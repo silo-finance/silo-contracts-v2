@@ -6,7 +6,18 @@ name: Governance Quality Test
 on:
   push:
     branches: [ master, develop ]
+    paths:
+      - silo-governance/**/*.sol
+      - silo-governance/**/*.ts
+      - silo-governance/**/*.js
+      - silo-governance/**/*.json
+
   pull_request:
+    paths:
+      - silo-governance/**/*.sol
+      - silo-governance/**/*.ts
+      - silo-governance/**/*.js
+      - silo-governance/**/*.json
 
 jobs:
 
@@ -27,9 +38,7 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
 
-      - run: cd ./silo-governance
-        
-      - run: yarn --cwd install
+      - run: yarn --cwd ./silo-governance install
 
       - name: Solidity Lint
-        run: yarn --cwd lint:sol
+        run: yarn --cwd ./silo-governance lint:sol

@@ -6,7 +6,18 @@ name: CORE Quality Test
 on:
   push:
     branches: [ master, develop ]
+    paths:
+      - silo-core/**/*.sol
+      - silo-core/**/*.ts
+      - silo-core/**/*.js
+      - silo-core/**/*.json
+
   pull_request:
+    paths:
+      - silo-core/**/*.sol
+      - silo-core/**/*.ts
+      - silo-core/**/*.js
+      - silo-core/**/*.json
 
 jobs:
 
@@ -27,9 +38,7 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
 
-      - run: cd ./silo-core
-
-      - run: yarn --cwd install
+      - run: yarn --cwd ./silo-core install
 
       - name: Solidity Lint
-        run: yarn --cwd lint:sol
+        run: yarn --cwd ./silo-core lint:sol
