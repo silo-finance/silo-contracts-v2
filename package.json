@@ -1,0 +1,8 @@
+{
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:silo-finance/silo-v2.git"
+  },
+  "workspaces": ["silo-core", "silo-amm", "silo-governance"]
+}
