@@ -15,4 +15,5 @@ nvm install 18
 nvm use 18
 npm i -g yarn
 yarn install
+git submodule update --init --recursive
 ```

@@ -16,6 +16,7 @@
     "solhint": "~3.4.1"
   },
   "scripts": {
-    "lint:sol": "solhint \"contracts/**/*.sol\" --max-warnings=0"
+    "lint:sol": "solhint \"contracts/**/*.sol\" --max-warnings=0",
+    "foundry:qa": "forge test -vvv"
   }
 }
