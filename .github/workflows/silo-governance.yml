@@ -3,6 +3,9 @@
 
 name: Governance Quality Test
 
+env:
+  FOUNDRY_PROFILE: governance
+
 on:
   push:
     branches: [ master, develop ]

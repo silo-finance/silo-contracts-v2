@@ -1,5 +1,5 @@
 {
-  "name": "silo-core",
+  "name": "silo-vaults",
   "version": "0.0.0",
   "engines": {
     "node": ">=16.0.0"
@@ -11,13 +11,13 @@
   "license": "BUSL-1.1",
   "dependencies": {
     "solc": "~0.8.19",
-    "@openzeppelin/contracts-3.4.1": "npm:@openzeppelin/contracts@3.4.1"
+    "@openzeppelin/contracts": "4.8.3"
   },
   "devDependencies": {
     "solhint": "~3.4.1"
   },
   "scripts": {
     "lint:sol": "solhint \"contracts/**/*.sol\" --max-warnings=0",
-    "foundry:qa": "FOUNDRY_PROFILE=core forge test -vvv"
+    "foundry:qa": "FOUNDRY_PROFILE=vaults forge test -vvv"
   }
 }

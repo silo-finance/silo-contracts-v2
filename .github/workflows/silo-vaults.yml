@@ -1,26 +1,26 @@
 # This workflow will do a clean install of node dependencies, build the source code and run tests across different versions of node
 # For more information see: https://help.github.com/actions/language-and-framework-guides/using-nodejs-with-github-actions
 
-name: CORE Quality Test
+name: VAULTS Quality Test
 
 env:
-  FOUNDRY_PROFILE: core
+  FOUNDRY_PROFILE: vaults
 
 on:
   push:
     branches: [ master, develop ]
     paths:
-      - silo-core/**/*.sol
-      - silo-core/**/*.ts
-      - silo-core/**/*.js
-      - silo-core/**/*.json
+      - silo-vaults/**/*.sol
+      - silo-vaults/**/*.ts
+      - silo-vaults/**/*.js
+      - silo-vaults/**/*.json
 
   pull_request:
     paths:
-      - silo-core/**/*.sol
-      - silo-core/**/*.ts
-      - silo-core/**/*.js
-      - silo-core/**/*.json
+      - silo-vaults/**/*.sol
+      - silo-vaults/**/*.ts
+      - silo-vaults/**/*.js
+      - silo-vaults/**/*.json
 
 jobs:
 
@@ -41,10 +41,11 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
 
-      - run: yarn --cwd ./silo-core install
+      - run: yarn --cwd ./silo-vaults install
 
       - name: Solidity Lint
-        run: yarn --cwd ./silo-core lint:sol
+        run: yarn --cwd ./silo-vaults lint:sol
+
 
   foundry:
     name: Foundry QA

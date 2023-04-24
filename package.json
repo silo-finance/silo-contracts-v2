@@ -4,5 +4,12 @@
     "type": "git",
     "url": "git@github.com:silo-finance/silo-v2.git"
   },
-  "workspaces": ["silo-core", "silo-amm", "silo-governance"]
+  "workspaces": ["silo-amm", "silo-core", "silo-governance", "silo-vaults"],
+  "scripts": {
+    "clear:artifacts": "find . -name 'artifacts' | xargs rm -rf",
+    "clear:cache": "yarn clear:artifacts && rm -rf ./cache/ && forge clean",
+    "clear:node_modules": "find . -name 'node_modules' | xargs rm -rf",
+    "remove:locks": "find . -name 'yarn.lock' -delete",
+    "reinstall": "yarn clear:node_modules && yarn remove:locks && yarn"
+  }
 }
