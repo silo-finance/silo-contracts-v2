@@ -4,7 +4,9 @@ Monorepo for Silo protocol. v2
 
 ## Development setup
 
-see: https://classic.yarnpkg.com/lang/en/docs/workspaces/
+see:
+- https://yarnpkg.com/getting-started/install
+- https://classic.yarnpkg.com/lang/en/docs/workspaces/
 
 ```shell
 # from root dir
@@ -13,6 +15,11 @@ git hf init
 
 nvm install 18
 nvm use 18
+
+# this is for ode 18, for other versions please check https://yarnpkg.com/getting-started/install
+corepack enable
+corepack prepare yarn@stable --activate
+
 npm i -g yarn
 yarn install
 ```

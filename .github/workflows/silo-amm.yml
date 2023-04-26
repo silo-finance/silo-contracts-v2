@@ -41,7 +41,7 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
 
-      - run: yarn --cwd ./silo-amm install
+      - run: yarn workspace silo-amm install
 
       - name: Solidity Lint
-        run: yarn --cwd ./silo-amm lint:sol
+        run: yarn workspace silo-amm lint:sol
