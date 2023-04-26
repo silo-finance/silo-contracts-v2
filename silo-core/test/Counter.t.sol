@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.13;
+pragma solidity >=0.7.6;
+pragma abicoder v2;
 
 import "forge-std/Test.sol";
-import "../src/Counter.sol";
+import "../contracts/Counter.sol";
 
 contract CounterTest is Test {
     Counter public counter;
