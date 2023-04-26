@@ -14,6 +14,10 @@ git hf init
 nvm install 18
 nvm use 18
 npm i -g yarn
+
+# for modern version of yarn
+yarn set version berry
+
 yarn install
 ```
 
