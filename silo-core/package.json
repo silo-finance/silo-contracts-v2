@@ -10,8 +10,8 @@
   },
   "license": "BUSL-1.1",
   "dependencies": {
-    "solc": "~0.8.19",
-    "@openzeppelin/contracts-3.4.1": "npm:@openzeppelin/contracts@3.4.1"
+    "@openzeppelin/contracts-3.4.1": "npm:@openzeppelin/contracts@3.4.1",
+    "solc": "~0.8.19"
   },
   "devDependencies": {
     "solhint": "~3.4.1"
