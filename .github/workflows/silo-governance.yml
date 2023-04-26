@@ -41,7 +41,7 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
 
-      - run: yarn --cwd ./silo-governance install
+      - run: yarn workspace silo-governance install
 
       - name: Solidity Lint
-        run: yarn --cwd ./silo-governance lint:sol
+        run: yarn workspace silo-governance lint:sol

@@ -41,10 +41,10 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
 
-      - run: yarn --cwd ./silo-core install
+      - run: yarn workspace silo-core install
 
       - name: Solidity Lint
-        run: yarn --cwd ./silo-core lint:sol
+        run: yarn workspace silo-core lint:sol
 
   foundry:
     name: Foundry QA
