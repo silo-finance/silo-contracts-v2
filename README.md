@@ -62,3 +62,18 @@ git rm -f silo-core/lib/forge-std
 - create new profile in `.foundry.toml`
 - add new workspace in `package.json` `workspaces` section
 - run `yarn reinstall`
+
+## Cloning external code
+
+- In `external/` create subdirectory for cloned code eg `uniswap-v3-core/`
+- clone git repo into that directory
+- update `external/package.json#workspaces` with this new `uniswap-v3-core`
+- update `external/uniswap-v3-core/package.json#name` to match dir name, in our example `uniswap-v3-core`
+
+Run `yarn`, enter your new cloned workspace and you should be able to execute commands for this new workspace.
+
+example of running scripts for workspace:
+
+```shell
+yarn workspace <workspaceName> <commandName> ...
+```

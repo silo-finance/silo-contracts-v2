@@ -1,5 +1,6 @@
 {
   "private": true,
+  "name": "silo-contracts-v2",
   "packageManager": "yarn@3.5.0",
   "repository": {
     "type": "git",
@@ -9,7 +10,8 @@
     "silo-amm",
     "silo-core",
     "silo-governance",
-    "silo-vaults"
+    "silo-vaults",
+    "external/*"
   ],
   "scripts": {
     "clear:artifacts": "find . -name 'artifacts' | xargs rm -rf",
