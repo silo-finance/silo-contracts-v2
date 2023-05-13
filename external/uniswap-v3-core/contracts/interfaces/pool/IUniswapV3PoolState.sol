@@ -24,9 +24,6 @@ interface IUniswapV3PoolState {
         returns (
             uint160 sqrtPriceX96,
             int24 tick,
-            uint16 observationIndex,
-            uint16 observationCardinality,
-            uint16 observationCardinalityNext,
             uint8 feeProtocol,
             bool unlocked
         );
@@ -54,8 +51,6 @@ interface IUniswapV3PoolState {
     /// liquidityNet how much liquidity changes when the pool price crosses the tick,
     /// feeGrowthOutside0X128 the fee growth on the other side of the tick from the current tick in token0,
     /// feeGrowthOutside1X128 the fee growth on the other side of the tick from the current tick in token1,
-    /// tickCumulativeOutside the cumulative tick value on the other side of the tick from the current tick
-    /// secondsPerLiquidityOutsideX128 the seconds spent per liquidity on the other side of the tick from the current tick,
     /// secondsOutside the seconds spent on the other side of the tick from the current tick,
     /// initialized Set to true if the tick is initialized, i.e. liquidityGross is greater than 0, otherwise equal to false.
     /// Outside values can only be used if the tick is initialized, i.e. if liquidityGross is greater than 0.
@@ -69,8 +64,6 @@ interface IUniswapV3PoolState {
             int128 liquidityNet,
             uint256 feeGrowthOutside0X128,
             uint256 feeGrowthOutside1X128,
-            int56 tickCumulativeOutside,
-            uint160 secondsPerLiquidityOutsideX128,
             uint32 secondsOutside,
             bool initialized
         );
@@ -94,23 +87,5 @@ interface IUniswapV3PoolState {
             uint256 feeGrowthInside1LastX128,
             uint128 tokensOwed0,
             uint128 tokensOwed1
-        );
-
-    /// @notice Returns data about a specific observation index
-    /// @param index The element of the observations array to fetch
-    /// @dev You most likely want to use #observe() instead of this method to get an observation as of some amount of time
-    /// ago, rather than at a specific index in the array.
-    /// @return blockTimestamp The timestamp of the observation,
-    /// Returns tickCumulative the tick multiplied by seconds elapsed for the life of the pool as of the observation timestamp,
-    /// Returns secondsPerLiquidityCumulativeX128 the seconds per in range liquidity for the life of the pool as of the observation timestamp,
-    /// Returns initialized whether the observation has been initialized and the values are safe to use
-    function observations(uint256 index)
-        external
-        view
-        returns (
-            uint32 blockTimestamp,
-            int56 tickCumulative,
-            uint160 secondsPerLiquidityCumulativeX128,
-            bool initialized
         );
 }

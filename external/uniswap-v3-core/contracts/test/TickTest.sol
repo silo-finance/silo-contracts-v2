@@ -46,8 +46,6 @@ contract TickTest {
                 liquidityDelta,
                 feeGrowthGlobal0X128,
                 feeGrowthGlobal1X128,
-                secondsPerLiquidityCumulativeX128,
-                tickCumulative,
                 time,
                 upper,
                 maxLiquidity
@@ -71,8 +69,6 @@ contract TickTest {
                 tick,
                 feeGrowthGlobal0X128,
                 feeGrowthGlobal1X128,
-                secondsPerLiquidityCumulativeX128,
-                tickCumulative,
                 time
             );
     }

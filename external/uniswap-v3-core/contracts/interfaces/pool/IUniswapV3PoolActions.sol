@@ -94,10 +94,4 @@ interface IUniswapV3PoolActions {
         uint256 amount1,
         bytes calldata data
     ) external;
-
-    /// @notice Increase the maximum number of price and liquidity observations that this pool will store
-    /// @dev This method is no-op if the pool already has an observationCardinalityNext greater than or equal to
-    /// the input observationCardinalityNext.
-    /// @param observationCardinalityNext The desired minimum number of observations for the pool to store
-    function increaseObservationCardinalityNext(uint16 observationCardinalityNext) external;
 }
