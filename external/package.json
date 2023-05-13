@@ -6,6 +6,7 @@
   "workspaces": [
     "uniswap-v2-core",
     "uniswap-v2-periphery",
-    "balancer-v2-monorepo"
+    "balancer-v2-monorepo",
+    "uniswap-v3-core"
   ]
 }
