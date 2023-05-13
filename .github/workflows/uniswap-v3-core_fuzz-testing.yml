@@ -30,7 +30,6 @@ jobs:
           - SwapMathEchidnaTest
           - TickEchidnaTest
           - TickOverflowSafetyEchidnaTest
-          - OracleEchidnaTest
           - BitMathEchidnaTest
           - LowGasSafeMathEchidnaTest
           - UnsafeMathEchidnaTest

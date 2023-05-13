@@ -95,16 +95,6 @@ interface IUniswapV3PoolEvents {
         uint256 paid1
     );
 
-    /// @notice Emitted by the pool for increases to the number of observations that can be stored
-    /// @dev observationCardinalityNext is not the observation cardinality until an observation is written at the index
-    /// just before a mint/swap/burn.
-    /// @param observationCardinalityNextOld The previous value of the next observation cardinality
-    /// @param observationCardinalityNextNew The updated value of the next observation cardinality
-    event IncreaseObservationCardinalityNext(
-        uint16 observationCardinalityNextOld,
-        uint16 observationCardinalityNextNew
-    );
-
     /// @notice Emitted when the protocol fee is changed by the pool
     /// @param feeProtocol0Old The previous value of the token0 protocol fee
     /// @param feeProtocol1Old The previous value of the token1 protocol fee

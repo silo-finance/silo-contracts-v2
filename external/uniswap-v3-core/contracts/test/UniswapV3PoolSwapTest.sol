@@ -31,7 +31,7 @@ contract UniswapV3PoolSwapTest is IUniswapV3SwapCallback {
             abi.encode(msg.sender)
         );
 
-        (nextSqrtRatio, , , , , , ) = IUniswapV3Pool(pool).slot0();
+        (nextSqrtRatio, , , ) = IUniswapV3Pool(pool).slot0();
     }
 
     function uniswapV3SwapCallback(

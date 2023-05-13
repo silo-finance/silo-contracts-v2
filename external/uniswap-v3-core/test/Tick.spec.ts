@@ -67,8 +67,6 @@ describe('Tick', () => {
         feeGrowthOutside1X128: 3,
         liquidityGross: 0,
         liquidityNet: 0,
-        secondsPerLiquidityOutsideX128: 0,
-        tickCumulativeOutside: 0,
         secondsOutside: 0,
         initialized: true,
       })
@@ -83,8 +81,6 @@ describe('Tick', () => {
         feeGrowthOutside1X128: 3,
         liquidityGross: 0,
         liquidityNet: 0,
-        secondsPerLiquidityOutsideX128: 0,
-        tickCumulativeOutside: 0,
         secondsOutside: 0,
         initialized: true,
       })
@@ -99,8 +95,6 @@ describe('Tick', () => {
         feeGrowthOutside1X128: 3,
         liquidityGross: 0,
         liquidityNet: 0,
-        secondsPerLiquidityOutsideX128: 0,
-        tickCumulativeOutside: 0,
         secondsOutside: 0,
         initialized: true,
       })
@@ -109,8 +103,6 @@ describe('Tick', () => {
         feeGrowthOutside1X128: 1,
         liquidityGross: 0,
         liquidityNet: 0,
-        secondsPerLiquidityOutsideX128: 0,
-        tickCumulativeOutside: 0,
         secondsOutside: 0,
         initialized: true,
       })
@@ -125,8 +117,6 @@ describe('Tick', () => {
         feeGrowthOutside1X128: constants.MaxUint256.sub(2),
         liquidityGross: 0,
         liquidityNet: 0,
-        secondsPerLiquidityOutsideX128: 0,
-        tickCumulativeOutside: 0,
         secondsOutside: 0,
         initialized: true,
       })
@@ -135,8 +125,6 @@ describe('Tick', () => {
         feeGrowthOutside1X128: 5,
         liquidityGross: 0,
         liquidityNet: 0,
-        secondsPerLiquidityOutsideX128: 0,
-        tickCumulativeOutside: 0,
         secondsOutside: 0,
         initialized: true,
       })
@@ -190,14 +178,10 @@ describe('Tick', () => {
         feeGrowthOutside0X128,
         feeGrowthOutside1X128,
         secondsOutside,
-        secondsPerLiquidityOutsideX128,
-        tickCumulativeOutside,
         initialized,
       } = await tickTest.ticks(1)
       expect(feeGrowthOutside0X128).to.eq(1)
       expect(feeGrowthOutside1X128).to.eq(2)
-      expect(secondsPerLiquidityOutsideX128).to.eq(3)
-      expect(tickCumulativeOutside).to.eq(4)
       expect(secondsOutside).to.eq(5)
       expect(initialized).to.eq(true)
     })
@@ -208,14 +192,10 @@ describe('Tick', () => {
         feeGrowthOutside0X128,
         feeGrowthOutside1X128,
         secondsOutside,
-        secondsPerLiquidityOutsideX128,
-        tickCumulativeOutside,
         initialized,
       } = await tickTest.ticks(1)
       expect(feeGrowthOutside0X128).to.eq(1)
       expect(feeGrowthOutside1X128).to.eq(2)
-      expect(secondsPerLiquidityOutsideX128).to.eq(3)
-      expect(tickCumulativeOutside).to.eq(4)
       expect(secondsOutside).to.eq(5)
       expect(initialized).to.eq(true)
     })
@@ -225,14 +205,10 @@ describe('Tick', () => {
         feeGrowthOutside0X128,
         feeGrowthOutside1X128,
         secondsOutside,
-        secondsPerLiquidityOutsideX128,
-        tickCumulativeOutside,
         initialized,
       } = await tickTest.ticks(2)
       expect(feeGrowthOutside0X128).to.eq(0)
       expect(feeGrowthOutside1X128).to.eq(0)
-      expect(secondsPerLiquidityOutsideX128).to.eq(0)
-      expect(tickCumulativeOutside).to.eq(0)
       expect(secondsOutside).to.eq(0)
       expect(initialized).to.eq(true)
     })
@@ -246,8 +222,6 @@ describe('Tick', () => {
         feeGrowthOutside1X128: 2,
         liquidityGross: 3,
         liquidityNet: 4,
-        secondsPerLiquidityOutsideX128: 5,
-        tickCumulativeOutside: 6,
         secondsOutside: 7,
         initialized: true,
       })
@@ -256,17 +230,13 @@ describe('Tick', () => {
         feeGrowthOutside0X128,
         feeGrowthOutside1X128,
         secondsOutside,
-        secondsPerLiquidityOutsideX128,
         liquidityGross,
-        tickCumulativeOutside,
         liquidityNet,
         initialized,
       } = await tickTest.ticks(2)
       expect(feeGrowthOutside0X128).to.eq(0)
       expect(feeGrowthOutside1X128).to.eq(0)
       expect(secondsOutside).to.eq(0)
-      expect(secondsPerLiquidityOutsideX128).to.eq(0)
-      expect(tickCumulativeOutside).to.eq(0)
       expect(liquidityGross).to.eq(0)
       expect(liquidityNet).to.eq(0)
       expect(initialized).to.eq(false)
@@ -280,8 +250,6 @@ describe('Tick', () => {
         feeGrowthOutside1X128: 2,
         liquidityGross: 3,
         liquidityNet: 4,
-        secondsPerLiquidityOutsideX128: 5,
-        tickCumulativeOutside: 6,
         secondsOutside: 7,
         initialized: true,
       })
@@ -290,13 +258,9 @@ describe('Tick', () => {
         feeGrowthOutside0X128,
         feeGrowthOutside1X128,
         secondsOutside,
-        tickCumulativeOutside,
-        secondsPerLiquidityOutsideX128,
       } = await tickTest.ticks(2)
       expect(feeGrowthOutside0X128).to.eq(6)
       expect(feeGrowthOutside1X128).to.eq(7)
-      expect(secondsPerLiquidityOutsideX128).to.eq(3)
-      expect(tickCumulativeOutside).to.eq(9)
       expect(secondsOutside).to.eq(3)
     })
     it('two flips are no op', async () => {
@@ -305,8 +269,6 @@ describe('Tick', () => {
         feeGrowthOutside1X128: 2,
         liquidityGross: 3,
         liquidityNet: 4,
-        secondsPerLiquidityOutsideX128: 5,
-        tickCumulativeOutside: 6,
         secondsOutside: 7,
         initialized: true,
       })
@@ -316,13 +278,9 @@ describe('Tick', () => {
         feeGrowthOutside0X128,
         feeGrowthOutside1X128,
         secondsOutside,
-        tickCumulativeOutside,
-        secondsPerLiquidityOutsideX128,
       } = await tickTest.ticks(2)
       expect(feeGrowthOutside0X128).to.eq(1)
       expect(feeGrowthOutside1X128).to.eq(2)
-      expect(secondsPerLiquidityOutsideX128).to.eq(5)
-      expect(tickCumulativeOutside).to.eq(6)
       expect(secondsOutside).to.eq(7)
     })
   })

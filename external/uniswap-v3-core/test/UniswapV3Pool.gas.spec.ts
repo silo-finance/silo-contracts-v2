@@ -57,7 +57,6 @@ describe('UniswapV3Pool gas tests', () => {
 
         await pool.initialize(encodePriceSqrt(1, 1))
         await pool.setFeeProtocol(feeProtocol, feeProtocol)
-        await pool.increaseObservationCardinalityNext(4)
         await pool.advanceTime(1)
         await mint(wallet.address, minTick, maxTick, expandTo18Decimals(2))
 
@@ -285,29 +284,6 @@ describe('UniswapV3Pool gas tests', () => {
           await swapExact0For1(expandTo18Decimals(1).div(100), wallet.address)
           await pool.burn(tickLower, tickUpper, 0) // poke to accumulate fees
           await snapshotGasCost(pool.collect(wallet.address, tickLower, tickUpper, MaxUint128, MaxUint128))
-        })
-      })
-
-      describe('#increaseObservationCardinalityNext', () => {
-        it('grow by 1 slot', async () => {
-          await snapshotGasCost(pool.increaseObservationCardinalityNext(5))
-        })
-        it('no op', async () => {
-          await snapshotGasCost(pool.increaseObservationCardinalityNext(3))
-        })
-      })
-
-      describe('#snapshotCumulativesInside', () => {
-        it('tick inside', async () => {
-          await snapshotGasCost(pool.estimateGas.snapshotCumulativesInside(minTick, maxTick))
-        })
-        it('tick above', async () => {
-          await swapToHigherPrice(MAX_SQRT_RATIO.sub(1), wallet.address)
-          await snapshotGasCost(pool.estimateGas.snapshotCumulativesInside(minTick, maxTick))
-        })
-        it('tick below', async () => {
-          await swapToLowerPrice(MIN_SQRT_RATIO.add(1), wallet.address)
-          await snapshotGasCost(pool.estimateGas.snapshotCumulativesInside(minTick, maxTick))
         })
       })
     })
