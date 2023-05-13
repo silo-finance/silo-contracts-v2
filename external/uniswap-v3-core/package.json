@@ -1,5 +1,5 @@
 {
-  "name": "@uniswap/v3-core",
+  "name": "uniswap-v3-core",
   "description": "🦄 Core smart contracts of Uniswap V3",
   "license": "BUSL-1.1",
   "publishConfig": {
@@ -27,7 +27,6 @@
   "engines": {
     "node": ">=10"
   },
-  "dependencies": {},
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "^2.0.2",
     "@nomiclabs/hardhat-etherscan": "^2.1.8",

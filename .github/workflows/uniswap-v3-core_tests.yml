@@ -1,0 +1,48 @@
+name: Uniswap V3 Core - Tests
+
+on:
+  push:
+    branches: [ master, develop ]
+    paths:
+      - external/uniswap-v3-core/**/*.sol
+      - external/uniswap-v3-core/**/*.ts
+      - external/uniswap-v3-core/**/*.js
+      - external/uniswap-v3-core/**/*.json
+
+  pull_request:
+    paths:
+      - external/uniswap-v3-core/**/*.sol
+      - external/uniswap-v3-core/**/*.ts
+      - external/uniswap-v3-core/**/*.js
+      - external/uniswap-v3-core/**/*.json
+
+jobs:
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v1
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 12.x
+
+      - id: yarn-cache
+        run: echo "::set-output name=dir::$(yarn workspace uniswap-v3-core cache dir)"
+
+      - uses: actions/cache@v1
+        with:
+          path: ${{ steps.yarn-cache.outputs.dir }}
+          key: yarn-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            yarn-
+
+      - name: Install dependencies
+        run: yarn workspace uniswap-v3-core install --frozen-lockfile
+
+      # This is required separately from yarn test because it generates the typechain definitions
+      - name: Compile
+        run: yarn workspace uniswap-v3-core compile
+
+      - name: Run unit tests
+        run: yarn workspace uniswap-v3-core test

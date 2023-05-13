@@ -1,10 +1,20 @@
-name: Fuzz Testing
+name: Uniswap V3 Core - Fuzz Testing
 
 on:
   push:
-    branches:
-      - main
+    branches: [ master, develop ]
+    paths:
+      - external/uniswap-v3-core/**/*.sol
+      - external/uniswap-v3-core/**/*.ts
+      - external/uniswap-v3-core/**/*.js
+      - external/uniswap-v3-core/**/*.json
+
   pull_request:
+    paths:
+      - external/uniswap-v3-core/**/*.sol
+      - external/uniswap-v3-core/**/*.ts
+      - external/uniswap-v3-core/**/*.js
+      - external/uniswap-v3-core/**/*.json
 
 jobs:
   echidna:
@@ -40,7 +50,7 @@ jobs:
           python-version: 3.8
 
       - name: Install node dependencies
-        run: yarn install --frozen-lockfile
+        run: yarn workspace uniswap-v3-core install --frozen-lockfile
 
       - name: Install pip3
         run: |
@@ -57,4 +67,4 @@ jobs:
           sudo chmod +x /usr/bin/echidna-test
 
       - name: Run ${{ matrix.testName }}
-        run: echidna-test . --contract ${{ matrix.testName }} --config echidna.config.yml
+        run: cd external/uniswap-v3-core/ && echidna-test . --contract ${{ matrix.testName }} --config echidna.config.yml

@@ -1,4 +1,4 @@
-name: Mythx
+name: Uniswap V3 Core - Mythx
 
 on:
   workflow_dispatch:
@@ -22,7 +22,7 @@ jobs:
           python-version: 3.8
 
       - name: Install node dependencies
-        run: yarn install --frozen-lockfile
+        run: yarn workspace uniswap-v3-core install --frozen-lockfile
 
       - name: Install pip3
         run: |
@@ -43,7 +43,7 @@ jobs:
 
       - name: Submit code to Mythx
         run: |
-          mythx --api-key ${{ secrets.MYTHX_API_KEY }} \
+          cd external/uniswap-v3-core/ && mythx --api-key ${{ secrets.MYTHX_API_KEY }} \
             --yes \
             analyze \
             --mode deep \

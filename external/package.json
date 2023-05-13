@@ -4,5 +4,6 @@
   "description": "cloned external code",
   "private": true,
   "workspaces": [
+    "uniswap-v3-core"
   ]
 }
