@@ -1,9 +1,10 @@
 import chai, { expect } from 'chai'
 import { Contract } from 'ethers'
 import { AddressZero, Zero, MaxUint256 } from 'ethers/constants'
-import { BigNumber, bigNumberify } from 'ethers/utils'
+import { BigNumber, bigNumberify, keccak256 } from 'ethers/utils'
 import { solidity, MockProvider, createFixtureLoader } from 'ethereum-waffle'
 import { ecsign } from 'ethereumjs-util'
+import { bytecode } from 'uniswap-v2-core/build/UniswapV2Pair.json'
 
 import { expandTo18Decimals, getApprovalDigest, mineBlock, MINIMUM_LIQUIDITY } from './shared/utilities'
 import { v2Fixture } from './shared/fixtures'
@@ -56,6 +57,13 @@ describe('UniswapV2Router{01,02}', () => {
 
     afterEach(async function() {
       expect(await provider.getBalance(router.address)).to.eq(Zero)
+    })
+
+    it('UniswapV2Library.pairFor, initial code', async () => {
+      expect(keccak256(`0x${bytecode}`)).to.eq(
+        '0x87c7acd6da0c4307683e25d68e65555e6212557a23d789c8853cc631c828237c',
+        'update init code hash in UniswapV2Library'
+      )
     })
 
     describe(routerVersion, () => {
@@ -368,8 +376,8 @@ describe('UniswapV2Router{01,02}', () => {
           const receipt = await tx.wait()
           expect(receipt.gasUsed).to.eq(
             {
-              [RouterVersion.UniswapV2Router01]: 101876,
-              [RouterVersion.UniswapV2Router02]: 101898
+              [RouterVersion.UniswapV2Router01]: 88874,
+              [RouterVersion.UniswapV2Router02]: 88896
             }[routerVersion as RouterVersion]
           )
         }).retries(3)
@@ -517,8 +525,8 @@ describe('UniswapV2Router{01,02}', () => {
           const receipt = await tx.wait()
           expect(receipt.gasUsed).to.eq(
             {
-              [RouterVersion.UniswapV2Router01]: 138770,
-              [RouterVersion.UniswapV2Router02]: 138770
+              [RouterVersion.UniswapV2Router01]: 95768,
+              [RouterVersion.UniswapV2Router02]: 95768
             }[routerVersion as RouterVersion]
           )
         }).retries(3)

@@ -42,8 +42,10 @@ jobs:
           restore-keys: |
             ${{ matrix.os }}-yarn-
 
-      - run: yarn workspace uniswap-v2-periphery install
+      - run: yarn install
 
+      - run: yarn workspace uniswap-v2-core install
+      - run: yarn workspace uniswap-v2-core compile
       - run: yarn workspace uniswap-v2-periphery compile
       - run: yarn workspace uniswap-v2-periphery lint
       - run: yarn workspace uniswap-v2-periphery test
