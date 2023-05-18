@@ -35,7 +35,7 @@ describe('ExampleComputeLiquidityValue', () => {
     token1 = fixture.token1
     pair = fixture.pair
     factory = fixture.factoryV2
-    router = fixture.router
+    router = fixture.router02
     computeLiquidityValue = await deployContract(
       wallet,
       ExampleComputeLiquidityValue,
