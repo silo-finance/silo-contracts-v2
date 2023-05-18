@@ -1,0 +1,50 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "MockL2LayerZeroDelegation",
+  "sourceName": "contracts/test/MockL2LayerZeroDelegation.sol",
+  "abi": [
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "user",
+          "type": "address"
+        }
+      ],
+      "name": "OnVeBalBridged",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [],
+      "name": "OnVeBalSupplyUpdate",
+      "type": "event"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "user",
+          "type": "address"
+        }
+      ],
+      "name": "onVeBalBridged",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "onVeBalSupplyUpdate",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x608060405234801561001057600080fd5b5061011c806100206000396000f3fe6080604052348015600f57600080fd5b506004361060325760003560e01c806396345fb5146037578063df130bfe14603f575b600080fd5b603d606f565b005b603d60048036036020811015605357600080fd5b503573ffffffffffffffffffffffffffffffffffffffff16609a565b6040517f1a1847013e2565a8419e50f84464bc78e81a9b06e839cc6196ef88138d4435a990600090a1565b6040805173ffffffffffffffffffffffffffffffffffffffff8316815290517f75e2797830269bd4ffcd50158cc60532b40559a46a0b17249e0a325628d0500e9181900360200190a15056fea264697066735822122077f3757873c7fb3820c49fa20ee820bde4f8d6d29fc164ca449e83055c651cef64736f6c63430007010033",
+  "deployedBytecode": "0x6080604052348015600f57600080fd5b506004361060325760003560e01c806396345fb5146037578063df130bfe14603f575b600080fd5b603d606f565b005b603d60048036036020811015605357600080fd5b503573ffffffffffffffffffffffffffffffffffffffff16609a565b6040517f1a1847013e2565a8419e50f84464bc78e81a9b06e839cc6196ef88138d4435a990600090a1565b6040805173ffffffffffffffffffffffffffffffffffffffff8316815290517f75e2797830269bd4ffcd50158cc60532b40559a46a0b17249e0a325628d0500e9181900360200190a15056fea264697066735822122077f3757873c7fb3820c49fa20ee820bde4f8d6d29fc164ca449e83055c651cef64736f6c63430007010033",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

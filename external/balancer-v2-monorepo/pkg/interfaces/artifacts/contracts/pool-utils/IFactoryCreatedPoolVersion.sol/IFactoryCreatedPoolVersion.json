@@ -1,0 +1,24 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "IFactoryCreatedPoolVersion",
+  "sourceName": "contracts/pool-utils/IFactoryCreatedPoolVersion.sol",
+  "abi": [
+    {
+      "inputs": [],
+      "name": "getPoolVersion",
+      "outputs": [
+        {
+          "internalType": "string",
+          "name": "",
+          "type": "string"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

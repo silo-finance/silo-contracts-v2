@@ -1,0 +1,37 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "IOptimismGasLimitProvider",
+  "sourceName": "contracts/liquidity-mining/IOptimismGasLimitProvider.sol",
+  "abi": [
+    {
+      "inputs": [],
+      "name": "getOptimismGasLimit",
+      "outputs": [
+        {
+          "internalType": "uint32",
+          "name": "gasLimit",
+          "type": "uint32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint32",
+          "name": "gasLimit",
+          "type": "uint32"
+        }
+      ],
+      "name": "setOptimismGasLimit",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

@@ -1,0 +1,251 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "MockGaugeController",
+  "sourceName": "contracts/test/MockGaugeController.sol",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "contract IVotingEscrow",
+          "name": "votingEscrow",
+          "type": "address"
+        },
+        {
+          "internalType": "contract IAuthorizerAdaptor",
+          "name": "authorizerAdaptor",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "addr",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "int128",
+          "name": "gauge_type",
+          "type": "int128"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "weight",
+          "type": "uint256"
+        }
+      ],
+      "name": "NewGauge",
+      "type": "event"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "gauge",
+          "type": "address"
+        },
+        {
+          "internalType": "int128",
+          "name": "gaugeType",
+          "type": "int128"
+        }
+      ],
+      "name": "add_gauge",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "string",
+          "name": "",
+          "type": "string"
+        },
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "add_type",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "admin",
+      "outputs": [
+        {
+          "internalType": "contract IAuthorizerAdaptor",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "int128",
+          "name": "",
+          "type": "int128"
+        },
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "change_type_weight",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "checkpoint_gauge",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "gauge",
+          "type": "address"
+        }
+      ],
+      "name": "gauge_exists",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "gauge",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "gauge_relative_weight",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "gauge",
+          "type": "address"
+        }
+      ],
+      "name": "gauge_types",
+      "outputs": [
+        {
+          "internalType": "int128",
+          "name": "",
+          "type": "int128"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "n_gauge_types",
+      "outputs": [
+        {
+          "internalType": "int128",
+          "name": "",
+          "type": "int128"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "gauge",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "weight",
+          "type": "uint256"
+        }
+      ],
+      "name": "setGaugeWeight",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "token",
+      "outputs": [
+        {
+          "internalType": "contract IERC20",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "voting_escrow",
+      "outputs": [
+        {
+          "internalType": "contract IVotingEscrow",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x608060405234801561001057600080fd5b506040516108303803806108308339818101604052604081101561003357600080fd5b508051602090910151600580546001600160a01b039384166001600160a01b031991821617909155600480549390921692169190911790556107b68061007a6000396000f3fe608060405234801561001057600080fd5b50600436106100d45760003560e01c80639fba03a111610081578063dfe050311161005b578063dfe05031146102fd578063f851a4401461032e578063fc0c546a14610336576100d4565b80639fba03a114610284578063d3078c941461028c578063db1ca260146102d7576100d4565b806361df1bf9116100b257806361df1bf9146101945780638d57bba4146101db57806392d0d23214610214576100d4565b80633a04f900146100d95780633f9095b714610117578063615e523714610161575b600080fd5b610115600480360360408110156100ef57600080fd5b5073ffffffffffffffffffffffffffffffffffffffff8135169060200135600f0b61033e565b005b61014a6004803603602081101561012d57600080fd5b503573ffffffffffffffffffffffffffffffffffffffff166104dd565b60408051600f9290920b8252519081900360200190f35b6101156004803603602081101561017757600080fd5b503573ffffffffffffffffffffffffffffffffffffffff16610587565b6101c7600480360360208110156101aa57600080fd5b503573ffffffffffffffffffffffffffffffffffffffff1661058a565b604080519115158252519081900360200190f35b610115600480360360408110156101f157600080fd5b5073ffffffffffffffffffffffffffffffffffffffff81351690602001356105b5565b6101156004803603604081101561022a57600080fd5b81019060208101813564010000000081111561024557600080fd5b82018360208201111561025757600080fd5b8035906020019184600183028401116401000000008311171561027957600080fd5b91935091503561065c565b61014a6106a8565b6102c5600480360360408110156102a257600080fd5b5073ffffffffffffffffffffffffffffffffffffffff81351690602001356106b1565b60408051918252519081900360200190f35b610115600480360360408110156102ed57600080fd5b508035600f0b90602001356106da565b6103056106de565b6040805173ffffffffffffffffffffffffffffffffffffffff9092168252519081900360200190f35b6103056106fa565b610305610716565b73ffffffffffffffffffffffffffffffffffffffff821660009081526001602052604090205460ff16156103bd576040517f08c379a000000000000000000000000000000000000000000000000000000000815260040180806020018281038252602281526020018061073e6022913960400191505060405180910390fd5b600081600f0b121580156103dc5750600054600f90810b810b9082900b125b61044757604080517f08c379a000000000000000000000000000000000000000000000000000000000815260206004820152601260248201527f496e76616c696420676175676520747970650000000000000000000000000000604482015290519081900360640190fd5b73ffffffffffffffffffffffffffffffffffffffff8216600081815260016020818152604080842080547fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00169093179092558151938452600f85900b9084015282810191909152517ffd55b3191f9c9dd92f4f134dd700e7d76f6a0c836a08687023d6d38f03ebd8779181900360600190a15050565b73ffffffffffffffffffffffffffffffffffffffff811660009081526001602052604081205460ff1661055b576040517f08c379a00000000000000000000000000000000000000000000000000000000081526004018080602001828103825260218152602001806107606021913960400191505060405180910390fd5b5073ffffffffffffffffffffffffffffffffffffffff16600090815260026020526040902054600f0b90565b50565b73ffffffffffffffffffffffffffffffffffffffff1660009081526001602052604090205460ff1690565b73ffffffffffffffffffffffffffffffffffffffff821660009081526001602052604090205460ff16610633576040517f08c379a000000000000000000000000000000000000000000000000000000000815260040180806020018281038252602281526020018061071c6022913960400191505060405180910390fd5b73ffffffffffffffffffffffffffffffffffffffff909116600090815260036020526040902055565b505060008054600f81810b600101900b6fffffffffffffffffffffffffffffffff167fffffffffffffffffffffffffffffffff0000000000000000000000000000000090911617905550565b600054600f0b90565b5073ffffffffffffffffffffffffffffffffffffffff1660009081526003602052604090205490565b5050565b60055473ffffffffffffffffffffffffffffffffffffffff1681565b60045473ffffffffffffffffffffffffffffffffffffffff1681565b60009056fe476175676520646f6573206e6f74206578697374206f6e20636f6e74726f6c6c6572476175676520616c726561647920657869737473206f6e20636f6e74726f6c6c6572476175676520646f65736e2774206578697374206f6e20636f6e74726f6c6c6572a264697066735822122028a0c3577f0db3db242d9b0d6c97e25cef96b883ea8ec42123a409990fb75e5a64736f6c63430007010033",
+  "deployedBytecode": "0x608060405234801561001057600080fd5b50600436106100d45760003560e01c80639fba03a111610081578063dfe050311161005b578063dfe05031146102fd578063f851a4401461032e578063fc0c546a14610336576100d4565b80639fba03a114610284578063d3078c941461028c578063db1ca260146102d7576100d4565b806361df1bf9116100b257806361df1bf9146101945780638d57bba4146101db57806392d0d23214610214576100d4565b80633a04f900146100d95780633f9095b714610117578063615e523714610161575b600080fd5b610115600480360360408110156100ef57600080fd5b5073ffffffffffffffffffffffffffffffffffffffff8135169060200135600f0b61033e565b005b61014a6004803603602081101561012d57600080fd5b503573ffffffffffffffffffffffffffffffffffffffff166104dd565b60408051600f9290920b8252519081900360200190f35b6101156004803603602081101561017757600080fd5b503573ffffffffffffffffffffffffffffffffffffffff16610587565b6101c7600480360360208110156101aa57600080fd5b503573ffffffffffffffffffffffffffffffffffffffff1661058a565b604080519115158252519081900360200190f35b610115600480360360408110156101f157600080fd5b5073ffffffffffffffffffffffffffffffffffffffff81351690602001356105b5565b6101156004803603604081101561022a57600080fd5b81019060208101813564010000000081111561024557600080fd5b82018360208201111561025757600080fd5b8035906020019184600183028401116401000000008311171561027957600080fd5b91935091503561065c565b61014a6106a8565b6102c5600480360360408110156102a257600080fd5b5073ffffffffffffffffffffffffffffffffffffffff81351690602001356106b1565b60408051918252519081900360200190f35b610115600480360360408110156102ed57600080fd5b508035600f0b90602001356106da565b6103056106de565b6040805173ffffffffffffffffffffffffffffffffffffffff9092168252519081900360200190f35b6103056106fa565b610305610716565b73ffffffffffffffffffffffffffffffffffffffff821660009081526001602052604090205460ff16156103bd576040517f08c379a000000000000000000000000000000000000000000000000000000000815260040180806020018281038252602281526020018061073e6022913960400191505060405180910390fd5b600081600f0b121580156103dc5750600054600f90810b810b9082900b125b61044757604080517f08c379a000000000000000000000000000000000000000000000000000000000815260206004820152601260248201527f496e76616c696420676175676520747970650000000000000000000000000000604482015290519081900360640190fd5b73ffffffffffffffffffffffffffffffffffffffff8216600081815260016020818152604080842080547fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00169093179092558151938452600f85900b9084015282810191909152517ffd55b3191f9c9dd92f4f134dd700e7d76f6a0c836a08687023d6d38f03ebd8779181900360600190a15050565b73ffffffffffffffffffffffffffffffffffffffff811660009081526001602052604081205460ff1661055b576040517f08c379a00000000000000000000000000000000000000000000000000000000081526004018080602001828103825260218152602001806107606021913960400191505060405180910390fd5b5073ffffffffffffffffffffffffffffffffffffffff16600090815260026020526040902054600f0b90565b50565b73ffffffffffffffffffffffffffffffffffffffff1660009081526001602052604090205460ff1690565b73ffffffffffffffffffffffffffffffffffffffff821660009081526001602052604090205460ff16610633576040517f08c379a000000000000000000000000000000000000000000000000000000000815260040180806020018281038252602281526020018061071c6022913960400191505060405180910390fd5b73ffffffffffffffffffffffffffffffffffffffff909116600090815260036020526040902055565b505060008054600f81810b600101900b6fffffffffffffffffffffffffffffffff167fffffffffffffffffffffffffffffffff0000000000000000000000000000000090911617905550565b600054600f0b90565b5073ffffffffffffffffffffffffffffffffffffffff1660009081526003602052604090205490565b5050565b60055473ffffffffffffffffffffffffffffffffffffffff1681565b60045473ffffffffffffffffffffffffffffffffffffffff1681565b60009056fe476175676520646f6573206e6f74206578697374206f6e20636f6e74726f6c6c6572476175676520616c726561647920657869737473206f6e20636f6e74726f6c6c6572476175676520646f65736e2774206578697374206f6e20636f6e74726f6c6c6572a264697066735822122028a0c3577f0db3db242d9b0d6c97e25cef96b883ea8ec42123a409990fb75e5a64736f6c63430007010033",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

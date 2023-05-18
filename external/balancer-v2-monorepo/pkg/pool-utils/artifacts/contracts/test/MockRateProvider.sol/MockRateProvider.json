@@ -1,0 +1,42 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "MockRateProvider",
+  "sourceName": "contracts/test/MockRateProvider.sol",
+  "abi": [
+    {
+      "inputs": [],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "inputs": [],
+      "name": "getRate",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "newRate",
+          "type": "uint256"
+        }
+      ],
+      "name": "mockRate",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x608060405234801561001057600080fd5b50670de0b6b3a764000060005560ac8061002b6000396000f3fe6080604052348015600f57600080fd5b506004361060325760003560e01c8063679aefce146037578063a1cfa04114604f575b600080fd5b603d606b565b60408051918252519081900360200190f35b606960048036036020811015606357600080fd5b50356071565b005b60005490565b60005556fea264697066735822122028cb998fa480bd4b3c352dfe7459085d6a8bf8a0e042f1eec090039cf7cf2c0f64736f6c63430007010033",
+  "deployedBytecode": "0x6080604052348015600f57600080fd5b506004361060325760003560e01c8063679aefce146037578063a1cfa04114604f575b600080fd5b603d606b565b60408051918252519081900360200190f35b606960048036036020811015606357600080fd5b50356071565b005b60005490565b60005556fea264697066735822122028cb998fa480bd4b3c352dfe7459085d6a8bf8a0e042f1eec090039cf7cf2c0f64736f6c63430007010033",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

@@ -1,0 +1,24 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "IRateProviderPool",
+  "sourceName": "@balancer-labs/v2-interfaces/contracts/pool-utils/IRateProviderPool.sol",
+  "abi": [
+    {
+      "inputs": [],
+      "name": "getRateProviders",
+      "outputs": [
+        {
+          "internalType": "contract IRateProvider[]",
+          "name": "",
+          "type": "address[]"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

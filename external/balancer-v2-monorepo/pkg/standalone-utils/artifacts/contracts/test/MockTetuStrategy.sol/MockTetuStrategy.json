@@ -1,0 +1,37 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "MockTetuStrategy",
+  "sourceName": "contracts/test/MockTetuStrategy.sol",
+  "abi": [
+    {
+      "inputs": [],
+      "name": "investedUnderlyingBalance",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "investedUnderlyingBalance",
+          "type": "uint256"
+        }
+      ],
+      "name": "setInvestedUnderlyingBalance",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x60806040526000805534801561001457600080fd5b5060ac806100236000396000f3fe6080604052348015600f57600080fd5b506004361060325760003560e01c806345d01e4a146037578063c4ee6db914604f575b600080fd5b603d606b565b60408051918252519081900360200190f35b606960048036036020811015606357600080fd5b50356071565b005b60005490565b60005556fea264697066735822122045bb7513bb8ec24bcd645729f760a557d46ac27d10f6d54f4d45aed1f917844e64736f6c63430007010033",
+  "deployedBytecode": "0x6080604052348015600f57600080fd5b506004361060325760003560e01c806345d01e4a146037578063c4ee6db914604f575b600080fd5b603d606b565b60408051918252519081900360200190f35b606960048036036020811015606357600080fd5b50356071565b005b60005490565b60005556fea264697066735822122045bb7513bb8ec24bcd645729f760a557d46ac27d10f6d54f4d45aed1f917844e64736f6c63430007010033",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}
