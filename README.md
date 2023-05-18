@@ -5,6 +5,7 @@ Monorepo for Silo protocol. v2
 ## Development setup
 
 see:
+
 - https://yarnpkg.com/getting-started/install
 - https://classic.yarnpkg.com/lang/en/docs/workspaces/
 
@@ -42,7 +43,7 @@ this will make forge visible for imports eg: `import "forge-std/Test.sol"`.
 
 ### Remove submodule
 
-example: 
+example:
 
 ```shell
 # Remove the submodule entry from .git/config
@@ -67,11 +68,16 @@ git rm -f silo-core/lib/forge-std
 
 - In `external/` create subdirectory for cloned code eg `uniswap-v3-core/`
 - clone git repo into that directory
-  - you need to remove `./git` directories in order to commit cloned code
+    - you need to remove `./git` directories in order to commit cloned code
 - update `external/package.json#workspaces` with this new `uniswap-v3-core`
 - update `external/uniswap-v3-core/package.json#name` to match dir name, in our example `uniswap-v3-core`
 
-Run `yarn`, enter your new cloned workspace and you should be able to execute commands for this new workspace.
+Run `yarn workspace uniswap-v3-core install`, enter your new cloned workspace and you should be able to execute commands
+for this new workspace.
+
+**NOTICE**: do not run `yarn install` directly from workspace directory. It will create separate `yarn.lock` and it will
+act like separate repo, not part of monorepo. It will cause issues when trying to access other workspaces eg as
+dependency.
 
 example of running scripts for workspace:
 
