@@ -11322,15 +11322,6 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"silo-governance@workspace:silo-governance":
-  version: 0.0.0-use.local
-  resolution: "silo-governance@workspace:silo-governance"
-  dependencies:
-    solc: ~0.8.19
-    solhint: ~3.4.1
-  languageName: unknown
-  linkType: soft
-
 "silo-vaults@workspace:silo-vaults":
   version: 0.0.0-use.local
   resolution: "silo-vaults@workspace:silo-vaults"
@@ -13048,6 +13039,15 @@ __metadata:
   checksum: ae0123222c6df65b437669d63dfa8c36cee20a504101b2fcd97b8bf76f91259c17f9f2b4d70a1e3c6bbcee7f51b28392833adb6b2770b23b01abec84e369660b
   languageName: node
   linkType: hard
+
+"ve-silo@workspace:ve-silo":
+  version: 0.0.0-use.local
+  resolution: "ve-silo@workspace:ve-silo"
+  dependencies:
+    solc: ~0.8.19
+    solhint: ~3.4.1
+  languageName: unknown
+  linkType: soft
 
 "verror@npm:1.10.0":
   version: 1.10.0
