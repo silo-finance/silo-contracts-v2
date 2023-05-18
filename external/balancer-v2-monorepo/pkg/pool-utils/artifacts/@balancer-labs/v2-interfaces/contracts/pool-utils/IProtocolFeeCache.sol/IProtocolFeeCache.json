@@ -1,0 +1,18 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "IProtocolFeeCache",
+  "sourceName": "@balancer-labs/v2-interfaces/contracts/pool-utils/IProtocolFeeCache.sol",
+  "abi": [
+    {
+      "inputs": [],
+      "name": "updateProtocolFeePercentageCache",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

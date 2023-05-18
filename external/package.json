@@ -5,6 +5,7 @@
   "private": true,
   "workspaces": [
     "uniswap-v2-core",
-    "uniswap-v2-periphery"
+    "uniswap-v2-periphery",
+    "balancer-v2-monorepo"
   ]
 }
