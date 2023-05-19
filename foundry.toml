@@ -4,7 +4,6 @@ libs = [
     'node_modules',
     'silo-amm/node_modules',
     'silo-core/node_modules',
-    'silo-governance/node_modules',
     'silo-vaults/node_modules'
 ]
 out = 'cache/foundry/out'
@@ -19,10 +18,10 @@ src = 'silo-core/src'
 out = 'cache/foundry/out/silo-core'
 test = 'silo-core/test'
 
-[profile.governance]
-src = 'silo-governance/contracts'
-out = 'cache/foundry/out/silo-governance'
-test = 'silo-governance/test/foundry'
+[profile.ve-silo]
+src = 've-silo/contracts'
+out = 'cache/foundry/out/ve-silo'
+test = 've-silo/test/foundry'
 
 [profile.vaults]
 src = 'silo-vaults/contracts'

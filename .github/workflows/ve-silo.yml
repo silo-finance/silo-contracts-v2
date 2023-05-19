@@ -1,0 +1,23 @@
+# This workflow will do a clean install of node dependencies, build the source code and run tests across different versions of node
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-nodejs-with-github-actions
+
+name: veSilo Quality Tests
+
+env:
+  FOUNDRY_PROFILE: ve-silo
+
+on:
+  push:
+    branches: [ master, develop ]
+    paths:
+      - ve-silo/**/*.sol
+      - ve-silo/**/*.ts
+      - ve-silo/**/*.js
+      - ve-silo/**/*.json
+
+  pull_request:
+    paths:
+      - ve-silo/**/*.sol
+      - ve-silo/**/*.ts
+      - ve-silo/**/*.js
+      - ve-silo/**/*.json

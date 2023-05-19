@@ -9,8 +9,8 @@
   "workspaces": [
     "silo-amm",
     "silo-core",
-    "silo-governance",
     "silo-vaults",
+    "ve-silo",
     "external/*"
   ],
   "scripts": {
