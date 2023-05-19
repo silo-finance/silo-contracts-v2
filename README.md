@@ -29,6 +29,7 @@ yarn install
 
 ```
 git submodule add --name foundry https://github.com/foundry-rs/forge-std gitmodules/forge-std
+git submodule add --name silo-foundry-utils https://github.com/silo-finance/silo-foundry-utils gitmodules/silo-foundry-utils
 git submodule update --init --recursive
 git submodule
 ```
@@ -40,6 +41,15 @@ forge-std/=gitmodules/forge-std/src/
 ```
 
 this will make forge visible for imports eg: `import "forge-std/Test.sol"`.
+
+### Build Silo Foundry Utils
+```bash
+cd gitmodules/silo-foundry-utils
+cargo build --release
+cp target/release/silo-foundry-utils ../../silo-foundry-utils
+```
+
+More about silo foundry utils [here](https://github.com/silo-finance/silo-foundry-utils).
 
 ### Remove submodule
 
