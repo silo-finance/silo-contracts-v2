@@ -15,3 +15,11 @@ cache
 
 # silo-foundry-utils cli binary
 /silo-foundry-utils
+deployments/localhost
+deployments/31337
+**/deployments/localhost
+**/deployments/31337
+
+# forge broadcast
+broadcast
+**/broadcast
