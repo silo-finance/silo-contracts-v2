@@ -12,20 +12,24 @@ out = 'cache/foundry/out'
 src = 'silo-amm/contracts'
 out = 'cache/foundry/out/silo-amm'
 test = 'silo-amm/test/foundry'
+broadcast = 'silo-amm/broadcast'
 
 [profile.core]
 src = 'silo-core/src'
 out = 'cache/foundry/out/silo-core'
 test = 'silo-core/test'
+broadcast = 'silo-core/broadcast'
 
 [profile.ve-silo]
 src = 've-silo/contracts'
 out = 'cache/foundry/out/ve-silo'
-test = 've-silo/test/foundry'
+test = 've-silo/test'
+broadcast = 've-silo/broadcast'
 
 [profile.vaults]
 src = 'silo-vaults/contracts'
 out = 'cache/foundry/out/silo-vaults'
 test = 'silo-vaults/test/foundry'
+broadcast = 'silo-vaults/broadcast'
 
 # See more config options https://github.com/foundry-rs/foundry/tree/master/config

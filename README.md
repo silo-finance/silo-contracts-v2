@@ -66,6 +66,11 @@ rm -rf .git/modules/silo-core/lib/forge-std
 git rm -f silo-core/lib/forge-std
 ```
 
+### Update submodule
+```shell
+git submodule update --remote gitmodules/<submodule>
+```
+
 ## Adding new working space
 
 - create new workflow in `.github/workflows`
