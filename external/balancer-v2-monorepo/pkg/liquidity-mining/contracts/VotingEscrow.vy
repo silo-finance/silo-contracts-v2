@@ -1,4 +1,4 @@
-# @version 0.3.1
+# @version 0.3.7
 """
 @title Voting Escrow
 @author Curve Finance
@@ -76,6 +76,7 @@ event Supply:
 
 WEEK: constant(uint256) = 7 * 86400  # all future times are rounded by week
 MAXTIME: constant(uint256) = 365 * 86400  # 1 year
+MAXTIME_INT128: constant(int128) = 365 * 86400  # 1 year
 MULTIPLIER: constant(uint256) = 10 ** 18
 
 TOKEN: immutable(address)
@@ -109,7 +110,7 @@ def __init__(token_addr: address, _name: String[64], _symbol: String[32], _autho
     @param _symbol Token symbol
     @param _authorizer_adaptor `AuthorizerAdaptor` contract address
     """
-    assert _authorizer_adaptor != ZERO_ADDRESS
+    assert _authorizer_adaptor != empty(address)
 
     TOKEN = token_addr
     AUTHORIZER_ADAPTOR = _authorizer_adaptor
@@ -175,7 +176,7 @@ def assert_not_contract(addr: address):
     """
     if addr != tx.origin:
         checker: address = self.smart_wallet_checker
-        if checker != ZERO_ADDRESS:
+        if checker != empty(address):
             if SmartWalletChecker(checker).check(addr):
                 return
         raise "Smart contract depositors not allowed"
@@ -230,14 +231,14 @@ def _checkpoint(addr: address, old_locked: LockedBalance, new_locked: LockedBala
     new_dslope: int128 = 0
     _epoch: uint256 = self.epoch
 
-    if addr != ZERO_ADDRESS:
+    if addr != empty(address):
         # Calculate slopes and biases
         # Kept at zero when they have to
         if old_locked.end > block.timestamp and old_locked.amount > 0:
-            u_old.slope = old_locked.amount / MAXTIME
+            u_old.slope = old_locked.amount / MAXTIME_INT128
             u_old.bias = u_old.slope * convert(old_locked.end - block.timestamp, int128)
         if new_locked.end > block.timestamp and new_locked.amount > 0:
-            u_new.slope = new_locked.amount / MAXTIME
+            u_new.slope = new_locked.amount / MAXTIME_INT128
             u_new.bias = u_new.slope * convert(new_locked.end - block.timestamp, int128)
 
         # Read values of scheduled changes in the slope
@@ -294,7 +295,7 @@ def _checkpoint(addr: address, old_locked: LockedBalance, new_locked: LockedBala
     self.epoch = _epoch
     # Now point_history is filled until t=now
 
-    if addr != ZERO_ADDRESS:
+    if addr != empty(address):
         # If last point was in this block, the slope change has been applied already
         # But in such case we have 0 slope(s)
         last_point.slope += (u_new.slope - u_old.slope)
@@ -307,7 +308,7 @@ def _checkpoint(addr: address, old_locked: LockedBalance, new_locked: LockedBala
     # Record the changed point into history
     self.point_history[_epoch] = last_point
 
-    if addr != ZERO_ADDRESS:
+    if addr != empty(address):
         # Schedule the slope changes (slope is going down)
         # We subtract new_user_slope from [new_locked.end]
         # and add old_user_slope to [old_locked.end]
@@ -371,7 +372,7 @@ def checkpoint():
     """
     @notice Record global data to checkpoint
     """
-    self._checkpoint(ZERO_ADDRESS, empty(LockedBalance), empty(LockedBalance))
+    self._checkpoint(empty(address), empty(LockedBalance), empty(LockedBalance))
 
 
 @external
