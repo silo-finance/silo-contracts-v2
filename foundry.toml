@@ -13,6 +13,8 @@ src = 'silo-amm/contracts'
 out = 'cache/foundry/out/silo-amm'
 test = 'silo-amm/test/foundry'
 broadcast = 'silo-amm/broadcast'
+fs_permissions = [{ access = "read", path = "./silo-amm/test/foundry/data/"}]
+
 
 [profile.core]
 src = 'silo-core/src'

@@ -2,7 +2,7 @@
   "name": "silo-amm",
   "version": "0.0.0",
   "engines": {
-    "node": ">=16.0.0"
+    "node": ">=18.0.0"
   },
   "repository": {
     "type": "git",
@@ -10,12 +10,15 @@
   },
   "license": "BUSL-1.1",
   "dependencies": {
-    "solc": "~0.8.19"
+    "solc": "0.8.17"
   },
   "devDependencies": {
+    "@openzeppelin/contracts": "4.9.0",
     "solhint": "~3.4.1"
   },
   "scripts": {
-    "lint:sol": "solhint \"contracts/**/*.sol\" --max-warnings=0"
+    "compile": "FOUNDRY_PROFILE=amm forge build",
+    "lint:sol": "solhint \"contracts/**/*.sol\" --max-warnings=0",
+    "test": "FOUNDRY_PROFILE=amm forge test -vvv"
   }
 }
