@@ -24,7 +24,7 @@ on:
 
 jobs:
 
-  linters:
+  build:
     runs-on: ubuntu-latest
 
     strategy:
@@ -34,14 +34,29 @@ jobs:
 
     steps:
       - name: Checkout sources
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
 
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node-version }}
 
-      - run: yarn workspace silo-amm install
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
+
+      - run: yarn install
+
+      - name: Run Forge build
+        run: |
+          forge --version
+          forge build --sizes
 
       - name: Solidity Lint
         run: yarn workspace silo-amm lint:sol
+
+      - name: Solidity Foundry Tests
+        run: yarn workspace silo-amm test

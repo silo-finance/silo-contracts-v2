@@ -1461,6 +1461,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@openzeppelin/contracts@npm:4.9.0":
+  version: 4.9.0
+  resolution: "@openzeppelin/contracts@npm:4.9.0"
+  checksum: aa1499897f85821f9184497f5201152a4a272b05749c85c209e9e553d734467a78557bcd2efe35f07994d6e14f30c545b239a4f63622f27f808182efb3103658
+  languageName: node
+  linkType: hard
+
 "@resolver-engine/core@npm:^0.3.3":
   version: 0.3.3
   resolution: "@resolver-engine/core@npm:0.3.3"
@@ -11301,7 +11308,8 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "silo-amm@workspace:silo-amm"
   dependencies:
-    solc: ~0.8.19
+    "@openzeppelin/contracts": 4.9.0
+    solc: 0.8.17
     solhint: ~3.4.1
   languageName: unknown
   linkType: soft
@@ -11507,6 +11515,23 @@ __metadata:
   bin:
     solcjs: solcjs
   checksum: 2d8eb16c6d8f648213c94dc8d977cffe5099cba7d41c82d92d769ef71ae8320a985065ce3d6c306440a85f8e8d2b27fb30bdd3ac38f69e5c1fa0ab8a3fb2f217
+  languageName: node
+  linkType: hard
+
+"solc@npm:0.8.17":
+  version: 0.8.17
+  resolution: "solc@npm:0.8.17"
+  dependencies:
+    command-exists: ^1.2.8
+    commander: ^8.1.0
+    follow-redirects: ^1.12.1
+    js-sha3: 0.8.0
+    memorystream: ^0.3.1
+    semver: ^5.5.0
+    tmp: 0.0.33
+  bin:
+    solcjs: solc.js
+  checksum: 99deb834d249cc65d8874026a876bbc1f0a09c74d94c17bdf5fa94952889cde9c11246eb70e4313daf39efb234523f2b705e821ae9f78586d51ff7be8d889fe6
   languageName: node
   linkType: hard
 
