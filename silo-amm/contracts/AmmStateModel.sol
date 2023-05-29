@@ -57,6 +57,7 @@ contract AmmStateModel {
     mapping (address => UserPosition) private _positions;
 
     error UserNotCleanedUp();
+    error PercentOverflow();
 
     function getTotalState() external view returns (TotalState memory) {
         return _totalState;
@@ -110,8 +111,6 @@ contract AmmStateModel {
         uint256 _collateralOut,
         uint256 _debtIn
     ) public {
-        console.log("SWAP %s for %s", _collateralOut, _debtIn);
-
         // R should be scaled before other changes
         _totalState.R = _totalState.R * (_totalState.availableCollateral - _collateralOut) / _totalState.availableCollateral;
 
@@ -125,7 +124,9 @@ contract AmmStateModel {
         address _user,
         uint256 _w
     ) public returns (uint256 shares) {
-        UserPosition memory position = _positions[_user];
+        if (_w > ONE) revert PercentOverflow();
+
+        UserPosition storage position = _positions[_user];
 
         uint256 ci = getCurrentlyAvailableCollateralForUser(
             _totalState.shares,
@@ -146,24 +147,24 @@ contract AmmStateModel {
         uint256 dA = _w * position.collateralAmount / ONE;
         uint256 dV = _w * position.liquidationTimeValue / ONE;
         uint256 dS = _w * position.shares / ONE; // TODO support exponential
-        console.log("__________");
 
         // TODO in tests we will have to make sure, that when one of below subtraction end up being zero,
         //  others should be zeros as well
 
         // now let's calculate R, it must be done before other state is updated
         uint256 ri = auxiliaryVariableRi(ci, position.liquidationTimeValue, position.collateralAmount);
-        console.log("ri", ri);
-        console.log("%s - %s", position.collateralAmount, dA);
-        console.log("->", position.collateralAmount - dA);
 
-    uint256 riNew = (ci - dC) * (position.liquidationTimeValue - dV) / (position.collateralAmount - dA);
-        console.log(111);
+        uint256 newCollateralAmount = position.collateralAmount - dA;
+        uint256 newLiquidationTimeValue = position.liquidationTimeValue - dV;
 
-    _totalState.R = _totalState.R - ri + riNew;
+        uint256 riNew = newCollateralAmount == 0
+            ? 0
+            : (ci - dC) * newLiquidationTimeValue / newCollateralAmount;
 
-        position.collateralAmount -= dA;
-        position.liquidationTimeValue -= dV;
+        _totalState.R = _totalState.R - ri + riNew;
+
+        position.collateralAmount = newCollateralAmount;
+        position.liquidationTimeValue = newLiquidationTimeValue;
         position.shares -= dS;
 
         _totalState.collateralAmount -= dA;

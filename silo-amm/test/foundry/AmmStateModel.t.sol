@@ -35,7 +35,7 @@ contract AmmStateModelTest is Test {
     }
 
     /*
-        FOUNDRY_PROFILE=amm forge test -vvv --match-test test_ammStateModelFlow
+        FOUNDRY_PROFILE=amm forge test -vv --match-test test_ammStateModelFlow
     */
     function test_ammStateModelFlow() public {
         unchecked {
