@@ -175,10 +175,11 @@ contract AmmStateModel {
             position.shares
         );
 
-        uint256 dC = _w * ci;
+        uint256 dC;
 
-        // unchecked: div is safe, we need to /ONE because of `_w`
-        unchecked { dC /= ONE; }
+        // unchecked: we can uncheck `_w * ci` because below, we have `_w * position.collateralAmount`
+        // and ci (available collateral) < position.collateralAmount
+        unchecked { dC = _w * ci / ONE; }
 
         debtAmount = _w * userAvailableDebtAmount(
             totalState.debtAmount,
