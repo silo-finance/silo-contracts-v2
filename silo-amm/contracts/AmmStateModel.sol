@@ -113,13 +113,29 @@ contract AmmStateModel {
         uint256 _debtIn
     ) public {
         uint256 availableCollateral = _totalState.availableCollateral;
+
+        // this check covers case when both or one is zero
         if (_collateralOut > availableCollateral) revert NotEnoughAvailableCollateral();
 
-         unchecked {
-            // R should be scaled before other changes
-            _totalState.R = _totalState.R * (availableCollateral - _collateralOut) / availableCollateral;
+        uint256 newAvailableCollateral;
 
-            _totalState.availableCollateral = availableCollateral - _collateralOut;
+        unchecked {
+            // unchecked: we can not underflow because of check `if (_collateralOut > availableCollateral) revert`
+            newAvailableCollateral = availableCollateral - _collateralOut;
+        }
+
+        uint256 tmp = _totalState.R * newAvailableCollateral;
+
+        unchecked {
+            // unchecked: div is safe
+            // R should be scaled before other changes
+            _totalState.R = tmp / availableCollateral;
+
+            // unchecked: we can not underflow because of check `if (_collateralOut > availableCollateral) revert`
+            _totalState.availableCollateral = newAvailableCollateral;
+
+            // unchecked: only way to overflow is when: (1) our math is wrong or (2) we have overflow in token itself
+            // if any of this cases true, then overflow makes no difference
             _totalState.debtAmount += _debtIn;
          }
     }
