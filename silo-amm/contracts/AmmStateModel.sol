@@ -204,9 +204,6 @@ contract AmmStateModel {
         // TODO in tests we will have to make sure, that when one of below subtraction end up being zero,
         //  others should be zeros as well
 
-        // now let's calculate R, it must be done before other state is updated
-        uint256 ri = auxiliaryVariableRi(ci, position.liquidationTimeValue, position.collateralAmount);
-
         uint256 newCollateralAmount;
         // unchecked: `dA` is fraction of position.collateralAmount
         unchecked { newCollateralAmount = position.collateralAmount - dA; }
@@ -214,6 +211,9 @@ contract AmmStateModel {
         uint256 newLiquidationTimeValue;
         // unchecked: `dV` is fraction of position.liquidationTimeValue
         unchecked { newLiquidationTimeValue = position.liquidationTimeValue - dV; }
+
+        // now let's calculate R, it must be done before other state is updated
+        uint256 ri = auxiliaryVariableRi(ci, position.liquidationTimeValue, position.collateralAmount);
 
         uint256 riNew = newCollateralAmount == 0
             ? 0
