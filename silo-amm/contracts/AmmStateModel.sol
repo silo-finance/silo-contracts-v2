@@ -228,11 +228,16 @@ contract AmmStateModel {
             : (ci - dC) * newLiquidationTimeValue / newCollateralAmount;
 
         _totalState.R = totalState.R - ri + riNew;
-        _totalState.collateralAmount = totalState.collateralAmount - dA;
-        _totalState.liquidationTimeValue = totalState.liquidationTimeValue - dV;
-        _totalState.shares = totalState.shares - dS;
-        _totalState.availableCollateral = totalState.availableCollateral - dC;
-        _totalState.debtAmount = totalState.debtAmount - debtAmount;
+
+        unchecked {
+            // for all below `_totalState` changed, we decreasing state by fraction or at most whole
+            // so as along as math is correct we should not underflow
+            _totalState.collateralAmount = totalState.collateralAmount - dA;
+            _totalState.liquidationTimeValue = totalState.liquidationTimeValue - dV;
+            _totalState.shares = totalState.shares - dS;
+            _totalState.availableCollateral = totalState.availableCollateral - dC;
+            _totalState.debtAmount = totalState.debtAmount - debtAmount;
+        }
 
         storagePosition.collateralAmount = newCollateralAmount;
         storagePosition.liquidationTimeValue = newLiquidationTimeValue;
