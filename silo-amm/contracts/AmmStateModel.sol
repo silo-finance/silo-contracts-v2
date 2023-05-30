@@ -100,7 +100,7 @@ contract AmmStateModel {
             uint256 collateralAmountTimesShares = _collateralAmount * totalStateShares;
 
             // TBD: shares transformation to/from exponential
-            // unchecked: div is safe and we catch /0
+            // unchecked: div is safe and we catched /0
             unchecked { shares = collateralAmountTimesShares / totalStateAvailableCollateral; }
         }
 
@@ -255,8 +255,12 @@ contract AmmStateModel {
             position.shares
         );
 
-        swappedCollateralFraction =
-            (position.collateralAmount - userAvailableCollateralAmount) / position.collateralAmount;
+        unchecked {
+            // userAvailableCollateralAmount is never greater than collateralAmount, and division is safe
+            swappedCollateralFraction = position.collateralAmount == 0
+                ? 0
+                : (position.collateralAmount - userAvailableCollateralAmount) / position.collateralAmount;
+        }
     }
 
     /// @dev amount of collateral currently available to user
