@@ -299,6 +299,9 @@ contract AmmStateModel {
         uint256 _userLiquidationTimeValue,
         uint256 _userCollateralAmount
     ) public pure returns (uint256 ri) {
-        ri = _userCollateralAmount == 0 ? 0 : _userAvailableCollateralAmount * _userLiquidationTimeValue / _userCollateralAmount;
+        if (_userCollateralAmount == 0) return 0;
+
+        ri = _userAvailableCollateralAmount * _userLiquidationTimeValue;
+        unchecked { ri /= _userCollateralAmount; }
     }
 }
