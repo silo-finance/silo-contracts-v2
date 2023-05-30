@@ -18,22 +18,6 @@ contract AmmStateModelTest is Test {
         ammStateModelTestData = new AmmStateModelTestData();
     }
 
-    function test_getAmmConfig_gas() public {
-        uint256 gasStart = gasleft();
-//        stateModel.getAmmConfig();
-        uint256 gasEnd = gasleft();
-
-        assertEq(gasStart - gasEnd, 4502);
-    }
-
-    function test_collateralPrice_gas() public {
-        uint256 gasStart = gasleft();
-//        stateModel.collateralPrice(1, 2);
-        uint256 gasEnd = gasleft();
-
-        assertEq(gasStart - gasEnd, 5574);
-    }
-
     /*
         FOUNDRY_PROFILE=amm forge test -vv --match-test test_ammStateModelFlow
     */
