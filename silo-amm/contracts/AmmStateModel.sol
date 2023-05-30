@@ -51,10 +51,10 @@ contract AmmStateModel {
     uint256 constant public DECIMALS = 1e18;
 
     // TODO we will need two total states for two flows tokenA -> tokenB, tokenB -> tokenA
-    TotalState private _totalState;
+    TotalState internal _totalState;
 
     // TODO we will need two states for each user, same as above
-    mapping (address => UserPosition) private _positions;
+    mapping (address => UserPosition) internal _positions;
 
     error UserNotCleanedUp();
     error PercentOverflow();
@@ -86,6 +86,7 @@ contract AmmStateModel {
         uint256 dV;
 
         // unchecked: multiplication, because if we overflow on amount * price, then all the dexes will crash as well
+        // we could check the math here of when we do insolvency calculations, but we should pick one place
         // unchecked: div(DECIMALS) because price is expected to be in 18 decimals, div is safe
         unchecked { dV = _collateralPrice * _collateralAmount / DECIMALS; }
 
@@ -106,9 +107,13 @@ contract AmmStateModel {
         position.liquidationTimeValue = dV; // Vi + dV, but Vi is 0
         position.shares = shares;
 
-        // TODO check usage of A (collateralAmount) and C (availableCollateral) !!! everywhere
         _totalState.collateralAmount += _collateralAmount;
-        _totalState.liquidationTimeValue += dV;
+
+        // unchecked: because if we overflow on value, then all the dexes will crash as well
+        // we could check the math here of when we do insolvency calculations, but we should pick one place
+        unchecked { _totalState.liquidationTimeValue += dV; }
+
+        // shares value can be higher than amount, this is why += shares in not unchecked
         _totalState.shares += shares;
         _totalState.availableCollateral = totalStateAvailableCollateral + _collateralAmount;
 
