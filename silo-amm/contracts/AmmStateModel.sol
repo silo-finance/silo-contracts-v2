@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.17;
 
-import "forge-std/console.sol";
 
 /// @notice DRAFT
 /// @dev annotations like (A) or (Ci) is reference to the internal document that describes model in mathematical way.
@@ -75,11 +74,10 @@ contract AmmStateModel {
     /// The variable R is updated so that it keeps track of the sum of Ri
     /// @param _user depositor, owner of position
     /// @param _collateralPrice current price P(T) of collateral, in 18 decimals
-    function addLiquidity(
-        address _user,
-        uint256 _collateralPrice,
-        uint256 _collateralAmount
-    ) public returns (uint256 shares) {
+    function addLiquidity(address _user, uint256 _collateralPrice, uint256 _collateralAmount)
+        public
+        returns (uint256 shares)
+    {
         UserPosition storage position = _positions[_user];
 
         if (position.shares != 0) revert UserNotCleanedUp();
@@ -117,7 +115,8 @@ contract AmmStateModel {
             // we could check the math here of when we do insolvency calculations, but we should pick one place
             _totalState.liquidationTimeValue += dV;
 
-            // unchecked availableCollateral is never more than collateralAmount, so it is enough to check collateralAmount
+            // unchecked availableCollateral is never more than collateralAmount,
+            // so it is enough to check collateralAmount
             _totalState.availableCollateral = totalStateAvailableCollateral + _collateralAmount;
         }
 
@@ -125,7 +124,6 @@ contract AmmStateModel {
         _totalState.shares = totalStateShares + shares;
 
         // now let's calculate R
-        // if Ci, Vi, Ai, Ri = 0 (because of cleanup), then we end up with R = R + (dC*dV/dC) = R + dV
         _totalState.R = _totalState.R + dV;
     }
 
@@ -161,10 +159,10 @@ contract AmmStateModel {
     /// @param _user owner of position
     /// @param _w fraction of user position that needs to be withdrawn, 0 < _w <= 100%
     /// @return debtAmount that is withdrawn
-    function withdrawLiquidity(
-        address _user,
-        uint256 _w
-    ) public returns (uint256 debtAmount) {
+    function withdrawLiquidity( address _user, uint256 _w) // solhint-disable-line function-max-lines
+        public
+        returns (uint256 debtAmount)
+    {
         if (_w > ONE) revert PercentOverflow();
         // TODO: make separate method for withdraw ALL
         // else if (_w == ONE) return withdrawAllLiquidity(_user);
@@ -298,7 +296,6 @@ contract AmmStateModel {
         amount = (_position.liquidationTimeValue - ri) * _totalDebtAmount;
         unchecked { amount /= divider; }
     }
-
 
     /// @param _userAvailableCollateralAmount amount of collateral currently available to user (Ci)
     /// @param _userLiquidationTimeValue liquidation-time value of collateral provided by the user (Vi)
