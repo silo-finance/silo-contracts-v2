@@ -141,11 +141,11 @@ contract AmmStateModel {
         // unchecked: we can not underflow because of check `if (_collateralOut > availableCollateral) revert`
         unchecked { newAvailableCollateral = availableCollateral - _collateralOut; }
 
-        uint256 tmp = _totalState.R * newAvailableCollateral;
+        uint256 rTimesAvailableCollateral = _totalState.R * newAvailableCollateral;
 
         // unchecked: div is safe
         // R should be scaled before other changes
-        unchecked { _totalState.R = tmp / availableCollateral; }
+        unchecked { _totalState.R = rTimesAvailableCollateral / availableCollateral; }
 
         _totalState.availableCollateral = newAvailableCollateral;
 
@@ -163,7 +163,7 @@ contract AmmStateModel {
     ) public returns (uint256 debtAmount) {
         if (_w > ONE) revert PercentOverflow();
 
-        UserPosition storage position = _positions[_user];
+        UserPosition memory position = _positions[_user];
 
         uint256 ci = getCurrentlyAvailableCollateralForUser(
             _totalState.shares,
@@ -173,7 +173,7 @@ contract AmmStateModel {
 
         uint256 dC = _w * ci / ONE;
 
-        uint256 dD = _w * userAvailableDebtAmount(
+        debtAmount = _w * userAvailableDebtAmount(
             _totalState.debtAmount,
             _totalState.liquidationTimeValue,
             _totalState.R,
@@ -200,17 +200,15 @@ contract AmmStateModel {
 
         _totalState.R = _totalState.R - ri + riNew;
 
-        position.collateralAmount = newCollateralAmount;
-        position.liquidationTimeValue = newLiquidationTimeValue;
-        position.shares -= dS;
+        _positions[_user].collateralAmount = newCollateralAmount;
+        _positions[_user].liquidationTimeValue = newLiquidationTimeValue;
+        _positions[_user].shares -= dS;
 
         _totalState.collateralAmount -= dA;
         _totalState.liquidationTimeValue -= dV;
         _totalState.shares -= dS;
         _totalState.availableCollateral -= dC;
-        _totalState.debtAmount -= dD;
-
-        return dD;
+        _totalState.debtAmount -= debtAmount;
     }
 
     /// @notice The part of the user’s collateral amount that has already been swapped
