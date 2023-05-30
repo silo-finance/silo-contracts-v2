@@ -126,18 +126,15 @@ contract AmmStateModel {
 
         uint256 tmp = _totalState.R * newAvailableCollateral;
 
-        unchecked {
-            // unchecked: div is safe
-            // R should be scaled before other changes
-            _totalState.R = tmp / availableCollateral;
+        // unchecked: div is safe
+        // R should be scaled before other changes
+        unchecked { _totalState.R = tmp / availableCollateral; }
 
-            // unchecked: we can not underflow because of check `if (_collateralOut > availableCollateral) revert`
-            _totalState.availableCollateral = newAvailableCollateral;
+        _totalState.availableCollateral = newAvailableCollateral;
 
-            // unchecked: only way to overflow is when: (1) our math is wrong or (2) we have overflow in token itself
-            // if any of this cases true, then overflow makes no difference
-            _totalState.debtAmount += _debtIn;
-         }
+        // unchecked: only way to overflow is when: (1) our math is wrong or (2) we have overflow in token itself
+        // if any of this cases true, then overflow makes no difference
+        unchecked { _totalState.debtAmount += _debtIn; }
     }
 
     /// @param _user owner of position
