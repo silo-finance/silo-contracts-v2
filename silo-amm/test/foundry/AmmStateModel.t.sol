@@ -67,6 +67,12 @@ contract AmmStateModelTest is Test {
             uint256 gasEnd = gasleft();
             gasSum += (gasStart - gasEnd);
 
+            if (i == testDatas.length - 1) {
+                assertTrue(testData.action == AmmStateModelTestData.Action.WITHDRAW, "we need withdraw for last one");
+                // assuming we withdraw all already, nothing should happen when withdraw again
+                stateModel.withdrawLiquidity(testData.user, 1e18);
+            }
+
             AmmStateModel.TotalState memory state = stateModel.getTotalState();
             AmmStateModel.UserPosition memory userPosition = stateModel.positions(testData.user);
 
@@ -98,6 +104,6 @@ contract AmmStateModelTest is Test {
             assertEq(state.R, testData.totalState.r, "total.R");
         }
 
-        assertEq(gasSum, 428667, "make sure we gas efficient on price model actions");
+        assertEq(gasSum, 419402, "make sure we gas efficient on price model actions");
     }
 }

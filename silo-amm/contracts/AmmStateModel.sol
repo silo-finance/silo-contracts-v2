@@ -171,6 +171,7 @@ contract AmmStateModel {
 
         UserPosition storage storagePosition = _positions[_user];
         UserPosition memory position = _positions[_user];
+
         TotalState memory totalState = _totalState;
 
         uint256 ci = getCurrentlyAvailableCollateralForUser(
@@ -178,6 +179,10 @@ contract AmmStateModel {
             totalState.availableCollateral,
             position.shares
         );
+
+        if (ci == 0) {
+            return 0;
+        }
 
         uint256 dC;
 
