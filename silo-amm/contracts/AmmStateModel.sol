@@ -47,7 +47,7 @@ contract AmmStateModel {
     /// @dev 100%
     uint256 constant public ONE = 1e18;
 
-    /// @dev
+    /// @dev our precision
     uint256 constant public DECIMALS = 1e18;
 
     // TODO we will need two total states for two flows tokenA -> tokenB, tokenB -> tokenA
@@ -83,8 +83,11 @@ contract AmmStateModel {
 
         if (position.shares != 0) revert UserNotCleanedUp();
 
-        // div(DECIMALS) because price is expected to be in 18 decimals
-        uint256 dV = _collateralPrice * _collateralAmount / DECIMALS;
+        uint256 dV;
+
+        // unchecked: multiplication, because if we overflow on amount * price, then all the dexes will crash as well
+        // unchecked: div(DECIMALS) because price is expected to be in 18 decimals, div is safe
+        unchecked { dV = _collateralPrice * _collateralAmount / DECIMALS; }
 
         // TBD: shares transformation to/from exponential
         shares = _totalState.availableCollateral == 0
