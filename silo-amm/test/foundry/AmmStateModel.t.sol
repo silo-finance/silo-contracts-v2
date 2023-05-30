@@ -98,6 +98,6 @@ contract AmmStateModelTest is Test {
             assertEq(state.R, testData.totalState.r, "total.R");
         }
 
-        assertEq(gasSum, 430109, "make sure we gas efficient on price model actions");
+        assertEq(gasSum, 429741, "make sure we gas efficient on price model actions");
     }
 }

@@ -214,17 +214,18 @@ contract AmmStateModel {
             ? 0
             : (ci - dC) * newLiquidationTimeValue / newCollateralAmount;
 
+
+
         _totalState.R = totalState.R - ri + riNew;
-
-        storagePosition.collateralAmount = newCollateralAmount;
-        storagePosition.liquidationTimeValue = newLiquidationTimeValue;
-        storagePosition.shares = storagePosition.shares - dS;
-
         _totalState.collateralAmount = totalState.collateralAmount - dA;
         _totalState.liquidationTimeValue = totalState.liquidationTimeValue - dV;
         _totalState.shares = totalState.shares - dS;
         _totalState.availableCollateral = totalState.availableCollateral - dC;
         _totalState.debtAmount = totalState.debtAmount - debtAmount;
+
+        storagePosition.collateralAmount = newCollateralAmount;
+        storagePosition.liquidationTimeValue = newLiquidationTimeValue;
+        storagePosition.shares = position.shares - dS;
     }
 
     function withdrawAllLiquidity(address _user) public returns (uint256 debtAmount) {
