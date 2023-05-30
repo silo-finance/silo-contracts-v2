@@ -91,11 +91,12 @@ contract AmmStateModel {
         unchecked { dV = _collateralPrice * _collateralAmount / DECIMALS; }
 
         uint256 totalStateAvailableCollateral = _totalState.availableCollateral;
+        uint256 totalStateShares = _totalState.shares;
 
         if (totalStateAvailableCollateral == 0) {
             shares = _collateralAmount;
         } else {
-            uint256 collateralAmountTimesShares = _collateralAmount * _totalState.shares;
+            uint256 collateralAmountTimesShares = _collateralAmount * totalStateShares;
 
             // TBD: shares transformation to/from exponential
             // unchecked: div is safe and we catch /0
@@ -115,7 +116,7 @@ contract AmmStateModel {
         unchecked { _totalState.liquidationTimeValue += dV; }
 
         // shares value can be higher than amount, this is why += shares in not unchecked
-        _totalState.shares = _totalState.shares + shares;
+        _totalState.shares = totalStateShares + shares;
 
         // unchecked availableCollateral is never more than collateralAmount, so it is enough to check collateralAmount
         unchecked { _totalState.availableCollateral = totalStateAvailableCollateral + _collateralAmount; }
