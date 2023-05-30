@@ -58,6 +58,7 @@ contract AmmStateModel {
 
     error UserNotCleanedUp();
     error PercentOverflow();
+    error NotEnoughAvailableCollateral();
 
     function getTotalState() external view returns (TotalState memory) {
         return _totalState;
@@ -111,11 +112,15 @@ contract AmmStateModel {
         uint256 _collateralOut,
         uint256 _debtIn
     ) public {
-        // R should be scaled before other changes
-        _totalState.R = _totalState.R * (_totalState.availableCollateral - _collateralOut) / _totalState.availableCollateral;
+        if (_collateralOut > _totalState.availableCollateral) revert NotEnoughAvailableCollateral();
 
-        _totalState.availableCollateral -= _collateralOut;
-        _totalState.debtAmount += _debtIn;
+         unchecked {
+            // R should be scaled before other changes
+            _totalState.R = _totalState.R * (_totalState.availableCollateral - _collateralOut) / _totalState.availableCollateral;
+
+            _totalState.availableCollateral -= _collateralOut;
+            _totalState.debtAmount += _debtIn;
+         }
     }
 
     /// @param _user owner of position

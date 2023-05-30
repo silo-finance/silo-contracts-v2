@@ -55,6 +55,8 @@ contract AmmStateModelTest is Test {
             } else if (testData.action == AmmStateModelTestData.Action.SWAP) {
                 stateModel.onSwap(testData.amount, testData.amount * testData.price / ONE);
                 // data will be tested on state check or other action
+                uint256 gasLeft = gasleft();
+                gasSum += (gasStart - gasLeft);
                 continue;
             } else if (testData.action == AmmStateModelTestData.Action.WITHDRAW) {
                 stateModel.withdrawLiquidity(testData.user, testData.amount);
@@ -96,6 +98,6 @@ contract AmmStateModelTest is Test {
             assertEq(state.R, testData.totalState.r, "total.R");
         }
 
-        assertEq(gasSum, 392528, "make sure we gas efficient on price model actions");
+        assertEq(gasSum, 416398, "make sure we gas efficient on price model actions");
     }
 }
