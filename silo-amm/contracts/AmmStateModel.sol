@@ -89,10 +89,17 @@ contract AmmStateModel {
         // unchecked: div(DECIMALS) because price is expected to be in 18 decimals, div is safe
         unchecked { dV = _collateralPrice * _collateralAmount / DECIMALS; }
 
-        // TBD: shares transformation to/from exponential
-        shares = _totalState.availableCollateral == 0
-            ? _collateralAmount
-            : _collateralAmount * _totalState.shares / _totalState.availableCollateral;
+        uint256 totalStateAvailableCollateral = _totalState.availableCollateral;
+
+        if (totalStateAvailableCollateral == 0) {
+            shares = _collateralAmount;
+        } else {
+            uint256 collateralAmountTimesShares = _collateralAmount * _totalState.shares;
+
+            // TBD: shares transformation to/from exponential
+            // unchecked: div is safe and we catch /0
+            unchecked { shares = collateralAmountTimesShares / totalStateAvailableCollateral; }
+        }
 
         // because of cleanup, there will no previous state, so this is all user initial values
         position.collateralAmount = _collateralAmount; // Ai + dC, but Ai is 0
@@ -103,7 +110,7 @@ contract AmmStateModel {
         _totalState.collateralAmount += _collateralAmount;
         _totalState.liquidationTimeValue += dV;
         _totalState.shares += shares;
-        _totalState.availableCollateral += _collateralAmount;
+        _totalState.availableCollateral = totalStateAvailableCollateral + _collateralAmount;
 
         // now let's calculate R
         // if Ci, Vi, Ai, Ri = 0 (because of cleanup), then we end up with R = R + (dC*dV/dC) = R + dV
