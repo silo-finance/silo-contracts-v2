@@ -237,11 +237,12 @@ contract AmmStateModel {
             _totalState.shares = totalState.shares - dS;
             _totalState.availableCollateral = totalState.availableCollateral - dC;
             _totalState.debtAmount = totalState.debtAmount - debtAmount;
+
+            storagePosition.shares = position.shares - dS;
         }
 
         storagePosition.collateralAmount = newCollateralAmount;
         storagePosition.liquidationTimeValue = newLiquidationTimeValue;
-        storagePosition.shares = position.shares - dS;
     }
 
     /// @notice The part of the user’s collateral amount that has already been swapped
