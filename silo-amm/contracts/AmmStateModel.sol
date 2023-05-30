@@ -263,7 +263,7 @@ contract AmmStateModel {
         uint256 _totalAvailableCollateral,
         uint256 _userShares
     ) public pure returns (uint256 amount) {
-        return _totalShares == 0 || _userShares == 0 ? 0 : _userShares * _totalAvailableCollateral / _totalShares;
+        return _totalShares == 0 ? 0 : _userShares * _totalAvailableCollateral / _totalShares;
     }
 
     /// @dev amount of debt token currently available to user
