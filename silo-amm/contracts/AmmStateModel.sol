@@ -120,10 +120,11 @@ contract AmmStateModel {
 
     /// @param _user owner of position
     /// @param _w fraction of user position that needs to be withdrawn, 0 < _w <= 100%
+    /// @return debtAmount
     function withdrawLiquidity(
         address _user,
         uint256 _w
-    ) public returns (uint256 shares) {
+    ) public returns (uint256 debtAmount) {
         if (_w > ONE) revert PercentOverflow();
 
         UserPosition storage position = _positions[_user];
@@ -173,7 +174,7 @@ contract AmmStateModel {
         _totalState.availableCollateral -= dC;
         _totalState.debtAmount -= dD;
 
-        return dS;
+        return dD;
     }
 
     /// @notice The part of the user’s collateral amount that has already been swapped
@@ -200,7 +201,7 @@ contract AmmStateModel {
         uint256 _totalAvailableCollateral,
         uint256 _userShares
     ) public pure returns (uint256 amount) {
-        return _userShares * _totalAvailableCollateral / _totalShares;
+        return _totalShares == 0 || _userShares == 0 ? 0 : _userShares * _totalAvailableCollateral / _totalShares;
     }
 
     /// @dev amount of debt token currently available to user
@@ -224,7 +225,9 @@ contract AmmStateModel {
             _position.collateralAmount
         );
 
-        return (_position.liquidationTimeValue - ri) * _totalDebtAmount / (_totalLiquidationTimeValue - _totalR);
+        uint256 divider = _totalLiquidationTimeValue - _totalR;
+
+        return divider == 0 ? 0 : (_position.liquidationTimeValue - ri) * _totalDebtAmount / divider;
     }
 
     /// @param _userAvailableCollateralAmount amount of collateral currently available to user (Ci)
@@ -236,6 +239,6 @@ contract AmmStateModel {
         uint256 _userLiquidationTimeValue,
         uint256 _userCollateralAmount
     ) public pure returns (uint256 ri) {
-        ri = _userAvailableCollateralAmount * _userLiquidationTimeValue / _userCollateralAmount;
+        ri = _userCollateralAmount == 0 ? 0 : _userAvailableCollateralAmount * _userLiquidationTimeValue / _userCollateralAmount;
     }
 }
