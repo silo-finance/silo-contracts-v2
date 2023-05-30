@@ -218,7 +218,7 @@ contract AmmStateModel {
 
         storagePosition.collateralAmount = newCollateralAmount;
         storagePosition.liquidationTimeValue = newLiquidationTimeValue;
-        storagePosition.shares -= dS;
+        storagePosition.shares = storagePosition.shares - dS;
 
         _totalState.collateralAmount = totalState.collateralAmount - dA;
         _totalState.liquidationTimeValue = totalState.liquidationTimeValue - dV;
