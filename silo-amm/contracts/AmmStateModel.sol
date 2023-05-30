@@ -192,9 +192,14 @@ contract AmmStateModel {
         // unchecked:
         unchecked { debtAmount /= ONE; }
 
-        uint256 dA = _w * position.collateralAmount / ONE;
-        uint256 dV = _w * position.liquidationTimeValue / ONE;
-        uint256 dS = _w * position.shares / ONE; // TODO support exponential
+        uint256 dA = _w * position.collateralAmount;
+        unchecked { dA /= ONE; }
+
+        uint256 dV = _w * position.liquidationTimeValue;
+        unchecked { dV /= ONE; }
+
+        uint256 dS = _w * position.shares; // TODO support exponential
+        unchecked { dS /= ONE; }
 
         // TODO in tests we will have to make sure, that when one of below subtraction end up being zero,
         //  others should be zeros as well
