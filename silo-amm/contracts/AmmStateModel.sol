@@ -107,7 +107,8 @@ contract AmmStateModel {
         position.liquidationTimeValue = dV; // Vi + dV, but Vi is 0
         position.shares = shares;
 
-        _totalState.collateralAmount = _totalState.collateralAmount + _collateralAmount;
+        // unchecked: this is basically token balance, it is enough to do check on transfer
+        unchecked { _totalState.collateralAmount += _collateralAmount; }
 
         // unchecked: because if we overflow on value, then all the dexes will crash as well
         // we could check the math here of when we do insolvency calculations, but we should pick one place
