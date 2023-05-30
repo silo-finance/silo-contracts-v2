@@ -59,6 +59,7 @@ contract AmmStateModel {
     error UserNotCleanedUp();
     error PercentOverflow();
     error NotEnoughAvailableCollateral();
+    error CollateralOverflow();
 
     function getTotalState() external view returns (TotalState memory) {
         return _totalState;
@@ -162,6 +163,7 @@ contract AmmStateModel {
         uint256 _w
     ) public returns (uint256 debtAmount) {
         if (_w > ONE) revert PercentOverflow();
+//        else if (_w == ONE) return withdrawAllLiquidity(_user);
 
         UserPosition storage storagePosition = _positions[_user];
         UserPosition memory position = _positions[_user];
@@ -173,7 +175,10 @@ contract AmmStateModel {
             position.shares
         );
 
-        uint256 dC = _w * ci / ONE;
+        uint256 dC = _w * ci;
+
+        // unchecked: div is safe, we need to /ONE because of `_w`
+        unchecked { dC /= ONE; }
 
         debtAmount = _w * userAvailableDebtAmount(
             totalState.debtAmount,
@@ -181,7 +186,10 @@ contract AmmStateModel {
             totalState.R,
             position,
             ci
-        ) / ONE;
+        );
+
+        // unchecked:
+        unchecked { debtAmount /= ONE; }
 
         uint256 dA = _w * position.collateralAmount / ONE;
         uint256 dV = _w * position.liquidationTimeValue / ONE;
@@ -210,6 +218,49 @@ contract AmmStateModel {
         _totalState.liquidationTimeValue = totalState.liquidationTimeValue - dV;
         _totalState.shares = totalState.shares - dS;
         _totalState.availableCollateral = totalState.availableCollateral - dC;
+        _totalState.debtAmount = totalState.debtAmount - debtAmount;
+    }
+
+    function withdrawAllLiquidity(address _user) public returns (uint256 debtAmount) {
+        UserPosition storage storagePosition = _positions[_user];
+        UserPosition memory position = _positions[_user];
+        TotalState memory totalState = _totalState;
+
+        uint256 ci = getCurrentlyAvailableCollateralForUser(
+            totalState.shares,
+            totalState.availableCollateral,
+            position.shares
+        );
+
+        debtAmount = userAvailableDebtAmount(
+            totalState.debtAmount,
+            totalState.liquidationTimeValue,
+            totalState.R,
+            position,
+            ci
+        );
+
+        // TODO in tests we will have to make sure, that when one of below subtraction end up being zero,
+        //  others should be zeros as well
+
+        // now let's calculate R, it must be done before other state is updated
+        uint256 ri = auxiliaryVariableRi(ci, position.liquidationTimeValue, position.collateralAmount);
+
+        uint256 newCollateralAmount = position.collateralAmount - position.collateralAmount;
+        uint256 newLiquidationTimeValue = position.liquidationTimeValue - position.liquidationTimeValue;
+
+        uint256 riNew = 0;
+
+        _totalState.R = totalState.R - ri + riNew;
+
+        storagePosition.collateralAmount = newCollateralAmount;
+        storagePosition.liquidationTimeValue = newLiquidationTimeValue;
+        storagePosition.shares -= position.shares;
+
+        _totalState.collateralAmount = totalState.collateralAmount - position.collateralAmount;
+        _totalState.liquidationTimeValue = totalState.liquidationTimeValue - position.liquidationTimeValue;
+        _totalState.shares = totalState.shares - position.shares;
+        _totalState.availableCollateral = totalState.availableCollateral - ci;
         _totalState.debtAmount = totalState.debtAmount - debtAmount;
     }
 
