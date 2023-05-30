@@ -112,13 +112,14 @@ contract AmmStateModel {
         uint256 _collateralOut,
         uint256 _debtIn
     ) public {
-        if (_collateralOut > _totalState.availableCollateral) revert NotEnoughAvailableCollateral();
+        uint256 availableCollateral = _totalState.availableCollateral;
+        if (_collateralOut > availableCollateral) revert NotEnoughAvailableCollateral();
 
          unchecked {
             // R should be scaled before other changes
-            _totalState.R = _totalState.R * (_totalState.availableCollateral - _collateralOut) / _totalState.availableCollateral;
+            _totalState.R = _totalState.R * (availableCollateral - _collateralOut) / availableCollateral;
 
-            _totalState.availableCollateral -= _collateralOut;
+            _totalState.availableCollateral = availableCollateral - _collateralOut;
             _totalState.debtAmount += _debtIn;
          }
     }
