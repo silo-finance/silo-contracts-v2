@@ -166,7 +166,8 @@ contract AmmStateModel {
         uint256 _w
     ) public returns (uint256 debtAmount) {
         if (_w > ONE) revert PercentOverflow();
-//        else if (_w == ONE) return withdrawAllLiquidity(_user);
+        // TODO: make separate method for withdraw ALL
+        // else if (_w == ONE) return withdrawAllLiquidity(_user);
 
         UserPosition storage storagePosition = _positions[_user];
         UserPosition memory position = _positions[_user];
@@ -192,7 +193,6 @@ contract AmmStateModel {
             ci
         );
 
-        // unchecked:
         unchecked { debtAmount /= ONE; }
 
         uint256 dA = _w * position.collateralAmount;
@@ -232,49 +232,6 @@ contract AmmStateModel {
         storagePosition.collateralAmount = newCollateralAmount;
         storagePosition.liquidationTimeValue = newLiquidationTimeValue;
         storagePosition.shares = position.shares - dS;
-    }
-
-    function withdrawAllLiquidity(address _user) public returns (uint256 debtAmount) {
-        UserPosition storage storagePosition = _positions[_user];
-        UserPosition memory position = _positions[_user];
-        TotalState memory totalState = _totalState;
-
-        uint256 ci = getCurrentlyAvailableCollateralForUser(
-            totalState.shares,
-            totalState.availableCollateral,
-            position.shares
-        );
-
-        debtAmount = userAvailableDebtAmount(
-            totalState.debtAmount,
-            totalState.liquidationTimeValue,
-            totalState.R,
-            position,
-            ci
-        );
-
-        // TODO in tests we will have to make sure, that when one of below subtraction end up being zero,
-        //  others should be zeros as well
-
-        // now let's calculate R, it must be done before other state is updated
-        uint256 ri = auxiliaryVariableRi(ci, position.liquidationTimeValue, position.collateralAmount);
-
-        uint256 newCollateralAmount = position.collateralAmount - position.collateralAmount;
-        uint256 newLiquidationTimeValue = position.liquidationTimeValue - position.liquidationTimeValue;
-
-        uint256 riNew = 0;
-
-        _totalState.R = totalState.R - ri + riNew;
-
-        storagePosition.collateralAmount = newCollateralAmount;
-        storagePosition.liquidationTimeValue = newLiquidationTimeValue;
-        storagePosition.shares -= position.shares;
-
-        _totalState.collateralAmount = totalState.collateralAmount - position.collateralAmount;
-        _totalState.liquidationTimeValue = totalState.liquidationTimeValue - position.liquidationTimeValue;
-        _totalState.shares = totalState.shares - position.shares;
-        _totalState.availableCollateral = totalState.availableCollateral - ci;
-        _totalState.debtAmount = totalState.debtAmount - debtAmount;
     }
 
     /// @notice The part of the user’s collateral amount that has already been swapped
@@ -326,9 +283,12 @@ contract AmmStateModel {
         );
 
         uint256 divider = _totalLiquidationTimeValue - _totalR;
+        if (divider == 0) return 0;
 
-        return divider == 0 ? 0 : (_position.liquidationTimeValue - ri) * _totalDebtAmount / divider;
+        amount = (_position.liquidationTimeValue - ri) * _totalDebtAmount;
+        unchecked { amount /= divider; }
     }
+
 
     /// @param _userAvailableCollateralAmount amount of collateral currently available to user (Ci)
     /// @param _userLiquidationTimeValue liquidation-time value of collateral provided by the user (Vi)
