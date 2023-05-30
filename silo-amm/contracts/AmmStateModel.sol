@@ -163,20 +163,22 @@ contract AmmStateModel {
     ) public returns (uint256 debtAmount) {
         if (_w > ONE) revert PercentOverflow();
 
+        UserPosition storage storagePosition = _positions[_user];
         UserPosition memory position = _positions[_user];
+        TotalState memory totalState = _totalState;
 
         uint256 ci = getCurrentlyAvailableCollateralForUser(
-            _totalState.shares,
-            _totalState.availableCollateral,
+            totalState.shares,
+            totalState.availableCollateral,
             position.shares
         );
 
         uint256 dC = _w * ci / ONE;
 
         debtAmount = _w * userAvailableDebtAmount(
-            _totalState.debtAmount,
-            _totalState.liquidationTimeValue,
-            _totalState.R,
+            totalState.debtAmount,
+            totalState.liquidationTimeValue,
+            totalState.R,
             position,
             ci
         ) / ONE;
@@ -198,17 +200,17 @@ contract AmmStateModel {
             ? 0
             : (ci - dC) * newLiquidationTimeValue / newCollateralAmount;
 
-        _totalState.R = _totalState.R - ri + riNew;
+        _totalState.R = totalState.R - ri + riNew;
 
-        _positions[_user].collateralAmount = newCollateralAmount;
-        _positions[_user].liquidationTimeValue = newLiquidationTimeValue;
-        _positions[_user].shares -= dS;
+        storagePosition.collateralAmount = newCollateralAmount;
+        storagePosition.liquidationTimeValue = newLiquidationTimeValue;
+        storagePosition.shares -= dS;
 
-        _totalState.collateralAmount -= dA;
-        _totalState.liquidationTimeValue -= dV;
-        _totalState.shares -= dS;
-        _totalState.availableCollateral -= dC;
-        _totalState.debtAmount -= debtAmount;
+        _totalState.collateralAmount = totalState.collateralAmount - dA;
+        _totalState.liquidationTimeValue = totalState.liquidationTimeValue - dV;
+        _totalState.shares = totalState.shares - dS;
+        _totalState.availableCollateral = totalState.availableCollateral - dC;
+        _totalState.debtAmount = totalState.debtAmount - debtAmount;
     }
 
     /// @notice The part of the user’s collateral amount that has already been swapped
