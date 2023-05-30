@@ -109,18 +109,20 @@ contract AmmStateModel {
         position.liquidationTimeValue = dV; // Vi + dV, but Vi is 0
         position.shares = shares;
 
-        // unchecked: this is basically token balance, it is enough to do check on transfer
-        unchecked { _totalState.collateralAmount += _collateralAmount; }
+        unchecked {
+            // unchecked: this is basically token balance, it is enough to do check on transfer
+            _totalState.collateralAmount += _collateralAmount;
 
-        // unchecked: because if we overflow on value, then all the dexes will crash as well
-        // we could check the math here of when we do insolvency calculations, but we should pick one place
-        unchecked { _totalState.liquidationTimeValue += dV; }
+            // unchecked: because if we overflow on value, then all the dexes will crash as well
+            // we could check the math here of when we do insolvency calculations, but we should pick one place
+            _totalState.liquidationTimeValue += dV;
+
+            // unchecked availableCollateral is never more than collateralAmount, so it is enough to check collateralAmount
+            _totalState.availableCollateral = totalStateAvailableCollateral + _collateralAmount;
+        }
 
         // shares value can be higher than amount, this is why += shares in not unchecked
         _totalState.shares = totalStateShares + shares;
-
-        // unchecked availableCollateral is never more than collateralAmount, so it is enough to check collateralAmount
-        unchecked { _totalState.availableCollateral = totalStateAvailableCollateral + _collateralAmount; }
 
         // now let's calculate R
         // if Ci, Vi, Ai, Ri = 0 (because of cleanup), then we end up with R = R + (dC*dV/dC) = R + dV
