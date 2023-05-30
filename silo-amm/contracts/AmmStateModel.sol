@@ -107,15 +107,17 @@ contract AmmStateModel {
         position.liquidationTimeValue = dV; // Vi + dV, but Vi is 0
         position.shares = shares;
 
-        _totalState.collateralAmount += _collateralAmount;
+        _totalState.collateralAmount = _totalState.collateralAmount + _collateralAmount;
 
         // unchecked: because if we overflow on value, then all the dexes will crash as well
         // we could check the math here of when we do insolvency calculations, but we should pick one place
-        unchecked { _totalState.liquidationTimeValue += dV; }
+        unchecked { _totalState.liquidationTimeValue = _totalState.liquidationTimeValue + dV; }
 
         // shares value can be higher than amount, this is why += shares in not unchecked
         _totalState.shares += shares;
-        _totalState.availableCollateral = totalStateAvailableCollateral + _collateralAmount;
+
+        // unchecked availableCollateral is never more than collateralAmount, so it is enough to check collateralAmount
+        unchecked { _totalState.availableCollateral = totalStateAvailableCollateral + _collateralAmount; }
 
         // now let's calculate R
         // if Ci, Vi, Ai, Ri = 0 (because of cleanup), then we end up with R = R + (dC*dV/dC) = R + dV
