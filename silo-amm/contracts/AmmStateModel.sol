@@ -119,10 +119,8 @@ contract AmmStateModel {
 
         uint256 newAvailableCollateral;
 
-        unchecked {
-            // unchecked: we can not underflow because of check `if (_collateralOut > availableCollateral) revert`
-            newAvailableCollateral = availableCollateral - _collateralOut;
-        }
+        // unchecked: we can not underflow because of check `if (_collateralOut > availableCollateral) revert`
+        unchecked { newAvailableCollateral = availableCollateral - _collateralOut; }
 
         uint256 tmp = _totalState.R * newAvailableCollateral;
 
