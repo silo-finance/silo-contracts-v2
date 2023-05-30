@@ -147,7 +147,7 @@ contract AmmStateModel {
 
     /// @param _user owner of position
     /// @param _w fraction of user position that needs to be withdrawn, 0 < _w <= 100%
-    /// @return debtAmount
+    /// @return debtAmount that is withdrawn
     function withdrawLiquidity(
         address _user,
         uint256 _w

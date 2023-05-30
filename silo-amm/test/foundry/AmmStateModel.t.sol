@@ -41,7 +41,7 @@ contract AmmStateModelTest is Test {
         AmmStateModelTestData.TestData[] memory testDatas = ammStateModelTestData.testData();
 
         uint256 gasSum;
-        assertEq(testDatas.length, 14, "for proper gas check, update it when add more tests");
+        assertEq(testDatas.length, 17, "for proper gas check, update it when add more tests");
 
         for (uint i; i < testDatas.length; i++) {
             AmmStateModelTestData.TestData memory testData = testDatas[i];
@@ -98,6 +98,6 @@ contract AmmStateModelTest is Test {
             assertEq(state.R, testData.totalState.r, "total.R");
         }
 
-        assertEq(gasSum, 414760, "make sure we gas efficient on price model actions");
+        assertEq(gasSum, 437859, "make sure we gas efficient on price model actions");
     }
 }
