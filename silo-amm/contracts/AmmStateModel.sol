@@ -207,14 +207,17 @@ contract AmmStateModel {
         // now let's calculate R, it must be done before other state is updated
         uint256 ri = auxiliaryVariableRi(ci, position.liquidationTimeValue, position.collateralAmount);
 
-        uint256 newCollateralAmount = position.collateralAmount - dA;
-        uint256 newLiquidationTimeValue = position.liquidationTimeValue - dV;
+        uint256 newCollateralAmount;
+        // unchecked: `dA` is fraction of position.collateralAmount
+        unchecked { newCollateralAmount = position.collateralAmount - dA; }
+
+        uint256 newLiquidationTimeValue;
+        // unchecked: `dV` is fraction of position.liquidationTimeValue
+        unchecked { newLiquidationTimeValue = position.liquidationTimeValue - dV; }
 
         uint256 riNew = newCollateralAmount == 0
             ? 0
             : (ci - dC) * newLiquidationTimeValue / newCollateralAmount;
-
-
 
         _totalState.R = totalState.R - ri + riNew;
         _totalState.collateralAmount = totalState.collateralAmount - dA;
