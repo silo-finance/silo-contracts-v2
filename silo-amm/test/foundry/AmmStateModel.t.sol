@@ -24,11 +24,20 @@ contract AmmStateModelTest is Test {
     function test_ammStateModelFlow() public {
         AmmStateModelTestData.TestData[] memory testDatas = ammStateModelTestData.testData();
 
-        uint256 gasSum;
-        assertEq(testDatas.length, 17, "for proper gas check, update it when add more tests");
+        _ammStateModelFlow(testDatas, false, 427211);
+        _ammStateModelFlow(testDatas, true, 393522);
+    }
 
-        for (uint i; i < testDatas.length; i++) {
-            AmmStateModelTestData.TestData memory testData = testDatas[i];
+    function _ammStateModelFlow(
+        AmmStateModelTestData.TestData[] memory _testDatas,
+        bool _withdrawAll,
+        uint256 _expectedGas
+    ) internal {
+        uint256 gasSum;
+        assertEq(_testDatas.length, 17, "for proper gas check, update it when add more tests");
+
+        for (uint i; i < _testDatas.length; i++) {
+            AmmStateModelTestData.TestData memory testData = _testDatas[i];
 
             uint256 gasStart = gasleft();
 
@@ -43,7 +52,9 @@ contract AmmStateModelTest is Test {
                 gasSum += (gasStart - gasLeft);
                 continue;
             } else if (testData.action == AmmStateModelTestData.Action.WITHDRAW) {
-                stateModel.withdrawLiquidity(testData.user, testData.amount);
+                testData.amount == ONE && _withdrawAll
+                    ? stateModel.withdrawAllLiquidity(testData.user)
+                    : stateModel.withdrawLiquidity(testData.user, testData.amount);
             } else {
                 revert("not supported");
             }
@@ -51,7 +62,7 @@ contract AmmStateModelTest is Test {
             uint256 gasEnd = gasleft();
             gasSum += (gasStart - gasEnd);
 
-            if (i == testDatas.length - 1) {
+            if (i == _testDatas.length - 1) {
                 assertTrue(testData.action == AmmStateModelTestData.Action.WITHDRAW, "we need withdraw for last one");
                 // assuming we withdraw all already, nothing should happen when withdraw again
                 stateModel.withdrawLiquidity(testData.user, 1e18);
@@ -88,6 +99,6 @@ contract AmmStateModelTest is Test {
             assertEq(state.R, testData.totalState.r, "total.R");
         }
 
-        assertEq(gasSum, 426939, "make sure we gas efficient on price model actions");
+        assertEq(gasSum, _expectedGas, "make sure we gas efficient on price model actions");
     }
 }
