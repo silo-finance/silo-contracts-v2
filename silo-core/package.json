@@ -1,16 +1,15 @@
 {
   "name": "silo-core",
-  "version": "0.0.0",
+  "version": "2.0.0",
   "engines": {
     "node": ">=16.0.0"
   },
   "repository": {
     "type": "git",
-    "url": "git@github.com:silo-finance/silo-contracts.git"
+    "url": "git@github.com:silo-finance/silo-contracts-v2.git"
   },
   "license": "BUSL-1.1",
   "dependencies": {
-    "@openzeppelin/contracts-3.4.1": "npm:@openzeppelin/contracts@3.4.1",
     "solc": "~0.8.19"
   },
   "devDependencies": {
