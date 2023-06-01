@@ -159,13 +159,11 @@ contract AmmStateModel {
     /// @param _user owner of position
     /// @param _w fraction of user position that needs to be withdrawn, 0 < _w <= 100%
     /// @return debtAmount that is withdrawn
-    function withdrawLiquidity( address _user, uint256 _w) // solhint-disable-line function-max-lines
+    function withdrawLiquidity(address _user, uint256 _w) // solhint-disable-line function-max-lines
         public
         returns (uint256 debtAmount)
     {
         if (_w > ONE) revert PercentOverflow();
-        // TODO: make separate method for withdraw ALL
-        // else if (_w == ONE) return withdrawAllLiquidity(_user);
 
         UserPosition storage storagePosition = _positions[_user];
         UserPosition memory position = _positions[_user];
@@ -236,6 +234,47 @@ contract AmmStateModel {
 
         storagePosition.collateralAmount = newCollateralAmount;
         storagePosition.liquidationTimeValue = newLiquidationTimeValue;
+    }
+
+    /// @param _user owner of position
+    /// @return debtAmount that is withdrawn
+    function withdrawAllLiquidity( address _user) public returns (uint256 debtAmount) {
+        UserPosition storage storagePosition = _positions[_user];
+        UserPosition memory position = _positions[_user];
+        TotalState memory totalState = _totalState;
+
+        uint256 ci = getCurrentlyAvailableCollateralForUser(
+            totalState.shares,
+            totalState.availableCollateral,
+            position.shares
+        );
+
+        debtAmount = userAvailableDebtAmount(
+            totalState.debtAmount,
+            totalState.liquidationTimeValue,
+            totalState.R,
+            position,
+            ci
+        );
+
+        // now let's calculate R, it must be done before other state is updated
+        uint256 ri = auxiliaryVariableRi(ci, position.liquidationTimeValue, position.collateralAmount);
+
+        _totalState.R = totalState.R - ri;
+
+        unchecked {
+            // for all below `_totalState` changed, we decreasing state by fraction or at most whole
+            // so as along as math is correct we should not underflow
+            _totalState.collateralAmount = totalState.collateralAmount - position.collateralAmount;
+            _totalState.liquidationTimeValue = totalState.liquidationTimeValue - position.liquidationTimeValue;
+            _totalState.shares = totalState.shares - position.shares;
+            _totalState.availableCollateral = totalState.availableCollateral - ci;
+            _totalState.debtAmount = totalState.debtAmount - debtAmount;
+        }
+
+        storagePosition.shares = 0;
+        storagePosition.collateralAmount = 0;
+        storagePosition.liquidationTimeValue = 0;
     }
 
     /// @notice The part of the user’s collateral amount that has already been swapped
