@@ -4,3 +4,7 @@
 [submodule "silo-foundry-utils"]
 	path = gitmodules/silo-foundry-utils
 	url = https://github.com/silo-finance/silo-foundry-utils
+[submodule "gitmodules/openzeppelin-contracts"]
+	path = gitmodules/openzeppelin-contracts
+	url = https://github.com/OpenZeppelin/openzeppelin-contracts
+	branch = v4.9.0

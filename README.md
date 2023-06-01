@@ -30,6 +30,7 @@ yarn install
 ```
 git submodule add --name foundry https://github.com/foundry-rs/forge-std gitmodules/forge-std
 git submodule add --name silo-foundry-utils https://github.com/silo-finance/silo-foundry-utils gitmodules/silo-foundry-utils
+forge install OpenZeppelin/openzeppelin-contracts --no-commit
 git submodule update --init --recursive
 git submodule
 ```
