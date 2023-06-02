@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.17;
+pragma solidity 0.8.19;
 
 
 /// @dev annotations like (A) or (Ci) is reference to the internal document that describes model in mathematical way.
