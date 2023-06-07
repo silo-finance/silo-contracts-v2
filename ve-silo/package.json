@@ -16,6 +16,6 @@
     "solhint": "~3.4.1"
   },
   "scripts": {
-    "lint:sol": "solhint \"contracts/**/*.sol\" --max-warnings=0"
+    "lint:sol": "solhint \"contracts/**/*.sol\" \"deploy/**/*.sol\" \"test/**/*.sol\" --max-warnings=0"
   }
 }
