@@ -21,8 +21,6 @@ contract VotingEscrowTest is IntegrationTest {
 
     uint256 internal constant _FORKING_BLOCK_NUMBER = 17336000;
 
-    constructor() {}
-
     function setUp() public {
         vm.createSelectFork(
             getChainRpcUrl(MAINNET_ALIAS),
