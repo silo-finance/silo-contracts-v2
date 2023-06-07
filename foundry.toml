@@ -34,4 +34,7 @@ out = 'cache/foundry/out/silo-vaults'
 test = 'silo-vaults/test/foundry'
 broadcast = 'silo-vaults/broadcast'
 
+[rpc_endpoints]
+mainnet = "${RPC_MAINNET}"
+
 # See more config options https://github.com/foundry-rs/foundry/tree/master/config
