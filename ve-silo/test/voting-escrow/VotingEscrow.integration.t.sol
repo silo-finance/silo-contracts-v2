@@ -8,12 +8,12 @@ import {IntegrationTest} from "silo-foundry-utils/networks/IntegrationTest.sol";
 
 import {IVotingEscrowLike} from "../../contracts/voting-escrow/interfaces/IVotingEscrowLike.sol";
 import {ISmartWalletChecker} from "../../contracts/voting-escrow/interfaces/ISmartWalletChecker.sol";
-import {VotingEscrowDeploymentScript} from "../../deploy/VotingEscrowDeploy.s.sol";
+import {VotingEscrowDeploy} from "../../deploy/VotingEscrowDeploy.s.sol";
 
 // FOUNDRY_PROFILE=ve-silo forge test --ffi -vvv
 contract VotingEscrowTest is IntegrationTest {
     IVotingEscrowLike internal _votingEscrow;
-    VotingEscrowDeploymentScript internal _deploymentScript;
+    VotingEscrowDeploy internal _deploymentScript;
 
     address internal _authorizer = makeAddr("authorizer account");
     address internal _smartValletChecker = makeAddr("Smart wallet checker");
@@ -31,7 +31,7 @@ contract VotingEscrowTest is IntegrationTest {
     }
 
     function deployVotingEscrowForTests() public returns (IVotingEscrowLike instance) {
-        _deploymentScript = new VotingEscrowDeploymentScript();
+        _deploymentScript = new VotingEscrowDeploy();
         _deploymentScript.disableDeploymentsSync();
 
         _mockPermissions();

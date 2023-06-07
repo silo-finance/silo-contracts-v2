@@ -1,16 +1,13 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.19;
 
-import {Deployer} from "silo-foundry-utils/deployer/Deployer.sol";
+import {CommonDeploy} from "./_CommonDeploy.sol";
 import {AddressesCollection} from "silo-foundry-utils/networks/addresses/AddressesCollection.sol";
 
 // forge script ve-silo/deploy/VotingEscrowDeploy.s.sol --ffi --broadcast --rpc-url http://127.0.0.1:8545
-contract VotingEscrowDeploymentScript is Deployer, AddressesCollection {
+contract VotingEscrowDeploy is CommonDeploy, AddressesCollection {
     string public constant AUTHORIZER_ADDRESS_KEY = "authorizer";
-
-    string internal constant _DEPLOYMENTS_SUB_DIR = "ve-silo";
     string internal constant _BASE_DIR = "external/balancer-v2-monorepo/pkg/liquidity-mining/contracts";
-    string internal constant _FILE = "VotingEscrow.vy";
 
     function setUp() public {
         // TODO: Should be a DAO address after governance is implemented
@@ -23,9 +20,7 @@ contract VotingEscrowDeploymentScript is Deployer, AddressesCollection {
         vm.startBroadcast(deployerPrivateKey);
 
         votingEscrow = _deploy(
-            _BASE_DIR,
-            _DEPLOYMENTS_SUB_DIR,
-            _FILE,
+            _VOTING_ESCROW,
             abi.encode(
                 getAddress(SILO80_WETH20_TOKEN),
                 votingEscrowName(),
@@ -47,5 +42,9 @@ contract VotingEscrowDeploymentScript is Deployer, AddressesCollection {
     function votingEscrowSymbol() public pure returns (string memory symbol) {
         symbol = new string(32);
         symbol = "veSILO";
+    }
+
+    function _contractBaseDir() internal pure override virtual returns (string memory) {
+        return _BASE_DIR;
     }
 }
