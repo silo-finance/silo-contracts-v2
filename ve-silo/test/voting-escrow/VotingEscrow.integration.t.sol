@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.19;
 
-import { IERC20 } from "forge-std/interfaces/IERC20.sol";
-import { Test } from "forge-std/Test.sol";
+import {IERC20} from "forge-std/interfaces/IERC20.sol";
+import {Test} from "forge-std/Test.sol";
 
-import { IntegrationTest } from "silo-foundry-utils/networks/IntegrationTest.sol";
+import {IntegrationTest} from "silo-foundry-utils/networks/IntegrationTest.sol";
 
-import { IVotingEscrowLike } from "../../contracts/voting-escrow/interfaces/IVotingEscrowLike.sol";
-import { ISmartWalletChecker } from "../../contracts/voting-escrow/interfaces/ISmartWalletChecker.sol";
-import { VotingEscrowDeploymentScript } from "../../deploy/VotingEscrowDeploy.s.sol";
+import {IVotingEscrowLike} from "../../contracts/voting-escrow/interfaces/IVotingEscrowLike.sol";
+import {ISmartWalletChecker} from "../../contracts/voting-escrow/interfaces/ISmartWalletChecker.sol";
+import {VotingEscrowDeploymentScript} from "../../deploy/VotingEscrowDeploy.s.sol";
 
 // FOUNDRY_PROFILE=ve-silo forge test --ffi -vvv
 contract VotingEscrowTest is IntegrationTest {
@@ -19,14 +19,14 @@ contract VotingEscrowTest is IntegrationTest {
     address internal _smartValletChecker = makeAddr("Smart wallet checker");
     address internal _user = makeAddr("test user1");
 
-    uint256 internal constant _FORKING_BLOCK_NUMNER = 17336000;
+    uint256 internal constant _FORKING_BLOCK_NUMBER = 17336000;
 
     constructor() {}
 
     function setUp() public {
         vm.createSelectFork(
             getChainRpcUrl(MAINNET_ALIAS),
-            _FORKING_BLOCK_NUMNER
+            _FORKING_BLOCK_NUMBER
         );
 
         _votingEscrow = deployVotingEscrowForTests();

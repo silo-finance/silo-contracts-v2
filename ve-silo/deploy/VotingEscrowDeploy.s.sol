@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.19;
 
-import { Deployer } from "silo-foundry-utils/deployer/Deployer.sol";
-import { AddressesCollection } from "silo-foundry-utils/networks/addresses/AddressesCollection.sol";
+import {Deployer} from "silo-foundry-utils/deployer/Deployer.sol";
+import {AddressesCollection} from "silo-foundry-utils/networks/addresses/AddressesCollection.sol";
 
 // forge script ve-silo/deploy/VotingEscrowDeploy.s.sol --ffi --broadcast --rpc-url http://127.0.0.1:8545
 contract VotingEscrowDeploymentScript is Deployer, AddressesCollection {
