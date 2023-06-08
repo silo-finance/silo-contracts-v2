@@ -1,16 +1,19 @@
 # This workflow will do a clean install of node dependencies, build the source code and run tests across different versions of node
 # For more information see: https://help.github.com/actions/language-and-framework-guides/using-nodejs-with-github-actions
 
-name: veSilo Quality Tests
+name: veSilo
 
 env:
   FOUNDRY_PROFILE: ve-silo
+  RPC_MAINNET: ${{ secrets.RPC_MAINNET }}
+  PRIVATE_KEY: '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80' # anvil (only for tests)
 
 on:
   push:
     branches: [ master, develop ]
     paths:
       - ve-silo/**/*.sol
+      - ve-silo/**/*.vy
       - ve-silo/**/*.ts
       - ve-silo/**/*.js
       - ve-silo/**/*.json
@@ -18,6 +21,50 @@ on:
   pull_request:
     paths:
       - ve-silo/**/*.sol
+      - ve-silo/**/*.vy
       - ve-silo/**/*.ts
       - ve-silo/**/*.js
       - ve-silo/**/*.json
+
+jobs:
+  ve-silo-foundry:
+    strategy:
+      fail-fast: true
+
+    name: Foundry tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
+
+      - name: yarn install
+        run: yarn workspace ve-silo install
+
+      - name: Solidity Lint
+        run: yarn workspace ve-silo lint:sol
+
+      - name: Install Vyper compiler
+        run: |
+          pip install vyper==0.3.7
+          vyper --version
+
+      - name: Build silo foundry utils
+        working-directory: ./gitmodules/silo-foundry-utils
+        run: |
+          cargo build --release
+          cp target/release/silo-foundry-utils ../../silo-foundry-utils
+          ../../silo-foundry-utils --version
+
+      - name: Forge build
+        run: |
+          forge --version
+          forge build --sizes
+
+      - name: Forge test
+        run: forge test --ffi -vvv
