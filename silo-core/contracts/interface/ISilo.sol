@@ -155,6 +155,7 @@ interface ISilo {
     ) external returns (uint256 shares);
     // TODO: is euler style leverage safe?
     function leverage() external;
+    // TODO: use flag that will mark pending liquidaiton position
     function liquidate(address _borrower) external;
     function accrueInterest(address _token) external returns (uint256 accruedInterest);
 }
