@@ -29,7 +29,7 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
     error OnlySilo();
     error MinimumShareRequirement();
 
-    modifier onlySilo {
+    modifier onlySilo() {
         if (msg.sender != address(silo)) revert OnlySilo();
 
         _;
@@ -44,34 +44,17 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
     /// @param _symbol token symbol
     /// @param _silo Silo address for which tokens was deployed
     /// @param _asset asset for which this tokens was deployed
-    function __ShareToken_init(
-        string memory _name,
-        string memory _symbol,
-        ISilo _silo,
-        address _asset
-    ) internal onlyInitializing {
+    function __ShareToken_init(string memory _name, string memory _symbol, ISilo _silo, address _asset)
+        internal
+        onlyInitializing
+    {
         __ERC20_init(_name, _symbol);
 
         silo = _silo;
         asset = _asset;
     }
 
-    /// @inheritdoc IShareToken
-    function mint(address _account, uint256 _amount) external onlySilo override {
-        _mint(_account, _amount);
-    }
-
-    /// @inheritdoc IShareToken
-    function burn(address _account, uint256 _amount) external onlySilo override {
-        _burn(_account, _amount);
-    }
-
-    /// @inheritdoc IShareToken
-    function spendAllowance(address _owner, address _spender, uint256 _amount) external onlySilo {
-        _spendAllowance(_owner, _spender, _amount);
-    }
-
-    function _afterTokenTransfer(address _sender, address _recipient, uint256 _amount) internal override virtual {
+    function _afterTokenTransfer(address _sender, address _recipient, uint256 _amount) internal virtual override {
         // report mint/burn or transfer
         _notifyAboutTransfer(_sender, _recipient, _amount);
 
@@ -97,11 +80,7 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
             // solhint-disable-next-line avoid-low-level-calls
             (bool success,) = notificationReceiver.call(
                 abi.encodeWithSelector(
-                    INotificationReceiver.onAfterTransfer.selector,
-                    address(this),
-                    _from,
-                    _to,
-                    _amount
+                    INotificationReceiver.onAfterTransfer.selector, address(this), _from, _to, _amount
                 )
             );
 

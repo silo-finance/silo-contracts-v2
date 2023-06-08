@@ -34,12 +34,16 @@ interface ISilo {
     function getMaxLtv(address _token) external view returns (uint256);
     function getLt(address _token) external view returns (uint256);
 
-    /*** ERC4626 ***/
+    /**
+     * ERC4626
+     */
 
     function tokens() external view returns (address[2] memory assetTokenAddresses);
     function totalAssets(address _token) external view returns (uint256 totalManagedAssets);
 
-    /*** Deposits ***/
+    /**
+     * Deposits
+     */
 
     function convertToShares(address _token, uint256 _assets) external view returns (uint256 shares);
     function convertToAssets(address _token, uint256 _shares) external view returns (uint256 assets);
@@ -54,45 +58,82 @@ interface ISilo {
 
     function maxWithdraw(address _token, address _owner) external view returns (uint256 maxAssets);
     function previewWithdraw(address _token, uint256 _assets) external view returns (uint256 shares);
-    function withdraw(address _token, uint256 _assets, address _receiver, address _owner) external returns (uint256 shares);
+    function withdraw(address _token, uint256 _assets, address _receiver, address _owner)
+        external
+        returns (uint256 shares);
 
     function maxRedeem(address _token, address _owner) external view returns (uint256 maxShares);
     function previewRedeem(address _token, uint256 _shares) external view returns (uint256 assets);
-    function redeem(address _token, uint256 _shares, address _receiver, address _owner) external returns (uint256 assets);
+    function redeem(address _token, uint256 _shares, address _receiver, address _owner)
+        external
+        returns (uint256 assets);
 
-    /*** Protected Deposits ***/
+    /**
+     * Protected Deposits
+     */
 
-    function convertToShares(address _token, uint256 _assets, bool _isProtected) external view returns (uint256 shares);
-    function convertToAssets(address _token, uint256 _shares, bool _isProtected) external view returns (uint256 assets);
+    function convertToShares(address _token, uint256 _assets, bool _isProtected)
+        external
+        view
+        returns (uint256 shares);
+    function convertToAssets(address _token, uint256 _shares, bool _isProtected)
+        external
+        view
+        returns (uint256 assets);
 
-    function maxDeposit(address _token, address _receiver, bool _isProtected) external view returns (uint256 maxAssets);
-    function previewDeposit(address _token, uint256 _assets, bool _isProtected) external view returns (uint256 shares);
-    function deposit(address _token, uint256 _assets, address _receiver, bool _isProtected) external returns (uint256 shares);
+    function maxDeposit(address _token, address _receiver, bool _isProtected)
+        external
+        view
+        returns (uint256 maxAssets);
+    function previewDeposit(address _token, uint256 _assets, bool _isProtected)
+        external
+        view
+        returns (uint256 shares);
+    function deposit(address _token, uint256 _assets, address _receiver, bool _isProtected)
+        external
+        returns (uint256 shares);
 
     function maxMint(address _token, address _receiver, bool _isProtected) external view returns (uint256 maxShares);
     function previewMint(address _token, uint256 _shares, bool _isProtected) external view returns (uint256 assets);
-    function mint(address _token, uint256 _shares, address _receiver, bool _isProtected) external returns (uint256 assets);
+    function mint(address _token, uint256 _shares, address _receiver, bool _isProtected)
+        external
+        returns (uint256 assets);
 
     function maxWithdraw(address _token, address _owner, bool _isProtected) external view returns (uint256 maxAssets);
-    function previewWithdraw(address _token, uint256 _assets, bool _isProtected) external view returns (uint256 shares);
-    function withdraw(address _token, uint256 _assets, address _receiver, address _owner, bool _isProtected) external returns (uint256 shares);
+    function previewWithdraw(address _token, uint256 _assets, bool _isProtected)
+        external
+        view
+        returns (uint256 shares);
+    function withdraw(address _token, uint256 _assets, address _receiver, address _owner, bool _isProtected)
+        external
+        returns (uint256 shares);
 
     function maxRedeem(address _token, address _owner, bool _isProtected) external view returns (uint256 maxShares);
     function previewRedeem(address _token, uint256 _shares, bool _isProtected) external view returns (uint256 assets);
-    function redeem(address _token, uint256 _shares, address _receiver, address _owner, bool _isProtected) external returns (uint256 assets);
+    function redeem(address _token, uint256 _shares, address _receiver, address _owner, bool _isProtected)
+        external
+        returns (uint256 assets);
 
     function transitionToProtected(address _token, uint256 _shares, address _owner) external returns (uint256 assets);
-    function transitionFromProtected(address _token, uint256 _shares, address _owner) external returns (uint256 shares);
+    function transitionFromProtected(address _token, uint256 _shares, address _owner)
+        external
+        returns (uint256 shares);
 
-    /*** Lending ***/
+    /**
+     * Lending
+     */
 
     function maxBorrow(address _token, address _borrower) external view returns (uint256 maxAssets);
     function previewBorrow(address _token, uint256 _assets) external view returns (uint256 shares);
-    function borrow(address _token, uint256 _assets, address _receiver, address _borrower) external returns (uint256 shares);
+    function borrow(address _token, uint256 _assets, address _receiver, address _borrower)
+        external
+        returns (uint256 shares);
 
     function maxBorrowShares(address _token, address _borrower) external view returns (uint256 maxShares);
     function previewBorrowShares(address _token, uint256 _shares) external view returns (uint256 assets);
-    function borrowShares(address _token, uint256 _shares, address _receiver, address _borrower) external returns (uint256 assets);
+    function borrowShares(address _token, uint256 _shares, address _receiver, address _borrower)
+        external
+        returns (uint256 assets);
 
     function maxRepay(address _token, address _borrower) external view returns (uint256 assets);
     function previewRepay(address _token, uint256 _assets) external view returns (uint256 shares);
@@ -100,10 +141,18 @@ interface ISilo {
 
     function maxRepayShares(address _token, address _borrower) external view returns (uint256 shares);
     function previewRepayShares(address _token, uint256 _shares) external view returns (uint256 assets);
-    function repayShares(address _token, uint256 _shares, address repayer, address _borrower) external returns (uint256 assets);
+    function repayShares(address _token, uint256 _shares, address repayer, address _borrower)
+        external
+        returns (uint256 assets);
 
     // TODO: https://eips.ethereum.org/EIPS/eip-3156
-    function flashloan(address _token, uint256 _assets, address _borrower, address _receiver,  bytes memory _flashloanReceiverData) external returns (uint256 shares);
+    function flashloan(
+        address _token,
+        uint256 _assets,
+        address _borrower,
+        address _receiver,
+        bytes memory _flashloanReceiverData
+    ) external returns (uint256 shares);
     // TODO: is euler style leverage safe?
     function leverage() external;
     function liquidate(address _borrower) external;

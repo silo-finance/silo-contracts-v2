@@ -7,12 +7,11 @@ import "./ShareToken.sol";
 /// @notice ERC20 compatible token representing collateral position in Silo
 /// @custom:security-contact security@silo.finance
 contract ShareCollateralToken is ShareToken {
-
     error SenderNotSolventAfterTransfer();
     error ShareTransferNotAllowed();
 
     /// @dev Token is always deployed for specific Silo and asset
-    constructor (ISiloFactory _factory) ShareToken(_factory) {
+    constructor(ISiloFactory _factory) ShareToken(_factory) {
         // all setup is done in parent contracts, nothing to do here
     }
 
@@ -20,13 +19,19 @@ contract ShareCollateralToken is ShareToken {
     /// @param _symbol token symbol
     /// @param _silo Silo address for which tokens was deployed
     /// @param _asset asset for which this tokens was deployed
-    function initialize(
-        string memory _name,
-        string memory _symbol,
-        ISilo _silo,
-        address _asset
-    ) external initializer {
+    function initialize(string memory _name, string memory _symbol, ISilo _silo, address _asset) external initializer {
         __ShareToken_init(_name, _symbol, _silo, _asset);
+    }
+
+    /// @inheritdoc IShareToken
+    function mint(address _owner, address, uint256 _amount) external override onlySilo {
+        _mint(_owner, _amount);
+    }
+
+    /// @inheritdoc IShareToken
+    function burn(address _owner, address _spender, uint256 _amount) external onlySilo {
+        if (_owner != _spender) _spendAllowance(_owner, _spender, _amount);
+        _burn(_owner, _amount);
     }
 
     function _beforeTokenTransfer(address _sender, address _recipient, uint256) internal view override {

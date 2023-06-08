@@ -24,7 +24,7 @@ contract ShareDebtToken is IERC20R, ShareToken {
     error RecipientNotSolventAfterTransfer();
 
     /// @dev Token is always deployed for specific Silo and asset
-    constructor (ISiloFactory _factory) ShareToken(_factory) {
+    constructor(ISiloFactory _factory) ShareToken(_factory) {
         // all setup is done in parent contracts, nothing to do here
     }
 
@@ -32,12 +32,7 @@ contract ShareDebtToken is IERC20R, ShareToken {
     /// @param _symbol token symbol
     /// @param _silo Silo address for which tokens was deployed
     /// @param _asset asset for which this tokens was deployed
-    function initialize(
-        string memory _name,
-        string memory _symbol,
-        ISilo _silo,
-        address _asset
-    ) external initializer {
+    function initialize(string memory _name, string memory _symbol, ISilo _silo, address _asset) external initializer {
         __ShareToken_init(_name, _symbol, _silo, _asset);
     }
 
@@ -63,15 +58,22 @@ contract ShareDebtToken is IERC20R, ShareToken {
         return _receiveAllowances[_owner][_recipient];
     }
 
+    /// @inheritdoc IShareToken
+    function mint(address _owner, address _spender, uint256 _amount) external override onlySilo {
+        if (_owner != _spender) _spendAllowance(_owner, _spender, _amount);
+        _mint(_owner, _amount);
+    }
+
+    /// @inheritdoc IShareToken
+    function burn(address _owner, address, uint256 _amount) external override onlySilo {
+        _burn(_owner, _amount);
+    }
+
     /// @dev Set allowance
     /// @param _owner owner of debt token
     /// @param _recipient wallet that allows `_owner` to send debt to its wallet
     /// @param _amount amount of token allowed to be transferred
-    function _setReceiveApproval(
-        address _owner,
-        address _recipient,
-        uint256 _amount
-    ) internal virtual {
+    function _setReceiveApproval(address _owner, address _recipient, uint256 _amount) internal virtual {
         if (_owner == address(0)) revert OwnerIsZero();
         if (_recipient == address(0)) revert RecipientIsZero();
 
