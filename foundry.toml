@@ -8,13 +8,18 @@ libs = [
 ]
 out = 'cache/foundry/out'
 
-[profile.amm]
-src = 'silo-amm/contracts'
-out = 'cache/foundry/out/silo-amm'
-test = 'silo-amm/test/foundry'
-broadcast = 'silo-amm/broadcast'
-fs_permissions = [{ access = "read", path = "./silo-amm/test/foundry/data/"}]
+[profile.amm-periphery]
+src = 'silo-amm-periphery/contracts'
+out = 'silo-amm-periphery/artifacts'
+test = 'silo-amm-periphery/test/foundry'
+broadcast = 'silo-amm-periphery/broadcast'
 
+[profile.amm-core]
+src = 'silo-amm-core/contracts'
+out = 'silo-amm-core/artifacts'
+test = 'silo-amm-core/test/foundry'
+broadcast = 'silo-amm-core/broadcast'
+fs_permissions = [{ access = "read", path = "./silo-amm-core/test/foundry/data/"}]
 
 [profile.core]
 src = 'silo-core/src'

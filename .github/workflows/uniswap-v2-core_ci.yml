@@ -18,6 +18,7 @@ on:
 
 jobs:
   test:
+    name: Univ2 Core job
     strategy:
       matrix:
         node: [ 18.x ]

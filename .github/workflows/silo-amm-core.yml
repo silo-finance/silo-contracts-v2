@@ -1,30 +1,30 @@
 # This workflow will do a clean install of node dependencies, build the source code and run tests across different versions of node
 # For more information see: https://help.github.com/actions/language-and-framework-guides/using-nodejs-with-github-actions
 
-name: AMM Quality Test
+name: AMM Core Quality Test
 
 env:
-  FOUNDRY_PROFILE: amm
+  FOUNDRY_PROFILE: amm-core
 
 on:
   push:
     branches: [ master, develop ]
     paths:
-      - silo-amm/**/*.sol
-      - silo-amm/**/*.ts
-      - silo-amm/**/*.js
-      - silo-amm/**/*.json
+      - silo-amm-core/**/*.sol
+      - silo-amm-core/**/*.ts
+      - silo-amm-core/**/*.js
+      - silo-amm-core/**/*.json
 
   pull_request:
     paths:
-      - silo-amm/**/*.sol
-      - silo-amm/**/*.ts
-      - silo-amm/**/*.js
-      - silo-amm/**/*.json
+      - silo-amm-core/**/*.sol
+      - silo-amm-core/**/*.ts
+      - silo-amm-core/**/*.js
+      - silo-amm-core/**/*.json
 
 jobs:
-
   build:
+    name: AMM Core job
     runs-on: ubuntu-latest
 
     strategy:
@@ -56,7 +56,7 @@ jobs:
           forge build --sizes
 
       - name: Solidity Lint
-        run: yarn workspace silo-amm lint:sol
+        run: yarn workspace silo-amm-core lint:sol
 
       - name: Solidity Foundry Tests
-        run: yarn workspace silo-amm test
+        run: yarn workspace silo-amm-core test

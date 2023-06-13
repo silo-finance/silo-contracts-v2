@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
@@ -31,7 +31,7 @@ contract AmmStateModelTestData is Test {
 
     function testData() external returns (TestData[] memory) {
         string memory root = vm.projectRoot();
-        string memory path = string.concat(root, "/silo-amm/test/foundry/data/AmmStateModelTest.json");
+        string memory path = string.concat(root, "/silo-amm-core/test/foundry/data/AmmStateModelTest.json");
         string memory json = vm.readFile(path);
 
         uint item;

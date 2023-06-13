@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
@@ -16,7 +16,7 @@ contract AmmPriceModelTestData is Test {
         uint twap;
         bool al;
         bool swap;
-        int k;
+        uint k;
         uint price;
         Action action;
     }
@@ -25,7 +25,7 @@ contract AmmPriceModelTestData is Test {
 
     function testData() external returns (TestData[] memory) {
         string memory root = vm.projectRoot();
-        string memory path = string.concat(root, "/silo-amm/test/foundry/data/AmmPriceModelTest.json");
+        string memory path = string.concat(root, "/silo-amm-core/test/foundry/data/AmmPriceModelTest.json");
         string memory json = vm.readFile(path);
 
         uint item;
@@ -45,7 +45,7 @@ contract AmmPriceModelTestData is Test {
             tmp.al = vm.parseJsonBool(json, string(abi.encodePacked(".[", lp, "].AL")));
             tmp.swap = vm.parseJsonBool(json, string(abi.encodePacked(".[", lp, "].SWAP")));
 
-            tmp.k = vm.parseJsonInt(json, string(abi.encodePacked(".[", lp, "].k")));
+            tmp.k = vm.parseJsonUint(json, string(abi.encodePacked(".[", lp, "].k")));
             tmp.price = vm.parseJsonUint(json, string(abi.encodePacked(".[", lp, "].price")));
             tmp.action = Action(vm.parseJsonUint(json, string(abi.encodePacked(".[", lp, "].action"))));
 

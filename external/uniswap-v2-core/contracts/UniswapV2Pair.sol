@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Unlicense
 pragma solidity =0.5.16;
 
 import './interfaces/IUniswapV2Pair.sol';
