@@ -1,18 +1,19 @@
-import { Wallet, Contract } from 'ethers'
+import { Wallet, Contract, constants } from 'ethers'
 import { Web3Provider } from 'ethers/providers'
 import { deployContract } from 'ethereum-waffle'
 
 import { expandTo18Decimals } from './utilities'
 
-import UniswapV2Factory from 'uniswap-v2-core/build/UniswapV2Factory.json'
+import SiloAmmPairFactory from 'silo-amm-core/artifacts/SiloAmmPairFactory.sol/SiloAmmPairFactory.json'
 import IUniswapV2Pair from 'uniswap-v2-core/build/IUniswapV2Pair.json'
 
 import ERC20 from '../../build/ERC20.json'
 import WETH9 from '../../build/WETH9.json'
 import UniswapV1Exchange from '../../buildV1/UniswapV1Exchange.json'
 import UniswapV1Factory from '../../buildV1/UniswapV1Factory.json'
-import UniswapV2Router02 from '../../build/UniswapV2Router02.json'
+import SiloAmmRouter from 'silo-amm-periphery/artifacts/SiloAmmRouter.sol/SiloAmmRouter.json'
 import RouterEventEmitter from '../../build/RouterEventEmitter.json'
+import {ContractJSON} from "ethereum-waffle/dist/esm/ContractJSON";
 
 const overrides = {
   gasLimit: 9999999
@@ -44,10 +45,11 @@ export async function v2Fixture(provider: Web3Provider, [wallet]: Wallet[]): Pro
   await factoryV1.initializeFactory((await deployContract(wallet, UniswapV1Exchange, [])).address)
 
   // deploy V2
-  const factoryV2 = await deployContract(wallet, UniswapV2Factory, [wallet.address])
+  const factory = await deployContract(wallet, (SiloAmmPairFactory as unknown) as ContractJSON, [])
 
   // deploy routers
-  const router02 = await deployContract(wallet, UniswapV2Router02, [factoryV2.address, WETH.address], overrides)
+  const router02 = await deployContract(wallet, (SiloAmmRouter as unknown) as ContractJSON, [factory.address, WETH.address], overrides)
+  const factoryV2 = router02;
 
   // event emitter for testing
   const routerEventEmitter = await deployContract(wallet, RouterEventEmitter, [])
@@ -60,16 +62,31 @@ export async function v2Fixture(provider: Web3Provider, [wallet]: Wallet[]): Pro
   )
 
   // initialize V2
-  await factoryV2.createPair(tokenA.address, tokenB.address)
-  const pairAddress = await factoryV2.getPair(tokenA.address, tokenB.address)
+  await factoryV2.createPair(
+    tokenA.address,
+    constants.AddressZero,
+    tokenB.address,
+    constants.AddressZero,
+    {tSlow: 60 * 60, q: '100000000000000', kMax: '10000000000000000', kMin: 0, vFast: '4629629629629', deltaK: 3564},
+    constants.AddressZero
+  );
+
+  const pairAddress = await factoryV2.getPair(tokenA.address, tokenB.address, constants.AddressZero)
   const pair = new Contract(pairAddress, JSON.stringify(IUniswapV2Pair.abi), provider).connect(wallet)
 
   const token0Address = await pair.token0()
   const token0 = tokenA.address === token0Address ? tokenA : tokenB
   const token1 = tokenA.address === token0Address ? tokenB : tokenA
 
-  await factoryV2.createPair(WETH.address, WETHPartner.address)
-  const WETHPairAddress = await factoryV2.getPair(WETH.address, WETHPartner.address)
+  await factoryV2.createPair(
+    WETH.address,
+    constants.AddressZero,
+    WETHPartner.address,
+    constants.AddressZero,
+    {tSlow: 60 * 60, q: '100000000000000', kMax: '10000000000000000', kMin: 0, vFast: '4629629629629', deltaK: 3564},
+    constants.AddressZero
+  )
+  const WETHPairAddress = await factoryV2.getPair(WETH.address, WETHPartner.address, constants.AddressZero)
   const WETHPair = new Contract(WETHPairAddress, JSON.stringify(IUniswapV2Pair.abi), provider).connect(wallet)
 
   return {

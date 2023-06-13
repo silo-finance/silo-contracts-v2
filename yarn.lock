@@ -11297,9 +11297,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"silo-amm@workspace:silo-amm":
+"silo-amm-core@workspace:silo-amm-core":
   version: 0.0.0-use.local
-  resolution: "silo-amm@workspace:silo-amm"
+  resolution: "silo-amm-core@workspace:silo-amm-core"
+  dependencies:
+    solc: 0.8.19
+    solhint: ~3.4.1
+  languageName: unknown
+  linkType: soft
+
+"silo-amm-periphery@workspace:silo-amm-periphery":
+  version: 0.0.0-use.local
+  resolution: "silo-amm-periphery@workspace:silo-amm-periphery"
   dependencies:
     solc: 0.8.19
     solhint: ~3.4.1

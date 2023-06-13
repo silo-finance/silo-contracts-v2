@@ -1,31 +1,63 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: Unlicense
 pragma solidity >=0.8.0;
 
 import "forge-std/Test.sol";
 import "../../contracts/AmmStateModel.sol";
 import "./data-readers/AmmStateModelTestData.sol";
 
+contract StateModel is AmmStateModel {
+    address immutable _COLLATERAL;
+
+    constructor (address _collateral) {
+        _COLLATERAL = _collateral;
+    }
+
+    function addLiquidity(address _user, uint256 _collateralAmount, uint256 _collateralValue)
+        external
+        returns (uint256 shares) {
+        return _addLiquidity(_COLLATERAL, _user, _collateralAmount, _collateralValue);
+    }
+
+    function withdrawLiquidity(address _user, uint256 _w) // solhint-disable-line function-max-lines
+        external
+        returns (uint256 debtAmount)
+    {
+        return _withdrawLiquidity(_COLLATERAL, _user, _w);
+    }
+
+    function withdrawAllLiquidity(address _user) external returns (uint256 debtAmount) {
+        return _withdrawAllLiquidity(_COLLATERAL, _user);
+    }
+
+    function onSwapStateChange(uint256 _collateralOut, uint256 _debtIn) external {
+        _onSwapStateChange(_COLLATERAL, _collateralOut, _debtIn);
+    }
+}
+
 /*
-    FOUNDRY_PROFILE=amm forge test -vvv --match-contract AmmStateModelTest
+    FOUNDRY_PROFILE=amm-core forge test -v --match-contract AmmStateModelTest
 */
 contract AmmStateModelTest is Test {
+    address public constant COLLATERAL = address(123);
     uint256 public constant ONE = 1e18;
-    AmmStateModel public immutable stateModel;
+    StateModel public immutable stateModel;
     AmmStateModelTestData public immutable ammStateModelTestData;
 
+    mapping (AmmStateModelTestData.Action => uint[]) gas;
+
     constructor() {
-        stateModel = new AmmStateModel();
+        stateModel = new StateModel(COLLATERAL);
         ammStateModelTestData = new AmmStateModelTestData();
     }
 
     /*
-        FOUNDRY_PROFILE=amm forge test -vv --match-test test_ammStateModelFlow
+        FOUNDRY_PROFILE=amm-core forge test -vv --match-test test_ammStateModelFlow
     */
     function test_ammStateModelFlow() public {
         AmmStateModelTestData.TestData[] memory testDatas = ammStateModelTestData.testData();
 
-        _ammStateModelFlow(testDatas, false, 427211);
-        _ammStateModelFlow(testDatas, true, 393522);
+        _ammStateModelFlow(testDatas, false, 438051);
+        _ammStateModelFlow(testDatas, true, 401166);
     }
 
     function _ammStateModelFlow(
@@ -39,37 +71,45 @@ contract AmmStateModelTest is Test {
         for (uint i; i < _testDatas.length; i++) {
             AmmStateModelTestData.TestData memory testData = _testDatas[i];
 
-            uint256 gasStart = gasleft();
-
             if (testData.action == AmmStateModelTestData.Action.STATE_CHECK) {
                 // state check
             } else if (testData.action == AmmStateModelTestData.Action.ADD_LIQUIDITY) {
-                stateModel.addLiquidity(testData.user, testData.price, testData.amount);
+                uint256 collateralValue = testData.price * testData.amount / ONE;
+                uint256 gasStart = gasleft();
+                stateModel.addLiquidity(testData.user, testData.amount, collateralValue);
+                uint256 gasLeft = gasleft();
+                gasSum += _saveGas(AmmStateModelTestData.Action.ADD_LIQUIDITY, gasStart - gasLeft);
             } else if (testData.action == AmmStateModelTestData.Action.SWAP) {
-                stateModel.onSwap(testData.amount, testData.amount * testData.price / ONE);
+                uint256 gasStart = gasleft();
+                stateModel.onSwapStateChange(testData.amount, testData.amount * testData.price / ONE);
                 // data will be tested on state check or other action
                 uint256 gasLeft = gasleft();
-                gasSum += (gasStart - gasLeft);
+                gasSum += _saveGas(AmmStateModelTestData.Action.SWAP, gasStart - gasLeft);
                 continue;
             } else if (testData.action == AmmStateModelTestData.Action.WITHDRAW) {
+                uint256 gasStart = gasleft();
+
                 testData.amount == ONE && _withdrawAll
                     ? stateModel.withdrawAllLiquidity(testData.user)
                     : stateModel.withdrawLiquidity(testData.user, testData.amount);
+
+                uint256 gasLeft = gasleft();
+                gasSum += _saveGas(AmmStateModelTestData.Action.WITHDRAW, gasStart - gasLeft);
             } else {
                 revert("not supported");
             }
 
-            uint256 gasEnd = gasleft();
-            gasSum += (gasStart - gasEnd);
-
             if (i == _testDatas.length - 1) {
                 assertTrue(testData.action == AmmStateModelTestData.Action.WITHDRAW, "we need withdraw for last one");
                 // assuming we withdraw all already, nothing should happen when withdraw again
+                uint256 gasStart = gasleft();
                 stateModel.withdrawLiquidity(testData.user, 1e18);
+                uint256 gasLeft = gasleft();
+                gasSum += _saveGas(AmmStateModelTestData.Action.WITHDRAW, gasStart - gasLeft);
             }
 
-            AmmStateModel.TotalState memory state = stateModel.getTotalState();
-            AmmStateModel.UserPosition memory userPosition = stateModel.positions(testData.user);
+            AmmStateModel.TotalState memory state = stateModel.getTotalState(COLLATERAL);
+            AmmStateModel.UserPosition memory userPosition = stateModel.positions(COLLATERAL, testData.user);
 
             uint256 userAvailableCollateral = stateModel.getCurrentlyAvailableCollateralForUser(
                 state.shares,
@@ -100,5 +140,29 @@ contract AmmStateModelTest is Test {
         }
 
         assertEq(gasSum, _expectedGas, "make sure we gas efficient on price model actions");
+
+        _printGas();
+    }
+
+    function _saveGas(AmmStateModelTestData.Action _action, uint256 _gasUsed) internal returns (uint256 gasUsed) {
+        gas[_action].push(_gasUsed);
+        return _gasUsed;
+    }
+
+    function _printGas() internal {
+        emit log("ADD_LIQUIDITY");
+        _printGasAction(AmmStateModelTestData.Action.ADD_LIQUIDITY);
+        emit log("SWAP");
+        _printGasAction(AmmStateModelTestData.Action.SWAP);
+        emit log("WITHDRAW");
+        _printGasAction(AmmStateModelTestData.Action.WITHDRAW);
+    }
+
+    function _printGasAction(AmmStateModelTestData.Action _action) internal {
+        uint256 count = gas[_action].length;
+
+        for (uint i; i < count; i++) {
+            emit log_named_uint("gas used", gas[_action][i]);
+        }
     }
 }

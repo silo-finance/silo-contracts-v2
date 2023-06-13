@@ -1,16 +1,49 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: Unlicense
 pragma solidity >=0.8.0;
 
 import "forge-std/Test.sol";
 import "../../contracts/AmmPriceModel.sol";
 import "./data-readers/AmmPriceModelTestData.sol";
 
+contract PriceModel is AmmPriceModel {
+    address immutable _COLLATERAL;
+
+    constructor (address _collateral, AmmPriceModel.AmmPriceConfig memory _config) AmmPriceModel(_config) {
+        _COLLATERAL = _collateral;
+    }
+
+    function init() external {
+        _init(_COLLATERAL);
+    }
+
+    function onAddingLiquidity() external {
+        _onAddingLiquidity(_COLLATERAL);
+    }
+
+    function onSwapPriceChange() external {
+        _onSwapPriceChange(_COLLATERAL);
+    }
+
+    function onWithdraw() external {
+        _onWithdraw(_COLLATERAL);
+    }
+
+    function collateralPrice(uint256 _collateralAmount, uint256 _collateralTwapPrice)
+        external
+        view
+        returns (uint256 debtAmount)
+    {
+        return super.collateralPrice(_COLLATERAL, _collateralAmount, _collateralTwapPrice);
+    }
+}
+
 /*
-    FOUNDRY_PROFILE=amm forge test -vvv --match-contract AmmPriceModelTest
+    FOUNDRY_PROFILE=amm-core forge test -vvv --match-contract AmmPriceModelTest
 */
 contract AmmPriceModelTest is Test {
+    address public constant COLLATERAL = address(123);
     uint256 public constant ONE = 1e18;
-    AmmPriceModel public immutable priceModel;
+    PriceModel public immutable priceModel;
     AmmPriceModelTestData public immutable ammPriceModelTestData;
 
     constructor() {
@@ -25,7 +58,7 @@ contract AmmPriceModelTest is Test {
         config.vFast = 4629629629629;
         config.deltaK = 3564;
 
-        priceModel = new AmmPriceModel(config);
+        priceModel = new PriceModel(COLLATERAL, config);
         ammPriceModelTestData = new AmmPriceModelTestData();
     }
 
@@ -34,7 +67,7 @@ contract AmmPriceModelTest is Test {
         priceModel.getAmmConfig();
         uint256 gasEnd = gasleft();
 
-        assertEq(gasStart - gasEnd, 4067);
+        assertEq(gasStart - gasEnd, 4114);
     }
 
     function test_collateralPrice_gas() public {
@@ -42,7 +75,7 @@ contract AmmPriceModelTest is Test {
         priceModel.collateralPrice(1, 2);
         uint256 gasEnd = gasleft();
 
-        assertEq(gasStart - gasEnd, 5574);
+        assertEq(gasStart - gasEnd, 5723);
     }
 
     /*
@@ -68,7 +101,7 @@ contract AmmPriceModelTest is Test {
                 } else if (testData.action == AmmPriceModelTestData.Action.ADD_LIQUIDITY) {
                     priceModel.onAddingLiquidity();
                 } else if (testData.action == AmmPriceModelTestData.Action.SWAP) {
-                    priceModel.onSwap();
+                    priceModel.onSwapPriceChange();
                 } else if (testData.action == AmmPriceModelTestData.Action.WITHDRAW) {
                     priceModel.onWithdraw();
                 } else {
@@ -78,14 +111,14 @@ contract AmmPriceModelTest is Test {
                 uint256 gasEnd = gasleft();
                 gasSum += (gasStart - gasEnd);
 
-                AmmPriceModel.AmmPriceState memory state = priceModel.getState();
+                AmmPriceModel.AmmPriceState memory state = priceModel.getState(COLLATERAL);
 
                 assertEq(block.timestamp, testData.time, "time");
                 assertEq(state.lastActionTimestamp, testData.tCur, "tCur");
                 assertTrue(state.liquidityAdded == testData.al, "AL");
                 assertTrue(state.swap == testData.swap, "SWAP");
 
-                int256 kPrecision = 1e5;
+                uint256 kPrecision = 1e5;
                 assertEq(state.k / kPrecision, testData.k / kPrecision, "k");
 
                 if (testData.price != 0) {
@@ -95,21 +128,16 @@ contract AmmPriceModelTest is Test {
                 }
             }
 
-            assertEq(gasSum, 44774, "make sure we gas efficient on price model actions");
+            assertEq(gasSum, 49063, "make sure we gas efficient on price model actions");
         }
     }
 
     function test_ammConfigVerification_InvalidTslow() public {
         AmmPriceModel.AmmPriceConfig memory config = priceModel.getAmmConfig();
 
-        config.tSlow = -1;
+        config.tSlow = uint32(7 days + 1);
 
-        vm.expectRevert(AmmPriceModel.InvalidTslow.selector);
-        priceModel.ammConfigVerification(config);
-
-        config.tSlow = int32(7 days + 1);
-
-        vm.expectRevert(AmmPriceModel.InvalidTslow.selector);
+        vm.expectRevert(IAmmPriceModel.INVALID_T_SLOW.selector);
         priceModel.ammConfigVerification(config);
     }
 
@@ -118,54 +146,39 @@ contract AmmPriceModelTest is Test {
 
         config.kMax = 0;
 
-        vm.expectRevert(AmmPriceModel.InvalidKmax.selector);
+        vm.expectRevert(IAmmPriceModel.INVALID_K_MAX.selector);
         priceModel.ammConfigVerification(config);
 
-        config.kMax = int64(priceModel.ONE() + 1);
+        config.kMax = uint64(priceModel.ONE() + 1);
 
-        vm.expectRevert(AmmPriceModel.InvalidKmax.selector);
+        vm.expectRevert(IAmmPriceModel.INVALID_K_MAX.selector);
         priceModel.ammConfigVerification(config);
     }
 
     function test_ammConfigVerification_InvalidKmin() public {
         AmmPriceModel.AmmPriceConfig memory config = priceModel.getAmmConfig();
 
-        config.kMin = -1;
+        config.kMin = uint64(config.kMax + 1);
 
-        vm.expectRevert(AmmPriceModel.InvalidKmin.selector);
-        priceModel.ammConfigVerification(config);
-
-        config.kMin = int64(config.kMax + 1);
-
-        vm.expectRevert(AmmPriceModel.InvalidKmin.selector);
+        vm.expectRevert(IAmmPriceModel.INVALID_K_MIN.selector);
         priceModel.ammConfigVerification(config);
     }
 
     function test_ammConfigVerification_InvalidQ() public {
         AmmPriceModel.AmmPriceConfig memory config = priceModel.getAmmConfig();
 
-        config.q = -1;
+        config.q = uint64(priceModel.ONE() + 1);
 
-        vm.expectRevert(AmmPriceModel.InvalidQ.selector);
-        priceModel.ammConfigVerification(config);
-
-        config.q = int64(priceModel.ONE() + 1);
-
-        vm.expectRevert(AmmPriceModel.InvalidQ.selector);
+        vm.expectRevert(IAmmPriceModel.INVALID_Q.selector);
         priceModel.ammConfigVerification(config);
     }
 
     function test_ammConfigVerification_InvalidVfast() public {
         AmmPriceModel.AmmPriceConfig memory config = priceModel.getAmmConfig();
 
-        config.vFast = -1;
+        config.vFast = uint64(priceModel.ONE() + 1);
 
-        vm.expectRevert(AmmPriceModel.InvalidVfast.selector);
-        priceModel.ammConfigVerification(config);
-
-        config.vFast = int64(priceModel.ONE() + 1);
-
-        vm.expectRevert(AmmPriceModel.InvalidVfast.selector);
+        vm.expectRevert(IAmmPriceModel.INVALID_V_FAST.selector);
         priceModel.ammConfigVerification(config);
     }
 
@@ -175,14 +188,9 @@ contract AmmPriceModelTest is Test {
     function test_ammConfigVerification_InvalidDeltaK() public {
         AmmPriceModel.AmmPriceConfig memory config = priceModel.getAmmConfig();
 
-        config.deltaK = -1;
-
-        vm.expectRevert(AmmPriceModel.InvalidDeltaK.selector);
-        priceModel.ammConfigVerification(config);
-
         config.deltaK = config.tSlow + 1;
 
-        vm.expectRevert(AmmPriceModel.InvalidDeltaK.selector);
+        vm.expectRevert(IAmmPriceModel.INVALID_DELTA_K.selector);
         priceModel.ammConfigVerification(config);
     }
 }

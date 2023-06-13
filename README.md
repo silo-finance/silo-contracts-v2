@@ -30,7 +30,10 @@ yarn install
 ```
 git submodule add --name foundry https://github.com/foundry-rs/forge-std gitmodules/forge-std
 git submodule add --name silo-foundry-utils https://github.com/silo-finance/silo-foundry-utils gitmodules/silo-foundry-utils
-forge install OpenZeppelin/openzeppelin-contracts --no-commit
+forge install OpenZeppelin/openzeppelin-contracts --no-commit 
+git submodule add --name gitmodules/uniswap/v2-core https://github.com/Uniswap/v2-core gitmodules/uniswap/v2-core 
+git submodule add --name gitmodules/uniswap/v2-periphery https://github.com/Uniswap/v2-periphery gitmodules/uniswap/v2-periphery 
+git submodule add --name gitmodules/uniswap/v3-periphery https://github.com/Uniswap/v3-periphery gitmodules/uniswap/v3-periphery 
 git submodule update --init --recursive
 git submodule
 ```
@@ -59,12 +62,13 @@ example:
 ```shell
 # Remove the submodule entry from .git/config
 git submodule deinit -f silo-core/lib/forge-std
+git submodule deinit -f gitmodules/uniswap/v2-periphery 
 
 # Remove the submodule directory from the superproject's .git/modules directory
-rm -rf .git/modules/silo-core/lib/forge-std
+rm -rf .git/modules/gitmodules/uniswap/v2-periphery
 
 # Remove the entry in .gitmodules and remove the submodule directory located at path/to/submodule
-git rm -f silo-core/lib/forge-std
+rm -rf gitmodules/v2-periphery
 ```
 
 ### Update submodule
