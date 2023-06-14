@@ -16,7 +16,7 @@
     "solhint": "~3.4.1"
   },
   "scripts": {
-    "compile": "FOUNDRY_PROFILE=amm-core forge build",
+    "compile": "FOUNDRY_PROFILE=amm-core forge build --sizes",
     "clean": "FOUNDRY_PROFILE=amm-core forge clean",
     "lint:sol": "solhint \"contracts/**/*.sol\" --max-warnings=0",
     "test": "FOUNDRY_PROFILE=amm-core forge test -vvv"

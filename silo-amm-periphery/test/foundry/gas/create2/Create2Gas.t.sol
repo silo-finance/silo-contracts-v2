@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Unlicense
-pragma solidity >=0.8.0;
+pragma solidity 0.8.19;
 
 import "forge-std/Test.sol";
 import "./PairCreate2.sol";
@@ -28,7 +28,7 @@ contract Pair {
 }
 
 /*
-    FOUNDRY_PROFILE=amm forge test -vvv --match-contract Create2GasTest
+    FOUNDRY_PROFILE=amm-periphery forge test -vv --match-contract Create2GasTest
 */
 contract Create2GasTest is Test {
     bytes32 constant INIT_HASH = bytes32(0x3858a74580d233bea7420d0f6383ad8499ac270275d9fe840c13a653949d4742);

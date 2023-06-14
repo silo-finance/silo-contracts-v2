@@ -2,8 +2,8 @@
 pragma solidity >=0.6.2;
 
 /// @dev source: uniswap
-/// It had to be cloned because of factory and WETH - they are marked as pure and we need view and theer is no way to
-/// override as a view
+/// It had to be cloned because of `factory()` and `WETH()` methods, they are marked as pure but we need them to be view
+/// and there is no way to override this.
 interface IUniswapV2Router01 {
     function addLiquidity(
         address tokenA,
@@ -24,6 +24,7 @@ interface IUniswapV2Router01 {
         address to,
         uint deadline
     ) external payable returns (uint amountToken, uint amountETH, uint liquidity);
+
     function removeLiquidity(
         address tokenA,
         address tokenB,
@@ -81,22 +82,22 @@ interface IUniswapV2Router01 {
     ) external returns (uint[] memory amounts);
 
     function swapExactETHForTokens(uint amountOutMin, address[] calldata path, address to, uint deadline)
-    external
-    payable
-    returns (uint[] memory amounts);
+        external
+        payable
+        returns (uint[] memory amounts);
 
     function swapTokensForExactETH(uint amountOut, uint amountInMax, address[] calldata path, address to, uint deadline)
-    external
-    returns (uint[] memory amounts);
+        external
+        returns (uint[] memory amounts);
 
     function swapExactTokensForETH(uint amountIn, uint amountOutMin, address[] calldata path, address to, uint deadline)
-    external
-    returns (uint[] memory amounts);
+        external
+        returns (uint[] memory amounts);
 
     function swapETHForExactTokens(uint amountOut, address[] calldata path, address to, uint deadline)
-    external
-    payable
-    returns (uint[] memory amounts);
+        external
+        payable
+        returns (uint[] memory amounts);
 
     function factory() external view returns (address);
     function WETH() external view returns (address); // solhint-disable-line func-name-mixedcase

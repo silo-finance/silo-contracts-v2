@@ -3,13 +3,13 @@ pragma solidity >=0.8.0;
 
 import "forge-std/Test.sol";
 import "../../contracts/SiloAmmPair.sol";
-import "./helpers/Fxtures.sol";
+import "./helpers/Fixtures.sol";
 
 
 /*
     FOUNDRY_PROFILE=amm forge test -vvv --match-contract Create2GasTest
 */
-contract SiloAmmPairTest is Test, Fxtures {
+contract SiloAmmPairTest is Test, Fixtures {
     address constant TOKEN_0 = address(3);
     address constant TOKEN_1 = address(4);
 
@@ -17,11 +17,10 @@ contract SiloAmmPairTest is Test, Fxtures {
 
     constructor() {
         address router = address(1);
-        address feeTo;
         ISiloOracle oracle0;
         ISiloOracle oracle1;
 
-        pair = new SiloAmmPair(router, address(this), TOKEN_0, TOKEN_1, feeTo, oracle0, oracle1, ammPriceConfig);
+        pair = new SiloAmmPair(router, address(this), TOKEN_0, TOKEN_1, oracle0, oracle1, ammPriceConfig);
     }
 
     /*

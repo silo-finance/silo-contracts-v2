@@ -1,12 +1,12 @@
-// SPDX-License-Identifier: BUSL-1.1
+// SPDX-License-Identifier: GD
 pragma solidity >=0.5.0;
 
 import "uniswap/v2-core/contracts/interfaces/IUniswapV2ERC20.sol";
 
 /// @dev cleaned version of original IUniswapV2Pair
-/// - main reason for cleanup is this error:
-///   TypeError: Derived contract must override function "transferFrom". Two or more base classes define...
-/// - removed common part that is present in IUniswapV2ERC20
+/// Main reason for cleanup is this error:
+/// `TypeError: Derived contract must override function "transferFrom". Two or more base classes define...`.
+/// Also removed common part that is present in IUniswapV2ERC20
 interface IUniswapV2Pair is IUniswapV2ERC20 {
     event Mint(address indexed sender, uint amount0, uint amount1);
     event Burn(address indexed sender, uint amount0, uint amount1, address indexed to);

@@ -1,48 +1,31 @@
 // SPDX-License-Identifier: GD
 pragma solidity >=0.5.0;
 
-import "silo-amm-core/contracts/external/interfaces/IUniswapV2Pair.sol";
-import "silo-amm-core/contracts/interfaces/IAmmPriceModel.sol";
 import "silo-amm-core/contracts/external/interfaces/ISiloOracle.sol";
+import "silo-amm-core/contracts/interfaces/IAmmPriceModel.sol";
 
 import "../external/interfaces/IUniswapV2Router02.sol";
+import "./ISiloAmmRouterEvents.sol";
 
-interface ISiloAmmRouter is IUniswapV2Router02 {
-    /// @dev this event is here to keep backwards compatibility with IUniswapV2Factory
-    event PairCreated(address indexed token0, address indexed token1, IUniswapV2Pair pair, uint id);
-
-    /// @param silo address
-    event PairCreated(
-        address indexed token0,
-        address indexed token1,
-        IUniswapV2Pair pair,
-        address indexed silo,
-        uint id
-    );
-
-    error NOT_SUPPORTED();
-
-    error IDENTICAL_ADDRESSES();
-    error ZERO_ADDRESS();
-    error PAIR_EXISTS();
-
-    error UNISWAPV2_ROUTER_EXPIRED();
-    error UNISWAPV2_ROUTER_INVALID_PATH();
-    error UNISWAPV2_ROUTER_EXCESSIVE_INPUT_AMOUNT();
-    error UNISWAPV2_ROUTER_INSUFFICIENT_A_AMOUNT();
-    error UNISWAPV2_ROUTER_INSUFFICIENT_B_AMOUNT();
-    error UNISWAPV2_ROUTER_INSUFFICIENT_OUTPUT_AMOUNT();
-
+interface ISiloAmmRouter is ISiloAmmRouterEvents, IUniswapV2Router02 {
+    /// @dev It creates pool for pair of tokens. It creates 1:1 bond with Silo
+    /// @notice Only SiloFactory can call this method.
+    /// @param _silo address of silo with which pool will be paired up
+    /// @param _token0 address, assuming addresses are sorted, so `token0 < token1`
+    /// @param _token1 address, assuming addresses are sorted, so `token0 < token1`
+    /// @param _oracle0 oracle address TODO
+    /// @param _oracle1 oracle address TODO
+    /// @param _config AmmPriceConfig pool config
     function createPair(
+        address _silo,
         address _token0,
-        ISiloOracle _oracle0,
         address _token1,
+        ISiloOracle _oracle0,
         ISiloOracle _oracle1,
-        IAmmPriceModel.AmmPriceConfig memory _config,
-        address _feeTo
-    ) external returns (IUniswapV2Pair pair);
+        IAmmPriceModel.AmmPriceConfig memory _config
+    ) external returns (ISiloAmmPair pair);
 
-    function getPair(address silo, address tokenA, address tokenB) external view returns (IUniswapV2Pair pair);
+    function getPair(address tokenA, address tokenB, uint256 id) external view returns (IUniswapV2Pair pair);
     function getPairs(address tokenA, address tokenB) external view returns (IUniswapV2Pair[] memory pairs);
 
     function allPairs(uint) external view returns (address pair);

@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: GD
 pragma solidity >=0.8.0;
 
+import "silo-amm-core/contracts/interfaces/ISiloAmmPair.sol";
+
 import "../external/Babylonian.sol";
-import "../interfaces/ISiloAmmPair.sol";
 
 import "./FullMath.sol";
 import "./UniswapV2Library.sol";

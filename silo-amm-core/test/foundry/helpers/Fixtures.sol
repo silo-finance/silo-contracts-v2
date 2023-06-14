@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import "../../../contracts/AmmPriceModel.sol";
 
-contract Fxtures {
+contract Fixtures {
     AmmPriceModel.AmmPriceConfig ammPriceConfig;
     
     constructor(){
