@@ -17,7 +17,7 @@
   },
   "scripts": {
     "clean": "FOUNDRY_PROFILE=amm-periphery forge clean",
-    "compile": "FOUNDRY_PROFILE=amm-periphery forge build",
+    "compile": "FOUNDRY_PROFILE=amm-periphery forge build --sizes",
     "lint:sol": "solhint \"contracts/**/*.sol\" --max-warnings=0",
     "test": "FOUNDRY_PROFILE=amm-periphery forge test -vvv"
   }

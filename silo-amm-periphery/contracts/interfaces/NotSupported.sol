@@ -3,20 +3,22 @@ pragma solidity ^0.8.0;
 
 import "./ISiloAmmRouter.sol";
 
+/// @dev Liquidity management is not supported in Silo AMM because it is restricted to Silos only.
+/// This contact has list of all methods that are not supported but they are part of UniswapV2 router interface.
+/// However it should not affect swaps in any way.
 abstract contract NotSupported  is ISiloAmmRouter {
-    function addLiquidity(address, address, uint, uint, uint, uint, address, uint)
-        external pure virtual override returns (uint, uint, uint)
-    {
-        revert NOT_SUPPORTED();
-    }
-
     function addLiquidityETH(address, uint, uint, uint, address, uint)
         external payable virtual override returns (uint, uint, uint)
     {
         revert NOT_SUPPORTED();
     }
 
-    // **** REMOVE LIQUIDITY ****
+    function addLiquidity(address, address, uint, uint, uint, uint, address, uint)
+        external pure virtual override returns (uint, uint, uint)
+    {
+        revert NOT_SUPPORTED();
+    }
+
     function removeLiquidity(address, address, uint, uint, uint, address, uint)
         external pure virtual override returns (uint, uint)
     {
@@ -41,7 +43,6 @@ abstract contract NotSupported  is ISiloAmmRouter {
         revert NOT_SUPPORTED();
     }
 
-    // **** REMOVE LIQUIDITY (supporting fee-on-transfer tokens) ****
     function removeLiquidityETHSupportingFeeOnTransferTokens(address, uint, uint, uint, address, uint)
         external pure virtual override returns (uint)
     {

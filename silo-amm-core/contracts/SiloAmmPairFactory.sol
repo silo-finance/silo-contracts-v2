@@ -10,14 +10,19 @@ contract SiloAmmPairFactory is ISiloAmmPairFactory {
         address _silo,
         address _token0,
         address _token1,
-        address _feeTo,
         ISiloOracle _oracle0,
         ISiloOracle _oracle1,
-        SiloAmmPair.AmmPriceConfig memory _config
+        IAmmPriceModel.AmmPriceConfig memory _config
     )
         external
-        returns (IUniswapV2Pair pair)
+        virtual
+        returns (ISiloAmmPair pair)
     {
-        pair = new SiloAmmPair(msg.sender, _silo, _token0, _token1, _feeTo, _oracle0, _oracle1, _config);
+        pair = new SiloAmmPair(msg.sender, _silo, _token0, _token1, _oracle0, _oracle1, _config);
+    }
+
+    /// @inheritdoc ISiloAmmPairFactory
+    function siloAmmPairFactoryPing() external pure returns(bytes4) {
+        return ISiloAmmPairFactory.siloAmmPairFactoryPing.selector;
     }
 }

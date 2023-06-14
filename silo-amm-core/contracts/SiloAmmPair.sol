@@ -2,7 +2,6 @@
 pragma solidity 0.8.19;
 
 import "uniswap/v2-core/contracts/interfaces/IUniswapV2Callee.sol";
-import "uniswap/v2-core/contracts/interfaces/IERC20.sol";
 
 import "./external/libraries/Math.sol";
 import "./external/UniswapV2ERC20.sol";
@@ -10,9 +9,10 @@ import "./external/UniswapV2ERC20.sol";
 import "./interfaces/ISiloAmmPair.sol";
 import "./AmmStateModel.sol";
 import "./AmmPriceModel.sol";
+import "./utils/SafeTransfers.sol";
 
 
-contract SiloAmmPair is ISiloAmmPair, UniswapV2ERC20, AmmStateModel, AmmPriceModel {
+contract SiloAmmPair is ISiloAmmPair, SafeTransfers, UniswapV2ERC20, AmmStateModel, AmmPriceModel {
     uint public constant MINIMUM_LIQUIDITY = 10**3;
 
     /// @dev _TOKEN_0 < _TOKEN_1
@@ -58,7 +58,6 @@ contract SiloAmmPair is ISiloAmmPair, UniswapV2ERC20, AmmStateModel, AmmPriceMod
         address _silo,
         address _token0,
         address _token1,
-        address _feeTo,
         ISiloOracle _oracle0,
         ISiloOracle _oracle1,
         AmmPriceConfig memory _config
@@ -70,15 +69,14 @@ contract SiloAmmPair is ISiloAmmPair, UniswapV2ERC20, AmmStateModel, AmmPriceMod
         _TOKEN_1 = _token1;
 
         if (_router == address(0)) revert ZERO_ADDRESS();
-        _ROUTER = _router;
-
-        // zero check is enough, we don"t need to check, if this is real silo, ...or do we?? :]
+        // zero check is enough, we don't need to check, if this is real silo
         if (_silo == address(0)) revert ZERO_ADDRESS();
 
+        _ROUTER = _router;
         _SILO = _silo;
 
-        // can be zero
-        _FEE_TO = _feeTo;
+        // TODO
+        _FEE_TO = address(0);
 
         ORACLE_0 = _oracle0;
         ORACLE_1 = _oracle1;
@@ -263,42 +261,6 @@ contract SiloAmmPair is ISiloAmmPair, UniswapV2ERC20, AmmStateModel, AmmPriceMod
         } else if (_kLast != 0) {
             kLast = 0;
         }
-    }
-
-    /// @notice Transfers tokens from msg.sender to a recipient
-    /// @dev Errors with ST if transfer fails
-    /// @param token The contract address of the token which will be transferred
-    /// @param to The recipient of the transfer
-    /// @param value The value of the transfer
-    function _safeTransfer(
-        address token,
-        address to,
-        uint256 value
-    ) internal {
-        // solhint-disable-next-line avoid-low-level-calls
-        (bool success, bytes memory data) = token.call(abi.encodeWithSelector(IERC20.transfer.selector, to, value));
-        require(success && (data.length == 0 || abi.decode(data, (bool))), "ST");
-    }
-
-    /// @notice Transfers tokens from the targeted address to the given destination
-    /// @notice Errors with "STF" if transfer fails
-    /// @param token The contract address of the token to be transferred
-    /// @param from The originating address from which the tokens will be transferred
-    /// @param to The destination address of the transfer
-    /// @param value The amount to be transferred
-    function _safeTransferFrom(
-        address token,
-        address from,
-        address to,
-        uint256 value
-    ) internal {
-        (
-            bool success,
-            bytes memory data
-        // solhint-disable-next-line avoid-low-level-calls
-        ) = token.call(abi.encodeWithSelector(IERC20.transferFrom.selector, from, to, value));
-
-        require(success && (data.length == 0 || abi.decode(data, (bool))), "STF");
     }
 
     function _oracleSetup(address _oracle0, address _oracle1) internal pure returns (OracleSetup) {
