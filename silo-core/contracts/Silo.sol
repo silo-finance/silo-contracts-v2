@@ -25,7 +25,7 @@ abstract contract Silo is Initializable, ISilo {
 
     /// @notice Sets configuration
     /// @param _config address of ISiloConfig with full config for this Silo
-    function initialize(ISiloConfig _config) external initializer {
+    function initialize(ISiloConfig _config) external virtual initializer {
         config = _config;
     }
 
@@ -34,11 +34,11 @@ abstract contract Silo is Initializable, ISilo {
     }
 
     function token0() external view virtual returns (address) {
-        return config.token0();
+        return config.TOKEN0();
     }
 
     function token1() external view virtual returns (address) {
-        return config.token1();
+        return config.TOKEN1();
     }
 
     function isSolvent(address _borrower) external virtual returns (bool) {
@@ -61,9 +61,7 @@ abstract contract Silo is Initializable, ISilo {
         return SiloStdLib.getLt(config, _token);
     }
 
-    /**
-     * ERC4626 *
-     */
+    // ERC4626
 
     function tokens() external view virtual returns (address[2] memory assetTokenAddresses) {
         return SiloStdLib.tokens(config);
@@ -73,9 +71,7 @@ abstract contract Silo is Initializable, ISilo {
         return SiloStdLib.totalAssets(config, _token, assetStorage);
     }
 
-    /**
-     * Deposits *
-     */
+    // Deposits
 
     function convertToShares(address _token, uint256 _assets) external view virtual returns (uint256 shares) {
         return SiloStdLib.convertToShares(config, _token, _assets, false, false, assetStorage);
@@ -145,9 +141,7 @@ abstract contract Silo is Initializable, ISilo {
         return SiloStdLib.accrueInterest(config, FACTORY, _token, assetStorage);
     }
 
-    /**
-     * Protected Deposits *
-     */
+    // Protected Deposits
 
     function convertToShares(address _token, uint256 _assets, bool _isProtected)
         external
@@ -287,9 +281,7 @@ abstract contract Silo is Initializable, ISilo {
         return SiloStdLib.transitionFromProtected(config, FACTORY, _token, _shares, _owner, msg.sender, assetStorage);
     }
 
-    /**
-     * Lending *
-     */
+    // Lending
 
     function maxBorrow(address _token, address _borrower) external view virtual returns (uint256 maxAssets) {
         return SiloStdLib.maxBorrow(config, _token, _borrower, assetStorage);

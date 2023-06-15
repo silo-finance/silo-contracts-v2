@@ -10,8 +10,8 @@ interface ISiloConfig {
         address ltvOracle0;
         address ltOracle0;
         address interestRateModel0;
-        uint256 maxLtv0;
-        uint256 lt0;
+        uint64 maxLtv0;
+        uint64 lt0;
         bool borrowable0;
         address token1;
         address protectedCollateralShareToken1;
@@ -20,42 +20,44 @@ interface ISiloConfig {
         address ltvOracle1;
         address ltOracle1;
         address interestRateModel1;
-        uint256 maxLtv1;
-        uint256 lt1;
+        uint64 maxLtv1;
+        uint64 lt1;
         bool borrowable1;
     }
 
+    error SameAsset();
+    error InvalidIrm();
+    error InvalidMaxLtv();
+    error NonBorrowableSilo();
+    error InvalidShareTokens();
+
     function SILO_ID() external view returns (uint256);
 
-    /**
-     * TOKEN #0
-     */
+    // TOKEN #0
 
-    function token0() external view returns (address);
-    function protectedCollateralShareToken0() external view returns (address);
-    function collateralShareToken0() external view returns (address);
-    function debtShareToken0() external view returns (address);
-    function ltvOracle0() external view returns (address);
-    function ltOracle0() external view returns (address);
-    function interestRateModel0() external view returns (address);
-    function maxLtv0() external view returns (uint256);
-    function lt0() external view returns (uint256);
-    function borrowable0() external view returns (bool);
+    function TOKEN0() external view returns (address);
+    function PROTECTED_COLLATERAL_SHARE_TOKEN0() external view returns (address);
+    function COLLATERAL_SHARE_TOKEN0() external view returns (address);
+    function DEBT_SHARE_TOKEN0() external view returns (address);
+    function LTV_ORACLE0() external view returns (address);
+    function LT_ORACLE0() external view returns (address);
+    function INTEREST_RATE_MODEL0() external view returns (address);
+    function MAX_LTV0() external view returns (uint64);
+    function LT0() external view returns (uint64);
+    function BORROWABLE0() external view returns (bool);
 
-    /**
-     * TOKEN #1
-     */
+    // TOKEN #1
 
-    function token1() external view returns (address);
-    function protectedCollateralShareToken1() external view returns (address);
-    function collateralShareToken1() external view returns (address);
-    function debtShareToken1() external view returns (address);
-    function ltvOracle1() external view returns (address);
-    function ltOracle1() external view returns (address);
-    function interestRateModel1() external view returns (address);
-    function maxLtv1() external view returns (uint256);
-    function lt1() external view returns (uint256);
-    function borrowable1() external view returns (bool);
+    function TOKEN1() external view returns (address);
+    function PROTECTED_COLLATERAL_SHARE_TOKEN1() external view returns (address);
+    function COLLATERAL_SHARE_TOKEN1() external view returns (address);
+    function DEBT_SHARE_TOKEN1() external view returns (address);
+    function LTV_ORACLE1() external view returns (address);
+    function LT_ORACLE1() external view returns (address);
+    function INTEREST_RATE_MODEL1() external view returns (address);
+    function MAX_LTV1() external view returns (uint64);
+    function LT1() external view returns (uint64);
+    function BORROWABLE1() external view returns (bool);
 
     function getConfig() external view returns (ConfigData memory);
 }

@@ -163,7 +163,7 @@ library SiloStdLib {
     ) internal view returns (LtvData memory ltvData) {
         uint256 debtShareToken0Balance = IShareToken(_configData.debtShareToken0).balanceOf(_borrower);
 
-        if (debtShareToken0Balance > 0) {
+        if (debtShareToken0Balance != 0) {
             // borrowed token0, collateralized token1
             ltvData.debtAssets = toAssets(
                 debtShareToken0Balance,
@@ -227,7 +227,7 @@ library SiloStdLib {
         uint256 protectedBalance = ltvData.protectedCollateralShareToken.balanceOf(_borrower);
         uint256 protectedAssets;
 
-        if (protectedBalance > 0) {
+        if (protectedBalance != 0) {
             protectedAssets = toAssets(
                 protectedBalance,
                 _assetStorage[ltvData.collateralToken].protectedDeposits,
@@ -238,7 +238,7 @@ library SiloStdLib {
         uint256 collateralBalance = ltvData.collateralShareToken.balanceOf(_borrower);
         uint256 collateralAssets;
 
-        if (collateralBalance > 0) {
+        if (collateralBalance != 0) {
             collateralAssets = toAssets(
                 collateralBalance,
                 amountWithInterest(
@@ -250,7 +250,10 @@ library SiloStdLib {
             );
         }
 
-        ltvData.collateralAssets = protectedAssets + collateralAssets;
+        /// @dev sum of assets cannot be bigger than total supply which must fit in uint256
+        unchecked {
+            ltvData.collateralAssets = protectedAssets + collateralAssets;
+        }
     }
 
     function getLtvView(
@@ -406,7 +409,10 @@ library SiloStdLib {
         ISiloConfig.ConfigData memory configData = _config.getConfig();
 
         if (configData.token0 == _token || configData.token1 == _token) {
-            return _assetStorage[_token].protectedDeposits + _assetStorage[_token].collateralDeposits;
+            /// @dev sum of assets cannot be bigger than total supply which must fit in uint256
+            unchecked {
+                return _assetStorage[_token].protectedDeposits + _assetStorage[_token].collateralDeposits;
+            }
         } else {
             revert WrongToken();
         }
@@ -504,9 +510,15 @@ library SiloStdLib {
         if (!depositPossible(_config, _token, _receiver)) return 0;
 
         if (_isProtected) {
-            return type(uint256).max - _assetStorage[_token].protectedDeposits;
+            /// @dev protectedDeposits cannot be bigger then uin256 itself
+            unchecked {
+                return type(uint256).max - _assetStorage[_token].protectedDeposits;
+            }
         } else {
-            return type(uint256).max - _assetStorage[_token].collateralDeposits;
+            /// @dev collateralDeposits cannot be bigger then uin256 itself
+            unchecked {
+                return type(uint256).max - _assetStorage[_token].collateralDeposits;
+            }
         }
     }
 
@@ -795,7 +807,7 @@ library SiloStdLib {
 
         (ltv, maxShares, assets) = _maxWithdrawInternal(configData, _token, _owner, _isProtected, _assetStorage);
 
-        if (ltv > 0) {
+        if (ltv != 0) {
             // has debt, convert assets to shares
             maxShares = _convertToSharesInternal(configData, _token, assets, _isProtected, false, _assetStorage);
         }
@@ -938,17 +950,17 @@ library SiloStdLib {
         uint256 totalCollateralAssets;
         uint256 debtAssets;
 
-        if (protectedBalance > 0) {
+        if (protectedBalance != 0) {
             totalCollateralAssets +=
                 _convertToAssetsInternal(configData, _token, protectedBalance, true, false, _assetStorage);
         }
 
-        if (collateralBalance > 0) {
+        if (collateralBalance != 0) {
             totalCollateralAssets +=
                 _convertToAssetsInternal(configData, _token, collateralBalance, false, false, _assetStorage);
         }
 
-        if (debtBalance > 0) {
+        if (debtBalance != 0) {
             debtAssets = _convertToAssetsInternal(configData, _token, debtBalance, false, true, _assetStorage);
         }
 

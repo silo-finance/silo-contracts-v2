@@ -9,57 +9,47 @@ import "./interface/ISiloConfig.sol";
 contract SiloConfig is ISiloConfig {
     uint256 public immutable SILO_ID;
 
-    /**
-     * TOKEN #0
-     */
+    // TOKEN #0
 
-    address public immutable token0;
+    address public immutable TOKEN0;
 
     /// @dev Token that represents a share in total protected deposits of Silo
-    address public immutable protectedCollateralShareToken0;
+    address public immutable PROTECTED_COLLATERAL_SHARE_TOKEN0;
     /// @dev Token that represents a share in total deposits of Silo
-    address public immutable collateralShareToken0;
+    address public immutable COLLATERAL_SHARE_TOKEN0;
     /// @dev Token that represents a share in total debt of Silo
-    address public immutable debtShareToken0;
+    address public immutable DEBT_SHARE_TOKEN0;
 
-    address public immutable ltvOracle0;
-    address public immutable ltOracle0;
+    address public immutable LTV_ORACLE0;
+    address public immutable LT_ORACLE0;
 
-    address public immutable interestRateModel0;
+    address public immutable INTEREST_RATE_MODEL0;
 
-    uint256 public immutable maxLtv0;
-    uint256 public immutable lt0;
+    uint64 public immutable MAX_LTV0;
+    uint64 public immutable LT0;
 
-    bool public immutable borrowable0;
+    bool public immutable BORROWABLE0;
 
-    /**
-     * TOKEN #1
-     */
+    // TOKEN #1
 
-    address public immutable token1;
+    address public immutable TOKEN1;
 
     /// @dev Token that represents a share in total protected deposits of Silo
-    address public immutable protectedCollateralShareToken1;
+    address public immutable PROTECTED_COLLATERAL_SHARE_TOKEN1;
     /// @dev Token that represents a share in total deposits of Silo
-    address public immutable collateralShareToken1;
+    address public immutable COLLATERAL_SHARE_TOKEN1;
     /// @dev Token that represents a share in total debt of Silo
-    address public immutable debtShareToken1;
+    address public immutable DEBT_SHARE_TOKEN1;
 
-    address public immutable ltvOracle1;
-    address public immutable ltOracle1;
+    address public immutable LTV_ORACLE1;
+    address public immutable LT_ORACLE1;
 
-    address public immutable interestRateModel1;
+    address public immutable INTEREST_RATE_MODEL1;
 
-    uint256 public immutable maxLtv1;
-    uint256 public immutable lt1;
+    uint64 public immutable MAX_LTV1;
+    uint64 public immutable LT1;
 
-    bool public immutable borrowable1;
-
-    error SameAsset();
-    error InvalidIrm();
-    error InvalidMaxLtv();
-    error NonBorrowableSilo();
-    error InvalidShareTokens();
+    bool public immutable BORROWABLE1;
 
     /// @param _siloId ID of this pool assigned by factory
     /// @param _configData silo configuration data
@@ -68,45 +58,41 @@ contract SiloConfig is ISiloConfig {
 
         SILO_ID = _siloId;
 
-        /**
-         * TOKEN #0
-         */
+        // TOKEN #0
 
-        token0 = _configData.token0;
+        TOKEN0 = _configData.token0;
 
-        protectedCollateralShareToken0 = _configData.protectedCollateralShareToken0;
-        collateralShareToken0 = _configData.collateralShareToken0;
-        debtShareToken0 = _configData.debtShareToken0;
+        PROTECTED_COLLATERAL_SHARE_TOKEN0 = _configData.protectedCollateralShareToken0;
+        COLLATERAL_SHARE_TOKEN0 = _configData.collateralShareToken0;
+        DEBT_SHARE_TOKEN0 = _configData.debtShareToken0;
 
-        ltvOracle0 = _configData.ltvOracle0;
-        ltOracle0 = _configData.ltOracle0;
+        LTV_ORACLE0 = _configData.ltvOracle0;
+        LT_ORACLE0 = _configData.ltOracle0;
 
-        interestRateModel0 = _configData.interestRateModel0;
+        INTEREST_RATE_MODEL0 = _configData.interestRateModel0;
 
-        maxLtv0 = _configData.maxLtv0;
-        lt0 = _configData.lt0;
+        MAX_LTV0 = _configData.maxLtv0;
+        LT0 = _configData.lt0;
 
-        borrowable0 = _configData.borrowable0;
+        BORROWABLE0 = _configData.borrowable0;
 
-        /**
-         * TOKEN #1
-         */
+        // TOKEN #1
 
-        token1 = _configData.token1;
+        TOKEN1 = _configData.token1;
 
-        protectedCollateralShareToken1 = _configData.protectedCollateralShareToken1;
-        collateralShareToken1 = _configData.collateralShareToken1;
-        debtShareToken1 = _configData.debtShareToken1;
+        PROTECTED_COLLATERAL_SHARE_TOKEN1 = _configData.protectedCollateralShareToken1;
+        COLLATERAL_SHARE_TOKEN1 = _configData.collateralShareToken1;
+        DEBT_SHARE_TOKEN1 = _configData.debtShareToken1;
 
-        ltvOracle1 = _configData.ltvOracle1;
-        ltOracle1 = _configData.ltOracle1;
+        LTV_ORACLE1 = _configData.ltvOracle1;
+        LT_ORACLE1 = _configData.ltOracle1;
 
-        interestRateModel1 = _configData.interestRateModel1;
+        INTEREST_RATE_MODEL1 = _configData.interestRateModel1;
 
-        maxLtv1 = _configData.maxLtv1;
-        lt1 = _configData.lt1;
+        MAX_LTV1 = _configData.maxLtv1;
+        LT1 = _configData.lt1;
 
-        borrowable1 = _configData.borrowable1;
+        BORROWABLE1 = _configData.borrowable1;
     }
 
     function validateSiloData(ConfigData memory _configData) public pure {
@@ -129,26 +115,26 @@ contract SiloConfig is ISiloConfig {
 
     function getConfig() public view returns (ConfigData memory) {
         return ConfigData({
-            token0: token0,
-            protectedCollateralShareToken0: protectedCollateralShareToken0,
-            collateralShareToken0: collateralShareToken0,
-            debtShareToken0: debtShareToken0,
-            ltvOracle0: ltvOracle0,
-            ltOracle0: ltOracle0,
-            interestRateModel0: interestRateModel0,
-            maxLtv0: maxLtv0,
-            lt0: lt0,
-            borrowable0: borrowable0,
-            token1: token1,
-            protectedCollateralShareToken1: protectedCollateralShareToken1,
-            collateralShareToken1: collateralShareToken1,
-            debtShareToken1: debtShareToken1,
-            ltvOracle1: ltvOracle1,
-            ltOracle1: ltOracle1,
-            interestRateModel1: interestRateModel1,
-            maxLtv1: maxLtv1,
-            lt1: lt1,
-            borrowable1: borrowable1
+            token0: TOKEN0,
+            protectedCollateralShareToken0: PROTECTED_COLLATERAL_SHARE_TOKEN0,
+            collateralShareToken0: COLLATERAL_SHARE_TOKEN0,
+            debtShareToken0: DEBT_SHARE_TOKEN0,
+            ltvOracle0: LTV_ORACLE0,
+            ltOracle0: LT_ORACLE0,
+            interestRateModel0: INTEREST_RATE_MODEL0,
+            maxLtv0: MAX_LTV0,
+            lt0: LT0,
+            borrowable0: BORROWABLE0,
+            token1: TOKEN1,
+            protectedCollateralShareToken1: PROTECTED_COLLATERAL_SHARE_TOKEN1,
+            collateralShareToken1: COLLATERAL_SHARE_TOKEN1,
+            debtShareToken1: DEBT_SHARE_TOKEN1,
+            ltvOracle1: LTV_ORACLE1,
+            ltOracle1: LT_ORACLE1,
+            interestRateModel1: INTEREST_RATE_MODEL1,
+            maxLtv1: MAX_LTV1,
+            lt1: LT1,
+            borrowable1: BORROWABLE1
         });
     }
 }
