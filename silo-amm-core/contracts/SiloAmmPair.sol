@@ -37,15 +37,15 @@ contract SiloAmmPair is NotSupportedInPair, SafeTransfers, UniswapV2ERC20, AmmSt
     uint112 internal _token0Reserve;           // uses single storage slot, accessible via getReserves
     uint112 internal _token1Reserve;           // uses single storage slot, accessible via getReserves
 
-    uint public kLast; // reserve0 * reserve1, as of immediately after the most recent liquidity event
+    uint256 public kLast; // reserve0 * reserve1, as of immediately after the most recent liquidity event
 
-    bool private _locked; // todo move to save gas
+    uint256 private _unlocked = 1;
 
     modifier lock() {
-        if (_locked) revert LOCKED();
-        _locked = false;
+        if (_unlocked == 0) revert LOCKED();
+        _unlocked = 0;
         _;
-        _locked = true;
+        _unlocked = 1;
     }
 
     modifier onlySilo() {
@@ -115,29 +115,35 @@ contract SiloAmmPair is NotSupportedInPair, SafeTransfers, UniswapV2ERC20, AmmSt
         if (_amount0Out != 0 && _amount1Out != 0) revert INVALID_OUT();
         if (_to == _TOKEN_0 || _to == _TOKEN_1) revert INVALID_TO();
 
-        bool token0In = _amount0Out == 0;
+        SwapTmpData memory data;
+        data.token0In = _amount0Out == 0;
+
+        uint256 collateralOut;
+
         // collateral is always the one that will be OUT of the pool
-        address collateral = token0In ? _TOKEN_1 : _TOKEN_0;
-        address debtToken = token0In ? _TOKEN_0 : _TOKEN_1;
+        (data.collateral, data.debtToken, collateralOut) = data.token0In
+            ? (_TOKEN_1, _TOKEN_0, _amount1Out)
+            : (_TOKEN_0, _TOKEN_1, _amount0Out);
 
-        _onSwapPriceChange(collateral);
-        uint256 _collateralOut = token0In ? _amount1Out : _amount1Out;
-        uint256 _collateralTwapPrice = getOraclePrice(collateral, _collateralOut);
-        uint256 _debtIn = collateralPrice(collateral, _collateralOut, _collateralTwapPrice);
-        _onSwapStateChange(collateral, _collateralOut, _debtIn);
+        _onSwapPriceChange(data.collateral);
 
-        // TODO let"s make unlimited allowance, it might save gas
-        _safeTransferFrom(collateral, _SILO, _to, _collateralOut);
-        _safeTransferFrom(debtToken, _to, address(this), _debtIn);
+        // TODO fix oracle and collateralPrice
+        uint256 collateralValueInDebt = getOraclePrice(data.collateral, collateralOut);
+        uint256 debtIn = collateralPrice(data.collateral, collateralOut, collateralValueInDebt);
+
+        _onSwapStateChange(data.collateral, collateralOut, debtIn);
+
+        (uint256 amount0In, uint256 amount1In) = data.token0In ? (debtIn, uint256(0)) : (uint256(0), debtIn);
+        emit Swap(msg.sender, amount0In, amount1In, _amount0Out, _amount1Out, _to);
+
+        _safeTransferFrom(data.collateral, _SILO, _to, collateralOut);
+        // we doing transfer directly to SILO, but state will be updated on withdraw
+        _safeTransferFrom(data.debtToken, _to, _SILO, debtIn);
 
         if (_data.length != 0) {
-            // TODO do we need it??
+            // keep it for backwards compatibility and allow flash swap
             IUniswapV2Callee(_to).uniswapV2Call(msg.sender, _amount0Out, _amount1Out, _data);
         }
-
-        // (uint256 amount0In, uint256 amount1In) = token0In ? (_debtIn, uint256(0)) : (uint256(0), _debtIn);
-        // TODO temporary disable emit because stack too deep and I want to test math
-        // emit Swap(msg.sender, amount0In, amount1In, _amount0Out, _amount1Out, _to);
     }
 
     /// @dev this is only for backward compatibility with uniswapV2
@@ -175,13 +181,7 @@ contract SiloAmmPair is NotSupportedInPair, SafeTransfers, UniswapV2ERC20, AmmSt
             ? _withdrawAllLiquidity(_collateral, _user)
             : _withdrawLiquidity(_collateral, _user, _w);
 
-        address debtToken = _collateral == _TOKEN_0 ? _TOKEN_1 : _TOKEN_0;
-
         _priceChangeOnWithdraw(_collateral);
-
-        if (debtAmount != 0) {
-            _safeTransfer(debtToken, msg.sender, debtAmount);
-        }
     }
 
     /// @return reserve0
@@ -200,6 +200,7 @@ contract SiloAmmPair is NotSupportedInPair, SafeTransfers, UniswapV2ERC20, AmmSt
             //
         } else if (_ORACLE_SETUP == OracleSetup.NONE) {
             // if (ORACLE_0 == 0 && ORACLE_1 == 0) return _collateralAmount; do we support this case?
+            return _collateralAmount; // TODO temporary solution
         } else if (_ORACLE_SETUP == OracleSetup.FOR_TOKEN0) {
             if (_collateral == _TOKEN_0) {
                 // we have only one oracle and it is for our `_collateral` so this case is straight forward

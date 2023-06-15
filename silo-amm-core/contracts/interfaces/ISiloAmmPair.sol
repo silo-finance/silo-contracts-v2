@@ -4,6 +4,14 @@ pragma solidity >=0.5.0;
 import "../external/interfaces/IUniswapV2Pair.sol";
 
 interface ISiloAmmPair is IUniswapV2Pair {
+    /// @dev this is struct that prevents `Stack too deep`
+    struct SwapTmpData {
+        // collateral is always the one that will be OUT of the pool
+        address collateral;
+        address debtToken;
+        bool token0In;
+    }
+
     enum OracleSetup { NONE, BOTH, FOR_TOKEN0, FOR_TOKEN1 }
 
     error ONLY_SILO();
@@ -24,7 +32,8 @@ interface ISiloAmmPair is IUniswapV2Pair {
     error INSUFFICIENT_INPUT_AMOUNT();
     error K();
 
-    /// @notice endpoint for liquidation, here borrower collateral is added as liquidity
+    /// @notice endpoint for liquidation, here borrower collateral is added as liquidity, no token transfers is required
+    /// tokens will be transfered directly from SILO on swap
     /// THIS METHOD BLINDLY TRUST SILO BECAUSE OF 1:1 BOND
     /// @dev User adds `dC` units of collateral to the pool and receives shares.
     /// Liquidation-time value of the collateral at the current spot price P(t) is added to the user’s count.
@@ -47,10 +56,11 @@ interface ISiloAmmPair is IUniswapV2Pair {
         external
         returns (uint256 shares);
 
+    /// @notice there is no token transfers on removing liquidity, tokens are transferred on swap
     /// @param _collateral token address for which liquidity was added
     /// @param _user owner of position
     /// @param _w fraction of user position that needs to be withdrawn, 0 < _w <= 100%
-    /// @return debtAmount that is withdrawn
+    /// @return debtAmount that is "withdrawn", it can be 0
     function removeLiquidity(address _collateral, address _user, uint256 _w)
         external
         returns (uint256 debtAmount);

@@ -147,7 +147,7 @@ abstract contract AmmStateModel is IAmmStateModel {
             uint256 collateralAmountTimesShares = _collateralAmount * totalStateShares;
 
             // TBD: shares transformation to/from exponential
-            // unchecked: div is safe and we catched /0
+            // unchecked: div is safe and we caught /0 in if above
             unchecked { shares = collateralAmountTimesShares / totalStateAvailableCollateral; }
         }
 
