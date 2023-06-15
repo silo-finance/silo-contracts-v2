@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Unlicense
-pragma solidity >=0.8.0;
+pragma solidity 0.8.19;
 
 import "forge-std/Test.sol";
 import "../../contracts/AmmPriceModel.sol";
@@ -13,11 +13,11 @@ contract PriceModel is AmmPriceModel {
     }
 
     function init() external {
-        _init(_COLLATERAL);
+        _priceInit(_COLLATERAL);
     }
 
     function onAddingLiquidity() external {
-        _onAddingLiquidity(_COLLATERAL);
+        _priceChangeOnAddingLiquidity(_COLLATERAL);
     }
 
     function onSwapPriceChange() external {
@@ -25,7 +25,7 @@ contract PriceModel is AmmPriceModel {
     }
 
     function onWithdraw() external {
-        _onWithdraw(_COLLATERAL);
+        _priceChangeOnWithdraw(_COLLATERAL);
     }
 
     function collateralPrice(uint256 _collateralAmount, uint256 _collateralTwapPrice)
@@ -38,7 +38,7 @@ contract PriceModel is AmmPriceModel {
 }
 
 /*
-    FOUNDRY_PROFILE=amm-core forge test -vvv --match-contract AmmPriceModelTest
+    FOUNDRY_PROFILE=amm-core forge test -vv --match-contract AmmPriceModelTest
 */
 contract AmmPriceModelTest is Test {
     address public constant COLLATERAL = address(123);
@@ -75,7 +75,7 @@ contract AmmPriceModelTest is Test {
         priceModel.collateralPrice(1, 2);
         uint256 gasEnd = gasleft();
 
-        assertEq(gasStart - gasEnd, 5723);
+        assertEq(gasStart - gasEnd, 5790);
     }
 
     /*
@@ -111,7 +111,7 @@ contract AmmPriceModelTest is Test {
                 uint256 gasEnd = gasleft();
                 gasSum += (gasStart - gasEnd);
 
-                AmmPriceModel.AmmPriceState memory state = priceModel.getState(COLLATERAL);
+                AmmPriceModel.AmmPriceState memory state = priceModel.getPriceState(COLLATERAL);
 
                 assertEq(block.timestamp, testData.time, "time");
                 assertEq(state.lastActionTimestamp, testData.tCur, "tCur");
@@ -128,7 +128,7 @@ contract AmmPriceModelTest is Test {
                 }
             }
 
-            assertEq(gasSum, 49063, "make sure we gas efficient on price model actions");
+            assertEq(gasSum, 49423, "make sure we gas efficient on price model actions");
         }
     }
 

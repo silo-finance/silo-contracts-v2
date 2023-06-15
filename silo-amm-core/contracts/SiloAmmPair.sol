@@ -6,13 +6,14 @@ import "uniswap/v2-core/contracts/interfaces/IUniswapV2Callee.sol";
 import "./external/libraries/Math.sol";
 import "./external/UniswapV2ERC20.sol";
 
-import "./interfaces/ISiloAmmPair.sol";
+import "./interfaces/NotSupportedInPair.sol";
 import "./AmmStateModel.sol";
 import "./AmmPriceModel.sol";
 import "./utils/SafeTransfers.sol";
 
 
-contract SiloAmmPair is ISiloAmmPair, SafeTransfers, UniswapV2ERC20, AmmStateModel, AmmPriceModel {
+contract SiloAmmPair is NotSupportedInPair, SafeTransfers, UniswapV2ERC20, AmmStateModel, AmmPriceModel {
+    // TODO when we check exponential operations on shares we will decide if we need minimum liquidity
     uint public constant MINIMUM_LIQUIDITY = 10**3;
 
     /// @dev _TOKEN_0 < _TOKEN_1
@@ -84,47 +85,28 @@ contract SiloAmmPair is ISiloAmmPair, SafeTransfers, UniswapV2ERC20, AmmStateMod
         _ORACLE_SETUP = _oracleSetup(address(_oracle0), address(_oracle1));
     }
 
-    // TODO can we swap instead of add liquidity?
-    /// @notice endpoint for liquidation, here borrower collateral is added as liquidity
-    /// THIS METHOD BLINDLY TRUST SILO TO TRANSFER TOKENS
-    /// @dev User adds `dC` units of collateral to the pool and receives shares.
-    /// Liquidation-time value of the collateral at the current spot price P(t) is added to the user’s count.
-    /// The variable R is updated so that it keeps track of the sum of Ri
-    /// @param _collateral address of collateral token that is been deposited into pool
-    /// @param _user depositor, owner of position
-    /// @param _collateralAmount amount of collateral
-    /// @param _collateralValue value that is: collateralPrice * collateralAmount / DECIMALS,
-    /// where collateralPrice is current price P(T) of collateral denominate in ???? TODO
-    function addLiquidity(address _collateral, address _user, uint256 _collateralAmount, uint256 _collateralValue)
+    /// @inheritdoc ISiloAmmPair
+    function addLiquidity(
+        address _collateral,
+        address _user,
+        bool _cleanUp,
+        uint256 _collateralAmount,
+        uint256 _collateralValue
+    )
         external
+        virtual
         onlySilo
         returns (uint256 shares)
     {
-        shares = _addLiquidity(_collateral, _user, _collateralAmount, _collateralValue);
-        _init(_collateral);
-        _onAddingLiquidity(_collateral);
-    }
+        if (_cleanUp) {
+            removeLiquidity(_collateral, _user, ONE);
+        }
 
-    /// @param _collateral token address for which liquidity was added
-    /// @param _user owner of position
-    /// @param _w fraction of user position that needs to be withdrawn, 0 < _w <= 100%
-    /// @return debtAmount that is withdrawn
-    function removeLiquidity(address _collateral, address _user, uint256 _w)
-        external
-        onlySilo
-        returns (uint256 debtAmount)
-    {
-        if (_w > ONE) revert PERCENT_OVERFLOW();
+        shares = _stateChangeOnAddLiquidity(_collateral, _user, _collateralAmount, _collateralValue);
+        if (shares == 0) revert ZERO_SHARES();
 
-        debtAmount = _w == ONE
-            ? _withdrawAllLiquidity(_collateral, _user)
-            : _withdrawLiquidity(_collateral, _user, _w);
-
-        address debtToken = _collateral == _TOKEN_0 ? _TOKEN_1 : _TOKEN_0;
-
-        _onWithdraw(_collateral);
-
-        _safeTransfer(debtToken, msg.sender, debtAmount);
+        _priceInit(_collateral);
+        _priceChangeOnAddingLiquidity(_collateral);
     }
 
     // this low-level function should be called from a contract which performs important safety checks
@@ -180,34 +162,26 @@ contract SiloAmmPair is ISiloAmmPair, SafeTransfers, UniswapV2ERC20, AmmStateMod
         return _FEE_TO;
     }
 
-    function initialize(address, address) external pure {
-        revert NOT_SUPPORTED();
-    }
+    /// @inheritdoc ISiloAmmPair
+    function removeLiquidity(address _collateral, address _user, uint256 _w)
+        public
+        virtual
+        onlySilo
+        returns (uint256 debtAmount)
+    {
+        if (_w > ONE) revert PERCENT_OVERFLOW();
 
-    function mint(address) external pure returns (uint) {
-        revert NOT_SUPPORTED();
-    }
+        debtAmount = _w == ONE
+            ? _withdrawAllLiquidity(_collateral, _user)
+            : _withdrawLiquidity(_collateral, _user, _w);
 
-    function burn(address) external pure returns (uint, uint){
-        revert NOT_SUPPORTED();
-    }
+        address debtToken = _collateral == _TOKEN_0 ? _TOKEN_1 : _TOKEN_0;
 
-    function price0CumulativeLast() external pure returns (uint) {
-        revert NOT_SUPPORTED();
-    }
+        _priceChangeOnWithdraw(_collateral);
 
-    function price1CumulativeLast() external pure returns (uint) {
-        revert NOT_SUPPORTED();
-    }
-
-    // force balances to match reserves
-    function skim(address) external pure {
-        revert NOT_SUPPORTED();
-    }
-
-    // force reserves to match balances
-    function sync() external pure {
-        revert NOT_SUPPORTED();
+        if (debtAmount != 0) {
+            _safeTransfer(debtToken, msg.sender, debtAmount);
+        }
     }
 
     /// @return reserve0

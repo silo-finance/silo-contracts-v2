@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Unlicense
-pragma solidity >=0.8.0;
+pragma solidity 0.8.19;
 
 import "forge-std/Test.sol";
 import "../../contracts/AmmStateModel.sol";
@@ -15,7 +15,7 @@ contract StateModel is AmmStateModel {
     function addLiquidity(address _user, uint256 _collateralAmount, uint256 _collateralValue)
         external
         returns (uint256 shares) {
-        return _addLiquidity(_COLLATERAL, _user, _collateralAmount, _collateralValue);
+        return _stateChangeOnAddLiquidity(_COLLATERAL, _user, _collateralAmount, _collateralValue);
     }
 
     function withdrawLiquidity(address _user, uint256 _w) // solhint-disable-line function-max-lines
@@ -35,7 +35,7 @@ contract StateModel is AmmStateModel {
 }
 
 /*
-    FOUNDRY_PROFILE=amm-core forge test -v --match-contract AmmStateModelTest
+    FOUNDRY_PROFILE=amm-core forge test -vv --match-contract AmmStateModelTest
 */
 contract AmmStateModelTest is Test {
     address public constant COLLATERAL = address(123);

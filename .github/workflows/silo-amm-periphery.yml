@@ -56,8 +56,6 @@ jobs:
           forge --version
           forge build --sizes
 
-      - run: yarn workspace silo-amm-periphery clean
-
       - name: Solidity Lint
         run: yarn workspace silo-amm-periphery lint:sol
 
