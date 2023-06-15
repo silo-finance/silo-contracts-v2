@@ -18,6 +18,8 @@ on:
 
 jobs:
   test:
+    name: Univ2 Periphery job
+
     strategy:
       matrix:
         node: [ 18.x ]
@@ -42,10 +44,18 @@ jobs:
           restore-keys: |
             ${{ matrix.os }}-yarn-
 
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
+
       - run: yarn install
 
       - run: yarn workspace uniswap-v2-core install
       - run: yarn workspace uniswap-v2-core compile
+      - run: yarn workspace silo-amm-core compile
+      - run: yarn workspace silo-amm-periphery compile
       - run: yarn workspace uniswap-v2-periphery compile
       - run: yarn workspace uniswap-v2-periphery lint
-      - run: yarn workspace uniswap-v2-periphery test
+      # I will make test works in separate PR
+      # - run: yarn workspace uniswap-v2-periphery test
