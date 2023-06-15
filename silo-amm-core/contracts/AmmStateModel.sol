@@ -6,52 +6,6 @@ import "./interfaces/IAmmStateModel.sol";
 
 /// @dev annotations like (A) or (Ci) is reference to the internal document that describes model in mathematical way.
 abstract contract AmmStateModel is IAmmStateModel {
-    /// TODO not sure, if this exponential model is really useful, need to verify in QA
-    /// @dev share = m * 2^e;
-    struct Share {
-        uint112 m;
-        uint112 e;
-    }
-
-    // this is to avoid stack too deep, it might be less than another function call TODO verify it
-    struct Deltas {
-        uint256 dA;
-        uint256 dC;
-        uint256 dS;
-        uint256 dV;
-    }
-
-    struct TotalState {
-        /// @dev the total amount of collateral historically provided (denominated in collateral tokens) (A)
-        uint256 collateralAmount;
-
-        /// @dev the total liquidation-time value of collateral (V)
-        uint256 liquidationTimeValue;
-
-        /// @dev the total number of shares (S)
-        uint256 shares;
-
-        /// @dev the total amount of remaining (not yet swapped) collateral in the pool (C)
-        uint256 availableCollateral;
-
-        /// @dev the total amount of debt token in the pool (D)
-        uint256 debtAmount;
-
-        /// @dev an auxiliary variable, explained in the internal documentation (R)
-        uint256 R; // solhint-disable-line var-name-mixedcase
-    }
-
-    struct UserPosition {
-        /// @dev amount of collateral historically provided by the user (denominated in collateral tokens) (Ai)
-        uint256 collateralAmount;
-
-        /// @dev liquidation-time value of collateral provided by the user (Vi)
-        uint256 liquidationTimeValue;
-
-        /// @dev number of shares held by the user (Si)
-        uint256 shares;
-    }
-
     /// @dev 100%
     uint256 constant public HUNDRED = 1e18;
 
@@ -171,7 +125,12 @@ abstract contract AmmStateModel is IAmmStateModel {
     /// @param _collateralAmount amount of collateral
     /// @param _collateralValue value that is: collateralPrice * collateralAmount / DECIMALS,
     //. where collateralPrice is current price P(T) of collateral
-    function _addLiquidity(address _collateral, address _user, uint256 _collateralAmount, uint256 _collateralValue)
+    function _stateChangeOnAddLiquidity(
+        address _collateral,
+        address _user,
+        uint256 _collateralAmount,
+        uint256 _collateralValue
+    )
         internal
         returns (uint256 shares)
     {
@@ -217,19 +176,20 @@ abstract contract AmmStateModel is IAmmStateModel {
         _totalStates[_collateral].R = _totalStates[_collateral].R + _collateralValue;
     }
 
+    /// @return debtAmount amount of debt that will be withdrawn
     // solhint-disable-next-line function-max-lines
     function _withdrawLiquidity(address _collateral, address _user, uint256 _w)
         internal
         returns (uint256 debtAmount)
     {
         UserPosition storage storagePosition = _positions[_collateral][_user];
-        UserPosition memory position = _positions[_collateral][_user];
+        UserPosition memory cachedPosition = _positions[_collateral][_user];
         TotalState memory totalState = _totalStates[_collateral];
 
         uint256 ci = getCurrentlyAvailableCollateralForUser(
             totalState.shares,
             totalState.availableCollateral,
-            position.shares
+            cachedPosition.shares
         );
 
         Deltas memory deltas;
@@ -242,34 +202,34 @@ abstract contract AmmStateModel is IAmmStateModel {
             totalState.debtAmount,
             totalState.liquidationTimeValue,
             totalState.R,
-            position,
+            cachedPosition,
             ci
         );
 
         unchecked { debtAmount /= HUNDRED; }
 
-        deltas.dA = _w * position.collateralAmount;
+        deltas.dA = _w * cachedPosition.collateralAmount;
         unchecked { deltas.dA /= HUNDRED; }
 
-        deltas.dV = _w * position.liquidationTimeValue;
+        deltas.dV = _w * cachedPosition.liquidationTimeValue;
         unchecked { deltas.dV /= HUNDRED; }
 
-        deltas.dS = _w * position.shares; // TODO support exponential
+        deltas.dS = _w * cachedPosition.shares; // TODO support exponential
         unchecked { deltas.dS /= HUNDRED; }
 
         // TODO in tests we will have to make sure, that when one of below subtraction end up being zero,
-        //  others should be zeros as well
+        // others should be zeros as well
 
         uint256 newCollateralAmount;
         // unchecked: `dA` is fraction of position.collateralAmount
-        unchecked { newCollateralAmount = position.collateralAmount - deltas.dA; }
+        unchecked { newCollateralAmount = cachedPosition.collateralAmount - deltas.dA; }
 
         uint256 newLiquidationTimeValue;
         // unchecked: `dV` is fraction of position.liquidationTimeValue
-        unchecked { newLiquidationTimeValue = position.liquidationTimeValue - deltas.dV; }
+        unchecked { newLiquidationTimeValue = cachedPosition.liquidationTimeValue - deltas.dV; }
 
         // now let's calculate R, it must be done before other state is updated
-        uint256 ri = auxiliaryVariableRi(ci, position.liquidationTimeValue, position.collateralAmount);
+        uint256 ri = auxiliaryVariableRi(ci, cachedPosition.liquidationTimeValue, cachedPosition.collateralAmount);
 
         uint256 riNew = newCollateralAmount == 0
             ? 0
@@ -283,10 +243,10 @@ abstract contract AmmStateModel is IAmmStateModel {
             _totalStates[_collateral].collateralAmount = totalState.collateralAmount - deltas.dA;
             _totalStates[_collateral].liquidationTimeValue = totalState.liquidationTimeValue - deltas.dV;
             _totalStates[_collateral].shares = totalState.shares - deltas.dS;
-            _totalStates[_collateral].availableCollateral = totalState.availableCollateral -deltas.dC;
+            _totalStates[_collateral].availableCollateral = totalState.availableCollateral - deltas.dC;
             _totalStates[_collateral].debtAmount = totalState.debtAmount - debtAmount;
 
-            storagePosition.shares = position.shares - deltas.dS;
+            storagePosition.shares = cachedPosition.shares - deltas.dS;
         }
 
         storagePosition.collateralAmount = newCollateralAmount;
@@ -297,25 +257,25 @@ abstract contract AmmStateModel is IAmmStateModel {
     /// @return debtAmount that is withdrawn
     function _withdrawAllLiquidity(address _collateral, address _user) internal returns (uint256 debtAmount) {
         UserPosition storage storagePosition = _positions[_collateral][_user];
-        UserPosition memory position = _positions[_collateral][_user];
+        UserPosition memory cachedPosition = storagePosition;
         TotalState memory totalState = _totalStates[_collateral];
 
         uint256 ci = getCurrentlyAvailableCollateralForUser(
             totalState.shares,
             totalState.availableCollateral,
-            position.shares
+            cachedPosition.shares
         );
 
         debtAmount = userAvailableDebtAmount(
             totalState.debtAmount,
             totalState.liquidationTimeValue,
             totalState.R,
-            position,
+            cachedPosition,
             ci
         );
 
         // now let's calculate R, it must be done before other state is updated
-        uint256 ri = auxiliaryVariableRi(ci, position.liquidationTimeValue, position.collateralAmount);
+        uint256 ri = auxiliaryVariableRi(ci, cachedPosition.liquidationTimeValue, cachedPosition.collateralAmount);
 
         _totalStates[_collateral].R = totalState.R - ri;
 
@@ -323,12 +283,12 @@ abstract contract AmmStateModel is IAmmStateModel {
             // for all below `_totalStates` changed, we decreasing state by fraction or at most whole
             // so as along as math is correct we should not underflow
             _totalStates[_collateral].collateralAmount =
-                totalState.collateralAmount - position.collateralAmount;
+                totalState.collateralAmount - cachedPosition.collateralAmount;
 
             _totalStates[_collateral].liquidationTimeValue =
-                totalState.liquidationTimeValue - position.liquidationTimeValue;
+                totalState.liquidationTimeValue - cachedPosition.liquidationTimeValue;
 
-            _totalStates[_collateral].shares = totalState.shares - position.shares;
+            _totalStates[_collateral].shares = totalState.shares - cachedPosition.shares;
             _totalStates[_collateral].availableCollateral = totalState.availableCollateral - ci;
             _totalStates[_collateral].debtAmount = totalState.debtAmount - debtAmount;
         }

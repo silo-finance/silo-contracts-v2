@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Unlicense
-pragma solidity >=0.8.0;
+pragma solidity 0.8.19;
 
 import "forge-std/Test.sol";
 import "./helpers/Fixtures.sol";
@@ -17,11 +17,6 @@ contract SiloAmmPairFactoryTest is Test, Fixtures {
     SiloAmmPairFactory immutable factory;
 
     constructor() {
-        address router = address(1);
-        address feeTo;
-        ISiloOracle oracle0;
-        ISiloOracle oracle1;
-
         factory = new SiloAmmPairFactory();
     }
 
@@ -41,7 +36,7 @@ contract SiloAmmPairFactoryTest is Test, Fixtures {
         uint256 gasUsed = gasStart - gasleft();
 
         emit log_named_uint("gas used", gasUsed);
-        assertEq(gasUsed, 2367579, "expected gas usage for createPair");
+        assertEq(gasUsed, 2388025, "expected gas usage for createPair");
         assertEq(pair.silo(), address(this), "expected to set silo");
     }
 }

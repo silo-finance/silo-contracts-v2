@@ -34,7 +34,7 @@ contract AmmPriceModel is IAmmPriceModel {
     uint256 public immutable Q; // solhint-disable-line var-name-mixedcase
 
     /// @dev collateral token address => state
-    mapping (address => AmmPriceState) internal _state;
+    mapping (address => AmmPriceState) internal _priceState;
 
     constructor(AmmPriceConfig memory _config) {
         ammConfigVerification(_config);
@@ -56,8 +56,8 @@ contract AmmPriceModel is IAmmPriceModel {
         ammConfig.q = uint64(Q);
     }
 
-    function getState(address _collateral) external view returns (AmmPriceState memory) {
-        return _state[_collateral];
+    function getPriceState(address _collateral) external view returns (AmmPriceState memory) {
+        return _priceState[_collateral];
     }
 
     /// @param _collateralAmount how much collateral you want to buy, amount with 18 decimals
@@ -67,7 +67,7 @@ contract AmmPriceModel is IAmmPriceModel {
         view
         returns (uint256 debtAmount)
     {
-        uint256 value = _state[_collateral].k * _collateralTwapPrice * _collateralAmount;
+        uint256 value = _priceState[_collateral].k * _collateralTwapPrice * _collateralAmount;
 
         unchecked {
             // div is safe
@@ -90,16 +90,16 @@ contract AmmPriceModel is IAmmPriceModel {
     }
 
     /// @dev The initial action is adding liquidity. This method should be call on first `addLiquidity`
-    function _init(address _collateral) internal {
-        if (_state[_collateral].init) {
+    function _priceInit(address _collateral) internal {
+        if (_priceState[_collateral].init) {
             return;
         }
 
-        _state[_collateral].k = uint64(K_MAX);
-        _state[_collateral].lastActionTimestamp = uint64(block.timestamp);
-        _state[_collateral].liquidityAdded = true;
-        _state[_collateral].swap = false;
-        _state[_collateral].init = true;
+        _priceState[_collateral].k = uint64(K_MAX);
+        _priceState[_collateral].lastActionTimestamp = uint64(block.timestamp);
+        _priceState[_collateral].liquidityAdded = true;
+        _priceState[_collateral].swap = false;
+        _priceState[_collateral].init = true;
     }
 
     /// @dev Add liquidity should not change the price. But the following situation may occur.
@@ -108,15 +108,15 @@ contract AmmPriceModel is IAmmPriceModel {
     /// If liquidity is added at this moment, then part of the collateral will be swaped at a low price.
     /// To prevent this, we reset the values of `k` and `t`, if the previous action was either swap or withdraw, i.e.,
     /// if the previous action reduced the volume of the AMM.
-    function _onAddingLiquidity(address _collateral) internal {
-        if (_state[_collateral].liquidityAdded) {
+    function _priceChangeOnAddingLiquidity(address _collateral) internal {
+        if (_priceState[_collateral].liquidityAdded) {
             return;
         }
 
-        _state[_collateral].k = uint64(K_MAX);
-        _state[_collateral].liquidityAdded = true;
-        _state[_collateral].swap = false;
-        _state[_collateral].lastActionTimestamp = uint64(block.timestamp);
+        _priceState[_collateral].k = uint64(K_MAX);
+        _priceState[_collateral].liquidityAdded = true;
+        _priceState[_collateral].swap = false;
+        _priceState[_collateral].lastActionTimestamp = uint64(block.timestamp);
     }
 
     function _onSwapPriceChange(address _collateral) internal {
@@ -124,9 +124,9 @@ contract AmmPriceModel is IAmmPriceModel {
 
         unchecked {
             // unchecked: timestamp is at least lastActionTimestamp so we do not underflow
-            uint256 time = block.timestamp - _state[_collateral].lastActionTimestamp;
+            uint256 time = block.timestamp - _priceState[_collateral].lastActionTimestamp;
 
-            if (_state[_collateral].swap) {
+            if (_priceState[_collateral].swap) {
                 if (time > T_SLOW) {
                     // unchecked: all this values are max 64bits, so we can not produce value that is more than 128b
                     // and it is OK to got negative number on `(time - DELTA_K)`
@@ -145,19 +145,19 @@ contract AmmPriceModel is IAmmPriceModel {
 
             // unchecked: all this values are max 64bits (<1e18), so we can not produce value that will
             // over or under flow
-            k = _state[_collateral].k - time;
+            k = _priceState[_collateral].k - time;
         }
 
-        _state[_collateral].k = uint64(k > K_MIN ? k : K_MIN);
-        _state[_collateral].swap = true;
-        _state[_collateral].liquidityAdded = false;
-        _state[_collateral].lastActionTimestamp = uint64(block.timestamp);
+        _priceState[_collateral].k = uint64(k > K_MIN ? k : K_MIN);
+        _priceState[_collateral].swap = true;
+        _priceState[_collateral].liquidityAdded = false;
+        _priceState[_collateral].lastActionTimestamp = uint64(block.timestamp);
     }
 
     /// @dev If a withdraw has occurred, the AMM price is not needed, therefore, the only change to be made is updating
     /// parameter AL. This means that on the next step we will know that the previous action reduced the volume of the
     /// AMM.
-    function _onWithdraw(address _collateral) internal {
-        _state[_collateral].liquidityAdded = false;
+    function _priceChangeOnWithdraw(address _collateral) internal {
+        _priceState[_collateral].liquidityAdded = false;
     }
 }
