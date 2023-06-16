@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.18;
 
-import "./ISiloConfig.sol";
-import "./ISiloFactory.sol";
+import {ISiloConfig} from "./ISiloConfig.sol";
+import {ISiloFactory} from "./ISiloFactory.sol";
 
 interface ISilo {
     /// @dev Storage struct that holds all required data for a single token market
@@ -28,22 +28,18 @@ interface ISilo {
     function token1() external view returns (address);
     function assetStorage(address _token) external view returns (uint256, uint256, uint256, uint64);
 
-    function isSolvent(address _borrower) external returns (bool);
+    function isSolvent(address _borrower) external returns (bool); // solhint-disable-line ordering
     function depositPossible(address _token, address _depositor) external view returns (bool);
     function borrowPossible(address _token, address _borrower) external view returns (bool);
     function getMaxLtv(address _token) external view returns (uint256);
     function getLt(address _token) external view returns (uint256);
 
-    /**
-     * ERC4626
-     */
+    // ERC4626
 
     function tokens() external view returns (address[2] memory assetTokenAddresses);
     function totalAssets(address _token) external view returns (uint256 totalManagedAssets);
 
-    /**
-     * Deposits
-     */
+    // Deposits
 
     function convertToShares(address _token, uint256 _assets) external view returns (uint256 shares);
     function convertToAssets(address _token, uint256 _shares) external view returns (uint256 assets);
@@ -68,9 +64,7 @@ interface ISilo {
         external
         returns (uint256 assets);
 
-    /**
-     * Protected Deposits
-     */
+    // Protected Deposits
 
     function convertToShares(address _token, uint256 _assets, bool _isProtected)
         external
@@ -119,9 +113,7 @@ interface ISilo {
         external
         returns (uint256 shares);
 
-    /**
-     * Lending
-     */
+    // Lending
 
     function maxBorrow(address _token, address _borrower) external view returns (uint256 maxAssets);
     function previewBorrow(address _token, uint256 _assets) external view returns (uint256 shares);

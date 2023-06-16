@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.18;
 
-import "openzeppelin-contracts-upgradeable/contracts/token/ERC20/extensions/IERC20MetadataUpgradeable.sol";
-import "../interface/ISilo.sol";
+import {
+    IERC20MetadataUpgradeable
+} from "openzeppelin-contracts-upgradeable/contracts/token/ERC20/extensions/IERC20MetadataUpgradeable.sol";
+import {ISilo} from "../interface/ISilo.sol";
 
 interface IShareToken is IERC20MetadataUpgradeable {
     /// @notice Emitted every time receiver is notified about token transfer

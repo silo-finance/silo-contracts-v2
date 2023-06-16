@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.18;
 
-import "./ShareToken.sol";
+import {IShareToken, ShareToken, ISiloFactory, ISilo} from "./ShareToken.sol";
 
 /// @title ShareCollateralToken
 /// @notice ERC20 compatible token representing collateral position in Silo
@@ -22,6 +22,7 @@ contract ShareCollateralToken is ShareToken {
     function initialize(string memory _name, string memory _symbol, ISilo _silo, address _asset) external initializer {
         __ShareToken_init(_name, _symbol, _silo, _asset);
     }
+
 
     /// @inheritdoc IShareToken
     function mint(address _owner, address, uint256 _amount) external override onlySilo {
@@ -45,10 +46,11 @@ contract ShareCollateralToken is ShareToken {
     }
 
     function _afterTokenTransfer(address _sender, address _recipient, uint256 _amount) internal override {
+        // solhint-disable-previous-line ordering
         ShareToken._afterTokenTransfer(_sender, _recipient, _amount);
 
-        // if we minting or burning, Silo is responsible to check all necessary conditions
-        // make sure that _sender is solvent after transfer
+        // for minting or burning, Silo is responsible to check all necessary conditions
+        // for transfer make sure that _sender is solvent after transfer
         if (_isTransfer(_sender, _recipient) && !silo.isSolvent(_sender)) {
             revert SenderNotSolventAfterTransfer();
         }

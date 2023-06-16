@@ -31,6 +31,8 @@ interface ISiloConfig {
     error NonBorrowableSilo();
     error InvalidShareTokens();
 
+    // solhint-disable func-name-mixedcase
+
     function SILO_ID() external view returns (uint256);
 
     // TOKEN #0

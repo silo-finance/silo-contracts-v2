@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.18;
 
-import "openzeppelin-contracts-upgradeable/contracts/utils/CountersUpgradeable.sol";
-import "openzeppelin-contracts-upgradeable/contracts/proxy/ClonesUpgradeable.sol";
-import "openzeppelin-contracts-upgradeable/contracts/proxy/utils/Initializable.sol";
+import {CountersUpgradeable} from "openzeppelin-contracts-upgradeable/contracts/utils/CountersUpgradeable.sol";
+import {ClonesUpgradeable} from  "openzeppelin-contracts-upgradeable/contracts/proxy/ClonesUpgradeable.sol";
+import {Initializable} from "openzeppelin-contracts-upgradeable/contracts/proxy/utils/Initializable.sol";
 
-import "./interface/IShareToken.sol";
-import "./SiloConfig.sol";
-import "./Silo.sol";
+import {IShareToken} from "./interface/IShareToken.sol";
+import {ISiloConfig, SiloConfig} from "./SiloConfig.sol";
+import {ISilo, Silo} from "./Silo.sol";
 
 contract SiloFactory is Initializable {
     using CountersUpgradeable for CountersUpgradeable.Counter;
@@ -41,7 +41,8 @@ contract SiloFactory is Initializable {
     }
 
     /// @param _configData silo configuration data
-    /// @dev share tokens in _configData are overridden so can be set to address(0). Sanity data validation is done by SiloConfig
+    /// @dev share tokens in _configData are overridden so can be set to address(0). Sanity data validation 
+    ///      is done by SiloConfig.
     function createSilo(ISiloConfig.ConfigData memory _configData) public {
         uint256 nextSiloId = _siloId.current();
         _siloId.increment();

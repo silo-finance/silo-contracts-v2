@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.18;
 
-import "openzeppelin-contracts-upgradeable/contracts/proxy/utils/Initializable.sol";
+import {Initializable} from "openzeppelin-contracts-upgradeable/contracts/proxy/utils/Initializable.sol";
 
-import "./interface/ISilo.sol";
-import "./interface/ISiloConfig.sol";
-import "./interface/ISiloFactory.sol";
-import "./lib/SiloStdLib.sol";
+import {ISilo} from "./interface/ISilo.sol";
+import {ISiloConfig} from "./interface/ISiloConfig.sol";
+import {ISiloFactory} from "./interface/ISiloFactory.sol";
+import {SiloStdLib} from "./lib/SiloStdLib.sol";
 
 abstract contract Silo is Initializable, ISilo {
     string public constant VERSION = "2.0.0";
 
-    ISiloFactory public immutable FACTORY;
+    ISiloFactory public immutable FACTORY; // solhint-disable-line var-name-mixedcase
 
     ISiloConfig public config;
 
@@ -41,7 +41,7 @@ abstract contract Silo is Initializable, ISilo {
         return config.TOKEN1();
     }
 
-    function isSolvent(address _borrower) external virtual returns (bool) {
+    function isSolvent(address _borrower) external virtual returns (bool) { // solhint-disable-line ordering
         return SiloStdLib.isSolvent(config, _borrower, assetStorage);
     }
 
@@ -122,7 +122,9 @@ abstract contract Silo is Initializable, ISilo {
         virtual
         returns (uint256 shares)
     {
-        return SiloStdLib.withdraw(config, FACTORY, _token, _assets, _receiver, _owner, msg.sender, false, assetStorage);
+        return SiloStdLib.withdraw(
+            config, FACTORY, _token, _assets, _receiver, _owner, msg.sender, false, assetStorage
+        );
     }
 
     function maxRedeem(address _token, address _owner) external view virtual returns (uint256 maxShares) {
@@ -240,7 +242,9 @@ abstract contract Silo is Initializable, ISilo {
         virtual
         returns (uint256 shares)
     {
-        return SiloStdLib.withdraw(config, FACTORY, _token, _assets, _receiver, _owner, msg.sender, _isProtected, assetStorage);
+        return SiloStdLib.withdraw(
+            config, FACTORY, _token, _assets, _receiver, _owner, msg.sender, _isProtected, assetStorage
+        );
     }
 
     function maxRedeem(address _token, address _owner, bool _isProtected)
@@ -266,7 +270,9 @@ abstract contract Silo is Initializable, ISilo {
         virtual
         returns (uint256 assets)
     {
-        return SiloStdLib.redeem(config, FACTORY, _token, _shares, _receiver, _owner, msg.sender, _isProtected, assetStorage);
+        return SiloStdLib.redeem(
+            config, FACTORY, _token, _shares, _receiver, _owner, msg.sender, _isProtected, assetStorage
+        );
     }
 
     function transitionToProtected(address _token, uint256 _shares, address _owner)

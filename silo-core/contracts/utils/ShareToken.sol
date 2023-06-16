@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.18;
 
-import "openzeppelin-contracts-upgradeable/contracts/token/ERC20/ERC20Upgradeable.sol";
+import {ERC20Upgradeable} from "openzeppelin-contracts-upgradeable/contracts/token/ERC20/ERC20Upgradeable.sol";
 
-import "../interface/ISiloFactory.sol";
-import "../interface/IShareToken.sol";
-import "../interface/INotificationReceiver.sol";
+import {ISiloFactory} from "../interface/ISiloFactory.sol";
+import {IShareToken, ISilo} from "../interface/IShareToken.sol";
+import {INotificationReceiver} from "../interface/INotificationReceiver.sol";
 
 /// @title ShareToken
 /// @notice Implements common interface for Silo tokens representing debt or collateral positions.
@@ -44,7 +44,12 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
     /// @param _symbol token symbol
     /// @param _silo Silo address for which tokens was deployed
     /// @param _asset asset for which this tokens was deployed
-    function __ShareToken_init(string memory _name, string memory _symbol, ISilo _silo, address _asset)
+    function __ShareToken_init( // solhint-disable-line func-name-mixedcase
+        string memory _name,
+        string memory _symbol,
+        ISilo _silo,
+        address _asset
+    )
         internal
         onlyInitializing
     {

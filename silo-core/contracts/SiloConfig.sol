@@ -1,55 +1,55 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.18;
 
-import "./interface/ISiloConfig.sol";
+import {ISiloConfig} from "./interface/ISiloConfig.sol";
 
 /// @notice SiloConfig stores full configuration of Silo in immutable manner
 /// @dev Immutable contract is more expensive to deploy than minimal proxy however it provides nearly 10x cheapper
 /// data access using immutable variables.
 contract SiloConfig is ISiloConfig {
-    uint256 public immutable SILO_ID;
+    uint256 public immutable SILO_ID; // solhint-disable-line var-name-mixedcase
 
     // TOKEN #0
 
-    address public immutable TOKEN0;
+    address public immutable TOKEN0; // solhint-disable-line var-name-mixedcase
 
     /// @dev Token that represents a share in total protected deposits of Silo
-    address public immutable PROTECTED_COLLATERAL_SHARE_TOKEN0;
+    address public immutable PROTECTED_COLLATERAL_SHARE_TOKEN0; // solhint-disable-line var-name-mixedcase
     /// @dev Token that represents a share in total deposits of Silo
-    address public immutable COLLATERAL_SHARE_TOKEN0;
+    address public immutable COLLATERAL_SHARE_TOKEN0; // solhint-disable-line var-name-mixedcase
     /// @dev Token that represents a share in total debt of Silo
-    address public immutable DEBT_SHARE_TOKEN0;
+    address public immutable DEBT_SHARE_TOKEN0; // solhint-disable-line var-name-mixedcase
 
-    address public immutable LTV_ORACLE0;
-    address public immutable LT_ORACLE0;
+    address public immutable LTV_ORACLE0; // solhint-disable-line var-name-mixedcase
+    address public immutable LT_ORACLE0; // solhint-disable-line var-name-mixedcase
 
-    address public immutable INTEREST_RATE_MODEL0;
+    address public immutable INTEREST_RATE_MODEL0; // solhint-disable-line var-name-mixedcase
 
-    uint64 public immutable MAX_LTV0;
-    uint64 public immutable LT0;
+    uint64 public immutable MAX_LTV0; // solhint-disable-line var-name-mixedcase
+    uint64 public immutable LT0; // solhint-disable-line var-name-mixedcase
 
-    bool public immutable BORROWABLE0;
+    bool public immutable BORROWABLE0; // solhint-disable-line var-name-mixedcase
 
     // TOKEN #1
 
-    address public immutable TOKEN1;
+    address public immutable TOKEN1; // solhint-disable-line var-name-mixedcase
 
     /// @dev Token that represents a share in total protected deposits of Silo
-    address public immutable PROTECTED_COLLATERAL_SHARE_TOKEN1;
+    address public immutable PROTECTED_COLLATERAL_SHARE_TOKEN1; // solhint-disable-line var-name-mixedcase
     /// @dev Token that represents a share in total deposits of Silo
-    address public immutable COLLATERAL_SHARE_TOKEN1;
+    address public immutable COLLATERAL_SHARE_TOKEN1; // solhint-disable-line var-name-mixedcase
     /// @dev Token that represents a share in total debt of Silo
-    address public immutable DEBT_SHARE_TOKEN1;
+    address public immutable DEBT_SHARE_TOKEN1; // solhint-disable-line var-name-mixedcase
 
-    address public immutable LTV_ORACLE1;
-    address public immutable LT_ORACLE1;
+    address public immutable LTV_ORACLE1; // solhint-disable-line var-name-mixedcase
+    address public immutable LT_ORACLE1; // solhint-disable-line var-name-mixedcase
 
-    address public immutable INTEREST_RATE_MODEL1;
+    address public immutable INTEREST_RATE_MODEL1; // solhint-disable-line var-name-mixedcase
 
-    uint64 public immutable MAX_LTV1;
-    uint64 public immutable LT1;
+    uint64 public immutable MAX_LTV1; // solhint-disable-line var-name-mixedcase
+    uint64 public immutable LT1; // solhint-disable-line var-name-mixedcase
 
-    bool public immutable BORROWABLE1;
+    bool public immutable BORROWABLE1; // solhint-disable-line var-name-mixedcase
 
     /// @param _siloId ID of this pool assigned by factory
     /// @param _configData silo configuration data
@@ -95,24 +95,6 @@ contract SiloConfig is ISiloConfig {
         BORROWABLE1 = _configData.borrowable1;
     }
 
-    function validateSiloData(ConfigData memory _configData) public pure {
-        if (_configData.token0 == _configData.token1) revert SameAsset();
-        if (_configData.interestRateModel0 == address(0) || _configData.interestRateModel1 == address(0)) {
-            revert InvalidIrm();
-        }
-        if (_configData.maxLtv0 > _configData.lt0) revert InvalidMaxLtv();
-        if (_configData.maxLtv1 > _configData.lt1) revert InvalidMaxLtv();
-        if (_configData.maxLtv0 == 0 && _configData.maxLtv1 == 0) revert InvalidMaxLtv();
-        if (!_configData.borrowable0 && !_configData.borrowable1) revert NonBorrowableSilo();
-
-        if (_configData.protectedCollateralShareToken0 == address(0)) revert InvalidShareTokens();
-        if (_configData.collateralShareToken0 == address(0)) revert InvalidShareTokens();
-        if (_configData.debtShareToken0 == address(0)) revert InvalidShareTokens();
-        if (_configData.protectedCollateralShareToken1 == address(0)) revert InvalidShareTokens();
-        if (_configData.collateralShareToken1 == address(0)) revert InvalidShareTokens();
-        if (_configData.debtShareToken1 == address(0)) revert InvalidShareTokens();
-    }
-
     function getConfig() public view returns (ConfigData memory) {
         return ConfigData({
             token0: TOKEN0,
@@ -136,5 +118,23 @@ contract SiloConfig is ISiloConfig {
             lt1: LT1,
             borrowable1: BORROWABLE1
         });
+    }
+
+    function validateSiloData(ConfigData memory _configData) public pure { // solhint-disable-line code-complexity
+        if (_configData.token0 == _configData.token1) revert SameAsset();
+        if (_configData.interestRateModel0 == address(0) || _configData.interestRateModel1 == address(0)) {
+            revert InvalidIrm();
+        }
+        if (_configData.maxLtv0 > _configData.lt0) revert InvalidMaxLtv();
+        if (_configData.maxLtv1 > _configData.lt1) revert InvalidMaxLtv();
+        if (_configData.maxLtv0 == 0 && _configData.maxLtv1 == 0) revert InvalidMaxLtv();
+        if (!_configData.borrowable0 && !_configData.borrowable1) revert NonBorrowableSilo();
+
+        if (_configData.protectedCollateralShareToken0 == address(0)) revert InvalidShareTokens();
+        if (_configData.collateralShareToken0 == address(0)) revert InvalidShareTokens();
+        if (_configData.debtShareToken0 == address(0)) revert InvalidShareTokens();
+        if (_configData.protectedCollateralShareToken1 == address(0)) revert InvalidShareTokens();
+        if (_configData.collateralShareToken1 == address(0)) revert InvalidShareTokens();
+        if (_configData.debtShareToken1 == address(0)) revert InvalidShareTokens();
     }
 }

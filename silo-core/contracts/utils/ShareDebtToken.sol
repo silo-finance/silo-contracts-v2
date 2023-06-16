@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.18;
 
-import "../interface/IERC20R.sol";
-import "./ShareToken.sol";
+import {IERC20R} from "../interface/IERC20R.sol";
+import {IShareToken, ShareToken, ISiloFactory, ISilo} from "./ShareToken.sol";
 
 /// @title ShareDebtToken
 /// @notice ERC20 compatible token representing debt position in Silo
@@ -36,6 +36,17 @@ contract ShareDebtToken is IERC20R, ShareToken {
         __ShareToken_init(_name, _symbol, _silo, _asset);
     }
 
+    /// @inheritdoc IShareToken
+    function mint(address _owner, address _spender, uint256 _amount) external override onlySilo {
+        if (_owner != _spender) _spendAllowance(_owner, _spender, _amount);
+        _mint(_owner, _amount);
+    }
+
+    /// @inheritdoc IShareToken
+    function burn(address _owner, address, uint256 _amount) external override onlySilo {
+        _burn(_owner, _amount);
+    }
+
     /// @inheritdoc IERC20R
     function setReceiveApproval(address owner, uint256 _amount) external virtual override {
         _setReceiveApproval(owner, _msgSender(), _amount);
@@ -56,17 +67,6 @@ contract ShareDebtToken is IERC20R, ShareToken {
     /// @inheritdoc IERC20R
     function receiveAllowance(address _owner, address _recipient) public view virtual override returns (uint256) {
         return _receiveAllowances[_owner][_recipient];
-    }
-
-    /// @inheritdoc IShareToken
-    function mint(address _owner, address _spender, uint256 _amount) external override onlySilo {
-        if (_owner != _spender) _spendAllowance(_owner, _spender, _amount);
-        _mint(_owner, _amount);
-    }
-
-    /// @inheritdoc IShareToken
-    function burn(address _owner, address, uint256 _amount) external override onlySilo {
-        _burn(_owner, _amount);
     }
 
     /// @dev Set allowance
