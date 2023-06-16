@@ -7,6 +7,9 @@ import {ISiloConfig} from "./interface/ISiloConfig.sol";
 /// @dev Immutable contract is more expensive to deploy than minimal proxy however it provides nearly 10x cheapper
 /// data access using immutable variables.
 contract SiloConfig is ISiloConfig {
+    /// @dev 1e18 == 100%
+    uint256 public constant ONE = 1e18;
+
     uint256 public immutable SILO_ID; // solhint-disable-line var-name-mixedcase
 
     // TOKEN #0
@@ -54,7 +57,7 @@ contract SiloConfig is ISiloConfig {
     /// @param _siloId ID of this pool assigned by factory
     /// @param _configData silo configuration data
     constructor(uint256 _siloId, ConfigData memory _configData) {
-        validateSiloData(_configData);
+        validateSiloConfig(_configData);
 
         SILO_ID = _siloId;
 
@@ -120,7 +123,7 @@ contract SiloConfig is ISiloConfig {
         });
     }
 
-    function validateSiloData(ConfigData memory _configData) public pure { // solhint-disable-line code-complexity
+    function validateSiloConfig(ConfigData memory _configData) public pure { // solhint-disable-line code-complexity
         if (_configData.token0 == _configData.token1) revert SameAsset();
         if (_configData.interestRateModel0 == address(0) || _configData.interestRateModel1 == address(0)) {
             revert InvalidIrm();
@@ -128,6 +131,7 @@ contract SiloConfig is ISiloConfig {
         if (_configData.maxLtv0 > _configData.lt0) revert InvalidMaxLtv();
         if (_configData.maxLtv1 > _configData.lt1) revert InvalidMaxLtv();
         if (_configData.maxLtv0 == 0 && _configData.maxLtv1 == 0) revert InvalidMaxLtv();
+        if (_configData.lt0 >= ONE || _configData.lt1 >= ONE) revert InvalidMaxLt();
         if (!_configData.borrowable0 && !_configData.borrowable1) revert NonBorrowableSilo();
 
         if (_configData.protectedCollateralShareToken0 == address(0)) revert InvalidShareTokens();

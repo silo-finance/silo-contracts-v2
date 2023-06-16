@@ -28,11 +28,13 @@ interface ISiloConfig {
     error SameAsset();
     error InvalidIrm();
     error InvalidMaxLtv();
+    error InvalidMaxLt();
     error NonBorrowableSilo();
     error InvalidShareTokens();
 
     // solhint-disable func-name-mixedcase
 
+    function ONE() external view returns (uint256);
     function SILO_ID() external view returns (uint256);
 
     // TOKEN #0
