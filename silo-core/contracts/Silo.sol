@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.19;
+pragma solidity 0.8.18;
 
 import "openzeppelin-contracts-upgradeable/contracts/proxy/utils/Initializable.sol";
 
@@ -46,10 +46,12 @@ abstract contract Silo is Initializable, ISilo {
     }
 
     function depositPossible(address _token, address _depositor) external view virtual returns (bool) {
+        // TODO: caps
         return SiloStdLib.depositPossible(config, _token, _depositor);
     }
 
     function borrowPossible(address _token, address _borrower) external view virtual returns (bool) {
+        // TODO: caps
         return SiloStdLib.borrowPossible(config, _token, _borrower);
     }
 
@@ -82,6 +84,7 @@ abstract contract Silo is Initializable, ISilo {
     }
 
     function maxDeposit(address _token, address _receiver) external view virtual returns (uint256 maxAssets) {
+        // TODO: caps
         return SiloStdLib.maxDeposit(config, _receiver, _token, false, assetStorage);
     }
 
@@ -94,6 +97,7 @@ abstract contract Silo is Initializable, ISilo {
     }
 
     function maxMint(address _token, address _receiver) external view virtual returns (uint256 maxShares) {
+        // TODO: caps
         return SiloStdLib.maxMint(config, _receiver, _token, false);
     }
 
