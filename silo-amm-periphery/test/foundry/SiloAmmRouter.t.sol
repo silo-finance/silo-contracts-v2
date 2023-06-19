@@ -100,6 +100,6 @@ contract SiloAmmRouterTest is Test, Fixtures, ISiloAmmRouterEvents {
         uint256 gasUsed = gasStart - gasleft();
 
         emit log_named_uint("gas used", gasUsed);
-        assertEq(gasUsed, 2472114, "gas usage for SiloAmmRouter.createPair");
+        assertEq(gasUsed, 2445077, "gas usage for SiloAmmRouter.createPair");
     }
 }

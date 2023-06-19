@@ -2,17 +2,21 @@
 pragma solidity 0.8.19;
 
 import "forge-std/Test.sol";
+
 import "../../contracts/SiloAmmPair.sol";
 import "./helpers/Fixtures.sol";
+import "./helpers/TestToken.sol";
 
 
 /*
     FOUNDRY_PROFILE=amm-core forge test -vv --match-contract SiloAmmPairTest
 */
 contract SiloAmmPairTest is Test, Fixtures {
+    uint256 constant ONE = 1e18;
     bool constant CLEAN_UP = false;
-    address constant TOKEN_0 = address(3);
-    address constant TOKEN_1 = address(4);
+    address immutable TOKEN_0;
+    address immutable TOKEN_1;
+    address immutable SILO;
 
     SiloAmmPair immutable pair;
 
@@ -20,6 +24,13 @@ contract SiloAmmPairTest is Test, Fixtures {
         address router = address(1);
         ISiloOracle oracle0;
         ISiloOracle oracle1;
+
+        SILO = address(this);
+
+        address t1 = address(new TestToken("A"));
+        address t2 = address(new TestToken("B"));
+
+        (TOKEN_0, TOKEN_1) = t1 < t2 ? (t1, t2) : (t2, t1);
 
         pair = new SiloAmmPair(router, address(this), TOKEN_0, TOKEN_1, oracle0, oracle1, ammPriceConfig);
     }
@@ -53,9 +64,9 @@ contract SiloAmmPairTest is Test, Fixtures {
         uint256 gas = gasStart - gasEnd;
         emit log_named_uint("gas", gas);
 
-        assertEq(gas, 3490);
+        assertEq(gas, 3512);
 
-        assertEq(debtPrice, 0);
+        assertEq(debtPrice, 1e18);
     }
 
     /*
@@ -90,7 +101,7 @@ contract SiloAmmPairTest is Test, Fixtures {
 
         emit log_named_uint("gas #2", gas);
 
-        assertEq(gas, 170163, "add with cleanup");
+        assertEq(gas, 170070, "gase usage for adding liquidity with cleanup");
         assertEq(shares, shares2, "expect same shares");
     }
 
@@ -102,22 +113,39 @@ contract SiloAmmPairTest is Test, Fixtures {
         uint256 amount = 1e18;
         uint256 value = 2e18;
 
+        TestToken(TOKEN_0).mint(SILO, amount);
+        TestToken(TOKEN_0).approve(address(pair), type(uint256).max); // approve max saves gas
         pair.addLiquidity(TOKEN_0, _user, CLEAN_UP, amount, value);
 
-        // TODO add swap to this test
+        uint amount0Out = amount / 2;
+        uint amount1Out = 0;
+        uint debtIn = amount0Out * ONE / value;
+        address to = address(9999);
+
+        TestToken(TOKEN_1).mint(to, debtIn);
+        vm.prank(to);
+        TestToken(TOKEN_1).approve(address(pair), type(uint256).max);
 
         uint256 gasStart = gasleft();
-        pair.removeLiquidity(TOKEN_0, _user, 5e17);
+        pair.swap(amount0Out, amount1Out, to, "");
         uint256 gas = gasStart - gasleft();
 
+        emit log_named_uint("gas for swap", gas);
+        assertEq(gas, 87874);
+        assertGt(IERC20(TOKEN_0).balanceOf(to), 0, "expect collateral in `to` wallet");
+
+        gasStart = gasleft();
+        pair.removeLiquidity(TOKEN_0, _user, 5e17);
+        gas = gasStart - gasleft();
+
         emit log_named_uint("gas for partial removal", gas);
-        assertEq(gas, 8934);
+        assertEq(gas, 7047);
 
         gasStart = gasleft();
         pair.removeLiquidity(TOKEN_0, _user, 1e18);
         gas = gasStart - gasleft();
 
         emit log_named_uint("gas for FULL removal", gas);
-        assertEq(gas, 5215);
+        assertEq(gas, 5328);
     }
 }
