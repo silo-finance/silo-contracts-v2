@@ -29,6 +29,7 @@ interface ISiloConfig {
     error InvalidIrm();
     error InvalidMaxLtv();
     error InvalidMaxLt();
+    error InvalidLt();
     error NonBorrowableSilo();
     error InvalidShareTokens();
 

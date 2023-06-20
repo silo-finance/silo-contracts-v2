@@ -79,6 +79,7 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
     /// @param _to recipient
     /// @param _amount amount that was transferred
     function _notifyAboutTransfer(address _from, address _to, uint256 _amount) internal {
+        // TODO: make notification address per share token, NOT per Silo
         address notificationReceiver = factory.getNotificationReceiver(address(this));
 
         if (notificationReceiver != address(0)) {

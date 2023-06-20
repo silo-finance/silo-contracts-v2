@@ -131,7 +131,7 @@ contract SiloConfig is ISiloConfig {
         if (_configData.maxLtv0 > _configData.lt0) revert InvalidMaxLtv();
         if (_configData.maxLtv1 > _configData.lt1) revert InvalidMaxLtv();
         if (_configData.maxLtv0 == 0 && _configData.maxLtv1 == 0) revert InvalidMaxLtv();
-        if (_configData.lt0 >= ONE || _configData.lt1 >= ONE) revert InvalidMaxLt();
+        if (_configData.lt0 >= ONE || _configData.lt1 >= ONE) revert InvalidLt();
         if (!_configData.borrowable0 && !_configData.borrowable1) revert NonBorrowableSilo();
 
         if (_configData.protectedCollateralShareToken0 == address(0)) revert InvalidShareTokens();
