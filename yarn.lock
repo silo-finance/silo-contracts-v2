@@ -1447,13 +1447,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@openzeppelin/contracts-3.4.1@npm:@openzeppelin/contracts@3.4.1":
-  version: 3.4.1
-  resolution: "@openzeppelin/contracts@npm:3.4.1"
-  checksum: e42ad730179764de75ddfbca740def7f536181271e11d5276bfd750d89188a3788ee39152b6edaa0bbd66611a450e681c6a139a59e97e23b51a89bd2584a79ae
-  languageName: node
-  linkType: hard
-
 "@openzeppelin/contracts@npm:4.8.3":
   version: 4.8.3
   resolution: "@openzeppelin/contracts@npm:4.8.3"
@@ -11325,8 +11318,6 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "silo-core@workspace:silo-core"
   dependencies:
-    "@openzeppelin/contracts-3.4.1": "npm:@openzeppelin/contracts@3.4.1"
-    solc: ~0.8.19
     solhint: ~3.4.1
   languageName: unknown
   linkType: soft

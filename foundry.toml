@@ -22,7 +22,7 @@ broadcast = 'silo-amm-core/broadcast'
 fs_permissions = [{ access = "read", path = "./silo-amm-core/test/foundry/data/"}]
 
 [profile.core]
-src = 'silo-core/src'
+src = 'silo-core/contracts'
 out = 'cache/foundry/out/silo-core'
 test = 'silo-core/test'
 broadcast = 'silo-core/broadcast'

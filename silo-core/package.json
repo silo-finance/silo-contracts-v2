@@ -6,13 +6,9 @@
   },
   "repository": {
     "type": "git",
-    "url": "git@github.com:silo-finance/silo-contracts.git"
+    "url": "git@github.com:silo-finance/silo-contracts-v2.git"
   },
   "license": "BUSL-1.1",
-  "dependencies": {
-    "@openzeppelin/contracts-3.4.1": "npm:@openzeppelin/contracts@3.4.1",
-    "solc": "~0.8.19"
-  },
   "devDependencies": {
     "solhint": "~3.4.1"
   },
