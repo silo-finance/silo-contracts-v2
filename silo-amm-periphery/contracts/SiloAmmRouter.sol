@@ -59,6 +59,7 @@ contract SiloAmmRouter is NotSupportedRouter, SafeTransferETH, SafeTransfers {
         address _token1,
         ISiloOracle _oracle0,
         ISiloOracle _oracle1,
+        address _bridge,
         IAmmPriceModel.AmmPriceConfig memory _config
     )
         external
@@ -73,7 +74,7 @@ contract SiloAmmRouter is NotSupportedRouter, SafeTransferETH, SafeTransfers {
 
         // TODO there is one issue with it - we can not deploy routerV2, because the whole state will be
         // inside old router
-        pair = PAIR_FACTORY.createPair(_silo, _token0, _token1, _oracle0, _oracle1, _config);
+        pair = PAIR_FACTORY.createPair(_silo, _token0, _token1, _oracle0, _oracle1, _bridge, _config);
 
         _pairs[_token0][_token1][id] = IUniswapV2Pair(address(pair));
         _pairs[_token1][_token0][id] = IUniswapV2Pair(address(pair));
