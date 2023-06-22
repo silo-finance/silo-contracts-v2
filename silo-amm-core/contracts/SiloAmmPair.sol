@@ -109,41 +109,58 @@ contract SiloAmmPair is NotSupportedInPair, SafeTransfers, UniswapV2ERC20, AmmSt
         _priceChangeOnAddingLiquidity(_collateral);
     }
 
-    // this low-level function should be called from a contract which performs important safety checks
-    function swap(uint _amount0Out, uint _amount1Out, address _to, bytes calldata _data) external lock {
+    /// @inheritdoc IUniswapV2Pair
+    function swap(uint256 _amount0Out, uint256 _amount1Out, address _to, bytes calldata _data)
+        external
+        virtual
+        lock
+        returns (uint256 amountIn)
+    {
         if (_amount0Out == 0 && _amount1Out == 0) revert INSUFFICIENT_OUTPUT_AMOUNT();
         if (_amount0Out != 0 && _amount1Out != 0) revert INVALID_OUT();
         if (_to == _TOKEN_0 || _to == _TOKEN_1) revert INVALID_TO();
 
-        SwapTmpData memory data;
-        data.token0In = _amount0Out == 0;
+        bool token0In = _amount0Out == 0;
 
-        uint256 collateralOut;
-
-        // collateral is always the one that will be OUT of the pool
-        (data.collateral, data.debtToken, collateralOut) = data.token0In
+        // collateral is always the one, that will be OUT of the pool
+        (address collateral, address debtToken, uint256 collateralOut) = token0In
             ? (_TOKEN_1, _TOKEN_0, _amount1Out)
             : (_TOKEN_0, _TOKEN_1, _amount0Out);
 
-        _onSwapPriceChange(data.collateral);
+        uint256 k = _onSwapCalculateK(collateral);
+        _onSwapPriceChange(collateral, uint64(k));
 
-        // TODO fix oracle and collateralPrice
-        uint256 collateralValueInDebt = getOraclePrice(data.collateral, collateralOut);
-        uint256 debtIn = collateralPrice(data.collateral, collateralOut, collateralValueInDebt);
+        uint256 collateralPriceInDebt = getPriceFromOracle(collateral, collateralOut);
+        amountIn = getDebtIn(collateralPriceInDebt, k);
+        if (amountIn == 0) revert INSUFFICIENT_INPUT_AMOUNT();
 
-        _onSwapStateChange(data.collateral, collateralOut, debtIn);
+        _finishSwap(collateral, debtToken, token0In, amountIn, collateralOut, _to, _data);
+    }
 
-        (uint256 amount0In, uint256 amount1In) = data.token0In ? (debtIn, uint256(0)) : (uint256(0), debtIn);
-        emit Swap(msg.sender, amount0In, amount1In, _amount0Out, _amount1Out, _to);
+    /// @inheritdoc ISiloAmmPair
+    function exactInSwap(address _tokenIn, uint256 _amountIn, address _to, bytes calldata _data)
+        external
+        virtual
+        lock
+        returns (uint256 amountOut)
+    {
+        if (_amountIn == 0) revert INSUFFICIENT_INPUT_AMOUNT();
+        if (_to == _TOKEN_0 || _to == _TOKEN_1) revert INVALID_TO();
 
-        _safeTransferFrom(data.collateral, _SILO, _to, collateralOut);
-        // we doing transfer directly to SILO, but state will be updated on withdraw
-        _safeTransferFrom(data.debtToken, _to, _SILO, debtIn);
+        bool token0In = _tokenIn == _TOKEN_0;
 
-        if (_data.length != 0) {
-            // keep it for backwards compatibility and allow flash swap
-            IUniswapV2Callee(_to).uniswapV2Call(msg.sender, _amount0Out, _amount1Out, _data);
-        }
+        // collateral is always the one, that will be OUT of the pool
+        address collateral = token0In ? _TOKEN_1 : _TOKEN_0;
+
+        uint256 k = _onSwapCalculateK(collateral);
+        _onSwapPriceChange(collateral, uint64(k));
+
+        // REVERSE calculation of what we have in `swap`
+        uint256 collateralPriceInDebt = getCollateralOut(_amountIn, k);
+        amountOut = getPriceFromOracle(_tokenIn, collateralPriceInDebt);
+        if (amountOut == 0) revert INSUFFICIENT_OUTPUT_AMOUNT();
+
+        _finishSwap(collateral, _tokenIn, token0In, _amountIn, amountOut, _to, _data);
     }
 
     /// @dev this is only for backward compatibility with uniswapV2
@@ -195,22 +212,62 @@ contract SiloAmmPair is NotSupportedInPair, SafeTransfers, UniswapV2ERC20, AmmSt
     }
 
     // TODO once Edd has code we can complete that logic
-    function getOraclePrice(address _collateral, uint256 _collateralAmount) public view returns (uint256 debtPrice) {
+    /// @return quotePrice price of base token denominated in other token
+    function getPriceFromOracle(address _baseToken, uint256 _baseAmount)
+        public
+        view
+        virtual
+        returns (uint256 quotePrice)
+    {
         if (_ORACLE_SETUP == OracleSetup.BOTH) {
             //
         } else if (_ORACLE_SETUP == OracleSetup.NONE) {
             // if (ORACLE_0 == 0 && ORACLE_1 == 0) return _collateralAmount; do we support this case?
-            return _collateralAmount; // TODO temporary solution
+            return _baseAmount; // TODO temporary solution
         } else if (_ORACLE_SETUP == OracleSetup.FOR_TOKEN0) {
-            if (_collateral == _TOKEN_0) {
+            if (_baseToken == _TOKEN_0) {
                 // we have only one oracle and it is for our `_collateral` so this case is straight forward
-                debtPrice = ORACLE_0.quoteView(_collateralAmount, _TOKEN_0); // return price in _TOKEN_1
+                quotePrice = ORACLE_0.quoteView(_baseAmount, _TOKEN_0); // return price in _TOKEN_1
             } else {
                 // we have only one oracle, but is not set for `_collateral` token, but for other one
                 // so lal we need to change base? => so we can simply remove this last if?
                 // and it does not matter for which token is is set as always using this oracle for both tokens?
-                debtPrice = ORACLE_0.quoteView(_collateralAmount, _TOKEN_1);
+                quotePrice = ORACLE_0.quoteView(_baseAmount, _TOKEN_1);
             }
+        }
+    }
+
+    function _finishSwap(
+        address _collateral,
+        address _debt,
+        bool _token0In,
+        uint256 _amountIn,
+        uint256 _amountOut,
+        address _to,
+        bytes calldata _data
+    )
+        internal
+        virtual
+    {
+        _onSwapStateChange(_collateral, _amountOut, _amountIn);
+
+        if (_token0In) {
+            emit Swap(msg.sender, _amountIn, uint256(0), uint256(0), _amountOut, _to);
+        } else {
+            emit Swap(msg.sender, uint256(0), _amountIn, _amountOut, uint256(0), _to);
+        }
+
+        // we doing transfer directly to SILO, but state will be updated on withdraw
+        _safeTransferFrom(_debt, msg.sender, _SILO, _amountIn);
+        _safeTransferFrom(_collateral, _SILO, _to, _amountOut);
+
+        if (_data.length != 0) {
+            // keep it for backwards compatibility and allow flash swap
+            (uint256 _amount0Out, uint256 _amount1Out) = _token0In
+                ? (uint256(0), _amountOut)
+                : (_amountOut, uint256(0));
+
+            IUniswapV2Callee(_to).uniswapV2Call(msg.sender, _amount0Out, _amount1Out, _data);
         }
     }
 
