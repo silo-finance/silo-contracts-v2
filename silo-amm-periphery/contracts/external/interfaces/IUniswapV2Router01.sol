@@ -65,12 +65,20 @@ interface IUniswapV2Router01 {
         bool approveMax, uint8 v, bytes32 r, bytes32 s
     ) external returns (uint amountToken, uint amountETH);
 
+    /// @param _amountIn initial, exact amount of first token to swap
+    /// @param _amountOutMin minimal expected amount of last token out
+    /// @param _path in Silo there might be multiple pools for same pair of tokens, so path must include pool address,
+    /// path must be composed in that way: [tokenIn, pool, tokenOut, ...] so single swap is basically 3 addresses
+    /// token-pool-token. In case of 2 swaps and more, tokenOut became tokenIn for next swap
+    /// @param _to address of swap receiver
+    /// @param _deadline time when swap will expire
+    /// @return amounts array of amounts for each swap
     function swapExactTokensForTokens(
-        uint amountIn,
-        uint amountOutMin,
-        address[] calldata path,
-        address to,
-        uint deadline
+        uint256 _amountIn,
+        uint256 _amountOutMin,
+        address[] calldata _path,
+        address _to,
+        uint256 _deadline
     ) external returns (uint[] memory amounts);
 
     function swapTokensForExactTokens(

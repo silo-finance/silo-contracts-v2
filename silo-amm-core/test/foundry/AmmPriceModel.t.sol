@@ -20,20 +20,16 @@ contract PriceModel is AmmPriceModel {
         _priceChangeOnAddingLiquidity(_COLLATERAL);
     }
 
-    function onSwapPriceChange() external {
-        _onSwapPriceChange(_COLLATERAL);
+    function onSwapCalculateK() external view returns (uint256 k) {
+        return _onSwapCalculateK(_COLLATERAL);
+    }
+
+    function onSwapPriceChange(uint64 _k) external {
+        _onSwapPriceChange(_COLLATERAL, _k);
     }
 
     function onWithdraw() external {
         _priceChangeOnWithdraw(_COLLATERAL);
-    }
-
-    function collateralPrice(uint256 _collateralAmount, uint256 _collateralTwapPrice)
-        external
-        view
-        returns (uint256 debtAmount)
-    {
-        return super.collateralPrice(_COLLATERAL, _collateralAmount, _collateralTwapPrice);
     }
 }
 
@@ -62,7 +58,7 @@ contract AmmPriceModelTest is Test {
         ammPriceModelTestData = new AmmPriceModelTestData();
     }
 
-    function test_getAmmConfig_gas() public {
+    function test_AmmPriceModel_getAmmConfig_gas() public {
         uint256 gasStart = gasleft();
         priceModel.getAmmConfig();
         uint256 gasEnd = gasleft();
@@ -70,20 +66,53 @@ contract AmmPriceModelTest is Test {
         assertEq(gasStart - gasEnd, 4114);
     }
 
-    function test_collateralPrice_gas() public {
+    /*
+        FOUNDRY_PROFILE=amm-core forge test -vv --match-test test_AmmPriceModel_collateralPrice_gas
+    */
+    function test_AmmPriceModel_collateralPrice_gas() public {
+        uint256 collateralPriceInDebt = 2e18;
+        uint256 k = 1e15;
+
         uint256 gasStart = gasleft();
-        priceModel.collateralPrice(1, 2);
+        priceModel.getDebtIn(collateralPriceInDebt, k);
         uint256 gasEnd = gasleft();
 
-        assertEq(gasStart - gasEnd, 5790);
+        assertEq(gasStart - gasEnd, 3457);
     }
 
     /*
-        FOUNDRY_PROFILE=amm forge test -vvv --match-test test_ammPriceModelFlow
+        FOUNDRY_PROFILE=amm-core forge test -vv --match-test test_AmmPriceModel_onSwapKchange_gas
     */
-    function test_ammPriceModelFlow() public {
+    function test_AmmPriceModel_onSwapKchange_gas() public {
+        uint256 gasStart = gasleft();
+        priceModel.onSwapCalculateK();
+        uint256 gasEnd = gasleft();
+
+        assertEq(gasStart - gasEnd, 5659);
+    }
+
+    /*
+        FOUNDRY_PROFILE=amm-core forge test -vv --match-test test_AmmPriceModel_getDebtIn_andReverse
+    */
+    function test_AmmPriceModel_getDebtIn_andReverse() public {
+        uint256 collateralPriceInDebt = 1234e18;
+        uint256 k = 1e14;
+
+        uint256 gasStart = gasleft();
+        uint256 debtIn = priceModel.getDebtIn(collateralPriceInDebt, k);
+        uint256 collateralOut2 = priceModel.getCollateralOut(debtIn, k);
+        uint256 gasEnd = gasleft();
+
+        assertEq(collateralPriceInDebt, collateralOut2);
+        assertEq(gasStart - gasEnd, 4353, "gas");
+    }
+
+    /*
+        FOUNDRY_PROFILE=amm-core forge test -vv --match-test test_AmmPriceModel_ammPriceModelFlow
+    */
+    function test_AmmPriceModel_ammPriceModelFlow() public {
         unchecked {
-            uint256 twap = 1000 * ONE;
+            uint256 collateralPrice = 1000 * ONE;
 
             AmmPriceModelTestData.TestData[] memory testDatas = ammPriceModelTestData.testData();
 
@@ -101,7 +130,7 @@ contract AmmPriceModelTest is Test {
                 } else if (testData.action == AmmPriceModelTestData.Action.ADD_LIQUIDITY) {
                     priceModel.onAddingLiquidity();
                 } else if (testData.action == AmmPriceModelTestData.Action.SWAP) {
-                    priceModel.onSwapPriceChange();
+                    priceModel.onSwapPriceChange(uint64(priceModel.onSwapCalculateK()));
                 } else if (testData.action == AmmPriceModelTestData.Action.WITHDRAW) {
                     priceModel.onWithdraw();
                 } else {
@@ -123,16 +152,16 @@ contract AmmPriceModelTest is Test {
 
                 if (testData.price != 0) {
                     uint256 pricePrecision = 1e8;
-                    uint256 price = priceModel.collateralPrice(ONE, twap);
-                    assertEq(price / pricePrecision, testData.price / pricePrecision, "price");
+                    uint256 debtIn = priceModel.getDebtIn(collateralPrice, state.k);
+                    assertEq(debtIn / pricePrecision, testData.price / pricePrecision, "price");
                 }
             }
 
-            assertEq(gasSum, 49423, "make sure we gas efficient on price model actions");
+            assertEq(gasSum, 55518, "make sure we gas efficient on price model actions");
         }
     }
 
-    function test_ammConfigVerification_InvalidTslow() public {
+    function test_AmmPriceModel_ammConfigVerification_InvalidTslow() public {
         AmmPriceModel.AmmPriceConfig memory config = priceModel.getAmmConfig();
 
         config.tSlow = uint32(7 days + 1);
@@ -141,7 +170,7 @@ contract AmmPriceModelTest is Test {
         priceModel.ammConfigVerification(config);
     }
 
-    function test_ammConfigVerification_InvalidKmax() public {
+    function test_AmmPriceModel_ammConfigVerification_InvalidKmax() public {
         AmmPriceModel.AmmPriceConfig memory config = priceModel.getAmmConfig();
 
         config.kMax = 0;
@@ -155,7 +184,7 @@ contract AmmPriceModelTest is Test {
         priceModel.ammConfigVerification(config);
     }
 
-    function test_ammConfigVerification_InvalidKmin() public {
+    function test_AmmPriceModel_ammConfigVerification_InvalidKmin() public {
         AmmPriceModel.AmmPriceConfig memory config = priceModel.getAmmConfig();
 
         config.kMin = uint64(config.kMax + 1);
@@ -164,7 +193,7 @@ contract AmmPriceModelTest is Test {
         priceModel.ammConfigVerification(config);
     }
 
-    function test_ammConfigVerification_InvalidQ() public {
+    function test_AmmPriceModel_ammConfigVerification_InvalidQ() public {
         AmmPriceModel.AmmPriceConfig memory config = priceModel.getAmmConfig();
 
         config.q = uint64(priceModel.ONE() + 1);
@@ -173,7 +202,7 @@ contract AmmPriceModelTest is Test {
         priceModel.ammConfigVerification(config);
     }
 
-    function test_ammConfigVerification_InvalidVfast() public {
+    function test_AmmPriceModel_ammConfigVerification_InvalidVfast() public {
         AmmPriceModel.AmmPriceConfig memory config = priceModel.getAmmConfig();
 
         config.vFast = uint64(priceModel.ONE() + 1);
@@ -183,9 +212,9 @@ contract AmmPriceModelTest is Test {
     }
 
     /*
-        FOUNDRY_PROFILE=amm forge test -vvv --match-test test_ammConfigVerification_InvalidDeltaK
+        FOUNDRY_PROFILE=amm-core forge test -vvv --match-test test_ammConfigVerification_InvalidDeltaK
     */
-    function test_ammConfigVerification_InvalidDeltaK() public {
+    function test_AmmPriceModel_ammConfigVerification_InvalidDeltaK() public {
         AmmPriceModel.AmmPriceConfig memory config = priceModel.getAmmConfig();
 
         config.deltaK = config.tSlow + 1;

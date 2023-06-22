@@ -8,7 +8,7 @@ import "../../contracts/SiloAmmPairFactory.sol";
 
 
 /*
-    FOUNDRY_PROFILE=amm forge test -vvv --match-contract Create2GasTest
+    FOUNDRY_PROFILE=amm-core forge test -vv --match-contract SiloAmmPairFactoryTest
 */
 contract SiloAmmPairFactoryTest is Test, Fixtures {
     address constant TOKEN_0 = address(3);
@@ -36,7 +36,7 @@ contract SiloAmmPairFactoryTest is Test, Fixtures {
         uint256 gasUsed = gasStart - gasleft();
 
         emit log_named_uint("gas used", gasUsed);
-        assertEq(gasUsed, 2360988, "expected gas usage for createPair");
+        assertEq(gasUsed, 2504812, "expected gas usage for createPair");
         assertEq(pair.silo(), address(this), "expected to set silo");
     }
 }

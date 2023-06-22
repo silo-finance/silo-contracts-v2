@@ -3,21 +3,23 @@ pragma solidity >=0.8.0;
 
 import "forge-std/Test.sol";
 import "silo-amm-core/test/foundry/helpers/Fixtures.sol";
+import "silo-amm-core/test/foundry/helpers/TestToken.sol";
 import "silo-amm-core/contracts/SiloAmmPairFactory.sol";
 
-import "../../contracts/SiloAmmRouter.sol";
 import "../../contracts/interfaces/ISiloAmmRouterEvents.sol";
+import "../../contracts/SiloAmmRouter.sol";
 
 
 /*
     FOUNDRY_PROFILE=amm-periphery forge test -vv --match-contract SiloAmmRouterTest
 */
 contract SiloAmmRouterTest is Test, Fixtures, ISiloAmmRouterEvents {
+    address constant SILO = address(0x5170);
     ISiloOracle constant ORACLE_0 = ISiloOracle(address(0));
     ISiloOracle constant ORACLE_1 = ISiloOracle(address(0));
 
-    address constant TOKEN_0 = address(3);
-    address constant TOKEN_1 = address(4);
+    address immutable TOKEN_0;
+    address immutable TOKEN_1;
     address constant WETH = address(5);
 
     SiloAmmPairFactory immutable PAIR_FACTORY;
@@ -28,10 +30,20 @@ contract SiloAmmRouterTest is Test, Fixtures, ISiloAmmRouterEvents {
     constructor() {
         PAIR_FACTORY = new SiloAmmPairFactory();
         ROUTER = new SiloAmmRouter(PAIR_FACTORY, WETH);
+
+        address t1 = address(new TestToken("A"));
+        address t2 = address(new TestToken("B"));
+
+        (TOKEN_0, TOKEN_1) = t1 < t2 ? (t1, t2) : (t2, t1);
     }
 
     function setUp() public {
-        pair = ROUTER.createPair(address(this), TOKEN_0, TOKEN_1, ORACLE_0, ORACLE_1, ammPriceConfig);
+        pair = ROUTER.createPair(SILO, TOKEN_0, TOKEN_1, ORACLE_0, ORACLE_1, ammPriceConfig);
+
+        vm.prank(SILO);
+        TestToken(TOKEN_0).approve(address(pair), type(uint256).max);
+        vm.prank(SILO);
+        TestToken(TOKEN_1).approve(address(pair), type(uint256).max);
     }
 
     function test_SiloAmmRouter_factory() public {
@@ -57,7 +69,7 @@ contract SiloAmmRouterTest is Test, Fixtures, ISiloAmmRouterEvents {
         assertEq(pair2, address(pair), "reverse");
 
         emit log_named_uint("gas used", gasUsed);
-        assertEq(gasUsed, 6723);
+        assertEq(gasUsed, 6738);
     }
 
     /*
@@ -69,7 +81,7 @@ contract SiloAmmRouterTest is Test, Fixtures, ISiloAmmRouterEvents {
         uint256 gasUsed = gasStart - gasleft();
 
         emit log_named_uint("gas used", gasUsed);
-        assertEq(gasUsed, 9169);
+        assertEq(gasUsed, 9204);
 
         assertEq(pairs.length, 1);
     }
@@ -96,10 +108,47 @@ contract SiloAmmRouterTest is Test, Fixtures, ISiloAmmRouterEvents {
     */
     function test_SiloAmmRouter_createPair_gas() public {
         uint256 gasStart = gasleft();
-        ROUTER.createPair(address(123), TOKEN_0, TOKEN_1, ORACLE_0, ORACLE_1, ammPriceConfig);
+        ROUTER.createPair(SILO, TOKEN_0, TOKEN_1, ORACLE_0, ORACLE_1, ammPriceConfig);
         uint256 gasUsed = gasStart - gasleft();
 
         emit log_named_uint("gas used", gasUsed);
-        assertEq(gasUsed, 2445077, "gas usage for SiloAmmRouter.createPair");
+        assertEq(gasUsed, 2644059, "gas usage for SiloAmmRouter.createPair");
+    }
+
+    /*
+        FOUNDRY_PROFILE=amm-periphery forge test -vv --match-test test_SiloAmmRouter_swapExactTokensForTokens_gas
+    */
+    function test_SiloAmmRouter_swapExactTokensForTokens_gas() public {
+        uint256 amountIn = 1e18;
+        uint256 amountOutMin = 1e18;
+        address[] memory path = new address[](3);
+        address to = address(1111);
+        uint256 deadline = block.timestamp;
+
+        path[0] = TOKEN_0;
+        path[1] = address(pair);
+        path[2] = TOKEN_1;
+
+        // mint debt
+        TestToken(TOKEN_0).mint(address(this), amountIn);
+        TestToken(TOKEN_0).approve(address(ROUTER), type(uint256).max);
+
+        // mint collateral
+        TestToken(TOKEN_1).mint(SILO, amountOutMin);
+
+        vm.prank(SILO);
+        pair.addLiquidity(TOKEN_1, address(333), false, amountOutMin, amountOutMin);
+
+        uint256 gasStart = gasleft();
+        ROUTER.swapExactTokensForTokens(amountIn, amountOutMin, path, to, deadline);
+        uint256 gasUsed = gasStart - gasleft();
+
+        emit log_named_uint("gas used", gasUsed);
+        assertEq(gasUsed, 124008, "gas usage for SiloAmmRouter.swapExactTokensForTokens");
+
+        assertEq(TestToken(path[0]).balanceOf(SILO), amountIn, "expect silo to got debt");
+        assertEq(TestToken(path[0]).balanceOf(to), 0, "expect swapper to not have debt token");
+        assertEq(TestToken(path[2]).balanceOf(SILO), 0, "expect silo to not have collateral");
+        assertEq(TestToken(path[2]).balanceOf(to), amountOutMin, "expect swapper to got collateral");
     }
 }

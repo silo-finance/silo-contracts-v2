@@ -24,7 +24,12 @@ interface IUniswapV2Pair is IUniswapV2ERC20 {
 
     function mint(address to) external returns (uint liquidity);
     function burn(address to) external returns (uint amount0, uint amount1);
-    function swap(uint amount0Out, uint amount1Out, address to, bytes calldata data) external;
+    /// @notice originally this method does not return anything
+    /// @return amountIn amount of debt token spend on swap
+    function swap(uint256 amount0Out, uint256 amount1Out, address to, bytes calldata data)
+        external
+        returns (uint256 amountIn);
+
     function skim(address to) external;
     function sync() external;
 
