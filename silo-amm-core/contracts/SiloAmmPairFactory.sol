@@ -12,13 +12,14 @@ contract SiloAmmPairFactory is ISiloAmmPairFactory {
         address _token1,
         ISiloOracle _oracle0,
         ISiloOracle _oracle1,
+        address _bridge,
         IAmmPriceModel.AmmPriceConfig memory _config
     )
         external
         virtual
         returns (ISiloAmmPair pair)
     {
-        pair = new SiloAmmPair(msg.sender, _silo, _token0, _token1, _oracle0, _oracle1, _config);
+        pair = new SiloAmmPair(msg.sender, _silo, _token0, _token1, _oracle0, _oracle1, _bridge, _config);
     }
 
     /// @inheritdoc ISiloAmmPairFactory

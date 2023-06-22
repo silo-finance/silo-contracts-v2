@@ -20,6 +20,9 @@ contract SiloAmmPair is NotSupportedInPair, SafeTransfers, UniswapV2ERC20, AmmSt
     address internal immutable _TOKEN_0; // solhint-disable-line var-name-mixedcase
     address internal immutable _TOKEN_1; // solhint-disable-line var-name-mixedcase
 
+    /// @dev in case of two oracle setup, we using bridge token to get quote
+    address public immutable BRIDGE_TOKEN; // solhint-disable-line var-name-mixedcase
+
     /// @dev gives token0 price in token1
     ISiloOracle public immutable ORACLE_0; // solhint-disable-line var-name-mixedcase
     ISiloOracle public immutable ORACLE_1; // solhint-disable-line var-name-mixedcase
@@ -32,7 +35,7 @@ contract SiloAmmPair is NotSupportedInPair, SafeTransfers, UniswapV2ERC20, AmmSt
     address internal immutable _ROUTER; // solhint-disable-line var-name-mixedcase
 
     /// @dev flag, that tell us, if we have two oracle set up or one
-    OracleSetup immutable private _ORACLE_SETUP; // solhint-disable-line var-name-mixedcase
+    OracleSetup public immutable ORACLE_SETUP; // solhint-disable-line var-name-mixedcase
 
     uint112 internal _token0Reserve;           // uses single storage slot, accessible via getReserves
     uint112 internal _token1Reserve;           // uses single storage slot, accessible via getReserves
@@ -61,6 +64,7 @@ contract SiloAmmPair is NotSupportedInPair, SafeTransfers, UniswapV2ERC20, AmmSt
         address _token1,
         ISiloOracle _oracle0,
         ISiloOracle _oracle1,
+        address _bridge,
         AmmPriceConfig memory _config
     )
         AmmPriceModel(_config)
@@ -79,10 +83,7 @@ contract SiloAmmPair is NotSupportedInPair, SafeTransfers, UniswapV2ERC20, AmmSt
         // TODO
         _FEE_TO = address(0);
 
-        ORACLE_0 = _oracle0;
-        ORACLE_1 = _oracle1;
-
-        _ORACLE_SETUP = _oracleSetup(address(_oracle0), address(_oracle1));
+        (ORACLE_SETUP, ORACLE_0, ORACLE_1, BRIDGE_TOKEN) = _oracleSetup(address(_oracle0), address(_oracle1), _bridge);
     }
 
     /// @inheritdoc ISiloAmmPair
@@ -99,7 +100,7 @@ contract SiloAmmPair is NotSupportedInPair, SafeTransfers, UniswapV2ERC20, AmmSt
         returns (uint256 shares)
     {
         if (_cleanUp) {
-            removeLiquidity(_collateral, _user, ONE);
+            removeLiquidity(_collateral, _user, PRECISION);
         }
 
         shares = _stateChangeOnAddLiquidity(_collateral, _user, _collateralAmount, _collateralValue);
@@ -130,8 +131,8 @@ contract SiloAmmPair is NotSupportedInPair, SafeTransfers, UniswapV2ERC20, AmmSt
         uint256 k = _onSwapCalculateK(collateral);
         _onSwapPriceChange(collateral, uint64(k));
 
-        uint256 collateralPriceInDebt = getPriceFromOracle(collateral, collateralOut);
-        amountIn = getDebtIn(collateralPriceInDebt, k);
+        uint256 debtQuote = getQuoteFromOracle(collateralOut, collateral);
+        amountIn = getDebtIn(debtQuote, k);
         if (amountIn == 0) revert INSUFFICIENT_INPUT_AMOUNT();
 
         _finishSwap(collateral, debtToken, token0In, amountIn, collateralOut, _to, _data);
@@ -156,8 +157,8 @@ contract SiloAmmPair is NotSupportedInPair, SafeTransfers, UniswapV2ERC20, AmmSt
         _onSwapPriceChange(collateral, uint64(k));
 
         // REVERSE calculation of what we have in `swap`
-        uint256 collateralPriceInDebt = getCollateralOut(_amountIn, k);
-        amountOut = getPriceFromOracle(_tokenIn, collateralPriceInDebt);
+        uint256 virtualDebtIn = getDebtInReverse(_amountIn, k);
+        amountOut = getQuoteFromOracle(virtualDebtIn, _tokenIn);
         if (amountOut == 0) revert INSUFFICIENT_OUTPUT_AMOUNT();
 
         _finishSwap(collateral, _tokenIn, token0In, _amountIn, amountOut, _to, _data);
@@ -192,9 +193,9 @@ contract SiloAmmPair is NotSupportedInPair, SafeTransfers, UniswapV2ERC20, AmmSt
         onlySilo
         returns (uint256 debtAmount)
     {
-        if (_w > ONE) revert PERCENT_OVERFLOW();
+        if (_w > PRECISION) revert PERCENT_OVERFLOW();
 
-        debtAmount = _w == ONE
+        debtAmount = _w == PRECISION
             ? _withdrawAllLiquidity(_collateral, _user)
             : _withdrawLiquidity(_collateral, _user, _w);
 
@@ -211,29 +212,21 @@ contract SiloAmmPair is NotSupportedInPair, SafeTransfers, UniswapV2ERC20, AmmSt
         blockTimestampLast = 0;
     }
 
-    // TODO once Edd has code we can complete that logic
-    /// @return quotePrice price of base token denominated in other token
-    function getPriceFromOracle(address _baseToken, uint256 _baseAmount)
+    /// @return quoteAmount amount of quote token that represents value of `_baseToken` and `_baseAmount`
+    function getQuoteFromOracle(uint256 _baseAmount, address _baseToken)
         public
         view
         virtual
-        returns (uint256 quotePrice)
+        returns (uint256 quoteAmount)
     {
-        if (_ORACLE_SETUP == OracleSetup.BOTH) {
-            //
-        } else if (_ORACLE_SETUP == OracleSetup.NONE) {
-            // if (ORACLE_0 == 0 && ORACLE_1 == 0) return _collateralAmount; do we support this case?
-            return _baseAmount; // TODO temporary solution
-        } else if (_ORACLE_SETUP == OracleSetup.FOR_TOKEN0) {
-            if (_baseToken == _TOKEN_0) {
-                // we have only one oracle and it is for our `_collateral` so this case is straight forward
-                quotePrice = ORACLE_0.quoteView(_baseAmount, _TOKEN_0); // return price in _TOKEN_1
-            } else {
-                // we have only one oracle, but is not set for `_collateral` token, but for other one
-                // so lal we need to change base? => so we can simply remove this last if?
-                // and it does not matter for which token is is set as always using this oracle for both tokens?
-                quotePrice = ORACLE_0.quoteView(_baseAmount, _TOKEN_1);
-            }
+        if (ORACLE_SETUP == OracleSetup.ONE) {
+            quoteAmount = ORACLE_0.quoteView(_baseAmount, _baseToken);
+        } else if (ORACLE_SETUP == OracleSetup.BOTH) {
+            (ISiloOracle one, ISiloOracle two) = _baseToken == _TOKEN_0 ? (ORACLE_0, ORACLE_1) : (ORACLE_1, ORACLE_0);
+            quoteAmount = one.quoteView(_baseAmount, _baseToken);
+            quoteAmount = two.quoteView(quoteAmount, BRIDGE_TOKEN);
+        } else { // if (ORACLE_SETUP == OracleSetup.NONE)
+            quoteAmount = _baseAmount;
         }
     }
 
@@ -295,11 +288,21 @@ contract SiloAmmPair is NotSupportedInPair, SafeTransfers, UniswapV2ERC20, AmmSt
         }
     }
 
-    function _oracleSetup(address _oracle0, address _oracle1) internal pure returns (OracleSetup) {
-        if (_oracle0 == address(0) && _oracle1 == address(0)) return OracleSetup.NONE;
-        if (_oracle0 != address(0) && _oracle1 != address(0)) return OracleSetup.BOTH;
-        if (_oracle0 == address(0)) return OracleSetup.FOR_TOKEN1;
-
-        return OracleSetup.FOR_TOKEN0;
+    function _oracleSetup(address _oracle0, address _oracle1, address _bridge)
+        internal
+        pure
+        returns (OracleSetup setup, ISiloOracle oracle0, ISiloOracle oracle1, address bridge)
+    {
+        if (_oracle0 == address(0) && _oracle1 == address(0)) {
+            setup = OracleSetup.NONE;
+        } else if (_oracle0 != address(0) && _oracle1 != address(0)) {
+            oracle0 = ISiloOracle(_oracle0);
+            oracle1 = ISiloOracle(_oracle1);
+            bridge = _bridge;
+            setup = OracleSetup.BOTH;
+        } else {
+            setup = OracleSetup.ONE;
+            oracle0 = ISiloOracle(_oracle0 == address(0) ? _oracle1 : _oracle0);
+        }
     }
 }

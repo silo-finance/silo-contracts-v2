@@ -4,7 +4,7 @@ pragma solidity >=0.5.0;
 import "../external/interfaces/IUniswapV2Pair.sol";
 
 interface ISiloAmmPair is IUniswapV2Pair {
-    enum OracleSetup { NONE, BOTH, FOR_TOKEN0, FOR_TOKEN1 }
+    enum OracleSetup { NONE, ONE, BOTH }
 
     error ONLY_SILO();
     error NOT_SUPPORTED();
