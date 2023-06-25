@@ -58,41 +58,6 @@ contract AmmPriceModel is IAmmPriceModel {
         return _priceState[_collateral];
     }
 
-    /// @param _debtQuote debt amount that we want to swap
-    /// @param _onSwapK result of `_onSwapCalculateK()`
-    /// @return debtAmountIn adjusted amount of debt token that will be swap (it will be equal or less `_debtQuote`
-    function getDebtIn(uint256 _debtQuote, uint256 _onSwapK)
-        public
-        pure
-        returns (uint256 debtAmountIn)
-    {
-        debtAmountIn = _onSwapK * _debtQuote;
-
-        unchecked {
-            // div is safe
-            // div(PRECISION) because of K
-            return debtAmountIn / PRECISION;
-        }
-    }
-
-    /// @dev this is reverse of what `getDebtIn()` does
-    /// @param _onSwapK result of `_onSwapCalculateK()`
-    /// @param _amountIn amount of debt token that user expect to swap
-    /// @param debtIn adjusted debt amount that will be used to get quote for collateral
-    /// (if will be equal or greater than `_debtAmountIn`)
-    function getDebtInReverse(uint256 _amountIn, uint256 _onSwapK)
-        public
-        pure
-        returns (uint256 debtIn)
-    {
-        debtIn = _amountIn * PRECISION;
-
-        unchecked {
-            // div is safe
-            return debtIn / _onSwapK;
-        }
-    }
-
     function ammConfigVerification(AmmPriceConfig memory _config) public pure {
         // week is arbitrary value, we assume 1 week for waiting for price to go to minimum is abstract enough
         uint256 week = 7 days;
@@ -137,7 +102,7 @@ contract AmmPriceModel is IAmmPriceModel {
 
     /// @param _onSwapK result of `_onSwapCalculateK()`
     function _onSwapPriceChange(address _collateral, uint64 _onSwapK) internal {
-        _priceState[_collateral].k = _onSwapK; // TODO do we need to store it?
+        _priceState[_collateral].k = _onSwapK;
         _priceState[_collateral].swap = true;
         _priceState[_collateral].liquidityAdded = false;
         _priceState[_collateral].lastActionTimestamp = uint64(block.timestamp);
@@ -151,10 +116,14 @@ contract AmmPriceModel is IAmmPriceModel {
     }
 
     /// @dev it calculates K
-    function _onSwapCalculateK(address _collateral) internal view returns (uint256 k) {
+    /// @notice it can underflow if `_blockTimestamp` will be from past
+    /// @param _blockTimestamp current (block.timestamp) time or time from future (in case for view calculations)
+    function _onSwapCalculateK(address _collateral, uint256 _blockTimestamp) internal view returns (uint256 k) {
         unchecked {
-            // unchecked: timestamp is at least lastActionTimestamp so we do not underflow
-            uint256 time = block.timestamp - _priceState[_collateral].lastActionTimestamp;
+            // unchecked: timestamp is at least lastActionTimestamp so we do not underflow in normal case
+            // when we will be using block.timestamp, however if this method will be used as view and we pass
+            // time from past, we can underflow and got invalid results
+            uint256 time = _blockTimestamp - _priceState[_collateral].lastActionTimestamp;
 
             if (_priceState[_collateral].swap) {
                 if (time > T_SLOW) {

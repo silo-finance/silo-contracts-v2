@@ -113,7 +113,7 @@ contract SiloAmmRouterTest is Test, Fixtures, ISiloAmmRouterEvents {
         uint256 gasUsed = gasStart - gasleft();
 
         emit log_named_uint("gas used", gasUsed);
-        assertEq(gasUsed, 2713936, "gas usage for SiloAmmRouter.createPair");
+        assertEq(gasUsed, 2789974, "gas usage for SiloAmmRouter.createPair");
     }
 
     /*
@@ -122,34 +122,121 @@ contract SiloAmmRouterTest is Test, Fixtures, ISiloAmmRouterEvents {
     function test_SiloAmmRouter_swapExactTokensForTokens_gas() public {
         uint256 amountIn = 1e18;
         uint256 amountOutMin = 1e18;
-        address[] memory path = new address[](3);
+
+        address[] memory path = _setupForSwap(TOKEN_1, SILO, amountIn, TOKEN_0, amountOutMin);
+
         address to = address(1111);
         uint256 deadline = block.timestamp;
-
-        path[0] = TOKEN_0;
-        path[1] = address(pair);
-        path[2] = TOKEN_1;
-
-        // mint debt
-        TestToken(TOKEN_0).mint(address(this), amountIn);
-        TestToken(TOKEN_0).approve(address(ROUTER), type(uint256).max);
-
-        // mint collateral
-        TestToken(TOKEN_1).mint(SILO, amountOutMin);
-
-        vm.prank(SILO);
-        pair.addLiquidity(TOKEN_1, address(333), false, amountOutMin, amountOutMin);
 
         uint256 gasStart = gasleft();
         ROUTER.swapExactTokensForTokens(amountIn, amountOutMin, path, to, deadline);
         uint256 gasUsed = gasStart - gasleft();
 
         emit log_named_uint("gas used", gasUsed);
-        assertEq(gasUsed, 124019, "gas usage for SiloAmmRouter.swapExactTokensForTokens");
+        assertEq(gasUsed, 123991, "gas usage for SiloAmmRouter.swapExactTokensForTokens");
 
         assertEq(TestToken(path[0]).balanceOf(SILO), amountIn, "expect silo to got debt");
         assertEq(TestToken(path[0]).balanceOf(to), 0, "expect swapper to not have debt token");
         assertEq(TestToken(path[2]).balanceOf(SILO), 0, "expect silo to not have collateral");
         assertEq(TestToken(path[2]).balanceOf(to), amountOutMin, "expect swapper to got collateral");
+    }
+
+    /*
+        FOUNDRY_PROFILE=amm-periphery forge test -vv --match-test test_SiloAmmRouter_getAmountsOut_gas
+    */
+    function test_SiloAmmRouter_getAmountsOut_gas() public {
+        uint256 amountIn = 1e18;
+        uint256 amountOutMin = 1e18;
+
+        address[] memory path = _setupForSwap(TOKEN_1, SILO, amountIn, TOKEN_0, amountOutMin);
+
+        uint256 gasStart = gasleft();
+        uint256[] memory amountsOut = ROUTER.getAmountsOut(amountIn, path);
+        uint256 gasUsed = gasStart - gasleft();
+
+        emit log_named_uint("gas used", gasUsed);
+        assertEq(gasUsed, 7752, "gas usage for SiloAmmRouter.getAmountsOut");
+
+        assertEq(amountsOut.length, 2, "expect to have 2 amounts");
+        assertEq(amountsOut[0], amountIn, "expect amount 0 to be IN");
+        assertEq(amountsOut[1], amountOutMin, "expect amount 1 to be OUT");
+
+
+        uint256 timestamp = block.timestamp + 100;
+
+        gasStart = gasleft();
+        amountsOut = ROUTER.getAmountsOut(amountIn, path, timestamp);
+        gasUsed = gasStart - gasleft();
+
+        emit log_named_uint("gas used with timestamp", gasUsed);
+        assertEq(gasUsed, 5354, "gas usage for SiloAmmRouter.getAmountsOut@timestamp");
+
+        assertEq(amountsOut[0], amountIn, "expect amount 0 to be IN");
+        assertEq(amountsOut[1], 1000463177396942966, "expect amount 1 to be OUT");
+    }
+
+    /*
+        FOUNDRY_PROFILE=amm-periphery forge test -vv --match-test test_SiloAmmRouter_getAmountsIn_gas
+    */
+    function test_SiloAmmRouter_getAmountsIn_gas() public {
+        uint256 amountIn = 1e18;
+        uint256 amountOutMin = 1e18;
+
+        address[] memory path = _setupForSwap(TOKEN_1, SILO, amountIn, TOKEN_0, amountOutMin);
+
+        uint256 gasStart = gasleft();
+        uint256[] memory amountsIn = ROUTER.getAmountsIn(amountOutMin, path);
+        uint256 gasUsed = gasStart - gasleft();
+
+        emit log_named_uint("gas used", gasUsed);
+        assertEq(gasUsed, 8054, "gas usage for SiloAmmRouter.getAmountsIn");
+
+        assertEq(amountsIn.length, 2, "expect to have 2 amounts");
+        assertEq(amountsIn[0], amountIn, "expect amount 0 to be IN");
+        assertEq(amountsIn[1], amountOutMin, "expect amount 1 to be OUT");
+
+
+        uint256 timestamp = block.timestamp + 100;
+
+        gasStart = gasleft();
+        amountsIn = ROUTER.getAmountsIn(amountOutMin, path, timestamp);
+        gasUsed = gasStart - gasleft();
+
+        emit log_named_uint("gas used with timestamp", gasUsed);
+        assertEq(gasUsed, 5185, "gas usage for SiloAmmRouter.getAmountsIn@timestamp");
+
+        assertEq(amountsIn[0], 999537037037037100, "expect amount 0 to be IN");
+        assertEq(amountsIn[1], amountOutMin, "expect amount 1 to be OUT");
+    }
+
+    function _setupForSwap(
+        address _collateral,
+        address _silo,
+        uint256 _collateralAmount,
+        address _debt,
+        uint256 _debtAmount
+    )
+        internal
+        returns (address[] memory path)
+    {
+        // mint debt
+        TestToken(_debt).mint(address(this), _debtAmount);
+        TestToken(TOKEN_0).approve(address(ROUTER), type(uint256).max);
+
+        // mint collateral
+        TestToken(_collateral).mint(_silo, _collateralAmount);
+
+        address user = address(333);
+        bool cleanUp = false;
+        uint256 collateralValue = _collateralAmount; // assuming price 1:1
+
+        vm.prank(_silo);
+        pair.addLiquidity(_collateral, user, cleanUp, _collateralAmount, collateralValue);
+
+        path = new address[](3);
+
+        path[0] = _debt;
+        path[1] = address(pair);
+        path[2] = _collateral;
     }
 }

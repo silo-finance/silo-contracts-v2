@@ -93,7 +93,7 @@ contract SiloAmmPairTest is Test, Fixtures {
 
         emit log_named_uint("gas #1", gas);
 
-        assertEq(gas, 204476);
+        assertEq(gas, 204454);
         assertEq(shares, amount, "initial amount == shares");
 
         gasStart = gasleft();
@@ -102,7 +102,7 @@ contract SiloAmmPairTest is Test, Fixtures {
 
         emit log_named_uint("gas #2", gas);
 
-        assertEq(gas, 170048, "gase usage for adding liquidity with cleanup");
+        assertEq(gas, 170026, "gase usage for adding liquidity with cleanup");
         assertEq(shares, shares2, "expect same shares");
     }
 
@@ -119,9 +119,9 @@ contract SiloAmmPairTest is Test, Fixtures {
         TestToken(TOKEN_0).approve(address(pair), type(uint256).max); // approve max saves gas
         pair.addLiquidity(TOKEN_0, _user, CLEAN_UP, amount, value);
 
-        uint amount0Out = amount / 2;
+        uint amount0Out = amount / 3;
         uint amount1Out = 0;
-        uint debtIn = amount0Out * ONE / value; // TODO use view method!
+        uint debtIn = pair.getAmountIn(TOKEN_0, amount0Out, 0);
         address to = address(9999);
 
         // mint debt
@@ -133,8 +133,16 @@ contract SiloAmmPairTest is Test, Fixtures {
         uint256 gas = gasStart - gasleft();
 
         emit log_named_uint("gas for swap", gas);
-        assertEq(gas, 85265);
-        assertGt(IERC20(TOKEN_0).balanceOf(address(this)), 0, "expect collateral in `to` wallet");
+        assertEq(gas, 85262);
+        assertEq(IERC20(TOKEN_0).balanceOf(address(this)), 666666666666666667, "expect collateral in `to` wallet");
+
+        gasStart = gasleft();
+        pair.exactInSwap(TOKEN_1, 1e17, to, "");
+        gas = gasStart - gasleft();
+
+        emit log_named_uint("gas for exactInSwap", gas);
+        assertEq(gas, 19662);
+        assertEq(IERC20(TOKEN_0).balanceOf(address(this)), 566666666666666667, "expect collateral in `to` wallet");
 
         gasStart = gasleft();
         pair.removeLiquidity(TOKEN_0, _user, 5e17);

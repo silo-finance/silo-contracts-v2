@@ -68,18 +68,18 @@ interface IUniswapV2Router01 {
     /// @param _amountIn initial, exact amount of first token to swap
     /// @param _amountOutMin minimal expected amount of last token out
     /// @param _path in Silo there might be multiple pools for same pair of tokens, so path must include pool address,
-    /// path must be composed in that way: [tokenIn, pool, tokenOut, ...] so single swap is basically 3 addresses
-    /// token-pool-token. In case of 2 swaps and more, tokenOut became tokenIn for next swap
+    /// path must be composed in that way: [tokenIn, pool, tokenOut, ...] so for single swap you need to provide
+    /// 3 addresses token-pool-token. In case of 2 swaps and more, tokenOut became tokenIn for next swap etc.
     /// @param _to address of swap receiver
     /// @param _deadline time when swap will expire
-    /// @return amounts array of amounts for each swap
+    /// @return amounts array of amounts out for each swap
     function swapExactTokensForTokens(
         uint256 _amountIn,
         uint256 _amountOutMin,
         address[] calldata _path,
         address _to,
         uint256 _deadline
-    ) external returns (uint[] memory amounts);
+    ) external returns (uint256[] memory amounts);
 
     function swapTokensForExactTokens(
         uint amountOut,
@@ -110,8 +110,41 @@ interface IUniswapV2Router01 {
     function factory() external view returns (address);
     function WETH() external view returns (address); // solhint-disable-line func-name-mixedcase
 
-    function getAmountsOut(uint amountIn, address[] calldata path) external view returns (uint[] memory amounts);
-    function getAmountsIn(uint amountOut, address[] calldata path) external view returns (uint[] memory amounts);
+    /// @dev performs chained getAmountOut calculations on any number of pairs
+    /// @param _amountIn initial, exact amount of first token to swap
+    /// @param _path in Silo there might be multiple pools for same pair of tokens, so path must include pool address,
+    /// path must be composed in that way: [tokenIn, pool, tokenOut, ...] so for single swap you need to provide
+    /// 3 addresses token-pool-token. In case of 2 swaps and more, tokenOut became tokenIn for next swap etc.
+    /// @return amounts array of amounts out for each swap
+    function getAmountsOut(
+        uint256 _amountIn,
+        address[] calldata _path
+    ) external view returns (uint256[] memory amounts);
+
+    /// @param _timestamp time for which calculations are done, price in Silo can change over time
+    function getAmountsOut(
+        uint256 _amountIn,
+        address[] calldata _path,
+        uint256 _timestamp
+    ) external view returns (uint256[] memory amounts);
+
+    /// @dev performs chained getAmountOut calculations on any number of pairs
+    /// @param _amountOut  exact amount out that is expected to get after swap
+    /// @param _path in Silo there might be multiple pools for same pair of tokens, so path must include pool address,
+    /// path must be composed in that way: [tokenIn, pool, tokenOut, ...] so for single swap you need to provide
+    /// 3 addresses token-pool-token. In case of 2 swaps and more, tokenOut became tokenIn for next swap etc.
+    /// @return amounts array of amounts out for each swap
+    function getAmountsIn(
+        uint256 _amountOut,
+        address[] calldata _path
+    ) external view returns (uint256[] memory amounts);
+
+    /// @param _timestamp time for which calculations are done, price in Silo can change over time
+    function getAmountsIn(
+        uint256 _amountOut,
+        address[] calldata _path,
+        uint256 _timestamp
+    ) external view returns (uint256[] memory amounts);
 
     function quote(uint amountA, uint reserveA, uint reserveB) external pure returns (uint amountB);
     function getAmountOut(uint amountIn, uint reserveIn, uint reserveOut) external pure returns (uint amountOut);
