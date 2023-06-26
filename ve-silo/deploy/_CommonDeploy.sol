@@ -6,6 +6,8 @@ import {Deployer} from "silo-foundry-utils/deployer/Deployer.sol";
 contract Contracts {
     // smart contracts list
     string internal constant _VOTING_ESCROW = "VotingEscrow.vy";
+    string internal constant _TIMELOCK_CONTROLLER = "TimelockController.sol";
+    string internal constant _SILO_GOVERNOR = "SiloGovernor.sol";
 }
 
 contract CommonDeploy is Deployer, Contracts {

@@ -6,13 +6,13 @@ import {Test} from "forge-std/Test.sol";
 
 import {IntegrationTest} from "silo-foundry-utils/networks/IntegrationTest.sol";
 
-import {IVotingEscrowLike} from "../../contracts/voting-escrow/interfaces/IVotingEscrowLike.sol";
-import {ISmartWalletChecker} from "../../contracts/voting-escrow/interfaces/ISmartWalletChecker.sol";
-import {VotingEscrowDeploy} from "../../deploy/VotingEscrowDeploy.s.sol";
+import {IVeSilo} from "ve-silo/contracts/voting-escrow/interfaces/IVeSilo.sol";
+import {ISmartWalletChecker} from "ve-silo/contracts/voting-escrow/interfaces/ISmartWalletChecker.sol";
+import {VotingEscrowDeploy} from "ve-silo/deploy/VotingEscrowDeploy.s.sol";
 
 // FOUNDRY_PROFILE=ve-silo forge test --ffi -vvv
 contract VotingEscrowTest is IntegrationTest {
-    IVotingEscrowLike internal _votingEscrow;
+    IVeSilo internal _votingEscrow;
     VotingEscrowDeploy internal _deploymentScript;
 
     address internal _authorizer = makeAddr("authorizer account");
@@ -30,13 +30,13 @@ contract VotingEscrowTest is IntegrationTest {
         _votingEscrow = deployVotingEscrowForTests();
     }
 
-    function deployVotingEscrowForTests() public returns (IVotingEscrowLike instance) {
+    function deployVotingEscrowForTests() public returns (IVeSilo instance) {
         _deploymentScript = new VotingEscrowDeploy();
         _deploymentScript.disableDeploymentsSync();
 
         _mockPermissions();
 
-        instance = IVotingEscrowLike(_deploymentScript.run());
+        instance = IVeSilo(_deploymentScript.run());
 
         vm.prank(_authorizer);
         instance.commit_smart_wallet_checker(_smartValletChecker);
