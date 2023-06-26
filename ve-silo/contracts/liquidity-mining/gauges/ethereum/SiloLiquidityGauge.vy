@@ -6,7 +6,6 @@
 @notice Implementation contract for use with Curve Factory
 """
 interface TokenAdmin:
-    def getVault() -> address: view
     def future_epoch_time_write() -> uint256: nonpayable
     def rate() -> uint256: view
 
@@ -67,7 +66,6 @@ WEEK: constant(uint256) = 604800
 VERSION: constant(String[8]) = "v5.0.0"
 
 BAL_TOKEN_ADMIN: immutable(address)
-BAL_VAULT: immutable(address)
 AUTHORIZER_ADAPTOR: immutable(address)
 GAUGE_CONTROLLER: immutable(address)
 MINTER: immutable(address)
@@ -77,7 +75,6 @@ VEBOOST_PROXY: immutable(address)
 MAX_RELATIVE_WEIGHT_CAP: constant(uint256) = 10 ** 18
 
 # Gauge
-lp_token: public(address)
 
 is_killed: public(bool)
 
@@ -130,14 +127,11 @@ def __init__(minter: address, veBoostProxy: address, authorizerAdaptor: address)
     gaugeController: address = Minter(minter).getGaugeController()
     balTokenAdmin: address = Minter(minter).getBalancerTokenAdmin()
     BAL_TOKEN_ADMIN = balTokenAdmin
-    BAL_VAULT = TokenAdmin(balTokenAdmin).getVault()
     AUTHORIZER_ADAPTOR = authorizerAdaptor
     GAUGE_CONTROLLER = gaugeController
     MINTER = minter
     VOTING_ESCROW = Controller(gaugeController).voting_escrow()
     VEBOOST_PROXY = veBoostProxy
-    # prevent initialization of implementation
-    self.lp_token = 0x000000000000000000000000000000000000dEaD
 
 
 # Internal Functions
@@ -613,14 +607,10 @@ def _setRelativeWeightCap(relative_weight_cap: uint256):
     log RelativeWeightCapChanged(relative_weight_cap)
 
 @external
-def initialize(_lp_token: address, relative_weight_cap: uint256):
+def initialize(relative_weight_cap: uint256):
     """
     @notice Contract constructor
-    @param _lp_token Liquidity Pool contract address
     """
-    assert self.lp_token == ZERO_ADDRESS
-
-    self.lp_token = _lp_token
 
     self.period_timestamp[0] = block.timestamp
     self.inflation_params = shift(TokenAdmin(BAL_TOKEN_ADMIN).future_epoch_time_write(), 216) + TokenAdmin(BAL_TOKEN_ADMIN).rate()
