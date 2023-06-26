@@ -306,66 +306,6 @@ def _update_liquidity_limit(addr: address, l: uint256, L: uint256):
 
 # External User Facing Functions
 
-
-@external
-@nonreentrant('lock')
-def deposit(_value: uint256, _addr: address = msg.sender, _claim_rewards: bool = False):
-    """
-    @notice Deposit `_value` LP tokens
-    @dev Depositting also claims pending reward tokens
-    @param _value Number of tokens to deposit
-    @param _addr Address to deposit for
-    """
-
-    self._checkpoint(_addr)
-
-    if _value != 0:
-        is_rewards: bool = self.reward_count != 0
-        total_supply: uint256 = self.totalSupply
-        if is_rewards:
-            self._checkpoint_rewards(_addr, total_supply, _claim_rewards, ZERO_ADDRESS)
-
-        total_supply += _value
-        new_balance: uint256 = self.balanceOf[_addr] + _value
-        self.balanceOf[_addr] = new_balance
-        self.totalSupply = total_supply
-
-        self._update_liquidity_limit(_addr, new_balance, total_supply)
-
-        ERC20(self.lp_token).transferFrom(msg.sender, self, _value)
-
-    log Deposit(_addr, _value)
-    log Transfer(ZERO_ADDRESS, _addr, _value)
-
-
-@external
-@nonreentrant('lock')
-def withdraw(_value: uint256, _claim_rewards: bool = False):
-    """
-    @notice Withdraw `_value` LP tokens
-    @dev Withdrawing also claims pending reward tokens
-    @param _value Number of tokens to withdraw
-    """
-    self._checkpoint(msg.sender)
-
-    if _value != 0:
-        is_rewards: bool = self.reward_count != 0
-        total_supply: uint256 = self.totalSupply
-        if is_rewards:
-            self._checkpoint_rewards(msg.sender, total_supply, _claim_rewards, ZERO_ADDRESS)
-
-        total_supply -= _value
-        new_balance: uint256 = self.balanceOf[msg.sender] - _value
-        self.balanceOf[msg.sender] = new_balance
-        self.totalSupply = total_supply
-
-        self._update_liquidity_limit(msg.sender, new_balance, total_supply)
-
-        ERC20(self.lp_token).transfer(msg.sender, _value)
-
-    log Withdraw(msg.sender, _value)
-    log Transfer(msg.sender, ZERO_ADDRESS, _value)
-
 @external
 @nonreentrant('lock')
 def claim_rewards(_addr: address = msg.sender, _receiver: address = ZERO_ADDRESS):
