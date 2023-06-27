@@ -92,7 +92,7 @@ contract SiloAmmPairTest is Test, Fixtures {
 
         emit log_named_uint("gas #1", gas);
 
-        assertEq(gas, 204454);
+        assertEq(gas, 204526);
         assertEq(shares, amount, "initial amount == shares");
 
         gasStart = gasleft();
@@ -101,7 +101,7 @@ contract SiloAmmPairTest is Test, Fixtures {
 
         emit log_named_uint("gas #2", gas);
 
-        assertEq(gas, 170026, "gase usage for adding liquidity with cleanup");
+        assertEq(gas, 170369, "gas usage for adding liquidity with cleanup");
         assertEq(shares, shares2, "expect same shares");
     }
 

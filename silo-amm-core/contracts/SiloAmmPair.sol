@@ -99,7 +99,7 @@ contract SiloAmmPair is NotSupportedInPair, SafeTransfers, UniswapV2ERC20, AmmSt
 
     /// @inheritdoc ISiloAmmPair
     function addLiquidity(
-        address _collateral,
+        address _collateralToken,
         address _user,
         bool _cleanUp,
         uint256 _collateralAmount,
@@ -111,14 +111,22 @@ contract SiloAmmPair is NotSupportedInPair, SafeTransfers, UniswapV2ERC20, AmmSt
         returns (uint256 shares)
     {
         if (_cleanUp) {
-            removeLiquidity(_collateral, _user, PRECISION);
+            removeLiquidity(_collateralToken, _user, PRECISION);
         }
 
-        shares = _stateChangeOnAddLiquidity(_collateral, _user, _collateralAmount, _collateralValue);
+        uint256 availableCollateralBefore;
+        uint256 availableCollateralAfter;
+
+        (
+            availableCollateralBefore,
+            availableCollateralAfter,
+            shares
+        ) = _onAddLiquidityStateChange(_collateralToken, _user, _collateralAmount, _collateralValue);
+
         if (shares == 0) revert ZERO_SHARES();
 
-        _priceInit(_collateral);
-        _priceChangeOnAddingLiquidity(_collateral);
+        _priceInit(_collateralToken);
+        _onAddingLiquidityPriceChange(_collateralToken, availableCollateralBefore, availableCollateralAfter);
     }
 
     /// @inheritdoc IUniswapV2Pair
@@ -240,7 +248,7 @@ contract SiloAmmPair is NotSupportedInPair, SafeTransfers, UniswapV2ERC20, AmmSt
     }
 
     /// @inheritdoc ISiloAmmPair
-    function removeLiquidity(address _collateral, address _user, uint256 _w)
+    function removeLiquidity(address _collateralToken, address _user, uint256 _w)
         public
         virtual
         onlySilo
@@ -249,10 +257,10 @@ contract SiloAmmPair is NotSupportedInPair, SafeTransfers, UniswapV2ERC20, AmmSt
         if (_w > PRECISION) revert PERCENT_OVERFLOW();
 
         debtAmount = _w == PRECISION
-            ? _withdrawAllLiquidity(_collateral, _user)
-            : _withdrawLiquidity(_collateral, _user, _w);
+            ? _withdrawAllLiquidity(_collateralToken, _user)
+            : _withdrawLiquidity(_collateralToken, _user, _w);
 
-        _priceChangeOnWithdraw(_collateral);
+        _onWithdrawPriceChange(_collateralToken);
     }
 
     /// @return reserve0
@@ -284,7 +292,7 @@ contract SiloAmmPair is NotSupportedInPair, SafeTransfers, UniswapV2ERC20, AmmSt
     }
 
     function _finishSwap(
-        address _collateral,
+        address _collateralToken,
         address _debt,
         bool _token0In,
         uint256 _amountIn,
@@ -295,7 +303,7 @@ contract SiloAmmPair is NotSupportedInPair, SafeTransfers, UniswapV2ERC20, AmmSt
         internal
         virtual
     {
-        _onSwapStateChange(_collateral, _amountOut, _amountIn);
+        _onSwapStateChange(_collateralToken, _amountOut, _amountIn);
 
         if (_token0In) {
             emit Swap(msg.sender, _amountIn, uint256(0), uint256(0), _amountOut, _to);
@@ -305,7 +313,7 @@ contract SiloAmmPair is NotSupportedInPair, SafeTransfers, UniswapV2ERC20, AmmSt
 
         // we doing transfer directly to SILO, but state will be updated on withdraw
         _safeTransferFrom(_debt, msg.sender, _SILO, _amountIn);
-        _safeTransferFrom(_collateral, _SILO, _to, _amountOut);
+        _safeTransferFrom(_collateralToken, _SILO, _to, _amountOut);
 
         if (_data.length != 0) {
             // keep it for backwards compatibility and allow flash swap
