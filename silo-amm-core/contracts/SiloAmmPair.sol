@@ -114,11 +114,21 @@ contract SiloAmmPair is NotSupportedInPair, SafeTransfers, UniswapV2ERC20, AmmSt
             removeLiquidity(_collateral, _user, PRECISION);
         }
 
-        shares = _stateChangeOnAddLiquidity(_collateral, _user, _collateralAmount, _collateralValue);
+        uint256 availableCollateralBefore;
+        uint256 availableCollateralAfter;
+
+        (
+            availableCollateralBefore,
+            availableCollateralAfter,
+            shares
+        ) = _onAddLiquidityStateChange(_collateral, _user, _collateralAmount, _collateralValue);
+
         if (shares == 0) revert ZERO_SHARES();
 
+        // if (availableCollateralBefore <= MAX_SUPPORTED_AMOUNT - _collateralAmount) revert ZERO_SHARES();
+
         _priceInit(_collateral);
-        _priceChangeOnAddingLiquidity(_collateral);
+        _onAddingLiquidityPriceChange(_collateral, availableCollateralBefore, availableCollateralAfter);
     }
 
     /// @inheritdoc IUniswapV2Pair
@@ -252,7 +262,7 @@ contract SiloAmmPair is NotSupportedInPair, SafeTransfers, UniswapV2ERC20, AmmSt
             ? _withdrawAllLiquidity(_collateral, _user)
             : _withdrawLiquidity(_collateral, _user, _w);
 
-        _priceChangeOnWithdraw(_collateral);
+        _onWithdrawPriceChange(_collateral);
     }
 
     /// @return reserve0

@@ -14,7 +14,7 @@ contract StateModel is AmmStateModel {
         external
         returns (uint256 shares)
     {
-        return _stateChangeOnAddLiquidity(_COLLATERAL, _user, _collateralAmount, _collateralValue);
+        (,, shares) = _onAddLiquidityStateChange(_COLLATERAL, _user, _collateralAmount, _collateralValue);
     }
 
     function withdrawLiquidity(address _user, uint256 _w) // solhint-disable-line function-max-lines

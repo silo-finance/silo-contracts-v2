@@ -124,31 +124,33 @@ abstract contract AmmStateModel is IAmmStateModel {
     /// @param _user depositor, owner of position
     /// @param _collateralAmount amount of collateral
     /// @param _collateralValue value that is: collateralPrice * collateralAmount / DECIMALS,
-    //. where collateralPrice is current price P(T) of collateral
-    function _stateChangeOnAddLiquidity(
+    /// where collateralPrice is current price P(T) of collateral
+    function _onAddLiquidityStateChange(
         address _collateral,
         address _user,
         uint256 _collateralAmount,
         uint256 _collateralValue
     )
         internal
-        returns (uint256 shares)
+        returns (uint256 availableCollateralBefore, uint256 availableCollateralAfter, uint256 shares)
     {
         UserPosition storage position = _positions[_collateral][_user];
 
         if (position.shares != 0) revert USER_NOT_CLEANED_UP();
 
-        uint256 totalStateAvailableCollateral = _totalStates[_collateral].availableCollateral;
+        availableCollateralBefore = _totalStates[_collateral].availableCollateral;
         uint256 totalStateShares = _totalStates[_collateral].shares;
 
-        if (totalStateAvailableCollateral == 0) {
+        if (availableCollateralBefore == 0) {
             shares = _collateralAmount;
+            availableCollateralAfter = _collateralAmount;
         } else {
             uint256 collateralAmountTimesShares = _collateralAmount * totalStateShares;
 
             // TBD: shares transformation to/from exponential
             // unchecked: div is safe and we caught /0 in if above
-            unchecked { shares = collateralAmountTimesShares / totalStateAvailableCollateral; }
+            unchecked { shares = collateralAmountTimesShares / availableCollateralBefore; }
+            availableCollateralAfter = availableCollateralBefore + _collateralAmount;
         }
 
         // because of cleanup, there will no previous state, so this is all user initial values
@@ -166,7 +168,7 @@ abstract contract AmmStateModel is IAmmStateModel {
 
             // unchecked availableCollateral is never more than collateralAmount,
             // so it is enough to check collateralAmount
-            _totalStates[_collateral].availableCollateral = totalStateAvailableCollateral + _collateralAmount;
+            _totalStates[_collateral].availableCollateral = availableCollateralAfter;
         }
 
         // shares value can be higher than amount, this is why += shares in not unchecked

@@ -29,8 +29,8 @@ contract AmmStateModelTest is Test {
     function test_ammStateModelFlow() public {
         AmmStateModelTestData.TestData[] memory testDatas = ammStateModelTestData.testData();
 
-        _ammStateModelFlow(testDatas, false, 438051);
-        _ammStateModelFlow(testDatas, true, 401166);
+        _ammStateModelFlow(testDatas, false, 438388);
+        _ammStateModelFlow(testDatas, true, 401503);
     }
 
     function _ammStateModelFlow(

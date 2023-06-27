@@ -62,7 +62,7 @@ contract AmmPriceModelTest is Test {
         priceModel.onSwapCalculateK();
         uint256 gasEnd = gasleft();
 
-        assertEq(gasStart - gasEnd, 5715);
+        assertEq(gasStart - gasEnd, 5751);
     }
 
     /*
@@ -93,6 +93,8 @@ contract AmmPriceModelTest is Test {
             uint256 gasSum;
             assertEq(testDatas.length, 17, "for proper gas check, update it when add more tests");
 
+            uint256 collateralLiquidity;
+
             for (uint i; i < testDatas.length; i++) {
                 AmmPriceModelTestData.TestData memory testData = testDatas[i];
                 vm.warp(testData.time);
@@ -102,7 +104,7 @@ contract AmmPriceModelTest is Test {
                 if (testData.action == AmmPriceModelTestData.Action.INIT) {
                     priceModel.init();
                 } else if (testData.action == AmmPriceModelTestData.Action.ADD_LIQUIDITY) {
-                    priceModel.onAddingLiquidity();
+                    priceModel.onAddingLiquidity(collateralLiquidity, testData.amount);
                 } else if (testData.action == AmmPriceModelTestData.Action.SWAP) {
                     priceModel.onSwapPriceChange(uint64(priceModel.onSwapCalculateK()));
                 } else if (testData.action == AmmPriceModelTestData.Action.WITHDRAW) {
@@ -113,6 +115,8 @@ contract AmmPriceModelTest is Test {
 
                 uint256 gasEnd = gasleft();
                 gasSum += (gasStart - gasEnd);
+
+                collateralLiquidity = testData.amount;
 
                 AmmPriceModel.AmmPriceState memory state = priceModel.getPriceState(COLLATERAL);
 
@@ -131,7 +135,7 @@ contract AmmPriceModelTest is Test {
                 }
             }
 
-            assertEq(gasSum, 56298, "make sure we gas efficient on price model actions");
+            assertEq(gasSum, 57965, "make sure we gas efficient on price model actions");
         }
     }
 
@@ -191,7 +195,7 @@ contract AmmPriceModelTest is Test {
     function test_AmmPriceModel_ammConfigVerification_InvalidDeltaK() public {
         AmmPriceModel.AmmPriceConfig memory config = priceModel.getAmmConfig();
 
-        config.deltaK = config.tSlow + 1;
+        config.deltaK = 10 * 365 days + 1;
 
         vm.expectRevert(IAmmPriceModel.INVALID_DELTA_K.selector);
         priceModel.ammConfigVerification(config);

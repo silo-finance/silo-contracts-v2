@@ -14,6 +14,7 @@ contract AmmPriceModelTestData is Test {
         uint tCur;
         uint tPast;
         uint twap;
+        uint amount;
         bool al;
         bool swap;
         uint k;
@@ -42,6 +43,7 @@ contract AmmPriceModelTestData is Test {
             tmp.tCur = vm.parseJsonUint(json, string(abi.encodePacked(".[", lp, "].tCur")));
             tmp.tPast = vm.parseJsonUint(json, string(abi.encodePacked(".[", lp, "].tPast")));
             tmp.twap = vm.parseJsonUint(json, string(abi.encodePacked(".[", lp, "].twap")));
+            tmp.amount = vm.parseJsonUint(json, string(abi.encodePacked(".[", lp, "].amount")));
             tmp.al = vm.parseJsonBool(json, string(abi.encodePacked(".[", lp, "].AL")));
             tmp.swap = vm.parseJsonBool(json, string(abi.encodePacked(".[", lp, "].SWAP")));
 
