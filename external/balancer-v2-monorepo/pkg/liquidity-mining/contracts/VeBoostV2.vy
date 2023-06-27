@@ -1,4 +1,4 @@
-# @version 0.3.3
+# @version 0.3.7
 """
 @title Boost Delegation V2
 @author CurveFi
@@ -82,7 +82,7 @@ def __init__(_boost_v1: address, _ve: address):
     DOMAIN_SEPARATOR = keccak256(_abi_encode(EIP712_TYPEHASH, keccak256(NAME), keccak256(VERSION), chain.id, self))
     VE = _ve
 
-    log Transfer(ZERO_ADDRESS, msg.sender, 0)
+    log Transfer(empty(address), msg.sender, 0)
 
 
 @view
@@ -164,7 +164,7 @@ def _checkpoint_write(_user: address, _delegated: bool) -> Point:
             break
 
     if _delegated == False and dbias != 0:  # received boost
-        log Transfer(_user, ZERO_ADDRESS, dbias)
+        log Transfer(_user, empty(address), dbias)
 
     return point
 
@@ -184,7 +184,7 @@ def _balance_of(_user: address) -> uint256:
 
 @internal
 def _boost(_from: address, _to: address, _amount: uint256, _endtime: uint256):
-    assert _to not in [_from, ZERO_ADDRESS]
+    assert _to not in [_from, empty(address)]
     assert _amount != 0
     assert _endtime > block.timestamp
     assert _endtime % WEEK == 0
@@ -228,7 +228,7 @@ def boost(_to: address, _amount: uint256, _endtime: uint256, _from: address = ms
     # reduce approval if necessary
     if _from != msg.sender:
         allowance: uint256 = self.allowance[_from][msg.sender]
-        if allowance != MAX_UINT256:
+        if allowance != max_value(uint256):
             self.allowance[_from][msg.sender] = allowance - _amount
             log Approval(_from, msg.sender, allowance - _amount)
 
@@ -291,7 +291,7 @@ def permit(_owner: address, _spender: address, _value: uint256, _deadline: uint2
         # reentrancy not a concern since this is a staticcall
         assert ERC1271(_owner).isValidSignature(digest, sig) == ERC1271_MAGIC_VAL, 'INVALID_SIGNATURE'
     else:
-        assert ecrecover(digest, convert(_v, uint256), convert(_r, uint256), convert(_s, uint256)) == _owner and _owner != ZERO_ADDRESS, 'INVALID_SIGNATURE'
+        assert ecrecover(digest, convert(_v, uint256), convert(_r, uint256), convert(_s, uint256)) == _owner and _owner != empty(address), 'INVALID_SIGNATURE'
 
     self.allowance[_owner][_spender] = _value
     self.nonces[_owner] = nonce + 1
