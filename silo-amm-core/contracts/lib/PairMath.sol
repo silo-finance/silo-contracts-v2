@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity >=0.7.6 <0.9.0;
 
-
 library PairMath {
     uint256 constant PRECISION = 1e18;
 
@@ -16,8 +15,8 @@ library PairMath {
         debtAmountIn = _onSwapK * _debtQuote;
 
         unchecked {
-        // div is safe
-        // div(PRECISION) because of K
+            // div is safe
+            // div(PRECISION) because of K
             return debtAmountIn / PRECISION;
         }
     }
@@ -35,7 +34,7 @@ library PairMath {
         debtIn = _amountIn * PRECISION;
 
         unchecked {
-        // div is safe
+            // div is safe
             return debtIn / _onSwapK;
         }
     }

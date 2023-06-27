@@ -15,25 +15,25 @@ abstract contract AmmStateModel is IAmmStateModel {
     /// @dev collateral token => user => position
     mapping (address => mapping (address => UserPosition)) internal _positions;
 
-    function getTotalState(address _collateral) external view returns (TotalState memory) {
-        return _totalStates[_collateral];
+    function getTotalState(address _collateralToken) external view returns (TotalState memory) {
+        return _totalStates[_collateralToken];
     }
 
-    function positions(address _collateral, address _user) external view returns (UserPosition memory) {
-        return _positions[_collateral][_user];
+    function positions(address _collateralToken, address _user) external view returns (UserPosition memory) {
+        return _positions[_collateralToken][_user];
     }
 
     /// @notice The part of the user’s collateral amount that has already been swapped
-    function userSwappedCollateral(address _collateral, address _user)
+    function userSwappedCollateral(address _collateralToken, address _user)
         public
         view
         returns (uint256 swappedCollateralFraction)
     {
-        UserPosition memory position = _positions[_collateral][_user];
+        UserPosition memory position = _positions[_collateralToken][_user];
 
         uint256 userAvailableCollateralAmount = getCurrentlyAvailableCollateralForUser(
-            _totalStates[_collateral].shares,
-            _totalStates[_collateral].availableCollateral,
+            _totalStates[_collateralToken].shares,
+            _totalStates[_collateralToken].availableCollateral,
             position.shares
         );
 
@@ -120,35 +120,37 @@ abstract contract AmmStateModel is IAmmStateModel {
     /// @dev User adds `dC` units of collateral to the pool and receives shares.
     /// Liquidation-time value of the collateral at the current spot price P(t) is added to the user’s count.
     /// The variable R is updated so that it keeps track of the sum of Ri
-    /// @param _collateral address of collateral token that is been deposited into pool
+    /// @param _collateralToken address of collateral token that is been deposited into pool
     /// @param _user depositor, owner of position
     /// @param _collateralAmount amount of collateral
     /// @param _collateralValue value that is: collateralPrice * collateralAmount / DECIMALS,
-    //. where collateralPrice is current price P(T) of collateral
-    function _stateChangeOnAddLiquidity(
-        address _collateral,
+    /// where collateralPrice is current price P(T) of collateral
+    function _onAddLiquidityStateChange(
+        address _collateralToken,
         address _user,
         uint256 _collateralAmount,
         uint256 _collateralValue
     )
         internal
-        returns (uint256 shares)
+        returns (uint256 availableCollateralBefore, uint256 availableCollateralAfter, uint256 shares)
     {
-        UserPosition storage position = _positions[_collateral][_user];
+        UserPosition storage position = _positions[_collateralToken][_user];
 
         if (position.shares != 0) revert USER_NOT_CLEANED_UP();
 
-        uint256 totalStateAvailableCollateral = _totalStates[_collateral].availableCollateral;
-        uint256 totalStateShares = _totalStates[_collateral].shares;
+        availableCollateralBefore = _totalStates[_collateralToken].availableCollateral;
+        uint256 totalStateShares = _totalStates[_collateralToken].shares;
 
-        if (totalStateAvailableCollateral == 0) {
+        if (availableCollateralBefore == 0) {
             shares = _collateralAmount;
+            availableCollateralAfter = _collateralAmount;
         } else {
             uint256 collateralAmountTimesShares = _collateralAmount * totalStateShares;
 
             // TBD: shares transformation to/from exponential
             // unchecked: div is safe and we caught /0 in if above
-            unchecked { shares = collateralAmountTimesShares / totalStateAvailableCollateral; }
+            unchecked { shares = collateralAmountTimesShares / availableCollateralBefore; }
+            availableCollateralAfter = availableCollateralBefore + _collateralAmount;
         }
 
         // because of cleanup, there will no previous state, so this is all user initial values
@@ -158,33 +160,33 @@ abstract contract AmmStateModel is IAmmStateModel {
 
         unchecked {
             // unchecked: this is basically token balance, it is enough to do check on transfer
-            _totalStates[_collateral].collateralAmount += _collateralAmount;
+            _totalStates[_collateralToken].collateralAmount += _collateralAmount;
 
             // unchecked: because if we overflow on value, then all the dexes will crash as well
             // we could check the math here of when we do insolvency calculations, but we should pick one place
-            _totalStates[_collateral].liquidationTimeValue += _collateralValue;
+            _totalStates[_collateralToken].liquidationTimeValue += _collateralValue;
 
             // unchecked availableCollateral is never more than collateralAmount,
             // so it is enough to check collateralAmount
-            _totalStates[_collateral].availableCollateral = totalStateAvailableCollateral + _collateralAmount;
+            _totalStates[_collateralToken].availableCollateral = availableCollateralAfter;
         }
 
         // shares value can be higher than amount, this is why += shares in not unchecked
-        _totalStates[_collateral].shares = totalStateShares + shares;
+        _totalStates[_collateralToken].shares = totalStateShares + shares;
 
         // now let's calculate R
-        _totalStates[_collateral].R = _totalStates[_collateral].R + _collateralValue;
+        _totalStates[_collateralToken].R = _totalStates[_collateralToken].R + _collateralValue;
     }
 
     /// @return debtAmount amount of debt that will be withdrawn
     // solhint-disable-next-line function-max-lines
-    function _withdrawLiquidity(address _collateral, address _user, uint256 _w)
+    function _withdrawLiquidity(address _collateralToken, address _user, uint256 _w)
         internal
         returns (uint256 debtAmount)
     {
-        UserPosition storage storagePosition = _positions[_collateral][_user];
-        UserPosition memory cachedPosition = _positions[_collateral][_user];
-        TotalState memory totalState = _totalStates[_collateral];
+        UserPosition storage storagePosition = _positions[_collateralToken][_user];
+        UserPosition memory cachedPosition = _positions[_collateralToken][_user];
+        TotalState memory totalState = _totalStates[_collateralToken];
 
         uint256 ci = getCurrentlyAvailableCollateralForUser(
             totalState.shares,
@@ -235,16 +237,16 @@ abstract contract AmmStateModel is IAmmStateModel {
             ? 0
             : (ci - deltas.dC) * newLiquidationTimeValue / newCollateralAmount;
 
-        _totalStates[_collateral].R = totalState.R - ri + riNew;
+        _totalStates[_collateralToken].R = totalState.R - ri + riNew;
 
         unchecked {
             // for all below `_totalStates` changed, we decreasing state by fraction or at most whole
             // so as along as math is correct we should not underflow
-            _totalStates[_collateral].collateralAmount = totalState.collateralAmount - deltas.dA;
-            _totalStates[_collateral].liquidationTimeValue = totalState.liquidationTimeValue - deltas.dV;
-            _totalStates[_collateral].shares = totalState.shares - deltas.dS;
-            _totalStates[_collateral].availableCollateral = totalState.availableCollateral - deltas.dC;
-            _totalStates[_collateral].debtAmount = totalState.debtAmount - debtAmount;
+            _totalStates[_collateralToken].collateralAmount = totalState.collateralAmount - deltas.dA;
+            _totalStates[_collateralToken].liquidationTimeValue = totalState.liquidationTimeValue - deltas.dV;
+            _totalStates[_collateralToken].shares = totalState.shares - deltas.dS;
+            _totalStates[_collateralToken].availableCollateral = totalState.availableCollateral - deltas.dC;
+            _totalStates[_collateralToken].debtAmount = totalState.debtAmount - debtAmount;
 
             storagePosition.shares = cachedPosition.shares - deltas.dS;
         }
@@ -255,10 +257,10 @@ abstract contract AmmStateModel is IAmmStateModel {
 
     /// @param _user owner of position
     /// @return debtAmount that is withdrawn
-    function _withdrawAllLiquidity(address _collateral, address _user) internal returns (uint256 debtAmount) {
-        UserPosition storage storagePosition = _positions[_collateral][_user];
+    function _withdrawAllLiquidity(address _collateralToken, address _user) internal returns (uint256 debtAmount) {
+        UserPosition storage storagePosition = _positions[_collateralToken][_user];
         UserPosition memory cachedPosition = storagePosition;
-        TotalState memory totalState = _totalStates[_collateral];
+        TotalState memory totalState = _totalStates[_collateralToken];
 
         uint256 ci = getCurrentlyAvailableCollateralForUser(
             totalState.shares,
@@ -277,20 +279,20 @@ abstract contract AmmStateModel is IAmmStateModel {
         // now let's calculate R, it must be done before other state is updated
         uint256 ri = auxiliaryVariableRi(ci, cachedPosition.liquidationTimeValue, cachedPosition.collateralAmount);
 
-        _totalStates[_collateral].R = totalState.R - ri;
+        _totalStates[_collateralToken].R = totalState.R - ri;
 
         unchecked {
             // for all below `_totalStates` changed, we decreasing state by fraction or at most whole
             // so as along as math is correct we should not underflow
-            _totalStates[_collateral].collateralAmount =
+            _totalStates[_collateralToken].collateralAmount =
                 totalState.collateralAmount - cachedPosition.collateralAmount;
 
-            _totalStates[_collateral].liquidationTimeValue =
+            _totalStates[_collateralToken].liquidationTimeValue =
                 totalState.liquidationTimeValue - cachedPosition.liquidationTimeValue;
 
-            _totalStates[_collateral].shares = totalState.shares - cachedPosition.shares;
-            _totalStates[_collateral].availableCollateral = totalState.availableCollateral - ci;
-            _totalStates[_collateral].debtAmount = totalState.debtAmount - debtAmount;
+            _totalStates[_collateralToken].shares = totalState.shares - cachedPosition.shares;
+            _totalStates[_collateralToken].availableCollateral = totalState.availableCollateral - ci;
+            _totalStates[_collateralToken].debtAmount = totalState.debtAmount - debtAmount;
         }
 
         storagePosition.shares = 0;
@@ -300,11 +302,11 @@ abstract contract AmmStateModel is IAmmStateModel {
 
     /// @dev state change on swap
     function _onSwapStateChange(
-        address _collateral,
+        address _collateralToken,
         uint256 _collateralOut,
         uint256 _debtIn
     ) internal {
-        uint256 availableCollateral = _totalStates[_collateral].availableCollateral;
+        uint256 availableCollateral = _totalStates[_collateralToken].availableCollateral;
 
         // this check covers case when both or one is zero
         if (_collateralOut > availableCollateral) revert NOT_ENOUGH_AVAILABLE_COLLATERAL();
@@ -314,18 +316,18 @@ abstract contract AmmStateModel is IAmmStateModel {
         // unchecked: we can not underflow because of check `if (_collateralOut > availableCollateral) revert`
         unchecked { newAvailableCollateral = availableCollateral - _collateralOut; }
 
-        uint256 rTimesAvailableCollateral = _totalStates[_collateral].R * newAvailableCollateral;
+        uint256 rTimesAvailableCollateral = _totalStates[_collateralToken].R * newAvailableCollateral;
 
         unchecked {
             // R should be scaled before other changes
             // unchecked: div is safe
-            _totalStates[_collateral].R = rTimesAvailableCollateral / availableCollateral;
+            _totalStates[_collateralToken].R = rTimesAvailableCollateral / availableCollateral;
 
             // unchecked: only way to overflow is when: (1) our math is wrong or (2) we have overflow in token itself
             // if any of this cases true, then overflow makes no difference
-            _totalStates[_collateral].debtAmount += _debtIn;
+            _totalStates[_collateralToken].debtAmount += _debtIn;
         }
 
-        _totalStates[_collateral].availableCollateral = newAvailableCollateral;
+        _totalStates[_collateralToken].availableCollateral = newAvailableCollateral;
     }
 }

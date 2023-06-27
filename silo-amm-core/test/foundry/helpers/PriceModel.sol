@@ -13,8 +13,8 @@ contract PriceModel is AmmPriceModel {
         _priceInit(_COLLATERAL);
     }
 
-    function onAddingLiquidity() external {
-        _priceChangeOnAddingLiquidity(_COLLATERAL);
+    function onAddingLiquidity(uint256 _collateralLiquidityBefore, uint256 _collateralLiquidityAfter) external {
+        _onAddingLiquidityPriceChange(_COLLATERAL, _collateralLiquidityBefore, _collateralLiquidityAfter);
     }
 
     function onSwapCalculateK() external view returns (uint256 k) {
@@ -26,6 +26,6 @@ contract PriceModel is AmmPriceModel {
     }
 
     function onWithdraw() external {
-        _priceChangeOnWithdraw(_COLLATERAL);
+        _onWithdrawPriceChange(_COLLATERAL);
     }
 }
