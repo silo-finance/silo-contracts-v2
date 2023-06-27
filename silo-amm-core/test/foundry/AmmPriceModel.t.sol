@@ -2,36 +2,10 @@
 pragma solidity 0.8.19;
 
 import "forge-std/Test.sol";
+import "./helpers/PriceModel.sol";
+import "../../contracts/lib/PairMath.sol";
 import "../../contracts/AmmPriceModel.sol";
 import "./data-readers/AmmPriceModelTestData.sol";
-
-contract PriceModel is AmmPriceModel {
-    address immutable _COLLATERAL;
-
-    constructor (address _collateral, AmmPriceModel.AmmPriceConfig memory _config) AmmPriceModel(_config) {
-        _COLLATERAL = _collateral;
-    }
-
-    function init() external {
-        _priceInit(_COLLATERAL);
-    }
-
-    function onAddingLiquidity() external {
-        _priceChangeOnAddingLiquidity(_COLLATERAL);
-    }
-
-    function onSwapCalculateK() external view returns (uint256 k) {
-        return _onSwapCalculateK(_COLLATERAL);
-    }
-
-    function onSwapPriceChange(uint64 _k) external {
-        _onSwapPriceChange(_COLLATERAL, _k);
-    }
-
-    function onWithdraw() external {
-        _priceChangeOnWithdraw(_COLLATERAL);
-    }
-}
 
 /*
     FOUNDRY_PROFILE=amm-core forge test -vv --match-contract AmmPriceModelTest
@@ -74,10 +48,10 @@ contract AmmPriceModelTest is Test {
         uint256 k = 1e15;
 
         uint256 gasStart = gasleft();
-        priceModel.getDebtIn(debtQuote, k);
+        PairMath.getDebtIn(debtQuote, k);
         uint256 gasEnd = gasleft();
 
-        assertEq(gasStart - gasEnd, 3435);
+        assertEq(gasStart - gasEnd, 169);
     }
 
     /*
@@ -88,7 +62,7 @@ contract AmmPriceModelTest is Test {
         priceModel.onSwapCalculateK();
         uint256 gasEnd = gasleft();
 
-        assertEq(gasStart - gasEnd, 5726);
+        assertEq(gasStart - gasEnd, 5715);
     }
 
     /*
@@ -99,12 +73,12 @@ contract AmmPriceModelTest is Test {
         uint256 k = 1e14;
 
         uint256 gasStart = gasleft();
-        uint256 debtIn = priceModel.getDebtIn(debtQuote, k);
-        uint256 debtQuote2 = priceModel.getDebtInReverse(debtIn, k);
+        uint256 debtIn = PairMath.getDebtIn(debtQuote, k);
+        uint256 debtQuote2 = PairMath.getDebtInReverse(debtIn, k);
         uint256 gasEnd = gasleft();
 
         assertEq(debtQuote, debtQuote2);
-        assertEq(gasStart - gasEnd, 4331, "gas");
+        assertEq(gasStart - gasEnd, 356, "gas");
     }
 
     /*
@@ -152,12 +126,12 @@ contract AmmPriceModelTest is Test {
 
                 if (testData.price != 0) {
                     uint256 pricePrecision = 1e8;
-                    uint256 debtIn = priceModel.getDebtIn(collateralPrice, state.k);
+                    uint256 debtIn = PairMath.getDebtIn(collateralPrice, state.k);
                     assertEq(debtIn / pricePrecision, testData.price / pricePrecision, "price");
                 }
             }
 
-            assertEq(gasSum, 55878, "make sure we gas efficient on price model actions");
+            assertEq(gasSum, 56298, "make sure we gas efficient on price model actions");
         }
     }
 

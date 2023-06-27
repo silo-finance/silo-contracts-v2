@@ -15,6 +15,7 @@ interface ISiloAmmRouterEvents {
     event PairCreated(address indexed token0, address indexed token1, address pair, uint id);
 
     error NOT_SUPPORTED();
+    error MOVED_TO_PAIR();
     error SILO_AMM_PAIR_FACTORY_PING();
 
     error WETH_ZERO();

@@ -120,4 +120,26 @@ abstract contract NotSupportedRouter is ISiloAmmRouter {
     ) external pure virtual override returns (uint) {
         revert NOT_SUPPORTED();
     }
+
+    function swapExactTokensForTokensSupportingFeeOnTransferTokens(
+        uint,
+        uint,
+        address[] calldata,
+        address,
+        uint
+    ) external virtual override {
+        revert NOT_SUPPORTED();
+    }
+
+    function getAmountOut(uint, uint, uint) external pure returns (uint) {
+        revert MOVED_TO_PAIR();
+    }
+
+    function getAmountIn(uint, uint, uint) external pure returns (uint) {
+        revert MOVED_TO_PAIR();
+    }
+
+    function quote(uint, uint, uint) external pure returns (uint) {
+        revert NOT_SUPPORTED();
+    }
 }

@@ -10,6 +10,7 @@ import "./interfaces/NotSupportedInPair.sol";
 import "./AmmStateModel.sol";
 import "./AmmPriceModel.sol";
 import "./utils/SafeTransfers.sol";
+import "./lib/PairMath.sol";
 
 
 contract SiloAmmPair is NotSupportedInPair, SafeTransfers, UniswapV2ERC20, AmmStateModel, AmmPriceModel {
@@ -138,12 +139,12 @@ contract SiloAmmPair is NotSupportedInPair, SafeTransfers, UniswapV2ERC20, AmmSt
             ? (_TOKEN_1, _TOKEN_0, _amount1Out)
             : (_TOKEN_0, _TOKEN_1, _amount0Out);
 
-        uint256 k = _onSwapCalculateK(collateralToken);
+        uint256 k = _onSwapCalculateK(collateralToken, block.timestamp);
         _onSwapPriceChange(collateralToken, uint64(k));
 
         uint256 debtQuote = getQuoteFromOracle(collateralAmountOut, collateralToken);
-        amountIn = getDebtIn(debtQuote, k);
-
+        amountIn = PairMath.getDebtIn(debtQuote, k);
+        
         if (amountIn == 0) revert INSUFFICIENT_INPUT_AMOUNT();
 
         _finishSwap(collateralToken, debtToken, token0In, amountIn, collateralAmountOut, _to, _data);
@@ -164,15 +165,56 @@ contract SiloAmmPair is NotSupportedInPair, SafeTransfers, UniswapV2ERC20, AmmSt
         // collateral is always the one, that will be OUT of the pool
         address collateral = token0In ? _TOKEN_1 : _TOKEN_0;
 
-        uint256 k = _onSwapCalculateK(collateral);
+        uint256 k = _onSwapCalculateK(collateral, block.timestamp);
         _onSwapPriceChange(collateral, uint64(k));
 
         // REVERSE calculation of what we have in `swap`
-        uint256 virtualDebtIn = getDebtInReverse(_amountIn, k);
+        uint256 virtualDebtIn = PairMath.getDebtInReverse(_amountIn, k);
         amountOut = getQuoteFromOracle(virtualDebtIn, _tokenIn);
         if (amountOut == 0) revert INSUFFICIENT_OUTPUT_AMOUNT();
 
         _finishSwap(collateral, _tokenIn, token0In, _amountIn, amountOut, _to, _data);
+    }
+
+    /// @inheritdoc ISiloAmmPair
+    function getAmountIn(address _tokenOut, uint256 _amountOut, uint256 _timestamp)
+        external
+        virtual
+        view
+        returns (uint256 amountIn)
+    {
+        if (_timestamp == 0) {
+            _timestamp = block.timestamp;
+        } else if (_timestamp < block.timestamp) revert TIME_UNDERFLOW();
+
+        if (_amountOut == 0) {
+            return 0;
+        }
+
+        uint256 k = _onSwapCalculateK(_tokenOut, _timestamp);
+        uint256 debtQuote = getQuoteFromOracle(_amountOut, _tokenOut);
+        amountIn = PairMath.getDebtIn(debtQuote, k);
+    }
+
+    /// @inheritdoc ISiloAmmPair
+    function getAmountOut(address _tokenIn, uint256 _amountIn, uint256 _timestamp)
+        external
+        virtual
+        view
+        returns (uint256 amountOut)
+    {
+        if (_timestamp == 0) {
+            _timestamp = block.timestamp;
+        } else if (_timestamp < block.timestamp) revert TIME_UNDERFLOW();
+
+        if (_amountIn == 0) {
+            return 0;
+        }
+
+        address collateral = _tokenIn == _TOKEN_0 ? _TOKEN_1 : _TOKEN_0;
+        uint256 k = _onSwapCalculateK(collateral, _timestamp);
+        uint256 virtualDebtIn = PairMath.getDebtInReverse(_amountIn, k);
+        amountOut = getQuoteFromOracle(virtualDebtIn, _tokenIn);
     }
 
     /// @dev this is only for backward compatibility with uniswapV2
@@ -299,17 +341,23 @@ contract SiloAmmPair is NotSupportedInPair, SafeTransfers, UniswapV2ERC20, AmmSt
         }
     }
 
-    function _oracleSetup(address _oracle0, address _oracle1, address _bridge)
+    function _oracleSetup(address _oracle0, address _oracle1, address _bridgeQuoteToken)
         internal
         pure
-        returns (OracleSetup setup, ISiloOracle oracle0, ISiloOracle oracle1, ISiloOracle oracleSingle, address bridge)
+        returns (
+            OracleSetup setup,
+            ISiloOracle oracle0,
+            ISiloOracle oracle1,
+            ISiloOracle oracleSingle,
+            address bridgeQuoteToken
+        )
     {
         if (_oracle0 == address(0) && _oracle1 == address(0)) {
             setup = OracleSetup.NONE;
         } else if (_oracle0 != address(0) && _oracle1 != address(0)) {
             oracle0 = ISiloOracle(_oracle0);
             oracle1 = ISiloOracle(_oracle1);
-            bridge = _bridge;
+            bridgeQuoteToken = _bridgeQuoteToken;
             setup = OracleSetup.BOTH;
         } else {
             setup = OracleSetup.ONE;
