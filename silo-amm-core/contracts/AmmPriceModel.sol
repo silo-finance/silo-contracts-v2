@@ -9,9 +9,7 @@ import "./interfaces/IAmmPriceModel.sol";
 contract AmmPriceModel is IAmmPriceModel {
     /// @dev floating point 1.0
     /// @notice this has noting to do with tokens decimals, this is just precision
-    uint256 constant public ONE = 1e18;
-
-    uint256 constant public DECIMALS = 1e18;
+    uint256 constant public PRECISION = 1e18;
 
     /// @dev positive number, scope: [0, 1.0], where 1.0 is treated as 1e18
     uint256 public immutable K_MIN; // solhint-disable-line var-name-mixedcase
@@ -60,20 +58,38 @@ contract AmmPriceModel is IAmmPriceModel {
         return _priceState[_collateral];
     }
 
-    /// @param _collateralAmount how much collateral you want to buy, amount with 18 decimals
-    /// @param _collateralTwapPrice collateral price in ??? there are few cases...
-    function collateralPrice(address _collateral, uint256 _collateralAmount, uint256 _collateralTwapPrice)
+    /// @param _debtQuote debt amount that we want to swap
+    /// @param _onSwapK result of `_onSwapCalculateK()`
+    /// @return debtAmountIn adjusted amount of debt token that will be swap (it will be equal or less `_debtQuote`
+    function getDebtIn(uint256 _debtQuote, uint256 _onSwapK)
         public
-        view
-        returns (uint256 debtAmount)
+        pure
+        returns (uint256 debtAmountIn)
     {
-        uint256 value = _priceState[_collateral].k * _collateralTwapPrice * _collateralAmount;
+        debtAmountIn = _onSwapK * _debtQuote;
 
         unchecked {
             // div is safe
-            // div(DECIMALS) because twap price is in decimals
-            // div(ONE) because of k
-            return value / DECIMALS / uint256(ONE);
+            // div(PRECISION) because of K
+            return debtAmountIn / PRECISION;
+        }
+    }
+
+    /// @dev this is reverse of what `getDebtIn()` does
+    /// @param _onSwapK result of `_onSwapCalculateK()`
+    /// @param _amountIn amount of debt token that user expect to swap
+    /// @param debtIn adjusted debt amount that will be used to get quote for collateral
+    /// (if will be equal or greater than `_debtAmountIn`)
+    function getDebtInReverse(uint256 _amountIn, uint256 _onSwapK)
+        public
+        pure
+        returns (uint256 debtIn)
+    {
+        debtIn = _amountIn * PRECISION;
+
+        unchecked {
+            // div is safe
+            return debtIn / _onSwapK;
         }
     }
 
@@ -82,10 +98,10 @@ contract AmmPriceModel is IAmmPriceModel {
         uint256 week = 7 days;
 
         if (!(_config.tSlow <= week)) revert INVALID_T_SLOW();
-        if (!(_config.kMax != 0 && _config.kMax <= ONE)) revert INVALID_K_MAX();
+        if (!(_config.kMax != 0 && _config.kMax <= PRECISION)) revert INVALID_K_MAX();
         if (!(_config.kMin <= _config.kMax)) revert INVALID_K_MIN();
-        if (!(_config.q <= ONE)) revert INVALID_Q();
-        if (!(_config.vFast <= ONE)) revert INVALID_V_FAST();
+        if (!(_config.q <= PRECISION)) revert INVALID_Q();
+        if (!(_config.vFast <= PRECISION)) revert INVALID_V_FAST();
         if (!(_config.deltaK <= _config.tSlow)) revert INVALID_DELTA_K();
     }
 
@@ -119,9 +135,23 @@ contract AmmPriceModel is IAmmPriceModel {
         _priceState[_collateral].lastActionTimestamp = uint64(block.timestamp);
     }
 
-    function _onSwapPriceChange(address _collateral) internal {
-        uint256 k;
+    /// @param _onSwapK result of `_onSwapCalculateK()`
+    function _onSwapPriceChange(address _collateral, uint64 _onSwapK) internal {
+        _priceState[_collateral].k = _onSwapK; // TODO do we need to store it?
+        _priceState[_collateral].swap = true;
+        _priceState[_collateral].liquidityAdded = false;
+        _priceState[_collateral].lastActionTimestamp = uint64(block.timestamp);
+    }
 
+    /// @dev If a withdraw has occurred, the AMM price is not needed, therefore, the only change to be made is updating
+    /// parameter AL. This means that on the next step we will know that the previous action reduced the volume of the
+    /// AMM.
+    function _priceChangeOnWithdraw(address _collateral) internal {
+        _priceState[_collateral].liquidityAdded = false;
+    }
+
+    /// @dev it calculates K
+    function _onSwapCalculateK(address _collateral) internal view returns (uint256 k) {
         unchecked {
             // unchecked: timestamp is at least lastActionTimestamp so we do not underflow
             uint256 time = block.timestamp - _priceState[_collateral].lastActionTimestamp;
@@ -134,8 +164,8 @@ contract AmmPriceModel is IAmmPriceModel {
                 } else {
                     // unchecked: all this values are max 64bits (<1e18), so we can not produce value that will
                     // over or under flow
-                    // unchecked: we need to div(ONE) because of Q, division is safe
-                    time = time * Q * V_FAST / ONE;
+                    // unchecked: we need to div(PRECISION) because of Q, division is safe
+                    time = time * Q * V_FAST / PRECISION;
                 }
             } else {
                 // unchecked: all this values are max 64bits (<1e18), so we can not produce value that will
@@ -148,16 +178,6 @@ contract AmmPriceModel is IAmmPriceModel {
             k = _priceState[_collateral].k - time;
         }
 
-        _priceState[_collateral].k = uint64(k > K_MIN ? k : K_MIN);
-        _priceState[_collateral].swap = true;
-        _priceState[_collateral].liquidityAdded = false;
-        _priceState[_collateral].lastActionTimestamp = uint64(block.timestamp);
-    }
-
-    /// @dev If a withdraw has occurred, the AMM price is not needed, therefore, the only change to be made is updating
-    /// parameter AL. This means that on the next step we will know that the previous action reduced the volume of the
-    /// AMM.
-    function _priceChangeOnWithdraw(address _collateral) internal {
-        _priceState[_collateral].liquidityAdded = false;
+        return k > K_MIN ? k : K_MIN;
     }
 }

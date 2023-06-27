@@ -4,15 +4,7 @@ pragma solidity >=0.5.0;
 import "../external/interfaces/IUniswapV2Pair.sol";
 
 interface ISiloAmmPair is IUniswapV2Pair {
-    /// @dev this is struct that prevents `Stack too deep`
-    struct SwapTmpData {
-        // collateral is always the one that will be OUT of the pool
-        address collateral;
-        address debtToken;
-        bool token0In;
-    }
-
-    enum OracleSetup { NONE, BOTH, FOR_TOKEN0, FOR_TOKEN1 }
+    enum OracleSetup { NONE, ONE, BOTH }
 
     error ONLY_SILO();
     error NOT_SUPPORTED();
@@ -55,6 +47,15 @@ interface ISiloAmmPair is IUniswapV2Pair {
     )
         external
         returns (uint256 shares);
+
+    /// @dev additional swap method that allows to provide amount IN
+    /// @param _tokenIn address of token that will be swap for other one
+    /// @param _amountIn amount of `_tokenIn`
+    /// @param _to swap receiver
+    /// @param _data optional data that follow `IUniswapV2Callee` functionality from UniswapV2
+    function exactInSwap(address _tokenIn, uint256 _amountIn, address _to, bytes calldata _data)
+        external
+        returns (uint256);
 
     /// @notice there is no token transfers on removing liquidity, tokens are transferred on swap
     /// @param _collateral token address for which liquidity was added

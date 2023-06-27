@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
-import "openzeppelin-contracts/contracts/utils/Strings.sol";
+import "openzeppelin-contracts/utils/Strings.sol";
 
 contract AmmStateModelTestData is Test {
     using Strings for uint256;
