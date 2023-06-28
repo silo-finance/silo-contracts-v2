@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity >=0.5.0;
 
-import "../external/interfaces/ISiloOracle.sol";
+import "silo-core/contracts/interface/ISiloOracle.sol";
 import "./IAmmPriceModel.sol";
 import "./ISiloAmmPair.sol";
 

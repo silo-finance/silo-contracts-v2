@@ -7,9 +7,14 @@
         "ignoreConstructors": true
       }
     ],
-    "no-empty-blocks": "off",
+    "no-console": [
+      "error"
+    ],
     "comprehensive-interface": "off",
+    "no-empty-blocks": "off",
+    "contract-name-camelcase": "off",
     "not-rely-on-time": "off",
+    "no-global-import": "off",
     "reason-string": [
       "warn",
       {
