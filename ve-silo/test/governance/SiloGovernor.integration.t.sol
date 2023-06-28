@@ -35,10 +35,8 @@ contract SiloGovernorTest is IntegrationTest {
         _deploymentScript = new SiloGovernorDeploy();
 
         _deploymentScript.disableDeploymentsSync();
-        _deploymentScript.votingEscrowDeploy().disableDeploymentsSync();
-        _deploymentScript.timelockControllerDeploy().disableDeploymentsSync();
 
-        (_siloGovernor, _timelock, _votingEscrow) = _deploymentScript.run();
+        (_siloGovernor, _timelock, _votingEscrow, ) = _deploymentScript.run();
     }
 
     function testEnsureDeployedWithCorrectConfigurations() public {

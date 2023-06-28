@@ -1,21 +1,26 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.19;
 
+import {ERC20} from "openzeppelin-contracts/token/ERC20/ERC20.sol";
+
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
 import {Test} from "forge-std/Test.sol";
 
 import {IntegrationTest} from "silo-foundry-utils/networks/IntegrationTest.sol";
 
 import {IVeSilo} from "ve-silo/contracts/voting-escrow/interfaces/IVeSilo.sol";
+import {IVeBoost} from "ve-silo/contracts/voting-escrow/interfaces/IVeBoost.sol";
 import {ISmartWalletChecker} from "ve-silo/contracts/voting-escrow/interfaces/ISmartWalletChecker.sol";
 import {VotingEscrowDeploy} from "ve-silo/deploy/VotingEscrowDeploy.s.sol";
+import {VeSiloContracts} from "ve-silo/deploy/_CommonDeploy.sol";
 
 // FOUNDRY_PROFILE=ve-silo forge test --ffi -vvv
 contract VotingEscrowTest is IntegrationTest {
     IVeSilo internal _votingEscrow;
+    IVeBoost internal _veBoost;
     VotingEscrowDeploy internal _deploymentScript;
 
-    address internal _authorizer = makeAddr("authorizer account");
+    address internal _timelock = makeAddr("silo timelock");
     address internal _smartValletChecker = makeAddr("Smart wallet checker");
     address internal _user = makeAddr("test user1");
 
@@ -27,22 +32,23 @@ contract VotingEscrowTest is IntegrationTest {
             _FORKING_BLOCK_NUMBER
         );
 
-        _votingEscrow = deployVotingEscrowForTests();
+        (_votingEscrow, _veBoost) = deployVotingEscrowForTests();
     }
 
-    function deployVotingEscrowForTests() public returns (IVeSilo instance) {
+    function deployVotingEscrowForTests() public returns (IVeSilo veSilo, IVeBoost veBoost) {
         _deploymentScript = new VotingEscrowDeploy();
         _deploymentScript.disableDeploymentsSync();
 
         _mockPermissions();
+        _dummySiloToken();
 
-        instance = IVeSilo(_deploymentScript.run());
+        (veSilo, veBoost) = _deploymentScript.run();
 
-        vm.prank(_authorizer);
-        instance.commit_smart_wallet_checker(_smartValletChecker);
+        vm.prank(_timelock);
+        veSilo.commit_smart_wallet_checker(_smartValletChecker);
 
-        vm.prank(_authorizer);
-        instance.apply_smart_wallet_checker();
+        vm.prank(_timelock);
+        veSilo.apply_smart_wallet_checker();
     }
 
     function getVeSiloTokens(address _userAddr, uint256 _amount, uint256 _unlockTime) public {
@@ -69,6 +75,9 @@ contract VotingEscrowTest is IntegrationTest {
             IERC20(siloToken).decimals(),
             "Decimals should be the same with as a token decimals"
         );
+
+        assertEq(_veBoost.BOOST_V1(), address(0), "veBoostV1 makes no sense");
+        assertEq(_veBoost.VE(), address(_votingEscrow), "An invalid VotingEscrow address");
     }
 
     function testGetVeSiloTokens() public {
@@ -87,12 +96,22 @@ contract VotingEscrowTest is IntegrationTest {
     }
 
     function _mockPermissions() internal {
-        setAddress(_deploymentScript.AUTHORIZER_ADDRESS_KEY(), _authorizer);
+        setAddress(VeSiloContracts.TIMELOCK_CONTROLLER, _timelock);
 
         vm.mockCall(
             _smartValletChecker,
             abi.encodeCall(ISmartWalletChecker.check, _user),
             abi.encode(true)
         );
+    }
+
+    function _dummySiloToken() internal {
+        if (isChain(ANVIL_ALIAS)) {
+            ERC20 siloToken = new ERC20("Silo test token", "SILO");
+            ERC20 silo8020Token = new ERC20("Silo 80/20", "SILO-80-20");
+
+            setAddress(getChainId(), SILO_TOKEN, address(siloToken));
+            setAddress(getChainId(), SILO80_WETH20_TOKEN, address(silo8020Token));
+        }
     }
 }
