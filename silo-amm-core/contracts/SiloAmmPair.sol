@@ -3,7 +3,6 @@ pragma solidity 0.8.19;
 
 import "uniswap/v2-core/contracts/interfaces/IUniswapV2Callee.sol";
 
-import "./external/libraries/Math.sol";
 import "./external/UniswapV2ERC20.sol";
 
 import "./interfaces/NotSupportedInPair.sol";
@@ -326,14 +325,14 @@ contract SiloAmmPair is NotSupportedInPair, SafeTransfers, UniswapV2ERC20, AmmSt
     }
 
     // if fee is on, mint liquidity equivalent to 1/6th of the growth in sqrt(k)
-    function _mintFee(uint112 _reserve0, uint112 _reserve1) internal returns (bool feeOn) {
+    function _mintFee(uint112 /* _reserve0 */, uint112 /* _reserve1 */) internal returns (bool feeOn) {
         feeOn = _FEE_TO != address(0);
         uint _kLast = kLast; // gas savings
 
         if (feeOn) {
             if (_kLast != 0) {
-                uint rootK = Math.sqrt(uint256(_reserve0) * _reserve1);
-                uint rootKLast = Math.sqrt(_kLast);
+                uint rootK; // TODO = Math.sqrt(uint256(_reserve0) * _reserve1);
+                uint rootKLast; // = Math.sqrt(_kLast);
 
                 if (rootK > rootKLast) {
                     uint numerator = totalSupply * (rootK - rootKLast);

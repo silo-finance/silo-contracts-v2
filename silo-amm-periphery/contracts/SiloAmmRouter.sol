@@ -4,17 +4,15 @@ pragma solidity 0.8.19;
 import "uniswap/v2-periphery/contracts/interfaces/IWETH.sol";
 
 import "silo-amm-core/contracts/interfaces/ISiloAmmPairFactory.sol";
-import "silo-amm-core/contracts/external/interfaces/ISiloOracle.sol";
 import "silo-amm-core/contracts/utils/SafeTransfers.sol";
+import "silo-amm-core/contracts/lib/Ping.sol";
 
 import "./libraries/UniswapV2Library.sol";
-import "./libraries/Ping.sol";
 import "./interfaces/NotSupportedRouter.sol";
-import "./utils/SafeTransferETH.sol";
 
 
 /// @dev based on UniswapV2Router02
-contract SiloAmmRouter is NotSupportedRouter, SafeTransferETH, SafeTransfers {
+contract SiloAmmRouter is NotSupportedRouter, SafeTransfers {
     ISiloAmmPairFactory public immutable PAIR_FACTORY; // solhint-disable-line var-name-mixedcase
     address public immutable WETH; // solhint-disable-line var-name-mixedcase
 
