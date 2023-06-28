@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.19;
 
-import {CommonDeploy} from "./_CommonDeploy.sol";
+import {CommonDeploy, VeSiloContracts} from "./_CommonDeploy.sol";
 import {TimelockController} from "openzeppelin-contracts/governance/TimelockController.sol";
 import {ISiloTimelockController} from "ve-silo/contracts/governance/interfaces/ISiloTimelockController.sol";
 
@@ -30,7 +30,7 @@ contract TimelockControllerDeploy is CommonDeploy {
             )
         ));
 
-        _registerDeployment(address(timelockController), _TIMELOCK_CONTROLLER);
+        _registerDeployment(address(timelockController), VeSiloContracts.TIMELOCK_CONTROLLER);
 
         vm.stopBroadcast();
 

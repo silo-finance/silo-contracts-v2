@@ -1,15 +1,14 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.19;
 
-import {CommonDeploy} from "./_CommonDeploy.sol";
+import {CommonDeploy, VeSiloContracts} from "./_CommonDeploy.sol";
 import {IVotes} from "openzeppelin-contracts/governance/extensions/GovernorVotes.sol";
 import {TimelockController} from "openzeppelin-contracts/governance/extensions/GovernorTimelockControl.sol";
-
-import {AddressesCollection} from "silo-foundry-utils/networks/addresses/AddressesCollection.sol";
 
 import {SiloGovernor} from "ve-silo/contracts/governance/SiloGovernor.sol";
 import {ISiloGovernor} from "ve-silo/contracts/governance/interfaces/ISiloGovernor.sol";
 import {IVeSilo} from "ve-silo/contracts/voting-escrow/interfaces/IVeSilo.sol";
+import {IVeBoost} from "ve-silo/contracts/voting-escrow/interfaces/IVeBoost.sol";
 import {ISiloTimelockController} from "ve-silo/contracts/governance/interfaces/ISiloTimelockController.sol";
 
 import {VotingEscrowDeploy} from "./VotingEscrowDeploy.s.sol";
@@ -20,7 +19,7 @@ FOUNDRY_PROFILE=ve-silo \
     forge script ve-silo/deploy/SiloGovernorDeploy.s.sol \
     --ffi --broadcast --rpc-url http://127.0.0.1:8545
  */
-contract SiloGovernorDeploy is CommonDeploy, AddressesCollection {
+contract SiloGovernorDeploy is CommonDeploy {
     VotingEscrowDeploy public votingEscrowDeploy = new VotingEscrowDeploy();
     TimelockControllerDeploy public timelockControllerDeploy = new TimelockControllerDeploy();
 
@@ -29,7 +28,8 @@ contract SiloGovernorDeploy is CommonDeploy, AddressesCollection {
         returns (
             ISiloGovernor siloGovernor,
             ISiloTimelockController timelock,
-            IVeSilo votingEscrow
+            IVeSilo votingEscrow,
+            IVeBoost veBoost
         )
     {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
@@ -48,12 +48,10 @@ contract SiloGovernorDeploy is CommonDeploy, AddressesCollection {
 
         vm.stopBroadcast();
 
-        _registerDeployment(address(siloGovernor), _SILO_GOVERNOR);
+        _registerDeployment(address(siloGovernor), VeSiloContracts.SILO_GOVERNOR);
         _syncDeployments();
 
-        setAddress(votingEscrowDeploy.AUTHORIZER_ADDRESS_KEY(), address(timelock));
-
-        votingEscrow = votingEscrowDeploy.run();
+        (votingEscrow, veBoost) = votingEscrowDeploy.run();
 
         _configure(siloGovernor, timelock, votingEscrow);
     }
