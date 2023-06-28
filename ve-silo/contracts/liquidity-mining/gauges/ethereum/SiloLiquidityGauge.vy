@@ -5,6 +5,15 @@
 @license MIT
 @notice Implementation contract for use with Curve Factory
 """
+interface ERC20:
+    def balanceOf(addr: address) -> uint256: view
+    def totalSupply() -> uint256: view
+
+interface ERC20BlancesHandler:
+    def balanceOf(addr: address) -> uint256: view
+    def totalSupply() -> uint256: view
+    def balanceOfAndTotalSupply(addr: address) -> (uint256, uint256): view
+
 interface TokenAdmin:
     def future_epoch_time_write() -> uint256: nonpayable
     def rate() -> uint256: view
@@ -76,6 +85,8 @@ MAX_RELATIVE_WEIGHT_CAP: constant(uint256) = 10 ** 18
 
 # Gauge
 
+bal_handler: public(address)
+
 is_killed: public(bool)
 
 # [future_epoch_time uint40][inflation_rate uint216]
@@ -132,7 +143,6 @@ def __init__(minter: address, veBoostProxy: address, authorizerAdaptor: address)
     MINTER = minter
     VOTING_ESCROW = Controller(gaugeController).voting_escrow()
     VEBOOST_PROXY = veBoostProxy
-
 
 # Internal Functions
 
@@ -224,12 +234,12 @@ def _checkpoint_rewards(_user: address, _total_supply: uint256, _claim: bool, _r
     """
     user_balance: uint256 = 0
     receiver: address = _receiver
-    if _user != ZERO_ADDRESS:
-        user_balance = self.balanceOf[_user]
-        if _claim and _receiver == ZERO_ADDRESS:
+    if _user != empty(address):
+        user_balance = ERC20BlancesHandler(self.bal_handler).balanceOf(_user)
+        if _claim and _receiver == empty(address):
             # if receiver is not explicitly declared, check if a default receiver is set
             receiver = self.rewards_receiver[_user]
-            if receiver == ZERO_ADDRESS:
+            if receiver == empty(address):
                 # if no default receiver is set, direct claims to the user
                 receiver = _user
 
@@ -248,7 +258,7 @@ def _checkpoint_rewards(_user: address, _total_supply: uint256, _claim: bool, _r
                 integral += duration * self.reward_data[token].rate * 10**18 / _total_supply
                 self.reward_data[token].integral = integral
 
-        if _user != ZERO_ADDRESS:
+        if _user != empty(address):
             integral_for: uint256 = self.reward_integral_for[token][_user]
             new_claimable: uint256 = 0
 
@@ -308,17 +318,20 @@ def _update_liquidity_limit(addr: address, l: uint256, L: uint256):
 
 @external
 @nonreentrant('lock')
-def claim_rewards(_addr: address = msg.sender, _receiver: address = ZERO_ADDRESS):
+def claim_rewards(_addr: address = msg.sender, _receiver: address = empty(address)):
     """
     @notice Claim available reward tokens for `_addr`
     @param _addr Address to claim for
     @param _receiver Address to transfer rewards to - if set to
-                     ZERO_ADDRESS, uses the default reward receiver
+                     empty(address), uses the default reward receiver
                      for the caller
     """
-    if _receiver != ZERO_ADDRESS:
+    if _receiver != empty(address):
         assert _addr == msg.sender  # dev: cannot redirect when claiming for another user
-    self._checkpoint_rewards(_addr, self.totalSupply, True, _receiver)
+
+    total_supply: uint256 = ERC20BlancesHandler(self.bal_handler).totalSupply()
+
+    self._checkpoint_rewards(_addr, total_supply, True, _receiver)
 
 @external
 def user_checkpoint(addr: address) -> bool:
@@ -328,8 +341,14 @@ def user_checkpoint(addr: address) -> bool:
     @return bool success
     """
     assert msg.sender in [addr, MINTER]  # dev: unauthorized
+
+    user_balance: uint256 = 0
+    total_supply: uint256 = 0
+    
+    (user_balance, total_supply) = ERC20BlancesHandler(self.bal_handler).balanceOfAndTotalSupply(addr)
+
     self._checkpoint(addr)
-    self._update_liquidity_limit(addr, self.balanceOf[addr], self.totalSupply)
+    self._update_liquidity_limit(addr, user_balance, total_supply)
     return True
 
 
@@ -337,7 +356,7 @@ def user_checkpoint(addr: address) -> bool:
 def set_rewards_receiver(_receiver: address):
     """
     @notice Set the default reward receiver for the caller.
-    @dev When set to ZERO_ADDRESS, rewards are sent to the caller
+    @dev When set to empty(address), rewards are sent to the caller
     @param _receiver Receiver address for any rewards claimed via `claim_rewards`
     """
     self.rewards_receiver[msg.sender] = _receiver
@@ -354,13 +373,17 @@ def kick(addr: address):
     t_ve: uint256 = VotingEscrow(VOTING_ESCROW).user_point_history__ts(
         addr, VotingEscrow(VOTING_ESCROW).user_point_epoch(addr)
     )
-    _balance: uint256 = self.balanceOf[addr]
+
+    _balance: uint256 = 0
+    _total_supply: uint256 = 0
+    
+    (_balance, _total_supply) = ERC20BlancesHandler(self.bal_handler).balanceOfAndTotalSupply(addr)
 
     assert ERC20(VOTING_ESCROW).balanceOf(addr) == 0 or t_ve > t_last # dev: kick not allowed
     assert self.working_balances[addr] > _balance * TOKENLESS_PRODUCTION / 100  # dev: kick not needed
 
     self._checkpoint(addr)
-    self._update_liquidity_limit(addr, self.balanceOf[addr], self.totalSupply)
+    self._update_liquidity_limit(addr, _balance, _total_supply)
 
 
 # Administrative Functions
@@ -376,7 +399,9 @@ def deposit_reward_token(_reward_token: address, _amount: uint256):
     """
     assert msg.sender == self.reward_data[_reward_token].distributor
 
-    self._checkpoint_rewards(ZERO_ADDRESS, self.totalSupply, False, ZERO_ADDRESS)
+    total_supply: uint256 = ERC20BlancesHandler(self.bal_handler).totalSupply()
+
+    self._checkpoint_rewards(empty(address), total_supply, False, empty(address))
 
     response: Bytes[32] = raw_call(
         _reward_token,
@@ -407,12 +432,12 @@ def add_reward(_reward_token: address, _distributor: address):
     @param _reward_token The token to add as an additional reward
     @param _distributor Address permitted to fund this contract with the reward token
     """
-    assert _distributor != ZERO_ADDRESS
+    assert _distributor != empty(address)
     assert msg.sender == AUTHORIZER_ADAPTOR  # dev: only owner
 
     reward_count: uint256 = self.reward_count
     assert reward_count < MAX_REWARDS
-    assert self.reward_data[_reward_token].distributor == ZERO_ADDRESS
+    assert self.reward_data[_reward_token].distributor == empty(address)
 
     self.reward_data[_reward_token].distributor = _distributor
     self.reward_tokens[reward_count] = _reward_token
@@ -430,8 +455,8 @@ def set_reward_distributor(_reward_token: address, _distributor: address):
     current_distributor: address = self.reward_data[_reward_token].distributor
 
     assert msg.sender == current_distributor or msg.sender == AUTHORIZER_ADAPTOR
-    assert current_distributor != ZERO_ADDRESS
-    assert _distributor != ZERO_ADDRESS
+    assert current_distributor != empty(address)
+    assert _distributor != empty(address)
 
     self.reward_data[_reward_token].distributor = _distributor
     log RewardDistributorUpdated(_reward_token, _distributor)
@@ -480,14 +505,19 @@ def claimable_reward(_user: address, _reward_token: address) -> uint256:
     @return uint256 Claimable reward token amount
     """
     integral: uint256 = self.reward_data[_reward_token].integral
-    total_supply: uint256 = self.totalSupply
+
+    user_balance: uint256 = 0
+    total_supply: uint256 = 0
+    
+    (user_balance, total_supply) = ERC20BlancesHandler(self.bal_handler).balanceOfAndTotalSupply(_user)
+
     if total_supply != 0:
         last_update: uint256 = min(block.timestamp, self.reward_data[_reward_token].period_finish)
         duration: uint256 = last_update - self.reward_data[_reward_token].last_update
         integral += (duration * self.reward_data[_reward_token].rate * 10**18 / total_supply)
 
     integral_for: uint256 = self.reward_integral_for[_reward_token][_user]
-    new_claimable: uint256 = self.balanceOf[_user] * (integral - integral_for) / 10**18
+    new_claimable: uint256 = user_balance * (integral - integral_for) / 10**18
 
     return shift(self.claim_data[_user][_reward_token], -128) + new_claimable
 
@@ -547,10 +577,14 @@ def _setRelativeWeightCap(relative_weight_cap: uint256):
     log RelativeWeightCapChanged(relative_weight_cap)
 
 @external
-def initialize(relative_weight_cap: uint256):
+def initialize(relative_weight_cap: uint256, handler: address):
     """
     @notice Contract constructor
     """
+    assert handler != empty(address) # dev: balances handler required
+    assert self.bal_handler == empty(address) # dev: already initialized
+
+    self.bal_handler = handler
 
     self.period_timestamp[0] = block.timestamp
     self.inflation_params = shift(TokenAdmin(BAL_TOKEN_ADMIN).future_epoch_time_write(), 216) + TokenAdmin(BAL_TOKEN_ADMIN).rate()
