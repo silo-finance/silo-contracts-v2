@@ -9,6 +9,7 @@ library VeSiloContracts {
     string public constant VE_BOOST = "VeBoostV2.vy";
     string public constant TIMELOCK_CONTROLLER = "TimelockController.sol";
     string public constant SILO_GOVERNOR = "SiloGovernor.sol";
+    string public constant GAUGE_CONTROLLER = "GaugeController.vy";
 }
 
 contract CommonDeploy is Deployer {
