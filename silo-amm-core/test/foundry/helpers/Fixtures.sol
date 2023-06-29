@@ -14,7 +14,6 @@ contract Fixtures {
         ammPriceConfig.tSlow = 1 hours;
 
         ammPriceConfig.q = 1e16;
-        ammPriceConfig.kMax = 1e18;
         ammPriceConfig.kMin = 0;
 
         ammPriceConfig.vFast = 4629629629629;

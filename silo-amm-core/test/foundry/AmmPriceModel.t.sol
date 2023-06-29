@@ -22,7 +22,6 @@ contract AmmPriceModelTest is Test {
         config.tSlow = 1 hours;
 
         config.q = 1e16;
-        config.kMax = 1e18;
         config.kMin = 0;
 
         config.vFast = 4629629629629;
@@ -37,7 +36,7 @@ contract AmmPriceModelTest is Test {
         priceModel.getAmmConfig();
         uint256 gasEnd = gasleft();
 
-        assertEq(gasStart - gasEnd, 4114);
+        assertEq(gasStart - gasEnd, 3979);
     }
 
     /*
@@ -62,7 +61,7 @@ contract AmmPriceModelTest is Test {
         priceModel.onSwapCalculateK();
         uint256 gasEnd = gasleft();
 
-        assertEq(gasStart - gasEnd, 5670);
+        assertEq(gasStart - gasEnd, 5715);
     }
 
     /*
@@ -136,7 +135,7 @@ contract AmmPriceModelTest is Test {
                 }
             }
 
-            assertEq(gasSum, 57588, "make sure we gas efficient on price model actions");
+            assertEq(gasSum, 57648, "make sure we gas efficient on price model actions");
         }
     }
 
@@ -149,24 +148,10 @@ contract AmmPriceModelTest is Test {
         priceModel.ammConfigVerification(config);
     }
 
-    function test_AmmPriceModel_ammConfigVerification_InvalidKmax() public {
-        AmmPriceModel.AmmPriceConfig memory config = priceModel.getAmmConfig();
-
-        config.kMax = 0;
-
-        vm.expectRevert(IAmmPriceModel.INVALID_K_MAX.selector);
-        priceModel.ammConfigVerification(config);
-
-        config.kMax = uint64(priceModel.PRECISION() + 1);
-
-        vm.expectRevert(IAmmPriceModel.INVALID_K_MAX.selector);
-        priceModel.ammConfigVerification(config);
-    }
-
     function test_AmmPriceModel_ammConfigVerification_InvalidKmin() public {
         AmmPriceModel.AmmPriceConfig memory config = priceModel.getAmmConfig();
 
-        config.kMin = uint64(config.kMax + 1);
+        config.kMin = uint64(priceModel.PRECISION() + 1);
 
         vm.expectRevert(IAmmPriceModel.INVALID_K_MIN.selector);
         priceModel.ammConfigVerification(config);

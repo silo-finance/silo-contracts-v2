@@ -14,9 +14,6 @@ abstract contract AmmPriceModel is IAmmPriceModel {
     /// @dev positive number, scope: [0, 1.0], where 1.0 is treated as 1e18
     uint256 public immutable K_MIN; // solhint-disable-line var-name-mixedcase
 
-    /// @dev positive number, scope: [0, 1.0], where 1.0 is treated as 1e18
-    uint256 public immutable K_MAX; // solhint-disable-line var-name-mixedcase
-
     /// @dev positive number, delta >= 0 and always smaller or equals T_SLOW.
     uint256 public immutable DELTA_K; // solhint-disable-line var-name-mixedcase
 
@@ -38,7 +35,6 @@ abstract contract AmmPriceModel is IAmmPriceModel {
         ammConfigVerification(_config);
 
         K_MIN = _config.kMin;
-        K_MAX = _config.kMax;
         DELTA_K = _config.deltaK;
         T_SLOW = _config.tSlow;
         V_FAST = _config.vFast;
@@ -47,7 +43,6 @@ abstract contract AmmPriceModel is IAmmPriceModel {
 
     function getAmmConfig() external view returns (AmmPriceConfig memory ammConfig) {
         ammConfig.kMin = uint64(K_MIN);
-        ammConfig.kMax = uint64(K_MAX);
         ammConfig.deltaK = uint64(DELTA_K);
         ammConfig.tSlow = uint32(T_SLOW);
         ammConfig.vFast = uint64(V_FAST);
@@ -63,8 +58,7 @@ abstract contract AmmPriceModel is IAmmPriceModel {
         uint256 week = 7 days;
 
         if (_config.tSlow > week) revert INVALID_T_SLOW();
-        if (!(_config.kMax != 0 && _config.kMax <= PRECISION)) revert INVALID_K_MAX();
-        if (_config.kMin > _config.kMax) revert INVALID_K_MIN();
+        if (_config.kMin > PRECISION) revert INVALID_K_MIN();
         if (_config.q > PRECISION) revert INVALID_Q();
         if (_config.vFast > PRECISION) revert INVALID_V_FAST();
         if (_config.deltaK > _config.tSlow) revert INVALID_DELTA_K();
@@ -76,7 +70,7 @@ abstract contract AmmPriceModel is IAmmPriceModel {
             return;
         }
 
-        _priceState[_collateralToken].k = uint64(K_MAX);
+        _priceState[_collateralToken].k = uint64(PRECISION);
         _priceState[_collateralToken].lastActionTimestamp = uint64(block.timestamp);
         _priceState[_collateralToken].liquidityAdded = true;
         _priceState[_collateralToken].swap = false;
