@@ -6,8 +6,8 @@ import "uniswap/v2-core/contracts/interfaces/IUniswapV2Callee.sol";
 import "./external/UniswapV2ERC20.sol";
 
 import "./interfaces/NotSupportedInPair.sol";
-import "./AmmStateModel.sol";
-import "./AmmPriceModel.sol";
+import "./models/AmmStateModel.sol";
+import "./models/AmmPriceModel.sol";
 import "./utils/SafeTransfers.sol";
 import "./lib/PairMath.sol";
 

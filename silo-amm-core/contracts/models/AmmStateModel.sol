@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.19;
 
-import "./interfaces/IAmmStateModel.sol";
+import "../interfaces/IAmmStateModel.sol";
 
 
 /// @dev annotations like (A) or (Ci) is reference to the internal document that describes model in mathematical way.
@@ -24,7 +24,7 @@ abstract contract AmmStateModel is IAmmStateModel {
     }
 
     /// @notice The part of the user’s collateral amount that has already been swapped
-    function userSwappedCollateral(address _collateralToken, address _user)
+    function getUserSwappedCollateral(address _collateralToken, address _user)
         public
         view
         returns (uint256 swappedCollateralFraction)

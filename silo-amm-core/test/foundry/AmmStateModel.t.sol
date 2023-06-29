@@ -4,7 +4,7 @@ pragma solidity 0.8.19;
 import "forge-std/Test.sol";
 import "./data-readers/AmmStateModelTestData.sol";
 import "./helpers/StateModel.sol";
-import "../../contracts/AmmStateModel.sol";
+import "../../contracts/models/AmmStateModel.sol";
 
 
 /*
@@ -29,8 +29,8 @@ contract AmmStateModelTest is Test {
     function test_ammStateModelFlow() public {
         AmmStateModelTestData.TestData[] memory testDatas = ammStateModelTestData.testData();
 
-        _ammStateModelFlow(testDatas, false, 438388);
-        _ammStateModelFlow(testDatas, true, 401503);
+        _ammStateModelFlow(testDatas, false, 438316);
+        _ammStateModelFlow(testDatas, true, 401431);
     }
 
     function _ammStateModelFlow(

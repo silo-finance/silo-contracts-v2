@@ -92,7 +92,7 @@ contract SiloAmmPairTest is Test, Fixtures {
 
         emit log_named_uint("gas #1", gas);
 
-        assertEq(gas, 204526);
+        assertEq(gas, 204504);
         assertEq(shares, amount, "initial amount == shares");
 
         gasStart = gasleft();
@@ -101,7 +101,7 @@ contract SiloAmmPairTest is Test, Fixtures {
 
         emit log_named_uint("gas #2", gas);
 
-        assertEq(gas, 170369, "gas usage for adding liquidity with cleanup");
+        assertEq(gas, 170347, "gas usage for adding liquidity with cleanup");
         assertEq(shares, shares2, "expect same shares");
     }
 
@@ -148,13 +148,13 @@ contract SiloAmmPairTest is Test, Fixtures {
         gas = gasStart - gasleft();
 
         emit log_named_uint("gas for partial removal", gas);
-        assertEq(gas, 7116);
+        assertEq(gas, 7120);
 
         gasStart = gasleft();
         pair.removeLiquidity(TOKEN_0, _user, 1e18);
         gas = gasStart - gasleft();
 
         emit log_named_uint("gas for FULL removal", gas);
-        assertEq(gas, 5394);
+        assertEq(gas, 5398);
     }
 }
