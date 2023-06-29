@@ -4,7 +4,7 @@ pragma solidity 0.8.19;
 import "forge-std/Test.sol";
 import "./helpers/PriceModel.sol";
 import "../../contracts/lib/PairMath.sol";
-import "../../contracts/AmmPriceModel.sol";
+import "../../contracts/models/AmmPriceModel.sol";
 import "./data-readers/AmmPriceModelTestData.sol";
 
 /*

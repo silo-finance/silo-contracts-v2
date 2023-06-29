@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import "../../../contracts/AmmPriceModel.sol";
+import "../../../contracts/models/AmmPriceModel.sol";
 
 contract Fixtures {
     AmmPriceModel.AmmPriceConfig ammPriceConfig;

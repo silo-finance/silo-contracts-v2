@@ -2,11 +2,11 @@
 pragma solidity 0.8.19;
 
 import "silo-core/contracts/interface/ISiloOracle.sol";
-import "./interfaces/IAmmPriceModel.sol";
+import "../interfaces/IAmmPriceModel.sol";
 
 
 /// @dev annotations like (A) or (Ci) is reference to the internal document that describes model in mathematical way.
-contract AmmPriceModel is IAmmPriceModel {
+abstract contract AmmPriceModel is IAmmPriceModel {
     /// @dev floating point 1.0
     /// @notice this has noting to do with tokens decimals, this is just precision
     uint256 constant public PRECISION = 1e18;
