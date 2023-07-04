@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.18;
 
-import {
-    SafeERC20Upgradeable
-} from "openzeppelin-contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
+import {SafeERC20Upgradeable} from "openzeppelin-contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
 import {IERC20Upgradeable} from "openzeppelin-contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 
 import {ISiloConfig} from "../interface/ISiloConfig.sol";
@@ -32,6 +30,7 @@ library SiloStdLib {
     error DepositNotPossible();
     error NothingToWithdraw();
     error NotSolvent();
+    error NotEnoughLiquidity();
 
     /// @notice Emitted when deposit is made
     /// @param token asset address that was deposited
@@ -145,6 +144,14 @@ library SiloStdLib {
         }
     }
 
+    function liquidity(address _token, mapping(address => ISilo.AssetStorage) storage _assetStorage)
+        internal
+        view
+        returns (uint256 liquidAssets)
+    {
+        liquidAssets = _assetStorage[_token].collateralAssets - _assetStorage[_token].debtAssets;
+    }
+
     struct LtvData {
         address debtToken;
         address collateralToken;
@@ -237,7 +244,7 @@ library SiloStdLib {
         if (protectedBalance != 0) {
             protectedAssets = toAssets(
                 protectedBalance,
-                _assetStorage[ltvData.collateralToken].protectedDeposits,
+                _assetStorage[ltvData.collateralToken].protectedAssets,
                 IShareToken(ltvData.protectedCollateralShareToken).totalSupply()
             );
         }
@@ -250,7 +257,7 @@ library SiloStdLib {
                 collateralBalance,
                 amountWithInterest(
                     ltvData.collateralToken,
-                    _assetStorage[ltvData.collateralToken].collateralDeposits,
+                    _assetStorage[ltvData.collateralToken].collateralAssets,
                     ltvData.collateralInterestRateModel
                 ),
                 IShareToken(ltvData.collateralShareToken).totalSupply()
@@ -292,6 +299,11 @@ library SiloStdLib {
         );
     }
 
+    /// @return LTV
+    /// @return isToken0Collateral
+    /// @return debtValue
+    /// @return collateralValue
+    /// @return collateralAssets
     function getLtv(
         ISiloConfig.ConfigData memory _configData,
         address _borrower,
@@ -418,7 +430,7 @@ library SiloStdLib {
         if (configData.token0 == _token || configData.token1 == _token) {
             /// @dev sum of assets cannot be bigger than total supply which must fit in uint256
             unchecked {
-                return _assetStorage[_token].protectedDeposits + _assetStorage[_token].collateralDeposits;
+                return _assetStorage[_token].protectedAssets + _assetStorage[_token].collateralAssets;
             }
         } else {
             revert WrongToken();
@@ -439,11 +451,11 @@ library SiloStdLib {
             totalAmount = amountWithInterest(_token, _assetStorage[_token].debtAssets, findModel(_configData, _token));
         } else if (_isProtected) {
             shareToken = findShareToken(_configData, TokenType.Protected, _token);
-            totalAmount = _assetStorage[_token].protectedDeposits;
+            totalAmount = _assetStorage[_token].protectedAssets;
         } else {
             shareToken = findShareToken(_configData, TokenType.Collateral, _token);
             totalAmount =
-                amountWithInterest(_token, _assetStorage[_token].collateralDeposits, findModel(_configData, _token));
+                amountWithInterest(_token, _assetStorage[_token].collateralAssets, findModel(_configData, _token));
         }
 
         totalShares = shareToken.totalSupply();
@@ -517,14 +529,14 @@ library SiloStdLib {
         if (!depositPossible(_config, _token, _receiver)) return 0;
 
         if (_isProtected) {
-            /// @dev protectedDeposits cannot be bigger then uin256 itself
+            /// @dev protectedAssets cannot be bigger then uin256 itself
             unchecked {
-                return type(uint256).max - _assetStorage[_token].protectedDeposits;
+                return type(uint256).max - _assetStorage[_token].protectedAssets;
             }
         } else {
-            /// @dev collateralDeposits cannot be bigger then uin256 itself
+            /// @dev collateralAssets cannot be bigger then uin256 itself
             unchecked {
-                return type(uint256).max - _assetStorage[_token].collateralDeposits;
+                return type(uint256).max - _assetStorage[_token].collateralAssets;
             }
         }
     }
@@ -551,7 +563,7 @@ library SiloStdLib {
         address _receiver,
         bool _isProtected,
         mapping(address => ISilo.AssetStorage) storage _assetStorage
-    ) private returns (uint256 collateralDeposits, IShareToken collateralShareToken) {
+    ) private returns (uint256 collateralAssets, IShareToken collateralShareToken) {
         ISiloConfig.ConfigData memory configData = _config.getConfig();
 
         _accrueInterestInternal(configData, _factory, _token, _assetStorage);
@@ -559,10 +571,10 @@ library SiloStdLib {
         if (!depositPossible(_config, _token, _receiver)) revert DepositNotPossible();
 
         if (_isProtected) {
-            collateralDeposits = _assetStorage[_token].protectedDeposits;
+            collateralAssets = _assetStorage[_token].protectedAssets;
             collateralShareToken = findShareToken(configData, TokenType.Protected, _token);
         } else {
-            collateralDeposits = _assetStorage[_token].collateralDeposits;
+            collateralAssets = _assetStorage[_token].collateralAssets;
             collateralShareToken = findShareToken(configData, TokenType.Collateral, _token);
         }
     }
@@ -577,10 +589,10 @@ library SiloStdLib {
         bool _isProtected,
         mapping(address => ISilo.AssetStorage) storage _assetStorage
     ) internal returns (uint256 shares) {
-        (uint256 collateralDeposits, IShareToken collateralShareToken) =
+        (uint256 collateralAssets, IShareToken collateralShareToken) =
             _depositInternal(_config, _factory, _token, _receiver, _isProtected, _assetStorage);
 
-        shares = toShare(_assets, collateralDeposits, collateralShareToken.totalSupply());
+        shares = toShare(_assets, collateralAssets, collateralShareToken.totalSupply());
         collateralShareToken.mint(_receiver, msg.sender, shares);
 
         IERC20Upgradeable(_token).safeTransferFrom(_depositor, address(this), _assets);
@@ -631,10 +643,10 @@ library SiloStdLib {
         bool _isProtected,
         mapping(address => ISilo.AssetStorage) storage _assetStorage
     ) internal returns (uint256 assets) {
-        (uint256 collateralDeposits, IShareToken collateralToken) =
+        (uint256 collateralAssets, IShareToken collateralToken) =
             _depositInternal(_config, _factory, _token, _receiver, _isProtected, _assetStorage);
 
-        assets = toAssets(_shares, collateralDeposits, collateralToken.totalSupply());
+        assets = toAssets(_shares, collateralAssets, collateralToken.totalSupply());
         collateralToken.mint(_receiver, msg.sender, _shares);
 
         IERC20Upgradeable(_token).safeTransferFrom(_depositor, address(this), assets);
@@ -648,39 +660,42 @@ library SiloStdLib {
         address _owner,
         bool _isProtected,
         mapping(address => ISilo.AssetStorage) storage _assetStorage
-    ) private view returns (uint256 ltv, uint256 shares, uint256 assets) {
+    ) private view returns (uint256 shares, uint256 assets) {
         IShareToken shareToken;
         bool isToken0Collateral;
+        uint256 totalAmount;
         uint256 debtValue;
         uint256 collateralValue;
-        uint256 collateralAssets;
+        uint256 liquidAssets = liquidity(_token, _assetStorage);
 
         if (_isProtected) {
             shareToken = findShareToken(_configData, TokenType.Protected, _token);
-            shares = shareToken.balanceOf(_owner);
+            totalAmount = _assetStorage[_token].protectedAssets;
         } else {
             shareToken = findShareToken(_configData, TokenType.Collateral, _token);
-            shares = shareToken.balanceOf(_owner);
+            totalAmount = _assetStorage[_token].collateralAssets;
         }
 
-        // no deposits of _token
-        if (shares == 0) return (0, 0, 0);
+        shares = shareToken.balanceOf(_owner);
 
-        (ltv, isToken0Collateral, debtValue, collateralValue, collateralAssets) =
+        // no deposits of _token
+        if (shares == 0) return (0, 0);
+
+        (, isToken0Collateral, debtValue, collateralValue, assets) =
             getLtvView(_configData, _owner, true, _assetStorage);
 
         // must deduct debt
-        if (ltv > 0) {
+        if (debtValue > 0) {
             uint256 lt = isToken0Collateral ? _configData.lt0 : _configData.lt1;
             uint256 spareCollateralValue = collateralValue - (debtValue * _PRECISION_DECIMALS / lt);
+            assets = spareCollateralValue * _PRECISION_DECIMALS / collateralValue * assets / _PRECISION_DECIMALS;
+            shares = toShare(assets, totalAmount, shareToken.totalSupply());
+        }
 
-            if (collateralValue == collateralAssets) {
-                // price is 1
-                assets = spareCollateralValue;
-            } else {
-                assets = spareCollateralValue * _PRECISION_DECIMALS / collateralValue * collateralAssets
-                    / _PRECISION_DECIMALS;
-            }
+        // cannot withdraw more then liquidity
+        if (assets > liquidAssets) {
+            assets = liquidAssets;
+            shares = toShare(assets, totalAmount, shareToken.totalSupply());
         }
     }
 
@@ -692,16 +707,7 @@ library SiloStdLib {
         mapping(address => ISilo.AssetStorage) storage _assetStorage
     ) internal view returns (uint256 maxAssets) {
         ISiloConfig.ConfigData memory configData = _config.getConfig();
-
-        uint256 ltv;
-        uint256 shares;
-
-        (ltv, shares, maxAssets) = _maxWithdrawInternal(configData, _token, _owner, _isProtected, _assetStorage);
-
-        if (ltv == 0) {
-            // nothing borrowed, convert shares to assets
-            maxAssets = convertToAssets(_config, _token, shares, _isProtected, false, _assetStorage);
-        }
+        (, maxAssets) = _maxWithdrawInternal(configData, _token, _owner, _isProtected, _assetStorage);
     }
 
     function previewWithdraw(
@@ -737,10 +743,10 @@ library SiloStdLib {
 
         if (_isProtected) {
             shareToken = findShareToken(configData, TokenType.Protected, _token);
-            totalAmount = _assetStorage[_token].protectedDeposits;
+            totalAmount = _assetStorage[_token].protectedAssets;
         } else {
             shareToken = findShareToken(configData, TokenType.Collateral, _token);
-            totalAmount = _assetStorage[_token].collateralDeposits;
+            totalAmount = _assetStorage[_token].collateralAssets;
         }
 
         uint256 totalShares = shareToken.totalSupply();
@@ -764,22 +770,26 @@ library SiloStdLib {
             assets = toAssets(shares, totalAmount, totalShares);
         }
 
+        if (assets > liquidity(_token, _assetStorage)) revert NotEnoughLiquidity();
+
         if (_isProtected) {
             // TODO: write FV (formal verification) rule and comment
             unchecked {
-                _assetStorage[_token].protectedDeposits = totalAmount - assets;
+                _assetStorage[_token].protectedAssets = totalAmount - assets;
             }
         } else {
             // TODO: write FV (formal verification) rule and comment
             unchecked {
-                _assetStorage[_token].collateralDeposits = totalAmount - assets;
+                _assetStorage[_token].collateralAssets = totalAmount - assets;
             }
         }
 
+        /// @dev `burn` checks if `_spender` is allowed to withdraw `_owner` assets
         shareToken.burn(_owner, _spender, shares);
-        // in case token sent in fee-on-transfer type of token we do not care when withdrawing
+        /// @dev fee-on-transfer is ignored
         IERC20Upgradeable(_token).safeTransferFrom(address(this), _receiver, assets);
 
+        /// @dev `_owner` must be solvent
         if (!_isSolventInternal(configData, _owner, _assetStorage)) revert NotSolvent();
 
         emit Withdraw(_token, _owner, _receiver, assets, shares, _isProtected);
@@ -809,16 +819,7 @@ library SiloStdLib {
         mapping(address => ISilo.AssetStorage) storage _assetStorage
     ) internal view returns (uint256 maxShares) {
         ISiloConfig.ConfigData memory configData = _config.getConfig();
-
-        uint256 ltv;
-        uint256 assets;
-
-        (ltv, maxShares, assets) = _maxWithdrawInternal(configData, _token, _owner, _isProtected, _assetStorage);
-
-        if (ltv != 0) {
-            // has debt, convert assets to shares
-            maxShares = _convertToSharesInternal(configData, _token, assets, _isProtected, false, _assetStorage);
-        }
+        (maxShares,) = _maxWithdrawInternal(configData, _token, _owner, _isProtected, _assetStorage);
     }
 
     function previewRedeem(
@@ -867,14 +868,14 @@ library SiloStdLib {
 
         if (_toProtected) {
             fromShareToken = findShareToken(_configData, TokenType.Collateral, _token);
-            fromTotalAmount = _assetStorage[_token].collateralDeposits;
+            fromTotalAmount = _assetStorage[_token].collateralAssets;
             toShareToken = findShareToken(_configData, TokenType.Protected, _token);
-            toTotalAmount = _assetStorage[_token].protectedDeposits;
+            toTotalAmount = _assetStorage[_token].protectedAssets;
         } else {
             fromShareToken = findShareToken(_configData, TokenType.Protected, _token);
-            fromTotalAmount = _assetStorage[_token].protectedDeposits;
+            fromTotalAmount = _assetStorage[_token].protectedAssets;
             toShareToken = findShareToken(_configData, TokenType.Collateral, _token);
-            toTotalAmount = _assetStorage[_token].collateralDeposits;
+            toTotalAmount = _assetStorage[_token].collateralAssets;
         }
 
         uint256 fromTotalShares = fromShareToken.totalSupply();
@@ -892,17 +893,18 @@ library SiloStdLib {
         uint256 toShares = toShare(assets, toTotalAmount, toShareToken.totalSupply());
 
         if (_toProtected) {
-            _assetStorage[_token].protectedDeposits = toTotalAmount + assets;
-            _assetStorage[_token].collateralDeposits = fromTotalAmount - assets;
+            _assetStorage[_token].protectedAssets = toTotalAmount + assets;
+            _assetStorage[_token].collateralAssets = fromTotalAmount - assets;
         } else {
-            _assetStorage[_token].protectedDeposits = fromTotalAmount - assets;
-            _assetStorage[_token].collateralDeposits = toTotalAmount + assets;
+            _assetStorage[_token].protectedAssets = fromTotalAmount - assets;
+            _assetStorage[_token].collateralAssets = toTotalAmount + assets;
         }
 
         /// @dev burn checks if _spender is allowed to transition _owner tokens
         fromShareToken.burn(_owner, _spender, _shares);
         toShareToken.mint(_owner, _spender, toShares);
 
+        /// @dev `_owner` must be solvent
         if (!_isSolventInternal(_configData, _owner, _assetStorage)) revert NotSolvent();
 
         emit Withdraw(_token, _owner, _owner, assets, _shares, !_toProtected);
@@ -938,40 +940,40 @@ library SiloStdLib {
     }
 
     // solhint-disable-next-line function-max-lines
-    function maxBorrow(
+    function _maxBorrowInternal(
         ISiloConfig _config,
         address _token,
         address _borrower,
         mapping(address => ISilo.AssetStorage) storage _assetStorage
-    ) internal view returns (uint256 maxAssets) {
+    ) private view returns (uint256 maxAssets, uint256 maxShares) {
         ISiloConfig.ConfigData memory configData = _config.getConfig();
 
         IShareToken protectedShareToken = findShareToken(configData, TokenType.Protected, _token);
         IShareToken collateralShareToken = findShareToken(configData, TokenType.Collateral, _token);
         IShareToken debtShareToken = findShareToken(configData, TokenType.Debt, _token);
 
-        uint256 protectedBalance = protectedShareToken.balanceOf(_borrower);
-        uint256 collateralBalance = collateralShareToken.balanceOf(_borrower);
-        uint256 debtBalance = debtShareToken.balanceOf(_borrower);
+        uint256 protectedShareBalance = protectedShareToken.balanceOf(_borrower);
+        uint256 collateralShareBalance = collateralShareToken.balanceOf(_borrower);
+        uint256 debtShareBalance = debtShareToken.balanceOf(_borrower);
 
-        // no collateral no borrow
-        if (protectedBalance + collateralBalance == 0) return 0;
+        // no collateral, no borrow
+        if (protectedShareBalance + collateralShareBalance == 0) return (0, 0);
 
         uint256 totalCollateralAssets;
         uint256 debtAssets;
 
-        if (protectedBalance != 0) {
+        if (protectedShareBalance != 0) {
             totalCollateralAssets +=
-                _convertToAssetsInternal(configData, _token, protectedBalance, true, false, _assetStorage);
+                _convertToAssetsInternal(configData, _token, protectedShareBalance, true, false, _assetStorage);
         }
 
-        if (collateralBalance != 0) {
+        if (collateralShareBalance != 0) {
             totalCollateralAssets +=
-                _convertToAssetsInternal(configData, _token, collateralBalance, false, false, _assetStorage);
+                _convertToAssetsInternal(configData, _token, collateralShareBalance, false, false, _assetStorage);
         }
 
-        if (debtBalance != 0) {
-            debtAssets = _convertToAssetsInternal(configData, _token, debtBalance, false, true, _assetStorage);
+        if (debtShareBalance != 0) {
+            debtAssets = _convertToAssetsInternal(configData, _token, debtShareBalance, false, true, _assetStorage);
         }
 
         ISiloOracle collateralOracle;
@@ -1004,13 +1006,22 @@ library SiloStdLib {
 
         uint256 maxDebtValue = collateralValue * maxLtv / _PRECISION_DECIMALS;
 
-        uint256 debtValue =
-            address(debtOracle) != address(0) ? debtOracle.quoteView(debtAssets, debtToken) : debtAssets;
+        uint256 debtValue = address(debtOracle) != address(0) ? debtOracle.quoteView(debtAssets, debtToken) : debtAssets;
 
         // if LTV is higher than LT user cannot borrow more
-        if (debtValue >= maxDebtValue) return 0;
+        if (debtValue >= maxDebtValue) return (0, 0);
 
-        return debtAssets * maxDebtValue / debtValue - debtAssets;
+        maxAssets = debtAssets * maxDebtValue / debtValue - debtAssets;
+        maxShares = toShare(maxAssets, debtAssets, debtShareToken.totalSupply());
+    }
+
+    function maxBorrow(
+        ISiloConfig _config,
+        address _token,
+        address _borrower,
+        mapping(address => ISilo.AssetStorage) storage _assetStorage
+    ) internal view returns (uint256 maxAssets) {
+        (maxAssets,) = _maxBorrowInternal(_config, _token, _borrower, _assetStorage);
     }
 
     function previewBorrow(
@@ -1039,27 +1050,80 @@ library SiloStdLib {
         _accrueInterestInternal(configData, _factory, _token, _assetStorage);
 
         IShareToken debtShareToken = findShareToken(configData, TokenType.Debt, _token);
-        uint256 totalAmount = _assetStorage[_token].debtAssets;
-        uint256 totalShares = debtShareToken.totalSupply();
+        uint256 totalDebtAmount = _assetStorage[_token].debtAssets;
+        uint256 totalDebtShares = debtShareToken.totalSupply();
 
         if (_isAssets) {
             // borrowing assets
-            shares = toShare(_assets, totalAmount, totalShares);
+            shares = toShare(_assets, totalDebtAmount, totalDebtShares);
             assets = _assets;
         } else {
             // borrowing shares
             shares = _shares;
-            assets = toAssets(_shares, totalAmount, totalShares);
+            assets = toAssets(_shares, totalDebtAmount, totalDebtShares);
         }
 
+        if (assets > liquidity(_token, _assetStorage)) revert NotEnoughLiquidity();
+
+        /// @dev add new debt
+        _assetStorage[_token].debtAssets += assets;
         /// @dev mint checks if _spender is allowed to borrow on the account of _borrower
         debtShareToken.mint(_borrower, _spender, shares);
-        // in case token sent in fee-on-transfer type of token we do not care when withdrawing
+        /// @dev/ @dev fee-on-transfer is ignored
         IERC20Upgradeable(_token).safeTransferFrom(address(this), _receiver, assets);
 
+        /// @dev `_owner` must be solvent
         if (!_isSolventInternal(configData, _borrower, _assetStorage)) revert NotSolvent();
 
         emit Borrow(_token, _borrower, _receiver, assets, shares);
+    }
+
+    function borrow(
+        ISiloConfig _config,
+        ISiloFactory _factory,
+        address _token,
+        uint256 _assets,
+        address _receiver,
+        address _borrower,
+        address _spender,
+        mapping(address => ISilo.AssetStorage) storage _assetStorage
+    ) internal returns (uint256 shares) {
+        (, shares) = _borrowInternal(
+            _config, _factory, _token, _assets, 0, _receiver, _borrower, _spender, true, _assetStorage
+        );
+    }
+
+    function maxBorrowShares(
+        ISiloConfig _config,
+        address _token,
+        address _borrower,
+        mapping(address => ISilo.AssetStorage) storage _assetStorage
+    ) internal view returns (uint256 maxShares) {
+        (, maxShares) = _maxBorrowInternal(_config, _token, _borrower, _assetStorage);
+    }
+
+    function previewBorrowShares(
+        ISiloConfig _config,
+        address _token,
+        uint256 _shares,
+        mapping(address => ISilo.AssetStorage) storage _assetStorage
+    ) internal view returns (uint256 assets) {
+        return convertToAssets(_config, _token, _shares, false, true, _assetStorage);
+    }
+
+    function borrowShares(
+        ISiloConfig _config,
+        ISiloFactory _factory,
+        address _token,
+        uint256 _shares,
+        address _receiver,
+        address _borrower,
+        address _spender,
+        mapping(address => ISilo.AssetStorage) storage _assetStorage
+    ) internal returns (uint256 assets) {
+        (assets,) = _borrowInternal(
+            _config, _factory, _token, 0, _shares, _receiver, _borrower, _spender, false, _assetStorage
+        );
     }
 
     // solhint-disable-next-line function-max-lines
@@ -1099,7 +1163,7 @@ library SiloStdLib {
         // TODO: deployer and DAO fee should be immutable
         uint256 totalFee = _factory.getFee();
 
-        uint256 collateralDepositsCache = _assetStorage[_token].collateralDeposits;
+        uint256 collateralAssetsCache = _assetStorage[_token].collateralAssets;
         uint256 debtAssetsCache = _assetStorage[_token].debtAssets;
         uint256 daoAndDeployerAmount;
         uint256 depositorsAmount;
@@ -1115,12 +1179,12 @@ library SiloStdLib {
         // TODO: should we mint without veSILO notification? It could save significant amount of gas.
         uint256 totalShares = collateralToken.totalSupply();
         uint256 daoAndDeployerShare =
-            toShare(daoAndDeployerAmount, collateralDepositsCache + depositorsAmount, totalShares);
+            toShare(daoAndDeployerAmount, collateralAssetsCache + depositorsAmount, totalShares);
         collateralToken.mint(address(_factory), address(this), daoAndDeployerShare);
 
         // update contract state
         _assetStorage[_token].debtAssets = debtAssetsCache + accruedInterest;
-        _assetStorage[_token].collateralDeposits = collateralDepositsCache + accruedInterest;
+        _assetStorage[_token].collateralAssets = collateralAssetsCache + accruedInterest;
         _assetStorage[_token].interestRateTimestamp = uint64(block.timestamp);
     }
 

@@ -10,10 +10,10 @@ interface ISilo {
     struct AssetStorage {
         /// @dev PROTECTED COLLATERAL: Amount of asset token that has been deposited to Silo that can be ONLY used
         /// as collateral. These deposits do NOT earn interest and CANNOT be borrowed.
-        uint256 protectedDeposits;
+        uint256 protectedAssets;
         /// @dev COLLATERAL: Amount of asset token that has been deposited to Silo plus interest earned by depositors.
         /// It also includes token amount that has been borrowed.
-        uint256 collateralDeposits;
+        uint256 collateralAssets;
         /// @dev DEBT: Amount of asset token that has been borrowed plus accrued interest.
         uint256 debtAssets;
         /// @dev timestamp of the last interest accrual
@@ -35,12 +35,10 @@ interface ISilo {
     function getMaxLtv(address _token) external view returns (uint256);
     function getLt(address _token) external view returns (uint256);
 
-    // ERC4626
+    // ERC4626-ish
 
     function tokens() external view returns (address[2] memory assetTokenAddresses);
     function totalAssets(address _token) external view returns (uint256 totalManagedAssets);
-
-    // Deposits
 
     function convertToShares(address _token, uint256 _assets) external view returns (uint256 shares);
     function convertToAssets(address _token, uint256 _shares) external view returns (uint256 assets);
@@ -65,7 +63,7 @@ interface ISilo {
         external
         returns (uint256 assets);
 
-    // Protected Deposits
+    // Protected
 
     function convertToShares(address _token, uint256 _assets, bool _isProtected)
         external

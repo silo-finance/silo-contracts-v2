@@ -41,7 +41,8 @@ abstract contract Silo is Initializable, ISilo {
         return config.TOKEN1();
     }
 
-    function isSolvent(address _borrower) external virtual returns (bool) { // solhint-disable-line ordering
+    function isSolvent(address _borrower) external virtual returns (bool) {
+        // solhint-disable-line ordering
         return SiloStdLib.isSolvent(config, _borrower, assetStorage);
     }
 
@@ -63,7 +64,7 @@ abstract contract Silo is Initializable, ISilo {
         return SiloStdLib.getLt(config, _token);
     }
 
-    // ERC4626
+    // ERC4626-ish
 
     function tokens() external view virtual returns (address[2] memory assetTokenAddresses) {
         return SiloStdLib.tokens(config);
@@ -72,8 +73,6 @@ abstract contract Silo is Initializable, ISilo {
     function totalAssets(address _token) external view virtual returns (uint256 totalManagedAssets) {
         return SiloStdLib.totalAssets(config, _token, assetStorage);
     }
-
-    // Deposits
 
     function convertToShares(address _token, uint256 _assets) external view virtual returns (uint256 shares) {
         return SiloStdLib.convertToShares(config, _token, _assets, false, false, assetStorage);
@@ -122,9 +121,7 @@ abstract contract Silo is Initializable, ISilo {
         virtual
         returns (uint256 shares)
     {
-        return SiloStdLib.withdraw(
-            config, FACTORY, _token, _assets, _receiver, _owner, msg.sender, false, assetStorage
-        );
+        return SiloStdLib.withdraw(config, FACTORY, _token, _assets, _receiver, _owner, msg.sender, false, assetStorage);
     }
 
     function maxRedeem(address _token, address _owner) external view virtual returns (uint256 maxShares) {
@@ -147,7 +144,7 @@ abstract contract Silo is Initializable, ISilo {
         return SiloStdLib.accrueInterest(config, FACTORY, _token, assetStorage);
     }
 
-    // Protected Deposits
+    // Protected
 
     function convertToShares(address _token, uint256 _assets, bool _isProtected)
         external
@@ -305,5 +302,28 @@ abstract contract Silo is Initializable, ISilo {
         external
         virtual
         returns (uint256 shares)
-    {}
+    {
+        return SiloStdLib.borrow(config, FACTORY, _token, _assets, _receiver, _borrower, msg.sender, assetStorage);
+    }
+
+    function maxBorrowShares(address _token, address _borrower) external view virtual returns (uint256 maxShares) {
+        return SiloStdLib.maxBorrowShares(config, _token, _borrower, assetStorage);
+    }
+
+    function previewBorrowShares(address _token, uint256 _shares) external view virtual returns (uint256 assets) {
+        return SiloStdLib.previewBorrowShares(config, _token, _shares, assetStorage);
+    }
+
+    function borrowShares(address _token, uint256 _shares, address _receiver, address _borrower)
+        external
+        virtual
+        returns (uint256 assets)
+    {
+        return SiloStdLib.borrowShares(config, FACTORY, _token, _shares, _receiver, _borrower, msg.sender, assetStorage);
+    }
+
+    function maxRepay(address _token, address _borrower) external view virtual returns (uint256 assets) {
+        
+    }
+
 }
