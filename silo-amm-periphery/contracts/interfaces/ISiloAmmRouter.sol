@@ -6,7 +6,6 @@ import "silo-amm-core/contracts/interfaces/IAmmPriceModel.sol";
 
 import "../external/interfaces/IUniswapV2Router02.sol";
 import "./ISiloAmmRouterEvents.sol";
-// import "silo-amm-core/contracts/interfaces/ISiloAmmPair.sol";
 
 interface ISiloAmmRouter is ISiloAmmRouterEvents, IUniswapV2Router02 {
     /// @dev It creates pool for pair of tokens. It creates 1:1 bond with Silo
