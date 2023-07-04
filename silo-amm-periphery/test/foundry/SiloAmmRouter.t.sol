@@ -113,7 +113,7 @@ contract SiloAmmRouterTest is Test, Fixtures, ISiloAmmRouterEvents {
         uint256 gasUsed = gasStart - gasleft();
 
         emit log_named_uint("gas used", gasUsed);
-        assertEq(gasUsed, 2882771, "gas usage for SiloAmmRouter.createPair");
+        assertEq(gasUsed, 2848475, "gas usage for SiloAmmRouter.createPair");
     }
 
     /*
@@ -133,7 +133,7 @@ contract SiloAmmRouterTest is Test, Fixtures, ISiloAmmRouterEvents {
         uint256 gasUsed = gasStart - gasleft();
 
         emit log_named_uint("gas used", gasUsed);
-        assertEq(gasUsed, 124070, "gas usage for SiloAmmRouter.swapExactTokensForTokens");
+        assertEq(gasUsed, 124082, "gas usage for SiloAmmRouter.swapExactTokensForTokens");
 
         assertEq(TestToken(path[0]).balanceOf(SILO), amountIn, "expect silo to got debt");
         assertEq(TestToken(path[0]).balanceOf(to), 0, "expect swapper to not have debt token");
@@ -155,7 +155,7 @@ contract SiloAmmRouterTest is Test, Fixtures, ISiloAmmRouterEvents {
         uint256 gasUsed = gasStart - gasleft();
 
         emit log_named_uint("gas used", gasUsed);
-        assertEq(gasUsed, 7760, "gas usage for SiloAmmRouter.getAmountsOut");
+        assertEq(gasUsed, 7766, "gas usage for SiloAmmRouter.getAmountsOut");
 
         assertEq(amountsOut.length, 2, "expect to have 2 amounts");
         assertEq(amountsOut[0], amountIn, "expect amount 0 to be IN");
@@ -169,7 +169,7 @@ contract SiloAmmRouterTest is Test, Fixtures, ISiloAmmRouterEvents {
         gasUsed = gasStart - gasleft();
 
         emit log_named_uint("gas used with timestamp", gasUsed);
-        assertEq(gasUsed, 5362, "gas usage for SiloAmmRouter.getAmountsOut@timestamp");
+        assertEq(gasUsed, 5368, "gas usage for SiloAmmRouter.getAmountsOut@timestamp");
 
         assertEq(amountsOut[0], amountIn, "expect amount 0 to be IN");
         assertEq(amountsOut[1], 1000463177396942966, "expect amount 1 to be OUT");
@@ -189,7 +189,7 @@ contract SiloAmmRouterTest is Test, Fixtures, ISiloAmmRouterEvents {
         uint256 gasUsed = gasStart - gasleft();
 
         emit log_named_uint("gas used", gasUsed);
-        assertEq(gasUsed, 8076, "gas usage for SiloAmmRouter.getAmountsIn");
+        assertEq(gasUsed, 8082, "gas usage for SiloAmmRouter.getAmountsIn");
 
         assertEq(amountsIn.length, 2, "expect to have 2 amounts");
         assertEq(amountsIn[0], amountIn, "expect amount 0 to be IN");
@@ -203,7 +203,7 @@ contract SiloAmmRouterTest is Test, Fixtures, ISiloAmmRouterEvents {
         gasUsed = gasStart - gasleft();
 
         emit log_named_uint("gas used with timestamp", gasUsed);
-        assertEq(gasUsed, 5207, "gas usage for SiloAmmRouter.getAmountsIn@timestamp");
+        assertEq(gasUsed, 5213, "gas usage for SiloAmmRouter.getAmountsIn@timestamp");
 
         assertEq(amountsIn[0], 999537037037037100, "expect amount 0 to be IN");
         assertEq(amountsIn[1], amountOutMin, "expect amount 1 to be OUT");
