@@ -14,11 +14,9 @@
 
 pragma solidity >=0.7.0 <0.9.0;
 
-import "../solidity-utils/helpers/IAuthentication.sol";
-
 import "balancer-labs/v2-interfaces/liquidity-mining/IBalancerToken.sol";
 
-interface IBalancerTokenAdmin is IAuthentication {
+interface IBalancerTokenAdmin {
     // solhint-disable func-name-mixedcase
     function INITIAL_RATE() external view returns (uint256);
 

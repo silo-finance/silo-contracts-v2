@@ -16,9 +16,8 @@ pragma solidity 0.8.19;
 
 import {IBalancerTokenAdmin, IBalancerToken} from "./interfaces/IBalancerTokenAdmin.sol";
 
-import "@balancer-labs/v2-solidity-utils/contracts/helpers/SingletonAuthentication.sol";
+import {ExtendedOwnable} from "../access/ExtendedOwnable.sol";
 import {ReentrancyGuard} from "openzeppelin-contracts/security/ReentrancyGuard.sol";
-import "@balancer-labs/v2-solidity-utils/contracts/helpers/Authentication.sol";
 import {SafeMath} from "openzeppelin-contracts/utils/math/SafeMath.sol";
 
 // solhint-disable not-rely-on-time
@@ -34,7 +33,7 @@ import {SafeMath} from "openzeppelin-contracts/utils/math/SafeMath.sol";
  * in order to know how much BAL a gauge is allowed to mint. As this does not exist within the BAL token itself
  * it is defined here, we must then wrap the token's minting functionality in order for this to be meaningful.
  */
-contract BalancerTokenAdmin is IBalancerTokenAdmin, SingletonAuthentication, ReentrancyGuard {
+contract BalancerTokenAdmin is IBalancerTokenAdmin, ExtendedOwnable, ReentrancyGuard {
     using SafeMath for uint256;
 
     // Initial inflation rate of 145k BAL per week.
@@ -53,7 +52,7 @@ contract BalancerTokenAdmin is IBalancerTokenAdmin, SingletonAuthentication, Ree
     uint256 private _startEpochSupply;
     uint256 private _rate;
 
-    constructor(IVault vault, IBalancerToken balancerToken) SingletonAuthentication(vault) {
+    constructor(IBalancerToken balancerToken) {
         _balancerToken = balancerToken;
     }
 
@@ -68,7 +67,7 @@ contract BalancerTokenAdmin is IBalancerTokenAdmin, SingletonAuthentication, Ree
      * @notice Initiate BAL token inflation schedule
      * @dev Reverts if contract does not have sole minting powers over BAL (and no other minters can be added).
      */
-    function activate() external override nonReentrant authenticate {
+    function activate() external override nonReentrant onlyManager {
         require(_startEpochTime == type(uint256).max, "Already activated");
 
         // We need to check that this contract can't be bypassed to mint more BAL in the future.
@@ -143,7 +142,7 @@ contract BalancerTokenAdmin is IBalancerTokenAdmin, SingletonAuthentication, Ree
      * @notice Mint BAL tokens subject to the defined inflation schedule
      * @dev Callable only by addresses defined in the Balancer Authorizer contract
      */
-    function mint(address to, uint256 amount) external override authenticate {
+    function mint(address to, uint256 amount) external override onlyManager {
         // Check if we've passed into a new epoch such that we should calculate available supply with a smaller rate.
         if (block.timestamp >= _startEpochTime.add(RATE_REDUCTION_TIME)) {
             _updateMiningParameters();
@@ -160,7 +159,7 @@ contract BalancerTokenAdmin is IBalancerTokenAdmin, SingletonAuthentication, Ree
      * @notice Perform a snapshot of BAL token balances
      * @dev Callable only by addresses defined in the Balancer Authorizer contract
      */
-    function snapshot() external authenticate {
+    function snapshot() external onlyManager {
         _balancerToken.snapshot();
     }
 
