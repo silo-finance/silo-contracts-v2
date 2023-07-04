@@ -14,50 +14,9 @@ import "./UniswapV2Library.sol";
 /// library containing some math for dealing with the liquidity shares of a pair, e.g. computing their exact value
 /// in terms of the underlying tokens
 library UniswapV2LiquidityMathLibrary {
+    error NOT_SUPPORTED();
     error LIB_ZERO_PAIR_RESERVES();
     error COMPUTE_LIQUIDITY_VALUE_LIQUIDITY_AMOUNT();
-
-    /// @notice differences from original UniswapV2Library:
-    /// - first argument is changed from factory address to pair address
-    /// @dev gets the reserves after an arbitrage moves the price to the profit-maximizing ratio given an externally
-    /// observed true price
-    function getReservesAfterArbitrage(
-        IUniswapV2Pair _pair,
-        address _tokenA,
-        address _tokenB,
-        uint256 _truePriceTokenA,
-        uint256 _truePriceTokenB
-    ) internal view returns (uint256 reserveA, uint256 reserveB) {
-        // first get reserves before the swap
-        (reserveA, reserveB) = UniswapV2Library.getReserves(_pair, _tokenA, _tokenB);
-
-        if (reserveA == 0 || reserveB == 0) revert LIB_ZERO_PAIR_RESERVES();
-
-        // then compute how much to swap to arb to the true price
-        (
-            bool aToB,
-            uint256 amountIn
-        ) = computeProfitMaximizingTrade(_truePriceTokenA, _truePriceTokenB, reserveA, reserveB);
-
-        if (amountIn == 0) {
-            return (reserveA, reserveB);
-        }
-
-        // now affect the trade to the reserves
-        if (aToB) {
-            uint amountOut = UniswapV2Library.getAmountOut(amountIn, reserveA, reserveB);
-            unchecked {
-                reserveA += amountIn;
-                reserveB -= amountOut;
-            }
-        } else {
-            uint amountOut = UniswapV2Library.getAmountOut(amountIn, reserveB, reserveA);
-            unchecked {
-                reserveB += amountIn;
-                reserveA -= amountOut;
-            }
-        }
-    }
 
     /// @notice differences from original UniswapV2Library:
     /// - first argument is changed from factory address to pair address
@@ -77,39 +36,9 @@ library UniswapV2LiquidityMathLibrary {
         return computeLiquidityValue(reservesA, reservesB, totalSupply, _liquidityAmount, feeOn, kLast);
     }
 
-    /// @notice differences from original UniswapV2Library:
-    /// - first argument is changed from factory address to pair address
-    /// @dev given two tokens, tokenA and tokenB, and their "true price", i.e. the observed ratio of value of token A to
-    /// token B, and a liquidity amount, returns the value of the liquidity in terms of tokenA and tokenB
-    function getLiquidityValueAfterArbitrageToPrice(
-        IUniswapV2Pair _pair,
-        address _tokenA,
-        address _tokenB,
-        uint256 _truePriceTokenA,
-        uint256 _truePriceTokenB,
-        uint256 _liquidityAmount
-    ) internal view returns (
-        uint256 tokenAAmount,
-        uint256 tokenBAmount
-    ) {
-        bool feeOn = ISiloAmmPair(address(_pair)).feeTo() != address(0);
-        uint kLast = feeOn ? _pair.kLast() : 0;
-        uint totalSupply = _pair.totalSupply();
-
-        // this also checks that totalSupply > 0
-        if (!(totalSupply >= _liquidityAmount && _liquidityAmount != 0)) {
-            revert COMPUTE_LIQUIDITY_VALUE_LIQUIDITY_AMOUNT();
-        }
-
-        (
-            uint reservesA,
-            uint reservesB
-        ) = getReservesAfterArbitrage(_pair, _tokenA, _tokenB, _truePriceTokenA, _truePriceTokenB);
-
-        return computeLiquidityValue(reservesA, reservesB, totalSupply, _liquidityAmount, feeOn, kLast);
-    }
-
     /// @dev computes the direction and magnitude of the profit-maximizing trade
+    /// TODO here we can calculate, when (in how many seconds in future) price will be the TRUE price
+    /// OR we can go over pools?? but this can be done off-chain
     function computeProfitMaximizingTrade(
         uint256 _truePriceTokenA,
         uint256 _truePriceTokenB,

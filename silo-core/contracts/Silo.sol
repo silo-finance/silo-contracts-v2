@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.18;
 
-import {Initializable} from "openzeppelin-contracts-upgradeable/contracts/proxy/utils/Initializable.sol";
+import {Initializable} from "openzeppelin-contracts-upgradeable/proxy/utils/Initializable.sol";
 
 import {ISilo} from "./interface/ISilo.sol";
 import {ISiloConfig} from "./interface/ISiloConfig.sol";

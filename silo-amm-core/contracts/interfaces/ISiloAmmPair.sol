@@ -4,15 +4,7 @@ pragma solidity >=0.5.0;
 import "../external/interfaces/IUniswapV2Pair.sol";
 
 interface ISiloAmmPair is IUniswapV2Pair {
-    /// @dev this is struct that prevents `Stack too deep`
-    struct SwapTmpData {
-        // collateral is always the one that will be OUT of the pool
-        address collateral;
-        address debtToken;
-        bool token0In;
-    }
-
-    enum OracleSetup { NONE, BOTH, FOR_TOKEN0, FOR_TOKEN1 }
+    enum OracleSetup { NONE, ONE, BOTH }
 
     error ONLY_SILO();
     error NOT_SUPPORTED();
@@ -31,6 +23,8 @@ interface ISiloAmmPair is IUniswapV2Pair {
     error INVALID_OUT();
     error INSUFFICIENT_INPUT_AMOUNT();
     error K();
+
+    error TIME_UNDERFLOW();
 
     /// @notice endpoint for liquidation, here borrower collateral is added as liquidity, no token transfers is required
     /// tokens will be transfered directly from SILO on swap
@@ -56,6 +50,15 @@ interface ISiloAmmPair is IUniswapV2Pair {
         external
         returns (uint256 shares);
 
+    /// @dev additional swap method that allows to provide amount IN
+    /// @param _tokenIn address of token that will be swap for other one
+    /// @param _amountIn amount of `_tokenIn`
+    /// @param _to swap receiver
+    /// @param _data optional data that follow `IUniswapV2Callee` functionality from UniswapV2
+    function exactInSwap(address _tokenIn, uint256 _amountIn, address _to, bytes calldata _data)
+        external
+        returns (uint256);
+
     /// @notice there is no token transfers on removing liquidity, tokens are transferred on swap
     /// @param _collateral token address for which liquidity was added
     /// @param _user owner of position
@@ -64,6 +67,24 @@ interface ISiloAmmPair is IUniswapV2Pair {
     function removeLiquidity(address _collateral, address _user, uint256 _w)
         external
         returns (uint256 debtAmount);
+
+    /// @param _tokenOut address of token that you want to swap for
+    /// @param _amountOut amount of `_tokenOut`
+    /// @param _timestamp time at which expect swap will happen, for default (current) time use 0.
+    /// @return amountIn exact amount in of other token required for swap
+    function getAmountIn(address _tokenOut, uint256 _amountOut, uint256 _timestamp)
+        external
+        view
+        returns (uint256 amountIn);
+
+    /// @param _tokenIn address of token that will be swap for other one
+    /// @param _amountIn amount of `_tokenIn`
+    /// @param _timestamp time at which expect swap will happen, for default (current) time use 0.
+    /// @return amountOut exact amount out
+    function getAmountOut(address _tokenIn, uint256 _amountIn, uint256 _timestamp)
+        external
+        view
+        returns (uint256 amountOut);
 
     function feeTo() external view returns (address);
     function silo() external view returns (address);

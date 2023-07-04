@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity >=0.5.0;
 
-import "../external/interfaces/ISiloOracle.sol";
+import "silo-core/contracts/interface/ISiloOracle.sol";
 import "./IAmmPriceModel.sol";
 import "./ISiloAmmPair.sol";
 
@@ -18,8 +18,9 @@ interface ISiloAmmPairFactory {
     /// @param _silo address
     /// @param _token0 address, assuming addresses are sorted, so `token0 < token1`
     /// @param _token1 address, assuming addresses are sorted, so `token0 < token1`
-    /// @param _oracle0 oracle address TODO
-    /// @param _oracle1 oracle address TODO
+    /// @param _oracle0 oracle address
+    /// @param _oracle1 oracle address
+    /// @param _bridge token address required when both oracle are provided
     /// @param _config AmmPriceConfig pool config
     /// @return pair ISiloAmmPair address of new created pool
     function createPair(
@@ -28,6 +29,7 @@ interface ISiloAmmPairFactory {
         address _token1,
         ISiloOracle _oracle0,
         ISiloOracle _oracle1,
+        address _bridge,
         IAmmPriceModel.AmmPriceConfig memory _config
     ) external returns (ISiloAmmPair pair);
 

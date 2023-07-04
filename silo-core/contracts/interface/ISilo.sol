@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.18;
+// TODO: use 0.5.0 for interfaces
+pragma solidity >=0.5.0;
 
 import {ISiloConfig} from "./ISiloConfig.sol";
 import {ISiloFactory} from "./ISiloFactory.sol";
@@ -148,6 +149,8 @@ interface ISilo {
     // TODO: is euler style leverage safe?
     function leverage() external;
     // TODO: use flag that will mark pending liquidaiton position
+    // TODO: pay 1% fee to msg.sender
+    // TODO: allow selfliquidate
     function liquidate(address _borrower) external;
     function accrueInterest(address _token) external returns (uint256 accruedInterest);
 }

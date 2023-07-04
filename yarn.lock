@@ -11294,7 +11294,6 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "silo-amm-core@workspace:silo-amm-core"
   dependencies:
-    solc: 0.8.19
     solhint: ~3.4.1
   languageName: unknown
   linkType: soft
@@ -11303,7 +11302,6 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "silo-amm-periphery@workspace:silo-amm-periphery"
   dependencies:
-    solc: 0.8.19
     solhint: ~3.4.1
   languageName: unknown
   linkType: soft
@@ -11507,23 +11505,6 @@ __metadata:
   bin:
     solcjs: solcjs
   checksum: 2d8eb16c6d8f648213c94dc8d977cffe5099cba7d41c82d92d769ef71ae8320a985065ce3d6c306440a85f8e8d2b27fb30bdd3ac38f69e5c1fa0ab8a3fb2f217
-  languageName: node
-  linkType: hard
-
-"solc@npm:0.8.19":
-  version: 0.8.19
-  resolution: "solc@npm:0.8.19"
-  dependencies:
-    command-exists: ^1.2.8
-    commander: ^8.1.0
-    follow-redirects: ^1.12.1
-    js-sha3: 0.8.0
-    memorystream: ^0.3.1
-    semver: ^5.5.0
-    tmp: 0.0.33
-  bin:
-    solcjs: solc.js
-  checksum: 80d8d0fec4316ce79f4765be9bdafb675091e9ae839e01a8a53e3464a3afc356c6dd8c4ca4d3b2eeee1d2cf063bab7f82afcccf610b6446c9ea7cbe15c280997
   languageName: node
   linkType: hard
 

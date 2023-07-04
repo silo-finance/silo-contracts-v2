@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.18;
 
-import {CountersUpgradeable} from "openzeppelin-contracts-upgradeable/contracts/utils/CountersUpgradeable.sol";
-import {ClonesUpgradeable} from  "openzeppelin-contracts-upgradeable/contracts/proxy/ClonesUpgradeable.sol";
-import {Initializable} from "openzeppelin-contracts-upgradeable/contracts/proxy/utils/Initializable.sol";
+import {CountersUpgradeable} from "openzeppelin-contracts-upgradeable/utils/CountersUpgradeable.sol";
+import {ClonesUpgradeable} from  "openzeppelin-contracts-upgradeable/proxy/ClonesUpgradeable.sol";
+import {Initializable} from "openzeppelin-contracts-upgradeable/proxy/utils/Initializable.sol";
 
 import {IShareToken} from "./interface/IShareToken.sol";
 import {ISiloConfig, SiloConfig} from "./SiloConfig.sol";

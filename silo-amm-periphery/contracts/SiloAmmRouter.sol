@@ -4,17 +4,15 @@ pragma solidity 0.8.19;
 import "uniswap/v2-periphery/contracts/interfaces/IWETH.sol";
 
 import "silo-amm-core/contracts/interfaces/ISiloAmmPairFactory.sol";
-import "silo-amm-core/contracts/external/interfaces/ISiloOracle.sol";
 import "silo-amm-core/contracts/utils/SafeTransfers.sol";
+import "silo-amm-core/contracts/lib/Ping.sol";
 
 import "./libraries/UniswapV2Library.sol";
-import "./libraries/Ping.sol";
-import "./interfaces/NotSupported.sol";
-import "./utils/SafeTransferETH.sol";
+import "./interfaces/NotSupportedRouter.sol";
 
 
 /// @dev based on UniswapV2Router02
-contract SiloAmmRouter is NotSupported, SafeTransferETH, SafeTransfers {
+contract SiloAmmRouter is NotSupportedRouter, SafeTransfers {
     ISiloAmmPairFactory public immutable PAIR_FACTORY; // solhint-disable-line var-name-mixedcase
     address public immutable WETH; // solhint-disable-line var-name-mixedcase
 
@@ -59,6 +57,7 @@ contract SiloAmmRouter is NotSupported, SafeTransferETH, SafeTransfers {
         address _token1,
         ISiloOracle _oracle0,
         ISiloOracle _oracle1,
+        address _bridge,
         IAmmPriceModel.AmmPriceConfig memory _config
     )
         external
@@ -71,7 +70,9 @@ contract SiloAmmRouter is NotSupported, SafeTransferETH, SafeTransfers {
         // if (_tokenA == _tokenB) revert IDENTICAL_ADDRESSES();
         // if (token0 == address(0)) revert ZERO_ADDRESS();
 
-        pair = PAIR_FACTORY.createPair(_silo, _token0, _token1, _oracle0, _oracle1, _config);
+        // TODO there is one issue with it - we can not deploy routerV2, because the whole state will be
+        // inside old router
+        pair = PAIR_FACTORY.createPair(_silo, _token0, _token1, _oracle0, _oracle1, _bridge, _config);
 
         _pairs[_token0][_token1][id] = IUniswapV2Pair(address(pair));
         _pairs[_token1][_token0][id] = IUniswapV2Pair(address(pair));
@@ -82,199 +83,81 @@ contract SiloAmmRouter is NotSupported, SafeTransferETH, SafeTransfers {
 
         // UniswapV2 compatible event
         emit PairCreated(_token0, _token1, address(pair), id);
+
+        IERC20(_token0).approve(address(pair), type(uint256).max);
+        IERC20(_token1).approve(address(pair), type(uint256).max);
     }
 
+    /// @inheritdoc IUniswapV2Router01
     function swapExactTokensForTokens(
-        uint amountIn,
-        uint amountOutMin,
-        address[] calldata path,
-        address to,
-        uint deadline
-    ) external virtual override ensure(deadline) returns (uint[] memory amounts) {
-        amounts = UniswapV2Library.getAmountsOut(amountIn, path);
+        uint256 _amountIn,
+        uint256 _amountOutMin,
+        address[] calldata _path,
+        address _to,
+        uint256 _deadline
+    ) external virtual override ensure(_deadline) returns (uint256[] memory amounts) {
+        _safeTransferFrom(_path[0], msg.sender, address(this), _amountIn);
+        amounts = _swapIn(_amountIn, _path, _to);
+
         unchecked {
-            if (amounts[amounts.length - 1] < amountOutMin) revert UNISWAPV2_ROUTER_INSUFFICIENT_OUTPUT_AMOUNT();
+            if (amounts[amounts.length - 1] < _amountOutMin) revert UNISWAPV2_ROUTER_INSUFFICIENT_OUTPUT_AMOUNT();
         }
-        _safeTransferFrom(path[0], msg.sender, path[1], amounts[0]);
-        _swap(amounts, path, to);
     }
 
     function swapTokensForExactTokens(
-        uint amountOut,
-        uint amountInMax,
-        address[] calldata path,
-        address to,
-        uint deadline
-    ) external virtual override ensure(deadline) returns (uint[] memory amounts) {
-        amounts = UniswapV2Library.getAmountsIn(amountOut, path);
-        if (amounts[0] > amountInMax) revert UNISWAPV2_ROUTER_EXCESSIVE_INPUT_AMOUNT();
+        uint256 _amountOut,
+        uint256 _amountInMax,
+        address[] calldata _path,
+        address _to,
+        uint256 _deadline
+    ) external virtual override ensure(_deadline) returns (uint[] memory amounts) {
+        amounts = UniswapV2Library.getAmountsIn(_amountOut, _path, 0 /* timestamp */);
+        if (amounts[0] > _amountInMax) revert UNISWAPV2_ROUTER_EXCESSIVE_INPUT_AMOUNT();
 
-        _safeTransferFrom(path[0], msg.sender, path[1], amounts[0]);
-        _swap(amounts, path, to);
-    }
-
-    function swapExactETHForTokens(uint amountOutMin, address[] calldata path, address to, uint deadline)
-        external
-        virtual
-        override
-        payable
-        ensure(deadline)
-        returns (uint[] memory amounts)
-    {
-        if (path[0] != WETH) revert UNISWAPV2_ROUTER_INVALID_PATH();
-
-        amounts = UniswapV2Library.getAmountsOut(msg.value, path);
-        if (amounts[amounts.length - 1] < amountOutMin) revert UNISWAPV2_ROUTER_INSUFFICIENT_OUTPUT_AMOUNT();
-
-        IWETH(WETH).deposit{value: amounts[0]}();
-        assert(IWETH(WETH).transfer(path[1], amounts[0]));
-        _swap(amounts, path, to);
-    }
-
-    function swapTokensForExactETH(uint amountOut, uint amountInMax, address[] calldata path, address to, uint deadline)
-        external
-        virtual
-        override
-        ensure(deadline)
-        returns (uint[] memory amounts)
-    {
-        unchecked {
-            if (path[path.length - 1] != WETH) revert UNISWAPV2_ROUTER_INVALID_PATH();
-
-            amounts = UniswapV2Library.getAmountsIn(amountOut, path);
-            if (amounts[0] > amountInMax) revert UNISWAPV2_ROUTER_EXCESSIVE_INPUT_AMOUNT();
-
-            _safeTransferFrom(path[0], msg.sender, path[1], amounts[0]);
-            _swap(amounts, path, address(this));
-            IWETH(WETH).withdraw(amounts[amounts.length - 1]);
-            _safeTransferETH(to, amounts[amounts.length - 1]);
-        }
-    }
-
-    function swapExactTokensForETH(uint amountIn, uint amountOutMin, address[] calldata path, address to, uint deadline)
-        external
-        virtual
-        override
-        ensure(deadline)
-        returns (uint[] memory amounts)
-    {
-        unchecked {
-            if (path[path.length - 1] != WETH) revert UNISWAPV2_ROUTER_INVALID_PATH();
-
-            amounts = UniswapV2Library.getAmountsOut(amountIn, path);
-            if (amounts[amounts.length - 1] < amountOutMin) revert UNISWAPV2_ROUTER_INSUFFICIENT_OUTPUT_AMOUNT();
-
-            _safeTransferFrom(
-                path[0], msg.sender, path[1], amounts[0]
-            );
-            _swap(amounts, path, address(this));
-            IWETH(WETH).withdraw(amounts[amounts.length - 1]);
-            _safeTransferETH(to, amounts[amounts.length - 1]);
-        }
-    }
-
-    function swapETHForExactTokens(uint _amountOut, address[] calldata _path, address _to, uint _deadline)
-        external
-        virtual
-        override
-        payable
-        ensure(_deadline)
-        returns (uint[] memory amounts)
-    {
-        if (_path[0] != WETH) revert UNISWAPV2_ROUTER_INVALID_PATH();
-
-        amounts = UniswapV2Library.getAmountsIn(_amountOut, _path);
-        if (amounts[0] > msg.value) revert UNISWAPV2_ROUTER_EXCESSIVE_INPUT_AMOUNT();
-
-        IWETH(WETH).deposit{value: amounts[0]}();
-        assert(IWETH(WETH).transfer(_path[1], amounts[0]));
+        _safeTransferFrom(_path[0], msg.sender, _path[1], amounts[0]);
         _swap(amounts, _path, _to);
-        // refund dust eth, if any
-        if (msg.value > amounts[0]) _safeTransferETH(msg.sender, msg.value - amounts[0]);
     }
 
-    function swapExactTokensForTokensSupportingFeeOnTransferTokens(
-        uint amountIn,
-        uint amountOutMin,
-        address[] calldata path,
-        address to,
-        uint deadline
-    ) external virtual override ensure(deadline) {
-        _safeTransferFrom(path[0], msg.sender, path[1], amountIn);
-        uint lastId;
-        unchecked { lastId = path.length - 1; }
-        uint balanceBefore = IERC20(path[lastId]).balanceOf(to);
-        _swapSupportingFeeOnTransferTokens(path, to);
-
-        if (IERC20(path[lastId]).balanceOf(to) - balanceBefore < amountOutMin)
-            revert UNISWAPV2_ROUTER_INSUFFICIENT_OUTPUT_AMOUNT();
-    }
-
-    function swapExactETHForTokensSupportingFeeOnTransferTokens(
-        uint amountOutMin,
-        address[] calldata path,
-        address to,
-        uint deadline
-    )
-        external
-        virtual
-        override
-        payable
-        ensure(deadline)
-    {
-        if (path[0] != WETH) revert UNISWAPV2_ROUTER_INVALID_PATH();
-
-        uint amountIn = msg.value;
-        IWETH(WETH).deposit{value: amountIn}();
-        assert(IWETH(WETH).transfer(path[1], amountIn));
-        uint balanceBefore = IERC20(path[path.length - 1]).balanceOf(to);
-        _swapSupportingFeeOnTransferTokens(path, to);
-
-        if (IERC20(path[path.length - 1]).balanceOf(to) - balanceBefore < amountOutMin)
-            revert UNISWAPV2_ROUTER_INSUFFICIENT_OUTPUT_AMOUNT();
-    }
-
-    function swapExactTokensForETHSupportingFeeOnTransferTokens(
-        uint amountIn,
-        uint amountOutMin,
-        address[] calldata path,
-        address to,
-        uint deadline
-    )
-        external
-        virtual
-        override
-        ensure(deadline)
-    {
-        if (path[path.length - 1] != WETH) revert UNISWAPV2_ROUTER_INVALID_PATH();
-
-        _safeTransferFrom(path[0], msg.sender, path[1], amountIn);
-        _swapSupportingFeeOnTransferTokens(path, address(this));
-        uint amountOut = IERC20(WETH).balanceOf(address(this));
-        if (amountOut < amountOutMin) revert UNISWAPV2_ROUTER_INSUFFICIENT_OUTPUT_AMOUNT();
-
-        IWETH(WETH).withdraw(amountOut);
-        _safeTransferETH(to, amountOut);
-    }
-
-    function getAmountsOut(uint amountIn, address[] memory path)
+    /// @inheritdoc IUniswapV2Router01
+    function getAmountsOut(uint256 _amountIn, address[] calldata _path)
         external
         view
         virtual
         override
-        returns (uint[] memory amounts)
+        returns (uint256[] memory amounts)
     {
-        return UniswapV2Library.getAmountsOut(amountIn, path);
+        return UniswapV2Library.getAmountsOut(_amountIn, _path, 0 /* defaut timestamp */);
     }
 
-    function getAmountsIn(uint amountOut, address[] memory path)
+    function getAmountsOut(uint256 _amountIn, address[] calldata _path, uint256 _timestamp)
         external
         view
         virtual
         override
-        returns (uint[] memory amounts)
+        returns (uint256[] memory amounts)
     {
-        return UniswapV2Library.getAmountsIn(amountOut, path);
+        return UniswapV2Library.getAmountsOut(_amountIn, _path, _timestamp);
+    }
+
+    /// @inheritdoc IUniswapV2Router01
+    function getAmountsIn(uint256 _amountOut, address[] memory _path)
+        external
+        view
+        virtual
+        override
+        returns (uint256[] memory amounts)
+    {
+        return UniswapV2Library.getAmountsIn(_amountOut, _path, 0 /* defaut timestamp */);
+    }
+
+    function getAmountsIn(uint256 _amountOut, address[] calldata _path, uint256 _timestamp)
+        external
+        view
+        virtual
+        override
+        returns (uint256[] memory amounts)
+    {
+        return UniswapV2Library.getAmountsIn(_amountOut, _path, _timestamp);
     }
 
     function getReserves(
@@ -337,64 +220,52 @@ contract SiloAmmRouter is NotSupported, SafeTransferETH, SafeTransfers {
         return address(this);
     }
 
-    // **** LIBRARY FUNCTIONS ****
-    function quote(uint amountA, uint reserveA, uint reserveB) external pure virtual override returns (uint amountB) {
-        return UniswapV2Library.quote(amountA, reserveA, reserveB);
-    }
-
-    function getAmountOut(uint amountIn, uint reserveIn, uint reserveOut)
-        external
-        pure
+    /// @dev requires the initial amount to have already been sent to the first pair
+    function _swapIn(uint256 _amountIn, address[] memory _path, address _to)
+        internal
         virtual
-        override
-        returns (uint amountOut)
+        returns (uint256[] memory amounts)
     {
-        return UniswapV2Library.getAmountOut(amountIn, reserveIn, reserveOut);
-    }
-
-    function getAmountIn(uint amountOut, uint reserveIn, uint reserveOut)
-        external
-        pure
-        virtual
-        override
-        returns (uint amountIn)
-    {
-        return UniswapV2Library.getAmountIn(amountOut, reserveIn, reserveOut);
-    }
-
-    // **** SWAP ****
-    // requires the initial amount to have already been sent to the first pair
-    function _swap(uint[] memory _amounts, address[] memory _path, address _to) internal virtual {
+        // all below unchecks refer to array index
         unchecked {
-            for (uint i; i < _path.length - 2; i+=2) {
-                (address input, address output) = (_path[i], _path[i + 2]);
-                (address token0,) = UniswapV2Library.sortTokens(input, output);
-                uint amountOut = _amounts[i + 1];
-                (uint amount0Out, uint amount1Out) = input == token0 ? (uint(0), amountOut) : (amountOut, uint(0));
-                address to = i < _path.length - 3 ? address(_path[i + 3]) : _to;
-                IUniswapV2Pair(_path[i+1]).swap(amount0Out, amount1Out, to, new bytes(0));
+            amounts = new uint256[](_path.length / 2);
+            uint256 prevAmountIn = _amountIn;
+            uint256 count = _path.length - 2;
+
+            for (uint256 i; i < count; i += 2) {
+                address to = i + 2 < count ? address(_path[i + 3]) : _to;
+                prevAmountIn = ISiloAmmPair(_path[i + 1]).exactInSwap(_path[i], prevAmountIn, to, "");
+                amounts[i / 2] = prevAmountIn;
             }
         }
     }
 
-    // **** SWAP (supporting fee-on-transfer tokens) ****
-    // requires the initial amount to have already been sent to the first pair
-    function _swapSupportingFeeOnTransferTokens(address[] memory _path, address _to) internal virtual {
-        for (uint i; i < _path.length - 2; i+=2) {
-            (address input, address output) = (_path[i], _path[i + 2]);
-            (address token0,) = UniswapV2Library.sortTokens(input, output);
-            IUniswapV2Pair pair = IUniswapV2Pair(_path[i + 1]);
-            uint amountInput;
-            uint amountOutput;
-            { // scope to avoid stack too deep errors
-                (uint reserve0, uint reserve1,) = pair.getReserves();
-                (uint reserveInput, uint reserveOutput) = input == token0 ? (reserve0, reserve1) : (reserve1, reserve0);
-                amountInput = IERC20(input).balanceOf(address(pair)) - reserveInput;
-                amountOutput = UniswapV2Library.getAmountOut(amountInput, reserveInput, reserveOutput);
+    /// @dev requires the initial amount to have already been sent to the first pair
+    /// @param _amounts array of amounts, where first one is IN
+    /// @param _path array of addresses, tokens and pairs, because there might be multiple pairs for same tokens
+    /// single swap requires 3 addresses: tokenFrom, pair, tokenTo.
+    /// @param _to receiver address
+    function _swap(uint256[] memory _amounts, address[] memory _path, address _to)
+        internal
+        virtual
+        returns (uint256[] memory amounts)
+    {
+        // all below unchecks refer to array index
+        unchecked {
+            amounts = new uint256[](_amounts.length - 1);
+
+            for (uint256 i; i < _path.length - 3; i += 2) {
+                (address input, address output) = (_path[i], _path[i + 2]);
+                (address token0,) = UniswapV2Library.sortTokens(input, output);
+                uint256 amountOut = _amounts[i + 1];
+
+                (uint256 amount0Out, uint256 amount1Out) = input == token0
+                    ? (uint256(0), amountOut)
+                    : (amountOut, uint256(0));
+
+                address to = i < _path.length - 3 ? address(_path[i + 3]) : _to;
+                amounts[i / 2] = IUniswapV2Pair(_path[i + 1]).swap(amount0Out, amount1Out, to, "");
             }
-            (uint amount0Out, uint amount1Out) = input == token0 ? (uint(0), amountOutput) : (amountOutput, uint(0));
-            address to = i < _path.length - 3 ? _path[i + 3] : _to;
-            pair.swap(amount0Out, amount1Out, to, new bytes(0));
         }
     }
 }

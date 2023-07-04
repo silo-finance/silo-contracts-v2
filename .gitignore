@@ -28,4 +28,4 @@ broadcast
 **/artifacts/
 
 .env*
-
+.DS_Store

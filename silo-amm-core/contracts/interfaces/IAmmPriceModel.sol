@@ -7,7 +7,6 @@ interface IAmmPriceModel {
     /// please refer to constants description of particular variables
     struct AmmPriceConfig {
         uint64 kMin;
-        uint64 kMax;
         uint64 deltaK;
         uint64 vFast;
         uint32 tSlow;
@@ -32,7 +31,6 @@ interface IAmmPriceModel {
     }
 
     error INVALID_K_MIN();
-    error INVALID_K_MAX();
     error INVALID_T_SLOW();
     error INVALID_Q();
     error INVALID_V_FAST();

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.18;
+pragma solidity >=0.5.0;
 
-import {IERC721Upgradeable} from "openzeppelin-contracts-upgradeable/contracts/interfaces/IERC721Upgradeable.sol";
+import {IERC721Upgradeable} from "openzeppelin-contracts-upgradeable/interfaces/IERC721Upgradeable.sol";
 
 interface ISiloFactory is IERC721Upgradeable {
     function isSilo(address silo) external view returns (bool);
