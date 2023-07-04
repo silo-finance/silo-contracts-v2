@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.18;
 
-import {ERC20Upgradeable} from "openzeppelin-contracts-upgradeable/contracts/token/ERC20/ERC20Upgradeable.sol";
+import {ERC20Upgradeable} from "openzeppelin-contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 
 import {ISiloFactory} from "../interface/ISiloFactory.sol";
 import {IShareToken, ISilo} from "../interface/IShareToken.sol";
@@ -34,6 +34,26 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
 
         _;
     }
+    // TODO: store gauge address in share token
+    //     TODO: add gauge callback
+    //     interface ERC20BlancesHandler:
+    //     def balanceOf(addr: address) -> uint256: view
+    //     def totalSupply() -> uint256: view
+    //     def balanceOfAndTotalSupply(addr: address) -> (uint256, uint256): view
+
+    //     def balance_updated_for_user(
+    //     _user: address,
+    //     _user_new_balancer: uint256,
+    //     _total_supply: uint256
+    // ) -> bool:
+
+    // def balance_updated_for_users(
+    //     _user1: address,
+    //     _user1_new_balancer: uint256,
+    //     _user2: address,
+    //     _user2_new_balancer: uint256,
+    //     _total_supply: uint256
+    // )
 
     /// @dev Token is always deployed for specific Silo and asset
     constructor(ISiloFactory _factory) {
@@ -45,11 +65,7 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
     /// @param _silo Silo address for which tokens was deployed
     /// @param _asset asset for which this tokens was deployed
     function __ShareToken_init( // solhint-disable-line func-name-mixedcase
-        string memory _name,
-        string memory _symbol,
-        ISilo _silo,
-        address _asset
-    )
+    string memory _name, string memory _symbol, ISilo _silo, address _asset)
         internal
         onlyInitializing
     {

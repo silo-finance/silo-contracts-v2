@@ -21,3 +21,12 @@
 [submodule "gitmodules/uniswap/v3-periphery"]
 	path = gitmodules/uniswap/v3-periphery
 	url = https://github.com/Uniswap/v3-periphery
+	branch = v1.3.0
+[submodule "gitmodules/openzeppelin-contracts-upgradeable@v3.4.2"]
+	path = gitmodules/openzeppelin-contracts-upgradeable@v3.4.2
+	url = https://github.com/OpenZeppelin/openzeppelin-contracts-upgradeable
+	branch = v3.4.2
+[submodule "gitmodules/uniswap/v3-core"]
+	path = gitmodules/uniswap/v3-core
+	url = https://github.com/Uniswap/v3-core
+	branch = v1.0.0

@@ -3,8 +3,8 @@ pragma solidity 0.8.18;
 
 import {
     SafeERC20Upgradeable
-} from "openzeppelin-contracts-upgradeable/contracts/token/ERC20/utils/SafeERC20Upgradeable.sol";
-import {IERC20Upgradeable} from "openzeppelin-contracts-upgradeable/contracts/token/ERC20/IERC20Upgradeable.sol";
+} from "openzeppelin-contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
+import {IERC20Upgradeable} from "openzeppelin-contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 
 import {ISiloConfig} from "../interface/ISiloConfig.sol";
 import {ISiloOracle} from "../interface/ISiloOracle.sol";
