@@ -12,17 +12,19 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-pragma solidity ^0.7.0;
+pragma solidity 0.8.19;
 
-import "@balancer-labs/v2-interfaces/contracts/liquidity-mining/IBalancerTokenAdmin.sol";
-import "@balancer-labs/v2-interfaces/contracts/liquidity-mining/IGaugeController.sol";
-import "@balancer-labs/v2-interfaces/contracts/liquidity-mining/ILiquidityGauge.sol";
-import "@balancer-labs/v2-interfaces/contracts/liquidity-mining/IMainnetBalancerMinter.sol";
-import "@balancer-labs/v2-solidity-utils/contracts/openzeppelin/SafeMath.sol";
+import {IBalancerTokenAdmin} from "balancer-labs/v2-interfaces/liquidity-mining/IBalancerTokenAdmin.sol";
+import {IGaugeController} from "balancer-labs/v2-interfaces/liquidity-mining/IGaugeController.sol";
+import {ILiquidityGauge} from "balancer-labs/v2-interfaces/liquidity-mining/ILiquidityGauge.sol";
+import {ILMGetters} from "balancer-labs/v2-interfaces/liquidity-mining/ILMGetters.sol";
 
-import "./BalancerMinter.sol";
+import {SafeMath} from "openzeppelin-contracts/utils/math/SafeMath.sol";
 
-contract MainnetBalancerMinter is IMainnetBalancerMinter, BalancerMinter {
+import {IBalancerMinter} from "./interfaces/IBalancerMinter.sol";
+import {BalancerMinter} from "./BalancerMinter.sol";
+
+contract MainnetBalancerMinter is IBalancerMinter, ILMGetters, BalancerMinter {
     using SafeMath for uint256;
 
     IBalancerTokenAdmin private immutable _tokenAdmin;
