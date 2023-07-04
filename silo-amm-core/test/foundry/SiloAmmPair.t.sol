@@ -2,8 +2,10 @@
 pragma solidity 0.8.19;
 
 import "forge-std/Test.sol";
+import "silo-amm-periphery/contracts/interfaces/IFeeManager.sol";
 
 import "../../contracts/SiloAmmPair.sol";
+import "../../contracts/interfaces/ISiloAmmPair.sol";
 import "./helpers/Fixtures.sol";
 import "./helpers/TestToken.sol";
 
@@ -24,6 +26,7 @@ contract SiloAmmPairTest is Test, Fixtures {
         address router = address(1);
         ISiloOracle oracle0;
         ISiloOracle oracle1;
+        uint256 fee;
         address bridge;
 
         SILO = address(this);
@@ -33,7 +36,7 @@ contract SiloAmmPairTest is Test, Fixtures {
 
         (TOKEN_0, TOKEN_1) = t1 < t2 ? (t1, t2) : (t2, t1);
 
-        pair = new SiloAmmPair(router, address(this), TOKEN_0, TOKEN_1, oracle0, oracle1, bridge, ammPriceConfig);
+        pair = new SiloAmmPair(router, address(this), TOKEN_0, TOKEN_1, oracle0, oracle1, bridge, fee, ammPriceConfig);
     }
 
     /*
@@ -65,7 +68,7 @@ contract SiloAmmPairTest is Test, Fixtures {
         uint256 gas = gasStart - gasEnd;
         emit log_named_uint("gas", gas);
 
-        assertEq(gas, 3548);
+        assertEq(gas, 3547);
         assertEq(debtPrice, 1e18);
     }
 
@@ -92,7 +95,7 @@ contract SiloAmmPairTest is Test, Fixtures {
 
         emit log_named_uint("gas #1", gas);
 
-        assertEq(gas, 204491);
+        assertEq(gas, 204479);
         assertEq(shares, amount, "initial amount == shares");
 
         gasStart = gasleft();
@@ -101,7 +104,7 @@ contract SiloAmmPairTest is Test, Fixtures {
 
         emit log_named_uint("gas #2", gas);
 
-        assertEq(gas, 170370, "gas usage for adding liquidity with cleanup");
+        assertEq(gas, 170358, "gas usage for adding liquidity with cleanup");
         assertEq(shares, shares2, "expect same shares");
     }
 
@@ -132,7 +135,7 @@ contract SiloAmmPairTest is Test, Fixtures {
         uint256 gas = gasStart - gasleft();
 
         emit log_named_uint("gas for swap", gas);
-        assertEq(gas, 85262);
+        assertEq(gas, 85325);
         assertEq(IERC20(TOKEN_0).balanceOf(address(this)), 666666666666666667, "expect collateral in `to` wallet");
 
         gasStart = gasleft();
@@ -140,7 +143,7 @@ contract SiloAmmPairTest is Test, Fixtures {
         gas = gasStart - gasleft();
 
         emit log_named_uint("gas for exactInSwap", gas);
-        assertEq(gas, 19662);
+        assertEq(gas, 19719);
         assertEq(IERC20(TOKEN_0).balanceOf(address(this)), 566666666666666667, "expect collateral in `to` wallet");
 
         gasStart = gasleft();
@@ -148,13 +151,13 @@ contract SiloAmmPairTest is Test, Fixtures {
         gas = gasStart - gasleft();
 
         emit log_named_uint("gas for partial removal", gas);
-        assertEq(gas, 7098);
+        assertEq(gas, 7090);
 
         gasStart = gasleft();
         pair.removeLiquidity(TOKEN_0, _user, 1e18);
         gas = gasStart - gasleft();
 
         emit log_named_uint("gas for FULL removal", gas);
-        assertEq(gas, 5376);
+        assertEq(gas, 5368);
     }
 }

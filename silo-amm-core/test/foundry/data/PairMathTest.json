@@ -1,0 +1,29 @@
+[
+  {
+    "debtQuote": "1000000000000000000",
+    "onSwapK": "1000000000000000000",
+    "fee": 0,
+    "expected": {
+      "debtAmountIn": "1000000000000000000",
+      "debtAmountInFee": "0"
+    }
+  },
+  {
+    "debtQuote": "900000000000000000",
+    "onSwapK": "1000000000000000000",
+    "fee": 1000,
+    "expected": {
+      "debtAmountIn": "1000000000000000000",
+      "debtAmountInFee": "100000000000000000"
+    }
+  },
+  {
+    "debtQuote": "1980000000000000000",
+    "onSwapK": "500000000000000000",
+    "fee": 100,
+    "expected": {
+      "debtAmountIn": "1000000000000000000",
+      "debtAmountInFee": "10000000000000000"
+    }
+  }
+]

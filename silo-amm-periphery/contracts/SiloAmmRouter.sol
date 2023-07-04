@@ -9,10 +9,11 @@ import "silo-amm-core/contracts/lib/Ping.sol";
 
 import "./libraries/UniswapV2Library.sol";
 import "./interfaces/NotSupportedRouter.sol";
+import "./utils/FeeManager.sol";
 
 
 /// @dev based on UniswapV2Router02
-contract SiloAmmRouter is NotSupportedRouter, SafeTransfers {
+contract SiloAmmRouter is NotSupportedRouter, SafeTransfers, FeeManager {
     ISiloAmmPairFactory public immutable PAIR_FACTORY; // solhint-disable-line var-name-mixedcase
     address public immutable WETH; // solhint-disable-line var-name-mixedcase
 
@@ -30,7 +31,7 @@ contract SiloAmmRouter is NotSupportedRouter, SafeTransfers {
         _;
     }
 
-    constructor(ISiloAmmPairFactory _pairFactory, address _weth) {
+    constructor(ISiloAmmPairFactory _pairFactory, address _weth, Fee memory _fee) FeeManager(_fee) {
         if (!Ping.pong(_pairFactory.siloAmmPairFactoryPing)) revert SILO_AMM_PAIR_FACTORY_PING();
         if (_weth == address(0)) revert WETH_ZERO();
 
@@ -57,7 +58,7 @@ contract SiloAmmRouter is NotSupportedRouter, SafeTransfers {
         address _token1,
         ISiloOracle _oracle0,
         ISiloOracle _oracle1,
-        address _bridge,
+        address _bridgeQuoteToken,
         IAmmPriceModel.AmmPriceConfig memory _config
     )
         external
@@ -72,7 +73,16 @@ contract SiloAmmRouter is NotSupportedRouter, SafeTransfers {
 
         // TODO there is one issue with it - we can not deploy routerV2, because the whole state will be
         // inside old router
-        pair = PAIR_FACTORY.createPair(_silo, _token0, _token1, _oracle0, _oracle1, _bridge, _config);
+        pair = PAIR_FACTORY.createPair(
+            _silo,
+            _token0,
+            _token1,
+            _oracle0,
+            _oracle1,
+            _bridgeQuoteToken,
+            _protocolFee.percent,
+            _config
+        );
 
         _pairs[_token0][_token1][id] = IUniswapV2Pair(address(pair));
         _pairs[_token1][_token0][id] = IUniswapV2Pair(address(pair));
@@ -218,6 +228,10 @@ contract SiloAmmRouter is NotSupportedRouter, SafeTransfers {
     /// we returning self address
     function factory() external view returns (address) {
         return address(this);
+    }
+
+    function feeTo() external view returns (address) {
+        return _protocolFee.receiver;
     }
 
     /// @dev requires the initial amount to have already been sent to the first pair

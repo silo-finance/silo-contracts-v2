@@ -21,7 +21,6 @@ interface ISiloAmmRouterEvents {
     error WETH_ZERO();
 
     error IDENTICAL_ADDRESSES();
-    error ZERO_ADDRESS();
 
     error UNISWAPV2_ROUTER_EXPIRED();
     error UNISWAPV2_ROUTER_INVALID_PATH();

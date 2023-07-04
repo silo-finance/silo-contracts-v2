@@ -87,5 +87,6 @@ interface ISiloAmmPair is IUniswapV2Pair {
         returns (uint256 amountOut);
 
     function feeTo() external view returns (address);
+    function fee() external view returns (uint256);
     function silo() external view returns (address);
 }
