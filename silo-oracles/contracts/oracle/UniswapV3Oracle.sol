@@ -13,7 +13,7 @@ contract UniswapV3Oracle is ISiloOracle, Initializable {
 
     /// @dev It is assumed that this contract will be deployed once per blockchain so blockTime can safely use
     /// immutable variable even thought it is used as implemencation contract for a proxy.
-    uint8 immutable blockTime;
+    uint8 immutable public blockTime;
 
     /// @dev UniV3 pool address that is used for TWAP price
     IUniswapV3Pool public pool;
@@ -83,6 +83,62 @@ contract UniswapV3Oracle is ISiloOracle, Initializable {
         pool.increaseObservationCardinalityNext(uint16(requiredCardinality));
     }
 
+
+    /// @dev UniV3 saves price only on: mint, burn and swap.
+    /// Mint and burn will write observation only when "current tick is inside the passed range" of ticks.
+    /// I think that means, that if we minting/burning outside ticks range  (so outside current price)
+    /// it will not modify observation. So we left with swap.
+    ///
+    /// Swap will write observation under this condition:
+    ///     // update tick and write an oracle entry if the tick change
+    ///     if (state.tick != slot0Start.tick) {
+    /// that means, it is possible that price will be up to date (in a range of same tick)
+    /// but observation timestamp will be old.
+    ///
+    /// Every pool by default comes with just one slot for observation (cardinality == 1).
+    /// We can increase number of slots so TWAP price will be "better".
+    /// When we increase, we have to wait until new tx will write new observation.
+    /// Based on all above, we can tell how old is observation, but this does not mean the price is wrong.
+    /// UniV3 recommends to use `observe` and `OracleLibrary.consult` uses it.
+    /// `observe` reverts if `secondsAgo` > oldest observation, means, if there is any price observation in selected
+    /// time frame, it will revert. Otherwise it will return either exact TWAP price or by interpolation.
+    ///
+    /// Conclusion: we can choose how many observation pool will be storing, but we need to remember,
+    /// not all of them might be used to provide our price. Final question is: how many observations we need?
+    ///
+    /// How UniV3 calculates TWAP
+    /// we ask for TWAP on time range ago:now using `OracleLibrary.consult`, it is all about find the right tick
+    /// - we call `IUniswapV3Pool(pool).observe(secondAgo)` that returns two accumulator values (for ago and now)
+    /// - each observation is resolved by `observeSingle`
+    ///   - for _now_ we just using latest observation, and if it does not match timestamp, we interpolate (!)
+    ///     and this is how we got the _tickCumulative_, so in extreme situation, if last observation was made day ago,
+    ///     UniV3 will interpolate to reflect _tickCumulative_ at current time
+    ///   - for _ago_ we search for observation using `getSurroundingObservations` that give us
+    ///     before and after observation, base on which we calculate "avg" and we have target _tickCumulative_
+    ///     - getSurroundingObservations: it's job is to find 2 observations based on which we calculate tickCumulative
+    ///       here is where all calculations can revert, if ago < oldest observation, otherwise it will be calculated
+    ///       either by interpolation or we will have exact match
+    /// - now with both _tickCumulative_s we calculating TWAP
+    ///
+    /// recommended observations are = 30 min / blockTime
+    /// @inheritdoc ISiloOracle
+    /// @dev Returns quote price for _baseAmount of _baseToken
+    /// @param _baseAmount Amount of priced token
+    /// @param _baseToken Address of priced token
+    function quote(uint256 _baseAmount, address _baseToken) external virtual override returns (uint256 quoteAmount) {
+        quoteAmount = _quoteInternal(_baseAmount, _baseToken);
+    }
+
+    function quoteView(uint256 _baseAmount, address _baseToken)
+        external
+        view
+        virtual
+        override
+        returns (uint256 quoteAmount)
+    {
+        quoteAmount = _quoteInternal(_baseAmount, _baseToken);
+    }
+
     function oldestTimestamp() external view virtual returns (uint32 oldestTimestamps) {
         (,, uint16 observationIndex, uint16 currentObservationCardinality,,,) = pool.slot0();
         oldestTimestamps = resolveOldestObservationTimestamp(pool, observationIndex, currentObservationCardinality);
@@ -132,62 +188,6 @@ contract UniswapV3Oracle is ISiloOracle, Initializable {
         return true;
     }
 
-    /// @dev UniV3 saves price only on: mint, burn and swap.
-    /// Mint and burn will write observation only when "current tick is inside the passed range" of ticks.
-    /// I think that means, that if we minting/burning outside ticks range  (so outside current price)
-    /// it will not modify observation. So we left with swap.
-    ///
-    /// Swap will write observation under this condition:
-    ///     // update tick and write an oracle entry if the tick change
-    ///     if (state.tick != slot0Start.tick) {
-    /// that means, it is possible that price will be up to date (in a range of same tick)
-    /// but observation timestamp will be old.
-    ///
-    /// Every pool by default comes with just one slot for observation (cardinality == 1).
-    /// We can increase number of slots so TWAP price will be "better".
-    /// When we increase, we have to wait until new tx will write new observation.
-    /// Based on all above, we can tell how old is observation, but this does not mean the price is wrong.
-    /// UniV3 recommends to use `observe` and `OracleLibrary.consult` uses it.
-    /// `observe` reverts if `secondsAgo` > oldest observation, means, if there is any price observation in selected
-    /// time frame, it will revert. Otherwise it will return either exact TWAP price or by interpolation.
-    ///
-    /// Conclusion: we can choose how many observation pool will be storing, but we need to remember,
-    /// not all of them might be used to provide our price. Final question is: how many observations we need?
-    ///
-    /// How UniV3 calculates TWAP
-    /// we ask for TWAP on time range ago:now using `OracleLibrary.consult`, it is all about find the right tick
-    /// - we call `IUniswapV3Pool(pool).observe(secondAgo)` that returns two accumulator values (for ago and now)
-    /// - each observation is resolved by `observeSingle`
-    ///   - for _now_ we just using latest observation, and if it does not match timestamp, we interpolate (!)
-    ///     and this is how we got the _tickCumulative_, so in extreme situation, if last observation was made day ago,
-    ///     UniV3 will interpolate to reflect _tickCumulative_ at current time
-    ///   - for _ago_ we search for observation using `getSurroundingObservations` that give us
-    ///     before and after observation, base on which we calculate "avg" and we have target _tickCumulative_
-    ///     - getSurroundingObservations: it's job is to find 2 observations based on which we calculate tickCumulative
-    ///       here is where all calculations can revert, if ago < oldest observation, otherwise it will be calculated
-    ///       either by interpolation or we will have exact match
-    /// - now with both _tickCumulative_s we calculating TWAP
-    ///
-    /// recommended observations are = 30 min / blockTime
-    /// @inheritdoc ISiloOracle
-    /// @dev Returns quote price for _baseAmount of _baseToken
-    /// @param _baseAmount Amount of priced token
-    /// @param _baseToken Address of priced token
-    function quote(uint256 _baseAmount, address _baseToken) external virtual override returns (uint256 quoteAmount) {
-        quoteAmount = _quoteInternal(_baseAmount, _baseToken);
-    }
-
-    function quoteView(uint256 _baseAmount, address _baseToken) external view virtual override returns (uint256 quoteAmount) {
-        quoteAmount = _quoteInternal(_baseAmount, _baseToken);
-    }
-
-    function _quoteInternal(uint256 _baseAmount, address _baseToken) internal view virtual returns (uint256 quoteAmount) {
-        if (_baseAmount > type(uint128).max) revert("Overflow");
-        uint128 _baseAmount128 = uint128(_baseAmount);
-        int24 timeWeightedAverageTick = _consult(pool);
-        quoteAmount = OracleLibrary.getQuoteAtTick(timeWeightedAverageTick, _baseAmount128, _baseToken, quoteToken);
-    }
-
     /// @param _pool uniswap V3 pool address
     /// @param _currentObservationIndex the most-recently updated index of the observations array
     /// @param _currentObservationCardinality the current maximum number of observations that are being stored
@@ -213,6 +213,18 @@ contract UniswapV3Oracle is ISiloOracle, Initializable {
         if (!initialized) {
             (lastObservationTimestamp,,,) = _pool.observations(0);
         }
+    }
+
+    function _quoteInternal(uint256 _baseAmount, address _baseToken)
+        internal
+        view
+        virtual
+        returns (uint256 quoteAmount)
+    {
+        if (_baseAmount > type(uint128).max) revert("Overflow");
+        uint128 _baseAmount128 = uint128(_baseAmount);
+        int24 timeWeightedAverageTick = _consult(pool);
+        quoteAmount = OracleLibrary.getQuoteAtTick(timeWeightedAverageTick, _baseAmount128, _baseToken, quoteToken);
     }
 
     /// @notice Fetches time-weighted average tick using Uniswap V3 oracle

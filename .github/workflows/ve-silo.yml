@@ -44,7 +44,7 @@ jobs:
           version: nightly
 
       - name: yarn install
-        run: yarn workspace ve-silo install
+        run: yarn install
 
       - name: Solidity Lint
         run: yarn workspace ve-silo lint:sol

@@ -35,6 +35,7 @@ jobs:
 
       - run: npm install -g yarn
 
-      - run: yarn workspace @balancer-labs/v2-liquidity-mining install
+      - run: yarn install
+      - run: yarn workspace @balancer-labs/v2-vault compile
       - run: yarn workspace @balancer-labs/v2-liquidity-mining compile
       - run: yarn workspace @balancer-labs/v2-liquidity-mining test
