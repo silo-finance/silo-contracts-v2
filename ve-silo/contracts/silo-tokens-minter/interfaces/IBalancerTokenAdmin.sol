@@ -16,7 +16,7 @@
 
 pragma solidity >=0.7.0 <0.9.0;
 
-import {IBalancerToken} from "balancer-labs/v2-interfaces/liquidity-mining/IBalancerToken.sol";
+import {IBalancerToken} from "./IBalancerToken.sol";
 
 interface IBalancerTokenAdmin {
     // solhint-disable func-name-mixedcase

@@ -72,66 +72,8 @@ contract BalancerTokenAdmin is IBalancerTokenAdmin, ExtendedOwnable, ReentrancyG
     function activate() external override nonReentrant onlyManager {
         require(_startEpochTime == type(uint256).max, "Already activated");
 
-        // We need to check that this contract can't be bypassed to mint more BAL in the future.
-        // If other addresses had minting rights over the BAL token then this inflation schedule
-        // could be bypassed by minting new tokens directly on the BalancerGovernanceToken contract.
-
-        // On the BalancerGovernanceToken contract the minter role's admin is the DEFAULT_ADMIN_ROLE.
-        // No external function exists to change the minter role's admin so we cannot make the list of
-        // minters immutable without revoking all access to DEFAULT_ADMIN_ROLE.
-        bytes32 minterRole = _balancerToken.MINTER_ROLE();
-        bytes32 snapshotRole = _balancerToken.SNAPSHOT_ROLE();
-        bytes32 adminRole = _balancerToken.DEFAULT_ADMIN_ROLE();
-
-        require(_balancerToken.hasRole(adminRole, address(this)), "BalancerTokenAdmin is not an admin");
-
-        // All other minters must be removed to avoid inflation schedule enforcement being bypassed.
-        uint256 numberOfMinters = _balancerToken.getRoleMemberCount(minterRole);
-        for (uint256 i = 0; i < numberOfMinters; ++i) {
-            address minter = _balancerToken.getRoleMember(minterRole, 0);
-            _balancerToken.revokeRole(minterRole, minter);
-        }
-        // Give this contract minting rights over the BAL token
-        _balancerToken.grantRole(minterRole, address(this));
-
-        // BalancerGovernanceToken exposes a role-restricted `snapshot` function for performing onchain voting.
-        // We delegate control over this to the Balancer Authorizer by removing this role from all current addresses
-        // and exposing a function which defers to the Authorizer for access control.
-        uint256 numberOfSnapshotters = _balancerToken.getRoleMemberCount(snapshotRole);
-        for (uint256 i = 0; i < numberOfSnapshotters; ++i) {
-            address snapshotter = _balancerToken.getRoleMember(snapshotRole, 0);
-            _balancerToken.revokeRole(snapshotRole, snapshotter);
-        }
-        // Give this contract snapshotting rights over the BAL token
-        _balancerToken.grantRole(snapshotRole, address(this));
-
-        // BalancerTokenAdmin now is the only holder of MINTER_ROLE and SNAPSHOT_ROLE for BalancerGovernanceToken.
-
-        // We can't prevent any other admins from granting other addresses these roles however.
-        // This undermines the ability for BalancerTokenAdmin to enforce the correct inflation schedule.
-        // The only way to prevent this is for BalancerTokenAdmin to be the only admin. We then remove all other admins.
-        uint256 numberOfAdmins = _balancerToken.getRoleMemberCount(adminRole);
-        uint256 skipSelf = 0;
-        for (uint256 i = 0; i < numberOfAdmins; ++i) {
-            address admin = _balancerToken.getRoleMember(adminRole, skipSelf);
-            if (admin != address(this)) {
-                _balancerToken.revokeRole(adminRole, admin);
-            } else {
-                // This contract is now the admin with index 0, we now delete the address with index 1 instead
-                skipSelf = 1;
-            }
-        }
-
-        // BalancerTokenAdmin doesn't actually need admin rights any more and won't grant rights to any more addresses
-        // We then renounce our admin role to ensure that another address won't gain absolute minting powers.
-        _balancerToken.revokeRole(adminRole, address(this));
-
-        // Perform sanity checks to make sure we're not leaving the roles in a broken state
-        require(_balancerToken.getRoleMemberCount(adminRole) == 0, "Address exists with admin rights");
-        require(_balancerToken.hasRole(minterRole, address(this)), "BalancerTokenAdmin is not a minter");
-        require(_balancerToken.hasRole(snapshotRole, address(this)), "BalancerTokenAdmin is not a snapshotter");
-        require(_balancerToken.getRoleMemberCount(minterRole) == 1, "Multiple minters exist");
-        require(_balancerToken.getRoleMemberCount(snapshotRole) == 1, "Multiple snapshotters exist");
+        // Perform sanity checks to make sure `BalancerTokenAdmin` can mint tokens
+        require(_balancerToken.owner() == address(this), "BalancerTokenAdmin is not a minter");
 
         // As BAL inflation is now enforced by this contract we can initialise the relevant variables.
         _startEpochSupply = _balancerToken.totalSupply();
@@ -155,14 +97,6 @@ contract BalancerTokenAdmin is IBalancerTokenAdmin, ExtendedOwnable, ReentrancyG
             "Mint amount exceeds remaining available supply"
         );
         _balancerToken.mint(to, amount);
-    }
-
-    /**
-     * @notice Perform a snapshot of BAL token balances
-     * @dev Callable only by addresses defined in the Balancer Authorizer contract
-     */
-    function snapshot() external onlyManager {
-        _balancerToken.snapshot();
     }
 
     /**
