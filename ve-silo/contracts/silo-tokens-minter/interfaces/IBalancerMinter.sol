@@ -22,6 +22,8 @@ import {IERC20} from "balancer-labs/v2-interfaces/solidity-utils/openzeppelin/IE
 interface IBalancerMinter {
     event Minted(address indexed recipient, address gauge, uint256 minted);
 
+    // solhint-disable ordering
+
     /**
      * @notice Returns the address of the Balancer Governance Token
      */

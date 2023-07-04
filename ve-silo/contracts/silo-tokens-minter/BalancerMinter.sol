@@ -46,6 +46,8 @@ abstract contract BalancerMinter is IBalancerMinter, ReentrancyGuard, EOASignatu
         _token = token;
     }
 
+    // solhint-disable ordering
+
     /// @inheritdoc IBalancerMinter
     function getBalancerToken() public view override returns (IERC20) {
         return _token;
