@@ -12,9 +12,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+// solhint-disable ordering
+
 pragma solidity >=0.7.0 <0.9.0;
 
-import "balancer-labs/v2-interfaces/liquidity-mining/IBalancerToken.sol";
+import {IBalancerToken} from "balancer-labs/v2-interfaces/liquidity-mining/IBalancerToken.sol";
 
 interface IBalancerTokenAdmin {
     // solhint-disable func-name-mixedcase

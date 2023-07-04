@@ -21,6 +21,7 @@ import {ReentrancyGuard} from "openzeppelin-contracts/security/ReentrancyGuard.s
 import {SafeMath} from "openzeppelin-contracts/utils/math/SafeMath.sol";
 
 // solhint-disable not-rely-on-time
+// solhint-disable ordering
 
 /**
  * @title Balancer Token Admin
@@ -67,6 +68,7 @@ contract BalancerTokenAdmin is IBalancerTokenAdmin, ExtendedOwnable, ReentrancyG
      * @notice Initiate BAL token inflation schedule
      * @dev Reverts if contract does not have sole minting powers over BAL (and no other minters can be added).
      */
+    // solhint-disable-next-line function-max-lines
     function activate() external override nonReentrant onlyManager {
         require(_startEpochTime == type(uint256).max, "Already activated");
 
@@ -283,6 +285,7 @@ contract BalancerTokenAdmin is IBalancerTokenAdmin, ExtendedOwnable, ReentrancyG
      * @param end End of the time interval (timestamp)
      * @return Tokens mintable from `start` till `end`
      */
+    // solhint-disable-next-line code-complexity
     function _mintableInTimeframe(uint256 start, uint256 end) internal view returns (uint256) {
         require(start <= end, "start > end");
 
