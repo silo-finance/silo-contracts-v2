@@ -269,7 +269,7 @@ contract SiloAmmPair is NotSupportedInPair, SafeTransfers, UniswapV2ERC20, AmmSt
     }
 
     function feeTo() external view returns (address) {
-        return ISiloAmmRouter(_ROUTER).feeTo();
+        return _PROTOCOL_FEE_RECEIVER;
     }
 
     /// @inheritdoc ISiloAmmPair
@@ -341,7 +341,7 @@ contract SiloAmmPair is NotSupportedInPair, SafeTransfers, UniswapV2ERC20, AmmSt
         _safeTransferFrom(_debt, msg.sender, _SILO, _amountInForSwap);
 
         if (_amountInFee != 0) {
-            _safeTransferFrom(_debt, msg.sender, _ROUTER, _amountInFee);
+            _safeTransferFrom(_debt, msg.sender, _PROTOCOL_FEE_RECEIVER, _amountInFee);
         }
 
         _safeTransferFrom(_collateralToken, _SILO, _to, _amountOut);
