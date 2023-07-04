@@ -3,6 +3,7 @@ pragma solidity 0.8.19;
 
 import "uniswap/v2-core/contracts/interfaces/IUniswapV2Callee.sol";
 import "silo-amm-periphery/contracts/interfaces/ISiloAmmRouter.sol";
+import "silo-amm-periphery/contracts/interfaces/IFeeManager.sol";
 
 import "./external/UniswapV2ERC20.sol";
 
@@ -11,7 +12,6 @@ import "./models/AmmStateModel.sol";
 import "./models/AmmPriceModel.sol";
 import "./utils/SafeTransfers.sol";
 import "./lib/PairMath.sol";
-
 
 /// @notice PAIR THAT WAS NOT CREATED BY THE SILO (via Silo Router and Silo Factory) CANNOT BE TRUSTED
 /// before using it, verify this contract address against Silo.ammPair()
@@ -37,7 +37,9 @@ contract SiloAmmPair is NotSupportedInPair, SafeTransfers, UniswapV2ERC20, AmmSt
     /// @dev address of Silo with witch we cresting 1:1 bond for liquidity management
     address internal immutable _SILO; // solhint-disable-line var-name-mixedcase
 
+    // TODO uint24?
     uint256 internal immutable _PROTOCOL_FEE; // solhint-disable-line var-name-mixedcase
+    address internal immutable _PROTOCOL_FEE_RECEIVER; // solhint-disable-line var-name-mixedcase
 
     address internal immutable _ROUTER; // solhint-disable-line var-name-mixedcase
 
@@ -74,7 +76,7 @@ contract SiloAmmPair is NotSupportedInPair, SafeTransfers, UniswapV2ERC20, AmmSt
         ISiloOracle _oracle0,
         ISiloOracle _oracle1,
         address _bridgeQuoteToken,
-        uint256 _fee,
+        IFeeManager.FeeSetup memory _fee,
         AmmPriceConfig memory _config
     )
         AmmPriceModel(_config)
@@ -91,7 +93,8 @@ contract SiloAmmPair is NotSupportedInPair, SafeTransfers, UniswapV2ERC20, AmmSt
         _SILO = _silo;
 
         // zero is acceptable
-        _PROTOCOL_FEE = _fee;
+        _PROTOCOL_FEE = _fee.percent;
+        _PROTOCOL_FEE_RECEIVER = _fee.receiver;
 
         (
             ORACLE_SETUP,

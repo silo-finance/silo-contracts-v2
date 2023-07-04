@@ -13,8 +13,8 @@ contract SiloAmmPairFactory is ISiloAmmPairFactory {
         ISiloOracle _oracle0,
         ISiloOracle _oracle1,
         address _bridgeQuoteToken,
-        uint256 _fee,
-        IAmmPriceModel.AmmPriceConfig memory _config
+        IFeeManager.FeeSetup calldata _fee,
+        IAmmPriceModel.AmmPriceConfig calldata _config
     )
         external
         virtual

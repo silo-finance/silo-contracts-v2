@@ -8,7 +8,7 @@ import "../../contracts/SiloAmmPair.sol";
 import "../../contracts/interfaces/ISiloAmmPair.sol";
 import "./helpers/Fixtures.sol";
 import "./helpers/TestToken.sol";
-
+import "../../../silo-amm-periphery/contracts/interfaces/IFeeManager.sol";
 
 /*
     FOUNDRY_PROFILE=amm-core forge test -vv --match-contract SiloAmmPairTest
@@ -26,7 +26,7 @@ contract SiloAmmPairTest is Test, Fixtures {
         address router = address(1);
         ISiloOracle oracle0;
         ISiloOracle oracle1;
-        uint256 fee;
+        IFeeManager.FeeSetup memory fee = IFeeManager.FeeSetup(address(1), 0);
         address bridge;
 
         SILO = address(this);
@@ -135,7 +135,7 @@ contract SiloAmmPairTest is Test, Fixtures {
         uint256 gas = gasStart - gasleft();
 
         emit log_named_uint("gas for swap", gas);
-        assertEq(gas, 85325);
+        assertEq(gas, 85436);
         assertEq(IERC20(TOKEN_0).balanceOf(address(this)), 666666666666666667, "expect collateral in `to` wallet");
 
         gasStart = gasleft();

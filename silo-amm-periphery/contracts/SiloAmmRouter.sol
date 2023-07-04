@@ -9,12 +9,13 @@ import "silo-amm-core/contracts/lib/Ping.sol";
 
 import "./libraries/UniswapV2Library.sol";
 import "./interfaces/NotSupportedRouter.sol";
-import "./utils/FeeManager.sol";
+import "./FeeManager.sol";
 
 
 /// @dev based on UniswapV2Router02
-contract SiloAmmRouter is NotSupportedRouter, SafeTransfers, FeeManager {
+contract SiloAmmRouter is NotSupportedRouter, SafeTransfers {
     ISiloAmmPairFactory public immutable PAIR_FACTORY; // solhint-disable-line var-name-mixedcase
+    IFeeManager public immutable FEE_MANAGER; // solhint-disable-line var-name-mixedcase
     address public immutable WETH; // solhint-disable-line var-name-mixedcase
 
     /// @dev token0 => token1 => ID => pair
@@ -31,12 +32,14 @@ contract SiloAmmRouter is NotSupportedRouter, SafeTransfers, FeeManager {
         _;
     }
 
-    constructor(ISiloAmmPairFactory _pairFactory, address _weth, Fee memory _fee) FeeManager(_fee) {
+    constructor(ISiloAmmPairFactory _pairFactory, address _weth, IFeeManager.FeeSetup memory _fee) {
         if (!Ping.pong(_pairFactory.siloAmmPairFactoryPing)) revert SILO_AMM_PAIR_FACTORY_PING();
         if (_weth == address(0)) revert WETH_ZERO();
 
         PAIR_FACTORY = _pairFactory;
         WETH = _weth;
+
+        FEE_MANAGER = new FeeManager(_fee);
     }
 
     /*
@@ -80,7 +83,7 @@ contract SiloAmmRouter is NotSupportedRouter, SafeTransfers, FeeManager {
             _oracle0,
             _oracle1,
             _bridgeQuoteToken,
-            _protocolFee.percent,
+            FEE_MANAGER.getFeeSetup(),
             _config
         );
 
@@ -231,7 +234,7 @@ contract SiloAmmRouter is NotSupportedRouter, SafeTransfers, FeeManager {
     }
 
     function feeTo() external view returns (address) {
-        return _protocolFee.receiver;
+        return FEE_MANAGER.getFeeSetup().receiver;
     }
 
     /// @dev requires the initial amount to have already been sent to the first pair

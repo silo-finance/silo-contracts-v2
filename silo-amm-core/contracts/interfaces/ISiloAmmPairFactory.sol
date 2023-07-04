@@ -22,7 +22,7 @@ interface ISiloAmmPairFactory {
     /// @param _oracle0 oracle address
     /// @param _oracle1 oracle address
     /// @param _bridgeQuoteToken token address required when both oracle are provided
-    /// @param _fee protocol fee
+    /// @param _fee protocol fee setup
     /// @param _config AmmPriceConfig pool config
     /// @return pair ISiloAmmPair address of new created pool
     function createPair(
@@ -32,7 +32,7 @@ interface ISiloAmmPairFactory {
         ISiloOracle _oracle0,
         ISiloOracle _oracle1,
         address _bridgeQuoteToken,
-        uint256 _fee,
+        IFeeManager.FeeSetup memory _fee,
         IAmmPriceModel.AmmPriceConfig memory _config
     ) external returns (ISiloAmmPair pair);
 

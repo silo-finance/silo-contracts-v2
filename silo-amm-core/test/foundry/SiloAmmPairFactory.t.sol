@@ -30,7 +30,7 @@ contract SiloAmmPairFactoryTest is Test, Fixtures {
     function test_SiloAmmPairFactory_createPair() public {
         ISiloOracle oracle0;
         ISiloOracle oracle1;
-        uint256 fee;
+        IFeeManager.FeeSetup memory fee = IFeeManager.FeeSetup(address(1), 0);
         address bridge;
 
         uint256 gasStart = gasleft();
@@ -49,7 +49,7 @@ contract SiloAmmPairFactoryTest is Test, Fixtures {
         uint256 gasUsed = gasStart - gasleft();
 
         emit log_named_uint("gas used", gasUsed);
-        assertEq(gasUsed, 2725878, "expected gas usage for createPair");
+        assertEq(gasUsed, 2737786, "expected gas usage for createPair");
         assertEq(pair.silo(), address(this), "expected to set silo");
     }
 }
