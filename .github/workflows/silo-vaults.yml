@@ -41,7 +41,7 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
 
-      - run: yarn workspace silo-vaults install
+      - run: yarn install
 
       - name: Solidity Lint
         run: yarn workspace silo-vaults lint:sol
