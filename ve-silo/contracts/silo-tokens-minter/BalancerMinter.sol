@@ -12,14 +12,14 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-pragma solidity ^0.7.0;
+pragma solidity 0.8.19;
 
-import "@balancer-labs/v2-interfaces/contracts/liquidity-mining/IBalancerMinter.sol";
+import {IBalancerMinter, IERC20} from "./interfaces/IBalancerMinter.sol";
 
-import "@balancer-labs/v2-solidity-utils/contracts/openzeppelin/ReentrancyGuard.sol";
-import "@balancer-labs/v2-solidity-utils/contracts/openzeppelin/SafeMath.sol";
-import "@balancer-labs/v2-solidity-utils/contracts/openzeppelin/EIP712.sol";
-import "@balancer-labs/v2-solidity-utils/contracts/helpers/EOASignaturesValidator.sol";
+import {ReentrancyGuard} from "openzeppelin-contracts/security/ReentrancyGuard.sol";
+import {SafeMath} from "openzeppelin-contracts/utils/math/SafeMath.sol";
+import {EIP712} from "openzeppelin-contracts/utils/cryptography/EIP712.sol";
+import {EOASignaturesValidator, Errors, _require} from "./helpers/EOASignaturesValidator.sol";
 
 abstract contract BalancerMinter is IBalancerMinter, ReentrancyGuard, EOASignaturesValidator {
     using SafeMath for uint256;

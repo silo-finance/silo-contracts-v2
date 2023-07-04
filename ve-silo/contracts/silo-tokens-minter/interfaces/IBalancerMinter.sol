@@ -14,7 +14,7 @@
 
 pragma solidity >=0.7.0 <0.9.0;
 
-import "../solidity-utils/openzeppelin/IERC20.sol";
+import {IERC20} from "balancer-labs/v2-interfaces/solidity-utils/openzeppelin/IERC20.sol";
 
 /**
  * @dev Base minter interface, applicable to Mainnet minter or L2 pseudo minters.
