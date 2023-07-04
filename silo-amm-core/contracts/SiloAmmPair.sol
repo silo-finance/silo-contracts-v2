@@ -13,7 +13,7 @@ import "./utils/SafeTransfers.sol";
 import "./lib/PairMath.sol";
 
 
-/// @notice PAIR THAT WAS NOT CREATED BY THE SILO (via Silo Router and Silo Factory) CAN NOT BE TRUSTED
+/// @notice PAIR THAT WAS NOT CREATED BY THE SILO (via Silo Router and Silo Factory) CANNOT BE TRUSTED
 /// before using it, verify this contract address against Silo.ammPair()
 contract SiloAmmPair is NotSupportedInPair, SafeTransfers, UniswapV2ERC20, AmmStateModel, AmmPriceModel {
     // TODO when we check exponential operations on shares we will decide if we need minimum liquidity
