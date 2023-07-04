@@ -33,7 +33,7 @@ contract PairMathTest is Test {
                 PairMathTestData.TestData memory testData = testDatas[i];
 
                 uint256 gasStart = gasleft();
-                (uint256 exactIn, uint256 fee) = PairMath.getDebtIn(testData.debtQuote, testData.onSwapK, testData.fee);
+                (uint256 exactIn,, uint256 fee) = PairMath.getDebtIn(testData.debtQuote, testData.onSwapK, testData.fee);
                 uint256 gasEnd = gasleft();
                 gasSum += (gasStart - gasEnd);
 
@@ -41,7 +41,7 @@ contract PairMathTest is Test {
                 assertEq(fee, testData.debtAmountInFee, "debtAmountInFee");
             }
 
-            assertEq(gasSum, 838, "make sure we gas efficient on price model actions");
+            assertEq(gasSum, 921, "make sure we gas efficient on price model actions");
         }
     }
 

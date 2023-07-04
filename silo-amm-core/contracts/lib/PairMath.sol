@@ -15,12 +15,13 @@ library PairMath {
     /// @param _debtQuote debt amount that is needed for expected collateral out during swap
     /// @param _onSwapK result of `_onSwapCalculateK()`
     /// @param _fee fee in basis points
-    /// @return debtAmountIn adjusted amount of debt token that will be swap (exact in)
+    /// @return debtAmountIn adjusted amount of debt token (exact in)
+    /// @return amountInForSwap amount that wil be swapped, reduced by fee
     /// @return fee protocol fee amount, that is part of `debtAmountIn`
     function getDebtIn(uint256 _debtQuote, uint256 _onSwapK, uint256 _fee)
         internal
         pure
-        returns (uint256 debtAmountIn, uint256 fee)
+        returns (uint256 debtAmountIn, uint256 amountInForSwap, uint256 fee)
     {
         debtAmountIn = _onSwapK * _debtQuote;
 
@@ -38,7 +39,11 @@ library PairMath {
                 // and it will not be div(0)
                 debtAmountIn = debtAmountIn * _FEE_BP / (_FEE_BP - _fee);
                 fee = debtAmountIn * _fee / _FEE_BP;
+                // fee is always less than debtAmountIn, so we can not underflow
+                amountInForSwap = debtAmountIn - fee;
             }
+        } else {
+            amountInForSwap = debtAmountIn;
         }
     }
 

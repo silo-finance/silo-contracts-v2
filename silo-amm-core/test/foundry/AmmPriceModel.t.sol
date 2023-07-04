@@ -59,12 +59,12 @@ contract AmmPriceModelTest is Test {
         uint256 k = 1e14;
 
         uint256 gasStart = gasleft();
-        (uint256 debtIn,) = PairMath.getDebtIn(debtQuote, k, NO_FEE);
+        (uint256 debtIn,,) = PairMath.getDebtIn(debtQuote, k, NO_FEE);
         (uint256 debtQuote2,) = PairMath.getDebtInReverse(debtIn, k, NO_FEE);
         uint256 gasEnd = gasleft();
 
         assertEq(debtQuote, debtQuote2);
-        assertEq(gasStart - gasEnd, 414, "gas");
+        assertEq(gasStart - gasEnd, 431, "gas");
     }
 
     /*
@@ -76,13 +76,13 @@ contract AmmPriceModelTest is Test {
         uint256 fee = 1234;
 
         uint256 gasStart = gasleft();
-        (uint256 debtIn, uint256 debtInFee) = PairMath.getDebtIn(debtQuote, k, fee);
+        (uint256 debtIn,, uint256 debtInFee) = PairMath.getDebtIn(debtQuote, k, fee);
         (uint256 debtQuote2, uint256 debtQuote2Fee) = PairMath.getDebtInReverse(debtIn, k, fee);
         uint256 gasEnd = gasleft();
 
         assertEq(debtInFee, debtQuote2Fee, "expect the same fees");
         assertEq(debtQuote, debtQuote2, "expect the same debt IN");
-        assertEq(gasStart - gasEnd, 530, "gas");
+        assertEq(gasStart - gasEnd, 563, "gas");
     }
 
     /*
@@ -135,7 +135,7 @@ contract AmmPriceModelTest is Test {
 
                 if (testData.price != 0) {
                     uint256 pricePrecision = 1e8;
-                    (uint256 debtIn, uint256 fee) = PairMath.getDebtIn(collateralPrice, state.k, NO_FEE);
+                    (uint256 debtIn,, uint256 fee) = PairMath.getDebtIn(collateralPrice, state.k, NO_FEE);
 
                     assertEq(fee, 0, "fee");
                     assertEq(debtIn / pricePrecision, testData.price / pricePrecision, "price");

@@ -152,19 +152,28 @@ contract SiloAmmPair is NotSupportedInPair, SafeTransfers, UniswapV2ERC20, AmmSt
             ? (_TOKEN_1, _TOKEN_0, _amount1Out)
             : (_TOKEN_0, _TOKEN_1, _amount0Out);
 
-        uint256 amountInFee;
+        AmountsIn memory amounts;
 
         { // stack too deep
             uint256 k = _onSwapCalculateK(collateralToken, block.timestamp);
             _onSwapPriceChange(collateralToken, uint64(k));
 
             uint256 debtQuote = getQuoteFromOracle(collateralAmountOut, collateralToken);
-            (amountIn, amountInFee) = PairMath.getDebtIn(debtQuote, k, _PROTOCOL_FEE);
+            (amountIn, amounts.amountInForSwap, amounts.feeAmount) = PairMath.getDebtIn(debtQuote, k, _PROTOCOL_FEE);
 
             if (amountIn == 0) revert INSUFFICIENT_INPUT_AMOUNT();
         }
 
-        _finishSwap(collateralToken, debtToken, token0In, amountIn, amountInFee, collateralAmountOut, _to, _data);
+        _finishSwap(
+            collateralToken,
+            debtToken,
+            token0In,
+            amounts.amountInForSwap,
+            amounts.feeAmount,
+            collateralAmountOut,
+            _to,
+            _data
+        );
     }
 
     /// @inheritdoc ISiloAmmPair
@@ -210,7 +219,7 @@ contract SiloAmmPair is NotSupportedInPair, SafeTransfers, UniswapV2ERC20, AmmSt
 
         uint256 k = _onSwapCalculateK(_tokenOut, _timestamp);
         uint256 debtQuote = getQuoteFromOracle(_amountOut, _tokenOut);
-        (amountIn,) = PairMath.getDebtIn(debtQuote, k, _PROTOCOL_FEE);
+        (amountIn,,) = PairMath.getDebtIn(debtQuote, k, _PROTOCOL_FEE);
     }
 
     /// @inheritdoc ISiloAmmPair
