@@ -12,14 +12,14 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-pragma solidity ^0.7.0;
+pragma solidity 0.8.19;
 
-import "@balancer-labs/v2-interfaces/contracts/liquidity-mining/IBalancerTokenAdmin.sol";
+import {IBalancerTokenAdmin, IBalancerToken} from "./interfaces/IBalancerTokenAdmin.sol";
 
 import "@balancer-labs/v2-solidity-utils/contracts/helpers/SingletonAuthentication.sol";
-import "@balancer-labs/v2-solidity-utils/contracts/openzeppelin/ReentrancyGuard.sol";
+import {ReentrancyGuard} from "openzeppelin-contracts/security/ReentrancyGuard.sol";
 import "@balancer-labs/v2-solidity-utils/contracts/helpers/Authentication.sol";
-import "@balancer-labs/v2-solidity-utils/contracts/math/Math.sol";
+import {SafeMath} from "openzeppelin-contracts/utils/math/SafeMath.sol";
 
 // solhint-disable not-rely-on-time
 
@@ -35,7 +35,7 @@ import "@balancer-labs/v2-solidity-utils/contracts/math/Math.sol";
  * it is defined here, we must then wrap the token's minting functionality in order for this to be meaningful.
  */
 contract BalancerTokenAdmin is IBalancerTokenAdmin, SingletonAuthentication, ReentrancyGuard {
-    using Math for uint256;
+    using SafeMath for uint256;
 
     // Initial inflation rate of 145k BAL per week.
     uint256 public constant override INITIAL_RATE = (145000 * 1e18) / uint256(1 weeks); // BAL has 18 decimals
@@ -268,7 +268,7 @@ contract BalancerTokenAdmin is IBalancerTokenAdmin, SingletonAuthentication, Ree
     function _updateMiningParameters() internal {
         uint256 inflationRate = _rate;
         uint256 startEpochSupply = _startEpochSupply.add(inflationRate.mul(RATE_REDUCTION_TIME));
-        inflationRate = inflationRate.mul(RATE_DENOMINATOR).divDown(RATE_REDUCTION_COEFFICIENT);
+        inflationRate = inflationRate.mul(RATE_DENOMINATOR).div(RATE_REDUCTION_COEFFICIENT);
 
         _miningEpoch = _miningEpoch.add(1);
         _startEpochTime = _startEpochTime.add(RATE_REDUCTION_TIME);
@@ -295,7 +295,7 @@ contract BalancerTokenAdmin is IBalancerTokenAdmin, SingletonAuthentication, Ree
         // Special case if end is in future (not yet minted) epoch
         if (end > currentEpochTime.add(RATE_REDUCTION_TIME)) {
             currentEpochTime = currentEpochTime.add(RATE_REDUCTION_TIME);
-            currentRate = currentRate.mul(RATE_DENOMINATOR).divDown(RATE_REDUCTION_COEFFICIENT);
+            currentRate = currentRate.mul(RATE_DENOMINATOR).div(RATE_REDUCTION_COEFFICIENT);
         }
 
         require(end <= currentEpochTime.add(RATE_REDUCTION_TIME), "too far in future");
@@ -325,7 +325,7 @@ contract BalancerTokenAdmin is IBalancerTokenAdmin, SingletonAuthentication, Ree
 
             currentEpochTime = currentEpochTime.sub(RATE_REDUCTION_TIME);
             // double-division with rounding made rate a bit less => good
-            currentRate = currentRate.mul(RATE_REDUCTION_COEFFICIENT).divDown(RATE_DENOMINATOR);
+            currentRate = currentRate.mul(RATE_REDUCTION_COEFFICIENT).div(RATE_DENOMINATOR);
             assert(currentRate <= INITIAL_RATE);
         }
 
