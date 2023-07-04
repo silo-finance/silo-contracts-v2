@@ -1,11 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.19;
 
-import "uniswap/v2-core/contracts/interfaces/IUniswapV2Callee.sol";
 import "silo-amm-periphery/contracts/interfaces/ISiloAmmRouter.sol";
 import "silo-amm-periphery/contracts/interfaces/IFeeManager.sol";
-
-import "./external/UniswapV2ERC20.sol";
 
 import "./interfaces/NotSupportedInPair.sol";
 import "./models/AmmStateModel.sol";
@@ -15,7 +12,7 @@ import "./lib/PairMath.sol";
 
 /// @notice PAIR THAT WAS NOT CREATED BY THE SILO (via Silo Router and Silo Factory) CANNOT BE TRUSTED
 /// before using it, verify this contract address against Silo.ammPair()
-contract SiloAmmPair is NotSupportedInPair, SafeTransfers, UniswapV2ERC20, AmmStateModel, AmmPriceModel {
+contract SiloAmmPair is NotSupportedInPair, SafeTransfers, AmmStateModel, AmmPriceModel {
     // TODO when we check exponential operations on shares we will decide if we need minimum liquidity
     uint public constant MINIMUM_LIQUIDITY = 10**3;
 
@@ -25,6 +22,9 @@ contract SiloAmmPair is NotSupportedInPair, SafeTransfers, UniswapV2ERC20, AmmSt
 
     /// @dev in case of two oracle setup, we using bridge token to get quote
     address public immutable BRIDGE_TOKEN; // solhint-disable-line var-name-mixedcase
+
+    /// @dev flag, that tell us, if we have two oracle set up or one
+    OracleSetup public immutable ORACLE_SETUP; // solhint-disable-line var-name-mixedcase
 
     /// @dev gives token0 price in token1
     ISiloOracle public immutable ORACLE_0; // solhint-disable-line var-name-mixedcase
@@ -42,14 +42,6 @@ contract SiloAmmPair is NotSupportedInPair, SafeTransfers, UniswapV2ERC20, AmmSt
     address internal immutable _PROTOCOL_FEE_RECEIVER; // solhint-disable-line var-name-mixedcase
 
     address internal immutable _ROUTER; // solhint-disable-line var-name-mixedcase
-
-    /// @dev flag, that tell us, if we have two oracle set up or one
-    OracleSetup public immutable ORACLE_SETUP; // solhint-disable-line var-name-mixedcase
-
-    uint112 internal _token0Reserve;           // uses single storage slot, accessible via getReserves
-    uint112 internal _token1Reserve;           // uses single storage slot, accessible via getReserves
-
-    uint256 public kLast; // reserve0 * reserve1, as of immediately after the most recent liquidity event
 
     uint256 private _unlocked = 1;
 
@@ -138,7 +130,7 @@ contract SiloAmmPair is NotSupportedInPair, SafeTransfers, UniswapV2ERC20, AmmSt
     }
 
     /// @inheritdoc IUniswapV2Pair
-    function swap(uint256 _amount0Out, uint256 _amount1Out, address _to, bytes calldata _data)
+    function swap(uint256 _amount0Out, uint256 _amount1Out, address _to, bytes calldata /* _data */)
         external
         virtual
         lock
@@ -167,20 +159,18 @@ contract SiloAmmPair is NotSupportedInPair, SafeTransfers, UniswapV2ERC20, AmmSt
             if (amountIn == 0) revert INSUFFICIENT_INPUT_AMOUNT();
         }
 
-        _finishSwap(
-            collateralToken,
+        _finishSwap(collateralToken,
             debtToken,
             token0In,
             amounts.amountInForSwap,
             amounts.feeAmount,
             collateralAmountOut,
-            _to,
-            _data
+            _to
         );
     }
 
     /// @inheritdoc ISiloAmmPair
-    function exactInSwap(address _tokenIn, uint256 _amountIn, address _to, bytes calldata _data)
+    function exactInSwap(address _tokenIn, uint256 _amountIn, address _to)
         external
         virtual
         lock
@@ -202,7 +192,7 @@ contract SiloAmmPair is NotSupportedInPair, SafeTransfers, UniswapV2ERC20, AmmSt
         amountOut = getQuoteFromOracle(virtualDebtIn, _tokenIn);
         if (amountOut == 0) revert INSUFFICIENT_OUTPUT_AMOUNT();
 
-        _finishSwap(collateral, _tokenIn, token0In, _amountIn, amountInFee, amountOut, _to, _data);
+        _finishSwap(collateral, _tokenIn, token0In, _amountIn, amountInFee, amountOut, _to);
     }
 
     /// @inheritdoc ISiloAmmPair
@@ -291,7 +281,7 @@ contract SiloAmmPair is NotSupportedInPair, SafeTransfers, UniswapV2ERC20, AmmSt
     /// @return reserve0
     /// @return reserve1
     /// @return blockTimestampLast is always 0, we do not support Oracle functionality
-    function getReserves() public view returns (uint112 reserve0, uint112 reserve1, uint32 blockTimestampLast) {
+    function getReserves() external view returns (uint112 reserve0, uint112 reserve1, uint32 blockTimestampLast) {
         // TODO if univ2 can handle reserves in uint112 then maybe so do we? QA and verify
         reserve0 = uint112(_totalStates[_TOKEN_0].collateralAmount);
         reserve1 = uint112(_totalStates[_TOKEN_1].collateralAmount);
@@ -323,8 +313,7 @@ contract SiloAmmPair is NotSupportedInPair, SafeTransfers, UniswapV2ERC20, AmmSt
         uint256 _amountInForSwap,
         uint256 _amountInFee,
         uint256 _amountOut,
-        address _to,
-        bytes calldata _data
+        address _to
     )
         internal
         virtual
@@ -345,15 +334,6 @@ contract SiloAmmPair is NotSupportedInPair, SafeTransfers, UniswapV2ERC20, AmmSt
         }
 
         _safeTransferFrom(_collateralToken, _SILO, _to, _amountOut);
-
-        if (_data.length != 0) {
-            // keep it for backwards compatibility and allow flash swap
-            (uint256 _amount0Out, uint256 _amount1Out) = _token0In
-                ? (uint256(0), _amountOut)
-                : (_amountOut, uint256(0));
-
-            IUniswapV2Callee(_to).uniswapV2Call(msg.sender, _amount0Out, _amount1Out, _data);
-        }
     }
 
     function _oracleSetup(address _oracle0, address _oracle1, address _bridgeQuoteToken)

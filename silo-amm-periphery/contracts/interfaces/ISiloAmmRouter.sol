@@ -6,6 +6,7 @@ import "silo-amm-core/contracts/interfaces/IAmmPriceModel.sol";
 
 import "../external/interfaces/IUniswapV2Router02.sol";
 import "./ISiloAmmRouterEvents.sol";
+// import "silo-amm-core/contracts/interfaces/ISiloAmmPair.sol";
 
 interface ISiloAmmRouter is ISiloAmmRouterEvents, IUniswapV2Router02 {
     /// @dev It creates pool for pair of tokens. It creates 1:1 bond with Silo
@@ -27,8 +28,8 @@ interface ISiloAmmRouter is ISiloAmmRouterEvents, IUniswapV2Router02 {
         IAmmPriceModel.AmmPriceConfig memory _config
     ) external returns (ISiloAmmPair pair);
 
-    function getPair(address tokenA, address tokenB, uint256 id) external view returns (IUniswapV2Pair pair);
-    function getPairs(address tokenA, address tokenB) external view returns (IUniswapV2Pair[] memory pairs);
+    function getPair(address tokenA, address tokenB, uint256 id) external view returns (ISiloAmmPair pair);
+    function getPairs(address tokenA, address tokenB) external view returns (ISiloAmmPair[] memory pairs);
 
     function allPairs(uint) external view returns (address pair);
     function allPairsLength() external view returns (uint);

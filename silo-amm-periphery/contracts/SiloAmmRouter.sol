@@ -19,7 +19,7 @@ contract SiloAmmRouter is NotSupportedRouter, SafeTransfers {
     address public immutable WETH; // solhint-disable-line var-name-mixedcase
 
     /// @dev token0 => token1 => ID => pair
-    mapping(address => mapping(address => mapping(uint256 => IUniswapV2Pair))) internal _pairs;
+    mapping(address => mapping(address => mapping(uint256 => ISiloAmmPair))) internal _pairs;
 
     /// @dev token0 => token1 => number of pairs
     mapping(address => mapping(address => uint256)) internal _sameTypePairsCount;
@@ -87,12 +87,12 @@ contract SiloAmmRouter is NotSupportedRouter, SafeTransfers {
             _config
         );
 
-        _pairs[_token0][_token1][id] = IUniswapV2Pair(address(pair));
-        _pairs[_token1][_token0][id] = IUniswapV2Pair(address(pair));
+        _pairs[_token0][_token1][id] = ISiloAmmPair(address(pair));
+        _pairs[_token1][_token0][id] = ISiloAmmPair(address(pair));
         // we will not overflow in lifetime
         unchecked { _sameTypePairsCount[_token0][_token1]++; }
 
-        allPairs.push(address(IUniswapV2Pair(address(pair))));
+        allPairs.push(address(ISiloAmmPair(address(pair))));
 
         // UniswapV2 compatible event
         emit PairCreated(_token0, _token1, address(pair), id);
@@ -174,7 +174,7 @@ contract SiloAmmRouter is NotSupportedRouter, SafeTransfers {
     }
 
     function getReserves(
-        IUniswapV2Pair _pair,
+        ISiloAmmPair _pair,
         address _tokenA,
         address _tokenB
     ) external view returns (uint reserveA, uint reserveB) {
@@ -185,22 +185,22 @@ contract SiloAmmRouter is NotSupportedRouter, SafeTransfers {
         address _tokenA,
         address _tokenB,
         uint256 _id
-    ) external view returns (IUniswapV2Pair pair) {
+    ) external view returns (ISiloAmmPair pair) {
         return _pairs[_tokenA][_tokenB][_id];
     }
 
-    function getPair(address _tokenA, address _tokenB) external view returns (IUniswapV2Pair pair) {
+    function getPair(address _tokenA, address _tokenB) external view returns (ISiloAmmPair pair) {
         return _pairs[_tokenA][_tokenB][0];
     }
 
-    function getPair(address _tokenA, address _tokenB, uint256 _id) external view returns (IUniswapV2Pair pair) {
+    function getPair(address _tokenA, address _tokenB, uint256 _id) external view returns (ISiloAmmPair pair) {
         return _pairs[_tokenA][_tokenB][_id];
     }
 
     /// @dev expected sorted tokens
-    function getPairs(address _token0, address _token1) external view returns (IUniswapV2Pair[] memory pairs) {
+    function getPairs(address _token0, address _token1) external view returns (ISiloAmmPair[] memory pairs) {
         uint256 count = _sameTypePairsCount[_token0][_token1];
-        pairs = new IUniswapV2Pair[](count);
+        pairs = new ISiloAmmPair[](count);
 
         for (uint256 i; i < count;) {
             pairs[i] = _pairs[_token0][_token1][i];
@@ -208,8 +208,8 @@ contract SiloAmmRouter is NotSupportedRouter, SafeTransfers {
         }
     }
 
-    function getAllPairs(uint256 _offset, uint256 _limit) external view returns (IUniswapV2Pair[] memory pairs) {
-        pairs = new IUniswapV2Pair[](_limit);
+    function getAllPairs(uint256 _offset, uint256 _limit) external view returns (ISiloAmmPair[] memory pairs) {
+        pairs = new ISiloAmmPair[](_limit);
         uint256 count = pairs.length;
 
         unchecked {
@@ -217,7 +217,7 @@ contract SiloAmmRouter is NotSupportedRouter, SafeTransfers {
                 uint256 id = _offset + i;
 
                 if (id < count) {
-                    pairs[i] = IUniswapV2Pair(allPairs[id]);
+                    pairs[i] = ISiloAmmPair(allPairs[id]);
                 }
             }
         }
@@ -251,7 +251,7 @@ contract SiloAmmRouter is NotSupportedRouter, SafeTransfers {
 
             for (uint256 i; i < count; i += 2) {
                 address to = i + 2 < count ? address(_path[i + 3]) : _to;
-                prevAmountIn = ISiloAmmPair(_path[i + 1]).exactInSwap(_path[i], prevAmountIn, to, "");
+                prevAmountIn = ISiloAmmPair(_path[i + 1]).exactInSwap(_path[i], prevAmountIn, to);
                 amounts[i / 2] = prevAmountIn;
             }
         }
@@ -281,7 +281,7 @@ contract SiloAmmRouter is NotSupportedRouter, SafeTransfers {
                     : (amountOut, uint256(0));
 
                 address to = i < _path.length - 3 ? address(_path[i + 3]) : _to;
-                amounts[i / 2] = IUniswapV2Pair(_path[i + 1]).swap(amount0Out, amount1Out, to, "");
+                amounts[i / 2] = ISiloAmmPair(_path[i + 1]).swap(amount0Out, amount1Out, to, "");
             }
         }
     }

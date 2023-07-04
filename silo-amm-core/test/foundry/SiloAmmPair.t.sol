@@ -139,7 +139,7 @@ contract SiloAmmPairTest is Test, Fixtures {
         assertEq(IERC20(TOKEN_0).balanceOf(address(this)), 666666666666666667, "expect collateral in `to` wallet");
 
         gasStart = gasleft();
-        pair.exactInSwap(TOKEN_1, 1e17, to, "");
+        pair.exactInSwap(TOKEN_1, 1e17, to);
         gas = gasStart - gasleft();
 
         emit log_named_uint("gas for exactInSwap", gas);

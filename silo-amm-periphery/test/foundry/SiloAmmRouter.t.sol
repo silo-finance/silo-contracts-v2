@@ -78,7 +78,7 @@ contract SiloAmmRouterTest is Test, Fixtures, ISiloAmmRouterEvents {
     */
     function test_SiloAmmRouter_getPairs() public {
         uint256 gasStart = gasleft();
-        IUniswapV2Pair[] memory pairs = ROUTER.getPairs(TOKEN_0, TOKEN_1);
+        ISiloAmmPair[] memory pairs = ROUTER.getPairs(TOKEN_0, TOKEN_1);
         uint256 gasUsed = gasStart - gasleft();
 
         emit log_named_uint("gas used", gasUsed);
