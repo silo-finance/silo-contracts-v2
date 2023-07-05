@@ -18,6 +18,8 @@ import {ILiquidityGaugeFactory} from "balancer-labs/v2-interfaces/liquidity-mini
 
 import {Clones} from "openzeppelin-contracts/proxy/Clones.sol";
 
+// solhint-disable ordering
+
 abstract contract BaseGaugeFactory is ILiquidityGaugeFactory {
     address private _gaugeImplementation;
 
