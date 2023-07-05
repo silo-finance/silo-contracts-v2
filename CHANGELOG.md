@@ -11,3 +11,5 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   - core (`commit:ca96a9fc9d90dfb4f20da4ae325de46e79bdb006`)
   - periphery (`commit:0335e8f7e1bd1e8d8329fd300aea2ef2f36dd19f`)
   - removed: oracle features, router01 and migration
+
+- LiquidityGaugeFactory
