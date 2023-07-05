@@ -73,12 +73,12 @@ library SiloSolvencyLib {
     }
 
     // solhint-disable-next-line function-max-lines
-    function _getLtvInternal(
+    function getLtvInternal(
         ISiloConfig.ConfigData memory _configData,
         address _borrower,
         bool _useLtOracle,
         mapping(address => ISilo.AssetStorage) storage _assetStorage
-    ) private view returns (LtvData memory ltvData) {
+    ) internal view returns (LtvData memory ltvData) {
         uint256 debtShareToken0Balance = IShareToken(_configData.debtShareToken0).balanceOf(_borrower);
 
         if (debtShareToken0Balance != 0) {
@@ -181,7 +181,7 @@ library SiloSolvencyLib {
         bool _useLtOracle,
         mapping(address => ISilo.AssetStorage) storage _assetStorage
     ) internal view returns (uint256, bool, uint256, uint256, uint256) {
-        LtvData memory ltvData = _getLtvInternal(_configData, _borrower, _useLtOracle, _assetStorage);
+        LtvData memory ltvData = getLtvInternal(_configData, _borrower, _useLtOracle, _assetStorage);
 
         if (ltvData.debtAssets == 0) return (0, false, 0, 0, 0);
 
@@ -215,7 +215,7 @@ library SiloSolvencyLib {
         bool _useLtOracle,
         mapping(address => ISilo.AssetStorage) storage _assetStorage
     ) internal returns (uint256, bool, uint256, uint256, uint256) {
-        LtvData memory ltvData = _getLtvInternal(_configData, _borrower, _useLtOracle, _assetStorage);
+        LtvData memory ltvData = getLtvInternal(_configData, _borrower, _useLtOracle, _assetStorage);
 
         if (ltvData.debtAssets == 0) return (0, false, 0, 0, 0);
 

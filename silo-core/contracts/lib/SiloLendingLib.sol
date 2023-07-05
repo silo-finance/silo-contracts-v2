@@ -18,6 +18,7 @@ library SiloLendingLib {
     uint256 internal constant _PRECISION_DECIMALS = 1e18;
 
     error DepositNotPossible();
+    error BorrowNotPossible();
     error NothingToWithdraw();
     error NotSolvent();
     error NotEnoughLiquidity();
@@ -70,8 +71,8 @@ library SiloLendingLib {
     /// @param shares amount of shares that was burn
     event Repay(address token, address borrower, address repayer, uint256 assets, uint256 shares);
 
-    function _depositPossibleInternal(ISiloConfig.ConfigData memory _configData, address _token, address _depositor)
-        private
+    function depositPossibleInternal(ISiloConfig.ConfigData memory _configData, address _token, address _depositor)
+        internal
         view
         returns (bool)
     {
@@ -82,11 +83,11 @@ library SiloLendingLib {
     function depositPossible(ISiloConfig _config, address _token, address _depositor) internal view returns (bool) {
         ISiloConfig.ConfigData memory configData = _config.getConfig();
 
-        return _depositPossibleInternal(configData, _token, _depositor);
+        return depositPossibleInternal(configData, _token, _depositor);
     }
 
-    function _borrowPossibleInternal(ISiloConfig.ConfigData memory _configData, address _token, address _borrower)
-        private
+    function borrowPossibleInternal(ISiloConfig.ConfigData memory _configData, address _token, address _borrower)
+        internal
         view
         returns (bool)
     {
@@ -101,7 +102,7 @@ library SiloLendingLib {
     function borrowPossible(ISiloConfig _config, address _token, address _borrower) internal view returns (bool) {
         ISiloConfig.ConfigData memory configData = _config.getConfig();
 
-        return _borrowPossibleInternal(configData, _token, _borrower);
+        return borrowPossibleInternal(configData, _token, _borrower);
     }
 
     function maxDeposit(
@@ -138,22 +139,22 @@ library SiloLendingLib {
         SiloStdLib.TokenType tokenType = SiloStdLib.TokenType.Collateral;
         if (_isProtected) tokenType = SiloStdLib.TokenType.Protected;
 
-        if (!_depositPossibleInternal(configData, _token, _receiver)) revert DepositNotPossible();
+        if (!depositPossibleInternal(configData, _token, _receiver)) revert DepositNotPossible();
 
         return SiloStdLib.convertToSharesInternal(configData, _token, _assets, tokenType, _assetStorage);
     }
 
-    function _depositInternal(
+    function depositInternal(
         ISiloConfig _config,
         ISiloFactory _factory,
         address _token,
         address _receiver,
         bool _isProtected,
         mapping(address => ISilo.AssetStorage) storage _assetStorage
-    ) private returns (uint256 collateralAssets, IShareToken collateralShareToken) {
+    ) internal returns (uint256 collateralAssets, IShareToken collateralShareToken) {
         ISiloConfig.ConfigData memory configData = _config.getConfig();
 
-        _accrueInterestInternal(configData, _factory, _token, _assetStorage);
+        accrueInterestInternal(configData, _factory, _token, _assetStorage);
 
         if (!depositPossible(_config, _token, _receiver)) revert DepositNotPossible();
 
@@ -177,7 +178,7 @@ library SiloLendingLib {
         mapping(address => ISilo.AssetStorage) storage _assetStorage
     ) internal returns (uint256 shares) {
         (uint256 collateralAssets, IShareToken collateralShareToken) =
-            _depositInternal(_config, _factory, _token, _receiver, _isProtected, _assetStorage);
+            depositInternal(_config, _factory, _token, _receiver, _isProtected, _assetStorage);
 
         shares = SiloStdLib.toShare(_assets, collateralAssets, collateralShareToken.totalSupply());
         collateralShareToken.mint(_receiver, msg.sender, shares);
@@ -234,7 +235,7 @@ library SiloLendingLib {
         mapping(address => ISilo.AssetStorage) storage _assetStorage
     ) internal returns (uint256 assets) {
         (uint256 collateralAssets, IShareToken collateralToken) =
-            _depositInternal(_config, _factory, _token, _receiver, _isProtected, _assetStorage);
+            depositInternal(_config, _factory, _token, _receiver, _isProtected, _assetStorage);
 
         assets = SiloStdLib.toAssets(_shares, collateralAssets, collateralToken.totalSupply());
         collateralToken.mint(_receiver, msg.sender, _shares);
@@ -244,13 +245,13 @@ library SiloLendingLib {
         emit Deposit(_token, _depositor, _receiver, assets, _shares, _isProtected);
     }
 
-    function _maxWithdrawInternal(
+    function maxWithdrawInternal(
         ISiloConfig.ConfigData memory _configData,
         address _token,
         address _owner,
         bool _isProtected,
         mapping(address => ISilo.AssetStorage) storage _assetStorage
-    ) private view returns (uint256 shares, uint256 assets) {
+    ) internal view returns (uint256 shares, uint256 assets) {
         IShareToken shareToken;
         bool isToken0Collateral;
         uint256 totalAmount;
@@ -297,7 +298,7 @@ library SiloLendingLib {
         mapping(address => ISilo.AssetStorage) storage _assetStorage
     ) internal view returns (uint256 maxAssets) {
         ISiloConfig.ConfigData memory configData = _config.getConfig();
-        (, maxAssets) = _maxWithdrawInternal(configData, _token, _owner, _isProtected, _assetStorage);
+        (, maxAssets) = maxWithdrawInternal(configData, _token, _owner, _isProtected, _assetStorage);
     }
 
     function previewWithdraw(
@@ -314,7 +315,7 @@ library SiloLendingLib {
     }
 
     // solhint-disable-next-line code-complexity
-    function _withdrawInternal(
+    function withdrawInternal(
         ISiloConfig _config,
         ISiloFactory _factory,
         address _token,
@@ -326,10 +327,10 @@ library SiloLendingLib {
         bool _isProtected,
         bool _isWithdraw,
         mapping(address => ISilo.AssetStorage) storage _assetStorage
-    ) private returns (uint256 assets, uint256 shares) {
+    ) internal returns (uint256 assets, uint256 shares) {
         ISiloConfig.ConfigData memory configData = _config.getConfig();
 
-        _accrueInterestInternal(configData, _factory, _token, _assetStorage);
+        accrueInterestInternal(configData, _factory, _token, _assetStorage);
 
         IShareToken shareToken;
         uint256 totalAmount;
@@ -399,7 +400,7 @@ library SiloLendingLib {
         bool _isProtected,
         mapping(address => ISilo.AssetStorage) storage _assetStorage
     ) internal returns (uint256 shares) {
-        (, shares) = _withdrawInternal(
+        (, shares) = withdrawInternal(
             _config, _factory, _token, _assets, 0, _receiver, _owner, _spender, _isProtected, true, _assetStorage
         );
     }
@@ -412,7 +413,7 @@ library SiloLendingLib {
         mapping(address => ISilo.AssetStorage) storage _assetStorage
     ) internal view returns (uint256 maxShares) {
         ISiloConfig.ConfigData memory configData = _config.getConfig();
-        (maxShares,) = _maxWithdrawInternal(configData, _token, _owner, _isProtected, _assetStorage);
+        (maxShares,) = maxWithdrawInternal(configData, _token, _owner, _isProtected, _assetStorage);
     }
 
     function previewRedeem(
@@ -439,12 +440,12 @@ library SiloLendingLib {
         bool _isProtected,
         mapping(address => ISilo.AssetStorage) storage _assetStorage
     ) internal returns (uint256 assets) {
-        (assets,) = _withdrawInternal(
+        (assets,) = withdrawInternal(
             _config, _factory, _token, 0, _shares, _receiver, _owner, _spender, _isProtected, false, _assetStorage
         );
     }
 
-    function _transitionInternal(
+    function transitionInternal(
         ISiloConfig.ConfigData memory _configData,
         ISiloFactory _factory,
         address _token,
@@ -453,8 +454,8 @@ library SiloLendingLib {
         address _spender,
         bool _toProtected,
         mapping(address => ISilo.AssetStorage) storage _assetStorage
-    ) private returns (uint256 assets) {
-        _accrueInterestInternal(_configData, _factory, _token, _assetStorage);
+    ) internal returns (uint256 assets) {
+        accrueInterestInternal(_configData, _factory, _token, _assetStorage);
 
         IShareToken fromShareToken;
         uint256 fromTotalAmount;
@@ -517,7 +518,7 @@ library SiloLendingLib {
     ) internal returns (uint256 assets) {
         ISiloConfig.ConfigData memory configData = _config.getConfig();
 
-        return _transitionInternal(configData, _factory, _token, _shares, _owner, _spender, true, _assetStorage);
+        return transitionInternal(configData, _factory, _token, _shares, _owner, _spender, true, _assetStorage);
     }
 
     function transitionFromProtected(
@@ -531,16 +532,19 @@ library SiloLendingLib {
     ) internal returns (uint256 assets) {
         ISiloConfig.ConfigData memory configData = _config.getConfig();
 
-        return _transitionInternal(configData, _factory, _token, _shares, _owner, _spender, false, _assetStorage);
+        return transitionInternal(configData, _factory, _token, _shares, _owner, _spender, false, _assetStorage);
     }
 
-    function _maxBorrowInternal(
+    // solhint-disable-next-line code-complexity
+    function maxBorrowInternal(
         ISiloConfig _config,
         address _token,
         address _borrower,
         mapping(address => ISilo.AssetStorage) storage _assetStorage
-    ) private view returns (uint256 maxAssets, uint256 maxShares) {
+    ) internal view returns (uint256 maxAssets, uint256 maxShares) {
         ISiloConfig.ConfigData memory configData = _config.getConfig();
+
+        if (!borrowPossibleInternal(configData, _token, _borrower)) return (0, 0);
 
         IShareToken protectedShareToken = SiloStdLib.findShareToken(configData, SiloStdLib.TokenType.Protected, _token);
         IShareToken collateralShareToken =
@@ -621,7 +625,7 @@ library SiloLendingLib {
         address _borrower,
         mapping(address => ISilo.AssetStorage) storage _assetStorage
     ) internal view returns (uint256 maxAssets) {
-        (maxAssets,) = _maxBorrowInternal(_config, _token, _borrower, _assetStorage);
+        (maxAssets,) = maxBorrowInternal(_config, _token, _borrower, _assetStorage);
     }
 
     function previewBorrow(
@@ -633,7 +637,7 @@ library SiloLendingLib {
         return SiloStdLib.convertToShares(_config, _token, _assets, SiloStdLib.TokenType.Debt, _assetStorage);
     }
 
-    function _borrowInternal(
+    function borrowInternal(
         ISiloConfig _config,
         ISiloFactory _factory,
         address _token,
@@ -644,10 +648,12 @@ library SiloLendingLib {
         address _spender,
         bool _isAssets,
         mapping(address => ISilo.AssetStorage) storage _assetStorage
-    ) private returns (uint256 assets, uint256 shares) {
+    ) internal returns (uint256 assets, uint256 shares) {
         ISiloConfig.ConfigData memory configData = _config.getConfig();
 
-        _accrueInterestInternal(configData, _factory, _token, _assetStorage);
+        if (!borrowPossibleInternal(configData, _token, _borrower)) revert BorrowNotPossible();
+
+        accrueInterestInternal(configData, _factory, _token, _assetStorage);
 
         IShareToken debtShareToken = SiloStdLib.findShareToken(configData, SiloStdLib.TokenType.Debt, _token);
         uint256 totalDebtAmount = _assetStorage[_token].debtAssets;
@@ -689,7 +695,7 @@ library SiloLendingLib {
         mapping(address => ISilo.AssetStorage) storage _assetStorage
     ) internal returns (uint256 shares) {
         (, shares) =
-            _borrowInternal(_config, _factory, _token, _assets, 0, _receiver, _borrower, _spender, true, _assetStorage);
+            borrowInternal(_config, _factory, _token, _assets, 0, _receiver, _borrower, _spender, true, _assetStorage);
     }
 
     function maxBorrowShares(
@@ -698,7 +704,7 @@ library SiloLendingLib {
         address _borrower,
         mapping(address => ISilo.AssetStorage) storage _assetStorage
     ) internal view returns (uint256 maxShares) {
-        (, maxShares) = _maxBorrowInternal(_config, _token, _borrower, _assetStorage);
+        (, maxShares) = maxBorrowInternal(_config, _token, _borrower, _assetStorage);
     }
 
     function previewBorrowShares(
@@ -720,17 +726,17 @@ library SiloLendingLib {
         address _spender,
         mapping(address => ISilo.AssetStorage) storage _assetStorage
     ) internal returns (uint256 assets) {
-        (assets,) = _borrowInternal(
+        (assets,) = borrowInternal(
             _config, _factory, _token, 0, _shares, _receiver, _borrower, _spender, false, _assetStorage
         );
     }
 
-    function _maxRepayInternal(
+    function maxRepayInternal(
         ISiloConfig _config,
         address _token,
         address _borrower,
         mapping(address => ISilo.AssetStorage) storage _assetStorage
-    ) private view returns (uint256 assets, uint256 shares) {
+    ) internal view returns (uint256 assets, uint256 shares) {
         ISiloConfig.ConfigData memory configData = _config.getConfig();
 
         IShareToken debtShareToken = SiloStdLib.findShareToken(configData, SiloStdLib.TokenType.Debt, _token);
@@ -745,7 +751,7 @@ library SiloLendingLib {
         address _borrower,
         mapping(address => ISilo.AssetStorage) storage _assetStorage
     ) internal view returns (uint256 assets) {
-        (assets,) = _maxRepayInternal(_config, _token, _borrower, _assetStorage);
+        (assets,) = maxRepayInternal(_config, _token, _borrower, _assetStorage);
     }
 
     function previewRepay(
@@ -757,7 +763,7 @@ library SiloLendingLib {
         shares = SiloStdLib.convertToShares(_config, _token, _assets, SiloStdLib.TokenType.Debt, _assetStorage);
     }
 
-    function _repayInternal(
+    function repayInternal(
         ISiloConfig _config,
         ISiloFactory _factory,
         address _token,
@@ -767,10 +773,10 @@ library SiloLendingLib {
         address _repayer,
         bool _isAssets,
         mapping(address => ISilo.AssetStorage) storage _assetStorage
-    ) private returns (uint256 assets, uint256 shares) {
+    ) internal returns (uint256 assets, uint256 shares) {
         ISiloConfig.ConfigData memory configData = _config.getConfig();
 
-        _accrueInterestInternal(configData, _factory, _token, _assetStorage);
+        accrueInterestInternal(configData, _factory, _token, _assetStorage);
 
         IShareToken debtShareToken = SiloStdLib.findShareToken(configData, SiloStdLib.TokenType.Debt, _token);
         uint256 totalDebtAmount = _assetStorage[_token].debtAssets;
@@ -812,7 +818,7 @@ library SiloLendingLib {
         address _repayer,
         mapping(address => ISilo.AssetStorage) storage _assetStorage
     ) internal returns (uint256 shares) {
-        (, shares) = _repayInternal(_config, _factory, _token, _assets, 0, _borrower, _repayer, true, _assetStorage);
+        (, shares) = repayInternal(_config, _factory, _token, _assets, 0, _borrower, _repayer, true, _assetStorage);
     }
 
     function maxRepayShares(
@@ -821,7 +827,7 @@ library SiloLendingLib {
         address _borrower,
         mapping(address => ISilo.AssetStorage) storage _assetStorage
     ) internal view returns (uint256 shares) {
-        (, shares) = _maxRepayInternal(_config, _token, _borrower, _assetStorage);
+        (, shares) = maxRepayInternal(_config, _token, _borrower, _assetStorage);
     }
 
     function previewRepayShares(
@@ -851,15 +857,15 @@ library SiloLendingLib {
         address _repayer,
         mapping(address => ISilo.AssetStorage) storage _assetStorage
     ) internal returns (uint256 assets) {
-        (assets,) = _repayInternal(_config, _factory, _token, 0, _shares, _borrower, _repayer, false, _assetStorage);
+        (assets,) = repayInternal(_config, _factory, _token, 0, _shares, _borrower, _repayer, false, _assetStorage);
     }
 
-    function _accrueInterestInternal(
+    function accrueInterestInternal(
         ISiloConfig.ConfigData memory _configData,
         ISiloFactory _factory,
         address _token,
         mapping(address => ISilo.AssetStorage) storage _assetStorage
-    ) private returns (uint256 accruedInterest) {
+    ) internal returns (uint256 accruedInterest) {
         uint256 lastTimestamp = _assetStorage[_token].interestRateTimestamp;
 
         // This is the first time, so we can return early and save some gas
@@ -923,6 +929,6 @@ library SiloLendingLib {
     ) internal returns (uint256 accruedInterest) {
         ISiloConfig.ConfigData memory configData = _config.getConfig();
 
-        accruedInterest = _accrueInterestInternal(configData, _factory, _token, _assetStorage);
+        accruedInterest = accrueInterestInternal(configData, _factory, _token, _assetStorage);
     }
 }
