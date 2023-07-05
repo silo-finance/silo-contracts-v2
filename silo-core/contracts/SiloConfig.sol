@@ -61,6 +61,8 @@ contract SiloConfig is ISiloConfig {
 
         SILO_ID = _siloId;
 
+        // TODO: sort tokens, token0 < token1, use two structs
+
         // TOKEN #0
 
         TOKEN0 = _configData.token0;

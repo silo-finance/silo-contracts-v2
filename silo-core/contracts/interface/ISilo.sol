@@ -132,9 +132,7 @@ interface ISilo {
 
     function maxRepayShares(address _token, address _borrower) external view returns (uint256 shares);
     function previewRepayShares(address _token, uint256 _shares) external view returns (uint256 assets);
-    function repayShares(address _token, uint256 _shares, address repayer, address _borrower)
-        external
-        returns (uint256 assets);
+    function repayShares(address _token, uint256 _shares, address _borrower) external returns (uint256 assets);
 
     // TODO: https://eips.ethereum.org/EIPS/eip-3156
     function flashloan(
