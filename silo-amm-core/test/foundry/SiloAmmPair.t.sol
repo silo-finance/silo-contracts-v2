@@ -50,7 +50,7 @@ contract SiloAmmPairTest is Test, Fixtures {
         uint256 gas = gasStart - gasEnd;
         emit log_named_uint("gas", gas);
 
-        assertEq(gas, 7810);
+        assertEq(gas, 7835);
 
         assertEq(reserve0, 0);
         assertEq(reserve1, 0);
@@ -68,7 +68,7 @@ contract SiloAmmPairTest is Test, Fixtures {
         uint256 gas = gasStart - gasEnd;
         emit log_named_uint("gas", gas);
 
-        assertEq(gas, 3548);
+        assertEq(gas, 3526);
         assertEq(debtPrice, 1e18);
     }
 
@@ -95,7 +95,7 @@ contract SiloAmmPairTest is Test, Fixtures {
 
         emit log_named_uint("gas #1", gas);
 
-        assertEq(gas, 204491);
+        assertEq(gas, 204458);
         assertEq(shares, amount, "initial amount == shares");
 
         gasStart = gasleft();
@@ -104,7 +104,7 @@ contract SiloAmmPairTest is Test, Fixtures {
 
         emit log_named_uint("gas #2", gas);
 
-        assertEq(gas, 170370, "gas usage for adding liquidity with cleanup");
+        assertEq(gas, 170319, "gas usage for adding liquidity with cleanup");
         assertEq(shares, shares2, "expect same shares");
     }
 
@@ -135,15 +135,15 @@ contract SiloAmmPairTest is Test, Fixtures {
         uint256 gas = gasStart - gasleft();
 
         emit log_named_uint("gas for swap", gas);
-        assertEq(gas, 85442);
+        assertEq(gas, 85262);
         assertEq(IERC20(TOKEN_0).balanceOf(address(this)), 666666666666666667, "expect collateral in `to` wallet");
 
         gasStart = gasleft();
-        pair.exactInSwap(TOKEN_1, 1e17, to, "");
+        pair.exactInSwap(TOKEN_1, 1e17, to);
         gas = gasStart - gasleft();
 
         emit log_named_uint("gas for exactInSwap", gas);
-        assertEq(gas, 19731);
+        assertEq(gas, 19354);
         assertEq(IERC20(TOKEN_0).balanceOf(address(this)), 566666666666666667, "expect collateral in `to` wallet");
 
         gasStart = gasleft();
@@ -151,13 +151,13 @@ contract SiloAmmPairTest is Test, Fixtures {
         gas = gasStart - gasleft();
 
         emit log_named_uint("gas for partial removal", gas);
-        assertEq(gas, 7098);
+        assertEq(gas, 7064);
 
         gasStart = gasleft();
         pair.removeLiquidity(TOKEN_0, _user, 1e18);
         gas = gasStart - gasleft();
 
         emit log_named_uint("gas for FULL removal", gas);
-        assertEq(gas, 5376);
+        assertEq(gas, 5336);
     }
 }

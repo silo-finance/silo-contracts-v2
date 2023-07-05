@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: GD
 pragma solidity >=0.5.0;
 
-import "silo-amm-core/contracts/external/interfaces/IUniswapV2Pair.sol";
 import "silo-amm-core/contracts/interfaces/ISiloAmmPair.sol";
 
 interface ISiloAmmRouterEvents {
@@ -9,7 +8,7 @@ interface ISiloAmmRouterEvents {
     /// @notice in Silo we can have multiple pool for same tokens pair
     /// @param token0 token address, "lower" one
     /// @param token1 token address, "higher" one
-    /// @param pair address of ISiloAmmPair, compatible with IUniswapV2Pair interface,
+    /// @param pair address of ISiloAmmPair
     /// this address can not be calculated using create2
     /// @param id index in `allPools` array
     event PairCreated(address indexed token0, address indexed token1, address pair, uint id);

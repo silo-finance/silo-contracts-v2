@@ -59,8 +59,7 @@ interface ISiloAmmPair is IUniswapV2Pair {
     /// @param _tokenIn address of token that will be swap for other one
     /// @param _amountIn amount of `_tokenIn`
     /// @param _to swap receiver
-    /// @param _data optional data that follow `IUniswapV2Callee` functionality from UniswapV2
-    function exactInSwap(address _tokenIn, uint256 _amountIn, address _to, bytes calldata _data)
+    function exactInSwap(address _tokenIn, uint256 _amountIn, address _to)
         external
         returns (uint256);
 

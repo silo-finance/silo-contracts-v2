@@ -49,7 +49,7 @@ contract SiloAmmPairFactoryTest is Test, Fixtures {
         uint256 gasUsed = gasStart - gasleft();
 
         emit log_named_uint("gas used", gasUsed);
-        assertEq(gasUsed, 2703490, "expected gas usage for createPair");
+        assertEq(gasUsed, 2224537, "expected gas usage for createPair");
         assertEq(pair.silo(), address(this), "expected to set silo");
     }
 }
