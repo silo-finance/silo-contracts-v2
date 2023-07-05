@@ -7,3 +7,4 @@ openzeppelin-contracts/=gitmodules/openzeppelin-contracts/contracts
 uniswap/=gitmodules/uniswap/
 @uniswap/v3-core/=gitmodules/uniswap/v3-core/
 ve-silo/=ve-silo/
+balancer-labs/v2-interfaces/=external/balancer-v2-monorepo/pkg/interfaces/contracts
