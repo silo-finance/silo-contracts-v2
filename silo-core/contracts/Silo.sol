@@ -10,6 +10,8 @@ import {SiloStdLib} from "./lib/SiloStdLib.sol";
 import {SiloSolvencyLib} from "./lib/SiloSolvencyLib.sol";
 import {SiloLendingLib} from "./lib/SiloLendingLib.sol";
 
+// solhint-disable ordering
+
 abstract contract Silo is Initializable, ISilo {
     string public constant VERSION = "2.0.0";
 
@@ -123,7 +125,9 @@ abstract contract Silo is Initializable, ISilo {
         virtual
         returns (uint256 shares)
     {
-        return SiloLendingLib.withdraw(config, FACTORY, _token, _assets, _receiver, _owner, msg.sender, false, assetStorage);
+        return SiloLendingLib.withdraw(
+            config, FACTORY, _token, _assets, _receiver, _owner, msg.sender, false, assetStorage
+        );
     }
 
     function maxRedeem(address _token, address _owner) external view virtual returns (uint256 maxShares) {
@@ -139,7 +143,8 @@ abstract contract Silo is Initializable, ISilo {
         virtual
         returns (uint256 assets)
     {
-        return SiloLendingLib.redeem(config, FACTORY, _token, _shares, _receiver, _owner, msg.sender, false, assetStorage);
+        return
+            SiloLendingLib.redeem(config, FACTORY, _token, _shares, _receiver, _owner, msg.sender, false, assetStorage);
     }
 
     function accrueInterest(address _token) external virtual returns (uint256 accruedInterest) {
@@ -195,7 +200,8 @@ abstract contract Silo is Initializable, ISilo {
         virtual
         returns (uint256 shares)
     {
-        return SiloLendingLib.deposit(config, FACTORY, _token, msg.sender, _receiver, _assets, _isProtected, assetStorage);
+        return
+            SiloLendingLib.deposit(config, FACTORY, _token, msg.sender, _receiver, _assets, _isProtected, assetStorage);
     }
 
     function maxMint(address _token, address _receiver, bool _isProtected)
@@ -293,7 +299,8 @@ abstract contract Silo is Initializable, ISilo {
         virtual
         returns (uint256 shares)
     {
-        return SiloLendingLib.transitionFromProtected(config, FACTORY, _token, _shares, _owner, msg.sender, assetStorage);
+        return
+            SiloLendingLib.transitionFromProtected(config, FACTORY, _token, _shares, _owner, msg.sender, assetStorage);
     }
 
     // Lending
@@ -327,7 +334,9 @@ abstract contract Silo is Initializable, ISilo {
         virtual
         returns (uint256 assets)
     {
-        return SiloLendingLib.borrowShares(config, FACTORY, _token, _shares, _receiver, _borrower, msg.sender, assetStorage);
+        return SiloLendingLib.borrowShares(
+            config, FACTORY, _token, _shares, _receiver, _borrower, msg.sender, assetStorage
+        );
     }
 
     function maxRepay(address _token, address _borrower) external view virtual returns (uint256 assets) {

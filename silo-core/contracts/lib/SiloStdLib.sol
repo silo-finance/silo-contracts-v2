@@ -192,7 +192,7 @@ library SiloStdLib {
         }
     }
 
-    function _convertToSharesInternal(
+    function convertToSharesInternal(
         ISiloConfig.ConfigData memory _configData,
         address _token,
         uint256 _assets,
@@ -216,10 +216,10 @@ library SiloStdLib {
     ) internal view returns (uint256) {
         ISiloConfig.ConfigData memory configData = _config.getConfig();
 
-        return _convertToSharesInternal(configData, _token, _assets, _tokenType, _assetStorage);
+        return convertToSharesInternal(configData, _token, _assets, _tokenType, _assetStorage);
     }
 
-    function _convertToAssetsInternal(
+    function convertToAssetsInternal(
         ISiloConfig.ConfigData memory _configData,
         address _token,
         uint256 _shares,
@@ -243,6 +243,6 @@ library SiloStdLib {
     ) internal view returns (uint256) {
         ISiloConfig.ConfigData memory configData = _config.getConfig();
 
-        return _convertToAssetsInternal(configData, _token, _shares, _tokenType, _assetStorage);
+        return convertToAssetsInternal(configData, _token, _shares, _tokenType, _assetStorage);
     }
 }

@@ -11320,6 +11320,14 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"silo-oracles@workspace:silo-oracles":
+  version: 0.0.0-use.local
+  resolution: "silo-oracles@workspace:silo-oracles"
+  dependencies:
+    solhint: ~3.4.1
+  languageName: unknown
+  linkType: soft
+
 "silo-vaults@workspace:silo-vaults":
   version: 0.0.0-use.local
   resolution: "silo-vaults@workspace:silo-vaults"

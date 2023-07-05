@@ -10,6 +10,7 @@ import {SiloStdLib, ISiloConfig, ISilo, IShareToken, IInterestRateModel} from ".
 import {SiloSolvencyLib} from "./SiloSolvencyLib.sol";
 
 // solhint-disable ordering
+// solhint-disable function-max-lines
 
 library SiloLendingLib {
     using SafeERC20Upgradeable for IERC20Upgradeable;
@@ -89,7 +90,8 @@ library SiloLendingLib {
         view
         returns (bool)
     {
-        IShareToken protectedShareToken = SiloStdLib.findShareToken(_configData, SiloStdLib.TokenType.Protected, _token);
+        IShareToken protectedShareToken =
+            SiloStdLib.findShareToken(_configData, SiloStdLib.TokenType.Protected, _token);
         IShareToken collateralShareToken =
             SiloStdLib.findShareToken(_configData, SiloStdLib.TokenType.Collateral, _token);
 
@@ -138,7 +140,7 @@ library SiloLendingLib {
 
         if (!_depositPossibleInternal(configData, _token, _receiver)) revert DepositNotPossible();
 
-        return SiloStdLib._convertToSharesInternal(configData, _token, _assets, tokenType, _assetStorage);
+        return SiloStdLib.convertToSharesInternal(configData, _token, _assets, tokenType, _assetStorage);
     }
 
     function _depositInternal(
@@ -311,7 +313,7 @@ library SiloLendingLib {
         return SiloStdLib.convertToShares(_config, _token, _assets, tokenType, _assetStorage);
     }
 
-    // solhint-disable-next-line function-max-lines
+    // solhint-disable-next-line code-complexity
     function _withdrawInternal(
         ISiloConfig _config,
         ISiloFactory _factory,
@@ -381,7 +383,7 @@ library SiloLendingLib {
         IERC20Upgradeable(_token).safeTransferFrom(address(this), _receiver, assets);
 
         /// @dev `_owner` must be solvent
-        if (!SiloSolvencyLib._isSolventInternal(configData, _owner, _assetStorage)) revert NotSolvent();
+        if (!SiloSolvencyLib.isSolventInternal(configData, _owner, _assetStorage)) revert NotSolvent();
 
         emit Withdraw(_token, _owner, _receiver, assets, shares, _isProtected);
     }
@@ -442,7 +444,6 @@ library SiloLendingLib {
         );
     }
 
-    // solhint-disable-next-line function-max-lines
     function _transitionInternal(
         ISiloConfig.ConfigData memory _configData,
         ISiloFactory _factory,
@@ -499,7 +500,7 @@ library SiloLendingLib {
         toShareToken.mint(_owner, _spender, toShares);
 
         /// @dev `_owner` must be solvent
-        if (!SiloSolvencyLib._isSolventInternal(_configData, _owner, _assetStorage)) revert NotSolvent();
+        if (!SiloSolvencyLib.isSolventInternal(_configData, _owner, _assetStorage)) revert NotSolvent();
 
         emit Withdraw(_token, _owner, _owner, assets, _shares, !_toProtected);
         emit Deposit(_token, _owner, _owner, assets, toShares, _toProtected);
@@ -533,7 +534,6 @@ library SiloLendingLib {
         return _transitionInternal(configData, _factory, _token, _shares, _owner, _spender, false, _assetStorage);
     }
 
-    // solhint-disable-next-line function-max-lines
     function _maxBorrowInternal(
         ISiloConfig _config,
         address _token,
@@ -558,19 +558,19 @@ library SiloLendingLib {
         uint256 debtAssets;
 
         if (protectedShareBalance != 0) {
-            totalCollateralAssets += SiloStdLib._convertToAssetsInternal(
+            totalCollateralAssets += SiloStdLib.convertToAssetsInternal(
                 configData, _token, protectedShareBalance, SiloStdLib.TokenType.Protected, _assetStorage
             );
         }
 
         if (collateralShareBalance != 0) {
-            totalCollateralAssets += SiloStdLib._convertToAssetsInternal(
+            totalCollateralAssets += SiloStdLib.convertToAssetsInternal(
                 configData, _token, collateralShareBalance, SiloStdLib.TokenType.Collateral, _assetStorage
             );
         }
 
         if (debtShareBalance != 0) {
-            debtAssets = SiloStdLib._convertToAssetsInternal(
+            debtAssets = SiloStdLib.convertToAssetsInternal(
                 configData, _token, debtShareBalance, SiloStdLib.TokenType.Debt, _assetStorage
             );
         }
@@ -605,7 +605,8 @@ library SiloLendingLib {
 
         uint256 maxDebtValue = collateralValue * maxLtv / _PRECISION_DECIMALS;
 
-        uint256 debtValue = address(debtOracle) != address(0) ? debtOracle.quoteView(debtAssets, debtToken) : debtAssets;
+        uint256 debtValue =
+            address(debtOracle) != address(0) ? debtOracle.quoteView(debtAssets, debtToken) : debtAssets;
 
         // if LTV is higher than LT user cannot borrow more
         if (debtValue >= maxDebtValue) return (0, 0);
@@ -672,7 +673,7 @@ library SiloLendingLib {
         IERC20Upgradeable(_token).safeTransferFrom(address(this), _receiver, assets);
 
         /// @dev `_owner` must be solvent
-        if (!SiloSolvencyLib._isSolventInternal(configData, _borrower, _assetStorage)) revert NotSolvent();
+        if (!SiloSolvencyLib.isSolventInternal(configData, _borrower, _assetStorage)) revert NotSolvent();
 
         emit Borrow(_token, _borrower, _receiver, assets, shares);
     }
@@ -719,8 +720,9 @@ library SiloLendingLib {
         address _spender,
         mapping(address => ISilo.AssetStorage) storage _assetStorage
     ) internal returns (uint256 assets) {
-        (assets,) =
-            _borrowInternal(_config, _factory, _token, 0, _shares, _receiver, _borrower, _spender, false, _assetStorage);
+        (assets,) = _borrowInternal(
+            _config, _factory, _token, 0, _shares, _receiver, _borrower, _spender, false, _assetStorage
+        );
     }
 
     function _maxRepayInternal(
@@ -734,7 +736,7 @@ library SiloLendingLib {
         IShareToken debtShareToken = SiloStdLib.findShareToken(configData, SiloStdLib.TokenType.Debt, _token);
         shares = debtShareToken.balanceOf(_borrower);
         assets =
-            SiloStdLib._convertToAssetsInternal(configData, _token, shares, SiloStdLib.TokenType.Debt, _assetStorage);
+            SiloStdLib.convertToAssetsInternal(configData, _token, shares, SiloStdLib.TokenType.Debt, _assetStorage);
     }
 
     function maxRepay(
@@ -852,7 +854,6 @@ library SiloLendingLib {
         (assets,) = _repayInternal(_config, _factory, _token, 0, _shares, _borrower, _repayer, false, _assetStorage);
     }
 
-    // solhint-disable-next-line function-max-lines
     function _accrueInterestInternal(
         ISiloConfig.ConfigData memory _configData,
         ISiloFactory _factory,

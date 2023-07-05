@@ -238,7 +238,7 @@ library SiloSolvencyLib {
         );
     }
 
-    function _isSolventInternal(
+    function isSolventInternal(
         ISiloConfig.ConfigData memory _configData,
         address _borrower,
         mapping(address => ISilo.AssetStorage) storage _assetStorage
@@ -259,7 +259,7 @@ library SiloSolvencyLib {
     ) internal returns (bool) {
         ISiloConfig.ConfigData memory configData = _config.getConfig();
 
-        return _isSolventInternal(configData, _borrower, _assetStorage);
+        return isSolventInternal(configData, _borrower, _assetStorage);
     }
 
     function getMaxLtv(ISiloConfig _config, address _token) internal view returns (uint256) {
