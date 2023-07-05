@@ -314,7 +314,43 @@ def _update_liquidity_limit(addr: address, l: uint256, L: uint256):
     log UpdateLiquidityLimit(addr, l, L, lim, _working_supply)
 
 
+@internal
+def _update_user(
+    _user: address,
+    _user_new_balance: uint256,
+    _total_supply: uint256
+):
+    assert _total_supply >= _user_new_balance
+
+    self._checkpoint(_user)
+
+    if self.reward_count != 0:
+        self._checkpoint_rewards(_user, _total_supply, False, empty(address))
+
+    self._update_liquidity_limit(_user, _user_new_balance, _total_supply)
+
+
 # External User Facing Functions
+
+
+@external
+@nonreentrant('lock')
+def balance_updated_for_users(
+    _user1: address,
+    _user1_new_balance: uint256,
+    _user2: address,
+    _user2_new_balance: uint256,
+    _total_supply: uint256
+) -> bool:
+    assert msg.sender == self.bal_handler # dev: only balancer handler
+
+    if _user1 != empty(address):
+        self._update_user(_user1, _user1_new_balance, _total_supply)
+
+    if _user2 != empty(address):
+        self._update_user(_user2, _user2_new_balance, _total_supply)
+
+    return True
 
 @external
 @nonreentrant('lock')
