@@ -15,7 +15,7 @@ interface ISiloAmmRouter is ISiloAmmRouterEvents, IUniswapV2Router02 {
     /// @param _token1 address, assuming addresses are sorted, so `token0 < token1`
     /// @param _oracle0 oracle address
     /// @param _oracle1 oracle address
-    /// @param _bridge token address required when both oracle are provided
+    /// @param _bridgeQuoteToken token address required when both oracle are provided
     /// @param _config AmmPriceConfig pool config
     function createPair(
         address _silo,
@@ -23,7 +23,7 @@ interface ISiloAmmRouter is ISiloAmmRouterEvents, IUniswapV2Router02 {
         address _token1,
         ISiloOracle _oracle0,
         ISiloOracle _oracle1,
-        address _bridge,
+        address _bridgeQuoteToken,
         IAmmPriceModel.AmmPriceConfig memory _config
     ) external returns (ISiloAmmPair pair);
 
@@ -32,4 +32,6 @@ interface ISiloAmmRouter is ISiloAmmRouterEvents, IUniswapV2Router02 {
 
     function allPairs(uint) external view returns (address pair);
     function allPairsLength() external view returns (uint);
+
+    function feeTo() external view returns (address);
 }

@@ -127,7 +127,7 @@ abstract contract NotSupportedRouter is ISiloAmmRouter {
         address[] calldata,
         address,
         uint
-    ) external virtual override {
+    ) external pure virtual override {
         revert NOT_SUPPORTED();
     }
 

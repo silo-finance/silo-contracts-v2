@@ -13,6 +13,7 @@ import "./data-readers/AmmPriceModelTestData.sol";
 contract AmmPriceModelTest is Test {
     address public constant COLLATERAL = address(123);
     uint256 public constant ONE = 1e18;
+    uint256 public constant NO_FEE = 0;
     PriceModel public immutable priceModel;
     AmmPriceModelTestData public immutable ammPriceModelTestData;
 
@@ -40,20 +41,6 @@ contract AmmPriceModelTest is Test {
     }
 
     /*
-        FOUNDRY_PROFILE=amm-core forge test -vv --match-test test_AmmPriceModel_collateralPrice_gas
-    */
-    function test_AmmPriceModel_collateralPrice_gas() public {
-        uint256 debtQuote = 2e18;
-        uint256 k = 1e15;
-
-        uint256 gasStart = gasleft();
-        PairMath.getDebtIn(debtQuote, k);
-        uint256 gasEnd = gasleft();
-
-        assertEq(gasStart - gasEnd, 169);
-    }
-
-    /*
         FOUNDRY_PROFILE=amm-core forge test -vv --match-test test_AmmPriceModel_onSwapKchange_gas
     */
     function test_AmmPriceModel_onSwapKchange_gas() public {
@@ -65,19 +52,37 @@ contract AmmPriceModelTest is Test {
     }
 
     /*
-        FOUNDRY_PROFILE=amm-core forge test -vv --match-test test_AmmPriceModel_getDebtIn_andReverse
+        FOUNDRY_PROFILE=amm-core forge test -vv --match-test test_AmmPriceModel_getDebtIn_andReverse_noFee
     */
-    function test_AmmPriceModel_getDebtIn_andReverse() public {
+    function test_AmmPriceModel_getDebtIn_andReverse_noFee() public {
         uint256 debtQuote = 1234e18;
         uint256 k = 1e14;
 
         uint256 gasStart = gasleft();
-        uint256 debtIn = PairMath.getDebtIn(debtQuote, k);
-        uint256 debtQuote2 = PairMath.getDebtInReverse(debtIn, k);
+        (uint256 debtIn,,) = PairMath.getDebtIn(debtQuote, k, NO_FEE);
+        (uint256 debtQuote2,) = PairMath.getDebtInReverse(debtIn, k, NO_FEE);
         uint256 gasEnd = gasleft();
 
         assertEq(debtQuote, debtQuote2);
-        assertEq(gasStart - gasEnd, 356, "gas");
+        assertEq(gasStart - gasEnd, 431, "gas");
+    }
+
+    /*
+        FOUNDRY_PROFILE=amm-core forge test -vv --match-test test_AmmPriceModel_getDebtIn_andReverse_withFee
+    */
+    function test_AmmPriceModel_getDebtIn_andReverse_withFee() public {
+        uint256 debtQuote = 1234e18;
+        uint256 k = 1e14;
+        uint256 fee = 1234;
+
+        uint256 gasStart = gasleft();
+        (uint256 debtIn,, uint256 debtInFee) = PairMath.getDebtIn(debtQuote, k, fee);
+        (uint256 debtQuote2, uint256 debtQuote2Fee) = PairMath.getDebtInReverse(debtIn, k, fee);
+        uint256 gasEnd = gasleft();
+
+        assertEq(debtInFee, debtQuote2Fee, "expect the same fees");
+        assertEq(debtQuote, debtQuote2, "expect the same debt IN");
+        assertEq(gasStart - gasEnd, 563, "gas");
     }
 
     /*
@@ -130,12 +135,14 @@ contract AmmPriceModelTest is Test {
 
                 if (testData.price != 0) {
                     uint256 pricePrecision = 1e8;
-                    uint256 debtIn = PairMath.getDebtIn(collateralPrice, state.k);
+                    (uint256 debtIn,, uint256 fee) = PairMath.getDebtIn(collateralPrice, state.k, NO_FEE);
+
+                    assertEq(fee, 0, "fee");
                     assertEq(debtIn / pricePrecision, testData.price / pricePrecision, "price");
                 }
             }
 
-            assertEq(gasSum, 57648, "make sure we gas efficient on price model actions");
+            assertEq(gasSum, 57647, "make sure we gas efficient on price model actions");
         }
     }
 
