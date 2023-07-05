@@ -10,30 +10,4 @@ abstract contract NotSupportedInPair is ISiloAmmPair {
     function initialize(address, address) external pure {
         revert NOT_SUPPORTED();
     }
-
-    function mint(address) external pure returns (uint) {
-        revert NOT_SUPPORTED();
-    }
-
-    function burn(address) external pure returns (uint, uint){
-        revert NOT_SUPPORTED();
-    }
-
-    function price0CumulativeLast() external pure returns (uint) {
-        revert NOT_SUPPORTED();
-    }
-
-    function price1CumulativeLast() external pure returns (uint) {
-        revert NOT_SUPPORTED();
-    }
-
-    // force balances to match reserves
-    function skim(address) external pure {
-        revert NOT_SUPPORTED();
-    }
-
-    // force reserves to match balances
-    function sync() external pure {
-        revert NOT_SUPPORTED();
-    }
 }
