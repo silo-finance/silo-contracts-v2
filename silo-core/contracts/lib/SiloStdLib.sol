@@ -32,7 +32,7 @@ library SiloStdLib {
     error NotSolvent();
     error NotEnoughLiquidity();
 
-    /// @notice Emitted when deposit is made
+    /// @notice Emitted on deposit
     /// @param token asset address that was deposited
     /// @param depositor wallet address that deposited asset
     /// @param receiver wallet address that received shares in Silo
@@ -48,7 +48,7 @@ library SiloStdLib {
         bool isProtected
     );
 
-    /// @notice Emitted when withdraw is made
+    /// @notice Emitted on withdraw
     /// @param token asset address that was withdrew
     /// @param owner wallet address that deposited asset
     /// @param receiver wallet address that received asset
@@ -64,13 +64,21 @@ library SiloStdLib {
         bool isProtected
     );
 
-    /// @notice Emitted when user borrows
+    /// @notice Emitted on borrow
     /// @param token asset address that was borrowed
     /// @param borrower wallet address that borrowed asset
     /// @param receiver wallet address that received asset
     /// @param assets amount of asset that was borrowed
     /// @param shares amount of shares that was minted
     event Borrow(address token, address borrower, address receiver, uint256 assets, uint256 shares);
+
+    /// @notice Emitted on repayment
+    /// @param token asset address that was borrowed
+    /// @param borrower wallet address that borrowed asset
+    /// @param repayer wallet address that repaid asset
+    /// @param assets amount of asset that was repaid
+    /// @param shares amount of shares that was burn
+    event Repay(address token, address borrower, address repayer, uint256 assets, uint256 shares);
 
     // TODO: check rounding up/down
     function toAssets(uint256 _shares, uint256 _totalAmount, uint256 _totalShares) internal pure returns (uint256) {
@@ -440,39 +448,33 @@ library SiloStdLib {
     function getTotalAmountAndTotalShares(
         ISiloConfig.ConfigData memory _configData,
         address _token,
-        bool _isProtected,
-        bool _isDebt,
+        TokenType _tokenType,
         mapping(address => ISilo.AssetStorage) storage _assetStorage
     ) internal view returns (uint256 totalAmount, uint256 totalShares) {
-        IShareToken shareToken;
+        IShareToken shareToken = findShareToken(_configData, _tokenType, _token);
+        totalShares = shareToken.totalSupply();
 
-        if (_isDebt) {
-            shareToken = findShareToken(_configData, TokenType.Debt, _token);
-            totalAmount = amountWithInterest(_token, _assetStorage[_token].debtAssets, findModel(_configData, _token));
-        } else if (_isProtected) {
-            shareToken = findShareToken(_configData, TokenType.Protected, _token);
-            totalAmount = _assetStorage[_token].protectedAssets;
-        } else {
-            shareToken = findShareToken(_configData, TokenType.Collateral, _token);
+        if (_tokenType == TokenType.Collateral) {
             totalAmount =
                 amountWithInterest(_token, _assetStorage[_token].collateralAssets, findModel(_configData, _token));
+        } else if (_tokenType == TokenType.Debt) {
+            totalAmount = amountWithInterest(_token, _assetStorage[_token].debtAssets, findModel(_configData, _token));
+        } else if (_tokenType == TokenType.Protected) {
+            totalAmount = _assetStorage[_token].protectedAssets;
         }
-
-        totalShares = shareToken.totalSupply();
     }
 
     function _convertToSharesInternal(
         ISiloConfig.ConfigData memory _configData,
         address _token,
         uint256 _assets,
-        bool _isProtected,
-        bool _isDebt,
+        TokenType _tokenType,
         mapping(address => ISilo.AssetStorage) storage _assetStorage
     ) private view returns (uint256) {
         if (_assets == 0) return 0;
 
         (uint256 totalAmount, uint256 totalShares) =
-            getTotalAmountAndTotalShares(_configData, _token, _isProtected, _isDebt, _assetStorage);
+            getTotalAmountAndTotalShares(_configData, _token, _tokenType, _assetStorage);
 
         return toShare(_assets, totalAmount, totalShares);
     }
@@ -481,27 +483,25 @@ library SiloStdLib {
         ISiloConfig _config,
         address _token,
         uint256 _assets,
-        bool _isProtected,
-        bool _isDebt,
+        TokenType _tokenType,
         mapping(address => ISilo.AssetStorage) storage _assetStorage
     ) internal view returns (uint256) {
         ISiloConfig.ConfigData memory configData = _config.getConfig();
 
-        return _convertToSharesInternal(configData, _token, _assets, _isProtected, _isDebt, _assetStorage);
+        return _convertToSharesInternal(configData, _token, _assets, _tokenType, _assetStorage);
     }
 
     function _convertToAssetsInternal(
         ISiloConfig.ConfigData memory _configData,
         address _token,
         uint256 _shares,
-        bool _isProtected,
-        bool _isDebt,
+        TokenType _tokenType,
         mapping(address => ISilo.AssetStorage) storage _assetStorage
     ) private view returns (uint256) {
         if (_shares == 0) return 0;
 
         (uint256 totalAmount, uint256 totalShares) =
-            getTotalAmountAndTotalShares(_configData, _token, _isProtected, _isDebt, _assetStorage);
+            getTotalAmountAndTotalShares(_configData, _token, _tokenType, _assetStorage);
 
         return toAssets(_shares, totalAmount, totalShares);
     }
@@ -510,13 +510,12 @@ library SiloStdLib {
         ISiloConfig _config,
         address _token,
         uint256 _shares,
-        bool _isProtected,
-        bool _isDebt,
+        TokenType _tokenType,
         mapping(address => ISilo.AssetStorage) storage _assetStorage
     ) internal view returns (uint256) {
         ISiloConfig.ConfigData memory configData = _config.getConfig();
 
-        return _convertToAssetsInternal(configData, _token, _shares, _isProtected, _isDebt, _assetStorage);
+        return _convertToAssetsInternal(configData, _token, _shares, _tokenType, _assetStorage);
     }
 
     function maxDeposit(
@@ -550,10 +549,12 @@ library SiloStdLib {
         mapping(address => ISilo.AssetStorage) storage _assetStorage
     ) internal view returns (uint256 shares) {
         ISiloConfig.ConfigData memory configData = _config.getConfig();
+        TokenType tokenType = TokenType.Collateral;
+        if (_isProtected) tokenType = TokenType.Protected;
 
         if (!_depositPossibleInternal(configData, _token, _receiver)) revert DepositNotPossible();
 
-        return _convertToSharesInternal(configData, _token, _assets, _isProtected, false, _assetStorage);
+        return _convertToSharesInternal(configData, _token, _assets, tokenType, _assetStorage);
     }
 
     function _depositInternal(
@@ -630,7 +631,10 @@ library SiloStdLib {
     ) internal view returns (uint256 assets) {
         if (!depositPossible(_config, _token, _receiver)) revert DepositNotPossible();
 
-        return convertToAssets(_config, _token, _shares, _isProtected, false, _assetStorage);
+        TokenType tokenType = TokenType.Collateral;
+        if (_isProtected) tokenType = TokenType.Protected;
+
+        return convertToAssets(_config, _token, _shares, tokenType, _assetStorage);
     }
 
     function mint(
@@ -717,7 +721,10 @@ library SiloStdLib {
         bool _isProtected,
         mapping(address => ISilo.AssetStorage) storage _assetStorage
     ) internal view returns (uint256 shares) {
-        return convertToShares(_config, _token, _assets, _isProtected, false, _assetStorage);
+        TokenType tokenType = TokenType.Collateral;
+        if (_isProtected) tokenType = TokenType.Protected;
+
+        return convertToShares(_config, _token, _assets, tokenType, _assetStorage);
     }
 
     // solhint-disable-next-line function-max-lines
@@ -829,7 +836,10 @@ library SiloStdLib {
         bool _isProtected,
         mapping(address => ISilo.AssetStorage) storage _assetStorage
     ) external view returns (uint256 assets) {
-        return convertToAssets(_config, _token, _shares, _isProtected, false, _assetStorage);
+        TokenType tokenType = TokenType.Collateral;
+        if (_isProtected) tokenType = TokenType.Protected;
+
+        return convertToAssets(_config, _token, _shares, tokenType, _assetStorage);
     }
 
     function redeem(
@@ -964,16 +974,17 @@ library SiloStdLib {
 
         if (protectedShareBalance != 0) {
             totalCollateralAssets +=
-                _convertToAssetsInternal(configData, _token, protectedShareBalance, true, false, _assetStorage);
+                _convertToAssetsInternal(configData, _token, protectedShareBalance, TokenType.Protected, _assetStorage);
         }
 
         if (collateralShareBalance != 0) {
-            totalCollateralAssets +=
-                _convertToAssetsInternal(configData, _token, collateralShareBalance, false, false, _assetStorage);
+            totalCollateralAssets += _convertToAssetsInternal(
+                configData, _token, collateralShareBalance, TokenType.Collateral, _assetStorage
+            );
         }
 
         if (debtShareBalance != 0) {
-            debtAssets = _convertToAssetsInternal(configData, _token, debtShareBalance, false, true, _assetStorage);
+            debtAssets = _convertToAssetsInternal(configData, _token, debtShareBalance, TokenType.Debt, _assetStorage);
         }
 
         ISiloOracle collateralOracle;
@@ -1030,7 +1041,7 @@ library SiloStdLib {
         uint256 _assets,
         mapping(address => ISilo.AssetStorage) storage _assetStorage
     ) internal view returns (uint256 shares) {
-        return convertToShares(_config, _token, _assets, false, true, _assetStorage);
+        return convertToShares(_config, _token, _assets, TokenType.Debt, _assetStorage);
     }
 
     function _borrowInternal(
@@ -1088,9 +1099,8 @@ library SiloStdLib {
         address _spender,
         mapping(address => ISilo.AssetStorage) storage _assetStorage
     ) internal returns (uint256 shares) {
-        (, shares) = _borrowInternal(
-            _config, _factory, _token, _assets, 0, _receiver, _borrower, _spender, true, _assetStorage
-        );
+        (, shares) =
+            _borrowInternal(_config, _factory, _token, _assets, 0, _receiver, _borrower, _spender, true, _assetStorage);
     }
 
     function maxBorrowShares(
@@ -1108,7 +1118,7 @@ library SiloStdLib {
         uint256 _shares,
         mapping(address => ISilo.AssetStorage) storage _assetStorage
     ) internal view returns (uint256 assets) {
-        return convertToAssets(_config, _token, _shares, false, true, _assetStorage);
+        return convertToAssets(_config, _token, _shares, TokenType.Debt, _assetStorage);
     }
 
     function borrowShares(
@@ -1121,9 +1131,127 @@ library SiloStdLib {
         address _spender,
         mapping(address => ISilo.AssetStorage) storage _assetStorage
     ) internal returns (uint256 assets) {
-        (assets,) = _borrowInternal(
-            _config, _factory, _token, 0, _shares, _receiver, _borrower, _spender, false, _assetStorage
-        );
+        (assets,) =
+            _borrowInternal(_config, _factory, _token, 0, _shares, _receiver, _borrower, _spender, false, _assetStorage);
+    }
+
+    function _maxRepayInternal(
+        ISiloConfig _config,
+        address _token,
+        address _borrower,
+        mapping(address => ISilo.AssetStorage) storage _assetStorage
+    ) private view returns (uint256 assets, uint256 shares) {
+        ISiloConfig.ConfigData memory configData = _config.getConfig();
+
+        IShareToken debtShareToken = findShareToken(configData, TokenType.Debt, _token);
+        shares = debtShareToken.balanceOf(_borrower);
+        assets = _convertToAssetsInternal(configData, _token, shares, TokenType.Debt, _assetStorage);
+    }
+
+    function maxRepay(
+        ISiloConfig _config,
+        address _token,
+        address _borrower,
+        mapping(address => ISilo.AssetStorage) storage _assetStorage
+    ) internal view returns (uint256 assets) {
+        (assets,) = _maxRepayInternal(_config, _token, _borrower, _assetStorage);
+    }
+
+    function previewRepay(
+        ISiloConfig _config,
+        address _token,
+        uint256 _assets,
+        mapping(address => ISilo.AssetStorage) storage _assetStorage
+    ) internal view returns (uint256 shares) {
+        shares = convertToShares(_config, _token, _assets, TokenType.Debt, _assetStorage);
+    }
+
+    function _repayInternal(
+        ISiloConfig _config,
+        ISiloFactory _factory,
+        address _token,
+        uint256 _assets,
+        uint256 _shares,
+        address _borrower,
+        address _repayer,
+        bool _isAssets,
+        mapping(address => ISilo.AssetStorage) storage _assetStorage
+    ) private returns (uint256 assets, uint256 shares) {
+        ISiloConfig.ConfigData memory configData = _config.getConfig();
+
+        _accrueInterestInternal(configData, _factory, _token, _assetStorage);
+
+        IShareToken debtShareToken = findShareToken(configData, TokenType.Debt, _token);
+        uint256 totalDebtAmount = _assetStorage[_token].debtAssets;
+        uint256 totalDebtShares = debtShareToken.totalSupply();
+        uint256 shareDebtBalance = debtShareToken.balanceOf(_borrower);
+
+        if (_isAssets) {
+            // repaying assets
+            shares = toShare(_assets, totalDebtAmount, totalDebtShares);
+            assets = _assets;
+        } else {
+            // repaying shares
+            shares = _shares;
+            assets = toAssets(_shares, totalDebtAmount, totalDebtShares);
+        }
+
+        // repay max if shares above balance
+        if (shares > shareDebtBalance) {
+            shares = shareDebtBalance;
+            assets = toAssets(shares, totalDebtAmount, totalDebtShares);
+        }
+
+        /// @dev/ @dev fee-on-transfer is ignored
+        IERC20Upgradeable(_token).safeTransferFrom(_repayer, address(this), assets);
+        /// @dev subtract repayment from debt
+        _assetStorage[_token].debtAssets -= assets;
+        /// @dev burn debt shares
+        debtShareToken.burn(_borrower, _repayer, shares);
+
+        emit Repay(_token, _borrower, _repayer, assets, shares);
+    }
+
+    function repay(
+        ISiloConfig _config,
+        ISiloFactory _factory,
+        address _token,
+        uint256 _assets,
+        address _borrower,
+        address _repayer,
+        mapping(address => ISilo.AssetStorage) storage _assetStorage
+    ) internal returns (uint256 shares) {
+        (, shares) = _repayInternal(_config, _factory, _token, _assets, 0, _borrower, _repayer, true, _assetStorage);
+    }
+
+    function maxRepayShares(
+        ISiloConfig _config,
+        address _token,
+        address _borrower,
+        mapping(address => ISilo.AssetStorage) storage _assetStorage
+    ) internal view returns (uint256 shares) {
+        (, shares) = _maxRepayInternal(_config, _token, _borrower, _assetStorage);
+    }
+
+    function previewRepayShares(
+        ISiloConfig _config,
+        address _token,
+        uint256 _shares,
+        mapping(address => ISilo.AssetStorage) storage _assetStorage
+    ) internal view returns (uint256 assets) {
+        assets = convertToAssets(_config, _token, _shares, TokenType.Debt, _assetStorage);
+    }
+
+    function repayShares(
+        ISiloConfig _config,
+        ISiloFactory _factory,
+        address _token,
+        uint256 _shares,
+        address _borrower,
+        address _repayer,
+        mapping(address => ISilo.AssetStorage) storage _assetStorage
+    ) external returns (uint256 assets) {
+        (assets,) = _repayInternal(_config, _factory, _token, 0, _shares, _borrower, _repayer, false, _assetStorage);
     }
 
     // solhint-disable-next-line function-max-lines
