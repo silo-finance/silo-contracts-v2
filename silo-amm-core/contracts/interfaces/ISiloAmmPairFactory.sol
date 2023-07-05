@@ -2,9 +2,10 @@
 pragma solidity >=0.5.0;
 
 import "silo-core/contracts/interface/ISiloOracle.sol";
+import "silo-amm-periphery/contracts/interfaces/IFeeManager.sol";
+
 import "./IAmmPriceModel.sol";
 import "./ISiloAmmPair.sol";
-
 
 /// @dev this is based on IUniswapV2Factory, unfortunately we are not able to replicate factory interface entirely
 /// and methods that are relevant to developers will be integrated into router. So basically in Silo AMM
@@ -20,7 +21,8 @@ interface ISiloAmmPairFactory {
     /// @param _token1 address, assuming addresses are sorted, so `token0 < token1`
     /// @param _oracle0 oracle address
     /// @param _oracle1 oracle address
-    /// @param _bridge token address required when both oracle are provided
+    /// @param _bridgeQuoteToken token address required when both oracle are provided
+    /// @param _fee protocol fee setup
     /// @param _config AmmPriceConfig pool config
     /// @return pair ISiloAmmPair address of new created pool
     function createPair(
@@ -29,7 +31,8 @@ interface ISiloAmmPairFactory {
         address _token1,
         ISiloOracle _oracle0,
         ISiloOracle _oracle1,
-        address _bridge,
+        address _bridgeQuoteToken,
+        IFeeManager.FeeSetup memory _fee,
         IAmmPriceModel.AmmPriceConfig memory _config
     ) external returns (ISiloAmmPair pair);
 

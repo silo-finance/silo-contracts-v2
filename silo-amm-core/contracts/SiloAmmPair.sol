@@ -2,6 +2,8 @@
 pragma solidity 0.8.19;
 
 import "uniswap/v2-core/contracts/interfaces/IUniswapV2Callee.sol";
+import "silo-amm-periphery/contracts/interfaces/ISiloAmmRouter.sol";
+import "silo-amm-periphery/contracts/interfaces/IFeeManager.sol";
 
 import "./external/UniswapV2ERC20.sol";
 
@@ -11,7 +13,8 @@ import "./models/AmmPriceModel.sol";
 import "./utils/SafeTransfers.sol";
 import "./lib/PairMath.sol";
 
-
+/// @notice PAIR THAT WAS NOT CREATED BY THE SILO (via Silo Router and Silo Factory) CANNOT BE TRUSTED
+/// before using it, verify this contract address against Silo.ammPair()
 contract SiloAmmPair is NotSupportedInPair, SafeTransfers, UniswapV2ERC20, AmmStateModel, AmmPriceModel {
     // TODO when we check exponential operations on shares we will decide if we need minimum liquidity
     uint public constant MINIMUM_LIQUIDITY = 10**3;
@@ -34,7 +37,9 @@ contract SiloAmmPair is NotSupportedInPair, SafeTransfers, UniswapV2ERC20, AmmSt
     /// @dev address of Silo with witch we cresting 1:1 bond for liquidity management
     address internal immutable _SILO; // solhint-disable-line var-name-mixedcase
 
-    address internal immutable _FEE_TO; // solhint-disable-line var-name-mixedcase
+    // TODO uint24?
+    uint256 internal immutable _PROTOCOL_FEE; // solhint-disable-line var-name-mixedcase
+    address internal immutable _PROTOCOL_FEE_RECEIVER; // solhint-disable-line var-name-mixedcase
 
     address internal immutable _ROUTER; // solhint-disable-line var-name-mixedcase
 
@@ -50,6 +55,7 @@ contract SiloAmmPair is NotSupportedInPair, SafeTransfers, UniswapV2ERC20, AmmSt
 
     modifier lock() {
         if (_unlocked == 0) revert LOCKED();
+
         _unlocked = 0;
         _;
         _unlocked = 1;
@@ -60,7 +66,8 @@ contract SiloAmmPair is NotSupportedInPair, SafeTransfers, UniswapV2ERC20, AmmSt
         _;
     }
 
-    /// @dev tokens must be sorted
+    /// @dev tokens must be sorted, we trusted all input data because they came from Silo -> router -> factory -> pair
+    /// pair that was created in different way will not be part of protocol
     constructor(
         address _router,
         address _silo,
@@ -69,6 +76,7 @@ contract SiloAmmPair is NotSupportedInPair, SafeTransfers, UniswapV2ERC20, AmmSt
         ISiloOracle _oracle0,
         ISiloOracle _oracle1,
         address _bridgeQuoteToken,
+        IFeeManager.FeeSetup memory _fee,
         AmmPriceConfig memory _config
     )
         AmmPriceModel(_config)
@@ -84,8 +92,9 @@ contract SiloAmmPair is NotSupportedInPair, SafeTransfers, UniswapV2ERC20, AmmSt
         _ROUTER = _router;
         _SILO = _silo;
 
-        // TODO
-        _FEE_TO = address(0);
+        // zero is acceptable
+        _PROTOCOL_FEE = _fee.percent;
+        _PROTOCOL_FEE_RECEIVER = _fee.receiver;
 
         (
             ORACLE_SETUP,
@@ -146,15 +155,28 @@ contract SiloAmmPair is NotSupportedInPair, SafeTransfers, UniswapV2ERC20, AmmSt
             ? (_TOKEN_1, _TOKEN_0, _amount1Out)
             : (_TOKEN_0, _TOKEN_1, _amount0Out);
 
-        uint256 k = _onSwapCalculateK(collateralToken, block.timestamp);
-        _onSwapPriceChange(collateralToken, uint64(k));
+        AmountsIn memory amounts;
 
-        uint256 debtQuote = getQuoteFromOracle(collateralAmountOut, collateralToken);
-        amountIn = PairMath.getDebtIn(debtQuote, k);
-        
-        if (amountIn == 0) revert INSUFFICIENT_INPUT_AMOUNT();
+        { // stack too deep
+            uint256 k = _onSwapCalculateK(collateralToken, block.timestamp);
+            _onSwapPriceChange(collateralToken, uint64(k));
 
-        _finishSwap(collateralToken, debtToken, token0In, amountIn, collateralAmountOut, _to, _data);
+            uint256 debtQuote = getQuoteFromOracle(collateralAmountOut, collateralToken);
+            (amountIn, amounts.amountInForSwap, amounts.feeAmount) = PairMath.getDebtIn(debtQuote, k, _PROTOCOL_FEE);
+
+            if (amountIn == 0) revert INSUFFICIENT_INPUT_AMOUNT();
+        }
+
+        _finishSwap(
+            collateralToken,
+            debtToken,
+            token0In,
+            amounts.amountInForSwap,
+            amounts.feeAmount,
+            collateralAmountOut,
+            _to,
+            _data
+        );
     }
 
     /// @inheritdoc ISiloAmmPair
@@ -176,11 +198,11 @@ contract SiloAmmPair is NotSupportedInPair, SafeTransfers, UniswapV2ERC20, AmmSt
         _onSwapPriceChange(collateral, uint64(k));
 
         // REVERSE calculation of what we have in `swap`
-        uint256 virtualDebtIn = PairMath.getDebtInReverse(_amountIn, k);
+        (uint256 virtualDebtIn, uint256 amountInFee) = PairMath.getDebtInReverse(_amountIn, k, _PROTOCOL_FEE);
         amountOut = getQuoteFromOracle(virtualDebtIn, _tokenIn);
         if (amountOut == 0) revert INSUFFICIENT_OUTPUT_AMOUNT();
 
-        _finishSwap(collateral, _tokenIn, token0In, _amountIn, amountOut, _to, _data);
+        _finishSwap(collateral, _tokenIn, token0In, _amountIn, amountInFee, amountOut, _to, _data);
     }
 
     /// @inheritdoc ISiloAmmPair
@@ -200,7 +222,7 @@ contract SiloAmmPair is NotSupportedInPair, SafeTransfers, UniswapV2ERC20, AmmSt
 
         uint256 k = _onSwapCalculateK(_tokenOut, _timestamp);
         uint256 debtQuote = getQuoteFromOracle(_amountOut, _tokenOut);
-        amountIn = PairMath.getDebtIn(debtQuote, k);
+        (amountIn,,) = PairMath.getDebtIn(debtQuote, k, _PROTOCOL_FEE);
     }
 
     /// @inheritdoc ISiloAmmPair
@@ -220,7 +242,7 @@ contract SiloAmmPair is NotSupportedInPair, SafeTransfers, UniswapV2ERC20, AmmSt
 
         address collateral = _tokenIn == _TOKEN_0 ? _TOKEN_1 : _TOKEN_0;
         uint256 k = _onSwapCalculateK(collateral, _timestamp);
-        uint256 virtualDebtIn = PairMath.getDebtInReverse(_amountIn, k);
+        (uint256 virtualDebtIn,) = PairMath.getDebtInReverse(_amountIn, k, _PROTOCOL_FEE);
         amountOut = getQuoteFromOracle(virtualDebtIn, _tokenIn);
     }
 
@@ -242,8 +264,12 @@ contract SiloAmmPair is NotSupportedInPair, SafeTransfers, UniswapV2ERC20, AmmSt
         return _TOKEN_1;
     }
 
+    function fee() external view returns (uint256) {
+        return _PROTOCOL_FEE;
+    }
+
     function feeTo() external view returns (address) {
-        return _FEE_TO;
+        return _PROTOCOL_FEE_RECEIVER;
     }
 
     /// @inheritdoc ISiloAmmPair
@@ -294,7 +320,8 @@ contract SiloAmmPair is NotSupportedInPair, SafeTransfers, UniswapV2ERC20, AmmSt
         address _collateralToken,
         address _debt,
         bool _token0In,
-        uint256 _amountIn,
+        uint256 _amountInForSwap,
+        uint256 _amountInFee,
         uint256 _amountOut,
         address _to,
         bytes calldata _data
@@ -302,16 +329,21 @@ contract SiloAmmPair is NotSupportedInPair, SafeTransfers, UniswapV2ERC20, AmmSt
         internal
         virtual
     {
-        _onSwapStateChange(_collateralToken, _amountOut, _amountIn);
+        _onSwapStateChange(_collateralToken, _amountOut, _amountInForSwap);
 
         if (_token0In) {
-            emit Swap(msg.sender, _amountIn, uint256(0), uint256(0), _amountOut, _to);
+            emit Swap(msg.sender, _amountInForSwap, uint256(0), uint256(0), _amountOut, _to);
         } else {
-            emit Swap(msg.sender, uint256(0), _amountIn, _amountOut, uint256(0), _to);
+            emit Swap(msg.sender, uint256(0), _amountInForSwap, _amountOut, uint256(0), _to);
         }
 
         // we doing transfer directly to SILO, but state will be updated on withdraw
-        _safeTransferFrom(_debt, msg.sender, _SILO, _amountIn);
+        _safeTransferFrom(_debt, msg.sender, _SILO, _amountInForSwap);
+
+        if (_amountInFee != 0) {
+            _safeTransferFrom(_debt, msg.sender, _PROTOCOL_FEE_RECEIVER, _amountInFee);
+        }
+
         _safeTransferFrom(_collateralToken, _SILO, _to, _amountOut);
 
         if (_data.length != 0) {
@@ -321,30 +353,6 @@ contract SiloAmmPair is NotSupportedInPair, SafeTransfers, UniswapV2ERC20, AmmSt
                 : (_amountOut, uint256(0));
 
             IUniswapV2Callee(_to).uniswapV2Call(msg.sender, _amount0Out, _amount1Out, _data);
-        }
-    }
-
-    // if fee is on, mint liquidity equivalent to 1/6th of the growth in sqrt(k)
-    function _mintFee(uint112 /* _reserve0 */, uint112 /* _reserve1 */) internal returns (bool feeOn) {
-        feeOn = _FEE_TO != address(0);
-        uint _kLast = kLast; // gas savings
-
-        if (feeOn) {
-            if (_kLast != 0) {
-                uint rootK; // TODO = Math.sqrt(uint256(_reserve0) * _reserve1);
-                uint rootKLast; // = Math.sqrt(_kLast);
-
-                if (rootK > rootKLast) {
-                    uint numerator = totalSupply * (rootK - rootKLast);
-                    uint denominator = rootK * 5 + rootKLast;
-                    uint liquidity;
-                    unchecked { liquidity = numerator / denominator; }
-
-                    if (liquidity != 0) _mint(_FEE_TO, liquidity);
-                }
-            }
-        } else if (_kLast != 0) {
-            kLast = 0;
         }
     }
 

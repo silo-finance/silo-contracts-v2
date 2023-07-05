@@ -6,6 +6,11 @@ import "../external/interfaces/IUniswapV2Pair.sol";
 interface ISiloAmmPair is IUniswapV2Pair {
     enum OracleSetup { NONE, ONE, BOTH }
 
+    struct AmountsIn {
+        uint256 amountInForSwap;
+        uint256 feeAmount;
+    }
+
     error ONLY_SILO();
     error NOT_SUPPORTED();
     error ZERO_SHARES();
@@ -87,5 +92,6 @@ interface ISiloAmmPair is IUniswapV2Pair {
         returns (uint256 amountOut);
 
     function feeTo() external view returns (address);
+    function fee() external view returns (uint256);
     function silo() external view returns (address);
 }

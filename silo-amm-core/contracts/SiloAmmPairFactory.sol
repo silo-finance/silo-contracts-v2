@@ -13,13 +13,24 @@ contract SiloAmmPairFactory is ISiloAmmPairFactory {
         ISiloOracle _oracle0,
         ISiloOracle _oracle1,
         address _bridgeQuoteToken,
-        IAmmPriceModel.AmmPriceConfig memory _config
+        IFeeManager.FeeSetup calldata _fee,
+        IAmmPriceModel.AmmPriceConfig calldata _config
     )
         external
         virtual
         returns (ISiloAmmPair pair)
     {
-        pair = new SiloAmmPair(msg.sender, _silo, _token0, _token1, _oracle0, _oracle1, _bridgeQuoteToken, _config);
+        pair = new SiloAmmPair(
+            msg.sender,
+            _silo,
+            _token0,
+            _token1,
+            _oracle0,
+            _oracle1,
+            _bridgeQuoteToken,
+            _fee,
+            _config
+        );
     }
 
     /// @inheritdoc ISiloAmmPairFactory
