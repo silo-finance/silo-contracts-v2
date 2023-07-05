@@ -5,3 +5,4 @@ openzeppelin-contracts-upgradeable/=gitmodules/openzeppelin-contracts-upgradeabl
 openzeppelin-contracts/=gitmodules/openzeppelin-contracts/contracts
 uniswap/=gitmodules/uniswap/
 ve-silo/=ve-silo/
+balancer-labs/v2-interfaces/=external/balancer-v2-monorepo/pkg/interfaces/contracts

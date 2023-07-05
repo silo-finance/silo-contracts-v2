@@ -12,11 +12,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-pragma solidity ^0.7.0;
+pragma solidity 0.8.19;
 
-import "@balancer-labs/v2-interfaces/contracts/liquidity-mining/ILiquidityGaugeFactory.sol";
+import {ILiquidityGaugeFactory} from "balancer-labs/v2-interfaces/liquidity-mining/ILiquidityGaugeFactory.sol";
 
-import "@balancer-labs/v2-solidity-utils/contracts/openzeppelin/Clones.sol";
+import {Clones} from "openzeppelin-contracts/proxy/Clones.sol";
 
 abstract contract BaseGaugeFactory is ILiquidityGaugeFactory {
     address private _gaugeImplementation;

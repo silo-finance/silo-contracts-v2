@@ -12,12 +12,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-pragma solidity ^0.7.0;
-pragma experimental ABIEncoderV2;
+pragma solidity 0.8.19;
 
-import "@balancer-labs/v2-interfaces/contracts/liquidity-mining/IStakingLiquidityGauge.sol";
+import {IStakingLiquidityGauge} from "balancer-labs/v2-interfaces/liquidity-mining/IStakingLiquidityGauge.sol";
 
-import "../BaseGaugeFactory.sol";
+import {BaseGaugeFactory} from "../BaseGaugeFactory.sol";
 
 contract LiquidityGaugeFactory is BaseGaugeFactory {
     constructor(IStakingLiquidityGauge gauge) BaseGaugeFactory(address(gauge)) {
