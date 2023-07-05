@@ -14,12 +14,12 @@
 
 pragma solidity 0.8.19;
 
-import {IStakingLiquidityGauge} from "balancer-labs/v2-interfaces/liquidity-mining/IStakingLiquidityGauge.sol";
+import {ISiloLiquidityGauge} from "../interfaces/ISiloLiquidityGauge.sol";
 
 import {BaseGaugeFactory} from "../BaseGaugeFactory.sol";
 
 contract LiquidityGaugeFactory is BaseGaugeFactory {
-    constructor(IStakingLiquidityGauge gauge) BaseGaugeFactory(address(gauge)) {
+    constructor(ISiloLiquidityGauge gauge) BaseGaugeFactory(address(gauge)) {
         // solhint-disable-previous-line no-empty-blocks
     }
 
@@ -32,13 +32,13 @@ contract LiquidityGaugeFactory is BaseGaugeFactory {
      * suitable before they are added to the GaugeController.
      *
      * It is possible to deploy multiple gauges for a single pool.
-     * @param pool The address of the pool for which to deploy a gauge
      * @param relativeWeightCap The relative weight cap for the created gauge
+     * @param erc20BalancesHandler The address of the pool for which to deploy a gauge
      * @return The address of the deployed gauge
      */
-    function create(address pool, uint256 relativeWeightCap) external returns (address) {
+    function create(uint256 relativeWeightCap, address erc20BalancesHandler) external returns (address) {
         address gauge = _create();
-        IStakingLiquidityGauge(gauge).initialize(pool, relativeWeightCap);
+        ISiloLiquidityGauge(gauge).initialize(relativeWeightCap, erc20BalancesHandler);
         return gauge;
     }
 }
