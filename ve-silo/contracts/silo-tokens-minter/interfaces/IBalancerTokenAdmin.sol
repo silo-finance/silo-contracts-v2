@@ -42,4 +42,6 @@ interface IBalancerTokenAdmin {
     function startEpochTimeWrite() external returns (uint256);
 
     function mint(address to, uint256 amount) external;
+
+    function getAvailableSupply() external view returns (uint256);
 }

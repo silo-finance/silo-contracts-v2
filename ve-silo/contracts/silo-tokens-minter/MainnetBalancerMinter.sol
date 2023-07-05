@@ -14,14 +14,13 @@
 
 pragma solidity 0.8.19;
 
-import {IBalancerTokenAdmin} from "balancer-labs/v2-interfaces/liquidity-mining/IBalancerTokenAdmin.sol";
-import {IGaugeController} from "balancer-labs/v2-interfaces/liquidity-mining/IGaugeController.sol";
 import {ILiquidityGauge} from "balancer-labs/v2-interfaces/liquidity-mining/ILiquidityGauge.sol";
-import {ILMGetters} from "balancer-labs/v2-interfaces/liquidity-mining/ILMGetters.sol";
 
 import {SafeMath} from "openzeppelin-contracts/utils/math/SafeMath.sol";
 
 import {IBalancerMinter} from "./interfaces/IBalancerMinter.sol";
+import {IBalancerTokenAdmin} from "./interfaces/IBalancerTokenAdmin.sol";
+import {ILMGetters, IGaugeController} from "./interfaces/ILMGetters.sol";
 import {BalancerMinter} from "./BalancerMinter.sol";
 
 contract MainnetBalancerMinter is IBalancerMinter, ILMGetters, BalancerMinter {
@@ -31,7 +30,7 @@ contract MainnetBalancerMinter is IBalancerMinter, ILMGetters, BalancerMinter {
     IGaugeController private immutable _gaugeController;
 
     constructor(IBalancerTokenAdmin tokenAdmin, IGaugeController gaugeController)
-        BalancerMinter(tokenAdmin.getBalancerToken(), "Balancer Minter", "1")
+        BalancerMinter(tokenAdmin.getBalancerToken(), "Silo Minter", "1")
     {
         _tokenAdmin = tokenAdmin;
         _gaugeController = gaugeController;
