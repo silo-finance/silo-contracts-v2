@@ -10,6 +10,9 @@ library VeSiloContracts {
     string public constant TIMELOCK_CONTROLLER = "TimelockController.sol";
     string public constant SILO_GOVERNOR = "SiloGovernor.sol";
     string public constant GAUGE_CONTROLLER = "GaugeController.vy";
+    string public constant SILO_LIQUIDITY_GAUGE = "SiloLiquidityGauge.vy";
+    string public constant LIQUIDITY_GAUGE_FACTORY = "LiquidityGaugeFactory.sol";
+    string public constant MAINNET_BALANCER_MINTER = "MainnetBalancerMinter.sol";
 }
 
 contract CommonDeploy is Deployer {
