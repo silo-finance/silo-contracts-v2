@@ -13,12 +13,14 @@ src = 'silo-amm-periphery/contracts'
 out = 'silo-amm-periphery/artifacts'
 test = 'silo-amm-periphery/test/foundry'
 broadcast = 'silo-amm-periphery/broadcast'
+fuzz.runs = 1000
 
 [profile.amm-core]
 src = 'silo-amm-core/contracts'
 out = 'silo-amm-core/artifacts'
 test = 'silo-amm-core/test/foundry'
 broadcast = 'silo-amm-core/broadcast'
+fuzz.runs = 1000
 fs_permissions = [{ access = "read", path = "./silo-amm-core/test/foundry/data/"}]
 
 [profile.core]
