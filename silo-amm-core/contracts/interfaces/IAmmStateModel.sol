@@ -2,13 +2,6 @@
 pragma solidity >=0.5.0;
 
 interface IAmmStateModel {
-    /// TODO not sure, if this exponential model is really useful, need to verify in QA
-    /// @dev share = m * 2^e;
-    struct Share {
-        uint112 m;
-        uint112 e;
-    }
-
     // this is to avoid stack too deep, it might be less than another function call TODO verify it
     struct Deltas {
         uint256 dA;

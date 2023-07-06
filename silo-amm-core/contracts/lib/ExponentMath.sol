@@ -1,14 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.0;
 
-/// @dev all operations on exponent can be unchecked because - see documentation for `m` and `e`
-struct Exponent {
-    /// @dev we need to keep it between 0.5 and 1.0 (1e18) so 64bits are enough,
-    /// our precision is 1e18 (64b), we doing mul on that, but outside of Exponent, inside max we need it 64b
-    uint64 m;
-    /// @dev for `e` 64b should be more than enough, we doing only + or - on `e` so it is relatively small
-    uint64 e;
-}
 
 /// @notice DO NOT USE THIS LIB FOR EXPONENT THAT WAS NOT CREATED BY IT - THERE IS A RISK OF OVER/UNDER-FLOW
 library ExponentMath {
@@ -32,66 +24,67 @@ library ExponentMath {
     error EXP_TO_SCALAR_OVERFLOW();
     error SUB_UNDERFLOW();
 
-    function toExp(uint256 _scalar) internal pure returns (Exponent memory exp) {
+    function toExp(uint256 _scalar) internal pure returns (uint64 m, uint64 e) {
         unchecked {
             // we will not overflow on +1 because `base2` can return at most e=196
-            exp.e = base2(_scalar) + 1;
+            e = base2(_scalar) + 1;
             // we will not overflow on `* _PRECISION` because of check `_scalar > _MAX_SCALAR`
             // we will not overflow on `** exp.e` because `e` is based on `_scalar`
-            exp.m = uint64(_scalar * _PRECISION / (uint256(2) ** exp.e));
+            m = uint64(_scalar * _PRECISION / (uint256(2) ** e));
         }
     }
 
-    function fromExp(Exponent memory _exp) internal pure returns (uint256 scalar) {
-        if (_exp.e > _MAX_E) revert EXP_TO_SCALAR_OVERFLOW();
+    function fromExp(uint64 _m, uint64 _e) internal pure returns (uint256 scalar) {
+        if (_e > _MAX_E) revert EXP_TO_SCALAR_OVERFLOW();
 
-        // we can not overflow because we check for `_exp.e > _MAX_E`
-        unchecked { scalar = uint256(_exp.m) * uint256(2) ** _exp.e / _PRECISION; }
+        // we can not overflow because we check for `e > _MAX_E`
+        unchecked { scalar = uint256(_m) * uint256(2) ** _e / _PRECISION; }
     }
 
-    function mul(Exponent memory _exp, uint256 _scalar) internal pure returns (Exponent memory exp) {
-        exp = toExp(_scalar);
+    function mul(uint64 _m, uint64 _e, uint256 _scalar) internal pure returns (uint64 m, uint64 e) {
+        (m, e) = toExp(_scalar);
 
         unchecked {
-            return normaliseUp(uint128(_exp.m) * uint128(exp.m) / _PRECISION, _exp.e + exp.e);
+            return normaliseUp(uint128(m) * uint128(_m) / _PRECISION, e + _e);
         }
     }
 
-    function add(Exponent memory _exp1, Exponent memory _exp2) internal pure returns (Exponent memory) {
+    function add(uint64 _m1, uint64 _e1, uint64 _m2, uint64 _e2) internal pure returns (uint64 m, uint64 e) {
         unchecked {
-            if (_exp1.e > _exp2.e) {
-                uint256 eDiff = _exp1.e - _exp2.e;
-                _exp2.e += uint64(eDiff); // safe cast, because this is already in other e
-                _exp2.m >>= eDiff;
-            } else if (_exp2.e > _exp1.e) {
-                uint256 eDiff = _exp2.e - _exp1.e;
-                _exp1.e += uint64(eDiff); // safe cast, because this is already in other e
-                _exp1.m >>= eDiff;
+            if (_e1 > _e2) {
+                uint256 eDiff = _e1 - _e2;
+                _e2 += uint64(eDiff); // safe cast, because this is already in other e
+                _m2 >>= eDiff;
+            } else if (_e2 > _e1) {
+                uint256 eDiff = _e2 - _e1;
+                _e1 += uint64(eDiff); // safe cast, because this is already in other e
+                _m1 >>= eDiff;
             }
 
-            return normaliseDown(_exp1.m + _exp2.m, _exp1.e);
+            return normaliseDown(_m1 + _m2, _e1);
         }
     }
 
-    function sub(Exponent memory _exp1, Exponent memory _exp2) internal pure returns (Exponent memory) {
+    function sub(uint64 _m1, uint64 _e1, uint64 _m2, uint64 _e2) internal pure returns (uint64 m, uint64 e) {
         unchecked {
-            if (_exp1.e > _exp2.e) {
-                uint256 eDiff = _exp1.e - _exp2.e;
-                _exp1.e -= uint64(eDiff); // safe cast, because this is already in other e
-                _exp1.m <<= eDiff;
-            } else if (_exp2.e > _exp1.e) {
-                uint256 eDiff = _exp2.e - _exp1.e;
-                _exp2.e -= uint64(eDiff); // safe cast, because this is already in other e
-                _exp2.m <<= eDiff;
+            if (_e1 > _e2) {
+                uint256 eDiff = _e1 - _e2;
+                _e1 -= uint64(eDiff); // safe cast, because this is already in other e
+                _m1 <<= eDiff;
+            } else if (_e2 > _e1) {
+                uint256 eDiff = _e2 - _e1;
+                _e2 -= uint64(eDiff); // safe cast, because this is already in other e
+                _m2 <<= eDiff;
             }
 
-            if (_exp1.m < _exp2.m) revert SUB_UNDERFLOW();
-            return normaliseUp(_exp1.m - _exp2.m, _exp1.e);
+            if (_m1 < _m2) revert SUB_UNDERFLOW();
+
+            return normaliseUp(_m1 - _m2, _e1);
         }
     }
 
     /// @dev this method is for keeping mantisa in expected range 0.5 <= m <= 1.0
-    function normaliseDown(uint128 _m, uint128 _e) internal pure returns (Exponent memory exp) {
+    function normaliseDown(uint128 _m, uint128 _e) internal pure returns (uint64 m, uint64 e) {
         while (_m > _PRECISION) {
             unchecked {
                 // arbitrary magic number discovered based on avg gas consumption for tests
@@ -103,11 +96,11 @@ library ExponentMath {
         if (_e > type(uint64).max) revert E_OVERFLOW();
 
         // after normalisation m should fit into 64b based on loops conditions
-        return Exponent(uint64(_m), uint64(_e));
+        return (uint64(_m), uint64(_e));
     }
 
     /// @dev this method is for keeping mantisa in expected range 0.5 <= m <= 1.0
-    function normaliseUp(uint128 _m, uint128 _e) internal pure returns (Exponent memory) {
+    function normaliseUp(uint128 _m, uint128 _e) internal pure returns (uint64 m, uint64 e) {
         uint256 initialE = _e;
 
         while (_m < _MINIMAL_MANTISA) {
@@ -122,7 +115,7 @@ library ExponentMath {
         if (_e > initialE) revert E_UNDERFLOW();
 
         // after normalisation m should fit into 64b based on loops conditions
-        return Exponent(uint64(_m), uint64(_e));
+        return (uint64(_m), uint64(_e));
     }
 
     /// @dev optimised method to find exponent for scalar

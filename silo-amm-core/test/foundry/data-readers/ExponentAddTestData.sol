@@ -8,6 +8,15 @@ import "silo-amm-core/contracts/lib/ExponentMath.sol";
 contract ExponentAddTestData is Test {
     using Strings for uint256;
 
+    /// @dev all operations on exponent can be unchecked because - see documentation for `m` and `e`
+    struct Exponent {
+        /// @dev we need to keep it between 0.5 and 1.0 (1e18) so 64bits are enough,
+        /// our precision is 1e18 (64b), we doing mul on that, but outside of Exponent, inside max we need it 64b
+        uint64 m;
+        /// @dev for `e` 64b should be more than enough, we doing only + or - on `e` so it is relatively small
+        uint64 e;
+    }
+
     struct TestData {
         Exponent a;
         Exponent b;

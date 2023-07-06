@@ -114,22 +114,22 @@ contract ExponentMathTest is Test {
                 ExponentMathTestData.TestData memory testData = testDatas[i];
 
                 uint256 gasStart = gasleft();
-                Exponent memory exp = ExponentMath.toExp(testData.scalar);
+                (uint64 m, uint64 e) = ExponentMath.toExp(testData.scalar);
                 uint256 gasEnd = gasleft();
 
                 uint256 gasStart2 = gasleft();
-                ExponentMath.fromExp(exp);
+                ExponentMath.fromExp(m, e);
                 uint256 gasEnd2 = gasleft();
 
                 gasSum += (gasStart - gasEnd);
                 gasSum2 += (gasStart2 - gasEnd2);
 
-                _assertMentisa(exp);
-                _assertExpEq(exp, testData.exp);
+                _assertMantisa(m);
+                _assertExpEq(m, e, testData.exp.m, testData.exp.e);
             }
 
-            assertEq(gasSum / testDatas.length, 940, "avg gas for toExp");
-            assertEq(gasSum2 / testDatas.length, 232, "avg gas for fromExp");
+            assertEq(gasSum / testDatas.length, 868, "avg gas for toExp");
+            assertEq(gasSum2 / testDatas.length, 210, "avg gas for fromExp");
         }
     }
 
@@ -140,13 +140,14 @@ contract ExponentMathTest is Test {
         vm.assume(_x != 0);
         vm.assume(_x <= ExponentMath._MAX_SCALAR);
 
-        Exponent memory exp = ExponentMath.toExp(_x);
-        _assertMentisa(exp);
+        (uint64 m, uint64 e) = ExponentMath.toExp(_x);
+        _assertMantisa(m);
 
         emit log_named_uint("ExponentMath._MAX_SCALAR", ExponentMath._MAX_SCALAR);
-        emit log_named_uint("e", exp.e);
-        emit log_named_uint("m", exp.m);
-        uint256 result = ExponentMath.fromExp(exp);
+        emit log_named_uint("m", m);
+        emit log_named_uint("e", e);
+
+        uint256 result = ExponentMath.fromExp(m, e);
 
         _assertScalarEq(result, _x);
     }
@@ -155,15 +156,15 @@ contract ExponentMathTest is Test {
         FOUNDRY_PROFILE=amm-core forge test -vv --match-test test_ExponentMath_normalise_one
     */
     function test_ExponentMath_normalise_one() public {
-        Exponent memory exp = ExponentMath.normaliseUp(1, 100);
-        _assertMentisa(exp);
-        assertEq(exp.m, 2 ** 59);
-        assertEq(exp.e, 100 - 59);
+        (uint64 m, uint64 e) = ExponentMath.normaliseUp(1, 100);
+        _assertMantisa(m);
+        assertEq(m, 2 ** 59);
+        assertEq(e, 100 - 59);
 
-        exp = ExponentMath.normaliseDown(1e18 ** 2, 0);
-        _assertMentisa(exp);
-        assertEq(exp.m, 1e18 ** 2 >> 60);
-        assertEq(exp.e, 60);
+        (m, e) = ExponentMath.normaliseDown(1e18 ** 2, 0);
+        _assertMantisa(m);
+        assertEq(m, 1e18 ** 2 >> 60);
+        assertEq(e, 60);
     }
 
     /*
@@ -174,14 +175,13 @@ contract ExponentMathTest is Test {
         vm.assume(_x != 0);
         vm.assume(_x <= ExponentMath._MAX_SCALAR / uint256(_multiplier));
 
-        Exponent memory result = ExponentMath.mul(ExponentMath.toExp(_x), _multiplier);
+        (uint64 m, uint64 e) = ExponentMath.toExp(_x);
+        (uint64 resultM, uint64 resultE) = ExponentMath.mul(m, e, _multiplier);
+        (uint64 expectM, uint64 expectE) = ExponentMath.toExp(_x * uint256(_multiplier));
 
-        emit log_named_uint("e", result.e);
-        emit log_named_uint("m", result.m);
-
-        _assertExpEqualish(result, ExponentMath.toExp(_x * uint256(_multiplier)));
-        _assertScalarEq(ExponentMath.fromExp(result), _x * uint256(_multiplier));
-        _assertMentisa(result);
+        _assertExpEqualish(resultM, resultE, expectM, expectE);
+        _assertScalarEq(ExponentMath.fromExp(resultM, resultE), _x * uint256(_multiplier));
+        _assertMantisa(resultM);
     }
 
     /*
@@ -189,11 +189,11 @@ contract ExponentMathTest is Test {
     */
     function test_ExponentMath_mul_gas() public {
         uint256 gasStart = gasleft();
-        Exponent memory result = ExponentMath.mul(Exponent(75e16, 70), 123e18);
+        (uint64 m,) = ExponentMath.mul(75e16, 70, 123e18);
         uint256 gasEnd = gasleft();
 
-        assertEq(gasStart - gasEnd, 1665, "mul gas");
-        _assertMentisa(result);
+        assertEq(gasStart - gasEnd, 1329, "mul gas");
+        _assertMantisa(m);
     }
 
     /*
@@ -211,23 +211,23 @@ contract ExponentMathTest is Test {
                 ExponentAddTestData.TestData memory testData = testDatas[i];
 
                 uint256 gasStart = gasleft();
-                Exponent memory sum = ExponentMath.add(testData.a, testData.b);
+                (uint64 sumM, uint64 sumE) = ExponentMath.add(testData.a.m, testData.a.e, testData.b.m, testData.b.e);
                 uint256 gasEnd = gasleft();
 
-                _assertExpEq(sum, testData.sum);
+                _assertExpEq(sumM, sumE, testData.sum.m, testData.sum.e);
 
                 uint256 gasStart2 = gasleft();
-                Exponent memory sub = ExponentMath.sub(testData.sum, testData.b);
+                (uint64 subM, uint64 subE) = ExponentMath.sub(testData.sum.m, testData.sum.e, testData.b.m, testData.b.e);
                 uint256 gasEnd2 = gasleft();
 
-                _assertExpEqualish(sub, testData.a);
+                _assertExpEqualish(subM, subE, testData.a.m, testData.a.e);
 
                 gasSum += (gasStart - gasEnd);
                 gasSum2 += (gasStart2 - gasEnd2);
             }
 
-            assertEq(gasSum / testDatas.length, 742, "avg gas for ADD");
-            assertEq(gasSum2 / testDatas.length, 833, "avg gas for SUB");
+            assertEq(gasSum / testDatas.length, 556, "avg gas for ADD");
+            assertEq(gasSum2 / testDatas.length, 668, "avg gas for SUB");
         }
     }
 
@@ -239,20 +239,20 @@ contract ExponentMathTest is Test {
         uint256 c = commonMantisas.length;
 
         for (uint i; i < c; i++) {
-            uint64 m = uint64(commonMantisas[i]);
+            uint64 mi = uint64(commonMantisas[i]);
             uint64 e1 = uint64(70 + i % 3);
             uint64 e2 = uint64(70 - i % 3);
 
             uint256 gasStart = gasleft();
-            Exponent memory exp = ExponentMath.add(Exponent(m, e1), Exponent(m, e2));
+            (uint64 m,) = ExponentMath.add(mi, e1, mi, e2);
             uint256 gasEnd = gasleft();
 
             gasSum += (gasStart - gasEnd);
 
-            _assertMentisa(exp);
+            _assertMantisa(m);
         }
 
-        assertEq(gasSum / c, 847, "avg gas for ADD");
+        assertEq(gasSum / c, 448, "avg gas for ADD");
     }
 
     /*
@@ -260,7 +260,7 @@ contract ExponentMathTest is Test {
     */
     function test_ExponentMath_zero() public {
         vm.expectRevert(ExponentMath.ZERO.selector);
-        ExponentMath.mul(Exponent(55e16, 10), 0);
+        ExponentMath.mul(55e16, 10, 0);
 
         vm.expectRevert(ExponentMath.ZERO.selector);
         ExponentMath.toExp(0);
@@ -276,8 +276,8 @@ contract ExponentMathTest is Test {
         vm.assume(_m != 0);
         vm.assume(_m <= ExponentMath._PRECISION);
 
-        Exponent memory exp = ExponentMath.normaliseUp(_m, type(uint64).max / 2);
-        _assertMentisa(exp);
+        (uint64 m,) = ExponentMath.normaliseUp(_m, type(uint64).max / 2);
+        _assertMantisa(m);
     }
 
     /*
@@ -286,8 +286,8 @@ contract ExponentMathTest is Test {
     function test_ExponentMath_normaliseDown_fuzz(uint64 _m) public {
         vm.assume(_m >= ExponentMath._MINIMAL_MANTISA);
 
-        Exponent memory exp = ExponentMath.normaliseDown(_m, type(uint64).max / 2);
-        _assertMentisa(exp);
+        (uint64 m,) = ExponentMath.normaliseDown(_m, type(uint64).max / 2);
+        _assertMantisa(m);
     }
     
     /*
@@ -298,17 +298,17 @@ contract ExponentMathTest is Test {
         uint256 c = normaliseDownCommonMantisas.length;
 
         for (uint i; i < c; i++) {
-            uint128 m = normaliseDownCommonMantisas[i];
+            uint128 mi = normaliseDownCommonMantisas[i];
             uint256 gasStart = gasleft();
-            Exponent memory exp = ExponentMath.normaliseDown(m, 80);
+            (uint64 m,) = ExponentMath.normaliseDown(mi, 80);
             uint256 gasEnd = gasleft();
 
             gasSum += (gasStart - gasEnd);
 
-            _assertMentisa(exp);
+            _assertMantisa(m);
         }
 
-        assertEq(gasSum / c, 369, "avg gas for normaliseDown");
+        assertEq(gasSum / c, 248, "avg gas for normaliseDown");
     }
 
     /*
@@ -328,26 +328,26 @@ contract ExponentMathTest is Test {
         uint256 gasSum;
 
         for (uint i; i < ms.length; i++) {
-            uint128 m = ms[i];
+            uint128 mi = ms[i];
             uint256 gasStart = gasleft();
-            Exponent memory exp = ExponentMath.normaliseUp(m, 80);
+            (uint64 m,) = ExponentMath.normaliseUp(mi, 80);
             uint256 gasEnd = gasleft();
 
             gasSum += (gasStart - gasEnd);
 
-            _assertMentisa(exp);
+            _assertMantisa(m);
         }
 
-        assertEq(gasSum / ms.length, 346, "avg gas for normaliseUp");
+        assertEq(gasSum / ms.length, 218, "avg gas for normaliseUp");
     }
 
-    function _assertExpEq(Exponent memory _exp, uint256 _scalar) internal {
-        Exponent memory exp = ExponentMath.toExp(_scalar);
+    function _assertExpEq(uint64 _m, uint64 _e, uint256 _scalar) internal {
+        (uint64 m, uint64 e) = ExponentMath.toExp(_scalar);
 
-        assertEq(exp.m, _exp.m, "[_assertExpEq] exp.m differs");
-        assertEq(exp.e, _exp.e, "[_assertExpEq] exp.e differs");
+        assertEq(m, _m, "[_assertExpEq] m differs");
+        assertEq(e, _e, "[_assertExpEq] e differs");
 
-        uint256 fromExp = ExponentMath.fromExp(_exp);
+        uint256 fromExp = ExponentMath.fromExp(_m, _e);
         uint256 diff = _scalar - fromExp;
         uint256 diffPercent = diff * 1e18 / _scalar;
         assertLe(diffPercent, 1e13, "[_assertExpEq] expect diff not more than 0.00001%");
@@ -368,48 +368,45 @@ contract ExponentMathTest is Test {
         assertLe(diffPercent, 1e13, "[_assertScalarEq] expect difference no more than 0.00001%");
     }
 
-    function _assertExpEq(Exponent memory _exp1, Exponent memory _exp2) internal {
-        assertEq(_exp1.m, _exp2.m, "[_assertExpEq] exp.m differs");
-        assertEq(_exp1.e, _exp2.e, "[_assertExpEq] exp.e differs");
+    function _assertExpEq(uint64 _m1, uint64 _e1, uint64 _m2, uint64 _e2) internal {
+        assertEq(_m1, _m2, "[_assertExpEq] m differs");
+        assertEq(_e1, _e2, "[_assertExpEq] e differs");
     }
 
-    function _assertExpEqualish(Exponent memory _exp1, Exponent memory _exp2) internal {
-        Exponent memory exp1 = Exponent(_exp1.m, _exp1.e);
-        Exponent memory exp2 = Exponent(_exp2.m, _exp2.e);
-
-        (uint256 diff, bool firstHasLowerE) = exp1.m > exp2.m
-            ? (exp1.m - exp2.m, true)
-            : (exp2.m - exp1.m, false);
+    function _assertExpEqualish(uint64 _m1, uint64 _e1, uint64 _m2, uint64 _e2) internal {
+        uint256 diff = _m1 > _m2 ? _m1 - _m2 : _m2 - _m1;
 
         uint256 maxDiff = 4;
+        _printExp(_m1, _e1);
+        _printExp(_m2, _e2);
 
         if (diff > maxDiff) {
             // why we adjusting? because we can have situations like:
             // {1000000000000000000, 0} vs {500000000000000000, 1}
-            if (firstHasLowerE) {
-                _printExp("normalising exp", exp1);
+            if (_e1 < _e2) {
+                _printExp("normalising exp", _m1, _e1);
 
-                uint64 eDiff = exp2.e - exp1.e;
-                exp1.e += eDiff;
-                exp1.m >>= eDiff;
+                uint64 eDiff = _e2 - _e1;
+                _e1 += eDiff;
+                _m1 >>= eDiff;
             } else {
-                _printExp("normalising exp", exp2);
+                _printExp("normalising exp", _m2, _e2);
 
-                uint64 eDiff = exp1.e - exp2.e;
-                exp2.e += eDiff;
-                exp2.m >>= eDiff;
+                uint64 eDiff = _e1 - _e2;
+                _e2 += eDiff;
+                _m2 >>= eDiff;
             }
 
-            diff = exp1.m > exp2.m ? exp1.m - exp2.m : exp2.m - exp1.m;
+            diff = _m1 > _m2 ? _m1 - _m2 : _m2 - _m1;
         }
 
-        assertLe(diff, maxDiff, "[_assertExpEqualish] ~exp.m differs");
-        assertEq(exp1.e, exp2.e, "[_assertExpEqualish] exp.e differs");
+        assertLe(diff, maxDiff, "[_assertExpEqualish] ~m differs");
+        assertEq(_e1, _e2, "[_assertExpEqualish] e differs");
     }
 
-    function _assertMentisa(Exponent memory _exp) internal {
-        assertGe(_exp.m, 5e17, "[_assertMentisa] m >= 0.5");
-        assertLe(_exp.m, 1e18, "[_assertMentisa] m <= 1.0");
+    function _assertMantisa(uint64 _m) internal {
+        assertGe(_m, 5e17, "[_assertMentisa] m >= 0.5");
+        assertLe(_m, 1e18, "[_assertMentisa] m <= 1.0");
     }
 
     function _normaliseUpMantisas() internal pure returns (uint128[] memory) {
@@ -454,11 +451,11 @@ contract ExponentMathTest is Test {
         return ms;
     }
 
-    function _printExp(string memory _prefix, Exponent memory _exp) internal view {
-        console.log("[%s] {m: %s, e: %s}", _prefix, _exp.m, _exp.e);
+    function _printExp(string memory _prefix, uint64 _m, uint64 _e) internal view {
+        console.log("[%s] {m: %s, e: %s}", _prefix, _m, _e);
     }
 
-    function _printExp(Exponent memory _exp) internal view {
-        console.log("{m: %s, e: %s}", _exp.m, _exp.e);
+    function _printExp(uint64 _m, uint64 _e) internal view {
+        console.log("{m: %s, e: %s}", _m, _e);
     }
 }
