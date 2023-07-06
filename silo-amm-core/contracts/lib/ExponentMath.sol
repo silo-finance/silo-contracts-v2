@@ -1,15 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.0;
 
-/// @dev all operations on exponent can be unchecked because - see documentation for `m` and `e`
-struct Exponent {
-    /// @dev we need to keep it between 0.5 and 1.0 (1e18) so 64bits are enough,
-    /// our precision is 1e18 (64b), we doing mul on that, but outside of Exponent, inside max we need it 64b
-    uint64 m;
-    /// @dev for `e` 64b should be more than enough, we doing only + or - on `e` so it is relatively small
-    uint64 e;
-}
 
+/// @dev all operations on exponent can be unchecked because - see documentation for `m` and `e`
 /// @notice DO NOT USE THIS LIB FOR EXPONENT THAT WAS NOT CREATED BY IT - THERE IS A RISK OF OVER/UNDER-FLOW
 library ExponentMath {
     /// @dev biggest number that can be translated to exponent type and back
@@ -32,7 +25,7 @@ library ExponentMath {
     error EXP_TO_SCALAR_OVERFLOW();
     error SUB_UNDERFLOW();
 
-    function toExp(uint256 _scalar) internal pure returns (Exponent memory exp) {
+    function toExp(uint256 _scalar) internal pure returns (IAmmStateModel.Exponent memory exp) {
         unchecked {
             // we will not overflow on +1 because `base2` can return at most e=196
             exp.e = base2(_scalar) + 1;
@@ -42,14 +35,18 @@ library ExponentMath {
         }
     }
 
-    function fromExp(Exponent memory _exp) internal pure returns (uint256 scalar) {
+    function fromExp(IAmmStateModel.Exponent memory _exp) internal pure returns (uint256 scalar) {
         if (_exp.e > _MAX_E) revert EXP_TO_SCALAR_OVERFLOW();
 
         // we can not overflow because we check for `_exp.e > _MAX_E`
         unchecked { scalar = uint256(_exp.m) * uint256(2) ** _exp.e / _PRECISION; }
     }
 
-    function mul(Exponent memory _exp, uint256 _scalar) internal pure returns (Exponent memory exp) {
+    function mul(IAmmStateModel.Exponent memory _exp, uint256 _scalar)
+        internal
+        pure
+        returns (IAmmStateModel.Exponent memory exp)
+    {
         exp = toExp(_scalar);
 
         unchecked {
@@ -57,7 +54,11 @@ library ExponentMath {
         }
     }
 
-    function add(Exponent memory _exp1, Exponent memory _exp2) internal pure returns (Exponent memory) {
+    function add(IAmmStateModel.Exponent memory _exp1, IAmmStateModel.Exponent memory _exp2)
+        internal
+        pure
+        returns (IAmmStateModel.Exponent memory)
+    {
         unchecked {
             if (_exp1.e > _exp2.e) {
                 uint256 eDiff = _exp1.e - _exp2.e;
@@ -73,7 +74,11 @@ library ExponentMath {
         }
     }
 
-    function sub(Exponent memory _exp1, Exponent memory _exp2) internal pure returns (Exponent memory) {
+    function sub(IAmmStateModel.Exponent memory _exp1, IAmmStateModel.Exponent memory _exp2)
+        internal
+        pure
+        returns (IAmmStateModel.Exponent memory)
+    {
         unchecked {
             if (_exp1.e > _exp2.e) {
                 uint256 eDiff = _exp1.e - _exp2.e;
@@ -91,7 +96,7 @@ library ExponentMath {
     }
 
     /// @dev this method is for keeping mantisa in expected range 0.5 <= m <= 1.0
-    function normaliseDown(uint128 _m, uint128 _e) internal pure returns (Exponent memory exp) {
+    function normaliseDown(uint128 _m, uint128 _e) internal pure returns (IAmmStateModel.Exponent memory exp) {
         while (_m > _PRECISION) {
             unchecked {
                 // arbitrary magic number discovered based on avg gas consumption for tests
@@ -103,11 +108,11 @@ library ExponentMath {
         if (_e > type(uint64).max) revert E_OVERFLOW();
 
         // after normalisation m should fit into 64b based on loops conditions
-        return Exponent(uint64(_m), uint64(_e));
+        return IAmmStateModel.Exponent(uint64(_m), uint64(_e));
     }
 
     /// @dev this method is for keeping mantisa in expected range 0.5 <= m <= 1.0
-    function normaliseUp(uint128 _m, uint128 _e) internal pure returns (Exponent memory) {
+    function normaliseUp(uint128 _m, uint128 _e) internal pure returns (IAmmStateModel.Exponent memory) {
         uint256 initialE = _e;
 
         while (_m < _MINIMAL_MANTISA) {
@@ -122,7 +127,7 @@ library ExponentMath {
         if (_e > initialE) revert E_UNDERFLOW();
 
         // after normalisation m should fit into 64b based on loops conditions
-        return Exponent(uint64(_m), uint64(_e));
+        return IAmmStateModel.Exponent(uint64(_m), uint64(_e));
     }
 
     /// @dev optimised method to find exponent for scalar

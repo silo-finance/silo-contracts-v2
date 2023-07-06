@@ -2,11 +2,12 @@
 pragma solidity >=0.5.0;
 
 interface IAmmStateModel {
-    /// TODO not sure, if this exponential model is really useful, need to verify in QA
-    /// @dev share = m * 2^e;
-    struct Share {
-        uint112 m;
-        uint112 e;
+    struct Exponent {
+        /// @dev we need to keep it between 0.5 and 1.0 (1e18) so 64bits are enough,
+        /// our precision is 1e18 (64b), we doing mul on that, but outside of Exponent, inside max we need it 64b
+        uint64 m;
+        /// @dev for `e` 64b should be more than enough, we doing only + or - on `e` so it is relatively small
+        uint64 e;
     }
 
     // this is to avoid stack too deep, it might be less than another function call TODO verify it

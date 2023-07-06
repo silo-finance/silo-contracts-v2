@@ -2,6 +2,7 @@
 pragma solidity 0.8.19;
 
 import "../interfaces/IAmmStateModel.sol";
+import "../lib/ExponentMath.sol";
 
 
 /// @dev annotations like (A) or (Ci) is reference to the internal document that describes model in mathematical way.
