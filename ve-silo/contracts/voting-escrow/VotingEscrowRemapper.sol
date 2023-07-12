@@ -22,7 +22,8 @@ import {Errors, _require} from "balancer-labs/v2-interfaces/solidity-utils/helpe
 
 import {Address} from "openzeppelin-contracts/utils/Address.sol";
 import {ReentrancyGuard} from "openzeppelin-contracts/security/ReentrancyGuard.sol";
-import "@balancer-labs/v2-solidity-utils/contracts/helpers/SingletonAuthentication.sol";
+
+import {Ownable2Step} from "openzeppelin-contracts/access/Ownable2Step.sol";
 
 /**
  * @notice This contract allows veBAL holders on Ethereum to assign their balance to designated addresses on each L2.
@@ -34,7 +35,7 @@ import "@balancer-labs/v2-solidity-utils/contracts/helpers/SingletonAuthenticati
  * Users able to call this contract can set their own mappings, or delegate this function to another account if they
  * cannot.
  */
-contract VotingEscrowRemapper is IVotingEscrowRemapper, SingletonAuthentication, ReentrancyGuard {
+contract VotingEscrowRemapper is IVotingEscrowRemapper, Ownable2Step, ReentrancyGuard {
     IVotingEscrow private immutable _votingEscrow;
     IOmniVotingEscrowAdaptor private _omniVotingEscrowAdaptor;
     mapping(uint16 => mapping(address => address)) private _localToRemoteAddressMap;
@@ -44,10 +45,9 @@ contract VotingEscrowRemapper is IVotingEscrowRemapper, SingletonAuthentication,
     mapping(address => address) private _localRemappingManager;
 
     constructor(
-        IVault vault,
         IVotingEscrow votingEscrow,
         IOmniVotingEscrowAdaptor omniVotingEscrowAdaptor
-    ) SingletonAuthentication(vault) {
+    ) {
         _votingEscrow = votingEscrow;
         _omniVotingEscrowAdaptor = omniVotingEscrowAdaptor;
     }
@@ -187,7 +187,7 @@ contract VotingEscrowRemapper is IVotingEscrowRemapper, SingletonAuthentication,
     function setNetworkRemappingManager(address localUser, address delegate)
         external
         override
-        authenticate
+        onlyOwner
         nonReentrant
     {
         require(_isAllowedContract(localUser), "Only contracts which can hold veBAL may have a delegate");
