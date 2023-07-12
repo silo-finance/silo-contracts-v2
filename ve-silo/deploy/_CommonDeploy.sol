@@ -13,6 +13,7 @@ library VeSiloContracts {
     string public constant SILO_LIQUIDITY_GAUGE = "SiloLiquidityGauge.vy";
     string public constant LIQUIDITY_GAUGE_FACTORY = "LiquidityGaugeFactory.sol";
     string public constant MAINNET_BALANCER_MINTER = "MainnetBalancerMinter.sol";
+    string public constant BALANCER_TOKEN_ADMIN = "BalancerTokenAdmin.sol";
 }
 
 contract CommonDeploy is Deployer {

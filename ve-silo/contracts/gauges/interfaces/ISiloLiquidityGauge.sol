@@ -25,6 +25,8 @@ interface ISiloLiquidityGauge {
         external
         returns (bool);
 
+    function user_checkpoint(address _addr) external returns (bool);
+
     /// @notice Returns ERC-20 Balancer handler
     function bal_handler() external view returns (address);
     /// @notice Get the timestamp of the last checkpoint

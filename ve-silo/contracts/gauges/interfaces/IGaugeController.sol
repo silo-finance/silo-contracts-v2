@@ -26,6 +26,7 @@ interface IGaugeController {
     function get_total_weight() external view returns (uint256);
     function get_gauge_weight(int128 _type_id) external view returns (uint256);
     function get_weights_sum_per_type(int128 _type_id) external view returns (uint256);
+    function gauge_types(address gauge) external view returns (int128);
     // solhint-enable func-name-mixedcase
     // solhint-enable var-name-mixedcase
     // solhint-enable func-param-name-mixedcase
