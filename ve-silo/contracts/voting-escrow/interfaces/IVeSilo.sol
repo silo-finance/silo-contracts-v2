@@ -12,6 +12,7 @@ interface IVeSilo {
     function apply_smart_wallet_checker() external;
     function future_smart_wallet_checker() external view returns(address);
     function smart_wallet_checker() external view returns(address);
+    function locked__end(address _user) external view returns (uint256);
     // solhint-enable func-name-mixedcase
 
     function name() external view returns (string memory);
@@ -22,5 +23,6 @@ interface IVeSilo {
     function balanceOf(address _user) external view returns (uint256);
     function balanceOf(address _user, uint256 _timestamp) external view returns (uint256);
     function balanceOfAt(address _addr, uint256 _block) external view returns(uint256);
+    function totalSupply() external view returns(uint256);
     function totalSupply(uint256 _time) external view returns(uint256);
 }

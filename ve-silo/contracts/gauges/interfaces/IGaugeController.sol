@@ -9,8 +9,8 @@ interface IGaugeController {
     // solhint-disable func-name-mixedcase
     // solhint-disable var-name-mixedcase
     // solhint-disable func-param-name-mixedcase
-    function add_type(string[64] memory _name) external;
-    function add_type(string[64] memory _name, uint256 _weight) external;
+    function add_type(string memory _name) external;
+    function add_type(string memory _name, uint256 _weight) external;
     function change_type_weight(int128 _type_id, uint256 _weight) external;
     function change_gauge_weight(address _gauge, uint256 _weight) external;
     function add_gauge(address _gauge, int128 _gauge_type) external;
@@ -27,6 +27,9 @@ interface IGaugeController {
     function get_gauge_weight(int128 _type_id) external view returns (uint256);
     function get_weights_sum_per_type(int128 _type_id) external view returns (uint256);
     function gauge_types(address gauge) external view returns (int128);
+    function n_gauge_types() external view returns (int128);
+    function n_gauges() external view returns (int128);
+    function points_total(uint256 _time) external view returns (uint256);
     // solhint-enable func-name-mixedcase
     // solhint-enable var-name-mixedcase
     // solhint-enable func-param-name-mixedcase

@@ -69,7 +69,7 @@ contract BalancerTokenAdmin is IBalancerTokenAdmin, ExtendedOwnable, ReentrancyG
      * @dev Reverts if contract does not have sole minting powers over BAL (and no other minters can be added).
      */
     // solhint-disable-next-line function-max-lines
-    function activate() external override nonReentrant onlyManager {
+    function activate() external override nonReentrant onlyOwner {
         require(_startEpochTime == type(uint256).max, "Already activated");
 
         // Perform sanity checks to make sure `BalancerTokenAdmin` can mint tokens
