@@ -179,7 +179,7 @@ contract VotingEscrowRemapper is IVotingEscrowRemapper, Ownable2Step, Reentrancy
         // Send back any leftover ETH to the caller.
         uint256 remainingBalance = address(this).balance;
         if (remainingBalance > 0) {
-            Address.sendValue(msg.sender, remainingBalance);
+            Address.sendValue(payable(msg.sender), remainingBalance);
         }
     }
 
@@ -223,7 +223,7 @@ contract VotingEscrowRemapper is IVotingEscrowRemapper, Ownable2Step, Reentrancy
         // Send back any leftover ETH to the caller.
         uint256 remainingBalance = address(this).balance;
         if (remainingBalance > 0) {
-            Address.sendValue(msg.sender, remainingBalance);
+            Address.sendValue(payable(msg.sender), remainingBalance);
         }
     }
 
