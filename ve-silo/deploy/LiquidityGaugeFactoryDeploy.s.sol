@@ -30,6 +30,8 @@ contract LiquidityGaugeFactoryDeploy is CommonDeploy {
 
         LiquidityGaugeFactory factoryAddr = new LiquidityGaugeFactory(ISiloLiquidityGauge(liquidityGaugeImpl));
 
+        _registerDeployment(address(factoryAddr), VeSiloContracts.LIQUIDITY_GAUGE_FACTORY);
+
         gaugeFactory = ILiquidityGaugeFactory(address(factoryAddr));
 
         vm.stopBroadcast();

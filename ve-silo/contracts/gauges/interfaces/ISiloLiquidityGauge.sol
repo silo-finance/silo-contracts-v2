@@ -37,9 +37,15 @@ interface ISiloLiquidityGauge {
     function working_supply() external view returns (uint256);
     function working_balances(address _user) external view returns (uint256);
 
+    function period() external view returns (int128);
+    function period_timestamp(int128 _period) external view returns (uint256);
+    function integrate_inv_supply(int128 _period) external view returns (uint256);
+    function integrate_inv_supply_of(address _user) external view returns (uint256);
+
     // solhint-enable func-name-mixedcase
     // solhint-enable func-param-name-mixedcase
     // solhint-enable var-name-mixedcase
 
     function getRelativeWeightCap() external view returns (uint256);
+    function getCappedRelativeWeight(uint256 _time) external view returns (uint256);
 }
