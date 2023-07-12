@@ -18,7 +18,7 @@ import {IOmniVotingEscrow} from "balancer-labs/v2-interfaces/liquidity-mining/IO
 import {IOmniVotingEscrowAdaptor} from "balancer-labs/v2-interfaces/liquidity-mining/IOmniVotingEscrowAdaptor.sol";
 import {IOmniVotingEscrowAdaptorSettings} from "balancer-labs/v2-interfaces/liquidity-mining/IOmniVotingEscrowAdaptorSettings.sol";
 
-import "@balancer-labs/v2-solidity-utils/contracts/helpers/SingletonAuthentication.sol";
+import {Ownable2Step} from "openzeppelin-contracts/access/Ownable2Step.sol";
 
 /**
  * @notice Adaptor contract between `VotingEscrowRemapper` and `OmniVotingEscrow`.
@@ -28,16 +28,12 @@ import "@balancer-labs/v2-solidity-utils/contracts/helpers/SingletonAuthenticati
 contract OmniVotingEscrowAdaptor is
     IOmniVotingEscrowAdaptor,
     IOmniVotingEscrowAdaptorSettings,
-    SingletonAuthentication
+    Ownable2Step
 {
     IOmniVotingEscrow private _omniVotingEscrow;
     bool private _useZro;
     bytes private _adapterParams;
     address private _zroPaymentAddress;
-
-    constructor(IVault vault) SingletonAuthentication(vault) {
-        // solhint-disable-previous-line no-empty-blocks
-    }
 
     /// @inheritdoc IOmniVotingEscrowAdaptorSettings
     function getOmniVotingEscrow() public view override returns (IOmniVotingEscrow) {
@@ -91,25 +87,25 @@ contract OmniVotingEscrowAdaptor is
     }
 
     /// @inheritdoc IOmniVotingEscrowAdaptorSettings
-    function setOmniVotingEscrow(IOmniVotingEscrow omniVotingEscrow) external override authenticate {
+    function setOmniVotingEscrow(IOmniVotingEscrow omniVotingEscrow) external override onlyOwner {
         _omniVotingEscrow = omniVotingEscrow;
         emit OmniVotingEscrowUpdated(omniVotingEscrow);
     }
 
     /// @inheritdoc IOmniVotingEscrowAdaptorSettings
-    function setUseZero(bool useZro) external override authenticate {
+    function setUseZero(bool useZro) external override onlyOwner {
         _useZro = useZro;
         emit UseZeroUpdated(useZro);
     }
 
     /// @inheritdoc IOmniVotingEscrowAdaptorSettings
-    function setAdapterParams(bytes memory adapterParams) external override authenticate {
+    function setAdapterParams(bytes memory adapterParams) external override onlyOwner {
         _adapterParams = adapterParams;
         emit AdapterParamsUpdated(adapterParams);
     }
 
     /// @inheritdoc IOmniVotingEscrowAdaptorSettings
-    function setZeroPaymentAddress(address paymentAddress) external override authenticate {
+    function setZeroPaymentAddress(address paymentAddress) external override onlyOwner {
         _zroPaymentAddress = paymentAddress;
         emit ZeroPaymentAddressUpdated(paymentAddress);
     }
