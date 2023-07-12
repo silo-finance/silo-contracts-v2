@@ -63,7 +63,7 @@ contract OmniVotingEscrowAdaptor is
         returns (uint256 nativeFee, uint256 zroFee)
     {
         IOmniVotingEscrow omniVotingEscrow = getOmniVotingEscrow();
-        require(omniVotingEscrow != IOmniVotingEscrow(0), "Omni voting escrow not set");
+        require(omniVotingEscrow != IOmniVotingEscrow(address(0)), "Omni voting escrow not set");
 
         return omniVotingEscrow.estimateSendUserBalance(_dstChainId, _useZro, _adapterParams);
     }
@@ -75,7 +75,7 @@ contract OmniVotingEscrowAdaptor is
         address payable _refundAddress
     ) external payable override {
         IOmniVotingEscrow omniVotingEscrow = getOmniVotingEscrow();
-        require(omniVotingEscrow != IOmniVotingEscrow(0), "Omni voting escrow not set");
+        require(omniVotingEscrow != IOmniVotingEscrow(address(0)), "Omni voting escrow not set");
 
         omniVotingEscrow.sendUserBalance{ value: msg.value }(
             _user,
