@@ -12,11 +12,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-pragma solidity ^0.7.0;
+pragma solidity 0.8.19;
 
-import "@balancer-labs/v2-interfaces/contracts/liquidity-mining/IOmniVotingEscrow.sol";
-import "@balancer-labs/v2-interfaces/contracts/liquidity-mining/IOmniVotingEscrowAdaptor.sol";
-import "@balancer-labs/v2-interfaces/contracts/liquidity-mining/IOmniVotingEscrowAdaptorSettings.sol";
+import {IOmniVotingEscrow} from "balancer-labs/v2-interfaces/liquidity-mining/IOmniVotingEscrow.sol";
+import {IOmniVotingEscrowAdaptor} from "balancer-labs/v2-interfaces/liquidity-mining/IOmniVotingEscrowAdaptor.sol";
+import {IOmniVotingEscrowAdaptorSettings} from "balancer-labs/v2-interfaces/liquidity-mining/IOmniVotingEscrowAdaptorSettings.sol";
 
 import "@balancer-labs/v2-solidity-utils/contracts/helpers/SingletonAuthentication.sol";
 
