@@ -14,6 +14,9 @@
 
 pragma solidity 0.8.19;
 
+// solhint-disable ordering
+// solhint-disable max-line-length
+
 import {IOmniVotingEscrow} from "balancer-labs/v2-interfaces/liquidity-mining/IOmniVotingEscrow.sol";
 import {IOmniVotingEscrowAdaptor} from "balancer-labs/v2-interfaces/liquidity-mining/IOmniVotingEscrowAdaptor.sol";
 import {IOmniVotingEscrowAdaptorSettings} from "balancer-labs/v2-interfaces/liquidity-mining/IOmniVotingEscrowAdaptorSettings.sol";
