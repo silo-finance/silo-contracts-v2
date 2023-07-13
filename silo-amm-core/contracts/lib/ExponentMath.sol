@@ -110,7 +110,7 @@ library ExponentMath {
             }
         }
 
-        // in general, for exp managed by this lib we should not have situation when e underflow
+        // in general, for exp managed by this lib we should not have situation when e underflows
         // but it cost only ~80gas to be 100% sure
         if (_e > initialE) revert E_UNDERFLOW();
 
