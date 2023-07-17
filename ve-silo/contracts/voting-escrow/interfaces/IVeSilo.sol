@@ -6,7 +6,17 @@ pragma solidity 0.8.19;
 /// all the methods present in the Balancer VotingEscrow. We'll have a solidity version
 /// of the interface that includes only methods required for Silo.
 interface IVeSilo {
+    struct Point {
+        int128 bias;
+        int128 slope; // - dweight / dt
+        uint256 ts;
+        uint256 blk; // block
+    }
+
     // solhint-disable func-name-mixedcase
+    function user_point_epoch(address _user) external returns (uint);
+    function user_point_history(address _user, uint _epoch) external returns (Point memory);
+    function point_history(uint _epoch) external returns (Point memory);
     function create_lock(uint256 _value, uint256 _timestamp) external;
     function commit_smart_wallet_checker(address _addr) external;
     function apply_smart_wallet_checker() external;
@@ -25,4 +35,5 @@ interface IVeSilo {
     function balanceOfAt(address _addr, uint256 _block) external view returns(uint256);
     function totalSupply() external view returns(uint256);
     function totalSupply(uint256 _time) external view returns(uint256);
+    function epoch() external view returns (uint);
 }
