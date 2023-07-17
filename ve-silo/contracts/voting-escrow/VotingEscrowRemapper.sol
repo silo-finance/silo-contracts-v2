@@ -25,6 +25,9 @@ import {ReentrancyGuard} from "openzeppelin-contracts/security/ReentrancyGuard.s
 
 import {Ownable2Step} from "openzeppelin-contracts/access/Ownable2Step.sol";
 
+// solhint-disable ordering
+// solhint-disable function-max-lines
+
 /**
  * @notice This contract allows veBAL holders on Ethereum to assign their balance to designated addresses on each L2.
  * This is intended for smart contracts that are not deployed to the same address on all networks. EOA's are
