@@ -1,4 +1,4 @@
-# @version 0.3.3
+# @version 0.3.7
 """
 @title Child Liquidity Gauge
 @license MIT
@@ -194,7 +194,7 @@ def _update_liquidity_limit(_user: address, _user_balance: uint256, _total_suppl
     working_balance: uint256 = _user_balance * TOKENLESS_PRODUCTION / 100
 
     ve: address = VE_DELEGATION_PROXY
-    if ve != ZERO_ADDRESS:
+    if ve != empty(address):
         ve_ts: uint256 = VotingEscrowDelegationProxy(ve).totalSupply()
         if ve_ts != 0:
             ve_user_balance: uint256 = VotingEscrowDelegationProxy(ve).adjustedBalanceOf(_user)
@@ -235,12 +235,12 @@ def _checkpoint_rewards(
     """
     user_balance: uint256 = 0
     receiver: address = _receiver
-    if _user != ZERO_ADDRESS:
+    if _user != empty(address):
         user_balance = self.balanceOf[_user]
-        if _claim and _receiver == ZERO_ADDRESS:
+        if _claim and _receiver == empty(address):
             # if receiver is not explicitly declared, check if a default receiver is set
             receiver = self.rewards_receiver[_user]
-            if receiver == ZERO_ADDRESS:
+            if receiver == empty(address):
                 # if no default receiver is set, direct claims to the user
                 receiver = _user
 
@@ -265,7 +265,7 @@ def _checkpoint_rewards(
                 integral += duration * self.reward_data[token].rate * 10**18 / _total_supply
                 self.reward_data[token].integral = integral
 
-        if _user != ZERO_ADDRESS:
+        if _user != empty(address):
             integral_for: uint256 = self.reward_integral_for[token][_user]
             new_claimable: uint256 = 0
 
@@ -305,7 +305,7 @@ def _transfer(_from: address, _to: address, _value: uint256):
         self._checkpoint(addr)
         # We need to checkpoint all of the rewards before affecting the gauge token balance for a user,
         # but to do it safely we need to skip making external calls. Therefore, we set _claim to False.
-        self._checkpoint_rewards(addr, total_supply, False, ZERO_ADDRESS, [])
+        self._checkpoint_rewards(addr, total_supply, False, empty(address), [])
 
     new_balance: uint256 = self.balanceOf[_from] - _value
     self.balanceOf[_from] = new_balance
@@ -336,7 +336,7 @@ def deposit(_value: uint256, _user: address = msg.sender):
     if self.reward_count != 0:
         # We need to checkpoint all of the rewards before affecting the gauge token balance for a user,
         # but to do it safely we need to skip making external calls. Therefore, we set _claim to False.
-        self._checkpoint_rewards(_user, total_supply, False, ZERO_ADDRESS, [])
+        self._checkpoint_rewards(_user, total_supply, False, empty(address), [])
 
     total_supply += _value
 
@@ -348,7 +348,7 @@ def deposit(_value: uint256, _user: address = msg.sender):
     ERC20(self.lp_token).transferFrom(msg.sender, self, _value)
 
     log Deposit(_user, _value)
-    log Transfer(ZERO_ADDRESS, _user, _value)
+    log Transfer(empty(address), _user, _value)
 
 
 @external
@@ -369,7 +369,7 @@ def withdraw(_value: uint256, _user: address = msg.sender):
     if self.reward_count != 0:
         # We need to checkpoint all of the rewards before affecting the gauge token balance for a user,
         # but to do it safely we need to skip making external calls. Therefore, we set _claim to False.
-        self._checkpoint_rewards(_user, total_supply, False, ZERO_ADDRESS, [])
+        self._checkpoint_rewards(_user, total_supply, False, empty(address), [])
 
     total_supply -= _value
 
@@ -381,7 +381,7 @@ def withdraw(_value: uint256, _user: address = msg.sender):
     ERC20(self.lp_token).transfer(_user, _value)
 
     log Withdraw(_user, _value)
-    log Transfer(msg.sender, ZERO_ADDRESS, _value)
+    log Transfer(msg.sender, empty(address), _value)
 
 
 @view
@@ -393,7 +393,7 @@ def _get_allowance(owner: address, spender: address) -> uint256:
      contract inherits.
     """
     if (spender == BAL_VAULT):
-        return MAX_UINT256
+        return max_value(uint256)
     return self._allowance[owner][spender]
 
 @external
@@ -407,7 +407,7 @@ def transferFrom(_from: address, _to: address, _value: uint256) -> bool:
     @return bool success
     """
     allowance: uint256 = self._get_allowance(_from, msg.sender)
-    if allowance != MAX_UINT256:
+    if allowance != max_value(uint256):
         self._allowance[_from][msg.sender] = allowance - _value
 
     self._transfer(_from, _to, _value)
@@ -459,7 +459,7 @@ def permit(
     @param _s The bytes[32:64] of the valid secp256k1 signature of permit by owner
     @return True, if transaction completes successfully
     """
-    assert _owner != ZERO_ADDRESS, "INVALID_OWNER"
+    assert _owner != empty(address), "INVALID_OWNER"
     assert block.timestamp <= _deadline, "DEADLINE_EXPIRED"
 
     nonce: uint256 = self.nonces[_owner]
@@ -593,7 +593,7 @@ def claimable_reward(_user: address, _reward_token: address) -> uint256:
 def set_rewards_receiver(_receiver: address):
     """
     @notice Set the default reward receiver for the caller.
-    @dev When set to ZERO_ADDRESS, rewards are sent to the caller
+    @dev When set to empty(address), rewards are sent to the caller
     @param _receiver Receiver address for any rewards claimed via `claim_rewards`
     """
     self.rewards_receiver[msg.sender] = _receiver
@@ -603,18 +603,18 @@ def set_rewards_receiver(_receiver: address):
 @nonreentrant('lock')
 def claim_rewards(
     _addr: address = msg.sender,
-    _receiver: address = ZERO_ADDRESS,
+    _receiver: address = empty(address),
     _reward_indexes: DynArray[uint256, MAX_REWARDS] = []
 ):
     """
     @notice Claim available reward tokens for `_addr`
     @param _addr Address to claim for
     @param _receiver Address to transfer rewards to - if set to
-                     ZERO_ADDRESS, uses the default reward receiver
+                     empty(address), uses the default reward receiver
                      for the caller
     @param _reward_indexes Array with indexes of the rewards to be checkpointed (all of them by default)
     """
-    if _receiver != ZERO_ADDRESS:
+    if _receiver != empty(address):
         assert _addr == msg.sender, "CANNOT_REDIRECT_CLAIM"  # dev: cannot redirect when claiming for another user
     self._checkpoint_rewards(_addr, self.totalSupply, True, _receiver, _reward_indexes)
 
@@ -630,7 +630,7 @@ def add_reward(_reward_token: address, _distributor: address):
 
     reward_count: uint256 = self.reward_count
     assert reward_count < MAX_REWARDS, "MAX_REWARDS_REACHED"
-    assert self.reward_data[_reward_token].distributor == ZERO_ADDRESS, "REWARD_ALREADY_EXISTS"
+    assert self.reward_data[_reward_token].distributor == empty(address), "REWARD_ALREADY_EXISTS"
 
     self.reward_data[_reward_token].distributor = _distributor
     self.reward_tokens[reward_count] = _reward_token
@@ -642,8 +642,8 @@ def set_reward_distributor(_reward_token: address, _distributor: address):
     current_distributor: address = self.reward_data[_reward_token].distributor
 
     assert msg.sender in [current_distributor, AUTHORIZER_ADAPTOR], "SENDER_NOT_ALLOWED"
-    assert current_distributor != ZERO_ADDRESS, "REWARD_NOT_ADDED"
-    assert _distributor != ZERO_ADDRESS, "INVALID_DISTRIBUTOR"
+    assert current_distributor != empty(address), "REWARD_NOT_ADDED"
+    assert _distributor != empty(address), "INVALID_DISTRIBUTOR"
 
     self.reward_data[_reward_token].distributor = _distributor
 
@@ -654,7 +654,7 @@ def deposit_reward_token(_reward_token: address, _amount: uint256):
     assert msg.sender == self.reward_data[_reward_token].distributor, "SENDER_NOT_ALLOWED"
 
     # It is safe to checkpoint all the existing rewards as long as `_claim` is set to false (i.e. no external calls).
-    self._checkpoint_rewards(ZERO_ADDRESS, self.totalSupply, False, ZERO_ADDRESS, [])
+    self._checkpoint_rewards(empty(address), self.totalSupply, False, empty(address), [])
 
     response: Bytes[32] = raw_call(
         _reward_token,
@@ -754,7 +754,7 @@ def authorizer_adaptor() -> address:
 
 @external
 def initialize(_lp_token: address, _version: String[128]):
-    assert self.lp_token == ZERO_ADDRESS, "ALREADY_INITIALIZED"  # dev: already initialzed
+    assert self.lp_token == empty(address), "ALREADY_INITIALIZED"  # dev: already initialzed
 
     self.lp_token = _lp_token
     self.version = _version
