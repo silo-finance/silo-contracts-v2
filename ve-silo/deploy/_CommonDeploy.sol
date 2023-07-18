@@ -14,6 +14,9 @@ library VeSiloContracts {
     string public constant LIQUIDITY_GAUGE_FACTORY = "LiquidityGaugeFactory.sol";
     string public constant MAINNET_BALANCER_MINTER = "MainnetBalancerMinter.sol";
     string public constant BALANCER_TOKEN_ADMIN = "BalancerTokenAdmin.sol";
+    string public constant OMNI_VOTING_ESCROW = "OmniVotingEscrow.sol";
+    string public constant OMNI_VOTING_ESCROW_ADAPTER = "OmniVotingEscrowAdaptor.sol";
+    string public constant VOTING_ESCROW_REMAPPER = "VotingEscrowRemapper.sol";
 }
 
 contract CommonDeploy is Deployer {

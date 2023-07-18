@@ -49,6 +49,9 @@ contract VotingEscrowTest is IntegrationTest {
 
         vm.prank(_timelock);
         veSilo.apply_smart_wallet_checker();
+
+        _votingEscrow = veSilo;
+        _veBoost = veBoost;
     }
 
     function getVeSiloTokens(address _userAddr, uint256 _amount, uint256 _unlockTime) public {

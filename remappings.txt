@@ -10,3 +10,5 @@ ve-silo/=ve-silo/
 balancer-labs/v2-solidity-utils/=external/balancer-v2-monorepo/pkg/solidity-utils/contracts
 balancer-labs/v2-interfaces/=external/balancer-v2-monorepo/pkg/interfaces/contracts
 balancer-labs/v2-liquidity-mining/=external/balancer-v2-monorepo/pkg/liquidity-mining/contracts
+lz_gauges/=gitmodules/lz_gauges/contracts
+@layerzerolabs/solidity-examples/=gitmodules/layer-zero-examples/

@@ -7,6 +7,7 @@ import {SiloGovernorDeploy} from "./SiloGovernorDeploy.s.sol";
 import {LiquidityGaugeFactoryDeploy} from "./LiquidityGaugeFactoryDeploy.s.sol";
 import {GaugeControllerDeploy} from "./GaugeControllerDeploy.s.sol";
 import {MainnetBalancerMinterDeploy} from "./MainnetBalancerMinterDeploy.s.sol";
+import {VotingEscrowRemapperDeploy} from "./VotingEscrowRemapperDeploy.s.sol";
 
 import {IExtendedOwnable} from "ve-silo/contracts/access/IExtendedOwnable.sol";
 
@@ -21,11 +22,13 @@ contract MainnetDeploy is CommonDeploy {
         GaugeControllerDeploy controllerDeploy = new GaugeControllerDeploy();
         MainnetBalancerMinterDeploy minterDeploy = new MainnetBalancerMinterDeploy();
         LiquidityGaugeFactoryDeploy factoryDeploy = new LiquidityGaugeFactoryDeploy();
+        VotingEscrowRemapperDeploy remapperDeploy = new VotingEscrowRemapperDeploy();
 
         governorDeploy.run();
         controllerDeploy.run();
         minterDeploy.run();
         factoryDeploy.run();
+        remapperDeploy.run();
 
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
 
