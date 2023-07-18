@@ -11,9 +11,6 @@ interface Minter:
     def minted(_user: address, _gauge: address) -> uint256: view
     def getBalancerToken() -> address: view
 
-interface AuthorizerAdaptor:
-    def getVault() -> address: view
-
 interface VotingEscrowDelegationProxy:
     def totalSupply() -> uint256: view
     def adjustedBalanceOf(_account: address) -> uint256: view
@@ -51,10 +48,8 @@ WEEK: constant(uint256) = 86400 * 7
 BAL: immutable(address)
 BAL_PSEUDO_MINTER: immutable(address)
 VE_DELEGATION_PROXY: immutable(address)
-BAL_VAULT: immutable(address)
 AUTHORIZER_ADAPTOR: immutable(address)
 
-lp_token: public(address)
 version: public(String[128])
 factory: public(address)
 
@@ -91,7 +86,6 @@ def __init__(
     _authorizer_adaptor: address,
     _version: String[128]
 ):
-    self.lp_token = 0x000000000000000000000000000000000000dEaD
     self.version = _version
     self.factory = 0x000000000000000000000000000000000000dEaD
 
@@ -99,7 +93,6 @@ def __init__(
     BAL_PSEUDO_MINTER = _bal_pseudo_minter
     BAL = Minter(_bal_pseudo_minter).getBalancerToken()
     AUTHORIZER_ADAPTOR = _authorizer_adaptor
-    BAL_VAULT = AuthorizerAdaptor(_authorizer_adaptor).getVault()
 
 
 @internal
@@ -531,10 +524,7 @@ def authorizer_adaptor() -> address:
 
 
 @external
-def initialize(_lp_token: address, _version: String[128]):
-    assert self.lp_token == empty(address), "ALREADY_INITIALIZED"  # dev: already initialzed
-
-    self.lp_token = _lp_token
+def initialize(_version: String[128]):
     self.version = _version
     self.factory = msg.sender
 
