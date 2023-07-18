@@ -44,19 +44,15 @@ contract ChildChainGaugeFactory is Version, BaseGaugeFactory {
     }
 
     /**
-     * @notice Deploys a new gauge for a Balancer pool.
-     * @dev As anyone can register arbitrary Balancer pools with the Vault,
-     * it's impossible to prove onchain that `pool` is a "valid" deployment.
-     *
-     * Care must be taken to ensure that gauges deployed from this factory are suitable to distribute rewards.
+     * @notice Deploys a new gauge for a ERC-20 balances handler (Silo shares token)
      *
      * It is possible to deploy multiple gauges for a single pool.
-     * @param pool The address of the pool for which to deploy a gauge
+     * @param erc20BalancesHandler ERC-20 balances handler for which to deploy a gauge
      * @return The address of the deployed gauge
      */
-    function create(address pool) external returns (address) { //solhint-disable-line ordering
+    function create(address erc20BalancesHandler) external returns (address) { //solhint-disable-line ordering
         address gauge = _create();
-        IChildChainGauge(gauge).initialize(pool, getProductVersion());
+        IChildChainGauge(gauge).initialize(erc20BalancesHandler, getProductVersion());
         return gauge;
     }
 }
