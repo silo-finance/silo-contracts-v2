@@ -12,9 +12,9 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-pragma solidity ^0.7.0;
+pragma solidity 0.8.19;
 
-import "@balancer-labs/v2-interfaces/contracts/pool-utils/IVersion.sol";
+import {IVersion} from "balancer-labs/v2-interfaces/pool-utils/IVersion.sol";
 
 /**
  * @notice Retrieves a contract's version set at creation time from storage.
@@ -22,8 +22,8 @@ import "@balancer-labs/v2-interfaces/contracts/pool-utils/IVersion.sol";
 contract Version is IVersion {
     string private _version;
 
-    constructor(string memory version) {
-        _setVersion(version);
+    constructor(string memory _contractVersion) {
+        _setVersion(_contractVersion);
     }
 
     function version() external view override returns (string memory) {

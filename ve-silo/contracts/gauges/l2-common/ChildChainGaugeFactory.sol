@@ -12,13 +12,12 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-pragma solidity ^0.7.0;
-pragma experimental ABIEncoderV2;
+pragma solidity 0.8.19;
 
-import "@balancer-labs/v2-interfaces/contracts/liquidity-mining/IChildChainGauge.sol";
-import "@balancer-labs/v2-pool-utils/contracts/Version.sol";
+import {IChildChainGauge} from "balancer-labs/v2-interfaces/liquidity-mining/IChildChainGauge.sol";
+import {Version} from "../_common/Version.sol";
 
-import "./BaseGaugeFactory.sol";
+import {BaseGaugeFactory} from "../BaseGaugeFactory.sol";
 
 contract ChildChainGaugeFactory is Version, BaseGaugeFactory {
     string private _productVersion;
@@ -55,7 +54,7 @@ contract ChildChainGaugeFactory is Version, BaseGaugeFactory {
      * @param pool The address of the pool for which to deploy a gauge
      * @return The address of the deployed gauge
      */
-    function create(address pool) external returns (address) {
+    function create(address pool) external returns (address) { //solhint-disable-line ordering
         address gauge = _create();
         IChildChainGauge(gauge).initialize(pool, getProductVersion());
         return gauge;
