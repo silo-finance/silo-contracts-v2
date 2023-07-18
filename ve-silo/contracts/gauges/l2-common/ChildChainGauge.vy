@@ -6,18 +6,10 @@
 """
 from vyper.interfaces import ERC20
 
-implements: ERC20
-
-
-interface ERC20Extended:
-    def symbol() -> String[26]: view
 
 interface Minter:
     def minted(_user: address, _gauge: address) -> uint256: view
     def getBalancerToken() -> address: view
-
-interface ERC1271:
-    def isValidSignature(_hash: bytes32, _signature: Bytes[65]) -> bytes32: view
 
 interface AuthorizerAdaptor:
     def getVault() -> address: view
@@ -26,16 +18,6 @@ interface VotingEscrowDelegationProxy:
     def totalSupply() -> uint256: view
     def adjustedBalanceOf(_account: address) -> uint256: view
 
-
-event Approval:
-    _owner: indexed(address)
-    _spender: indexed(address)
-    _value: uint256
-
-event Transfer:
-    _from: indexed(address)
-    _to: indexed(address)
-    _value: uint256
 
 event Deposit:
     _user: indexed(address)
@@ -61,10 +43,6 @@ struct Reward:
     integral: uint256
 
 
-DOMAIN_TYPE_HASH: constant(bytes32) = keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)")
-PERMIT_TYPE_HASH: constant(bytes32) = keccak256("Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)")
-ERC1271_MAGIC_VAL: constant(bytes32) = 0x1626ba7e00000000000000000000000000000000000000000000000000000000
-
 MAX_REWARDS: constant(uint256) = 8
 TOKENLESS_PRODUCTION: constant(uint256) = 40
 WEEK: constant(uint256) = 86400 * 7
@@ -75,16 +53,6 @@ BAL_PSEUDO_MINTER: immutable(address)
 VE_DELEGATION_PROXY: immutable(address)
 BAL_VAULT: immutable(address)
 AUTHORIZER_ADAPTOR: immutable(address)
-
-DOMAIN_SEPARATOR: public(bytes32)
-nonces: public(HashMap[address, uint256])
-
-name: public(String[64])
-symbol: public(String[32])
-
-_allowance: HashMap[address, HashMap[address, uint256]]
-balanceOf: public(HashMap[address, uint256])
-totalSupply: public(uint256)
 
 lp_token: public(address)
 version: public(String[128])
@@ -294,30 +262,6 @@ def _checkpoint_rewards(
                     self.claim_data[_user][token] = total_claimed + shift(total_claimable, 128)
 
 
-@internal
-def _transfer(_from: address, _to: address, _value: uint256):
-    if _value == 0:
-        return
-    total_supply: uint256 = self.totalSupply
-
-    has_rewards: bool = self.reward_count != 0
-    for addr in [_from, _to]:
-        self._checkpoint(addr)
-        # We need to checkpoint all of the rewards before affecting the gauge token balance for a user,
-        # but to do it safely we need to skip making external calls. Therefore, we set _claim to False.
-        self._checkpoint_rewards(addr, total_supply, False, empty(address), [])
-
-    new_balance: uint256 = self.balanceOf[_from] - _value
-    self.balanceOf[_from] = new_balance
-    self._update_liquidity_limit(_from, new_balance, total_supply)
-
-    new_balance = self.balanceOf[_to] + _value
-    self.balanceOf[_to] = new_balance
-    self._update_liquidity_limit(_to, new_balance, total_supply)
-
-    log Transfer(_from, _to, _value)
-
-
 @external
 @nonreentrant("lock")
 def deposit(_value: uint256, _user: address = msg.sender):
@@ -382,154 +326,6 @@ def withdraw(_value: uint256, _user: address = msg.sender):
 
     log Withdraw(_user, _value)
     log Transfer(msg.sender, empty(address), _value)
-
-
-@view
-@internal
-def _get_allowance(owner: address, spender: address) -> uint256:
-    """
-     @dev Override to grant the Vault infinite allowance, causing for Gauge Tokens to not require approval.
-     This is sound as the Vault already provides authorization mechanisms when initiating token transfers, which this
-     contract inherits.
-    """
-    if (spender == BAL_VAULT):
-        return max_value(uint256)
-    return self._allowance[owner][spender]
-
-@external
-@nonreentrant("lock")
-def transferFrom(_from: address, _to: address, _value: uint256) -> bool:
-    """
-    @notice Transfer tokens from one address to another
-    @param _from The address which you want to send tokens from
-    @param _to The address which you want to transfer to
-    @param _value the amount of tokens to be transferred
-    @return bool success
-    """
-    allowance: uint256 = self._get_allowance(_from, msg.sender)
-    if allowance != max_value(uint256):
-        self._allowance[_from][msg.sender] = allowance - _value
-
-    self._transfer(_from, _to, _value)
-    return True
-
-
-@external
-def approve(_spender: address, _value: uint256) -> bool:
-    """
-    @notice Approve the passed address to transfer the specified amount of
-            tokens on behalf of msg.sender
-    @dev Beware that changing an allowance via this method brings the risk
-         that someone may use both the old and new allowance by unfortunate
-         transaction ordering. This may be mitigated with the use of
-         {increaseAllowance} and {decreaseAllowance}.
-         https://github.com/ethereum/EIPs/issues/20#issuecomment-263524729
-    @param _spender The address which will transfer the funds
-    @param _value The amount of tokens that may be transferred
-    @return bool success
-    """
-    self._allowance[msg.sender][_spender] = _value
-
-    log Approval(msg.sender, _spender, _value)
-    return True
-
-
-@external
-def permit(
-    _owner: address,
-    _spender: address,
-    _value: uint256,
-    _deadline: uint256,
-    _v: uint8,
-    _r: bytes32,
-    _s: bytes32
-) -> bool:
-    """
-    @notice Approves spender by owner's signature to expend owner's tokens.
-        See https://eips.ethereum.org/EIPS/eip-2612.
-    @dev Inspired by https://github.com/yearn/yearn-vaults/blob/main/contracts/Vault.vy#L753-L793
-    @dev Supports smart contract wallets which implement ERC1271
-        https://eips.ethereum.org/EIPS/eip-1271
-    @param _owner The address which is a source of funds and has signed the Permit.
-    @param _spender The address which is allowed to spend the funds.
-    @param _value The amount of tokens to be spent.
-    @param _deadline The timestamp after which the Permit is no longer valid.
-    @param _v The bytes[64] of the valid secp256k1 signature of permit by owner
-    @param _r The bytes[0:32] of the valid secp256k1 signature of permit by owner
-    @param _s The bytes[32:64] of the valid secp256k1 signature of permit by owner
-    @return True, if transaction completes successfully
-    """
-    assert _owner != empty(address), "INVALID_OWNER"
-    assert block.timestamp <= _deadline, "DEADLINE_EXPIRED"
-
-    nonce: uint256 = self.nonces[_owner]
-    digest: bytes32 = keccak256(
-        concat(
-            b"\x19\x01",
-            self.DOMAIN_SEPARATOR,
-            keccak256(_abi_encode(PERMIT_TYPE_HASH, _owner, _spender, _value, nonce, _deadline))
-        )
-    )
-
-    if _owner.is_contract:
-        sig: Bytes[65] = concat(_abi_encode(_r, _s), slice(convert(_v, bytes32), 31, 1))
-        assert ERC1271(_owner).isValidSignature(digest, sig) == ERC1271_MAGIC_VAL, "INVALID_SIG"
-    else:
-        recovered_address: address = ecrecover(digest, convert(_v, uint256), convert(_r, uint256), convert(_s, uint256))
-        assert recovered_address == _owner,"INVALID_SIG"
-
-    self._allowance[_owner][_spender] = _value
-    self.nonces[_owner] = nonce + 1
-
-    log Approval(_owner, _spender, _value)
-    return True
-
-
-@external
-@nonreentrant("lock")
-def transfer(_to: address, _value: uint256) -> bool:
-    """
-    @notice Transfer token to a specified address
-    @param _to The address to transfer to
-    @param _value The amount to be transferred
-    @return bool success
-    """
-    self._transfer(msg.sender, _to, _value)
-    return True
-
-
-@external
-def increaseAllowance(_spender: address, _added_value: uint256) -> bool:
-    """
-    @notice Increase the allowance granted to `_spender` by the caller
-    @dev This is alternative to {approve} that can be used as a mitigation for
-         the potential race condition
-    @param _spender The address which will transfer the funds
-    @param _added_value The amount of to increase the allowance
-    @return bool success
-    """
-    allowance: uint256 = self._get_allowance(msg.sender, _spender) + _added_value
-    self._allowance[msg.sender][_spender] = allowance
-
-    log Approval(msg.sender, _spender, allowance)
-    return True
-
-
-@external
-def decreaseAllowance(_spender: address, _subtracted_value: uint256) -> bool:
-    """
-    @notice Decrease the allowance granted to `_spender` by the caller
-    @dev This is alternative to {approve} that can be used as a mitigation for
-         the potential race condition
-    @param _spender The address which will transfer the funds
-    @param _subtracted_value The amount of to decrease the allowance
-    @return bool success
-    """
-    allowance: uint256 = self._get_allowance(msg.sender, _spender) - _subtracted_value
-    self._allowance[msg.sender][_spender] = allowance
-
-    log Approval(msg.sender, _spender, allowance)
-    return True
 
 
 @external
@@ -703,24 +499,6 @@ def unkillGauge():
 
 @view
 @external
-def decimals() -> uint256:
-    """
-    @notice Returns the number of decimals the token uses
-    """
-    return 18
-
-
-@view
-@external
-def allowance(owner: address, spender: address) -> uint256:
-    """
-     @notice Get `spender`'s current allowance from `owner` 
-    """
-    return self._get_allowance(owner, spender)
-
-
-@view
-@external
 def integrate_checkpoint() -> uint256:
     return self.period_timestamp[self.period]
 
@@ -760,19 +538,4 @@ def initialize(_lp_token: address, _version: String[128]):
     self.version = _version
     self.factory = msg.sender
 
-    symbol: String[26] = ERC20Extended(_lp_token).symbol()
-    name: String[64] = concat("Balancer ", symbol, " Gauge Deposit")
-
-    self.name = name
-    self.symbol = concat(symbol, "-gauge")
-
     self.period_timestamp[0] = block.timestamp
-    self.DOMAIN_SEPARATOR = keccak256(
-        _abi_encode(
-            DOMAIN_TYPE_HASH,
-            keccak256(name),
-            keccak256(self.version),
-            chain.id,
-            self
-        )
-    )
