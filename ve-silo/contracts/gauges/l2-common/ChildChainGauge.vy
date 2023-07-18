@@ -7,6 +7,11 @@
 from vyper.interfaces import ERC20
 
 
+interface ERC20BlancesHandler:
+    def balanceOf(addr: address) -> uint256: view
+    def totalSupply() -> uint256: view
+    def balanceOfAndTotalSupply(addr: address) -> (uint256, uint256): view
+
 interface Minter:
     def minted(_user: address, _gauge: address) -> uint256: view
     def getBalancerToken() -> address: view
@@ -50,6 +55,7 @@ BAL_PSEUDO_MINTER: immutable(address)
 VE_DELEGATION_PROXY: immutable(address)
 AUTHORIZER_ADAPTOR: immutable(address)
 
+bal_handler: public(address)
 version: public(String[128])
 factory: public(address)
 
@@ -197,7 +203,7 @@ def _checkpoint_rewards(
     user_balance: uint256 = 0
     receiver: address = _receiver
     if _user != empty(address):
-        user_balance = self.balanceOf[_user]
+        user_balance = ERC20BlancesHandler(self.bal_handler).balanceOf(_user)
         if _claim and _receiver == empty(address):
             # if receiver is not explicitly declared, check if a default receiver is set
             receiver = self.rewards_receiver[_user]
@@ -263,7 +269,13 @@ def user_checkpoint(addr: address) -> bool:
     @return bool success
     """
     self._checkpoint(addr)
-    self._update_liquidity_limit(addr, self.balanceOf[addr], self.totalSupply)
+
+    user_balance: uint256 = 0
+    total_supply: uint256 = 0
+
+    (user_balance, total_supply) = ERC20BlancesHandler(self.bal_handler).balanceOfAndTotalSupply(addr)
+
+    self._update_liquidity_limit(addr, user_balance, total_supply)
     return True
 
 
@@ -300,14 +312,19 @@ def claimable_reward(_user: address, _reward_token: address) -> uint256:
     @return uint256 Claimable reward token amount
     """
     integral: uint256 = self.reward_data[_reward_token].integral
-    total_supply: uint256 = self.totalSupply
+
+    user_balance: uint256 = 0
+    total_supply: uint256 = 0
+
+    (user_balance, total_supply) = ERC20BlancesHandler(self.bal_handler).balanceOfAndTotalSupply(_user)
+
     if total_supply != 0:
         last_update: uint256 = min(block.timestamp, self.reward_data[_reward_token].period_finish)
         duration: uint256 = last_update - self.reward_data[_reward_token].last_update
         integral += (duration * self.reward_data[_reward_token].rate * 10**18 / total_supply)
 
     integral_for: uint256 = self.reward_integral_for[_reward_token][_user]
-    new_claimable: uint256 = self.balanceOf[_user] * (integral - integral_for) / 10**18
+    new_claimable: uint256 = user_balance * (integral - integral_for) / 10**18
 
     return shift(self.claim_data[_user][_reward_token], -128) + new_claimable
 
@@ -339,7 +356,10 @@ def claim_rewards(
     """
     if _receiver != empty(address):
         assert _addr == msg.sender, "CANNOT_REDIRECT_CLAIM"  # dev: cannot redirect when claiming for another user
-    self._checkpoint_rewards(_addr, self.totalSupply, True, _receiver, _reward_indexes)
+
+    total_supply: uint256 = ERC20BlancesHandler(self.bal_handler).totalSupply()
+
+    self._checkpoint_rewards(_addr, total_supply, True, _receiver, _reward_indexes)
 
 
 @external
@@ -376,8 +396,10 @@ def set_reward_distributor(_reward_token: address, _distributor: address):
 def deposit_reward_token(_reward_token: address, _amount: uint256):
     assert msg.sender == self.reward_data[_reward_token].distributor, "SENDER_NOT_ALLOWED"
 
+    total_supply: uint256 = ERC20BlancesHandler(self.bal_handler).totalSupply()
+
     # It is safe to checkpoint all the existing rewards as long as `_claim` is set to false (i.e. no external calls).
-    self._checkpoint_rewards(empty(address), self.totalSupply, False, empty(address), [])
+    self._checkpoint_rewards(empty(address), total_supply, False, empty(address), [])
 
     response: Bytes[32] = raw_call(
         _reward_token,
@@ -458,8 +480,12 @@ def authorizer_adaptor() -> address:
 
 
 @external
-def initialize(_version: String[128]):
+def initialize(handler: address, _version: String[128]):
+    assert handler != empty(address) # dev: balances handler required
+    assert self.bal_handler == empty(address) # dev: already initialized
+
     self.version = _version
     self.factory = msg.sender
+    self.bal_handler = handler
 
     self.period_timestamp[0] = block.timestamp
