@@ -17,7 +17,7 @@ import {VotingEscrowRemapper} from "ve-silo/contracts/voting-escrow/VotingEscrow
 import {OmniVotingEscrowAdaptor} from "ve-silo/contracts/voting-escrow/OmniVotingEscrowAdaptor.sol";
 
 import {CommonDeploy, VeSiloContracts} from "./_CommonDeploy.sol";
-import {VeSiloAddresses} from "./_VeSiloAddresses.sol";
+import {VeSiloAddresses, VeSiloAddressesKeys} from "./_VeSiloAddresses.sol";
 
 contract VotingEscrowRemapperDeploy is CommonDeploy, VeSiloAddresses {
      function run()
@@ -41,7 +41,7 @@ contract VotingEscrowRemapperDeploy is CommonDeploy, VeSiloAddresses {
           _registerDeployment(address(remapper), VeSiloContracts.VOTING_ESCROW_REMAPPER);
 
           omniVotingEscrow = IOmniVotingEscrow(address(new OmniVotingEscrow(
-               getAddress(LZ_ENDPOINT),
+               getAddress(VeSiloAddressesKeys.LZ_ENDPOINT),
                address(remapper)
           )));
 

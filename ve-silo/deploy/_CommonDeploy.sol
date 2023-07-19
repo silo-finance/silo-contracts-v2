@@ -16,11 +16,13 @@ library VeSiloContracts {
     string public constant BALANCER_TOKEN_ADMIN = "BalancerTokenAdmin.sol";
     string public constant OMNI_VOTING_ESCROW = "OmniVotingEscrow.sol";
     string public constant OMNI_VOTING_ESCROW_ADAPTER = "OmniVotingEscrowAdaptor.sol";
+    string public constant OMNI_VOTING_ESCROW_CHILD = "OmniVotingEscrowChild.sol";
     string public constant VOTING_ESCROW_REMAPPER = "VotingEscrowRemapper.sol";
     string public constant CHILD_CHAIN_GAUGE = "ChildChainGauge.vy";
     string public constant CHILD_CHAIN_GAUGE_FACTORY = "ChildChainGaugeFactory.sol";
     string public constant L2_BALANCER_PSEUDO_MINTER = "L2BalancerPseudoMinter.sol";
     string public constant VOTING_ESCROW_DELEGATION_PROXY = "VotingEscrowDelegationProxy.sol";
+    string public constant L2_LAYER_ZERO_BRIDGE_FORWARDER = "L2LayerZeroBridgeForwarder.sol";
 }
 
 contract CommonDeploy is Deployer {
