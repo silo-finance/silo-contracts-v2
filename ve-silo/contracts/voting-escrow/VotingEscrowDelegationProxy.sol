@@ -15,22 +15,20 @@
 pragma solidity 0.8.19;
 
 import {IVeDelegation} from "@balancer-labs/v2-interfaces/contracts/liquidity-mining/IVeDelegation.sol";
+
 import {IERC20} from "openzeppelin-contracts/token/ERC20/ERC20.sol";
-import "@balancer-labs/v2-interfaces/contracts/vault/IVault.sol";
+import {Ownable2Step} from "openzeppelin-contracts/access/Ownable2Step.sol";
 
-import "@balancer-labs/v2-solidity-utils/contracts/helpers/SingletonAuthentication.sol";
-
-contract VotingEscrowDelegationProxy is SingletonAuthentication {
+contract VotingEscrowDelegationProxy is Ownable2Step {
     IERC20 private immutable _votingEscrow;
     IVeDelegation private _delegation;
 
     event DelegationImplementationUpdated(address indexed newImplementation);
 
     constructor(
-        IVault vault,
         IERC20 votingEscrow,
         IVeDelegation delegation
-    ) SingletonAuthentication(vault) {
+    ) {
         _votingEscrow = votingEscrow;
         _delegation = delegation;
     }
@@ -92,7 +90,7 @@ contract VotingEscrowDelegationProxy is SingletonAuthentication {
 
     // Admin functions
     // solhint-disable ordering
-    function setDelegation(IVeDelegation delegation) external authenticate {
+    function setDelegation(IVeDelegation delegation) external onlyOwner {
         // call `adjusted_balance_of` to make sure it works
         delegation.adjusted_balance_of(msg.sender);
 
@@ -100,7 +98,7 @@ contract VotingEscrowDelegationProxy is SingletonAuthentication {
         emit DelegationImplementationUpdated(address(delegation));
     }
 
-    function killDelegation() external authenticate {
+    function killDelegation() external onlyOwner {
         _delegation = IVeDelegation(0);
         emit DelegationImplementationUpdated(address(0));
     }
