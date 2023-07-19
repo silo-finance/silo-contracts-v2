@@ -12,6 +12,7 @@ import {IVeBoost} from "ve-silo/contracts/voting-escrow/interfaces/IVeBoost.sol"
 import {ISiloTimelockController} from "ve-silo/contracts/governance/interfaces/ISiloTimelockController.sol";
 
 import {VotingEscrowDeploy} from "./VotingEscrowDeploy.s.sol";
+import {VeBoostDeploy} from "./VeBoostDeploy.s.sol";
 import {TimelockControllerDeploy} from "./TimelockControllerDeploy.s.sol";
 
 /**
@@ -21,6 +22,7 @@ FOUNDRY_PROFILE=ve-silo \
  */
 contract SiloGovernorDeploy is CommonDeploy {
     VotingEscrowDeploy public votingEscrowDeploy = new VotingEscrowDeploy();
+    VeBoostDeploy public veBoostDeploy = new VeBoostDeploy();
     TimelockControllerDeploy public timelockControllerDeploy = new TimelockControllerDeploy();
 
     function run()
@@ -51,7 +53,8 @@ contract SiloGovernorDeploy is CommonDeploy {
         _registerDeployment(address(siloGovernor), VeSiloContracts.SILO_GOVERNOR);
         _syncDeployments();
 
-        (votingEscrow, veBoost) = votingEscrowDeploy.run();
+        votingEscrow = votingEscrowDeploy.run();
+        veBoost = veBoostDeploy.run();
 
         _configure(siloGovernor, timelock, votingEscrow);
     }

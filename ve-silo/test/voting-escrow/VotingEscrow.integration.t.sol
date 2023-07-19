@@ -12,13 +12,15 @@ import {IVeSilo} from "ve-silo/contracts/voting-escrow/interfaces/IVeSilo.sol";
 import {IVeBoost} from "ve-silo/contracts/voting-escrow/interfaces/IVeBoost.sol";
 import {ISmartWalletChecker} from "ve-silo/contracts/voting-escrow/interfaces/ISmartWalletChecker.sol";
 import {VotingEscrowDeploy} from "ve-silo/deploy/VotingEscrowDeploy.s.sol";
+import {VeBoostDeploy} from "ve-silo/deploy/VeBoostDeploy.s.sol";
 import {VeSiloContracts} from "ve-silo/deploy/_CommonDeploy.sol";
 
-// FOUNDRY_PROFILE=ve-silo forge test --ffi -vvv
+// FOUNDRY_PROFILE=ve-silo forge test --mc VotingEscrowTest --ffi -vvv
 contract VotingEscrowTest is IntegrationTest {
     IVeSilo internal _votingEscrow;
     IVeBoost internal _veBoost;
-    VotingEscrowDeploy internal _deploymentScript;
+    VotingEscrowDeploy internal _veDeploymentScript;
+    VeBoostDeploy internal _veBoostDeploymentScript;
 
     address internal _timelock = makeAddr("silo timelock");
     address internal _smartValletChecker = makeAddr("Smart wallet checker");
@@ -36,13 +38,16 @@ contract VotingEscrowTest is IntegrationTest {
     }
 
     function deployVotingEscrowForTests() public returns (IVeSilo veSilo, IVeBoost veBoost) {
-        _deploymentScript = new VotingEscrowDeploy();
-        _deploymentScript.disableDeploymentsSync();
+        _veDeploymentScript = new VotingEscrowDeploy();
+        _veDeploymentScript.disableDeploymentsSync();
+
+        _veBoostDeploymentScript = new VeBoostDeploy();
 
         _mockPermissions();
         _dummySiloToken();
 
-        (veSilo, veBoost) = _deploymentScript.run();
+        veSilo = _veDeploymentScript.run();
+        veBoost = _veBoostDeploymentScript.run();
 
         vm.prank(_timelock);
         veSilo.commit_smart_wallet_checker(_smartValletChecker);
@@ -70,8 +75,8 @@ contract VotingEscrowTest is IntegrationTest {
         address siloToken = getAddress(SILO80_WETH20_TOKEN);
 
         assertEq(_votingEscrow.token(), siloToken, "Invalid voting escrow token");
-        assertEq(_votingEscrow.name(), _deploymentScript.votingEscrowName(), "Wrong name");
-        assertEq(_votingEscrow.symbol(), _deploymentScript.votingEscrowSymbol(), "Wrong symbol");
+        assertEq(_votingEscrow.name(), _veDeploymentScript.votingEscrowName(), "Wrong name");
+        assertEq(_votingEscrow.symbol(), _veDeploymentScript.votingEscrowSymbol(), "Wrong symbol");
 
         assertEq(
             _votingEscrow.decimals(),
