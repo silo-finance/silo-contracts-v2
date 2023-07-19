@@ -72,7 +72,7 @@ contract VotingEscrowDelegationProxy is Ownable2Step {
      */
     function totalSupply() external view returns (uint256) {
         IVeDelegation implementation = _delegation;
-        if (implementation == IVeDelegation(0)) {
+        if (implementation == IVeDelegation(address(0))) {
             return IERC20(_votingEscrow).totalSupply();
         }
         return implementation.totalSupply();
@@ -82,7 +82,7 @@ contract VotingEscrowDelegationProxy is Ownable2Step {
 
     function _adjustedBalanceOf(address user) internal view returns (uint256) {
         IVeDelegation implementation = _delegation;
-        if (implementation == IVeDelegation(0)) {
+        if (implementation == IVeDelegation(address(0))) {
             return IERC20(_votingEscrow).balanceOf(user);
         }
         return implementation.adjusted_balance_of(user);
@@ -99,7 +99,7 @@ contract VotingEscrowDelegationProxy is Ownable2Step {
     }
 
     function killDelegation() external onlyOwner {
-        _delegation = IVeDelegation(0);
+        _delegation = IVeDelegation(address(0));
         emit DelegationImplementationUpdated(address(0));
     }
 }
