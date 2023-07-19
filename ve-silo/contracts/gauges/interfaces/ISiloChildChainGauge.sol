@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.19;
 
-interface ISiloLiquidityGauge {
-    function initialize(uint256 relativeWeightCap, address erc20BalancesHandler) external;
+interface ISiloChildChainGauge {
+    function initialize(address _erc20BalancesHandler, string memory _version) external;
     // solhint-disable func-name-mixedcase
     // solhint-disable func-param-name-mixedcase
     // solhint-disable var-name-mixedcase
@@ -32,11 +32,11 @@ interface ISiloLiquidityGauge {
     function period_timestamp(int128 _period) external view returns (uint256);
     function integrate_inv_supply(int128 _period) external view returns (uint256);
     function integrate_inv_supply_of(address _user) external view returns (uint256);
+    function version() external view returns (string memory);
+    function factory() external view returns (address);
+    function authorizer_adaptor() external view returns (address);
 
     // solhint-enable func-name-mixedcase
     // solhint-enable func-param-name-mixedcase
     // solhint-enable var-name-mixedcase
-
-    function getRelativeWeightCap() external view returns (uint256);
-    function getCappedRelativeWeight(uint256 _time) external view returns (uint256);
 }
