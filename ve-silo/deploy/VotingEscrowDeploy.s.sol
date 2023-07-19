@@ -5,7 +5,6 @@ import {IERC20} from "forge-std/interfaces/IERC20.sol";
 
 import {CommonDeploy, VeSiloContracts} from "./_CommonDeploy.sol";
 import {IVeSilo} from "ve-silo/contracts/voting-escrow/interfaces/IVeSilo.sol";
-import {IVeBoost} from "ve-silo/contracts/voting-escrow/interfaces/IVeBoost.sol";
 
 /**
 FOUNDRY_PROFILE=ve-silo \
@@ -15,7 +14,7 @@ FOUNDRY_PROFILE=ve-silo \
 contract VotingEscrowDeploy is CommonDeploy {
     string internal constant _BASE_DIR = "external/balancer-v2-monorepo/pkg/liquidity-mining/contracts";
 
-    function run() public returns (IVeSilo votingEscrow, IVeBoost veBoost) {
+    function run() public returns (IVeSilo votingEscrow) {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
 
         vm.startBroadcast(deployerPrivateKey);
@@ -30,16 +29,7 @@ contract VotingEscrowDeploy is CommonDeploy {
             )
         );
 
-         address veBoostAddr = _deploy(
-            VeSiloContracts.VE_BOOST,
-            abi.encode(
-                address(0), // veBoostV1 - an empty address
-                votingEscrowAddr
-            )
-         );
-
         votingEscrow = IVeSilo(votingEscrowAddr);
-        veBoost = IVeBoost(veBoostAddr);
 
         vm.stopBroadcast();
 
