@@ -21,7 +21,7 @@ import "@balancer-labs/v2-solidity-utils/contracts/helpers/SingletonAuthenticati
 import "@balancer-labs/v2-solidity-utils/contracts/openzeppelin/EnumerableSet.sol";
 import "@balancer-labs/v2-solidity-utils/contracts/openzeppelin/ReentrancyGuard.sol";
 
-import "../L2BalancerPseudoMinter.sol";
+import {IL2BalancerPseudoMinter} from "../interfaces/IL2BalancerPseudoMinter.sol";
 
 /**
  * @title ChildChainGaugeRegistry
@@ -32,7 +32,7 @@ import "../L2BalancerPseudoMinter.sol";
 contract ChildChainGaugeRegistry is SingletonAuthentication, ReentrancyGuard {
     using EnumerableSet for EnumerableSet.AddressSet;
 
-    L2BalancerPseudoMinter private immutable _l2BalancerPseudoMinter;
+    IL2BalancerPseudoMinter private immutable _l2BalancerPseudoMinter;
 
     EnumerableSet.AddressSet private _gauges;
 
@@ -43,7 +43,7 @@ contract ChildChainGaugeRegistry is SingletonAuthentication, ReentrancyGuard {
      * @notice Constructor initializes the ChildChainGaugeRegistry contract.
      * @param l2BalancerPseudoMinter The L2 Balancer pseudo minter.
      */
-    constructor(L2BalancerPseudoMinter l2BalancerPseudoMinter)
+    constructor(IL2BalancerPseudoMinter l2BalancerPseudoMinter)
         SingletonAuthentication(l2BalancerPseudoMinter.getVault())
     {
         _l2BalancerPseudoMinter = l2BalancerPseudoMinter;
