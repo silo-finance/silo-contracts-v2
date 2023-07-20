@@ -17,7 +17,7 @@ pragma solidity ^0.7.0;
 import "@balancer-labs/v2-interfaces/contracts/liquidity-mining/ILiquidityGaugeFactory.sol";
 import "@balancer-labs/v2-interfaces/contracts/liquidity-mining/IChildChainGauge.sol";
 
-import "@balancer-labs/v2-solidity-utils/contracts/helpers/SingletonAuthentication.sol";
+import {Ownable2Step} from "openzeppelin-contracts/access/Ownable2Step.sol";
 import "@balancer-labs/v2-solidity-utils/contracts/openzeppelin/EnumerableSet.sol";
 import "@balancer-labs/v2-solidity-utils/contracts/openzeppelin/ReentrancyGuard.sol";
 
@@ -29,7 +29,7 @@ import {IL2BalancerPseudoMinter} from "../interfaces/IL2BalancerPseudoMinter.sol
  * This contract enables the addition and removal of child chain gauges to the registry.
  * Duplication is not permitted. Gauges are verified to be valid.
  */
-contract ChildChainGaugeRegistry is SingletonAuthentication, ReentrancyGuard {
+contract ChildChainGaugeRegistry is Ownable2Step, ReentrancyGuard {
     using EnumerableSet for EnumerableSet.AddressSet;
 
     IL2BalancerPseudoMinter private immutable _l2BalancerPseudoMinter;
@@ -44,7 +44,6 @@ contract ChildChainGaugeRegistry is SingletonAuthentication, ReentrancyGuard {
      * @param l2BalancerPseudoMinter The L2 Balancer pseudo minter.
      */
     constructor(IL2BalancerPseudoMinter l2BalancerPseudoMinter)
-        SingletonAuthentication(l2BalancerPseudoMinter.getVault())
     {
         _l2BalancerPseudoMinter = l2BalancerPseudoMinter;
     }
@@ -56,7 +55,7 @@ contract ChildChainGaugeRegistry is SingletonAuthentication, ReentrancyGuard {
      * the gauge is added to the registry, and a GaugeAdded event is emitted.
      * @param gauge The gauge to add to the registry.
      */
-    function addGauge(IChildChainGauge gauge) external authenticate nonReentrant {
+    function addGauge(IChildChainGauge gauge) external onlyOwner nonReentrant {
         // Check that the gauge is valid
         // 1. The gauge's factory is registered with the L2BalancerPseudoMinter
         // 2. The gauge is deployed from the registered factory
@@ -75,7 +74,7 @@ contract ChildChainGaugeRegistry is SingletonAuthentication, ReentrancyGuard {
      * Remove a gauge might affect the order of the remaining gauges.
      * @param gauge The gauge to remove from the registry.
      */
-    function removeGauge(IChildChainGauge gauge) external authenticate {
+    function removeGauge(IChildChainGauge gauge) external onlyOwner {
         require(_gauges.remove(address(gauge)), "GAUGE_NOT_REGISTERED");
 
         emit GaugeRemoved(gauge);
