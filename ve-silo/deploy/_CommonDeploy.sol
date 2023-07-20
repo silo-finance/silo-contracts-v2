@@ -19,6 +19,8 @@ library VeSiloContracts {
     string public constant VOTING_ESCROW_REMAPPER = "VotingEscrowRemapper.sol";
     string public constant CHILD_CHAIN_GAUGE = "ChildChainGauge.vy";
     string public constant CHILD_CHAIN_GAUGE_FACTORY = "ChildChainGaugeFactory.sol";
+    string public constant CHILD_CHAIN_GAUGE_REGISTRY = "ChildChainGaugeRegistry.sol";
+    string public constant CHILD_CHAIN_GAUGE_CHECKPOINTER = "ChildChainGaugeCheckpointer.sol";
     string public constant L2_BALANCER_PSEUDO_MINTER = "L2BalancerPseudoMinter.sol";
     string public constant VOTING_ESCROW_DELEGATION_PROXY = "VotingEscrowDelegationProxy.sol";
 }

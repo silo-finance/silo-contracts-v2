@@ -44,3 +44,21 @@
 - Bumped solidity to 0.8.19, updated imports, and solhint ([430e843](https://github.com/silo-finance/silo-contracts-v2/pull/56/commits/430e843bed16bf2dfde6cd39b5eaf1b25c4e02b7))
 
 - Copy of Balancer's implementation of the ChildChainGaugeFactory.sol ([0543b3f](https://github.com/silo-finance/silo-contracts-v2/pull/56/commits/0543b3fd50fe02c3555c0d2efc82fa7771fba33e))
+
+### l2-common/ChildChainGaugeRegistry.sol
+- Bumped solidity to 0.8.19 and updated imports ([3fb2983](https://github.com/silo-finance/silo-contracts-v2/pull/60/commits/3fb298378417ede34d7b4fa4edd032cf1ed0ce5b))
+
+- Changed ownership system for ChildChainGaugeRegistry. Replaced SingletonAuthentication with Ownable2Step ([bdcf970](https://github.com/silo-finance/silo-contracts-v2/pull/60/commits/bdcf970447a1f0915b26ebca66b61f9b0a89505a))
+
+- Usage of the L2BalancerPseudoMinter interface instead of the smart contract ([827c19b](https://github.com/silo-finance/silo-contracts-v2/pull/60/commits/827c19b0e25218ba6a9ab9c9eeb83c13e1060ffc))
+
+- Removed a `_liquidityGaugeFactory` as it was not used ([8cc8335](https://github.com/silo-finance/silo-contracts-v2/pull/60/commits/8cc83359c2227060cf6ea59f6e218af092d2c9ba))
+
+- Copy of Balancer's implementation of the ChildChainGaugeRegistry.sol ([83d6b2c](https://github.com/silo-finance/silo-contracts-v2/pull/60/commits/83d6b2c53eaccca44d4b9bcea9740f3be7d35ba5))
+
+### l2-common/ChildChainGaugeCheckpointer.sol
+- Bumped solidity to 0.8.19 and updated imports. Some imports were removed as they were not used ([7ce5cec](https://github.com/silo-finance/silo-contracts-v2/pull/60/commits/7ce5cec90e5889c82fe9f396787ae6be491580c1))
+
+- Usage of the ChildChainGaugeRegistry interface instead of the smart contract ([3b19b5f](https://github.com/silo-finance/silo-contracts-v2/pull/60/commits/3b19b5f8cb96f604e19f1961588eafa02e77bf04))
+
+- Copy of Balancer's implementation of the ChildChainGaugeCheckpointer.sol ([e7386b0](https://github.com/silo-finance/silo-contracts-v2/pull/60/commits/e7386b0b0515a5653c41b9e604965264552fc771))
