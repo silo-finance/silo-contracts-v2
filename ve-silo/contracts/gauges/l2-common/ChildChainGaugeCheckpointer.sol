@@ -21,7 +21,7 @@ import "@balancer-labs/v2-solidity-utils/contracts/helpers/SingletonAuthenticati
 import "@balancer-labs/v2-solidity-utils/contracts/openzeppelin/EnumerableSet.sol";
 import "@balancer-labs/v2-interfaces/contracts/liquidity-mining/IL2LayerZeroDelegation.sol";
 
-import { ChildChainGaugeRegistry } from "./ChildChainGaugeRegistry.sol";
+import {IChildChainGaugeRegistry} from "../interfaces/IChildChainGaugeRegistry.sol";
 
 /**
  * @title ChildChainGaugeCheckpointer
@@ -29,9 +29,9 @@ import { ChildChainGaugeRegistry } from "./ChildChainGaugeRegistry.sol";
  * This contract calls `user_checkpoint` function on every child chain gauge during onVeBalBridged callback.
  */
 contract ChildChainGaugeCheckpointer is IL2LayerZeroDelegation {
-    ChildChainGaugeRegistry private immutable _childChainGaugeRegistry;
+    IChildChainGaugeRegistry private immutable _childChainGaugeRegistry;
 
-    constructor(ChildChainGaugeRegistry childChainGaugeRegistry) {
+    constructor(IChildChainGaugeRegistry childChainGaugeRegistry) {
         _childChainGaugeRegistry = childChainGaugeRegistry;
     }
 
