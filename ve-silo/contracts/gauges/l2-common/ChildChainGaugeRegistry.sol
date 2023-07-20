@@ -33,7 +33,6 @@ contract ChildChainGaugeRegistry is SingletonAuthentication, ReentrancyGuard {
     using EnumerableSet for EnumerableSet.AddressSet;
 
     L2BalancerPseudoMinter private immutable _l2BalancerPseudoMinter;
-    ILiquidityGaugeFactory private immutable _liquidityGaugeFactory;
 
     EnumerableSet.AddressSet private _gauges;
 
@@ -43,13 +42,11 @@ contract ChildChainGaugeRegistry is SingletonAuthentication, ReentrancyGuard {
     /**
      * @notice Constructor initializes the ChildChainGaugeRegistry contract.
      * @param l2BalancerPseudoMinter The L2 Balancer pseudo minter.
-     * @param liquidityGaugeFactory The liquidity gauge factory.
      */
-    constructor(L2BalancerPseudoMinter l2BalancerPseudoMinter, ILiquidityGaugeFactory liquidityGaugeFactory)
+    constructor(L2BalancerPseudoMinter l2BalancerPseudoMinter)
         SingletonAuthentication(l2BalancerPseudoMinter.getVault())
     {
         _l2BalancerPseudoMinter = l2BalancerPseudoMinter;
-        _liquidityGaugeFactory = liquidityGaugeFactory;
     }
 
     /**
