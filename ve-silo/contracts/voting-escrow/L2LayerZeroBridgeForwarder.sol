@@ -12,9 +12,9 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-pragma solidity ^0.7.0;
+pragma solidity 0.8.19;
 
-import "@balancer-labs/v2-interfaces/contracts/liquidity-mining/IL2LayerZeroDelegation.sol";
+import {IL2LayerZeroDelegation} from "balancer-labs/v2-interfaces/liquidity-mining/IL2LayerZeroDelegation.sol";
 
 import {Ownable2Step} from "openzeppelin-contracts/access/Ownable2Step.sol";
 
@@ -27,7 +27,7 @@ import {Ownable2Step} from "openzeppelin-contracts/access/Ownable2Step.sol";
 contract L2LayerZeroBridgeForwarder is IL2LayerZeroDelegation, Ownable2Step {
     event DelegationImplementationUpdated(IL2LayerZeroDelegation indexed newImplementation);
 
-    IL2LayerZeroDelegation private _delegation;
+    IL2LayerZeroDelegation private _delegation; // solhint-disable-line ordering
 
     /**
      * @notice Returns the current delegation implementation contract.
@@ -40,7 +40,7 @@ contract L2LayerZeroBridgeForwarder is IL2LayerZeroDelegation, Ownable2Step {
      * @notice Hook to be called whenever the veBAL balance of a user is updated.
      */
     function onVeBalBridged(address user) external override {
-        if (_delegation != IL2LayerZeroDelegation(0)) {
+        if (_delegation != IL2LayerZeroDelegation(address(0))) {
             _delegation.onVeBalBridged(user);
         }
     }
@@ -49,7 +49,7 @@ contract L2LayerZeroBridgeForwarder is IL2LayerZeroDelegation, Ownable2Step {
      * @notice Hook to be called whenever the veBAL supply is updated.
      */
     function onVeBalSupplyUpdate() external override {
-        if (_delegation != IL2LayerZeroDelegation(0)) {
+        if (_delegation != IL2LayerZeroDelegation(address(0))) {
             _delegation.onVeBalSupplyUpdate();
         }
     }
