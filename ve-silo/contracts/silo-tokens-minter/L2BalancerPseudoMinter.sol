@@ -15,7 +15,7 @@
 pragma solidity ^0.7.0;
 
 import "@balancer-labs/v2-interfaces/contracts/liquidity-mining/IChildChainGauge.sol";
-import "@balancer-labs/v2-solidity-utils/contracts/helpers/SingletonAuthentication.sol";
+import {Ownable2Step} from "openzeppelin-contracts/access/Ownable2Step.sol";
 import "@balancer-labs/v2-solidity-utils/contracts/openzeppelin/SafeERC20.sol";
 import "@balancer-labs/v2-solidity-utils/contracts/openzeppelin/SafeMath.sol";
 
@@ -36,7 +36,7 @@ import "./BalancerMinter.sol";
  * amount that it has already distributed for that gauge / user, the pseudo minter can then transfer the difference
  * to the user and update the total transferred amount.
  */
-contract L2BalancerPseudoMinter is BalancerMinter, SingletonAuthentication {
+contract L2BalancerPseudoMinter is BalancerMinter, Ownable2Step {
     event GaugeFactoryAdded(ILiquidityGaugeFactory indexed factory);
     event GaugeFactoryRemoved(ILiquidityGaugeFactory indexed factory);
 
@@ -45,9 +45,8 @@ contract L2BalancerPseudoMinter is BalancerMinter, SingletonAuthentication {
 
     mapping(ILiquidityGaugeFactory => bool) private _validFactories;
 
-    constructor(IVault vault, IERC20 balancerToken)
+    constructor(IERC20 balancerToken)
         BalancerMinter(balancerToken, "Balancer Pseudo Minter", "1")
-        SingletonAuthentication(vault)
     {
         // solhint-disable-previous-line no-empty-blocks
     }
@@ -57,7 +56,7 @@ contract L2BalancerPseudoMinter is BalancerMinter, SingletonAuthentication {
      * @dev This is a permissioned function.
      * Reverts if the given factory was added beforehand; emits `GaugeFactoryAdded` event upon success.
      */
-    function addGaugeFactory(ILiquidityGaugeFactory factory) external authenticate {
+    function addGaugeFactory(ILiquidityGaugeFactory factory) external onlyOwner {
         require(!_validFactories[factory], "FACTORY_ALREADY_ADDED");
         _validFactories[factory] = true;
         emit GaugeFactoryAdded(factory);
@@ -68,7 +67,7 @@ contract L2BalancerPseudoMinter is BalancerMinter, SingletonAuthentication {
      * @dev This is a permissioned function.
      * Reverts if the given factory had not been added beforehand; emits `GaugeFactoryRemoved` event upon success.
      */
-    function removeGaugeFactory(ILiquidityGaugeFactory factory) external authenticate {
+    function removeGaugeFactory(ILiquidityGaugeFactory factory) external onlyOwner {
         require(_validFactories[factory], "FACTORY_NOT_ADDED");
         _validFactories[factory] = false;
         emit GaugeFactoryRemoved(factory);
