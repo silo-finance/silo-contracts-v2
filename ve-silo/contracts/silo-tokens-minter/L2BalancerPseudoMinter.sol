@@ -12,14 +12,15 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-pragma solidity ^0.7.0;
+pragma solidity 0.8.19;
 
-import "@balancer-labs/v2-interfaces/contracts/liquidity-mining/IChildChainGauge.sol";
+import {ISiloChildChainGauge} from "ve-silo/contracts/gauges/interfaces/ISiloChildChainGauge.sol";
+import {ILiquidityGaugeFactory} from "ve-silo/contracts/gauges/interfaces/ILiquidityGaugeFactory.sol";
 import {Ownable2Step} from "openzeppelin-contracts/access/Ownable2Step.sol";
-import "@balancer-labs/v2-solidity-utils/contracts/openzeppelin/SafeERC20.sol";
-import "@balancer-labs/v2-solidity-utils/contracts/openzeppelin/SafeMath.sol";
+import {SafeERC20} from "openzeppelin-contracts/token/ERC20/utils/SafeERC20.sol";
+import {SafeMath} from "openzeppelin-contracts/utils/math/SafeMath.sol";
 
-import "./BalancerMinter.sol";
+import {BalancerMinter, IERC20} from "./BalancerMinter.sol";
 
 /**
  * @dev Distributes bridged BAL tokens in child chains, using the same interface as the mainnet Balancer minter.
@@ -37,6 +38,7 @@ import "./BalancerMinter.sol";
  * to the user and update the total transferred amount.
  */
 contract L2BalancerPseudoMinter is BalancerMinter, Ownable2Step {
+    // solhint-disable ordering
     event GaugeFactoryAdded(ILiquidityGaugeFactory indexed factory);
     event GaugeFactoryRemoved(ILiquidityGaugeFactory indexed factory);
 
@@ -108,7 +110,7 @@ contract L2BalancerPseudoMinter is BalancerMinter, Ownable2Step {
         // First, we retrieve the factory address registered from the gauge.
         // If the factory address is allowlisted in this contract, we verify that the gauge was actually created by
         // the factory (otherwise it could be just a malicious gauge that claims to be created by an allowed factory).
-        IChildChainGauge ccGauge = IChildChainGauge(gauge);
+        ISiloChildChainGauge ccGauge = ISiloChildChainGauge(gauge);
         ILiquidityGaugeFactory factory = ccGauge.factory();
         require(isValidGaugeFactory(factory), "INVALID_GAUGE_FACTORY");
         require(factory.isGaugeFromFactory(gauge), "INVALID_GAUGE");
