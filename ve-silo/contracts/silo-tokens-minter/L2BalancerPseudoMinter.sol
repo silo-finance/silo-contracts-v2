@@ -48,7 +48,7 @@ contract L2BalancerPseudoMinter is BalancerMinter, Ownable2Step {
     mapping(ILiquidityGaugeFactory => bool) private _validFactories;
 
     constructor(IERC20 balancerToken)
-        BalancerMinter(balancerToken, "Balancer Pseudo Minter", "1")
+        BalancerMinter(balancerToken, "Silo Pseudo Minter", "1")
     {
         // solhint-disable-previous-line no-empty-blocks
     }
