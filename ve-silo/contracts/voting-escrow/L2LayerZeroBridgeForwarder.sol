@@ -14,10 +14,9 @@
 
 pragma solidity ^0.7.0;
 
-import "@balancer-labs/v2-interfaces/contracts/vault/IVault.sol";
 import "@balancer-labs/v2-interfaces/contracts/liquidity-mining/IL2LayerZeroDelegation.sol";
 
-import "@balancer-labs/v2-solidity-utils/contracts/helpers/SingletonAuthentication.sol";
+import {Ownable2Step} from "openzeppelin-contracts/access/Ownable2Step.sol";
 
 /**
  * @notice Forwards calls from LayerZero's system to a custom hook whenever a veBAL balance is updated for a given user
@@ -25,14 +24,10 @@ import "@balancer-labs/v2-solidity-utils/contracts/helpers/SingletonAuthenticati
  * @dev The delegation contract can be set so that e.g. Child Chain Gauges are updated automatically whenever there is
  * a veBAL balance update.
  */
-contract L2LayerZeroBridgeForwarder is IL2LayerZeroDelegation, SingletonAuthentication {
+contract L2LayerZeroBridgeForwarder is IL2LayerZeroDelegation, Ownable2Step {
     event DelegationImplementationUpdated(IL2LayerZeroDelegation indexed newImplementation);
 
     IL2LayerZeroDelegation private _delegation;
-
-    constructor(IVault vault) SingletonAuthentication(vault) {
-        // solhint-disable-previous-line no-empty-blocks
-    }
 
     /**
      * @notice Returns the current delegation implementation contract.
@@ -62,7 +57,7 @@ contract L2LayerZeroBridgeForwarder is IL2LayerZeroDelegation, SingletonAuthenti
     /**
      * @notice Sets a new delegation implementation for `onVeBalBridged`.
      */
-    function setDelegation(IL2LayerZeroDelegation delegation) external authenticate {
+    function setDelegation(IL2LayerZeroDelegation delegation) external onlyOwner {
         _delegation = delegation;
 
         emit DelegationImplementationUpdated(delegation);
