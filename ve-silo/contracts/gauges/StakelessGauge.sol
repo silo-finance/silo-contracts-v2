@@ -12,18 +12,19 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-pragma solidity ^0.7.0;
+pragma solidity 0.8.19;
 
-import "@balancer-labs/v2-interfaces/contracts/solidity-utils/openzeppelin/IERC20.sol";
-import "@balancer-labs/v2-interfaces/contracts/liquidity-mining/IBalancerTokenAdmin.sol";
-import "@balancer-labs/v2-interfaces/contracts/liquidity-mining/IGaugeController.sol";
-import "@balancer-labs/v2-interfaces/contracts/liquidity-mining/IMainnetBalancerMinter.sol";
-import "@balancer-labs/v2-interfaces/contracts/liquidity-mining/IStakelessGauge.sol";
+import {IERC20} from "balancer-labs/v2-interfaces/solidity-utils/openzeppelin/IERC20.sol";
+import {IBalancerTokenAdmin} from "ve-silo/contracts/silo-tokens-minter/interfaces/IBalancerTokenAdmin.sol";
+import {IGaugeController} from "ve-silo/contracts/gauges/interfaces/IGaugeController.sol";
+import {IMainnetBalancerMinter} from "ve-silo/contracts/silo-tokens-minter/interfaces/IMainnetBalancerMinter.sol";
+import {IStakelessGauge} from "balancer-labs/v2-interfaces/liquidity-mining/IStakelessGauge.sol";
 
-import "@balancer-labs/v2-solidity-utils/contracts/math/Math.sol";
-import "@balancer-labs/v2-solidity-utils/contracts/openzeppelin/ReentrancyGuard.sol";
+import {Math} from "openzeppelin-contracts/utils/math/Math.sol";
+import {ReentrancyGuard} from "openzeppelin-contracts/security/ReentrancyGuard.sol";
 
 abstract contract StakelessGauge is IStakelessGauge, ReentrancyGuard {
+    // solhint-disable ordering
     uint256 public constant MAX_RELATIVE_WEIGHT_CAP = 1e18;
 
     IERC20 internal immutable _balToken;
@@ -84,6 +85,7 @@ abstract contract StakelessGauge is IStakelessGauge, ReentrancyGuard {
         _setRelativeWeightCap(relativeWeightCap);
     }
 
+    // solhint-disable function-max-lines
     function checkpoint() external payable override nonReentrant returns (bool) {
         require(msg.sender == address(_authorizerAdaptor), "SENDER_NOT_ALLOWED");
         uint256 lastPeriod = _period;
