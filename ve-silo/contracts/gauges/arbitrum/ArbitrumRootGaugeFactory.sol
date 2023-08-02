@@ -12,13 +12,14 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-pragma solidity ^0.7.0;
-pragma experimental ABIEncoderV2;
+pragma solidity 0.8.19;
 
 import {Ownable2Step} from "openzeppelin-contracts/access/Ownable2Step.sol";
 
-import "../BaseGaugeFactory.sol";
-import "./ArbitrumRootGauge.sol";
+import {BaseGaugeFactory} from "../BaseGaugeFactory.sol";
+
+import {ArbitrumRootGauge, IGatewayRouter, IMainnetBalancerMinter, IArbitrumFeeProvider}
+    from "./ArbitrumRootGauge.sol";
 
 contract ArbitrumRootGaugeFactory is IArbitrumFeeProvider, BaseGaugeFactory, Ownable2Step {
     uint64 private _gasLimit;
@@ -38,6 +39,8 @@ contract ArbitrumRootGaugeFactory is IArbitrumFeeProvider, BaseGaugeFactory, Own
         _gasPrice = gasPrice;
         _maxSubmissionCost = maxSubmissionCost;
     }
+
+    // solhint-disable ordering
 
     /**
      * @notice Set the fees for the Arbitrum side of the bridging transaction
