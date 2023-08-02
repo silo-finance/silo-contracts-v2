@@ -12,13 +12,13 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-pragma solidity ^0.7.0;
+pragma solidity 0.8.19;
 
-import "@balancer-labs/v2-interfaces/contracts/liquidity-mining/IArbitrumFeeProvider.sol";
-import "@balancer-labs/v2-solidity-utils/contracts/openzeppelin/SafeERC20.sol";
+import {IArbitrumFeeProvider} from "balancer-labs/v2-interfaces/liquidity-mining/IArbitrumFeeProvider.sol";
+import {SafeERC20, IERC20} from "openzeppelin-contracts/token/ERC20/utils/SafeERC20.sol";
 
-import "../StakelessGauge.sol";
-import "./IGatewayRouter.sol";
+import {StakelessGauge, IMainnetBalancerMinter} from "../StakelessGauge.sol";
+import {IGatewayRouter} from "./IGatewayRouter.sol";
 
 contract ArbitrumRootGauge is StakelessGauge {
     using SafeERC20 for IERC20;
@@ -35,6 +35,8 @@ contract ArbitrumRootGauge is StakelessGauge {
         _factory = IArbitrumFeeProvider(msg.sender);
     }
 
+    // solhint-disable ordering
+
     function initialize(address recipient, uint256 relativeWeightCap) external {
         // This will revert in all calls except the first one
         __StakelessGauge_init(relativeWeightCap);
@@ -48,7 +50,7 @@ contract ArbitrumRootGauge is StakelessGauge {
 
     function _postMintAction(uint256 mintAmount) internal override {
         // Token needs to be approved on the gateway NOT the gateway router
-        _balToken.safeApprove(_gateway, mintAmount);
+        IERC20(address(_balToken)).safeApprove(_gateway, mintAmount);
 
         (uint256 gasLimit, uint256 gasPrice, uint256 maxSubmissionCost) = _factory.getArbitrumFees();
         uint256 totalBridgeCost = _getTotalBridgeCost(gasLimit, gasPrice, maxSubmissionCost);
