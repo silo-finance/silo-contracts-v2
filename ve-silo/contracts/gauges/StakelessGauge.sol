@@ -22,8 +22,9 @@ import {IStakelessGauge} from "balancer-labs/v2-interfaces/liquidity-mining/ISta
 
 import {Math} from "openzeppelin-contracts/utils/math/Math.sol";
 import {ReentrancyGuard} from "openzeppelin-contracts/security/ReentrancyGuard.sol";
+import {Ownable2Step} from "openzeppelin-contracts/access/Ownable2Step.sol";
 
-abstract contract StakelessGauge is IStakelessGauge, ReentrancyGuard {
+abstract contract StakelessGauge is IStakelessGauge, ReentrancyGuard, Ownable2Step {
     // solhint-disable ordering
     uint256 public constant MAX_RELATIVE_WEIGHT_CAP = 1e18;
 
@@ -31,7 +32,6 @@ abstract contract StakelessGauge is IStakelessGauge, ReentrancyGuard {
     IBalancerTokenAdmin private immutable _tokenAdmin;
     IMainnetBalancerMinter private immutable _minter;
     IGaugeController private immutable _gaugeController;
-    IAuthorizerAdaptor private immutable _authorizerAdaptor;
 
     event Checkpoint(uint256 indexed periodTime, uint256 periodEmissions);
 
@@ -59,7 +59,6 @@ abstract contract StakelessGauge is IStakelessGauge, ReentrancyGuard {
         _tokenAdmin = tokenAdmin;
         _minter = minter;
         _gaugeController = gaugeController;
-        _authorizerAdaptor = gaugeController.admin();
 
         _RATE_REDUCTION_TIME = tokenAdmin.RATE_REDUCTION_TIME();
         _RATE_REDUCTION_COEFFICIENT = tokenAdmin.RATE_REDUCTION_COEFFICIENT();
@@ -86,8 +85,7 @@ abstract contract StakelessGauge is IStakelessGauge, ReentrancyGuard {
     }
 
     // solhint-disable function-max-lines
-    function checkpoint() external payable override nonReentrant returns (bool) {
-        require(msg.sender == address(_authorizerAdaptor), "SENDER_NOT_ALLOWED");
+    function checkpoint() external payable override nonReentrant onlyOwner returns (bool) {
         uint256 lastPeriod = _period;
         uint256 currentPeriod = _currentPeriod();
 
@@ -166,18 +164,15 @@ abstract contract StakelessGauge is IStakelessGauge, ReentrancyGuard {
         return _isKilled;
     }
 
-    function killGauge() external override {
-        require(msg.sender == address(_authorizerAdaptor), "SENDER_NOT_ALLOWED");
+    function killGauge() external override onlyOwner {
         _isKilled = true;
     }
 
-    function unkillGauge() external override {
-        require(msg.sender == address(_authorizerAdaptor), "SENDER_NOT_ALLOWED");
+    function unkillGauge() external override onlyOwner {
         _isKilled = false;
     }
 
-    function setRelativeWeightCap(uint256 relativeWeightCap) external override {
-        require(msg.sender == address(_authorizerAdaptor), "SENDER_NOT_ALLOWED");
+    function setRelativeWeightCap(uint256 relativeWeightCap) external override onlyOwner {
         _setRelativeWeightCap(relativeWeightCap);
     }
 
