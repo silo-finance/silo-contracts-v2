@@ -15,14 +15,12 @@
 pragma solidity ^0.7.0;
 pragma experimental ABIEncoderV2;
 
-import "@balancer-labs/v2-interfaces/contracts/vault/IVault.sol";
-
-import "@balancer-labs/v2-solidity-utils/contracts/helpers/SingletonAuthentication.sol";
+import {Ownable2Step} from "openzeppelin-contracts/access/Ownable2Step.sol";
 
 import "../BaseGaugeFactory.sol";
 import "./ArbitrumRootGauge.sol";
 
-contract ArbitrumRootGaugeFactory is IArbitrumFeeProvider, BaseGaugeFactory, SingletonAuthentication {
+contract ArbitrumRootGaugeFactory is IArbitrumFeeProvider, BaseGaugeFactory, Ownable2Step {
     uint64 private _gasLimit;
     uint64 private _gasPrice;
     uint64 private _maxSubmissionCost;
@@ -30,13 +28,12 @@ contract ArbitrumRootGaugeFactory is IArbitrumFeeProvider, BaseGaugeFactory, Sin
     event ArbitrumFeesModified(uint256 gasLimit, uint256 gasPrice, uint256 maxSubmissionCost);
 
     constructor(
-        IVault vault,
         IMainnetBalancerMinter minter,
         IGatewayRouter gatewayRouter,
         uint64 gasLimit,
         uint64 gasPrice,
         uint64 maxSubmissionCost
-    ) BaseGaugeFactory(address(new ArbitrumRootGauge(minter, gatewayRouter))) SingletonAuthentication(vault) {
+    ) BaseGaugeFactory(address(new ArbitrumRootGauge(minter, gatewayRouter))) {
         _gasLimit = gasLimit;
         _gasPrice = gasPrice;
         _maxSubmissionCost = maxSubmissionCost;
@@ -81,7 +78,7 @@ contract ArbitrumRootGaugeFactory is IArbitrumFeeProvider, BaseGaugeFactory, Sin
         uint64 gasLimit,
         uint64 gasPrice,
         uint64 maxSubmissionCost
-    ) external override authenticate {
+    ) external override onlyOwner {
         _gasLimit = gasLimit;
         _gasPrice = gasPrice;
         _maxSubmissionCost = maxSubmissionCost;
