@@ -69,7 +69,7 @@ contract ShareDebtToken is IERC20R, ShareToken {
         return _receiveAllowances[_owner][_recipient];
     }
 
-    /// @dev Set allowance
+    /// @dev Set approval for `_owner` to send debt to `_recipient`
     /// @param _owner owner of debt token
     /// @param _recipient wallet that allows `_owner` to send debt to its wallet
     /// @param _amount amount of token allowed to be transferred

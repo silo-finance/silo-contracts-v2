@@ -31,6 +31,7 @@ contract CloneFactory {
 
         // initialize oracle
         if (_initData.length > 0) {
+            // solhint-disable avoid-low-level-calls
             (bool success, bytes memory returndata) = cloneAddress.call(_initData);
             if (!success) revert InitRevert(returndata);
         }

@@ -65,10 +65,11 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
     /// @param _silo Silo address for which tokens was deployed
     /// @param _asset asset for which this tokens was deployed
     function __ShareToken_init( // solhint-disable-line func-name-mixedcase
-    string memory _name, string memory _symbol, ISilo _silo, address _asset)
-        internal
-        onlyInitializing
-    {
+        string memory _name,
+        string memory _symbol,
+        ISilo _silo,
+        address _asset
+    ) internal onlyInitializing {
         __ERC20_init(_name, _symbol);
 
         silo = _silo;
