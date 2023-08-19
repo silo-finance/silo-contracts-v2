@@ -10,7 +10,7 @@ contract SiloConfig is ISiloConfig {
     /// @dev 1e18 == 100%
     uint256 public constant ONE = 1e18;
 
-    uint256 public immutable SILO_ID; // solhint-disable-line var-name-mixedcase
+    // uint256 public immutable SILO_ID; // solhint-disable-line var-name-mixedcase
 
     // TOKEN #0
 

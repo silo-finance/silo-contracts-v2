@@ -6,9 +6,12 @@ import {Initializable} from "openzeppelin-contracts-upgradeable/proxy/utils/Init
 import {ISilo} from "./interface/ISilo.sol";
 import {ISiloConfig} from "./interface/ISiloConfig.sol";
 import {ISiloFactory} from "./interface/ISiloFactory.sol";
+import {IERC3156FlashBorrower} from "./interface/IERC3156FlashBorrower.sol";
+
 import {SiloStdLib} from "./lib/SiloStdLib.sol";
 import {SiloSolvencyLib} from "./lib/SiloSolvencyLib.sol";
 import {SiloLendingLib} from "./lib/SiloLendingLib.sol";
+import {SiloFlashloanLib} from "./lib/SiloFlashloanLib.sol";
 
 // solhint-disable ordering
 
@@ -50,6 +53,7 @@ abstract contract Silo is Initializable, ISilo {
         return SiloSolvencyLib.isSolvent(config, _borrower, assetStorage);
     }
 
+    // TODO: add hooks and use hooks for deposit and borrow caps
     function depositPossible(address _token, address _depositor) external view virtual returns (bool) {
         // TODO: caps
         return SiloLendingLib.depositPossible(config, _token, _depositor);
@@ -361,5 +365,22 @@ abstract contract Silo is Initializable, ISilo {
 
     function repayShares(address _token, uint256 _shares, address _borrower) external returns (uint256 assets) {
         return SiloLendingLib.repayShares(config, FACTORY, _token, _shares, _borrower, msg.sender, assetStorage);
+    }
+
+    function maxFlashLoan(address _token) external view returns (uint256 assets) {
+        return SiloFlashloanLib.maxFlashLoan(_token, assetStorage);
+    }
+
+    function flashFee(address _token, uint256 _assets) external view returns (uint256) {
+        return 0;
+    }
+
+    function flashLoan(
+        IERC3156FlashBorrower _receiver,
+        address _token,
+        uint256 _assets,
+        bytes calldata _flashloanReceiverData
+    ) external returns (bool) {
+        return SiloFlashloanLib.flashloan(config, _token, _assets, _receiver, _flashloanReceiverData, assetStorage);
     }
 }

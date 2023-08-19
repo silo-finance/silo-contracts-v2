@@ -4,8 +4,9 @@ pragma solidity >=0.5.0;
 
 import {ISiloConfig} from "./ISiloConfig.sol";
 import {ISiloFactory} from "./ISiloFactory.sol";
+import {IERC3156FlashLender} from "./IERC3156FlashLender.sol";
 
-interface ISilo {
+interface ISilo is IERC3156FlashLender {
     /// @dev Storage struct that holds all required data for a single token market
     struct AssetStorage {
         /// @dev PROTECTED COLLATERAL: Amount of asset token that has been deposited to Silo that can be ONLY used

@@ -77,6 +77,7 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
     }
 
     function _afterTokenTransfer(address _sender, address _recipient, uint256 _amount) internal virtual override {
+        // TODO: implement generic hook system
         // report mint/burn or transfer
         _notifyAboutTransfer(_sender, _recipient, _amount);
 
@@ -96,6 +97,8 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
     /// @param _to recipient
     /// @param _amount amount that was transferred
     function _notifyAboutTransfer(address _from, address _to, uint256 _amount) internal {
+        hookimpl.afterTokenTransfer(_from, _to, _amount);
+
         // TODO: make notification address per share token, NOT per Silo
         address notificationReceiver = factory.getNotificationReceiver(address(this));
 
