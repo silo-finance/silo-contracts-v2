@@ -19,3 +19,17 @@
 - Bumped solidity to 0.8.19 & updated imports ([60825f0](https://github.com/silo-finance/silo-contracts-v2/pull/54/commits/60825f0afe2fa6aab63b5a3e9f096603f988a7c7))
 
 - Copy of Balancer's implementation of the VotingEscrowRemapper.sol ([49be1c2](https://github.com/silo-finance/silo-contracts-v2/pull/54/commits/49be1c2ec7d84179df413d3a8691a1bcd474b848))
+
+### VotingEscrowDelegationProxy.sol
+- Specified a proper data type ([67296ea](https://github.com/silo-finance/silo-contracts-v2/pull/59/commits/67296ea0c9cb7c8b0d0176cf9d6e352d905222df))
+
+- Changed ownership system for VotingEscrowDelegationProxy. Replaced SingletonAuthentication with Ownable2Step ([aa87cfa](https://github.com/silo-finance/silo-contracts-v2/pull/59/commits/aa87cfa56a677addfcd813253e7ed13a0731181e))
+
+- Bumped solidity to 0.8.19, updated imports, solhint ([5184582](https://github.com/silo-finance/silo-contracts-v2/pull/59/commits/518458251f92b4fb1b209d85221d33a1c133743b))
+
+- Copy of Balancer's implementation of the VotingEscrowDelegationProxy.sol ([8eb3e0d](https://github.com/silo-finance/silo-contracts-v2/pull/59/commits/8eb3e0d5230eb0dcf1dec50cdaf571f44015a289))
+
+### NullVotingEscrow.sol
+- Bumped solidity to 0.8.19, updated imports, solhint ([4d3ec12](https://github.com/silo-finance/silo-contracts-v2/pull/59/commits/4d3ec12208d1976fc5617b072c1bb7d38ddd4c77))
+
+- Copy of Balancer's implementation of the NullVotingEscrow.sol ([4057e0b](https://github.com/silo-finance/silo-contracts-v2/pull/59/commits/4057e0b992046e47f3b118b0625c57387155fa69))
