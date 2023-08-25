@@ -522,9 +522,9 @@ contract FeeDistributor is IFeeDistributor, OptionalOnlyCaller, ReentrancyGuard 
                     break;
                 }
 
-                int128 dt = int128(nextWeekToCheckpoint - currentUserPoint.ts);
+                int128 dt = int128(int256(nextWeekToCheckpoint - currentUserPoint.ts));
                 uint256 userBalance = currentUserPoint.bias > currentUserPoint.slope * dt
-                    ? uint256(currentUserPoint.bias - currentUserPoint.slope * dt)
+                    ? uint256(int256(currentUserPoint.bias - currentUserPoint.slope * dt))
                     : 0;
 
                 // User's lock has expired and they haven't relocked yet.
