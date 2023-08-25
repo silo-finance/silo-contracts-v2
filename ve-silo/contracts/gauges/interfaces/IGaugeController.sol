@@ -30,6 +30,7 @@ interface IGaugeController {
     function n_gauge_types() external view returns (int128);
     function n_gauges() external view returns (int128);
     function points_total(uint256 _time) external view returns (uint256);
+    function gauge_relative_weight(address gauge, uint256 time) external view returns (uint256);
     // solhint-enable func-name-mixedcase
     // solhint-enable var-name-mixedcase
     // solhint-enable func-param-name-mixedcase
