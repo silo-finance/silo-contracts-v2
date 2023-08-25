@@ -33,3 +33,10 @@
 - Bumped solidity to 0.8.19, updated imports, solhint ([4d3ec12](https://github.com/silo-finance/silo-contracts-v2/pull/59/commits/4d3ec12208d1976fc5617b072c1bb7d38ddd4c77))
 
 - Copy of Balancer's implementation of the NullVotingEscrow.sol ([4057e0b](https://github.com/silo-finance/silo-contracts-v2/pull/59/commits/4057e0b992046e47f3b118b0625c57387155fa69))
+
+### L2LayerZeroBridgeForwarder.sol
+- Bumped solidity to 0.8.19, updated imports, solhint, and changed data types ([0caafa8](https://github.com/silo-finance/silo-contracts-v2/pull/61/commits/0caafa85b6316b84e879ed2127f756bd7ba6a516))
+
+- Changed ownership system for L2LayerZeroBridgeForwarder. Replaced SingletonAuthentication with Ownable2Step ([c2f9f11](https://github.com/silo-finance/silo-contracts-v2/pull/61/commits/c2f9f11392b88904bf353be66effb8e4ce5f920f))
+
+- Copy of Balancer's implementation of the L2LayerZeroBridgeForwarder.sol ([feaf031](https://github.com/silo-finance/silo-contracts-v2/pull/61/commits/feaf031e7733f9a3cb1d077a55935ee419044254))
