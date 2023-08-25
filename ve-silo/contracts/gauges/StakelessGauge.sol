@@ -52,7 +52,7 @@ abstract contract StakelessGauge is IStakelessGauge, ReentrancyGuard, Ownable2St
 
     constructor(IMainnetBalancerMinter minter) {
         IBalancerTokenAdmin tokenAdmin = IBalancerTokenAdmin(minter.getBalancerTokenAdmin());
-        IERC20 balToken = tokenAdmin.getBalancerToken();
+        IERC20 balToken = IERC20(address(tokenAdmin.getBalancerToken()));
         IGaugeController gaugeController = minter.getGaugeController();
 
         _balToken = balToken;
