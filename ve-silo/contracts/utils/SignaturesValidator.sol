@@ -12,12 +12,12 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-pragma solidity ^0.7.0;
+pragma solidity 0.8.19;
 
-import "@balancer-labs/v2-interfaces/contracts/solidity-utils/openzeppelin/IERC1271.sol";
+import {IERC1271} from "balancer-labs/v2-interfaces/solidity-utils/openzeppelin/IERC1271.sol";
 
-import "./EOASignaturesValidator.sol";
-import "../openzeppelin/Address.sol";
+import {EOASignaturesValidator} from "./EOASignaturesValidator.sol";
+import {Address} from "openzeppelin-contracts/utils/Address.sol";
 
 /**
  * @dev Utility for signing Solidity function calls.

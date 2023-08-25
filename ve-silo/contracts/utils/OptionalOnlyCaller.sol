@@ -12,12 +12,14 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-pragma solidity ^0.7.0;
+pragma solidity 0.8.19;
 
-import "@balancer-labs/v2-interfaces/contracts/solidity-utils/helpers/IOptionalOnlyCaller.sol";
-import "@balancer-labs/v2-interfaces/contracts/solidity-utils/helpers/BalancerErrors.sol";
+import {IOptionalOnlyCaller} from "balancer-labs/v2-interfaces/solidity-utils/helpers/IOptionalOnlyCaller.sol";
+import {Errors, _require} from "balancer-labs/v2-interfaces/solidity-utils/helpers/BalancerErrors.sol";
 
-import "./SignaturesValidator.sol";
+import {SignaturesValidator} from "./SignaturesValidator.sol";
+
+// solhint-disable ordering
 
 abstract contract OptionalOnlyCaller is IOptionalOnlyCaller, SignaturesValidator {
     mapping(address => bool) private _isOnlyCallerEnabled;
