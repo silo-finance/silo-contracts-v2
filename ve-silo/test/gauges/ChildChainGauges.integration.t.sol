@@ -64,7 +64,7 @@ contract ChildChainGaugesTest is IntegrationTest {
 
         assertEq(gauge.bal_handler(), _erc20BalancesHandler, "Deployed with wrong handler");
         assertEq(gauge.version(), _factory.getProductVersion(), "Deployed with wrong version");
-        assertEq(gauge.factory(), address(_factory), "Deployed with wrong factory");
+        assertEq(address(gauge.factory()), address(_factory), "Deployed with wrong factory");
 
         assertEq(
             gauge.authorizer_adaptor(),

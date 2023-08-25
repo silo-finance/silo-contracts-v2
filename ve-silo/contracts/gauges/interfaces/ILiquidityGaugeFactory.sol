@@ -11,4 +11,6 @@ interface ILiquidityGaugeFactory {
 
     /// @return the address of the implementation used for the gauge deployments.
     function getGaugeImplementation() external view returns (address);
+
+    function isGaugeFromFactory(address gauge) external view returns (bool);
 }

@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.19;
 
+import {ILiquidityGaugeFactory} from "./ILiquidityGaugeFactory.sol";
+
 interface ISiloChildChainGauge {
     function initialize(address _erc20BalancesHandler, string memory _version) external;
     // solhint-disable func-name-mixedcase
@@ -33,7 +35,7 @@ interface ISiloChildChainGauge {
     function integrate_inv_supply(int128 _period) external view returns (uint256);
     function integrate_inv_supply_of(address _user) external view returns (uint256);
     function version() external view returns (string memory);
-    function factory() external view returns (address);
+    function factory() external view returns (ILiquidityGaugeFactory);
     function authorizer_adaptor() external view returns (address);
 
     // solhint-enable func-name-mixedcase
