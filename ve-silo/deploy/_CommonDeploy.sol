@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.19;
 
+import {AddressesCollection} from "silo-foundry-utils/networks/addresses/AddressesCollection.sol";
 import {Deployer} from "silo-foundry-utils/deployer/Deployer.sol";
 
 library VeSiloContracts {
@@ -26,9 +27,24 @@ library VeSiloContracts {
     string public constant VOTING_ESCROW_DELEGATION_PROXY = "VotingEscrowDelegationProxy.sol";
     string public constant L2_LAYER_ZERO_BRIDGE_FORWARDER = "L2LayerZeroBridgeForwarder.sol";
     string public constant NULL_VOTING_ESCROW = "NullVotingEscrow.sol";
+    string public constant ARBITRUM_ROOT_GAUGE = "ArbitrumRootGauge.sol";
+    string public constant ARBITRUM_ROOT_GAUGE_FACTORY = "ArbitrumRootGaugeFactory.sol";
 }
 
-contract CommonDeploy is Deployer {
+contract VeSiloAddresses is AddressesCollection {
+    string constant public ARBITRUM_GATEWAY_ROUTER = "Arbitrum gateway router";
+
+    constructor() {
+        _ethereumAddresses();
+    }
+
+    function _ethereumAddresses() internal {
+        uint256 chainId = getChain(MAINNET_ALIAS).chainId;
+        setAddress(chainId, ARBITRUM_GATEWAY_ROUTER, 0xC840838Bc438d73C16c2f8b22D2Ce3669963cD48);
+    }
+}
+
+contract CommonDeploy is Deployer, VeSiloAddresses {
     // Common variables
     string internal constant _FORGE_OUT_DIR = "cache/foundry/out/ve-silo";
     string internal constant _DEPLOYMENTS_SUB_DIR = "ve-silo";

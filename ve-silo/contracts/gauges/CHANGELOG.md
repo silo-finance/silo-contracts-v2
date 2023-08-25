@@ -62,3 +62,24 @@
 - Usage of the ChildChainGaugeRegistry interface instead of the smart contract ([3b19b5f](https://github.com/silo-finance/silo-contracts-v2/pull/60/commits/3b19b5f8cb96f604e19f1961588eafa02e77bf04))
 
 - Copy of Balancer's implementation of the ChildChainGaugeCheckpointer.sol ([e7386b0](https://github.com/silo-finance/silo-contracts-v2/pull/60/commits/e7386b0b0515a5653c41b9e604965264552fc771))
+
+### l2-common/StakelessGauge.sol
+- Changed balancer token type ([931f28e](https://github.com/silo-finance/silo-contracts-v2/pull/63/commits/931f28eba3e58321e1a7c3c330634202bcdd1345))
+
+- Changed ownership system for StakelessGauge. Replaced SingletonAuthentication with Ownable2Step ([65fbc67](https://github.com/silo-finance/silo-contracts-v2/pull/63/commits/65fbc670f9a91105742b8ae3738ee4215280c7e3))
+
+- Bumped solidity to 0.8.19 and updated imports. Some imports were removed as they were not used ([6075b4a](https://github.com/silo-finance/silo-contracts-v2/pull/63/commits/6075b4a97a142967a68071a7b3e4f5f82df6f402))
+
+- Copy of Balancer's implementation of the StakelessGauge.sol ([c731307](https://github.com/silo-finance/silo-contracts-v2/pull/63/commits/c7313073b1ca24f4d75fd9f6e5eab3110489249a))
+
+### l2-common/ArbitrumRootGauge.sol
+- Bumped solidity to 0.8.19 and updated imports. Some imports were removed as they were not used ([21980f3](https://github.com/silo-finance/silo-contracts-v2/pull/63/commits/21980f320d453e4ae96793c2ca728915f4ff6b28))
+
+- Copy of Balancer's implementation of the ArbitrumRootGauge.sol ([07b58da](https://github.com/silo-finance/silo-contracts-v2/pull/63/commits/07b58da40203b8d6594b16130bc80550a4b4d465))
+
+### l2-common/ArbitrumRootGaugeFactory.sol
+- Changed ownership system for ArbitrumRootGaugeFactory. Replaced SingletonAuthentication with Ownable2Step ([6595183](https://github.com/silo-finance/silo-contracts-v2/pull/63/commits/659518311f8a73fe552848d25aeb3167eb753ce1))
+
+- Bumped solidity to 0.8.19 and updated imports. Some imports were removed as they were not used ([3bebd3c](https://github.com/silo-finance/silo-contracts-v2/pull/63/commits/3bebd3c9d6f4bd551900b7004e92aee7e4171c0b))
+
+- Copy of Balancer's implementation of the ArbitrumRootGaugeFactory.sol ([0980dbe](https://github.com/silo-finance/silo-contracts-v2/pull/63/commits/0980dbe5b7a875ec329a45e453b4c1e25708a907))
