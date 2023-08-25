@@ -12,21 +12,21 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-pragma solidity ^0.7.0;
-pragma experimental ABIEncoderV2;
+pragma solidity 0.8.19;
 
-import "@balancer-labs/v2-interfaces/contracts/solidity-utils/helpers/IAuthentication.sol";
-import "@balancer-labs/v2-interfaces/contracts/liquidity-mining/IFeeDistributor.sol";
-import "@balancer-labs/v2-interfaces/contracts/liquidity-mining/IVotingEscrow.sol";
+import {IFeeDistributor} from "./interfaces/IFeeDistributor.sol";
+import {IVotingEscrow} from "balancer-labs/v2-interfaces/liquidity-mining/IVotingEscrow.sol";
 
-import "@balancer-labs/v2-solidity-utils/contracts/openzeppelin/ReentrancyGuard.sol";
-import "@balancer-labs/v2-solidity-utils/contracts/helpers/OptionalOnlyCaller.sol";
-import "@balancer-labs/v2-solidity-utils/contracts/helpers/InputHelpers.sol";
-import "@balancer-labs/v2-solidity-utils/contracts/openzeppelin/SafeERC20.sol";
-import "@balancer-labs/v2-solidity-utils/contracts/openzeppelin/SafeMath.sol";
-import "@balancer-labs/v2-solidity-utils/contracts/math/Math.sol";
+import {ReentrancyGuard} from "openzeppelin-contracts/security/ReentrancyGuard.sol";
+import {OptionalOnlyCaller} from "../utils/OptionalOnlyCaller.sol";
+import {InputHelpers} from "../utils/InputHelpers.sol";
+import {SafeERC20, IERC20} from "openzeppelin-contracts/token/ERC20/utils/SafeERC20.sol";
+import {SafeMath} from "openzeppelin-contracts/utils/math/SafeMath.sol";
+import {Math} from "openzeppelin-contracts/utils/math/Math.sol";
+import {EIP712} from "openzeppelin-contracts/utils/cryptography/EIP712.sol";
 
 // solhint-disable not-rely-on-time
+// solhint-disable ordering
 
 /**
  * @title Fee Distributor
@@ -351,7 +351,8 @@ contract FeeDistributor is IFeeDistributor, OptionalOnlyCaller, ReentrancyGuard 
     /**
      * @dev Calculate the amount of `token` to be distributed to `_votingEscrow` holders since the last checkpoint.
      */
-    function _checkpointToken(IERC20 token, bool force) internal {
+    // solhint-disable-next-line function-max-lines
+    function _checkpointToken(IERC20 token, bool force) internal { // solhint-disable-line code-complexity
         TokenState storage tokenState = _tokenState[token];
         uint256 lastTokenTime = tokenState.timeCursor;
         uint256 timeSinceLastCheckpoint;
@@ -438,7 +439,8 @@ contract FeeDistributor is IFeeDistributor, OptionalOnlyCaller, ReentrancyGuard 
     /**
      * @dev Cache the `user`'s balance of `_votingEscrow` at the beginning of each new week
      */
-    function _checkpointUserBalance(address user) internal {
+    // solhint-disable-next-line function-max-lines
+    function _checkpointUserBalance(address user) internal { // solhint-disable-line code-complexity
         uint256 maxUserEpoch = _votingEscrow.user_point_epoch(user);
 
         // If user has no epochs then they have never locked veBAL.

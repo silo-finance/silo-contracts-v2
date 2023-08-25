@@ -12,12 +12,13 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-pragma solidity >=0.7.0 <0.9.0;
-pragma experimental ABIEncoderV2;
+pragma solidity 0.8.19;
 
-import "../solidity-utils/openzeppelin/IERC20.sol";
+import {IERC20} from "openzeppelin-contracts/token/ERC20/utils/SafeERC20.sol";
 
-import "./IVotingEscrow.sol";
+import {IVotingEscrow} from "balancer-labs/v2-interfaces/liquidity-mining/IVotingEscrow.sol";
+
+// solhint-disable ordering
 
 /**
  * @title Fee Distributor
