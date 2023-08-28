@@ -15,24 +15,18 @@
 pragma solidity >=0.7.0 <0.9.0;
 pragma experimental ABIEncoderV2;
 
-import "./IAuthorizerAdaptorEntrypoint.sol";
 import "./IGaugeController.sol";
 import "./ILiquidityGauge.sol";
 import "./ILiquidityGaugeFactory.sol";
 import "./IStakingLiquidityGauge.sol";
 
-interface IGaugeAdder is IAuthentication {
+interface IGaugeAdder {
     // Deprecated. TODO: remove from interfaces, and remove references.
     enum GaugeType { LiquidityMiningCommittee, veBAL, Ethereum, Polygon, Arbitrum, Optimism, Gnosis, ZKSync }
 
     // String values are hashed when indexed, so we also emit the raw string as a data field for ease of use.
     event GaugeTypeAdded(string indexed indexedGaugeType, string gaugeType);
     event GaugeFactorySet(string indexed indexedGaugeType, string gaugeType, ILiquidityGaugeFactory gaugeFactory);
-
-    /**
-     * @notice Returns the address of the Authorizer adaptor entrypoint contract.
-     */
-    function getAuthorizerAdaptorEntrypoint() external view returns (IAuthorizerAdaptorEntrypoint);
 
     /**
      * @notice Returns the address of the Gauge Controller

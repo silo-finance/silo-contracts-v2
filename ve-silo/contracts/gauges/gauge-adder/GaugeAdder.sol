@@ -17,13 +17,11 @@ pragma experimental ABIEncoderV2;
 
 import "@balancer-labs/v2-interfaces/contracts/liquidity-mining/IGaugeAdder.sol";
 import "@balancer-labs/v2-interfaces/contracts/liquidity-mining/IStakingLiquidityGauge.sol";
-import "@balancer-labs/v2-interfaces/contracts/vault/IVault.sol";
 
-import "@balancer-labs/v2-solidity-utils/contracts/helpers/SingletonAuthentication.sol";
+import {Ownable2Step} from "openzeppelin-contracts/access/Ownable2Step.sol";
 import "@balancer-labs/v2-solidity-utils/contracts/openzeppelin/ReentrancyGuard.sol";
-import "@balancer-labs/v2-solidity-utils/contracts/helpers/Authentication.sol";
 
-contract GaugeAdder is IGaugeAdder, SingletonAuthentication, ReentrancyGuard {
+contract GaugeAdder is IGaugeAdder, Ownable2Step, ReentrancyGuard {
     // This is the gauge type as used in the GaugeController for Ethereum gauges, which we'll use for all gauges of all
     // networks from now on.
     int128 private constant _ETHEREUM_GAUGE_CONTROLLER_TYPE = 2;
@@ -31,7 +29,6 @@ contract GaugeAdder is IGaugeAdder, SingletonAuthentication, ReentrancyGuard {
     bytes32 private immutable _ethereum = keccak256(abi.encodePacked("Ethereum"));
     IGaugeController private immutable _gaugeController;
     IERC20 private immutable _balWethBpt;
-    IAuthorizerAdaptorEntrypoint private _authorizerAdaptorEntrypoint;
 
     // Registered gauge types. Append-only.
     string[] private _gaugeTypes;
@@ -39,11 +36,9 @@ contract GaugeAdder is IGaugeAdder, SingletonAuthentication, ReentrancyGuard {
     // Mapping from gauge type to address of approved factory for that type
     mapping(string => ILiquidityGaugeFactory) private _gaugeTypeFactory;
 
-    constructor(IGaugeController gaugeController, IAuthorizerAdaptorEntrypoint authorizerAdaptorEntrypoint)
-        SingletonAuthentication(gaugeController.admin().getVault())
+    constructor(IGaugeController gaugeController)
     {
         _gaugeController = gaugeController;
-        _authorizerAdaptorEntrypoint = authorizerAdaptorEntrypoint;
 
         // Cache the BAL 80 WETH 20 BPT on this contract.
         _balWethBpt = gaugeController.token();
@@ -52,11 +47,6 @@ contract GaugeAdder is IGaugeAdder, SingletonAuthentication, ReentrancyGuard {
     modifier withValidGaugeType(string memory gaugeType) {
         require(_isValidGaugeType(gaugeType), "Invalid gauge type");
         _;
-    }
-
-    /// @inheritdoc IGaugeAdder
-    function getAuthorizerAdaptorEntrypoint() external view override returns (IAuthorizerAdaptorEntrypoint) {
-        return _authorizerAdaptorEntrypoint;
     }
 
     /// @inheritdoc IGaugeAdder
@@ -109,7 +99,7 @@ contract GaugeAdder is IGaugeAdder, SingletonAuthentication, ReentrancyGuard {
     // Admin Functions
 
     /// @inheritdoc IGaugeAdder
-    function addGaugeType(string memory gaugeType) external override authenticate {
+    function addGaugeType(string memory gaugeType) external override onlyOwner {
         require(bytes(gaugeType).length > 0, "Gauge type cannot be empty");
         require(!_isValidGaugeType(gaugeType), "Gauge type already added");
 
@@ -122,7 +112,7 @@ contract GaugeAdder is IGaugeAdder, SingletonAuthentication, ReentrancyGuard {
     function addGauge(address gauge, string memory gaugeType)
         external
         override
-        authenticate
+        onlyOwner
         withValidGaugeType(gaugeType)
     {
         if (keccak256(abi.encodePacked(gaugeType)) == _ethereum) {
@@ -137,7 +127,7 @@ contract GaugeAdder is IGaugeAdder, SingletonAuthentication, ReentrancyGuard {
     function setGaugeFactory(ILiquidityGaugeFactory factory, string memory gaugeType)
         external
         override
-        authenticate
+        onlyOwner
         withValidGaugeType(gaugeType)
     {
         // Sanity check that calling `isGaugeFromFactory` won't revert
