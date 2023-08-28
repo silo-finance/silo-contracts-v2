@@ -46,6 +46,6 @@ test = 'silo-oracles/test'
 broadcast = 'silo-oracles/broadcast'
 
 [rpc_endpoints]
-mainnet = "${RPC_MAINNET}"
+mainnet = "${vars.RPC_MAINNET}"
 
 # See more config options https://github.com/foundry-rs/foundry/tree/master/config
