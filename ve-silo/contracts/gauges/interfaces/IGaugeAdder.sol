@@ -20,9 +20,6 @@ import {ILiquidityGaugeFactory} from "./ILiquidityGaugeFactory.sol";
 // solhint-disable ordering
 
 interface IGaugeAdder {
-    // Deprecated. TODO: remove from interfaces, and remove references.
-    enum GaugeType { LiquidityMiningCommittee, veBAL, Ethereum, Polygon, Arbitrum, Optimism, Gnosis, ZKSync }
-
     // String values are hashed when indexed, so we also emit the raw string as a data field for ease of use.
     event GaugeTypeAdded(string indexed indexedGaugeType, string gaugeType);
     event GaugeFactorySet(string indexed indexedGaugeType, string gaugeType, ILiquidityGaugeFactory gaugeFactory);

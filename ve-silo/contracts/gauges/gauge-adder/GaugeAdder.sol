@@ -22,11 +22,10 @@ import {ReentrancyGuard} from "openzeppelin-contracts/security/ReentrancyGuard.s
 // solhint-disable ordering
 
 contract GaugeAdder is IGaugeAdder, Ownable2Step, ReentrancyGuard {
-    // This is the gauge type as used in the GaugeController for Ethereum gauges, which we'll use for all gauges of all
-    // networks from now on.
-    int128 private constant _ETHEREUM_GAUGE_CONTROLLER_TYPE = 2;
+    // This is the gauge type as used in the GaugeController for Ethereum gauges,
+    // which we'll use for all gauges of all networks.
+    int128 private constant _ETHEREUM_GAUGE_CONTROLLER_TYPE = 1;
 
-    bytes32 private immutable _ethereum = keccak256(abi.encodePacked("Ethereum"));
     IGaugeController private immutable _gaugeController;
 
     // Registered gauge types. Append-only.
