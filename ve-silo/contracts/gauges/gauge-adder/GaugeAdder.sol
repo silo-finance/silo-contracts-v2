@@ -123,7 +123,7 @@ contract GaugeAdder is IGaugeAdder, Ownable2Step, ReentrancyGuard {
     {
         // Sanity check that calling `isGaugeFromFactory` won't revert
         require(
-            (factory == ILiquidityGaugeFactory(0)) || (!factory.isGaugeFromFactory(address(0))),
+            (factory == ILiquidityGaugeFactory(address(0))) || (!factory.isGaugeFromFactory(address(0))),
             "Invalid factory implementation"
         );
 
@@ -136,7 +136,7 @@ contract GaugeAdder is IGaugeAdder, Ownable2Step, ReentrancyGuard {
 
     function _isGaugeFromValidFactory(address gauge, string memory gaugeType) internal view returns (bool) {
         ILiquidityGaugeFactory gaugeFactory = _gaugeTypeFactory[gaugeType];
-        return gaugeFactory == ILiquidityGaugeFactory(0) ? false : gaugeFactory.isGaugeFromFactory(gauge);
+        return gaugeFactory == ILiquidityGaugeFactory(address(0)) ? false : gaugeFactory.isGaugeFromFactory(gauge);
     }
 
     /**
@@ -146,10 +146,7 @@ contract GaugeAdder is IGaugeAdder, Ownable2Step, ReentrancyGuard {
         require(_isGaugeFromValidFactory(gauge, gaugeType), "Invalid gauge");
 
         // `_gaugeController` enforces that duplicate gauges may not be added so we do not need to check here.
-        _authorizerAdaptorEntrypoint.performAction(
-            address(_gaugeController),
-            abi.encodeWithSelector(IGaugeController.add_gauge.selector, gauge, _ETHEREUM_GAUGE_CONTROLLER_TYPE)
-        );
+        _gaugeController.add_gauge(gauge, _ETHEREUM_GAUGE_CONTROLLER_TYPE);
     }
 
     function _isValidGaugeType(string memory gaugeType) internal view returns (bool) {
