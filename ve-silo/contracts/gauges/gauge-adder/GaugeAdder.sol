@@ -16,7 +16,6 @@ pragma solidity ^0.7.0;
 pragma experimental ABIEncoderV2;
 
 import "@balancer-labs/v2-interfaces/contracts/liquidity-mining/IGaugeAdder.sol";
-import "@balancer-labs/v2-interfaces/contracts/liquidity-mining/IStakingLiquidityGauge.sol";
 
 import {Ownable2Step} from "openzeppelin-contracts/access/Ownable2Step.sol";
 import "@balancer-labs/v2-solidity-utils/contracts/openzeppelin/ReentrancyGuard.sol";
@@ -28,7 +27,6 @@ contract GaugeAdder is IGaugeAdder, Ownable2Step, ReentrancyGuard {
 
     bytes32 private immutable _ethereum = keccak256(abi.encodePacked("Ethereum"));
     IGaugeController private immutable _gaugeController;
-    IERC20 private immutable _balWethBpt;
 
     // Registered gauge types. Append-only.
     string[] private _gaugeTypes;
@@ -39,9 +37,6 @@ contract GaugeAdder is IGaugeAdder, Ownable2Step, ReentrancyGuard {
     constructor(IGaugeController gaugeController)
     {
         _gaugeController = gaugeController;
-
-        // Cache the BAL 80 WETH 20 BPT on this contract.
-        _balWethBpt = gaugeController.token();
     }
 
     modifier withValidGaugeType(string memory gaugeType) {
@@ -115,11 +110,6 @@ contract GaugeAdder is IGaugeAdder, Ownable2Step, ReentrancyGuard {
         onlyOwner
         withValidGaugeType(gaugeType)
     {
-        if (keccak256(abi.encodePacked(gaugeType)) == _ethereum) {
-            IERC20 pool = IStakingLiquidityGauge(gauge).lp_token();
-            require(pool != _balWethBpt, "Cannot add gauge for 80/20 BAL-WETH BPT");
-        }
-
         _addGauge(gauge, gaugeType);
     }
 

@@ -18,7 +18,6 @@ pragma experimental ABIEncoderV2;
 import "./IGaugeController.sol";
 import "./ILiquidityGauge.sol";
 import "./ILiquidityGaugeFactory.sol";
-import "./IStakingLiquidityGauge.sol";
 
 interface IGaugeAdder {
     // Deprecated. TODO: remove from interfaces, and remove references.
