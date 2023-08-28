@@ -12,13 +12,14 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-pragma solidity ^0.7.0;
-pragma experimental ABIEncoderV2;
+pragma solidity 0.8.19;
 
-import "@balancer-labs/v2-interfaces/contracts/liquidity-mining/IGaugeAdder.sol";
+import {IGaugeAdder, ILiquidityGaugeFactory, IGaugeController} from "../interfaces/IGaugeAdder.sol";
 
 import {Ownable2Step} from "openzeppelin-contracts/access/Ownable2Step.sol";
-import "@balancer-labs/v2-solidity-utils/contracts/openzeppelin/ReentrancyGuard.sol";
+import {ReentrancyGuard} from "openzeppelin-contracts/security/ReentrancyGuard.sol";
+
+// solhint-disable ordering
 
 contract GaugeAdder is IGaugeAdder, Ownable2Step, ReentrancyGuard {
     // This is the gauge type as used in the GaugeController for Ethereum gauges, which we'll use for all gauges of all
