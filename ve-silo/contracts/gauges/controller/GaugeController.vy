@@ -55,6 +55,8 @@ event NewGauge:
     gauge_type: int128
     weight: uint256
 
+event NewGaugeAdder:
+    addr: address
 
 MULTIPLIER: constant(uint256) = 10 ** 18
 
@@ -99,6 +101,7 @@ time_total: public(uint256)  # last scheduled time
 points_type_weight: public(HashMap[int128, HashMap[uint256, uint256]])  # type_id -> time -> type weight
 time_type_weight: public(uint256[1000000000])  # type_id -> last scheduled time (next week)
 
+gauge_adder: public(address) # An address that can add gauges
 
 @external
 def __init__(_voting_escrow: address, _authorizer_adaptor: address):
@@ -287,7 +290,7 @@ def add_gauge(addr: address, gauge_type: int128, weight: uint256 = 0):
     @param gauge_type Gauge type
     @param weight Gauge weight
     """
-    assert msg.sender == AUTHORIZER_ADAPTOR
+    assert msg.sender == self.gauge_adder
     assert (gauge_type >= 0) and (gauge_type < self.n_gauge_types)
     assert self.gauge_types_[addr] == 0  # dev: cannot add the same gauge twice
 
@@ -333,6 +336,20 @@ def checkpoint_gauge(addr: address):
     """
     self._get_weight(addr)
     self._get_total()
+
+
+@external
+def set_gauge_adder(addr: address):
+    """
+    @notice Update a gauge adder
+    @param addr Gauge adder address
+    """
+    assert msg.sender == AUTHORIZER_ADAPTOR
+    assert addr != self.gauge_adder
+
+    self.gauge_adder = addr
+
+    log NewGaugeAdder(addr)
 
 
 @internal
