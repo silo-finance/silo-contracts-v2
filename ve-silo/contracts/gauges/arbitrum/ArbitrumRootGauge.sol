@@ -17,7 +17,7 @@ pragma solidity 0.8.19;
 import {IArbitrumFeeProvider} from "balancer-labs/v2-interfaces/liquidity-mining/IArbitrumFeeProvider.sol";
 import {SafeERC20, IERC20} from "openzeppelin-contracts/token/ERC20/utils/SafeERC20.sol";
 
-import {StakelessGauge, IMainnetBalancerMinter} from "../StakelessGauge.sol";
+import {StakelessGauge, Ownable2Step, IMainnetBalancerMinter} from "../StakelessGauge.sol";
 import {IGatewayRouter} from "./IGatewayRouter.sol";
 
 contract ArbitrumRootGauge is StakelessGauge {
@@ -42,6 +42,9 @@ contract ArbitrumRootGauge is StakelessGauge {
         __StakelessGauge_init(relativeWeightCap);
 
         _setCheckpointer(checkpointer);
+
+        // Transfer ownership to the Factory's owner (DAO)
+        _transferOwnership(Ownable2Step(msg.sender).owner());
 
         _recipient = recipient;
     }
