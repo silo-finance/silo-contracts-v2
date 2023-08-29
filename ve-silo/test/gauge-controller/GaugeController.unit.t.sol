@@ -11,7 +11,17 @@ import {VeSiloContracts} from "ve-silo/deploy/_CommonDeploy.sol";
 
 // FOUNDRY_PROFILE=ve-silo forge test --mc GaugeControllerTest --ffi -vvv
 contract GaugeControllerTest is IntegrationTest {
+    string constant internal _ETHEREUM = "Ethereum";
+    int128 constant internal _GAUGE_TYPE = 0;
+    uint256 constant internal _GAUGE_WEIGHT = 0;
+
     IGaugeController internal _controller;
+
+    address internal _gaugeAdder = makeAddr("GaugeAdder");
+    address internal _gauge = makeAddr("Gauge");
+
+    event NewGaugeAdder(address addr);
+    event NewGauge(address addr, int128 gaugeType, uint256 weight);
 
     function setUp() public {
         SiloGovernorDeploy _governanceDeploymentScript = new SiloGovernorDeploy();
@@ -41,6 +51,36 @@ contract GaugeControllerTest is IntegrationTest {
             getDeployedAddress(VeSiloContracts.TIMELOCK_CONTROLLER),
             "TimelockController should be an admin"
         );
+    }
+
+    function testOnlyOnwerCanSetGaugeAdder() public {
+        vm.expectRevert();
+        _controller.set_gauge_adder(_gaugeAdder);
+
+        vm.expectEmit(false, false, false, true);
+        emit NewGaugeAdder(_gaugeAdder);
+
+        vm.prank(getDeployedAddress(VeSiloContracts.TIMELOCK_CONTROLLER));
+        _controller.set_gauge_adder(_gaugeAdder);
+    }
+
+    function testOnlyGaugeAdderCanAddGauge() public {
+        vm.prank(getDeployedAddress(VeSiloContracts.TIMELOCK_CONTROLLER));
+        _controller.add_type(_ETHEREUM, _GAUGE_WEIGHT);
+
+        // should fail for an owner
+        vm.prank(getDeployedAddress(VeSiloContracts.TIMELOCK_CONTROLLER));
+        vm.expectRevert();
+        _controller.add_gauge(_gauge, _GAUGE_TYPE);
+
+        vm.prank(getDeployedAddress(VeSiloContracts.TIMELOCK_CONTROLLER));
+        _controller.set_gauge_adder(_gaugeAdder);
+
+        vm.expectEmit(false, true, true, true);
+        emit NewGauge(_gauge, _GAUGE_TYPE, _GAUGE_WEIGHT);
+
+        vm.prank(_gaugeAdder);
+        _controller.add_gauge(_gauge, _GAUGE_TYPE);
     }
 
     function _dummySiloToken() internal {

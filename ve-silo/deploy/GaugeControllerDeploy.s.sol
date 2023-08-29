@@ -10,7 +10,7 @@ FOUNDRY_PROFILE=ve-silo \
     --ffi --broadcast --rpc-url http://127.0.0.1:8545
  */
 contract GaugeControllerDeploy is CommonDeploy {
-    string internal constant _BASE_DIR = "external/balancer-v2-monorepo/pkg/liquidity-mining/contracts";
+    string internal constant _BASE_DIR = "ve-silo/contracts/gauges/controller";
 
     function run() public returns (IGaugeController gaugeController) {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
