@@ -37,9 +37,11 @@ contract ArbitrumRootGauge is StakelessGauge {
 
     // solhint-disable ordering
 
-    function initialize(address recipient, uint256 relativeWeightCap) external {
+    function initialize(address recipient, uint256 relativeWeightCap, address checkpointer) external {
         // This will revert in all calls except the first one
         __StakelessGauge_init(relativeWeightCap);
+
+        _setCheckpointer(checkpointer);
 
         _recipient = recipient;
     }
