@@ -1,4 +1,4 @@
-# @version 0.3.1
+# @version 0.3.7
 """
 @title Gauge Controller
 @author Curve Finance
@@ -107,8 +107,8 @@ def __init__(_voting_escrow: address, _authorizer_adaptor: address):
     @param _voting_escrow `VotingEscrow` contract address
     @param _authorizer_adaptor `AuthorizerAdaptor` contract address
     """
-    assert _voting_escrow != ZERO_ADDRESS
-    assert _authorizer_adaptor != ZERO_ADDRESS
+    assert _voting_escrow != empty(address)
+    assert _authorizer_adaptor != empty(address)
 
     TOKEN = VotingEscrow(_voting_escrow).token()
     VOTING_ESCROW = _voting_escrow
@@ -499,8 +499,8 @@ def _vote_for_gauge_weights(_user: address, _gauge_addr: address, _user_weight: 
     old_bias: uint256 = old_slope.slope * old_dt
     new_slope: VotedSlope = VotedSlope({
         slope: slope * _user_weight / 10000,
-        end: lock_end,
-        power: _user_weight
+        power: _user_weight,
+        end: lock_end
     })
     new_dt: uint256 = lock_end - next_time  # dev: raises when expired
     new_bias: uint256 = new_slope.slope * new_dt
@@ -548,7 +548,7 @@ def _vote_for_gauge_weights(_user: address, _gauge_addr: address, _user_weight: 
 @nonreentrant('lock')
 def vote_for_many_gauge_weights(_gauge_addrs: address[8], _user_weight: uint256[8]):
     for i in range(8):
-        if _gauge_addrs[i] == ZERO_ADDRESS:
+        if _gauge_addrs[i] == empty(address):
             break
         self._vote_for_gauge_weights(msg.sender, _gauge_addrs[i], _user_weight[i])
 
