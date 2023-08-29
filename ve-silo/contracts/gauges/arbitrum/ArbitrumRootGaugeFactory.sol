@@ -26,6 +26,8 @@ contract ArbitrumRootGaugeFactory is IArbitrumFeeProvider, BaseGaugeFactory, Own
     uint64 private _gasPrice;
     uint64 private _maxSubmissionCost;
 
+    address private _checkpointer;
+
     event ArbitrumFeesModified(uint256 gasLimit, uint256 gasPrice, uint256 maxSubmissionCost);
 
     constructor(
@@ -33,11 +35,13 @@ contract ArbitrumRootGaugeFactory is IArbitrumFeeProvider, BaseGaugeFactory, Own
         IGatewayRouter gatewayRouter,
         uint64 gasLimit,
         uint64 gasPrice,
-        uint64 maxSubmissionCost
+        uint64 maxSubmissionCost,
+        address checkpointer
     ) BaseGaugeFactory(address(new ArbitrumRootGauge(minter, gatewayRouter))) {
         _gasLimit = gasLimit;
         _gasPrice = gasPrice;
         _maxSubmissionCost = maxSubmissionCost;
+        _checkpointer = checkpointer;
     }
 
     // solhint-disable ordering
@@ -70,7 +74,7 @@ contract ArbitrumRootGaugeFactory is IArbitrumFeeProvider, BaseGaugeFactory, Own
      */
     function create(address recipient, uint256 relativeWeightCap) external returns (address) {
         address gauge = _create();
-        ArbitrumRootGauge(gauge).initialize(recipient, relativeWeightCap);
+        ArbitrumRootGauge(gauge).initialize(recipient, relativeWeightCap, _checkpointer);
         return gauge;
     }
 
