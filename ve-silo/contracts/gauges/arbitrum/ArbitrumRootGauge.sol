@@ -17,7 +17,7 @@ pragma solidity 0.8.19;
 import {IArbitrumFeeProvider} from "balancer-labs/v2-interfaces/liquidity-mining/IArbitrumFeeProvider.sol";
 import {SafeERC20, IERC20} from "openzeppelin-contracts/token/ERC20/utils/SafeERC20.sol";
 
-import {StakelessGauge, Ownable2Step, IMainnetBalancerMinter} from "../StakelessGauge.sol";
+import {StakelessGauge, Ownable2Step, IMainnetBalancerMinter} from "../stakeless-gauge/StakelessGauge.sol";
 import {IGatewayRouter} from "./IGatewayRouter.sol";
 
 contract ArbitrumRootGauge is StakelessGauge {
