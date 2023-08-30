@@ -91,3 +91,16 @@
 - Bumped solidity to 0.8.19 and updated imports. Some imports were removed as they were not used ([3bebd3c](https://github.com/silo-finance/silo-contracts-v2/pull/63/commits/3bebd3c9d6f4bd551900b7004e92aee7e4171c0b))
 
 - Copy of Balancer's implementation of the ArbitrumRootGaugeFactory.sol ([0980dbe](https://github.com/silo-finance/silo-contracts-v2/pull/63/commits/0980dbe5b7a875ec329a45e453b4c1e25708a907))
+
+### gauge-adder/GaugeAdder.sol
+- Removed gauge types as they were deprecated ([0ea9da8](https://github.com/silo-finance/silo-contracts-v2/pull/66/commits/0ea9da87c6827ed73211bb266aa183a7a71d82ec))
+
+- Refactored `_addGauge` fn, fixed data types conversion ([0faa476](https://github.com/silo-finance/silo-contracts-v2/pull/66/commits/0faa476b4422be322d44ffa5701bb08829013493))
+
+- Bumped solidity to 0.8.19 and updated imports. Some imports were removed as they were not used ([6177204](https://github.com/silo-finance/silo-contracts-v2/pull/66/commits/617720407034bf9ef324908eac900afd09f4dc6a))
+
+- Removed verification of the gauge LP token while adding a gauge, as gauges will be created only for the Silo share tokens ([c23d305](https://github.com/silo-finance/silo-contracts-v2/pull/66/commits/c23d3057199a85a32297b8095c203a0519bc350b))
+
+- Changed ownership system for GaugeAdder. Replaced SingletonAuthentication with Ownable2Step ([6b8206f](https://github.com/silo-finance/silo-contracts-v2/pull/66/commits/6b8206ff6a538cdacde7b3d90269d04b64c46b91))
+
+- Copy of Balancer's implementation of the GaugeAdder.sol ([fa25615](https://github.com/silo-finance/silo-contracts-v2/pull/66/commits/fa256150b70ff6cf222f39d26b52a5fb90788e6f))
