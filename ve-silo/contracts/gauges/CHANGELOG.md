@@ -11,6 +11,14 @@
 
 - Copy of Balancer's implementation of the LiquidityGauge.vy ([bac7082](https://github.com/silo-finance/silo-contracts-v2/pull/34/commits/bac708248757c313a2f0c47c6dee0bd91ddaf531))
 
+### controller/GaugeController.sol
+
+- Introduced a `Gauge Adder` role, which can be set by an `AUTHORIZER_ADAPTOR` and is eligible to add gauge into the gauge controller ([4aacd41](https://github.com/silo-finance/silo-contracts-v2/pull/69/commits/4aacd41da29853662f3391e4826af4fd207adde4))
+
+- Bumped vyper to 0.3.7 ([db7ad37](https://github.com/silo-finance/silo-contracts-v2/pull/69/commits/db7ad3739e4ac02dd7556b58d64a933b7744691b))
+
+- Copy of Balancer's implementation of the GaugeController.vy ([a9562fe](https://github.com/silo-finance/silo-contracts-v2/pull/69/commits/a9562fee86534cc563b23bd7ea663292af85eec8))
+
 ### ethereum/LiquidityGaugeFactory.sol
 
 - solhint-disable ordering for BaseGaugeFactory ([420307b](https://github.com/silo-finance/silo-contracts-v2/pull/34/commits/420307bfeae951a74f04d8d8e82507ea35d412bb))

@@ -195,20 +195,22 @@ contract MainnetTest is IntegrationTest {
     }
 
     function _addGauge(address _gauge) internal {
-        address[] memory targets = new address[](2);
+        address[] memory targets = new address[](3);
         targets[0] = address(_gaugeController);
         targets[1] = address(_gaugeController);
+        targets[2] = address(_gaugeController);
 
         // Empty values
-        uint256[] memory values = new uint256[](2);
+        uint256[] memory values = new uint256[](3);
 
         // Functions inputs
-        bytes[] memory calldatas = new bytes[](2);
+        bytes[] memory calldatas = new bytes[](3);
         
         string memory gaugeTypeName = new string(64);
         gaugeTypeName = "Mainnet gauge";
         calldatas[0] = abi.encodeWithSignature("add_type(string,uint256)", gaugeTypeName, 1e18);
-        calldatas[1] = abi.encodeWithSignature("add_gauge(address,int128)", _gauge, 0);
+        calldatas[1] = abi.encodeWithSignature("set_gauge_adder(address)", address(_timelock));
+        calldatas[2] = abi.encodeWithSignature("add_gauge(address,int128)", _gauge, 0);
 
         _executeProposal(targets, values, calldatas);
 
