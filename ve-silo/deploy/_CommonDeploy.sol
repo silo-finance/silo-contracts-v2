@@ -31,6 +31,7 @@ library VeSiloContracts {
     string public constant ARBITRUM_ROOT_GAUGE_FACTORY = "ArbitrumRootGaugeFactory.sol";
     string public constant FEES_DISTRIBUTOR = "FeesDistributor.sol";
     string public constant GAUGE_ADDER = "GaugeAdder.sol";
+    string public constant STAKELESS_GAUGE_CHECKPOINTER = "StakelessGaugeCheckpointer.sol";
 }
 
 contract VeSiloAddresses is AddressesCollection {

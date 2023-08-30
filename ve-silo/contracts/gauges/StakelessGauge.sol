@@ -18,7 +18,7 @@ import {IERC20} from "balancer-labs/v2-interfaces/solidity-utils/openzeppelin/IE
 import {IBalancerTokenAdmin} from "ve-silo/contracts/silo-tokens-minter/interfaces/IBalancerTokenAdmin.sol";
 import {IGaugeController} from "ve-silo/contracts/gauges/interfaces/IGaugeController.sol";
 import {IMainnetBalancerMinter} from "ve-silo/contracts/silo-tokens-minter/interfaces/IMainnetBalancerMinter.sol";
-import {IStakelessGauge} from "balancer-labs/v2-interfaces/liquidity-mining/IStakelessGauge.sol";
+import {IStakelessGauge} from "./interfaces/IStakelessGauge.sol";
 
 import {Math} from "openzeppelin-contracts/utils/math/Math.sol";
 import {ReentrancyGuard} from "openzeppelin-contracts/security/ReentrancyGuard.sol";
@@ -34,6 +34,7 @@ abstract contract StakelessGauge is IStakelessGauge, ReentrancyGuard, Ownable2St
     IGaugeController private immutable _gaugeController;
 
     event Checkpoint(uint256 indexed periodTime, uint256 periodEmissions);
+    event NewCheckpointer(address checkpointer);
 
     // solhint-disable var-name-mixedcase
     uint256 private immutable _RATE_REDUCTION_TIME;
@@ -49,6 +50,8 @@ abstract contract StakelessGauge is IStakelessGauge, ReentrancyGuard, Ownable2St
     bool private _isKilled;
 
     uint256 private _relativeWeightCap;
+
+    address private _checkpointer;
 
     constructor(IMainnetBalancerMinter minter) {
         IBalancerTokenAdmin tokenAdmin = IBalancerTokenAdmin(minter.getBalancerTokenAdmin());
@@ -85,7 +88,9 @@ abstract contract StakelessGauge is IStakelessGauge, ReentrancyGuard, Ownable2St
     }
 
     // solhint-disable function-max-lines
-    function checkpoint() external payable override nonReentrant onlyOwner returns (bool) {
+    function checkpoint() external payable override nonReentrant returns (bool) {
+        require(msg.sender == _checkpointer, "Only checkpointer");
+
         uint256 lastPeriod = _period;
         uint256 currentPeriod = _currentPeriod();
 
@@ -142,6 +147,18 @@ abstract contract StakelessGauge is IStakelessGauge, ReentrancyGuard, Ownable2St
         return true;
     }
 
+    function setCheckpointer(address newCheckpointer) external onlyOwner {
+        _setCheckpointer(newCheckpointer);
+    }
+
+    function _setCheckpointer(address newCheckpointer) internal {
+        require(_checkpointer != newCheckpointer, "Checkpointer address the same");
+
+        _checkpointer = newCheckpointer;
+
+        emit NewCheckpointer(_checkpointer);
+    }
+
     function _currentPeriod() internal view returns (uint256) {
         // solhint-disable-next-line not-rely-on-time
         return (block.timestamp / 1 weeks) - 1;
@@ -184,6 +201,10 @@ abstract contract StakelessGauge is IStakelessGauge, ReentrancyGuard, Ownable2St
 
     function getRelativeWeightCap() external view override returns (uint256) {
         return _relativeWeightCap;
+    }
+
+    function getCheckpointer() external view returns (address) {
+        return _checkpointer;
     }
 
     function getCappedRelativeWeight(uint256 time) public view override returns (uint256) {
