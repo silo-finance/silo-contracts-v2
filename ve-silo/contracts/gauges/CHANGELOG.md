@@ -84,7 +84,18 @@
 
 - Copy of Balancer's implementation of the StakelessGauge.sol ([c731307](https://github.com/silo-finance/silo-contracts-v2/pull/63/commits/c7313073b1ca24f4d75fd9f6e5eab3110489249a))
 
-### l2-common/ArbitrumRootGauge.sol
+### stakeless-gauge/StakelessGaugeCheckpointer.sol
+- Added `receive` fn to be able to receive leftover ETH from the `StakelessGaugeCheckpointerAdaptor` if there will be any ([7bddde6](https://github.com/silo-finance/silo-contracts-v2/pull/72/commits/7bddde63c1b895c5ec938a320468a53ca666379e))
+
+- Bumped solidity to 0.8.19, updated imports, and solhint ([f752edd](https://github.com/silo-finance/silo-contracts-v2/pull/72/commits/f752eddb5972cc99fc5d4dae3806c1287113bb83))
+
+- Changed ownership system for StakelessGauge. Replaced SingletonAuthentication with Ownable2Step ([a42ae4c](https://github.com/silo-finance/silo-contracts-v2/pull/72/commits/a42ae4ca7bfd1a76ad76251ede5b265fba7bfa87))
+
+- Replaced authorizerAdaptorEntrypoint with StakelessGaugeCheckpointerAdaptor ([6afed53](https://github.com/silo-finance/silo-contracts-v2/pull/72/commits/6afed5359eef99bb1367c21960412715542c14ef))
+
+- Copy of Balancer's implementation of the StakelessGaugeCheckpointer.sol ([5c7ea22](https://github.com/silo-finance/silo-contracts-v2/pull/72/commits/5c7ea225313e8a3b10ba809f47153271fcdac6fc))
+
+### arbitrum/ArbitrumRootGauge.sol
 - Updated and import of the StakelessGauge ([0181db7](https://github.com/silo-finance/silo-contracts-v2/pull/71/commits/0181db745f6e252033c879805fcd9e610b7609af))
 
 - Ownership transfer during initialization ([7864c5e](https://github.com/silo-finance/silo-contracts-v2/pull/70/commits/7864c5e9aec84c6a469c73162871fcadc82c2844))
@@ -95,7 +106,7 @@
 
 - Copy of Balancer's implementation of the ArbitrumRootGauge.sol ([07b58da](https://github.com/silo-finance/silo-contracts-v2/pull/63/commits/07b58da40203b8d6594b16130bc80550a4b4d465))
 
-### l2-common/ArbitrumRootGaugeFactory.sol
+### arbitrum/ArbitrumRootGaugeFactory.sol
 - `Checkpointer` initialization in the gauge during the gauge creation ([866f236](https://github.com/silo-finance/silo-contracts-v2/pull/70/commits/866f2368ad10f5d0f4e6ff253680d10590eb9cd1))
 
 - Changed ownership system for ArbitrumRootGaugeFactory. Replaced SingletonAuthentication with Ownable2Step ([6595183](https://github.com/silo-finance/silo-contracts-v2/pull/63/commits/659518311f8a73fe552848d25aeb3167eb753ce1))
