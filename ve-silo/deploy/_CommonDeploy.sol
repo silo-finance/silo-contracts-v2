@@ -32,6 +32,7 @@ library VeSiloContracts {
     string public constant FEES_DISTRIBUTOR = "FeesDistributor.sol";
     string public constant GAUGE_ADDER = "GaugeAdder.sol";
     string public constant STAKELESS_GAUGE_CHECKPOINTER = "StakelessGaugeCheckpointer.sol";
+    string public constant STAKELESS_GAUGE_CHECKPOINTER_ADAPTOR = "StakelessGaugeCheckpointerAdaptor.sol";
 }
 
 contract VeSiloAddresses is AddressesCollection {
