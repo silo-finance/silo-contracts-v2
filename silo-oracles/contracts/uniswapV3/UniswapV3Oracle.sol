@@ -5,61 +5,26 @@ pragma abicoder v2;
 import {Initializable} from  "openzeppelin-contracts-upgradeable@v3.4.2/proxy/Initializable.sol";
 import {OracleLibrary} from  "uniswap/v3-periphery/contracts/libraries/OracleLibrary.sol";
 import {IUniswapV3Pool} from  "uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
-import {ISiloOracle} from "silo-core/contracts/interface/ISiloOracle.sol";
-import {RevertBytes} from  "../lib/RevertBytes.sol";
 
-contract UniswapV3Oracle is ISiloOracle, Initializable {
+import {ISiloOracle} from "silo-core/contracts/interface/ISiloOracle.sol";
+
+import {RevertBytes} from  "../lib/RevertBytes.sol";
+import {IUniswapV3Oracle} from "../interfaces/IUniswapV3Oracle.sol";
+import {UniswapV3OracleConfig} from "./UniswapV3OracleConfig.sol";
+
+contract UniswapV3Oracle is ISiloOracle, IUniswapV3Oracle, Initializable {
     using RevertBytes for bytes;
 
-    /// @dev It is assumed that this contract will be deployed once per blockchain so blockTime can safely use
-    /// immutable variable even thought it is used as implemencation contract for a proxy.
-    uint8 immutable public blockTime;
+    bytes32 public constant OLD_ERROR_HASH = keccak256(abi.encodeWithSignature("Error(string)", "OLD"));
 
-    /// @dev UniV3 pool address that is used for TWAP price
-    IUniswapV3Pool public pool;
+    /// @dev deployment with configuration setup, can not be immutable because it is initialized
+    UniswapV3OracleConfig public oracleConfig;
 
-    /// @dev Asset for which oracle was deployed
-    address public override baseToken;
+    /// @param _configAddress UniswapV3OracleConfig address
+    function initialize(UniswapV3OracleConfig _configAddress) external virtual initializer {
+        oracleConfig = _configAddress;
 
-    /// @dev Asset in which oracle denominates its price
-    address public override quoteToken;
-
-    /// @dev TWAP period in seconds
-    uint32 public periodForAvgPrice;
-
-    bytes32 private constant _OLD_ERROR_HASH = keccak256(abi.encodeWithSignature("Error(string)", "OLD"));
-
-    /// @dev block time is used to estimate the average number of blocks minted in `periodForAvgPrice`
-    /// block time tends to go down (not up), temporary deviations are not important
-    /// Ethereum's block time is almost never higher than ~15 sec, so in practice we shouldn't need to set it above that
-    /// 60 was chosen as an arbitrary maximum just to prevent human errors
-    uint256 public constant MAX_ACCEPTED_BLOCK_TIME = 60;
-
-    /// @notice Emitted when TWAP period changes
-    /// @param pool UniswapV3 pool address
-    /// @param baseToken asset address that is going to be quoted (priced)
-    /// @param quoteToken asset address in which quotes are given
-    /// @param periodForAvgPrice TWAP period in seconds, ie. 1800 means 30 min
-    event OracleInit(IUniswapV3Pool pool, address baseToken, address quoteToken, uint32 periodForAvgPrice);
-
-    /// @param _blockTime estimated block time, it is better to set it bit lower than higher that avg block time
-    /// eg. if ETH block time is 13~13.5s, you can set it to 12s
-    constructor(uint8 _blockTime) {
-        blockTime = _blockTime;
-    }
-
-    /// @param _pool UniswapV3 pool address used for TWAP
-    /// @param _baseToken asset address that is going to be quoted (priced)
-    /// @param _periodForAvgPrice period in seconds for TWAP price, ie. 1800 means 30 min
-    function initialize(IUniswapV3Pool _pool, address _baseToken, uint32 _periodForAvgPrice) external initializer {
-        pool = _pool;
-        baseToken = _baseToken;
-        periodForAvgPrice = _periodForAvgPrice;
-        quoteToken = _baseToken == _pool.token0() ? _pool.token1() : _pool.token0();
-
-        emit OracleInit(_pool, _baseToken, quoteToken, _periodForAvgPrice);
-
-        verifyPool(address(_pool), _baseToken, quoteToken, _periodForAvgPrice, blockTime);
+        emit OracleInit(_configAddress);
     }
 
     /// @notice Adjust UniV3 pool cardinality to Silo's requirements.
@@ -71,19 +36,17 @@ contract UniswapV3Oracle is ISiloOracle, Initializable {
     /// @dev Increases observation cardinality for univ3 oracle pool if needed, see getPrice desc for details.
     /// We should call it on init and when we are changing the pool (univ3 can have multiple pools for the same tokens)
     function adjustOracleCardinality() external virtual {
-        // ideally we want to have data at every block during periodForAvgPrice
-        // If we want to get TWAP for 5 minutes and assuming we have tx in every block, and block time is 15 sec,
-        // then for 5 minutes we will have 20 blocks, that means our requiredCardinality is 20.
-        uint256 requiredCardinality = periodForAvgPrice / blockTime;
+        UniswapV3OracleSetup memory config = oracleConfig.getOracleSetup();
 
-        (,,,, uint16 cardinalityNext,,) = pool.slot0();
-        if (cardinalityNext >= requiredCardinality) revert("NotNecessary");
+        (,,,, uint16 cardinalityNext,,) = config.pool.slot0();
+        if (cardinalityNext >= config.requiredCardinality) revert("NotNecessary");
 
         // initialize required amount of slots, it will cost!
-        pool.increaseObservationCardinalityNext(uint16(requiredCardinality));
+        config.pool.increaseObservationCardinalityNext(config.requiredCardinality);
     }
 
-
+    /// @inheritdoc ISiloOracle
+    /// @notice please check `_calculatePeriodAndTicks` for buffer comments
     /// @dev UniV3 saves price only on: mint, burn and swap.
     /// Mint and burn will write observation only when "current tick is inside the passed range" of ticks.
     /// I think that means, that if we minting/burning outside ticks range  (so outside current price)
@@ -121,14 +84,12 @@ contract UniswapV3Oracle is ISiloOracle, Initializable {
     /// - now with both _tickCumulative_s we calculating TWAP
     ///
     /// recommended observations are = 30 min / blockTime
-    /// @inheritdoc ISiloOracle
-    /// @dev Returns quote price for _baseAmount of _baseToken
-    /// @param _baseAmount Amount of priced token
-    /// @param _baseToken Address of priced token
     function quote(uint256 _baseAmount, address _baseToken) external virtual override returns (uint256 quoteAmount) {
         quoteAmount = _quoteInternal(_baseAmount, _baseToken);
     }
 
+    /// @inheritdoc ISiloOracle
+    /// @notice please check `_calculatePeriodAndTicks` for buffer comments
     function quoteView(uint256 _baseAmount, address _baseToken)
         external
         view
@@ -139,53 +100,17 @@ contract UniswapV3Oracle is ISiloOracle, Initializable {
         quoteAmount = _quoteInternal(_baseAmount, _baseToken);
     }
 
+    function quoteToken() external view override virtual returns (address) {
+        return oracleConfig.getOracleSetup().quoteToken;
+    }
+
     function oldestTimestamp() external view virtual returns (uint32 oldestTimestamps) {
-        (,, uint16 observationIndex, uint16 currentObservationCardinality,,,) = pool.slot0();
-        oldestTimestamps = resolveOldestObservationTimestamp(pool, observationIndex, currentObservationCardinality);
-    }
+        UniswapV3OracleSetup memory config = oracleConfig.getOracleSetup();
 
-    /// @notice Check if UniV3 pool has enough cardinality to meet Silo's requirements
-    /// If it does not have, please execute `adjustOracleCardinality`.
-    /// @return bufferFull TRUE if buffer is ready to provide TWAP price rof required period
-    /// @return enoughObservations TRUE if buffer has enough observations spots (they don't have to be filled up yet)
-    /// @return currentCardinality cardinality of configured UniV3 pool
-    function observationsStatus()
-        public
-        view
-        virtual
-        returns (bool bufferFull, bool enoughObservations, uint16 currentCardinality)
-    {
-        (,,, uint16 currentObservationCardinality, uint16 observationCardinalityNext,,) = pool.slot0();
+        (,, uint16 observationIndex, uint16 currentObservationCardinality,,,) = config.pool.slot0();
 
-        // ideally we want to have data at every block during periodForAvgPrice
-        uint256 requiredCardinality = periodForAvgPrice / blockTime;
-
-        bufferFull = currentObservationCardinality >= requiredCardinality;
-        enoughObservations = observationCardinalityNext >= requiredCardinality;
-        currentCardinality = currentObservationCardinality;
-    }
-
-    /// @dev It verifies, if provider pool for asset (and quote token) is valid.
-    /// Throws when there is no pool or pool is empty (zero liquidity) or not ready for price
-    /// @param _pool UniV3 pool address
-    /// @param _baseToken asset for which prices are going to be calculated
-    /// @param _quoteToken asset in which prices are going to be denominated
-    /// @param _periodForAvgPrice time for TWAP configuration
-    /// @param _blockTime block time for the blockchain that this contract is deployed on
-    /// @return true if verification successful, otherwise throws
-    function verifyPool(
-        address _pool,
-        address _baseToken,
-        address _quoteToken,
-        uint32 _periodForAvgPrice,
-        uint8 _blockTime
-    ) public view virtual returns (bool) {
-        uint256 requiredCardinality = _periodForAvgPrice / _blockTime;
-        if (requiredCardinality > type(uint16).max) revert("InvalidRequiredCardinality");
-        if (_periodForAvgPrice == 0) revert("InvalidPeriodForAvgPrice");
-        if (blockTime == 0 || blockTime >= MAX_ACCEPTED_BLOCK_TIME) revert("InvalidBlockTime");
-        if (_pool == address(0) || _baseToken == address(0) || _quoteToken == address(0)) revert("ZeroAddress");
-        return true;
+        oldestTimestamps
+            = resolveOldestObservationTimestamp(config.pool, observationIndex, currentObservationCardinality);
     }
 
     /// @param _pool uniswap V3 pool address
@@ -222,18 +147,36 @@ contract UniswapV3Oracle is ISiloOracle, Initializable {
         returns (uint256 quoteAmount)
     {
         if (_baseAmount > type(uint128).max) revert("Overflow");
-        uint128 _baseAmount128 = uint128(_baseAmount);
-        int24 timeWeightedAverageTick = _consult(pool);
-        quoteAmount = OracleLibrary.getQuoteAtTick(timeWeightedAverageTick, _baseAmount128, _baseToken, quoteToken);
+
+        UniswapV3OracleSetup memory config = oracleConfig.getOracleSetup();
+
+        // this will force to optimise gas by not doing call for quote
+        if (_baseToken == config.quoteToken) revert("UseBaseAmount");
+
+        int24 timeWeightedAverageTick = _consult(config.pool, config.periodForAvgPrice);
+
+        quoteAmount = OracleLibrary.getQuoteAtTick(
+            timeWeightedAverageTick, uint128(_baseAmount), _baseToken, config.quoteToken
+        );
+
+        // zero is also returned on invalid base token
+        if (quoteAmount == 0) revert("Zero");
     }
 
     /// @notice Fetches time-weighted average tick using Uniswap V3 oracle
     /// @dev this is based on `OracleLibrary.consult`, we adjusted it to handle `OLD` error, time window will adjust
     /// to available pool observations
     /// @param _pool Address of Uniswap V3 pool that we want to observe
+    /// @param _periodForAvgPrice TWAP period in seconds.
+    /// Number of seconds for which time-weighted average should be calculated, ie. 1800 means 30 min
     /// @return timeWeightedAverageTick time-weighted average tick from (block.timestamp - period) to block.timestamp
-    function _consult(IUniswapV3Pool _pool) internal view virtual returns (int24 timeWeightedAverageTick) {
-        (uint32 period, int56[] memory tickCumulatives) = _calculatePeriodAndTicks(_pool);
+    function _consult(IUniswapV3Pool _pool, uint32 _periodForAvgPrice)
+        internal
+        view
+        virtual
+        returns (int24 timeWeightedAverageTick)
+    {
+        (uint32 period, int56[] memory tickCumulatives) = _calculatePeriodAndTicks(_pool, _periodForAvgPrice);
         int56 tickCumulativesDelta = tickCumulatives[1] - tickCumulatives[0];
 
         timeWeightedAverageTick = int24(tickCumulativesDelta / period);
@@ -243,15 +186,17 @@ contract UniswapV3Oracle is ISiloOracle, Initializable {
     }
 
     /// @param _pool Address of Uniswap V3 pool
+    /// @param _periodForAvgPrice TWAP period in seconds.
+    /// Number of seconds for which time-weighted average should be calculated, ie. 1800 means 30 min
     /// @return period Number of seconds in the past to start calculating time-weighted average
     /// @return tickCumulatives Cumulative tick values as of each secondsAgos from the current block timestamp
-    function _calculatePeriodAndTicks(IUniswapV3Pool _pool)
+    function _calculatePeriodAndTicks(IUniswapV3Pool _pool, uint32 _periodForAvgPrice)
         internal
         view
         virtual
         returns (uint32 period, int56[] memory tickCumulatives)
     {
-        period = periodForAvgPrice;
+        period = _periodForAvgPrice;
         bool old;
 
         (tickCumulatives, old) = _observe(_pool, period);
@@ -262,6 +207,15 @@ contract UniswapV3Oracle is ISiloOracle, Initializable {
             uint32 latestTimestamp =
                 resolveOldestObservationTimestamp(_pool, observationIndex, currentObservationCardinality);
 
+            // assuming we checked for BufferFull, we can safely reduce period to oldest available time,
+            // so we can fetch price
+            // NOTICE: buffer check is disabled, that means it is possible to deploy oracle configured for TWAP N
+            // even when there is not enough observations to provide that price.
+            // it is recommended to execute `adjustOracleCardinality` asap, even before deployment if possible.
+            // Reason for disabling this check is to allow early deployments. However it should not be used
+            // until buffer will be filled up because TWAP price can be invalid because of below line.
+            //
+            // adjusting period to handle the case, where we might have enough observations but query period is beyond
             period = uint32(block.timestamp - latestTimestamp);
 
             (tickCumulatives, old) = _observe(_pool, period);
@@ -288,7 +242,7 @@ contract UniswapV3Oracle is ISiloOracle, Initializable {
             old = false;
         }
         catch (bytes memory reason) {
-            if (keccak256(reason) != _OLD_ERROR_HASH) reason.revertBytes("_observe");
+            if (keccak256(reason) != OLD_ERROR_HASH) reason.revertBytes("_observe");
             old = true;
         }
     }

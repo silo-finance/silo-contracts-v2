@@ -5,6 +5,8 @@ name: Oracles Quality Test
 
 env:
   FOUNDRY_PROFILE: oracles
+  RPC_MAINNET: ${{ vars.RPC_MAINNET }}
+  RPC_ARBITRUM: ${{ vars.RPC_ARBITRUM }}
 
 on:
   push:
@@ -49,6 +51,12 @@ jobs:
   foundry:
     name: Foundry QA
     runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [ 18.x ]
+        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
+
     steps:
       - uses: actions/checkout@v3
         with:
@@ -65,4 +73,4 @@ jobs:
           forge build --sizes
 
       - name: Run Forge tests
-        run: forge test -vvv
+        run: forge test -vvv --no-match-test "_skip_"
