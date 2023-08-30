@@ -14,13 +14,11 @@
 
 pragma solidity 0.8.19;
 
-import {IStakelessGauge} from "./IStakelessGauge.sol";
-
 interface IStakelessGaugeCheckpointerAdaptor {
     /**
      * @notice Record a checkpoint
      */
-    function checkpoint(IStakelessGauge gauge) external payable returns (bool);
+    function checkpoint(address gauge) external payable returns (bool);
 
     /**
      * @notice Configures a stakeless checkpointer address
