@@ -12,11 +12,12 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-pragma solidity ^0.7.0;
-pragma experimental ABIEncoderV2;
+pragma solidity 0.8.19;
 
-import "./IGaugeAdder.sol";
-import "./IStakelessGauge.sol";
+import {IGaugeAdder} from "./IGaugeAdder.sol";
+import {IStakelessGauge} from "./IStakelessGauge.sol";
+
+// solhint-disable ordering
 
 /**
  * @title Stakeless Gauge Checkpointer interface

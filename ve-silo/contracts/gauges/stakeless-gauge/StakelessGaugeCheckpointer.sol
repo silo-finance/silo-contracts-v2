@@ -12,23 +12,24 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-pragma solidity ^0.7.0;
-pragma experimental ABIEncoderV2;
+pragma solidity 0.8.19;
 
 import {IStakelessGaugeCheckpointerAdaptor}
     from "ve-silo/contracts/gauges/interfaces/IStakelessGaugeCheckpointerAdaptor.sol";
-import "@balancer-labs/v2-interfaces/contracts/liquidity-mining/IGaugeAdder.sol";
-import "@balancer-labs/v2-interfaces/contracts/liquidity-mining/IGaugeController.sol";
-import "@balancer-labs/v2-interfaces/contracts/liquidity-mining/IStakelessGauge.sol";
-import "@balancer-labs/v2-interfaces/contracts/liquidity-mining/IStakelessGaugeCheckpointer.sol";
+import {IGaugeAdder} from "../interfaces/IGaugeAdder.sol";
+import {IGaugeController} from "../interfaces/IGaugeController.sol";
+import {IStakelessGauge} from "../interfaces/IStakelessGauge.sol";
+import {IStakelessGaugeCheckpointer} from "../interfaces/IStakelessGaugeCheckpointer.sol";
 
-import "@balancer-labs/v2-solidity-utils/contracts/openzeppelin/Address.sol";
-import "@balancer-labs/v2-solidity-utils/contracts/openzeppelin/EnumerableSet.sol";
-import "@balancer-labs/v2-solidity-utils/contracts/openzeppelin/ReentrancyGuard.sol";
+import {Address} from "openzeppelin-contracts/utils/Address.sol";
+import {EnumerableSet} from "openzeppelin-contracts/utils/structs/EnumerableSet.sol";
+import {ReentrancyGuard} from "openzeppelin-contracts/security/ReentrancyGuard.sol";
 import {Ownable2Step} from "openzeppelin-contracts/access/Ownable2Step.sol";
 
-import "../admin/GaugeAdder.sol";
-import "./arbitrum/ArbitrumRootGauge.sol";
+import {GaugeAdder} from "../gauge-adder/GaugeAdder.sol";
+import {ArbitrumRootGauge} from "../arbitrum/ArbitrumRootGauge.sol";
+
+// solhint-disable ordering
 
 /**
  * @title Stakeless Gauge Checkpointer
@@ -154,7 +155,7 @@ contract StakelessGaugeCheckpointer is IStakelessGaugeCheckpointer, ReentrancyGu
         }
 
         // Send back any leftover ETH to the caller.
-        Address.sendValue(msg.sender, address(this).balance);
+        Address.sendValue(payable(msg.sender), address(this).balance);
     }
 
     /// @inheritdoc IStakelessGaugeCheckpointer
@@ -217,7 +218,7 @@ contract StakelessGaugeCheckpointer is IStakelessGaugeCheckpointer, ReentrancyGu
         uint256 totalCost;
 
         for (uint256 i = 0; i < totalArbitrumGauges; ++i) {
-            address gauge = arbitrumGauges.unchecked_at(i);
+            address gauge = arbitrumGauges.at(i);
             // Skip gauges that are below the threshold.
             if (_gaugeController.gauge_relative_weight(gauge, currentPeriod) < minRelativeWeight) {
                 continue;
@@ -290,7 +291,7 @@ contract StakelessGaugeCheckpointer is IStakelessGaugeCheckpointer, ReentrancyGu
             : _checkpointCostlessBridgeGauge;
 
         for (uint256 i = 0; i < totalTypeGauges; ++i) {
-            address gauge = typeGauges.unchecked_at(i);
+            address gauge = typeGauges.at(i);
 
             // The gauge might need to be checkpointed in the controller to update its relative weight.
             // Otherwise it might be filtered out mistakenly.
@@ -334,7 +335,7 @@ contract StakelessGaugeCheckpointer is IStakelessGaugeCheckpointer, ReentrancyGu
         // Most gauge types don't need to send value, and this step can be skipped in those cases.
         uint256 remainingBalance = address(this).balance;
         if (remainingBalance > 0) {
-            Address.sendValue(msg.sender, remainingBalance);
+            Address.sendValue(payable(msg.sender), remainingBalance);
         }
     }
 
