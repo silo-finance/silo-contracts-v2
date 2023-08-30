@@ -25,6 +25,7 @@ import "@balancer-labs/v2-interfaces/contracts/liquidity-mining/IStakelessGaugeC
 import "@balancer-labs/v2-solidity-utils/contracts/openzeppelin/Address.sol";
 import "@balancer-labs/v2-solidity-utils/contracts/openzeppelin/EnumerableSet.sol";
 import "@balancer-labs/v2-solidity-utils/contracts/openzeppelin/ReentrancyGuard.sol";
+import {Ownable2Step} from "openzeppelin-contracts/access/Ownable2Step.sol";
 
 import "../admin/GaugeAdder.sol";
 import "./arbitrum/ArbitrumRootGauge.sol";
@@ -33,7 +34,7 @@ import "./arbitrum/ArbitrumRootGauge.sol";
  * @title Stakeless Gauge Checkpointer
  * @notice Implements IStakelessGaugeCheckpointer; refer to it for API documentation.
  */
-contract StakelessGaugeCheckpointer is IStakelessGaugeCheckpointer, ReentrancyGuard, SingletonAuthentication {
+contract StakelessGaugeCheckpointer is IStakelessGaugeCheckpointer, ReentrancyGuard, Ownable2Step {
     using EnumerableSet for EnumerableSet.AddressSet;
 
     bytes32 private immutable _arbitrum = keccak256(abi.encodePacked("Arbitrum"));
@@ -43,9 +44,7 @@ contract StakelessGaugeCheckpointer is IStakelessGaugeCheckpointer, ReentrancyGu
     IGaugeAdder private immutable _gaugeAdder;
     IGaugeController private immutable _gaugeController;
 
-    constructor(IGaugeAdder gaugeAdder, IStakelessGaugeCheckpointerAdaptor checkpointerAdaptor)
-        SingletonAuthentication(authorizerAdaptorEntrypoint.getVault())
-    {
+    constructor(IGaugeAdder gaugeAdder, IStakelessGaugeCheckpointerAdaptor checkpointerAdaptor) {
         _gaugeAdder = gaugeAdder;
         _checkpointerAdaptor = checkpointerAdaptor;
         _gaugeController = gaugeAdder.getGaugeController();
@@ -71,7 +70,7 @@ contract StakelessGaugeCheckpointer is IStakelessGaugeCheckpointer, ReentrancyGu
         external
         override
         withValidGaugeType(gaugeType)
-        authenticate
+        onlyOwner
     {
         // This is a permissioned call, so we can assume that the gauges' type matches the given one.
         // Therefore, we indicate `_addGauges` not to verify the gauge type.
