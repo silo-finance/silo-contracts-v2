@@ -15,7 +15,8 @@
 pragma solidity ^0.7.0;
 pragma experimental ABIEncoderV2;
 
-import "@balancer-labs/v2-interfaces/contracts/liquidity-mining/IAuthorizerAdaptorEntrypoint.sol";
+import {IStakelessGaugeCheckpointerAdaptor}
+    from "ve-silo/contracts/gauges/interfaces/IStakelessGaugeCheckpointerAdaptor.sol";
 import "@balancer-labs/v2-interfaces/contracts/liquidity-mining/IGaugeAdder.sol";
 import "@balancer-labs/v2-interfaces/contracts/liquidity-mining/IGaugeController.sol";
 import "@balancer-labs/v2-interfaces/contracts/liquidity-mining/IStakelessGauge.sol";
@@ -38,15 +39,15 @@ contract StakelessGaugeCheckpointer is IStakelessGaugeCheckpointer, ReentrancyGu
     bytes32 private immutable _arbitrum = keccak256(abi.encodePacked("Arbitrum"));
 
     mapping(string => EnumerableSet.AddressSet) private _gauges;
-    IAuthorizerAdaptorEntrypoint private immutable _authorizerAdaptorEntrypoint;
+    IStakelessGaugeCheckpointerAdaptor private immutable _checkpointerAdaptor;
     IGaugeAdder private immutable _gaugeAdder;
     IGaugeController private immutable _gaugeController;
 
-    constructor(IGaugeAdder gaugeAdder, IAuthorizerAdaptorEntrypoint authorizerAdaptorEntrypoint)
+    constructor(IGaugeAdder gaugeAdder, IStakelessGaugeCheckpointerAdaptor checkpointerAdaptor)
         SingletonAuthentication(authorizerAdaptorEntrypoint.getVault())
     {
         _gaugeAdder = gaugeAdder;
-        _authorizerAdaptorEntrypoint = authorizerAdaptorEntrypoint;
+        _checkpointerAdaptor = checkpointerAdaptor;
         _gaugeController = gaugeAdder.getGaugeController();
     }
 
@@ -311,26 +312,20 @@ contract StakelessGaugeCheckpointer is IStakelessGaugeCheckpointer, ReentrancyGu
      */
     function _checkpointArbitrumGauge(address gauge) private {
         uint256 checkpointCost = ArbitrumRootGauge(gauge).getTotalBridgeCost();
-        _authorizerAdaptorEntrypoint.performAction{ value: checkpointCost }(
-            gauge,
-            abi.encodeWithSelector(IStakelessGauge.checkpoint.selector)
-        );
+        _checkpointerAdaptor.checkpoint{ value: checkpointCost }(gauge);
     }
 
     /**
      * @dev Performs checkpoint for non-Arbitrum gauge; does not forward any ETH.
      */
     function _checkpointCostlessBridgeGauge(address gauge) private {
-        _authorizerAdaptorEntrypoint.performAction(gauge, abi.encodeWithSelector(IStakelessGauge.checkpoint.selector));
+        _checkpointerAdaptor.checkpoint(gauge);
     }
 
     function _checkpointSingleGauge(string memory gaugeType, address gauge) internal {
         uint256 checkpointCost = getSingleBridgeCost(gaugeType, gauge);
 
-        _authorizerAdaptorEntrypoint.performAction{ value: checkpointCost }(
-            gauge,
-            abi.encodeWithSelector(IStakelessGauge.checkpoint.selector)
-        );
+        _checkpointerAdaptor.checkpoint{ value: checkpointCost }(gauge);
     }
 
     /**
