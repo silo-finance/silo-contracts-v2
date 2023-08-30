@@ -71,7 +71,9 @@
 
 - Copy of Balancer's implementation of the ChildChainGaugeCheckpointer.sol ([e7386b0](https://github.com/silo-finance/silo-contracts-v2/pull/60/commits/e7386b0b0515a5653c41b9e604965264552fc771))
 
-### l2-common/StakelessGauge.sol
+### stakeless-gauge/StakelessGauge.sol
+- Changed StakelessGauge.sol location and updated an IStakelessGauge import ([8a43a53](https://github.com/silo-finance/silo-contracts-v2/pull/71/commits/8a43a53bc9c415d6d13b9ed89b25fdfac793b6fd))
+
 - introduced `checkpointer` role that can checkpoint gauge ([f6603fa](https://github.com/silo-finance/silo-contracts-v2/pull/70/commits/f6603fa4a728fb9d934be846ab5968f359d91d96))
 
 - Changed balancer token type ([931f28e](https://github.com/silo-finance/silo-contracts-v2/pull/63/commits/931f28eba3e58321e1a7c3c330634202bcdd1345))
@@ -83,6 +85,8 @@
 - Copy of Balancer's implementation of the StakelessGauge.sol ([c731307](https://github.com/silo-finance/silo-contracts-v2/pull/63/commits/c7313073b1ca24f4d75fd9f6e5eab3110489249a))
 
 ### l2-common/ArbitrumRootGauge.sol
+- Updated and import of the StakelessGauge ([0181db7](https://github.com/silo-finance/silo-contracts-v2/pull/71/commits/0181db745f6e252033c879805fcd9e610b7609af))
+
 - Ownership transfer during initialization ([7864c5e](https://github.com/silo-finance/silo-contracts-v2/pull/70/commits/7864c5e9aec84c6a469c73162871fcadc82c2844))
 
 - Added `checkpointer` initialization via `initialize` fn ([8275e62](https://github.com/silo-finance/silo-contracts-v2/pull/70/commits/8275e62cc02f3411dd0a71281ab6fddae5ff9370))

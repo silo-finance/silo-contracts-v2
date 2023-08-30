@@ -24,7 +24,7 @@ contract ArbitrumRootGaugeFactoryDeploy is CommonDeploy {
         vm.startBroadcast(deployerPrivateKey);
 
         address minter = getDeployedAddress(VeSiloContracts.MAINNET_BALANCER_MINTER);
-        address checkpointer = getDeployedAddress(VeSiloContracts.STAKELESS_GAUGE_CHECKPOINTER);
+        address checkpointer = getDeployedAddress(VeSiloContracts.STAKELESS_GAUGE_CHECKPOINTER_ADAPTOR);
         address gatewayRouter = getAddress(ARBITRUM_GATEWAY_ROUTER);
 
         factory = new ArbitrumRootGaugeFactory(

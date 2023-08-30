@@ -38,7 +38,7 @@ contract ArbitrumRootGaugeFactoryTest is IntegrationTest {
         _deploy = new ArbitrumRootGaugeFactoryDeploy();
         _deploy.disableDeploymentsSync();
 
-        setAddress(getChainId(), VeSiloContracts.STAKELESS_GAUGE_CHECKPOINTER, _checkpointer);
+        setAddress(getChainId(), VeSiloContracts.STAKELESS_GAUGE_CHECKPOINTER_ADAPTOR, _checkpointer);
 
         _factory = _deploy.run();
     }
