@@ -56,6 +56,10 @@ contract StakelessGaugeCheckpointer is IStakelessGaugeCheckpointer, ReentrancyGu
         _;
     }
 
+    receive() external payable {
+        require(msg.sender == address(_checkpointerAdaptor), "Only checkpoint adaptor");
+    }
+
     /// @inheritdoc IStakelessGaugeCheckpointer
     function getGaugeAdder() external view override returns (IGaugeAdder) {
         return _gaugeAdder;
