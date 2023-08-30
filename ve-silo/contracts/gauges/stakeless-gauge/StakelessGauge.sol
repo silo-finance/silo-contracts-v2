@@ -18,7 +18,7 @@ import {IERC20} from "balancer-labs/v2-interfaces/solidity-utils/openzeppelin/IE
 import {IBalancerTokenAdmin} from "ve-silo/contracts/silo-tokens-minter/interfaces/IBalancerTokenAdmin.sol";
 import {IGaugeController} from "ve-silo/contracts/gauges/interfaces/IGaugeController.sol";
 import {IMainnetBalancerMinter} from "ve-silo/contracts/silo-tokens-minter/interfaces/IMainnetBalancerMinter.sol";
-import {IStakelessGauge} from "./interfaces/IStakelessGauge.sol";
+import {IStakelessGauge} from "../interfaces/IStakelessGauge.sol";
 
 import {Math} from "openzeppelin-contracts/utils/math/Math.sol";
 import {ReentrancyGuard} from "openzeppelin-contracts/security/ReentrancyGuard.sol";
