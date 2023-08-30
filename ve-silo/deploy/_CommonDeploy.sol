@@ -29,6 +29,7 @@ library VeSiloContracts {
     string public constant NULL_VOTING_ESCROW = "NullVotingEscrow.sol";
     string public constant ARBITRUM_ROOT_GAUGE = "ArbitrumRootGauge.sol";
     string public constant ARBITRUM_ROOT_GAUGE_FACTORY = "ArbitrumRootGaugeFactory.sol";
+    string public constant FEES_DISTRIBUTOR = "FeesDistributor.sol";
 }
 
 contract VeSiloAddresses is AddressesCollection {

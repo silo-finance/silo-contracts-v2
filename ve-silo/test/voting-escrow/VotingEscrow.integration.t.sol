@@ -60,6 +60,8 @@ contract VotingEscrowTest is IntegrationTest {
     }
 
     function getVeSiloTokens(address _userAddr, uint256 _amount, uint256 _unlockTime) public {
+        whiteListUser(_userAddr);
+
         IERC20 silo80Weth20Token = IERC20(getAddress(SILO80_WETH20_TOKEN));
 
         deal(address(silo80Weth20Token), _userAddr, _amount);
@@ -103,14 +105,17 @@ contract VotingEscrowTest is IntegrationTest {
         assertEq(votingPower, 10969862664878009779);
     }
 
-    function _mockPermissions() internal {
-        setAddress(VeSiloContracts.TIMELOCK_CONTROLLER, _timelock);
-
+    function whiteListUser(address _userToWhitelist) public {
         vm.mockCall(
             _smartValletChecker,
-            abi.encodeCall(ISmartWalletChecker.check, _user),
+            abi.encodeCall(ISmartWalletChecker.check, _userToWhitelist),
             abi.encode(true)
         );
+    }
+
+    function _mockPermissions() internal {
+        setAddress(VeSiloContracts.TIMELOCK_CONTROLLER, _timelock);
+        whiteListUser(_user);
     }
 
     function _dummySiloToken() internal {
