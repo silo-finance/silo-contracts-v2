@@ -9,7 +9,7 @@ import {ArbitrumRootGaugeFactoryDeploy} from "ve-silo/deploy/ArbitrumRootGaugeFa
 import {ArbitrumRootGaugeFactory} from "ve-silo/contracts/gauges/arbitrum/ArbitrumRootGaugeFactory.sol";
 import {ArbitrumRootGauge} from "ve-silo/contracts/gauges/arbitrum/ArbitrumRootGauge.sol";
 
-import {VeSiloAddresses} from "ve-silo/deploy/_CommonDeploy.sol";
+import {VeSiloAddresses, VeSiloContracts} from "ve-silo/deploy/_CommonDeploy.sol";
 
 // FOUNDRY_PROFILE=ve-silo forge test --mc ArbitrumRootGaugeFactoryTest --ffi -vvv
 contract ArbitrumRootGaugeFactoryTest is IntegrationTest {
@@ -18,9 +18,13 @@ contract ArbitrumRootGaugeFactoryTest is IntegrationTest {
     address internal constant _GATEWAY_ADDR = 0xB2535b988dcE19f9D71dfB22dB6da744aCac21bf;
 
     address internal _recipient = makeAddr("L2 recepient");
+    address internal _checkpointer = makeAddr("Checkpointer");
+    address internal _newCheckpointer = makeAddr("NewCheckpointer");
 
     ArbitrumRootGaugeFactory internal _factory;
     ArbitrumRootGaugeFactoryDeploy internal _deploy;
+
+    event NewCheckpointer(address checkpointer);
 
     function setUp() public {
         vm.createSelectFork(
@@ -33,6 +37,8 @@ contract ArbitrumRootGaugeFactoryTest is IntegrationTest {
 
         _deploy = new ArbitrumRootGaugeFactoryDeploy();
         _deploy.disableDeploymentsSync();
+
+        setAddress(getChainId(), VeSiloContracts.STAKELESS_GAUGE_CHECKPOINTER, _checkpointer);
 
         _factory = _deploy.run();
     }
@@ -68,6 +74,35 @@ contract ArbitrumRootGaugeFactoryTest is IntegrationTest {
         uint256 totalBridgeCost = gauge.getTotalBridgeCost();
         
         assertEq(calculated, totalBridgeCost, "Invalid total bridge cost");
+
+        address checkpointer = gauge.getCheckpointer();
+        assertEq(checkpointer, _checkpointer, "Failed to intialize a gauge");
+    }
+
+    function testStakelessGaugeCheckpointerConfig() public {
+        ArbitrumRootGauge gauge = _createArbitrumRootGauge();
+
+        vm.expectRevert("Ownable: caller is not the owner");
+        gauge.setCheckpointer(_newCheckpointer);
+
+        uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
+        address owner = vm.addr(deployerPrivateKey);
+
+        vm.expectEmit(false, false, false, true);
+        emit NewCheckpointer(_newCheckpointer);
+
+        vm.prank(owner);
+        gauge.setCheckpointer(_newCheckpointer);
+    }
+
+    function testOnlyCheckpointerCanCheckpoint() public {
+        ArbitrumRootGauge gauge = _createArbitrumRootGauge();
+        
+        vm.expectRevert("Only checkpointer");
+        gauge.checkpoint();
+
+        vm.prank(_checkpointer);
+        gauge.checkpoint();
     }
 
     function _createArbitrumRootGauge() internal returns (ArbitrumRootGauge _gauge) {
