@@ -14,15 +14,18 @@
 
 pragma solidity 0.8.19;
 
-interface IStakelessGaugeCheckpointerAdaptor {
-    /**
-     * @notice Record a checkpoint
-     */
-    function checkpoint(address gauge) external payable returns (bool);
+import {Address} from "openzeppelin-contracts/utils/Address.sol";
 
-    /**
-     * @notice Configures a stakeless checkpointer address
-     * @param checkpointer Address of the stakeless checkpointer
-     */
-    function setStakelessGaugeCheckpointer(address checkpointer) external;
+contract CheckpointerAdaptorMock {
+    receive() external payable {}
+
+    function checkpoint(address) external payable returns (bool result) {
+        // Send back any leftover ETH to the caller if there is an existing balance in the contract.
+        uint256 remainingBalance = address(this).balance;
+        if (remainingBalance > 0) {
+            Address.sendValue(payable(msg.sender), remainingBalance);
+        }
+
+        result = true;
+    }
 }

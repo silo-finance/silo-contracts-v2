@@ -44,12 +44,12 @@ contract StakelessGaugeCheckpointerAdaptorTest is IntegrationTest {
         _mockCalls();
 
         vm.expectRevert(StakelessGaugeCheckpointerAdaptor.OnlyCheckpointer.selector);
-        _checkpointerAdaptor.checkpoint(IStakelessGauge(_gauge));
+        _checkpointerAdaptor.checkpoint(_gauge);
 
         _setCheckpointer();
 
         vm.prank(_newCheckpointer);
-        _checkpointerAdaptor.checkpoint(IStakelessGauge(_gauge));
+        _checkpointerAdaptor.checkpoint(_gauge);
     }
 
     function testLeftoverETH() public {
@@ -62,7 +62,7 @@ contract StakelessGaugeCheckpointerAdaptorTest is IntegrationTest {
         payable(_newCheckpointer).transfer(1 ether);
 
         vm.prank(_newCheckpointer);
-        _checkpointerAdaptor.checkpoint{ value: 1 ether }(IStakelessGauge(_gauge));
+        _checkpointerAdaptor.checkpoint{ value: 1 ether }(_gauge);
 
         balance = address(_checkpointerAdaptor).balance;
         assertEq(balance, 0, "Expect have no ETH");

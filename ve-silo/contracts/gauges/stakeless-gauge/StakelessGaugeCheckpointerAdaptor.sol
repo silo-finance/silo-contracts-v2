@@ -29,10 +29,10 @@ contract StakelessGaugeCheckpointerAdaptor is Ownable2Step, IStakelessGaugeCheck
     error OnlyCheckpointer();
 
     /// @inheritdoc IStakelessGaugeCheckpointerAdaptor
-    function checkpoint(IStakelessGauge gauge) external payable returns (bool result) {
+    function checkpoint(address gauge) external payable returns (bool result) {
         if (msg.sender != checkpointer) revert OnlyCheckpointer();
 
-        result = gauge.checkpoint{ value: msg.value }();
+        result = IStakelessGauge(gauge).checkpoint{ value: msg.value }();
 
         // Send back any leftover ETH to the caller if there is an existing balance in the contract.
         uint256 remainingBalance = address(this).balance;
