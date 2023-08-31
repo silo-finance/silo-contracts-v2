@@ -36,3 +36,6 @@
 [submodule "layer-zero-examples"]
 	path = gitmodules/layer-zero-examples
 	url = https://github.com/LayerZero-Labs/solidity-examples
+[submodule "gitmodules/chainlink"]
+	path = gitmodules/chainlink
+	url = https://github.com/smartcontractkit/chainlink

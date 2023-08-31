@@ -35,6 +35,7 @@ forge install OpenZeppelin/openzeppelin-contracts-upgradeable --no-commit
 git submodule add --name gitmodules/uniswap/v2-core https://github.com/Uniswap/v2-core gitmodules/uniswap/v2-core 
 git submodule add --name gitmodules/uniswap/v2-periphery https://github.com/Uniswap/v2-periphery gitmodules/uniswap/v2-periphery 
 git submodule add --name gitmodules/uniswap/v3-periphery https://github.com/Uniswap/v3-periphery gitmodules/uniswap/v3-periphery 
+git submodule add --name gitmodules/chainlink https://github.com/smartcontractkit/chainlink gitmodules/chainlink 
 git submodule add --name lz_gauges https://github.com/LayerZero-Labs/lz_gauges gitmodules/lz_gauges
 git submodule add --name layer-zero-examples https://github.com/LayerZero-Labs/solidity-examples gitmodules/layer-zero-examples
 git submodule update --init --recursive
@@ -64,14 +65,13 @@ example:
 
 ```shell
 # Remove the submodule entry from .git/config
-git submodule deinit -f silo-core/lib/forge-std
-git submodule deinit -f gitmodules/uniswap/v2-periphery 
+git submodule deinit -f gitmodules/chainlink
 
 # Remove the submodule directory from the superproject's .git/modules directory
-rm -rf .git/modules/gitmodules/uniswap/v2-periphery
+rm -rf .git/modules/gitmodules/chainlink
 
 # Remove the entry in .gitmodules and remove the submodule directory located at path/to/submodule
-rm -rf gitmodules/v2-periphery
+rm -rf gitmodules/chainlink
 ```
 
 ### Update submodule
