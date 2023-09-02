@@ -99,7 +99,7 @@ contract OracleNormalizationTest is Test {
         emit log_named_decimal_uint("asset value in ETH", calculatedPriceInEth, quoteDecimals);
         assertEq(calculatedPriceInEth, expectedPriceInEth, "calculatedPriceInEth == expectedPriceInEth");
 
-        uint256 normalizedPrice = OracleNormalization.normalizePriceEth(
+        uint256 normalizedPrice = OracleNormalization.normalizePrices(
             baseAmount, assetPrice, ethPriceInUsd, divider, multiplier
         );
 
@@ -136,7 +136,7 @@ contract OracleNormalizationTest is Test {
         emit log_named_decimal_uint("asset value in ETH", calculatedPriceInEth, quoteDecimals);
         assertEq(calculatedPriceInEth, expectedPriceInEth, "calculatedPriceInEth == expectedPriceInEth");
 
-        uint256 normalizedPrice = OracleNormalization.normalizePriceEth(
+        uint256 normalizedPrice = OracleNormalization.normalizePrices(
             baseAmount, assetPrice, ethPriceInUsd, divider, multiplier
         );
 
@@ -173,7 +173,7 @@ contract OracleNormalizationTest is Test {
         emit log_named_decimal_uint("SPELL value in ETH", calculatedPriceInEth, quoteDecimals);
         assertEq(calculatedPriceInEth, expectedPriceInEth);
 
-        uint256 normalizedPrice = OracleNormalization.normalizePriceEth(
+        uint256 normalizedPrice = OracleNormalization.normalizePrices(
             baseAmount, assetPrice, ethPriceInUsd, divider, multiplier
         );
 

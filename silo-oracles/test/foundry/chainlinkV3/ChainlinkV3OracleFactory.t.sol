@@ -20,26 +20,15 @@ contract ChainlinkV3OracleFactoryTest is ChainlinkV3Configs {
     constructor() TokensGenerator(BlockChain.ETHEREUM) {
         initFork(TEST_BLOCK);
 
-        ORACLE_FACTORY = new ChainlinkV3OracleFactory(address(tokens["WETH"]));
+        ORACLE_FACTORY = new ChainlinkV3OracleFactory();
     }
 
     /*
-        FOUNDRY_PROFILE=oracles forge test -vvv --mt test_ChainlinkV3OracleFactory_verifyTokens
+        FOUNDRY_PROFILE=oracles forge test -vvv --mt test_ChainlinkV3OracleFactory_verifyConfig
     */
-    function test_ChainlinkV3OracleFactory_verifyTokens() public {
-        assertTrue(_dydxChainlinkV3Config().ethHeartbeat == 0, "expect one config for USD");
-        assertTrue(_spellEthChainlinkV3Config().ethHeartbeat != 0, "expect one config for ETH");
-
-        ORACLE_FACTORY.verifyTokens(_dydxChainlinkV3Config());
-        ORACLE_FACTORY.verifyTokens(_spellEthChainlinkV3Config());
-    }
-
-    /*
-        FOUNDRY_PROFILE=oracles forge test -vvv --mt test_ChainlinkV3OracleFactory_verifyAggregators
-    */
-    function test_ChainlinkV3OracleFactory_verifyAggregators() public view {
-        ORACLE_FACTORY.verifyAggregators(_dydxChainlinkV3Config());
-        ORACLE_FACTORY.verifyAggregators(_spellEthChainlinkV3Config());
+    function test_ChainlinkV3OracleFactory_verifyConfig() public view {
+        ORACLE_FACTORY.verifyConfig(_dydxChainlinkV3Config());
+        ORACLE_FACTORY.verifyConfig(_spellEthChainlinkV3Config());
     }
 
     /*
@@ -67,7 +56,7 @@ contract ChainlinkV3OracleFactoryTest is ChainlinkV3Configs {
 
         emit log_named_decimal_uint("SPELL/USD", price, 6);
         assertEq(price, 403, ", SPELL/USD price is ~$0.000403");
-        assertEq(gasStart - gasEnd, 7736, "optimise gas");
+        assertEq(gasStart - gasEnd, 15787, "optimise gas");
     }
 
     /*
@@ -79,7 +68,7 @@ contract ChainlinkV3OracleFactoryTest is ChainlinkV3Configs {
         uint256 gasEnd = gasleft();
 
         emit log_named_uint("gas", gasStart - gasEnd);
-        assertEq(gasStart - gasEnd, 361880, "optimise gas for creation");
+        assertEq(gasStart - gasEnd, 315859, "optimise gas for creation");
 
         gasStart = gasleft();
         uint256 price = oracle.quoteView(1e18, address(tokens["SPELL"]));
@@ -88,6 +77,6 @@ contract ChainlinkV3OracleFactoryTest is ChainlinkV3Configs {
 
         emit log_named_decimal_uint("SPELL/ETH", price, 18);
         assertEq(price, 235285547785, ", SPELL/USD price is ~$0.000403 => ETH@1716 => SPELL/ETH ~ 0.000403/1716 => 0.00000023");
-        assertEq(gasStart - gasEnd, 11804, "optimise gas");
+        assertEq(gasStart - gasEnd, 27855, "optimise gas");
     }
 }

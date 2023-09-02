@@ -92,7 +92,7 @@ contract DIAOracle is ISiloOracle, IDIAOracle, Initializable {
         (uint128 ethPriceInUsd, bool ethPriceUpToDate) = getPriceForKey(data.diaOracle, ETH_USD_KEY, data.heartbeat);
         if (!ethPriceUpToDate) revert OldPriceEth();
 
-        return OracleNormalization.normalizePriceEth(
+        return OracleNormalization.normalizePrices(
             _baseAmount,
             assetPriceInUsd,
             ethPriceInUsd,

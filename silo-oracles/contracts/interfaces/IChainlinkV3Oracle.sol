@@ -7,32 +7,47 @@ import {ChainlinkV3OracleConfig} from "../chainlinkV3/ChainlinkV3OracleConfig.so
 
 interface IChainlinkV3Oracle {
     /// @dev config based on which new oracle will be deployed
-    /// @param baseToken we do not have access to tokens addresses from chainlink aggregators, so there is a need to
-    /// provide them manually. Base token symbol must match aggregator description
-    /// @param quoteToken we do not have access to tokens addresses from chainlink aggregators, so there is a need to
-    /// provide them manually. For ETH ue WETH address.
-    struct ChainlinkV3OracleInitConfig {
+    /// @notice there is no way to check if aggregators match tokens, so it is users job to verify config.
+    /// @param primaryAggregator used to read price from chainlink, if it can not provide price in quote token,
+    /// then you have to setup secondary one that will do the job
+    /// @param secondaryAggregator if set, it is used translate primary price into quote price eg:
+    /// primary price is ABC/USD and secondary is ETH/USD, then result will be price in ABC/ETH
+    /// @param baseToken base token address, it must have decimals() method available
+    /// @param quoteToken quote toke address, it must have decimals() method available
+    /// @param primaryHeartbeat heartbeat of primary price
+    /// @param secondaryHeartbeat heartbeat of secondary price
+    struct ChainlinkV3DeploymentConfig {
         IERC20Metadata baseToken;
         IERC20Metadata quoteToken;
-        AggregatorV3Interface aggregator;
-        uint32 heartbeat;
-        AggregatorV3Interface ethAggregator;
-        uint32 ethHeartbeat;
+        AggregatorV3Interface primaryAggregator;
+        uint32 primaryHeartbeat;
+        AggregatorV3Interface secondaryAggregator;
+        uint32 secondaryHeartbeat;
     }
 
-    struct ChainlinkV3OracleSetup {
-        AggregatorV3Interface aggregator;
-        AggregatorV3Interface ethAggregator;
-        uint256 heartbeat;
-        uint256 ethHeartbeat;
+    /// @dev config based on which new oracle will be deployed
+    /// @notice there is no way to check if aggregators match tokens, so it is users job to verify config.
+    /// @param primaryAggregator used to read price from chainlink, if it can not provide price in quote token,
+    /// then you have to setup secondary one that will do the job
+    /// @param secondaryAggregator if set, it is used translate primary price into quote price eg:
+    /// primary price is ABC/USD and secondary is ETH/USD, then result will be price in ABC/ETH
+    /// @param baseToken base token address, it must have decimals() method available
+    /// @param quoteToken quote toke address, it must have decimals() method available
+    /// @param primaryHeartbeat heartbeat of primary price
+    /// @param secondaryHeartbeat heartbeat of secondary price
+    struct ChainlinkV3Config {
+        AggregatorV3Interface primaryAggregator;
+        AggregatorV3Interface secondaryAggregator;
+        uint256 primaryHeartbeat;
+        uint256 secondaryHeartbeat;
         uint256 normalizationDivider;
         uint256 normalizationMultiplier;
         IERC20Metadata baseToken;
         IERC20Metadata quoteToken;
-        bool convertToEth;
+        bool convertToQuote;
     }
 
-    event OracleInit(ChainlinkV3OracleConfig configAddress);
+    event ChainlinkV3ConfigDeployed(ChainlinkV3OracleConfig configAddress);
 
     event NewAggregator(address indexed asset, AggregatorV3Interface indexed aggregator, bool convertToQuote);
     event NewHeartbeat(address indexed asset, uint256 heartbeat);
@@ -41,11 +56,11 @@ interface IChainlinkV3Oracle {
 
     error AddressZero();
     error InvalidPrice();
-    error InvalidPriceEth();
+    error InvalidSecondPrice();
     error BaseAmountOverflow();
+    error TokensAreTheSame();
+    error AggregatorsAreTheSame();
 
-    error AggregatorDesciptionNotMatch();
-    error EthAggregatorDesciptionNotMatch();
     error QuoteTokenNotMatchEth();
     error InvalidEthAggregatorDecimals();
     error InvalidHeartbeat();

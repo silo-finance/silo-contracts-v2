@@ -73,4 +73,4 @@ jobs:
           forge build --sizes
 
       - name: Run Forge tests
-        run: forge test -vvv --no-match-test "_skip_"
+        run: forge test -vv --no-match-test "_skip_"

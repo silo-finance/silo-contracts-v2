@@ -6,11 +6,11 @@ import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 
 import {IDIAOracle} from "../interfaces/IDIAOracle.sol";
 import {IDIAOracleV2} from "../external/dia/IDIAOracleV2.sol";
-import {L1OracleConfig} from "../_common/L1OracleConfig.sol";
+import {Layer1OracleConfig} from "../_common/Layer1OracleConfig.sol";
 
 /// @notice to keep config contract size low (this is the one that will be deployed each time)
 /// factory contract take over verification. You should not deploy or use config that was not created by factory.
-contract DIAOracleConfig is L1OracleConfig {
+contract DIAOracleConfig is Layer1OracleConfig {
     /// @dev Oracle deployed for Silo by DIA, all our prices will be submitted to this contract
     IDIAOracleV2 internal immutable _DIA_ORACLEV2; // solhint-disable-line var-name-mixedcase
 
@@ -30,7 +30,7 @@ contract DIAOracleConfig is L1OracleConfig {
         uint256 _normalizationMultiplier,
         string memory _key
     )
-        L1OracleConfig(
+        Layer1OracleConfig(
             _config.baseToken,
             _config.quoteToken,
             _config.heartbeat,

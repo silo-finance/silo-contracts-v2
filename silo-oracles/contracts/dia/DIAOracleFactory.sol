@@ -46,10 +46,6 @@ contract DIAOracleFactory is OracleFactory {
 
         verifyHeartbeat(_config.heartbeat);
 
-        if (!quoteIsEth) {
-            verifyStablecoin(_config.quoteToken.symbol());
-        }
-
         string memory diaKey = createKey(_config.baseToken);
 
         (uint256 divider, uint256 multiplier) = OracleNormalization.normalizationNumbers(
