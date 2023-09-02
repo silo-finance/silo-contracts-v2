@@ -15,7 +15,7 @@ contract UniswapV3OracleTest is UniswapPools {
     UniswapV3OracleFactory public immutable ORACLE_FACTORY;
 
     UniswapV3Oracle public immutable PRICE_PROVIDER;
-    IUniswapV3Oracle.UniswapV3OracleInitConfig config;
+    IUniswapV3Oracle.UniswapV3DeploymentConfig config;
 
     constructor() UniswapPools(BlockChain.ETHEREUM) {
         initFork(17977506);
@@ -23,7 +23,7 @@ contract UniswapV3OracleTest is UniswapPools {
         UniswapV3OracleFactory factory = new UniswapV3OracleFactory(IUniswapV3Factory(UNISWAPV3_FACTORY));
         ORACLE_FACTORY = factory;
 
-        config = IUniswapV3Oracle.UniswapV3OracleInitConfig(
+        config = IUniswapV3Oracle.UniswapV3DeploymentConfig(
             pools["USDC_WETH"],
             address(tokens["USDC"]),
             1800,
@@ -75,7 +75,7 @@ contract UniswapV3OracleTest is UniswapPools {
         // available period: 12
         // price: 4.983925969794450679
 
-        UniswapV3Oracle oracle = ORACLE_FACTORY.create(IUniswapV3Oracle.UniswapV3OracleInitConfig(
+        UniswapV3Oracle oracle = ORACLE_FACTORY.create(IUniswapV3Oracle.UniswapV3DeploymentConfig(
             pools["SP500_WETH"],
             address(tokens["WETH"]),
             15,
@@ -118,7 +118,7 @@ contract UniswapV3OracleTest is UniswapPools {
 
         UniswapV3OracleFactory factory = new UniswapV3OracleFactory(IUniswapV3Factory(UNISWAPV3_FACTORY));
 
-        config = IUniswapV3Oracle.UniswapV3OracleInitConfig(
+        config = IUniswapV3Oracle.UniswapV3DeploymentConfig(
             pools["USDC_WETH"],
             address(tokens["USDC"]),
             1800,

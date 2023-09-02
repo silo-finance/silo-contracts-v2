@@ -6,7 +6,7 @@ import {IUniswapV3Factory} from  "uniswap/v3-core/contracts/interfaces/IUniswapV
 import {UniswapV3OracleConfig} from "../uniswapV3/UniswapV3OracleConfig.sol";
 
 interface IUniswapV3Oracle {
-    struct UniswapV3OracleInitConfig {
+    struct UniswapV3DeploymentConfig {
         // UniV3 pool address that is used for TWAP price
         IUniswapV3Pool pool;
 
@@ -21,8 +21,8 @@ interface IUniswapV3Oracle {
         uint8 blockTime;
     }
 
-    /// @dev this is UniswapV3OracleInitConfig + quoteToken
-    struct UniswapV3OracleSetup {
+    /// @dev this is UniswapV3DeploymentConfig + quoteToken
+    struct UniswapV3Config {
         // UniV3 pool address that is used for TWAP price
         IUniswapV3Pool pool;
 
@@ -37,5 +37,5 @@ interface IUniswapV3Oracle {
     }
 
     /// @param configAddress UniswapV3OracleConfig config contract address
-    event OracleInit(UniswapV3OracleConfig configAddress);
+    event UniswapV3ConfigDeployed(UniswapV3OracleConfig configAddress);
 }

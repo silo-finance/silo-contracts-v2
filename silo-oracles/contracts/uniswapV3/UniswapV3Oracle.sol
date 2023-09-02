@@ -24,7 +24,7 @@ contract UniswapV3Oracle is ISiloOracle, IUniswapV3Oracle, Initializable {
     function initialize(UniswapV3OracleConfig _configAddress) external virtual initializer {
         oracleConfig = _configAddress;
 
-        emit OracleInit(_configAddress);
+        emit UniswapV3ConfigDeployed(_configAddress);
     }
 
     /// @notice Adjust UniV3 pool cardinality to Silo's requirements.
@@ -36,7 +36,7 @@ contract UniswapV3Oracle is ISiloOracle, IUniswapV3Oracle, Initializable {
     /// @dev Increases observation cardinality for univ3 oracle pool if needed, see getPrice desc for details.
     /// We should call it on init and when we are changing the pool (univ3 can have multiple pools for the same tokens)
     function adjustOracleCardinality() external virtual {
-        UniswapV3OracleSetup memory config = oracleConfig.getOracleSetup();
+        UniswapV3Config memory config = oracleConfig.getConfig();
 
         (,,,, uint16 cardinalityNext,,) = config.pool.slot0();
         if (cardinalityNext >= config.requiredCardinality) revert("NotNecessary");
@@ -101,11 +101,11 @@ contract UniswapV3Oracle is ISiloOracle, IUniswapV3Oracle, Initializable {
     }
 
     function quoteToken() external view override virtual returns (address) {
-        return oracleConfig.getOracleSetup().quoteToken;
+        return oracleConfig.getConfig().quoteToken;
     }
 
     function oldestTimestamp() external view virtual returns (uint32 oldestTimestamps) {
-        UniswapV3OracleSetup memory config = oracleConfig.getOracleSetup();
+        UniswapV3Config memory config = oracleConfig.getConfig();
 
         (,, uint16 observationIndex, uint16 currentObservationCardinality,,,) = config.pool.slot0();
 
@@ -148,7 +148,7 @@ contract UniswapV3Oracle is ISiloOracle, IUniswapV3Oracle, Initializable {
     {
         if (_baseAmount > type(uint128).max) revert("Overflow");
 
-        UniswapV3OracleSetup memory config = oracleConfig.getOracleSetup();
+        UniswapV3Config memory config = oracleConfig.getConfig();
 
         // this will force to optimise gas by not doing call for quote
         if (_baseToken == config.quoteToken) revert("UseBaseAmount");

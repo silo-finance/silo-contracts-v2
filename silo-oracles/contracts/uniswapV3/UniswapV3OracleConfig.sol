@@ -29,7 +29,7 @@ contract UniswapV3OracleConfig {
     uint8 internal immutable _BLOCK_TIME; // solhint-disable-line var-name-mixedcase
 
     constructor(
-        IUniswapV3Oracle.UniswapV3OracleInitConfig memory _config,
+        IUniswapV3Oracle.UniswapV3DeploymentConfig memory _config,
         uint16 _requiredCardinality
     ) {
         _REQUIRED_CARDINALITY = _requiredCardinality;
@@ -39,10 +39,10 @@ contract UniswapV3OracleConfig {
         _BLOCK_TIME = _config.blockTime;
     }
 
-    function getOracleSetup() external view virtual returns (IUniswapV3Oracle.UniswapV3OracleSetup memory setup) {
-        setup.pool = _POOL;
-        setup.quoteToken = _QUOTE_TOKEN;
-        setup.periodForAvgPrice = _PERIOD_FOR_AVG_PRICE;
-        setup.requiredCardinality = _REQUIRED_CARDINALITY;
+    function getConfig() external view virtual returns (IUniswapV3Oracle.UniswapV3Config memory config) {
+        config.pool = _POOL;
+        config.quoteToken = _QUOTE_TOKEN;
+        config.periodForAvgPrice = _PERIOD_FOR_AVG_PRICE;
+        config.requiredCardinality = _REQUIRED_CARDINALITY;
     }
 }

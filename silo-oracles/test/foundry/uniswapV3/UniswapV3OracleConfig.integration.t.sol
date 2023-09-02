@@ -31,7 +31,7 @@ contract UniswapV3OracleConfigIntegrationTest is UniswapPools {
         FOUNDRY_PROFILE=oracles forge test -vvv --mt test_UniswapV3OracleConfig_integration_constructor_pass
     */
     function test_UniswapV3OracleConfig_integration_constructor_pass() public {
-        IUniswapV3Oracle.UniswapV3OracleInitConfig memory config = IUniswapV3Oracle.UniswapV3OracleInitConfig(
+        IUniswapV3Oracle.UniswapV3DeploymentConfig memory config = IUniswapV3Oracle.UniswapV3DeploymentConfig(
             pools["USDC_WETH"],
             address(tokens["USDC"]),
             PERIOD_FOR_AVG_PRICE,
@@ -45,7 +45,7 @@ contract UniswapV3OracleConfigIntegrationTest is UniswapPools {
         FOUNDRY_PROFILE=oracles forge test -vvv --mt test_UniswapV3OracleConfig_integration_constructor_InvalidPoolForQuoteToken
     */
     function test_UniswapV3OracleConfig_integration_constructor_InvalidPoolForQuoteToken() public {
-        IUniswapV3Oracle.UniswapV3OracleInitConfig memory config = IUniswapV3Oracle.UniswapV3OracleInitConfig(
+        IUniswapV3Oracle.UniswapV3DeploymentConfig memory config = IUniswapV3Oracle.UniswapV3DeploymentConfig(
             pools["UKY_WETH"],
             address(tokens["USDC"]),
             PERIOD_FOR_AVG_PRICE,
@@ -60,7 +60,7 @@ contract UniswapV3OracleConfigIntegrationTest is UniswapPools {
         FOUNDRY_PROFILE=oracles forge test -vvv --mt test_UniswapV3OracleConfig_integration_constructor_EmptyPool0
     */
     function test_UniswapV3OracleConfig_integration_constructor_EmptyPool0() public {
-        IUniswapV3Oracle.UniswapV3OracleInitConfig memory config = IUniswapV3Oracle.UniswapV3OracleInitConfig(
+        IUniswapV3Oracle.UniswapV3DeploymentConfig memory config = IUniswapV3Oracle.UniswapV3DeploymentConfig(
             pools["UKY_WETH"],
             address(tokens["UKY"]),
             PERIOD_FOR_AVG_PRICE,
@@ -78,7 +78,7 @@ contract UniswapV3OracleConfigIntegrationTest is UniswapPools {
     function test_skip_UniswapV3OracleConfig_integration_constructor_BufferNotFull() public {
         initFork(UKY_CREATION_BLOCK + 200);
 
-        IUniswapV3Oracle.UniswapV3OracleInitConfig memory config = IUniswapV3Oracle.UniswapV3OracleInitConfig(
+        IUniswapV3Oracle.UniswapV3DeploymentConfig memory config = IUniswapV3Oracle.UniswapV3DeploymentConfig(
             pools["UKY_WETH"],
             address(tokens["UKY"]),
             PERIOD_FOR_AVG_PRICE,
