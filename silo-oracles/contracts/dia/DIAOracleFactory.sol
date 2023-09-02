@@ -10,26 +10,14 @@ import {DIAOracleConfig} from "../dia/DIAOracleConfig.sol";
 import {OracleNormalization} from "../lib/OracleNormalization.sol";
 
 contract DIAOracleFactory is OracleFactory {
-    /// @dev price provider needs to return prices in ETH, but assets prices provided by DIA are in USD
-    /// Under ETH_USD_KEY we will find ETH price in USD so we can convert price in USD into price in ETH
-    string public constant ETH_USD_KEY = "ETH/USD";
-
     /// @dev decimals in DIA oracle
     uint256 public constant DIA_DECIMALS = 8;
 
-    /// @dev address that will be used to determine, if token address is ETH
-    /// DIA is not operating based on addresses, so this can be any address eg WETH or 0xEeEe...
-    /// if address(0) then this feature will be disabled and USD will be quote token
-    address public immutable ETH_ADDRESS; // solhint-disable-line var-name-mixedcase
-
-    error InvalidHeartbeat();
-
-    constructor(address _ethAddress) OracleFactory(address(new DIAOracle())) {
-        // zero means disabled
-        ETH_ADDRESS = _ethAddress;
+    constructor() OracleFactory(address(new DIAOracle())) {
+        // noting to set
     }
 
-    function create(IDIAOracle.DIAConfig memory _config)
+    function create(IDIAOracle.DIADeploymentConfig calldata _config)
         external
         virtual
         returns (DIAOracle oracle)
@@ -42,26 +30,24 @@ contract DIAOracleFactory is OracleFactory {
             return DIAOracle(getOracleAddress[address(oracleConfig)]);
         }
 
-        bool quoteIsEth = address(_config.quoteToken) == ETH_ADDRESS;
+        verifyConfig(_config);
 
-        verifyHeartbeat(_config.heartbeat);
-
-        string memory diaKey = createKey(_config.baseToken);
+        bool convertToQuote = bytes(_config.secondaryKey).length != 0;
 
         (uint256 divider, uint256 multiplier) = OracleNormalization.normalizationNumbers(
-            _config.baseToken, _config.quoteToken, DIA_DECIMALS, quoteIsEth ? DIA_DECIMALS : 0
+            _config.baseToken, _config.quoteToken, DIA_DECIMALS, convertToQuote ? DIA_DECIMALS : 0
         );
 
-        oracleConfig = new DIAOracleConfig(_config, quoteIsEth, divider, multiplier, diaKey);
+        oracleConfig = new DIAOracleConfig(_config, divider, multiplier);
 
         oracle = DIAOracle(ClonesUpgradeable.clone(ORACLE_IMPLEMENTATION));
 
         _saveOracle(address(oracle), address(oracleConfig), id);
 
-        oracle.initialize(oracleConfig);
+        oracle.initialize(oracleConfig, _config.primaryKey, _config.secondaryKey);
     }
 
-    function hashConfig(IDIAOracle.DIAConfig memory _config)
+    function hashConfig(IDIAOracle.DIADeploymentConfig memory _config)
         public
         virtual
         view
@@ -70,16 +56,14 @@ contract DIAOracleFactory is OracleFactory {
         configId = keccak256(abi.encode(_config));
     }
 
-    /// @dev creates KEY based on symbol of base token
-    /// @param _baseToken address of base token
-    /// @return under this key asset price should be available in DIA oracle
-    function createKey(IERC20Metadata _baseToken) public view virtual returns (string memory) {
-        string memory baseSymbol = _baseToken.symbol();
-        return string(abi.encodePacked(baseSymbol, "/USD"));
-    }
+    function verifyConfig(IDIAOracle.DIADeploymentConfig calldata _config) public view virtual {
+        if (address(_config.diaOracle) == address(0)) revert IDIAOracle.AddressZero();
+        if (address(_config.quoteToken) == address(0)) revert IDIAOracle.AddressZero();
+        if (address(_config.baseToken) == address(0)) revert IDIAOracle.AddressZero();
+        if (address(_config.quoteToken) == address(_config.baseToken)) revert IDIAOracle.TokensAreTheSame();
+        if (bytes(_config.primaryKey).length == 0) revert IDIAOracle.EmptyPrimaryKey();
 
-    function verifyHeartbeat(uint256 _heartbeat) public view virtual {
         // heartbeat restrictions are arbitrary
-        if (_heartbeat < 60 seconds || _heartbeat > 2 days) revert InvalidHeartbeat();
+        if (_config.heartbeat < 60 seconds || _config.heartbeat > 2 days) revert IDIAOracle.InvalidHeartbeat();
     }
 }

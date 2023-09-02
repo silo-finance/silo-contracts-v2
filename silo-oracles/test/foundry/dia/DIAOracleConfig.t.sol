@@ -20,19 +20,18 @@ contract DIAOracleConfigTest is DIAConfigDefault {
     constructor() TokensGenerator(BlockChain.ARBITRUM) {
         initFork(TEST_BLOCK);
 
-        CFG = new DIAOracleConfig(_defaultDIAConfig(), false, 10 ** (18 + 8 - 18), 0, "RDPX/USD");
+        CFG = new DIAOracleConfig(_defaultDIAConfig(), 10 ** (18 + 8 - 18), 0);
     }
 
     function test_DIAOracleConfig_getQuoteData() public {
-        IDIAOracle.DIASetup memory setup = CFG.getSetup();
+        IDIAOracle.DIAConfig memory config = CFG.getConfig();
 
-        assertEq(address(setup.diaOracle), address(DIA_ORACLE_V2), "diaOracle");
-        assertEq(setup.baseToken, address(tokens["RDPX"]), "baseToken");
-        assertEq(setup.quoteToken, address(tokens["USDT"]), "quoteToken");
-        assertEq(uint256(setup.heartbeat), uint256(1 days), "heartbeat");
-        assertEq(uint256(setup.normalizationDivider), 100000000, "normalizationDivider");
-        assertEq(uint256(setup.normalizationMultiplier), 0, "normalizationMultiplier");
-        assertFalse(setup.quoteIsEth, "quoteIsEth");
-        assertEq(setup.key, "RDPX/USD", "key");
+        assertEq(address(config.diaOracle), address(DIA_ORACLE_V2), "diaOracle");
+        assertEq(config.baseToken, address(tokens["RDPX"]), "baseToken");
+        assertEq(config.quoteToken, address(tokens["USDT"]), "quoteToken");
+        assertEq(uint256(config.heartbeat), uint256(1 days), "heartbeat");
+        assertEq(uint256(config.normalizationDivider), 100000000, "normalizationDivider");
+        assertEq(uint256(config.normalizationMultiplier), 0, "normalizationMultiplier");
+        assertFalse(config.convertToQuote, "quoteIsEth");
     }
 }

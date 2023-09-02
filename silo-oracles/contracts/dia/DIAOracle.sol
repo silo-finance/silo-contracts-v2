@@ -11,22 +11,34 @@ import {IDIAOracle} from "../interfaces/IDIAOracle.sol";
 import {IDIAOracleV2} from "../external/dia/IDIAOracleV2.sol";
 
 contract DIAOracle is ISiloOracle, IDIAOracle, Initializable {
-    /// @dev price provider needs to return prices in ETH, but assets prices provided by DIA are in USD
-    /// Under ETH_USD_KEY we will find ETH price in USD so we can convert price in USD into price in ETH
-    string public constant ETH_USD_KEY = "ETH/USD";
-
     DIAOracleConfig public oracleConfig;
+
+    /// @dev we accessing prices for assets by keys eg. "Jones/USD"
+    /// I tried to store it as bytes32 immutable, but translation to string uses over 5K gas,
+    /// reading string is less gas, because it is not immutable it is not stored in config contracts (less gas)
+    /// @notice this is actually a string stored as bytes32, so we can make it immutable
+    mapping (DIAOracleConfig => string) public primaryKey;
+
+    /// @dev key for secondary price
+    mapping (DIAOracleConfig => string) public secondaryKey;
 
     /// @notice validation of config is checked in factory, therefore you should not deploy and initialize directly
     /// use factory always.
-    function initialize(DIAOracleConfig _configAddress) external virtual initializer {
+    function initialize(
+        DIAOracleConfig _configAddress,
+        string memory _key1,
+        string memory _key2
+    )
+        external
+        virtual
+        initializer
+    {
         oracleConfig = _configAddress;
 
-        IERC20Metadata baseToken = IERC20Metadata(_configAddress.getSetup().baseToken);
-        // sanity check of price for 1 TOKEN
-        _quote(10 ** baseToken.decimals(), address(baseToken));
+        primaryKey[_configAddress] = _key1;
+        secondaryKey[_configAddress] = _key2;
 
-        emit OracleInit(_configAddress);
+        emit DIAConfigDeployed(_configAddress);
     }
 
     /// @inheritdoc ISiloOracle
@@ -41,7 +53,7 @@ contract DIAOracle is ISiloOracle, IDIAOracle, Initializable {
 
     /// @inheritdoc ISiloOracle
     function quoteToken() external view virtual returns (address) {
-        IDIAOracle.DIASetup memory setup = oracleConfig.getSetup();
+        IDIAOracle.DIAConfig memory setup = oracleConfig.getConfig();
         return address(setup.quoteToken);
     }
 
@@ -75,27 +87,35 @@ contract DIAOracle is ISiloOracle, IDIAOracle, Initializable {
         virtual
         returns (uint256 quoteAmount)
     {
-        DIASetup memory data = oracleConfig.getSetup();
+        DIAOracleConfig cacheOracleConfig = oracleConfig;
+        DIAConfig memory data = cacheOracleConfig.getConfig();
 
         if (_baseToken != data.baseToken) revert AssetNotSupported();
         if (_baseAmount > type(uint128).max) revert BaseAmountOverflow();
 
-        (uint128 assetPriceInUsd, bool priceUpToDate) = getPriceForKey(data.diaOracle, data.key, data.heartbeat);
+        (
+            uint128 assetPrice,
+            bool priceUpToDate
+        ) = getPriceForKey(data.diaOracle, primaryKey[cacheOracleConfig], data.heartbeat);
+
         if (!priceUpToDate) revert OldPrice();
 
-        if (!data.quoteIsEth) {
+        if (!data.convertToQuote) {
             return OracleNormalization.normalizePrice(
-                _baseAmount, assetPriceInUsd, data.normalizationDivider, data.normalizationMultiplier
+                _baseAmount, assetPrice, data.normalizationDivider, data.normalizationMultiplier
             );
         }
 
-        (uint128 ethPriceInUsd, bool ethPriceUpToDate) = getPriceForKey(data.diaOracle, ETH_USD_KEY, data.heartbeat);
-        if (!ethPriceUpToDate) revert OldPriceEth();
+        (
+            uint128 secondaryPrice, bool secondaryPriceValid
+        ) = getPriceForKey(data.diaOracle, secondaryKey[cacheOracleConfig], data.heartbeat);
+
+        if (!secondaryPriceValid) revert OldSecondaryPrice();
 
         return OracleNormalization.normalizePrices(
             _baseAmount,
-            assetPriceInUsd,
-            ethPriceInUsd,
+            assetPrice,
+            secondaryPrice,
             data.normalizationDivider,
             data.normalizationMultiplier
         );
