@@ -27,6 +27,7 @@ src = 'silo-core/contracts'
 out = 'cache/foundry/out/silo-core'
 test = 'silo-core/test'
 broadcast = 'silo-core/broadcast'
+fs_permissions = [{ access = "read", path = "./silo-core/test/foundry/data/"}]
 
 [profile.ve-silo]
 src = 've-silo/contracts'

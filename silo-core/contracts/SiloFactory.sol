@@ -5,7 +5,7 @@ import {CountersUpgradeable} from "openzeppelin-contracts-upgradeable/utils/Coun
 import {ClonesUpgradeable} from  "openzeppelin-contracts-upgradeable/proxy/ClonesUpgradeable.sol";
 import {Initializable} from "openzeppelin-contracts-upgradeable/proxy/utils/Initializable.sol";
 
-import {IShareToken} from "./interface/IShareToken.sol";
+import {IShareToken} from "./interfaces/IShareToken.sol";
 import {ISiloConfig, SiloConfig} from "./SiloConfig.sol";
 import {ISilo, Silo} from "./Silo.sol";
 

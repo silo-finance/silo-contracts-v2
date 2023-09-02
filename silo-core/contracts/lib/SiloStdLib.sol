@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.18;
 
-import {ISiloConfig} from "../interface/ISiloConfig.sol";
-import {ISilo} from "../interface/ISilo.sol";
-import {IInterestRateModel} from "../interface/IInterestRateModel.sol";
-import {IShareToken} from "../interface/IShareToken.sol";
+import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
+import {ISilo} from "../interfaces/ISilo.sol";
+import {IInterestRateModel} from "../interfaces/IInterestRateModel.sol";
+import {IShareToken} from "../interfaces/IShareToken.sol";
 
 // solhint-disable ordering
 

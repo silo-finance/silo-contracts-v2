@@ -3,9 +3,9 @@ pragma solidity 0.8.18;
 
 import {Initializable} from "openzeppelin-contracts-upgradeable/proxy/utils/Initializable.sol";
 
-import {ISilo} from "./interface/ISilo.sol";
-import {ISiloConfig} from "./interface/ISiloConfig.sol";
-import {ISiloFactory} from "./interface/ISiloFactory.sol";
+import {ISilo} from "./interfaces/ISilo.sol";
+import {ISiloConfig} from "./interfaces/ISiloConfig.sol";
+import {ISiloFactory} from "./interfaces/ISiloFactory.sol";
 import {SiloStdLib} from "./lib/SiloStdLib.sol";
 import {SiloSolvencyLib} from "./lib/SiloSolvencyLib.sol";
 import {SiloLendingLib} from "./lib/SiloLendingLib.sol";

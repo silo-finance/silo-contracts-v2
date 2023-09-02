@@ -48,15 +48,6 @@ contract UniswapV3OracleFactory is OracleFactory {
         oracle.initialize(UniswapV3OracleConfig(oracleConfig));
     }
 
-    function hashConfig(IUniswapV3Oracle.UniswapV3OracleInitConfig memory _config)
-        public
-        virtual
-        view
-        returns (bytes32 configId)
-    {
-        configId = keccak256(abi.encode(_config));
-    }
-
     /// @notice Check if UniV3 pool has enough cardinality to meet Silo's requirements
     /// If it does not have, please execute `adjustOracleCardinality`.
     /// @param _pool UniV3 pool address
@@ -66,13 +57,18 @@ contract UniswapV3OracleFactory is OracleFactory {
         external
         view
         virtual
-        returns (
-            bool bufferFull,
-            bool enoughObservations,
-            uint16 currentCardinality
-        )
+        returns (bool bufferFull, bool enoughObservations, uint16 currentCardinality)
     {
         return _observationsStatus(_pool, _requiredCardinality);
+    }
+
+    function hashConfig(IUniswapV3Oracle.UniswapV3OracleInitConfig memory _config)
+        public
+        virtual
+        view
+        returns (bytes32 configId)
+    {
+        configId = keccak256(abi.encode(_config));
     }
 
     /// @dev It verifies config, throws when invalid

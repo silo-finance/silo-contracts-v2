@@ -3,9 +3,9 @@ pragma solidity 0.8.18;
 
 import {ERC20Upgradeable} from "openzeppelin-contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 
-import {ISiloFactory} from "../interface/ISiloFactory.sol";
-import {IShareToken, ISilo} from "../interface/IShareToken.sol";
-import {INotificationReceiver} from "../interface/INotificationReceiver.sol";
+import {ISiloFactory} from "../interfaces/ISiloFactory.sol";
+import {IShareToken, ISilo} from "../interfaces/IShareToken.sol";
+import {INotificationReceiver} from "../interfaces/INotificationReceiver.sol";
 
 /// @title ShareToken
 /// @notice Implements common interface for Silo tokens representing debt or collateral positions.

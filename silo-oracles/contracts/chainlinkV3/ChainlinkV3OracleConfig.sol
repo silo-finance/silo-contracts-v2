@@ -3,7 +3,7 @@ pragma solidity 0.8.18;
 
 import {IERC20Metadata} from "openzeppelin-contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {AggregatorV3Interface} from "chainlink/v0.8/interfaces/AggregatorV3Interface.sol";
-import {ISiloOracle} from "silo-core/contracts/interface/ISiloOracle.sol";
+import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 import {IChainlinkV3Oracle} from "../interfaces/IChainlinkV3Oracle.sol";
 import {L1OracleConfig} from "../_common/L1OracleConfig.sol";
 

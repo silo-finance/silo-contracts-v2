@@ -6,7 +6,7 @@ import {Initializable} from  "openzeppelin-contracts-upgradeable@v3.4.2/proxy/In
 import {OracleLibrary} from  "uniswap/v3-periphery/contracts/libraries/OracleLibrary.sol";
 import {IUniswapV3Pool} from  "uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
 
-import {ISiloOracle} from "silo-core/contracts/interface/ISiloOracle.sol";
+import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 
 import {RevertBytes} from  "../lib/RevertBytes.sol";
 import {IUniswapV3Oracle} from "../interfaces/IUniswapV3Oracle.sol";
