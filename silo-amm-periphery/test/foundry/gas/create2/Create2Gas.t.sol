@@ -31,7 +31,7 @@ contract Pair {
     FOUNDRY_PROFILE=amm-periphery forge test -vv --match-contract Create2GasTest
 */
 contract Create2GasTest is Test {
-    bytes32 constant INIT_HASH = bytes32(0x6820f04c6b126f519e7b61ec3146d9075a364343c3ad0be07f5e6ce0d4858023);
+    bytes32 constant INIT_HASH = bytes32(0x7a99a18f5545dc24596e0e81c9b078fa07c510254fe59178533ab5641f8e4e0a);
 
     PairCreate2 immutable pair2;
     Factory immutable factory;

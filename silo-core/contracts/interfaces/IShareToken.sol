@@ -4,7 +4,7 @@ pragma solidity >=0.5.0;
 import {
     IERC20MetadataUpgradeable
 } from "openzeppelin-contracts-upgradeable/token/ERC20/extensions/IERC20MetadataUpgradeable.sol";
-import {ISilo} from "../interface/ISilo.sol";
+import {ISilo} from "../interfaces/ISilo.sol";
 
 interface IShareToken is IERC20MetadataUpgradeable {
     /// @notice Emitted every time receiver is notified about token transfer

@@ -20,6 +20,14 @@ interface ISilo {
         uint64 interestRateTimestamp;
     }
 
+    /// @notice data that InterestModel needs for calculations
+    struct UtilizationData {
+        uint256 totalDeposits;
+        uint256 totalBorrowAmount;
+        /// @dev timestamp of last interest accrual
+        uint64 interestRateTimestamp;
+    }
+
     function initialize(ISiloConfig _config) external;
 
     function factory() external view returns (ISiloFactory);
@@ -34,6 +42,9 @@ interface ISilo {
     function borrowPossible(address _token, address _borrower) external view returns (bool);
     function getMaxLtv(address _token) external view returns (uint256);
     function getLt(address _token) external view returns (uint256);
+
+    /// @dev helper method for InterestRateModel calculations
+    function utilizationData(address _asset) external view returns (UtilizationData memory data);
 
     // ERC4626-ish
 

@@ -3,7 +3,7 @@ pragma solidity 0.8.18;
 
 import {IERC20Metadata} from "openzeppelin-contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {Initializable} from  "openzeppelin-contracts-upgradeable/proxy/utils/Initializable.sol";
-import {ISiloOracle} from "silo-core/contracts/interface/ISiloOracle.sol";
+import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 
 import {OracleNormalization} from "../lib/OracleNormalization.sol";
 import {DIAOracleConfig} from "./DIAOracleConfig.sol";

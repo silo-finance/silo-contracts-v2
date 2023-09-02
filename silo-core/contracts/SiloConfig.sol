@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.18;
 
-import {ISiloConfig} from "./interface/ISiloConfig.sol";
+import {ISiloConfig} from "./interfaces/ISiloConfig.sol";
 
 /// @notice SiloConfig stores full configuration of Silo in immutable manner
 /// @dev Immutable contract is more expensive to deploy than minimal proxy however it provides nearly 10x cheapper
