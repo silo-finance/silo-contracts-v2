@@ -59,12 +59,10 @@ jobs:
         with:
           version: nightly
 
-      - run: yarn install
-
       - name: Run Forge build
         run: |
           forge --version
-          forge build --sizes
+          # forge build --sizes
 
       - name: Run Forge tests
         run: forge test -vvv

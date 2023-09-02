@@ -6,7 +6,6 @@ import {IERC20Upgradeable} from "openzeppelin-contracts-upgradeable/token/ERC20/
 import {MathUpgradeable} from "openzeppelin-contracts-upgradeable/utils/math/MathUpgradeable.sol";
 
 import {ISiloOracle} from "../interface/ISiloOracle.sol";
-import {IHookReceiver} from "../interface/IHookReceiver.sol";
 import {SiloStdLib, ISiloConfig, ISilo, IShareToken, IInterestRateModel} from "./SiloStdLib.sol";
 import {SiloSolvencyLib} from "./SiloSolvencyLib.sol";
 import {SiloERC4626Lib} from "./SiloERC4626Lib.sol";

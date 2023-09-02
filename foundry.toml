@@ -7,6 +7,7 @@ libs = [
     'silo-vaults/node_modules'
 ]
 out = 'cache/foundry/out'
+evm_version = 'shanghai'
 
 [profile.amm-periphery]
 src = 'silo-amm-periphery/contracts'
@@ -26,6 +27,7 @@ src = 'silo-core/contracts'
 out = 'cache/foundry/out/silo-core'
 test = 'silo-core/test'
 broadcast = 'silo-core/broadcast'
+fs_permissions = [{ access = "read", path = "./silo-core/test/foundry/data/"}]
 
 [profile.default.fmt]
 line_length=118

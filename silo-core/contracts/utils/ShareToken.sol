@@ -10,7 +10,6 @@ import {StringsUpgradeable} from "openzeppelin-contracts-upgradeable/utils/Strin
 import {ISiloFactory} from "../interface/ISiloFactory.sol";
 import {IHookReceiver} from "../interface/IHookReceiver.sol";
 import {IShareToken, ISilo} from "../interface/IShareToken.sol";
-import {INotificationReceiver} from "../interface/INotificationReceiver.sol";
 import {ISiloConfig} from "../SiloConfig.sol";
 import {TokenHelper} from "../lib/TokenHelper.sol";
 

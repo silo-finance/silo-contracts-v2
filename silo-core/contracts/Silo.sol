@@ -5,9 +5,9 @@ import {Initializable} from "openzeppelin-contracts-upgradeable/proxy/utils/Init
 import {ReentrancyGuardUpgradeable} from "openzeppelin-contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import {MathUpgradeable} from "openzeppelin-contracts-upgradeable/utils/math/MathUpgradeable.sol";
 
-import {ISilo} from "./interface/ISilo.sol";
-import {ISiloConfig} from "./interface/ISiloConfig.sol";
-import {ISiloFactory} from "./interface/ISiloFactory.sol";
+import {ISilo} from "./interfaces/ISilo.sol";
+import {ISiloConfig} from "./interfaces/ISiloConfig.sol";
+import {ISiloFactory} from "./interfaces/ISiloFactory.sol";
 import {SiloStdLib} from "./lib/SiloStdLib.sol";
 import {SiloSolvencyLib} from "./lib/SiloSolvencyLib.sol";
 import {SiloLendingLib} from "./lib/SiloLendingLib.sol";

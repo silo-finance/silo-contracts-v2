@@ -7,8 +7,7 @@ import {Initializable} from "openzeppelin-contracts-upgradeable/proxy/utils/Init
 import {OwnableUpgradeable} from "openzeppelin-contracts-upgradeable/access/OwnableUpgradeable.sol";
 import {ERC721Upgradeable} from "openzeppelin-contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
 
-import {IShareToken} from "./interface/IShareToken.sol";
-import {IHookReceiver} from "./interface/IHookReceiver.sol";
+import {IShareToken} from "./interfaces/IShareToken.sol";
 import {ISiloConfig, SiloConfig} from "./SiloConfig.sol";
 import {ISilo, Silo} from "./Silo.sol";
 

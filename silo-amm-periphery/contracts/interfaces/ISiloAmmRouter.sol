@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GD
 pragma solidity >=0.5.0;
 
-import "silo-core/contracts/interface/ISiloOracle.sol";
+import "silo-core/contracts/interfaces/ISiloOracle.sol";
 import "silo-amm-core/contracts/interfaces/IAmmPriceModel.sol";
 
 import "../external/interfaces/IUniswapV2Router02.sol";

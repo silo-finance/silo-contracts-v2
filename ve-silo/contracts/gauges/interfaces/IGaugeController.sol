@@ -19,6 +19,7 @@ interface IGaugeController {
     function checkpoint_gauge(address _gauge) external;
     function vote_for_gauge_weights(address _gauge_addr, uint256 _user_weight) external;
     function vote_for_many_gauge_weights(address[8] memory _gauge_addrs, uint256[8] memory _user_weight) external;
+    function set_gauge_adder(address _addr) external;
 
     function token() external view returns (address);
     function voting_escrow() external view returns (address);
@@ -30,6 +31,10 @@ interface IGaugeController {
     function n_gauge_types() external view returns (int128);
     function n_gauges() external view returns (int128);
     function points_total(uint256 _time) external view returns (uint256);
+    function gauge_relative_weight(address gauge, uint256 time) external view returns (uint256);
+    function gauge_adder() external view returns (address);
+    function gauge_exists(address _addr) external view returns (bool);
+    function time_weight(address _addr) external view returns (uint256);
     // solhint-enable func-name-mixedcase
     // solhint-enable var-name-mixedcase
     // solhint-enable func-param-name-mixedcase

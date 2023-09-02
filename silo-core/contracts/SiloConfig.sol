@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.18;
 
-import {ISiloConfig} from "./interface/ISiloConfig.sol";
+import {ISiloConfig} from "./interfaces/ISiloConfig.sol";
 
 // solhint-disable var-name-mixedcase
 
