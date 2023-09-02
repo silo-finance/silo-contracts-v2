@@ -21,7 +21,7 @@ contract DIAOracleFactoryTest is DIAConfigDefault {
     constructor() TokensGenerator(BlockChain.ARBITRUM) {
         initFork(TEST_BLOCK);
 
-        ORACLE_FACTORY = new DIAOracleFactory(address(tokens["WETH"]));
+        ORACLE_FACTORY = new DIAOracleFactory();
     }
 
     /*
@@ -32,16 +32,10 @@ contract DIAOracleFactoryTest is DIAConfigDefault {
     }
 
     /*
-        FOUNDRY_PROFILE=oracles forge test -vvv --mt test_DIAOracleFactory_createKey
+        FOUNDRY_PROFILE=oracles forge test -vvv --mt test_DIAOracleFactory_verifyConfig
     */
-    function test_DIAOracleFactory_createKey() public {
-        IERC20Metadata token = IERC20Metadata(address(1));
-
-        vm.expectRevert();
-        ORACLE_FACTORY.createKey(token);
-
-        token = IERC20Metadata(address(tokens["WETH"]));
-        assertEq(ORACLE_FACTORY.createKey(token), "WETH/USD");
+    function test_DIAOracleFactory_verifyConfig() public view {
+        ORACLE_FACTORY.verifyConfig(_defaultDIAConfig());
     }
 
     /*
@@ -59,7 +53,7 @@ contract DIAOracleFactoryTest is DIAConfigDefault {
         FOUNDRY_PROFILE=oracles forge test -vvv --mt test_DIAOracleFactory_quoteView_RDPXinTUSD
     */
     function test_DIAOracleFactory_quoteView_RDPXinTUSD() public {
-        IDIAOracle.DIAConfig memory cfg = _defaultDIAConfig();
+        IDIAOracle.DIADeploymentConfig memory cfg = _defaultDIAConfig();
         cfg.quoteToken = IERC20Metadata(address(tokens["TUSD"]));
 
         DIAOracle oracle = ORACLE_FACTORY.create(cfg);
@@ -68,9 +62,9 @@ contract DIAOracleFactoryTest is DIAConfigDefault {
         uint256 price = oracle.quoteView(1e18, address(tokens["RDPX"]));
         uint256 gasEnd = gasleft();
 
-        emit log_named_decimal_uint("RDPX/USD", price, 6);
+        emit log_named_decimal_uint("RDPX/USD", price, 18);
         emit log_named_uint("gas used", gasStart - gasEnd);
-        assertEq(gasStart - gasEnd, 7503, "optimise gas");
+        assertEq(gasStart - gasEnd, 10825, "optimise gas");
         assertEq(price, 16_676184950000000000, ", RDPX/USD price is ~$16");
     }
 
@@ -78,15 +72,16 @@ contract DIAOracleFactoryTest is DIAConfigDefault {
         FOUNDRY_PROFILE=oracles forge test -vvv --mt test_DIAOracleFactory_quoteView_RDPXinETH
     */
     function test_DIAOracleFactory_quoteView_RDPXinETH() public {
-        IDIAOracle.DIAConfig memory cfg = _defaultDIAConfig();
+        IDIAOracle.DIADeploymentConfig memory cfg = _defaultDIAConfig();
         cfg.quoteToken = IERC20Metadata(address(tokens["WETH"]));
+        cfg.secondaryKey = "ETH/USD";
 
         uint256 gasStart = gasleft();
         DIAOracle oracle = ORACLE_FACTORY.create(cfg);
         uint256 gasEnd = gasleft();
 
         emit log_named_uint("gas", gasStart - gasEnd);
-        assertEq(gasStart - gasEnd, 401476, "optimise gas for creation");
+        assertEq(gasStart - gasEnd, 330895, "optimise gas for creation");
 
         gasStart = gasleft();
         uint256 price = oracle.quoteView(1e18, address(tokens["RDPX"]));
@@ -100,7 +95,7 @@ contract DIAOracleFactoryTest is DIAConfigDefault {
 
         emit log_named_decimal_uint("RDPX/ETH", price, 18);
         emit log_named_uint("gas used", gasStart - gasEnd);
-        assertEq(gasStart - gasEnd, 9724, "optimise gas");
+        assertEq(gasStart - gasEnd, 15792, "optimise gas");
         assertEq(price, 10104984720670688, "RDPX/ETH price 0.01ETH");
     }
 }

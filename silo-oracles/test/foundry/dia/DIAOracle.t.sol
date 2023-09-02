@@ -21,57 +21,47 @@ contract DIAOracleTest is DIAConfigDefault {
     constructor() TokensGenerator(BlockChain.ARBITRUM) {
         initFork(TEST_BLOCK);
 
-        DIAOracleConfig cfg = new DIAOracleConfig(_defaultDIAConfig(), false, 10 ** (18 + 8 - 18), 0, "RDPX/USD");
+        DIAOracleConfig cfg = new DIAOracleConfig(_defaultDIAConfig(), 10 ** (18 + 8 - 18), 0);
         DIA_ORACLE = new DIAOracle();
-        DIA_ORACLE.initialize(cfg);
-    }
-
-    /*
-        FOUNDRY_PROFILE=oracles forge test -vvv --mt test_DIAOracle_initialize
-    */
-    function test_DIAOracle_initialize_InvalidKey() public {
-        DIAOracle newOracle = new DIAOracle();
-        IDIAOracle.DIAConfig memory cfg = _defaultDIAConfig();
-
-        DIAOracleConfig newConfig = new DIAOracleConfig(cfg, false, 10 ** (18 + 8 - 18), 0, "aaa");
-
-        vm.expectRevert(IDIAOracle.InvalidKey.selector);
-        newOracle.initialize(newConfig);
+        DIA_ORACLE.initialize(cfg, _defaultDIAConfig().primaryKey, _defaultDIAConfig().secondaryKey);
     }
 
     function test_DIAOracle_initialize_OldPrice() public {
         DIAOracle newOracle = new DIAOracle();
-        IDIAOracle.DIAConfig memory cfg = _defaultDIAConfig();
+        IDIAOracle.DIADeploymentConfig memory cfg = _defaultDIAConfig();
 
         cfg.heartbeat = 1856;
-        DIAOracleConfig newConfig = new DIAOracleConfig(cfg, false, 10 ** (18 + 8 - 18), 0, "RDPX/USD");
+        DIAOracleConfig newConfig = new DIAOracleConfig(cfg, 10 ** (18 + 8 - 18), 0);
+
+        newOracle.initialize(newConfig, cfg.primaryKey, cfg.secondaryKey);
 
         vm.expectRevert(IDIAOracle.OldPrice.selector);
-        newOracle.initialize(newConfig);
+        newOracle.quoteView(1e18, address(tokens["RDPX"]));
     }
 
-    function test_DIAOracle_initialize_OldPriceEth() public {
+    function test_DIAOracle_initialize_OldSecondaryPrice() public {
         DIAOracle newOracle = new DIAOracle();
-        IDIAOracle.DIAConfig memory cfg = _defaultDIAConfig();
+        IDIAOracle.DIADeploymentConfig memory cfg = _defaultDIAConfig();
 
         // at the block from test, price is 1856s old
         // and ETH price is 6306s old
         cfg.heartbeat = 1857;
-        bool quoteIsEth = true;
+        cfg.secondaryKey = "ETH/USD";
 
-        DIAOracleConfig newConfig = new DIAOracleConfig(cfg, quoteIsEth, 10 ** (18 + 8 - 18), 0, "RDPX/USD");
+        DIAOracleConfig newConfig = new DIAOracleConfig(cfg, 10 ** (18 + 8 - 18), 0);
+        newOracle.initialize(newConfig, cfg.primaryKey, cfg.secondaryKey);
 
-        vm.expectRevert(IDIAOracle.OldPriceEth.selector);
-        newOracle.initialize(newConfig);
+        vm.expectRevert(IDIAOracle.OldSecondaryPrice.selector);
+        newOracle.quoteView(1e18, address(tokens["RDPX"]));
     }
 
     function test_DIAOracle_initialize_pass() public {
         DIAOracle newOracle = new DIAOracle();
-        IDIAOracle.DIAConfig memory cfg = _defaultDIAConfig();
+        IDIAOracle.DIADeploymentConfig memory cfg = _defaultDIAConfig();
 
-        DIAOracleConfig newConfig = new DIAOracleConfig(cfg, false, 10 ** (18 + 8 - 18), 0, "RDPX/USD");
+        DIAOracleConfig newConfig = new DIAOracleConfig(cfg, 10 ** (18 + 8 - 18), 0);
 
-        newOracle.initialize(newConfig);
+        newOracle.initialize(newConfig, cfg.primaryKey, cfg.secondaryKey);
     }
 
     /*
@@ -87,11 +77,11 @@ contract DIAOracleTest is DIAConfigDefault {
         FOUNDRY_PROFILE=oracles forge test -vvv --mt test_DIAOracle_quoteView_inUSDC
     */
     function test_DIAOracle_quoteView_inUSDC() public {
-        IDIAOracle.DIAConfig memory cfg = _defaultDIAConfig();
+        IDIAOracle.DIADeploymentConfig memory cfg = _defaultDIAConfig();
         cfg.quoteToken = IERC20Metadata(address(tokens["USDC"]));
-        DIAOracleConfig oracleConfig = new DIAOracleConfig(_defaultDIAConfig(), false, 10 ** (18 + 8 - 6), 0, "RDPX/USD");
+        DIAOracleConfig oracleConfig = new DIAOracleConfig(_defaultDIAConfig(), 10 ** (18 + 8 - 6), 0);
         DIAOracle oracle = new DIAOracle();
-        oracle.initialize(oracleConfig);
+        oracle.initialize(oracleConfig, cfg.primaryKey, cfg.secondaryKey);
 
         uint256 price = oracle.quoteView(1e18, address(tokens["RDPX"]));
         emit log_named_decimal_uint("RDPX/USD", price, 6);
