@@ -28,12 +28,9 @@ contract ShareDebtToken is IERC20R, ShareToken {
         // all setup is done in parent contracts, nothing to do here
     }
 
-    /// @param _name token name
-    /// @param _symbol token symbol
     /// @param _silo Silo address for which tokens was deployed
-    /// @param _asset asset for which this tokens was deployed
-    function initialize(string memory _name, string memory _symbol, ISilo _silo, address _asset) external initializer {
-        __ShareToken_init(_name, _symbol, _silo, _asset);
+    function initialize(ISilo _silo, address _hookReceiver) external initializer {
+        __ShareToken_init(_silo, _hookReceiver);
     }
 
     /// @inheritdoc IShareToken
@@ -82,26 +79,26 @@ contract ShareDebtToken is IERC20R, ShareToken {
         emit ReceiveApproval(_owner, _recipient, _amount);
     }
 
+    /// @dev Check receive allowance and if recipient is allowed to accept debt from silo
     function _beforeTokenTransfer(address _sender, address _recipient, uint256 _amount) internal override {
         // If we are minting or burning, Silo is responsible to check all necessary conditions
-        if (!_isTransfer(_sender, _recipient)) {
-            return;
-        }
+        if (_isTransfer(_sender, _recipient)) {
+            // Silo forbids having debt and collateral position of the same asset in given Silo
+            if (!silo.borrowPossible(_recipient)) revert ShareTransferNotAllowed();
 
-        // Silo forbids having debt and collateral position of the same asset in given Silo
-        if (!silo.borrowPossible(asset, _recipient)) revert ShareTransferNotAllowed();
+            // _recipient must approve debt transfer, _sender does not have to
+            uint256 currentAllowance = receiveAllowance(_sender, _recipient);
+            if (currentAllowance < _amount) revert AmountExceedsAllowance();
 
-        // _recipient must approve debt transfer, _sender does not have to
-        uint256 currentAllowance = receiveAllowance(_sender, _recipient);
-        if (currentAllowance < _amount) revert AmountExceedsAllowance();
-
-        // There can't be an underflow in the subtraction because of the previous check
-        unchecked {
-            // update debt allowance
-            _setReceiveApproval(_sender, _recipient, currentAllowance - _amount);
+            // There can't be an underflow in the subtraction because of the previous check
+            unchecked {
+                // update debt allowance
+                _setReceiveApproval(_sender, _recipient, currentAllowance - _amount);
+            }
         }
     }
 
+    /// @dev Check if recipient is solvent after debt transfer
     function _afterTokenTransfer(address _sender, address _recipient, uint256 _amount) internal override {
         ShareToken._afterTokenTransfer(_sender, _recipient, _amount);
 
