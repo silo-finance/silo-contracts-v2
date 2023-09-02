@@ -22,8 +22,8 @@ contract UniswapV3OracleFactory is OracleFactory {
         UNISWAPV3_FACTORY = _factory;
     }
 
-    /// @param _config UniswapV3OracleInitConfig configuration data
-    function create(IUniswapV3Oracle.UniswapV3OracleInitConfig memory _config)
+    /// @param _config UniswapV3DeploymentConfig configuration data
+    function create(IUniswapV3Oracle.UniswapV3DeploymentConfig memory _config)
         external
         virtual
         returns (UniswapV3Oracle oracle)
@@ -62,7 +62,7 @@ contract UniswapV3OracleFactory is OracleFactory {
         return _observationsStatus(_pool, _requiredCardinality);
     }
 
-    function hashConfig(IUniswapV3Oracle.UniswapV3OracleInitConfig memory _config)
+    function hashConfig(IUniswapV3Oracle.UniswapV3DeploymentConfig memory _config)
         public
         virtual
         view
@@ -72,9 +72,9 @@ contract UniswapV3OracleFactory is OracleFactory {
     }
 
     /// @dev It verifies config, throws when invalid
-    /// @param _config UniswapV3OracleInitConfig struct
+    /// @param _config UniswapV3DeploymentConfig struct
     /// @return requiredCardinality when config is valid, returns required Cardinality value
-    function verifyConfig(IUniswapV3Oracle.UniswapV3OracleInitConfig memory _config)
+    function verifyConfig(IUniswapV3Oracle.UniswapV3DeploymentConfig memory _config)
         public
         view
         virtual
