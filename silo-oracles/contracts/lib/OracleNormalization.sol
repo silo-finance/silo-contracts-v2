@@ -8,17 +8,16 @@ import {IERC20Metadata} from "openzeppelin-contracts/token/ERC20/extensions/IERC
 library OracleNormalization {
     error Overflow();
 
-    /// @param _priceDecimals decimals of "base price" eg. 8. In case final price is calculated from two prices:
-    /// eg. base price and eth price, `_priceDecimals` is always decimals of first/base price.
-    /// @param _ethPriceDecimals decimals of ETH price eg. 18. If set to 0, that means there is no second/ETH price
+    /// @param _primaryPriceDecimals decimals of "base price" eg. 8.
+    /// @param _secondaryPriceDecimals decimals of second price eg. 18. If set to 0, that means there is no second price
     /// @return divider
     /// @return multiplier max value for first price 10^36 and for ETH price 10^(36+36)
     /// but this is assuming unreal decimals. TODO certora?
     function normalizationNumbers( // solhint-disable-line code-complexity, function-max-lines
         IERC20Metadata _baseToken,
         IERC20Metadata _quoteToken,
-        uint256 _priceDecimals,
-        uint256 _ethPriceDecimals
+        uint256 _primaryPriceDecimals,
+        uint256 _secondaryPriceDecimals
     )
         internal
         view
@@ -37,36 +36,36 @@ library OracleNormalization {
         bool useMultiplier = false;
 
         // below check prevents underflow on subtraction
-        if (quoteDecimals > baseDecimals + _priceDecimals) {
+        if (quoteDecimals > baseDecimals + _primaryPriceDecimals) {
             // safe because of above `quoteDecimals > baseDecimals + _priceDecimals`
-            unchecked { multiplier = quoteDecimals - (baseDecimals + _priceDecimals); }
+            unchecked { multiplier = quoteDecimals - (baseDecimals + _primaryPriceDecimals); }
             useMultiplier = true;
         } else {
             // make no sense to support that weird base tokens
             if (baseDecimals > arbitraryMaxDecimals) revert Overflow();
 
             // safe because of above `quoteDecimals > baseDecimals + _priceDecimals`
-            unchecked { divider = baseDecimals + _priceDecimals - quoteDecimals; }
+            unchecked { divider = baseDecimals + _primaryPriceDecimals - quoteDecimals; }
         }
 
-        if (_ethPriceDecimals == 0) {
+        if (_secondaryPriceDecimals == 0) {
             return (useMultiplier ? 0 : 10 ** divider, useMultiplier ? 10 ** multiplier : 0);
         }
 
-        if (_ethPriceDecimals > arbitraryMaxDecimals) revert Overflow();
+        if (_secondaryPriceDecimals > arbitraryMaxDecimals) revert Overflow();
 
         if (useMultiplier) {
             // safe because we working on small decimals numbers < arbitraryMaxDecimals
-            unchecked { multiplier += _ethPriceDecimals; }
+            unchecked { multiplier += _secondaryPriceDecimals; }
         } else {
-            if (_ethPriceDecimals > divider) {
+            if (_secondaryPriceDecimals > divider) {
                 // safe to unchecked because of `_ethPriceDecimals > divider`
-                unchecked { multiplier = _ethPriceDecimals - divider; }
+                unchecked { multiplier = _secondaryPriceDecimals - divider; }
                 divider = 0;
                 useMultiplier = true;
             } else {
                 // safe to unchecked because of `_ethPriceDecimals > divider`
-                unchecked { divider = divider - _ethPriceDecimals; }
+                unchecked { divider = divider - _secondaryPriceDecimals; }
             }
         }
 
@@ -107,14 +106,15 @@ library OracleNormalization {
     /// @notice if you call normalizePrice directly you can create overflow
     /// @param _baseAmount amount of base token (can not be higher than uint128!)
     /// @param _assetPrice price returned by oracle (can not be higher than uint128!)
-    /// @param _ethPriceInUsd price of ETH is USD returned by oracle (can not be higher than uint128!)
+    /// @param _secondPrice price of quote token denominated in same token as _assetPrice
+    /// (can not be higher than uint128!)
     /// @param _normalizationDivider constant that allows to translate output price to expected decimals
     /// @param _normalizationMultiplier constant that allows to translate output price to expected decimals
     /// @return assetPrice uint256 18 decimals price
-    function normalizePriceEth(
+    function normalizePrices(
         uint256 _baseAmount,
         uint256 _assetPrice,
-        uint256 _ethPriceInUsd,
+        uint256 _secondPrice,
         uint256 _normalizationDivider,
         uint256 _normalizationMultiplier
     )
@@ -129,7 +129,7 @@ library OracleNormalization {
             // however if you call normalizePrice directly (because it is public) you can create overflow
             // div is safe
             unchecked {
-                return _baseAmount * _assetPrice / _normalizationDivider / _ethPriceInUsd;
+                return _baseAmount * _assetPrice / _normalizationDivider / _secondPrice;
             }
         }
 
@@ -140,6 +140,6 @@ library OracleNormalization {
         mul = mul * _normalizationMultiplier;
 
         // div is safe
-        unchecked { return mul / _ethPriceInUsd; }
+        unchecked { return mul / _secondPrice; }
     }
 }

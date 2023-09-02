@@ -24,20 +24,6 @@ abstract contract OracleFactory {
         ORACLE_IMPLEMENTATION = _oracleImplementation;
     }
 
-    /// @dev there is no way to verify if quote token is actual stablecoin. DIA is providing prices in USD.
-    /// At least we can do is check token symbol. In case we need different stablecoin we can always
-    /// override this method.
-    /// quote decimals does not matter because DIA has 8 decimals for all prices
-    function verifyStablecoin(string memory _symbol) public view virtual {
-        bytes32 symbolHash = keccak256(abi.encodePacked(_symbol));
-
-        if (symbolHash == keccak256(abi.encodePacked("USDC"))) return;
-        if (symbolHash == keccak256(abi.encodePacked("USDT"))) return;
-        if (symbolHash == keccak256(abi.encodePacked("TUSD"))) return;
-
-        revert ("NotSupportedStablecoin");
-    }
-
     /// @dev execute this method from target factory, to save ID and update mappings
     /// @param _newOracle new oracle address
     /// @param _newConfig oracle config address

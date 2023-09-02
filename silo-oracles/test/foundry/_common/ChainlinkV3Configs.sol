@@ -10,8 +10,8 @@ import {TokensGenerator} from "./TokensGenerator.sol";
 import {IChainlinkV3Oracle} from "../../../contracts/interfaces/IChainlinkV3Oracle.sol";
 
 abstract contract ChainlinkV3Configs is TokensGenerator {
-    function _spellEthChainlinkV3Config() internal view returns (IChainlinkV3Oracle.ChainlinkV3OracleInitConfig memory) {
-        return IChainlinkV3Oracle.ChainlinkV3OracleInitConfig(
+    function _spellEthChainlinkV3Config() internal view returns (IChainlinkV3Oracle.ChainlinkV3DeploymentConfig memory) {
+        return IChainlinkV3Oracle.ChainlinkV3DeploymentConfig(
             IERC20Metadata(address(tokens["SPELL"])),
             IERC20Metadata(address(tokens["WETH"])),
             AggregatorV3Interface(0x8c110B94C5f1d347fAcF5E1E938AB2db60E3c9a8),
@@ -21,8 +21,8 @@ abstract contract ChainlinkV3Configs is TokensGenerator {
         );
     }
 
-    function _spellUsdChainlinkV3Config() internal view returns (IChainlinkV3Oracle.ChainlinkV3OracleInitConfig memory) {
-        return IChainlinkV3Oracle.ChainlinkV3OracleInitConfig(
+    function _spellUsdChainlinkV3Config() internal view returns (IChainlinkV3Oracle.ChainlinkV3DeploymentConfig memory) {
+        return IChainlinkV3Oracle.ChainlinkV3DeploymentConfig(
             IERC20Metadata(address(tokens["SPELL"])),
             IERC20Metadata(address(tokens["USDC"])),
             AggregatorV3Interface(0x8c110B94C5f1d347fAcF5E1E938AB2db60E3c9a8),
@@ -32,8 +32,8 @@ abstract contract ChainlinkV3Configs is TokensGenerator {
         );
     }
 
-    function _dydxChainlinkV3Config() internal view returns (IChainlinkV3Oracle.ChainlinkV3OracleInitConfig memory) {
-        return IChainlinkV3Oracle.ChainlinkV3OracleInitConfig(
+    function _dydxChainlinkV3Config() internal view returns (IChainlinkV3Oracle.ChainlinkV3DeploymentConfig memory) {
+        return IChainlinkV3Oracle.ChainlinkV3DeploymentConfig(
             IERC20Metadata(address(tokens["DYDX"])),
             IERC20Metadata(address(tokens["USDT"])),
             AggregatorV3Interface(0x478909D4D798f3a1F11fFB25E4920C959B4aDe0b),
@@ -43,11 +43,11 @@ abstract contract ChainlinkV3Configs is TokensGenerator {
         );
     }
 
-    function _printChainlinkV3Setup(IChainlinkV3Oracle.ChainlinkV3OracleSetup memory _setup) internal {
-        emit log_named_address("aggregator", address(_setup.aggregator));
-        emit log_named_address("ethAggregator", address(_setup.ethAggregator));
-        emit log_named_uint("heartbeat", _setup.heartbeat);
-        emit log_named_uint("ethHeartbeat", _setup.ethHeartbeat);
+    function _printChainlinkV3Setup(IChainlinkV3Oracle.ChainlinkV3Config memory _setup) internal {
+        emit log_named_address("aggregator", address(_setup.primaryAggregator));
+        emit log_named_address("ethAggregator", address(_setup.secondaryAggregator));
+        emit log_named_uint("heartbeat", _setup.primaryHeartbeat);
+        emit log_named_uint("ethHeartbeat", _setup.secondaryHeartbeat);
         emit log_named_uint("normalizationDivider", _setup.normalizationDivider);
         emit log_named_uint("normalizationMultiplier", _setup.normalizationMultiplier);
         emit log_named_address("base token", address(_setup.baseToken));

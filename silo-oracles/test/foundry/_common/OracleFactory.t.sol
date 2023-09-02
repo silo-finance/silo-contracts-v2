@@ -24,20 +24,6 @@ contract OracleFactoryTest is Test {
     }
 
     /*
-        FOUNDRY_PROFILE=oracles forge test -vvv --mt test_OracleFactory_verifyStablecoin
-    */
-    function test_OracleFactory_verifyStablecoin() public {
-        vm.expectRevert();
-        ORACLE_FACTORY.verifyStablecoin("?");
-
-        vm.expectRevert("NotSupportedStablecoin");
-        ORACLE_FACTORY.verifyStablecoin("GRAIL");
-
-        // PASS
-        ORACLE_FACTORY.verifyStablecoin("USDC");
-    }
-
-    /*
         FOUNDRY_PROFILE=silo-oracles forge test -vvv --match-test test_OracleFactory__saveOracle
     */
     function test_OracleFactory__saveOracle() public {

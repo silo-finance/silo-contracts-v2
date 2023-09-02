@@ -17,30 +17,20 @@ contract ChainlinkV3Oracle is IChainlinkV3Oracle, ISiloOracle, Initializable {
     /// use factory always.
     function initialize(ChainlinkV3OracleConfig _configAddress) external virtual initializer {
         oracleConfig = _configAddress;
-
-        IERC20Metadata baseToken = _configAddress.getSetup().baseToken;
-        // sanity check of price for 1 TOKEN
-        _quote(10 ** baseToken.decimals(), address(baseToken));
-
-        emit OracleInit(_configAddress);
+        emit ChainlinkV3ConfigDeployed(_configAddress);
     }
 
     /// @inheritdoc ISiloOracle
-    // TODO WHY DO WE NEED THIS "VIEW"??
     function quote(uint256 _baseAmount, address _baseToken) external virtual returns (uint256 quoteAmount) {
         return _quote(_baseAmount, _baseToken);
     }
 
     /// @dev Returns price directly from aggregator, this method is mostly for debug purposes
-    function getAggregatorPrice() external view virtual returns (bool success, uint256 price) {
-        IChainlinkV3Oracle.ChainlinkV3OracleSetup memory setup = oracleConfig.getSetup();
-        return _getAggregatorPrice(setup.aggregator, setup.heartbeat);
-    }
-
-    /// @dev Returns price directly from aggregator, this method is mostly for debug purposes
-    function getAggregatorPriceEth() external view virtual returns (bool success, uint256 price) {
-        IChainlinkV3Oracle.ChainlinkV3OracleSetup memory setup = oracleConfig.getSetup();
-        return _getAggregatorPrice(setup.ethAggregator, setup.ethHeartbeat);
+    function getAggregatorPrice(bool _primary) external view virtual returns (bool success, uint256 price) {
+        IChainlinkV3Oracle.ChainlinkV3Config memory config = oracleConfig.getConfig();
+        return _primary
+            ? _getAggregatorPrice(config.primaryAggregator, config.primaryHeartbeat)
+            : _getAggregatorPrice(config.secondaryAggregator, config.secondaryHeartbeat);
     }
 
     /// @inheritdoc ISiloOracle
@@ -50,34 +40,38 @@ contract ChainlinkV3Oracle is IChainlinkV3Oracle, ISiloOracle, Initializable {
 
     /// @inheritdoc ISiloOracle
     function quoteToken() external view virtual returns (address) {
-        IChainlinkV3Oracle.ChainlinkV3OracleSetup memory setup = oracleConfig.getSetup();
-        return address(setup.quoteToken);
+        IChainlinkV3Oracle.ChainlinkV3Config memory config = oracleConfig.getConfig();
+        return address(config.quoteToken);
     }
 
     function _quote(uint256 _baseAmount, address _baseToken) internal view virtual returns (uint256 quoteAmount) {
-        ChainlinkV3OracleSetup memory data = oracleConfig.getSetup();
+        ChainlinkV3Config memory config = oracleConfig.getConfig();
 
-        if (_baseToken != address(data.baseToken)) revert AssetNotSupported();
+        if (_baseToken != address(config.baseToken)) revert AssetNotSupported();
         if (_baseAmount > type(uint128).max) revert BaseAmountOverflow();
 
-        (bool success, uint256 price) = _getAggregatorPrice(data.aggregator, data.heartbeat);
+        (bool success, uint256 price) = _getAggregatorPrice(config.primaryAggregator, config.primaryHeartbeat);
         if (!success) revert InvalidPrice();
 
-        if (!data.convertToEth) {
+        if (!config.convertToQuote) {
             return OracleNormalization.normalizePrice(
-                _baseAmount, price, data.normalizationDivider, data.normalizationMultiplier
+                _baseAmount, price, config.normalizationDivider, config.normalizationMultiplier
             );
         }
 
-        (bool ethSuccess, uint256 ethPriceInUsd) = _getAggregatorPrice(data.ethAggregator, data.heartbeat);
-        if (!ethSuccess) revert InvalidPriceEth();
+        (
+            bool secondSuccess,
+            uint256 secondPrice
+        ) = _getAggregatorPrice(config.secondaryAggregator, config.primaryHeartbeat);
 
-        return OracleNormalization.normalizePriceEth(
+        if (!secondSuccess) revert InvalidSecondPrice();
+
+        return OracleNormalization.normalizePrices(
             _baseAmount,
             price,
-            ethPriceInUsd,
-            data.normalizationDivider,
-            data.normalizationMultiplier
+            secondPrice,
+            config.normalizationDivider,
+            config.normalizationMultiplier
         );
     }
 
