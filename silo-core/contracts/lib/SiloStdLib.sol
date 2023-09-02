@@ -1,15 +1,23 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.18;
 
-import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
-import {ISilo} from "../interfaces/ISilo.sol";
-import {IInterestRateModel} from "../interfaces/IInterestRateModel.sol";
-import {IShareToken} from "../interfaces/IShareToken.sol";
+import {SafeERC20Upgradeable} from "openzeppelin-contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
+import {IERC20Upgradeable} from "openzeppelin-contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
+import {MathUpgradeable} from "openzeppelin-contracts-upgradeable/utils/math/MathUpgradeable.sol";
+
+import {ISiloConfig} from "../interface/ISiloConfig.sol";
+import {ISiloFactory} from "../interface/ISiloFactory.sol";
+import {ISilo} from "../interface/ISilo.sol";
+import {IInterestRateModel} from "../interface/IInterestRateModel.sol";
+import {IShareToken} from "../interface/IShareToken.sol";
 
 // solhint-disable ordering
 
 library SiloStdLib {
-    enum TokenType {
+    using SafeERC20Upgradeable for IERC20Upgradeable;
+    using MathUpgradeable for uint256;
+
+    enum AssetType {
         Protected,
         Collateral,
         Debt
@@ -17,89 +25,9 @@ library SiloStdLib {
 
     uint256 internal constant _PRECISION_DECIMALS = 1e18;
 
-    error ZeroAssets();
-    error ZeroShares();
     error WrongToken();
-
-    /// @notice Emitted on deposit
-    /// @param token asset address that was deposited
-    /// @param depositor wallet address that deposited asset
-    /// @param receiver wallet address that received shares in Silo
-    /// @param assets amount of asset that was deposited
-    /// @param shares amount of shares that was minted
-    /// @param isProtected type of deposit, if true, deposited as protected (cannot be borrowed by other users)
-    event Deposit(
-        address indexed token,
-        address indexed depositor,
-        address indexed receiver,
-        uint256 assets,
-        uint256 shares,
-        bool isProtected
-    );
-
-    /// @notice Emitted on withdraw
-    /// @param token asset address that was withdrew
-    /// @param owner wallet address that deposited asset
-    /// @param receiver wallet address that received asset
-    /// @param assets amount of asset that was withdrew
-    /// @param shares amount of shares that was burn
-    /// @param isProtected type of withdraw, if true, withdraw protected deposit
-    event Withdraw(
-        address indexed token,
-        address indexed owner,
-        address indexed receiver,
-        uint256 assets,
-        uint256 shares,
-        bool isProtected
-    );
-
-    /// @notice Emitted on borrow
-    /// @param token asset address that was borrowed
-    /// @param borrower wallet address that borrowed asset
-    /// @param receiver wallet address that received asset
-    /// @param assets amount of asset that was borrowed
-    /// @param shares amount of shares that was minted
-    event Borrow(address token, address borrower, address receiver, uint256 assets, uint256 shares);
-
-    /// @notice Emitted on repayment
-    /// @param token asset address that was borrowed
-    /// @param borrower wallet address that borrowed asset
-    /// @param repayer wallet address that repaid asset
-    /// @param assets amount of asset that was repaid
-    /// @param shares amount of shares that was burn
-    event Repay(address token, address borrower, address repayer, uint256 assets, uint256 shares);
-
-    // TODO: check rounding up/down
-    function toAssets(uint256 _shares, uint256 _totalAmount, uint256 _totalShares) internal pure returns (uint256) {
-        if (_totalShares == 0 || _totalAmount == 0) {
-            return 0;
-        }
-
-        uint256 result = _shares * _totalAmount / _totalShares;
-
-        // Prevent rounding error
-        if (result == 0 && _shares != 0) {
-            revert ZeroAssets();
-        }
-
-        return result;
-    }
-
-    // TODO: check rounding up/down
-    function toShare(uint256 _amount, uint256 _totalAmount, uint256 _totalShares) internal pure returns (uint256) {
-        if (_totalShares == 0 || _totalAmount == 0) {
-            return _amount;
-        }
-
-        uint256 result = _amount * _totalShares / _totalAmount;
-
-        // Prevent rounding error
-        if (result == 0 && _amount != 0) {
-            revert ZeroShares();
-        }
-
-        return result;
-    }
+    error OutOfBounds();
+    error NothingToPay();
 
     function amountWithInterest(address _asset, uint256 _amount, address _model)
         internal
@@ -113,136 +41,114 @@ library SiloStdLib {
     }
 
     // solhint-disable-next-line code-complexity
-    function findShareToken(ISiloConfig.ConfigData memory _configData, TokenType _tokenType, address _token)
+    function findShareToken(ISiloConfig.ConfigData memory _configData, AssetType _assetType, address _asset)
         internal
         pure
         returns (IShareToken shareToken)
     {
-        if (_configData.token0 == _token) {
-            if (_tokenType == TokenType.Protected) return IShareToken(_configData.protectedCollateralShareToken0);
-            else if (_tokenType == TokenType.Collateral) return IShareToken(_configData.collateralShareToken0);
-            else if (_tokenType == TokenType.Debt) return IShareToken(_configData.debtShareToken0);
-        } else if (_configData.token1 == _token) {
-            if (_tokenType == TokenType.Protected) return IShareToken(_configData.protectedCollateralShareToken1);
-            else if (_tokenType == TokenType.Collateral) return IShareToken(_configData.collateralShareToken1);
-            else if (_tokenType == TokenType.Debt) return IShareToken(_configData.debtShareToken1);
+        if (_configData.token0 == _asset) {
+            if (_assetType == AssetType.Protected) return IShareToken(_configData.protectedShareToken0);
+            else if (_assetType == AssetType.Collateral) return IShareToken(_configData.collateralShareToken0);
+            else if (_assetType == AssetType.Debt) return IShareToken(_configData.debtShareToken0);
+        } else if (_configData.token1 == _asset) {
+            if (_assetType == AssetType.Protected) return IShareToken(_configData.protectedShareToken1);
+            else if (_assetType == AssetType.Collateral) return IShareToken(_configData.collateralShareToken1);
+            else if (_assetType == AssetType.Debt) return IShareToken(_configData.debtShareToken1);
         } else {
             revert WrongToken();
         }
     }
 
-    function findModel(ISiloConfig.ConfigData memory _configData, address _token) internal pure returns (address) {
-        if (_configData.token0 == _token) {
+    function findModel(ISiloConfig.ConfigData memory _configData, address _asset) internal pure returns (address) {
+        if (_configData.token0 == _asset) {
             return _configData.interestRateModel0;
-        } else if (_configData.token1 == _token) {
+        } else if (_configData.token1 == _asset) {
             return _configData.interestRateModel1;
         } else {
             revert WrongToken();
         }
     }
 
-    function liquidity(address _token, mapping(address => ISilo.AssetStorage) storage _assetStorage)
+    function liquidity(address _asset, mapping(address => ISilo.AssetStorage) storage _assetStorage)
         internal
         view
         returns (uint256 liquidAssets)
     {
-        liquidAssets = _assetStorage[_token].collateralAssets - _assetStorage[_token].debtAssets;
+        liquidAssets = _assetStorage[_asset].collateralAssets - _assetStorage[_asset].debtAssets;
     }
 
-    function tokens(ISiloConfig _config) internal view returns (address[2] memory assetTokenAddresses) {
-        ISiloConfig.ConfigData memory configData = _config.getConfig();
-
-        assetTokenAddresses[0] = configData.token0;
-        assetTokenAddresses[1] = configData.token1;
-    }
-
-    function totalAssets(
-        ISiloConfig _config,
-        address _token,
-        mapping(address => ISilo.AssetStorage) storage _assetStorage
-    ) internal view returns (uint256) {
-        ISiloConfig.ConfigData memory configData = _config.getConfig();
-
-        if (configData.token0 == _token || configData.token1 == _token) {
-            /// @dev sum of assets cannot be bigger than total supply which must fit in uint256
-            unchecked {
-                return _assetStorage[_token].protectedAssets + _assetStorage[_token].collateralAssets;
-            }
-        } else {
-            revert WrongToken();
-        }
-    }
-
-    function getTotalAmountAndTotalShares(
+    function getTotalAssetsAndTotalShares(
         ISiloConfig.ConfigData memory _configData,
-        address _token,
-        TokenType _tokenType,
+        address _asset,
+        AssetType _assetType,
         mapping(address => ISilo.AssetStorage) storage _assetStorage
-    ) internal view returns (uint256 totalAmount, uint256 totalShares) {
-        IShareToken shareToken = findShareToken(_configData, _tokenType, _token);
+    ) internal view returns (uint256 totalAssets, uint256 totalShares) {
+        IShareToken shareToken = findShareToken(_configData, _assetType, _asset);
         totalShares = shareToken.totalSupply();
 
-        if (_tokenType == TokenType.Collateral) {
-            totalAmount =
-                amountWithInterest(_token, _assetStorage[_token].collateralAssets, findModel(_configData, _token));
-        } else if (_tokenType == TokenType.Debt) {
-            totalAmount = amountWithInterest(_token, _assetStorage[_token].debtAssets, findModel(_configData, _token));
-        } else if (_tokenType == TokenType.Protected) {
-            totalAmount = _assetStorage[_token].protectedAssets;
+        if (_assetType == AssetType.Collateral) {
+            totalAssets =
+                amountWithInterest(_asset, _assetStorage[_asset].collateralAssets, findModel(_configData, _asset));
+        } else if (_assetType == AssetType.Debt) {
+            totalAssets = amountWithInterest(_asset, _assetStorage[_asset].debtAssets, findModel(_configData, _asset));
+        } else if (_assetType == AssetType.Protected) {
+            totalAssets = _assetStorage[_asset].protectedAssets;
         }
-    }
-
-    function convertToSharesInternal(
-        ISiloConfig.ConfigData memory _configData,
-        address _token,
-        uint256 _assets,
-        TokenType _tokenType,
-        mapping(address => ISilo.AssetStorage) storage _assetStorage
-    ) internal view returns (uint256) {
-        if (_assets == 0) return 0;
-
-        (uint256 totalAmount, uint256 totalShares) =
-            getTotalAmountAndTotalShares(_configData, _token, _tokenType, _assetStorage);
-
-        return toShare(_assets, totalAmount, totalShares);
     }
 
     function convertToShares(
-        ISiloConfig _config,
-        address _token,
         uint256 _assets,
-        TokenType _tokenType,
-        mapping(address => ISilo.AssetStorage) storage _assetStorage
-    ) internal view returns (uint256) {
-        ISiloConfig.ConfigData memory configData = _config.getConfig();
-
-        return convertToSharesInternal(configData, _token, _assets, _tokenType, _assetStorage);
-    }
-
-    function convertToAssetsInternal(
-        ISiloConfig.ConfigData memory _configData,
-        address _token,
-        uint256 _shares,
-        TokenType _tokenType,
-        mapping(address => ISilo.AssetStorage) storage _assetStorage
-    ) internal view returns (uint256) {
-        if (_shares == 0) return 0;
-
-        (uint256 totalAmount, uint256 totalShares) =
-            getTotalAmountAndTotalShares(_configData, _token, _tokenType, _assetStorage);
-
-        return toAssets(_shares, totalAmount, totalShares);
+        uint256 _totalAssets,
+        uint256 _totalShares,
+        MathUpgradeable.Rounding _rounding
+    ) internal pure returns (uint256) {
+        return _assets.mulDiv(_totalShares + 10 ** _decimalsOffset(), _totalAssets + 1, _rounding);
     }
 
     function convertToAssets(
-        ISiloConfig _config,
-        address _token,
         uint256 _shares,
-        TokenType _tokenType,
-        mapping(address => ISilo.AssetStorage) storage _assetStorage
-    ) internal view returns (uint256) {
-        ISiloConfig.ConfigData memory configData = _config.getConfig();
+        uint256 _totalAssets,
+        uint256 _totalShares,
+        MathUpgradeable.Rounding _rounding
+    ) internal pure returns (uint256) {
+        return _shares.mulDiv(_totalAssets + 1, _totalShares + 10 ** _decimalsOffset(), _rounding);
+    }
 
-        return convertToAssetsInternal(configData, _token, _shares, _tokenType, _assetStorage);
+    function withdrawFees(
+        ISiloConfig _config,
+        ISiloFactory _factory,
+        mapping(address => ISilo.AssetStorage) storage _assetStorage
+    ) internal {
+        (ISiloConfig.ConfigData memory configData, address asset) = _config.getConfigWithAsset(address(this));
+
+        uint256 earnedFees = _assetStorage[asset].daoAndDeployerFees;
+        uint256 balanceOf = IERC20Upgradeable(asset).balanceOf(address(this));
+        if (earnedFees > balanceOf) earnedFees = balanceOf;
+
+        _assetStorage[asset].daoAndDeployerFees -= earnedFees;
+
+        (address daoFeeReceiver, address deployerFeeReceiver) = _factory.getFeeReceivers(address(this));
+
+        if (daoFeeReceiver == address(0) && deployerFeeReceiver == address(0)) {
+            // just in case, should never happen...
+            revert NothingToPay();
+        } else if (deployerFeeReceiver == address(0)) {
+            // deployer was never setup or deployer NFT has been burned
+            IERC20Upgradeable(asset).safeTransferFrom(address(this), daoFeeReceiver, earnedFees);
+        } else if (daoFeeReceiver == address(0)) {
+            // should never happen... but we assume DAO does not want to make money so all is going to deployer
+            IERC20Upgradeable(asset).safeTransferFrom(address(this), deployerFeeReceiver, earnedFees);
+        } else {
+            // split fees proportionally
+            uint256 daoFees = earnedFees * configData.daoFee / (configData.daoFee + configData.deployerFee);
+            uint256 deployerFees = earnedFees - daoFees;
+
+            IERC20Upgradeable(asset).safeTransferFrom(address(this), daoFeeReceiver, daoFees);
+            IERC20Upgradeable(asset).safeTransferFrom(address(this), deployerFeeReceiver, deployerFees);
+        }
+    }
+
+    function _decimalsOffset() private pure returns (uint8) {
+        return 0;
     }
 }

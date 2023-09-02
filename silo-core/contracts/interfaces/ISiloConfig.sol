@@ -2,9 +2,39 @@
 pragma solidity >=0.5.0;
 
 interface ISiloConfig {
-    struct ConfigData {
+    struct InitData {
+        address deployer;
+        uint256 deployerFee;
         address token0;
-        address protectedCollateralShareToken0;
+        address ltvOracle0;
+        address ltOracle0;
+        address interestRateModel0;
+        uint64 maxLtv0;
+        uint64 lt0;
+        uint64 liquidationFee0;
+        bool borrowable0;
+        address protectedHookReceiver0;
+        address collateralHookReceiver0;
+        address debtHookReceiver0;
+        address token1;
+        address ltvOracle1;
+        address ltOracle1;
+        address interestRateModel1;
+        uint64 maxLtv1;
+        uint64 lt1;
+        uint64 liquidationFee1;
+        bool borrowable1;
+        address protectedHookReceiver1;
+        address collateralHookReceiver1;
+        address debtHookReceiver1;
+    }
+
+    struct ConfigData {
+        uint256 daoFee;
+        uint256 deployerFee;
+        address silo0;
+        address token0;
+        address protectedShareToken0;
         address collateralShareToken0;
         address debtShareToken0;
         address ltvOracle0;
@@ -12,9 +42,11 @@ interface ISiloConfig {
         address interestRateModel0;
         uint64 maxLtv0;
         uint64 lt0;
+        uint64 liquidationFee0;
         bool borrowable0;
+        address silo1;
         address token1;
-        address protectedCollateralShareToken1;
+        address protectedShareToken1;
         address collateralShareToken1;
         address debtShareToken1;
         address ltvOracle1;
@@ -22,47 +54,36 @@ interface ISiloConfig {
         address interestRateModel1;
         uint64 maxLtv1;
         uint64 lt1;
+        uint64 liquidationFee1;
         bool borrowable1;
     }
 
-    error SameAsset();
-    error InvalidIrm();
-    error InvalidMaxLtv();
-    error InvalidMaxLt();
-    error InvalidLt();
-    error NonBorrowableSilo();
-    error InvalidShareTokens();
+    struct SmallConfigData {
+        uint256 daoFee;
+        uint256 deployerFee;
+        address token0;
+        address protectedShareToken0;
+        address collateralShareToken0;
+        address debtShareToken0;
+        address interestRateModel0;
+        address token1;
+        address protectedShareToken1;
+        address collateralShareToken1;
+        address debtShareToken1;
+        address interestRateModel1;
+    }
+
+    error WrongSilo();
 
     // solhint-disable func-name-mixedcase
 
-    function ONE() external view returns (uint256);
     function SILO_ID() external view returns (uint256);
 
-    // TOKEN #0
-
-    function TOKEN0() external view returns (address);
-    function PROTECTED_COLLATERAL_SHARE_TOKEN0() external view returns (address);
-    function COLLATERAL_SHARE_TOKEN0() external view returns (address);
-    function DEBT_SHARE_TOKEN0() external view returns (address);
-    function LTV_ORACLE0() external view returns (address);
-    function LT_ORACLE0() external view returns (address);
-    function INTEREST_RATE_MODEL0() external view returns (address);
-    function MAX_LTV0() external view returns (uint64);
-    function LT0() external view returns (uint64);
-    function BORROWABLE0() external view returns (bool);
-
-    // TOKEN #1
-
-    function TOKEN1() external view returns (address);
-    function PROTECTED_COLLATERAL_SHARE_TOKEN1() external view returns (address);
-    function COLLATERAL_SHARE_TOKEN1() external view returns (address);
-    function DEBT_SHARE_TOKEN1() external view returns (address);
-    function LTV_ORACLE1() external view returns (address);
-    function LT_ORACLE1() external view returns (address);
-    function INTEREST_RATE_MODEL1() external view returns (address);
-    function MAX_LTV1() external view returns (uint64);
-    function LT1() external view returns (uint64);
-    function BORROWABLE1() external view returns (bool);
-
+    function getAssetForSilo(address _silo) external view returns (address asset);
     function getConfig() external view returns (ConfigData memory);
+    function getSmallConfigWithAsset(address _silo)
+        external
+        view
+        returns (SmallConfigData memory configData, address asset);
+    function getConfigWithAsset(address silo) external view returns (ConfigData memory, address);
 }

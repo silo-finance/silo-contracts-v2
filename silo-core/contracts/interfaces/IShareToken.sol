@@ -14,11 +14,9 @@ interface IShareToken is IERC20MetadataUpgradeable {
 
     error Forbidden();
 
-    /// @param _name token name
-    /// @param _symbol token symbol
     /// @param _silo Silo address for which tokens was deployed
-    /// @param _asset asset for which this tokens was deployed
-    function initialize(string memory _name, string memory _symbol, ISilo _silo, address _asset) external;
+    /// @param _hookReceiver address that will get a callback on mint, burn and transfer of the token
+    function initialize(ISilo _silo, address _hookReceiver) external;
 
     /// @notice Mint method for Silo to create debt position
     /// @param _owner wallet for which to mint token
@@ -31,4 +29,10 @@ interface IShareToken is IERC20MetadataUpgradeable {
     /// @param _spender wallet that asks for burn
     /// @param _amount amount of token to be burned
     function burn(address _owner, address _spender, uint256 _amount) external;
+
+    /// @dev Returns the amount of tokens owned by `account`.
+    /// @param _account address for which to return data
+    /// @return balance of the _account
+    /// @return totalSupply total supply of the token
+    function balanceOfAndTotalSupply(address _account) external view returns (uint256 balance, uint256 totalSupply);
 }

@@ -12,7 +12,7 @@ interface ISiloFactory is IERC721Upgradeable {
     function getFee() external view returns (uint256 totalFee);
 
     // solhint-disable ordering
-    
+
     function createSilo(
         address[2] calldata assets,
         address[4] calldata oracles,
@@ -25,4 +25,5 @@ interface ISiloFactory is IERC721Upgradeable {
     function setFees(uint256 daoFee, uint256 deployerFee) external;
     function claimFees(address silo) external returns (uint256[2] memory fees);
     function getNotificationReceiver(address silo) external returns (address notificationReceiver);
+    function getFeeReceivers(address _silo) external view returns (address dao, address deployer);
 }
