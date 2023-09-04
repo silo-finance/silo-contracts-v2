@@ -5,9 +5,7 @@ import {SafeERC20Upgradeable} from "openzeppelin-contracts-upgradeable/token/ERC
 import {IERC20Upgradeable} from "openzeppelin-contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import {MathUpgradeable} from "openzeppelin-contracts-upgradeable/utils/math/MathUpgradeable.sol";
 
-import {ISiloOracle} from "../interface/ISiloOracle.sol";
-import {IHookReceiver} from "../interface/IHookReceiver.sol";
-import {SiloStdLib, ISiloConfig, ISilo, IShareToken, IInterestRateModel} from "./SiloStdLib.sol";
+import {SiloStdLib, ISiloConfig, ISilo, IShareToken} from "./SiloStdLib.sol";
 import {SiloSolvencyLib} from "./SiloSolvencyLib.sol";
 import {SiloLendingLib} from "./SiloLendingLib.sol";
 
@@ -16,11 +14,30 @@ import {SiloLendingLib} from "./SiloLendingLib.sol";
 
 library SiloERC4626Lib {
     using SafeERC20Upgradeable for IERC20Upgradeable;
+    using MathUpgradeable for uint256;
 
     uint256 internal constant _PRECISION_DECIMALS = 1e18;
 
     error DepositNotPossible();
     error NothingToWithdraw();
+
+    function convertToShares(
+        uint256 _assets,
+        uint256 _totalAssets,
+        uint256 _totalShares,
+        MathUpgradeable.Rounding _rounding
+    ) internal pure returns (uint256) {
+        return _assets.mulDiv(_totalShares + 10 ** _decimalsOffset(), _totalAssets + 1, _rounding);
+    }
+
+    function convertToAssets(
+        uint256 _shares,
+        uint256 _totalAssets,
+        uint256 _totalShares,
+        MathUpgradeable.Rounding _rounding
+    ) internal pure returns (uint256) {
+        return _shares.mulDiv(_totalAssets + 1, _totalShares + 10 ** _decimalsOffset(), _rounding);
+    }
 
     function depositPossible(ISiloConfig.ConfigData memory _configData, address _asset, address _depositor)
         internal
@@ -53,7 +70,7 @@ library SiloERC4626Lib {
         (uint256 totalAssets, uint256 totalShares) =
             SiloStdLib.getTotalAssetsAndTotalShares(configData, asset, assetType, _assetStorage);
 
-        return SiloStdLib.convertToShares(_assets, totalAssets, totalShares, MathUpgradeable.Rounding.Down);
+        return convertToShares(_assets, totalAssets, totalShares, MathUpgradeable.Rounding.Down);
     }
 
     struct DepositCache {
@@ -93,13 +110,13 @@ library SiloERC4626Lib {
         cache.totalShares = cache.collateralShareToken.totalSupply();
 
         if (_isDeposit) {
-            shares = SiloStdLib.convertToShares(
+            shares = convertToShares(
                 _assets, cache.totalAssets, cache.collateralShareToken.totalSupply(), MathUpgradeable.Rounding.Down
             );
             assets = _assets;
         } else {
             shares = _shares;
-            assets = SiloStdLib.convertToAssets(
+            assets = convertToAssets(
                 _shares, cache.totalAssets, cache.collateralShareToken.totalSupply(), MathUpgradeable.Rounding.Up
             );
         }
@@ -145,7 +162,7 @@ library SiloERC4626Lib {
         (uint256 totalAssets, uint256 totalShares) =
             SiloStdLib.getTotalAssetsAndTotalShares(configData, asset, assetType, _assetStorage);
 
-        return SiloStdLib.convertToAssets(_shares, totalAssets, totalShares, MathUpgradeable.Rounding.Up);
+        return convertToAssets(_shares, totalAssets, totalShares, MathUpgradeable.Rounding.Up);
     }
 
     function mint(
@@ -207,7 +224,7 @@ library SiloERC4626Lib {
                 ((spareTotalCollateralValue * _PRECISION_DECIMALS) / cache.totalCollateralValue)
                     * cache.protectedAndCollateralAssets
             ) / _PRECISION_DECIMALS;
-            uint256 spareCollateralShares = SiloStdLib.convertToShares(
+            uint256 spareCollateralShares = convertToShares(
                 spareCollateralAssets, cache.totalAssets, cache.totalShares, MathUpgradeable.Rounding.Down
             );
 
@@ -217,15 +234,12 @@ library SiloERC4626Lib {
             }
         }
 
-        assets =
-            SiloStdLib.convertToAssets(shares, cache.totalAssets, cache.totalShares, MathUpgradeable.Rounding.Down);
+        assets = convertToAssets(shares, cache.totalAssets, cache.totalShares, MathUpgradeable.Rounding.Down);
         cache.liquidAssets = SiloStdLib.liquidity(asset, _assetStorage);
 
         if (!_isProtected && assets > cache.liquidAssets) {
             assets = cache.liquidAssets;
-            shares = SiloStdLib.convertToShares(
-                assets, cache.totalAssets, cache.totalShares, MathUpgradeable.Rounding.Down
-            );
+            shares = convertToShares(assets, cache.totalAssets, cache.totalShares, MathUpgradeable.Rounding.Down);
         }
     }
 
@@ -246,7 +260,7 @@ library SiloERC4626Lib {
         (uint256 totalAssets, uint256 totalShares) =
             SiloStdLib.getTotalAssetsAndTotalShares(configData, asset, assetType, _assetStorage);
 
-        return SiloStdLib.convertToShares(_assets, totalAssets, totalShares, MathUpgradeable.Rounding.Down);
+        return convertToShares(_assets, totalAssets, totalShares, MathUpgradeable.Rounding.Down);
     }
 
     struct WithdrawCache {
@@ -287,16 +301,12 @@ library SiloERC4626Lib {
 
         if (_isWithdraw) {
             // it's withdraw so assets are user input
-            shares = SiloStdLib.convertToShares(
-                _assets, cache.totalAssets, cache.totalShares, MathUpgradeable.Rounding.Down
-            );
+            shares = convertToShares(_assets, cache.totalAssets, cache.totalShares, MathUpgradeable.Rounding.Down);
             assets = _assets;
         } else {
             // it's redeem so shares are user input
             shares = _shares;
-            assets = SiloStdLib.convertToAssets(
-                _shares, cache.totalAssets, cache.totalShares, MathUpgradeable.Rounding.Down
-            );
+            assets = convertToAssets(_shares, cache.totalAssets, cache.totalShares, MathUpgradeable.Rounding.Down);
         }
 
         if (assets == 0 || cache.shareBalance == 0 || shares == 0) revert NothingToWithdraw();
@@ -304,9 +314,7 @@ library SiloERC4626Lib {
         // withdraw max
         if (shares > cache.shareBalance) {
             shares = cache.shareBalance;
-            assets = SiloStdLib.convertToAssets(
-                shares, cache.totalAssets, cache.totalShares, MathUpgradeable.Rounding.Down
-            );
+            assets = convertToAssets(shares, cache.totalAssets, cache.totalShares, MathUpgradeable.Rounding.Down);
         }
 
         // check liquidity
@@ -350,7 +358,7 @@ library SiloERC4626Lib {
         (uint256 totalAssets, uint256 totalShares) =
             SiloStdLib.getTotalAssetsAndTotalShares(configData, asset, assetType, _assetStorage);
 
-        return SiloStdLib.convertToAssets(_shares, totalAssets, totalShares, MathUpgradeable.Rounding.Down);
+        return convertToAssets(_shares, totalAssets, totalShares, MathUpgradeable.Rounding.Down);
     }
 
     function smallConfigToConfig(ISiloConfig.SmallConfigData memory _smallConfigData)
@@ -370,5 +378,9 @@ library SiloERC4626Lib {
         configData.collateralShareToken1 = _smallConfigData.collateralShareToken1;
         configData.debtShareToken1 = _smallConfigData.debtShareToken1;
         configData.interestRateModel1 = _smallConfigData.interestRateModel1;
+    }
+
+    function _decimalsOffset() private pure returns (uint8) {
+        return 0;
     }
 }
