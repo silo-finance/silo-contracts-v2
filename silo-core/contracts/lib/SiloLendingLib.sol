@@ -5,7 +5,7 @@ import {SafeERC20Upgradeable} from "openzeppelin-contracts-upgradeable/token/ERC
 import {IERC20Upgradeable} from "openzeppelin-contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import {MathUpgradeable} from "openzeppelin-contracts-upgradeable/utils/math/MathUpgradeable.sol";
 
-import {ISiloOracle} from "../interface/ISiloOracle.sol";
+import {ISiloOracle} from "../interfaces/ISiloOracle.sol";
 import {SiloStdLib, ISiloConfig, ISilo, IShareToken, IInterestRateModel} from "./SiloStdLib.sol";
 import {SiloSolvencyLib} from "./SiloSolvencyLib.sol";
 import {SiloERC4626Lib} from "./SiloERC4626Lib.sol";
@@ -88,7 +88,7 @@ library SiloLendingLib {
 
         cache.fromTotalShares = cache.fromShareToken.totalSupply();
         cache.shareBalance = cache.fromShareToken.balanceOf(_owner);
-        assets = SiloStdLib.convertToAssets(
+        assets = SiloERC4626Lib.convertToAssets(
             _shares, cache.fromTotalAssets, cache.fromTotalShares, MathUpgradeable.Rounding.Down
         );
         shares = _shares;
@@ -98,7 +98,7 @@ library SiloLendingLib {
         // withdraw max
         if (cache.shareBalance < shares) {
             shares = cache.shareBalance;
-            assets = SiloStdLib.convertToAssets(
+            assets = SiloERC4626Lib.convertToAssets(
                 shares, cache.fromTotalAssets, cache.fromTotalShares, MathUpgradeable.Rounding.Down
             );
         }
@@ -126,7 +126,7 @@ library SiloLendingLib {
             _assetStorage[_asset].collateralAssets = cache.toTotalAssets + assets;
         }
 
-        toShares = SiloStdLib.convertToShares(
+        toShares = SiloERC4626Lib.convertToShares(
             assets, cache.toTotalAssets, cache.toShareToken.totalSupply(), MathUpgradeable.Rounding.Down
         );
         cache.toShareToken.mint(_owner, _spender, toShares);
@@ -173,7 +173,7 @@ library SiloLendingLib {
         if (cache.protectedShareBalance + cache.collateralShareBalance == 0) return (0, 0);
 
         if (cache.protectedShareBalance != 0) {
-            cache.totalCollateralAssets += SiloStdLib.convertToAssets(
+            cache.totalCollateralAssets += SiloERC4626Lib.convertToAssets(
                 cache.protectedShareBalance,
                 _assetStorage[asset].protectedAssets,
                 cache.protectedShareToken.totalSupply(),
@@ -186,7 +186,7 @@ library SiloLendingLib {
                 configData, asset, SiloStdLib.AssetType.Collateral, _assetStorage
             );
 
-            cache.totalCollateralAssets += SiloStdLib.convertToAssets(
+            cache.totalCollateralAssets += SiloERC4626Lib.convertToAssets(
                 cache.collateralShareBalance, totalAssets, totalShares, MathUpgradeable.Rounding.Down
             );
         }
@@ -195,7 +195,7 @@ library SiloLendingLib {
             (uint256 totalAssets, uint256 totalShares) =
                 SiloStdLib.getTotalAssetsAndTotalShares(configData, asset, SiloStdLib.AssetType.Debt, _assetStorage);
 
-            cache.debtAssets += SiloStdLib.convertToAssets(
+            cache.debtAssets += SiloERC4626Lib.convertToAssets(
                 cache.debtShareBalance, totalAssets, totalShares, MathUpgradeable.Rounding.Up
             );
         }
@@ -231,7 +231,7 @@ library SiloLendingLib {
         if (cache.debtValue >= cache.maxDebtValue) return (0, 0);
 
         maxAssets = cache.debtAssets * cache.maxDebtValue / cache.debtValue - cache.debtAssets;
-        maxShares = SiloStdLib.convertToShares(
+        maxShares = SiloERC4626Lib.convertToShares(
             maxAssets, cache.debtAssets, cache.debtShareToken.totalSupply(), MathUpgradeable.Rounding.Down
         );
     }
@@ -246,7 +246,7 @@ library SiloLendingLib {
         (uint256 totalAssets, uint256 totalShares) =
             SiloStdLib.getTotalAssetsAndTotalShares(configData, asset, SiloStdLib.AssetType.Debt, _assetStorage);
 
-        return SiloStdLib.convertToShares(_assets, totalAssets, totalShares, MathUpgradeable.Rounding.Up);
+        return SiloERC4626Lib.convertToShares(_assets, totalAssets, totalShares, MathUpgradeable.Rounding.Up);
     }
 
     struct BorrowCache {
@@ -281,14 +281,14 @@ library SiloLendingLib {
 
         if (_isAssets) {
             // borrowing assets
-            shares = SiloStdLib.convertToShares(
+            shares = SiloERC4626Lib.convertToShares(
                 _assets, cache.totalDebtAssets, cache.totalDebtShares, MathUpgradeable.Rounding.Up
             );
             assets = _assets;
         } else {
             // borrowing shares
             shares = _shares;
-            assets = SiloStdLib.convertToAssets(
+            assets = SiloERC4626Lib.convertToAssets(
                 _shares, cache.totalDebtAssets, cache.totalDebtShares, MathUpgradeable.Rounding.Down
             );
         }
@@ -323,7 +323,7 @@ library SiloLendingLib {
         (uint256 totalAssets, uint256 totalShares) =
             SiloStdLib.getTotalAssetsAndTotalShares(configData, asset, SiloStdLib.AssetType.Debt, _assetStorage);
 
-        return SiloStdLib.convertToAssets(_shares, totalAssets, totalShares, MathUpgradeable.Rounding.Down);
+        return SiloERC4626Lib.convertToAssets(_shares, totalAssets, totalShares, MathUpgradeable.Rounding.Down);
     }
 
     function maxRepay(
@@ -339,7 +339,7 @@ library SiloLendingLib {
         (uint256 totalAssets, uint256 totalShares) =
             SiloStdLib.getTotalAssetsAndTotalShares(configData, asset, SiloStdLib.AssetType.Debt, _assetStorage);
 
-        assets = SiloStdLib.convertToAssets(shares, totalAssets, totalShares, MathUpgradeable.Rounding.Up);
+        assets = SiloERC4626Lib.convertToAssets(shares, totalAssets, totalShares, MathUpgradeable.Rounding.Up);
     }
 
     function previewRepay(
@@ -352,7 +352,7 @@ library SiloLendingLib {
         (uint256 totalAssets, uint256 totalShares) =
             SiloStdLib.getTotalAssetsAndTotalShares(configData, asset, SiloStdLib.AssetType.Debt, _assetStorage);
 
-        return SiloStdLib.convertToShares(_assets, totalAssets, totalShares, MathUpgradeable.Rounding.Down);
+        return SiloERC4626Lib.convertToShares(_assets, totalAssets, totalShares, MathUpgradeable.Rounding.Down);
     }
 
     function repay(
@@ -377,20 +377,22 @@ library SiloLendingLib {
 
         if (_isAssets) {
             // repaying assets
-            shares =
-                SiloStdLib.convertToShares(_assets, totalDebtAmount, totalDebtShares, MathUpgradeable.Rounding.Down);
+            shares = SiloERC4626Lib.convertToShares(
+                _assets, totalDebtAmount, totalDebtShares, MathUpgradeable.Rounding.Down
+            );
             assets = _assets;
         } else {
             // repaying shares
             shares = _shares;
             assets =
-                SiloStdLib.convertToAssets(_shares, totalDebtAmount, totalDebtShares, MathUpgradeable.Rounding.Up);
+                SiloERC4626Lib.convertToAssets(_shares, totalDebtAmount, totalDebtShares, MathUpgradeable.Rounding.Up);
         }
 
         // repay max if shares above balance
         if (shares > shareDebtBalance) {
             shares = shareDebtBalance;
-            assets = SiloStdLib.convertToAssets(shares, totalDebtAmount, totalDebtShares, MathUpgradeable.Rounding.Up);
+            assets =
+                SiloERC4626Lib.convertToAssets(shares, totalDebtAmount, totalDebtShares, MathUpgradeable.Rounding.Up);
         }
 
         /// @dev fee-on-transfer is ignored
@@ -413,7 +415,7 @@ library SiloLendingLib {
         (uint256 totalAssets, uint256 totalShares) =
             SiloStdLib.getTotalAssetsAndTotalShares(configData, asset, SiloStdLib.AssetType.Debt, _assetStorage);
 
-        assets = SiloStdLib.convertToAssets(_shares, totalAssets, totalShares, MathUpgradeable.Rounding.Up);
+        assets = SiloERC4626Lib.convertToAssets(_shares, totalAssets, totalShares, MathUpgradeable.Rounding.Up);
     }
 
     struct AccrueInterestCache {

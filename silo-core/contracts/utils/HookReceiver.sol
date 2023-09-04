@@ -3,9 +3,9 @@ pragma solidity >=0.5.0;
 
 import {OwnableUpgradeable} from "openzeppelin-contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-import {IShareToken} from "../interface/IShareToken.sol";
-import {IHookReceiver} from "../interface/IHookReceiver.sol";
-import {IGauge} from "../interface/IGauge.sol";
+import {IShareToken} from "../interfaces/IShareToken.sol";
+import {IHookReceiver} from "../interfaces/IHookReceiver.sol";
+import {IGauge} from "../interfaces/IGauge.sol";
 
 contract HookReceiver is IHookReceiver, OwnableUpgradeable {
     IGauge public gauge;

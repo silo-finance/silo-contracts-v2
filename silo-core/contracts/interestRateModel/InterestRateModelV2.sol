@@ -5,7 +5,7 @@ import {SafeCast} from "openzeppelin-contracts/utils/math/SafeCast.sol";
 import {Math} from "openzeppelin-contracts/utils/math/Math.sol";
 
 import {PRBMathSD59x18} from "../lib/PRBMathSD59x18.sol";
-import {EasyMathV2} from  "../lib/EasyMathV2.sol";
+import {SiloStdLib} from  "../lib/SiloStdLib.sol";
 import {ISilo} from "../interfaces/ISilo.sol";
 import {IInterestRateModel} from "../interfaces/IInterestRateModel.sol";
 import {IInterestRateModelConfig} from "../interfaces/IInterestRateModelConfig.sol";
@@ -103,8 +103,8 @@ contract InterestRateModelV2 is IInterestRateModel {
 
         (rcomp, currentSetup.ri, currentSetup.Tcrit) = calculateCompoundInterestRate(
             getConfig(silo, _asset),
-            data.totalDeposits,
-            data.totalBorrowAmount,
+            data.collateralAssets,
+            data.debtAssets,
             data.interestRateTimestamp,
             _blockTimestamp
         );
@@ -120,8 +120,8 @@ contract InterestRateModelV2 is IInterestRateModel {
 
         (rcomp,,) = calculateCompoundInterestRate(
             getConfig(_silo, _asset),
-            data.totalDeposits,
-            data.totalBorrowAmount,
+            data.collateralAssets,
+            data.debtAssets,
             data.interestRateTimestamp,
             _blockTimestamp
         );
@@ -137,8 +137,8 @@ contract InterestRateModelV2 is IInterestRateModel {
 
         (,,,overflow) = calculateCompoundInterestRateWithOverflowDetection(
             getConfig(_silo, _asset),
-            data.totalDeposits,
-            data.totalBorrowAmount,
+            data.collateralAssets,
+            data.debtAssets,
             data.interestRateTimestamp,
             _blockTimestamp
         );
@@ -154,8 +154,8 @@ contract InterestRateModelV2 is IInterestRateModel {
 
         rcur = calculateCurrentInterestRate(
             getConfig(_silo, _asset),
-            data.totalDeposits,
-            data.totalBorrowAmount,
+            data.collateralAssets,
+            data.debtAssets,
             data.interestRateTimestamp,
             _blockTimestamp
         );
@@ -207,7 +207,7 @@ contract InterestRateModelV2 is IInterestRateModel {
             _l.T = (_blockTimestamp - _interestRateTimestamp).toInt256();
         }
 
-        _l.u = EasyMathV2.calculateUtilization(DP, _totalDeposits, _totalBorrowAmount).toInt256();
+        _l.u = SiloStdLib.calculateUtilization(DP, _totalDeposits, _totalBorrowAmount).toInt256();
         _l.DP = int256(DP);
 
         if (_l.u > _c.ucrit) {
@@ -281,7 +281,7 @@ contract InterestRateModelV2 is IInterestRateModel {
 
         int256 _DP = int256(DP); // solhint-disable-line var-name-mixedcase
 
-        _l.u = EasyMathV2.calculateUtilization(DP, _totalDeposits, _totalBorrowAmount).toInt256();
+        _l.u = SiloStdLib.calculateUtilization(DP, _totalDeposits, _totalBorrowAmount).toInt256();
 
         // slopei := ki * (u0 - uopt )
         _l.slopei = _c.ki * (_l.u - _c.uopt) / _DP;

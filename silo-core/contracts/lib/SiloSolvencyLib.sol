@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.18;
 
+import {MathUpgradeable} from "openzeppelin-contracts-upgradeable/utils/math/MathUpgradeable.sol";
+
 import {ISiloOracle} from "../interfaces/ISiloOracle.sol";
 import {SiloStdLib, ISiloConfig, IShareToken, ISilo} from "./SiloStdLib.sol";
-import {MathUpgradeable} from "openzeppelin-contracts-upgradeable/utils/math/MathUpgradeable.sol";
+import {SiloERC4626Lib} from "./SiloERC4626Lib.sol";
 
 // solhint-disable ordering
 
@@ -111,7 +113,7 @@ library SiloSolvencyLib {
         }
 
         /// @dev Round up so borrower has more to repay. Always round in favor of the protocol.
-        ltvData.debtAssets = SiloStdLib.convertToAssets(
+        ltvData.debtAssets = SiloERC4626Lib.convertToAssets(
             ltvCache.debtShareTokenBalance,
             /// @dev amountWithInterest is not needed for core LTV calculations because accrueInterest was just called
             ///      and storage data is fresh.
@@ -128,7 +130,7 @@ library SiloSolvencyLib {
         uint256 protectedAssets;
 
         if (protectedBalance != 0) {
-            protectedAssets = SiloStdLib.convertToAssets(
+            protectedAssets = SiloERC4626Lib.convertToAssets(
                 protectedBalance,
                 ltvCache.collateralSilo.getProtectedAssets(),
                 ltvCache.protectedShareToken.totalSupply(),
@@ -140,7 +142,7 @@ library SiloSolvencyLib {
         uint256 collateralAssets;
 
         if (collateralBalance != 0) {
-            collateralAssets = SiloStdLib.convertToAssets(
+            collateralAssets = SiloERC4626Lib.convertToAssets(
                 collateralBalance,
                 /// @dev amountWithInterest is not needed for core LTV calculations because accrueInterest is called
                 _interestRateType == InterestRateType.Dynamic

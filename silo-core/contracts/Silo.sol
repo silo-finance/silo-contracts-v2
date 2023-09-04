@@ -44,6 +44,14 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable {
         return config.SILO_ID();
     }
 
+    function utilizationData(address _asset) external view returns (UtilizationData memory) {
+        return UtilizationData({
+            collateralAssets: assetStorage[_asset].collateralAssets,
+            debtAssets: assetStorage[_asset].debtAssets,
+            interestRateTimestamp: assetStorage[_asset].interestRateTimestamp
+        });
+    }
+
     function isSolvent(address _borrower) external view virtual returns (bool) {
         // solhint-disable-line ordering
         return SiloSolvencyLib.isSolventWithInterestAccrue(config, _borrower);
@@ -100,7 +108,7 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable {
             configData, siloAsset, SiloStdLib.AssetType.Collateral, assetStorage
         );
 
-        return SiloStdLib.convertToShares(_assets, totalAssetsUpdated, totalShares, MathUpgradeable.Rounding.Down);
+        return SiloERC4626Lib.convertToShares(_assets, totalAssetsUpdated, totalShares, MathUpgradeable.Rounding.Down);
     }
 
     function convertToAssets(uint256 _shares) external view virtual returns (uint256 assets) {
@@ -110,7 +118,7 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable {
             configData, siloAsset, SiloStdLib.AssetType.Collateral, assetStorage
         );
 
-        return SiloStdLib.convertToAssets(_shares, totalAssetsUpdated, totalShares, MathUpgradeable.Rounding.Down);
+        return SiloERC4626Lib.convertToAssets(_shares, totalAssetsUpdated, totalShares, MathUpgradeable.Rounding.Down);
     }
 
     function maxDeposit(address _receiver) external view virtual returns (uint256 maxAssets) {
@@ -202,7 +210,7 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable {
         (uint256 totalAssetsUpdated, uint256 totalShares) =
             SiloStdLib.getTotalAssetsAndTotalShares(configData, siloAsset, assetType, assetStorage);
 
-        return SiloStdLib.convertToShares(_assets, totalAssetsUpdated, totalShares, MathUpgradeable.Rounding.Down);
+        return SiloERC4626Lib.convertToShares(_assets, totalAssetsUpdated, totalShares, MathUpgradeable.Rounding.Down);
     }
 
     function convertToAssets(uint256 _shares, bool _isProtected) external view virtual returns (uint256 assets) {
@@ -214,7 +222,7 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable {
         (uint256 totalAssetsUpdated, uint256 totalShares) =
             SiloStdLib.getTotalAssetsAndTotalShares(configData, siloAsset, assetType, assetStorage);
 
-        return SiloStdLib.convertToAssets(_shares, totalAssetsUpdated, totalShares, MathUpgradeable.Rounding.Down);
+        return SiloERC4626Lib.convertToAssets(_shares, totalAssetsUpdated, totalShares, MathUpgradeable.Rounding.Down);
     }
 
     function maxDeposit(address _receiver, bool /*_isProtected*/ )

@@ -22,6 +22,16 @@ interface ISilo {
         uint64 interestRateTimestamp;
     }
 
+    struct UtilizationData {
+        /// @dev COLLATERAL: Amount of asset token that has been deposited to Silo plus interest earned by depositors.
+        /// It also includes token amount that has been borrowed.
+        uint256 collateralAssets;
+        /// @dev DEBT: Amount of asset token that has been borrowed plus accrued interest.
+        uint256 debtAssets;
+        /// @dev timestamp of the last interest accrual
+        uint64 interestRateTimestamp;
+    }
+
     /// @notice Emitted on deposit
     /// @param sender wallet address that deposited asset
     /// @param owner wallet address that received shares in Silo
@@ -77,7 +87,8 @@ interface ISilo {
 
     function config() external view returns (ISiloConfig);
     function siloId() external view returns (uint256);
-    function assetStorage(address _token) external view returns (uint256, uint256, uint256, uint256, uint64);
+    function assetStorage(address _asset) external view returns (uint256, uint256, uint256, uint256, uint64);
+    function utilizationData(address _asset) external view returns (UtilizationData memory);
 
     function isSolvent(address _borrower) external returns (bool); // solhint-disable-line ordering
     function depositPossible(address _depositor) external view returns (bool);
