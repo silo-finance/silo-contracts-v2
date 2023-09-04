@@ -4,8 +4,11 @@ pragma solidity 0.8.18;
 import {Initializable} from "openzeppelin-contracts-upgradeable/proxy/utils/Initializable.sol";
 import {ReentrancyGuardUpgradeable} from "openzeppelin-contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import {MathUpgradeable} from "openzeppelin-contracts-upgradeable/utils/math/MathUpgradeable.sol";
+import {SafeERC20Upgradeable} from "openzeppelin-contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
+import {IERC20Upgradeable} from "openzeppelin-contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 
 import {ISilo} from "./interfaces/ISilo.sol";
+import {IERC3156FlashBorrower} from "./interfaces/IERC3156FlashBorrower.sol";
 import {ISiloConfig} from "./interfaces/ISiloConfig.sol";
 import {ISiloFactory} from "./interfaces/ISiloFactory.sol";
 import {SiloStdLib} from "./lib/SiloStdLib.sol";
@@ -16,7 +19,13 @@ import {SiloERC4626Lib} from "./lib/SiloERC4626Lib.sol";
 // solhint-disable ordering
 
 contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable {
+    using SafeERC20Upgradeable for IERC20Upgradeable;
+
     string public constant VERSION = "2.0.0";
+
+    /// @dev 1%, 1e18 == 100%
+    uint256 public constant FLASHLOAN_FEE = 0.01e18;
+    bytes32 public constant FLASHLOAN_CALLBACK = keccak256("ERC3156FlashBorrower.onFlashLoan");
 
     ISiloFactory public immutable factory;
 
@@ -452,11 +461,34 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable {
         emit Repay(msg.sender, _borrower, assets, shares);
     }
 
-    function flashloan(uint256 _assets, address _borrower, address _receiver, bytes memory _flashloanReceiverData)
+    function maxFlashLoan(address _token) external view returns (uint256) {
+        return
+            _token == config.getAssetForSilo(address(this)) ? IERC20Upgradeable(_token).balanceOf(address(this)) : 0;
+    }
+
+    function flashFee(address _token, uint256 _amount) external view returns (uint256) {
+        return SiloStdLib.flashFee(config, FLASHLOAN_FEE, _token, _amount);
+    }
+
+    function flashLoan(IERC3156FlashBorrower _receiver, address _token, uint256 _amount, bytes calldata _data)
         external
-        virtual
-        returns (uint256 shares)
-    {}
+        returns (bool)
+    {
+        /// @dev flashFee will revert for wrong token
+        uint256 fee = SiloStdLib.flashFee(config, FLASHLOAN_FEE, _token, _amount);
+
+        IERC20Upgradeable(_token).safeTransferFrom(address(this), address(_receiver), _amount);
+
+        if (_receiver.onFlashLoan(msg.sender, _token, _amount, fee, _data) != FLASHLOAN_CALLBACK) {
+            revert FlashloanFailed();
+        }
+
+        IERC20Upgradeable(_token).safeTransferFrom(address(_receiver), address(this), _amount + fee);
+
+        assetStorage[_token].daoAndDeployerFees += fee;
+
+        return true;
+    }
 
     function leverage() external virtual {}
     function liquidate(address _borrower) external virtual {}

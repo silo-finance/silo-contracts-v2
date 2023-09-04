@@ -23,10 +23,6 @@ library SiloLendingLib {
 
     uint256 internal constant _PRECISION_DECIMALS = 1e18;
 
-    error NotEnoughLiquidity();
-    error NotSolvent();
-    error BorrowNotPossible();
-
     function borrowPossible(ISiloConfig.ConfigData memory _configData, address _asset, address _borrower)
         internal
         view
@@ -93,7 +89,7 @@ library SiloLendingLib {
         );
         shares = _shares;
 
-        if (assets == 0 || cache.shareBalance == 0 || shares == 0) revert SiloERC4626Lib.NothingToWithdraw();
+        if (assets == 0 || cache.shareBalance == 0 || shares == 0) revert ISilo.NothingToWithdraw();
 
         // withdraw max
         if (cache.shareBalance < shares) {
@@ -107,7 +103,7 @@ library SiloLendingLib {
             /// @dev when moving to protected collateral make sure that there is available liquidity in the Silo.
             ///      If there isn't, disallow transition. Otherwise, users could use it as a way to withdraw other's
             ///      people protected tokens when utilization of the Silo is at 100%.
-            if (assets > SiloStdLib.liquidity(_asset, _assetStorage)) revert NotEnoughLiquidity();
+            if (assets > SiloStdLib.liquidity(_asset, _assetStorage)) revert ISilo.NotEnoughLiquidity();
 
             _assetStorage[_asset].collateralAssets = cache.fromTotalAssets - assets;
         } else {
@@ -269,7 +265,7 @@ library SiloLendingLib {
     ) internal returns (uint256 assets, uint256 shares) {
         (ISiloConfig.ConfigData memory configData, address asset) = _config.getConfigWithAsset(address(this));
 
-        if (!borrowPossible(configData, asset, _borrower)) revert BorrowNotPossible();
+        if (!borrowPossible(configData, asset, _borrower)) revert ISilo.BorrowNotPossible();
 
         accrueInterest(configData, asset, _assetStorage);
 
@@ -293,7 +289,7 @@ library SiloLendingLib {
             );
         }
 
-        if (assets > SiloStdLib.liquidity(asset, _assetStorage)) revert NotEnoughLiquidity();
+        if (assets > SiloStdLib.liquidity(asset, _assetStorage)) revert ISilo.NotEnoughLiquidity();
 
         /// @dev add new debt
         _assetStorage[asset].debtAssets += assets;
@@ -307,9 +303,9 @@ library SiloLendingLib {
         (cache.ltv, cache.isToken0Collateral) = SiloSolvencyLib.getLtv(configData, _borrower);
 
         if (cache.isToken0Collateral) {
-            if (cache.ltv > configData.maxLtv0) revert NotSolvent();
+            if (cache.ltv > configData.maxLtv0) revert ISilo.NotSolvent();
         } else {
-            if (cache.ltv > configData.maxLtv1) revert NotSolvent();
+            if (cache.ltv > configData.maxLtv1) revert ISilo.NotSolvent();
         }
     }
 

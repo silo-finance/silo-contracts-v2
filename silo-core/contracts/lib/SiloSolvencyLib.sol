@@ -267,7 +267,7 @@ library SiloSolvencyLib {
         } else if (configData.token1 == asset) {
             return configData.maxLtv1;
         } else {
-            revert SiloStdLib.WrongToken();
+            revert ISilo.WrongToken();
         }
     }
 
@@ -279,7 +279,7 @@ library SiloSolvencyLib {
         } else if (configData.token1 == asset) {
             return configData.lt1;
         } else {
-            revert SiloStdLib.WrongToken();
+            revert ISilo.WrongToken();
         }
     }
 }

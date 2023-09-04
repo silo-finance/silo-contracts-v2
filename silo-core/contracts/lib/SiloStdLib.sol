@@ -21,10 +21,6 @@ library SiloStdLib {
 
     uint256 internal constant _PRECISION_DECIMALS = 1e18;
 
-    error WrongToken();
-    error OutOfBounds();
-    error NothingToPay();
-
     function withdrawFees(
         ISiloConfig _config,
         ISiloFactory _factory,
@@ -42,7 +38,7 @@ library SiloStdLib {
 
         if (daoFeeReceiver == address(0) && deployerFeeReceiver == address(0)) {
             // just in case, should never happen...
-            revert NothingToPay();
+            revert ISilo.NothingToPay();
         } else if (deployerFeeReceiver == address(0)) {
             // deployer was never setup or deployer NFT has been burned
             IERC20Upgradeable(asset).safeTransferFrom(address(this), daoFeeReceiver, earnedFees);
@@ -57,6 +53,16 @@ library SiloStdLib {
             IERC20Upgradeable(asset).safeTransferFrom(address(this), daoFeeReceiver, daoFees);
             IERC20Upgradeable(asset).safeTransferFrom(address(this), deployerFeeReceiver, deployerFees);
         }
+    }
+
+    function flashFee(ISiloConfig _config, uint256 _flashloanFee, address _token, uint256 _amount)
+        internal
+        view
+        returns (uint256)
+    {
+        if (_token != _config.getAssetForSilo(address(this))) revert ISilo.Unsupported();
+
+        return _amount * _flashloanFee / _PRECISION_DECIMALS;
     }
 
     function amountWithInterest(address _asset, uint256 _amount, address _model)
@@ -112,7 +118,7 @@ library SiloStdLib {
             else if (_assetType == AssetType.Collateral) return IShareToken(_configData.collateralShareToken1);
             else if (_assetType == AssetType.Debt) return IShareToken(_configData.debtShareToken1);
         } else {
-            revert WrongToken();
+            revert ISilo.WrongToken();
         }
     }
 
@@ -122,7 +128,7 @@ library SiloStdLib {
         } else if (_configData.token1 == _asset) {
             return _configData.interestRateModel1;
         } else {
-            revert WrongToken();
+            revert ISilo.WrongToken();
         }
     }
 
