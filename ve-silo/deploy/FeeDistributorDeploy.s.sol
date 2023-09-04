@@ -9,10 +9,10 @@ import {FeeDistributor, IFeeDistributor} from "ve-silo/contracts/fees-distributi
 
 /**
 FOUNDRY_PROFILE=ve-silo \
-    forge script ve-silo/deploy/FeesDistributorDeploy.s.sol \
+    forge script ve-silo/deploy/FeeDistributorDeploy.s.sol \
     --ffi --broadcast --rpc-url http://127.0.0.1:8545
  */
-contract FeesDistributorDeploy is CommonDeploy {
+contract FeeDistributorDeploy is CommonDeploy {
     uint256 public startTime = 1706745600;
 
     function run() public returns (IFeeDistributor feeDistributor) {
@@ -28,7 +28,7 @@ contract FeesDistributorDeploy is CommonDeploy {
         
         vm.stopBroadcast();
 
-        _registerDeployment(address(feeDistributor), VeSiloContracts.FEES_DISTRIBUTOR);
+        _registerDeployment(address(feeDistributor), VeSiloContracts.FEE_DISTRIBUTOR);
 
         _syncDeployments();
     }
