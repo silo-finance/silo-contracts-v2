@@ -4,8 +4,29 @@ pragma solidity >=0.5.0;
 import {IERC3156FlashLender} from "./IERC3156FlashLender.sol";
 import {ISiloConfig} from "./ISiloConfig.sol";
 import {ISiloFactory} from "./ISiloFactory.sol";
+import {ILeverageBorrower} from "./ILeverageBorrower.sol";
 
 interface ISilo is IERC3156FlashLender {
+    enum Protected {
+        Yes,
+        No
+    }
+
+    enum UseAssets {
+        Yes,
+        No
+    }
+
+    enum CheckSolvency {
+        Yes,
+        No
+    }
+
+    enum Transition {
+        ToProtected,
+        FromProtected
+    }
+
     // TODO: optimized storage to use uint128 and uncheck math
     /// @dev Storage struct that holds all required data for a single token market
     struct AssetStorage {
@@ -93,6 +114,7 @@ interface ISilo is IERC3156FlashLender {
     error WrongToken();
     error NothingToPay();
     error FlashloanFailed();
+    error LeverageFailed();
 
     function initialize(ISiloConfig _config) external;
 
@@ -136,26 +158,26 @@ interface ISilo is IERC3156FlashLender {
 
     // Protected
 
-    function convertToShares(uint256 _assets, bool _isProtected) external view returns (uint256 shares);
-    function convertToAssets(uint256 _shares, bool _isProtected) external view returns (uint256 assets);
+    function convertToShares(uint256 _assets, Protected _isProtected) external view returns (uint256 shares);
+    function convertToAssets(uint256 _shares, Protected _isProtected) external view returns (uint256 assets);
 
-    function maxDeposit(address _receiver, bool _isProtected) external view returns (uint256 maxAssets);
-    function previewDeposit(uint256 _assets, bool _isProtected) external view returns (uint256 shares);
-    function deposit(uint256 _assets, address _receiver, bool _isProtected) external returns (uint256 shares);
+    function maxDeposit(address _receiver, Protected _isProtected) external view returns (uint256 maxAssets);
+    function previewDeposit(uint256 _assets, Protected _isProtected) external view returns (uint256 shares);
+    function deposit(uint256 _assets, address _receiver, Protected _isProtected) external returns (uint256 shares);
 
-    function maxMint(address _receiver, bool _isProtected) external view returns (uint256 maxShares);
-    function previewMint(uint256 _shares, bool _isProtected) external view returns (uint256 assets);
-    function mint(uint256 _shares, address _receiver, bool _isProtected) external returns (uint256 assets);
+    function maxMint(address _receiver, Protected _isProtected) external view returns (uint256 maxShares);
+    function previewMint(uint256 _shares, Protected _isProtected) external view returns (uint256 assets);
+    function mint(uint256 _shares, address _receiver, Protected _isProtected) external returns (uint256 assets);
 
-    function maxWithdraw(address _owner, bool _isProtected) external view returns (uint256 maxAssets);
-    function previewWithdraw(uint256 _assets, bool _isProtected) external view returns (uint256 shares);
-    function withdraw(uint256 _assets, address _receiver, address _owner, bool _isProtected)
+    function maxWithdraw(address _owner, Protected _isProtected) external view returns (uint256 maxAssets);
+    function previewWithdraw(uint256 _assets, Protected _isProtected) external view returns (uint256 shares);
+    function withdraw(uint256 _assets, address _receiver, address _owner, Protected _isProtected)
         external
         returns (uint256 shares);
 
-    function maxRedeem(address _owner, bool _isProtected) external view returns (uint256 maxShares);
-    function previewRedeem(uint256 _shares, bool _isProtected) external view returns (uint256 assets);
-    function redeem(uint256 _shares, address _receiver, address _owner, bool _isProtected)
+    function maxRedeem(address _owner, Protected _isProtected) external view returns (uint256 maxShares);
+    function previewRedeem(uint256 _shares, Protected _isProtected) external view returns (uint256 assets);
+    function redeem(uint256 _shares, address _receiver, address _owner, Protected _isProtected)
         external
         returns (uint256 assets);
 
@@ -180,7 +202,9 @@ interface ISilo is IERC3156FlashLender {
     function previewRepayShares(uint256 _shares) external view returns (uint256 assets);
     function repayShares(uint256 _shares, address _borrower) external returns (uint256 assets);
 
-    function leverage() external;
+    function leverage(uint256 _assets, ILeverageBorrower _receiver, address _borrower, bytes calldata _data)
+        external
+        returns (uint256 shares);
     // TODO: allow selfliquidate
     function liquidate(address _borrower) external;
     function accrueInterest() external returns (uint256 accruedInterest);
