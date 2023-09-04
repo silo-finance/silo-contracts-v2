@@ -55,14 +55,16 @@ library SiloStdLib {
         }
     }
 
-    function flashFee(ISiloConfig _config, uint256 _flashloanFee, address _token, uint256 _amount)
+    function flashFee(ISiloConfig _config, address _token, uint256 _amount)
         internal
         view
         returns (uint256)
     {
-        if (_token != _config.getAssetForSilo(address(this))) revert ISilo.Unsupported();
+        (uint256 flashloanFee, address asset) = _config.getFlashloanFeeWithAsset(address(this));
 
-        return _amount * _flashloanFee / _PRECISION_DECIMALS;
+        if (_token != asset) revert ISilo.Unsupported();
+
+        return _amount * flashloanFee / _PRECISION_DECIMALS;
     }
 
     function amountWithInterest(address _asset, uint256 _amount, address _model)
