@@ -18,9 +18,6 @@ library SiloERC4626Lib {
 
     uint256 internal constant _PRECISION_DECIMALS = 1e18;
 
-    error DepositNotPossible();
-    error NothingToWithdraw();
-
     function convertToShares(
         uint256 _assets,
         uint256 _totalAssets,
@@ -95,7 +92,7 @@ library SiloERC4626Lib {
 
         SiloLendingLib.accrueInterest(configData, asset, _assetStorage);
 
-        if (!depositPossible(configData, asset, _receiver)) revert DepositNotPossible();
+        if (!depositPossible(configData, asset, _receiver)) revert ISilo.DepositNotPossible();
 
         DepositCache memory cache;
 
@@ -309,7 +306,7 @@ library SiloERC4626Lib {
             assets = convertToAssets(_shares, cache.totalAssets, cache.totalShares, MathUpgradeable.Rounding.Down);
         }
 
-        if (assets == 0 || cache.shareBalance == 0 || shares == 0) revert NothingToWithdraw();
+        if (assets == 0 || cache.shareBalance == 0 || shares == 0) revert ISilo.NothingToWithdraw();
 
         // withdraw max
         if (shares > cache.shareBalance) {
@@ -318,7 +315,7 @@ library SiloERC4626Lib {
         }
 
         // check liquidity
-        if (assets > SiloStdLib.liquidity(asset, _assetStorage)) revert SiloLendingLib.NotEnoughLiquidity();
+        if (assets > SiloStdLib.liquidity(asset, _assetStorage)) revert ISilo.NotEnoughLiquidity();
 
         if (_isProtected) {
             /// @dev `assets` can never be more then `totalAssets` because we always increase `totalAssets` by
@@ -341,7 +338,7 @@ library SiloERC4626Lib {
         IERC20Upgradeable(asset).safeTransferFrom(address(this), _receiver, assets);
 
         /// @dev `_owner` must be solvent
-        if (!SiloSolvencyLib.isSolvent(configData, _owner)) revert SiloLendingLib.NotSolvent();
+        if (!SiloSolvencyLib.isSolvent(configData, _owner)) revert ISilo.NotSolvent();
     }
 
     function previewRedeem(

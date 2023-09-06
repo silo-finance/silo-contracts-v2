@@ -1,10 +1,11 @@
-// SPDX-License-Identifier: BUSL-1.1
+// SPDX-License-Identifier: MIT
 pragma solidity >=0.5.0;
 
+import {IERC3156FlashLender} from "./IERC3156FlashLender.sol";
 import {ISiloConfig} from "./ISiloConfig.sol";
 import {ISiloFactory} from "./ISiloFactory.sol";
 
-interface ISilo {
+interface ISilo is IERC3156FlashLender {
     // TODO: optimized storage to use uint128 and uncheck math
     /// @dev Storage struct that holds all required data for a single token market
     struct AssetStorage {
@@ -82,6 +83,16 @@ interface ISilo {
     /// @param assets amount of asset that was repaid
     /// @param shares amount of shares that was burn
     event Repay(address indexed sender, address indexed owner, uint256 assets, uint256 shares);
+
+    error Unsupported();
+    error DepositNotPossible();
+    error NothingToWithdraw();
+    error NotEnoughLiquidity();
+    error NotSolvent();
+    error BorrowNotPossible();
+    error WrongToken();
+    error NothingToPay();
+    error FlashloanFailed();
 
     function initialize(ISiloConfig _config) external;
 
@@ -169,10 +180,6 @@ interface ISilo {
     function previewRepayShares(uint256 _shares) external view returns (uint256 assets);
     function repayShares(uint256 _shares, address _borrower) external returns (uint256 assets);
 
-    // TODO: https://eips.ethereum.org/EIPS/eip-3156
-    function flashloan(uint256 _assets, address _borrower, address _receiver, bytes memory _flashloanReceiverData)
-        external
-        returns (uint256 shares);
     function leverage() external;
     // TODO: allow selfliquidate
     function liquidate(address _borrower) external;
