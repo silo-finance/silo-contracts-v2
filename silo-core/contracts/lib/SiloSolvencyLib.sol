@@ -236,7 +236,7 @@ library SiloSolvencyLib {
 
         uint256 lt = isToken0Collateral ? _configData.lt0 : _configData.lt1;
 
-        return ltv <= lt;
+        return ltv < lt;
     }
 
     function isSolvent(ISiloConfig _config, address _borrower) internal returns (bool) {
@@ -252,8 +252,16 @@ library SiloSolvencyLib {
 
         uint256 lt = isToken0Collateral ? configData.lt0 : configData.lt1;
 
-        return ltv <= lt;
+        return ltv < lt;
     }
+
+    function isBelowMaxLtv(ISiloConfig.ConfigData memory _configData, address _borrower) internal returns (bool) {
+        (uint256 ltv, bool isToken0Collateral) = getLtv(_configData, _borrower);
+        uint256 maxLTV = isToken0Collateral ? _configData.maxLtv0 : _configData.maxLtv1;
+
+        return ltv < maxLTV;
+    }
+
 
     function getMaxLtv(ISiloConfig _config) internal view returns (uint256) {
         (ISiloConfig.ConfigData memory configData, address asset) = _config.getConfigWithAsset(address(this));

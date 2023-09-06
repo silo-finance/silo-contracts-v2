@@ -77,7 +77,8 @@ library SiloERC4626Lib {
     }
 
     function deposit(
-        ISiloConfig _config,
+        ISiloConfig.ConfigData memory _configData,
+        address _asset,
         address _depositor,
         address _receiver,
         uint256 _assets,
@@ -86,22 +87,16 @@ library SiloERC4626Lib {
         ISilo.UseAssets _isAssets,
         mapping(address => ISilo.AssetStorage) storage _assetStorage
     ) internal returns (uint256 assets, uint256 shares) {
-        (ISiloConfig.SmallConfigData memory smallConfigData, address asset) =
-            _config.getSmallConfigWithAsset(address(this));
-        ISiloConfig.ConfigData memory configData = smallConfigToConfig(smallConfigData);
-
-        SiloLendingLib.accrueInterest(configData, asset, _assetStorage);
-
-        if (!depositPossible(configData, asset, _receiver)) revert ISilo.DepositNotPossible();
-
         DepositCache memory cache;
 
         if (_isProtected == ISilo.Protected.Yes) {
-            cache.totalAssets = _assetStorage[asset].protectedAssets;
-            cache.collateralShareToken = SiloStdLib.findShareToken(configData, SiloStdLib.AssetType.Protected, asset);
+            cache.totalAssets = _assetStorage[_asset].protectedAssets;
+            cache.collateralShareToken =
+                SiloStdLib.findShareToken(_configData, SiloStdLib.AssetType.Protected, _asset);
         } else {
-            cache.totalAssets = _assetStorage[asset].collateralAssets;
-            cache.collateralShareToken = SiloStdLib.findShareToken(configData, SiloStdLib.AssetType.Collateral, asset);
+            cache.totalAssets = _assetStorage[_asset].collateralAssets;
+            cache.collateralShareToken =
+                SiloStdLib.findShareToken(_configData, SiloStdLib.AssetType.Collateral, _asset);
         }
 
         cache.totalShares = cache.collateralShareToken.totalSupply();
@@ -119,17 +114,17 @@ library SiloERC4626Lib {
         }
 
         /// @dev Transfer tokens before minting. No state changes have been made so far so reentracy does nothing.
-        IERC20Upgradeable(asset).safeTransferFrom(_depositor, address(this), assets);
+        IERC20Upgradeable(_asset).safeTransferFrom(_depositor, address(this), assets);
 
         if (_isProtected == ISilo.Protected.Yes) {
             /// @dev `assets` and `totalAssets` can never be more than uint256 because totalSupply cannot be either
             unchecked {
-                _assetStorage[asset].protectedAssets = cache.totalAssets + assets;
+                _assetStorage[_asset].protectedAssets = cache.totalAssets + assets;
             }
         } else {
             /// @dev `assets` and `totalAssets` can never be more than uint256 because totalSupply cannot be either
             unchecked {
-                _assetStorage[asset].collateralAssets = cache.totalAssets + assets;
+                _assetStorage[_asset].collateralAssets = cache.totalAssets + assets;
             }
         }
 
@@ -160,18 +155,6 @@ library SiloERC4626Lib {
             SiloStdLib.getTotalAssetsAndTotalShares(configData, asset, assetType, _assetStorage);
 
         return convertToAssets(_shares, totalAssets, totalShares, MathUpgradeable.Rounding.Up);
-    }
-
-    function mint(
-        ISiloConfig _config,
-        address _depositor,
-        address _receiver,
-        uint256 _shares,
-        ISilo.Protected _isProtected,
-        mapping(address => ISilo.AssetStorage) storage _assetStorage
-    ) internal returns (uint256 assets) {
-        (assets,) =
-            deposit(_config, _depositor, _receiver, 0, _shares, _isProtected, ISilo.UseAssets.No, _assetStorage);
     }
 
     struct MaxWithdrawCache {
@@ -270,7 +253,8 @@ library SiloERC4626Lib {
 
     // solhint-disable-next-line code-complexity
     function withdraw(
-        ISiloConfig _config,
+        ISiloConfig.ConfigData memory _configData,
+        address _asset,
         uint256 _assets,
         uint256 _shares,
         address _receiver,
@@ -280,18 +264,14 @@ library SiloERC4626Lib {
         ISilo.UseAssets _isAssets,
         mapping(address => ISilo.AssetStorage) storage _assetStorage
     ) internal returns (uint256 assets, uint256 shares) {
-        (ISiloConfig.ConfigData memory configData, address asset) = _config.getConfigWithAsset(address(this));
-
         WithdrawCache memory cache;
 
-        SiloLendingLib.accrueInterest(configData, asset, _assetStorage);
-
         if (_isProtected == ISilo.Protected.Yes) {
-            cache.shareToken = SiloStdLib.findShareToken(configData, SiloStdLib.AssetType.Protected, asset);
-            cache.totalAssets = _assetStorage[asset].protectedAssets;
+            cache.shareToken = SiloStdLib.findShareToken(_configData, SiloStdLib.AssetType.Protected, _asset);
+            cache.totalAssets = _assetStorage[_asset].protectedAssets;
         } else {
-            cache.shareToken = SiloStdLib.findShareToken(configData, SiloStdLib.AssetType.Collateral, asset);
-            cache.totalAssets = _assetStorage[asset].collateralAssets;
+            cache.shareToken = SiloStdLib.findShareToken(_configData, SiloStdLib.AssetType.Collateral, _asset);
+            cache.totalAssets = _assetStorage[_asset].collateralAssets;
         }
 
         cache.totalShares = cache.shareToken.totalSupply();
@@ -316,19 +296,19 @@ library SiloERC4626Lib {
         }
 
         // check liquidity
-        if (assets > SiloStdLib.liquidity(asset, _assetStorage)) revert ISilo.NotEnoughLiquidity();
+        if (assets > SiloStdLib.liquidity(_asset, _assetStorage)) revert ISilo.NotEnoughLiquidity();
 
         if (_isProtected == ISilo.Protected.Yes) {
             /// @dev `assets` can never be more then `totalAssets` because we always increase `totalAssets` by
             ///      `assets` and interest
             unchecked {
-                _assetStorage[asset].protectedAssets = cache.totalAssets - assets;
+                _assetStorage[_asset].protectedAssets = cache.totalAssets - assets;
             }
         } else {
             /// @dev `assets` can never be more then `totalAssets` because we always increase `totalAssets` by
             ///      `assets` and interest
             unchecked {
-                _assetStorage[asset].collateralAssets = cache.totalAssets - assets;
+                _assetStorage[_asset].collateralAssets = cache.totalAssets - assets;
             }
         }
 
@@ -336,10 +316,7 @@ library SiloERC4626Lib {
         ///      can potentially reenter but state changes are already completed.
         cache.shareToken.burn(_owner, _spender, shares);
         /// @dev fee-on-transfer is ignored
-        IERC20Upgradeable(asset).safeTransferFrom(address(this), _receiver, assets);
-
-        /// @dev `_owner` must be solvent
-        if (!SiloSolvencyLib.isSolvent(configData, _owner)) revert ISilo.NotSolvent();
+        IERC20Upgradeable(_asset).safeTransferFrom(address(this), _receiver, assets);
     }
 
     function previewRedeem(
@@ -357,25 +334,6 @@ library SiloERC4626Lib {
             SiloStdLib.getTotalAssetsAndTotalShares(configData, asset, assetType, _assetStorage);
 
         return convertToAssets(_shares, totalAssets, totalShares, MathUpgradeable.Rounding.Down);
-    }
-
-    function smallConfigToConfig(ISiloConfig.SmallConfigData memory _smallConfigData)
-        public
-        pure
-        returns (ISiloConfig.ConfigData memory configData)
-    {
-        configData.daoFee = _smallConfigData.daoFee;
-        configData.deployerFee = _smallConfigData.deployerFee;
-        configData.token0 = _smallConfigData.token0;
-        configData.protectedShareToken0 = _smallConfigData.protectedShareToken0;
-        configData.collateralShareToken0 = _smallConfigData.collateralShareToken0;
-        configData.debtShareToken0 = _smallConfigData.debtShareToken0;
-        configData.interestRateModel0 = _smallConfigData.interestRateModel0;
-        configData.token1 = _smallConfigData.token1;
-        configData.protectedShareToken1 = _smallConfigData.protectedShareToken1;
-        configData.collateralShareToken1 = _smallConfigData.collateralShareToken1;
-        configData.debtShareToken1 = _smallConfigData.debtShareToken1;
-        configData.interestRateModel1 = _smallConfigData.interestRateModel1;
     }
 
     function _decimalsOffset() private pure returns (uint8) {

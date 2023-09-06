@@ -72,6 +72,8 @@ interface IInterestRateModel {
     error InvalidUopt();
     error InvalidRi();
 
+    function connect(address _asset, address _configAddress) external;
+
     /// @dev get compound interest rate and update model storage
     /// @param _asset address of an asset in Silo for which interest rate should be calculated
     /// @param _blockTimestamp current block timestamp

@@ -8,18 +8,13 @@ import {ILeverageBorrower} from "./ILeverageBorrower.sol";
 
 interface ISilo is IERC3156FlashLender {
     enum Protected {
-        Yes,
-        No
+        No,
+        Yes
     }
 
     enum UseAssets {
-        Yes,
-        No
-    }
-
-    enum CheckSolvency {
-        Yes,
-        No
+        No,
+        Yes
     }
 
     enum Transition {
@@ -52,6 +47,14 @@ interface ISilo is IERC3156FlashLender {
         uint256 debtAssets;
         /// @dev timestamp of the last interest accrual
         uint64 interestRateTimestamp;
+    }
+
+    struct WithdrawParams {
+        uint256 assets;
+        uint256 shares;
+        address receiver;
+        address owner;
+        Protected isProtected;
     }
 
     /// @notice Emitted on deposit
@@ -105,6 +108,9 @@ interface ISilo is IERC3156FlashLender {
     /// @param shares amount of shares that was burn
     event Repay(address indexed sender, address indexed owner, uint256 assets, uint256 shares);
 
+    /// @notice Emitted on leverage
+    event Leverage();
+
     error Unsupported();
     error DepositNotPossible();
     error NothingToWithdraw();
@@ -115,8 +121,9 @@ interface ISilo is IERC3156FlashLender {
     error NothingToPay();
     error FlashloanFailed();
     error LeverageFailed();
+    error AboveMaxLtv();
 
-    function initialize(ISiloConfig _config) external;
+    function initialize(ISiloConfig _config, address _modelConfigAddress) external;
 
     function config() external view returns (ISiloConfig);
     function siloId() external view returns (uint256);
@@ -181,8 +188,8 @@ interface ISilo is IERC3156FlashLender {
         external
         returns (uint256 assets);
 
-    function transitionToProtected(uint256 _shares, address _owner) external returns (uint256 assets);
-    function transitionFromProtected(uint256 _shares, address _owner) external returns (uint256 shares);
+    function transitionCollateralToProtected(uint256 _shares, address _owner) external returns (uint256 assets);
+    function transitionCollateralFromProtected(uint256 _shares, address _owner) external returns (uint256 shares);
 
     // Lending
 

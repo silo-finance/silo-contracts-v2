@@ -13,7 +13,6 @@ contract SiloConfig is ISiloConfig {
 
     uint256 private immutable _DAO_FEE;
     uint256 private immutable _DEPLOYER_FEE;
-    uint256 private immutable _FLASHLOAN_FEE;
 
     // TOKEN #0
 
@@ -36,6 +35,7 @@ contract SiloConfig is ISiloConfig {
     uint64 private immutable _MAX_LTV0;
     uint64 private immutable _LT0;
     uint64 private immutable _LIQUIDATION_FEE0;
+    uint64 private immutable _FLASHLOAN_FEE0;
 
     bool private immutable _BORROWABLE0;
 
@@ -60,6 +60,7 @@ contract SiloConfig is ISiloConfig {
     uint64 private immutable _MAX_LTV1;
     uint64 private immutable _LT1;
     uint64 private immutable _LIQUIDATION_FEE1;
+    uint64 private immutable _FLASHLOAN_FEE1;
 
     bool private immutable _BORROWABLE1;
 
@@ -70,7 +71,6 @@ contract SiloConfig is ISiloConfig {
 
         _DAO_FEE = _configData.daoFee;
         _DEPLOYER_FEE = _configData.deployerFee;
-        _FLASHLOAN_FEE = _configData.flashloanFee;
 
         // TOKEN #0
 
@@ -90,6 +90,7 @@ contract SiloConfig is ISiloConfig {
         _MAX_LTV0 = _configData.maxLtv0;
         _LT0 = _configData.lt0;
         _LIQUIDATION_FEE0 = _configData.liquidationFee0;
+        _FLASHLOAN_FEE0 = _configData.flashloanFee0;
 
         _BORROWABLE0 = _configData.borrowable0;
 
@@ -111,6 +112,7 @@ contract SiloConfig is ISiloConfig {
         _MAX_LTV1 = _configData.maxLtv1;
         _LT1 = _configData.lt1;
         _LIQUIDATION_FEE1 = _configData.liquidationFee1;
+        _FLASHLOAN_FEE1 = _configData.flashloanFee1;
 
         _BORROWABLE1 = _configData.borrowable1;
     }
@@ -129,7 +131,6 @@ contract SiloConfig is ISiloConfig {
         return ConfigData({
             daoFee: _DAO_FEE,
             deployerFee: _DEPLOYER_FEE,
-            flashloanFee: _FLASHLOAN_FEE,
             silo0: _SILO0,
             token0: _TOKEN0,
             protectedShareToken0: _PROTECTED_COLLATERAL_SHARE_TOKEN0,
@@ -141,6 +142,7 @@ contract SiloConfig is ISiloConfig {
             maxLtv0: _MAX_LTV0,
             lt0: _LT0,
             liquidationFee0: _LIQUIDATION_FEE0,
+            flashloanFee0: _FLASHLOAN_FEE0,
             borrowable0: _BORROWABLE0,
             silo1: _SILO1,
             token1: _TOKEN1,
@@ -153,11 +155,15 @@ contract SiloConfig is ISiloConfig {
             maxLtv1: _MAX_LTV1,
             lt1: _LT1,
             liquidationFee1: _LIQUIDATION_FEE1,
+            flashloanFee1: _FLASHLOAN_FEE1,
             borrowable1: _BORROWABLE1
         });
     }
 
     /// @dev returns only part of the config needed for deposit and repey to save gas
+    ///      Getting full config (ConfigData) costs ~3k gas. Small config (SmallConfigData) costs ~1.4k gas.
+    ///      SmallConfigData is always casted to ConfigData so it's tempting to do casting here but full config with
+    ///      empty data costs ~2.4k gas so it makes sense to cast in memory outside of this contract.
     function getSmallConfigWithAsset(address _silo)
         public
         view
@@ -185,7 +191,14 @@ contract SiloConfig is ISiloConfig {
     }
 
     function getFlashloanFeeWithAsset(address _silo) public view returns (uint256 flashloanFee, address asset) {
-        flashloanFee = _FLASHLOAN_FEE;
-        asset = getAssetForSilo(_silo);
+        if (_silo == _SILO0) {
+            flashloanFee = _FLASHLOAN_FEE0;
+            asset = _TOKEN0;
+        } else if (_silo == _SILO1) {
+            flashloanFee = _FLASHLOAN_FEE1;
+            asset = _TOKEN1;
+        } else {
+            revert WrongSilo();
+        }
     }
 }

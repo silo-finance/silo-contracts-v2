@@ -5,14 +5,15 @@ interface ISiloConfig {
     struct InitData {
         address deployer;
         uint256 deployerFee;
-        uint256 flashloanFee;
         address token0;
         address ltvOracle0;
         address ltOracle0;
         address interestRateModel0;
+        address interestRateModelConfig0;
         uint64 maxLtv0;
         uint64 lt0;
         uint64 liquidationFee0;
+        uint64 flashloanFee0;
         bool borrowable0;
         address protectedHookReceiver0;
         address collateralHookReceiver0;
@@ -21,9 +22,11 @@ interface ISiloConfig {
         address ltvOracle1;
         address ltOracle1;
         address interestRateModel1;
+        address interestRateModelConfig1;
         uint64 maxLtv1;
         uint64 lt1;
         uint64 liquidationFee1;
+        uint64 flashloanFee1;
         bool borrowable1;
         address protectedHookReceiver1;
         address collateralHookReceiver1;
@@ -33,7 +36,6 @@ interface ISiloConfig {
     struct ConfigData {
         uint256 daoFee;
         uint256 deployerFee;
-        uint256 flashloanFee;
         address silo0;
         address token0;
         address protectedShareToken0;
@@ -45,6 +47,7 @@ interface ISiloConfig {
         uint64 maxLtv0;
         uint64 lt0;
         uint64 liquidationFee0;
+        uint64 flashloanFee0;
         bool borrowable0;
         address silo1;
         address token1;
@@ -57,6 +60,7 @@ interface ISiloConfig {
         uint64 maxLtv1;
         uint64 lt1;
         uint64 liquidationFee1;
+        uint64 flashloanFee1;
         bool borrowable1;
     }
 
