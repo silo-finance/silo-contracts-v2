@@ -56,13 +56,13 @@ library SiloERC4626Lib {
     function previewDeposit(
         ISiloConfig _config,
         uint256 _assets,
-        bool _isProtected,
+        ISilo.Protected _isProtected,
         mapping(address => ISilo.AssetStorage) storage _assetStorage
     ) internal view returns (uint256 shares) {
         (ISiloConfig.ConfigData memory configData, address asset) = _config.getConfigWithAsset(address(this));
 
         SiloStdLib.AssetType assetType = SiloStdLib.AssetType.Collateral;
-        if (_isProtected) assetType = SiloStdLib.AssetType.Protected;
+        if (_isProtected == ISilo.Protected.Yes) assetType = SiloStdLib.AssetType.Protected;
 
         (uint256 totalAssets, uint256 totalShares) =
             SiloStdLib.getTotalAssetsAndTotalShares(configData, asset, assetType, _assetStorage);
@@ -82,8 +82,8 @@ library SiloERC4626Lib {
         address _receiver,
         uint256 _assets,
         uint256 _shares,
-        bool _isProtected,
-        bool _isDeposit,
+        ISilo.Protected _isProtected,
+        ISilo.UseAssets _isAssets,
         mapping(address => ISilo.AssetStorage) storage _assetStorage
     ) internal returns (uint256 assets, uint256 shares) {
         (ISiloConfig.SmallConfigData memory smallConfigData, address asset) =
@@ -96,7 +96,7 @@ library SiloERC4626Lib {
 
         DepositCache memory cache;
 
-        if (_isProtected) {
+        if (_isProtected == ISilo.Protected.Yes) {
             cache.totalAssets = _assetStorage[asset].protectedAssets;
             cache.collateralShareToken = SiloStdLib.findShareToken(configData, SiloStdLib.AssetType.Protected, asset);
         } else {
@@ -106,7 +106,7 @@ library SiloERC4626Lib {
 
         cache.totalShares = cache.collateralShareToken.totalSupply();
 
-        if (_isDeposit) {
+        if (_isAssets == ISilo.UseAssets.Yes) {
             shares = convertToShares(
                 _assets, cache.totalAssets, cache.collateralShareToken.totalSupply(), MathUpgradeable.Rounding.Down
             );
@@ -121,7 +121,7 @@ library SiloERC4626Lib {
         /// @dev Transfer tokens before minting. No state changes have been made so far so reentracy does nothing.
         IERC20Upgradeable(asset).safeTransferFrom(_depositor, address(this), assets);
 
-        if (_isProtected) {
+        if (_isProtected == ISilo.Protected.Yes) {
             /// @dev `assets` and `totalAssets` can never be more than uint256 because totalSupply cannot be either
             unchecked {
                 _assetStorage[asset].protectedAssets = cache.totalAssets + assets;
@@ -148,13 +148,13 @@ library SiloERC4626Lib {
     function previewMint(
         ISiloConfig _config,
         uint256 _shares,
-        bool _isProtected,
+        ISilo.Protected _isProtected,
         mapping(address => ISilo.AssetStorage) storage _assetStorage
     ) internal view returns (uint256 assets) {
         (ISiloConfig.ConfigData memory configData, address asset) = _config.getConfigWithAsset(address(this));
 
         SiloStdLib.AssetType assetType = SiloStdLib.AssetType.Collateral;
-        if (_isProtected) assetType = SiloStdLib.AssetType.Protected;
+        if (_isProtected == ISilo.Protected.Yes) assetType = SiloStdLib.AssetType.Protected;
 
         (uint256 totalAssets, uint256 totalShares) =
             SiloStdLib.getTotalAssetsAndTotalShares(configData, asset, assetType, _assetStorage);
@@ -167,10 +167,11 @@ library SiloERC4626Lib {
         address _depositor,
         address _receiver,
         uint256 _shares,
-        bool _isProtected,
+        ISilo.Protected _isProtected,
         mapping(address => ISilo.AssetStorage) storage _assetStorage
     ) internal returns (uint256 assets) {
-        (assets,) = deposit(_config, _depositor, _receiver, 0, _shares, _isProtected, true, _assetStorage);
+        (assets,) =
+            deposit(_config, _depositor, _receiver, 0, _shares, _isProtected, ISilo.UseAssets.No, _assetStorage);
     }
 
     struct MaxWithdrawCache {
@@ -186,14 +187,14 @@ library SiloERC4626Lib {
     function maxWithdraw(
         ISiloConfig _config,
         address _owner,
-        bool _isProtected,
+        ISilo.Protected _isProtected,
         mapping(address => ISilo.AssetStorage) storage _assetStorage
     ) internal view returns (uint256 assets, uint256 shares) {
         (ISiloConfig.ConfigData memory configData, address asset) = _config.getConfigWithAsset(address(this));
 
         MaxWithdrawCache memory cache;
 
-        if (_isProtected) {
+        if (_isProtected == ISilo.Protected.Yes) {
             cache.shareToken = SiloStdLib.findShareToken(configData, SiloStdLib.AssetType.Protected, asset);
             cache.totalAssets = _assetStorage[asset].protectedAssets;
         } else {
@@ -234,7 +235,7 @@ library SiloERC4626Lib {
         assets = convertToAssets(shares, cache.totalAssets, cache.totalShares, MathUpgradeable.Rounding.Down);
         cache.liquidAssets = SiloStdLib.liquidity(asset, _assetStorage);
 
-        if (!_isProtected && assets > cache.liquidAssets) {
+        if (_isProtected == ISilo.Protected.No && assets > cache.liquidAssets) {
             assets = cache.liquidAssets;
             shares = convertToShares(assets, cache.totalAssets, cache.totalShares, MathUpgradeable.Rounding.Down);
         }
@@ -243,14 +244,14 @@ library SiloERC4626Lib {
     function previewWithdraw(
         ISiloConfig _config,
         uint256 _assets,
-        bool _isProtected,
+        ISilo.Protected _isProtected,
         mapping(address => ISilo.AssetStorage) storage _assetStorage
     ) internal view returns (uint256 shares) {
         (ISiloConfig.ConfigData memory configData, address asset) = _config.getConfigWithAsset(address(this));
 
         SiloStdLib.AssetType assetType = SiloStdLib.AssetType.Collateral;
 
-        if (_isProtected) {
+        if (_isProtected == ISilo.Protected.Yes) {
             assetType = SiloStdLib.AssetType.Protected;
         }
 
@@ -275,8 +276,8 @@ library SiloERC4626Lib {
         address _receiver,
         address _owner,
         address _spender,
-        bool _isProtected,
-        bool _isWithdraw,
+        ISilo.Protected _isProtected,
+        ISilo.UseAssets _isAssets,
         mapping(address => ISilo.AssetStorage) storage _assetStorage
     ) internal returns (uint256 assets, uint256 shares) {
         (ISiloConfig.ConfigData memory configData, address asset) = _config.getConfigWithAsset(address(this));
@@ -285,7 +286,7 @@ library SiloERC4626Lib {
 
         SiloLendingLib.accrueInterest(configData, asset, _assetStorage);
 
-        if (_isProtected) {
+        if (_isProtected == ISilo.Protected.Yes) {
             cache.shareToken = SiloStdLib.findShareToken(configData, SiloStdLib.AssetType.Protected, asset);
             cache.totalAssets = _assetStorage[asset].protectedAssets;
         } else {
@@ -296,7 +297,7 @@ library SiloERC4626Lib {
         cache.totalShares = cache.shareToken.totalSupply();
         cache.shareBalance = cache.shareToken.balanceOf(_owner);
 
-        if (_isWithdraw) {
+        if (_isAssets == ISilo.UseAssets.Yes) {
             // it's withdraw so assets are user input
             shares = convertToShares(_assets, cache.totalAssets, cache.totalShares, MathUpgradeable.Rounding.Down);
             assets = _assets;
@@ -317,7 +318,7 @@ library SiloERC4626Lib {
         // check liquidity
         if (assets > SiloStdLib.liquidity(asset, _assetStorage)) revert ISilo.NotEnoughLiquidity();
 
-        if (_isProtected) {
+        if (_isProtected == ISilo.Protected.Yes) {
             /// @dev `assets` can never be more then `totalAssets` because we always increase `totalAssets` by
             ///      `assets` and interest
             unchecked {
@@ -344,13 +345,13 @@ library SiloERC4626Lib {
     function previewRedeem(
         ISiloConfig _config,
         uint256 _shares,
-        bool _isProtected,
+        ISilo.Protected _isProtected,
         mapping(address => ISilo.AssetStorage) storage _assetStorage
     ) external view returns (uint256 assets) {
         (ISiloConfig.ConfigData memory configData, address asset) = _config.getConfigWithAsset(address(this));
 
         SiloStdLib.AssetType assetType = SiloStdLib.AssetType.Collateral;
-        if (_isProtected) assetType = SiloStdLib.AssetType.Protected;
+        if (_isProtected == ISilo.Protected.Yes) assetType = SiloStdLib.AssetType.Protected;
 
         (uint256 totalAssets, uint256 totalShares) =
             SiloStdLib.getTotalAssetsAndTotalShares(configData, asset, assetType, _assetStorage);

@@ -16,11 +16,6 @@ import {SiloERC4626Lib} from "./SiloERC4626Lib.sol";
 library SiloLendingLib {
     using SafeERC20Upgradeable for IERC20Upgradeable;
 
-    enum Transition {
-        ToProtected,
-        FromProtected
-    }
-
     uint256 internal constant _PRECISION_DECIMALS = 1e18;
 
     function borrowPossible(ISiloConfig.ConfigData memory _configData, address _asset, address _borrower)
@@ -36,13 +31,7 @@ library SiloLendingLib {
         uint256 totalCollateralBalance =
             protectedShareToken.balanceOf(_borrower) + collateralShareToken.balanceOf(_borrower);
 
-        bool borrowable;
-
-        if (_asset == _configData.token0) {
-            borrowable = _configData.borrowable0;
-        } else {
-            borrowable = _configData.borrowable1;
-        }
+        bool borrowable = _asset == _configData.token0 ? _configData.borrowable0 : _configData.borrowable1;
 
         /// @dev token must be marked as borrowable and _borrower cannot have any collateral deposited
         return borrowable && totalCollateralBalance == 0;
@@ -63,14 +52,14 @@ library SiloLendingLib {
         uint256 _shares,
         address _owner,
         address _spender,
-        Transition _transition,
+        ISilo.Transition _transition,
         mapping(address => ISilo.AssetStorage) storage _assetStorage
     ) internal returns (uint256 assets, uint256 shares, uint256 toShares) {
         accrueInterest(_configData, _asset, _assetStorage);
 
         TransitionCache memory cache;
 
-        if (_transition == Transition.ToProtected) {
+        if (_transition == ISilo.Transition.ToProtected) {
             cache.fromShareToken = SiloStdLib.findShareToken(_configData, SiloStdLib.AssetType.Collateral, _asset);
             cache.fromTotalAssets = _assetStorage[_asset].collateralAssets;
             cache.toShareToken = SiloStdLib.findShareToken(_configData, SiloStdLib.AssetType.Protected, _asset);
@@ -99,7 +88,7 @@ library SiloLendingLib {
             );
         }
 
-        if (_transition == Transition.ToProtected) {
+        if (_transition == ISilo.Transition.ToProtected) {
             /// @dev when moving to protected collateral make sure that there is available liquidity in the Silo.
             ///      If there isn't, disallow transition. Otherwise, users could use it as a way to withdraw other's
             ///      people protected tokens when utilization of the Silo is at 100%.
@@ -116,7 +105,7 @@ library SiloLendingLib {
         /// @dev `burn` and `mint` call hook receiver contract which can possibly reenter. To keep correct state during
         ///      potential reentry, we increase balances after burn as if transition was done in two separate
         ///      transactions.
-        if (_transition == Transition.ToProtected) {
+        if (_transition == ISilo.Transition.ToProtected) {
             _assetStorage[_asset].protectedAssets = cache.toTotalAssets + assets;
         } else {
             _assetStorage[_asset].collateralAssets = cache.toTotalAssets + assets;
@@ -251,31 +240,32 @@ library SiloLendingLib {
         uint256 totalDebtShares;
         uint256 ltv;
         bool isToken0Collateral;
+        uint256 maxLtv;
     }
 
     function borrow(
-        ISiloConfig _config,
+        ISiloConfig.ConfigData memory _configData,
+        address _asset,
         uint256 _assets,
         uint256 _shares,
         address _receiver,
         address _borrower,
         address _spender,
-        bool _isAssets,
+        ISilo.UseAssets _isAssets,
+        ISilo.CheckSolvency _checkSolvency,
         mapping(address => ISilo.AssetStorage) storage _assetStorage
     ) internal returns (uint256 assets, uint256 shares) {
-        (ISiloConfig.ConfigData memory configData, address asset) = _config.getConfigWithAsset(address(this));
+        if (!borrowPossible(_configData, _asset, _borrower)) revert ISilo.BorrowNotPossible();
 
-        if (!borrowPossible(configData, asset, _borrower)) revert ISilo.BorrowNotPossible();
-
-        accrueInterest(configData, asset, _assetStorage);
+        accrueInterest(_configData, _asset, _assetStorage);
 
         BorrowCache memory cache;
 
-        cache.debtShareToken = SiloStdLib.findShareToken(configData, SiloStdLib.AssetType.Debt, asset);
-        cache.totalDebtAssets = _assetStorage[asset].debtAssets;
+        cache.debtShareToken = SiloStdLib.findShareToken(_configData, SiloStdLib.AssetType.Debt, _asset);
+        cache.totalDebtAssets = _assetStorage[_asset].debtAssets;
         cache.totalDebtShares = cache.debtShareToken.totalSupply();
 
-        if (_isAssets) {
+        if (_isAssets == ISilo.UseAssets.Yes) {
             // borrowing assets
             shares = SiloERC4626Lib.convertToShares(
                 _assets, cache.totalDebtAssets, cache.totalDebtShares, MathUpgradeable.Rounding.Up
@@ -289,23 +279,23 @@ library SiloLendingLib {
             );
         }
 
-        if (assets > SiloStdLib.liquidity(asset, _assetStorage)) revert ISilo.NotEnoughLiquidity();
+        if (assets > SiloStdLib.liquidity(_asset, _assetStorage)) revert ISilo.NotEnoughLiquidity();
 
         /// @dev add new debt
-        _assetStorage[asset].debtAssets += assets;
+        _assetStorage[_asset].debtAssets += assets;
         /// @dev `mint` checks if _spender is allowed to borrow on the account of _borrower. Hook receiver can
         ///      potentially reenter but the state is correct.
         cache.debtShareToken.mint(_borrower, _spender, shares);
         /// @dev fee-on-transfer is ignored. If token reenters, state is already finilized, no harm done.
-        IERC20Upgradeable(asset).safeTransferFrom(address(this), _receiver, assets);
+        IERC20Upgradeable(_asset).safeTransferFrom(address(this), _receiver, assets);
 
-        /// @dev `_borrower` must be below maxLtv
-        (cache.ltv, cache.isToken0Collateral) = SiloSolvencyLib.getLtv(configData, _borrower);
+        /// @dev during leverage allow for solvency check after a callback is called to allow for collateral deposit
+        if (_checkSolvency == ISilo.CheckSolvency.Yes) {
+            /// @dev `_borrower` must be below maxLtv
+            (cache.ltv, cache.isToken0Collateral) = SiloSolvencyLib.getLtv(_configData, _borrower);
+            cache.maxLtv = cache.isToken0Collateral ? _configData.maxLtv0 : _configData.maxLtv1;
 
-        if (cache.isToken0Collateral) {
-            if (cache.ltv > configData.maxLtv0) revert ISilo.NotSolvent();
-        } else {
-            if (cache.ltv > configData.maxLtv1) revert ISilo.NotSolvent();
+            if (cache.ltv > cache.maxLtv) revert ISilo.NotSolvent();
         }
     }
 
@@ -357,7 +347,7 @@ library SiloLendingLib {
         uint256 _shares,
         address _borrower,
         address _repayer,
-        bool _isAssets,
+        ISilo.UseAssets _isAssets,
         mapping(address => ISilo.AssetStorage) storage _assetStorage
     ) internal returns (uint256 assets, uint256 shares) {
         (ISiloConfig.SmallConfigData memory smallConfigData, address asset) =
@@ -371,7 +361,7 @@ library SiloLendingLib {
         uint256 totalDebtShares = debtShareToken.totalSupply();
         uint256 shareDebtBalance = debtShareToken.balanceOf(_borrower);
 
-        if (_isAssets) {
+        if (_isAssets == ISilo.UseAssets.Yes) {
             // repaying assets
             shares = SiloERC4626Lib.convertToShares(
                 _assets, totalDebtAmount, totalDebtShares, MathUpgradeable.Rounding.Down

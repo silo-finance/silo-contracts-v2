@@ -5,6 +5,7 @@ interface ISiloConfig {
     struct InitData {
         address deployer;
         uint256 deployerFee;
+        uint256 flashloanFee;
         address token0;
         address ltvOracle0;
         address ltOracle0;
@@ -32,6 +33,7 @@ interface ISiloConfig {
     struct ConfigData {
         uint256 daoFee;
         uint256 deployerFee;
+        uint256 flashloanFee;
         address silo0;
         address token0;
         address protectedShareToken0;
@@ -86,4 +88,5 @@ interface ISiloConfig {
         view
         returns (SmallConfigData memory configData, address asset);
     function getConfigWithAsset(address silo) external view returns (ConfigData memory, address);
+    function getFlashloanFeeWithAsset(address _silo) external view returns (uint256 flashloanFee, address asset);
 }

@@ -9,6 +9,7 @@ import {IERC20Upgradeable} from "openzeppelin-contracts-upgradeable/token/ERC20/
 
 import {ISilo} from "./interfaces/ISilo.sol";
 import {IERC3156FlashBorrower} from "./interfaces/IERC3156FlashBorrower.sol";
+import {ILeverageBorrower} from "./interfaces/ILeverageBorrower.sol";
 import {ISiloConfig} from "./interfaces/ISiloConfig.sol";
 import {ISiloFactory} from "./interfaces/ISiloFactory.sol";
 import {SiloStdLib} from "./lib/SiloStdLib.sol";
@@ -23,9 +24,8 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable {
 
     string public constant VERSION = "2.0.0";
 
-    /// @dev 1%, 1e18 == 100%
-    uint256 public constant FLASHLOAN_FEE = 0.01e18;
     bytes32 public constant FLASHLOAN_CALLBACK = keccak256("ERC3156FlashBorrower.onFlashLoan");
+    bytes32 public constant LEVERAGE_CALLBACK = keccak256("ILeverageBorrower.onLeverage");
 
     ISiloFactory public immutable factory;
 
@@ -135,14 +135,15 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable {
     }
 
     function previewDeposit(uint256 _assets) external view virtual returns (uint256 shares) {
-        return SiloERC4626Lib.previewDeposit(config, _assets, false, assetStorage);
+        return SiloERC4626Lib.previewDeposit(config, _assets, Protected.No, assetStorage);
     }
 
     function deposit(uint256 _assets, address _receiver) external virtual nonReentrant returns (uint256 shares) {
         uint256 assets;
 
-        (assets, shares) =
-            SiloERC4626Lib.deposit(config, msg.sender, _receiver, _assets, 0, false, true, assetStorage);
+        (assets, shares) = SiloERC4626Lib.deposit(
+            config, msg.sender, _receiver, _assets, 0, Protected.No, UseAssets.Yes, assetStorage
+        );
 
         emit Deposit(msg.sender, _receiver, assets, shares);
     }
@@ -152,24 +153,25 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable {
     }
 
     function previewMint(uint256 _shares) external view virtual returns (uint256 assets) {
-        return SiloERC4626Lib.previewMint(config, _shares, false, assetStorage);
+        return SiloERC4626Lib.previewMint(config, _shares, Protected.No, assetStorage);
     }
 
     function mint(uint256 _shares, address _receiver) external virtual nonReentrant returns (uint256 assets) {
         uint256 shares;
 
-        (assets, shares) =
-            SiloERC4626Lib.deposit(config, msg.sender, _receiver, 0, _shares, false, false, assetStorage);
+        (assets, shares) = SiloERC4626Lib.deposit(
+            config, msg.sender, _receiver, 0, _shares, Protected.No, UseAssets.No, assetStorage
+        );
 
         emit Deposit(msg.sender, _receiver, assets, shares);
     }
 
     function maxWithdraw(address _owner) external view virtual returns (uint256 maxAssets) {
-        (maxAssets,) = SiloERC4626Lib.maxWithdraw(config, _owner, false, assetStorage);
+        (maxAssets,) = SiloERC4626Lib.maxWithdraw(config, _owner, Protected.No, assetStorage);
     }
 
     function previewWithdraw(uint256 _assets) external view virtual returns (uint256 shares) {
-        return SiloERC4626Lib.previewWithdraw(config, _assets, false, assetStorage);
+        return SiloERC4626Lib.previewWithdraw(config, _assets, Protected.No, assetStorage);
     }
 
     function withdraw(uint256 _assets, address _receiver, address _owner)
@@ -180,18 +182,19 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable {
     {
         uint256 assets;
 
-        (assets, shares) =
-            SiloERC4626Lib.withdraw(config, _assets, 0, _receiver, _owner, msg.sender, false, true, assetStorage);
+        (assets, shares) = SiloERC4626Lib.withdraw(
+            config, _assets, 0, _receiver, _owner, msg.sender, Protected.No, UseAssets.Yes, assetStorage
+        );
 
         emit Withdraw(msg.sender, _receiver, _owner, assets, shares);
     }
 
     function maxRedeem(address _owner) external view virtual returns (uint256 maxShares) {
-        (, maxShares) = SiloERC4626Lib.maxWithdraw(config, _owner, false, assetStorage);
+        (, maxShares) = SiloERC4626Lib.maxWithdraw(config, _owner, Protected.No, assetStorage);
     }
 
     function previewRedeem(uint256 _shares) external view virtual returns (uint256 assets) {
-        return SiloERC4626Lib.previewRedeem(config, _shares, false, assetStorage);
+        return SiloERC4626Lib.previewRedeem(config, _shares, Protected.No, assetStorage);
     }
 
     function redeem(uint256 _shares, address _receiver, address _owner)
@@ -202,19 +205,25 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable {
     {
         uint256 shares;
 
-        (assets, shares) =
-            SiloERC4626Lib.withdraw(config, 0, _shares, _receiver, _owner, msg.sender, false, false, assetStorage);
+        (assets, shares) = SiloERC4626Lib.withdraw(
+            config, 0, _shares, _receiver, _owner, msg.sender, Protected.No, UseAssets.No, assetStorage
+        );
 
         emit Withdraw(msg.sender, _receiver, _owner, assets, shares);
     }
 
     // Protected
 
-    function convertToShares(uint256 _assets, bool _isProtected) external view virtual returns (uint256 shares) {
+    function convertToShares(uint256 _assets, Protected _isProtected)
+        external
+        view
+        virtual
+        returns (uint256 shares)
+    {
         (ISiloConfig.ConfigData memory configData, address siloAsset) = config.getConfigWithAsset(address(this));
 
         SiloStdLib.AssetType assetType = SiloStdLib.AssetType.Collateral;
-        if (_isProtected) assetType = SiloStdLib.AssetType.Protected;
+        if (_isProtected == Protected.Yes) assetType = SiloStdLib.AssetType.Protected;
 
         (uint256 totalAssetsUpdated, uint256 totalShares) =
             SiloStdLib.getTotalAssetsAndTotalShares(configData, siloAsset, assetType, assetStorage);
@@ -222,11 +231,16 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable {
         return SiloERC4626Lib.convertToShares(_assets, totalAssetsUpdated, totalShares, MathUpgradeable.Rounding.Down);
     }
 
-    function convertToAssets(uint256 _shares, bool _isProtected) external view virtual returns (uint256 assets) {
+    function convertToAssets(uint256 _shares, Protected _isProtected)
+        external
+        view
+        virtual
+        returns (uint256 assets)
+    {
         (ISiloConfig.ConfigData memory configData, address siloAsset) = config.getConfigWithAsset(address(this));
 
         SiloStdLib.AssetType assetType = SiloStdLib.AssetType.Collateral;
-        if (_isProtected) assetType = SiloStdLib.AssetType.Protected;
+        if (_isProtected == Protected.Yes) assetType = SiloStdLib.AssetType.Protected;
 
         (uint256 totalAssetsUpdated, uint256 totalShares) =
             SiloStdLib.getTotalAssetsAndTotalShares(configData, siloAsset, assetType, assetStorage);
@@ -234,7 +248,7 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable {
         return SiloERC4626Lib.convertToAssets(_shares, totalAssetsUpdated, totalShares, MathUpgradeable.Rounding.Down);
     }
 
-    function maxDeposit(address _receiver, bool /*_isProtected*/ )
+    function maxDeposit(address _receiver, Protected /*_isProtected*/ )
         external
         view
         virtual
@@ -243,11 +257,11 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable {
         return SiloERC4626Lib.maxDeposit(config, _receiver);
     }
 
-    function previewDeposit(uint256 _assets, bool _isProtected) external view virtual returns (uint256 shares) {
+    function previewDeposit(uint256 _assets, Protected _isProtected) external view virtual returns (uint256 shares) {
         return SiloERC4626Lib.previewDeposit(config, _assets, _isProtected, assetStorage);
     }
 
-    function deposit(uint256 _assets, address _receiver, bool _isProtected)
+    function deposit(uint256 _assets, address _receiver, Protected _isProtected)
         external
         virtual
         nonReentrant
@@ -255,25 +269,31 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable {
     {
         uint256 assets;
 
-        (assets, shares) =
-            SiloERC4626Lib.deposit(config, msg.sender, _receiver, _assets, 0, _isProtected, true, assetStorage);
+        (assets, shares) = SiloERC4626Lib.deposit(
+            config, msg.sender, _receiver, _assets, 0, _isProtected, UseAssets.Yes, assetStorage
+        );
 
-        if (_isProtected) {
+        if (_isProtected == Protected.Yes) {
             emit DepositProtected(msg.sender, _receiver, assets, shares);
         } else {
             emit Deposit(msg.sender, _receiver, assets, shares);
         }
     }
 
-    function maxMint(address _receiver, bool /*_isProtected*/ ) external view virtual returns (uint256 maxShares) {
+    function maxMint(address _receiver, Protected /*_isProtected*/ )
+        external
+        view
+        virtual
+        returns (uint256 maxShares)
+    {
         return SiloERC4626Lib.maxMint(config, _receiver);
     }
 
-    function previewMint(uint256 _shares, bool _isProtected) external view virtual returns (uint256 assets) {
+    function previewMint(uint256 _shares, Protected _isProtected) external view virtual returns (uint256 assets) {
         return SiloERC4626Lib.previewMint(config, _shares, _isProtected, assetStorage);
     }
 
-    function mint(uint256 _shares, address _receiver, bool _isProtected)
+    function mint(uint256 _shares, address _receiver, Protected _isProtected)
         external
         virtual
         nonReentrant
@@ -281,25 +301,31 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable {
     {
         uint256 shares;
 
-        (assets, shares) =
-            SiloERC4626Lib.deposit(config, msg.sender, _receiver, 0, _shares, _isProtected, false, assetStorage);
+        (assets, shares) = SiloERC4626Lib.deposit(
+            config, msg.sender, _receiver, 0, _shares, _isProtected, UseAssets.No, assetStorage
+        );
 
-        if (_isProtected) {
+        if (_isProtected == Protected.Yes) {
             emit DepositProtected(msg.sender, _receiver, assets, shares);
         } else {
             emit Deposit(msg.sender, _receiver, assets, shares);
         }
     }
 
-    function maxWithdraw(address _owner, bool _isProtected) external view virtual returns (uint256 maxAssets) {
+    function maxWithdraw(address _owner, Protected _isProtected) external view virtual returns (uint256 maxAssets) {
         (maxAssets,) = SiloERC4626Lib.maxWithdraw(config, _owner, _isProtected, assetStorage);
     }
 
-    function previewWithdraw(uint256 _assets, bool _isProtected) external view virtual returns (uint256 shares) {
+    function previewWithdraw(uint256 _assets, Protected _isProtected)
+        external
+        view
+        virtual
+        returns (uint256 shares)
+    {
         return SiloERC4626Lib.previewWithdraw(config, _assets, _isProtected, assetStorage);
     }
 
-    function withdraw(uint256 _assets, address _receiver, address _owner, bool _isProtected)
+    function withdraw(uint256 _assets, address _receiver, address _owner, Protected _isProtected)
         external
         virtual
         nonReentrant
@@ -308,25 +334,25 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable {
         uint256 assets;
 
         (assets, shares) = SiloERC4626Lib.withdraw(
-            config, _assets, 0, _receiver, _owner, msg.sender, _isProtected, true, assetStorage
+            config, _assets, 0, _receiver, _owner, msg.sender, _isProtected, UseAssets.Yes, assetStorage
         );
 
-        if (_isProtected) {
+        if (_isProtected == Protected.Yes) {
             emit WithdrawProtected(msg.sender, _receiver, _owner, assets, shares);
         } else {
             emit Withdraw(msg.sender, _receiver, _owner, assets, shares);
         }
     }
 
-    function maxRedeem(address _owner, bool _isProtected) external view virtual returns (uint256 maxShares) {
+    function maxRedeem(address _owner, Protected _isProtected) external view virtual returns (uint256 maxShares) {
         (, maxShares) = SiloERC4626Lib.maxWithdraw(config, _owner, _isProtected, assetStorage);
     }
 
-    function previewRedeem(uint256 _shares, bool _isProtected) external view virtual returns (uint256 assets) {
+    function previewRedeem(uint256 _shares, Protected _isProtected) external view virtual returns (uint256 assets) {
         return SiloERC4626Lib.previewRedeem(config, _shares, _isProtected, assetStorage);
     }
 
-    function redeem(uint256 _shares, address _receiver, address _owner, bool _isProtected)
+    function redeem(uint256 _shares, address _receiver, address _owner, Protected _isProtected)
         external
         virtual
         nonReentrant
@@ -335,10 +361,10 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable {
         uint256 shares;
 
         (assets, shares) = SiloERC4626Lib.withdraw(
-            config, 0, _shares, _receiver, _owner, msg.sender, _isProtected, false, assetStorage
+            config, 0, _shares, _receiver, _owner, msg.sender, _isProtected, UseAssets.No, assetStorage
         );
 
-        if (_isProtected) {
+        if (_isProtected == Protected.Yes) {
             emit WithdrawProtected(msg.sender, _receiver, _owner, assets, shares);
         } else {
             emit Withdraw(msg.sender, _receiver, _owner, assets, shares);
@@ -357,7 +383,7 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable {
         uint256 toShares;
 
         (assets, shares, toShares) = SiloLendingLib.transition(
-            configData, siloAsset, _shares, _owner, msg.sender, SiloLendingLib.Transition.ToProtected, assetStorage
+            configData, siloAsset, _shares, _owner, msg.sender, Transition.ToProtected, assetStorage
         );
 
         emit Withdraw(msg.sender, _owner, _owner, assets, shares);
@@ -376,7 +402,7 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable {
         uint256 toShares;
 
         (assets, shares, toShares) = SiloLendingLib.transition(
-            configData, siloAsset, _shares, _owner, msg.sender, SiloLendingLib.Transition.FromProtected, assetStorage
+            configData, siloAsset, _shares, _owner, msg.sender, Transition.FromProtected, assetStorage
         );
 
         emit WithdrawProtected(msg.sender, _owner, _owner, assets, shares);
@@ -399,10 +425,22 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable {
         nonReentrant
         returns (uint256 shares)
     {
+        (ISiloConfig.ConfigData memory configData, address siloAsset) = config.getConfigWithAsset(address(this));
+
         uint256 assets;
 
-        (assets, shares) =
-            SiloLendingLib.borrow(config, _assets, 0, _receiver, _borrower, msg.sender, true, assetStorage);
+        (assets, shares) = SiloLendingLib.borrow(
+            configData,
+            siloAsset,
+            _assets,
+            0,
+            _receiver,
+            _borrower,
+            msg.sender,
+            UseAssets.Yes,
+            CheckSolvency.Yes,
+            assetStorage
+        );
 
         emit Borrow(msg.sender, _receiver, _borrower, assets, shares);
     }
@@ -421,10 +459,22 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable {
         nonReentrant
         returns (uint256 assets)
     {
+        (ISiloConfig.ConfigData memory configData, address siloAsset) = config.getConfigWithAsset(address(this));
+
         uint256 shares;
 
-        (assets, shares) =
-            SiloLendingLib.borrow(config, 0, _shares, _receiver, _borrower, msg.sender, false, assetStorage);
+        (assets, shares) = SiloLendingLib.borrow(
+            configData,
+            siloAsset,
+            0,
+            _shares,
+            _receiver,
+            _borrower,
+            msg.sender,
+            UseAssets.No,
+            CheckSolvency.Yes,
+            assetStorage
+        );
 
         emit Borrow(msg.sender, _receiver, _borrower, assets, shares);
     }
@@ -440,7 +490,8 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable {
     function repay(uint256 _assets, address _borrower) external virtual nonReentrant returns (uint256 shares) {
         uint256 assets;
 
-        (assets, shares) = SiloLendingLib.repay(config, _assets, 0, _borrower, msg.sender, true, assetStorage);
+        (assets, shares) =
+            SiloLendingLib.repay(config, _assets, 0, _borrower, msg.sender, UseAssets.Yes, assetStorage);
 
         emit Repay(msg.sender, _borrower, assets, shares);
     }
@@ -456,7 +507,7 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable {
     function repayShares(uint256 _shares, address _borrower) external virtual nonReentrant returns (uint256 assets) {
         uint256 shares;
 
-        (assets, shares) = SiloLendingLib.repay(config, 0, _shares, _borrower, msg.sender, false, assetStorage);
+        (assets, shares) = SiloLendingLib.repay(config, 0, _shares, _borrower, msg.sender, UseAssets.No, assetStorage);
 
         emit Repay(msg.sender, _borrower, assets, shares);
     }
@@ -467,7 +518,7 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable {
     }
 
     function flashFee(address _token, uint256 _amount) external view returns (uint256) {
-        return SiloStdLib.flashFee(config, FLASHLOAN_FEE, _token, _amount);
+        return SiloStdLib.flashFee(config, _token, _amount);
     }
 
     function flashLoan(IERC3156FlashBorrower _receiver, address _token, uint256 _amount, bytes calldata _data)
@@ -475,7 +526,7 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable {
         returns (bool)
     {
         /// @dev flashFee will revert for wrong token
-        uint256 fee = SiloStdLib.flashFee(config, FLASHLOAN_FEE, _token, _amount);
+        uint256 fee = SiloStdLib.flashFee(config, _token, _amount);
 
         IERC20Upgradeable(_token).safeTransferFrom(address(this), address(_receiver), _amount);
 
@@ -490,7 +541,43 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable {
         return true;
     }
 
-    function leverage() external virtual {}
+    function leverage(uint256 _assets, ILeverageBorrower _receiver, address _borrower, bytes calldata _data)
+        external
+        virtual
+        returns (uint256 shares)
+    {
+        (ISiloConfig.ConfigData memory configData, address siloAsset) = config.getConfigWithAsset(address(this));
+
+        uint256 assets;
+
+        (assets, shares) = SiloLendingLib.borrow(
+            configData,
+            siloAsset,
+            _assets,
+            0,
+            address(_receiver),
+            _borrower,
+            msg.sender,
+            UseAssets.Yes,
+            CheckSolvency.No,
+            assetStorage
+        );
+
+        if (_receiver.onLeverage(msg.sender, _borrower, siloAsset, _assets, _data) != LEVERAGE_CALLBACK) {
+            revert LeverageFailed();
+        }
+
+        /// @dev Deposit event should be emitted during callback so now it's time for `Borrow`
+        emit Borrow(msg.sender, address(_receiver), _borrower, assets, shares);
+
+        /// @dev `borrow` did not check solvency to allow borrower to deposit collateral during callback
+        ///      so we must check it now. `_borrower` must be below maxLtv
+        (uint256 ltv, bool isToken0Collateral) = SiloSolvencyLib.getLtv(configData, _borrower);
+        uint256 maxLTV = isToken0Collateral ? configData.maxLtv0 : configData.maxLtv1;
+
+        if (ltv > maxLTV) revert ISilo.NotSolvent();
+    }
+
     function liquidate(address _borrower) external virtual {}
 
     function accrueInterest() external virtual returns (uint256 accruedInterest) {
