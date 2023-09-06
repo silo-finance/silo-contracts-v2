@@ -184,6 +184,7 @@ contract SiloFactory is Initializable, OwnableUpgradeable, ERC721Upgradeable {
         returns (ISiloConfig.ConfigData memory configData)
     {
         configData.deployerFee = _initData.deployerFee;
+        configData.flashloanFee = _initData.flashloanFee;
         configData.token0 = _initData.token0;
         configData.ltvOracle0 = _initData.ltvOracle0;
         configData.ltOracle0 = _initData.ltOracle0;

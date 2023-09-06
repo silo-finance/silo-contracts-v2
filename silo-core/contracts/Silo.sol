@@ -24,9 +24,6 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable {
 
     string public constant VERSION = "2.0.0";
 
-    // TODO: set FLASHLOAN_FEE on deployment
-    /// @dev 1%, 1e18 == 100%
-    uint256 public constant FLASHLOAN_FEE = 0.01e18;
     bytes32 public constant FLASHLOAN_CALLBACK = keccak256("ERC3156FlashBorrower.onFlashLoan");
     bytes32 public constant LEVERAGE_CALLBACK = keccak256("ILeverageBorrower.onLeverage");
 
@@ -521,7 +518,7 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable {
     }
 
     function flashFee(address _token, uint256 _amount) external view returns (uint256) {
-        return SiloStdLib.flashFee(config, FLASHLOAN_FEE, _token, _amount);
+        return SiloStdLib.flashFee(config, _token, _amount);
     }
 
     function flashLoan(IERC3156FlashBorrower _receiver, address _token, uint256 _amount, bytes calldata _data)
@@ -529,7 +526,7 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable {
         returns (bool)
     {
         /// @dev flashFee will revert for wrong token
-        uint256 fee = SiloStdLib.flashFee(config, FLASHLOAN_FEE, _token, _amount);
+        uint256 fee = SiloStdLib.flashFee(config, _token, _amount);
 
         IERC20Upgradeable(_token).safeTransferFrom(address(this), address(_receiver), _amount);
 

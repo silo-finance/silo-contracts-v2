@@ -13,6 +13,7 @@ contract SiloConfig is ISiloConfig {
 
     uint256 private immutable _DAO_FEE;
     uint256 private immutable _DEPLOYER_FEE;
+    uint256 private immutable _FLASHLOAN_FEE;
 
     // TOKEN #0
 
@@ -69,6 +70,7 @@ contract SiloConfig is ISiloConfig {
 
         _DAO_FEE = _configData.daoFee;
         _DEPLOYER_FEE = _configData.deployerFee;
+        _FLASHLOAN_FEE = _configData.flashloanFee;
 
         // TOKEN #0
 
@@ -127,6 +129,7 @@ contract SiloConfig is ISiloConfig {
         return ConfigData({
             daoFee: _DAO_FEE,
             deployerFee: _DEPLOYER_FEE,
+            flashloanFee: _FLASHLOAN_FEE,
             silo0: _SILO0,
             token0: _TOKEN0,
             protectedShareToken0: _PROTECTED_COLLATERAL_SHARE_TOKEN0,
@@ -178,6 +181,11 @@ contract SiloConfig is ISiloConfig {
 
     function getConfigWithAsset(address _silo) public view returns (ConfigData memory configData, address asset) {
         configData = getConfig();
+        asset = getAssetForSilo(_silo);
+    }
+
+    function getFlashloanFeeWithAsset(address _silo) public view returns (uint256 flashloanFee, address asset) {
+        flashloanFee = _FLASHLOAN_FEE;
         asset = getAssetForSilo(_silo);
     }
 }
