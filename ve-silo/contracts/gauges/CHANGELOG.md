@@ -116,6 +116,8 @@
 - Copy of Balancer's implementation of the ArbitrumRootGaugeFactory.sol ([0980dbe](https://github.com/silo-finance/silo-contracts-v2/pull/63/commits/0980dbe5b7a875ec329a45e453b4c1e25708a907))
 
 ### gauge-adder/GaugeAdder.sol
+- Updated `_ETHEREUM_GAUGE_CONTROLLER_TYPE` value to `0` ([c1dce5f](https://github.com/silo-finance/silo-contracts-v2/pull/85/commits/c1dce5f0e0825176632bfb0c8332d40caf5832dc))
+
 - Removed gauge types as they were deprecated ([0ea9da8](https://github.com/silo-finance/silo-contracts-v2/pull/66/commits/0ea9da87c6827ed73211bb266aa183a7a71d82ec))
 
 - Refactored `_addGauge` fn, fixed data types conversion ([0faa476](https://github.com/silo-finance/silo-contracts-v2/pull/66/commits/0faa476b4422be322d44ffa5701bb08829013493))

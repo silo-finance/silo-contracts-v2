@@ -24,7 +24,7 @@ import {ReentrancyGuard} from "openzeppelin-contracts/security/ReentrancyGuard.s
 contract GaugeAdder is IGaugeAdder, Ownable2Step, ReentrancyGuard {
     // This is the gauge type as used in the GaugeController for Ethereum gauges,
     // which we'll use for all gauges of all networks.
-    int128 private constant _ETHEREUM_GAUGE_CONTROLLER_TYPE = 1;
+    int128 private constant _ETHEREUM_GAUGE_CONTROLLER_TYPE = 0;
 
     IGaugeController private immutable _gaugeController;
 
