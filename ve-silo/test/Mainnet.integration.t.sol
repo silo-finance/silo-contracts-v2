@@ -3,6 +3,7 @@ pragma solidity 0.8.19;
 
 import {StdStorage, stdStorage} from "forge-std/StdStorage.sol";
 import {IERC20} from "openzeppelin-contracts/token/ERC20/ERC20.sol";
+import {Ownable2Step} from "openzeppelin-contracts/access/Ownable2Step.sol";
 import {IntegrationTest} from "silo-foundry-utils/networks/IntegrationTest.sol";
 
 import {MainnetDeploy} from "ve-silo/deploy/MainnetDeploy.s.sol";
@@ -19,6 +20,7 @@ import {ILiquidityGaugeFactory} from "ve-silo/contracts/gauges/interfaces/ILiqui
 import {IGaugeController} from "ve-silo/contracts/gauges/interfaces/IGaugeController.sol";
 import {IBalancerTokenAdmin} from "ve-silo/contracts/silo-tokens-minter/interfaces/IBalancerTokenAdmin.sol";
 import {IBalancerMinter} from "ve-silo/contracts/silo-tokens-minter/interfaces/IBalancerMinter.sol";
+import {IGaugeAdder} from "ve-silo/contracts/gauges/interfaces/IGaugeAdder.sol";
 
 interface IERC20BalancerHandler is IERC20 {
     function balanceOfAndTotalSupply(address _account) external view returns (uint256 _balance, uint256 _totalSupply);
@@ -45,6 +47,7 @@ contract MainnetTest is IntegrationTest {
     IVeSilo internal _veSilo;
     ISiloTimelockController internal _timelock;
     ISiloGovernor internal _siloGovernor;
+    IGaugeAdder internal _gaugeAdder;
 
     address internal _erc20BalancesHandler = makeAddr("_erc20BalancesHandler");
     address internal _bob = makeAddr("_bob");
@@ -74,6 +77,7 @@ contract MainnetTest is IntegrationTest {
         _gaugeController = IGaugeController(getDeployedAddress(VeSiloContracts.GAUGE_CONTROLLER));
         _siloGovernor = ISiloGovernor(getDeployedAddress(VeSiloContracts.SILO_GOVERNOR));
         _minter = IBalancerMinter(getDeployedAddress(VeSiloContracts.MAINNET_BALANCER_MINTER));
+        _gaugeAdder = IGaugeAdder(getDeployedAddress(VeSiloContracts.GAUGE_ADDER));
     }
 
     function testIt() public {
@@ -183,7 +187,7 @@ contract MainnetTest is IntegrationTest {
         assertTrue(_gauge.working_balances(_john) != 0, "An invalid working balance for John");
     }
 
-    function _voteForGauge(address _gauge) internal {        
+    function _voteForGauge(address _gauge) internal {
         vm.prank(_bob);
         _gaugeController.vote_for_gauge_weights(_gauge, 10000);
 
@@ -195,22 +199,28 @@ contract MainnetTest is IntegrationTest {
     }
 
     function _addGauge(address _gauge) internal {
-        address[] memory targets = new address[](3);
+        address[] memory targets = new address[](6);
         targets[0] = address(_gaugeController);
         targets[1] = address(_gaugeController);
-        targets[2] = address(_gaugeController);
+        targets[2] = address(_gaugeAdder);
+        targets[3] = address(_gaugeAdder);
+        targets[4] = address(_gaugeAdder);
+        targets[5] = address(_gaugeAdder);
 
         // Empty values
-        uint256[] memory values = new uint256[](3);
+        uint256[] memory values = new uint256[](6);
 
         // Functions inputs
-        bytes[] memory calldatas = new bytes[](3);
+        bytes[] memory calldatas = new bytes[](6);
         
         string memory gaugeTypeName = new string(64);
         gaugeTypeName = "Mainnet gauge";
         calldatas[0] = abi.encodeWithSignature("add_type(string,uint256)", gaugeTypeName, 1e18);
-        calldatas[1] = abi.encodeWithSignature("set_gauge_adder(address)", address(_timelock));
-        calldatas[2] = abi.encodeWithSignature("add_gauge(address,int128)", _gauge, 0);
+        calldatas[1] = abi.encodeWithSignature("set_gauge_adder(address)", address(_gaugeAdder));
+        calldatas[2] = abi.encodeWithSignature("acceptOwnership()");
+        calldatas[3] = abi.encodeWithSignature("addGaugeType(string)", gaugeTypeName);
+        calldatas[4] = abi.encodeWithSignature("setGaugeFactory(address,string)", address(_factory), gaugeTypeName);
+        calldatas[5] = abi.encodeWithSignature("addGauge(address,string)", address(_gauge), gaugeTypeName);
 
         _executeProposal(targets, values, calldatas);
 

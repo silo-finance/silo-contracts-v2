@@ -4,6 +4,7 @@ pragma solidity 0.8.19;
 import {IERC20} from "openzeppelin-contracts/token/ERC20/IERC20.sol";
 import {IntegrationTest} from "silo-foundry-utils/networks/IntegrationTest.sol";
 
+import {VeSiloAddrKey} from "ve-silo/common/VeSiloAddresses.sol";
 import {FeeDistributorDeploy} from "ve-silo/deploy/FeeDistributorDeploy.s.sol";
 import {VotingEscrowTest} from "ve-silo/test/voting-escrow/VotingEscrow.integration.t.sol";
 import {IFeeDistributor} from "ve-silo/contracts/fees-distribution/interfaces/IFeeDistributor.sol";
@@ -13,10 +14,9 @@ import {FeeSwapperDeploy} from "ve-silo/deploy/FeeSwapperDeploy.s.sol";
 import {UniswapSwapperDeploy} from "ve-silo/deploy/UniswapSwapperDeploy.s.sol";
 import {UniswapSwapper} from "ve-silo/contracts/fees-distribution/fee-swapper/swappers/UniswapSwapper.sol";
 import {UniswapSwapperTest} from "ve-silo/test/fee-dustribution/UniswapSwapper.integration..sol";
-import {VeSiloAddresses} from "ve-silo/deploy/_CommonDeploy.sol";
 
 // FOUNDRY_PROFILE=ve-silo forge test --mc FeeSwapperTest --ffi -vvv
-contract FeeSwapperTest is IntegrationTest, VeSiloAddresses {
+contract FeeSwapperTest is IntegrationTest {
     uint256 constant internal _FORKING_BLOCK_NUMBER = 18040200;
     address constant internal _SNX_WHALE = 0x5Fd79D46EBA7F351fe49BFF9E87cdeA6c821eF9f;
 
@@ -65,8 +65,8 @@ contract FeeSwapperTest is IntegrationTest, VeSiloAddresses {
 
         _feeSwap = UniswapSwapper(address(swapDeploy.run()));
 
-        _snxToken = IERC20(getAddress(SNX));
-        _wethToken = IERC20(getAddress(WETH));
+        _snxToken = IERC20(getAddress(VeSiloAddrKey.SNX));
+        _wethToken = IERC20(getAddress(VeSiloAddrKey.WETH));
         _silo80Weth20Token = IERC20(getAddress(SILO80_WETH20_TOKEN));
 
         _uniswapSwapperTest = new UniswapSwapperTest();
@@ -98,7 +98,7 @@ contract FeeSwapperTest is IntegrationTest, VeSiloAddresses {
 
     function testBalancerPoolJoin() public {
         uint256 amount = 1e18;
-        deal(getAddress(WETH), address(_feeSwapper), amount);
+        deal(getAddress(VeSiloAddrKey.WETH), address(_feeSwapper), amount);
 
         uint256 balance = _silo80Weth20Token.balanceOf(address(_feeSwapper));
         assertEq(balance, 0, "LP tokens balance should be 0");

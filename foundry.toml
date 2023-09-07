@@ -52,5 +52,6 @@ broadcast = 'silo-oracles/broadcast'
 
 [rpc_endpoints]
 mainnet = "${RPC_MAINNET}"
+arbitrum_one = "${RPC_ARBITRUM}"
 
 # See more config options https://github.com/foundry-rs/foundry/tree/master/config

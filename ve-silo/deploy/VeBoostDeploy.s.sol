@@ -21,7 +21,7 @@ contract VeBoostDeploy is CommonDeploy {
             VeSiloContracts.VE_BOOST,
             abi.encode(
                 address(0), // veBoostV1 - an empty address
-                getDeployedAddress(VeSiloContracts.VOTING_ESCROW)
+                _votingEscrowAddress()
             )
          );
 
@@ -30,6 +30,12 @@ contract VeBoostDeploy is CommonDeploy {
         vm.stopBroadcast();
 
         _syncDeployments();
+    }
+
+    function _votingEscrowAddress() internal returns (address) {
+        if (isChain(ARBITRUM_ONE_ALIAS)) return getDeployedAddress(VeSiloContracts.OMNI_VOTING_ESCROW_CHILD);
+
+        return getDeployedAddress(VeSiloContracts.VOTING_ESCROW);
     }
 
     function _contractBaseDir() internal pure override virtual returns (string memory) {

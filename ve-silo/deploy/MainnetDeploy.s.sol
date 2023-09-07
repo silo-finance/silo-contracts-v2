@@ -8,6 +8,13 @@ import {LiquidityGaugeFactoryDeploy} from "./LiquidityGaugeFactoryDeploy.s.sol";
 import {GaugeControllerDeploy} from "./GaugeControllerDeploy.s.sol";
 import {MainnetBalancerMinterDeploy} from "./MainnetBalancerMinterDeploy.s.sol";
 import {VotingEscrowRemapperDeploy} from "./VotingEscrowRemapperDeploy.s.sol";
+import {GaugeAdderDeploy} from "./GaugeAdderDeploy.s.sol";
+import {ArbitrumRootGaugeFactoryDeploy} from "ve-silo/deploy/ArbitrumRootGaugeFactoryDeploy.s.sol";
+import {StakelessGaugeCheckpointerAdaptorDeploy} from "ve-silo/deploy/StakelessGaugeCheckpointerAdaptorDeploy.s.sol";
+import {StakelessGaugeCheckpointerDeploy} from "ve-silo/deploy/StakelessGaugeCheckpointerDeploy.s.sol";
+import {FeeDistributorDeploy} from "ve-silo/deploy/FeeDistributorDeploy.s.sol";
+import {FeeSwapperDeploy} from "ve-silo/deploy/FeeSwapperDeploy.s.sol";
+import {UniswapSwapperDeploy} from "ve-silo/deploy/UniswapSwapperDeploy.s.sol";
 
 import {IExtendedOwnable} from "ve-silo/contracts/access/IExtendedOwnable.sol";
 
@@ -18,20 +25,10 @@ FOUNDRY_PROFILE=ve-silo \
  */
 contract MainnetDeploy is CommonDeploy {
     function run() public {
-        SiloGovernorDeploy governorDeploy = new SiloGovernorDeploy();
-        GaugeControllerDeploy controllerDeploy = new GaugeControllerDeploy();
-        MainnetBalancerMinterDeploy minterDeploy = new MainnetBalancerMinterDeploy();
-        LiquidityGaugeFactoryDeploy factoryDeploy = new LiquidityGaugeFactoryDeploy();
-        VotingEscrowRemapperDeploy remapperDeploy = new VotingEscrowRemapperDeploy();
-
-        governorDeploy.run();
-        controllerDeploy.run();
-        minterDeploy.run();
-        factoryDeploy.run();
-        remapperDeploy.run();
+        _deployL1();
+        _deployL1ForL2();
 
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
-
         vm.startBroadcast(deployerPrivateKey);
 
         address balancerTokenAdmin = getDeployedAddress(VeSiloContracts.BALANCER_TOKEN_ADMIN);
@@ -40,5 +37,37 @@ contract MainnetDeploy is CommonDeploy {
         IExtendedOwnable(balancerTokenAdmin).changeManager(mainnetBalancerMinter);
 
         vm.stopBroadcast();
+    }
+
+    function _deployL1() internal {
+        SiloGovernorDeploy governorDeploy = new SiloGovernorDeploy();
+        GaugeControllerDeploy controllerDeploy = new GaugeControllerDeploy();
+        MainnetBalancerMinterDeploy minterDeploy = new MainnetBalancerMinterDeploy();
+        LiquidityGaugeFactoryDeploy factoryDeploy = new LiquidityGaugeFactoryDeploy();
+        GaugeAdderDeploy gaugeAdderDeploy = new GaugeAdderDeploy();
+        FeeDistributorDeploy feeDistributorDeploy = new FeeDistributorDeploy();
+        FeeSwapperDeploy feeSwapperDeploy = new FeeSwapperDeploy();
+        UniswapSwapperDeploy uniswapSwapperDeploy = new UniswapSwapperDeploy();
+
+        governorDeploy.run();
+        controllerDeploy.run();
+        minterDeploy.run();
+        factoryDeploy.run();
+        gaugeAdderDeploy.run();
+        feeDistributorDeploy.run();
+        feeSwapperDeploy.run();
+        uniswapSwapperDeploy.run();
+    }
+
+    function _deployL1ForL2() internal {
+        ArbitrumRootGaugeFactoryDeploy factoryDeploy = new ArbitrumRootGaugeFactoryDeploy();
+        StakelessGaugeCheckpointerAdaptorDeploy adaptorDeploy = new StakelessGaugeCheckpointerAdaptorDeploy();
+        StakelessGaugeCheckpointerDeploy chackpointerDeploy = new StakelessGaugeCheckpointerDeploy();
+        VotingEscrowRemapperDeploy remapperDeploy = new VotingEscrowRemapperDeploy();
+
+        adaptorDeploy.run();
+        factoryDeploy.run();
+        chackpointerDeploy.run();
+        remapperDeploy.run();
     }
 }

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.19;
 
+import {VeSiloAddrKey} from "ve-silo/common/VeSiloAddresses.sol";
 import {CommonDeploy, VeSiloContracts} from "./_CommonDeploy.sol";
 
 import {ArbitrumRootGaugeFactory, IMainnetBalancerMinter, IGatewayRouter}
@@ -25,7 +26,7 @@ contract ArbitrumRootGaugeFactoryDeploy is CommonDeploy {
 
         address minter = getDeployedAddress(VeSiloContracts.MAINNET_BALANCER_MINTER);
         address checkpointer = getDeployedAddress(VeSiloContracts.STAKELESS_GAUGE_CHECKPOINTER_ADAPTOR);
-        address gatewayRouter = getAddress(ARBITRUM_GATEWAY_ROUTER);
+        address gatewayRouter = getAddress(VeSiloAddrKey.ARBITRUM_GATEWAY_ROUTER);
 
         factory = new ArbitrumRootGaugeFactory(
             IMainnetBalancerMinter(minter),

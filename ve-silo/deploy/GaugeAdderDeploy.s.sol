@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.19;
 
+import {Ownable2Step} from "openzeppelin-contracts/access/Ownable2Step.sol";
+
 import {CommonDeploy, VeSiloContracts} from "./_CommonDeploy.sol";
 
 import {IGaugeController} from "ve-silo/contracts/gauges/interfaces/IGaugeController.sol";
@@ -20,6 +22,9 @@ contract GaugeAdderDeploy is CommonDeploy {
         address controller = getDeployedAddress(VeSiloContracts.GAUGE_CONTROLLER);
 
         gaugeAdder = IGaugeAdder(address(new GaugeAdder(IGaugeController(controller))));
+
+        address timelock = getDeployedAddress(VeSiloContracts.TIMELOCK_CONTROLLER);
+        Ownable2Step(address(gaugeAdder)).transferOwnership(timelock);
 
         vm.stopBroadcast();
 

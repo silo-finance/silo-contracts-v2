@@ -6,9 +6,9 @@ import {IntegrationTest} from "silo-foundry-utils/networks/IntegrationTest.sol";
 import {IVotingEscrow} from "lz_gauges/interfaces/IVotingEscrow.sol";
 import {IL2LayerZeroDelegation} from "lz_gauges/interfaces/IL2LayerZeroDelegation.sol";
 
+import {VeSiloAddrKey} from "ve-silo/common/VeSiloAddresses.sol";
 import {IOmniVotingEscrowSettings} from "ve-silo/contracts/voting-escrow/interfaces/IOmniVotingEscrowSettings.sol";
 import {VeSiloContracts} from "ve-silo/deploy/_CommonDeploy.sol";
-import {VeSiloAddressesKeys} from "ve-silo/deploy/_VeSiloAddresses.sol";
 import {OmniVotingEscrowChildDeploy} from "ve-silo/deploy/OmniVotingEscrowChildDeploy.s.sol";
 import {IOmniVotingEscrowChild} from "ve-silo/contracts/voting-escrow/interfaces/IOmniVotingEscrowChild.sol";
 
@@ -31,7 +31,7 @@ contract OmnoVotingEscrowChildTest is IntegrationTest {
     IOmniVotingEscrowSettings internal _omniVotingEscrowSettings;
 
     function setUp() public {
-        setAddress(VeSiloAddressesKeys.LZ_ENDPOINT, _lzEndpoint);
+        setAddress(VeSiloAddrKey.LZ_ENDPOINT, _lzEndpoint);
         setAddress(VeSiloContracts.L2_LAYER_ZERO_BRIDGE_FORWARDER, _delegationHook);
 
         OmniVotingEscrowChildDeploy deploy = new OmniVotingEscrowChildDeploy();
