@@ -2,28 +2,62 @@
 pragma solidity >=0.5.0;
 
 import {IERC721Upgradeable} from "openzeppelin-contracts-upgradeable/interfaces/IERC721Upgradeable.sol";
+import {ISiloConfig} from "./ISiloConfig.sol";
 
 interface ISiloFactory is IERC721Upgradeable {
-    function isSilo(address silo) external view returns (bool);
-    function listSilos(address token0, address token1) external view returns (uint256[] memory ids);
-    function daoFee() external view returns (uint256);
-    function deployerFee() external view returns (uint256);
-    function feeDistributor() external view returns (uint256);
-    function getFee() external view returns (uint256 totalFee);
+    event NewSilo(address indexed token0, address indexed token1, address silo0, address silo1, address siloConfig);
+    event DaoFeeChanged(uint256 daoFee);
+    event MaxDeployerFeeChanged(uint256 maxDeployerFee);
+    event MaxFlashloanFeeChanged(uint256 maxFlashloanFee);
+    event MaxLiquidationFeeChanged(uint256 maxLiquidationFee);
+    event DaoFeeReceiverChanged(address daoFeeReceiver);
 
-    // solhint-disable ordering
+    error ZeroAddress();
+    error MaxFee();
+    error SameAsset();
+    error InvalidIrm();
+    error InvalidMaxLtv();
+    error InvalidMaxLt();
+    error InvalidLt();
+    error InvalidDeployer();
+    error NonBorrowableSilo();
+    error MaxDeployerFee();
+    error MaxFlashloanFee();
+    error MaxLiquidationFee();
+    error InvalidIrmConfig();
 
-    function createSilo(
-        address[2] calldata assets,
-        address[4] calldata oracles,
-        address[2] calldata interestRateModel,
-        uint256[2] calldata maxLtv,
-        uint256[2] calldata lt,
-        bool[2] memory _borrowable
-    ) external returns (address silo, uint256 siloId);
+    function initialize(
+        address _siloImpl,
+        address _shareCollateralTokenImpl,
+        address _shareDebtTokenImpl,
+        uint256 _daoFee,
+        address _daoFeeReceiver
+    ) external;
 
-    function setFees(uint256 daoFee, uint256 deployerFee) external;
-    function claimFees(address silo) external returns (uint256[2] memory fees);
-    function getNotificationReceiver(address silo) external returns (address notificationReceiver);
+    /// @dev share tokens in _configData are overridden so can be set to address(0). Sanity data validation
+    ///      is done by SiloConfig.
+    /// @param _initData silo initialization data
+    function createSilo(ISiloConfig.InitData memory _initData) external returns (ISiloConfig siloConfig);
+
+    function setDaoFee(uint256 _newDaoFeeInBp) external;
+    function setDaoFeeReceiver(address _newDaoFeeReceiver) external;
+    function setMaxDeployerFee(uint256 _newMaxDeployerFeeInBp) external;
+    function setMaxFlashloanFee(uint256 _newMaxFlashloanFeeInBp) external;
+    function setMaxLiquidationFee(uint256 _newMaxLiquidationFeeInBp) external;
+
+    function daoFeeInBp() external view returns (uint256);
+    function maxDeployerFeeInBp() external view returns (uint256);
+    function maxFlashloanFeeInBp() external view returns (uint256);
+    function maxLiquidationFeeInBp() external view returns (uint256);
+    function daoFeeReceiver() external view returns (address);
+    function siloImpl() external view returns (address);
+    function shareCollateralTokenImpl() external view returns (address);
+    function shareDebtTokenImpl() external view returns (address);
+
+    function idToSilos(uint256 _id) external view returns (address[2] memory);
+    function siloToId(address _silo) external view returns (uint256);
+
+    function isSilo(address _silo) external view returns (bool);
+    function getNextSiloId() external view returns (uint256);
     function getFeeReceivers(address _silo) external view returns (address dao, address deployer);
 }

@@ -55,16 +55,16 @@ library SiloStdLib {
         }
     }
 
-    function flashFee(ISiloConfig _config, address _token, uint256 _amount)
-        internal
-        view
-        returns (uint256)
-    {
+    function flashFee(ISiloConfig _config, address _token, uint256 _amount) internal view returns (uint256 fee) {
         (uint256 flashloanFee, address asset) = _config.getFlashloanFeeWithAsset(address(this));
 
         if (_token != asset) revert ISilo.Unsupported();
 
-        return _amount * flashloanFee / _PRECISION_DECIMALS;
+        fee = _amount * flashloanFee;
+
+        unchecked {
+            fee /= _PRECISION_DECIMALS;
+        }
     }
 
     function amountWithInterest(address _asset, uint256 _amount, address _model)
@@ -157,5 +157,24 @@ library SiloStdLib {
 
         // cap at 100%
         if (utilization > _dp) utilization = _dp;
+    }
+
+    function smallConfigToConfig(ISiloConfig.SmallConfigData memory _smallConfigData)
+        internal
+        pure
+        returns (ISiloConfig.ConfigData memory configData)
+    {
+        configData.daoFee = _smallConfigData.daoFee;
+        configData.deployerFee = _smallConfigData.deployerFee;
+        configData.token0 = _smallConfigData.token0;
+        configData.protectedShareToken0 = _smallConfigData.protectedShareToken0;
+        configData.collateralShareToken0 = _smallConfigData.collateralShareToken0;
+        configData.debtShareToken0 = _smallConfigData.debtShareToken0;
+        configData.interestRateModel0 = _smallConfigData.interestRateModel0;
+        configData.token1 = _smallConfigData.token1;
+        configData.protectedShareToken1 = _smallConfigData.protectedShareToken1;
+        configData.collateralShareToken1 = _smallConfigData.collateralShareToken1;
+        configData.debtShareToken1 = _smallConfigData.debtShareToken1;
+        configData.interestRateModel1 = _smallConfigData.interestRateModel1;
     }
 }
