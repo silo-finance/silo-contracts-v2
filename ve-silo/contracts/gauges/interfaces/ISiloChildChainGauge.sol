@@ -37,6 +37,7 @@ interface ISiloChildChainGauge {
     function version() external view returns (string memory);
     function factory() external view returns (ILiquidityGaugeFactory);
     function authorizer_adaptor() external view returns (address);
+    function integrate_checkpoint_of(address _user) external view returns (uint256);
 
     // solhint-enable func-name-mixedcase
     // solhint-enable func-param-name-mixedcase

@@ -25,7 +25,7 @@ contract ChildChainGaugeCheckpointerDeploy is CommonDeploy {
             new ChildChainGaugeCheckpointer(registry) 
         ));
 
-        _registerDeployment(address(registry), VeSiloContracts.CHILD_CHAIN_GAUGE_CHECKPOINTER);
+        _registerDeployment(address(checkpointer), VeSiloContracts.CHILD_CHAIN_GAUGE_CHECKPOINTER);
 
         vm.stopBroadcast();
 

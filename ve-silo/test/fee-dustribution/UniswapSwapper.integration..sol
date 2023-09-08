@@ -6,13 +6,12 @@ import {IERC20} from "openzeppelin-contracts/token/ERC20/IERC20.sol";
 
 import {IntegrationTest} from "silo-foundry-utils/networks/IntegrationTest.sol";
 
+import {VeSiloAddrKey} from "ve-silo/common/VeSiloAddresses.sol";
 import {UniswapSwapperDeploy} from "ve-silo/deploy/UniswapSwapperDeploy.s.sol";
 import {UniswapSwapper} from "ve-silo/contracts/fees-distribution/fee-swapper/swappers/UniswapSwapper.sol";
 
-import {VeSiloAddresses} from "ve-silo/deploy/_CommonDeploy.sol";
-
 // FOUNDRY_PROFILE=ve-silo forge test --mc UniswapSwapperTest --ffi -vvv
-contract UniswapSwapperTest is IntegrationTest, VeSiloAddresses {
+contract UniswapSwapperTest is IntegrationTest {
     uint256 constant internal _FORKING_BLOCK_NUMBER = 18040200;
 
     address internal _deployer;
@@ -39,8 +38,8 @@ contract UniswapSwapperTest is IntegrationTest, VeSiloAddresses {
 
         feeSwap = UniswapSwapper(address(deploy.run()));
 
-        _snxToken = IERC20(getAddress(SNX));
-        _wethToken = IERC20(getAddress(WETH));
+        _snxToken = IERC20(getAddress(VeSiloAddrKey.SNX));
+        _wethToken = IERC20(getAddress(VeSiloAddrKey.WETH));
     }
 
     function testonlyOwnerCanConfigure() public {
@@ -84,12 +83,12 @@ contract UniswapSwapperTest is IntegrationTest, VeSiloAddresses {
         swapPath = new UniswapSwapper.SwapPath[](2);
 
         swapPath[0] = UniswapSwapper.SwapPath({
-            pool: IUniswapV3Pool(getAddress(SNX_USDC_UNIV3_POOL)),
+            pool: IUniswapV3Pool(getAddress(VeSiloAddrKey.SNX_USDC_UNIV3_POOL)),
             token0IsInterim: true
         });
 
         swapPath[1] = UniswapSwapper.SwapPath({
-            pool: IUniswapV3Pool(getAddress(USDC_ETH_UNI_POOL)),
+            pool: IUniswapV3Pool(getAddress(VeSiloAddrKey.USDC_ETH_UNI_POOL)),
             token0IsInterim: false
         });
     }

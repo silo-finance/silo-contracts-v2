@@ -9,6 +9,7 @@ import {ISiloChildChainGauge} from "ve-silo/contracts/gauges/interfaces/ISiloChi
 import {IChildChainGaugeFactory} from "ve-silo/contracts/gauges/interfaces/IChildChainGaugeFactory.sol";
 import {VeSiloContracts} from "ve-silo/deploy/_CommonDeploy.sol";
 import {ChildChainGaugeFactoryDeploy} from "ve-silo/deploy/ChildChainGaugeFactoryDeploy.s.sol";
+import {VeSiloAddrKey} from "ve-silo/common/VeSiloAddresses.sol";
 
 // interfaces for tests
 interface IMinter {
@@ -29,7 +30,7 @@ contract ChildChainGaugesTest is IntegrationTest {
 
     address internal _votingEscrowDelegationProxy = makeAddr("_votingEscrowDelegationProxy");
     address internal _l2BalancerPseudoMinter = makeAddr("_l2BalancerPseudoMinter");
-    address internal _timelockController = makeAddr("_timelockController");
+    address internal _l2Multisig = makeAddr("_l2Multisig");
     address internal _erc20BalancesHandler = makeAddr("ERC-20 balances handler");
     address internal _bob = makeAddr("Bob");
     address internal _alice = makeAddr("Alice");
@@ -40,7 +41,7 @@ contract ChildChainGaugesTest is IntegrationTest {
     function setUp() public {
         setAddress(VeSiloContracts.VOTING_ESCROW_DELEGATION_PROXY, _votingEscrowDelegationProxy);
         setAddress(VeSiloContracts.L2_BALANCER_PSEUDO_MINTER, _l2BalancerPseudoMinter);
-        setAddress(VeSiloContracts.TIMELOCK_CONTROLLER, _timelockController);
+        setAddress(VeSiloAddrKey.L2_MULTISIG, _l2Multisig);
 
         _mockCalls();
 
@@ -68,7 +69,7 @@ contract ChildChainGaugesTest is IntegrationTest {
 
         assertEq(
             gauge.authorizer_adaptor(),
-            getDeployedAddress(VeSiloContracts.TIMELOCK_CONTROLLER),
+            getDeployedAddress(VeSiloAddrKey.L2_MULTISIG),
             "Deployed with wrong timelockController"
         );
     }

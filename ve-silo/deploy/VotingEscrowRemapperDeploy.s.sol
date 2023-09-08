@@ -15,11 +15,11 @@ import {IOmniVotingEscrow} from "balancer-labs/v2-interfaces/liquidity-mining/IO
 import {IVeSilo} from "ve-silo/contracts/voting-escrow/interfaces/IVeSilo.sol";
 import {VotingEscrowRemapper} from "ve-silo/contracts/voting-escrow/VotingEscrowRemapper.sol";
 import {OmniVotingEscrowAdaptor} from "ve-silo/contracts/voting-escrow/OmniVotingEscrowAdaptor.sol";
+import {VeSiloAddrKey} from "ve-silo/common/VeSiloAddresses.sol";
 
 import {CommonDeploy, VeSiloContracts} from "./_CommonDeploy.sol";
-import {VeSiloAddresses, VeSiloAddressesKeys} from "./_VeSiloAddresses.sol";
 
-contract VotingEscrowRemapperDeploy is CommonDeploy, VeSiloAddresses {
+contract VotingEscrowRemapperDeploy is CommonDeploy {
      function run()
           public
           returns (
@@ -41,7 +41,7 @@ contract VotingEscrowRemapperDeploy is CommonDeploy, VeSiloAddresses {
           _registerDeployment(address(remapper), VeSiloContracts.VOTING_ESCROW_REMAPPER);
 
           omniVotingEscrow = IOmniVotingEscrow(address(new OmniVotingEscrow(
-               getAddress(VeSiloAddressesKeys.LZ_ENDPOINT),
+               getAddress(VeSiloAddrKey.LZ_ENDPOINT),
                address(remapper)
           )));
 

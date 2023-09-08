@@ -35,6 +35,7 @@ contract GaugeAdderTest is IntegrationTest {
         deploy.disableDeploymentsSync();
 
         setAddress(VeSiloContracts.GAUGE_CONTROLLER, _controller);
+        setAddress(VeSiloContracts.TIMELOCK_CONTROLLER, _deployer);
 
         _gaugeAdder = deploy.run();
     }
