@@ -163,9 +163,7 @@ library SiloSolvencyLib {
         }
     }
 
-    /// @dev Returns LTV and other data. Method is implemented as a view function for off-chain use. It's easier
-    ///      for off-chain software to use view functions. It helps avoids weird behaviours. It uses quoteView
-    ///      from oracle which cannot change state.
+    /// @dev Returns LTV and other data
     /// @return ltv Loan-to-Value
     /// @return isToken0Collateral true if token0 is collateral
     /// @return debtValue value of debt quoted by oracle
@@ -193,12 +191,12 @@ library SiloSolvencyLib {
 
         // if no oracle is set, assume price 1
         debtValue = address(ltvData.debtOracle) != address(0)
-            ? ltvData.debtOracle.quoteView(ltvData.debtAssets, ltvData.debtAsset)
+            ? ltvData.debtOracle.quote(ltvData.debtAssets, ltvData.debtAsset)
             : ltvData.debtAssets;
 
         // if no oracle is set, assume price 1
         collateralValue = address(ltvData.collateralOracle) != address(0)
-            ? ltvData.collateralOracle.quoteView(ltvData.totalCollateralAssets, ltvData.collateralAsset)
+            ? ltvData.collateralOracle.quote(ltvData.totalCollateralAssets, ltvData.collateralAsset)
             : ltvData.totalCollateralAssets;
 
         ltv = debtValue * _PRECISION_DECIMALS / collateralValue;
@@ -210,6 +208,7 @@ library SiloSolvencyLib {
     /// @return isToken0Collateral true if token0 is collateral
     function getLtv(ISiloConfig.ConfigData memory _configData, address _borrower)
         internal
+        view
         returns (uint256 ltv, bool isToken0Collateral)
     {
         LtvData memory ltvData = getAssetsData(_configData, _borrower, OracleType.Lt, InterestRateType.Static);
@@ -231,7 +230,7 @@ library SiloSolvencyLib {
         ltv = debtValue * _PRECISION_DECIMALS / collateralValue;
     }
 
-    function isSolvent(ISiloConfig.ConfigData memory _configData, address _borrower) internal returns (bool) {
+    function isSolvent(ISiloConfig.ConfigData memory _configData, address _borrower) internal view returns (bool) {
         (uint256 ltv, bool isToken0Collateral) = getLtv(_configData, _borrower);
 
         uint256 lt = isToken0Collateral ? _configData.lt0 : _configData.lt1;
@@ -239,7 +238,7 @@ library SiloSolvencyLib {
         return ltv < lt;
     }
 
-    function isSolvent(ISiloConfig _config, address _borrower) internal returns (bool) {
+    function isSolvent(ISiloConfig _config, address _borrower) internal view returns (bool) {
         ISiloConfig.ConfigData memory configData = _config.getConfig();
 
         return isSolvent(configData, _borrower);
@@ -255,7 +254,7 @@ library SiloSolvencyLib {
         return ltv < lt;
     }
 
-    function isBelowMaxLtv(ISiloConfig.ConfigData memory _configData, address _borrower) internal returns (bool) {
+    function isBelowMaxLtv(ISiloConfig.ConfigData memory _configData, address _borrower) internal view returns (bool) {
         (uint256 ltv, bool isToken0Collateral) = getLtv(_configData, _borrower);
         uint256 maxLTV = isToken0Collateral ? _configData.maxLtv0 : _configData.maxLtv1;
 

@@ -202,13 +202,13 @@ library SiloLendingLib {
 
         // if no oracle is set, assume price 1
         cache.collateralValue = address(cache.collateralOracle) != address(0)
-            ? cache.collateralOracle.quoteView(cache.totalCollateralAssets, cache.collateralToken)
+            ? cache.collateralOracle.quote(cache.totalCollateralAssets, cache.collateralToken)
             : cache.totalCollateralAssets;
 
         cache.maxDebtValue = cache.collateralValue * cache.maxLtv / _PRECISION_DECIMALS;
 
         cache.debtValue = address(cache.debtOracle) != address(0)
-            ? cache.debtOracle.quoteView(cache.debtAssets, cache.debtToken)
+            ? cache.debtOracle.quote(cache.debtAssets, cache.debtToken)
             : cache.debtAssets;
 
         // if LTV is higher than maxLTV, user cannot borrow more
