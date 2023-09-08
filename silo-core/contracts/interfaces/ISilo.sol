@@ -22,6 +22,23 @@ interface ISilo is IERC3156FlashLender {
         FromProtected
     }
 
+    /// @dev Intrest accrual happens on each deposit/withdraw/borrow/repay. View methods work on storage that might be
+    ///      outdate. Some calculations require accrued interest to return current state of Silo. This struct is used
+    ///      to make a decision inside functions if interest should be accrued in memory to work on updated values.
+    enum AccrueInterestInMemory {
+        No,
+        Yes
+    }
+
+    /// @dev Silo has two separate oracles for solvency and maxLtv calcualtions. MaxLtv oracle is optional. Solvency
+    ///      oracle can also be optional if asset is used as denominator in Silo config. For example, in ETH/USDC Silo
+    ///      one could setup only solvency oracle for ETH that returns price in USDC. Then USDC does not need an oracle
+    ///      because it's used as denominator for ETH and it's "price" can be assume as 1.
+    enum OracleType {
+        Solvency,
+        MaxLtv
+    }
+
     // TODO: optimized storage to use uint128 and uncheck math
     /// @dev Storage struct that holds all required data for a single token market
     struct AssetStorage {
