@@ -27,8 +27,8 @@ contract SiloConfig is ISiloConfig {
     /// @dev Token that represents a share in total debt of Silo
     address private immutable _DEBT_SHARE_TOKEN0;
 
-    address private immutable _LTV_ORACLE0;
-    address private immutable _LT_ORACLE0;
+    address private immutable _SOLVENCY_ORACLE0;
+    address private immutable _MAX_LTV_ORACLE0;
 
     address private immutable _INTEREST_RATE_MODEL0;
 
@@ -52,8 +52,8 @@ contract SiloConfig is ISiloConfig {
     /// @dev Token that represents a share in total debt of Silo
     address private immutable _DEBT_SHARE_TOKEN1;
 
-    address private immutable _LTV_ORACLE1;
-    address private immutable _LT_ORACLE1;
+    address private immutable _SOLVENCY_ORACLE1;
+    address private immutable _MAX_LTV_ORACLE1;
 
     address private immutable _INTEREST_RATE_MODEL1;
 
@@ -82,8 +82,8 @@ contract SiloConfig is ISiloConfig {
         _COLLATERAL_SHARE_TOKEN0 = _configData.collateralShareToken0;
         _DEBT_SHARE_TOKEN0 = _configData.debtShareToken0;
 
-        _LTV_ORACLE0 = _configData.ltvOracle0;
-        _LT_ORACLE0 = _configData.ltOracle0;
+        _SOLVENCY_ORACLE0 = _configData.solvencyOracle0;
+        _MAX_LTV_ORACLE0 = _configData.maxLtvOracle0;
 
         _INTEREST_RATE_MODEL0 = _configData.interestRateModel0;
 
@@ -104,8 +104,8 @@ contract SiloConfig is ISiloConfig {
         _COLLATERAL_SHARE_TOKEN1 = _configData.collateralShareToken1;
         _DEBT_SHARE_TOKEN1 = _configData.debtShareToken1;
 
-        _LTV_ORACLE1 = _configData.ltvOracle1;
-        _LT_ORACLE1 = _configData.ltOracle1;
+        _SOLVENCY_ORACLE1 = _configData.solvencyOracle1;
+        _MAX_LTV_ORACLE1 = _configData.maxLtvOracle1;
 
         _INTEREST_RATE_MODEL1 = _configData.interestRateModel1;
 
@@ -136,8 +136,8 @@ contract SiloConfig is ISiloConfig {
             protectedShareToken0: _PROTECTED_COLLATERAL_SHARE_TOKEN0,
             collateralShareToken0: _COLLATERAL_SHARE_TOKEN0,
             debtShareToken0: _DEBT_SHARE_TOKEN0,
-            ltvOracle0: _LTV_ORACLE0,
-            ltOracle0: _LT_ORACLE0,
+            solvencyOracle0: _SOLVENCY_ORACLE0,
+            maxLtvOracle0: _MAX_LTV_ORACLE0,
             interestRateModel0: _INTEREST_RATE_MODEL0,
             maxLtv0: _MAX_LTV0,
             lt0: _LT0,
@@ -149,8 +149,8 @@ contract SiloConfig is ISiloConfig {
             protectedShareToken1: _PROTECTED_COLLATERAL_SHARE_TOKEN1,
             collateralShareToken1: _COLLATERAL_SHARE_TOKEN1,
             debtShareToken1: _DEBT_SHARE_TOKEN1,
-            ltvOracle1: _LTV_ORACLE1,
-            ltOracle1: _LT_ORACLE1,
+            solvencyOracle1: _SOLVENCY_ORACLE1,
+            maxLtvOracle1: _MAX_LTV_ORACLE1,
             interestRateModel1: _INTEREST_RATE_MODEL1,
             maxLtv1: _MAX_LTV1,
             lt1: _LT1,

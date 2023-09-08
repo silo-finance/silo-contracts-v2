@@ -163,7 +163,6 @@ library SiloERC4626Lib {
         uint256 debtValue;
         uint256 totalCollateralValue;
         uint256 liquidAssets;
-        uint256 protectedAndCollateralAssets;
         uint256 totalShares;
     }
 
@@ -193,8 +192,11 @@ library SiloERC4626Lib {
         // no deposits of asset
         if (shares == 0) return (0, 0);
 
-        (,, cache.debtValue, cache.totalCollateralValue, cache.protectedAndCollateralAssets) =
-            SiloSolvencyLib.getLtvAndData(configData, _owner);
+        SiloSolvencyLib.LtvData memory ltvData = SiloSolvencyLib.getAssetsDataForLtvCalculations(
+            configData, _owner, ISilo.OracleType.Solvency, ISilo.AccrueInterestInMemory.Yes
+        );
+
+        (cache.debtValue, cache.totalCollateralValue) = SiloSolvencyLib.getPositionValues(ltvData);
 
         // must deduct debt if exists
         if (cache.debtValue != 0) {
@@ -203,7 +205,7 @@ library SiloERC4626Lib {
                 cache.totalCollateralValue - ((cache.debtValue * _PRECISION_DECIMALS) / lt);
             uint256 spareCollateralAssets = (
                 ((spareTotalCollateralValue * _PRECISION_DECIMALS) / cache.totalCollateralValue)
-                    * cache.protectedAndCollateralAssets
+                    * ltvData.totalCollateralAssets
             ) / _PRECISION_DECIMALS;
             uint256 spareCollateralShares = convertToShares(
                 spareCollateralAssets, cache.totalAssets, cache.totalShares, MathUpgradeable.Rounding.Down

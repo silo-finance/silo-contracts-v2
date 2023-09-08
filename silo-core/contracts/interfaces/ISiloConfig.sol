@@ -6,8 +6,8 @@ interface ISiloConfig {
         address deployer;
         uint256 deployerFee;
         address token0;
-        address ltvOracle0;
-        address ltOracle0;
+        address solvencyOracle0;
+        address maxLtvOracle0;
         address interestRateModel0;
         address interestRateModelConfig0;
         uint64 maxLtv0;
@@ -19,8 +19,8 @@ interface ISiloConfig {
         address collateralHookReceiver0;
         address debtHookReceiver0;
         address token1;
-        address ltvOracle1;
-        address ltOracle1;
+        address solvencyOracle1;
+        address maxLtvOracle1;
         address interestRateModel1;
         address interestRateModelConfig1;
         uint64 maxLtv1;
@@ -41,8 +41,8 @@ interface ISiloConfig {
         address protectedShareToken0;
         address collateralShareToken0;
         address debtShareToken0;
-        address ltvOracle0;
-        address ltOracle0;
+        address solvencyOracle0;
+        address maxLtvOracle0;
         address interestRateModel0;
         uint64 maxLtv0;
         uint64 lt0;
@@ -54,8 +54,8 @@ interface ISiloConfig {
         address protectedShareToken1;
         address collateralShareToken1;
         address debtShareToken1;
-        address ltvOracle1;
-        address ltOracle1;
+        address solvencyOracle1;
+        address maxLtvOracle1;
         address interestRateModel1;
         uint64 maxLtv1;
         uint64 lt1;

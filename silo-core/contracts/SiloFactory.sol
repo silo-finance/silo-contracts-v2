@@ -235,8 +235,8 @@ contract SiloFactory is ISiloFactory, ERC721Upgradeable, OwnableUpgradeable {
     {
         configData.deployerFee = _initData.deployerFee;
         configData.token0 = _initData.token0;
-        configData.ltvOracle0 = _initData.ltvOracle0;
-        configData.ltOracle0 = _initData.ltOracle0;
+        configData.solvencyOracle0 = _initData.solvencyOracle0;
+        configData.maxLtvOracle0 = _initData.maxLtvOracle0;
         configData.interestRateModel0 = _initData.interestRateModel0;
         configData.maxLtv0 = _initData.maxLtv0;
         configData.lt0 = _initData.lt0;
@@ -244,8 +244,8 @@ contract SiloFactory is ISiloFactory, ERC721Upgradeable, OwnableUpgradeable {
         configData.flashloanFee0 = _initData.flashloanFee0;
         configData.borrowable0 = _initData.borrowable0;
         configData.token1 = _initData.token1;
-        configData.ltvOracle1 = _initData.ltvOracle1;
-        configData.ltOracle1 = _initData.ltOracle1;
+        configData.solvencyOracle1 = _initData.solvencyOracle1;
+        configData.maxLtvOracle1 = _initData.maxLtvOracle1;
         configData.interestRateModel1 = _initData.interestRateModel1;
         configData.maxLtv1 = _initData.maxLtv1;
         configData.lt1 = _initData.lt1;
