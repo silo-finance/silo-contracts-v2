@@ -74,8 +74,9 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable, LeverageReent
     }
 
     function isSolvent(address _borrower) external view virtual returns (bool) {
-        // solhint-disable-line ordering
-        return SiloSolvencyLib.isSolventWithInterestAccrue(config, _borrower);
+        (ISiloConfig.ConfigData memory configData,) = config.getConfigWithAsset(address(this));
+
+        return SiloSolvencyLib.isSolvent(configData, _borrower, AccrueInterestInMemory.Yes);
     }
 
     function depositPossible(address _depositor) external view virtual returns (bool) {
@@ -544,7 +545,7 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable, LeverageReent
             revert LeverageFailed();
         }
 
-        if (!SiloSolvencyLib.isBelowMaxLtv(configData, _borrower)) revert ISilo.AboveMaxLtv();
+        if (!SiloSolvencyLib.isBelowMaxLtv(configData, _borrower, AccrueInterestInMemory.No)) revert AboveMaxLtv();
     }
 
     function liquidate(address _borrower) external virtual {}
@@ -578,7 +579,7 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable, LeverageReent
             configData = SiloStdLib.smallConfigToConfig(smallConfigData);
         }
 
-        if (!SiloERC4626Lib.depositPossible(configData, siloAsset, _receiver)) revert ISilo.DepositNotPossible();
+        if (!SiloERC4626Lib.depositPossible(configData, siloAsset, _receiver)) revert DepositNotPossible();
 
         SiloLendingLib.accrueInterest(configData, siloAsset, assetStorage);
 
@@ -626,7 +627,7 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable, LeverageReent
         }
 
         /// @dev `_params.owner` must be solvent
-        if (!SiloSolvencyLib.isSolvent(configData, _params.owner)) revert ISilo.NotSolvent();
+        if (!SiloSolvencyLib.isSolvent(configData, _params.owner, AccrueInterestInMemory.No)) revert NotSolvent();
     }
 
     function _borrow(uint256 _assets, uint256 _shares, address _receiver, address _borrower)
@@ -646,7 +647,7 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable, LeverageReent
 
         emit Borrow(msg.sender, _receiver, _borrower, assets, shares);
 
-        if (!SiloSolvencyLib.isBelowMaxLtv(configData, _borrower)) revert ISilo.AboveMaxLtv();
+        if (!SiloSolvencyLib.isBelowMaxLtv(configData, _borrower, AccrueInterestInMemory.No)) revert AboveMaxLtv();
     }
 
     function _repay(uint256 _assets, uint256 _shares, address _borrower)

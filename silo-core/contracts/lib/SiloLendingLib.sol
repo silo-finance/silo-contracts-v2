@@ -145,6 +145,8 @@ library SiloLendingLib {
 
         MaxBorrowCache memory cache;
 
+        cache.debtToken = asset;
+
         cache.protectedShareToken = SiloStdLib.findShareToken(configData, SiloStdLib.AssetType.Protected, asset);
         cache.collateralShareToken = SiloStdLib.findShareToken(configData, SiloStdLib.AssetType.Collateral, asset);
         cache.debtShareToken = SiloStdLib.findShareToken(configData, SiloStdLib.AssetType.Debt, asset);
@@ -184,31 +186,37 @@ library SiloLendingLib {
             );
         }
 
-        cache.debtToken = asset;
-
         if (asset == configData.token0) {
             cache.collateralToken = configData.token1;
-            cache.collateralOracle = ISiloOracle(configData.ltvOracle1);
+            cache.collateralOracle = configData.maxLtvOracle1 != address(0)
+                ? ISiloOracle(configData.maxLtvOracle1)
+                : ISiloOracle(configData.solvencyOracle1);
             cache.maxLtv = configData.maxLtv1;
 
-            cache.debtOracle = ISiloOracle(configData.ltvOracle0);
+            cache.debtOracle = configData.maxLtvOracle0 != address(0)
+                ? ISiloOracle(configData.maxLtvOracle0)
+                : ISiloOracle(configData.solvencyOracle0);
         } else {
             cache.collateralToken = configData.token0;
-            cache.collateralOracle = ISiloOracle(configData.ltvOracle0);
+            cache.collateralOracle = configData.maxLtvOracle0 != address(0)
+                ? ISiloOracle(configData.maxLtvOracle0)
+                : ISiloOracle(configData.solvencyOracle0);
             cache.maxLtv = configData.maxLtv0;
 
-            cache.debtOracle = ISiloOracle(configData.ltvOracle1);
+            cache.debtOracle = configData.maxLtvOracle1 != address(0)
+                ? ISiloOracle(configData.maxLtvOracle1)
+                : ISiloOracle(configData.solvencyOracle1);
         }
 
         // if no oracle is set, assume price 1
         cache.collateralValue = address(cache.collateralOracle) != address(0)
-            ? cache.collateralOracle.quoteView(cache.totalCollateralAssets, cache.collateralToken)
+            ? cache.collateralOracle.quote(cache.totalCollateralAssets, cache.collateralToken)
             : cache.totalCollateralAssets;
 
         cache.maxDebtValue = cache.collateralValue * cache.maxLtv / _PRECISION_DECIMALS;
 
         cache.debtValue = address(cache.debtOracle) != address(0)
-            ? cache.debtOracle.quoteView(cache.debtAssets, cache.debtToken)
+            ? cache.debtOracle.quote(cache.debtAssets, cache.debtToken)
             : cache.debtAssets;
 
         // if LTV is higher than maxLTV, user cannot borrow more
@@ -238,7 +246,6 @@ library SiloLendingLib {
         uint256 totalDebtAssets;
         uint256 totalDebtShares;
         uint256 ltv;
-        bool isToken0Collateral;
         uint256 maxLtv;
     }
 
