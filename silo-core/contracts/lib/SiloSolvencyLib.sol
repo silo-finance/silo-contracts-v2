@@ -7,11 +7,7 @@ import {ISiloOracle} from "../interfaces/ISiloOracle.sol";
 import {SiloStdLib, ISiloConfig, IShareToken, ISilo} from "./SiloStdLib.sol";
 import {SiloERC4626Lib} from "./SiloERC4626Lib.sol";
 
-// solhint-disable ordering
-
 library SiloSolvencyLib {
-    uint256 internal constant _PRECISION_DECIMALS = 1e18;
-
     struct LtvData {
         address debtAsset;
         address collateralAsset;
@@ -23,140 +19,85 @@ library SiloSolvencyLib {
         uint256 maxLtv;
     }
 
-    struct LtvCache {
-        ISilo debtSilo;
-        ISilo collateralSilo;
-        IShareToken debtShareToken;
-        IShareToken protectedShareToken;
-        IShareToken collateralShareToken;
-        address debtInterestRateModel;
-        address collateralInterestRateModel;
-        uint256 debtShareTokenBalance;
-        uint256 debtValue;
-        uint256 collateralValue;
-    }
+    uint256 internal constant _PRECISION_DECIMALS = 1e18;
 
-    // solhint-disable-next-line function-max-lines
-    function getAssetsDataForLtvCalculations(
+    function convertToAssetsWtihInterest(
         ISiloConfig.ConfigData memory _configData,
         address _borrower,
-        ISilo.OracleType _oracleType,
-        ISilo.AccrueInterestInMemory _accrueInMemory
-    ) internal view returns (LtvData memory ltvData) {
-        LtvCache memory ltvCache;
-        uint256 debtShareToken0Balance = IShareToken(_configData.debtShareToken0).balanceOf(_borrower);
+        ISilo.AccrueInterestInMemory _accrueInMemory,
+        ISilo.AssetType _assetType,
+        MathUpgradeable.Rounding _rounding
+    ) internal view returns (uint256 assets) {
+        IShareToken shareToken = SiloStdLib.findShareToken(_configData, _assetType);
+        uint256 shareBalance = shareToken.balanceOf(_borrower);
 
-        if (debtShareToken0Balance != 0) {
-            // borrowed token0, collateralized token1
-            ltvCache.debtShareTokenBalance = debtShareToken0Balance;
-            ltvCache.debtSilo = ISilo(_configData.silo0);
-            ltvCache.debtInterestRateModel = _configData.interestRateModel0;
-            ltvCache.debtShareToken = IShareToken(_configData.debtShareToken0);
+        if (shareBalance == 0) return 0;
 
-            ltvCache.collateralSilo = ISilo(_configData.silo1);
-            ltvCache.collateralInterestRateModel = _configData.interestRateModel1;
-            ltvCache.protectedShareToken = IShareToken(_configData.protectedShareToken1);
-            ltvCache.collateralShareToken = IShareToken(_configData.collateralShareToken1);
-
-            ltvData.debtAsset = _configData.token0;
-            ltvData.collateralAsset = _configData.token1;
-
-            ltvData.lt = _configData.lt1;
-            ltvData.maxLtv = _configData.maxLtv1;
-
-            // If LTV is needed for solvency, ltOracle should be used. If ltOracle is not set, fallback to ltvOracle.
-            ltvData.debtOracle = _oracleType == ISilo.OracleType.MaxLtv && _configData.maxLtvOracle0 != address(0)
-                ? ISiloOracle(_configData.maxLtvOracle0)
-                : ISiloOracle(_configData.solvencyOracle0);
-            ltvData.collateralOracle = _oracleType == ISilo.OracleType.MaxLtv
-                && _configData.maxLtvOracle1 != address(0)
-                ? ISiloOracle(_configData.maxLtvOracle1)
-                : ISiloOracle(_configData.solvencyOracle1);
-        } else {
-            uint256 debtShareToken1Balance = IShareToken(_configData.debtShareToken1).balanceOf(_borrower);
-
-            if (debtShareToken1Balance != 0) {
-                // borrowed token1, collateralized token0
-                ltvCache.debtShareTokenBalance = debtShareToken1Balance;
-                ltvCache.debtSilo = ISilo(_configData.silo1);
-                ltvCache.debtInterestRateModel = _configData.interestRateModel1;
-                ltvCache.debtShareToken = IShareToken(_configData.debtShareToken1);
-                
-                ltvCache.collateralSilo = ISilo(_configData.silo0);
-                ltvCache.collateralInterestRateModel = _configData.interestRateModel0;
-                ltvCache.protectedShareToken = IShareToken(_configData.protectedShareToken0);
-                ltvCache.collateralShareToken = IShareToken(_configData.collateralShareToken0);
-
-                ltvData.debtAsset = _configData.token1;
-                ltvData.collateralAsset = _configData.token0;
-
-                ltvData.lt = _configData.lt0;
-                ltvData.maxLtv = _configData.maxLtv0;
-
-                /// @dev If max ltv oracle is requested check if it is set because it's optional. If not, fallback to
-                ///      solvency oracle.
-                ltvData.debtOracle = _oracleType == ISilo.OracleType.MaxLtv && _configData.maxLtvOracle1 != address(0)
-                    ? ISiloOracle(_configData.maxLtvOracle1)
-                    : ISiloOracle(_configData.solvencyOracle1);
-                ltvData.collateralOracle = _oracleType == ISilo.OracleType.MaxLtv
-                    && _configData.maxLtvOracle0 != address(0)
-                    ? ISiloOracle(_configData.maxLtvOracle0)
-                    : ISiloOracle(_configData.solvencyOracle0);
-            } else {
-                return ltvData; // nothing borrowed
-            }
-        }
-
-        /// @dev Round up so borrower has more to repay. Always round in favor of the protocol.
-        ltvData.debtAssets = SiloERC4626Lib.convertToAssets(
-            ltvCache.debtShareTokenBalance,
+        assets = SiloERC4626Lib.convertToAssets(
+            shareBalance,
             /// @dev amountWithInterest is not needed for core LTV calculations because accrueInterest was just called
             ///      and storage data is fresh.
             _accrueInMemory == ISilo.AccrueInterestInMemory.Yes
                 ? SiloStdLib.amountWithInterest(
-                    ltvData.debtAsset, ltvCache.debtSilo.getDebtAssets(), ltvCache.debtInterestRateModel
+                    _configData.token, ISilo(_configData.silo).getDebtAssets(), _configData.interestRateModel
                 )
-                : ltvCache.debtSilo.getDebtAssets(),
-            ltvCache.debtShareToken.totalSupply(),
-            MathUpgradeable.Rounding.Up
+                : ISilo(_configData.silo).getDebtAssets(),
+            shareToken.totalSupply(),
+            _rounding
+        );
+    }
+
+    function getAssetsDataForLtvCalculations(
+        ISiloConfig.ConfigData memory _collateralConfig,
+        ISiloConfig.ConfigData memory _debtConfig,
+        address _borrower,
+        ISilo.OracleType _oracleType,
+        ISilo.AccrueInterestInMemory _accrueInMemory
+    ) internal view returns (LtvData memory ltvData) {
+        uint256 debtShareTokenBalance = IShareToken(_debtConfig.debtShareToken).balanceOf(_borrower);
+
+        // check if config was given in correct order
+        if (debtShareTokenBalance == 0) {
+            debtShareTokenBalance = IShareToken(_collateralConfig.debtShareToken).balanceOf(_borrower);
+
+            if (debtShareTokenBalance == 0) {
+                // nothing borrowed
+                return ltvData;
+            } else {
+                // configs in wrong order, reverse order
+                ISiloConfig.ConfigData memory _tempConfig;
+
+                _tempConfig = _debtConfig;
+                _debtConfig = _collateralConfig;
+                _collateralConfig = _tempConfig;
+            }
+        }
+
+        ltvData.debtAsset = _debtConfig.token;
+        ltvData.collateralAsset = _collateralConfig.token;
+        ltvData.lt = _collateralConfig.lt;
+        ltvData.maxLtv = _collateralConfig.maxLtv;
+
+        // If LTV is needed for solvency, ltOracle should be used. If ltOracle is not set, fallback to ltvOracle.
+        ltvData.debtOracle = _oracleType == ISilo.OracleType.MaxLtv && _debtConfig.maxLtvOracle != address(0)
+            ? ISiloOracle(_debtConfig.maxLtvOracle)
+            : ISiloOracle(_debtConfig.solvencyOracle);
+        ltvData.collateralOracle = _oracleType == ISilo.OracleType.MaxLtv
+            && _collateralConfig.maxLtvOracle != address(0)
+            ? ISiloOracle(_collateralConfig.maxLtvOracle)
+            : ISiloOracle(_collateralConfig.solvencyOracle);
+
+        ltvData.debtAssets = convertToAssetsWtihInterest(
+            _debtConfig, _borrower, _accrueInMemory, ISilo.AssetType.Debt, MathUpgradeable.Rounding.Up
         );
 
-        uint256 protectedBalance = ltvCache.protectedShareToken.balanceOf(_borrower);
-        uint256 protectedAssets;
+        ltvData.totalCollateralAssets = convertToAssetsWtihInterest(
+            _collateralConfig, _borrower, _accrueInMemory, ISilo.AssetType.Protected, MathUpgradeable.Rounding.Down
+        );
 
-        if (protectedBalance != 0) {
-            protectedAssets = SiloERC4626Lib.convertToAssets(
-                protectedBalance,
-                ltvCache.collateralSilo.getProtectedAssets(),
-                ltvCache.protectedShareToken.totalSupply(),
-                MathUpgradeable.Rounding.Down
-            );
-        }
-
-        uint256 collateralBalance = ltvCache.collateralShareToken.balanceOf(_borrower);
-        uint256 collateralAssets;
-
-        if (collateralBalance != 0) {
-            collateralAssets = SiloERC4626Lib.convertToAssets(
-                collateralBalance,
-                /// @dev amountWithInterest is not needed for core LTV calculations because accrueInterest was just
-                ///      called and storage data is fresh.
-                _accrueInMemory == ISilo.AccrueInterestInMemory.Yes
-                    ? SiloStdLib.amountWithInterest(
-                        ltvData.collateralAsset,
-                        ltvCache.collateralSilo.getCollateralAssets(),
-                        ltvCache.collateralInterestRateModel
-                    )
-                    : ltvCache.collateralSilo.getCollateralAssets(),
-                ltvCache.collateralShareToken.totalSupply(),
-                MathUpgradeable.Rounding.Down
-            );
-        }
-
-        /// @dev sum of assets cannot be bigger than total supply which must fit in uint256
-        unchecked {
-            ltvData.totalCollateralAssets = protectedAssets + collateralAssets;
-        }
+        ltvData.totalCollateralAssets += convertToAssetsWtihInterest(
+            _collateralConfig, _borrower, _accrueInMemory, ISilo.AssetType.Collateral, MathUpgradeable.Rounding.Down
+        );
     }
 
     function getPositionValues(LtvData memory _ltvData)
@@ -181,12 +122,14 @@ library SiloSolvencyLib {
     /// @return lt liquidation threshold
     /// @return maxLtv maximum Loan-to-Value
     function getLtv(
-        ISiloConfig.ConfigData memory _configData,
+        ISiloConfig.ConfigData memory _configData0,
+        ISiloConfig.ConfigData memory _configData1,
         address _borrower,
         ISilo.OracleType _oracleType,
         ISilo.AccrueInterestInMemory _accrueInMemory
     ) internal view returns (uint256 ltv, uint256 lt, uint256 maxLtv) {
-        LtvData memory ltvData = getAssetsDataForLtvCalculations(_configData, _borrower, _oracleType, _accrueInMemory);
+        LtvData memory ltvData =
+            getAssetsDataForLtvCalculations(_configData0, _configData1, _borrower, _oracleType, _accrueInMemory);
 
         lt = ltvData.lt;
         maxLtv = ltvData.maxLtv;
@@ -199,46 +142,26 @@ library SiloSolvencyLib {
     }
 
     function isSolvent(
-        ISiloConfig.ConfigData memory _configData,
+        ISiloConfig.ConfigData memory _configData0,
+        ISiloConfig.ConfigData memory _configData1,
         address _borrower,
         ISilo.AccrueInterestInMemory _accrueInMemory
     ) internal view returns (bool) {
-        (uint256 ltv, uint256 lt,) = getLtv(_configData, _borrower, ISilo.OracleType.Solvency, _accrueInMemory);
+        (uint256 ltv, uint256 lt,) =
+            getLtv(_configData0, _configData1, _borrower, ISilo.OracleType.Solvency, _accrueInMemory);
 
         return ltv < lt;
     }
 
     function isBelowMaxLtv(
-        ISiloConfig.ConfigData memory _configData,
+        ISiloConfig.ConfigData memory _configData0,
+        ISiloConfig.ConfigData memory _configData1,
         address _borrower,
         ISilo.AccrueInterestInMemory _accrueInMemory
     ) internal view returns (bool) {
-        (uint256 ltv,, uint256 maxLTV) = getLtv(_configData, _borrower, ISilo.OracleType.MaxLtv, _accrueInMemory);
+        (uint256 ltv,, uint256 maxLTV) =
+            getLtv(_configData0, _configData1, _borrower, ISilo.OracleType.MaxLtv, _accrueInMemory);
 
         return ltv < maxLTV;
-    }
-
-    function getMaxLtv(ISiloConfig _config) internal view returns (uint256) {
-        (ISiloConfig.ConfigData memory configData, address asset) = _config.getConfigWithAsset(address(this));
-
-        if (configData.token0 == asset) {
-            return configData.maxLtv0;
-        } else if (configData.token1 == asset) {
-            return configData.maxLtv1;
-        } else {
-            revert ISilo.WrongToken();
-        }
-    }
-
-    function getLt(ISiloConfig _config) internal view returns (uint256) {
-        (ISiloConfig.ConfigData memory configData, address asset) = _config.getConfigWithAsset(address(this));
-
-        if (configData.token0 == asset) {
-            return configData.lt0;
-        } else if (configData.token1 == asset) {
-            return configData.lt1;
-        } else {
-            revert ISilo.WrongToken();
-        }
     }
 }

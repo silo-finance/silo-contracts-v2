@@ -45,8 +45,8 @@ contract InterestRateModelV2ConfigFactory {
     }
 
     /// @dev set config for silo and asset
-    // solhint-disable-next-line code-complexity
     function verifyConfig(IInterestRateModel.Config calldata _config) public view virtual {
+    // solhint-disable-previous-line code-complexity
         int256 dp = int256(DP);
 
         if (_config.uopt <= 0 || _config.uopt >= dp) revert IInterestRateModel.InvalidUopt();
