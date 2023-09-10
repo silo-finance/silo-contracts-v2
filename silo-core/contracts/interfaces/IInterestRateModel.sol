@@ -3,8 +3,10 @@ pragma solidity >=0.5.0;
 
 import {IInterestRateModelConfig} from "./IInterestRateModelConfig.sol";
 
+// solhint-disable func-name-mixedcase
+// solhint-disable var-name-mixedcase
+
 interface IInterestRateModel {
-    /* solhint-disable */
     struct Config {
         // uopt ∈ (0, 1) – optimal utilization;
         int256 uopt;
@@ -152,7 +154,7 @@ interface IInterestRateModel {
         returns (
             uint256 rcomp,
             int256 ri,
-            int256 Tcrit, // solhint-disable-line var-name-mixedcase
+            int256 Tcrit,
             bool overflow
         );
 
@@ -171,8 +173,8 @@ interface IInterestRateModel {
         uint256 _totalBorrowAmount,
         uint256 _interestRateTimestamp,
         uint256 _blockTimestamp
-    ) external pure returns (uint256 rcomp, int256 ri, int256 Tcrit); // solhint-disable-line var-name-mixedcase
+    ) external pure returns (uint256 rcomp, int256 ri, int256 Tcrit);
 
     /// @dev returns decimal points used by model
-    function DP() external pure returns (uint256); // solhint-disable-line func-name-mixedcase
+    function DP() external pure returns (uint256);
 }

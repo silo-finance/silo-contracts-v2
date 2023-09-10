@@ -24,8 +24,8 @@ abstract contract LeverageReentrancyGuard is Initializable {
         _leverageStatus = _LEVERAGE_NOT_ENTERED;
     }
 
-    // solhint-disable-next-line func-name-mixedcase
     function __LeverageReentrancyGuard_init() internal onlyInitializing {
+        // solhint-disable-previous-line func-name-mixedcase
         _leverageStatus = _LEVERAGE_NOT_ENTERED;
     }
 }

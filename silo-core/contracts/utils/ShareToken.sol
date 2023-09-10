@@ -13,6 +13,8 @@ import {IShareToken, ISilo} from "../interfaces/IShareToken.sol";
 import {ISiloConfig} from "../SiloConfig.sol";
 import {TokenHelper} from "../lib/TokenHelper.sol";
 
+// solhint-disable func-name-mixedcase
+
 /// @title ShareToken
 /// @notice Implements common interface for Silo tokens representing debt or collateral positions.
 /// @dev Docs borrowed from https://github.com/OpenZeppelin/openzeppelin-contracts/tree/v4.9.3
@@ -81,7 +83,6 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
     }
 
     /// @param _silo Silo address for which tokens was deployed
-    // solhint-disable-next-line func-name-mixedcase
     function __ShareToken_init(ISilo _silo, address _hookReceiver) internal onlyInitializing {
         silo = _silo;
         hookReceiver = _hookReceiver;
@@ -94,38 +95,25 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
     ///      Protected deposit: "Silo Finance Non-borrowable NAME Deposit, SiloId: SILO_ID"
     ///      Borrowable deposit: "Silo Finance Borrowable NAME Deposit, SiloId: SILO_ID"
     ///      Debt: "Silo Finance NAME Debt, SiloId: SILO_ID"
-    // solhint-disable-next-line ordering
     function name() public view override(ERC20Upgradeable, IERC20MetadataUpgradeable) returns (string memory) {
+        // solhint-disable-previous-line ordering
         ISiloConfig siloConfig = silo.config();
-        ISiloConfig.ConfigData memory configData = siloConfig.getConfig();
+        ISiloConfig.ConfigData memory configData = siloConfig.getConfig(address(silo));
         string memory siloIdAscii = StringsUpgradeable.toString(siloConfig.SILO_ID());
 
-        address token;
         string memory pre = "";
-        string memory post = " Deposit, SiloId: ";
+        string memory post = " Deposit";
 
-        if (address(this) == configData.protectedShareToken0) {
-            token = configData.token0;
+        if (address(this) == configData.protectedShareToken) {
             pre = "Non-borrowable ";
-        } else if (address(this) == configData.collateralShareToken0) {
-            token = configData.token0;
+        } else if (address(this) == configData.collateralShareToken) {
             pre = "Borrowable ";
-        } else if (address(this) == configData.debtShareToken0) {
-            token = configData.token0;
-            post = " Debt, SiloId:  ";
-        } else if (address(this) == configData.protectedShareToken1) {
-            token = configData.token1;
-            pre = "Non-borrowable ";
-        } else if (address(this) == configData.collateralShareToken1) {
-            token = configData.token1;
-            pre = "Borrowable ";
-        } else if (address(this) == configData.debtShareToken1) {
-            token = configData.token1;
-            post = " Debt, SiloId:  ";
+        } else if (address(this) == configData.debtShareToken) {
+            post = " Debt";
         }
 
-        string memory tokenSymbol = TokenHelper.symbol(token);
-        return string.concat("Silo Finance ", pre, tokenSymbol, post, siloIdAscii);
+        string memory tokenSymbol = TokenHelper.symbol(configData.token);
+        return string.concat("Silo Finance ", pre, tokenSymbol, post, ", SiloId: ", siloIdAscii);
     }
 
     /// @dev Symbol convention:
@@ -137,39 +125,28 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
     ///      Debt: "dSYMBOL-SILO_ID"
     function symbol() public view override(ERC20Upgradeable, IERC20MetadataUpgradeable) returns (string memory) {
         ISiloConfig siloConfig = silo.config();
-        ISiloConfig.ConfigData memory configData = siloConfig.getConfig();
+        ISiloConfig.ConfigData memory configData = siloConfig.getConfig(address(silo));
         string memory siloIdAscii = StringsUpgradeable.toString(siloConfig.SILO_ID());
 
-        address token;
         string memory pre;
 
-        if (address(this) == configData.protectedShareToken0) {
-            token = configData.token0;
+        if (address(this) == configData.protectedShareToken) {
             pre = "nb";
-        } else if (address(this) == configData.collateralShareToken0) {
-            token = configData.token0;
+        } else if (address(this) == configData.collateralShareToken) {
             pre = "b";
-        } else if (address(this) == configData.debtShareToken0) {
-            token = configData.token0;
-            pre = "d";
-        } else if (address(this) == configData.protectedShareToken1) {
-            token = configData.token1;
-            pre = "nb";
-        } else if (address(this) == configData.collateralShareToken1) {
-            token = configData.token1;
-            pre = "b";
-        } else if (address(this) == configData.debtShareToken1) {
-            token = configData.token1;
+        } else if (address(this) == configData.debtShareToken) {
             pre = "d";
         }
 
-        string memory tokenSymbol = TokenHelper.symbol(token);
+        string memory tokenSymbol = TokenHelper.symbol(configData.token);
         return string.concat(pre, tokenSymbol, "-", siloIdAscii);
     }
 
     function balanceOfAndTotalSupply(address _account) public view returns (uint256, uint256) {
         return (balanceOf(_account), totalSupply());
     }
+
+    
 
     /// @dev Call an afterTokenTransfer hook if registered and check minimum share requirement on mint/burn
     function _afterTokenTransfer(address _sender, address _recipient, uint256 _amount) internal virtual override {

@@ -65,56 +65,57 @@ contract SiloConfig is ISiloConfig {
     bool private immutable _BORROWABLE1;
 
     /// @param _siloId ID of this pool assigned by factory
-    /// @param _configData silo configuration data
-    constructor(uint256 _siloId, ConfigData memory _configData) {
+    /// @param _configData0 silo configuration data for token0
+    /// @param _configData1 silo configuration data for token1
+    constructor(uint256 _siloId, ConfigData memory _configData0, ConfigData memory _configData1) {
         SILO_ID = _siloId;
 
-        _DAO_FEE = _configData.daoFee;
-        _DEPLOYER_FEE = _configData.deployerFee;
+        _DAO_FEE = _configData0.daoFee;
+        _DEPLOYER_FEE = _configData0.deployerFee;
 
         // TOKEN #0
 
-        _SILO0 = _configData.silo0;
+        _SILO0 = _configData0.silo;
 
-        _TOKEN0 = _configData.token0;
+        _TOKEN0 = _configData0.token;
 
-        _PROTECTED_COLLATERAL_SHARE_TOKEN0 = _configData.protectedShareToken0;
-        _COLLATERAL_SHARE_TOKEN0 = _configData.collateralShareToken0;
-        _DEBT_SHARE_TOKEN0 = _configData.debtShareToken0;
+        _PROTECTED_COLLATERAL_SHARE_TOKEN0 = _configData0.protectedShareToken;
+        _COLLATERAL_SHARE_TOKEN0 = _configData0.collateralShareToken;
+        _DEBT_SHARE_TOKEN0 = _configData0.debtShareToken;
 
-        _SOLVENCY_ORACLE0 = _configData.solvencyOracle0;
-        _MAX_LTV_ORACLE0 = _configData.maxLtvOracle0;
+        _SOLVENCY_ORACLE0 = _configData0.solvencyOracle;
+        _MAX_LTV_ORACLE0 = _configData0.maxLtvOracle;
 
-        _INTEREST_RATE_MODEL0 = _configData.interestRateModel0;
+        _INTEREST_RATE_MODEL0 = _configData0.interestRateModel;
 
-        _MAX_LTV0 = _configData.maxLtv0;
-        _LT0 = _configData.lt0;
-        _LIQUIDATION_FEE0 = _configData.liquidationFee0;
-        _FLASHLOAN_FEE0 = _configData.flashloanFee0;
+        _MAX_LTV0 = _configData0.maxLtv;
+        _LT0 = _configData0.lt;
+        _LIQUIDATION_FEE0 = _configData0.liquidationFee;
+        _FLASHLOAN_FEE0 = _configData0.flashloanFee;
 
-        _BORROWABLE0 = _configData.borrowable0;
+        _BORROWABLE0 = _configData0.borrowable;
 
         // TOKEN #1
 
-        _SILO1 = _configData.silo1;
+        _SILO1 = _configData1.silo;
 
-        _TOKEN1 = _configData.token1;
+        _TOKEN1 = _configData1.token;
 
-        _PROTECTED_COLLATERAL_SHARE_TOKEN1 = _configData.protectedShareToken1;
-        _COLLATERAL_SHARE_TOKEN1 = _configData.collateralShareToken1;
-        _DEBT_SHARE_TOKEN1 = _configData.debtShareToken1;
+        _PROTECTED_COLLATERAL_SHARE_TOKEN1 = _configData1.protectedShareToken;
+        _COLLATERAL_SHARE_TOKEN1 = _configData1.collateralShareToken;
+        _DEBT_SHARE_TOKEN1 = _configData1.debtShareToken;
 
-        _SOLVENCY_ORACLE1 = _configData.solvencyOracle1;
-        _MAX_LTV_ORACLE1 = _configData.maxLtvOracle1;
+        _SOLVENCY_ORACLE1 = _configData1.solvencyOracle;
+        _MAX_LTV_ORACLE1 = _configData1.maxLtvOracle;
 
-        _INTEREST_RATE_MODEL1 = _configData.interestRateModel1;
+        _INTEREST_RATE_MODEL1 = _configData1.interestRateModel;
 
-        _MAX_LTV1 = _configData.maxLtv1;
-        _LT1 = _configData.lt1;
-        _LIQUIDATION_FEE1 = _configData.liquidationFee1;
-        _FLASHLOAN_FEE1 = _configData.flashloanFee1;
+        _MAX_LTV1 = _configData1.maxLtv;
+        _LT1 = _configData1.lt;
+        _LIQUIDATION_FEE1 = _configData1.liquidationFee;
+        _FLASHLOAN_FEE1 = _configData1.flashloanFee;
 
-        _BORROWABLE1 = _configData.borrowable1;
+        _BORROWABLE1 = _configData1.borrowable;
     }
 
     function getAssetForSilo(address _silo) public view returns (address asset) {
@@ -127,67 +128,93 @@ contract SiloConfig is ISiloConfig {
         }
     }
 
-    function getConfig() public view returns (ConfigData memory) {
-        return ConfigData({
+    function getConfigs(address _silo) public view returns (ConfigData memory, ConfigData memory) {
+        ConfigData memory configData0 = ConfigData({
             daoFee: _DAO_FEE,
             deployerFee: _DEPLOYER_FEE,
-            silo0: _SILO0,
-            token0: _TOKEN0,
-            protectedShareToken0: _PROTECTED_COLLATERAL_SHARE_TOKEN0,
-            collateralShareToken0: _COLLATERAL_SHARE_TOKEN0,
-            debtShareToken0: _DEBT_SHARE_TOKEN0,
-            solvencyOracle0: _SOLVENCY_ORACLE0,
-            maxLtvOracle0: _MAX_LTV_ORACLE0,
-            interestRateModel0: _INTEREST_RATE_MODEL0,
-            maxLtv0: _MAX_LTV0,
-            lt0: _LT0,
-            liquidationFee0: _LIQUIDATION_FEE0,
-            flashloanFee0: _FLASHLOAN_FEE0,
-            borrowable0: _BORROWABLE0,
-            silo1: _SILO1,
-            token1: _TOKEN1,
-            protectedShareToken1: _PROTECTED_COLLATERAL_SHARE_TOKEN1,
-            collateralShareToken1: _COLLATERAL_SHARE_TOKEN1,
-            debtShareToken1: _DEBT_SHARE_TOKEN1,
-            solvencyOracle1: _SOLVENCY_ORACLE1,
-            maxLtvOracle1: _MAX_LTV_ORACLE1,
-            interestRateModel1: _INTEREST_RATE_MODEL1,
-            maxLtv1: _MAX_LTV1,
-            lt1: _LT1,
-            liquidationFee1: _LIQUIDATION_FEE1,
-            flashloanFee1: _FLASHLOAN_FEE1,
-            borrowable1: _BORROWABLE1
+            silo: _SILO0,
+            token: _TOKEN0,
+            protectedShareToken: _PROTECTED_COLLATERAL_SHARE_TOKEN0,
+            collateralShareToken: _COLLATERAL_SHARE_TOKEN0,
+            debtShareToken: _DEBT_SHARE_TOKEN0,
+            solvencyOracle: _SOLVENCY_ORACLE0,
+            maxLtvOracle: _MAX_LTV_ORACLE0,
+            interestRateModel: _INTEREST_RATE_MODEL0,
+            maxLtv: _MAX_LTV0,
+            lt: _LT0,
+            liquidationFee: _LIQUIDATION_FEE0,
+            flashloanFee: _FLASHLOAN_FEE0,
+            borrowable: _BORROWABLE0
         });
+
+        ConfigData memory configData1 = ConfigData({
+            daoFee: _DAO_FEE,
+            deployerFee: _DEPLOYER_FEE,
+            silo: _SILO1,
+            token: _TOKEN1,
+            protectedShareToken: _PROTECTED_COLLATERAL_SHARE_TOKEN1,
+            collateralShareToken: _COLLATERAL_SHARE_TOKEN1,
+            debtShareToken: _DEBT_SHARE_TOKEN1,
+            solvencyOracle: _SOLVENCY_ORACLE1,
+            maxLtvOracle: _MAX_LTV_ORACLE1,
+            interestRateModel: _INTEREST_RATE_MODEL1,
+            maxLtv: _MAX_LTV1,
+            lt: _LT1,
+            liquidationFee: _LIQUIDATION_FEE1,
+            flashloanFee: _FLASHLOAN_FEE1,
+            borrowable: _BORROWABLE1
+        });
+
+        // Silo that is asking for configs will have its config at index 0
+        if (_silo == _SILO0) {
+            return (configData0, configData1);
+        } else if (_silo == _SILO1) {
+            return (configData1, configData0);
+        } else {
+            revert WrongSilo();
+        }
     }
 
-    /// @dev returns only part of the config needed for deposit and repey to save gas
-    ///      Getting full config (ConfigData) costs ~3k gas. Small config (SmallConfigData) costs ~1.4k gas.
-    ///      SmallConfigData is always casted to ConfigData so it's tempting to do casting here but full config with
-    ///      empty data costs ~2.4k gas so it makes sense to cast in memory outside of this contract.
-    function getSmallConfigWithAsset(address _silo)
-        public
-        view
-        returns (SmallConfigData memory configData, address asset)
-    {
-        configData.daoFee = _DAO_FEE;
-        configData.deployerFee = _DEPLOYER_FEE;
-        configData.token0 = _TOKEN0;
-        configData.protectedShareToken0 = _PROTECTED_COLLATERAL_SHARE_TOKEN0;
-        configData.collateralShareToken0 = _COLLATERAL_SHARE_TOKEN0;
-        configData.debtShareToken0 = _DEBT_SHARE_TOKEN0;
-        configData.interestRateModel0 = _INTEREST_RATE_MODEL0;
-        configData.token1 = _TOKEN1;
-        configData.protectedShareToken1 = _PROTECTED_COLLATERAL_SHARE_TOKEN1;
-        configData.collateralShareToken1 = _COLLATERAL_SHARE_TOKEN1;
-        configData.debtShareToken1 = _DEBT_SHARE_TOKEN1;
-        configData.interestRateModel1 = _INTEREST_RATE_MODEL1;
-
-        asset = getAssetForSilo(_silo);
-    }
-
-    function getConfigWithAsset(address _silo) public view returns (ConfigData memory configData, address asset) {
-        configData = getConfig();
-        asset = getAssetForSilo(_silo);
+    function getConfig(address _silo) public view returns (ConfigData memory) {
+        if (_silo == _SILO0) {
+            return ConfigData({
+                daoFee: _DAO_FEE,
+                deployerFee: _DEPLOYER_FEE,
+                silo: _SILO0,
+                token: _TOKEN0,
+                protectedShareToken: _PROTECTED_COLLATERAL_SHARE_TOKEN0,
+                collateralShareToken: _COLLATERAL_SHARE_TOKEN0,
+                debtShareToken: _DEBT_SHARE_TOKEN0,
+                solvencyOracle: _SOLVENCY_ORACLE0,
+                maxLtvOracle: _MAX_LTV_ORACLE0,
+                interestRateModel: _INTEREST_RATE_MODEL0,
+                maxLtv: _MAX_LTV0,
+                lt: _LT0,
+                liquidationFee: _LIQUIDATION_FEE0,
+                flashloanFee: _FLASHLOAN_FEE0,
+                borrowable: _BORROWABLE0
+            });
+        } else if (_silo == _SILO1) {
+            return ConfigData({
+                daoFee: _DAO_FEE,
+                deployerFee: _DEPLOYER_FEE,
+                silo: _SILO1,
+                token: _TOKEN1,
+                protectedShareToken: _PROTECTED_COLLATERAL_SHARE_TOKEN1,
+                collateralShareToken: _COLLATERAL_SHARE_TOKEN1,
+                debtShareToken: _DEBT_SHARE_TOKEN1,
+                solvencyOracle: _SOLVENCY_ORACLE1,
+                maxLtvOracle: _MAX_LTV_ORACLE1,
+                interestRateModel: _INTEREST_RATE_MODEL1,
+                maxLtv: _MAX_LTV1,
+                lt: _LT1,
+                liquidationFee: _LIQUIDATION_FEE1,
+                flashloanFee: _FLASHLOAN_FEE1,
+                borrowable: _BORROWABLE1
+            });
+        } else {
+            revert WrongSilo();
+        }
     }
 
     function getFlashloanFeeWithAsset(address _silo) public view returns (uint256 flashloanFee, address asset) {
