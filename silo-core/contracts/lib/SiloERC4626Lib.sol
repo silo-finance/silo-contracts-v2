@@ -194,8 +194,7 @@ library SiloERC4626Lib {
         }
     }
 
-    // TODO: name?
-    function preview(
+    function convertToAssetsOrToShares(
         ISiloConfig _config,
         uint256 _assetsOrShares,
         ISilo.AssetType _assetType,
@@ -208,12 +207,10 @@ library SiloERC4626Lib {
         (uint256 totalAssets, uint256 totalShares) =
             SiloStdLib.getTotalAssetsAndTotalShares(configData, _assetType, _assetStorage);
 
-        if (_useAssets == ISilo.UseAssets.Yes) {
+        return _useAssets == ISilo.UseAssets.Yes
             // using assets means we are converting to shares
-            return convertToShares(_assetsOrShares, totalAssets, totalShares, _rounding);
-        } else {
-            return convertToAssets(_assetsOrShares, totalAssets, totalShares, _rounding);
-        }
+            ? convertToShares(_assetsOrShares, totalAssets, totalShares, _rounding)
+            : convertToAssets(_assetsOrShares, totalAssets, totalShares, _rounding);
     }
 
     function maxWithdraw(

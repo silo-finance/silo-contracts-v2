@@ -266,7 +266,7 @@ library SiloLendingLib {
         ISiloConfig.ConfigData memory configData = _config.getConfig(address(this));
 
         shares = IShareToken(configData.debtShareToken).balanceOf(_borrower);
-        assets = SiloERC4626Lib.preview(
+        assets = SiloERC4626Lib.convertToAssetsOrToShares(
             _config, shares, ISilo.AssetType.Debt, ISilo.UseAssets.No, MathUpgradeable.Rounding.Up, _assetStorage
         );
     }
