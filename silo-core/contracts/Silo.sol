@@ -127,13 +127,13 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable, LeverageReent
     }
 
     function convertToShares(uint256 _assets) external view virtual returns (uint256 shares) {
-        return SiloERC4626Lib.preview(
+        return SiloERC4626Lib.convertToAssetsOrToShares(
             config, _assets, AssetType.Collateral, UseAssets.Yes, MathUpgradeable.Rounding.Down, assetStorage
         );
     }
 
     function convertToAssets(uint256 _shares) external view virtual returns (uint256 assets) {
-        return SiloERC4626Lib.preview(
+        return SiloERC4626Lib.convertToAssetsOrToShares(
             config, _shares, AssetType.Collateral, UseAssets.No, MathUpgradeable.Rounding.Down, assetStorage
         );
     }
@@ -143,7 +143,7 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable, LeverageReent
     }
 
     function previewDeposit(uint256 _assets) external view virtual returns (uint256 shares) {
-        return SiloERC4626Lib.preview(
+        return SiloERC4626Lib.convertToAssetsOrToShares(
             config, _assets, AssetType.Collateral, UseAssets.Yes, MathUpgradeable.Rounding.Down, assetStorage
         );
     }
@@ -160,7 +160,7 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable, LeverageReent
     }
 
     function previewMint(uint256 _shares) external view virtual returns (uint256 assets) {
-        return SiloERC4626Lib.preview(
+        return SiloERC4626Lib.convertToAssetsOrToShares(
             config, _shares, AssetType.Collateral, UseAssets.No, MathUpgradeable.Rounding.Down, assetStorage
         );
     }
@@ -177,7 +177,7 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable, LeverageReent
     }
 
     function previewWithdraw(uint256 _assets) external view virtual returns (uint256 shares) {
-        return SiloERC4626Lib.preview(
+        return SiloERC4626Lib.convertToAssetsOrToShares(
             config, _assets, AssetType.Collateral, UseAssets.Yes, MathUpgradeable.Rounding.Up, assetStorage
         );
     }
@@ -210,7 +210,7 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable, LeverageReent
     }
 
     function previewRedeem(uint256 _shares) external view virtual returns (uint256 assets) {
-        return SiloERC4626Lib.preview(
+        return SiloERC4626Lib.convertToAssetsOrToShares(
             config, _shares, AssetType.Collateral, UseAssets.No, MathUpgradeable.Rounding.Down, assetStorage
         );
     }
@@ -241,13 +241,13 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable, LeverageReent
     // Protected
 
     function convertToShares(uint256 _assets, AssetType _assetType) external view virtual returns (uint256 shares) {
-        return SiloERC4626Lib.preview(
+        return SiloERC4626Lib.convertToAssetsOrToShares(
             config, _assets, _assetType, UseAssets.Yes, MathUpgradeable.Rounding.Down, assetStorage
         );
     }
 
     function convertToAssets(uint256 _shares, AssetType _assetType) external view virtual returns (uint256 assets) {
-        return SiloERC4626Lib.preview(
+        return SiloERC4626Lib.convertToAssetsOrToShares(
             config, _shares, _assetType, UseAssets.No, MathUpgradeable.Rounding.Down, assetStorage
         );
     }
@@ -262,7 +262,7 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable, LeverageReent
     }
 
     function previewDeposit(uint256 _assets, AssetType _assetType) external view virtual returns (uint256 shares) {
-        return SiloERC4626Lib.preview(
+        return SiloERC4626Lib.convertToAssetsOrToShares(
             config, _assets, _assetType, UseAssets.Yes, MathUpgradeable.Rounding.Down, assetStorage
         );
     }
@@ -289,7 +289,7 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable, LeverageReent
     }
 
     function previewMint(uint256 _shares, AssetType _assetType) external view virtual returns (uint256 assets) {
-        return SiloERC4626Lib.preview(
+        return SiloERC4626Lib.convertToAssetsOrToShares(
             config, _shares, _assetType, UseAssets.No, MathUpgradeable.Rounding.Down, assetStorage
         );
     }
@@ -311,7 +311,7 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable, LeverageReent
     }
 
     function previewWithdraw(uint256 _assets, AssetType _assetType) external view virtual returns (uint256 shares) {
-        return SiloERC4626Lib.preview(
+        return SiloERC4626Lib.convertToAssetsOrToShares(
             config, _assets, _assetType, UseAssets.Yes, MathUpgradeable.Rounding.Down, assetStorage
         );
     }
@@ -344,7 +344,7 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable, LeverageReent
     }
 
     function previewRedeem(uint256 _shares, AssetType _assetType) external view virtual returns (uint256 assets) {
-        return SiloERC4626Lib.preview(
+        return SiloERC4626Lib.convertToAssetsOrToShares(
             config, _shares, _assetType, UseAssets.No, MathUpgradeable.Rounding.Down, assetStorage
         );
     }
@@ -411,7 +411,7 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable, LeverageReent
     }
 
     function previewBorrow(uint256 _assets) external view virtual returns (uint256 shares) {
-        return SiloERC4626Lib.preview(
+        return SiloERC4626Lib.convertToAssetsOrToShares(
             config, _assets, AssetType.Debt, UseAssets.Yes, MathUpgradeable.Rounding.Up, assetStorage
         );
     }
@@ -434,7 +434,7 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable, LeverageReent
     }
 
     function previewBorrowShares(uint256 _shares) external view virtual returns (uint256 assets) {
-        return SiloERC4626Lib.preview(
+        return SiloERC4626Lib.convertToAssetsOrToShares(
             config, _shares, AssetType.Debt, UseAssets.No, MathUpgradeable.Rounding.Up, assetStorage
         );
     }
@@ -457,7 +457,7 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable, LeverageReent
     }
 
     function previewRepay(uint256 _assets) external view virtual returns (uint256 shares) {
-        return SiloERC4626Lib.preview(
+        return SiloERC4626Lib.convertToAssetsOrToShares(
             config, _assets, AssetType.Debt, UseAssets.Yes, MathUpgradeable.Rounding.Down, assetStorage
         );
     }
@@ -480,7 +480,7 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable, LeverageReent
     }
 
     function previewRepayShares(uint256 _shares) external view virtual returns (uint256 assets) {
-        return SiloERC4626Lib.preview(
+        return SiloERC4626Lib.convertToAssetsOrToShares(
             config, _shares, AssetType.Debt, UseAssets.No, MathUpgradeable.Rounding.Down, assetStorage
         );
     }
