@@ -5,12 +5,12 @@ import {IERC3156FlashLender} from "./IERC3156FlashLender.sol";
 import {ISiloConfig} from "./ISiloConfig.sol";
 import {ISiloFactory} from "./ISiloFactory.sol";
 import {ILeverageBorrower} from "./ILeverageBorrower.sol";
+import {ISiloLiquidation} from "./ISiloLiquidation.sol";
 
 // solhint-disable ordering
-
-interface ISilo is IERC3156FlashLender {
+interface ISilo is IERC3156FlashLender, ISiloLiquidation {
     /// @dev Functions like deposit, withdraw, repay and borrow have two versions of themselves, one working with
-    ///      assets and the other with shares. Underlaying logic and calculations are the same however the data
+    ///      assets and the other with shares. Underlying logic and calculations are the same however the data
     ///      differs. To avoid copying the code this enum is used to determine if assets or shares should be used.
     enum UseAssets {
         No,
@@ -25,7 +25,7 @@ interface ISilo is IERC3156FlashLender {
         Yes
     }
 
-    /// @dev Silo has two separate oracles for solvency and maxLtv calcualtions. MaxLtv oracle is optional. Solvency
+    /// @dev Silo has two separate oracles for solvency and maxLtv calculations. MaxLtv oracle is optional. Solvency
     ///      oracle can also be optional if asset is used as denominator in Silo config. For example, in ETH/USDC Silo
     ///      one could setup only solvency oracle for ETH that returns price in USDC. Then USDC does not need an oracle
     ///      because it's used as denominator for ETH and it's "price" can be assume as 1.
@@ -35,7 +35,7 @@ interface ISilo is IERC3156FlashLender {
     }
 
     /// @dev There are 3 types of accounting in the system: for non-borrowable collateral deposit called "protected",
-    ///      for borrowable collateral deposit called "collaterl" and for borrowed tokens called "debt". System does
+    ///      for borrowable collateral deposit called "collateral" and for borrowed tokens called "debt". System does
     ///      identical calculations for each type of accounting but it uses different data. To avoid code duplication
     ///      this enum is used to decide which data should be read.
     enum AssetType {
@@ -44,8 +44,8 @@ interface ISilo is IERC3156FlashLender {
         Debt
     }
 
-    /// @dev This enum is used to decide if transfer of underlaying token should happen within deposit and withdraw
-    ///      functions. One use case where it's not desired is tranision of non-borrowable collateral to borrowable
+    /// @dev This enum is used to decide if transfer of underlying token should happen within deposit and withdraw
+    ///      functions. One use case where it's not desired is transition of non-borrowable collateral to borrowable
     ///      collateral and vice versa.
     enum TokenTransfer {
         No,
@@ -235,8 +235,7 @@ interface ISilo is IERC3156FlashLender {
     function leverage(uint256 _assets, ILeverageBorrower _receiver, address _borrower, bytes calldata _data)
         external
         returns (uint256 shares);
-    // TODO: allow selfliquidate
-    function liquidate(address _borrower) external;
+
     function accrueInterest() external returns (uint256 accruedInterest);
 
     function withdrawFees() external;

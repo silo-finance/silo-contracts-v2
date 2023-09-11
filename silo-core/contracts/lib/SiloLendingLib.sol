@@ -141,6 +141,7 @@ library SiloLendingLib {
         cache.shareDebtBalance = cache.debtShareToken.balanceOf(_borrower);
 
         if (_useAssets == ISilo.UseAssets.Yes) {
+        // TODO if (_assets != 0) {
             // repaying assets
             shares = SiloERC4626Lib.convertToShares(
                 _assets, cache.totalDebtAmount, cache.totalDebtShares, MathUpgradeable.Rounding.Down
