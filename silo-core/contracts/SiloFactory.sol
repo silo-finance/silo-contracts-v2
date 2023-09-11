@@ -78,53 +78,53 @@ contract SiloFactory is ISiloFactory, ERC721Upgradeable, OwnableUpgradeable {
     /// @param _initData silo initialization data
     function createSilo(ISiloConfig.InitData memory _initData) external returns (ISiloConfig siloConfig) {
         _validateSiloInitData(_initData);
-        ISiloConfig.ConfigData memory configData = _copyConfig(_initData);
+        (ISiloConfig.ConfigData memory configData0, ISiloConfig.ConfigData memory configData1) = _copyConfig(_initData);
 
         uint256 nextSiloId = _siloId.current();
         _siloId.increment();
 
-        configData.daoFee = daoFeeInBp;
+        configData0.daoFee = daoFeeInBp;
+        configData1.daoFee = daoFeeInBp;
 
-        configData.protectedShareToken0 = ClonesUpgradeable.clone(shareCollateralTokenImpl);
-        configData.collateralShareToken0 = ClonesUpgradeable.clone(shareCollateralTokenImpl);
-        configData.debtShareToken0 = ClonesUpgradeable.clone(shareDebtTokenImpl);
+        configData0.protectedShareToken = ClonesUpgradeable.clone(shareCollateralTokenImpl);
+        configData0.collateralShareToken = ClonesUpgradeable.clone(shareCollateralTokenImpl);
+        configData0.debtShareToken = ClonesUpgradeable.clone(shareDebtTokenImpl);
+        configData1.protectedShareToken = ClonesUpgradeable.clone(shareCollateralTokenImpl);
+        configData1.collateralShareToken = ClonesUpgradeable.clone(shareCollateralTokenImpl);
+        configData1.debtShareToken = ClonesUpgradeable.clone(shareDebtTokenImpl);
 
-        configData.protectedShareToken1 = ClonesUpgradeable.clone(shareCollateralTokenImpl);
-        configData.collateralShareToken1 = ClonesUpgradeable.clone(shareCollateralTokenImpl);
-        configData.debtShareToken1 = ClonesUpgradeable.clone(shareDebtTokenImpl);
+        configData0.silo = ClonesUpgradeable.clone(siloImpl);
+        configData1.silo = ClonesUpgradeable.clone(siloImpl);
 
-        configData.silo0 = ClonesUpgradeable.clone(siloImpl);
-        configData.silo1 = ClonesUpgradeable.clone(siloImpl);
+        siloConfig = ISiloConfig(address(new SiloConfig(nextSiloId, configData0, configData1)));
 
-        siloConfig = ISiloConfig(address(new SiloConfig(nextSiloId, configData)));
+        ISilo(configData0.silo).initialize(siloConfig, _initData.interestRateModelConfig0);
+        ISilo(configData1.silo).initialize(siloConfig, _initData.interestRateModelConfig1);
 
-        ISilo(configData.silo0).initialize(siloConfig, _initData.interestRateModelConfig0);
-        ISilo(configData.silo1).initialize(siloConfig, _initData.interestRateModelConfig1);
-
-        IShareToken(configData.protectedShareToken0).initialize(
-            ISilo(configData.silo0), _initData.protectedHookReceiver0
+        IShareToken(configData0.protectedShareToken).initialize(
+            ISilo(configData0.silo), _initData.protectedHookReceiver0
         );
-        IShareToken(configData.collateralShareToken0).initialize(
-            ISilo(configData.silo0), _initData.collateralHookReceiver0
+        IShareToken(configData0.collateralShareToken).initialize(
+            ISilo(configData0.silo), _initData.collateralHookReceiver0
         );
-        IShareToken(configData.debtShareToken0).initialize(ISilo(configData.silo0), _initData.debtHookReceiver0);
-        IShareToken(configData.protectedShareToken1).initialize(
-            ISilo(configData.silo1), _initData.protectedHookReceiver1
+        IShareToken(configData0.debtShareToken).initialize(ISilo(configData0.silo), _initData.debtHookReceiver0);
+        IShareToken(configData1.protectedShareToken).initialize(
+            ISilo(configData1.silo), _initData.protectedHookReceiver1
         );
-        IShareToken(configData.collateralShareToken1).initialize(
-            ISilo(configData.silo1), _initData.collateralHookReceiver1
+        IShareToken(configData1.collateralShareToken).initialize(
+            ISilo(configData1.silo), _initData.collateralHookReceiver1
         );
-        IShareToken(configData.debtShareToken1).initialize(ISilo(configData.silo1), _initData.debtHookReceiver1);
+        IShareToken(configData1.debtShareToken).initialize(ISilo(configData1.silo), _initData.debtHookReceiver1);
 
-        siloToId[configData.silo0] = nextSiloId;
-        siloToId[configData.silo1] = nextSiloId;
-        _idToSilos[nextSiloId] = [configData.silo0, configData.silo1];
+        siloToId[configData0.silo] = nextSiloId;
+        siloToId[configData1.silo] = nextSiloId;
+        _idToSilos[nextSiloId] = [configData0.silo, configData1.silo];
 
         if (_initData.deployer != address(0)) {
             _mint(_initData.deployer, nextSiloId);
         }
 
-        emit NewSilo(configData.token0, configData.token1, configData.silo0, configData.silo1, address(siloConfig));
+        emit NewSilo(configData0.token, configData1.token, configData0.silo, configData1.silo, address(siloConfig));
 
         return siloConfig;
     }
@@ -203,9 +203,8 @@ contract SiloFactory is ISiloFactory, ERC721Upgradeable, OwnableUpgradeable {
         return "//app.silo.finance/silo/";
     }
 
-    // solhint-disable-next-line code-complexity
     function _validateSiloInitData(ISiloConfig.InitData memory _initData) internal view {
-        // solhint-disable-line code-complexity
+        // solhint-disable-previous-line code-complexity
         if (_initData.token0 == _initData.token1) revert SameAsset();
         if (_initData.maxLtv0 > _initData.lt0) revert InvalidMaxLtv();
         if (_initData.maxLtv1 > _initData.lt1) revert InvalidMaxLtv();
@@ -231,26 +230,29 @@ contract SiloFactory is ISiloFactory, ERC721Upgradeable, OwnableUpgradeable {
     function _copyConfig(ISiloConfig.InitData memory _initData)
         internal
         pure
-        returns (ISiloConfig.ConfigData memory configData)
+        returns (ISiloConfig.ConfigData memory configData0, ISiloConfig.ConfigData memory configData1)
     {
-        configData.deployerFee = _initData.deployerFee;
-        configData.token0 = _initData.token0;
-        configData.solvencyOracle0 = _initData.solvencyOracle0;
-        configData.maxLtvOracle0 = _initData.maxLtvOracle0;
-        configData.interestRateModel0 = _initData.interestRateModel0;
-        configData.maxLtv0 = _initData.maxLtv0;
-        configData.lt0 = _initData.lt0;
-        configData.liquidationFee0 = _initData.liquidationFee0;
-        configData.flashloanFee0 = _initData.flashloanFee0;
-        configData.borrowable0 = _initData.borrowable0;
-        configData.token1 = _initData.token1;
-        configData.solvencyOracle1 = _initData.solvencyOracle1;
-        configData.maxLtvOracle1 = _initData.maxLtvOracle1;
-        configData.interestRateModel1 = _initData.interestRateModel1;
-        configData.maxLtv1 = _initData.maxLtv1;
-        configData.lt1 = _initData.lt1;
-        configData.liquidationFee1 = _initData.liquidationFee1;
-        configData.flashloanFee1 = _initData.flashloanFee1;
-        configData.borrowable1 = _initData.borrowable1;
+        configData0.deployerFee = _initData.deployerFee;
+        configData1.deployerFee = _initData.deployerFee;
+        
+        configData0.token = _initData.token0;
+        configData0.solvencyOracle = _initData.solvencyOracle0;
+        configData0.maxLtvOracle = _initData.maxLtvOracle0;
+        configData0.interestRateModel = _initData.interestRateModel0;
+        configData0.maxLtv = _initData.maxLtv0;
+        configData0.lt = _initData.lt0;
+        configData0.liquidationFee = _initData.liquidationFee0;
+        configData0.flashloanFee = _initData.flashloanFee0;
+        configData0.borrowable = _initData.borrowable0;
+
+        configData1.token = _initData.token1;
+        configData1.solvencyOracle = _initData.solvencyOracle1;
+        configData1.maxLtvOracle = _initData.maxLtvOracle1;
+        configData1.interestRateModel = _initData.interestRateModel1;
+        configData1.maxLtv = _initData.maxLtv1;
+        configData1.lt = _initData.lt1;
+        configData1.liquidationFee = _initData.liquidationFee1;
+        configData1.flashloanFee = _initData.flashloanFee1;
+        configData1.borrowable = _initData.borrowable1;
     }
 }

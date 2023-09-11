@@ -10,7 +10,7 @@ import {ISilo} from "../interfaces/ISilo.sol";
 import {IInterestRateModel} from "../interfaces/IInterestRateModel.sol";
 import {IInterestRateModelConfig} from "../interfaces/IInterestRateModelConfig.sol";
 
-/* solhint-disable var-name-mixedcase */
+// solhint-disable var-name-mixedcase
 
 /// @title InterestRateModelV2
 /// @notice This model is for one silo/asset set. So one silo need to have as many IRMs as many assets it holds.
@@ -262,7 +262,7 @@ contract InterestRateModelV2 is IInterestRateModel {
     ) public pure virtual returns (
         uint256 rcomp,
         int256 ri,
-        int256 Tcrit, // solhint-disable-line var-name-mixedcase
+        int256 Tcrit,
         bool overflow
     ) {
         ri = _c.ri;
@@ -279,7 +279,7 @@ contract InterestRateModelV2 is IInterestRateModel {
             _l.T = (_blockTimestamp - _interestRateTimestamp).toInt256();
         }
 
-        int256 _DP = int256(DP); // solhint-disable-line var-name-mixedcase
+        int256 _DP = int256(DP);
 
         _l.u = SiloStdLib.calculateUtilization(DP, _totalDeposits, _totalBorrowAmount).toInt256();
 
@@ -441,4 +441,4 @@ contract InterestRateModelV2 is IInterestRateModel {
     }
 }
 
-/* solhint-enable var-name-mixedcase */
+// solhint-enable var-name-mixedcase

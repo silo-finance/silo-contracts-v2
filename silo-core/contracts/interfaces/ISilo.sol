@@ -6,20 +6,15 @@ import {ISiloConfig} from "./ISiloConfig.sol";
 import {ISiloFactory} from "./ISiloFactory.sol";
 import {ILeverageBorrower} from "./ILeverageBorrower.sol";
 
-interface ISilo is IERC3156FlashLender {
-    enum Protected {
-        No,
-        Yes
-    }
+// solhint-disable ordering
 
+interface ISilo is IERC3156FlashLender {
+    /// @dev Functions like deposit, withdraw, repay and borrow have two versions of themselves, one working with
+    ///      assets and the other with shares. Underlaying logic and calculations are the same however the data
+    ///      differs. To avoid copying the code this enum is used to determine if assets or shares should be used.
     enum UseAssets {
         No,
         Yes
-    }
-
-    enum Transition {
-        ToProtected,
-        FromProtected
     }
 
     /// @dev Intrest accrual happens on each deposit/withdraw/borrow/repay. View methods work on storage that might be
@@ -37,6 +32,24 @@ interface ISilo is IERC3156FlashLender {
     enum OracleType {
         Solvency,
         MaxLtv
+    }
+
+    /// @dev There are 3 types of accounting in the system: for non-borrowable collateral deposit called "protected",
+    ///      for borrowable collateral deposit called "collaterl" and for borrowed tokens called "debt". System does
+    ///      identical calculations for each type of accounting but it uses different data. To avoid code duplication
+    ///      this enum is used to decide which data should be read.
+    enum AssetType {
+        Protected,
+        Collateral,
+        Debt
+    }
+
+    /// @dev This enum is used to decide if transfer of underlaying token should happen within deposit and withdraw
+    ///      functions. One use case where it's not desired is tranision of non-borrowable collateral to borrowable
+    ///      collateral and vice versa.
+    enum TokenTransfer {
+        No,
+        Yes
     }
 
     // TODO: optimized storage to use uint128 and uncheck math
@@ -64,14 +77,6 @@ interface ISilo is IERC3156FlashLender {
         uint256 debtAssets;
         /// @dev timestamp of the last interest accrual
         uint64 interestRateTimestamp;
-    }
-
-    struct WithdrawParams {
-        uint256 assets;
-        uint256 shares;
-        address receiver;
-        address owner;
-        Protected isProtected;
     }
 
     /// @notice Emitted on deposit
@@ -139,6 +144,7 @@ interface ISilo is IERC3156FlashLender {
     error FlashloanFailed();
     error LeverageFailed();
     error AboveMaxLtv();
+    error WrongAssetType();
 
     function initialize(ISiloConfig _config, address _modelConfigAddress) external;
 
@@ -147,7 +153,7 @@ interface ISilo is IERC3156FlashLender {
     function assetStorage(address _asset) external view returns (uint256, uint256, uint256, uint256, uint64);
     function utilizationData(address _asset) external view returns (UtilizationData memory);
 
-    function isSolvent(address _borrower) external returns (bool); // solhint-disable-line ordering
+    function isSolvent(address _borrower) external view returns (bool);
     function depositPossible(address _depositor) external view returns (bool);
     function borrowPossible(address _borrower) external view returns (bool);
     function getMaxLtv() external view returns (uint256);
@@ -182,26 +188,26 @@ interface ISilo is IERC3156FlashLender {
 
     // Protected
 
-    function convertToShares(uint256 _assets, Protected _isProtected) external view returns (uint256 shares);
-    function convertToAssets(uint256 _shares, Protected _isProtected) external view returns (uint256 assets);
+    function convertToShares(uint256 _assets, AssetType _asserType) external view returns (uint256 shares);
+    function convertToAssets(uint256 _shares, AssetType _asserType) external view returns (uint256 assets);
 
-    function maxDeposit(address _receiver, Protected _isProtected) external view returns (uint256 maxAssets);
-    function previewDeposit(uint256 _assets, Protected _isProtected) external view returns (uint256 shares);
-    function deposit(uint256 _assets, address _receiver, Protected _isProtected) external returns (uint256 shares);
+    function maxDeposit(address _receiver, AssetType _asserType) external view returns (uint256 maxAssets);
+    function previewDeposit(uint256 _assets, AssetType _asserType) external view returns (uint256 shares);
+    function deposit(uint256 _assets, address _receiver, AssetType _asserType) external returns (uint256 shares);
 
-    function maxMint(address _receiver, Protected _isProtected) external view returns (uint256 maxShares);
-    function previewMint(uint256 _shares, Protected _isProtected) external view returns (uint256 assets);
-    function mint(uint256 _shares, address _receiver, Protected _isProtected) external returns (uint256 assets);
+    function maxMint(address _receiver, AssetType _asserType) external view returns (uint256 maxShares);
+    function previewMint(uint256 _shares, AssetType _asserType) external view returns (uint256 assets);
+    function mint(uint256 _shares, address _receiver, AssetType _asserType) external returns (uint256 assets);
 
-    function maxWithdraw(address _owner, Protected _isProtected) external view returns (uint256 maxAssets);
-    function previewWithdraw(uint256 _assets, Protected _isProtected) external view returns (uint256 shares);
-    function withdraw(uint256 _assets, address _receiver, address _owner, Protected _isProtected)
+    function maxWithdraw(address _owner, AssetType _asserType) external view returns (uint256 maxAssets);
+    function previewWithdraw(uint256 _assets, AssetType _asserType) external view returns (uint256 shares);
+    function withdraw(uint256 _assets, address _receiver, address _owner, AssetType _asserType)
         external
         returns (uint256 shares);
 
-    function maxRedeem(address _owner, Protected _isProtected) external view returns (uint256 maxShares);
-    function previewRedeem(uint256 _shares, Protected _isProtected) external view returns (uint256 assets);
-    function redeem(uint256 _shares, address _receiver, address _owner, Protected _isProtected)
+    function maxRedeem(address _owner, AssetType _asserType) external view returns (uint256 maxShares);
+    function previewRedeem(uint256 _shares, AssetType _asserType) external view returns (uint256 assets);
+    function redeem(uint256 _shares, address _receiver, address _owner, AssetType _asserType)
         external
         returns (uint256 assets);
 

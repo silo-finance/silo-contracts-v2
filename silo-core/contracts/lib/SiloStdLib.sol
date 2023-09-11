@@ -13,12 +13,6 @@ import {IShareToken} from "../interfaces/IShareToken.sol";
 library SiloStdLib {
     using SafeERC20Upgradeable for IERC20Upgradeable;
 
-    enum AssetType {
-        Protected,
-        Collateral,
-        Debt
-    }
-
     uint256 internal constant _PRECISION_DECIMALS = 1e18;
 
     function withdrawFees(
@@ -26,13 +20,13 @@ library SiloStdLib {
         ISiloFactory _factory,
         mapping(address => ISilo.AssetStorage) storage _assetStorage
     ) internal {
-        (ISiloConfig.ConfigData memory configData, address asset) = _config.getConfigWithAsset(address(this));
+        ISiloConfig.ConfigData memory configData = _config.getConfig(address(this));
 
-        uint256 earnedFees = _assetStorage[asset].daoAndDeployerFees;
-        uint256 balanceOf = IERC20Upgradeable(asset).balanceOf(address(this));
+        uint256 earnedFees = _assetStorage[configData.token].daoAndDeployerFees;
+        uint256 balanceOf = IERC20Upgradeable(configData.token).balanceOf(address(this));
         if (earnedFees > balanceOf) earnedFees = balanceOf;
 
-        _assetStorage[asset].daoAndDeployerFees -= earnedFees;
+        _assetStorage[configData.token].daoAndDeployerFees -= earnedFees;
 
         (address daoFeeReceiver, address deployerFeeReceiver) = _factory.getFeeReceivers(address(this));
 
@@ -41,17 +35,17 @@ library SiloStdLib {
             revert ISilo.NothingToPay();
         } else if (deployerFeeReceiver == address(0)) {
             // deployer was never setup or deployer NFT has been burned
-            IERC20Upgradeable(asset).safeTransferFrom(address(this), daoFeeReceiver, earnedFees);
+            IERC20Upgradeable(configData.token).safeTransferFrom(address(this), daoFeeReceiver, earnedFees);
         } else if (daoFeeReceiver == address(0)) {
             // should never happen... but we assume DAO does not want to make money so all is going to deployer
-            IERC20Upgradeable(asset).safeTransferFrom(address(this), deployerFeeReceiver, earnedFees);
+            IERC20Upgradeable(configData.token).safeTransferFrom(address(this), deployerFeeReceiver, earnedFees);
         } else {
             // split fees proportionally
             uint256 daoFees = earnedFees * configData.daoFee / (configData.daoFee + configData.deployerFee);
             uint256 deployerFees = earnedFees - daoFees;
 
-            IERC20Upgradeable(asset).safeTransferFrom(address(this), daoFeeReceiver, daoFees);
-            IERC20Upgradeable(asset).safeTransferFrom(address(this), deployerFeeReceiver, deployerFees);
+            IERC20Upgradeable(configData.token).safeTransferFrom(address(this), daoFeeReceiver, daoFees);
+            IERC20Upgradeable(configData.token).safeTransferFrom(address(this), deployerFeeReceiver, deployerFees);
         }
     }
 
@@ -88,50 +82,33 @@ library SiloStdLib {
 
     function getTotalAssetsAndTotalShares(
         ISiloConfig.ConfigData memory _configData,
-        address _asset,
-        AssetType _assetType,
+        ISilo.AssetType _assetType,
         mapping(address => ISilo.AssetStorage) storage _assetStorage
     ) internal view returns (uint256 totalAssets, uint256 totalShares) {
-        IShareToken shareToken = findShareToken(_configData, _assetType, _asset);
-        totalShares = shareToken.totalSupply();
-
-        if (_assetType == AssetType.Collateral) {
-            totalAssets =
-                amountWithInterest(_asset, _assetStorage[_asset].collateralAssets, findModel(_configData, _asset));
-        } else if (_assetType == AssetType.Debt) {
-            totalAssets = amountWithInterest(_asset, _assetStorage[_asset].debtAssets, findModel(_configData, _asset));
-        } else if (_assetType == AssetType.Protected) {
-            totalAssets = _assetStorage[_asset].protectedAssets;
+        if (_assetType == ISilo.AssetType.Collateral) {
+            totalAssets = amountWithInterest(
+                _configData.token, _assetStorage[_configData.token].collateralAssets, _configData.interestRateModel
+            );
+            totalShares = IShareToken(_configData.collateralShareToken).totalSupply();
+        } else if (_assetType == ISilo.AssetType.Debt) {
+            totalAssets = amountWithInterest(
+                _configData.token, _assetStorage[_configData.token].debtAssets, _configData.interestRateModel
+            );
+            totalShares = IShareToken(_configData.debtShareToken).totalSupply();
+        } else if (_assetType == ISilo.AssetType.Protected) {
+            totalAssets = _assetStorage[_configData.token].protectedAssets;
+            totalShares = IShareToken(_configData.protectedShareToken).totalSupply();
         }
     }
 
-    // solhint-disable-next-line code-complexity
-    function findShareToken(ISiloConfig.ConfigData memory _configData, AssetType _assetType, address _asset)
+    function findShareToken(ISiloConfig.ConfigData memory _configData, ISilo.AssetType _assetType)
         internal
         pure
         returns (IShareToken shareToken)
     {
-        if (_configData.token0 == _asset) {
-            if (_assetType == AssetType.Protected) return IShareToken(_configData.protectedShareToken0);
-            else if (_assetType == AssetType.Collateral) return IShareToken(_configData.collateralShareToken0);
-            else if (_assetType == AssetType.Debt) return IShareToken(_configData.debtShareToken0);
-        } else if (_configData.token1 == _asset) {
-            if (_assetType == AssetType.Protected) return IShareToken(_configData.protectedShareToken1);
-            else if (_assetType == AssetType.Collateral) return IShareToken(_configData.collateralShareToken1);
-            else if (_assetType == AssetType.Debt) return IShareToken(_configData.debtShareToken1);
-        } else {
-            revert ISilo.WrongToken();
-        }
-    }
-
-    function findModel(ISiloConfig.ConfigData memory _configData, address _asset) internal pure returns (address) {
-        if (_configData.token0 == _asset) {
-            return _configData.interestRateModel0;
-        } else if (_configData.token1 == _asset) {
-            return _configData.interestRateModel1;
-        } else {
-            revert ISilo.WrongToken();
-        }
+        if (_assetType == ISilo.AssetType.Protected) shareToken = IShareToken(_configData.protectedShareToken);
+        else if (_assetType == ISilo.AssetType.Collateral) shareToken = IShareToken(_configData.collateralShareToken);
+        else if (_assetType == ISilo.AssetType.Debt) shareToken = IShareToken(_configData.debtShareToken);
     }
 
     /// @notice Calculates fraction between borrowed and deposited amount of tokens denominated in percentage
@@ -157,24 +134,5 @@ library SiloStdLib {
 
         // cap at 100%
         if (utilization > _dp) utilization = _dp;
-    }
-
-    function smallConfigToConfig(ISiloConfig.SmallConfigData memory _smallConfigData)
-        internal
-        pure
-        returns (ISiloConfig.ConfigData memory configData)
-    {
-        configData.daoFee = _smallConfigData.daoFee;
-        configData.deployerFee = _smallConfigData.deployerFee;
-        configData.token0 = _smallConfigData.token0;
-        configData.protectedShareToken0 = _smallConfigData.protectedShareToken0;
-        configData.collateralShareToken0 = _smallConfigData.collateralShareToken0;
-        configData.debtShareToken0 = _smallConfigData.debtShareToken0;
-        configData.interestRateModel0 = _smallConfigData.interestRateModel0;
-        configData.token1 = _smallConfigData.token1;
-        configData.protectedShareToken1 = _smallConfigData.protectedShareToken1;
-        configData.collateralShareToken1 = _smallConfigData.collateralShareToken1;
-        configData.debtShareToken1 = _smallConfigData.debtShareToken1;
-        configData.interestRateModel1 = _smallConfigData.interestRateModel1;
     }
 }
