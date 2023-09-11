@@ -18,6 +18,7 @@ import {SiloStdLib} from "./lib/SiloStdLib.sol";
 import {SiloSolvencyLib} from "./lib/SiloSolvencyLib.sol";
 import {SiloLendingLib} from "./lib/SiloLendingLib.sol";
 import {SiloERC4626Lib} from "./lib/SiloERC4626Lib.sol";
+import {SiloLiquidationLib} from "./lib/SiloLiquidationLib.sol";
 import {LeverageReentrancyGuard} from "./utils/LeverageReentrancyGuard.sol";
 
 // Keep ERC4626 ordering
@@ -571,21 +572,15 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable, LeverageReent
         }
     }
 
-    function liquidate(address _borrower) external virtual {}
-
     function accrueInterest() external virtual returns (uint256 accruedInterest) {
         ISiloConfig.ConfigData memory configData = config.getConfig(address(this));
 
         accruedInterest = SiloLendingLib.accrueInterest(configData, assetStorage);
     }
 
-    // Admin
-
     function withdrawFees() external virtual {
         SiloStdLib.withdrawFees(config, factory, assetStorage);
     }
-
-    // Internal
 
     function _deposit(uint256 _assets, uint256 _shares, address _receiver, AssetType _assetType)
         internal
@@ -694,5 +689,106 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable, LeverageReent
         SiloLendingLib.accrueInterest(configData, assetStorage);
 
         return SiloLendingLib.transitionCollateral(configData, _shares, _owner, msg.sender, _assetType, assetStorage);
+    }
+
+    // TODO: allow selfliquidate
+    function liquidationCall( // solhint-disable function-max-lines
+        address _collateralAsset,
+        address _debtAsset,
+        address _borrower,
+        uint256 _debtToCover,
+        bool _receiveSToken
+    ) external {
+        (
+            ISiloConfig.ConfigData memory debtConfig,
+            ISiloConfig.ConfigData memory collateralConfig
+        ) = config.getConfigs(address(this));
+
+        if (_collateralAsset != collateralConfig.token) revert UnexpectedCollateralToken();
+        if (_debtAsset != debtConfig.token) revert UnexpectedDebtToken();
+
+        SiloLendingLib.accrueInterest(collateralConfig, assetStorage);
+        SiloLendingLib.accrueInterest(debtConfig, assetStorage);
+
+        (
+            uint256 receiveCollateralAssets,
+            uint256 repayDebtAssets
+        ) = SiloSolvencyLib.liquidationPreview(
+            collateralConfig, debtConfig, _borrower, _debtToCover, collateralConfig.liquidationFee
+        );
+
+        if (receiveCollateralAssets == 0 || repayDebtAssets == 0) revert UserIsSolvent();
+
+        // always ZERO, we can receive shares, but we can not repay with shares
+        // TODO good? If not good, we need either separate method or interface will not be the same as AAVE
+        uint256 repayDebtShares;
+
+        SiloLendingLib.repay(
+            debtConfig,
+            repayDebtAssets,
+            repayDebtShares,
+            _borrower,
+            msg.sender,
+            UseAssets.Yes,
+            assetStorage
+        );
+
+        (uint256 borrowerCollateralAssets,) = SiloSolvencyLib.assetBalanceOfWithInterest(
+            collateralConfig.silo,
+            collateralConfig.interestRateModel,
+            collateralConfig.token,
+            collateralConfig.collateralShareToken,
+            _borrower,
+            ISilo.AccrueInterestInMemory.No,
+            MathUpgradeable.Rounding.Down
+        );
+
+        uint256 withdrawFromCollateral;
+        uint256 withdrawFromProtected;
+
+        unchecked {
+            (withdrawFromCollateral, withdrawFromProtected) = receiveCollateralAssets > borrowerCollateralAssets
+                // safe to unchecked because of above condition
+                ? (borrowerCollateralAssets, receiveCollateralAssets - borrowerCollateralAssets)
+                : (receiveCollateralAssets, 0);
+        }
+
+        if (withdrawFromCollateral != 0) {
+            // TODO must be call to other silo
+            SiloERC4626Lib.withdraw(
+                collateralConfig,
+                SiloERC4626Lib.WithdrawParams({
+                    assets: withdrawFromCollateral,
+                    shares: 0,
+                    receiver: msg.sender,
+                    owner: _borrower,
+                    spender: _borrower,
+                    doTransfer: ISilo.TokenTransfer.Yes,
+                    assetType: ISilo.AssetType.Collateral
+                }),
+                ISilo.UseAssets.Yes,
+                assetStorage
+            );
+        }
+
+        if (withdrawFromProtected != 0) {
+            // TODO must be call to other silo
+            SiloERC4626Lib.withdraw(
+                collateralConfig,
+                SiloERC4626Lib.WithdrawParams({
+                    assets: withdrawFromProtected,
+                    shares: 0,
+                    receiver: msg.sender,
+                    owner: _borrower,
+                    spender: _borrower,
+                    doTransfer: ISilo.TokenTransfer.Yes,
+                    assetType: ISilo.AssetType.Protected
+                }),
+                ISilo.UseAssets.Yes,
+                assetStorage
+            );
+        }
+
+        emit LiquidationCall(msg.sender, _receiveSToken);
     }
 }
