@@ -9,4 +9,6 @@ interface IGauge {
         uint256 _recipientBalance,
         uint256 _totalSupply
     ) external;
+
+    function shareToken() external view returns (address);
 }

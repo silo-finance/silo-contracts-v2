@@ -20,37 +20,51 @@ library SiloStdLib {
         ISiloFactory _factory,
         mapping(address => ISilo.AssetStorage) storage _assetStorage
     ) internal {
-        ISiloConfig.ConfigData memory configData = _config.getConfig(address(this));
+        (address daoFeeReceiver, address deployerFeeReceiver, uint256 daoFee, uint256 deployerFee, address asset) =
+            getFeesAndFeeReceiversWithAsset(_config, _factory);
 
-        uint256 earnedFees = _assetStorage[configData.token].daoAndDeployerFees;
-        uint256 balanceOf = IERC20Upgradeable(configData.token).balanceOf(address(this));
+        uint256 earnedFees = _assetStorage[asset].daoAndDeployerFees;
+        uint256 balanceOf = IERC20Upgradeable(asset).balanceOf(address(this));
         if (earnedFees > balanceOf) earnedFees = balanceOf;
 
-        _assetStorage[configData.token].daoAndDeployerFees -= earnedFees;
-
-        (address daoFeeReceiver, address deployerFeeReceiver) = _factory.getFeeReceivers(address(this));
+        _assetStorage[asset].daoAndDeployerFees -= earnedFees;
 
         if (daoFeeReceiver == address(0) && deployerFeeReceiver == address(0)) {
             // just in case, should never happen...
             revert ISilo.NothingToPay();
         } else if (deployerFeeReceiver == address(0)) {
             // deployer was never setup or deployer NFT has been burned
-            IERC20Upgradeable(configData.token).safeTransferFrom(address(this), daoFeeReceiver, earnedFees);
+            IERC20Upgradeable(asset).safeTransferFrom(address(this), daoFeeReceiver, earnedFees);
         } else if (daoFeeReceiver == address(0)) {
             // should never happen... but we assume DAO does not want to make money so all is going to deployer
-            IERC20Upgradeable(configData.token).safeTransferFrom(address(this), deployerFeeReceiver, earnedFees);
+            IERC20Upgradeable(asset).safeTransferFrom(address(this), deployerFeeReceiver, earnedFees);
         } else {
             // split fees proportionally
-            uint256 daoFees = earnedFees * configData.daoFee / (configData.daoFee + configData.deployerFee);
+            uint256 daoFees = earnedFees * daoFee / (daoFee + deployerFee);
             uint256 deployerFees = earnedFees - daoFees;
 
-            IERC20Upgradeable(configData.token).safeTransferFrom(address(this), daoFeeReceiver, daoFees);
-            IERC20Upgradeable(configData.token).safeTransferFrom(address(this), deployerFeeReceiver, deployerFees);
+            IERC20Upgradeable(asset).safeTransferFrom(address(this), daoFeeReceiver, daoFees);
+            IERC20Upgradeable(asset).safeTransferFrom(address(this), deployerFeeReceiver, deployerFees);
         }
     }
 
+    function getFeesAndFeeReceiversWithAsset(ISiloConfig _config, ISiloFactory _factory)
+        internal
+        view
+        returns (
+            address daoFeeReceiver,
+            address deployerFeeReceiver,
+            uint256 daoFee,
+            uint256 deployerFee,
+            address asset
+        )
+    {
+        (daoFee, deployerFee,, asset) = _config.getFeesWithAsset(address(this));
+        (daoFeeReceiver, deployerFeeReceiver) = _factory.getFeeReceivers(address(this));
+    }
+
     function flashFee(ISiloConfig _config, address _token, uint256 _amount) internal view returns (uint256 fee) {
-        (uint256 flashloanFee, address asset) = _config.getFlashloanFeeWithAsset(address(this));
+        (,, uint256 flashloanFee, address asset) = _config.getFeesWithAsset(address(this));
 
         if (_token != asset) revert ISilo.Unsupported();
 
