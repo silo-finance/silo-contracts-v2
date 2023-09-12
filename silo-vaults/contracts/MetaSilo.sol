@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: GPL-3.0
-pragma solidity 0.8.19;
+// SPDX-License-Identifier: BUSL-1.1
+pragma solidity 0.8.18;
 
 import {SafeERC20Upgradeable as SafeERC20} from
     "openzeppelin-contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
@@ -10,9 +10,12 @@ import {
     IERC20MetadataUpgradeable as IERC20Metadata
 } from "openzeppelin-contracts-upgradeable/token/ERC20/extensions/ERC4626Upgradeable.sol";
 import {MathUpgradeable as Math} from "openzeppelin-contracts-upgradeable/utils/math/MathUpgradeable.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+
 import {SafeCastLib} from "solmate/utils/SafeCastLib.sol";
 import {FixedPointMathLib} from "solmate/utils/FixedPointMathLib.sol";
-import {OwnedUpgradeable} from "./OwnedUpgradeable.sol";
+
+import {ISilo} from "../../silo-core/contracts/Silo.sol";
 
 struct RewardInfo {
   /// @notice scalar for the rewardToken
@@ -25,14 +28,13 @@ struct RewardInfo {
 
 /**
  * @title MetaSilo
- * @author 0xValJohn
  * @notice An ERC4626 compliant single asset vault that dynamically lends to multiple silos.
  * @notice This contract handles multiple rewards, which can be claimed by the depositors.
  *
  * https://ethereum.org/en/developers/docs/standards/tokens/erc-4626/
  * Based on Popcorn MultiRewardStaking and fei flywheel-v2 implementations.
  */
-contract MetaSilo is ERC4626Upgradeable, OwnedUpgradeable {
+contract MetaSilo is ERC4626Upgradeable, Ownable {
     using SafeERC20 for IERC20;
     using SafeCastLib for uint256;
     using FixedPointMathLib for uint256;
@@ -120,6 +122,8 @@ contract MetaSilo is ERC4626Upgradeable, OwnedUpgradeable {
         IERC20(asset()).safeTransferFrom(caller, address(this), assets);
 
         _mint(receiver, shares);
+
+        //@todo: do we want to rebalance on deposit, or wait for harvest to allocate?
 
         emit Deposit(caller, receiver, assets, shares);
     }
@@ -289,9 +293,9 @@ contract MetaSilo is ERC4626Upgradeable, OwnedUpgradeable {
      * @param _silo address of the silo to be deposited to
      * @param _amount amount of asset to be deposited
      */
-    function depositToSilo(address _silo, uint256 _amount) internal {
+    function _depositToSilo(address _silo, uint256 _amount) internal {
         require(silos[_silo], "SILO_NOT_FOUND");
-        // @todo: deposit to _silo
+        ISilo(_silo).deposit(_amount, address(this));
     }
 
     /**
@@ -299,9 +303,22 @@ contract MetaSilo is ERC4626Upgradeable, OwnedUpgradeable {
      * @param _silo address of the silo to be withdrawn from
      * @param _amount amount of asset to be withdrawn
      */ 
-    function withdrawFromSilo(address _silo, uint256 _amount) internal {
+    function _withdrawFromSilo(address _silo, uint256 _amount) internal {
         require(silos[_silo], "SILO_NOT_FOUND");
-        // @todo: windraw to _silo
+        ISilo(_silo).deposit(_amount, address(this), address(this));
+    }
+
+    function _claimRewardsFromSilos() internal {
+        // Claim each reward from platform
+        for (uint i = 0; i < rewardTokens.length; i++) {
+            IERC20 reward = rewardTokens[i];
+            // @todo: claim rewards from each silo
+            // Cache RewardInfo
+            // RewardInfo memory rewards = rewardInfos[rewardToken];
+            // Update the index of rewardInfo before updating the rewardInfo
+            // _accrueRewards(rewardToken, amount);
+            // rewardsEarned[reward] += amount;
+        }
     }
 
     /**
@@ -330,19 +347,6 @@ contract MetaSilo is ERC4626Upgradeable, OwnedUpgradeable {
     /// @notice View functions to return the number of Silos attached to Meta Silo
     function numSilos() public view returns (uint256) {
         return siloList.length;
-    }
-
-    function claimRewardsFromSilos() internal {
-        // Claim each reward from platform
-        for (uint i = 0; i < rewardTokens.length; i++) {
-            IERC20 reward = rewardTokens[i];
-            // @todo: claim rewards from each silo
-            // Cache RewardInfo
-            // RewardInfo memory rewards = rewardInfos[rewardToken];
-            // Update the index of rewardInfo before updating the rewardInfo
-            // _accrueRewards(rewardToken, amount);
-            // rewardsEarned[reward] += amount;
-        }
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -376,7 +380,7 @@ contract MetaSilo is ERC4626Upgradeable, OwnedUpgradeable {
         uint256 totalFromSilos = 0;
 
         for (uint256 i = 0; i < siloList.length; i++) {
-            address siloAddress = siloList[i];
+            address _silo = siloList[i];
             // ISilo silo = ISilo(siloAddress);
             // totalFromSilos += silo.balanceOf(address(this)); // @todo: check silo interface to retreive deposited balance
         }
