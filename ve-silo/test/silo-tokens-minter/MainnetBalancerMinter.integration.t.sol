@@ -17,6 +17,8 @@ import {MainnetBalancerMinterDeploy, IBalancerTokenAdmin, IBalancerMinter}
 import {VeSiloContracts} from "ve-silo/deploy/_CommonDeploy.sol";
 import {IVeBoost} from "ve-silo/contracts/voting-escrow/interfaces/IVeBoost.sol";
 import {IExtendedOwnable} from "ve-silo/contracts/access/IExtendedOwnable.sol";
+import {IHookReceiverMock as IHookReceiver} from "../_mocks/IHookReceiverMock.sol";
+import {IShareTokenLike as IShareToken} from "ve-silo/contracts/gauges/interfaces/IShareTokenLike.sol";
 
 contract ERC20 is ERC20WithoutMint {
     constructor(string memory name, string memory symbol) ERC20WithoutMint(name, symbol) {}
@@ -36,16 +38,15 @@ contract MainnetBalancerMinterTest is IntegrationTest {
     IBalancerMinter internal _minter;
     IGaugeController internal _gaugeController;
 
-    address internal _erc20BalancesHandler;
-    address internal _bob;
+    address internal _hookReceiver = makeAddr("Hook receiver");
+    address internal _shareToken = makeAddr("Share token");
+    address internal _silo = makeAddr("Silo");
+    address internal _bob = makeAddr("Bob");
     address internal _deployer;
 
     event MiningProgramStoped();
 
     function setUp() public {
-        _erc20BalancesHandler = makeAddr("ERC-20 balances handler");
-        _bob = makeAddr("Bob");
-
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
         _deployer = vm.addr(deployerPrivateKey);
 
@@ -77,7 +78,19 @@ contract MainnetBalancerMinterTest is IntegrationTest {
         vm.prank(_deployer);
         IExtendedOwnable(address(_balancerTokenAdmin)).changeManager(address(_minter));
 
-        _gauge = ISiloLiquidityGauge(_factory.create(_WEIGHT_CAP, _erc20BalancesHandler));
+        vm.mockCall(
+            _hookReceiver,
+            abi.encodeWithSelector(IHookReceiver.shareToken.selector),
+            abi.encode(_shareToken)
+        );
+
+        vm.mockCall(
+            _shareToken,
+            abi.encodeWithSelector(IShareToken.silo.selector),
+            abi.encode(_silo)
+        );
+
+        _gauge = ISiloLiquidityGauge(_factory.create(_WEIGHT_CAP, _hookReceiver));
 
         _mockCallsForTest();
     }
