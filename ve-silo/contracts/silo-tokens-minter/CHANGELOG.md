@@ -6,6 +6,8 @@
 - Copy of Balancer's implementation of the BalancerMinter.sol ([01439b5](https://github.com/silo-finance/silo-contracts-v2/pull/38/commits/01439b5dcd336edf7866e4f633a192984756a210))
 
 ### BalancerTokenAdmin.sol
+- Added  a possibility to stop a mining program by transferring ownership of the incentive token ([cb7b755](https://github.com/silo-finance/silo-contracts-v2/pull/93/commits/cb7b75505384e77cbb4431cc4eb15f53fea20a37))
+
 - Changed ownership system for BalancerTokenAdmin. Replaced SingletonAuthentication with ExtendedOwnable ([47c8933](https://github.com/silo-finance/silo-contracts-v2/pull/38/commits/47c89333cebd0bb772f7da1b0bf2d76981c8a5a6))
 
 - solhint-disable ordering for BalancerTokenAdmin ([a92a196](https://github.com/silo-finance/silo-contracts-v2/pull/38/commits/a92a19673b56acfeb78a44d6971916dd38a56c07))

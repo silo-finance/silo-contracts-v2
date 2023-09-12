@@ -37,6 +37,8 @@ interface IBalancerTokenAdmin {
 
     function activate() external;
 
+    function stopMining() external;
+
     function rate() external view returns (uint256);
 
     function startEpochTimeWrite() external returns (uint256);
