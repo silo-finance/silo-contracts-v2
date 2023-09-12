@@ -12,6 +12,8 @@ import {GaugeControllerDeploy} from "ve-silo/deploy/GaugeControllerDeploy.s.sol"
 import {SiloGovernorDeploy} from "ve-silo/deploy/SiloGovernorDeploy.s.sol";
 import {VeSiloContracts} from "ve-silo/deploy/_CommonDeploy.sol";
 import {IVeBoost} from "ve-silo/contracts/voting-escrow/interfaces/IVeBoost.sol";
+import {IHookReceiverMock as IHookReceiver} from "../_mocks/IHookReceiverMock.sol";
+import {IShareTokenLike as IShareToken} from "ve-silo/contracts/gauges/interfaces/IShareTokenLike.sol";
 
 // interfaces for tests
 
@@ -35,7 +37,9 @@ contract LiquidityGaugesTest is IntegrationTest {
 
     ILiquidityGaugeFactory internal _factory;
 
-    address internal _erc20BalancesHandler;
+    address internal _hookReceiver;
+    address internal _shareToken;
+    address internal _silo;
     address internal _minter;
     address internal _tokenAdmin;
     address internal _bob;
@@ -44,7 +48,9 @@ contract LiquidityGaugesTest is IntegrationTest {
     function setUp() public {
         _minter = makeAddr("Mainnet silo tokens minter");
         _tokenAdmin = makeAddr("Silo token admin");
-        _erc20BalancesHandler = makeAddr("ERC-20 balances handler");
+        _hookReceiver = makeAddr("Hook receiver");
+        _shareToken = makeAddr("Share token");
+        _silo = makeAddr("Silo");
         _bob = makeAddr("Bob");
         _alice = makeAddr("Alice");
 
@@ -79,7 +85,9 @@ contract LiquidityGaugesTest is IntegrationTest {
     function testCreateGauge() public {
         ISiloLiquidityGauge gauge = _createGauge(_WEIGHT_CAP);
 
-        assertEq(gauge.bal_handler(), _erc20BalancesHandler, "Deployed with wrong handler");
+        assertEq(gauge.hook_receiver(), _hookReceiver, "Deployed with wrong hook receiver");
+        assertEq(gauge.share_token(), _shareToken, "Deployed with wrong share token");
+        assertEq(gauge.silo(), _silo, "Deployed with wrong silo");
         assertEq(gauge.getRelativeWeightCap(), _WEIGHT_CAP, "Deployed with wrong relative weight cap");
     }
 
@@ -95,9 +103,9 @@ contract LiquidityGaugesTest is IntegrationTest {
         uint256 timestamp = integrateCheckpoint + 3_600;
 
         vm.warp(timestamp);
-        vm.prank(_erc20BalancesHandler);
+        vm.prank(_hookReceiver);
 
-        gauge.balance_updated_for_users(
+        gauge.afterTokenTransfer(
             _bob,
             _BOB_BAL,
             _alice,
@@ -114,12 +122,12 @@ contract LiquidityGaugesTest is IntegrationTest {
 
         timestamp += 3_600;
         vm.warp(timestamp);
-        vm.prank(_erc20BalancesHandler);
+        vm.prank(_hookReceiver);
 
         uint256 newBobBal = _BOB_BAL + 10e18;
         uint256 newSharesTokensTotalSupply = _TOTAL_SUPPLY + 10e18;
 
-        gauge.balance_updated_for_users(_bob, newBobBal, address(0), 0, newSharesTokensTotalSupply);
+        gauge.afterTokenTransfer(_bob, newBobBal, address(0), 0, newSharesTokensTotalSupply);
 
         assertEq(gauge.working_balances(_bob), newBobBal, "After 2. An invalid working balance");
         assertEq(gauge.working_balances(_alice), _ALICE_BAL, "After 2. An invalid working balance for Alice");
@@ -130,9 +138,9 @@ contract LiquidityGaugesTest is IntegrationTest {
         ISiloLiquidityGauge gauge = _createGauge(_WEIGHT_CAP);
         vm.label(address(gauge), "gauge");
 
-        vm.expectRevert(); // dev: only balancer handler
+        vm.expectRevert(); // dev: only silo hook receiver
         
-        gauge.balance_updated_for_users(
+        gauge.afterTokenTransfer(
             _bob,
             _BOB_BAL,
             _alice,
@@ -142,7 +150,7 @@ contract LiquidityGaugesTest is IntegrationTest {
     }
 
     function _createGauge(uint256 _weightCap) internal returns (ISiloLiquidityGauge gauge) {
-        gauge = ISiloLiquidityGauge(_factory.create(_weightCap, _erc20BalancesHandler));
+        gauge = ISiloLiquidityGauge(_factory.create(_weightCap, _hookReceiver));
     }
 
     function _dummySiloToken() internal {
@@ -155,6 +163,7 @@ contract LiquidityGaugesTest is IntegrationTest {
         }
     }
 
+    // solhint-disable-next-line function-max-lines
     function _mockCallsForTest() internal {
         vm.mockCall(
             _minter,
@@ -196,6 +205,18 @@ contract LiquidityGaugesTest is IntegrationTest {
             getDeployedAddress(VeSiloContracts.VOTING_ESCROW),
             abi.encodeWithSelector(IERC20.totalSupply.selector),
             abi.encode(_BOB_BAL + _ALICE_BAL)
+        );
+
+        vm.mockCall(
+            _hookReceiver,
+            abi.encodeWithSelector(IHookReceiver.shareToken.selector),
+            abi.encode(_shareToken)
+        );
+
+        vm.mockCall(
+            _shareToken,
+            abi.encodeWithSelector(IShareToken.silo.selector),
+            abi.encode(_silo)
         );
     }
 }

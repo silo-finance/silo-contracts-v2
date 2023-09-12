@@ -21,10 +21,10 @@ import {IGaugeController} from "ve-silo/contracts/gauges/interfaces/IGaugeContro
 import {IBalancerTokenAdmin} from "ve-silo/contracts/silo-tokens-minter/interfaces/IBalancerTokenAdmin.sol";
 import {IBalancerMinter} from "ve-silo/contracts/silo-tokens-minter/interfaces/IBalancerMinter.sol";
 import {IGaugeAdder} from "ve-silo/contracts/gauges/interfaces/IGaugeAdder.sol";
+import {IHookReceiverMock as IHookReceiver} from "./_mocks/IHookReceiverMock.sol";
+import {IShareTokenLike as IShareToken} from "ve-silo/contracts/gauges/interfaces/IShareTokenLike.sol";
 
-interface IERC20BalancerHandler is IERC20 {
-    function balanceOfAndTotalSupply(address _account) external view returns (uint256 _balance, uint256 _totalSupply);
-}
+// solhint-disable max-states-count
 
 // FOUNDRY_PROFILE=ve-silo forge test --mc MainnetTest --ffi -vvv
 contract MainnetTest is IntegrationTest {
@@ -49,7 +49,9 @@ contract MainnetTest is IntegrationTest {
     ISiloGovernor internal _siloGovernor;
     IGaugeAdder internal _gaugeAdder;
 
-    address internal _erc20BalancesHandler = makeAddr("_erc20BalancesHandler");
+    address internal _hookReceiver = makeAddr("Hook receiver");
+    address internal _shareToken = makeAddr("Share token");
+    address internal _silo = makeAddr("Silo");
     address internal _bob = makeAddr("_bob");
     address internal _alice = makeAddr("_alice");
     address internal _john = makeAddr("_john");
@@ -78,6 +80,18 @@ contract MainnetTest is IntegrationTest {
         _siloGovernor = ISiloGovernor(getDeployedAddress(VeSiloContracts.SILO_GOVERNOR));
         _minter = IBalancerMinter(getDeployedAddress(VeSiloContracts.MAINNET_BALANCER_MINTER));
         _gaugeAdder = IGaugeAdder(getDeployedAddress(VeSiloContracts.GAUGE_ADDER));
+
+        vm.mockCall(
+            _hookReceiver,
+            abi.encodeWithSelector(IHookReceiver.shareToken.selector),
+            abi.encode(_shareToken)
+        );
+
+        vm.mockCall(
+            _shareToken,
+            abi.encodeWithSelector(IShareToken.silo.selector),
+            abi.encode(_silo)
+        );
     }
 
     function testIt() public {
@@ -141,19 +155,19 @@ contract MainnetTest is IntegrationTest {
         internal
     {
         vm.mockCall(
-            _erc20BalancesHandler,
-            abi.encodeCall(IERC20.balanceOf, _user),
+            _shareToken,
+            abi.encodeCall(IShareToken.balanceOf, _user),
             abi.encode(_balance)
         );
 
         vm.mockCall(
-            _erc20BalancesHandler,
-            abi.encodeCall(IERC20BalancerHandler.balanceOfAndTotalSupply, _user),
+            _shareToken,
+            abi.encodeCall(IShareToken.balanceOfAndTotalSupply, _user),
             abi.encode(_balance, _totalSupply)
         );
 
-        vm.prank(_erc20BalancesHandler);
-        _gauge.balance_updated_for_users(
+        vm.prank(_hookReceiver);
+        _gauge.afterTokenTransfer(
             _user,
             _balance,
             address(0),
@@ -168,8 +182,8 @@ contract MainnetTest is IntegrationTest {
         uint256 johnBalance = 100e18;
         
         vm.mockCall(
-            _erc20BalancesHandler,
-            abi.encodeWithSelector(IERC20.totalSupply.selector),
+            _shareToken,
+            abi.encodeWithSelector(IShareToken.totalSupply.selector),
             abi.encode(_ERC_20_TOTAL_SUPPLY)
         );
 
@@ -229,7 +243,7 @@ contract MainnetTest is IntegrationTest {
     }
 
     function _createGauge() internal returns (address gauge) {
-        gauge = _factory.create(_WEIGHT_CAP, _erc20BalancesHandler);
+        gauge = _factory.create(_WEIGHT_CAP, _hookReceiver);
         vm.label(gauge, "Gauge");
     }
 

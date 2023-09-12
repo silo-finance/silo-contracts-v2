@@ -10,7 +10,7 @@ import {IERC20} from "openzeppelin-contracts/token/ERC20/IERC20.sol";
 import {VeSiloContracts} from "ve-silo/deploy/_CommonDeploy.sol";
 import {VeSiloAddrKey} from "ve-silo/common/VeSiloAddresses.sol";
 import {L2Deploy} from "ve-silo/deploy/L2Deploy.s.sol";
-import {IERC20BalancesHandler} from "ve-silo/contracts/gauges/interfaces/IERC20BalancesHandler.sol";
+import {IShareTokenLike as IShareToken} from "ve-silo/contracts/gauges/interfaces/IShareTokenLike.sol";
 import {IChildChainGaugeFactory} from "ve-silo/contracts/gauges/interfaces/IChildChainGaugeFactory.sol";
 import {IChildChainGaugeRegistry} from "ve-silo/contracts/gauges/interfaces/IChildChainGaugeRegistry.sol";
 import {ISiloChildChainGauge} from "ve-silo/contracts/gauges/interfaces/ISiloChildChainGauge.sol";
@@ -19,6 +19,9 @@ import {ILiquidityGaugeFactory} from "ve-silo/contracts/gauges/interfaces/ILiqui
 import {IOmniVotingEscrowSettings} from "ve-silo/contracts/voting-escrow/interfaces/IOmniVotingEscrowSettings.sol";
 import {IOmniVotingEscrowChild} from "ve-silo/contracts/voting-escrow/interfaces/IOmniVotingEscrowChild.sol";
 import {IL2LayerZeroBridgeForwarder} from "ve-silo/contracts/voting-escrow/interfaces/IL2LayerZeroBridgeForwarder.sol";
+import {IHookReceiverMock as IHookReceiver} from "./_mocks/IHookReceiverMock.sol";
+
+// solhint-disable max-states-count
 
 // FOUNDRY_PROFILE=ve-silo forge test --mc L2Test --ffi -vvv
 contract L2Test is IntegrationTest {
@@ -34,7 +37,9 @@ contract L2Test is IntegrationTest {
     address internal constant _SILO_WHALE_ARB = 0xae1Eb69e880670Ca47C50C9CE712eC2B48FaC3b6;
 
     address internal _deployer;
-    address internal _erc20BalancesHandler = makeAddr("_erc20BalancesHandler");
+    address internal _hookReceiver = makeAddr("Hook receiver");
+    address internal _shareToken = makeAddr("Share token");
+    address internal _silo = makeAddr("Silo");
     address internal _omniVotingEscrow = makeAddr("OmniVotingEscrow"); // L1 sender
     address internal _bob = makeAddr("_bob");
     address internal _alice = makeAddr("_alice");
@@ -132,7 +137,7 @@ contract L2Test is IntegrationTest {
     }
 
     function _createGauge() internal returns (ISiloChildChainGauge gauge) {
-        gauge = ISiloChildChainGauge(_factory.create(_erc20BalancesHandler));
+        gauge = ISiloChildChainGauge(_factory.create(_hookReceiver));
         vm.label(address(gauge), "gauge");
     }
 
@@ -160,21 +165,33 @@ contract L2Test is IntegrationTest {
 
     function _mockCalls() internal {
         vm.mockCall(
-            _erc20BalancesHandler,
-            abi.encodeWithSelector(IERC20BalancesHandler.balanceOf.selector, _bob),
+            _shareToken,
+            abi.encodeWithSelector(IShareToken.balanceOf.selector, _bob),
             abi.encode(500_000e18)
         );
 
         vm.mockCall(
-            _erc20BalancesHandler,
-            abi.encodeWithSelector(IERC20BalancesHandler.totalSupply.selector),
+            _shareToken,
+            abi.encodeWithSelector(IShareToken.totalSupply.selector),
             abi.encode(200_000_000e18)
         );
 
         vm.mockCall(
-            _erc20BalancesHandler,
-            abi.encodeWithSelector(IERC20BalancesHandler.balanceOfAndTotalSupply.selector, _bob),
+            _shareToken,
+            abi.encodeWithSelector(IShareToken.balanceOfAndTotalSupply.selector, _bob),
             abi.encode(500_000e18, 200_000_000e18)
+        );
+
+                vm.mockCall(
+            _hookReceiver,
+            abi.encodeWithSelector(IHookReceiver.shareToken.selector),
+            abi.encode(_shareToken)
+        );
+
+        vm.mockCall(
+            _shareToken,
+            abi.encodeWithSelector(IShareToken.silo.selector),
+            abi.encode(_silo)
         );
     }
 
