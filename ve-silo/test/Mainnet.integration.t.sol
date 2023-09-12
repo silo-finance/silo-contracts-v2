@@ -90,6 +90,7 @@ contract MainnetTest is IntegrationTest {
         _updateUserBalances(ISiloLiquidityGauge(gauge));
         _checkpointUsers(ISiloLiquidityGauge(gauge));
         _getIncentives(gauge);
+        _stopMiningProgram();
     }
 
     function _getUserIncentives(address _user, address _gauge) internal {
@@ -358,5 +359,22 @@ contract MainnetTest is IntegrationTest {
             calldatas,
             keccak256(bytes(description))
         );
+    }
+
+    function _stopMiningProgram() internal {
+        Ownable2Step siloToken = Ownable2Step(getAddress(SILO_TOKEN));
+
+        address siloTokenOwner = siloToken.owner();
+
+        assertEq(siloTokenOwner, address(_balancerTokenAdmin), "_balancerTokenAdmin is not an owner");
+
+        address owner = Ownable2Step(address(_balancerTokenAdmin)).owner();
+
+        vm.prank(owner);
+        _balancerTokenAdmin.stopMining();
+
+        siloTokenOwner = siloToken.owner();
+
+        assertEq(owner, siloTokenOwner, "Expect an ownership to be transferred");
     }
 }
