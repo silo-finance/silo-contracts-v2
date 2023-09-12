@@ -16,7 +16,7 @@ pragma solidity 0.8.19;
 
 import {IBalancerTokenAdmin, IBalancerToken} from "./interfaces/IBalancerTokenAdmin.sol";
 
-import {ExtendedOwnable} from "../access/ExtendedOwnable.sol";
+import {ExtendedOwnable, Ownable} from "../access/ExtendedOwnable.sol";
 import {ReentrancyGuard} from "openzeppelin-contracts/security/ReentrancyGuard.sol";
 import {SafeMath} from "openzeppelin-contracts/utils/math/SafeMath.sol";
 
@@ -43,9 +43,12 @@ contract BalancerTokenAdmin is IBalancerTokenAdmin, ExtendedOwnable, ReentrancyG
     uint256 public constant override RATE_REDUCTION_COEFFICIENT = 1189207115002721024; // 2 ** (1/4) * 1e18
     uint256 public constant override RATE_DENOMINATOR = 1e18;
 
+    bool public isActive;
+
     IBalancerToken private immutable _balancerToken;
 
     event MiningParametersUpdated(uint256 rate, uint256 supply);
+    event MiningProgramStoped();
 
     // Supply Variables
     uint256 private _miningEpoch;
@@ -79,6 +82,8 @@ contract BalancerTokenAdmin is IBalancerTokenAdmin, ExtendedOwnable, ReentrancyG
         _startEpochSupply = _balancerToken.totalSupply();
         _startEpochTime = block.timestamp;
         _rate = INITIAL_RATE;
+        isActive = true;
+
         emit MiningParametersUpdated(INITIAL_RATE, _startEpochSupply);
     }
 
@@ -165,6 +170,20 @@ contract BalancerTokenAdmin is IBalancerTokenAdmin, ExtendedOwnable, ReentrancyG
     function updateMiningParameters() external {
         require(block.timestamp >= _startEpochTime.add(RATE_REDUCTION_TIME), "Epoch has not finished yet");
         _updateMiningParameters();
+    }
+
+    /**
+     * @notice Stop a mining program by transferring ownership of the incentive token
+     */
+    function stopMining() external onlyOwner {
+        require(isActive, "Not active");
+
+        isActive = false;
+
+        // Transfer ownership of the token to the BalancerTokenAdmin owner (DAO)
+        Ownable(address(_balancerToken)).transferOwnership(owner());
+
+        emit MiningProgramStoped();
     }
 
     /**

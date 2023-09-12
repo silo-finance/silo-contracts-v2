@@ -2,6 +2,7 @@
 pragma solidity 0.8.19;
 
 import {ERC20 as ERC20WithoutMint, IERC20} from "openzeppelin-contracts/token/ERC20/ERC20.sol";
+import {Ownable} from "openzeppelin-contracts/access/Ownable.sol";
 import {IntegrationTest} from "silo-foundry-utils/networks/IntegrationTest.sol";
 
 import {ILiquidityGaugeFactory} from "ve-silo/contracts/gauges/interfaces/ILiquidityGaugeFactory.sol";
@@ -38,6 +39,8 @@ contract MainnetBalancerMinterTest is IntegrationTest {
     address internal _erc20BalancesHandler;
     address internal _bob;
     address internal _deployer;
+
+    event MiningProgramStoped();
 
     function setUp() public {
         _erc20BalancesHandler = makeAddr("ERC-20 balances handler");
@@ -93,6 +96,23 @@ contract MainnetBalancerMinterTest is IntegrationTest {
         _minter.mintFor(address(_gauge), _bob);
 
         assertEq(siloToken.balanceOf(_bob), _BOB_BALANCE);
+    }
+
+    function testStopMining() public {
+        vm.expectRevert("Ownable: caller is not the owner");
+        _balancerTokenAdmin.stopMining();
+
+        vm.mockCall(
+            getAddress(SILO_TOKEN),
+            abi.encodeWithSelector(Ownable.transferOwnership.selector, _deployer),
+            abi.encode(true)
+        );
+
+        vm.expectEmit(false, false, false, false);
+        emit MiningProgramStoped();
+
+        vm.prank(_deployer);
+        _balancerTokenAdmin.stopMining();
     }
 
     function _dummySiloToken() internal {
