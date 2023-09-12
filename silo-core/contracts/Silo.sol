@@ -113,6 +113,15 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable, LeverageReent
         return assetStorage[config.getAssetForSilo(address(this))].debtAssets;
     }
 
+    function getFeesAndFeeReceivers()
+        external
+        view
+        returns (address daoFeeReceiver, address deployerFeeReceiver, uint256 daoFee, uint256 deployerFee)
+    {
+        (daoFeeReceiver, deployerFeeReceiver, daoFee, deployerFee,) =
+            SiloStdLib.getFeesAndFeeReceiversWithAsset(config, factory);
+    }
+
     // ERC4626
 
     function asset() external view virtual returns (address assetTokenAddress) {
