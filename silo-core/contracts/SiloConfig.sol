@@ -217,13 +217,20 @@ contract SiloConfig is ISiloConfig {
         }
     }
 
-    function getFlashloanFeeWithAsset(address _silo) public view returns (uint256 flashloanFee, address asset) {
+    function getFeesWithAsset(address _silo)
+        public
+        view
+        returns (uint256 daoFee, uint256 deployerFee, uint256 flashloanFee, address asset)
+    {
+        daoFee = _DAO_FEE;
+        deployerFee = _DEPLOYER_FEE;
+
         if (_silo == _SILO0) {
-            flashloanFee = _FLASHLOAN_FEE0;
             asset = _TOKEN0;
+            flashloanFee = _FLASHLOAN_FEE0;
         } else if (_silo == _SILO1) {
-            flashloanFee = _FLASHLOAN_FEE1;
             asset = _TOKEN1;
+            flashloanFee = _FLASHLOAN_FEE1;
         } else {
             revert WrongSilo();
         }

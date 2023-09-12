@@ -59,5 +59,8 @@ interface ISiloConfig {
     function getAssetForSilo(address _silo) external view returns (address asset);
     function getConfigs(address _silo) external view returns (ConfigData memory, ConfigData memory);
     function getConfig(address _silo) external view returns (ConfigData memory);
-    function getFlashloanFeeWithAsset(address _silo) external view returns (uint256 flashloanFee, address asset);
+    function getFeesWithAsset(address _silo)
+        external
+        view
+        returns (uint256 daoFee, uint256 deployerFee, uint256 flashloanFee, address asset);
 }

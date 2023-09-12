@@ -146,8 +146,6 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
         return (balanceOf(_account), totalSupply());
     }
 
-    
-
     /// @dev Call an afterTokenTransfer hook if registered and check minimum share requirement on mint/burn
     function _afterTokenTransfer(address _sender, address _recipient, uint256 _amount) internal virtual override {
         if (hookReceiver != address(0)) {
