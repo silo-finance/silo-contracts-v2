@@ -9,10 +9,14 @@ interface ERC20:
     def balanceOf(addr: address) -> uint256: view
     def totalSupply() -> uint256: view
 
-interface ERC20BlancesHandler:
+interface ShareToken:
     def balanceOf(addr: address) -> uint256: view
     def totalSupply() -> uint256: view
+    def silo() -> address: view
     def balanceOfAndTotalSupply(addr: address) -> (uint256, uint256): view
+
+interface HookReceiver:
+    def shareToken() -> address: view
 
 interface TokenAdmin:
     def future_epoch_time_write() -> uint256: nonpayable
@@ -85,7 +89,9 @@ MAX_RELATIVE_WEIGHT_CAP: constant(uint256) = 10 ** 18
 
 # Gauge
 
-bal_handler: public(address)
+hook_receiver: public(address)
+share_token: public(address)
+silo: public(address)
 
 is_killed: public(bool)
 
@@ -235,7 +241,7 @@ def _checkpoint_rewards(_user: address, _total_supply: uint256, _claim: bool, _r
     user_balance: uint256 = 0
     receiver: address = _receiver
     if _user != empty(address):
-        user_balance = ERC20BlancesHandler(self.bal_handler).balanceOf(_user)
+        user_balance = ShareToken(self.share_token).balanceOf(_user)
         if _claim and _receiver == empty(address):
             # if receiver is not explicitly declared, check if a default receiver is set
             receiver = self.rewards_receiver[_user]
@@ -335,14 +341,14 @@ def _update_user(
 
 @external
 @nonreentrant('lock')
-def balance_updated_for_users(
+def afterTokenTransfer(
     _user1: address,
     _user1_new_balance: uint256,
     _user2: address,
     _user2_new_balance: uint256,
     _total_supply: uint256
 ) -> bool:
-    assert msg.sender == self.bal_handler # dev: only balancer handler
+    assert msg.sender == self.hook_receiver # dev: only silo hook receiver
 
     if _user1 != empty(address):
         self._update_user(_user1, _user1_new_balance, _total_supply)
@@ -365,7 +371,7 @@ def claim_rewards(_addr: address = msg.sender, _receiver: address = empty(addres
     if _receiver != empty(address):
         assert _addr == msg.sender  # dev: cannot redirect when claiming for another user
 
-    total_supply: uint256 = ERC20BlancesHandler(self.bal_handler).totalSupply()
+    total_supply: uint256 = ShareToken(self.share_token).totalSupply()
 
     self._checkpoint_rewards(_addr, total_supply, True, _receiver)
 
@@ -381,7 +387,7 @@ def user_checkpoint(addr: address) -> bool:
     user_balance: uint256 = 0
     total_supply: uint256 = 0
     
-    (user_balance, total_supply) = ERC20BlancesHandler(self.bal_handler).balanceOfAndTotalSupply(addr)
+    (user_balance, total_supply) = ShareToken(self.share_token).balanceOfAndTotalSupply(addr)
 
     self._checkpoint(addr)
     self._update_liquidity_limit(addr, user_balance, total_supply)
@@ -413,7 +419,7 @@ def kick(addr: address):
     _balance: uint256 = 0
     _total_supply: uint256 = 0
     
-    (_balance, _total_supply) = ERC20BlancesHandler(self.bal_handler).balanceOfAndTotalSupply(addr)
+    (_balance, _total_supply) = ShareToken(self.share_token).balanceOfAndTotalSupply(addr)
 
     assert ERC20(VOTING_ESCROW).balanceOf(addr) == 0 or t_ve > t_last # dev: kick not allowed
     assert self.working_balances[addr] > _balance * TOKENLESS_PRODUCTION / 100  # dev: kick not needed
@@ -435,7 +441,7 @@ def deposit_reward_token(_reward_token: address, _amount: uint256):
     """
     assert msg.sender == self.reward_data[_reward_token].distributor
 
-    total_supply: uint256 = ERC20BlancesHandler(self.bal_handler).totalSupply()
+    total_supply: uint256 = ShareToken(self.share_token).totalSupply()
 
     self._checkpoint_rewards(empty(address), total_supply, False, empty(address))
 
@@ -545,7 +551,7 @@ def claimable_reward(_user: address, _reward_token: address) -> uint256:
     user_balance: uint256 = 0
     total_supply: uint256 = 0
     
-    (user_balance, total_supply) = ERC20BlancesHandler(self.bal_handler).balanceOfAndTotalSupply(_user)
+    (user_balance, total_supply) = ShareToken(self.share_token).balanceOfAndTotalSupply(_user)
 
     if total_supply != 0:
         last_update: uint256 = min(block.timestamp, self.reward_data[_reward_token].period_finish)
@@ -613,14 +619,16 @@ def _setRelativeWeightCap(relative_weight_cap: uint256):
     log RelativeWeightCapChanged(relative_weight_cap)
 
 @external
-def initialize(relative_weight_cap: uint256, handler: address):
+def initialize(relative_weight_cap: uint256, hook_receiver: address):
     """
     @notice Contract constructor
     """
-    assert handler != empty(address) # dev: balances handler required
-    assert self.bal_handler == empty(address) # dev: already initialized
+    assert hook_receiver != empty(address) # dev: silo hook receiver required
+    assert self.hook_receiver == empty(address) # dev: already initialized
 
-    self.bal_handler = handler
+    self.hook_receiver = hook_receiver
+    self.share_token = HookReceiver(hook_receiver).shareToken()
+    self.silo = ShareToken(self.share_token).silo()
 
     self.period_timestamp[0] = block.timestamp
     self.inflation_params = shift(TokenAdmin(BAL_TOKEN_ADMIN).future_epoch_time_write(), 216) + TokenAdmin(BAL_TOKEN_ADMIN).rate()
