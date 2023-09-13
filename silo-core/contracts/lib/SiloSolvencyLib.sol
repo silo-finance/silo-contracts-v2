@@ -10,18 +10,19 @@ import {SiloERC4626Lib} from "./SiloERC4626Lib.sol";
 import {SiloLiquidationLib} from "./SiloLiquidationLib.sol";
 
 library SiloSolvencyLib {
-    struct LtvData {
+    struct LtvData { // TODO rename +borrower
         address debtAsset;
         address collateralAsset;
         ISiloOracle debtOracle;
         ISiloOracle collateralOracle;
         uint256 debtAssets;
         uint256 totalCollateralAssets;
-        uint256 lt;
+        uint256 ltInBP;
         uint256 maxLtv;
     }
 
     uint256 internal constant _PRECISION_DECIMALS = 1e18;
+    uint256 internal constant _BASIS_POINTS = 1e4;
 
     function assetBalanceOfWithInterest(
         address _silo,
@@ -75,11 +76,15 @@ library SiloSolvencyLib {
             uint256 totalBorrowerCollateralValue
         ) = SiloSolvencyLib.getPositionValues(ltvData);
 
-        uint256 ltv = totalBorrowerDebtValue * _PRECISION_DECIMALS / totalBorrowerCollateralValue;
+        uint256 ltvInBP = totalBorrowerDebtValue * _BASIS_POINTS / totalBorrowerCollateralValue;
 
-        if (ltvData.lt > ltv) revert ISiloLiquidation.UserIsSolvent();
+        if (ltvData.ltInBP > ltvInBP) revert ISiloLiquidation.UserIsSolvent();
 
-        (receiveCollateralAssets, repayDebtAssets, ltv) = SiloLiquidationLib.calculateExactLiquidationAmounts(
+        if (ltvInBP >= _BASIS_POINTS) { // in case of bad debt we return all
+            return (ltvData.totalCollateralAssets, ltvData.debtAssets);
+        }
+
+        (receiveCollateralAssets, repayDebtAssets, ltvInBP) = SiloLiquidationLib.calculateExactLiquidationAmounts(
             _debtToCover,
             totalBorrowerDebtValue,
             ltvData.debtAssets,
@@ -90,8 +95,10 @@ library SiloSolvencyLib {
 
         if (receiveCollateralAssets == 0 || repayDebtAssets == 0) revert ISiloLiquidation.InsufficientLiquidation();
 
-        if (ltv != 0) { // it can be 0 in case of full liquidation
-            if (ltv < SiloLiquidationLib.minAcceptableLT(ltvData.lt)) revert ISiloLiquidation.LiquidationTooBig();
+        if (ltvInBP != 0) { // it can be 0 in case of full liquidation
+            if (ltvInBP < SiloLiquidationLib.minAcceptableLT(ltvData.ltInBP)) {
+                revert ISiloLiquidation.LiquidationTooBig();
+            }
         }
     }
 
@@ -117,7 +124,7 @@ library SiloSolvencyLib {
 
         ltvData.debtAsset = _debtConfig.token;
         ltvData.collateralAsset = _collateralConfig.token;
-        ltvData.lt = _collateralConfig.lt;
+        ltvData.ltInBP = _collateralConfig.lt;
         ltvData.maxLtv = _collateralConfig.maxLtv;
 
         // If LTV is needed for solvency, ltOracle should be used. If ltOracle is not set, fallback to ltvOracle.
@@ -196,7 +203,7 @@ library SiloSolvencyLib {
         LtvData memory ltvData =
             getAssetsDataForLtvCalculations(_configData0, _configData1, _borrower, _oracleType, _accrueInMemory);
 
-        lt = ltvData.lt;
+        lt = ltvData.ltInBP;
         maxLtv = ltvData.maxLtv;
 
         if (ltvData.debtAssets == 0) return (ltv, lt, maxLtv);
