@@ -230,9 +230,9 @@ library SiloERC4626Lib {
             uint256 ltv = debtValue * _PRECISION_DECIMALS / collateralValue;
 
             // if LTV is higher than LT, user cannot withdraw
-            if (ltv >= ltvData.lt) return (0, 0);
+            if (ltv >= ltvData.ltInBP) return (0, 0);
 
-            uint256 minimumCollateralValue = debtValue * _PRECISION_DECIMALS / ltvData.lt;
+            uint256 minimumCollateralValue = debtValue * _PRECISION_DECIMALS / ltvData.ltInBP;
             uint256 spareCollateralValue = collateralValue - minimumCollateralValue;
 
             // these are total assets (protected + collateral) that _owner can withdraw
