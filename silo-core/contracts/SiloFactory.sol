@@ -186,6 +186,7 @@ contract SiloFactory is ISiloFactory, ERC721Upgradeable, OwnableUpgradeable {
     }
 
     function _setMaxLiquidationFee(uint256 _newMaxLiquidationFee) internal {
+        if (_newMaxLiquidationFee >= 1e4) revert("TODO in all places");
         maxLiquidationFeeInBp = _newMaxLiquidationFee;
 
         emit MaxLiquidationFeeChanged(_newMaxLiquidationFee);
