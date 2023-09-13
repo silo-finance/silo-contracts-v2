@@ -10,6 +10,8 @@ import {IChildChainGaugeFactory} from "ve-silo/contracts/gauges/interfaces/IChil
 import {VeSiloContracts} from "ve-silo/deploy/_CommonDeploy.sol";
 import {ChildChainGaugeFactoryDeploy} from "ve-silo/deploy/ChildChainGaugeFactoryDeploy.s.sol";
 import {VeSiloAddrKey} from "ve-silo/common/VeSiloAddresses.sol";
+import {IHookReceiverMock as IHookReceiver} from "../_mocks/IHookReceiverMock.sol";
+import {IShareTokenLike as IShareToken} from "ve-silo/contracts/gauges/interfaces/IShareTokenLike.sol";
 
 // interfaces for tests
 interface IMinter {
@@ -31,7 +33,9 @@ contract ChildChainGaugesTest is IntegrationTest {
     address internal _votingEscrowDelegationProxy = makeAddr("_votingEscrowDelegationProxy");
     address internal _l2BalancerPseudoMinter = makeAddr("_l2BalancerPseudoMinter");
     address internal _l2Multisig = makeAddr("_l2Multisig");
-    address internal _erc20BalancesHandler = makeAddr("ERC-20 balances handler");
+    address internal _hookReceiver = makeAddr("Hook receiver");
+    address internal _shareToken = makeAddr("Share token");
+    address internal _silo = makeAddr("Silo");
     address internal _bob = makeAddr("Bob");
     address internal _alice = makeAddr("Alice");
 
@@ -63,7 +67,9 @@ contract ChildChainGaugesTest is IntegrationTest {
     function testShouldCreateGauge() public {
         ISiloChildChainGauge gauge = _createGauge();
 
-        assertEq(gauge.bal_handler(), _erc20BalancesHandler, "Deployed with wrong handler");
+        assertEq(gauge.hook_receiver(), _hookReceiver, "Deployed with wrong hook receiver");
+        assertEq(gauge.share_token(), _shareToken, "Deployed with wrong share token");
+        assertEq(gauge.silo(), _silo, "Deployed with wrong silo");
         assertEq(gauge.version(), _factory.getProductVersion(), "Deployed with wrong version");
         assertEq(address(gauge.factory()), address(_factory), "Deployed with wrong factory");
 
@@ -80,7 +86,7 @@ contract ChildChainGaugesTest is IntegrationTest {
 
         vm.expectRevert(); // dev: only balancer handler
         
-        gauge.balance_updated_for_users(
+        gauge.afterTokenTransfer(
             _bob,
             _BOB_BAL,
             _alice,
@@ -100,9 +106,9 @@ contract ChildChainGaugesTest is IntegrationTest {
         uint256 timestamp = integrateCheckpoint + 3_600;
 
         vm.warp(timestamp);
-        vm.prank(_erc20BalancesHandler);
+        vm.prank(_hookReceiver);
 
-        gauge.balance_updated_for_users(
+        gauge.afterTokenTransfer(
             _bob,
             _BOB_BAL,
             _alice,
@@ -119,19 +125,19 @@ contract ChildChainGaugesTest is IntegrationTest {
 
         timestamp += 3_600;
         vm.warp(timestamp);
-        vm.prank(_erc20BalancesHandler);
+        vm.prank(_hookReceiver);
 
         uint256 newBobBal = _BOB_BAL + 10e18;
         uint256 newSharesTokensTotalSupply = _TOTAL_SUPPLY + 10e18;
 
-        gauge.balance_updated_for_users(_bob, newBobBal, address(0), 0, newSharesTokensTotalSupply);
+        gauge.afterTokenTransfer(_bob, newBobBal, address(0), 0, newSharesTokensTotalSupply);
 
         assertEq(gauge.working_balances(_bob), 25200000000000000000, "After 2. An invalid working balance for Bob");
         assertEq(gauge.working_balances(_alice), _ALICE_BAL, "After 2. An invalid working balance for Alice");
     }
 
     function _createGauge() internal returns (ISiloChildChainGauge gauge) {
-        gauge = ISiloChildChainGauge(_factory.create(_erc20BalancesHandler));
+        gauge = ISiloChildChainGauge(_factory.create(_hookReceiver));
         vm.label(address(gauge), "gauge");
     }
 
@@ -160,6 +166,18 @@ contract ChildChainGaugesTest is IntegrationTest {
             _votingEscrowDelegationProxy,
             abi.encodeWithSelector(IVotingEscrowDelegationProxy.adjustedBalanceOf.selector, _alice),
             abi.encode(_ALICE_BAL)
+        );
+
+        vm.mockCall(
+            _hookReceiver,
+            abi.encodeWithSelector(IHookReceiver.shareToken.selector),
+            abi.encode(_shareToken)
+        );
+
+        vm.mockCall(
+            _shareToken,
+            abi.encodeWithSelector(IShareToken.silo.selector),
+            abi.encode(_silo)
         );
     }
 }

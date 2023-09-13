@@ -1,4 +1,7 @@
 ### ethereum/SiloLiquidityGauge.vy
+
+- Replaced an ERC-20 Balancer handler with a Silo Hook Receiver. Added integration with the Silo share token ([ccf97d1](https://github.com/silo-finance/silo-contracts-v2/pull/94/commits/ccf97d1d8434ac54c169e954094a3d4537ed5b3d))
+
 - As in the current implementation, we have an external ERC-20 Balancer handler. We added a function that can recalculate gauge math each time the balance updated ([3ab9b90](https://github.com/silo-finance/silo-contracts-v2/pull/34/commits/3ab9b90750287ce4c36d0329408a6bd9d39882d9))
 
 - The current implementation of the gauge assumes that different smart contract performs balance accounting. Such information as a user balance and a tokens totals supply gauge read from the so-called `ERC-20 Balances handler` ([4682361](https://github.com/silo-finance/silo-contracts-v2/pull/34/commits/468236129c7222b62b6faf27726c4dc64ad8d73e))
@@ -30,6 +33,8 @@
 - Copy of Balancer's implementation of the LiquidityGaugeFactory.sol ([c2bc3d5](https://github.com/silo-finance/silo-contracts-v2/pull/34/commits/c2bc3d539244abee8e2cd9b13e70b931eb251735))
 
 ### l2-common/ChildChainGauge.vy
+
+- Replaced an ERC-20 Balancer handler with a Silo Hook Receiver. Added integration with the Silo share token ([53ee1fe](https://github.com/silo-finance/silo-contracts-v2/pull/94/commits/53ee1febf52e92b80fe81e03cd1ee675ed88e955))
 
 - As in the current implementation, we have an external ERC-20 Balancer handler. We added a function that can recalculate gauge math each time the balance updated ([54ad3d0](https://github.com/silo-finance/silo-contracts-v2/pull/56/commits/54ad3d017658e95b0b4e07356998ce558ff2f1ec))
 

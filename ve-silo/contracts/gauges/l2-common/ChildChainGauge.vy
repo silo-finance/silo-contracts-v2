@@ -7,10 +7,14 @@
 from vyper.interfaces import ERC20
 
 
-interface ERC20BlancesHandler:
+interface ShareToken:
     def balanceOf(addr: address) -> uint256: view
     def totalSupply() -> uint256: view
+    def silo() -> address: view
     def balanceOfAndTotalSupply(addr: address) -> (uint256, uint256): view
+
+interface HookReceiver:
+    def shareToken() -> address: view
 
 interface Minter:
     def minted(_user: address, _gauge: address) -> uint256: view
@@ -55,7 +59,9 @@ BAL_PSEUDO_MINTER: immutable(address)
 VE_DELEGATION_PROXY: immutable(address)
 AUTHORIZER_ADAPTOR: immutable(address)
 
-bal_handler: public(address)
+hook_receiver: public(address)
+share_token: public(address)
+silo: public(address)
 version: public(String[128])
 factory: public(address)
 
@@ -203,7 +209,7 @@ def _checkpoint_rewards(
     user_balance: uint256 = 0
     receiver: address = _receiver
     if _user != empty(address):
-        user_balance = ERC20BlancesHandler(self.bal_handler).balanceOf(_user)
+        user_balance = ShareToken(self.share_token).balanceOf(_user)
         if _claim and _receiver == empty(address):
             # if receiver is not explicitly declared, check if a default receiver is set
             receiver = self.rewards_receiver[_user]
@@ -279,14 +285,14 @@ def _update_user(
 
 @external
 @nonreentrant('lock')
-def balance_updated_for_users(
+def afterTokenTransfer(
     _user1: address,
     _user1_new_balance: uint256,
     _user2: address,
     _user2_new_balance: uint256,
     _total_supply: uint256
 ) -> bool:
-    assert msg.sender == self.bal_handler # dev: only balancer handler
+    assert msg.sender == self.hook_receiver # dev: only silo hook receiver
 
     if _user1 != empty(address):
         self._update_user(_user1, _user1_new_balance, _total_supply)
@@ -309,7 +315,7 @@ def user_checkpoint(addr: address) -> bool:
     user_balance: uint256 = 0
     total_supply: uint256 = 0
 
-    (user_balance, total_supply) = ERC20BlancesHandler(self.bal_handler).balanceOfAndTotalSupply(addr)
+    (user_balance, total_supply) = ShareToken(self.share_token).balanceOfAndTotalSupply(addr)
 
     self._update_liquidity_limit(addr, user_balance, total_supply)
     return True
@@ -352,7 +358,7 @@ def claimable_reward(_user: address, _reward_token: address) -> uint256:
     user_balance: uint256 = 0
     total_supply: uint256 = 0
 
-    (user_balance, total_supply) = ERC20BlancesHandler(self.bal_handler).balanceOfAndTotalSupply(_user)
+    (user_balance, total_supply) = ShareToken(self.share_token).balanceOfAndTotalSupply(_user)
 
     if total_supply != 0:
         last_update: uint256 = min(block.timestamp, self.reward_data[_reward_token].period_finish)
@@ -393,7 +399,7 @@ def claim_rewards(
     if _receiver != empty(address):
         assert _addr == msg.sender, "CANNOT_REDIRECT_CLAIM"  # dev: cannot redirect when claiming for another user
 
-    total_supply: uint256 = ERC20BlancesHandler(self.bal_handler).totalSupply()
+    total_supply: uint256 = ShareToken(self.share_token).totalSupply()
 
     self._checkpoint_rewards(_addr, total_supply, True, _receiver, _reward_indexes)
 
@@ -432,7 +438,7 @@ def set_reward_distributor(_reward_token: address, _distributor: address):
 def deposit_reward_token(_reward_token: address, _amount: uint256):
     assert msg.sender == self.reward_data[_reward_token].distributor, "SENDER_NOT_ALLOWED"
 
-    total_supply: uint256 = ERC20BlancesHandler(self.bal_handler).totalSupply()
+    total_supply: uint256 = ShareToken(self.share_token).totalSupply()
 
     # It is safe to checkpoint all the existing rewards as long as `_claim` is set to false (i.e. no external calls).
     self._checkpoint_rewards(empty(address), total_supply, False, empty(address), [])
@@ -516,12 +522,14 @@ def authorizer_adaptor() -> address:
 
 
 @external
-def initialize(handler: address, _version: String[128]):
-    assert handler != empty(address) # dev: balances handler required
-    assert self.bal_handler == empty(address) # dev: already initialized
+def initialize(hook_receiver: address, _version: String[128]):
+    assert hook_receiver != empty(address) # dev: silo hook receiver required
+    assert self.hook_receiver == empty(address) # dev: already initialized
 
     self.version = _version
     self.factory = msg.sender
-    self.bal_handler = handler
+    self.hook_receiver = hook_receiver
+    self.share_token = HookReceiver(hook_receiver).shareToken()
+    self.silo = ShareToken(self.share_token).silo()
 
     self.period_timestamp[0] = block.timestamp
