@@ -15,6 +15,8 @@ library SiloERC4626Lib {
     using SafeERC20Upgradeable for IERC20Upgradeable;
     using MathUpgradeable for uint256;
 
+    /// @dev assets amount of assets to withdraw, if 0, means withdraw is based on `shares`
+    /// @dev shares depends on `assets` it can be 0 or not
     struct WithdrawParams {
         uint256 assets;
         uint256 shares;
@@ -101,23 +103,20 @@ library SiloERC4626Lib {
         address _token,
         address _shareToken,
         WithdrawParams memory _params,
-        ISilo.UseAssets _useAssets,
         ISilo.AssetStorage storage _assetStorage
     ) internal returns (uint256 assets, uint256 shares) {
-        WithdrawCache memory cache = getWithdrawCache(
-            _shareToken, _params.owner, _params.assetType, _assetStorage
-        );
+        WithdrawCache memory cache = getWithdrawCache(_shareToken, _params.owner, _params.assetType, _assetStorage);
 
-        if (_useAssets == ISilo.UseAssets.Yes) {
-            // it's withdraw so assets are user input
-            shares =
-                convertToShares(_params.assets, cache.totalAssets, cache.totalShares, MathUpgradeable.Rounding.Down);
-            assets = _params.assets;
-        } else {
+        if (_params.assets == 0) {
             // it's redeem so shares are user input
             shares = _params.shares;
             assets =
                 convertToAssets(_params.shares, cache.totalAssets, cache.totalShares, MathUpgradeable.Rounding.Down);
+        } else {
+            // it's withdraw so assets are user input
+            shares =
+                convertToShares(_params.assets, cache.totalAssets, cache.totalShares, MathUpgradeable.Rounding.Down);
+            assets = _params.assets;
         }
 
         if (assets == 0 || cache.shareBalance == 0 || shares == 0) revert ISilo.NothingToWithdraw();
@@ -195,11 +194,12 @@ library SiloERC4626Lib {
         }
     }
 
+    /// @param _convertMethod if you using assets then choose `convertToShares`, otherwise `convertToAssets`
     function convertToAssetsOrToShares(
         ISiloConfig _config,
         uint256 _assetsOrShares,
         ISilo.AssetType _assetType,
-        ISilo.UseAssets _useAssets,
+        function(uint256, uint256, uint256, MathUpgradeable.Rounding) view returns (uint256) _convertMethod,
         MathUpgradeable.Rounding _rounding,
         mapping(address => ISilo.AssetStorage) storage _assetStorageMap
     ) internal view returns (uint256 assetsOrShares) {
@@ -208,10 +208,12 @@ library SiloERC4626Lib {
         (uint256 totalAssets, uint256 totalShares) =
             SiloStdLib.getTotalAssetsAndTotalShares(configData, _assetType, _assetStorageMap[configData.token]);
 
-        return _useAssets == ISilo.UseAssets.Yes
-            // using assets means we are converting to shares
-            ? convertToShares(_assetsOrShares, totalAssets, totalShares, _rounding)
-            : convertToAssets(_assetsOrShares, totalAssets, totalShares, _rounding);
+        return _convertMethod(_assetsOrShares, totalAssets, totalShares, _rounding);
+
+//        return _useAssets == ISilo.UseAssets.Yes
+//            // using assets means we are converting to shares
+//            ? convertToShares(_assetsOrShares, totalAssets, totalShares, _rounding)
+//            : convertToAssets(_assetsOrShares, totalAssets, totalShares, _rounding);
     }
 
     function maxWithdraw(
