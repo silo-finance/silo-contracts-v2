@@ -42,12 +42,7 @@ contract DIAOracle is ISiloOracle, IDIAOracle, Initializable {
     }
 
     /// @inheritdoc ISiloOracle
-    function quote(uint256 _baseAmount, address _baseToken) external virtual returns (uint256 quoteAmount) {
-        return _quote(_baseAmount, _baseToken);
-    }
-
-    /// @inheritdoc ISiloOracle
-    function quoteView(uint256 _baseAmount, address _baseToken) external view virtual returns (uint256 quoteAmount) {
+    function quote(uint256 _baseAmount, address _baseToken) external view virtual returns (uint256 quoteAmount) {
         return _quote(_baseAmount, _baseToken);
     }
 
@@ -55,6 +50,10 @@ contract DIAOracle is ISiloOracle, IDIAOracle, Initializable {
     function quoteToken() external view virtual returns (address) {
         IDIAOracle.DIAConfig memory setup = oracleConfig.getConfig();
         return address(setup.quoteToken);
+    }
+
+    function beforeQuote(uint256, address) external pure virtual override {
+        // nothing to execute
     }
 
     /// @param _diaOracle IDIAOracleV2 oracle where price is stored

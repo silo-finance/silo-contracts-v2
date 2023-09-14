@@ -36,7 +36,7 @@ contract DIAOracleTest is DIAConfigDefault {
         newOracle.initialize(newConfig, cfg.primaryKey, cfg.secondaryKey);
 
         vm.expectRevert(IDIAOracle.OldPrice.selector);
-        newOracle.quoteView(1e18, address(tokens["RDPX"]));
+        newOracle.quote(1e18, address(tokens["RDPX"]));
     }
 
     function test_DIAOracle_initialize_OldSecondaryPrice() public {
@@ -52,7 +52,7 @@ contract DIAOracleTest is DIAConfigDefault {
         newOracle.initialize(newConfig, cfg.primaryKey, cfg.secondaryKey);
 
         vm.expectRevert(IDIAOracle.OldSecondaryPrice.selector);
-        newOracle.quoteView(1e18, address(tokens["RDPX"]));
+        newOracle.quote(1e18, address(tokens["RDPX"]));
     }
 
     function test_DIAOracle_initialize_pass() public {
@@ -65,43 +65,43 @@ contract DIAOracleTest is DIAConfigDefault {
     }
 
     /*
-        FOUNDRY_PROFILE=oracles forge test -vvv --mt test_DIAOracle_quoteView_pass
+        FOUNDRY_PROFILE=oracles forge test -vvv --mt test_DIAOracle_quote_pass
     */
-    function test_DIAOracle_quoteView_inUSDT() public {
-        uint256 price = DIA_ORACLE.quoteView(1e18, address(tokens["RDPX"]));
+    function test_DIAOracle_quote_inUSDT() public {
+        uint256 price = DIA_ORACLE.quote(1e18, address(tokens["RDPX"]));
         emit log_named_decimal_uint("RDPX/USD", price, 18);
         assertEq(price, 17889972650000000000, "$17,88");
     }
 
     /*
-        FOUNDRY_PROFILE=oracles forge test -vvv --mt test_DIAOracle_quoteView_inUSDC
+        FOUNDRY_PROFILE=oracles forge test -vvv --mt test_DIAOracle_quote_inUSDC
     */
-    function test_DIAOracle_quoteView_inUSDC() public {
+    function test_DIAOracle_quote_inUSDC() public {
         IDIAOracle.DIADeploymentConfig memory cfg = _defaultDIAConfig();
         cfg.quoteToken = IERC20Metadata(address(tokens["USDC"]));
         DIAOracleConfig oracleConfig = new DIAOracleConfig(_defaultDIAConfig(), 10 ** (18 + 8 - 6), 0);
         DIAOracle oracle = new DIAOracle();
         oracle.initialize(oracleConfig, cfg.primaryKey, cfg.secondaryKey);
 
-        uint256 price = oracle.quoteView(1e18, address(tokens["RDPX"]));
+        uint256 price = oracle.quote(1e18, address(tokens["RDPX"]));
         emit log_named_decimal_uint("RDPX/USD", price, 6);
         assertEq(price, 17889972, "$17,88");
     }
 
     /*
-        FOUNDRY_PROFILE=oracles forge test -vvv --mt test_DIAOracle_quoteView_AssetNotSupported
+        FOUNDRY_PROFILE=oracles forge test -vvv --mt test_DIAOracle_quote_AssetNotSupported
     */
-    function test_DIAOracle_quoteView_AssetNotSupported() public {
+    function test_DIAOracle_quote_AssetNotSupported() public {
         vm.expectRevert(IDIAOracle.AssetNotSupported.selector);
-        DIA_ORACLE.quoteView(1e18, address(1));
+        DIA_ORACLE.quote(1e18, address(1));
     }
 
     /*
-        FOUNDRY_PROFILE=oracles forge test -vvv --mt test_DIAOracle_quoteView_AssetNotSupported
+        FOUNDRY_PROFILE=oracles forge test -vvv --mt test_DIAOracle_quote_AssetNotSupported
     */
-    function test_DIAOracle_quoteView_BaseAmountOverflow() public {
+    function test_DIAOracle_quote_BaseAmountOverflow() public {
         vm.expectRevert(IDIAOracle.BaseAmountOverflow.selector);
-        DIA_ORACLE.quoteView(2 ** 128, address(tokens["RDPX"]));
+        DIA_ORACLE.quote(2 ** 128, address(tokens["RDPX"]));
     }
 
     function test_DIAOracle_quoteToken() public {

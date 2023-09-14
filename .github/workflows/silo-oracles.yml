@@ -16,6 +16,7 @@ on:
       - silo-oracles/**/*.ts
       - silo-oracles/**/*.js
       - silo-oracles/**/*.json
+      - silo-core/contracts/interfaces/ISiloOracle.sol
 
   pull_request:
     paths:
@@ -23,6 +24,7 @@ on:
       - silo-oracles/**/*.ts
       - silo-oracles/**/*.js
       - silo-oracles/**/*.json
+      - silo-core/contracts/interfaces/ISiloOracle.sol
 
 jobs:
 
