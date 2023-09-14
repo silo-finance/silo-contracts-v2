@@ -48,7 +48,7 @@ library SiloLendingLib {
         address _owner,
         address _spender,
         ISilo.AssetType _assetType,
-        mapping(address => ISilo.AssetStorage) storage _assetStorage
+        ISilo.AssetStorage storage _assetStorage
     ) internal returns (uint256 assets, uint256 shares, uint256 toShares) {
         uint256 zeroAssets = 0;
         uint256 zeroShares = 0;
@@ -91,12 +91,12 @@ library SiloLendingLib {
         address _borrower,
         address _spender,
         ISilo.UseAssets _useAssets,
-        mapping(address => ISilo.AssetStorage) storage _assetStorage
+        ISilo.AssetStorage storage _assetStorage
     ) internal returns (uint256 assets, uint256 shares) {
         BorrowCache memory cache;
 
         cache.debtShareToken = IShareToken(_configData.debtShareToken);
-        cache.totalDebtAssets = _assetStorage[_configData.token].debtAssets;
+        cache.totalDebtAssets = _assetStorage.debtAssets;
         cache.totalDebtShares = cache.debtShareToken.totalSupply();
 
         if (_useAssets == ISilo.UseAssets.Yes) {
@@ -113,10 +113,10 @@ library SiloLendingLib {
             );
         }
 
-        if (assets > SiloStdLib.liquidity(_configData.token, _assetStorage)) revert ISilo.NotEnoughLiquidity();
+        if (assets > SiloStdLib.liquidity(_assetStorage)) revert ISilo.NotEnoughLiquidity();
 
         // add new debt
-        _assetStorage[_configData.token].debtAssets += assets;
+        _assetStorage.debtAssets += assets;
         // `mint` checks if _spender is allowed to borrow on the account of _borrower. Hook receiver can
         // potentially reenter but the state is correct.
         cache.debtShareToken.mint(_borrower, _spender, shares);
@@ -131,12 +131,12 @@ library SiloLendingLib {
         address _borrower,
         address _repayer,
         ISilo.UseAssets _useAssets,
-        mapping(address => ISilo.AssetStorage) storage _assetStorage
+        ISilo.AssetStorage storage _assetStorage
     ) internal returns (uint256 assets, uint256 shares) {
         RepayCache memory cache;
 
         cache.debtShareToken = IShareToken(_configData.debtShareToken);
-        cache.totalDebtAmount = _assetStorage[_configData.token].debtAssets;
+        cache.totalDebtAmount = _assetStorage.debtAssets;
         cache.totalDebtShares = cache.debtShareToken.totalSupply();
         cache.shareDebtBalance = cache.debtShareToken.balanceOf(_borrower);
 
@@ -167,23 +167,25 @@ library SiloLendingLib {
         // If token reenters, no harm done because we didn't change the state yet.
         IERC20Upgradeable(_configData.token).safeTransferFrom(_repayer, address(this), assets);
         // subtract repayment from debt
-        _assetStorage[_configData.token].debtAssets -= assets;
+        _assetStorage.debtAssets -= assets;
         // Anyone can repay anyone's debt so no approval check is needed. If hook receiver reenters then
         // no harm done because state changes are completed.
         cache.debtShareToken.burn(_borrower, _repayer, shares);
     }
 
-    function accrueInterest(
+    /// @notice this method will accrue interest ONLY for ONE asset, to calculate all you have to call it twice
+    /// with `_configData` for each token
+    function accrueInterestForAsset(
         ISiloConfig.ConfigData memory _configData,
-        mapping(address => ISilo.AssetStorage) storage _assetStorage
+        ISilo.AssetStorage storage _assetStorage
     ) internal returns (uint256 accruedInterest) {
         AccrueInterestCache memory cache;
 
-        cache.lastTimestamp = _assetStorage[_configData.token].interestRateTimestamp;
+        cache.lastTimestamp = _assetStorage.interestRateTimestamp;
 
         // This is the first time, so we can return early and save some gas
         if (cache.lastTimestamp == 0) {
-            _assetStorage[_configData.token].interestRateTimestamp = uint64(block.timestamp);
+            _assetStorage.interestRateTimestamp = uint64(block.timestamp);
             return 0;
         }
 
@@ -197,8 +199,8 @@ library SiloLendingLib {
         );
         cache.totalFeeInBp = _configData.daoFee + _configData.deployerFee;
 
-        cache.collateralAssets = _assetStorage[_configData.token].collateralAssets;
-        cache.debtAssets = _assetStorage[_configData.token].debtAssets;
+        cache.collateralAssets = _assetStorage.collateralAssets;
+        cache.debtAssets = _assetStorage.debtAssets;
 
         accruedInterest = cache.debtAssets * cache.rcomp / _PRECISION_DECIMALS;
 
@@ -209,10 +211,10 @@ library SiloLendingLib {
         }
 
         // update contract state
-        _assetStorage[_configData.token].debtAssets = cache.debtAssets + accruedInterest;
-        _assetStorage[_configData.token].collateralAssets = cache.collateralAssets + cache.depositorsAmount;
-        _assetStorage[_configData.token].interestRateTimestamp = uint64(block.timestamp);
-        _assetStorage[_configData.token].daoAndDeployerFees += cache.daoAndDeployerAmount;
+        _assetStorage.debtAssets = cache.debtAssets + accruedInterest;
+        _assetStorage.collateralAssets = cache.collateralAssets + cache.depositorsAmount;
+        _assetStorage.interestRateTimestamp = uint64(block.timestamp);
+        _assetStorage.daoAndDeployerFees += cache.daoAndDeployerAmount;
     }
 
     function borrowPossible(ISiloConfig.ConfigData memory _configData, address _borrower)
@@ -230,7 +232,7 @@ library SiloLendingLib {
     function maxBorrow(
         ISiloConfig _config,
         address _borrower,
-        mapping(address => ISilo.AssetStorage) storage _assetStorage
+        mapping(address => ISilo.AssetStorage) storage _assetStorageMap
     ) internal view returns (uint256 assets, uint256 shares) {
         (ISiloConfig.ConfigData memory configData0, ISiloConfig.ConfigData memory configData1) =
             _config.getConfigs(address(this));
@@ -252,8 +254,9 @@ library SiloLendingLib {
         }
 
         {
-            (uint256 totalAssets, uint256 totalShares) =
-                SiloStdLib.getTotalAssetsAndTotalShares(configData0, ISilo.AssetType.Debt, _assetStorage);
+            (uint256 totalAssets, uint256 totalShares) = SiloStdLib.getTotalAssetsAndTotalShares(
+                configData0, ISilo.AssetType.Debt, _assetStorageMap[configData0.token]
+            );
 
             assets = SiloERC4626Lib.convertToAssets(shares, totalAssets, totalShares, MathUpgradeable.Rounding.Up);
         }
@@ -262,13 +265,13 @@ library SiloLendingLib {
     function maxRepay(
         ISiloConfig _config,
         address _borrower,
-        mapping(address => ISilo.AssetStorage) storage _assetStorage
+        mapping(address => ISilo.AssetStorage) storage _assetStorageMap
     ) internal view returns (uint256 assets, uint256 shares) {
         ISiloConfig.ConfigData memory configData = _config.getConfig(address(this));
 
         shares = IShareToken(configData.debtShareToken).balanceOf(_borrower);
         assets = SiloERC4626Lib.convertToAssetsOrToShares(
-            _config, shares, ISilo.AssetType.Debt, ISilo.UseAssets.No, MathUpgradeable.Rounding.Up, _assetStorage
+            _config, shares, ISilo.AssetType.Debt, ISilo.UseAssets.No, MathUpgradeable.Rounding.Up, _assetStorageMap
         );
     }
 }
