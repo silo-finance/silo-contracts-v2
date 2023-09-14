@@ -20,6 +20,7 @@ import {IOmniVotingEscrowSettings} from "ve-silo/contracts/voting-escrow/interfa
 import {IOmniVotingEscrowChild} from "ve-silo/contracts/voting-escrow/interfaces/IOmniVotingEscrowChild.sol";
 import {IL2LayerZeroBridgeForwarder} from "ve-silo/contracts/voting-escrow/interfaces/IL2LayerZeroBridgeForwarder.sol";
 import {IHookReceiverMock as IHookReceiver} from "./_mocks/IHookReceiverMock.sol";
+import {ISiloWithFeeDetails as ISilo} from "ve-silo/contracts/silo-tokens-minter/interfaces/ISiloWithFeeDetails.sol";
 
 // solhint-disable max-states-count
 
@@ -33,14 +34,19 @@ contract L2Test is IntegrationTest {
     uint16 internal constant _ETHEREUM_CHAIN_ID = 101;
     uint256 internal constant _FORKING_BLOCK_NUMBER = 128253340;
     uint256 internal constant _INCENTIVES_AMOUNT = 2_000_000e18;
-    uint256 internal constant _EXPECTED_USER_BAL = 1999999999999999999500000;
+    uint256 internal constant _EXPECTED_USER_BAL = 1399999999999999999650000;
     address internal constant _SILO_WHALE_ARB = 0xae1Eb69e880670Ca47C50C9CE712eC2B48FaC3b6;
+    uint256 internal constant _WEEK = 604800;
+    uint256 internal constant _DAO_FEE = 1e3; // 10%
+    uint256 internal constant _DEPLOYER_FEE = 2e3; // 20%
 
     address internal _deployer;
     address internal _hookReceiver = makeAddr("Hook receiver");
     address internal _shareToken = makeAddr("Share token");
     address internal _silo = makeAddr("Silo");
     address internal _omniVotingEscrow = makeAddr("OmniVotingEscrow"); // L1 sender
+    address internal _daoFeeReceiver = makeAddr("DAO fee receiver");
+    address internal _deployerFeeReceiver = makeAddr("Deployer fee receiver");
     address internal _bob = makeAddr("_bob");
     address internal _alice = makeAddr("_alice");
     address internal _l2Multisig = makeAddr(VeSiloAddrKey.L2_MULTISIG);
@@ -112,19 +118,14 @@ contract L2Test is IntegrationTest {
 
         // transfer incentives (SILO token)
         // get incentives by users
-        vm.prank(_SILO_WHALE_ARB);
-        _siloToken.transfer(address(gauge), _INCENTIVES_AMOUNT);
-
-        uint256 userBalance = _siloToken.balanceOf(_bob);
-        assertEq(userBalance, 0, "Expect to have an empty user balance");
-
-        uint256 pseudoMinterBalance = _siloToken.balanceOf(address(_l2PseudoMinter));
-        assertEq(pseudoMinterBalance, 0, "Expect to have an empty `_l2PseudoMinter` balance");
+        _transferIncentives(gauge);
 
         // Expect to transfer all incentives to the `_l2PseudoMinter` during the user checkpoint
         gauge.user_checkpoint(_bob);
 
-        pseudoMinterBalance = _siloToken.balanceOf(address(_l2PseudoMinter));
+        _verifyClaimable(ISiloChildChainGauge(gauge));
+
+        uint256 pseudoMinterBalance = _siloToken.balanceOf(address(_l2PseudoMinter));
         assertEq(pseudoMinterBalance, _INCENTIVES_AMOUNT, "Invalid `_l2PseudoMinter` balance");
 
         vm.warp(block.timestamp + 10 days);
@@ -132,8 +133,29 @@ contract L2Test is IntegrationTest {
         vm.prank(_bob);
         _l2PseudoMinter.mint(address(gauge));
 
-        userBalance = _siloToken.balanceOf(_bob);
+        uint256 userBalance = _siloToken.balanceOf(_bob);
         assertEq(userBalance, _EXPECTED_USER_BAL, "Expect user to receive incentives");
+
+        _verifyMintedStats(gauge);
+    }
+
+    function _verifyMintedStats(ISiloChildChainGauge _gauge) internal {
+        uint256 totalMinted = _l2PseudoMinter.minted(_bob, address(_gauge));
+        uint256 expectedMinted = totalMinted - (totalMinted * 10 / 100 + totalMinted * 20 / 100);
+        uint256 mintedToUser = _l2PseudoMinter.mintedToUser(_bob, address(_gauge));
+
+        assertEq(mintedToUser, expectedMinted, "Counters of minted tokens did not mutch");
+    }
+
+    function _transferIncentives(ISiloChildChainGauge _gauge) internal {
+        vm.prank(_SILO_WHALE_ARB);
+        _siloToken.transfer(address(_gauge), _INCENTIVES_AMOUNT);
+
+        uint256 userBalance = _siloToken.balanceOf(_bob);
+        assertEq(userBalance, 0, "Expect to have an empty user balance");
+
+        uint256 pseudoMinterBalance = _siloToken.balanceOf(address(_l2PseudoMinter));
+        assertEq(pseudoMinterBalance, 0, "Expect to have an empty `_l2PseudoMinter` balance");
     }
 
     function _createGauge() internal returns (ISiloChildChainGauge gauge) {
@@ -161,6 +183,42 @@ contract L2Test is IntegrationTest {
             nonce,
             lzPayload
         );
+    }
+
+    function _verifyClaimable(ISiloChildChainGauge _gauge) internal {
+        // with fees
+        // 10% - to DAO
+        // 20% - to deployer
+        vm.mockCall(
+            _silo,
+            abi.encodeWithSelector(ISilo.getFeesAndFeeReceivers.selector),
+            abi.encode(
+                _daoFeeReceiver,
+                _deployerFeeReceiver,
+                _DAO_FEE,
+                _DEPLOYER_FEE
+            )
+        );
+
+        vm.warp(block.timestamp + _WEEK + 1);
+
+        uint256 claimableTotal;
+        uint256 claimableTokens;
+        uint256 feeDao;
+        uint256 feeDeployer;
+
+        claimableTotal = _gauge.claimable_tokens(_bob);
+        (claimableTokens, feeDao, feeDeployer) = _gauge.claimable_tokens_with_fees(_bob);
+
+        assertTrue(claimableTotal == (claimableTokens + feeDao + feeDeployer));
+
+        uint256 expectedFeeDao = claimableTotal * 10 / 100;
+        uint256 expectedFeeDeployer = claimableTotal * 20 / 100;
+        uint256 expectedToReceive = claimableTotal - expectedFeeDao - expectedFeeDeployer;
+
+        assertEq(expectedFeeDao, feeDao, "Wrong DAO fee");
+        assertEq(expectedFeeDeployer, feeDeployer, "Wrong deployer fee");
+        assertEq(expectedToReceive, claimableTokens, "Wrong number of the user tokens");
     }
 
     function _mockCalls() internal {

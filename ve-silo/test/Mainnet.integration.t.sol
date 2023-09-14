@@ -23,6 +23,7 @@ import {IBalancerMinter} from "ve-silo/contracts/silo-tokens-minter/interfaces/I
 import {IGaugeAdder} from "ve-silo/contracts/gauges/interfaces/IGaugeAdder.sol";
 import {IHookReceiverMock as IHookReceiver} from "./_mocks/IHookReceiverMock.sol";
 import {IShareTokenLike as IShareToken} from "ve-silo/contracts/gauges/interfaces/IShareTokenLike.sol";
+import {ISiloWithFeeDetails as ISilo} from "ve-silo/contracts/silo-tokens-minter/interfaces/ISiloWithFeeDetails.sol";
 
 // solhint-disable max-states-count
 
@@ -39,6 +40,8 @@ contract MainnetTest is IntegrationTest {
     uint256 internal constant _FORKING_BLOCK_NUMBER = 17633400;
     uint256 internal constant _YEAR = 365 * 24 * 3600;
     uint256 internal constant _WEEK = 604800;
+    uint256 internal constant _DAO_FEE = 1e3; // 10%
+    uint256 internal constant _DEPLOYER_FEE = 2e3; // 20%
 
     IBalancerMinter internal _minter;
     IGaugeController internal _gaugeController;
@@ -52,6 +55,8 @@ contract MainnetTest is IntegrationTest {
     address internal _hookReceiver = makeAddr("Hook receiver");
     address internal _shareToken = makeAddr("Share token");
     address internal _silo = makeAddr("Silo");
+    address internal _daoFeeReceiver = makeAddr("DAO fee receiver");
+    address internal _deployerFeeReceiver = makeAddr("Deployer fee receiver");
     address internal _bob = makeAddr("_bob");
     address internal _alice = makeAddr("_alice");
     address internal _john = makeAddr("_john");
@@ -103,8 +108,33 @@ contract MainnetTest is IntegrationTest {
         _voteForGauge(gauge);
         _updateUserBalances(ISiloLiquidityGauge(gauge));
         _checkpointUsers(ISiloLiquidityGauge(gauge));
+        _verifyClaimable(ISiloLiquidityGauge(gauge));
         _getIncentives(gauge);
         _stopMiningProgram();
+    }
+
+    function _verifyClaimable(ISiloLiquidityGauge _gauge) internal {
+        _mockSiloFeesDetails();
+
+        vm.warp(block.timestamp + _WEEK + 1);
+
+        uint256 claimableTotal;
+        uint256 claimableTokens;
+        uint256 feeDao;
+        uint256 feeDeployer;
+
+        claimableTotal = _gauge.claimable_tokens(_bob);
+        (claimableTokens, feeDao, feeDeployer) = _gauge.claimable_tokens_with_fees(_bob);
+
+        assertTrue(claimableTotal == (claimableTokens + feeDao + feeDeployer));
+
+        uint256 expectedFeeDao = claimableTotal * 10 / 100;
+        uint256 expectedFeeDeployer = claimableTotal * 20 / 100;
+        uint256 expectedToReceive = claimableTotal - expectedFeeDao - expectedFeeDeployer;
+
+        assertEq(expectedFeeDao, feeDao, "Wrong DAO fee");
+        assertEq(expectedFeeDeployer, feeDeployer, "Wrong deployer fee");
+        assertEq(expectedToReceive, claimableTokens, "Wrong number of the user tokens");
     }
 
     function _getUserIncentives(address _user, address _gauge) internal {
@@ -118,9 +148,17 @@ contract MainnetTest is IntegrationTest {
         _minter.mintFor(_gauge, _user);
 
         assertTrue(siloToken.balanceOf(_user) != 0);
+
+        uint256 totalMinted = _minter.minted(_user, _gauge);
+        uint256 expectedMinted = totalMinted - (totalMinted * 10 / 100 + totalMinted * 20 / 100);
+        uint256 mintedToUser = _minter.mintedToUser(_user, _gauge);
+
+        assertEq(mintedToUser, expectedMinted, "Counters of minted tokens did not mutch");
     }
 
     function _getIncentives(address _gauge) internal {
+        _mockSiloFeesDetails();
+
         _getUserIncentives(_bob, _gauge);
         _getUserIncentives(_alice, _gauge);
         _getUserIncentives(_john, _gauge);
@@ -324,6 +362,22 @@ contract MainnetTest is IntegrationTest {
             _smartValletChecker,
             abi.encodeCall(ISmartWalletChecker.check, _daoVoter),
             abi.encode(true)
+        );
+    }
+
+    function _mockSiloFeesDetails() internal {
+        // with fees
+        // 10% - to DAO
+        // 20% - to deployer
+        vm.mockCall(
+            _silo,
+            abi.encodeWithSelector(ISilo.getFeesAndFeeReceivers.selector),
+            abi.encode(
+                _daoFeeReceiver,
+                _deployerFeeReceiver,
+                _DAO_FEE,
+                _DEPLOYER_FEE
+            )
         );
     }
 

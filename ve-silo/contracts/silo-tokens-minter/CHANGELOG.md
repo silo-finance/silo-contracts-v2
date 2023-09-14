@@ -1,4 +1,6 @@
 ### BalancerMinter.sol
+- Fees collection ([ad564c1](https://github.com/silo-finance/silo-contracts-v2/pull/97/commits/ad564c19f4fa0b3a2a2f741168a7880e18904449))
+
 - solhint-disable ordering for BalancerMinter ([cfda647](https://github.com/silo-finance/silo-contracts-v2/pull/38/commits/cfda647e39e006a3c50a67792cae81368ccd9acb))
 
 - Bumped solidity to 0.8.19 & updated imports ([de03bc0](https://github.com/silo-finance/silo-contracts-v2/pull/38/commits/de03bc0debbb4cc7bb25ec99d0250336a8cc02c8))
@@ -17,6 +19,8 @@
 - Copy of Balancer's implementation of the BalancerTokenAdmin.sol ([44824ae](https://github.com/silo-finance/silo-contracts-v2/pull/38/commits/44824aeb22ca0bddcc87f109e19fce792984469c))
 
 ### MainnetBalancerMinter.sol
+- Fees collection ([2767b4a](https://github.com/silo-finance/silo-contracts-v2/pull/97/commits/2767b4a2bf6d1db9473eaeacfa67d868a8c66e41))
+
 - Updated interfaces as Balancer's implementations were not complete, and some methods that we need for test missed ([c23801c](https://github.com/silo-finance/silo-contracts-v2/pull/38/commits/c23801cdecf88e5b85f37ac39dc6e3f7817aa054))
 
 - Bumped solidity to 0.8.19 & updated imports ([a44710c](https://github.com/silo-finance/silo-contracts-v2/pull/38/commits/a44710c33a7d791d9b02f77f35e339090b7a994f))
@@ -24,6 +28,8 @@
 - Copy of Balancer's implementation of the MainnetBalancerMinter.sol ([c3762da](https://github.com/silo-finance/silo-contracts-v2/pull/38/commits/c3762da774abbab4a309157c86237c1432e01ae8))
 
 ### L2BalancerPseudoMinter.sol
+- Fees collection ([6cbbfa0](https://github.com/silo-finance/silo-contracts-v2/pull/97/commits/6cbbfa0e629e6b686f322d89f87f244427dde5ee))
+
 - Changed EIP712 name to `Silo Pseudo Minter` ([c7a308d](https://github.com/silo-finance/silo-contracts-v2/pull/62/commits/c7a308d2b8f547983ca8179ccb9f4c96b1248e91))
 
 - Bumped solidity to 0.8.19, updated imports, solhint ([d738a00](https://github.com/silo-finance/silo-contracts-v2/pull/62/commits/d738a00897465e70f7284c5c3c11738242f45f56))
