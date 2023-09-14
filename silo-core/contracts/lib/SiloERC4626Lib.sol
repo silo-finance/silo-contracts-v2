@@ -49,14 +49,14 @@ library SiloERC4626Lib {
         ISilo.AssetType _assetType,
         ISilo.UseAssets _useAssets,
         ISilo.TokenTransfer _doTransfer,
-        mapping(address => ISilo.AssetStorage) storage _assetStorage
+        ISilo.AssetStorage storage _assetStorage
     ) internal returns (uint256 assets, uint256 shares) {
         DepositCache memory cache;
 
         if (_assetType == ISilo.AssetType.Protected) {
-            cache.totalAssets = _assetStorage[_configData.token].protectedAssets;
+            cache.totalAssets = _assetStorage.protectedAssets;
         } else if (_assetType == ISilo.AssetType.Collateral) {
-            cache.totalAssets = _assetStorage[_configData.token].collateralAssets;
+            cache.totalAssets = _assetStorage.collateralAssets;
         } else {
             revert ISilo.WrongAssetType();
         }
@@ -84,12 +84,12 @@ library SiloERC4626Lib {
         if (_assetType == ISilo.AssetType.Protected) {
             // `assets` and `totalAssets` can never be more than uint256 because totalSupply cannot be either
             unchecked {
-                _assetStorage[_configData.token].protectedAssets = cache.totalAssets + assets;
+                _assetStorage.protectedAssets = cache.totalAssets + assets;
             }
         } else {
             // `assets` and `totalAssets` can never be more than uint256 because totalSupply cannot be either
             unchecked {
-                _assetStorage[_configData.token].collateralAssets = cache.totalAssets + assets;
+                _assetStorage.collateralAssets = cache.totalAssets + assets;
             }
         }
 
@@ -101,7 +101,7 @@ library SiloERC4626Lib {
         ISiloConfig.ConfigData memory _configData,
         WithdrawParams memory _params,
         ISilo.UseAssets _useAssets,
-        mapping(address => ISilo.AssetStorage) storage _assetStorage
+        ISilo.AssetStorage storage _assetStorage
     ) internal returns (uint256 assets, uint256 shares) {
         WithdrawCache memory cache = getWithdrawCache(_configData, _params.owner, _params.assetType, _assetStorage);
 
@@ -126,22 +126,21 @@ library SiloERC4626Lib {
         }
 
         // check liquidity
-        if (
-            _params.assetType == ISilo.AssetType.Collateral
-                && assets > SiloStdLib.liquidity(_configData.token, _assetStorage)
-        ) revert ISilo.NotEnoughLiquidity();
+        if (_params.assetType == ISilo.AssetType.Collateral && assets > SiloStdLib.liquidity(_assetStorage)) {
+            revert ISilo.NotEnoughLiquidity();
+        }
 
         if (_params.assetType == ISilo.AssetType.Protected) {
             // `assets` can never be more then `totalAssets` because we always increase `totalAssets` by
             // `assets` and interest
             unchecked {
-                _assetStorage[_configData.token].protectedAssets = cache.totalAssets - assets;
+                _assetStorage.protectedAssets = cache.totalAssets - assets;
             }
         } else {
             // `assets` can never be more then `totalAssets` because we always increase `totalAssets` by
             // `assets` and interest
             unchecked {
-                _assetStorage[_configData.token].collateralAssets = cache.totalAssets - assets;
+                _assetStorage.collateralAssets = cache.totalAssets - assets;
             }
         }
 
@@ -159,12 +158,12 @@ library SiloERC4626Lib {
         ISiloConfig.ConfigData memory _configData,
         address _owner,
         ISilo.AssetType _assetType,
-        mapping(address => ISilo.AssetStorage) storage _assetStorage
+        ISilo.AssetStorage storage _assetStorage
     ) internal view returns (WithdrawCache memory cache) {
         if (_assetType == ISilo.AssetType.Protected) {
-            cache.totalAssets = _assetStorage[_configData.token].protectedAssets;
+            cache.totalAssets = _assetStorage.protectedAssets;
         } else if (_assetType == ISilo.AssetType.Collateral) {
-            cache.totalAssets = _assetStorage[_configData.token].collateralAssets;
+            cache.totalAssets = _assetStorage.collateralAssets;
         } else {
             revert ISilo.WrongAssetType();
         }
@@ -200,12 +199,12 @@ library SiloERC4626Lib {
         ISilo.AssetType _assetType,
         ISilo.UseAssets _useAssets,
         MathUpgradeable.Rounding _rounding,
-        mapping(address => ISilo.AssetStorage) storage _assetStorage
+        mapping(address => ISilo.AssetStorage) storage _assetStorageMap
     ) internal view returns (uint256 assetsOrShares) {
         ISiloConfig.ConfigData memory configData = _config.getConfig(address(this));
 
         (uint256 totalAssets, uint256 totalShares) =
-            SiloStdLib.getTotalAssetsAndTotalShares(configData, _assetType, _assetStorage);
+            SiloStdLib.getTotalAssetsAndTotalShares(configData, _assetType, _assetStorageMap[configData.token]);
 
         return _useAssets == ISilo.UseAssets.Yes
             // using assets means we are converting to shares
@@ -217,7 +216,7 @@ library SiloERC4626Lib {
         ISiloConfig _config,
         address _owner,
         ISilo.AssetType _assetType,
-        mapping(address => ISilo.AssetStorage) storage _assetStorage
+        mapping(address => ISilo.AssetStorage) storage _assetStorageMap
     ) internal view returns (uint256 assets, uint256 shares) {
         (ISiloConfig.ConfigData memory configData0, ISiloConfig.ConfigData memory configData1) =
             _config.getConfigs(address(this));
@@ -240,7 +239,7 @@ library SiloERC4626Lib {
         }
 
         (uint256 totalAssets, uint256 totalShares) =
-            SiloStdLib.getTotalAssetsAndTotalShares(configData0, _assetType, _assetStorage);
+            SiloStdLib.getTotalAssetsAndTotalShares(configData0, _assetType, _assetStorageMap[configData0.token]);
         shares = SiloERC4626Lib.convertToShares(assets, totalAssets, totalShares, MathUpgradeable.Rounding.Down);
 
         uint256 shareBalance;
@@ -250,7 +249,7 @@ library SiloERC4626Lib {
         } else if (_assetType == ISilo.AssetType.Collateral) {
             shareBalance = IShareToken(configData0.collateralShareToken).balanceOf(_owner);
 
-            uint256 liquidAssets = SiloStdLib.liquidity(configData0.token, _assetStorage);
+            uint256 liquidAssets = SiloStdLib.liquidity(_assetStorageMap[configData0.token]);
 
             // check liquidity
             if (assets > liquidAssets) {

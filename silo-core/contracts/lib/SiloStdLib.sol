@@ -18,16 +18,16 @@ library SiloStdLib {
     function withdrawFees(
         ISiloConfig _config,
         ISiloFactory _factory,
-        mapping(address => ISilo.AssetStorage) storage _assetStorage
+        mapping(address => ISilo.AssetStorage) storage _assetStorageMap
     ) internal {
         (address daoFeeReceiver, address deployerFeeReceiver, uint256 daoFee, uint256 deployerFee, address asset) =
             getFeesAndFeeReceiversWithAsset(_config, _factory);
 
-        uint256 earnedFees = _assetStorage[asset].daoAndDeployerFees;
+        uint256 earnedFees = _assetStorageMap[asset].daoAndDeployerFees;
         uint256 balanceOf = IERC20Upgradeable(asset).balanceOf(address(this));
         if (earnedFees > balanceOf) earnedFees = balanceOf;
 
-        _assetStorage[asset].daoAndDeployerFees -= earnedFees;
+        _assetStorageMap[asset].daoAndDeployerFees -= earnedFees;
 
         if (daoFeeReceiver == address(0) && deployerFeeReceiver == address(0)) {
             // just in case, should never happen...
@@ -86,31 +86,31 @@ library SiloStdLib {
         amount = _amount + _amount * rcomp / _PRECISION_DECIMALS;
     }
 
-    function liquidity(address _asset, mapping(address => ISilo.AssetStorage) storage _assetStorage)
+    function liquidity(ISilo.AssetStorage storage _assetStorage)
         internal
         view
         returns (uint256 liquidAssets)
     {
-        liquidAssets = _assetStorage[_asset].collateralAssets - _assetStorage[_asset].debtAssets;
+        liquidAssets = _assetStorage.collateralAssets - _assetStorage.debtAssets;
     }
 
     function getTotalAssetsAndTotalShares(
         ISiloConfig.ConfigData memory _configData,
         ISilo.AssetType _assetType,
-        mapping(address => ISilo.AssetStorage) storage _assetStorage
+        ISilo.AssetStorage storage _assetStorage
     ) internal view returns (uint256 totalAssets, uint256 totalShares) {
         if (_assetType == ISilo.AssetType.Collateral) {
             totalAssets = amountWithInterest(
-                _configData.token, _assetStorage[_configData.token].collateralAssets, _configData.interestRateModel
+                _configData.token, _assetStorage.collateralAssets, _configData.interestRateModel
             );
             totalShares = IShareToken(_configData.collateralShareToken).totalSupply();
         } else if (_assetType == ISilo.AssetType.Debt) {
             totalAssets = amountWithInterest(
-                _configData.token, _assetStorage[_configData.token].debtAssets, _configData.interestRateModel
+                _configData.token, _assetStorage.debtAssets, _configData.interestRateModel
             );
             totalShares = IShareToken(_configData.debtShareToken).totalSupply();
         } else if (_assetType == ISilo.AssetType.Protected) {
-            totalAssets = _assetStorage[_configData.token].protectedAssets;
+            totalAssets = _assetStorage.protectedAssets;
             totalShares = IShareToken(_configData.protectedShareToken).totalSupply();
         }
     }
