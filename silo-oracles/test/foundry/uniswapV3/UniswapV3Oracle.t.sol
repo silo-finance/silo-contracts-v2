@@ -38,7 +38,7 @@ contract UniswapV3OracleTest is UniswapPools {
     */
     function test_UniswapV3Oracle_price_Overflow() public {
         vm.expectRevert("Overflow");
-        PRICE_PROVIDER.quoteView(2 ** 128, address(1));
+        PRICE_PROVIDER.quote(2 ** 128, address(1));
     }
 
     /*
@@ -46,7 +46,7 @@ contract UniswapV3OracleTest is UniswapPools {
     */
     function test_UniswapV3Oracle_revert_whenPriceZero() public {
         vm.expectRevert(bytes("Zero"));
-        PRICE_PROVIDER.quoteView(1e6, address(tokens["WETH"]));
+        PRICE_PROVIDER.quote(1e6, address(tokens["WETH"]));
     }
 
     /*
@@ -54,7 +54,7 @@ contract UniswapV3OracleTest is UniswapPools {
     */
     function test_UniswapV3Oracle_revert_onQuoteQuote() public {
         vm.expectRevert("UseBaseAmount");
-        PRICE_PROVIDER.quoteView(1e6, address(tokens["USDC"]));
+        PRICE_PROVIDER.quote(1e6, address(tokens["USDC"]));
     }
 
     /*
@@ -62,7 +62,7 @@ contract UniswapV3OracleTest is UniswapPools {
     */
     function test_UniswapV3Oracle_invalidBaseToken() public {
         vm.expectRevert(bytes("Zero"));
-        PRICE_PROVIDER.quoteView(1e6, address(tokens["CRV"]));
+        PRICE_PROVIDER.quote(1e6, address(tokens["CRV"]));
     }
 
     /*
@@ -89,7 +89,7 @@ contract UniswapV3OracleTest is UniswapPools {
         secondAgos[0] = 12;
         vm.expectCall(0x4532aC4F53871697CbFaE2d86517823c1E68B016, abi.encodeWithSignature("observe(uint32[])", secondAgos));
 
-        oracle.quoteView(1e10, address(tokens["SP500"]));
+        oracle.quote(1e10, address(tokens["SP500"]));
     }
 
     /*
@@ -106,10 +106,10 @@ contract UniswapV3OracleTest is UniswapPools {
     */
     function test_UniswapV3Oracle_price_gas() public {
         uint256 gasStart = gasleft();
-        uint256 priceView = PRICE_PROVIDER.quoteView(1e18, address(tokens["WETH"]));
+        uint256 priceView = PRICE_PROVIDER.quote(1e18, address(tokens["WETH"]));
         uint256 gasSpend = gasStart - gasleft();
         emit log_named_uint("gasSpend", gasSpend);
-        assertEq(gasSpend, 80957, "expect optimised gas #1");
+        assertEq(gasSpend, 80870, "expect optimised gas #1");
 
         assertEq(priceView, 1641_609559, "expect ETH price in USDC");
 
@@ -128,11 +128,11 @@ contract UniswapV3OracleTest is UniswapPools {
         UniswapV3Oracle oracle = factory.create(config);
 
         gasStart = gasleft();
-        priceView = oracle.quoteView(1e18, address(tokens["WETH"]));
+        priceView = oracle.quote(1e18, address(tokens["WETH"]));
         gasSpend = gasStart - gasleft();
         emit log_named_uint("at block", otherBlock);
         emit log_named_uint("gasSpend", gasSpend);
-        assertEq(gasSpend, 47939, "expect optimised gas #1");
+        assertEq(gasSpend, 47852, "expect optimised gas #1");
 
         assertEq(priceView, 1657_278376, "expect ETH price in USDC");
     }
