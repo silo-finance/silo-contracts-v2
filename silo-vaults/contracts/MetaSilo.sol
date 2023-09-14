@@ -16,14 +16,15 @@ import {SafeCastLib} from "solmate/utils/SafeCastLib.sol";
 import {FixedPointMathLib} from "solmate/utils/FixedPointMathLib.sol";
 
 import {ISilo} from "../../silo-core/contracts/Silo.sol";
+import {IBalancerMinter} from "../../ve-silo/contracts/silo-tokens-minter/BalancerMinter.sol";
 
 struct RewardInfo {
-  /// @notice scalar for the rewardToken
-  uint64 ONE;
-  /// @notice The vault's last updated index
-  uint224 index;
-  /// @notice Exists or not
-  bool exists; 
+    /// @notice scalar for the rewardToken
+    uint64 ONE;
+    /// @notice The vault's last updated index
+    uint224 index;
+    /// @notice Exists or not
+    bool exists;
 }
 
 /**
@@ -44,6 +45,8 @@ contract MetaSilo is ERC4626Upgradeable, Ownable {
     string private _symbol;
     uint8 private _decimals;
 
+    IBalancerMinter public balancerMinter;
+
     /**
      * @notice Initialize a new MetaSilo contract.
      * @param _asset The native asset to be deposited.
@@ -51,14 +54,20 @@ contract MetaSilo is ERC4626Upgradeable, Ownable {
      * @param _symbolParam Symbol of the contract.
      * @param _owner Owner of the contract.
      */
-    function initialize(IERC20 _asset, string calldata _nameParam, string calldata _symbolParam, address _owner) external initializer {
+    function initialize(
+        IERC20 _asset,
+        string calldata _nameParam,
+        string calldata _symbolParam,
+        address _owner,
+        IBalancerMinter balancerMinter
+    ) external initializer {
         __ERC4626_init(IERC20Metadata(address(_asset)));
         __Owned_init(_owner);
 
         _name = _nameParam;
         _symbol = _symbolParam;
         _decimals = IERC20Metadata(address(_asset)).decimals();
-
+        balancerMinter = balancerMinter;
     }
 
     function name() public view override(ERC20Upgradeable, IERC20Metadata) returns (string memory) {
@@ -100,7 +109,6 @@ contract MetaSilo is ERC4626Upgradeable, Ownable {
     error ZeroAddressTransfer(address from, address to);
     error InsufficentBalance();
 
-
     /// @notice This function returns the amount of shares that would be exchanged by the vault for the amount of assets provided.
     function _convertToShares(uint256 assets, Math.Rounding) internal pure override returns (uint256) {
         uint256 supply = totalSupply();
@@ -129,7 +137,7 @@ contract MetaSilo is ERC4626Upgradeable, Ownable {
     }
 
     /// @notice Internal withdraw function used by `withdraw()` and `redeem()`. Accrues rewards for the `caller` and `receiver`.
-    function _withdraw(address caller, address receiver, address owner, uint256 assets, uint256 shares)
+    function _withdraw(address caller, address receiver, address owner, uint256 assets, uint256 shares, bool harvest)
         internal
         override
         accrueRewards(owner, receiver)
@@ -137,10 +145,12 @@ contract MetaSilo is ERC4626Upgradeable, Ownable {
         if (caller != owner) {
             _approve(owner, msg.sender, allowance(owner, msg.sender) - shares);
         }
-
+        //harvest prior the withdraw
+        if (harvest) {
+            harvest();
+        }
         // @todo: logic to withdraw from silo
         // decide if we want to rebalance on withdrawal
-
         _burn(owner, shares);
         IERC20(asset()).safeTransfer(receiver, assets);
 
@@ -216,11 +226,8 @@ contract MetaSilo is ERC4626Upgradeable, Ownable {
     function addRewardToken(address tokenAddress) external onlyOwner {
         IERC20 rewardToken = IERC20(tokenAddress);
         require(!rewardInfos[rewardToken].exists, "REWARD_TOKEN_ALREADY_ADDED");
-        
-        rewardInfos[rewardToken] = RewardInfo({
-            decimals: uint8(rewardToken.decimals()),
-            exists: true
-        });
+
+        rewardInfos[rewardToken] = RewardInfo({decimals: uint8(rewardToken.decimals()), exists: true});
         rewardTokens.push(rewardToken);
     }
 
@@ -251,11 +258,8 @@ contract MetaSilo is ERC4626Upgradeable, Ownable {
     function _accrueRewards(IERC20 _rewardToken, uint256 accrued) internal {
         uint256 supplyTokens = totalSupply();
         if (supplyTokens != 0) {
-            uint224 deltaIndex = accrued.mulDiv(
-                uint256(10 ** decimals()),
-                supplyTokens,
-                Math.Rounding.Down
-            ).safeCastTo224();
+            uint224 deltaIndex =
+                accrued.mulDiv(uint256(10 ** decimals()), supplyTokens, Math.Rounding.Down).safeCastTo224();
 
             rewardInfos[_rewardToken].index += deltaIndex;
         }
@@ -277,7 +281,7 @@ contract MetaSilo is ERC4626Upgradeable, Ownable {
         userIndex[_user][_rewardToken] = rewards.index;
         accruedRewards[_user][_rewardToken] += supplierDelta;
     }
-    
+
     /*//////////////////////////////////////////////////////////////
                       SILO FUNCTIONS
     //////////////////////////////////////////////////////////////*/
@@ -293,16 +297,18 @@ contract MetaSilo is ERC4626Upgradeable, Ownable {
      * @param _silo address of the silo to be deposited to
      * @param _amount amount of asset to be deposited
      */
-    function _depositToSilo(address _silo, uint256 _amount) internal {
+    function _depositToSilo(address _silo, address gauge, uint256 _amount) internal {
         require(silos[_silo], "SILO_NOT_FOUND");
         ISilo(_silo).deposit(_amount, address(this));
+        //Stake to gauge
+        balancerMinter.mintFor(gauge, address(this));
     }
 
     /**
      * @notice Withdraws to a given silo
      * @param _silo address of the silo to be withdrawn from
      * @param _amount amount of asset to be withdrawn
-     */ 
+     */
     function _withdrawFromSilo(address _silo, uint256 _amount) internal {
         require(silos[_silo], "SILO_NOT_FOUND");
         ISilo(_silo).deposit(_amount, address(this), address(this));
@@ -310,7 +316,7 @@ contract MetaSilo is ERC4626Upgradeable, Ownable {
 
     function _claimRewardsFromSilos() internal {
         // Claim each reward from platform
-        for (uint i = 0; i < rewardTokens.length; i++) {
+        for (uint256 i = 0; i < rewardTokens.length; i++) {
             IERC20 reward = rewardTokens[i];
             // @todo: claim rewards from each silo
             // Cache RewardInfo
@@ -324,7 +330,7 @@ contract MetaSilo is ERC4626Upgradeable, Ownable {
     /**
      * @notice Allows owners to add a silo
      * @param _silo address of the silo to be added
-     */ 
+     */
     function addSilo(address _silo) public onlyOwner {
         require(_silo != address(0), "ZERO_ADDRESS");
         require(!silos[_silo], "SILO_EXISTS");
@@ -335,8 +341,8 @@ contract MetaSilo is ERC4626Upgradeable, Ownable {
     /**
      * @notice Allows owners to remove a silo
      * @dev Allocation to Silo will be withdrawn before removing Silo
-     * @param _silo address of the silo to be removed   
-     */ 
+     * @param _silo address of the silo to be removed
+     */
     function removeSilo(address _silo) public onlyOwner {
         require(silos[_silo], "SILO_NOT_FOUND");
         // @todo: logic to withdraw all assets from this silo
@@ -356,16 +362,16 @@ contract MetaSilo is ERC4626Upgradeable, Ownable {
     /**
      * @notice harvest logic for Meta Silo
      * @notice harvests rewards from all silos and rebalance allocation
-     */ 
+     */
 
-    function harvest() external {
+    function harvest() public {
         claimRewardsFromSilos();
     }
 
     function rebalance() internal {
         // @todo: rebalance logic
         // what's the amount to allocate optimally?
-        // 
+        //
     }
 
     function nav() external view returns (uint256) {
@@ -375,7 +381,7 @@ contract MetaSilo is ERC4626Upgradeable, Ownable {
     /**
      * @notice Function to retreive the net asset value of the Meta Silo
      * @notice This excludes non-native token rewards, that are accrued separately in accruedRewards
-     */ 
+     */
     function _nav() internal returns (uint256) {
         uint256 totalFromSilos = 0;
 
@@ -387,5 +393,4 @@ contract MetaSilo is ERC4626Upgradeable, Ownable {
 
         return asset.balanceOf(address(this)) + totalFromSilos;
     }
-
 }
