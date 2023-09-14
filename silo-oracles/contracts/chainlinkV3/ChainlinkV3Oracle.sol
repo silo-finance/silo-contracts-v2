@@ -21,7 +21,7 @@ contract ChainlinkV3Oracle is IChainlinkV3Oracle, ISiloOracle, Initializable {
     }
 
     /// @inheritdoc ISiloOracle
-    function quote(uint256 _baseAmount, address _baseToken) external virtual returns (uint256 quoteAmount) {
+    function quote(uint256 _baseAmount, address _baseToken) external view virtual returns (uint256 quoteAmount) {
         return _quote(_baseAmount, _baseToken);
     }
 
@@ -34,14 +34,13 @@ contract ChainlinkV3Oracle is IChainlinkV3Oracle, ISiloOracle, Initializable {
     }
 
     /// @inheritdoc ISiloOracle
-    function quoteView(uint256 _baseAmount, address _baseToken) external view virtual returns (uint256 quoteAmount) {
-        return _quote(_baseAmount, _baseToken);
-    }
-
-    /// @inheritdoc ISiloOracle
     function quoteToken() external view virtual returns (address) {
         IChainlinkV3Oracle.ChainlinkV3Config memory config = oracleConfig.getConfig();
         return address(config.quoteToken);
+    }
+
+    function beforeQuote(uint256, address) external pure virtual override {
+        // nothing to execute
     }
 
     function _quote(uint256 _baseAmount, address _baseToken) internal view virtual returns (uint256 quoteAmount) {

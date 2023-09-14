@@ -84,13 +84,7 @@ contract UniswapV3Oracle is ISiloOracle, IUniswapV3Oracle, Initializable {
     /// - now with both _tickCumulative_s we calculating TWAP
     ///
     /// recommended observations are = 30 min / blockTime
-    function quote(uint256 _baseAmount, address _baseToken) external virtual override returns (uint256 quoteAmount) {
-        quoteAmount = _quoteInternal(_baseAmount, _baseToken);
-    }
-
-    /// @inheritdoc ISiloOracle
-    /// @notice please check `_calculatePeriodAndTicks` for buffer comments
-    function quoteView(uint256 _baseAmount, address _baseToken)
+    function quote(uint256 _baseAmount, address _baseToken)
         external
         view
         virtual
@@ -111,6 +105,10 @@ contract UniswapV3Oracle is ISiloOracle, IUniswapV3Oracle, Initializable {
 
         oldestTimestamps
             = resolveOldestObservationTimestamp(config.pool, observationIndex, currentObservationCardinality);
+    }
+
+    function beforeQuote(uint256, address) external pure virtual override {
+        // nothing to execute
     }
 
     /// @param _pool uniswap V3 pool address

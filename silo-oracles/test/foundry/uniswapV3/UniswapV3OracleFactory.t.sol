@@ -188,7 +188,7 @@ contract UniswapV3OracleFactoryTest is UniswapPools {
             120
         ));
 
-        assertEq(oracle.quoteView(3710e18, address(tokens["CRV"])), 1015110362648407264, "expect 3700@$.46 CRV => 1ETH");
+        assertEq(oracle.quote(3710e18, address(tokens["CRV"])), 1015110362648407264, "expect 3700@$.46 CRV => 1ETH");
     }
 
     /*
@@ -207,7 +207,7 @@ contract UniswapV3OracleFactoryTest is UniswapPools {
         uint256 gasEnd = gasleft();
 
         emit log_named_uint("gas", gasStart - gasEnd);
-        assertEq(gasStart - gasEnd, 260004, "optimise gas");
+        assertEq(gasStart - gasEnd, 260025, "optimise gas");
 
         UniswapV3Oracle oracle2 =  UNISWAPV3_ORACLE_FACTORY.create(cfg);
 
@@ -228,7 +228,7 @@ contract UniswapV3OracleFactoryTest is UniswapPools {
             120
         ));
 
-        assertEq(oracle.quoteView(3710e18, address(tokens["CRV"])), 1015110362648407264, "expect 3700@$.46 CRV => 1ETH");
+        assertEq(oracle.quote(3710e18, address(tokens["CRV"])), 1015110362648407264, "expect 3700@$.46 CRV => 1ETH");
     }
 
     /*

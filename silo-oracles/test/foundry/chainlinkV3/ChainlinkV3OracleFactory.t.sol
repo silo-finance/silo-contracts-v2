@@ -32,51 +32,51 @@ contract ChainlinkV3OracleFactoryTest is ChainlinkV3Configs {
     }
 
     /*
-        FOUNDRY_PROFILE=oracles forge test -vvv --mt test_ChainlinkV3OracleFactory_quoteView_DYDXinUSDT
+        FOUNDRY_PROFILE=oracles forge test -vvv --mt test_ChainlinkV3OracleFactory_quote_DYDXinUSDT
     */
-    function test_ChainlinkV3OracleFactory_quoteView_DYDXinUSDT() public {
+    function test_ChainlinkV3OracleFactory_quote_DYDXinUSDT() public {
         ChainlinkV3Oracle oracle = ORACLE_FACTORY.create(_dydxChainlinkV3Config());
 
-        uint256 price = oracle.quoteView(1e18, address(tokens["DYDX"]));
+        uint256 price = oracle.quote(1e18, address(tokens["DYDX"]));
         emit log_named_decimal_uint("DYDX/USD", price, 6);
 
         assertEq(price, 2_128486, "DYDX/USD price is ~$2.14");
     }
 
     /*
-        FOUNDRY_PROFILE=oracles forge test -vvv --mt test_ChainlinkV3OracleFactory_quoteView_SPELLinUSD
+        FOUNDRY_PROFILE=oracles forge test -vvv --mt test_ChainlinkV3OracleFactory_quote_SPELLinUSD
     */
-    function test_ChainlinkV3OracleFactory_quoteView_SPELLinUSD() public {
+    function test_ChainlinkV3OracleFactory_quote_SPELLinUSD() public {
         ChainlinkV3Oracle oracle = ORACLE_FACTORY.create(_spellUsdChainlinkV3Config());
 
         uint256 gasStart = gasleft();
-        uint256 price = oracle.quoteView(1e18, address(tokens["SPELL"]));
+        uint256 price = oracle.quote(1e18, address(tokens["SPELL"]));
         uint256 gasEnd = gasleft();
         emit log_named_uint("gas used", gasStart - gasEnd);
 
         emit log_named_decimal_uint("SPELL/USD", price, 6);
         assertEq(price, 403, ", SPELL/USD price is ~$0.000403");
-        assertEq(gasStart - gasEnd, 15787, "optimise gas");
+        assertEq(gasStart - gasEnd, 15677, "optimise gas");
     }
 
     /*
-        FOUNDRY_PROFILE=oracles forge test -vv --mt test_ChainlinkV3OracleFactory_quoteView_SPELLinETH
+        FOUNDRY_PROFILE=oracles forge test -vv --mt test_ChainlinkV3OracleFactory_quote_SPELLinETH
     */
-    function test_ChainlinkV3OracleFactory_quoteView_SPELLinETH() public {
+    function test_ChainlinkV3OracleFactory_quote_SPELLinETH() public {
         uint256 gasStart = gasleft();
         ChainlinkV3Oracle oracle = ORACLE_FACTORY.create(_spellEthChainlinkV3Config());
         uint256 gasEnd = gasleft();
 
         emit log_named_uint("gas", gasStart - gasEnd);
-        assertEq(gasStart - gasEnd, 315859, "optimise gas for creation");
+        assertEq(gasStart - gasEnd, 315880, "optimise gas for creation");
 
         gasStart = gasleft();
-        uint256 price = oracle.quoteView(1e18, address(tokens["SPELL"]));
+        uint256 price = oracle.quote(1e18, address(tokens["SPELL"]));
         gasEnd = gasleft();
         emit log_named_uint("gas used", gasStart - gasEnd);
 
         emit log_named_decimal_uint("SPELL/ETH", price, 18);
         assertEq(price, 235285547785, ", SPELL/USD price is ~$0.000403 => ETH@1716 => SPELL/ETH ~ 0.000403/1716 => 0.00000023");
-        assertEq(gasStart - gasEnd, 27855, "optimise gas");
+        assertEq(gasStart - gasEnd, 27745, "optimise gas");
     }
 }

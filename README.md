@@ -32,8 +32,6 @@ git submodule add --name foundry https://github.com/foundry-rs/forge-std gitmodu
 git submodule add --name silo-foundry-utils https://github.com/silo-finance/silo-foundry-utils gitmodules/silo-foundry-utils
 forge install OpenZeppelin/openzeppelin-contracts --no-commit 
 forge install OpenZeppelin/openzeppelin-contracts-upgradeable --no-commit
-git submodule add --name gitmodules/uniswap/v2-core https://github.com/Uniswap/v2-core gitmodules/uniswap/v2-core 
-git submodule add --name gitmodules/uniswap/v2-periphery https://github.com/Uniswap/v2-periphery gitmodules/uniswap/v2-periphery 
 git submodule add --name gitmodules/uniswap/v3-periphery https://github.com/Uniswap/v3-periphery gitmodules/uniswap/v3-periphery 
 git submodule add --name gitmodules/chainlink https://github.com/smartcontractkit/chainlink gitmodules/chainlink 
 git submodule add --name lz_gauges https://github.com/LayerZero-Labs/lz_gauges gitmodules/lz_gauges
