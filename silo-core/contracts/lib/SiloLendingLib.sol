@@ -66,7 +66,6 @@ library SiloLendingLib {
                 spender: _spender,
                 assetType: _assetType
             }),
-            ISilo.UseAssets.No,
             _assetStorage
         );
 
@@ -91,7 +90,6 @@ library SiloLendingLib {
         address _receiver,
         address _borrower,
         address _spender,
-        ISilo.UseAssets _useAssets,
         ISilo.AssetStorage storage _assetStorage
     ) internal returns (uint256 assets, uint256 shares) {
         BorrowCache memory cache;
@@ -100,18 +98,18 @@ library SiloLendingLib {
         cache.totalDebtAssets = _assetStorage.debtAssets;
         cache.totalDebtShares = cache.debtShareToken.totalSupply();
 
-        if (_useAssets == ISilo.UseAssets.Yes) {
-            // borrowing assets
-            shares = SiloERC4626Lib.convertToShares(
-                _assets, cache.totalDebtAssets, cache.totalDebtShares, MathUpgradeable.Rounding.Up
-            );
-            assets = _assets;
-        } else {
+        if (_assets == 0) {
             // borrowing shares
             shares = _shares;
             assets = SiloERC4626Lib.convertToAssets(
                 _shares, cache.totalDebtAssets, cache.totalDebtShares, MathUpgradeable.Rounding.Down
             );
+        } else {
+            // borrowing assets
+            shares = SiloERC4626Lib.convertToShares(
+                _assets, cache.totalDebtAssets, cache.totalDebtShares, MathUpgradeable.Rounding.Up
+            );
+            assets = _assets;
         }
 
         if (assets > SiloStdLib.liquidity(_assetStorage)) revert ISilo.NotEnoughLiquidity();
@@ -131,7 +129,6 @@ library SiloLendingLib {
         uint256 _shares,
         address _borrower,
         address _repayer,
-        ISilo.UseAssets _useAssets,
         ISilo.AssetStorage storage _assetStorage
     ) internal returns (uint256 assets, uint256 shares) {
         RepayCache memory cache;
@@ -141,19 +138,18 @@ library SiloLendingLib {
         cache.totalDebtShares = cache.debtShareToken.totalSupply();
         cache.shareDebtBalance = cache.debtShareToken.balanceOf(_borrower);
 
-        if (_useAssets == ISilo.UseAssets.Yes) {
-        // TODO if (_assets != 0) {
-            // repaying assets
-            shares = SiloERC4626Lib.convertToShares(
-                _assets, cache.totalDebtAmount, cache.totalDebtShares, MathUpgradeable.Rounding.Down
-            );
-            assets = _assets;
-        } else {
+        if (_assets == 0) {
             // repaying shares
             shares = _shares;
             assets = SiloERC4626Lib.convertToAssets(
                 _shares, cache.totalDebtAmount, cache.totalDebtShares, MathUpgradeable.Rounding.Up
             );
+        } else {
+            // repaying assets
+            shares = SiloERC4626Lib.convertToShares(
+                _assets, cache.totalDebtAmount, cache.totalDebtShares, MathUpgradeable.Rounding.Down
+            );
+            assets = _assets;
         }
 
         // repay max if shares above balance
@@ -271,8 +267,14 @@ library SiloLendingLib {
         ISiloConfig.ConfigData memory configData = _config.getConfig(address(this));
 
         shares = IShareToken(configData.debtShareToken).balanceOf(_borrower);
+
         assets = SiloERC4626Lib.convertToAssetsOrToShares(
-            _config, shares, ISilo.AssetType.Debt, ISilo.UseAssets.No, MathUpgradeable.Rounding.Up, _assetStorageMap
+            _config,
+            shares,
+            ISilo.AssetType.Debt,
+            SiloERC4626Lib.convertToAssets,
+            MathUpgradeable.Rounding.Up,
+            _assetStorageMap
         );
     }
 }

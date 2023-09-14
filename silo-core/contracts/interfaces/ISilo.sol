@@ -9,14 +9,6 @@ import {ISiloLiquidation} from "./ISiloLiquidation.sol";
 
 // solhint-disable ordering
 interface ISilo is IERC3156FlashLender, ISiloLiquidation {
-    /// @dev Functions like deposit, withdraw, repay and borrow have two versions of themselves, one working with
-    ///      assets and the other with shares. Underlying logic and calculations are the same however the data
-    ///      differs. To avoid copying the code this enum is used to determine if assets or shares should be used.
-    enum UseAssets { // TODO can we remove?
-        No,
-        Yes
-    }
-
     /// @dev Intrest accrual happens on each deposit/withdraw/borrow/repay. View methods work on storage that might be
     ///      outdate. Some calculations require accrued interest to return current state of Silo. This struct is used
     ///      to make a decision inside functions if interest should be accrued in memory to work on updated values.
