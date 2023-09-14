@@ -120,7 +120,9 @@ contract L2BalancerPseudoMinter is BalancerMinter, Ownable2Step {
         tokensToMint = totalMint.sub(minted(user, gauge));
 
         if (tokensToMint > 0) {
+            tokensToMint = _collectFees(gauge, tokensToMint);
             _setMinted(user, gauge, totalMint);
+            _addMintedToUser(user, gauge, tokensToMint);
         }
     }
 
@@ -131,5 +133,9 @@ contract L2BalancerPseudoMinter is BalancerMinter, Ownable2Step {
         if (tokensToMint > 0) {
             getBalancerToken().safeTransfer(user, tokensToMint);
         }
+    }
+
+    function _mint(address user, uint256 tokensToMint) internal override {
+        _pseudoMint(user, tokensToMint);
     }
 }
