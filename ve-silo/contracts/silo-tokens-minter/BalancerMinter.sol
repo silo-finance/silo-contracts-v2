@@ -15,6 +15,8 @@
 pragma solidity 0.8.19;
 
 import {IBalancerMinter, IERC20} from "./interfaces/IBalancerMinter.sol";
+import {ISiloWithFeeDetails as ISilo} from "./interfaces/ISiloWithFeeDetails.sol";
+import {ISiloLiquidityGauge} from "ve-silo/contracts/gauges/interfaces/ISiloLiquidityGauge.sol";
 
 import {ReentrancyGuard} from "openzeppelin-contracts/security/ReentrancyGuard.sol";
 import {SafeMath} from "openzeppelin-contracts/utils/math/SafeMath.sol";
@@ -28,6 +30,7 @@ abstract contract BalancerMinter is IBalancerMinter, ReentrancyGuard, EOASignatu
 
     // user -> gauge -> value
     mapping(address => mapping(address => uint256)) private _minted;
+    mapping(address => mapping(address => uint256)) private _mintedToUser;
     // minter -> user -> can mint?
     mapping(address => mapping(address => bool)) private _allowedMinter;
 
@@ -37,6 +40,14 @@ abstract contract BalancerMinter is IBalancerMinter, ReentrancyGuard, EOASignatu
     );
 
     event MinterApprovalSet(address indexed user, address indexed minter, bool approval);
+
+    event FeeCollected(
+        address indexed gauge,
+        address indexed daoReceiver,
+        address indexed deployerReceiver,
+        uint256 mintedToDao,
+        uint256 mintedToDeployer
+    );
 
     constructor(
         IERC20 token,
@@ -78,6 +89,11 @@ abstract contract BalancerMinter is IBalancerMinter, ReentrancyGuard, EOASignatu
     /// @inheritdoc IBalancerMinter
     function minted(address user, address gauge) public view override returns (uint256) {
         return _minted[user][gauge];
+    }
+
+    /// @inheritdoc IBalancerMinter
+    function mintedToUser(address user, address gauge) public view override returns (uint256) {
+        return _mintedToUser[user][gauge];
     }
 
     /// @inheritdoc IBalancerMinter
@@ -129,7 +145,20 @@ abstract contract BalancerMinter is IBalancerMinter, ReentrancyGuard, EOASignatu
         emit Minted(user, gauge, value);
     }
 
+    function _addMintedToUser(
+        address user,
+        address gauge,
+        uint256 value
+    ) internal {
+        uint256 totalMintedToUser = _mintedToUser[user][gauge] + value;
+        _mintedToUser[user][gauge] = totalMintedToUser;
+
+        emit MintedToUser(user, gauge, totalMintedToUser);
+    }
+
     function _mintFor(address gauge, address user) internal virtual returns (uint256 tokensToMint);
+
+    function _mint(address user, uint256 tokensToMint) internal virtual;
 
     function _mintForMany(address[] calldata gauges, address user) internal virtual returns (uint256 tokensToMint);
 
@@ -162,5 +191,63 @@ abstract contract BalancerMinter is IBalancerMinter, ReentrancyGuard, EOASignatu
     /// @inheritdoc IBalancerMinter
     function toggle_approve_mint(address minter) external override {
         setMinterApproval(minter, !_allowedMinter[minter][msg.sender]);
+    }
+
+    /// @notice Calculates and collects fees for the DAO and for the gauge deployer
+    /// @param gauge Address of the gauge that incentives to be minted for
+    /// @param totalTokensToMint Total tokens to be minted for a user
+    /// @return tokensToMint Amount of tokens to be minted after the fee is deducted
+    function _collectFees(address gauge, uint256 totalTokensToMint) internal returns (uint256 tokensToMint) {
+        if (totalTokensToMint == 0) return 0;
+
+        address silo = ISiloLiquidityGauge(gauge).silo();
+
+        address daoFeeReceiver;
+        address deployerFeeReceiver;
+        uint256 daoFee;
+        uint256 deployerFee;
+
+        (daoFeeReceiver, deployerFeeReceiver, daoFee, deployerFee) = ISilo(silo).getFeesAndFeeReceivers();
+
+        uint256 mintedToDao = _calculateFeeAndMint(daoFeeReceiver, totalTokensToMint, daoFee);
+        uint256 mintedToDeployer = _calculateFeeAndMint(deployerFeeReceiver, totalTokensToMint, deployerFee);
+
+        tokensToMint = totalTokensToMint;
+
+        if (mintedToDao != 0 || mintedToDeployer != 0) {
+            unchecked {
+                // `mintedToDao` + `mintedToDeployer` <= `tokensToMint`
+                tokensToMint -= (mintedToDao + mintedToDeployer);
+            }
+
+            emit FeeCollected(
+                gauge,
+                daoFeeReceiver,
+                deployerFeeReceiver,
+                mintedToDao,
+                mintedToDeployer
+            );
+        }
+    }
+
+    /// @notice Calculate a fee and mint tokens
+    /// @param feeReceiver Fee receiver
+    /// @param totalTokensToMint Total tokens that we will mint for the user
+    /// @param bps Fee percentage in basis points (1e4 == 100%)
+    /// @return fee Collected fee for the `feeReceiver`
+    function _calculateFeeAndMint(
+        address feeReceiver,
+        uint256 totalTokensToMint,
+        uint256 bps
+    )
+        internal returns (uint256 fee)
+    {
+        if (bps == 0 || feeReceiver == address(0)) return 0;
+
+        fee = totalTokensToMint * bps;
+        // Safe math makes no sense. In the worst case, we may end up with `0`
+        unchecked { fee = fee / 1e4; }
+
+        _mint(feeReceiver, fee);
     }
 }
