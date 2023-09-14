@@ -12,7 +12,7 @@ interface ISilo is IERC3156FlashLender, ISiloLiquidation {
     /// @dev Functions like deposit, withdraw, repay and borrow have two versions of themselves, one working with
     ///      assets and the other with shares. Underlying logic and calculations are the same however the data
     ///      differs. To avoid copying the code this enum is used to determine if assets or shares should be used.
-    enum UseAssets {
+    enum UseAssets { // TODO can we remove?
         No,
         Yes
     }
@@ -42,14 +42,6 @@ interface ISilo is IERC3156FlashLender, ISiloLiquidation {
         Protected,
         Collateral,
         Debt
-    }
-
-    /// @dev This enum is used to decide if transfer of underlying token should happen within deposit and withdraw
-    ///      functions. One use case where it's not desired is transition of non-borrowable collateral to borrowable
-    ///      collateral and vice versa.
-    enum TokenTransfer {
-        No,
-        Yes
     }
 
     // TODO: optimized storage to use uint128 and uncheck math

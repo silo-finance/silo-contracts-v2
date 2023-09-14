@@ -115,16 +115,6 @@ library SiloStdLib {
         }
     }
 
-    function findShareToken(ISiloConfig.ConfigData memory _configData, ISilo.AssetType _assetType)
-        internal
-        pure
-        returns (IShareToken shareToken)
-    {
-        if (_assetType == ISilo.AssetType.Protected) shareToken = IShareToken(_configData.protectedShareToken);
-        else if (_assetType == ISilo.AssetType.Collateral) shareToken = IShareToken(_configData.collateralShareToken);
-        else if (_assetType == ISilo.AssetType.Debt) shareToken = IShareToken(_configData.debtShareToken);
-    }
-
     /// @notice Calculates fraction between borrowed and deposited amount of tokens denominated in percentage
     /// @dev It assumes `_dp` = 100%.
     /// @param _dp decimal points used by model
