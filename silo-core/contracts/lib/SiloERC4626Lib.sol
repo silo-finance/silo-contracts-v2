@@ -21,18 +21,23 @@ library SiloERC4626Lib {
         address receiver;
         address owner;
         address spender;
-        ISilo.TokenTransfer doTransfer;
         ISilo.AssetType assetType;
+    }
+
+    struct DepositParams {
+        uint256 assets;
+        uint256 shares;
+        address receiver;
+        ISilo.AssetType assetType;
+        IShareToken collateralShareToken;
     }
 
     struct DepositCache {
         uint256 totalAssets;
-        IShareToken collateralShareToken;
         uint256 totalShares;
     }
 
     struct WithdrawCache {
-        IShareToken shareToken;
         uint256 totalAssets;
         uint256 totalShares;
         uint256 shareBalance;
@@ -40,48 +45,41 @@ library SiloERC4626Lib {
 
     uint256 internal constant _PRECISION_DECIMALS = 1e18;
 
+    /// @param _token if empty, tokens will not be transferred, useful for transition of collateral
     function deposit(
-        ISiloConfig.ConfigData memory _configData,
+        address _token,
         address _depositor,
-        address _receiver,
-        uint256 _assets,
-        uint256 _shares,
-        ISilo.AssetType _assetType,
-        ISilo.UseAssets _useAssets,
-        ISilo.TokenTransfer _doTransfer,
+        DepositParams memory _depositParams,
         ISilo.AssetStorage storage _assetStorage
     ) internal returns (uint256 assets, uint256 shares) {
         DepositCache memory cache;
 
-        if (_assetType == ISilo.AssetType.Protected) {
+        if (_depositParams.assetType == ISilo.AssetType.Protected) {
             cache.totalAssets = _assetStorage.protectedAssets;
-        } else if (_assetType == ISilo.AssetType.Collateral) {
+        } else {
             cache.totalAssets = _assetStorage.collateralAssets;
-        } else {
-            revert ISilo.WrongAssetType();
         }
 
-        cache.collateralShareToken = SiloStdLib.findShareToken(_configData, _assetType);
-        cache.totalShares = cache.collateralShareToken.totalSupply();
+        cache.totalShares = _depositParams.collateralShareToken.totalSupply();
 
-        if (_useAssets == ISilo.UseAssets.Yes) {
-            shares = convertToShares(
-                _assets, cache.totalAssets, cache.collateralShareToken.totalSupply(), MathUpgradeable.Rounding.Down
-            );
-            assets = _assets;
-        } else {
-            shares = _shares;
+        if (_depositParams.assets == 0) {
+            shares = _depositParams.shares;
             assets = convertToAssets(
-                _shares, cache.totalAssets, cache.collateralShareToken.totalSupply(), MathUpgradeable.Rounding.Up
+                _depositParams.shares, cache.totalAssets, cache.totalShares, MathUpgradeable.Rounding.Up
             );
+        } else {
+            shares = convertToShares(
+                _depositParams.assets, cache.totalAssets, cache.totalShares, MathUpgradeable.Rounding.Down
+            );
+            assets = _depositParams.assets;
         }
 
-        if (_doTransfer == ISilo.TokenTransfer.Yes) {
-            // Transfer tokens before minting. No state changes have been made so reentracy does nothing
-            IERC20Upgradeable(_configData.token).safeTransferFrom(_depositor, address(this), assets);
+        if (_token != address(0)) {
+            // Transfer tokens before minting. No state changes have been made so reentrancy does nothing
+            IERC20Upgradeable(_token).safeTransferFrom(_depositor, address(this), assets);
         }
 
-        if (_assetType == ISilo.AssetType.Protected) {
+        if (_depositParams.assetType == ISilo.AssetType.Protected) {
             // `assets` and `totalAssets` can never be more than uint256 because totalSupply cannot be either
             unchecked {
                 _assetStorage.protectedAssets = cache.totalAssets + assets;
@@ -94,16 +92,21 @@ library SiloERC4626Lib {
         }
 
         // Hook receiver is called after `mint` and can reentry but state changes are completed already
-        cache.collateralShareToken.mint(_receiver, _depositor, shares);
+        _depositParams.collateralShareToken.mint(_depositParams.receiver, _depositor, shares);
     }
 
+    /// @param _token token address that we want to withdraw, if empty, withdraw action will be done WITHOUT
+    /// actual token transfer
     function withdraw(
-        ISiloConfig.ConfigData memory _configData,
+        address _token,
+        address _shareToken,
         WithdrawParams memory _params,
         ISilo.UseAssets _useAssets,
         ISilo.AssetStorage storage _assetStorage
     ) internal returns (uint256 assets, uint256 shares) {
-        WithdrawCache memory cache = getWithdrawCache(_configData, _params.owner, _params.assetType, _assetStorage);
+        WithdrawCache memory cache = getWithdrawCache(
+            _shareToken, _params.owner, _params.assetType, _assetStorage
+        );
 
         if (_useAssets == ISilo.UseAssets.Yes) {
             // it's withdraw so assets are user input
@@ -146,16 +149,16 @@ library SiloERC4626Lib {
 
         // `burn` checks if `_spender` is allowed to withdraw `_owner` assets. `burn` calls hook receiver that
         // can potentially reenter but state changes are already completed.
-        cache.shareToken.burn(_params.owner, _params.spender, shares);
+        IShareToken(_shareToken).burn(_params.owner, _params.spender, shares);
 
-        if (_params.doTransfer == ISilo.TokenTransfer.Yes) {
+        if (_token != address(0)) {
             // fee-on-transfer is ignored
-            IERC20Upgradeable(_configData.token).safeTransferFrom(address(this), _params.receiver, assets);
+            IERC20Upgradeable(_token).safeTransferFrom(address(this), _params.receiver, assets);
         }
     }
 
     function getWithdrawCache(
-        ISiloConfig.ConfigData memory _configData,
+        address _shareToken,
         address _owner,
         ISilo.AssetType _assetType,
         ISilo.AssetStorage storage _assetStorage
@@ -168,9 +171,8 @@ library SiloERC4626Lib {
             revert ISilo.WrongAssetType();
         }
 
-        cache.shareToken = SiloStdLib.findShareToken(_configData, _assetType);
-        cache.totalShares = cache.shareToken.totalSupply();
-        cache.shareBalance = cache.shareToken.balanceOf(_owner);
+        cache.totalShares = IShareToken(_shareToken).totalSupply();
+        cache.shareBalance = IShareToken(_shareToken).balanceOf(_owner);
     }
 
     function depositPossible(ISiloConfig.ConfigData memory _configData, address _depositor)
