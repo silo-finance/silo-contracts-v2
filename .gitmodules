@@ -12,12 +12,6 @@
 	path = gitmodules/openzeppelin-contracts-upgradeable
 	url = https://github.com/OpenZeppelin/openzeppelin-contracts-upgradeable
 	branch = v4.9.0
-[submodule "gitmodules/uniswap/v2-core"]
-	path = gitmodules/uniswap/v2-core
-	url = https://github.com/Uniswap/v2-core
-[submodule "gitmodules/uniswap/v2-periphery"]
-	path = gitmodules/uniswap/v2-periphery
-	url = https://github.com/Uniswap/v2-periphery
 [submodule "gitmodules/uniswap/v3-periphery"]
 	path = gitmodules/uniswap/v3-periphery
 	url = https://github.com/Uniswap/v3-periphery
