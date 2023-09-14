@@ -50,35 +50,36 @@ library SiloLendingLib {
         ISilo.AssetType _assetType,
         ISilo.AssetStorage storage _assetStorage
     ) internal returns (uint256 assets, uint256 shares, uint256 toShares) {
-        uint256 zeroAssets = 0;
-        uint256 zeroShares = 0;
+        (ISilo.AssetType depositType, address shareTokenFrom, address shareTokenTo) =
+            _assetType == ISilo.AssetType.Protected
+                ? (ISilo.AssetType.Collateral, _configData.protectedShareToken, _configData.collateralShareToken)
+                : (ISilo.AssetType.Protected, _configData.collateralShareToken, _configData.protectedShareToken);
 
         (assets, shares) = SiloERC4626Lib.withdraw(
-            _configData,
+            address(0), // empty token address because we dont want to do transfer
+            shareTokenFrom,
             SiloERC4626Lib.WithdrawParams({
-                assets: zeroAssets,
+                assets: 0,
                 shares: _shares,
                 receiver: _owner,
                 owner: _owner,
                 spender: _spender,
-                doTransfer: ISilo.TokenTransfer.No,
                 assetType: _assetType
             }),
             ISilo.UseAssets.No,
             _assetStorage
         );
 
-        ISilo.AssetType depositType = ISilo.AssetType((uint256(_assetType) + 1) % 2);
-
         (assets, toShares) = SiloERC4626Lib.deposit(
-            _configData,
+            address(0), // empty token because we don't want to transfer
             _owner,
-            _owner,
-            assets,
-            zeroShares,
-            depositType,
-            ISilo.UseAssets.Yes,
-            ISilo.TokenTransfer.No,
+            SiloERC4626Lib.DepositParams({
+                assets: assets,
+                shares: 0,
+                receiver: _owner,
+                assetType: depositType,
+                collateralShareToken: IShareToken(shareTokenTo)
+            }),
             _assetStorage
         );
     }
