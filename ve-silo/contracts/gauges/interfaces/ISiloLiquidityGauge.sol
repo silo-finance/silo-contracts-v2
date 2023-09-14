@@ -17,6 +17,17 @@ interface ISiloLiquidityGauge {
         returns (bool);
 
     function user_checkpoint(address _addr) external returns (bool);
+    function claimable_tokens(address _user) external returns (uint256);
+
+    function claimable_tokens_with_fees(
+        address _user
+    )
+        external
+        returns (
+            uint256 claimable_tokens,
+            uint256 fee_dao,
+            uint256 fee_deployer
+        );
 
     /// @notice Returns a silo hook receiver
     function hook_receiver() external view returns (address);

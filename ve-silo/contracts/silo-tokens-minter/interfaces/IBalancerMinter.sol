@@ -21,6 +21,7 @@ import {IERC20} from "openzeppelin-contracts/token/ERC20/IERC20.sol";
  */
 interface IBalancerMinter {
     event Minted(address indexed recipient, address gauge, uint256 minted);
+    event MintedToUser(address indexed recipient, address gauge, uint256 minted);
 
     // solhint-disable ordering
 
@@ -61,6 +62,11 @@ interface IBalancerMinter {
      * @notice The total number of tokens minted for `user` from `gauge`
      */
     function minted(address user, address gauge) external view returns (uint256);
+
+    /**
+     * @notice The total number of tokens minted for `user` from `gauge` with deducted fee
+     */
+    function mintedToUser(address user, address gauge) external view returns (uint256);
 
     /**
      * @notice Whether `minter` is approved to mint tokens for `user`

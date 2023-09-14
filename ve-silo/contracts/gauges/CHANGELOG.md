@@ -1,5 +1,7 @@
 ### ethereum/SiloLiquidityGauge.vy
 
+- Implemented `claimable_tokens_with_fees` fn, which returns claimable tokens for a user and also fees gained by a DAO and deployer ([a96d717](https://github.com/silo-finance/silo-contracts-v2/pull/97/commits/a96d7173319a766536acc4874aa9b1670c54f0fa))
+
 - Replaced an ERC-20 Balancer handler with a Silo Hook Receiver. Added integration with the Silo share token ([ccf97d1](https://github.com/silo-finance/silo-contracts-v2/pull/94/commits/ccf97d1d8434ac54c169e954094a3d4537ed5b3d))
 
 - As in the current implementation, we have an external ERC-20 Balancer handler. We added a function that can recalculate gauge math each time the balance updated ([3ab9b90](https://github.com/silo-finance/silo-contracts-v2/pull/34/commits/3ab9b90750287ce4c36d0329408a6bd9d39882d9))
@@ -33,6 +35,8 @@
 - Copy of Balancer's implementation of the LiquidityGaugeFactory.sol ([c2bc3d5](https://github.com/silo-finance/silo-contracts-v2/pull/34/commits/c2bc3d539244abee8e2cd9b13e70b931eb251735))
 
 ### l2-common/ChildChainGauge.vy
+
+- Implemented `claimable_tokens_with_fees` fn, which returns claimable tokens for a user and also fees gained by a DAO and deployer ([5611fe5](https://github.com/silo-finance/silo-contracts-v2/pull/97/commits/5611fe5eb81553e6a47db71638a601346fad065e))
 
 - Replaced an ERC-20 Balancer handler with a Silo Hook Receiver. Added integration with the Silo share token ([53ee1fe](https://github.com/silo-finance/silo-contracts-v2/pull/94/commits/53ee1febf52e92b80fe81e03cd1ee675ed88e955))
 
