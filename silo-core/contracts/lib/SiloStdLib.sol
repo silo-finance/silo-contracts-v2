@@ -115,41 +115,6 @@ library SiloStdLib {
         amount = _amount + accruedInterest;
     }
 
-    /// @notice Returns collateral assets with added interest since last accrue
-    /// @dev This function is usefull for view functions that do not accrue interest before doing calculations. To work
-    ///      on updated numbers, interest should be added on the fly.
-    /// @param _collateralAssets currently saved in the storage
-    /// @param _debtAssets currently saved in the storage
-    /// @param _rcomp compounded interest rate returned by interest rate model at block.timestamp
-    /// @param _daoFeeInBp dao fee defined for asset
-    /// @param _deployerFeeInBp deployer fee defined for asset
-    /// @return assetsWithInterest collateral assets with interest
-    function collateralAssetsWithInterest(
-        uint256 _collateralAssets,
-        uint256 _debtAssets,
-        uint256 _rcomp,
-        uint256 _daoFeeInBp,
-        uint256 _deployerFeeInBp
-    ) internal pure returns (uint256 assetsWithInterest) {
-        uint256 accruedInterest = _debtAssets * _rcomp / _PRECISION_DECIMALS;
-        accruedInterest -= accruedInterest * (_daoFeeInBp + _deployerFeeInBp) / _BASIS_POINTS;
-        assetsWithInterest = _collateralAssets + accruedInterest;
-    }
-
-    /// @notice Returns debt assets with added interest since last accrue
-    /// @dev This function is usefull for view functions that do not accrue interest before doing calculations. To work
-    ///      on updated numbers, interest should be added on the fly.
-    /// @param _debtAssets currently saved in the storage
-    /// @param _rcomp compounded interest rate returned by interest rate model at block.timestamp
-    /// @return assetsWithInterest debt assets with interest
-    function debtAssetsWithInterest(uint256 _debtAssets, uint256 _rcomp)
-        internal
-        pure
-        returns (uint256 assetsWithInterest)
-    {
-        assetsWithInterest = _debtAssets + _debtAssets * _rcomp / _PRECISION_DECIMALS;
-    }
-
     /// @notice Returns available liquidity to be borrowed
     /// @dev Accrued interest is entirely added to `debtAssets` but only part of it is added to `collateralAssets`. The
     ///      difference is DAO's and deployer's cut. That means DAO's and deployer's cut is not considered a borrowable
@@ -191,6 +156,41 @@ library SiloStdLib {
             totalAssets = _assetStorage.protectedAssets;
             totalShares = IShareToken(_configData.protectedShareToken).totalSupply();
         }
+    }
+
+    /// @notice Returns collateral assets with added interest since last accrue
+    /// @dev This function is usefull for view functions that do not accrue interest before doing calculations. To work
+    ///      on updated numbers, interest should be added on the fly.
+    /// @param _collateralAssets currently saved in the storage
+    /// @param _debtAssets currently saved in the storage
+    /// @param _rcomp compounded interest rate returned by interest rate model at block.timestamp
+    /// @param _daoFeeInBp dao fee defined for asset
+    /// @param _deployerFeeInBp deployer fee defined for asset
+    /// @return assetsWithInterest collateral assets with interest
+    function collateralAssetsWithInterest(
+        uint256 _collateralAssets,
+        uint256 _debtAssets,
+        uint256 _rcomp,
+        uint256 _daoFeeInBp,
+        uint256 _deployerFeeInBp
+    ) internal pure returns (uint256 assetsWithInterest) {
+        uint256 accruedInterest = _debtAssets * _rcomp / _PRECISION_DECIMALS;
+        accruedInterest -= accruedInterest * (_daoFeeInBp + _deployerFeeInBp) / _BASIS_POINTS;
+        assetsWithInterest = _collateralAssets + accruedInterest;
+    }
+
+    /// @notice Returns debt assets with added interest since last accrue
+    /// @dev This function is usefull for view functions that do not accrue interest before doing calculations. To work
+    ///      on updated numbers, interest should be added on the fly.
+    /// @param _debtAssets currently saved in the storage
+    /// @param _rcomp compounded interest rate returned by interest rate model at block.timestamp
+    /// @return assetsWithInterest debt assets with interest
+    function debtAssetsWithInterest(uint256 _debtAssets, uint256 _rcomp)
+        internal
+        pure
+        returns (uint256 assetsWithInterest)
+    {
+        assetsWithInterest = _debtAssets + _debtAssets * _rcomp / _PRECISION_DECIMALS;
     }
 
     /// @notice Calculates fraction between borrowed and deposited amount of tokens denominated in percentage
