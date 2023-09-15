@@ -12,7 +12,8 @@ contract MockSilo {
 
 // forge test -vv --mc SiloStdLibTest
 contract SiloStdLibTest is Test {
-    ISilo.AssetStorage public assetStorage;
+    ISilo.SiloData public siloData;
+    ISilo.Assets public assets;
 
     address public config = address(10001);
     address public asset = address(10002);
@@ -164,13 +165,10 @@ contract SiloStdLibTest is Test {
     // }
 
     function test_liquidity(uint256 _collateralAssets, uint256 _debtAssets) public {
-        assetStorage.collateralAssets = _collateralAssets;
-        assetStorage.debtAssets = _debtAssets;
-
         if (_debtAssets > _collateralAssets) {
-            assertEq(SiloStdLib.liquidity(assetStorage), 0);
+            assertEq(SiloStdLib.liquidity(_collateralAssets, _debtAssets), 0);
         } else {
-            assertEq(SiloStdLib.liquidity(assetStorage), _collateralAssets - _debtAssets);
+            assertEq(SiloStdLib.liquidity(_collateralAssets, _debtAssets), _collateralAssets - _debtAssets);
         }
     }
 

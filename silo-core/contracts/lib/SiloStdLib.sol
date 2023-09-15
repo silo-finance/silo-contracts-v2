@@ -19,7 +19,7 @@ library SiloStdLib {
     function withdrawFees(
         ISiloConfig _config,
         ISiloFactory _factory,
-        mapping(address => ISilo.AssetStorage) storage _assetStorageMap
+        ISilo.SiloData storage _siloData
     ) internal {
         (
             address daoFeeReceiver,
@@ -29,11 +29,11 @@ library SiloStdLib {
             address asset
         ) = getFeesAndFeeReceiversWithAsset(_config, _factory);
 
-        uint256 earnedFees = _assetStorageMap[asset].daoAndDeployerFees;
+        uint256 earnedFees = _siloData.daoAndDeployerFees;
         uint256 balanceOf = IERC20Upgradeable(asset).balanceOf(address(this));
         if (earnedFees > balanceOf) earnedFees = balanceOf;
 
-        _assetStorageMap[asset].daoAndDeployerFees -= earnedFees;
+        _siloData.daoAndDeployerFees -= earnedFees;
 
         if (daoFeeReceiver == address(0) && deployerFeeReceiver == address(0)) {
             // just in case, should never happen...
@@ -111,7 +111,7 @@ library SiloStdLib {
         uint256 accruedInterest = _amount * rcomp / _PRECISION_DECIMALS;
         // accruedInterest -= accruedInterest * (_daoFeeInBp + _deployerFeeInBp) / _BASIS_POINTS;
 
-        // deployer and dao fee can be ignored because interest is fully added to AssetStorage anyway
+        // deployer and dao fee can be ignored because interest is fully added to SiloData anyway
         amount = _amount + accruedInterest;
     }
 
@@ -119,42 +119,38 @@ library SiloStdLib {
     /// @dev Accrued interest is entirely added to `debtAssets` but only part of it is added to `collateralAssets`. The
     ///      difference is DAO's and deployer's cut. That means DAO's and deployer's cut is not considered a borrowable
     ///      liquidity.
-    function liquidity(ISilo.AssetStorage storage _assetStorage) internal view returns (uint256 liquidAssets) {
-        uint256 collateralAssets = _assetStorage.collateralAssets;
-        uint256 debtAssets = _assetStorage.debtAssets;
-
-        if (debtAssets > collateralAssets) return 0;
-
+    function liquidity(uint256 _collateralAssets, uint256 _debtAssets)
+        internal
+        view
+        returns (uint256 liquidAssets)
+    {
         unchecked {
-            // we just checked the overflow above
-            liquidAssets = _assetStorage.collateralAssets - _assetStorage.debtAssets;
+            // we checked the underflow
+            liquidAssets = _debtAssets > _collateralAssets ?  0 : _collateralAssets - _debtAssets;
         }
     }
 
     /// @notice Returns totalAssets and totalShares for conversion math (convertToAssets and convertToShares)
-    /// @dev This is usefull for view functions that do not accrue interest before doing calculations. To work on
+    /// @dev This is useful for view functions that do not accrue interest before doing calculations. To work on
     ///      updated numbers, interest should be added on the fly.
     /// @param _configData for a single token for which to do calculations
     /// @param _assetType used to read proper storage data
-    /// @param _assetStorage storage data for asset
+    /// @param _totalAssets amount of asset
     /// @return totalAssets share token used for given asset type
     /// @return totalShares share token used for given asset type
     function getTotalAssetsAndTotalShares(
         ISiloConfig.ConfigData memory _configData,
         ISilo.AssetType _assetType,
-        ISilo.AssetStorage storage _assetStorage
+        uint256 _totalAssets
     ) internal view returns (uint256 totalAssets, uint256 totalShares) {
-        if (_assetType == ISilo.AssetType.Collateral) {
-            totalAssets =
-                amountWithInterest(_configData.token, _assetStorage.collateralAssets, _configData.interestRateModel);
-            totalShares = IShareToken(_configData.collateralShareToken).totalSupply();
-        } else if (_assetType == ISilo.AssetType.Debt) {
-            totalAssets =
-                amountWithInterest(_configData.token, _assetStorage.debtAssets, _configData.interestRateModel);
-            totalShares = IShareToken(_configData.debtShareToken).totalSupply();
-        } else if (_assetType == ISilo.AssetType.Protected) {
-            totalAssets = _assetStorage.protectedAssets;
+        if (_assetType == ISilo.AssetType.Protected) {
+            totalAssets = _totalAssets;
             totalShares = IShareToken(_configData.protectedShareToken).totalSupply();
+        } else {
+            // TODO interest calculation for debt and collateral must be separated methods
+            // TODO BUG!
+            totalAssets = amountWithInterest(_configData.token, _totalAssets, _configData.interestRateModel);
+            totalShares = IShareToken(_configData.collateralShareToken).totalSupply();
         }
     }
 
