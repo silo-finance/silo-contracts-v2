@@ -100,19 +100,54 @@ library SiloStdLib {
     ///  _daoFeeInBp dao's fee, set to 0 for Debt calculations, set to correct value for Collateral
     ///  _deployerFeeInBp deployer's fee, set to 0 for Debt calculations, set to correct value for Collateral
     /// @return amount with interest
-    function amountWithInterest(
-        address _asset,
-        uint256 _amount,
-        address _model
+    function amountWithInterest(address _asset, uint256 _amount, address _model)
         // uint256 _daoFeeInBp,
         // uint256 _deployerFeeInBp
-    ) internal view returns (uint256 amount) {
+        internal
+        view
+        returns (uint256 amount)
+    {
         uint256 rcomp = IInterestRateModel(_model).getCompoundInterestRate(address(this), _asset, block.timestamp);
         uint256 accruedInterest = _amount * rcomp / _PRECISION_DECIMALS;
         // accruedInterest -= accruedInterest * (_daoFeeInBp + _deployerFeeInBp) / _BASIS_POINTS;
 
         // deployer and dao fee can be ignored because interest is fully added to AssetStorage anyway
         amount = _amount + accruedInterest;
+    }
+
+    /// @notice Returns collateral assets with added interest since last accrue
+    /// @dev This function is usefull for view functions that do not accrue interest before doing calculations. To work
+    ///      on updated numbers, interest should be added on the fly.
+    /// @param _collateralAssets currently saved in the storage
+    /// @param _debtAssets currently saved in the storage
+    /// @param _rcomp compounded interest rate returned by interest rate model at block.timestamp
+    /// @param _daoFeeInBp dao fee defined for asset
+    /// @param _deployerFeeInBp deployer fee defined for asset
+    /// @return assetsWithInterest collateral assets with interest
+    function collateralAssetsWithInterest(
+        uint256 _collateralAssets,
+        uint256 _debtAssets,
+        uint256 _rcomp,
+        uint256 _daoFeeInBp,
+        uint256 _deployerFeeInBp
+    ) internal pure returns (uint256 assetsWithInterest) {
+        uint256 accruedInterest = _debtAssets * _rcomp / _PRECISION_DECIMALS;
+        accruedInterest -= accruedInterest * (_daoFeeInBp + _deployerFeeInBp) / _BASIS_POINTS;
+        assetsWithInterest = _collateralAssets + accruedInterest;
+    }
+
+    /// @notice Returns debt assets with added interest since last accrue
+    /// @dev This function is usefull for view functions that do not accrue interest before doing calculations. To work
+    ///      on updated numbers, interest should be added on the fly.
+    /// @param _debtAssets currently saved in the storage
+    /// @param _rcomp compounded interest rate returned by interest rate model at block.timestamp
+    /// @return assetsWithInterest debt assets with interest
+    function debtAssetsWithInterest(uint256 _debtAssets, uint256 _rcomp)
+        internal
+        pure
+        returns (uint256 assetsWithInterest)
+    {
+        assetsWithInterest = _debtAssets + _debtAssets * _rcomp / _PRECISION_DECIMALS;
     }
 
     /// @notice Returns available liquidity to be borrowed
@@ -145,14 +180,12 @@ library SiloStdLib {
         ISilo.AssetStorage storage _assetStorage
     ) internal view returns (uint256 totalAssets, uint256 totalShares) {
         if (_assetType == ISilo.AssetType.Collateral) {
-            totalAssets = amountWithInterest(
-                _configData.token, _assetStorage.collateralAssets, _configData.interestRateModel
-            );
+            totalAssets =
+                amountWithInterest(_configData.token, _assetStorage.collateralAssets, _configData.interestRateModel);
             totalShares = IShareToken(_configData.collateralShareToken).totalSupply();
         } else if (_assetType == ISilo.AssetType.Debt) {
-            totalAssets = amountWithInterest(
-                _configData.token, _assetStorage.debtAssets, _configData.interestRateModel
-            );
+            totalAssets =
+                amountWithInterest(_configData.token, _assetStorage.debtAssets, _configData.interestRateModel);
             totalShares = IShareToken(_configData.debtShareToken).totalSupply();
         } else if (_assetType == ISilo.AssetType.Protected) {
             totalAssets = _assetStorage.protectedAssets;
