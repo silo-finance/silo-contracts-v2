@@ -92,7 +92,7 @@ contract InterestRateModelV2RcompTest is RcompTestData, InterestRateModelConfigs
             INTEREST_RATE_MODEL.connect(asset, address(configAddress));
 
             INTEREST_RATE_MODEL.mockSetup(silo, asset, testCase.input.integratorState, testCase.input.Tcrit);
-            vm.mockCall(silo, abi.encodeWithSelector(ISilo.utilizationData.selector, asset), abi.encode(utilizationData));
+            vm.mockCall(silo, abi.encodeWithSelector(ISilo.utilizationData.selector), abi.encode(utilizationData));
             uint256 compoundInterestRate = INTEREST_RATE_MODEL.getCompoundInterestRate(silo, asset, testCase.input.currentTime);
             assertEq(compoundInterestRate, rcomp, "getCompoundInterestRate()");
         }
@@ -134,7 +134,7 @@ contract InterestRateModelV2RcompTest is RcompTestData, InterestRateModelConfigs
 
             INTEREST_RATE_MODEL.mockSetup(silo, asset, testCase.input.integratorState, testCase.input.Tcrit);
 
-            vm.mockCall(silo, abi.encodeWithSelector(ISilo.utilizationData.selector, asset), abi.encode(utilizationData));
+            vm.mockCall(silo, abi.encodeWithSelector(ISilo.utilizationData.selector), abi.encode(utilizationData));
 
             vm.prank(silo);
             INTEREST_RATE_MODEL.getCompoundInterestRateAndUpdate(asset, testCase.input.currentTime);

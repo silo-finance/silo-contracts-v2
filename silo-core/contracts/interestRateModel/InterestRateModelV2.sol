@@ -96,7 +96,7 @@ contract InterestRateModelV2 is IInterestRateModel {
         // assume that caller is Silo
         address silo = msg.sender;
 
-        ISilo.UtilizationData memory data = ISilo(silo).utilizationData(_asset);
+        ISilo.UtilizationData memory data = ISilo(silo).utilizationData();
 
         // TODO when depositing, we doing two calls for `calculateCompoundInterestRate`, maybe we can optimize?
         Setup storage currentSetup = getSetup[silo][_asset];
@@ -116,7 +116,7 @@ contract InterestRateModelV2 is IInterestRateModel {
         address _asset,
         uint256 _blockTimestamp
     ) external view virtual override returns (uint256 rcomp) {
-        ISilo.UtilizationData memory data = ISilo(_silo).utilizationData(_asset);
+        ISilo.UtilizationData memory data = ISilo(_silo).utilizationData();
 
         (rcomp,,) = calculateCompoundInterestRate(
             getConfig(_silo, _asset),
@@ -133,7 +133,7 @@ contract InterestRateModelV2 is IInterestRateModel {
         address _asset,
         uint256 _blockTimestamp
     ) external view virtual override returns (bool overflow) {
-        ISilo.UtilizationData memory data = ISilo(_silo).utilizationData(_asset);
+        ISilo.UtilizationData memory data = ISilo(_silo).utilizationData();
 
         (,,,overflow) = calculateCompoundInterestRateWithOverflowDetection(
             getConfig(_silo, _asset),
@@ -150,7 +150,7 @@ contract InterestRateModelV2 is IInterestRateModel {
         address _asset,
         uint256 _blockTimestamp
     ) external view virtual override returns (uint256 rcur) {
-        ISilo.UtilizationData memory data = ISilo(_silo).utilizationData(_asset);
+        ISilo.UtilizationData memory data = ISilo(_silo).utilizationData();
 
         rcur = calculateCurrentInterestRate(
             getConfig(_silo, _asset),
@@ -161,6 +161,7 @@ contract InterestRateModelV2 is IInterestRateModel {
         );
     }
 
+    // TODO, silo is per asset, so maybe we can remove one param?
     function getConfig(address _silo, address _asset) public view returns (ConfigWithState memory fullConfig) {
         Setup memory setup = getSetup[_silo][_asset];
         Config memory config = setup.config.getConfig();
