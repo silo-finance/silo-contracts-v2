@@ -84,8 +84,8 @@ contract SiloFactory is ISiloFactory, ERC721Upgradeable, OwnableUpgradeable {
         uint256 nextSiloId = _siloId.current();
         _siloId.increment();
 
-        configData0.daoFee = daoFeeInBp;
-        configData1.daoFee = daoFeeInBp;
+        configData0.daoFeeInBp = daoFeeInBp;
+        configData1.daoFeeInBp = daoFeeInBp;
 
         configData0.protectedShareToken = ClonesUpgradeable.clone(shareCollateralTokenImpl);
         configData0.collateralShareToken = ClonesUpgradeable.clone(shareCollateralTokenImpl);
@@ -236,8 +236,8 @@ contract SiloFactory is ISiloFactory, ERC721Upgradeable, OwnableUpgradeable {
         if (_initData.maxLtv0 == 0 && _initData.maxLtv1 == 0) revert InvalidMaxLtv();
         if (_initData.lt0 >= _ONE || _initData.lt1 >= _ONE) revert InvalidLt();
         if (!_initData.borrowable0 && !_initData.borrowable1) revert NonBorrowableSilo();
-        if (_initData.deployerFee > 0 && _initData.deployer == address(0)) revert InvalidDeployer();
-        if (_initData.deployerFee > maxDeployerFeeInBp) revert MaxDeployerFee();
+        if (_initData.deployerFeeInBp > 0 && _initData.deployer == address(0)) revert InvalidDeployer();
+        if (_initData.deployerFeeInBp > maxDeployerFeeInBp) revert MaxDeployerFee();
         if (_initData.flashloanFee0 > maxFlashloanFeeInBp) revert MaxFlashloanFee();
         if (_initData.flashloanFee1 > maxFlashloanFeeInBp) revert MaxFlashloanFee();
         if (_initData.liquidationFee0 > maxLiquidationFeeInBp) revert MaxLiquidationFee();
@@ -257,7 +257,7 @@ contract SiloFactory is ISiloFactory, ERC721Upgradeable, OwnableUpgradeable {
         pure
         returns (ISiloConfig.ConfigData memory configData0, ISiloConfig.ConfigData memory configData1)
     {
-        configData0.deployerFee = _initData.deployerFee;
+        configData0.deployerFeeInBp = _initData.deployerFeeInBp;
         configData0.token = _initData.token0;
         configData0.solvencyOracle = _initData.solvencyOracle0;
         configData0.maxLtvOracle = _initData.maxLtvOracle0;
@@ -268,7 +268,7 @@ contract SiloFactory is ISiloFactory, ERC721Upgradeable, OwnableUpgradeable {
         configData0.flashloanFee = _initData.flashloanFee0;
         configData0.borrowable = _initData.borrowable0;
 
-        configData1.deployerFee = _initData.deployerFee;
+        configData1.deployerFeeInBp = _initData.deployerFeeInBp;
         configData1.token = _initData.token1;
         configData1.solvencyOracle = _initData.solvencyOracle1;
         configData1.maxLtvOracle = _initData.maxLtvOracle1;

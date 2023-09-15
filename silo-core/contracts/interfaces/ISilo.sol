@@ -148,7 +148,7 @@ interface ISilo is IERC3156FlashLender, ISiloLiquidation {
     function getFeesAndFeeReceivers()
         external 
         view
-        returns (address daoFeeReceiver, address deployerFeeReceiver, uint256 daoFee, uint256 deployerFee);
+        returns (address daoFeeReceiver, address deployerFeeReceiver, uint256 daoFeeInBp, uint256 deployerFeeInBp);
 
     // ERC4626
 
