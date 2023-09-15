@@ -33,3 +33,6 @@
 [submodule "gitmodules/chainlink"]
 	path = gitmodules/chainlink
 	url = https://github.com/smartcontractkit/chainlink
+[submodule "chainlink-ccip"]
+	path = gitmodules/chainlink-ccip
+	url = https://github.com/smartcontractkit/ccip
