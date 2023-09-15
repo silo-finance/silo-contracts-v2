@@ -5,6 +5,7 @@ openzeppelin-contracts-upgradeable/=gitmodules/openzeppelin-contracts-upgradeabl
 openzeppelin-contracts-upgradeable@v3.4.2/=gitmodules/openzeppelin-contracts-upgradeable@v3.4.2/contracts
 openzeppelin-contracts/=gitmodules/openzeppelin-contracts/contracts
 chainlink/=gitmodules/chainlink/contracts/src
+chainlink-ccip/=gitmodules/chainlink-ccip/contracts/src
 uniswap/=gitmodules/uniswap/
 @uniswap/v3-core/=gitmodules/uniswap/v3-core/
 ve-silo/=ve-silo/
