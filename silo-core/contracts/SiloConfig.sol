@@ -70,8 +70,8 @@ contract SiloConfig is ISiloConfig {
     constructor(uint256 _siloId, ConfigData memory _configData0, ConfigData memory _configData1) {
         SILO_ID = _siloId;
 
-        _DAO_FEE = _configData0.daoFee;
-        _DEPLOYER_FEE = _configData0.deployerFee;
+        _DAO_FEE = _configData0.daoFeeInBp;
+        _DEPLOYER_FEE = _configData0.deployerFeeInBp;
 
         // TOKEN #0
 
@@ -130,8 +130,8 @@ contract SiloConfig is ISiloConfig {
 
     function getConfigs(address _silo) public view returns (ConfigData memory, ConfigData memory) {
         ConfigData memory configData0 = ConfigData({
-            daoFee: _DAO_FEE,
-            deployerFee: _DEPLOYER_FEE,
+            daoFeeInBp: _DAO_FEE,
+            deployerFeeInBp: _DEPLOYER_FEE,
             silo: _SILO0,
             token: _TOKEN0,
             protectedShareToken: _PROTECTED_COLLATERAL_SHARE_TOKEN0,
@@ -148,8 +148,8 @@ contract SiloConfig is ISiloConfig {
         });
 
         ConfigData memory configData1 = ConfigData({
-            daoFee: _DAO_FEE,
-            deployerFee: _DEPLOYER_FEE,
+            daoFeeInBp: _DAO_FEE,
+            deployerFeeInBp: _DEPLOYER_FEE,
             silo: _SILO1,
             token: _TOKEN1,
             protectedShareToken: _PROTECTED_COLLATERAL_SHARE_TOKEN1,
@@ -178,8 +178,8 @@ contract SiloConfig is ISiloConfig {
     function getConfig(address _silo) public view returns (ConfigData memory) {
         if (_silo == _SILO0) {
             return ConfigData({
-                daoFee: _DAO_FEE,
-                deployerFee: _DEPLOYER_FEE,
+                daoFeeInBp: _DAO_FEE,
+                deployerFeeInBp: _DEPLOYER_FEE,
                 silo: _SILO0,
                 token: _TOKEN0,
                 protectedShareToken: _PROTECTED_COLLATERAL_SHARE_TOKEN0,
@@ -196,8 +196,8 @@ contract SiloConfig is ISiloConfig {
             });
         } else if (_silo == _SILO1) {
             return ConfigData({
-                daoFee: _DAO_FEE,
-                deployerFee: _DEPLOYER_FEE,
+                daoFeeInBp: _DAO_FEE,
+                deployerFeeInBp: _DEPLOYER_FEE,
                 silo: _SILO1,
                 token: _TOKEN1,
                 protectedShareToken: _PROTECTED_COLLATERAL_SHARE_TOKEN1,
@@ -220,17 +220,17 @@ contract SiloConfig is ISiloConfig {
     function getFeesWithAsset(address _silo)
         public
         view
-        returns (uint256 daoFee, uint256 deployerFee, uint256 flashloanFee, address asset)
+        returns (uint256 daoFee, uint256 deployerFee, uint256 flashloanFeeInBp, address asset)
     {
         daoFee = _DAO_FEE;
         deployerFee = _DEPLOYER_FEE;
 
         if (_silo == _SILO0) {
             asset = _TOKEN0;
-            flashloanFee = _FLASHLOAN_FEE0;
+            flashloanFeeInBp = _FLASHLOAN_FEE0;
         } else if (_silo == _SILO1) {
             asset = _TOKEN1;
-            flashloanFee = _FLASHLOAN_FEE1;
+            flashloanFeeInBp = _FLASHLOAN_FEE1;
         } else {
             revert WrongSilo();
         }

@@ -24,7 +24,7 @@ library SiloSolvencyLib {
     uint256 internal constant _PRECISION_DECIMALS = 1e18;
     uint256 internal constant _BASIS_POINTS = 1e4;
 
-    function assetBalanceOfWithInterest(
+    function getAssetAndSharesWithInterest(
         address _silo,
         address _interestRateModel,
         address _token,
@@ -136,7 +136,7 @@ library SiloSolvencyLib {
                 ? ISiloOracle(_collateralConfig.maxLtvOracle)
                 : ISiloOracle(_collateralConfig.solvencyOracle);
 
-        (ltvData.debtAssets,) = assetBalanceOfWithInterest(
+        (ltvData.debtAssets,) = getAssetAndSharesWithInterest(
             _debtConfig.silo,
             _debtConfig.interestRateModel,
             _debtConfig.token,
@@ -146,7 +146,7 @@ library SiloSolvencyLib {
             MathUpgradeable.Rounding.Up
         );
 
-        (ltvData.totalCollateralAssets,) = assetBalanceOfWithInterest(
+        (ltvData.totalCollateralAssets,) = getAssetAndSharesWithInterest(
             _collateralConfig.silo,
             _collateralConfig.interestRateModel,
             _collateralConfig.token,
@@ -156,7 +156,7 @@ library SiloSolvencyLib {
             MathUpgradeable.Rounding.Down
         );
 
-        (uint256 collateralAssets,) = assetBalanceOfWithInterest(
+        (uint256 collateralAssets,) = getAssetAndSharesWithInterest(
             _collateralConfig.silo,
             _collateralConfig.interestRateModel,
             _collateralConfig.token,

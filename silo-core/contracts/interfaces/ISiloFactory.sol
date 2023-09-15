@@ -6,8 +6,8 @@ import {ISiloConfig} from "./ISiloConfig.sol";
 
 interface ISiloFactory is IERC721Upgradeable {
     event NewSilo(address indexed token0, address indexed token1, address silo0, address silo1, address siloConfig);
-    event DaoFeeChanged(uint256 daoFee);
-    event MaxDeployerFeeChanged(uint256 maxDeployerFee);
+    event DaoFeeChanged(uint256 daoFeeInBp);
+    event MaxDeployerFeeChanged(uint256 maxDeployerFeeInBp);
     event MaxFlashloanFeeChanged(uint256 maxFlashloanFee);
     event MaxLiquidationFeeChanged(uint256 maxLiquidationFee);
     event DaoFeeReceiverChanged(address daoFeeReceiver);
@@ -30,7 +30,7 @@ interface ISiloFactory is IERC721Upgradeable {
         address _siloImpl,
         address _shareCollateralTokenImpl,
         address _shareDebtTokenImpl,
-        uint256 _daoFee,
+        uint256 _daoFeeInBp,
         address _daoFeeReceiver
     ) external;
 
