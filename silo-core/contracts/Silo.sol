@@ -38,6 +38,7 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable, LeverageReent
 
     ISiloConfig public config;
 
+    // asset => AssetStorage
     mapping(address => AssetStorage) public assetStorage;
 
     /// @custom:oz-upgrades-unsafe-allow constructor
@@ -49,7 +50,6 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable, LeverageReent
     /// @notice Sets configuration
     /// @param _config address of ISiloConfig with full config for this Silo
     /// @param _modelConfigAddress address of a config contract used by model
-    // TODO: _modelConfigAddress cannot be part of initialize becasue it's not generic
     function initialize(ISiloConfig _config, address _modelConfigAddress) external virtual initializer {
         __ReentrancyGuard_init();
         __LeverageReentrancyGuard_init();
@@ -804,7 +804,7 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable, LeverageReent
             assetStorage[debtConfig.token]
         );
 
-        (uint256 borrowerCollateralAssets,) = SiloSolvencyLib.assetBalanceOfWithInterest(
+        (uint256 borrowerCollateralAssets,) = SiloSolvencyLib.getAssetAndSharesWithInterest(
             collateralConfig.silo,
             collateralConfig.interestRateModel,
             collateralConfig.token,

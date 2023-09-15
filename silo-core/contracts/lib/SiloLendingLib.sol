@@ -194,7 +194,7 @@ library SiloLendingLib {
         cache.rcomp = IInterestRateModel(_configData.interestRateModel).getCompoundInterestRateAndUpdate(
             _configData.token, block.timestamp
         );
-        cache.totalFeeInBp = _configData.daoFee + _configData.deployerFee;
+        cache.totalFeeInBp = _configData.daoFeeInBp + _configData.deployerFeeInBp;
 
         cache.collateralAssets = _assetStorage.collateralAssets;
         cache.debtAssets = _assetStorage.debtAssets;

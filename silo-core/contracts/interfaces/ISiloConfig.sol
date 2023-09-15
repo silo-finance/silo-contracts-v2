@@ -4,7 +4,7 @@ pragma solidity >=0.5.0;
 interface ISiloConfig {
     struct InitData {
         address deployer;
-        uint256 deployerFee;
+        uint256 deployerFeeInBp;
         address token0;
         address solvencyOracle0;
         address maxLtvOracle0;
@@ -34,8 +34,8 @@ interface ISiloConfig {
     }
 
     struct ConfigData {
-        uint256 daoFee;
-        uint256 deployerFee;
+        uint256 daoFeeInBp;
+        uint256 deployerFeeInBp;
         address silo;
         address token;
         address protectedShareToken;
@@ -62,5 +62,5 @@ interface ISiloConfig {
     function getFeesWithAsset(address _silo)
         external
         view
-        returns (uint256 daoFee, uint256 deployerFee, uint256 flashloanFee, address asset);
+        returns (uint256 daoFeeInBp, uint256 deployerFeeInBp, uint256 flashloanFeeInBp, address asset);
 }
