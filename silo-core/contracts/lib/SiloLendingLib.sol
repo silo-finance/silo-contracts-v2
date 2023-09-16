@@ -50,44 +50,6 @@ library SiloLendingLib {
     uint256 internal constant _PRECISION_DECIMALS = 1e18;
     uint256 internal constant _BASIS_POINTS = 1e4;
 
-    /// @dev it "transfer" shares but on protocol level
-    /// @param _unprotectedLiquidity we only need it when `_assetType` is Collateral, otherwise can be 0.
-    function moveCollateralShares( // TODO change name
-        MoveCollateralShares memory _params,
-        ISilo.AssetType _depositType,
-        ISilo.AssetType _assetType,
-        ISilo.Assets storage _total,
-        uint256 _unprotectedLiquidity
-    ) internal returns (uint256 assets, uint256 shares, uint256 toShares) {
-        (assets, shares) = SiloERC4626Lib.withdraw(
-            address(0), // empty token address because we dont want to do transfer
-            _params.shareTokenFrom,
-            SiloERC4626Lib.WithdrawParams({
-                assets: 0,
-                shares: _params.shares,
-                receiver: _params.receiver,
-                owner: _params.receiver,
-                spender: _params.spender,
-                assetType: _assetType
-            }),
-            _total,
-            _unprotectedLiquidity
-        );
-
-        (assets, toShares) = SiloERC4626Lib.deposit(
-            address(0), // empty token because we don't want to transfer
-            _params.receiver,
-            SiloERC4626Lib.DepositParams({
-                assets: assets,
-                shares: 0,
-                receiver: _params.receiver,
-                assetType: _depositType,
-                collateralShareToken: IShareToken(_params.shareTokenTo)
-            }),
-            _total
-        );
-    }
-
     function borrow(
         ISiloConfig.ConfigData memory _configData,
         uint256 _assets,
