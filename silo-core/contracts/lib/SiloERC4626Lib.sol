@@ -193,20 +193,24 @@ library SiloERC4626Lib {
         uint256 _totalAssets,
         uint256 _liquidAssets
     ) internal view returns (uint256 assets, uint256 shares) {
-        (ISiloConfig.ConfigData memory configData0, ISiloConfig.ConfigData memory configData1) =
+        (ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig) =
             _config.getConfigs(address(this));
 
         {
             SiloSolvencyLib.LtvData memory ltvData = SiloSolvencyLib.getAssetsDataForLtvCalculations(
-                configData0, configData1, _owner, ISilo.OracleType.Solvency, ISilo.AccrueInterestInMemory.Yes
+                collateralConfig, debtConfig, _owner, ISilo.OracleType.Solvency, ISilo.AccrueInterestInMemory.Yes
             );
-            (uint256 collateralValue, uint256 debtValue) = SiloSolvencyLib.getPositionValues(ltvData);
+
+            (
+                uint256 collateralValue, uint256 debtValue
+            ) = SiloSolvencyLib.getPositionValues(ltvData, collateralConfig.token, debtConfig.token);
+
             uint256 ltv = debtValue * _PRECISION_DECIMALS / collateralValue;
 
             // if LTV is higher than LT, user cannot withdraw
-            if (ltv >= ltvData.ltInBP) return (0, 0);
+            if (ltv >= collateralConfig.lt) return (0, 0);
 
-            uint256 minimumCollateralValue = debtValue * _PRECISION_DECIMALS / ltvData.ltInBP;
+            uint256 minimumCollateralValue = debtValue * _PRECISION_DECIMALS / collateralConfig.lt;
             uint256 spareCollateralValue = collateralValue - minimumCollateralValue;
 
             // these are total assets (protected + collateral) that _owner can withdraw
@@ -214,7 +218,7 @@ library SiloERC4626Lib {
         }
 
         (uint256 totalAssets, uint256 totalShares) = SiloStdLib.getTotalAssetsAndTotalShares(
-            configData0, _assetType, _totalAssets
+            collateralConfig, _assetType, _totalAssets
         );
 
         shares = SiloERC4626Lib.convertToShares(assets, totalAssets, totalShares, MathUpgradeable.Rounding.Down);
@@ -222,9 +226,9 @@ library SiloERC4626Lib {
         uint256 shareBalance;
 
         if (_assetType == ISilo.AssetType.Protected) {
-            shareBalance = IShareToken(configData0.protectedShareToken).balanceOf(_owner);
+            shareBalance = IShareToken(collateralConfig.protectedShareToken).balanceOf(_owner);
         } else if (_assetType == ISilo.AssetType.Collateral) {
-            shareBalance = IShareToken(configData0.collateralShareToken).balanceOf(_owner);
+            shareBalance = IShareToken(collateralConfig.collateralShareToken).balanceOf(_owner);
 
             // check liquidity
             if (assets > _liquidAssets) {

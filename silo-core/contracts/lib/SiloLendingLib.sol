@@ -52,7 +52,7 @@ library SiloLendingLib {
 
     /// @dev it "transfer" shares but on protocol level
     /// @param _unprotectedLiquidity we only need it when `_assetType` is Collateral, otherwise can be 0.
-    function moveCollateralShares(
+    function moveCollateralShares( // TODO change name
         MoveCollateralShares memory _params,
         ISilo.AssetType _depositType,
         ISilo.AssetType _assetType,
@@ -176,10 +176,10 @@ library SiloLendingLib {
         cache.debtShareToken.burn(_borrower, _repayer, shares);
     }
 
-    /// @notice this method will accrue interest ONLY for ONE asset, to calculate all you have to call it twice
+    /// @dev this method will accrue interest for ONE asset ONLY, to calculate all you have to call it twice
     /// with `_configData` for each token
     function accrueInterestForAsset(
-        ISiloConfig.ConfigData memory _configData,
+        ISiloConfig.ConfigData memory _assetConfig,
         ISilo.SiloData storage _siloData,
         ISilo.Assets storage _totalCollateral,
         ISilo.Assets storage _totalDebt
@@ -199,10 +199,10 @@ library SiloLendingLib {
             return 0;
         }
 
-        cache.rcomp = IInterestRateModel(_configData.interestRateModel).getCompoundInterestRateAndUpdate(
-            _configData.token, block.timestamp
+        cache.rcomp = IInterestRateModel(_assetConfig.interestRateModel).getCompoundInterestRateAndUpdate(
+            _assetConfig.token, block.timestamp
         );
-        cache.totalFeeInBp = _configData.daoFeeInBp + _configData.deployerFeeInBp;
+        cache.totalFeeInBp = _assetConfig.daoFeeInBp + _assetConfig.deployerFeeInBp;
 
         cache.collateralAssets = _totalCollateral.assets;
         cache.debtAssets = _totalDebt.assets;
@@ -239,28 +239,32 @@ library SiloLendingLib {
         address _borrower,
         uint256 _totalDebtAssets
     ) internal view returns (uint256 assets, uint256 shares) {
-        (ISiloConfig.ConfigData memory configData0, ISiloConfig.ConfigData memory configData1) =
+        (ISiloConfig.ConfigData memory debtConfig, ISiloConfig.ConfigData memory collateralConfig) =
             _config.getConfigs(address(this));
 
         SiloSolvencyLib.LtvData memory ltvData = SiloSolvencyLib.getAssetsDataForLtvCalculations(
-            configData0, configData1, _borrower, ISilo.OracleType.MaxLtv, ISilo.AccrueInterestInMemory.Yes
+            collateralConfig, debtConfig, _borrower, ISilo.OracleType.MaxLtv, ISilo.AccrueInterestInMemory.Yes
         );
-        (uint256 collateralValue, uint256 debtValue) = SiloSolvencyLib.getPositionValues(ltvData);
+
+        (
+            uint256 collateralValue, uint256 debtValue
+        ) = SiloSolvencyLib.getPositionValues(ltvData, debtConfig.token, collateralConfig.token);
+
         uint256 ltv = debtValue * _PRECISION_DECIMALS / collateralValue;
 
         // if LTV is higher than maxLTV, user cannot borrow more
-        if (ltv >= ltvData.maxLtv) return (0, 0);
+        if (ltv >= collateralConfig.maxLtv) return (0, 0);
 
         {
-            uint256 maxDebtValue = collateralValue * ltvData.maxLtv / _PRECISION_DECIMALS;
-            IShareToken debtShareToken = IShareToken(configData0.debtShareToken);
+            uint256 maxDebtValue = collateralValue * collateralConfig.maxLtv / _PRECISION_DECIMALS;
+            IShareToken debtShareToken = IShareToken(debtConfig.debtShareToken);
             uint256 debtShareBalance = debtShareToken.balanceOf(_borrower);
             shares = debtShareBalance * maxDebtValue / debtValue - debtShareBalance;
         }
 
         {
             (uint256 totalAssets, uint256 totalShares) = SiloStdLib.getTotalAssetsAndTotalShares(
-                configData0, ISilo.AssetType.Debt, _totalDebtAssets
+                debtConfig, ISilo.AssetType.Debt, _totalDebtAssets
             );
 
             assets = SiloERC4626Lib.convertToAssets(shares, totalAssets, totalShares, MathUpgradeable.Rounding.Up);
