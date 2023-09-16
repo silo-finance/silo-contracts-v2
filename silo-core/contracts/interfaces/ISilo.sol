@@ -36,20 +36,24 @@ interface ISilo is IERC3156FlashLender, ISiloLiquidation {
         Debt
     }
 
+    /// @dev this struct is used for all types of assets: collateral, protected and debt
+    /// @param assets based on type:
+    /// - PROTECTED COLLATERAL: Amount of asset token that has been deposited to Silo that can be ONLY used
+    /// as collateral. These deposits do NOT earn interest and CANNOT be borrowed.
+    /// - COLLATERAL: Amount of asset token that has been deposited to Silo plus interest earned by depositors.
+    /// It also includes token amount that has been borrowed.
+    /// - DEBT: Amount of asset token that has been borrowed plus accrued interest.
+    struct Assets {
+        uint256 assets;
+    }
+
     // TODO: optimized storage to use uint128 and uncheck math
     /// @dev Storage struct that holds all required data for a single token market
-    struct AssetStorage {
-        /// @dev PROTECTED COLLATERAL: Amount of asset token that has been deposited to Silo that can be ONLY used
-        /// as collateral. These deposits do NOT earn interest and CANNOT be borrowed.
-        uint256 protectedAssets;
-        /// @dev COLLATERAL: Amount of asset token that has been deposited to Silo plus interest earned by depositors.
-        /// It also includes token amount that has been borrowed.
-        uint256 collateralAssets;
-        /// @dev DEBT: Amount of asset token that has been borrowed plus accrued interest.
-        uint256 debtAssets;
-        /// @dev Current amount of fees accrued by DAO and Deployer
+    /// @param daoAndDeployerFees Current amount of fees accrued by DAO and Deployer
+    /// @param interestRateTimestamp timestamp of the last interest accrual
+    /// @param assets map of assets
+    struct SiloData {
         uint256 daoAndDeployerFees;
-        /// @dev timestamp of the last interest accrual
         uint64 interestRateTimestamp;
     }
 
@@ -134,8 +138,8 @@ interface ISilo is IERC3156FlashLender, ISiloLiquidation {
 
     function config() external view returns (ISiloConfig);
     function siloId() external view returns (uint256);
-    function assetStorage(address _asset) external view returns (uint256, uint256, uint256, uint256, uint64);
-    function utilizationData(address _asset) external view returns (UtilizationData memory);
+    function siloData() external view returns (uint256, uint64);
+    function utilizationData() external view returns (UtilizationData memory);
 
     function isSolvent(address _borrower) external view returns (bool);
     function depositPossible(address _depositor) external view returns (bool);

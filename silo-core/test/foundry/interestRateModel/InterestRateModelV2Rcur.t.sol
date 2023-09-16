@@ -26,6 +26,9 @@ contract InterestRateModelV2RcurTest is RcurTestData, InterestRateModelConfigs {
         CONFIG_FACTORY = new InterestRateModelV2ConfigFactory();
     }
 
+    /*
+    forge test -vv --mt test_IRM_RcurData
+    */
     function test_IRM_RcurData() public {
         RcurData[] memory data = _readDataFromJson();
 
@@ -67,7 +70,7 @@ contract InterestRateModelV2RcurTest is RcurTestData, InterestRateModelConfigs {
             INTEREST_RATE_MODEL.connect(asset, address(configAddress));
 
             INTEREST_RATE_MODEL.mockSetup(silo, asset, testCase.input.integratorState, testCase.input.Tcrit);
-            vm.mockCall(silo, abi.encodeWithSelector(ISilo.utilizationData.selector, asset), abi.encode(utilizationData));
+            vm.mockCall(silo, abi.encodeWithSelector(ISilo.utilizationData.selector), abi.encode(utilizationData));
             uint256 mockedRcur = INTEREST_RATE_MODEL.getCurrentInterestRate(silo, asset, testCase.input.currentTime);
             assertEq(mockedRcur, rcur, "getCurrentInterestRate()");
 
