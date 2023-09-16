@@ -75,10 +75,15 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable, LeverageReent
     }
 
     function isSolvent(address _borrower) external view virtual returns (bool) {
-        (ISiloConfig.ConfigData memory configData0, ISiloConfig.ConfigData memory configData1) =
-            config.getConfigs(address(this));
+        (
+            ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig
+        ) = config.getConfigs(address(this));
 
-        return SiloSolvencyLib.isSolvent(configData0, configData1, _borrower, AccrueInterestInMemory.Yes);
+        if (!SiloSolvencyLib.validConfigOrder(collateralConfig.debtShareToken, debtConfig.debtShareToken, _borrower)) {
+            (collateralConfig, debtConfig) = (debtConfig, collateralConfig);
+        }
+
+        return SiloSolvencyLib.isSolvent(collateralConfig, debtConfig, _borrower, AccrueInterestInMemory.Yes);
     }
 
     function depositPossible(address _depositor) external view virtual returns (bool) {
@@ -667,14 +672,14 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable, LeverageReent
         leverageNonReentrant
         returns (uint256 shares)
     {
-        (ISiloConfig.ConfigData memory configData0, ISiloConfig.ConfigData memory configData1) =
+        // config for this Silo is always at index 0
+        (ISiloConfig.ConfigData memory debtConfig, ISiloConfig.ConfigData memory collateralConfig) =
             config.getConfigs(address(this));
 
-        // config for this Silo is always at index 0
-        if (!SiloLendingLib.borrowPossible(configData0, _borrower)) revert BorrowNotPossible();
+        if (!SiloLendingLib.borrowPossible(debtConfig, _borrower)) revert BorrowNotPossible();
 
         SiloLendingLib.accrueInterestForAsset(
-            configData0, siloData, total[AssetType.Collateral], total[AssetType.Debt]
+            debtConfig, siloData, total[AssetType.Collateral], total[AssetType.Debt]
         );
 
         uint256 assets;
@@ -683,7 +688,7 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable, LeverageReent
         uint256 borrowSharesZero = 0;
 
         (assets, shares) = SiloLendingLib.borrow(
-            configData0,
+            debtConfig,
             _assets,
             borrowSharesZero,
             address(_receiver),
@@ -697,11 +702,11 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable, LeverageReent
         emit Leverage();
 
         // allow for deposit reentry only to provide collateral
-        if (_receiver.onLeverage(msg.sender, _borrower, configData0.token, assets, _data) != LEVERAGE_CALLBACK) {
+        if (_receiver.onLeverage(msg.sender, _borrower, debtConfig.token, assets, _data) != LEVERAGE_CALLBACK) {
             revert LeverageFailed();
         }
 
-        if (!SiloSolvencyLib.isBelowMaxLtv(configData0, configData1, _borrower, AccrueInterestInMemory.No)) {
+        if (!SiloSolvencyLib.isBelowMaxLtv(collateralConfig, debtConfig, _borrower, AccrueInterestInMemory.No)) {
             revert AboveMaxLtv();
         }
     }
@@ -768,20 +773,22 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable, LeverageReent
     {
         if (_params.assetType == AssetType.Debt) revert ISilo.WrongAssetType();
 
-        (ISiloConfig.ConfigData memory configData0, ISiloConfig.ConfigData memory configData1) =
+        (ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig) =
             config.getConfigs(address(this));
 
         SiloLendingLib.accrueInterestForAsset(
-            configData0, siloData, total[AssetType.Collateral], total[AssetType.Debt]
+            collateralConfig, siloData, total[AssetType.Collateral], total[AssetType.Debt]
         );
 
         address shareToken = _params.assetType == AssetType.Protected
-            ? configData0.protectedShareToken
-            : configData0.collateralShareToken;
+            ? collateralConfig.protectedShareToken
+            : collateralConfig.collateralShareToken;
 
         (
             assets, shares
-        ) = SiloERC4626Lib.withdraw(configData0.token, shareToken, _params, total[_params.assetType], _liquidity());
+        ) = SiloERC4626Lib.withdraw(
+            collateralConfig.token, shareToken, _params, total[_params.assetType], _liquidity()
+        );
 
         if (_params.assetType == AssetType.Protected) {
             emit WithdrawProtected(msg.sender, _params.receiver, _params.owner, assets, shares);
@@ -790,7 +797,7 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable, LeverageReent
         }
 
         // `_params.owner` must be solvent
-        if (!SiloSolvencyLib.isSolvent(configData0, configData1, _params.owner, AccrueInterestInMemory.No)) {
+        if (!SiloSolvencyLib.isSolvent(collateralConfig, debtConfig, _params.owner, AccrueInterestInMemory.No)) {
             revert NotSolvent();
         }
     }
@@ -800,18 +807,18 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable, LeverageReent
         virtual
         returns (uint256 assets, uint256 shares)
     {
-        (ISiloConfig.ConfigData memory configData0, ISiloConfig.ConfigData memory configData1) =
+        (ISiloConfig.ConfigData memory debtConfig, ISiloConfig.ConfigData memory collateralConfig) =
             config.getConfigs(address(this));
 
         // config for this Silo is always at index 0
-        if (!SiloLendingLib.borrowPossible(configData0, _borrower)) revert BorrowNotPossible();
+        if (!SiloLendingLib.borrowPossible(debtConfig, _borrower)) revert BorrowNotPossible();
 
         SiloLendingLib.accrueInterestForAsset(
-            configData0, siloData, total[AssetType.Collateral], total[AssetType.Debt]
+            debtConfig, siloData, total[AssetType.Collateral], total[AssetType.Debt]
         );
 
         (assets, shares) = SiloLendingLib.borrow(
-            configData0,
+            debtConfig,
             _assets,
             _shares,
             _receiver,
@@ -823,7 +830,7 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable, LeverageReent
 
         emit Borrow(msg.sender, _receiver, _borrower, assets, shares);
 
-        if (!SiloSolvencyLib.isBelowMaxLtv(configData0, configData1, _borrower, AccrueInterestInMemory.No)) {
+        if (!SiloSolvencyLib.isBelowMaxLtv(collateralConfig, debtConfig, _borrower, AccrueInterestInMemory.No)) {
             revert AboveMaxLtv();
         }
     }

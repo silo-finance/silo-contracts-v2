@@ -115,21 +115,6 @@ library SiloStdLib {
         amount = _amount + accruedInterest;
     }
 
-    /// @notice Returns available liquidity to be borrowed
-    /// @dev Accrued interest is entirely added to `debtAssets` but only part of it is added to `collateralAssets`. The
-    ///      difference is DAO's and deployer's cut. That means DAO's and deployer's cut is not considered a borrowable
-    ///      liquidity.
-    function liquidity(uint256 _collateralAssets, uint256 _debtAssets)
-        internal
-        view
-        returns (uint256 liquidAssets)
-    {
-        unchecked {
-            // we checked the underflow
-            liquidAssets = _debtAssets > _collateralAssets ?  0 : _collateralAssets - _debtAssets;
-        }
-    }
-
     /// @notice Returns totalAssets and totalShares for conversion math (convertToAssets and convertToShares)
     /// @dev This is useful for view functions that do not accrue interest before doing calculations. To work on
     ///      updated numbers, interest should be added on the fly.
@@ -151,6 +136,21 @@ library SiloStdLib {
             // TODO BUG!
             totalAssets = amountWithInterest(_configData.token, _totalAssets, _configData.interestRateModel);
             totalShares = IShareToken(_configData.collateralShareToken).totalSupply();
+        }
+    }
+
+    /// @notice Returns available liquidity to be borrowed
+    /// @dev Accrued interest is entirely added to `debtAssets` but only part of it is added to `collateralAssets`. The
+    ///      difference is DAO's and deployer's cut. That means DAO's and deployer's cut is not considered a borrowable
+    ///      liquidity.
+    function liquidity(uint256 _collateralAssets, uint256 _debtAssets)
+        internal
+        pure
+        returns (uint256 liquidAssets)
+    {
+        unchecked {
+        // we checked the underflow
+            liquidAssets = _debtAssets > _collateralAssets ?  0 : _collateralAssets - _debtAssets;
         }
     }
 
