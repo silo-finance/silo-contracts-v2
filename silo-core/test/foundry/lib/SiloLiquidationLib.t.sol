@@ -33,7 +33,7 @@ contract SiloLiquidationLibTest is Test {
     forge test -vv --mt test_SiloLiquidationLib_collateralToLiquidate
     */
     function test_SiloLiquidationLib_collateralToLiquidate() public {
-        // uint256 _debtToCover, uint256 _totalCollateral, uint256 _liquidityFeeInBP
+        // uint256 _debtToCover, uint256 _totalCollateral, uint256 _liquidityFeeInBp
         assertEq(SiloLiquidationLib.collateralToLiquidate(0, 0, 0), 0);
         assertEq(SiloLiquidationLib.collateralToLiquidate(1, 1, 0), 1);
         assertEq(SiloLiquidationLib.collateralToLiquidate(1, 1, 1), 1);
@@ -112,8 +112,8 @@ contract SiloLiquidationLibTest is Test {
             uint256 repayValue = SiloLiquidationLib.estimateMaxRepayValue(
                 data[i].input.totalBorrowerDebtValue,
                 data[i].input.totalBorrowerCollateralValue,
-                data[i].input.ltvAfterLiquidationInBP,
-                data[i].input.liquidityFeeInBP
+                data[i].input.ltvAfterLiquidationInBp,
+                data[i].input.liquidityFeeInBp
             );
 
             // emit log_named_uint("#", i);
@@ -163,15 +163,15 @@ contract SiloLiquidationLibTest is Test {
             ) = SiloLiquidationLib.maxLiquidationPreview(
                 data[i].input.totalBorrowerDebtValue,
                 data[i].input.totalBorrowerCollateralValue,
-                data[i].input.ltvAfterLiquidationInBP,
-                data[i].input.liquidityFeeInBP
+                data[i].input.ltvAfterLiquidationInBp,
+                data[i].input.liquidityFeeInBp
             );
 
             assertEq(collateralValueToLiquidate, data[i].output.collateralValueToLiquidate, "expect collateral value");
             assertEq(repayValue, data[i].output.repayValue, "expect repayValue");
 
             // cross check, but only when totalBorrowerDebtValue > 0
-            // otherwise we will have different results for ltv because ltvAfterLiquidationInBP will not be achievable
+            // otherwise we will have different results for ltv because ltvAfterLiquidationInBp will not be achievable
 
             // assets does not matter because it is basically related to value by price
             // so I pick here some arbitrary prices
@@ -188,13 +188,13 @@ contract SiloLiquidationLibTest is Test {
                 totalBorrowerDebtAssets,
                 data[i].input.totalBorrowerCollateralValue,
                 totalBorrowerCollateralAssets,
-                data[i].input.liquidityFeeInBP
+                data[i].input.liquidityFeeInBp
             );
 
             // emit log_named_uint("cross check #", i);
 
             if (data[i].output.targetLtvPossible) {
-                assertEq(ltvAfterLiquidation, data[i].input.ltvAfterLiquidationInBP, "ltvAfterLiquidation cross check");
+                assertEq(ltvAfterLiquidation, data[i].input.ltvAfterLiquidationInBp, "ltvAfterLiquidation cross check");
             } else {
                 assertEq(ltvAfterLiquidation, 0, "ltvAfterLiquidation cross check");
             }
@@ -212,10 +212,10 @@ contract SiloLiquidationLibTest is Test {
         uint256 _debtToCover,
         uint128 _totalBorrowerDebtAssets,
         uint128 _totalBorrowerCollateralAssets,
-        uint256 _liquidationFeeInBP,
+        uint256 _liquidationFeeInBp,
         uint16 _quote
     ) public {
-        vm.assume(_liquidationFeeInBP <= 1e3);
+        vm.assume(_liquidationFeeInBp <= 1e3);
         vm.assume(_debtToCover <= _totalBorrowerDebtAssets);
         vm.assume(_totalBorrowerDebtAssets > 0);
         vm.assume(_totalBorrowerCollateralAssets > 0);
@@ -243,7 +243,7 @@ contract SiloLiquidationLibTest is Test {
             _totalBorrowerDebtAssets,
             totalBorrowerCollateralValue,
             _totalBorrowerDebtAssets,
-            _liquidationFeeInBP
+            _liquidationFeeInBp
         );
 
         (
@@ -254,13 +254,13 @@ contract SiloLiquidationLibTest is Test {
             _totalBorrowerDebtAssets,
             totalBorrowerCollateralValue,
             _totalBorrowerDebtAssets,
-            _liquidationFeeInBP
+            _liquidationFeeInBp
         );
 
         assertEq(collateralAssetsToLiquidate2, collateralAssetsToLiquidate, "collateralAssetsToLiquidate");
         assertEq(debtAssetsToRepay2, debtAssetsToRepay, "debtAssetsToRepay");
         // not testing ltv because stack to deep, but if others two values are good, we good on ltv
-        // assertEq(ltvAfterLiquidationInBP2, ltvAfterLiquidationInBP, "ltvAfterLiquidationInBP");
+        // assertEq(ltvAfterLiquidationInBp2, ltvAfterLiquidationInBp, "ltvAfterLiquidationInBp");
     }
 
     /*
@@ -357,13 +357,13 @@ contract SiloLiquidationLibTest is Test {
     function _estimateMaxRepayValueRaw(
         uint256 _totalBorrowerDebtValue,
         uint256 _totalBorrowerCollateralValue,
-        uint256 _ltvAfterLiquidationInBP,
-        uint256 _liquidityFeeInBP
+        uint256 _ltvAfterLiquidationInBp,
+        uint256 _liquidityFeeInBp
     )
         private pure returns (uint256 repayValue)
     {
-        return (_totalBorrowerDebtValue - _ltvAfterLiquidationInBP * _totalBorrowerCollateralValue / _BASIS_POINTS) *
+        return (_totalBorrowerDebtValue - _ltvAfterLiquidationInBp * _totalBorrowerCollateralValue / _BASIS_POINTS) *
             _BASIS_POINTS /
-            (_BASIS_POINTS - _ltvAfterLiquidationInBP - _ltvAfterLiquidationInBP * _liquidityFeeInBP / _BASIS_POINTS);
+            (_BASIS_POINTS - _ltvAfterLiquidationInBp - _ltvAfterLiquidationInBp * _liquidityFeeInBp / _BASIS_POINTS);
     }
 }
