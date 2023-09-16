@@ -93,7 +93,7 @@ library SiloERC4626Lib {
         address _shareToken,
         WithdrawParams memory _params,
         ISilo.Assets storage _totalCollateral,
-        uint256 _unprotectedLiquidity
+        function() view returns (uint256) _liquidity
     ) internal returns (uint256 assets, uint256 shares) {
         WithdrawCache memory cache = getWithdrawCache(_shareToken, _params.owner, _totalCollateral);
 
@@ -118,7 +118,7 @@ library SiloERC4626Lib {
         }
 
         // check liquidity
-        if (_params.assetType == ISilo.AssetType.Collateral && assets > _unprotectedLiquidity) {
+        if (_params.assetType == ISilo.AssetType.Collateral && assets > _liquidity()) {
             revert ISilo.NotEnoughLiquidity();
         }
 
@@ -184,14 +184,15 @@ library SiloERC4626Lib {
         return _convertMethod(_assetsOrShares, totalAssets, totalShares, _rounding);
     }
 
-    /// @param _liquidAssets it is only needed if `_assetType` == `ISilo.AssetType.Collateral`
+    /// @param _liquidity method that will provide liquidity,
+    /// it is method because we need it only if `_assetType` == `ISilo.AssetType.Collateral`
     /// @param _totalAssets based on `_assetType` this is total collateral/protected assets
     function maxWithdraw(
         ISiloConfig _config,
         address _owner,
         ISilo.AssetType _assetType,
         uint256 _totalAssets,
-        uint256 _liquidAssets
+        function() view returns (uint256) _liquidity
     ) internal view returns (uint256 assets, uint256 shares) {
         (ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig) =
             _config.getConfigs(address(this));
@@ -230,9 +231,11 @@ library SiloERC4626Lib {
         } else if (_assetType == ISilo.AssetType.Collateral) {
             shareBalance = IShareToken(collateralConfig.collateralShareToken).balanceOf(_owner);
 
+            uint256 liquidAssets = _liquidity();
+
             // check liquidity
-            if (assets > _liquidAssets) {
-                assets = _liquidAssets;
+            if (assets > liquidAssets) {
+                assets = liquidAssets;
                 shares =
                     SiloERC4626Lib.convertToShares(assets, totalAssets, totalShares, MathUpgradeable.Rounding.Down);
             }
