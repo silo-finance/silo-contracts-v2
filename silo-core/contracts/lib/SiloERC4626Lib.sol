@@ -15,8 +15,8 @@ library SiloERC4626Lib {
     using SafeERC20Upgradeable for IERC20Upgradeable;
     using MathUpgradeable for uint256;
 
-    /// @dev assets amount of assets to withdraw, if 0, means withdraw is based on `shares`
-    /// @dev shares depends on `assets` it can be 0 or not
+    /// @param assets amount of assets to withdraw, if 0, means withdraw is based on `shares`
+    /// @param shares depends on `assets` it can be 0 or not
     struct WithdrawParams {
         uint256 assets;
         uint256 shares;
