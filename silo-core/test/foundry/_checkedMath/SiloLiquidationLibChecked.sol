@@ -44,26 +44,26 @@ library SiloLiquidationLibChecked {
     /// @param _debtToCover amount of debt token to use for repay
     /// @return collateralAssetsToLiquidate this is how much collateral liquidator will get
     /// @return debtAssetsToRepay this is how much debt had been repay, it might be less or eq than `_debtToCover`
-    /// @return ltvAfterLiquidationInBP if 0, means this is full liquidation
+    /// @return ltvAfterLiquidationInBp if 0, means this is full liquidation
     function calculateExactLiquidationAmounts(
         uint256 _debtToCover,
         uint256 _totalBorrowerDebtValue,
         uint256 _totalBorrowerDebtAssets,
         uint256 _totalBorrowerCollateralValue,
         uint256 _totalBorrowerCollateralAssets,
-        uint256 _liquidationFeeInBP
+        uint256 _liquidationFeeInBp
     )
         internal
         pure
-        returns (uint256 collateralAssetsToLiquidate, uint256 debtAssetsToRepay, uint256 ltvAfterLiquidationInBP)
+        returns (uint256 collateralAssetsToLiquidate, uint256 debtAssetsToRepay, uint256 ltvAfterLiquidationInBp)
     {
         if (_totalBorrowerCollateralValue == 0) { // we need to support this weird case to not revert on /0
             return (_totalBorrowerCollateralAssets, _debtToCover, 0);
         }
 
         if (_debtToCover == 0 || _totalBorrowerDebtValue == 0 || _totalBorrowerDebtAssets == 0) {
-            ltvAfterLiquidationInBP = _totalBorrowerDebtValue * _BASIS_POINTS;
-            /* unchecked */ { return (0, 0, ltvAfterLiquidationInBP / _totalBorrowerCollateralValue); }
+            ltvAfterLiquidationInBp = _totalBorrowerDebtValue * _BASIS_POINTS;
+            /* unchecked */ { return (0, 0, ltvAfterLiquidationInBp / _totalBorrowerCollateralValue); }
         }
 
         debtAssetsToRepay = _debtToCover;
@@ -72,7 +72,7 @@ library SiloLiquidationLibChecked {
 
         if (debtValueToCover * _BASIS_POINTS / _totalBorrowerDebtValue > _POSITION_DUST_LEVEL_IN_BP) { // full on dust
             collateralValueToLiquidate = collateralToLiquidate(
-                debtValueToCover, _totalBorrowerCollateralValue, _liquidationFeeInBP
+                debtValueToCover, _totalBorrowerCollateralValue, _liquidationFeeInBp
             );
 
             collateralAssetsToLiquidate = valueToAssetsRatio(
@@ -83,26 +83,26 @@ library SiloLiquidationLibChecked {
         }
 
         (collateralAssetsToLiquidate, collateralValueToLiquidate) = calculateCollateralsToLiquidate(
-            debtValueToCover, _totalBorrowerCollateralValue, _totalBorrowerCollateralAssets, _liquidationFeeInBP
+            debtValueToCover, _totalBorrowerCollateralValue, _totalBorrowerCollateralAssets, _liquidationFeeInBp
         );
 
         if (_totalBorrowerCollateralValue == collateralValueToLiquidate) {
-            ltvAfterLiquidationInBP = 0;
+            ltvAfterLiquidationInBp = 0;
         } else {
             /* unchecked */ {
             // 1. all subs are safe because this values are chunks of total, so we will not underflow
             // 2. * is save because if we did not overflow on LTV, then target LTV will be less, so we not overflow
-                ltvAfterLiquidationInBP = (_totalBorrowerDebtValue - debtValueToCover) * _BASIS_POINTS
+                ltvAfterLiquidationInBp = (_totalBorrowerDebtValue - debtValueToCover) * _BASIS_POINTS
                     / (_totalBorrowerCollateralValue - collateralValueToLiquidate);
             }
         }
     }
 
-    /// @param _ltInBP LT liquidation threshold for asset
+    /// @param _ltInBp LT liquidation threshold for asset
     /// @return minimalAcceptableLT min acceptable LT after liquidation
-    function minAcceptableLT(uint256 _ltInBP) internal pure returns (uint256 minimalAcceptableLT) {
+    function minAcceptableLT(uint256 _ltInBp) internal pure returns (uint256 minimalAcceptableLT) {
         // safe to uncheck because all values are in BP
-        /* unchecked */ { minimalAcceptableLT = _ltInBP * _MIN_LTV_AFTER_LIQUIDATION_IN_BP / _BASIS_POINTS; }
+        /* unchecked */ { minimalAcceptableLT = _ltInBp * _MIN_LTV_AFTER_LIQUIDATION_IN_BP / _BASIS_POINTS; }
     }
 
     /// @notice this function never reverts
@@ -139,34 +139,34 @@ library SiloLiquidationLibChecked {
     /// function will return full debt value and full collateral value, it will not revert. It is up to liquidator
     /// to make decision if it will be profitable
     /// @param _totalBorrowerCollateralValue regular and protected
-    /// @param _ltvAfterLiquidationInBP % of `repayValue` that liquidator will use as profit from liquidating,
+    /// @param _ltvAfterLiquidationInBp % of `repayValue` that liquidator will use as profit from liquidating,
     /// 4 basis point eg: 100% = 1e4
     function maxLiquidationPreview(
         uint256 _totalBorrowerDebtValue,
         uint256 _totalBorrowerCollateralValue,
-        uint256 _ltvAfterLiquidationInBP,
-        uint256 _liquidityFeeInBP
+        uint256 _ltvAfterLiquidationInBp,
+        uint256 _liquidityFeeInBp
     )
         internal pure returns (uint256 collateralValueToLiquidate, uint256 repayValue)
     {
         repayValue = estimateMaxRepayValue(
-            _totalBorrowerDebtValue, _totalBorrowerCollateralValue, _ltvAfterLiquidationInBP, _liquidityFeeInBP
+            _totalBorrowerDebtValue, _totalBorrowerCollateralValue, _ltvAfterLiquidationInBp, _liquidityFeeInBp
         );
 
         collateralValueToLiquidate = collateralToLiquidate(
-            repayValue, _totalBorrowerCollateralValue, _liquidityFeeInBP
+            repayValue, _totalBorrowerCollateralValue, _liquidityFeeInBp
         );
     }
 
     /// @param _debtToCover assets or value, but must be in sync with `_totalCollateral`
     /// @param _totalCollateral assets or value, but must be in sync with `_debtToCover`
     /// @return toLiquidate depends on inputs, it might be collateral value or collateral assets
-    function collateralToLiquidate(uint256 _debtToCover, uint256 _totalCollateral, uint256 _liquidityFeeInBP)
+    function collateralToLiquidate(uint256 _debtToCover, uint256 _totalCollateral, uint256 _liquidityFeeInBp)
         internal
         pure
         returns (uint256 toLiquidate)
     {
-        uint256 fee = _debtToCover * _liquidityFeeInBP;
+        uint256 fee = _debtToCover * _liquidityFeeInBp;
         /* unchecked */ { fee /= _BASIS_POINTS; }
 
         toLiquidate = _debtToCover + fee;
@@ -182,33 +182,33 @@ library SiloLiquidationLibChecked {
     /// @notice protocol does not uses this method, because in protocol our input is debt to cover in assers
     /// however this is useful to figure out what is max debt to cover.
     /// @param _totalBorrowerCollateralValue regular and protected
-    /// @param _ltvAfterLiquidationInBP % of `repayValue` that liquidator will use as profit from liquidating,
+    /// @param _ltvAfterLiquidationInBp % of `repayValue` that liquidator will use as profit from liquidating,
     /// 4 basis point eg: 100% = 1e4
     function estimateMaxRepayValue(
         uint256 _totalBorrowerDebtValue,
         uint256 _totalBorrowerCollateralValue,
-        uint256 _ltvAfterLiquidationInBP,
-        uint256 _liquidityFeeInBP
+        uint256 _ltvAfterLiquidationInBp,
+        uint256 _liquidityFeeInBp
     )
         internal pure returns (uint256 repayValue)
     {
         if (_totalBorrowerDebtValue == 0) return 0;
-        if (_liquidityFeeInBP >= _BASIS_POINTS) return 0;
+        if (_liquidityFeeInBp >= _BASIS_POINTS) return 0;
 
         // this will cover case, when _totalBorrowerCollateralValue == 0
         if (_totalBorrowerDebtValue >= _totalBorrowerCollateralValue) {
             return _totalBorrowerDebtValue;
         }
 
-        if (_ltvAfterLiquidationInBP == 0) { // full liquidation
+        if (_ltvAfterLiquidationInBp == 0) { // full liquidation
             return _totalBorrowerDebtValue;
         }
 
         // x = (Dv - LT * Cv) / (BP - LT - LT * f)
-        uint256 ltCv = _ltvAfterLiquidationInBP * _totalBorrowerCollateralValue;
+        uint256 ltCv = _ltvAfterLiquidationInBp * _totalBorrowerCollateralValue;
         /* unchecked */ { ltCv /= _BASIS_POINTS; }
 
-        // negative value means our current LT is lower than _ltvAfterLiquidationInBP
+        // negative value means our current LT is lower than _ltvAfterLiquidationInBp
         if (ltCv >= _totalBorrowerDebtValue) return 0;
 
         uint256 dividerR; // LT + LT * f
@@ -216,12 +216,12 @@ library SiloLiquidationLibChecked {
         /* unchecked */ {
         // safe because of above `LTCv >= _totalBorrowerDebtValue`
             repayValue = _totalBorrowerDebtValue - ltCv;
-        // we checked at begin `_liquidityFeeInBP >= _BASIS_POINTS`
+        // we checked at begin `_liquidityFeeInBp >= _BASIS_POINTS`
         // mul on BP will not overflow on uint256, div is safe
-            dividerR = _ltvAfterLiquidationInBP + _ltvAfterLiquidationInBP * _liquidityFeeInBP / _BASIS_POINTS;
+            dividerR = _ltvAfterLiquidationInBp + _ltvAfterLiquidationInBp * _liquidityFeeInBp / _BASIS_POINTS;
         }
 
-        // if dividerR is more than 100%, means it is impossible to go down to _ltvAfterLiquidationInBP, return all
+        // if dividerR is more than 100%, means it is impossible to go down to _ltvAfterLiquidationInBp, return all
         if (dividerR >= _BASIS_POINTS) {
             return _totalBorrowerDebtValue;
         }

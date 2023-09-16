@@ -55,7 +55,7 @@ library SiloSolvencyLib {
         ISiloConfig.ConfigData memory _debtConfig,
         address _user,
         uint256 _debtToCover,
-        uint256 _liquidationFeeInBP
+        uint256 _liquidationFeeInBp
     )
         internal
         view
@@ -72,27 +72,27 @@ library SiloSolvencyLib {
             uint256 totalBorrowerCollateralValue
         ) = SiloSolvencyLib.getPositionValues(ltvData, _collateralConfig.token, _debtConfig.token);
 
-        uint256 ltvInBP = totalBorrowerDebtValue * _BASIS_POINTS / totalBorrowerCollateralValue;
+        uint256 ltvInBp = totalBorrowerDebtValue * _BASIS_POINTS / totalBorrowerCollateralValue;
 
-        if (_collateralConfig.lt > ltvInBP) revert ISiloLiquidation.UserIsSolvent();
+        if (_collateralConfig.lt > ltvInBp) revert ISiloLiquidation.UserIsSolvent();
 
-        if (ltvInBP >= _BASIS_POINTS) { // in case of bad debt we return all
+        if (ltvInBp >= _BASIS_POINTS) { // in case of bad debt we return all
             return (ltvData.totalCollateralAssets, ltvData.debtAssets);
         }
 
-        (receiveCollateralAssets, repayDebtAssets, ltvInBP) = SiloLiquidationLib.calculateExactLiquidationAmounts(
+        (receiveCollateralAssets, repayDebtAssets, ltvInBp) = SiloLiquidationLib.calculateExactLiquidationAmounts(
             _debtToCover,
             totalBorrowerDebtValue,
             ltvData.debtAssets,
             totalBorrowerCollateralValue,
             ltvData.totalCollateralAssets,
-            _liquidationFeeInBP
+            _liquidationFeeInBp
         );
 
         if (receiveCollateralAssets == 0 || repayDebtAssets == 0) revert ISiloLiquidation.InsufficientLiquidation();
 
-        if (ltvInBP != 0) { // it can be 0 in case of full liquidation
-            if (ltvInBP < SiloLiquidationLib.minAcceptableLT(_collateralConfig.lt)) {
+        if (ltvInBp != 0) { // it can be 0 in case of full liquidation
+            if (ltvInBp < SiloLiquidationLib.minAcceptableLT(_collateralConfig.lt)) {
                 revert ISiloLiquidation.LiquidationTooBig();
             }
         }
