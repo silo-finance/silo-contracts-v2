@@ -881,7 +881,8 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable, LeverageReent
     }
 
     // TODO: allow selfliquidate
-    function liquidationCall( // solhint-disable function-max-lines
+    /// @dev it can be called on "debt silo" only
+    function liquidationCall( // solhint-disable function-max-lines, code-complexity
         address _collateralAsset,
         address _debtAsset,
         address _borrower,
@@ -896,14 +897,11 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable, LeverageReent
         if (_collateralAsset != collateralConfig.token) revert UnexpectedCollateralToken();
         if (_debtAsset != debtConfig.token) revert UnexpectedDebtToken();
 
-        // TODO bug, we need to accrue interest in correct silo?! `siloData`
         SiloLendingLib.accrueInterestForAsset(
             collateralConfig, siloData, total[AssetType.Collateral], total[AssetType.Debt]
         );
 
-        SiloLendingLib.accrueInterestForAsset(
-            debtConfig, siloData, total[AssetType.Collateral], total[AssetType.Debt]
-        );
+        SiloLendingLib.accrueInterestForAsset(debtConfig, siloData, total[AssetType.Collateral], total[AssetType.Debt]);
 
         (
             uint256 receiveCollateralAssets,
@@ -915,45 +913,71 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable, LeverageReent
         if (receiveCollateralAssets == 0 || repayDebtAssets == 0) revert UserIsSolvent();
 
         // always ZERO, we can receive shares, but we can not repay with shares
-        // TODO good? If not good, we need either separate method or interface will not be the same as AAVE
         uint256 zeroShares;
+        SiloLendingLib.repay(debtConfig, repayDebtAssets, zeroShares, _borrower, msg.sender, total[AssetType.Debt]);
 
-        SiloLendingLib.repay(
-            debtConfig,
-            repayDebtAssets,
-            zeroShares,
-            _borrower,
-            msg.sender,
-            total[AssetType.Debt]
-        );
-
-        (uint256 borrowerCollateralAssets,) = SiloSolvencyLib.getAssetAndSharesWithInterest(
+        (
+            uint256 withdrawAssetsFromCollateral, uint256 withdrawAssetsFromProtected
+        ) = SiloSolvencyLib.splitReceiveCollateralToLiquidate(
+            receiveCollateralAssets,
             collateralConfig.silo,
             collateralConfig.interestRateModel,
             collateralConfig.token,
             collateralConfig.collateralShareToken,
-            _borrower,
-            ISilo.AccrueInterestInMemory.No,
-            MathUpgradeable.Rounding.Down
+            _borrower
         );
 
-        uint256 withdrawFromCollateral;
-        uint256 withdrawFromProtected;
+        emit LiquidationCall(msg.sender, _receiveSToken);
 
-        unchecked {
-            (withdrawFromCollateral, withdrawFromProtected) = receiveCollateralAssets > borrowerCollateralAssets
-                // safe to unchecked because of above condition
-                ? (borrowerCollateralAssets, receiveCollateralAssets - borrowerCollateralAssets)
-                : (receiveCollateralAssets, 0);
+        if (_receiveSToken) {
+            if (withdrawAssetsFromProtected != 0) {
+                SiloSolvencyLib.liquidationSTransfer(
+                    _borrower,
+                    msg.sender,
+                    withdrawAssetsFromProtected,
+                    total[ISilo.AssetType.Protected].assets,
+                    IShareToken(collateralConfig.protectedShareToken)
+                );
+            }
+
+            if (withdrawAssetsFromCollateral != 0) {
+                SiloSolvencyLib.liquidationSTransfer(
+                    _borrower,
+                    msg.sender,
+                    withdrawAssetsFromCollateral,
+                    total[ISilo.AssetType.Collateral].assets,
+                    IShareToken(collateralConfig.collateralShareToken)
+                );
+            }
+
+            return;
         }
 
-        if (withdrawFromCollateral != 0) {
+        if (withdrawAssetsFromProtected != 0) {
+            // TODO must be call to other silo
+            SiloERC4626Lib.withdraw(
+                collateralConfig.token,
+                collateralConfig.protectedShareToken,
+                SiloERC4626Lib.WithdrawParams({
+                    assets: withdrawAssetsFromProtected,
+                    shares: 0,
+                    receiver: msg.sender,
+                    owner: _borrower,
+                    spender: _borrower,
+                    assetType: ISilo.AssetType.Protected
+                }),
+                total[ISilo.AssetType.Protected],
+                0 // TODO do we need to check liquidity for protected? I think not, but let's use f() as param
+            );
+        }
+
+        if (withdrawAssetsFromCollateral != 0) {
             // TODO must be call to other silo
             SiloERC4626Lib.withdraw(
                 collateralConfig.token,
                 collateralConfig.collateralShareToken,
                 SiloERC4626Lib.WithdrawParams({
-                    assets: withdrawFromCollateral,
+                    assets: withdrawAssetsFromCollateral,
                     shares: 0,
                     receiver: msg.sender,
                     owner: _borrower,
@@ -964,26 +988,6 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable, LeverageReent
                 _liquidity()
             );
         }
-
-        if (withdrawFromProtected != 0) {
-            // TODO must be call to other silo
-            SiloERC4626Lib.withdraw(
-                collateralConfig.token,
-                collateralConfig.protectedShareToken,
-                SiloERC4626Lib.WithdrawParams({
-                    assets: withdrawFromProtected,
-                    shares: 0,
-                    receiver: msg.sender,
-                    owner: _borrower,
-                    spender: _borrower,
-                    assetType: ISilo.AssetType.Protected
-                }),
-                total[ISilo.AssetType.Protected],
-                0 // do we need to check liquidity for protected?
-            );
-        }
-
-        emit LiquidationCall(msg.sender, _receiveSToken);
     }
 
     function _liquidity() internal view returns (uint256 liquidity) {

@@ -82,6 +82,11 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
         factory = _factory;
     }
 
+    /// @inheritdoc IShareToken
+    function liquidationTransfer(address _owner, address _recipient, uint256 _amount) external virtual onlySilo {
+        _transfer(_owner, _recipient, _amount);
+    }
+
     /// @param _silo Silo address for which tokens was deployed
     function __ShareToken_init(ISilo _silo, address _hookReceiver) internal onlyInitializing {
         silo = _silo;
