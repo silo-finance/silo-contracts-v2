@@ -20,6 +20,26 @@ library SiloSolvencyLib {
     uint256 internal constant _PRECISION_DECIMALS = 1e18;
     uint256 internal constant _BASIS_POINTS = 1e4;
 
+    /// @dev this method expect accrue interest were executed before
+    /// it transfer sToken from borrower to liquidator
+    function liquidationSTransfer(
+        address _borrower,
+        address _liquidator,
+        uint256 _amountToLiquidate,
+        uint256 _totalAssets,
+        IShareToken _shareToken
+    ) internal {
+        // we already accrued interest, so we can work directly on assets
+        uint256 shares = SiloERC4626Lib.convertToShares(
+            _amountToLiquidate,
+            _totalAssets,
+            _shareToken.totalSupply(),
+            MathUpgradeable.Rounding.Down
+        );
+
+        _shareToken.liquidationTransfer(_borrower, _liquidator, shares);
+    }
+
     function getAssetAndSharesWithInterest(
         address _silo,
         address _interestRateModel,
@@ -224,5 +244,36 @@ library SiloSolvencyLib {
     ) internal view returns (bool) {
         uint256 ltv = getLtv(_collateralConfig, _debtConfig, _borrower, ISilo.OracleType.MaxLtv, _accrueInMemory);
         return ltv < _collateralConfig.maxLtv;
+    }
+
+    function splitReceiveCollateralToLiquidate(
+        uint256 _receiveCollateralToLiquidate,
+        address _collateralSilo,
+        address _interestRateModel,
+        address _token,
+        address _shareToken,
+        address _borrower
+    )
+        internal
+        view
+        returns (uint256 withdrawAssetsFromCollateral, uint256 withdrawAssetsFromProtected)
+    {
+        (uint256 borrowerCollateralAssets,) = SiloSolvencyLib.getAssetAndSharesWithInterest(
+            _collateralSilo,
+            _interestRateModel,
+            _token,
+            _shareToken,
+            _borrower,
+            ISilo.AccrueInterestInMemory.No,
+            MathUpgradeable.Rounding.Down
+        );
+
+        unchecked {
+            (withdrawAssetsFromCollateral, withdrawAssetsFromProtected) =
+                _receiveCollateralToLiquidate > borrowerCollateralAssets
+                    // safe to unchecked because of above condition
+                    ? (borrowerCollateralAssets, _receiveCollateralToLiquidate - borrowerCollateralAssets)
+                    : (_receiveCollateralToLiquidate, 0);
+        }
     }
 }
