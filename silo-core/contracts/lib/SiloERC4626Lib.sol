@@ -124,7 +124,9 @@ library SiloERC4626Lib {
 
         // `assets` can never be more then `totalAssets` because we always increase `totalAssets` by
         // `assets` and interest
-        unchecked { _totalCollateral.assets = cache.totalAssets - assets; }
+        unchecked {
+            _totalCollateral.assets = cache.totalAssets - assets;
+        }
 
         // `burn` checks if `_spender` is allowed to withdraw `_owner` assets. `burn` calls hook receiver that
         // can potentially reenter but state changes are already completed.
@@ -136,11 +138,11 @@ library SiloERC4626Lib {
         }
     }
 
-    function getWithdrawCache(
-        address _shareToken,
-        address _owner,
-        ISilo.Assets storage _totalCollateral
-    ) internal view returns (WithdrawCache memory cache) {
+    function getWithdrawCache(address _shareToken, address _owner, ISilo.Assets storage _totalCollateral)
+        internal
+        view
+        returns (WithdrawCache memory cache)
+    {
         cache.totalAssets = _totalCollateral.assets;
         cache.totalShares = IShareToken(_shareToken).totalSupply();
         cache.shareBalance = IShareToken(_shareToken).balanceOf(_owner);
@@ -166,24 +168,6 @@ library SiloERC4626Lib {
         }
     }
 
-    /// @param _convertMethod if you using assets then choose `convertToShares`, otherwise `convertToAssets`
-    function convertToAssetsOrToShares(
-        ISiloConfig _config,
-        uint256 _assetsOrShares,
-        ISilo.AssetType _assetType,
-        function(uint256, uint256, uint256, MathUpgradeable.Rounding) view returns (uint256) _convertMethod,
-        MathUpgradeable.Rounding _rounding,
-        uint256 _totalAssets
-    ) internal view returns (uint256 assetsOrShares) {
-        ISiloConfig.ConfigData memory configData = _config.getConfig(address(this));
-
-        (uint256 totalAssets, uint256 totalShares) = SiloStdLib.getTotalAssetsAndTotalShares(
-            configData, _assetType, _totalAssets
-        );
-
-        return _convertMethod(_assetsOrShares, totalAssets, totalShares, _rounding);
-    }
-
     /// @param _liquidity method that will provide liquidity,
     /// it is method because we need it only if `_assetType` == `ISilo.AssetType.Collateral`
     /// @param _totalAssets based on `_assetType` this is total collateral/protected assets
@@ -197,56 +181,48 @@ library SiloERC4626Lib {
         (ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig) =
             _config.getConfigs(address(this));
 
-        {
-            SiloSolvencyLib.LtvData memory ltvData = SiloSolvencyLib.getAssetsDataForLtvCalculations(
-                collateralConfig, debtConfig, _owner, ISilo.OracleType.Solvency, ISilo.AccrueInterestInMemory.Yes
-            );
-
-            (
-                uint256 collateralValue, uint256 debtValue
-            ) = SiloSolvencyLib.getPositionValues(ltvData, collateralConfig.token, debtConfig.token);
-
-            uint256 ltv = debtValue * _PRECISION_DECIMALS / collateralValue;
-
-            // if LTV is higher than LT, user cannot withdraw
-            if (ltv >= collateralConfig.lt) return (0, 0);
-
-            uint256 minimumCollateralValue = debtValue * _PRECISION_DECIMALS / collateralConfig.lt;
-            uint256 spareCollateralValue = collateralValue - minimumCollateralValue;
-
-            // these are total assets (protected + collateral) that _owner can withdraw
-            assets = ltvData.totalCollateralAssets * spareCollateralValue / collateralValue;
-        }
-
-        (uint256 totalAssets, uint256 totalShares) = SiloStdLib.getTotalAssetsAndTotalShares(
-            collateralConfig, _assetType, _totalAssets
+        SiloSolvencyLib.LtvData memory ltvData = SiloSolvencyLib.getAssetsDataForLtvCalculations(
+            collateralConfig, debtConfig, _owner, ISilo.OracleType.Solvency, ISilo.AccrueInterestInMemory.Yes
         );
 
-        shares = SiloERC4626Lib.convertToShares(assets, totalAssets, totalShares, MathUpgradeable.Rounding.Down);
+        (uint256 collateralValue, uint256 debtValue) =
+            SiloSolvencyLib.getPositionValues(ltvData, collateralConfig.token, debtConfig.token);
 
-        uint256 shareBalance;
+        uint256 ltv = debtValue * _PRECISION_DECIMALS / collateralValue;
 
-        if (_assetType == ISilo.AssetType.Protected) {
-            shareBalance = IShareToken(collateralConfig.protectedShareToken).balanceOf(_owner);
+        // if LTV is higher than LT, user cannot withdraw
+        if (ltv >= collateralConfig.lt) return (0, 0);
+
+        uint256 minimumCollateralValue = debtValue * _PRECISION_DECIMALS / collateralConfig.lt;
+        uint256 spareCollateralValue = collateralValue - minimumCollateralValue;
+
+        // these are total assets (protected + collateral) that _owner can withdraw
+        assets = (ltvData.protectedAssets + ltvData.collateralAssets) * spareCollateralValue / collateralValue;
+
+        if (_assetType == ISilo.AssetType.Protected && assets > ltvData.protectedAssets) {
+            assets = ltvData.protectedAssets;
+            shares = SiloERC4626Lib.convertToShares(
+                assets,
+                _totalAssets,
+                IShareToken(collateralConfig.protectedShareToken).totalSupply(),
+                MathUpgradeable.Rounding.Down
+            );
         } else if (_assetType == ISilo.AssetType.Collateral) {
-            shareBalance = IShareToken(collateralConfig.collateralShareToken).balanceOf(_owner);
+            if (assets > ltvData.collateralAssets) {
+                assets = ltvData.collateralAssets;
+            }
 
             uint256 liquidAssets = _liquidity();
-
-            // check liquidity
             if (assets > liquidAssets) {
                 assets = liquidAssets;
-                shares =
-                    SiloERC4626Lib.convertToShares(assets, totalAssets, totalShares, MathUpgradeable.Rounding.Down);
             }
-        } else {
-            revert ISilo.WrongAssetType();
-        }
 
-        // check if _owner has enough collateral balance
-        if (shares > shareBalance) {
-            shares = shareBalance;
-            assets = SiloERC4626Lib.convertToAssets(shares, totalAssets, totalShares, MathUpgradeable.Rounding.Down);
+            shares = SiloERC4626Lib.convertToShares(
+                assets,
+                _totalAssets,
+                IShareToken(collateralConfig.collateralShareToken).totalSupply(),
+                MathUpgradeable.Rounding.Down
+            );
         }
     }
 
