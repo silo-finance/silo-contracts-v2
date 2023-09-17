@@ -185,7 +185,7 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable, LeverageReent
     }
 
     function deposit(uint256 _assets, address _receiver) external virtual nonReentrant returns (uint256 shares) {
-        ISiloConfig.ConfigData memory configData = config.getConfig(address(this));
+        (, ISiloConfig.ConfigData memory configData) = _accrueInterest();
 
         (, shares) = _deposit(
             configData,
@@ -215,14 +215,12 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable, LeverageReent
     }
 
     function mint(uint256 _shares, address _receiver) external virtual nonReentrant returns (uint256 assets) {
-        // avoid magic number 0
-        uint256 mintAssets = 0;
-        ISiloConfig.ConfigData memory configData = config.getConfig(address(this));
+        (, ISiloConfig.ConfigData memory configData) = _accrueInterest();
 
         (assets,) = _deposit(
             configData,
             SiloERC4626Lib.DepositParams({
-                assets: mintAssets,
+                assets: 0,
                 shares: _shares,
                 receiver: _receiver,
                 assetType: AssetType.Collateral,
@@ -358,7 +356,7 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable, LeverageReent
         nonReentrant
         returns (uint256 shares)
     {
-        ISiloConfig.ConfigData memory configData = config.getConfig(address(this));
+        (, ISiloConfig.ConfigData memory configData) = _accrueInterest();
 
         address collateralShareToken = _assetType == AssetType.Collateral
             ? configData.collateralShareToken
@@ -402,7 +400,7 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable, LeverageReent
         nonReentrant
         returns (uint256 assets)
     {
-        ISiloConfig.ConfigData memory configData = config.getConfig(address(this));
+        (, ISiloConfig.ConfigData memory configData) = _accrueInterest();
 
         address collateralShareToken = _assetType == AssetType.Collateral
             ? configData.collateralShareToken
@@ -676,9 +674,7 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable, LeverageReent
 
         if (!SiloLendingLib.borrowPossible(debtConfig, _borrower)) revert BorrowNotPossible();
 
-        SiloLendingLib.accrueInterestForAsset(
-            debtConfig, siloData, total[AssetType.Collateral], total[AssetType.Debt]
-        );
+        _accrueInterest(debtConfig);
 
         uint256 assets;
 
@@ -710,18 +706,13 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable, LeverageReent
     }
 
     function accrueInterest() external virtual returns (uint256 accruedInterest) {
-        ISiloConfig.ConfigData memory configData = config.getConfig(address(this));
-
-        accruedInterest = SiloLendingLib.accrueInterestForAsset(
-            configData, siloData, total[AssetType.Collateral], total[AssetType.Debt]
-        );
+        (accruedInterest,) = _accrueInterest();
     }
 
     function withdrawFees() external virtual {
         SiloStdLib.withdrawFees(config, factory, siloData);
     }
 
-    // TODO use this in other places to simplify code
     function _accrueInterest()
         internal
         virtual
@@ -734,6 +725,16 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable, LeverageReent
         );
     }
 
+    function _accrueInterest(ISiloConfig.ConfigData memory _configData)
+        internal
+        virtual
+        returns (uint256 accruedInterest)
+    {
+        accruedInterest = SiloLendingLib.accrueInterestForAsset(
+            _configData, siloData, total[AssetType.Collateral], total[AssetType.Debt]
+        );
+    }
+
     function _deposit(
         ISiloConfig.ConfigData memory _configData,
         SiloERC4626Lib.DepositParams memory _depositParams
@@ -743,12 +744,7 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable, LeverageReent
         returns (uint256 assets, uint256 shares)
     {
         if (_depositParams.assetType == AssetType.Debt) revert ISilo.WrongAssetType();
-
         if (!SiloERC4626Lib.depositPossible(_configData, _depositParams.receiver)) revert DepositNotPossible();
-
-        SiloLendingLib.accrueInterestForAsset(
-            _configData, siloData, total[AssetType.Collateral], total[AssetType.Debt]
-        );
 
         (assets, shares) = SiloERC4626Lib.deposit(
             _configData.token,
@@ -774,9 +770,7 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable, LeverageReent
         (ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig) =
             config.getConfigs(address(this));
 
-        SiloLendingLib.accrueInterestForAsset(
-            collateralConfig, siloData, total[AssetType.Collateral], total[AssetType.Debt]
-        );
+        _accrueInterest();
 
         address shareToken = _params.assetType == AssetType.Protected
             ? collateralConfig.protectedShareToken
@@ -808,12 +802,9 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable, LeverageReent
         (ISiloConfig.ConfigData memory debtConfig, ISiloConfig.ConfigData memory collateralConfig) =
             config.getConfigs(address(this));
 
-        // config for this Silo is always at index 0
         if (!SiloLendingLib.borrowPossible(debtConfig, _borrower)) revert BorrowNotPossible();
 
-        SiloLendingLib.accrueInterestForAsset(
-            debtConfig, siloData, total[AssetType.Collateral], total[AssetType.Debt]
-        );
+        _accrueInterest(debtConfig);
 
         (assets, shares) = SiloLendingLib.borrow(
             debtConfig,
@@ -838,11 +829,7 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable, LeverageReent
         virtual
         returns (uint256 assets, uint256 shares)
     {
-        ISiloConfig.ConfigData memory configData = config.getConfig(address(this));
-
-        SiloLendingLib.accrueInterestForAsset(
-            configData, siloData, total[AssetType.Collateral], total[AssetType.Debt]
-        );
+        (, ISiloConfig.ConfigData memory configData) = _accrueInterest();
 
         (assets, shares) = SiloLendingLib.repay(
             configData, _assets, _shares, _borrower, msg.sender, total[AssetType.Debt]
@@ -909,7 +896,7 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable, LeverageReent
         if (_collateralAsset != collateralConfig.token) revert UnexpectedCollateralToken();
         if (_debtAsset != debtConfig.token) revert UnexpectedDebtToken();
 
-        SiloLendingLib.accrueInterestForAsset(debtConfig, siloData, total[AssetType.Collateral], total[AssetType.Debt]);
+        _accrueInterest(debtConfig);
         Silo(debtConfig.otherSilo).accrueInterest();
 
         bool selfLiquidation = _borrower == msg.sender;
