@@ -48,7 +48,7 @@ contract SiloFactory is ISiloFactory, ERC721Upgradeable, OwnableUpgradeable {
         address _shareDebtTokenImpl,
         uint256 _daoFee,
         address _daoFeeReceiver
-    ) external initializer {
+    ) external virtual initializer {
         __ERC721_init("Silo Finance Fee Receiver", "feeSILO");
 
         // start IDs from 1
@@ -77,7 +77,7 @@ contract SiloFactory is ISiloFactory, ERC721Upgradeable, OwnableUpgradeable {
     /// @dev share tokens in _configData are overridden so can be set to address(0). Sanity data validation
     ///      is done by SiloConfig.
     /// @param _initData silo initialization data
-    function createSilo(ISiloConfig.InitData memory _initData) external returns (ISiloConfig siloConfig) {
+    function createSilo(ISiloConfig.InitData memory _initData) external virtual returns (ISiloConfig siloConfig) {
         _validateSiloInitData(_initData);
         (ISiloConfig.ConfigData memory configData0, ISiloConfig.ConfigData memory configData1) = _copyConfig(_initData);
 
@@ -129,43 +129,43 @@ contract SiloFactory is ISiloFactory, ERC721Upgradeable, OwnableUpgradeable {
         emit NewSilo(configData0.token, configData1.token, configData0.silo, configData1.silo, address(siloConfig));
     }
 
-    function setDaoFee(uint256 _newDaoFee) external onlyOwner {
+    function setDaoFee(uint256 _newDaoFee) external virtual onlyOwner {
         _setDaoFee(_newDaoFee);
     }
 
-    function setMaxDeployerFee(uint256 _newMaxDeployerFeeInBp) external onlyOwner {
+    function setMaxDeployerFee(uint256 _newMaxDeployerFeeInBp) external virtual onlyOwner {
         _setMaxDeployerFee(_newMaxDeployerFeeInBp);
     }
 
-    function setMaxFlashloanFee(uint256 _newMaxFlashloanFeeInBp) external onlyOwner {
+    function setMaxFlashloanFee(uint256 _newMaxFlashloanFeeInBp) external virtual onlyOwner {
         _setMaxFlashloanFee(_newMaxFlashloanFeeInBp);
     }
 
-    function setMaxLiquidationFee(uint256 _newMaxLiquidationFeeInBp) external onlyOwner {
+    function setMaxLiquidationFee(uint256 _newMaxLiquidationFeeInBp) external virtual onlyOwner {
         _setMaxLiquidationFee(_newMaxLiquidationFeeInBp);
     }
 
-    function setDaoFeeReceiver(address _newDaoFeeReceiver) external onlyOwner {
+    function setDaoFeeReceiver(address _newDaoFeeReceiver) external virtual onlyOwner {
         _setDaoFeeReceiver(_newDaoFeeReceiver);
     }
 
-    function isSilo(address _silo) external view returns (bool) {
+    function isSilo(address _silo) external view virtual returns (bool) {
         return siloToId[_silo] != 0;
     }
 
-    function idToSilos(uint256 _id) external view returns (address[2] memory silos) {
+    function idToSilos(uint256 _id) external view virtual returns (address[2] memory silos) {
         silos = _idToSilos[_id];
     }
 
-    function getNextSiloId() external view returns (uint256) {
+    function getNextSiloId() external view virtual returns (uint256) {
         return _siloId.current();
     }
 
-    function getFeeReceivers(address _silo) external view returns (address dao, address deployer) {
+    function getFeeReceivers(address _silo) external view virtual returns (address dao, address deployer) {
         return (daoFeeReceiver, _ownerOf(siloToId[_silo]));
     }
 
-    function _setDaoFee(uint256 _newDaoFee) internal {
+    function _setDaoFee(uint256 _newDaoFee) internal virtual {
         if (_newDaoFee > MAX_DAO_FEE) revert MaxFee();
 
         daoFeeInBp = _newDaoFee;
@@ -173,26 +173,26 @@ contract SiloFactory is ISiloFactory, ERC721Upgradeable, OwnableUpgradeable {
         emit DaoFeeChanged(_newDaoFee);
     }
 
-    function _setMaxDeployerFee(uint256 _newMaxDeployerFee) internal {
+    function _setMaxDeployerFee(uint256 _newMaxDeployerFee) internal virtual {
         maxDeployerFeeInBp = _newMaxDeployerFee;
 
         emit MaxDeployerFeeChanged(_newMaxDeployerFee);
     }
 
-    function _setMaxFlashloanFee(uint256 _newMaxFlashloanFee) internal {
+    function _setMaxFlashloanFee(uint256 _newMaxFlashloanFee) internal virtual {
         maxFlashloanFeeInBp = _newMaxFlashloanFee;
 
         emit MaxFlashloanFeeChanged(_newMaxFlashloanFee);
     }
 
-    function _setMaxLiquidationFee(uint256 _newMaxLiquidationFee) internal {
+    function _setMaxLiquidationFee(uint256 _newMaxLiquidationFee) internal virtual {
         if (_newMaxLiquidationFee >= 1e4) revert("TODO in all places");
         maxLiquidationFeeInBp = _newMaxLiquidationFee;
 
         emit MaxLiquidationFeeChanged(_newMaxLiquidationFee);
     }
 
-    function _setDaoFeeReceiver(address _newDaoFeeReceiver) internal {
+    function _setDaoFeeReceiver(address _newDaoFeeReceiver) internal virtual {
         if (_newDaoFeeReceiver == address(0)) revert ZeroAddress();
 
         daoFeeReceiver = _newDaoFeeReceiver;
@@ -206,7 +206,7 @@ contract SiloFactory is ISiloFactory, ERC721Upgradeable, OwnableUpgradeable {
         address _protectedHookReceiver,
         address _collateralHookReceiver,
         address _debtHookReceiver
-    ) internal {
+    ) internal virtual {
         if (_protectedHookReceiver != address(0)) {
             IHookReceiver(_protectedHookReceiver).initialize(_deployer, IShareToken(configData.protectedShareToken));
         }
@@ -228,7 +228,7 @@ contract SiloFactory is ISiloFactory, ERC721Upgradeable, OwnableUpgradeable {
         return "//app.silo.finance/silo/";
     }
 
-    function _validateSiloInitData(ISiloConfig.InitData memory _initData) internal view {
+    function _validateSiloInitData(ISiloConfig.InitData memory _initData) internal view virtual {
         // solhint-disable-previous-line code-complexity
         if (_initData.token0 == _initData.token1) revert SameAsset();
         if (_initData.maxLtv0 > _initData.lt0) revert InvalidMaxLtv();
@@ -255,6 +255,7 @@ contract SiloFactory is ISiloFactory, ERC721Upgradeable, OwnableUpgradeable {
     function _copyConfig(ISiloConfig.InitData memory _initData)
         internal
         pure
+        virtual
         returns (ISiloConfig.ConfigData memory configData0, ISiloConfig.ConfigData memory configData1)
     {
         configData0.deployerFeeInBp = _initData.deployerFeeInBp;

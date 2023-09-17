@@ -118,7 +118,7 @@ contract SiloConfig is ISiloConfig {
         _BORROWABLE1 = _configData1.borrowable;
     }
 
-    function getAssetForSilo(address _silo) public view returns (address asset) {
+    function getAssetForSilo(address _silo) public view virtual returns (address asset) {
         if (_silo == _SILO0) {
             return _TOKEN0;
         } else if (_silo == _SILO1) {
@@ -128,7 +128,7 @@ contract SiloConfig is ISiloConfig {
         }
     }
 
-    function getConfigs(address _silo) public view returns (ConfigData memory, ConfigData memory) {
+    function getConfigs(address _silo) public view virtual returns (ConfigData memory, ConfigData memory) {
         ConfigData memory configData0 = ConfigData({
             daoFeeInBp: _DAO_FEE,
             deployerFeeInBp: _DEPLOYER_FEE,
@@ -177,7 +177,7 @@ contract SiloConfig is ISiloConfig {
         }
     }
 
-    function getConfig(address _silo) public view returns (ConfigData memory) {
+    function getConfig(address _silo) public view virtual returns (ConfigData memory) {
         if (_silo == _SILO0) {
             return ConfigData({
                 daoFeeInBp: _DAO_FEE,
@@ -224,6 +224,7 @@ contract SiloConfig is ISiloConfig {
     function getFeesWithAsset(address _silo)
         public
         view
+        virtual
         returns (uint256 daoFee, uint256 deployerFee, uint256 flashloanFeeInBp, address asset)
     {
         daoFee = _DAO_FEE;

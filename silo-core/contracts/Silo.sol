@@ -127,6 +127,7 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable, LeverageReent
     function getFeesAndFeeReceivers()
         external
         view
+        virtual
         returns (address daoFeeReceiver, address deployerFeeReceiver, uint256 daoFee, uint256 deployerFee)
     {
         (daoFeeReceiver, deployerFeeReceiver, daoFee, deployerFee,) =
@@ -630,17 +631,18 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable, LeverageReent
         (assets,) = _repay(zeroAssets, _shares, _borrower);
     }
 
-    function maxFlashLoan(address _token) external view returns (uint256 maxLoan) {
+    function maxFlashLoan(address _token) external view virtual returns (uint256 maxLoan) {
         maxLoan =
             _token == config.getAssetForSilo(address(this)) ? IERC20Upgradeable(_token).balanceOf(address(this)) : 0;
     }
 
-    function flashFee(address _token, uint256 _amount) external view returns (uint256 fee) {
+    function flashFee(address _token, uint256 _amount) external view virtual returns (uint256 fee) {
         fee = SiloStdLib.flashFee(config, _token, _amount);
     }
 
     function flashLoan(IERC3156FlashBorrower _receiver, address _token, uint256 _amount, bytes calldata _data)
         external
+        virtual
         leverageNonReentrant
         returns (bool success)
     {
@@ -885,7 +887,7 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable, LeverageReent
         address _borrower,
         uint256 _debtToCover,
         bool _receiveSToken
-    ) external {
+    ) external virtual {
         (
             ISiloConfig.ConfigData memory debtConfig,
             ISiloConfig.ConfigData memory collateralConfig
@@ -1003,7 +1005,7 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable, LeverageReent
         }
     }
 
-    function _liquidity() internal view returns (uint256 liquidity) {
+    function _liquidity() internal view virtual returns (uint256 liquidity) {
         liquidity = SiloStdLib.liquidity(total[AssetType.Collateral].assets, total[AssetType.Debt].assets);
     }
 }

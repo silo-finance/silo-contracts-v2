@@ -168,7 +168,7 @@ contract InterestRateModelV2 is IInterestRateModel {
         );
     }
 
-    function getConfig(address _silo) public view returns (ConfigWithState memory fullConfig) {
+    function getConfig(address _silo) public view virtual returns (ConfigWithState memory fullConfig) {
         Setup memory setup = getSetup[_silo];
         Config memory config = setup.config.getConfig();
 
