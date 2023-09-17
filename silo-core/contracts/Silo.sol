@@ -880,7 +880,7 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable, LeverageReent
     }
 
     /// @dev it can be called on "debt silo" only
-    /// @notice user can use this method to do selfl iquidation, it that case check for LT requirements will be ignored
+    /// @notice user can use this method to do self liquidation, it that case check for LT requirements will be ignored
     function liquidationCall(
         address _collateralAsset,
         address _debtAsset,
@@ -927,7 +927,7 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable, LeverageReent
     }
 
     /// @dev that method allow t ofinish liquidation process by giving up collateral to liquidator
-    function withdrawCollateralToLiquidate( // solhint-disable function-max-lines
+    function withdrawCollateralToLiquidate(
         uint256 _collateralToLiquidate,
         address _borrower,
         address _liquidator,
@@ -936,73 +936,16 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable, LeverageReent
         ISiloConfig.ConfigData memory collateralConfig = config.getConfig(address(this));
         if (msg.sender != collateralConfig.otherSilo) revert OnlySilo();
 
-        (
-            uint256 withdrawAssetsFromCollateral, uint256 withdrawAssetsFromProtected
-        ) = SiloSolvencyLib.splitReceiveCollateralToLiquidate(
+        SiloSolvencyLib.withdrawCollateralToLiquidate(
+            collateralConfig,
             _collateralToLiquidate,
-            collateralConfig.silo,
-            collateralConfig.interestRateModel,
-            collateralConfig.collateralShareToken,
-            _borrower
+            _borrower,
+            _liquidator,
+            _receiveSToken,
+            total[AssetType.Collateral],
+            total[AssetType.Protected],
+            _liquidity
         );
-
-        if (_receiveSToken) {
-            if (withdrawAssetsFromProtected != 0) {
-                SiloSolvencyLib.liquidationSTransfer(
-                    _borrower,
-                    _liquidator,
-                    withdrawAssetsFromProtected,
-                    total[ISilo.AssetType.Protected].assets,
-                    IShareToken(collateralConfig.protectedShareToken)
-                );
-            }
-
-            if (withdrawAssetsFromCollateral != 0) {
-                SiloSolvencyLib.liquidationSTransfer(
-                    _borrower,
-                    _liquidator,
-                    withdrawAssetsFromCollateral,
-                    total[ISilo.AssetType.Collateral].assets,
-                    IShareToken(collateralConfig.collateralShareToken)
-                );
-            }
-
-            return;
-        }
-
-        if (withdrawAssetsFromProtected != 0) {
-            SiloERC4626Lib.withdraw(
-                collateralConfig.token,
-                collateralConfig.protectedShareToken,
-                SiloERC4626Lib.WithdrawParams({
-                    assets: withdrawAssetsFromProtected,
-                    shares: 0,
-                    receiver: _liquidator,
-                    owner: _borrower,
-                    spender: _borrower,
-                    assetType: ISilo.AssetType.Protected
-                }),
-                total[ISilo.AssetType.Protected],
-                _liquidity
-            );
-        }
-
-        if (withdrawAssetsFromCollateral != 0) {
-            SiloERC4626Lib.withdraw(
-                collateralConfig.token,
-                collateralConfig.collateralShareToken,
-                SiloERC4626Lib.WithdrawParams({
-                    assets: withdrawAssetsFromCollateral,
-                    shares: 0,
-                    receiver: _liquidator,
-                    owner: _borrower,
-                    spender: _borrower,
-                    assetType: ISilo.AssetType.Collateral
-                }),
-                total[ISilo.AssetType.Collateral],
-                _liquidity
-            );
-        }
     }
 
     function _liquidity() internal view virtual returns (uint256 liquidity) {
