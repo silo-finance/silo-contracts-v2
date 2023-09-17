@@ -100,6 +100,11 @@
 
 - Copy of Balancer's implementation of the StakelessGaugeCheckpointer.sol ([5c7ea22](https://github.com/silo-finance/silo-contracts-v2/pull/72/commits/5c7ea225313e8a3b10ba809f47153271fcdac6fc))
 
+### stakeless-gauge/CCIPGaugeCheckpointer.sol
+- Implementation of the `CCIPGaugeCheckpointer` ([bfa6cfa](https://github.com/silo-finance/silo-contracts-v2/pull/111/commits/bfa6cfa11fd91e51c6904b9399247774dd2022df))
+
+- Copy of the [StakelessGaugeCheckpointer.sol commit 7bddde6](https://github.com/silo-finance/silo-contracts-v2/pull/72/commits/7bddde63c1b895c5ec938a320468a53ca666379e) ([2f0e3ed](https://github.com/silo-finance/silo-contracts-v2/pull/111/commits/2f0e3edf24969ebbd3c8c65ca68b4eaa6c5005d6))
+
 ### arbitrum/ArbitrumRootGauge.sol
 - Updated and import of the StakelessGauge ([0181db7](https://github.com/silo-finance/silo-contracts-v2/pull/71/commits/0181db745f6e252033c879805fcd9e610b7609af))
 

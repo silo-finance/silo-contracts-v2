@@ -30,6 +30,7 @@ library VeSiloContracts {
     string public constant FEE_SWAPPER = "FeeSwapper.sol";
     string public constant GAUGE_ADDER = "GaugeAdder.sol";
     string public constant STAKELESS_GAUGE_CHECKPOINTER = "StakelessGaugeCheckpointer.sol";
+    string public constant CCIP_GAUGE_CHECKPOINTER = "CCIPGaugeCheckpointer.sol";
     string public constant STAKELESS_GAUGE_CHECKPOINTER_ADAPTOR = "StakelessGaugeCheckpointerAdaptor.sol";
     string public constant UNISWAP_SWAPPER = "UniswapSwapper.sol";
 }
