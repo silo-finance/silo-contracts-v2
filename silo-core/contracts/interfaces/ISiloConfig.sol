@@ -37,6 +37,7 @@ interface ISiloConfig {
         uint256 daoFeeInBp;
         uint256 deployerFeeInBp;
         address silo;
+        address otherSilo;
         address token;
         address protectedShareToken;
         address collateralShareToken;

@@ -75,7 +75,8 @@ library SiloSolvencyLib {
         ISiloConfig.ConfigData memory _debtConfig,
         address _user,
         uint256 _debtToCover,
-        uint256 _liquidationFeeInBp
+        uint256 _liquidationFeeInBp,
+        bool _selfLiquidation
     )
         internal
         view
@@ -94,7 +95,7 @@ library SiloSolvencyLib {
 
         uint256 ltvInBp = totalBorrowerDebtValue * _BASIS_POINTS / totalBorrowerCollateralValue;
 
-        if (_collateralConfig.lt > ltvInBp) revert ISiloLiquidation.UserIsSolvent();
+        if (!_selfLiquidation && _collateralConfig.lt > ltvInBp) revert ISiloLiquidation.UserIsSolvent();
 
         if (ltvInBp >= _BASIS_POINTS) { // in case of bad debt we return all
             return (ltvData.totalCollateralAssets, ltvData.debtAssets);
@@ -112,7 +113,7 @@ library SiloSolvencyLib {
         if (receiveCollateralAssets == 0 || repayDebtAssets == 0) revert ISiloLiquidation.InsufficientLiquidation();
 
         if (ltvInBp != 0) { // it can be 0 in case of full liquidation
-            if (ltvInBp < SiloLiquidationLib.minAcceptableLT(_collateralConfig.lt)) {
+            if (!_selfLiquidation && ltvInBp < SiloLiquidationLib.minAcceptableLT(_collateralConfig.lt)) {
                 revert ISiloLiquidation.LiquidationTooBig();
             }
         }
