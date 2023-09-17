@@ -8,9 +8,11 @@ import {PRBMathSD59x18} from "../lib/PRBMathSD59x18.sol";
 import {SiloStdLib} from  "../lib/SiloStdLib.sol";
 import {ISilo} from "../interfaces/ISilo.sol";
 import {IInterestRateModel} from "../interfaces/IInterestRateModel.sol";
-import {IInterestRateModelConfig} from "../interfaces/IInterestRateModelConfig.sol";
+import {IInterestRateModelV2} from "../interfaces/IInterestRateModelV2.sol";
+import {IInterestRateModelV2Config} from "../interfaces/IInterestRateModelV2Config.sol";
 
 // solhint-disable var-name-mixedcase
+// solhint-disable func-name-mixedcase
 
 /// @title InterestRateModelV2
 /// @notice This model is for one silo/asset set. So one silo need to have as many IRMs as many assets it holds.
@@ -20,7 +22,7 @@ import {IInterestRateModelConfig} from "../interfaces/IInterestRateModelConfig.s
 ///     if (_config.ki < 0) revert InvalidKi();  --- was ... <= 0
 //      if (_config.kcrit < 0) revert InvalidKcrit();  --- was ... <= 0
 /// @custom:security-contact security@silo.finance
-contract InterestRateModelV2 is IInterestRateModel {
+contract InterestRateModelV2 is IInterestRateModel, IInterestRateModelV2 {
     using PRBMathSD59x18 for int256;
     using SafeCast for int256;
     using SafeCast for uint256;
@@ -54,7 +56,7 @@ contract InterestRateModelV2 is IInterestRateModel {
     }
 
     /// @dev DP is 18 decimal points used for integer calculations
-    uint256 public constant override DP = 1e18;
+    uint256 internal constant _DP = 1e18;
 
     /// @dev maximum value of compound interest the model will return
     uint256 public constant RCOMP_MAX = (2**16) * 1e18;
@@ -83,7 +85,7 @@ contract InterestRateModelV2 is IInterestRateModel {
     function connect(address _configAddress) external virtual {
         if (address(getSetup[msg.sender].config) != address(0)) revert AlreadyConnected();
 
-        getSetup[msg.sender].config = IInterestRateModelConfig(_configAddress);
+        getSetup[msg.sender].config = IInterestRateModelV2Config(_configAddress);
         emit Initialized(msg.sender, _configAddress);
     }
 
@@ -112,6 +114,11 @@ contract InterestRateModelV2 is IInterestRateModel {
     }
 
     /// @inheritdoc IInterestRateModel
+    function decimals() external view virtual returns (uint256) {
+        return _DP;
+    }
+
+    /// @inheritdoc IInterestRateModel
     function getCompoundInterestRate(address _silo, uint256 _blockTimestamp)
         external
         view
@@ -130,7 +137,7 @@ contract InterestRateModelV2 is IInterestRateModel {
         );
     }
 
-    /// @inheritdoc IInterestRateModel
+    /// @inheritdoc IInterestRateModelV2
     function overflowDetected(address _silo, uint256 _blockTimestamp)
         external
         view
@@ -184,7 +191,7 @@ contract InterestRateModelV2 is IInterestRateModel {
         fullConfig.Tcrit = setup.Tcrit;
     }
 
-    /// @inheritdoc IInterestRateModel
+    /// @inheritdoc IInterestRateModelV2
     function calculateCurrentInterestRate(
         ConfigWithState memory _c,
         uint256 _totalDeposits,
@@ -214,8 +221,8 @@ contract InterestRateModelV2 is IInterestRateModel {
             _l.T = (_blockTimestamp - _interestRateTimestamp).toInt256();
         }
 
-        _l.u = SiloStdLib.calculateUtilization(DP, _totalDeposits, _totalBorrowAmount).toInt256();
-        _l.DP = int256(DP);
+        _l.u = SiloStdLib.calculateUtilization(_DP, _totalDeposits, _totalBorrowAmount).toInt256();
+        _l.DP = int256(_DP);
 
         if (_l.u > _c.ucrit) {
             // rp := kcrit *(1 + Tcrit + beta *T)*( u0 - ucrit )
@@ -238,7 +245,7 @@ contract InterestRateModelV2 is IInterestRateModel {
         return _currentInterestRateCAP(rcur);
     }
 
-    /// @inheritdoc IInterestRateModel
+    /// @inheritdoc IInterestRateModelV2
     function calculateCompoundInterestRate(
         ConfigWithState memory _c,
         uint256 _totalDeposits,
@@ -259,7 +266,7 @@ contract InterestRateModelV2 is IInterestRateModel {
         );
     }
 
-    /// @inheritdoc IInterestRateModel
+    /// @inheritdoc IInterestRateModelV2
     function calculateCompoundInterestRateWithOverflowDetection( // solhint-disable-line function-max-lines
         ConfigWithState memory _c,
         uint256 _totalDeposits,
@@ -286,23 +293,23 @@ contract InterestRateModelV2 is IInterestRateModel {
             _l.T = (_blockTimestamp - _interestRateTimestamp).toInt256();
         }
 
-        int256 _DP = int256(DP);
+        int256 decimalPoints = int256(_DP);
 
-        _l.u = SiloStdLib.calculateUtilization(DP, _totalDeposits, _totalBorrowAmount).toInt256();
+        _l.u = SiloStdLib.calculateUtilization(_DP, _totalDeposits, _totalBorrowAmount).toInt256();
 
         // slopei := ki * (u0 - uopt )
-        _l.slopei = _c.ki * (_l.u - _c.uopt) / _DP;
+        _l.slopei = _c.ki * (_l.u - _c.uopt) / decimalPoints;
 
         if (_l.u > _c.ucrit) {
             // rp := kcrit * (1 + Tcrit) * (u0 - ucrit )
-            _l.rp = _c.kcrit * (_DP + Tcrit) / _DP * (_l.u - _c.ucrit) / _DP;
+            _l.rp = _c.kcrit * (decimalPoints + Tcrit) / decimalPoints * (_l.u - _c.ucrit) / decimalPoints;
             // slope := slopei + kcrit * beta * (u0 - ucrit )
-            _l.slope = _l.slopei + _c.kcrit * _c.beta / _DP * (_l.u - _c.ucrit) / _DP;
+            _l.slope = _l.slopei + _c.kcrit * _c.beta / decimalPoints * (_l.u - _c.ucrit) / decimalPoints;
             // Tcrit := Tcrit + beta * T
             Tcrit = Tcrit + _c.beta * _l.T;
         } else {
             // rp := min (0, klow * (u0 - ulow ))
-            _l.rp = _min(0, _c.klow * (_l.u - _c.ulow) / _DP);
+            _l.rp = _min(0, _c.klow * (_l.u - _c.ulow) / decimalPoints);
             // slope := slopei
             _l.slope = _l.slopei;
             // Tcrit := max (0, Tcrit - beta * T)
@@ -310,7 +317,7 @@ contract InterestRateModelV2 is IInterestRateModel {
         }
 
         // rlin := klin * u0 # lower bound between t0 and t1
-        _l.rlin = _c.klin * _l.u / _DP;
+        _l.rlin = _c.klin * _l.u / decimalPoints;
         // ri := max(ri , rlin )
         ri = _max(ri , _l.rlin);
         // r0 := ri + rp # interest rate at t0 ignoring lower bound
@@ -374,7 +381,7 @@ contract InterestRateModelV2 is IInterestRateModel {
             // but later on we can get overflow worse.
             overflow = true;
         } else {
-            rcompSigned = _x.exp() - int256(DP);
+            rcompSigned = _x.exp() - int256(_DP);
             rcomp = rcompSigned > 0 ? rcompSigned.toUint256() : 0;
         }
 
@@ -395,9 +402,9 @@ contract InterestRateModelV2 is IInterestRateModel {
 
             if (
                 rcompMulTBA / rcomp != _totalBorrowAmount ||
-                rcompMulTBA / DP > ASSET_DATA_OVERFLOW_LIMIT - maxAmount
+                rcompMulTBA / _DP > ASSET_DATA_OVERFLOW_LIMIT - maxAmount
             ) {
-                rcomp = (ASSET_DATA_OVERFLOW_LIMIT - maxAmount) * DP / _totalBorrowAmount;
+                rcomp = (ASSET_DATA_OVERFLOW_LIMIT - maxAmount) * _DP / _totalBorrowAmount;
 
                 return (rcomp, true);
             }

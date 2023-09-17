@@ -33,7 +33,7 @@ contract InterestRateModelV2RcompTest is RcompTestData, InterestRateModelConfigs
         for (uint i; i < data.length; i++) {
             RcompData memory testCase = data[i];
 
-            IInterestRateModel.ConfigWithState memory cfg = _toConfigWithState(testCase);
+            IInterestRateModelV2.ConfigWithState memory cfg = _toConfigWithState(testCase);
 
             (
                 uint256 rcomp,
@@ -104,7 +104,7 @@ contract InterestRateModelV2RcompTest is RcompTestData, InterestRateModelConfigs
         for (uint i; i < data.length; i++) {
             RcompData memory testCase = data[i];
 
-            IInterestRateModel.ConfigWithState memory cfg = _toConfigWithState(testCase);
+            IInterestRateModelV2.ConfigWithState memory cfg = _toConfigWithState(testCase);
 
             (
                 , int256 ri,

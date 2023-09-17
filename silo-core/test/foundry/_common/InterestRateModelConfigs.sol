@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import {IInterestRateModel} from "../../../contracts/interfaces/IInterestRateModel.sol";
+import {IInterestRateModelV2} from "../../../contracts/interfaces/IInterestRateModelV2.sol";
 
 contract InterestRateModelConfigs {
-    function _configWithState() internal pure returns (IInterestRateModel.ConfigWithState memory config) {
-        config = IInterestRateModel.ConfigWithState({
+    function _configWithState() internal pure returns (IInterestRateModelV2.ConfigWithState memory config) {
+        config = IInterestRateModelV2.ConfigWithState({
             uopt:  800000000000000000,
             ucrit:  900000000000000000,
             ulow:  500000000000000000,
