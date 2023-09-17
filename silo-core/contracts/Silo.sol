@@ -892,9 +892,9 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable, LeverageReent
         );
     }
 
-    // TODO: allow selfliquidate
     /// @dev it can be called on "debt silo" only
-    function liquidationCall( // solhint-disable function-max-lines, code-complexity
+    /// @notice user can use this method to do selfl iquidation, it that case check for LT requirements will be ignored
+    function liquidationCall(
         address _collateralAsset,
         address _debtAsset,
         address _borrower,
@@ -909,17 +909,21 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable, LeverageReent
         if (_collateralAsset != collateralConfig.token) revert UnexpectedCollateralToken();
         if (_debtAsset != debtConfig.token) revert UnexpectedDebtToken();
 
-        SiloLendingLib.accrueInterestForAsset(
-            collateralConfig, siloData, total[AssetType.Collateral], total[AssetType.Debt]
-        );
-
         SiloLendingLib.accrueInterestForAsset(debtConfig, siloData, total[AssetType.Collateral], total[AssetType.Debt]);
+        Silo(debtConfig.otherSilo).accrueInterest();
+
+        bool selfLiquidation = _borrower == msg.sender;
 
         (
             uint256 receiveCollateralAssets,
             uint256 repayDebtAssets
         ) = SiloSolvencyLib.liquidationPreview(
-            collateralConfig, debtConfig, _borrower, _debtToCover, collateralConfig.liquidationFee
+            collateralConfig,
+            debtConfig,
+            _borrower,
+            _debtToCover,
+            selfLiquidation ? 0 : collateralConfig.liquidationFee,
+            selfLiquidation
         );
 
         if (receiveCollateralAssets == 0 || repayDebtAssets == 0) revert UserIsSolvent();
@@ -928,10 +932,27 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable, LeverageReent
         uint256 zeroShares;
         SiloLendingLib.repay(debtConfig, repayDebtAssets, zeroShares, _borrower, msg.sender, total[AssetType.Debt]);
 
+        emit LiquidationCall(msg.sender, _receiveSToken);
+
+        Silo(debtConfig.otherSilo).withdrawCollateralToLiquidate(
+            receiveCollateralAssets, _borrower, msg.sender, _receiveSToken
+        );
+    }
+
+    /// @dev that method allow t ofinish liquidation process by giving up collateral to liquidator
+    function withdrawCollateralToLiquidate( // solhint-disable function-max-lines
+        uint256 _collateralToLiquidate,
+        address _borrower,
+        address _liquidator,
+        bool _receiveSToken
+    ) external {
+        ISiloConfig.ConfigData memory collateralConfig = config.getConfig(address(this));
+        if (msg.sender != collateralConfig.otherSilo) revert OnlySilo();
+
         (
             uint256 withdrawAssetsFromCollateral, uint256 withdrawAssetsFromProtected
         ) = SiloSolvencyLib.splitReceiveCollateralToLiquidate(
-            receiveCollateralAssets,
+            _collateralToLiquidate,
             collateralConfig.silo,
             collateralConfig.interestRateModel,
             collateralConfig.token,
@@ -939,13 +960,11 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable, LeverageReent
             _borrower
         );
 
-        emit LiquidationCall(msg.sender, _receiveSToken);
-
         if (_receiveSToken) {
             if (withdrawAssetsFromProtected != 0) {
                 SiloSolvencyLib.liquidationSTransfer(
                     _borrower,
-                    msg.sender,
+                    _liquidator,
                     withdrawAssetsFromProtected,
                     total[ISilo.AssetType.Protected].assets,
                     IShareToken(collateralConfig.protectedShareToken)
@@ -955,7 +974,7 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable, LeverageReent
             if (withdrawAssetsFromCollateral != 0) {
                 SiloSolvencyLib.liquidationSTransfer(
                     _borrower,
-                    msg.sender,
+                    _liquidator,
                     withdrawAssetsFromCollateral,
                     total[ISilo.AssetType.Collateral].assets,
                     IShareToken(collateralConfig.collateralShareToken)
@@ -966,14 +985,13 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable, LeverageReent
         }
 
         if (withdrawAssetsFromProtected != 0) {
-            // TODO must be call to other silo
             SiloERC4626Lib.withdraw(
                 collateralConfig.token,
                 collateralConfig.protectedShareToken,
                 SiloERC4626Lib.WithdrawParams({
                     assets: withdrawAssetsFromProtected,
                     shares: 0,
-                    receiver: msg.sender,
+                    receiver: _liquidator,
                     owner: _borrower,
                     spender: _borrower,
                     assetType: ISilo.AssetType.Protected
@@ -984,14 +1002,13 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable, LeverageReent
         }
 
         if (withdrawAssetsFromCollateral != 0) {
-            // TODO must be call to other silo
             SiloERC4626Lib.withdraw(
                 collateralConfig.token,
                 collateralConfig.collateralShareToken,
                 SiloERC4626Lib.WithdrawParams({
                     assets: withdrawAssetsFromCollateral,
                     shares: 0,
-                    receiver: msg.sender,
+                    receiver: _liquidator,
                     owner: _borrower,
                     spender: _borrower,
                     assetType: ISilo.AssetType.Collateral
