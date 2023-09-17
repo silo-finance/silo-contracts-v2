@@ -35,7 +35,7 @@ contract InterestRateModelV2RcurTest is RcurTestData, InterestRateModelConfigs {
         for (uint i; i < data.length; i++) {
             RcurData memory testCase = data[i];
 
-            IInterestRateModel.ConfigWithState memory cfg = _toConfigWithState(testCase);
+            IInterestRateModelV2.ConfigWithState memory cfg = _toConfigWithState(testCase);
 
             uint256 rcur = INTEREST_RATE_MODEL.calculateCurrentInterestRate(
                 cfg,
