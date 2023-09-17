@@ -29,18 +29,18 @@ contract ShareDebtToken is IERC20R, ShareToken {
     }
 
     /// @param _silo Silo address for which tokens was deployed
-    function initialize(ISilo _silo, address _hookReceiver) external initializer {
+    function initialize(ISilo _silo, address _hookReceiver) external virtual initializer {
         __ShareToken_init(_silo, _hookReceiver);
     }
 
     /// @inheritdoc IShareToken
-    function mint(address _owner, address _spender, uint256 _amount) external override onlySilo {
+    function mint(address _owner, address _spender, uint256 _amount) external virtual override onlySilo {
         if (_owner != _spender) _spendAllowance(_owner, _spender, _amount);
         _mint(_owner, _amount);
     }
 
     /// @inheritdoc IShareToken
-    function burn(address _owner, address, uint256 _amount) external override onlySilo {
+    function burn(address _owner, address, uint256 _amount) external virtual override onlySilo {
         _burn(_owner, _amount);
     }
 
@@ -80,7 +80,7 @@ contract ShareDebtToken is IERC20R, ShareToken {
     }
 
     /// @dev Check receive allowance and if recipient is allowed to accept debt from silo
-    function _beforeTokenTransfer(address _sender, address _recipient, uint256 _amount) internal override {
+    function _beforeTokenTransfer(address _sender, address _recipient, uint256 _amount) internal virtual override {
         // If we are minting or burning, Silo is responsible to check all necessary conditions
         if (_isTransfer(_sender, _recipient)) {
             // Silo forbids having debt and collateral position of the same asset in given Silo
@@ -99,7 +99,7 @@ contract ShareDebtToken is IERC20R, ShareToken {
     }
 
     /// @dev Check if recipient is solvent after debt transfer
-    function _afterTokenTransfer(address _sender, address _recipient, uint256 _amount) internal override {
+    function _afterTokenTransfer(address _sender, address _recipient, uint256 _amount) internal virtual override {
         ShareToken._afterTokenTransfer(_sender, _recipient, _amount);
 
         // if we are minting or burning, Silo is responsible to check all necessary conditions

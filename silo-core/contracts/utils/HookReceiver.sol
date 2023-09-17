@@ -13,13 +13,13 @@ contract HookReceiver is IHookReceiver, OwnableUpgradeable {
 
     error Unauthorized();
 
-    function initialize(address _owner, IShareToken _shareToken) external initializer {
+    function initialize(address _owner, IShareToken _shareToken) external virtual initializer {
         _transferOwnership(_owner);
 
         shareToken = _shareToken;
     }
 
-    function setup(IGauge _gauge) external onlyOwner {
+    function setup(IGauge _gauge) external virtual onlyOwner {
         gauge = _gauge;
 
         if (gauge.shareToken() != address(shareToken)) revert WrongShareToken();
@@ -32,7 +32,7 @@ contract HookReceiver is IHookReceiver, OwnableUpgradeable {
         uint256 _recipientBalance,
         uint256 _totalSupply,
         uint256
-    ) external {
+    ) external virtual {
         if (msg.sender != address(shareToken)) revert Unauthorized();
 
         if (address(gauge) != address(0)) {

@@ -88,7 +88,7 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
     }
 
     /// @param _silo Silo address for which tokens was deployed
-    function __ShareToken_init(ISilo _silo, address _hookReceiver) internal onlyInitializing {
+    function __ShareToken_init(ISilo _silo, address _hookReceiver) internal virtual onlyInitializing {
         silo = _silo;
         hookReceiver = _hookReceiver;
     }
@@ -100,7 +100,7 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
     ///      Protected deposit: "Silo Finance Non-borrowable NAME Deposit, SiloId: SILO_ID"
     ///      Borrowable deposit: "Silo Finance Borrowable NAME Deposit, SiloId: SILO_ID"
     ///      Debt: "Silo Finance NAME Debt, SiloId: SILO_ID"
-    function name() public view override(ERC20Upgradeable, IERC20MetadataUpgradeable) returns (string memory) {
+    function name() public view virtual override(ERC20Upgradeable, IERC20MetadataUpgradeable) returns (string memory) {
         // solhint-disable-previous-line ordering
         ISiloConfig siloConfig = silo.config();
         ISiloConfig.ConfigData memory configData = siloConfig.getConfig(address(silo));
@@ -128,7 +128,13 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
     ///      Protected deposit: "nbSYMBOL-SILO_ID"
     ///      Borrowable deposit: "bSYMBOL-SILO_ID"
     ///      Debt: "dSYMBOL-SILO_ID"
-    function symbol() public view override(ERC20Upgradeable, IERC20MetadataUpgradeable) returns (string memory) {
+    function symbol()
+        public
+        view
+        virtual
+        override(ERC20Upgradeable, IERC20MetadataUpgradeable)
+        returns (string memory)
+    {
         ISiloConfig siloConfig = silo.config();
         ISiloConfig.ConfigData memory configData = siloConfig.getConfig(address(silo));
         string memory siloIdAscii = StringsUpgradeable.toString(siloConfig.SILO_ID());
@@ -147,7 +153,7 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
         return string.concat(pre, tokenSymbol, "-", siloIdAscii);
     }
 
-    function balanceOfAndTotalSupply(address _account) public view returns (uint256, uint256) {
+    function balanceOfAndTotalSupply(address _account) public view virtual returns (uint256, uint256) {
         return (balanceOf(_account), totalSupply());
     }
 
@@ -168,7 +174,7 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
     /// @param _sender sender address
     /// @param _recipient recipient address
     /// @return bool true if operation is real transfer, false if it is mint or burn
-    function _isTransfer(address _sender, address _recipient) internal pure returns (bool) {
+    function _isTransfer(address _sender, address _recipient) internal pure virtual returns (bool) {
         // in order this check to be true, is is required to have:
         // require(sender != address(0), "ERC20: transfer from the zero address");
         // require(recipient != address(0), "ERC20: transfer to the zero address");
