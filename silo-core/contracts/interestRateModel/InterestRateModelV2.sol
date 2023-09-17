@@ -71,38 +71,39 @@ contract InterestRateModelV2 is IInterestRateModel {
 
     /// @dev each Silo setup is stored separately in mapping, that's why we do not need to clone IRM
     /// at the same time this is safety feature because we will write to this mapping based on msg.sender
-    /// silo => asset => setup
-    mapping (address => mapping (address => Setup)) public getSetup;
+    /// silo => setup
+    mapping (address => Setup) public getSetup;
 
     /// @notice Emitted on config init
     /// @param silo Silo address for which config should be set
-    /// @param asset asset address for which config should be set
     /// @param config config struct for asset in Silo
-    event Initialized(address indexed silo, address indexed asset, address indexed config);
+    event Initialized(address indexed silo, address indexed config);
 
-    function connect(address _asset, address _configAddress) external virtual {
-        if (_asset == address(0)) revert AddressZero();
-        if (address(getSetup[msg.sender][_asset].config) != address(0)) revert AlreadyConnected();
+    /// @dev this method creates 1:1 link between silo and config
+    function connect(address _configAddress) external virtual {
+        if (address(getSetup[msg.sender].config) != address(0)) revert AlreadyConnected();
 
-        getSetup[msg.sender][_asset].config = IInterestRateModelConfig(_configAddress);
-        emit Initialized(msg.sender, _asset, _configAddress);
+        getSetup[msg.sender].config = IInterestRateModelConfig(_configAddress);
+        emit Initialized(msg.sender, _configAddress);
     }
 
     /// @inheritdoc IInterestRateModel
-    function getCompoundInterestRateAndUpdate(
-        address _asset,
-        uint256 _blockTimestamp
-    ) external virtual override returns (uint256 rcomp) {
+    function getCompoundInterestRateAndUpdate(uint256 _blockTimestamp)
+        external
+        virtual
+        override
+        returns (uint256 rcomp)
+    {
         // assume that caller is Silo
         address silo = msg.sender;
 
         ISilo.UtilizationData memory data = ISilo(silo).utilizationData();
 
         // TODO when depositing, we doing two calls for `calculateCompoundInterestRate`, maybe we can optimize?
-        Setup storage currentSetup = getSetup[silo][_asset];
+        Setup storage currentSetup = getSetup[silo];
 
         (rcomp, currentSetup.ri, currentSetup.Tcrit) = calculateCompoundInterestRate(
-            getConfig(silo, _asset),
+            getConfig(silo),
             data.collateralAssets,
             data.debtAssets,
             data.interestRateTimestamp,
@@ -111,15 +112,17 @@ contract InterestRateModelV2 is IInterestRateModel {
     }
 
     /// @inheritdoc IInterestRateModel
-    function getCompoundInterestRate(
-        address _silo,
-        address _asset,
-        uint256 _blockTimestamp
-    ) external view virtual override returns (uint256 rcomp) {
+    function getCompoundInterestRate(address _silo, uint256 _blockTimestamp)
+        external
+        view
+        virtual
+        override
+        returns (uint256 rcomp)
+    {
         ISilo.UtilizationData memory data = ISilo(_silo).utilizationData();
 
         (rcomp,,) = calculateCompoundInterestRate(
-            getConfig(_silo, _asset),
+            getConfig(_silo),
             data.collateralAssets,
             data.debtAssets,
             data.interestRateTimestamp,
@@ -128,15 +131,17 @@ contract InterestRateModelV2 is IInterestRateModel {
     }
 
     /// @inheritdoc IInterestRateModel
-    function overflowDetected(
-        address _silo,
-        address _asset,
-        uint256 _blockTimestamp
-    ) external view virtual override returns (bool overflow) {
+    function overflowDetected(address _silo, uint256 _blockTimestamp)
+        external
+        view
+        virtual
+        override
+        returns (bool overflow)
+    {
         ISilo.UtilizationData memory data = ISilo(_silo).utilizationData();
 
         (,,,overflow) = calculateCompoundInterestRateWithOverflowDetection(
-            getConfig(_silo, _asset),
+            getConfig(_silo),
             data.collateralAssets,
             data.debtAssets,
             data.interestRateTimestamp,
@@ -145,15 +150,17 @@ contract InterestRateModelV2 is IInterestRateModel {
     }
 
     /// @inheritdoc IInterestRateModel
-    function getCurrentInterestRate(
-        address _silo,
-        address _asset,
-        uint256 _blockTimestamp
-    ) external view virtual override returns (uint256 rcur) {
+    function getCurrentInterestRate(address _silo, uint256 _blockTimestamp)
+        external
+        view
+        virtual
+        override
+        returns (uint256 rcur)
+    {
         ISilo.UtilizationData memory data = ISilo(_silo).utilizationData();
 
         rcur = calculateCurrentInterestRate(
-            getConfig(_silo, _asset),
+            getConfig(_silo),
             data.collateralAssets,
             data.debtAssets,
             data.interestRateTimestamp,
@@ -161,9 +168,8 @@ contract InterestRateModelV2 is IInterestRateModel {
         );
     }
 
-    // TODO, silo is per asset, so maybe we can remove one param?
-    function getConfig(address _silo, address _asset) public view returns (ConfigWithState memory fullConfig) {
-        Setup memory setup = getSetup[_silo][_asset];
+    function getConfig(address _silo) public view returns (ConfigWithState memory fullConfig) {
+        Setup memory setup = getSetup[_silo];
         Config memory config = setup.config.getConfig();
 
         fullConfig.uopt = config.uopt;

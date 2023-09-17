@@ -43,7 +43,6 @@ library SiloSolvencyLib {
     function getAssetAndSharesWithInterest(
         address _silo,
         address _interestRateModel,
-        address _token,
         address _shareToken,
         address _borrower,
         ISilo.AccrueInterestInMemory _accrueInMemory,
@@ -61,7 +60,7 @@ library SiloSolvencyLib {
             ///      and storage data is fresh.
             _accrueInMemory == ISilo.AccrueInterestInMemory.Yes
                 ? SiloStdLib.amountWithInterest(
-                    _token, ISilo(_silo).getDebtAssets(), _interestRateModel // TODO why debt? bug?
+                    ISilo(_silo).getDebtAssets(), _interestRateModel // TODO why debt? bug?
                 )
                 : ISilo(_silo).getDebtAssets(), // TODO why debt? bug?
             IShareToken(_shareToken).totalSupply(),
@@ -156,7 +155,6 @@ library SiloSolvencyLib {
         (ltvData.debtAssets,) = getAssetAndSharesWithInterest(
             _debtConfig.silo,
             _debtConfig.interestRateModel,
-            _debtConfig.token,
             _debtConfig.debtShareToken,
             _borrower,
             _accrueInMemory,
@@ -166,7 +164,6 @@ library SiloSolvencyLib {
         (ltvData.totalCollateralAssets,) = getAssetAndSharesWithInterest(
             _collateralConfig.silo,
             _collateralConfig.interestRateModel,
-            _collateralConfig.token,
             _collateralConfig.protectedShareToken,
             _borrower,
             _accrueInMemory,
@@ -176,7 +173,6 @@ library SiloSolvencyLib {
         (uint256 collateralAssets,) = getAssetAndSharesWithInterest(
             _collateralConfig.silo,
             _collateralConfig.interestRateModel,
-            _collateralConfig.token,
             _collateralConfig.collateralShareToken,
             _borrower,
             _accrueInMemory,
@@ -251,7 +247,6 @@ library SiloSolvencyLib {
         uint256 _receiveCollateralToLiquidate,
         address _collateralSilo,
         address _interestRateModel,
-        address _token,
         address _shareToken,
         address _borrower
     )
@@ -262,7 +257,6 @@ library SiloSolvencyLib {
         (uint256 borrowerCollateralAssets,) = SiloSolvencyLib.getAssetAndSharesWithInterest(
             _collateralSilo,
             _interestRateModel,
-            _token,
             _shareToken,
             _borrower,
             ISilo.AccrueInterestInMemory.No,
