@@ -14,10 +14,10 @@
 
 pragma solidity 0.8.19;
 
-import {IGaugeAdder} from "./IGaugeAdder.sol";
-import {IStakelessGauge} from "./IStakelessGauge.sol";
+import {Client} from "chainlink-ccip/v0.8/ccip/libraries/Client.sol";
 
-// solhint-disable ordering
+import {IGaugeAdder} from "./IGaugeAdder.sol";
+import {ICCIPGauge} from "./ICCIPGauge.sol";
 
 /**
  * @title Stakeless Gauge Checkpointer interface
@@ -26,27 +26,70 @@ import {IStakelessGauge} from "./IStakelessGauge.sol";
  * @dev Supports gauge types registered in `GaugeAdder`.
  * Gauges to be checkpointed need to be added to the controller beforehand.
  */
-interface IStakelessGaugeCheckpointer {
+interface ICCIPGaugeCheckpointer {
     // String values are hashed when indexed, so we also emit the raw string as a data field for ease of use.
     /**
      * @notice Emitted when a gauge is added to the checkpointer.
      */
-    event GaugeAdded(IStakelessGauge indexed gauge, string indexed indexedGaugeType, string gaugeType);
+    event GaugeAdded(ICCIPGauge indexed gauge, string indexed indexedGaugeType, string gaugeType);
 
     /**
      * @notice Emitted when a gauge is removed from the checkpointer.
      */
-    event GaugeRemoved(IStakelessGauge indexed gauge, string indexed indexedGaugeType, string gaugeType);
+    event GaugeRemoved(ICCIPGauge indexed gauge, string indexed indexedGaugeType, string gaugeType);
 
     /**
-     * @notice Returns `GaugeAdder` contract.
+     * @notice Performs a checkpoint for all added gauges above the given relative weight threshold.
+     * @dev Reverts if the ETH sent in the call is not enough to cover bridge costs.
+     * @param minRelativeWeight Threshold to filter out gauges below it.
+     * @param payFeesIn Pay fees in LINK or Native
      */
-    function getGaugeAdder() external view returns (IGaugeAdder);
+    function checkpointGaugesAboveRelativeWeight(
+        uint256 minRelativeWeight,
+        ICCIPGauge.PayFeesIn payFeesIn
+    ) external payable;
 
     /**
-     * @notice Returns gauge types available in the checkpointer.
+     * @notice Performs a checkpoint for all added gauges of a given type above the given relative weight threshold.
+     * @dev Reverts if the ETH sent in the call is not enough to cover bridge costs.
+     * @param gaugeType Type of the gauge.
+     * @param minRelativeWeight Threshold to filter out gauges below it.
+     * @param payFeesIn Pay fees in LINK or Native
      */
-    function getGaugeTypes() external view returns (string[] memory);
+    function checkpointGaugesOfTypeAboveRelativeWeight(
+        string memory gaugeType,
+        uint256 minRelativeWeight,
+        ICCIPGauge.PayFeesIn payFeesIn
+    ) external payable;
+
+    /**
+     * @notice Performs a checkpoint for a single added gauge of a given type.
+     * Reverts if the ETH sent in the call is not enough to cover bridge costs.
+     * Reverts if the gauge was not added to the checkpointer beforehand.
+     * @param gaugeType Type of the gauge.
+     * @param gauge Address of the gauge to checkpoint.
+     * @param payFeesIn Pay fees in LINK or Native
+     */
+    function checkpointSingleGauge(
+        string memory gaugeType,
+        ICCIPGauge gauge,
+        ICCIPGauge.PayFeesIn payFeesIn
+    ) external payable;
+
+    /**
+     * @notice Performs a checkpoint for a multiple added gauges of the given types.
+     * Reverts if the ETH sent in the call is not enough to cover bridge costs.
+     * Reverts if the gauges were not added to the checkpointer beforehand.
+     * @param gaugeTypes Types of the gauges to be checkpointed. If a single type is provided, it is applied to all of
+     * the gauges, otherwise the gauge types array should be equal in length to the gauges.
+     * @param gauges Addresses of the gauges to checkpoint.
+     * @param payFeesIn Pay fees in LINK or Native
+     */
+    function checkpointMultipleGauges(
+        string[] memory gaugeTypes,
+        ICCIPGauge[] memory gauges,
+        ICCIPGauge.PayFeesIn payFeesIn
+    ) external payable;
 
     /**
      * @notice Adds an array of gauges from the given type. This is a permissioned function.
@@ -60,7 +103,7 @@ interface IStakelessGaugeCheckpointer {
      * @param gaugeType Type of the gauge.
      * @param gauges Gauges to add.
      */
-    function addGaugesWithVerifiedType(string memory gaugeType, IStakelessGauge[] calldata gauges) external;
+    function addGaugesWithVerifiedType(string memory gaugeType, ICCIPGauge[] calldata gauges) external;
 
     /**
      * @notice Adds an array of gauges from the given type.
@@ -73,7 +116,7 @@ interface IStakelessGaugeCheckpointer {
      * @param gaugeType Type of the gauge.
      * @param gauges Gauges to add.
      */
-    function addGauges(string memory gaugeType, IStakelessGauge[] calldata gauges) external;
+    function addGauges(string memory gaugeType, ICCIPGauge[] calldata gauges) external;
 
     /**
      * @notice Removes an array of gauges from the given type.
@@ -83,14 +126,14 @@ interface IStakelessGaugeCheckpointer {
      * @param gaugeType Type of the gauge.
      * @param gauges Gauges to remove.
      */
-    function removeGauges(string memory gaugeType, IStakelessGauge[] calldata gauges) external;
+    function removeGauges(string memory gaugeType, ICCIPGauge[] calldata gauges) external;
 
     /**
      * @notice Returns true if the given gauge was added for the given type; false otherwise.
      * @param gaugeType Type of the gauge.
      * @param gauge Gauge to check.
      */
-    function hasGauge(string memory gaugeType, IStakelessGauge gauge) external view returns (bool);
+    function hasGauge(string memory gaugeType, ICCIPGauge gauge) external view returns (bool);
 
     /**
      * @notice Returns the amount of added gauges for a given type.
@@ -104,7 +147,7 @@ interface IStakelessGaugeCheckpointer {
      * @param gaugeType Type of the gauge.
      * @param index - Index of the added gauge.
      */
-    function getGaugeAtIndex(string memory gaugeType, uint256 index) external view returns (IStakelessGauge);
+    function getGaugeAtIndex(string memory gaugeType, uint256 index) external view returns (ICCIPGauge);
 
     /**
      * @notice Returns the timestamp corresponding to the start of the previous week of the current block.
@@ -112,58 +155,36 @@ interface IStakelessGaugeCheckpointer {
     function getRoundedDownBlockTimestamp() external view returns (uint256);
 
     /**
-     * @notice Performs a checkpoint for all added gauges above the given relative weight threshold.
-     * @dev Reverts if the ETH sent in the call is not enough to cover bridge costs.
-     * @param minRelativeWeight Threshold to filter out gauges below it.
-     */
-    function checkpointGaugesAboveRelativeWeight(uint256 minRelativeWeight) external payable;
-
-    /**
-     * @notice Performs a checkpoint for all added gauges of a given type above the given relative weight threshold.
-     * @dev Reverts if the ETH sent in the call is not enough to cover bridge costs.
-     * @param gaugeType Type of the gauge.
-     * @param minRelativeWeight Threshold to filter out gauges below it.
-     */
-    function checkpointGaugesOfTypeAboveRelativeWeight(string memory gaugeType, uint256 minRelativeWeight)
-        external
-        payable;
-
-    /**
-     * @notice Performs a checkpoint for a single added gauge of a given type.
-     * Reverts if the ETH sent in the call is not enough to cover bridge costs.
-     * Reverts if the gauge was not added to the checkpointer beforehand.
-     * @param gaugeType Type of the gauge.
-     * @param gauge Address of the gauge to checkpoint.
-     */
-    function checkpointSingleGauge(string memory gaugeType, address gauge) external payable;
-
-    /**
-     * @notice Performs a checkpoint for a multiple added gauges of the given types.
-     * Reverts if the ETH sent in the call is not enough to cover bridge costs.
-     * Reverts if the gauges were not added to the checkpointer beforehand.
-     * @param gaugeTypes Types of the gauges to be checkpointed. If a single type is provided, it is applied to all of
-     * the gauges, otherwise the gauge types array should be equal in length to the gauges.
-     * @param gauges Addresses of the gauges to checkpoint.
-     */
-    function checkpointMultipleGauges(string[] memory gaugeTypes, address[] memory gauges) external payable;
-
-    /**
-     * @notice Returns the ETH cost to checkpoint a single given gauge.
+     * @notice Returns the LINK/Native cost to checkpoint a single given gauge.
      * @dev Reverts if the gauge was not added to the checkpointer beforehand.
      * @param gaugeType Type of the gauge.
      * @param gauge Address of the gauge to check the bridge costs.
+     * @param payFeesIn Pay fees in LINK or Native
      */
-    function getSingleBridgeCost(string memory gaugeType, address gauge) external view returns (uint256);
+    function getSingleBridgeCost(
+        string memory gaugeType,
+        ICCIPGauge gauge,
+        ICCIPGauge.PayFeesIn payFeesIn
+    ) external view returns (uint256);
 
     /**
-     * @notice Returns the ETH cost to checkpoint all gauges for a given minimum relative weight.
+     * @notice Returns the LINK/Native cost to checkpoint all gauges for a given minimum relative weight.
      * @dev A lower minimum relative weight might return higher costs, since more gauges could potentially be included
      * in the checkpoint.
      */
-    function getTotalBridgeCost(uint256 minRelativeWeight) external view returns (uint256);
+    function getTotalBridgeCost(
+        uint256 minRelativeWeight,
+        string memory gaugeType,
+        ICCIPGauge.PayFeesIn payFeesIn
+    ) external view returns (uint256);
 
     /**
      * @notice Returns true if gauge type is valid; false otherwise.
      */
     function isValidGaugeType(string memory gaugeType) external view returns (bool);
+
+    /**
+     * @notice Returns gauge types available in the checkpointer.
+     */
+    function getGaugeTypes() external view returns (string[] memory);
 }
