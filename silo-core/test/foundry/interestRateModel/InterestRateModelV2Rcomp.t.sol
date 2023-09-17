@@ -7,9 +7,9 @@ import "../data-readers/RcompTestData.sol";
 import "../../../contracts/interestRateModel/InterestRateModelV2ConfigFactory.sol";
 
 contract InterestRateModelV2Impl is InterestRateModelV2 {
-    function mockSetup(address _silo, address _asset, int256 _ri, int256 _Tcrit) external {
-        getSetup[_silo][_asset].Tcrit = _Tcrit;
-        getSetup[_silo][_asset].ri = _ri;
+    function mockSetup(address _silo, int256 _ri, int256 _Tcrit) external {
+        getSetup[_silo].Tcrit = _Tcrit;
+        getSetup[_silo].ri = _ri;
     }
 }
 
@@ -84,16 +84,15 @@ contract InterestRateModelV2RcompTest is RcompTestData, InterestRateModelConfigs
             );
 
             address silo = address(uint160(i));
-            address asset = address(1234567890);
 
             (, InterestRateModelV2Config configAddress) = CONFIG_FACTORY.create(_toConfigStruct(testCase));
 
             vm.prank(silo);
-            INTEREST_RATE_MODEL.connect(asset, address(configAddress));
+            INTEREST_RATE_MODEL.connect(address(configAddress));
 
-            INTEREST_RATE_MODEL.mockSetup(silo, asset, testCase.input.integratorState, testCase.input.Tcrit);
+            INTEREST_RATE_MODEL.mockSetup(silo, testCase.input.integratorState, testCase.input.Tcrit);
             vm.mockCall(silo, abi.encodeWithSelector(ISilo.utilizationData.selector), abi.encode(utilizationData));
-            uint256 compoundInterestRate = INTEREST_RATE_MODEL.getCompoundInterestRate(silo, asset, testCase.input.currentTime);
+            uint256 compoundInterestRate = INTEREST_RATE_MODEL.getCompoundInterestRate(silo, testCase.input.currentTime);
             assertEq(compoundInterestRate, rcomp, "getCompoundInterestRate()");
         }
     }
@@ -119,12 +118,11 @@ contract InterestRateModelV2RcompTest is RcompTestData, InterestRateModelConfigs
             );
 
             address silo = address(uint160(i));
-            address asset = address(1234567890);
 
             (, InterestRateModelV2Config configAddress) = CONFIG_FACTORY.create(_toConfigStruct(testCase));
 
             vm.prank(silo);
-            INTEREST_RATE_MODEL.connect(asset, address(configAddress));
+            INTEREST_RATE_MODEL.connect(address(configAddress));
 
             ISilo.UtilizationData memory utilizationData = ISilo.UtilizationData(
                 testCase.input.totalDeposits,
@@ -132,13 +130,13 @@ contract InterestRateModelV2RcompTest is RcompTestData, InterestRateModelConfigs
                 uint64(testCase.input.lastTransactionTime)
             );
 
-            INTEREST_RATE_MODEL.mockSetup(silo, asset, testCase.input.integratorState, testCase.input.Tcrit);
+            INTEREST_RATE_MODEL.mockSetup(silo, testCase.input.integratorState, testCase.input.Tcrit);
 
             vm.mockCall(silo, abi.encodeWithSelector(ISilo.utilizationData.selector), abi.encode(utilizationData));
 
             vm.prank(silo);
-            INTEREST_RATE_MODEL.getCompoundInterestRateAndUpdate(asset, testCase.input.currentTime);
-            (, int256 storageRi, int256 storageTcrit)= INTEREST_RATE_MODEL.getSetup(silo, asset);
+            INTEREST_RATE_MODEL.getCompoundInterestRateAndUpdate(testCase.input.currentTime);
+            (, int256 storageRi, int256 storageTcrit)= INTEREST_RATE_MODEL.getSetup(silo);
 
             assertEq(storageRi, ri, "storageRi");
             assertEq(storageTcrit, Tcrit, "storageTcrit");

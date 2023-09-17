@@ -74,45 +74,41 @@ interface IInterestRateModel {
     error InvalidUopt();
     error InvalidRi();
 
-    function connect(address _asset, address _configAddress) external;
+    function connect(address _configAddress) external;
 
     /// @dev get compound interest rate and update model storage
-    /// @param _asset address of an asset in Silo for which interest rate should be calculated
     /// @param _blockTimestamp current block timestamp
     /// @return rcomp compounded interest rate from last update until now (1e18 == 100%)
-    function getCompoundInterestRateAndUpdate(address _asset, uint256 _blockTimestamp)
+    function getCompoundInterestRateAndUpdate(uint256 _blockTimestamp)
         external
         returns (uint256 rcomp);
 
     /// @dev Get config for given asset in a Silo. If dedicated config is not set, default one will be returned.
     /// @param _silo Silo address for which config should be set
-    /// @param _asset asset address for which config should be set
     /// @return Config struct for asset in Silo
-    function getConfig(address _silo, address _asset) external view returns (ConfigWithState memory);
+    function getConfig(address _silo) external view returns (ConfigWithState memory);
 
     /// @dev get compound interest rate
-    /// @param _silo address of Silo
-    /// @param _asset address of an asset in Silo for which interest rate should be calculated
+    /// @param _silo address of Silo for which interest rate should be calculated
     /// @param _blockTimestamp current block timestamp
     /// @return rcomp compounded interest rate from last update until now (1e18 == 100%)
-    function getCompoundInterestRate(address _silo, address _asset, uint256 _blockTimestamp)
+    function getCompoundInterestRate(address _silo, uint256 _blockTimestamp)
         external
         view
         returns (uint256 rcomp);
 
     /// @dev get current annual interest rate
-    /// @param _silo address of Silo
-    /// @param _asset address of an asset in Silo for which interest rate should be calculated
+    /// @param _silo address of Silo for which interest rate should be calculated
     /// @param _blockTimestamp current block timestamp
     /// @return rcur current annual interest rate (1e18 == 100%)
-    function getCurrentInterestRate(address _silo, address _asset, uint256 _blockTimestamp)
+    function getCurrentInterestRate(address _silo, uint256 _blockTimestamp)
         external
         view
         returns (uint256 rcur);
 
     /// @notice get the flag to detect rcomp restriction (zero current interest) due to overflow
     /// overflow boolean flag to detect rcomp restriction
-    function overflowDetected(address _silo, address _asset, uint256 _blockTimestamp)
+    function overflowDetected(address _silo, uint256 _blockTimestamp)
         external
         view
         returns (bool overflow);
