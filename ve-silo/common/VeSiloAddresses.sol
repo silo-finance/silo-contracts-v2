@@ -6,6 +6,7 @@ import {AddressesCollection} from "silo-foundry-utils/networks/addresses/Address
 library VeSiloAddrKey {
     string constant public ARBITRUM_GATEWAY_ROUTER = "Arbitrum gateway router";
     string constant public WETH = "WETH";
+    string constant public LINK = "LINK";
     string constant public BALANCER_VAULT = "Balancer Vault";
     string constant public UNISWAP_ROUTER = "Uniswap router";
     string constant public SNX = "Token(SNX)";
@@ -14,21 +15,23 @@ library VeSiloAddrKey {
     string constant public USDC_ETH_UNI_POOL = "USDC/ETH Uniswap pool";
     string constant public LZ_ENDPOINT = "LayerZero endpoint";
     string constant public L2_MULTISIG = "L2 Multisig";
+    string constant public CCIP_BNM = "CCIP BNM token";
 }
 
 contract VeSiloAddresses is AddressesCollection {
     // chain id => is initialized
-    mapping(uint256 => bool) private isInitialized;
+    mapping(uint256 => bool) private _isInitialized;
 
     constructor() {
         _ethereumAddresses();
         _initializeArbitrum();
+        _initializeSepolia();
     }
 
     function _ethereumAddresses() internal {
         uint256 chainId = getChain(MAINNET_ALIAS).chainId;
 
-        if (isInitialized[chainId]) return;
+        if (_isInitialized[chainId]) return;
 
         setAddress(chainId, VeSiloAddrKey.ARBITRUM_GATEWAY_ROUTER, 0xC840838Bc438d73C16c2f8b22D2Ce3669963cD48);
         setAddress(chainId, VeSiloAddrKey.WETH, 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2);
@@ -40,17 +43,28 @@ contract VeSiloAddresses is AddressesCollection {
         setAddress(chainId, VeSiloAddrKey.USDC_ETH_UNI_POOL, 0x88e6A0c2dDD26FEEb64F039a2c41296FcB3f5640);
         setAddress(chainId, VeSiloAddrKey.LZ_ENDPOINT, 0x66A71Dcef29A0fFBDBE3c6a460a3B5BC225Cd675);
 
-        isInitialized[chainId] = true;
+        _isInitialized[chainId] = true;
     }
 
     function _initializeArbitrum() private {
         uint256 chainId = getChain(ARBITRUM_ONE_ALIAS).chainId;
 
-        if (isInitialized[chainId]) return;
+        if (_isInitialized[chainId]) return;
 
         setAddress(chainId, VeSiloAddrKey.LZ_ENDPOINT, 0x3c2269811836af69497E5F486A85D7316753cf62);
         setAddress(chainId, SILO_TOKEN, 0x0341C0C0ec423328621788d4854119B97f44E391);
 
-        isInitialized[chainId] = true;
+        _isInitialized[chainId] = true;
+    }
+
+    function _initializeSepolia() private {
+        uint256 chainId = getChain(SEPOLIA_ALIAS).chainId;
+
+        if (_isInitialized[chainId]) return;
+
+        setAddress(chainId, VeSiloAddrKey.LINK, 0x779877A7B0D9E8603169DdbD7836e478b4624789);
+        setAddress(chainId, VeSiloAddrKey.CCIP_BNM, 0xFd57b4ddBf88a4e07fF4e34C487b99af2Fe82a05);
+
+        _isInitialized[chainId] = true;
     }
 }
