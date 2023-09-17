@@ -26,6 +26,8 @@ import {LeverageReentrancyGuard} from "./utils/LeverageReentrancyGuard.sol";
 // Keep ERC4626 ordering
 // solhint-disable ordering
 
+// TODO check all contract for `virtual`
+
 contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable, LeverageReentrancyGuard {
     using SafeERC20Upgradeable for IERC20Upgradeable;
 
@@ -59,7 +61,7 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable, LeverageReent
         config = _config;
 
         ISiloConfig.ConfigData memory configData = _config.getConfig(address(this));
-        IInterestRateModel(configData.interestRateModel).connect(configData.token, _modelConfigAddress);
+        IInterestRateModel(configData.interestRateModel).connect(_modelConfigAddress);
     }
 
     function siloId() external view virtual returns (uint256) {
@@ -140,11 +142,7 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable, LeverageReent
     function totalAssets() external view virtual returns (uint256 totalManagedAssets) {
         ISiloConfig.ConfigData memory configData = config.getConfig(address(this));
 
-        return SiloStdLib.amountWithInterest(
-            configData.token,
-            total[AssetType.Collateral].assets,
-            configData.interestRateModel
-        );
+        return SiloStdLib.amountWithInterest(total[AssetType.Collateral].assets, configData.interestRateModel);
     }
 
     function convertToShares(uint256 _assets) external view virtual returns (uint256 shares) {
@@ -955,7 +953,6 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable, LeverageReent
             _collateralToLiquidate,
             collateralConfig.silo,
             collateralConfig.interestRateModel,
-            collateralConfig.token,
             collateralConfig.collateralShareToken,
             _borrower
         );

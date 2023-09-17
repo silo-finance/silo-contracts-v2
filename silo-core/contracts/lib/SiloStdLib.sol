@@ -93,21 +93,19 @@ library SiloStdLib {
     ///      calculations it should be 0s becaue all interest is added to borrowers balances for repayment. This
     ///      function is usefull for view functions that do not accrue interest before doing calculations. To work
     ///      on updated numbers, interest should be added on the fly.
-    /// @param _asset for which interest is calculated
-    ///  _debtAssets total amount of debt assets from which interest is calculated. Only debt accrues interest.
     /// @param _amount to which add interest
     /// @param _model to use
     ///  _daoFeeInBp dao's fee, set to 0 for Debt calculations, set to correct value for Collateral
     ///  _deployerFeeInBp deployer's fee, set to 0 for Debt calculations, set to correct value for Collateral
     /// @return amount with interest
-    function amountWithInterest(address _asset, uint256 _amount, address _model)
+    function amountWithInterest(uint256 _amount, address _model)
         // uint256 _daoFeeInBp,
         // uint256 _deployerFeeInBp
         internal
         view
         returns (uint256 amount)
     {
-        uint256 rcomp = IInterestRateModel(_model).getCompoundInterestRate(address(this), _asset, block.timestamp);
+        uint256 rcomp = IInterestRateModel(_model).getCompoundInterestRate(address(this), block.timestamp);
         uint256 accruedInterest = _amount * rcomp / _PRECISION_DECIMALS;
         // accruedInterest -= accruedInterest * (_daoFeeInBp + _deployerFeeInBp) / _BASIS_POINTS;
 
@@ -134,7 +132,7 @@ library SiloStdLib {
         } else {
             // TODO interest calculation for debt and collateral must be separated methods
             // TODO BUG!
-            totalAssets = amountWithInterest(_configData.token, _totalAssets, _configData.interestRateModel);
+            totalAssets = amountWithInterest(_totalAssets, _configData.interestRateModel);
             totalShares = IShareToken(_configData.collateralShareToken).totalSupply();
         }
     }

@@ -162,7 +162,7 @@ library SiloLendingLib {
         }
 
         cache.rcomp = IInterestRateModel(_assetConfig.interestRateModel).getCompoundInterestRateAndUpdate(
-            _assetConfig.token, block.timestamp
+            block.timestamp
         );
         cache.totalFeeInBp = _assetConfig.daoFeeInBp + _assetConfig.deployerFeeInBp;
 
