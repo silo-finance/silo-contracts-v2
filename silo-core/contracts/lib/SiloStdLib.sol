@@ -16,11 +16,7 @@ library SiloStdLib {
     uint256 internal constant _PRECISION_DECIMALS = 1e18;
     uint256 internal constant _BASIS_POINTS = 1e4;
 
-    function withdrawFees(
-        ISiloConfig _config,
-        ISiloFactory _factory,
-        ISilo.SiloData storage _siloData
-    ) internal {
+    function withdrawFees(ISiloConfig _config, ISiloFactory _factory, ISilo.SiloData storage _siloData) internal {
         (
             address daoFeeReceiver,
             address deployerFeeReceiver,
@@ -87,104 +83,109 @@ library SiloStdLib {
         }
     }
 
-    /// @notice Returns amount with added interest since last accrue
-    /// @dev This function does not know if it should subtract dao's and deployer's fees or not. It is up to a caller
-    ///      to set those values. For Collateral calculations fees should be set to correct values. For Debt
-    ///      calculations it should be 0s becaue all interest is added to borrowers balances for repayment. This
-    ///      function is usefull for view functions that do not accrue interest before doing calculations. To work
-    ///      on updated numbers, interest should be added on the fly.
-    /// @param _amount to which add interest
-    /// @param _model to use
-    ///  _daoFeeInBp dao's fee, set to 0 for Debt calculations, set to correct value for Collateral
-    ///  _deployerFeeInBp deployer's fee, set to 0 for Debt calculations, set to correct value for Collateral
-    /// @return amount with interest
-    function amountWithInterest(uint256 _amount, address _model)
-        // uint256 _daoFeeInBp,
-        // uint256 _deployerFeeInBp
-        internal
-        view
-        returns (uint256 amount)
-    {
-        uint256 rcomp = IInterestRateModel(_model).getCompoundInterestRate(address(this), block.timestamp);
-        uint256 accruedInterest = _amount * rcomp / _PRECISION_DECIMALS;
-        // accruedInterest -= accruedInterest * (_daoFeeInBp + _deployerFeeInBp) / _BASIS_POINTS;
-
-        // deployer and dao fee can be ignored because interest is fully added to SiloData anyway
-        amount = _amount + accruedInterest;
-    }
-
     /// @notice Returns totalAssets and totalShares for conversion math (convertToAssets and convertToShares)
     /// @dev This is useful for view functions that do not accrue interest before doing calculations. To work on
     ///      updated numbers, interest should be added on the fly.
     /// @param _configData for a single token for which to do calculations
     /// @param _assetType used to read proper storage data
-    /// @param _totalAssets amount of asset
-    /// @return totalAssets share token used for given asset type
-    /// @return totalShares share token used for given asset type
-    function getTotalAssetsAndTotalShares(
-        ISiloConfig.ConfigData memory _configData,
-        ISilo.AssetType _assetType,
-        uint256 _totalAssets
-    ) internal view returns (uint256 totalAssets, uint256 totalShares) {
+    /// @return totalAssets total assets in Silo with interest for given asset type
+    /// @return totalShares total shares in Silo for given asset type
+    function getTotalAssetsAndTotalShares(ISiloConfig.ConfigData memory _configData, ISilo.AssetType _assetType)
+        internal
+        view
+        returns (uint256 totalAssets, uint256 totalShares)
+    {
         if (_assetType == ISilo.AssetType.Protected) {
-            totalAssets = _totalAssets;
+            totalAssets = ISilo(_configData.silo).getProtectedAssets();
             totalShares = IShareToken(_configData.protectedShareToken).totalSupply();
         } else {
-            // TODO interest calculation for debt and collateral must be separated methods
-            // TODO BUG!
-            totalAssets = amountWithInterest(_totalAssets, _configData.interestRateModel);
-            totalShares = IShareToken(_configData.collateralShareToken).totalSupply();
+            totalAssets = getTotalAsssetsWithInterest(
+                _configData.silo,
+                _configData.interestRateModel,
+                ISilo(_configData.silo).getCollateralAssets(),
+                _configData.daoFeeInBp,
+                _configData.deployerFeeInBp,
+                _assetType,
+                ISilo.AccrueInterestInMemory.Yes
+            );
+
+            if (_assetType == ISilo.AssetType.Collateral) {
+                totalShares = IShareToken(_configData.collateralShareToken).totalSupply();
+            } else if (_assetType == ISilo.AssetType.Debt) {
+                totalShares = IShareToken(_configData.debtShareToken).totalSupply();
+            } else {
+                revert ISilo.WrongAssetType();
+            }
         }
+    }
+
+    function getTotalAsssetsWithInterest(
+        address _silo,
+        address _interestRateModel,
+        uint256 _totalCollateralAssets,
+        uint256 _daoFeeInBp,
+        uint256 _deployerFeeInBp,
+        ISilo.AssetType _assetType,
+        ISilo.AccrueInterestInMemory _accrueInMemory
+    ) internal view returns (uint256 totalAssetsWithInterest) {
+        if (_accrueInMemory == ISilo.AccrueInterestInMemory.Yes) {
+            uint256 rcomp =
+                IInterestRateModel(_interestRateModel).getCompoundInterestRate(address(this), block.timestamp);
+
+            (uint256 totalCollateralAssets, uint256 totalDebtAssets,,) = SiloStdLib.getAmountsWithInterest(
+                _totalCollateralAssets, ISilo(_silo).getDebtAssets(), rcomp, _daoFeeInBp, _deployerFeeInBp
+            );
+
+            totalAssetsWithInterest = 
+                _assetType == ISilo.AssetType.Collateral ? totalCollateralAssets : totalDebtAssets;
+        } else {
+            totalAssetsWithInterest =
+                _assetType == ISilo.AssetType.Collateral ? _totalCollateralAssets : ISilo(_silo).getDebtAssets();
+        }
+    }
+
+    function getSharesAndTotalSupply(
+        address _shareToken,
+        address _owner
+    ) internal view returns (uint256 shares, uint256 totalSupply) {
+        shares = IShareToken(_shareToken).balanceOf(_owner);
+        totalSupply = IShareToken(_shareToken).totalSupply();
     }
 
     /// @notice Returns available liquidity to be borrowed
     /// @dev Accrued interest is entirely added to `debtAssets` but only part of it is added to `collateralAssets`. The
     ///      difference is DAO's and deployer's cut. That means DAO's and deployer's cut is not considered a borrowable
     ///      liquidity.
-    function liquidity(uint256 _collateralAssets, uint256 _debtAssets)
-        internal
-        pure
-        returns (uint256 liquidAssets)
-    {
+    function liquidity(uint256 _collateralAssets, uint256 _debtAssets) internal pure returns (uint256 liquidAssets) {
         unchecked {
-        // we checked the underflow
-            liquidAssets = _debtAssets > _collateralAssets ?  0 : _collateralAssets - _debtAssets;
+            // we checked the underflow
+            liquidAssets = _debtAssets > _collateralAssets ? 0 : _collateralAssets - _debtAssets;
         }
     }
 
-    /// @notice Returns collateral assets with added interest since last accrue
-    /// @dev This function is usefull for view functions that do not accrue interest before doing calculations. To work
-    ///      on updated numbers, interest should be added on the fly.
-    /// @param _collateralAssets currently saved in the storage
-    /// @param _debtAssets currently saved in the storage
-    /// @param _rcomp compounded interest rate returned by interest rate model at block.timestamp
-    /// @param _daoFeeInBp dao fee defined for asset
-    /// @param _deployerFeeInBp deployer fee defined for asset
-    /// @return assetsWithInterest collateral assets with interest
-    function collateralAssetsWithInterest(
+    function getAmountsWithInterest(
         uint256 _collateralAssets,
         uint256 _debtAssets,
         uint256 _rcomp,
         uint256 _daoFeeInBp,
         uint256 _deployerFeeInBp
-    ) internal pure returns (uint256 assetsWithInterest) {
-        uint256 accruedInterest = _debtAssets * _rcomp / _PRECISION_DECIMALS;
-        accruedInterest -= accruedInterest * (_daoFeeInBp + _deployerFeeInBp) / _BASIS_POINTS;
-        assetsWithInterest = _collateralAssets + accruedInterest;
-    }
-
-    /// @notice Returns debt assets with added interest since last accrue
-    /// @dev This function is usefull for view functions that do not accrue interest before doing calculations. To work
-    ///      on updated numbers, interest should be added on the fly.
-    /// @param _debtAssets currently saved in the storage
-    /// @param _rcomp compounded interest rate returned by interest rate model at block.timestamp
-    /// @return assetsWithInterest debt assets with interest
-    function debtAssetsWithInterest(uint256 _debtAssets, uint256 _rcomp)
+    )
         internal
         pure
-        returns (uint256 assetsWithInterest)
+        returns (
+            uint256 collateralAssetsWithInterest,
+            uint256 debtAssetsWithInterest,
+            uint256 daoAndDeployerFees,
+            uint256 accruedInterest
+        )
     {
-        assetsWithInterest = _debtAssets + _debtAssets * _rcomp / _PRECISION_DECIMALS;
+        unchecked {
+            // If we overflow on multiplication it should not revert tx, we will get lower fees
+            accruedInterest = _debtAssets * _rcomp / _PRECISION_DECIMALS;
+            daoAndDeployerFees = accruedInterest * (_daoFeeInBp + _deployerFeeInBp) / _BASIS_POINTS;
+        }
+        collateralAssetsWithInterest = _collateralAssets + accruedInterest - daoAndDeployerFees;
+        debtAssetsWithInterest = _debtAssets + accruedInterest;
     }
 
     /// @notice Calculates fraction between borrowed and deposited amount of tokens denominated in percentage

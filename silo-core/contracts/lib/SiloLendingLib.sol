@@ -28,17 +28,6 @@ library SiloLendingLib {
         uint256 shareDebtBalance;
     }
 
-    struct AccrueInterestCache {
-        uint256 lastTimestamp;
-        uint256 rcomp;
-        uint256 totalFeeInBp;
-        uint256 collateralAssets;
-        uint256 debtAssets;
-        uint256 daoAndDeployerAmount;
-        uint256 depositorsAmount;
-        uint256 daoAndDeployerShare;
-    }
-
     struct MoveCollateralShares {
         address shareTokenFrom;
         address shareTokenTo;
@@ -146,42 +135,32 @@ library SiloLendingLib {
         ISilo.Assets storage _totalCollateral,
         ISilo.Assets storage _totalDebt
     ) internal returns (uint256 accruedInterest) {
-        AccrueInterestCache memory cache;
-
-        cache.lastTimestamp = _siloData.interestRateTimestamp;
+        uint64 lastTimestamp = _siloData.interestRateTimestamp;
 
         // This is the first time, so we can return early and save some gas
-        if (cache.lastTimestamp == 0) {
+        if (lastTimestamp == 0) {
             _siloData.interestRateTimestamp = uint64(block.timestamp);
             return 0;
         }
 
         // Interest has already been accrued this block
-        if (cache.lastTimestamp == block.timestamp) {
+        if (lastTimestamp == block.timestamp) {
             return 0;
         }
 
-        cache.rcomp = IInterestRateModel(_assetConfig.interestRateModel).getCompoundInterestRateAndUpdate(
-            block.timestamp
+        uint256 totalFees;
+
+        (_totalCollateral.assets, _totalDebt.assets, totalFees, accruedInterest) = SiloStdLib.getAmountsWithInterest(
+            _totalCollateral.assets,
+            _totalDebt.assets,
+            IInterestRateModel(_assetConfig.interestRateModel).getCompoundInterestRateAndUpdate(block.timestamp),
+            _assetConfig.daoFeeInBp,
+            _assetConfig.deployerFeeInBp
         );
-        cache.totalFeeInBp = _assetConfig.daoFeeInBp + _assetConfig.deployerFeeInBp;
 
-        cache.collateralAssets = _totalCollateral.assets;
-        cache.debtAssets = _totalDebt.assets;
-
-        accruedInterest = cache.debtAssets * cache.rcomp / _PRECISION_DECIMALS;
-
-        unchecked {
-            // If we overflow on multiplication it should not revert tx, we will get lower fees
-            cache.daoAndDeployerAmount = accruedInterest * cache.totalFeeInBp / _BASIS_POINTS;
-            cache.depositorsAmount = accruedInterest - cache.daoAndDeployerAmount;
-        }
-
-        // update contract state
-        _totalDebt.assets = cache.debtAssets + accruedInterest;
-        _totalCollateral.assets = cache.collateralAssets + cache.depositorsAmount;
+        // update remaining contract state
         _siloData.interestRateTimestamp = uint64(block.timestamp);
-        _siloData.daoAndDeployerFees += cache.daoAndDeployerAmount;
+        _siloData.daoAndDeployerFees += totalFees;
     }
 
     function borrowPossible(ISiloConfig.ConfigData memory _configData, address _borrower)
@@ -196,11 +175,11 @@ library SiloLendingLib {
         return _configData.borrowable && totalCollateralBalance == 0;
     }
 
-    function maxBorrow(
-        ISiloConfig _config,
-        address _borrower,
-        uint256 _totalDebtAssets
-    ) internal view returns (uint256 assets, uint256 shares) {
+    function maxBorrow(ISiloConfig _config, address _borrower, uint256 _totalDebtAssets, uint256 _totalDebtShares)
+        internal
+        view
+        returns (uint256 assets, uint256 shares)
+    {
         (ISiloConfig.ConfigData memory debtConfig, ISiloConfig.ConfigData memory collateralConfig) =
             _config.getConfigs(address(this));
 
@@ -208,9 +187,8 @@ library SiloLendingLib {
             collateralConfig, debtConfig, _borrower, ISilo.OracleType.MaxLtv, ISilo.AccrueInterestInMemory.Yes
         );
 
-        (
-            uint256 collateralValue, uint256 debtValue
-        ) = SiloSolvencyLib.getPositionValues(ltvData, debtConfig.token, collateralConfig.token);
+        (uint256 collateralValue, uint256 debtValue) =
+            SiloSolvencyLib.getPositionValues(ltvData, debtConfig.token, collateralConfig.token);
 
         uint256 ltv = debtValue * _PRECISION_DECIMALS / collateralValue;
 
@@ -225,30 +203,9 @@ library SiloLendingLib {
         }
 
         {
-            (uint256 totalAssets, uint256 totalShares) = SiloStdLib.getTotalAssetsAndTotalShares(
-                debtConfig, ISilo.AssetType.Debt, _totalDebtAssets
+            assets = SiloERC4626Lib.convertToAssets(
+                shares, _totalDebtAssets, _totalDebtShares, MathUpgradeable.Rounding.Up
             );
-
-            assets = SiloERC4626Lib.convertToAssets(shares, totalAssets, totalShares, MathUpgradeable.Rounding.Up);
         }
-    }
-
-    function maxRepay(
-        ISiloConfig _config,
-        address _borrower,
-        uint256 _totalDebtAssets
-    ) internal view returns (uint256 assets, uint256 shares) {
-        ISiloConfig.ConfigData memory configData = _config.getConfig(address(this));
-
-        shares = IShareToken(configData.debtShareToken).balanceOf(_borrower);
-
-        assets = SiloERC4626Lib.convertToAssetsOrToShares(
-            _config,
-            shares,
-            ISilo.AssetType.Debt,
-            SiloERC4626Lib.convertToAssets,
-            MathUpgradeable.Rounding.Up,
-            _totalDebtAssets
-        );
     }
 }

@@ -5,16 +5,19 @@ import {MathUpgradeable} from "openzeppelin-contracts-upgradeable/utils/math/Mat
 
 import {ISiloOracle} from "../interfaces/ISiloOracle.sol";
 import {ISiloLiquidation} from "../interfaces/ISiloLiquidation.sol";
+import {IInterestRateModel} from "../interfaces/IInterestRateModel.sol";
 import {SiloStdLib, ISiloConfig, IShareToken, ISilo} from "./SiloStdLib.sol";
 import {SiloERC4626Lib} from "./SiloERC4626Lib.sol";
 import {SiloLiquidationLib} from "./SiloLiquidationLib.sol";
 
 library SiloSolvencyLib {
-    struct LtvData { // TODO rename +borrower
+    struct LtvData {
+        // TODO rename +borrower
         ISiloOracle debtOracle;
         ISiloOracle collateralOracle;
+        uint256 protectedAssets;
+        uint256 collateralAssets;
         uint256 debtAssets;
-        uint256 totalCollateralAssets;
     }
 
     uint256 internal constant _PRECISION_DECIMALS = 1e18;
@@ -31,10 +34,7 @@ library SiloSolvencyLib {
     ) internal {
         // we already accrued interest, so we can work directly on assets
         uint256 shares = SiloERC4626Lib.convertToShares(
-            _amountToLiquidate,
-            _totalAssets,
-            _shareToken.totalSupply(),
-            MathUpgradeable.Rounding.Down
+            _amountToLiquidate, _totalAssets, _shareToken.totalSupply(), MathUpgradeable.Rounding.Down
         );
 
         _shareToken.liquidationTransfer(_borrower, _liquidator, shares);
@@ -119,34 +119,6 @@ library SiloSolvencyLib {
         }
     }
 
-    function getAssetAndSharesWithInterest(
-        address _silo,
-        address _interestRateModel,
-        address _shareToken,
-        address _borrower,
-        ISilo.AccrueInterestInMemory _accrueInMemory,
-        MathUpgradeable.Rounding _rounding
-    ) internal view returns (uint256 assets, uint256 shares) {
-        shares = IShareToken(_shareToken).balanceOf(_borrower);
-
-        if (shares == 0) {
-            return (0, 0);
-        }
-
-        assets = SiloERC4626Lib.convertToAssets(
-            shares,
-            /// @dev amountWithInterest is not needed for core LTV calculations because accrueInterest was just called
-            ///      and storage data is fresh.
-            _accrueInMemory == ISilo.AccrueInterestInMemory.Yes
-                ? SiloStdLib.amountWithInterest(
-                    ISilo(_silo).getDebtAssets(), _interestRateModel // TODO why debt? bug?
-                )
-                : ISilo(_silo).getDebtAssets(), // TODO why debt? bug?
-            IShareToken(_shareToken).totalSupply(),
-            _rounding
-        );
-    }
-
     /// @dev it will be user responsibility to check profit
     function liquidationPreview(
         ISiloConfig.ConfigData memory _collateralConfig,
@@ -155,28 +127,26 @@ library SiloSolvencyLib {
         uint256 _debtToCover,
         uint256 _liquidationFeeInBp,
         bool _selfLiquidation
-    )
-        internal
-        view
-        returns (uint256 receiveCollateralAssets, uint256 repayDebtAssets)
-    {
+    ) internal view returns (uint256 receiveCollateralAssets, uint256 repayDebtAssets) {
         SiloSolvencyLib.LtvData memory ltvData = SiloSolvencyLib.getAssetsDataForLtvCalculations(
             _collateralConfig, _debtConfig, _user, ISilo.OracleType.Solvency, ISilo.AccrueInterestInMemory.No
         );
 
-        if (ltvData.debtAssets == 0 || ltvData.totalCollateralAssets == 0) revert ISiloLiquidation.UserIsSolvent();
+        uint256 totalCollateralAssets = ltvData.collateralAssets + ltvData.debtAssets;
 
-        (
-            uint256 totalBorrowerDebtValue,
-            uint256 totalBorrowerCollateralValue
-        ) = SiloSolvencyLib.getPositionValues(ltvData, _collateralConfig.token, _debtConfig.token);
+        if (ltvData.protectedAssets == 0 || totalCollateralAssets == 0) {
+            revert ISiloLiquidation.UserIsSolvent();
+        }
+
+        (uint256 totalBorrowerDebtValue, uint256 totalBorrowerCollateralValue) =
+            SiloSolvencyLib.getPositionValues(ltvData, _collateralConfig.token, _debtConfig.token);
 
         uint256 ltvInBp = totalBorrowerDebtValue * _BASIS_POINTS / totalBorrowerCollateralValue;
 
         if (!_selfLiquidation && _collateralConfig.lt > ltvInBp) revert ISiloLiquidation.UserIsSolvent();
 
         if (ltvInBp >= _BASIS_POINTS) { // in case of bad debt we return all
-            return (ltvData.totalCollateralAssets, ltvData.debtAssets);
+            return (totalCollateralAssets, ltvData.debtAssets);
         }
 
         (receiveCollateralAssets, repayDebtAssets, ltvInBp) = SiloLiquidationLib.calculateExactLiquidationAmounts(
@@ -184,7 +154,7 @@ library SiloSolvencyLib {
             totalBorrowerDebtValue,
             ltvData.debtAssets,
             totalBorrowerCollateralValue,
-            ltvData.totalCollateralAssets,
+            totalCollateralAssets,
             _liquidationFeeInBp
         );
 
@@ -203,18 +173,14 @@ library SiloSolvencyLib {
         address _collateralConfigDebtShareToken,
         address _debtConfigDebtShareToken,
         address _borrower
-    )
-        internal
-        view
-        returns (bool orderCorrect)
-    {
+    ) internal view returns (bool orderCorrect) {
         uint256 debtShareTokenBalance = IShareToken(_debtConfigDebtShareToken).balanceOf(_borrower);
 
-        return debtShareTokenBalance == 0
-            ? IShareToken(_collateralConfigDebtShareToken).balanceOf(_borrower) == 0
-            : true;
+        return
+            debtShareTokenBalance == 0 ? IShareToken(_collateralConfigDebtShareToken).balanceOf(_borrower) == 0 : true;
     }
 
+    // solhint-disable-next-line function-max-lines
     function getAssetsDataForLtvCalculations(
         ISiloConfig.ConfigData memory _collateralConfig,
         ISiloConfig.ConfigData memory _debtConfig,
@@ -222,46 +188,50 @@ library SiloSolvencyLib {
         ISilo.OracleType _oracleType,
         ISilo.AccrueInterestInMemory _accrueInMemory
     ) internal view returns (LtvData memory ltvData) {
-        // If LTV is needed for solvency, ltOracle should be used. If ltOracle is not set, fallback to ltvOracle.
+        // When calculating maxLtv, use maxLtv oracle. If maxLtv oracle is not set, fallback to solvency oracle
         ltvData.debtOracle = _oracleType == ISilo.OracleType.MaxLtv && _debtConfig.maxLtvOracle != address(0)
             ? ISiloOracle(_debtConfig.maxLtvOracle)
             : ISiloOracle(_debtConfig.solvencyOracle);
         ltvData.collateralOracle = _oracleType == ISilo.OracleType.MaxLtv
             && _collateralConfig.maxLtvOracle != address(0)
-                ? ISiloOracle(_collateralConfig.maxLtvOracle)
-                : ISiloOracle(_collateralConfig.solvencyOracle);
+            ? ISiloOracle(_collateralConfig.maxLtvOracle)
+            : ISiloOracle(_collateralConfig.solvencyOracle);
 
-        (ltvData.debtAssets,) = getAssetAndSharesWithInterest(
+        uint256 totalAssets;
+        uint256 totalShares;
+        uint256 shares;
+
+        (shares, totalShares) = SiloStdLib.getSharesAndTotalSupply(_collateralConfig.protectedShareToken, _borrower);
+        totalAssets = ISilo(_collateralConfig.silo).getProtectedAssets();
+        ltvData.protectedAssets =
+            SiloERC4626Lib.convertToAssets(shares, totalAssets, totalShares, MathUpgradeable.Rounding.Down);
+
+        (shares, totalShares) = SiloStdLib.getSharesAndTotalSupply(_collateralConfig.collateralShareToken, _borrower);
+        totalAssets = SiloStdLib.getTotalAsssetsWithInterest(
+            _collateralConfig.silo,
+            _collateralConfig.interestRateModel,
+            ISilo(_collateralConfig.silo).getCollateralAssets(),
+            _collateralConfig.daoFeeInBp,
+            _collateralConfig.deployerFeeInBp,
+            ISilo.AssetType.Collateral,
+            _accrueInMemory
+        );
+        ltvData.collateralAssets =
+            SiloERC4626Lib.convertToAssets(shares, totalAssets, totalShares, MathUpgradeable.Rounding.Down);
+
+        (shares, totalShares) = SiloStdLib.getSharesAndTotalSupply(_debtConfig.debtShareToken, _borrower);
+        totalAssets = SiloStdLib.getTotalAsssetsWithInterest(
             _debtConfig.silo,
             _debtConfig.interestRateModel,
-            _debtConfig.debtShareToken,
-            _borrower,
-            _accrueInMemory,
-            MathUpgradeable.Rounding.Up
+            0,
+            _debtConfig.daoFeeInBp,
+            _debtConfig.deployerFeeInBp,
+            ISilo.AssetType.Debt,
+            _accrueInMemory
         );
 
-        (ltvData.totalCollateralAssets,) = getAssetAndSharesWithInterest(
-            _collateralConfig.silo,
-            _collateralConfig.interestRateModel,
-            _collateralConfig.protectedShareToken,
-            _borrower,
-            _accrueInMemory,
-            MathUpgradeable.Rounding.Down
-        );
-
-        (uint256 collateralAssets,) = getAssetAndSharesWithInterest(
-            _collateralConfig.silo,
-            _collateralConfig.interestRateModel,
-            _collateralConfig.collateralShareToken,
-            _borrower,
-            _accrueInMemory,
-            MathUpgradeable.Rounding.Down
-        );
-
-        /// @dev sum of assets cannot be bigger than total supply which must fit in uint256
-        unchecked {
-            ltvData.totalCollateralAssets += collateralAssets;
-        }
+        ltvData.debtAssets =
+            SiloERC4626Lib.convertToAssets(shares, totalAssets, totalShares, MathUpgradeable.Rounding.Up);
     }
 
     function getPositionValues(LtvData memory _ltvData, address _collateralAsset, address _debtAsset)
@@ -269,10 +239,11 @@ library SiloSolvencyLib {
         view
         returns (uint256 collateralValue, uint256 debtValue)
     {
+        uint256 totalCollateralAssets = _ltvData.protectedAssets + _ltvData.collateralAssets;
         // if no oracle is set, assume price 1
         collateralValue = address(_ltvData.collateralOracle) != address(0)
-            ? _ltvData.collateralOracle.quote(_ltvData.totalCollateralAssets, _collateralAsset)
-            : _ltvData.totalCollateralAssets;
+            ? _ltvData.collateralOracle.quote(totalCollateralAssets, _collateralAsset)
+            : totalCollateralAssets;
 
         // if no oracle is set, assume price 1
         debtValue = address(_ltvData.debtOracle) != address(0)
@@ -295,9 +266,8 @@ library SiloSolvencyLib {
 
         if (ltvData.debtAssets == 0) return 0;
 
-        (
-            uint256 debtValue, uint256 collateralValue
-        ) = getPositionValues(ltvData, _collateralConfig.token, _debtConfig.token);
+        (uint256 debtValue, uint256 collateralValue) =
+            getPositionValues(ltvData, _collateralConfig.token, _debtConfig.token);
 
         ltv = debtValue * _PRECISION_DECIMALS / collateralValue;
     }
@@ -324,30 +294,28 @@ library SiloSolvencyLib {
 
     function splitReceiveCollateralToLiquidate(
         uint256 _receiveCollateralToLiquidate,
-        address _collateralSilo,
-        address _interestRateModel,
-        address _shareToken,
-        address _borrower
-    )
-        internal
-        view
-        returns (uint256 withdrawAssetsFromCollateral, uint256 withdrawAssetsFromProtected)
-    {
-        (uint256 borrowerCollateralAssets,) = SiloSolvencyLib.getAssetAndSharesWithInterest(
-            _collateralSilo,
-            _interestRateModel,
-            _shareToken,
-            _borrower,
-            ISilo.AccrueInterestInMemory.No,
-            MathUpgradeable.Rounding.Down
-        );
+        address, // _collateralSilo,
+        address, // _interestRateModel,
+        address, // _shareToken,
+        address // _borrower
+    ) internal pure returns (uint256 withdrawAssetsFromCollateral, uint256 withdrawAssetsFromProtected) {
+        // TODO: this function can be either replaced or called in liquidationPreview because new ltvData struct
+        // (uint256 borrowerCollateralAssets,) = SiloSolvencyLib.getAssetAndSharesWithInterest(
+        //     _collateralSilo,
+        //     _interestRateModel,
+        //     _shareToken,
+        //     _borrower,
+        //     ISilo.AccrueInterestInMemory.No,
+        //     MathUpgradeable.Rounding.Down
+        // );
+        uint256 borrowerCollateralAssets;
 
         unchecked {
-            (withdrawAssetsFromCollateral, withdrawAssetsFromProtected) =
-                _receiveCollateralToLiquidate > borrowerCollateralAssets
-                    // safe to unchecked because of above condition
-                    ? (borrowerCollateralAssets, _receiveCollateralToLiquidate - borrowerCollateralAssets)
-                    : (_receiveCollateralToLiquidate, 0);
+            (withdrawAssetsFromCollateral, withdrawAssetsFromProtected) = _receiveCollateralToLiquidate
+                > borrowerCollateralAssets
+                // safe to unchecked because of above condition
+                ? (borrowerCollateralAssets, _receiveCollateralToLiquidate - borrowerCollateralAssets)
+                : (_receiveCollateralToLiquidate, 0);
         }
     }
 }

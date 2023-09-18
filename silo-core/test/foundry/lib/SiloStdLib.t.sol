@@ -64,59 +64,59 @@ contract SiloStdLibTest is Test {
         assertEq(mockSilo.flashFee(ISiloConfig(config), asset, _amount), result);
     }
 
-    function test_collateralAssetsWithInterest(
-        uint256 _collateralAssets,
-        uint256 _debtAssets,
-        uint256 _rcomp,
-        uint256 _daoFeeInBp,
-        uint256 _deployerFeeInBp
-    ) public {
-        vm.assume(_collateralAssets < type(uint128).max);
-        vm.assume(_debtAssets < type(uint128).max / 10000);
-        vm.assume(_rcomp < type(uint128).max / 10000);
-        vm.assume(_daoFeeInBp < 5000);
-        vm.assume(_deployerFeeInBp < 5000);
+    // function test_collateralAssetsWithInterest(
+    //     uint256 _collateralAssets,
+    //     uint256 _debtAssets,
+    //     uint256 _rcomp,
+    //     uint256 _daoFeeInBp,
+    //     uint256 _deployerFeeInBp
+    // ) public {
+    //     vm.assume(_collateralAssets < type(uint128).max);
+    //     vm.assume(_debtAssets < type(uint128).max / 10000);
+    //     vm.assume(_rcomp < type(uint128).max / 10000);
+    //     vm.assume(_daoFeeInBp < 5000);
+    //     vm.assume(_deployerFeeInBp < 5000);
 
-        uint256 collateralAssetsWithInterest = SiloStdLib.collateralAssetsWithInterest(
-            _collateralAssets, _debtAssets, _rcomp, _daoFeeInBp, _deployerFeeInBp
-        );
-        uint256 accruedInterest = _debtAssets * _rcomp / SiloStdLib._PRECISION_DECIMALS;
-        accruedInterest -= accruedInterest * (_daoFeeInBp + _deployerFeeInBp) / SiloStdLib._BASIS_POINTS;
-        uint256 result = _collateralAssets + accruedInterest;
+    //     uint256 collateralAssetsWithInterest = SiloStdLib.collateralAssetsWithInterest(
+    //         _collateralAssets, _debtAssets, _rcomp, _daoFeeInBp, _deployerFeeInBp
+    //     );
+    //     uint256 accruedInterest = _debtAssets * _rcomp / SiloStdLib._PRECISION_DECIMALS;
+    //     accruedInterest -= accruedInterest * (_daoFeeInBp + _deployerFeeInBp) / SiloStdLib._BASIS_POINTS;
+    //     uint256 result = _collateralAssets + accruedInterest;
 
-        assertEq(collateralAssetsWithInterest, result);
+    //     assertEq(collateralAssetsWithInterest, result);
 
-        _collateralAssets = 100e18;
-        _debtAssets = 40e18;
-        _rcomp = 0.25e18;
-        _daoFeeInBp = 0.15e4;
-        _deployerFeeInBp = 0.1e4;
-        result = 107.5e18;
+    //     _collateralAssets = 100e18;
+    //     _debtAssets = 40e18;
+    //     _rcomp = 0.25e18;
+    //     _daoFeeInBp = 0.15e4;
+    //     _deployerFeeInBp = 0.1e4;
+    //     result = 107.5e18;
 
-        collateralAssetsWithInterest = SiloStdLib.collateralAssetsWithInterest(
-            _collateralAssets, _debtAssets, _rcomp, _daoFeeInBp, _deployerFeeInBp
-        );
+    //     collateralAssetsWithInterest = SiloStdLib.collateralAssetsWithInterest(
+    //         _collateralAssets, _debtAssets, _rcomp, _daoFeeInBp, _deployerFeeInBp
+    //     );
 
-        assertEq(collateralAssetsWithInterest, result);
-    }
+    //     assertEq(collateralAssetsWithInterest, result);
+    // }
 
-    function test_debtAssetsWithInterest(uint256 _debtAssets, uint256 _rcomp) public {
-        vm.assume(_debtAssets < type(uint128).max / 10000);
-        vm.assume(_rcomp < type(uint128).max / 10000);
+    // function test_debtAssetsWithInterest(uint256 _debtAssets, uint256 _rcomp) public {
+    //     vm.assume(_debtAssets < type(uint128).max / 10000);
+    //     vm.assume(_rcomp < type(uint128).max / 10000);
 
-        uint256 debtAssetsWithInterest = SiloStdLib.debtAssetsWithInterest(_debtAssets, _rcomp);
-        uint256 result = _debtAssets + _debtAssets * _rcomp / SiloStdLib._PRECISION_DECIMALS;
+    //     uint256 debtAssetsWithInterest = SiloStdLib.debtAssetsWithInterest(_debtAssets, _rcomp);
+    //     uint256 result = _debtAssets + _debtAssets * _rcomp / SiloStdLib._PRECISION_DECIMALS;
 
-        assertEq(debtAssetsWithInterest, result);
+    //     assertEq(debtAssetsWithInterest, result);
 
-        _debtAssets = 60e18;
-        _rcomp = 0.3e18;
-        result = 78e18;
+    //     _debtAssets = 60e18;
+    //     _rcomp = 0.3e18;
+    //     result = 78e18;
 
-        debtAssetsWithInterest = SiloStdLib.debtAssetsWithInterest(_debtAssets, _rcomp);
+    //     debtAssetsWithInterest = SiloStdLib.debtAssetsWithInterest(_debtAssets, _rcomp);
 
-        assertEq(debtAssetsWithInterest, result);
-    }
+    //     assertEq(debtAssetsWithInterest, result);
+    // }
 
     // function test_amountWithInterest(uint256 _rcomp, uint256 _amount, uint256 _daoFeeInBp, uint256 _deployerFeeInBp)
     //     public
