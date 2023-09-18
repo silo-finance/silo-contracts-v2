@@ -40,6 +40,85 @@ library SiloSolvencyLib {
         _shareToken.liquidationTransfer(_borrower, _liquidator, shares);
     }
 
+    function withdrawCollateralToLiquidate( // solhint-disable function-max-lines
+        ISiloConfig.ConfigData memory _collateralConfig,
+        uint256 _collateralToLiquidate,
+        address _borrower,
+        address _liquidator,
+        bool _receiveSToken,
+        ISilo.Assets storage _totalCollateral,
+        ISilo.Assets storage _totalProtected,
+        function() view returns (uint256) _liquidity
+    ) internal {
+        (
+            uint256 withdrawAssetsFromCollateral, uint256 withdrawAssetsFromProtected
+        ) = splitReceiveCollateralToLiquidate(
+            _collateralToLiquidate,
+            _collateralConfig.silo,
+            _collateralConfig.interestRateModel,
+            _collateralConfig.collateralShareToken,
+            _borrower
+        );
+
+        if (_receiveSToken) {
+            if (withdrawAssetsFromProtected != 0) {
+                liquidationSTransfer(
+                    _borrower,
+                    _liquidator,
+                    withdrawAssetsFromProtected,
+                    _totalProtected.assets,
+                    IShareToken(_collateralConfig.protectedShareToken)
+                );
+            }
+
+            if (withdrawAssetsFromCollateral != 0) {
+                liquidationSTransfer(
+                    _borrower,
+                    _liquidator,
+                    withdrawAssetsFromCollateral,
+                    _totalCollateral.assets,
+                    IShareToken(_collateralConfig.collateralShareToken)
+                );
+            }
+
+            return;
+        }
+
+        if (withdrawAssetsFromProtected != 0) {
+            SiloERC4626Lib.withdraw(
+                _collateralConfig.token,
+                _collateralConfig.protectedShareToken,
+                SiloERC4626Lib.WithdrawParams({
+                    assets: withdrawAssetsFromProtected,
+                    shares: 0,
+                    receiver: _liquidator,
+                    owner: _borrower,
+                    spender: _borrower,
+                    assetType: ISilo.AssetType.Protected
+                }),
+                _totalProtected,
+                _liquidity
+            );
+        }
+
+        if (withdrawAssetsFromCollateral != 0) {
+            SiloERC4626Lib.withdraw(
+                _collateralConfig.token,
+                _collateralConfig.collateralShareToken,
+                SiloERC4626Lib.WithdrawParams({
+                    assets: withdrawAssetsFromCollateral,
+                    shares: 0,
+                    receiver: _liquidator,
+                    owner: _borrower,
+                    spender: _borrower,
+                    assetType: ISilo.AssetType.Collateral
+                }),
+                _totalCollateral,
+                _liquidity
+            );
+        }
+    }
+
     function getAssetAndSharesWithInterest(
         address _silo,
         address _interestRateModel,
