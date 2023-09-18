@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
 
-import {IInterestRateModel} from "../../../contracts/interfaces/IInterestRateModel.sol";
+import {IInterestRateModelV2} from "../../../contracts/interfaces/IInterestRateModelV2.sol";
 
 contract RcurTestData is Test {
     // must be in alphabetic order
@@ -83,7 +83,7 @@ contract RcurTestData is Test {
     function _toConfigWithState(RcurData memory _data)
         internal
         pure
-        returns (IInterestRateModel.ConfigWithState memory cfg)
+        returns (IInterestRateModelV2.ConfigWithState memory cfg)
     {
         cfg.uopt = _data.constants.uopt;
         cfg.ucrit = _data.constants.ucrit;
@@ -100,7 +100,7 @@ contract RcurTestData is Test {
     function _toConfigStruct(RcurData memory _data)
         internal
         pure
-        returns (IInterestRateModel.Config memory cfg)
+        returns (IInterestRateModelV2.Config memory cfg)
     {
         cfg.uopt = _data.constants.uopt;
         cfg.ucrit = _data.constants.ucrit;

@@ -2,13 +2,14 @@
 pragma solidity 0.8.18;
 
 import {IInterestRateModel} from "../interfaces/IInterestRateModel.sol";
-import {IInterestRateModelConfig} from "../interfaces/IInterestRateModelConfig.sol";
+import {IInterestRateModelV2Config} from "../interfaces/IInterestRateModelV2Config.sol";
+import {IInterestRateModelV2} from "../interfaces/IInterestRateModelV2.sol";
 
 // solhint-disable var-name-mixedcase
 
 /// @title InterestRateModelV2Config
 /// @notice Please never deploy config manually, always use factory, because factory does necessary checkes.
-contract InterestRateModelV2Config is IInterestRateModelConfig {
+contract InterestRateModelV2Config is IInterestRateModelV2Config {
     // uopt ∈ (0, 1) – optimal utilization;
     int256 internal immutable _UOPT;
     // ucrit ∈ (uopt, 1) – threshold of large utilization;
@@ -38,7 +39,7 @@ contract InterestRateModelV2Config is IInterestRateModelConfig {
     error InvalidUopt();
     error InvalidRi();
 
-    constructor(IInterestRateModel.Config memory _config) {
+    constructor(IInterestRateModelV2.Config memory _config) {
         _UOPT = _config.uopt;
         _UCRIT = _config.ucrit;
         _ULOW = _config.ulow;
@@ -49,7 +50,7 @@ contract InterestRateModelV2Config is IInterestRateModelConfig {
         _BETA = _config.beta;
     }
 
-    function getConfig() external view virtual returns (IInterestRateModel.Config memory config) {
+    function getConfig() external view virtual returns (IInterestRateModelV2.Config memory config) {
         config.uopt = _UOPT;
         config.ucrit = _UCRIT;
         config.ulow = _ULOW;

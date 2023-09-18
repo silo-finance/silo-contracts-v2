@@ -20,8 +20,8 @@ contract InterestRateModelV2Test is Test, InterestRateModelConfigs {
         INTEREST_RATE_MODEL = new InterestRateModelV2();
     }
 
-    function test_IRM_DP() public {
-        assertEq(INTEREST_RATE_MODEL.DP(), DP);
+    function test_IRM_decimals() public {
+        assertEq(INTEREST_RATE_MODEL.decimals(), DP);
     }
 
     function test_IRM_RCOMP_MAX() public {
@@ -37,14 +37,14 @@ contract InterestRateModelV2Test is Test, InterestRateModelConfigs {
     }
 
     function test_IRM_calculateCompoundInterestRate_InvalidTimestamps() public {
-        IInterestRateModel.ConfigWithState memory c;
-        vm.expectRevert(IInterestRateModel.InvalidTimestamps.selector);
+        IInterestRateModelV2.ConfigWithState memory c;
+        vm.expectRevert(IInterestRateModelV2.InvalidTimestamps.selector);
         INTEREST_RATE_MODEL.calculateCompoundInterestRate(c, 0, 0, 1, 0);
     }
 
     function test_IRM_calculateCurrentInterestRate_InvalidTimestamps() public {
-        IInterestRateModel.ConfigWithState memory c;
-        vm.expectRevert(IInterestRateModel.InvalidTimestamps.selector);
+        IInterestRateModelV2.ConfigWithState memory c;
+        vm.expectRevert(IInterestRateModelV2.InvalidTimestamps.selector);
         INTEREST_RATE_MODEL.calculateCurrentInterestRate(c, 0, 0, 1, 0);
     }
     
@@ -62,13 +62,13 @@ contract InterestRateModelV2Test is Test, InterestRateModelConfigs {
     }
 
     function test_IRM_calculateCurrentInterestRate_revertsWhenTimestampInvalid() public {
-        IInterestRateModel.ConfigWithState memory emptyConfig;
+        IInterestRateModelV2.ConfigWithState memory emptyConfig;
 
         // currentTime should always be larger than last, so this should revert
         uint256 lastTransactionTime = 1;
         uint256 currentTime = 0;
 
-        vm.expectRevert(IInterestRateModel.InvalidTimestamps.selector);
+        vm.expectRevert(IInterestRateModelV2.InvalidTimestamps.selector);
         INTEREST_RATE_MODEL.calculateCurrentInterestRate(emptyConfig, 0, 0, lastTransactionTime, currentTime);
     }
 
