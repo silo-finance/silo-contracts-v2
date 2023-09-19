@@ -47,7 +47,7 @@ library SiloERC4626Lib {
     ) internal returns (uint256 assets, uint256 shares) {
         uint256 totalAssets = _totalCollateral.assets;
 
-        (assets, shares) = SiloMathLib.convertToAssetsOrToShares(
+        (assets, shares) = SiloMathLib.convertToAssetsAndToShares(
             _depositParams.assets,
             _depositParams.shares,
             totalAssets,
@@ -82,7 +82,7 @@ library SiloERC4626Lib {
     ) internal returns (uint256 assets, uint256 shares) {
         uint256 totalAssets = _totalCollateral.assets;
 
-        (assets, shares) = SiloMathLib.convertToAssetsOrToShares(
+        (assets, shares) = SiloMathLib.convertToAssetsAndToShares(
             _params.assets,
             _params.shares,
             totalAssets,

@@ -32,7 +32,7 @@ library SiloLendingLib {
         IShareToken debtShareToken = IShareToken(_configData.debtShareToken);
         uint256 totalDebtAssets = _totalDebt.assets;
 
-        (assets, shares) = SiloMathLib.convertToAssetsOrToShares(
+        (assets, shares) = SiloMathLib.convertToAssetsAndToShares(
             _assets,
             _shares,
             totalDebtAssets,
@@ -63,7 +63,7 @@ library SiloLendingLib {
         IShareToken debtShareToken = IShareToken(_configData.debtShareToken);
         uint256 totalDebtAssets = _totalDebt.assets;
 
-        (assets, shares) = SiloMathLib.convertToAssetsOrToShares(
+        (assets, shares) = SiloMathLib.convertToAssetsAndToShares(
             _assets,
             _shares,
             totalDebtAssets,
