@@ -10,11 +10,6 @@ contract ShareCollateralToken is ShareToken {
     error SenderNotSolventAfterTransfer();
     error ShareTransferNotAllowed();
 
-    /// @dev Token is always deployed for specific Silo and asset
-    constructor(ISiloFactory _factory) ShareToken(_factory) {
-        // all setup is done in parent contracts, nothing to do here
-    }
-
     /// @param _silo Silo address for which tokens was deployed
     function initialize(ISilo _silo, address _hookReceiver) external virtual initializer {
         __ShareToken_init(_silo, _hookReceiver);
