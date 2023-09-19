@@ -14,15 +14,15 @@ library SiloSolvencyLib {
     struct LtvData {
         ISiloOracle collateralOracle;
         ISiloOracle debtOracle;
-        uint256 borrowerProtectedAssets;
         uint256 borrowerCollateralAssets;
+        uint256 borrowerProtectedAssets;
         uint256 borrowerDebtAssets;
     }
 
     uint256 internal constant _PRECISION_DECIMALS = 1e18;
     uint256 internal constant _BASIS_POINTS = 1e4;
 
-
+    /// @dev calculation never reverts, if there is revert, then it is because of oracle
     function calculateLtv(
         SiloSolvencyLib.LtvData memory _ltvData,
         address _collateralToken,
@@ -30,12 +30,19 @@ library SiloSolvencyLib {
     )
         internal
         view
-        returns (uint256 ltvInBp, uint256 totalBorrowerDebtValue, uint256 totalBorrowerCollateralValue)
+        returns (uint256 ltvInBp, uint256 totalBorrowerDebtValue, uint256 sumOfBorrowerCollateralValue)
     {
-        (totalBorrowerDebtValue, totalBorrowerCollateralValue) =
+        (sumOfBorrowerCollateralValue, totalBorrowerDebtValue) =
             SiloSolvencyLib.getPositionValues(_ltvData, _collateralToken, _debtToken);
 
-        ltvInBp = totalBorrowerDebtValue * _BASIS_POINTS / totalBorrowerCollateralValue;
+        if (sumOfBorrowerCollateralValue == 0 && totalBorrowerDebtValue == 0) {
+            return (0, 0, 0);
+        } else if (sumOfBorrowerCollateralValue == 0) {
+            ltvInBp = _BASIS_POINTS + 1; // +1 to be over 100%
+        } else {
+            // TODO when 128 the whole below math can be unchecked, cast to 256!
+            ltvInBp = totalBorrowerDebtValue * _BASIS_POINTS / sumOfBorrowerCollateralValue;
+        }
     }
 
     /// @dev check if config was given in correct order
@@ -108,13 +115,13 @@ library SiloSolvencyLib {
     function getPositionValues(LtvData memory _ltvData, address _collateralAsset, address _debtAsset)
         internal
         view
-        returns (uint256 collateralValue, uint256 debtValue)
+        returns (uint256 sumOfCollateralValue, uint256 debtValue)
     {
-        uint256 totalCollateralAssets = _ltvData.borrowerProtectedAssets + _ltvData.borrowerCollateralAssets;
+        uint256 sumOfCollateralAssets = _ltvData.borrowerProtectedAssets + _ltvData.borrowerCollateralAssets;
         // if no oracle is set, assume price 1
-        collateralValue = address(_ltvData.collateralOracle) != address(0)
-            ? _ltvData.collateralOracle.quote(totalCollateralAssets, _collateralAsset)
-            : totalCollateralAssets;
+        sumOfCollateralValue = address(_ltvData.collateralOracle) != address(0)
+            ? _ltvData.collateralOracle.quote(sumOfCollateralAssets, _collateralAsset)
+            : sumOfCollateralAssets;
 
         // if no oracle is set, assume price 1
         debtValue = address(_ltvData.debtOracle) != address(0)
