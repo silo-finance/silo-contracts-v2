@@ -5,7 +5,7 @@ import {SafeCast} from "openzeppelin-contracts/utils/math/SafeCast.sol";
 import {Math} from "openzeppelin-contracts/utils/math/Math.sol";
 
 import {PRBMathSD59x18} from "../lib/PRBMathSD59x18.sol";
-import {SiloStdLib} from  "../lib/SiloStdLib.sol";
+import {SiloMathLib} from  "../lib/SiloMathLib.sol";
 import {ISilo} from "../interfaces/ISilo.sol";
 import {IInterestRateModel} from "../interfaces/IInterestRateModel.sol";
 import {IInterestRateModelV2} from "../interfaces/IInterestRateModelV2.sol";
@@ -221,7 +221,7 @@ contract InterestRateModelV2 is IInterestRateModel, IInterestRateModelV2 {
             _l.T = (_blockTimestamp - _interestRateTimestamp).toInt256();
         }
 
-        _l.u = SiloStdLib.calculateUtilization(_DP, _totalDeposits, _totalBorrowAmount).toInt256();
+        _l.u = SiloMathLib.calculateUtilization(_DP, _totalDeposits, _totalBorrowAmount).toInt256();
         _l.DP = int256(_DP);
 
         if (_l.u > _c.ucrit) {
@@ -295,7 +295,7 @@ contract InterestRateModelV2 is IInterestRateModel, IInterestRateModelV2 {
 
         int256 decimalPoints = int256(_DP);
 
-        _l.u = SiloStdLib.calculateUtilization(_DP, _totalDeposits, _totalBorrowAmount).toInt256();
+        _l.u = SiloMathLib.calculateUtilization(_DP, _totalDeposits, _totalBorrowAmount).toInt256();
 
         // slopei := ki * (u0 - uopt )
         _l.slopei = _c.ki * (_l.u - _c.uopt) / decimalPoints;
