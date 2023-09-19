@@ -3,7 +3,7 @@ pragma solidity >=0.5.0;
 
 interface ISiloLiquidation {
     /// @dev Emitted when a borrower is liquidated.
-    // @param liquidator The address of the liquidator
+    /// @param liquidator The address of the liquidator
     /// @param receiveSToken True if the liquidators wants to receive the collateral sTokens, `false` if he wants
     /// to receive the underlying collateral asset directly
     event LiquidationCall(
@@ -36,6 +36,14 @@ interface ISiloLiquidation {
         address _debtAsset,
         address _user,
         uint256 _debtToCover,
+        bool _receiveSToken
+    ) external;
+
+    function withdrawCollateralsToLiquidator(
+        uint256 _withdrawAssetsFromCollateral,
+        uint256 _withdrawAssetsFromProtected,
+        address _borrower,
+        address _liquidator,
         bool _receiveSToken
     ) external;
 }
