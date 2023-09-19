@@ -12,12 +12,11 @@ import {SiloMathLib} from "./SiloMathLib.sol";
 
 library SiloSolvencyLib {
     struct LtvData {
-        // TODO rename +borrower
-        ISiloOracle debtOracle;
         ISiloOracle collateralOracle;
-        uint256 protectedAssets;
-        uint256 collateralAssets;
-        uint256 debtAssets;
+        ISiloOracle debtOracle;
+        uint256 borrowerProtectedAssets;
+        uint256 borrowerCollateralAssets;
+        uint256 borrowerDebtAssets;
     }
 
     uint256 internal constant _PRECISION_DECIMALS = 1e18;
@@ -75,7 +74,7 @@ library SiloSolvencyLib {
 
         (shares, totalShares) = SiloStdLib.getSharesAndTotalSupply(_collateralConfig.protectedShareToken, _borrower);
         totalAssets = ISilo(_collateralConfig.silo).getProtectedAssets();
-        ltvData.protectedAssets =
+        ltvData.borrowerProtectedAssets =
             SiloMathLib.convertToAssets(shares, totalAssets, totalShares, MathUpgradeable.Rounding.Down);
 
         (shares, totalShares) = SiloStdLib.getSharesAndTotalSupply(_collateralConfig.collateralShareToken, _borrower);
@@ -88,7 +87,7 @@ library SiloSolvencyLib {
             ISilo.AssetType.Collateral,
             _accrueInMemory
         );
-        ltvData.collateralAssets =
+        ltvData.borrowerCollateralAssets =
             SiloMathLib.convertToAssets(shares, totalAssets, totalShares, MathUpgradeable.Rounding.Down);
 
         (shares, totalShares) = SiloStdLib.getSharesAndTotalSupply(_debtConfig.debtShareToken, _borrower);
@@ -102,7 +101,7 @@ library SiloSolvencyLib {
             _accrueInMemory
         );
 
-        ltvData.debtAssets =
+        ltvData.borrowerDebtAssets =
             SiloMathLib.convertToAssets(shares, totalAssets, totalShares, MathUpgradeable.Rounding.Up);
     }
 
@@ -111,7 +110,7 @@ library SiloSolvencyLib {
         view
         returns (uint256 collateralValue, uint256 debtValue)
     {
-        uint256 totalCollateralAssets = _ltvData.protectedAssets + _ltvData.collateralAssets;
+        uint256 totalCollateralAssets = _ltvData.borrowerProtectedAssets + _ltvData.borrowerCollateralAssets;
         // if no oracle is set, assume price 1
         collateralValue = address(_ltvData.collateralOracle) != address(0)
             ? _ltvData.collateralOracle.quote(totalCollateralAssets, _collateralAsset)
@@ -119,8 +118,8 @@ library SiloSolvencyLib {
 
         // if no oracle is set, assume price 1
         debtValue = address(_ltvData.debtOracle) != address(0)
-            ? _ltvData.debtOracle.quote(_ltvData.debtAssets, _debtAsset)
-            : _ltvData.debtAssets;
+            ? _ltvData.debtOracle.quote(_ltvData.borrowerDebtAssets, _debtAsset)
+            : _ltvData.borrowerDebtAssets;
     }
 
     /// @dev Calculates LTV for user. It is used in core logic. Non-view function is needed in case the oracle
@@ -136,7 +135,7 @@ library SiloSolvencyLib {
         LtvData memory ltvData =
             getAssetsDataForLtvCalculations(_collateralConfig, _debtConfig, _borrower, _oracleType, _accrueInMemory);
 
-        if (ltvData.debtAssets == 0) return 0;
+        if (ltvData.borrowerDebtAssets == 0) return 0;
 
         (ltv,,) = calculateLtv(ltvData, _collateralConfig.token, _debtConfig.token);
     }

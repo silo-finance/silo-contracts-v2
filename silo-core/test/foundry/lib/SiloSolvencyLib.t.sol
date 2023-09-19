@@ -39,8 +39,8 @@ contract SiloSolvencyLibTest is Test {
         uint256 debtAssets = 3;
 
         SiloSolvencyLib.LtvData memory ltvData = SiloSolvencyLib.LtvData(
-            ISiloOracle(debtOracle),
             ISiloOracle(collateralOracle),
+            ISiloOracle(debtOracle),
             protectedAssets,
             collateralAssets,
             debtAssets
@@ -51,13 +51,13 @@ contract SiloSolvencyLibTest is Test {
 
         vm.mockCall(
             collateralOracle,
-            abi.encodeWithSelector(ISiloOracle.quote.selector, ltvData.collateralAssets + ltvData.protectedAssets, collateralAsset),
+            abi.encodeWithSelector(ISiloOracle.quote.selector, ltvData.borrowerCollateralAssets + ltvData.borrowerProtectedAssets, collateralAsset),
             abi.encode(uint256(9876))
         );
 
         vm.mockCall(
             debtOracle,
-            abi.encodeWithSelector(ISiloOracle.quote.selector, ltvData.debtAssets, debtAsset),
+            abi.encodeWithSelector(ISiloOracle.quote.selector, ltvData.borrowerDebtAssets, debtAsset),
             abi.encode(uint256(1234))
         );
 

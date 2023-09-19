@@ -166,10 +166,11 @@ library SiloERC4626Lib {
         uint256 spareCollateralValue = collateralValue - minimumCollateralValue;
 
         // these are total assets (protected + collateral) that _owner can withdraw
-        assets = (ltvData.protectedAssets + ltvData.collateralAssets) * spareCollateralValue / collateralValue;
+        assets = (ltvData.borrowerProtectedAssets + ltvData.borrowerCollateralAssets) * spareCollateralValue
+            / collateralValue;
 
-        if (_assetType == ISilo.AssetType.Protected && assets > ltvData.protectedAssets) {
-            assets = ltvData.protectedAssets;
+        if (_assetType == ISilo.AssetType.Protected && assets > ltvData.borrowerProtectedAssets) {
+            assets = ltvData.borrowerProtectedAssets;
             shares = SiloMathLib.convertToShares(
                 assets,
                 _totalAssets,
@@ -177,8 +178,8 @@ library SiloERC4626Lib {
                 MathUpgradeable.Rounding.Down
             );
         } else if (_assetType == ISilo.AssetType.Collateral) {
-            if (assets > ltvData.collateralAssets) {
-                assets = ltvData.collateralAssets;
+            if (assets > ltvData.borrowerCollateralAssets) {
+                assets = ltvData.borrowerCollateralAssets;
             }
 
             uint256 liquidAssets = _liquidity();
