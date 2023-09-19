@@ -16,29 +16,6 @@ import {SiloMathLib} from "./SiloMathLib.sol";
 library SiloLendingLib {
     using SafeERC20Upgradeable for IERC20Upgradeable;
 
-    struct BorrowCache {
-        IShareToken debtShareToken;
-        uint256 totalDebtAssets;
-        uint256 totalDebtShares;
-        uint256 ltv;
-        uint256 maxLtv;
-    }
-
-    struct RepayCache {
-        IShareToken debtShareToken;
-        uint256 totalDebtAmount;
-        uint256 totalDebtShares;
-        uint256 shareDebtBalance;
-    }
-
-    struct MoveCollateralShares {
-        address shareTokenFrom;
-        address shareTokenTo;
-        uint256 shares;
-        address spender;
-        address receiver;
-    }
-
     uint256 internal constant _PRECISION_DECIMALS = 1e18;
     uint256 internal constant _BASIS_POINTS = 1e4;
 
@@ -52,33 +29,25 @@ library SiloLendingLib {
         ISilo.Assets storage _totalDebt,
         uint256 _totalCollateral
     ) internal returns (uint256 assets, uint256 shares) {
-        BorrowCache memory cache;
+        IShareToken debtShareToken = IShareToken(_configData.debtShareToken);
+        uint256 totalDebtAssets = _totalDebt.assets;
 
-        cache.debtShareToken = IShareToken(_configData.debtShareToken);
-        cache.totalDebtAssets = _totalDebt.assets;
-        cache.totalDebtShares = cache.debtShareToken.totalSupply();
+        (assets, shares) = SiloMathLib.convertToAssetsAndToShares(
+            _assets,
+            _shares,
+            totalDebtAssets,
+            debtShareToken.totalSupply(),
+            MathUpgradeable.Rounding.Down,
+            MathUpgradeable.Rounding.Up
+        );
 
-        if (_assets == 0) {
-            // borrowing shares
-            shares = _shares;
-            assets = SiloMathLib.convertToAssets(
-                _shares, cache.totalDebtAssets, cache.totalDebtShares, MathUpgradeable.Rounding.Down
-            );
-        } else {
-            // borrowing assets
-            shares = SiloMathLib.convertToShares(
-                _assets, cache.totalDebtAssets, cache.totalDebtShares, MathUpgradeable.Rounding.Up
-            );
-            assets = _assets;
-        }
-
-        if (assets > SiloMathLib.liquidity(_totalCollateral, cache.totalDebtAssets)) revert ISilo.NotEnoughLiquidity();
+        if (assets > SiloMathLib.liquidity(_totalCollateral, totalDebtAssets)) revert ISilo.NotEnoughLiquidity();
 
         // add new debt
-        _totalDebt.assets += assets;
+        _totalDebt.assets = totalDebtAssets + assets;
         // `mint` checks if _spender is allowed to borrow on the account of _borrower. Hook receiver can
         // potentially reenter but the state is correct.
-        cache.debtShareToken.mint(_borrower, _spender, shares);
+        debtShareToken.mint(_borrower, _spender, shares);
         // fee-on-transfer is ignored. If token reenters, state is already finilized, no harm done.
         IERC20Upgradeable(_configData.token).safeTransferFrom(address(this), _receiver, assets);
     }
@@ -91,43 +60,26 @@ library SiloLendingLib {
         address _repayer,
         ISilo.Assets storage _totalDebt
     ) internal returns (uint256 assets, uint256 shares) {
-        RepayCache memory cache;
+        IShareToken debtShareToken = IShareToken(_configData.debtShareToken);
+        uint256 totalDebtAssets = _totalDebt.assets;
 
-        cache.debtShareToken = IShareToken(_configData.debtShareToken);
-        cache.totalDebtAmount = _totalDebt.assets;
-        cache.totalDebtShares = cache.debtShareToken.totalSupply();
-        cache.shareDebtBalance = cache.debtShareToken.balanceOf(_borrower);
-
-        if (_assets == 0) {
-            // repaying shares
-            shares = _shares;
-            assets = SiloMathLib.convertToAssets(
-                _shares, cache.totalDebtAmount, cache.totalDebtShares, MathUpgradeable.Rounding.Up
-            );
-        } else {
-            // repaying assets
-            shares = SiloMathLib.convertToShares(
-                _assets, cache.totalDebtAmount, cache.totalDebtShares, MathUpgradeable.Rounding.Down
-            );
-            assets = _assets;
-        }
-
-        // repay max if shares above balance
-        if (shares > cache.shareDebtBalance) {
-            shares = cache.shareDebtBalance;
-            assets = SiloMathLib.convertToAssets(
-                shares, cache.totalDebtAmount, cache.totalDebtShares, MathUpgradeable.Rounding.Up
-            );
-        }
+        (assets, shares) = SiloMathLib.convertToAssetsAndToShares(
+            _assets,
+            _shares,
+            totalDebtAssets,
+            debtShareToken.totalSupply(),
+            MathUpgradeable.Rounding.Up,
+            MathUpgradeable.Rounding.Down
+        );
 
         // fee-on-transfer is ignored
         // If token reenters, no harm done because we didn't change the state yet.
         IERC20Upgradeable(_configData.token).safeTransferFrom(_repayer, address(this), assets);
         // subtract repayment from debt
-        _totalDebt.assets -= assets;
+        _totalDebt.assets = totalDebtAssets - assets;
         // Anyone can repay anyone's debt so no approval check is needed. If hook receiver reenters then
         // no harm done because state changes are completed.
-        cache.debtShareToken.burn(_borrower, _repayer, shares);
+        debtShareToken.burn(_borrower, _repayer, shares);
     }
 
     /// @dev this method will accrue interest for ONE asset ONLY, to calculate all you have to call it twice
