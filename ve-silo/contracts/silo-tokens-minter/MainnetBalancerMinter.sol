@@ -50,9 +50,7 @@ contract MainnetBalancerMinter is IBalancerMinter, ILMGetters, BalancerMinter {
 
     function _mintFor(address gauge, address user) internal override returns (uint256 tokensToMint) {
         tokensToMint = _updateGauge(gauge, user);
-        if (tokensToMint > 0) {
-            _tokenAdmin.mint(user, tokensToMint);
-        }
+        _mint(user, tokensToMint);
     }
 
     function _mintForMany(address[] calldata gauges, address user) internal override returns (uint256 tokensToMint) {
@@ -61,9 +59,7 @@ contract MainnetBalancerMinter is IBalancerMinter, ILMGetters, BalancerMinter {
             tokensToMint = tokensToMint.add(_updateGauge(gauges[i], user));
         }
 
-        if (tokensToMint > 0) {
-            _tokenAdmin.mint(user, tokensToMint);
-        }
+        _mint(user, tokensToMint);
     }
 
     function _updateGauge(address gauge, address user) internal returns (uint256 tokensToMint) {
@@ -75,6 +71,17 @@ contract MainnetBalancerMinter is IBalancerMinter, ILMGetters, BalancerMinter {
 
         if (tokensToMint > 0) {
             _setMinted(user, gauge, totalMint);
+
+            if (gauge != user) { // Stakeless gauge mints to itself. In this case, we will take a cut on L2
+                tokensToMint = _collectFees(gauge, tokensToMint);
+                _addMintedToUser(user, gauge, tokensToMint);
+            }
+        }
+    }
+
+    function _mint(address user, uint256 tokensToMint) internal override {
+        if (tokensToMint > 0) {
+            _tokenAdmin.mint(user, tokensToMint);
         }
     }
 }

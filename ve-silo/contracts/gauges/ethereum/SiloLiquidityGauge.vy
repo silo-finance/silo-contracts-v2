@@ -18,6 +18,9 @@ interface ShareToken:
 interface HookReceiver:
     def shareToken() -> address: view
 
+interface Silo:
+    def getFeesAndFeeReceivers() -> (address, address, uint256, uint256): view
+
 interface TokenAdmin:
     def future_epoch_time_write() -> uint256: nonpayable
     def rate() -> uint256: view
@@ -86,6 +89,7 @@ VOTING_ESCROW: immutable(address)
 VEBOOST_PROXY: immutable(address)
 
 MAX_RELATIVE_WEIGHT_CAP: constant(uint256) = 10 ** 18
+BPS_BASE: constant(uint256) = 10 ** 4
 
 # Gauge
 
@@ -336,6 +340,49 @@ def _update_user(
     self._update_liquidity_limit(_user, _user_new_balance, _total_supply)
 
 
+@internal
+@view
+def _dao_and_deployer_fee(_amount: uint256) -> (uint256, uint256):
+    """
+    @notice Calculates DAO and a Silo Deployer fees
+    @param _amount Amount from which fee should be deducted
+    """
+    fee_to_dao: uint256 = 0
+    fee_to_deployer: uint256 = 0
+
+    if _amount == 0:
+        return (fee_to_dao, fee_to_deployer)
+
+    dao_fee: uint256 = 0
+    deployer_fee: uint256 = 0
+    dao_fee_receiver: address = empty(address)
+    deployer_fee_receiver: address = empty(address)
+
+    (
+        dao_fee_receiver,
+        deployer_fee_receiver,
+        dao_fee,
+        deployer_fee
+    ) = Silo(self.silo).getFeesAndFeeReceivers()
+
+    if dao_fee_receiver != empty(address):
+        fee_to_dao = self._calculate_fee(_amount, dao_fee)
+
+    if deployer_fee_receiver != empty(address):
+        fee_to_deployer = self._calculate_fee(_amount, deployer_fee)
+
+    return (fee_to_dao, fee_to_deployer)
+
+
+@internal
+@pure
+def _calculate_fee(_amount: uint256, _bps: uint256) -> uint256:
+    if _amount == 0 or _bps == 0:
+        return 0
+
+    return _amount * _bps / BPS_BASE
+
+
 # External User Facing Functions
 
 
@@ -573,6 +620,27 @@ def claimable_tokens(addr: address) -> uint256:
     """
     self._checkpoint(addr)
     return self.integrate_fraction[addr] - Minter(MINTER).minted(addr, self)
+
+
+@external
+def claimable_tokens_with_fees(addr: address) -> (uint256, uint256, uint256):
+    """
+    @notice Get the number of claimable tokens per user
+    @dev This function should be manually changed to "view" in the ABI
+    @return uint256 number of claimable tokens per user
+    """
+    self._checkpoint(addr)
+
+    claimable_tokens: uint256 = self.integrate_fraction[addr] - Minter(MINTER).minted(addr, self)
+
+    fee_dao: uint256 = 0
+    fee_deployer: uint256 = 0
+    
+    if claimable_tokens != 0:
+        (fee_dao, fee_deployer) = self._dao_and_deployer_fee(claimable_tokens)
+        claimable_tokens -= (fee_dao + fee_deployer)
+
+    return (claimable_tokens, fee_dao, fee_deployer)
 
 
 @view

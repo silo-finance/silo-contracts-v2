@@ -19,6 +19,7 @@ import {IVeBoost} from "ve-silo/contracts/voting-escrow/interfaces/IVeBoost.sol"
 import {IExtendedOwnable} from "ve-silo/contracts/access/IExtendedOwnable.sol";
 import {IHookReceiverMock as IHookReceiver} from "../_mocks/IHookReceiverMock.sol";
 import {IShareTokenLike as IShareToken} from "ve-silo/contracts/gauges/interfaces/IShareTokenLike.sol";
+import {ISiloWithFeeDetails as ISilo} from "ve-silo/contracts/silo-tokens-minter/interfaces/ISiloWithFeeDetails.sol";
 
 contract ERC20 is ERC20WithoutMint {
     constructor(string memory name, string memory symbol) ERC20WithoutMint(name, symbol) {}
@@ -31,6 +32,8 @@ contract ERC20 is ERC20WithoutMint {
 contract MainnetBalancerMinterTest is IntegrationTest {
     uint256 internal constant _WEIGHT_CAP = 1e18;
     uint256 internal constant _BOB_BALANCE = 1e18;
+    uint256 internal constant _DAO_FEE = 1e3; // 10%
+    uint256 internal constant _DEPLOYER_FEE = 2e3; // 20%
 
     ILiquidityGaugeFactory internal _factory;
     ISiloLiquidityGauge internal _gauge;
@@ -41,6 +44,8 @@ contract MainnetBalancerMinterTest is IntegrationTest {
     address internal _hookReceiver = makeAddr("Hook receiver");
     address internal _shareToken = makeAddr("Share token");
     address internal _silo = makeAddr("Silo");
+    address internal _daoFeeReceiver = makeAddr("DAO fee receiver");
+    address internal _deployerFeeReceiver = makeAddr("Deployer fee receiver");
     address internal _bob = makeAddr("Bob");
     address internal _deployer;
 
@@ -96,19 +101,65 @@ contract MainnetBalancerMinterTest is IntegrationTest {
     }
 
     /// @notice Should mint tokens
-    function testMintFor() public {
+    function testMintForNoFees() public {
+        // without fees
+        vm.mockCall(
+            _silo,
+            abi.encodeWithSelector(ISilo.getFeesAndFeeReceivers.selector),
+            abi.encode(
+                address(0),
+                address(0),
+                0,
+                0
+            )
+        );
+
         IERC20 siloToken = IERC20(getAddress(SILO_TOKEN));
 
         assertEq(siloToken.balanceOf(_bob), 0);
 
-        vm.warp(block.timestamp + 3_600 * 24 * 30);
-
-        vm.prank(_bob);
-        _minter.setMinterApproval(_bob, true);
-        vm.prank(_bob);
-        _minter.mintFor(address(_gauge), _bob);
+        _mintFor();
 
         assertEq(siloToken.balanceOf(_bob), _BOB_BALANCE);
+    }
+
+    /// @notice Should mint tokens and collect fees
+    function testMintForWithFees() public {
+        // with fees
+        // 10% - to DAO
+        // 20% - to deployer
+        vm.mockCall(
+            _silo,
+            abi.encodeWithSelector(ISilo.getFeesAndFeeReceivers.selector),
+            abi.encode(
+                _daoFeeReceiver,
+                _deployerFeeReceiver,
+                _DAO_FEE,
+                _DEPLOYER_FEE
+            )
+        );
+
+        IERC20 siloToken = IERC20(getAddress(SILO_TOKEN));
+
+        assertEq(siloToken.balanceOf(_bob), 0);
+
+        _mintFor();
+
+        // 100% - 1e18
+        // 10% to DAO
+        uint256 expectedDAOBalance = 1e17;
+        // 20$ to deployer
+        uint256 expectedDeployerBalance = 2e17;
+        // Bob's balance `_BOB_BALANCE` - 30% fees cut
+        uint256 expectedBobBalance = 7e17;
+
+        uint256 bobBalance = siloToken.balanceOf(_bob);
+        uint256 daoBalance = siloToken.balanceOf(_daoFeeReceiver);
+        uint256 deployerBalance = siloToken.balanceOf(_deployerFeeReceiver);
+
+        assertEq(expectedBobBalance, bobBalance, "Wrong Bob's balance");
+        assertEq(expectedDAOBalance, daoBalance, "Wrong DAO's balance");
+        assertEq(expectedDeployerBalance, deployerBalance, "Wrong deployer's balance");
     }
 
     function testStopMining() public {
@@ -126,6 +177,15 @@ contract MainnetBalancerMinterTest is IntegrationTest {
 
         vm.prank(_deployer);
         _balancerTokenAdmin.stopMining();
+    }
+
+    function _mintFor() internal {
+        vm.warp(block.timestamp + 3_600 * 24 * 30);
+
+        vm.prank(_bob);
+        _minter.setMinterApproval(_bob, true);
+        vm.prank(_bob);
+        _minter.mintFor(address(_gauge), _bob);
     }
 
     function _dummySiloToken() internal {
