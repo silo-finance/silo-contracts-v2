@@ -23,102 +23,8 @@ library SiloSolvencyLib {
     uint256 internal constant _PRECISION_DECIMALS = 1e18;
     uint256 internal constant _BASIS_POINTS = 1e4;
 
-    /// @dev this method expect accrue interest were executed before
-    /// it transfer sToken from borrower to liquidator
-    function liquidationSTransfer(
-        address _borrower,
-        address _liquidator,
-        uint256 _amountToLiquidate,
-        uint256 _totalAssets,
-        IShareToken _shareToken
-    ) internal {
-        // we already accrued interest, so we can work directly on assets
-        uint256 shares = SiloMathLib.convertToShares(
-            _amountToLiquidate, _totalAssets, _shareToken.totalSupply(), MathUpgradeable.Rounding.Down
-        );
 
-        _shareToken.liquidationTransfer(_borrower, _liquidator, shares);
-    }
-
-    /// @dev withdraws assets
-    function withdrawCollateralToLiquidator(
-        ISiloConfig.ConfigData memory _collateralConfig,
-        uint256 _withdrawAssetsFromCollateral,
-        uint256 _withdrawAssetsFromProtected,
-        address _borrower,
-        address _liquidator,
-        ISilo.Assets storage _totalCollateral,
-        ISilo.Assets storage _totalProtected,
-        function() view returns (uint256) _liquidity
-    ) internal {
-        if (_withdrawAssetsFromProtected != 0) {
-            SiloERC4626Lib.withdraw(
-                _collateralConfig.token,
-                _collateralConfig.protectedShareToken,
-                SiloERC4626Lib.WithdrawParams({
-                    assets: _withdrawAssetsFromProtected,
-                    shares: 0,
-                    receiver: _liquidator,
-                    owner: _borrower,
-                    spender: _borrower,
-                    assetType: ISilo.AssetType.Protected
-                }),
-                _totalProtected,
-                _liquidity
-            );
-        }
-
-        if (_withdrawAssetsFromCollateral != 0) {
-            SiloERC4626Lib.withdraw(
-                _collateralConfig.token,
-                _collateralConfig.collateralShareToken,
-                SiloERC4626Lib.WithdrawParams({
-                    assets: _withdrawAssetsFromCollateral,
-                    shares: 0,
-                    receiver: _liquidator,
-                    owner: _borrower,
-                    spender: _borrower,
-                    assetType: ISilo.AssetType.Collateral
-                }),
-                _totalCollateral,
-                _liquidity
-            );
-        }
-    }
-
-    /// @dev withdraws sTokens
-    function withdrawSCollateralToLiquidator(
-        address _collateralShareToken,
-        address _collateralProtectedShareToken,
-        uint256 _withdrawAssetsFromCollateral,
-        uint256 _withdrawAssetsFromProtected,
-        address _borrower,
-        address _liquidator,
-        ISilo.Assets storage _totalCollateral,
-        ISilo.Assets storage _totalProtected
-    ) internal {
-        if (_withdrawAssetsFromProtected != 0) {
-            liquidationSTransfer(
-                _borrower,
-                _liquidator,
-                _withdrawAssetsFromProtected,
-                _totalProtected.assets,
-                IShareToken(_collateralProtectedShareToken)
-            );
-        }
-
-        if (_withdrawAssetsFromCollateral != 0) {
-            liquidationSTransfer(
-                _borrower,
-                _liquidator,
-                _withdrawAssetsFromCollateral,
-                _totalCollateral.assets,
-                IShareToken(_collateralShareToken)
-            );
-        }
-    }
-
-    function ltvAfterLiquidation( // TODO better name
+    function calculateLtv(
         SiloSolvencyLib.LtvData memory _ltvData,
         address _collateralToken,
         address _debtToken
@@ -131,93 +37,6 @@ library SiloSolvencyLib {
             SiloSolvencyLib.getPositionValues(_ltvData, _collateralToken, _debtToken);
 
         ltvInBp = totalBorrowerDebtValue * _BASIS_POINTS / totalBorrowerCollateralValue;
-    }
-
-    /// @dev it will be user responsibility to check profit
-    function getExactLiquidationAmounts(
-        ISiloConfig.ConfigData memory _collateralConfig,
-        ISiloConfig.ConfigData memory _debtConfig,
-        address _user,
-        uint256 _debtToCover,
-        uint256 _liquidationFeeInBp,
-        bool _selfLiquidation
-    )
-        internal
-        view
-        returns (uint256 withdrawAssetsFromCollateral, uint256 withdrawAssetsFromProtected, uint256 repayDebtAssets)
-    {
-        SiloSolvencyLib.LtvData memory ltvData = SiloSolvencyLib.getAssetsDataForLtvCalculations(
-            _collateralConfig, _debtConfig, _user, ISilo.OracleType.Solvency, ISilo.AccrueInterestInMemory.No
-        );
-
-        uint256 borrowerCollateralToLiquidate;
-
-        (
-            borrowerCollateralToLiquidate, repayDebtAssets
-        ) = liquidationPreview(
-            ltvData,
-            _collateralConfig.lt,
-            _collateralConfig.token,
-            _debtConfig.token,
-            _debtToCover,
-            _liquidationFeeInBp,
-            _selfLiquidation
-        );
-
-        (
-            withdrawAssetsFromCollateral, withdrawAssetsFromProtected
-        ) = SiloMathLib.splitReceiveCollateralToLiquidate(borrowerCollateralToLiquidate, ltvData.protectedAssets);
-    }
-
-    /// @return receiveCollateralAssets collateral + protected to liquidate
-    /// @return repayDebtAssets
-    function liquidationPreview(
-        SiloSolvencyLib.LtvData memory _ltvData,
-        uint256 _collateralLt,
-        address _collateralConfigToken,
-        address _debtConfigToken,
-        uint256 _debtToCover,
-        uint256 _liquidationFeeInBp,
-        bool _selfLiquidation
-    )
-        internal
-        view
-        returns (
-            uint256 receiveCollateralAssets,
-            uint256 repayDebtAssets
-        )
-    {
-        uint256 totalCollateralAssets = _ltvData.collateralAssets + _ltvData.protectedAssets;
-
-        if (_ltvData.debtAssets == 0 || totalCollateralAssets == 0) revert ISiloLiquidation.UserIsSolvent();
-
-        (
-            uint256 ltvAfterInBp, uint256 totalBorrowerDebtValue, uint256 totalBorrowerCollateralValue
-        ) = ltvAfterLiquidation(_ltvData, _collateralConfigToken, _debtConfigToken);
-
-        if (!_selfLiquidation && _collateralLt > ltvAfterInBp) revert ISiloLiquidation.UserIsSolvent();
-
-        // TODO do not do full liquidation, do partial
-        if (ltvAfterInBp >= _BASIS_POINTS) { // in case of bad debt we return all
-            return (totalCollateralAssets, _ltvData.debtAssets);
-        }
-
-        (receiveCollateralAssets, repayDebtAssets, ltvAfterInBp) = SiloLiquidationLib.calculateExactLiquidationAmounts(
-            _debtToCover,
-            totalBorrowerDebtValue,
-            _ltvData.debtAssets,
-            totalBorrowerCollateralValue,
-            totalCollateralAssets,
-            _liquidationFeeInBp
-        );
-
-        if (receiveCollateralAssets == 0 || repayDebtAssets == 0) revert ISiloLiquidation.UserIsSolvent();
-
-        if (ltvAfterInBp != 0) { // it can be 0 in case of full liquidation
-            if (!_selfLiquidation && ltvAfterInBp < SiloLiquidationLib.minAcceptableLT(_collateralLt)) {
-                revert ISiloLiquidation.LiquidationTooBig();
-            }
-        }
     }
 
     /// @dev check if config was given in correct order
@@ -319,10 +138,7 @@ library SiloSolvencyLib {
 
         if (ltvData.debtAssets == 0) return 0;
 
-        (uint256 debtValue, uint256 collateralValue) =
-            getPositionValues(ltvData, _collateralConfig.token, _debtConfig.token);
-
-        ltv = debtValue * _PRECISION_DECIMALS / collateralValue;
+        (ltv,,) = calculateLtv(ltvData, _collateralConfig.token, _debtConfig.token);
     }
 
     function isSolvent(
