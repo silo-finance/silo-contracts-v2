@@ -7,7 +7,7 @@ import {MathUpgradeable} from "openzeppelin-contracts-upgradeable/utils/math/Mat
 import {SafeERC20Upgradeable} from "openzeppelin-contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
 import {IERC20Upgradeable} from "openzeppelin-contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 
-import {ISilo} from "./interfaces/ISilo.sol";
+import {ISilo, ISiloLiquidation} from "./interfaces/ISilo.sol";
 import {IShareToken} from "./interfaces/IShareToken.sol";
 
 import {IERC3156FlashBorrower} from "./interfaces/IERC3156FlashBorrower.sol";
@@ -21,6 +21,7 @@ import {SiloSolvencyLib} from "./lib/SiloSolvencyLib.sol";
 import {SiloLendingLib} from "./lib/SiloLendingLib.sol";
 import {SiloERC4626Lib} from "./lib/SiloERC4626Lib.sol";
 import {SiloMathLib} from "./lib/SiloMathLib.sol";
+import {SiloLiquidationExecLib} from "./lib/SiloLiquidationExecLib.sol";
 import {LeverageReentrancyGuard} from "./utils/LeverageReentrancyGuard.sol";
 
 // Keep ERC4626 ordering TODO why?
@@ -854,20 +855,21 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable, LeverageReent
         uint256 _debtToCover,
         bool _receiveSToken
     ) external virtual {
-        (ISiloConfig.ConfigData memory debtConfig, ISiloConfig.ConfigData memory collateralConfig) =
-            config.getConfigs(address(this));
+        (
+            ISiloConfig.ConfigData memory debtConfig, ISiloConfig.ConfigData memory collateralConfig
+        ) = config.getConfigs(address(this));
 
         if (_collateralAsset != collateralConfig.token) revert UnexpectedCollateralToken();
         if (_debtAsset != debtConfig.token) revert UnexpectedDebtToken();
 
         _accrueInterest(debtConfig);
-        Silo(debtConfig.otherSilo).accrueInterest();
+        ISilo(debtConfig.otherSilo).accrueInterest();
 
         bool selfLiquidation = _borrower == msg.sender;
 
         (
             uint256 withdrawAssetsFromCollateral, uint256 withdrawAssetsFromProtected, uint256 repayDebtAssets
-        ) = SiloSolvencyLib.getExactLiquidationAmounts(
+        ) = SiloLiquidationExecLib.getExactLiquidationAmounts(
             collateralConfig,
             debtConfig,
             _borrower,
@@ -878,50 +880,32 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable, LeverageReent
 
         // always ZERO, we can receive shares, but we can not repay with shares
         uint256 zeroShares;
+        emit LiquidationCall(msg.sender, _receiveSToken);
         SiloLendingLib.repay(debtConfig, repayDebtAssets, zeroShares, _borrower, msg.sender, total[AssetType.Debt]);
 
-        emit LiquidationCall(msg.sender, _receiveSToken);
-
-        Silo(debtConfig.otherSilo).withdrawCollateralToLiquidator(
+        ISiloLiquidation(debtConfig.otherSilo).withdrawCollateralsToLiquidator(
             withdrawAssetsFromCollateral, withdrawAssetsFromProtected, _borrower, msg.sender, _receiveSToken
         );
     }
 
-    // TODO move this whole f body to lib and create separate lib to execute liquidation
     /// @dev that method allow to finish liquidation process by giving up collateral to liquidator
-    function withdrawCollateralToLiquidator(
+    function withdrawCollateralsToLiquidator(
         uint256 _withdrawAssetsFromCollateral,
         uint256 _withdrawAssetsFromProtected,
         address _borrower,
         address _liquidator,
         bool _receiveSToken
     ) external virtual {
-        ISiloConfig.ConfigData memory collateralConfig = config.getConfig(address(this));
-        if (msg.sender != collateralConfig.otherSilo) revert OnlySilo();
-
-        if (_receiveSToken) {
-            SiloSolvencyLib.withdrawSCollateralToLiquidator(
-                collateralConfig.collateralShareToken,
-                collateralConfig.protectedShareToken,
-                _withdrawAssetsFromCollateral,
-                _withdrawAssetsFromProtected,
-                _borrower,
-                _liquidator,
-                total[AssetType.Collateral],
-                total[AssetType.Protected]
-            );
-        } else {
-            SiloSolvencyLib.withdrawCollateralToLiquidator(
-                collateralConfig,
-                _withdrawAssetsFromCollateral,
-                _withdrawAssetsFromProtected,
-                _borrower,
-                _liquidator,
-                total[AssetType.Collateral],
-                total[AssetType.Protected],
-                _liquidity
-            );
-        }
+        SiloLiquidationExecLib.withdrawCollateralsToLiquidator(
+            config,
+            _withdrawAssetsFromCollateral,
+            _withdrawAssetsFromProtected,
+            _borrower,
+            _liquidator,
+            _receiveSToken,
+            total,
+            _liquidity
+        );
     }
 
     function _liquidity() internal view virtual returns (uint256 liquidity) {
