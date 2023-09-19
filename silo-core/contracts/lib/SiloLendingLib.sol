@@ -29,6 +29,12 @@ library SiloLendingLib {
         ISilo.Assets storage _totalDebt,
         uint256 _totalCollateral
     ) internal returns (uint256 assets, uint256 shares) {
+        if (
+            !borrowPossible(
+                _configData.protectedShareToken, _configData.collateralShareToken, _configData.borrowable, _borrower
+            )
+        ) revert ISilo.BorrowNotPossible();
+
         IShareToken debtShareToken = IShareToken(_configData.debtShareToken);
         uint256 totalDebtAssets = _totalDebt.assets;
 
@@ -118,16 +124,17 @@ library SiloLendingLib {
         _siloData.daoAndDeployerFees += totalFees;
     }
 
-    function borrowPossible(ISiloConfig.ConfigData memory _configData, address _borrower)
-        internal
-        view
-        returns (bool)
-    {
-        uint256 totalCollateralBalance = IShareToken(_configData.protectedShareToken).balanceOf(_borrower)
-            + IShareToken(_configData.collateralShareToken).balanceOf(_borrower);
+    function borrowPossible(
+        address _protectedShareToken,
+        address _collateralShareToken,
+        bool _borrowable,
+        address _borrower
+    ) internal view returns (bool) {
+        uint256 totalCollateralBalance = IShareToken(_protectedShareToken).balanceOf(_borrower)
+            + IShareToken(_collateralShareToken).balanceOf(_borrower);
 
         // token must be marked as borrowable and _borrower cannot have any collateral deposited
-        return _configData.borrowable && totalCollateralBalance == 0;
+        return _borrowable && totalCollateralBalance == 0;
     }
 
     function maxBorrow(ISiloConfig _config, address _borrower, uint256 _totalDebtAssets, uint256 _totalDebtShares)
@@ -158,9 +165,8 @@ library SiloLendingLib {
         }
 
         {
-            assets = SiloMathLib.convertToAssets(
-                shares, _totalDebtAssets, _totalDebtShares, MathUpgradeable.Rounding.Up
-            );
+            assets =
+                SiloMathLib.convertToAssets(shares, _totalDebtAssets, _totalDebtShares, MathUpgradeable.Rounding.Up);
         }
     }
 }
