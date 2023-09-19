@@ -8,7 +8,6 @@ import "silo-core/contracts/utils/ShareDebtToken.sol";
 import "silo-core/contracts/interfaces/ISilo.sol";
 import "silo-core/contracts/interfaces/ISiloConfig.sol";
 
-
 contract Token {
     uint8 public immutable decimals;
 
