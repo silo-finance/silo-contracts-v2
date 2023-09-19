@@ -13,7 +13,6 @@ import {IShareToken, ISilo} from "../interfaces/IShareToken.sol";
 import {ISiloConfig} from "../SiloConfig.sol";
 import {TokenHelper} from "../lib/TokenHelper.sol";
 
-// solhint-disable func-name-mixedcase
 
 /// @title ShareToken
 /// @notice Implements common interface for Silo tokens representing debt or collateral positions.
@@ -58,16 +57,15 @@ import {TokenHelper} from "../lib/TokenHelper.sol";
 /// _Available since v4.7._
 /// @custom:security-contact security@silo.finance
 abstract contract ShareToken is ERC20Upgradeable, IShareToken {
-    ISiloFactory public immutable factory;
+    /// @dev ERC4626 decimal offset
+    /// see https://docs.openzeppelin.com/contracts/4.x/erc4626 for details
+    uint8 internal constant _DECIMALS_OFFSET = 2;
 
     /// @notice Silo address for which tokens was deployed
     ISilo public silo;
 
     /// @notice Address of hook contract called on each token transfer, mint and burn
     address public hookReceiver;
-
-    /// @dev decimals that match the original asset decimals
-    uint8 internal _decimals;
 
     error OnlySilo();
 
@@ -77,20 +75,17 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
         _;
     }
 
-    /// @dev Token is always deployed for specific Silo and asset
-    constructor(ISiloFactory _factory) {
-        factory = _factory;
-    }
-
     /// @inheritdoc IShareToken
     function liquidationTransfer(address _owner, address _recipient, uint256 _amount) external virtual onlySilo {
         _transfer(_owner, _recipient, _amount);
     }
 
-    /// @param _silo Silo address for which tokens was deployed
-    function __ShareToken_init(ISilo _silo, address _hookReceiver) internal virtual onlyInitializing {
-        silo = _silo;
-        hookReceiver = _hookReceiver;
+    /// @dev decimals of share token
+    function decimals() public view virtual override(ERC20Upgradeable, IERC20MetadataUpgradeable) returns (uint8) {
+        ISiloConfig siloConfig = silo.config();
+        ISiloConfig.ConfigData memory configData = siloConfig.getConfig(address(silo));
+
+        return uint8(TokenHelper.assertAndGetDecimals(configData.token)) + _DECIMALS_OFFSET;
     }
 
     /// @dev Name convention:
@@ -101,7 +96,6 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
     ///      Borrowable deposit: "Silo Finance Borrowable NAME Deposit, SiloId: SILO_ID"
     ///      Debt: "Silo Finance NAME Debt, SiloId: SILO_ID"
     function name() public view virtual override(ERC20Upgradeable, IERC20MetadataUpgradeable) returns (string memory) {
-        // solhint-disable-previous-line ordering
         ISiloConfig siloConfig = silo.config();
         ISiloConfig.ConfigData memory configData = siloConfig.getConfig(address(silo));
         string memory siloIdAscii = StringsUpgradeable.toString(siloConfig.SILO_ID());
@@ -157,17 +151,26 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
         return (balanceOf(_account), totalSupply());
     }
 
+    /// @param _silo Silo address for which tokens was deployed
+    // solhint-disable-next-line func-name-mixedcase
+    function __ShareToken_init(ISilo _silo, address _hookReceiver) internal virtual onlyInitializing {
+        silo = _silo;
+        hookReceiver = _hookReceiver;
+    }
+    
     /// @dev Call an afterTokenTransfer hook if registered and check minimum share requirement on mint/burn
     function _afterTokenTransfer(address _sender, address _recipient, uint256 _amount) internal virtual override {
-        if (hookReceiver != address(0)) {
-            // report mint, burn or transfer
-            hookReceiver.call( // solhint-disable-line avoid-low-level-calls
-                abi.encodeCall(
-                    IHookReceiver.afterTokenTransfer,
-                    (_sender, balanceOf(_sender), _recipient, balanceOf(_recipient), totalSupply(), _amount)
-                )
-            );
-        }
+        if (hookReceiver == address(0)) return;
+
+        // report mint, burn or transfer
+        (bool resultIgnored,) = hookReceiver.call( // solhint-disable-line avoid-low-level-calls
+            abi.encodeCall(
+                IHookReceiver.afterTokenTransfer,
+                (_sender, balanceOf(_sender), _recipient, balanceOf(_recipient), totalSupply(), _amount)
+            )
+        );
+
+        resultIgnored; // this is to fix: Warning (2072): Unused local variable
     }
 
     /// @dev checks if operation is "real" transfer

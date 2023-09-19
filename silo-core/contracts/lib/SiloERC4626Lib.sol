@@ -45,6 +45,7 @@ library SiloERC4626Lib {
         uint256 shareBalance;
     }
 
+    uint256 internal constant _DECIMALS_OFFSET_POW = 10 ** 2;
     uint256 internal constant _PRECISION_DECIMALS = 1e18;
 
     /// @param _token if empty, tokens will not be transferred, useful for transition of collateral
@@ -232,7 +233,8 @@ library SiloERC4626Lib {
         uint256 _totalShares,
         MathUpgradeable.Rounding _rounding
     ) internal pure returns (uint256) {
-        return _assets.mulDiv(_totalShares + 10 ** _decimalsOffset(), _totalAssets + 1, _rounding);
+        // TODO what is magic number 1?
+        return _assets.mulDiv(_totalShares + _DECIMALS_OFFSET_POW, _totalAssets + 1, _rounding);
     }
 
     function convertToAssets(
@@ -241,10 +243,7 @@ library SiloERC4626Lib {
         uint256 _totalShares,
         MathUpgradeable.Rounding _rounding
     ) internal pure returns (uint256) {
-        return _shares.mulDiv(_totalAssets + 1, _totalShares + 10 ** _decimalsOffset(), _rounding);
-    }
-
-    function _decimalsOffset() private pure returns (uint8) {
-        return 0;
+        /// TODO what is magic number 1?
+        return _shares.mulDiv(_totalAssets + 1, _totalShares + _DECIMALS_OFFSET_POW, _rounding);
     }
 }
