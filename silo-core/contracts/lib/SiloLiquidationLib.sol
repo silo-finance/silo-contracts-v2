@@ -39,7 +39,7 @@ library SiloLiquidationLib {
         uint256 _debtToCover,
         uint256 _totalBorrowerDebtValue,
         uint256 _totalBorrowerDebtAssets,
-        uint256 _totalBorrowerCollateralValue,
+        uint256 _totalBorrowerCollateralValue, // TODO change order, so collateral is before debt to match other places
         uint256 _totalBorrowerCollateralAssets,
         uint256 _liquidationFeeInBp
     )
@@ -225,5 +225,66 @@ library SiloLiquidationLib {
         return repayValue * _BASIS_POINTS/ _totalBorrowerDebtValue > _POSITION_DUST_LEVEL_IN_BP
             ? _totalBorrowerDebtValue
             : repayValue;
+    }
+
+    /// @dev protected collateral is prioritized
+    /// @param _borrowerProtectedAssets available users protected collateral
+    function splitReceiveCollateralToLiquidate(uint256 _collateralToLiquidate, uint256 _borrowerProtectedAssets)
+        internal
+        pure
+        returns (uint256 withdrawAssetsFromCollateral, uint256 withdrawAssetsFromProtected)
+    {
+        unchecked {
+            (
+                withdrawAssetsFromProtected, withdrawAssetsFromCollateral
+            ) = _collateralToLiquidate > _borrowerProtectedAssets
+                // safe to unchecked because of above condition
+                ? (_collateralToLiquidate - _borrowerProtectedAssets, _borrowerProtectedAssets)
+                : (0, _collateralToLiquidate);
+        }
+    }
+
+    /// @param _totalBorrowerCollateralValue collateral + protected
+    /// @param _totalBorrowerCollateralAssets collateral + protected
+    function calculateLiquidationNumbers(
+        uint256 _debtToCover,
+        uint256 _totalBorrowerCollateralValue,
+        uint256 _totalBorrowerCollateralAssets,
+        uint256 _totalBorrowerProtectedAssets,
+        uint256 _totalBorrowerDebtValue,
+        uint256 _totalBorrowerDebtAssets,
+        uint256 _ltInBp,
+        uint256 _liquidationFeeInBp,
+        bool _selfLiquidation
+    )
+        internal
+        pure
+        returns (uint256 withdrawAssetsFromCollateral, uint256 withdrawAssetsFromProtected, uint256 repayDebtAssets)
+    {
+        uint256 borrowerCollateralToLiquidate;
+        uint256 ltvInBp;
+
+        (borrowerCollateralToLiquidate, repayDebtAssets, ltvInBp) = SiloLiquidationLib.calculateExactLiquidationAmounts(
+            _debtToCover,
+            _totalBorrowerDebtValue,
+            _totalBorrowerDebtAssets,
+            _totalBorrowerCollateralValue,
+            _totalBorrowerCollateralAssets,
+            _liquidationFeeInBp
+        );
+
+        if (borrowerCollateralToLiquidate == 0 || repayDebtAssets == 0) revert ISiloLiquidation.UserIsSolvent();
+
+        if (ltvInBp != 0) { // it can be 0 in case of full liquidation
+            if (!_selfLiquidation && ltvInBp < SiloLiquidationLib.minAcceptableLT(_ltInBp)) {
+                revert ISiloLiquidation.LiquidationTooBig();
+            }
+        }
+
+        (
+            withdrawAssetsFromCollateral, withdrawAssetsFromProtected
+        ) = SiloLiquidationLib.splitReceiveCollateralToLiquidate(
+            borrowerCollateralToLiquidate, _totalBorrowerProtectedAssets
+        );
     }
 }

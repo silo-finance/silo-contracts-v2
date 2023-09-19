@@ -867,14 +867,20 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable, LeverageReent
 
         bool selfLiquidation = _borrower == msg.sender;
 
+        SiloSolvencyLib.LtvData memory ltvData = SiloSolvencyLib.getAssetsDataForLtvCalculations(
+            collateralConfig, debtConfig, _borrower, ISilo.OracleType.Solvency, ISilo.AccrueInterestInMemory.No
+        );
+
         (
             uint256 withdrawAssetsFromCollateral, uint256 withdrawAssetsFromProtected, uint256 repayDebtAssets
         ) = SiloLiquidationExecLib.getExactLiquidationAmounts(
-            collateralConfig,
-            debtConfig,
+            ltvData,
+            collateralConfig.token,
+            debtConfig.token,
             _borrower,
             _debtToCover,
             selfLiquidation ? 0 : collateralConfig.liquidationFee,
+            collateralConfig.lt,
             selfLiquidation
         );
 
