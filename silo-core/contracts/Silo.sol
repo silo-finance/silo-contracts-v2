@@ -23,7 +23,7 @@ import {SiloERC4626Lib} from "./lib/SiloERC4626Lib.sol";
 import {SiloLiquidationLib} from "./lib/SiloLiquidationLib.sol";
 import {LeverageReentrancyGuard} from "./utils/LeverageReentrancyGuard.sol";
 
-// Keep ERC4626 ordering
+// Keep ERC4626 ordering TODO why?
 // solhint-disable ordering
 
 contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable, LeverageReentrancyGuard {
@@ -864,7 +864,9 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable, LeverageReent
 
         bool selfLiquidation = _borrower == msg.sender;
 
-        (uint256 receiveCollateralAssets, uint256 repayDebtAssets) = SiloSolvencyLib.liquidationPreview(
+        (
+            uint256 withdrawAssetsFromCollateral, uint256 withdrawAssetsFromProtected, uint256 repayDebtAssets
+        ) = SiloSolvencyLib.getExactLiquidationAmounts(
             collateralConfig,
             debtConfig,
             _borrower,
@@ -873,22 +875,22 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable, LeverageReent
             selfLiquidation
         );
 
-        if (receiveCollateralAssets == 0 || repayDebtAssets == 0) revert UserIsSolvent();
-
         // always ZERO, we can receive shares, but we can not repay with shares
         uint256 zeroShares;
         SiloLendingLib.repay(debtConfig, repayDebtAssets, zeroShares, _borrower, msg.sender, total[AssetType.Debt]);
 
         emit LiquidationCall(msg.sender, _receiveSToken);
 
-        Silo(debtConfig.otherSilo).withdrawCollateralToLiquidate(
-            receiveCollateralAssets, _borrower, msg.sender, _receiveSToken
+        Silo(debtConfig.otherSilo).withdrawCollateralToLiquidator(
+            withdrawAssetsFromCollateral, withdrawAssetsFromProtected, _borrower, msg.sender, _receiveSToken
         );
     }
 
-    /// @dev that method allow t ofinish liquidation process by giving up collateral to liquidator
-    function withdrawCollateralToLiquidate(
-        uint256 _collateralToLiquidate,
+    // TODO move this whole f body to lib and create separate lib to execute liquidation
+    /// @dev that method allow to finish liquidation process by giving up collateral to liquidator
+    function withdrawCollateralToLiquidator(
+        uint256 _withdrawAssetsFromCollateral,
+        uint256 _withdrawAssetsFromProtected,
         address _borrower,
         address _liquidator,
         bool _receiveSToken
@@ -896,16 +898,29 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable, LeverageReent
         ISiloConfig.ConfigData memory collateralConfig = config.getConfig(address(this));
         if (msg.sender != collateralConfig.otherSilo) revert OnlySilo();
 
-        SiloSolvencyLib.withdrawCollateralToLiquidate(
-            collateralConfig,
-            _collateralToLiquidate,
-            _borrower,
-            _liquidator,
-            _receiveSToken,
-            total[AssetType.Collateral],
-            total[AssetType.Protected],
-            _liquidity
-        );
+        if (_receiveSToken) {
+            SiloSolvencyLib.withdrawSCollateralToLiquidator(
+                collateralConfig.collateralShareToken,
+                collateralConfig.protectedShareToken,
+                _withdrawAssetsFromCollateral,
+                _withdrawAssetsFromProtected,
+                _borrower,
+                _liquidator,
+                total[AssetType.Collateral],
+                total[AssetType.Protected]
+            );
+        } else {
+            SiloSolvencyLib.withdrawCollateralToLiquidator(
+                collateralConfig,
+                _withdrawAssetsFromCollateral,
+                _withdrawAssetsFromProtected,
+                _borrower,
+                _liquidator,
+                total[AssetType.Collateral],
+                total[AssetType.Protected],
+                _liquidity
+            );
+        }
     }
 
     function _liquidity() internal view virtual returns (uint256 liquidity) {
