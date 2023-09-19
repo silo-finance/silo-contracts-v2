@@ -181,7 +181,9 @@ library SiloLiquidationExecLib {
 
         (
             withdrawAssetsFromCollateral, withdrawAssetsFromProtected
-        ) = SiloMathLib.splitReceiveCollateralToLiquidate(borrowerCollateralToLiquidate, ltvData.protectedAssets);
+        ) = SiloLiquidationLib.splitReceiveCollateralToLiquidate(
+            borrowerCollateralToLiquidate, ltvData.protectedAssets
+        );
     }
 
     /// @return receiveCollateralAssets collateral + protected to liquidate
