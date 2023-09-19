@@ -34,6 +34,7 @@ library SiloERC4626Lib {
         address receiver;
         ISilo.AssetType assetType;
         IShareToken collateralShareToken;
+        IShareToken debtShareToken;
     }
 
     uint256 internal constant _PRECISION_DECIMALS = 1e18;
@@ -45,6 +46,10 @@ library SiloERC4626Lib {
         DepositParams memory _depositParams,
         ISilo.Assets storage _totalCollateral
     ) internal returns (uint256 assets, uint256 shares) {
+        if (!depositPossible(address(_depositParams.debtShareToken), _depositParams.receiver)) {
+            revert ISilo.DepositNotPossible();
+        }
+
         uint256 totalAssets = _totalCollateral.assets;
 
         (assets, shares) = SiloMathLib.convertToAssetsAndToShares(
@@ -77,8 +82,8 @@ library SiloERC4626Lib {
         address _asset,
         address _shareToken,
         WithdrawParams memory _params,
-        ISilo.Assets storage _totalCollateral,
-        function() view returns (uint256) _liquidity
+        uint256 _liquidity,
+        ISilo.Assets storage _totalCollateral
     ) internal returns (uint256 assets, uint256 shares) {
         uint256 totalAssets = _totalCollateral.assets;
 
@@ -94,9 +99,7 @@ library SiloERC4626Lib {
         if (assets == 0 || shares == 0) revert ISilo.NothingToWithdraw();
 
         // check liquidity
-        if (_params.assetType == ISilo.AssetType.Collateral && assets > _liquidity()) {
-            revert ISilo.NotEnoughLiquidity();
-        }
+        if (assets > _liquidity) revert ISilo.NotEnoughLiquidity();
 
         // `assets` can never be more then `totalAssets` because we always increase `totalAssets` by
         // `assets` and interest
@@ -114,12 +117,12 @@ library SiloERC4626Lib {
         }
     }
 
-    function depositPossible(ISiloConfig.ConfigData memory _configData, address _depositor)
+    function depositPossible(address _debtShareToken, address _depositor)
         internal
         view
         returns (bool)
     {
-        return IShareToken(_configData.debtShareToken).balanceOf(_depositor) == 0;
+        return IShareToken(_debtShareToken).balanceOf(_depositor) == 0;
     }
 
     function maxDepositOrMint(ISiloConfig _config, address _receiver)
@@ -129,7 +132,7 @@ library SiloERC4626Lib {
     {
         ISiloConfig.ConfigData memory configData = _config.getConfig(address(this));
 
-        if (SiloERC4626Lib.depositPossible(configData, _receiver)) {
+        if (SiloERC4626Lib.depositPossible(configData.debtShareToken, _receiver)) {
             maxAssetsOrShares = type(uint256).max - 1;
         }
     }

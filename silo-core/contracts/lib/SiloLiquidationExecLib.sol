@@ -24,8 +24,8 @@ library SiloLiquidationExecLib {
         address _borrower,
         address _liquidator,
         bool _receiveSToken,
-        mapping(ISilo.AssetType => ISilo.Assets) storage _total,
-        function() view returns (uint256) _liquidity
+        uint256 _liquidity,
+        mapping(ISilo.AssetType => ISilo.Assets) storage _total
     ) internal {
         ISiloConfig.ConfigData memory collateralConfig = _config.getConfig(address(this));
         if (msg.sender != collateralConfig.otherSilo) revert ISiloLiquidation.OnlySilo();
@@ -48,8 +48,8 @@ library SiloLiquidationExecLib {
                 _withdrawAssetsFromProtected,
                 _borrower,
                 _liquidator,
-                _total,
-                _liquidity
+                _liquidity,
+                _total
             );
         }
     }
@@ -61,8 +61,8 @@ library SiloLiquidationExecLib {
         uint256 _withdrawAssetsFromProtected,
         address _borrower,
         address _liquidator,
-        mapping(ISilo.AssetType => ISilo.Assets) storage _total,
-        function() view returns (uint256) _liquidity
+        uint256 _liquidity,
+        mapping(ISilo.AssetType => ISilo.Assets) storage _total
     ) internal {
         if (_withdrawAssetsFromProtected != 0) {
             SiloERC4626Lib.withdraw(
@@ -76,8 +76,8 @@ library SiloLiquidationExecLib {
                     spender: _borrower,
                     assetType: ISilo.AssetType.Protected
                 }),
-                _total[ISilo.AssetType.Protected],
-                _liquidity
+                type(uint256).max,
+                _total[ISilo.AssetType.Protected]
             );
         }
 
@@ -93,8 +93,8 @@ library SiloLiquidationExecLib {
                     spender: _borrower,
                     assetType: ISilo.AssetType.Collateral
                 }),
-                _total[ISilo.AssetType.Collateral],
-                _liquidity
+                _liquidity,
+                _total[ISilo.AssetType.Collateral]
             );
         }
     }
