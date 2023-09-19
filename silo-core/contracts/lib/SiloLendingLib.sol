@@ -27,7 +27,7 @@ library SiloLendingLib {
         address _borrower,
         address _spender,
         ISilo.Assets storage _totalDebt,
-        uint256 _totalCollateral
+        uint256 _totalCollateralAssets
     ) internal returns (uint256 assets, uint256 shares) {
         if (
             !borrowPossible(
@@ -47,7 +47,7 @@ library SiloLendingLib {
             MathUpgradeable.Rounding.Up
         );
 
-        if (assets > SiloMathLib.liquidity(_totalCollateral, totalDebtAssets)) revert ISilo.NotEnoughLiquidity();
+        if (assets > SiloMathLib.liquidity(_totalCollateralAssets, totalDebtAssets)) revert ISilo.NotEnoughLiquidity();
 
         // add new debt
         _totalDebt.assets = totalDebtAssets + assets;
@@ -130,11 +130,11 @@ library SiloLendingLib {
         bool _borrowable,
         address _borrower
     ) internal view returns (bool) {
-        uint256 totalCollateralBalance = IShareToken(_protectedShareToken).balanceOf(_borrower)
+        uint256 sumOfCollateralAssets = IShareToken(_protectedShareToken).balanceOf(_borrower)
             + IShareToken(_collateralShareToken).balanceOf(_borrower);
 
         // token must be marked as borrowable and _borrower cannot have any collateral deposited
-        return _borrowable && totalCollateralBalance == 0;
+        return _borrowable && sumOfCollateralAssets == 0;
     }
 
     function maxBorrow(ISiloConfig _config, address _borrower, uint256 _totalDebtAssets, uint256 _totalDebtShares)
