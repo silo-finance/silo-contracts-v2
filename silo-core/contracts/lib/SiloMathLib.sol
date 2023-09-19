@@ -88,7 +88,7 @@ library SiloMathLib {
         }
     }
 
-    function convertToAssetsOrToShares(
+    function convertToAssetsAndToShares(
         uint256 _assets,
         uint256 _shares,
         uint256 _totalAssets,
