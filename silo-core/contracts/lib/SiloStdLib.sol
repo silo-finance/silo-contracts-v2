@@ -9,6 +9,7 @@ import {ISiloFactory} from "../interfaces/ISiloFactory.sol";
 import {ISilo} from "../interfaces/ISilo.sol";
 import {IInterestRateModel} from "../interfaces/IInterestRateModel.sol";
 import {IShareToken} from "../interfaces/IShareToken.sol";
+import {SiloMathLib} from "./SiloMathLib.sol";
 
 library SiloStdLib {
     using SafeERC20Upgradeable for IERC20Upgradeable;
@@ -132,7 +133,7 @@ library SiloStdLib {
             uint256 rcomp =
                 IInterestRateModel(_interestRateModel).getCompoundInterestRate(address(this), block.timestamp);
 
-            (uint256 totalCollateralAssets, uint256 totalDebtAssets,,) = SiloStdLib.getAmountsWithInterest(
+            (uint256 totalCollateralAssets, uint256 totalDebtAssets,,) = SiloMathLib.getAmountsWithInterest(
                 _totalCollateralAssets, ISilo(_silo).getDebtAssets(), rcomp, _daoFeeInBp, _deployerFeeInBp
             );
 
@@ -150,66 +151,5 @@ library SiloStdLib {
     ) internal view returns (uint256 shares, uint256 totalSupply) {
         shares = IShareToken(_shareToken).balanceOf(_owner);
         totalSupply = IShareToken(_shareToken).totalSupply();
-    }
-
-    /// @notice Returns available liquidity to be borrowed
-    /// @dev Accrued interest is entirely added to `debtAssets` but only part of it is added to `collateralAssets`. The
-    ///      difference is DAO's and deployer's cut. That means DAO's and deployer's cut is not considered a borrowable
-    ///      liquidity.
-    function liquidity(uint256 _collateralAssets, uint256 _debtAssets) internal pure returns (uint256 liquidAssets) {
-        unchecked {
-            // we checked the underflow
-            liquidAssets = _debtAssets > _collateralAssets ? 0 : _collateralAssets - _debtAssets;
-        }
-    }
-
-    function getAmountsWithInterest(
-        uint256 _collateralAssets,
-        uint256 _debtAssets,
-        uint256 _rcomp,
-        uint256 _daoFeeInBp,
-        uint256 _deployerFeeInBp
-    )
-        internal
-        pure
-        returns (
-            uint256 collateralAssetsWithInterest,
-            uint256 debtAssetsWithInterest,
-            uint256 daoAndDeployerFees,
-            uint256 accruedInterest
-        )
-    {
-        unchecked {
-            // If we overflow on multiplication it should not revert tx, we will get lower fees
-            accruedInterest = _debtAssets * _rcomp / _PRECISION_DECIMALS;
-            daoAndDeployerFees = accruedInterest * (_daoFeeInBp + _deployerFeeInBp) / _BASIS_POINTS;
-        }
-        collateralAssetsWithInterest = _collateralAssets + accruedInterest - daoAndDeployerFees;
-        debtAssetsWithInterest = _debtAssets + accruedInterest;
-    }
-
-    /// @notice Calculates fraction between borrowed and deposited amount of tokens denominated in percentage
-    /// @dev It assumes `_dp` = 100%.
-    /// @param _dp decimal points used by model
-    /// @param _collateralAssets current total deposits for assets
-    /// @param _debtAssets current total borrows for assets
-    /// @return utilization value, capped to 100%
-    /// Limiting utilisation ratio by 100% max will allows us to perform better interest rate computations
-    /// and should not affect any other part of protocol.
-    function calculateUtilization(uint256 _dp, uint256 _collateralAssets, uint256 _debtAssets)
-        internal
-        pure
-        returns (uint256 utilization)
-    {
-        if (_collateralAssets == 0 || _debtAssets == 0) return 0;
-
-        utilization = _debtAssets * _dp;
-        // _collateralAssets is not 0 based on above check, so it is safe to uncheck this division
-        unchecked {
-            utilization /= _collateralAssets;
-        }
-
-        // cap at 100%
-        if (utilization > _dp) utilization = _dp;
     }
 }

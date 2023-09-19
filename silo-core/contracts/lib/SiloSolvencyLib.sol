@@ -5,10 +5,10 @@ import {MathUpgradeable} from "openzeppelin-contracts-upgradeable/utils/math/Mat
 
 import {ISiloOracle} from "../interfaces/ISiloOracle.sol";
 import {ISiloLiquidation} from "../interfaces/ISiloLiquidation.sol";
-import {IInterestRateModel} from "../interfaces/IInterestRateModel.sol";
 import {SiloStdLib, ISiloConfig, IShareToken, ISilo} from "./SiloStdLib.sol";
 import {SiloERC4626Lib} from "./SiloERC4626Lib.sol";
 import {SiloLiquidationLib} from "./SiloLiquidationLib.sol";
+import {SiloMathLib} from "./SiloMathLib.sol";
 
 library SiloSolvencyLib {
     struct LtvData {
@@ -33,7 +33,7 @@ library SiloSolvencyLib {
         IShareToken _shareToken
     ) internal {
         // we already accrued interest, so we can work directly on assets
-        uint256 shares = SiloERC4626Lib.convertToShares(
+        uint256 shares = SiloMathLib.convertToShares(
             _amountToLiquidate, _totalAssets, _shareToken.totalSupply(), MathUpgradeable.Rounding.Down
         );
 
@@ -166,7 +166,7 @@ library SiloSolvencyLib {
 
         (
             withdrawAssetsFromCollateral, withdrawAssetsFromProtected
-        ) = splitReceiveCollateralToLiquidate(borrowerCollateralToLiquidate, ltvData.protectedAssets);
+        ) = SiloMathLib.splitReceiveCollateralToLiquidate(borrowerCollateralToLiquidate, ltvData.protectedAssets);
     }
 
     /// @return receiveCollateralAssets collateral + protected to liquidate
@@ -257,7 +257,7 @@ library SiloSolvencyLib {
         (shares, totalShares) = SiloStdLib.getSharesAndTotalSupply(_collateralConfig.protectedShareToken, _borrower);
         totalAssets = ISilo(_collateralConfig.silo).getProtectedAssets();
         ltvData.protectedAssets =
-            SiloERC4626Lib.convertToAssets(shares, totalAssets, totalShares, MathUpgradeable.Rounding.Down);
+            SiloMathLib.convertToAssets(shares, totalAssets, totalShares, MathUpgradeable.Rounding.Down);
 
         (shares, totalShares) = SiloStdLib.getSharesAndTotalSupply(_collateralConfig.collateralShareToken, _borrower);
         totalAssets = SiloStdLib.getTotalAsssetsWithInterest(
@@ -270,7 +270,7 @@ library SiloSolvencyLib {
             _accrueInMemory
         );
         ltvData.collateralAssets =
-            SiloERC4626Lib.convertToAssets(shares, totalAssets, totalShares, MathUpgradeable.Rounding.Down);
+            SiloMathLib.convertToAssets(shares, totalAssets, totalShares, MathUpgradeable.Rounding.Down);
 
         (shares, totalShares) = SiloStdLib.getSharesAndTotalSupply(_debtConfig.debtShareToken, _borrower);
         totalAssets = SiloStdLib.getTotalAsssetsWithInterest(
@@ -284,7 +284,7 @@ library SiloSolvencyLib {
         );
 
         ltvData.debtAssets =
-            SiloERC4626Lib.convertToAssets(shares, totalAssets, totalShares, MathUpgradeable.Rounding.Up);
+            SiloMathLib.convertToAssets(shares, totalAssets, totalShares, MathUpgradeable.Rounding.Up);
     }
 
     function getPositionValues(LtvData memory _ltvData, address _collateralAsset, address _debtAsset)
@@ -343,22 +343,5 @@ library SiloSolvencyLib {
     ) internal view returns (bool) {
         uint256 ltv = getLtv(_collateralConfig, _debtConfig, _borrower, ISilo.OracleType.MaxLtv, _accrueInMemory);
         return ltv < _collateralConfig.maxLtv;
-    }
-
-    /// @dev protected collateral is prioritized
-    /// @param _borrowerProtectedAssets available users protected collateral
-    function splitReceiveCollateralToLiquidate(uint256 _collateralToLiquidate, uint256 _borrowerProtectedAssets)
-        internal
-        pure
-        returns (uint256 withdrawAssetsFromCollateral, uint256 withdrawAssetsFromProtected)
-    {
-        unchecked {
-            (
-                withdrawAssetsFromProtected, withdrawAssetsFromCollateral
-            ) = _collateralToLiquidate > _borrowerProtectedAssets
-                // safe to unchecked because of above condition
-                ? (_collateralToLiquidate - _borrowerProtectedAssets, _borrowerProtectedAssets)
-                : (0, _collateralToLiquidate);
-        }
     }
 }

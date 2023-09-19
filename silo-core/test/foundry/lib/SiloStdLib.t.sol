@@ -166,9 +166,9 @@ contract SiloStdLibTest is Test {
 
     function test_liquidity(uint256 _collateralAssets, uint256 _debtAssets) public {
         if (_debtAssets > _collateralAssets) {
-            assertEq(SiloStdLib.liquidity(_collateralAssets, _debtAssets), 0);
+            assertEq(SiloMathLib.liquidity(_collateralAssets, _debtAssets), 0);
         } else {
-            assertEq(SiloStdLib.liquidity(_collateralAssets, _debtAssets), _collateralAssets - _debtAssets);
+            assertEq(SiloMathLib.liquidity(_collateralAssets, _debtAssets), _collateralAssets - _debtAssets);
         }
     }
 
@@ -339,13 +339,13 @@ contract SiloStdLibTest is Test {
         uint256 u = _debtAssets * dp / _collateralAssets;
         vm.assume(u <= dp);
 
-        assertEq(SiloStdLib.calculateUtilization(dp, _collateralAssets, _debtAssets), u);
+        assertEq(SiloMathLib.calculateUtilization(dp, _collateralAssets, _debtAssets), u);
 
-        assertEq(SiloStdLib.calculateUtilization(dp, 1e18, 0.9e18), 0.9e18);
-        assertEq(SiloStdLib.calculateUtilization(dp, 1e18, 0.1e18), 0.1e18);
-        assertEq(SiloStdLib.calculateUtilization(dp, 10e18, 1e18), 0.1e18);
-        assertEq(SiloStdLib.calculateUtilization(dp, 100e18, 25e18), 0.25e18);
-        assertEq(SiloStdLib.calculateUtilization(dp, 100e18, 49e18), 0.49e18);
+        assertEq(SiloMathLib.calculateUtilization(dp, 1e18, 0.9e18), 0.9e18);
+        assertEq(SiloMathLib.calculateUtilization(dp, 1e18, 0.1e18), 0.1e18);
+        assertEq(SiloMathLib.calculateUtilization(dp, 10e18, 1e18), 0.1e18);
+        assertEq(SiloMathLib.calculateUtilization(dp, 100e18, 25e18), 0.25e18);
+        assertEq(SiloMathLib.calculateUtilization(dp, 100e18, 49e18), 0.49e18);
     }
 
     function test_calculateUtilizationWithMax(uint256 _dp, uint256 _collateralAssets, uint256 _debtAssets) public {
@@ -354,11 +354,11 @@ contract SiloStdLibTest is Test {
 
         uint256 standardDp = 1e18;
 
-        assertEq(SiloStdLib.calculateUtilization(standardDp, 0, _debtAssets), 0);
-        assertEq(SiloStdLib.calculateUtilization(standardDp, _collateralAssets, 0), 0);
-        assertEq(SiloStdLib.calculateUtilization(0, _collateralAssets, _debtAssets), 0);
+        assertEq(SiloMathLib.calculateUtilization(standardDp, 0, _debtAssets), 0);
+        assertEq(SiloMathLib.calculateUtilization(standardDp, _collateralAssets, 0), 0);
+        assertEq(SiloMathLib.calculateUtilization(0, _collateralAssets, _debtAssets), 0);
 
-        uint256 u = SiloStdLib.calculateUtilization(_dp, _collateralAssets, _debtAssets);
+        uint256 u = SiloMathLib.calculateUtilization(_dp, _collateralAssets, _debtAssets);
         assertTrue(u <= _dp);
     }
 }

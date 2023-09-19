@@ -36,6 +36,6 @@ contract ShareTokenTest is Test {
         vm.mockCall(address(silo), abi.encodeWithSelector(ISilo.config.selector), abi.encode(siloConfig));
         vm.mockCall(siloConfig, abi.encodeWithSelector(ISiloConfig.getConfig.selector, address(silo)), abi.encode(configData));
 
-        assertEq(10 ** (sToken.decimals() - token.decimals()), SiloERC4626Lib._DECIMALS_OFFSET_POW, "expect valid offset");
+        assertEq(10 ** (sToken.decimals() - token.decimals()), SiloMathLib._DECIMALS_OFFSET_POW, "expect valid offset");
     }
 }
