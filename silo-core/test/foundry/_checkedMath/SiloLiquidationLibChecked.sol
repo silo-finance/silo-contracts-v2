@@ -159,9 +159,9 @@ library SiloLiquidationLibChecked {
     }
 
     /// @param _debtToCover assets or value, but must be in sync with `_totalCollateral`
-    /// @param _totalCollateral assets or value, but must be in sync with `_debtToCover`
+    /// @param _sumOfCollateral assets or value, but must be in sync with `_debtToCover`
     /// @return toLiquidate depends on inputs, it might be collateral value or collateral assets
-    function collateralToLiquidate(uint256 _debtToCover, uint256 _totalCollateral, uint256 _liquidityFeeInBp)
+    function collateralToLiquidate(uint256 _debtToCover, uint256 _sumOfCollateral, uint256 _liquidityFeeInBp)
         internal
         pure
         returns (uint256 toLiquidate)
@@ -171,8 +171,8 @@ library SiloLiquidationLibChecked {
 
         toLiquidate = _debtToCover + fee;
 
-        if (toLiquidate > _totalCollateral) {
-            toLiquidate = _totalCollateral;
+        if (toLiquidate > _sumOfCollateral) {
+            toLiquidate = _sumOfCollateral;
         }
     }
 
