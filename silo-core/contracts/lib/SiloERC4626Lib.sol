@@ -5,9 +5,11 @@ import {SafeERC20Upgradeable} from "openzeppelin-contracts-upgradeable/token/ERC
 import {IERC20Upgradeable} from "openzeppelin-contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import {MathUpgradeable} from "openzeppelin-contracts-upgradeable/utils/math/MathUpgradeable.sol";
 
-import {SiloStdLib, ISiloConfig, ISilo, IShareToken} from "./SiloStdLib.sol";
+import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
+import {ISilo} from "../interfaces/ISilo.sol";
+import {IShareToken} from "../interfaces/IShareToken.sol";
 import {SiloSolvencyLib} from "./SiloSolvencyLib.sol";
-import {SiloLendingLib} from "./SiloLendingLib.sol";
+import {SiloMathLib} from "./SiloMathLib.sol";
 
 // solhint-disable function-max-lines
 
@@ -45,7 +47,6 @@ library SiloERC4626Lib {
         uint256 shareBalance;
     }
 
-    uint256 internal constant _DECIMALS_OFFSET_POW = 10 ** 2;
     uint256 internal constant _PRECISION_DECIMALS = 1e18;
 
     /// @param _token if empty, tokens will not be transferred, useful for transition of collateral
@@ -60,13 +61,14 @@ library SiloERC4626Lib {
         cache.totalAssets = _totalCollateral.assets;
         cache.totalShares = _depositParams.collateralShareToken.totalSupply();
 
+        // TODO: move all if-s to separate pure function
         if (_depositParams.assets == 0) {
             shares = _depositParams.shares;
-            assets = convertToAssets(
+            assets = SiloMathLib.convertToAssets(
                 _depositParams.shares, cache.totalAssets, cache.totalShares, MathUpgradeable.Rounding.Up
             );
         } else {
-            shares = convertToShares(
+            shares = SiloMathLib.convertToShares(
                 _depositParams.assets, cache.totalAssets, cache.totalShares, MathUpgradeable.Rounding.Down
             );
             assets = _depositParams.assets;
@@ -101,21 +103,26 @@ library SiloERC4626Lib {
         if (_params.assets == 0) {
             // it's redeem so shares are user input
             shares = _params.shares;
-            assets =
-                convertToAssets(_params.shares, cache.totalAssets, cache.totalShares, MathUpgradeable.Rounding.Down);
+            assets = SiloMathLib.convertToAssets(
+                _params.shares, cache.totalAssets, cache.totalShares, MathUpgradeable.Rounding.Down
+            );
         } else {
             // it's withdraw so assets are user input
-            shares =
-                convertToShares(_params.assets, cache.totalAssets, cache.totalShares, MathUpgradeable.Rounding.Down);
+            shares = SiloMathLib.convertToShares(
+                _params.assets, cache.totalAssets, cache.totalShares, MathUpgradeable.Rounding.Down
+            );
             assets = _params.assets;
         }
 
         if (assets == 0 || cache.shareBalance == 0 || shares == 0) revert ISilo.NothingToWithdraw();
 
+        // TODO: remove max, use shares instead
         // withdraw max
         if (shares > cache.shareBalance) {
             shares = cache.shareBalance;
-            assets = convertToAssets(shares, cache.totalAssets, cache.totalShares, MathUpgradeable.Rounding.Down);
+            assets = SiloMathLib.convertToAssets(
+                shares, cache.totalAssets, cache.totalShares, MathUpgradeable.Rounding.Down
+            );
         }
 
         // check liquidity
@@ -202,7 +209,7 @@ library SiloERC4626Lib {
 
         if (_assetType == ISilo.AssetType.Protected && assets > ltvData.protectedAssets) {
             assets = ltvData.protectedAssets;
-            shares = SiloERC4626Lib.convertToShares(
+            shares = SiloMathLib.convertToShares(
                 assets,
                 _totalAssets,
                 IShareToken(collateralConfig.protectedShareToken).totalSupply(),
@@ -218,32 +225,12 @@ library SiloERC4626Lib {
                 assets = liquidAssets;
             }
 
-            shares = SiloERC4626Lib.convertToShares(
+            shares = SiloMathLib.convertToShares(
                 assets,
                 _totalAssets,
                 IShareToken(collateralConfig.collateralShareToken).totalSupply(),
                 MathUpgradeable.Rounding.Down
             );
         }
-    }
-
-    function convertToShares(
-        uint256 _assets,
-        uint256 _totalAssets,
-        uint256 _totalShares,
-        MathUpgradeable.Rounding _rounding
-    ) internal pure returns (uint256) {
-        // TODO what is magic number 1?
-        return _assets.mulDiv(_totalShares + _DECIMALS_OFFSET_POW, _totalAssets + 1, _rounding);
-    }
-
-    function convertToAssets(
-        uint256 _shares,
-        uint256 _totalAssets,
-        uint256 _totalShares,
-        MathUpgradeable.Rounding _rounding
-    ) internal pure returns (uint256) {
-        /// TODO what is magic number 1?
-        return _shares.mulDiv(_totalAssets + 1, _totalShares + _DECIMALS_OFFSET_POW, _rounding);
     }
 }

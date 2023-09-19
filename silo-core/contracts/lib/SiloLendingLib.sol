@@ -6,9 +6,12 @@ import {IERC20Upgradeable} from "openzeppelin-contracts-upgradeable/token/ERC20/
 import {MathUpgradeable} from "openzeppelin-contracts-upgradeable/utils/math/MathUpgradeable.sol";
 
 import {ISiloOracle} from "../interfaces/ISiloOracle.sol";
-import {SiloStdLib, ISiloConfig, ISilo, IShareToken, IInterestRateModel} from "./SiloStdLib.sol";
+import {ISilo} from "../interfaces/ISilo.sol";
+import {IShareToken} from "../interfaces/IShareToken.sol";
+import {IInterestRateModel} from "../interfaces/IInterestRateModel.sol";
+import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
 import {SiloSolvencyLib} from "./SiloSolvencyLib.sol";
-import {SiloERC4626Lib} from "./SiloERC4626Lib.sol";
+import {SiloMathLib} from "./SiloMathLib.sol";
 
 library SiloLendingLib {
     using SafeERC20Upgradeable for IERC20Upgradeable;
@@ -58,18 +61,18 @@ library SiloLendingLib {
         if (_assets == 0) {
             // borrowing shares
             shares = _shares;
-            assets = SiloERC4626Lib.convertToAssets(
+            assets = SiloMathLib.convertToAssets(
                 _shares, cache.totalDebtAssets, cache.totalDebtShares, MathUpgradeable.Rounding.Down
             );
         } else {
             // borrowing assets
-            shares = SiloERC4626Lib.convertToShares(
+            shares = SiloMathLib.convertToShares(
                 _assets, cache.totalDebtAssets, cache.totalDebtShares, MathUpgradeable.Rounding.Up
             );
             assets = _assets;
         }
 
-        if (assets > SiloStdLib.liquidity(_totalCollateral, cache.totalDebtAssets)) revert ISilo.NotEnoughLiquidity();
+        if (assets > SiloMathLib.liquidity(_totalCollateral, cache.totalDebtAssets)) revert ISilo.NotEnoughLiquidity();
 
         // add new debt
         _totalDebt.assets += assets;
@@ -98,12 +101,12 @@ library SiloLendingLib {
         if (_assets == 0) {
             // repaying shares
             shares = _shares;
-            assets = SiloERC4626Lib.convertToAssets(
+            assets = SiloMathLib.convertToAssets(
                 _shares, cache.totalDebtAmount, cache.totalDebtShares, MathUpgradeable.Rounding.Up
             );
         } else {
             // repaying assets
-            shares = SiloERC4626Lib.convertToShares(
+            shares = SiloMathLib.convertToShares(
                 _assets, cache.totalDebtAmount, cache.totalDebtShares, MathUpgradeable.Rounding.Down
             );
             assets = _assets;
@@ -112,7 +115,7 @@ library SiloLendingLib {
         // repay max if shares above balance
         if (shares > cache.shareDebtBalance) {
             shares = cache.shareDebtBalance;
-            assets = SiloERC4626Lib.convertToAssets(
+            assets = SiloMathLib.convertToAssets(
                 shares, cache.totalDebtAmount, cache.totalDebtShares, MathUpgradeable.Rounding.Up
             );
         }
@@ -150,7 +153,7 @@ library SiloLendingLib {
 
         uint256 totalFees;
 
-        (_totalCollateral.assets, _totalDebt.assets, totalFees, accruedInterest) = SiloStdLib.getAmountsWithInterest(
+        (_totalCollateral.assets, _totalDebt.assets, totalFees, accruedInterest) = SiloMathLib.getAmountsWithInterest(
             _totalCollateral.assets,
             _totalDebt.assets,
             IInterestRateModel(_assetConfig.interestRateModel).getCompoundInterestRateAndUpdate(block.timestamp),
@@ -203,7 +206,7 @@ library SiloLendingLib {
         }
 
         {
-            assets = SiloERC4626Lib.convertToAssets(
+            assets = SiloMathLib.convertToAssets(
                 shares, _totalDebtAssets, _totalDebtShares, MathUpgradeable.Rounding.Up
             );
         }
