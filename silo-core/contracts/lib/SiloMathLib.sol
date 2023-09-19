@@ -88,6 +88,23 @@ library SiloMathLib {
         }
     }
 
+    function convertToAssetsOrToShares(
+        uint256 _assets,
+        uint256 _shares,
+        uint256 _totalAssets,
+        uint256 _totalShares,
+        MathUpgradeable.Rounding _roundingToAssets,
+        MathUpgradeable.Rounding _roundingToShares
+    ) internal pure returns (uint256 assets, uint256 shares) {
+        if (_assets == 0) {
+            shares = _shares;
+            assets = convertToAssets(_shares, _totalAssets, _totalShares, _roundingToAssets);
+        } else {
+            shares = convertToShares(_assets, _totalAssets, _totalShares, _roundingToShares);
+            assets = _assets;
+        }
+    }
+
     function convertToShares(
         uint256 _assets,
         uint256 _totalAssets,
