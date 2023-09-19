@@ -71,23 +71,6 @@ library SiloMathLib {
         if (utilization > _dp) utilization = _dp;
     }
 
-    /// @dev protected collateral is prioritized
-    /// @param _borrowerProtectedAssets available users protected collateral
-    function splitReceiveCollateralToLiquidate(uint256 _collateralToLiquidate, uint256 _borrowerProtectedAssets)
-        internal
-        pure
-        returns (uint256 withdrawAssetsFromCollateral, uint256 withdrawAssetsFromProtected)
-    {
-        unchecked {
-            (
-                withdrawAssetsFromProtected, withdrawAssetsFromCollateral
-            ) = _collateralToLiquidate > _borrowerProtectedAssets
-                // safe to unchecked because of above condition
-                ? (_collateralToLiquidate - _borrowerProtectedAssets, _borrowerProtectedAssets)
-                : (0, _collateralToLiquidate);
-        }
-    }
-
     function convertToAssetsAndToShares(
         uint256 _assets,
         uint256 _shares,

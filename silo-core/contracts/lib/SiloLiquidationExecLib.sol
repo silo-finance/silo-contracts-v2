@@ -181,7 +181,9 @@ library SiloLiquidationExecLib {
 
         (
             withdrawAssetsFromCollateral, withdrawAssetsFromProtected
-        ) = SiloMathLib.splitReceiveCollateralToLiquidate(borrowerCollateralToLiquidate, ltvData.protectedAssets);
+        ) = SiloLiquidationLib.splitReceiveCollateralToLiquidate(
+            borrowerCollateralToLiquidate, ltvData.protectedAssets
+        );
     }
 
     /// @return receiveCollateralAssets collateral + protected to liquidate
@@ -211,11 +213,6 @@ library SiloLiquidationExecLib {
         ) = SiloSolvencyLib.calculateLtv(_ltvData, _collateralConfigToken, _debtConfigToken);
 
         if (!_selfLiquidation && _collateralLt > ltvInBp) revert ISiloLiquidation.UserIsSolvent();
-
-        // TODO do not do full liquidation, do partial
-        if (ltvInBp >= _BASIS_POINTS) { // in case of bad debt we return all
-            return (totalCollateralAssets, _ltvData.debtAssets);
-        }
 
         (receiveCollateralAssets, repayDebtAssets, ltvInBp) = SiloLiquidationLib.calculateExactLiquidationAmounts(
             _debtToCover,
