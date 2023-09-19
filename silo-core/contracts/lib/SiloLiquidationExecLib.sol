@@ -182,7 +182,7 @@ library SiloLiquidationExecLib {
         (
             withdrawAssetsFromCollateral, withdrawAssetsFromProtected
         ) = SiloLiquidationLib.splitReceiveCollateralToLiquidate(
-            borrowerCollateralToLiquidate, ltvData.protectedAssets
+            borrowerCollateralToLiquidate, ltvData.borrowerProtectedAssets
         );
     }
 
@@ -204,9 +204,9 @@ library SiloLiquidationExecLib {
             uint256 repayDebtAssets
         )
     {
-        uint256 totalCollateralAssets = _ltvData.collateralAssets + _ltvData.protectedAssets;
+        uint256 totalCollateralAssets = _ltvData.borrowerCollateralAssets + _ltvData.borrowerProtectedAssets;
 
-        if (_ltvData.debtAssets == 0 || totalCollateralAssets == 0) revert ISiloLiquidation.UserIsSolvent();
+        if (_ltvData.borrowerDebtAssets == 0 || totalCollateralAssets == 0) revert ISiloLiquidation.UserIsSolvent();
 
         (
             uint256 ltvInBp, uint256 totalBorrowerDebtValue, uint256 totalBorrowerCollateralValue
@@ -217,7 +217,7 @@ library SiloLiquidationExecLib {
         (receiveCollateralAssets, repayDebtAssets, ltvInBp) = SiloLiquidationLib.calculateExactLiquidationAmounts(
             _debtToCover,
             totalBorrowerDebtValue,
-            _ltvData.debtAssets,
+            _ltvData.borrowerDebtAssets,
             totalBorrowerCollateralValue,
             totalCollateralAssets,
             _liquidationFeeInBp
