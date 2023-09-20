@@ -4,11 +4,11 @@ pragma solidity ^0.8.0;
 import "forge-std/Test.sol";
 
 library TestLib {
-    function add(uint256 _a, uint256 _b) internal view returns (uint256) {
+    function add(uint256 _a, uint256 _b) internal pure returns (uint256) {
         return _a + _b;
     }
 
-    function sub(uint256 _a, uint256 _b) internal view returns (uint256) {
+    function sub(uint256 _a, uint256 _b) internal pure returns (uint256) {
         return _a - _b;
     }
 }
@@ -34,15 +34,15 @@ contract FuncAsParamTest is Test {
         // gas with f: 189
     }
 
-    function _operation(uint256 _a, uint256 _b, function(uint256, uint256) view returns (uint256) _f)
+    function _operation(uint256 _a, uint256 _b, function(uint256, uint256) pure returns (uint256) _f)
         private
-        view
+        pure
         returns (uint256)
     {
         return _f(_a, _b);
     }
 
-    function _operation(uint256 _a, uint256 _b, bool _add) private view returns (uint256) {
+    function _operation(uint256 _a, uint256 _b, bool _add) private pure returns (uint256) {
         return _add ? TestLib.add(_a, _b) : TestLib.sub(_a, _b);
     }
 }
