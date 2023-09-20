@@ -26,7 +26,7 @@ library SiloLiquidationExecLib {
         bool _receiveSToken,
         uint256 _liquidity,
         mapping(ISilo.AssetType => ISilo.Assets) storage _total
-    ) internal {
+    ) external {
         ISiloConfig.ConfigData memory collateralConfig = _config.getConfig(address(this));
         if (msg.sender != collateralConfig.otherSilo) revert ISiloLiquidation.OnlySilo();
 
@@ -157,7 +157,7 @@ library SiloLiquidationExecLib {
         uint256 _liquidationFeeInBp,
         bool _selfLiquidation
     )
-        internal
+        external
         view
         returns (uint256 withdrawAssetsFromCollateral, uint256 withdrawAssetsFromProtected, uint256 repayDebtAssets)
     {
@@ -214,21 +214,21 @@ library SiloLiquidationExecLib {
 
         if (!_selfLiquidation && _collateralLt > ltvInBp) revert ISiloLiquidation.UserIsSolvent();
 
-        (receiveCollateralAssets, repayDebtAssets, ltvInBp) = SiloLiquidationLib.calculateExactLiquidationAmounts(
-            _debtToCover,
-            totalBorrowerDebtValue,
-            _ltvData.borrowerDebtAssets,
-            totalBorrowerCollateralValue,
-            totalCollateralAssets,
-            _liquidationFeeInBp
-        );
+        // (receiveCollateralAssets, repayDebtAssets, ltvInBp) = SiloLiquidationLib.calculateExactLiquidationAmounts(
+        //     _debtToCover,
+        //     totalBorrowerDebtValue,
+        //     _ltvData.borrowerDebtAssets,
+        //     totalBorrowerCollateralValue,
+        //     totalCollateralAssets,
+        //     _liquidationFeeInBp
+        // );
 
-        if (receiveCollateralAssets == 0 || repayDebtAssets == 0) revert ISiloLiquidation.UserIsSolvent();
+        // if (receiveCollateralAssets == 0 || repayDebtAssets == 0) revert ISiloLiquidation.UserIsSolvent();
 
-        if (ltvInBp != 0) { // it can be 0 in case of full liquidation
-            if (!_selfLiquidation && ltvInBp < SiloLiquidationLib.minAcceptableLT(_collateralLt)) {
-                revert ISiloLiquidation.LiquidationTooBig();
-            }
-        }
+        // if (ltvInBp != 0) { // it can be 0 in case of full liquidation
+        //     if (!_selfLiquidation && ltvInBp < SiloLiquidationLib.minAcceptableLT(_collateralLt)) {
+        //         revert ISiloLiquidation.LiquidationTooBig();
+        //     }
+        // }
     }
 }

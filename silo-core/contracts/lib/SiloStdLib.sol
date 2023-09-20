@@ -17,7 +17,7 @@ library SiloStdLib {
     uint256 internal constant _PRECISION_DECIMALS = 1e18;
     uint256 internal constant _BASIS_POINTS = 1e4;
 
-    function withdrawFees(ISiloConfig _config, ISiloFactory _factory, ISilo.SiloData storage _siloData) internal {
+    function withdrawFees(ISiloConfig _config, ISiloFactory _factory, ISilo.SiloData storage _siloData) external {
         (
             address daoFeeReceiver,
             address deployerFeeReceiver,
@@ -52,7 +52,7 @@ library SiloStdLib {
     }
 
     function getFeesAndFeeReceiversWithAsset(ISiloConfig _config, ISiloFactory _factory)
-        internal
+        public
         view
         returns (
             address daoFeeReceiver,
@@ -71,7 +71,7 @@ library SiloStdLib {
     /// @param _token for which fee is calculated
     /// @param _amount for which fee is calculated
     /// @return fee flash fee amount
-    function flashFee(ISiloConfig _config, address _token, uint256 _amount) internal view returns (uint256 fee) {
+    function flashFee(ISiloConfig _config, address _token, uint256 _amount) external view returns (uint256 fee) {
         // all user set fees are in basis points
         (,, uint256 flashloanFeeInBp, address asset) = _config.getFeesWithAsset(address(this));
 
@@ -92,7 +92,7 @@ library SiloStdLib {
     /// @return totalAssets total assets in Silo with interest for given asset type
     /// @return totalShares total shares in Silo for given asset type
     function getTotalAssetsAndTotalShares(ISiloConfig.ConfigData memory _configData, ISilo.AssetType _assetType)
-        internal
+        external
         view
         returns (uint256 totalAssets, uint256 totalShares)
     {
@@ -148,7 +148,7 @@ library SiloStdLib {
     function getSharesAndTotalSupply(
         address _shareToken,
         address _owner
-    ) internal view returns (uint256 shares, uint256 totalSupply) {
+    ) external view returns (uint256 shares, uint256 totalSupply) {
         shares = IShareToken(_shareToken).balanceOf(_owner);
         totalSupply = IShareToken(_shareToken).totalSupply();
     }

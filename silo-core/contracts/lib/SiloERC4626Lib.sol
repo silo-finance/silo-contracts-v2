@@ -45,7 +45,7 @@ library SiloERC4626Lib {
         address _depositor,
         DepositParams memory _depositParams,
         ISilo.Assets storage _totalCollateral
-    ) internal returns (uint256 assets, uint256 shares) {
+    ) external returns (uint256 assets, uint256 shares) {
         if (!depositPossible(address(_depositParams.debtShareToken), _depositParams.receiver)) {
             revert ISilo.DepositNotPossible();
         }
@@ -84,7 +84,7 @@ library SiloERC4626Lib {
         WithdrawParams memory _params,
         uint256 _liquidity,
         ISilo.Assets storage _totalCollateral
-    ) internal returns (uint256 assets, uint256 shares) {
+    ) external returns (uint256 assets, uint256 shares) {
         uint256 totalAssets = _totalCollateral.assets;
 
         (assets, shares) = SiloMathLib.convertToAssetsAndToShares(
@@ -118,7 +118,7 @@ library SiloERC4626Lib {
     }
 
     function depositPossible(address _debtShareToken, address _depositor)
-        internal
+        public
         view
         returns (bool)
     {
@@ -126,13 +126,13 @@ library SiloERC4626Lib {
     }
 
     function maxDepositOrMint(ISiloConfig _config, address _receiver)
-        internal
+        external
         view
         returns (uint256 maxAssetsOrShares)
     {
         ISiloConfig.ConfigData memory configData = _config.getConfig(address(this));
 
-        if (SiloERC4626Lib.depositPossible(configData.debtShareToken, _receiver)) {
+        if (depositPossible(configData.debtShareToken, _receiver)) {
             maxAssetsOrShares = type(uint256).max - 1;
         }
     }
@@ -145,8 +145,8 @@ library SiloERC4626Lib {
         address _owner,
         ISilo.AssetType _assetType,
         uint256 _totalAssets,
-        function() view returns (uint256) _liquidity
-    ) internal view returns (uint256 assets, uint256 shares) {
+        uint256 _liquidity
+    ) external view returns (uint256 assets, uint256 shares) {
         (ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig) =
             _config.getConfigs(address(this));
 
@@ -182,9 +182,8 @@ library SiloERC4626Lib {
                 assets = ltvData.borrowerCollateralAssets;
             }
 
-            uint256 liquidAssets = _liquidity();
-            if (assets > liquidAssets) {
-                assets = liquidAssets;
+            if (assets > _liquidity) {
+                assets = _liquidity;
             }
 
             shares = SiloMathLib.convertToShares(

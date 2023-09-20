@@ -33,7 +33,7 @@ library SiloSolvencyLib {
         returns (uint256 ltvInBp, uint256 totalBorrowerDebtValue, uint256 sumOfBorrowerCollateralValue)
     {
         (sumOfBorrowerCollateralValue, totalBorrowerDebtValue) =
-            SiloSolvencyLib.getPositionValues(_ltvData, _collateralToken, _debtToken);
+            getPositionValues(_ltvData, _collateralToken, _debtToken);
 
         if (sumOfBorrowerCollateralValue == 0 && totalBorrowerDebtValue == 0) {
             return (0, 0, 0);
@@ -51,7 +51,7 @@ library SiloSolvencyLib {
         address _collateralConfigDebtShareToken,
         address _debtConfigDebtShareToken,
         address _borrower
-    ) internal view returns (bool orderCorrect) {
+    ) external view returns (bool orderCorrect) {
         uint256 debtShareTokenBalance = IShareToken(_debtConfigDebtShareToken).balanceOf(_borrower);
 
         return
@@ -152,7 +152,7 @@ library SiloSolvencyLib {
         ISiloConfig.ConfigData memory _debtConfig,
         address _borrower,
         ISilo.AccrueInterestInMemory _accrueInMemory
-    ) internal view returns (bool) {
+    ) external view returns (bool) {
         uint256 ltv = getLtv(_collateralConfig, _debtConfig, _borrower, ISilo.OracleType.Solvency, _accrueInMemory);
         return ltv < _collateralConfig.lt;
     }
@@ -162,7 +162,7 @@ library SiloSolvencyLib {
         ISiloConfig.ConfigData memory _debtConfig,
         address _borrower,
         ISilo.AccrueInterestInMemory _accrueInMemory
-    ) internal view returns (bool) {
+    ) external view returns (bool) {
         uint256 ltv = getLtv(_collateralConfig, _debtConfig, _borrower, ISilo.OracleType.MaxLtv, _accrueInMemory);
         return ltv < _collateralConfig.maxLtv;
     }
