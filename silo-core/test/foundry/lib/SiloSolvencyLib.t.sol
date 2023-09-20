@@ -3,17 +3,12 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
 import "../../../contracts/lib/SiloSolvencyLib.sol";
+import "../_common/MockOracleQuote.sol";
 
 
 // forge test -vv --mc SiloSolvencyLibTest
-contract SiloSolvencyLibTest is Test {
+contract SiloSolvencyLibTest is Test, MockOracleQuote {
     uint256 internal constant BASIS_POINTS = 1e4;
-
-    address constant COLLATERAL_ASSET = address(0xc01a);
-    address constant DEBT_ASSET = address(0xdeb);
-
-    address constant COLLATERAL_ORACLE = address(0x555555);
-    address constant DEBT_ORACLE = address(0x77777);
 
     /*
     forge test -vv --mt test_SiloSolvencyLib_BASIS_POINTS
@@ -59,7 +54,7 @@ contract SiloSolvencyLibTest is Test {
             debtAssets
         );
 
-        _quoteMocks(ltvData, 9876, 1234);
+        _oraclesQuoteMocks(ltvData, 9876, 1234);
 
         (
             uint256 collateralValue, uint256 debtValue
@@ -165,24 +160,10 @@ contract SiloSolvencyLibTest is Test {
             ISiloOracle(COLLATERAL_ORACLE), ISiloOracle(DEBT_ORACLE), _protectedAssets, _collateralAssets, _debtAssets
         );
 
-        _quoteMocks(ltvData, 9999, 1111);
+        _oraclesQuoteMocks(ltvData, 9999, 1111);
 
         (,, uint256 ltv) = SiloSolvencyLib.calculateLtv(ltvData, COLLATERAL_ASSET, DEBT_ASSET);
 
         assertEq(ltv, 1111 * BASIS_POINTS / 9999, "constant values, constant ltv");
-    }
-
-    function _quoteMocks(SiloSolvencyLib.LtvData memory _ltvData, uint256 _quoteCollateral, uint256 _quoteDebt) private {
-        vm.mockCall(
-            COLLATERAL_ORACLE,
-            abi.encodeWithSelector(ISiloOracle.quote.selector, _ltvData.borrowerCollateralAssets + _ltvData.borrowerProtectedAssets, COLLATERAL_ASSET),
-            abi.encode(_quoteCollateral)
-        );
-
-        vm.mockCall(
-            DEBT_ORACLE,
-            abi.encodeWithSelector(ISiloOracle.quote.selector, _ltvData.borrowerDebtAssets, DEBT_ASSET),
-            abi.encode(_quoteDebt)
-        );
     }
 }
