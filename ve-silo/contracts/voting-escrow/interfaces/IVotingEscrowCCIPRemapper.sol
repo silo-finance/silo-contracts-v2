@@ -36,7 +36,7 @@ interface IVotingEscrowCCIPRemapper {
     event AddressMappingUpdated(address indexed localUser, address indexed remoteUser, uint64 indexed chainId);
     event RemoteAddressMappingCleared(address indexed remoteUser, uint64 indexed chainId);
     event AddressDelegateUpdated(address indexed localUser, address indexed delegate);
-    event VeSiloDelegatorUpdated(address delegator);
+    event VeSiloDelegatorUpdated(IVeSiloDelegatorViaCCIP delegator);
 
     /**
      * @notice Returns Voting Escrow contract address.

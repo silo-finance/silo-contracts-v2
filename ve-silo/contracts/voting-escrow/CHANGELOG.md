@@ -10,6 +10,8 @@
 - Copy of Balancer's implementation of the OmniVotingEscrowAdaptor.sol ([a960d6c](https://github.com/silo-finance/silo-contracts-v2/pull/54/commits/a960d6c37bd9b770cceff66a02461d676e7c7d1a))
 
 ### VotingEscrowRemapper.sol
+- Switched from LayerZero to CCIP ([d9a2f77](https://github.com/silo-finance/silo-contracts-v2/pull/134/commits/d9a2f77f1ffd068ad58da9a86055dfd9e3c942e7))
+
 - solhint-disable ordering and max-line-length for VotingEscrowRemapper ([d192c10](https://github.com/silo-finance/silo-contracts-v2/pull/54/commits/d192c100ff85cebd4c36c809e4e8dd01fd4627c3))
 
 - Fixed a data type to be able to send ETH ([bcfa6dc](https://github.com/silo-finance/silo-contracts-v2/pull/54/commits/bcfa6dc577407facef2973c55695b07c77fb822e))

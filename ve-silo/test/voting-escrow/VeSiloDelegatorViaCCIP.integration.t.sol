@@ -233,7 +233,7 @@ contract VeSiloDelegatorViaCCIP is IntegrationTest {
     }
 
     function _mockCallsBeforeDeploy() internal {
-        setAddress(VeSiloContracts.VOTING_ESCROW_CCIP_REMAPPER, _votingEscrowCCIPRemapper);
+        setAddress(VeSiloContracts.VOTING_ESCROW_REMAPPER, _votingEscrowCCIPRemapper);
 
         vm.mockCall(
             _smartValletChecker,
