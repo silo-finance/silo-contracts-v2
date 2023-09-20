@@ -15,15 +15,19 @@
 pragma solidity 0.8.19;
 
 import {IOmniVotingEscrowAdaptor} from "balancer-labs/v2-interfaces/liquidity-mining/IOmniVotingEscrowAdaptor.sol";
-import {IVotingEscrowRemapper} from "balancer-labs/v2-interfaces/liquidity-mining/IVotingEscrowRemapper.sol";
 import {IVotingEscrow} from "balancer-labs/v2-interfaces/liquidity-mining/IVotingEscrow.sol";
 import {ISmartWalletChecker} from "balancer-labs/v2-interfaces/liquidity-mining/ISmartWalletChecker.sol";
 import {Errors, _require} from "balancer-labs/v2-interfaces/solidity-utils/helpers/BalancerErrors.sol";
 
 import {Address} from "openzeppelin-contracts/utils/Address.sol";
 import {ReentrancyGuard} from "openzeppelin-contracts/security/ReentrancyGuard.sol";
+import {IERC20} from "openzeppelin-contracts/token/ERC20/IERC20.sol";
 
 import {Ownable2Step} from "openzeppelin-contracts/access/Ownable2Step.sol";
+
+import {IVeSiloDelegatorViaCCIP} from "ve-silo/contracts/voting-escrow/interfaces/IVeSiloDelegatorViaCCIP.sol";
+import {ICCIPMessageSender} from "ve-silo/contracts/utils/CCIPMessageSender.sol";
+import {IVotingEscrowCCIPRemapper} from "ve-silo/contracts/voting-escrow/interfaces/IVotingEscrowCCIPRemapper.sol";
 
 // solhint-disable ordering
 // solhint-disable function-max-lines
@@ -38,79 +42,84 @@ import {Ownable2Step} from "openzeppelin-contracts/access/Ownable2Step.sol";
  * Users able to call this contract can set their own mappings, or delegate this function to another account if they
  * cannot.
  */
-contract VotingEscrowRemapper is IVotingEscrowRemapper, Ownable2Step, ReentrancyGuard {
+contract VotingEscrowRemapper is IVotingEscrowCCIPRemapper, Ownable2Step, ReentrancyGuard {
+    // solhint-disable-next-line var-name-mixedcase
+    IERC20 public immutable LINK;
+
     IVotingEscrow private immutable _votingEscrow;
-    IOmniVotingEscrowAdaptor private _omniVotingEscrowAdaptor;
-    mapping(uint16 => mapping(address => address)) private _localToRemoteAddressMap;
-    mapping(uint16 => mapping(address => address)) private _remoteToLocalAddressMap;
+    IVeSiloDelegatorViaCCIP private _veSiloDelegator;
+    mapping(uint64 => mapping(address => address)) private _localToRemoteAddressMap;
+    mapping(uint64 => mapping(address => address)) private _remoteToLocalAddressMap;
 
     // Records a mapping from an address to another address which is authorized to manage its remote users.
     mapping(address => address) private _localRemappingManager;
 
-    constructor(
-        IVotingEscrow votingEscrow,
-        IOmniVotingEscrowAdaptor omniVotingEscrowAdaptor
-    ) {
+    constructor(IVotingEscrow votingEscrow, IERC20 _link) {
         _votingEscrow = votingEscrow;
-        _omniVotingEscrowAdaptor = omniVotingEscrowAdaptor;
+        LINK = _link;
     }
 
-    /// @inheritdoc IVotingEscrowRemapper
-    function getVotingEscrow() public view override returns (IVotingEscrow) {
+    /// @inheritdoc IVotingEscrowCCIPRemapper
+    function setVeSiloDelegator(IVeSiloDelegatorViaCCIP _delegator) external onlyOwner {
+        _veSiloDelegator = _delegator;
+
+        emit VeSiloDelegatorUpdated(_delegator);
+    }
+
+    /// @inheritdoc IVotingEscrowCCIPRemapper
+    function getVotingEscrow() public view returns (IVotingEscrow) {
         return _votingEscrow;
     }
 
-    /// @inheritdoc IVotingEscrowRemapper
-    function getOmniVotingEscrowAdaptor() public view override returns (IOmniVotingEscrowAdaptor) {
-        return _omniVotingEscrowAdaptor;
+    function getVeSiloDelegator() public view returns (IVeSiloDelegatorViaCCIP) {
+        return _veSiloDelegator;
     }
 
-    /// @inheritdoc IVotingEscrowRemapper
-    function getTotalSupplyPoint() external view override returns (IVotingEscrow.Point memory) {
+    /// @inheritdoc IVotingEscrowCCIPRemapper
+    function getTotalSupplyPoint() external view returns (IVotingEscrow.Point memory) {
         IVotingEscrow votingEscrow = getVotingEscrow();
         uint256 totalSupplyEpoch = votingEscrow.epoch();
         return votingEscrow.point_history(totalSupplyEpoch);
     }
 
-    /// @inheritdoc IVotingEscrowRemapper
-    function getUserPoint(address user) external view override returns (IVotingEscrow.Point memory) {
+    /// @inheritdoc IVotingEscrowCCIPRemapper
+    function getUserPoint(address user) external view returns (IVotingEscrow.Point memory) {
         IVotingEscrow votingEscrow = getVotingEscrow();
         uint256 userEpoch = votingEscrow.user_point_epoch(user);
         return votingEscrow.user_point_history(user, userEpoch);
     }
 
-    /// @inheritdoc IVotingEscrowRemapper
-    function getLockedEnd(address user) external view override returns (uint256) {
+    /// @inheritdoc IVotingEscrowCCIPRemapper
+    function getLockedEnd(address user) external view returns (uint256) {
         return getVotingEscrow().locked__end(user);
     }
 
-    /// @inheritdoc IVotingEscrowRemapper
-    function getLocalUser(address remoteUser, uint16 chainId) public view override returns (address) {
+    /// @inheritdoc IVotingEscrowCCIPRemapper
+    function getLocalUser(address remoteUser, uint64 chainId) public view returns (address) {
         return _remoteToLocalAddressMap[chainId][remoteUser];
     }
 
-    /// @inheritdoc IVotingEscrowRemapper
-    function getRemoteUser(address localUser, uint16 chainId) public view override returns (address) {
+    /// @inheritdoc IVotingEscrowCCIPRemapper
+    function getRemoteUser(address localUser, uint64 chainId) public view returns (address) {
         return _localToRemoteAddressMap[chainId][localUser];
     }
 
-    /// @inheritdoc IVotingEscrowRemapper
-    function getRemappingManager(address localUser) public view override returns (address) {
+    /// @inheritdoc IVotingEscrowCCIPRemapper
+    function getRemappingManager(address localUser) public view returns (address) {
         return _localRemappingManager[localUser];
     }
 
     // Remapping Setters
 
-    /// @inheritdoc IVotingEscrowRemapper
     function setNetworkRemapping(
         address localUser,
         address remoteUser,
-        uint16 chainId
-    ) external payable override nonReentrant {
+        uint64 chainId,
+        ICCIPMessageSender.PayFeesIn payFeesIn
+    ) external payable nonReentrant {
         _require(msg.sender == localUser || msg.sender == _localRemappingManager[localUser], Errors.SENDER_NOT_ALLOWED);
         require(_isAllowedContract(localUser), "Only contracts which can hold veBAL can set up a mapping");
         require(remoteUser != address(0), "Zero address cannot be used as remote user");
-        IOmniVotingEscrowAdaptor omniVotingEscrowAdaptor = getOmniVotingEscrowAdaptor();
 
         // We keep a 1-to-1 local-remote mapping for each chain.
         // If A --> B (i.e. A in the local chain is remapped to B in the remote chain), to keep the state consistent
@@ -166,18 +175,25 @@ contract VotingEscrowRemapper is IVotingEscrowRemapper, Ownable2Step, Reentrancy
 
         // Note: it is important to perform the bridge calls _after_ the mappings are settled, since the
         // omni voting escrow will rely on the correct mappings to bridge the balances.
-        (uint256 nativeFee, ) = omniVotingEscrowAdaptor.estimateSendUserBalance(chainId);
-        if (oldRemoteUser != address(0)) {
-            require(msg.value >= nativeFee * 2, "Insufficient ETH to bridge user balance");
-            // If there was an old mapping, send balance from (local) oldRemoteUser --> (remote) oldRemoteUser
-            // This should clean up the existing bridged balance from localUser --> oldRemoteUser.
-            omniVotingEscrowAdaptor.sendUserBalance{ value: nativeFee }(oldRemoteUser, chainId, payable(msg.sender));
-        } else {
-            require(msg.value >= nativeFee, "Insufficient ETH to bridge user balance");
-        }
+        uint256 fee = _veSiloDelegator.estimateSendUserBalance(localUser, chainId, payFeesIn);
 
-        // Bridge balance for new mapping localUser --> remoteUser.
-        omniVotingEscrowAdaptor.sendUserBalance{ value: nativeFee }(localUser, chainId, payable(msg.sender));
+        if (payFeesIn == ICCIPMessageSender.PayFeesIn.Native) {
+            _transferAndPayFeesInNative(
+                fee,
+                oldRemoteUser,
+                localUser,
+                chainId,
+                payFeesIn
+            );
+        } else {
+            _transferAndPayFeesInLink(
+                fee,
+                oldRemoteUser,
+                localUser,
+                chainId,
+                payFeesIn
+            );
+        }
 
         // Send back any leftover ETH to the caller.
         uint256 remainingBalance = address(this).balance;
@@ -186,7 +202,29 @@ contract VotingEscrowRemapper is IVotingEscrowRemapper, Ownable2Step, Reentrancy
         }
     }
 
-    /// @inheritdoc IVotingEscrowRemapper
+    function _transferAndPayFeesInNative(
+        uint256 nativeFee,
+        address oldRemoteUser,
+        address localUser,
+        uint64 chainId,
+        ICCIPMessageSender.PayFeesIn payFeesIn
+    ) internal {
+        IVeSiloDelegatorViaCCIP delegator = _veSiloDelegator;
+
+        if (oldRemoteUser != address(0)) {
+            require(msg.value >= nativeFee * 2, "Insufficient ETH to bridge user balance");
+            // If there was an old mapping, send balance from (local) oldRemoteUser --> (remote) oldRemoteUser
+            // This should clean up the existing bridged balance from localUser --> oldRemoteUser.
+            delegator.sendUserBalance{ value: nativeFee }(oldRemoteUser, chainId, payFeesIn);
+        } else {
+            require(msg.value >= nativeFee, "Insufficient ETH to bridge user balance");
+        }
+
+        // Bridge balance for new mapping localUser --> remoteUser.
+        delegator.sendUserBalance{ value: nativeFee }(localUser, chainId, payFeesIn);
+    }
+
+    /// @inheritdoc IVotingEscrowCCIPRemapper
     function setNetworkRemappingManager(address localUser, address delegate)
         external
         override
@@ -199,11 +237,14 @@ contract VotingEscrowRemapper is IVotingEscrowRemapper, Ownable2Step, Reentrancy
         emit AddressDelegateUpdated(localUser, delegate);
     }
 
-    /// @inheritdoc IVotingEscrowRemapper
-    function clearNetworkRemapping(address localUser, uint16 chainId) external payable override nonReentrant {
+    /// @inheritdoc IVotingEscrowCCIPRemapper
+    function clearNetworkRemapping(
+        address localUser,
+        uint64 chainId,
+        ICCIPMessageSender.PayFeesIn payFeesIn
+    ) external payable nonReentrant {
         require(localUser != address(0), "localUser cannot be zero address");
         require(!_isAllowedContract(localUser) || localUser == msg.sender, "localUser is still in good standing");
-        IOmniVotingEscrowAdaptor omniVotingEscrowAdaptor = getOmniVotingEscrowAdaptor();
 
         address remoteUser = _localToRemoteAddressMap[chainId][localUser];
         require(remoteUser != address(0), "Remapping to clear does not exist");
@@ -217,11 +258,25 @@ contract VotingEscrowRemapper is IVotingEscrowRemapper, Ownable2Step, Reentrancy
         // Note: it is important to perform the bridge calls _after_ the mappings are settled, since the
         // omni voting escrow will rely on the correct mappings to bridge the balances.
         // Clean up the balance for the old mapping, and bridge the new (default) one.
-        (uint256 nativeFee, ) = omniVotingEscrowAdaptor.estimateSendUserBalance(chainId);
-        require(msg.value >= nativeFee * 2, "Insufficient ETH to bridge user balance");
+        uint256 fee = _veSiloDelegator.estimateSendUserBalance(localUser, chainId, payFeesIn);
 
-        omniVotingEscrowAdaptor.sendUserBalance{ value: nativeFee }(localUser, chainId, payable(msg.sender));
-        omniVotingEscrowAdaptor.sendUserBalance{ value: nativeFee }(remoteUser, chainId, payable(msg.sender));
+        if (payFeesIn == ICCIPMessageSender.PayFeesIn.Native) {
+            _transferAndPayFeesInNative(
+                fee,
+                remoteUser,
+                localUser,
+                chainId,
+                payFeesIn
+            );
+        } else {
+            _transferAndPayFeesInLink(
+                fee,
+                remoteUser,
+                localUser,
+                chainId,
+                payFeesIn
+            );
+        }
 
         // Send back any leftover ETH to the caller.
         uint256 remainingBalance = address(this).balance;
@@ -231,6 +286,38 @@ contract VotingEscrowRemapper is IVotingEscrowRemapper, Ownable2Step, Reentrancy
     }
 
     // Internal Functions
+
+    function _transferAndPayFeesInLink(
+        uint256 fee,
+        address oldRemoteUser,
+        address localUser,
+        uint64 chainId,
+        ICCIPMessageSender.PayFeesIn payFeesIn
+    ) internal {
+        IVeSiloDelegatorViaCCIP delegator = _veSiloDelegator;
+
+        if (oldRemoteUser != address(0)) {
+            // It is insane to have a `fee` > type(uint128).max.
+            // Even if so, and we will overflow, the chainlink router will revert.
+            unchecked { fee = fee * 2; }
+
+            _handleFee(address(delegator), fee);
+
+            // If there was an old mapping, send balance from (local) oldRemoteUser --> (remote) oldRemoteUser
+            // This should clean up the existing bridged balance from localUser --> oldRemoteUser.
+            delegator.sendUserBalance(oldRemoteUser, chainId, payFeesIn);
+        } else {
+            _handleFee(address(delegator), fee);
+        }
+
+        // Bridge balance for new mapping localUser --> remoteUser.
+        delegator.sendUserBalance(localUser, chainId, payFeesIn);
+    }
+
+    function _handleFee(address delegator, uint256 fee) internal {
+        IERC20(LINK).transferFrom(msg.sender, address(this), fee);
+        IERC20(LINK).approve(delegator, fee);
+    }
 
     /**
      * @notice Returns whether `localUser` is a contract which is authorized to hold veBAL.
