@@ -16,8 +16,8 @@ import {SiloLiquidationLib} from "./SiloLiquidationLib.sol";
 library SiloLiquidationExecLib {
     struct LiquidationPreviewParams {
         uint256 collateralLt;
-        address collateralConfigToken;
-        address debtConfigToken;
+        address collateralConfigAsset;
+        address debtConfigAsset;
         uint256 debtToCover;
         uint256 liquidationFeeInBp;
         bool selfLiquidation;
@@ -88,8 +88,8 @@ library SiloLiquidationExecLib {
             ltvData,
             LiquidationPreviewParams({
                 collateralLt: _collateralConfig.lt,
-                collateralConfigToken: _collateralConfig.token,
-                debtConfigToken: _debtConfig.token,
+                collateralConfigAsset: _collateralConfig.token,
+                debtConfigAsset: _debtConfig.token,
                 debtToCover: _debtToCover,
                 liquidationFeeInBp: _liquidationFeeInBp,
                 selfLiquidation: _selfLiquidation
@@ -204,26 +204,28 @@ library SiloLiquidationExecLib {
         view
         returns (uint256 receiveCollateralAssets, uint256 repayDebtAssets)
     {
-        uint256 totalCollateralAssets = _ltvData.borrowerCollateralAssets + _ltvData.borrowerProtectedAssets;
+        uint256 sumOfCollateralAssets;
+        // safe because same asset can not overflow
+        unchecked  { sumOfCollateralAssets = _ltvData.borrowerCollateralAssets + _ltvData.borrowerProtectedAssets; }
 
-        if (_ltvData.borrowerDebtAssets == 0 || totalCollateralAssets == 0) revert ISiloLiquidation.UserIsSolvent();
+        if (_ltvData.borrowerDebtAssets == 0 || sumOfCollateralAssets == 0) return (0, 0);
 
         (
             uint256 sumOfBorrowerCollateralValue, uint256 totalBorrowerDebtValue, uint256 ltvInBp
-        ) = SiloSolvencyLib.calculateLtv(_ltvData, _params.collateralConfigToken, _params.debtConfigToken);
+        ) = SiloSolvencyLib.calculateLtv(_ltvData, _params.collateralConfigAsset, _params.debtConfigAsset);
 
-        if (!_params.selfLiquidation && _params.collateralLt > ltvInBp) revert ISiloLiquidation.UserIsSolvent();
+        if (!_params.selfLiquidation && _params.collateralLt > ltvInBp) return (0, 0);
 
          (receiveCollateralAssets, repayDebtAssets, ltvInBp) = SiloLiquidationLib.calculateExactLiquidationAmounts(
              _params.debtToCover,
              totalBorrowerDebtValue,
              _ltvData.borrowerDebtAssets,
              sumOfBorrowerCollateralValue,
-             totalCollateralAssets,
+             sumOfCollateralAssets,
              _params.liquidationFeeInBp
          );
 
-         if (receiveCollateralAssets == 0 || repayDebtAssets == 0) revert ISiloLiquidation.UserIsSolvent();
+         if (receiveCollateralAssets == 0 || repayDebtAssets == 0) return (0, 0);
 
          if (ltvInBp != 0) { // it can be 0 in case of full liquidation
              if (!_params.selfLiquidation && ltvInBp < SiloLiquidationLib.minAcceptableLT(_params.collateralLt)) {
