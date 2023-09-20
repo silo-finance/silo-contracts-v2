@@ -75,6 +75,10 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable, LeverageReent
         });
     }
 
+    function liquidity() public view virtual returns (uint256 liquidity) {
+        liquidity = SiloMathLib.liquidity(total[AssetType.Collateral].assets, total[AssetType.Debt].assets);
+    }
+
     function isSolvent(address _borrower) external view virtual returns (bool) {
         (ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig) =
             config.getConfigs(address(this));
@@ -224,7 +228,7 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable, LeverageReent
 
     function maxWithdraw(address _owner) external view virtual returns (uint256 maxAssets) {
         (maxAssets,) = SiloERC4626Lib.maxWithdraw(
-            config, _owner, AssetType.Collateral, total[AssetType.Collateral].assets, _liquidity
+            config, _owner, AssetType.Collateral, total[AssetType.Collateral].assets, liquidity()
         );
     }
 
@@ -258,7 +262,7 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable, LeverageReent
 
     function maxRedeem(address _owner) external view virtual returns (uint256 maxShares) {
         (, maxShares) = SiloERC4626Lib.maxWithdraw(
-            config, _owner, AssetType.Collateral, total[AssetType.Collateral].assets, _liquidity
+            config, _owner, AssetType.Collateral, total[AssetType.Collateral].assets, liquidity()
         );
     }
 
@@ -396,7 +400,7 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable, LeverageReent
     }
 
     function maxWithdraw(address _owner, AssetType _assetType) external view virtual returns (uint256 maxAssets) {
-        (maxAssets,) = SiloERC4626Lib.maxWithdraw(config, _owner, _assetType, total[_assetType].assets, _liquidity);
+        (maxAssets,) = SiloERC4626Lib.maxWithdraw(config, _owner, _assetType, total[_assetType].assets, liquidity());
     }
 
     function previewWithdraw(uint256 _assets, AssetType _assetType) external view virtual returns (uint256 shares) {
@@ -428,7 +432,7 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable, LeverageReent
     }
 
     function maxRedeem(address _owner, AssetType _assetType) external view virtual returns (uint256 maxShares) {
-        (, maxShares) = SiloERC4626Lib.maxWithdraw(config, _owner, _assetType, total[_assetType].assets, _liquidity);
+        (, maxShares) = SiloERC4626Lib.maxWithdraw(config, _owner, _assetType, total[_assetType].assets, liquidity());
     }
 
     function previewRedeem(uint256 _shares, AssetType _assetType) external view virtual returns (uint256 assets) {
@@ -459,36 +463,57 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable, LeverageReent
         );
     }
 
-    function transitionCollateralToProtected(uint256 _shares, address _owner)
+    function transitionCollateral(uint256 _shares, address _owner, AssetType _withdrawType)
         external
         virtual
         nonReentrant
         leverageNonReentrant
         returns (uint256 assets)
     {
-        uint256 shares;
+        (, ISiloConfig.ConfigData memory configData) = _accrueInterest();
+
+        (AssetType depositType, address shareTokenFrom, address shareTokenTo, uint256 liquidity) = 
+            _withdrawType == AssetType.Protected
+            ? (AssetType.Collateral, configData.protectedShareToken, configData.collateralShareToken, type(uint256).max)
+            : (AssetType.Protected, configData.collateralShareToken, configData.protectedShareToken, liquidity());
+
+        (assets, _shares) = SiloERC4626Lib.withdraw(
+            address(0), // empty token address because we dont want to do transfer
+            shareTokenFrom,
+            SiloERC4626Lib.WithdrawParams({
+                assets: 0,
+                shares: _shares,
+                receiver: _owner,
+                owner: _owner,
+                spender: msg.sender,
+                assetType: _withdrawType
+            }),
+            liquidity,
+            total[_withdrawType]
+        );
+
         uint256 toShares;
+        (assets, toShares) = SiloERC4626Lib.deposit(
+            address(0), // empty token because we don't want to transfer
+            _owner,
+            SiloERC4626Lib.DepositParams({
+                assets: assets,
+                shares: 0,
+                receiver: _owner,
+                assetType: depositType,
+                collateralShareToken: IShareToken(shareTokenTo),
+                debtShareToken: IShareToken(configData.debtShareToken)
+            }),
+            total[depositType]
+        );
 
-        (assets, shares, toShares) = _transitionCollateral(_shares, _owner, AssetType.Collateral);
-
-        emit Withdraw(msg.sender, _owner, _owner, assets, shares);
-        emit DepositProtected(msg.sender, _owner, assets, toShares);
-    }
-
-    function transitionCollateralFromProtected(uint256 _shares, address _owner)
-        external
-        virtual
-        nonReentrant
-        leverageNonReentrant
-        returns (uint256 assets)
-    {
-        uint256 shares;
-        uint256 toShares;
-
-        (assets, shares, toShares) = _transitionCollateral(_shares, _owner, AssetType.Protected);
-
-        emit WithdrawProtected(msg.sender, _owner, _owner, assets, shares);
-        emit Deposit(msg.sender, _owner, assets, toShares);
+        if (_withdrawType == AssetType.Protected) {
+            emit WithdrawProtected(msg.sender, _owner, _owner, assets, _shares);
+            emit Deposit(msg.sender, _owner, assets, toShares);
+        } else {
+            emit Withdraw(msg.sender, _owner, _owner, assets, _shares);
+            emit DepositProtected(msg.sender, _owner, assets, toShares);
+        }
     }
 
     // Lending
@@ -756,7 +781,7 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable, LeverageReent
             ? collateralConfig.protectedShareToken
             : collateralConfig.collateralShareToken;
 
-        uint256 liquidity = _params.assetType == ISilo.AssetType.Collateral ? _liquidity() : type(uint256).max;
+        uint256 liquidity = _params.assetType == AssetType.Collateral ? liquidity() : type(uint256).max;
 
         (assets, shares) =
             SiloERC4626Lib.withdraw(collateralConfig.token, shareToken, _params, liquidity, total[_params.assetType]);
@@ -812,55 +837,6 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable, LeverageReent
             SiloLendingLib.repay(configData, _assets, _shares, _borrower, msg.sender, total[AssetType.Debt]);
 
         emit Repay(msg.sender, _borrower, assets, shares);
-    }
-
-    function _transitionCollateral(uint256 _shares, address _owner, ISilo.AssetType _assetType)
-        internal
-        virtual
-        returns (uint256 assets, uint256 shares, uint256 toShares)
-    {
-        (, ISiloConfig.ConfigData memory configData) = _accrueInterest();
-
-        (ISilo.AssetType depositType, address shareTokenFrom, address shareTokenTo, uint256 liquidity) = _assetType
-            == ISilo.AssetType.Protected
-            ? (
-                ISilo.AssetType.Collateral,
-                configData.protectedShareToken,
-                configData.collateralShareToken,
-                type(uint256).max
-            )
-            : (
-                ISilo.AssetType.Protected, configData.collateralShareToken, configData.protectedShareToken, _liquidity()
-            );
-
-        (assets, shares) = SiloERC4626Lib.withdraw(
-            address(0), // empty token address because we dont want to do transfer
-            shareTokenFrom,
-            SiloERC4626Lib.WithdrawParams({
-                assets: 0,
-                shares: _shares,
-                receiver: _owner,
-                owner: _owner,
-                spender: msg.sender,
-                assetType: _assetType
-            }),
-            liquidity,
-            total[_assetType]
-        );
-
-        (assets, toShares) = SiloERC4626Lib.deposit(
-            address(0), // empty token because we don't want to transfer
-            _owner,
-            SiloERC4626Lib.DepositParams({
-                assets: assets,
-                shares: 0,
-                receiver: _owner,
-                assetType: depositType,
-                collateralShareToken: IShareToken(shareTokenTo),
-                debtShareToken: IShareToken(configData.debtShareToken)
-            }),
-            total[_assetType]
-        );
     }
 
     /// @dev it can be called on "debt silo" only
@@ -920,12 +896,8 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable, LeverageReent
             _borrower,
             _liquidator,
             _receiveSToken,
-            _liquidity(),
+            liquidity(),
             total
         );
-    }
-
-    function _liquidity() internal view virtual returns (uint256 liquidity) {
-        liquidity = SiloMathLib.liquidity(total[AssetType.Collateral].assets, total[AssetType.Debt].assets);
     }
 }

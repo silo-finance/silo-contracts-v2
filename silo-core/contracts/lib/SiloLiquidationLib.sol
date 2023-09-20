@@ -17,16 +17,6 @@ library SiloLiquidationLib {
     /// eg total value = 51 and dust level = 98%, then when we can not liquidate 50, we have to liquidate 51.
     uint256 internal constant _POSITION_DUST_LEVEL_IN_BP = 9000; // 90%
 
-    /// @notice reverts on `_totalValue` == 0
-    /// @dev calculate assets based on ratio: assets = (value, totalAssets, totalValue)
-    function valueToAssetsRatio(uint256 _value, uint256 _totalAssets, uint256 _totalValue)
-        internal
-        pure
-        returns (uint256 assets)
-    {
-        assets = _value * _totalAssets;
-        unchecked { assets /= _totalValue; }
-    }
 
     /// @notice this method does not care about ltv, it will calculate based on any values, this is just a pure math
     /// if ltv is over 100% this method should not be called, it should be full liquidation right away
@@ -80,12 +70,23 @@ library SiloLiquidationLib {
             ltvAfterLiquidationInBp = 0;
         } else {
             unchecked {
-                // 1. all subs are safe because this values are chunks of total, so we will not underflow
-                // 2. * is save because if we did not overflow on LTV, then target LTV will be less, so we not overflow
+            // 1. all subs are safe because this values are chunks of total, so we will not underflow
+            // 2. * is save because if we did not overflow on LTV, then target LTV will be less, so we not overflow
                 ltvAfterLiquidationInBp = (_totalBorrowerDebtValue - debtValueToCover) * _BASIS_POINTS
                     / (_totalBorrowerCollateralValue - collateralValueToLiquidate);
             }
         }
+    }
+
+    /// @notice reverts on `_totalValue` == 0
+    /// @dev calculate assets based on ratio: assets = (value, totalAssets, totalValue)
+    function valueToAssetsRatio(uint256 _value, uint256 _totalAssets, uint256 _totalValue)
+        internal
+        pure
+        returns (uint256 assets)
+    {
+        assets = _value * _totalAssets;
+        unchecked { assets /= _totalValue; }
     }
 
     /// @param _ltInBp LT liquidation threshold for asset
@@ -103,11 +104,7 @@ library SiloLiquidationLib {
         uint256 _totalBorrowerCollateralValue,
         uint256 _totalBorrowerCollateralAssets,
         uint256 _liquidationFee
-    )
-        internal
-        pure
-        returns (uint256 collateralAssetsToLiquidate, uint256 collateralValueToLiquidate)
-    {
+    ) internal pure returns (uint256 collateralAssetsToLiquidate, uint256 collateralValueToLiquidate) {
         collateralValueToLiquidate = collateralToLiquidate(
             _debtValueToCover, _totalBorrowerCollateralValue, _liquidationFee
         );
@@ -136,9 +133,7 @@ library SiloLiquidationLib {
         uint256 _totalBorrowerCollateralValue,
         uint256 _ltvAfterLiquidationInBp,
         uint256 _liquidityFeeInBp
-    )
-        internal pure returns (uint256 collateralValueToLiquidate, uint256 repayValue)
-    {
+    ) internal pure returns (uint256 collateralValueToLiquidate, uint256 repayValue) {
         repayValue = estimateMaxRepayValue(
             _totalBorrowerDebtValue, _totalBorrowerCollateralValue, _ltvAfterLiquidationInBp, _liquidityFeeInBp
         );
@@ -179,9 +174,7 @@ library SiloLiquidationLib {
         uint256 _totalBorrowerCollateralValue,
         uint256 _ltvAfterLiquidationInBp,
         uint256 _liquidityFeeInBp
-    )
-        internal pure returns (uint256 repayValue)
-    {
+    ) internal pure returns (uint256 repayValue) {
         if (_totalBorrowerDebtValue == 0) return 0;
         if (_liquidityFeeInBp >= _BASIS_POINTS) return 0;
 
@@ -222,7 +215,7 @@ library SiloLiquidationLib {
         // here is weird case, sometimes it is impossible to go down to target LTV, however math can calculate it
         // eg with negative numerator and denominator and result will be positive, that why we we simply return all
         // we also cover dust case here
-        return repayValue * _BASIS_POINTS/ _totalBorrowerDebtValue > _POSITION_DUST_LEVEL_IN_BP
+        return repayValue * _BASIS_POINTS / _totalBorrowerDebtValue > _POSITION_DUST_LEVEL_IN_BP
             ? _totalBorrowerDebtValue
             : repayValue;
     }

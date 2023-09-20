@@ -83,7 +83,7 @@ contract SiloSolvencyLibTest is Test {
 
         address any = address(1);
 
-        (uint256 ltv,,) = SiloSolvencyLib.calculateLtv(ltvData, any, any);
+        (,, uint256 ltv) = SiloSolvencyLib.calculateLtv(ltvData, any, any);
 
         assertEq(ltv, 0, "no debt no collateral");
     }
@@ -103,7 +103,7 @@ contract SiloSolvencyLibTest is Test {
 
         address any = address(1);
 
-        (uint256 ltv,,) = SiloSolvencyLib.calculateLtv(ltvData, any, any);
+        (,, uint256 ltv) = SiloSolvencyLib.calculateLtv(ltvData, any, any);
 
         assertEq(ltv, BASIS_POINTS + 1, "when only debt");
     }
@@ -129,7 +129,7 @@ contract SiloSolvencyLibTest is Test {
 
         address any = address(1);
 
-        (uint256 ltv,,) = SiloSolvencyLib.calculateLtv(ltvData, any, any);
+        (,, uint256 ltv) = SiloSolvencyLib.calculateLtv(ltvData, any, any);
 
         uint256 expectedLtv;
 
@@ -167,7 +167,7 @@ contract SiloSolvencyLibTest is Test {
 
         _quoteMocks(ltvData, 9999, 1111);
 
-        (uint256 ltv,,) = SiloSolvencyLib.calculateLtv(ltvData, COLLATERAL_ASSET, DEBT_ASSET);
+        (,, uint256 ltv) = SiloSolvencyLib.calculateLtv(ltvData, COLLATERAL_ASSET, DEBT_ASSET);
 
         assertEq(ltv, 1111 * BASIS_POINTS / 9999, "constant values, constant ltv");
     }
