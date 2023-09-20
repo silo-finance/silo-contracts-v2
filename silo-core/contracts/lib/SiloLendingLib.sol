@@ -28,7 +28,7 @@ library SiloLendingLib {
         address _spender,
         ISilo.Assets storage _totalDebt,
         uint256 _totalCollateralAssets
-    ) internal returns (uint256 assets, uint256 shares) {
+    ) external returns (uint256 assets, uint256 shares) {
         if (
             !borrowPossible(
                 _configData.protectedShareToken, _configData.collateralShareToken, _configData.borrowable, _borrower
@@ -65,7 +65,7 @@ library SiloLendingLib {
         address _borrower,
         address _repayer,
         ISilo.Assets storage _totalDebt
-    ) internal returns (uint256 assets, uint256 shares) {
+    ) external returns (uint256 assets, uint256 shares) {
         IShareToken debtShareToken = IShareToken(_configData.debtShareToken);
         uint256 totalDebtAssets = _totalDebt.assets;
 
@@ -95,7 +95,7 @@ library SiloLendingLib {
         ISilo.SiloData storage _siloData,
         ISilo.Assets storage _totalCollateral,
         ISilo.Assets storage _totalDebt
-    ) internal returns (uint256 accruedInterest) {
+    ) external returns (uint256 accruedInterest) {
         uint64 lastTimestamp = _siloData.interestRateTimestamp;
 
         // This is the first time, so we can return early and save some gas
@@ -124,21 +124,8 @@ library SiloLendingLib {
         _siloData.daoAndDeployerFees += totalFees;
     }
 
-    function borrowPossible(
-        address _protectedShareToken,
-        address _collateralShareToken,
-        bool _borrowable,
-        address _borrower
-    ) internal view returns (bool) {
-        uint256 sumOfCollateralAssets = IShareToken(_protectedShareToken).balanceOf(_borrower)
-            + IShareToken(_collateralShareToken).balanceOf(_borrower);
-
-        // token must be marked as borrowable and _borrower cannot have any collateral deposited
-        return _borrowable && sumOfCollateralAssets == 0;
-    }
-
     function maxBorrow(ISiloConfig _config, address _borrower, uint256 _totalDebtAssets, uint256 _totalDebtShares)
-        internal
+        external
         view
         returns (uint256 assets, uint256 shares)
     {
@@ -168,5 +155,18 @@ library SiloLendingLib {
             assets =
                 SiloMathLib.convertToAssets(shares, _totalDebtAssets, _totalDebtShares, MathUpgradeable.Rounding.Up);
         }
+    }
+
+    function borrowPossible(
+        address _protectedShareToken,
+        address _collateralShareToken,
+        bool _borrowable,
+        address _borrower
+    ) public view returns (bool) {
+        uint256 sumOfCollateralAssets = IShareToken(_protectedShareToken).balanceOf(_borrower)
+            + IShareToken(_collateralShareToken).balanceOf(_borrower);
+
+        // token must be marked as borrowable and _borrower cannot have any collateral deposited
+        return _borrowable && sumOfCollateralAssets == 0;
     }
 }

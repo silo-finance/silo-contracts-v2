@@ -39,13 +39,86 @@ library SiloERC4626Lib {
 
     uint256 internal constant _PRECISION_DECIMALS = 1e18;
 
+    /// @dev ERC4626: MUST return 2 ** 256 - 1 if there is no limit on the maximum amount of assets that may be
+    ///      deposited.
+    uint256 internal constant _NO_DEPOSIT_LIMIT = type(uint256).max - 1;
+
+    function maxDepositOrMint(ISiloConfig _config, address _receiver)
+        external
+        view
+        returns (uint256 maxAssetsOrShares)
+    {
+        ISiloConfig.ConfigData memory configData = _config.getConfig(address(this));
+
+        if (depositPossible(configData.debtShareToken, _receiver)) {
+            maxAssetsOrShares = _NO_DEPOSIT_LIMIT;
+        }
+    }
+
+    /// @param _liquidity available liquidity in Silo
+    /// @param _totalAssets based on `_assetType` this is total collateral/protected assets
+    function maxWithdraw(
+        ISiloConfig _config,
+        address _owner,
+        ISilo.AssetType _assetType,
+        uint256 _totalAssets,
+        uint256 _liquidity
+    ) external view returns (uint256 assets, uint256 shares) {
+        (ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig) =
+            _config.getConfigs(address(this));
+
+        SiloSolvencyLib.LtvData memory ltvData = SiloSolvencyLib.getAssetsDataForLtvCalculations(
+            collateralConfig, debtConfig, _owner, ISilo.OracleType.Solvency, ISilo.AccrueInterestInMemory.Yes
+        );
+
+        (uint256 collateralValue, uint256 debtValue) =
+            SiloSolvencyLib.getPositionValues(ltvData, collateralConfig.token, debtConfig.token);
+
+        uint256 ltv = debtValue * _PRECISION_DECIMALS / collateralValue;
+
+        // if LTV is higher than LT, user cannot withdraw
+        if (ltv >= collateralConfig.lt) return (0, 0);
+
+        uint256 minimumCollateralValue = debtValue * _PRECISION_DECIMALS / collateralConfig.lt;
+        uint256 spareCollateralValue = collateralValue - minimumCollateralValue;
+
+        // these are total assets (protected + collateral) that _owner can withdraw
+        assets = (ltvData.borrowerProtectedAssets + ltvData.borrowerCollateralAssets) * spareCollateralValue
+            / collateralValue;
+
+        if (_assetType == ISilo.AssetType.Protected && assets > ltvData.borrowerProtectedAssets) {
+            assets = ltvData.borrowerProtectedAssets;
+            shares = SiloMathLib.convertToShares(
+                assets,
+                _totalAssets,
+                IShareToken(collateralConfig.protectedShareToken).totalSupply(),
+                MathUpgradeable.Rounding.Down
+            );
+        } else if (_assetType == ISilo.AssetType.Collateral) {
+            if (assets > ltvData.borrowerCollateralAssets) {
+                assets = ltvData.borrowerCollateralAssets;
+            }
+
+            if (assets > _liquidity) {
+                assets = _liquidity;
+            }
+
+            shares = SiloMathLib.convertToShares(
+                assets,
+                _totalAssets,
+                IShareToken(collateralConfig.collateralShareToken).totalSupply(),
+                MathUpgradeable.Rounding.Down
+            );
+        }
+    }
+
     /// @param _asset if empty, tokens will not be transferred, useful for transition of collateral
     function deposit(
         address _asset,
         address _depositor,
         DepositParams memory _depositParams,
         ISilo.Assets storage _totalCollateral
-    ) internal returns (uint256 assets, uint256 shares) {
+    ) public returns (uint256 assets, uint256 shares) {
         if (!depositPossible(address(_depositParams.debtShareToken), _depositParams.receiver)) {
             revert ISilo.DepositNotPossible();
         }
@@ -84,7 +157,7 @@ library SiloERC4626Lib {
         WithdrawParams memory _params,
         uint256 _liquidity,
         ISilo.Assets storage _totalCollateral
-    ) internal returns (uint256 assets, uint256 shares) {
+    ) public returns (uint256 assets, uint256 shares) {
         uint256 totalAssets = _totalCollateral.assets;
 
         (assets, shares) = SiloMathLib.convertToAssetsAndToShares(
@@ -117,82 +190,7 @@ library SiloERC4626Lib {
         }
     }
 
-    function depositPossible(address _debtShareToken, address _depositor)
-        internal
-        view
-        returns (bool)
-    {
+    function depositPossible(address _debtShareToken, address _depositor) public view returns (bool) {
         return IShareToken(_debtShareToken).balanceOf(_depositor) == 0;
-    }
-
-    function maxDepositOrMint(ISiloConfig _config, address _receiver)
-        internal
-        view
-        returns (uint256 maxAssetsOrShares)
-    {
-        ISiloConfig.ConfigData memory configData = _config.getConfig(address(this));
-
-        if (SiloERC4626Lib.depositPossible(configData.debtShareToken, _receiver)) {
-            maxAssetsOrShares = type(uint256).max - 1;
-        }
-    }
-
-    /// @param _liquidity method that will provide liquidity,
-    /// it is method because we need it only if `_assetType` == `ISilo.AssetType.Collateral`
-    /// @param _totalAssets based on `_assetType` this is total collateral/protected assets
-    function maxWithdraw(
-        ISiloConfig _config,
-        address _owner,
-        ISilo.AssetType _assetType,
-        uint256 _totalAssets,
-        function() view returns (uint256) _liquidity
-    ) internal view returns (uint256 assets, uint256 shares) {
-        (ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig) =
-            _config.getConfigs(address(this));
-
-        SiloSolvencyLib.LtvData memory ltvData = SiloSolvencyLib.getAssetsDataForLtvCalculations(
-            collateralConfig, debtConfig, _owner, ISilo.OracleType.Solvency, ISilo.AccrueInterestInMemory.Yes
-        );
-
-        (uint256 collateralValue, uint256 debtValue) =
-            SiloSolvencyLib.getPositionValues(ltvData, collateralConfig.token, debtConfig.token);
-
-        uint256 ltv = debtValue * _PRECISION_DECIMALS / collateralValue;
-
-        // if LTV is higher than LT, user cannot withdraw
-        if (ltv >= collateralConfig.lt) return (0, 0);
-
-        uint256 minimumCollateralValue = debtValue * _PRECISION_DECIMALS / collateralConfig.lt;
-        uint256 spareCollateralValue = collateralValue - minimumCollateralValue;
-
-        // these are total assets (protected + collateral) that _owner can withdraw
-        assets = (ltvData.borrowerProtectedAssets + ltvData.borrowerCollateralAssets) * spareCollateralValue
-            / collateralValue;
-
-        if (_assetType == ISilo.AssetType.Protected && assets > ltvData.borrowerProtectedAssets) {
-            assets = ltvData.borrowerProtectedAssets;
-            shares = SiloMathLib.convertToShares(
-                assets,
-                _totalAssets,
-                IShareToken(collateralConfig.protectedShareToken).totalSupply(),
-                MathUpgradeable.Rounding.Down
-            );
-        } else if (_assetType == ISilo.AssetType.Collateral) {
-            if (assets > ltvData.borrowerCollateralAssets) {
-                assets = ltvData.borrowerCollateralAssets;
-            }
-
-            uint256 liquidAssets = _liquidity();
-            if (assets > liquidAssets) {
-                assets = liquidAssets;
-            }
-
-            shares = SiloMathLib.convertToShares(
-                assets,
-                _totalAssets,
-                IShareToken(collateralConfig.collateralShareToken).totalSupply(),
-                MathUpgradeable.Rounding.Down
-            );
-        }
     }
 }

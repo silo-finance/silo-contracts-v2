@@ -17,7 +17,7 @@ library SiloStdLib {
     uint256 internal constant _PRECISION_DECIMALS = 1e18;
     uint256 internal constant _BASIS_POINTS = 1e4;
 
-    function withdrawFees(ISiloConfig _config, ISiloFactory _factory, ISilo.SiloData storage _siloData) internal {
+    function withdrawFees(ISiloConfig _config, ISiloFactory _factory, ISilo.SiloData storage _siloData) external {
         (
             address daoFeeReceiver,
             address deployerFeeReceiver,
@@ -51,8 +51,26 @@ library SiloStdLib {
         }
     }
 
+    /// @notice Returns flash fee amount
+    /// @param _config address of config contract for Silo
+    /// @param _token for which fee is calculated
+    /// @param _amount for which fee is calculated
+    /// @return fee flash fee amount
+    function flashFee(ISiloConfig _config, address _token, uint256 _amount) external view returns (uint256 fee) {
+        // all user set fees are in basis points
+        (,, uint256 flashloanFeeInBp, address asset) = _config.getFeesWithAsset(address(this));
+
+        if (_token != asset) revert ISilo.Unsupported();
+
+        fee = _amount * flashloanFeeInBp;
+
+        unchecked {
+            fee /= _BASIS_POINTS;
+        }
+    }
+
     function getFeesAndFeeReceiversWithAsset(ISiloConfig _config, ISiloFactory _factory)
-        internal
+        public
         view
         returns (
             address daoFeeReceiver,
@@ -64,24 +82,6 @@ library SiloStdLib {
     {
         (daoFeeInBp, deployerFeeInBp,, asset) = _config.getFeesWithAsset(address(this));
         (daoFeeReceiver, deployerFeeReceiver) = _factory.getFeeReceivers(address(this));
-    }
-
-    /// @notice Returns flash fee amount
-    /// @param _config address of config contract for Silo
-    /// @param _token for which fee is calculated
-    /// @param _amount for which fee is calculated
-    /// @return fee flash fee amount
-    function flashFee(ISiloConfig _config, address _token, uint256 _amount) internal view returns (uint256 fee) {
-        // all user set fees are in basis points
-        (,, uint256 flashloanFeeInBp, address asset) = _config.getFeesWithAsset(address(this));
-
-        if (_token != asset) revert ISilo.Unsupported();
-
-        fee = _amount * flashloanFeeInBp;
-
-        unchecked {
-            fee /= _BASIS_POINTS;
-        }
     }
 
     /// @notice Returns totalAssets and totalShares for conversion math (convertToAssets and convertToShares)
@@ -120,6 +120,15 @@ library SiloStdLib {
         }
     }
 
+    function getSharesAndTotalSupply(address _shareToken, address _owner)
+        internal
+        view
+        returns (uint256 shares, uint256 totalSupply)
+    {
+        shares = IShareToken(_shareToken).balanceOf(_owner);
+        totalSupply = IShareToken(_shareToken).totalSupply();
+    }
+
     function getTotalAsssetsWithInterest(
         address _silo,
         address _interestRateModel,
@@ -137,19 +146,11 @@ library SiloStdLib {
                 _totalCollateralAssets, ISilo(_silo).getDebtAssets(), rcomp, _daoFeeInBp, _deployerFeeInBp
             );
 
-            totalAssetsWithInterest = 
+            totalAssetsWithInterest =
                 _assetType == ISilo.AssetType.Collateral ? totalCollateralAssets : totalDebtAssets;
         } else {
             totalAssetsWithInterest =
                 _assetType == ISilo.AssetType.Collateral ? _totalCollateralAssets : ISilo(_silo).getDebtAssets();
         }
-    }
-
-    function getSharesAndTotalSupply(
-        address _shareToken,
-        address _owner
-    ) internal view returns (uint256 shares, uint256 totalSupply) {
-        shares = IShareToken(_shareToken).balanceOf(_owner);
-        totalSupply = IShareToken(_shareToken).totalSupply();
     }
 }
