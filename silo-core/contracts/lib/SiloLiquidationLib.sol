@@ -61,8 +61,9 @@ library SiloLiquidationLib {
         uint256 collateralValueToLiquidate;
 
         if (debtValueToCover * _BASIS_POINTS / _totalBorrowerDebtValue > _POSITION_DUST_LEVEL_IN_BP) { // full on dust
-            collateralValueToLiquidate =
-                collateralToLiquidate(debtValueToCover, _totalBorrowerCollateralValue, _liquidationFeeInBp);
+            collateralValueToLiquidate = collateralToLiquidate(
+                debtValueToCover, _totalBorrowerCollateralValue, _liquidationFeeInBp
+            );
 
             collateralAssetsToLiquidate = valueToAssetsRatio(
                 collateralValueToLiquidate, _totalBorrowerCollateralAssets, _totalBorrowerCollateralValue
@@ -136,8 +137,9 @@ library SiloLiquidationLib {
             _totalBorrowerDebtValue, _totalBorrowerCollateralValue, _ltvAfterLiquidationInBp, _liquidityFeeInBp
         );
 
-        collateralValueToLiquidate =
-            collateralToLiquidate(repayValue, _totalBorrowerCollateralValue, _liquidityFeeInBp);
+        collateralValueToLiquidate = collateralToLiquidate(
+            repayValue, _totalBorrowerCollateralValue, _liquidityFeeInBp
+        );
     }
 
     /// @param _debtToCover assets or value, but must be in sync with `_totalCollateral`
