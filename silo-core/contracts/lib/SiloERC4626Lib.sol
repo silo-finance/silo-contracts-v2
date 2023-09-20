@@ -54,8 +54,7 @@ library SiloERC4626Lib {
         }
     }
 
-    /// @param _liquidity method that will provide liquidity,
-    /// it is method because we need it only if `_assetType` == `ISilo.AssetType.Collateral`
+    /// @param _liquidity available liquidity in Silo
     /// @param _totalAssets based on `_assetType` this is total collateral/protected assets
     function maxWithdraw(
         ISiloConfig _config,
