@@ -140,6 +140,7 @@ interface ISilo is IERC3156FlashLender, ISiloLiquidation {
     function siloId() external view returns (uint256);
     function siloData() external view returns (uint256, uint64);
     function utilizationData() external view returns (UtilizationData memory);
+    function liquidity() external view returns (uint256);
 
     function isSolvent(address _borrower) external view returns (bool);
     function depositPossible(address _depositor) external view returns (bool);
@@ -150,7 +151,7 @@ interface ISilo is IERC3156FlashLender, ISiloLiquidation {
     function getCollateralAssets() external view returns (uint256);
     function getDebtAssets() external view returns (uint256);
     function getFeesAndFeeReceivers()
-        external 
+        external
         view
         returns (address daoFeeReceiver, address deployerFeeReceiver, uint256 daoFeeInBp, uint256 deployerFeeInBp);
 
@@ -203,8 +204,9 @@ interface ISilo is IERC3156FlashLender, ISiloLiquidation {
         external
         returns (uint256 assets);
 
-    function transitionCollateralToProtected(uint256 _shares, address _owner) external returns (uint256 assets);
-    function transitionCollateralFromProtected(uint256 _shares, address _owner) external returns (uint256 shares);
+    function transitionCollateral(uint256 _shares, address _owner, AssetType _withdrawType)
+        external
+        returns (uint256 assets);
 
     // Lending
 

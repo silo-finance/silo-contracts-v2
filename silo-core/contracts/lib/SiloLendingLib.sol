@@ -124,19 +124,6 @@ library SiloLendingLib {
         _siloData.daoAndDeployerFees += totalFees;
     }
 
-    function borrowPossible(
-        address _protectedShareToken,
-        address _collateralShareToken,
-        bool _borrowable,
-        address _borrower
-    ) public view returns (bool) {
-        uint256 sumOfCollateralAssets = IShareToken(_protectedShareToken).balanceOf(_borrower)
-            + IShareToken(_collateralShareToken).balanceOf(_borrower);
-
-        // token must be marked as borrowable and _borrower cannot have any collateral deposited
-        return _borrowable && sumOfCollateralAssets == 0;
-    }
-
     function maxBorrow(ISiloConfig _config, address _borrower, uint256 _totalDebtAssets, uint256 _totalDebtShares)
         external
         view
@@ -168,5 +155,18 @@ library SiloLendingLib {
             assets =
                 SiloMathLib.convertToAssets(shares, _totalDebtAssets, _totalDebtShares, MathUpgradeable.Rounding.Up);
         }
+    }
+
+    function borrowPossible(
+        address _protectedShareToken,
+        address _collateralShareToken,
+        bool _borrowable,
+        address _borrower
+    ) public view returns (bool) {
+        uint256 sumOfCollateralAssets = IShareToken(_protectedShareToken).balanceOf(_borrower)
+            + IShareToken(_collateralShareToken).balanceOf(_borrower);
+
+        // token must be marked as borrowable and _borrower cannot have any collateral deposited
+        return _borrowable && sumOfCollateralAssets == 0;
     }
 }

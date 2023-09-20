@@ -51,21 +51,6 @@ library SiloStdLib {
         }
     }
 
-    function getFeesAndFeeReceiversWithAsset(ISiloConfig _config, ISiloFactory _factory)
-        public
-        view
-        returns (
-            address daoFeeReceiver,
-            address deployerFeeReceiver,
-            uint256 daoFeeInBp,
-            uint256 deployerFeeInBp,
-            address asset
-        )
-    {
-        (daoFeeInBp, deployerFeeInBp,, asset) = _config.getFeesWithAsset(address(this));
-        (daoFeeReceiver, deployerFeeReceiver) = _factory.getFeeReceivers(address(this));
-    }
-
     /// @notice Returns flash fee amount
     /// @param _config address of config contract for Silo
     /// @param _token for which fee is calculated
@@ -120,6 +105,30 @@ library SiloStdLib {
         }
     }
 
+    function getSharesAndTotalSupply(address _shareToken, address _owner)
+        external
+        view
+        returns (uint256 shares, uint256 totalSupply)
+    {
+        shares = IShareToken(_shareToken).balanceOf(_owner);
+        totalSupply = IShareToken(_shareToken).totalSupply();
+    }
+
+    function getFeesAndFeeReceiversWithAsset(ISiloConfig _config, ISiloFactory _factory)
+        public
+        view
+        returns (
+            address daoFeeReceiver,
+            address deployerFeeReceiver,
+            uint256 daoFeeInBp,
+            uint256 deployerFeeInBp,
+            address asset
+        )
+    {
+        (daoFeeInBp, deployerFeeInBp,, asset) = _config.getFeesWithAsset(address(this));
+        (daoFeeReceiver, deployerFeeReceiver) = _factory.getFeeReceivers(address(this));
+    }
+
     function getTotalAsssetsWithInterest(
         address _silo,
         address _interestRateModel,
@@ -137,19 +146,11 @@ library SiloStdLib {
                 _totalCollateralAssets, ISilo(_silo).getDebtAssets(), rcomp, _daoFeeInBp, _deployerFeeInBp
             );
 
-            totalAssetsWithInterest = 
+            totalAssetsWithInterest =
                 _assetType == ISilo.AssetType.Collateral ? totalCollateralAssets : totalDebtAssets;
         } else {
             totalAssetsWithInterest =
                 _assetType == ISilo.AssetType.Collateral ? _totalCollateralAssets : ISilo(_silo).getDebtAssets();
         }
-    }
-
-    function getSharesAndTotalSupply(
-        address _shareToken,
-        address _owner
-    ) external view returns (uint256 shares, uint256 totalSupply) {
-        shares = IShareToken(_shareToken).balanceOf(_owner);
-        totalSupply = IShareToken(_shareToken).totalSupply();
     }
 }
