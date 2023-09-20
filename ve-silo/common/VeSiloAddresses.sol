@@ -44,6 +44,7 @@ contract VeSiloAddresses is AddressesCollection {
         setAddress(chainId, VeSiloAddrKey.USDC_ETH_UNI_POOL, 0x88e6A0c2dDD26FEEb64F039a2c41296FcB3f5640);
         setAddress(chainId, VeSiloAddrKey.LZ_ENDPOINT, 0x66A71Dcef29A0fFBDBE3c6a460a3B5BC225Cd675);
         setAddress(chainId, VeSiloAddrKey.CHAINLINK_CCIP_ROUTER, 0xE561d5E02207fb5eB32cca20a699E0d8919a1476);
+        setAddress(chainId, VeSiloAddrKey.LINK, 0x514910771AF9Ca656af840dff83E8264EcF986CA);
 
         _isInitialized[chainId] = true;
     }
