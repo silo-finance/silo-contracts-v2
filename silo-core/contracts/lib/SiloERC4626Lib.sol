@@ -39,6 +39,9 @@ library SiloERC4626Lib {
 
     uint256 internal constant _PRECISION_DECIMALS = 1e18;
 
+    /// @dev ERC4626: MUST return 2 ** 256 - 1 if there is no limit on the maximum amount of assets that may be deposited.
+    uint256 internal constant _NO_DEPOSIT_LIMIT = type(uint256).max - 1;
+
     function maxDepositOrMint(ISiloConfig _config, address _receiver)
         external
         view
@@ -47,7 +50,7 @@ library SiloERC4626Lib {
         ISiloConfig.ConfigData memory configData = _config.getConfig(address(this));
 
         if (depositPossible(configData.debtShareToken, _receiver)) {
-            maxAssetsOrShares = type(uint256).max - 1;
+            maxAssetsOrShares = _NO_DEPOSIT_LIMIT;
         }
     }
 
