@@ -119,7 +119,7 @@ contract VotingEscrowTest is IntegrationTest {
     }
 
     function _dummySiloToken() internal {
-        if (isChain(ANVIL_ALIAS)) {
+        if (isChain(ANVIL_ALIAS) || isChain(SEPOLIA_ALIAS)) {
             ERC20 siloToken = new ERC20("Silo test token", "SILO");
             ERC20 silo8020Token = new ERC20("Silo 80/20", "SILO-80-20");
 

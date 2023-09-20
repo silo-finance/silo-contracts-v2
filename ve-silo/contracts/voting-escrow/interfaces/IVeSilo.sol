@@ -14,12 +14,13 @@ interface IVeSilo {
     }
 
     // solhint-disable func-name-mixedcase
-    function user_point_epoch(address _user) external returns (uint);
-    function user_point_history(address _user, uint _epoch) external returns (Point memory);
-    function point_history(uint _epoch) external returns (Point memory);
+    function checkpoint() external;
     function create_lock(uint256 _value, uint256 _timestamp) external;
     function commit_smart_wallet_checker(address _addr) external;
     function apply_smart_wallet_checker() external;
+    function point_history(uint _epoch) external view returns (Point memory);
+    function user_point_history(address _user, uint _epoch) external view returns (Point memory);
+    function user_point_epoch(address _user) external view returns (uint);
     function future_smart_wallet_checker() external view returns(address);
     function smart_wallet_checker() external view returns(address);
     function locked__end(address _user) external view returns (uint256);

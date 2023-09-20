@@ -16,6 +16,7 @@ library VeSiloAddrKey {
     string constant public LZ_ENDPOINT = "LayerZero endpoint";
     string constant public L2_MULTISIG = "L2 Multisig";
     string constant public CCIP_BNM = "CCIP BNM token";
+    string constant public CHAINLINK_CCIP_ROUTER = "Chainlink CCIP router";
 }
 
 contract VeSiloAddresses is AddressesCollection {
@@ -42,6 +43,7 @@ contract VeSiloAddresses is AddressesCollection {
         setAddress(chainId, VeSiloAddrKey.SNX_USDC_UNIV3_POOL, 0x020C349A0541D76C16F501Abc6B2E9c98AdAe892);
         setAddress(chainId, VeSiloAddrKey.USDC_ETH_UNI_POOL, 0x88e6A0c2dDD26FEEb64F039a2c41296FcB3f5640);
         setAddress(chainId, VeSiloAddrKey.LZ_ENDPOINT, 0x66A71Dcef29A0fFBDBE3c6a460a3B5BC225Cd675);
+        setAddress(chainId, VeSiloAddrKey.CHAINLINK_CCIP_ROUTER, 0xE561d5E02207fb5eB32cca20a699E0d8919a1476);
 
         _isInitialized[chainId] = true;
     }
@@ -53,6 +55,7 @@ contract VeSiloAddresses is AddressesCollection {
 
         setAddress(chainId, VeSiloAddrKey.LZ_ENDPOINT, 0x3c2269811836af69497E5F486A85D7316753cf62);
         setAddress(chainId, SILO_TOKEN, 0x0341C0C0ec423328621788d4854119B97f44E391);
+        setAddress(chainId, VeSiloAddrKey.CHAINLINK_CCIP_ROUTER, 0x88E492127709447A5ABEFdaB8788a15B4567589E);
 
         _isInitialized[chainId] = true;
     }
@@ -64,6 +67,7 @@ contract VeSiloAddresses is AddressesCollection {
 
         setAddress(chainId, VeSiloAddrKey.LINK, 0x779877A7B0D9E8603169DdbD7836e478b4624789);
         setAddress(chainId, VeSiloAddrKey.CCIP_BNM, 0xFd57b4ddBf88a4e07fF4e34C487b99af2Fe82a05);
+        setAddress(chainId, VeSiloAddrKey.CHAINLINK_CCIP_ROUTER, 0xD0daae2231E9CB96b94C8512223533293C3693Bf);
 
         _isInitialized[chainId] = true;
     }
