@@ -8,7 +8,9 @@ library SiloMathLib {
 
     uint256 internal constant _PRECISION_DECIMALS = 1e18;
     uint256 internal constant _BASIS_POINTS = 1e4;
-    uint256 internal constant _DECIMALS_OFFSET_POW = 10 ** 2;
+
+    /// @dev this is constant version of openzeppelin-contracts/contracts/token/ERC20/extensions/ERC4626._decimalsOffset
+    uint256 internal constant _DECIMALS_OFFSET_POW = 10 ** 2; // TODO when 128 change to 0?
 
     /// @notice Returns available liquidity to be borrowed
     /// @dev Accrued interest is entirely added to `debtAssets` but only part of it is added to `collateralAssets`. The
@@ -88,23 +90,23 @@ library SiloMathLib {
         }
     }
 
+    /// @dev this is exact copy of openzeppelin-contracts/contracts/token/ERC20/extensions/ERC4626._convertToShares
     function convertToShares(
         uint256 _assets,
         uint256 _totalAssets,
         uint256 _totalShares,
         MathUpgradeable.Rounding _rounding
     ) internal pure returns (uint256) {
-        // TODO what is magic number 1?
         return _assets.mulDiv(_totalShares + _DECIMALS_OFFSET_POW, _totalAssets + 1, _rounding);
     }
 
+    /// @dev this is exact copy of openzeppelin-contracts/contracts/token/ERC20/extensions/ERC4626._convertToAssets
     function convertToAssets(
         uint256 _shares,
         uint256 _totalAssets,
         uint256 _totalShares,
         MathUpgradeable.Rounding _rounding
-    ) internal pure returns (uint256) {
-        /// TODO what is magic number 1?
-        return _shares.mulDiv(_totalAssets + 1, _totalShares + _DECIMALS_OFFSET_POW, _rounding);
+    ) internal pure returns (uint256 assets) {
+        assets = _shares.mulDiv(_totalAssets + 1, _totalShares + _DECIMALS_OFFSET_POW, _rounding);
     }
 }
