@@ -86,7 +86,7 @@ contract InterestRateModelV2RcompTest is RcompTestData, InterestRateModelConfigs
 
             address silo = address(uint160(i));
 
-            (, InterestRateModelV2Config configAddress) = CONFIG_FACTORY.create(_toConfigStruct(testCase));
+            (, IInterestRateModelV2Config configAddress) = CONFIG_FACTORY.create(_toConfigStruct(testCase));
 
             vm.prank(silo);
             INTEREST_RATE_MODEL.connect(address(configAddress));
@@ -120,7 +120,7 @@ contract InterestRateModelV2RcompTest is RcompTestData, InterestRateModelConfigs
 
             address silo = address(uint160(i));
 
-            (, InterestRateModelV2Config configAddress) = CONFIG_FACTORY.create(_toConfigStruct(testCase));
+            (, IInterestRateModelV2Config configAddress) = CONFIG_FACTORY.create(_toConfigStruct(testCase));
 
             vm.prank(silo);
             INTEREST_RATE_MODEL.connect(address(configAddress));

@@ -25,6 +25,7 @@ interface ISiloFactory is IERC721Upgradeable {
     error MaxFlashloanFee();
     error MaxLiquidationFee();
     error InvalidIrmConfig();
+    error InvalidFee();
 
     function initialize(
         address _siloImpl,
