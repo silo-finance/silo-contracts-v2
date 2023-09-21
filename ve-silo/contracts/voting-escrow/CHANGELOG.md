@@ -42,3 +42,10 @@
 - Changed ownership system for L2LayerZeroBridgeForwarder. Replaced SingletonAuthentication with Ownable2Step ([c2f9f11](https://github.com/silo-finance/silo-contracts-v2/pull/61/commits/c2f9f11392b88904bf353be66effb8e4ce5f920f))
 
 - Copy of Balancer's implementation of the L2LayerZeroBridgeForwarder.sol ([feaf031](https://github.com/silo-finance/silo-contracts-v2/pull/61/commits/feaf031e7733f9a3cb1d077a55935ee419044254))
+
+### SmartWalletChecker.sol
+- Bumped solidity to 0.8.19, updated imports, solhint ([9869e1f](https://github.com/silo-finance/silo-contracts-v2/pull/139/commits/9869e1f41c4338b0062429e9781a9cb7c6a91bbc))
+
+- Changed ownership system for SmartWalletChecker. Replaced SingletonAuthentication with Ownable2Step ([aba8056](https://github.com/silo-finance/silo-contracts-v2/pull/139/commits/aba80567a66c341a28438a3d857311bc5e5f5a65))
+
+- Copy of Balancer's implementation of the SmartWalletChecker.sol ([984507b](https://github.com/silo-finance/silo-contracts-v2/pull/139/commits/984507b1a541e1a1683e3b540b3d2a78a8da1046))
