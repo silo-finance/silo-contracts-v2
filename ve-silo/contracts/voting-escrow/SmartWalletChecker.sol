@@ -15,12 +15,11 @@
 pragma solidity ^0.7.0;
 
 import "@balancer-labs/v2-interfaces/contracts/liquidity-mining/ISmartWalletChecker.sol";
-import "@balancer-labs/v2-interfaces/contracts/vault/IVault.sol";
 
-import "@balancer-labs/v2-solidity-utils/contracts/helpers/SingletonAuthentication.sol";
+import {Ownable2Step} from "openzeppelin-contracts/access/Ownable2Step.sol";
 import "@balancer-labs/v2-solidity-utils/contracts/openzeppelin/EnumerableSet.sol";
 
-contract SmartWalletChecker is ISmartWalletChecker, SingletonAuthentication {
+contract SmartWalletChecker is ISmartWalletChecker, Ownable2Step {
     using EnumerableSet for EnumerableSet.AddressSet;
 
     event ContractAddressAdded(address contractAddress);
@@ -28,7 +27,7 @@ contract SmartWalletChecker is ISmartWalletChecker, SingletonAuthentication {
 
     EnumerableSet.AddressSet private _allowlistedAddresses;
 
-    constructor(IVault vault, address[] memory initialAllowedAddresses) SingletonAuthentication(vault) {
+    constructor(address[] memory initialAllowedAddresses) {
         uint256 addressesLength = initialAllowedAddresses.length;
         for (uint256 i = 0; i < addressesLength; ++i) {
             _allowlistAddress(initialAllowedAddresses[i]);
@@ -47,11 +46,11 @@ contract SmartWalletChecker is ISmartWalletChecker, SingletonAuthentication {
         return _allowlistedAddresses.length();
     }
 
-    function allowlistAddress(address contractAddress) external authenticate {
+    function allowlistAddress(address contractAddress) external onlyOwner {
         _allowlistAddress(contractAddress);
     }
 
-    function denylistAddress(address contractAddress) external authenticate {
+    function denylistAddress(address contractAddress) external onlyOwner {
         require(_allowlistedAddresses.remove(contractAddress), "Address is not allowlisted");
         emit ContractAddressRemoved(contractAddress);
     }
