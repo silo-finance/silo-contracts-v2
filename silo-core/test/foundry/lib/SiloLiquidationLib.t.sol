@@ -307,8 +307,33 @@ contract SiloLiquidationLibTest is Test {
         assertEq(collateralValueToLiquidate, 2020000000000000000);
     }
 
-    // forge test -vv --mt test_SiloLiquidationLib_maxLiquidationPreview_unchecked
-    function test_SiloLiquidationLib_maxLiquidationPreview_unchecked(
+    /*
+    forge test -vv --mt test_SiloLiquidationLib_splitReceiveCollateralToLiquidate
+    */
+    function test_SiloLiquidationLib_splitReceiveCollateralToLiquidate() public {
+        (uint256 fromCollateral, uint256 fromProtected) = SiloLiquidationLib.splitReceiveCollateralToLiquidate(0, 0);
+        assertEq(fromCollateral, 0, "fromCollateral (0,0) => 0");
+        assertEq(fromProtected, 0, "fromProtected (0,0) => 0");
+
+        (fromCollateral, fromProtected) = SiloLiquidationLib.splitReceiveCollateralToLiquidate(1, 0);
+        assertEq(fromCollateral, 1, "fromCollateral (1,0) => 1");
+        assertEq(fromProtected, 0, "fromProtected (1,0) => 0");
+
+        (fromCollateral, fromProtected) = SiloLiquidationLib.splitReceiveCollateralToLiquidate(0, 10);
+        assertEq(fromCollateral, 0, "fromCollateral (0, 10) => 0");
+        assertEq(fromProtected, 0, "fromProtected (0, 10) => 0");
+
+        (fromCollateral, fromProtected) = SiloLiquidationLib.splitReceiveCollateralToLiquidate(10, 2);
+        assertEq(fromCollateral, 8, "fromCollateral (10, 2) => 8");
+        assertEq(fromProtected, 2, "fromProtected (10, 2) => 2");
+
+        (fromCollateral, fromProtected) = SiloLiquidationLib.splitReceiveCollateralToLiquidate(5, 15);
+        assertEq(fromCollateral, 0, "fromCollateral (5, 15) => 0");
+        assertEq(fromProtected, 5, "fromProtected (5, 15) => 5");
+    }
+    
+    // forge test -vv --mt test_SiloLiquidationLib_maxLiquidationPreview_unchecked_fuzz
+    function test_SiloLiquidationLib_maxLiquidationPreview_unchecked_fuzz(
         uint128 _debtAmount,
         uint128 _collateralAmount,
         uint16 _targetLT,

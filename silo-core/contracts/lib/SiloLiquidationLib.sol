@@ -227,9 +227,11 @@ library SiloLiquidationLib {
         pure
         returns (uint256 withdrawAssetsFromCollateral, uint256 withdrawAssetsFromProtected)
     {
+        if (_collateralToLiquidate == 0) return (0, 0);
+
         unchecked {
             (
-                withdrawAssetsFromProtected, withdrawAssetsFromCollateral
+                withdrawAssetsFromCollateral, withdrawAssetsFromProtected
             ) = _collateralToLiquidate > _borrowerProtectedAssets
                 // safe to unchecked because of above condition
                 ? (_collateralToLiquidate - _borrowerProtectedAssets, _borrowerProtectedAssets)
