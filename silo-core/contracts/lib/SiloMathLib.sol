@@ -26,7 +26,7 @@ library SiloMathLib {
     function getAmountsWithInterest(
         uint256 _collateralAssets,
         uint256 _debtAssets,
-        uint256 _rcomp,
+        uint256 _rcompInDp,
         uint256 _daoFeeInBp,
         uint256 _deployerFeeInBp
     )
@@ -39,12 +39,21 @@ library SiloMathLib {
             uint256 accruedInterest
         )
     {
+        if (_debtAssets == 0) {
+            return (_collateralAssets, 0, 0, 0);
+        }
+
         unchecked {
             // If we overflow on multiplication it should not revert tx, we will get lower fees
-            accruedInterest = _debtAssets * _rcomp / _PRECISION_DECIMALS;
+            accruedInterest = _debtAssets * _rcompInDp / _PRECISION_DECIMALS;
             daoAndDeployerFees = accruedInterest * (_daoFeeInBp + _deployerFeeInBp) / _BASIS_POINTS;
         }
-        collateralAssetsWithInterest = _collateralAssets + accruedInterest - daoAndDeployerFees;
+
+        uint256 collateralInterest;
+        // we will not underflow because daoAndDeployerFees is chunk of accruedInterest
+        unchecked { collateralInterest = accruedInterest - daoAndDeployerFees; }
+
+        collateralAssetsWithInterest = _collateralAssets + collateralInterest;
         debtAssetsWithInterest = _debtAssets + accruedInterest;
     }
 
