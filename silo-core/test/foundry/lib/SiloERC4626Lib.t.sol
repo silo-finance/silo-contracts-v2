@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
-import "../../../contracts/lib/SiloMathLib.sol";
+import "silo-core/contracts/lib/SiloMathLib.sol";
 
 
 // forge test -vv --mc SiloERC4626LibTest
