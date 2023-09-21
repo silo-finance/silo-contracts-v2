@@ -3,7 +3,8 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
 import "silo-core/contracts/lib/SiloStdLib.sol";
-import "../../_common/ShareTokenMock.sol";
+
+import "../../_mocks/ShareTokenMock.sol";
 
 
 // forge test -vv --mc GetSharesAndTotalSupplyTest

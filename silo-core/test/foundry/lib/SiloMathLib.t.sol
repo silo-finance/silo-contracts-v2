@@ -108,9 +108,36 @@ contract SiloMathLibTest is Test {
     }
 
     /*
-    forge test -vv --mt test_getAmountsWithInterest
+    forge test -vv --mt test_getDebtAmountsWithInterest
     */
-    function test_getAmountsWithInterest() public {
+    function test_getDebtAmountsWithInterest() public {
+        uint256 debtAssets;
+        uint256 rcompInDp;
+
+        (uint256 debtAssetsWithInterest,uint256 accruedInterest) = SiloMathLib.getDebtAmountsWithInterest(debtAssets, rcompInDp);
+
+        assertEq(debtAssetsWithInterest, 0);
+        assertEq(accruedInterest, 0);
+
+        rcompInDp = 0.1e18;
+
+        (debtAssetsWithInterest, accruedInterest) = SiloMathLib.getDebtAmountsWithInterest(debtAssets, rcompInDp);
+
+        assertEq(debtAssetsWithInterest, 0, "debtAssetsWithInterest, just rcomp");
+        assertEq(accruedInterest, 0, "accruedInterest, just rcomp");
+
+        debtAssets = 1e18;
+
+        (debtAssetsWithInterest, accruedInterest) = SiloMathLib.getDebtAmountsWithInterest(debtAssets, rcompInDp);
+
+        assertEq(debtAssetsWithInterest, 1.1e18, "debtAssetsWithInterest - no debt, no interest");
+        assertEq(accruedInterest, 0.1e18, "accruedInterest - no debt, no interest");
+    }
+
+    /*
+    forge test -vv --mt test_getCollateralAmountsWithInterest
+    */
+    function test_getCollateralAmountsWithInterest() public {
         uint256 collateralAssets;
         uint256 debtAssets;
         uint256 rcompInDp;
@@ -122,7 +149,7 @@ contract SiloMathLibTest is Test {
             uint256 debtAssetsWithInterest,
             uint256 daoAndDeployerFees,
             uint256 accruedInterest
-        ) = SiloMathLib.getAmountsWithInterest(collateralAssets, debtAssets, rcompInDp, daoFeeInBp, deployerFeeInBp);
+        ) = SiloMathLib.getCollateralAmountsWithInterest(collateralAssets, debtAssets, rcompInDp, daoFeeInBp, deployerFeeInBp);
 
         assertEq(collateralAssetsWithInterest, 0);
         assertEq(debtAssetsWithInterest, 0);
@@ -138,7 +165,7 @@ contract SiloMathLibTest is Test {
             debtAssetsWithInterest,
             daoAndDeployerFees,
             accruedInterest
-        ) = SiloMathLib.getAmountsWithInterest(collateralAssets, debtAssets, rcompInDp, daoFeeInBp, deployerFeeInBp);
+        ) = SiloMathLib.getCollateralAmountsWithInterest(collateralAssets, debtAssets, rcompInDp, daoFeeInBp, deployerFeeInBp);
 
         assertEq(collateralAssetsWithInterest, 2.1e18, "collateralAssetsWithInterest, just rcomp");
         assertEq(debtAssetsWithInterest, 1.1e18, "debtAssetsWithInterest, just rcomp");
@@ -152,7 +179,7 @@ contract SiloMathLibTest is Test {
             debtAssetsWithInterest,
             daoAndDeployerFees,
             accruedInterest
-        ) = SiloMathLib.getAmountsWithInterest(collateralAssets, debtAssets, rcompInDp, daoFeeInBp, deployerFeeInBp);
+        ) = SiloMathLib.getCollateralAmountsWithInterest(collateralAssets, debtAssets, rcompInDp, daoFeeInBp, deployerFeeInBp);
 
         assertEq(collateralAssetsWithInterest, 2.095e18, "collateralAssetsWithInterest, rcomp + daoFee");
         assertEq(debtAssetsWithInterest, 1.1e18, "debtAssetsWithInterest, rcomp + daoFee");
@@ -167,7 +194,7 @@ contract SiloMathLibTest is Test {
             debtAssetsWithInterest,
             daoAndDeployerFees,
             accruedInterest
-        ) = SiloMathLib.getAmountsWithInterest(collateralAssets, debtAssets, rcompInDp, daoFeeInBp, deployerFeeInBp);
+        ) = SiloMathLib.getCollateralAmountsWithInterest(collateralAssets, debtAssets, rcompInDp, daoFeeInBp, deployerFeeInBp);
 
         assertEq(collateralAssetsWithInterest, 2.095e18, "collateralAssetsWithInterest, rcomp + deployerFeeInBp");
         assertEq(debtAssetsWithInterest, 1.1e18, "debtAssetsWithInterest, rcomp + deployerFeeInBp");
@@ -182,7 +209,7 @@ contract SiloMathLibTest is Test {
             debtAssetsWithInterest,
             daoAndDeployerFees,
             accruedInterest
-        ) = SiloMathLib.getAmountsWithInterest(collateralAssets, debtAssets, rcompInDp, daoFeeInBp, deployerFeeInBp);
+        ) = SiloMathLib.getCollateralAmountsWithInterest(collateralAssets, debtAssets, rcompInDp, daoFeeInBp, deployerFeeInBp);
 
         assertEq(collateralAssetsWithInterest, 2.090e18, "collateralAssetsWithInterest, rcomp + fees");
         assertEq(debtAssetsWithInterest, 1.1e18, "debtAssetsWithInterest, rcomp + fees");
@@ -196,7 +223,7 @@ contract SiloMathLibTest is Test {
             debtAssetsWithInterest,
             daoAndDeployerFees,
             accruedInterest
-        ) = SiloMathLib.getAmountsWithInterest(collateralAssets, debtAssets, rcompInDp, daoFeeInBp, deployerFeeInBp);
+        ) = SiloMathLib.getCollateralAmountsWithInterest(collateralAssets, debtAssets, rcompInDp, daoFeeInBp, deployerFeeInBp);
 
         assertEq(collateralAssetsWithInterest, 2e18, "collateralAssetsWithInterest - no debt, no interest");
         assertEq(debtAssetsWithInterest, 0, "debtAssetsWithInterest - no debt, no interest");

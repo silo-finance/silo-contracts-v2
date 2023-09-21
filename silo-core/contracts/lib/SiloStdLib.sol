@@ -100,14 +100,11 @@ library SiloStdLib {
             totalAssets = ISilo(_configData.silo).getProtectedAssets();
             totalShares = IShareToken(_configData.protectedShareToken).totalSupply();
         } else {
-            totalAssets = getTotalAssetsWithInterest(
+            totalAssets = getTotalCollateralAssetsWithInterest(
                 _configData.silo,
                 _configData.interestRateModel,
-                ISilo(_configData.silo).getCollateralAssets(),
                 _configData.daoFeeInBp,
-                _configData.deployerFeeInBp,
-                _assetType,
-                ISilo.AccrueInterestInMemory.Yes
+                _configData.deployerFeeInBp
             );
 
             if (_assetType == ISilo.AssetType.Collateral) {
@@ -129,28 +126,26 @@ library SiloStdLib {
         totalSupply = IShareToken(_shareToken).totalSupply();
     }
 
-    function getTotalAssetsWithInterest(
+    /// @dev do not use this method when accrueInterest were executed already, in that case total does not change
+    function getTotalCollateralAssetsWithInterest(
         address _silo,
         address _interestRateModel,
-        uint256 _totalCollateralAssets,
         uint256 _daoFeeInBp,
-        uint256 _deployerFeeInBp,
-        ISilo.AssetType _assetType,
-        ISilo.AccrueInterestInMemory _accrueInMemory
-    ) internal view returns (uint256 totalAssetsWithInterest) {
-        if (_accrueInMemory == ISilo.AccrueInterestInMemory.Yes) {
-            uint256 rcomp =
-                IInterestRateModel(_interestRateModel).getCompoundInterestRate(address(this), block.timestamp);
+        uint256 _deployerFeeInBp
+    ) internal view returns (uint256 totalCollateralAssetsWithInterest) {
+        uint256 rcomp = IInterestRateModel(_interestRateModel).getCompoundInterestRate(_silo, block.timestamp);
 
-            (uint256 totalCollateralAssets, uint256 totalDebtAssets,,) = SiloMathLib.getAmountsWithInterest(
-                _totalCollateralAssets, ISilo(_silo).getDebtAssets(), rcomp, _daoFeeInBp, _deployerFeeInBp
-            );
+        (totalCollateralAssetsWithInterest,,,) = SiloMathLib.getCollateralAmountsWithInterest(
+            ISilo(_silo).getCollateralAssets(), ISilo(_silo).getDebtAssets(), rcomp, _daoFeeInBp, _deployerFeeInBp
+        );
+    }
 
-            totalAssetsWithInterest =
-                _assetType == ISilo.AssetType.Collateral ? totalCollateralAssets : totalDebtAssets;
-        } else {
-            totalAssetsWithInterest =
-                _assetType == ISilo.AssetType.Collateral ? _totalCollateralAssets : ISilo(_silo).getDebtAssets();
-        }
+    function getTotalDebtAssetsWithInterest(address _silo, address _interestRateModel)
+        internal
+        view
+        returns (uint256 totalDebtAssetsWithInterest)
+    {
+        uint256 rcomp = IInterestRateModel(_interestRateModel).getCompoundInterestRate(_silo, block.timestamp);
+        (totalDebtAssetsWithInterest,) = SiloMathLib.getDebtAmountsWithInterest(ISilo(_silo).getDebtAssets(), rcomp);
     }
 }

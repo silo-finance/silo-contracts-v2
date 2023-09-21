@@ -152,7 +152,7 @@ interface ISilo is IERC3156FlashLender, ISiloLiquidation {
     function getMaxLtv() external view returns (uint256);
     function getLt() external view returns (uint256);
     function getProtectedAssets() external view returns (uint256);
-    function getCollateralAssets() external view returns (uint256);
+    function getCollateralAssets() external view returns (uint256 totalCollateralAssets);
     function getDebtAssets() external view returns (uint256 totalDebtAssets);
     function getFeesAndFeeReceivers()
         external
