@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.18;
+pragma solidity 0.8.19;
 
 import {IERC20R} from "../interfaces/IERC20R.sol";
 import {IShareToken, ShareToken, ISiloFactory, ISilo} from "./ShareToken.sol";
@@ -22,7 +22,6 @@ contract ShareDebtToken is IERC20R, ShareToken {
     error ShareTransferNotAllowed();
     error AmountExceedsAllowance();
     error RecipientNotSolventAfterTransfer();
-
 
     /// @param _silo Silo address for which tokens was deployed
     function initialize(ISilo _silo, address _hookReceiver) external virtual initializer {

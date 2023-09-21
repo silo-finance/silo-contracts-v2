@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.18;
+pragma solidity 0.8.19;
 
 import {CountersUpgradeable} from "openzeppelin-contracts-upgradeable/utils/CountersUpgradeable.sol";
 import {ClonesUpgradeable} from "openzeppelin-contracts-upgradeable/proxy/ClonesUpgradeable.sol";
@@ -16,11 +16,11 @@ import {ISilo, Silo} from "./Silo.sol";
 contract SiloFactory is ISiloFactory, ERC721Upgradeable, OwnableUpgradeable {
     using CountersUpgradeable for CountersUpgradeable.Counter;
 
-    /// @dev 1e18 == 100%
-    uint256 private constant _ONE = 1e18;
+    /// @dev 1e4 == 100%
+    uint256 private constant _BASIS_POINTS = 1e4;
 
-    /// @dev max dao fee is 30%, 1e18 == 100%
-    uint256 public constant MAX_DAO_FEE = 0.5e18;
+    /// @dev max fee is 40%, 1e4 == 100%
+    uint256 public constant MAX_FEE_IN_BP = 0.4e4;
 
     CountersUpgradeable.Counter private _siloId;
 
@@ -46,10 +46,11 @@ contract SiloFactory is ISiloFactory, ERC721Upgradeable, OwnableUpgradeable {
         address _siloImpl,
         address _shareCollateralTokenImpl,
         address _shareDebtTokenImpl,
-        uint256 _daoFee,
+        uint256 _daoFeeInBp,
         address _daoFeeReceiver
     ) external virtual initializer {
         __ERC721_init("Silo Finance Fee Receiver", "feeSILO");
+        __Ownable_init();
 
         // start IDs from 1
         _siloId.increment();
@@ -66,7 +67,7 @@ contract SiloFactory is ISiloFactory, ERC721Upgradeable, OwnableUpgradeable {
         uint256 _newMaxFlashloanFeeInBp = 0.15e4; // 15% max flashloan fee
         uint256 _newMaxLiquidationFeeInBp = 0.30e4; // 30% max liquidation fee
 
-        _setDaoFee(_daoFee);
+        _setDaoFee(_daoFeeInBp);
         _setDaoFeeReceiver(_daoFeeReceiver);
 
         _setMaxDeployerFee(_maxDeployerFeeInBp);
@@ -166,7 +167,7 @@ contract SiloFactory is ISiloFactory, ERC721Upgradeable, OwnableUpgradeable {
     }
 
     function _setDaoFee(uint256 _newDaoFee) internal virtual {
-        if (_newDaoFee > MAX_DAO_FEE) revert MaxFee();
+        if (_newDaoFee > MAX_FEE_IN_BP) revert MaxFee();
 
         daoFeeInBp = _newDaoFee;
 
@@ -174,19 +175,24 @@ contract SiloFactory is ISiloFactory, ERC721Upgradeable, OwnableUpgradeable {
     }
 
     function _setMaxDeployerFee(uint256 _newMaxDeployerFee) internal virtual {
+        if (_newMaxDeployerFee >= MAX_FEE_IN_BP) revert InvalidFee();
+
         maxDeployerFeeInBp = _newMaxDeployerFee;
 
         emit MaxDeployerFeeChanged(_newMaxDeployerFee);
     }
 
     function _setMaxFlashloanFee(uint256 _newMaxFlashloanFee) internal virtual {
+        if (_newMaxFlashloanFee >= MAX_FEE_IN_BP) revert InvalidFee();
+
         maxFlashloanFeeInBp = _newMaxFlashloanFee;
 
         emit MaxFlashloanFeeChanged(_newMaxFlashloanFee);
     }
 
     function _setMaxLiquidationFee(uint256 _newMaxLiquidationFee) internal virtual {
-        if (_newMaxLiquidationFee >= 1e4) revert("TODO in all places");
+        if (_newMaxLiquidationFee >= MAX_FEE_IN_BP) revert InvalidFee();
+
         maxLiquidationFeeInBp = _newMaxLiquidationFee;
 
         emit MaxLiquidationFeeChanged(_newMaxLiquidationFee);
@@ -234,7 +240,7 @@ contract SiloFactory is ISiloFactory, ERC721Upgradeable, OwnableUpgradeable {
         if (_initData.maxLtv0 > _initData.lt0) revert InvalidMaxLtv();
         if (_initData.maxLtv1 > _initData.lt1) revert InvalidMaxLtv();
         if (_initData.maxLtv0 == 0 && _initData.maxLtv1 == 0) revert InvalidMaxLtv();
-        if (_initData.lt0 >= _ONE || _initData.lt1 >= _ONE) revert InvalidLt();
+        if (_initData.lt0 > _BASIS_POINTS || _initData.lt1 > _BASIS_POINTS) revert InvalidLt();
         if (!_initData.borrowable0 && !_initData.borrowable1) revert NonBorrowableSilo();
         if (_initData.deployerFeeInBp > 0 && _initData.deployer == address(0)) revert InvalidDeployer();
         if (_initData.deployerFeeInBp > maxDeployerFeeInBp) revert MaxDeployerFee();

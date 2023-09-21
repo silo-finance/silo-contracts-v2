@@ -6,6 +6,8 @@ import "silo-core/contracts/interestRateModel/InterestRateModelV2ConfigFactory.s
 
 import "../_common/InterestRateModelConfigs.sol";
 import "../data-readers/RcurTestData.sol";
+import "../../../contracts/interestRateModel/InterestRateModelV2ConfigFactory.sol";
+import "../../../contracts/interfaces/IInterestRateModelV2Config.sol";
 
 contract InterestRateModelV2Impl is InterestRateModelV2 {
     function mockSetup(address _silo, int256 _ri, int256 _Tcrit) external {
@@ -33,7 +35,7 @@ contract InterestRateModelV2RcurTest is RcurTestData, InterestRateModelConfigs {
     function test_IRM_RcurData() public {
         RcurData[] memory data = _readDataFromJson();
 
-        for (uint i; i < data.length; i++) {
+        for (uint256 i; i < data.length; i++) {
             RcurData memory testCase = data[i];
 
             IInterestRateModelV2.ConfigWithState memory cfg = _toConfigWithState(testCase);
@@ -64,7 +66,7 @@ contract InterestRateModelV2RcurTest is RcurTestData, InterestRateModelConfigs {
 
             address silo = address(uint160(i));
 
-            (, InterestRateModelV2Config configAddress) = CONFIG_FACTORY.create(_toConfigStruct(testCase));
+            (, IInterestRateModelV2Config configAddress) = CONFIG_FACTORY.create(_toConfigStruct(testCase));
 
             vm.prank(silo);
             INTEREST_RATE_MODEL.connect(address(configAddress));
