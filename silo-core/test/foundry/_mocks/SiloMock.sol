@@ -6,12 +6,13 @@ import {Vm} from "forge-std/Vm.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 
 contract SiloMock {
-    address public constant ADDRESS = address(0x83652230941111111111111111);
+    address public immutable ADDRESS;
 
     Vm private immutable vm;
 
-    constructor (Vm _vm) {
+    constructor(Vm _vm, address _silo) {
         vm = _vm;
+        ADDRESS = _silo == address(0) ? address(0x51101111111111111111) : _silo;
     }
 
     function getCollateralAssetsMock(uint256 _totalCollateralAssets) external {
@@ -27,6 +28,14 @@ contract SiloMock {
             ADDRESS,
             abi.encodeWithSelector(ISilo.getDebtAssets.selector),
             abi.encode(_totalDebtAssets)
+        );
+    }
+
+    function getProtectedAssetsMock(uint256 _totalProtectedAssets) external {
+        vm.mockCall(
+            ADDRESS,
+            abi.encodeWithSelector(ISilo.getProtectedAssets.selector),
+            abi.encode(_totalProtectedAssets)
         );
     }
 }

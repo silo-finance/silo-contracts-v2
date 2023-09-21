@@ -6,19 +6,16 @@ import "silo-core/contracts/lib/SiloStdLib.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 
 import {SiloMock} from "../../_mocks/SiloMock.sol";
-import {ShareTokenMock} from "../../_mocks/ShareTokenMock.sol";
 import {InterestRateModelMock} from "../../_mocks/InterestRateModelMock.sol";
 
 
 // forge test -vv --mc GetTotalAssetsWithInterestTest
 contract GetTotalAssetsWithInterestTest is Test {
     SiloMock immutable SILO;
-    ShareTokenMock immutable SHARE_TOKEN;
     InterestRateModelMock immutable INTEREST_RATE_MODEL;
 
     constructor () {
-        SILO = new SiloMock(vm);
-        SHARE_TOKEN = new ShareTokenMock(vm);
+        SILO = new SiloMock(vm, address(0));
         INTEREST_RATE_MODEL = new InterestRateModelMock(vm);
     }
 
