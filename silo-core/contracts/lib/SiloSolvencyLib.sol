@@ -102,7 +102,7 @@ library SiloSolvencyLib {
             SiloMathLib.convertToAssets(shares, totalAssets, totalShares, MathUpgradeable.Rounding.Down);
 
         (shares, totalShares) = SiloStdLib.getSharesAndTotalSupply(_collateralConfig.collateralShareToken, _borrower);
-        totalAssets = SiloStdLib.getTotalAsssetsWithInterest(
+        totalAssets = SiloStdLib.getTotalAssetsWithInterest(
             _collateralConfig.silo,
             _collateralConfig.interestRateModel,
             ISilo(_collateralConfig.silo).getCollateralAssets(),
@@ -115,7 +115,7 @@ library SiloSolvencyLib {
             SiloMathLib.convertToAssets(shares, totalAssets, totalShares, MathUpgradeable.Rounding.Down);
 
         (shares, totalShares) = SiloStdLib.getSharesAndTotalSupply(_debtConfig.debtShareToken, _borrower);
-        totalAssets = SiloStdLib.getTotalAsssetsWithInterest(
+        totalAssets = SiloStdLib.getTotalAssetsWithInterest(
             _debtConfig.silo,
             _debtConfig.interestRateModel,
             0,

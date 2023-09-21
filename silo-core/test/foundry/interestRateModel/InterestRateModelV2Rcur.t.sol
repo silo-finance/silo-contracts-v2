@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.0;
 
-import "../../../contracts/interestRateModel/InterestRateModelV2.sol";
+import "silo-core/contracts/interestRateModel/InterestRateModelV2.sol";
+import "silo-core/contracts/interestRateModel/InterestRateModelV2ConfigFactory.sol";
+
 import "../_common/InterestRateModelConfigs.sol";
 import "../data-readers/RcurTestData.sol";
-import "../../../contracts/interestRateModel/InterestRateModelV2ConfigFactory.sol";
 
 contract InterestRateModelV2Impl is InterestRateModelV2 {
     function mockSetup(address _silo, int256 _ri, int256 _Tcrit) external {

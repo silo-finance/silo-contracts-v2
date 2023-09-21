@@ -100,7 +100,7 @@ library SiloStdLib {
             totalAssets = ISilo(_configData.silo).getProtectedAssets();
             totalShares = IShareToken(_configData.protectedShareToken).totalSupply();
         } else {
-            totalAssets = getTotalAsssetsWithInterest(
+            totalAssets = getTotalAssetsWithInterest(
                 _configData.silo,
                 _configData.interestRateModel,
                 ISilo(_configData.silo).getCollateralAssets(),
@@ -129,7 +129,7 @@ library SiloStdLib {
         totalSupply = IShareToken(_shareToken).totalSupply();
     }
 
-    function getTotalAsssetsWithInterest(
+    function getTotalAssetsWithInterest(
         address _silo,
         address _interestRateModel,
         uint256 _totalCollateralAssets,
