@@ -120,8 +120,8 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable, LeverageReent
         return total[AssetType.Protected].assets;
     }
 
-    function getCollateralAssets() external view virtual returns (uint256) {
-        return total[AssetType.Collateral].assets;
+    function getCollateralAssets() external view virtual returns (uint256 totalCollateralAssets) {
+        totalCollateralAssets = total[AssetType.Collateral].assets;
     }
 
     function getDebtAssets() external view virtual returns (uint256 totalDebtAssets) {

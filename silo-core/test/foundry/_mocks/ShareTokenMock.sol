@@ -6,7 +6,7 @@ import {Vm} from "forge-std/Vm.sol";
 import {IERC20Upgradeable} from "openzeppelin-contracts-upgradeable/interfaces/IERC20Upgradeable.sol";
 
 contract ShareTokenMock {
-    address public constant ADDRESS = address(0x97263586483648732);
+    address public constant ADDRESS = address(0x97263586483648732222222222222);
 
     Vm private immutable vm;
 
