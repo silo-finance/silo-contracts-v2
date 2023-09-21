@@ -328,9 +328,13 @@ contract SiloLiquidationLibTest is Test {
         assertEq(fromCollateral, 8, "fromCollateral (10, 2) => 8");
         assertEq(fromProtected, 2, "fromProtected (10, 2) => 2");
 
+        uint256 gasStart = gasleft();
         (fromCollateral, fromProtected) = SiloLiquidationLib.splitReceiveCollateralToLiquidate(5, 15);
+        uint256 gasEnd = gasleft();
+
         assertEq(fromCollateral, 0, "fromCollateral (5, 15) => 0");
         assertEq(fromProtected, 5, "fromProtected (5, 15) => 5");
+        assertEq(gasStart - gasEnd, 149, "optimise splitReceiveCollateralToLiquidate");
     }
     
     // forge test -vv --mt test_SiloLiquidationLib_maxLiquidationPreview_unchecked_fuzz

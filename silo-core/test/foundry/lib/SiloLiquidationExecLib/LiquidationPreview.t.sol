@@ -4,22 +4,11 @@ pragma solidity ^0.8.0;
 import "forge-std/Test.sol";
 import "silo-core/contracts/lib/SiloLiquidationExecLib.sol";
 import "../../_common/MockOracleQuote.sol";
+import "../../_common/SiloLiquidationExecLibImpl.sol";
 
-contract SiloLiquidationExecLibImpl {
-    function liquidationPreview(
-        SiloSolvencyLib.LtvData memory _ltvData,
-        SiloLiquidationExecLib.LiquidationPreviewParams memory _params
-    )
-        external
-        view
-        returns (uint256 receiveCollateralAssets, uint256 repayDebtAssets)
-    {
-        return SiloLiquidationExecLib.liquidationPreview(_ltvData, _params);
-    }
-}
 
 // forge test -vv --mc LiquidationPreviewTest
-contract LiquidationPreviewTest is Test, MockOracleQuote {
+contract getExactLiquidationAmountsTest is Test, MockOracleQuote {
     uint256 constant BASIS_POINTS = 1e4;
 
     // this must match value from SiloLiquidationLib
