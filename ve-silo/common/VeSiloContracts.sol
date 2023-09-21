@@ -34,5 +34,4 @@ library VeSiloContracts {
     string public constant STAKELESS_GAUGE_CHECKPOINTER_ADAPTOR = "StakelessGaugeCheckpointerAdaptor.sol";
     string public constant UNISWAP_SWAPPER = "UniswapSwapper.sol";
     string public constant VE_SILO_DELEGATOR_VIA_CCIP = "VeSiloDelegatorViaCCIP.sol";
-    string public constant VOTING_ESCROW_CCIP_REMAPPER = "VotingEscrowCCIPRemapper.sol";
 }

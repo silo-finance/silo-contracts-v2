@@ -24,7 +24,7 @@ contract VeSiloDelegatorViaCCIPDeploy is CommonDeploy {
         vm.startBroadcast(deployerPrivateKey);
 
         address veSilo = getDeployedAddress(VeSiloContracts.VOTING_ESCROW);
-        address remapper = getDeployedAddress(VeSiloContracts.VOTING_ESCROW_CCIP_REMAPPER);
+        address remapper = getDeployedAddress(VeSiloContracts.VOTING_ESCROW_REMAPPER);
 
         delegator = IVeSiloDelegatorViaCCIP(address(
             new VeSiloDelegatorViaCCIP(
