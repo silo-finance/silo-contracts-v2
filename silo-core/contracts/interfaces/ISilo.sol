@@ -1,15 +1,19 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.5.0;
 
+import {IERC4626} from "openzeppelin-contracts/interfaces/IERC4626.sol";
+
 import {IERC3156FlashLender} from "./IERC3156FlashLender.sol";
 import {ISiloConfig} from "./ISiloConfig.sol";
 import {ISiloFactory} from "./ISiloFactory.sol";
 import {ILeverageBorrower} from "./ILeverageBorrower.sol";
 import {ISiloLiquidation} from "./ISiloLiquidation.sol";
 
+// TODO make ISilo is IERC4626
+
 // solhint-disable ordering
 interface ISilo is IERC3156FlashLender, ISiloLiquidation {
-    /// @dev Intrest accrual happens on each deposit/withdraw/borrow/repay. View methods work on storage that might be
+    /// @dev Interest accrual happens on each deposit/withdraw/borrow/repay. View methods work on storage that might be
     ///      outdate. Some calculations require accrued interest to return current state of Silo. This struct is used
     ///      to make a decision inside functions if interest should be accrued in memory to work on updated values.
     enum AccrueInterestInMemory {
@@ -155,60 +159,32 @@ interface ISilo is IERC3156FlashLender, ISiloLiquidation {
         view
         returns (address daoFeeReceiver, address deployerFeeReceiver, uint256 daoFeeInBp, uint256 deployerFeeInBp);
 
-    // ERC4626
+    function convertToShares(uint256 _assets, AssetType _assetType) external view returns (uint256 shares);
+    function convertToAssets(uint256 _shares, AssetType _assetType) external view returns (uint256 assets);
 
-    function asset() external view returns (address assetTokenAddress);
-    function totalAssets() external view returns (uint256 totalManagedAssets);
+    function maxDeposit(address _receiver, AssetType _assetType) external view returns (uint256 maxAssets);
+    function previewDeposit(uint256 _assets, AssetType _assetType) external view returns (uint256 shares);
+    function deposit(uint256 _assets, address _receiver, AssetType _assetType) external returns (uint256 shares);
 
-    function convertToShares(uint256 _assets) external view returns (uint256 shares);
-    function convertToAssets(uint256 _shares) external view returns (uint256 assets);
+    function maxMint(address _receiver, AssetType _assetType) external view returns (uint256 maxShares);
+    function previewMint(uint256 _shares, AssetType _assetType) external view returns (uint256 assets);
+    function mint(uint256 _shares, address _receiver, AssetType _assetType) external returns (uint256 assets);
 
-    function maxDeposit(address _receiver) external view returns (uint256 maxAssets);
-    function previewDeposit(uint256 _assets) external view returns (uint256 shares);
-    function deposit(uint256 _assets, address _receiver) external returns (uint256 shares);
-
-    function maxMint(address _receiver) external view returns (uint256 maxShares);
-    function previewMint(uint256 _shares) external view returns (uint256 assets);
-    function mint(uint256 _shares, address _receiver) external returns (uint256 assets);
-
-    function maxWithdraw(address _owner) external view returns (uint256 maxAssets);
-    function previewWithdraw(uint256 _assets) external view returns (uint256 shares);
-    function withdraw(uint256 _assets, address _receiver, address _owner) external returns (uint256 shares);
-
-    function maxRedeem(address _owner) external view returns (uint256 maxShares);
-    function previewRedeem(uint256 _shares) external view returns (uint256 assets);
-    function redeem(uint256 _shares, address _receiver, address _owner) external returns (uint256 assets);
-
-    // Protected
-
-    function convertToShares(uint256 _assets, AssetType _asserType) external view returns (uint256 shares);
-    function convertToAssets(uint256 _shares, AssetType _asserType) external view returns (uint256 assets);
-
-    function maxDeposit(address _receiver, AssetType _asserType) external view returns (uint256 maxAssets);
-    function previewDeposit(uint256 _assets, AssetType _asserType) external view returns (uint256 shares);
-    function deposit(uint256 _assets, address _receiver, AssetType _asserType) external returns (uint256 shares);
-
-    function maxMint(address _receiver, AssetType _asserType) external view returns (uint256 maxShares);
-    function previewMint(uint256 _shares, AssetType _asserType) external view returns (uint256 assets);
-    function mint(uint256 _shares, address _receiver, AssetType _asserType) external returns (uint256 assets);
-
-    function maxWithdraw(address _owner, AssetType _asserType) external view returns (uint256 maxAssets);
-    function previewWithdraw(uint256 _assets, AssetType _asserType) external view returns (uint256 shares);
-    function withdraw(uint256 _assets, address _receiver, address _owner, AssetType _asserType)
+    function maxWithdraw(address _owner, AssetType _assetType) external view returns (uint256 maxAssets);
+    function previewWithdraw(uint256 _assets, AssetType _assetType) external view returns (uint256 shares);
+    function withdraw(uint256 _assets, address _receiver, address _owner, AssetType _assetType)
         external
         returns (uint256 shares);
 
-    function maxRedeem(address _owner, AssetType _asserType) external view returns (uint256 maxShares);
-    function previewRedeem(uint256 _shares, AssetType _asserType) external view returns (uint256 assets);
-    function redeem(uint256 _shares, address _receiver, address _owner, AssetType _asserType)
+    function maxRedeem(address _owner, AssetType _assetType) external view returns (uint256 maxShares);
+    function previewRedeem(uint256 _shares, AssetType _assetType) external view returns (uint256 assets);
+    function redeem(uint256 _shares, address _receiver, address _owner, AssetType _assetType)
         external
         returns (uint256 assets);
 
     function transitionCollateral(uint256 _shares, address _owner, AssetType _withdrawType)
         external
         returns (uint256 assets);
-
-    // Lending
 
     function maxBorrow(address _borrower) external view returns (uint256 maxAssets);
     function previewBorrow(uint256 _assets) external view returns (uint256 shares);
