@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
-import "../../../contracts/lib/SiloStdLib.sol";
+import "silo-core/contracts/lib/SiloStdLib.sol";
 
 contract MockSilo {
     function flashFee(ISiloConfig _config, address _token, uint256 _amount) external view returns (uint256 fee) {

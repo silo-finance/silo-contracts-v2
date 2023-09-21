@@ -2,7 +2,8 @@
 pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
-import "../../../contracts/lib/SiloLiquidationLib.sol";
+import "silo-core/contracts/lib/SiloLiquidationLib.sol";
+
 import "../_checkedMath/SiloLiquidationLibChecked.sol";
 import "../data-readers/CalculateCollateralToLiquidateTestData.sol";
 import "../data-readers/CalculateExactLiquidationAmountsTestData.sol";
