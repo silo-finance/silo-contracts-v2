@@ -23,7 +23,7 @@ library SiloMathLib {
         }
     }
 
-    function getAmountsWithInterest(
+    function getCollateralAmountsWithInterest(
         uint256 _collateralAssets,
         uint256 _debtAssets,
         uint256 _rcompInDp,
@@ -39,21 +39,33 @@ library SiloMathLib {
             uint256 accruedInterest
         )
     {
-        if (_debtAssets == 0) {
-            return (_collateralAssets, 0, 0, 0);
-        }
+        (debtAssetsWithInterest, accruedInterest) = getDebtAmountsWithInterest(_debtAssets, _rcompInDp);
+        uint256 collateralInterest;
 
         unchecked {
             // If we overflow on multiplication it should not revert tx, we will get lower fees
-            accruedInterest = _debtAssets * _rcompInDp / _PRECISION_DECIMALS;
             daoAndDeployerFees = accruedInterest * (_daoFeeInBp + _deployerFeeInBp) / _BASIS_POINTS;
+            // we will not underflow because daoAndDeployerFees is chunk of accruedInterest
+            collateralInterest = accruedInterest - daoAndDeployerFees;
         }
 
-        uint256 collateralInterest;
-        // we will not underflow because daoAndDeployerFees is chunk of accruedInterest
-        unchecked { collateralInterest = accruedInterest - daoAndDeployerFees; }
-
         collateralAssetsWithInterest = _collateralAssets + collateralInterest;
+    }
+
+    function getDebtAmountsWithInterest(uint256 _debtAssets, uint256 _rcompInDp)
+        internal
+        pure
+        returns (uint256 debtAssetsWithInterest, uint256 accruedInterest)
+    {
+        if (_debtAssets == 0 || _rcompInDp == 0) {
+            return (_debtAssets, 0);
+        }
+
+        unchecked {
+        // If we overflow on multiplication it should not revert tx, we will get lower fees
+            accruedInterest = _debtAssets * _rcompInDp / _PRECISION_DECIMALS;
+        }
+
         debtAssetsWithInterest = _debtAssets + accruedInterest;
     }
 
