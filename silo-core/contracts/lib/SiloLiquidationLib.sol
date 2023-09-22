@@ -55,7 +55,7 @@ library SiloLiquidationLib {
                 debtValueToCover, _sumOfBorrowerCollateralValue, _liquidationFeeInBp
             );
 
-            collateralAssetsToLiquidate = valueToAssetsRatio(
+            collateralAssetsToLiquidate = valueToAssetsByRatio(
                 collateralValueToLiquidate, _sumOfBorrowerCollateralAssets, _sumOfBorrowerCollateralValue
             );
 
@@ -80,7 +80,7 @@ library SiloLiquidationLib {
 
     /// @notice reverts on `_totalValue` == 0
     /// @dev calculate assets based on ratio: assets = (value, totalAssets, totalValue)
-    function valueToAssetsRatio(uint256 _value, uint256 _totalAssets, uint256 _totalValue)
+    function valueToAssetsByRatio(uint256 _value, uint256 _totalAssets, uint256 _totalValue)
         internal
         pure
         returns (uint256 assets)
@@ -115,7 +115,7 @@ library SiloLiquidationLib {
         }
 
         // this will never revert, because of `if collateralValueToLiquidate == _totalBorrowerCollateralValue`
-        collateralAssetsToLiquidate = valueToAssetsRatio(
+        collateralAssetsToLiquidate = valueToAssetsByRatio(
             collateralValueToLiquidate, _totalBorrowerCollateralAssets, _totalBorrowerCollateralValue
         );
     }
