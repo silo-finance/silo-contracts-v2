@@ -3,6 +3,8 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
 
+import {ClonesUpgradeable} from "openzeppelin-contracts-upgradeable/proxy/ClonesUpgradeable.sol";
+
 import "silo-core/contracts/lib/SiloERC4626Lib.sol";
 import "silo-core/contracts/utils/ShareDebtToken.sol";
 import "silo-core/contracts/interfaces/ISilo.sol";
@@ -23,7 +25,7 @@ contract ShareTokenTest is Test {
     function test_ShareToken_decimals() public {
         uint8 decimals = 8;
         Token token = new Token(decimals);
-        ShareDebtToken sToken = new ShareDebtToken();
+        ShareDebtToken sToken = ShareDebtToken(ClonesUpgradeable.clone(address(new ShareDebtToken())));
         ISilo silo = ISilo(address(1));
         address hook = address(0);
         sToken.initialize(silo, hook);

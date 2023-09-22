@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.18;
+pragma solidity 0.8.19;
 
 import {
     ERC20Upgradeable,
@@ -73,6 +73,11 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
         if (msg.sender != address(silo)) revert OnlySilo();
 
         _;
+    }
+
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
     }
 
     /// @inheritdoc IShareToken
