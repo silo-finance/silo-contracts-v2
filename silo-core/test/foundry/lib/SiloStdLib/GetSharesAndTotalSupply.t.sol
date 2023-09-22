@@ -9,10 +9,10 @@ import "../../_mocks/ShareTokenMock.sol";
 
 // forge test -vv --mc GetSharesAndTotalSupplyTest
 contract GetSharesAndTotalSupplyTest is Test {
-    ShareTokenMock immutable SHARE_TOKEN;
+    TokenMock immutable SHARE_TOKEN;
 
     constructor () {
-        SHARE_TOKEN = new ShareTokenMock(vm);
+        SHARE_TOKEN = new TokenMock(vm, address(0));
     }
 
     /*

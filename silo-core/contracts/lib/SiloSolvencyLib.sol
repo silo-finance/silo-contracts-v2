@@ -117,7 +117,7 @@ library SiloSolvencyLib {
         (shares, totalShares) = SiloStdLib.getSharesAndTotalSupply(_debtConfig.debtShareToken, _borrower);
         totalAssets = _accrueInMemory == ISilo.AccrueInterestInMemory.Yes
             ? SiloStdLib.getTotalDebtAssetsWithInterest(_debtConfig.silo, _debtConfig.interestRateModel)
-            : ISilo(_collateralConfig.silo).getDebtAssets();
+            : ISilo(_debtConfig.silo).getDebtAssets();
 
         ltvData.borrowerDebtAssets =
             SiloMathLib.convertToAssets(shares, totalAssets, totalShares, MathUpgradeable.Rounding.Up);

@@ -5,13 +5,14 @@ import {Vm} from "forge-std/Vm.sol";
 
 import {IERC20Upgradeable} from "openzeppelin-contracts-upgradeable/interfaces/IERC20Upgradeable.sol";
 
-contract ShareTokenMock {
-    address public constant ADDRESS = address(0x97263586483648732222222222222);
+contract TokenMock {
+    address public immutable ADDRESS;
 
     Vm private immutable vm;
 
-    constructor (Vm _vm) {
+    constructor (Vm _vm, address _address) {
         vm = _vm;
+        ADDRESS = _address == address(0) ? address(0x97263586483648732222222222222) : _address;
     }
 
     function balanceOfMock(address _owner, uint256 _shares) external {
