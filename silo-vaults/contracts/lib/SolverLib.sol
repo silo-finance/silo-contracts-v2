@@ -1,71 +1,63 @@
-// SPDX-License-Identifier: Unlicense
+// SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import {MathUpgradeable as Math} from "openzeppelin-contracts-upgradeable/utils/math/MathUpgradeable.sol";
+import {MathUpgradeable as Math} from "@openzeppelin-contracts-upgradeable/utils/math/MathUpgradeable.sol";
 
 library SolverLib {
-    uint256 constant P = 10;
+    uint256 constant P = 5;
 
-    /// @dev Calculates a normalized utilization factor for a silo.
-    /// @param u Current utilization of the silo (e.g., 75 represents 75%).
-    /// @param uopt Optimal utilization percentage for the silo.
-    /// @param ucrit Critical utilization percentage for the silo.
-    /// @return Normalized utilization factor for the silo based on its current, optimal, and critical utilizations.
-    function _factor(uint256 u, uint256 uopt, uint256 ucrit) internal pure returns (uint256) {
-        if (u < uopt) {
-            return u / uopt;
-        } else if (u < ucrit) {
-            return 1 + (u - uopt) / (ucrit - uopt);
+    function _factor(uint256 util, uint256 uopt, uint256 ucrit) internal pure returns (uint256 f) {
+        if (util < uopt) {
+            return util * 1e18 / uopt;
+        } else if (util < ucrit) {
+            return 1e18 + (util - uopt) * 1e18 / (ucrit - uopt);
         } else {
-            return 2 + (u - ucrit) / (1 - ucrit);
+            uint256 numerator = util - ucrit;
+            uint256 denominator = 1e18 - ucrit;
+            return 2e18 + numerator * 1e18 / denominator;
         }
     }
 
-    /// @dev Calculates the silo size based on the normalized utilization factor.
-    /// @param f Target utilization factor
-    /// @param B Current borrow amount of the silo.
-    /// @param D Current deposit amount of the silo
-    /// @param uopt Optimal utilization percentage for the silo.
-    /// @param ucrit Critical utilization percentage for the silo.
-    /// @return Amount of additional deposit needed beyond depositAmount to reach utilization factor f
-    function _unfactor(uint256 f, uint256 B, uint256 D, uint256 uopt, uint256 ucrit) internal pure returns (uint256) {
-        if (f < 1) {
-            return B / (f * uopt) - D;
-        } else if (f < 2) {
-            return B / (uopt + (f - 1) * (ucrit - uopt)) - D;
-        } else {
-            return B / (ucrit + (f - 2) * (1 - ucrit)) - D;
-        }
-    }
-
-    /// @dev Redistributes deposits across silos to optimize utilization
-    /// @param B Array of current borrow amounts for each silo
-    /// @param D Array of current deposit amounts for each silo
-    /// @param uopt Array of optimal utilization percentages for each silo
-    /// @param ucrit Array of critical utilization percentages for each silo
-    /// @param Stot Total amount to distribute across silos
-    /// @return Array of optimized deposit amounts for each silo
-    function solver(uint256[] memory B, uint256[] memory D, uint256[] memory uopt, uint256[] memory ucrit, uint256 Stot)
+    function _unfactor(uint256 factor, uint256 borrow, uint256 deposit, uint256 uopt, uint256 ucrit)
         internal
         pure
-        returns (uint256[] memory)
+        returns (uint256 amountNeeded)
     {
-        uint256 N = B.length;
+        if (factor < 1e18) {
+            return borrow * 1e18 / (factor * uopt) - deposit;
+        } else if (factor < 2e18) {
+            return borrow * 1e18 / (uopt + (factor - 1e18) * (ucrit - uopt) / 1e18) - deposit;
+        } else {
+            return borrow * 1e18 / (ucrit + (factor - 2e18) * (1e18 - ucrit) / 1e18) - deposit; //@todo: underflow issue here
+        }
+    }
+
+    function _solver(
+        uint256[] memory borrow,
+        uint256[] memory deposit,
+        uint256[] memory uopt,
+        uint256[] memory ucrit,
+        uint256 amountToDistribute
+    ) internal pure returns (uint256[] memory) {
+        uint256 N = borrow.length;
         uint256[] memory basket = new uint[](N);
         uint256[] memory cnt = new uint[](P+2);
         uint256[] memory ind = new uint[](N);
         uint256[] memory S = new uint[](N);
         uint256[] memory dS = new uint[](N);
 
-        // Calculate basket for each silo
+        // Step 1 - Calculate basket for each silo
         for (uint256 i = 0; i < N; i++) {
-            uint256 f = _factor(B[i] / D[i], uopt[i], ucrit[i]);
-            if (f > 2) {
+            uint256 f = _factor(borrow[i] * 1e18 / deposit[i], uopt[i], ucrit[i]);
+            // Silo is critically overutilized, assign to basket 0
+            if (f > 2 * 1e18) {
                 basket[i] = 0;
                 cnt[1]++;
-            } else if (f > 1) {
-                basket[i] = (2 - f) * P;
-                cnt[basket[i] + 1]++;
+            // silo is underutilized but not critically, assigned a basket from 1 to P based on how underutilized it is
+            } else if (f > 1e18) {
+                basket[i] = P - (f - 1e18) / (1e18 / P);
+                cnt[basket[i] + 1e18]++;
+            // silo is optimally utilized, assigned to basket P+1
             } else {
                 basket[i] = P + 1;
             }
@@ -84,18 +76,26 @@ library SolverLib {
 
         // Redistribute deposits
         uint256 Ssum = 0;
+        // Looping throught each basket
         for (uint256 k = 0; k <= P; k++) {
             uint256 jk = cnt[k];
-            uint256 f = 2 - k / P; // target factor
+            // Skip redistribution for empty basket
+            if (jk == 0) {
+                continue;
+            }
 
+            uint256 f = (2 - k / P) * 1e18; // target factor
             uint256 dSsum = 0;
             for (uint256 j = 0; j < jk; j++) {
                 uint256 i = ind[j];
-                dS[i] = _unfactor(f, B[i], D[i] + S[i], uopt[i], ucrit[i]);
+                // Calculate dS[i] = deposit amount needed to reach factor f for silo i
+                dS[i] = _unfactor(f, borrow[i], deposit[i] + S[i], uopt[i], ucrit[i]);
+                // Sum dS[i] to get total deposits dSsum needed for this basket
                 dSsum += dS[i];
             }
 
-            uint256 scale = Math.min(1, (Stot - Ssum) / dSsum);
+            uint256 scale = Math.min(1e18, (amountToDistribute - Ssum) / dSsum);
+
             for (uint256 j = 0; j < jk; j++) {
                 uint256 i = ind[j];
                 S[i] += dS[i] * scale;
@@ -104,6 +104,34 @@ library SolverLib {
             Ssum += dSsum * scale;
             if (scale < 1) {
                 break;
+            }
+        }
+
+        // After main distribution loop
+        if (Ssum < amountToDistribute) {
+
+            uint256[] memory Bu = new uint256[](N);
+            uint256 Dsum;
+            uint256 Busum;
+
+            for (uint256 i = 0; i < N; i++) {
+                Bu[i] = borrow[i] / uopt[i]; 
+                Busum += Bu[i];
+                Dsum += deposit[i];
+            }
+
+            uint256 dSnegsum;
+            for (uint256 i = 0; i < N; i++) {
+                dS[i] = (Bu[i] / Busum) * (amountToDistribute + Dsum) - deposit[i] - S[i];
+                if (dS[i] < 0) {
+                dSnegsum -= dS[i]; 
+                }
+            }
+
+            for (uint256 i = 0; i < N; i++) {
+                if (dS[i] > 0) {
+                S[i] += dS[i] - (dSnegsum * dS[i]) / (amountToDistribute - Ssum + dSnegsum);
+                }
             }
         }
 
