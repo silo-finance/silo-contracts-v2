@@ -218,10 +218,10 @@ library SiloLiquidationExecLib {
 
          (receiveCollateralAssets, repayDebtAssets, ltvInBp) = SiloLiquidationLib.calculateExactLiquidationAmounts(
              _params.debtToCover,
-             totalBorrowerDebtValue,
-             _ltvData.borrowerDebtAssets,
-             sumOfBorrowerCollateralValue,
              sumOfCollateralAssets,
+             sumOfBorrowerCollateralValue,
+             _ltvData.borrowerDebtAssets,
+             totalBorrowerDebtValue,
              _params.liquidationFeeInBp
          );
 

@@ -86,10 +86,10 @@ contract SiloLiquidationLibTest is Test {
                 uint256 ltvAfterLiquidation
             ) = SiloLiquidationLib.calculateExactLiquidationAmounts(
                 data[i].input.debtToCover,
-                data[i].input.totalBorrowerDebtValue,
-                data[i].input.totalBorrowerDebtAssets,
-                data[i].input.totalBorrowerCollateralValue,
                 data[i].input.totalBorrowerCollateralAssets,
+                data[i].input.totalBorrowerCollateralValue,
+                data[i].input.totalBorrowerDebtAssets,
+                data[i].input.totalBorrowerDebtValue,
                 data[i].input.liquidationFee
             );
 
@@ -185,10 +185,10 @@ contract SiloLiquidationLibTest is Test {
                 uint256 ltvAfterLiquidation
             ) = SiloLiquidationLib.calculateExactLiquidationAmounts(
                 _assetsChunk(data[i].input.totalBorrowerDebtValue, totalBorrowerDebtAssets, repayValue),
-                data[i].input.totalBorrowerDebtValue,
-                totalBorrowerDebtAssets,
-                data[i].input.totalBorrowerCollateralValue,
                 totalBorrowerCollateralAssets,
+                data[i].input.totalBorrowerCollateralValue,
+                totalBorrowerDebtAssets,
+                data[i].input.totalBorrowerDebtValue,
                 data[i].input.liquidityFeeInBp
             );
 
@@ -240,10 +240,10 @@ contract SiloLiquidationLibTest is Test {
             uint256 collateralAssetsToLiquidate, uint256 debtAssetsToRepay,
         ) = SiloLiquidationLib.calculateExactLiquidationAmounts(
             _debtToCover,
-            totalBorrowerDebtValue,
-            _totalBorrowerDebtAssets,
+            _totalBorrowerCollateralAssets,
             totalBorrowerCollateralValue,
             _totalBorrowerDebtAssets,
+            totalBorrowerDebtValue,
             _liquidationFeeInBp
         );
 
@@ -251,10 +251,10 @@ contract SiloLiquidationLibTest is Test {
             uint256 collateralAssetsToLiquidate2, uint256 debtAssetsToRepay2,
         ) = SiloLiquidationLibChecked.calculateExactLiquidationAmounts(
             _debtToCover,
-            totalBorrowerDebtValue,
-            _totalBorrowerDebtAssets,
+            _totalBorrowerCollateralAssets,
             totalBorrowerCollateralValue,
             _totalBorrowerDebtAssets,
+            totalBorrowerDebtValue,
             _liquidationFeeInBp
         );
 
@@ -269,9 +269,9 @@ contract SiloLiquidationLibTest is Test {
     */
     function test_SiloLiquidationLib_calculateExactLiquidationAmounts_not_reverts() public {
         SiloLiquidationLib.calculateExactLiquidationAmounts(0, 0, 1e18, 1e18, 0, 0);
-        SiloLiquidationLib.calculateExactLiquidationAmounts(1, 1e18, 0, 1e18, 0, 0);
-        SiloLiquidationLib.calculateExactLiquidationAmounts(0, 1e18, 1e18, 0, 0, 0);
-        SiloLiquidationLib.calculateExactLiquidationAmounts(1, 1e18, 1e18, 0, 0, 0);
+        SiloLiquidationLib.calculateExactLiquidationAmounts(1, 0, 1e18, 0, 1e18, 0);
+        SiloLiquidationLib.calculateExactLiquidationAmounts(0, 0, 0, 1e18, 1e18, 0);
+        SiloLiquidationLib.calculateExactLiquidationAmounts(1, 0, 0, 1e18, 1e18, 0);
 
         uint256 gasStart = gasleft();
         SiloLiquidationLib.calculateExactLiquidationAmounts(1e8, 1e18, 1e18, 1e18, 1e18, 10);
