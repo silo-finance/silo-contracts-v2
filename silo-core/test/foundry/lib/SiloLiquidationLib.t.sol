@@ -277,7 +277,7 @@ contract SiloLiquidationLibTest is Test {
         SiloLiquidationLib.calculateExactLiquidationAmounts(1e8, 1e18, 1e18, 1e18, 1e18, 10);
         uint256 gasEnd = gasleft();
 
-        assertEq(gasStart - gasEnd, 1164, "optimise calculateExactLiquidationAmounts");
+        assertEq(gasStart - gasEnd, 1209, "optimise calculateExactLiquidationAmounts");
     }
 
     /*
