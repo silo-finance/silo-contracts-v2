@@ -21,6 +21,7 @@ library SiloLiquidationLib {
     /// @notice this method does not care about ltv, it will calculate based on any values, this is just a pure math
     /// if ltv is over 100% this method should not be called, it should be full liquidation right away
     /// This function never reverts
+    /// This function unchecks LTV calculations. Uncheck is safe only when we already calculate LTV before
     /// @param _debtToCover amount of debt token to use for repay
     /// @return collateralAssetsToLiquidate this is how much collateral liquidator will get
     /// @return debtAssetsToRepay this is how much debt had been repay, it might be less or eq than `_debtToCover`
@@ -42,8 +43,7 @@ library SiloLiquidationLib {
         }
 
         if (_debtToCover == 0 || _totalBorrowerDebtValue == 0 || _totalBorrowerDebtAssets == 0) {
-            ltvAfterLiquidationInBp = _totalBorrowerDebtValue * _BASIS_POINTS;
-            unchecked { return (0, 0, ltvAfterLiquidationInBp / _sumOfBorrowerCollateralValue); }
+            return (0, 0, ltvAfter(_sumOfBorrowerCollateralValue, _totalBorrowerDebtValue));
         }
 
         debtAssetsToRepay = _debtToCover;
@@ -51,11 +51,11 @@ library SiloLiquidationLib {
         uint256 collateralValueToLiquidate;
 
         if (debtValueToCover * _BASIS_POINTS / _totalBorrowerDebtValue > _POSITION_DUST_LEVEL_IN_BP) { // full on dust
-            collateralValueToLiquidate = collateralToLiquidate(
+            collateralValueToLiquidate = calculateCollateralToLiquidate(
                 debtValueToCover, _sumOfBorrowerCollateralValue, _liquidationFeeInBp
             );
 
-            collateralAssetsToLiquidate = valueToAssetsRatio(
+            collateralAssetsToLiquidate = valueToAssetsByRatio(
                 collateralValueToLiquidate, _sumOfBorrowerCollateralAssets, _sumOfBorrowerCollateralValue
             );
 
@@ -70,17 +70,18 @@ library SiloLiquidationLib {
             ltvAfterLiquidationInBp = 0;
         } else {
             unchecked {
-            // 1. all subs are safe because this values are chunks of total, so we will not underflow
-            // 2. * is save because if we did not overflow on LTV, then target LTV will be less, so we not overflow
-                ltvAfterLiquidationInBp = (_totalBorrowerDebtValue - debtValueToCover) * _BASIS_POINTS
-                    / (_sumOfBorrowerCollateralValue - collateralValueToLiquidate);
+                // all subs are safe because this values are chunks of total, so we will not underflow
+                ltvAfterLiquidationInBp = ltvAfter(
+                    _sumOfBorrowerCollateralValue - collateralValueToLiquidate,
+                    _totalBorrowerDebtValue - debtValueToCover
+                );
             }
         }
     }
 
     /// @notice reverts on `_totalValue` == 0
     /// @dev calculate assets based on ratio: assets = (value, totalAssets, totalValue)
-    function valueToAssetsRatio(uint256 _value, uint256 _totalAssets, uint256 _totalValue)
+    function valueToAssetsByRatio(uint256 _value, uint256 _totalAssets, uint256 _totalValue)
         internal
         pure
         returns (uint256 assets)
@@ -105,7 +106,7 @@ library SiloLiquidationLib {
         uint256 _totalBorrowerCollateralAssets,
         uint256 _liquidationFee
     ) internal pure returns (uint256 collateralAssetsToLiquidate, uint256 collateralValueToLiquidate) {
-        collateralValueToLiquidate = collateralToLiquidate(
+        collateralValueToLiquidate = calculateCollateralToLiquidate(
             _debtValueToCover, _totalBorrowerCollateralValue, _liquidationFee
         );
 
@@ -115,7 +116,7 @@ library SiloLiquidationLib {
         }
 
         // this will never revert, because of `if collateralValueToLiquidate == _totalBorrowerCollateralValue`
-        collateralAssetsToLiquidate = valueToAssetsRatio(
+        collateralAssetsToLiquidate = valueToAssetsByRatio(
             collateralValueToLiquidate, _totalBorrowerCollateralAssets, _totalBorrowerCollateralValue
         );
     }
@@ -138,7 +139,7 @@ library SiloLiquidationLib {
             _totalBorrowerDebtValue, _totalBorrowerCollateralValue, _ltvAfterLiquidationInBp, _liquidityFeeInBp
         );
 
-        collateralValueToLiquidate = collateralToLiquidate(
+        collateralValueToLiquidate = calculateCollateralToLiquidate(
             repayValue, _totalBorrowerCollateralValue, _liquidityFeeInBp
         );
     }
@@ -146,7 +147,7 @@ library SiloLiquidationLib {
     /// @param _debtToCover assets or value, but must be in sync with `_totalCollateral`
     /// @param _sumOfCollateral assets or value, but must be in sync with `_debtToCover`
     /// @return toLiquidate depends on inputs, it might be collateral value or collateral assets
-    function collateralToLiquidate(uint256 _debtToCover, uint256 _sumOfCollateral, uint256 _liquidityFeeInBp)
+    function calculateCollateralToLiquidate(uint256 _debtToCover, uint256 _sumOfCollateral, uint256 _liquidityFeeInBp)
         internal
         pure
         returns (uint256 toLiquidate)
@@ -236,6 +237,15 @@ library SiloLiquidationLib {
                 // safe to unchecked because of above condition
                 ? (_collateralToLiquidate - _borrowerProtectedAssets, _borrowerProtectedAssets)
                 : (0, _collateralToLiquidate);
+        }
+    }
+
+    /// @notice must stay private because this is not for general LTV, only for ltv after
+    function ltvAfter(uint256 _collateral, uint256 _debt) private pure returns (uint256 ltv) {
+        unchecked {
+            // mul is save because if we did not overflow on LTV before (and before debt is more),
+            // then LTV after will be less, so we not overflow
+            ltv = _debt * _BASIS_POINTS / _collateral;
         }
     }
 }

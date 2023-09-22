@@ -35,13 +35,13 @@ contract SiloLiquidationLibTest is Test {
     */
     function test_SiloLiquidationLib_collateralToLiquidate() public {
         // uint256 _debtToCover, uint256 _totalCollateral, uint256 _liquidityFeeInBp
-        assertEq(SiloLiquidationLib.collateralToLiquidate(0, 0, 0), 0);
-        assertEq(SiloLiquidationLib.collateralToLiquidate(1, 1, 0), 1);
-        assertEq(SiloLiquidationLib.collateralToLiquidate(1, 1, 1), 1);
-        assertEq(SiloLiquidationLib.collateralToLiquidate(10, 10, 999), 10);
-        assertEq(SiloLiquidationLib.collateralToLiquidate(10, 11, 1000), 11);
-        assertEq(SiloLiquidationLib.collateralToLiquidate(10, 9, 1000), 9);
-        assertEq(SiloLiquidationLib.collateralToLiquidate(100, 1000, 1200), 112);
+        assertEq(SiloLiquidationLib.calculateCollateralToLiquidate(0, 0, 0), 0);
+        assertEq(SiloLiquidationLib.calculateCollateralToLiquidate(1, 1, 0), 1);
+        assertEq(SiloLiquidationLib.calculateCollateralToLiquidate(1, 1, 1), 1);
+        assertEq(SiloLiquidationLib.calculateCollateralToLiquidate(10, 10, 999), 10);
+        assertEq(SiloLiquidationLib.calculateCollateralToLiquidate(10, 11, 1000), 11);
+        assertEq(SiloLiquidationLib.calculateCollateralToLiquidate(10, 9, 1000), 9);
+        assertEq(SiloLiquidationLib.calculateCollateralToLiquidate(100, 1000, 1200), 112);
     }
 
     /*
@@ -277,7 +277,7 @@ contract SiloLiquidationLibTest is Test {
         SiloLiquidationLib.calculateExactLiquidationAmounts(1e8, 1e18, 1e18, 1e18, 1e18, 10);
         uint256 gasEnd = gasleft();
 
-        assertEq(gasStart - gasEnd, 1168, "optimise calculateExactLiquidationAmounts");
+        assertEq(gasStart - gasEnd, 1209, "optimise calculateExactLiquidationAmounts");
     }
 
     /*
@@ -303,7 +303,7 @@ contract SiloLiquidationLibTest is Test {
         );
         uint256 gasEnd = gasleft();
 
-        assertEq(gasStart - gasEnd, 562, "optimise calculateCollateralToLiquidate()");
+        assertEq(gasStart - gasEnd, 558, "optimise calculateCollateralToLiquidate()");
         assertEq(collateralAssetsToLiquidate, 1010000000000000000);
         assertEq(collateralValueToLiquidate, 2020000000000000000);
     }
@@ -368,6 +368,38 @@ contract SiloLiquidationLibTest is Test {
 
         assertEq(repayValue, repayValue2, "repay must match value with safe math");
         assertEq(receiveCollateral, receiveCollateral2, "receiveCollateral must match value with safe math");
+    }
+
+    /*
+    forge test -vv --mt test_valueToAssetsByRatio
+    */
+    function test_valueToAssetsByRatio() public {
+        uint256 value;
+        uint256 totalAssets;
+        uint256 totalValue = 1; // can not be 0
+
+        assertEq(SiloLiquidationLib.valueToAssetsByRatio(value, totalAssets, totalValue), 0);
+
+        value; totalAssets = 1; totalValue = 1;
+        assertEq(SiloLiquidationLib.valueToAssetsByRatio(value, totalAssets, totalValue), 0);
+
+        value = 1; totalAssets = 1; totalValue = 1;
+        assertEq(SiloLiquidationLib.valueToAssetsByRatio(value, totalAssets, totalValue), 1);
+
+        value = 1; totalAssets = 100; totalValue = 1;
+        assertEq(SiloLiquidationLib.valueToAssetsByRatio(value, totalAssets, totalValue), 100);
+
+        value = 1; totalAssets = 100; totalValue = 10;
+        assertEq(SiloLiquidationLib.valueToAssetsByRatio(value, totalAssets, totalValue), 10);
+
+        value = 1; totalAssets = 100; totalValue = 100;
+        assertEq(SiloLiquidationLib.valueToAssetsByRatio(value, totalAssets, totalValue), 1);
+
+        value = 2; totalAssets = 10; totalValue = 100;
+        assertEq(SiloLiquidationLib.valueToAssetsByRatio(value, totalAssets, totalValue), 0);
+
+        value = 2; totalAssets = 1000; totalValue = 100;
+        assertEq(SiloLiquidationLib.valueToAssetsByRatio(value, totalAssets, totalValue), 20);
     }
 
     function _assetsChunk(uint256 _totalValue, uint256 _totalAssets, uint256 _chunkValue)

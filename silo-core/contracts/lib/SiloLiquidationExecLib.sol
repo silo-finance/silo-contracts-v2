@@ -216,16 +216,16 @@ library SiloLiquidationExecLib {
 
         if (!_params.selfLiquidation && _params.collateralLt > ltvInBp) return (0, 0);
 
-         (receiveCollateralAssets, repayDebtAssets, ltvInBp) = SiloLiquidationLib.calculateExactLiquidationAmounts(
-             _params.debtToCover,
-             sumOfCollateralAssets,
-             sumOfBorrowerCollateralValue,
-             _ltvData.borrowerDebtAssets,
-             totalBorrowerDebtValue,
-             _params.liquidationFeeInBp
-         );
+        (receiveCollateralAssets, repayDebtAssets, ltvInBp) = SiloLiquidationLib.calculateExactLiquidationAmounts(
+            _params.debtToCover,
+            sumOfCollateralAssets,
+            sumOfBorrowerCollateralValue,
+            _ltvData.borrowerDebtAssets,
+            totalBorrowerDebtValue,
+            _params.liquidationFeeInBp
+        );
 
-         if (receiveCollateralAssets == 0 || repayDebtAssets == 0) return (0, 0);
+        if (receiveCollateralAssets == 0 || repayDebtAssets == 0) return (0, 0);
 
          if (ltvInBp != 0) { // it can be 0 in case of full liquidation
              if (!_params.selfLiquidation && ltvInBp < SiloLiquidationLib.minAcceptableLT(_params.collateralLt)) {
