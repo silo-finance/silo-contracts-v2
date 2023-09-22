@@ -51,7 +51,7 @@ library SiloLiquidationLib {
         uint256 collateralValueToLiquidate;
 
         if (debtValueToCover * _BASIS_POINTS / _totalBorrowerDebtValue > _POSITION_DUST_LEVEL_IN_BP) { // full on dust
-            collateralValueToLiquidate = collateralToLiquidate(
+            collateralValueToLiquidate = calculateCollateralToLiquidate(
                 debtValueToCover, _sumOfBorrowerCollateralValue, _liquidationFeeInBp
             );
 
@@ -105,7 +105,7 @@ library SiloLiquidationLib {
         uint256 _totalBorrowerCollateralAssets,
         uint256 _liquidationFee
     ) internal pure returns (uint256 collateralAssetsToLiquidate, uint256 collateralValueToLiquidate) {
-        collateralValueToLiquidate = collateralToLiquidate(
+        collateralValueToLiquidate = calculateCollateralToLiquidate(
             _debtValueToCover, _totalBorrowerCollateralValue, _liquidationFee
         );
 
@@ -138,7 +138,7 @@ library SiloLiquidationLib {
             _totalBorrowerDebtValue, _totalBorrowerCollateralValue, _ltvAfterLiquidationInBp, _liquidityFeeInBp
         );
 
-        collateralValueToLiquidate = collateralToLiquidate(
+        collateralValueToLiquidate = calculateCollateralToLiquidate(
             repayValue, _totalBorrowerCollateralValue, _liquidityFeeInBp
         );
     }
@@ -146,7 +146,7 @@ library SiloLiquidationLib {
     /// @param _debtToCover assets or value, but must be in sync with `_totalCollateral`
     /// @param _sumOfCollateral assets or value, but must be in sync with `_debtToCover`
     /// @return toLiquidate depends on inputs, it might be collateral value or collateral assets
-    function collateralToLiquidate(uint256 _debtToCover, uint256 _sumOfCollateral, uint256 _liquidityFeeInBp)
+    function calculateCollateralToLiquidate(uint256 _debtToCover, uint256 _sumOfCollateral, uint256 _liquidityFeeInBp)
         internal
         pure
         returns (uint256 toLiquidate)
