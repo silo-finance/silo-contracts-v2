@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import {MathUpgradeable as Math} from "@openzeppelin-contracts-upgradeable/utils/math/MathUpgradeable.sol";
+import {MathUpgradeable as Math} from "lib/openzeppelin-contracts-upgradeable/contracts/utils/math/MathUpgradeable.sol";
 
 library SolverLib {
     uint256 constant P = 5;
@@ -24,11 +24,11 @@ library SolverLib {
         returns (uint256 amountNeeded)
     {
         if (factor < 1e18) {
-            return borrow * 1e18 / (factor * uopt) - deposit;
+            return borrow * 1e36 / (factor * uopt) - deposit;
         } else if (factor < 2e18) {
-            return borrow * 1e18 / (uopt + (factor - 1e18) * (ucrit - uopt) / 1e18) - deposit;
+            return borrow * 1e36 / (uopt + (factor - 1e18) * (ucrit - uopt) / 1e18) - deposit;
         } else {
-            return borrow * 1e18 / (ucrit + (factor - 2e18) * (1e18 - ucrit) / 1e18) - deposit; //@todo: underflow issue here
+            return borrow * 1e36 / (ucrit + (factor - 2e18) * (1e18 - ucrit) / 1e18) - deposit;
         }
     }
 
@@ -56,7 +56,7 @@ library SolverLib {
             // silo is underutilized but not critically, assigned a basket from 1 to P based on how underutilized it is
             } else if (f > 1e18) {
                 basket[i] = P - (f - 1e18) / (1e18 / P);
-                cnt[basket[i] + 1e18]++;
+                cnt[basket[i] + 1]++;
             // silo is optimally utilized, assigned to basket P+1
             } else {
                 basket[i] = P + 1;
@@ -84,7 +84,7 @@ library SolverLib {
                 continue;
             }
 
-            uint256 f = (2 - k / P) * 1e18; // target factor
+            uint256 f = 2e18 - k * 1e18 / P; // target factor
             uint256 dSsum = 0;
             for (uint256 j = 0; j < jk; j++) {
                 uint256 i = ind[j];
@@ -94,43 +94,46 @@ library SolverLib {
                 dSsum += dS[i];
             }
 
-            uint256 scale = Math.min(1e18, (amountToDistribute - Ssum) / dSsum);
+            uint256 scale = Math.min(1e18, (amountToDistribute - Ssum) * 1e18 / dSsum);
 
             for (uint256 j = 0; j < jk; j++) {
                 uint256 i = ind[j];
-                S[i] += dS[i] * scale;
+                S[i] += dS[i] * scale / 1e18;
             }
 
             Ssum += dSsum * scale;
-            if (scale < 1) {
+            if (scale < 1e18) {
                 break;
             }
         }
 
-        // After main distribution loop
+        // After main distribution loop (top up remaining)
         if (Ssum < amountToDistribute) {
-
             uint256[] memory Bu = new uint256[](N);
             uint256 Dsum;
             uint256 Busum;
+            uint256 dSnegsum = 0;
 
             for (uint256 i = 0; i < N; i++) {
-                Bu[i] = borrow[i] / uopt[i]; 
+                Bu[i] = borrow[i] * 1e18 / uopt[i];
                 Busum += Bu[i];
                 Dsum += deposit[i];
             }
 
-            uint256 dSnegsum;
             for (uint256 i = 0; i < N; i++) {
-                dS[i] = (Bu[i] / Busum) * (amountToDistribute + Dsum) - deposit[i] - S[i];
-                if (dS[i] < 0) {
-                dSnegsum -= dS[i]; 
+                uint256 value = Bu[i] * (amountToDistribute + Dsum) / Busum;
+
+                if (value < deposit[i] + S[i]) { 
+                    dSnegsum += (deposit[i] + S[i]) - value;
+                    dS[i] = 0;
+                } else {
+                    dS[i] = value - deposit[i] - S[i];
                 }
             }
 
             for (uint256 i = 0; i < N; i++) {
                 if (dS[i] > 0) {
-                S[i] += dS[i] - (dSnegsum * dS[i]) / (amountToDistribute - Ssum + dSnegsum);
+                    S[i] += dS[i] - (dSnegsum * dS[i]) / (amountToDistribute - Ssum + dSnegsum);
                 }
             }
         }
