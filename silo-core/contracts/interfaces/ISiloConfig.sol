@@ -57,6 +57,7 @@ interface ISiloConfig {
     // solhint-disable-next-line func-name-mixedcase
     function SILO_ID() external view returns (uint256);
 
+    function getSilos() external view returns (address, address);
     function getAssetForSilo(address _silo) external view returns (address asset);
     function getConfigs(address _silo) external view returns (ConfigData memory, ConfigData memory);
     function getConfig(address _silo) external view returns (ConfigData memory);

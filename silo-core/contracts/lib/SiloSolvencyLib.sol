@@ -21,6 +21,7 @@ library SiloSolvencyLib {
 
     uint256 internal constant _PRECISION_DECIMALS = 1e18;
     uint256 internal constant _BASIS_POINTS = 1e4;
+    uint256 internal constant _INFINITY = type(uint256).max;
 
     /// @dev check if config was given in correct order
     /// @return orderCorrect TRUE means that order is correct OR `_borrower` has no debt and we can not really tell
@@ -68,7 +69,7 @@ library SiloSolvencyLib {
         if (sumOfBorrowerCollateralValue == 0 && totalBorrowerDebtValue == 0) {
             return (0, 0, 0);
         } else if (sumOfBorrowerCollateralValue == 0) {
-            ltvInBp = _BASIS_POINTS + 1; // +1 to be over 100%
+            ltvInBp = _INFINITY;
         } else {
             // TODO when 128 the whole below math can be unchecked, cast to 256!
             ltvInBp = totalBorrowerDebtValue * _BASIS_POINTS / sumOfBorrowerCollateralValue;

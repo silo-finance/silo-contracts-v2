@@ -101,7 +101,7 @@ contract SiloSolvencyLibTest is Test, MockOracleQuote {
 
         (,, uint256 ltv) = SiloSolvencyLib.calculateLtv(ltvData, any, any);
 
-        assertEq(ltv, BASIS_POINTS + 1, "when only debt");
+        assertEq(ltv, SiloSolvencyLib._INFINITY, "when only debt");
     }
 
     /*
@@ -132,7 +132,7 @@ contract SiloSolvencyLibTest is Test, MockOracleQuote {
         if (sumOfCollateralAssets == 0 && _debtAssets == 0) {
             // expectedLtv is 0;
         } else if (sumOfCollateralAssets == 0) {
-            expectedLtv = BASIS_POINTS + 1; // +1 to be over 100%
+            expectedLtv = SiloSolvencyLib._INFINITY;
         } else {
             // TODO when 128 the whole below math can be unchecked, cast to 256!
             expectedLtv = _debtAssets * BASIS_POINTS / sumOfCollateralAssets;

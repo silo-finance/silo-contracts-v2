@@ -9,8 +9,8 @@ library VeSiloAddrKey {
     string constant public LINK = "LINK";
     string constant public BALANCER_VAULT = "Balancer Vault";
     string constant public UNISWAP_ROUTER = "Uniswap router";
-    string constant public SNX = "Token(SNX)";
-    string constant public USDC = "Token(USDC)";
+    string constant public SNX = "SNX";
+    string constant public USDC = "USDC";
     string constant public SNX_USDC_UNIV3_POOL = "SNX/USDC UniswapV3 pool";
     string constant public USDC_ETH_UNI_POOL = "USDC/ETH Uniswap pool";
     string constant public LZ_ENDPOINT = "LayerZero endpoint";

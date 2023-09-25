@@ -18,8 +18,8 @@ contract OmniVotingEscrowChildDeploy is CommonDeploy {
 
         vm.startBroadcast(deployerPrivateKey);
 
-       address lzEndpoint = getAddress(VeSiloAddrKey.LZ_ENDPOINT);
-       address delegationHook = getDeployedAddress(VeSiloContracts.L2_LAYER_ZERO_BRIDGE_FORWARDER);
+        address lzEndpoint = getAddress(VeSiloAddrKey.LZ_ENDPOINT);
+        address delegationHook = getDeployedAddress(VeSiloContracts.L2_LAYER_ZERO_BRIDGE_FORWARDER);
 
         omniVitingEscrowChild = IOmniVotingEscrowChild(address(
             new OmniVotingEscrowChild(lzEndpoint, delegationHook)
