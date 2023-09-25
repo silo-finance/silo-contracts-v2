@@ -21,15 +21,6 @@ import {IBalancerMinter} from "../../ve-silo/contracts/silo-tokens-minter/Balanc
 
 import "./lib/SolverLib.sol";
 
-struct RewardInfo {
-    /// @dev scalar for the rewardToken
-    uint64 ONE;
-    /// @dev The vault's last updated index
-    uint224 index;
-    /// @dev Exists or not
-    bool exists;
-}
-
 /**
  * @title MetaSilo
  * @notice An ERC4626 compliant single asset vault that dynamically lends to multiple silos.
@@ -45,28 +36,39 @@ contract MetaSilo is ERC4626Upgradeable, Ownable {
     string private _symbol;
     uint8 private _decimals;
 
+    bool public isEmergency;
+
     IBalancerMinter public balancerMinter;
 
+    /// Silo
+    address[] public silos;
+    address[] public removedSilos;
+    mapping(address => address) public gauge;
+
+    /// Rewards
     IERC20[] public rewardTokens;
-    IERC20[] public activeSilos;
-    IERC20[] public removedSilos;
+
+    struct RewardInfo {
+        uint64 ONE;
+        uint224 index;
+        bool exists;
+    }
 
     mapping(IERC20 => RewardInfo) public rewardInfos;
     mapping(address => mapping(IERC20 => uint256)) public userIndex;
     mapping(address => mapping(IERC20 => uint256)) public accruedRewards;
-    mapping(address => bool) public silos;
 
-    error RewardTokenAlreadyExist(IERC20 rewardToken);
-    error RewardTokenDoesntExist(IERC20 rewardToken);
-    error ZeroAmount();
-    error NotSubmitter(address submitter);
-    error RewardsAreDynamic(IERC20 rewardToken);
-    error InvalidConfig();
+    /// Errors
     error ZeroAddressTransfer(address from, address to);
     error InsufficentBalance();
-    error ZeroRewards(IERC20 rewardToken);
+    error RewardTokenAlreadyAdded(IERC20 rewardToken);
+    error DepositNotAllowedEmergency();
+    error SiloAlreadyAdded();
 
+    /// Events
     event RewardsClaimed(address indexed user, IERC20 rewardToken, uint256 amount, bool escrowed);
+    event SiloAdded(address silo, address balancerMinter);
+    event SiloRemoved(address silo);
 
     /**
      * @notice Initialize a new MetaSilo contract.
@@ -74,7 +76,7 @@ contract MetaSilo is ERC4626Upgradeable, Ownable {
      * @param _nameParam Name of the contract.
      * @param _symbolParam Symbol of the contract.
      * @param _owner Owner of the contract.
-     * @param _balancerMinter Gauge contract.
+     * @param _balancerMinter balancerMinter contract.
      */
     function initialize(
         IERC20 _asset,
@@ -146,12 +148,10 @@ contract MetaSilo is ERC4626Upgradeable, Ownable {
         override
         accrueRewards(caller, receiver)
     {
+        if (isEmergency) revert DepositNotAllowedEmergency();
         IERC20(asset()).safeTransferFrom(caller, address(this), assets);
-
         _mint(receiver, shares);
-
         emit Deposit(caller, receiver, assets, shares);
-
         _afterDeposit(assets);
     }
 
@@ -161,30 +161,20 @@ contract MetaSilo is ERC4626Upgradeable, Ownable {
         override
         accrueRewards(owner, receiver)
     {
-        if (caller != owner) {
-            _approve(owner, msg.sender, allowance(owner, msg.sender) - shares);
-        }
-
+        if (caller != owner) _approve(owner, msg.sender, allowance(owner, msg.sender) - shares);
         _burn(owner, shares);
-
         emit Withdraw(caller, receiver, owner, assets, shares);
-
         _beforeWithdraw(assets, receiver);
         IERC20(asset()).safeTransfer(receiver, assets);
     }
 
     /// @notice Internal transfer fct used by `transfer()` and `transferFrom()`. Accrues rewards for `from` and `to`.
     function _transfer(address from, address to, uint256 amount) internal override accrueRewards(from, to) {
-        if (from == address(0) || to == address(0)) {
-            revert ZeroAddressTransfer(from, to);
-        }
-
+        if (from == address(0) || to == address(0)) revert ZeroAddressTransfer(from, to);
         uint256 fromBalance = balanceOf(from);
         if (fromBalance < amount) revert InsufficentBalance();
-
         _burn(from, amount);
         _mint(to, amount);
-
         emit Transfer(from, to, amount);
     }
 
@@ -201,9 +191,7 @@ contract MetaSilo is ERC4626Upgradeable, Ownable {
     function claimRewards(address user, IERC20[] memory _rewardTokens) external accrueRewards(msg.sender, user) {
         for (uint8 i; i < _rewardTokens.length; i++) {
             uint256 rewardAmount = accruedRewards[user][_rewardTokens[i]];
-
-            if (rewardAmount == 0) revert ZeroRewards(_rewardTokens[i]);
-
+            if (rewardAmount == 0) continue; // here we don't want to revert if there is no reward
             accruedRewards[user][_rewardTokens[i]] = 0;
             _rewardTokens[i].transfer(user, rewardAmount);
             emit RewardsClaimed(user, _rewardTokens[i], rewardAmount, false);
@@ -221,14 +209,13 @@ contract MetaSilo is ERC4626Upgradeable, Ownable {
      */
     function addRewardToken(address tokenAddress) external onlyOwner {
         IERC20 rewardToken = IERC20(tokenAddress);
-        require(!rewardInfos[rewardToken].exists, "REWARD_TOKEN_ALREADY_ADDED");
-
+        if (rewardInfos[rewardToken].exists) revert RewardTokenAlreadyAdded(tokenAddress);
         rewardInfos[rewardToken] = RewardInfo({decimals: uint8(rewardToken.decimals()), exists: true});
         rewardTokens.push(rewardToken);
     }
 
     /*//////////////////////////////////////////////////////////////
-                      REWARDS ACCRUAL LOGIC
+                        REWARDS ACCRUAL LOGIC
     //////////////////////////////////////////////////////////////*/
 
     /// @notice Accrue rewards for up to 2 users for all available reward tokens.
@@ -251,7 +238,6 @@ contract MetaSilo is ERC4626Upgradeable, Ownable {
         if (supplyTokens != 0) {
             uint224 deltaIndex =
                 accrued.mulDiv(uint256(10 ** decimals()), supplyTokens, Math.Rounding.Down).safeCastTo224();
-
             rewardInfos[_rewardToken].index += deltaIndex;
         }
     }
@@ -259,7 +245,6 @@ contract MetaSilo is ERC4626Upgradeable, Ownable {
     /// @notice Sync a user's rewards for a rewardToken with the global reward index for that token
     function _accrueUser(address _user, IERC20 _rewardToken) internal {
         RewardInfo memory rewards = rewardInfos[_rewardToken];
-
         uint256 oldIndex = userIndex[_user][_rewardToken];
 
         // If user hasn't yet accrued rewards, grant rewards from the strategy beginning if they have a balance
@@ -274,7 +259,7 @@ contract MetaSilo is ERC4626Upgradeable, Ownable {
     }
 
     /*//////////////////////////////////////////////////////////////
-                      SILO FUNCTIONS
+                            SILO FUNCTIONS
     //////////////////////////////////////////////////////////////*/
 
     /**
@@ -283,7 +268,6 @@ contract MetaSilo is ERC4626Upgradeable, Ownable {
      * @param _amount amount of asset to be deposited
      */
     function _depositToSilo(address _siloAddress, uint256 _amount) internal {
-        require(silos[_siloAddress], "SILO_NOT_FOUND");
         ISilo(_siloAddress).deposit(_amount, address(this));
     }
 
@@ -293,160 +277,31 @@ contract MetaSilo is ERC4626Upgradeable, Ownable {
      * @param _amount amount of asset to be withdrawn
      */
     function _withdrawFromSilo(address _siloAddress, uint256 _amount) internal returns (uint256 _withdrawn) {
-        require(silos[_siloAddress], "SILO_NOT_FOUND");
-        uint256 _availableToWithdraw = ISilo(_siloAddress).maxWithdraw(address(this));
-        return ISilo(_siloAddress).withdraw(Math.min(_amount, _availableToWithdraw), address(this), address(this));
-    }
-
-    /**
-     * @notice logic to allocate funds to silo after a deposit to MetaSilo
-     * @param _amount amount to be deposited
-     */
-    function _afterDeposit(uint256 _amount) internal {
-        // @todo: determine deposit logic
-        // uint256 highest = 0;
-        // address highestUtilSilo;
-
-        // for (uint256 i = 0; i < activeSilos.length; i++) {
-        //     if (silos[_siloAddress] = true) {
-        //         uint256 util = ISilo(_siloAddress).getCollateralAssets() * 10_000 / ISilo(_siloAddress).getDebtAssets();
-        //         if (util > highest) {
-        //             highest = util;
-        //             highestUtilSilo = silos[i];
-        //         }
-        //     }
-        // }
-        // _depositToSilo(highestUtilSilo, _amount);
-    }
-
-    /**
-     * @notice logic to free-up funds before withdraw from MetaSilo
-     * @param _amount amount to be withdrawn
-     * @return amount that was freed-up
-     */
-    function _beforeWithdraw(uint256 _amount) internal returns (uint256 _withdrawn) {
-        // @todo: determine withdrawal logic
-        // if (activeSilos.length == 0) {
-        //     return 0;
-        // }
-
-        // /// @notice: if we have silos that were removed but still holding assets, withdraw as much as possible here
-        // for (uint256 i = 0; i < activeSilos.length; i++) {
-        //     if (silos[i] = false) {
-        //         _withdrawFromSilo(silos[i], type(uint256).max);
-        //         /// if removed silo is empty, call deleteSilo
-        //         // if (ISilo(_siloAddress).balanceOf(address(this) == 0)) {
-        //         //     deleteSilo(silos[i]);
-        //         // }
-        //     }
-        // }
-
-        // uint256 amountWithdrawn = 0;
-        // uint256 j = 0;
-        // /// @note: number of loops
-
-        // /// @notice: withdraw from the lowest util vault, until we have the full amount withdrawn
-        // while (amountWithdrawn < _amount) {
-        //     uint256 lowest = uint256(-1);
-        //     address lowestUtilSilo;
-        //     for (uint256 i = 0; i < activeSilos.length; i++) {
-        //         if (silos[_siloAddress] = true) {
-        //             uint256 util = ISilo(_siloAddress).getCollateralAssets() * 10_000 / ISilo(_siloAddress).getDebtAssets();
-        //             if (util < lowest) {
-        //                 lowest = util;
-        //                 lowestUtilSilo = silos[i];
-        //             }
-        //         }
-        //     }
-        //     amountWithdrawn = amountWithdrawn.add(_withdrawFromSilo(_amount - amountWithdrawn));
-        //     j++;
-
-        //     if (j >= 5) {
-        //         /// @notice: dont want infinite loop
-        //         return amountWithdrawn;
-        //     }
-        // }
-    }
-
-    /**
-     * @notice Claims pending rewards and update accounting
-     */
-    function _claimRewardsFromSilos() internal {
-        for (uint256 i = 0; i < rewardTokens.length; i++) {
-            IERC20 reward = rewardTokens[i];
-            // @todo: fetch gauge address
-            balancerMinter.mintFor(gauge, address(this));
-            // Cache RewardInfo
-            RewardInfo memory rewards = rewardInfos[rewardToken];
-            // Update the index of rewardInfo before updating the rewardInfo
-            _accrueRewards(rewardToken, amount);
-            rewardsEarned[reward] += amount;
-        }
-    }
-
-    /**
-     * @notice Allows owners to add a silo
-     * @param _siloAddress address of the silo to be added
-     */
-    function addSilo(address _siloAddress) public onlyOwner {
-        require(_siloAddress != address(0), "ZERO_ADDRESS");
-        require(!silos[_siloAddress], "SILO_EXISTS");
-        silos[_siloAddress] = true;
-        activeSilos.push(_siloAddress);
-    }
-
-    /**
-     * @notice Allows owners to remove a silo
-     * @dev Calling this doesn't actually delete the silo from the mapping. It just sets it to false.
-     * @dev This keeps storage cluttered with inactive Silos. The mapping should be deleted in deleteSilo().
-     * @param _siloAddress address of the silo to be removed
-     */
-    function removeSilo(address _siloAddress) public onlyOwner {
-        require(silos[_siloAddress], "SILO_NOT_FOUND");
-        delete silos[_siloAddress];
-        _withdrawFromSilo(_siloAddress, getSiloDeposit());
-        /// @notice: withdraw as much as possible from Silo
-        if (getSiloDeposit = !0) {
-            removedSilos.push(_siloAddress);
-        }
-    }
-
-    function deleteEmptySilo(address _siloAddress) public onlyOwner {
-        // @todo: function to remove a silo from removedSilos array once its empty
-        // require(silos[_siloAddress], "SILO_NOT_FOUND");
-        // require(ISilo(silos[i]).balanceOf(address(this)) == 0, "SILO NOT EMPTY");
-        // removedSilos.push(_siloAddress);
-    }
-
-    /**
-     * @notice View functions to return the number of Silos attached to Meta Silo
-     * @return number of activeSilos
-     */
-    function numActiveSilos() public view returns (uint256) {
-        return activeSilos.length;
+        ISilo silo = ISilo(_siloAddress);
+        uint256 _availableToWithdraw = silo.maxWithdraw(address(this));
+        return silo.withdraw(Math.min(_amount, _availableToWithdraw), address(this), address(this));
     }
 
     /**
      * @notice Gets the deposited asset amount for a silo
-     * @param silo The address of the silo
+     * @param _siloAddress The address of the silo
      * @return The underlying deposited asset amount
      */
-    function getSiloDeposit(address silo) public view returns (uint256) {
-        require(silos[silo], "Invalid silo");
-        ISilo siloContract = ISilo(silo);
-        return siloContract.convertToAssets(siloContract.balanceOf(address(this)));
+    function getSiloDeposit(address _siloAddress) public view returns (uint256) {
+        ISilo silo = ISilo(_siloAddress);
+        return silo.convertToAssets(silo.balanceOf(address(this)));
     }
 
     /**
      * @notice Gets the available liquid balances for all silos
      * @return An array containing the available liquid balance for each silo
      */
-    function getSiloLiquidBalances() public view returns (uint256[] memory) {
-        uint256 numSilos = activeSilos.length;
+    function _getSiloLiquidBalances() internal returns (uint256[] memory) {
+        uint256 numSilos = silos.length;
         uint256[] memory liquidBalances = new uint256[](numSilos);
 
         for (uint256 i = 0; i < numSilos; i++) {
-            address silo = activeSilos[i];
+            address silo = silos[i];
 
             uint256 availableToWithdraw = ISilo(silo).maxWithdraw(address(this));
 
@@ -459,23 +314,38 @@ contract MetaSilo is ERC4626Upgradeable, Ownable {
      * @notice Fetches the deposit amounts for each silo
      * @return An array containing the deposit amount for each silo
      */
-    function getDepositAmounts() public view returns (uint256[] memory) {
-        uint256 numSilos = activeSilos.length;
+    function _getDepositAmounts() internal returns (uint256[] memory) {
+        uint256 numSilos = silos.length;
         uint256[] memory D = new uint256[](numSilos);
 
         for (uint256 i = 0; i < numSilos; i++) {
-            address silo = activeSilos[i];
-            D[i] = ISilo(silo).balanceOf(address(this));
+            address silo = silos[i];
+            D[i] = ISilo(silo).getCollateralAssets();
         }
         return D;
+    }
+
+    /**
+     * @notice Fetches the BORROW amounts for each silo
+     * @return An array containing the BORROW amount for each silo
+     */
+    function _getBorrowAmounts() internal returns (uint256[] memory) {
+        uint256 numSilos = silos.length;
+        uint256[] memory B = new uint256[](numSilos);
+
+        for (uint256 i = 0; i < numSilos; i++) {
+            address silo = silos[i];
+            B[i] = ISilo(silo).getDebtAssets();
+        }
+        return B;
     }
 
     /**
      * @notice Fetches the utilization configurations for all silos
      * @return The optimal and critical utilization percentages for each silo
      */
-    function getUtilizations() public view returns (uint256[] memory uopt, uint256[] memory ucrit) {
-        uint256 numSilos = activeSilos.length;
+    function _getUtilizations() internal returns (uint256[] memory uopt, uint256[] memory ucrit) {
+        uint256 numSilos = silos.length;
         uopt = new uint256[](numSilos);
         ucrit = new uint256[](numSilos);
 
@@ -488,16 +358,184 @@ contract MetaSilo is ERC4626Upgradeable, Ownable {
     }
 
     /*//////////////////////////////////////////////////////////////
-                      HARVEST LOGIC
+                            OWNER FUNCTION
     //////////////////////////////////////////////////////////////*/
+
+    /**
+     * @notice Allows owner to add a single silo
+     * @param _siloAddress Address of the silo
+     * @param _gaugeAddress Address of the associated balancerMinter
+     */
+    function addSilo(address _siloAddress, address _gaugeAddress) public onlyOwner {
+        for (uint256 i = 0; i < silos.length; i++) {
+            if (silos[i] != _silo) revert SiloAlreadyAdded();
+        }
+        silos.push(_siloAddress);
+        gauge[_siloAddress] = _gaugeAddress;
+        emit SiloAdded(_siloAddress, _balancerMinterAddress);
+    }
+
+    /**
+     * @notice Allows owner to add multiple silos
+     * @param _siloAddresses Array of silo addresses
+     * @param _gaugeAddresses Array of associated balancerMinter addresses
+     */
+    function addMultipleSilos(address[] memory _siloAddresses, address[] memory _gaugeAddresses) external onlyOwner {
+        for (uint256 i = 0; i < _silos.length; i++) {
+            for (uint256 i = 0; i < silos.length; i++) {
+                if (silos[i] != _silo) revert SiloAlreadyAdded();
+            }
+            silos.push(_silos[i]);
+            gauge[_silos[i]] = _gauges[i];
+            emit SiloAdded(_silos[i], _balancerMinters[i]);
+        }
+    }
+
+    /**
+     * @notice Allows owner to remove a silo
+     * @dev If full withdrawal from that silo is not possible, we add it to removedSilos array
+     * @param _siloAddress Address of silo to remove
+     */
+    function removeSilo(address _siloAddress) public onlyOwner {
+        // Withdraw all available funds
+        _withdrawFromSilo(silos[_siloAddress], type(uint256).max);
+
+        // Find index of silo in array
+        uint256 index = -1;
+        for (uint256 i = 0; i < silos.length; i++) {
+            if (silos[i] == _siloAddress) {
+                index = i;
+                break;
+            }
+        }
+
+        // Remove from array
+        if (index >= 0) {
+            // Move last element to index
+            silos[index] = silos[silos.length - 1];
+            // Reduce length
+            silos.pop();
+        }
+
+        // Track removed silo if not emptied
+        if (ISilo(_siloAddress).balanceOf(address(this)) > 0) {
+            removedSilos.push(_siloAddress);
+        }
+
+        emit SiloRemoved(_siloAddress);
+    }
+
+    // @todo: function to handle removedSilos when it's empty
+    // @todo: owner function to manually withdraw from removeSilos
+
+    /**
+    * @notice Manually reallocate funds across silos 
+    * @dev Only callable by owner
+    * @param proposed Proposed deposit amounts for each silo
+    */
+    function reallocateManual(uint256[] memory proposed) public onlyOwner {
+        _reallocate(proposed);
+    }
+
+    /**
+    * @notice Automatically reallocate funds across silos
+    * @dev Calls internal solver to calculate optimal distribution
+    * @dev Only callable by owner
+    */
+    function reallocateWithSolver() public onlyOwner {
+        _reallocate(_solveDistribution(_nav()));
+    }
+
+    /**
+     * @notice Allows owner to set emergency, which restrict new deposits
+     * @param _isEmergency Bool to indicate if emergency is activated
+     */
+    function setEmergency(bool _isEmergency) public onlyOwner {
+        isEmergency = _isEmergency;
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                    ALLOCATION / HARVEST LOGIC
+    //////////////////////////////////////////////////////////////*/
+
+    /**
+     * @notice logic to allocate funds to silo after a deposit to MetaSilo
+     * @notice We default to allocating to the highest utilization silo.
+     * @param _amount amount to be deposited
+     */
+    function _afterDeposit(uint256 _amount) internal {
+        uint256 highest = 0;
+        address highestUtilSilo;
+
+        for (uint256 i = 0; i < silos.length; i++) {
+            ISilo silo = ISilo(silos[i]);
+            uint256 util = silo.getCollateralAssets() * 1e18 / silo.getDebtAssets();
+
+            if (util > highest) {
+                highest = util;
+                highestUtilSilo = silos[i];
+            }
+        }
+
+        _depositToSilo(highestUtilSilo, _amount);
+    }
+
+    /**
+     * @notice logic to free-up funds before withdraw from MetaSilo
+     * @param _amount amount to be withdrawn
+     * @return amount that was freed-up
+     */
+    function _beforeWithdraw(uint256 _amount) internal returns (uint256 _withdrawn) {
+        /// @todo: decide if we want to attempt withdrawing from removed silos
+
+        uint256 amountWithdrawn = 0;
+        uint256 j = 0;
+
+        /// @notice: withdraw from the lowest util vault, until we have the full amount withdrawn
+        while (amountWithdrawn < _amount) {
+            uint256 lowest = uint256(-1);
+            address lowestUtilSilo;
+
+            for (uint256 i = 0; i < silos.length; i++) {
+                ISilo silo = ISilo(silos[i]);
+                uint256 util = silo.getCollateralAssets() * 1e18 / silo.getDebtAssets();
+                if (util < lowest) {
+                    lowest = util;
+                    lowestUtilSilo = silos[i];
+                }
+            }
+
+            amountWithdrawn = amountWithdrawn.add(_withdrawFromSilo(_amount - amountWithdrawn));
+            j++;
+            if (j >= 5) return amountWithdrawn;
+            /// @notice: dont want infinite loop
+        }
+    }
+
+    /**
+     * @notice Claims pending rewards and update accounting
+     */
+    function _claimRewardsFromSilos() internal {
+        /// @todo: clarify multiple rewards per gauge?
+        // for (uint256 i = 0; i < rewardTokens.length; i++) {
+        //     IERC20 reward = rewardTokens[i];
+        //     balancerMinter.mintFor(gauge[silo], address(this));
+        //     // Cache RewardInfo
+        //     RewardInfo memory rewards = rewardInfos[rewardToken];
+        //     // Update the index of rewardInfo before updating the rewardInfo
+        //     _accrueRewards(rewardToken, amount);
+        //     rewardsEarned[reward] += amount;
+        // }
+    }
 
     /**
      * @notice harvest logic for Meta Silo
      * @notice harvests rewards from all silos and rebalance allocation
      */
     function harvest() public {
-        claimRewardsFromSilos();
-        _reallocate(_solveDistribution(_nav())); // @todo: need to remove potential funds stuck in a removed silo
+        // @todo: check if we want it to be callable by anyone?
+        // loop for all silos
+        _claimRewardsFromSilos();
     }
 
     /**
@@ -509,23 +547,23 @@ contract MetaSilo is ERC4626Upgradeable, Ownable {
         uint256 total = _nav();
 
         // First withdraw from silos where current > proposed
-        for (uint256 i = 0; i < activeSilos.length; i++) {
-            uint256 current = getSiloDeposit(activeSilos[i]);
+        for (uint256 i = 0; i < silos.length; i++) {
+            uint256 current = getSiloDeposit(silos[i]);
 
             if (current > proposed[i]) {
                 uint256 amount = current - proposed[i];
-                _withdrawFromSilo(activeSilos[i], amount);
+                _withdrawFromSilo(silos[i], amount);
             }
         }
 
         // Now deposit to silos up to proposed amounts
         uint256 remaining = total;
 
-        for (uint256 i = 0; i < activeSilos.length; i++) {
-            uint256 amount = proposed[i] - getSiloDeposit(activeSilos[i]);
+        for (uint256 i = 0; i < silos.length; i++) {
+            uint256 amount = proposed[i] - getSiloDeposit(silos[i]);
 
             if (amount > 0) {
-                _depositToSilo(activeSilos[i], Math.min(remaining, amount));
+                _depositToSilo(silos[i], Math.min(remaining, amount));
                 remaining -= amount;
             }
 
@@ -533,17 +571,22 @@ contract MetaSilo is ERC4626Upgradeable, Ownable {
                 break;
             }
         }
-
-        // Deposit any remainder to highest utilization
-        // @todo: _depositToHighestUtil(remaining);
     }
 
-    // Helper to pass all params to SolverLib
+    /**
+    * @dev Helper to calculate optimal deposit distribution 
+    * @param _total Total assets to distribute
+    * @return Array of proposed deposit amounts for each silo
+    */
     function _solveDistribution(uint256 _total) internal returns (uint256[] memory) {
         (uint256[] memory uopt, uint256[] memory ucrit) = getUtilizations();
         return SolverLib.solver(getBorrowAmounts(), getDepositAmounts(), uopt, ucrit, _total);
     }
 
+    /**
+    * @notice Get the current Net Asset Value (NAV) of the vault
+    * @return nav The NAV excluding external reward balances
+    */
     function nav() external view returns (uint256) {
         return _nav();
     }
