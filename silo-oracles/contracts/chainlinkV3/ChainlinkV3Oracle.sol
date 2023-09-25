@@ -13,6 +13,11 @@ import {IChainlinkV3Oracle} from "../interfaces/IChainlinkV3Oracle.sol";
 contract ChainlinkV3Oracle is IChainlinkV3Oracle, ISiloOracle, Initializable {
     ChainlinkV3OracleConfig public oracleConfig;
 
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
     /// @notice validation of config is checked in factory, therefore you should not deploy and initialize directly
     /// use factory always.
     function initialize(ChainlinkV3OracleConfig _configAddress) external virtual initializer {

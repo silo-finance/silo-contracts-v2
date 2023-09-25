@@ -118,6 +118,10 @@ contract SiloConfig is ISiloConfig {
         _BORROWABLE1 = _configData1.borrowable;
     }
 
+    function getSilos() external view returns (address silo0, address silo1) {
+        return (_SILO0, _SILO1);
+    }
+
     function getAssetForSilo(address _silo) public view virtual returns (address asset) {
         if (_silo == _SILO0) {
             return _TOKEN0;

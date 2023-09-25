@@ -22,6 +22,11 @@ contract DIAOracle is ISiloOracle, IDIAOracle, Initializable {
     /// @dev key for secondary price
     mapping (DIAOracleConfig => string) public secondaryKey;
 
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
     /// @notice validation of config is checked in factory, therefore you should not deploy and initialize directly
     /// use factory always.
     function initialize(

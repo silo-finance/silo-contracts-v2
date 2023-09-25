@@ -3,6 +3,7 @@ pragma solidity 0.8.18;
 
 import "../../../constants/Arbitrum.sol";
 
+import {ClonesUpgradeable} from "openzeppelin-contracts-upgradeable/proxy/ClonesUpgradeable.sol";
 import {IERC20Metadata} from "openzeppelin-contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {TokensGenerator} from "../_common/TokensGenerator.sol";
 import {DIAOracle, DIAOracle, IDIAOracle, IDIAOracleV2} from "../../../contracts/dia/DIAOracle.sol";
@@ -22,12 +23,12 @@ contract DIAOracleTest is DIAConfigDefault {
         initFork(TEST_BLOCK);
 
         DIAOracleConfig cfg = new DIAOracleConfig(_defaultDIAConfig(), 10 ** (18 + 8 - 18), 0);
-        DIA_ORACLE = new DIAOracle();
+        DIA_ORACLE = DIAOracle(ClonesUpgradeable.clone(address(new DIAOracle())));
         DIA_ORACLE.initialize(cfg, _defaultDIAConfig().primaryKey, _defaultDIAConfig().secondaryKey);
     }
 
     function test_DIAOracle_initialize_OldPrice() public {
-        DIAOracle newOracle = new DIAOracle();
+        DIAOracle newOracle = DIAOracle(ClonesUpgradeable.clone(address(new DIAOracle())));
         IDIAOracle.DIADeploymentConfig memory cfg = _defaultDIAConfig();
 
         cfg.heartbeat = 1856;
@@ -40,7 +41,7 @@ contract DIAOracleTest is DIAConfigDefault {
     }
 
     function test_DIAOracle_initialize_OldSecondaryPrice() public {
-        DIAOracle newOracle = new DIAOracle();
+        DIAOracle newOracle = DIAOracle(ClonesUpgradeable.clone(address(new DIAOracle())));
         IDIAOracle.DIADeploymentConfig memory cfg = _defaultDIAConfig();
 
         // at the block from test, price is 1856s old
@@ -56,7 +57,7 @@ contract DIAOracleTest is DIAConfigDefault {
     }
 
     function test_DIAOracle_initialize_pass() public {
-        DIAOracle newOracle = new DIAOracle();
+        DIAOracle newOracle = DIAOracle(ClonesUpgradeable.clone(address(new DIAOracle())));
         IDIAOracle.DIADeploymentConfig memory cfg = _defaultDIAConfig();
 
         DIAOracleConfig newConfig = new DIAOracleConfig(cfg, 10 ** (18 + 8 - 18), 0);
@@ -80,7 +81,7 @@ contract DIAOracleTest is DIAConfigDefault {
         IDIAOracle.DIADeploymentConfig memory cfg = _defaultDIAConfig();
         cfg.quoteToken = IERC20Metadata(address(tokens["USDC"]));
         DIAOracleConfig oracleConfig = new DIAOracleConfig(_defaultDIAConfig(), 10 ** (18 + 8 - 6), 0);
-        DIAOracle oracle = new DIAOracle();
+        DIAOracle oracle = DIAOracle(ClonesUpgradeable.clone(address(new DIAOracle())));
         oracle.initialize(oracleConfig, cfg.primaryKey, cfg.secondaryKey);
 
         uint256 price = oracle.quote(1e18, address(tokens["RDPX"]));
