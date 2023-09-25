@@ -101,7 +101,7 @@ library SolverLib {
                 S[i] += dS[i] * scale / 1e18;
             }
 
-            Ssum += dSsum * scale;
+            Ssum += dSsum * scale / 1e18;
             if (scale < 1e18) {
                 break;
             }
