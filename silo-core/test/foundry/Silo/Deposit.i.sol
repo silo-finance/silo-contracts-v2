@@ -52,6 +52,6 @@ contract DepositTest is IntegrationTest {
         uint256 shares = silo0.deposit(assets, receiver, ISilo.AssetType.Collateral);
         uint256 gasEnd = gasleft();
 
-        assertEq(gasStart - gasEnd, 144695, "optimise deposit");
+        assertEq(gasStart - gasEnd, 144673, "optimise deposit");
     }
 }
