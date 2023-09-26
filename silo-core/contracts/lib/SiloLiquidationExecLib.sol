@@ -211,12 +211,13 @@ library SiloLiquidationExecLib {
         if (_ltvData.borrowerDebtAssets == 0 || sumOfCollateralAssets == 0) return (0, 0);
 
         (
-            uint256 sumOfBorrowerCollateralValue, uint256 totalBorrowerDebtValue, uint256 ltvInBp
+            uint256 sumOfBorrowerCollateralValue, uint256 totalBorrowerDebtValue, uint256 ltvBeforeInBp
         ) = SiloSolvencyLib.calculateLtv(_ltvData, _params.collateralConfigAsset, _params.debtConfigAsset);
 
-        if (!_params.selfLiquidation && _params.collateralLt > ltvInBp) return (0, 0);
+        if (!_params.selfLiquidation && _params.collateralLt > ltvBeforeInBp) return (0, 0);
 
-        (receiveCollateralAssets, repayDebtAssets, ltvInBp) = SiloLiquidationLib.calculateExactLiquidationAmounts(
+        uint256 ltvAfterInBp;
+        (receiveCollateralAssets, repayDebtAssets, ltvAfterInBp) = SiloLiquidationLib.calculateExactLiquidationAmounts(
             _params.debtToCover,
             sumOfCollateralAssets,
             sumOfBorrowerCollateralValue,
@@ -227,9 +228,15 @@ library SiloLiquidationExecLib {
 
         if (receiveCollateralAssets == 0 || repayDebtAssets == 0) return (0, 0);
 
-         if (ltvInBp != 0) { // it can be 0 in case of full liquidation
-             if (!_params.selfLiquidation && ltvInBp < SiloLiquidationLib.minAcceptableLT(_params.collateralLt)) {
+         if (ltvAfterInBp != 0) { // it can be 0 in case of full liquidation
+             if (!_params.selfLiquidation && ltvAfterInBp < SiloLiquidationLib.minAcceptableLTV(_params.collateralLt)) {
                  revert ISiloLiquidation.LiquidationTooBig();
+             }
+
+             // because our precision is 1e4, it is possible to end up with higher LTV, if difference will be
+             // inside a "precision error"
+             if (ltvAfterInBp > ltvBeforeInBp) {
+                 revert ISiloLiquidation.LtvWentUp();
              }
          }
     }

@@ -26,7 +26,7 @@ contract CalculateExactLiquidationAmountsTestData {
         data = new CELAData[](11);
         uint256 i;
 
-        data[i++] = CELAData({
+        data[i++] = CELAData({ // #0
             input: Input({
                 debtToCover: 0,
                 totalBorrowerDebtValue: 1,
@@ -42,7 +42,7 @@ contract CalculateExactLiquidationAmountsTestData {
             })
         });
 
-        data[i++] = CELAData({
+        data[i++] = CELAData({ // #1
             input: Input({
                 debtToCover: 0,
                 totalBorrowerDebtValue: 1,
@@ -58,7 +58,7 @@ contract CalculateExactLiquidationAmountsTestData {
             })
         });
 
-        data[i++] = CELAData({
+        data[i++] = CELAData({ // #2
             input: Input({
                 debtToCover: 0,
                 totalBorrowerDebtValue: 1,
@@ -74,7 +74,7 @@ contract CalculateExactLiquidationAmountsTestData {
             })
         });
 
-        data[i++] = CELAData({
+        data[i++] = CELAData({ // #3
             input: Input({
                 debtToCover: 0,
                 totalBorrowerDebtValue: 1e18,
@@ -90,7 +90,7 @@ contract CalculateExactLiquidationAmountsTestData {
             })
         });
 
-        data[i++] = CELAData({
+        data[i++] = CELAData({ // #4
             input: Input({
                 debtToCover: 1,
                 totalBorrowerDebtValue: 1e18,
@@ -106,7 +106,7 @@ contract CalculateExactLiquidationAmountsTestData {
             })
         });
 
-        data[i++] = CELAData({
+        data[i++] = CELAData({ // #5
             input: Input({
                 debtToCover: 10,
                 totalBorrowerDebtValue: 1e18,
@@ -122,7 +122,7 @@ contract CalculateExactLiquidationAmountsTestData {
             })
         });
 
-        data[i++] = CELAData({
+        data[i++] = CELAData({ // #6
             input: Input({
                 debtToCover: 0.5e18, // the value is 40e18 + fee => 44e18 in value
                 totalBorrowerDebtValue: 80e18,
@@ -139,7 +139,7 @@ contract CalculateExactLiquidationAmountsTestData {
         });
 
         // this is just before full liquidation because of "dust"
-        data[i++] = CELAData({
+        data[i++] = CELAData({ // #7
             input: Input({
                 debtToCover: 0.90e18, // the value is 72e18 + fee => 79.2e18 in value
                 totalBorrowerDebtValue: 80e18,
@@ -158,24 +158,24 @@ contract CalculateExactLiquidationAmountsTestData {
         // this will do full liquidation because of dust
         // input values are made up and looks like we have huge collateral
         // but the math in this method does not care about ltv and logic, it just calculates
-        data[i++] = CELAData({
+        data[i++] = CELAData({ // #8
             input: Input({
-                debtToCover: 0.91e18, // the value is 72.8e18 + fee => 80e18 in value
+                debtToCover: 0.91e18, // the value is 72.8e18, but this is over "dust" margin, so it will be full
                 totalBorrowerDebtValue: 80e18,
-                totalBorrowerDebtAssets: 1e18,
+                totalBorrowerDebtAssets: 1e18, // 1debt token == 80 in value
                 totalBorrowerCollateralValue: 9_000e18,
-                totalBorrowerCollateralAssets: 10e18, // 1token == 900value
+                totalBorrowerCollateralAssets: 10e18, // 1token == 900 in value
                 liquidationFee: 1e3
             }),
             output: Output({
-                collateralAssetsToLiquidate: uint256(72.8e18 + 72.8e18 * 1e3 / 1e4) / 900,
+                collateralAssetsToLiquidate: uint256(80e18 + 80e18 * 1e3 / 1e4) / 900,
                 debtAssetsToRepay: 1e18,
                 ltvAfterLiquidation: 0
             })
         });
 
         // if we expect ltv to be 0, we need full liquidation
-        data[i++] = CELAData({
+        data[i++] = CELAData({ // #9
             input: Input({
                 debtToCover: 160e18,
                 totalBorrowerDebtValue: 80e18,
@@ -191,7 +191,7 @@ contract CalculateExactLiquidationAmountsTestData {
             })
         });
 
-        data[i++] = CELAData({
+        data[i++] = CELAData({ // #10
             input: Input({
                 debtToCover: 10e18,
                 totalBorrowerDebtValue: 180e18,

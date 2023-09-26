@@ -43,24 +43,25 @@ library SiloLiquidationLib {
         }
 
         if (_debtToCover == 0 || _totalBorrowerDebtValue == 0 || _totalBorrowerDebtAssets == 0) {
-            return (0, 0, ltvAfter(_sumOfBorrowerCollateralValue, _totalBorrowerDebtValue));
+            return (0, 0, _ltvAfter(_sumOfBorrowerCollateralValue, _totalBorrowerDebtValue));
         }
 
-        debtAssetsToRepay = _debtToCover;
-        uint256 debtValueToCover = _totalBorrowerDebtValue * debtAssetsToRepay / _totalBorrowerDebtAssets;
-        uint256 collateralValueToLiquidate;
-
-        if (debtValueToCover * _BASIS_POINTS / _totalBorrowerDebtValue > _POSITION_DUST_LEVEL_IN_BP) { // full on dust
-            collateralValueToLiquidate = calculateCollateralToLiquidate(
-                debtValueToCover, _sumOfBorrowerCollateralValue, _liquidationFeeInBp
+        // full on dust OR when _debtToCover higher then total assets
+        if (_debtToCover * _BASIS_POINTS / _totalBorrowerDebtAssets > _POSITION_DUST_LEVEL_IN_BP) {
+            uint256 liquidationValue = calculateCollateralToLiquidate(
+                _totalBorrowerDebtValue, _sumOfBorrowerCollateralValue, _liquidationFeeInBp
             );
 
             collateralAssetsToLiquidate = valueToAssetsByRatio(
-                collateralValueToLiquidate, _sumOfBorrowerCollateralAssets, _sumOfBorrowerCollateralValue
+                liquidationValue, _sumOfBorrowerCollateralAssets, _sumOfBorrowerCollateralValue
             );
 
             return (collateralAssetsToLiquidate, _totalBorrowerDebtAssets, 0);
         }
+
+        debtAssetsToRepay = _debtToCover;
+        uint256 collateralValueToLiquidate;
+        uint256 debtValueToCover = _totalBorrowerDebtValue * debtAssetsToRepay / _totalBorrowerDebtAssets;
 
         (collateralAssetsToLiquidate, collateralValueToLiquidate) = calculateCollateralsToLiquidate(
             debtValueToCover, _sumOfBorrowerCollateralValue, _sumOfBorrowerCollateralAssets, _liquidationFeeInBp
@@ -69,9 +70,8 @@ library SiloLiquidationLib {
         if (_sumOfBorrowerCollateralValue == collateralValueToLiquidate) {
             ltvAfterLiquidationInBp = 0;
         } else {
-            unchecked {
-                // all subs are safe because this values are chunks of total, so we will not underflow
-                ltvAfterLiquidationInBp = ltvAfter(
+            unchecked { // all subs are safe because this values are chunks of total, so we will not underflow
+                ltvAfterLiquidationInBp = _ltvAfter(
                     _sumOfBorrowerCollateralValue - collateralValueToLiquidate,
                     _totalBorrowerDebtValue - debtValueToCover
                 );
@@ -91,10 +91,10 @@ library SiloLiquidationLib {
     }
 
     /// @param _ltInBp LT liquidation threshold for asset
-    /// @return minimalAcceptableLT min acceptable LT after liquidation
-    function minAcceptableLT(uint256 _ltInBp) internal pure returns (uint256 minimalAcceptableLT) {
+    /// @return minimalAcceptableLTV min acceptable LTV after liquidation
+    function minAcceptableLTV(uint256 _ltInBp) internal pure returns (uint256 minimalAcceptableLTV) {
         // safe to uncheck because all values are in BP
-        unchecked { minimalAcceptableLT = _ltInBp * _LT_LIQUIDATION_MARGIN_IN_BP / _BASIS_POINTS; }
+        unchecked { minimalAcceptableLTV = _ltInBp * _LT_LIQUIDATION_MARGIN_IN_BP / _BASIS_POINTS; }
     }
 
     /// @notice this function never reverts
@@ -241,7 +241,7 @@ library SiloLiquidationLib {
     }
 
     /// @notice must stay private because this is not for general LTV, only for ltv after
-    function ltvAfter(uint256 _collateral, uint256 _debt) private pure returns (uint256 ltv) {
+    function _ltvAfter(uint256 _collateral, uint256 _debt) private pure returns (uint256 ltv) {
         unchecked {
             // mul is save because if we did not overflow on LTV before (and before debt is more),
             // then LTV after will be less, so we not overflow
