@@ -13,7 +13,6 @@ import {IShareToken, ISilo} from "../interfaces/IShareToken.sol";
 import {ISiloConfig} from "../SiloConfig.sol";
 import {TokenHelper} from "../lib/TokenHelper.sol";
 
-
 /// @title ShareToken
 /// @notice Implements common interface for Silo tokens representing debt or collateral positions.
 /// @dev Docs borrowed from https://github.com/OpenZeppelin/openzeppelin-contracts/tree/v4.9.3
@@ -81,8 +80,23 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
     }
 
     /// @inheritdoc IShareToken
-    function liquidationTransfer(address _owner, address _recipient, uint256 _amount) external virtual onlySilo {
+    function forwardTransfer(address _owner, address _recipient, uint256 _amount) external virtual onlySilo {
         _transfer(_owner, _recipient, _amount);
+    }
+
+    /// @inheritdoc IShareToken
+    function forwardTransferFrom(address _spender, address _from, address _to, uint256 _amount)
+        public
+        virtual
+        onlySilo
+    {
+        _spendAllowance(_from, _spender, _amount);
+        _transfer(_from, _to, _amount);
+    }
+
+    /// @inheritdoc IShareToken
+    function forwardApprove(address _owner, address _spender, uint256 _amount) public virtual onlySilo {
+        _approve(_owner, _spender, _amount);
     }
 
     /// @dev decimals of share token
@@ -100,7 +114,13 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
     ///      Protected deposit: "Silo Finance Non-borrowable NAME Deposit, SiloId: SILO_ID"
     ///      Borrowable deposit: "Silo Finance Borrowable NAME Deposit, SiloId: SILO_ID"
     ///      Debt: "Silo Finance NAME Debt, SiloId: SILO_ID"
-    function name() public view virtual override(ERC20Upgradeable, IERC20MetadataUpgradeable) returns (string memory) {
+    function name()
+        public
+        view
+        virtual
+        override(ERC20Upgradeable, IERC20MetadataUpgradeable)
+        returns (string memory)
+    {
         ISiloConfig siloConfig = silo.config();
         ISiloConfig.ConfigData memory configData = siloConfig.getConfig(address(silo));
         string memory siloIdAscii = StringsUpgradeable.toString(siloConfig.SILO_ID());
@@ -162,7 +182,7 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
         silo = _silo;
         hookReceiver = _hookReceiver;
     }
-    
+
     /// @dev Call an afterTokenTransfer hook if registered and check minimum share requirement on mint/burn
     function _afterTokenTransfer(address _sender, address _recipient, uint256 _amount) internal virtual override {
         if (hookReceiver == address(0)) return;
