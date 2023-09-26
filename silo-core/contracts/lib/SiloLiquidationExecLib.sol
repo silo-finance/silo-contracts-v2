@@ -194,7 +194,7 @@ library SiloLiquidationExecLib {
             _amountToLiquidate, _totalAssets, _shareToken.totalSupply(), MathUpgradeable.Rounding.Down
         );
 
-        _shareToken.liquidationTransfer(_borrower, _liquidator, shares);
+        _shareToken.forwardTransfer(_borrower, _liquidator, shares);
     }
 
     /// @return receiveCollateralAssets collateral + protected to liquidate

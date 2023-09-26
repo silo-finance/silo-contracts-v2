@@ -9,10 +9,8 @@ import {ISiloFactory} from "./ISiloFactory.sol";
 import {ILeverageBorrower} from "./ILeverageBorrower.sol";
 import {ISiloLiquidation} from "./ISiloLiquidation.sol";
 
-// TODO make ISilo is IERC4626
-
 // solhint-disable ordering
-interface ISilo is IERC3156FlashLender, ISiloLiquidation {
+interface ISilo is IERC4626, IERC3156FlashLender, ISiloLiquidation {
     /// @dev Interest accrual happens on each deposit/withdraw/borrow/repay. View methods work on storage that might be
     ///      outdate. Some calculations require accrued interest to return current state of Silo. This struct is used
     ///      to make a decision inside functions if interest should be accrued in memory to work on updated values.
@@ -71,29 +69,12 @@ interface ISilo is IERC3156FlashLender, ISiloLiquidation {
         uint64 interestRateTimestamp;
     }
 
-    /// @notice Emitted on deposit
-    /// @param sender wallet address that deposited asset
-    /// @param owner wallet address that received shares in Silo
-    /// @param assets amount of asset that was deposited
-    /// @param shares amount of shares that was minted
-    event Deposit(address indexed sender, address indexed owner, uint256 assets, uint256 shares);
-
     /// @notice Emitted on protected deposit
     /// @param sender wallet address that deposited asset
     /// @param owner wallet address that received shares in Silo
     /// @param assets amount of asset that was deposited
     /// @param shares amount of shares that was minted
     event DepositProtected(address indexed sender, address indexed owner, uint256 assets, uint256 shares);
-
-    /// @notice Emitted on withdraw
-    /// @param sender wallet address that sent transaction
-    /// @param receiver wallet address that received asset
-    /// @param owner wallet address that owned asset
-    /// @param assets amount of asset that was withdrew
-    /// @param shares amount of shares that was burn
-    event Withdraw(
-        address indexed sender, address indexed receiver, address indexed owner, uint256 assets, uint256 shares
-    );
 
     /// @notice Emitted on protected withdraw
     /// @param sender wallet address that sent transaction
@@ -145,7 +126,7 @@ interface ISilo is IERC3156FlashLender, ISiloLiquidation {
     function siloData() external view returns (uint256 daoAndDeployerFees, uint64 interestRateTimestamp);
     function utilizationData() external view returns (UtilizationData memory utilizationData);
     function getLiquidity() external view returns (uint256 liquidity);
-    function shareBalanceOf(address _depositor) external view returns (uint256 shares);
+    function getShareToken() external view returns (address shareToken);
 
     function isSolvent(address _borrower) external view returns (bool);
     function depositPossible(address _depositor) external view returns (bool);

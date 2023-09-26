@@ -101,7 +101,6 @@ contract InterestRateModelV2 is IInterestRateModel, IInterestRateModelV2 {
 
         ISilo.UtilizationData memory data = ISilo(silo).utilizationData();
 
-        // TODO when depositing, we doing two calls for `calculateCompoundInterestRate`, maybe we can optimize?
         Setup storage currentSetup = getSetup[silo];
 
         (rcomp, currentSetup.ri, currentSetup.Tcrit) = calculateCompoundInterestRate(
