@@ -145,6 +145,7 @@ interface ISilo is IERC3156FlashLender, ISiloLiquidation {
     function siloData() external view returns (uint256 daoAndDeployerFees, uint64 interestRateTimestamp);
     function utilizationData() external view returns (UtilizationData memory utilizationData);
     function getLiquidity() external view returns (uint256 liquidity);
+    function shareBalanceOf(address _depositor) external view returns (uint256 shares);
 
     function isSolvent(address _borrower) external view returns (bool);
     function depositPossible(address _depositor) external view returns (bool);

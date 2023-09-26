@@ -122,7 +122,21 @@ contract SiloConfig is ISiloConfig {
         return (_SILO0, _SILO1);
     }
 
-    function getAssetForSilo(address _silo) public view virtual returns (address asset) {
+    function getShareTokens(address _silo)
+        external
+        view
+        returns (address protectedShareToken, address collateralShareToken, address debtShareToken)
+    {
+        if (_silo == _SILO0) {
+            return (_PROTECTED_COLLATERAL_SHARE_TOKEN0, _COLLATERAL_SHARE_TOKEN0, _DEBT_SHARE_TOKEN0);
+        } else if (_silo == _SILO1) {
+            return (_PROTECTED_COLLATERAL_SHARE_TOKEN1, _COLLATERAL_SHARE_TOKEN1, _DEBT_SHARE_TOKEN1);
+        } else {
+            revert WrongSilo();
+        }
+    }
+
+    function getAssetForSilo(address _silo) external view virtual returns (address asset) {
         if (_silo == _SILO0) {
             return _TOKEN0;
         } else if (_silo == _SILO1) {
@@ -132,7 +146,7 @@ contract SiloConfig is ISiloConfig {
         }
     }
 
-    function getConfigs(address _silo) public view virtual returns (ConfigData memory, ConfigData memory) {
+    function getConfigs(address _silo) external view virtual returns (ConfigData memory, ConfigData memory) {
         ConfigData memory configData0 = ConfigData({
             daoFeeInBp: _DAO_FEE,
             deployerFeeInBp: _DEPLOYER_FEE,
@@ -181,7 +195,7 @@ contract SiloConfig is ISiloConfig {
         }
     }
 
-    function getConfig(address _silo) public view virtual returns (ConfigData memory) {
+    function getConfig(address _silo) external view virtual returns (ConfigData memory) {
         if (_silo == _SILO0) {
             return ConfigData({
                 daoFeeInBp: _DAO_FEE,
@@ -226,7 +240,7 @@ contract SiloConfig is ISiloConfig {
     }
 
     function getFeesWithAsset(address _silo)
-        public
+        external
         view
         virtual
         returns (uint256 daoFee, uint256 deployerFee, uint256 flashloanFeeInBp, address asset)
