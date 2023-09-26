@@ -8,9 +8,9 @@ import {SiloLiquidationLib} from "silo-core/contracts/lib/SiloLiquidationLib.sol
 import {SiloLiquidationExecLib} from "silo-core/contracts/lib/SiloLiquidationExecLib.sol";
 import {SiloFactory} from "silo-core/contracts/SiloFactory.sol";
 
-import "../../_mocks/SiloMock.sol";
-import "../../_mocks/InterestRateModelMock.sol";
-import "../../_mocks/ShareTokenMock.sol";
+import {SiloMock} from "../../_mocks/SiloMock.sol";
+import {InterestRateModelMock} from "../../_mocks/InterestRateModelMock.sol";
+import {TokenMock} from "../../_mocks/TokenMock.sol";
 import "../../data-readers/GetExactLiquidationAmountsTestData.sol";
 
 

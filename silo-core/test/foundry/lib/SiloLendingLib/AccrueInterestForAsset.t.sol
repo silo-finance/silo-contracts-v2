@@ -2,21 +2,18 @@
 pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
-import "silo-core/contracts/lib/SiloLiquidationExecLib.sol";
-import "../../_common/MockOracleQuote.sol";
-import "../../_common/SiloLiquidationExecLibImpl.sol";
+import {SiloLendingLib} from "silo-core/contracts/lib/SiloLendingLib.sol";
+import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
+
 import "../../_mocks/InterestRateModelMock.sol";
 
 // forge test -vv --mc AccrueInterestForAssetTest
-contract AccrueInterestForAssetTest is Test, MockOracleQuote {
+contract AccrueInterestForAssetTest is Test {
     uint256 constant BASIS_POINTS = 1e4;
 
     ISilo.SiloData siloData;
     ISilo.Assets totalCollateral;
     ISilo.Assets totalDebt;
-
-    // this must match value from SiloLiquidationLib
-    uint256 internal constant _LT_LIQUIDATION_MARGIN_IN_BP = 0.9e4; // 90%
 
     function setUp() public {
         siloData.daoAndDeployerFees = 0;
