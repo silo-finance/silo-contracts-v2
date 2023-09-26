@@ -4,9 +4,9 @@ pragma solidity >=0.8.0;
 import {Deployer} from "silo-foundry-utils/deployer/Deployer.sol";
 
 import {SiloCoreContracts} from "silo-core/common/SiloCoreContracts.sol";
-import {SiloCoreAddresses} from "silo-core/common/SiloCoreAddresses.sol";
+import {VeSiloAddresses} from "ve-silo/common/VeSiloAddresses.sol";
 
-contract CommonDeploy is Deployer, SiloCoreAddresses {
+contract CommonDeploy is Deployer, VeSiloAddresses {
     // Common variables
     string internal constant _FORGE_OUT_DIR = "cache/foundry/out/silo-core";
     string internal constant _DEPLOYMENTS_SUB_DIR = "silo-core";

@@ -5,6 +5,10 @@ name: CORE Quality Test
 
 env:
   FOUNDRY_PROFILE: core
+  RPC_MAINNET: ${{ vars.RPC_MAINNET }}
+  RPC_ARBITRUM: ${{ vars.RPC_ARBITRUM }}
+  RPC_SEPOLIA: ${{ vars.RPC_SEPOLIA }}
+  PRIVATE_KEY: ${{ vars.ANVIL_PRIVATE_KEY }}
 
 on:
   push:
@@ -66,4 +70,4 @@ jobs:
           # forge build --sizes
 
       - name: Run Forge tests
-        run: forge test -vv --no-match-test "_skip_"
+        run: forge test -vvv --no-match-test "_skip_"
