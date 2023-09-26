@@ -689,7 +689,7 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable, LeverageReent
             )
         ) revert ISilo.BorrowNotPossible();
 
-        _accrueInterest(debtConfig);
+        _accrueInterest(debtConfig.interestRateModel, debtConfig.daoFeeInBp, debtConfig.deployerFeeInBp);
 
         uint256 assets;
 
@@ -736,17 +736,27 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable, LeverageReent
         configData = config.getConfig(address(this));
 
         accruedInterest = SiloLendingLib.accrueInterestForAsset(
-            configData, siloData, total[AssetType.Collateral], total[AssetType.Debt]
+            configData.interestRateModel,
+            configData.daoFeeInBp,
+            configData.deployerFeeInBp,
+            siloData,
+            total[AssetType.Collateral],
+            total[AssetType.Debt]
         );
     }
 
-    function _accrueInterest(ISiloConfig.ConfigData memory _configData)
+    function _accrueInterest(address _interestRateModel, uint256 _daoFeeInBp, uint256 _deployerFeeInBp)
         internal
         virtual
         returns (uint256 accruedInterest)
     {
         accruedInterest = SiloLendingLib.accrueInterestForAsset(
-            _configData, siloData, total[AssetType.Collateral], total[AssetType.Debt]
+            _interestRateModel,
+            _daoFeeInBp,
+            _deployerFeeInBp,
+            siloData,
+            total[AssetType.Collateral],
+            total[AssetType.Debt]
         );
     }
 
@@ -808,7 +818,7 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable, LeverageReent
         (ISiloConfig.ConfigData memory debtConfig, ISiloConfig.ConfigData memory collateralConfig) =
             config.getConfigs(address(this));
 
-        _accrueInterest(debtConfig);
+        _accrueInterest(debtConfig.interestRateModel, debtConfig.daoFeeInBp, debtConfig.deployerFeeInBp);
 
         (assets, shares) = SiloLendingLib.borrow(
             debtConfig,
@@ -856,7 +866,7 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable, LeverageReent
         if (_collateralAsset != collateralConfig.token) revert UnexpectedCollateralToken();
         if (_debtAsset != debtConfig.token) revert UnexpectedDebtToken();
 
-        _accrueInterest(debtConfig);
+        _accrueInterest(debtConfig.interestRateModel, debtConfig.daoFeeInBp, debtConfig.deployerFeeInBp);
         ISilo(debtConfig.otherSilo).accrueInterest();
 
         bool selfLiquidation = _borrower == msg.sender;
