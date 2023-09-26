@@ -33,7 +33,7 @@ interface ISiloConfig {
         address debtHookReceiver1;
     }
 
-    struct ConfigData {
+    struct ConfigData { // TODO check all places where we using it and try to oprimise
         uint256 daoFeeInBp;
         uint256 deployerFeeInBp;
         address silo;
