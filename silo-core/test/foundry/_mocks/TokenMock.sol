@@ -3,11 +3,9 @@ pragma solidity ^0.8.0;
 
 import {Vm} from "forge-std/Vm.sol";
 
-import {
-    IERC20Upgradeable
-} from "openzeppelin-contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
+import {IERC20Upgradeable} from "openzeppelin-contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 
-contract Token {
+contract TokenMock {
     address public immutable ADDRESS;
 
     Vm private immutable vm;
@@ -17,11 +15,11 @@ contract Token {
         ADDRESS = _token == address(0) ? address(0x5224928173683243804202752353186) : _token;
     }
 
-    function balanceOfMock(address _owner, uint256 _balanceof) public {
+    function balanceOfMock(address _owner, uint256 _balance) public {
         vm.mockCall(
             ADDRESS,
             abi.encodeWithSelector(IERC20Upgradeable.balanceOf.selector, _owner),
-            abi.encode(_balanceof)
+            abi.encode(_balance)
         );
     }
 
@@ -30,6 +28,14 @@ contract Token {
             ADDRESS,
             abi.encodeWithSelector(IERC20Upgradeable.transferFrom.selector, _from, _to, _amount),
             abi.encode(true)
+        );
+    }
+
+    function totalSupplyMock(uint256 _totalSupply) external {
+        vm.mockCall(
+            ADDRESS,
+            abi.encodeWithSelector(IERC20Upgradeable.totalSupply.selector),
+            abi.encode(_totalSupply)
         );
     }
 }
