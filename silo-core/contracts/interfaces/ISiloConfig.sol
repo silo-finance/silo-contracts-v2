@@ -65,4 +65,9 @@ interface ISiloConfig {
         external
         view
         returns (uint256 daoFeeInBp, uint256 deployerFeeInBp, uint256 flashloanFeeInBp, address asset);
+
+    function getShareTokens(address _silo)
+        external
+        view
+        returns (address protectedShareToken, address collateralShareToken, address debtShareToken);
 }

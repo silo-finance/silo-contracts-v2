@@ -64,6 +64,14 @@ library SiloERC4626Lib {
         uint256 _totalAssets,
         uint256 _liquidity
     ) external view returns (uint256 assets, uint256 shares) {
+        bool isVault;
+
+        (assets, shares, isVault) = maxWithdrawForVaults(_config, _owner, _totalAssets, _assetType);
+
+        if (isVault) {
+            return (assets, shares);
+        }
+
         (ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig) =
             _config.getConfigs(address(this));
 
@@ -192,5 +200,29 @@ library SiloERC4626Lib {
 
     function depositPossible(address _debtShareToken, address _depositor) public view returns (bool) {
         return IShareToken(_debtShareToken).balanceOf(_depositor) == 0;
+    }
+
+    /// @notice maxWithdraw optimized implemencation for vaults that only use collateral and do not have debt
+    function maxWithdrawForVaults(
+        ISiloConfig _config,
+        address _owner,
+        uint256 _totalAssets,
+        ISilo.AssetType _assetType
+    ) internal view returns (uint256 assets, uint256 shares, bool isVault) {
+        if (_assetType == ISilo.AssetType.Collateral) {
+            (, address collateralShareToken, address debtShareToken) = _config.getShareTokens(address(this));
+
+            if (IShareToken(debtShareToken).balanceOf(_owner) == 0) {
+                shares = IShareToken(collateralShareToken).balanceOf(_owner);
+                assets = SiloMathLib.convertToAssets(
+                    shares,
+                    _totalAssets,
+                    IShareToken(collateralShareToken).totalSupply(),
+                    MathUpgradeable.Rounding.Down
+                );
+
+                return (assets, shares, true);
+            }
+        }
     }
 }

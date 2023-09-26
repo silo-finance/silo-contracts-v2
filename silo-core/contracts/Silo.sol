@@ -79,6 +79,11 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable, LeverageReent
         liquidity = SiloMathLib.liquidity(total[AssetType.Collateral].assets, total[AssetType.Debt].assets);
     }
 
+    function shareBalanceOf(address _depositor) external view virtual returns (uint256 shares) {
+        ISiloConfig.ConfigData memory collateralConfig = config.getConfig(address(this));
+        shares = IShareToken(collateralConfig.collateralShareToken).balanceOf(_depositor);
+    }
+
     function isSolvent(address _borrower) external view virtual returns (bool) {
         (ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig) =
             config.getConfigs(address(this));
