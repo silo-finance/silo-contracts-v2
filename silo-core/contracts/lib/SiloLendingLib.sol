@@ -91,7 +91,9 @@ library SiloLendingLib {
     /// @dev this method will accrue interest for ONE asset ONLY, to calculate all you have to call it twice
     /// with `_configData` for each token
     function accrueInterestForAsset(
-        ISiloConfig.ConfigData memory _assetConfig,
+        address _interestRateModel,
+        uint256 _daoFeeInBp,
+        uint256 _deployerFeeInBp,
         ISilo.SiloData storage _siloData,
         ISilo.Assets storage _totalCollateral,
         ISilo.Assets storage _totalDebt
@@ -116,9 +118,9 @@ library SiloLendingLib {
         ) = SiloMathLib.getCollateralAmountsWithInterest(
             _totalCollateral.assets,
             _totalDebt.assets,
-            IInterestRateModel(_assetConfig.interestRateModel).getCompoundInterestRateAndUpdate(block.timestamp),
-            _assetConfig.daoFeeInBp,
-            _assetConfig.deployerFeeInBp
+            IInterestRateModel(_interestRateModel).getCompoundInterestRateAndUpdate(block.timestamp),
+            _daoFeeInBp,
+            _deployerFeeInBp
         );
 
         // update remaining contract state
