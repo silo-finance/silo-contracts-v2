@@ -9,15 +9,15 @@ import {SiloDeploy_ETH_USDC_1 as SiloDeploy1} from "silo-core/deploy/silo/SiloDe
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 
-import {Token} from "silo-core/test/foundry/_mocks/Token.sol";
+import {TokenMock} from "silo-core/test/foundry/_mocks/TokenMock.sol";
 
 contract DepositTest is IntegrationTest {
     ISiloConfig siloConfig;
     ISilo silo0;
     ISilo silo1;
 
-    Token weth;
-    Token usdc;
+    TokenMock weth;
+    TokenMock usdc;
 
     uint256 internal constant _FORKING_BLOCK_NUMBER = 17336000;
 
@@ -37,8 +37,8 @@ contract DepositTest is IntegrationTest {
         silo0 = ISilo(siloConfig0.silo);
         silo1 = ISilo(siloConfig1.silo);
 
-        weth = new Token(vm, siloConfig0.token);
-        usdc = new Token(vm, siloConfig1.token);
+        weth = new TokenMock(vm, siloConfig0.token);
+        usdc = new TokenMock(vm, siloConfig1.token);
     }
 
     /*
@@ -49,9 +49,9 @@ contract DepositTest is IntegrationTest {
         address receiver = address(10);
         weth.transferFromMock(address(this), address(silo0), assets);
         uint256 gasStart = gasleft();
-        uint256 shares = silo0.deposit(assets, receiver, ISilo.AssetType.Collateral);
+        silo0.deposit(assets, receiver, ISilo.AssetType.Collateral);
         uint256 gasEnd = gasleft();
 
-        assertEq(gasStart - gasEnd, 144673, "optimise deposit");
+        assertEq(gasStart - gasEnd, 144658, "optimise deposit");
     }
 }

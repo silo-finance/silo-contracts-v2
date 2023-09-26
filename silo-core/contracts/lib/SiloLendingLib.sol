@@ -166,11 +166,12 @@ library SiloLendingLib {
         address _collateralShareToken,
         bool _borrowable,
         address _borrower
-    ) public view returns (bool) {
-        uint256 sumOfCollateralAssets = IShareToken(_protectedShareToken).balanceOf(_borrower)
-            + IShareToken(_collateralShareToken).balanceOf(_borrower);
+    ) public view returns (bool possible) {
+        // token must be marked as borrowable
+        if (!_borrowable) return false;
 
-        // token must be marked as borrowable and _borrower cannot have any collateral deposited
-        return _borrowable && sumOfCollateralAssets == 0;
+        // _borrower cannot have any collateral deposited
+        possible = IShareToken(_protectedShareToken).balanceOf(_borrower) == 0
+            && IShareToken(_collateralShareToken).balanceOf(_borrower) == 0;
     }
 }
