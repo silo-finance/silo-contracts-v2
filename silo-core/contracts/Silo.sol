@@ -16,6 +16,7 @@ import {ISiloConfig} from "./interfaces/ISiloConfig.sol";
 import {ISiloFactory} from "./interfaces/ISiloFactory.sol";
 import {IInterestRateModel} from "./interfaces/IInterestRateModel.sol";
 
+import {SiloERC4626} from "./utils/SiloERC4626.sol";
 import {SiloStdLib} from "./lib/SiloStdLib.sol";
 import {SiloSolvencyLib} from "./lib/SiloSolvencyLib.sol";
 import {SiloLendingLib} from "./lib/SiloLendingLib.sol";
@@ -27,7 +28,7 @@ import {LeverageReentrancyGuard} from "./utils/LeverageReentrancyGuard.sol";
 // Keep ERC4626 ordering TODO why?
 // solhint-disable ordering
 
-contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable, LeverageReentrancyGuard {
+contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, LeverageReentrancyGuard {
     using SafeERC20Upgradeable for IERC20Upgradeable;
 
     string public constant VERSION = "2.0.0";
@@ -79,9 +80,8 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable, LeverageReent
         liquidity = SiloMathLib.liquidity(total[AssetType.Collateral].assets, total[AssetType.Debt].assets);
     }
 
-    function shareBalanceOf(address _depositor) external view virtual returns (uint256 shares) {
-        ISiloConfig.ConfigData memory collateralConfig = config.getConfig(address(this));
-        shares = IShareToken(collateralConfig.collateralShareToken).balanceOf(_depositor);
+    function getShareToken() public view virtual override returns (address collateralShareToken) {
+        (, collateralShareToken,) = config.getShareTokens(address(this));
     }
 
     function isSolvent(address _borrower) external view virtual returns (bool) {
@@ -677,7 +677,6 @@ contract Silo is Initializable, ISilo, ReentrancyGuardUpgradeable, LeverageReent
         success = true;
     }
 
-    // TODO: move to library
     function leverage(uint256 _assets, ILeverageBorrower _receiver, address _borrower, bytes calldata _data)
         external
         virtual
