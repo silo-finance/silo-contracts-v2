@@ -15,19 +15,19 @@ import "../data-readers/EstimateMaxRepayValueTestData.sol";
 contract SiloLiquidationLibTest is Test {
     uint256 internal constant _BASIS_POINTS = 1e4;
 
-    // forge test -vv --mt test_SiloLiquidationLib_minAcceptableLT
-    function test_SiloLiquidationLib_minAcceptableLT() public {
-        assertEq(SiloLiquidationLib.minAcceptableLT(0), 0);
-        assertEq(SiloLiquidationLib.minAcceptableLT(1), 0);
-        assertEq(SiloLiquidationLib.minAcceptableLT(10), 9);
-        assertEq(SiloLiquidationLib.minAcceptableLT(500), 450);
-        assertEq(SiloLiquidationLib.minAcceptableLT(1e4), 9000);
+    // forge test -vv --mt test_SiloLiquidationLib_minAcceptableLTV
+    function test_SiloLiquidationLib_minAcceptableLTV() public {
+        assertEq(SiloLiquidationLib.minAcceptableLTV(0), 0);
+        assertEq(SiloLiquidationLib.minAcceptableLTV(1), 0);
+        assertEq(SiloLiquidationLib.minAcceptableLTV(10), 9);
+        assertEq(SiloLiquidationLib.minAcceptableLTV(500), 450);
+        assertEq(SiloLiquidationLib.minAcceptableLTV(1e4), 9000);
 
         uint256 gasStart = gasleft();
-        assertEq(SiloLiquidationLib.minAcceptableLT(800), 720, "LT=80% => min=>72%");
+        assertEq(SiloLiquidationLib.minAcceptableLTV(800), 720, "LT=80% => min=>72%");
         uint256 gasEnd = gasleft();
 
-        assertEq(gasStart - gasEnd, 134, "optimise minAcceptableLT()");
+        assertEq(gasStart - gasEnd, 134, "optimise minAcceptableLTV()");
     }
 
     /*
