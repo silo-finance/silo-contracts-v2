@@ -3,6 +3,8 @@ pragma solidity 0.8.19;
 
 import {SafeERC20Upgradeable} from "openzeppelin-contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
 import {IERC20Upgradeable} from "openzeppelin-contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
+import {IERC20MetadataUpgradeable} from "openzeppelin-contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
+
 import {MathUpgradeable} from "openzeppelin-contracts-upgradeable/utils/math/MathUpgradeable.sol";
 
 import {ISiloOracle} from "../interfaces/ISiloOracle.sol";
@@ -140,24 +142,38 @@ library SiloLendingLib {
             collateralConfig, debtConfig, _borrower, ISilo.OracleType.MaxLtv, ISilo.AccrueInterestInMemory.Yes
         );
 
-        (uint256 collateralValue, uint256 debtValue) =
+        (uint256 sumOfBorrowerCollateralValue, uint256 borrowerDebtValue) =
             SiloSolvencyLib.getPositionValues(ltvData, debtConfig.token, collateralConfig.token);
 
-        uint256 ltv = debtValue * _PRECISION_DECIMALS / collateralValue;
+        uint256 maxBorrowValue = SiloMathLib.calculateMaxBorrowValue(
+            collateralConfig.maxLtv,
+            sumOfBorrowerCollateralValue,
+            borrowerDebtValue
+        );
 
-        // if LTV is higher than maxLTV, user cannot borrow more
-        if (ltv >= collateralConfig.maxLtv) return (0, 0);
-
-        {
-            uint256 maxDebtValue = collateralValue * collateralConfig.maxLtv / _PRECISION_DECIMALS;
-            IShareToken debtShareToken = IShareToken(debtConfig.debtShareToken);
-            uint256 debtShareBalance = debtShareToken.balanceOf(_borrower);
-            shares = debtShareBalance * maxDebtValue / debtValue - debtShareBalance;
+        if (maxBorrowValue == 0) {
+            return (0, 0);
         }
 
-        {
-            assets =
-                SiloMathLib.convertToAssets(shares, _totalDebtAssets, _totalDebtShares, MathUpgradeable.Rounding.Up);
+        if (borrowerDebtValue == 0) {
+            uint256 oneDebtToken = 10 ** IERC20MetadataUpgradeable(debtConfig.token).decimals();
+
+            uint256 oneDebtTokenValue = address(ltvData.debtOracle) == address(0)
+                ? oneDebtToken
+                : ltvData.debtOracle.quote(oneDebtToken, debtConfig.token);
+
+            assets = maxBorrowValue * _PRECISION_DECIMALS / oneDebtTokenValue;
+
+            shares = SiloMathLib.convertToShares(
+                assets, _totalDebtAssets, _totalDebtShares, MathUpgradeable.Rounding.Down
+            );
+        } else {
+            uint256 shareBalance = IShareToken(debtConfig.token).balanceOf(_borrower);
+            shares = maxBorrowValue * shareBalance / borrowerDebtValue;
+
+            assets = SiloMathLib.convertToAssets(
+                shares, _totalDebtAssets, _totalDebtShares, MathUpgradeable.Rounding.Up
+            );
         }
     }
 
