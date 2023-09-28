@@ -130,4 +130,29 @@ library SiloMathLib {
     ) internal pure returns (uint256 assets) {
         assets = _shares.mulDiv(_totalAssets + 1, _totalShares + _DECIMALS_OFFSET_POW, _rounding);
     }
+
+    /// @return maxBorrowValue max borrow value yet available for borrower
+    function calculateMaxBorrowValue(
+        uint256 _configMaxLtvInBp,
+        uint256 _sumOfBorrowerCollateralValue,
+        uint256 _borrowerDebtValue
+    ) internal pure returns (uint256 maxBorrowValue) {
+        if (_sumOfBorrowerCollateralValue == 0) {
+            return 0;
+        }
+
+        uint256 ltvInBp = _borrowerDebtValue == 0
+            ? 0
+            : _borrowerDebtValue * _BASIS_POINTS / _sumOfBorrowerCollateralValue;
+
+        // if LTV is higher than maxLTV, user cannot borrow more
+        if (ltvInBp >= _configMaxLtvInBp) return 0;
+
+        uint256 maxDebtValue = _sumOfBorrowerCollateralValue * _configMaxLtvInBp / _BASIS_POINTS;
+
+        unchecked {
+            // we will not underflow because we checking `maxDebtValue > _borrowerDebtValue`
+            maxBorrowValue = maxDebtValue > _borrowerDebtValue ? maxDebtValue - _borrowerDebtValue : 0;
+        }
+    }
 }

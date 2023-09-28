@@ -130,15 +130,20 @@ library SiloSolvencyLib {
         returns (uint256 sumOfCollateralValue, uint256 debtValue)
     {
         uint256 sumOfCollateralAssets = _ltvData.borrowerProtectedAssets + _ltvData.borrowerCollateralAssets;
-        // if no oracle is set, assume price 1
-        sumOfCollateralValue = address(_ltvData.collateralOracle) != address(0)
-            ? _ltvData.collateralOracle.quote(sumOfCollateralAssets, _collateralAsset)
-            : sumOfCollateralAssets;
 
-        // if no oracle is set, assume price 1
-        debtValue = address(_ltvData.debtOracle) != address(0)
-            ? _ltvData.debtOracle.quote(_ltvData.borrowerDebtAssets, _debtAsset)
-            : _ltvData.borrowerDebtAssets;
+        if (sumOfCollateralAssets != 0) {
+            // if no oracle is set, assume price 1
+            sumOfCollateralValue = address(_ltvData.collateralOracle) != address(0)
+                ? _ltvData.collateralOracle.quote(sumOfCollateralAssets, _collateralAsset)
+                : sumOfCollateralAssets;
+        }
+
+        if (_ltvData.borrowerDebtAssets != 0) {
+            // if no oracle is set, assume price 1
+            debtValue = address(_ltvData.debtOracle) != address(0)
+                ? _ltvData.debtOracle.quote(_ltvData.borrowerDebtAssets, _debtAsset)
+                : _ltvData.borrowerDebtAssets;
+        }
     }
 
     /// @dev Calculates LTV for user. It is used in core logic. Non-view function is needed in case the oracle
