@@ -24,6 +24,7 @@ import "./lib/SolverLib.sol";
 import {SiloManager} from "./manager/SiloManager.sol";
 import {RewardsManager} from "./manager/RewardsManager.sol";
 
+import {IBalancerMinter} from "ve-silo/contracts/silo-tokens-minter/interfaces/IBalancerMinter.sol";
 /**
  * @title MetaSilo
  * @notice An ERC4626 compliant single asset vault that dynamically lends to multiple silos.
@@ -38,6 +39,9 @@ contract MetaSilo is ERC4626Upgradeable, SiloManager, RewardsManager {
     string private _name;
     string private _symbol;
     uint8 private _decimals;
+
+    address public constant SILO = 0x6f80310CA7F2C654691D1383149Fa1A57d8AB1f8;
+    IBalancerMinter public balancerMinter;
 
     /// Errors
     error ZeroAddressTransfer(address from, address to);
@@ -63,7 +67,7 @@ contract MetaSilo is ERC4626Upgradeable, SiloManager, RewardsManager {
         _name = _nameParam;
         _symbol = _symbolParam;
         _decimals = IERC20Metadata(address(_asset)).decimals();
-        _RewardManager_init(_balancerMinter);
+        balancerMinter = IBalancerMinter(_balancerMinter);
     }
 
     function name() public view override(ERC20Upgradeable, IERC20Metadata) returns (string memory) {
@@ -102,23 +106,23 @@ contract MetaSilo is ERC4626Upgradeable, SiloManager, RewardsManager {
                         ERC4626 OVERRIDES
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice This fct returns the amount of shares needed by the vault for the amount of assets provided.
+    /// @notice This function returns the amount of shares needed by the vault for the amount of assets provided.
     function _convertToShares(uint256 assets, Math.Rounding) internal view override returns (uint256) {
         uint256 supply = totalSupply();
         return supply == 0 ? assets : assets.mulDivDown(supply, _nav());
     }
 
-    /// @notice This fct returns the amount of assets needed by the vault for the amount of shares provided.
+    /// @notice This function returns the amount of assets needed by the vault for the amount of shares provided.
     function _convertToAssets(uint256 shares, Math.Rounding) internal view override returns (uint256) {
         uint256 supply = totalSupply();
         return supply == 0 ? shares : shares.mulDivDown(_nav(), supply);
     }
 
-    /// @notice Internal deposit fct used by `deposit()` and `mint()`. Accrues rewards for `caller` and `receiver`.
+    /// @notice Internal deposit function used by `deposit()` and `mint()`. Accrues rewards for `caller` and `receiver`.
     function _deposit(address caller, address receiver, uint256 assets, uint256 shares)
         internal
         override
-        accrueRewards(caller, receiver)
+        accrueRewards(receiver)
     {
         if (isEmergency) revert DepositNotAllowedEmergency();
         IERC20(asset()).safeTransferFrom(caller, address(this), assets);
@@ -127,11 +131,11 @@ contract MetaSilo is ERC4626Upgradeable, SiloManager, RewardsManager {
         _afterDeposit(assets);
     }
 
-    /// @notice Internal withdraw fct used by `withdraw()` and `redeem()`. Accrues rewards for `caller` and `receiver`.
+    /// @notice Internal withdraw function used by `withdraw()` and `redeem()`. Accrues rewards for `caller` and `receiver`.
     function _withdraw(address caller, address receiver, address owner, uint256 assets, uint256 shares)
         internal
         override
-        accrueRewards(owner, receiver)
+        accrueRewards(receiver)
     {
         if (caller != owner) {
             _approve(owner, msg.sender, allowance(owner, msg.sender) - shares);
@@ -142,8 +146,8 @@ contract MetaSilo is ERC4626Upgradeable, SiloManager, RewardsManager {
         IERC20(asset()).safeTransfer(receiver, assets);
     }
 
-    /// @notice Internal transfer fct used by `transfer()` and `transferFrom()`. Accrues rewards for `from` and `to`.
-    function _transfer(address from, address to, uint256 amount) internal override accrueRewards(from, to) {
+    /// @notice Internal transfer function used by `transfer()` and `transferFrom()`. Accrues rewards for `from` and `to`.
+    function _transfer(address from, address to, uint256 amount) internal override accrueRewards(to) {
         if (from == address(0) || to == address(0)) {
             revert ZeroAddressTransfer(from, to);
         }
@@ -205,17 +209,41 @@ contract MetaSilo is ERC4626Upgradeable, SiloManager, RewardsManager {
             }
 
             amountWithdrawn += _withdrawFromSilo(address(silos[j]), _amount - amountWithdrawn);
-
             j++;
+
             if (j >= 5) return amountWithdrawn;
         }
     }
 
     /**
-     * @notice Harvest logic for Meta Silo.
+     * @notice Harvest logic for Meta Silo, callable by anyone.
      */
     function harvest() public {
         _harvestRewards();
+    }
+
+    /**
+     * @notice Claims pending rewards and update accounting
+     * @notice First claim the SILO rewards, then other reward tokens.
+     */
+    function _harvestRewards() internal {
+        IERC20 siloReward = IERC20(SILO);
+        uint256 siloBalanceBefore = siloReward.balanceOf(address(this));
+
+        for (uint256 i = 0; i < silos.length; i++) {
+            if (gauge[silos[i]] != address(0)) {
+                balancerMinter.mintFor(gauge[silos[i]], address(this));
+            }
+        }
+        _accrueRewards(siloReward, siloReward.balanceOf(address(this)) - siloBalanceBefore);
+
+        for (uint256 i = 0; i < rewardTokens.length; i++) {
+            IERC20 reward = rewardTokens[i];
+            RewardInfo memory rewards = rewardInfos[reward];
+            uint256 balanceBefore = reward.balanceOf(address(this));
+            rewards.gauge.claim_rewards(address(this), address(this));
+            _accrueRewards(reward, reward.balanceOf(address(this)) - balanceBefore);
+        }
     }
 
     /**
@@ -230,9 +258,9 @@ contract MetaSilo is ERC4626Upgradeable, SiloManager, RewardsManager {
     /**
      * @notice Automatically reallocate funds across silos.
      * @dev Calls internal solver to calculate optimal distribution.
-     * @dev Only callable by owner.
+     * @dev Callable by anyone.
      */
-    function reallocateWithSolver() public onlyOwner {
+    function reallocateWithSolver() public {
         _reallocate(_solveDistribution(_nav()));
     }
 
@@ -241,25 +269,23 @@ contract MetaSilo is ERC4626Upgradeable, SiloManager, RewardsManager {
      * @param proposed Array of proposed deposit amounts for each silo.
      */
     function _reallocate(uint256[] memory proposed) internal {
-        uint256 total = _nav();
-
         for (uint256 i = 0; i < silos.length; i++) {
             uint256 current = _getSiloDeposit(silos[i]);
-
+            
             if (current > proposed[i]) {
                 uint256 amount = current - proposed[i];
                 _withdrawFromSilo(silos[i], amount);
             }
         }
 
-        uint256 remaining = total;
+        uint256 remaining = totalAssets();
 
         for (uint256 i = 0; i < silos.length; i++) {
-            uint256 amount = proposed[i] - _getSiloDeposit(silos[i]);
-
-            if (amount > 0) {
-                _depositToSilo(silos[i], Math.min(remaining, amount));
-                remaining -= amount;
+            uint256 amountToDeposit = proposed[i] - _getSiloDeposit(silos[i]);
+            
+            if (amountToDeposit > 0) {
+                _depositToSilo(silos[i], Math.min(remaining, amountToDeposit));
+                remaining -= amountToDeposit;
             }
 
             if (remaining == 0) {
@@ -274,7 +300,7 @@ contract MetaSilo is ERC4626Upgradeable, SiloManager, RewardsManager {
      * @return Array of proposed deposit amounts for each silo.
      */
     function _solveDistribution(uint256 _total) internal returns (uint256[] memory) {
-        (uint256[] memory uopt, uint256[] memory ucrit) = _getConfig();
+        (int256[] memory uopt, int256[] memory ucrit) = _getConfig();
         return SolverLib.solver(_getBorrowAmounts(), _getDepositAmounts(), uopt, ucrit, _total);
     }
 
@@ -285,12 +311,11 @@ contract MetaSilo is ERC4626Upgradeable, SiloManager, RewardsManager {
      * @return net asset value of the MetaSilo, excluding rewards.
      */
     function _nav() internal view returns (uint256) {
-        uint256 totalFromSilos = 0;
-
+        uint256 totalFromSilos;
+        
         for (uint256 i = 0; i < silos.length; i++) {
-            address _siloAddress = silos[i];
-            ISilo silo = ISilo(_siloAddress);
-            totalFromSilos += silo.convertToAssets(silo.shareBalanceOf(address(this)));
+            ISilo silo = ISilo(silos[i]);
+            totalFromSilos += silo.convertToAssets(silo.balanceOf(address(this)));
         }
 
         return totalAssets() + totalFromSilos;

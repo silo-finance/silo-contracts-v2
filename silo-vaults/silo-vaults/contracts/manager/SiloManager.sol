@@ -15,25 +15,26 @@ abstract contract SiloManager is Ownable {
     mapping(address => address) public gauge;
 
     bool public isEmergency;
-    IBalancerMinter public balancerMinter;
 
     /// Errors
     error SiloAlreadyAdded();
 
     /// Events
     event SiloAdded(address silo, address balancerMinter);
-    event SiloRemoved(address silo);
+    event SiloRemoved(address silo, bool isEmergency);
     event IsEmergency(bool);
 
     /**
      * @notice Allows owner to add a single silo.
      * @param _siloAddress Address of the silo.
      * @param _gaugeAddress Address of the associated balancerMinter.
+     * @dev If no gauge associated with Silo, set to address(0).
      */
     function addSilo(address _siloAddress, address _gaugeAddress) public onlyOwner {
         for (uint256 i = 0; i < silos.length; i++) {
             if (silos[i] != _siloAddress) revert SiloAlreadyAdded();
         }
+
         silos.push(_siloAddress);
         gauge[_siloAddress] = _gaugeAddress;
         emit SiloAdded(_siloAddress, _gaugeAddress);
@@ -43,15 +44,18 @@ abstract contract SiloManager is Ownable {
      * @notice Allows owner to add multiple silos.
      * @param _siloAddresses Array of silo addresses.
      * @param _gaugeAddresses Array of associated balancerMinter addresses.
+     * @dev If no gauge associated with Silo, set to address(0).
      */
     function addMultipleSilos(address[] memory _siloAddresses, address[] memory _gaugeAddresses) external onlyOwner {
         for (uint256 i = 0; i < _siloAddresses.length; i++) {
+            
             for (uint256 j = 0; j < silos.length; j++) {
                 if (_siloAddresses[i] == silos[j]) revert SiloAlreadyAdded();
             }
+
             silos.push(_siloAddresses[i]);
             gauge[_siloAddresses[i]] = _gaugeAddresses[i];
-            emit SiloAdded(_siloAddresses[i], address(balancerMinter));
+            emit SiloAdded(_siloAddresses[i], address(_gaugeAddresses[i]));
         }
     }
 
@@ -76,7 +80,7 @@ abstract contract SiloManager is Ownable {
             removedSilos.push(_siloAddress);
         }
 
-        emit SiloRemoved(_siloAddress);
+        emit SiloRemoved(_siloAddress, isEmergency);
     }
 
     /**
@@ -105,7 +109,7 @@ abstract contract SiloManager is Ownable {
      */
     function setEmergency(bool _isEmergency) public onlyOwner {
         isEmergency = _isEmergency;
-        emit SiloRemoved(isEmergency);
+        emit SiloRemoved(address(this), isEmergency);
     }
 
     /**
@@ -133,28 +137,28 @@ abstract contract SiloManager is Ownable {
      */
     function _getDepositAmounts() internal returns (uint256[] memory) {
         uint256 numSilos = silos.length;
-        uint256[] memory D = new uint256[](numSilos);
+        uint256[] memory depositAmounts = new uint256[](numSilos);
 
         for (uint256 i = 0; i < numSilos; i++) {
             address silo = silos[i];
-            D[i] = ISilo(silo).getCollateralAssets();
+            depositAmounts[i] = ISilo(silo).getCollateralAssets();
         }
-        return D;
+        return depositAmounts;
     }
 
     /**
-     * @notice Fetches the BORROW amounts for each silo.
-     * @return An array containing the BORROW amount for each silo.
+     * @notice Fetches the borrow amounts for each silo.
+     * @return An array containing the borrow amount for each silo.
      */
     function _getBorrowAmounts() internal returns (uint256[] memory) {
         uint256 numSilos = silos.length;
-        uint256[] memory B = new uint256[](numSilos);
+        uint256[] memory borrowAmounts = new uint256[](numSilos);
 
         for (uint256 i = 0; i < numSilos; i++) {
             address silo = silos[i];
-            B[i] = ISilo(silo).getDebtAssets();
+            borrowAmounts[i] = ISilo(silo).getDebtAssets();
         }
-        return B;
+        return borrowAmounts;
     }
 
     /**
@@ -162,20 +166,18 @@ abstract contract SiloManager is Ownable {
      * @return uopt Array of optimal utilizations for each silo.
      * @return ucrit Array of critical utilizations for each silo.
      */
-    function _getConfig() internal returns (uint256[] memory uopt, uint256[] memory ucrit) {
+    function _getConfig() internal returns (int256[] memory uopt, int256[] memory ucrit) {
         uint256 numSilos = silos.length;
-        uopt = new uint256[](numSilos);
-        ucrit = new uint256[](numSilos);
+        uopt = new int256[](numSilos);
+        ucrit = new int256[](numSilos);
 
         for (uint256 i = 0; i < numSilos; i++) {
             ISilo silo = ISilo(silos[i]);
             ISiloConfig siloConfig = silo.config();
-            ISiloConfig.ConfigData memory configData = siloConfig.getConfig();
-            //TODO define what asset to pass as a second param for getConfig
-            IERC20 asset = IERC20(address(0));
+            ISiloConfig.ConfigData memory configData = siloConfig.getConfig(address(silo));
             IInterestRateModel.ConfigWithState memory modelConfig =
-                IInterestRateModel(configData.interestRateModel0).getConfig(address(silo), address(asset));
-
+                IInterestRateModel(configData.interestRateModel).getConfig(address(silo));
+                
             uopt[i] = modelConfig.uopt;
             ucrit[i] = modelConfig.ucrit;
         }
