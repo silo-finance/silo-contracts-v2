@@ -218,7 +218,7 @@ library SiloLiquidationExecLib {
             uint256 sumOfBorrowerCollateralValue, uint256 totalBorrowerDebtValue, uint256 ltvBeforeInBp
         ) = SiloSolvencyLib.calculateLtv(_ltvData, _params.collateralConfigAsset, _params.debtConfigAsset);
 
-        if (!_params.selfLiquidation && _params.collateralLt > ltvBeforeInBp) return (0, 0);
+        if (!_params.selfLiquidation && _params.collateralLt >= ltvBeforeInBp) return (0, 0);
 
         uint256 ltvAfterInBp;
         (receiveCollateralAssets, repayDebtAssets, ltvAfterInBp) = SiloLiquidationLib.calculateExactLiquidationAmounts(
