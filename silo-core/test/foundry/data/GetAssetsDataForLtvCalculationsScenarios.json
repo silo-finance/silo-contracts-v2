@@ -1,0 +1,38 @@
+[
+  {
+    "id": 0,
+    "input": {
+      "accrueInMemory": false,
+      "oracleType": "solvency",
+      "debtConfig": {
+        "maxLtvOracle": 101,
+        "solvencyOracle": 102,
+        "debtShareBalanceOf": 10000,
+        "debtShareTotalSupply": 10000,
+        "totalDebtAssets": 2000000000000000000,
+        "compoundInterestRate": 1000000000000000000
+      },
+      "collateralConfig": {
+        "maxLtvOracle": 103,
+        "solvencyOracle": 104,
+        "protectedShareBalanceOf": 2000,
+        "protectedShareTotalSupply": 10000,
+        "collateralShareBalanceOf": 15000,
+        "collateralShareTotalSupply": 100000,
+        "daoFeeInBp": 0,
+        "deployerFeeInBp": 0,
+        "totalProtectedAssets": 40000,
+        "totalCollateralAssets": 60000,
+        "totalDebtAssets": 5000,
+        "compoundInterestRate": 1000000000000000000
+      }
+    },
+    "expected": {
+      "collateralOracl111e": 104,
+      "debtOracle": 102,
+      "borrowerProtectedAssets": 7920,
+      "borrowerCollateralAssets": 8991,
+      "borrowerDebtAssets": 2000000000000000000
+    }
+  }
+]

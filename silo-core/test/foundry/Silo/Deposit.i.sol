@@ -46,12 +46,43 @@ contract DepositTest is IntegrationTest {
     */
     function test_deposit_gas() public {
         uint256 assets = 1e18;
-        address receiver = address(10);
+        address depositor = address(10);
+        address borrower = address(11);
+
         weth.transferFromMock(address(this), address(silo0), assets);
         uint256 gasStart = gasleft();
-        silo0.deposit(assets, receiver, ISilo.AssetType.Collateral);
+        silo0.deposit(assets, depositor);
         uint256 gasEnd = gasleft();
 
-        assertEq(gasStart - gasEnd, 144657, "optimise deposit");
+        // assertEq(gasStart - gasEnd, 144471, "optimise deposit");
+
+        weth.transferFromMock(address(silo0), depositor, assets / 2);
+        gasStart = gasleft();
+        vm.prank(depositor);
+        silo0.withdraw(assets / 2, depositor, depositor);
+        gasEnd = gasleft();
+        // assertEq(gasStart - gasEnd, 80541, "optimise withdraw");
+
+        weth.transferFromMock(depositor, address(silo0), assets);
+        vm.prank(depositor);
+        silo0.deposit(assets, depositor);
+
+        usdc.transferFromMock(borrower, address(silo1), assets * 2);
+        vm.prank(borrower);
+        silo1.deposit(assets * 2, borrower);
+
+        weth.transferFromMock(address(silo0), borrower, assets / 2);
+        gasStart = gasleft();
+        vm.prank(borrower);
+        silo0.borrow(assets / 2, borrower, borrower);
+        gasEnd = gasleft();
+        // assertEq(gasStart - gasEnd, 134221, "optimise borrow");
+
+        weth.transferFromMock(borrower, address(silo0), assets / 2);
+        gasStart = gasleft();
+        vm.prank(borrower);
+        silo0.repay(assets / 2, borrower);
+        gasEnd = gasleft();
+        // assertEq(gasStart - gasEnd, 28401, "optimise repay");
     }
 }

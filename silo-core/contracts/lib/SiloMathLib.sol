@@ -2,6 +2,7 @@
 pragma solidity 0.8.19;
 
 import {MathUpgradeable} from "openzeppelin-contracts-upgradeable/utils/math/MathUpgradeable.sol";
+import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 
 library SiloMathLib {
     using MathUpgradeable for uint256;
@@ -62,7 +63,7 @@ library SiloMathLib {
         }
 
         unchecked {
-        // If we overflow on multiplication it should not revert tx, we will get lower fees
+            // If we overflow on multiplication it should not revert tx, we will get lower fees
             accruedInterest = _debtAssets * _rcompInDp / _PRECISION_DECIMALS;
         }
 
@@ -100,35 +101,52 @@ library SiloMathLib {
         uint256 _totalAssets,
         uint256 _totalShares,
         MathUpgradeable.Rounding _roundingToAssets,
-        MathUpgradeable.Rounding _roundingToShares
+        MathUpgradeable.Rounding _roundingToShares,
+        ISilo.AssetType _assetType
     ) internal pure returns (uint256 assets, uint256 shares) {
         if (_assets == 0) {
             shares = _shares;
-            assets = convertToAssets(_shares, _totalAssets, _totalShares, _roundingToAssets);
+            assets = convertToAssets(_shares, _totalAssets, _totalShares, _roundingToAssets, _assetType);
         } else {
-            shares = convertToShares(_assets, _totalAssets, _totalShares, _roundingToShares);
+            shares = convertToShares(_assets, _totalAssets, _totalShares, _roundingToShares, _assetType);
             assets = _assets;
         }
     }
 
-    /// @dev this is exact copy of openzeppelin-contracts/contracts/token/ERC20/extensions/ERC4626._convertToShares
+    /// @dev Math for collateral is exact copy of
+    ///      openzeppelin-contracts/contracts/token/ERC20/extensions/ERC4626._convertToShares
     function convertToShares(
         uint256 _assets,
         uint256 _totalAssets,
         uint256 _totalShares,
-        MathUpgradeable.Rounding _rounding
+        MathUpgradeable.Rounding _rounding,
+        ISilo.AssetType _assetType
     ) internal pure returns (uint256) {
-        return _assets.mulDiv(_totalShares + _DECIMALS_OFFSET_POW, _totalAssets + 1, _rounding);
+        // Debt calculations should not lower the result. Debt is a liability so protocol should not take any for
+        // itself. It should return actual result and round it up.
+        (uint256 offsetPow, uint256 one) = _assetType == ISilo.AssetType.Debt ? (0, 0) : (_DECIMALS_OFFSET_POW, 1);
+
+        if (_totalAssets == 0 && _assetType == ISilo.AssetType.Debt) return 0;
+
+        return _assets.mulDiv(_totalShares + offsetPow, _totalAssets + one, _rounding);
     }
 
-    /// @dev this is exact copy of openzeppelin-contracts/contracts/token/ERC20/extensions/ERC4626._convertToAssets
+    /// @dev Math for collateral is exact copy of
+    ///      openzeppelin-contracts/contracts/token/ERC20/extensions/ERC4626._convertToAssets
     function convertToAssets(
         uint256 _shares,
         uint256 _totalAssets,
         uint256 _totalShares,
-        MathUpgradeable.Rounding _rounding
+        MathUpgradeable.Rounding _rounding,
+        ISilo.AssetType _assetType
     ) internal pure returns (uint256 assets) {
-        assets = _shares.mulDiv(_totalAssets + 1, _totalShares + _DECIMALS_OFFSET_POW, _rounding);
+        // Debt calculations should not lower the result. Debt is a liability so protocol should not take any for
+        // itself. It should return actual result and round it up.
+        (uint256 offsetPow, uint256 one) = _assetType == ISilo.AssetType.Debt ? (0, 0) : (_DECIMALS_OFFSET_POW, 1);
+
+        if (_totalShares == 0 && _assetType == ISilo.AssetType.Debt) return 0;
+
+        assets = _shares.mulDiv(_totalAssets + one, _totalShares + offsetPow, _rounding);
     }
 
     /// @return maxBorrowValue max borrow value yet available for borrower
