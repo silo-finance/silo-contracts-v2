@@ -3,6 +3,7 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
+import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloLiquidation} from "silo-core/contracts/interfaces/ISiloLiquidation.sol";
 import {SiloLiquidationLib} from "silo-core/contracts/lib/SiloLiquidationLib.sol";
 import {SiloLiquidationExecLib} from "silo-core/contracts/lib/SiloLiquidationExecLib.sol";
@@ -66,15 +67,15 @@ contract GetExactLiquidationAmountsHelper is Test {
 
         P_SHARE_TOKEN_A.balanceOfMock(address(123), 0);
         P_SHARE_TOKEN_A.totalSupplyMock(0);
-        SILO_A.getProtectedAssetsMock(0);
+        SILO_A.totalMock(ISilo.AssetType.Protected, 0);
 
         C_SHARE_TOKEN_A.balanceOfMock(address(123), _collateralUserBalanceOf * sharesOffset);
         C_SHARE_TOKEN_A.totalSupplyMock((2 ** 128 - 1) * sharesOffset);
-        SILO_A.getCollateralAssetsMock(2 ** 128 - 1);
+        SILO_A.totalMock(ISilo.AssetType.Collateral, 2 ** 128 - 1);
 
         D_SHARE_TOKEN_B.balanceOfMock(address(123), _debtUserBalanceOf * sharesOffset);
         D_SHARE_TOKEN_B.totalSupplyMock(_debtUserBalanceOf * sharesOffset);
-        SILO_B.getDebtAssetsMock(_debtUserBalanceOf);
+        SILO_B.totalMock(ISilo.AssetType.Debt,  _debtUserBalanceOf);
 
         return SiloLiquidationExecLib.getExactLiquidationAmounts(
             collateralConfig,
@@ -132,15 +133,15 @@ contract GetExactLiquidationAmountsTest is GetExactLiquidationAmountsHelper {
 
         P_SHARE_TOKEN_A.balanceOfMock(user, 0);
         P_SHARE_TOKEN_A.totalSupplyMock(0);
-        SILO_A.getProtectedAssetsMock(0);
+        SILO_A.totalMock(ISilo.AssetType.Protected, 0);
 
         C_SHARE_TOKEN_A.balanceOfMock(user, 0);
         C_SHARE_TOKEN_A.totalSupplyMock(0);
-        SILO_A.getCollateralAssetsMock(0);
+        SILO_A.totalMock(ISilo.AssetType.Collateral, 0);
 
         D_SHARE_TOKEN_B.balanceOfMock(user, 0);
         D_SHARE_TOKEN_B.totalSupplyMock(0);
-        SILO_B.getDebtAssetsMock(0);
+        SILO_B.totalMock(ISilo.AssetType.Debt,  0);
 
         (
             uint256 fromCollateral, uint256 fromProtected, uint256 repayDebtAssets
@@ -164,15 +165,15 @@ contract GetExactLiquidationAmountsTest is GetExactLiquidationAmountsHelper {
 
             P_SHARE_TOKEN_A.balanceOfMock(testData.input.user, testData.mocks.protectedUserSharesBalanceOf);
             P_SHARE_TOKEN_A.totalSupplyMock(testData.mocks.protectedSharesTotalSupply);
-            SILO_A.getProtectedAssetsMock(testData.mocks.siloTotalProtectedAssets);
+            SILO_A.totalMock(ISilo.AssetType.Protected, testData.mocks.siloTotalProtectedAssets);
 
             C_SHARE_TOKEN_A.balanceOfMock(testData.input.user, testData.mocks.collateralUserSharesBalanceOf);
             C_SHARE_TOKEN_A.totalSupplyMock(testData.mocks.collateralSharesTotalSupply);
-            SILO_A.getCollateralAssetsMock(testData.mocks.siloTotalCollateralAssets);
+            SILO_A.totalMock(ISilo.AssetType.Collateral, testData.mocks.siloTotalCollateralAssets);
 
             D_SHARE_TOKEN_B.balanceOfMock(testData.input.user, testData.mocks.debtUserSharesBalanceOf);
             D_SHARE_TOKEN_B.totalSupplyMock(testData.mocks.debtSharesTotalSupply);
-            SILO_B.getDebtAssetsMock(testData.mocks.siloTotalDebtAssets);
+            SILO_B.totalMock(ISilo.AssetType.Debt,  testData.mocks.siloTotalDebtAssets);
 
             (
                 uint256 fromCollateral, uint256 fromProtected, uint256 repayDebtAssets

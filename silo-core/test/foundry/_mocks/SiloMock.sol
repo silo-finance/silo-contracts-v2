@@ -15,27 +15,11 @@ contract SiloMock {
         ADDRESS = _silo == address(0) ? address(0x51101111111111111111) : _silo;
     }
 
-    function getCollateralAssetsMock(uint256 _totalCollateralAssets) external {
+    function totalMock(ISilo.AssetType _type, uint256 _totalAssets) external {
         vm.mockCall(
             ADDRESS,
-            abi.encodeWithSelector(ISilo.getCollateralAssets.selector),
-            abi.encode(_totalCollateralAssets)
-        );
-    }
-
-    function getDebtAssetsMock(uint256 _totalDebtAssets) external {
-        vm.mockCall(
-            ADDRESS,
-            abi.encodeWithSelector(ISilo.getDebtAssets.selector),
-            abi.encode(_totalDebtAssets)
-        );
-    }
-
-    function getProtectedAssetsMock(uint256 _totalProtectedAssets) external {
-        vm.mockCall(
-            ADDRESS,
-            abi.encodeWithSelector(ISilo.getProtectedAssets.selector),
-            abi.encode(_totalProtectedAssets)
+            abi.encodeWithSelector(ISilo.total.selector, _type),
+            abi.encode(_totalAssets)
         );
     }
 }
