@@ -56,10 +56,6 @@ import {TokenHelper} from "../lib/TokenHelper.sol";
 /// _Available since v4.7._
 /// @custom:security-contact security@silo.finance
 abstract contract ShareToken is ERC20Upgradeable, IShareToken {
-    /// @dev ERC4626 decimal offset
-    /// see https://docs.openzeppelin.com/contracts/4.x/erc4626 for details
-    uint8 internal constant _DECIMALS_OFFSET = 2;
-
     /// @notice Silo address for which tokens was deployed
     ISilo public silo;
 
@@ -104,7 +100,7 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
         ISiloConfig siloConfig = silo.config();
         ISiloConfig.ConfigData memory configData = siloConfig.getConfig(address(silo));
 
-        return uint8(TokenHelper.assertAndGetDecimals(configData.token)) + _DECIMALS_OFFSET;
+        return uint8(TokenHelper.assertAndGetDecimals(configData.token));
     }
 
     /// @dev Name convention:
