@@ -49,7 +49,7 @@ contract GetAssetsDataForLtvCalculationsTest is Test {
         debtShareTokenMock.totalSupplyMock(scenario.input.debtConfig.debtShareTotalSupply);
         debtConfig.silo = silo0;
         SiloMock siloMock0 = new SiloMock(vm, silo0);
-        siloMock0.getDebtAssetsMock(scenario.input.debtConfig.totalDebtAssets);
+        siloMock0.totalMock(ISilo.AssetType.Debt,  scenario.input.debtConfig.totalDebtAssets);
         debtConfig.interestRateModel = interestRateModelMock.ADDRESS();
         interestRateModelMock.getCompoundInterestRateMock(
             silo0, timestamp, scenario.input.debtConfig.compoundInterestRate
@@ -73,9 +73,9 @@ contract GetAssetsDataForLtvCalculationsTest is Test {
         collateralConfig.deployerFeeInBp = scenario.input.collateralConfig.deployerFeeInBp;
         collateralConfig.silo = silo1;
         SiloMock siloMock1 = new SiloMock(vm, silo1);
-        siloMock1.getProtectedAssetsMock(scenario.input.collateralConfig.totalProtectedAssets);
-        siloMock1.getCollateralAssetsMock(scenario.input.collateralConfig.totalCollateralAssets);
-        siloMock1.getDebtAssetsMock(scenario.input.collateralConfig.totalDebtAssets);
+        siloMock1.totalMock(ISilo.AssetType.Protected, scenario.input.collateralConfig.totalProtectedAssets);
+        siloMock1.totalMock(ISilo.AssetType.Collateral,  scenario.input.collateralConfig.totalCollateralAssets);
+        siloMock1.totalMock(ISilo.AssetType.Debt,  scenario.input.collateralConfig.totalDebtAssets);
 
         borrower = borrowerAddr;
         oracleType = keccak256(bytes(scenario.input.oracleType)) == keccak256(bytes("solvency"))

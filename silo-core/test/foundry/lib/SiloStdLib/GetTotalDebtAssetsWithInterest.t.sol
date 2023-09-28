@@ -26,7 +26,7 @@ contract GetTotalDebtAssetsWithInterestTest is Test {
         address silo = SILO.ADDRESS();
         address interestRateModel = INTEREST_RATE_MODEL.ADDRESS();
 
-        SILO.getDebtAssetsMock(0);
+        SILO.totalMock(ISilo.AssetType.Debt,  0);
         INTEREST_RATE_MODEL.getCompoundInterestRateMock(silo, block.timestamp, 0);
 
         assertEq(SiloStdLib.getTotalDebtAssetsWithInterest(silo, interestRateModel), 0);
@@ -35,12 +35,12 @@ contract GetTotalDebtAssetsWithInterestTest is Test {
 
         assertEq(SiloStdLib.getTotalDebtAssetsWithInterest(silo, interestRateModel), 0);
 
-        SILO.getDebtAssetsMock(1e18);
+        SILO.totalMock(ISilo.AssetType.Debt,  1e18);
         INTEREST_RATE_MODEL.getCompoundInterestRateMock(silo, block.timestamp, 0);
 
         assertEq(SiloStdLib.getTotalDebtAssetsWithInterest(silo, interestRateModel), 1e18);
 
-        SILO.getDebtAssetsMock(1e18);
+        SILO.totalMock(ISilo.AssetType.Debt,  1e18);
         INTEREST_RATE_MODEL.getCompoundInterestRateMock(silo, block.timestamp, 0.01e18);
 
         assertEq(SiloStdLib.getTotalDebtAssetsWithInterest(silo, interestRateModel), 1.01e18);
