@@ -5,8 +5,6 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 
 contract SiloLendingLibBorrowTestData {
-    uint256 constant SHARE_TOKEN_OFFSET = 10 ** 2;
-
     struct Input {
         ISiloConfig.ConfigData configData;
         uint256 assets;
@@ -93,7 +91,7 @@ contract SiloLendingLibBorrowTestData {
         data[i].input.initTotalDebt = 1;
         data[i].mocks.debtSharesTotalSupply = 100;
         data[i].output.borrowedAssets = 4;
-        data[i].output.borrowedShare = 4 * SHARE_TOKEN_OFFSET;
+        data[i].output.borrowedShare = 400;
 
         i++;
         _init(data[i], "#6 shares are ignored if assets provided");
@@ -103,33 +101,33 @@ contract SiloLendingLibBorrowTestData {
         data[i].input.initTotalDebt = 1;
         data[i].mocks.debtSharesTotalSupply = 100;
         data[i].output.borrowedAssets = 2;
-        data[i].output.borrowedShare = 2 * SHARE_TOKEN_OFFSET;
+        data[i].output.borrowedShare = 200;
 
         i++;
         _init(data[i], "#7 1st borrow: 100");
         data[i].input.assets = 100;
-        data[i].input.totalCollateralAssets = 5000;
+        data[i].input.totalCollateralAssets = 10000;
         data[i].input.initTotalDebt = 0;
         data[i].mocks.debtSharesTotalSupply = 0;
         data[i].output.borrowedAssets = 100;
-        data[i].output.borrowedShare = 100 * SHARE_TOKEN_OFFSET;
+        data[i].output.borrowedShare = 100;
 
         i++;
         _init(data[i], "#8 2nd borrow: 100, 200");
         data[i].input.assets = 200;
         data[i].input.totalCollateralAssets = data[i-1].input.totalCollateralAssets;
         data[i].input.initTotalDebt = 100;
-        data[i].mocks.debtSharesTotalSupply = 100 * SHARE_TOKEN_OFFSET;
+        data[i].mocks.debtSharesTotalSupply = 100;
         data[i].output.borrowedAssets = 200;
-        data[i].output.borrowedShare = 200 * SHARE_TOKEN_OFFSET;
+        data[i].output.borrowedShare = 200;
 
         i++;
         _init(data[i], "#9 3rd borrow: 100, 200, 5000s");
         data[i].input.shares = 5000;
         data[i].input.totalCollateralAssets = data[i-1].input.totalCollateralAssets;
         data[i].input.initTotalDebt = 100 + 200;
-        data[i].mocks.debtSharesTotalSupply = (100 + 200) * SHARE_TOKEN_OFFSET;
-        data[i].output.borrowedAssets = 50;
+        data[i].mocks.debtSharesTotalSupply = (100 + 200);
+        data[i].output.borrowedAssets = 5000;
         data[i].output.borrowedShare = 5000;
 
         i++;
@@ -138,9 +136,9 @@ contract SiloLendingLibBorrowTestData {
         data[i].input.assets = allTheRest;
         data[i].input.totalCollateralAssets = data[i-1].input.totalCollateralAssets;
         data[i].input.initTotalDebt = 100 + 200 + 50;
-        data[i].mocks.debtSharesTotalSupply = (100 + 200 + 50) * SHARE_TOKEN_OFFSET;
+        data[i].mocks.debtSharesTotalSupply = (100 + 200 + 50);
         data[i].output.borrowedAssets = allTheRest;
-        data[i].output.borrowedShare = allTheRest * SHARE_TOKEN_OFFSET;
+        data[i].output.borrowedShare = allTheRest;
     }
 
     function _init(SLLBData memory _src, string memory _name) private view {

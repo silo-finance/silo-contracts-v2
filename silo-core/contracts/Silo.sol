@@ -155,6 +155,8 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
         (totalManagedAssets,) = SiloStdLib.getTotalAssetsAndTotalShares(configData, AssetType.Collateral);
     }
 
+    /// @notice Converts assets to shares for collateral and protected collateral
+    /// @dev For debt, use `convertToShares(uint256 _assets, AssetType _assetType)` with `AssetType.Debt`
     function convertToShares(uint256 _assets) external view virtual returns (uint256 shares) {
         ISiloConfig.ConfigData memory configData = config.getConfig(address(this));
 
@@ -166,6 +168,8 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
         );
     }
 
+    /// @notice Converts shares to assets for collateral and protected collateral
+    /// @dev For debt, use `convertToAssets(uint256 _shares, AssetType _assetType)` with `AssetType.Debt`
     function convertToAssets(uint256 _shares) external view virtual returns (uint256 assets) {
         ISiloConfig.ConfigData memory configData = config.getConfig(address(this));
 
