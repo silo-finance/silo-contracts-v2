@@ -30,7 +30,7 @@ library SiloLendingLib {
         address _spender,
         ISilo.Assets storage _totalDebt,
         uint256 _totalCollateralAssets
-    ) external returns (uint256 assets, uint256 shares) {
+    ) external returns (uint256 borrowedAssets, uint256 borrowedShares) {
         if (
             !borrowPossible(
                 _configData.protectedShareToken, _configData.collateralShareToken, _configData.borrowable, _borrower
@@ -40,7 +40,7 @@ library SiloLendingLib {
         IShareToken debtShareToken = IShareToken(_configData.debtShareToken);
         uint256 totalDebtAssets = _totalDebt.assets;
 
-        (assets, shares) = SiloMathLib.convertToAssetsAndToShares(
+        (borrowedAssets, borrowedShares) = SiloMathLib.convertToAssetsAndToShares(
             _assets,
             _shares,
             totalDebtAssets,
@@ -49,15 +49,17 @@ library SiloLendingLib {
             MathUpgradeable.Rounding.Up
         );
 
-        if (assets > SiloMathLib.liquidity(_totalCollateralAssets, totalDebtAssets)) revert ISilo.NotEnoughLiquidity();
+        if (borrowedAssets > SiloMathLib.liquidity(_totalCollateralAssets, totalDebtAssets)) {
+            revert ISilo.NotEnoughLiquidity();
+        }
 
         // add new debt
-        _totalDebt.assets = totalDebtAssets + assets;
+        _totalDebt.assets = totalDebtAssets + borrowedAssets;
         // `mint` checks if _spender is allowed to borrow on the account of _borrower. Hook receiver can
         // potentially reenter but the state is correct.
-        debtShareToken.mint(_borrower, _spender, shares);
+        debtShareToken.mint(_borrower, _spender, borrowedShares);
         // fee-on-transfer is ignored. If token reenters, state is already finilized, no harm done.
-        IERC20Upgradeable(_configData.token).safeTransferFrom(address(this), _receiver, assets);
+        IERC20Upgradeable(_configData.token).safeTransferFrom(address(this), _receiver, borrowedAssets);
     }
 
     function repay(
