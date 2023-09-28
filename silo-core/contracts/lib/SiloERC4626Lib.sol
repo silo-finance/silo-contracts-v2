@@ -64,12 +64,14 @@ library SiloERC4626Lib {
         uint256 _totalAssets,
         uint256 _liquidity
     ) external view returns (uint256 assets, uint256 shares) {
-        bool isVault;
+        {
+            bool isVault;
 
-        (assets, shares, isVault) = maxWithdrawForVaults(_config, _owner, _totalAssets, _assetType);
+            (assets, shares, isVault) = maxWithdrawForVaults(_config, _owner, _totalAssets, _assetType);
 
-        if (isVault) {
-            return (assets, shares);
+            if (isVault) {
+                return (assets, shares);
+            }
         }
 
         (ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig) =
@@ -82,17 +84,21 @@ library SiloERC4626Lib {
         (uint256 collateralValue, uint256 debtValue) =
             SiloSolvencyLib.getPositionValues(ltvData, collateralConfig.token, debtConfig.token);
 
-        uint256 ltv = debtValue * _PRECISION_DECIMALS / collateralValue;
+        {
+            uint256 ltv = debtValue * _PRECISION_DECIMALS / collateralValue;
 
-        // if LTV is higher than LT, user cannot withdraw
-        if (ltv >= collateralConfig.lt) return (0, 0);
+            // if LTV is higher than LT, user cannot withdraw
+            if (ltv >= collateralConfig.lt) return (0, 0);
+        }
 
-        uint256 minimumCollateralValue = debtValue * _PRECISION_DECIMALS / collateralConfig.lt;
-        uint256 spareCollateralValue = collateralValue - minimumCollateralValue;
+        {
+            uint256 minimumCollateralValue = debtValue * _PRECISION_DECIMALS / collateralConfig.lt;
+            uint256 spareCollateralValue = collateralValue - minimumCollateralValue;
 
-        // these are total assets (protected + collateral) that _owner can withdraw
-        assets = (ltvData.borrowerProtectedAssets + ltvData.borrowerCollateralAssets) * spareCollateralValue
-            / collateralValue;
+            // these are total assets (protected + collateral) that _owner can withdraw
+            assets = (ltvData.borrowerProtectedAssets + ltvData.borrowerCollateralAssets) * spareCollateralValue
+                / collateralValue;
+        }
 
         if (_assetType == ISilo.AssetType.Protected && assets > ltvData.borrowerProtectedAssets) {
             assets = ltvData.borrowerProtectedAssets;
@@ -100,7 +106,8 @@ library SiloERC4626Lib {
                 assets,
                 _totalAssets,
                 IShareToken(collateralConfig.protectedShareToken).totalSupply(),
-                MathUpgradeable.Rounding.Down
+                MathUpgradeable.Rounding.Down,
+                _assetType
             );
         } else if (_assetType == ISilo.AssetType.Collateral) {
             if (assets > ltvData.borrowerCollateralAssets) {
@@ -115,7 +122,8 @@ library SiloERC4626Lib {
                 assets,
                 _totalAssets,
                 IShareToken(collateralConfig.collateralShareToken).totalSupply(),
-                MathUpgradeable.Rounding.Down
+                MathUpgradeable.Rounding.Down,
+                _assetType
             );
         }
     }
@@ -139,7 +147,8 @@ library SiloERC4626Lib {
             totalAssets,
             _depositParams.collateralShareToken.totalSupply(),
             MathUpgradeable.Rounding.Up,
-            MathUpgradeable.Rounding.Down
+            MathUpgradeable.Rounding.Down,
+            ISilo.AssetType.Collateral
         );
 
         if (_asset != address(0)) {
@@ -174,7 +183,8 @@ library SiloERC4626Lib {
             totalAssets,
             IShareToken(_shareToken).totalSupply(),
             MathUpgradeable.Rounding.Down,
-            MathUpgradeable.Rounding.Up
+            MathUpgradeable.Rounding.Up,
+            ISilo.AssetType.Collateral
         );
 
         if (assets == 0 || shares == 0) revert ISilo.NothingToWithdraw();
@@ -218,7 +228,8 @@ library SiloERC4626Lib {
                     shares,
                     _totalAssets,
                     IShareToken(collateralShareToken).totalSupply(),
-                    MathUpgradeable.Rounding.Down
+                    MathUpgradeable.Rounding.Down,
+                    _assetType
                 );
 
                 return (assets, shares, true);

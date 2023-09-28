@@ -4,10 +4,8 @@ pragma solidity ^0.8.0;
 import "forge-std/Test.sol";
 import "silo-core/contracts/lib/SiloMathLib.sol";
 
-
 // forge test -vv --mc SiloERC4626LibTest
 contract SiloERC4626LibTest is Test {
-
     /*
     forge test -vv --mt test_SiloMathLib_conversions
     */
@@ -17,26 +15,29 @@ contract SiloERC4626LibTest is Test {
         uint256 _totalShares;
         MathUpgradeable.Rounding _rounding = MathUpgradeable.Rounding.Down;
 
-        uint256 shares = SiloMathLib.convertToShares(_assets, _totalAssets, _totalShares, _rounding);
+        uint256 shares =
+            SiloMathLib.convertToShares(_assets, _totalAssets, _totalShares, _rounding, ISilo.AssetType.Collateral);
         assertEq(shares, 1 * SiloMathLib._DECIMALS_OFFSET_POW);
 
         _totalAssets += _assets;
         _totalShares += shares;
 
         _assets = 1000;
-        shares = SiloMathLib.convertToShares(_assets,  _totalAssets, _totalShares, _rounding);
+        shares =
+            SiloMathLib.convertToShares(_assets, _totalAssets, _totalShares, _rounding, ISilo.AssetType.Collateral);
         assertEq(shares, 1000 * SiloMathLib._DECIMALS_OFFSET_POW);
 
         _totalAssets += _assets;
         _totalShares += shares;
 
         shares = 1 * SiloMathLib._DECIMALS_OFFSET_POW;
-        _assets = SiloMathLib.convertToAssets(shares, _totalAssets, _totalShares, _rounding);
+        _assets =
+            SiloMathLib.convertToAssets(shares, _totalAssets, _totalShares, _rounding, ISilo.AssetType.Collateral);
         assertEq(_assets, 1);
 
         shares = 1000 * SiloMathLib._DECIMALS_OFFSET_POW;
-        _assets = SiloMathLib.convertToAssets(shares, _totalAssets, _totalShares, _rounding);
+        _assets =
+            SiloMathLib.convertToAssets(shares, _totalAssets, _totalShares, _rounding, ISilo.AssetType.Collateral);
         assertEq(_assets, 1000);
     }
-
 }

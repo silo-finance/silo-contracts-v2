@@ -62,8 +62,11 @@ contract SiloMathLibTest is Test {
         uint256 totalShares;
 
         assertEq(
-            SiloMathLib.convertToAssets(shares, totalAssets, totalShares, MathUpgradeable.Rounding.Down),
-            0, "all zeros"
+            SiloMathLib.convertToAssets(
+                shares, totalAssets, totalShares, MathUpgradeable.Rounding.Down, ISilo.AssetType.Collateral
+            ),
+            0,
+            "all zeros"
         );
 
         shares = 0;
@@ -71,39 +74,60 @@ contract SiloMathLibTest is Test {
         totalShares = 1000 * offset;
 
         assertEq(
-            SiloMathLib.convertToAssets(shares, totalAssets, totalShares, MathUpgradeable.Rounding.Down),
-            0, "0 shares => 0 assets"
+            SiloMathLib.convertToAssets(
+                shares, totalAssets, totalShares, MathUpgradeable.Rounding.Down, ISilo.AssetType.Collateral
+            ),
+            0,
+            "0 shares => 0 assets"
         );
 
         shares = 1;
         totalAssets = 1;
         totalShares = 1;
         assertEq(
-            SiloMathLib.convertToAssets(shares, totalAssets, totalShares, MathUpgradeable.Rounding.Down),
-            0, "(1/1), 1 share down => 0 assets"
+            SiloMathLib.convertToAssets(
+                shares, totalAssets, totalShares, MathUpgradeable.Rounding.Down, ISilo.AssetType.Collateral
+            ),
+            0,
+            "(1/1), 1 share down => 0 assets"
         );
         assertEq(
-            SiloMathLib.convertToAssets(shares, totalAssets, totalShares, MathUpgradeable.Rounding.Up),
-            1, "(1/1), 1 share Up => 1 assets"
+            SiloMathLib.convertToAssets(
+                shares, totalAssets, totalShares, MathUpgradeable.Rounding.Up, ISilo.AssetType.Collateral
+            ),
+            1,
+            "(1/1), 1 share Up => 1 assets"
         );
 
         totalAssets = 10;
         totalShares = 10 * offset;
         assertEq(
-            SiloMathLib.convertToAssets(1, totalAssets, totalShares, MathUpgradeable.Rounding.Down),
-            0, "(10/10), 0.01 share down => 0 assets"
+            SiloMathLib.convertToAssets(
+                1, totalAssets, totalShares, MathUpgradeable.Rounding.Down, ISilo.AssetType.Collateral
+            ),
+            0,
+            "(10/10), 0.01 share down => 0 assets"
         );
         assertEq(
-            SiloMathLib.convertToAssets(1, totalAssets, totalShares, MathUpgradeable.Rounding.Up),
-            1, "(10/10), 0.01 share Up => 1 assets"
+            SiloMathLib.convertToAssets(
+                1, totalAssets, totalShares, MathUpgradeable.Rounding.Up, ISilo.AssetType.Collateral
+            ),
+            1,
+            "(10/10), 0.01 share Up => 1 assets"
         );
         assertEq(
-            SiloMathLib.convertToAssets(100, totalAssets, totalShares, MathUpgradeable.Rounding.Up),
-            1, "(10/10), 1.0 share Up => 1 assets"
+            SiloMathLib.convertToAssets(
+                100, totalAssets, totalShares, MathUpgradeable.Rounding.Up, ISilo.AssetType.Collateral
+            ),
+            1,
+            "(10/10), 1.0 share Up => 1 assets"
         );
         assertEq(
-            SiloMathLib.convertToAssets(1000, totalAssets, totalShares, MathUpgradeable.Rounding.Up),
-            10, "(10/10), 10.00 share Up => 10 assets"
+            SiloMathLib.convertToAssets(
+                1000, totalAssets, totalShares, MathUpgradeable.Rounding.Up, ISilo.AssetType.Collateral
+            ),
+            10,
+            "(10/10), 10.00 share Up => 10 assets"
         );
     }
 
@@ -114,7 +138,8 @@ contract SiloMathLibTest is Test {
         uint256 debtAssets;
         uint256 rcompInDp;
 
-        (uint256 debtAssetsWithInterest,uint256 accruedInterest) = SiloMathLib.getDebtAmountsWithInterest(debtAssets, rcompInDp);
+        (uint256 debtAssetsWithInterest, uint256 accruedInterest) =
+            SiloMathLib.getDebtAmountsWithInterest(debtAssets, rcompInDp);
 
         assertEq(debtAssetsWithInterest, 0);
         assertEq(accruedInterest, 0);
