@@ -28,11 +28,119 @@
       }
     },
     "expected": {
-      "collateralOracl111e": 104,
+      "collateralOracle": 104,
       "debtOracle": 102,
-      "borrowerProtectedAssets": 7920,
-      "borrowerCollateralAssets": 8991,
+      "borrowerProtectedAssets": 7999,
+      "borrowerCollateralAssets": 9000,
       "borrowerDebtAssets": 2000000000000000000
+    }
+  },
+  {
+    "id": 1,
+    "input": {
+      "accrueInMemory": false,
+      "oracleType": "maxLtv",
+      "debtConfig": {
+        "maxLtvOracle": 0,
+        "solvencyOracle": 102,
+        "debtShareBalanceOf": 1000,
+        "debtShareTotalSupply": 10000,
+        "totalDebtAssets": 50000,
+        "compoundInterestRate": 1000000000000000000
+      },
+      "collateralConfig": {
+        "maxLtvOracle": 103,
+        "solvencyOracle": 104,
+        "protectedShareBalanceOf": 2000,
+        "protectedShareTotalSupply": 10000,
+        "collateralShareBalanceOf": 10000,
+        "collateralShareTotalSupply": 100000,
+        "daoFeeInBp": 0,
+        "deployerFeeInBp": 0,
+        "totalProtectedAssets": 15000,
+        "totalCollateralAssets": 60000,
+        "totalDebtAssets": 5000,
+        "compoundInterestRate": 1000000000000000000
+      }
+    },
+    "expected": {
+      "collateralOracle": 103,
+      "debtOracle": 102,
+      "borrowerProtectedAssets": 2999,
+      "borrowerCollateralAssets": 6000,
+      "borrowerDebtAssets": 5000
+    }
+  },
+  {
+    "id": 2,
+    "input": {
+      "accrueInMemory": true,
+      "oracleType": "maxLtv",
+      "debtConfig": {
+        "maxLtvOracle": 0,
+        "solvencyOracle": 102,
+        "debtShareBalanceOf": 166666667,
+        "debtShareTotalSupply": 500000000,
+        "totalDebtAssets": 500000000,
+        "compoundInterestRate": 1000000000000000000
+      },
+      "collateralConfig": {
+        "maxLtvOracle": 103,
+        "solvencyOracle": 104,
+        "protectedShareBalanceOf": 2000,
+        "protectedShareTotalSupply": 10000,
+        "collateralShareBalanceOf": 10000,
+        "collateralShareTotalSupply": 100000,
+        "daoFeeInBp": 0,
+        "deployerFeeInBp": 0,
+        "totalProtectedAssets": 15000,
+        "totalCollateralAssets": 60000,
+        "totalDebtAssets": 5000,
+        "compoundInterestRate": 1000000000000000000
+      }
+    },
+    "expected": {
+      "collateralOracle": 103,
+      "debtOracle": 102,
+      "borrowerProtectedAssets": 2999,
+      "borrowerCollateralAssets": 6500,
+      "borrowerDebtAssets": 333333334
+    }
+  },
+  {
+    "id": 3,
+    "input": {
+      "accrueInMemory": true,
+      "oracleType": "maxLtv",
+      "debtConfig": {
+        "maxLtvOracle": 0,
+        "solvencyOracle": 102,
+        "debtShareBalanceOf": 166666667,
+        "debtShareTotalSupply": 500000000,
+        "totalDebtAssets": 500000000,
+        "compoundInterestRate": 1000000000000000000
+      },
+      "collateralConfig": {
+        "maxLtvOracle": 0,
+        "solvencyOracle": 0,
+        "protectedShareBalanceOf": 2000,
+        "protectedShareTotalSupply": 10000,
+        "collateralShareBalanceOf": 10000,
+        "collateralShareTotalSupply": 100000,
+        "daoFeeInBp": 1000,
+        "deployerFeeInBp": 500,
+        "totalProtectedAssets": 15000,
+        "totalCollateralAssets": 60000,
+        "totalDebtAssets": 5000,
+        "compoundInterestRate": 1000000000000000000
+      }
+    },
+    "expected": {
+      "collateralOracle": 0,
+      "debtOracle": 102,
+      "borrowerProtectedAssets": 2999,
+      "borrowerCollateralAssets": 6425,
+      "borrowerDebtAssets": 333333334
     }
   }
 ]
