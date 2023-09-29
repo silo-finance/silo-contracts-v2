@@ -102,7 +102,7 @@ library SiloStdLib {
         if (_assetType == ISilo.AssetType.Protected) {
             totalAssets = ISilo(_configData.silo).total(ISilo.AssetType.Protected);
             totalShares = IShareToken(_configData.protectedShareToken).totalSupply();
-        } else {
+        } else if (_assetType == ISilo.AssetType.Collateral) {
             totalAssets = getTotalCollateralAssetsWithInterest(
                 _configData.silo,
                 _configData.interestRateModel,
@@ -110,13 +110,12 @@ library SiloStdLib {
                 _configData.deployerFeeInBp
             );
 
-            if (_assetType == ISilo.AssetType.Collateral) {
-                totalShares = IShareToken(_configData.collateralShareToken).totalSupply();
-            } else if (_assetType == ISilo.AssetType.Debt) {
-                totalShares = IShareToken(_configData.debtShareToken).totalSupply();
-            } else {
-                revert ISilo.WrongAssetType();
-            }
+            totalShares = IShareToken(_configData.collateralShareToken).totalSupply();
+        } else if (_assetType == ISilo.AssetType.Debt) {
+            totalAssets = getTotalDebtAssetsWithInterest(_configData.silo, _configData.interestRateModel);
+            totalShares = IShareToken(_configData.debtShareToken).totalSupply();
+        } else {
+            revert ISilo.WrongAssetType();
         }
     }
 
