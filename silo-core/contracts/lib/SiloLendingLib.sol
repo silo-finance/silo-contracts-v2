@@ -59,7 +59,7 @@ library SiloLendingLib {
         // `mint` checks if _spender is allowed to borrow on the account of _borrower. Hook receiver can
         // potentially reenter but the state is correct.
         debtShareToken.mint(_borrower, _spender, borrowedShares);
-        // fee-on-transfer is ignored. If token reenters, state is already finilized, no harm done.
+        // fee-on-transfer is ignored. If token reenters, state is already finalized, no harm done.
         IERC20Upgradeable(_configData.token).safeTransferFrom(address(this), _receiver, borrowedAssets);
     }
 
