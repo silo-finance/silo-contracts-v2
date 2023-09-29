@@ -1,14 +1,11 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.0;
 
-import {IntegrationTest} from "silo-foundry-utils/networks/IntegrationTest.sol";
+import "forge-std/Test.sol";
 
 import {SiloLendingLib} from "silo-core/contracts/lib/SiloLendingLib.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
-
-import {MainnetDeploy} from "silo-core/deploy/MainnetDeploy.s.sol";
-import {SiloDeploy_ETH_USDC_1 as SiloDeploy1} from "silo-core/deploy/silo/SiloDeploy_ETH_USDC_1.s.sol";
 
 import {TokenMock} from "silo-core/test/foundry/_mocks/TokenMock.sol";
 import "../../data-readers/SiloLendingLibBorrowTestData.sol";
@@ -17,7 +14,7 @@ import "../../_common/SiloLendingLibImpl.sol";
 /*
     forge test -vv --mc MaxBorrowTest
 */
-contract MaxBorrowTest is IntegrationTest {
+contract BorrowTest is Test {
     ISilo.Assets totalDebt;
 
     TokenMock immutable protectedShareToken;
@@ -58,7 +55,7 @@ contract MaxBorrowTest is IntegrationTest {
         uint256 totalCollateralAssets;
 
         vm.expectRevert(ISilo.BorrowNotPossible.selector);
-        (uint256 borrowedAssets, uint256 borrowedShares) = SiloLendingLib.borrow(
+        SiloLendingLib.borrow(
             configData, assets, shares, receiver, borrower, spender, totalDebt, totalCollateralAssets
         );
     }

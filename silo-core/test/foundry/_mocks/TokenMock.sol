@@ -43,6 +43,14 @@ contract TokenMock {
         );
     }
 
+    function decimalsMock(uint256 _decimals) external {
+        vm.mockCall(
+            ADDRESS,
+            abi.encodeWithSelector(bytes4(keccak256("decimals()"))),
+            abi.encode(_decimals)
+        );
+    }
+
     function mintMock(address _owner, address _spender, uint256 _amount) external {
         require(_owner != address(0), "ERC20: mint to the zero address");
 
