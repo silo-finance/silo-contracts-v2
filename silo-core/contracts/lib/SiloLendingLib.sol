@@ -134,51 +134,40 @@ library SiloLendingLib {
         _siloData.daoAndDeployerFees += totalFees;
     }
 
-    function maxBorrow(ISiloConfig _config, address _borrower, uint256 _totalDebtAssets, uint256 _totalDebtShares)
+    function maxBorrow(
+        ISiloConfig.ConfigData memory _collateralConfig,
+        ISiloConfig.ConfigData memory _debtConfig,
+        address _borrower,
+        uint256 _totalDebtAssets,
+        uint256 _totalDebtShares
+    )
         external
         view
         returns (uint256 assets, uint256 shares)
     {
-        (ISiloConfig.ConfigData memory debtConfig, ISiloConfig.ConfigData memory collateralConfig) =
-            _config.getConfigs(address(this));
-
         SiloSolvencyLib.LtvData memory ltvData = SiloSolvencyLib.getAssetsDataForLtvCalculations(
-            collateralConfig, debtConfig, _borrower, ISilo.OracleType.MaxLtv, ISilo.AccrueInterestInMemory.Yes
+            _collateralConfig, _debtConfig, _borrower, ISilo.OracleType.MaxLtv, ISilo.AccrueInterestInMemory.Yes
         );
 
         (uint256 sumOfBorrowerCollateralValue, uint256 borrowerDebtValue) =
-            SiloSolvencyLib.getPositionValues(ltvData, debtConfig.token, collateralConfig.token);
+            SiloSolvencyLib.getPositionValues(ltvData, _collateralConfig.token, _debtConfig.token);
 
         uint256 maxBorrowValue = SiloMathLib.calculateMaxBorrowValue(
-            collateralConfig.maxLtv,
+            _collateralConfig.maxLtv,
             sumOfBorrowerCollateralValue,
             borrowerDebtValue
         );
 
-        if (maxBorrowValue == 0) {
-            return (0, 0);
-        }
-
-        if (borrowerDebtValue == 0) {
-            uint256 oneDebtToken = 10 ** IERC20MetadataUpgradeable(debtConfig.token).decimals();
-
-            uint256 oneDebtTokenValue = address(ltvData.debtOracle) == address(0)
-                ? oneDebtToken
-                : ltvData.debtOracle.quote(oneDebtToken, debtConfig.token);
-
-            assets = maxBorrowValue * _PRECISION_DECIMALS / oneDebtTokenValue;
-
-            shares = SiloMathLib.convertToShares(
-                assets, _totalDebtAssets, _totalDebtShares, MathUpgradeable.Rounding.Down, ISilo.AssetType.Debt
-            );
-        } else {
-            uint256 shareBalance = IShareToken(debtConfig.token).balanceOf(_borrower);
-            shares = maxBorrowValue * shareBalance / borrowerDebtValue;
-
-            assets = SiloMathLib.convertToAssets(
-                shares, _totalDebtAssets, _totalDebtShares, MathUpgradeable.Rounding.Up, ISilo.AssetType.Debt
-            );
-        }
+        return maxBorrowValueToAssetsAndShares(
+            maxBorrowValue,
+            borrowerDebtValue,
+            _borrower,
+            _debtConfig.token,
+            _debtConfig.debtShareToken,
+            ltvData.debtOracle,
+            _totalDebtAssets,
+            _totalDebtShares
+        );
     }
 
     function borrowPossible(
@@ -193,5 +182,45 @@ library SiloLendingLib {
         // _borrower cannot have any collateral deposited
         possible = IShareToken(_protectedShareToken).balanceOf(_borrower) == 0
             && IShareToken(_collateralShareToken).balanceOf(_borrower) == 0;
+    }
+
+    function maxBorrowValueToAssetsAndShares(
+        uint256 _maxBorrowValue,
+        uint256 _borrowerDebtValue,
+        address _borrower,
+        address _debtToken,
+        address _debtShareToken,
+        ISiloOracle _debtOracle,
+        uint256 _totalDebtAssets,
+        uint256 _totalDebtShares
+    )
+        internal
+        view
+        returns (uint256 assets, uint256 shares)
+    {
+        if (_maxBorrowValue == 0) {
+            return (0, 0);
+        }
+
+        if (_borrowerDebtValue == 0) {
+            uint256 oneDebtToken = 10 ** IERC20MetadataUpgradeable(_debtToken).decimals();
+
+            uint256 oneDebtTokenValue = address(_debtOracle) == address(0)
+                ? oneDebtToken
+                : _debtOracle.quote(oneDebtToken, _debtToken);
+
+            assets = _maxBorrowValue * _PRECISION_DECIMALS / oneDebtTokenValue;
+
+            shares = SiloMathLib.convertToShares(
+                assets, _totalDebtAssets, _totalDebtShares, MathUpgradeable.Rounding.Down, ISilo.AssetType.Debt
+            );
+        } else {
+            uint256 shareBalance = IShareToken(_debtShareToken).balanceOf(_borrower);
+            shares = _maxBorrowValue * shareBalance / _borrowerDebtValue;
+
+            assets = SiloMathLib.convertToAssets(
+                shares, _totalDebtAssets, _totalDebtShares, MathUpgradeable.Rounding.Up, ISilo.AssetType.Debt
+            );
+        }
     }
 }
