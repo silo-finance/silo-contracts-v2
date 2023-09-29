@@ -232,16 +232,16 @@ library SiloLiquidationExecLib {
 
         if (receiveCollateralAssets == 0 || repayDebtAssets == 0) return (0, 0);
 
-         if (ltvAfterInBp != 0) { // it can be 0 in case of full liquidation
-             if (!_params.selfLiquidation && ltvAfterInBp < SiloLiquidationLib.minAcceptableLTV(_params.collateralLt)) {
-                 revert ISiloLiquidation.LiquidationTooBig();
-             }
+        if (ltvAfterInBp != 0) { // it can be 0 in case of full liquidation
+            if (!_params.selfLiquidation && ltvAfterInBp < SiloLiquidationLib.minAcceptableLTV(_params.collateralLt)) {
+                revert ISiloLiquidation.LiquidationTooBig();
+            }
 
-             // because our precision is 1e4, it is possible to end up with higher LTV, if difference will be
-             // inside a "precision error"
-             if (ltvAfterInBp > ltvBeforeInBp) {
-                 revert ISiloLiquidation.LtvWentUp();
-             }
-         }
+            // because our precision is 1e4, it is possible to end up with higher LTV, if difference will be
+            // inside a "precision error"
+            if (ltvAfterInBp > ltvBeforeInBp) {
+                revert ISiloLiquidation.LtvWentUp();
+            }
+        }
     }
 }
