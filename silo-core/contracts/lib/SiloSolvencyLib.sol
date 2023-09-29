@@ -98,7 +98,7 @@ library SiloSolvencyLib {
         uint256 shares;
 
         (shares, totalShares) = SiloStdLib.getSharesAndTotalSupply(_collateralConfig.protectedShareToken, _borrower);
-        totalAssets = ISilo(_collateralConfig.silo).total(ISilo.AssetType.Protected);
+        totalAssets = ISilo(_collateralConfig.silo).getProtectedAssets();
         ltvData.borrowerProtectedAssets = SiloMathLib.convertToAssets(
             shares, totalAssets, totalShares, MathUpgradeable.Rounding.Down, ISilo.AssetType.Protected
         );
@@ -112,7 +112,7 @@ library SiloSolvencyLib {
                 _collateralConfig.daoFeeInBp,
                 _collateralConfig.deployerFeeInBp
             )
-            : ISilo(_collateralConfig.silo).total(ISilo.AssetType.Collateral);
+            : ISilo(_collateralConfig.silo).getCollateralAssets();
 
         ltvData.borrowerCollateralAssets = SiloMathLib.convertToAssets(
             shares, totalAssets, totalShares, MathUpgradeable.Rounding.Down, ISilo.AssetType.Collateral
@@ -121,7 +121,7 @@ library SiloSolvencyLib {
         (shares, totalShares) = SiloStdLib.getSharesAndTotalSupply(_debtConfig.debtShareToken, _borrower);
         totalAssets = _accrueInMemory == ISilo.AccrueInterestInMemory.Yes
             ? SiloStdLib.getTotalDebtAssetsWithInterest(_debtConfig.silo, _debtConfig.interestRateModel)
-            : ISilo(_debtConfig.silo).total(ISilo.AssetType.Debt);
+            : ISilo(_debtConfig.silo).getDebtAssets();
 
         ltvData.borrowerDebtAssets = SiloMathLib.convertToAssets(
             shares, totalAssets, totalShares, MathUpgradeable.Rounding.Up, ISilo.AssetType.Debt
