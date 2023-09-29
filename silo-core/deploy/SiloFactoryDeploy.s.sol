@@ -29,16 +29,15 @@ contract SiloFactoryDeploy is CommonDeploy {
         address shareDebtTokenImpl = address(new ShareDebtToken());
 
         uint256 daoFeeInBp = 0.15e4;
-        address daoFeeReceiver = address(420);
+        address daoFeeReceiver = address(msg.sender);
         // TODO: uncomment when reading from file system is completed
         // address daoFeeReceiver = getDeployedAddress(VeSiloContracts.FEE_DISTRIBUTOR);
 
         siloFactory.initialize(siloImpl, shareCollateralTokenImpl, shareDebtTokenImpl, daoFeeInBp, daoFeeReceiver);
 
-        address timelock = msg.sender;
         // TODO: uncomment when reading from file system is completed
         // address timelock = getDeployedAddress(VeSiloContracts.TIMELOCK_CONTROLLER);
-        OwnableUpgradeable(address(siloFactory)).transferOwnership(timelock);
+        OwnableUpgradeable(address(siloFactory)).transferOwnership(msg.sender);
 
         vm.stopBroadcast();
 
