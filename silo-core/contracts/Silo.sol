@@ -80,10 +80,6 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
         liquidity = SiloMathLib.liquidity(total[AssetType.Collateral].assets, total[AssetType.Debt].assets);
     }
 
-    function getShareToken() public view virtual override returns (address collateralShareToken) {
-        (, collateralShareToken,) = config.getShareTokens(address(this));
-    }
-
     function isSolvent(address _borrower) external view virtual returns (bool) {
         (ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig) =
             config.getConfigs(address(this));
@@ -770,6 +766,67 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
         SiloStdLib.withdrawFees(config, factory, siloData);
     }
 
+    /// @dev it can be called on "debt silo" only
+    /// @notice user can use this method to do self liquidation, it that case check for LT requirements will be ignored
+    function liquidationCall(
+        address _collateralAsset,
+        address _debtAsset,
+        address _borrower,
+        uint256 _debtToCover,
+        bool _receiveSToken
+    ) external virtual {
+        (ISiloConfig.ConfigData memory debtConfig, ISiloConfig.ConfigData memory collateralConfig) =
+            config.getConfigs(address(this));
+
+        if (_collateralAsset != collateralConfig.token) revert UnexpectedCollateralToken();
+        if (_debtAsset != debtConfig.token) revert UnexpectedDebtToken();
+
+        _accrueInterest(debtConfig.interestRateModel, debtConfig.daoFeeInBp, debtConfig.deployerFeeInBp);
+        ISilo(debtConfig.otherSilo).accrueInterest();
+
+        bool selfLiquidation = _borrower == msg.sender;
+
+        (
+            uint256 withdrawAssetsFromCollateral, uint256 withdrawAssetsFromProtected, uint256 repayDebtAssets
+        ) = SiloLiquidationExecLib.getExactLiquidationAmounts(
+            collateralConfig,
+            debtConfig,
+            _borrower,
+            _debtToCover,
+            selfLiquidation ? 0 : collateralConfig.liquidationFee,
+            selfLiquidation
+        );
+
+        // always ZERO, we can receive shares, but we can not repay with shares
+        uint256 zeroShares;
+        emit LiquidationCall(msg.sender, _receiveSToken);
+        SiloLendingLib.repay(debtConfig, repayDebtAssets, zeroShares, _borrower, msg.sender, total[AssetType.Debt]);
+
+        ISiloLiquidation(debtConfig.otherSilo).withdrawCollateralsToLiquidator(
+            withdrawAssetsFromCollateral, withdrawAssetsFromProtected, _borrower, msg.sender, _receiveSToken
+        );
+    }
+
+    /// @dev that method allow to finish liquidation process by giving up collateral to liquidator
+    function withdrawCollateralsToLiquidator(
+        uint256 _withdrawAssetsFromCollateral,
+        uint256 _withdrawAssetsFromProtected,
+        address _borrower,
+        address _liquidator,
+        bool _receiveSToken
+    ) external virtual {
+        SiloLiquidationExecLib.withdrawCollateralsToLiquidator(
+            config,
+            _withdrawAssetsFromCollateral,
+            _withdrawAssetsFromProtected,
+            _borrower,
+            _liquidator,
+            _receiveSToken,
+            getLiquidity(),
+            total
+        );
+    }
+
     function _accrueInterest()
         internal
         virtual
@@ -893,64 +950,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
         emit Repay(msg.sender, _borrower, assets, shares);
     }
 
-    /// @dev it can be called on "debt silo" only
-    /// @notice user can use this method to do self liquidation, it that case check for LT requirements will be ignored
-    function liquidationCall(
-        address _collateralAsset,
-        address _debtAsset,
-        address _borrower,
-        uint256 _debtToCover,
-        bool _receiveSToken
-    ) external virtual {
-        (ISiloConfig.ConfigData memory debtConfig, ISiloConfig.ConfigData memory collateralConfig) =
-            config.getConfigs(address(this));
-
-        if (_collateralAsset != collateralConfig.token) revert UnexpectedCollateralToken();
-        if (_debtAsset != debtConfig.token) revert UnexpectedDebtToken();
-
-        _accrueInterest(debtConfig.interestRateModel, debtConfig.daoFeeInBp, debtConfig.deployerFeeInBp);
-        ISilo(debtConfig.otherSilo).accrueInterest();
-
-        bool selfLiquidation = _borrower == msg.sender;
-
-        (
-            uint256 withdrawAssetsFromCollateral, uint256 withdrawAssetsFromProtected, uint256 repayDebtAssets
-        ) = SiloLiquidationExecLib.getExactLiquidationAmounts(
-            collateralConfig,
-            debtConfig,
-            _borrower,
-            _debtToCover,
-            selfLiquidation ? 0 : collateralConfig.liquidationFee,
-            selfLiquidation
-        );
-
-        // always ZERO, we can receive shares, but we can not repay with shares
-        uint256 zeroShares;
-        emit LiquidationCall(msg.sender, _receiveSToken);
-        SiloLendingLib.repay(debtConfig, repayDebtAssets, zeroShares, _borrower, msg.sender, total[AssetType.Debt]);
-
-        ISiloLiquidation(debtConfig.otherSilo).withdrawCollateralsToLiquidator(
-            withdrawAssetsFromCollateral, withdrawAssetsFromProtected, _borrower, msg.sender, _receiveSToken
-        );
-    }
-
-    /// @dev that method allow to finish liquidation process by giving up collateral to liquidator
-    function withdrawCollateralsToLiquidator(
-        uint256 _withdrawAssetsFromCollateral,
-        uint256 _withdrawAssetsFromProtected,
-        address _borrower,
-        address _liquidator,
-        bool _receiveSToken
-    ) external virtual {
-        SiloLiquidationExecLib.withdrawCollateralsToLiquidator(
-            config,
-            _withdrawAssetsFromCollateral,
-            _withdrawAssetsFromProtected,
-            _borrower,
-            _liquidator,
-            _receiveSToken,
-            getLiquidity(),
-            total
-        );
+    function _getShareToken() internal view virtual override returns (address collateralShareToken) {
+        (, collateralShareToken,) = config.getShareTokens(address(this));
     }
 }
