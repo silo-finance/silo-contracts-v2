@@ -191,7 +191,11 @@ library SiloLiquidationExecLib {
     ) internal {
         // we already accrued interest, so we can work directly on assets
         uint256 shares = SiloMathLib.convertToShares(
-            _amountToLiquidate, _totalAssets, _shareToken.totalSupply(), MathUpgradeable.Rounding.Down
+            _amountToLiquidate,
+            _totalAssets,
+            _shareToken.totalSupply(),
+            MathUpgradeable.Rounding.Down,
+            ISilo.AssetType.Collateral
         );
 
         _shareToken.forwardTransfer(_borrower, _liquidator, shares);

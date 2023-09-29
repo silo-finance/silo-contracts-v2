@@ -14,8 +14,8 @@ library SiloSolvencyLib {
     struct LtvData {
         ISiloOracle collateralOracle; // TODO remove oracles once we have deposit gas
         ISiloOracle debtOracle;
-        uint256 borrowerCollateralAssets;
         uint256 borrowerProtectedAssets;
+        uint256 borrowerCollateralAssets;
         uint256 borrowerDebtAssets;
     }
 
@@ -99,8 +99,9 @@ library SiloSolvencyLib {
 
         (shares, totalShares) = SiloStdLib.getSharesAndTotalSupply(_collateralConfig.protectedShareToken, _borrower);
         totalAssets = ISilo(_collateralConfig.silo).getProtectedAssets();
-        ltvData.borrowerProtectedAssets =
-            SiloMathLib.convertToAssets(shares, totalAssets, totalShares, MathUpgradeable.Rounding.Down);
+        ltvData.borrowerProtectedAssets = SiloMathLib.convertToAssets(
+            shares, totalAssets, totalShares, MathUpgradeable.Rounding.Down, ISilo.AssetType.Protected
+        );
 
         (shares, totalShares) = SiloStdLib.getSharesAndTotalSupply(_collateralConfig.collateralShareToken, _borrower);
 
@@ -109,19 +110,22 @@ library SiloSolvencyLib {
                 _collateralConfig.silo,
                 _collateralConfig.interestRateModel,
                 _collateralConfig.daoFeeInBp,
-                _collateralConfig.deployerFeeInBp)
+                _collateralConfig.deployerFeeInBp
+            )
             : ISilo(_collateralConfig.silo).getCollateralAssets();
 
-        ltvData.borrowerCollateralAssets =
-            SiloMathLib.convertToAssets(shares, totalAssets, totalShares, MathUpgradeable.Rounding.Down);
+        ltvData.borrowerCollateralAssets = SiloMathLib.convertToAssets(
+            shares, totalAssets, totalShares, MathUpgradeable.Rounding.Down, ISilo.AssetType.Collateral
+        );
 
         (shares, totalShares) = SiloStdLib.getSharesAndTotalSupply(_debtConfig.debtShareToken, _borrower);
         totalAssets = _accrueInMemory == ISilo.AccrueInterestInMemory.Yes
             ? SiloStdLib.getTotalDebtAssetsWithInterest(_debtConfig.silo, _debtConfig.interestRateModel)
             : ISilo(_debtConfig.silo).getDebtAssets();
 
-        ltvData.borrowerDebtAssets =
-            SiloMathLib.convertToAssets(shares, totalAssets, totalShares, MathUpgradeable.Rounding.Up);
+        ltvData.borrowerDebtAssets = SiloMathLib.convertToAssets(
+            shares, totalAssets, totalShares, MathUpgradeable.Rounding.Up, ISilo.AssetType.Debt
+        );
     }
 
     function getPositionValues(LtvData memory _ltvData, address _collateralAsset, address _debtAsset)

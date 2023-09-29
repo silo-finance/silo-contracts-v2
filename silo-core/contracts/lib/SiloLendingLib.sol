@@ -46,7 +46,8 @@ library SiloLendingLib {
             totalDebtAssets,
             debtShareToken.totalSupply(),
             MathUpgradeable.Rounding.Down,
-            MathUpgradeable.Rounding.Up
+            MathUpgradeable.Rounding.Up,
+            ISilo.AssetType.Debt
         );
 
         if (borrowedAssets > SiloMathLib.liquidity(_totalCollateralAssets, totalDebtAssets)) {
@@ -79,7 +80,8 @@ library SiloLendingLib {
             totalDebtAssets,
             debtShareToken.totalSupply(),
             MathUpgradeable.Rounding.Up,
-            MathUpgradeable.Rounding.Down
+            MathUpgradeable.Rounding.Down,
+            ISilo.AssetType.Debt
         );
 
         // fee-on-transfer is ignored
@@ -167,14 +169,14 @@ library SiloLendingLib {
             assets = maxBorrowValue * _PRECISION_DECIMALS / oneDebtTokenValue;
 
             shares = SiloMathLib.convertToShares(
-                assets, _totalDebtAssets, _totalDebtShares, MathUpgradeable.Rounding.Down
+                assets, _totalDebtAssets, _totalDebtShares, MathUpgradeable.Rounding.Down, ISilo.AssetType.Debt
             );
         } else {
             uint256 shareBalance = IShareToken(debtConfig.token).balanceOf(_borrower);
             shares = maxBorrowValue * shareBalance / borrowerDebtValue;
 
             assets = SiloMathLib.convertToAssets(
-                shares, _totalDebtAssets, _totalDebtShares, MathUpgradeable.Rounding.Up
+                shares, _totalDebtAssets, _totalDebtShares, MathUpgradeable.Rounding.Up, ISilo.AssetType.Debt
             );
         }
     }
