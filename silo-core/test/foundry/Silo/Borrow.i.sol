@@ -49,9 +49,9 @@ contract BorrowTest is IntegrationTest {
         uint256 assets = 0;
         address borrower = address(1);
 
-        assertEq(silo0.total(ISilo.AssetType.Debt), 0);
+        assertEq(silo0.getDebtAssets(), 0);
         silo0.borrow(assets, borrower, borrower);
-        assertEq(silo0.total(ISilo.AssetType.Debt), 0, "expect no change");
+        assertEq(silo0.getDebtAssets(), 0, "expect no change");
 
         (,, address debtShareToken) = siloConfig.getShareTokens(address(silo0));
         assertEq(IShareToken(debtShareToken).balanceOf(borrower), 0, "expect no debt");
@@ -135,14 +135,14 @@ contract BorrowTest is IntegrationTest {
         silo0.borrow(maxBorrow, borrower, borrower);
         uint256 gasEnd = gasleft();
 
-        assertEq(gasStart - gasEnd, 128964, "optimise borrow");
+        assertEq(gasStart - gasEnd, 129031, "optimise borrow");
 
         assertEq(IShareToken(debtShareToken).balanceOf(borrower), 0, "expect borrower to NOT have debt in collateral silo");
-        assertEq(silo1.total(ISilo.AssetType.Debt), 0, "expect collateral silo to NOT have debt");
+        assertEq(silo1.getDebtAssets(), 0, "expect collateral silo to NOT have debt");
 
         (protectedShareToken, collateralShareToken, debtShareToken) = siloConfig.getShareTokens(address(silo0));
         assertEq(IShareToken(debtShareToken).balanceOf(borrower), maxBorrow, "expect borrower to have debt in debt silo");
-        assertEq(silo0.total(ISilo.AssetType.Debt), maxBorrow, "expect debt silo to have debt");
+        assertEq(silo0.getDebtAssets(), maxBorrow, "expect debt silo to have debt");
     }
 
     /*
@@ -178,16 +178,16 @@ contract BorrowTest is IntegrationTest {
         uint256 gotShares = silo0.borrow(borrowAmount, borrower, borrower);
         uint256 gasEnd = gasleft();
 
-        assertEq(gasStart - gasEnd, 128973, "optimise borrow #1");
+        assertEq(gasStart - gasEnd, 129040, "optimise borrow #1");
 
         assertEq(IShareToken(debtShareToken).balanceOf(borrower), 0, "collateral silo: expect borrower to NOT have debt");
         assertEq(IShareToken(collateralShareToken).balanceOf(borrower), 1e18, "collateral silo: borrower has collateral");
-        assertEq(silo1.total(ISilo.AssetType.Debt), 0, "collateral silo: NO debt");
+        assertEq(silo1.getDebtAssets(), 0, "collateral silo: NO debt");
 
         (protectedShareToken, collateralShareToken, debtShareToken) = siloConfig.getShareTokens(address(silo0));
         assertEq(IShareToken(debtShareToken).balanceOf(borrower), 0.425e18, "debt silo: borrower has debt");
         assertEq(gotShares, 0.425e18, "got debt shares");
-        assertEq(silo0.total(ISilo.AssetType.Debt), borrowAmount, "debt silo: has debt");
+        assertEq(silo0.getDebtAssets(), borrowAmount, "debt silo: has debt");
 
         borrowAmount = silo0.maxBorrow(borrower);
         // emit log_named_decimal_uint("borrowAmount #2", borrowAmount, 18);
@@ -198,16 +198,16 @@ contract BorrowTest is IntegrationTest {
         gotShares = silo0.borrow(borrowAmount, borrower, borrower);
         gasEnd = gasleft();
 
-        assertEq(gasStart - gasEnd, 54860, "optimise borrow #2");
+        assertEq(gasStart - gasEnd, 54927, "optimise borrow #2");
 
         assertEq(IShareToken(debtShareToken).balanceOf(borrower), 0.85e18, "debt silo: borrower has debt");
         assertEq(gotShares, 0.425e18, "got shares");
-        assertEq(silo0.total(ISilo.AssetType.Debt), maxBorrow, "debt silo: has debt");
+        assertEq(silo0.getDebtAssets(), maxBorrow, "debt silo: has debt");
 
         (protectedShareToken, collateralShareToken, debtShareToken) = siloConfig.getShareTokens(address(silo1));
         assertEq(IShareToken(debtShareToken).balanceOf(borrower), 0, "collateral silo: expect borrower to NOT have debt");
         assertEq(IShareToken(collateralShareToken).balanceOf(borrower), 1e18, "collateral silo: borrower has collateral");
-        assertEq(silo1.total(ISilo.AssetType.Debt), 0, "collateral silo: NO debt");
+        assertEq(silo1.getDebtAssets(), 0, "collateral silo: NO debt");
 
         assertTrue(silo0.isSolvent(borrower), "still isSolvent");
         assertTrue(silo1.isSolvent(borrower), "still isSolvent");
