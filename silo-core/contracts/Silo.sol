@@ -542,12 +542,14 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
     // Lending
 
     function maxBorrow(address _borrower) external view virtual returns (uint256 maxAssets) {
-        ISiloConfig.ConfigData memory configData = config.getConfig(address(this));
+        (
+            ISiloConfig.ConfigData memory debtConfig, ISiloConfig.ConfigData memory collateralConfig
+        ) = config.getConfigs(address(this));
 
-        (uint256 totalSiloAssets, uint256 totalShares) =
-            SiloStdLib.getTotalAssetsAndTotalShares(configData, AssetType.Debt);
+        (uint256 totalDebtAssets, uint256 totalDebtShares) =
+            SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(debtConfig, AssetType.Debt);
 
-        (maxAssets,) = SiloLendingLib.maxBorrow(config, _borrower, totalSiloAssets, totalShares);
+        (maxAssets,) = SiloLendingLib.maxBorrow(collateralConfig, debtConfig, _borrower, totalDebtAssets, totalDebtShares);
     }
 
     function previewBorrow(uint256 _assets) external view virtual returns (uint256 shares) {
@@ -574,12 +576,14 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
     }
 
     function maxBorrowShares(address _borrower) external view virtual returns (uint256 maxShares) {
-        ISiloConfig.ConfigData memory configData = config.getConfig(address(this));
+        (
+            ISiloConfig.ConfigData memory debtConfig, ISiloConfig.ConfigData memory collateralConfig
+        ) = config.getConfigs(address(this));
 
         (uint256 totalSiloAssets, uint256 totalShares) =
             SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(debtConfig, AssetType.Debt);
 
-        (, maxShares) = SiloLendingLib.maxBorrow(config, _borrower, totalSiloAssets, totalShares);
+        (, maxShares) = SiloLendingLib.maxBorrow(collateralConfig, debtConfig, _borrower, totalSiloAssets, totalShares);
     }
 
     function previewBorrowShares(uint256 _shares) external view virtual returns (uint256 assets) {
