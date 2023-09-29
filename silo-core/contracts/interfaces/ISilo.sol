@@ -121,9 +121,6 @@ interface ISilo is IERC4626, IERC3156FlashLender, ISiloLiquidation {
 
     function initialize(ISiloConfig _config, address _modelConfigAddress) external;
 
-    /// @dev raw total assets, no interest
-    function total(AssetType _type) external view returns (uint256 assets);
-
     function config() external view returns (ISiloConfig siloConfig);
     function siloId() external view returns (uint256 siloId);
     function siloData() external view returns (uint256 daoAndDeployerFees, uint64 interestRateTimestamp);
@@ -135,6 +132,9 @@ interface ISilo is IERC4626, IERC3156FlashLender, ISiloLiquidation {
     function borrowPossible(address _borrower) external view returns (bool);
     function getMaxLtv() external view returns (uint256 maxLtv);
     function getLt() external view returns (uint256 lt);
+    function getProtectedAssets() external view returns (uint256 totalProtectedAssets);
+    function getCollateralAssets() external view returns (uint256 totalCollateralAssets);
+    function getDebtAssets() external view returns (uint256 totalDebtAssets);
     function getFeesAndFeeReceivers()
         external
         view
