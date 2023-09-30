@@ -84,48 +84,27 @@ library SiloERC4626Lib {
         (uint256 collateralValue, uint256 debtValue) =
             SiloSolvencyLib.getPositionValues(ltvData, collateralConfig.token, debtConfig.token);
 
-        {
-            uint256 ltv = debtValue * _PRECISION_DECIMALS / collateralValue;
+        assets = SiloMathLib.calculateMaxAssetsToWithdraw(
+            collateralValue,
+            debtValue,
+            collateralConfig.lt,
+            ltvData.borrowerProtectedAssets,
+            ltvData.borrowerCollateralAssets
+        );
 
-            // if LTV is higher than LT, user cannot withdraw
-            if (ltv >= collateralConfig.lt) return (0, 0);
-        }
+        uint256 shareTokenTotalSupply = _assetType == ISilo.AssetType.Protected
+            ? IShareToken(collateralConfig.protectedShareToken).totalSupply()
+            : IShareToken(collateralConfig.collateralShareToken).totalSupply();
 
-        {
-            uint256 minimumCollateralValue = debtValue * _PRECISION_DECIMALS / collateralConfig.lt;
-            uint256 spareCollateralValue = collateralValue - minimumCollateralValue;
-
-            // these are total assets (protected + collateral) that _owner can withdraw
-            assets = (ltvData.borrowerProtectedAssets + ltvData.borrowerCollateralAssets) * spareCollateralValue
-                / collateralValue;
-        }
-
-        if (_assetType == ISilo.AssetType.Protected && assets > ltvData.borrowerProtectedAssets) {
-            assets = ltvData.borrowerProtectedAssets;
-            shares = SiloMathLib.convertToShares(
-                assets,
-                _totalAssets,
-                IShareToken(collateralConfig.protectedShareToken).totalSupply(),
-                MathUpgradeable.Rounding.Down,
-                _assetType
-            );
-        } else if (_assetType == ISilo.AssetType.Collateral) {
-            if (assets > ltvData.borrowerCollateralAssets) {
-                assets = ltvData.borrowerCollateralAssets;
-            }
-
-            if (assets > _liquidity) {
-                assets = _liquidity;
-            }
-
-            shares = SiloMathLib.convertToShares(
-                assets,
-                _totalAssets,
-                IShareToken(collateralConfig.collateralShareToken).totalSupply(),
-                MathUpgradeable.Rounding.Down,
-                _assetType
-            );
-        }
+        return SiloMathLib.maxWithdrawToAssetsAndShares(
+            assets,
+            ltvData.borrowerCollateralAssets,
+            ltvData.borrowerProtectedAssets,
+            _assetType,
+            _totalAssets,
+            shareTokenTotalSupply,
+            _liquidity
+        );
     }
 
     /// @param _asset if empty, tokens will not be transferred, useful for transition of collateral

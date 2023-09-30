@@ -166,4 +166,75 @@ library SiloMathLib {
             maxBorrowValue = maxDebtValue > _borrowerDebtValue ? maxDebtValue - _borrowerDebtValue : 0;
         }
     }
+
+    function calculateMaxAssetsToWithdraw(
+        uint256 _sumOfCollateralsValue,
+        uint256 _debtValue,
+        uint256 _ltInBp,
+        uint256 _borrowerCollateralAssets,
+        uint256 _borrowerProtectedAssets
+    ) internal pure returns (uint256 maxAssets) {
+        if (_sumOfCollateralsValue == 0) return 0;
+        if (_debtValue == 0) return _sumOfCollateralsValue;
+
+        uint256 ltvInBp = _debtValue * _BASIS_POINTS;
+        unchecked { ltvInBp /= _sumOfCollateralsValue; }
+
+        // if LTV is higher than LT, user cannot withdraw
+        if (ltvInBp >= _ltInBp) return 0;
+
+        uint256 minimumCollateralValue = _debtValue * _BASIS_POINTS;
+        unchecked { minimumCollateralValue /= _ltInBp; }
+
+        // if we over LT, we can not withdraw
+        if (_sumOfCollateralsValue <= minimumCollateralValue) {
+            return 0;
+        }
+
+        uint256 spareCollateralValue;
+        // safe because we checked `if (_sumOfCollateralsValue <= minimumCollateralValue)`
+        unchecked { spareCollateralValue = _sumOfCollateralsValue - minimumCollateralValue; }
+
+        unchecked {
+            // these are total assets (protected + collateral) that _owner can withdraw
+            // + is safe because we adding same asset (under sme total supply)
+            // * can potentially overflow, but it is unlikely, we would overflow in LTV calculations first
+            // worse what can happen we return lower number than real MAX on overflow
+            maxAssets = (_borrowerProtectedAssets + _borrowerCollateralAssets) * spareCollateralValue
+                / _sumOfCollateralsValue;
+        }
+    }
+
+    /// @param _maxAssets result of calculateMaxAssetsToWithdraw()
+    /// @param _assetTypeShareTokenTotalSupply depends on `_assetType`: protected or collateral share token total supply
+    function maxWithdrawToAssetsAndShares(
+        uint256 _maxAssets,
+        uint256 _borrowerCollateralAssets,
+        uint256 _borrowerProtectedAssets,
+        ISilo.AssetType _assetType,
+        uint256 _totalAssets,
+        uint256 _assetTypeShareTokenTotalSupply,
+        uint256 _liquidity
+    ) internal pure returns (uint256 assets, uint256 shares) {
+        if (_maxAssets == 0) return (0, 0);
+        if (_assetTypeShareTokenTotalSupply == 0) return (0, 0);
+
+        if (_assetType == ISilo.AssetType.Protected) {
+            assets = _maxAssets > _borrowerProtectedAssets ? _borrowerProtectedAssets : _maxAssets;
+        } else if (_assetType == ISilo.AssetType.Collateral) {
+            assets = _maxAssets > _borrowerCollateralAssets ? _borrowerCollateralAssets : _maxAssets;
+
+            if (assets > _liquidity) {
+                assets = _liquidity;
+            }
+        }
+
+        shares = SiloMathLib.convertToShares(
+            assets,
+            _totalAssets,
+            _assetTypeShareTokenTotalSupply,
+            MathUpgradeable.Rounding.Down,
+            _assetType
+        );
+    }
 }
