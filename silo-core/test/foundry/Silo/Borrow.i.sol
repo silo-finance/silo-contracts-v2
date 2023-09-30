@@ -135,7 +135,7 @@ contract BorrowTest is IntegrationTest {
         silo0.borrow(maxBorrow, borrower, borrower);
         uint256 gasEnd = gasleft();
 
-        assertEq(gasStart - gasEnd, 129031, "optimise borrow");
+        assertEq(gasStart - gasEnd, 128957, "optimise borrow");
 
         assertEq(IShareToken(debtShareToken).balanceOf(borrower), 0, "expect borrower to NOT have debt in collateral silo");
         assertEq(silo1.getDebtAssets(), 0, "expect collateral silo to NOT have debt");
@@ -178,7 +178,7 @@ contract BorrowTest is IntegrationTest {
         uint256 gotShares = silo0.borrow(borrowAmount, borrower, borrower);
         uint256 gasEnd = gasleft();
 
-        assertEq(gasStart - gasEnd, 129040, "optimise borrow #1");
+        assertEq(gasStart - gasEnd, 128966, "optimise borrow #1");
 
         assertEq(IShareToken(debtShareToken).balanceOf(borrower), 0, "collateral silo: expect borrower to NOT have debt");
         assertEq(IShareToken(collateralShareToken).balanceOf(borrower), 1e18, "collateral silo: borrower has collateral");
@@ -198,7 +198,7 @@ contract BorrowTest is IntegrationTest {
         gotShares = silo0.borrow(borrowAmount, borrower, borrower);
         gasEnd = gasleft();
 
-        assertEq(gasStart - gasEnd, 54927, "optimise borrow #2");
+        assertEq(gasStart - gasEnd, 54853, "optimise borrow #2");
 
         assertEq(IShareToken(debtShareToken).balanceOf(borrower), 0.85e18, "debt silo: borrower has debt");
         assertEq(gotShares, 0.425e18, "got shares");
