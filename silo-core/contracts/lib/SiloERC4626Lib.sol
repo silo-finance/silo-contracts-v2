@@ -156,14 +156,17 @@ library SiloERC4626Lib {
     ) public returns (uint256 assets, uint256 shares) {
         uint256 totalAssets = _totalCollateral.assets;
 
+        uint256 shareTotalSupply = IShareToken(_shareToken).totalSupply();
+        if (shareTotalSupply == 0) revert ISilo.NothingToWithdraw();
+
         (assets, shares) = SiloMathLib.convertToAssetsAndToShares(
             _params.assets,
             _params.shares,
             totalAssets,
-            IShareToken(_shareToken).totalSupply(),
+            shareTotalSupply,
             MathUpgradeable.Rounding.Down,
             MathUpgradeable.Rounding.Up,
-            ISilo.AssetType.Collateral
+            _params.assetType
         );
 
         if (assets == 0 || shares == 0) revert ISilo.NothingToWithdraw();

@@ -176,12 +176,7 @@ library SiloMathLib {
     ) internal pure returns (uint256 maxAssets) {
         if (_sumOfCollateralsValue == 0) return 0;
         if (_debtValue == 0) return _sumOfCollateralsValue;
-
-        uint256 ltvInBp = _debtValue * _BASIS_POINTS;
-        unchecked { ltvInBp /= _sumOfCollateralsValue; }
-
-        // if LTV is higher than LT, user cannot withdraw
-        if (ltvInBp >= _ltInBp) return 0;
+        if (_ltInBp == 0) return 0;
 
         uint256 minimumCollateralValue = _debtValue * _BASIS_POINTS;
         unchecked { minimumCollateralValue /= _ltInBp; }
