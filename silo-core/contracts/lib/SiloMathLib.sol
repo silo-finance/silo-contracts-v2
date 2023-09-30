@@ -159,13 +159,6 @@ library SiloMathLib {
             return 0;
         }
 
-        uint256 ltvInBp = _borrowerDebtValue == 0
-            ? 0
-            : _borrowerDebtValue * _BASIS_POINTS / _sumOfBorrowerCollateralValue;
-
-        // if LTV is higher than maxLTV, user cannot borrow more
-        if (ltvInBp >= _configMaxLtvInBp) return 0;
-
         uint256 maxDebtValue = _sumOfBorrowerCollateralValue * _configMaxLtvInBp / _BASIS_POINTS;
 
         unchecked {

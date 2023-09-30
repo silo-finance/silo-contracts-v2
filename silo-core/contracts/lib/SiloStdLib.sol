@@ -91,7 +91,10 @@ library SiloStdLib {
     /// @param _assetType used to read proper storage data
     /// @return totalAssets total assets in Silo with interest for given asset type
     /// @return totalShares total shares in Silo for given asset type
-    function getTotalAssetsAndTotalShares(ISiloConfig.ConfigData memory _configData, ISilo.AssetType _assetType)
+    function getTotalAssetsAndTotalSharesWithInterest( // TODO Edd QA, Neo did QA for methods below
+        ISiloConfig.ConfigData memory _configData,
+        ISilo.AssetType _assetType
+    )
         internal
         view
         returns (uint256 totalAssets, uint256 totalShares)
@@ -99,7 +102,7 @@ library SiloStdLib {
         if (_assetType == ISilo.AssetType.Protected) {
             totalAssets = ISilo(_configData.silo).getProtectedAssets();
             totalShares = IShareToken(_configData.protectedShareToken).totalSupply();
-        } else {
+        } else if (_assetType == ISilo.AssetType.Collateral) {
             totalAssets = getTotalCollateralAssetsWithInterest(
                 _configData.silo,
                 _configData.interestRateModel,
@@ -107,13 +110,12 @@ library SiloStdLib {
                 _configData.deployerFeeInBp
             );
 
-            if (_assetType == ISilo.AssetType.Collateral) {
-                totalShares = IShareToken(_configData.collateralShareToken).totalSupply();
-            } else if (_assetType == ISilo.AssetType.Debt) {
-                totalShares = IShareToken(_configData.debtShareToken).totalSupply();
-            } else {
-                revert ISilo.WrongAssetType();
-            }
+            totalShares = IShareToken(_configData.collateralShareToken).totalSupply();
+        } else if (_assetType == ISilo.AssetType.Debt) {
+            totalAssets = getTotalDebtAssetsWithInterest(_configData.silo, _configData.interestRateModel);
+            totalShares = IShareToken(_configData.debtShareToken).totalSupply();
+        } else {
+            revert ISilo.WrongAssetType();
         }
     }
 

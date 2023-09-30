@@ -80,22 +80,27 @@ contract getExactLiquidationAmountsTest is Test, MockOracleQuote {
         SiloLiquidationExecLib.LiquidationPreviewParams memory params;
         params.collateralConfigAsset = COLLATERAL_ASSET;
         params.debtConfigAsset = DEBT_ASSET;
-        params.collateralLt = 8000;
+        params.collateralLt = 7999;
 
-        // liquidation margin is 90% of LT => 90% * 80% = 72%
-        params.debtToCover = 0.285714e18;
+        // liquidation margin is 90% of LT => 90% * 79.99% = 71991%
+        uint256 maxDebtToCover = 285969296679757229; // this is max debt we can cover
+        params.debtToCover = maxDebtToCover;
 
-        _oraclesQuoteMocks(ltvData, 1e18, 0.8e18); // ltv 80%
+        _oraclesQuoteMocks(ltvData, 1e18, 0.8000e18); // ltv just above 79%
 
         // does not revert - counter example first
-        impl.liquidationPreview(ltvData, params);
+        (uint256 receiveCollateralAssets, uint256 repayDebtAssets) = impl.liquidationPreview(ltvData, params);
+        assertEq(receiveCollateralAssets, maxDebtToCover, "receiveCollateralAssets #1");
+        assertEq(repayDebtAssets, maxDebtToCover, "repayDebtAssets #1");
 
         // more debt should cause revert because of _LT_LIQUIDATION_MARGIN_IN_BP
-        params.debtToCover += 0.000001e18;
+        params.debtToCover += 1;
 
         // does not revert for self liquidation - counter example first
         params.selfLiquidation = true;
-        impl.liquidationPreview(ltvData, params);
+        (receiveCollateralAssets, repayDebtAssets) = impl.liquidationPreview(ltvData, params);
+        assertEq(receiveCollateralAssets, maxDebtToCover + 1, "receiveCollateralAssets #2");
+        assertEq(repayDebtAssets, maxDebtToCover + 1, "repayDebtAssets #2");
 
         params.selfLiquidation = false;
         vm.expectRevert(ISiloLiquidation.LiquidationTooBig.selector);

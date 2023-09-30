@@ -3,13 +3,11 @@ pragma solidity ^0.8.0;
 
 import {IntegrationTest} from "silo-foundry-utils/networks/IntegrationTest.sol";
 
-import {MainnetDeploy} from "silo-core/deploy/MainnetDeploy.s.sol";
-import {SiloDeploy_ETH_USDC_1 as SiloDeploy1} from "silo-core/deploy/silo/SiloDeploy_ETH_USDC_1.s.sol";
-
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 
 import {TokenMock} from "silo-core/test/foundry/_mocks/TokenMock.sol";
+import "../_common/fixtures/SiloFixture_ETH_USDC.sol";
 
 contract DepositTest is IntegrationTest {
     ISiloConfig siloConfig;
@@ -24,21 +22,8 @@ contract DepositTest is IntegrationTest {
     function setUp() public {
         vm.createSelectFork(getChainRpcUrl(MAINNET_ALIAS), _FORKING_BLOCK_NUMBER);
 
-        MainnetDeploy mainnetDeploy = new MainnetDeploy();
-        mainnetDeploy.disableDeploymentsSync();
-        mainnetDeploy.run();
-
-        SiloDeploy1 siloDeploy1 = new SiloDeploy1();
-        siloDeploy1.disableDeploymentsSync();
-        siloConfig = siloDeploy1.run();
-
-        (address silo,) = siloConfig.getSilos();
-        (ISiloConfig.ConfigData memory siloConfig0, ISiloConfig.ConfigData memory siloConfig1) = siloConfig.getConfigs(silo);
-        silo0 = ISilo(siloConfig0.silo);
-        silo1 = ISilo(siloConfig1.silo);
-
-        weth = new TokenMock(vm, siloConfig0.token);
-        usdc = new TokenMock(vm, siloConfig1.token);
+        SiloFixture_ETH_USDC siloFixture = new SiloFixture_ETH_USDC();
+        (siloConfig, silo0, silo1, weth, usdc) = siloFixture.deploy(vm);
     }
 
     /*

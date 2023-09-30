@@ -43,7 +43,7 @@ library SiloSolvencyLib {
         ISilo.AccrueInterestInMemory _accrueInMemory
     ) external view returns (bool) {
         uint256 ltv = getLtv(_collateralConfig, _debtConfig, _borrower, ISilo.OracleType.Solvency, _accrueInMemory);
-        return ltv < _collateralConfig.lt;
+        return ltv <= _collateralConfig.lt;
     }
 
     function isBelowMaxLtv(
@@ -53,7 +53,7 @@ library SiloSolvencyLib {
         ISilo.AccrueInterestInMemory _accrueInMemory
     ) external view returns (bool) {
         uint256 ltv = getLtv(_collateralConfig, _debtConfig, _borrower, ISilo.OracleType.MaxLtv, _accrueInMemory);
-        return ltv < _collateralConfig.maxLtv;
+        return ltv <= _collateralConfig.maxLtv;
     }
 
     /// @dev calculation never reverts, if there is revert, then it is because of oracle
