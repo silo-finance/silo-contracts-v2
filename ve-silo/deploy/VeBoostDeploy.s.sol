@@ -33,7 +33,7 @@ contract VeBoostDeploy is CommonDeploy {
     }
 
     function _votingEscrowAddress() internal returns (address) {
-        if (isChain(ARBITRUM_ONE_ALIAS)) return getDeployedAddress(VeSiloContracts.OMNI_VOTING_ESCROW_CHILD);
+        if (!isChain(MAINNET_ALIAS)) return getDeployedAddress(VeSiloContracts.VOTING_ESCROW_CHILD_CHAIN);
 
         return getDeployedAddress(VeSiloContracts.VOTING_ESCROW);
     }

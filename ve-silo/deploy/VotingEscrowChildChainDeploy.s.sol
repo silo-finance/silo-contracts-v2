@@ -13,12 +13,12 @@ FOUNDRY_PROFILE=ve-silo \
     --ffi --broadcast --rpc-url http://127.0.0.1:8545
  */
 contract VotingEscrowChildChainDeploy is CommonDeploy {
-    function run() public returns (IVotingEscrowChildChain delegator) {
+    function run() public returns (IVotingEscrowChildChain votingEscrow) {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
 
         vm.startBroadcast(deployerPrivateKey);
 
-        delegator = IVotingEscrowChildChain(address(
+        votingEscrow = IVotingEscrowChildChain(address(
             new VotingEscrowChildChain(
                 getAddress(VeSiloAddrKey.CHAINLINK_CCIP_ROUTER),
                 _sourceChainSelector()
@@ -27,7 +27,7 @@ contract VotingEscrowChildChainDeploy is CommonDeploy {
 
         vm.stopBroadcast();
 
-        _registerDeployment(address(delegator), VeSiloContracts.VE_SILO_DELEGATOR_VIA_CCIP);
+        _registerDeployment(address(votingEscrow), VeSiloContracts.VOTING_ESCROW_CHILD_CHAIN);
         _syncDeployments();
     }
 
