@@ -186,7 +186,7 @@ library SiloERC4626Lib {
 
         if (_asset != address(0)) {
             // fee-on-transfer is ignored
-            IERC20Upgradeable(_asset).safeTransferFrom(address(this), _params.receiver, assets);
+            IERC20Upgradeable(_asset).safeTransfer(_params.receiver, assets);
         }
     }
 
