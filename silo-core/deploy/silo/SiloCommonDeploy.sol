@@ -53,6 +53,7 @@ abstract contract SiloCommonDeploy is CommonDeploy {
 
         vm.startBroadcast(deployerPrivateKey);
 
+        beforeCreateSilo(siloInitData);
         siloConfig = siloFactory.createSilo(siloInitData);
 
         vm.stopBroadcast();
@@ -62,4 +63,8 @@ abstract contract SiloCommonDeploy is CommonDeploy {
     }
 
     function siloToDeploy() public pure virtual returns (string memory);
+
+    function beforeCreateSilo(ISiloConfig.InitData memory) internal virtual {
+        // hook for any action before creating silo
+    }
 }

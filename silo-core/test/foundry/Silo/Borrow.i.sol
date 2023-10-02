@@ -8,7 +8,7 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 
 import {TokenMock} from "silo-core/test/foundry/_mocks/TokenMock.sol";
-import {SiloFixture_ETH_USDC} from "../_common/fixtures/SiloFixture_ETH_USDC.sol";
+import {SiloFixture} from "../_common/fixtures/SiloFixture.sol";
 
 /*
     forge test -vv --mc BorrowTest
@@ -28,8 +28,13 @@ contract BorrowTest is IntegrationTest {
     function setUp() public {
         vm.createSelectFork(getChainRpcUrl(MAINNET_ALIAS), _FORKING_BLOCK_NUMBER);
 
-        SiloFixture_ETH_USDC siloFixture = new SiloFixture_ETH_USDC();
-        (siloConfig, silo0, silo1, token0, token1) = siloFixture.deploy(vm);
+        SiloFixture siloFixture = new SiloFixture();
+        address t0;
+        address t1;
+        (siloConfig, silo0, silo1, t0, t1) = siloFixture.deploy_ETH_USDC();
+
+        token0 = new TokenMock(vm, t0);
+        token1 = new TokenMock(vm, t1);
 
         assertTrue(siloConfig.getConfig(address(silo0)).borrowable, "we need borrow to be allowed");
     }
