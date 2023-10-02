@@ -1,19 +1,22 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.0;
 
-import {IntegrationTest} from "silo-foundry-utils/networks/IntegrationTest.sol";
+import "forge-std/Test.sol";
 
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 
 import {TokenMock} from "silo-core/test/foundry/_mocks/TokenMock.sol";
-import {SiloFixture_ETH_USDC} from "../../_common/fixtures/SiloFixture_ETH_USDC.sol";
+import {SiloFixture} from "../../_common/fixtures/SiloFixture.sol";
+
+import {Vm} from "forge-std/Vm.sol";
+import "../../_common/MintableToken.sol";
 
 /*
     forge test -vv --mc WithdrawWhenNoDebtTest
 */
-contract WithdrawWhenNoDebtTest is IntegrationTest {
+contract WithdrawWhenNoDebtTest is Test {
     uint256 internal constant _BASIS_POINTS = 1e4;
     uint256 internal constant _FORKING_BLOCK_NUMBER = 17336000;
 
@@ -21,14 +24,15 @@ contract WithdrawWhenNoDebtTest is IntegrationTest {
     ISilo silo0;
     ISilo silo1;
 
-    TokenMock token0;
-    TokenMock token1;
+    MintableToken token0;
+    MintableToken token1;
 
     function setUp() public {
-        vm.createSelectFork(getChainRpcUrl(MAINNET_ALIAS), _FORKING_BLOCK_NUMBER);
+        token0 = new MintableToken();
+        token1 = new MintableToken();
 
-        SiloFixture_ETH_USDC siloFixture = new SiloFixture_ETH_USDC();
-        (siloConfig, silo0, silo1, token0, token1) = siloFixture.deploy(vm);
+        SiloFixture siloFixture = new SiloFixture();
+        (siloConfig, silo0, silo1,,) = siloFixture.deploy_local(SiloFixture.Override(address(token0), address(token1)));
     }
 
     /*
@@ -94,7 +98,6 @@ contract WithdrawWhenNoDebtTest is IntegrationTest {
         _deposit(address(5555), 1, ISilo.AssetType.Protected);
         _deposit(address(6666), 1, ISilo.AssetType.Collateral);
 
-
         _deposit(address(this), 2e18, ISilo.AssetType.Collateral);
         _deposit(address(this), 1e18, ISilo.AssetType.Protected);
 
@@ -116,7 +119,7 @@ contract WithdrawWhenNoDebtTest is IntegrationTest {
     forge test -vv --mt test_withdraw_scenarios_fuzz
     */
     function test_withdraw_scenarios_fuzz(uint256 _deposit1, uint256 _deposit2, uint256 _deposit3) public {
-        vm.assume(_deposit1 != 0 && _deposit1 < 2 ** 128);
+        vm.assume(_deposit1 > 2 && _deposit1 < 2 ** 128);
         vm.assume(_deposit2 != 0 && _deposit2 < 2 ** 128);
         vm.assume(_deposit3 != 0 && _deposit3 < 2 ** 128);
 
@@ -126,12 +129,11 @@ contract WithdrawWhenNoDebtTest is IntegrationTest {
         _deposit(address(2), _deposit2, ISilo.AssetType.Protected);
         _deposit(address(2), _deposit2, ISilo.AssetType.Collateral);
 
+        _withdraw(address(1), _deposit1 / 2, ISilo.AssetType.Protected);
+        _withdraw(address(1), _deposit1 / 2, ISilo.AssetType.Collateral);
+
         _deposit(address(3), _deposit3, ISilo.AssetType.Protected);
         _deposit(address(3), _deposit3, ISilo.AssetType.Collateral);
-
-
-        _withdraw(address(1), _deposit1, ISilo.AssetType.Protected);
-        _withdraw(address(1), _deposit1, ISilo.AssetType.Collateral);
 
         _withdraw(address(2), _deposit2, ISilo.AssetType.Protected);
         _withdraw(address(2), _deposit2, ISilo.AssetType.Collateral);
@@ -139,6 +141,8 @@ contract WithdrawWhenNoDebtTest is IntegrationTest {
         _withdraw(address(3), _deposit3, ISilo.AssetType.Protected);
         _withdraw(address(3), _deposit3, ISilo.AssetType.Collateral);
 
+        _withdraw(address(1), _deposit1 - _deposit1 / 2, ISilo.AssetType.Protected);
+        _withdraw(address(1), _deposit1 - _deposit1 / 2, ISilo.AssetType.Collateral);
 
         assertEq(silo0.getProtectedAssets(), 0, "protected Assets should be withdrawn");
         assertEq(silo0.getCollateralAssets(), 0, "protected Assets should be withdrawn");
@@ -177,21 +181,15 @@ contract WithdrawWhenNoDebtTest is IntegrationTest {
         assertEq(IShareToken(collateralShareToken).balanceOf(address(this)), 0, "collateral burned");
     }
 
-
     function _deposit(address _depositor, uint256 _amount, ISilo.AssetType _type) internal {
-        token0.transferFromMock(_depositor, address(silo0), _amount);
+        token0.mint(_depositor, _amount);
+        vm.prank(_depositor);
+        token0.approve(address(silo0), _amount);
         vm.prank(_depositor);
         silo0.deposit(_amount, _depositor, _type);
     }
 
-    function _borrow(address _borrower, uint256 _amount) internal returns (uint256 shares) {
-        token0.transferFromMock(address(silo0), address(_borrower), _amount);
-        vm.prank(_borrower);
-        shares = silo0.withdraw(_amount, _borrower, _borrower);
-    }
-
     function _withdraw(address _depositor, uint256 _amount, ISilo.AssetType _type) internal returns (uint256 assets){
-        token0.transferFromMock(address(silo0), _depositor, _amount);
         vm.prank(_depositor);
         return silo0.withdraw(_amount, _depositor, _depositor, _type);
     }

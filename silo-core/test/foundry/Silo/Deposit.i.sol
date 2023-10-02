@@ -7,7 +7,7 @@ import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 
 import {TokenMock} from "silo-core/test/foundry/_mocks/TokenMock.sol";
-import "../_common/fixtures/SiloFixture_ETH_USDC.sol";
+import {SiloFixture} from "../_common/fixtures/SiloFixture.sol";
 
 contract DepositTest is IntegrationTest {
     ISiloConfig siloConfig;
@@ -22,8 +22,13 @@ contract DepositTest is IntegrationTest {
     function setUp() public {
         vm.createSelectFork(getChainRpcUrl(MAINNET_ALIAS), _FORKING_BLOCK_NUMBER);
 
-        SiloFixture_ETH_USDC siloFixture = new SiloFixture_ETH_USDC();
-        (siloConfig, silo0, silo1, weth, usdc) = siloFixture.deploy(vm);
+        SiloFixture siloFixture = new SiloFixture();
+        address t0;
+        address t1;
+        (siloConfig, silo0, silo1, t0, t1) = siloFixture.deploy_ETH_USDC();
+
+        weth = new TokenMock(vm, t0);
+        usdc = new TokenMock(vm, t1);
     }
 
     /*
@@ -39,9 +44,9 @@ contract DepositTest is IntegrationTest {
         silo0.deposit(assets, depositor);
         uint256 gasEnd = gasleft();
 
-        // assertEq(gasStart - gasEnd, 144471, "optimise deposit");
+        assertEq(gasStart - gasEnd, 144782, "optimise deposit");
 
-        weth.transferFromMock(address(silo0), depositor, assets / 2);
+        weth.transferMock(depositor, assets / 2);
         gasStart = gasleft();
         vm.prank(depositor);
         silo0.withdraw(assets / 2, depositor, depositor);
