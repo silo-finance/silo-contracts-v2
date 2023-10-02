@@ -133,7 +133,9 @@ library SiloSolvencyLib {
         view
         returns (uint256 sumOfCollateralValue, uint256 debtValue)
     {
-        uint256 sumOfCollateralAssets = _ltvData.borrowerProtectedAssets + _ltvData.borrowerCollateralAssets;
+        uint256 sumOfCollateralAssets;
+        // safe because we adding same token, so it is under same total supply
+        unchecked { sumOfCollateralAssets = _ltvData.borrowerProtectedAssets + _ltvData.borrowerCollateralAssets; }
 
         if (sumOfCollateralAssets != 0) {
             // if no oracle is set, assume price 1

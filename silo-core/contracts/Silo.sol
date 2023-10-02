@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.19;
 
+
 import {Initializable} from "openzeppelin-contracts-upgradeable/proxy/utils/Initializable.sol";
 import {ReentrancyGuardUpgradeable} from "openzeppelin-contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import {MathUpgradeable} from "openzeppelin-contracts-upgradeable/utils/math/MathUpgradeable.sol";
@@ -898,7 +899,9 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
             ? collateralConfig.protectedShareToken
             : collateralConfig.collateralShareToken;
 
-        uint256 liquidity = _params.assetType == AssetType.Collateral ? getLiquidity() : type(uint256).max;
+        uint256 liquidity = _params.assetType == AssetType.Collateral
+            ? getLiquidity()
+            : _total[AssetType.Protected].assets;
 
         (assets, shares) =
             SiloERC4626Lib.withdraw(collateralConfig.token, shareToken, _params, liquidity, _total[_params.assetType]);
