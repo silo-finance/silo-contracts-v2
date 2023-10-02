@@ -223,22 +223,27 @@ contract MetaSilo is ERC4626Upgradeable, SiloManager, RewardsManager {
     }
 
     /**
-     * @notice Claims pending rewards and update accounting
-     * @notice First claim the SILO rewards, then other reward tokens.
-     */
+    * @notice Claims pending rewards from gauges and accrues them 
+    * @dev Harvests SILO rewards from gauges and accrues 
+    * Then claims and accrues other reward tokens
+    */
     function _harvestRewards() internal {
+        /// First we claim SILO rewards
         IERC20 siloReward = IERC20(SILO);
         uint256 siloBalanceBefore = siloReward.balanceOf(address(this));
-
         for (uint256 i = 0; i < silos.length; i++) {
             if (gauge[silos[i]] != address(0)) {
                 balancerMinter.mintFor(gauge[silos[i]], address(this));
             }
         }
         _accrueRewards(siloReward, siloReward.balanceOf(address(this)) - siloBalanceBefore);
-
+        
+        /// Then we claim other rewards, if applicable
         for (uint256 i = 0; i < rewardTokens.length; i++) {
             IERC20 reward = rewardTokens[i];
+            if (reward == IERC20(SILO)) { /// already claimed in previous lines
+                continue;
+            }
             RewardInfo memory rewards = rewardInfos[reward];
             uint256 balanceBefore = reward.balanceOf(address(this));
             rewards.gauge.claim_rewards(address(this), address(this));

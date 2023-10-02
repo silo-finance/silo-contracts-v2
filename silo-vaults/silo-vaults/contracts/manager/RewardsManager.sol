@@ -25,9 +25,8 @@ abstract contract RewardsManager is Ownable {
     using Math for uint256;
 
     struct RewardInfo {
-        uint64 ONE;
-        uint224 index;
-        bool exists;
+        uint256 index;
+        uint8 decimals;
         ISiloLiquidityGauge gauge;
     }
     /// Errors
@@ -38,14 +37,9 @@ abstract contract RewardsManager is Ownable {
 
     /// Rewards
     IERC20[] public rewardTokens;
-    address public constant SILO = 0x6f80310ca7f2c654691d1383149fa1a57d8ab1f8;
     mapping(IERC20 => RewardInfo) public rewardInfos;
     mapping(address => mapping(IERC20 => uint256)) public accruedRewards;
     mapping(address => mapping(IERC20 => uint256)) internal userIndex;
-
-    function __RewardManager_init(address _balancerMinter) internal {
-        balancerMinter = IBalancerMinter(_balancerMinter);
-    }
 
     /*//////////////////////////////////////////////////////////////
                     REWARDS MANAGEMENT LOGIC
@@ -57,11 +51,13 @@ abstract contract RewardsManager is Ownable {
      * @param tokenAddress address of the reward token.
      * @param _gauge to claim reward tokens from.
      */
-    function addRewardToken(address tokenAddress, ISiloLiquidityGauge _gauge) external onlyOwner {
+    function addRewardToken(address tokenAddress, address gauge) external onlyOwner {
         IERC20 rewardToken = IERC20(tokenAddress);
-        if (rewardInfos[rewardToken].exists) revert RewardTokenAlreadyAdded(rewardToken);
-        uint64 ONE = (10 ** IERC20Metadata(address(rewardsToken)).decimals()).safeCastTo64();
-        rewardInfos[rewardToken] = RewardInfo({ONE: ONE, index: ONE, exists: true, gauge: _gauge});
+        rewardInfos[rewardToken] = RewardInfo({
+            index: 0,
+            decimals: IERC20Metadata(address(tokenAddress)).decimals(),
+            gauge: _gauge
+        });
         rewardTokens.push(rewardToken);
     }
 
@@ -80,87 +76,58 @@ abstract contract RewardsManager is Ownable {
     }
 
     /**
-     * @notice Claims pending rewards and update accounting
+     * @notice Syncs a user's accrued rewards to the latest global reward index
+     * @dev Fetches the user's last synchronized index and calculates the delta to the current global index. 
+     * Uses the delta and user's vault balance to increment their accrued rewards
+     * @param _user The address of the user to sync accrued rewards for
+     * @param _rewardToken The reward token to sync accrued rewards for
      */
-     //TODO here I changed the logic to harvest both SILO tokens AND rewards tokens
-    function _harvestRewards() internal {
-        /// @notice first we claim SILO rewards
-        IERC20 siloReward = IERC20(SILO);
-        uint256 siloBalanceBefore = siloReward.balanceOf(address(this));
-        for (uint256 i = 0; i < silos.length; i++) {
-            if (gauge[silos[i]] != address(0)) {
-                balancerMinter.mintFor(gauge[silos[i]], address(this));
-            }
-        }
-        _accrueRewards(siloReward, siloReward.balanceOf(address(this)) - siloBalanceBefore);
-        
-        /// @notice then we claim other rewards, if applicable
-        for (uint256 i = 0; i < rewardTokens.length; i++) {
-            IERC20 reward = rewardTokens[i];
-            RewardInfo memory rewards = rewardInfos[reward];
-            uint256 balanceBefore = reward.balanceOf(address(this));
-            rewards.gauge.claim_rewards(address(this), address(this));
-            _accrueRewards(reward, reward.balanceOf(address(this)) - balanceBefore);
-        }
-    }
-
-    /**
-     * @notice Accrue global rewards for a rewardToken
-     */
-    function _accrueRewards(IERC20 _rewardToken, uint256 accrued) internal {
-        uint256 supplyTokens = _rewardToken.totalSupply();
-        //TODO figure out where to get decimals from
-        //uint decimals = _rewardToken.decimals();
-        uint256 decimals = uint256(0);
-        if (supplyTokens != 0) {
-            uint224 deltaIndex =
-                accrued.mulDiv(uint256(10 ** decimals), supplyTokens, Math.Rounding.Down).safeCastTo224();
-            rewardInfos[_rewardToken].index += deltaIndex;
-        }
-    }
-
-    /// @notice Sync a user's rewards for a rewardToken with the global reward index for that token
     function _accrueUser(address _user, IERC20 _rewardToken) internal {
         RewardInfo memory rewards = rewardInfos[_rewardToken];
 
-        uint256 oldIndex = userIndex[_user][_rewardToken];
+        /// Get user's index the last time their rewards were synced and calculate delta
+        uint256 lastSyncedIndex = userIndex[_user][_rewardToken];
+        uint256 deltaIndex = rewards.index - lastSyncedIndex;
 
-        // If user hasn't yet accrued rewards, grant rewards from the strategy beginning if they have a balance
-        // Zero balances will have no effect other than syncing to global index
-        uint256 deltaIndex = oldIndex == 0 //TODO used to be rewards.ONE. replace uint(0) with a proper value
-            ? rewards.index - uint256(0)
-            : rewards.index - oldIndex;
+        /// Calculate additional rewards user has accrued, based on urrent vault balance of user
+        uint256 newEarnedRewards = (balanceOf(_user) * deltaIndex).mulDiv(10**rewards.decimals, 1e18);
 
-        //TODO figure out where to get decimals from
-        //uint decimals = _rewardToken.decimals();
-        uint256 decimals = uint256(0);
-
-        // Accumulate rewards by multiplying user tokens by rewardsPerToken index and adding on unclaimed
-        uint256 supplierDelta =
-            _rewardToken.balanceOf(_user).mulDiv(deltaIndex, uint256(10 ** decimals), Math.Rounding.Down);
-
+        /// Update user's index to new global index and increment user's total accrued rewards
         userIndex[_user][_rewardToken] = rewards.index;
-        accruedRewards[_user][_rewardToken] += supplierDelta;
+        accruedRewards[_user][_rewardToken] += newEarnedRewards;
     }
-}
 
-/*//////////////////////////////////////////////////////////////
+    /**
+    * @notice Accrues global rewards for a reward token
+    * @dev Increments the global reward index based on the amount of new rewards
+    * @param _rewardToken The reward token to accrue rewards for 
+    * @param accrued The amount of new rewards accrued
+    */
+    function _accrueRewards(IERC20 _rewardToken, uint256 _accrued) internal {
+        RewardInfo storage rewards = rewardInfos[_rewardToken];
+
+        /// Calculate increase in global index and increment; 
+        if (_accrued != 0) {
+            rewards.index += _accrued.mulDiv(10**rewards.decimals, 1e18);
+        }  
+    }
+
+    /*//////////////////////////////////////////////////////////////
                             CLAIM LOGIC
     //////////////////////////////////////////////////////////////*/
 
-/**
- * @notice Claim rewards for a user in any amount of rewardTokens.
- * @param user User for which rewards should be claimed.
- * @param _rewardTokens Array of rewardTokens for which rewards should be claimed.
- * @dev This function will revert if any of the rewardTokens have zero rewards accrued.
- */
- //TODO here we should have no input arg, and allow msg.sender to retrieve all rewards, SILO and OTHERS
-function claimRewards(address user, IERC20[] memory _rewardTokens) external accrueRewards(msg.sender) {
-    for (uint8 i; i < _rewardTokens.length; i++) {
-        uint256 rewardAmount = accruedRewards[user][_rewardTokens[i]];
-        if (rewardAmount == 0) continue; // here we don't want to revert if there is no reward
-        accruedRewards[user][_rewardTokens[i]] = 0;
-        _rewardTokens[i].transfer(user, rewardAmount);
-        emit RewardsClaimed(user, _rewardTokens[i], rewardAmount);
+    /**
+    * @notice Claims accrued rewards for msg.sender
+    * @dev Loops through all accrued reward tokens and transfers rewards owed to msg.sender
+    */
+    function claimRewards() external accrueRewards(msg.sender) {
+        address user = msg.sender();
+        for (uint8 i; i < _rewardTokens.length; i++) {
+            uint256 rewardAmount = accruedRewards[user][_rewardTokens[i]];
+            if (rewardAmount == 0) continue; /// here we don't want to revert if there is no reward
+            accruedRewards[user][_rewardTokens[i]] = 0;
+            _rewardTokens[i].transfer(user, rewardAmount);
+            emit RewardsClaimed(user, _rewardTokens[i], rewardAmount);
+        }
     }
 }
