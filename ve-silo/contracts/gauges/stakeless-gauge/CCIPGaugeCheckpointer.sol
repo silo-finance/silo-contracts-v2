@@ -88,7 +88,7 @@ contract CCIPGaugeCheckpointer is ICCIPGaugeCheckpointer, ReentrancyGuard, Ownab
 
     /// @inheritdoc ICCIPGaugeCheckpointer
     function checkpointGaugesOfTypeAboveRelativeWeight(
-        string memory gaugeType,
+        string calldata gaugeType,
         uint256 minRelativeWeight,
         ICCIPGauge.PayFeesIn payFeesIn
     )
@@ -107,7 +107,7 @@ contract CCIPGaugeCheckpointer is ICCIPGaugeCheckpointer, ReentrancyGuard, Ownab
 
     /// @inheritdoc ICCIPGaugeCheckpointer
     function checkpointSingleGauge(
-        string memory gaugeType,
+        string calldata gaugeType,
         ICCIPGauge gauge,
         ICCIPGauge.PayFeesIn payFeesIn
     ) external payable override nonReentrant {
@@ -120,8 +120,8 @@ contract CCIPGaugeCheckpointer is ICCIPGaugeCheckpointer, ReentrancyGuard, Ownab
 
     /// @inheritdoc ICCIPGaugeCheckpointer
     function checkpointMultipleGauges(
-        string[] memory gaugeTypes,
-        ICCIPGauge[] memory gauges,
+        string[] calldata gaugeTypes,
+        ICCIPGauge[] calldata gauges,
         ICCIPGauge.PayFeesIn payFeesIn
     )
         external
@@ -143,7 +143,7 @@ contract CCIPGaugeCheckpointer is ICCIPGaugeCheckpointer, ReentrancyGuard, Ownab
     }
 
     /// @inheritdoc ICCIPGaugeCheckpointer
-    function addGaugesWithVerifiedType(string memory gaugeType, ICCIPGauge[] calldata gauges)
+    function addGaugesWithVerifiedType(string calldata gaugeType, ICCIPGauge[] calldata gauges)
         external
         override
         withValidGaugeType(gaugeType)
@@ -155,7 +155,7 @@ contract CCIPGaugeCheckpointer is ICCIPGaugeCheckpointer, ReentrancyGuard, Ownab
     }
 
     /// @inheritdoc ICCIPGaugeCheckpointer
-    function addGauges(string memory gaugeType, ICCIPGauge[] calldata gauges)
+    function addGauges(string calldata gaugeType, ICCIPGauge[] calldata gauges)
         external
         override
         withValidGaugeType(gaugeType)
@@ -165,7 +165,7 @@ contract CCIPGaugeCheckpointer is ICCIPGaugeCheckpointer, ReentrancyGuard, Ownab
     }
 
     /// @inheritdoc ICCIPGaugeCheckpointer
-    function removeGauges(string memory gaugeType, ICCIPGauge[] calldata gauges)
+    function removeGauges(string calldata gaugeType, ICCIPGauge[] calldata gauges)
         external
         override
         withValidGaugeType(gaugeType)
@@ -184,7 +184,7 @@ contract CCIPGaugeCheckpointer is ICCIPGaugeCheckpointer, ReentrancyGuard, Ownab
     }
 
     /// @inheritdoc ICCIPGaugeCheckpointer
-    function hasGauge(string memory gaugeType, ICCIPGauge gauge)
+    function hasGauge(string calldata gaugeType, ICCIPGauge gauge)
         external
         view
         override
@@ -195,7 +195,7 @@ contract CCIPGaugeCheckpointer is ICCIPGaugeCheckpointer, ReentrancyGuard, Ownab
     }
 
     /// @inheritdoc ICCIPGaugeCheckpointer
-    function getTotalGauges(string memory gaugeType)
+    function getTotalGauges(string calldata gaugeType)
         external
         view
         override
@@ -206,7 +206,7 @@ contract CCIPGaugeCheckpointer is ICCIPGaugeCheckpointer, ReentrancyGuard, Ownab
     }
 
     /// @inheritdoc ICCIPGaugeCheckpointer
-    function getGaugeAtIndex(string memory gaugeType, uint256 index)
+    function getGaugeAtIndex(string calldata gaugeType, uint256 index)
         external
         view
         override
@@ -224,7 +224,7 @@ contract CCIPGaugeCheckpointer is ICCIPGaugeCheckpointer, ReentrancyGuard, Ownab
     /// @inheritdoc ICCIPGaugeCheckpointer
     function getTotalBridgeCost(
         uint256 minRelativeWeight,
-        string memory gaugeType,
+        string calldata gaugeType,
         ICCIPGauge.PayFeesIn payFeesIn
     )
         external
@@ -253,7 +253,7 @@ contract CCIPGaugeCheckpointer is ICCIPGaugeCheckpointer, ReentrancyGuard, Ownab
     }
 
     /// @inheritdoc ICCIPGaugeCheckpointer
-    function isValidGaugeType(string memory gaugeType) external view override returns (bool) {
+    function isValidGaugeType(string calldata gaugeType) external view override returns (bool) {
         return GAUGE_ADDER.isValidGaugeType(gaugeType);
     }
 

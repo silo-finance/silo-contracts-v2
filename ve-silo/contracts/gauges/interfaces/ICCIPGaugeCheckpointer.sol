@@ -57,7 +57,7 @@ interface ICCIPGaugeCheckpointer {
      * @param payFeesIn Pay fees in LINK or Native
      */
     function checkpointGaugesOfTypeAboveRelativeWeight(
-        string memory gaugeType,
+        string calldata gaugeType,
         uint256 minRelativeWeight,
         ICCIPGauge.PayFeesIn payFeesIn
     ) external payable;
@@ -71,7 +71,7 @@ interface ICCIPGaugeCheckpointer {
      * @param payFeesIn Pay fees in LINK or Native
      */
     function checkpointSingleGauge(
-        string memory gaugeType,
+        string calldata gaugeType,
         ICCIPGauge gauge,
         ICCIPGauge.PayFeesIn payFeesIn
     ) external payable;
@@ -86,8 +86,8 @@ interface ICCIPGaugeCheckpointer {
      * @param payFeesIn Pay fees in LINK or Native
      */
     function checkpointMultipleGauges(
-        string[] memory gaugeTypes,
-        ICCIPGauge[] memory gauges,
+        string[] calldata gaugeTypes,
+        ICCIPGauge[] calldata gauges,
         ICCIPGauge.PayFeesIn payFeesIn
     ) external payable;
 
@@ -103,7 +103,7 @@ interface ICCIPGaugeCheckpointer {
      * @param gaugeType Type of the gauge.
      * @param gauges Gauges to add.
      */
-    function addGaugesWithVerifiedType(string memory gaugeType, ICCIPGauge[] calldata gauges) external;
+    function addGaugesWithVerifiedType(string calldata gaugeType, ICCIPGauge[] calldata gauges) external;
 
     /**
      * @notice Adds an array of gauges from the given type.
@@ -116,7 +116,7 @@ interface ICCIPGaugeCheckpointer {
      * @param gaugeType Type of the gauge.
      * @param gauges Gauges to add.
      */
-    function addGauges(string memory gaugeType, ICCIPGauge[] calldata gauges) external;
+    function addGauges(string calldata gaugeType, ICCIPGauge[] calldata gauges) external;
 
     /**
      * @notice Removes an array of gauges from the given type.
@@ -126,20 +126,20 @@ interface ICCIPGaugeCheckpointer {
      * @param gaugeType Type of the gauge.
      * @param gauges Gauges to remove.
      */
-    function removeGauges(string memory gaugeType, ICCIPGauge[] calldata gauges) external;
+    function removeGauges(string calldata gaugeType, ICCIPGauge[] calldata gauges) external;
 
     /**
      * @notice Returns true if the given gauge was added for the given type; false otherwise.
      * @param gaugeType Type of the gauge.
      * @param gauge Gauge to check.
      */
-    function hasGauge(string memory gaugeType, ICCIPGauge gauge) external view returns (bool);
+    function hasGauge(string calldata gaugeType, ICCIPGauge gauge) external view returns (bool);
 
     /**
      * @notice Returns the amount of added gauges for a given type.
      * @param gaugeType Type of the gauge.
      */
-    function getTotalGauges(string memory gaugeType) external view returns (uint256);
+    function getTotalGauges(string calldata gaugeType) external view returns (uint256);
 
     /**
      * @notice Returns the gauge of a given type at the given index.
@@ -147,7 +147,7 @@ interface ICCIPGaugeCheckpointer {
      * @param gaugeType Type of the gauge.
      * @param index - Index of the added gauge.
      */
-    function getGaugeAtIndex(string memory gaugeType, uint256 index) external view returns (ICCIPGauge);
+    function getGaugeAtIndex(string calldata gaugeType, uint256 index) external view returns (ICCIPGauge);
 
     /**
      * @notice Returns the timestamp corresponding to the start of the previous week of the current block.
@@ -162,7 +162,7 @@ interface ICCIPGaugeCheckpointer {
      * @param payFeesIn Pay fees in LINK or Native
      */
     function getSingleBridgeCost(
-        string memory gaugeType,
+        string calldata gaugeType,
         ICCIPGauge gauge,
         ICCIPGauge.PayFeesIn payFeesIn
     ) external view returns (uint256);
@@ -174,14 +174,14 @@ interface ICCIPGaugeCheckpointer {
      */
     function getTotalBridgeCost(
         uint256 minRelativeWeight,
-        string memory gaugeType,
+        string calldata gaugeType,
         ICCIPGauge.PayFeesIn payFeesIn
     ) external view returns (uint256);
 
     /**
      * @notice Returns true if gauge type is valid; false otherwise.
      */
-    function isValidGaugeType(string memory gaugeType) external view returns (bool);
+    function isValidGaugeType(string calldata gaugeType) external view returns (bool);
 
     /**
      * @notice Returns gauge types available in the checkpointer.
