@@ -162,6 +162,7 @@ library SiloSolvencyLib {
         ISilo.OracleType _oracleType,
         ISilo.AccrueInterestInMemory _accrueInMemory
     ) internal view returns (uint256 ltv) {
+        // TODO: early return if no debt
         LtvData memory ltvData =
             getAssetsDataForLtvCalculations(_collateralConfig, _debtConfig, _borrower, _oracleType, _accrueInMemory);
 
