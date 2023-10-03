@@ -16,7 +16,6 @@ pragma solidity 0.8.19;
 
 import {ISiloChildChainGauge} from "ve-silo/contracts/gauges/interfaces/ISiloChildChainGauge.sol";
 import {ILiquidityGaugeFactory} from "ve-silo/contracts/gauges/interfaces/ILiquidityGaugeFactory.sol";
-import {Ownable2Step} from "openzeppelin-contracts/access/Ownable2Step.sol";
 import {SafeERC20} from "openzeppelin-contracts/token/ERC20/utils/SafeERC20.sol";
 import {SafeMath} from "openzeppelin-contracts/utils/math/SafeMath.sol";
 
@@ -37,7 +36,7 @@ import {BalancerMinter, IERC20} from "./BalancerMinter.sol";
  * amount that it has already distributed for that gauge / user, the pseudo minter can then transfer the difference
  * to the user and update the total transferred amount.
  */
-contract L2BalancerPseudoMinter is BalancerMinter, Ownable2Step {
+contract L2BalancerPseudoMinter is BalancerMinter {
     // solhint-disable ordering
     event GaugeFactoryAdded(ILiquidityGaugeFactory indexed factory);
     event GaugeFactoryRemoved(ILiquidityGaugeFactory indexed factory);
