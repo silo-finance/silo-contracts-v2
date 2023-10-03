@@ -17,11 +17,15 @@ interface HookReceiver:
     def shareToken() -> address: view
 
 interface Silo:
-    def getFeesAndFeeReceivers() -> (address, address, uint256, uint256): view
+    def factory() -> address: view
+
+interface SiloFactory:
+    def getFeeReceivers(silo: address) -> (address, address): view
 
 interface Minter:
     def minted(_user: address, _gauge: address) -> uint256: view
     def getBalancerToken() -> address: view
+    def getFees() -> (uint256, uint256): view
 
 interface VotingEscrowDelegationProxy:
     def totalSupply() -> uint256: view
@@ -68,6 +72,7 @@ share_token: public(address)
 silo: public(address)
 version: public(String[128])
 factory: public(address)
+silo_factory: public(address)
 
 working_balances: public(HashMap[address, uint256])
 working_supply: public(uint256)
@@ -307,10 +312,10 @@ def _dao_and_deployer_fee(_amount: uint256) -> (uint256, uint256):
 
     (
         dao_fee_receiver,
-        deployer_fee_receiver,
-        dao_fee,
-        deployer_fee
-    ) = Silo(self.silo).getFeesAndFeeReceivers()
+        deployer_fee_receiver
+    ) = SiloFactory(self.silo_factory).getFeeReceivers(self.silo)
+
+    (dao_fee, deployer_fee) = Minter(BAL_PSEUDO_MINTER).getFees()
 
     if dao_fee_receiver != empty(address):
         fee_to_dao = self._calculate_fee(_amount, dao_fee)
@@ -558,6 +563,12 @@ def unkillGauge():
 
 @view
 @external
+def getFeeReceivers() -> (address, address):
+    return SiloFactory(self.silo_factory).getFeeReceivers(self.silo)
+
+
+@view
+@external
 def integrate_checkpoint() -> uint256:
     return self.period_timestamp[self.period]
 
@@ -598,6 +609,10 @@ def initialize(hook_receiver: address, _version: String[128]):
     self.factory = msg.sender
     self.hook_receiver = hook_receiver
     self.share_token = HookReceiver(hook_receiver).shareToken()
-    self.silo = ShareToken(self.share_token).silo()
+    
+    silo: address = ShareToken(self.share_token).silo()
+
+    self.silo = silo
+    self.silo_factory = Silo(silo).factory()
 
     self.period_timestamp[0] = block.timestamp
