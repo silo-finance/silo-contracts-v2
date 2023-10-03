@@ -1,14 +1,3 @@
-### OmniVotingEscrowAdaptor.sol
-- solhint-disable ordering and max-line-length for OmniVotingEscrowAdaptor ([b2dec13](https://github.com/silo-finance/silo-contracts-v2/pull/54/commits/b2dec138851df0e2f41249f3544cde890048ecab))
-
-- Specified a proper data type ([d5c711d](https://github.com/silo-finance/silo-contracts-v2/pull/54/commits/d5c711d2966cacd50d89460f9f654ef51e880401))
-
-- Changed ownership system for OmniVotingEscrowAdaptor. Replaced SingletonAuthentication with Ownable2Step ([0a3ed18](https://github.com/silo-finance/silo-contracts-v2/pull/54/commits/0a3ed182f235e1ee6ac54a37bf1ff620d9550431))
-
-- Bumped solidity to 0.8.19 & updated imports ([8034700](https://github.com/silo-finance/silo-contracts-v2/pull/54/commits/80347008417dfc606ac8a8b515c16cc1db7dd334))
-
-- Copy of Balancer's implementation of the OmniVotingEscrowAdaptor.sol ([a960d6c](https://github.com/silo-finance/silo-contracts-v2/pull/54/commits/a960d6c37bd9b770cceff66a02461d676e7c7d1a))
-
 ### VotingEscrowRemapper.sol
 - Switched from LayerZero to CCIP ([d9a2f77](https://github.com/silo-finance/silo-contracts-v2/pull/134/commits/d9a2f77f1ffd068ad58da9a86055dfd9e3c942e7))
 
@@ -35,13 +24,6 @@
 - Bumped solidity to 0.8.19, updated imports, solhint ([4d3ec12](https://github.com/silo-finance/silo-contracts-v2/pull/59/commits/4d3ec12208d1976fc5617b072c1bb7d38ddd4c77))
 
 - Copy of Balancer's implementation of the NullVotingEscrow.sol ([4057e0b](https://github.com/silo-finance/silo-contracts-v2/pull/59/commits/4057e0b992046e47f3b118b0625c57387155fa69))
-
-### L2LayerZeroBridgeForwarder.sol
-- Bumped solidity to 0.8.19, updated imports, solhint, and changed data types ([0caafa8](https://github.com/silo-finance/silo-contracts-v2/pull/61/commits/0caafa85b6316b84e879ed2127f756bd7ba6a516))
-
-- Changed ownership system for L2LayerZeroBridgeForwarder. Replaced SingletonAuthentication with Ownable2Step ([c2f9f11](https://github.com/silo-finance/silo-contracts-v2/pull/61/commits/c2f9f11392b88904bf353be66effb8e4ce5f920f))
-
-- Copy of Balancer's implementation of the L2LayerZeroBridgeForwarder.sol ([feaf031](https://github.com/silo-finance/silo-contracts-v2/pull/61/commits/feaf031e7733f9a3cb1d077a55935ee419044254))
 
 ### SmartWalletChecker.sol
 - Bumped solidity to 0.8.19, updated imports, solhint ([9869e1f](https://github.com/silo-finance/silo-contracts-v2/pull/139/commits/9869e1f41c4338b0062429e9781a9cb7c6a91bbc))

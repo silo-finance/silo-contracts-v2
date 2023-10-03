@@ -1,20 +1,11 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.19;
 
-import {OmniVotingEscrow} from "lz_gauges/OmniVotingEscrow.sol";
 import {IERC20} from "openzeppelin-contracts/token/ERC20/IERC20.sol";
-
 import {IVotingEscrow} from "balancer-labs/v2-interfaces/liquidity-mining/IVotingEscrow.sol";
-import {IOmniVotingEscrowAdaptor} from "balancer-labs/v2-interfaces/liquidity-mining/IOmniVotingEscrowAdaptor.sol";
-
-import {IOmniVotingEscrowAdaptorSettings}
-     from "balancer-labs/v2-interfaces/liquidity-mining/IOmniVotingEscrowAdaptorSettings.sol";
-
 import {IVotingEscrowRemapper} from "balancer-labs/v2-interfaces/liquidity-mining/IVotingEscrowRemapper.sol";
-import {IOmniVotingEscrow} from "balancer-labs/v2-interfaces/liquidity-mining/IOmniVotingEscrow.sol";
 
 import {VotingEscrowRemapper} from "ve-silo/contracts/voting-escrow/VotingEscrowRemapper.sol";
-import {OmniVotingEscrowAdaptor} from "ve-silo/contracts/voting-escrow/OmniVotingEscrowAdaptor.sol";
 import {VeSiloAddrKey} from "ve-silo/common/VeSiloAddresses.sol";
 
 import {CommonDeploy, VeSiloContracts} from "./_CommonDeploy.sol";

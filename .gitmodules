@@ -24,12 +24,6 @@
 	path = gitmodules/uniswap/v3-core
 	url = https://github.com/Uniswap/v3-core
 	branch = v1.0.0
-[submodule "lz_gauges"]
-	path = gitmodules/lz_gauges
-	url = https://github.com/LayerZero-Labs/lz_gauges
-[submodule "layer-zero-examples"]
-	path = gitmodules/layer-zero-examples
-	url = https://github.com/LayerZero-Labs/solidity-examples
 [submodule "gitmodules/chainlink"]
 	path = gitmodules/chainlink
 	url = https://github.com/smartcontractkit/chainlink

@@ -62,24 +62,6 @@
 
 - Copy of Balancer's implementation of the ChildChainGaugeFactory.sol ([0543b3f](https://github.com/silo-finance/silo-contracts-v2/pull/56/commits/0543b3fd50fe02c3555c0d2efc82fa7771fba33e))
 
-### l2-common/ChildChainGaugeRegistry.sol
-- Bumped solidity to 0.8.19 and updated imports ([3fb2983](https://github.com/silo-finance/silo-contracts-v2/pull/60/commits/3fb298378417ede34d7b4fa4edd032cf1ed0ce5b))
-
-- Changed ownership system for ChildChainGaugeRegistry. Replaced SingletonAuthentication with Ownable2Step ([bdcf970](https://github.com/silo-finance/silo-contracts-v2/pull/60/commits/bdcf970447a1f0915b26ebca66b61f9b0a89505a))
-
-- Usage of the L2BalancerPseudoMinter interface instead of the smart contract ([827c19b](https://github.com/silo-finance/silo-contracts-v2/pull/60/commits/827c19b0e25218ba6a9ab9c9eeb83c13e1060ffc))
-
-- Removed a `_liquidityGaugeFactory` as it was not used ([8cc8335](https://github.com/silo-finance/silo-contracts-v2/pull/60/commits/8cc83359c2227060cf6ea59f6e218af092d2c9ba))
-
-- Copy of Balancer's implementation of the ChildChainGaugeRegistry.sol ([83d6b2c](https://github.com/silo-finance/silo-contracts-v2/pull/60/commits/83d6b2c53eaccca44d4b9bcea9740f3be7d35ba5))
-
-### l2-common/ChildChainGaugeCheckpointer.sol
-- Bumped solidity to 0.8.19 and updated imports. Some imports were removed as they were not used ([7ce5cec](https://github.com/silo-finance/silo-contracts-v2/pull/60/commits/7ce5cec90e5889c82fe9f396787ae6be491580c1))
-
-- Usage of the ChildChainGaugeRegistry interface instead of the smart contract ([3b19b5f](https://github.com/silo-finance/silo-contracts-v2/pull/60/commits/3b19b5f8cb96f604e19f1961588eafa02e77bf04))
-
-- Copy of Balancer's implementation of the ChildChainGaugeCheckpointer.sol ([e7386b0](https://github.com/silo-finance/silo-contracts-v2/pull/60/commits/e7386b0b0515a5653c41b9e604965264552fc771))
-
 ### stakeless-gauge/StakelessGauge.sol
 - Changed StakelessGauge.sol location and updated an IStakelessGauge import ([8a43a53](https://github.com/silo-finance/silo-contracts-v2/pull/71/commits/8a43a53bc9c415d6d13b9ed89b25fdfac793b6fd))
 
@@ -93,41 +75,10 @@
 
 - Copy of Balancer's implementation of the StakelessGauge.sol ([c731307](https://github.com/silo-finance/silo-contracts-v2/pull/63/commits/c7313073b1ca24f4d75fd9f6e5eab3110489249a))
 
-### stakeless-gauge/StakelessGaugeCheckpointer.sol
-- Added `receive` fn to be able to receive leftover ETH from the `StakelessGaugeCheckpointerAdaptor` if there will be any ([7bddde6](https://github.com/silo-finance/silo-contracts-v2/pull/72/commits/7bddde63c1b895c5ec938a320468a53ca666379e))
-
-- Bumped solidity to 0.8.19, updated imports, and solhint ([f752edd](https://github.com/silo-finance/silo-contracts-v2/pull/72/commits/f752eddb5972cc99fc5d4dae3806c1287113bb83))
-
-- Changed ownership system for StakelessGauge. Replaced SingletonAuthentication with Ownable2Step ([a42ae4c](https://github.com/silo-finance/silo-contracts-v2/pull/72/commits/a42ae4ca7bfd1a76ad76251ede5b265fba7bfa87))
-
-- Replaced authorizerAdaptorEntrypoint with StakelessGaugeCheckpointerAdaptor ([6afed53](https://github.com/silo-finance/silo-contracts-v2/pull/72/commits/6afed5359eef99bb1367c21960412715542c14ef))
-
-- Copy of Balancer's implementation of the StakelessGaugeCheckpointer.sol ([5c7ea22](https://github.com/silo-finance/silo-contracts-v2/pull/72/commits/5c7ea225313e8a3b10ba809f47153271fcdac6fc))
-
 ### stakeless-gauge/CCIPGaugeCheckpointer.sol
 - Implementation of the `CCIPGaugeCheckpointer` ([bfa6cfa](https://github.com/silo-finance/silo-contracts-v2/pull/111/commits/bfa6cfa11fd91e51c6904b9399247774dd2022df))
 
 - Copy of the [StakelessGaugeCheckpointer.sol commit 7bddde6](https://github.com/silo-finance/silo-contracts-v2/pull/72/commits/7bddde63c1b895c5ec938a320468a53ca666379e) ([2f0e3ed](https://github.com/silo-finance/silo-contracts-v2/pull/111/commits/2f0e3edf24969ebbd3c8c65ca68b4eaa6c5005d6))
-
-### arbitrum/ArbitrumRootGauge.sol
-- Updated and import of the StakelessGauge ([0181db7](https://github.com/silo-finance/silo-contracts-v2/pull/71/commits/0181db745f6e252033c879805fcd9e610b7609af))
-
-- Ownership transfer during initialization ([7864c5e](https://github.com/silo-finance/silo-contracts-v2/pull/70/commits/7864c5e9aec84c6a469c73162871fcadc82c2844))
-
-- Added `checkpointer` initialization via `initialize` fn ([8275e62](https://github.com/silo-finance/silo-contracts-v2/pull/70/commits/8275e62cc02f3411dd0a71281ab6fddae5ff9370))
-
-- Bumped solidity to 0.8.19 and updated imports. Some imports were removed as they were not used ([21980f3](https://github.com/silo-finance/silo-contracts-v2/pull/63/commits/21980f320d453e4ae96793c2ca728915f4ff6b28))
-
-- Copy of Balancer's implementation of the ArbitrumRootGauge.sol ([07b58da](https://github.com/silo-finance/silo-contracts-v2/pull/63/commits/07b58da40203b8d6594b16130bc80550a4b4d465))
-
-### arbitrum/ArbitrumRootGaugeFactory.sol
-- `Checkpointer` initialization in the gauge during the gauge creation ([866f236](https://github.com/silo-finance/silo-contracts-v2/pull/70/commits/866f2368ad10f5d0f4e6ff253680d10590eb9cd1))
-
-- Changed ownership system for ArbitrumRootGaugeFactory. Replaced SingletonAuthentication with Ownable2Step ([6595183](https://github.com/silo-finance/silo-contracts-v2/pull/63/commits/659518311f8a73fe552848d25aeb3167eb753ce1))
-
-- Bumped solidity to 0.8.19 and updated imports. Some imports were removed as they were not used ([3bebd3c](https://github.com/silo-finance/silo-contracts-v2/pull/63/commits/3bebd3c9d6f4bd551900b7004e92aee7e4171c0b))
-
-- Copy of Balancer's implementation of the ArbitrumRootGaugeFactory.sol ([0980dbe](https://github.com/silo-finance/silo-contracts-v2/pull/63/commits/0980dbe5b7a875ec329a45e453b4c1e25708a907))
 
 ### gauge-adder/GaugeAdder.sol
 - Updated `_ETHEREUM_GAUGE_CONTROLLER_TYPE` value to `0` ([c1dce5f](https://github.com/silo-finance/silo-contracts-v2/pull/85/commits/c1dce5f0e0825176632bfb0c8332d40caf5832dc))
