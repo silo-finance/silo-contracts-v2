@@ -12,7 +12,7 @@
 // You should have received a copy of the GNU General external License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-pragma solidity >=0.5.0;
+pragma solidity >=0.7.0 <0.9.0;
 pragma experimental ABIEncoderV2;
 
 import {IVotingEscrow} from "balancer-labs/v2-interfaces/liquidity-mining/IVotingEscrow.sol";
