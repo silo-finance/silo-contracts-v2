@@ -60,7 +60,7 @@ library SiloLendingLib {
         // potentially reenter but the state is correct.
         debtShareToken.mint(_borrower, _spender, borrowedShares);
         // fee-on-transfer is ignored. If token reenters, state is already finalized, no harm done.
-        IERC20Upgradeable(_configData.token).safeTransferFrom(address(this), _receiver, borrowedAssets);
+        IERC20Upgradeable(_configData.token).safeTransfer(_receiver, borrowedAssets);
     }
 
     function repay(
