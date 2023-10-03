@@ -19,7 +19,13 @@ import {IVeBoost} from "ve-silo/contracts/voting-escrow/interfaces/IVeBoost.sol"
 import {IExtendedOwnable} from "ve-silo/contracts/access/IExtendedOwnable.sol";
 import {IHookReceiverMock as IHookReceiver} from "../_mocks/IHookReceiverMock.sol";
 import {IShareTokenLike as IShareToken} from "ve-silo/contracts/gauges/interfaces/IShareTokenLike.sol";
-import {ISiloWithFeeDetails as ISilo} from "ve-silo/contracts/silo-tokens-minter/interfaces/ISiloWithFeeDetails.sol";
+import {ISiloMock as ISilo} from "ve-silo/test/_mocks/ISiloMock.sol";
+import {IFeesManager} from "ve-silo/contracts/silo-tokens-minter/interfaces/IFeesManager.sol";
+import {FeesManagerTest} from "./FeesManager.unit.t.sol";
+
+import {
+    ISiloFactoryWithFeeDetails as ISiloFactory
+} from "ve-silo/contracts/silo-tokens-minter/interfaces/ISiloFactoryWithFeeDetails.sol";
 
 contract ERC20 is ERC20WithoutMint {
     constructor(string memory name, string memory symbol) ERC20WithoutMint(name, symbol) {}
@@ -40,10 +46,12 @@ contract MainnetBalancerMinterTest is IntegrationTest {
     IBalancerTokenAdmin internal _balancerTokenAdmin;
     IBalancerMinter internal _minter;
     IGaugeController internal _gaugeController;
+    FeesManagerTest internal _feesTest;
 
     address internal _hookReceiver = makeAddr("Hook receiver");
     address internal _shareToken = makeAddr("Share token");
     address internal _silo = makeAddr("Silo");
+    address internal _siloFactory = makeAddr("Silo Factory");
     address internal _daoFeeReceiver = makeAddr("DAO fee receiver");
     address internal _deployerFeeReceiver = makeAddr("Deployer fee receiver");
     address internal _bob = makeAddr("Bob");
@@ -51,6 +59,7 @@ contract MainnetBalancerMinterTest is IntegrationTest {
 
     event MiningProgramStoped();
 
+    // solhint-disable-next-line function-max-lines
     function setUp() public {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
         _deployer = vm.addr(deployerPrivateKey);
@@ -95,22 +104,46 @@ contract MainnetBalancerMinterTest is IntegrationTest {
             abi.encode(_silo)
         );
 
+        vm.mockCall(
+            _silo,
+            abi.encodeWithSelector(ISilo.factory.selector),
+            abi.encode(_siloFactory)
+        );
+
         _gauge = ISiloLiquidityGauge(_factory.create(_WEIGHT_CAP, _hookReceiver));
 
         _mockCallsForTest();
+
+        _feesTest = new FeesManagerTest();
+    }
+
+    function testOnlyOwnerCanSetFees() public {
+        _feesTest.onlyOwnerCanSetFees(
+            IFeesManager(address(_minter)),
+            _DAO_FEE,
+            _DEPLOYER_FEE,
+            _deployer
+        );
+    }
+
+    function testMaxFees() public {
+        _feesTest.onlyOwnerCanSetFees(
+            IFeesManager(address(_minter)),
+            _DAO_FEE,
+            _DEPLOYER_FEE + 1,
+            _deployer
+        );
     }
 
     /// @notice Should mint tokens
     function testMintForNoFees() public {
         // without fees
         vm.mockCall(
-            _silo,
-            abi.encodeWithSelector(ISilo.getFeesAndFeeReceivers.selector),
+            _siloFactory,
+            abi.encodeWithSelector(ISiloFactory.getFeeReceivers.selector, _silo),
             abi.encode(
                 address(0),
-                address(0),
-                0,
-                0
+                address(0)
             )
         );
 
@@ -129,15 +162,16 @@ contract MainnetBalancerMinterTest is IntegrationTest {
         // 10% - to DAO
         // 20% - to deployer
         vm.mockCall(
-            _silo,
-            abi.encodeWithSelector(ISilo.getFeesAndFeeReceivers.selector),
+            _siloFactory,
+            abi.encodeWithSelector(ISiloFactory.getFeeReceivers.selector, _silo),
             abi.encode(
                 _daoFeeReceiver,
-                _deployerFeeReceiver,
-                _DAO_FEE,
-                _DEPLOYER_FEE
+                _deployerFeeReceiver
             )
         );
+
+        vm.prank(_deployer);
+        IFeesManager(address(_minter)).setFees(_DAO_FEE, _DEPLOYER_FEE);
 
         IERC20 siloToken = IERC20(getAddress(SILO_TOKEN));
 

@@ -23,7 +23,12 @@ import {IBalancerMinter} from "ve-silo/contracts/silo-tokens-minter/interfaces/I
 import {IGaugeAdder} from "ve-silo/contracts/gauges/interfaces/IGaugeAdder.sol";
 import {IHookReceiverMock as IHookReceiver} from "./_mocks/IHookReceiverMock.sol";
 import {IShareTokenLike as IShareToken} from "ve-silo/contracts/gauges/interfaces/IShareTokenLike.sol";
-import {ISiloWithFeeDetails as ISilo} from "ve-silo/contracts/silo-tokens-minter/interfaces/ISiloWithFeeDetails.sol";
+import {ISiloMock as ISilo} from "ve-silo/test/_mocks/ISiloMock.sol";
+import {IFeesManager} from "ve-silo/contracts/silo-tokens-minter/interfaces/IFeesManager.sol";
+
+import {
+    ISiloFactoryWithFeeDetails as ISiloFactory
+} from "ve-silo/contracts/silo-tokens-minter/interfaces/ISiloFactoryWithFeeDetails.sol";
 
 // solhint-disable max-states-count
 
@@ -55,6 +60,7 @@ contract MainnetTest is IntegrationTest {
     address internal _hookReceiver = makeAddr("Hook receiver");
     address internal _shareToken = makeAddr("Share token");
     address internal _silo = makeAddr("Silo");
+    address internal _siloFactory = makeAddr("Silo Factory");
     address internal _daoFeeReceiver = makeAddr("DAO fee receiver");
     address internal _deployerFeeReceiver = makeAddr("Deployer fee receiver");
     address internal _bob = makeAddr("_bob");
@@ -96,6 +102,12 @@ contract MainnetTest is IntegrationTest {
             _shareToken,
             abi.encodeWithSelector(IShareToken.silo.selector),
             abi.encode(_silo)
+        );
+
+        vm.mockCall(
+            _silo,
+            abi.encodeWithSelector(ISilo.factory.selector),
+            abi.encode(_siloFactory)
         );
     }
 
@@ -370,15 +382,16 @@ contract MainnetTest is IntegrationTest {
         // 10% - to DAO
         // 20% - to deployer
         vm.mockCall(
-            _silo,
-            abi.encodeWithSelector(ISilo.getFeesAndFeeReceivers.selector),
+            _siloFactory,
+            abi.encodeWithSelector(ISiloFactory.getFeeReceivers.selector, _silo),
             abi.encode(
                 _daoFeeReceiver,
-                _deployerFeeReceiver,
-                _DAO_FEE,
-                _DEPLOYER_FEE
+                _deployerFeeReceiver
             )
         );
+
+        vm.prank(_deployer);
+        IFeesManager(address(_minter)).setFees(_DAO_FEE, _DEPLOYER_FEE);
     }
 
     // solhint-disable-next-line function-max-lines

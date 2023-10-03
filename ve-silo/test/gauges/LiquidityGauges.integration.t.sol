@@ -14,6 +14,7 @@ import {VeSiloContracts} from "ve-silo/deploy/_CommonDeploy.sol";
 import {IVeBoost} from "ve-silo/contracts/voting-escrow/interfaces/IVeBoost.sol";
 import {IHookReceiverMock as IHookReceiver} from "../_mocks/IHookReceiverMock.sol";
 import {IShareTokenLike as IShareToken} from "ve-silo/contracts/gauges/interfaces/IShareTokenLike.sol";
+import {ISiloMock as ISilo} from "ve-silo/test/_mocks/ISiloMock.sol";
 
 // interfaces for tests
 
@@ -37,23 +38,16 @@ contract LiquidityGaugesTest is IntegrationTest {
 
     ILiquidityGaugeFactory internal _factory;
 
-    address internal _hookReceiver;
-    address internal _shareToken;
-    address internal _silo;
-    address internal _minter;
-    address internal _tokenAdmin;
-    address internal _bob;
-    address internal _alice;
+    address internal _hookReceiver = makeAddr("Hook receiver");
+    address internal _shareToken = makeAddr("Share token");
+    address internal _silo = makeAddr("Silo");
+    address internal _siloFactory = makeAddr("Silo Factory");
+    address internal _minter = makeAddr("Mainnet silo tokens minter");
+    address internal _tokenAdmin = makeAddr("Silo token admin");
+    address internal _bob = makeAddr("Bob");
+    address internal _alice = makeAddr("Alice");
 
     function setUp() public {
-        _minter = makeAddr("Mainnet silo tokens minter");
-        _tokenAdmin = makeAddr("Silo token admin");
-        _hookReceiver = makeAddr("Hook receiver");
-        _shareToken = makeAddr("Share token");
-        _silo = makeAddr("Silo");
-        _bob = makeAddr("Bob");
-        _alice = makeAddr("Alice");
-
         SiloGovernorDeploy _governanceDeploymentScript = new SiloGovernorDeploy();
         _governanceDeploymentScript.disableDeploymentsSync();
 
@@ -88,6 +82,7 @@ contract LiquidityGaugesTest is IntegrationTest {
         assertEq(gauge.hook_receiver(), _hookReceiver, "Deployed with wrong hook receiver");
         assertEq(gauge.share_token(), _shareToken, "Deployed with wrong share token");
         assertEq(gauge.silo(), _silo, "Deployed with wrong silo");
+        assertEq(gauge.silo_factory(), _siloFactory, "Deployed with wrong silo factory");
         assertEq(gauge.getRelativeWeightCap(), _WEIGHT_CAP, "Deployed with wrong relative weight cap");
     }
 
@@ -217,6 +212,12 @@ contract LiquidityGaugesTest is IntegrationTest {
             _shareToken,
             abi.encodeWithSelector(IShareToken.silo.selector),
             abi.encode(_silo)
+        );
+
+        vm.mockCall(
+            _silo,
+            abi.encodeWithSelector(ISilo.factory.selector),
+            abi.encode(_siloFactory)
         );
     }
 }

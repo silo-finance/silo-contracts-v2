@@ -6,10 +6,18 @@ import {IntegrationTest} from "silo-foundry-utils/networks/IntegrationTest.sol";
 
 import {ILiquidityGaugeFactory} from "ve-silo/contracts/gauges/interfaces/ILiquidityGaugeFactory.sol";
 import {ISiloChildChainGauge} from "ve-silo/contracts/gauges/interfaces/ISiloChildChainGauge.sol";
-import {ISiloWithFeeDetails as ISilo} from "ve-silo/contracts/silo-tokens-minter/interfaces/ISiloWithFeeDetails.sol";
+import {ISiloMock as ISilo} from "ve-silo/test/_mocks/ISiloMock.sol";
+import {IFeesManager} from "ve-silo/contracts/silo-tokens-minter/interfaces/IFeesManager.sol";
+import {FeesManagerTest} from "./FeesManager.unit.t.sol";
 
-import {L2BalancerPseudoMinterDeploy, IL2BalancerPseudoMinter}
-    from "ve-silo/deploy/L2BalancerPseudoMinterDeploy.s.sol";
+import {
+    ISiloFactoryWithFeeDetails as ISiloFactory
+} from "ve-silo/contracts/silo-tokens-minter/interfaces/ISiloFactoryWithFeeDetails.sol";
+
+import {
+    L2BalancerPseudoMinterDeploy,
+    IL2BalancerPseudoMinter
+} from "ve-silo/deploy/L2BalancerPseudoMinterDeploy.s.sol";
 
 // FOUNDRY_PROFILE=ve-silo forge test --mc L2BalancerPseudoMinterTest --ffi -vvv
 contract L2BalancerPseudoMinterTest is IntegrationTest {
@@ -17,6 +25,7 @@ contract L2BalancerPseudoMinterTest is IntegrationTest {
     uint256 internal constant _DAO_FEE = 1e3; // 10%
     uint256 internal constant _DEPLOYER_FEE = 2e3; // 20%
 
+    FeesManagerTest internal _feesTest;
     ERC20PresetMinterPauser internal _siloToken;
     IL2BalancerPseudoMinter internal _minter;
     ILiquidityGaugeFactory internal _liquidityGaugeFactory =
@@ -24,7 +33,10 @@ contract L2BalancerPseudoMinterTest is IntegrationTest {
 
     address internal _gauge = makeAddr("Gauge");
     address internal _bob = makeAddr("Bob");
+    address internal _hookReceiver = makeAddr("Hook receiver");
+    address internal _shareToken = makeAddr("Share token");
     address internal _silo = makeAddr("Silo");
+    address internal _siloFactory = makeAddr("Silo Factory");
     address internal _daoFeeReceiver = makeAddr("DAO fee receiver");
     address internal _deployerFeeReceiver = makeAddr("Deployer fee receiver");
     address internal _deployer;
@@ -45,6 +57,26 @@ contract L2BalancerPseudoMinterTest is IntegrationTest {
         _mockCallsForTest();
 
         _siloToken.mint(address(_minter), _BOB_BALANCE);
+
+        _feesTest = new FeesManagerTest();
+    }
+
+    function testOnlyOwnerCanSetFees() public {
+        _feesTest.onlyOwnerCanSetFees(
+            IFeesManager(address(_minter)),
+            _DAO_FEE,
+            _DEPLOYER_FEE,
+            _deployer
+        );
+    }
+
+    function testMaxFees() public {
+        _feesTest.onlyOwnerCanSetFees(
+            IFeesManager(address(_minter)),
+            _DAO_FEE,
+            _DEPLOYER_FEE + 1,
+            _deployer
+        );
     }
 
     function testAddGaugeFactoryPermissions() public {
@@ -73,13 +105,11 @@ contract L2BalancerPseudoMinterTest is IntegrationTest {
 
         // without fees
         vm.mockCall(
-            _silo,
-            abi.encodeWithSelector(ISilo.getFeesAndFeeReceivers.selector),
+            _gauge,
+            abi.encodeWithSelector(ISiloChildChainGauge.getFeeReceivers.selector),
             abi.encode(
                 address(0),
-                address(0),
-                0,
-                0
+                address(0)
             )
         );
 
@@ -101,15 +131,16 @@ contract L2BalancerPseudoMinterTest is IntegrationTest {
         // 10% - to DAO
         // 20% - to deployer
         vm.mockCall(
-            _silo,
-            abi.encodeWithSelector(ISilo.getFeesAndFeeReceivers.selector),
+            _gauge,
+            abi.encodeWithSelector(ISiloChildChainGauge.getFeeReceivers.selector),
             abi.encode(
                 _daoFeeReceiver,
-                _deployerFeeReceiver,
-                _DAO_FEE,
-                _DEPLOYER_FEE
+                _deployerFeeReceiver
             )
         );
+
+        vm.prank(_deployer);
+        IFeesManager(address(_minter)).setFees(_DAO_FEE, _DEPLOYER_FEE);
 
         IERC20 siloToken = IERC20(getAddress(SILO_TOKEN));
 

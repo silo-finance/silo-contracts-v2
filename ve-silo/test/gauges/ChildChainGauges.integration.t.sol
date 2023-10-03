@@ -12,6 +12,7 @@ import {ChildChainGaugeFactoryDeploy} from "ve-silo/deploy/ChildChainGaugeFactor
 import {VeSiloAddrKey} from "ve-silo/common/VeSiloAddresses.sol";
 import {IHookReceiverMock as IHookReceiver} from "../_mocks/IHookReceiverMock.sol";
 import {IShareTokenLike as IShareToken} from "ve-silo/contracts/gauges/interfaces/IShareTokenLike.sol";
+import {ISiloMock as ISilo} from "ve-silo/test/_mocks/ISiloMock.sol";
 
 // interfaces for tests
 interface IMinter {
@@ -36,6 +37,7 @@ contract ChildChainGaugesTest is IntegrationTest {
     address internal _hookReceiver = makeAddr("Hook receiver");
     address internal _shareToken = makeAddr("Share token");
     address internal _silo = makeAddr("Silo");
+    address internal _siloFactory = makeAddr("Silo Factory");
     address internal _bob = makeAddr("Bob");
     address internal _alice = makeAddr("Alice");
 
@@ -70,6 +72,7 @@ contract ChildChainGaugesTest is IntegrationTest {
         assertEq(gauge.hook_receiver(), _hookReceiver, "Deployed with wrong hook receiver");
         assertEq(gauge.share_token(), _shareToken, "Deployed with wrong share token");
         assertEq(gauge.silo(), _silo, "Deployed with wrong silo");
+        assertEq(gauge.silo_factory(), _siloFactory, "Deployed with wrong silo factory");
         assertEq(gauge.version(), _factory.getProductVersion(), "Deployed with wrong version");
         assertEq(address(gauge.factory()), address(_factory), "Deployed with wrong factory");
 
@@ -178,6 +181,12 @@ contract ChildChainGaugesTest is IntegrationTest {
             _shareToken,
             abi.encodeWithSelector(IShareToken.silo.selector),
             abi.encode(_silo)
+        );
+
+        vm.mockCall(
+            _silo,
+            abi.encodeWithSelector(ISilo.factory.selector),
+            abi.encode(_siloFactory)
         );
     }
 }

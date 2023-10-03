@@ -5,6 +5,7 @@ import {IntegrationTest} from "silo-foundry-utils/networks/IntegrationTest.sol";
 import {ERC20 as ERC20WithoutMint, IERC20} from "openzeppelin-contracts/token/ERC20/ERC20.sol";
 import {Client} from "chainlink-ccip/v0.8/ccip/interfaces/IAny2EVMMessageReceiver.sol";
 
+import {IFeesManager} from "ve-silo/contracts/silo-tokens-minter/interfaces/IFeesManager.sol";
 import {IVeSilo} from "ve-silo/contracts/voting-escrow/interfaces/IVeSilo.sol";
 import {VeSiloContracts} from "ve-silo/deploy/_CommonDeploy.sol";
 import {VeSiloAddrKey} from "ve-silo/common/VeSiloAddresses.sol";
@@ -16,9 +17,13 @@ import {ISiloChildChainGauge} from "ve-silo/contracts/gauges/interfaces/ISiloChi
 import {IL2BalancerPseudoMinter} from "ve-silo/contracts/silo-tokens-minter/interfaces/IL2BalancerPseudoMinter.sol";
 import {ILiquidityGaugeFactory} from "ve-silo/contracts/gauges/interfaces/ILiquidityGaugeFactory.sol";
 import {IHookReceiverMock as IHookReceiver} from "./_mocks/IHookReceiverMock.sol";
-import {ISiloWithFeeDetails as ISilo} from "ve-silo/contracts/silo-tokens-minter/interfaces/ISiloWithFeeDetails.sol";
+import {ISiloMock as ISilo} from "ve-silo/test/_mocks/ISiloMock.sol";
 import {IVotingEscrowChildChain} from "ve-silo/contracts/voting-escrow/interfaces/IVotingEscrowChildChain.sol";
 import {VotingEscrowChildChainTest} from "ve-silo/test/voting-escrow/VotingEscrowChildChain.unit.t.sol";
+
+import {
+    ISiloFactoryWithFeeDetails as ISiloFactory
+} from "ve-silo/contracts/silo-tokens-minter/interfaces/ISiloFactoryWithFeeDetails.sol";
 
 // solhint-disable max-states-count
 
@@ -43,6 +48,7 @@ contract L2Test is IntegrationTest {
     address internal _hookReceiver = makeAddr("Hook receiver");
     address internal _shareToken = makeAddr("Share token");
     address internal _silo = makeAddr("Silo");
+    address internal _siloFactory = makeAddr("Silo Factory");
     address internal _daoFeeReceiver = makeAddr("DAO fee receiver");
     address internal _deployerFeeReceiver = makeAddr("Deployer fee receiver");
     address internal _bob = makeAddr("localUser");
@@ -163,15 +169,16 @@ contract L2Test is IntegrationTest {
         // 10% - to DAO
         // 20% - to deployer
         vm.mockCall(
-            _silo,
-            abi.encodeWithSelector(ISilo.getFeesAndFeeReceivers.selector),
+            _siloFactory,
+            abi.encodeWithSelector(ISiloFactory.getFeeReceivers.selector, _silo),
             abi.encode(
                 _daoFeeReceiver,
-                _deployerFeeReceiver,
-                _DAO_FEE,
-                _DEPLOYER_FEE
+                _deployerFeeReceiver
             )
         );
+
+        vm.prank(_deployer);
+        IFeesManager(address(_l2PseudoMinter)).setFees(_DAO_FEE, _DEPLOYER_FEE);
 
         vm.warp(block.timestamp + _WEEK + 1);
 
@@ -223,6 +230,12 @@ contract L2Test is IntegrationTest {
             _shareToken,
             abi.encodeWithSelector(IShareToken.silo.selector),
             abi.encode(_silo)
+        );
+
+        vm.mockCall(
+            _silo,
+            abi.encodeWithSelector(ISilo.factory.selector),
+            abi.encode(_siloFactory)
         );
     }
 
