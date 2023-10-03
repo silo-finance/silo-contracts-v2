@@ -705,7 +705,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
         // flashFee will revert for wrong token
         uint256 fee = SiloStdLib.flashFee(config, _token, _amount);
 
-        IERC20Upgradeable(_token).safeTransferFrom(address(this), address(_receiver), _amount);
+        IERC20Upgradeable(_token).safeTransfer(address(_receiver), _amount);
 
         if (_receiver.onFlashLoan(msg.sender, _token, _amount, fee, _data) != FLASHLOAN_CALLBACK) {
             revert FlashloanFailed();
