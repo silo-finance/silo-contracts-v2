@@ -1,4 +1,6 @@
 ### BalancerMinter.sol
+- Implemented FeesManager for the BalancerMinter ([cfbb406](https://github.com/silo-finance/silo-contracts-v2/pull/155/commits/cfbb4060b3e1c747797565e3e934faa0ec92ae03))
+
 - Fees collection ([ad564c1](https://github.com/silo-finance/silo-contracts-v2/pull/97/commits/ad564c19f4fa0b3a2a2f741168a7880e18904449))
 
 - solhint-disable ordering for BalancerMinter ([cfda647](https://github.com/silo-finance/silo-contracts-v2/pull/38/commits/cfda647e39e006a3c50a67792cae81368ccd9acb))
@@ -28,6 +30,8 @@
 - Copy of Balancer's implementation of the MainnetBalancerMinter.sol ([c3762da](https://github.com/silo-finance/silo-contracts-v2/pull/38/commits/c3762da774abbab4a309157c86237c1432e01ae8))
 
 ### L2BalancerPseudoMinter.sol
+- Removed Ownable2Step as it is now a part of the BalancerMinter.sol ([4c126b4](https://github.com/silo-finance/silo-contracts-v2/pull/155/commits/4c126b49282fc9b0930cb794f77178c6cbfc4a16))
+
 - Fees collection ([6cbbfa0](https://github.com/silo-finance/silo-contracts-v2/pull/97/commits/6cbbfa0e629e6b686f322d89f87f244427dde5ee))
 
 - Changed EIP712 name to `Silo Pseudo Minter` ([c7a308d](https://github.com/silo-finance/silo-contracts-v2/pull/62/commits/c7a308d2b8f547983ca8179ccb9f4c96b1248e91))
