@@ -19,7 +19,10 @@ interface HookReceiver:
     def shareToken() -> address: view
 
 interface Silo:
-    def getFeesAndFeeReceivers() -> (address, address, uint256, uint256): view
+    def factory() -> address: view
+
+interface SiloFactory:
+    def getFeeReceivers(silo: address) -> (address, address): view
 
 interface TokenAdmin:
     def future_epoch_time_write() -> uint256: nonpayable
@@ -34,6 +37,7 @@ interface Minter:
     def getBalancerTokenAdmin() -> address: view
     def getGaugeController() -> address: view
     def minted(user: address, gauge: address) -> uint256: view
+    def getFees() -> (uint256, uint256): view
 
 interface VotingEscrow:
     def user_point_epoch(addr: address) -> uint256: view
@@ -96,6 +100,7 @@ BPS_BASE: constant(uint256) = 10 ** 4
 hook_receiver: public(address)
 share_token: public(address)
 silo: public(address)
+silo_factory: public(address)
 
 is_killed: public(bool)
 
@@ -360,10 +365,10 @@ def _dao_and_deployer_fee(_amount: uint256) -> (uint256, uint256):
 
     (
         dao_fee_receiver,
-        deployer_fee_receiver,
-        dao_fee,
-        deployer_fee
-    ) = Silo(self.silo).getFeesAndFeeReceivers()
+        deployer_fee_receiver
+    ) = SiloFactory(self.silo_factory).getFeeReceivers(self.silo)
+
+    (dao_fee, deployer_fee) = Minter(MINTER).getFees()
 
     if dao_fee_receiver != empty(address):
         fee_to_dao = self._calculate_fee(_amount, dao_fee)
@@ -696,7 +701,11 @@ def initialize(relative_weight_cap: uint256, hook_receiver: address):
 
     self.hook_receiver = hook_receiver
     self.share_token = HookReceiver(hook_receiver).shareToken()
-    self.silo = ShareToken(self.share_token).silo()
+
+    silo: address = ShareToken(self.share_token).silo()
+
+    self.silo = silo
+    self.silo_factory = Silo(silo).factory()
 
     self.period_timestamp[0] = block.timestamp
     self.inflation_params = shift(TokenAdmin(BAL_TOKEN_ADMIN).future_epoch_time_write(), 216) + TokenAdmin(BAL_TOKEN_ADMIN).rate()
@@ -728,6 +737,11 @@ def getCappedRelativeWeight(time: uint256) -> uint256:
     @param time Timestamp in the past or present.
     """
     return self._getCappedRelativeWeight(time)
+
+@external
+@view
+def getFeeReceivers() -> (address, address):
+    return SiloFactory(self.silo_factory).getFeeReceivers(self.silo)
 
 @external
 @pure
