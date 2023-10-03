@@ -365,8 +365,9 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
     {
         (, ISiloConfig.ConfigData memory configData) = _accrueInterest();
 
-        address collateralShareToken =
-            _assetType == AssetType.Collateral ? configData.collateralShareToken : configData.protectedShareToken;
+        address collateralShareToken = _assetType == AssetType.Collateral
+            ? configData.collateralShareToken
+            : configData.protectedShareToken;
 
         (, shares) = _deposit(
             configData,
@@ -409,8 +410,9 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
     {
         (, ISiloConfig.ConfigData memory configData) = _accrueInterest();
 
-        address collateralShareToken =
-            _assetType == AssetType.Collateral ? configData.collateralShareToken : configData.protectedShareToken;
+        address collateralShareToken = _assetType == AssetType.Collateral
+            ? configData.collateralShareToken
+            : configData.protectedShareToken;
 
         (assets,) = _deposit(
             configData,

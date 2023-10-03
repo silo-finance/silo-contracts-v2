@@ -35,6 +35,16 @@ contract TokenMock {
         );
     }
 
+    function transferMock(address _to, uint256 _amount) public {
+        require(_to != address(0), "ERC20: transfer to the zero address");
+
+        vm.mockCall(
+            ADDRESS,
+            abi.encodeWithSelector(IERC20Upgradeable.transfer.selector, _to, _amount),
+            abi.encode(true)
+        );
+    }
+
     function totalSupplyMock(uint256 _totalSupply) external {
         vm.mockCall(
             ADDRESS,

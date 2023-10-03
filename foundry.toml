@@ -1,3 +1,7 @@
+[invariant]
+fail_on_revert = true
+call_override = false
+
 [profile.default]
 libs = [
     'gitmodules',
@@ -27,6 +31,7 @@ src = 'silo-core/contracts'
 out = 'cache/foundry/out/silo-core'
 test = 'silo-core/test'
 broadcast = 'silo-core/broadcast'
+
 fs_permissions = [
     { access = "read", path = "./silo-core/test/foundry/data/"},
     { access = "read", path = "./silo-core/deploy/input/"}

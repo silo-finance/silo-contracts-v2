@@ -57,6 +57,7 @@ contract SiloConfigData is Test, CommonDeploy {
         returns (ConfigData memory config, ISiloConfig.InitData memory initData)
     {
         config = _readDataFromJson(_name);
+
         initData = ISiloConfig.InitData({
             deployer: config.deployer,
             deployerFeeInBp: config.deployerFeeInBp,
