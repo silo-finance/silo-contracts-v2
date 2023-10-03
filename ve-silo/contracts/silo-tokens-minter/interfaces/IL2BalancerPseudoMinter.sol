@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity >=0.7.0 <0.9.0;
+pragma solidity >=0.5.0;
 
 import {ILiquidityGaugeFactory} from "ve-silo/contracts/gauges/interfaces/ILiquidityGaugeFactory.sol";
 import {IBalancerMinter} from "./IBalancerMinter.sol";
