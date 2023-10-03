@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.19;
+pragma solidity >=0.5.0;
 
 interface IChildChainGaugeFactory {
     /// @notice Deploys a new gauge for a ERC-20 balances handler (Silo shares token)

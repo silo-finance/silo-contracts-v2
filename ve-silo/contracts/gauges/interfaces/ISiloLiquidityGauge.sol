@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.19;
+pragma solidity >=0.5.0;
 
 interface ISiloLiquidityGauge {
     function initialize(uint256 relativeWeightCap, address erc20BalancesHandler) external;

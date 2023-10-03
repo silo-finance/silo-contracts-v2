@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.19;
+pragma solidity >=0.5.0;
 
 /// @dev Balancer V2 GaugesController interface
 /// As Balancer GaugesController is implemented with Vyper programming language and we don't use
