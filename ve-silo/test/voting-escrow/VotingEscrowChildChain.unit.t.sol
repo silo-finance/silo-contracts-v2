@@ -19,14 +19,14 @@ contract VotingEscrowChildChainTest is IntegrationTest {
     uint256 internal constant _LOCKED_END_TEST = 1726099200;
     uint64 internal constant _TEST_CHAIN_SELECTOR = 1;
 
-    IVeSilo.Point internal _tsTestPoint = IVeSilo.Point({
+    IVeSilo.Point public tsTestPoint = IVeSilo.Point({
         bias: 2947469178042106200,
         slope: 95129375950,
         ts: 1695115404,
         blk: 4319390
     });
 
-    IVeSilo.Point internal _uTestPoint = IVeSilo.Point({
+    IVeSilo.Point public uTestPoint = IVeSilo.Point({
         bias: 982489726003707468,
         slope: 31709791983,
         ts: 1695115404,
@@ -67,20 +67,19 @@ contract VotingEscrowChildChainTest is IntegrationTest {
     function testReceiveBalanceAndTotalSupply() public {
         _setSourceChainSender();
 
-        // solhint-disable-next-line max-line-length
-        bytes memory data = hex"00000000000000000000000000000000000000000000000000000000000000000000000000000000000000004b83cc4a15e13b84de509abc40893e1b5826ca420000000000000000000000000000000000000000000000000000000066e22f000000000000000000000000000000000000000000000000000da2813349ebfe4c00000000000000000000000000000000000000000000000000000007620d06ef000000000000000000000000000000000000000000000000000000006509688c000000000000000000000000000000000000000000000000000000000041e89e00000000000000000000000000000000000000000000000028e78399df9cc15800000000000000000000000000000000000000000000000000000016262714ce000000000000000000000000000000000000000000000000000000006509688c000000000000000000000000000000000000000000000000000000000041e89e";
+        bytes memory data = balanceTransferData();
 
-        Client.Any2EVMMessage memory ccipMessage = _getCCIPMessage(data);
+        Client.Any2EVMMessage memory ccipMessage = getCCIPMessage(data);
 
         vm.expectEmit(false, true, true, true);
         emit UserBalanceUpdated(
             _localUser,
             _LOCKED_END_TEST,
-            _uTestPoint
+            uTestPoint
         );
 
         vm.expectEmit(false, false, false, true);
-        emit TotalSupplyUpdated(_tsTestPoint);
+        emit TotalSupplyUpdated(tsTestPoint);
 
         vm.expectEmit(false, false, false, true);
         emit MessageReceived(_TEST_MESSAGE_ID);
@@ -88,24 +87,23 @@ contract VotingEscrowChildChainTest is IntegrationTest {
         vm.prank(_router);
         _votingEscrowChild.ccipReceive(ccipMessage);
 
-        vm.warp(_tsTestPoint.ts);
+        vm.warp(tsTestPoint.ts);
         // `totalSupply` should be equal to the `point.bias` as `block.timestamp` is set to the `point.ts`
-        assertEq(_votingEscrowChild.totalSupply(), uint256(int256(_tsTestPoint.bias)), "Invalid total supply");
+        assertEq(_votingEscrowChild.totalSupply(), uint256(int256(tsTestPoint.bias)), "Invalid total supply");
         // `balanceOf` should be equal to the `point.bias` as `block.timestamp` is set to the `point.ts`
-        assertEq(_votingEscrowChild.balanceOf(_localUser), uint256(int256(_uTestPoint.bias)), "Invalid user balance");
+        assertEq(_votingEscrowChild.balanceOf(_localUser), uint256(int256(uTestPoint.bias)), "Invalid user balance");
         assertEq(_votingEscrowChild.locked__end(_localUser), _LOCKED_END_TEST, "Locked end did not match");
     }
 
     function testReceiveTotalSupply() public {
         _setSourceChainSender();
 
-        // solhint-disable-next-line max-line-length
-        bytes memory data = hex"000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000028e78399df9cc15800000000000000000000000000000000000000000000000000000016262714ce000000000000000000000000000000000000000000000000000000006509688c000000000000000000000000000000000000000000000000000000000041e89e";
+        bytes memory data = totalSupplyTransferData();
 
-        Client.Any2EVMMessage memory ccipMessage = _getCCIPMessage(data);
+        Client.Any2EVMMessage memory ccipMessage = getCCIPMessage(data);
 
         vm.expectEmit(false, false, false, true);
-        emit TotalSupplyUpdated(_tsTestPoint);
+        emit TotalSupplyUpdated(tsTestPoint);
 
         vm.expectEmit(false, false, false, true);
         emit MessageReceived(_TEST_MESSAGE_ID);
@@ -113,9 +111,9 @@ contract VotingEscrowChildChainTest is IntegrationTest {
         vm.prank(_router);
         _votingEscrowChild.ccipReceive(ccipMessage);
 
-        vm.warp(_tsTestPoint.ts);
+        vm.warp(tsTestPoint.ts);
         // `totalSupply` should be equal to the `point.bias` as `block.timestamp` is set to the `point.ts`
-        assertEq(_votingEscrowChild.totalSupply(), uint256(int256(_tsTestPoint.bias)), "Invalid total supply");
+        assertEq(_votingEscrowChild.totalSupply(), uint256(int256(tsTestPoint.bias)), "Invalid total supply");
         assertEq(_votingEscrowChild.balanceOf(_localUser), 0, "Invalid user balance");
         assertEq(_votingEscrowChild.locked__end(_localUser), 0, "Locked end did not match");
     }
@@ -148,10 +146,9 @@ contract VotingEscrowChildChainTest is IntegrationTest {
     function testMessageType() public {
         _setSourceChainSender();
 
-        // solhint-disable-next-line max-line-length
-        bytes memory data = hex"000000000000000000000000000000000000000000000000000000000000000300000000000000000000000000000000000000000000000028e78399df9cc15800000000000000000000000000000000000000000000000000000016262714ce000000000000000000000000000000000000000000000000000000006509688c000000000000000000000000000000000000000000000000000000000041e89e";
+        bytes memory data = wrongCodeData();
 
-        Client.Any2EVMMessage memory ccipMessage = _getCCIPMessage(data);
+        Client.Any2EVMMessage memory ccipMessage = getCCIPMessage(data);
 
         // Conversion into non-existent enum type
         vm.expectRevert();
@@ -160,16 +157,8 @@ contract VotingEscrowChildChainTest is IntegrationTest {
         _votingEscrowChild.ccipReceive(ccipMessage);
     }
 
-    function _setSourceChainSender() internal {
-        vm.expectEmit(false, false, false, true);
-        emit MainChainSenderConfiguered(_sender);
-
-        vm.prank(_deployer);
-        _votingEscrowChild.setSourceChainSender(_sender);
-    }
-
-    function _getCCIPMessage(bytes memory _data)
-        internal
+    function getCCIPMessage(bytes memory _data)
+        public
         view
         returns (Client.Any2EVMMessage memory ccipMessage)
     {
@@ -180,5 +169,28 @@ contract VotingEscrowChildChainTest is IntegrationTest {
             data: _data,
             destTokenAmounts: new Client.EVMTokenAmount[](0)
         });
+    }
+
+    function balanceTransferData() public pure returns (bytes memory data) {
+        // solhint-disable-next-line max-line-length
+        data = hex"00000000000000000000000000000000000000000000000000000000000000000000000000000000000000004b83cc4a15e13b84de509abc40893e1b5826ca420000000000000000000000000000000000000000000000000000000066e22f000000000000000000000000000000000000000000000000000da2813349ebfe4c00000000000000000000000000000000000000000000000000000007620d06ef000000000000000000000000000000000000000000000000000000006509688c000000000000000000000000000000000000000000000000000000000041e89e00000000000000000000000000000000000000000000000028e78399df9cc15800000000000000000000000000000000000000000000000000000016262714ce000000000000000000000000000000000000000000000000000000006509688c000000000000000000000000000000000000000000000000000000000041e89e";
+    }
+
+    function totalSupplyTransferData() public pure returns (bytes memory data) {
+        // solhint-disable-next-line max-line-length
+        data = hex"000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000028e78399df9cc15800000000000000000000000000000000000000000000000000000016262714ce000000000000000000000000000000000000000000000000000000006509688c000000000000000000000000000000000000000000000000000000000041e89e";
+    }
+
+    function wrongCodeData() public pure returns (bytes memory data) {
+        // solhint-disable-next-line max-line-length
+        data = hex"000000000000000000000000000000000000000000000000000000000000000300000000000000000000000000000000000000000000000028e78399df9cc15800000000000000000000000000000000000000000000000000000016262714ce000000000000000000000000000000000000000000000000000000006509688c000000000000000000000000000000000000000000000000000000000041e89e";
+    }
+
+    function _setSourceChainSender() internal {
+        vm.expectEmit(false, false, false, true);
+        emit MainChainSenderConfiguered(_sender);
+
+        vm.prank(_deployer);
+        _votingEscrowChild.setSourceChainSender(_sender);
     }
 }

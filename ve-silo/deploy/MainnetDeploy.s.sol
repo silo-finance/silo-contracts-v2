@@ -9,9 +9,7 @@ import {GaugeControllerDeploy} from "./GaugeControllerDeploy.s.sol";
 import {MainnetBalancerMinterDeploy} from "./MainnetBalancerMinterDeploy.s.sol";
 import {VotingEscrowRemapperDeploy} from "./VotingEscrowRemapperDeploy.s.sol";
 import {GaugeAdderDeploy} from "./GaugeAdderDeploy.s.sol";
-import {ArbitrumRootGaugeFactoryDeploy} from "ve-silo/deploy/ArbitrumRootGaugeFactoryDeploy.s.sol";
 import {StakelessGaugeCheckpointerAdaptorDeploy} from "ve-silo/deploy/StakelessGaugeCheckpointerAdaptorDeploy.s.sol";
-import {StakelessGaugeCheckpointerDeploy} from "ve-silo/deploy/StakelessGaugeCheckpointerDeploy.s.sol";
 import {FeeDistributorDeploy} from "ve-silo/deploy/FeeDistributorDeploy.s.sol";
 import {FeeSwapperDeploy} from "ve-silo/deploy/FeeSwapperDeploy.s.sol";
 import {UniswapSwapperDeploy} from "ve-silo/deploy/UniswapSwapperDeploy.s.sol";
@@ -60,14 +58,10 @@ contract MainnetDeploy is CommonDeploy {
     }
 
     function _deployL1ForL2() internal {
-        ArbitrumRootGaugeFactoryDeploy factoryDeploy = new ArbitrumRootGaugeFactoryDeploy();
         StakelessGaugeCheckpointerAdaptorDeploy adaptorDeploy = new StakelessGaugeCheckpointerAdaptorDeploy();
-        StakelessGaugeCheckpointerDeploy chackpointerDeploy = new StakelessGaugeCheckpointerDeploy();
         VotingEscrowRemapperDeploy remapperDeploy = new VotingEscrowRemapperDeploy();
 
         adaptorDeploy.run();
-        factoryDeploy.run();
-        chackpointerDeploy.run();
         remapperDeploy.run();
     }
 }
