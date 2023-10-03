@@ -14,6 +14,9 @@ import {ISmartWalletChecker} from "ve-silo/contracts/voting-escrow/interfaces/IS
 import {VotingEscrowDeploy} from "ve-silo/deploy/VotingEscrowDeploy.s.sol";
 import {VeBoostDeploy} from "ve-silo/deploy/VeBoostDeploy.s.sol";
 import {VeSiloContracts} from "ve-silo/deploy/_CommonDeploy.sol";
+import {VotingEscrowChildChainDeploy} from "ve-silo/deploy/VotingEscrowChildChainDeploy.s.sol";
+
+import {console} from "forge-std/console.sol"; 
 
 // FOUNDRY_PROFILE=ve-silo forge test --mc VotingEscrowTest --ffi -vvv
 contract VotingEscrowTest is IntegrationTest {
@@ -41,12 +44,15 @@ contract VotingEscrowTest is IntegrationTest {
         _veDeploymentScript = new VotingEscrowDeploy();
         _veDeploymentScript.disableDeploymentsSync();
 
-        _veBoostDeploymentScript = new VeBoostDeploy();
-
         _mockPermissions();
         _dummySiloToken();
 
         veSilo = _veDeploymentScript.run();
+
+        setAddress(getChainId(), VeSiloContracts.VOTING_ESCROW_CHILD_CHAIN, address(veSilo));
+
+        _veBoostDeploymentScript = new VeBoostDeploy();
+
         veBoost = _veBoostDeploymentScript.run();
 
         vm.prank(_timelock);

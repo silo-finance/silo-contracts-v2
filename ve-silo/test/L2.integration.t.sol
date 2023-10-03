@@ -31,6 +31,7 @@ contract ERC20 is ERC20WithoutMint {
 
 // FOUNDRY_PROFILE=ve-silo forge test --mc L2Test --ffi -vvv
 contract L2Test is IntegrationTest {
+    uint256 internal constant _FORKING_BLOCK_NUMBER = 4413530;
     uint256 internal constant _INCENTIVES_AMOUNT = 2_000_000e18;
     uint256 internal constant _EXPECTED_USER_BAL = 1399999999999999999650000;
     address internal constant _SILO_WHALE_ARB = 0xae1Eb69e880670Ca47C50C9CE712eC2B48FaC3b6;
@@ -47,7 +48,6 @@ contract L2Test is IntegrationTest {
     address internal _bob = makeAddr("localUser");
     address internal _alice = makeAddr("_alice");
     address internal _l2Multisig = makeAddr(VeSiloAddrKey.L2_MULTISIG);
-    address internal _router = makeAddr("CCIP Router");
     address internal _sender = makeAddr("Source chain sender");
 
     IChildChainGaugeFactory internal _factory;
@@ -58,6 +58,12 @@ contract L2Test is IntegrationTest {
     ERC20 internal _siloToken;
 
     function setUp() public {
+        // only to make deployment scripts work
+        vm.createSelectFork(
+            getChainRpcUrl(SEPOLIA_ALIAS),
+            _FORKING_BLOCK_NUMBER
+        );
+
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
         _deployer = vm.addr(deployerPrivateKey);
 
@@ -67,7 +73,6 @@ contract L2Test is IntegrationTest {
         deploy.disableDeploymentsSync();
 
         setAddress(VeSiloAddrKey.L2_MULTISIG, _l2Multisig);
-        setAddress(VeSiloAddrKey.CHAINLINK_CCIP_ROUTER, _router);
 
         deploy.run();
 
@@ -146,7 +151,7 @@ contract L2Test is IntegrationTest {
         bytes memory data = _votingEscrowChildTest.balanceTransferData();
         Client.Any2EVMMessage memory ccipMessage = _votingEscrowChildTest.getCCIPMessage(data);
 
-        vm.prank(_router);
+        vm.prank(getAddress(VeSiloAddrKey.CHAINLINK_CCIP_ROUTER));
         _votingEscrowChild.ccipReceive(ccipMessage);
 
         (,,uint256 ts,) = _votingEscrowChildTest.tsTestPoint();

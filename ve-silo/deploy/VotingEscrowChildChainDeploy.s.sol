@@ -32,7 +32,7 @@ contract VotingEscrowChildChainDeploy is CommonDeploy {
     }
 
     function _sourceChainSelector() internal returns (uint64 sourceChainSelector) {
-         if (isChain(ANVIL_ALIAS)) {
+         if (isChain(ANVIL_ALIAS) || isChain(SEPOLIA_ALIAS)) {
             return 1; // only for local tests
          }
     }
