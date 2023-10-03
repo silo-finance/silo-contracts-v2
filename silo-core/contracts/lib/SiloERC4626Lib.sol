@@ -64,18 +64,29 @@ library SiloERC4626Lib {
         uint256 _totalAssets,
         uint256 _liquidity
     ) external view returns (uint256 assets, uint256 shares) {
-        {
-            bool isVault;
+        (
+            ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig
+        ) = _config.getConfigs(address(this));
 
-            (assets, shares, isVault) = maxWithdrawForVaults(_config, _owner, _totalAssets, _assetType);
+        uint256 shareTokenTotalSupply = _assetType == ISilo.AssetType.Protected
+            ? IShareToken(collateralConfig.protectedShareToken).totalSupply()
+            : IShareToken(collateralConfig.collateralShareToken).totalSupply();
 
-            if (isVault) {
-                return (assets, shares);
-            }
+        if (!hasDebt(debtConfig.debtShareToken, _owner)) {
+            shares = _assetType == ISilo.AssetType.Protected
+                ? IShareToken(collateralConfig.protectedShareToken).balanceOf(_owner)
+                : IShareToken(collateralConfig.collateralShareToken).balanceOf(_owner);
+
+            assets = SiloMathLib.convertToAssets(
+                shares,
+                _totalAssets,
+                shareTokenTotalSupply,
+                MathUpgradeable.Rounding.Down,
+                _assetType
+            );
+
+            return (assets, shares);
         }
-
-        (ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig) =
-            _config.getConfigs(address(this));
 
         SiloSolvencyLib.LtvData memory ltvData = SiloSolvencyLib.getAssetsDataForLtvCalculations(
             collateralConfig, debtConfig, _owner, ISilo.OracleType.Solvency, ISilo.AccrueInterestInMemory.Yes
@@ -91,10 +102,6 @@ library SiloERC4626Lib {
             ltvData.borrowerProtectedAssets,
             ltvData.borrowerCollateralAssets
         );
-
-        uint256 shareTokenTotalSupply = _assetType == ISilo.AssetType.Protected
-            ? IShareToken(collateralConfig.protectedShareToken).totalSupply()
-            : IShareToken(collateralConfig.collateralShareToken).totalSupply();
 
         return SiloMathLib.maxWithdrawToAssetsAndShares(
             assets,
@@ -194,28 +201,7 @@ library SiloERC4626Lib {
         return IShareToken(_debtShareToken).balanceOf(_depositor) == 0;
     }
 
-    /// @notice maxWithdraw optimized implemencation for vaults that only use collateral and do not have debt
-    function maxWithdrawForVaults(
-        ISiloConfig _config,
-        address _owner,
-        uint256 _totalAssets,
-        ISilo.AssetType _assetType
-    ) internal view returns (uint256 assets, uint256 shares, bool isVault) {
-        if (_assetType == ISilo.AssetType.Collateral) {
-            (, address collateralShareToken, address debtShareToken) = _config.getShareTokens(address(this));
-
-            if (IShareToken(debtShareToken).balanceOf(_owner) == 0) {
-                shares = IShareToken(collateralShareToken).balanceOf(_owner);
-                assets = SiloMathLib.convertToAssets(
-                    shares,
-                    _totalAssets,
-                    IShareToken(collateralShareToken).totalSupply(),
-                    MathUpgradeable.Rounding.Down,
-                    _assetType
-                );
-
-                return (assets, shares, true);
-            }
-        }
+    function hasDebt(address _debtShareToken, address _owner) internal view returns (bool debt) {
+        debt = IShareToken(_debtShareToken).balanceOf(_owner) != 0;
     }
 }
