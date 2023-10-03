@@ -15,8 +15,8 @@ contract MaxWithdrawToAssetsAndSharesTest is Test {
         MaxWithdrawToAssetsAndSharesTestData.MWTASData[] memory testDatas = tests.getData();
 
         for (uint256 i; i < testDatas.length; i++) {
-            emit log_string(testDatas[i].name);
-            emit log_named_uint("testDatas[i].output.assets", testDatas[i].output.assets);
+            // emit log_string(testDatas[i].name);
+            // emit log_named_uint("testDatas[i].output.assets", testDatas[i].output.assets);
 
             (uint256 assets, uint256 shares) = SiloMathLib.maxWithdrawToAssetsAndShares(
                 testDatas[i].input.maxAssets,

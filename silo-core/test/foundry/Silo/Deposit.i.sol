@@ -1,34 +1,32 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.0;
 
-import {IntegrationTest} from "silo-foundry-utils/networks/IntegrationTest.sol";
+import "forge-std/Test.sol";
 
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 
-import {TokenMock} from "silo-core/test/foundry/_mocks/TokenMock.sol";
 import {SiloFixture} from "../_common/fixtures/SiloFixture.sol";
+import {MintableToken} from "../_common/MintableToken.sol";
+import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
 
-contract DepositTest is IntegrationTest {
+contract DepositTest is SiloLittleHelper, Test {
     ISiloConfig siloConfig;
-    ISilo silo0;
-    ISilo silo1;
 
-    TokenMock weth;
-    TokenMock usdc;
-
-    uint256 internal constant _FORKING_BLOCK_NUMBER = 17336000;
+    MintableToken weth;
+    MintableToken usdc;
 
     function setUp() public {
-        vm.createSelectFork(getChainRpcUrl(MAINNET_ALIAS), _FORKING_BLOCK_NUMBER);
+        token0 = new MintableToken();
+        token1 = new MintableToken();
 
         SiloFixture siloFixture = new SiloFixture();
-        address t0;
-        address t1;
-        (siloConfig, silo0, silo1, t0, t1) = siloFixture.deploy_ETH_USDC();
+        (siloConfig, silo0, silo1,,) = siloFixture.deploy_local(SiloFixture.Override(address(token0), address(token1)));
 
-        weth = new TokenMock(vm, t0);
-        usdc = new TokenMock(vm, t1);
+        __init(vm, token0, token1, silo0, silo1);
+
+        weth = token0;
+        usdc = token1;
     }
 
     /*
@@ -39,39 +37,31 @@ contract DepositTest is IntegrationTest {
         address depositor = address(10);
         address borrower = address(11);
 
-        weth.transferFromMock(address(this), address(silo0), assets);
         uint256 gasStart = gasleft();
-        silo0.deposit(assets, depositor);
+        _deposit(assets, depositor);
         uint256 gasEnd = gasleft();
 
-        assertEq(gasStart - gasEnd, 144782, "optimise deposit");
+        assertEq(gasStart - gasEnd, 258007, "optimise deposit");
 
-        weth.transferMock(depositor, assets / 2);
         gasStart = gasleft();
-        vm.prank(depositor);
-        silo0.withdraw(assets / 2, depositor, depositor);
+        _withdraw(assets / 2, depositor);
         gasEnd = gasleft();
         // assertEq(gasStart - gasEnd, 80541, "optimise withdraw");
 
-        weth.transferFromMock(depositor, address(silo0), assets);
-        vm.prank(depositor);
-        silo0.deposit(assets, depositor);
+        _depositForBorrow(assets, depositor);
 
-        usdc.transferFromMock(borrower, address(silo1), assets * 2);
-        vm.prank(borrower);
-        silo1.deposit(assets * 2, borrower);
+        _deposit(assets * 2, borrower);
 
-        weth.transferFromMock(address(silo0), borrower, assets / 2);
         gasStart = gasleft();
-        vm.prank(borrower);
-        silo0.borrow(assets / 2, borrower, borrower);
+        _borrow(assets / 2, borrower);
         gasEnd = gasleft();
         // assertEq(gasStart - gasEnd, 134221, "optimise borrow");
 
-        weth.transferFromMock(borrower, address(silo0), assets / 2);
+        vm.prank(borrower);
+        usdc.approve(address(silo1), assets / 2);
         gasStart = gasleft();
         vm.prank(borrower);
-        silo0.repay(assets / 2, borrower);
+        silo1.repay(assets / 2, borrower);
         gasEnd = gasleft();
         // assertEq(gasStart - gasEnd, 28401, "optimise repay");
     }
