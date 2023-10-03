@@ -23,7 +23,9 @@ import {SafeMath} from "openzeppelin-contracts/utils/math/SafeMath.sol";
 import {EIP712} from "openzeppelin-contracts/utils/cryptography/EIP712.sol";
 import {EOASignaturesValidator, Errors, _require} from "./helpers/EOASignaturesValidator.sol";
 
-abstract contract BalancerMinter is IBalancerMinter, ReentrancyGuard, EOASignaturesValidator {
+import {FeesManager} from "./FeesManager.sol";
+
+abstract contract BalancerMinter is IBalancerMinter, ReentrancyGuard, EOASignaturesValidator, FeesManager {
     using SafeMath for uint256;
 
     IERC20 private immutable _token;
@@ -200,14 +202,10 @@ abstract contract BalancerMinter is IBalancerMinter, ReentrancyGuard, EOASignatu
     function _collectFees(address gauge, uint256 totalTokensToMint) internal returns (uint256 tokensToMint) {
         if (totalTokensToMint == 0) return 0;
 
-        address silo = ISiloLiquidityGauge(gauge).silo();
-
         address daoFeeReceiver;
         address deployerFeeReceiver;
-        uint256 daoFee;
-        uint256 deployerFee;
 
-        (daoFeeReceiver, deployerFeeReceiver, daoFee, deployerFee) = ISilo(silo).getFeesAndFeeReceivers();
+        (daoFeeReceiver, deployerFeeReceiver) = ISiloLiquidityGauge(gauge).getFeeReceivers();
 
         uint256 mintedToDao = _calculateFeeAndMint(daoFeeReceiver, totalTokensToMint, daoFee);
         uint256 mintedToDeployer = _calculateFeeAndMint(deployerFeeReceiver, totalTokensToMint, deployerFee);
