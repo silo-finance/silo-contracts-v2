@@ -24,7 +24,7 @@ interface IFeeSwapper {
         IFeeSwap swap;
     }
 
-    function swapFeesAndDeposit(address[] memory _assets) external;
+    function swapFeesAndDeposit(address[] calldata _assets) external;
 
     /// @notice Deposit into SILO-80%/WEH-20% Balancer pool
     function joinBalancerPool() external;
@@ -36,9 +36,9 @@ interface IFeeSwapper {
 
     /// @notice Swap all provided assets into WETH
     /// @param _assets A list of the asset to swap
-    function swapFees(address[] memory _assets) external;
+    function swapFees(address[] calldata _assets) external;
 
     /// @notice Configure swappers
     /// @param _inputs Swappers configurations
-    function setSwappers(SwapperConfigInput[] memory _inputs) external;
+    function setSwappers(SwapperConfigInput[] calldata _inputs) external;
 }

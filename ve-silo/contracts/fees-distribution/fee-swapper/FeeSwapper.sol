@@ -48,7 +48,7 @@ contract FeeSwapper is FeeSwapperConfig {
         BALANCER_POOL_ID = _poolId;
     }
 
-    function swapFeesAndDeposit(address[] memory _assets) external virtual {
+    function swapFeesAndDeposit(address[] calldata _assets) external virtual {
         _swapFees(_assets);
         _depositIntoBalancer();
         _depositLPTokens(type(uint256).max);
@@ -65,7 +65,7 @@ contract FeeSwapper is FeeSwapperConfig {
     }
 
     /// @inheritdoc IFeeSwapper
-    function swapFees(address[] memory _assets) external virtual {
+    function swapFees(address[] calldata _assets) external virtual {
         _swapFees(_assets);
     }
 
