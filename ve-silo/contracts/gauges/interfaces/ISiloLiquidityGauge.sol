@@ -35,6 +35,10 @@ interface ISiloLiquidityGauge {
     function share_token() external view returns (address);
     /// @notice Returns a silo
     function silo() external view returns (address);
+    /// @notice Returns a silo factory
+    function silo_factory() external view returns (address);
+    /// @notice Returns a silo and a silo factory
+    function getFeeReceivers() external view returns (address, address);
     /// @notice Get the timestamp of the last checkpoint
     function integrate_checkpoint() external view returns (uint256);
     /// @notice ∫(balance * rate(t) / totalSupply(t) dt) from 0 till checkpoint
