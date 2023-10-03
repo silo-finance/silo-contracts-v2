@@ -69,7 +69,7 @@ contract UniswapSwapper is IFeeSwap, Ownable2Step {
 
     /// @notice Update an asset swap configuration
     /// @param _swapPath Swap path
-    function configurePath(IERC20 _asset, SwapPath[] memory _swapPath) external onlyOwner {
+    function configurePath(IERC20 _asset, SwapPath[] calldata _swapPath) external onlyOwner {
         if (address(_asset) == address(0)) revert AssetIsZero();
 
         delete config[_asset];

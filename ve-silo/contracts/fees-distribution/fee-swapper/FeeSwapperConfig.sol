@@ -33,7 +33,7 @@ abstract contract FeeSwapperConfig is IFeeSwapper, Ownable2Step {
     }
 
     /// @inheritdoc IFeeSwapper
-    function setSwappers(SwapperConfigInput[] memory _configs) external virtual onlyOwner {
+    function setSwappers(SwapperConfigInput[] calldata _configs) external virtual onlyOwner {
         _setSwappers(_configs);
     }
 

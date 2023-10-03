@@ -50,7 +50,7 @@ abstract contract CCIPGauge is StakelessGauge, ICCIPGauge {
     }
 
     /// @inheritdoc ICCIPGauge
-    function calculateFee(Client.EVM2AnyMessage memory _message) external view returns (uint256 fee) {
+    function calculateFee(Client.EVM2AnyMessage calldata _message) external view returns (uint256 fee) {
         fee = _calculateFee(_message);
     }
 
