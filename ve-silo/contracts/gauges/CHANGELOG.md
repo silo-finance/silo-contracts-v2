@@ -80,9 +80,22 @@
 - Copy of Balancer's implementation of the StakelessGauge.sol ([c731307](https://github.com/silo-finance/silo-contracts-v2/pull/63/commits/c7313073b1ca24f4d75fd9f6e5eab3110489249a))
 
 ### stakeless-gauge/CCIPGaugeCheckpointer.sol
+- Calldata instead of memory for external functions ([cadcaf9](https://github.com/silo-finance/silo-contracts-v2/pull/171/commits/cadcaf99500d5d34714a406df5b43293d2e4abec))
+
 - Implementation of the `CCIPGaugeCheckpointer` ([bfa6cfa](https://github.com/silo-finance/silo-contracts-v2/pull/111/commits/bfa6cfa11fd91e51c6904b9399247774dd2022df))
 
 - Copy of the [StakelessGaugeCheckpointer.sol commit 7bddde6](https://github.com/silo-finance/silo-contracts-v2/pull/72/commits/7bddde63c1b895c5ec938a320468a53ca666379e) ([2f0e3ed](https://github.com/silo-finance/silo-contracts-v2/pull/111/commits/2f0e3edf24969ebbd3c8c65ca68b4eaa6c5005d6))
+
+### StakelessGaugeCheckpointer.sol (see CCIPGaugeCheckpointer.sol)
+- Added `receive` fn to be able to receive leftover ETH from the `StakelessGaugeCheckpointerAdaptor` if there will be any ([7bddde6](https://github.com/silo-finance/silo-contracts-v2/pull/72/commits/7bddde63c1b895c5ec938a320468a53ca666379e))
+
+- Bumped solidity to 0.8.19, updated imports, and solhint ([f752edd](https://github.com/silo-finance/silo-contracts-v2/pull/72/commits/f752eddb5972cc99fc5d4dae3806c1287113bb83))
+
+- Changed ownership system for StakelessGauge. Replaced SingletonAuthentication with Ownable2Step ([a42ae4c](https://github.com/silo-finance/silo-contracts-v2/pull/72/commits/a42ae4ca7bfd1a76ad76251ede5b265fba7bfa87))
+
+- Replaced authorizerAdaptorEntrypoint with StakelessGaugeCheckpointerAdaptor ([6afed53](https://github.com/silo-finance/silo-contracts-v2/pull/72/commits/6afed5359eef99bb1367c21960412715542c14ef))
+
+- Copy of Balancer's implementation of the StakelessGaugeCheckpointer.sol ([5c7ea22](https://github.com/silo-finance/silo-contracts-v2/pull/72/commits/5c7ea225313e8a3b10ba809f47153271fcdac6fc))
 
 ### gauge-adder/GaugeAdder.sol
 - Updated `_ETHEREUM_GAUGE_CONTROLLER_TYPE` value to `0` ([c1dce5f](https://github.com/silo-finance/silo-contracts-v2/pull/85/commits/c1dce5f0e0825176632bfb0c8332d40caf5832dc))
