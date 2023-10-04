@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.19;
+pragma solidity 0.8.21;
 
 import {IInterestRateModel} from "../interfaces/IInterestRateModel.sol";
 import {IInterestRateModelV2} from "../interfaces/IInterestRateModelV2.sol";
 import {IInterestRateModelV2ConfigFactory} from "../interfaces/IInterestRateModelV2ConfigFactory.sol";
 import {IInterestRateModelV2Config} from "../interfaces/IInterestRateModelV2Config.sol";
 import {InterestRateModelV2Config} from "./InterestRateModelV2Config.sol";
-
 
 /// @title InterestRateModelV2ConfigFactory
 /// @dev It creates InterestRateModelV2Config.
@@ -42,8 +41,8 @@ contract InterestRateModelV2ConfigFactory is IInterestRateModelV2ConfigFactory {
     }
 
     /// @inheritdoc IInterestRateModelV2ConfigFactory
+    // solhint-disable-next-line code-complexity
     function verifyConfig(IInterestRateModelV2.Config calldata _config) public view virtual {
-    // solhint-disable-previous-line code-complexity
         int256 dp = int256(DP);
 
         if (_config.uopt <= 0 || _config.uopt >= dp) revert IInterestRateModelV2.InvalidUopt();

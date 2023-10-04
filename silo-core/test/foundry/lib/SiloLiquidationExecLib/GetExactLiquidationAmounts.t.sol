@@ -151,6 +151,7 @@ contract GetExactLiquidationAmountsTest is GetExactLiquidationAmountsHelper {
         assertEq(repayDebtAssets, 0);
     }
 
+    // TODO: [FAIL. Reason: Assertion failed.]
     /*
     forge test -vv --mt test_getExactLiquidationAmounts_noOracle_loop
     */
@@ -192,6 +193,7 @@ contract GetExactLiquidationAmountsTest is GetExactLiquidationAmountsHelper {
         }
     }
 
+    // TODO: FAIL. Reason: The `vm.assume` cheatcode rejected too many inputs (65536 allowed)]
     /*
     forge test -vv --mt test_getExactLiquidationAmounts_selfLiquidation_fuzz
     make sure self-liquidation can not make user less solvent
@@ -228,6 +230,7 @@ contract GetExactLiquidationAmountsTest is GetExactLiquidationAmountsHelper {
         }
     }
 
+    // TODO: [FAIL. Reason: The `vm.assume` cheatcode rejected too many inputs (65536 allowed)]
     /*
     forge test -vv --mt test_getExactLiquidationAmounts_liquidation_fuzz
     make sure liquidation can not make user less solvent

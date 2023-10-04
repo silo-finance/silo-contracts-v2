@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.19;
+pragma solidity 0.8.21;
 
 import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
 import {ISiloLiquidation} from "../interfaces/ISiloLiquidation.sol";
@@ -16,7 +16,6 @@ library SiloLiquidationLib {
     /// then we will force full liquidation,
     /// eg total value = 51 and dust level = 98%, then when we can not liquidate 50, we have to liquidate 51.
     uint256 internal constant _POSITION_DUST_LEVEL_IN_BP = 9000; // 90%
-
 
     /// @notice this method does not care about ltv, it will calculate based on any values, this is just a pure math
     /// if ltv is over 100% this method should not be called, it should be full liquidation right away

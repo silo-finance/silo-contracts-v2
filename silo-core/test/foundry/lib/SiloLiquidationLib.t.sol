@@ -15,7 +15,9 @@ import "../data-readers/EstimateMaxRepayValueTestData.sol";
 contract SiloLiquidationLibTest is Test {
     uint256 internal constant _BASIS_POINTS = 1e4;
 
-    // forge test -vv --mt test_SiloLiquidationLib_minAcceptableLTV
+    /*
+    forge test -vv --mt test_SiloLiquidationLib_minAcceptableLTV
+    */
     function test_SiloLiquidationLib_minAcceptableLTV() public {
         assertEq(SiloLiquidationLib.minAcceptableLTV(0), 0);
         assertEq(SiloLiquidationLib.minAcceptableLTV(1), 0);
@@ -27,7 +29,7 @@ contract SiloLiquidationLibTest is Test {
         assertEq(SiloLiquidationLib.minAcceptableLTV(800), 720, "LT=80% => min=>72%");
         uint256 gasEnd = gasleft();
 
-        assertEq(gasStart - gasEnd, 134, "optimise minAcceptableLTV()");
+        assertEq(gasStart - gasEnd, 133, "optimise minAcceptableLTV()");
     }
 
     /*
@@ -220,8 +222,9 @@ contract SiloLiquidationLibTest is Test {
         vm.assume(_debtToCover <= _totalBorrowerDebtAssets);
         vm.assume(_totalBorrowerDebtAssets > 0);
         vm.assume(_totalBorrowerCollateralAssets > 0);
-
         vm.assume(_quote > 0);
+        vm.assume(_totalBorrowerDebtAssets < type(uint128).max / _quote);
+        vm.assume(_totalBorrowerCollateralAssets < type(uint128).max / _quote);
 
         uint256 totalBorrowerDebtValue = _totalBorrowerDebtAssets;
         uint256 totalBorrowerCollateralValue = _totalBorrowerCollateralAssets;
@@ -277,7 +280,7 @@ contract SiloLiquidationLibTest is Test {
         SiloLiquidationLib.calculateExactLiquidationAmounts(1e8, 1e18, 1e18, 1e18, 1e18, 10);
         uint256 gasEnd = gasleft();
 
-        assertEq(gasStart - gasEnd, 1209, "optimise calculateExactLiquidationAmounts");
+        assertEq(gasStart - gasEnd, 1198, "optimise calculateExactLiquidationAmounts");
     }
 
     /*
@@ -303,7 +306,7 @@ contract SiloLiquidationLibTest is Test {
         );
         uint256 gasEnd = gasleft();
 
-        assertEq(gasStart - gasEnd, 558, "optimise calculateCollateralToLiquidate()");
+        assertEq(gasStart - gasEnd, 553, "optimise calculateCollateralToLiquidate()");
         assertEq(collateralAssetsToLiquidate, 1010000000000000000);
         assertEq(collateralValueToLiquidate, 2020000000000000000);
     }
@@ -334,7 +337,7 @@ contract SiloLiquidationLibTest is Test {
 
         assertEq(fromCollateral, 0, "fromCollateral (5, 15) => 0");
         assertEq(fromProtected, 5, "fromProtected (5, 15) => 5");
-        assertEq(gasStart - gasEnd, 149, "optimise splitReceiveCollateralToLiquidate");
+        assertEq(gasStart - gasEnd, 145, "optimise splitReceiveCollateralToLiquidate");
     }
     
     // forge test -vv --mt test_SiloLiquidationLib_maxLiquidationPreview_unchecked_fuzz

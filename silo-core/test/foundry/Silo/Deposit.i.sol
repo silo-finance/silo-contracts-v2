@@ -41,7 +41,7 @@ contract DepositTest is SiloLittleHelper, Test {
         _deposit(assets, depositor);
         uint256 gasEnd = gasleft();
 
-        assertEq(gasStart - gasEnd, 258007, "optimise deposit");
+        assertEq(gasStart - gasEnd, 257898, "optimise deposit");
 
         gasStart = gasleft();
         _withdraw(assets / 2, depositor);

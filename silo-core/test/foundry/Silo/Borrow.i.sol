@@ -123,7 +123,7 @@ contract BorrowTest is SiloLittleHelper, Test {
         silo0.borrow(maxBorrow, borrower, borrower);
         uint256 gasEnd = gasleft();
 
-        assertEq(gasStart - gasEnd, 154853, "optimise borrow");
+        assertEq(gasStart - gasEnd, 154684, "optimise borrow");
 
         assertEq(IShareToken(debtShareToken).balanceOf(borrower), 0, "expect borrower to NOT have debt in collateral silo");
         assertEq(silo1.getDebtAssets(), 0, "expect collateral silo to NOT have debt");
@@ -164,7 +164,7 @@ contract BorrowTest is SiloLittleHelper, Test {
         uint256 gotShares = _borrow(borrowAmount, borrower);
         uint256 gasEnd = gasleft();
 
-        assertEq(gasStart - gasEnd, 147624, "optimise borrow #1");
+        assertEq(gasStart - gasEnd, 147454, "optimise borrow #1");
 
         assertEq(IShareToken(debtShareToken).balanceOf(borrower), 0.375e18, "expect borrower to have 1/2 of debt");
         assertEq(IShareToken(collateralShareToken).balanceOf(borrower), 1e18, "collateral silo: borrower has collateral");
@@ -179,7 +179,7 @@ contract BorrowTest is SiloLittleHelper, Test {
         gotShares = _borrow(borrowAmount, borrower);
         gasEnd = gasleft();
 
-        assertEq(gasStart - gasEnd, 58107, "optimise borrow #2");
+        assertEq(gasStart - gasEnd, 57934, "optimise borrow #2");
 
         assertEq(IShareToken(debtShareToken).balanceOf(borrower), 0.75e18, "debt silo: borrower has debt");
         assertEq(gotShares, 0.375e18, "got shares");

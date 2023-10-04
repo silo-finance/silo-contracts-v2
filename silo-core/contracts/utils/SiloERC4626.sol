@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.19;
+pragma solidity 0.8.21;
 
 import {ISilo} from "../interfaces/ISilo.sol";
 import {IShareToken} from "../interfaces/IShareToken.sol";

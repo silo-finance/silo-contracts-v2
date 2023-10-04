@@ -61,4 +61,6 @@ interface ISiloFactory is IERC721Upgradeable {
     function isSilo(address _silo) external view returns (bool);
     function getNextSiloId() external view returns (uint256);
     function getFeeReceivers(address _silo) external view returns (address dao, address deployer);
+
+    function validateSiloInitData(ISiloConfig.InitData memory _initData) external view returns (bool);
 }

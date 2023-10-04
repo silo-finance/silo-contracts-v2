@@ -14,6 +14,7 @@ interface ISiloConfig {
         uint64 lt0;
         uint64 liquidationFee0;
         uint64 flashloanFee0;
+        // TODO: borrowable0 is redundant because the same can be achieved with maxLTV = 0
         bool borrowable0;
         address protectedHookReceiver0;
         address collateralHookReceiver0;
@@ -27,6 +28,7 @@ interface ISiloConfig {
         uint64 lt1;
         uint64 liquidationFee1;
         uint64 flashloanFee1;
+        // TODO: borrowable1 is redundant because the same can be achieved with maxLTV = 0
         bool borrowable1;
         address protectedHookReceiver1;
         address collateralHookReceiver1;
