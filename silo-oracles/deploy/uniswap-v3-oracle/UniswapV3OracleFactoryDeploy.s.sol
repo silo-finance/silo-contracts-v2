@@ -5,7 +5,7 @@ import {IUniswapV3Factory} from  "uniswap/v3-core/contracts/interfaces/IUniswapV
 
 import {CommonDeploy} from "../CommonDeploy.sol";
 import {SiloOraclesContracts} from "../SiloOraclesContracts.sol";
-import {SiloAddrKey} from "common/SiloAddresses.sol";
+import {AddrKey} from "common/addresses/AddrKey.sol";
 import {UniswapV3OracleFactory} from "silo-oracles/contracts/uniswapV3/UniswapV3OracleFactory.sol";
 
 /**
@@ -18,7 +18,7 @@ contract UniswapV3OracleFactoryDeploy is CommonDeploy {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
         vm.startBroadcast(deployerPrivateKey);
 
-        address uniswapFactory = getAddress(SiloAddrKey.UNISWAP_FACTORY);
+        address uniswapFactory = getAddress(AddrKey.UNISWAP_FACTORY);
 
         factory = new UniswapV3OracleFactory(IUniswapV3Factory(uniswapFactory));
         

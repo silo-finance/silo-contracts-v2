@@ -7,9 +7,8 @@ library UniswapOracleConfig {
     string public constant ETH_USDC_0_3 = "UniV3-ETH-USDC-0.3";
 }
 
-library UniswapOracleConfigDeployment {
-    string constant public DEPLOYMENTS_FILE =
-        "silo-oracles/deploy/uniswap-v3-oracle/configs/_deployments.json";
+library UniswapV3OracleDeployments {
+    string constant public DEPLOYMENTS_FILE = "silo-oracles/deploy/uniswap-v3-oracle/deployments.json";
 
     function save(
         string memory _chain,

@@ -4,7 +4,6 @@ pragma solidity >=0.7.6 <0.9.0;
 import {Deployments} from "silo-foundry-utils/lib/Deployments.sol";
 
 library SiloOraclesContracts {
-    string public constant UNISWAP_V3_ORACLE = "UniswapV3Oracle.sol";
     string public constant UNISWAP_V3_ORACLE_FACTORY = "UniswapV3OracleFactory.sol";
 }
 

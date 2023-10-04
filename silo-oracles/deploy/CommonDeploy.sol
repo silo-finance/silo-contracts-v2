@@ -3,10 +3,9 @@ pragma solidity 0.7.6;
 
 import {Deployer} from "silo-foundry-utils/deployer/Deployer.sol";
 
-import {SiloAddresses} from "common/SiloAddresses.sol";
 import {SiloOraclesDeployments} from "./SiloOraclesContracts.sol";
 
-contract CommonDeploy is Deployer, SiloAddresses {
+contract CommonDeploy is Deployer {
     string internal constant _FORGE_OUT_DIR = "cache/foundry/out/silo-oracles";
 
     function _forgeOutDir() internal pure override virtual returns (string memory) {

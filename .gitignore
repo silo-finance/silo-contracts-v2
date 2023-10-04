@@ -31,3 +31,5 @@ broadcast
 
 .env*
 .DS_Store
+
+common/addresses/anvil.json
