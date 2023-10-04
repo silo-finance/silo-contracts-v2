@@ -30,3 +30,6 @@
 [submodule "chainlink-ccip"]
 	path = gitmodules/chainlink-ccip
 	url = https://github.com/smartcontractkit/ccip
+[submodule "gitmodules/solmate"]
+	path = gitmodules/solmate
+	url = https://github.com/transmissions11/solmate
