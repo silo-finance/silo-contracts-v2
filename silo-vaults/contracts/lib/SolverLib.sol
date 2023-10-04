@@ -1,7 +1,7 @@
-// SPDX-License-Identifier: AGPL-3.0-only
-pragma solidity ^0.8.18;
+// SPDX-License-Identifier: BUSL-1.1
+pragma solidity 0.8.19;
 
-import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
+import {Math} from "openzeppelin-contracts/utils/math/Math.sol";
 
 library SolverLib {
     uint256 constant P = 5;
