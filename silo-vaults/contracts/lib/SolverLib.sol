@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.19;
+pragma solidity 0.8.21;
 
 import {Math} from "openzeppelin-contracts/utils/math/Math.sol";
 
@@ -35,8 +35,8 @@ library SolverLib {
     function _solver(
         uint256[] memory borrow,
         uint256[] memory deposit,
-        int256[] memory uopt,
-        int256[] memory ucrit,
+        uint256[] memory uopt,
+        uint256[] memory ucrit,
         uint256 amountToDistribute
     ) internal pure returns (uint256[] memory) {
         uint256 N = borrow.length;
