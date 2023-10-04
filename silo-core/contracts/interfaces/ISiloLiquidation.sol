@@ -14,6 +14,7 @@ interface ISiloLiquidation {
     error UnexpectedCollateralToken();
     error UnexpectedDebtToken();
     error LiquidityFeeToHi();
+    error NoDebtToCover();
 
     error InvalidSiloForCollateral();
     error UserIsSolvent();

@@ -134,4 +134,25 @@ contract getExactLiquidationAmountsTest is Test, MockOracleQuote {
         assertEq(receiveCollateral, 1, "some collateral - self-liquidation");
         assertEq(repayDebt, 2, "some debt - self-liquidation");
     }
+
+    /*
+    forge test -vv --mt test_liquidationPreview_whenNotSolvent
+    */
+    function test_liquidationPreview_whenNotSolvent() public {
+        SiloSolvencyLib.LtvData memory ltvData;
+        ltvData.borrowerCollateralAssets = 1e18;
+        ltvData.borrowerDebtAssets = 2e18; // 200% LTV
+
+        SiloLiquidationExecLib.LiquidationPreviewParams memory params;
+        params.collateralConfigAsset = COLLATERAL_ASSET;
+        params.debtConfigAsset = DEBT_ASSET;
+        params.collateralLt = 8000;
+        params.debtToCover = 2;
+
+        _oraclesQuoteMocks(ltvData, 1e18, 2e18); // ltv 200% - user NOT solvent
+
+        (uint256 receiveCollateral, uint256 repayDebt) = SiloLiquidationExecLib.liquidationPreview(ltvData, params);
+        assertEq(receiveCollateral, 2, "receiveCollateral");
+        assertEq(repayDebt, 2, "repayDebt");
+    }
 }

@@ -806,6 +806,8 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
             selfLiquidation
         );
 
+        if (repayDebtAssets == 0) revert NoDebtToCover();
+
         // always ZERO, we can receive shares, but we can not repay with shares
         uint256 zeroShares;
         emit LiquidationCall(msg.sender, _receiveSToken);
