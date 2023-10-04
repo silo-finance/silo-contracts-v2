@@ -23,7 +23,7 @@ contract CalculateExactLiquidationAmountsTestData {
     }
 
     function readDataFromJson() external pure returns (CELAData[] memory data) {
-        data = new CELAData[](11);
+        data = new CELAData[](13);
         uint256 i;
 
         data[i++] = CELAData({ // #0
@@ -204,6 +204,40 @@ contract CalculateExactLiquidationAmountsTestData {
                 collateralAssetsToLiquidate: (10e18 + 10e18 * 1000 / 1e4),
                 debtAssetsToRepay: 10e18,
                 ltvAfterLiquidation: 1_9101
+            })
+        });
+
+        // we have bad debt and we will cover everything
+        data[i++] = CELAData({ // #11
+            input: Input({
+                debtToCover: 100e18,
+                totalBorrowerDebtValue: 12e18,
+                totalBorrowerDebtAssets: 12e18,
+                totalBorrowerCollateralValue: 10e18,
+                totalBorrowerCollateralAssets: 10e18,
+                liquidationFee: 1000
+            }),
+            output: Output({
+                collateralAssetsToLiquidate: 10e18,
+                debtAssetsToRepay: 12e18,
+                ltvAfterLiquidation: 0
+            })
+        });
+
+        // we have bad debt and we will cover everything #2
+        data[i++] = CELAData({ // #12
+            input: Input({
+                debtToCover: 100e18,
+                totalBorrowerDebtValue: 12e18,
+                totalBorrowerDebtAssets: 18e18,
+                totalBorrowerCollateralValue: 10e18,
+                totalBorrowerCollateralAssets: 30e18,
+                liquidationFee: 1000
+            }),
+            output: Output({
+                collateralAssetsToLiquidate: 30e18,
+                debtAssetsToRepay: 18e18,
+                ltvAfterLiquidation: 0
             })
         });
     }
