@@ -1,7 +1,7 @@
-// SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.0;
+// SPDX-License-Identifier: AGPL-3.0-only
+pragma solidity ^0.8.18;
 
-import {MathUpgradeable as Math} from "openzeppelin-contracts-upgradeable/utils/math/MathUpgradeable.sol";
+import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 
 library SolverLib {
     uint256 constant P = 5;
@@ -35,8 +35,8 @@ library SolverLib {
     function _solver(
         uint256[] memory borrow,
         uint256[] memory deposit,
-        uint256[] memory uopt,
-        uint256[] memory ucrit,
+        int256[] memory uopt,
+        int256[] memory ucrit,
         uint256 amountToDistribute
     ) internal pure returns (uint256[] memory) {
         uint256 N = borrow.length;
@@ -53,11 +53,11 @@ library SolverLib {
             if (f > 2 * 1e18) {
                 basket[i] = 0;
                 cnt[1]++;
-            // silo is underutilized but not critically, assigned a basket from 1 to P based on how underutilized it is
+                // silo is underutilized but not critically, assigned a basket from 1 to P based on how underutilized it is
             } else if (f > 1e18) {
                 basket[i] = P - (f - 1e18) / (1e18 / P);
                 cnt[basket[i] + 1]++;
-            // silo is optimally utilized, assigned to basket P+1
+                // silo is optimally utilized, assigned to basket P+1
             } else {
                 basket[i] = P + 1;
             }
@@ -123,7 +123,7 @@ library SolverLib {
             for (uint256 i = 0; i < N; i++) {
                 uint256 value = Bu[i] * (amountToDistribute + Dsum) / Busum;
 
-                if (value < deposit[i] + S[i]) { 
+                if (value < deposit[i] + S[i]) {
                     dSnegsum += (deposit[i] + S[i]) - value;
                     dS[i] = 0;
                 } else {

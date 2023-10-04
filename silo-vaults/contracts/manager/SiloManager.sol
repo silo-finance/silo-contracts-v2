@@ -1,13 +1,11 @@
-// SPDX-License-Identifier: BUSL-1.1
+// SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity ^0.8.18;
 
-import "@openzeppelin/contracts/access/Ownable.sol";
-import {ISilo, ISiloConfig} from "silo-core/contracts/Silo.sol";
-import {InterestRateModelV2, IInterestRateModel} from "silo-core/contracts/interestRateModel/InterestRateModelV2.sol";
+import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
-import {MathUpgradeable as Math} from "openzeppelin-contracts-upgradeable/utils/math/MathUpgradeable.sol";
-
-import {IERC20Upgradeable as IERC20} from "openzeppelin-contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
+import {ISilo, ISiloConfig} from "@silo/silo-contracts-v2//silo-core/contracts/Silo.sol";
+import {InterestRateModelV2, IInterestRateModel} from "@silo/silo-contracts-v2/silo-core/contracts/interestRateModel/InterestRateModelV2.sol";
 
 abstract contract SiloManager is Ownable {
     address[] public silos;
@@ -16,54 +14,33 @@ abstract contract SiloManager is Ownable {
 
     bool public isEmergency;
 
-    /// Errors
-    error SiloAlreadyAdded();
-
-    /// Events
-    event SiloAdded(address silo, address balancerMinter);
-    event SiloRemoved(address silo, bool isEmergency);
     event IsEmergency(bool);
 
-    /**
-     * @notice Allows owner to add a single silo.
-     * @param _siloAddress Address of the silo.
-     * @param _gaugeAddress Address of the associated balancerMinter.
-     * @dev If no gauge associated with Silo, set to address(0).
-     */
+    function setEmergency(bool _isEmergency) public onlyOwner {
+        isEmergency = _isEmergency;
+    }
+
     function addSilo(address _siloAddress, address _gaugeAddress) public onlyOwner {
         for (uint256 i = 0; i < silos.length; i++) {
-            if (silos[i] != _siloAddress) revert SiloAlreadyAdded();
+            require(silos[i] != _siloAddress, "SILO_ALREADY_ADDDED");
         }
 
         silos.push(_siloAddress);
-        gauge[_siloAddress] = _gaugeAddress;
-        emit SiloAdded(_siloAddress, _gaugeAddress);
-    }
+        if (_gaugeAddress != address(0)) gauge[_siloAddress] = _gaugeAddress;
+        }
 
-    /**
-     * @notice Allows owner to add multiple silos.
-     * @param _siloAddresses Array of silo addresses.
-     * @param _gaugeAddresses Array of associated balancerMinter addresses.
-     * @dev If no gauge associated with Silo, set to address(0).
-     */
     function addMultipleSilos(address[] memory _siloAddresses, address[] memory _gaugeAddresses) external onlyOwner {
         for (uint256 i = 0; i < _siloAddresses.length; i++) {
             
             for (uint256 j = 0; j < silos.length; j++) {
-                if (_siloAddresses[i] == silos[j]) revert SiloAlreadyAdded();
+                require(_siloAddresses[i] != silos[j], "SILO_ALREADY_ADDDED");
             }
 
             silos.push(_siloAddresses[i]);
-            gauge[_siloAddresses[i]] = _gaugeAddresses[i];
-            emit SiloAdded(_siloAddresses[i], address(_gaugeAddresses[i]));
+            if (_gaugeAddresses[i] != address(0)) gauge[_siloAddresses[i]] = _gaugeAddresses[i];
         }
     }
 
-    /**
-     * @notice Allows owner to remove a silo.
-     * @dev If full withdrawal from that silo is not possible, we add it to removedSilos array.
-     * @param _siloAddress Address of silo to remove.
-     */
     function removeSilo(address _siloAddress) public onlyOwner {
         _withdrawFromSilo(_siloAddress, type(uint256).max);
 
@@ -80,16 +57,8 @@ abstract contract SiloManager is Ownable {
             removedSilos.push(_siloAddress);
         }
 
-        emit SiloRemoved(_siloAddress, isEmergency);
     }
 
-    /**
-     * @notice Withdraws all funds from a previously removed silo.
-     * @param _siloAddress Address of the removed silo to withdraw from.
-     * @dev Loops to validate silo is in removedSilos array.
-     * @dev Withdraws full share balance for this contract.
-     * @dev If fully withdrawn, removes silo from removedSilos.
-     */
     function withdrawFromRemovedSilo(address _siloAddress) public onlyOwner {
         for (uint256 i = 0; i < removedSilos.length; i++) {
             if (removedSilos[i] == _siloAddress) {
@@ -103,38 +72,15 @@ abstract contract SiloManager is Ownable {
         }
     }
 
-    /**
-     * @notice Allows owner to set emergency, which restrict new deposits.
-     * @param _isEmergency Bool to indicate if emergency is activated.
-     */
-    function setEmergency(bool _isEmergency) public onlyOwner {
-        isEmergency = _isEmergency;
-        emit SiloRemoved(address(this), isEmergency);
-    }
-
-    /**
-     * @notice Gets the deposited asset amount for a silo.
-     * @param _siloAddress The address of the silo.
-     * @return The underlying deposited asset amount.
-     */
     function _getSiloDeposit(address _siloAddress) internal returns (uint256) {
         ISilo silo = ISilo(_siloAddress);
         return silo.convertToAssets(silo.shareBalanceOf(address(this)));
     }
 
-    /**
-     * @notice Deposits to a given silo.
-     * @param _siloAddress address of the silo to be deposited to.
-     * @param _amount amount of asset to be deposited.
-     */
     function _depositToSilo(address _siloAddress, uint256 _amount) internal {
         ISilo(_siloAddress).deposit(_amount, address(this));
     }
 
-    /**
-     * @notice Fetches the deposit amounts for each silo.
-     * @return An array containing the deposit amount for each silo.
-     */
     function _getDepositAmounts() internal returns (uint256[] memory) {
         uint256 numSilos = silos.length;
         uint256[] memory depositAmounts = new uint256[](numSilos);
@@ -146,10 +92,6 @@ abstract contract SiloManager is Ownable {
         return depositAmounts;
     }
 
-    /**
-     * @notice Fetches the borrow amounts for each silo.
-     * @return An array containing the borrow amount for each silo.
-     */
     function _getBorrowAmounts() internal returns (uint256[] memory) {
         uint256 numSilos = silos.length;
         uint256[] memory borrowAmounts = new uint256[](numSilos);
@@ -161,11 +103,6 @@ abstract contract SiloManager is Ownable {
         return borrowAmounts;
     }
 
-    /**
-     * @notice Gets optimal and critical utilizations for each silo.
-     * @return uopt Array of optimal utilizations for each silo.
-     * @return ucrit Array of critical utilizations for each silo.
-     */
     function _getConfig() internal returns (int256[] memory uopt, int256[] memory ucrit) {
         uint256 numSilos = silos.length;
         uopt = new int256[](numSilos);
@@ -184,11 +121,6 @@ abstract contract SiloManager is Ownable {
         return (uopt, ucrit);
     }
 
-    /**
-     * @notice Withdraws from a given silo.
-     * @param _siloAddress address of the silo to be withdrawn from.
-     * @param _amount amount of asset to be withdrawn.
-     */
     function _withdrawFromSilo(address _siloAddress, uint256 _amount) internal returns (uint256 _withdrawn) {
         ISilo silo = ISilo(_siloAddress);
         uint256 _availableToWithdraw = silo.maxWithdraw(address(this));
