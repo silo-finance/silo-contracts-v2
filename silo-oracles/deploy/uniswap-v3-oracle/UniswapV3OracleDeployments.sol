@@ -8,7 +8,7 @@ library UniswapOracleConfig {
 }
 
 library UniswapV3OracleDeployments {
-    string constant public DEPLOYMENTS_FILE = "silo-oracles/deploy/uniswap-v3-oracle/deployments.json";
+    string constant public DEPLOYMENTS_FILE = "silo-oracles/deploy/uniswap-v3-oracle/_deployments.json";
 
     function save(
         string memory _chain,

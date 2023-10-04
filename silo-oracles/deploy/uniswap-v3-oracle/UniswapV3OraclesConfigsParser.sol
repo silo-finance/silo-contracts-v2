@@ -8,7 +8,7 @@ import {IUniswapV3Oracle} from "silo-oracles/contracts/interfaces/IUniswapV3Orac
 import {IUniswapV3Pool} from "uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
 
 library UniswapV3OraclesConfigsParser {
-    string constant public CONFIGS_FILE = "silo-oracles/deploy/uniswap-v3-oracle/configs.json";
+    string constant public CONFIGS_FILE = "silo-oracles/deploy/uniswap-v3-oracle/_configs.json";
 
     function getConfig(
         string memory _network,
