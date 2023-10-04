@@ -5,6 +5,7 @@ import {Deployments} from "silo-foundry-utils/lib/Deployments.sol";
 
 library SiloOraclesContracts {
     string public constant UNISWAP_V3_ORACLE_FACTORY = "UniswapV3OracleFactory.sol";
+    string public constant CHAINLINK_V3_ORACLE_FACTORY = "ChainlinkV3OracleFactory.sol";
 }
 
 library SiloOraclesDeployments {
