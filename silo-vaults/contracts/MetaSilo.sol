@@ -1,12 +1,10 @@
-// SPDX-License-Identifier: AGPL-3.0-only
-pragma solidity ^0.8.18;
+// SPDX-License-Identifier: BUSL-1.1
+pragma solidity 0.8.19;
 
-import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
-import {SafeTransferLib} from "@solmate/utils/SafeCastLib.sol";
-import {FixedPointMathLib} from "@solmate/utils/FixedPointMathLib.sol";
+import {ERC20} from "openzeppelin-contracts/token/ERC20/ERC20.sol";
+import {FixedPointMathLib} from "solmate/utils/FixedPointMathLib.sol";
 
-import {ISilo} from "@silo/silo-contracts-v2/silo-core/contracts/Silo.sol";
+import {ISilo} from "./interfaces/ISilo.sol";
 
 import "./lib/SolverLib.sol";
 import {SiloManager} from "./manager/SiloManager.sol";
@@ -17,9 +15,7 @@ import {HarvestManager} from "./manager/HarvestManager.sol";
 /// @notice This contract handles multiple rewards, which can be claimed by the depositors.
 
 contract MetaSilo is ERC20, SiloManager, RewardsManager, HarvestManager {
-    using SafeTransferLib for ERC20;
     using FixedPointMathLib for uint256;
-    using Math for uint256;
 
     event Deposit(address indexed caller, address indexed owner, uint256 assets, uint256 shares);
 

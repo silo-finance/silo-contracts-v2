@@ -1,11 +1,12 @@
-// SPDX-License-Identifier: AGPL-3.0-only
-pragma solidity ^0.8.18;
+// SPDX-License-Identifier: BUSL-1.1
+pragma solidity 0.8.19;
 
-import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {Math} from "openzeppelin-contracts/utils/math/Math.sol";
+import {Ownable} from "openzeppelin-contracts/access/Ownable.sol";
 
-import {ISilo, ISiloConfig} from "@silo/silo-contracts-v2//silo-core/contracts/Silo.sol";
-import {InterestRateModelV2, IInterestRateModel} from "@silo/silo-contracts-v2/silo-core/contracts/interestRateModel/InterestRateModelV2.sol";
+import {ISiloConfig} from ".././interfaces/ISiloConfig.sol";
+import {ISilo} from ".././interfaces/ISilo.sol";
+import {IInterestRateModel} from ".././interfaces/IInterestRateModel.sol";
 
 abstract contract SiloManager is Ownable {
     address[] public silos;

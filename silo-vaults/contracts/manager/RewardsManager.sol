@@ -1,22 +1,17 @@
-// SPDX-License-Identifier: AGPL-3.0-only
-pragma solidity ^0.8.18;
+// SPDX-License-Identifier: BUSL-1.1
+pragma solidity 0.8.19;
 
-import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
-
-import {SafeCastLib} from "@solmate/utils/SafeCastLib.sol";
-import {FixedPointMathLib} from "@solmate/utils/FixedPointMathLib.sol";
-
-import {ISiloLiquidityGauge} from "@silo/silo-contracts-v2/ve-silo/contracts/gauges/interfaces/ISiloLiquidityGauge.sol";
+import {Ownable} from "openzeppelin-contracts/access/Ownable.sol";
+import {SafeCastLib} from "solmate/utils/SafeCastLib.sol";
+import {FixedPointMathLib} from "solmate/utils/FixedPointMathLib.sol";
 
 abstract contract RewardsManager is Ownable {
     using SafeCastLib for uint256;
     using FixedPointMathLib for uint256;
-    using Math for uint256;
-
+    
     struct RewardInfo {
         uint224 index;
-        ISiloLiquidityGauge gauge;
+        address gauge;
     }
 
     event RewardsClaimed(address indexed user, ERC20 rewardToken, uint256 amount);

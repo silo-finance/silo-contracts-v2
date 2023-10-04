@@ -19,3 +19,5 @@ balancer-labs/v2-interfaces/=external/balancer-v2-monorepo/pkg/interfaces/contra
 balancer-labs/v2-liquidity-mining/=external/balancer-v2-monorepo/pkg/liquidity-mining/contracts
 lz_gauges/=gitmodules/lz_gauges/contracts
 @layerzerolabs/solidity-examples/=gitmodules/layer-zero-examples/
+
+solmate=gitmodules/transmissions11/solmate/src

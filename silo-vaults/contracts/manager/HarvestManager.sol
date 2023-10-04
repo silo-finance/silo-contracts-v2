@@ -1,10 +1,11 @@
-// SPDX-License-Identifier: AGPL-3.0-only
-pragma solidity ^0.8.18;
+// SPDX-License-Identifier: BUSL-1.1
+pragma solidity 0.8.19;
 
-import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {ERC20} from "openzeppelin-contracts/token/ERC20/ERC20.sol";
+import {Ownable} from "openzeppelin-contracts//access/Ownable.sol";
 
-import {IBalancerMinter} from "@silo/silo-contracts-v2/ve-silo/contracts/silo-tokens-minter/interfaces/IBalancerMinter.sol";
+import {IBalancerMinter} from ".././interfaces/IBalancerMinter.sol";
+import {ISiloLiquidityGauge} from ".././interfaces/ISiloLiquidityGauge.sol";
 
 abstract contract HarvestManager is Ownable {
     address public constant SILO = 0x6f80310CA7F2C654691D1383149Fa1A57d8AB1f8;
@@ -34,7 +35,7 @@ abstract contract HarvestManager is Ownable {
             if (reward == ERC20(SILO)) continue;
             RewardInfo memory rewards = rewardInfos[reward];
             uint256 balanceBefore = reward.balanceOf(address(this));
-            rewards.gauge.claim_rewards(address(this), address(this));
+            ISiloLiquidityGauge(rewards.gauge).claim_rewards(address(this), address(this));
             _accrueRewards(reward, reward.balanceOf(address(this)) - balanceBefore);
         }
     }
