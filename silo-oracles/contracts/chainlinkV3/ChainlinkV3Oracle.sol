@@ -66,7 +66,7 @@ contract ChainlinkV3Oracle is IChainlinkV3Oracle, ISiloOracle, Initializable {
         (
             bool secondSuccess,
             uint256 secondPrice
-        ) = _getAggregatorPrice(config.secondaryAggregator, config.primaryHeartbeat);
+        ) = _getAggregatorPrice(config.secondaryAggregator, config.secondaryHeartbeat);
 
         if (!secondSuccess) revert InvalidSecondPrice();
 
