@@ -24,7 +24,7 @@ contract LiquidationCallTest is SiloLittleHelper, Test {
 
     ISiloConfig siloConfig;
 
-    event LiquidationCall(address executor, bool receiveSToken);
+    event LiquidationCall(address indexed liquidator, bool receiveSToken);
 
     function setUp() public {
         token0 = new MintableToken();
@@ -68,13 +68,42 @@ contract LiquidationCallTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --mt test_liquidationCall_NoDebtToCover
+    forge test -vv --mt test_liquidationCall_NoDebtToCover_whenZero
     */
-    function test_liquidationCall_NoDebtToCover() public {
+    function test_liquidationCall_NoDebtToCover_whenZero() public {
         uint256 debtToCover;
         bool receiveSToken;
 
         vm.expectRevert(ISiloLiquidation.NoDebtToCover.selector);
+        silo1.liquidationCall(address(token0), address(token1), BORROWER, debtToCover, receiveSToken);
+    }
+
+    /*
+    forge test -vv --mt test_liquidationCall_NoDebtToCover_whenUserSolvent
+    */
+    function test_liquidationCall_NoDebtToCover_whenUserSolvent() public {
+        uint256 debtToCover = 1e18;
+        bool receiveSToken;
+
+        vm.expectRevert(ISiloLiquidation.NoDebtToCover.selector);
+        silo1.liquidationCall(address(token0), address(token1), BORROWER, debtToCover, receiveSToken);
+    }
+
+    /*
+    forge test -vv --mt test_liquidationCall_self
+    */
+    function test_liquidationCall_self() public {
+        uint256 debtToCover = 1e18;
+        bool receiveSToken;
+
+        token1.mint(BORROWER, debtToCover);
+        vm.prank(BORROWER);
+        token1.approve(address(silo1), debtToCover);
+
+        vm.expectEmit(true, true, true, true);
+        emit LiquidationCall(BORROWER, receiveSToken);
+
+        vm.prank(BORROWER);
         silo1.liquidationCall(address(token0), address(token1), BORROWER, debtToCover, receiveSToken);
     }
 
