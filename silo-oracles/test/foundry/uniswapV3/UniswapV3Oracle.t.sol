@@ -45,7 +45,7 @@ contract UniswapV3OracleTest is UniswapPools {
         FOUNDRY_PROFILE=silo-oracles forge test -vvv --mt test_UniswapV3Oracle_revert_whenPriceZero
     */
     function test_UniswapV3Oracle_revert_whenPriceZero() public {
-        vm.expectRevert(bytes("Zero"));
+        vm.expectRevert(bytes("ZeroQuote"));
         PRICE_PROVIDER.quote(1e6, address(tokens["WETH"]));
     }
 
@@ -61,7 +61,7 @@ contract UniswapV3OracleTest is UniswapPools {
         FOUNDRY_PROFILE=silo-oracles forge test -vvv --mt test_UniswapV3Oracle_invalidBaseToken
     */
     function test_UniswapV3Oracle_invalidBaseToken() public {
-        vm.expectRevert(bytes("Zero"));
+        vm.expectRevert(bytes("ZeroQuote"));
         PRICE_PROVIDER.quote(1e6, address(tokens["CRV"]));
     }
 

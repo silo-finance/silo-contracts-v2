@@ -44,7 +44,7 @@ contract UniswapV3OracleConfigIntegrationTest is UniswapPools {
     /*
         FOUNDRY_PROFILE=oracles forge test -vvv --mt test_UniswapV3OracleConfig_integration_constructor_InvalidPoolForQuoteToken
     */
-    function test_UniswapV3OracleConfig_integration_constructor_InvalidPoolForQuoteToken() public {
+    function test_UniswapV3OracleConfig_integration_verifyPool_InvalidPoolForQuoteToken() public {
         IUniswapV3Oracle.UniswapV3DeploymentConfig memory config = IUniswapV3Oracle.UniswapV3DeploymentConfig(
             pools["UKY_WETH"],
             address(tokens["USDC"]),
@@ -53,13 +53,13 @@ contract UniswapV3OracleConfigIntegrationTest is UniswapPools {
         );
 
         vm.expectRevert("InvalidPoolForQuoteToken");
-        UNISWAPV3_ORACLE_FACTORY.create(config);
+        UNISWAPV3_ORACLE_FACTORY.verifyPool(config.pool, config.quoteToken, REQUIRED_CARDINALITY);
     }
 
     /*
-        FOUNDRY_PROFILE=oracles forge test -vvv --mt test_UniswapV3OracleConfig_integration_constructor_EmptyPool0
+        FOUNDRY_PROFILE=oracles forge test -vvv --mt test_UniswapV3OracleConfig_integration_verifyPool_EmptyPool0
     */
-    function test_UniswapV3OracleConfig_integration_constructor_EmptyPool0() public {
+    function test_UniswapV3OracleConfig_integration_verifyPool_EmptyPool0() public {
         IUniswapV3Oracle.UniswapV3DeploymentConfig memory config = IUniswapV3Oracle.UniswapV3DeploymentConfig(
             pools["UKY_WETH"],
             address(tokens["UKY"]),
@@ -68,24 +68,6 @@ contract UniswapV3OracleConfigIntegrationTest is UniswapPools {
         );
 
         vm.expectRevert("EmptyPool0");
-        UNISWAPV3_ORACLE_FACTORY.create(config);
-    }
-
-    /*
-        FOUNDRY_PROFILE=oracles forge test -vvv --mt test_UniswapV3OracleConfig_integration_constructor_BufferNotFull
-        SKIPPED because BufferNotFull is disabled
-    */
-    function test_skip_UniswapV3OracleConfig_integration_constructor_BufferNotFull() public {
-        initFork(UKY_CREATION_BLOCK + 200);
-
-        IUniswapV3Oracle.UniswapV3DeploymentConfig memory config = IUniswapV3Oracle.UniswapV3DeploymentConfig(
-            pools["UKY_WETH"],
-            address(tokens["UKY"]),
-            PERIOD_FOR_AVG_PRICE,
-            BLOCK_TIME
-        );
-
-        vm.expectRevert("BufferNotFull");
-        UNISWAPV3_ORACLE_FACTORY.create(config);
+        UNISWAPV3_ORACLE_FACTORY.verifyPool(config.pool, config.quoteToken, REQUIRED_CARDINALITY);
     }
 }
