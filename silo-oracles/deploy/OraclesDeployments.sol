@@ -1,14 +1,16 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.18;
+pragma solidity >=0.7.6;
 
 import {KeyValueStorage} from "silo-foundry-utils/key-value/KeyValueStorage.sol";
 
-library DIAOracleConfig {
-    string public constant DEMO_CONFIG = "demo-config";
+library OracleConfig {
+    string public constant DAI_DEMO_CONFIG = "DIA_Demo_config";
+    string public constant CHAINLINK_DEMO_CONFIG = "CHAINLINK_Demo_config";
+    string public constant UNI_V3_ETH_USDC_03 = "UniV3-ETH-USDC-0.3";
 }
 
-library DIAOracleDeployments {
-    string constant public DEPLOYMENTS_FILE = "silo-oracles/deploy/dia-oracle/_deployments.json";
+library OraclesDeployments {
+    string constant public DEPLOYMENTS_FILE = "silo-oracles/deploy/_oraclesDeployments.json";
 
     function save(
         string memory _chain,

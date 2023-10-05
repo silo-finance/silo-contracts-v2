@@ -1,5 +1,5 @@
 {
-    "demo-config": {
+    "DIA_Demo_config": {
         "diaOracle": "DIA_ORACLE_EXAMPLE",
         "baseToken": "USDC",
         "quoteToken": "WETH",

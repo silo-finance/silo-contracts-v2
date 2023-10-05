@@ -8,6 +8,8 @@ import {KeyValueStorage as KV} from "silo-foundry-utils/key-value/KeyValueStorag
 import {IDIAOracle} from "silo-oracles/contracts/interfaces/IDIAOracle.sol";
 import {IDIAOracleV2} from "silo-oracles/contracts/external/dia/IDIAOracleV2.sol";
 
+import {console} from "forge-std/console.sol";
+
 library DIAOraclesConfigsParser {
     string constant public CONFIGS_FILE = "silo-oracles/deploy/dia-oracle/_configs.json";
 

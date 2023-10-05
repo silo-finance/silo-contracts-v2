@@ -5,9 +5,9 @@ pragma abicoder v2;
 import {IUniswapV3Pool} from "uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
 
 import {CommonDeploy} from "../CommonDeploy.sol";
-import {SiloOraclesContracts} from "../SiloOraclesContracts.sol";
+import {SiloOraclesFactoriesContracts} from "../SiloOraclesFactoriesContracts.sol";
 import {UniswapV3OraclesConfigsParser as ConfigParser} from "./UniswapV3OraclesConfigsParser.sol";
-import {UniswapV3OracleDeployments} from "./UniswapV3OracleDeployments.sol";
+import {OraclesDeployments} from "../OraclesDeployments.sol";
 import {UniswapV3Oracle} from "silo-oracles/contracts/uniswapV3/UniswapV3Oracle.sol";
 import {UniswapV3OracleFactory} from "silo-oracles/contracts/uniswapV3/UniswapV3OracleFactory.sol";
 import {IUniswapV3Oracle} from "silo-oracles/contracts/interfaces/IUniswapV3Oracle.sol";
@@ -29,11 +29,11 @@ contract UniswapV3OracleDeploy is CommonDeploy {
             configName
         );
 
-        address factory = getDeployedAddress(SiloOraclesContracts.UNISWAP_V3_ORACLE_FACTORY);
+        address factory = getDeployedAddress(SiloOraclesFactoriesContracts.UNISWAP_V3_ORACLE_FACTORY);
 
         oracle = UniswapV3OracleFactory(factory).create(config);
 
-        UniswapV3OracleDeployments.save(getChainAlias(), configName, address(oracle));
+        OraclesDeployments.save(getChainAlias(), configName, address(oracle));
 
         vm.stopBroadcast();
     }

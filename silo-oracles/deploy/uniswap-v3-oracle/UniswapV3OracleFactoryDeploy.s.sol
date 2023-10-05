@@ -4,7 +4,7 @@ pragma solidity 0.7.6;
 import {IUniswapV3Factory} from  "uniswap/v3-core/contracts/interfaces/IUniswapV3Factory.sol";
 
 import {CommonDeploy} from "../CommonDeploy.sol";
-import {SiloOraclesContracts} from "../SiloOraclesContracts.sol";
+import {SiloOraclesFactoriesContracts} from "../SiloOraclesFactoriesContracts.sol";
 import {AddrKey} from "common/addresses/AddrKey.sol";
 import {UniswapV3OracleFactory} from "silo-oracles/contracts/uniswapV3/UniswapV3OracleFactory.sol";
 
@@ -24,6 +24,6 @@ contract UniswapV3OracleFactoryDeploy is CommonDeploy {
         
         vm.stopBroadcast();
 
-        _registerDeployment(address(factory), SiloOraclesContracts.UNISWAP_V3_ORACLE_FACTORY);
+        _registerDeployment(address(factory), SiloOraclesFactoriesContracts.UNISWAP_V3_ORACLE_FACTORY);
     }
 }

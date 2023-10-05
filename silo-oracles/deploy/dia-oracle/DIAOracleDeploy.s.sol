@@ -2,15 +2,15 @@
 pragma solidity 0.8.18;
 
 import {CommonDeploy} from "../CommonDeploy.sol";
-import {SiloOraclesContracts} from "../SiloOraclesContracts.sol";
+import {SiloOraclesFactoriesContracts} from "../SiloOraclesFactoriesContracts.sol";
 import {DIAOraclesConfigsParser as ConfigParser} from "./DIAOraclesConfigsParser.sol";
 import {IDIAOracle} from "silo-oracles/contracts/interfaces/IDIAOracle.sol";
 import {DIAOracleFactory} from "silo-oracles/contracts/dia/DIAOracleFactory.sol";
 import {DIAOracle} from "silo-oracles/contracts/dia/DIAOracle.sol";
-import {DIAOracleDeployments} from "./DIAOracleDeployments.sol";
+import {OraclesDeployments} from "../OraclesDeployments.sol";
 
 /**
-FOUNDRY_PROFILE=oracles CONFIG=demo-config \
+FOUNDRY_PROFILE=oracles CONFIG=DIA_Demo_config \
     forge script silo-oracles/deploy/dia-oracle/DIAOracleDeploy.s.sol \
     --ffi --broadcast --rpc-url http://127.0.0.1:8545
  */
@@ -26,11 +26,11 @@ contract DIAOracleDeploy is CommonDeploy {
             configName
         );
 
-        address factory = getDeployedAddress(SiloOraclesContracts.DIA_ORACLE_FACTORY);
+        address factory = getDeployedAddress(SiloOraclesFactoriesContracts.DIA_ORACLE_FACTORY);
 
         oracle = DIAOracleFactory(factory).create(config);
 
-        DIAOracleDeployments.save(getChainAlias(), configName, address(oracle));
+        OraclesDeployments.save(getChainAlias(), configName, address(oracle));
 
         vm.stopBroadcast();
     }
