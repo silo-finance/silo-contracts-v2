@@ -1,4 +1,6 @@
 ### VotingEscrowRemapper.sol
+- Bumped solidity to 0.8.21 ([8443b28](https://github.com/silo-finance/silo-contracts-v2/commit/8443b286829f2bdba9181e5a764dd25a7906db13))
+
 - Switched from LayerZero to CCIP ([d9a2f77](https://github.com/silo-finance/silo-contracts-v2/pull/134/commits/d9a2f77f1ffd068ad58da9a86055dfd9e3c942e7))
 
 - solhint-disable ordering and max-line-length for VotingEscrowRemapper ([d192c10](https://github.com/silo-finance/silo-contracts-v2/pull/54/commits/d192c100ff85cebd4c36c809e4e8dd01fd4627c3))
@@ -12,22 +14,34 @@
 - Copy of Balancer's implementation of the VotingEscrowRemapper.sol ([49be1c2](https://github.com/silo-finance/silo-contracts-v2/pull/54/commits/49be1c2ec7d84179df413d3a8691a1bcd474b848))
 
 ### VotingEscrowDelegationProxy.sol
-- Specified a proper data type ([67296ea](https://github.com/silo-finance/silo-contracts-v2/pull/59/commits/67296ea0c9cb7c8b0d0176cf9d6e352d905222df))
+- Bumped solidity to 0.8.21 ([8443b28](https://github.com/silo-finance/silo-contracts-v2/commit/8443b286829f2bdba9181e5a764dd25a7906db13))
 
-- Changed ownership system for VotingEscrowDelegationProxy. Replaced SingletonAuthentication with Ownable2Step ([aa87cfa](https://github.com/silo-finance/silo-contracts-v2/pull/59/commits/aa87cfa56a677addfcd813253e7ed13a0731181e))
+- Specified a proper data type ([3f41db](https://github.com/silo-finance/silo-contracts-v2/commit/3f41dbaeaaa069c1562b2c76c65a0c9c2750ed82))
 
-- Bumped solidity to 0.8.19, updated imports, solhint ([5184582](https://github.com/silo-finance/silo-contracts-v2/pull/59/commits/518458251f92b4fb1b209d85221d33a1c133743b))
+- Changed ownership system for VotingEscrowDelegationProxy. Replaced SingletonAuthentication with Ownable2Step ([635daa](https://github.com/silo-finance/silo-contracts-v2/commit/635daa507f708b844aba3ca7bf5a6e40b1f45e41))
 
-- Copy of Balancer's implementation of the VotingEscrowDelegationProxy.sol ([8eb3e0d](https://github.com/silo-finance/silo-contracts-v2/pull/59/commits/8eb3e0d5230eb0dcf1dec50cdaf571f44015a289))
+- Bumped solidity to 0.8.19, updated imports, solhint ([f64ce3](https://github.com/silo-finance/silo-contracts-v2/commit/f64ce3e1adb2451ebc7560933a4f7b0a7251fae2))
+
+- Copy of Balancer's implementation of the VotingEscrowDelegationProxy.sol ([e2eeae](https://github.com/silo-finance/silo-contracts-v2/commit/e2eeae15d88a94e9ef4a938e561a3d2eede4c131))
 
 ### NullVotingEscrow.sol
-- Bumped solidity to 0.8.19, updated imports, solhint ([4d3ec12](https://github.com/silo-finance/silo-contracts-v2/pull/59/commits/4d3ec12208d1976fc5617b072c1bb7d38ddd4c77))
+- Bumped solidity to 0.8.21 ([8443b28](https://github.com/silo-finance/silo-contracts-v2/commit/8443b286829f2bdba9181e5a764dd25a7906db13))
 
-- Copy of Balancer's implementation of the NullVotingEscrow.sol ([4057e0b](https://github.com/silo-finance/silo-contracts-v2/pull/59/commits/4057e0b992046e47f3b118b0625c57387155fa69))
+- Bumped solidity to 0.8.19, updated imports, solhint ([c94d76](https://github.com/silo-finance/silo-contracts-v2/commit/c94d761d2f5965c4b0820c937fa91a95ee412a84))
+
+- Copy of Balancer's implementation of the NullVotingEscrow.sol ([cf45e1](https://github.com/silo-finance/silo-contracts-v2/commit/cf45e1d114e05097f9994086ccc772684732ad5a))
 
 ### SmartWalletChecker.sol
+- Bumped solidity to 0.8.21 ([8443b28](https://github.com/silo-finance/silo-contracts-v2/commit/8443b286829f2bdba9181e5a764dd25a7906db13))
+
 - Bumped solidity to 0.8.19, updated imports, solhint ([9869e1f](https://github.com/silo-finance/silo-contracts-v2/pull/139/commits/9869e1f41c4338b0062429e9781a9cb7c6a91bbc))
 
 - Changed ownership system for SmartWalletChecker. Replaced SingletonAuthentication with Ownable2Step ([aba8056](https://github.com/silo-finance/silo-contracts-v2/pull/139/commits/aba80567a66c341a28438a3d857311bc5e5f5a65))
 
 - Copy of Balancer's implementation of the SmartWalletChecker.sol ([984507b](https://github.com/silo-finance/silo-contracts-v2/pull/139/commits/984507b1a541e1a1683e3b540b3d2a78a8da1046))
+
+### external/balancer-v2-monorepo/pkg/liquidity-mining/contracts/VotingEscrow.vy
+- Bumped VotingEscrow.vy Vyper version to 0.3.7 ([3ff7446](https://github.com/silo-finance/silo-contracts-v2/commit/3ff7446dc08b8ec951fef20558748f6e5c7dc5e9))
+
+### external/balancer-v2-monorepo/pkg/liquidity-mining/contracts/VeBoostV2.vy
+- Bumped VeBoostV2 vyper to 0.3.7 ([c23a855](https://github.com/silo-finance/silo-contracts-v2/commit/c23a855d087309f3d1897951ad972c85ddca0405))
