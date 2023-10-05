@@ -80,7 +80,7 @@ contract AccrueInterestForAssetTest is Test {
         );
         uint256 gasEnd = gasleft();
 
-        assertEq(gasStart - gasEnd, 8099, "optimise accrueInterestForAsset");
+        assertEq(gasStart - gasEnd, 8081, "optimise accrueInterestForAsset");
 
         assertEq(accruedInterest, 0.005e18, "accruedInterest");
         assertEq(totalCollateral.assets, 1.005e18, "totalCollateral");
@@ -114,7 +114,7 @@ contract AccrueInterestForAssetTest is Test {
         );
         uint256 gasEnd = gasleft();
 
-        assertEq(gasStart - gasEnd, 27999, "optimise accrueInterestForAsset");
+        assertEq(gasStart - gasEnd, 27982, "optimise accrueInterestForAsset");
 
         assertEq(accruedInterest, 0.005e18, "accruedInterest");
         assertEq(totalCollateral.assets, 1e18 + accruedInterest * (BASIS_POINTS - daoFeeInBp - deployerFeeInBp) / BASIS_POINTS, "totalCollateral");

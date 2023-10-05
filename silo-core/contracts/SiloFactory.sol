@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.19;
+pragma solidity 0.8.21;
 
 import {CountersUpgradeable} from "openzeppelin-contracts-upgradeable/utils/CountersUpgradeable.sol";
 import {ClonesUpgradeable} from "openzeppelin-contracts-upgradeable/proxy/ClonesUpgradeable.sol";
@@ -41,7 +41,7 @@ contract SiloFactory is ISiloFactory, ERC721Upgradeable, OwnableUpgradeable {
 
     mapping(uint256 id => address[2] silos) private _idToSilos;
     mapping(address silo => uint256 id) public siloToId;
-    
+
     function initialize(
         address _siloImpl,
         address _shareCollateralTokenImpl,
@@ -79,7 +79,7 @@ contract SiloFactory is ISiloFactory, ERC721Upgradeable, OwnableUpgradeable {
     ///      is done by SiloConfig.
     /// @param _initData silo initialization data
     function createSilo(ISiloConfig.InitData memory _initData) external virtual returns (ISiloConfig siloConfig) {
-        _validateSiloInitData(_initData);
+        validateSiloInitData(_initData);
         (ISiloConfig.ConfigData memory configData0, ISiloConfig.ConfigData memory configData1) = _copyConfig(_initData);
 
         uint256 nextSiloId = _siloId.current();
@@ -166,6 +166,32 @@ contract SiloFactory is ISiloFactory, ERC721Upgradeable, OwnableUpgradeable {
         return (daoFeeReceiver, _ownerOf(siloToId[_silo]));
     }
 
+    function validateSiloInitData(ISiloConfig.InitData memory _initData) public view virtual returns (bool) {
+        // solhint-disable-previous-line code-complexity
+        if (_initData.token0 == _initData.token1) revert SameAsset();
+        if (_initData.maxLtv0 == 0 && _initData.maxLtv1 == 0) revert InvalidMaxLtv();
+        if (_initData.maxLtv0 > _initData.lt0) revert InvalidMaxLtv();
+        if (_initData.maxLtv1 > _initData.lt1) revert InvalidMaxLtv();
+        if (_initData.lt0 > _BASIS_POINTS || _initData.lt1 > _BASIS_POINTS) revert InvalidLt();
+        if (!_initData.borrowable0 && !_initData.borrowable1) revert NonBorrowableSilo();
+        if (_initData.deployerFeeInBp > 0 && _initData.deployer == address(0)) revert InvalidDeployer();
+        if (_initData.deployerFeeInBp > maxDeployerFeeInBp) revert MaxDeployerFee();
+        if (_initData.flashloanFee0 > maxFlashloanFeeInBp) revert MaxFlashloanFee();
+        if (_initData.flashloanFee1 > maxFlashloanFeeInBp) revert MaxFlashloanFee();
+        if (_initData.liquidationFee0 > maxLiquidationFeeInBp) revert MaxLiquidationFee();
+        if (_initData.liquidationFee1 > maxLiquidationFeeInBp) revert MaxLiquidationFee();
+
+        if (_initData.interestRateModelConfig0 == address(0) || _initData.interestRateModelConfig1 == address(0)) {
+            revert InvalidIrmConfig();
+        }
+
+        if (_initData.interestRateModel0 == address(0) || _initData.interestRateModel1 == address(0)) {
+            revert InvalidIrm();
+        }
+
+        return true;
+    }
+
     function _setDaoFee(uint256 _newDaoFee) internal virtual {
         if (_newDaoFee > MAX_FEE_IN_BP) revert MaxFee();
 
@@ -175,7 +201,7 @@ contract SiloFactory is ISiloFactory, ERC721Upgradeable, OwnableUpgradeable {
     }
 
     function _setMaxDeployerFee(uint256 _newMaxDeployerFee) internal virtual {
-        if (_newMaxDeployerFee >= MAX_FEE_IN_BP) revert InvalidFee();
+        if (_newMaxDeployerFee >= MAX_FEE_IN_BP) revert MaxFee();
 
         maxDeployerFeeInBp = _newMaxDeployerFee;
 
@@ -183,7 +209,7 @@ contract SiloFactory is ISiloFactory, ERC721Upgradeable, OwnableUpgradeable {
     }
 
     function _setMaxFlashloanFee(uint256 _newMaxFlashloanFee) internal virtual {
-        if (_newMaxFlashloanFee >= MAX_FEE_IN_BP) revert InvalidFee();
+        if (_newMaxFlashloanFee >= MAX_FEE_IN_BP) revert MaxFee();
 
         maxFlashloanFeeInBp = _newMaxFlashloanFee;
 
@@ -191,7 +217,7 @@ contract SiloFactory is ISiloFactory, ERC721Upgradeable, OwnableUpgradeable {
     }
 
     function _setMaxLiquidationFee(uint256 _newMaxLiquidationFee) internal virtual {
-        if (_newMaxLiquidationFee >= MAX_FEE_IN_BP) revert InvalidFee();
+        if (_newMaxLiquidationFee >= MAX_FEE_IN_BP) revert MaxFee();
 
         maxLiquidationFeeInBp = _newMaxLiquidationFee;
 
@@ -232,30 +258,6 @@ contract SiloFactory is ISiloFactory, ERC721Upgradeable, OwnableUpgradeable {
 
     function _baseURI() internal view virtual override returns (string memory) {
         return "//app.silo.finance/silo/";
-    }
-
-    function _validateSiloInitData(ISiloConfig.InitData memory _initData) internal view virtual {
-        // solhint-disable-previous-line code-complexity
-        if (_initData.token0 == _initData.token1) revert SameAsset();
-        if (_initData.maxLtv0 > _initData.lt0) revert InvalidMaxLtv();
-        if (_initData.maxLtv1 > _initData.lt1) revert InvalidMaxLtv();
-        if (_initData.maxLtv0 == 0 && _initData.maxLtv1 == 0) revert InvalidMaxLtv();
-        if (_initData.lt0 > _BASIS_POINTS || _initData.lt1 > _BASIS_POINTS) revert InvalidLt();
-        if (!_initData.borrowable0 && !_initData.borrowable1) revert NonBorrowableSilo();
-        if (_initData.deployerFeeInBp > 0 && _initData.deployer == address(0)) revert InvalidDeployer();
-        if (_initData.deployerFeeInBp > maxDeployerFeeInBp) revert MaxDeployerFee();
-        if (_initData.flashloanFee0 > maxFlashloanFeeInBp) revert MaxFlashloanFee();
-        if (_initData.flashloanFee1 > maxFlashloanFeeInBp) revert MaxFlashloanFee();
-        if (_initData.liquidationFee0 > maxLiquidationFeeInBp) revert MaxLiquidationFee();
-        if (_initData.liquidationFee1 > maxLiquidationFeeInBp) revert MaxLiquidationFee();
-
-        if (_initData.interestRateModelConfig0 == address(0) || _initData.interestRateModelConfig0 == address(0)) {
-            revert InvalidIrmConfig();
-        }
-
-        if (_initData.interestRateModel0 == address(0) || _initData.interestRateModel1 == address(0)) {
-            revert InvalidIrm();
-        }
     }
 
     function _copyConfig(ISiloConfig.InitData memory _initData)

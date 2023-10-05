@@ -55,5 +55,11 @@ interface IShareToken is IERC20MetadataUpgradeable {
     /// @return totalSupply total supply of the token
     function balanceOfAndTotalSupply(address _account) external view returns (uint256 balance, uint256 totalSupply);
 
-    function silo() external view returns (ISilo);
+    /// @notice Returns address of the contract that is called by share token on every transfer
+    /// @return hookReceiver address
+    function hookReceiver() external view returns (address hookReceiver);
+
+    /// @notice Returns silo address for which token was deployed
+    /// @return silo address
+    function silo() external view returns (ISilo silo);
 }

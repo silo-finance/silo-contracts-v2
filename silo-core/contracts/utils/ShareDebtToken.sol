@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.19;
+pragma solidity 0.8.21;
 
 import {IERC20R} from "../interfaces/IERC20R.sol";
 import {IShareToken, ShareToken, ISiloFactory, ISilo} from "./ShareToken.sol";
