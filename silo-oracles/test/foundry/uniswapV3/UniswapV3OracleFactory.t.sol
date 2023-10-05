@@ -91,7 +91,7 @@ contract UniswapV3OracleFactoryTest is UniswapPools {
     function test_UniswapV3OracleFactory_verifyPool_throws_InvalidPoolForQuoteToken() public {
         vm.expectRevert("InvalidPoolForQuoteToken");
 
-        UNISWAPV3_ORACLE_FACTORY.verifyPool(IUniswapV3Factory(UNISWAPV3_FACTORY), IUniswapV3Pool(POOL), address(3));
+        UNISWAPV3_ORACLE_FACTORY.verifyPool(IUniswapV3Pool(POOL), address(3), REQUIRED_CARDINALITY);
     }
 
     /*
@@ -102,7 +102,7 @@ contract UniswapV3OracleFactoryTest is UniswapPools {
 
         vm.expectRevert("InvalidPool");
 
-        UNISWAPV3_ORACLE_FACTORY.verifyPool(IUniswapV3Factory(UNISWAPV3_FACTORY), IUniswapV3Pool(POOL), TOKEN_A);
+        UNISWAPV3_ORACLE_FACTORY.verifyPool(IUniswapV3Pool(POOL), TOKEN_A, REQUIRED_CARDINALITY);
     }
 
     /*
@@ -113,7 +113,7 @@ contract UniswapV3OracleFactoryTest is UniswapPools {
 
         vm.expectRevert("EmptyPool0");
 
-        UNISWAPV3_ORACLE_FACTORY.verifyPool(IUniswapV3Factory(UNISWAPV3_FACTORY), IUniswapV3Pool(POOL), TOKEN_B);
+        UNISWAPV3_ORACLE_FACTORY.verifyPool(IUniswapV3Pool(POOL), TOKEN_B, REQUIRED_CARDINALITY);
     }
 
     /*
@@ -124,7 +124,7 @@ contract UniswapV3OracleFactoryTest is UniswapPools {
 
         vm.expectRevert("EmptyPool1");
 
-        UNISWAPV3_ORACLE_FACTORY.verifyPool(IUniswapV3Factory(UNISWAPV3_FACTORY), IUniswapV3Pool(POOL), TOKEN_B);
+        UNISWAPV3_ORACLE_FACTORY.verifyPool(IUniswapV3Pool(POOL), TOKEN_B, REQUIRED_CARDINALITY);
     }
 
     /*
@@ -145,10 +145,8 @@ contract UniswapV3OracleFactoryTest is UniswapPools {
             )
         );
 
-        // DISABLED
-        // vm.expectRevert("BufferNotFull");
-
-        UNISWAPV3_ORACLE_FACTORY.verifyPool(IUniswapV3Factory(UNISWAPV3_FACTORY), IUniswapV3Pool(POOL), TOKEN_B);
+        vm.expectRevert("BufferNotFull");
+        UNISWAPV3_ORACLE_FACTORY.verifyPool(IUniswapV3Pool(POOL), TOKEN_B, REQUIRED_CARDINALITY);
     }
     
     /*
@@ -207,7 +205,7 @@ contract UniswapV3OracleFactoryTest is UniswapPools {
         uint256 gasEnd = gasleft();
 
         emit log_named_uint("gas", gasStart - gasEnd);
-        assertEq(gasStart - gasEnd, 260025, "optimise gas");
+        assertEq(gasStart - gasEnd, 237297, "optimise gas");
 
         UniswapV3Oracle oracle2 =  UNISWAPV3_ORACLE_FACTORY.create(cfg);
 

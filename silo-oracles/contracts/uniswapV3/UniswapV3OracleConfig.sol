@@ -21,9 +21,7 @@ contract UniswapV3OracleConfig {
     /// @dev how many observations we need for provided periodForAvgPrice and blockTime
     uint16 internal immutable _REQUIRED_CARDINALITY; // solhint-disable-line var-name-mixedcase
 
-    /// @dev It is assumed that this contract will be deployed once per blockchain so blockTime can safely use
-    /// immutable variable even thought it is used as implementation contract for a proxy.
-    /// It is number with 1 decimal eg blockTime=5 => 0.5 sec
+    /// @dev It is number with 1 decimal eg blockTime=5 => 0.5 sec
     /// It is better to set it bit lower than higher that avg block time
     /// eg. if ETH block time is 13~13.5s, you can set it to 12s
     uint8 internal immutable _BLOCK_TIME; // solhint-disable-line var-name-mixedcase

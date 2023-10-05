@@ -45,7 +45,7 @@ contract UniswapV3OracleTest is UniswapPools {
         FOUNDRY_PROFILE=silo-oracles forge test -vvv --mt test_UniswapV3Oracle_revert_whenPriceZero
     */
     function test_UniswapV3Oracle_revert_whenPriceZero() public {
-        vm.expectRevert(bytes("Zero"));
+        vm.expectRevert(bytes("ZeroQuote"));
         PRICE_PROVIDER.quote(1e6, address(tokens["WETH"]));
     }
 
@@ -61,7 +61,7 @@ contract UniswapV3OracleTest is UniswapPools {
         FOUNDRY_PROFILE=silo-oracles forge test -vvv --mt test_UniswapV3Oracle_invalidBaseToken
     */
     function test_UniswapV3Oracle_invalidBaseToken() public {
-        vm.expectRevert(bytes("Zero"));
+        vm.expectRevert(bytes("ZeroQuote"));
         PRICE_PROVIDER.quote(1e6, address(tokens["CRV"]));
     }
 
@@ -109,7 +109,7 @@ contract UniswapV3OracleTest is UniswapPools {
         uint256 priceView = PRICE_PROVIDER.quote(1e18, address(tokens["WETH"]));
         uint256 gasSpend = gasStart - gasleft();
         emit log_named_uint("gasSpend", gasSpend);
-        assertEq(gasSpend, 80870, "expect optimised gas #1");
+        assertEq(gasSpend, 80825, "expect optimised gas #1");
 
         assertEq(priceView, 1641_609559, "expect ETH price in USDC");
 
@@ -132,7 +132,7 @@ contract UniswapV3OracleTest is UniswapPools {
         gasSpend = gasStart - gasleft();
         emit log_named_uint("at block", otherBlock);
         emit log_named_uint("gasSpend", gasSpend);
-        assertEq(gasSpend, 47852, "expect optimised gas #1");
+        assertEq(gasSpend, 50307, "expect optimised gas #1");
 
         assertEq(priceView, 1657_278376, "expect ETH price in USDC");
     }

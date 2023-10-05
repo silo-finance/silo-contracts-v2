@@ -76,7 +76,7 @@ contract ChainlinkV3OracleFactory is OracleFactory {
 
     /// @dev heartbeat restrictions are arbitrary
     /// @notice Chainlink's heartbeat is "always" less than a day, except when they late
-    function verifyHeartbeat(IChainlinkV3Oracle.ChainlinkV3DeploymentConfig memory _config) public view virtual {
+    function verifyHeartbeat(IChainlinkV3Oracle.ChainlinkV3DeploymentConfig memory _config) public pure virtual {
         if (_config.primaryHeartbeat < 30 seconds || _config.primaryHeartbeat > 2 days) {
             revert IChainlinkV3Oracle.InvalidHeartbeat();
         }

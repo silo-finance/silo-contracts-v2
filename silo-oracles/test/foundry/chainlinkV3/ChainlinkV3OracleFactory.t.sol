@@ -56,7 +56,7 @@ contract ChainlinkV3OracleFactoryTest is ChainlinkV3Configs {
 
         emit log_named_decimal_uint("SPELL/USD", price, 6);
         assertEq(price, 403, ", SPELL/USD price is ~$0.000403");
-        assertEq(gasStart - gasEnd, 15677, "optimise gas");
+        assertEq(gasStart - gasEnd, 15628, "optimise gas");
     }
 
     /*
@@ -77,6 +77,6 @@ contract ChainlinkV3OracleFactoryTest is ChainlinkV3Configs {
 
         emit log_named_decimal_uint("SPELL/ETH", price, 18);
         assertEq(price, 235285547785, ", SPELL/USD price is ~$0.000403 => ETH@1716 => SPELL/ETH ~ 0.000403/1716 => 0.00000023");
-        assertEq(gasStart - gasEnd, 27745, "optimise gas");
+        assertEq(gasStart - gasEnd, 27700, "optimise gas");
     }
 }

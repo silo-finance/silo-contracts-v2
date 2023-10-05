@@ -15,6 +15,15 @@ import {UniswapV3OracleConfig} from "./UniswapV3OracleConfig.sol";
 contract UniswapV3Oracle is ISiloOracle, IUniswapV3Oracle, Initializable {
     using RevertBytes for bytes;
 
+    /// @dev Uniswap can revert with "Old" error when begin of TWAP period is older than oldest observation.
+    /// This hash is for catch this error.
+    /// Assuming we checked for BufferFull (so we do have all required observations), we can safely reduce period
+    /// to oldest available time and we can fetch price.
+    /// NOTICE: buffer check is disabled (we not doing that check on oracle creation), that means it is possible
+    /// to deploy oracle configured for TWAP N, even when there is not enough observations to provide that price.
+    /// it is recommended to execute `adjustOracleCardinality` asap, even before deployment if possible.
+    /// Reason for disabling this check is to allow early deployments. However it should not be used
+    /// until buffer will be filled up because TWAP price can be invalid
     bytes32 public constant OLD_ERROR_HASH = keccak256(abi.encodeWithSignature("Error(string)", "OLD"));
 
     /// @dev deployment with configuration setup, can not be immutable because it is initialized
@@ -91,7 +100,21 @@ contract UniswapV3Oracle is ISiloOracle, IUniswapV3Oracle, Initializable {
         override
         returns (uint256 quoteAmount)
     {
-        quoteAmount = _quoteInternal(_baseAmount, _baseToken);
+        if (_baseAmount > type(uint128).max) revert("Overflow");
+
+        UniswapV3Config memory config = oracleConfig.getConfig();
+
+        // this will force to optimise gas by not doing call for quote
+        if (_baseToken == config.quoteToken) revert("UseBaseAmount");
+
+        int24 timeWeightedAverageTick = _consult(config.pool, config.periodForAvgPrice);
+
+        quoteAmount = OracleLibrary.getQuoteAtTick(
+            timeWeightedAverageTick, uint128(_baseAmount), _baseToken, config.quoteToken
+        );
+
+        // zero is also returned on invalid base token
+        if (quoteAmount == 0) revert("ZeroQuote");
     }
 
     function quoteToken() external view override virtual returns (address) {
@@ -138,29 +161,6 @@ contract UniswapV3Oracle is ISiloOracle, IUniswapV3Oracle, Initializable {
         }
     }
 
-    function _quoteInternal(uint256 _baseAmount, address _baseToken)
-        internal
-        view
-        virtual
-        returns (uint256 quoteAmount)
-    {
-        if (_baseAmount > type(uint128).max) revert("Overflow");
-
-        UniswapV3Config memory config = oracleConfig.getConfig();
-
-        // this will force to optimise gas by not doing call for quote
-        if (_baseToken == config.quoteToken) revert("UseBaseAmount");
-
-        int24 timeWeightedAverageTick = _consult(config.pool, config.periodForAvgPrice);
-
-        quoteAmount = OracleLibrary.getQuoteAtTick(
-            timeWeightedAverageTick, uint128(_baseAmount), _baseToken, config.quoteToken
-        );
-
-        // zero is also returned on invalid base token
-        if (quoteAmount == 0) revert("Zero");
-    }
-
     /// @notice Fetches time-weighted average tick using Uniswap V3 oracle
     /// @dev this is based on `OracleLibrary.consult`, we adjusted it to handle `OLD` error, time window will adjust
     /// to available pool observations
@@ -205,14 +205,7 @@ contract UniswapV3Oracle is ISiloOracle, IUniswapV3Oracle, Initializable {
             uint32 latestTimestamp =
                 resolveOldestObservationTimestamp(_pool, observationIndex, currentObservationCardinality);
 
-            // assuming we checked for BufferFull, we can safely reduce period to oldest available time,
-            // so we can fetch price
-            // NOTICE: buffer check is disabled, that means it is possible to deploy oracle configured for TWAP N
-            // even when there is not enough observations to provide that price.
-            // it is recommended to execute `adjustOracleCardinality` asap, even before deployment if possible.
-            // Reason for disabling this check is to allow early deployments. However it should not be used
-            // until buffer will be filled up because TWAP price can be invalid because of below line.
-            //
+            // WARNING: please check desc for `OLD_ERROR_HASH`
             // adjusting period to handle the case, where we might have enough observations but query period is beyond
             period = uint32(block.timestamp - latestTimestamp);
 

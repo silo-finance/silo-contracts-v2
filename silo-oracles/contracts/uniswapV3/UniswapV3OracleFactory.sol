@@ -22,6 +22,8 @@ contract UniswapV3OracleFactory is OracleFactory {
         UNISWAPV3_FACTORY = _factory;
     }
 
+    /// @dev you need to make sure, that pool you are using is valid and can provide a TWAP price
+    /// this method does no verify it, you can verify by calling `verifyPool`
     /// @param _config UniswapV3DeploymentConfig configuration data
     function create(IUniswapV3Oracle.UniswapV3DeploymentConfig memory _config)
         external
@@ -41,8 +43,6 @@ contract UniswapV3OracleFactory is OracleFactory {
         oracleConfig = address(new UniswapV3OracleConfig(_config, requiredCardinality));
         oracle = UniswapV3Oracle(ClonesUpgradeable.clone(ORACLE_IMPLEMENTATION));
 
-        verifyPool(UNISWAPV3_FACTORY, _config.pool, _config.quoteToken);
-
         _saveOracle(address(oracle), oracleConfig, id);
 
         oracle.initialize(UniswapV3OracleConfig(oracleConfig));
@@ -60,6 +60,42 @@ contract UniswapV3OracleFactory is OracleFactory {
         returns (bool bufferFull, bool enoughObservations, uint16 currentCardinality)
     {
         return _observationsStatus(_pool, _requiredCardinality);
+    }
+
+    /// @dev It's run few checks on `_pool`, making sure we can use it for providing price
+    /// Throws when there is no pool or pool is empty (zero liquidity) or not ready for price
+    /// @param _pool UniV3 pool addresses that will be verified
+    /// @param _quoteToken asset in which oracle denominates its price
+    function verifyPool(
+        IUniswapV3Pool _pool,
+        address _quoteToken,
+        uint16 _requiredCardinality
+    )
+        external
+        view
+        virtual
+    {
+        address token0 = _pool.token0();
+        address token1 = _pool.token1();
+
+        if (token0 != _quoteToken && token1 != _quoteToken) {
+            revert("InvalidPoolForQuoteToken");
+        }
+
+        address otherToken = _quoteToken == token0 ? token1 : token0;
+
+        if (UNISWAPV3_FACTORY.getPool(_quoteToken, otherToken, _pool.fee()) != address(_pool)) {
+            revert("InvalidPool");
+        }
+
+        uint256 liquidity = IERC20BalanceOf(token0).balanceOf(address(_pool));
+        if (liquidity == 0) revert("EmptyPool0");
+
+        liquidity = IERC20BalanceOf(token1).balanceOf(address(_pool));
+        if (liquidity == 0) revert("EmptyPool1");
+
+        (bool bufferFull,,) = _observationsStatus(_pool, _requiredCardinality);
+        if (!bufferFull) revert("BufferNotFull");
     }
 
     function hashConfig(IUniswapV3Oracle.UniswapV3DeploymentConfig memory _config)
@@ -94,45 +130,6 @@ contract UniswapV3OracleFactory is OracleFactory {
         if (_config.quoteToken == address(0)) revert("EmptyQuoteToken");
 
         return uint16(cardinality);
-    }
-
-    /// @dev It's run few checks on `_pool`, making sure we can use it for providing price
-    /// Throws when there is no pool or pool is empty (zero liquidity) or not ready for price
-    /// @param _factory UniV3 factory
-    /// @param _pool UniV3 pool addresses that will be verified
-    /// @param _quoteToken asset in which oracle denominates its price
-    function verifyPool(
-        IUniswapV3Factory _factory,
-        IUniswapV3Pool _pool,
-        address _quoteToken
-        // uint16 _requiredCardinality
-    )
-        public
-        view
-        virtual
-    {
-        address token0 = _pool.token0();
-        address token1 = _pool.token1();
-
-        if (token0 != _quoteToken && token1 != _quoteToken) {
-            revert("InvalidPoolForQuoteToken");
-        }
-
-        address otherToken = _quoteToken == token0 ? token1 : token0;
-
-        if (_factory.getPool(_quoteToken, otherToken, _pool.fee()) != address(_pool)) {
-            revert("InvalidPool");
-        }
-
-        uint256 liquidity = IERC20BalanceOf(token0).balanceOf(address(_pool));
-        if (liquidity == 0) revert("EmptyPool0");
-
-        liquidity = IERC20BalanceOf(token1).balanceOf(address(_pool));
-        if (liquidity == 0) revert("EmptyPool1");
-
-        // check for buffer disabled to allow early deployments
-        // (bool bufferFull,,) = _observationsStatus(_pool, _requiredCardinality);
-        // if (!bufferFull) revert("BufferNotFull");
     }
 
     function _observationsStatus(IUniswapV3Pool _pool, uint16 _requiredCardinality)
