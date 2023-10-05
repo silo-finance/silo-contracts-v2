@@ -18,7 +18,7 @@
 
 - Copy of Balancer's implementation of the LiquidityGauge.vy ([bac7082](https://github.com/silo-finance/silo-contracts-v2/pull/34/commits/bac708248757c313a2f0c47c6dee0bd91ddaf531))
 
-### controller/GaugeController.sol
+### controller/GaugeController.vy
 
 - Introduced a `Gauge Adder` role, which can be set by an `AUTHORIZER_ADAPTOR` and is eligible to add gauge into the gauge controller ([4aacd41](https://github.com/silo-finance/silo-contracts-v2/pull/69/commits/4aacd41da29853662f3391e4826af4fd207adde4))
 
@@ -26,9 +26,17 @@
 
 - Copy of Balancer's implementation of the GaugeController.vy ([a9562fe](https://github.com/silo-finance/silo-contracts-v2/pull/69/commits/a9562fee86534cc563b23bd7ea663292af85eec8))
 
-### ethereum/LiquidityGaugeFactory.sol
+### ethereum/BaseGaugeFactory.sol
+- Bumped solidity to 0.8.21 ([8443b28](https://github.com/silo-finance/silo-contracts-v2/commit/8443b286829f2bdba9181e5a764dd25a7906db13))
 
 - solhint-disable ordering for BaseGaugeFactory ([420307b](https://github.com/silo-finance/silo-contracts-v2/pull/34/commits/420307bfeae951a74f04d8d8e82507ea35d412bb))
+
+- Bumped solidity to 0.8.19 and updated imports ([b1fceab](https://github.com/silo-finance/silo-contracts-v2/pull/34/commits/b1fceaba4398d4041e7ec958273deb6b9901cb4e))
+
+- Copy of Balancer's implementation of the BaseGaugeFactory.sol ([c2bc3d5](https://github.com/silo-finance/silo-contracts-v2/pull/34/commits/c2bc3d539244abee8e2cd9b13e70b931eb251735))
+
+### ethereum/LiquidityGaugeFactory.sol
+- Bumped solidity to 0.8.21 ([8443b28](https://github.com/silo-finance/silo-contracts-v2/commit/8443b286829f2bdba9181e5a764dd25a7906db13))
 
 - Introduced ISiloLiquidityGauge interface as SiloLiquidityGauge initialization function changed ([f25f91d](https://github.com/silo-finance/silo-contracts-v2/pull/34/commits/f25f91d693fd5894841688ba6e9095759ecc53ce))
 
@@ -59,6 +67,7 @@
 - Copy of Balancer's implementation of the ChildChainGauge.vy ([1c535c4](https://github.com/silo-finance/silo-contracts-v2/pull/56/commits/1c535c462b0fa00b4a42531e741caa357894a7ad))
 
 ### l2-common/ChildChainGaugeFactory.sol
+- Bumped solidity to 0.8.21 ([8443b28](https://github.com/silo-finance/silo-contracts-v2/commit/8443b286829f2bdba9181e5a764dd25a7906db13))
 
 - Updated naming and comment in a favor of the ERC-20 balances handler instead of the pool ([1ea523d](https://github.com/silo-finance/silo-contracts-v2/pull/56/commits/1ea523d4fba941b1ad192091c36f9268bdde3f41))
 
@@ -67,6 +76,8 @@
 - Copy of Balancer's implementation of the ChildChainGaugeFactory.sol ([0543b3f](https://github.com/silo-finance/silo-contracts-v2/pull/56/commits/0543b3fd50fe02c3555c0d2efc82fa7771fba33e))
 
 ### stakeless-gauge/StakelessGauge.sol
+- Bumped solidity to 0.8.21 ([8443b28](https://github.com/silo-finance/silo-contracts-v2/commit/8443b286829f2bdba9181e5a764dd25a7906db13))
+
 - Changed StakelessGauge.sol location and updated an IStakelessGauge import ([8a43a53](https://github.com/silo-finance/silo-contracts-v2/pull/71/commits/8a43a53bc9c415d6d13b9ed89b25fdfac793b6fd))
 
 - introduced `checkpointer` role that can checkpoint gauge ([f6603fa](https://github.com/silo-finance/silo-contracts-v2/pull/70/commits/f6603fa4a728fb9d934be846ab5968f359d91d96))
@@ -80,6 +91,8 @@
 - Copy of Balancer's implementation of the StakelessGauge.sol ([c731307](https://github.com/silo-finance/silo-contracts-v2/pull/63/commits/c7313073b1ca24f4d75fd9f6e5eab3110489249a))
 
 ### stakeless-gauge/CCIPGaugeCheckpointer.sol
+- Bumped solidity to 0.8.21 ([8443b28](https://github.com/silo-finance/silo-contracts-v2/commit/8443b286829f2bdba9181e5a764dd25a7906db13))
+
 - Calldata instead of memory for external functions ([cadcaf9](https://github.com/silo-finance/silo-contracts-v2/pull/171/commits/cadcaf99500d5d34714a406df5b43293d2e4abec))
 
 - Implementation of the `CCIPGaugeCheckpointer` ([bfa6cfa](https://github.com/silo-finance/silo-contracts-v2/pull/111/commits/bfa6cfa11fd91e51c6904b9399247774dd2022df))
@@ -98,6 +111,8 @@
 - Copy of Balancer's implementation of the StakelessGaugeCheckpointer.sol ([5c7ea22](https://github.com/silo-finance/silo-contracts-v2/pull/72/commits/5c7ea225313e8a3b10ba809f47153271fcdac6fc))
 
 ### gauge-adder/GaugeAdder.sol
+- Bumped solidity to 0.8.21 ([8443b28](https://github.com/silo-finance/silo-contracts-v2/commit/8443b286829f2bdba9181e5a764dd25a7906db13))
+
 - Updated `_ETHEREUM_GAUGE_CONTROLLER_TYPE` value to `0` ([c1dce5f](https://github.com/silo-finance/silo-contracts-v2/pull/85/commits/c1dce5f0e0825176632bfb0c8332d40caf5832dc))
 
 - Removed gauge types as they were deprecated ([0ea9da8](https://github.com/silo-finance/silo-contracts-v2/pull/66/commits/0ea9da87c6827ed73211bb266aa183a7a71d82ec))

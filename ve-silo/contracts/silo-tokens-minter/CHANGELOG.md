@@ -1,4 +1,6 @@
 ### BalancerMinter.sol
+- Bumped solidity to 0.8.21 ([8443b28](https://github.com/silo-finance/silo-contracts-v2/commit/8443b286829f2bdba9181e5a764dd25a7906db13))
+
 - Implemented FeesManager for the BalancerMinter ([cfbb406](https://github.com/silo-finance/silo-contracts-v2/pull/155/commits/cfbb4060b3e1c747797565e3e934faa0ec92ae03))
 
 - Fees collection ([ad564c1](https://github.com/silo-finance/silo-contracts-v2/pull/97/commits/ad564c19f4fa0b3a2a2f741168a7880e18904449))
@@ -10,6 +12,8 @@
 - Copy of Balancer's implementation of the BalancerMinter.sol ([01439b5](https://github.com/silo-finance/silo-contracts-v2/pull/38/commits/01439b5dcd336edf7866e4f633a192984756a210))
 
 ### BalancerTokenAdmin.sol
+- Bumped solidity to 0.8.21 ([8443b28](https://github.com/silo-finance/silo-contracts-v2/commit/8443b286829f2bdba9181e5a764dd25a7906db13))
+
 - Added  a possibility to stop a mining program by transferring ownership of the incentive token ([cb7b755](https://github.com/silo-finance/silo-contracts-v2/pull/93/commits/cb7b75505384e77cbb4431cc4eb15f53fea20a37))
 
 - Changed ownership system for BalancerTokenAdmin. Replaced SingletonAuthentication with ExtendedOwnable ([47c8933](https://github.com/silo-finance/silo-contracts-v2/pull/38/commits/47c89333cebd0bb772f7da1b0bf2d76981c8a5a6))
@@ -21,6 +25,8 @@
 - Copy of Balancer's implementation of the BalancerTokenAdmin.sol ([44824ae](https://github.com/silo-finance/silo-contracts-v2/pull/38/commits/44824aeb22ca0bddcc87f109e19fce792984469c))
 
 ### MainnetBalancerMinter.sol
+- Bumped solidity to 0.8.21 ([8443b28](https://github.com/silo-finance/silo-contracts-v2/commit/8443b286829f2bdba9181e5a764dd25a7906db13))
+
 - Fees collection ([2767b4a](https://github.com/silo-finance/silo-contracts-v2/pull/97/commits/2767b4a2bf6d1db9473eaeacfa67d868a8c66e41))
 
 - Updated interfaces as Balancer's implementations were not complete, and some methods that we need for test missed ([c23801c](https://github.com/silo-finance/silo-contracts-v2/pull/38/commits/c23801cdecf88e5b85f37ac39dc6e3f7817aa054))
@@ -30,6 +36,8 @@
 - Copy of Balancer's implementation of the MainnetBalancerMinter.sol ([c3762da](https://github.com/silo-finance/silo-contracts-v2/pull/38/commits/c3762da774abbab4a309157c86237c1432e01ae8))
 
 ### L2BalancerPseudoMinter.sol
+- Bumped solidity to 0.8.21 ([8443b28](https://github.com/silo-finance/silo-contracts-v2/commit/8443b286829f2bdba9181e5a764dd25a7906db13))
+
 - Removed Ownable2Step as it is now a part of the BalancerMinter.sol ([4c126b4](https://github.com/silo-finance/silo-contracts-v2/pull/155/commits/4c126b49282fc9b0930cb794f77178c6cbfc4a16))
 
 - Fees collection ([6cbbfa0](https://github.com/silo-finance/silo-contracts-v2/pull/97/commits/6cbbfa0e629e6b686f322d89f87f244427dde5ee))
