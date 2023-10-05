@@ -164,7 +164,7 @@ library SiloLiquidationExecLib {
                 _borrower,
                 _liquidator,
                 _withdrawAssetsFromProtected,
-                _totalCollateralAssets,
+                _totalProtectedAssets,
                 IShareToken(_collateralProtectedShareToken)
             );
         }
@@ -174,7 +174,7 @@ library SiloLiquidationExecLib {
                 _borrower,
                 _liquidator,
                 _withdrawAssetsFromCollateral,
-                _totalProtectedAssets,
+                _totalCollateralAssets,
                 IShareToken(_collateralShareToken)
             );
         }
