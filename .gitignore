@@ -16,9 +16,11 @@ cache
 
 # silo-foundry-utils cli binary
 /silo-foundry-utils
+deployments/anvil
 deployments/localhost
 deployments/31337
 **/deployments/localhost
+**/deployments/anvil
 **/deployments/31337
 
 # forge broadcast
@@ -29,3 +31,5 @@ broadcast
 
 .env*
 .DS_Store
+
+common/addresses/anvil.json
