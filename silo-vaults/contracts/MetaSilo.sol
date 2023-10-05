@@ -142,8 +142,7 @@ contract MetaSilo is ERC4626, Ownable {
             if (reward == ERC20(SILO)) continue;
             RewardInfo memory rewards = rewardInfos[reward];
             uint256 balanceBefore = reward.balanceOf(address(this));
-            // ISiloLiquidityGauge(rewards.gauge).claim_rewards(address(this), address(this)); // TODO: check new function name
-            ISiloLiquidityGauge(rewards.gauge).claimable_tokens(address(this));
+            ISiloLiquidityGauge(rewards.gauge).claim_rewards(address(this), address(this));
             _accrueRewards(reward, reward.balanceOf(address(this)) - balanceBefore);
         }
     }

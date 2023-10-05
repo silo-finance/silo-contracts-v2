@@ -58,4 +58,7 @@ interface ISiloLiquidityGauge {
 
     function getRelativeWeightCap() external view returns (uint256);
     function getCappedRelativeWeight(uint256 _time) external view returns (uint256);
+
+    function claim_rewards(address _addr, address _receiver) external;
+
 }
