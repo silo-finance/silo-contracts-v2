@@ -16,7 +16,6 @@ contract DIAOracle is ISiloOracle, IDIAOracle, Initializable {
     /// @dev we accessing prices for assets by keys eg. "Jones/USD"
     /// I tried to store it as bytes32 immutable, but translation to string uses over 5K gas,
     /// reading string is less gas, because it is not immutable it is not stored in config contracts (less gas)
-    /// @notice this is actually a string stored as bytes32, so we can make it immutable
     mapping (DIAOracleConfig => string) public primaryKey;
 
     /// @dev key for secondary price
@@ -48,7 +47,38 @@ contract DIAOracle is ISiloOracle, IDIAOracle, Initializable {
 
     /// @inheritdoc ISiloOracle
     function quote(uint256 _baseAmount, address _baseToken) external view virtual returns (uint256 quoteAmount) {
-        return _quote(_baseAmount, _baseToken);
+        DIAOracleConfig cacheOracleConfig = oracleConfig;
+        DIAConfig memory data = cacheOracleConfig.getConfig();
+
+        if (_baseToken != data.baseToken) revert AssetNotSupported();
+        if (_baseAmount > type(uint128).max) revert BaseAmountOverflow();
+
+        (
+            uint128 assetPrice,
+            bool priceUpToDate
+        ) = getPriceForKey(data.diaOracle, primaryKey[cacheOracleConfig], data.heartbeat);
+
+        if (!priceUpToDate) revert OldPrice();
+
+        if (!data.convertToQuote) {
+            return OracleNormalization.normalizePrice(
+                _baseAmount, assetPrice, data.normalizationDivider, data.normalizationMultiplier
+            );
+        }
+
+        (
+            uint128 secondaryPrice, bool secondaryPriceValid
+        ) = getPriceForKey(data.diaOracle, secondaryKey[cacheOracleConfig], data.heartbeat);
+
+        if (!secondaryPriceValid) revert OldSecondaryPrice();
+
+        return OracleNormalization.normalizePrices(
+            _baseAmount,
+            assetPrice,
+            secondaryPrice,
+            data.normalizationDivider,
+            data.normalizationMultiplier
+        );
     }
 
     /// @inheritdoc ISiloOracle
@@ -83,45 +113,5 @@ contract DIAOracle is ISiloOracle, IDIAOracle, Initializable {
 
         // we not checking assetPriceInUsd != 0, because this is checked on setup, so it will be always some value here
         priceUpToDate = priceTimestamp > oldestAcceptedPriceTimestamp;
-    }
-
-    function _quote(uint256 _baseAmount, address _baseToken)
-        internal
-        view
-        virtual
-        returns (uint256 quoteAmount)
-    {
-        DIAOracleConfig cacheOracleConfig = oracleConfig;
-        DIAConfig memory data = cacheOracleConfig.getConfig();
-
-        if (_baseToken != data.baseToken) revert AssetNotSupported();
-        if (_baseAmount > type(uint128).max) revert BaseAmountOverflow();
-
-        (
-            uint128 assetPrice,
-            bool priceUpToDate
-        ) = getPriceForKey(data.diaOracle, primaryKey[cacheOracleConfig], data.heartbeat);
-
-        if (!priceUpToDate) revert OldPrice();
-
-        if (!data.convertToQuote) {
-            return OracleNormalization.normalizePrice(
-                _baseAmount, assetPrice, data.normalizationDivider, data.normalizationMultiplier
-            );
-        }
-
-        (
-            uint128 secondaryPrice, bool secondaryPriceValid
-        ) = getPriceForKey(data.diaOracle, secondaryKey[cacheOracleConfig], data.heartbeat);
-
-        if (!secondaryPriceValid) revert OldSecondaryPrice();
-
-        return OracleNormalization.normalizePrices(
-            _baseAmount,
-            assetPrice,
-            secondaryPrice,
-            data.normalizationDivider,
-            data.normalizationMultiplier
-        );
     }
 }

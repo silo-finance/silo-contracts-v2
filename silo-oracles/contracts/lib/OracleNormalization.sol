@@ -29,7 +29,6 @@ library OracleNormalization {
         // anything above 36 might cause precision errors in price and it will make no sense to have it
         // we can always create separate version of lib if we need
         uint256 arbitraryMaxDecimals = 36;
-
         if (quoteDecimals > arbitraryMaxDecimals) revert Overflow();
 
         uint256 baseDecimals = _baseToken.decimals();

@@ -14,7 +14,7 @@ contract DIAOracleConfig is Layer1OracleConfig {
     /// @dev Oracle deployed for Silo by DIA, all our prices will be submitted to this contract
     IDIAOracleV2 internal immutable _DIA_ORACLEV2; // solhint-disable-line var-name-mixedcase
 
-    /// @dev if set, we will use secondary price to conver to quote
+    /// @dev if set, we will use secondary price to convert to quote
     bool internal immutable _CONVERT_TO_QUOTE; // solhint-disable-line var-name-mixedcase
 
     /// @dev all verification should be done by factory

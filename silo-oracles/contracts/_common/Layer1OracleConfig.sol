@@ -7,7 +7,7 @@ import {IERC20Metadata} from "openzeppelin-contracts/token/ERC20/extensions/IERC
 /// factory contract take over verification. You should not deploy or use config that was not created by factory.
 /// @dev This is common config for Layer1 oracles
 abstract contract Layer1OracleConfig {
-    /// @dev price must be updated at least once every 24h, otherwise something is wrong
+    /// @dev price must be updated at least once every `_HEARTBEAT` seconds, otherwise something is wrong
     uint256 internal immutable _HEARTBEAT; // solhint-disable-line var-name-mixedcase
 
     /// @dev constant used for normalising price
