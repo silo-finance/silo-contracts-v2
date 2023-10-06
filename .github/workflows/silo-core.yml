@@ -20,6 +20,8 @@ on:
       - silo-core/**/*.json
       - package.json
       - yarn.lock
+      - gitmodules/*
+      - .gitmodules
 
   pull_request:
     paths:
@@ -29,6 +31,8 @@ on:
       - silo-core/**/*.json
       - package.json
       - yarn.lock
+      - gitmodules/*
+      - .gitmodules
 
 jobs:
 
@@ -75,5 +79,4 @@ jobs:
           # forge build --sizes
 
       - name: Run Forge tests
-        run: |
-          forge test -vvv --no-match-test "_skip_" --ffi
+        run: forge test -vvv --no-match-test "_skip_" --ffi

@@ -26,6 +26,8 @@ on:
       - ve-silo/**/*.json
       - package.json
       - yarn.lock
+      - gitmodules/*
+      - .gitmodules
 
   pull_request:
     paths:
@@ -41,6 +43,8 @@ on:
       - ve-silo/**/*.json
       - package.json
       - yarn.lock
+      - gitmodules/*
+      - .gitmodules
 
 jobs:
   ve-silo-foundry:

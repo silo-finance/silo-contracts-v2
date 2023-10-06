@@ -19,6 +19,8 @@ on:
       - silo-core/contracts/interfaces/ISiloOracle.sol
       - package.json
       - yarn.lock
+      - gitmodules/*
+      - .gitmodules
 
   pull_request:
     paths:
@@ -29,6 +31,8 @@ on:
       - silo-core/contracts/interfaces/ISiloOracle.sol
       - package.json
       - yarn.lock
+      - gitmodules/*
+      - .gitmodules
 
 jobs:
 
