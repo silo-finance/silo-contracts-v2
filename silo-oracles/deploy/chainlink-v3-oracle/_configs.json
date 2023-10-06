@@ -1,0 +1,10 @@
+{
+    "CHAINLINK_Demo_config": {
+        "baseToken": "USDC",
+        "quoteToken": "WETH",
+        "primaryAggregator": "CHAINLINK_PRIMARY_AGGREGATOR",
+        "primaryHeartbeat": 120,
+        "secondaryAggregator": "CHAINLINK_SECONDARY_AGGREGATOR",
+        "secondaryHeartbeat": 240
+    }
+}
