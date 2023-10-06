@@ -14,19 +14,33 @@ on:
   push:
     branches: [ master, develop ]
     paths:
+      - external/balancer-v2-monorepo/**/*.sol
+      - external/balancer-v2-monorepo/**/*.vy
+      - external/balancer-v2-monorepo/**/*.ts
+      - external/balancer-v2-monorepo/**/*.js
+      - external/balancer-v2-monorepo/**/*.json
       - ve-silo/**/*.sol
       - ve-silo/**/*.vy
       - ve-silo/**/*.ts
       - ve-silo/**/*.js
       - ve-silo/**/*.json
+      - package.json
+      - yarn.lock
 
   pull_request:
     paths:
+      - external/balancer-v2-monorepo/**/*.sol
+      - external/balancer-v2-monorepo/**/*.vy
+      - external/balancer-v2-monorepo/**/*.ts
+      - external/balancer-v2-monorepo/**/*.js
+      - external/balancer-v2-monorepo/**/*.json
       - ve-silo/**/*.sol
       - ve-silo/**/*.vy
       - ve-silo/**/*.ts
       - ve-silo/**/*.js
       - ve-silo/**/*.json
+      - package.json
+      - yarn.lock
 
 jobs:
   ve-silo-foundry:
