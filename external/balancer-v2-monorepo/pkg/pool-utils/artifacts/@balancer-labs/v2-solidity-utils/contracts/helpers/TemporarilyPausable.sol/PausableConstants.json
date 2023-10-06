@@ -1,0 +1,37 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "PausableConstants",
+  "sourceName": "@balancer-labs/v2-solidity-utils/contracts/helpers/TemporarilyPausable.sol",
+  "abi": [
+    {
+      "inputs": [],
+      "name": "MAX_BUFFER_PERIOD_DURATION",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "MAX_PAUSE_WINDOW_DURATION",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x60a5610024600b82828239805160001a607314601757fe5b30600052607381538281f3fe7300000000000000000000000000000000000000003014608060405260043610603d5760003560e01c80638b19548d146042578063fc5e93fe14605a575b600080fd5b60486060565b60408051918252519081900360200190f35b60486067565b6276a70081565b630163f5008156fea2646970667358221220e696b773c3bbcab17864c17d85217a70752d2a807c6db79a1cfa3535917480ab64736f6c63430007010033",
+  "deployedBytecode": "0x7300000000000000000000000000000000000000003014608060405260043610603d5760003560e01c80638b19548d146042578063fc5e93fe14605a575b600080fd5b60486060565b60408051918252519081900360200190f35b60486067565b6276a70081565b630163f5008156fea2646970667358221220e696b773c3bbcab17864c17d85217a70752d2a807c6db79a1cfa3535917480ab64736f6c63430007010033",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

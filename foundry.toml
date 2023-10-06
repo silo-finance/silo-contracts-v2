@@ -1,0 +1,66 @@
+[invariant]
+fail_on_revert = true
+call_override = false
+
+[profile.default]
+libs = [
+    'gitmodules',
+    'node_modules',
+    'silo-amm/node_modules',
+    'silo-core/node_modules',
+    'silo-vaults/node_modules'
+]
+out = 'cache/foundry/out'
+evm_version = 'shanghai'
+
+[profile.amm-periphery]
+src = 'silo-amm-periphery/contracts'
+out = 'silo-amm-periphery/artifacts'
+test = 'silo-amm-periphery/test/foundry'
+broadcast = 'silo-amm-periphery/broadcast'
+
+[profile.amm-core]
+src = 'silo-amm-core/contracts'
+out = 'silo-amm-core/artifacts'
+test = 'silo-amm-core/test/foundry'
+broadcast = 'silo-amm-core/broadcast'
+fs_permissions = [{ access = "read", path = "./silo-amm-core/test/foundry/data/"}]
+
+[profile.core]
+src = 'silo-core/contracts'
+out = 'cache/foundry/out/silo-core'
+test = 'silo-core/test'
+broadcast = 'silo-core/broadcast'
+
+fs_permissions = [
+    { access = "read", path = "./silo-core/test/foundry/data/"},
+    { access = "read", path = "./silo-core/deploy/input/"}
+]
+
+[profile.default.fmt]
+line_length=119
+
+[profile.ve-silo]
+src = 've-silo/contracts'
+out = 'cache/foundry/out/ve-silo'
+test = 've-silo/test'
+broadcast = 've-silo/broadcast'
+
+[profile.vaults]
+src = 'silo-vaults/contracts'
+out = 'cache/foundry/out/silo-vaults'
+test = 'silo-vaults/test/foundry'
+broadcast = 'silo-vaults/broadcast'
+
+[profile.oracles]
+src = 'silo-oracles/contracts'
+out = 'cache/foundry/out/silo-oracles'
+test = 'silo-oracles/test'
+broadcast = 'silo-oracles/broadcast'
+
+[rpc_endpoints]
+mainnet = "${RPC_MAINNET}"
+sepolia = "${RPC_SEPOLIA}"
+arbitrum_one = "${RPC_ARBITRUM}"
+
+# See more config options https://github.com/foundry-rs/foundry/tree/master/config

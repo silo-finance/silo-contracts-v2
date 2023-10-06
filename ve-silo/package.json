@@ -1,0 +1,21 @@
+{
+  "name": "ve-silo",
+  "version": "0.0.0",
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:silo-finance/silo-contracts.git"
+  },
+  "license": "BUSL-1.1",
+  "dependencies": {
+    "solc": "~0.8.19"
+  },
+  "devDependencies": {
+    "solhint": "~3.4.1"
+  },
+  "scripts": {
+    "lint:sol": "solhint \"contracts/**/*.sol\" \"deploy/**/*.sol\" \"test/**/*.sol\" --max-warnings=0"
+  }
+}

@@ -1,0 +1,87 @@
+# This workflow will do a clean install of node dependencies, build the source code and run tests across different versions of node
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-nodejs-with-github-actions
+
+name: veSilo
+
+env:
+  FOUNDRY_PROFILE: ve-silo
+  RPC_MAINNET: ${{ vars.RPC_MAINNET }}
+  RPC_ARBITRUM: ${{ vars.RPC_ARBITRUM }}
+  RPC_SEPOLIA: ${{ vars.RPC_SEPOLIA }}
+  PRIVATE_KEY: '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80' # anvil (only for tests)
+
+on:
+  push:
+    branches: [ master, develop ]
+    paths:
+      - external/balancer-v2-monorepo/**/*.sol
+      - external/balancer-v2-monorepo/**/*.vy
+      - external/balancer-v2-monorepo/**/*.ts
+      - external/balancer-v2-monorepo/**/*.js
+      - external/balancer-v2-monorepo/**/*.json
+      - ve-silo/**/*.sol
+      - ve-silo/**/*.vy
+      - ve-silo/**/*.ts
+      - ve-silo/**/*.js
+      - ve-silo/**/*.json
+      - package.json
+      - yarn.lock
+
+  pull_request:
+    paths:
+      - external/balancer-v2-monorepo/**/*.sol
+      - external/balancer-v2-monorepo/**/*.vy
+      - external/balancer-v2-monorepo/**/*.ts
+      - external/balancer-v2-monorepo/**/*.js
+      - external/balancer-v2-monorepo/**/*.json
+      - ve-silo/**/*.sol
+      - ve-silo/**/*.vy
+      - ve-silo/**/*.ts
+      - ve-silo/**/*.js
+      - ve-silo/**/*.json
+      - package.json
+      - yarn.lock
+
+jobs:
+  ve-silo-foundry:
+    strategy:
+      fail-fast: true
+
+    name: Foundry tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
+
+      - name: yarn install
+        run: yarn install
+
+      - name: Solidity Lint
+        run: yarn workspace ve-silo lint:sol
+
+      - name: Install Vyper compiler
+        run: |
+          pip install vyper==0.3.7
+          vyper --version
+
+      - name: Build silo foundry utils
+        working-directory: ./gitmodules/silo-foundry-utils
+        run: |
+          cargo build --release
+          cp target/release/silo-foundry-utils ../../silo-foundry-utils
+          ../../silo-foundry-utils --version
+
+      - name: Forge build
+        run: |
+          git submodule
+          forge --version
+          forge build --sizes
+
+      - name: Forge test
+        run: forge test --ffi -vvv

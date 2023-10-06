@@ -1,0 +1,9 @@
+{
+  "name": "@silo-contracts-v2/external",
+  "version": "0.0.0",
+  "description": "cloned external code",
+  "private": true,
+  "workspaces": [
+    "balancer-v2-monorepo"
+  ]
+}

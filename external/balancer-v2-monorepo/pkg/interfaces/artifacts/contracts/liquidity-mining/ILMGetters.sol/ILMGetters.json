@@ -1,0 +1,37 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "ILMGetters",
+  "sourceName": "contracts/liquidity-mining/ILMGetters.sol",
+  "abi": [
+    {
+      "inputs": [],
+      "name": "getBalancerTokenAdmin",
+      "outputs": [
+        {
+          "internalType": "contract IBalancerTokenAdmin",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getGaugeController",
+      "outputs": [
+        {
+          "internalType": "contract IGaugeController",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

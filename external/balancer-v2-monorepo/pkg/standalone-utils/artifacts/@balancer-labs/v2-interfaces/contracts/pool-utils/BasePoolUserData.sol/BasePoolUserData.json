@@ -1,0 +1,24 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "BasePoolUserData",
+  "sourceName": "@balancer-labs/v2-interfaces/contracts/pool-utils/BasePoolUserData.sol",
+  "abi": [
+    {
+      "inputs": [],
+      "name": "RECOVERY_MODE_EXIT_KIND",
+      "outputs": [
+        {
+          "internalType": "uint8",
+          "name": "",
+          "type": "uint8"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x608f610024600b82828239805160001a607314601757fe5b30600052607381538281f3fe730000000000000000000000000000000000000000301460806040526004361060335760003560e01c806309564cb1146038575b600080fd5b603e6054565b6040805160ff9092168252519081900360200190f35b60ff8156fea2646970667358221220378fd437b6a4bf4c57f3a732a65742cb1c7ed7247fc625b1d6cfd5911ee6c06064736f6c63430007010033",
+  "deployedBytecode": "0x730000000000000000000000000000000000000000301460806040526004361060335760003560e01c806309564cb1146038575b600080fd5b603e6054565b6040805160ff9092168252519081900360200190f35b60ff8156fea2646970667358221220378fd437b6a4bf4c57f3a732a65742cb1c7ed7247fc625b1d6cfd5911ee6c06064736f6c63430007010033",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

@@ -1,0 +1,43 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "MockVeDelegation",
+  "sourceName": "contracts/test/MockVeDelegation.sol",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "adjusted_balance_of",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "totalSupply",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x608060405234801561001057600080fd5b5060c28061001f6000396000f3fe6080604052348015600f57600080fd5b506004361060325760003560e01c806318160ddd146037578063bbf7408a14604f575b600080fd5b603d607f565b60408051918252519081900360200190f35b603d60048036036020811015606357600080fd5b503573ffffffffffffffffffffffffffffffffffffffff166085565b60015490565b506000549056fea2646970667358221220b8f9c72576ea50b94eaed5b70ca16a15bd0ce584a57f94e1bca9722e94bf0fd664736f6c63430007010033",
+  "deployedBytecode": "0x6080604052348015600f57600080fd5b506004361060325760003560e01c806318160ddd146037578063bbf7408a14604f575b600080fd5b603d607f565b60408051918252519081900360200190f35b603d60048036036020811015606357600080fd5b503573ffffffffffffffffffffffffffffffffffffffff166085565b60015490565b506000549056fea2646970667358221220b8f9c72576ea50b94eaed5b70ca16a15bd0ce584a57f94e1bca9722e94bf0fd664736f6c63430007010033",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

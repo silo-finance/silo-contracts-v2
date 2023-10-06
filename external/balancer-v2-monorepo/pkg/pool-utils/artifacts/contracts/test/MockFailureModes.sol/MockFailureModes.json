@@ -1,0 +1,47 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "MockFailureModes",
+  "sourceName": "contracts/test/MockFailureModes.sol",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "enum MockFailureModes.FailureMode",
+          "name": "mode",
+          "type": "uint8"
+        },
+        {
+          "internalType": "uint256",
+          "name": "errorCode",
+          "type": "uint256"
+        }
+      ],
+      "name": "setFailureCode",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "enum MockFailureModes.FailureMode",
+          "name": "mode",
+          "type": "uint8"
+        },
+        {
+          "internalType": "bool",
+          "name": "failed",
+          "type": "bool"
+        }
+      ],
+      "name": "setFailureMode",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

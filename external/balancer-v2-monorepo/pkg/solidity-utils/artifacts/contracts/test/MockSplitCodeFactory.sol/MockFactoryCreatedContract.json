@@ -1,0 +1,35 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "MockFactoryCreatedContract",
+  "sourceName": "contracts/test/MockSplitCodeFactory.sol",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "id",
+          "type": "bytes32"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "inputs": [],
+      "name": "getId",
+      "outputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x608060405234801561001057600080fd5b506040516101073803806101078339818101604052602081101561003357600080fd5b505180610075576040805162461bcd60e51b815260206004820152600b60248201526a1393d397d6915493d7d25160aa1b604482015290519081900360640190fd5b6000556081806100866000396000f3fe6080604052348015600f57600080fd5b506004361060285760003560e01c80635d1ca63114602d575b600080fd5b60336045565b60408051918252519081900360200190f35b6000549056fea26469706673582212201e6dd6bf0cdc8a5f5979b43d9b927214b1a2d24a36cc321518ffe9a27290867e64736f6c63430007010033",
+  "deployedBytecode": "0x6080604052348015600f57600080fd5b506004361060285760003560e01c80635d1ca63114602d575b600080fd5b60336045565b60408051918252519081900360200190f35b6000549056fea26469706673582212201e6dd6bf0cdc8a5f5979b43d9b927214b1a2d24a36cc321518ffe9a27290867e64736f6c63430007010033",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

@@ -1,0 +1,35 @@
+node_modules
+.idea
+.vscode
+.env
+cache
+**/foundry/out/
+
+# https://yarnpkg.com/getting-started/qa#which-files-should-be-gitignored
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+
+# silo-foundry-utils cli binary
+/silo-foundry-utils
+deployments/anvil
+deployments/localhost
+deployments/31337
+**/deployments/localhost
+**/deployments/anvil
+**/deployments/31337
+
+# forge broadcast
+broadcast
+**/broadcast
+**/build/
+**/artifacts/
+
+.env*
+.DS_Store
+
+common/addresses/anvil.json

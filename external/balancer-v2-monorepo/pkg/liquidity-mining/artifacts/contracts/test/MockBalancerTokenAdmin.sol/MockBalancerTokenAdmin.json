@@ -1,0 +1,162 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "MockBalancerTokenAdmin",
+  "sourceName": "contracts/test/MockBalancerTokenAdmin.sol",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "contract IVault",
+          "name": "vault",
+          "type": "address"
+        },
+        {
+          "internalType": "contract IBalancerToken",
+          "name": "balancerToken",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "inputs": [],
+      "name": "INITIAL_RATE",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "RATE_DENOMINATOR",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "RATE_REDUCTION_COEFFICIENT",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "RATE_REDUCTION_TIME",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "future_epoch_time_write",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getBalancerToken",
+      "outputs": [
+        {
+          "internalType": "contract IBalancerToken",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getVault",
+      "outputs": [
+        {
+          "internalType": "contract IVault",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "to",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "mint",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "rate",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "startEpochTimeWrite",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x60a060405234801561001057600080fd5b5060405161037f38038061037f8339818101604052604081101561003357600080fd5b508051602090910151600080546001600160a01b039384166001600160a01b03199182161782556001805494909316931692909217905542600255670353c226d6c6f5806080819052906102eb9061009490398061018752506102eb6000f3fe608060405234801561001057600080fd5b50600436106100be5760003560e01c80638d928af811610076578063b26b238e1161005b578063b26b238e14610161578063b87b561614610169578063c003969914610171576100be565b80638d928af814610130578063a228bced14610161576100be565b806340c10f19116100a757806340c10f19146100e55780634dbac733146101205780637efad8e014610128576100be565b806321609bbf146100c35780632c4e722e146100dd575b600080fd5b6100cb610179565b60408051918252519081900360200190f35b6100cb610185565b61011e600480360360408110156100fb57600080fd5b5073ffffffffffffffffffffffffffffffffffffffff81351690602001356101a9565b005b6100cb610240565b6100cb61024c565b610138610258565b6040805173ffffffffffffffffffffffffffffffffffffffff9092168252519081900360200190f35b6100cb610274565b6100cb610283565b61013861028b565b671080e992061ab30081565b7f000000000000000000000000000000000000000000000000000000000000000090565b600154604080517f40c10f1900000000000000000000000000000000000000000000000000000000815273ffffffffffffffffffffffffffffffffffffffff858116600483015260248201859052915191909216916340c10f1991604480830192600092919082900301818387803b15801561022457600080fd5b505af1158015610238573d6000803e3d6000fd5b505050505050565b670353c226d6c6f58081565b670de0b6b3a764000081565b60005473ffffffffffffffffffffffffffffffffffffffff1690565b600061027e6102a7565b905090565b6301e1338081565b60015473ffffffffffffffffffffffffffffffffffffffff1690565b60028054600101908190559056fea2646970667358221220f7cd3486b54306f60df95188077fe0b32e09e2e4b0108860f117100e29f6be4864736f6c63430007010033",
+  "deployedBytecode": "0x608060405234801561001057600080fd5b50600436106100be5760003560e01c80638d928af811610076578063b26b238e1161005b578063b26b238e14610161578063b87b561614610169578063c003969914610171576100be565b80638d928af814610130578063a228bced14610161576100be565b806340c10f19116100a757806340c10f19146100e55780634dbac733146101205780637efad8e014610128576100be565b806321609bbf146100c35780632c4e722e146100dd575b600080fd5b6100cb610179565b60408051918252519081900360200190f35b6100cb610185565b61011e600480360360408110156100fb57600080fd5b5073ffffffffffffffffffffffffffffffffffffffff81351690602001356101a9565b005b6100cb610240565b6100cb61024c565b610138610258565b6040805173ffffffffffffffffffffffffffffffffffffffff9092168252519081900360200190f35b6100cb610274565b6100cb610283565b61013861028b565b671080e992061ab30081565b7f000000000000000000000000000000000000000000000000000000000000000090565b600154604080517f40c10f1900000000000000000000000000000000000000000000000000000000815273ffffffffffffffffffffffffffffffffffffffff858116600483015260248201859052915191909216916340c10f1991604480830192600092919082900301818387803b15801561022457600080fd5b505af1158015610238573d6000803e3d6000fd5b505050505050565b670353c226d6c6f58081565b670de0b6b3a764000081565b60005473ffffffffffffffffffffffffffffffffffffffff1690565b600061027e6102a7565b905090565b6301e1338081565b60015473ffffffffffffffffffffffffffffffffffffffff1690565b60028054600101908190559056fea2646970667358221220f7cd3486b54306f60df95188077fe0b32e09e2e4b0108860f117100e29f6be4864736f6c63430007010033",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

@@ -1,0 +1,57 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "IArbitrumFeeProvider",
+  "sourceName": "@balancer-labs/v2-interfaces/contracts/liquidity-mining/IArbitrumFeeProvider.sol",
+  "abi": [
+    {
+      "inputs": [],
+      "name": "getArbitrumFees",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "gasLimit",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "gasPrice",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "maxSubmissionCost",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint64",
+          "name": "gasLimit",
+          "type": "uint64"
+        },
+        {
+          "internalType": "uint64",
+          "name": "gasPrice",
+          "type": "uint64"
+        },
+        {
+          "internalType": "uint64",
+          "name": "maxSubmissionCost",
+          "type": "uint64"
+        }
+      ],
+      "name": "setArbitrumFees",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

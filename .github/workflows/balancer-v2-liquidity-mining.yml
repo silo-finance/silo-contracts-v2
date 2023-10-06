@@ -1,0 +1,48 @@
+name: BalancerV2 - Liquidity mining pkg tests
+
+on:
+  push:
+    branches: [ master, develop ]
+    paths:
+      - external/balancer-v2-monorepo/**/*.sol
+      - external/balancer-v2-monorepo/**/*.vy
+      - external/balancer-v2-monorepo/**/*.ts
+      - external/balancer-v2-monorepo/**/*.js
+      - external/balancer-v2-monorepo/**/*.json
+      - package.json
+      - yarn.lock
+
+  pull_request:
+    paths:
+      - external/balancer-v2-monorepo/**/*.sol
+      - external/balancer-v2-monorepo/**/*.vy
+      - external/balancer-v2-monorepo/**/*.ts
+      - external/balancer-v2-monorepo/**/*.js
+      - external/balancer-v2-monorepo/**/*.json
+      - package.json
+      - yarn.lock
+
+jobs:
+  test:
+    strategy:
+      matrix:
+        node: [ 18.x ]
+        os: [ubuntu-latest]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v1
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node }}
+          cache: 'yarn'
+
+      - run: npm install -g yarn
+
+      - run: yarn install
+      - run: yarn workspace @balancer-labs/v2-vault compile
+      - run: yarn workspace @balancer-labs/v2-liquidity-mining compile
+      - run: yarn workspace @balancer-labs/v2-liquidity-mining test

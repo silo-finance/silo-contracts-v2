@@ -1,0 +1,37 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "MockAuthorizerAdaptorEntrypoint",
+  "sourceName": "contracts/test/MockAuthorizerAdaptorEntrypoint.sol",
+  "abi": [
+    {
+      "inputs": [],
+      "name": "getAuthorizerAdaptor",
+      "outputs": [
+        {
+          "internalType": "contract IAuthorizerAdaptor",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getVault",
+      "outputs": [
+        {
+          "internalType": "contract IVault",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x6080604052348015600f57600080fd5b5060a18061001e6000396000f3fe6080604052348015600f57600080fd5b506004361060325760003560e01c80638d928af8146037578063e758d36b146037575b600080fd5b603d6066565b6040805173ffffffffffffffffffffffffffffffffffffffff9092168252519081900360200190f35b60009056fea2646970667358221220e00735b5d75bd7443644414fac8416d2ebbf30ce8e2c69e9af16898a87f76e0464736f6c63430007010033",
+  "deployedBytecode": "0x6080604052348015600f57600080fd5b506004361060325760003560e01c80638d928af8146037578063e758d36b146037575b600080fd5b603d6066565b6040805173ffffffffffffffffffffffffffffffffffffffff9092168252519081900360200190f35b60009056fea2646970667358221220e00735b5d75bd7443644414fac8416d2ebbf30ce8e2c69e9af16898a87f76e0464736f6c63430007010033",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

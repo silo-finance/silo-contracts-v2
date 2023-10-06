@@ -1,0 +1,330 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "MockVotingEscrow",
+  "sourceName": "contracts/test/MockVotingEscrow.sol",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "contract ISmartWalletChecker",
+          "name": "smartWalletChecker",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "balanceOf",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "epoch",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "locked__end",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "point_history",
+      "outputs": [
+        {
+          "internalType": "int128",
+          "name": "bias",
+          "type": "int128"
+        },
+        {
+          "internalType": "int128",
+          "name": "slope",
+          "type": "int128"
+        },
+        {
+          "internalType": "uint256",
+          "name": "ts",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "blk",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "user",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "balance",
+          "type": "uint256"
+        }
+      ],
+      "name": "setBalanceOf",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_epoch",
+          "type": "uint256"
+        }
+      ],
+      "name": "setEpoch",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "user",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "end",
+          "type": "uint256"
+        }
+      ],
+      "name": "setLockedEnd",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_epoch",
+          "type": "uint256"
+        },
+        {
+          "components": [
+            {
+              "internalType": "int128",
+              "name": "bias",
+              "type": "int128"
+            },
+            {
+              "internalType": "int128",
+              "name": "slope",
+              "type": "int128"
+            },
+            {
+              "internalType": "uint256",
+              "name": "ts",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "blk",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct IVotingEscrow.Point",
+          "name": "point",
+          "type": "tuple"
+        }
+      ],
+      "name": "setPointHistory",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "user",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_epoch",
+          "type": "uint256"
+        }
+      ],
+      "name": "setUserPointEpoch",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "user",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_epoch",
+          "type": "uint256"
+        },
+        {
+          "components": [
+            {
+              "internalType": "int128",
+              "name": "bias",
+              "type": "int128"
+            },
+            {
+              "internalType": "int128",
+              "name": "slope",
+              "type": "int128"
+            },
+            {
+              "internalType": "uint256",
+              "name": "ts",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "blk",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct IVotingEscrow.Point",
+          "name": "point",
+          "type": "tuple"
+        }
+      ],
+      "name": "setUserPointHistory",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "smart_wallet_checker",
+      "outputs": [
+        {
+          "internalType": "contract ISmartWalletChecker",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "user_point_epoch",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "user_point_history",
+      "outputs": [
+        {
+          "internalType": "int128",
+          "name": "bias",
+          "type": "int128"
+        },
+        {
+          "internalType": "int128",
+          "name": "slope",
+          "type": "int128"
+        },
+        {
+          "internalType": "uint256",
+          "name": "ts",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "blk",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x608060405234801561001057600080fd5b5060405161072538038061072583398101604081905261002f91610054565b600680546001600160a01b0319166001600160a01b0392909216919091179055610082565b600060208284031215610065578081fd5b81516001600160a01b038116811461007b578182fd5b9392505050565b610694806100916000396000f3fe608060405234801561001057600080fd5b50600436106100df5760003560e01c80637175d4f71161008c578063af8de87111610066578063af8de871146101ae578063b46310f6146101c1578063b67672ab146101d4578063d1febfb9146101e7576100df565b80637175d4f71461017e578063900cf0cf14610193578063adc635891461019b576100df565b806336aeef2a116100bd57806336aeef2a146101455780633dc6f15b1461015857806370a082311461016b576100df565b8063010ae757146100e45780630ceb2cef1461010d57806328d09d4714610122575b600080fd5b6100f76100f2366004610544565b6101fa565b6040516101049190610655565b60405180910390f35b61012061011b3660046105cd565b61020c565b005b610135610130366004610566565b610211565b6040516101049493929190610632565b610120610153366004610566565b610257565b610120610166366004610566565b610280565b6100f7610179366004610544565b6102a9565b6101866102bb565b6040516101049190610611565b6100f76102d7565b6100f76101a9366004610544565b6102dd565b6101206101bc366004610590565b6102ef565b6101206101cf366004610566565b6103a1565b6101206101e23660046105e5565b6103ca565b6101356101f53660046105cd565b61045b565b60036020526000908152604090205481565b600055565b60026020818152600093845260408085209091529183529120805460018201549190920154600f83810b937001000000000000000000000000000000009004900b919084565b73ffffffffffffffffffffffffffffffffffffffff909116600090815260046020526040902055565b73ffffffffffffffffffffffffffffffffffffffff909116600090815260036020526040902055565b60056020526000908152604090205481565b60065473ffffffffffffffffffffffffffffffffffffffff1690565b60005481565b60046020526000908152604090205481565b73ffffffffffffffffffffffffffffffffffffffff9092166000908152600260208181526040808420948452938152918390208451815493860151600f90810b6fffffffffffffffffffffffffffffffff908116700100000000000000000000000000000000029290910b81167fffffffffffffffffffffffffffffffff0000000000000000000000000000000090951694909417909316929092178255918301516001820155606090920151910155565b73ffffffffffffffffffffffffffffffffffffffff909116600090815260056020526040902055565b6000918252600160208181526040938490208351815492850151600f90810b6fffffffffffffffffffffffffffffffff908116700100000000000000000000000000000000029290910b81167fffffffffffffffffffffffffffffffff0000000000000000000000000000000090941693909317909216919091178155928201519083015560600151600290910155565b6001602081905260009182526040909120805491810154600290910154600f83810b937001000000000000000000000000000000009004900b919084565b803573ffffffffffffffffffffffffffffffffffffffff811681146104bd57600080fd5b92915050565b8035600f81900b81146104bd57600080fd5b6000608082840312156104e6578081fd5b6040516080810181811067ffffffffffffffff82111715610505578283fd5b60405290508061051584846104c3565b815261052484602085016104c3565b602082015260408301356040820152606083013560608201525092915050565b600060208284031215610555578081fd5b61055f8383610499565b9392505050565b60008060408385031215610578578081fd5b6105828484610499565b946020939093013593505050565b600080600060c084860312156105a4578081fd5b6105ae8585610499565b9250602084013591506105c485604086016104d5565b90509250925092565b6000602082840312156105de578081fd5b5035919050565b60008060a083850312156105f7578182fd5b8235915061060884602085016104d5565b90509250929050565b73ffffffffffffffffffffffffffffffffffffffff91909116815260200190565b600f94850b81529290930b60208301526040820152606081019190915260800190565b9081526020019056fea2646970667358221220f3cbf8db68092eff52f28c08f8d4fdac36aa8e04af61c65aab42c94cc2fa827964736f6c63430007010033",
+  "deployedBytecode": "0x608060405234801561001057600080fd5b50600436106100df5760003560e01c80637175d4f71161008c578063af8de87111610066578063af8de871146101ae578063b46310f6146101c1578063b67672ab146101d4578063d1febfb9146101e7576100df565b80637175d4f71461017e578063900cf0cf14610193578063adc635891461019b576100df565b806336aeef2a116100bd57806336aeef2a146101455780633dc6f15b1461015857806370a082311461016b576100df565b8063010ae757146100e45780630ceb2cef1461010d57806328d09d4714610122575b600080fd5b6100f76100f2366004610544565b6101fa565b6040516101049190610655565b60405180910390f35b61012061011b3660046105cd565b61020c565b005b610135610130366004610566565b610211565b6040516101049493929190610632565b610120610153366004610566565b610257565b610120610166366004610566565b610280565b6100f7610179366004610544565b6102a9565b6101866102bb565b6040516101049190610611565b6100f76102d7565b6100f76101a9366004610544565b6102dd565b6101206101bc366004610590565b6102ef565b6101206101cf366004610566565b6103a1565b6101206101e23660046105e5565b6103ca565b6101356101f53660046105cd565b61045b565b60036020526000908152604090205481565b600055565b60026020818152600093845260408085209091529183529120805460018201549190920154600f83810b937001000000000000000000000000000000009004900b919084565b73ffffffffffffffffffffffffffffffffffffffff909116600090815260046020526040902055565b73ffffffffffffffffffffffffffffffffffffffff909116600090815260036020526040902055565b60056020526000908152604090205481565b60065473ffffffffffffffffffffffffffffffffffffffff1690565b60005481565b60046020526000908152604090205481565b73ffffffffffffffffffffffffffffffffffffffff9092166000908152600260208181526040808420948452938152918390208451815493860151600f90810b6fffffffffffffffffffffffffffffffff908116700100000000000000000000000000000000029290910b81167fffffffffffffffffffffffffffffffff0000000000000000000000000000000090951694909417909316929092178255918301516001820155606090920151910155565b73ffffffffffffffffffffffffffffffffffffffff909116600090815260056020526040902055565b6000918252600160208181526040938490208351815492850151600f90810b6fffffffffffffffffffffffffffffffff908116700100000000000000000000000000000000029290910b81167fffffffffffffffffffffffffffffffff0000000000000000000000000000000090941693909317909216919091178155928201519083015560600151600290910155565b6001602081905260009182526040909120805491810154600290910154600f83810b937001000000000000000000000000000000009004900b919084565b803573ffffffffffffffffffffffffffffffffffffffff811681146104bd57600080fd5b92915050565b8035600f81900b81146104bd57600080fd5b6000608082840312156104e6578081fd5b6040516080810181811067ffffffffffffffff82111715610505578283fd5b60405290508061051584846104c3565b815261052484602085016104c3565b602082015260408301356040820152606083013560608201525092915050565b600060208284031215610555578081fd5b61055f8383610499565b9392505050565b60008060408385031215610578578081fd5b6105828484610499565b946020939093013593505050565b600080600060c084860312156105a4578081fd5b6105ae8585610499565b9250602084013591506105c485604086016104d5565b90509250925092565b6000602082840312156105de578081fd5b5035919050565b60008060a083850312156105f7578182fd5b8235915061060884602085016104d5565b90509250929050565b73ffffffffffffffffffffffffffffffffffffffff91909116815260200190565b600f94850b81529290930b60208301526040820152606081019190915260800190565b9081526020019056fea2646970667358221220f3cbf8db68092eff52f28c08f8d4fdac36aa8e04af61c65aab42c94cc2fa827964736f6c63430007010033",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}
