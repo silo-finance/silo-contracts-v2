@@ -11,6 +11,8 @@ on:
       - external/balancer-v2-monorepo/**/*.json
       - package.json
       - yarn.lock
+      - gitmodules/*
+      - .gitmodules
 
   pull_request:
     paths:
@@ -21,6 +23,8 @@ on:
       - external/balancer-v2-monorepo/**/*.json
       - package.json
       - yarn.lock
+      - gitmodules/*
+      - .gitmodules
 
 jobs:
   test:

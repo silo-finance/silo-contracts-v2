@@ -16,6 +16,8 @@ on:
       - silo-vaults/**/*.json
       - package.json
       - yarn.lock
+      - gitmodules/*
+      - .gitmodules
 
   pull_request:
     paths:
@@ -25,6 +27,8 @@ on:
       - silo-vaults/**/*.json
       - package.json
       - yarn.lock
+      - gitmodules/*
+      - .gitmodules
 
 jobs:
 
@@ -74,4 +78,4 @@ jobs:
           forge build --sizes
 
       - name: Run Forge tests
-        run: forge test -vvv
+        run: forge test -vvv --ffi
