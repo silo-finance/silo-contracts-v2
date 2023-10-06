@@ -8,6 +8,11 @@
     "url": "git@github.com:silo-finance/silo-v2.git"
   },
   "workspaces": [
+    "silo-amm-core",
+    "silo-amm-periphery",
+    "silo-core",
+    "silo-oracles",
+    "silo-vaults",
     "ve-silo",
     "external/*"
   ],
