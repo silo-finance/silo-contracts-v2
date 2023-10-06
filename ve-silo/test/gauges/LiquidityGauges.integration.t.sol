@@ -70,7 +70,7 @@ contract LiquidityGaugesTest is IntegrationTest {
     function testEnsureFactoryDeployedWithCorrectData() public {
         assertEq(
             _factory.getGaugeImplementation(),
-            getDeployedAddress(VeSiloContracts.SILO_LIQUIDITY_GAUGE),
+            getAddress(VeSiloContracts.SILO_LIQUIDITY_GAUGE),
             "Invalid gauge implementation"
         );
     }
@@ -169,7 +169,7 @@ contract LiquidityGaugesTest is IntegrationTest {
         vm.mockCall(
             _minter,
             abi.encodeWithSelector(IBalancerMinterLike.getGaugeController.selector),
-            abi.encode(getDeployedAddress(VeSiloContracts.GAUGE_CONTROLLER))
+            abi.encode(getAddress(VeSiloContracts.GAUGE_CONTROLLER))
         );
 
         vm.mockCall(
@@ -185,19 +185,19 @@ contract LiquidityGaugesTest is IntegrationTest {
         );
 
         vm.mockCall(
-            getDeployedAddress(VeSiloContracts.VE_BOOST),
+            getAddress(VeSiloContracts.VE_BOOST),
             abi.encodeWithSelector(IVeBoost.adjusted_balance_of.selector, _bob),
             abi.encode(_BOB_BAL)
         );
 
         vm.mockCall(
-            getDeployedAddress(VeSiloContracts.VE_BOOST),
+            getAddress(VeSiloContracts.VE_BOOST),
             abi.encodeWithSelector(IVeBoost.adjusted_balance_of.selector, _alice),
             abi.encode(_ALICE_BAL)
         );
 
         vm.mockCall(
-            getDeployedAddress(VeSiloContracts.VOTING_ESCROW),
+            getAddress(VeSiloContracts.VOTING_ESCROW),
             abi.encodeWithSelector(IERC20.totalSupply.selector),
             abi.encode(_BOB_BAL + _ALICE_BAL)
         );

@@ -4,7 +4,7 @@ pragma solidity 0.8.21;
 import {IERC20} from "openzeppelin-contracts/token/ERC20/IERC20.sol";
 
 import {CommonDeploy, VeSiloContracts} from "./_CommonDeploy.sol";
-import {VeSiloAddrKey} from "ve-silo/common/VeSiloAddresses.sol";
+import {AddrKey} from "common/addresses/AddrKey.sol";
 
 import {IFeeSwap} from "ve-silo/contracts/fees-distribution/interfaces/IFeeSwap.sol";
 import {UniswapSwapper} from "ve-silo/contracts/fees-distribution/fee-swapper/swappers/UniswapSwapper.sol";
@@ -21,7 +21,7 @@ contract UniswapSwapperDeploy is CommonDeploy {
         vm.startBroadcast(deployerPrivateKey);
 
         uniswapSwapper = IFeeSwap(address(
-            new UniswapSwapper(getAddress(VeSiloAddrKey.UNISWAP_ROUTER))
+            new UniswapSwapper(getAddress(AddrKey.UNISWAP_ROUTER))
         ));
 
         vm.stopBroadcast();

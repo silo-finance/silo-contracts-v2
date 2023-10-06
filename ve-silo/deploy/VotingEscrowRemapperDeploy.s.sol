@@ -6,7 +6,7 @@ import {IVotingEscrow} from "balancer-labs/v2-interfaces/liquidity-mining/IVotin
 import {IVotingEscrowRemapper} from "balancer-labs/v2-interfaces/liquidity-mining/IVotingEscrowRemapper.sol";
 
 import {VotingEscrowRemapper} from "ve-silo/contracts/voting-escrow/VotingEscrowRemapper.sol";
-import {VeSiloAddrKey} from "ve-silo/common/VeSiloAddresses.sol";
+import {AddrKey} from "common/addresses/AddrKey.sol";
 
 import {CommonDeploy, VeSiloContracts} from "./_CommonDeploy.sol";
 import {IVotingEscrowCCIPRemapper} from "ve-silo/contracts/voting-escrow/interfaces/IVotingEscrowCCIPRemapper.sol";
@@ -19,7 +19,7 @@ contract VotingEscrowRemapperDeploy is CommonDeploy {
 
           
           IVotingEscrow votingEscrow = IVotingEscrow(getDeployedAddress(VeSiloContracts.VOTING_ESCROW));
-          IERC20 link = IERC20(getAddress(VeSiloAddrKey.LINK));
+          IERC20 link = IERC20(getAddress(AddrKey.LINK));
 
           remapper = IVotingEscrowCCIPRemapper(new VotingEscrowRemapper(votingEscrow, link));
           _registerDeployment(address(remapper), VeSiloContracts.VOTING_ESCROW_REMAPPER);

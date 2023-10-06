@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
+import {console2} from "forge-std/console2.sol";
 
 import {CommonDeploy} from "../_CommonDeploy.sol";
 
@@ -40,11 +41,14 @@ contract SiloConfigData is Test, CommonDeploy {
         string token1;
     }
 
-    function _readInput(string memory _input) internal view returns (string memory) {
+    function _readInput(string memory _input) internal view returns (string memory data) {
         string memory inputDir = string.concat(vm.projectRoot(), "/silo-core/deploy/input/");
         string memory chainDir = string.concat(vm.toString(block.chainid), "/");
         string memory file = string.concat(_input, ".json");
-        return vm.readFile(string.concat(inputDir, chainDir, file));
+
+        console2.log("reading from %s", string.concat(inputDir, chainDir, file));
+        data = vm.readFile(string.concat(inputDir, chainDir, file));
+        console2.log("reading successful, read bytes: %s", bytes(data).length);
     }
 
     function _readDataFromJson(string memory _name) internal view returns (ConfigData memory) {
@@ -53,7 +57,6 @@ contract SiloConfigData is Test, CommonDeploy {
 
     function getConfigData(string memory _name)
         public
-        view
         returns (ConfigData memory config, ISiloConfig.InitData memory initData)
     {
         config = _readDataFromJson(_name);

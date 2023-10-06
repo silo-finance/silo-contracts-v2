@@ -5,7 +5,7 @@ import {IntegrationTest} from "silo-foundry-utils/networks/IntegrationTest.sol";
 import {IERC20} from "openzeppelin-contracts/token/ERC20/IERC20.sol";
 
 import {VeSiloContracts} from "ve-silo/deploy/_CommonDeploy.sol";
-import {VeSiloAddrKey} from "ve-silo/common/VeSiloAddresses.sol";
+import {AddrKey} from "common/addresses/AddrKey.sol";
 import {VotingEscrowRemapperDeploy} from "ve-silo/deploy/VotingEscrowRemapperDeploy.s.sol";
 import {IVeSilo} from "ve-silo/contracts/voting-escrow/interfaces/IVeSilo.sol";
 import {VotingEscrowTest} from "./VotingEscrow.integration.t.sol";
@@ -85,7 +85,7 @@ contract VotingEscrowRemapperTest is IntegrationTest {
 
         votingEscrow = IVeSilo(getAddress(VeSiloContracts.VOTING_ESCROW));
 
-        _link = getAddress(VeSiloAddrKey.LINK);
+        _link = getAddress(AddrKey.LINK);
 
         VeSiloDelegatorViaCCIPDeploy delegatorDeploy = new VeSiloDelegatorViaCCIPDeploy();
         veSiloDelegator = delegatorDeploy.run();

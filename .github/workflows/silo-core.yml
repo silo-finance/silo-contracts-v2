@@ -62,12 +62,14 @@ jobs:
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
         with:
-          version: nightly
+          version: nightly-2fc85cb4a2d296b916a413f9f13caadebcf4cf47
 
       - name: Run Forge build
         run: |
+          git submodule
           forge --version
           # forge build --sizes
 
       - name: Run Forge tests
-        run: forge test -vvv --no-match-test "_skip_"
+        run: |
+          forge test -vvv --no-match-test "_skip_" --ffi

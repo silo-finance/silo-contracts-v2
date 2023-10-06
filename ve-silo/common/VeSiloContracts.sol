@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: MIT
-pragma solidity >=0.6.2 <0.9.0;
+pragma solidity >=0.7.6 <0.9.0;
+
+import {Deployments} from "silo-foundry-utils/lib/Deployments.sol";
 
 library VeSiloContracts {
     // smart contracts list
@@ -29,4 +31,12 @@ library VeSiloContracts {
     string public constant VOTING_ESCROW_CHILD_CHAIN = "VotingEscrowChildChain.sol";
     string public constant SMART_WALLET_CHECKER = "SmartWalletChecker.sol";
     string public constant BATCH_GAUGE_CHECKPOINTER = "BatchGaugeCheckpointer.sol";
+}
+
+library VeSiloDeployments {
+    string public constant DEPLOYMENTS_DIR = "ve-silo";
+
+    function get(string memory _contract, string memory _network) internal returns(address) {
+        return Deployments.getAddress(DEPLOYMENTS_DIR, _network, _contract);
+    }
 }

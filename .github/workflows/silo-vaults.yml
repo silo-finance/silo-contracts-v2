@@ -65,6 +65,7 @@ jobs:
 
       - name: Run Forge build
         run: |
+          git submodule
           forge --version
           forge build --sizes
 

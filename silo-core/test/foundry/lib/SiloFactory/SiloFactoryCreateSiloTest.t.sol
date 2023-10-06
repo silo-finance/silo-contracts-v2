@@ -47,7 +47,7 @@ contract SiloFactoryCreateSiloTest is SiloLittleHelper, IntegrationTest {
 
         __init(vm, token0, token1, silo0, silo1);
 
-        siloFactory = ISiloFactory(getDeployedAddress(SiloCoreContracts.SILO_FACTORY));
+        siloFactory = ISiloFactory(getAddress(SiloCoreContracts.SILO_FACTORY));
 
         assertTrue(siloConfig.getConfig(address(silo0)).borrowable, "we need borrow to be allowed");
     }
@@ -80,7 +80,7 @@ contract SiloFactoryCreateSiloTest is SiloLittleHelper, IntegrationTest {
         assertTrue(configData0.debtShareToken != address(0));
         assertEq(configData0.solvencyOracle, initData.solvencyOracle0);
         assertEq(configData0.maxLtvOracle, initData.maxLtvOracle0);
-        assertEq(configData0.interestRateModel, getDeployedAddress(SiloCoreContracts.INTEREST_RATE_MODEL_V2));
+        assertEq(configData0.interestRateModel, getAddress(SiloCoreContracts.INTEREST_RATE_MODEL_V2));
         assertEq(configData0.maxLtv, initData.maxLtv0);
         assertEq(configData0.lt, initData.lt0);
         assertEq(configData0.liquidationFee, initData.liquidationFee0);
@@ -98,7 +98,7 @@ contract SiloFactoryCreateSiloTest is SiloLittleHelper, IntegrationTest {
         assertTrue(configData1.debtShareToken != address(0));
         assertEq(configData1.solvencyOracle, initData.solvencyOracle1);
         assertEq(configData1.maxLtvOracle, initData.maxLtvOracle1);
-        assertEq(configData1.interestRateModel, getDeployedAddress(SiloCoreContracts.INTEREST_RATE_MODEL_V2));
+        assertEq(configData1.interestRateModel, getAddress(SiloCoreContracts.INTEREST_RATE_MODEL_V2));
         assertEq(configData1.maxLtv, initData.maxLtv1);
         assertEq(configData1.lt, initData.lt1);
         assertEq(configData1.liquidationFee, initData.liquidationFee1);

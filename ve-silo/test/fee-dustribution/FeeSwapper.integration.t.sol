@@ -4,7 +4,7 @@ pragma solidity 0.8.21;
 import {IERC20} from "openzeppelin-contracts/token/ERC20/IERC20.sol";
 import {IntegrationTest} from "silo-foundry-utils/networks/IntegrationTest.sol";
 
-import {VeSiloAddrKey} from "ve-silo/common/VeSiloAddresses.sol";
+import {AddrKey} from "common/addresses/AddrKey.sol";
 import {FeeDistributorDeploy} from "ve-silo/deploy/FeeDistributorDeploy.s.sol";
 import {VotingEscrowTest} from "ve-silo/test/voting-escrow/VotingEscrow.integration.t.sol";
 import {IFeeDistributor} from "ve-silo/contracts/fees-distribution/interfaces/IFeeDistributor.sol";
@@ -65,8 +65,8 @@ contract FeeSwapperTest is IntegrationTest {
 
         _feeSwap = UniswapSwapper(address(swapDeploy.run()));
 
-        _snxToken = IERC20(getAddress(VeSiloAddrKey.SNX));
-        _wethToken = IERC20(getAddress(VeSiloAddrKey.WETH));
+        _snxToken = IERC20(getAddress(AddrKey.SNX));
+        _wethToken = IERC20(getAddress(AddrKey.WETH));
         _silo80Weth20Token = IERC20(getAddress(SILO80_WETH20_TOKEN));
 
         _uniswapSwapperTest = new UniswapSwapperTest();
@@ -98,7 +98,7 @@ contract FeeSwapperTest is IntegrationTest {
 
     function testBalancerPoolJoin() public {
         uint256 amount = 1e18;
-        deal(getAddress(VeSiloAddrKey.WETH), address(_feeSwapper), amount);
+        deal(getAddress(AddrKey.WETH), address(_feeSwapper), amount);
 
         uint256 balance = _silo80Weth20Token.balanceOf(address(_feeSwapper));
         assertEq(balance, 0, "LP tokens balance should be 0");

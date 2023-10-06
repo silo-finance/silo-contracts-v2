@@ -5,7 +5,7 @@ import {IChildChainGauge} from "balancer-labs/v2-interfaces/liquidity-mining/ICh
 
 import {IChildChainGaugeFactory} from "ve-silo/contracts/gauges/interfaces/IChildChainGaugeFactory.sol";
 import {ChildChainGaugeFactory} from "ve-silo/contracts/gauges/l2-common/ChildChainGaugeFactory.sol";
-import {VeSiloAddrKey} from "ve-silo/common/VeSiloAddresses.sol";
+import {AddrKey} from "common/addresses/AddrKey.sol";
 import {CommonDeploy, VeSiloContracts} from "./_CommonDeploy.sol";
 
 /**
@@ -27,7 +27,7 @@ contract ChildChainGaugeFactoryDeploy is CommonDeploy {
             abi.encode(
                 getDeployedAddress(VeSiloContracts.VOTING_ESCROW_DELEGATION_PROXY),
                 getDeployedAddress(VeSiloContracts.L2_BALANCER_PSEUDO_MINTER),
-                getDeployedAddress(VeSiloAddrKey.L2_MULTISIG),
+                getAddress(AddrKey.L2_MULTISIG),
                 _VERSION
             )
         );

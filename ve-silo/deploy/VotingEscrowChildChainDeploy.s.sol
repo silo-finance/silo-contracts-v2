@@ -3,7 +3,7 @@ pragma solidity 0.8.21;
 
 import {CommonDeploy, VeSiloContracts} from "./_CommonDeploy.sol";
 
-import {VeSiloAddrKey} from "ve-silo/common/VeSiloAddresses.sol";
+import {AddrKey} from "common/addresses/AddrKey.sol";
 import {IVotingEscrowChildChain} from "ve-silo/contracts/voting-escrow/interfaces/IVotingEscrowChildChain.sol";
 import {VotingEscrowChildChain} from "ve-silo/contracts/voting-escrow/VotingEscrowChildChain.sol";
 
@@ -20,7 +20,7 @@ contract VotingEscrowChildChainDeploy is CommonDeploy {
 
         votingEscrow = IVotingEscrowChildChain(address(
             new VotingEscrowChildChain(
-                getAddress(VeSiloAddrKey.CHAINLINK_CCIP_ROUTER),
+                getAddress(AddrKey.CHAINLINK_CCIP_ROUTER),
                 _sourceChainSelector()
             )
         ));

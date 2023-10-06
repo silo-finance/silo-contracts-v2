@@ -19,6 +19,7 @@ contract GaugeControllerTest is IntegrationTest {
 
     address internal _gaugeAdder = makeAddr("GaugeAdder");
     address internal _gauge = makeAddr("Gauge");
+    address internal _timelock;
 
     event NewGaugeAdder(address addr);
     event NewGauge(address addr, int128 gaugeType, uint256 weight);
@@ -33,6 +34,8 @@ contract GaugeControllerTest is IntegrationTest {
 
         _governanceDeploymentScript.run();
         _controller = _controllerDeploymentScript.run();
+
+        _timelock = getAddress(VeSiloContracts.TIMELOCK_CONTROLLER);
     }
 
     function testEnsureDeployedWithCorrectData() public {
@@ -42,13 +45,13 @@ contract GaugeControllerTest is IntegrationTest {
 
         assertEq(
             _controller.voting_escrow(),
-            getDeployedAddress(VeSiloContracts.VOTING_ESCROW),
+            getAddress(VeSiloContracts.VOTING_ESCROW),
             "Invalid voting escrow token"
         );
 
         assertEq(
             _controller.admin(),
-            getDeployedAddress(VeSiloContracts.TIMELOCK_CONTROLLER),
+            _timelock,
             "TimelockController should be an admin"
         );
     }
@@ -60,20 +63,20 @@ contract GaugeControllerTest is IntegrationTest {
         vm.expectEmit(false, false, false, true);
         emit NewGaugeAdder(_gaugeAdder);
 
-        vm.prank(getDeployedAddress(VeSiloContracts.TIMELOCK_CONTROLLER));
+        vm.prank(_timelock);
         _controller.set_gauge_adder(_gaugeAdder);
     }
 
     function testOnlyGaugeAdderCanAddGauge() public {
-        vm.prank(getDeployedAddress(VeSiloContracts.TIMELOCK_CONTROLLER));
+        vm.prank(_timelock);
         _controller.add_type(_ETHEREUM, _GAUGE_WEIGHT);
 
         // should fail for an owner
-        vm.prank(getDeployedAddress(VeSiloContracts.TIMELOCK_CONTROLLER));
+        vm.prank(_timelock);
         vm.expectRevert();
         _controller.add_gauge(_gauge, _GAUGE_TYPE);
 
-        vm.prank(getDeployedAddress(VeSiloContracts.TIMELOCK_CONTROLLER));
+        vm.prank(_timelock);
         _controller.set_gauge_adder(_gaugeAdder);
 
         vm.expectEmit(false, true, true, true);

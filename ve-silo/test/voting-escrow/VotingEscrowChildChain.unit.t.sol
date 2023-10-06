@@ -6,7 +6,7 @@ import {IERC20} from "openzeppelin-contracts/token/ERC20/IERC20.sol";
 import {Client} from "chainlink-ccip/v0.8/ccip/interfaces/IAny2EVMMessageReceiver.sol";
 
 import {IVeSilo} from "ve-silo/contracts/voting-escrow/interfaces/IVeSilo.sol";
-import {VeSiloAddrKey} from "ve-silo/common/VeSiloAddresses.sol";
+import {AddrKey} from "common/addresses/AddrKey.sol";
 import {VeSiloContracts} from "ve-silo/deploy/_CommonDeploy.sol";
 import {ICCIPMessageSender} from "ve-silo/contracts/utils/CCIPMessageSender.sol";
 import {VotingEscrowChildChainDeploy} from "ve-silo/deploy/VotingEscrowChildChainDeploy.s.sol";
@@ -49,7 +49,7 @@ contract VotingEscrowChildChainTest is IntegrationTest {
         VotingEscrowChildChainDeploy deploy = new VotingEscrowChildChainDeploy();
         deploy.disableDeploymentsSync();
 
-        setAddress(VeSiloAddrKey.CHAINLINK_CCIP_ROUTER, _router);
+        setAddress(AddrKey.CHAINLINK_CCIP_ROUTER, _router);
 
         _votingEscrowChild = deploy.run();
 

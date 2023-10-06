@@ -9,7 +9,7 @@ import {ISiloChildChainGauge} from "ve-silo/contracts/gauges/interfaces/ISiloChi
 import {IChildChainGaugeFactory} from "ve-silo/contracts/gauges/interfaces/IChildChainGaugeFactory.sol";
 import {VeSiloContracts} from "ve-silo/deploy/_CommonDeploy.sol";
 import {ChildChainGaugeFactoryDeploy} from "ve-silo/deploy/ChildChainGaugeFactoryDeploy.s.sol";
-import {VeSiloAddrKey} from "ve-silo/common/VeSiloAddresses.sol";
+import {AddrKey} from "common/addresses/AddrKey.sol";
 import {IHookReceiverMock as IHookReceiver} from "../_mocks/IHookReceiverMock.sol";
 import {IShareTokenLike as IShareToken} from "ve-silo/contracts/gauges/interfaces/IShareTokenLike.sol";
 import {ISiloMock as ISilo} from "ve-silo/test/_mocks/ISiloMock.sol";
@@ -47,7 +47,7 @@ contract ChildChainGaugesTest is IntegrationTest {
     function setUp() public {
         setAddress(VeSiloContracts.VOTING_ESCROW_DELEGATION_PROXY, _votingEscrowDelegationProxy);
         setAddress(VeSiloContracts.L2_BALANCER_PSEUDO_MINTER, _l2BalancerPseudoMinter);
-        setAddress(VeSiloAddrKey.L2_MULTISIG, _l2Multisig);
+        setAddress(AddrKey.L2_MULTISIG, _l2Multisig);
 
         _mockCalls();
 
@@ -61,7 +61,7 @@ contract ChildChainGaugesTest is IntegrationTest {
     function testEnsureFactoryDeployedWithCorrectData() public {
         assertEq(
             _factory.getGaugeImplementation(),
-            getDeployedAddress(VeSiloContracts.CHILD_CHAIN_GAUGE),
+            getAddress(VeSiloContracts.CHILD_CHAIN_GAUGE),
             "Invalid gauge implementation"
         );
     }
@@ -78,7 +78,7 @@ contract ChildChainGaugesTest is IntegrationTest {
 
         assertEq(
             gauge.authorizer_adaptor(),
-            getDeployedAddress(VeSiloAddrKey.L2_MULTISIG),
+            getAddress(AddrKey.L2_MULTISIG),
             "Deployed with wrong timelockController"
         );
     }

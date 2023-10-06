@@ -6,7 +6,7 @@ import {CommonDeploy, VeSiloContracts} from "./_CommonDeploy.sol";
 import {IStakelessGaugeCheckpointerAdaptor}
     from "ve-silo/contracts/gauges/interfaces/IStakelessGaugeCheckpointerAdaptor.sol";
 
-import {VeSiloAddrKey} from "ve-silo/common/VeSiloAddresses.sol";
+import {AddrKey} from "common/addresses/AddrKey.sol";
 import {IVeSilo} from "ve-silo/contracts/voting-escrow/interfaces/IVeSilo.sol";
 import {IVeSiloDelegatorViaCCIP} from "ve-silo/contracts/voting-escrow/interfaces/IVeSiloDelegatorViaCCIP.sol";
 import {IVotingEscrowCCIPRemapper} from "ve-silo/contracts/voting-escrow/interfaces/IVotingEscrowCCIPRemapper.sol";
@@ -30,8 +30,8 @@ contract VeSiloDelegatorViaCCIPDeploy is CommonDeploy {
             new VeSiloDelegatorViaCCIP(
                 IVeSilo(veSilo),
                 IVotingEscrowCCIPRemapper(remapper),
-                getAddress(VeSiloAddrKey.CHAINLINK_CCIP_ROUTER),
-                getAddress(VeSiloAddrKey.LINK)
+                getAddress(AddrKey.CHAINLINK_CCIP_ROUTER),
+                getAddress(AddrKey.LINK)
             )
         ));
 
