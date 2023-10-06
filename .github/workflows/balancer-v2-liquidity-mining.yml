@@ -9,6 +9,8 @@ on:
       - external/balancer-v2-monorepo/**/*.ts
       - external/balancer-v2-monorepo/**/*.js
       - external/balancer-v2-monorepo/**/*.json
+      - package.json
+      - yarn.lock
 
   pull_request:
     paths:
@@ -17,6 +19,8 @@ on:
       - external/balancer-v2-monorepo/**/*.ts
       - external/balancer-v2-monorepo/**/*.js
       - external/balancer-v2-monorepo/**/*.json
+      - package.json
+      - yarn.lock
 
 jobs:
   test:
