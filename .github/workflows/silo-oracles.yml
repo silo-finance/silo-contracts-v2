@@ -17,6 +17,8 @@ on:
       - silo-oracles/**/*.js
       - silo-oracles/**/*.json
       - silo-core/contracts/interfaces/ISiloOracle.sol
+      - package.json
+      - yarn.lock
 
   pull_request:
     paths:
@@ -25,6 +27,8 @@ on:
       - silo-oracles/**/*.js
       - silo-oracles/**/*.json
       - silo-core/contracts/interfaces/ISiloOracle.sol
+      - package.json
+      - yarn.lock
 
 jobs:
 

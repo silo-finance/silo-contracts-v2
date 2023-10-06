@@ -14,6 +14,8 @@ on:
       - silo-vaults/**/*.ts
       - silo-vaults/**/*.js
       - silo-vaults/**/*.json
+      - package.json
+      - yarn.lock
 
   pull_request:
     paths:
@@ -21,6 +23,8 @@ on:
       - silo-vaults/**/*.ts
       - silo-vaults/**/*.js
       - silo-vaults/**/*.json
+      - package.json
+      - yarn.lock
 
 jobs:
 

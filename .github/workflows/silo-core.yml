@@ -18,6 +18,8 @@ on:
       - silo-core/**/*.ts
       - silo-core/**/*.js
       - silo-core/**/*.json
+      - package.json
+      - yarn.lock
 
   pull_request:
     paths:
@@ -25,6 +27,8 @@ on:
       - silo-core/**/*.ts
       - silo-core/**/*.js
       - silo-core/**/*.json
+      - package.json
+      - yarn.lock
 
 jobs:
 
