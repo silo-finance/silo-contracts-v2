@@ -23,7 +23,7 @@ import {ICCIPGauge} from "ve-silo/contracts/gauges/interfaces/ICCIPGauge.sol";
 import {ICCIPGaugeCheckpointer} from "ve-silo/contracts/gauges/interfaces/ICCIPGaugeCheckpointer.sol";
 import {CCIPGaugeFactorySepoliaMumbai} from "ve-silo/test/_mocks/CCIPGaugeFactorySepoliaMumbai.sol";
 import {CCIPGaugeSepoliaMumbai} from "ve-silo/test/_mocks/CCIPGaugeSepoliaMumbai.sol";
-import {VeSiloAddresses, VeSiloContracts} from "ve-silo/deploy/_CommonDeploy.sol";
+import {VeSiloContracts} from "ve-silo/deploy/_CommonDeploy.sol";
 import {CheckpointerAdaptorMock} from "../_mocks/CheckpointerAdaptorMock.sol";
 
 // FOUNDRY_PROFILE=ve-silo forge test --mc CCIPGaugeCheckpointer --ffi -vvv
@@ -36,8 +36,8 @@ contract CCIPGaugeCheckpointer is IntegrationTest {
     uint256 internal constant _RELATIVE_WEIGHT_CAP = 1e18;
     address internal constant _LINK = 0x779877A7B0D9E8603169DdbD7836e478b4624789;
     address internal constant _CCIP_BNM = 0xFd57b4ddBf88a4e07fF4e34C487b99af2Fe82a05;
-    bytes32 internal constant _MESSAGE_ID_LINK = 0x5b07634290aeb7c9fa5e4c1b8f8c6a3276bf9b3d548cd9ac35bc1c90585d704a;
-    bytes32 internal constant _MESSAGE_ID_ETH = 0x487ecde8247c0b2fb3ca0eb78cd25f0134537c96c10af8531ae535e675685b2b;
+    bytes32 internal constant _MESSAGE_ID_LINK = 0x28b29e514f38f6b86ae82355a71af1aa40a440a934358022d5188dd872b1b8d1;
+    bytes32 internal constant _MESSAGE_ID_ETH = 0x27cc7c1c21a68ac9076080dc0f3e30cb7cc753f40de4ded0801ffa2d203189e5;
 
     address internal _minter = makeAddr("Minter");
     address internal _tokenAdmin = makeAddr("Token Admin");

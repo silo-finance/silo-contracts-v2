@@ -1,7 +1,7 @@
 {
     "deployer": "0x",
     "deployerFeeInBp": 1000,
-    "token0": "LOCAL",
+    "token0": "PLACEHOLDER",
     "solvencyOracle0": "UniswapV3_ETH_USDC_0.3",
     "maxLtvOracle0": "",
     "interestRateModel0": "0x",
@@ -14,7 +14,7 @@
     "protectedHookReceiver0": "0x",
     "collateralHookReceiver0": "0x",
     "debtHookReceiver0": "0x",
-    "token1": "LOCAL",
+    "token1": "PLACEHOLDER",
     "solvencyOracle1": "",
     "maxLtvOracle1": "",
     "interestRateModel1": "0x",

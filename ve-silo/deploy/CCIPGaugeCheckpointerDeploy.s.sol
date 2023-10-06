@@ -6,7 +6,7 @@ import {CommonDeploy, VeSiloContracts} from "./_CommonDeploy.sol";
 import {IStakelessGaugeCheckpointerAdaptor}
     from "ve-silo/contracts/gauges/interfaces/IStakelessGaugeCheckpointerAdaptor.sol";
 
-import {VeSiloAddrKey} from "ve-silo/common/VeSiloAddresses.sol";
+import {AddrKey} from "common/addresses/AddrKey.sol";
 import {IGaugeAdder} from "ve-silo/contracts/gauges/interfaces/IGaugeAdder.sol";
 import {ICCIPGaugeCheckpointer} from "ve-silo/contracts/gauges/interfaces/ICCIPGaugeCheckpointer.sol";
 import {CCIPGaugeCheckpointer} from "ve-silo/contracts/gauges/stakeless-gauge/CCIPGaugeCheckpointer.sol";
@@ -29,7 +29,7 @@ contract CCIPGaugeCheckpointerDeploy is CommonDeploy {
             new CCIPGaugeCheckpointer(
                 IGaugeAdder(gaugeAdder),
                 IStakelessGaugeCheckpointerAdaptor(checkpointerAdaptor),
-                getAddress(VeSiloAddrKey.LINK)
+                getAddress(AddrKey.LINK)
             )
         ));
         

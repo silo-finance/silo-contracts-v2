@@ -34,7 +34,7 @@ contract VotingEscrowDelegationProxyTest is IntegrationTest {
 
         assertEq(
             votingEscrow,
-            getDeployedAddress(VeSiloContracts.NULL_VOTING_ESCROW),
+            getAddress(VeSiloContracts.NULL_VOTING_ESCROW),
             "Deployed with wrong `delegator` address"
         );
     }

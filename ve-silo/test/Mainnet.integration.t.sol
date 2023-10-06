@@ -83,14 +83,14 @@ contract MainnetTest is IntegrationTest {
         deploy.disableDeploymentsSync();
         deploy.run();
 
-        _veSilo = IVeSilo(getDeployedAddress(VeSiloContracts.VOTING_ESCROW));
-        _timelock = ISiloTimelockController(getDeployedAddress(VeSiloContracts.TIMELOCK_CONTROLLER));
-        _factory = ILiquidityGaugeFactory(getDeployedAddress(VeSiloContracts.LIQUIDITY_GAUGE_FACTORY));
-        _balancerTokenAdmin = IBalancerTokenAdmin(getDeployedAddress(VeSiloContracts.BALANCER_TOKEN_ADMIN));
-        _gaugeController = IGaugeController(getDeployedAddress(VeSiloContracts.GAUGE_CONTROLLER));
-        _siloGovernor = ISiloGovernor(getDeployedAddress(VeSiloContracts.SILO_GOVERNOR));
-        _minter = IBalancerMinter(getDeployedAddress(VeSiloContracts.MAINNET_BALANCER_MINTER));
-        _gaugeAdder = IGaugeAdder(getDeployedAddress(VeSiloContracts.GAUGE_ADDER));
+        _veSilo = IVeSilo(getAddress(VeSiloContracts.VOTING_ESCROW));
+        _timelock = ISiloTimelockController(getAddress(VeSiloContracts.TIMELOCK_CONTROLLER));
+        _factory = ILiquidityGaugeFactory(getAddress(VeSiloContracts.LIQUIDITY_GAUGE_FACTORY));
+        _balancerTokenAdmin = IBalancerTokenAdmin(getAddress(VeSiloContracts.BALANCER_TOKEN_ADMIN));
+        _gaugeController = IGaugeController(getAddress(VeSiloContracts.GAUGE_CONTROLLER));
+        _siloGovernor = ISiloGovernor(getAddress(VeSiloContracts.SILO_GOVERNOR));
+        _minter = IBalancerMinter(getAddress(VeSiloContracts.MAINNET_BALANCER_MINTER));
+        _gaugeAdder = IGaugeAdder(getAddress(VeSiloContracts.GAUGE_ADDER));
 
         vm.mockCall(
             _hookReceiver,

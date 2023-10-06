@@ -2,7 +2,7 @@
 pragma solidity 0.8.21;
 
 import {OwnableUpgradeable} from "openzeppelin-contracts-upgradeable/access/OwnableUpgradeable.sol";
-import {VeSiloContracts} from "ve-silo/common/VeSiloContracts.sol";
+import {VeSiloContracts, VeSiloDeployments} from "ve-silo/common/VeSiloContracts.sol";
 import {CommonDeploy, SiloCoreContracts} from "./_CommonDeploy.sol";
 
 import {ISiloFactory} from "silo-core/contracts/interfaces/ISiloFactory.sol";
@@ -10,6 +10,8 @@ import {SiloFactory} from "silo-core/contracts/SiloFactory.sol";
 import {Silo} from "silo-core/contracts/Silo.sol";
 import {ShareCollateralToken} from "silo-core/contracts/utils/ShareCollateralToken.sol";
 import {ShareDebtToken} from "silo-core/contracts/utils/ShareDebtToken.sol";
+
+import {console2} from "forge-std/console2.sol";
 
 /**
     FOUNDRY_PROFILE=core \
@@ -29,15 +31,12 @@ contract SiloFactoryDeploy is CommonDeploy {
         address shareDebtTokenImpl = address(new ShareDebtToken());
 
         uint256 daoFeeInBp = 0.15e4;
-        address daoFeeReceiver = address(msg.sender);
-        // TODO: uncomment when reading from file system is completed
-        // address daoFeeReceiver = getDeployedAddress(VeSiloContracts.FEE_DISTRIBUTOR);
+        address daoFeeReceiver = VeSiloDeployments.get(VeSiloContracts.FEE_DISTRIBUTOR, getChainAlias());
 
         siloFactory.initialize(siloImpl, shareCollateralTokenImpl, shareDebtTokenImpl, daoFeeInBp, daoFeeReceiver);
 
-        // TODO: uncomment when reading from file system is completed
-        // address timelock = getDeployedAddress(VeSiloContracts.TIMELOCK_CONTROLLER);
-        OwnableUpgradeable(address(siloFactory)).transferOwnership(msg.sender);
+        address timelock = VeSiloDeployments.get(VeSiloContracts.TIMELOCK_CONTROLLER, getChainAlias());
+        OwnableUpgradeable(address(siloFactory)).transferOwnership(timelock);
 
         vm.stopBroadcast();
 

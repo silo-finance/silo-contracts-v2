@@ -13,6 +13,6 @@ library SiloOraclesFactoriesDeployments {
     string public constant DEPLOYMENTS_DIR = "silo-oracles";
 
     function get(string memory _contract, string memory _network) internal returns(address) {
-        return Deployments.getAddress(DEPLOYMENTS_DIR, _contract, _network);
+        return Deployments.getAddress(DEPLOYMENTS_DIR, _network, _contract);
     }
 }

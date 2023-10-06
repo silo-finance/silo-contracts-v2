@@ -2,6 +2,9 @@
 pragma solidity ^0.8.0;
 
 import {IntegrationTest} from "silo-foundry-utils/networks/IntegrationTest.sol";
+import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
+
+import {VeSiloContracts} from "ve-silo/common/VeSiloContracts.sol";
 
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
@@ -26,6 +29,10 @@ contract WithdrawWhenNoDepositTest is IntegrationTest {
 
     function setUp() public {
         vm.createSelectFork(getChainRpcUrl(MAINNET_ALIAS), _FORKING_BLOCK_NUMBER);
+
+        // Mock addresses that we need for the `SiloFactoryDeploy` script
+        AddrLib.setAddress(VeSiloContracts.TIMELOCK_CONTROLLER, makeAddr("Timelock"));
+        AddrLib.setAddress(VeSiloContracts.FEE_DISTRIBUTOR, makeAddr("FeeDistributor"));
 
         SiloFixture siloFixture = new SiloFixture();
         address t0;

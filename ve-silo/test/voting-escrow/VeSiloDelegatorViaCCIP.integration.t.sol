@@ -4,7 +4,7 @@ pragma solidity 0.8.21;
 import {IntegrationTest} from "silo-foundry-utils/networks/IntegrationTest.sol";
 import {IERC20} from "openzeppelin-contracts/token/ERC20/IERC20.sol";
 
-import {VeSiloAddrKey} from "ve-silo/common/VeSiloAddresses.sol";
+import {AddrKey} from "common/addresses/AddrKey.sol";
 import {VeSiloDelegatorViaCCIPDeploy} from "ve-silo/deploy/VeSiloDelegatorViaCCIPDeploy.s.sol";
 import {VeSiloContracts} from "ve-silo/deploy/_CommonDeploy.sol";
 import {IVeSilo} from "ve-silo/contracts/voting-escrow/interfaces/IVeSilo.sol";
@@ -75,7 +75,7 @@ contract VeSiloDelegatorViaCCIP is IntegrationTest {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
         _deployer = vm.addr(deployerPrivateKey);
 
-        _link = getAddress(VeSiloAddrKey.LINK);
+        _link = getAddress(AddrKey.LINK);
     }
 
     function testChildChainReceiveUpdatePermissions() public {

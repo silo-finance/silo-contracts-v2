@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.21;
 
+import {console2} from "forge-std/console2.sol";
+
 import {CommonDeploy, SiloCoreContracts} from "../_CommonDeploy.sol";
 
 import {ISiloFactory} from "silo-core/contracts/interfaces/ISiloFactory.sol";
@@ -12,8 +14,12 @@ import {SiloConfigData, ISiloConfig} from "../input-readers/SiloConfigData.sol";
 
 abstract contract SiloCommonDeploy is CommonDeploy {
     function run() public returns (ISiloConfig siloConfig) {
+        console2.log("[SiloCommonDeploy] run()");
+
         SiloConfigData siloData = new SiloConfigData();
+        console2.log("[SiloCommonDeploy] SiloConfigData deployed");
         InterestRateModelConfigData modelData = new InterestRateModelConfigData();
+        console2.log("[SiloCommonDeploy] InterestRateModelConfigData deployed");
 
         (SiloConfigData.ConfigData memory config, ISiloConfig.InitData memory siloInitData) =
             siloData.getConfigData(siloToDeploy());
@@ -22,12 +28,15 @@ abstract contract SiloCommonDeploy is CommonDeploy {
             getDeployedAddress(SiloCoreContracts.INTEREST_RATE_MODEL_V2_CONFIG_FACTORY)
         );
 
+        console2.log("[SiloCommonDeploy] using configFactory %s", address(configFactory));
+
         (, IInterestRateModelV2Config interestRateModelConfig0) =
             configFactory.create(modelData.getConfigData(config.interestRateModelConfig0));
         (, IInterestRateModelV2Config interestRateModelConfig1) =
             configFactory.create(modelData.getConfigData(config.interestRateModelConfig1));
 
         address interestRateModel = getDeployedAddress(SiloCoreContracts.INTEREST_RATE_MODEL_V2);
+        console2.log("[SiloCommonDeploy] using interestRateModel %s", address(interestRateModel));
 
         // TODO: pull and set all the data below
         // siloInitData.solvencyOracle0
@@ -48,6 +57,7 @@ abstract contract SiloCommonDeploy is CommonDeploy {
         siloInitData.interestRateModelConfig1 = address(interestRateModelConfig1);
 
         ISiloFactory siloFactory = ISiloFactory(getDeployedAddress(SiloCoreContracts.SILO_FACTORY));
+        console2.log("[SiloCommonDeploy] using siloFactory %s", address(siloFactory));
 
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
 
@@ -59,7 +69,7 @@ abstract contract SiloCommonDeploy is CommonDeploy {
         vm.stopBroadcast();
 
         _registerDeployment(address(siloConfig), siloToDeploy());
-        _syncDeployments();
+        console2.log("[SiloCommonDeploy] run() finished.");
     }
 
     function siloToDeploy() public pure virtual returns (string memory);

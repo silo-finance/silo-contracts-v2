@@ -3,6 +3,10 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
 
+import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
+
+import {VeSiloContracts} from "ve-silo/common/VeSiloContracts.sol";
+
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISiloFactory, SiloFactory} from "silo-core/contracts/SiloFactory.sol";
 import {SiloFactoryDeploy} from "silo-core/deploy/SiloFactoryDeploy.s.sol";
@@ -15,7 +19,14 @@ contract SiloFactoryValidateSiloInitDataTest is Test {
 
     ISiloFactory public siloFactory;
 
+    address internal _timelock = makeAddr("Timelock");
+    address internal _feeDistributor = makeAddr("FeeDistributor");
+
     function setUp() public {
+        // Mock addresses that we need for the `SiloFactoryDeploy` script
+        AddrLib.setAddress(VeSiloContracts.TIMELOCK_CONTROLLER, _timelock);
+        AddrLib.setAddress(VeSiloContracts.FEE_DISTRIBUTOR, _feeDistributor);
+
         SiloFactoryDeploy siloFactoryDeploy = new SiloFactoryDeploy();
         siloFactoryDeploy.disableDeploymentsSync();
         siloFactory = siloFactoryDeploy.run();

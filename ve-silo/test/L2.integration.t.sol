@@ -8,7 +8,7 @@ import {Client} from "chainlink-ccip/v0.8/ccip/interfaces/IAny2EVMMessageReceive
 import {IFeesManager} from "ve-silo/contracts/silo-tokens-minter/interfaces/IFeesManager.sol";
 import {IVeSilo} from "ve-silo/contracts/voting-escrow/interfaces/IVeSilo.sol";
 import {VeSiloContracts} from "ve-silo/deploy/_CommonDeploy.sol";
-import {VeSiloAddrKey} from "ve-silo/common/VeSiloAddresses.sol";
+import {AddrKey} from "common/addresses/AddrKey.sol";
 import {L2Deploy} from "ve-silo/deploy/L2Deploy.s.sol";
 import {IShareTokenLike as IShareToken} from "ve-silo/contracts/gauges/interfaces/IShareTokenLike.sol";
 import {IChildChainGaugeFactory} from "ve-silo/contracts/gauges/interfaces/IChildChainGaugeFactory.sol";
@@ -53,7 +53,7 @@ contract L2Test is IntegrationTest {
     address internal _deployerFeeReceiver = makeAddr("Deployer fee receiver");
     address internal _bob = makeAddr("localUser");
     address internal _alice = makeAddr("_alice");
-    address internal _l2Multisig = makeAddr(VeSiloAddrKey.L2_MULTISIG);
+    address internal _l2Multisig = makeAddr(AddrKey.L2_MULTISIG);
     address internal _sender = makeAddr("Source chain sender");
 
     IChildChainGaugeFactory internal _factory;
@@ -78,13 +78,14 @@ contract L2Test is IntegrationTest {
         L2Deploy deploy = new L2Deploy();
         deploy.disableDeploymentsSync();
 
-        setAddress(VeSiloAddrKey.L2_MULTISIG, _l2Multisig);
+        setAddress(AddrKey.L2_MULTISIG, _l2Multisig);
+        // setAddress(AddrKey.CHAINLINK_CCIP_ROUTER, address(1));
 
         deploy.run();
 
-        _factory = IChildChainGaugeFactory(getDeployedAddress(VeSiloContracts.CHILD_CHAIN_GAUGE_FACTORY));
-        _l2PseudoMinter = IL2BalancerPseudoMinter(getDeployedAddress(VeSiloContracts.L2_BALANCER_PSEUDO_MINTER));
-        _votingEscrowChild = IVotingEscrowChildChain(getDeployedAddress(VeSiloContracts.VOTING_ESCROW_CHILD_CHAIN));
+        _factory = IChildChainGaugeFactory(getAddress(VeSiloContracts.CHILD_CHAIN_GAUGE_FACTORY));
+        _l2PseudoMinter = IL2BalancerPseudoMinter(getAddress(VeSiloContracts.L2_BALANCER_PSEUDO_MINTER));
+        _votingEscrowChild = IVotingEscrowChildChain(getAddress(VeSiloContracts.VOTING_ESCROW_CHILD_CHAIN));
 
         _votingEscrowChildTest = new VotingEscrowChildChainTest();
     }
@@ -157,7 +158,7 @@ contract L2Test is IntegrationTest {
         bytes memory data = _votingEscrowChildTest.balanceTransferData();
         Client.Any2EVMMessage memory ccipMessage = _votingEscrowChildTest.getCCIPMessage(data);
 
-        vm.prank(getAddress(VeSiloAddrKey.CHAINLINK_CCIP_ROUTER));
+        vm.prank(getAddress(AddrKey.CHAINLINK_CCIP_ROUTER));
         _votingEscrowChild.ccipReceive(ccipMessage);
 
         (,,uint256 ts,) = _votingEscrowChildTest.tsTestPoint();

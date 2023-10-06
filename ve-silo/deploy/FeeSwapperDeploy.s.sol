@@ -3,7 +3,7 @@ pragma solidity 0.8.21;
 
 import {IERC20} from "openzeppelin-contracts/token/ERC20/IERC20.sol";
 
-import {VeSiloAddrKey} from "ve-silo/common/VeSiloAddresses.sol";
+import {AddrKey} from "common/addresses/AddrKey.sol";
 import {CommonDeploy, VeSiloContracts} from "./_CommonDeploy.sol";
 
 import {IFeeDistributor} from "ve-silo/contracts/fees-distribution/interfaces/IFeeDistributor.sol";
@@ -26,10 +26,10 @@ contract FeeSwapperDeploy is CommonDeploy {
 
         feeSwapper = IFeeSwapper(address(
             new FeeSwapper(
-                IERC20(getAddress(VeSiloAddrKey.WETH)),
+                IERC20(getAddress(AddrKey.WETH)),
                 IERC20(getAddress(SILO80_WETH20_TOKEN)),
                 IERC20(getAddress(SILO_TOKEN)),
-                getAddress(VeSiloAddrKey.BALANCER_VAULT),
+                getAddress(AddrKey.BALANCER_VAULT),
                 _poolId(),
                 IFeeDistributor(getDeployedAddress(VeSiloContracts.FEE_DISTRIBUTOR)),
                 _configs
