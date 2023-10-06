@@ -1,9 +1,0 @@
-{
-    "UniV3-ETH-USDC-0.3": {
-        "pool": "USDC_ETH_UNI_POOL",
-        "quoteToken": "USDC",
-        "periodForAvgPrice": 1800,
-        "blockTime": 120,
-        "requiredCardinality": true
-    }
-}
