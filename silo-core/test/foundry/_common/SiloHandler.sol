@@ -8,6 +8,7 @@ import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 
 import {MintableToken} from "../_common/MintableToken.sol";
 
+// TODO make all ...possible methods in a way, that we can turn ON: forge-config: core.invariant.fail-on-revert = true
 contract SiloHandler is Test {
     ISilo public immutable SILO_0;
     ISilo public immutable SILO_1;
@@ -69,12 +70,18 @@ contract SiloHandler is Test {
         SILO_0.withdraw(_assets, msg.sender, msg.sender, _assetType);
     }
 
-
     function borrow(uint256 _assets) external {
         vm.assume(_borrowPossible(_assets));
 
         vm.prank(msg.sender);
         SILO_1.borrow(_assets, msg.sender, msg.sender);
+    }
+
+    function repay(uint256 _assets) external {
+        vm.assume(_repayPossible(_assets));
+
+        vm.prank(msg.sender);
+        SILO_1.repay(_assets, msg.sender);
     }
 
     function _depositPossible(uint256 _assets, uint8 _type) internal returns (bool) {
@@ -129,7 +136,6 @@ contract SiloHandler is Test {
         return true;
     }
 
-
     function _borrowPossible(uint256 _assets) internal view returns (bool) {
         if (token1.balanceOf(address(SILO_1)) == 0) {
             // nobody deposit
@@ -143,6 +149,21 @@ contract SiloHandler is Test {
         }
 
         _assets = bound(_assets, 1, SILO_1.maxBorrow(msg.sender));
+
+        return true;
+    }
+
+    function _repayPossible(uint256 _assets) internal view returns (bool) {
+        (,, address debtShareToken) = SILO_1.config().getShareTokens(address(SILO_1));
+
+        uint256 debtShares = IShareToken(debtShareToken).balanceOf(address(msg.sender));
+
+        if (debtShares == 0) {
+            // no debt
+            return false;
+        }
+
+        _assets = bound(_assets, 1, SILO_1.previewRepayShares(debtShares));
 
         return true;
     }

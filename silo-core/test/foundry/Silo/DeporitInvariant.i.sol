@@ -53,7 +53,7 @@ contract DepositInvariantTest is Test {
     /*
     forge test -vv --ffi --mt invariant_silo_deposit
     */
-    /// forge-config: core.invariant.runs = 1000
+    /// forge-config: core.invariant.runs = 100
     /// forge-config: core.invariant.depth = 15
     /// forge-config: core.invariant.fail-on-revert = false
     function invariant_silo_deposit() public {

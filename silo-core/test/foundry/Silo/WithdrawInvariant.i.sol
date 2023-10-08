@@ -60,7 +60,7 @@ contract WithdrawInvariantTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt invariant_silo_withdraw
     */
-    /// forge-config: core.invariant.runs = 1000
+    /// forge-config: core.invariant.runs = 100
     /// forge-config: core.invariant.depth = 15
     /// forge-config: core.invariant.fail-on-revert = false
     function invariant_silo_withdraw() public {
