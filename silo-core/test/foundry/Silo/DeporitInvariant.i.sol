@@ -34,7 +34,7 @@ contract DepositInvariantTest is Test {
             ISiloConfig siloConfig, ISilo silo0, ISilo silo1,,
         ) = siloFixture.deploy_local(SiloFixture.Override(address(token0), address(token1)));
 
-        SiloHandler siloHandler = new SiloHandler(silo0, token0);
+        SiloHandler siloHandler = new SiloHandler(silo0, silo1, token0, token1);
         bytes4[] memory selectors = new bytes4[](2);
         selectors[0] = SiloHandler.deposit.selector;
         selectors[1] = SiloHandler.depositType.selector;
