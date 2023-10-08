@@ -13,12 +13,13 @@ import {SiloFixture} from "../_common/fixtures/SiloFixture.sol";
 import {MintableToken} from "../_common/MintableToken.sol";
 import {SiloHandler} from "../_common/SiloHandler.sol";
 import {SiloInvariants} from "../_common/SiloInvariants.sol";
+import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
 
 
 /*
     forge test -vv --ffi --mc DepositInvariantTest
 */
-contract DepositInvariantTest is Test {
+contract WithdrawInvariantTest is SiloLittleHelper, Test {
     SiloInvariants invariants;
 
     address user1 = address(0xabc01);
@@ -36,8 +37,8 @@ contract DepositInvariantTest is Test {
 
         SiloHandler siloHandler = new SiloHandler(silo0, token0);
         bytes4[] memory selectors = new bytes4[](2);
-        selectors[0] = SiloHandler.deposit.selector;
-        selectors[1] = SiloHandler.depositType.selector;
+        selectors[0] = SiloHandler.withdraw.selector;
+        selectors[1] = SiloHandler.withdrawType.selector;
 
         targetContract(address(siloHandler));
 
@@ -48,15 +49,21 @@ contract DepositInvariantTest is Test {
         targetSender(user3);
 
         invariants = new SiloInvariants(siloConfig, silo0, silo1, token0, token1);
+
+        __init(vm, token0, token1, silo0, silo1);
+
+        _deposit(2 ** 100, user1);
+        _deposit(2 ** 50, user2);
+        _deposit(2 ** 5, user3);
     }
 
     /*
-    forge test -vv --ffi --mt invariant_silo_deposit
+    forge test -vv --ffi --mt invariant_silo_withdraw
     */
     /// forge-config: core.invariant.runs = 1000
     /// forge-config: core.invariant.depth = 15
     /// forge-config: core.invariant.fail-on-revert = false
-    function invariant_silo_deposit() public {
+    function invariant_silo_withdraw() public {
         invariants.siloInvariant_userIsSolvent(user1);
         invariants.siloInvariant_userIsSolvent(user2);
         invariants.siloInvariant_userIsSolvent(user3);

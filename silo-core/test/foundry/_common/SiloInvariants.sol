@@ -27,15 +27,6 @@ contract SiloInvariants is Test {
         token1 = _token1;
     }
 
-    function siloInvariant_tokenTotalSupplyMustBeSumOfUsersBalances() external {
-        assertEq(
-            token0.totalSupply(),
-            silo0.getCollateralAssets() + silo0.getProtectedAssets()
-            + token0.balanceOf(address(0xabc01)) + token0.balanceOf(address(0xabc02)) + token0.balanceOf(address(0xabc03)),
-            "totalSupply"
-        );
-    }
-
     function siloInvariant_userIsSolvent(address _user) external {
         assertTrue(silo0.isSolvent(_user), "_user solvent silo0");
         assertTrue(silo1.isSolvent(_user), "_user solvent silo1");

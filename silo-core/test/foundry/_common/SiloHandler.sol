@@ -33,11 +33,6 @@ contract SiloHandler is Test {
     function deposit(uint128 _assets) external {
         vm.assume(_depositPossible(_assets, uint8(ISilo.AssetType.Collateral)));
 
-//        if (!_depositPossible(_assets, uint8(ISilo.AssetType.Collateral))) {
-//            // do not execute invariant
-//            return;
-//        }
-
         vm.prank(msg.sender);
         token0.approve(address(SILO), _assets);
 
@@ -46,10 +41,7 @@ contract SiloHandler is Test {
     }
 
     function depositType(uint128 _assets, ISilo.AssetType _assetType) external {
-        if (!_depositPossible(_assets, uint8(_assetType))) {
-            // do not execute invariant
-            return;
-        }
+        vm.assume(_depositPossible(_assets, uint8(ISilo.AssetType.Collateral)));
 
         vm.prank(msg.sender);
         token0.approve(address(SILO), _assets);
@@ -59,14 +51,14 @@ contract SiloHandler is Test {
     }
 
     function withdraw(uint256 _assets) external {
-        if (!_withdrawPossible(_assets, uint8(ISilo.AssetType.Collateral))) return;
+        vm.assume(_withdrawPossible(_assets, uint8(ISilo.AssetType.Collateral)));
 
         vm.prank(msg.sender);
         SILO.withdraw(_assets, msg.sender, msg.sender);
     }
 
     function withdrawType(uint256 _assets, ISilo.AssetType _assetType) external {
-        if (!_withdrawPossible(_assets, uint8(_assetType))) return;
+        vm.assume(_withdrawPossible(_assets, uint8(ISilo.AssetType.Collateral)));
 
         vm.prank(msg.sender);
         SILO.withdraw(_assets, msg.sender, msg.sender);
@@ -105,6 +97,7 @@ contract SiloHandler is Test {
             return false;
         }
 
+        vm.assume(_assets > 0);
         _type = uint8(bound(_type, 1, 2));
 
         (address protectedShareToken, address collateralShareToken, ) = SILO.config().getShareTokens(address(SILO));
