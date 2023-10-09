@@ -7,6 +7,7 @@ import {StdCheats} from "forge-std/StdCheats.sol";
 import {CommonBase} from "forge-std/Base.sol";
 import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 
+import {OracleConfig} from "silo-oracles/deploy/OraclesDeployments.sol";
 import {VeSiloContracts} from "ve-silo/common/VeSiloContracts.sol";
 
 import {MainnetDeploy} from "silo-core/deploy/MainnetDeploy.s.sol";
@@ -57,6 +58,7 @@ contract SiloFixture is StdCheats, CommonBase {
         // Mock addresses that we need for the `SiloFactoryDeploy` script
         AddrLib.setAddress(VeSiloContracts.TIMELOCK_CONTROLLER, makeAddr("Timelock"));
         AddrLib.setAddress(VeSiloContracts.FEE_DISTRIBUTOR, makeAddr("FeeDistributor"));
+        AddrLib.setAddress(OracleConfig.UNI_V3_ETH_USDC_03, makeAddr("ETH/USDC UniswapV3 oracle"));
         console2.log("[SiloFixture] _deploy: setAddress done.");
 
         vm.setEnv("CONFIG", SiloConfigsNames.ETH_USDC_UNI_V3_SILO);

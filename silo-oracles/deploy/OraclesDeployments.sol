@@ -2,6 +2,7 @@
 pragma solidity >=0.7.6;
 
 import {KeyValueStorage} from "silo-foundry-utils/key-value/KeyValueStorage.sol";
+import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 
 library OracleConfig {
     string public constant DAI_DEMO_CONFIG = "DIA_Demo_config";
@@ -26,6 +27,12 @@ library OraclesDeployments {
     }
 
     function get(string memory _chain, string memory _name) internal returns (address) {
+        address shared = AddrLib.getAddress(_name);
+
+        if (shared != address(0)) {
+            return shared;
+        }
+
         return KeyValueStorage.getAddress(
             DEPLOYMENTS_FILE,
             _chain,

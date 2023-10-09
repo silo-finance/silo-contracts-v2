@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 import {IntegrationTest} from "silo-foundry-utils/networks/IntegrationTest.sol";
 import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 
+import {OracleConfig} from "silo-oracles/deploy/OraclesDeployments.sol";
 import {VeSiloContracts} from "ve-silo/common/VeSiloContracts.sol";
 
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
@@ -33,6 +34,7 @@ contract WithdrawWhenNoDepositTest is IntegrationTest {
         // Mock addresses that we need for the `SiloFactoryDeploy` script
         AddrLib.setAddress(VeSiloContracts.TIMELOCK_CONTROLLER, makeAddr("Timelock"));
         AddrLib.setAddress(VeSiloContracts.FEE_DISTRIBUTOR, makeAddr("FeeDistributor"));
+        AddrLib.setAddress(OracleConfig.UNI_V3_ETH_USDC_03, makeAddr("ETH/USDC UniswapV3 oracle"));
 
         SiloFixture siloFixture = new SiloFixture();
         address t0;
