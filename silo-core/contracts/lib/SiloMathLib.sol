@@ -214,14 +214,14 @@ library SiloMathLib {
         if (_maxAssets == 0) return (0, 0);
         if (_assetTypeShareTokenTotalSupply == 0) return (0, 0);
 
-        if (_assetType == ISilo.AssetType.Protected) {
-            assets = _maxAssets > _borrowerProtectedAssets ? _borrowerProtectedAssets : _maxAssets;
-        } else if (_assetType == ISilo.AssetType.Collateral) {
+        if (_assetType == ISilo.AssetType.Collateral) {
             assets = _maxAssets > _borrowerCollateralAssets ? _borrowerCollateralAssets : _maxAssets;
 
             if (assets > _liquidity) {
                 assets = _liquidity;
             }
+        } else if (_assetType == ISilo.AssetType.Protected) {
+            assets = _maxAssets > _borrowerProtectedAssets ? _borrowerProtectedAssets : _maxAssets;
         }
 
         shares = SiloMathLib.convertToShares(

@@ -70,14 +70,14 @@ library SiloERC4626Lib {
             ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig
         ) = _config.getConfigs(address(this));
 
-        uint256 shareTokenTotalSupply = _assetType == ISilo.AssetType.Protected
-            ? IShareToken(collateralConfig.protectedShareToken).totalSupply()
-            : IShareToken(collateralConfig.collateralShareToken).totalSupply();
+        uint256 shareTokenTotalSupply = _assetType == ISilo.AssetType.Collateral
+            ? IShareToken(collateralConfig.collateralShareToken).totalSupply()
+            : IShareToken(collateralConfig.protectedShareToken).totalSupply();
 
         if (!hasDebt(debtConfig.debtShareToken, _owner)) {
-            shares = _assetType == ISilo.AssetType.Protected
-                ? IShareToken(collateralConfig.protectedShareToken).balanceOf(_owner)
-                : IShareToken(collateralConfig.collateralShareToken).balanceOf(_owner);
+            shares = _assetType == ISilo.AssetType.Collateral
+                ? IShareToken(collateralConfig.collateralShareToken).balanceOf(_owner)
+                : IShareToken(collateralConfig.protectedShareToken).balanceOf(_owner);
 
             assets = SiloMathLib.convertToAssets(
                 shares,

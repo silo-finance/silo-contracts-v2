@@ -30,7 +30,7 @@ contract DepositTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --mt test_deposit_gas
+    forge test -vv --ffi --mt test_deposit_gas
     */
     function test_deposit_gas() public {
         uint256 assets = 1e18;
@@ -41,7 +41,7 @@ contract DepositTest is SiloLittleHelper, Test {
         _deposit(assets, depositor);
         uint256 gasEnd = gasleft();
 
-        assertEq(gasStart - gasEnd, 257898, "optimise deposit");
+        assertEq(gasStart - gasEnd, 257910, "optimise deposit");
 
         gasStart = gasleft();
         _withdraw(assets / 2, depositor);
