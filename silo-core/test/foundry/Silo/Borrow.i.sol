@@ -12,7 +12,7 @@ import {MintableToken} from "../_common/MintableToken.sol";
 import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
 
 /*
-    forge test -vv --mc BorrowTest
+    forge test -vv --mc BorrowTest --ffi
 */
 contract BorrowTest is SiloLittleHelper, Test {
     uint256 internal constant _BASIS_POINTS = 1e4;
