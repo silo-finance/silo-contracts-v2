@@ -64,6 +64,8 @@ library SiloERC4626Lib {
         uint256 _totalAssets,
         uint256 _liquidity
     ) external view returns (uint256 assets, uint256 shares) {
+        if (_assetType == ISilo.AssetType.Debt) revert ISilo.WrongAssetType();
+
         (
             ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig
         ) = _config.getConfigs(address(this));

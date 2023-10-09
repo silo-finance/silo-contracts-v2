@@ -346,6 +346,8 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
     }
 
     function previewDeposit(uint256 _assets, AssetType _assetType) external view virtual returns (uint256 shares) {
+        if (_assetType == AssetType.Debt) revert ISilo.WrongAssetType();
+
         ISiloConfig.ConfigData memory configData = config.getConfig(address(this));
 
         (uint256 totalSiloAssets, uint256 totalShares) =
@@ -391,6 +393,8 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
     }
 
     function previewMint(uint256 _shares, AssetType _assetType) external view virtual returns (uint256 assets) {
+        if (_assetType == AssetType.Debt) revert ISilo.WrongAssetType();
+
         ISiloConfig.ConfigData memory configData = config.getConfig(address(this));
 
         (uint256 totalSiloAssets, uint256 totalShares) =
@@ -432,6 +436,8 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
     }
 
     function previewWithdraw(uint256 _assets, AssetType _assetType) external view virtual returns (uint256 shares) {
+        if (_assetType == AssetType.Debt) revert ISilo.WrongAssetType();
+
         ISiloConfig.ConfigData memory configData = config.getConfig(address(this));
 
         (uint256 totalSiloAssets, uint256 totalShares) =
@@ -467,6 +473,8 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
     }
 
     function previewRedeem(uint256 _shares, AssetType _assetType) external view virtual returns (uint256 assets) {
+        if (_assetType == AssetType.Debt) revert ISilo.WrongAssetType();
+
         ISiloConfig.ConfigData memory configData = config.getConfig(address(this));
 
         (uint256 totalSiloAssets, uint256 totalShares) =
@@ -503,6 +511,8 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
         leverageNonReentrant
         returns (uint256 assets)
     {
+        if (_withdrawType == AssetType.Debt) revert ISilo.WrongAssetType();
+
         (, ISiloConfig.ConfigData memory configData) = _accrueInterest();
 
         (AssetType depositType, address shareTokenFrom, address shareTokenTo, uint256 liquidity) =
