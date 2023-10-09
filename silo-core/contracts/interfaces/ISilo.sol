@@ -119,6 +119,8 @@ interface ISilo is IERC4626, IERC3156FlashLender, ISiloLiquidation {
     error LeverageFailed();
     error AboveMaxLtv();
     error WrongAssetType();
+    error ZeroAssets();
+    error ZeroShares();
 
     function initialize(ISiloConfig _config, address _modelConfigAddress) external;
 
