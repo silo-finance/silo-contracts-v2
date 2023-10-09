@@ -28,6 +28,8 @@ import {LeverageReentrancyGuard} from "./utils/LeverageReentrancyGuard.sol";
 // Keep ERC4626 ordering
 // solhint-disable ordering
 
+// TODO make sure we revert on zero deposit, borrow etc
+
 contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, LeverageReentrancyGuard {
     using SafeERC20Upgradeable for IERC20Upgradeable;
 
@@ -193,6 +195,8 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
     }
 
     function deposit(uint256 _assets, address _receiver) external virtual nonReentrant returns (uint256 shares) {
+        if (_assets == 0) revert ISilo.ZeroAssets();
+
         (, ISiloConfig.ConfigData memory configData) = _accrueInterest();
 
         (, shares) = _deposit(
@@ -364,6 +368,8 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
         nonReentrant
         returns (uint256 shares)
     {
+        if (_assets == 0) revert ISilo.ZeroAssets();
+
         (, ISiloConfig.ConfigData memory configData) = _accrueInterest();
 
         address collateralShareToken = _assetType == AssetType.Collateral
@@ -411,6 +417,8 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
         nonReentrant
         returns (uint256 assets)
     {
+        if (_shares == 0) revert ISilo.ZeroShares();
+
         (, ISiloConfig.ConfigData memory configData) = _accrueInterest();
 
         address collateralShareToken = _assetType == AssetType.Collateral

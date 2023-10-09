@@ -27,45 +27,15 @@ abstract contract SiloLittleHelper {
     }
 
     function _depositForBorrow(uint256 _assets, address _depositor) internal {
-        uint256 balanceOf = token1.balanceOf(_depositor);
-
-        if (balanceOf < _assets) {
-            uint256 toMint = _assets - balanceOf;
-            token1.mint(_depositor, toMint);
-        }
-
-        _vm.prank(_depositor);
-        token1.approve(address(silo1), _assets);
-        _vm.prank(_depositor);
-        silo1.deposit(_assets, _depositor);
+        _makeDeposit(silo1, token1, _assets, _depositor, ISilo.AssetType.Collateral);
     }
 
     function _deposit(uint256 _assets, address _depositor, ISilo.AssetType _type) internal {
-        uint256 balanceOf = token0.balanceOf(_depositor);
-
-        if (balanceOf < _assets) {
-            uint256 toMint = _assets - balanceOf;
-            token0.mint(_depositor, toMint);
-        }
-
-        _vm.prank(_depositor);
-        token0.approve(address(silo0), _assets);
-        _vm.prank(_depositor);
-        silo0.deposit(_assets, _depositor, _type);
+        _makeDeposit(silo0, token0, _assets, _depositor, _type);
     }
 
     function _deposit(uint256 _assets, address _depositor) internal {
-        uint256 balanceOf = token0.balanceOf(_depositor);
-
-        if (balanceOf < _assets) {
-            uint256 toMint = _assets - balanceOf;
-            token0.mint(_depositor, toMint);
-        }
-
-        _vm.prank(_depositor);
-        token0.approve(address(silo0), _assets);
-        _vm.prank(_depositor);
-        silo0.deposit(_assets, _depositor);
+        _makeDeposit(silo0, token0, _assets, _depositor, ISilo.AssetType.Collateral);
     }
 
     function _borrow(uint256 _amount, address _borrower) internal returns (uint256 shares) {
@@ -81,5 +51,21 @@ abstract contract SiloLittleHelper {
     function _withdraw(uint256 _amount, address _depositor, ISilo.AssetType _type) internal returns (uint256 assets){
         _vm.prank(_depositor);
         return silo0.withdraw(_amount, _depositor, _depositor, _type);
+    }
+
+    function _makeDeposit(ISilo _silo, MintableToken _token, uint256 _assets, address _depositor, ISilo.AssetType _type)
+        internal
+    {
+        uint256 balanceOf = _token.balanceOf(_depositor);
+
+        if (balanceOf < _assets) {
+            uint256 toMint = _assets - balanceOf;
+            _token.mint(_depositor, toMint);
+        }
+
+        _vm.prank(_depositor);
+        _token.approve(address(_silo), _assets);
+        _vm.prank(_depositor);
+        _silo.deposit(_assets, _depositor, _type);
     }
 }
