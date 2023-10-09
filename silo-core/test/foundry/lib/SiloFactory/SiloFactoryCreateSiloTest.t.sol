@@ -18,6 +18,7 @@ import {MintableToken} from "silo-core/test/foundry/_common/MintableToken.sol";
 import {SiloCoreContracts} from "silo-core/common/SiloCoreContracts.sol";
 import {SiloConfigData} from "silo-core/deploy/input-readers/SiloConfigData.sol";
 import {InterestRateModelConfigData} from "silo-core/deploy/input-readers/InterestRateModelConfigData.sol";
+import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
 
 import {SiloFixture} from "silo-core/test/foundry/_common/fixtures/SiloFixture.sol";
 import {SiloLittleHelper} from "silo-core/test/foundry/_common/SiloLittleHelper.sol";
@@ -28,7 +29,7 @@ forge test -vv --mc SiloFactoryCreateSiloTest
 contract SiloFactoryCreateSiloTest is SiloLittleHelper, IntegrationTest {
     uint256 internal constant _BASIS_POINTS = 1e4;
 
-    string public constant SILO_TO_DEPLOY = "ETH-USDC_UniswapV3_Silo";
+    string public constant SILO_TO_DEPLOY = SiloConfigsNames.ETH_USDC_UNI_V3_SILO;
 
     ISiloFactory siloFactory;
     ISiloConfig siloConfig;
@@ -56,8 +57,7 @@ contract SiloFactoryCreateSiloTest is SiloLittleHelper, IntegrationTest {
     forge test -vv --mt test_createSilo
     */
     function test_createSilo() public {
-        (SiloConfigData.ConfigData memory config, ISiloConfig.InitData memory initData) =
-            siloData.getConfigData(SILO_TO_DEPLOY);
+        (, ISiloConfig.InitData memory initData) = siloData.getConfigData(SILO_TO_DEPLOY);
 
         assertEq(siloFactory.getNextSiloId(), 2);
         assertTrue(siloFactory.isSilo(address(silo0)));
