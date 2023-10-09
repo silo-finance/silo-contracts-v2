@@ -71,6 +71,13 @@ jobs:
         uses: foundry-rs/foundry-toolchain@v1
         with:
           version: nightly-2fc85cb4a2d296b916a413f9f13caadebcf4cf47
+        
+      - name: Build silo foundry utils
+        working-directory: ./gitmodules/silo-foundry-utils
+        run: |
+          cargo build --release
+          cp target/release/silo-foundry-utils ../../silo-foundry-utils
+          ../../silo-foundry-utils --version
 
       - name: Run Forge build
         run: |
