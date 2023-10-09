@@ -11,32 +11,26 @@ import {IInterestRateModelV2ConfigFactory} from "silo-core/contracts/interfaces/
 import {IInterestRateModelV2Config} from "silo-core/contracts/interfaces/IInterestRateModelV2Config.sol";
 import {InterestRateModelConfigData} from "../input-readers/InterestRateModelConfigData.sol";
 import {SiloConfigData, ISiloConfig} from "../input-readers/SiloConfigData.sol";
+import {SiloDeployments} from "./SiloDeployments.sol";
 
-abstract contract SiloCommonDeploy is CommonDeploy {
+/**
+FOUNDRY_PROFILE=core CONFIG=USDC_UniswapV3_Silo \
+    forge script silo-core/deploy/silo/SiloDeploy.s.sol \
+    --ffi --broadcast --rpc-url http://127.0.0.1:8545
+ */
+contract SiloDeploy is CommonDeploy {
     function run() public returns (ISiloConfig siloConfig) {
         console2.log("[SiloCommonDeploy] run()");
 
         SiloConfigData siloData = new SiloConfigData();
         console2.log("[SiloCommonDeploy] SiloConfigData deployed");
-        InterestRateModelConfigData modelData = new InterestRateModelConfigData();
-        console2.log("[SiloCommonDeploy] InterestRateModelConfigData deployed");
+
+        string memory configName = vm.envString("CONFIG");
 
         (SiloConfigData.ConfigData memory config, ISiloConfig.InitData memory siloInitData) =
-            siloData.getConfigData(siloToDeploy());
+            siloData.getConfigData(configName);
 
-        IInterestRateModelV2ConfigFactory configFactory = IInterestRateModelV2ConfigFactory(
-            getDeployedAddress(SiloCoreContracts.INTEREST_RATE_MODEL_V2_CONFIG_FACTORY)
-        );
-
-        console2.log("[SiloCommonDeploy] using configFactory %s", address(configFactory));
-
-        (, IInterestRateModelV2Config interestRateModelConfig0) =
-            configFactory.create(modelData.getConfigData(config.interestRateModelConfig0));
-        (, IInterestRateModelV2Config interestRateModelConfig1) =
-            configFactory.create(modelData.getConfigData(config.interestRateModelConfig1));
-
-        address interestRateModel = getDeployedAddress(SiloCoreContracts.INTEREST_RATE_MODEL_V2);
-        console2.log("[SiloCommonDeploy] using interestRateModel %s", address(interestRateModel));
+        _setUpIRMs(config, siloInitData);
 
         // TODO: pull and set all the data below
         // siloInitData.solvencyOracle0
@@ -50,17 +44,10 @@ abstract contract SiloCommonDeploy is CommonDeploy {
         // siloInitData.collateralHookReceiver1
         // siloInitData.debtHookReceiver1
 
-        siloInitData.interestRateModel0 = interestRateModel;
-        siloInitData.interestRateModelConfig0 = address(interestRateModelConfig0);
-
-        siloInitData.interestRateModel1 = interestRateModel;
-        siloInitData.interestRateModelConfig1 = address(interestRateModelConfig1);
-
         ISiloFactory siloFactory = ISiloFactory(getDeployedAddress(SiloCoreContracts.SILO_FACTORY));
         console2.log("[SiloCommonDeploy] using siloFactory %s", address(siloFactory));
 
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
-
         vm.startBroadcast(deployerPrivateKey);
 
         beforeCreateSilo(siloInitData);
@@ -68,11 +55,35 @@ abstract contract SiloCommonDeploy is CommonDeploy {
 
         vm.stopBroadcast();
 
-        _registerDeployment(address(siloConfig), siloToDeploy());
+        SiloDeployments.save(getChainAlias(), configName, address(siloConfig));
+
         console2.log("[SiloCommonDeploy] run() finished.");
     }
 
-    function siloToDeploy() public pure virtual returns (string memory);
+    function _setUpIRMs(SiloConfigData.ConfigData memory _config, ISiloConfig.InitData memory _siloInitData) internal {
+        InterestRateModelConfigData modelData = new InterestRateModelConfigData();
+        console2.log("[SiloCommonDeploy] InterestRateModelConfigData deployed");
+
+        IInterestRateModelV2ConfigFactory configFactory = IInterestRateModelV2ConfigFactory(
+            getDeployedAddress(SiloCoreContracts.INTEREST_RATE_MODEL_V2_CONFIG_FACTORY)
+        );
+
+        console2.log("[SiloCommonDeploy] using configFactory %s", address(configFactory));
+
+        (, IInterestRateModelV2Config interestRateModelConfig0) =
+            configFactory.create(modelData.getConfigData(_config.interestRateModelConfig0));
+        (, IInterestRateModelV2Config interestRateModelConfig1) =
+            configFactory.create(modelData.getConfigData(_config.interestRateModelConfig1));
+
+        address interestRateModel = getDeployedAddress(SiloCoreContracts.INTEREST_RATE_MODEL_V2);
+        console2.log("[SiloCommonDeploy] using interestRateModel %s", address(interestRateModel));
+
+        _siloInitData.interestRateModel0 = interestRateModel;
+        _siloInitData.interestRateModelConfig0 = address(interestRateModelConfig0);
+
+        _siloInitData.interestRateModel1 = interestRateModel;
+        _siloInitData.interestRateModelConfig1 = address(interestRateModelConfig1);
+    }
 
     function beforeCreateSilo(ISiloConfig.InitData memory) internal virtual {
         // hook for any action before creating silo

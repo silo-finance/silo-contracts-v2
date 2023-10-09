@@ -3,6 +3,8 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
 
+import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";
+
 import {CommonDeploy} from "../_CommonDeploy.sol";
 
 import {IInterestRateModelV2} from "silo-core/contracts/interfaces/IInterestRateModelV2.sol";
@@ -29,7 +31,7 @@ contract InterestRateModelConfigData is Test, CommonDeploy {
 
     function _readInput(string memory input) internal view returns (string memory) {
         string memory inputDir = string.concat(vm.projectRoot(), "/silo-core/deploy/input/");
-        string memory chainDir = string.concat(vm.toString(block.chainid), "/");
+        string memory chainDir = string.concat(ChainsLib.chainAlias(block.chainid), "/");
         string memory file = string.concat(input, ".json");
         return vm.readFile(string.concat(inputDir, chainDir, file));
     }
