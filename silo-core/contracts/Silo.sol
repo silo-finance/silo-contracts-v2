@@ -904,7 +904,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
 
         uint256 liquidity = _params.assetType == AssetType.Collateral
             ? getLiquidity()
-            : _total[AssetType.Protected].assets;
+            : _total[_params.assetType].assets;
 
         (assets, shares) =
             SiloERC4626Lib.withdraw(collateralConfig.token, shareToken, _params, liquidity, _total[_params.assetType]);
