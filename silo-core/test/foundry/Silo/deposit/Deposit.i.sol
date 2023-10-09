@@ -6,9 +6,9 @@ import "forge-std/Test.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 
-import {SiloFixture} from "../_common/fixtures/SiloFixture.sol";
-import {MintableToken} from "../_common/MintableToken.sol";
-import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
+import {SiloFixture} from "../../_common/fixtures/SiloFixture.sol";
+import {MintableToken} from "../../_common/MintableToken.sol";
+import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
 
 contract DepositTest is SiloLittleHelper, Test {
     ISiloConfig siloConfig;
