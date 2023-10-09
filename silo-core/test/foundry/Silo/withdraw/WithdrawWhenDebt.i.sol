@@ -41,9 +41,7 @@ contract WithdrawWhenDebtTest is SiloLittleHelper, Test {
     /*
     forge test -vv --mt test_depositPossible
     */
-    function test_depositPossible() public {
-        (address protectedShareToken,,) = siloConfig.getShareTokens(address(silo0));
-
+    function test_integration_depositPossible() public {
         assertTrue(silo0.depositPossible(address(this)), "user has collateral in silo0");
         assertFalse(silo1.depositPossible(address(this)), "user has debt in silo1");
     }
