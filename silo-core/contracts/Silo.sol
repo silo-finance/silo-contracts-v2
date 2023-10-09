@@ -35,7 +35,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
 
     bytes32 public constant FLASHLOAN_CALLBACK = keccak256("ERC3156FlashBorrower.onFlashLoan");
     bytes32 public constant LEVERAGE_CALLBACK = keccak256("ILeverageBorrower.onLeverage");
-
+    
     ISiloFactory public immutable factory;
 
     ISiloConfig public config;
@@ -346,6 +346,8 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
     }
 
     function previewDeposit(uint256 _assets, AssetType _assetType) external view virtual returns (uint256 shares) {
+        if (_assetType == AssetType.Debt) revert ISilo.WrongAssetType();
+
         ISiloConfig.ConfigData memory configData = config.getConfig(address(this));
 
         (uint256 totalSiloAssets, uint256 totalShares) =
@@ -391,6 +393,8 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
     }
 
     function previewMint(uint256 _shares, AssetType _assetType) external view virtual returns (uint256 assets) {
+        if (_assetType == AssetType.Debt) revert ISilo.WrongAssetType();
+
         ISiloConfig.ConfigData memory configData = config.getConfig(address(this));
 
         (uint256 totalSiloAssets, uint256 totalShares) =
@@ -432,6 +436,8 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
     }
 
     function previewWithdraw(uint256 _assets, AssetType _assetType) external view virtual returns (uint256 shares) {
+        if (_assetType == AssetType.Debt) revert ISilo.WrongAssetType();
+
         ISiloConfig.ConfigData memory configData = config.getConfig(address(this));
 
         (uint256 totalSiloAssets, uint256 totalShares) =
@@ -467,6 +473,8 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
     }
 
     function previewRedeem(uint256 _shares, AssetType _assetType) external view virtual returns (uint256 assets) {
+        if (_assetType == AssetType.Debt) revert ISilo.WrongAssetType();
+
         ISiloConfig.ConfigData memory configData = config.getConfig(address(this));
 
         (uint256 totalSiloAssets, uint256 totalShares) =
@@ -503,12 +511,19 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
         leverageNonReentrant
         returns (uint256 assets)
     {
+        if (_withdrawType == AssetType.Debt) revert ISilo.WrongAssetType();
+
         (, ISiloConfig.ConfigData memory configData) = _accrueInterest();
 
         (AssetType depositType, address shareTokenFrom, address shareTokenTo, uint256 liquidity) =
-            _withdrawType == AssetType.Protected
-            ? (AssetType.Collateral, configData.protectedShareToken, configData.collateralShareToken, type(uint256).max)
-            : (AssetType.Protected, configData.collateralShareToken, configData.protectedShareToken, getLiquidity());
+            _withdrawType == AssetType.Collateral
+            ? (AssetType.Protected, configData.collateralShareToken, configData.protectedShareToken, getLiquidity())
+            : (
+                AssetType.Collateral,
+                configData.protectedShareToken,
+                configData.collateralShareToken,
+                _total[_withdrawType].assets
+            );
 
         (assets, _shares) = SiloERC4626Lib.withdraw(
             address(0), // empty token address because we dont want to do transfer
@@ -540,12 +555,12 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
             _total[depositType]
         );
 
-        if (_withdrawType == AssetType.Protected) {
-            emit WithdrawProtected(msg.sender, _owner, _owner, assets, _shares);
-            emit Deposit(msg.sender, _owner, assets, toShares);
-        } else {
+        if (_withdrawType == AssetType.Collateral) {
             emit Withdraw(msg.sender, _owner, _owner, assets, _shares);
             emit DepositProtected(msg.sender, _owner, assets, toShares);
+        } else {
+            emit WithdrawProtected(msg.sender, _owner, _owner, assets, _shares);
+            emit Deposit(msg.sender, _owner, assets, toShares);
         }
     }
 
@@ -879,10 +894,10 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
         (assets, shares) =
             SiloERC4626Lib.deposit(_configData.token, msg.sender, _depositParams, _total[_depositParams.assetType]);
 
-        if (_depositParams.assetType == AssetType.Protected) {
-            emit DepositProtected(msg.sender, _depositParams.receiver, assets, shares);
-        } else {
+        if (_depositParams.assetType == AssetType.Collateral) {
             emit Deposit(msg.sender, _depositParams.receiver, assets, shares);
+        } else {
+            emit DepositProtected(msg.sender, _depositParams.receiver, assets, shares);
         }
     }
 
@@ -898,21 +913,21 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
 
         _accrueInterest();
 
-        address shareToken = _params.assetType == AssetType.Protected
-            ? collateralConfig.protectedShareToken
-            : collateralConfig.collateralShareToken;
+        address shareToken = _params.assetType == AssetType.Collateral
+            ? collateralConfig.collateralShareToken
+            : collateralConfig.protectedShareToken;
 
         uint256 liquidity = _params.assetType == AssetType.Collateral
             ? getLiquidity()
-            : _total[AssetType.Protected].assets;
+            : _total[_params.assetType].assets;
 
         (assets, shares) =
             SiloERC4626Lib.withdraw(collateralConfig.token, shareToken, _params, liquidity, _total[_params.assetType]);
 
-        if (_params.assetType == AssetType.Protected) {
-            emit WithdrawProtected(msg.sender, _params.receiver, _params.owner, assets, shares);
-        } else {
+        if (_params.assetType == AssetType.Collateral) {
             emit Withdraw(msg.sender, _params.receiver, _params.owner, assets, shares);
+        } else {
+            emit WithdrawProtected(msg.sender, _params.receiver, _params.owner, assets, shares);
         }
 
         // `_params.owner` must be solvent

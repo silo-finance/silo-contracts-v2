@@ -33,9 +33,10 @@ interface ISilo is IERC4626, IERC3156FlashLender, ISiloLiquidation {
     ///      identical calculations for each type of accounting but it uses different data. To avoid code duplication
     ///      this enum is used to decide which data should be read.
     enum AssetType {
-        Protected,
+        Protected, // default
         Collateral,
         Debt
+        // if you add new, make sure you adjust all places with revert WrongAssetType()
     }
 
     /// @dev this struct is used for all types of assets: collateral, protected and debt
