@@ -2,7 +2,7 @@
     "deployer": "0x",
     "deployerFeeInBp": 1000,
     "token0": "WETH",
-    "solvencyOracle0": "UniV3-ETH-USDC-0.3",
+    "solvencyOracle0": "NO_ORACLE",
     "maxLtvOracle0": "NO_ORACLE",
     "interestRateModel0": "0x",
     "interestRateModelConfig0": "defaultAsset",
