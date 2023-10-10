@@ -26,16 +26,16 @@ abstract contract SiloLittleHelper {
         silo1 = _silo1;
     }
 
-    function _depositForBorrow(uint256 _assets, address _depositor) internal {
-        _makeDeposit(silo1, token1, _assets, _depositor, ISilo.AssetType.Collateral);
+    function _depositForBorrow(uint256 _assets, address _depositor) internal returns (uint256 shares) {
+        return _makeDeposit(silo1, token1, _assets, _depositor, ISilo.AssetType.Collateral);
     }
 
-    function _deposit(uint256 _assets, address _depositor, ISilo.AssetType _type) internal {
-        _makeDeposit(silo0, token0, _assets, _depositor, _type);
+    function _deposit(uint256 _assets, address _depositor, ISilo.AssetType _type) internal returns (uint256 shares) {
+        return _makeDeposit(silo0, token0, _assets, _depositor, _type);
     }
 
-    function _deposit(uint256 _assets, address _depositor) internal {
-        _makeDeposit(silo0, token0, _assets, _depositor, ISilo.AssetType.Collateral);
+    function _deposit(uint256 _assets, address _depositor) internal returns (uint256 shares) {
+        return _makeDeposit(silo0, token0, _assets, _depositor, ISilo.AssetType.Collateral);
     }
 
     function _borrow(uint256 _amount, address _borrower) internal returns (uint256 shares) {
@@ -55,6 +55,7 @@ abstract contract SiloLittleHelper {
 
     function _makeDeposit(ISilo _silo, MintableToken _token, uint256 _assets, address _depositor, ISilo.AssetType _type)
         internal
+        returns (uint256 shares)
     {
         uint256 balanceOf = _token.balanceOf(_depositor);
 
@@ -66,6 +67,6 @@ abstract contract SiloLittleHelper {
         _vm.prank(_depositor);
         _token.approve(address(_silo), _assets);
         _vm.prank(_depositor);
-        _silo.deposit(_assets, _depositor, _type);
+        shares = _silo.deposit(_assets, _depositor, _type);
     }
 }
