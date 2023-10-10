@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 import {IntegrationTest} from "silo-foundry-utils/networks/IntegrationTest.sol";
 import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 
+import {OracleConfig} from "silo-oracles/deploy/OraclesDeployments.sol";
 import {VeSiloContracts} from "ve-silo/common/VeSiloContracts.sol";
 
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";

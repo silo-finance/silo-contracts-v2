@@ -6,11 +6,14 @@ import {console2} from "forge-std/console2.sol";
 
 import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";
 
+import {OraclesDeployments} from "silo-oracles/deploy/OraclesDeployments.sol";
 import {CommonDeploy} from "../_CommonDeploy.sol";
 
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 
 contract SiloConfigData is Test, CommonDeploy {
+    bytes32 constant public NO_ORACLE_KEY = keccak256(bytes("NO_ORACLE"));
+
     // must be in alphabetic order
     struct ConfigData {
         bool borrowable0;
@@ -33,12 +36,12 @@ contract SiloConfigData is Test, CommonDeploy {
         uint64 lt1;
         uint64 maxLtv0;
         uint64 maxLtv1;
-        address maxLtvOracle0;
-        address maxLtvOracle1;
+        string maxLtvOracle0;
+        string maxLtvOracle1;
         address protectedHookReceiver0;
         address protectedHookReceiver1;
-        address solvencyOracle0;
-        address solvencyOracle1;
+        string solvencyOracle0;
+        string solvencyOracle1;
         string token0;
         string token1;
     }
@@ -67,8 +70,8 @@ contract SiloConfigData is Test, CommonDeploy {
             deployer: config.deployer,
             deployerFeeInBp: config.deployerFeeInBp,
             token0: getAddress(config.token0),
-            solvencyOracle0: address(0),
-            maxLtvOracle0: address(0),
+            solvencyOracle0: _getOracle(config.solvencyOracle0),
+            maxLtvOracle0: _getOracle(config.maxLtvOracle0),
             interestRateModel0: address(0),
             interestRateModelConfig0: address(0),
             maxLtv0: config.maxLtv0,
@@ -80,8 +83,8 @@ contract SiloConfigData is Test, CommonDeploy {
             collateralHookReceiver0: address(0),
             debtHookReceiver0: address(0),
             token1: getAddress(config.token1),
-            solvencyOracle1: address(0),
-            maxLtvOracle1: address(0),
+            solvencyOracle1: _getOracle(config.solvencyOracle1),
+            maxLtvOracle1: _getOracle(config.maxLtvOracle1),
             interestRateModel1: address(0),
             interestRateModelConfig1: address(0),
             maxLtv1: config.maxLtv1,
@@ -93,6 +96,12 @@ contract SiloConfigData is Test, CommonDeploy {
             collateralHookReceiver1: address(0),
             debtHookReceiver1: address(0)
         });
+    }
+
+    function _getOracle(string memory _key) internal returns (address oracleAddress) {
+        if (keccak256(bytes(_key)) != NO_ORACLE_KEY) {
+            oracleAddress = OraclesDeployments.get(ChainsLib.chainAlias(block.chainid), _key);
+        }
     }
 
     // TODO

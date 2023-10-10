@@ -33,13 +33,9 @@ contract SiloDeploy is CommonDeploy {
         _setUpIRMs(config, siloInitData);
 
         // TODO: pull and set all the data below
-        // siloInitData.solvencyOracle0
-        // siloInitData.maxLtvOracle0
         // siloInitData.protectedHookReceiver0
         // siloInitData.collateralHookReceiver0
         // siloInitData.debtHookReceiver0
-        // siloInitData.solvencyOracle1
-        // siloInitData.maxLtvOracle1
         // siloInitData.protectedHookReceiver1
         // siloInitData.collateralHookReceiver1
         // siloInitData.debtHookReceiver1
