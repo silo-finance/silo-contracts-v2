@@ -7,21 +7,25 @@ import {console2} from "forge-std/console2.sol";
 import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";
 
 import {OraclesDeployments} from "silo-oracles/deploy/OraclesDeployments.sol";
-import {CommonDeploy} from "../_CommonDeploy.sol";
+import {CommonDeploy, SiloCoreContracts} from "../_CommonDeploy.sol";
 
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
+import {IHookReceiversFactory} from "silo-core/contracts/interfaces/IHookReceiversFactory.sol";
 
 contract SiloConfigData is Test, CommonDeploy {
     bytes32 constant public NO_ORACLE_KEY = keccak256(bytes("NO_ORACLE"));
+    bytes32 constant public NO_HOOK_RECEIVER_KEY = keccak256(bytes("NO_HOOK_RECEIVER"));
+
+    error HookReceiverImplNoFound(string hookReceiver);
 
     // must be in alphabetic order
     struct ConfigData {
         bool borrowable0;
         bool borrowable1;
-        address collateralHookReceiver0;
-        address collateralHookReceiver1;
-        address debtHookReceiver0;
-        address debtHookReceiver1;
+        string collateralHookReceiver0;
+        string collateralHookReceiver1;
+        string debtHookReceiver0;
+        string debtHookReceiver1;
         address deployer;
         uint256 deployerFeeInBp;
         uint64 flashloanFee0;
@@ -38,8 +42,8 @@ contract SiloConfigData is Test, CommonDeploy {
         uint64 maxLtv1;
         string maxLtvOracle0;
         string maxLtvOracle1;
-        address protectedHookReceiver0;
-        address protectedHookReceiver1;
+        string protectedHookReceiver0;
+        string protectedHookReceiver1;
         string solvencyOracle0;
         string solvencyOracle1;
         string token0;
@@ -65,6 +69,7 @@ contract SiloConfigData is Test, CommonDeploy {
         returns (ConfigData memory config, ISiloConfig.InitData memory initData)
     {
         config = _readDataFromJson(_name);
+        IHookReceiversFactory.CreatedHookReceivers memory hookReceivers = _getHookReceivers(config);
 
         initData = ISiloConfig.InitData({
             deployer: config.deployer,
@@ -79,9 +84,9 @@ contract SiloConfigData is Test, CommonDeploy {
             liquidationFee0: config.liquidationFee0,
             flashloanFee0: config.flashloanFee0,
             borrowable0: config.borrowable0,
-            protectedHookReceiver0: address(0),
-            collateralHookReceiver0: address(0),
-            debtHookReceiver0: address(0),
+            protectedHookReceiver0: hookReceivers.protectedHookReceiver0,
+            collateralHookReceiver0: hookReceivers.collateralHookReceiver0,
+            debtHookReceiver0: hookReceivers.debtHookReceiver0,
             token1: getAddress(config.token1),
             solvencyOracle1: _getOracle(config.solvencyOracle1),
             maxLtvOracle1: _getOracle(config.maxLtvOracle1),
@@ -92,15 +97,47 @@ contract SiloConfigData is Test, CommonDeploy {
             liquidationFee1: config.liquidationFee1,
             flashloanFee1: config.flashloanFee1,
             borrowable1: config.borrowable1,
-            protectedHookReceiver1: address(0),
-            collateralHookReceiver1: address(0),
-            debtHookReceiver1: address(0)
+            protectedHookReceiver1: hookReceivers.protectedHookReceiver1,
+            collateralHookReceiver1: hookReceivers.collateralHookReceiver1,
+            debtHookReceiver1: hookReceivers.debtHookReceiver1
         });
     }
 
     function _getOracle(string memory _key) internal returns (address oracleAddress) {
         if (keccak256(bytes(_key)) != NO_ORACLE_KEY) {
             oracleAddress = OraclesDeployments.get(ChainsLib.chainAlias(block.chainid), _key);
+        }
+    }
+
+    function _getHookReceivers(ConfigData memory _config)
+        internal
+        returns (IHookReceiversFactory.CreatedHookReceivers memory created)
+    {
+        IHookReceiversFactory.RequiredHookReceivers memory required;
+
+        required.protectedHookReceiver0 = _resolveHookReceiverImpl(_config.protectedHookReceiver0);
+        required.protectedHookReceiver1 = _resolveHookReceiverImpl(_config.protectedHookReceiver1);
+        required.collateralHookReceiver0 = _resolveHookReceiverImpl(_config.collateralHookReceiver0);
+        required.collateralHookReceiver1 = _resolveHookReceiverImpl(_config.collateralHookReceiver1);
+        required.debtHookReceiver0 = _resolveHookReceiverImpl(_config.debtHookReceiver0);
+        required.debtHookReceiver1 = _resolveHookReceiverImpl(_config.debtHookReceiver1);
+
+        if (required.protectedHookReceiver0 != address(0)
+            || required.protectedHookReceiver1 != address(0)
+            || required.collateralHookReceiver0 != address(0)
+            || required.collateralHookReceiver1 != address(0)
+            || required.debtHookReceiver0 != address(0)
+            || required.debtHookReceiver1 != address(0)
+        ) {
+            address factory = getDeployedAddress(SiloCoreContracts.HOOK_RECEIVERS_FACTORY);
+            created = IHookReceiversFactory(factory).clone(required);
+        }
+    }
+
+    function _resolveHookReceiverImpl(string memory _requiredHookReceiver) internal returns (address hookReceiver) {
+        if (keccak256(bytes(_requiredHookReceiver)) != NO_HOOK_RECEIVER_KEY) {
+            hookReceiver = getDeployedAddress(_requiredHookReceiver);
+            if (hookReceiver == address(0)) revert HookReceiverImplNoFound(_requiredHookReceiver);
         }
     }
 

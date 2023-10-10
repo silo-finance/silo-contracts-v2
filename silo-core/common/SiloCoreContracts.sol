@@ -8,6 +8,8 @@ library SiloCoreContracts {
     string public constant SILO_FACTORY = "SiloFactory.sol";
     string public constant INTEREST_RATE_MODEL_V2_CONFIG_FACTORY = "InterestRateModelV2ConfigFactory.sol";
     string public constant INTEREST_RATE_MODEL_V2 = "InterestRateModelV2.sol";
+    string public constant HOOK_RECEIVER = "HookReceiver.sol";
+    string public constant HOOK_RECEIVERS_FACTORY = "HookReceiversFactory.sol";
 }
 
 library SiloCoreDeployments {
