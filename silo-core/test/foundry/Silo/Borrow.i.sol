@@ -12,11 +12,10 @@ import {MintableToken} from "../_common/MintableToken.sol";
 import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
 
 /*
-    forge test -vv --mc BorrowTest --ffi
+    forge test -vv --ffi --mc BorrowTest --ffi
 */
 contract BorrowTest is SiloLittleHelper, Test {
     uint256 internal constant _BASIS_POINTS = 1e4;
-    uint256 internal constant _FORKING_BLOCK_NUMBER = 17336000;
 
     ISiloConfig siloConfig;
 
@@ -33,7 +32,7 @@ contract BorrowTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --mt test_borrow_zeros
+    forge test -vv --ffi --mt test_borrow_zeros
     */
     function test_borrow_zeros() public {
         vm.expectRevert("ERC20: approve from the zero address");
@@ -41,7 +40,7 @@ contract BorrowTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --mt test_borrow_zero_assets
+    forge test -vv --ffi --mt test_borrow_zero_assets
     */
     function test_borrow_zero_assets() public {
         uint256 assets = 0;
@@ -56,7 +55,7 @@ contract BorrowTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --mt test_borrow_when_NotEnoughLiquidity
+    forge test -vv --ffi --mt test_borrow_when_NotEnoughLiquidity
     */
     function test_borrow_when_NotEnoughLiquidity() public {
         uint256 assets = 1e18;
@@ -67,7 +66,7 @@ contract BorrowTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --mt test_borrow_when_BorrowNotPossible_withCollateral
+    forge test -vv --ffi --mt test_borrow_when_BorrowNotPossible_withCollateral
     */
     function test_borrow_when_BorrowNotPossible_withCollateral() public {
         uint256 assets = 1e18;
@@ -80,7 +79,7 @@ contract BorrowTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --mt test_borrow_when_BorrowNotPossible_withProtected
+    forge test -vv --ffi --mt test_borrow_when_BorrowNotPossible_withProtected
     */
     function test_borrow_when_BorrowNotPossible_withProtected() public {
         uint256 assets = 1e18;
@@ -93,12 +92,12 @@ contract BorrowTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --mt test_borrow_pass
+    forge test -vv --ffi --mt test_borrow_pass
     */
     function test_borrow_pass() public {
         uint256 depositAssets = 1e18;
-        address borrower = address(0x22334455);
-        address depositor = address(0x9876123);
+        address borrower = makeAddr("Borrower");
+        address depositor = makeAddr("Depositor");
 
         _deposit(depositAssets, depositor, ISilo.AssetType.Collateral);
         _depositForBorrow(depositAssets, borrower);
@@ -123,7 +122,7 @@ contract BorrowTest is SiloLittleHelper, Test {
         silo0.borrow(maxBorrow, borrower, borrower);
         uint256 gasEnd = gasleft();
 
-        assertEq(gasStart - gasEnd, 154684, "optimise borrow");
+        assertEq(gasStart - gasEnd, 154692, "optimise borrow");
 
         assertEq(IShareToken(debtShareToken).balanceOf(borrower), 0, "expect borrower to NOT have debt in collateral silo");
         assertEq(silo1.getDebtAssets(), 0, "expect collateral silo to NOT have debt");
@@ -134,7 +133,7 @@ contract BorrowTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --mt test_borrow_twice
+    forge test -vv --ffi --mt test_borrow_twice
     */
     function test_borrow_twice() public {
         uint256 depositAssets = 1e18;
@@ -164,7 +163,7 @@ contract BorrowTest is SiloLittleHelper, Test {
         uint256 gotShares = _borrow(borrowAmount, borrower);
         uint256 gasEnd = gasleft();
 
-        assertEq(gasStart - gasEnd, 147451, "optimise borrow #1");
+        assertEq(gasStart - gasEnd, 147455, "optimise borrow #1");
 
         assertEq(IShareToken(debtShareToken).balanceOf(borrower), 0.375e18, "expect borrower to have 1/2 of debt");
         assertEq(IShareToken(collateralShareToken).balanceOf(borrower), 1e18, "collateral silo: borrower has collateral");
@@ -179,7 +178,7 @@ contract BorrowTest is SiloLittleHelper, Test {
         gotShares = _borrow(borrowAmount, borrower);
         gasEnd = gasleft();
 
-        assertEq(gasStart - gasEnd, 57934, "optimise borrow #2");
+        assertEq(gasStart - gasEnd, 57938, "optimise borrow #2");
 
         assertEq(IShareToken(debtShareToken).balanceOf(borrower), 0.75e18, "debt silo: borrower has debt");
         assertEq(gotShares, 0.375e18, "got shares");
@@ -198,7 +197,7 @@ contract BorrowTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --mt test_borrow_scenarios
+    forge test -vv --ffi --mt test_borrow_scenarios
     */
     function test_borrow_scenarios() public {
         uint256 depositAssets = 1e18;
