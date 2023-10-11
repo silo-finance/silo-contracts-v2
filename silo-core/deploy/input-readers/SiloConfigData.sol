@@ -69,7 +69,7 @@ contract SiloConfigData is Test, CommonDeploy {
         returns (ConfigData memory config, ISiloConfig.InitData memory initData)
     {
         config = _readDataFromJson(_name);
-        IHookReceiversFactory.CreatedHookReceivers memory hookReceivers = _getHookReceivers(config);
+        IHookReceiversFactory.HookReceivers memory hookReceivers = _getHookReceivers(config);
 
         initData = ISiloConfig.InitData({
             deployer: config.deployer,
@@ -111,26 +111,26 @@ contract SiloConfigData is Test, CommonDeploy {
 
     function _getHookReceivers(ConfigData memory _config)
         internal
-        returns (IHookReceiversFactory.CreatedHookReceivers memory created)
+        returns (IHookReceiversFactory.HookReceivers memory created)
     {
-        IHookReceiversFactory.RequiredHookReceivers memory required;
+        IHookReceiversFactory.HookReceivers memory implementation;
 
-        required.protectedHookReceiver0 = _resolveHookReceiverImpl(_config.protectedHookReceiver0);
-        required.protectedHookReceiver1 = _resolveHookReceiverImpl(_config.protectedHookReceiver1);
-        required.collateralHookReceiver0 = _resolveHookReceiverImpl(_config.collateralHookReceiver0);
-        required.collateralHookReceiver1 = _resolveHookReceiverImpl(_config.collateralHookReceiver1);
-        required.debtHookReceiver0 = _resolveHookReceiverImpl(_config.debtHookReceiver0);
-        required.debtHookReceiver1 = _resolveHookReceiverImpl(_config.debtHookReceiver1);
+        implementation.protectedHookReceiver0 = _resolveHookReceiverImpl(_config.protectedHookReceiver0);
+        implementation.protectedHookReceiver1 = _resolveHookReceiverImpl(_config.protectedHookReceiver1);
+        implementation.collateralHookReceiver0 = _resolveHookReceiverImpl(_config.collateralHookReceiver0);
+        implementation.collateralHookReceiver1 = _resolveHookReceiverImpl(_config.collateralHookReceiver1);
+        implementation.debtHookReceiver0 = _resolveHookReceiverImpl(_config.debtHookReceiver0);
+        implementation.debtHookReceiver1 = _resolveHookReceiverImpl(_config.debtHookReceiver1);
 
-        if (required.protectedHookReceiver0 != address(0)
-            || required.protectedHookReceiver1 != address(0)
-            || required.collateralHookReceiver0 != address(0)
-            || required.collateralHookReceiver1 != address(0)
-            || required.debtHookReceiver0 != address(0)
-            || required.debtHookReceiver1 != address(0)
+        if (implementation.protectedHookReceiver0 != address(0)
+            || implementation.protectedHookReceiver1 != address(0)
+            || implementation.collateralHookReceiver0 != address(0)
+            || implementation.collateralHookReceiver1 != address(0)
+            || implementation.debtHookReceiver0 != address(0)
+            || implementation.debtHookReceiver1 != address(0)
         ) {
             address factory = getDeployedAddress(SiloCoreContracts.HOOK_RECEIVERS_FACTORY);
-            created = IHookReceiversFactory(factory).clone(required);
+            created = IHookReceiversFactory(factory).create(implementation);
         }
     }
 

@@ -8,32 +8,34 @@ import {IHookReceiversFactory} from "../interfaces/IHookReceiversFactory.sol";
 /// @notice Utility contract to clone multiple copies in a single transaction
 contract HookReceiversFactory is IHookReceiversFactory {
     /// @inheritdoc IHookReceiversFactory
-    function clone(RequiredHookReceivers memory _required)
+    function create(HookReceivers memory _implementation)
         external
-        returns (CreatedHookReceivers memory clones)
+        returns (HookReceivers memory)
     {
-        if (_required.protectedHookReceiver0 != address(0)) {
-            clones.protectedHookReceiver0 = ClonesUpgradeable.clone(_required.protectedHookReceiver0);
+        if (_implementation.protectedHookReceiver0 != address(0)) {
+            _implementation.protectedHookReceiver0 = ClonesUpgradeable.clone(_implementation.protectedHookReceiver0);
         }
 
-        if (_required.collateralHookReceiver0 != address(0)) {
-            clones.collateralHookReceiver0 = ClonesUpgradeable.clone(_required.collateralHookReceiver0);
+        if (_implementation.collateralHookReceiver0 != address(0)) {
+            _implementation.collateralHookReceiver0 = ClonesUpgradeable.clone(_implementation.collateralHookReceiver0);
         }
 
-        if (_required.debtHookReceiver0 != address(0)) {
-            clones.debtHookReceiver0 = ClonesUpgradeable.clone(_required.debtHookReceiver0);
+        if (_implementation.debtHookReceiver0 != address(0)) {
+            _implementation.debtHookReceiver0 = ClonesUpgradeable.clone(_implementation.debtHookReceiver0);
         }
 
-        if (_required.protectedHookReceiver1 != address(0)) {
-            clones.protectedHookReceiver1 = ClonesUpgradeable.clone(_required.protectedHookReceiver1);
+        if (_implementation.protectedHookReceiver1 != address(0)) {
+            _implementation.protectedHookReceiver1 = ClonesUpgradeable.clone(_implementation.protectedHookReceiver1);
         }
 
-        if (_required.collateralHookReceiver1 != address(0)) {
-            clones.collateralHookReceiver1 = ClonesUpgradeable.clone(_required.collateralHookReceiver1);
+        if (_implementation.collateralHookReceiver1 != address(0)) {
+            _implementation.collateralHookReceiver1 = ClonesUpgradeable.clone(_implementation.collateralHookReceiver1);
         }
 
-        if (_required.debtHookReceiver1 != address(0)) {
-            clones.debtHookReceiver1 = ClonesUpgradeable.clone(_required.debtHookReceiver1);
+        if (_implementation.debtHookReceiver1 != address(0)) {
+            _implementation.debtHookReceiver1 = ClonesUpgradeable.clone(_implementation.debtHookReceiver1);
         }
+
+        return _implementation;
     }
 }
