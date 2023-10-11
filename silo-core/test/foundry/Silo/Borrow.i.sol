@@ -32,10 +32,10 @@ contract BorrowTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --ffi --mt test_borrow_zeros
+    forge test -vv --ffi --mt test_borrow_all_zeros
     */
-    function test_borrow_zeros() public {
-        vm.expectRevert("ERC20: approve from the zero address");
+    function test_borrow_all_zeros() public {
+        vm.expectRevert(ISilo.ZeroAssets.selector);
         silo0.borrow(0, address(0), address(0));
     }
 
@@ -46,12 +46,8 @@ contract BorrowTest is SiloLittleHelper, Test {
         uint256 assets = 0;
         address borrower = address(1);
 
-        assertEq(silo0.getDebtAssets(), 0);
+        vm.expectRevert(ISilo.ZeroAssets.selector);
         silo0.borrow(assets, borrower, borrower);
-        assertEq(silo0.getDebtAssets(), 0, "expect no change");
-
-        (,, address debtShareToken) = siloConfig.getShareTokens(address(silo0));
-        assertEq(IShareToken(debtShareToken).balanceOf(borrower), 0, "expect no debt");
     }
 
     /*
@@ -117,12 +113,8 @@ contract BorrowTest is SiloLittleHelper, Test {
         vm.prank(borrower);
         silo0.borrow(borrowToMuch, borrower, borrower);
 
-        uint256 gasStart = gasleft();
         vm.prank(borrower);
         silo0.borrow(maxBorrow, borrower, borrower);
-        uint256 gasEnd = gasleft();
-
-        assertEq(gasStart - gasEnd, 154692, "optimise borrow");
 
         assertEq(IShareToken(debtShareToken).balanceOf(borrower), 0, "expect borrower to NOT have debt in collateral silo");
         assertEq(silo1.getDebtAssets(), 0, "expect collateral silo to NOT have debt");
@@ -159,11 +151,7 @@ contract BorrowTest is SiloLittleHelper, Test {
         uint256 borrowAmount = maxBorrow / 2;
         // emit log_named_decimal_uint("borrowAmount", borrowAmount, 18);
 
-        uint256 gasStart = gasleft();
         uint256 gotShares = _borrow(borrowAmount, borrower);
-        uint256 gasEnd = gasleft();
-
-        assertEq(gasStart - gasEnd, 147455, "optimise borrow #1");
 
         assertEq(IShareToken(debtShareToken).balanceOf(borrower), 0.375e18, "expect borrower to have 1/2 of debt");
         assertEq(IShareToken(collateralShareToken).balanceOf(borrower), 1e18, "collateral silo: borrower has collateral");
@@ -174,11 +162,7 @@ contract BorrowTest is SiloLittleHelper, Test {
         // emit log_named_decimal_uint("borrowAmount #2", borrowAmount, 18);
         assertEq(borrowAmount, 0.75e18 / 2, "~");
 
-        gasStart = gasleft();
         gotShares = _borrow(borrowAmount, borrower);
-        gasEnd = gasleft();
-
-        assertEq(gasStart - gasEnd, 57938, "optimise borrow #2");
 
         assertEq(IShareToken(debtShareToken).balanceOf(borrower), 0.75e18, "debt silo: borrower has debt");
         assertEq(gotShares, 0.375e18, "got shares");

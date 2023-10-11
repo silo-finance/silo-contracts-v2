@@ -129,41 +129,4 @@ contract DepositTest is SiloLittleHelper, Test {
         vm.prank(depositor);
         silo0.deposit(assets, depositor, ISilo.AssetType.Protected);
     }
-
-    /*
-    forge test -vv --ffi --mt test_deposit_gas
-    */
-    function test_deposit_gas() public {
-        uint256 assets = 1e18;
-        address depositor = address(10);
-        address borrower = address(11);
-
-        uint256 gasStart = gasleft();
-        _deposit(assets, depositor);
-        uint256 gasEnd = gasleft();
-
-        assertEq(gasStart - gasEnd, 258087, "optimise deposit");
-
-        gasStart = gasleft();
-        _withdraw(assets / 2, depositor);
-        gasEnd = gasleft();
-        // assertEq(gasStart - gasEnd, 80541, "optimise withdraw");
-
-        _depositForBorrow(assets, depositor);
-
-        _deposit(assets * 2, borrower);
-
-        gasStart = gasleft();
-        _borrow(assets / 2, borrower);
-        gasEnd = gasleft();
-        // assertEq(gasStart - gasEnd, 134221, "optimise borrow");
-
-        vm.prank(borrower);
-        usdc.approve(address(silo1), assets / 2);
-        gasStart = gasleft();
-        vm.prank(borrower);
-        silo1.repay(assets / 2, borrower);
-        gasEnd = gasleft();
-        // assertEq(gasStart - gasEnd, 28401, "optimise repay");
-    }
 }

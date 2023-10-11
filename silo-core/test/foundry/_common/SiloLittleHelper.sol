@@ -7,7 +7,7 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {MintableToken} from "./MintableToken.sol";
 
 abstract contract SiloLittleHelper {
-    Vm _vm;
+    Vm private _vm;
 
     MintableToken token0;
     MintableToken token1;
@@ -43,6 +43,47 @@ abstract contract SiloLittleHelper {
         shares = silo1.borrow(_amount, _borrower, _borrower);
     }
 
+    function _repay(uint256 _amount, address _borrower) internal returns (uint256 shares, uint256 gas) {
+        _mintTokens(token1, _amount, _borrower);
+        _vm.prank(_borrower);
+        token1.approve(address(silo1), _amount);
+        _vm.prank(_borrower);
+
+        uint256 gasStart = gasleft();
+        shares = silo1.repay(_amount, _borrower);
+        uint256 gasEnd = gasleft();
+
+        gas = gasStart - gasEnd;
+    }
+
+    function _repayShares(uint256 _approval, uint256 _shares, address _borrower)
+        internal
+        returns (uint256 shares, uint256 gas)
+    {
+        return _repayShares(_approval, _shares, _borrower, bytes(""));
+    }
+
+    function _repayShares(uint256 _approval, uint256 _shares, address _borrower, bytes memory _revert)
+        internal
+        returns (uint256 shares, uint256 gas)
+    {
+        _mintTokens(token1, _approval, _borrower);
+        _vm.prank(_borrower);
+        token1.approve(address(silo1), _approval);
+        _vm.prank(_borrower);
+
+        uint256 gasStart = gasleft();
+
+        if (_revert.length != 0) {
+            _vm.expectRevert(_revert);
+        }
+
+        shares = silo1.repayShares(_shares, _borrower);
+        uint256 gasEnd = gasleft();
+
+        gas = gasStart - gasEnd;
+    }
+
     function _withdraw(uint256 _amount, address _depositor) internal returns (uint256 assets){
         _vm.prank(_depositor);
         return silo0.withdraw(_amount, _depositor, _depositor);
@@ -57,16 +98,26 @@ abstract contract SiloLittleHelper {
         internal
         returns (uint256 shares)
     {
-        uint256 balanceOf = _token.balanceOf(_depositor);
-
-        if (balanceOf < _assets) {
-            uint256 toMint = _assets - balanceOf;
-            _token.mint(_depositor, toMint);
-        }
+        _mintTokens(_token, _assets, _depositor);
 
         _vm.prank(_depositor);
         _token.approve(address(_silo), _assets);
         _vm.prank(_depositor);
         shares = _silo.deposit(_assets, _depositor, _type);
+    }
+
+    function _mintTokens(MintableToken _token, uint256 _assets, address _user) internal {
+        uint256 balanceOf = _token.balanceOf(_user);
+
+        if (balanceOf < _assets) {
+            uint256 toMint = _assets - balanceOf;
+            _token.mint(_user, toMint);
+        }
+    }
+
+    function _createDebt(uint256 _amount, address _borrower) internal returns (uint256 debtShares){
+        _depositForBorrow(_amount, address(0x987654321));
+        _deposit(_amount * 2, _borrower);
+        debtShares = _borrow(_amount, _borrower);
     }
 }

@@ -8,8 +8,8 @@ import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 
 import {TokenMock} from "silo-core/test/foundry/_mocks/TokenMock.sol";
-import "../../data-readers/SiloLendingLibBorrowTestData.sol";
-import "../../_common/SiloLendingLibImpl.sol";
+import {SiloLendingLibBorrowTestData} from "../../data-readers/SiloLendingLibBorrowTestData.sol";
+import {SiloLendingLibImpl} from "../../_common/SiloLendingLibImpl.sol";
 
 /*
     forge test -vv --mc MaxBorrowTest
@@ -54,7 +54,8 @@ contract BorrowTest is Test {
         address spender;
         uint256 totalCollateralAssets;
 
-        vm.expectRevert(ISilo.BorrowNotPossible.selector);
+        vm.expectRevert(ISilo.ZeroAssets.selector);
+
         SiloLendingLib.borrow(
             configData, assets, shares, receiver, borrower, spender, totalDebt, totalCollateralAssets
         );
