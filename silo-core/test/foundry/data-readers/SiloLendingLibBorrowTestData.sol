@@ -57,6 +57,7 @@ contract SiloLendingLibBorrowTestData {
         uint256 i;
 
         _init(data[i], "#0 all zeros");
+        data[i].output.reverts = ISilo.ZeroAssets.selector;
 
         i++;
         _init(data[i], "#1 NotEnoughLiquidity if no collateral");

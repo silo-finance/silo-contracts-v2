@@ -142,4 +142,54 @@ contract PreviewTest is SiloLittleHelper, Test {
         assertEq(previewBorrowShares, _borrow(assetsToBorrow, borrower), "previewBorrow after accrueInterest");
         assertLt(sharesBefore + previewBorrowShares, assetsToBorrow * 2, "we should have less shares then amount of assets+interest");
     }
+
+    /*
+    forge test -vv --ffi --mt test_previewRepay_noInterestNoDebt
+    */
+    function test_previewRepay_noInterestNoDebt() public {
+        uint256 assets = 1e18;
+        address borrower = makeAddr("Borrower");
+
+        uint256 sharesToRepay = silo1.previewRepay(assets);
+
+        _createDebt(assets, borrower);
+
+        assertEq(sharesToRepay, assets, "previewRepay == assets == shares");
+
+        (uint256 returnedAssets, ) = _repayShares(assets, sharesToRepay, borrower);
+        assertEq(returnedAssets, assets, "preview should give us exact assets");
+    }
+
+    /*
+    forge test -vv --ffi --mt test_previewRepay_noInterest
+    */
+    function test_previewRepay_noInterest() public {
+        uint256 assets = 1e18;
+        address borrower = makeAddr("Borrower");
+
+        _createDebt(assets, borrower);
+
+        uint256 sharesToRepay = silo1.previewRepay(assets);
+        assertEq(sharesToRepay, assets, "previewRepay == assets == shares");
+
+        (uint256 returnedAssets, ) = _repayShares(assets, sharesToRepay, borrower);
+        assertEq(returnedAssets, assets, "preview should give us exact assets");
+    }
+
+    /*
+    forge test -vv --ffi --mt test_previewRepay_withInterest
+    */
+    function test_previewRepay_withInterest() public {
+        uint256 assets = 1e18;
+        address borrower = makeAddr("Borrower");
+
+        _createDebt(assets, borrower);
+        vm.warp(block.timestamp + 1 days);
+
+        uint256 sharesToRepay = silo1.previewRepay(assets);
+        assertLt(sharesToRepay, assets, "when assets includes interst, shares amount will be lower");
+
+        (uint256 returnedAssets, ) = _repayShares(assets, sharesToRepay, borrower);
+        assertEq(returnedAssets, assets, "preview should give us exact assets");
+    }
 }

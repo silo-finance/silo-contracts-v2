@@ -31,6 +31,8 @@ library SiloLendingLib {
         ISilo.Assets storage _totalDebt,
         uint256 _totalCollateralAssets
     ) external returns (uint256 borrowedAssets, uint256 borrowedShares) {
+        if (_assets == 0 && _shares == 0) revert ISilo.ZeroAssets();
+
         if (
             !borrowPossible(
                 _configData.protectedShareToken, _configData.collateralShareToken, _configData.borrowable, _borrower
@@ -49,6 +51,8 @@ library SiloLendingLib {
             MathUpgradeable.Rounding.Up,
             ISilo.AssetType.Debt
         );
+
+        if (borrowedShares == 0) revert ISilo.ZeroShares();
 
         if (borrowedAssets > SiloMathLib.liquidity(_totalCollateralAssets, totalDebtAssets)) {
             revert ISilo.NotEnoughLiquidity();
@@ -71,6 +75,8 @@ library SiloLendingLib {
         address _repayer,
         ISilo.Assets storage _totalDebt
     ) external returns (uint256 assets, uint256 shares) {
+        if (_assets == 0 && _shares == 0) revert ISilo.ZeroAssets();
+
         IShareToken debtShareToken = IShareToken(_configData.debtShareToken);
         uint256 totalDebtAssets = _totalDebt.assets;
 
@@ -83,6 +89,8 @@ library SiloLendingLib {
             MathUpgradeable.Rounding.Down,
             ISilo.AssetType.Debt
         );
+
+        if (shares == 0) revert ISilo.ZeroShares();
 
         // fee-on-transfer is ignored
         // If token reenters, no harm done because we didn't change the state yet.
