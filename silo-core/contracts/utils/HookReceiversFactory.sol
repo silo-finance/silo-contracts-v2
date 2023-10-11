@@ -10,32 +10,30 @@ contract HookReceiversFactory is IHookReceiversFactory {
     /// @inheritdoc IHookReceiversFactory
     function create(HookReceivers memory _implementation)
         external
-        returns (HookReceivers memory)
+        returns (HookReceivers memory clones)
     {
         if (_implementation.protectedHookReceiver0 != address(0)) {
-            _implementation.protectedHookReceiver0 = ClonesUpgradeable.clone(_implementation.protectedHookReceiver0);
+            clones.protectedHookReceiver0 = ClonesUpgradeable.clone(_implementation.protectedHookReceiver0);
         }
 
         if (_implementation.collateralHookReceiver0 != address(0)) {
-            _implementation.collateralHookReceiver0 = ClonesUpgradeable.clone(_implementation.collateralHookReceiver0);
+            clones.collateralHookReceiver0 = ClonesUpgradeable.clone(_implementation.collateralHookReceiver0);
         }
 
         if (_implementation.debtHookReceiver0 != address(0)) {
-            _implementation.debtHookReceiver0 = ClonesUpgradeable.clone(_implementation.debtHookReceiver0);
+            clones.debtHookReceiver0 = ClonesUpgradeable.clone(_implementation.debtHookReceiver0);
         }
 
         if (_implementation.protectedHookReceiver1 != address(0)) {
-            _implementation.protectedHookReceiver1 = ClonesUpgradeable.clone(_implementation.protectedHookReceiver1);
+            clones.protectedHookReceiver1 = ClonesUpgradeable.clone(_implementation.protectedHookReceiver1);
         }
 
         if (_implementation.collateralHookReceiver1 != address(0)) {
-            _implementation.collateralHookReceiver1 = ClonesUpgradeable.clone(_implementation.collateralHookReceiver1);
+            clones.collateralHookReceiver1 = ClonesUpgradeable.clone(_implementation.collateralHookReceiver1);
         }
 
         if (_implementation.debtHookReceiver1 != address(0)) {
-            _implementation.debtHookReceiver1 = ClonesUpgradeable.clone(_implementation.debtHookReceiver1);
+            clones.debtHookReceiver1 = ClonesUpgradeable.clone(_implementation.debtHookReceiver1);
         }
-
-        return _implementation;
     }
 }
