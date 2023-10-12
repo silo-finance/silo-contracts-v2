@@ -11,9 +11,9 @@
     "liquidationFee0": 500,
     "flashloanFee0": 100,
     "borrowable0": true,
-    "protectedHookReceiver0": "0x",
-    "collateralHookReceiver0": "0x",
-    "debtHookReceiver0": "0x",
+    "protectedHookReceiver0": "NO_HOOK_RECEIVER",
+    "collateralHookReceiver0": "NO_HOOK_RECEIVER",
+    "debtHookReceiver0": "NO_HOOK_RECEIVER",
     "token1": "PLACEHOLDER",
     "solvencyOracle1": "NO_ORACLE",
     "maxLtvOracle1": "NO_ORACLE",
@@ -24,7 +24,7 @@
     "liquidationFee1": 250,
     "flashloanFee1": 100,
     "borrowable1": true,
-    "protectedHookReceiver1": "0x",
-    "collateralHookReceiver1": "0x",
-    "debtHookReceiver1": "0x"
+    "protectedHookReceiver1": "NO_HOOK_RECEIVER",
+    "collateralHookReceiver1": "NO_HOOK_RECEIVER",
+    "debtHookReceiver1": "NO_HOOK_RECEIVER"
 }
