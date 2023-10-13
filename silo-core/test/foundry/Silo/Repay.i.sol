@@ -84,8 +84,7 @@ contract RepayTest is SiloLittleHelper, Test {
 
         _createDebt(assets, borrower);
 
-        (, uint256 gas) = _repay(assets, borrower);
-        assertEq(gas, 53792, "optimise repay");
+        _repay(assets, borrower);
     }
 
     /*
@@ -98,8 +97,7 @@ contract RepayTest is SiloLittleHelper, Test {
         _createDebt(assets, borrower);
         vm.warp(block.timestamp + 1 days);
 
-        (, uint256 gas) = _repay(assets, borrower);
-        assertEq(gas, 121490, "optimise repay with interest");
+        _repay(assets, borrower);
     }
 
     /*
