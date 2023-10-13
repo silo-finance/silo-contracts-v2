@@ -8,18 +8,18 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 
 import {TokenMock} from "silo-core/test/foundry/_mocks/TokenMock.sol";
-import {SiloFixture} from "../_common/fixtures/SiloFixture.sol";
+import {SiloFixture} from "../../_common/fixtures/SiloFixture.sol";
 
-import {MintableToken} from "../_common/MintableToken.sol";
-import {SiloHandler} from "../_common/SiloHandler.sol";
-import {SiloInvariants} from "../_common/SiloInvariants.sol";
-import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
+import {MintableToken} from "../../_common/MintableToken.sol";
+import {SiloHandler} from "../../_common/SiloHandler.sol";
+import {SiloInvariants} from "../../_common/SiloInvariants.sol";
+import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
 
 
 /*
-    forge test -vv --ffi --mc RepayInvariantTest
+    forge test -vv --ffi --mc BorrowInvariantTest
 */
-contract RepayInvariantTest is SiloLittleHelper, Test {
+contract BorrowInvariantTest is SiloLittleHelper, Test {
     SiloInvariants invariants;
 
     address user1 = address(0xabc01);
@@ -36,11 +36,10 @@ contract RepayInvariantTest is SiloLittleHelper, Test {
         ) = siloFixture.deploy_local(SiloFixture.Override(address(token0), address(token1)));
 
         SiloHandler siloHandler = new SiloHandler(silo0, silo1, token0, token1);
-        bytes4[] memory selectors = new bytes4[](4);
+        bytes4[] memory selectors = new bytes4[](3);
         selectors[0] = SiloHandler.deposit.selector;
         selectors[1] = SiloHandler.depositType.selector;
         selectors[2] = SiloHandler.borrow.selector;
-        selectors[3] = SiloHandler.repay.selector;
 
         targetContract(address(siloHandler));
 
@@ -62,12 +61,12 @@ contract RepayInvariantTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --ffi --mt invariant_silo_repay
+    forge test -vv --ffi --mt invariant_silo_borrow
     */
     /// forge-config: core.invariant.runs = 1000
     /// forge-config: core.invariant.depth = 15
     /// forge-config: core.invariant.fail-on-revert = false
-    function invariant_silo_repay() public {
+    function invariant_silo_borrow() public {
         invariants.siloInvariant_userIsSolvent(user1);
         invariants.siloInvariant_userIsSolvent(user2);
         invariants.siloInvariant_userIsSolvent(user3);
