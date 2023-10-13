@@ -20,7 +20,7 @@ interface ISiloLiquidation {
     error UserIsSolvent();
     error InsufficientLiquidation();
     error LiquidationTooBig();
-    error LtvWentUp();
+    error Insolvency();
     error OnlySilo();
 
     /// @notice Function to liquidate a non-healthy position collateral-wise

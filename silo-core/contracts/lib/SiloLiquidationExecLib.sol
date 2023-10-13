@@ -234,14 +234,25 @@ library SiloLiquidationExecLib {
         if (receiveCollateralAssets == 0 || repayDebtAssets == 0) return (0, 0);
 
         if (ltvAfterInBp != 0) { // it can be 0 in case of full liquidation
-            if (!_params.selfLiquidation && ltvAfterInBp < SiloLiquidationLib.minAcceptableLTV(_params.collateralLt)) {
-                revert ISiloLiquidation.LiquidationTooBig();
-            }
-
-            // because our precision is 1e4, it is possible to end up with higher LTV, if difference will be
-            // inside a "precision error"
-            if (ltvAfterInBp > ltvBeforeInBp) {
-                revert ISiloLiquidation.LtvWentUp();
+            if (_params.selfLiquidation) {
+                // Because our precision is 1e4, it is possible to end up with higher LTV, if difference will be
+                // inside a "precision error".
+                // There is also dependency, based on which LTV will be going up and we need to allow for liquidation
+                // dependency is: (collateral value / debt value) - 1 > fee
+                // when above is true, LTV will go down, otherwise it will always go up.
+                // When it will be going up, we are close to bad debt. This "close" depends on how big fee is.
+                // Based on that, we can not check if (ltvAfterInBp > ltvBeforeInBp), we need to allow for liquidation.
+                // In case of self liquidation:
+                // - if user is solvent after liquidation, LTV before does not matter
+                // - if user was solvent but after liquidation it is not, we need to revert
+                // - if user was not solvent, then we need to allow
+                if (ltvBeforeInBp <= _params.collateralLt && ltvAfterInBp > _params.collateralLt) {
+                    revert ISiloLiquidation.Insolvency();
+                }
+            } else {
+                if (ltvAfterInBp < SiloLiquidationLib.minAcceptableLTV(_params.collateralLt)) {
+                    revert ISiloLiquidation.LiquidationTooBig();
+                }
             }
         }
     }

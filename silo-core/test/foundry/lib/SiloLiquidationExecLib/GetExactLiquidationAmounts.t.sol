@@ -11,7 +11,7 @@ import {SiloFactory} from "silo-core/contracts/SiloFactory.sol";
 import {SiloMock} from "../../_mocks/SiloMock.sol";
 import {InterestRateModelMock} from "../../_mocks/InterestRateModelMock.sol";
 import {TokenMock} from "../../_mocks/TokenMock.sol";
-import "../../data-readers/GetExactLiquidationAmountsTestData.sol";
+import {GetExactLiquidationAmountsTestData} from "../../data-readers/GetExactLiquidationAmountsTestData.sol";
 
 
 // forge test -vv --mc LiquidationPreviewTest
@@ -35,18 +35,18 @@ contract GetExactLiquidationAmountsHelper is Test {
     InterestRateModelMock immutable INTEREST_RATE_MODEL;
 
     constructor () {
-        SILO_A = new SiloMock(vm, address(0xaaaaaaaaaaaaaaaaaa5170));
-        SILO_B = new SiloMock(vm, address(0xbbbbbbbbbbbbbbbbbb5170));
+        SILO_A = new SiloMock(vm, makeAddr("SILO_A"));
+        SILO_B = new SiloMock(vm, makeAddr("SILO_B"));
 
-        TOKEN_A = new TokenMock(vm, address(0xaaaaaaaaaaaaaaaaaa));
-        C_SHARE_TOKEN_A = new TokenMock(vm, address(0xCC0aaaaaaaaaaaaaaaaaa));
-        D_SHARE_TOKEN_A = new TokenMock(vm, address(0xDD0aaaaaaaaaaaaaaaaaa));
-        P_SHARE_TOKEN_A = new TokenMock(vm, address(0xFF0aaaaaaaaaaaaaaaaaa));
+        TOKEN_A = new TokenMock(vm, makeAddr("TOKEN_A"));
+        C_SHARE_TOKEN_A = new TokenMock(vm, makeAddr("C_SHARE_TOKEN_A"));
+        D_SHARE_TOKEN_A = new TokenMock(vm, makeAddr("D_SHARE_TOKEN_A"));
+        P_SHARE_TOKEN_A = new TokenMock(vm, makeAddr("P_SHARE_TOKEN_A"));
 
-        TOKEN_B = new TokenMock(vm, address(0xbbbbbbbbbbbbbbbbbb));
-        C_SHARE_TOKEN_B = new TokenMock(vm, address(0xCC0bbbbbbbbbbbbbbbbbb));
-        D_SHARE_TOKEN_B = new TokenMock(vm, address(0xDD0bbbbbbbbbbbbbbbbbb));
-        P_SHARE_TOKEN_B = new TokenMock(vm, address(0xFF0bbbbbbbbbbbbbbbbbb));
+        TOKEN_B = new TokenMock(vm, makeAddr("TOKEN_B"));
+        C_SHARE_TOKEN_B = new TokenMock(vm, makeAddr("C_SHARE_TOKEN_B"));
+        D_SHARE_TOKEN_B = new TokenMock(vm, makeAddr("D_SHARE_TOKEN_B"));
+        P_SHARE_TOKEN_B = new TokenMock(vm, makeAddr("P_SHARE_TOKEN_B"));
 
         INTEREST_RATE_MODEL = new InterestRateModelMock(vm);
     }
@@ -62,24 +62,22 @@ contract GetExactLiquidationAmountsHelper is Test {
         (ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig) = _configs();
         uint256 sharesOffset = 10 ** 2;
 
-        // address user = address(123); stack too deep
-
-        P_SHARE_TOKEN_A.balanceOfMock(address(123), 0);
+        P_SHARE_TOKEN_A.balanceOfMock(makeAddr("borrower"), 0);
         P_SHARE_TOKEN_A.totalSupplyMock(0);
         SILO_A.getProtectedAssetsMock(0);
 
-        C_SHARE_TOKEN_A.balanceOfMock(address(123), _collateralUserBalanceOf * sharesOffset);
+        C_SHARE_TOKEN_A.balanceOfMock(makeAddr("borrower"), _collateralUserBalanceOf * sharesOffset);
         C_SHARE_TOKEN_A.totalSupplyMock((2 ** 128 - 1) * sharesOffset);
         SILO_A.getCollateralAssetsMock(2 ** 128 - 1);
 
-        D_SHARE_TOKEN_B.balanceOfMock(address(123), _debtUserBalanceOf * sharesOffset);
+        D_SHARE_TOKEN_B.balanceOfMock(makeAddr("borrower"), _debtUserBalanceOf * sharesOffset);
         D_SHARE_TOKEN_B.totalSupplyMock(_debtUserBalanceOf * sharesOffset);
         SILO_B.getDebtAssetsMock(_debtUserBalanceOf);
 
         return SiloLiquidationExecLib.getExactLiquidationAmounts(
             collateralConfig,
             debtConfig,
-            address(123),
+            makeAddr("borrower"),
             _debtToCover,
             _liquidationFeeInBp,
             _selfLiquidation
@@ -114,9 +112,6 @@ contract GetExactLiquidationAmountsHelper is Test {
 
 // forge test -vv --mc LiquidationPreviewTest
 contract GetExactLiquidationAmountsTest is GetExactLiquidationAmountsHelper {
-
-//    FuzzHelper immutable FUZZ_HELPER;
-
     /*
     forge test -vv --mt test_getExactLiquidationAmounts_noOracle_zero
     */
@@ -151,7 +146,6 @@ contract GetExactLiquidationAmountsTest is GetExactLiquidationAmountsHelper {
         assertEq(repayDebtAssets, 0);
     }
 
-    // TODO: [FAIL. Reason: Assertion failed.]
     /*
     forge test -vv --mt test_getExactLiquidationAmounts_noOracle_loop
     */
@@ -193,12 +187,11 @@ contract GetExactLiquidationAmountsTest is GetExactLiquidationAmountsHelper {
         }
     }
 
-    // TODO: FAIL. Reason: The `vm.assume` cheatcode rejected too many inputs (65536 allowed)]
     /*
     forge test -vv --mt test_getExactLiquidationAmounts_selfLiquidation_fuzz
-    make sure self-liquidation can not make user less solvent
+    make sure self-liquidation can not make user insolvent
     */
-    /// forge-config: core.fuzz.runs = 1000
+    /// forge-config: core.fuzz.runs = 10000
     function test_getExactLiquidationAmounts_selfLiquidation_fuzz(
         uint128 _debtToCover,
         uint128 _collateralUserBalanceOf,
@@ -220,20 +213,23 @@ contract GetExactLiquidationAmountsTest is GetExactLiquidationAmountsHelper {
         ) = _tryGetExactLiquidationAmounts(_debtToCover, _collateralUserBalanceOf, _debtUserBalanceOf, 0, true);
 
         // we want cases where we doing liquidation
-        vm.assume(success);
         vm.assume(collateralToLiquidate != 0);
 
         if (success) {
-            assertGe(ltvBefore, ltvAfter, "self liquidation can not make user less solvent than it was");
+            assertGe(ltvBefore, ltvAfter, "self liquidation can not make user less solvent than it was, because fee=0");
+
+            if (ltvBefore <= LT) {
+                assertLe(ltvAfter, LT, "self liquidation can not make user insolvent");
+            }
         } else {
-            assertTrue(bytes4(errorType) == ISiloLiquidation.LtvWentUp.selector);
+            assertFalse(true, "?");
+            assertTrue(bytes4(errorType) == ISiloLiquidation.Insolvency.selector, "this is the only error we expect");
         }
     }
 
-    // TODO: [FAIL. Reason: The `vm.assume` cheatcode rejected too many inputs (65536 allowed)]
     /*
     forge test -vv --mt test_getExactLiquidationAmounts_liquidation_fuzz
-    make sure liquidation can not make user less solvent
+    goal here is to check if we can get unexpected reverts
     */
     /// forge-config: core.fuzz.runs = 1000
     function test_getExactLiquidationAmounts_liquidation_fuzz(
@@ -241,20 +237,19 @@ contract GetExactLiquidationAmountsTest is GetExactLiquidationAmountsHelper {
         uint128 _collateralUserBalanceOf,
         uint128 _debtUserBalanceOf
     ) public {
-        vm.assume(_debtToCover > 0);
+        vm.assume(_debtToCover != 0);
         vm.assume(_debtToCover <= _debtUserBalanceOf);
-        vm.assume(_collateralUserBalanceOf > 0);
-        vm.assume(_collateralUserBalanceOf < 2 ** 128);
+        vm.assume(_collateralUserBalanceOf != 0);
 
         // in this test we assume share is 1:1 assets 1:1 value
-        uint256 ltvBefore = _debtUserBalanceOf * BASIS_POINTS / _collateralUserBalanceOf;
+        uint256 ltvBefore = uint256(_debtUserBalanceOf) * BASIS_POINTS / _collateralUserBalanceOf;
 
         // investigate "normal" cases, where LTV is <= 100%, if we have bad debt then this is already lost cause
         vm.assume(ltvBefore >= LT);
         vm.assume(ltvBefore <= BASIS_POINTS);
 
         (
-            uint256 collateralToLiquidate, uint256 ltvAfter, bool success, bytes4 errorType
+            uint256 collateralToLiquidate,, bool success, bytes4 errorType
         ) = _tryGetExactLiquidationAmounts(_debtToCover, _collateralUserBalanceOf, _debtUserBalanceOf, 1, false);
 
         // we want cases where we do not revert
@@ -263,13 +258,9 @@ contract GetExactLiquidationAmountsTest is GetExactLiquidationAmountsHelper {
         vm.assume(collateralToLiquidate != 0);
 
         if (success) {
-            assertGe(ltvBefore, ltvAfter, "liquidation can not make user less solvent than it was");
+            // there is nothing to check here
         } else {
-            assertTrue(
-                bytes4(errorType) == ISiloLiquidation.LtvWentUp.selector
-                || bytes4(errorType) == ISiloLiquidation.LiquidationTooBig.selector,
-                "expect no other errors"
-            );
+            assertTrue(bytes4(errorType) == ISiloLiquidation.LiquidationTooBig.selector, "expect no other errors");
         }
     }
 
