@@ -43,45 +43,36 @@ abstract contract SiloLittleHelper {
         shares = silo1.borrow(_amount, _borrower, _borrower);
     }
 
-    function _repay(uint256 _amount, address _borrower) internal returns (uint256 shares, uint256 gas) {
+    function _repay(uint256 _amount, address _borrower) internal returns (uint256 shares) {
         _mintTokens(token1, _amount, _borrower);
         _vm.prank(_borrower);
         token1.approve(address(silo1), _amount);
         _vm.prank(_borrower);
 
-        uint256 gasStart = gasleft();
         shares = silo1.repay(_amount, _borrower);
-        uint256 gasEnd = gasleft();
-
-        gas = gasStart - gasEnd;
     }
 
     function _repayShares(uint256 _approval, uint256 _shares, address _borrower)
         internal
-        returns (uint256 shares, uint256 gas)
+        returns (uint256 shares)
     {
         return _repayShares(_approval, _shares, _borrower, bytes(""));
     }
 
     function _repayShares(uint256 _approval, uint256 _shares, address _borrower, bytes memory _revert)
         internal
-        returns (uint256 shares, uint256 gas)
+        returns (uint256 shares)
     {
         _mintTokens(token1, _approval, _borrower);
         _vm.prank(_borrower);
         token1.approve(address(silo1), _approval);
         _vm.prank(_borrower);
 
-        uint256 gasStart = gasleft();
-
         if (_revert.length != 0) {
             _vm.expectRevert(_revert);
         }
 
         shares = silo1.repayShares(_shares, _borrower);
-        uint256 gasEnd = gasleft();
-
-        gas = gasStart - gasEnd;
     }
 
     function _withdraw(uint256 _amount, address _depositor) internal returns (uint256 assets){

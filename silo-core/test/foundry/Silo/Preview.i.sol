@@ -156,7 +156,7 @@ contract PreviewTest is SiloLittleHelper, Test {
 
         assertEq(sharesToRepay, assets, "previewRepay == assets == shares");
 
-        (uint256 returnedAssets, ) = _repayShares(assets, sharesToRepay, borrower);
+        uint256 returnedAssets = _repayShares(assets, sharesToRepay, borrower);
         assertEq(returnedAssets, assets, "preview should give us exact assets");
     }
 
@@ -172,7 +172,7 @@ contract PreviewTest is SiloLittleHelper, Test {
         uint256 sharesToRepay = silo1.previewRepay(assets);
         assertEq(sharesToRepay, assets, "previewRepay == assets == shares");
 
-        (uint256 returnedAssets, ) = _repayShares(assets, sharesToRepay, borrower);
+        uint256 returnedAssets = _repayShares(assets, sharesToRepay, borrower);
         assertEq(returnedAssets, assets, "preview should give us exact assets");
     }
 
@@ -189,7 +189,7 @@ contract PreviewTest is SiloLittleHelper, Test {
         uint256 sharesToRepay = silo1.previewRepay(assets);
         assertLt(sharesToRepay, assets, "when assets includes interst, shares amount will be lower");
 
-        (uint256 returnedAssets, ) = _repayShares(assets, sharesToRepay, borrower);
+        uint256 returnedAssets = _repayShares(assets, sharesToRepay, borrower);
         assertEq(returnedAssets, assets, "preview should give us exact assets");
     }
 }
