@@ -737,7 +737,11 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
 
         IERC20Upgradeable(_token).safeTransferFrom(address(_receiver), address(this), _amount + fee);
 
-        siloData.daoAndDeployerFees += fee;
+        unchecked {
+            // we operating on chunks of real tokens, so overflow should not happen
+            // fee is simply to small to overflow on cast to uint192, even if, we will get lower fee
+            siloData.daoAndDeployerFees += uint192(fee);
+        }
 
         success = true;
     }

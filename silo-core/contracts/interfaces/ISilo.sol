@@ -50,13 +50,12 @@ interface ISilo is IERC4626, IERC3156FlashLender, ISiloLiquidation {
         uint256 assets;
     }
 
-    // TODO: optimized storage to use uint128 and uncheck math
     /// @dev Storage struct that holds all required data for a single token market
     /// @param daoAndDeployerFees Current amount of fees accrued by DAO and Deployer
     /// @param interestRateTimestamp timestamp of the last interest accrual
     /// @param assets map of assets
     struct SiloData {
-        uint256 daoAndDeployerFees;
+        uint192 daoAndDeployerFees;
         uint64 interestRateTimestamp;
     }
 
@@ -126,7 +125,7 @@ interface ISilo is IERC4626, IERC3156FlashLender, ISiloLiquidation {
 
     function config() external view returns (ISiloConfig siloConfig);
     function siloId() external view returns (uint256 siloId);
-    function siloData() external view returns (uint256 daoAndDeployerFees, uint64 interestRateTimestamp);
+    function siloData() external view returns (uint192 daoAndDeployerFees, uint64 interestRateTimestamp);
     function utilizationData() external view returns (UtilizationData memory utilizationData);
     function getLiquidity() external view returns (uint256 liquidity);
 
