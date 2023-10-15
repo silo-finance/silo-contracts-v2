@@ -28,7 +28,7 @@ contract Borrow2ndGasTest is Gas, Test {
     function test_gas_secondBorrow() public {
         _action(
             BORROWER,
-            silo1,
+            address(silo1),
             abi.encodeCall(ISilo.borrow, (ASSETS, BORROWER, BORROWER)),
             "for 2nd borrow (no interest)",
             146604

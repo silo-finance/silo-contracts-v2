@@ -33,7 +33,8 @@ contract LiquidationAccrueInterestGasTest is Gas, Test {
     function test_gas_liquidationCallWithInterest() public {
         _action(
             DEPOSITOR,
-            silo1, abi.encodeCall(ISiloLiquidation.liquidationCall, (address(token0), address(token1), BORROWER, ASSETS / 2, false)),
+            address(silo1),
+            abi.encodeCall(ISiloLiquidation.liquidationCall, (address(token0), address(token1), BORROWER, ASSETS / 2, false)),
             "liquidationCall with accrue interest",
             346818
         );

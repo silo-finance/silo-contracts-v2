@@ -23,7 +23,7 @@ contract Deposit2ndGasTest is Gas, Test {
     function test_gas_secondDeposit() public {
         _action(
             BORROWER,
-            silo0,
+            address(silo0),
             abi.encodeCall(ISilo.deposit, (ASSETS, BORROWER, ISilo.AssetType.Collateral)),
             "2nd deposit (no interest)",
             96447

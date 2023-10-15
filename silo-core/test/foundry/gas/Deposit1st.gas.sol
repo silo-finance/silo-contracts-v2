@@ -18,6 +18,12 @@ contract Deposit1stGasTest is Gas, Test {
     }
 
     function test_gas_firstDeposit() public {
-        _action(BORROWER, silo0, abi.encodeCall(ISilo.deposit, (ASSETS, BORROWER, ISilo.AssetType.Collateral)), "first deposit ever", 184951);
+        _action(
+            BORROWER,
+            address(silo0),
+            abi.encodeCall(ISilo.deposit, (ASSETS, BORROWER, ISilo.AssetType.Collateral)),
+            "first deposit ever",
+            184951
+        );
     }
 }

@@ -30,7 +30,7 @@ contract BorrowAccrueInterestGasTest is Gas, Test {
     function test_gas_borrowAccrueInterest() public {
         _action(
             BORROWER,
-            silo1,
+            address(silo1),
             abi.encodeCall(ISilo.borrow, (ASSETS, BORROWER, BORROWER)),
             "borrow with accrueInterest",
             218802

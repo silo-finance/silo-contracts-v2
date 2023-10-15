@@ -53,7 +53,7 @@ contract Gas is SiloLittleHelper {
 
     function _action(
         address _sender,
-        ISilo _target,
+        address _target,
         bytes memory _data,
         string memory _msg,
         uint256 _expectedGas
@@ -61,7 +61,7 @@ contract Gas is SiloLittleHelper {
         _vm.startPrank(_sender, _sender);
 
         uint256 gasStart = gasleft();
-        (bool success,) = address(_target).call(_data);
+        (bool success,) = _target.call(_data);
         uint256 gasEnd = gasleft();
         gas = gasStart - gasEnd;
 

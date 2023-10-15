@@ -30,7 +30,8 @@ contract WithdrawPartAccrueInterestGasTest is Gas, Test {
     function test_gas_withdrawPartWithInterest() public {
         _action(
             DEPOSITOR,
-            silo1, abi.encodeCall(ISilo.withdraw, (ASSETS / 10, DEPOSITOR, DEPOSITOR, ISilo.AssetType.Collateral)),
+            address(silo1),
+            abi.encodeCall(ISilo.withdraw, (ASSETS / 10, DEPOSITOR, DEPOSITOR, ISilo.AssetType.Collateral)),
             "partial withdraw with accrue interest",
             212848
         );
