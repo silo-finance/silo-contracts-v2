@@ -195,18 +195,17 @@ contract GetExactLiquidationAmountsTest is GetExactLiquidationAmountsHelper {
     function test_getExactLiquidationAmounts_selfLiquidation_fuzz(
         uint128 _debtToCover,
         uint128 _collateralUserBalanceOf,
-        uint128 _debtUserBalanceOf
+        uint120 _debtUserBalanceOf
     ) public {
         vm.assume(_debtToCover > 0);
         vm.assume(_debtToCover <= _debtUserBalanceOf);
         vm.assume(_collateralUserBalanceOf > 0);
-        vm.assume(_collateralUserBalanceOf < 2 ** 128);
 
         // in this test we assume share is 1:1 assets 1:1 value
         uint256 ltvBefore = _debtUserBalanceOf * BASIS_POINTS / _collateralUserBalanceOf;
 
-        // investigate "normal" cases, where LTV is <= 100%, if we have bad debt then this is already lost cause
-        vm.assume(ltvBefore <= BASIS_POINTS);
+        // investigate "normal" cases, where LTV is <= LT, user is solvent
+        vm.assume(ltvBefore <= LT);
 
         (
             uint256 collateralToLiquidate, uint256 ltvAfter, bool success, bytes4 errorType
@@ -222,7 +221,7 @@ contract GetExactLiquidationAmountsTest is GetExactLiquidationAmountsHelper {
                 assertLe(ltvAfter, LT, "self liquidation can not make user insolvent");
             }
         } else {
-            assertFalse(true, "?");
+            assertFalse(true, "do we ever revert with our assumptions?");
             assertTrue(bytes4(errorType) == ISiloLiquidation.Insolvency.selector, "this is the only error we expect");
         }
     }
