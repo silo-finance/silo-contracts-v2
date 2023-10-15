@@ -28,7 +28,7 @@ contract RepayPartGasTest is Gas, Test {
     function test_gas_repayPart() public {
         _action(
             BORROWER,
-            silo1,
+            address(silo1),
             abi.encodeCall(ISilo.repay, (ASSETS / 2, BORROWER)),
             "partial repay (no interest)",
             92288

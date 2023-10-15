@@ -30,7 +30,7 @@ contract DepositAccrueInterestGasTest is Gas, Test {
     function test_gas_depositAccrueInterest() public {
         _action(
             DEPOSITOR,
-            silo1,
+            address(silo1),
             abi.encodeCall(ISilo.deposit, (ASSETS, DEPOSITOR, ISilo.AssetType.Collateral)),
             "deposit with accrueInterest",
             170632

@@ -30,7 +30,7 @@ contract RepayPartAccrueInterestGasTest is Gas, Test {
     function test_gas_repayPartWithInterest() public {
         _action(
             BORROWER,
-            silo1,
+            address(silo1),
             abi.encodeCall(ISilo.repay, (ASSETS / 2, BORROWER)),
             "partial repay with accrue interest",
             166414
