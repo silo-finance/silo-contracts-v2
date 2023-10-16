@@ -200,15 +200,13 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
         (, ISiloConfig.ConfigData memory configData) = _accrueInterest();
 
         (, shares) = _deposit(
-            configData,
-            SiloERC4626Lib.DepositParams({
-                assets: _assets,
-                shares: 0,
-                receiver: _receiver,
-                assetType: AssetType.Collateral,
-                collateralShareToken: IShareToken(configData.collateralShareToken),
-                debtShareToken: IShareToken(configData.debtShareToken)
-            })
+            configData.token,
+            _assets,
+            0, // shares
+            _receiver,
+            AssetType.Collateral,
+            IShareToken(configData.collateralShareToken),
+            IShareToken(configData.debtShareToken)
         );
     }
 
@@ -231,15 +229,13 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
         (, ISiloConfig.ConfigData memory configData) = _accrueInterest();
 
         (assets,) = _deposit(
-            configData,
-            SiloERC4626Lib.DepositParams({
-                assets: 0,
-                shares: _shares,
-                receiver: _receiver,
-                assetType: AssetType.Collateral,
-                collateralShareToken: IShareToken(configData.collateralShareToken),
-                debtShareToken: IShareToken(configData.debtShareToken)
-            })
+            configData.token,
+            0, // assets
+            _shares,
+            _receiver,
+            AssetType.Collateral,
+            IShareToken(configData.collateralShareToken),
+            IShareToken(configData.debtShareToken)
         );
     }
 
@@ -377,15 +373,13 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
             : configData.protectedShareToken;
 
         (, shares) = _deposit(
-            configData,
-            SiloERC4626Lib.DepositParams({
-                assets: _assets,
-                shares: 0,
-                receiver: _receiver,
-                assetType: _assetType,
-                collateralShareToken: IShareToken(collateralShareToken),
-                debtShareToken: IShareToken(configData.debtShareToken)
-            })
+            configData.token,
+            _assets,
+            0, // shares
+            _receiver,
+            _assetType,
+            IShareToken(collateralShareToken),
+            IShareToken(configData.debtShareToken)
         );
     }
 
@@ -426,15 +420,13 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
             : configData.protectedShareToken;
 
         (assets,) = _deposit(
-            configData,
-            SiloERC4626Lib.DepositParams({
-                assets: 0,
-                shares: _shares,
-                receiver: _receiver,
-                assetType: _assetType,
-                collateralShareToken: IShareToken(collateralShareToken),
-                debtShareToken: IShareToken(configData.debtShareToken)
-            })
+            configData.token,
+            0, // asstes
+            _shares,
+            _receiver,
+            _assetType,
+            IShareToken(collateralShareToken),
+            IShareToken(configData.debtShareToken)
         );
     }
 
@@ -523,45 +515,45 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
 
         (, ISiloConfig.ConfigData memory configData) = _accrueInterest();
 
-        (AssetType depositType, address shareTokenFrom, address shareTokenTo, uint256 liquidity) =
-            _withdrawType == AssetType.Collateral
-            ? (AssetType.Protected, configData.collateralShareToken, configData.protectedShareToken, getLiquidity())
-            : (
-                AssetType.Collateral,
-                configData.protectedShareToken,
-                configData.collateralShareToken,
-                _total[_withdrawType].assets
+        uint256 toShares;
+
+        {
+            (AssetType depositType, address shareTokenFrom, address shareTokenTo, uint256 liquidity) =
+                _withdrawType == AssetType.Collateral
+                ? (AssetType.Protected, configData.collateralShareToken, configData.protectedShareToken, getLiquidity())
+                : (
+                    AssetType.Collateral,
+                    configData.protectedShareToken,
+                    configData.collateralShareToken,
+                    _total[_withdrawType].assets
+                );
+
+            (assets, _shares) = SiloERC4626Lib.withdraw(
+                address(0), // empty token address because we dont want to do transfer
+                shareTokenFrom,
+                SiloERC4626Lib.WithdrawParams({
+                    assets: 0,
+                    shares: _shares,
+                    receiver: _owner,
+                    owner: _owner,
+                    spender: msg.sender,
+                    assetType: _withdrawType
+                }),
+                liquidity,
+                _total[_withdrawType]
             );
 
-        (assets, _shares) = SiloERC4626Lib.withdraw(
-            address(0), // empty token address because we dont want to do transfer
-            shareTokenFrom,
-            SiloERC4626Lib.WithdrawParams({
-                assets: 0,
-                shares: _shares,
-                receiver: _owner,
-                owner: _owner,
-                spender: msg.sender,
-                assetType: _withdrawType
-            }),
-            liquidity,
-            _total[_withdrawType]
-        );
-
-        uint256 toShares;
-        (assets, toShares) = SiloERC4626Lib.deposit(
-            address(0), // empty token because we don't want to transfer
-            _owner,
-            SiloERC4626Lib.DepositParams({
-                assets: assets,
-                shares: 0,
-                receiver: _owner,
-                assetType: depositType,
-                collateralShareToken: IShareToken(shareTokenTo),
-                debtShareToken: IShareToken(configData.debtShareToken)
-            }),
-            _total[depositType]
-        );
+            (assets, toShares) = SiloERC4626Lib.deposit(
+                address(0), // empty token because we don't want to transfer
+                _owner,
+                assets,
+                0, // shares
+                _owner,
+                IShareToken(shareTokenTo),
+                IShareToken(configData.debtShareToken),
+                _total[depositType]
+            );
+        }
 
         if (_withdrawType == AssetType.Collateral) {
             emit Withdraw(msg.sender, _owner, _owner, assets, _shares);
@@ -896,20 +888,36 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
         );
     }
 
-    function _deposit(ISiloConfig.ConfigData memory _configData, SiloERC4626Lib.DepositParams memory _depositParams)
+    function _deposit(
+        address _token,
+        uint256 _assets,
+        uint256 _shares,
+        address _receiver,
+        ISilo.AssetType _assetType,
+        IShareToken _collateralShareToken,
+        IShareToken _debtShareToken
+    )
         internal
         virtual
         returns (uint256 assets, uint256 shares)
     {
-        if (_depositParams.assetType == AssetType.Debt) revert ISilo.WrongAssetType();
+        if (_assetType == AssetType.Debt) revert ISilo.WrongAssetType();
 
-        (assets, shares) =
-            SiloERC4626Lib.deposit(_configData.token, msg.sender, _depositParams, _total[_depositParams.assetType]);
+        (assets, shares) = SiloERC4626Lib.deposit(
+            _token,
+            msg.sender,
+            _assets,
+            _shares,
+            _receiver,
+            _collateralShareToken,
+            _debtShareToken,
+            _total[_assetType]
+        );
 
-        if (_depositParams.assetType == AssetType.Collateral) {
-            emit Deposit(msg.sender, _depositParams.receiver, assets, shares);
+        if (_assetType == AssetType.Collateral) {
+            emit Deposit(msg.sender, _receiver, assets, shares);
         } else {
-            emit DepositProtected(msg.sender, _depositParams.receiver, assets, shares);
+            emit DepositProtected(msg.sender, _receiver, assets, shares);
         }
     }
 

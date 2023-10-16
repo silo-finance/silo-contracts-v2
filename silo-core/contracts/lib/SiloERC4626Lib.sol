@@ -28,15 +28,6 @@ library SiloERC4626Lib {
         ISilo.AssetType assetType;
     }
 
-    struct DepositParams {
-        uint256 assets;
-        uint256 shares;
-        address receiver;
-        ISilo.AssetType assetType;
-        IShareToken collateralShareToken;
-        IShareToken debtShareToken;
-    }
-
     uint256 internal constant _PRECISION_DECIMALS = 1e18;
 
     /// @dev ERC4626: MUST return 2 ** 256 - 1 if there is no limit on the maximum amount of assets that may be
@@ -116,32 +107,36 @@ library SiloERC4626Lib {
         );
     }
 
-    /// @param _asset if empty, tokens will not be transferred, useful for transition of collateral
+    /// @param _token if empty, tokens will not be transferred, useful for transition of collateral
     function deposit(
-        address _asset,
+        address _token,
         address _depositor,
-        DepositParams memory _depositParams,
+        uint256 _assets,
+        uint256 _shares,
+        address _receiver,
+        IShareToken _collateralShareToken,
+        IShareToken _debtShareToken,
         ISilo.Assets storage _totalCollateral
     ) public returns (uint256 assets, uint256 shares) {
-        if (!depositPossible(address(_depositParams.debtShareToken), _depositParams.receiver)) {
+        if (!depositPossible(address(_debtShareToken), _receiver)) {
             revert ISilo.DepositNotPossible();
         }
 
         uint256 totalAssets = _totalCollateral.assets;
 
         (assets, shares) = SiloMathLib.convertToAssetsAndToShares(
-            _depositParams.assets,
-            _depositParams.shares,
+            _assets,
+            _shares,
             totalAssets,
-            _depositParams.collateralShareToken.totalSupply(),
+            _collateralShareToken.totalSupply(),
             MathUpgradeable.Rounding.Up,
             MathUpgradeable.Rounding.Down,
             ISilo.AssetType.Collateral
         );
 
-        if (_asset != address(0)) {
+        if (_token != address(0)) {
             // Transfer tokens before minting. No state changes have been made so reentrancy does nothing
-            IERC20Upgradeable(_asset).safeTransferFrom(_depositor, address(this), assets);
+            IERC20Upgradeable(_token).safeTransferFrom(_depositor, address(this), assets);
         }
 
         // `assets` and `totalAssets` can never be more than uint256 because totalSupply cannot be either
@@ -150,7 +145,7 @@ library SiloERC4626Lib {
         }
 
         // Hook receiver is called after `mint` and can reentry but state changes are completed already
-        _depositParams.collateralShareToken.mint(_depositParams.receiver, _depositor, shares);
+        _collateralShareToken.mint(_receiver, _depositor, shares);
     }
 
     /// @notice asset type is not verified here, make sure you revert before, when type == Debt

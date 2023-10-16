@@ -8,7 +8,7 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {Gas} from "./Gas.sol";
 
 /*
-forge test -vv --ffi --mt test_gas_ | grep -i '\[GAS\]'
+forge test -vv --ffi --mt test_gas_ | grep -i '\[GAS\]' | sort
 */
 contract Borrow2ndGasTest is Gas, Test {
     constructor() Gas(vm) {}
@@ -30,8 +30,8 @@ contract Borrow2ndGasTest is Gas, Test {
             BORROWER,
             address(silo1),
             abi.encodeCall(ISilo.borrow, (ASSETS, BORROWER, BORROWER)),
-            "for 2nd borrow (no interest)",
-            146604
+            "Borrow2nd (no interest)",
+            146615
         );
     }
 }

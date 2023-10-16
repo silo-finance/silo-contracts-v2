@@ -13,7 +13,7 @@ import {MintableToken} from "../_common/MintableToken.sol";
 import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
 
 /*
-forge test -vv --ffi --mt test_gas_ | grep -i '\[GAS\]'
+forge test -vv --ffi --mt test_gas_ | sort | grep -i '\[GAS\]'
 */
 contract Gas is SiloLittleHelper {
     uint256 constant ASSETS = 1e18;
@@ -73,9 +73,10 @@ contract Gas is SiloLittleHelper {
 
         if (gas != _expectedGas) {
             uint256 diff = _expectedGas > gas ? _expectedGas - gas : gas - _expectedGas;
-            string memory diffSign = _expectedGas > gas ? "-" : "+";
+            string memory diffSign = gas < _expectedGas ? "less" : "more";
+
             if (diff < 100) {
-                console2.log(string(abi.encodePacked("[GAS] ", _msg, ": %s (expected ", diffSign, "%s)")), gas, diff);
+                console2.log(string(abi.encodePacked("[GAS] ", _msg, ": %s (got bit ", diffSign, " by %s)")), gas, diff);
             } else {
                 revert(string(abi.encodePacked(
                     "[GAS] invalid gas for ",
@@ -83,7 +84,11 @@ contract Gas is SiloLittleHelper {
                     ": expected ",
                     Strings.toString(_expectedGas),
                     " got ",
-                    Strings.toString(gas)
+                    Strings.toString(gas),
+                    " it is ",
+                    diffSign,
+                    " by ",
+                    Strings.toString(diff)
                 )));
             }
         } else {

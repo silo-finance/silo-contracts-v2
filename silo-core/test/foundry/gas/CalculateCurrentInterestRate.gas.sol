@@ -45,7 +45,7 @@ contract CalculateCurrentInterestRateGasTest is Gas, Test {
                 data.interestRateTimestamp,
                 data.interestRateTimestamp + 30 days
             )),
-            "calculateCurrentInterestRate",
+            "CalculateCurrentInterestRate",
             12384
         );
     }
