@@ -30,7 +30,8 @@ library SiloStdLib {
         uint256 balanceOf = IERC20Upgradeable(asset).balanceOf(address(this));
         if (earnedFees > balanceOf) earnedFees = balanceOf;
 
-        _siloData.daoAndDeployerFees -= earnedFees;
+        // we will never underflow because earnedFees max value is `_siloData.daoAndDeployerFees`
+        unchecked { _siloData.daoAndDeployerFees -= uint192(earnedFees); }
 
         if (daoFeeReceiver == address(0) && deployerFeeReceiver == address(0)) {
             // just in case, should never happen...

@@ -33,7 +33,7 @@ contract RepayPartAccrueInterestGasTest is Gas, Test {
             address(silo1),
             abi.encodeCall(ISilo.repay, (ASSETS / 2, BORROWER)),
             "partial repay with accrue interest",
-            166414
+            144312
         );
     }
 }

@@ -139,7 +139,10 @@ library SiloLendingLib {
 
         // update remaining contract state
         _siloData.interestRateTimestamp = uint64(block.timestamp);
-        _siloData.daoAndDeployerFees += totalFees;
+
+        // we operating on chunks (fees) of real tokens, so overflow should not happen
+        // fee is simply to small to overflow on cast to uint192, even if, we will get lower fee
+        unchecked { _siloData.daoAndDeployerFees += uint192(totalFees); }
     }
 
     function maxBorrow(
