@@ -77,8 +77,8 @@ contract InterestRateModelV2RcompTest is RcompTestData, InterestRateModelConfigs
             }
 
             ISilo.UtilizationData memory utilizationData = ISilo.UtilizationData(
-                testCase.input.totalDeposits,
-                testCase.input.totalBorrowAmount,
+                uint128(testCase.input.totalDeposits),
+                uint128(testCase.input.totalBorrowAmount),
                 uint64(testCase.input.lastTransactionTime)
             );
 
@@ -86,6 +86,7 @@ contract InterestRateModelV2RcompTest is RcompTestData, InterestRateModelConfigs
                 totalDepositsOverflows++;
                 continue;
             }
+
             if (testCase.input.totalBorrowAmount != utilizationData.debtAssets) {
                 totalBorrowAmountOverflows++;
                 continue;
@@ -113,10 +114,23 @@ contract InterestRateModelV2RcompTest is RcompTestData, InterestRateModelConfigs
     function test_IRM_RcompData_Update() public {
         RcompData[] memory data = _readDataFromJson();
 
+        uint256 totalDepositsOverflows;
+        uint256 totalBorrowAmountOverflows;
+
         for (uint i; i < data.length; i++) {
             RcompData memory testCase = data[i];
 
             IInterestRateModelV2.ConfigWithState memory cfg = _toConfigWithState(testCase);
+
+            if (testCase.input.totalDeposits != uint128(testCase.input.totalDeposits)) {
+                totalDepositsOverflows++;
+                continue;
+            }
+
+            if (testCase.input.totalBorrowAmount != uint128(testCase.input.totalBorrowAmount)) {
+                totalBorrowAmountOverflows++;
+                continue;
+            }
 
             (
                 , int256 ri,
@@ -151,6 +165,10 @@ contract InterestRateModelV2RcompTest is RcompTestData, InterestRateModelConfigs
             assertEq(storageRi, ri, "storageRi");
             assertEq(storageTcrit, Tcrit, "storageTcrit");
         }
+
+        emit log_named_uint("totalBorrowAmountOverflows", totalBorrowAmountOverflows);
+        emit log_named_uint("totalDepositsOverflows", totalDepositsOverflows);
+        emit log_named_uint("total cases", data.length);
     }
 
     function _diff(int256 _a, int256 _b) internal pure returns (uint256 diff) {

@@ -29,8 +29,21 @@ contract InterestRateModelV2RcurTest is RcurTestData, InterestRateModelConfigs {
     function test_IRM_RcurData() public {
         RcurData[] memory data = _readDataFromJson();
 
+        uint256 totalDepositsOverflows;
+        uint256 totalBorrowAmountOverflows;
+
         for (uint256 i; i < data.length; i++) {
             RcurData memory testCase = data[i];
+
+            if (testCase.input.totalDeposits != uint128(testCase.input.totalDeposits)) {
+                totalDepositsOverflows++;
+                continue;
+            }
+
+            if (testCase.input.totalBorrowAmount != uint128(testCase.input.totalBorrowAmount)) {
+                totalBorrowAmountOverflows++;
+                continue;
+            }
 
             IInterestRateModelV2.ConfigWithState memory cfg = _toConfigWithState(testCase);
 
@@ -53,8 +66,8 @@ contract InterestRateModelV2RcurTest is RcurTestData, InterestRateModelConfigs {
             }
 
             ISilo.UtilizationData memory utilizationData = ISilo.UtilizationData(
-                testCase.input.totalDeposits,
-                testCase.input.totalBorrowAmount,
+                uint128(testCase.input.totalDeposits),
+                uint128(testCase.input.totalBorrowAmount),
                 uint64(testCase.input.lastTransactionTime)
             );
 
@@ -73,5 +86,9 @@ contract InterestRateModelV2RcurTest is RcurTestData, InterestRateModelConfigs {
             bool overflow = INTEREST_RATE_MODEL.overflowDetected(silo, testCase.input.currentTime);
             assertEq(overflow, testCase.expected.didOverflow == 1, "expect overflowDetected() = expected.didOverflow");
         }
+
+        emit log_named_uint("totalBorrowAmountOverflows", totalBorrowAmountOverflows);
+        emit log_named_uint("totalDepositsOverflows", totalDepositsOverflows);
+        emit log_named_uint("total cases", data.length);
     }
 }
