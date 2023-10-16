@@ -121,6 +121,7 @@ interface ISilo is IERC4626, IERC3156FlashLender, ISiloLiquidation {
     error ZeroAssets();
     error ZeroShares();
     error Overflow();
+    error ShareOverflow();
 
     function initialize(ISiloConfig _config, address _modelConfigAddress) external;
 

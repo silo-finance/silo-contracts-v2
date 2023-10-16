@@ -18,6 +18,7 @@ library SiloERC4626Lib {
     using MathUpgradeable for uint256;
 
     uint256 internal constant _PRECISION_DECIMALS = 1e18;
+    uint256 internal constant _TOTAL128_CAP = type(uint128).max - 1;
 
     /// @dev ERC4626: MUST return 2 ** 256 - 1 if there is no limit on the maximum amount of assets that may be
     ///      deposited.
@@ -114,26 +115,32 @@ library SiloERC4626Lib {
         }
 
         uint256 totalAssets = _totalCollateral.assets;
+        uint256 collateralShareTokenTotalSupply = _collateralShareToken.totalSupply();
 
         (assets, shares) = SiloMathLib.convertToAssetsAndToShares(
             _assets,
             _shares,
             totalAssets,
-            _collateralShareToken.totalSupply(),
+            collateralShareTokenTotalSupply,
             MathUpgradeable.Rounding.Up,
             MathUpgradeable.Rounding.Down,
             ISilo.AssetType.Collateral
         );
+
+        unchecked {
+            // `collateralShareTokenTotalSupply` is always lt max, because of this check, so we will not underflow
+            // `-1` is here because we using decimals offset, and we need "space" for it. Offset is 0 or 1.
+            // this CAP can allow us to optimise in other places where we are working with total shares
+            if (_TOTAL128_CAP - collateralShareTokenTotalSupply < shares) revert ISilo.ShareOverflow();
+        }
 
         if (_token != address(0)) {
             // Transfer tokens before minting. No state changes have been made so reentrancy does nothing
             IERC20Upgradeable(_token).safeTransferFrom(_depositor, address(this), assets);
         }
 
-        // `assets` and `totalAssets` can never be more than uint256 because totalSupply cannot be either
-        unchecked {
-            _totalCollateral.assets = totalAssets + assets;
-        }
+        // we have cap on totals, so we actually doing uint128 + uint128, we will not overflow
+        unchecked { _totalCollateral.assets = totalAssets + assets; }
 
         // Hook receiver is called after `mint` and can reentry but state changes are completed already
         _collateralShareToken.mint(_receiver, _depositor, shares);

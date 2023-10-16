@@ -183,7 +183,7 @@ library SiloLiquidationLib {
         pure
         returns (uint256 toLiquidate)
     {
-        // TODO unchecke? because this is fee - small number, and even if this can overflow, we simple get smaller fee?
+        // TODO uncheck? because this is fee - small number, and even if this can overflow, we simple get smaller fee?
         uint256 fee = _debtToCover * _liquidityFeeInBp;
         unchecked { fee /= _BASIS_POINTS; }
 

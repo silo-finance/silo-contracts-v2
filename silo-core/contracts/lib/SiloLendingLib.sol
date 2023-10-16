@@ -20,6 +20,7 @@ library SiloLendingLib {
 
     uint256 internal constant _PRECISION_DECIMALS = 1e18;
     uint256 internal constant _BASIS_POINTS = 1e4;
+    uint256 internal constant _TOTAL128_CAP = type(uint128).max - 1;
 
     function borrow(
         ISiloConfig.ConfigData memory _configData,
@@ -42,12 +43,13 @@ library SiloLendingLib {
 
         IShareToken debtShareToken = IShareToken(_configData.debtShareToken);
         uint256 totalDebtAssets = _totalDebt.assets;
+        uint256 debtShareTokenTotalSupply = debtShareToken.totalSupply();
 
         (borrowedAssets, borrowedShares) = SiloMathLib.convertToAssetsAndToShares(
             _assets,
             _shares,
             totalDebtAssets,
-            debtShareToken.totalSupply(),
+            debtShareTokenTotalSupply,
             MathUpgradeable.Rounding.Down,
             MathUpgradeable.Rounding.Up,
             ISilo.AssetType.Debt
@@ -55,19 +57,29 @@ library SiloLendingLib {
 
         if (borrowedShares == 0) revert ISilo.ZeroShares();
 
+        unchecked {
+            // `debtShareTokenTotalSupply` is always lt max, because of this check, so we will not underflow
+            // `-1` is here because we using decimals offset, and we need "space" for it. Offset is 0 or 1.
+            // this CAP can allow us to optimise in other places where we are working with total shares
+            if (_TOTAL128_CAP - debtShareTokenTotalSupply < borrowedShares) revert ISilo.ShareOverflow();
+        }
+
         if (borrowedAssets > SiloMathLib.liquidity(_totalCollateralAssets, totalDebtAssets)) {
             revert ISilo.NotEnoughLiquidity();
         }
 
-        // add new debt
-        uint256 total;
-        // `borrowedAssets` is uint128. Every time we are checking for `total > type(uint128).max`,
-        // We can safely uncheck sum because we adding up two uint128 numbers.
-        // This condition should allow us to uncheck every operation on assets and total in our code.
-        unchecked { total = totalDebtAssets + borrowedAssets; }
-        if (total > type(uint128).max) revert ISilo.Overflow();
+        unchecked {
+            // add new debt
+            uint256 total;
+            // `borrowedAssets` is uint128. Every time we are checking for `total > type(uint128).max`,
+            // We can safely uncheck sum because we adding up two uint128 numbers.
+            // `-1` is to have space for decimals offset, offset is 0 or 1.
+            // This condition should allow us to uncheck every operation on assets and total in our code.
+            total = totalDebtAssets + borrowedAssets;
+            if (total > _TOTAL128_CAP) revert ISilo.Overflow();
 
-        _totalDebt.assets = total;
+            _totalDebt.assets = total;
+        }
 
         // `mint` checks if _spender is allowed to borrow on the account of _borrower. Hook receiver can
         // potentially reenter but the state is correct.

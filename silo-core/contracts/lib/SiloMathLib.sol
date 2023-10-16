@@ -129,11 +129,13 @@ library SiloMathLib {
         // itself. It should return actual result and round it up.
         (uint256 offsetPow, uint256 one) = _assetType == ISilo.AssetType.Debt ? (0, 0) : (_DECIMALS_OFFSET_POW, 1);
 
-        uint256 totalSharesCached = _totalShares + offsetPow;
+        uint256 totalSharesCached;
+        // we will not overflow, because we have CAP on totals, CAP = max - 1.
+        unchecked { totalSharesCached = _totalShares + offsetPow; }
         if (totalSharesCached == 0) return _assets;
 
         uint256 totalAssetsCached;
-        // _totalAssets has cap on uint128, and `one` is at most 1, so we will not overflow
+        // _totalAssets has cap on (max uint128 - 1), and `one` is at most 1, so we will not overflow
         unchecked { totalAssetsCached = _totalAssets + one; }
 
         if (totalAssetsCached == 0) return _assets;
@@ -154,7 +156,9 @@ library SiloMathLib {
         // itself. It should return actual result and round it up.
         (uint256 offsetPow, uint256 one) = _assetType == ISilo.AssetType.Debt ? (0, 0) : (_DECIMALS_OFFSET_POW, 1);
 
-        uint256 totalSharesCached = _totalShares + offsetPow;
+        uint256 totalSharesCached;
+        // we will not overflow, because we have CAP on totals, so we doing here (uint128 - 1) + (0 or 1)
+        unchecked { totalSharesCached = _totalShares + offsetPow; }
         if (totalSharesCached == 0) return _shares;
 
         uint256 totalAssetsCached;
