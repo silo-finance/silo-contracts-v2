@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.21;
 
-import {MathUpgradeable} from "openzeppelin-contracts-upgradeable/utils/math/MathUpgradeable.sol";
-
 import {ISilo} from "../interfaces/ISilo.sol";
 import {IShareToken} from "../interfaces/IShareToken.sol";
 import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
@@ -226,7 +224,7 @@ library SiloLiquidationExecLib {
             _amountToLiquidate,
             _totalAssets,
             _shareToken.totalSupply(),
-            MathUpgradeable.Rounding.Down,
+            SiloMathLib.Rounding.Down,
             ISilo.AssetType.Collateral
         );
 

@@ -1,11 +1,16 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.21;
 
-import {MathUpgradeable} from "openzeppelin-contracts-upgradeable/utils/math/MathUpgradeable.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 
 library SiloMathLib {
-    using MathUpgradeable for uint256;
+//    using MathUpgradeable for uint256;
+
+    enum Rounding {
+        Down, // Toward negative infinity
+        Up, // Toward infinity
+        Zero // Toward zero
+    }
 
     uint256 internal constant _PRECISION_DECIMALS = 1e18;
     uint256 internal constant _BASIS_POINTS = 1e4;
@@ -103,8 +108,8 @@ library SiloMathLib {
         uint256 _shares,
         uint256 _totalAssets,
         uint256 _totalShares,
-        MathUpgradeable.Rounding _roundingToAssets,
-        MathUpgradeable.Rounding _roundingToShares,
+        Rounding _roundingToAssets,
+        Rounding _roundingToShares,
         ISilo.AssetType _assetType
     ) internal pure returns (uint256 assets, uint256 shares) {
         if (_assets == 0) {
@@ -122,7 +127,7 @@ library SiloMathLib {
         uint256 _assets,
         uint256 _totalAssets,
         uint256 _totalShares,
-        MathUpgradeable.Rounding _rounding,
+        Rounding _rounding,
         ISilo.AssetType _assetType
     ) internal pure returns (uint256) {
         // Debt calculations should not lower the result. Debt is a liability so protocol should not take any for
@@ -140,7 +145,9 @@ library SiloMathLib {
 
         if (totalAssetsCached == 0) return _assets;
 
-        return _assets.mulDiv(totalSharesCached, totalAssetsCached, _rounding);
+        // we can use optimised version because: `_assets` and `totalShares` are capped to uin128
+        // and `totalAssetsCached` is not 0
+        return mulDivOptimised(_assets, totalSharesCached, totalAssetsCached, _rounding);
     }
 
     /// @dev Math for collateral is exact copy of
@@ -149,7 +156,7 @@ library SiloMathLib {
         uint256 _shares,
         uint256 _totalAssets,
         uint256 _totalShares,
-        MathUpgradeable.Rounding _rounding,
+        Rounding _rounding,
         ISilo.AssetType _assetType
     ) internal pure returns (uint256 assets) {
         // Debt calculations should not lower the result. Debt is a liability so protocol should not take any for
@@ -167,7 +174,9 @@ library SiloMathLib {
 
         if (totalAssetsCached == 0) return _shares;
 
-        assets = _shares.mulDiv(totalAssetsCached, totalSharesCached, _rounding);
+        // we can use optimised version, because `_shares` and `totalAssetsCached` are capped to uint128
+        // and totalSharesCached is not 0
+        assets = mulDivOptimised(_shares, totalAssetsCached, totalSharesCached, _rounding);
     }
 
     /// @return maxBorrowValue max borrow value yet available for borrower
@@ -249,8 +258,23 @@ library SiloMathLib {
             assets,
             _totalAssets,
             _assetTypeShareTokenTotalSupply,
-            MathUpgradeable.Rounding.Down,
+            Rounding.Down,
             _assetType
         );
+    }
+
+    /// @dev WARNING: use this only if you sure, that x and y have cap to max uint128 and denominator is not 0
+    /// this is copy of openzeppelin-contracts-upgradeable/utils/math/MathUpgradeable.sol but without mulDiv on x,y,d
+    function mulDivOptimised(uint256 x, uint256 y, uint256 denominator, Rounding rounding)
+        internal
+        pure
+        returns (uint256 result)
+    {
+        // assuming that `x` and `y` are actually uint128, we ill not overflow on mul and div is save because is not 0
+        unchecked { result = x * y / denominator; }
+
+        if (rounding == Rounding.Up && mulmod(x, y, denominator) > 0) {
+            result += 1;
+        }
     }
 }

@@ -3,7 +3,6 @@ pragma solidity 0.8.21;
 
 import {Initializable} from "openzeppelin-contracts-upgradeable/proxy/utils/Initializable.sol";
 import {ReentrancyGuardUpgradeable} from "openzeppelin-contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
-import {MathUpgradeable} from "openzeppelin-contracts-upgradeable/utils/math/MathUpgradeable.sol";
 import {SafeERC20Upgradeable} from "openzeppelin-contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
 import {IERC20Upgradeable} from "openzeppelin-contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 
@@ -172,7 +171,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
             _getTotalAssetsAndTotalSharesWithInterest(AssetType.Collateral);
 
         return SiloMathLib.convertToShares(
-            _assets, totalSiloAssets, totalShares, MathUpgradeable.Rounding.Down, AssetType.Collateral
+            _assets, totalSiloAssets, totalShares, SiloMathLib.Rounding.Down, AssetType.Collateral
         );
     }
 
@@ -183,7 +182,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
             _getTotalAssetsAndTotalSharesWithInterest(AssetType.Collateral);
 
         return SiloMathLib.convertToAssets(
-            _shares, totalSiloAssets, totalShares, MathUpgradeable.Rounding.Down, AssetType.Collateral
+            _shares, totalSiloAssets, totalShares, SiloMathLib.Rounding.Down, AssetType.Collateral
         );
     }
 
@@ -196,7 +195,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
             _getTotalAssetsAndTotalSharesWithInterest(AssetType.Collateral);
 
         return SiloMathLib.convertToShares(
-            _assets, totalSiloAssets, totalShares, MathUpgradeable.Rounding.Down, AssetType.Collateral
+            _assets, totalSiloAssets, totalShares, SiloMathLib.Rounding.Down, AssetType.Collateral
         );
     }
 
@@ -225,7 +224,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
             _getTotalAssetsAndTotalSharesWithInterest(AssetType.Collateral);
 
         return SiloMathLib.convertToAssets(
-            _shares, totalSiloAssets, totalShares, MathUpgradeable.Rounding.Down, AssetType.Collateral
+            _shares, totalSiloAssets, totalShares, SiloMathLib.Rounding.Down, AssetType.Collateral
         );
     }
 
@@ -254,7 +253,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
             _getTotalAssetsAndTotalSharesWithInterest(AssetType.Collateral);
 
         return SiloMathLib.convertToShares(
-            _assets, totalSiloAssets, totalShares, MathUpgradeable.Rounding.Up, AssetType.Collateral
+            _assets, totalSiloAssets, totalShares, SiloMathLib.Rounding.Up, AssetType.Collateral
         );
     }
 
@@ -279,7 +278,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
             _getTotalAssetsAndTotalSharesWithInterest(AssetType.Collateral);
 
         return SiloMathLib.convertToAssets(
-            _shares, totalSiloAssets, totalShares, MathUpgradeable.Rounding.Down, AssetType.Collateral
+            _shares, totalSiloAssets, totalShares, SiloMathLib.Rounding.Down, AssetType.Collateral
         );
     }
 
@@ -300,7 +299,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
         (uint256 totalSiloAssets, uint256 totalShares) = _getTotalAssetsAndTotalSharesWithInterest(_assetType);
 
         return SiloMathLib.convertToShares(
-            _assets, totalSiloAssets, totalShares, MathUpgradeable.Rounding.Down, _assetType
+            _assets, totalSiloAssets, totalShares, SiloMathLib.Rounding.Down, _assetType
         );
     }
 
@@ -308,7 +307,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
         (uint256 totalSiloAssets, uint256 totalShares) = _getTotalAssetsAndTotalSharesWithInterest(_assetType);
 
         return SiloMathLib.convertToAssets(
-            _shares, totalSiloAssets, totalShares, MathUpgradeable.Rounding.Down, _assetType
+            _shares, totalSiloAssets, totalShares, SiloMathLib.Rounding.Down, _assetType
         );
     }
 
@@ -327,7 +326,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
         (uint256 totalSiloAssets, uint256 totalShares) = _getTotalAssetsAndTotalSharesWithInterest(_assetType);
 
         return SiloMathLib.convertToShares(
-            _assets, totalSiloAssets, totalShares, MathUpgradeable.Rounding.Down, AssetType.Collateral
+            _assets, totalSiloAssets, totalShares, SiloMathLib.Rounding.Down, AssetType.Collateral
         );
     }
 
@@ -371,7 +370,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
         (uint256 totalSiloAssets, uint256 totalShares) = _getTotalAssetsAndTotalSharesWithInterest(_assetType);
 
         return SiloMathLib.convertToAssets(
-            _shares, totalSiloAssets, totalShares, MathUpgradeable.Rounding.Down, _assetType
+            _shares, totalSiloAssets, totalShares, SiloMathLib.Rounding.Down, _assetType
         );
     }
 
@@ -411,7 +410,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
         (uint256 totalSiloAssets, uint256 totalShares) = _getTotalAssetsAndTotalSharesWithInterest(_assetType);
 
         return SiloMathLib.convertToShares(
-            _assets, totalSiloAssets, totalShares, MathUpgradeable.Rounding.Down, _assetType
+            _assets, totalSiloAssets, totalShares, SiloMathLib.Rounding.Down, _assetType
         );
     }
 
@@ -436,7 +435,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
         (uint256 totalSiloAssets, uint256 totalShares) = _getTotalAssetsAndTotalSharesWithInterest(_assetType);
 
         return SiloMathLib.convertToAssets(
-            _shares, totalSiloAssets, totalShares, MathUpgradeable.Rounding.Down, _assetType
+            _shares, totalSiloAssets, totalShares, SiloMathLib.Rounding.Down, _assetType
         );
     }
 
@@ -523,7 +522,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
         (uint256 totalSiloAssets, uint256 totalShares) = _getTotalAssetsAndTotalSharesWithInterest(AssetType.Debt);
 
         return SiloMathLib.convertToShares(
-            _assets, totalSiloAssets, totalShares, MathUpgradeable.Rounding.Up, AssetType.Debt
+            _assets, totalSiloAssets, totalShares, SiloMathLib.Rounding.Up, AssetType.Debt
         );
     }
 
@@ -555,7 +554,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
         (uint256 totalSiloAssets, uint256 totalShares) = _getTotalAssetsAndTotalSharesWithInterest(AssetType.Debt);
 
         return SiloMathLib.convertToAssets(
-            _shares, totalSiloAssets, totalShares, MathUpgradeable.Rounding.Up, AssetType.Debt
+            _shares, totalSiloAssets, totalShares, SiloMathLib.Rounding.Up, AssetType.Debt
         );
     }
 
@@ -580,7 +579,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
             SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(configData, AssetType.Debt);
 
         return SiloMathLib.convertToAssets(
-            shares, totalSiloAssets, totalShares, MathUpgradeable.Rounding.Up, AssetType.Debt
+            shares, totalSiloAssets, totalShares, SiloMathLib.Rounding.Up, AssetType.Debt
         );
     }
 
@@ -588,7 +587,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
         (uint256 totalSiloAssets, uint256 totalShares) = _getTotalAssetsAndTotalSharesWithInterest(AssetType.Debt);
 
         return SiloMathLib.convertToShares(
-            _assets, totalSiloAssets, totalShares, MathUpgradeable.Rounding.Down, AssetType.Debt
+            _assets, totalSiloAssets, totalShares, SiloMathLib.Rounding.Down, AssetType.Debt
         );
     }
 
@@ -614,7 +613,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
         (uint256 totalSiloAssets, uint256 totalShares) = _getTotalAssetsAndTotalSharesWithInterest(AssetType.Debt);
 
         return SiloMathLib.convertToAssets(
-            _shares, totalSiloAssets, totalShares, MathUpgradeable.Rounding.Down, AssetType.Debt
+            _shares, totalSiloAssets, totalShares, SiloMathLib.Rounding.Down, AssetType.Debt
         );
     }
 

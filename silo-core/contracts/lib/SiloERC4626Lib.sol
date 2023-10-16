@@ -3,7 +3,6 @@ pragma solidity 0.8.21;
 
 import {SafeERC20Upgradeable} from "openzeppelin-contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
 import {IERC20Upgradeable} from "openzeppelin-contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
-import {MathUpgradeable} from "openzeppelin-contracts-upgradeable/utils/math/MathUpgradeable.sol";
 
 import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
 import {ISilo} from "../interfaces/ISilo.sol";
@@ -15,7 +14,6 @@ import {SiloMathLib} from "./SiloMathLib.sol";
 
 library SiloERC4626Lib {
     using SafeERC20Upgradeable for IERC20Upgradeable;
-    using MathUpgradeable for uint256;
 
     uint256 internal constant _PRECISION_DECIMALS = 1e18;
     uint256 internal constant _TOTAL128_CAP = type(uint128).max - 1;
@@ -64,7 +62,7 @@ library SiloERC4626Lib {
                 shares,
                 _totalAssets,
                 shareTokenTotalSupply,
-                MathUpgradeable.Rounding.Down,
+                SiloMathLib.Rounding.Down,
                 _assetType
             );
 
@@ -122,8 +120,8 @@ library SiloERC4626Lib {
             _shares,
             totalAssets,
             collateralShareTokenTotalSupply,
-            MathUpgradeable.Rounding.Up,
-            MathUpgradeable.Rounding.Down,
+            SiloMathLib.Rounding.Up,
+            SiloMathLib.Rounding.Down,
             ISilo.AssetType.Collateral
         );
 
@@ -191,8 +189,8 @@ library SiloERC4626Lib {
                 _shares,
                 totalAssets,
                 shareTotalSupply,
-                MathUpgradeable.Rounding.Down,
-                MathUpgradeable.Rounding.Up,
+                SiloMathLib.Rounding.Down,
+                SiloMathLib.Rounding.Up,
                 _assetType
             );
 
