@@ -17,17 +17,6 @@ library SiloERC4626Lib {
     using SafeERC20Upgradeable for IERC20Upgradeable;
     using MathUpgradeable for uint256;
 
-    /// @param assets amount of assets to withdraw, if 0, means withdraw is based on `shares`
-    /// @param shares depends on `assets` it can be 0 or not
-    struct WithdrawParams {
-        uint256 assets;
-        uint256 shares;
-        address receiver;
-        address owner;
-        address spender;
-        ISilo.AssetType assetType;
-    }
-
     uint256 internal constant _PRECISION_DECIMALS = 1e18;
 
     /// @dev ERC4626: MUST return 2 ** 256 - 1 if there is no limit on the maximum amount of assets that may be
@@ -148,49 +137,71 @@ library SiloERC4626Lib {
         _collateralShareToken.mint(_receiver, _depositor, shares);
     }
 
-    /// @notice asset type is not verified here, make sure you revert before, when type == Debt
-    /// @param _asset token address that we want to withdraw, if empty, withdraw action will be done WITHOUT
-    /// actual token transfer
-    function withdraw(
-        address _asset,
+    /// this helped with stack too deep
+    function transitionCollateralWithdraw(
         address _shareToken,
-        WithdrawParams memory _params,
+        uint256 _shares,
+        address _owner,
+        address _spender,
+        ISilo.AssetType _assetType,
         uint256 _liquidity,
         ISilo.Assets storage _totalCollateral
     ) public returns (uint256 assets, uint256 shares) {
-        uint256 totalAssets = _totalCollateral.assets;
+        return withdraw(
+            address(0), _shareToken, 0, _shares, _owner, _owner, _spender, _assetType, _liquidity, _totalCollateral
+        );
+    }
 
+    /// @notice asset type is not verified here, make sure you revert before, when type == Debt
+    /// @param _asset token address that we want to withdraw, if empty, withdraw action will be done WITHOUT
+    /// actual token transfer
+    /// @param _assets amount of assets to withdraw, if 0, means withdraw is based on `shares`
+    /// @param _shares depends on `assets` it can be 0 or not
+    function withdraw(
+        address _asset,
+        address _shareToken,
+        uint256 _assets,
+        uint256 _shares,
+        address _receiver,
+        address _owner,
+        address _spender,
+        ISilo.AssetType _assetType,
+        uint256 _liquidity,
+        ISilo.Assets storage _totalCollateral
+    ) public returns (uint256 assets, uint256 shares) {
         uint256 shareTotalSupply = IShareToken(_shareToken).totalSupply();
         if (shareTotalSupply == 0) revert ISilo.NothingToWithdraw();
 
-        (assets, shares) = SiloMathLib.convertToAssetsAndToShares(
-            _params.assets,
-            _params.shares,
-            totalAssets,
-            shareTotalSupply,
-            MathUpgradeable.Rounding.Down,
-            MathUpgradeable.Rounding.Up,
-            _params.assetType
-        );
+        { // Stack too deep
+            uint256 totalAssets = _totalCollateral.assets;
 
-        if (assets == 0 || shares == 0) revert ISilo.NothingToWithdraw();
+            (assets, shares) = SiloMathLib.convertToAssetsAndToShares(
+                _assets,
+                _shares,
+                totalAssets,
+                shareTotalSupply,
+                MathUpgradeable.Rounding.Down,
+                MathUpgradeable.Rounding.Up,
+                _assetType
+            );
 
-        // check liquidity
-        if (assets > _liquidity) revert ISilo.NotEnoughLiquidity();
+            if (assets == 0 || shares == 0) revert ISilo.NothingToWithdraw();
 
-        // `assets` can never be more then `totalAssets` because we always increase `totalAssets` by
-        // `assets` and interest
-        unchecked {
-            _totalCollateral.assets = totalAssets - assets;
+            // check liquidity
+            if (assets > _liquidity) revert ISilo.NotEnoughLiquidity();
+
+            // `assets` can never be more then `totalAssets` because we always increase `totalAssets` by
+            // `assets` and interest
+            unchecked { _totalCollateral.assets = totalAssets - assets; }
         }
 
         // `burn` checks if `_spender` is allowed to withdraw `_owner` assets. `burn` calls hook receiver that
         // can potentially reenter but state changes are already completed.
-        IShareToken(_shareToken).burn(_params.owner, _params.spender, shares);
+        IShareToken(_shareToken).burn(_owner, _spender, shares);
 
         if (_asset != address(0)) {
             // fee-on-transfer is ignored
-            IERC20Upgradeable(_asset).safeTransfer(_params.receiver, assets);
+            IERC20Upgradeable(_asset).safeTransfer(_receiver, assets);
         }
     }
 
