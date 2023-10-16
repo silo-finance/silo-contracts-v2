@@ -74,9 +74,10 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
     }
 
     function utilizationData() external view virtual returns (UtilizationData memory) {
+        // safe to cast because we have cap on totals
         return UtilizationData({
-            collateralAssets: _total[AssetType.Collateral].assets,
-            debtAssets: _total[AssetType.Debt].assets,
+            collateralAssets: uint128(_total[AssetType.Collateral].assets),
+            debtAssets: uint128(_total[AssetType.Debt].assets),
             interestRateTimestamp: siloData.interestRateTimestamp
         });
     }
@@ -658,7 +659,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
 
         unchecked {
             // we operating on chunks of real tokens, so overflow should not happen
-            // fee is simply to small to overflow on cast to uint192, even if, we will get lower fee
+            // fee is simply too small to overflow on cast to uint192, even if, we will get lower fee
             siloData.daoAndDeployerFees += uint192(fee);
         }
 

@@ -32,6 +32,7 @@ library SiloLendingLib {
         uint256 _totalCollateralAssets
     ) external returns (uint256 borrowedAssets, uint256 borrowedShares) {
         if (_assets == 0 && _shares == 0) revert ISilo.ZeroAssets();
+        if (_assets > type(uint128).max) revert ISilo.Overflow();
 
         if (!borrowPossible(
             _configData.protectedShareToken, _configData.collateralShareToken, _borrower
@@ -59,7 +60,15 @@ library SiloLendingLib {
         }
 
         // add new debt
-        _totalDebt.assets = totalDebtAssets + borrowedAssets;
+        uint256 total;
+        // `borrowedAssets` is uint128. Every time we are checking for `total > type(uint128).max`,
+        // We can safely uncheck sum because we adding up two uint128 numbers.
+        // This condition should allow us to uncheck every operation on assets and total in our code.
+        unchecked { total = totalDebtAssets + borrowedAssets; }
+        if (total > type(uint128).max) revert ISilo.Overflow();
+
+        _totalDebt.assets = total;
+
         // `mint` checks if _spender is allowed to borrow on the account of _borrower. Hook receiver can
         // potentially reenter but the state is correct.
         debtShareToken.mint(_borrower, _spender, borrowedShares);
@@ -76,6 +85,7 @@ library SiloLendingLib {
         ISilo.Assets storage _totalDebt
     ) external returns (uint256 assets, uint256 shares) {
         if (_assets == 0 && _shares == 0) revert ISilo.ZeroAssets();
+        if (_assets > type(uint128).max) revert ISilo.Overflow();
 
         IShareToken debtShareToken = IShareToken(_configData.debtShareToken);
         uint256 totalDebtAssets = _totalDebt.assets;
@@ -96,7 +106,8 @@ library SiloLendingLib {
         // If token reenters, no harm done because we didn't change the state yet.
         IERC20Upgradeable(_configData.token).safeTransferFrom(_repayer, address(this), assets);
         // subtract repayment from debt
-        _totalDebt.assets = totalDebtAssets - assets;
+        // `SiloMathLib.convertToAssetsAndToShares` should never return more assets than total TODO add test case
+        unchecked { _totalDebt.assets = totalDebtAssets - assets; }
         // Anyone can repay anyone's debt so no approval check is needed. If hook receiver reenters then
         // no harm done because state changes are completed.
         debtShareToken.burn(_borrower, _repayer, shares);
@@ -218,7 +229,9 @@ library SiloLendingLib {
         }
 
         if (_borrowerDebtValue == 0) {
-            uint256 oneDebtToken = 10 ** IERC20MetadataUpgradeable(_debtToken).decimals();
+            uint256 oneDebtToken;
+            // if this tokens is "normal", we will not overflow on decimals
+            unchecked { oneDebtToken = 10 ** IERC20MetadataUpgradeable(_debtToken).decimals(); }
 
             uint256 oneDebtTokenValue = address(_debtOracle) == address(0)
                 ? oneDebtToken

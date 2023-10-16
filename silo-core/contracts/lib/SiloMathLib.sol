@@ -37,7 +37,7 @@ library SiloMathLib {
             uint256 collateralAssetsWithInterest,
             uint256 debtAssetsWithInterest,
             uint256 daoAndDeployerFees,
-            uint256 accruedInterest
+            uint128 accruedInterest
         )
     {
         (debtAssetsWithInterest, accruedInterest) = getDebtAmountsWithInterest(_debtAssets, _rcompInDp);
@@ -48,15 +48,16 @@ library SiloMathLib {
             daoAndDeployerFees = accruedInterest * (_daoFeeInBp + _deployerFeeInBp) / _BASIS_POINTS;
             // we will not underflow because daoAndDeployerFees is chunk of accruedInterest
             collateralInterest = accruedInterest - daoAndDeployerFees;
+            // `_collateralAssets` is actually uint128, because there is cap on totals.
+            // `collateralInterest` is also uint128, so we adding up two uint128, so we will not overflow
+            collateralAssetsWithInterest = _collateralAssets + collateralInterest;
         }
-
-        collateralAssetsWithInterest = _collateralAssets + collateralInterest;
     }
 
     function getDebtAmountsWithInterest(uint256 _debtAssets, uint256 _rcompInDp)
         internal
         pure
-        returns (uint256 debtAssetsWithInterest, uint256 accruedInterest)
+        returns (uint256 debtAssetsWithInterest, uint128 accruedInterest)
     {
         if (_debtAssets == 0 || _rcompInDp == 0) {
             return (_debtAssets, 0);
@@ -64,10 +65,12 @@ library SiloMathLib {
 
         unchecked {
             // If we overflow on multiplication it should not revert tx, we will get lower fees
-            accruedInterest = _debtAssets * _rcompInDp / _PRECISION_DECIMALS;
-        }
+            accruedInterest = uint128(_debtAssets * _rcompInDp / _PRECISION_DECIMALS);
 
-        debtAssetsWithInterest = _debtAssets + accruedInterest;
+            // `_debtAssets` is actually uint128, because there is cap on all totals.
+            // `accruedInterest` is also uint128, so we adding up two uint128, so we will not overflow
+            debtAssetsWithInterest = _debtAssets + accruedInterest;
+        }
     }
 
     /// @notice Calculates fraction between borrowed and deposited amount of tokens denominated in percentage
@@ -85,10 +88,10 @@ library SiloMathLib {
     {
         if (_collateralAssets == 0 || _debtAssets == 0) return 0;
 
-        utilization = _debtAssets * _dp;
-        // _collateralAssets is not 0 based on above check, so it is safe to uncheck this division
         unchecked {
-            utilization /= _collateralAssets;
+            // `_debtAssets` is actually uint128, because of cap. `_dp` is up to 1e18, so we wll not overflow on mul
+            // `_collateralAssets` is not 0 based on above check, so it is safe to uncheck this division
+            utilization = _debtAssets * _dp / _collateralAssets;
         }
 
         // cap at 100%
@@ -126,9 +129,16 @@ library SiloMathLib {
         // itself. It should return actual result and round it up.
         (uint256 offsetPow, uint256 one) = _assetType == ISilo.AssetType.Debt ? (0, 0) : (_DECIMALS_OFFSET_POW, 1);
 
-        if (_totalShares + offsetPow == 0 || _totalAssets + one == 0) return _assets;
+        uint256 totalSharesCached = _totalShares + offsetPow;
+        if (totalSharesCached == 0) return _assets;
 
-        return _assets.mulDiv(_totalShares + offsetPow, _totalAssets + one, _rounding);
+        uint256 totalAssetsCached;
+        // _totalAssets has cap on uint128, and `one` is at most 1, so we will not overflow
+        unchecked { totalAssetsCached = _totalAssets + one; }
+
+        if (totalAssetsCached == 0) return _assets;
+
+        return _assets.mulDiv(totalSharesCached, totalAssetsCached, _rounding);
     }
 
     /// @dev Math for collateral is exact copy of
@@ -144,9 +154,16 @@ library SiloMathLib {
         // itself. It should return actual result and round it up.
         (uint256 offsetPow, uint256 one) = _assetType == ISilo.AssetType.Debt ? (0, 0) : (_DECIMALS_OFFSET_POW, 1);
 
-        if (_totalShares + offsetPow == 0 || _totalAssets + one == 0) return _shares;
+        uint256 totalSharesCached = _totalShares + offsetPow;
+        if (totalSharesCached == 0) return _shares;
 
-        assets = _shares.mulDiv(_totalAssets + one, _totalShares + offsetPow, _rounding);
+        uint256 totalAssetsCached;
+        // _totalAssets has cap on uint128, and `one` is at most 1, so we will not overflow
+        unchecked { totalAssetsCached = _totalAssets + one; }
+
+        if (totalAssetsCached == 0) return _shares;
+
+        assets = _shares.mulDiv(totalAssetsCached, totalSharesCached, _rounding);
     }
 
     /// @return maxBorrowValue max borrow value yet available for borrower

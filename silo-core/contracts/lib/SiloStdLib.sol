@@ -63,11 +63,8 @@ library SiloStdLib {
 
         if (_token != asset) revert ISilo.Unsupported();
 
-        fee = _amount * flashloanFeeInBp;
-
-        unchecked {
-            fee /= _BASIS_POINTS;
-        }
+        // worse what can happen, we will have lower fee
+        unchecked { fee = _amount * flashloanFeeInBp / _BASIS_POINTS; }
     }
 
     function getFeesAndFeeReceiversWithAsset(ISiloConfig _config, ISiloFactory _factory)

@@ -62,9 +62,9 @@ interface ISilo is IERC4626, IERC3156FlashLender, ISiloLiquidation {
     struct UtilizationData {
         /// @dev COLLATERAL: Amount of asset token that has been deposited to Silo plus interest earned by depositors.
         /// It also includes token amount that has been borrowed.
-        uint256 collateralAssets;
+        uint128 collateralAssets;
         /// @dev DEBT: Amount of asset token that has been borrowed plus accrued interest.
-        uint256 debtAssets;
+        uint128 debtAssets;
         /// @dev timestamp of the last interest accrual
         uint64 interestRateTimestamp;
     }
@@ -120,6 +120,7 @@ interface ISilo is IERC4626, IERC3156FlashLender, ISiloLiquidation {
     error WrongAssetType();
     error ZeroAssets();
     error ZeroShares();
+    error Overflow();
 
     function initialize(ISiloConfig _config, address _modelConfigAddress) external;
 
