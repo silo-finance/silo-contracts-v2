@@ -117,14 +117,12 @@ library SiloLiquidationExecLib {
             SiloERC4626Lib.withdraw(
                 _collateralConfig.token,
                 _collateralConfig.protectedShareToken,
-                SiloERC4626Lib.WithdrawParams({
-                    assets: _withdrawAssetsFromProtected,
-                    shares: 0,
-                    receiver: _liquidator,
-                    owner: _borrower,
-                    spender: _borrower,
-                    assetType: ISilo.AssetType.Protected
-                }),
+                _withdrawAssetsFromProtected,
+                0, // shares
+                _liquidator,
+                _borrower,
+                _borrower,
+                ISilo.AssetType.Protected,
                 type(uint256).max,
                 _total[ISilo.AssetType.Protected]
             );
@@ -134,14 +132,12 @@ library SiloLiquidationExecLib {
             SiloERC4626Lib.withdraw(
                 _collateralConfig.token,
                 _collateralConfig.collateralShareToken,
-                SiloERC4626Lib.WithdrawParams({
-                    assets: _withdrawAssetsFromCollateral,
-                    shares: 0,
-                    receiver: _liquidator,
-                    owner: _borrower,
-                    spender: _borrower,
-                    assetType: ISilo.AssetType.Collateral
-                }),
+                _withdrawAssetsFromCollateral,
+                0, // shares
+                _liquidator,
+                _borrower,
+                _borrower,
+                ISilo.AssetType.Collateral,
                 _liquidity,
                 _total[ISilo.AssetType.Collateral]
             );
@@ -203,7 +199,10 @@ library SiloLiquidationExecLib {
 
     /// @return receiveCollateralAssets collateral + protected to liquidate
     /// @return repayDebtAssets
-    function liquidationPreview(SiloSolvencyLib.LtvData memory _ltvData, LiquidationPreviewParams memory _params)
+    function liquidationPreview( // solhint-disable-line function-max-lines, code-complexity
+        SiloSolvencyLib.LtvData memory _ltvData,
+        LiquidationPreviewParams memory _params
+    )
         internal
         view
         returns (uint256 receiveCollateralAssets, uint256 repayDebtAssets)
@@ -221,7 +220,6 @@ library SiloLiquidationExecLib {
         if (!_params.selfLiquidation && _params.collateralLt >= ltvBeforeInBp) return (0, 0);
 
         uint256 ltvAfterInBp;
-
         (receiveCollateralAssets, repayDebtAssets, ltvAfterInBp) = SiloLiquidationLib.calculateExactLiquidationAmounts(
             _params.debtToCover,
             sumOfCollateralAssets,

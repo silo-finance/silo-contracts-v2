@@ -32,8 +32,8 @@ contract DepositAccrueInterestGasTest is Gas, Test {
             DEPOSITOR,
             address(silo1),
             abi.encodeCall(ISilo.deposit, (ASSETS, DEPOSITOR, ISilo.AssetType.Collateral)),
-            "deposit with accrueInterest",
-            148530
+            "DepositAccrueInterest",
+            147903
         );
     }
 }

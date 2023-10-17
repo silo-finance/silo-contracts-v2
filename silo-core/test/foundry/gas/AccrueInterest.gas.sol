@@ -28,6 +28,12 @@ contract AccrueInterestGasTest is Gas, Test {
     }
 
     function test_gas_accrueInterest() public {
-        _action(DEPOSITOR, address(silo1), abi.encodeCall(ISilo.accrueInterest, ()), "accrueInterest", 78258);
+        _action(
+            DEPOSITOR,
+            address(silo1),
+            abi.encodeCall(ISilo.accrueInterest, ()),
+            "AccrueInterest",
+            78258
+        );
     }
 }

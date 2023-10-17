@@ -32,7 +32,7 @@ contract BorrowAccrueInterestGasTest is Gas, Test {
             BORROWER,
             address(silo1),
             abi.encodeCall(ISilo.borrow, (ASSETS, BORROWER, BORROWER)),
-            "borrow with accrueInterest",
+            "BorrowAccrueInterest",
             196700
         );
     }
