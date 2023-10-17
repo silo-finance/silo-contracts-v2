@@ -49,11 +49,11 @@ interface IInterestRateModelV2 {
     }
 
     struct Setup {
-        IInterestRateModelV2Config config;
         // ri ≥ 0 – initial value of the integrator
-        int256 ri;
+        int128 ri;
         // Tcrit ≥ 0 - the time during which the utilization exceeds the critical value
-        int256 Tcrit;
+        int128 Tcrit;
+        IInterestRateModelV2Config config;
     }
     /* solhint-enable */
 

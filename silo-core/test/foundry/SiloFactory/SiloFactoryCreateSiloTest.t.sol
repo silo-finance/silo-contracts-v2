@@ -111,7 +111,7 @@ contract SiloFactoryCreateSiloTest is SiloLittleHelper, IntegrationTest {
         vm.expectRevert("Initializable: contract is already initialized");
         ISilo(configData1.silo).initialize(siloConfig, initData.interestRateModelConfig1);
 
-        (IInterestRateModelV2Config modelConfigAddr0,,) =
+        (,, IInterestRateModelV2Config modelConfigAddr0) =
             InterestRateModelV2(configData0.interestRateModel).getSetup(configData0.silo);
         IInterestRateModelV2.Config memory irmConfigUsed0 = modelConfigAddr0.getConfig();
 
@@ -121,7 +121,7 @@ contract SiloFactoryCreateSiloTest is SiloLittleHelper, IntegrationTest {
 
         assertEq(abi.encode(irmConfigUsed0), abi.encode(irmConfigExpected0));
 
-        (IInterestRateModelV2Config modelConfigAddr1,,) =
+        (,, IInterestRateModelV2Config modelConfigAddr1) =
             InterestRateModelV2(configData1.interestRateModel).getSetup(configData1.silo);
         IInterestRateModelV2.Config memory irmConfigUsed1 = modelConfigAddr1.getConfig();
 
