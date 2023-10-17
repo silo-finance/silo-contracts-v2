@@ -68,7 +68,7 @@ contract AccrueInterestForAssetTest is Test {
         uint256 rcomp = 0.01e18;
 
         InterestRateModelMock irm = new InterestRateModelMock(vm);
-        irm.getCompoundInterestRateAndUpdateMock(currentTimestamp, rcomp);
+        irm.getCompoundInterestRateAndUpdateMock(rcomp);
 
         totalCollateral.assets = 1e18;
         totalDebt.assets = 0.5e18;
@@ -80,7 +80,7 @@ contract AccrueInterestForAssetTest is Test {
         );
         uint256 gasEnd = gasleft();
 
-        assertEq(gasStart - gasEnd, 5862, "optimise accrueInterestForAsset");
+        assertEq(gasStart - gasEnd, 5949, "optimise accrueInterestForAsset");
 
         assertEq(accruedInterest, 0.005e18, "accruedInterest");
         assertEq(totalCollateral.assets, 1.005e18, "totalCollateral");
@@ -102,7 +102,7 @@ contract AccrueInterestForAssetTest is Test {
         uint256 deployerFeeInBp = 0.03e4;
 
         InterestRateModelMock irm = new InterestRateModelMock(vm);
-        irm.getCompoundInterestRateAndUpdateMock(currentTimestamp, rcomp);
+        irm.getCompoundInterestRateAndUpdateMock(rcomp);
 
         totalCollateral.assets = 1e18;
         totalDebt.assets = 0.5e18;
@@ -114,7 +114,7 @@ contract AccrueInterestForAssetTest is Test {
         );
         uint256 gasEnd = gasleft();
 
-        assertEq(gasStart - gasEnd, 5863, "optimise accrueInterestForAsset");
+        assertEq(gasStart - gasEnd, 5950, "optimise accrueInterestForAsset");
 
         assertEq(accruedInterest, 0.005e18, "accruedInterest");
         assertEq(totalCollateral.assets, 1e18 + accruedInterest * (BASIS_POINTS - daoFeeInBp - deployerFeeInBp) / BASIS_POINTS, "totalCollateral");
