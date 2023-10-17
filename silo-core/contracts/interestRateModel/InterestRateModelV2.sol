@@ -27,11 +27,6 @@ contract InterestRateModelV2 is IInterestRateModel, IInterestRateModelV2 {
     using SafeCast for int256;
     using SafeCast for uint256;
 
-    struct LocalRiTcrit {
-        int256 ri;
-        int256 Tcrit;
-    }
-
     struct LocalVarsRCur {
         int256 T;
         int256 u;
@@ -103,13 +98,24 @@ contract InterestRateModelV2 is IInterestRateModel, IInterestRateModelV2 {
 
         Setup storage currentSetup = getSetup[silo];
 
-        (rcomp, currentSetup.ri, currentSetup.Tcrit) = calculateCompoundInterestRate(
+        int256 ri;
+        int256 Tcrit;
+
+        (rcomp, ri, Tcrit) = calculateCompoundInterestRate(
             getConfig(silo),
             data.collateralAssets,
             data.debtAssets,
             data.interestRateTimestamp,
             _blockTimestamp
         );
+
+        currentSetup.ri = ri > type(int128).max
+            ? type(int128).max
+            : ri < type(int128).min ? type(int128).min : int128(ri);
+
+        currentSetup.Tcrit = Tcrit > type(int128).max
+            ? type(int128).max
+            : Tcrit < type(int128).min ? type(int128).min : int128(Tcrit);
     }
 
     /// @inheritdoc IInterestRateModel

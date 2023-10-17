@@ -4,17 +4,11 @@ pragma solidity ^0.8.0;
 import "silo-core/contracts/interestRateModel/InterestRateModelV2.sol";
 import "silo-core/contracts/interestRateModel/InterestRateModelV2ConfigFactory.sol";
 
+import "./InterestRateModelV2Impl.sol";
 import "../_common/InterestRateModelConfigs.sol";
 import "../data-readers/RcurTestData.sol";
 import "../../../contracts/interestRateModel/InterestRateModelV2ConfigFactory.sol";
 import "../../../contracts/interfaces/IInterestRateModelV2Config.sol";
-
-contract InterestRateModelV2Impl is InterestRateModelV2 {
-    function mockSetup(address _silo, int256 _ri, int256 _Tcrit) external {
-        getSetup[_silo].Tcrit = _Tcrit;
-        getSetup[_silo].ri = _ri;
-    }
-}
 
 // forge test -vv --mc InterestRateModelV2RcurTest
 contract InterestRateModelV2RcurTest is RcurTestData, InterestRateModelConfigs {

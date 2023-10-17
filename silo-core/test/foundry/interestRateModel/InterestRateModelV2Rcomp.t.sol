@@ -4,17 +4,12 @@ pragma solidity ^0.8.0;
 import "silo-core/contracts/interestRateModel/InterestRateModelV2.sol";
 import "silo-core/contracts/interestRateModel/InterestRateModelV2ConfigFactory.sol";
 
+import "./InterestRateModelV2Impl.sol";
 import "../_common/InterestRateModelConfigs.sol";
 import "../data-readers/RcompTestData.sol";
 
-contract InterestRateModelV2Impl is InterestRateModelV2 {
-    function mockSetup(address _silo, int256 _ri, int256 _Tcrit) external {
-        getSetup[_silo].Tcrit = _Tcrit;
-        getSetup[_silo].ri = _ri;
-    }
-}
 
-// forge test -vv --mc InterestRateModelV2RcurTest
+// forge test -vv --ffi --mc InterestRateModelV2RcurTest
 contract InterestRateModelV2RcompTest is RcompTestData, InterestRateModelConfigs {
     InterestRateModelV2ConfigFactory immutable CONFIG_FACTORY;
     InterestRateModelV2Impl immutable INTEREST_RATE_MODEL;
@@ -27,9 +22,12 @@ contract InterestRateModelV2RcompTest is RcompTestData, InterestRateModelConfigs
         CONFIG_FACTORY = new InterestRateModelV2ConfigFactory();
     }
 
-    // forge test -vv --mt test_IRM_RcompData_Mock
+    // forge test -vv --ffi --mt test_IRM_RcompData_Mock
     function test_IRM_RcompData_Mock() public {
         RcompData[] memory data = _readDataFromJson();
+
+        uint256 totalDepositsOverflows;
+        uint256 totalBorrowAmountOverflows;
 
         for (uint i; i < data.length; i++) {
             RcompData memory testCase = data[i];
@@ -84,6 +82,17 @@ contract InterestRateModelV2RcompTest is RcompTestData, InterestRateModelConfigs
                 uint64(testCase.input.lastTransactionTime)
             );
 
+            if (testCase.input.totalDeposits != utilizationData.collateralAssets) {
+                totalDepositsOverflows++;
+                continue;
+                revert ("totalDeposits overflow");
+            }
+            if (testCase.input.totalBorrowAmount != utilizationData.debtAssets) {
+                totalBorrowAmountOverflows++;
+                continue;
+                revert ("totalBorrowAmount overflow");
+            }
+
             address silo = address(uint160(i));
 
             (, IInterestRateModelV2Config configAddress) = CONFIG_FACTORY.create(_toConfigStruct(testCase));
@@ -96,9 +105,13 @@ contract InterestRateModelV2RcompTest is RcompTestData, InterestRateModelConfigs
             uint256 compoundInterestRate = INTEREST_RATE_MODEL.getCompoundInterestRate(silo, testCase.input.currentTime);
             assertEq(compoundInterestRate, rcomp, "getCompoundInterestRate()");
         }
+
+        emit log_named_uint("totalBorrowAmountOverflows", totalBorrowAmountOverflows);
+        emit log_named_uint("totalDepositsOverflows", totalDepositsOverflows);
+        emit log_named_uint("total cases", data.length);
     }
 
-    // forge test -vv --mt test_IRM_RcompData_Update
+    // forge test -vv --ffi --mt test_IRM_RcompData_Update
     function test_IRM_RcompData_Update() public {
         RcompData[] memory data = _readDataFromJson();
 
@@ -137,7 +150,7 @@ contract InterestRateModelV2RcompTest is RcompTestData, InterestRateModelConfigs
 
             vm.prank(silo);
             INTEREST_RATE_MODEL.getCompoundInterestRateAndUpdate(testCase.input.currentTime);
-            (, int256 storageRi, int256 storageTcrit)= INTEREST_RATE_MODEL.getSetup(silo);
+            (int256 storageRi, int256 storageTcrit,)= INTEREST_RATE_MODEL.getSetup(silo);
 
             assertEq(storageRi, ri, "storageRi");
             assertEq(storageTcrit, Tcrit, "storageTcrit");
