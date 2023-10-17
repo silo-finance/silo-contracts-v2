@@ -126,13 +126,19 @@ library SiloLendingLib {
         }
 
         uint256 totalFees;
+        uint256 totalCollateralAssets = _totalCollateral.assets;
+        uint256 totalDebtAssets = _totalDebt.assets;
 
         (
             _totalCollateral.assets, _totalDebt.assets, totalFees, accruedInterest
         ) = SiloMathLib.getCollateralAmountsWithInterest(
-            _totalCollateral.assets,
-            _totalDebt.assets,
-            IInterestRateModel(_interestRateModel).getCompoundInterestRateAndUpdate(block.timestamp),
+            totalCollateralAssets,
+            totalDebtAssets,
+            IInterestRateModel(_interestRateModel).getCompoundInterestRateAndUpdate(
+                totalCollateralAssets,
+                totalDebtAssets,
+                lastTimestamp
+            ),
             _daoFeeInBp,
             _deployerFeeInBp
         );

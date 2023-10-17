@@ -7,10 +7,16 @@ interface IInterestRateModel {
     /// can be empty by must implement interface.
     function connect(address _configAddress) external;
 
-    /// @dev get compound interest rate and update model storage
-    /// @param _blockTimestamp current block timestamp
+    /// @dev get compound interest rate and update model storage for current block.timestamp
+    /// @param _collateralAssets total silo collateral assets
+    /// @param _debtAssets total silo debt assets
+    /// @param _interestRateTimestamp last IRM timestamp
     /// @return rcomp compounded interest rate from last update until now (1e18 == 100%)
-    function getCompoundInterestRateAndUpdate(uint256 _blockTimestamp)
+    function getCompoundInterestRateAndUpdate(
+        uint256 _collateralAssets,
+        uint256 _debtAssets,
+        uint256 _interestRateTimestamp
+    )
         external
         returns (uint256 rcomp);
 

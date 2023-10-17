@@ -85,7 +85,11 @@ contract InterestRateModelV2 is IInterestRateModel, IInterestRateModelV2 {
     }
 
     /// @inheritdoc IInterestRateModel
-    function getCompoundInterestRateAndUpdate(uint256 _blockTimestamp)
+    function getCompoundInterestRateAndUpdate(
+        uint256 _collateralAssets,
+        uint256 _debtAssets,
+        uint256 _interestRateTimestamp
+    )
         external
         virtual
         override
@@ -94,8 +98,6 @@ contract InterestRateModelV2 is IInterestRateModel, IInterestRateModelV2 {
         // assume that caller is Silo
         address silo = msg.sender;
 
-        ISilo.UtilizationData memory data = ISilo(silo).utilizationData();
-
         Setup storage currentSetup = getSetup[silo];
 
         int256 ri;
@@ -103,10 +105,10 @@ contract InterestRateModelV2 is IInterestRateModel, IInterestRateModelV2 {
 
         (rcomp, ri, Tcrit) = calculateCompoundInterestRate(
             getConfig(silo),
-            data.collateralAssets,
-            data.debtAssets,
-            data.interestRateTimestamp,
-            _blockTimestamp
+            _collateralAssets,
+            _debtAssets,
+            _interestRateTimestamp,
+            block.timestamp
         );
 
         currentSetup.ri = ri > type(int128).max

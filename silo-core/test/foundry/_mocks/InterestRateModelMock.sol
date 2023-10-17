@@ -22,10 +22,10 @@ contract InterestRateModelMock {
         );
     }
 
-    function getCompoundInterestRateAndUpdateMock(uint256 _blockTimestamp, uint256 _rcomp) external {
+    function getCompoundInterestRateAndUpdateMock(uint256 _rcomp) external {
         vm.mockCall(
             ADDRESS,
-            abi.encodeWithSelector(IInterestRateModel.getCompoundInterestRateAndUpdate.selector, _blockTimestamp),
+            abi.encodeWithSelector(IInterestRateModel.getCompoundInterestRateAndUpdate.selector),
             abi.encode(_rcomp)
         );
     }

@@ -146,10 +146,14 @@ contract InterestRateModelV2RcompTest is RcompTestData, InterestRateModelConfigs
 
             INTEREST_RATE_MODEL.mockSetup(silo, testCase.input.integratorState, testCase.input.Tcrit);
 
-            vm.mockCall(silo, abi.encodeWithSelector(ISilo.utilizationData.selector), abi.encode(utilizationData));
-
+            vm.warp(testCase.input.currentTime);
             vm.prank(silo);
-            INTEREST_RATE_MODEL.getCompoundInterestRateAndUpdate(testCase.input.currentTime);
+            INTEREST_RATE_MODEL.getCompoundInterestRateAndUpdate(
+                testCase.input.totalDeposits,
+                testCase.input.totalBorrowAmount,
+                testCase.input.lastTransactionTime
+            );
+
             (int256 storageRi, int256 storageTcrit,)= INTEREST_RATE_MODEL.getSetup(silo);
 
             assertEq(storageRi, ri, "storageRi");
