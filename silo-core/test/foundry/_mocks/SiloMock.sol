@@ -38,4 +38,24 @@ contract SiloMock {
             abi.encode(_totalProtectedAssets)
         );
     }
+
+    function getCollateralAndProtectedAssetsMock(uint256 _totalCollateralAssets, uint256 _totalProtectedAssets)
+        external
+    {
+        vm.mockCall(
+            ADDRESS,
+            abi.encodeWithSelector(ISilo.getCollateralAndProtectedAssets.selector),
+            abi.encode(_totalCollateralAssets, _totalProtectedAssets)
+        );
+    }
+
+    function utilizationDataMock(uint256 _collateral, uint256 _debt, uint256 _timestamp)
+        external
+    {
+        vm.mockCall(
+            ADDRESS,
+            abi.encodeWithSelector(ISilo.utilizationData.selector),
+            abi.encode(_collateral, _debt, _timestamp)
+        );
+    }
 }

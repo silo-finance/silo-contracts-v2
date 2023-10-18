@@ -85,12 +85,10 @@ contract InterestRateModelV2RcompTest is RcompTestData, InterestRateModelConfigs
             if (testCase.input.totalDeposits != utilizationData.collateralAssets) {
                 totalDepositsOverflows++;
                 continue;
-                revert ("totalDeposits overflow");
             }
             if (testCase.input.totalBorrowAmount != utilizationData.debtAssets) {
                 totalBorrowAmountOverflows++;
                 continue;
-                revert ("totalBorrowAmount overflow");
             }
 
             address silo = address(uint160(i));
@@ -137,12 +135,6 @@ contract InterestRateModelV2RcompTest is RcompTestData, InterestRateModelConfigs
 
             vm.prank(silo);
             INTEREST_RATE_MODEL.connect(address(configAddress));
-
-            ISilo.UtilizationData memory utilizationData = ISilo.UtilizationData(
-                testCase.input.totalDeposits,
-                testCase.input.totalBorrowAmount,
-                uint64(testCase.input.lastTransactionTime)
-            );
 
             INTEREST_RATE_MODEL.mockSetup(silo, testCase.input.integratorState, testCase.input.Tcrit);
 
