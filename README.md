@@ -23,6 +23,8 @@ corepack prepare yarn@stable --activate
 
 npm i -g yarn
 yarn install
+
+git config core.hooksPath .githooks/
 ```
 
 ### Foundry setup for monorepo
@@ -64,13 +66,13 @@ example:
 
 ```shell
 # Remove the submodule entry from .git/config
-git submodule deinit -f gitmodules/chainlink
+git submodule deinit -f gitmodules/silo-foundry-utils
 
 # Remove the submodule directory from the superproject's .git/modules directory
-rm -rf .git/modules/gitmodules/chainlink
+rm -rf .git/modules/gitmodules/silo-foundry-utils
 
 # Remove the entry in .gitmodules and remove the submodule directory located at path/to/submodule
-rm -rf gitmodules/chainlink
+rm -rf gitmodules/silo-foundry-utils
 ```
 
 ### Update submodule

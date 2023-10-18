@@ -2,12 +2,14 @@
   "private": true,
   "name": "silo-contracts-v2",
   "packageManager": "yarn@3.5.0",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "repository": {
     "type": "git",
     "url": "git@github.com:silo-finance/silo-v2.git"
   },
   "workspaces": [
+    "silo-core",
+    "silo-oracles",
     "ve-silo",
     "external/*"
   ],

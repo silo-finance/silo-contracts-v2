@@ -1,6 +1,4 @@
 [invariant]
-fail_on_revert = true
-call_override = false
 
 [profile.default]
 libs = [

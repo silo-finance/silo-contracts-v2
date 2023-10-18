@@ -10879,6 +10879,22 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"silo-core@workspace:silo-core":
+  version: 0.0.0-use.local
+  resolution: "silo-core@workspace:silo-core"
+  dependencies:
+    solhint: ~3.4.1
+  languageName: unknown
+  linkType: soft
+
+"silo-oracles@workspace:silo-oracles":
+  version: 0.0.0-use.local
+  resolution: "silo-oracles@workspace:silo-oracles"
+  dependencies:
+    solhint: ~3.4.1
+  languageName: unknown
+  linkType: soft
+
 "simple-concat@npm:^1.0.0":
   version: 1.0.1
   resolution: "simple-concat@npm:1.0.1"

@@ -1,0 +1,10 @@
+{
+    "DIA_Demo_config": {
+        "diaOracle": "DIA_ORACLE_EXAMPLE",
+        "baseToken": "USDC",
+        "quoteToken": "WETH",
+        "heartbeat": 120,
+        "primaryKey": "ABC/USD",
+        "secondaryKey": "ETH/USD"
+    }
+}
