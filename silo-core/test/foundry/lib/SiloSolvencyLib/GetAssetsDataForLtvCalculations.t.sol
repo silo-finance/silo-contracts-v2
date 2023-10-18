@@ -13,16 +13,16 @@ import {TokenMock} from "silo-core/test/foundry/_mocks/TokenMock.sol";
 import {SiloMock} from "silo-core/test/foundry/_mocks/SiloMock.sol";
 import {InterestRateModelMock} from "silo-core/test/foundry/_mocks/InterestRateModelMock.sol";
 
-// forge test -vv --mc GetSharesAndTotalSupplyTest
+// forge test -vv --ffi --mc GetSharesAndTotalSupplyTest
 contract GetAssetsDataForLtvCalculationsTest is Test {
     GetAssetsDataForLtvCalculationsTestData dataReader;
 
-    address public protectedShareToken = address(10000001);
-    address public collateralShareToken = address(10000002);
-    address public debtShareToken = address(10000003);
-    address public borrowerAddr = address(10000004);
-    address public silo0 = address(10000005);
-    address public silo1 = address(10000006);
+    address public protectedShareToken = address(0x10000001);
+    address public collateralShareToken = address(0x10000002);
+    address public debtShareToken = address(0x10000003);
+    address public borrowerAddr = address(0x10000004);
+    address public silo0 = address(0x10000005);
+    address public silo1 = address(0x10000006);
 
     InterestRateModelMock interestRateModelMock = new InterestRateModelMock(vm);
 
@@ -73,8 +73,12 @@ contract GetAssetsDataForLtvCalculationsTest is Test {
         collateralConfig.deployerFeeInBp = scenario.input.collateralConfig.deployerFeeInBp;
         collateralConfig.silo = silo1;
         SiloMock siloMock1 = new SiloMock(vm, silo1);
-        siloMock1.getProtectedAssetsMock(scenario.input.collateralConfig.totalProtectedAssets);
         siloMock1.getCollateralAssetsMock(scenario.input.collateralConfig.totalCollateralAssets);
+
+        siloMock1.getCollateralAndProtectedAssetsMock(
+            scenario.input.collateralConfig.totalCollateralAssets,
+            scenario.input.collateralConfig.totalProtectedAssets
+        );
         siloMock1.getDebtAssetsMock(scenario.input.collateralConfig.totalDebtAssets);
 
         borrower = borrowerAddr;
@@ -86,7 +90,7 @@ contract GetAssetsDataForLtvCalculationsTest is Test {
     }
 
     /*
-    forge test -vv --mt test_getAssetsDataForLtvCalculations_scenarios
+    forge test -vv --ffi --mt test_getAssetsDataForLtvCalculations_scenarios
     */
     function test_getAssetsDataForLtvCalculations_scenarios() public {
         GetAssetsDataForLtvCalculationsTestData.ScenarioData[] memory scenarios = dataReader.getScenarios();
@@ -99,6 +103,7 @@ contract GetAssetsDataForLtvCalculationsTest is Test {
                 ISilo.OracleType oracleType,
                 ISilo.AccrueInterestInMemory accrueInMemory
             ) = getData(scenarios[index]);
+
             SiloSolvencyLib.LtvData memory ltvData = SiloSolvencyLib.getAssetsDataForLtvCalculations(
                 collateralConfig, debtConfig, borrower, oracleType, accrueInMemory
             );

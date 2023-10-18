@@ -88,43 +88,48 @@ library SiloSolvencyLib {
         ltvData.debtOracle = _oracleType == ISilo.OracleType.MaxLtv && _debtConfig.maxLtvOracle != address(0)
             ? ISiloOracle(_debtConfig.maxLtvOracle)
             : ISiloOracle(_debtConfig.solvencyOracle);
+
         ltvData.collateralOracle = _oracleType == ISilo.OracleType.MaxLtv
             && _collateralConfig.maxLtvOracle != address(0)
             ? ISiloOracle(_collateralConfig.maxLtvOracle)
             : ISiloOracle(_collateralConfig.solvencyOracle);
 
-        uint256 totalAssets;
         uint256 totalShares;
         uint256 shares;
 
         (shares, totalShares) = SiloStdLib.getSharesAndTotalSupply(_collateralConfig.protectedShareToken, _borrower);
-        totalAssets = ISilo(_collateralConfig.silo).getProtectedAssets();
+
+        (
+            uint256 totalCollateralAssets, uint256 totalProtectedAssets
+        ) = ISilo(_collateralConfig.silo).getCollateralAndProtectedAssets();
+
         ltvData.borrowerProtectedAssets = SiloMathLib.convertToAssets(
-            shares, totalAssets, totalShares, MathUpgradeable.Rounding.Down, ISilo.AssetType.Protected
+            shares, totalProtectedAssets, totalShares, MathUpgradeable.Rounding.Down, ISilo.AssetType.Protected
         );
 
         (shares, totalShares) = SiloStdLib.getSharesAndTotalSupply(_collateralConfig.collateralShareToken, _borrower);
 
-        totalAssets = _accrueInMemory == ISilo.AccrueInterestInMemory.Yes
+        totalCollateralAssets = _accrueInMemory == ISilo.AccrueInterestInMemory.Yes
             ? SiloStdLib.getTotalCollateralAssetsWithInterest(
                 _collateralConfig.silo,
                 _collateralConfig.interestRateModel,
                 _collateralConfig.daoFeeInBp,
                 _collateralConfig.deployerFeeInBp
             )
-            : ISilo(_collateralConfig.silo).getCollateralAssets();
+            : totalCollateralAssets;
 
         ltvData.borrowerCollateralAssets = SiloMathLib.convertToAssets(
-            shares, totalAssets, totalShares, MathUpgradeable.Rounding.Down, ISilo.AssetType.Collateral
+            shares, totalCollateralAssets, totalShares, MathUpgradeable.Rounding.Down, ISilo.AssetType.Collateral
         );
 
         (shares, totalShares) = SiloStdLib.getSharesAndTotalSupply(_debtConfig.debtShareToken, _borrower);
-        totalAssets = _accrueInMemory == ISilo.AccrueInterestInMemory.Yes
+
+        uint256 totalDebtAssets = _accrueInMemory == ISilo.AccrueInterestInMemory.Yes
             ? SiloStdLib.getTotalDebtAssetsWithInterest(_debtConfig.silo, _debtConfig.interestRateModel)
             : ISilo(_debtConfig.silo).getDebtAssets();
 
         ltvData.borrowerDebtAssets = SiloMathLib.convertToAssets(
-            shares, totalAssets, totalShares, MathUpgradeable.Rounding.Up, ISilo.AssetType.Debt
+            shares, totalDebtAssets, totalShares, MathUpgradeable.Rounding.Up, ISilo.AssetType.Debt
         );
     }
 

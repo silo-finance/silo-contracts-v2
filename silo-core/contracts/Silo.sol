@@ -131,6 +131,16 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
         totalDebtAssets = _total[AssetType.Debt].assets;
     }
 
+    function getCollateralAndProtectedAssets()
+        external
+        view
+        virtual
+        returns (uint256 totalCollateralAssets, uint256 totalProtectedAssets)
+    {
+        totalCollateralAssets = _total[AssetType.Collateral].assets;
+        totalProtectedAssets = _total[AssetType.Protected].assets;
+    }
+
     function getFeesAndFeeReceivers()
         external
         view

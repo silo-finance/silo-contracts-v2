@@ -17,7 +17,9 @@ contract InterestRateModelMock {
     function getCompoundInterestRateMock(address _silo, uint256 _blockTimestamp, uint256 _rcomp) external {
         vm.mockCall(
             ADDRESS,
-            abi.encodeWithSelector(IInterestRateModel.getCompoundInterestRate.selector, _silo, _blockTimestamp),
+            abi.encodeWithSelector(
+                bytes4(keccak256(abi.encodePacked("getCompoundInterestRate(address,uint256)"))), _silo, _blockTimestamp
+            ),
             abi.encode(_rcomp)
         );
     }

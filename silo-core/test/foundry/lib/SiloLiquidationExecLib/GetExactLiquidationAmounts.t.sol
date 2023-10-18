@@ -64,11 +64,10 @@ contract GetExactLiquidationAmountsHelper is Test {
 
         P_SHARE_TOKEN_A.balanceOfMock(makeAddr("borrower"), 0);
         P_SHARE_TOKEN_A.totalSupplyMock(0);
-        SILO_A.getProtectedAssetsMock(0);
+        SILO_A.getCollateralAndProtectedAssetsMock(2 ** 128 - 1, 0);
 
         C_SHARE_TOKEN_A.balanceOfMock(makeAddr("borrower"), _collateralUserBalanceOf * sharesOffset);
         C_SHARE_TOKEN_A.totalSupplyMock((2 ** 128 - 1) * sharesOffset);
-        SILO_A.getCollateralAssetsMock(2 ** 128 - 1);
 
         D_SHARE_TOKEN_B.balanceOfMock(makeAddr("borrower"), _debtUserBalanceOf * sharesOffset);
         D_SHARE_TOKEN_B.totalSupplyMock(_debtUserBalanceOf * sharesOffset);
@@ -127,11 +126,10 @@ contract GetExactLiquidationAmountsTest is GetExactLiquidationAmountsHelper {
 
         P_SHARE_TOKEN_A.balanceOfMock(user, 0);
         P_SHARE_TOKEN_A.totalSupplyMock(0);
-        SILO_A.getProtectedAssetsMock(0);
+        SILO_A.getCollateralAndProtectedAssetsMock(0, 0);
 
         C_SHARE_TOKEN_A.balanceOfMock(user, 0);
         C_SHARE_TOKEN_A.totalSupplyMock(0);
-        SILO_A.getCollateralAssetsMock(0);
 
         D_SHARE_TOKEN_B.balanceOfMock(user, 0);
         D_SHARE_TOKEN_B.totalSupplyMock(0);
@@ -159,11 +157,13 @@ contract GetExactLiquidationAmountsTest is GetExactLiquidationAmountsHelper {
 
             P_SHARE_TOKEN_A.balanceOfMock(testData.input.user, testData.mocks.protectedUserSharesBalanceOf);
             P_SHARE_TOKEN_A.totalSupplyMock(testData.mocks.protectedSharesTotalSupply);
-            SILO_A.getProtectedAssetsMock(testData.mocks.siloTotalProtectedAssets);
+            SILO_A.getCollateralAndProtectedAssetsMock(
+                testData.mocks.siloTotalCollateralAssets,
+                testData.mocks.siloTotalProtectedAssets
+            );
 
             C_SHARE_TOKEN_A.balanceOfMock(testData.input.user, testData.mocks.collateralUserSharesBalanceOf);
             C_SHARE_TOKEN_A.totalSupplyMock(testData.mocks.collateralSharesTotalSupply);
-            SILO_A.getCollateralAssetsMock(testData.mocks.siloTotalCollateralAssets);
 
             D_SHARE_TOKEN_B.balanceOfMock(testData.input.user, testData.mocks.debtUserSharesBalanceOf);
             D_SHARE_TOKEN_B.totalSupplyMock(testData.mocks.debtSharesTotalSupply);
