@@ -148,18 +148,14 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
     }
 
     function totalAssets() external view virtual returns (uint256 totalManagedAssets) {
-        ISiloConfig.ConfigData memory configData = config.getConfig(address(this));
-
-        (totalManagedAssets,) = SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(configData, AssetType.Collateral);
+        (totalManagedAssets,) = _getTotalAssetsAndTotalSharesWithInterest(AssetType.Collateral);
     }
 
     /// @notice Converts assets to shares for collateral and protected collateral
     /// @dev For debt, use `convertToShares(uint256 _assets, AssetType _assetType)` with `AssetType.Debt`
     function convertToShares(uint256 _assets) external view virtual returns (uint256 shares) {
-        ISiloConfig.ConfigData memory configData = config.getConfig(address(this));
-
         (uint256 totalSiloAssets, uint256 totalShares) =
-            SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(configData, AssetType.Collateral);
+            _getTotalAssetsAndTotalSharesWithInterest(AssetType.Collateral);
 
         return SiloMathLib.convertToShares(
             _assets, totalSiloAssets, totalShares, MathUpgradeable.Rounding.Down, AssetType.Collateral
@@ -169,10 +165,8 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
     /// @notice Converts shares to assets for collateral and protected collateral
     /// @dev For debt, use `convertToAssets(uint256 _shares, AssetType _assetType)` with `AssetType.Debt`
     function convertToAssets(uint256 _shares) external view virtual returns (uint256 assets) {
-        ISiloConfig.ConfigData memory configData = config.getConfig(address(this));
-
         (uint256 totalSiloAssets, uint256 totalShares) =
-            SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(configData, AssetType.Collateral);
+            _getTotalAssetsAndTotalSharesWithInterest(AssetType.Collateral);
 
         return SiloMathLib.convertToAssets(
             _shares, totalSiloAssets, totalShares, MathUpgradeable.Rounding.Down, AssetType.Collateral
@@ -184,10 +178,8 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
     }
 
     function previewDeposit(uint256 _assets) external view virtual returns (uint256 shares) {
-        ISiloConfig.ConfigData memory configData = config.getConfig(address(this));
-
         (uint256 totalSiloAssets, uint256 totalShares) =
-            SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(configData, AssetType.Collateral);
+            _getTotalAssetsAndTotalSharesWithInterest(AssetType.Collateral);
 
         return SiloMathLib.convertToShares(
             _assets, totalSiloAssets, totalShares, MathUpgradeable.Rounding.Down, AssetType.Collateral
@@ -215,10 +207,8 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
     }
 
     function previewMint(uint256 _shares) external view virtual returns (uint256 assets) {
-        ISiloConfig.ConfigData memory configData = config.getConfig(address(this));
-
         (uint256 totalSiloAssets, uint256 totalShares) =
-            SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(configData, AssetType.Collateral);
+            _getTotalAssetsAndTotalSharesWithInterest(AssetType.Collateral);
 
         return SiloMathLib.convertToAssets(
             _shares, totalSiloAssets, totalShares, MathUpgradeable.Rounding.Down, AssetType.Collateral
@@ -246,10 +236,8 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
     }
 
     function previewWithdraw(uint256 _assets) external view virtual returns (uint256 shares) {
-        ISiloConfig.ConfigData memory configData = config.getConfig(address(this));
-
         (uint256 totalSiloAssets, uint256 totalShares) =
-            SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(configData, AssetType.Collateral);
+            _getTotalAssetsAndTotalSharesWithInterest(AssetType.Collateral);
 
         return SiloMathLib.convertToShares(
             _assets, totalSiloAssets, totalShares, MathUpgradeable.Rounding.Up, AssetType.Collateral
@@ -273,10 +261,8 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
     }
 
     function previewRedeem(uint256 _shares) external view virtual returns (uint256 assets) {
-        ISiloConfig.ConfigData memory configData = config.getConfig(address(this));
-
         (uint256 totalSiloAssets, uint256 totalShares) =
-            SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(configData, AssetType.Collateral);
+            _getTotalAssetsAndTotalSharesWithInterest(AssetType.Collateral);
 
         return SiloMathLib.convertToAssets(
             _shares, totalSiloAssets, totalShares, MathUpgradeable.Rounding.Down, AssetType.Collateral
@@ -297,10 +283,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
     }
 
     function convertToShares(uint256 _assets, AssetType _assetType) external view virtual returns (uint256 shares) {
-        ISiloConfig.ConfigData memory configData = config.getConfig(address(this));
-
-        (uint256 totalSiloAssets, uint256 totalShares) =
-            SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(configData, _assetType);
+        (uint256 totalSiloAssets, uint256 totalShares) = _getTotalAssetsAndTotalSharesWithInterest(_assetType);
 
         return SiloMathLib.convertToShares(
             _assets, totalSiloAssets, totalShares, MathUpgradeable.Rounding.Down, _assetType
@@ -308,10 +291,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
     }
 
     function convertToAssets(uint256 _shares, AssetType _assetType) external view virtual returns (uint256 assets) {
-        ISiloConfig.ConfigData memory configData = config.getConfig(address(this));
-
-        (uint256 totalSiloAssets, uint256 totalShares) =
-            SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(configData, _assetType);
+        (uint256 totalSiloAssets, uint256 totalShares) = _getTotalAssetsAndTotalSharesWithInterest(_assetType);
 
         return SiloMathLib.convertToAssets(
             _shares, totalSiloAssets, totalShares, MathUpgradeable.Rounding.Down, _assetType
@@ -330,10 +310,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
     function previewDeposit(uint256 _assets, AssetType _assetType) external view virtual returns (uint256 shares) {
         if (_assetType == AssetType.Debt) revert ISilo.WrongAssetType();
 
-        ISiloConfig.ConfigData memory configData = config.getConfig(address(this));
-
-        (uint256 totalSiloAssets, uint256 totalShares) =
-            SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(configData, _assetType);
+        (uint256 totalSiloAssets, uint256 totalShares) = _getTotalAssetsAndTotalSharesWithInterest(_assetType);
 
         return SiloMathLib.convertToShares(
             _assets, totalSiloAssets, totalShares, MathUpgradeable.Rounding.Down, AssetType.Collateral
@@ -377,10 +354,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
     function previewMint(uint256 _shares, AssetType _assetType) external view virtual returns (uint256 assets) {
         if (_assetType == AssetType.Debt) revert ISilo.WrongAssetType();
 
-        ISiloConfig.ConfigData memory configData = config.getConfig(address(this));
-
-        (uint256 totalSiloAssets, uint256 totalShares) =
-            SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(configData, _assetType);
+        (uint256 totalSiloAssets, uint256 totalShares) = _getTotalAssetsAndTotalSharesWithInterest(_assetType);
 
         return SiloMathLib.convertToAssets(
             _shares, totalSiloAssets, totalShares, MathUpgradeable.Rounding.Down, _assetType
@@ -420,10 +394,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
     function previewWithdraw(uint256 _assets, AssetType _assetType) external view virtual returns (uint256 shares) {
         if (_assetType == AssetType.Debt) revert ISilo.WrongAssetType();
 
-        ISiloConfig.ConfigData memory configData = config.getConfig(address(this));
-
-        (uint256 totalSiloAssets, uint256 totalShares) =
-            SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(configData, _assetType);
+        (uint256 totalSiloAssets, uint256 totalShares) = _getTotalAssetsAndTotalSharesWithInterest(_assetType);
 
         return SiloMathLib.convertToShares(
             _assets, totalSiloAssets, totalShares, MathUpgradeable.Rounding.Down, _assetType
@@ -448,10 +419,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
     function previewRedeem(uint256 _shares, AssetType _assetType) external view virtual returns (uint256 assets) {
         if (_assetType == AssetType.Debt) revert ISilo.WrongAssetType();
 
-        ISiloConfig.ConfigData memory configData = config.getConfig(address(this));
-
-        (uint256 totalSiloAssets, uint256 totalShares) =
-            SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(configData, _assetType);
+        (uint256 totalSiloAssets, uint256 totalShares) = _getTotalAssetsAndTotalSharesWithInterest(_assetType);
 
         return SiloMathLib.convertToAssets(
             _shares, totalSiloAssets, totalShares, MathUpgradeable.Rounding.Down, _assetType
@@ -538,10 +506,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
     }
 
     function previewBorrow(uint256 _assets) external view virtual returns (uint256 shares) {
-        ISiloConfig.ConfigData memory configData = config.getConfig(address(this));
-
-        (uint256 totalSiloAssets, uint256 totalShares) =
-            SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(configData, AssetType.Debt);
+        (uint256 totalSiloAssets, uint256 totalShares) = _getTotalAssetsAndTotalSharesWithInterest(AssetType.Debt);
 
         return SiloMathLib.convertToShares(
             _assets, totalSiloAssets, totalShares, MathUpgradeable.Rounding.Up, AssetType.Debt
@@ -573,10 +538,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
     }
 
     function previewBorrowShares(uint256 _shares) external view virtual returns (uint256 assets) {
-        ISiloConfig.ConfigData memory configData = config.getConfig(address(this));
-
-        (uint256 totalSiloAssets, uint256 totalShares) =
-            SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(configData, AssetType.Debt);
+        (uint256 totalSiloAssets, uint256 totalShares) = _getTotalAssetsAndTotalSharesWithInterest(AssetType.Debt);
 
         return SiloMathLib.convertToAssets(
             _shares, totalSiloAssets, totalShares, MathUpgradeable.Rounding.Up, AssetType.Debt
@@ -609,10 +571,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
     }
 
     function previewRepay(uint256 _assets) external view virtual returns (uint256 shares) {
-        ISiloConfig.ConfigData memory configData = config.getConfig(address(this));
-
-        (uint256 totalSiloAssets, uint256 totalShares) =
-            SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(configData, AssetType.Debt);
+        (uint256 totalSiloAssets, uint256 totalShares) = _getTotalAssetsAndTotalSharesWithInterest(AssetType.Debt);
 
         return SiloMathLib.convertToShares(
             _assets, totalSiloAssets, totalShares, MathUpgradeable.Rounding.Down, AssetType.Debt
@@ -638,10 +597,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
     }
 
     function previewRepayShares(uint256 _shares) external view virtual returns (uint256 assets) {
-        ISiloConfig.ConfigData memory configData = config.getConfig(address(this));
-
-        (uint256 totalSiloAssets, uint256 totalShares) =
-            SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(configData, AssetType.Debt);
+        (uint256 totalSiloAssets, uint256 totalShares) = _getTotalAssetsAndTotalSharesWithInterest(AssetType.Debt);
 
         return SiloMathLib.convertToAssets(
             _shares, totalSiloAssets, totalShares, MathUpgradeable.Rounding.Down, AssetType.Debt
@@ -980,6 +936,16 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
 
         emit Repay(msg.sender, _borrower, assets, shares);
     }
+
+    function _getTotalAssetsAndTotalSharesWithInterest(AssetType _assetType)
+        internal
+        view
+        returns (uint256 assets, uint256 shares)
+    {
+        ISiloConfig.ConfigData memory configData = config.getConfig(address(this));
+        (assets, shares) = SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(configData, _assetType);
+    }
+
 
     function _getShareToken() internal view virtual override returns (address collateralShareToken) {
         (, collateralShareToken,) = config.getShareTokens(address(this));
