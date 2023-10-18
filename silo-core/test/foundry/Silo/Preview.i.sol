@@ -25,8 +25,6 @@ contract PreviewTest is SiloLittleHelper, Test {
         (siloConfig, silo0, silo1,,) = siloFixture.deploy_local(SiloFixture.Override(address(token0), address(token1)));
 
         __init(vm, token0, token1, silo0, silo1);
-
-        assertTrue(siloConfig.getConfig(address(silo0)).borrowable, "we need borrow to be allowed");
     }
 
     /*

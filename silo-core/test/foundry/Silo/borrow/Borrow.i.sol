@@ -28,7 +28,7 @@ contract BorrowTest is SiloLittleHelper, Test {
 
         __init(vm, token0, token1, silo0, silo1);
 
-        assertTrue(siloConfig.getConfig(address(silo0)).borrowable, "we need borrow to be allowed");
+        assertTrue(siloConfig.getConfig(address(silo0)).maxLtv != 0, "we need borrow to be allowed");
     }
 
     /*

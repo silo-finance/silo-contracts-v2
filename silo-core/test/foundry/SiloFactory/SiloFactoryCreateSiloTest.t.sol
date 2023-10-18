@@ -50,7 +50,7 @@ contract SiloFactoryCreateSiloTest is SiloLittleHelper, IntegrationTest {
 
         siloFactory = ISiloFactory(getAddress(SiloCoreContracts.SILO_FACTORY));
 
-        assertTrue(siloConfig.getConfig(address(silo0)).borrowable, "we need borrow to be allowed");
+        assertTrue(siloConfig.getConfig(address(silo0)).maxLtv != 0, "we need borrow to be allowed");
     }
 
     /*
@@ -85,7 +85,7 @@ contract SiloFactoryCreateSiloTest is SiloLittleHelper, IntegrationTest {
         assertEq(configData0.lt, initData.lt0);
         assertEq(configData0.liquidationFee, initData.liquidationFee0);
         assertEq(configData0.flashloanFee, initData.flashloanFee0);
-        assertEq(configData0.borrowable, initData.borrowable0);
+        assertEq(configData0.callBeforeQuote, initData.callBeforeQuote0);
 
         assertEq(configData1.daoFeeInBp, siloFactory.daoFeeInBp());
         assertEq(configData1.deployerFeeInBp, initData.deployerFeeInBp);
@@ -103,7 +103,7 @@ contract SiloFactoryCreateSiloTest is SiloLittleHelper, IntegrationTest {
         assertEq(configData1.lt, initData.lt1);
         assertEq(configData1.liquidationFee, initData.liquidationFee1);
         assertEq(configData1.flashloanFee, initData.flashloanFee1);
-        assertEq(configData1.borrowable, initData.borrowable1);
+        assertEq(configData1.callBeforeQuote, initData.callBeforeQuote1);
 
         vm.expectRevert("Initializable: contract is already initialized");
         ISilo(configData0.silo).initialize(siloConfig, initData.interestRateModelConfig0);

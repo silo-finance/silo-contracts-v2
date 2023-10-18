@@ -62,12 +62,6 @@ contract SiloFactoryValidateSiloInitDataTest is Test {
         initData.lt0 = 8500;
         initData.lt1 = 7500;
 
-        vm.expectRevert(ISiloFactory.NonBorrowableSilo.selector);
-        siloFactory.validateSiloInitData(initData);
-
-        initData.borrowable0 = true;
-        initData.borrowable1 = true;
-
         vm.expectRevert(ISiloFactory.InvalidIrmConfig.selector);
         siloFactory.validateSiloInitData(initData);
 

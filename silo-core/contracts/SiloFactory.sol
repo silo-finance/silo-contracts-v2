@@ -154,7 +154,14 @@ contract SiloFactory is ISiloFactory, ERC721Upgradeable, OwnableUpgradeable {
         if (_initData.maxLtv0 > _initData.lt0) revert InvalidMaxLtv();
         if (_initData.maxLtv1 > _initData.lt1) revert InvalidMaxLtv();
         if (_initData.lt0 > _BASIS_POINTS || _initData.lt1 > _BASIS_POINTS) revert InvalidLt();
-        if (!_initData.borrowable0 && !_initData.borrowable1) revert NonBorrowableSilo();
+        if (
+            _initData.callBeforeQuote0
+            && _initData.maxLtvOracle0 == address(0) && _initData.solvencyOracle0 == address(0)
+        ) revert BeforeCall0();
+        if (
+            _initData.callBeforeQuote1
+            && _initData.maxLtvOracle1 == address(0) && _initData.solvencyOracle1 == address(0)
+        ) revert BeforeCall1();
         if (_initData.deployerFeeInBp > 0 && _initData.deployer == address(0)) revert InvalidDeployer();
         if (_initData.deployerFeeInBp > maxDeployerFeeInBp) revert MaxDeployerFee();
         if (_initData.flashloanFee0 > maxFlashloanFeeInBp) revert MaxFlashloanFee();
@@ -285,7 +292,7 @@ contract SiloFactory is ISiloFactory, ERC721Upgradeable, OwnableUpgradeable {
         configData0.lt = _initData.lt0;
         configData0.liquidationFee = _initData.liquidationFee0;
         configData0.flashloanFee = _initData.flashloanFee0;
-        configData0.borrowable = _initData.borrowable0;
+        configData0.callBeforeQuote = _initData.callBeforeQuote0 && configData0.maxLtvOracle != address(0);
 
         configData1.deployerFeeInBp = _initData.deployerFeeInBp;
         configData1.token = _initData.token1;
@@ -299,6 +306,6 @@ contract SiloFactory is ISiloFactory, ERC721Upgradeable, OwnableUpgradeable {
         configData1.lt = _initData.lt1;
         configData1.liquidationFee = _initData.liquidationFee1;
         configData1.flashloanFee = _initData.flashloanFee1;
-        configData1.borrowable = _initData.borrowable1;
+        configData1.callBeforeQuote = _initData.callBeforeQuote1 && configData1.maxLtvOracle != address(0);
     }
 }

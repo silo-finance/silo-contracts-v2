@@ -85,14 +85,9 @@ library SiloSolvencyLib {
         ISilo.AccrueInterestInMemory _accrueInMemory
     ) internal view returns (LtvData memory ltvData) {
         // When calculating maxLtv, use maxLtv oracle.
-        // we only need to call beforeQuote if we doing MaxLtv
-        ltvData.debtOracle = _oracleType == ISilo.OracleType.MaxLtv
-            ? ISiloOracle(_debtConfig.maxLtvOracle)
-            : ISiloOracle(_debtConfig.solvencyOracle);
-
-        ltvData.collateralOracle = _oracleType == ISilo.OracleType.MaxLtv
-            ? ISiloOracle(_collateralConfig.maxLtvOracle)
-            : ISiloOracle(_collateralConfig.solvencyOracle);
+        (ltvData.collateralOracle, ltvData.debtOracle) = _oracleType == ISilo.OracleType.MaxLtv
+            ? (ISiloOracle(_collateralConfig.maxLtvOracle), ISiloOracle(_debtConfig.maxLtvOracle))
+            : (ISiloOracle(_collateralConfig.solvencyOracle), ISiloOracle(_debtConfig.solvencyOracle));
 
         uint256 totalShares;
         uint256 shares;
@@ -172,7 +167,6 @@ library SiloSolvencyLib {
             getAssetsDataForLtvCalculations(_collateralConfig, _debtConfig, _borrower, _oracleType, _accrueInMemory);
 
         if (ltvData.borrowerDebtAssets == 0) return 0;
-
         (,, ltv) = calculateLtv(ltvData, _collateralConfig.token, _debtConfig.token);
     }
 }

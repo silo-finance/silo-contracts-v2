@@ -20,8 +20,8 @@ contract SiloConfigData is Test, CommonDeploy {
 
     // must be in alphabetic order
     struct ConfigData {
-        bool borrowable0;
-        bool borrowable1;
+        bool callBeforeQuote0;
+        bool callBeforeQuote1;
         string collateralHookReceiver0;
         string collateralHookReceiver1;
         string debtHookReceiver0;
@@ -83,7 +83,7 @@ contract SiloConfigData is Test, CommonDeploy {
             lt0: config.lt0,
             liquidationFee0: config.liquidationFee0,
             flashloanFee0: config.flashloanFee0,
-            borrowable0: config.borrowable0,
+            callBeforeQuote0: config.callBeforeQuote0,
             protectedHookReceiver0: hookReceivers.protectedHookReceiver0,
             collateralHookReceiver0: hookReceivers.collateralHookReceiver0,
             debtHookReceiver0: hookReceivers.debtHookReceiver0,
@@ -96,7 +96,7 @@ contract SiloConfigData is Test, CommonDeploy {
             lt1: config.lt1,
             liquidationFee1: config.liquidationFee1,
             flashloanFee1: config.flashloanFee1,
-            borrowable1: config.borrowable1,
+            callBeforeQuote1: config.callBeforeQuote1,
             protectedHookReceiver1: hookReceivers.protectedHookReceiver1,
             collateralHookReceiver1: hookReceivers.collateralHookReceiver1,
             debtHookReceiver1: hookReceivers.debtHookReceiver1

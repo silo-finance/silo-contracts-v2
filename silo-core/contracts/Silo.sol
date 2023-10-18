@@ -103,7 +103,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
         ISiloConfig.ConfigData memory configData = config.getConfig(address(this));
 
         return SiloLendingLib.borrowPossible(
-            configData.protectedShareToken, configData.collateralShareToken, configData.borrowable, _borrower
+            configData.protectedShareToken, configData.collateralShareToken, _borrower
         );
     }
 
@@ -674,7 +674,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
 
         if (
             !SiloLendingLib.borrowPossible(
-                debtConfig.protectedShareToken, debtConfig.collateralShareToken, debtConfig.borrowable, _borrower
+                debtConfig.protectedShareToken, debtConfig.collateralShareToken, _borrower
             )
         ) revert ISilo.BorrowNotPossible();
 

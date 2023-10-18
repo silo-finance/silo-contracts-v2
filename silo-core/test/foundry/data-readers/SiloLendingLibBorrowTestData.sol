@@ -150,7 +150,7 @@ contract SiloLendingLibBorrowTestData {
         _src.input.configData.debtShareToken = debtShareToken;
         _src.input.configData.token = debtToken;
 
-        _src.input.configData.borrowable = true;
+        _src.input.configData.maxLtv = 0.8e4;
 
         _src.input.receiver = address(0x123333333);
         _src.input.borrower = address(0x345555555);
@@ -175,7 +175,7 @@ contract SiloLendingLibBorrowTestData {
                 lt: _src.input.configData.lt,
                 liquidationFee: _src.input.configData.liquidationFee,
                 flashloanFee: _src.input.configData.flashloanFee,
-                borrowable: _src.input.configData.borrowable
+                callBeforeQuote: _src.input.configData.callBeforeQuote
             }),
             assets: _src.input.assets,
             shares: _src.input.shares,
