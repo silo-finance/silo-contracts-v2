@@ -84,13 +84,13 @@ library SiloSolvencyLib {
         ISilo.OracleType _oracleType,
         ISilo.AccrueInterestInMemory _accrueInMemory
     ) internal view returns (LtvData memory ltvData) {
-        // When calculating maxLtv, use maxLtv oracle. If maxLtv oracle is not set, fallback to solvency oracle
-        ltvData.debtOracle = _oracleType == ISilo.OracleType.MaxLtv && _debtConfig.maxLtvOracle != address(0)
+        // When calculating maxLtv, use maxLtv oracle.
+        // we only need to call beforeQuote if we doing MaxLtv
+        ltvData.debtOracle = _oracleType == ISilo.OracleType.MaxLtv
             ? ISiloOracle(_debtConfig.maxLtvOracle)
             : ISiloOracle(_debtConfig.solvencyOracle);
 
         ltvData.collateralOracle = _oracleType == ISilo.OracleType.MaxLtv
-            && _collateralConfig.maxLtvOracle != address(0)
             ? ISiloOracle(_collateralConfig.maxLtvOracle)
             : ISiloOracle(_collateralConfig.solvencyOracle);
 

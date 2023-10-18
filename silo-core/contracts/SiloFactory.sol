@@ -276,7 +276,10 @@ contract SiloFactory is ISiloFactory, ERC721Upgradeable, OwnableUpgradeable {
         configData0.deployerFeeInBp = _initData.deployerFeeInBp;
         configData0.token = _initData.token0;
         configData0.solvencyOracle = _initData.solvencyOracle0;
-        configData0.maxLtvOracle = _initData.maxLtvOracle0;
+        // If maxLtv oracle is not set, fallback to solvency oracle
+        configData0.maxLtvOracle = _initData.maxLtvOracle0 == address(0)
+            ? _initData.solvencyOracle0
+            : _initData.maxLtvOracle0;
         configData0.interestRateModel = _initData.interestRateModel0;
         configData0.maxLtv = _initData.maxLtv0;
         configData0.lt = _initData.lt0;
@@ -287,7 +290,10 @@ contract SiloFactory is ISiloFactory, ERC721Upgradeable, OwnableUpgradeable {
         configData1.deployerFeeInBp = _initData.deployerFeeInBp;
         configData1.token = _initData.token1;
         configData1.solvencyOracle = _initData.solvencyOracle1;
-        configData1.maxLtvOracle = _initData.maxLtvOracle1;
+        // If maxLtv oracle is not set, fallback to solvency oracle
+        configData1.maxLtvOracle = _initData.maxLtvOracle1 == address(0)
+            ? _initData.solvencyOracle1
+            : _initData.maxLtvOracle1;
         configData1.interestRateModel = _initData.interestRateModel1;
         configData1.maxLtv = _initData.maxLtv1;
         configData1.lt = _initData.lt1;
