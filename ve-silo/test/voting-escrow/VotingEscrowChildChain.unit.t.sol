@@ -53,7 +53,7 @@ contract VotingEscrowChildChainTest is IntegrationTest {
 
         _votingEscrowChild = deploy.run();
 
-        uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
+        uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
         _deployer = vm.addr(deployerPrivateKey);
     }
 

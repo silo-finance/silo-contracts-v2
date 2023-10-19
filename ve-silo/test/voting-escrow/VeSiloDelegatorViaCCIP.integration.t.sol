@@ -72,7 +72,7 @@ contract VeSiloDelegatorViaCCIP is IntegrationTest {
 
         votingEscrow = IVeSilo(getAddress(VeSiloContracts.VOTING_ESCROW));
 
-        uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
+        uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
         _deployer = vm.addr(deployerPrivateKey);
 
         _link = getAddress(AddrKey.LINK);

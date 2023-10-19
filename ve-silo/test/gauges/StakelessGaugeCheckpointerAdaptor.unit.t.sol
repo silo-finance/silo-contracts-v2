@@ -26,7 +26,7 @@ contract StakelessGaugeCheckpointerAdaptorTest is IntegrationTest {
 
         _checkpointerAdaptor = deploy.run();
 
-        uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
+        uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
         _owner = vm.addr(deployerPrivateKey);
     }
 

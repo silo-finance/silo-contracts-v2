@@ -12,7 +12,7 @@ import {IHookReceiver} from "silo-core/contracts/interfaces/IHookReceiver.sol";
  */
 contract HookReceiverDeploy is CommonDeploy {
     function run() public returns (IHookReceiver hookReceiver) {
-        uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
+        uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
 
         vm.startBroadcast(deployerPrivateKey);
 

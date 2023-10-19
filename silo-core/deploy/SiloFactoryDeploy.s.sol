@@ -20,7 +20,7 @@ import {console2} from "forge-std/console2.sol";
  */
 contract SiloFactoryDeploy is CommonDeploy {
     function run() public returns (ISiloFactory siloFactory) {
-        uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
+        uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
 
         vm.startBroadcast(deployerPrivateKey);
 

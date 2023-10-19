@@ -16,7 +16,7 @@ FOUNDRY_PROFILE=oracles CONFIG=DIA_Demo_config \
  */
 contract DIAOracleDeploy is CommonDeploy {
     function run() public returns (DIAOracle oracle) {
-        uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
+        uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
         vm.startBroadcast(deployerPrivateKey);
 
         string memory configName = vm.envString("CONFIG");

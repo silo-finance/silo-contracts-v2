@@ -18,7 +18,7 @@ contract FeeSwapperDeploy is CommonDeploy {
     bytes32 constant public POOL_ID_ETH = 0x9cc64ee4cb672bc04c54b00a37e1ed75b2cc19dd0002000000000000000004c1;
 
     function run() public returns (IFeeSwapper feeSwapper) {
-        uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
+        uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
 
         vm.startBroadcast(deployerPrivateKey);
 
