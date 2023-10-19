@@ -6,6 +6,9 @@ import {console2} from "forge-std/console2.sol";
 import {CommonDeploy, SiloCoreContracts} from "../_CommonDeploy.sol";
 
 import {ISiloFactory} from "silo-core/contracts/interfaces/ISiloFactory.sol";
+import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
+import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
+import {IHookReceiver} from "silo-core/contracts/interfaces/IHookReceiver.sol";
 import {IInterestRateModelV2} from "silo-core/contracts/interfaces/IInterestRateModelV2.sol";
 import {IInterestRateModelV2ConfigFactory} from "silo-core/contracts/interfaces/IInterestRateModelV2ConfigFactory.sol";
 import {IInterestRateModelV2Config} from "silo-core/contracts/interfaces/IInterestRateModelV2Config.sol";
@@ -32,14 +35,6 @@ contract SiloDeploy is CommonDeploy {
 
         _setUpIRMs(config, siloInitData);
 
-        // TODO: pull and set all the data below
-        // siloInitData.protectedHookReceiver0
-        // siloInitData.collateralHookReceiver0
-        // siloInitData.debtHookReceiver0
-        // siloInitData.protectedHookReceiver1
-        // siloInitData.collateralHookReceiver1
-        // siloInitData.debtHookReceiver1
-
         ISiloFactory siloFactory = ISiloFactory(getDeployedAddress(SiloCoreContracts.SILO_FACTORY));
         console2.log("[SiloCommonDeploy] using siloFactory %s", address(siloFactory));
 
@@ -48,6 +43,8 @@ contract SiloDeploy is CommonDeploy {
 
         beforeCreateSilo(siloInitData);
         siloConfig = siloFactory.createSilo(siloInitData);
+
+        _initializeHooksReceivers(siloConfig, siloInitData.deployer);
 
         vm.stopBroadcast();
 
@@ -79,6 +76,33 @@ contract SiloDeploy is CommonDeploy {
 
         _siloInitData.interestRateModel1 = interestRateModel;
         _siloInitData.interestRateModelConfig1 = address(interestRateModelConfig1);
+    }
+
+    function _initializeHooksReceivers(ISiloConfig _siloConfig, address _deployer) internal {
+        (address silo, address otherSilo) = _siloConfig.getSilos();
+
+        _initializeHookReceiversForSilo(_siloConfig, _deployer, silo);
+        _initializeHookReceiversForSilo(_siloConfig, _deployer, otherSilo);
+    }
+
+    function _initializeHookReceiversForSilo(ISiloConfig _siloConfig, address _deployer, address _silo) internal {
+        address protectedShareToken;
+        address collateralShareToken;
+        address debtShareToken;
+
+        (protectedShareToken, collateralShareToken, debtShareToken) = _siloConfig.getShareTokens(_silo);
+
+        _initializeHookReceiverForToken(_deployer, IShareToken(protectedShareToken));
+        _initializeHookReceiverForToken(_deployer, IShareToken(collateralShareToken));
+        _initializeHookReceiverForToken(_deployer, IShareToken(debtShareToken));
+    }
+
+    function _initializeHookReceiverForToken(address _deployer, IShareToken _token) internal {
+        address hookReceiver = _token.hookReceiver();
+
+        if (hookReceiver != address(0)) {
+            IHookReceiver(hookReceiver).initialize(_deployer, _token);
+        }
     }
 
     function beforeCreateSilo(ISiloConfig.InitData memory) internal virtual {
