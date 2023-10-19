@@ -88,12 +88,7 @@ contract SiloFactory is ISiloFactory, ERC721Upgradeable, OwnableUpgradeable {
         configData0.daoFeeInBp = daoFeeInBp;
         configData1.daoFeeInBp = daoFeeInBp;
 
-        configData0.protectedShareToken = ClonesUpgradeable.clone(shareCollateralTokenImpl);
-        configData0.collateralShareToken = ClonesUpgradeable.clone(shareCollateralTokenImpl);
-        configData0.debtShareToken = ClonesUpgradeable.clone(shareDebtTokenImpl);
-        configData1.protectedShareToken = ClonesUpgradeable.clone(shareCollateralTokenImpl);
-        configData1.collateralShareToken = ClonesUpgradeable.clone(shareCollateralTokenImpl);
-        configData1.debtShareToken = ClonesUpgradeable.clone(shareDebtTokenImpl);
+        _cloneShareTokens(configData0, configData1);
 
         configData0.silo = ClonesUpgradeable.clone(siloImpl);
         configData1.silo = ClonesUpgradeable.clone(siloImpl);
@@ -103,21 +98,7 @@ contract SiloFactory is ISiloFactory, ERC721Upgradeable, OwnableUpgradeable {
         ISilo(configData0.silo).initialize(siloConfig, _initData.interestRateModelConfig0);
         ISilo(configData1.silo).initialize(siloConfig, _initData.interestRateModelConfig1);
 
-        _initializeShareTokensAndHooks(
-            configData0,
-            _initData.deployer,
-            _initData.protectedHookReceiver0,
-            _initData.collateralHookReceiver0,
-            _initData.debtHookReceiver0
-        );
-
-        _initializeShareTokensAndHooks(
-            configData1,
-            _initData.deployer,
-            _initData.protectedHookReceiver1,
-            _initData.collateralHookReceiver1,
-            _initData.debtHookReceiver1
-        );
+        _initializeShareTokens(configData0, configData1, _initData);
 
         siloToId[configData0.silo] = nextSiloId;
         siloToId[configData1.silo] = nextSiloId;
@@ -232,28 +213,54 @@ contract SiloFactory is ISiloFactory, ERC721Upgradeable, OwnableUpgradeable {
         emit DaoFeeReceiverChanged(_newDaoFeeReceiver);
     }
 
-    function _initializeShareTokensAndHooks(
-        ISiloConfig.ConfigData memory configData,
-        address _deployer,
-        address _protectedHookReceiver,
-        address _collateralHookReceiver,
-        address _debtHookReceiver
+    function _cloneShareTokens(
+        ISiloConfig.ConfigData memory configData0,
+        ISiloConfig.ConfigData memory configData1
     ) internal virtual {
-        if (_protectedHookReceiver != address(0)) {
-            IHookReceiver(_protectedHookReceiver).initialize(_deployer, IShareToken(configData.protectedShareToken));
-        }
+        configData0.protectedShareToken = ClonesUpgradeable.clone(shareCollateralTokenImpl);
+        configData0.collateralShareToken = ClonesUpgradeable.clone(shareCollateralTokenImpl);
+        configData0.debtShareToken = ClonesUpgradeable.clone(shareDebtTokenImpl);
+        configData1.protectedShareToken = ClonesUpgradeable.clone(shareCollateralTokenImpl);
+        configData1.collateralShareToken = ClonesUpgradeable.clone(shareCollateralTokenImpl);
+        configData1.debtShareToken = ClonesUpgradeable.clone(shareDebtTokenImpl);
+    }
 
-        if (_collateralHookReceiver != address(0)) {
-            IHookReceiver(_collateralHookReceiver).initialize(_deployer, IShareToken(configData.collateralShareToken));
-        }
+    function _initializeShareTokens(
+        ISiloConfig.ConfigData memory configData0,
+        ISiloConfig.ConfigData memory configData1,
+        ISiloConfig.InitData memory _initData
+    ) internal virtual {
+        // initialize configData0
+        IShareToken(configData0.protectedShareToken).initialize(
+            ISilo(configData0.silo),
+            _initData.protectedHookReceiver0
+        );
 
-        if (_debtHookReceiver != address(0)) {
-            IHookReceiver(_debtHookReceiver).initialize(_deployer, IShareToken(configData.debtShareToken));
-        }
+        IShareToken(configData0.collateralShareToken).initialize(
+            ISilo(configData0.silo),
+            _initData.collateralHookReceiver0
+        );
 
-        IShareToken(configData.protectedShareToken).initialize(ISilo(configData.silo), _protectedHookReceiver);
-        IShareToken(configData.collateralShareToken).initialize(ISilo(configData.silo), _collateralHookReceiver);
-        IShareToken(configData.debtShareToken).initialize(ISilo(configData.silo), _debtHookReceiver);
+        IShareToken(configData0.debtShareToken).initialize(
+            ISilo(configData0.silo),
+            _initData.debtHookReceiver0
+        );
+
+        // initialize configData1
+        IShareToken(configData1.protectedShareToken).initialize(
+            ISilo(configData1.silo),
+            _initData.protectedHookReceiver1
+        );
+
+        IShareToken(configData1.collateralShareToken).initialize(
+            ISilo(configData1.silo),
+            _initData.collateralHookReceiver1
+        );
+
+        IShareToken(configData1.debtShareToken).initialize(
+            ISilo(configData1.silo),
+            _initData.debtHookReceiver1
+        );
     }
 
     function _baseURI() internal view virtual override returns (string memory) {
