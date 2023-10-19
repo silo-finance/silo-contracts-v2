@@ -42,7 +42,7 @@ contract L2BalancerPseudoMinterTest is IntegrationTest {
     address internal _deployer;
 
     function setUp() public {
-        uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
+        uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
         _deployer = vm.addr(deployerPrivateKey);
 
         L2BalancerPseudoMinterDeploy deploy = new L2BalancerPseudoMinterDeploy();

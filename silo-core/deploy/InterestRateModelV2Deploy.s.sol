@@ -12,7 +12,7 @@ import {IInterestRateModelV2, InterestRateModelV2} from "silo-core/contracts/int
  */
 contract InterestRateModelV2Deploy is CommonDeploy {
     function run() public returns (IInterestRateModelV2 interestRateModelV2) {
-        uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
+        uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
 
         vm.startBroadcast(deployerPrivateKey);
 

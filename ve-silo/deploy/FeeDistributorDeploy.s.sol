@@ -16,7 +16,7 @@ contract FeeDistributorDeploy is CommonDeploy {
     uint256 public startTime = 1706745600;
 
     function run() public returns (IFeeDistributor feeDistributor) {
-        uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
+        uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
 
         vm.startBroadcast(deployerPrivateKey);
 

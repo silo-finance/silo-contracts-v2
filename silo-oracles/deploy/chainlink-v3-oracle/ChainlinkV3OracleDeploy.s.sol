@@ -16,7 +16,7 @@ FOUNDRY_PROFILE=oracles CONFIG=CHAINLINK_Demo_config \
  */
 contract ChainlinkV3OracleDeploy is CommonDeploy {
     function run() public returns (ChainlinkV3Oracle oracle) {
-        uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
+        uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
         vm.startBroadcast(deployerPrivateKey);
 
         string memory configName = vm.envString("CONFIG");

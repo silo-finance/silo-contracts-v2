@@ -15,7 +15,7 @@ import {
  */
 contract InterestRateModelV2ConfigFactoryDeploy is CommonDeploy {
     function run() public returns (IInterestRateModelV2ConfigFactory interestRateModelV2ConfigFactory) {
-        uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
+        uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
 
         vm.startBroadcast(deployerPrivateKey);
 

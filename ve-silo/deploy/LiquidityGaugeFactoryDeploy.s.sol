@@ -15,7 +15,7 @@ contract LiquidityGaugeFactoryDeploy is CommonDeploy {
     string internal constant _BASE_DIR = "ve-silo/contracts/gauges/ethereum";
 
     function run() public returns (ILiquidityGaugeFactory gaugeFactory) {
-        uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
+        uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
 
         vm.startBroadcast(deployerPrivateKey);
 

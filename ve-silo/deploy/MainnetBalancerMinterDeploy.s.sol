@@ -17,7 +17,7 @@ FOUNDRY_PROFILE=ve-silo \
  */
 contract MainnetBalancerMinterDeploy is CommonDeploy {
     function run() public returns (IBalancerMinter minter, IBalancerTokenAdmin balancerTokenAdmin) {
-        uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
+        uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
 
         vm.startBroadcast(deployerPrivateKey);
 

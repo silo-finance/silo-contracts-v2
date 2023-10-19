@@ -58,7 +58,7 @@ contract SiloGovernorTest is IntegrationTest {
         assertTrue(_timelock.hasRole(cancellerRole, siloGovernorAddr), "DAO should have a CANCELLER_ROLE role");
         assertTrue(_timelock.hasRole(adminRole, siloGovernorAddr), "DAO should have a TIMELOCK_ADMIN_ROLE role");
 
-        uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
+        uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
         address deployer = vm.addr(deployerPrivateKey);
 
         // Deploye should not have roles

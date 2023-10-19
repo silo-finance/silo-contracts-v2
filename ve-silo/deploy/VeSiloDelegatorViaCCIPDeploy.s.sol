@@ -19,7 +19,7 @@ FOUNDRY_PROFILE=ve-silo \
  */
 contract VeSiloDelegatorViaCCIPDeploy is CommonDeploy {
     function run() public returns (IVeSiloDelegatorViaCCIP delegator) {
-        uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
+        uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
 
         vm.startBroadcast(deployerPrivateKey);
 

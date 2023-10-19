@@ -43,7 +43,7 @@ contract SiloDeploy is CommonDeploy {
         ISiloFactory siloFactory = ISiloFactory(getDeployedAddress(SiloCoreContracts.SILO_FACTORY));
         console2.log("[SiloCommonDeploy] using siloFactory %s", address(siloFactory));
 
-        uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
+        uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
         vm.startBroadcast(deployerPrivateKey);
 
         beforeCreateSilo(siloInitData);
