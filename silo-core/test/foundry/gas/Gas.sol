@@ -4,11 +4,10 @@ pragma solidity ^0.8.0;
 import {Strings} from "openzeppelin-contracts/utils/Strings.sol";
 
 import {console2} from "forge-std/console2.sol";
-import {Vm} from "forge-std/Vm.sol";
 
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 
-import {SiloFixture} from "../_common/fixtures/SiloFixture.sol";
+import {SiloFixture, SiloConfigOverride} from "../_common/fixtures/SiloFixture.sol";
 import {MintableToken} from "../_common/MintableToken.sol";
 import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
 
@@ -20,20 +19,17 @@ contract Gas is SiloLittleHelper {
     address constant BORROWER = address(0x1122);
     address constant DEPOSITOR = address(0x9988);
 
-    Vm private immutable _vm;
-
-    constructor(Vm __vm) {
-        _vm = __vm;
-    }
-
     function _gasTestsInit() internal {
         token0 = new MintableToken();
         token1 = new MintableToken();
 
         SiloFixture siloFixture = new SiloFixture();
-        (, silo0, silo1,,) = siloFixture.deploy_local(SiloFixture.Override(address(token0), address(token1)));
+        SiloConfigOverride memory overrides;
+        overrides.token0 = address(token0);
+        overrides.token1 = address(token1);
+        (, silo0, silo1,,) = siloFixture.deploy_local(overrides);
 
-        __init(_vm, token0, token1, silo0, silo1);
+        __init(token0, token1, silo0, silo1);
 
         uint256 max = 2 ** 128 - 1;
 

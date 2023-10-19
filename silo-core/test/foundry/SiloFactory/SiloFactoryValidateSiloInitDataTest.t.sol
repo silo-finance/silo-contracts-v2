@@ -65,6 +65,29 @@ contract SiloFactoryValidateSiloInitDataTest is Test {
         vm.expectRevert(ISiloFactory.InvalidIrmConfig.selector);
         siloFactory.validateSiloInitData(initData);
 
+        initData.maxLtvOracle0 = address(1);
+        vm.expectRevert(ISiloFactory.OracleMisconfiguration.selector);
+        siloFactory.validateSiloInitData(initData);
+
+        initData.callBeforeQuote0 = true;
+        initData.maxLtvOracle0 = address(0);
+        initData.solvencyOracle0 = address(0);
+        vm.expectRevert(ISiloFactory.BeforeCall.selector);
+        siloFactory.validateSiloInitData(initData);
+
+        initData.solvencyOracle0 = address(1);
+
+        initData.maxLtvOracle1 = address(1);
+        vm.expectRevert(ISiloFactory.OracleMisconfiguration.selector);
+        siloFactory.validateSiloInitData(initData);
+
+        initData.callBeforeQuote1 = true;
+        initData.maxLtvOracle1 = address(0);
+        vm.expectRevert(ISiloFactory.BeforeCall.selector);
+        siloFactory.validateSiloInitData(initData);
+
+        initData.solvencyOracle1 = address(1);
+
         initData.deployerFeeInBp = 100;
 
         vm.expectRevert(ISiloFactory.InvalidDeployer.selector);

@@ -11,8 +11,6 @@ import {Gas} from "./Gas.sol";
 forge test -vv --ffi --mt test_gas_ | grep -i '\[GAS\]'
 */
 contract DepositAccrueInterestGasTest is Gas, Test {
-    constructor() Gas(vm) {}
-
     function setUp() public {
         _gasTestsInit();
 

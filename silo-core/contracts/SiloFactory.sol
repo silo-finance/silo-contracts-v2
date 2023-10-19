@@ -154,14 +154,14 @@ contract SiloFactory is ISiloFactory, ERC721Upgradeable, OwnableUpgradeable {
         if (_initData.maxLtv0 > _initData.lt0) revert InvalidMaxLtv();
         if (_initData.maxLtv1 > _initData.lt1) revert InvalidMaxLtv();
         if (_initData.lt0 > _BASIS_POINTS || _initData.lt1 > _BASIS_POINTS) revert InvalidLt();
-        if (
-            _initData.callBeforeQuote0
-            && _initData.maxLtvOracle0 == address(0) && _initData.solvencyOracle0 == address(0)
-        ) revert BeforeCall0();
-        if (
-            _initData.callBeforeQuote1
-            && _initData.maxLtvOracle1 == address(0) && _initData.solvencyOracle1 == address(0)
-        ) revert BeforeCall1();
+        if (_initData.maxLtvOracle0 != address(0) && _initData.solvencyOracle0 == address(0)) {
+            revert OracleMisconfiguration();
+        }
+        if (_initData.callBeforeQuote0 && _initData.solvencyOracle0 == address(0)) revert BeforeCall();
+        if (_initData.maxLtvOracle1 != address(0) && _initData.solvencyOracle1 == address(0)) {
+            revert OracleMisconfiguration();
+        }
+        if (_initData.callBeforeQuote1 && _initData.solvencyOracle1 == address(0)) revert BeforeCall();
         if (_initData.deployerFeeInBp > 0 && _initData.deployer == address(0)) revert InvalidDeployer();
         if (_initData.deployerFeeInBp > maxDeployerFeeInBp) revert MaxDeployerFee();
         if (_initData.flashloanFee0 > maxFlashloanFeeInBp) revert MaxFlashloanFee();

@@ -25,8 +25,8 @@ interface ISiloFactory is IERC721Upgradeable {
     error MaxLiquidationFee();
     error InvalidIrmConfig();
     error InvalidFee();
-    error BeforeCall0();
-    error BeforeCall1();
+    error BeforeCall();
+    error OracleMisconfiguration();
 
     function initialize(
         address _siloImpl,

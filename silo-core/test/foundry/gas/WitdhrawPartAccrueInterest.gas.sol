@@ -11,8 +11,6 @@ import {Gas} from "./Gas.sol";
 forge test -vv --ffi --mt test_gas_ | grep -i '\[GAS\]'
 */
 contract WithdrawPartAccrueInterestGasTest is Gas, Test {
-    constructor() Gas(vm) {}
-
     function setUp() public {
         _gasTestsInit();
 
@@ -33,7 +31,7 @@ contract WithdrawPartAccrueInterestGasTest is Gas, Test {
             address(silo1),
             abi.encodeCall(ISilo.withdraw, (ASSETS / 10, DEPOSITOR, DEPOSITOR, ISilo.AssetType.Collateral)),
             "Withdraw partial with accrue interest",
-            185756
+            185705
         );
     }
 }

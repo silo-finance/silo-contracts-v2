@@ -11,8 +11,6 @@ import {Gas} from "./Gas.sol";
 forge test -vv --ffi --mt test_gas_ | grep -i '\[GAS\]'
 */
 contract RepaySharesFullAccrueInterestGasTest is Gas, Test {
-    constructor() Gas(vm) {}
-
     function setUp() public {
         _gasTestsInit();
 
@@ -39,7 +37,7 @@ contract RepaySharesFullAccrueInterestGasTest is Gas, Test {
             address(silo1),
             abi.encodeCall(ISilo.repayShares, (ASSETS, BORROWER)),
             "RepaySharesFullAccrueInterest full (shares) with accrue interest",
-            133791
+            133820
         );
     }
 }

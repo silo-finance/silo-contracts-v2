@@ -1,29 +1,33 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import {Vm} from "forge-std/Vm.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
+import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 
 import {MintableToken} from "./MintableToken.sol";
+import {SiloFixture, SiloConfigOverride} from "./fixtures/SiloFixture.sol";
+import {LocalVm} from "./LocalVm.sol";
 
-abstract contract SiloLittleHelper {
-    Vm private _vm;
-
+abstract contract SiloLittleHelper is LocalVm {
     MintableToken token0;
     MintableToken token1;
 
     ISilo silo0;
     ISilo silo1;
 
-    function __init(
-        Vm __vm,
-        MintableToken _token0, MintableToken _token1, ISilo _silo0, ISilo _silo1
-    ) internal {
-        _vm = __vm;
+    function __init(MintableToken _token0, MintableToken _token1, ISilo _silo0, ISilo _silo1) internal {
         token0 = _token0;
         token1 = _token1;
         silo0 = _silo0;
         silo1 = _silo1;
+    }
+
+    function _setUpLocalFixture() internal returns (ISiloConfig siloConfig) {
+        return _localFixture("");
+    }
+
+    function _setUpLocalFixture(string memory _configName) internal returns (ISiloConfig siloConfig) {
+        return _localFixture(_configName);
     }
 
     function _depositForBorrow(uint256 _assets, address _depositor) internal returns (uint256 shares) {
@@ -91,10 +95,11 @@ abstract contract SiloLittleHelper {
     {
         _mintTokens(_token, _assets, _depositor);
 
-        _vm.prank(_depositor);
+        _vm.startPrank(_depositor);
         _token.approve(address(_silo), _assets);
-        _vm.prank(_depositor);
         shares = _silo.deposit(_assets, _depositor, _type);
+        _vm.stopPrank();
+
     }
 
     function _mintTokens(MintableToken _token, uint256 _assets, address _user) internal {
@@ -110,5 +115,21 @@ abstract contract SiloLittleHelper {
         _depositForBorrow(_amount, address(0x987654321));
         _deposit(_amount * 2, _borrower);
         debtShares = _borrow(_amount, _borrower);
+    }
+
+    function _localFixture(string memory _configName)
+        private
+        returns (ISiloConfig siloConfig)
+    {
+        token0 = new MintableToken();
+        token1 = new MintableToken();
+
+        SiloConfigOverride memory overrides;
+        overrides.token0 = address(token0);
+        overrides.token1 = address(token1);
+        overrides.configName = _configName;
+
+        SiloFixture siloFixture = new SiloFixture();
+        (siloConfig, silo0, silo1,,) = siloFixture.deploy_local(overrides);
     }
 }

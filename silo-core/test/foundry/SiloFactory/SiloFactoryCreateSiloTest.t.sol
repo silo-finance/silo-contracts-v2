@@ -40,13 +40,7 @@ contract SiloFactoryCreateSiloTest is SiloLittleHelper, IntegrationTest {
         siloData = new SiloConfigData();
         modelData = new InterestRateModelConfigData();
 
-        token0 = new MintableToken();
-        token1 = new MintableToken();
-
-        SiloFixture siloFixture = new SiloFixture();
-        (siloConfig, silo0, silo1,,) = siloFixture.deploy_local(SiloFixture.Override(address(token0), address(token1)));
-
-        __init(vm, token0, token1, silo0, silo1);
+        siloConfig = _setUpLocalFixture();
 
         siloFactory = ISiloFactory(getAddress(SiloCoreContracts.SILO_FACTORY));
 

@@ -8,6 +8,7 @@ import {SafeERC20Upgradeable} from "openzeppelin-contracts-upgradeable/token/ERC
 import {IERC20Upgradeable} from "openzeppelin-contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 
 import {ISilo, ISiloLiquidation} from "./interfaces/ISilo.sol";
+import {ISiloOracle} from "./interfaces/ISiloOracle.sol";
 import {IShareToken} from "./interfaces/IShareToken.sol";
 
 import {IERC3156FlashBorrower} from "./interfaces/IERC3156FlashBorrower.sol";
@@ -672,11 +673,10 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
         (ISiloConfig.ConfigData memory debtConfig, ISiloConfig.ConfigData memory collateralConfig) =
             config.getConfigs(address(this));
 
-        if (
-            !SiloLendingLib.borrowPossible(
-                debtConfig.protectedShareToken, debtConfig.collateralShareToken, _borrower
-            )
-        ) revert ISilo.BorrowNotPossible();
+        // TODO collateralConfig.maxLtv == 0 - use other silo maxLtv in borrowPossible OR change precision to 1e18
+        if (!SiloLendingLib.borrowPossible(
+            debtConfig.protectedShareToken, debtConfig.collateralShareToken, _borrower
+        )) revert ISilo.BorrowNotPossible();
 
         _accrueInterest(debtConfig.interestRateModel, debtConfig.daoFeeInBp, debtConfig.deployerFeeInBp);
 
@@ -702,6 +702,14 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
         // allow for deposit reentry only to provide collateral
         if (_receiver.onLeverage(msg.sender, _borrower, debtConfig.token, assets, _data) != LEVERAGE_CALLBACK) {
             revert LeverageFailed();
+        }
+
+        if (collateralConfig.callBeforeQuote) {
+            ISiloOracle(collateralConfig.maxLtvOracle).beforeQuote(collateralConfig.token);
+        }
+
+        if (debtConfig.callBeforeQuote) {
+            ISiloOracle(debtConfig.maxLtvOracle).beforeQuote(debtConfig.token);
         }
 
         if (!SiloSolvencyLib.isBelowMaxLtv(collateralConfig, debtConfig, _borrower, AccrueInterestInMemory.No)) {
@@ -734,6 +742,14 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
 
         _accrueInterest(debtConfig.interestRateModel, debtConfig.daoFeeInBp, debtConfig.deployerFeeInBp);
         ISilo(debtConfig.otherSilo).accrueInterest();
+
+        if (collateralConfig.callBeforeQuote) {
+            ISiloOracle(collateralConfig.solvencyOracle).beforeQuote(collateralConfig.token);
+        }
+
+        if (debtConfig.callBeforeQuote) {
+            ISiloOracle(debtConfig.solvencyOracle).beforeQuote(debtConfig.token);
+        }
 
         bool selfLiquidation = _borrower == msg.sender;
 
@@ -900,6 +916,14 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
             emit WithdrawProtected(msg.sender, _receiver, _owner, assets, shares);
         }
 
+        if (collateralConfig.callBeforeQuote) {
+            ISiloOracle(collateralConfig.solvencyOracle).beforeQuote(collateralConfig.token);
+        }
+
+        if (debtConfig.callBeforeQuote) {
+            ISiloOracle(debtConfig.solvencyOracle).beforeQuote(debtConfig.token);
+        }
+
         // `_params.owner` must be solvent
         if (!SiloSolvencyLib.isSolvent(collateralConfig, debtConfig, _owner, AccrueInterestInMemory.No)) {
             revert NotSolvent();
@@ -929,6 +953,14 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
 
         emit Borrow(msg.sender, _receiver, _borrower, assets, shares);
 
+        if (collateralConfig.callBeforeQuote) {
+            ISiloOracle(collateralConfig.maxLtvOracle).beforeQuote(collateralConfig.token);
+        }
+
+        if (debtConfig.callBeforeQuote) {
+            ISiloOracle(debtConfig.maxLtvOracle).beforeQuote(debtConfig.token);
+        }
+
         if (!SiloSolvencyLib.isBelowMaxLtv(collateralConfig, debtConfig, _borrower, AccrueInterestInMemory.No)) {
             revert AboveMaxLtv();
         }
@@ -955,7 +987,6 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
         ISiloConfig.ConfigData memory configData = config.getConfig(address(this));
         (assets, shares) = SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(configData, _assetType);
     }
-
 
     function _getShareToken() internal view virtual override returns (address collateralShareToken) {
         (, collateralShareToken,) = config.getShareTokens(address(this));

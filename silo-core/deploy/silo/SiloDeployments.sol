@@ -5,6 +5,10 @@ import {KeyValueStorage} from "silo-foundry-utils/key-value/KeyValueStorage.sol"
 import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 
 library SiloConfigsNames {
+    string public constant LOCAL_NO_ORACLE_SILO = "Local_noOracle";
+    string public constant LOCAL_NOT_BORROWABLE = "Local_notBorrowable";
+    string public constant LOCAL_BEFORE_CALL = "Local_beforeCall";
+
     string public constant ETH_USDC_UNI_V3_SILO = "ETH-USDC_UniswapV3_Silo";
 }
 

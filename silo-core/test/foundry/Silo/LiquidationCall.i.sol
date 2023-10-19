@@ -11,7 +11,6 @@ import {ISiloLiquidation} from "silo-core/contracts/interfaces/ISiloLiquidation.
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {IInterestRateModel} from "silo-core/contracts/interfaces/IInterestRateModel.sol";
 
-import {SiloFixture} from "../_common/fixtures/SiloFixture.sol";
 import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
 import {MintableToken} from "../_common/MintableToken.sol";
 
@@ -27,13 +26,7 @@ contract LiquidationCallTest is SiloLittleHelper, Test {
     event LiquidationCall(address indexed liquidator, bool receiveSToken);
 
     function setUp() public {
-        token0 = new MintableToken();
-        token1 = new MintableToken();
-
-        SiloFixture siloFixture = new SiloFixture();
-        (siloConfig, silo0, silo1,,) = siloFixture.deploy_local(SiloFixture.Override(address(token0), address(token1)));
-
-        __init(vm, token0, token1, silo0, silo1);
+        siloConfig = _setUpLocalFixture();
 
         _depositForBorrow(8e18, address(1));
 

@@ -138,14 +138,14 @@ library SiloSolvencyLib {
         unchecked { sumOfCollateralAssets = _ltvData.borrowerProtectedAssets + _ltvData.borrowerCollateralAssets; }
 
         if (sumOfCollateralAssets != 0) {
-            // if no oracle is set, assume price 1
+            // if no oracle is set, assume price 1, we should also not set oracle for quote token
             sumOfCollateralValue = address(_ltvData.collateralOracle) != address(0)
                 ? _ltvData.collateralOracle.quote(sumOfCollateralAssets, _collateralAsset)
                 : sumOfCollateralAssets;
         }
 
         if (_ltvData.borrowerDebtAssets != 0) {
-            // if no oracle is set, assume price 1
+            // if no oracle is set, assume price 1, we should also not set oracle for quote token
             debtValue = address(_ltvData.debtOracle) != address(0)
                 ? _ltvData.debtOracle.quote(_ltvData.borrowerDebtAssets, _debtAsset)
                 : _ltvData.borrowerDebtAssets;

@@ -19,27 +19,30 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 
 import {TokenMock} from "../../_mocks/TokenMock.sol";
 
-contract SiloDeploy_ETH_USDC_1_Local is SiloDeploy {
+struct SiloConfigOverride {
     address token0;
     address token1;
+    address solvencyOracle0;
+    address maxLtvOracle0;
+    string configName;
+}
 
-    constructor(address _token0, address _token1) {
-        token0 = _token0;
-        token1 = _token1;
+contract SiloDeploy_ETH_USDC_1_Local is SiloDeploy {
+    SiloConfigOverride internal siloConfigOverride;
+
+    constructor(SiloConfigOverride memory _override) {
+        siloConfigOverride = _override;
     }
 
     function beforeCreateSilo(ISiloConfig.InitData memory _config) internal view override {
-        _config.token0 = token0;
-        _config.token1 = token1;
+        _config.token0 = siloConfigOverride.token0;
+        _config.token1 = siloConfigOverride.token1;
+        _config.solvencyOracle0 = siloConfigOverride.solvencyOracle0;
+        _config.maxLtvOracle0 = siloConfigOverride.maxLtvOracle0;
     }
 }
 
 contract SiloFixture is StdCheats, CommonBase {
-    struct Override {
-        address token0;
-        address token1;
-    }
-
     uint256 internal constant _FORKING_BLOCK_NUMBER = 17336000;
 
     function deploy_ETH_USDC()
@@ -51,7 +54,7 @@ contract SiloFixture is StdCheats, CommonBase {
         return _deploy(new SiloDeploy());
     }
 
-    function deploy_local(Override memory _override)
+    function deploy_local(SiloConfigOverride memory _override)
         external
         returns (ISiloConfig siloConfig, ISilo silo0, ISilo silo1, address weth, address usdc)
     {
@@ -59,10 +62,14 @@ contract SiloFixture is StdCheats, CommonBase {
         AddrLib.setAddress(VeSiloContracts.TIMELOCK_CONTROLLER, makeAddr("Timelock"));
         AddrLib.setAddress(VeSiloContracts.FEE_DISTRIBUTOR, makeAddr("FeeDistributor"));
         console2.log("[SiloFixture] _deploy: setAddress done.");
+        console2.log("[SiloFixture] configName:", _override.configName);
 
-        vm.setEnv("CONFIG", SiloConfigsNames.ETH_USDC_UNI_V3_SILO);
+        vm.setEnv(
+            "CONFIG",
+            bytes(_override.configName).length == 0 ? SiloConfigsNames.LOCAL_NO_ORACLE_SILO : _override.configName
+        );
 
-        return _deploy(new SiloDeploy_ETH_USDC_1_Local(_override.token0, _override.token1));
+        return _deploy(new SiloDeploy_ETH_USDC_1_Local(_override));
     }
 
     function _deploy(SiloDeploy _siloDeploy)
