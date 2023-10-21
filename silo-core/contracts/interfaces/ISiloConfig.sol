@@ -33,7 +33,7 @@ interface ISiloConfig {
         address debtHookReceiver1;
     }
 
-    struct ConfigData { // TODO check all places where we using it and try to oprimise
+    struct ConfigData {
         uint256 daoFeeInBp;
         uint256 deployerFeeInBp;
         address silo;
@@ -45,10 +45,10 @@ interface ISiloConfig {
         address solvencyOracle;
         address maxLtvOracle;
         address interestRateModel;
-        uint64 maxLtv;
-        uint64 lt;
-        uint64 liquidationFee;
-        uint64 flashloanFee;
+        uint256 maxLtv;
+        uint256 lt;
+        uint256 liquidationFee;
+        uint256 flashloanFee;
         bool callBeforeQuote;
     }
 

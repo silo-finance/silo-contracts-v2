@@ -29,7 +29,6 @@ import {LeverageReentrancyGuard} from "./utils/LeverageReentrancyGuard.sol";
 // Keep ERC4626 ordering
 // solhint-disable ordering
 
-// TODO make sure we revert on zero deposit, borrow etc
 // TODO: natspec
 
 contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, LeverageReentrancyGuard {

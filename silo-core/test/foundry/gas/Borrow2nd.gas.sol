@@ -29,7 +29,7 @@ contract Borrow2ndGasTest is Gas, Test {
             address(silo1),
             abi.encodeCall(ISilo.borrow, (ASSETS, BORROWER, BORROWER)),
             "Borrow2nd (no interest)",
-            145426
+            143606
         );
     }
 }

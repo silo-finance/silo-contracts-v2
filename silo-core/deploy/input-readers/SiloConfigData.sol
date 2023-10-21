@@ -140,9 +140,4 @@ contract SiloConfigData is Test, CommonDeploy {
             if (hookReceiver == address(0)) revert HookReceiverImplNoFound(_requiredHookReceiver);
         }
     }
-
-    // TODO
-    // function print(ISiloConfig.InitData memory _initData) public {
-    //     emit log_named_uint("deployer", _configData.uopt);
-    // }
 }

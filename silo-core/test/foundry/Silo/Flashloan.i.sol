@@ -14,7 +14,7 @@ import {IERC3156FlashBorrower} from "silo-core/contracts/interfaces/IERC3156Flas
 import {Silo, ILeverageBorrower} from "silo-core/contracts/Silo.sol";
 import {LeverageReentrancyGuard} from "silo-core/contracts/utils/LeverageReentrancyGuard.sol";
 
-import {SiloFixture} from "../_common/fixtures/SiloFixture.sol";
+import {SiloConfigOverride} from "../_common/fixtures/SiloFixture.sol";
 import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
 import {MintableToken} from "../_common/MintableToken.sol";
 
@@ -73,13 +73,7 @@ contract FlashloanTest is SiloLittleHelper, Test {
     ISiloConfig siloConfig;
 
     function setUp() public {
-        token0 = new MintableToken();
-        token1 = new MintableToken();
-
-        SiloFixture siloFixture = new SiloFixture();
-        (siloConfig, silo0, silo1,,) = siloFixture.deploy_local(SiloFixture.Override(address(token0), address(token1)));
-
-        __init(vm, token0, token1, silo0, silo1);
+        siloConfig = _setUpLocalFixture();
 
         _depositForBorrow(8e18, address(1));
 
