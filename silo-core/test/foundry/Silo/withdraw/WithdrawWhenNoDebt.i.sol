@@ -8,7 +8,7 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 
 import {TokenMock} from "silo-core/test/foundry/_mocks/TokenMock.sol";
-import {SiloFixture} from "../../_common/fixtures/SiloFixture.sol";
+import {SiloFixture, SiloConfigOverride} from "../../_common/fixtures/SiloFixture.sol";
 
 import {Vm} from "forge-std/Vm.sol";
 import "../../_common/MintableToken.sol";
@@ -31,8 +31,12 @@ contract WithdrawWhenNoDebtTest is Test {
         token0 = new MintableToken();
         token1 = new MintableToken();
 
+        SiloConfigOverride memory overrides;
+        overrides.token0 = address(token0);
+        overrides.token1 = address(token1);
+
         SiloFixture siloFixture = new SiloFixture();
-        (siloConfig, silo0, silo1,,) = siloFixture.deploy_local(SiloFixture.Override(address(token0), address(token1)));
+        (siloConfig, silo0, silo1,,) = siloFixture.deploy_local(overrides);
     }
 
     /*

@@ -44,7 +44,7 @@ contract GetTotalAssetsAndTotalSharesWithInterest is Test {
 
     constructor() {
         SILO = new SiloMock(vm, address(1));
-        INTEREST_RATE_MODEL = new InterestRateModelMock(vm);
+        INTEREST_RATE_MODEL = new InterestRateModelMock();
         PROTECTED_SHARE_TOKEN = new TokenMock(vm, address(2));
         COLLATERAL_SHARE_TOKEN = new TokenMock(vm, address(3));
         DEBT_SHARE_TOKEN = new TokenMock(vm, address(4));

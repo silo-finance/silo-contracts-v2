@@ -16,7 +16,7 @@ contract GetTotalDebtAssetsWithInterestTest is Test {
 
     constructor () {
         SILO = new SiloMock(vm, address(0));
-        INTEREST_RATE_MODEL = new InterestRateModelMock(vm);
+        INTEREST_RATE_MODEL = new InterestRateModelMock();
     }
 
     /*

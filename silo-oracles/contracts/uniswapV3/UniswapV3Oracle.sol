@@ -130,7 +130,7 @@ contract UniswapV3Oracle is ISiloOracle, IUniswapV3Oracle, Initializable {
             = resolveOldestObservationTimestamp(config.pool, observationIndex, currentObservationCardinality);
     }
 
-    function beforeQuote(uint256, address) external pure virtual override {
+    function beforeQuote(address) external pure virtual override {
         // nothing to execute
     }
 

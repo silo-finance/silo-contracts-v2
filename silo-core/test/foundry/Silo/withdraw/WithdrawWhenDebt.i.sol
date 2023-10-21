@@ -21,13 +21,7 @@ contract WithdrawWhenDebtTest is SiloLittleHelper, Test {
     ISiloConfig siloConfig;
 
     function setUp() public {
-        token0 = new MintableToken();
-        token1 = new MintableToken();
-
-        SiloFixture siloFixture = new SiloFixture();
-        (siloConfig, silo0, silo1,,) = siloFixture.deploy_local(SiloFixture.Override(address(token0), address(token1)));
-
-        __init(vm, token0, token1, silo0, silo1);
+        siloConfig = _setUpLocalFixture();
 
         // we need to have something to borrow
         _depositForBorrow(0.5e18, address(1));

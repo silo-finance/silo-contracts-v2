@@ -48,7 +48,7 @@ contract GetExactLiquidationAmountsHelper is Test {
         D_SHARE_TOKEN_B = new TokenMock(vm, makeAddr("D_SHARE_TOKEN_B"));
         P_SHARE_TOKEN_B = new TokenMock(vm, makeAddr("P_SHARE_TOKEN_B"));
 
-        INTEREST_RATE_MODEL = new InterestRateModelMock(vm);
+        INTEREST_RATE_MODEL = new InterestRateModelMock();
     }
 
     function getExactLiquidationAmounts(

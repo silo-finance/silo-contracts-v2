@@ -84,15 +84,10 @@ library SiloSolvencyLib {
         ISilo.OracleType _oracleType,
         ISilo.AccrueInterestInMemory _accrueInMemory
     ) internal view returns (LtvData memory ltvData) {
-        // When calculating maxLtv, use maxLtv oracle. If maxLtv oracle is not set, fallback to solvency oracle
-        ltvData.debtOracle = _oracleType == ISilo.OracleType.MaxLtv && _debtConfig.maxLtvOracle != address(0)
-            ? ISiloOracle(_debtConfig.maxLtvOracle)
-            : ISiloOracle(_debtConfig.solvencyOracle);
-
-        ltvData.collateralOracle = _oracleType == ISilo.OracleType.MaxLtv
-            && _collateralConfig.maxLtvOracle != address(0)
-            ? ISiloOracle(_collateralConfig.maxLtvOracle)
-            : ISiloOracle(_collateralConfig.solvencyOracle);
+        // When calculating maxLtv, use maxLtv oracle.
+        (ltvData.collateralOracle, ltvData.debtOracle) = _oracleType == ISilo.OracleType.MaxLtv
+            ? (ISiloOracle(_collateralConfig.maxLtvOracle), ISiloOracle(_debtConfig.maxLtvOracle))
+            : (ISiloOracle(_collateralConfig.solvencyOracle), ISiloOracle(_debtConfig.solvencyOracle));
 
         uint256 totalShares;
         uint256 shares;
@@ -143,14 +138,14 @@ library SiloSolvencyLib {
         unchecked { sumOfCollateralAssets = _ltvData.borrowerProtectedAssets + _ltvData.borrowerCollateralAssets; }
 
         if (sumOfCollateralAssets != 0) {
-            // if no oracle is set, assume price 1
+            // if no oracle is set, assume price 1, we should also not set oracle for quote token
             sumOfCollateralValue = address(_ltvData.collateralOracle) != address(0)
                 ? _ltvData.collateralOracle.quote(sumOfCollateralAssets, _collateralAsset)
                 : sumOfCollateralAssets;
         }
 
         if (_ltvData.borrowerDebtAssets != 0) {
-            // if no oracle is set, assume price 1
+            // if no oracle is set, assume price 1, we should also not set oracle for quote token
             debtValue = address(_ltvData.debtOracle) != address(0)
                 ? _ltvData.debtOracle.quote(_ltvData.borrowerDebtAssets, _debtAsset)
                 : _ltvData.borrowerDebtAssets;
@@ -172,7 +167,6 @@ library SiloSolvencyLib {
             getAssetsDataForLtvCalculations(_collateralConfig, _debtConfig, _borrower, _oracleType, _accrueInMemory);
 
         if (ltvData.borrowerDebtAssets == 0) return 0;
-
         (,, ltv) = calculateLtv(ltvData, _collateralConfig.token, _debtConfig.token);
     }
 }

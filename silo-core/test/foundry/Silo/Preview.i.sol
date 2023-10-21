@@ -7,7 +7,6 @@ import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 
-import {SiloFixture} from "../_common/fixtures/SiloFixture.sol";
 import {MintableToken} from "../_common/MintableToken.sol";
 import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
 
@@ -18,15 +17,7 @@ contract PreviewTest is SiloLittleHelper, Test {
     ISiloConfig siloConfig;
 
     function setUp() public {
-        token0 = new MintableToken();
-        token1 = new MintableToken();
-
-        SiloFixture siloFixture = new SiloFixture();
-        (siloConfig, silo0, silo1,,) = siloFixture.deploy_local(SiloFixture.Override(address(token0), address(token1)));
-
-        __init(vm, token0, token1, silo0, silo1);
-
-        assertTrue(siloConfig.getConfig(address(silo0)).borrowable, "we need borrow to be allowed");
+        siloConfig = _setUpLocalFixture();
     }
 
     /*

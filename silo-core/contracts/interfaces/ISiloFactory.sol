@@ -20,12 +20,13 @@ interface ISiloFactory is IERC721Upgradeable {
     error InvalidMaxLt();
     error InvalidLt();
     error InvalidDeployer();
-    error NonBorrowableSilo();
     error MaxDeployerFee();
     error MaxFlashloanFee();
     error MaxLiquidationFee();
     error InvalidIrmConfig();
     error InvalidFee();
+    error BeforeCall();
+    error OracleMisconfiguration();
 
     function initialize(
         address _siloImpl,

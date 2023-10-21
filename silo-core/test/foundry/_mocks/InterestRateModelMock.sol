@@ -1,17 +1,15 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import {Vm} from "forge-std/Vm.sol";
+import {Test} from "forge-std/Test.sol";
 
 import {IInterestRateModel} from "silo-core/contracts/interfaces/IInterestRateModel.sol";
 
-contract InterestRateModelMock {
-    address public constant ADDRESS = address(0x8365223094333333333333333333);
+contract InterestRateModelMock is Test {
+    address public immutable ADDRESS;
 
-    Vm private immutable vm;
-
-    constructor (Vm _vm) {
-        vm = _vm;
+    constructor () {
+        ADDRESS = makeAddr("InterestRateModelMock");
     }
 
     function getCompoundInterestRateMock(address _silo, uint256 _blockTimestamp, uint256 _rcomp) external {

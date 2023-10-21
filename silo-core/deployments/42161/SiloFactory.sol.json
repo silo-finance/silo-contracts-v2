@@ -391,7 +391,7 @@
             },
             {
               "internalType": "bool",
-              "name": "borrowable0",
+              "name": "callBeforeQuote0",
               "type": "bool"
             },
             {
@@ -456,7 +456,7 @@
             },
             {
               "internalType": "bool",
-              "name": "borrowable1",
+              "name": "callBeforeQuote1",
               "type": "bool"
             },
             {

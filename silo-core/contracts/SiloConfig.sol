@@ -37,7 +37,7 @@ contract SiloConfig is ISiloConfig {
     uint64 private immutable _LIQUIDATION_FEE0;
     uint64 private immutable _FLASHLOAN_FEE0;
 
-    bool private immutable _BORROWABLE0;
+    bool private immutable _CALL_BEFORE_QUOTE0;
 
     // TOKEN #1
 
@@ -62,7 +62,7 @@ contract SiloConfig is ISiloConfig {
     uint64 private immutable _LIQUIDATION_FEE1;
     uint64 private immutable _FLASHLOAN_FEE1;
 
-    bool private immutable _BORROWABLE1;
+    bool private immutable _CALL_BEFORE_QUOTE1;
 
     /// @param _siloId ID of this pool assigned by factory
     /// @param _configData0 silo configuration data for token0
@@ -93,7 +93,7 @@ contract SiloConfig is ISiloConfig {
         _LIQUIDATION_FEE0 = _configData0.liquidationFee;
         _FLASHLOAN_FEE0 = _configData0.flashloanFee;
 
-        _BORROWABLE0 = _configData0.borrowable;
+        _CALL_BEFORE_QUOTE0 = _configData0.callBeforeQuote;
 
         // TOKEN #1
 
@@ -115,7 +115,7 @@ contract SiloConfig is ISiloConfig {
         _LIQUIDATION_FEE1 = _configData1.liquidationFee;
         _FLASHLOAN_FEE1 = _configData1.flashloanFee;
 
-        _BORROWABLE1 = _configData1.borrowable;
+        _CALL_BEFORE_QUOTE1 = _configData1.callBeforeQuote;
     }
 
     function getSilos() external view returns (address silo0, address silo1) {
@@ -163,7 +163,7 @@ contract SiloConfig is ISiloConfig {
             lt: _LT0,
             liquidationFee: _LIQUIDATION_FEE0,
             flashloanFee: _FLASHLOAN_FEE0,
-            borrowable: _BORROWABLE0
+            callBeforeQuote: _CALL_BEFORE_QUOTE0
         });
 
         ConfigData memory configData1 = ConfigData({
@@ -182,7 +182,7 @@ contract SiloConfig is ISiloConfig {
             lt: _LT1,
             liquidationFee: _LIQUIDATION_FEE1,
             flashloanFee: _FLASHLOAN_FEE1,
-            borrowable: _BORROWABLE1
+            callBeforeQuote: _CALL_BEFORE_QUOTE1
         });
 
         // Silo that is asking for configs will have its config at index 0
@@ -213,7 +213,7 @@ contract SiloConfig is ISiloConfig {
                 lt: _LT0,
                 liquidationFee: _LIQUIDATION_FEE0,
                 flashloanFee: _FLASHLOAN_FEE0,
-                borrowable: _BORROWABLE0
+                callBeforeQuote: _CALL_BEFORE_QUOTE0
             });
         } else if (_silo == _SILO1) {
             return ConfigData({
@@ -232,7 +232,7 @@ contract SiloConfig is ISiloConfig {
                 lt: _LT1,
                 liquidationFee: _LIQUIDATION_FEE1,
                 flashloanFee: _FLASHLOAN_FEE1,
-                borrowable: _BORROWABLE1
+                callBeforeQuote: _CALL_BEFORE_QUOTE1
             });
         } else {
             revert WrongSilo();

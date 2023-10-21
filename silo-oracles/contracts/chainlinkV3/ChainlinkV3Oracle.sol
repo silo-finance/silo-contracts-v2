@@ -72,7 +72,7 @@ contract ChainlinkV3Oracle is IChainlinkV3Oracle, ISiloOracle, Initializable {
         return address(config.quoteToken);
     }
 
-    function beforeQuote(uint256, address) external pure virtual override {
+    function beforeQuote(address) external pure virtual override {
         // nothing to execute
     }
 
