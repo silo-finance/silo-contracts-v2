@@ -10,9 +10,9 @@ import {InterestRateModelMock} from "../../_mocks/InterestRateModelMock.sol";
 import {TokenMock} from "../../_mocks/TokenMock.sol";
 
 /*
-forge test -vv --mc GetTotalAssetsAndTotalSharesWithInterest
+forge test -vv --mc GetTotalAssetsAndTotalSharesWithInterestTest
 */
-contract GetTotalAssetsAndTotalSharesWithInterest is Test {
+contract GetTotalAssetsAndTotalSharesWithInterestTest is Test {
     struct DebtTestCases {
         uint256 rcomp;
         uint256 debtAssets;
