@@ -32,10 +32,10 @@ contract SiloConfig is ISiloConfig {
 
     address private immutable _INTEREST_RATE_MODEL0;
 
-    uint64 private immutable _MAX_LTV0;
-    uint64 private immutable _LT0;
-    uint64 private immutable _LIQUIDATION_FEE0;
-    uint64 private immutable _FLASHLOAN_FEE0;
+    uint256 private immutable _MAX_LTV0;
+    uint256 private immutable _LT0;
+    uint256 private immutable _LIQUIDATION_FEE0;
+    uint256 private immutable _FLASHLOAN_FEE0;
 
     bool private immutable _CALL_BEFORE_QUOTE0;
 
@@ -57,10 +57,10 @@ contract SiloConfig is ISiloConfig {
 
     address private immutable _INTEREST_RATE_MODEL1;
 
-    uint64 private immutable _MAX_LTV1;
-    uint64 private immutable _LT1;
-    uint64 private immutable _LIQUIDATION_FEE1;
-    uint64 private immutable _FLASHLOAN_FEE1;
+    uint256 private immutable _MAX_LTV1;
+    uint256 private immutable _LT1;
+    uint256 private immutable _LIQUIDATION_FEE1;
+    uint256 private immutable _FLASHLOAN_FEE1;
 
     bool private immutable _CALL_BEFORE_QUOTE1;
 
