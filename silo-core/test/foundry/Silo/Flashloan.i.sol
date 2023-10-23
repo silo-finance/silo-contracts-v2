@@ -14,7 +14,6 @@ import {IERC3156FlashBorrower} from "silo-core/contracts/interfaces/IERC3156Flas
 import {Silo, ILeverageBorrower} from "silo-core/contracts/Silo.sol";
 import {LeverageReentrancyGuard} from "silo-core/contracts/utils/LeverageReentrancyGuard.sol";
 
-import {SiloConfigOverride} from "../_common/fixtures/SiloFixture.sol";
 import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
 import {MintableToken} from "../_common/MintableToken.sol";
 

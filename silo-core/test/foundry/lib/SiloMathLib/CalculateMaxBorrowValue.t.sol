@@ -6,6 +6,8 @@ import "silo-core/contracts/lib/SiloMathLib.sol";
 
 // forge test -vv --mc CalculateMaxBorrowValueTest
 contract CalculateMaxBorrowValueTest is Test {
+    uint256 internal constant _BP2DP_NORMALIZATION = 10 ** (18 - 4);
+
     /*
     forge test -vv --mt test_calculateMaxBorrow
     */
@@ -19,7 +21,7 @@ contract CalculateMaxBorrowValueTest is Test {
             0, "when all zeros"
         );
 
-        configMaxLtv = 0.5e4;
+        configMaxLtv = 0.5e4 * _BP2DP_NORMALIZATION;
         sumOfBorrowerCollateralValue = 1e18;
         borrowerDebtValue = 0.5e18;
 
@@ -29,7 +31,7 @@ contract CalculateMaxBorrowValueTest is Test {
         );
 
 
-        configMaxLtv = 0.5e4;
+        configMaxLtv = 0.5e4 * _BP2DP_NORMALIZATION;
         sumOfBorrowerCollateralValue = 1e18;
         borrowerDebtValue = 1.5e18;
 
@@ -38,7 +40,7 @@ contract CalculateMaxBorrowValueTest is Test {
             0, "when ltv over limit -> zeros"
         );
 
-        configMaxLtv = 0.5e4;
+        configMaxLtv = 0.5e4 * _BP2DP_NORMALIZATION;
         sumOfBorrowerCollateralValue = 1e18;
         borrowerDebtValue = 0;
 
@@ -47,7 +49,7 @@ contract CalculateMaxBorrowValueTest is Test {
             0.5e18, "when no debt"
         );
 
-        configMaxLtv = 0.5e4;
+        configMaxLtv = 0.5e4 * _BP2DP_NORMALIZATION;
         sumOfBorrowerCollateralValue = 1e18;
         borrowerDebtValue = 0.1e18;
 

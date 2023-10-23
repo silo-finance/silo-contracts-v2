@@ -12,31 +12,18 @@ import {SiloFixture, SiloConfigOverride} from "../../_common/fixtures/SiloFixtur
 
 import {Vm} from "forge-std/Vm.sol";
 import "../../_common/MintableToken.sol";
+import "../../_common/SiloLittleHelper.sol";
 
 /*
     forge test -vv --mc WithdrawWhenNoDebtTest
 */
-contract WithdrawWhenNoDebtTest is Test {
+contract WithdrawWhenNoDebtTest is SiloLittleHelper, Test {
     uint256 internal constant _BASIS_POINTS = 1e4;
-    uint256 internal constant _FORKING_BLOCK_NUMBER = 17336000;
 
     ISiloConfig siloConfig;
-    ISilo silo0;
-    ISilo silo1;
-
-    MintableToken token0;
-    MintableToken token1;
 
     function setUp() public {
-        token0 = new MintableToken();
-        token1 = new MintableToken();
-
-        SiloConfigOverride memory overrides;
-        overrides.token0 = address(token0);
-        overrides.token1 = address(token1);
-
-        SiloFixture siloFixture = new SiloFixture();
-        (siloConfig, silo0, silo1,,) = siloFixture.deploy_local(overrides);
+        siloConfig = _setUpLocalFixture();
     }
 
     /*

@@ -14,8 +14,6 @@ import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
     forge test -vv --ffi --mc BorrowTest --ffi
 */
 contract BorrowTest is SiloLittleHelper, Test {
-    uint256 internal constant _BASIS_POINTS = 1e4;
-
     ISiloConfig siloConfig;
 
     function setUp() public {
@@ -95,12 +93,10 @@ contract BorrowTest is SiloLittleHelper, Test {
         assertGt(IShareToken(collateralShareToken).balanceOf(borrower), 0, "expect borrower to have collateral");
 
         uint256 maxBorrow = silo0.maxBorrow(borrower);
-        assertEq(maxBorrow, 0.85e18, "");
-        // emit log_named_decimal_uint("maxBorrow", maxBorrow, 18);
+        assertEq(maxBorrow, 0.85e18, "invalid maxBorrow");
 
-        // increasing max amount by 2bp, 1bp might be not enough because of precision error
-        uint256 borrowToMuch = maxBorrow + maxBorrow / _BASIS_POINTS * 2;
-        // emit log_named_decimal_uint("borrowToMuch", borrowToMuch, 18);
+        uint256 borrowToMuch = maxBorrow + 1;
+        // emit log_named_uint("borrowToMuch", borrowToMuch);
 
         vm.expectRevert(ISilo.AboveMaxLtv.selector);
         vm.prank(borrower);
@@ -200,8 +196,6 @@ contract BorrowTest is SiloLittleHelper, Test {
         assertTrue(silo0.isSolvent(borrower), "still isSolvent");
         assertTrue(silo1.isSolvent(borrower), "still isSolvent");
 
-        // still be able to borrow value of "precision error"
-        _borrow(1e14 - 1, borrower);
         _borrow(1, borrower, ISilo.AboveMaxLtv.selector);
     }
 

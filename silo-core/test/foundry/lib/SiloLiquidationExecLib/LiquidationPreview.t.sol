@@ -2,16 +2,21 @@
 pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
-import "silo-core/contracts/lib/SiloLiquidationExecLib.sol";
-import "../../_common/MockOracleQuote.sol";
-import "../../_common/SiloLiquidationExecLibImpl.sol";
+
+import {ISiloLiquidation} from "silo-core/contracts/interfaces/ISiloLiquidation.sol";
+import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
+import {SiloSolvencyLib} from "silo-core/contracts/lib/SiloSolvencyLib.sol";
+import {SiloLiquidationExecLib} from "silo-core/contracts/lib/SiloLiquidationExecLib.sol";
+import {SiloLiquidationLib} from "silo-core/contracts/lib/SiloLiquidationLib.sol";
+
+import {MockOracleQuote} from "../../_common/MockOracleQuote.sol";
+import {SiloLiquidationExecLibImpl} from "../../_common/SiloLiquidationExecLibImpl.sol";
 
 
 // forge test -vv --mc LiquidationPreviewTest
 contract getExactLiquidationAmountsTest is Test, MockOracleQuote {
-    uint256 constant BASIS_POINTS = 1e4;
-
     // this must match value from SiloLiquidationLib
+    uint256 internal constant _BP2DP_NORMALIZATION = 10 ** (18 - 4);
     uint256 internal constant _LT_LIQUIDATION_MARGIN_IN_BP = 0.9e4; // 90%
 
     /*
@@ -80,18 +85,28 @@ contract getExactLiquidationAmountsTest is Test, MockOracleQuote {
         SiloLiquidationExecLib.LiquidationPreviewParams memory params;
         params.collateralConfigAsset = COLLATERAL_ASSET;
         params.debtConfigAsset = DEBT_ASSET;
-        params.collateralLt = 7999;
+        params.collateralLt = 0.8000e18 - 1; // must be below LTV that is present in `ltvData`
 
-        // liquidation margin is 90% of LT => 90% * 79.99% = 71991%
-        uint256 maxDebtToCover = 285969296679757229; // this is max debt we can cover
+        (uint256 maxCollateralToLiquidate, uint256 maxDebtToCover) = SiloLiquidationLib.maxLiquidation(
+            ltvData.borrowerCollateralAssets,
+            ltvData.borrowerCollateralAssets,
+            ltvData.borrowerDebtAssets,
+            ltvData.borrowerDebtAssets,
+            params.collateralLt,
+            params.liquidationFeeInBp
+        );
+
+        emit log_named_decimal_uint("maxDebtToCover", maxDebtToCover, 18);
+
         params.debtToCover = maxDebtToCover;
-
-        _oraclesQuoteMocks(ltvData, 1e18, 0.8000e18); // ltv just above 79%
+        // price is 1:1
+        _oraclesQuoteMocks(ltvData, ltvData.borrowerCollateralAssets, ltvData.borrowerDebtAssets);
 
         // does not revert - counter example first
         (uint256 receiveCollateralAssets, uint256 repayDebtAssets) = impl.liquidationPreview(ltvData, params);
-        assertEq(receiveCollateralAssets, maxDebtToCover, "receiveCollateralAssets #1");
-        assertEq(repayDebtAssets, maxDebtToCover, "repayDebtAssets #1");
+        assertEq(receiveCollateralAssets, maxCollateralToLiquidate, "expect same collateral #1");
+        assertEq(receiveCollateralAssets, maxDebtToCover, "same collateral, because price is 1:1 and no fee #1");
+        assertEq(repayDebtAssets, maxDebtToCover, "repayDebtAssets match #1");
 
         // more debt should cause revert because of _LT_LIQUIDATION_MARGIN_IN_BP
         params.debtToCover += 1;
@@ -120,7 +135,7 @@ contract getExactLiquidationAmountsTest is Test, MockOracleQuote {
         SiloLiquidationExecLib.LiquidationPreviewParams memory params;
         params.collateralConfigAsset = COLLATERAL_ASSET;
         params.debtConfigAsset = DEBT_ASSET;
-        params.collateralLt = 8000;
+        params.collateralLt = 8000 * _BP2DP_NORMALIZATION;
         params.debtToCover = 2;
 
         _oraclesQuoteMocks(ltvData, 1e18, 0.5e18); // ltv 50% - user solvent
@@ -146,7 +161,7 @@ contract getExactLiquidationAmountsTest is Test, MockOracleQuote {
         SiloLiquidationExecLib.LiquidationPreviewParams memory params;
         params.collateralConfigAsset = COLLATERAL_ASSET;
         params.debtConfigAsset = DEBT_ASSET;
-        params.collateralLt = 8000;
+        params.collateralLt = 8000 * _BP2DP_NORMALIZATION;
         params.debtToCover = 2;
 
         _oraclesQuoteMocks(ltvData, 1e18, 2e18); // ltv 200% - user NOT solvent

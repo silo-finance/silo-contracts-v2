@@ -151,7 +151,7 @@ library SiloMathLib {
 
     /// @return maxBorrowValue max borrow value yet available for borrower
     function calculateMaxBorrowValue(
-        uint256 _configMaxLtvInBp,
+        uint256 _configMaxLtvInDp,
         uint256 _sumOfBorrowerCollateralValue,
         uint256 _borrowerDebtValue
     ) internal pure returns (uint256 maxBorrowValue) {
@@ -159,7 +159,7 @@ library SiloMathLib {
             return 0;
         }
 
-        uint256 maxDebtValue = _sumOfBorrowerCollateralValue * _configMaxLtvInBp / _BASIS_POINTS;
+        uint256 maxDebtValue = _sumOfBorrowerCollateralValue * _configMaxLtvInDp / _PRECISION_DECIMALS;
 
         unchecked {
             // we will not underflow because we checking `maxDebtValue > _borrowerDebtValue`
@@ -170,16 +170,16 @@ library SiloMathLib {
     function calculateMaxAssetsToWithdraw(
         uint256 _sumOfCollateralsValue,
         uint256 _debtValue,
-        uint256 _ltInBp,
+        uint256 _ltInDp,
         uint256 _borrowerCollateralAssets,
         uint256 _borrowerProtectedAssets
     ) internal pure returns (uint256 maxAssets) {
         if (_sumOfCollateralsValue == 0) return 0;
         if (_debtValue == 0) return _sumOfCollateralsValue;
-        if (_ltInBp == 0) return 0;
+        if (_ltInDp == 0) return 0;
 
-        uint256 minimumCollateralValue = _debtValue * _BASIS_POINTS;
-        unchecked { minimumCollateralValue /= _ltInBp; }
+        uint256 minimumCollateralValue = _debtValue * _PRECISION_DECIMALS;
+        unchecked { minimumCollateralValue /= _ltInDp; }
 
         // if we over LT, we can not withdraw
         if (_sumOfCollateralsValue <= minimumCollateralValue) {
@@ -192,11 +192,11 @@ library SiloMathLib {
 
         unchecked {
             // these are total assets (protected + collateral) that _owner can withdraw
-            // + is safe because we adding same asset (under sme total supply)
-            // * can potentially overflow, but it is unlikely, we would overflow in LTV calculations first
+            // - is safe because we adding same asset (under same total supply)
+            // - can potentially overflow, but it is unlikely, we would overflow in LTV calculations first
             // worse what can happen we return lower number than real MAX on overflow
-            maxAssets = (_borrowerProtectedAssets + _borrowerCollateralAssets) * spareCollateralValue
-                / _sumOfCollateralsValue;
+             maxAssets = (_borrowerProtectedAssets + _borrowerCollateralAssets) * spareCollateralValue
+                 / _sumOfCollateralsValue;
         }
     }
 

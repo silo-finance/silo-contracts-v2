@@ -60,7 +60,7 @@ library SiloSolvencyLib {
     function calculateLtv(SiloSolvencyLib.LtvData memory _ltvData, address _collateralToken, address _debtToken)
         internal
         view
-        returns (uint256 sumOfBorrowerCollateralValue, uint256 totalBorrowerDebtValue, uint256 ltvInBp)
+        returns (uint256 sumOfBorrowerCollateralValue, uint256 totalBorrowerDebtValue, uint256 ltvInDp)
     {
         (
             sumOfBorrowerCollateralValue, totalBorrowerDebtValue
@@ -69,10 +69,10 @@ library SiloSolvencyLib {
         if (sumOfBorrowerCollateralValue == 0 && totalBorrowerDebtValue == 0) {
             return (0, 0, 0);
         } else if (sumOfBorrowerCollateralValue == 0) {
-            ltvInBp = _INFINITY;
+            ltvInDp = _INFINITY;
         } else {
             // TODO when 128 the whole below math can be unchecked, cast to 256!
-            ltvInBp = totalBorrowerDebtValue * _BASIS_POINTS / sumOfBorrowerCollateralValue;
+            ltvInDp = totalBorrowerDebtValue * _PRECISION_DECIMALS / sumOfBorrowerCollateralValue;
         }
     }
 
@@ -153,20 +153,20 @@ library SiloSolvencyLib {
     }
 
     /// @dev Calculates LTV for user. It is used in core logic. Non-view function is needed in case the oracle
-    ///      has to write some data to storage to protect ie. from read re-entracy like in curve pools.
-    /// @return ltv Loan-to-Value
+    ///      has to write some data to storage to protect ie. from read re-entrancy like in curve pools.
+    /// @return ltvInDp Loan-to-Value
     function getLtv(
         ISiloConfig.ConfigData memory _collateralConfig,
         ISiloConfig.ConfigData memory _debtConfig,
         address _borrower,
         ISilo.OracleType _oracleType,
         ISilo.AccrueInterestInMemory _accrueInMemory
-    ) internal view returns (uint256 ltv) {
+    ) internal view returns (uint256 ltvInDp) {
         // TODO: early return if no debt
         LtvData memory ltvData =
             getAssetsDataForLtvCalculations(_collateralConfig, _debtConfig, _borrower, _oracleType, _accrueInMemory);
 
         if (ltvData.borrowerDebtAssets == 0) return 0;
-        (,, ltv) = calculateLtv(ltvData, _collateralConfig.token, _debtConfig.token);
+        (,, ltvInDp) = calculateLtv(ltvData, _collateralConfig.token, _debtConfig.token);
     }
 }

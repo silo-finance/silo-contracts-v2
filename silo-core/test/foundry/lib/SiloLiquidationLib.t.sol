@@ -2,6 +2,9 @@
 pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
+
+import {Strings} from "openzeppelin-contracts/utils/Strings.sol";
+
 import "silo-core/contracts/lib/SiloLiquidationLib.sol";
 
 import "../_checkedMath/SiloLiquidationLibChecked.sol";
@@ -14,6 +17,8 @@ import "../data-readers/EstimateMaxRepayValueTestData.sol";
 // forge test -vv --mc SiloLiquidationLibTest
 contract SiloLiquidationLibTest is Test {
     uint256 internal constant _BASIS_POINTS = 1e4;
+    uint256 internal constant _DECIMALS_POINTS = 1e18;
+    uint256 internal constant _BP2DP_NORMALIZATION = 10 ** (18 - 4);
 
     /*
     forge test -vv --mt test_SiloLiquidationLib_minAcceptableLTV
@@ -66,8 +71,8 @@ contract SiloLiquidationLibTest is Test {
                 data[i].input.liquidationFee
             );
 
-            assertEq(collateralAssets, data[i].output.collateralAssets, "expect collateralAssets");
-            assertEq(collateralValue, data[i].output.collateralValue, "expect collateralValue");
+            assertEq(collateralAssets, data[i].output.collateralAssets, _concatMsg(i, "expect collateralAssets"));
+            assertEq(collateralValue, data[i].output.collateralValue, _concatMsg(i, "expect collateralValue"));
         }
     }
 
@@ -95,10 +100,16 @@ contract SiloLiquidationLibTest is Test {
                 data[i].input.liquidationFee
             );
 
-            // emit log_named_uint("#", i);
-            assertEq(collateralAssetsToLiquidate, data[i].output.collateralAssetsToLiquidate, "expect assets");
-            assertEq(debtAssetsToRepay, data[i].output.debtAssetsToRepay, "expect debtAssetsToRepay");
-            assertEq(ltvAfterLiquidation, data[i].output.ltvAfterLiquidation, "expect ltvAfterLiquidation");
+            assertEq(
+                collateralAssetsToLiquidate, data[i].output.collateralAssetsToLiquidate,
+                _concatMsg(i, "] expect assets")
+            );
+            assertEq(
+                debtAssetsToRepay, data[i].output.debtAssetsToRepay, _concatMsg(i, "] expect debtAssetsToRepay")
+            );
+            assertEq(
+                ltvAfterLiquidation, data[i].output.ltvAfterLiquidation, _concatMsg(i, "] expect ltvAfterLiquidation")
+            );
         }
     }
 
@@ -115,12 +126,12 @@ contract SiloLiquidationLibTest is Test {
             uint256 repayValue = SiloLiquidationLib.estimateMaxRepayValue(
                 data[i].input.totalBorrowerDebtValue,
                 data[i].input.totalBorrowerCollateralValue,
-                data[i].input.ltvAfterLiquidationInBp,
+                data[i].input.ltvAfterLiquidationInDp,
                 data[i].input.liquidityFeeInBp
             );
 
-            // emit log_named_uint("#", i);
-            assertEq(repayValue, data[i].repayValue, "expect repayValue");
+            console.log("repayValue %s", repayValue);
+            assertEq(repayValue, data[i].repayValue, _concatMsg(i, "expect repayValue"));
         }
     }
 
@@ -130,23 +141,23 @@ contract SiloLiquidationLibTest is Test {
     function test_SiloLiquidationLib_estimateMaxRepayValue_raw() public {
         // debtValue, CollateralValue, ltv, fee
         assertEq(
-            SiloLiquidationLib.estimateMaxRepayValue(1e18, 1e18, 80, 10),
-            _estimateMaxRepayValueRaw(1e18, 1e18, 80, 10),
-            "expect raw == estimateMaxRepayValue"
+            SiloLiquidationLib.estimateMaxRepayValue(1e18, 1e18, 80 * _BP2DP_NORMALIZATION, 10),
+            _estimateMaxRepayValueRaw(1e18, 1e18, 80 * _BP2DP_NORMALIZATION, 10),
+            "expect raw == estimateMaxRepayValue (1)"
         );
 
         // simulation values
         assertEq(
-            SiloLiquidationLib.estimateMaxRepayValue(85e18, 100e18, 7900, 300),
-            _estimateMaxRepayValueRaw(85e18, 100e18, 7900, 300),
-            "expect raw == estimateMaxRepayValue"
+            SiloLiquidationLib.estimateMaxRepayValue(85e18, 100e18, 7900 * _BP2DP_NORMALIZATION, 300),
+            _estimateMaxRepayValueRaw(85e18, 100e18, 7900 * _BP2DP_NORMALIZATION, 300),
+            "expect raw == estimateMaxRepayValue (2)"
         );
 
         // simulation values
         assertEq(
-            SiloLiquidationLib.estimateMaxRepayValue(85e18, 111e18, 5000, 1000),
-            _estimateMaxRepayValueRaw(85e18, 111e18, 5000, 1000),
-            "expect raw == estimateMaxRepayValue"
+            SiloLiquidationLib.estimateMaxRepayValue(85e18, 111e18, 5000 * _BP2DP_NORMALIZATION, 1000),
+            _estimateMaxRepayValueRaw(85e18, 111e18, 5000 * _BP2DP_NORMALIZATION, 1000),
+            "expect raw == estimateMaxRepayValue (3)"
         );
     }
 
@@ -164,17 +175,20 @@ contract SiloLiquidationLibTest is Test {
                 uint256 collateralValueToLiquidate,
                 uint256 repayValue
             ) = SiloLiquidationLib.maxLiquidationPreview(
-                data[i].input.totalBorrowerDebtValue,
                 data[i].input.totalBorrowerCollateralValue,
-                data[i].input.ltvAfterLiquidationInBp,
+                data[i].input.totalBorrowerDebtValue,
+                data[i].input.ltvAfterLiquidationInDp,
                 data[i].input.liquidityFeeInBp
             );
 
-            assertEq(collateralValueToLiquidate, data[i].output.collateralValueToLiquidate, "expect collateral value");
-            assertEq(repayValue, data[i].output.repayValue, "expect repayValue");
+            assertEq(
+                collateralValueToLiquidate, data[i].output.collateralValueToLiquidate,
+                _concatMsg(i, "expect collateral value")
+            );
+            assertEq(repayValue, data[i].output.repayValue, _concatMsg(i, "expect repayValue"));
 
             // cross check, but only when totalBorrowerDebtValue > 0
-            // otherwise we will have different results for ltv because ltvAfterLiquidationInBp will not be achievable
+            // otherwise we will have different results for ltv because ltvAfterLiquidationInDp will not be achievable
 
             // assets does not matter because it is basically related to value by price
             // so I pick here some arbitrary prices
@@ -197,14 +211,19 @@ contract SiloLiquidationLibTest is Test {
             // emit log_named_uint("cross check #", i);
 
             if (data[i].output.targetLtvPossible) {
-                assertEq(ltvAfterLiquidation, data[i].input.ltvAfterLiquidationInBp, "ltvAfterLiquidation cross check");
+                assertEq(
+                    ltvAfterLiquidation, data[i].input.ltvAfterLiquidationInDp,
+                    _concatMsg(i, "ltvAfterLiquidation cross check")
+                );
             } else {
-                assertEq(ltvAfterLiquidation, 0, "ltvAfterLiquidation cross check");
+                assertEq(ltvAfterLiquidation, 0, _concatMsg(i, "ltvAfterLiquidation cross check"));
             }
 
             // calculateExactLiquidationAmounts VS maxLiquidationPreview
-            assertEq(collateralAssetsToLiquidate / 3, collateralValueToLiquidate, "collateral cross check");
-            assertEq(debtAssetsToRepay / 2, repayValue, "debt cross check");
+            assertEq(
+                collateralAssetsToLiquidate / 3, collateralValueToLiquidate, _concatMsg(i, "collateral cross check")
+            );
+            assertEq(debtAssetsToRepay / 2, repayValue, _concatMsg(i, "debt cross check"));
         }
     }
 
@@ -237,7 +256,7 @@ contract SiloLiquidationLibTest is Test {
         }
 
         // we assume here, we are under 100% of ltv, otherwise it is full liquidation
-        vm.assume(totalBorrowerDebtValue * _BASIS_POINTS / totalBorrowerCollateralValue <= _BASIS_POINTS);
+        vm.assume(totalBorrowerDebtValue * _DECIMALS_POINTS / totalBorrowerCollateralValue <= _DECIMALS_POINTS);
 
         (
             uint256 collateralAssetsToLiquidate, uint256 debtAssetsToRepay,
@@ -264,7 +283,7 @@ contract SiloLiquidationLibTest is Test {
         assertEq(collateralAssetsToLiquidate2, collateralAssetsToLiquidate, "collateralAssetsToLiquidate");
         assertEq(debtAssetsToRepay2, debtAssetsToRepay, "debtAssetsToRepay");
         // not testing ltv because stack to deep, but if others two values are good, we good on ltv
-        // assertEq(ltvAfterLiquidationInBp2, ltvAfterLiquidationInBp, "ltvAfterLiquidationInBp");
+        // assertEq(ltvAfterLiquidationInDp2, ltvAfterLiquidationInDp, "ltvAfterLiquidationInDp");
     }
 
     /*
@@ -280,7 +299,7 @@ contract SiloLiquidationLibTest is Test {
         SiloLiquidationLib.calculateExactLiquidationAmounts(1e8, 1e18, 1e18, 1e18, 1e18, 10);
         uint256 gasEnd = gasleft();
 
-        assertEq(gasStart - gasEnd, 1198, "optimise calculateExactLiquidationAmounts");
+        assertEq(gasStart - gasEnd, 1286, "optimise calculateExactLiquidationAmounts");
     }
 
     /*
@@ -355,8 +374,8 @@ contract SiloLiquidationLibTest is Test {
         uint256 collateralValue = uint256(_collateralAmount) * 80_000;
 
         (uint256 repayValue, uint256 receiveCollateral) = SiloLiquidationLib.maxLiquidationPreview(
-            debtValue,
             collateralValue,
+            debtValue,
             uint256(_targetLT),
             uint256(_liquidityFee)
         );
@@ -366,7 +385,7 @@ contract SiloLiquidationLibTest is Test {
         (
             uint256 repayValue2, uint256 receiveCollateral2
         ) = SiloLiquidationLibChecked.maxLiquidationPreview(
-            debtValue, collateralValue, _targetLT, _liquidityFee
+            collateralValue, debtValue, _targetLT, _liquidityFee
         );
 
         assertEq(repayValue, repayValue2, "repay must match value with safe math");
@@ -422,13 +441,21 @@ contract SiloLiquidationLibTest is Test {
     function _estimateMaxRepayValueRaw(
         uint256 _totalBorrowerDebtValue,
         uint256 _totalBorrowerCollateralValue,
-        uint256 _ltvAfterLiquidationInBp,
+        uint256 _ltvAfterLiquidationInDp,
         uint256 _liquidityFeeInBp
     )
         private pure returns (uint256 repayValue)
     {
-        return (_totalBorrowerDebtValue - _ltvAfterLiquidationInBp * _totalBorrowerCollateralValue / _BASIS_POINTS) *
-            _BASIS_POINTS /
-            (_BASIS_POINTS - _ltvAfterLiquidationInBp - _ltvAfterLiquidationInBp * _liquidityFeeInBp / _BASIS_POINTS);
+        repayValue = (
+            _totalBorrowerDebtValue - _ltvAfterLiquidationInDp * _totalBorrowerCollateralValue / _DECIMALS_POINTS
+        ) * _DECIMALS_POINTS / (
+            _DECIMALS_POINTS - _ltvAfterLiquidationInDp - _ltvAfterLiquidationInDp * _liquidityFeeInBp / _BASIS_POINTS
+        );
+
+        return repayValue > _totalBorrowerDebtValue ? _totalBorrowerDebtValue : repayValue;
+    }
+
+    function _concatMsg(uint256 _i, string memory _msg) internal pure returns (string memory) {
+        return string.concat("[", Strings.toString(_i), "] ", _msg);
     }
 }

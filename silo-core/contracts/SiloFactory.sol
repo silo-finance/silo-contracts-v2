@@ -19,6 +19,9 @@ contract SiloFactory is ISiloFactory, ERC721Upgradeable, OwnableUpgradeable {
     /// @dev 1e4 == 100%
     uint256 private constant _BASIS_POINTS = 1e4;
 
+    /// @dev multiplier for normalization of bp => dp
+    uint256 private constant _BP2DP_NORMALIZATION = 10 ** (18 - 4);
+
     /// @dev max fee is 40%, 1e4 == 100%
     uint256 public constant MAX_FEE_IN_BP = 0.4e4;
 
@@ -288,8 +291,11 @@ contract SiloFactory is ISiloFactory, ERC721Upgradeable, OwnableUpgradeable {
             ? _initData.solvencyOracle0
             : _initData.maxLtvOracle0;
         configData0.interestRateModel = _initData.interestRateModel0;
-        configData0.maxLtv = _initData.maxLtv0;
-        configData0.lt = _initData.lt0;
+        // safe to multiply BP * 1e14
+        unchecked {
+            configData0.maxLtv = _initData.maxLtv0 * _BP2DP_NORMALIZATION;
+            configData0.lt = _initData.lt0 * _BP2DP_NORMALIZATION;
+        }
         configData0.liquidationFee = _initData.liquidationFee0;
         configData0.flashloanFee = _initData.flashloanFee0;
         configData0.callBeforeQuote = _initData.callBeforeQuote0 && configData0.maxLtvOracle != address(0);
@@ -302,8 +308,11 @@ contract SiloFactory is ISiloFactory, ERC721Upgradeable, OwnableUpgradeable {
             ? _initData.solvencyOracle1
             : _initData.maxLtvOracle1;
         configData1.interestRateModel = _initData.interestRateModel1;
-        configData1.maxLtv = _initData.maxLtv1;
-        configData1.lt = _initData.lt1;
+        // safe to multiply BP * 1e14
+        unchecked {
+            configData1.maxLtv = _initData.maxLtv1 * _BP2DP_NORMALIZATION;
+            configData1.lt = _initData.lt1 * _BP2DP_NORMALIZATION;
+        }
         configData1.liquidationFee = _initData.liquidationFee1;
         configData1.flashloanFee = _initData.flashloanFee1;
         configData1.callBeforeQuote = _initData.callBeforeQuote1 && configData1.maxLtvOracle != address(0);

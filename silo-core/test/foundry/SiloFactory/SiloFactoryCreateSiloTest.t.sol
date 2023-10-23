@@ -24,10 +24,10 @@ import {SiloFixture} from "silo-core/test/foundry/_common/fixtures/SiloFixture.s
 import {SiloLittleHelper} from "silo-core/test/foundry/_common/SiloLittleHelper.sol";
 
 /*
-forge test -vv --mc SiloFactoryCreateSiloTest
+forge test -vv --ffi --mc SiloFactoryCreateSiloTest
 */
 contract SiloFactoryCreateSiloTest is SiloLittleHelper, IntegrationTest {
-    uint256 internal constant _BASIS_POINTS = 1e4;
+    uint256 internal constant _BP2DP_NORMALIZATION = 10 ** (18 - 4);
 
     string public constant SILO_TO_DEPLOY = SiloConfigsNames.ETH_USDC_UNI_V3_SILO;
 
@@ -48,7 +48,7 @@ contract SiloFactoryCreateSiloTest is SiloLittleHelper, IntegrationTest {
     }
 
     /*
-    forge test -vv --mt test_createSilo
+    forge test -vv --ffi --mt test_createSilo
     */
     function test_createSilo() public {
         (, ISiloConfig.InitData memory initData) = siloData.getConfigData(SILO_TO_DEPLOY);
@@ -75,8 +75,8 @@ contract SiloFactoryCreateSiloTest is SiloLittleHelper, IntegrationTest {
         assertEq(configData0.solvencyOracle, initData.solvencyOracle0);
         assertEq(configData0.maxLtvOracle, initData.maxLtvOracle0);
         assertEq(configData0.interestRateModel, getAddress(SiloCoreContracts.INTEREST_RATE_MODEL_V2));
-        assertEq(configData0.maxLtv, initData.maxLtv0);
-        assertEq(configData0.lt, initData.lt0);
+        assertEq(configData0.maxLtv, initData.maxLtv0 * _BP2DP_NORMALIZATION);
+        assertEq(configData0.lt, initData.lt0 * _BP2DP_NORMALIZATION);
         assertEq(configData0.liquidationFee, initData.liquidationFee0);
         assertEq(configData0.flashloanFee, initData.flashloanFee0);
         assertEq(configData0.callBeforeQuote, initData.callBeforeQuote0);
@@ -93,8 +93,8 @@ contract SiloFactoryCreateSiloTest is SiloLittleHelper, IntegrationTest {
         assertEq(configData1.solvencyOracle, initData.solvencyOracle1);
         assertEq(configData1.maxLtvOracle, initData.maxLtvOracle1);
         assertEq(configData1.interestRateModel, getAddress(SiloCoreContracts.INTEREST_RATE_MODEL_V2));
-        assertEq(configData1.maxLtv, initData.maxLtv1);
-        assertEq(configData1.lt, initData.lt1);
+        assertEq(configData1.maxLtv, initData.maxLtv1 * _BP2DP_NORMALIZATION);
+        assertEq(configData1.lt, initData.lt1 * _BP2DP_NORMALIZATION);
         assertEq(configData1.liquidationFee, initData.liquidationFee1);
         assertEq(configData1.flashloanFee, initData.flashloanFee1);
         assertEq(configData1.callBeforeQuote, initData.callBeforeQuote1);
