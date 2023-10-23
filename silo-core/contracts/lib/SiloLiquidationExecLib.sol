@@ -32,7 +32,8 @@ library SiloLiquidationExecLib {
         address _liquidator,
         bool _receiveSToken,
         uint256 _liquidity,
-        mapping(ISilo.AssetType => ISilo.Assets) storage _total
+        ISilo.Assets storage _collateral,
+        ISilo.Assets storage _protected
     ) external {
         ISiloConfig.ConfigData memory collateralConfig = _config.getConfig(address(this));
         if (msg.sender != collateralConfig.otherSilo) revert ISiloLiquidation.OnlySilo();
@@ -45,8 +46,8 @@ library SiloLiquidationExecLib {
                 _withdrawAssetsFromProtected,
                 _borrower,
                 _liquidator,
-                _total[ISilo.AssetType.Collateral].assets,
-                _total[ISilo.AssetType.Protected].assets
+                _collateral.assets,
+                _protected.assets
             );
         } else {
             withdrawCollateralToLiquidator(
@@ -56,7 +57,8 @@ library SiloLiquidationExecLib {
                 _borrower,
                 _liquidator,
                 _liquidity,
-                _total
+                _collateral,
+                _protected
             );
         }
     }
@@ -145,7 +147,8 @@ library SiloLiquidationExecLib {
         address _borrower,
         address _liquidator,
         uint256 _liquidity,
-        mapping(ISilo.AssetType => ISilo.Assets) storage _total
+        ISilo.Assets storage _collateral,
+        ISilo.Assets storage _protected
     ) internal {
         if (_withdrawAssetsFromProtected != 0) {
             SiloERC4626Lib.withdraw(
@@ -158,7 +161,7 @@ library SiloLiquidationExecLib {
                 _borrower,
                 ISilo.AssetType.Protected,
                 type(uint256).max,
-                _total[ISilo.AssetType.Protected]
+                _protected
             );
         }
 
@@ -173,7 +176,7 @@ library SiloLiquidationExecLib {
                 _borrower,
                 ISilo.AssetType.Collateral,
                 _liquidity,
-                _total[ISilo.AssetType.Collateral]
+                _collateral
             );
         }
     }

@@ -76,7 +76,7 @@ library SiloLendingLib {
             total = totalDebtAssets + borrowedAssets;
             if (total > _TOTAL128_CAP) revert ISilo.Overflow();
 
-            _totalDebt.assets = total;
+            _totalDebt.assets = uint128(total);
         }
 
         // `mint` checks if _spender is allowed to borrow on the account of _borrower. Hook receiver can
@@ -117,7 +117,7 @@ library SiloLendingLib {
         IERC20Upgradeable(_configData.token).safeTransferFrom(_repayer, address(this), assets);
         // subtract repayment from debt
         // `SiloMathLib.convertToAssetsAndToShares` should never return more assets than total TODO add test case
-        unchecked { _totalDebt.assets = totalDebtAssets - assets; }
+        unchecked { _totalDebt.assets = uint128(totalDebtAssets - assets); }
         // Anyone can repay anyone's debt so no approval check is needed. If hook receiver reenters then
         // no harm done because state changes are completed.
         debtShareToken.burn(_borrower, _repayer, shares);
@@ -151,7 +151,7 @@ library SiloLendingLib {
         uint256 totalDebtAssets = _totalDebt.assets;
 
         (
-            _totalCollateral.assets, _totalDebt.assets, totalFees, accruedInterest
+            totalCollateralAssets, totalDebtAssets, totalFees, accruedInterest
         ) = SiloMathLib.getCollateralAmountsWithInterest(
             totalCollateralAssets,
             totalDebtAssets,
@@ -163,6 +163,9 @@ library SiloLendingLib {
             _daoFeeInBp,
             _deployerFeeInBp
         );
+
+        _totalCollateral.assets = uint128(totalCollateralAssets);
+        _totalDebt.assets = uint128(totalDebtAssets);
 
         // update remaining contract state
         _siloData.interestRateTimestamp = uint64(block.timestamp);
