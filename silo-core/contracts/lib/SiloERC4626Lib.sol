@@ -138,7 +138,7 @@ library SiloERC4626Lib {
         }
 
         // we have cap on totals, so we actually doing uint128 + uint128, we will not overflow
-        unchecked { _totalCollateral.assets = uint128(totalAssets + assets); }
+        unchecked { _totalCollateral.assets = totalAssets + assets; }
 
         // Hook receiver is called after `mint` and can reentry but state changes are completed already
         _collateralShareToken.mint(_receiver, _depositor, shares);
@@ -201,7 +201,7 @@ library SiloERC4626Lib {
 
             // `assets` can never be more then `totalAssets` because we always increase `totalAssets` by
             // `assets` and interest
-            unchecked { _totalCollateral.assets = uint128(totalAssets - assets); }
+            unchecked { _totalCollateral.assets = totalAssets - assets; }
         }
 
         // `burn` checks if `_spender` is allowed to withdraw `_owner` assets. `burn` calls hook receiver that

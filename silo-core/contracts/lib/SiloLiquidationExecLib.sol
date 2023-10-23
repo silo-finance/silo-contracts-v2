@@ -32,8 +32,7 @@ library SiloLiquidationExecLib {
         address _liquidator,
         bool _receiveSToken,
         uint256 _liquidity,
-        ISilo.Assets storage _collateral,
-        ISilo.Assets storage _protected
+        mapping(ISilo.AssetType => ISilo.Assets) storage _total
     ) external {
         ISiloConfig.ConfigData memory collateralConfig = _config.getConfig(address(this));
         if (msg.sender != collateralConfig.otherSilo) revert ISiloLiquidation.OnlySilo();
@@ -46,8 +45,8 @@ library SiloLiquidationExecLib {
                 _withdrawAssetsFromProtected,
                 _borrower,
                 _liquidator,
-                _collateral.assets,
-                _protected.assets
+                _total[ISilo.AssetType.Collateral].assets,
+                _total[ISilo.AssetType.Protected].assets
             );
         } else {
             withdrawCollateralToLiquidator(
@@ -57,8 +56,7 @@ library SiloLiquidationExecLib {
                 _borrower,
                 _liquidator,
                 _liquidity,
-                _collateral,
-                _protected
+                _total
             );
         }
     }
@@ -147,8 +145,7 @@ library SiloLiquidationExecLib {
         address _borrower,
         address _liquidator,
         uint256 _liquidity,
-        ISilo.Assets storage _collateral,
-        ISilo.Assets storage _protected
+        mapping(ISilo.AssetType => ISilo.Assets) storage _total
     ) internal {
         if (_withdrawAssetsFromProtected != 0) {
             SiloERC4626Lib.withdraw(
@@ -161,7 +158,7 @@ library SiloLiquidationExecLib {
                 _borrower,
                 ISilo.AssetType.Protected,
                 type(uint256).max,
-                _protected
+                _total[ISilo.AssetType.Protected]
             );
         }
 
@@ -176,7 +173,7 @@ library SiloLiquidationExecLib {
                 _borrower,
                 ISilo.AssetType.Collateral,
                 _liquidity,
-                _collateral
+                _total[ISilo.AssetType.Collateral]
             );
         }
     }

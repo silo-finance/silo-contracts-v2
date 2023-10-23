@@ -47,7 +47,7 @@ interface ISilo is IERC4626, IERC3156FlashLender, ISiloLiquidation {
     /// It also includes token amount that has been borrowed.
     /// - DEBT: Amount of asset token that has been borrowed plus accrued interest.
     struct Assets {
-        uint128 assets;
+        uint256 assets;
     }
 
     /// @dev Storage struct that holds all required data for a single token market
