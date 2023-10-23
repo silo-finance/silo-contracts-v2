@@ -55,6 +55,6 @@ contract BorrowNotPossibleTest is SiloLittleHelper, Test {
 
         vm.prank(borrower);
         vm.expectRevert(ISilo.AboveMaxLtv.selector);
-        silo1.borrow(0.1e17, borrower, borrower); // TODO make this test for 1wei
+        silo1.borrow(1, borrower, borrower);
     }
 }

@@ -23,6 +23,7 @@ import {SiloSolvencyLib} from "./lib/SiloSolvencyLib.sol";
 import {SiloLendingLib} from "./lib/SiloLendingLib.sol";
 import {SiloERC4626Lib} from "./lib/SiloERC4626Lib.sol";
 import {SiloMathLib} from "./lib/SiloMathLib.sol";
+import {SiloLiquidationLib} from "./lib/SiloLiquidationLib.sol";
 import {SiloLiquidationExecLib} from "./lib/SiloLiquidationExecLib.sol";
 import {LeverageReentrancyGuard} from "./utils/LeverageReentrancyGuard.sol";
 
@@ -34,6 +35,7 @@ import {LeverageReentrancyGuard} from "./utils/LeverageReentrancyGuard.sol";
 contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, LeverageReentrancyGuard {
     using SafeERC20Upgradeable for IERC20Upgradeable;
 
+    uint256 internal constant _DP2BP_NORMALIZATION = 10 ** (18 - 4);
     string public constant VERSION = "2.0.0";
 
     bytes32 public constant FLASHLOAN_CALLBACK = keccak256("ERC3156FlashBorrower.onFlashLoan");
@@ -114,10 +116,10 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
         return configData.maxLtv;
     }
 
-    function getLt() external view virtual returns (uint256) {
+    function getLt() external view virtual returns (uint256 ltInBp) {
         ISiloConfig.ConfigData memory configData = config.getConfig(address(this));
 
-        return configData.lt;
+        unchecked { ltInBp = configData.lt / _DP2BP_NORMALIZATION; }
     }
 
     function getProtectedAssets() external view virtual returns (uint256) {
@@ -794,6 +796,17 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
             getLiquidity(),
             _total
         );
+    }
+
+    /// @dev debt is keep growing over time, so when dApp use this view to calculate max, tx should never revert
+    /// because actual max can be only higher
+    function maxLiquidation(address _borrower)
+        external
+        view
+        virtual
+        returns (uint256 collateralToLiquidate, uint256 debtToRepay)
+    {
+        return SiloLiquidationExecLib.maxLiquidation(this, _borrower);
     }
 
     function _accrueInterest()

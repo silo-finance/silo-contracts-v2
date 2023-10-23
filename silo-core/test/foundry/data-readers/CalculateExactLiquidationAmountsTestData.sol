@@ -2,6 +2,8 @@
 pragma solidity ^0.8.0;
 
 contract CalculateExactLiquidationAmountsTestData {
+    uint256 internal constant _BP2DP_NORMALIZATION = 10 ** (18 - 4);
+
     struct Input {
         uint256 debtToCover;
         uint256 totalBorrowerDebtValue;
@@ -38,7 +40,7 @@ contract CalculateExactLiquidationAmountsTestData {
             output: Output({
                 collateralAssetsToLiquidate: 0,
                 debtAssetsToRepay: 0,
-                ltvAfterLiquidation: 1e4
+                ltvAfterLiquidation: 1e4 * _BP2DP_NORMALIZATION
             })
         });
 
@@ -54,7 +56,7 @@ contract CalculateExactLiquidationAmountsTestData {
             output: Output({
                 collateralAssetsToLiquidate: 0,
                 debtAssetsToRepay: 0,
-                ltvAfterLiquidation: 1e4
+                ltvAfterLiquidation: 1e4 * _BP2DP_NORMALIZATION
             })
         });
 
@@ -70,7 +72,7 @@ contract CalculateExactLiquidationAmountsTestData {
             output: Output({
                 collateralAssetsToLiquidate: 0,
                 debtAssetsToRepay: 0,
-                ltvAfterLiquidation: 1e4
+                ltvAfterLiquidation: 1e4 * _BP2DP_NORMALIZATION
             })
         });
 
@@ -86,7 +88,7 @@ contract CalculateExactLiquidationAmountsTestData {
             output: Output({
                 collateralAssetsToLiquidate: 0,
                 debtAssetsToRepay: 0,
-                ltvAfterLiquidation: 100
+                ltvAfterLiquidation: 100 * _BP2DP_NORMALIZATION
             })
         });
 
@@ -102,7 +104,7 @@ contract CalculateExactLiquidationAmountsTestData {
             output: Output({
                 collateralAssetsToLiquidate: 1,
                 debtAssetsToRepay: 1,
-                ltvAfterLiquidation: 99
+                ltvAfterLiquidation: 9999999999999999 // (1e18 - 1) / (100e18 - 1)
             })
         });
 
@@ -116,9 +118,9 @@ contract CalculateExactLiquidationAmountsTestData {
                 liquidationFee: 1e3
             }),
             output: Output({
-                collateralAssetsToLiquidate: 11, // smallest fee
+                collateralAssetsToLiquidate: 11, // 10 debt to cover produces 1 fee
                 debtAssetsToRepay: 10,
-                ltvAfterLiquidation: 99
+                ltvAfterLiquidation: 9999999999999999
             })
         });
 
@@ -134,7 +136,7 @@ contract CalculateExactLiquidationAmountsTestData {
             output: Output({
                 collateralAssetsToLiquidate: 44e18 / 10,
                 debtAssetsToRepay: 0.5e18,
-                ltvAfterLiquidation: 7142
+                ltvAfterLiquidation: 7142_85714285714285
             })
         });
 
@@ -151,7 +153,8 @@ contract CalculateExactLiquidationAmountsTestData {
             output: Output({
                 collateralAssetsToLiquidate: 79.2e18 / 900,
                 debtAssetsToRepay: 0.90e18,
-                ltvAfterLiquidation: 8 // ~0.0007847
+                // (80e18 - 72e18) / (9_000e18 - 72e18 - 72e18 * 0.1) = 0.000896780557797507
+                ltvAfterLiquidation: 896780557797506
             })
         });
 
@@ -203,7 +206,7 @@ contract CalculateExactLiquidationAmountsTestData {
             output: Output({
                 collateralAssetsToLiquidate: (10e18 + 10e18 * 1000 / 1e4),
                 debtAssetsToRepay: 10e18,
-                ltvAfterLiquidation: 1_9101
+                ltvAfterLiquidation: 1_9101_12359550561797
             })
         });
 

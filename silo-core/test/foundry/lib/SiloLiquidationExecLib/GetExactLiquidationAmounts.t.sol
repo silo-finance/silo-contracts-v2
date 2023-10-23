@@ -16,8 +16,10 @@ import {GetExactLiquidationAmountsTestData} from "../../data-readers/GetExactLiq
 
 // forge test -vv --mc LiquidationPreviewTest
 contract GetExactLiquidationAmountsHelper is Test {
-    uint256 constant BASIS_POINTS = 1e4;
-    uint64 constant LT = 0.8e4;
+    uint256 constant DECIMALS_POINTS = 1e18;
+    uint256 constant LT_NORMALIZATION = 10 ** (18 - 4);
+
+    uint256 constant LT = 0.8e4 * LT_NORMALIZATION;
 
     SiloMock immutable SILO_A;
     SiloMock immutable SILO_B;
@@ -202,7 +204,7 @@ contract GetExactLiquidationAmountsTest is GetExactLiquidationAmountsHelper {
         vm.assume(_collateralUserBalanceOf > 0);
 
         // in this test we assume share is 1:1 assets 1:1 value
-        uint256 ltvBefore = _debtUserBalanceOf * BASIS_POINTS / _collateralUserBalanceOf;
+        uint256 ltvBefore = _debtUserBalanceOf * DECIMALS_POINTS / _collateralUserBalanceOf;
 
         // investigate "normal" cases, where LTV is <= LT, user is solvent
         vm.assume(ltvBefore <= LT);
@@ -241,11 +243,11 @@ contract GetExactLiquidationAmountsTest is GetExactLiquidationAmountsHelper {
         vm.assume(_collateralUserBalanceOf != 0);
 
         // in this test we assume share is 1:1 assets 1:1 value
-        uint256 ltvBefore = uint256(_debtUserBalanceOf) * BASIS_POINTS / _collateralUserBalanceOf;
+        uint256 ltvBefore = uint256(_debtUserBalanceOf) * DECIMALS_POINTS / _collateralUserBalanceOf;
 
         // investigate "normal" cases, where LTV is <= 100%, if we have bad debt then this is already lost cause
         vm.assume(ltvBefore >= LT);
-        vm.assume(ltvBefore <= BASIS_POINTS);
+        vm.assume(ltvBefore <= DECIMALS_POINTS);
 
         (
             uint256 collateralToLiquidate,, bool success, bytes4 errorType
@@ -282,7 +284,7 @@ contract GetExactLiquidationAmountsTest is GetExactLiquidationAmountsHelper {
 
             ltvAfter = _collateralUserBalanceOf - fromCollateral == 0
                 ? 0
-                : uint256(_debtUserBalanceOf - repayDebtAssets) * BASIS_POINTS / uint256(_collateralUserBalanceOf - fromCollateral);
+                : uint256(_debtUserBalanceOf - repayDebtAssets) * DECIMALS_POINTS / uint256(_collateralUserBalanceOf - fromCollateral);
         } catch (bytes memory data) {
             errorType = bytes4(data);
         }

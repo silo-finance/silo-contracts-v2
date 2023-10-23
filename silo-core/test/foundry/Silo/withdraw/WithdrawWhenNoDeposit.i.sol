@@ -15,7 +15,7 @@ import {TokenMock} from "silo-core/test/foundry/_mocks/TokenMock.sol";
 import {SiloFixture} from "../../_common/fixtures/SiloFixture.sol";
 
 /*
-    forge test -vv --mc WithdrawWhenNoDepositTest
+    forge test -vv --ffi --mc WithdrawWhenNoDepositTest
 */
 contract WithdrawWhenNoDepositTest is IntegrationTest {
     uint256 internal constant _BASIS_POINTS = 1e4;
@@ -45,7 +45,7 @@ contract WithdrawWhenNoDepositTest is IntegrationTest {
     }
 
     /*
-    forge test -vv --mt test_withdraw_zeros
+    forge test -vv --ffi --mt test_withdraw_zeros
     */
     function test_withdraw_zeros() public {
         vm.expectRevert(ISilo.NothingToWithdraw.selector);
@@ -53,7 +53,7 @@ contract WithdrawWhenNoDepositTest is IntegrationTest {
     }
 
     /*
-    forge test -vv --mt test_withdraw_WrongAssetType
+    forge test -vv --ffi --mt test_withdraw_WrongAssetType
     */
     function test_withdraw_WrongAssetType() public {
         vm.expectRevert(ISilo.WrongAssetType.selector);
@@ -61,7 +61,7 @@ contract WithdrawWhenNoDepositTest is IntegrationTest {
     }
 
     /*
-    forge test -vv --mt test_withdraw_NothingToWithdraw
+    forge test -vv --ffi --mt test_withdraw_NothingToWithdraw
     */
     function test_withdraw_NothingToWithdraw() public {
         vm.expectRevert(ISilo.NothingToWithdraw.selector);
@@ -78,7 +78,7 @@ contract WithdrawWhenNoDepositTest is IntegrationTest {
     }
 
     /*
-    forge test -vv --mt test_withdraw_when_liquidity_but_NothingToWithdraw
+    forge test -vv --ffi --mt test_withdraw_when_liquidity_but_NothingToWithdraw
     */
     function test_withdraw_when_liquidity_but_NothingToWithdraw() public {
         // any deposit so we have liquidity

@@ -2,10 +2,12 @@
 pragma solidity ^0.8.0;
 
 contract EstimateMaxRepayValueTestData {
+    uint256 constant BP2DP_NORMALIZATION = 10 ** (18-4);
+
     struct Input {
         uint256 totalBorrowerDebtValue;
         uint256 totalBorrowerCollateralValue;
-        uint256 ltvAfterLiquidationInBp;
+        uint256 ltvAfterLiquidationInDp;
         uint256 liquidityFeeInBp;
     }
 
@@ -23,7 +25,7 @@ contract EstimateMaxRepayValueTestData {
             input: Input({
                 totalBorrowerDebtValue: 0,
                 totalBorrowerCollateralValue: 1e18,
-                ltvAfterLiquidationInBp: 7000,
+                ltvAfterLiquidationInDp: 7000 * BP2DP_NORMALIZATION,
                 liquidityFeeInBp: 500
             }),
             repayValue: 0
@@ -34,7 +36,7 @@ contract EstimateMaxRepayValueTestData {
             input: Input({
                 totalBorrowerDebtValue: 1e18,
                 totalBorrowerCollateralValue: 2e18,
-                ltvAfterLiquidationInBp: 5001,
+                ltvAfterLiquidationInDp: 5001 * BP2DP_NORMALIZATION,
                 liquidityFeeInBp: 500
             }),
             repayValue: 0
@@ -45,7 +47,7 @@ contract EstimateMaxRepayValueTestData {
             input: Input({
                 totalBorrowerDebtValue: 80e18,
                 totalBorrowerCollateralValue: 100e18,
-                ltvAfterLiquidationInBp: 7900,
+                ltvAfterLiquidationInDp: 7900 * BP2DP_NORMALIZATION,
                 liquidityFeeInBp: 2659
             }),
             repayValue: 80e18 // we repay all because we never get as low as 79%
@@ -56,7 +58,7 @@ contract EstimateMaxRepayValueTestData {
             input: Input({
                 totalBorrowerDebtValue: 80e18,
                 totalBorrowerCollateralValue: 100e18,
-                ltvAfterLiquidationInBp: 7900, // impossible to get here with such high fee
+                ltvAfterLiquidationInDp: 7900 * BP2DP_NORMALIZATION, // impossible to get here with such high fee
                 liquidityFeeInBp: 2658
             }),
             repayValue: 80e18
@@ -67,7 +69,7 @@ contract EstimateMaxRepayValueTestData {
             input: Input({
                 totalBorrowerDebtValue: 180e18,
                 totalBorrowerCollateralValue: 180e18,
-                ltvAfterLiquidationInBp: 7000,
+                ltvAfterLiquidationInDp: 7000 * BP2DP_NORMALIZATION,
                 liquidityFeeInBp: 1
             }),
             repayValue: 180e18
@@ -78,7 +80,7 @@ contract EstimateMaxRepayValueTestData {
             input: Input({
                 totalBorrowerDebtValue: 80e18,
                 totalBorrowerCollateralValue: 100e18,
-                ltvAfterLiquidationInBp: 0,
+                ltvAfterLiquidationInDp: 0 * BP2DP_NORMALIZATION,
                 liquidityFeeInBp: 500
             }),
             repayValue: 80e18
@@ -89,7 +91,7 @@ contract EstimateMaxRepayValueTestData {
             input: Input({
                 totalBorrowerDebtValue: 80e18,
                 totalBorrowerCollateralValue: 100e18,
-                ltvAfterLiquidationInBp: 7000,
+                ltvAfterLiquidationInDp: 7000 * BP2DP_NORMALIZATION,
                 liquidityFeeInBp: 500
             }),
             repayValue: 37735849056603773584
@@ -100,7 +102,7 @@ contract EstimateMaxRepayValueTestData {
             input: Input({
                 totalBorrowerDebtValue: 80e18,
                 totalBorrowerCollateralValue: 112e18,
-                ltvAfterLiquidationInBp: 7000,
+                ltvAfterLiquidationInDp: 7000 * BP2DP_NORMALIZATION,
                 liquidityFeeInBp: 500
             }),
             repayValue: 6037735849056603773

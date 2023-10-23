@@ -10,7 +10,7 @@ import "../../_common/MockOracleQuote.sol";
 forge test -vv --mc CalculateLtvTest
 */
 contract CalculateLtvTest is Test, MockOracleQuote {
-    uint256 internal constant BASIS_POINTS = 1e4;
+    uint256 internal constant DECIMALS_POINTS = 1e18;
 
     /*
     forge test -vv --mt test_SiloSolvencyLib_calculateLtv_noOracle_zero
@@ -64,7 +64,7 @@ contract CalculateLtvTest is Test, MockOracleQuote {
         // because this is the same token, we assume the sum can not be higher than uint128
         // TODO when turn on uint128 this test need to be changed
         // vm.assume(totalAssets < type(uint128).max);
-        vm.assume(sumOfCollateralAssets < type(uint256).max / BASIS_POINTS);
+        vm.assume(sumOfCollateralAssets < type(uint256).max / DECIMALS_POINTS);
 
         SiloSolvencyLib.LtvData memory ltvData = SiloSolvencyLib.LtvData(
             noOracle, noOracle, _collateralAssets, _protectedAssets, _debtAssets
@@ -82,7 +82,7 @@ contract CalculateLtvTest is Test, MockOracleQuote {
             expectedLtv = SiloSolvencyLib._INFINITY;
         } else {
             // TODO when 128 the whole below math can be unchecked, cast to 256!
-            expectedLtv = _debtAssets * BASIS_POINTS / sumOfCollateralAssets;
+            expectedLtv = _debtAssets * DECIMALS_POINTS / sumOfCollateralAssets;
         }
 
         assertEq(ltv, expectedLtv, "ltv");
@@ -101,7 +101,7 @@ contract CalculateLtvTest is Test, MockOracleQuote {
         // because this is the same token, we assume the sum can not be higher than uint128
         // TODO when turn on uint128 this test need to be changed
         // vm.assume(totalAssets < type(uint128).max);
-        vm.assume(sumOfCollateralAssets < type(uint256).max / BASIS_POINTS);
+        vm.assume(sumOfCollateralAssets < type(uint256).max / DECIMALS_POINTS);
         vm.assume(sumOfCollateralAssets != 0);
 
         SiloSolvencyLib.LtvData memory ltvData = SiloSolvencyLib.LtvData(
@@ -112,6 +112,6 @@ contract CalculateLtvTest is Test, MockOracleQuote {
 
         (,, uint256 ltv) = SiloSolvencyLib.calculateLtv(ltvData, COLLATERAL_ASSET, DEBT_ASSET);
 
-        assertEq(ltv, 1111 * BASIS_POINTS / 9999, "constant values, constant ltv");
+        assertEq(ltv, 1111 * DECIMALS_POINTS / 9999, "constant values, constant ltv");
     }
 }

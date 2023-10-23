@@ -3,7 +3,8 @@ pragma solidity ^0.8.0;
 
 import {Test} from "forge-std/Test.sol";
 
-import "../../../contracts/lib/SiloSolvencyLib.sol";
+import {ISiloOracle} from "../../../contracts/interfaces/ISiloOracle.sol";
+import {SiloSolvencyLib} from "../../../contracts/lib/SiloSolvencyLib.sol";
 
 abstract contract MockOracleQuote is Test {
     address constant COLLATERAL_ASSET = address(0xc01a);
@@ -19,7 +20,11 @@ abstract contract MockOracleQuote is Test {
     ) internal {
         vm.mockCall(
             COLLATERAL_ORACLE,
-            abi.encodeWithSelector(ISiloOracle.quote.selector, _ltvData.borrowerCollateralAssets + _ltvData.borrowerProtectedAssets, COLLATERAL_ASSET),
+            abi.encodeWithSelector(
+                ISiloOracle.quote.selector,
+                _ltvData.borrowerCollateralAssets + _ltvData.borrowerProtectedAssets,
+                COLLATERAL_ASSET
+            ),
             abi.encode(_quoteCollateral)
         );
 

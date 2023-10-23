@@ -103,6 +103,42 @@ library SiloLiquidationExecLib {
         );
     }
 
+    /// @dev debt keeps growing over time, so when dApp use this view to calculate max, tx should never revert
+    /// because actual max can be only higher
+    function maxLiquidation(
+        ISilo _silo,
+        address _borrower
+    )
+        external
+        view
+        returns (uint256 collateralToLiquidate, uint256 debtToRepay)
+    {
+        (
+            ISiloConfig.ConfigData memory debtConfig, ISiloConfig.ConfigData memory collateralConfig
+        ) = _silo.config().getConfigs(address(this));
+
+        SiloSolvencyLib.LtvData memory ltvData = SiloSolvencyLib.getAssetsDataForLtvCalculations(
+            collateralConfig, debtConfig, _borrower, ISilo.OracleType.Solvency, ISilo.AccrueInterestInMemory.Yes
+        );
+
+        (
+            uint256 sumOfCollateralValue, uint256 debtValue
+        ) = SiloSolvencyLib.getPositionValues(ltvData, collateralConfig.token, debtConfig.token);
+
+        uint256 sumOfCollateralAssets;
+        // safe because we adding same token, so it is under same total supply
+        unchecked { sumOfCollateralAssets = ltvData.borrowerProtectedAssets + ltvData.borrowerCollateralAssets; }
+
+        return SiloLiquidationLib.maxLiquidation(
+            sumOfCollateralAssets,
+            sumOfCollateralValue,
+            ltvData.borrowerDebtAssets,
+            debtValue,
+            collateralConfig.lt,
+            collateralConfig.liquidationFee
+        );
+    }
+
     /// @dev withdraws assets
     function withdrawCollateralToLiquidator(
         ISiloConfig.ConfigData memory _collateralConfig,
@@ -214,13 +250,14 @@ library SiloLiquidationExecLib {
         if (_ltvData.borrowerDebtAssets == 0 || sumOfCollateralAssets == 0) return (0, 0);
 
         (
-            uint256 sumOfBorrowerCollateralValue, uint256 totalBorrowerDebtValue, uint256 ltvBeforeInBp
+            uint256 sumOfBorrowerCollateralValue, uint256 totalBorrowerDebtValue, uint256 ltvBeforeInDp
         ) = SiloSolvencyLib.calculateLtv(_ltvData, _params.collateralConfigAsset, _params.debtConfigAsset);
 
-        if (!_params.selfLiquidation && _params.collateralLt >= ltvBeforeInBp) return (0, 0);
+        if (!_params.selfLiquidation && _params.collateralLt >= ltvBeforeInDp) return (0, 0);
 
-        uint256 ltvAfterInBp;
-        (receiveCollateralAssets, repayDebtAssets, ltvAfterInBp) = SiloLiquidationLib.calculateExactLiquidationAmounts(
+        uint256 ltvAfterInDp;
+
+        (receiveCollateralAssets, repayDebtAssets, ltvAfterInDp) = SiloLiquidationLib.calculateExactLiquidationAmounts(
             _params.debtToCover,
             sumOfCollateralAssets,
             sumOfBorrowerCollateralValue,
@@ -231,24 +268,22 @@ library SiloLiquidationExecLib {
 
         if (receiveCollateralAssets == 0 || repayDebtAssets == 0) return (0, 0);
 
-        if (ltvAfterInBp != 0) { // it can be 0 in case of full liquidation
+        if (ltvAfterInDp != 0) { // it can be 0 in case of full liquidation
             if (_params.selfLiquidation) {
-                // Because our precision is 1e4, it is possible to end up with higher LTV, if difference will be
-                // inside a "precision error".
-                // There is also dependency, based on which LTV will be going up and we need to allow for liquidation
+                // There is dependency, based on which LTV will be going up and we need to allow for liquidation
                 // dependency is: (collateral value / debt value) - 1 > fee
                 // when above is true, LTV will go down, otherwise it will always go up.
                 // When it will be going up, we are close to bad debt. This "close" depends on how big fee is.
-                // Based on that, we can not check if (ltvAfterInBp > ltvBeforeInBp), we need to allow for liquidation.
+                // Based on that, we can not check if (ltvAfterInDp > ltvBeforeInDp), we need to allow for liquidation.
                 // In case of self liquidation:
                 // - if user is solvent after liquidation, LTV before does not matter
                 // - if user was solvent but after liquidation it is not, we need to revert
                 // - if user was not solvent, then we need to allow
-                if (ltvBeforeInBp <= _params.collateralLt && ltvAfterInBp > _params.collateralLt) {
+                if (ltvBeforeInDp <= _params.collateralLt && ltvAfterInDp > _params.collateralLt) {
                     revert ISiloLiquidation.Insolvency();
                 }
             } else {
-                if (ltvAfterInBp < SiloLiquidationLib.minAcceptableLTV(_params.collateralLt)) {
+                if (ltvAfterInDp < SiloLiquidationLib.minAcceptableLTV(_params.collateralLt)) {
                     revert ISiloLiquidation.LiquidationTooBig();
                 }
             }

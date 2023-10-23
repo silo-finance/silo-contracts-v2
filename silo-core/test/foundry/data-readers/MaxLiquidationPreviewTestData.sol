@@ -2,10 +2,12 @@
 pragma solidity ^0.8.0;
 
 contract MaxLiquidationPreviewTestData {
+    uint256 constant _BP2DP_NORMALIZATION = 10 ** (18 - 4);
+    
     struct Input {
         uint256 totalBorrowerDebtValue;
         uint256 totalBorrowerCollateralValue;
-        uint256 ltvAfterLiquidationInBp;
+        uint256 ltvAfterLiquidationInDp;
         uint256 liquidityFeeInBp;
     }
 
@@ -29,7 +31,7 @@ contract MaxLiquidationPreviewTestData {
             input: Input({
                 totalBorrowerDebtValue: 0,
                 totalBorrowerCollateralValue: 1e18,
-                ltvAfterLiquidationInBp: 7000,
+                ltvAfterLiquidationInDp: 7000 * _BP2DP_NORMALIZATION,
                 liquidityFeeInBp: 500
             }),
             output: Output({
@@ -44,7 +46,7 @@ contract MaxLiquidationPreviewTestData {
             input: Input({
                 totalBorrowerDebtValue: 180e18,
                 totalBorrowerCollateralValue: 100e18,
-                ltvAfterLiquidationInBp: 7000,
+                ltvAfterLiquidationInDp: 7000 * _BP2DP_NORMALIZATION,
                 liquidityFeeInBp: 500
             }),
                 output: Output({
@@ -59,7 +61,7 @@ contract MaxLiquidationPreviewTestData {
             input: Input({
                 totalBorrowerDebtValue: 80e18,
                 totalBorrowerCollateralValue: 100e18,
-                ltvAfterLiquidationInBp: 0,
+                ltvAfterLiquidationInDp: 0,
                 liquidityFeeInBp: 500
             }),
             output: Output({
@@ -74,7 +76,7 @@ contract MaxLiquidationPreviewTestData {
             input: Input({
                 totalBorrowerDebtValue: 98e18,
                 totalBorrowerCollateralValue: 100e18,
-                ltvAfterLiquidationInBp: 9700,
+                ltvAfterLiquidationInDp: 9700 * _BP2DP_NORMALIZATION,
                 liquidityFeeInBp: 310
             }),
             output: Output({
@@ -90,7 +92,7 @@ contract MaxLiquidationPreviewTestData {
             input: Input({
                 totalBorrowerDebtValue: 98e18,
                 totalBorrowerCollateralValue: 100e18,
-                ltvAfterLiquidationInBp: 9700,
+                ltvAfterLiquidationInDp: 9700 * _BP2DP_NORMALIZATION,
                 liquidityFeeInBp: 204 // 205-310 all produces collateral over 100%
             }),
             output: Output({ // result is 9791 LTV not 9700, but this are extreme input data
@@ -105,7 +107,7 @@ contract MaxLiquidationPreviewTestData {
             input: Input({
                 totalBorrowerDebtValue: 80e18,
                 totalBorrowerCollateralValue: 100e18,
-                ltvAfterLiquidationInBp: 7000,
+                ltvAfterLiquidationInDp: 7000 * _BP2DP_NORMALIZATION,
                 liquidityFeeInBp: 500
             }),
             output: Output({
