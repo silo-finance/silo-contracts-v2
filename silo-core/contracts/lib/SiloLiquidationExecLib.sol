@@ -32,7 +32,7 @@ library SiloLiquidationExecLib {
         address _liquidator,
         bool _receiveSToken,
         uint256 _liquidity,
-        mapping(ISilo.AssetType => ISilo.Assets) storage _total
+        ISilo.Assets storage _total
     ) external {
         ISiloConfig.ConfigData memory collateralConfig = _config.getConfig(address(this));
         if (msg.sender != collateralConfig.otherSilo) revert ISiloLiquidation.OnlySilo();
@@ -45,8 +45,8 @@ library SiloLiquidationExecLib {
                 _withdrawAssetsFromProtected,
                 _borrower,
                 _liquidator,
-                _total[ISilo.AssetType.Collateral].assets,
-                _total[ISilo.AssetType.Protected].assets
+                _total.collateral,
+                _total.protected
             );
         } else {
             withdrawCollateralToLiquidator(
@@ -145,7 +145,7 @@ library SiloLiquidationExecLib {
         address _borrower,
         address _liquidator,
         uint256 _liquidity,
-        mapping(ISilo.AssetType => ISilo.Assets) storage _total
+        ISilo.Assets storage _total
     ) internal {
         if (_withdrawAssetsFromProtected != 0) {
             SiloERC4626Lib.withdraw(
@@ -158,7 +158,7 @@ library SiloLiquidationExecLib {
                 _borrower,
                 ISilo.AssetType.Protected,
                 type(uint256).max,
-                _total[ISilo.AssetType.Protected]
+                _total
             );
         }
 
@@ -173,7 +173,7 @@ library SiloLiquidationExecLib {
                 _borrower,
                 ISilo.AssetType.Collateral,
                 _liquidity,
-                _total[ISilo.AssetType.Collateral]
+                _total
             );
         }
     }

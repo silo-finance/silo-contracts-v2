@@ -104,7 +104,8 @@ library SiloERC4626Lib {
         address _receiver,
         IShareToken _collateralShareToken,
         IShareToken _debtShareToken,
-        ISilo.Assets storage _totalCollateral
+        ISilo.AssetType _type,
+        ISilo.Assets storage _total
     ) public returns (uint256 assets, uint256 shares) {
         if (_assets > type(uint128).max) revert ISilo.Overflow();
 
@@ -112,24 +113,27 @@ library SiloERC4626Lib {
             revert ISilo.DepositNotPossible();
         }
 
-        uint256 totalAssets = _totalCollateral.assets;
-        uint256 collateralShareTokenTotalSupply = _collateralShareToken.totalSupply();
+        uint256 totalAssets = _type == ISilo.AssetType.Collateral ? _total.collateral : _total.protected;
 
-        (assets, shares) = SiloMathLib.convertToAssetsAndToShares(
-            _assets,
-            _shares,
-            totalAssets,
-            collateralShareTokenTotalSupply,
-            SiloMathLib.Rounding.Up,
-            SiloMathLib.Rounding.Down,
-            ISilo.AssetType.Collateral
-        );
+        {
+            uint256 collateralShareTokenTotalSupply = _collateralShareToken.totalSupply();
 
-        unchecked {
-            // `collateralShareTokenTotalSupply` is always lt max, because of this check, so we will not underflow
-            // `-1` is here because we using decimals offset, and we need "space" for it. Offset is 0 or 1.
-            // this CAP can allow us to optimise in other places where we are working with total shares
-            if (_TOTAL128_CAP - collateralShareTokenTotalSupply < shares) revert ISilo.ShareOverflow();
+            (assets, shares) = SiloMathLib.convertToAssetsAndToShares(
+                _assets,
+                _shares,
+                totalAssets,
+                collateralShareTokenTotalSupply,
+                SiloMathLib.Rounding.Up,
+                SiloMathLib.Rounding.Down,
+                ISilo.AssetType.Collateral
+            );
+
+            unchecked {
+                // `collateralShareTokenTotalSupply` is always lt max, because of this check, so we will not underflow
+                // `-1` is here because we using decimals offset, and we need "space" for it. Offset is 0 or 1.
+                // this CAP can allow us to optimise in other places where we are working with total shares
+                if (_TOTAL128_CAP - collateralShareTokenTotalSupply < shares) revert ISilo.ShareOverflow();
+            }
         }
 
         if (_token != address(0)) {
@@ -137,8 +141,12 @@ library SiloERC4626Lib {
             IERC20Upgradeable(_token).safeTransferFrom(_depositor, address(this), assets);
         }
 
-        // we have cap on totals, so we actually doing uint128 + uint128, we will not overflow
-        unchecked { _totalCollateral.assets = totalAssets + assets; }
+        if (_type == ISilo.AssetType.Collateral) {
+            // we have cap on totals, so we actually doing uint128 + uint128, we will not overflow
+            unchecked { _total.collateral = uint128(totalAssets + assets); }
+        } else {
+            unchecked { _total.protected = uint128(totalAssets + assets); }
+        }
 
         // Hook receiver is called after `mint` and can reentry but state changes are completed already
         _collateralShareToken.mint(_receiver, _depositor, shares);
@@ -174,7 +182,7 @@ library SiloERC4626Lib {
         address _spender,
         ISilo.AssetType _assetType,
         uint256 _liquidity,
-        ISilo.Assets storage _totalCollateral
+        ISilo.Assets storage _total
     ) public returns (uint256 assets, uint256 shares) {
         if (_assets > type(uint128).max) revert ISilo.Overflow();
 
@@ -182,7 +190,7 @@ library SiloERC4626Lib {
         if (shareTotalSupply == 0) revert ISilo.NothingToWithdraw();
 
         { // Stack too deep
-            uint256 totalAssets = _totalCollateral.assets;
+            uint256 totalAssets = _assetType == ISilo.AssetType.Collateral ? _total.collateral : _total.protected;
 
             (assets, shares) = SiloMathLib.convertToAssetsAndToShares(
                 _assets,
@@ -199,9 +207,13 @@ library SiloERC4626Lib {
             // check liquidity
             if (assets > _liquidity) revert ISilo.NotEnoughLiquidity();
 
-            // `assets` can never be more then `totalAssets` because we always increase `totalAssets` by
-            // `assets` and interest
-            unchecked { _totalCollateral.assets = totalAssets - assets; }
+            if (_assetType == ISilo.AssetType.Collateral) {
+                // `assets` can never be more then `totalAssets` because we always increase `totalAssets` by
+                // `assets` and interest
+                unchecked { _total.collateral = uint128(totalAssets - assets); }
+            } else {
+                unchecked { _total.protected = uint128(totalAssets - assets); }
+            }
         }
 
         // `burn` checks if `_spender` is allowed to withdraw `_owner` assets. `burn` calls hook receiver that

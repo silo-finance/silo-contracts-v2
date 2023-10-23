@@ -15,15 +15,14 @@ contract SiloLendingLibImpl {
         address _receiver,
         address _borrower,
         address _spender,
-        ISilo.Assets memory _totalDebt,
-        uint256 _totalCollateralAssets
+        ISilo.Assets memory _totalDebt
     ) external returns (uint256 borrowedAssets, uint256 borrowedShares) {
-        totalDebt.assets = _totalDebt.assets;
+        totalDebt.debt = _totalDebt.debt;
 
         (borrowedAssets, borrowedShares) = SiloLendingLib.borrow(
-            _configData, _assets, _shares, _receiver, _borrower, _spender, totalDebt, _totalCollateralAssets
+            _configData, _assets, _shares, _receiver, _borrower, _spender, totalDebt
         );
 
-        _totalDebt.assets = totalDebt.assets;
+        _totalDebt.debt = totalDebt.debt;
     }
 }
