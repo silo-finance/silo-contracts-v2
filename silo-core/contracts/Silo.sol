@@ -673,10 +673,6 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
         (ISiloConfig.ConfigData memory debtConfig, ISiloConfig.ConfigData memory collateralConfig) =
             config.getConfigs(address(this));
 
-        if (!SiloLendingLib.borrowPossible(
-            debtConfig.protectedShareToken, debtConfig.collateralShareToken, _borrower
-        )) revert ISilo.BorrowNotPossible();
-
         _accrueInterest(debtConfig.interestRateModel, debtConfig.daoFeeInBp, debtConfig.deployerFeeInBp);
 
         uint256 assets;

@@ -37,9 +37,7 @@ library SiloLendingLib {
     ) external returns (uint256 borrowedAssets, uint256 borrowedShares) {
         if (_assets == 0 && _shares == 0) revert ISilo.ZeroAssets();
 
-        if (!borrowPossible(
-            _configData.protectedShareToken, _configData.collateralShareToken, _borrower
-        )) {
+        if (!borrowPossible(_configData.protectedShareToken, _configData.collateralShareToken, _borrower)) {
             revert ISilo.BorrowNotPossible();
         }
 
