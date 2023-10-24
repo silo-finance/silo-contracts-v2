@@ -107,3 +107,18 @@ example of running scripts for workspace:
 ```shell
 yarn workspace <workspaceName> <commandName> ...
 ```
+
+## Coverage Report
+
+
+```shell
+brew install lcov
+
+rm lcov.info
+FOUNDRY_PROFILE=core forge coverage --report summary --report lcov --ffi | grep -i 'silo-core/contracts/' > coverage/silo-core.txt
+genhtml -o coverage/silo-core/ lcov.info
+
+rm lcov.info
+FOUNDRY_PROFILE=oracles forge coverage --report summary --report lcov | grep -i 'silo-oracles/contracts/' > coverage/silo-oracles.txt
+genhtml -o coverage/silo-oracles/ lcov.info
+```

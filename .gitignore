@@ -33,3 +33,8 @@ broadcast
 .DS_Store
 
 common/addresses/anvil.json
+
+coverage
+!coverage/silo-core.txt
+!coverage/silo-oracles.txt
+lcov.info
