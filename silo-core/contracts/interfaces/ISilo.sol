@@ -124,8 +124,13 @@ interface ISilo is IERC4626, IERC3156FlashLender, ISiloLiquidation {
     function initialize(ISiloConfig _config, address _modelConfigAddress) external;
 
     function config() external view returns (ISiloConfig siloConfig);
-    function siloId() external view returns (uint256 siloId);
     function siloData() external view returns (uint192 daoAndDeployerFees, uint64 interestRateTimestamp);
+
+    function getInfo()
+        external
+        view
+        returns (string memory version, ISiloFactory factory, uint256 siloId);
+
     function utilizationData() external view returns (UtilizationData memory utilizationData);
     function getLiquidity() external view returns (uint256 liquidity);
 

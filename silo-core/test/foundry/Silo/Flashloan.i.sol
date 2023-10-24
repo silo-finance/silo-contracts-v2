@@ -17,9 +17,9 @@ import {LeverageReentrancyGuard} from "silo-core/contracts/utils/LeverageReentra
 import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
 import {MintableToken} from "../_common/MintableToken.sol";
 
-contract Hack1 {
-    bytes32 public constant FLASHLOAN_CALLBACK = keccak256("ERC3156FlashBorrower.onFlashLoan");
+bytes32 constant FLASHLOAN_CALLBACK = keccak256("ERC3156FlashBorrower.onFlashLoan");
 
+contract Hack1 {
     function bytesToUint256(bytes memory input) public pure returns (uint256 output) {
         assembly {
             output := mload(add(input, 32))
@@ -129,7 +129,7 @@ contract FlashloanTest is SiloLittleHelper, Test {
             abi.encodeWithSelector(
                 IERC3156FlashBorrower.onFlashLoan.selector, address(this), address(token0), amount, fee, _data
             ),
-            abi.encode(Silo(address(silo0)).FLASHLOAN_CALLBACK())
+            abi.encode(FLASHLOAN_CALLBACK)
         );
 
         vm.expectCall(address(token0), abi.encodeWithSelector(IERC20.transfer.selector, address(receiver), amount));

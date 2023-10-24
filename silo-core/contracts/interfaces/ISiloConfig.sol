@@ -33,7 +33,6 @@ interface ISiloConfig {
         address debtHookReceiver1;
     }
 
-    // TODO check, if we passing configs only to internal, if we doing for external it might cost much more gas
     struct ConfigData {
         uint256 daoFeeInBp;
         uint256 deployerFeeInBp;

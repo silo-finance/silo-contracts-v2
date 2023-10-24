@@ -7,16 +7,20 @@ import {IERC20MetadataUpgradeable} from "openzeppelin-contracts-upgradeable/toke
 
 import {MathUpgradeable} from "openzeppelin-contracts-upgradeable/utils/math/MathUpgradeable.sol";
 
+import {IERC3156FlashBorrower} from "../interfaces/IERC3156FlashBorrower.sol";
 import {ISiloOracle} from "../interfaces/ISiloOracle.sol";
 import {ISilo} from "../interfaces/ISilo.sol";
 import {IShareToken} from "../interfaces/IShareToken.sol";
 import {IInterestRateModel} from "../interfaces/IInterestRateModel.sol";
 import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
 import {SiloSolvencyLib} from "./SiloSolvencyLib.sol";
+import {SiloStdLib} from "./SiloStdLib.sol";
 import {SiloMathLib} from "./SiloMathLib.sol";
 
 library SiloLendingLib {
     using SafeERC20Upgradeable for IERC20Upgradeable;
+
+    bytes32 internal constant _FLASHLOAN_CALLBACK = keccak256("ERC3156FlashBorrower.onFlashLoan");
 
     uint256 internal constant _PRECISION_DECIMALS = 1e18;
     uint256 internal constant _BASIS_POINTS = 1e4;
@@ -65,6 +69,37 @@ library SiloLendingLib {
         debtShareToken.mint(_borrower, _spender, borrowedShares);
         // fee-on-transfer is ignored. If token reenters, state is already finalized, no harm done.
         IERC20Upgradeable(_configData.token).safeTransfer(_receiver, borrowedAssets);
+    }
+
+    function flashLoan(
+        ISiloConfig _config,
+        ISilo.SiloData storage _siloData,
+        IERC3156FlashBorrower _receiver,
+        address _token,
+        uint256 _amount,
+        bytes calldata _data
+    )
+        external
+        returns (bool success)
+    {
+        // flashFee will revert for wrong token
+        uint256 fee = SiloStdLib.flashFee(_config, _token, _amount);
+
+        IERC20Upgradeable(_token).safeTransfer(address(_receiver), _amount);
+
+        if (_receiver.onFlashLoan(msg.sender, _token, _amount, fee, _data) != _FLASHLOAN_CALLBACK) {
+            revert ISilo.FlashloanFailed();
+        }
+
+        IERC20Upgradeable(_token).safeTransferFrom(address(_receiver), address(this), _amount + fee);
+
+        unchecked {
+            // we operating on chunks of real tokens, so overflow should not happen
+            // fee is simply to small to overflow on cast to uint192, even if, we will get lower fee
+            _siloData.daoAndDeployerFees += uint192(fee);
+        }
+
+        success = true;
     }
 
     function repay(
@@ -188,12 +223,10 @@ library SiloLendingLib {
     }
 
     function borrowPossible(
-//        uint256 _otherSiloMaxLtv,
         address _protectedShareToken,
         address _collateralShareToken,
         address _borrower
     ) public view returns (bool possible) {
-//        if (_otherSiloMaxLtv == 0)
         // _borrower cannot have any collateral deposited
         possible = IShareToken(_protectedShareToken).balanceOf(_borrower) == 0
             && IShareToken(_collateralShareToken).balanceOf(_borrower) == 0;
