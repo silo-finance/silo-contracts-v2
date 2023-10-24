@@ -6,7 +6,7 @@ import {CommonDeploy} from "./_CommonDeploy.sol";
 import {SiloFactoryDeploy} from "./SiloFactoryDeploy.s.sol";
 import {InterestRateModelV2ConfigFactoryDeploy} from "./InterestRateModelV2ConfigFactoryDeploy.s.sol";
 import {InterestRateModelV2Deploy} from "./InterestRateModelV2Deploy.s.sol";
-import {HookReceiverDeploy} from "./HookReceiverDeploy.s.sol";
+import {GaugeHookReceiverDeploy} from "./GaugeHookReceiverDeploy.s.sol";
 import {HookReceiversFactoryDeploy} from "./HookReceiversFactoryDeploy.s.sol";
 
 /**
@@ -20,13 +20,13 @@ contract MainnetDeploy is CommonDeploy {
         InterestRateModelV2ConfigFactoryDeploy interestRateModelV2ConfigFactoryDeploy =
             new InterestRateModelV2ConfigFactoryDeploy();
         InterestRateModelV2Deploy interestRateModelV2Deploy = new InterestRateModelV2Deploy();
-        HookReceiverDeploy hookReceiverDeploy = new HookReceiverDeploy();
+        GaugeHookReceiverDeploy gaugeHookReceiverDeploy = new GaugeHookReceiverDeploy();
         HookReceiversFactoryDeploy hookReceiversFactoryDeploy = new HookReceiversFactoryDeploy();
 
         siloFactoryDeploy.run();
         interestRateModelV2ConfigFactoryDeploy.run();
         interestRateModelV2Deploy.run();
-        hookReceiverDeploy.run();
+        gaugeHookReceiverDeploy.run();
         hookReceiversFactoryDeploy.run();
     }
 }

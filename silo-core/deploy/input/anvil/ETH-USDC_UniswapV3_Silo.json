@@ -12,7 +12,7 @@
     "flashloanFee0": 100,
     "callBeforeQuote0": false,
     "protectedHookReceiver0": "NO_HOOK_RECEIVER",
-    "collateralHookReceiver0": "HookReceiver.sol",
+    "collateralHookReceiver0": "GaugeHookReceiver.sol",
     "debtHookReceiver0": "NO_HOOK_RECEIVER",
     "token1": "USDC",
     "solvencyOracle1": "NO_ORACLE",
