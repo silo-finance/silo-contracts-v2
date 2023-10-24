@@ -76,12 +76,14 @@ library SiloSolvencyLib {
     }
 
     // solhint-disable-next-line function-max-lines
+    /// @param _debtShareBalanceCached if debt shares of `_borrower` is unknown, simply pass `0`
     function getAssetsDataForLtvCalculations(
         ISiloConfig.ConfigData memory _collateralConfig,
         ISiloConfig.ConfigData memory _debtConfig,
         address _borrower,
         ISilo.OracleType _oracleType,
-        ISilo.AccrueInterestInMemory _accrueInMemory
+        ISilo.AccrueInterestInMemory _accrueInMemory,
+        uint256 _debtShareBalanceCached
     ) internal view returns (LtvData memory ltvData) {
         // When calculating maxLtv, use maxLtv oracle.
         (ltvData.collateralOracle, ltvData.debtOracle) = _oracleType == ISilo.OracleType.MaxLtv
@@ -91,7 +93,9 @@ library SiloSolvencyLib {
         uint256 totalShares;
         uint256 shares;
 
-        (shares, totalShares) = SiloStdLib.getSharesAndTotalSupply(_collateralConfig.protectedShareToken, _borrower);
+        (shares, totalShares) = SiloStdLib.getSharesAndTotalSupply(
+            _collateralConfig.protectedShareToken, _borrower, 0 /* no cache */
+        );
 
         (
             uint256 totalCollateralAssets, uint256 totalProtectedAssets
@@ -101,7 +105,9 @@ library SiloSolvencyLib {
             shares, totalProtectedAssets, totalShares, MathUpgradeable.Rounding.Down, ISilo.AssetType.Protected
         );
 
-        (shares, totalShares) = SiloStdLib.getSharesAndTotalSupply(_collateralConfig.collateralShareToken, _borrower);
+        (shares, totalShares) = SiloStdLib.getSharesAndTotalSupply(
+            _collateralConfig.collateralShareToken, _borrower, 0 /* no cache */
+        );
 
         totalCollateralAssets = _accrueInMemory == ISilo.AccrueInterestInMemory.Yes
             ? SiloStdLib.getTotalCollateralAssetsWithInterest(
@@ -116,7 +122,9 @@ library SiloSolvencyLib {
             shares, totalCollateralAssets, totalShares, MathUpgradeable.Rounding.Down, ISilo.AssetType.Collateral
         );
 
-        (shares, totalShares) = SiloStdLib.getSharesAndTotalSupply(_debtConfig.debtShareToken, _borrower);
+        (shares, totalShares) = SiloStdLib.getSharesAndTotalSupply(
+            _debtConfig.debtShareToken, _borrower, _debtShareBalanceCached
+        );
 
         uint256 totalDebtAssets = _accrueInMemory == ISilo.AccrueInterestInMemory.Yes
             ? SiloStdLib.getTotalDebtAssetsWithInterest(_debtConfig.silo, _debtConfig.interestRateModel)
@@ -161,10 +169,16 @@ library SiloSolvencyLib {
         ISilo.OracleType _oracleType,
         ISilo.AccrueInterestInMemory _accrueInMemory
     ) internal view returns (uint256 ltvInDp) {
-        LtvData memory ltvData =
-            getAssetsDataForLtvCalculations(_collateralConfig, _debtConfig, _borrower, _oracleType, _accrueInMemory);
+        uint256 debtShareBalance = IShareToken(_debtConfig.debtShareToken).balanceOf(_borrower);
+
+        if (debtShareBalance == 0) return 0;
+
+        LtvData memory ltvData = getAssetsDataForLtvCalculations(
+            _collateralConfig, _debtConfig, _borrower, _oracleType, _accrueInMemory, debtShareBalance
+        );
 
         if (ltvData.borrowerDebtAssets == 0) return 0;
+
         (,, ltvInDp) = calculateLtv(ltvData, _collateralConfig.token, _debtConfig.token);
     }
 }

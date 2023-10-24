@@ -54,25 +54,31 @@ library SiloERC4626Lib {
             ? IShareToken(collateralConfig.collateralShareToken).totalSupply()
             : IShareToken(collateralConfig.protectedShareToken).totalSupply();
 
-        if (!hasDebt(debtConfig.debtShareToken, _owner)) {
-            shares = _assetType == ISilo.AssetType.Collateral
-                ? IShareToken(collateralConfig.collateralShareToken).balanceOf(_owner)
-                : IShareToken(collateralConfig.protectedShareToken).balanceOf(_owner);
+        SiloSolvencyLib.LtvData memory ltvData;
 
-            assets = SiloMathLib.convertToAssets(
-                shares,
-                _totalAssets,
-                shareTokenTotalSupply,
-                MathUpgradeable.Rounding.Down,
-                _assetType
+        { // stack too deep
+            uint256 debt = IShareToken(debtConfig.debtShareToken).balanceOf(_owner);
+
+            if (debt == 0) {
+                shares = _assetType == ISilo.AssetType.Collateral
+                    ? IShareToken(collateralConfig.collateralShareToken).balanceOf(_owner)
+                    : IShareToken(collateralConfig.protectedShareToken).balanceOf(_owner);
+
+                assets = SiloMathLib.convertToAssets(
+                    shares,
+                    _totalAssets,
+                    shareTokenTotalSupply,
+                    MathUpgradeable.Rounding.Down,
+                    _assetType
+                );
+
+                return (assets, shares);
+            }
+
+            ltvData = SiloSolvencyLib.getAssetsDataForLtvCalculations(
+                collateralConfig, debtConfig, _owner, ISilo.OracleType.Solvency, ISilo.AccrueInterestInMemory.Yes, debt
             );
-
-            return (assets, shares);
         }
-
-        SiloSolvencyLib.LtvData memory ltvData = SiloSolvencyLib.getAssetsDataForLtvCalculations(
-            collateralConfig, debtConfig, _owner, ISilo.OracleType.Solvency, ISilo.AccrueInterestInMemory.Yes
-        );
 
         (uint256 collateralValue, uint256 debtValue) =
             SiloSolvencyLib.getPositionValues(ltvData, collateralConfig.token, debtConfig.token);
@@ -207,9 +213,5 @@ library SiloERC4626Lib {
 
     function depositPossible(address _debtShareToken, address _depositor) public view returns (bool) {
         return IShareToken(_debtShareToken).balanceOf(_depositor) == 0;
-    }
-
-    function hasDebt(address _debtShareToken, address _owner) internal view returns (bool debt) {
-        debt = IShareToken(_debtShareToken).balanceOf(_owner) != 0;
     }
 }

@@ -24,7 +24,7 @@ contract GetSharesAndTotalSupplyTest is Test {
 
         SHARE_TOKEN.balanceOfMock(owner, 0);
         SHARE_TOKEN.totalSupplyMock(0);
-        (uint256 shares, uint256 totalSupply) = SiloStdLib.getSharesAndTotalSupply(shareToken, owner);
+        (uint256 shares, uint256 totalSupply) = SiloStdLib.getSharesAndTotalSupply(shareToken, owner, 0);
         assertEq(shares, 0, "zero shares");
         assertEq(totalSupply, 0, "zero totalSupply");
     }
@@ -38,8 +38,22 @@ contract GetSharesAndTotalSupplyTest is Test {
 
         SHARE_TOKEN.balanceOfMock(owner, 111);
         SHARE_TOKEN.totalSupplyMock(222);
-        (uint256 shares, uint256 totalSupply) = SiloStdLib.getSharesAndTotalSupply(shareToken, owner);
+        (uint256 shares, uint256 totalSupply) = SiloStdLib.getSharesAndTotalSupply(shareToken, owner, 0);
         assertEq(shares, 111, "shares");
+        assertEq(totalSupply, 222, "totalSupply");
+    }
+
+    /*
+    forge test -vv --mt test_getSharesAndTotalSupply_pass
+    */
+    function test_getSharesAndTotalSupply_balanceCached() public {
+        address shareToken = SHARE_TOKEN.ADDRESS();
+        address owner = address(2);
+        uint256 balance = 987;
+
+        SHARE_TOKEN.totalSupplyMock(222);
+        (uint256 shares, uint256 totalSupply) = SiloStdLib.getSharesAndTotalSupply(shareToken, owner, balance);
+        assertEq(shares, balance, "shares");
         assertEq(totalSupply, 222, "totalSupply");
     }
 }

@@ -120,12 +120,13 @@ library SiloStdLib {
         }
     }
 
-    function getSharesAndTotalSupply(address _shareToken, address _owner)
+    /// @param _balanceCached if balance of `_owner` is unknown beforehand, then pass `0`
+    function getSharesAndTotalSupply(address _shareToken, address _owner, uint256 _balanceCached)
         internal
         view
         returns (uint256 shares, uint256 totalSupply)
     {
-        shares = IShareToken(_shareToken).balanceOf(_owner);
+        shares = _balanceCached == 0 ? IShareToken(_shareToken).balanceOf(_owner) : _balanceCached;
         totalSupply = IShareToken(_shareToken).totalSupply();
     }
 

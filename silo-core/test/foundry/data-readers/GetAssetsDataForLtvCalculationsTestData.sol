@@ -6,6 +6,7 @@ import "forge-std/Test.sol";
 contract GetAssetsDataForLtvCalculationsTestData is Test {
     // must be in alphabetic order
     struct DebtConfigInput {
+        bool cachedBalance;
         uint256 compoundInterestRate;
         uint256 debtShareBalanceOf;
         uint256 debtShareTotalSupply;
@@ -81,7 +82,8 @@ contract GetAssetsDataForLtvCalculationsTestData is Test {
         emit log_named_uint("maxLtvOracle_debt", scenario.input.debtConfig.maxLtvOracle);
         emit log_named_uint("solvencyOracle_debt", scenario.input.debtConfig.solvencyOracle);
         emit log_named_uint("totalDebtAssets_debt", scenario.input.debtConfig.totalDebtAssets);
-        
+        emit log_named_string("cachedBalance", scenario.input.debtConfig.cachedBalance ? "true" : "false");
+
         // Print CollateralConfig struct within Input
         emit log_named_uint("collateralShareBalanceOf", scenario.input.collateralConfig.collateralShareBalanceOf);
         emit log_named_uint("collateralShareTotalSupply", scenario.input.collateralConfig.collateralShareTotalSupply);

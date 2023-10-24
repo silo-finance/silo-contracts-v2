@@ -52,21 +52,24 @@ contract GetAssetsDataForLtvCalculationsTest is Test {
             ISiloConfig.ConfigData memory debtConfig,
             address borrower,
             ISilo.OracleType oracleType,
-            ISilo.AccrueInterestInMemory accrueInMemory
+            ISilo.AccrueInterestInMemory accrueInMemory,
+            uint256 cachedShareDebtBalance
         )
     {
-        ISiloConfig.InitData memory initData;
+        { // stack too deep
+            ISiloConfig.InitData memory initData;
 
-        initData.maxLtvOracle0 = address(uint160(scenario.input.collateralConfig.maxLtvOracle));
-        initData.solvencyOracle0 = address(uint160(scenario.input.collateralConfig.solvencyOracle));
-        initData.interestRateModel0 = interestRateModelMock.ADDRESS();
-        initData.deployerFeeInBp = scenario.input.collateralConfig.deployerFeeInBp;
+            initData.maxLtvOracle0 = address(uint160(scenario.input.collateralConfig.maxLtvOracle));
+            initData.solvencyOracle0 = address(uint160(scenario.input.collateralConfig.solvencyOracle));
+            initData.interestRateModel0 = interestRateModelMock.ADDRESS();
+            initData.deployerFeeInBp = scenario.input.collateralConfig.deployerFeeInBp;
 
-        initData.maxLtvOracle1 = address(uint160(scenario.input.debtConfig.maxLtvOracle));
-        initData.solvencyOracle1 = address(uint160(scenario.input.debtConfig.solvencyOracle));
-        initData.interestRateModel1 = interestRateModelMock.ADDRESS();
+            initData.maxLtvOracle1 = address(uint160(scenario.input.debtConfig.maxLtvOracle));
+            initData.solvencyOracle1 = address(uint160(scenario.input.debtConfig.solvencyOracle));
+            initData.interestRateModel1 = interestRateModelMock.ADDRESS();
 
-        (collateralConfig, debtConfig) = siloFactoryHelper.copyConfig(initData);
+            (collateralConfig, debtConfig) = siloFactoryHelper.copyConfig(initData);
+        }
 
         collateralConfig.protectedShareToken = protectedShareToken;
         collateralConfig.collateralShareToken = collateralShareToken;
@@ -88,7 +91,11 @@ contract GetAssetsDataForLtvCalculationsTest is Test {
         );
 
         TokenMock debtShareTokenMock = new TokenMock(vm, debtShareToken);
-        debtShareTokenMock.balanceOfMock(borrowerAddr, scenario.input.debtConfig.debtShareBalanceOf);
+        if (scenario.input.debtConfig.cachedBalance) {
+            cachedShareDebtBalance = scenario.input.debtConfig.debtShareBalanceOf;
+        } else {
+            debtShareTokenMock.balanceOfMock(borrowerAddr, scenario.input.debtConfig.debtShareBalanceOf);
+        }
         debtShareTokenMock.totalSupplyMock(scenario.input.debtConfig.debtShareTotalSupply);
 
         SiloMock siloMock0 = new SiloMock(vm, silo0);
@@ -129,11 +136,12 @@ contract GetAssetsDataForLtvCalculationsTest is Test {
                 ISiloConfig.ConfigData memory debtConfig,
                 address borrower,
                 ISilo.OracleType oracleType,
-                ISilo.AccrueInterestInMemory accrueInMemory
+                ISilo.AccrueInterestInMemory accrueInMemory,
+                uint256 cachedShareDebtBalance
             ) = getData(scenarios[index]);
 
             SiloSolvencyLib.LtvData memory ltvData = SiloSolvencyLib.getAssetsDataForLtvCalculations(
-                collateralConfig, debtConfig, borrower, oracleType, accrueInMemory
+                collateralConfig, debtConfig, borrower, oracleType, accrueInMemory, cachedShareDebtBalance
             );
 
             assertEq(
