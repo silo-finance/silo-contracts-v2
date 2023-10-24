@@ -11,6 +11,7 @@ import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {IHookReceiver} from "silo-core/contracts/utils/hook-receivers/interfaces/IHookReceiver.sol";
 import {ISiloDeployer} from "silo-core/contracts/interfaces/ISiloDeployer.sol";
 
+/// @notice Silo Deployer
 contract SiloDeployer is ISiloDeployer {
     // solhint-disable var-name-mixedcase
     IInterestRateModelV2ConfigFactory public immutable IRM_CONFIG_FACTORY;
@@ -31,6 +32,7 @@ contract SiloDeployer is ISiloDeployer {
         TIMELOCK_CONTROLLER = _timelockController;
     }
 
+    /// @inheritdoc ISiloDeployer
     function deploy(
         Oracles calldata _oracles,
         IInterestRateModelV2.Config calldata _irmConfigData0,
@@ -54,6 +56,10 @@ contract SiloDeployer is ISiloDeployer {
         emit SiloCreated(siloConfig);
     }
 
+    /// @notice Create IRMs configs and update `_siloInitData`
+    /// @param _irmConfigData0 IRM config data for a silo `_TOKEN0`
+    /// @param _irmConfigData1 IRM config data for a silo `_TOKEN1`
+    /// @param _siloInitData Silo configuration for the silo creation
     function _setUpIRMs(
         IInterestRateModelV2.Config calldata _irmConfigData0,
         IInterestRateModelV2.Config calldata _irmConfigData1,
@@ -66,6 +72,8 @@ contract SiloDeployer is ISiloDeployer {
         _siloInitData.interestRateModelConfig1 = address(interestRateModelConfig1);
     }
 
+    /// @notice Create silo hooks receivers and update `_siloInitData`
+    /// @param _siloInitData Silo configuration for the silo creation
     function _createHookReceivers(ISiloConfig.InitData memory _siloInitData) internal {
         IHookReceiversFactory.HookReceivers memory implementations = IHookReceiversFactory.HookReceivers({
             protectedHookReceiver0: _siloInitData.protectedHookReceiver0,
@@ -86,6 +94,9 @@ contract SiloDeployer is ISiloDeployer {
         _siloInitData.debtHookReceiver1 = clones.debtHookReceiver1;
     }
 
+    /// @notice Initialize silos hooks receivers
+    /// @param _siloConfig Already created silo config
+    /// @param _siloInitData Silo configuration for the silo creation
     function _initializeHookReceivers(ISiloConfig _siloConfig, ISiloConfig.InitData memory _siloInitData) internal {
         (address silo, address otherSilo) = _siloConfig.getSilos();
 
@@ -108,6 +119,10 @@ contract SiloDeployer is ISiloDeployer {
         _initializeHookReceiversForSilo(_siloConfig, hookReceivers, otherSilo);
     }
 
+    /// @notice Initialize silo hook receivers
+    /// @param _siloConfig Already created silo config
+    /// @param _hookReceivers Silo hook receivers
+    /// @param _silo Silo
     function _initializeHookReceiversForSilo(
         ISiloConfig _siloConfig,
         HookReceivers memory _hookReceivers,
@@ -124,12 +139,18 @@ contract SiloDeployer is ISiloDeployer {
         _initializeHookReceiverForToken(debtShareToken, _hookReceivers.debtHookReceiver);
     }
 
+    /// @notice Initialize hook receiver for a silo share token
+    /// @param _token Silo share token address
+    /// @param _hookReceiver Hook receiver to be initialized
     function _initializeHookReceiverForToken(address _token, address _hookReceiver) internal {
         if (_hookReceiver != address(0)) {
             IHookReceiver(_hookReceiver).initialize(TIMELOCK_CONTROLLER, IShareToken(_token));
         }
     }
 
+    /// @notice Create an oracle if it is not specified in the `_siloInitData` and has tx details for the creation
+    /// @param _siloInitData Silo configuration for the silo creation
+    /// @param _oracles Oracles creation details (factory and creation tx input)
     function _createOracles(ISiloConfig.InitData memory _siloInitData, Oracles memory _oracles) internal {
         _siloInitData.solvencyOracle0 = _siloInitData.solvencyOracle0 != address(0)
             ? _siloInitData.solvencyOracle0
@@ -148,6 +169,8 @@ contract SiloDeployer is ISiloDeployer {
             : _createOracle(_oracles.maxLtvOracle1);
     }
 
+    /// @notice Create an oracle
+    /// @param _txData Oracle creation details (factory and creation tx input)
     function _createOracle(OracleCreationTxData memory _txData) internal returns (address _oracle) {
         address factory = _txData.factory;
 
