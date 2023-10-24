@@ -2,8 +2,8 @@
 pragma solidity 0.8.21;
 
 import {CommonDeploy, SiloCoreContracts} from "./_CommonDeploy.sol";
-import {IHookReceiversFactory} from "silo-core/contracts/interfaces/IHookReceiversFactory.sol";
-import {HookReceiversFactory} from "silo-core/contracts/utils/HookReceiversFactory.sol";
+import {IHookReceiversFactory} from "silo-core/contracts/utils/hook-receivers/interfaces/IHookReceiversFactory.sol";
+import {HookReceiversFactory} from "silo-core/contracts/utils/hook-receivers/HookReceiversFactory.sol";
 
 /**
     FOUNDRY_PROFILE=core \

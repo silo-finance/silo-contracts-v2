@@ -10,7 +10,7 @@ import {OraclesDeployments} from "silo-oracles/deploy/OraclesDeployments.sol";
 import {CommonDeploy, SiloCoreContracts} from "../_CommonDeploy.sol";
 
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
-import {IHookReceiversFactory} from "silo-core/contracts/interfaces/IHookReceiversFactory.sol";
+import {IHookReceiversFactory} from "silo-core/contracts/utils/hook-receivers/interfaces/IHookReceiversFactory.sol";
 
 contract SiloConfigData is Test, CommonDeploy {
     bytes32 constant public NO_ORACLE_KEY = keccak256(bytes("NO_ORACLE"));

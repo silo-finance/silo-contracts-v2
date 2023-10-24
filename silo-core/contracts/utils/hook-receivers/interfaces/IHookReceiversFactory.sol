@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.21;
+pragma solidity >=0.5.0;
 
 /// @notice Utility contract to clone all required hook receivers in a single transaction
 interface IHookReceiversFactory {

@@ -3,7 +3,7 @@ pragma solidity 0.8.21;
 
 import {ClonesUpgradeable} from "openzeppelin-contracts-upgradeable/proxy/ClonesUpgradeable.sol";
 
-import {IHookReceiversFactory} from "../interfaces/IHookReceiversFactory.sol";
+import {IHookReceiversFactory} from "./interfaces/IHookReceiversFactory.sol";
 
 /// @notice Utility contract to clone multiple copies in a single transaction
 contract HookReceiversFactory is IHookReceiversFactory {
