@@ -36,12 +36,12 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
     using SafeERC20Upgradeable for IERC20Upgradeable;
 
     uint256 internal constant _DP2BP_NORMALIZATION = 10 ** (18 - 4);
-    string public constant VERSION = "2.0.0";
+    string internal constant _VERSION = "2.0.0";
 
     bytes32 public constant FLASHLOAN_CALLBACK = keccak256("ERC3156FlashBorrower.onFlashLoan");
     bytes32 public constant LEVERAGE_CALLBACK = keccak256("ILeverageBorrower.onLeverage");
     
-    ISiloFactory public immutable factory;
+    ISiloFactory internal immutable _factory;
 
     ISiloConfig public config;
 
@@ -51,26 +51,33 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
     mapping(AssetType => Assets) internal _total;
 
     /// @custom:oz-upgrades-unsafe-allow constructor
-    constructor(ISiloFactory _factory) {
+    constructor(ISiloFactory _siloFactory) {
         _disableInitializers();
-        factory = _factory;
+        _factory = _siloFactory;
     }
 
     /// @notice Sets configuration
-    /// @param _config address of ISiloConfig with full config for this Silo
+    /// @param _siloConfig address of ISiloConfig with full config for this Silo
     /// @param _modelConfigAddress address of a config contract used by model
-    function initialize(ISiloConfig _config, address _modelConfigAddress) external virtual initializer {
+    function initialize(ISiloConfig _siloConfig, address _modelConfigAddress) external virtual initializer {
         __ReentrancyGuard_init();
         __LeverageReentrancyGuard_init();
 
-        config = _config;
+        config = _siloConfig;
 
-        ISiloConfig.ConfigData memory configData = _config.getConfig(address(this));
+        ISiloConfig.ConfigData memory configData = _siloConfig.getConfig(address(this));
         IInterestRateModel(configData.interestRateModel).connect(_modelConfigAddress);
     }
 
-    function siloId() external view virtual returns (uint256) {
-        return config.SILO_ID();
+    function getInfo()
+        external
+        view
+        virtual
+        returns (string memory version, ISiloFactory factory, uint256 siloId)
+    {
+        version = _VERSION;
+        factory = _factory;
+        siloId = config.SILO_ID();
     }
 
     function utilizationData() external view virtual returns (UtilizationData memory) {
@@ -86,12 +93,9 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
     }
 
     function isSolvent(address _borrower) external view virtual returns (bool) {
-        (ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig) =
-            config.getConfigs(address(this));
-
-        if (!SiloSolvencyLib.validConfigOrder(collateralConfig.debtShareToken, debtConfig.debtShareToken, _borrower)) {
-            (collateralConfig, debtConfig) = (debtConfig, collateralConfig);
-        }
+        (
+            ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig
+        ) = _getOrderedConfigs(_borrower);
 
         return SiloSolvencyLib.isSolvent(collateralConfig, debtConfig, _borrower, AccrueInterestInMemory.Yes);
     }
@@ -120,6 +124,18 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
         ISiloConfig.ConfigData memory configData = config.getConfig(address(this));
 
         unchecked { ltInBp = configData.lt / _DP2BP_NORMALIZATION; }
+    }
+
+    function getLtv(address _borrower) external view virtual returns (uint256 ltvInBp) {
+        (
+            ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig
+        ) = _getOrderedConfigs(_borrower);
+
+        ltvInBp = SiloSolvencyLib.getLtv(
+            collateralConfig, debtConfig, _borrower, ISilo.OracleType.Solvency, AccrueInterestInMemory.Yes
+        );
+
+        unchecked { ltvInBp /= _DP2BP_NORMALIZATION; }
     }
 
     function getProtectedAssets() external view virtual returns (uint256) {
@@ -151,7 +167,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
         returns (address daoFeeReceiver, address deployerFeeReceiver, uint256 daoFee, uint256 deployerFee)
     {
         (daoFeeReceiver, deployerFeeReceiver, daoFee, deployerFee,) =
-            SiloStdLib.getFeesAndFeeReceiversWithAsset(config, factory);
+            SiloStdLib.getFeesAndFeeReceiversWithAsset(config, _factory);
     }
 
     // ERC4626
@@ -723,7 +739,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
     }
 
     function withdrawFees() external virtual {
-        SiloStdLib.withdrawFees(config, factory, siloData);
+        SiloStdLib.withdrawFees(config, _factory, siloData);
     }
 
     /// @dev it can be called on "debt silo" only
@@ -1001,5 +1017,17 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
 
     function _getShareToken() internal view virtual override returns (address collateralShareToken) {
         (, collateralShareToken,) = config.getShareTokens(address(this));
+    }
+
+    function _getOrderedConfigs(address _borrower)
+        internal
+        view
+        virtual
+        returns (ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig) {
+        (collateralConfig, debtConfig) = config.getConfigs(address(this));
+
+        if (!SiloSolvencyLib.validConfigOrder(collateralConfig.debtShareToken, debtConfig.debtShareToken, _borrower)) {
+            (collateralConfig, debtConfig) = (debtConfig, collateralConfig);
+        }
     }
 }

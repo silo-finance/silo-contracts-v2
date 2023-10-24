@@ -12,7 +12,7 @@ import {SiloMathLib} from "./SiloMathLib.sol";
 
 library SiloSolvencyLib {
     struct LtvData {
-        ISiloOracle collateralOracle; // TODO remove oracles once we have deposit gas
+        ISiloOracle collateralOracle;
         ISiloOracle debtOracle;
         uint256 borrowerProtectedAssets;
         uint256 borrowerCollateralAssets;

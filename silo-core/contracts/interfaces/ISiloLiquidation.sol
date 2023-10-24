@@ -48,8 +48,6 @@ interface ISiloLiquidation {
         bool _receiveSToken
     ) external;
 
-    // TODO liquidationPreview
-
     function withdrawCollateralsToLiquidator(
         uint256 _withdrawAssetsFromCollateral,
         uint256 _withdrawAssetsFromProtected,
