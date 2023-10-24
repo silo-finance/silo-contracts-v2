@@ -124,12 +124,19 @@ library SiloMathLib {
     ) internal pure returns (uint256) {
         // Debt calculations should not lower the result. Debt is a liability so protocol should not take any for
         // itself. It should return actual result and round it up.
-        (uint256 offsetPow, uint256 one) = _assetType == ISilo.AssetType.Debt ? (0, 0) : (_DECIMALS_OFFSET_POW, 1);
+        uint256 totalShares;
+        uint256 totalAssets;
 
-        // TODO cache sum and reuse
-        if (_totalShares + offsetPow == 0 || _totalAssets + one == 0) return _assets;
+        unchecked {
+            // I think we can afford to uncheck +1
+            (totalShares, totalAssets) = _assetType == ISilo.AssetType.Debt
+                ? (_totalShares, _totalAssets)
+                : (_totalShares + _DECIMALS_OFFSET_POW, _totalAssets + 1);
+        }
 
-        return _assets.mulDiv(_totalShares + offsetPow, _totalAssets + one, _rounding);
+        if (totalShares == 0 || totalAssets == 0) return _assets;
+
+        return _assets.mulDiv(totalShares, totalAssets, _rounding);
     }
 
     /// @dev Math for collateral is exact copy of
@@ -143,12 +150,19 @@ library SiloMathLib {
     ) internal pure returns (uint256 assets) {
         // Debt calculations should not lower the result. Debt is a liability so protocol should not take any for
         // itself. It should return actual result and round it up.
-        (uint256 offsetPow, uint256 one) = _assetType == ISilo.AssetType.Debt ? (0, 0) : (_DECIMALS_OFFSET_POW, 1);
+        uint256 totalShares;
+        uint256 totalAssets;
 
-        // TODO cache sum and reuse
-        if (_totalShares + offsetPow == 0 || _totalAssets + one == 0) return _shares;
+        unchecked {
+            // I think we can afford to uncheck +1
+            (totalShares, totalAssets) = _assetType == ISilo.AssetType.Debt
+                ? (_totalShares, _totalAssets)
+                : (_totalShares + _DECIMALS_OFFSET_POW, _totalAssets + 1);
+        }
 
-        assets = _shares.mulDiv(_totalAssets + one, _totalShares + offsetPow, _rounding);
+        if (totalShares == 0 || totalAssets == 0) return _shares;
+
+        assets = _shares.mulDiv(totalAssets, totalShares, _rounding);
     }
 
     /// @return maxBorrowValue max borrow value yet available for borrower
