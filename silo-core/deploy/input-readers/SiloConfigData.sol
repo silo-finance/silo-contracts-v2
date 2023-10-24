@@ -75,8 +75,8 @@ contract SiloConfigData is Test, CommonDeploy {
             deployer: config.deployer,
             deployerFeeInBp: config.deployerFeeInBp,
             token0: getAddress(config.token0),
-            solvencyOracle0: _getOracle(config.solvencyOracle0),
-            maxLtvOracle0: _getOracle(config.maxLtvOracle0),
+            solvencyOracle0: address(0),
+            maxLtvOracle0: address(0),
             interestRateModel0: address(0),
             interestRateModelConfig0: address(0),
             maxLtv0: config.maxLtv0,
@@ -88,8 +88,8 @@ contract SiloConfigData is Test, CommonDeploy {
             collateralHookReceiver0: hookReceivers.collateralHookReceiver0,
             debtHookReceiver0: hookReceivers.debtHookReceiver0,
             token1: getAddress(config.token1),
-            solvencyOracle1: _getOracle(config.solvencyOracle1),
-            maxLtvOracle1: _getOracle(config.maxLtvOracle1),
+            solvencyOracle1: address(0),
+            maxLtvOracle1: address(0),
             interestRateModel1: address(0),
             interestRateModelConfig1: address(0),
             maxLtv1: config.maxLtv1,
@@ -101,12 +101,6 @@ contract SiloConfigData is Test, CommonDeploy {
             collateralHookReceiver1: hookReceivers.collateralHookReceiver1,
             debtHookReceiver1: hookReceivers.debtHookReceiver1
         });
-    }
-
-    function _getOracle(string memory _key) internal returns (address oracleAddress) {
-        if (keccak256(bytes(_key)) != NO_ORACLE_KEY) {
-            oracleAddress = OraclesDeployments.get(ChainsLib.chainAlias(block.chainid), _key);
-        }
     }
 
     function _getHookReceivers(ConfigData memory _config)
