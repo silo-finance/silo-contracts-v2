@@ -35,10 +35,8 @@ contract CalculateMaxAssetsToWithdrawTest is Test {
 
             assertEq(maxAssets, testData.maxAssets, _concatMsg(i, testData.name));
 
-            if (testData.verifyLtvAfter) {
-                uint256 ltvAfter = _ltv(testData);
-                assertLe(ltvAfter, testData.input.ltInDp, _concatMsg(i, string.concat(testData.name, " - LTV holds")));
-            }
+            uint256 ltvAfter = _ltv(testData);
+            assertLe(ltvAfter, testData.input.ltInDp, _concatMsg(i, string.concat(testData.name, " - LTV holds")));
         }
     }
 

@@ -126,6 +126,7 @@ library SiloMathLib {
         // itself. It should return actual result and round it up.
         (uint256 offsetPow, uint256 one) = _assetType == ISilo.AssetType.Debt ? (0, 0) : (_DECIMALS_OFFSET_POW, 1);
 
+        // TODO cache sum and reuse
         if (_totalShares + offsetPow == 0 || _totalAssets + one == 0) return _assets;
 
         return _assets.mulDiv(_totalShares + offsetPow, _totalAssets + one, _rounding);
@@ -144,6 +145,7 @@ library SiloMathLib {
         // itself. It should return actual result and round it up.
         (uint256 offsetPow, uint256 one) = _assetType == ISilo.AssetType.Debt ? (0, 0) : (_DECIMALS_OFFSET_POW, 1);
 
+        // TODO cache sum and reuse
         if (_totalShares + offsetPow == 0 || _totalAssets + one == 0) return _shares;
 
         assets = _shares.mulDiv(_totalAssets + one, _totalShares + offsetPow, _rounding);
@@ -179,7 +181,10 @@ library SiloMathLib {
         if (_ltInDp == 0) return 0;
 
         uint256 minimumCollateralValue = _debtValue * _PRECISION_DECIMALS;
-        unchecked { minimumCollateralValue /= _ltInDp; }
+        // +1 is solution for precision error that math can produce and when that happen,
+        // `maxAssets` can cause insolvency, so it can not be withdraw
+        // +1 will not overflow because it is after division
+        unchecked { minimumCollateralValue = minimumCollateralValue / _ltInDp + 1; }
 
         // if we over LT, we can not withdraw
         if (_sumOfCollateralsValue <= minimumCollateralValue) {
@@ -195,8 +200,8 @@ library SiloMathLib {
             // - is safe because we adding same asset (under same total supply)
             // - can potentially overflow, but it is unlikely, we would overflow in LTV calculations first
             // worse what can happen we return lower number than real MAX on overflow
-             maxAssets = (_borrowerProtectedAssets + _borrowerCollateralAssets) * spareCollateralValue
-                 / _sumOfCollateralsValue;
+            maxAssets = (_borrowerProtectedAssets + _borrowerCollateralAssets) * spareCollateralValue
+                / _sumOfCollateralsValue;
         }
     }
 
