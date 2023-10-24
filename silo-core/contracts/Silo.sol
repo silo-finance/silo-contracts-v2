@@ -38,9 +38,8 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
     uint256 internal constant _DP2BP_NORMALIZATION = 10 ** (18 - 4);
     string internal constant _VERSION = "2.0.0";
 
-    bytes32 public constant FLASHLOAN_CALLBACK = keccak256("ERC3156FlashBorrower.onFlashLoan");
-    bytes32 public constant LEVERAGE_CALLBACK = keccak256("ILeverageBorrower.onLeverage");
-    
+    bytes32 internal constant _LEVERAGE_CALLBACK = keccak256("ILeverageBorrower.onLeverage");
+
     ISiloFactory internal immutable _factory;
 
     ISiloConfig public config;
@@ -65,8 +64,8 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
 
         config = _siloConfig;
 
-        ISiloConfig.ConfigData memory configData = _siloConfig.getConfig(address(this));
-        IInterestRateModel(configData.interestRateModel).connect(_modelConfigAddress);
+        address interestRateModel = _siloConfig.getConfig(address(this)).interestRateModel;
+        IInterestRateModel(interestRateModel).connect(_modelConfigAddress);
     }
 
     function getInfo()
@@ -661,24 +660,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
         leverageNonReentrant
         returns (bool success)
     {
-        // flashFee will revert for wrong token
-        uint256 fee = SiloStdLib.flashFee(config, _token, _amount);
-
-        IERC20Upgradeable(_token).safeTransfer(address(_receiver), _amount);
-
-        if (_receiver.onFlashLoan(msg.sender, _token, _amount, fee, _data) != FLASHLOAN_CALLBACK) {
-            revert FlashloanFailed();
-        }
-
-        IERC20Upgradeable(_token).safeTransferFrom(address(_receiver), address(this), _amount + fee);
-
-        unchecked {
-            // we operating on chunks of real tokens, so overflow should not happen
-            // fee is simply to small to overflow on cast to uint192, even if, we will get lower fee
-            siloData.daoAndDeployerFees += uint192(fee);
-        }
-
-        success = true;
+        return SiloLendingLib.flashLoan(config, siloData, _receiver, _token, _amount, _data);
     }
 
     function leverage(uint256 _assets, ILeverageBorrower _receiver, address _borrower, bytes calldata _data)
@@ -717,7 +699,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
         emit Leverage();
 
         // allow for deposit reentry only to provide collateral
-        if (_receiver.onLeverage(msg.sender, _borrower, debtConfig.token, assets, _data) != LEVERAGE_CALLBACK) {
+        if (_receiver.onLeverage(msg.sender, _borrower, debtConfig.token, assets, _data) != _LEVERAGE_CALLBACK) {
             revert LeverageFailed();
         }
 

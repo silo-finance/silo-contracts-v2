@@ -24,7 +24,7 @@ contract Deposit2ndGasTest is Gas, Test {
             address(silo0),
             abi.encodeCall(ISilo.deposit, (ASSETS, BORROWER, ISilo.AssetType.Collateral)),
             "Deposit2nd (no interest)",
-            95101
+            95060
         );
     }
 }
