@@ -22,13 +22,22 @@ FOUNDRY_PROFILE=core CONFIG=USDC_UniswapV3_Silo \
     --ffi --broadcast --rpc-url http://127.0.0.1:8545
  */
 contract SiloDeploy is CommonDeploy {
+    string internal _configName;
+
+    function useConfig(string memory _config) external returns (SiloDeploy) {
+        _configName = _config;
+        return this;
+    }
+
     function run() public returns (ISiloConfig siloConfig) {
         console2.log("[SiloCommonDeploy] run()");
 
         SiloConfigData siloData = new SiloConfigData();
         console2.log("[SiloCommonDeploy] SiloConfigData deployed");
 
-        string memory configName = vm.envString("CONFIG");
+        string memory configName = bytes(_configName).length == 0 ? vm.envString("CONFIG") : _configName;
+
+        console2.log("[SiloCommonDeploy] using CONFIG: ", configName);
 
         (SiloConfigData.ConfigData memory config, ISiloConfig.InitData memory siloInitData) =
             siloData.getConfigData(configName);

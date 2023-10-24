@@ -27,7 +27,7 @@ struct SiloConfigOverride {
     string configName;
 }
 
-contract SiloDeploy_ETH_USDC_1_Local is SiloDeploy {
+contract SiloDeploy_Local is SiloDeploy {
     SiloConfigOverride internal siloConfigOverride;
 
     constructor(SiloConfigOverride memory _override) {
@@ -49,9 +49,7 @@ contract SiloFixture is StdCheats, CommonBase {
         external
         returns (ISiloConfig siloConfig, ISilo silo0, ISilo silo1, address weth, address usdc)
     {
-        vm.setEnv("CONFIG", SiloConfigsNames.ETH_USDC_UNI_V3_SILO);
-
-        return _deploy(new SiloDeploy());
+        return _deploy(new SiloDeploy(), SiloConfigsNames.ETH_USDC_UNI_V3_SILO);
     }
 
     function deploy_local(SiloConfigOverride memory _override)
@@ -62,17 +60,15 @@ contract SiloFixture is StdCheats, CommonBase {
         AddrLib.setAddress(VeSiloContracts.TIMELOCK_CONTROLLER, makeAddr("Timelock"));
         AddrLib.setAddress(VeSiloContracts.FEE_DISTRIBUTOR, makeAddr("FeeDistributor"));
         console2.log("[SiloFixture] _deploy: setAddress done.");
-        console2.log("[SiloFixture] configName:", _override.configName);
 
-        vm.setEnv(
-            "CONFIG",
+
+        return _deploy(
+            new SiloDeploy_Local(_override),
             bytes(_override.configName).length == 0 ? SiloConfigsNames.LOCAL_NO_ORACLE_SILO : _override.configName
         );
-
-        return _deploy(new SiloDeploy_ETH_USDC_1_Local(_override));
     }
 
-    function _deploy(SiloDeploy _siloDeploy)
+    function _deploy(SiloDeploy _siloDeploy, string memory _configName)
         internal
         returns (ISiloConfig siloConfig, ISilo silo0, ISilo silo1, address token0, address token1)
     {
@@ -81,7 +77,7 @@ contract SiloFixture is StdCheats, CommonBase {
         mainnetDeploy.run();
         console2.log("[SiloFixture] _deploy: mainnetDeploy.run() done.");
 
-        siloConfig = _siloDeploy.run();
+        siloConfig = _siloDeploy.useConfig(_configName).run();
         console2.log("[SiloFixture] _deploy: _siloDeploy.run() done.");
 
         (address silo,) = siloConfig.getSilos();
