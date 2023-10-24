@@ -5,8 +5,6 @@ import {SafeERC20Upgradeable} from "openzeppelin-contracts-upgradeable/token/ERC
 import {IERC20Upgradeable} from "openzeppelin-contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import {IERC20MetadataUpgradeable} from "openzeppelin-contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 
-import {MathUpgradeable} from "openzeppelin-contracts-upgradeable/utils/math/MathUpgradeable.sol";
-
 import {ISiloOracle} from "../interfaces/ISiloOracle.sol";
 import {ISilo} from "../interfaces/ISilo.sol";
 import {IShareToken} from "../interfaces/IShareToken.sol";
@@ -46,9 +44,9 @@ library SiloLendingLib {
             _assets,
             _shares,
             totalDebtAssets,
-            debtShareToken.totalSupply(),
-            MathUpgradeable.Rounding.Down,
-            MathUpgradeable.Rounding.Up,
+            debtShareToken.totalSupply(), // TODO can we optimise?
+            SiloMathLib.Rounding.Down,
+            SiloMathLib.Rounding.Up,
             ISilo.AssetType.Debt
         );
 
@@ -85,8 +83,8 @@ library SiloLendingLib {
             _shares,
             totalDebtAssets,
             debtShareToken.totalSupply(),
-            MathUpgradeable.Rounding.Up,
-            MathUpgradeable.Rounding.Down,
+            SiloMathLib.Rounding.Up,
+            SiloMathLib.Rounding.Down,
             ISilo.AssetType.Debt
         );
 
@@ -227,14 +225,14 @@ library SiloLendingLib {
             assets = _maxBorrowValue * _PRECISION_DECIMALS / oneDebtTokenValue;
 
             shares = SiloMathLib.convertToShares(
-                assets, _totalDebtAssets, _totalDebtShares, MathUpgradeable.Rounding.Down, ISilo.AssetType.Debt
+                assets, _totalDebtAssets, _totalDebtShares, SiloMathLib.Rounding.Down, ISilo.AssetType.Debt
             );
         } else {
             uint256 shareBalance = IShareToken(_debtShareToken).balanceOf(_borrower);
             shares = _maxBorrowValue * shareBalance / _borrowerDebtValue;
 
             assets = SiloMathLib.convertToAssets(
-                shares, _totalDebtAssets, _totalDebtShares, MathUpgradeable.Rounding.Up, ISilo.AssetType.Debt
+                shares, _totalDebtAssets, _totalDebtShares, SiloMathLib.Rounding.Up, ISilo.AssetType.Debt
             );
         }
     }

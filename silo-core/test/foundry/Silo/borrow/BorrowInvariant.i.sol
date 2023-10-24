@@ -59,7 +59,7 @@ contract BorrowInvariantTest is SiloLittleHelper, Test {
         _deposit(2 ** 50, user2);
         _deposit(2 ** 5, user3);
 
-        _depositForBorrow(2** 128-1, address(111));
+        _depositForBorrow(2 ** 128 - 2, address(111));
     }
 
     /*

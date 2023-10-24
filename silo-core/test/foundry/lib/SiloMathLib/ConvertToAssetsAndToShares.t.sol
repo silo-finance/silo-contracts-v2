@@ -2,7 +2,8 @@
 pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
-import "silo-core/contracts/lib/SiloMathLib.sol";
+import {SiloMathLib} from "silo-core/contracts/lib/SiloMathLib.sol";
+import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 
 // forge test -vv --mc ConvertToAssetsAndToSharesTest
 contract ConvertToAssetsAndToSharesTest is Test {
@@ -13,8 +14,8 @@ contract ConvertToAssetsAndToSharesTest is Test {
         uint256 _assetsOrShares = 10000;
         uint256 _totalAssets = 250000;
         uint256 _totalShares = 250000;
-        MathUpgradeable.Rounding roundingToAssets = MathUpgradeable.Rounding.Up;
-        MathUpgradeable.Rounding roundingToShares = MathUpgradeable.Rounding.Down;
+        SiloMathLib.Rounding roundingToAssets = SiloMathLib.Rounding.Up;
+        SiloMathLib.Rounding roundingToShares = SiloMathLib.Rounding.Down;
 
         uint256 assets;
         uint256 shares;

@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.21;
 
-import {MathUpgradeable} from "openzeppelin-contracts-upgradeable/utils/math/MathUpgradeable.sol";
-
 import {ISiloOracle} from "../interfaces/ISiloOracle.sol";
 import {ISiloLiquidation} from "../interfaces/ISiloLiquidation.sol";
 import {SiloStdLib, ISiloConfig, IShareToken, ISilo} from "./SiloStdLib.sol";
@@ -98,7 +96,7 @@ library SiloSolvencyLib {
         ) = ISilo(_collateralConfig.silo).getCollateralAndProtectedAssets();
 
         ltvData.borrowerProtectedAssets = SiloMathLib.convertToAssets(
-            shares, totalProtectedAssets, totalShares, MathUpgradeable.Rounding.Down, ISilo.AssetType.Protected
+            shares, totalProtectedAssets, totalShares, SiloMathLib.Rounding.Down, ISilo.AssetType.Protected
         );
 
         (shares, totalShares) = SiloStdLib.getSharesAndTotalSupply(_collateralConfig.collateralShareToken, _borrower);
@@ -113,7 +111,7 @@ library SiloSolvencyLib {
             : totalCollateralAssets;
 
         ltvData.borrowerCollateralAssets = SiloMathLib.convertToAssets(
-            shares, totalCollateralAssets, totalShares, MathUpgradeable.Rounding.Down, ISilo.AssetType.Collateral
+            shares, totalCollateralAssets, totalShares, SiloMathLib.Rounding.Down, ISilo.AssetType.Collateral
         );
 
         (shares, totalShares) = SiloStdLib.getSharesAndTotalSupply(_debtConfig.debtShareToken, _borrower);
@@ -123,7 +121,7 @@ library SiloSolvencyLib {
             : ISilo(_debtConfig.silo).getDebtAssets();
 
         ltvData.borrowerDebtAssets = SiloMathLib.convertToAssets(
-            shares, totalDebtAssets, totalShares, MathUpgradeable.Rounding.Up, ISilo.AssetType.Debt
+            shares, totalDebtAssets, totalShares, SiloMathLib.Rounding.Up, ISilo.AssetType.Debt
         );
     }
 
