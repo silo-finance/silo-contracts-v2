@@ -60,8 +60,7 @@ contract WithdrawWhenDebtTest is SiloLittleHelper, Test {
         uint256 expectedCollateralLeft = 1e18 - expectedWithdraw;
         assertLe(0.1e18 * 1e18 / expectedCollateralLeft, 8500 * _BP2DP_NORMALIZATION, "LTV holds");
 
-        // TODO I needed to do -1 for this test to pass, investigate why
-        assertEq(silo0.maxWithdraw(address(this), ISilo.AssetType.Protected) - 1, expectedWithdraw, "protected maxWithdraw");
+        assertEq(silo0.maxWithdraw(address(this), ISilo.AssetType.Protected), expectedWithdraw, "protected maxWithdraw");
         assertEq(previewWithdraw, gotShares, "previewWithdraw");
 
         assertEq(IShareToken(debtShareToken).balanceOf(address(this)), 0.1e18, "debtShareToken");
@@ -72,15 +71,13 @@ contract WithdrawWhenDebtTest is SiloLittleHelper, Test {
 
         // protected
 
-        // TODO I needed to do -1 for this test to pass, investigate why
-        maxWithdraw = silo0.maxWithdraw(address(this), ISilo.AssetType.Protected) - 1;
+        maxWithdraw = silo0.maxWithdraw(address(this), ISilo.AssetType.Protected);
         assertEq(maxWithdraw, expectedWithdraw, "maxWithdraw, protected");
 
         previewWithdraw = silo0.previewWithdraw(maxWithdraw, ISilo.AssetType.Protected);
         gotShares = _withdraw(maxWithdraw, address(this), ISilo.AssetType.Protected);
 
-        // TODO I needed to do -1 for this test to pass, investigate why
-        assertEq(silo0.maxWithdraw(address(this), ISilo.AssetType.Protected) - 1, 0, "protected withdrawn");
+        assertEq(silo0.maxWithdraw(address(this), ISilo.AssetType.Protected), 0, "no protected withdrawn left");
         assertEq(previewWithdraw, gotShares, "protected previewWithdraw");
 
         assertEq(IShareToken(debtShareToken).balanceOf(address(this)), 0.1e18, "debtShareToken");
