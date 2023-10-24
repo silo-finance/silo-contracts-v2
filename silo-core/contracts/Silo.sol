@@ -675,7 +675,6 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
         (ISiloConfig.ConfigData memory debtConfig, ISiloConfig.ConfigData memory collateralConfig) =
             config.getConfigs(address(this));
 
-        // TODO collateralConfig.maxLtv == 0 - use other silo maxLtv in borrowPossible OR change precision to 1e18
         if (!SiloLendingLib.borrowPossible(
             debtConfig.protectedShareToken, debtConfig.collateralShareToken, _borrower
         )) revert ISilo.BorrowNotPossible();
@@ -798,8 +797,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
         );
     }
 
-    /// @dev debt is keep growing over time, so when dApp use this view to calculate max, tx should never revert
-    /// because actual max can be only higher
+    /// @inheritdoc ISiloLiquidation
     function maxLiquidation(address _borrower)
         external
         view

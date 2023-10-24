@@ -17,7 +17,6 @@ library SiloLiquidationLib {
     /// eg total value = 51 and dust level = 98%, then when we can not liquidate 50, we have to liquidate 51.
     uint256 internal constant _POSITION_DUST_LEVEL_IN_DP = 0.9e18; // 90%
 
-    // TODO QA maxLiquidation
     /// @dev debt keeps growing over time, so when dApp use this view to calculate max, tx should never revert
     /// because actual max can be only higher
     function maxLiquidation(

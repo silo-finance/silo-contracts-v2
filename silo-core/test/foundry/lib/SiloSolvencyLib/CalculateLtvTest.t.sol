@@ -62,8 +62,6 @@ contract CalculateLtvTest is Test, MockOracleQuote {
         ISiloOracle noOracle;
         uint256 sumOfCollateralAssets = uint256(_collateralAssets) + _protectedAssets;
         // because this is the same token, we assume the sum can not be higher than uint128
-        // TODO when turn on uint128 this test need to be changed
-        // vm.assume(totalAssets < type(uint128).max);
         vm.assume(sumOfCollateralAssets < type(uint256).max / DECIMALS_POINTS);
 
         SiloSolvencyLib.LtvData memory ltvData = SiloSolvencyLib.LtvData(
@@ -81,7 +79,6 @@ contract CalculateLtvTest is Test, MockOracleQuote {
         } else if (sumOfCollateralAssets == 0) {
             expectedLtv = SiloSolvencyLib._INFINITY;
         } else {
-            // TODO when 128 the whole below math can be unchecked, cast to 256!
             expectedLtv = _debtAssets * DECIMALS_POINTS / sumOfCollateralAssets;
         }
 
@@ -98,9 +95,7 @@ contract CalculateLtvTest is Test, MockOracleQuote {
     ) public {
         vm.assume(_debtAssets != 0);
         uint256 sumOfCollateralAssets = uint256(_collateralAssets) + _protectedAssets;
-        // because this is the same token, we assume the sum can not be higher than uint128
-        // TODO when turn on uint128 this test need to be changed
-        // vm.assume(totalAssets < type(uint128).max);
+        // because this is the same token, we assume the sum can not be higher than uint256
         vm.assume(sumOfCollateralAssets < type(uint256).max / DECIMALS_POINTS);
         vm.assume(sumOfCollateralAssets != 0);
 
