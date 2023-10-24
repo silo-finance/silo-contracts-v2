@@ -9,18 +9,14 @@ import {VeSiloContracts} from "ve-silo/common/VeSiloContracts.sol";
 
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
-import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 
 import {TokenMock} from "silo-core/test/foundry/_mocks/TokenMock.sol";
-import {SiloFixture} from "../../_common/fixtures/SiloFixture.sol";
+import {SiloFixture, SiloConfigOverride} from "../../_common/fixtures/SiloFixture.sol";
 
 /*
     forge test -vv --ffi --mc WithdrawWhenNoDepositTest
 */
 contract WithdrawWhenNoDepositTest is IntegrationTest {
-    uint256 internal constant _BASIS_POINTS = 1e4;
-    uint256 internal constant _FORKING_BLOCK_NUMBER = 17336000;
-
     ISiloConfig siloConfig;
     ISilo silo0;
     ISilo silo1;
@@ -29,16 +25,14 @@ contract WithdrawWhenNoDepositTest is IntegrationTest {
     TokenMock token1;
 
     function setUp() public {
-        vm.createSelectFork(getChainRpcUrl(MAINNET_ALIAS), _FORKING_BLOCK_NUMBER);
-
-        // Mock addresses that we need for the `SiloFactoryDeploy` script
-        AddrLib.setAddress(VeSiloContracts.TIMELOCK_CONTROLLER, makeAddr("Timelock"));
-        AddrLib.setAddress(VeSiloContracts.FEE_DISTRIBUTOR, makeAddr("FeeDistributor"));
-
         SiloFixture siloFixture = new SiloFixture();
-        address t0;
-        address t1;
-        (siloConfig, silo0, silo1, t0, t1) = siloFixture.deploy_ETH_USDC();
+        address t0 = makeAddr("Token0");
+        address t1 = makeAddr("Token1");
+        SiloConfigOverride memory configOverride;
+        configOverride.token0 = t0;
+        configOverride.token1 = t1;
+
+        (siloConfig, silo0, silo1,,) = siloFixture.deploy_local(configOverride);
 
         token0 = new TokenMock(vm, t0);
         token1 = new TokenMock(vm, t1);

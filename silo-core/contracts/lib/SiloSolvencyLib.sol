@@ -71,7 +71,6 @@ library SiloSolvencyLib {
         } else if (sumOfBorrowerCollateralValue == 0) {
             ltvInDp = _INFINITY;
         } else {
-            // TODO when 128 the whole below math can be unchecked, cast to 256!
             ltvInDp = totalBorrowerDebtValue * _PRECISION_DECIMALS / sumOfBorrowerCollateralValue;
         }
     }
@@ -162,7 +161,6 @@ library SiloSolvencyLib {
         ISilo.OracleType _oracleType,
         ISilo.AccrueInterestInMemory _accrueInMemory
     ) internal view returns (uint256 ltvInDp) {
-        // TODO: early return if no debt
         LtvData memory ltvData =
             getAssetsDataForLtvCalculations(_collateralConfig, _debtConfig, _borrower, _oracleType, _accrueInMemory);
 

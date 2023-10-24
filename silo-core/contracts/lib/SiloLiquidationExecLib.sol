@@ -121,6 +121,8 @@ library SiloLiquidationExecLib {
             collateralConfig, debtConfig, _borrower, ISilo.OracleType.Solvency, ISilo.AccrueInterestInMemory.Yes
         );
 
+        if (ltvData.borrowerDebtAssets == 0) return (0, 0);
+
         (
             uint256 sumOfCollateralValue, uint256 debtValue
         ) = SiloSolvencyLib.getPositionValues(ltvData, collateralConfig.token, debtConfig.token);
