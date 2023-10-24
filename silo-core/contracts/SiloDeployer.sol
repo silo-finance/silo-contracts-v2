@@ -131,10 +131,21 @@ contract SiloDeployer is ISiloDeployer {
     }
 
     function _createOracles(ISiloConfig.InitData memory _siloInitData, Oracles memory _oracles) internal {
-        _siloInitData.solvencyOracle0 = _createOracle(_oracles.solvencyOracle0);
-        _siloInitData.maxLtvOracle0 = _createOracle(_oracles.maxLtvOracle0);
-        _siloInitData.solvencyOracle1 = _createOracle(_oracles.solvencyOracle1);
-        _siloInitData.maxLtvOracle1 = _createOracle(_oracles.maxLtvOracle1);
+        _siloInitData.solvencyOracle0 = _siloInitData.solvencyOracle0 != address(0)
+            ? _siloInitData.solvencyOracle0
+            : _createOracle(_oracles.solvencyOracle0);
+
+        _siloInitData.maxLtvOracle0 = _siloInitData.maxLtvOracle0 != address(0)
+            ? _siloInitData.maxLtvOracle0
+            : _createOracle(_oracles.maxLtvOracle0);
+
+        _siloInitData.solvencyOracle1 = _siloInitData.solvencyOracle1 != address(0)
+            ? _siloInitData.solvencyOracle1
+            : _createOracle(_oracles.solvencyOracle1);
+
+        _siloInitData.maxLtvOracle1 = _siloInitData.maxLtvOracle1 != address(0)
+            ? _siloInitData.maxLtvOracle1
+            : _createOracle(_oracles.maxLtvOracle1);
     }
 
     function _createOracle(OracleCreationTxData memory _txData) internal returns (address _oracle) {

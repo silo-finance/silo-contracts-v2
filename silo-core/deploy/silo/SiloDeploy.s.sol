@@ -136,22 +136,25 @@ contract SiloDeploy is CommonDeploy {
         returns (ISiloDeployer.Oracles memory oracles)
     {
         bytes32 noOracleKey = _siloData.NO_ORACLE_KEY();
+        bytes32 placeHolderKey = _siloData.PLACEHOLDER_KEY();
 
         oracles = ISiloDeployer.Oracles({
-            solvencyOracle0: _getOracleTxData(_config.solvencyOracle0, noOracleKey),
-            maxLtvOracle0: _getOracleTxData(_config.maxLtvOracle0, noOracleKey),
-            solvencyOracle1: _getOracleTxData(_config.solvencyOracle1, noOracleKey),
-            maxLtvOracle1: _getOracleTxData(_config.maxLtvOracle1, noOracleKey)
+            solvencyOracle0: _getOracleTxData(_config.solvencyOracle0, noOracleKey, placeHolderKey),
+            maxLtvOracle0: _getOracleTxData(_config.maxLtvOracle0, noOracleKey, placeHolderKey),
+            solvencyOracle1: _getOracleTxData(_config.solvencyOracle1, noOracleKey, placeHolderKey),
+            maxLtvOracle1: _getOracleTxData(_config.maxLtvOracle1, noOracleKey, placeHolderKey)
         });
     }
 
-    function _getOracleTxData(string memory _oracleConfigName, bytes32 _noOracleKey)
+    function _getOracleTxData(string memory _oracleConfigName, bytes32 _noOracleKey, bytes32 placeHolderKey)
         internal
         returns (ISiloDeployer.OracleCreationTxData memory txData)
     {
         console2.log("[SiloCommonDeploy] verifying an oracle config: ", _oracleConfigName);
 
-        if (keccak256(bytes(_oracleConfigName)) == _noOracleKey) return txData;
+        bytes32 configHashedKey = keccak256(bytes(_oracleConfigName));
+
+        if (configHashedKey == _noOracleKey || configHashedKey == placeHolderKey) return txData;
 
         if (_isUniswapOracle(_oracleConfigName)) {
             return _uniswapV3TxData(_oracleConfigName);

@@ -14,6 +14,7 @@ import {IHookReceiversFactory} from "silo-core/contracts/utils/hook-receivers/in
 
 contract SiloConfigData is Test, CommonDeploy {
     bytes32 constant public NO_ORACLE_KEY = keccak256(bytes("NO_ORACLE"));
+    bytes32 constant public PLACEHOLDER_KEY = keccak256(bytes("PLACEHOLDER"));
     bytes32 constant public NO_HOOK_RECEIVER_KEY = keccak256(bytes("NO_HOOK_RECEIVER"));
 
     error HookReceiverImplNoFound(string hookReceiver);
