@@ -118,10 +118,12 @@ contract SiloConfig is ISiloConfig {
         _CALL_BEFORE_QUOTE1 = _configData1.callBeforeQuote;
     }
 
+    /// @inheritdoc ISiloConfig
     function getSilos() external view returns (address silo0, address silo1) {
         return (_SILO0, _SILO1);
     }
 
+    /// @inheritdoc ISiloConfig
     function getShareTokens(address _silo)
         external
         view
@@ -136,6 +138,7 @@ contract SiloConfig is ISiloConfig {
         }
     }
 
+    /// @inheritdoc ISiloConfig
     function getAssetForSilo(address _silo) external view virtual returns (address asset) {
         if (_silo == _SILO0) {
             return _TOKEN0;
@@ -146,6 +149,7 @@ contract SiloConfig is ISiloConfig {
         }
     }
 
+    /// @inheritdoc ISiloConfig
     function getConfigs(address _silo) external view virtual returns (ConfigData memory, ConfigData memory) {
         ConfigData memory configData0 = ConfigData({
             daoFeeInBp: _DAO_FEE,
@@ -195,6 +199,7 @@ contract SiloConfig is ISiloConfig {
         }
     }
 
+    /// @inheritdoc ISiloConfig
     function getConfig(address _silo) external view virtual returns (ConfigData memory) {
         if (_silo == _SILO0) {
             return ConfigData({
@@ -239,14 +244,15 @@ contract SiloConfig is ISiloConfig {
         }
     }
 
+    /// @inheritdoc ISiloConfig
     function getFeesWithAsset(address _silo)
         external
         view
         virtual
-        returns (uint256 daoFee, uint256 deployerFee, uint256 flashloanFeeInBp, address asset)
+        returns (uint256 daoFeeInBp, uint256 deployerFeeInBp, uint256 flashloanFeeInBp, address asset)
     {
-        daoFee = _DAO_FEE;
-        deployerFee = _DEPLOYER_FEE;
+        daoFeeInBp = _DAO_FEE;
+        deployerFeeInBp = _DEPLOYER_FEE;
 
         if (_silo == _SILO0) {
             asset = _TOKEN0;

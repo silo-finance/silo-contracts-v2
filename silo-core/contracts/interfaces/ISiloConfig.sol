@@ -3,33 +3,106 @@ pragma solidity >=0.5.0;
 
 interface ISiloConfig {
     struct InitData {
+        /// @notice The address of the deployer of the Silo
         address deployer;
+
+        /// @notice Deployer's fee in basis points. Deployer will earn this fee based on the interest earned by
+        /// the Silo.
         uint256 deployerFeeInBp;
+
+        /// @notice Address of the first token
         address token0;
+
+        /// @notice Address of the solvency oracle. Solvency oracle is used to calcualte LTV when deciding if borrower
+        /// is solvent or should be liquidated. Solvency oracle is optional and if not set price of 1 will be assumed.
         address solvencyOracle0;
+
+        /// @notice Address of the maxLtv oracle. Max LTV oracle is used to calcualte LTV when deciding if borrower
+        /// can borrow given amount of assets. Max LTV oracle is optional and if not set it defaults to solvency
+        /// oracle. If neither is set price of 1 will be assumed.
         address maxLtvOracle0;
+
+        /// @notice Address of the interest rate model
         address interestRateModel0;
+
+        /// @notice Address of the interest rate model configuration. Configuration is a separately deployed contract
+        /// with immutable config that can be resued between multiple IRMs (Interest Rate Models).
         address interestRateModelConfig0;
-        uint64 maxLtv0;
-        uint64 lt0;
-        uint64 liquidationFee0;
-        uint64 flashloanFee0;
+
+        /// @notice Maximum LTV for first token. maxLTV is in basis points and is used to determine if borrower can
+        /// borrow given amount of assets. maxLtv is in basis points however is normalized to 18 decimals before it's
+        /// saved in storage.
+        uint256 maxLtv0;
+
+        /// @notice Liquidation threshold for first token. LT is used to calculate solvency. LT is in basis points 
+        /// however is normalized to 18 decimals before it's saved in storage.
+        uint256 lt0;
+
+        /// @notice Liquidation fee for the first token in basis points. Liquidation fee is what liquidator earns for
+        /// repaying insolvent loan.
+        uint256 liquidationFee0;
+
+        /// @notice Flashloan fee sets the cost of taking a flashloan in basis points
+        uint256 flashloanFee0;
+
+        /// @notice Indicates if a beforeQuote on oracle contract should be called before quoting price
         bool callBeforeQuote0;
+
+        /// @notice Address of the hook receiver called on every share token transfer for protected (non-borrowable)
+        /// collateral
         address protectedHookReceiver0;
+
+        /// @notice Address of the hook receiver called on every share token transfer for collateral
         address collateralHookReceiver0;
+
+        /// @notice Address of the hook receiver called on every share token transfer for debt
         address debtHookReceiver0;
+
+        /// @notice Address of the second token
         address token1;
+
+        /// @notice Address of the solvency oracle. Solvency oracle is used to calcualte LTV when deciding if borrower
+        /// is solvent or should be liquidated. Solvency oracle is optional and if not set price of 1 will be assumed.
         address solvencyOracle1;
+
+        /// @notice Address of the maxLtv oracle. Max LTV oracle is used to calcualte LTV when deciding if borrower
+        /// can borrow given amount of assets. Max LTV oracle is optional and if not set it defaults to solvency
+        /// oracle. If neither is set price of 1 will be assumed.
         address maxLtvOracle1;
+
+        /// @notice Address of the interest rate model
         address interestRateModel1;
+
+        /// @notice Address of the interest rate model configuration. Configuration is a separately deployed contract
+        /// with immutable config that can be resued between multiple IRMs (Interest Rate Models).
         address interestRateModelConfig1;
-        uint64 maxLtv1;
-        uint64 lt1;
-        uint64 liquidationFee1;
-        uint64 flashloanFee1;
+
+        /// @notice Maximum LTV for first token. maxLTV is in basis points and is used to determine if borrower can
+        /// borrow given amount of assets. maxLtv is in basis points however is normalized to 18 decimals before it's
+        /// saved in storage.
+        uint256 maxLtv1;
+
+        /// @notice Liquidation threshold for first token. LT is used to calculate solvency. LT is in basis points 
+        /// however is normalized to 18 decimals before it's saved in storage.
+        uint256 lt1;
+
+        /// @notice Liquidation fee is what liquidator earns for repaying insolvent loan.
+        uint256 liquidationFee1;
+
+        /// @notice Flashloan fee sets the cost of taking a flashloan in basis points
+        uint256 flashloanFee1;
+
+        /// @notice Indicates if a beforeQuote on oracle contract should be called before quoting price
         bool callBeforeQuote1;
+
+        /// @notice Address of the hook receiver called on every share token transfer for protected (non-borrowable)
+        /// collateral
         address protectedHookReceiver1;
+
+        /// @notice Address of the hook receiver called on every share token transfer for collateral
         address collateralHookReceiver1;
+
+        /// @notice Address of the hook receiver called on every share token transfer for debt
         address debtHookReceiver1;
     }
 
@@ -57,15 +130,49 @@ interface ISiloConfig {
     // solhint-disable-next-line func-name-mixedcase
     function SILO_ID() external view returns (uint256);
 
+    /// @notice Retrieves the addresses of the two silos
+    /// @return silo0 The address of the first silo
+    /// @return silo1 The address of the second silo
     function getSilos() external view returns (address, address);
+
+    /// @notice Retrieves the asset associated with a specific silo
+    /// @dev This function reverts for incorrect silo address input
+    /// @param _silo The address of the silo for which the associated asset is being retrieved
+    /// @return asset The address of the asset associated with the specified silo
     function getAssetForSilo(address _silo) external view returns (address asset);
+
+    /// @notice Retrieves configuration data for both silos. First config is for the silo that is asking for configs.
+    /// @dev This function reverts for incorrect silo address input
+    /// @param _silo The address of the silo for which configuration data is being retrieved. Config for this silo will
+    /// be at index 0.
+    /// @return configData0 The configuration data for the specified silo.
+    /// @return configData1 The configuration data for the other silo.
     function getConfigs(address _silo) external view returns (ConfigData memory, ConfigData memory);
+
+    /// @notice Retrieves configuration data for a specific silo
+    /// @dev This function reverts for incorrect silo address input
+    /// @param _silo The address of the silo for which configuration data is being retrieved
+    /// @return configData The configuration data for the specified silo
     function getConfig(address _silo) external view returns (ConfigData memory);
+
+    /// @notice Retrieves fee-related information for a specific silo
+    /// @dev This function reverts for incorrect silo address input
+    /// @param _silo The address of the silo for which fee-related information is being retrieved.
+    /// @return daoFeeInBp The DAO fee percentage in basis points.
+    /// @return deployerFeeInBp The deployer fee percentage in basis points.
+    /// @return flashloanFeeInBp The flashloan fee percentage in basis points.
+    /// @return asset The address of the asset associated with the specified silo.
     function getFeesWithAsset(address _silo)
         external
         view
         returns (uint256 daoFeeInBp, uint256 deployerFeeInBp, uint256 flashloanFeeInBp, address asset);
 
+    /// @notice Retrieves share tokens associated with a specific silo
+    /// @dev This function reverts for incorrect silo address input
+    /// @param _silo The address of the silo for which share tokens are being retrieved
+    /// @return protectedShareToken The address of the protected (non-borrowable) share token
+    /// @return collateralShareToken The address of the collateral share token
+    /// @return debtShareToken The address of the debt share token
     function getShareTokens(address _silo)
         external
         view

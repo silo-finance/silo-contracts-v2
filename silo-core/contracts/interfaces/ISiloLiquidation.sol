@@ -23,13 +23,6 @@ interface ISiloLiquidation {
     error Insolvency();
     error OnlySilo();
 
-    /// @dev debt is keep growing over time, so when dApp use this view to calculate max, tx should never revert
-    /// because actual max can be only higher
-    function maxLiquidation(address _borrower)
-        external
-        view
-        returns (uint256 collateralToLiquidate, uint256 debtToRepay);
-
     /// @notice Function to liquidate a non-healthy position collateral-wise
     /// - The caller (liquidator) covers `debtToCover` amount of debt of the user getting liquidated, and receives
     ///   a amount of the `collateralAsset` plus a bonus to cover market risk
@@ -55,4 +48,11 @@ interface ISiloLiquidation {
         address _liquidator,
         bool _receiveSToken
     ) external;
+
+    /// @dev debt is keep growing over time, so when dApp use this view to calculate max, tx should never revert
+    /// because actual max can be only higher
+    function maxLiquidation(address _borrower)
+        external
+        view
+        returns (uint256 collateralToLiquidate, uint256 debtToRepay);
 }
