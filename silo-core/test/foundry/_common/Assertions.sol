@@ -1,7 +1,7 @@
 pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
-import "openzeppelin-contracts/utils/Strings.sol";
+import {Strings} from "openzeppelin-contracts/utils/Strings.sol";
 
 contract Assertions is Test {
     using Strings for uint256;
