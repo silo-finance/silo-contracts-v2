@@ -33,7 +33,7 @@ contract SiloFactoryValidateSiloInitDataTest is Test {
     }
 
     /*
-    forge test -vv --mt test_validateSiloInitData
+    forge test -vv --ffi --mt test_validateSiloInitData
     */
     function test_validateSiloInitData() public {
         ISiloConfig.InitData memory initData;
