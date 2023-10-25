@@ -27,6 +27,7 @@ interface ISiloFactory is IERC721Upgradeable {
     error InvalidFee();
     error BeforeCall();
     error OracleMisconfiguration();
+    error EmptySiloAsset(address asset0, address asset1);
 
     function initialize(
         address _siloImpl,
