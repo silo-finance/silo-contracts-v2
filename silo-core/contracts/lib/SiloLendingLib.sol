@@ -25,6 +25,20 @@ library SiloLendingLib {
     uint256 internal constant _PRECISION_DECIMALS = 1e18;
     uint256 internal constant _BASIS_POINTS = 1e4;
 
+    /// @notice Allows a user or a delegate to borrow assets against their collateral
+    /// @dev The function checks for necessary conditions such as borrow possibility, enough liquidity, and zero
+    /// values
+    /// @param _configData Contains configurations such as associated share tokens and underlying tokens
+    /// @param _assets Number of assets the borrower intends to borrow. Use 0 if shares are provided.
+    /// @param _shares Number of shares corresponding to the assets that the borrower intends to borrow. Use 0 if
+    /// assets are provided.
+    /// @param _receiver Address that will receive the borrowed assets
+    /// @param _borrower The user who is borrowing the assets
+    /// @param _spender Address which initiates the borrowing action on behalf of the borrower
+    /// @param _totalDebt Current total outstanding debt in the system
+    /// @param _totalCollateralAssets Total collateralized assets currently in the system
+    /// @return borrowedAssets Actual number of assets that the user has borrowed
+    /// @return borrowedShares Number of debt share tokens corresponding to the borrowed assets
     function borrow(
         ISiloConfig.ConfigData memory _configData,
         uint256 _assets,
@@ -69,6 +83,14 @@ library SiloLendingLib {
         IERC20Upgradeable(_configData.token).safeTransfer(_receiver, borrowedAssets);
     }
 
+    /// @notice Executes a flash loan, sending the requested amount to the receiver and expecting it back with a fee
+    /// @param _config Configuration data relevant to the silo asset borrowed
+    /// @param _siloData Storage containing data related to fees
+    /// @param _receiver The entity that will receive the flash loan and is expected to return it with a fee
+    /// @param _token The token that is being borrowed in the flash loan
+    /// @param _amount The amount of tokens to be borrowed
+    /// @param _data Additional data to be passed to the flash loan receiver
+    /// @return success A boolean indicating if the flash loan was successful
     function flashLoan(
         ISiloConfig _config,
         ISilo.SiloData storage _siloData,
@@ -100,6 +122,15 @@ library SiloLendingLib {
         success = true;
     }
 
+    /// @notice Allows repaying borrowed assets either partially or in full
+    /// @param _configData Configuration data relevant to the silo asset
+    /// @param _assets The amount of assets to repay. Use 0 if shares are used.
+    /// @param _shares The number of corresponding shares associated with the debt. Use 0 if assets are used.
+    /// @param _borrower The account that has the debt
+    /// @param _repayer The account that is repaying the debt
+    /// @param _totalDebt The storage reference for the total amount of debt assets
+    /// @return assets The amount of assets that was repaid
+    /// @return shares The corresponding number of debt shares that were repaid
     function repay(
         ISiloConfig.ConfigData memory _configData,
         uint256 _assets,
@@ -135,8 +166,17 @@ library SiloLendingLib {
         debtShareToken.burn(_borrower, _repayer, shares);
     }
 
-    /// @dev this method will accrue interest for ONE asset ONLY, to calculate all you have to call it twice
+
+    /// @notice Accrues interest on assets, updating the collateral and debt balances
+    /// @dev This method will accrue interest for ONE asset ONLY, to calculate for both silos you have to call it twice
     /// with `_configData` for each token
+    /// @param _interestRateModel The address of the interest rate model to calculate the compound interest rate
+    /// @param _daoFeeInBp DAO's fee in basis points
+    /// @param _deployerFeeInBp Deployer's fee in basis points
+    /// @param _siloData The storage reference for the silo's data storing earned fees and interest rate timestamp
+    /// @param _totalCollateral The storage reference for the total collateral assets
+    /// @param _totalDebt The storage reference for the total debt assets
+    /// @return accruedInterest The total amount of interest accrued
     function accrueInterestForAsset(
         address _interestRateModel,
         uint256 _daoFeeInBp,
@@ -184,6 +224,15 @@ library SiloLendingLib {
         unchecked { _siloData.daoAndDeployerFees += uint192(totalFees); }
     }
 
+
+    /// @notice Determines the maximum amount (both in assets and shares) that a borrower can borrow
+    /// @param _collateralConfig Configuration data for the collateral
+    /// @param _debtConfig Configuration data for the debt
+    /// @param _borrower The address of the borrower whose maximum borrow limit is being queried
+    /// @param _totalDebtAssets The total debt assets in the system
+    /// @param _totalDebtShares The total debt shares in the system
+    /// @return assets The maximum amount in assets that can be borrowed
+    /// @return shares The equivalent amount in shares for the maximum assets that can be borrowed
     function maxBorrow(
         ISiloConfig.ConfigData memory _collateralConfig,
         ISiloConfig.ConfigData memory _debtConfig,
@@ -225,6 +274,11 @@ library SiloLendingLib {
         );
     }
 
+    /// @notice Checks if a borrower can borrow
+    /// @param _protectedShareToken Address of the protected share token
+    /// @param _collateralShareToken Address of the collateral share token
+    /// @param _borrower The address of the borrower being checked
+    /// @return possible `true` if the borrower can borrow, `false` otherwise
     function borrowPossible(
         address _protectedShareToken,
         address _collateralShareToken,
@@ -235,6 +289,17 @@ library SiloLendingLib {
             && IShareToken(_collateralShareToken).balanceOf(_borrower) == 0;
     }
 
+    /// @notice Calculates the maximum borrowable assets and shares
+    /// @param _maxBorrowValue The maximum value that can be borrowed by the user
+    /// @param _borrowerDebtValue The current debt value of the borrower
+    /// @param _borrower The address of the borrower
+    /// @param _debtToken Address of the debt token
+    /// @param _debtShareToken Address of the debt share token
+    /// @param _debtOracle Oracle used to get the value of the debt token
+    /// @param _totalDebtAssets Total assets of the debt
+    /// @param _totalDebtShares Total shares of the debt
+    /// @return assets Maximum borrowable assets
+    /// @return shares Maximum borrowable shares
     function maxBorrowValueToAssetsAndShares(
         uint256 _maxBorrowValue,
         uint256 _borrowerDebtValue,

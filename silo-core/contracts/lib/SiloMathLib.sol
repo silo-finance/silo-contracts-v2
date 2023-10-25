@@ -24,6 +24,16 @@ library SiloMathLib {
         }
     }
 
+    /// @notice Calculate collateral assets with accrued interest and associated fees
+    /// @param _collateralAssets The total amount of collateral assets
+    /// @param _debtAssets The total amount of debt assets
+    /// @param _rcompInDp Compound interest rate for debt
+    /// @param _daoFeeInBp The fee (in basis points) to be taken for the DAO
+    /// @param _deployerFeeInBp The fee (in basis points) to be taken for the deployer
+    /// @return collateralAssetsWithInterest The total collateral assets including the accrued interest
+    /// @return debtAssetsWithInterest The debt assets with accrued interest
+    /// @return daoAndDeployerFees Total fees amount to be split between DAO and deployer
+    /// @return accruedInterest The total accrued interest
     function getCollateralAmountsWithInterest(
         uint256 _collateralAssets,
         uint256 _debtAssets,
@@ -53,6 +63,11 @@ library SiloMathLib {
         collateralAssetsWithInterest = _collateralAssets + collateralInterest;
     }
 
+    /// @notice Calculate the debt assets with accrued interest
+    /// @param _debtAssets The total amount of debt assets before accrued interest
+    /// @param _rcompInDp Compound interest rate for the debt in 18 decimal precision
+    /// @return debtAssetsWithInterest The debt assets including the accrued interest
+    /// @return accruedInterest The amount of interest accrued on the debt assets
     function getDebtAmountsWithInterest(uint256 _debtAssets, uint256 _rcompInDp)
         internal
         pure
@@ -183,6 +198,13 @@ library SiloMathLib {
         }
     }
 
+    /// @notice Calculate the maximum assets a borrower can withdraw without breaching the liquidation threshold
+    /// @param _sumOfCollateralsValue The combined value of collateral and protected assets of the borrower
+    /// @param _debtValue The total debt value of the borrower
+    /// @param _ltInDp The liquidation threshold in 18 decimal points
+    /// @param _borrowerCollateralAssets The borrower's collateral assets before the withdrawal
+    /// @param _borrowerProtectedAssets The borrower's protected assets before the withdrawal
+    /// @return maxAssets The maximum assets the borrower can safely withdraw
     function calculateMaxAssetsToWithdraw(
         uint256 _sumOfCollateralsValue,
         uint256 _debtValue,
@@ -219,8 +241,17 @@ library SiloMathLib {
         }
     }
 
-    /// @param _maxAssets result of calculateMaxAssetsToWithdraw()
-    /// @param _assetTypeShareTokenTotalSupply depends on `_assetType`: protected or collateral share token total supply
+    /// @notice Determines the maximum number of assets and corresponding shares a borrower can safely withdraw
+    /// @param _maxAssets The calculated limit on how many assets can be withdrawn without breaching the liquidation
+    /// threshold
+    /// @param _borrowerCollateralAssets Amount of collateral assets currently held by the borrower
+    /// @param _borrowerProtectedAssets Amount of protected assets currently held by the borrower
+    /// @param _assetType Specifies whether the asset is of type Collateral or Protected
+    /// @param _totalAssets The entire quantity of assets available in the system for withdrawal
+    /// @param _assetTypeShareTokenTotalSupply Total supply of share tokens for the specified asset type
+    /// @param _liquidity Current liquidity in the system for the asset type
+    /// @return assets Maximum assets the borrower can withdraw
+    /// @return shares Corresponding number of shares for the derived `assets` amount
     function maxWithdrawToAssetsAndShares(
         uint256 _maxAssets,
         uint256 _borrowerCollateralAssets,

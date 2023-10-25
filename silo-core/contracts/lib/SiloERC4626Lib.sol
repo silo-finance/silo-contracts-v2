@@ -23,6 +23,12 @@ library SiloERC4626Lib {
     ///      deposited.
     uint256 internal constant _NO_DEPOSIT_LIMIT = type(uint256).max - 1;
 
+    /// @notice Determines the maximum amount a user can deposit or mint
+    /// @dev The function checks if deposit is possible for the given user, and if so, returns a constant
+    /// representing no deposit limit
+    /// @param _config Configuration of the silo
+    /// @param _receiver The address of the user
+    /// @return maxAssetsOrShares Maximum assets or shares a user can deposit or mint
     function maxDepositOrMint(ISiloConfig _config, address _receiver)
         external
         view
@@ -35,8 +41,17 @@ library SiloERC4626Lib {
         }
     }
 
-    /// @param _liquidity available liquidity in Silo
-    /// @param _totalAssets based on `_assetType` this is total collateral/protected assets
+    /// @notice Determines the maximum amount a user can withdraw, either in terms of assets or shares
+    /// @dev The function computes the maximum withdrawable assets and shares, considering user's collateral, debt,
+    /// and the liquidity in the silo.
+    /// Debt withdrawals are not allowed, resulting in a revert if such an attempt is made.
+    /// @param _config Configuration of the silo
+    /// @param _owner Address of the user for which the maximum withdrawal amount is calculated
+    /// @param _assetType The type of asset being considered for withdrawal
+    /// @param _totalAssets The total assets in the silo. Can be collateral or protected depending on `_assetType`.
+    /// @param _liquidity The available liquidity in the silo
+    /// @return assets The maximum assets that the user can withdraw
+    /// @return shares The maximum shares that the user can withdraw
     function maxWithdraw(
         ISiloConfig _config,
         address _owner,
@@ -102,7 +117,20 @@ library SiloERC4626Lib {
         );
     }
 
-    /// @param _token if empty, tokens will not be transferred, useful for transition of collateral
+    /// @notice Deposit assets into the silo
+    /// @dev Deposits are not allowed if the receiver already has some debt
+    /// @param _token The ERC20 token address being deposited; 0 means tokens will not be transferred. Useful for
+    /// transition of collateral.
+    /// @param _depositor Address of the user depositing the assets
+    /// @param _assets Amount of assets being deposited. Use 0 if shares are provided.
+    /// @param _shares Shares being exchanged for the deposit; used for precise calculations. Use 0 if assets are
+    /// provided.
+    /// @param _receiver The address that will receive the collateral shares
+    /// @param _collateralShareToken The collateral share token
+    /// @param _debtShareToken The debt share token
+    /// @param _totalCollateral Reference to the total collateral assets in the silo
+    /// @return assets The exact amount of assets being deposited
+    /// @return shares The exact number of collateral shares being minted in exchange for the deposited assets
     function deposit(
         address _token,
         address _depositor,
@@ -158,11 +186,21 @@ library SiloERC4626Lib {
         );
     }
 
-    /// @notice asset type is not verified here, make sure you revert before, when type == Debt
-    /// @param _asset token address that we want to withdraw, if empty, withdraw action will be done WITHOUT
-    /// actual token transfer
-    /// @param _assets amount of assets to withdraw, if 0, means withdraw is based on `shares`
-    /// @param _shares depends on `assets` it can be 0 or not
+    /// @notice Withdraw assets from the silo
+    /// @dev Asset type is not verified here, make sure you revert before when type == Debt
+    /// @param _asset The ERC20 token address to withdraw; 0 means tokens will not be transferred. Useful for
+    /// transition of collateral.
+    /// @param _shareToken Address of the share token being burned for withdrawal
+    /// @param _assets Amount of assets the user wishes to withdraw. Use 0 if shares are provided.
+    /// @param _shares Shares the user wishes to burn in exchange for the withdrawal. Use 0 if assets are provided.
+    /// @param _receiver Address receiving the withdrawn assets
+    /// @param _owner Address of the owner of the shares being burned
+    /// @param _spender Address executing the withdrawal; may be different than `_owner` if an allowance was set
+    /// @param _assetType Type of the asset being withdrawn (Collateral or Protected)
+    /// @param _liquidity Available liquidity for the withdrawal
+    /// @param _totalCollateral Reference to the total collateral assets in the silo
+    /// @return assets The exact amount of assets withdrawn
+    /// @return shares The exact number of shares burned in exchange for the withdrawn assets
     function withdraw(
         address _asset,
         address _shareToken,
@@ -211,6 +249,10 @@ library SiloERC4626Lib {
         }
     }
 
+    /// @notice Checks if a depositor can make a deposit
+    /// @param _debtShareToken Address of the debt share token
+    /// @param _depositor Address of the user attempting to deposit
+    /// @return Returns `true` if the depositor can deposit, otherwise `false`
     function depositPossible(address _debtShareToken, address _depositor) public view returns (bool) {
         return IShareToken(_debtShareToken).balanceOf(_depositor) == 0;
     }
