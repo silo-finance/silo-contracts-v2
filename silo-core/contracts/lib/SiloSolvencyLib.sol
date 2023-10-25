@@ -36,6 +36,12 @@ library SiloSolvencyLib {
             debtShareTokenBalance == 0 ? IShareToken(_collateralConfigDebtShareToken).balanceOf(_borrower) == 0 : true;
     }
 
+    /// @notice Determines if a borrower is solvent based on the Loan-to-Value (LTV) ratio
+    /// @param _collateralConfig Configuration data for the collateral
+    /// @param _debtConfig Configuration data for the debt
+    /// @param _borrower Address of the borrower to check solvency for
+    /// @param _accrueInMemory Determines whether or not to consider un-accrued interest in calculations
+    /// @return True if the borrower is solvent, false otherwise
     function isSolvent(
         ISiloConfig.ConfigData memory _collateralConfig,
         ISiloConfig.ConfigData memory _debtConfig,
@@ -46,6 +52,12 @@ library SiloSolvencyLib {
         return ltv <= _collateralConfig.lt;
     }
 
+    /// @notice Determines if a borrower's Loan-to-Value (LTV) ratio is below the maximum allowed LTV
+    /// @param _collateralConfig Configuration data for the collateral
+    /// @param _debtConfig Configuration data for the debt
+    /// @param _borrower Address of the borrower to check against max LTV
+    /// @param _accrueInMemory Determines whether or not to consider un-accrued interest in calculations
+    /// @return True if the borrower's LTV is below the maximum, false otherwise
     function isBelowMaxLtv(
         ISiloConfig.ConfigData memory _collateralConfig,
         ISiloConfig.ConfigData memory _debtConfig,
@@ -56,7 +68,14 @@ library SiloSolvencyLib {
         return ltv <= _collateralConfig.maxLtv;
     }
 
+    /// @notice Calculates the Loan-to-Value (LTV) ratio based on provided collateral and debt data
     /// @dev calculation never reverts, if there is revert, then it is because of oracle
+    /// @param _ltvData Data structure containing relevant information to calculate LTV
+    /// @param _collateralToken Address of the collateral token
+    /// @param _debtToken Address of the debt token
+    /// @return sumOfBorrowerCollateralValue Total value of borrower's collateral
+    /// @return totalBorrowerDebtValue Total debt value for the borrower
+    /// @return ltvInDp Calculated LTV in 18 decimal precision
     function calculateLtv(SiloSolvencyLib.LtvData memory _ltvData, address _collateralToken, address _debtToken)
         internal
         view
@@ -75,9 +94,16 @@ library SiloSolvencyLib {
         }
     }
 
-    // solhint-disable-next-line function-max-lines
-    /// @param _debtShareBalanceCached if debt shares of `_borrower` is unknown, simply pass `0`
-    function getAssetsDataForLtvCalculations(
+    /// @notice Retrieves assets data required for LTV calculations
+    /// @param _collateralConfig Configuration data for the collateral
+    /// @param _debtConfig Configuration data for the debt
+    /// @param _borrower Address of the borrower whose LTV data is to be calculated
+    /// @param _oracleType Specifies whether to use the MaxLTV or Solvency oracle type for calculations
+    /// @param _accrueInMemory Determines whether or not to consider un-accrued interest in calculations
+    /// @param _debtShareBalanceCached Cached value of debt share balance for the borrower. If debt shares of
+    /// `_borrower` is unknown, simply pass `0`.
+    /// @return ltvData Data structure containing necessary data to compute LTV
+    function getAssetsDataForLtvCalculations( // solhint-disable-line function-max-lines
         ISiloConfig.ConfigData memory _collateralConfig,
         ISiloConfig.ConfigData memory _debtConfig,
         address _borrower,
@@ -135,6 +161,13 @@ library SiloSolvencyLib {
         );
     }
 
+    /// @notice Computes the value of collateral and debt positions based on given LTV data and asset addresses
+    /// @param _ltvData Data structure containing the assets data required for LTV calculations
+    /// @param _collateralAsset Address of the collateral asset
+    /// @param _debtAsset Address of the debt asset
+    /// @return sumOfCollateralValue Total value of collateral assets considering both protected and regular collateral
+    /// assets
+    /// @return debtValue Total value of debt assets
     function getPositionValues(LtvData memory _ltvData, address _collateralAsset, address _debtAsset)
         internal
         view
@@ -159,9 +192,13 @@ library SiloSolvencyLib {
         }
     }
 
-    /// @dev Calculates LTV for user. It is used in core logic. Non-view function is needed in case the oracle
-    ///      has to write some data to storage to protect ie. from read re-entrancy like in curve pools.
-    /// @return ltvInDp Loan-to-Value
+    /// @notice Calculates the Loan-To-Value (LTV) ratio for a given borrower
+    /// @param _collateralConfig Configuration data related to the collateral asset
+    /// @param _debtConfig Configuration data related to the debt asset
+    /// @param _borrower Address of the borrower whose LTV is to be computed
+    /// @param _oracleType Oracle type to use for fetching the asset prices
+    /// @param _accrueInMemory Determines whether or not to consider un-accrued interest in calculations
+    /// @return ltvInDp The computed LTV ratio in 18 decimals precision
     function getLtv(
         ISiloConfig.ConfigData memory _collateralConfig,
         ISiloConfig.ConfigData memory _debtConfig,

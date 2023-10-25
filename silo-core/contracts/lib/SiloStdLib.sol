@@ -17,6 +17,12 @@ library SiloStdLib {
     uint256 internal constant _PRECISION_DECIMALS = 1e18;
     uint256 internal constant _BASIS_POINTS = 1e4;
 
+    /// @notice Withdraws accumulated fees and distributes them proportionally to the DAO and deployer
+    /// @dev This function takes into account scenarios where either the DAO or deployer may not be set, distributing
+    /// accordingly
+    /// @param _config The configuration contract for retrieving fee-related data
+    /// @param _factory The factory contract for retrieving fee-related data
+    /// @param _siloData Storage reference containing silo-related data, including accumulated fees
     function withdrawFees(ISiloConfig _config, ISiloFactory _factory, ISilo.SiloData storage _siloData) external {
         (
             address daoFeeReceiver,
@@ -70,6 +76,14 @@ library SiloStdLib {
         }
     }
 
+    /// @notice Retrieves fee amounts in basis points and their respective receivers along with the asset
+    /// @param _config The configuration contract used to fetch fee-related data
+    /// @param _factory The factory contract used to fetch fee receiver addresses
+    /// @return daoFeeReceiver Address of the DAO fee receiver
+    /// @return deployerFeeReceiver Address of the deployer fee receiver
+    /// @return daoFeeInBp DAO fee amount in basis points
+    /// @return deployerFeeInBp Deployer fee amount in basis points
+    /// @return asset Address of the associated asset
     function getFeesAndFeeReceiversWithAsset(ISiloConfig _config, ISiloFactory _factory)
         public
         view
@@ -130,7 +144,13 @@ library SiloStdLib {
         totalSupply = IShareToken(_shareToken).totalSupply();
     }
 
-    /// @dev do not use this method when accrueInterest were executed already, in that case total does not change
+    /// @notice Calculates the total collateral assets with accrued interest
+    /// @dev Do not use this method when accrueInterest were executed already, in that case total does not change
+    /// @param _silo Address of the silo contract
+    /// @param _interestRateModel Interest rate model to fetch compound interest rates
+    /// @param _daoFeeInBp DAO fee in basis points
+    /// @param _deployerFeeInBp Deployer fee in basis points
+    /// @return totalCollateralAssetsWithInterest Accumulated collateral amount with interest
     function getTotalCollateralAssetsWithInterest(
         address _silo,
         address _interestRateModel,
@@ -144,6 +164,10 @@ library SiloStdLib {
         );
     }
 
+    /// @notice Calculates the total debt assets with accrued interest
+    /// @param _silo Address of the silo contract
+    /// @param _interestRateModel Interest rate model to fetch compound interest rates
+    /// @return totalDebtAssetsWithInterest Accumulated debt amount with interest
     function getTotalDebtAssetsWithInterest(address _silo, address _interestRateModel)
         internal
         view
