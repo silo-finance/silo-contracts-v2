@@ -1,0 +1,12 @@
+| silo-oracles/contracts/_common/OracleFactory.sol                | 100.00% (8/8)    | 83.33% (10/12)   | 50.00% (2/4)    | 100.00% (2/2)  |
+| silo-oracles/contracts/chainlinkV3/ChainlinkV3Oracle.sol        | 79.17% (19/24)   | 66.67% (26/39)   | 58.33% (7/12)   | 50.00% (3/6)   |
+| silo-oracles/contracts/chainlinkV3/ChainlinkV3OracleConfig.sol  | 100.00% (9/9)    | 100.00% (9/9)    | 100.00% (0/0)   | 100.00% (1/1)  |
+| silo-oracles/contracts/chainlinkV3/ChainlinkV3OracleFactory.sol | 84.62% (22/26)   | 82.14% (46/56)   | 50.00% (11/22)  | 50.00% (2/4)   |
+| silo-oracles/contracts/dia/DIAOracle.sol                        | 100.00% (25/25)  | 97.14% (34/35)   | 91.67% (11/12)  | 60.00% (3/5)   |
+| silo-oracles/contracts/dia/DIAOracleConfig.sol                  | 100.00% (7/7)    | 100.00% (7/7)    | 100.00% (0/0)   | 100.00% (1/1)  |
+| silo-oracles/contracts/dia/DIAOracleFactory.sol                 | 94.44% (17/18)   | 80.49% (33/41)   | 50.00% (7/14)   | 66.67% (2/3)   |
+| silo-oracles/contracts/lib/OracleNormalization.sol              | 59.38% (19/32)   | 59.09% (26/44)   | 50.00% (9/18)   | 100.00% (3/3)  |
+| silo-oracles/contracts/lib/RevertBytes.sol                      | 0.00% (0/4)      | 0.00% (0/4)      | 0.00% (0/4)     | 0.00% (0/2)    |
+| silo-oracles/contracts/uniswapV3/UniswapV3Oracle.sol            | 86.49% (32/37)   | 80.77% (42/52)   | 56.25% (9/16)   | 70.00% (7/10)  |
+| silo-oracles/contracts/uniswapV3/UniswapV3OracleConfig.sol      | 100.00% (4/4)    | 100.00% (4/4)    | 100.00% (0/0)   | 100.00% (1/1)  |
+| silo-oracles/contracts/uniswapV3/UniswapV3OracleFactory.sol     | 97.14% (34/35)   | 95.38% (62/65)   | 90.91% (20/22)  | 66.67% (4/6)   |
