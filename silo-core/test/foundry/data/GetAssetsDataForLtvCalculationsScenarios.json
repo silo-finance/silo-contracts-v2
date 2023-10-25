@@ -10,7 +10,8 @@
         "debtShareBalanceOf": 10000,
         "debtShareTotalSupply": 10000,
         "totalDebtAssets": 2000000000000000000,
-        "compoundInterestRate": 1000000000000000000
+        "compoundInterestRate": 1000000000000000000,
+        "cachedBalance": true
       },
       "collateralConfig": {
         "maxLtvOracle": 103,
@@ -46,7 +47,8 @@
         "debtShareBalanceOf": 1000,
         "debtShareTotalSupply": 10000,
         "totalDebtAssets": 50000,
-        "compoundInterestRate": 1000000000000000000
+        "compoundInterestRate": 1000000000000000000,
+        "cachedBalance": false
       },
       "collateralConfig": {
         "maxLtvOracle": 103,
@@ -82,7 +84,8 @@
         "debtShareBalanceOf": 166666667,
         "debtShareTotalSupply": 500000000,
         "totalDebtAssets": 500000000,
-        "compoundInterestRate": 1000000000000000000
+        "compoundInterestRate": 1000000000000000000,
+        "cachedBalance": false
       },
       "collateralConfig": {
         "maxLtvOracle": 103,
@@ -118,7 +121,8 @@
         "debtShareBalanceOf": 166666667,
         "debtShareTotalSupply": 500000000,
         "totalDebtAssets": 500000000,
-        "compoundInterestRate": 1000000000000000000
+        "compoundInterestRate": 1000000000000000000,
+        "cachedBalance": true
       },
       "collateralConfig": {
         "maxLtvOracle": 0,

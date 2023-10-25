@@ -77,7 +77,12 @@ library SiloLiquidationExecLib {
         returns (uint256 withdrawAssetsFromCollateral, uint256 withdrawAssetsFromProtected, uint256 repayDebtAssets)
     {
         SiloSolvencyLib.LtvData memory ltvData = SiloSolvencyLib.getAssetsDataForLtvCalculations(
-            _collateralConfig, _debtConfig, _user, ISilo.OracleType.Solvency, ISilo.AccrueInterestInMemory.No
+            _collateralConfig,
+            _debtConfig,
+            _user,
+            ISilo.OracleType.Solvency,
+            ISilo.AccrueInterestInMemory.No,
+            0 /* no cached balance */
         );
 
         uint256 borrowerCollateralToLiquidate;
@@ -118,7 +123,12 @@ library SiloLiquidationExecLib {
         ) = _silo.config().getConfigs(address(this));
 
         SiloSolvencyLib.LtvData memory ltvData = SiloSolvencyLib.getAssetsDataForLtvCalculations(
-            collateralConfig, debtConfig, _borrower, ISilo.OracleType.Solvency, ISilo.AccrueInterestInMemory.Yes
+            collateralConfig,
+            debtConfig,
+            _borrower,
+            ISilo.OracleType.Solvency,
+            ISilo.AccrueInterestInMemory.Yes,
+            0 /* no cached balance */
         );
 
         if (ltvData.borrowerDebtAssets == 0) return (0, 0);

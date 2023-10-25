@@ -196,7 +196,12 @@ library SiloLendingLib {
         returns (uint256 assets, uint256 shares)
     {
         SiloSolvencyLib.LtvData memory ltvData = SiloSolvencyLib.getAssetsDataForLtvCalculations(
-            _collateralConfig, _debtConfig, _borrower, ISilo.OracleType.MaxLtv, ISilo.AccrueInterestInMemory.Yes
+            _collateralConfig,
+            _debtConfig,
+            _borrower,
+            ISilo.OracleType.MaxLtv,
+            ISilo.AccrueInterestInMemory.Yes,
+            0 /* no cached balance */
         );
 
         (uint256 sumOfBorrowerCollateralValue, uint256 borrowerDebtValue) =
