@@ -2,9 +2,10 @@
 pragma solidity 0.8.21;
 
 import {console2} from "forge-std/console2.sol";
+import {KeyValueStorage as KV} from "silo-foundry-utils/key-value/KeyValueStorage.sol";
+import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";
 
 import {CommonDeploy, SiloCoreContracts} from "../_CommonDeploy.sol";
-
 import {ISiloFactory} from "silo-core/contracts/interfaces/ISiloFactory.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
@@ -15,6 +16,23 @@ import {IInterestRateModelV2Config} from "silo-core/contracts/interfaces/IIntere
 import {InterestRateModelConfigData} from "../input-readers/InterestRateModelConfigData.sol";
 import {SiloConfigData, ISiloConfig} from "../input-readers/SiloConfigData.sol";
 import {SiloDeployments} from "./SiloDeployments.sol";
+import {ISiloDeployer} from "silo-core/contracts/interfaces/ISiloDeployer.sol";
+import {UniswapV3OraclesConfigsParser} from "silo-oracles/deploy/uniswap-v3-oracle/UniswapV3OraclesConfigsParser.sol";
+import {DIAOraclesConfigsParser} from "silo-oracles/deploy/dia-oracle/DIAOraclesConfigsParser.sol";
+import {IUniswapV3Oracle} from "silo-oracles/contracts/interfaces/IUniswapV3Oracle.sol";
+import {IUniswapV3Factory} from "silo-oracles/contracts/interfaces/IUniswapV3Factory.sol";
+import {IChainlinkV3Oracle} from "silo-oracles/contracts/interfaces/IChainlinkV3Oracle.sol";
+import {IChainlinkV3Factory} from "silo-oracles/contracts/interfaces/IChainlinkV3Factory.sol";
+import {IDIAOracle} from "silo-oracles/contracts/interfaces/IDIAOracle.sol";
+import {IDIAOracleFactory} from "silo-oracles/contracts/interfaces/IDIAOracleFactory.sol";
+import {
+    ChainlinkV3OraclesConfigsParser
+} from "silo-oracles/deploy/chainlink-v3-oracle/ChainlinkV3OraclesConfigsParser.sol";
+import {
+    SiloOraclesFactoriesContracts,
+    SiloOraclesFactoriesDeployments
+} from "silo-oracles/deploy/SiloOraclesFactoriesContracts.sol";
+import {OraclesDeployments} from "silo-oracles/deploy/OraclesDeployments.sol"; 
 
 /**
 FOUNDRY_PROFILE=core CONFIG=USDC_UniswapV3_Silo \
@@ -42,76 +60,200 @@ contract SiloDeploy is CommonDeploy {
         (SiloConfigData.ConfigData memory config, ISiloConfig.InitData memory siloInitData) =
             siloData.getConfigData(configName);
 
-        _setUpIRMs(config, siloInitData);
+        console2.log("[SiloCommonDeploy] Config prepared");
 
-        ISiloFactory siloFactory = ISiloFactory(getDeployedAddress(SiloCoreContracts.SILO_FACTORY));
-        console2.log("[SiloCommonDeploy] using siloFactory %s", address(siloFactory));
+        address interestRateModel = getDeployedAddress(SiloCoreContracts.INTEREST_RATE_MODEL_V2);
+
+        console2.log("[SiloCommonDeploy] SILO_DEPLOYER and INTEREST_RATE_MODEL_V2 resolved");
+
+        siloInitData.interestRateModel0 = interestRateModel;
+        siloInitData.interestRateModel1 = interestRateModel;
+
+        InterestRateModelConfigData modelData = new InterestRateModelConfigData();
+
+        IInterestRateModelV2.Config memory irmConfigData0 = modelData.getConfigData(config.interestRateModelConfig0);
+        IInterestRateModelV2.Config memory irmConfigData1 = modelData.getConfigData(config.interestRateModelConfig1);
+
+        console2.log("[SiloCommonDeploy] IRM configs prepared");
+        
+        ISiloDeployer.Oracles memory oracles = _getOracles(config, siloData);
 
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
         vm.startBroadcast(deployerPrivateKey);
 
         beforeCreateSilo(siloInitData);
-        siloConfig = siloFactory.createSilo(siloInitData);
 
-        _initializeHooksReceivers(siloConfig, siloInitData.deployer);
+        console2.log("[SiloCommonDeploy] `beforeCreateSilo` executed");
+
+        ISiloDeployer deployer = ISiloDeployer(getDeployedAddress(SiloCoreContracts.SILO_DEPLOYER));
+
+        siloConfig = deployer.deploy(
+            oracles,
+            irmConfigData0,
+            irmConfigData1,
+            siloInitData
+        );
+
+        console2.log("[SiloCommonDeploy] deploy done");
 
         vm.stopBroadcast();
 
         SiloDeployments.save(getChainAlias(), configName, address(siloConfig));
 
+        _saveOracles(siloConfig, config);
+
         console2.log("[SiloCommonDeploy] run() finished.");
     }
 
-    function _setUpIRMs(SiloConfigData.ConfigData memory _config, ISiloConfig.InitData memory _siloInitData) internal {
-        InterestRateModelConfigData modelData = new InterestRateModelConfigData();
-        console2.log("[SiloCommonDeploy] InterestRateModelConfigData deployed");
+    function _saveOracles(
+        ISiloConfig _siloConfig,
+        SiloConfigData.ConfigData memory _config
+    ) internal {
+        (address silo0, address silo1) = _siloConfig.getSilos();
 
-        IInterestRateModelV2ConfigFactory configFactory = IInterestRateModelV2ConfigFactory(
-            getDeployedAddress(SiloCoreContracts.INTEREST_RATE_MODEL_V2_CONFIG_FACTORY)
+        ISiloConfig.ConfigData memory siloConfig0 = _siloConfig.getConfig(silo0);
+        ISiloConfig.ConfigData memory siloConfig1 = _siloConfig.getConfig(silo1);
+
+        _saveOracle(siloConfig0.solvencyOracle, _config.solvencyOracle0);
+        _saveOracle(siloConfig0.maxLtvOracle, _config.maxLtvOracle0);
+        _saveOracle(siloConfig1.solvencyOracle, _config.solvencyOracle1);
+        _saveOracle(siloConfig1.maxLtvOracle, _config.maxLtvOracle1);
+    }
+
+    function _saveOracle(address _oracle, string memory _oracleConfigName) internal {
+        if (_oracle == address(0)) return;
+
+        string memory chainAlias = ChainsLib.chainAlias();
+        address oracleFromDeployments = OraclesDeployments.get(chainAlias, _oracleConfigName);
+
+        if (oracleFromDeployments != address(0)) return;
+
+        OraclesDeployments.save(chainAlias, _oracleConfigName, _oracle);
+    }
+
+    function _getOracles(SiloConfigData.ConfigData memory _config, SiloConfigData _siloData)
+        internal
+        returns (ISiloDeployer.Oracles memory oracles)
+    {
+        bytes32 noOracleKey = _siloData.NO_ORACLE_KEY();
+        bytes32 placeHolderKey = _siloData.PLACEHOLDER_KEY();
+
+        oracles = ISiloDeployer.Oracles({
+            solvencyOracle0: _getOracleTxData(_config.solvencyOracle0, noOracleKey, placeHolderKey),
+            maxLtvOracle0: _getOracleTxData(_config.maxLtvOracle0, noOracleKey, placeHolderKey),
+            solvencyOracle1: _getOracleTxData(_config.solvencyOracle1, noOracleKey, placeHolderKey),
+            maxLtvOracle1: _getOracleTxData(_config.maxLtvOracle1, noOracleKey, placeHolderKey)
+        });
+    }
+
+    function _getOracleTxData(string memory _oracleConfigName, bytes32 _noOracleKey, bytes32 placeHolderKey)
+        internal
+        returns (ISiloDeployer.OracleCreationTxData memory txData)
+    {
+        console2.log("[SiloCommonDeploy] verifying an oracle config: ", _oracleConfigName);
+
+        bytes32 configHashedKey = keccak256(bytes(_oracleConfigName));
+
+        if (configHashedKey == _noOracleKey || configHashedKey == placeHolderKey) return txData;
+
+        if (_isUniswapOracle(_oracleConfigName)) {
+            return _uniswapV3TxData(_oracleConfigName);
+        }
+
+        if (_isChainlinkOracle(_oracleConfigName)) {
+            return _chainLinkTxData(_oracleConfigName);
+        }
+
+        if (_isDiaOracle(_oracleConfigName)) {
+            return _diaTxData(_oracleConfigName);
+        }
+    }
+
+    function _uniswapV3TxData(string memory _oracleConfigName)
+        internal
+        returns (ISiloDeployer.OracleCreationTxData memory txData)
+    {
+        string memory chainAlias = ChainsLib.chainAlias();
+
+        txData.factory = SiloOraclesFactoriesDeployments.get(
+            SiloOraclesFactoriesContracts.UNISWAP_V3_ORACLE_FACTORY,
+            chainAlias
         );
 
-        console2.log("[SiloCommonDeploy] using configFactory %s", address(configFactory));
+        IUniswapV3Oracle.UniswapV3DeploymentConfig memory config = UniswapV3OraclesConfigsParser.getConfig(
+            chainAlias,
+            _oracleConfigName
+        );
 
-        (, IInterestRateModelV2Config interestRateModelConfig0) =
-            configFactory.create(modelData.getConfigData(_config.interestRateModelConfig0));
-        (, IInterestRateModelV2Config interestRateModelConfig1) =
-            configFactory.create(modelData.getConfigData(_config.interestRateModelConfig1));
-
-        address interestRateModel = getDeployedAddress(SiloCoreContracts.INTEREST_RATE_MODEL_V2);
-        console2.log("[SiloCommonDeploy] using interestRateModel %s", address(interestRateModel));
-
-        _siloInitData.interestRateModel0 = interestRateModel;
-        _siloInitData.interestRateModelConfig0 = address(interestRateModelConfig0);
-
-        _siloInitData.interestRateModel1 = interestRateModel;
-        _siloInitData.interestRateModelConfig1 = address(interestRateModelConfig1);
+        txData.txInput = abi.encodeCall(IUniswapV3Factory.create, config);
     }
 
-    function _initializeHooksReceivers(ISiloConfig _siloConfig, address _deployer) internal {
-        (address silo, address otherSilo) = _siloConfig.getSilos();
+    function _chainLinkTxData(string memory _oracleConfigName)
+        internal
+        returns (ISiloDeployer.OracleCreationTxData memory txData)
+    {
+        string memory chainAlias = ChainsLib.chainAlias();
 
-        _initializeHookReceiversForSilo(_siloConfig, _deployer, silo);
-        _initializeHookReceiversForSilo(_siloConfig, _deployer, otherSilo);
+        txData.factory = SiloOraclesFactoriesDeployments.get(
+            SiloOraclesFactoriesContracts.CHAINLINK_V3_ORACLE_FACTORY,
+            chainAlias
+        );
+
+        IChainlinkV3Oracle.ChainlinkV3DeploymentConfig memory config = ChainlinkV3OraclesConfigsParser.getConfig(
+            chainAlias,
+            _oracleConfigName
+        );
+
+        txData.txInput = abi.encodeCall(IChainlinkV3Factory.create, config);
     }
 
-    function _initializeHookReceiversForSilo(ISiloConfig _siloConfig, address _deployer, address _silo) internal {
-        address protectedShareToken;
-        address collateralShareToken;
-        address debtShareToken;
+    function _diaTxData(string memory _oracleConfigName)
+        internal
+        returns (ISiloDeployer.OracleCreationTxData memory txData)
+    {
+        string memory chainAlias = ChainsLib.chainAlias();
 
-        (protectedShareToken, collateralShareToken, debtShareToken) = _siloConfig.getShareTokens(_silo);
+        txData.factory = SiloOraclesFactoriesDeployments.get(
+            SiloOraclesFactoriesContracts.DIA_ORACLE_FACTORY,
+            chainAlias
+        );
 
-        _initializeHookReceiverForToken(_deployer, IShareToken(protectedShareToken));
-        _initializeHookReceiverForToken(_deployer, IShareToken(collateralShareToken));
-        _initializeHookReceiverForToken(_deployer, IShareToken(debtShareToken));
+        IDIAOracle.DIADeploymentConfig memory config = DIAOraclesConfigsParser.getConfig(
+            chainAlias,
+            _oracleConfigName
+        );
+
+        txData.txInput = abi.encodeCall(IDIAOracleFactory.create, config);
     }
 
-    function _initializeHookReceiverForToken(address _deployer, IShareToken _token) internal {
-        address hookReceiver = _token.hookReceiver();
+    function _isUniswapOracle(string memory _oracleConfigName) internal returns (bool isUniswapOracle) {
+        address pool = KV.getAddress(
+            UniswapV3OraclesConfigsParser.CONFIGS_FILE,
+            _oracleConfigName,
+            "pool"
+        );
 
-        if (hookReceiver != address(0)) {
-            IHookReceiver(hookReceiver).initialize(_deployer, _token);
-        }
+        isUniswapOracle = pool != address(0);
+    }
+
+    function _isChainlinkOracle(string memory _oracleConfigName) internal returns (bool isChainlinkOracle) {
+        address baseToken = KV.getAddress(
+            ChainlinkV3OraclesConfigsParser.CONFIGS_FILE,
+            _oracleConfigName,
+            "baseToken"
+        );
+
+        isChainlinkOracle = baseToken != address(0);
+    }
+
+    function _isDiaOracle(string memory _oracleConfigName) internal returns (bool isDiaOracle) {
+        address diaOracle = KV.getAddress(
+            DIAOraclesConfigsParser.CONFIGS_FILE,
+            _oracleConfigName,
+            "diaOracle"
+        );
+
+        isDiaOracle = diaOracle != address(0);
     }
 
     function beforeCreateSilo(ISiloConfig.InitData memory) internal virtual {
