@@ -125,4 +125,22 @@ contract DepositTest is SiloLittleHelper, Test {
         vm.prank(depositor);
         silo0.deposit(assets, depositor, ISilo.AssetType.Protected);
     }
+
+    /*
+    forge test -vv --ffi --mt test_deposit_totalAssets
+    */
+    function test_deposit_totalAssets() public {
+        _deposit(123, makeAddr("Depositor"));
+
+        assertEq(silo0.totalAssets(), 123, "totalAssets 0");
+        assertEq(silo1.totalAssets(), 0, "totalAssets 1");
+    }
+
+    /*
+    forge test -vv --ffi --mt test_maxDeposit
+    */
+    function test_maxDeposit() public {
+        assertEq(silo0.maxDeposit(address(1)), type(uint256).max - 1, "ERC4626 expect to return MAX - 1");
+        assertEq(silo0.maxMint(address(1)), type(uint256).max - 1, "ERC4626 expect to return MAX - 1 (maxMint)");
+    }
 }
