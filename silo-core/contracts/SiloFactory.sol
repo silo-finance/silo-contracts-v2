@@ -176,6 +176,10 @@ contract SiloFactory is ISiloFactory, ERC721Upgradeable, OwnableUpgradeable {
             revert InvalidIrm();
         }
 
+        if (_initData.token0 == address(0) || _initData.token1 == address(0)) {
+            revert EmptySiloAsset(_initData.token0, _initData.token1);
+        }
+
         return true;
     }
 
