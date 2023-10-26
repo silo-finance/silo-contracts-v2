@@ -36,14 +36,14 @@ contract Gas is SiloLittleHelper {
         _mintTokens(token0, max, BORROWER);
         _mintTokens(token1, max, DEPOSITOR);
 
-        _vm.prank(BORROWER);
+        vm.prank(BORROWER);
         token0.approve(address(silo0), max);
-        _vm.prank(BORROWER);
+        vm.prank(BORROWER);
         token1.approve(address(silo1), max);
 
-        _vm.prank(DEPOSITOR);
+        vm.prank(DEPOSITOR);
         token0.approve(address(silo0), max);
-        _vm.prank(DEPOSITOR);
+        vm.prank(DEPOSITOR);
         token1.approve(address(silo1), max);
     }
 
@@ -54,14 +54,14 @@ contract Gas is SiloLittleHelper {
         string memory _msg,
         uint256 _expectedGas
     ) internal returns (uint256 gas) {
-        _vm.startPrank(_sender, _sender);
+        vm.startPrank(_sender, _sender);
 
         uint256 gasStart = gasleft();
         (bool success,) = _target.call(_data);
         uint256 gasEnd = gasleft();
         gas = gasStart - gasEnd;
 
-        _vm.stopPrank();
+        vm.stopPrank();
 
         if (!success) {
             revert(string(abi.encodePacked("[GAS] ERROR: revert for ", _msg)));

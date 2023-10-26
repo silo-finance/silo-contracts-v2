@@ -27,7 +27,7 @@ contract DepositPossibleTest is Test {
     }
 
     function test_depositPossible_falseWhenBalance() public {
-        TokenMock debtShareToken = new TokenMock(vm, address(0));
+        TokenMock debtShareToken = new TokenMock(address(0));
         address depositor;
 
         debtShareToken.balanceOfMock(depositor, 1);
@@ -35,7 +35,7 @@ contract DepositPossibleTest is Test {
     }
 
     function test_depositPossible_trueWhenNoBalance() public {
-        TokenMock debtShareToken = new TokenMock(vm, address(0));
+        TokenMock debtShareToken = new TokenMock(address(0));
         address depositor = address(2);
 
         debtShareToken.balanceOfMock(depositor, 0);

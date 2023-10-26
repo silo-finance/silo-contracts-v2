@@ -12,7 +12,7 @@ contract SiloConfigMock is Test {
         ADDRESS = _siloConfig == address(0) ? makeAddr("SiloConfigMock") : _siloConfig;
     }
 
-    function getFeesWithAsset(
+    function getFeesWithAssetMock(
         address _silo,
         uint256 _daoFee,
         uint256 _deployerFee,

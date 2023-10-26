@@ -1,18 +1,14 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import {Vm} from "forge-std/Vm.sol";
-
 import {IERC20Upgradeable} from "openzeppelin-contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
+import {CommonBase} from "forge-std/Base.sol";
 
-contract TokenMock {
+contract TokenMock is CommonBase {
     address public immutable ADDRESS;
 
-    Vm private immutable vm;
-
-    constructor(Vm _vm, address _token) {
-        vm = _vm;
+    constructor(address _token) {
         ADDRESS = _token == address(0) ? address(0x5224928173683243804202752353186) : _token;
     }
 

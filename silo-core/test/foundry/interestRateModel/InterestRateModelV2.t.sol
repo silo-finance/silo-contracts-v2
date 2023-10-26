@@ -3,10 +3,11 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
 
-import "silo-core/contracts/interestRateModel/InterestRateModelV2.sol";
-import "silo-core/contracts/interestRateModel/InterestRateModelV2ConfigFactory.sol";
+import {IInterestRateModelV2} from "silo-core/contracts/interfaces/IInterestRateModelV2.sol";
+import {InterestRateModelV2} from "silo-core/contracts/interestRateModel/InterestRateModelV2.sol";
+import {InterestRateModelV2ConfigFactory} from "silo-core/contracts/interestRateModel/InterestRateModelV2ConfigFactory.sol";
 
-import "../_common/InterestRateModelConfigs.sol";
+import {InterestRateModelConfigs} from "../_common/InterestRateModelConfigs.sol";
 
 // forge test -vv --mc InterestRateModelV2Test
 contract InterestRateModelV2Test is Test, InterestRateModelConfigs {

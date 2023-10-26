@@ -6,9 +6,9 @@ import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 
 import {MintableToken} from "./MintableToken.sol";
 import {SiloFixture, SiloConfigOverride} from "./fixtures/SiloFixture.sol";
-import {LocalVm} from "./LocalVm.sol";
+import {CommonBase} from "forge-std/Base.sol";
 
-abstract contract SiloLittleHelper is LocalVm {
+abstract contract SiloLittleHelper is CommonBase {
     MintableToken token0;
     MintableToken token1;
 
@@ -43,15 +43,15 @@ abstract contract SiloLittleHelper is LocalVm {
     }
 
     function _borrow(uint256 _amount, address _borrower) internal returns (uint256 shares) {
-        _vm.prank(_borrower);
+        vm.prank(_borrower);
         shares = silo1.borrow(_amount, _borrower, _borrower);
     }
 
     function _repay(uint256 _amount, address _borrower) internal returns (uint256 shares) {
         _mintTokens(token1, _amount, _borrower);
-        _vm.prank(_borrower);
+        vm.prank(_borrower);
         token1.approve(address(silo1), _amount);
-        _vm.prank(_borrower);
+        vm.prank(_borrower);
 
         shares = silo1.repay(_amount, _borrower);
     }
@@ -68,24 +68,24 @@ abstract contract SiloLittleHelper is LocalVm {
         returns (uint256 shares)
     {
         _mintTokens(token1, _approval, _borrower);
-        _vm.prank(_borrower);
+        vm.prank(_borrower);
         token1.approve(address(silo1), _approval);
-        _vm.prank(_borrower);
+        vm.prank(_borrower);
 
         if (_revert.length != 0) {
-            _vm.expectRevert(_revert);
+            vm.expectRevert(_revert);
         }
 
         shares = silo1.repayShares(_shares, _borrower);
     }
 
     function _withdraw(uint256 _amount, address _depositor) internal returns (uint256 assets){
-        _vm.prank(_depositor);
+        vm.prank(_depositor);
         return silo0.withdraw(_amount, _depositor, _depositor);
     }
 
     function _withdraw(uint256 _amount, address _depositor, ISilo.AssetType _type) internal returns (uint256 assets){
-        _vm.prank(_depositor);
+        vm.prank(_depositor);
         return silo0.withdraw(_amount, _depositor, _depositor, _type);
     }
 
@@ -95,10 +95,10 @@ abstract contract SiloLittleHelper is LocalVm {
     {
         _mintTokens(_token, _assets, _depositor);
 
-        _vm.startPrank(_depositor);
+        vm.startPrank(_depositor);
         _token.approve(address(_silo), _assets);
         shares = _silo.deposit(_assets, _depositor, _type);
-        _vm.stopPrank();
+        vm.stopPrank();
 
     }
 

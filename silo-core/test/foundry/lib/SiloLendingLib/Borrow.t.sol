@@ -25,10 +25,10 @@ contract BorrowTest is Test {
     SiloLendingLibBorrowTestData immutable tests;
 
     constructor() {
-        protectedShareToken = new TokenMock(vm, address(0x66666666666666666));
-        collateralShareToken = new TokenMock(vm, address(0x7777777777777777));
-        debtShareToken = new TokenMock(vm, address(0x9999999999999));
-        debtToken = new TokenMock(vm, address(0x101010101010101010));
+        protectedShareToken = new TokenMock(address(0x66666666666666666));
+        collateralShareToken = new TokenMock(address(0x7777777777777777));
+        debtShareToken = new TokenMock(address(0x9999999999999));
+        debtToken = new TokenMock(address(0x101010101010101010));
 
         tests = new SiloLendingLibBorrowTestData(
             protectedShareToken.ADDRESS(),

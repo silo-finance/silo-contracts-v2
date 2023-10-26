@@ -93,7 +93,9 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
         assertGt(IShareToken(collateralShareToken).balanceOf(borrower), 0, "expect borrower to have collateral");
 
         uint256 maxBorrow = silo0.maxBorrow(borrower);
+        uint256 maxBorrowShares = silo0.maxBorrowShares(borrower);
         assertEq(maxBorrow, 0.85e18, "invalid maxBorrow");
+        assertEq(maxBorrowShares, 0.85e18, "invalid maxBorrowShares");
 
         uint256 borrowToMuch = maxBorrow + 1;
         // emit log_named_uint("borrowToMuch", borrowToMuch);
@@ -140,22 +142,31 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
         uint256 borrowAmount = maxBorrow / 2;
         // emit log_named_decimal_uint("borrowAmount", borrowAmount, 18);
 
+        uint256 convertToShares = silo1.convertToShares(borrowAmount);
+        uint256 previewBorrowShares = silo1.previewBorrowShares(convertToShares);
+        assertEq(previewBorrowShares, borrowAmount, "previewBorrowShares crosscheck");
+
         uint256 gotShares = _borrow(borrowAmount, borrower);
 
         assertEq(IShareToken(debtShareToken).balanceOf(borrower), 0.375e18, "expect borrower to have 1/2 of debt");
         assertEq(IShareToken(collateralShareToken).balanceOf(borrower), 1e18, "collateral silo: borrower has collateral");
         assertEq(silo1.getDebtAssets(), 0.375e18, "silo debt");
         assertEq(gotShares, 0.375e18, "got debt shares");
+        assertEq(gotShares, convertToShares, "convertToShares returns same result");
+        assertEq(borrowAmount, silo1.convertToAssets(gotShares), "convertToAssets returns borrowAmount");
 
         borrowAmount = silo1.maxBorrow(borrower);
         // emit log_named_decimal_uint("borrowAmount #2", borrowAmount, 18);
         assertEq(borrowAmount, 0.75e18 / 2, "~");
 
+        convertToShares = silo1.convertToShares(borrowAmount);
         gotShares = _borrow(borrowAmount, borrower);
 
         assertEq(IShareToken(debtShareToken).balanceOf(borrower), 0.75e18, "debt silo: borrower has debt");
         assertEq(gotShares, 0.375e18, "got shares");
         assertEq(silo1.getDebtAssets(), maxBorrow, "debt silo: has debt");
+        assertEq(gotShares, convertToShares, "convertToShares returns same result (2)");
+        assertEq(borrowAmount, silo1.convertToAssets(gotShares), "convertToAssets returns borrowAmount (2)");
 
         // collateral silo
         (protectedShareToken, collateralShareToken, debtShareToken) = siloConfig.getShareTokens(address(silo0));
@@ -183,20 +194,39 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
 
         // deposit, so we can borrow
         _depositForBorrow(100e18, depositor);
+        assertEq(silo1.getLtv(borrower), 0, "no debt, so LT == 0");
 
         _borrow(200e18, borrower, ISilo.NotEnoughLiquidity.selector);
         _borrow(maxBorrow * 2, borrower, ISilo.AboveMaxLtv.selector);
         _borrow(maxBorrow / 2, borrower);
+        assertEq(silo1.getLtv(borrower), 0.375e18, "borrow 50% of max, and maxLTV is 75%, so LT == 37,5%");
 
         _borrow(200e18, borrower, ISilo.NotEnoughLiquidity.selector);
         _borrow(maxBorrow, borrower, ISilo.AboveMaxLtv.selector);
         _borrow(maxBorrow / 2, borrower);
+        assertEq(silo1.getLtv(borrower), 0.75e18, "borrow 100% of max, so LT == 75%%");
 
         assertEq(silo0.maxBorrow(borrower), 0, "maxBorrow 0");
         assertTrue(silo0.isSolvent(borrower), "still isSolvent");
         assertTrue(silo1.isSolvent(borrower), "still isSolvent");
+        assertTrue(silo1.borrowPossible(borrower), "borrow is still possible, we just reached CAP");
 
         _borrow(1, borrower, ISilo.AboveMaxLtv.selector);
+    }
+
+    /*
+    forge test -vv --ffi --mt test_borrow_maxDeposit
+    */
+    function test_borrow_maxDeposit() public {
+        address borrower = makeAddr("Borrower");
+        address depositor = makeAddr("depositor");
+
+        _deposit(10, borrower);
+        _depositForBorrow(1, depositor);
+        _borrow(1, borrower);
+
+        assertEq(silo1.maxDeposit(borrower), 0, "can not deposit when already borrowed");
+        assertEq(silo1.maxMint(borrower), 0, "can not mint when already borrowed (maxMint)");
     }
 
     function _borrow(uint256 _amount, address _borrower, bytes4 _revert) internal returns (uint256 shares) {

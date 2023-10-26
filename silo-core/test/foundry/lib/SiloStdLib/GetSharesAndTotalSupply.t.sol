@@ -12,7 +12,7 @@ contract GetSharesAndTotalSupplyTest is Test {
     TokenMock immutable SHARE_TOKEN;
 
     constructor () {
-        SHARE_TOKEN = new TokenMock(vm, address(0));
+        SHARE_TOKEN = new TokenMock(address(0));
     }
 
     /*
