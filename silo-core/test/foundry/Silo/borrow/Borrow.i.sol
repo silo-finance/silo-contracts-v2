@@ -143,6 +143,9 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
         // emit log_named_decimal_uint("borrowAmount", borrowAmount, 18);
 
         uint256 convertToShares = silo1.convertToShares(borrowAmount);
+        uint256 previewBorrowShares = silo1.previewBorrowShares(convertToShares);
+        assertEq(previewBorrowShares, borrowAmount, "previewBorrowShares crosscheck");
+
         uint256 gotShares = _borrow(borrowAmount, borrower);
 
         assertEq(IShareToken(debtShareToken).balanceOf(borrower), 0.375e18, "expect borrower to have 1/2 of debt");

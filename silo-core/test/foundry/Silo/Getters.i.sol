@@ -46,7 +46,7 @@ contract GettersTest is SiloLittleHelper, Test {
     */
     function test_silo_getMaxLtv() public {
         assertEq(silo0.getMaxLtv(), 0.75e18, "getMaxLtv 0");
-        assertEq(silo1.getMaxLtv(), 0.75e18, "getMaxLtv 1");
+        assertEq(silo1.getMaxLtv(), 0.85e18, "getMaxLtv 1");
     }
 
     /*
@@ -54,7 +54,7 @@ contract GettersTest is SiloLittleHelper, Test {
     */
     function test_silo_getLt() public {
         assertEq(silo0.getLt(), 0.85e18, "LT 0");
-        assertEq(silo1.getLt(), 0.85e18, "LT 1");
+        assertEq(silo1.getLt(), 0.95e18, "LT 1");
     }
 
     /*

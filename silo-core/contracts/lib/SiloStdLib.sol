@@ -45,7 +45,7 @@ library SiloStdLib {
             // just in case, should never happen...
             revert ISilo.NothingToPay();
         } else if (deployerFeeReceiver == address(0)) {
-            // deployer was never setup or deployer has been burned
+            // deployer was never setup or deployer NFT has been burned
             IERC20Upgradeable(asset).safeTransferFrom(address(this), daoFeeReceiver, earnedFees);
         } else if (daoFeeReceiver == address(0)) {
             // should never happen... but we assume DAO does not want to make money so all is going to deployer

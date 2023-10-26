@@ -1,4 +1,4 @@
-| silo-core/contracts/Silo.sol                                                       | 71.82% (158/220)   | 67.62% (190/281)   | 56.67% (34/60)   | 77.63% (59/76)   |
+| silo-core/contracts/Silo.sol                                                       | 75.00% (165/220)   | 71.53% (201/281)   | 56.67% (34/60)   | 81.58% (62/76)   |
 | silo-core/contracts/SiloConfig.sol                                                 | 96.88% (31/32)     | 97.22% (35/36)     | 95.00% (19/20)   | 100.00% (6/6)    |
 | silo-core/contracts/SiloDeployer.sol                                               | 0.00% (0/41)       | 0.00% (0/55)       | 0.00% (0/6)      | 0.00% (0/8)      |
 | silo-core/contracts/SiloFactory.sol                                                | 71.93% (82/114)    | 79.07% (136/172)   | 93.75% (45/48)   | 80.95% (17/21)   |
