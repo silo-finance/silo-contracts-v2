@@ -132,6 +132,9 @@ interface ISilo is IERC4626, IERC3156FlashLender, ISiloLiquidation {
     /// @return siloConfig Address of the configuration contract associated with the silo
     function config() external view returns (ISiloConfig siloConfig);
 
+    /// @return siloFactory The associated factory of the silo
+    function factory() external view returns (ISiloFactory siloFactory);
+
     /// @notice Fetches the data related to the silo
     /// @return daoAndDeployerFees Current amount of fees accrued by DAO and Deployer
     /// @return interestRateTimestamp Timestamp of the last interest accrual
@@ -139,12 +142,8 @@ interface ISilo is IERC4626, IERC3156FlashLender, ISiloLiquidation {
 
     /// @notice Fetches details about the contract's version, the associated factory, and the siloId
     /// @return version The version string of the contract
-    /// @return factory The associated factory of the silo
     /// @return siloId The unique identifier for the silo
-    function getInfo()
-        external
-        view
-        returns (string memory version, ISiloFactory factory, uint256 siloId);
+    function getInfo() external view returns (string memory version, uint256 siloId);
 
     /// @notice Fetches the utilization data of the silo used by IRM
     function utilizationData() external view returns (UtilizationData memory utilizationData);

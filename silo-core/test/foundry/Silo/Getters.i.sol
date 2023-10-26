@@ -4,7 +4,6 @@ pragma solidity ^0.8.0;
 import "forge-std/Test.sol";
 
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
-import {ISiloFactory} from "silo-core/contracts/interfaces/ISiloFactory.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 
 import {MintableToken} from "../_common/MintableToken.sol";
@@ -16,7 +15,6 @@ import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
 contract GettersTest is SiloLittleHelper, Test {
     ISiloConfig siloConfig;
 
-
     function setUp() public {
         siloConfig = _setUpLocalFixture();
     }
@@ -25,12 +23,10 @@ contract GettersTest is SiloLittleHelper, Test {
     forge test -vv --ffi --mt test_silo_getInfo
     */
     function test_silo_getInfo() public {
-        (string memory version, ISiloFactory factory, uint256 siloId) = silo0.getInfo();
+        (string memory version, uint256 siloId) = silo0.getInfo();
 
         assertEq(version, "2.0.0", "version");
-        assertTrue(address(factory) != address(0), "factory not empty");
         assertEq(siloId, 1, "siloId");
-
     }
 
     /*

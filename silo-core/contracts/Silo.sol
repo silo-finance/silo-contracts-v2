@@ -40,7 +40,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
 
     bytes32 internal constant _LEVERAGE_CALLBACK = keccak256("ILeverageBorrower.onLeverage");
 
-    ISiloFactory internal immutable _factory;
+    ISiloFactory public immutable factory;
 
     ISiloConfig public config;
 
@@ -53,7 +53,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor(ISiloFactory _siloFactory) {
         _disableInitializers();
-        _factory = _siloFactory;
+        factory = _siloFactory;
     }
 
     /// @inheritdoc ISilo
@@ -72,10 +72,9 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
         external
         view
         virtual
-        returns (string memory version, ISiloFactory factory, uint256 siloId)
+        returns (string memory version, uint256 siloId)
     {
         version = _VERSION;
-        factory = _factory;
         siloId = config.SILO_ID();
     }
 
@@ -104,9 +103,8 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
 
     /// @inheritdoc ISilo
     function depositPossible(address _depositor) external view virtual returns (bool) {
-        ISiloConfig.ConfigData memory configData = config.getConfig(address(this));
-
-        return SiloERC4626Lib.depositPossible(configData.debtShareToken, _depositor);
+        address debtShareToken = config.getConfig(address(this)).debtShareToken;
+        return SiloERC4626Lib.depositPossible(debtShareToken, _depositor);
     }
 
     /// @inheritdoc ISilo
@@ -173,7 +171,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
         returns (address daoFeeReceiver, address deployerFeeReceiver, uint256 daoFee, uint256 deployerFee)
     {
         (daoFeeReceiver, deployerFeeReceiver, daoFee, deployerFee,) =
-            SiloStdLib.getFeesAndFeeReceiversWithAsset(config, _factory);
+            SiloStdLib.getFeesAndFeeReceiversWithAsset(config, factory);
     }
 
     // ERC4626
@@ -776,7 +774,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
 
     /// @inheritdoc ISilo
     function withdrawFees() external virtual {
-        SiloStdLib.withdrawFees(config, _factory, siloData);
+        SiloStdLib.withdrawFees(config, factory, siloData);
     }
 
     /// @dev it can be called on "debt silo" only
