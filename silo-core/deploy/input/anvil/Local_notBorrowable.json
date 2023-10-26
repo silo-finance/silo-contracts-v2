@@ -1,6 +1,6 @@
 {
     "deployer": "0x",
-    "deployerFeeInBp": 1000,
+    "deployerFee": 1000,
     "token0": "PLACEHOLDER",
     "solvencyOracle0": "NO_ORACLE",
     "maxLtvOracle0": "NO_ORACLE",
@@ -14,7 +14,6 @@
     "protectedHookReceiver0": "NO_HOOK_RECEIVER",
     "collateralHookReceiver0": "NO_HOOK_RECEIVER",
     "debtHookReceiver0": "NO_HOOK_RECEIVER",
-
     "token1": "PLACEHOLDER",
     "solvencyOracle1": "NO_ORACLE",
     "maxLtvOracle1": "NO_ORACLE",

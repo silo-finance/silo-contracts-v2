@@ -22,7 +22,7 @@ contract SiloFactoryInitializeTest is Test {
         address _siloImpl,
         address _shareCollateralTokenImpl,
         address _shareDebtTokenImpl,
-        uint256 _daoFeeInBp,
+        uint256 _daoFee,
         address _daoFeeReceiver
     ) public {
         vm.assume(_siloImpl != address(0));
@@ -30,28 +30,28 @@ contract SiloFactoryInitializeTest is Test {
         vm.assume(_shareDebtTokenImpl != address(0));
         vm.assume(_daoFeeReceiver != address(0));
 
-        uint256 maxFee = siloFactory.MAX_FEE_IN_BP();
+        uint256 maxFee = siloFactory.MAX_FEE();
 
-        vm.assume(_daoFeeInBp < maxFee);
+        vm.assume(_daoFee < maxFee);
 
         vm.expectRevert(ISiloFactory.ZeroAddress.selector);
         siloFactory.initialize(
-            address(0), _shareCollateralTokenImpl, _shareDebtTokenImpl, _daoFeeInBp, _daoFeeReceiver
+            address(0), _shareCollateralTokenImpl, _shareDebtTokenImpl, _daoFee, _daoFeeReceiver
         );
 
         vm.expectRevert(ISiloFactory.ZeroAddress.selector);
-        siloFactory.initialize(_siloImpl, address(0), _shareDebtTokenImpl, _daoFeeInBp, _daoFeeReceiver);
+        siloFactory.initialize(_siloImpl, address(0), _shareDebtTokenImpl, _daoFee, _daoFeeReceiver);
 
         vm.expectRevert(ISiloFactory.ZeroAddress.selector);
-        siloFactory.initialize(_siloImpl, _shareCollateralTokenImpl, address(0), _daoFeeInBp, _daoFeeReceiver);
+        siloFactory.initialize(_siloImpl, _shareCollateralTokenImpl, address(0), _daoFee, _daoFeeReceiver);
 
         vm.expectRevert(ISiloFactory.ZeroAddress.selector);
-        siloFactory.initialize(_siloImpl, _shareCollateralTokenImpl, _shareDebtTokenImpl, _daoFeeInBp, address(0));
+        siloFactory.initialize(_siloImpl, _shareCollateralTokenImpl, _shareDebtTokenImpl, _daoFee, address(0));
 
         vm.expectRevert(ISiloFactory.MaxFee.selector);
         siloFactory.initialize(_siloImpl, _shareCollateralTokenImpl, _shareDebtTokenImpl, maxFee + 1, _daoFeeReceiver);
 
-        siloFactory.initialize(_siloImpl, _shareCollateralTokenImpl, _shareDebtTokenImpl, _daoFeeInBp, _daoFeeReceiver);
+        siloFactory.initialize(_siloImpl, _shareCollateralTokenImpl, _shareDebtTokenImpl, _daoFee, _daoFeeReceiver);
 
         assertEq(siloFactory.name(), "Silo Finance Fee Receiver");
         assertEq(siloFactory.symbol(), "feeSILO");
@@ -60,9 +60,9 @@ contract SiloFactoryInitializeTest is Test {
         assertEq(siloFactory.siloImpl(), _siloImpl);
         assertEq(siloFactory.shareCollateralTokenImpl(), _shareCollateralTokenImpl);
         assertEq(siloFactory.shareDebtTokenImpl(), _shareDebtTokenImpl);
-        assertEq(siloFactory.daoFeeInBp(), _daoFeeInBp);
-        assertEq(siloFactory.maxDeployerFeeInBp(), 0.15e4);
-        assertEq(siloFactory.maxFlashloanFeeInBp(), 0.15e4);
-        assertEq(siloFactory.maxLiquidationFeeInBp(), 0.3e4);
+        assertEq(siloFactory.daoFee(), _daoFee);
+        assertEq(siloFactory.maxDeployerFee(), 0.15e18);
+        assertEq(siloFactory.maxFlashloanFee(), 0.15e18);
+        assertEq(siloFactory.maxLiquidationFee(), 0.3e18);
     }
 }

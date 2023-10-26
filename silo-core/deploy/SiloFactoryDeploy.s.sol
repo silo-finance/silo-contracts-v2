@@ -30,10 +30,10 @@ contract SiloFactoryDeploy is CommonDeploy {
         address shareCollateralTokenImpl = address(new ShareCollateralToken());
         address shareDebtTokenImpl = address(new ShareDebtToken());
 
-        uint256 daoFeeInBp = 0.15e4;
+        uint256 daoFee = 0.15e18;
         address daoFeeReceiver = VeSiloDeployments.get(VeSiloContracts.FEE_DISTRIBUTOR, getChainAlias());
 
-        siloFactory.initialize(siloImpl, shareCollateralTokenImpl, shareDebtTokenImpl, daoFeeInBp, daoFeeReceiver);
+        siloFactory.initialize(siloImpl, shareCollateralTokenImpl, shareDebtTokenImpl, daoFee, daoFeeReceiver);
 
         address timelock = VeSiloDeployments.get(VeSiloContracts.TIMELOCK_CONTROLLER, getChainAlias());
         OwnableUpgradeable(address(siloFactory)).transferOwnership(timelock);

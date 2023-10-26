@@ -11,9 +11,9 @@ import {MintableToken} from "../../_common/MintableToken.sol";
 import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
 
 /*
-    forge test -vv --ffi --mc BorrowTest
+    forge test -vv --ffi --mc BorrowIntegrationTest
 */
-contract BorrowTest is SiloLittleHelper, Test {
+contract BorrowIntegrationTest is SiloLittleHelper, Test {
     ISiloConfig siloConfig;
 
     function setUp() public {

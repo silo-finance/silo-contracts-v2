@@ -1,6 +1,6 @@
 {
     "deployer": "0x",
-    "deployerFeeInBp": 1000,
+    "deployerFee": 1000,
     "token0": "WETH",
     "solvencyOracle0": "DIA_Demo_config",
     "maxLtvOracle0": "CHAINLINK_Demo_config",

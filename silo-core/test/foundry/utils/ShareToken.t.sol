@@ -18,6 +18,9 @@ contract Token {
     }
 }
 
+/*
+forge test -vv --mc ShareTokenTest
+*/
 contract ShareTokenTest is Test {
     /*
     forge test -vv --mt test_ShareToken_decimals

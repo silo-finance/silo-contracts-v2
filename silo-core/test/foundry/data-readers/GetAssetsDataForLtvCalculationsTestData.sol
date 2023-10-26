@@ -19,8 +19,8 @@ contract GetAssetsDataForLtvCalculationsTestData is Test {
         uint256 collateralShareBalanceOf;
         uint256 collateralShareTotalSupply;
         uint256 compoundInterestRate;
-        uint256 daoFeeInBp;
-        uint256 deployerFeeInBp;
+        uint256 daoFee;
+        uint256 deployerFee;
         uint256 maxLtvOracle;
         uint256 protectedShareBalanceOf;
         uint256 protectedShareTotalSupply;
@@ -88,8 +88,8 @@ contract GetAssetsDataForLtvCalculationsTestData is Test {
         emit log_named_uint("collateralShareBalanceOf", scenario.input.collateralConfig.collateralShareBalanceOf);
         emit log_named_uint("collateralShareTotalSupply", scenario.input.collateralConfig.collateralShareTotalSupply);
         emit log_named_uint("compoundInterestRate_collateral", scenario.input.collateralConfig.compoundInterestRate);
-        emit log_named_uint("daoFeeInBp", scenario.input.collateralConfig.daoFeeInBp);
-        emit log_named_uint("deployerFeeInBp", scenario.input.collateralConfig.deployerFeeInBp);
+        emit log_named_uint("daoFee", scenario.input.collateralConfig.daoFee);
+        emit log_named_uint("deployerFee", scenario.input.collateralConfig.deployerFee);
         emit log_named_uint("maxLtvOracle_collateral", scenario.input.collateralConfig.maxLtvOracle);
         emit log_named_uint("solvencyOracle_collateral", scenario.input.collateralConfig.solvencyOracle);
         emit log_named_uint("protectedShareBalanceOf", scenario.input.collateralConfig.protectedShareBalanceOf);

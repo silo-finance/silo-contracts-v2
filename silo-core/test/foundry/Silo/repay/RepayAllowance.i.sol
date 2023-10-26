@@ -14,7 +14,7 @@ import {MintableToken} from "../../_common/MintableToken.sol";
 import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
 
 /*
-    forge test --ffi -vv--mc RepayAllowanceTest
+    forge test --ffi -vv --mc RepayAllowanceTest
 */
 contract RepayAllowanceTest is SiloLittleHelper, Test {
     uint256 internal constant ASSETS = 1e18;

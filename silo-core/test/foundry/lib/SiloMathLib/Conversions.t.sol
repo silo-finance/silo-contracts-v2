@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import "forge-std/Test.sol";
 import "silo-core/contracts/lib/SiloMathLib.sol";
 
-// forge test -vv --mc ConvertToSharesTest
+// forge test -vv --mc ConversionsTest
 contract ConversionsTest is Test {
     /*
     forge test -vv --mt test_SiloMathLib_conversions

@@ -8,7 +8,7 @@ import "forge-std/Test.sol";
 import {SiloMathLib} from "silo-core/contracts/lib/SiloMathLib.sol";
 import {CalculateMaxAssetsToWithdrawTestData} from "../../data-readers/CalculateMaxAssetsToWithdrawTestData.sol";
 
-// forge test -vv --mc CalculateMaxValueToWithdrawTest
+// forge test -vv --mc CalculateMaxAssetsToWithdrawTest
 contract CalculateMaxAssetsToWithdrawTest is Test {
     uint256 internal constant _PRECISION_DECIMALS = 1e18;
 
@@ -25,7 +25,7 @@ contract CalculateMaxAssetsToWithdrawTest is Test {
             uint256 maxAssets = SiloMathLib.calculateMaxAssetsToWithdraw(
                 testData.input.sumOfCollateralsValue,
                 testData.input.debtValue,
-                testData.input.ltInDp,
+                testData.input.lt,
                 testData.input.borrowerCollateralAssets,
                 testData.input.borrowerProtectedAssets
             );
@@ -36,7 +36,7 @@ contract CalculateMaxAssetsToWithdrawTest is Test {
             assertEq(maxAssets, testData.maxAssets, _concatMsg(i, testData.name));
 
             uint256 ltvAfter = _ltv(testData);
-            assertLe(ltvAfter, testData.input.ltInDp, _concatMsg(i, string.concat(testData.name, " - LTV holds")));
+            assertLe(ltvAfter, testData.input.lt, _concatMsg(i, string.concat(testData.name, " - LTV holds")));
         }
     }
 

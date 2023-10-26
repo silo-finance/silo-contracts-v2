@@ -15,8 +15,6 @@ import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
     forge test -vv --ffi --mc RepayTest
 */
 contract RepayTest is SiloLittleHelper, Test {
-    uint256 internal constant _BASIS_POINTS = 1e4;
-
     ISiloConfig siloConfig;
 
     function setUp() public {

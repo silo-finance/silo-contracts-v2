@@ -68,14 +68,13 @@ contract SiloDeployTest is IntegrationTest {
         mainnetDeploy.run();
 
         _siloDeploy = new SiloDeploy();
-        vm.setEnv("CONFIG", SiloConfigsNames.FULL_CONFIG_TEST);
 
         // Mock addresses for oracles configurations
         AddrLib.setAddress("CHAINLINK_PRIMARY_AGGREGATOR", makeAddr("Chainlink primary aggregator"));
         AddrLib.setAddress("CHAINLINK_SECONDARY_AGGREGATOR", makeAddr("Chainlink secondary aggregator"));
         AddrLib.setAddress("DIA_ORACLE_EXAMPLE", makeAddr("DIA oracle example"));
 
-        _siloConfig = _siloDeploy.run();
+        _siloConfig = _siloDeploy.useConfig(SiloConfigsNames.FULL_CONFIG_TEST).run();
     }
 
     // FOUNDRY_PROFILE=core forge test -vv --ffi -mt test_hooks_are_initialized

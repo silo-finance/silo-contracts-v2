@@ -5,7 +5,7 @@ import "forge-std/Test.sol";
 import {SiloMathLib} from "silo-core/contracts/lib/SiloMathLib.sol";
 import {MaxWithdrawToAssetsAndSharesTestData} from "../../data-readers/MaxWithdrawToAssetsAndSharesTestData.sol";
 
-// forge test -vv --mc CalculateMaxValueToWithdrawTest
+// forge test -vv --mc MaxWithdrawToAssetsAndSharesTest
 contract MaxWithdrawToAssetsAndSharesTest is Test {
     /*
     forge test -vv --mt test_maxWithdrawToAssetsAndShares_loop
@@ -28,8 +28,8 @@ contract MaxWithdrawToAssetsAndSharesTest is Test {
                 testDatas[i].input.liquidity
             );
 
-            assertEq(assets, testDatas[i].output.assets, string(abi.encodePacked(testDatas[i].name, " => assets")));
-            assertEq(shares, testDatas[i].output.shares, string(abi.encodePacked(testDatas[i].name, " => shares")));
+            assertEq(assets, testDatas[i].output.assets, string.concat(testDatas[i].name, " => assets"));
+            assertEq(shares, testDatas[i].output.shares, string.concat(testDatas[i].name, " => shares"));
         }
     }
 }

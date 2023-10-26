@@ -14,10 +14,9 @@ import {SiloLiquidationExecLibImpl} from "../../_common/SiloLiquidationExecLibIm
 
 
 // forge test -vv --mc LiquidationPreviewTest
-contract getExactLiquidationAmountsTest is Test, MockOracleQuote {
+contract LiquidationPreviewTest is Test, MockOracleQuote {
     // this must match value from SiloLiquidationLib
-    uint256 internal constant _BP2DP_NORMALIZATION = 10 ** (18 - 4);
-    uint256 internal constant _LT_LIQUIDATION_MARGIN_IN_BP = 0.9e4; // 90%
+    uint256 internal constant _LT_LIQUIDATION_MARGIN = 0.9e18; // 90%
 
     /*
     forge test -vv --mt test_liquidationPreview_noOracle_zero
@@ -93,7 +92,7 @@ contract getExactLiquidationAmountsTest is Test, MockOracleQuote {
             ltvData.borrowerDebtAssets,
             ltvData.borrowerDebtAssets,
             params.collateralLt,
-            params.liquidationFeeInBp
+            params.liquidationFee
         );
 
         emit log_named_decimal_uint("maxDebtToCover", maxDebtToCover, 18);
@@ -135,7 +134,7 @@ contract getExactLiquidationAmountsTest is Test, MockOracleQuote {
         SiloLiquidationExecLib.LiquidationPreviewParams memory params;
         params.collateralConfigAsset = COLLATERAL_ASSET;
         params.debtConfigAsset = DEBT_ASSET;
-        params.collateralLt = 8000 * _BP2DP_NORMALIZATION;
+        params.collateralLt = 0.8e18;
         params.debtToCover = 2;
 
         _oraclesQuoteMocks(ltvData, 1e18, 0.5e18); // ltv 50% - user solvent
@@ -161,7 +160,7 @@ contract getExactLiquidationAmountsTest is Test, MockOracleQuote {
         SiloLiquidationExecLib.LiquidationPreviewParams memory params;
         params.collateralConfigAsset = COLLATERAL_ASSET;
         params.debtConfigAsset = DEBT_ASSET;
-        params.collateralLt = 8000 * _BP2DP_NORMALIZATION;
+        params.collateralLt = 0.8e18;
         params.debtToCover = 2;
 
         _oraclesQuoteMocks(ltvData, 1e18, 2e18); // ltv 200% - user NOT solvent

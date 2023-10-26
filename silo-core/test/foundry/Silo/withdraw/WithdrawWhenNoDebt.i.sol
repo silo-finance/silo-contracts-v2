@@ -15,11 +15,9 @@ import "../../_common/MintableToken.sol";
 import "../../_common/SiloLittleHelper.sol";
 
 /*
-    forge test -vv --mc WithdrawWhenNoDebtTest
+    forge test -vv --ffi --mc WithdrawWhenNoDebtTest
 */
 contract WithdrawWhenNoDebtTest is SiloLittleHelper, Test {
-    uint256 internal constant _BASIS_POINTS = 1e4;
-
     ISiloConfig siloConfig;
 
     function setUp() public {
@@ -27,7 +25,7 @@ contract WithdrawWhenNoDebtTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --mt test_withdraw_all_Collateral
+    forge test -vv --ffi --mt test_withdraw_all_Collateral
     */
     function test_withdraw_all_Collateral() public {
         _deposit(address(this), 2e18, ISilo.AssetType.Collateral);
@@ -49,7 +47,7 @@ contract WithdrawWhenNoDebtTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --mt test_withdraw_all_Protected
+    forge test -vv --ffi --mt test_withdraw_all_Protected
     */
     function test_withdraw_all_Protected() public {
         _deposit(address(this), 2e18, ISilo.AssetType.Collateral);
@@ -73,7 +71,7 @@ contract WithdrawWhenNoDebtTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --mt test_withdraw_scenario_oneUser
+    forge test -vv --ffi --mt test_withdraw_scenario_oneUser
     */
     function test_withdraw_scenario_oneUser() public {
         _deposit(address(this), 2e18, ISilo.AssetType.Collateral);
@@ -83,7 +81,7 @@ contract WithdrawWhenNoDebtTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --mt test_withdraw_scenario_manyUsers
+    forge test -vv --ffi --mt test_withdraw_scenario_manyUsers
     */
     function test_withdraw_scenario_manyUsers() public {
         _deposit(address(5555), 1, ISilo.AssetType.Protected);
@@ -107,7 +105,7 @@ contract WithdrawWhenNoDebtTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --mt test_withdraw_scenarios_fuzz
+    forge test -vv --ffi --mt test_withdraw_scenarios_fuzz
     */
     function test_withdraw_scenarios_fuzz(uint256 _deposit1, uint256 _deposit2, uint256 _deposit3) public {
         vm.assume(_deposit1 > 2 && _deposit1 < 2 ** 128);

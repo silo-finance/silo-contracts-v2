@@ -7,9 +7,9 @@ import "silo-core/contracts/lib/SiloMathLib.sol";
 // forge test -vv --mc CalculateUtilizationTest
 contract CalculateUtilizationTest is Test {
     /*
-    forge test -vv --mt test_calculateUtilization
+    forge test -vv --mt test_calculateUtilization_fuzz
     */
-    function test_calculateUtilization(uint256 _collateralAssets, uint256 _debtAssets) public {
+    function test_calculateUtilization_fuzz(uint256 _collateralAssets, uint256 _debtAssets) public {
         uint256 dp = 1e18;
 
         assertEq(SiloMathLib.calculateUtilization(dp, 1e18, 0.9e18), 0.9e18);
@@ -25,9 +25,9 @@ contract CalculateUtilizationTest is Test {
     }
 
     /*
-    forge test -vv --mt test_calculateUtilizationWithMax
+    forge test -vv --mt test_calculateUtilizationWithMax_fuzz
     */
-    function test_calculateUtilizationWithMax(uint256 _dp, uint256 _collateralAssets, uint256 _debtAssets) public {
+    function test_calculateUtilizationWithMax_fuzz(uint256 _dp, uint256 _collateralAssets, uint256 _debtAssets) public {
         vm.assume(_debtAssets < type(uint128).max);
         vm.assume(_dp < type(uint128).max);
 

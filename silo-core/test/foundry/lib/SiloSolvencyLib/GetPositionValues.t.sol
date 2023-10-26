@@ -10,13 +10,13 @@ import "../../_common/MockOracleQuote.sol";
 forge test -vv --mc GetPositionValuesTest
 */
 contract GetPositionValuesTest is Test, MockOracleQuote {
-    uint256 internal constant BASIS_POINTS = 1e4;
+    uint256 internal constant _PRECISION_DECIMALS = 1e18;
 
     /*
-    forge test -vv --mt test_SiloSolvencyLib_BASIS_POINTS
+    forge test -vv --mt test_SiloSolvencyLib_PRECISION_DECIMALS
     */
-    function test_SiloSolvencyLib_BASIS_POINTS() public {
-        assertEq(BASIS_POINTS, SiloSolvencyLib._BASIS_POINTS, "BASIS_POINTS");
+    function test_SiloSolvencyLib_PRECISION_DECIMALS() public {
+        assertEq(_PRECISION_DECIMALS, SiloSolvencyLib._PRECISION_DECIMALS, "_PRECISION_DECIMALS");
     }
 
     /*

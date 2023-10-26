@@ -55,7 +55,7 @@ contract CalculateCollateralToLiquidateTestData {
                 debtValueToCover:  2e18,
                 totalBorrowerCollateralAssets: 10e18,
                 totalBorrowerCollateralValue: 2e18,
-                liquidationFee: 100
+                liquidationFee: 0.01e18
             }),
             output: Output({
                 collateralValue: 2e18,
@@ -68,11 +68,11 @@ contract CalculateCollateralToLiquidateTestData {
                 debtValueToCover:  2e18,
                 totalBorrowerCollateralAssets: 10e18,
                 totalBorrowerCollateralValue: 40e18, // 1token has value of 4e18
-                liquidationFee: 100
+                liquidationFee: 0.01e18
             }),
             output: Output({
-                collateralValue: 2e18 + 2e18 * 100 / 1e4, // debt + fee
-                collateralAssets: (2e18 + 2e18 * 100 / 1e4) * 1e18 / 4e18 // value / token value => token assets
+                collateralValue: 2e18 + 2e18 * 0.01e18 / 1e18, // debt + fee
+                collateralAssets: (2e18 + 2e18 * 0.01e18 / 1e18) * 1e18 / 4e18 // value / token value => token assets
             })
         });
 
@@ -81,11 +81,11 @@ contract CalculateCollateralToLiquidateTestData {
                 debtValueToCover:  1e18,
                 totalBorrowerCollateralAssets: 100e18,
                 totalBorrowerCollateralValue: 20e18, // 1token has value of 20 / 100 => 0.2e18
-                liquidationFee: 5000
+                liquidationFee: 0.5e18
             }),
             output: Output({
-                collateralValue: 1e18 + 1e18 * 5000 / 1e4, // debt + fee
-                collateralAssets: (1e18 + 1e18 * 5000 / 1e4) * 1e18 / 0.2e18 // value / token value => token assets
+                collateralValue: 1e18 + 1e18 * 0.5e18 / 1e18, // debt + fee
+                collateralAssets: (1e18 + 1e18 * 0.5e18 / 1e18) * 1e18 / 0.2e18 // value / token value => token assets
             })
         });
 
@@ -94,7 +94,7 @@ contract CalculateCollateralToLiquidateTestData {
                 debtValueToCover:  2e18,
                 totalBorrowerCollateralAssets: 10e18,
                 totalBorrowerCollateralValue: 1e18, // 1token has value of 0.1e18
-                liquidationFee: 100
+                liquidationFee: 0.01e18
             }),
             output: Output({
                 collateralValue: 1e18, // all

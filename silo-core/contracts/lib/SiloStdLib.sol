@@ -15,7 +15,6 @@ library SiloStdLib {
     using SafeERC20Upgradeable for IERC20Upgradeable;
 
     uint256 internal constant _PRECISION_DECIMALS = 1e18;
-    uint256 internal constant _BASIS_POINTS = 1e4;
 
     /// @notice Withdraws accumulated fees and distributes them proportionally to the DAO and deployer
     /// @dev This function takes into account scenarios where either the DAO or deployer may not be set, distributing
@@ -27,8 +26,8 @@ library SiloStdLib {
         (
             address daoFeeReceiver,
             address deployerFeeReceiver,
-            uint256 daoFeeInBp,
-            uint256 deployerFeeInBp,
+            uint256 daoFee,
+            uint256 deployerFee,
             address asset
         ) = getFeesAndFeeReceiversWithAsset(_config, _factory);
 
@@ -50,7 +49,7 @@ library SiloStdLib {
             IERC20Upgradeable(asset).safeTransferFrom(address(this), deployerFeeReceiver, earnedFees);
         } else {
             // split fees proportionally
-            uint256 daoFees = earnedFees * daoFeeInBp / (daoFeeInBp + deployerFeeInBp);
+            uint256 daoFees = earnedFees * daoFee / (daoFee + deployerFee);
             uint256 deployerFees = earnedFees - daoFees;
 
             IERC20Upgradeable(asset).safeTransferFrom(address(this), daoFeeReceiver, daoFees);
@@ -64,25 +63,22 @@ library SiloStdLib {
     /// @param _amount for which fee is calculated
     /// @return fee flash fee amount
     function flashFee(ISiloConfig _config, address _token, uint256 _amount) external view returns (uint256 fee) {
-        // all user set fees are in basis points
-        (,, uint256 flashloanFeeInBp, address asset) = _config.getFeesWithAsset(address(this));
+        // all user set fees are in 18 decimals points
+        (,, uint256 flashloanFee, address asset) = _config.getFeesWithAsset(address(this));
 
         if (_token != asset) revert ISilo.Unsupported();
 
-        fee = _amount * flashloanFeeInBp;
-
-        unchecked {
-            fee /= _BASIS_POINTS;
-        }
+        fee = _amount * flashloanFee;
+        unchecked { fee /= _PRECISION_DECIMALS; }
     }
 
-    /// @notice Retrieves fee amounts in basis points and their respective receivers along with the asset
+    /// @notice Retrieves fee amounts in 18 decimals points and their respective receivers along with the asset
     /// @param _config The configuration contract used to fetch fee-related data
     /// @param _factory The factory contract used to fetch fee receiver addresses
     /// @return daoFeeReceiver Address of the DAO fee receiver
     /// @return deployerFeeReceiver Address of the deployer fee receiver
-    /// @return daoFeeInBp DAO fee amount in basis points
-    /// @return deployerFeeInBp Deployer fee amount in basis points
+    /// @return daoFee DAO fee amount in 18 decimals points
+    /// @return deployerFee Deployer fee amount in 18 decimals points
     /// @return asset Address of the associated asset
     function getFeesAndFeeReceiversWithAsset(ISiloConfig _config, ISiloFactory _factory)
         public
@@ -90,12 +86,12 @@ library SiloStdLib {
         returns (
             address daoFeeReceiver,
             address deployerFeeReceiver,
-            uint256 daoFeeInBp,
-            uint256 deployerFeeInBp,
+            uint256 daoFee,
+            uint256 deployerFee,
             address asset
         )
     {
-        (daoFeeInBp, deployerFeeInBp,, asset) = _config.getFeesWithAsset(address(this));
+        (daoFee, deployerFee,, asset) = _config.getFeesWithAsset(address(this));
         (daoFeeReceiver, deployerFeeReceiver) = _factory.getFeeReceivers(address(this));
     }
 
@@ -121,8 +117,8 @@ library SiloStdLib {
             totalAssets = getTotalCollateralAssetsWithInterest(
                 _configData.silo,
                 _configData.interestRateModel,
-                _configData.daoFeeInBp,
-                _configData.deployerFeeInBp
+                _configData.daoFee,
+                _configData.deployerFee
             );
 
             totalShares = IShareToken(_configData.collateralShareToken).totalSupply();
@@ -148,19 +144,19 @@ library SiloStdLib {
     /// @dev Do not use this method when accrueInterest were executed already, in that case total does not change
     /// @param _silo Address of the silo contract
     /// @param _interestRateModel Interest rate model to fetch compound interest rates
-    /// @param _daoFeeInBp DAO fee in basis points
-    /// @param _deployerFeeInBp Deployer fee in basis points
+    /// @param _daoFee DAO fee in 18 decimals points
+    /// @param _deployerFee Deployer fee in 18 decimals points
     /// @return totalCollateralAssetsWithInterest Accumulated collateral amount with interest
     function getTotalCollateralAssetsWithInterest(
         address _silo,
         address _interestRateModel,
-        uint256 _daoFeeInBp,
-        uint256 _deployerFeeInBp
+        uint256 _daoFee,
+        uint256 _deployerFee
     ) internal view returns (uint256 totalCollateralAssetsWithInterest) {
         uint256 rcomp = IInterestRateModel(_interestRateModel).getCompoundInterestRate(_silo, block.timestamp);
 
         (totalCollateralAssetsWithInterest,,,) = SiloMathLib.getCollateralAmountsWithInterest(
-            ISilo(_silo).getCollateralAssets(), ISilo(_silo).getDebtAssets(), rcomp, _daoFeeInBp, _deployerFeeInBp
+            ISilo(_silo).getCollateralAssets(), ISilo(_silo).getDebtAssets(), rcomp, _daoFee, _deployerFee
         );
     }
 

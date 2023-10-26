@@ -2,6 +2,9 @@
 pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
+
+import {Strings} from "openzeppelin-contracts/utils/Strings.sol";
+
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISiloLiquidation} from "silo-core/contracts/interfaces/ISiloLiquidation.sol";
 import {SiloLiquidationLib} from "silo-core/contracts/lib/SiloLiquidationLib.sol";
@@ -13,13 +16,11 @@ import {InterestRateModelMock} from "../../_mocks/InterestRateModelMock.sol";
 import {TokenMock} from "../../_mocks/TokenMock.sol";
 import {GetExactLiquidationAmountsTestData} from "../../data-readers/GetExactLiquidationAmountsTestData.sol";
 
-
-// forge test -vv --mc LiquidationPreviewTest
+// this is not test contract, just a helper
 contract GetExactLiquidationAmountsHelper is Test {
     uint256 constant DECIMALS_POINTS = 1e18;
-    uint256 constant LT_NORMALIZATION = 10 ** (18 - 4);
 
-    uint256 constant LT = 0.8e4 * LT_NORMALIZATION;
+    uint256 constant LT = 0.8e18;
 
     SiloMock immutable SILO_A;
     SiloMock immutable SILO_B;
@@ -57,7 +58,7 @@ contract GetExactLiquidationAmountsHelper is Test {
         uint128 _debtToCover,
         uint128 _collateralUserBalanceOf,
         uint128 _debtUserBalanceOf,
-        uint32 _liquidationFeeInBp,
+        uint32 _liquidationFee,
         bool _selfLiquidation
 
     ) external returns (uint256 fromCollateral, uint256 fromProtected, uint256 repayDebtAssets) {
@@ -80,7 +81,7 @@ contract GetExactLiquidationAmountsHelper is Test {
             debtConfig,
             makeAddr("borrower"),
             _debtToCover,
-            _liquidationFeeInBp,
+            _liquidationFee,
             _selfLiquidation
         );
     }
@@ -111,7 +112,7 @@ contract GetExactLiquidationAmountsHelper is Test {
 }
 
 
-// forge test -vv --mc LiquidationPreviewTest
+// forge test -vv --mc GetExactLiquidationAmountsTest
 contract GetExactLiquidationAmountsTest is GetExactLiquidationAmountsHelper {
     /*
     forge test -vv --mt test_getExactLiquidationAmounts_noOracle_zero
@@ -123,7 +124,7 @@ contract GetExactLiquidationAmountsTest is GetExactLiquidationAmountsHelper {
 
         address user;
         uint256 debtToCover;
-        uint256 liquidationFeeInBp;
+        uint256 liquidationFee;
         bool selfLiquidation;
 
         P_SHARE_TOKEN_A.balanceOfMock(user, 0);
@@ -139,7 +140,7 @@ contract GetExactLiquidationAmountsTest is GetExactLiquidationAmountsHelper {
 
         (
             uint256 fromCollateral, uint256 fromProtected, uint256 repayDebtAssets
-        ) = SiloLiquidationExecLib.getExactLiquidationAmounts(collateralConfig, debtConfig, user, debtToCover, liquidationFeeInBp, selfLiquidation);
+        ) = SiloLiquidationExecLib.getExactLiquidationAmounts(collateralConfig, debtConfig, user, debtToCover, liquidationFee, selfLiquidation);
 
         assertEq(fromCollateral, 0);
         assertEq(fromProtected, 0);
@@ -178,14 +179,13 @@ contract GetExactLiquidationAmountsTest is GetExactLiquidationAmountsHelper {
                 debtConfig,
                 testData.input.user,
                 testData.input.debtToCover,
-                testData.input.liquidationFeeInBp,
+                testData.input.liquidationFee,
                 testData.input.selfLiquidation
             );
 
-            // emit log_named_uint(string(abi.encodePacked("################ ", testData.name, " #")), i);
-            assertEq(fromProtected, testData.output.fromProtected, "fromProtected");
-            assertEq(fromCollateral, testData.output.fromCollateral, "fromCollateral");
-            assertEq(repayDebtAssets, testData.output.repayDebtAssets, "repayDebtAssets");
+            assertEq(fromProtected, testData.output.fromProtected, _concatMsg(i, testData.name, "fromProtected"));
+            assertEq(fromCollateral, testData.output.fromCollateral, _concatMsg(i, testData.name, "fromCollateral"));
+            assertEq(repayDebtAssets, testData.output.repayDebtAssets, _concatMsg(i, testData.name, "repayDebtAssets"));
         }
     }
 
@@ -269,14 +269,14 @@ contract GetExactLiquidationAmountsTest is GetExactLiquidationAmountsHelper {
         uint128 _debtToCover,
         uint128 _collateralUserBalanceOf,
         uint128 _debtUserBalanceOf,
-        uint32 _liquidationFeeInBp,
+        uint32 _liquidationFee,
         bool _selfLiquidation
     ) internal returns (uint256 collateralToLiquidate, uint256 ltvAfter, bool success, bytes4 errorType) {
         try GetExactLiquidationAmountsHelper(this).getExactLiquidationAmounts(
             _debtToCover,
             _collateralUserBalanceOf,
             _debtUserBalanceOf,
-            _liquidationFeeInBp,
+            _liquidationFee,
             _selfLiquidation
         ) returns (uint256 fromCollateral, uint256 fromProtected, uint256 repayDebtAssets) {
             collateralToLiquidate = fromCollateral + fromProtected;
@@ -288,5 +288,9 @@ contract GetExactLiquidationAmountsTest is GetExactLiquidationAmountsHelper {
         } catch (bytes memory data) {
             errorType = bytes4(data);
         }
+    }
+
+    function _concatMsg(uint256 _i, string memory _name, string memory _msg) internal pure returns (string memory) {
+        return string.concat("[", Strings.toString(_i), "] ", _name, ": ", _msg);
     }
 }

@@ -15,8 +15,6 @@ import {SiloFactoryDeploy} from "silo-core/deploy/SiloFactoryDeploy.s.sol";
 forge test -vv --mc SiloFactoryValidateSiloInitDataTest
 */
 contract SiloFactoryValidateSiloInitDataTest is Test {
-    uint256 internal constant _BASIS_POINTS = 1e4;
-
     ISiloFactory public siloFactory;
 
     address internal _timelock = makeAddr("Timelock");
@@ -47,20 +45,20 @@ contract SiloFactoryValidateSiloInitDataTest is Test {
         vm.expectRevert(ISiloFactory.InvalidMaxLtv.selector);
         siloFactory.validateSiloInitData(initData);
 
-        initData.maxLtv0 = 7500;
-        initData.maxLtv1 = 6500;
+        initData.maxLtv0 = 0.75e18;
+        initData.maxLtv1 = 0.65e18;
 
         vm.expectRevert(ISiloFactory.InvalidMaxLtv.selector);
         siloFactory.validateSiloInitData(initData);
 
-        initData.lt0 = 85000;
-        initData.lt1 = 75000;
+        initData.lt0 = 8.50e18;
+        initData.lt1 = 7.50e18;
 
         vm.expectRevert(ISiloFactory.InvalidLt.selector);
         siloFactory.validateSiloInitData(initData);
 
-        initData.lt0 = 8500;
-        initData.lt1 = 7500;
+        initData.lt0 = 0.85e18;
+        initData.lt1 = 0.75e18;
 
         vm.expectRevert(ISiloFactory.InvalidIrmConfig.selector);
         siloFactory.validateSiloInitData(initData);
@@ -88,7 +86,7 @@ contract SiloFactoryValidateSiloInitDataTest is Test {
 
         initData.solvencyOracle1 = address(1);
 
-        initData.deployerFeeInBp = 100;
+        initData.deployerFee = 0.01e18;
 
         vm.expectRevert(ISiloFactory.InvalidDeployer.selector);
         siloFactory.validateSiloInitData(initData);
@@ -98,52 +96,52 @@ contract SiloFactoryValidateSiloInitDataTest is Test {
         vm.expectRevert(ISiloFactory.InvalidIrmConfig.selector);
         siloFactory.validateSiloInitData(initData);
 
-        initData.deployerFeeInBp = siloFactory.maxDeployerFeeInBp() + 1;
+        initData.deployerFee = siloFactory.maxDeployerFee() + 1;
 
         vm.expectRevert(ISiloFactory.MaxDeployerFee.selector);
         siloFactory.validateSiloInitData(initData);
 
-        initData.deployerFeeInBp = 0.01e4;
+        initData.deployerFee = 0.01e18;
 
         vm.expectRevert(ISiloFactory.InvalidIrmConfig.selector);
         siloFactory.validateSiloInitData(initData);
 
-        initData.flashloanFee0 = uint64(siloFactory.maxFlashloanFeeInBp() + 1);
+        initData.flashloanFee0 = uint64(siloFactory.maxFlashloanFee() + 1);
 
         vm.expectRevert(ISiloFactory.MaxFlashloanFee.selector);
         siloFactory.validateSiloInitData(initData);
 
-        initData.flashloanFee0 = 0.01e4;
+        initData.flashloanFee0 = 0.01e18;
 
         vm.expectRevert(ISiloFactory.InvalidIrmConfig.selector);
         siloFactory.validateSiloInitData(initData);
 
-        initData.flashloanFee1 = uint64(siloFactory.maxFlashloanFeeInBp() + 1);
+        initData.flashloanFee1 = uint64(siloFactory.maxFlashloanFee() + 1);
 
         vm.expectRevert(ISiloFactory.MaxFlashloanFee.selector);
         siloFactory.validateSiloInitData(initData);
 
-        initData.flashloanFee1 = 0.01e4;
+        initData.flashloanFee1 = 0.01e18;
 
         vm.expectRevert(ISiloFactory.InvalidIrmConfig.selector);
         siloFactory.validateSiloInitData(initData);
 
-        initData.liquidationFee0 = uint64(siloFactory.maxLiquidationFeeInBp() + 1);
+        initData.liquidationFee0 = uint64(siloFactory.maxLiquidationFee() + 1);
 
         vm.expectRevert(ISiloFactory.MaxLiquidationFee.selector);
         siloFactory.validateSiloInitData(initData);
 
-        initData.liquidationFee0 = 0.01e4;
+        initData.liquidationFee0 = 0.01e18;
 
         vm.expectRevert(ISiloFactory.InvalidIrmConfig.selector);
         siloFactory.validateSiloInitData(initData);
 
-        initData.liquidationFee1 = uint64(siloFactory.maxLiquidationFeeInBp() + 1);
+        initData.liquidationFee1 = uint64(siloFactory.maxLiquidationFee() + 1);
 
         vm.expectRevert(ISiloFactory.MaxLiquidationFee.selector);
         siloFactory.validateSiloInitData(initData);
 
-        initData.liquidationFee1 = 0.01e4;
+        initData.liquidationFee1 = 0.01e18;
 
         vm.expectRevert(ISiloFactory.InvalidIrmConfig.selector);
         siloFactory.validateSiloInitData(initData);

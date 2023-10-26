@@ -6,18 +6,18 @@ interface ISiloConfig {
         /// @notice The address of the deployer of the Silo
         address deployer;
 
-        /// @notice Deployer's fee in basis points. Deployer will earn this fee based on the interest earned by
+        /// @notice Deployer's fee in 18 decimals points. Deployer will earn this fee based on the interest earned by
         /// the Silo.
-        uint256 deployerFeeInBp;
+        uint256 deployerFee;
 
         /// @notice Address of the first token
         address token0;
 
-        /// @notice Address of the solvency oracle. Solvency oracle is used to calcualte LTV when deciding if borrower
+        /// @notice Address of the solvency oracle. Solvency oracle is used to calculate LTV when deciding if borrower
         /// is solvent or should be liquidated. Solvency oracle is optional and if not set price of 1 will be assumed.
         address solvencyOracle0;
 
-        /// @notice Address of the maxLtv oracle. Max LTV oracle is used to calcualte LTV when deciding if borrower
+        /// @notice Address of the maxLtv oracle. Max LTV oracle is used to calculate LTV when deciding if borrower
         /// can borrow given amount of assets. Max LTV oracle is optional and if not set it defaults to solvency
         /// oracle. If neither is set price of 1 will be assumed.
         address maxLtvOracle0;
@@ -29,20 +29,18 @@ interface ISiloConfig {
         /// with immutable config that can be resued between multiple IRMs (Interest Rate Models).
         address interestRateModelConfig0;
 
-        /// @notice Maximum LTV for first token. maxLTV is in basis points and is used to determine if borrower can
-        /// borrow given amount of assets. maxLtv is in basis points however is normalized to 18 decimals before it's
-        /// saved in storage.
+        /// @notice Maximum LTV for first token. maxLTV is in 18 decimals points and is used to determine,
+        /// if borrower can borrow given amount of assets. MaxLtv is in 18 decimals points
         uint256 maxLtv0;
 
-        /// @notice Liquidation threshold for first token. LT is used to calculate solvency. LT is in basis points 
-        /// however is normalized to 18 decimals before it's saved in storage.
+        /// @notice Liquidation threshold for first token. LT is used to calculate solvency. LT is in 18 decimals points
         uint256 lt0;
 
-        /// @notice Liquidation fee for the first token in basis points. Liquidation fee is what liquidator earns for
-        /// repaying insolvent loan.
+        /// @notice Liquidation fee for the first token in 18 decimals points. Liquidation fee is what liquidator earns
+        /// for repaying insolvent loan.
         uint256 liquidationFee0;
 
-        /// @notice Flashloan fee sets the cost of taking a flashloan in basis points
+        /// @notice Flashloan fee sets the cost of taking a flashloan in 18 decimals points
         uint256 flashloanFee0;
 
         /// @notice Indicates if a beforeQuote on oracle contract should be called before quoting price
@@ -61,11 +59,11 @@ interface ISiloConfig {
         /// @notice Address of the second token
         address token1;
 
-        /// @notice Address of the solvency oracle. Solvency oracle is used to calcualte LTV when deciding if borrower
+        /// @notice Address of the solvency oracle. Solvency oracle is used to calculate LTV when deciding if borrower
         /// is solvent or should be liquidated. Solvency oracle is optional and if not set price of 1 will be assumed.
         address solvencyOracle1;
 
-        /// @notice Address of the maxLtv oracle. Max LTV oracle is used to calcualte LTV when deciding if borrower
+        /// @notice Address of the maxLtv oracle. Max LTV oracle is used to calculate LTV when deciding if borrower
         /// can borrow given amount of assets. Max LTV oracle is optional and if not set it defaults to solvency
         /// oracle. If neither is set price of 1 will be assumed.
         address maxLtvOracle1;
@@ -74,22 +72,20 @@ interface ISiloConfig {
         address interestRateModel1;
 
         /// @notice Address of the interest rate model configuration. Configuration is a separately deployed contract
-        /// with immutable config that can be resued between multiple IRMs (Interest Rate Models).
+        /// with immutable config that can be reused between multiple IRMs (Interest Rate Models).
         address interestRateModelConfig1;
 
-        /// @notice Maximum LTV for first token. maxLTV is in basis points and is used to determine if borrower can
-        /// borrow given amount of assets. maxLtv is in basis points however is normalized to 18 decimals before it's
-        /// saved in storage.
+        /// @notice Maximum LTV for first token. maxLTV is in 18 decimals points and is used to determine,
+        /// if borrower can borrow given amount of assets. maxLtv is in 18 decimals points
         uint256 maxLtv1;
 
-        /// @notice Liquidation threshold for first token. LT is used to calculate solvency. LT is in basis points 
-        /// however is normalized to 18 decimals before it's saved in storage.
+        /// @notice Liquidation threshold for first token. LT is used to calculate solvency. LT is in 18 decimals points
         uint256 lt1;
 
         /// @notice Liquidation fee is what liquidator earns for repaying insolvent loan.
         uint256 liquidationFee1;
 
-        /// @notice Flashloan fee sets the cost of taking a flashloan in basis points
+        /// @notice Flashloan fee sets the cost of taking a flashloan in 18 decimals points
         uint256 flashloanFee1;
 
         /// @notice Indicates if a beforeQuote on oracle contract should be called before quoting price
@@ -107,8 +103,8 @@ interface ISiloConfig {
     }
 
     struct ConfigData {
-        uint256 daoFeeInBp;
-        uint256 deployerFeeInBp;
+        uint256 daoFee;
+        uint256 deployerFee;
         address silo;
         address otherSilo;
         address token;
@@ -158,14 +154,14 @@ interface ISiloConfig {
     /// @notice Retrieves fee-related information for a specific silo
     /// @dev This function reverts for incorrect silo address input
     /// @param _silo The address of the silo for which fee-related information is being retrieved.
-    /// @return daoFeeInBp The DAO fee percentage in basis points.
-    /// @return deployerFeeInBp The deployer fee percentage in basis points.
-    /// @return flashloanFeeInBp The flashloan fee percentage in basis points.
+    /// @return daoFee The DAO fee percentage in 18 decimals points.
+    /// @return deployerFee The deployer fee percentage in 18 decimals points.
+    /// @return flashloanFee The flashloan fee percentage in 18 decimals points.
     /// @return asset The address of the asset associated with the specified silo.
     function getFeesWithAsset(address _silo)
         external
         view
-        returns (uint256 daoFeeInBp, uint256 deployerFeeInBp, uint256 flashloanFeeInBp, address asset);
+        returns (uint256 daoFee, uint256 deployerFee, uint256 flashloanFee, address asset);
 
     /// @notice Retrieves share tokens associated with a specific silo
     /// @dev This function reverts for incorrect silo address input

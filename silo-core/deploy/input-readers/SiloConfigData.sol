@@ -13,9 +13,11 @@ import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {IHookReceiversFactory} from "silo-core/contracts/utils/hook-receivers/interfaces/IHookReceiversFactory.sol";
 
 contract SiloConfigData is Test, CommonDeploy {
-    bytes32 constant public NO_ORACLE_KEY = keccak256(bytes("NO_ORACLE"));
-    bytes32 constant public PLACEHOLDER_KEY = keccak256(bytes("PLACEHOLDER"));
-    bytes32 constant public NO_HOOK_RECEIVER_KEY = keccak256(bytes("NO_HOOK_RECEIVER"));
+    uint256 constant BP2DP_NORMALIZATION = 10 ** (18 - 4);
+
+    bytes32 public constant NO_ORACLE_KEY = keccak256(bytes("NO_ORACLE"));
+    bytes32 public constant PLACEHOLDER_KEY = keccak256(bytes("PLACEHOLDER"));
+    bytes32 public constant NO_HOOK_RECEIVER_KEY = keccak256(bytes("NO_HOOK_RECEIVER"));
 
     error HookReceiverImplNoFound(string hookReceiver);
 
@@ -28,7 +30,7 @@ contract SiloConfigData is Test, CommonDeploy {
         string debtHookReceiver0;
         string debtHookReceiver1;
         address deployer;
-        uint256 deployerFeeInBp;
+        uint256 deployerFee;
         uint64 flashloanFee0;
         uint64 flashloanFee1;
         address interestRateModel0;
@@ -74,16 +76,16 @@ contract SiloConfigData is Test, CommonDeploy {
 
         initData = ISiloConfig.InitData({
             deployer: config.deployer,
-            deployerFeeInBp: config.deployerFeeInBp,
+            deployerFee: config.deployerFee * BP2DP_NORMALIZATION,
             token0: getAddress(config.token0),
             solvencyOracle0: address(0),
             maxLtvOracle0: address(0),
             interestRateModel0: address(0),
             interestRateModelConfig0: address(0),
-            maxLtv0: config.maxLtv0,
-            lt0: config.lt0,
-            liquidationFee0: config.liquidationFee0,
-            flashloanFee0: config.flashloanFee0,
+            maxLtv0: config.maxLtv0 * BP2DP_NORMALIZATION,
+            lt0: config.lt0 * BP2DP_NORMALIZATION,
+            liquidationFee0: config.liquidationFee0 * BP2DP_NORMALIZATION,
+            flashloanFee0: config.flashloanFee0 * BP2DP_NORMALIZATION,
             callBeforeQuote0: config.callBeforeQuote0,
             protectedHookReceiver0: hookReceivers.protectedHookReceiver0,
             collateralHookReceiver0: hookReceivers.collateralHookReceiver0,
@@ -93,10 +95,10 @@ contract SiloConfigData is Test, CommonDeploy {
             maxLtvOracle1: address(0),
             interestRateModel1: address(0),
             interestRateModelConfig1: address(0),
-            maxLtv1: config.maxLtv1,
-            lt1: config.lt1,
-            liquidationFee1: config.liquidationFee1,
-            flashloanFee1: config.flashloanFee1,
+            maxLtv1: config.maxLtv1 * BP2DP_NORMALIZATION,
+            lt1: config.lt1 * BP2DP_NORMALIZATION,
+            liquidationFee1: config.liquidationFee1 * BP2DP_NORMALIZATION,
+            flashloanFee1: config.flashloanFee1 * BP2DP_NORMALIZATION,
             callBeforeQuote1: config.callBeforeQuote1,
             protectedHookReceiver1: hookReceivers.protectedHookReceiver1,
             collateralHookReceiver1: hookReceivers.collateralHookReceiver1,

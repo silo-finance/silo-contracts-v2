@@ -8,7 +8,6 @@ library SiloMathLib {
     using MathUpgradeable for uint256;
 
     uint256 internal constant _PRECISION_DECIMALS = 1e18;
-    uint256 internal constant _BASIS_POINTS = 1e4;
 
     /// @dev this is constant version of openzeppelin-contracts/contracts/token/ERC20/extensions/ERC4626._decimalsOffset
     uint256 internal constant _DECIMALS_OFFSET_POW = 10 ** 0;
@@ -27,9 +26,9 @@ library SiloMathLib {
     /// @notice Calculate collateral assets with accrued interest and associated fees
     /// @param _collateralAssets The total amount of collateral assets
     /// @param _debtAssets The total amount of debt assets
-    /// @param _rcompInDp Compound interest rate for debt
-    /// @param _daoFeeInBp The fee (in basis points) to be taken for the DAO
-    /// @param _deployerFeeInBp The fee (in basis points) to be taken for the deployer
+    /// @param _rcomp Compound interest rate for debt
+    /// @param _daoFee The fee (in 18 decimals points) to be taken for the DAO
+    /// @param _deployerFee The fee (in 18 decimals points) to be taken for the deployer
     /// @return collateralAssetsWithInterest The total collateral assets including the accrued interest
     /// @return debtAssetsWithInterest The debt assets with accrued interest
     /// @return daoAndDeployerFees Total fees amount to be split between DAO and deployer
@@ -37,9 +36,9 @@ library SiloMathLib {
     function getCollateralAmountsWithInterest(
         uint256 _collateralAssets,
         uint256 _debtAssets,
-        uint256 _rcompInDp,
-        uint256 _daoFeeInBp,
-        uint256 _deployerFeeInBp
+        uint256 _rcomp,
+        uint256 _daoFee,
+        uint256 _deployerFee
     )
         internal
         pure
@@ -50,12 +49,12 @@ library SiloMathLib {
             uint256 accruedInterest
         )
     {
-        (debtAssetsWithInterest, accruedInterest) = getDebtAmountsWithInterest(_debtAssets, _rcompInDp);
+        (debtAssetsWithInterest, accruedInterest) = getDebtAmountsWithInterest(_debtAssets, _rcomp);
         uint256 collateralInterest;
 
         unchecked {
             // If we overflow on multiplication it should not revert tx, we will get lower fees
-            daoAndDeployerFees = accruedInterest * (_daoFeeInBp + _deployerFeeInBp) / _BASIS_POINTS;
+            daoAndDeployerFees = accruedInterest * (_daoFee + _deployerFee) / _PRECISION_DECIMALS;
             // we will not underflow because daoAndDeployerFees is chunk of accruedInterest
             collateralInterest = accruedInterest - daoAndDeployerFees;
         }
@@ -65,21 +64,21 @@ library SiloMathLib {
 
     /// @notice Calculate the debt assets with accrued interest
     /// @param _debtAssets The total amount of debt assets before accrued interest
-    /// @param _rcompInDp Compound interest rate for the debt in 18 decimal precision
+    /// @param _rcomp Compound interest rate for the debt in 18 decimal precision
     /// @return debtAssetsWithInterest The debt assets including the accrued interest
     /// @return accruedInterest The amount of interest accrued on the debt assets
-    function getDebtAmountsWithInterest(uint256 _debtAssets, uint256 _rcompInDp)
+    function getDebtAmountsWithInterest(uint256 _debtAssets, uint256 _rcomp)
         internal
         pure
         returns (uint256 debtAssetsWithInterest, uint256 accruedInterest)
     {
-        if (_debtAssets == 0 || _rcompInDp == 0) {
+        if (_debtAssets == 0 || _rcomp == 0) {
             return (_debtAssets, 0);
         }
 
         unchecked {
             // If we overflow on multiplication it should not revert tx, we will get lower fees
-            accruedInterest = _debtAssets * _rcompInDp / _PRECISION_DECIMALS;
+            accruedInterest = _debtAssets * _rcomp / _PRECISION_DECIMALS;
         }
 
         debtAssetsWithInterest = _debtAssets + accruedInterest;
@@ -182,7 +181,7 @@ library SiloMathLib {
 
     /// @return maxBorrowValue max borrow value yet available for borrower
     function calculateMaxBorrowValue(
-        uint256 _configMaxLtvInDp,
+        uint256 _configMaxLtv,
         uint256 _sumOfBorrowerCollateralValue,
         uint256 _borrowerDebtValue
     ) internal pure returns (uint256 maxBorrowValue) {
@@ -190,7 +189,7 @@ library SiloMathLib {
             return 0;
         }
 
-        uint256 maxDebtValue = _sumOfBorrowerCollateralValue * _configMaxLtvInDp / _PRECISION_DECIMALS;
+        uint256 maxDebtValue = _sumOfBorrowerCollateralValue * _configMaxLtv / _PRECISION_DECIMALS;
 
         unchecked {
             // we will not underflow because we checking `maxDebtValue > _borrowerDebtValue`
@@ -201,26 +200,26 @@ library SiloMathLib {
     /// @notice Calculate the maximum assets a borrower can withdraw without breaching the liquidation threshold
     /// @param _sumOfCollateralsValue The combined value of collateral and protected assets of the borrower
     /// @param _debtValue The total debt value of the borrower
-    /// @param _ltInDp The liquidation threshold in 18 decimal points
+    /// @param _lt The liquidation threshold in 18 decimal points
     /// @param _borrowerCollateralAssets The borrower's collateral assets before the withdrawal
     /// @param _borrowerProtectedAssets The borrower's protected assets before the withdrawal
     /// @return maxAssets The maximum assets the borrower can safely withdraw
     function calculateMaxAssetsToWithdraw(
         uint256 _sumOfCollateralsValue,
         uint256 _debtValue,
-        uint256 _ltInDp,
+        uint256 _lt,
         uint256 _borrowerCollateralAssets,
         uint256 _borrowerProtectedAssets
     ) internal pure returns (uint256 maxAssets) {
         if (_sumOfCollateralsValue == 0) return 0;
         if (_debtValue == 0) return _sumOfCollateralsValue;
-        if (_ltInDp == 0) return 0;
+        if (_lt == 0) return 0;
 
         uint256 minimumCollateralValue = _debtValue * _PRECISION_DECIMALS;
         // +1 is solution for precision error that math can produce and when that happen,
         // `maxAssets` can cause insolvency, so it can not be withdraw
         // +1 will not overflow because it is after division
-        unchecked { minimumCollateralValue = minimumCollateralValue / _ltInDp + 1; }
+        unchecked { minimumCollateralValue = minimumCollateralValue / _lt + 1; }
 
         // if we over LT, we can not withdraw
         if (_sumOfCollateralsValue <= minimumCollateralValue) {

@@ -15,7 +15,6 @@ import {LeverageBorrower, ILeverageBorrower} from "../../_common/LeverageBorrowe
 /*
     forge test -vv --ffi --mc LeverageTest
 */
-
 contract LeverageTest is SiloLittleHelper, Test {
     ISiloConfig siloConfig;
 

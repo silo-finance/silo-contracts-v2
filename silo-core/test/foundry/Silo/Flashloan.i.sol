@@ -64,7 +64,7 @@ contract Hack1 {
 }
 
 /*
-    forge test -vv --mc FlashloanTest
+    forge test -vv --ffi --mc FlashloanTest
 */
 contract FlashloanTest is SiloLittleHelper, Test {
     address constant BORROWER = address(0x123);
@@ -84,7 +84,7 @@ contract FlashloanTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --mt test_maxFlashLoan
+    forge test -vv --ffi --mt test_maxFlashLoan
     */
     function test_maxFlashLoan() public {
         assertEq(silo0.maxFlashLoan(address(token1)), 0);
@@ -94,7 +94,7 @@ contract FlashloanTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --mt test_flashFee
+    forge test -vv --ffi --mt test_flashFee
     */
     function test_flashFee() public {
         vm.expectRevert(ISilo.Unsupported.selector);
@@ -110,7 +110,7 @@ contract FlashloanTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --mt test_flashLoan
+    forge test -vv --ffi --mt test_flashLoan
     */
     function test_flashLoan(bytes calldata _data) public {
         IERC3156FlashBorrower receiver = IERC3156FlashBorrower(makeAddr("IERC3156FlashBorrower"));
@@ -150,7 +150,7 @@ contract FlashloanTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --mt test_flashLoan_leverageNonReentrant
+    forge test -vv --ffi --mt test_flashLoan_leverageNonReentrant
     */
     function test_flashLoan_leverageNonReentrant(bytes32 _data) public {
         IERC3156FlashBorrower receiver = IERC3156FlashBorrower(address(new Hack1()));

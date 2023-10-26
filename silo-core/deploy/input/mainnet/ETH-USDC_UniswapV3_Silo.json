@@ -1,6 +1,6 @@
 {
     "deployer": "0x",
-    "deployerFeeInBp": 1000,
+    "deployerFee": 1000,
     "token0": "WETH",
     "solvencyOracle0": "NO_ORACLE",
     "maxLtvOracle0": "NO_ORACLE",

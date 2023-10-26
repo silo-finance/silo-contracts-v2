@@ -23,7 +23,6 @@ library SiloLendingLib {
     bytes32 internal constant _FLASHLOAN_CALLBACK = keccak256("ERC3156FlashBorrower.onFlashLoan");
 
     uint256 internal constant _PRECISION_DECIMALS = 1e18;
-    uint256 internal constant _BASIS_POINTS = 1e4;
 
     /// @notice Allows a user or a delegate to borrow assets against their collateral
     /// @dev The function checks for necessary conditions such as borrow possibility, enough liquidity, and zero
@@ -171,16 +170,16 @@ library SiloLendingLib {
     /// @dev This method will accrue interest for ONE asset ONLY, to calculate for both silos you have to call it twice
     /// with `_configData` for each token
     /// @param _interestRateModel The address of the interest rate model to calculate the compound interest rate
-    /// @param _daoFeeInBp DAO's fee in basis points
-    /// @param _deployerFeeInBp Deployer's fee in basis points
+    /// @param _daoFee DAO's fee in 18 decimals points
+    /// @param _deployerFee Deployer's fee in 18 decimals points
     /// @param _siloData The storage reference for the silo's data storing earned fees and interest rate timestamp
     /// @param _totalCollateral The storage reference for the total collateral assets
     /// @param _totalDebt The storage reference for the total debt assets
     /// @return accruedInterest The total amount of interest accrued
     function accrueInterestForAsset(
         address _interestRateModel,
-        uint256 _daoFeeInBp,
-        uint256 _deployerFeeInBp,
+        uint256 _daoFee,
+        uint256 _deployerFee,
         ISilo.SiloData storage _siloData,
         ISilo.Assets storage _totalCollateral,
         ISilo.Assets storage _totalDebt
@@ -212,8 +211,8 @@ library SiloLendingLib {
                 totalDebtAssets,
                 lastTimestamp
             ),
-            _daoFeeInBp,
-            _deployerFeeInBp
+            _daoFee,
+            _deployerFee
         );
 
         // update remaining contract state
