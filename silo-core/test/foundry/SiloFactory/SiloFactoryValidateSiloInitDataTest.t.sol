@@ -164,5 +164,15 @@ contract SiloFactoryValidateSiloInitDataTest is Test {
         initData.interestRateModel1 = initData.interestRateModel0;
 
         assertTrue(siloFactory.validateSiloInitData(initData));
+
+        initData.token0 = address(0);
+        initData.token1 = address(1);
+        vm.expectRevert(abi.encodeWithSelector(ISiloFactory.EmptySiloAsset.selector, initData.token0, initData.token1));
+        siloFactory.validateSiloInitData(initData);
+
+        initData.token0 = address(1);
+        initData.token1 = address(0);
+        vm.expectRevert(abi.encodeWithSelector(ISiloFactory.EmptySiloAsset.selector, initData.token0, initData.token1));
+        siloFactory.validateSiloInitData(initData);
     }
 }
