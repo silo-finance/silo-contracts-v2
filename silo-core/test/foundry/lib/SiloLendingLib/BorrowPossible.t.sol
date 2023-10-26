@@ -12,8 +12,8 @@ contract BorrowPossibleTest is Test {
     forge test -vv --mt test_borrowPossible_borrowable_zeros
     */
     function test_borrowPossible_borrowable_zeros() public {
-        TokenMock protectedShareToken = new TokenMock(vm, address(0x111));
-        TokenMock collateralShareToken = new TokenMock(vm, address(0x222));
+        TokenMock protectedShareToken = new TokenMock(address(0x111));
+        TokenMock collateralShareToken = new TokenMock(address(0x222));
         address borrower = address(0x333);
 
         protectedShareToken.balanceOfMock(borrower, 0);
@@ -28,8 +28,8 @@ contract BorrowPossibleTest is Test {
     forge test -vv --mt test_borrowPossible_borrowable_notPossibleWithCollateral
     */
     function test_borrowPossible_borrowable_notPossibleWithCollateral() public {
-        TokenMock protectedShareToken = new TokenMock(vm, address(0x111));
-        TokenMock collateralShareToken = new TokenMock(vm, address(0x222));
+        TokenMock protectedShareToken = new TokenMock(address(0x111));
+        TokenMock collateralShareToken = new TokenMock(address(0x222));
         address borrower = address(0x333);
 
         protectedShareToken.balanceOfMock(borrower, 0);
@@ -47,8 +47,8 @@ contract BorrowPossibleTest is Test {
     forge test -vv --mt test_borrowPossible_borrowable_notPossibleWithProtected
     */
     function test_borrowPossible_borrowable_notPossibleWithProtected() public {
-        TokenMock protectedShareToken = new TokenMock(vm, address(0x111));
-        TokenMock collateralShareToken = new TokenMock(vm, address(0x222));
+        TokenMock protectedShareToken = new TokenMock(address(0x111));
+        TokenMock collateralShareToken = new TokenMock(address(0x222));
         address borrower = address(0x333);
 
         protectedShareToken.balanceOfMock(borrower, 1);

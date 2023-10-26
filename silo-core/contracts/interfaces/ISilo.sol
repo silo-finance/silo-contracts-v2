@@ -113,6 +113,8 @@ interface ISilo is IERC4626, IERC3156FlashLender, ISiloLiquidation {
     error NotSolvent();
     error BorrowNotPossible();
     error WrongToken();
+    error BalanceZero();
+    error EarnedZero();
     error NothingToPay();
     error FlashloanFailed();
     error LeverageFailed();

@@ -79,18 +79,18 @@ contract GetAssetsDataForLtvCalculationsTest is Test {
         debtConfig.debtShareToken = debtShareToken;
         debtConfig.silo = silo1;
 
-        TokenMock protectedShareTokenMock = new TokenMock(vm, protectedShareToken);
+        TokenMock protectedShareTokenMock = new TokenMock(protectedShareToken);
         protectedShareTokenMock.balanceOfMock(borrowerAddr, scenario.input.collateralConfig.protectedShareBalanceOf);
         protectedShareTokenMock.totalSupplyMock(scenario.input.collateralConfig.protectedShareTotalSupply);
 
-        TokenMock collateralShareTokenMock = new TokenMock(vm, collateralShareToken);
+        TokenMock collateralShareTokenMock = new TokenMock(collateralShareToken);
         collateralShareTokenMock.balanceOfMock(borrowerAddr, scenario.input.collateralConfig.collateralShareBalanceOf);
         collateralShareTokenMock.totalSupplyMock(scenario.input.collateralConfig.collateralShareTotalSupply);
         interestRateModelMock.getCompoundInterestRateMock(
             silo0, block.timestamp, scenario.input.collateralConfig.compoundInterestRate
         );
 
-        TokenMock debtShareTokenMock = new TokenMock(vm, debtShareToken);
+        TokenMock debtShareTokenMock = new TokenMock(debtShareToken);
         if (scenario.input.debtConfig.cachedBalance) {
             cachedShareDebtBalance = scenario.input.debtConfig.debtShareBalanceOf;
         } else {

@@ -41,15 +41,15 @@ contract GetExactLiquidationAmountsHelper is Test {
         SILO_A = new SiloMock(vm, makeAddr("SILO_A"));
         SILO_B = new SiloMock(vm, makeAddr("SILO_B"));
 
-        TOKEN_A = new TokenMock(vm, makeAddr("TOKEN_A"));
-        C_SHARE_TOKEN_A = new TokenMock(vm, makeAddr("C_SHARE_TOKEN_A"));
-        D_SHARE_TOKEN_A = new TokenMock(vm, makeAddr("D_SHARE_TOKEN_A"));
-        P_SHARE_TOKEN_A = new TokenMock(vm, makeAddr("P_SHARE_TOKEN_A"));
+        TOKEN_A = new TokenMock(makeAddr("TOKEN_A"));
+        C_SHARE_TOKEN_A = new TokenMock(makeAddr("C_SHARE_TOKEN_A"));
+        D_SHARE_TOKEN_A = new TokenMock(makeAddr("D_SHARE_TOKEN_A"));
+        P_SHARE_TOKEN_A = new TokenMock(makeAddr("P_SHARE_TOKEN_A"));
 
-        TOKEN_B = new TokenMock(vm, makeAddr("TOKEN_B"));
-        C_SHARE_TOKEN_B = new TokenMock(vm, makeAddr("C_SHARE_TOKEN_B"));
-        D_SHARE_TOKEN_B = new TokenMock(vm, makeAddr("D_SHARE_TOKEN_B"));
-        P_SHARE_TOKEN_B = new TokenMock(vm, makeAddr("P_SHARE_TOKEN_B"));
+        TOKEN_B = new TokenMock(makeAddr("TOKEN_B"));
+        C_SHARE_TOKEN_B = new TokenMock(makeAddr("C_SHARE_TOKEN_B"));
+        D_SHARE_TOKEN_B = new TokenMock(makeAddr("D_SHARE_TOKEN_B"));
+        P_SHARE_TOKEN_B = new TokenMock(makeAddr("P_SHARE_TOKEN_B"));
 
         INTEREST_RATE_MODEL = new InterestRateModelMock();
     }

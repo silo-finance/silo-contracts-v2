@@ -33,7 +33,10 @@ library SiloStdLib {
 
         uint256 earnedFees = _siloData.daoAndDeployerFees;
         uint256 balanceOf = IERC20Upgradeable(asset).balanceOf(address(this));
+        if (balanceOf == 0) revert ISilo.BalanceZero();
+
         if (earnedFees > balanceOf) earnedFees = balanceOf;
+        if (earnedFees == 0) revert ISilo.EarnedZero();
 
         // we will never underflow because earnedFees max value is `_siloData.daoAndDeployerFees`
         unchecked { _siloData.daoAndDeployerFees -= uint192(earnedFees); }
@@ -42,18 +45,25 @@ library SiloStdLib {
             // just in case, should never happen...
             revert ISilo.NothingToPay();
         } else if (deployerFeeReceiver == address(0)) {
-            // deployer was never setup or deployer NFT has been burned
+            // deployer was never setup or deployer has been burned
             IERC20Upgradeable(asset).safeTransferFrom(address(this), daoFeeReceiver, earnedFees);
         } else if (daoFeeReceiver == address(0)) {
             // should never happen... but we assume DAO does not want to make money so all is going to deployer
-            IERC20Upgradeable(asset).safeTransferFrom(address(this), deployerFeeReceiver, earnedFees);
+            IERC20Upgradeable(asset).safeTransfer(deployerFeeReceiver, earnedFees);
         } else {
             // split fees proportionally
-            uint256 daoFees = earnedFees * daoFee / (daoFee + deployerFee);
-            uint256 deployerFees = earnedFees - daoFees;
+            uint256 daoFees = earnedFees * daoFee;
+            uint256 deployerFees;
 
-            IERC20Upgradeable(asset).safeTransferFrom(address(this), daoFeeReceiver, daoFees);
-            IERC20Upgradeable(asset).safeTransferFrom(address(this), deployerFeeReceiver, deployerFees);
+            unchecked {
+                // fees are % in decimal point so safe to uncheck
+                daoFees = daoFee / (daoFee + deployerFee);
+                // `daoFees` is chunk of earnedFees, so safe to uncheck
+                deployerFees = earnedFees - daoFees;
+            }
+
+            IERC20Upgradeable(asset).safeTransfer(daoFeeReceiver, daoFees);
+            IERC20Upgradeable(asset).safeTransfer(deployerFeeReceiver, deployerFees);
         }
     }
 

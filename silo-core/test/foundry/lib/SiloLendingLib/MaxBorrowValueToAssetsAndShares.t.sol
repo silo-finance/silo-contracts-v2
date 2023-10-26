@@ -19,8 +19,8 @@ contract MaxBorrowValueToAssetsAndSharesTest is Test {
     MaxBorrowValueToAssetsAndSharesTestData immutable tests;
 
     constructor() {
-        debtToken = new TokenMock(vm, address(0xDDDDDDDDDDDDDD));
-        debtShareToken = new TokenMock(vm, address(0xFFFFFFFFFF));
+        debtToken = new TokenMock(address(0xDDDDDDDDDDDDDD));
+        debtShareToken = new TokenMock(address(0xFFFFFFFFFF));
         tests = new MaxBorrowValueToAssetsAndSharesTestData(debtToken.ADDRESS(), debtShareToken.ADDRESS());
     }
 
