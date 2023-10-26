@@ -205,7 +205,7 @@ contract UniswapV3OracleFactoryTest is UniswapPools {
         uint256 gasEnd = gasleft();
 
         emit log_named_uint("gas", gasStart - gasEnd);
-        assertEq(gasStart - gasEnd, 237297, "optimise gas");
+        assertEq(gasStart - gasEnd, 237276, "optimise gas");
 
         UniswapV3Oracle oracle2 =  UNISWAPV3_ORACLE_FACTORY.create(cfg);
 

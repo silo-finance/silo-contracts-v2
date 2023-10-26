@@ -17,7 +17,7 @@ FOUNDRY_PROFILE=ve-silo \
  */
 contract L2BalancerPseudoMinterDeploy is CommonDeploy {
     function run() public returns (IL2BalancerPseudoMinter minter) {
-        uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
+        uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
 
         vm.startBroadcast(deployerPrivateKey);
 

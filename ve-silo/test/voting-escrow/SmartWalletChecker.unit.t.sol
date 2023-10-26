@@ -17,7 +17,7 @@ contract SmartWalletCheckerTest is IntegrationTest {
     event ContractAddressRemoved(address contractAddress);
 
     function setUp() public {
-        uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
+        uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
         _deployer = vm.addr(deployerPrivateKey);
 
         SmartWalletCheckerDeploy deploy = new SmartWalletCheckerDeploy();

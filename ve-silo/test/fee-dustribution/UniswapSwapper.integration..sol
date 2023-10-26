@@ -30,7 +30,7 @@ contract UniswapSwapperTest is IntegrationTest {
             _FORKING_BLOCK_NUMBER
         );
 
-        uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
+        uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
         _deployer = vm.addr(deployerPrivateKey);
 
         UniswapSwapperDeploy deploy = new UniswapSwapperDeploy();

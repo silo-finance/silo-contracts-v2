@@ -19,7 +19,7 @@ FOUNDRY_PROFILE=oracles CONFIG=UniV3-ETH-USDC-0.3 \
  */
 contract UniswapV3OracleDeploy is CommonDeploy {
     function run() public returns (UniswapV3Oracle oracle) {
-        uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
+        uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
         vm.startBroadcast(deployerPrivateKey);
 
         string memory configName = vm.envString("CONFIG");

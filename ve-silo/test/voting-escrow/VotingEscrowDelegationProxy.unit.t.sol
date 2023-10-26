@@ -53,7 +53,7 @@ contract VotingEscrowDelegationProxyTest is IntegrationTest {
         assertEq(delegation, _veBoost, "VeBoost should be the `delegation`");
 
         // should execute transaction
-        uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
+        uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
         address deployer = vm.addr(deployerPrivateKey);
 
         vm.prank(deployer);
@@ -68,7 +68,7 @@ contract VotingEscrowDelegationProxyTest is IntegrationTest {
         assertEq(delegation, _veBoost, "VeBoost should be the `delegation`");
 
         // should execute transaction
-        uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
+        uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
         address deployer = vm.addr(deployerPrivateKey);
 
         address veBoost2 = makeAddr("VeBoost2");

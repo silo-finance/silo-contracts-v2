@@ -26,7 +26,7 @@ contract MainnetDeploy is CommonDeploy {
         _deployL1();
         _deployL1ForL2();
 
-        uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
+        uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
         vm.startBroadcast(deployerPrivateKey);
 
         address balancerTokenAdmin = getDeployedAddress(VeSiloContracts.BALANCER_TOKEN_ADMIN);
