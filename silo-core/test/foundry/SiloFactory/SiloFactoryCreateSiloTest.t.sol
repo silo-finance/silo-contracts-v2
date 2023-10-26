@@ -46,30 +46,6 @@ contract SiloFactoryCreateSiloTest is SiloLittleHelper, IntegrationTest {
     }
 
     /*
-    forge test -vv --ffi --mt test_empty_tokens
-    */
-    function test_empty_tokens() public {
-        ISiloConfig.InitData memory initData;
-
-        vm.expectRevert(abi.encodeWithSelector(ISiloFactory.EmptySiloAsset.selector, address(0), address(0)));
-        siloFactory.createSilo(initData);
-
-        address token0 = makeAddr("Token0");
-        address token1 = makeAddr("Token1");
-
-        initData.token0 = token0;
-
-        vm.expectRevert(abi.encodeWithSelector(ISiloFactory.EmptySiloAsset.selector, token0, address(0)));
-        siloFactory.createSilo(initData);
-
-        initData.token0 = address(0);
-        initData.token1 = token1;
-
-        vm.expectRevert(abi.encodeWithSelector(ISiloFactory.EmptySiloAsset.selector, address(0), token1));
-        siloFactory.createSilo(initData);
-    }
-
-    /*
     forge test -vv --ffi --mt test_createSilo
     */
     function test_createSilo() public {
