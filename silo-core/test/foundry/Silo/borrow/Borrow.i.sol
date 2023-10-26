@@ -140,22 +140,28 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
         uint256 borrowAmount = maxBorrow / 2;
         // emit log_named_decimal_uint("borrowAmount", borrowAmount, 18);
 
+        uint256 convertToShares = silo1.convertToShares(borrowAmount);
         uint256 gotShares = _borrow(borrowAmount, borrower);
 
         assertEq(IShareToken(debtShareToken).balanceOf(borrower), 0.375e18, "expect borrower to have 1/2 of debt");
         assertEq(IShareToken(collateralShareToken).balanceOf(borrower), 1e18, "collateral silo: borrower has collateral");
         assertEq(silo1.getDebtAssets(), 0.375e18, "silo debt");
         assertEq(gotShares, 0.375e18, "got debt shares");
+        assertEq(gotShares, convertToShares, "convertToShares returns same result");
+        assertEq(borrowAmount, silo1.convertToAssets(gotShares), "convertToAssets returns borrowAmount");
 
         borrowAmount = silo1.maxBorrow(borrower);
         // emit log_named_decimal_uint("borrowAmount #2", borrowAmount, 18);
         assertEq(borrowAmount, 0.75e18 / 2, "~");
 
+        convertToShares = silo1.convertToShares(borrowAmount);
         gotShares = _borrow(borrowAmount, borrower);
 
         assertEq(IShareToken(debtShareToken).balanceOf(borrower), 0.75e18, "debt silo: borrower has debt");
         assertEq(gotShares, 0.375e18, "got shares");
         assertEq(silo1.getDebtAssets(), maxBorrow, "debt silo: has debt");
+        assertEq(gotShares, convertToShares, "convertToShares returns same result (2)");
+        assertEq(borrowAmount, silo1.convertToAssets(gotShares), "convertToAssets returns borrowAmount (2)");
 
         // collateral silo
         (protectedShareToken, collateralShareToken, debtShareToken) = siloConfig.getShareTokens(address(silo0));
