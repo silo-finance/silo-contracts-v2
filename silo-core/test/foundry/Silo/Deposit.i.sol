@@ -10,6 +10,9 @@ import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {MintableToken} from "../_common/MintableToken.sol";
 import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
 
+/*
+    forge test -vv --ffi --mc DepositTest
+*/
 contract DepositTest is SiloLittleHelper, Test {
     ISiloConfig siloConfig;
 

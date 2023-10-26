@@ -23,8 +23,8 @@ contract GetTotalAssetsAndTotalSharesWithInterestTest is Test {
         uint256 rcomp;
         uint256 debtAssets;
         uint256 collateralAssets;
-        uint256 daoFeeInBp;
-        uint256 deployerFeeInBp;
+        uint256 daoFee;
+        uint256 deployerFee;
         uint256 totalAssets;
     }
 
@@ -33,8 +33,8 @@ contract GetTotalAssetsAndTotalSharesWithInterestTest is Test {
     TokenMock immutable PROTECTED_SHARE_TOKEN;
     TokenMock immutable COLLATERAL_SHARE_TOKEN;
     TokenMock immutable DEBT_SHARE_TOKEN;
-    uint256 daoFeeInBp;
-    uint256 deployerFeeInBp;
+    uint256 daoFee;
+    uint256 deployerFee;
 
     mapping(uint256 => DebtTestCases) public debtTestCases;
     uint256 debtTestCasesIndex;
@@ -87,9 +87,9 @@ contract GetTotalAssetsAndTotalSharesWithInterestTest is Test {
     }
 
     /*
-    forge test -vv --mt test_getTotalAssetsAndTotalSharesWithInterest_totalSupply
+    forge test -vv --mt test_getTotalAssetsAndTotalSharesWithInterest_totalSupply_fuzz
     */
-    function test_getTotalAssetsAndTotalSharesWithInterest_totalSupply(uint256 _totalSupply) public {
+    function test_getTotalAssetsAndTotalSharesWithInterest_totalSupply_fuzz(uint256 _totalSupply) public {
         address silo = SILO.ADDRESS();
 
         uint256 totalAssets;
@@ -123,9 +123,9 @@ contract GetTotalAssetsAndTotalSharesWithInterestTest is Test {
     }
 
     /*
-    forge test -vv --mt test_getTotalAssetsAndTotalSharesWithInterest_protected
+    forge test -vv --mt test_getTotalAssetsAndTotalSharesWithInterest_protected_fuzz
     */
-    function test_getTotalAssetsAndTotalSharesWithInterest_protected(uint256 _totalSupply, uint256 _protectedAssets)
+    function test_getTotalAssetsAndTotalSharesWithInterest_protected_fuzz(uint256 _totalSupply, uint256 _protectedAssets)
         public
     {
         uint256 totalAssets;
@@ -142,9 +142,9 @@ contract GetTotalAssetsAndTotalSharesWithInterestTest is Test {
     }
 
     /*
-    forge test -vv --mt test_getTotalAssetsAndTotalSharesWithInterest_debt
+    forge test -vv --mt test_getTotalAssetsAndTotalSharesWithInterest_debt_fuzz
     */
-    function test_getTotalAssetsAndTotalSharesWithInterest_debt(uint256 _totalSupply) public {
+    function test_getTotalAssetsAndTotalSharesWithInterest_debt_fuzz(uint256 _totalSupply) public {
         debtTestCases[debtTestCasesIndex++] = DebtTestCases({rcomp: 0.1e18, debtAssets: 1e18, totalAssets: 1.1e18});
         debtTestCases[debtTestCasesIndex++] = DebtTestCases({rcomp: 0e18, debtAssets: 1e18, totalAssets: 1e18});
         debtTestCases[debtTestCasesIndex++] = DebtTestCases({rcomp: 10e18, debtAssets: 1e18, totalAssets: 11e18});
@@ -171,15 +171,15 @@ contract GetTotalAssetsAndTotalSharesWithInterestTest is Test {
     }
 
     /*
-    forge test -vv --mt test_getTotalAssetsAndTotalSharesWithInterest_collateral
+    forge test -vv --mt test_getTotalAssetsAndTotalSharesWithInterest_collateral_fuzz
     */
-    function test_getTotalAssetsAndTotalSharesWithInterest_collateral(uint256 _totalSupply) public {
+    function test_getTotalAssetsAndTotalSharesWithInterest_collateral_fuzz(uint256 _totalSupply) public {
         collateralTestCases[collateralTestCasesIndex++] = CollateralTestCases({
             rcomp: 0.1e18,
             debtAssets: 1e18,
             collateralAssets: 1e18,
-            daoFeeInBp: 0.2e4,
-            deployerFeeInBp: 0.1e4,
+            daoFee: 0.2e18,
+            deployerFee: 0.1e18,
             totalAssets: 1.07e18
         });
 
@@ -187,8 +187,8 @@ contract GetTotalAssetsAndTotalSharesWithInterestTest is Test {
             rcomp: 0.1e18,
             debtAssets: 0,
             collateralAssets: 1e18,
-            daoFeeInBp: 0.2e4,
-            deployerFeeInBp: 0.1e4,
+            daoFee: 0.2e18,
+            deployerFee: 0.1e18,
             totalAssets: 1e18
         });
 
@@ -196,8 +196,8 @@ contract GetTotalAssetsAndTotalSharesWithInterestTest is Test {
             rcomp: 0,
             debtAssets: 1e18,
             collateralAssets: 1e18,
-            daoFeeInBp: 0.2e4,
-            deployerFeeInBp: 0.1e4,
+            daoFee: 0.2e18,
+            deployerFee: 0.1e18,
             totalAssets: 1e18
         });
 
@@ -205,8 +205,8 @@ contract GetTotalAssetsAndTotalSharesWithInterestTest is Test {
             rcomp: 0.35e18,
             debtAssets: 100e18,
             collateralAssets: 250e18,
-            daoFeeInBp: 0.25e4,
-            deployerFeeInBp: 0.05e4,
+            daoFee: 0.25e18,
+            deployerFee: 0.05e18,
             totalAssets: 274.5e18
         });
 
@@ -214,8 +214,8 @@ contract GetTotalAssetsAndTotalSharesWithInterestTest is Test {
             rcomp: 0.35e18,
             debtAssets: 100e18,
             collateralAssets: 0,
-            daoFeeInBp: 0.25e4,
-            deployerFeeInBp: 0.05e4,
+            daoFee: 0.25e18,
+            deployerFee: 0.05e18,
             totalAssets: 24.5e18
         });
 
@@ -223,8 +223,8 @@ contract GetTotalAssetsAndTotalSharesWithInterestTest is Test {
             rcomp: 0.35e18,
             debtAssets: 100e18,
             collateralAssets: 250e18,
-            daoFeeInBp: 0.3e4,
-            deployerFeeInBp: 0,
+            daoFee: 0.3e18,
+            deployerFee: 0,
             totalAssets: 274.5e18
         });
 
@@ -232,8 +232,8 @@ contract GetTotalAssetsAndTotalSharesWithInterestTest is Test {
             rcomp: 0.35e18,
             debtAssets: 100e18,
             collateralAssets: 250e18,
-            daoFeeInBp: 0,
-            deployerFeeInBp: 0.3e4,
+            daoFee: 0,
+            deployerFee: 0.3e18,
             totalAssets: 274.5e18
         });
 
@@ -247,8 +247,8 @@ contract GetTotalAssetsAndTotalSharesWithInterestTest is Test {
             SILO.getDebtAssetsMock(collateralTestCases[index].debtAssets);
             COLLATERAL_SHARE_TOKEN.totalSupplyMock(_totalSupply);
             INTEREST_RATE_MODEL.getCompoundInterestRateMock(silo, block.timestamp, collateralTestCases[index].rcomp);
-            daoFeeInBp = collateralTestCases[index].daoFeeInBp;
-            deployerFeeInBp = collateralTestCases[index].deployerFeeInBp;
+            daoFee = collateralTestCases[index].daoFee;
+            deployerFee = collateralTestCases[index].deployerFee;
 
             (totalAssets, totalShares) =
                 SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(_config(), ISilo.AssetType.Collateral);
@@ -264,7 +264,7 @@ contract GetTotalAssetsAndTotalSharesWithInterestTest is Test {
         configData.protectedShareToken = PROTECTED_SHARE_TOKEN.ADDRESS();
         configData.debtShareToken = DEBT_SHARE_TOKEN.ADDRESS();
         configData.interestRateModel = INTEREST_RATE_MODEL.ADDRESS();
-        configData.daoFeeInBp = daoFeeInBp;
-        configData.deployerFeeInBp = deployerFeeInBp;
+        configData.daoFee = daoFee;
+        configData.deployerFee = deployerFee;
     }
 }

@@ -12,7 +12,7 @@ import {SiloLendingLibBorrowTestData} from "../../data-readers/SiloLendingLibBor
 import {SiloLendingLibImpl} from "../../_common/SiloLendingLibImpl.sol";
 
 /*
-    forge test -vv --mc MaxBorrowTest
+    forge test -vv --mc BorrowTest
 */
 contract BorrowTest is Test {
     ISilo.Assets totalDebt;

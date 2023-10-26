@@ -22,16 +22,16 @@ contract SiloConfigTest is Test {
 
         _configData0.otherSilo = _configData1.silo;
         _configData1.otherSilo = _configData0.silo;
-        _configData1.daoFeeInBp = _configData0.daoFeeInBp;
-        _configData1.deployerFeeInBp = _configData0.deployerFeeInBp;
+        _configData1.daoFee = _configData0.daoFee;
+        _configData1.deployerFee = _configData0.deployerFee;
 
         siloConfig = new SiloConfig(_siloId, _configData0, _configData1);
     }
 
     /*
-    forge test -vv --mt test_getSilos
+    forge test -vv --mt test_getSilos_fuzz
     */
-    function test_getSilos(
+    function test_getSilos_fuzz(
         uint256 _siloId,
         ISiloConfig.ConfigData memory _configData0,
         ISiloConfig.ConfigData memory _configData1
@@ -44,9 +44,9 @@ contract SiloConfigTest is Test {
     }
 
     /*
-    forge test -vv --mt test_getShareTokens
+    forge test -vv --mt test_getShareTokens_fuzz
     */
-    function test_getShareTokens(
+    function test_getShareTokens_fuzz(
         uint256 _siloId,
         ISiloConfig.ConfigData memory _configData0,
         ISiloConfig.ConfigData memory _configData1
@@ -68,9 +68,9 @@ contract SiloConfigTest is Test {
     }
 
     /*
-    forge test -vv --mt test_getAssetForSilo
+    forge test -vv --mt test_getAssetForSilo_fuzz
     */
-    function test_getAssetForSilo(
+    function test_getAssetForSilo_fuzz(
         uint256 _siloId,
         ISiloConfig.ConfigData memory _configData0,
         ISiloConfig.ConfigData memory _configData1
@@ -85,9 +85,9 @@ contract SiloConfigTest is Test {
     }
 
     /*
-    forge test -vv --mt test_getConfigs
+    forge test -vv --mt test_getConfigs_fuzz
     */
-    function test_getConfigs(
+    function test_getConfigs_fuzz(
         uint256 _siloId,
         ISiloConfig.ConfigData memory _configData0,
         ISiloConfig.ConfigData memory _configData1
@@ -104,9 +104,9 @@ contract SiloConfigTest is Test {
     }
 
     /*
-    forge test -vv --mt test_getConfig
+    forge test -vv --mt test_getConfig_fuzz
     */
-    function test_getConfig(
+    function test_getConfig_fuzz(
         uint256 _siloId,
         ISiloConfig.ConfigData memory _configData0,
         ISiloConfig.ConfigData memory _configData1
@@ -124,9 +124,9 @@ contract SiloConfigTest is Test {
     }
 
     /*
-    forge test -vv --mt test_getFeesWithAsset
+    forge test -vv --mt test_getFeesWithAsset_fuzz
     */
-    function test_getFeesWithAsset(
+    function test_getFeesWithAsset_fuzz(
         uint256 _siloId,
         ISiloConfig.ConfigData memory _configData0,
         ISiloConfig.ConfigData memory _configData1
@@ -136,18 +136,18 @@ contract SiloConfigTest is Test {
         vm.expectRevert(ISiloConfig.WrongSilo.selector);
         siloConfig.getFeesWithAsset(wrongSilo);
 
-        (uint256 daoFee, uint256 deployerFee, uint256 flashloanFeeInBp, address asset) = siloConfig.getFeesWithAsset(_configData0.silo);
+        (uint256 daoFee, uint256 deployerFee, uint256 flashloanFee, address asset) = siloConfig.getFeesWithAsset(_configData0.silo);
         
-        assertEq(daoFee, _configData0.daoFeeInBp);
-        assertEq(deployerFee, _configData0.deployerFeeInBp);
-        assertEq(flashloanFeeInBp, _configData0.flashloanFee);
+        assertEq(daoFee, _configData0.daoFee);
+        assertEq(deployerFee, _configData0.deployerFee);
+        assertEq(flashloanFee, _configData0.flashloanFee);
         assertEq(asset, _configData0.token);
 
-        (daoFee, deployerFee, flashloanFeeInBp, asset) = siloConfig.getFeesWithAsset(_configData1.silo);
+        (daoFee, deployerFee, flashloanFee, asset) = siloConfig.getFeesWithAsset(_configData1.silo);
         
-        assertEq(daoFee, _configData1.daoFeeInBp);
-        assertEq(deployerFee, _configData1.deployerFeeInBp);
-        assertEq(flashloanFeeInBp, _configData1.flashloanFee);
+        assertEq(daoFee, _configData1.daoFee);
+        assertEq(deployerFee, _configData1.deployerFee);
+        assertEq(flashloanFee, _configData1.flashloanFee);
         assertEq(asset, _configData1.token);
     }
 }

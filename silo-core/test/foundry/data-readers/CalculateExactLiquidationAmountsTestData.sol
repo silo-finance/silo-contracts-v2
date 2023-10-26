@@ -2,8 +2,6 @@
 pragma solidity ^0.8.0;
 
 contract CalculateExactLiquidationAmountsTestData {
-    uint256 internal constant _BP2DP_NORMALIZATION = 10 ** (18 - 4);
-
     struct Input {
         uint256 debtToCover;
         uint256 totalBorrowerDebtValue;
@@ -40,7 +38,7 @@ contract CalculateExactLiquidationAmountsTestData {
             output: Output({
                 collateralAssetsToLiquidate: 0,
                 debtAssetsToRepay: 0,
-                ltvAfterLiquidation: 1e4 * _BP2DP_NORMALIZATION
+                ltvAfterLiquidation: 1e18
             })
         });
 
@@ -56,7 +54,7 @@ contract CalculateExactLiquidationAmountsTestData {
             output: Output({
                 collateralAssetsToLiquidate: 0,
                 debtAssetsToRepay: 0,
-                ltvAfterLiquidation: 1e4 * _BP2DP_NORMALIZATION
+                ltvAfterLiquidation: 1e18
             })
         });
 
@@ -67,12 +65,12 @@ contract CalculateExactLiquidationAmountsTestData {
                 totalBorrowerDebtAssets: 1,
                 totalBorrowerCollateralValue: 1,
                 totalBorrowerCollateralAssets: 1,
-                liquidationFee: 1e3
+                liquidationFee: 0.1e18
             }),
             output: Output({
                 collateralAssetsToLiquidate: 0,
                 debtAssetsToRepay: 0,
-                ltvAfterLiquidation: 1e4 * _BP2DP_NORMALIZATION
+                ltvAfterLiquidation: 1e18
             })
         });
 
@@ -83,12 +81,12 @@ contract CalculateExactLiquidationAmountsTestData {
                 totalBorrowerDebtAssets: 1e18,
                 totalBorrowerCollateralValue: 100e18,
                 totalBorrowerCollateralAssets: 100e18,
-                liquidationFee: 1e3
+                liquidationFee: 0.1e18
             }),
             output: Output({
                 collateralAssetsToLiquidate: 0,
                 debtAssetsToRepay: 0,
-                ltvAfterLiquidation: 100 * _BP2DP_NORMALIZATION
+                ltvAfterLiquidation: 0.01e18
             })
         });
 
@@ -99,7 +97,7 @@ contract CalculateExactLiquidationAmountsTestData {
                 totalBorrowerDebtAssets: 1e18,
                 totalBorrowerCollateralValue: 100e18,
                 totalBorrowerCollateralAssets: 100e18,
-                liquidationFee: 1e3
+                liquidationFee: 0.1e18
             }),
             output: Output({
                 collateralAssetsToLiquidate: 1,
@@ -110,16 +108,16 @@ contract CalculateExactLiquidationAmountsTestData {
 
         data[i++] = CELAData({ // #5
             input: Input({
-                debtToCover: 10,
+                debtToCover: 100,
                 totalBorrowerDebtValue: 1e18,
                 totalBorrowerDebtAssets: 1e18,
                 totalBorrowerCollateralValue: 100e18,
                 totalBorrowerCollateralAssets: 100e18,
-                liquidationFee: 1e3
+                liquidationFee: 0.01e18 // 1%
             }),
             output: Output({
-                collateralAssetsToLiquidate: 11, // 10 debt to cover produces 1 fee
-                debtAssetsToRepay: 10,
+                collateralAssetsToLiquidate: 101, // 100 debt to cover produces 1 fee
+                debtAssetsToRepay: 100,
                 ltvAfterLiquidation: 9999999999999999
             })
         });
@@ -131,7 +129,7 @@ contract CalculateExactLiquidationAmountsTestData {
                 totalBorrowerDebtAssets: 1e18,
                 totalBorrowerCollateralValue: 100e18,
                 totalBorrowerCollateralAssets: 10e18,
-                liquidationFee: 1e3
+                liquidationFee: 0.1e18
             }),
             output: Output({
                 collateralAssetsToLiquidate: 44e18 / 10,
@@ -148,7 +146,7 @@ contract CalculateExactLiquidationAmountsTestData {
                 totalBorrowerDebtAssets: 1e18,
                 totalBorrowerCollateralValue: 9_000e18,
                 totalBorrowerCollateralAssets: 10e18,
-                liquidationFee: 1e3
+                liquidationFee: 0.1e18
             }),
             output: Output({
                 collateralAssetsToLiquidate: 79.2e18 / 900,
@@ -168,10 +166,10 @@ contract CalculateExactLiquidationAmountsTestData {
                 totalBorrowerDebtAssets: 1e18, // 1debt token == 80 in value
                 totalBorrowerCollateralValue: 9_000e18,
                 totalBorrowerCollateralAssets: 10e18, // 1token == 900 in value
-                liquidationFee: 1e3
+                liquidationFee: 0.01e18
             }),
             output: Output({
-                collateralAssetsToLiquidate: uint256(80e18 + 80e18 * 1e3 / 1e4) / 900,
+                collateralAssetsToLiquidate: uint256(80e18 + 80e18 * 0.01e18 / 1e18) / 900,
                 debtAssetsToRepay: 1e18,
                 ltvAfterLiquidation: 0
             })
@@ -185,10 +183,10 @@ contract CalculateExactLiquidationAmountsTestData {
                 totalBorrowerDebtAssets: 160e18,
                 totalBorrowerCollateralValue: 100e18,
                 totalBorrowerCollateralAssets: 300e18,
-                liquidationFee: 500
+                liquidationFee: 0.05e18
             }),
             output: Output({
-                collateralAssetsToLiquidate: (80e18 + 80e18 * 500 / 1e4) * 3, // 252...
+                collateralAssetsToLiquidate: (80e18 + 80e18 * 0.05e18 / 1e18) * 3, // 252...
                 debtAssetsToRepay: 160e18,
                 ltvAfterLiquidation: 0
             })
@@ -201,10 +199,10 @@ contract CalculateExactLiquidationAmountsTestData {
                 totalBorrowerDebtAssets: 180e18,
                 totalBorrowerCollateralValue: 100e18,
                 totalBorrowerCollateralAssets: 100e18,
-                liquidationFee: 1000
+                liquidationFee: 0.1e18
             }),
             output: Output({
-                collateralAssetsToLiquidate: (10e18 + 10e18 * 1000 / 1e4),
+                collateralAssetsToLiquidate: (10e18 + 10e18 * 0.1e18 / 1e18),
                 debtAssetsToRepay: 10e18,
                 ltvAfterLiquidation: 1_9101_12359550561797
             })
@@ -218,7 +216,7 @@ contract CalculateExactLiquidationAmountsTestData {
                 totalBorrowerDebtAssets: 12e18,
                 totalBorrowerCollateralValue: 10e18,
                 totalBorrowerCollateralAssets: 10e18,
-                liquidationFee: 1000
+                liquidationFee: 0.1e18
             }),
             output: Output({
                 collateralAssetsToLiquidate: 10e18,
@@ -235,7 +233,7 @@ contract CalculateExactLiquidationAmountsTestData {
                 totalBorrowerDebtAssets: 18e18,
                 totalBorrowerCollateralValue: 10e18,
                 totalBorrowerCollateralAssets: 30e18,
-                liquidationFee: 1000
+                liquidationFee: 0.1e18
             }),
             output: Output({
                 collateralAssetsToLiquidate: 30e18,

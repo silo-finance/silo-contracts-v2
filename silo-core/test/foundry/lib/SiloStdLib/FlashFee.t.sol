@@ -14,15 +14,15 @@ forge test -vv --mc FlashFeeTest
 */
 contract FlashFeeTest is Test {
     struct FeeTestCase {
-        uint256 flashloanFeeInBp;
+        uint256 flashloanFee;
         uint256 amount;
         uint256 fee;
     }
 
     SiloConfigMock immutable SILO_CONFIG;
 
-    uint256 daoFeeInBp;
-    uint256 deployerFeeInBp;
+    uint256 daoFee;
+    uint256 deployerFee;
 
     mapping(uint256 => FeeTestCase) public feeTestCases;
     uint256 feeTestCasesIndex;
@@ -32,23 +32,23 @@ contract FlashFeeTest is Test {
     }
 
     /*
-    forge test -vv --mt test_flashFee
+    forge test -vv --mt test_flashFee_fuzz
     */
-    function test_flashFee(address _silo, address _asset) public {
+    function test_flashFee_fuzz(address _silo, address _asset) public {
         vm.assume(_silo != address(0));
         vm.assume(_asset != address(0));
 
         ISiloConfig siloConfig = ISiloConfig(SILO_CONFIG.ADDRESS());
 
-        feeTestCases[feeTestCasesIndex++] = FeeTestCase({flashloanFeeInBp: 0.1e4, amount: 1e18, fee: 0.1e18});
-        feeTestCases[feeTestCasesIndex++] = FeeTestCase({flashloanFeeInBp: 0, amount: 1e18, fee: 0});
-        feeTestCases[feeTestCasesIndex++] = FeeTestCase({flashloanFeeInBp: 0.1e4, amount: 0, fee: 0});
-        feeTestCases[feeTestCasesIndex++] = FeeTestCase({flashloanFeeInBp: 0, amount: 0, fee: 0});
-        feeTestCases[feeTestCasesIndex++] = FeeTestCase({flashloanFeeInBp: 0.125e4, amount: 1e18, fee: 0.125e18});
-        feeTestCases[feeTestCasesIndex++] = FeeTestCase({flashloanFeeInBp: 0.65e4, amount: 1e18, fee: 0.65e18});
+        feeTestCases[feeTestCasesIndex++] = FeeTestCase({flashloanFee: 0.1e18, amount: 1e18, fee: 0.1e18});
+        feeTestCases[feeTestCasesIndex++] = FeeTestCase({flashloanFee: 0, amount: 1e18, fee: 0});
+        feeTestCases[feeTestCasesIndex++] = FeeTestCase({flashloanFee: 0.1e18, amount: 0, fee: 0});
+        feeTestCases[feeTestCasesIndex++] = FeeTestCase({flashloanFee: 0, amount: 0, fee: 0});
+        feeTestCases[feeTestCasesIndex++] = FeeTestCase({flashloanFee: 0.125e18, amount: 1e18, fee: 0.125e18});
+        feeTestCases[feeTestCasesIndex++] = FeeTestCase({flashloanFee: 0.65e18, amount: 1e18, fee: 0.65e18});
 
         for (uint256 index = 0; index < feeTestCasesIndex; index++) {
-            SILO_CONFIG.getFeesWithAsset(address(this), 0, 0, feeTestCases[index].flashloanFeeInBp, _asset);
+            SILO_CONFIG.getFeesWithAsset(address(this), 0, 0, feeTestCases[index].flashloanFee, _asset);
 
             assertEq(SiloStdLib.flashFee(siloConfig, _asset, feeTestCases[index].amount), feeTestCases[index].fee);
         }

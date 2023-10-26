@@ -7,7 +7,7 @@ contract GetExactLiquidationAmountsTestData {
     struct Input {
         address user;
         uint256 debtToCover;
-        uint256 liquidationFeeInBp;
+        uint256 liquidationFee;
         bool selfLiquidation;
     }
 
@@ -39,7 +39,7 @@ contract GetExactLiquidationAmountsTestData {
     }
 
     function getData() external pure returns (GELAData[] memory data) {
-        data = new GELAData[](6);
+        data = new GELAData[](8);
         uint256 i;
 
         data[i].name = "all zeros => zero output";
@@ -97,6 +97,15 @@ contract GetExactLiquidationAmountsTestData {
 
         i++;
         data[i] = _clone(data[i-1]);
+        data[i].name = "as above, same result because we ignoring on self-liquidation fee";
+        data[i].input.liquidationFee = 0.2e18;
+
+        data[i].output.fromProtected = data[i - 1].output.fromProtected;
+        data[i].output.fromCollateral = 0;
+        data[i].output.repayDebtAssets = data[i - 1].output.repayDebtAssets;
+
+        i++;
+        data[i] = _clone(data[i-1]);
         data[i].name = "with above, self-liquidate too much";
         data[i].input.debtToCover = 99999e18;
         data[i].input.selfLiquidation = true;
@@ -109,7 +118,7 @@ contract GetExactLiquidationAmountsTestData {
     function _clone(GELAData memory _src) private pure returns (GELAData memory dst) {
         dst.input.user = address(1);
         dst.input.debtToCover = _src.input.debtToCover;
-        dst.input.liquidationFeeInBp = _src.input.liquidationFeeInBp;
+        dst.input.liquidationFee = _src.input.liquidationFee;
         dst.input.selfLiquidation = _src.input.selfLiquidation;
 
         dst.mocks.protectedUserSharesBalanceOf = _src.mocks.protectedUserSharesBalanceOf;

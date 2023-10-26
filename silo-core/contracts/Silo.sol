@@ -36,8 +36,6 @@ import {LeverageReentrancyGuard} from "./utils/LeverageReentrancyGuard.sol";
 contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, LeverageReentrancyGuard {
     using SafeERC20Upgradeable for IERC20Upgradeable;
 
-    /// @dev 10 ** (18 - 4) because we use 4 decimals (they are human readable) for config values on initialization
-    uint256 internal constant _DP2BP_NORMALIZATION = 10 ** (18 - 4);
     string internal constant _VERSION = "2.0.0";
 
     bytes32 internal constant _LEVERAGE_CALLBACK = keccak256("ILeverageBorrower.onLeverage");
@@ -121,30 +119,24 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
     }
 
     /// @inheritdoc ISilo
-    function getMaxLtv() external view virtual returns (uint256 maxLtvInBp) {
-        ISiloConfig.ConfigData memory configData = config.getConfig(address(this));
-
-        unchecked { maxLtvInBp = configData.maxLtv / _DP2BP_NORMALIZATION; }
+    function getMaxLtv() external view virtual returns (uint256 maxLtv) {
+        maxLtv = config.getConfig(address(this)).maxLtv;
     }
 
     /// @inheritdoc ISilo
-    function getLt() external view virtual returns (uint256 ltInBp) {
-        ISiloConfig.ConfigData memory configData = config.getConfig(address(this));
-
-        unchecked { ltInBp = configData.lt / _DP2BP_NORMALIZATION; }
+    function getLt() external view virtual returns (uint256 lt) {
+        lt = config.getConfig(address(this)).lt;
     }
 
     /// @inheritdoc ISilo
-    function getLtv(address _borrower) external view virtual returns (uint256 ltvInBp) {
+    function getLtv(address _borrower) external view virtual returns (uint256 ltv) {
         (
             ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig
         ) = _getOrderedConfigs(_borrower);
 
-        ltvInBp = SiloSolvencyLib.getLtv(
+        ltv = SiloSolvencyLib.getLtv(
             collateralConfig, debtConfig, _borrower, ISilo.OracleType.Solvency, AccrueInterestInMemory.Yes
         );
-
-        unchecked { ltvInBp /= _DP2BP_NORMALIZATION; }
     }
 
     /// @inheritdoc ISilo
@@ -178,9 +170,9 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
         external
         view
         virtual
-        returns (address daoFeeReceiver, address deployerFeeReceiver, uint256 daoFeeInBp, uint256 deployerFeeInBp)
+        returns (address daoFeeReceiver, address deployerFeeReceiver, uint256 daoFee, uint256 deployerFee)
     {
-        (daoFeeReceiver, deployerFeeReceiver, daoFeeInBp, deployerFeeInBp,) =
+        (daoFeeReceiver, deployerFeeReceiver, daoFee, deployerFee,) =
             SiloStdLib.getFeesAndFeeReceiversWithAsset(config, _factory);
     }
 
@@ -738,7 +730,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
         (ISiloConfig.ConfigData memory debtConfig, ISiloConfig.ConfigData memory collateralConfig) =
             config.getConfigs(address(this));
 
-        _accrueInterest(debtConfig.interestRateModel, debtConfig.daoFeeInBp, debtConfig.deployerFeeInBp);
+        _accrueInterest(debtConfig.interestRateModel, debtConfig.daoFee, debtConfig.deployerFee);
 
         uint256 assets;
 
@@ -802,7 +794,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
         if (_collateralAsset != collateralConfig.token) revert UnexpectedCollateralToken();
         if (_debtAsset != debtConfig.token) revert UnexpectedDebtToken();
 
-        _accrueInterest(debtConfig.interestRateModel, debtConfig.daoFeeInBp, debtConfig.deployerFeeInBp);
+        _accrueInterest(debtConfig.interestRateModel, debtConfig.daoFee, debtConfig.deployerFee);
         ISilo(debtConfig.otherSilo).accrueInterest();
 
         if (collateralConfig.callBeforeQuote) {
@@ -877,23 +869,23 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
 
         accruedInterest = SiloLendingLib.accrueInterestForAsset(
             configData.interestRateModel,
-            configData.daoFeeInBp,
-            configData.deployerFeeInBp,
+            configData.daoFee,
+            configData.deployerFee,
             siloData,
             _total[AssetType.Collateral],
             _total[AssetType.Debt]
         );
     }
 
-    function _accrueInterest(address _interestRateModel, uint256 _daoFeeInBp, uint256 _deployerFeeInBp)
+    function _accrueInterest(address _interestRateModel, uint256 _daoFee, uint256 _deployerFee)
         internal
         virtual
         returns (uint256 accruedInterest)
     {
         accruedInterest = SiloLendingLib.accrueInterestForAsset(
             _interestRateModel,
-            _daoFeeInBp,
-            _deployerFeeInBp,
+            _daoFee,
+            _deployerFee,
             siloData,
             _total[AssetType.Collateral],
             _total[AssetType.Debt]
@@ -1010,7 +1002,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
         (ISiloConfig.ConfigData memory debtConfig, ISiloConfig.ConfigData memory collateralConfig) =
             config.getConfigs(address(this));
 
-        _accrueInterest(debtConfig.interestRateModel, debtConfig.daoFeeInBp, debtConfig.deployerFeeInBp);
+        _accrueInterest(debtConfig.interestRateModel, debtConfig.daoFee, debtConfig.deployerFee);
 
         (assets, shares) = SiloLendingLib.borrow(
             debtConfig,

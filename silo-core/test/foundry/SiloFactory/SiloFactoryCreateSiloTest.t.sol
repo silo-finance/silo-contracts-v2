@@ -27,8 +27,6 @@ import {SiloLittleHelper} from "silo-core/test/foundry/_common/SiloLittleHelper.
 forge test -vv --ffi --mc SiloFactoryCreateSiloTest
 */
 contract SiloFactoryCreateSiloTest is SiloLittleHelper, IntegrationTest {
-    uint256 internal constant _BP2DP_NORMALIZATION = 10 ** (18 - 4);
-
     string public constant SILO_TO_DEPLOY = SiloConfigsNames.ETH_USDC_UNI_V3_SILO;
 
     ISiloFactory siloFactory;
@@ -63,41 +61,42 @@ contract SiloFactoryCreateSiloTest is SiloLittleHelper, IntegrationTest {
 
         (ISiloConfig.ConfigData memory configData0, ISiloConfig.ConfigData memory configData1) =
             siloConfig.getConfigs(address(silo0));
-        assertEq(configData0.daoFeeInBp, siloFactory.daoFeeInBp());
-        assertEq(configData0.deployerFeeInBp, initData.deployerFeeInBp);
-        assertEq(configData0.silo, configData1.otherSilo);
-        assertEq(configData0.otherSilo, configData1.silo);
-        assertTrue(configData0.silo != address(0));
-        assertTrue(configData0.otherSilo != address(0));
-        assertTrue(configData0.protectedShareToken != address(0));
-        assertTrue(configData0.collateralShareToken != address(0));
-        assertTrue(configData0.debtShareToken != address(0));
-        assertEq(configData0.solvencyOracle, initData.solvencyOracle0);
-        assertEq(configData0.maxLtvOracle, initData.maxLtvOracle0);
+        
+        assertEq(configData0.daoFee, siloFactory.daoFee(), "configData0.daoFee");
+        assertEq(configData0.deployerFee, initData.deployerFee, "configData0.deployerFee");
+        assertEq(configData0.silo, configData1.otherSilo, "configData0.silo");
+        assertEq(configData0.otherSilo, configData1.silo, "configData0.otherSilo");
+        assertTrue(configData0.silo != address(0), "configData0.silo");
+        assertTrue(configData0.otherSilo != address(0), "configData0.otherSilo");
+        assertTrue(configData0.protectedShareToken != address(0), "configData0.protectedShareToken");
+        assertTrue(configData0.collateralShareToken != address(0), "configData0.collateralShareToken");
+        assertTrue(configData0.debtShareToken != address(0), "configData0.debtShareToken");
+        assertEq(configData0.solvencyOracle, initData.solvencyOracle0, "configData0.solvencyOracle");
+        assertEq(configData0.maxLtvOracle, initData.maxLtvOracle0, "configData0.maxLtvOracle");
         assertEq(configData0.interestRateModel, getAddress(SiloCoreContracts.INTEREST_RATE_MODEL_V2));
-        assertEq(configData0.maxLtv, initData.maxLtv0 * _BP2DP_NORMALIZATION);
-        assertEq(configData0.lt, initData.lt0 * _BP2DP_NORMALIZATION);
-        assertEq(configData0.liquidationFee, initData.liquidationFee0);
-        assertEq(configData0.flashloanFee, initData.flashloanFee0);
-        assertEq(configData0.callBeforeQuote, initData.callBeforeQuote0);
+        assertEq(configData0.maxLtv, initData.maxLtv0, "configData0.maxLtv");
+        assertEq(configData0.lt, initData.lt0, "configData0.lt");
+        assertEq(configData0.liquidationFee, initData.liquidationFee0, "configData0.liquidationFee");
+        assertEq(configData0.flashloanFee, initData.flashloanFee0, "configData0.flashloanFee");
+        assertEq(configData0.callBeforeQuote, initData.callBeforeQuote0, "configData0.callBeforeQuote");
 
-        assertEq(configData1.daoFeeInBp, siloFactory.daoFeeInBp());
-        assertEq(configData1.deployerFeeInBp, initData.deployerFeeInBp);
-        assertEq(configData1.silo, configData0.otherSilo);
-        assertEq(configData1.otherSilo, configData0.silo);
-        assertTrue(configData1.silo != address(0));
-        assertTrue(configData1.otherSilo != address(0));
-        assertTrue(configData1.protectedShareToken != address(0));
-        assertTrue(configData1.collateralShareToken != address(0));
-        assertTrue(configData1.debtShareToken != address(0));
-        assertEq(configData1.solvencyOracle, initData.solvencyOracle1);
-        assertEq(configData1.maxLtvOracle, initData.maxLtvOracle1);
+        assertEq(configData1.daoFee, siloFactory.daoFee(), "configData1.daoFee");
+        assertEq(configData1.deployerFee, initData.deployerFee, "configData1.deployerFee");
+        assertEq(configData1.silo, configData0.otherSilo, "configData1.silo");
+        assertEq(configData1.otherSilo, configData0.silo, "configData1.otherSilo");
+        assertTrue(configData1.silo != address(0), "configData1.silo");
+        assertTrue(configData1.otherSilo != address(0), "configData1.otherSilo");
+        assertTrue(configData1.protectedShareToken != address(0), "configData1.protectedShareToken");
+        assertTrue(configData1.collateralShareToken != address(0), "configData1.collateralShareToken");
+        assertTrue(configData1.debtShareToken != address(0), "configData1.debtShareToken");
+        assertEq(configData1.solvencyOracle, initData.solvencyOracle1, "configData1.solvencyOracle");
+        assertEq(configData1.maxLtvOracle, initData.maxLtvOracle1, "configData1.maxLtvOracle");
         assertEq(configData1.interestRateModel, getAddress(SiloCoreContracts.INTEREST_RATE_MODEL_V2));
-        assertEq(configData1.maxLtv, initData.maxLtv1 * _BP2DP_NORMALIZATION);
-        assertEq(configData1.lt, initData.lt1 * _BP2DP_NORMALIZATION);
-        assertEq(configData1.liquidationFee, initData.liquidationFee1);
-        assertEq(configData1.flashloanFee, initData.flashloanFee1);
-        assertEq(configData1.callBeforeQuote, initData.callBeforeQuote1);
+        assertEq(configData1.maxLtv, initData.maxLtv1, "configData1.maxLtv");
+        assertEq(configData1.lt, initData.lt1, "configData1.lt");
+        assertEq(configData1.liquidationFee, initData.liquidationFee1, "configData1.liquidationFee");
+        assertEq(configData1.flashloanFee, initData.flashloanFee1, "configData1.flashloanFee");
+        assertEq(configData1.callBeforeQuote, initData.callBeforeQuote1, "configData1.callBeforeQuote");
 
         vm.expectRevert("Initializable: contract is already initialized");
         ISilo(configData0.silo).initialize(siloConfig, initData.interestRateModelConfig0);

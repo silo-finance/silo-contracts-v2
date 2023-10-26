@@ -26,7 +26,7 @@ contract SiloFactoryHelper is SiloFactory {
     }
 }
 
-// forge test -vv --ffi --mc GetSharesAndTotalSupplyTest
+// forge test -vv --ffi --mc GetAssetsDataForLtvCalculationsTest
 contract GetAssetsDataForLtvCalculationsTest is Test {
     GetAssetsDataForLtvCalculationsTestData dataReader;
     SiloFactoryHelper siloFactoryHelper;
@@ -62,7 +62,7 @@ contract GetAssetsDataForLtvCalculationsTest is Test {
             initData.maxLtvOracle0 = address(uint160(scenario.input.collateralConfig.maxLtvOracle));
             initData.solvencyOracle0 = address(uint160(scenario.input.collateralConfig.solvencyOracle));
             initData.interestRateModel0 = interestRateModelMock.ADDRESS();
-            initData.deployerFeeInBp = scenario.input.collateralConfig.deployerFeeInBp;
+            initData.deployerFee = scenario.input.collateralConfig.deployerFee;
 
             initData.maxLtvOracle1 = address(uint160(scenario.input.debtConfig.maxLtvOracle));
             initData.solvencyOracle1 = address(uint160(scenario.input.debtConfig.solvencyOracle));
@@ -73,7 +73,7 @@ contract GetAssetsDataForLtvCalculationsTest is Test {
 
         collateralConfig.protectedShareToken = protectedShareToken;
         collateralConfig.collateralShareToken = collateralShareToken;
-        collateralConfig.daoFeeInBp = scenario.input.collateralConfig.daoFeeInBp;
+        collateralConfig.daoFee = scenario.input.collateralConfig.daoFee;
         collateralConfig.silo = silo0;
 
         debtConfig.debtShareToken = debtShareToken;

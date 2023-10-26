@@ -53,7 +53,7 @@ contract SiloLendingLibBorrowTestData {
     }
 
     function getData() external view returns (SLLBData[] memory data) {
-        data = new SLLBData[](11);
+        data = new SLLBData[](12);
         uint256 i;
 
         _init(data[i], "#0 all zeros");
@@ -140,6 +140,17 @@ contract SiloLendingLibBorrowTestData {
         data[i].mocks.debtSharesTotalSupply = (100 + 200 + 50);
         data[i].output.borrowedAssets = allTheRest;
         data[i].output.borrowedShare = allTheRest;
+
+        i++;
+        _init(data[i], "#11 can borrow with fee");
+        data[i].input.assets = 4e18;
+        data[i].input.totalCollateralAssets = 5e18;
+        data[i].input.initTotalDebt = 1e18;
+        data[i].input.configData.daoFee = 0.01e18;
+        data[i].input.configData.deployerFee = 0.03e18;
+        data[i].mocks.debtSharesTotalSupply = 100e18;
+        data[i].output.borrowedAssets = 4e18;
+        data[i].output.borrowedShare = 400e18;
     }
 
     function _init(SLLBData memory _src, string memory _name) private view {
@@ -160,8 +171,8 @@ contract SiloLendingLibBorrowTestData {
     function _clone(SLLBData memory _src) private pure returns (SLLBData memory dst) {
         dst.input = Input({
             configData: ISiloConfig.ConfigData({
-                daoFeeInBp: _src.input.configData.daoFeeInBp,
-                deployerFeeInBp: _src.input.configData.deployerFeeInBp,
+                daoFee: _src.input.configData.daoFee,
+                deployerFee: _src.input.configData.deployerFee,
                 silo: _src.input.configData.silo,
                 otherSilo: _src.input.configData.otherSilo,
                 token: _src.input.configData.token,

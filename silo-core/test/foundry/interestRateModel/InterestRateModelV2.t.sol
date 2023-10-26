@@ -8,13 +8,12 @@ import "silo-core/contracts/interestRateModel/InterestRateModelV2ConfigFactory.s
 
 import "../_common/InterestRateModelConfigs.sol";
 
-// forge test -vv --mt InterestRateModelV2Test
+// forge test -vv --mc InterestRateModelV2Test
 contract InterestRateModelV2Test is Test, InterestRateModelConfigs {
     uint256 constant TODAY = 1682885514;
     InterestRateModelV2 immutable INTEREST_RATE_MODEL;
 
     uint256 constant DP = 10 ** 18;
-    uint256 constant BASIS_POINTS = 10000;
 
     constructor() {
         INTEREST_RATE_MODEL = new InterestRateModelV2();
@@ -72,8 +71,8 @@ contract InterestRateModelV2Test is Test, InterestRateModelConfigs {
         INTEREST_RATE_MODEL.calculateCurrentInterestRate(emptyConfig, 0, 0, lastTransactionTime, currentTime);
     }
 
-    // forge test -vv --mt test_IRM_calculateCompoundInterestRateWithOverflowDetection_CAP
-    function test_IRM_calculateCompoundInterestRateWithOverflowDetection_CAP(uint256 _t) public {
+    // forge test -vv --mt test_IRM_calculateCompoundInterestRateWithOverflowDetection_CAP_fuzz
+    function test_IRM_calculateCompoundInterestRateWithOverflowDetection_CAP_fuzz(uint256 _t) public {
         vm.assume(_t < 5 * 365 days);
 
         uint256 cap = 3170979198376 * (1 + _t);

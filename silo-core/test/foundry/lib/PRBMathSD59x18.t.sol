@@ -9,6 +9,9 @@ import "../_common/Assertions.sol";
 import "../data/PRBMathSD59x18_exp2_data.sol";
 import "../data/PRBMathSD59x18_exp_data.sol";
 
+/*
+forge test -vv --mc PRBMathSD59x18Test
+*/
 contract PRBMathSD59x18Test is Assertions, PRBMathSD59x18_exp2_data, PRBMathSD59x18_exp_data {
     using Strings for uint256;
 

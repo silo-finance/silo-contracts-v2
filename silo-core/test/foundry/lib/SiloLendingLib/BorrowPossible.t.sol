@@ -8,8 +8,6 @@ import "../../_mocks/TokenMock.sol";
 
 // forge test -vv --mc BorrowPossibleTest
 contract BorrowPossibleTest is Test {
-    uint256 constant BASIS_POINTS = 1e4;
-
     /*
     forge test -vv --mt test_borrowPossible_borrowable_zeros
     */

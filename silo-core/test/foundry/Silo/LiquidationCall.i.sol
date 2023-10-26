@@ -183,6 +183,9 @@ contract LiquidationCallTest is SiloLittleHelper, Test {
         assertEq(collateralToLiquidate, COLLATERAL, "expect full collateralToLiquidate on bad debt");
         assertGt(debtToRepay, DEBT, "debtToRepay must be higher that original");
 
+        uint256 interest = 61_643835616429440000;
+        assertEq(debtToRepay - DEBT, interest, "interests on debt");
+
         vm.expectCall(address(silo0), abi.encodeWithSelector(ISilo.accrueInterest.selector));
         vm.expectCall(address(debtConfig.interestRateModel), abi.encodeWithSelector(IInterestRateModel.getCompoundInterestRateAndUpdate.selector));
         vm.expectCall(address(collateralConfig.interestRateModel), abi.encodeWithSelector(IInterestRateModel.getCompoundInterestRateAndUpdate.selector));
@@ -192,18 +195,29 @@ contract LiquidationCallTest is SiloLittleHelper, Test {
 
         silo1.liquidationCall(address(token0), address(token1), BORROWER, debtToCover, receiveSToken);
 
-        assertTrue(silo0.isSolvent(BORROWER), "user is solvent");
-        assertTrue(silo1.isSolvent(BORROWER), "user is solvent");
+        assertTrue(silo0.isSolvent(BORROWER), "user is solvent after liquidation");
+        assertTrue(silo1.isSolvent(BORROWER), "user is solvent after liquidation");
 
-        uint256 interest = 61_643835616429440000;
-        uint256 daoAndDeployerFees = interest * (0.15e4 + 0.10e4) / 1e4; // dao fee + deployer fee
+        assertEq(debtConfig.daoFee, 0.15e18, "just checking on daoFee");
+        assertEq(debtConfig.deployerFee, 0.10e18, "just checking on deployerFee");
 
-        assertEq(token0.balanceOf(liquidator), 10e18, "liquidator should get all borrower collateral, no fee because of bad debt");
+        uint256 daoAndDeployerFees = interest * (0.15e18 + 0.10e18) / 1e18; // dao fee + deployer fee
+
+        assertEq(
+            token0.balanceOf(liquidator), COLLATERAL,
+            "liquidator should get all borrower collateral, no fee because of bad debt"
+        );
         assertEq(token0.balanceOf(address(silo0)), 0, "all silo collateral should be transfer to liquidator");
-        assertEq(silo0.getCollateralAssets(), 0, "total collateral");
+        assertEq(silo0.getCollateralAssets(), 0, "total collateral == 0");
 
-        assertEq(token1.balanceOf(address(silo1)), 0.5e18 + 7.5e18 + interest, "silo has debt token fully repay, debt deposit + interest");
-        assertEq(silo1.getCollateralAssets(), 0.5e18 + 7.5e18 + interest - daoAndDeployerFees, "borrowed token + interest");
+        assertEq(
+            token1.balanceOf(address(silo1)), 0.5e18 + 7.5e18 + interest,
+            "silo has debt token fully repay, debt deposit + interest"
+        );
+        assertEq(
+            silo1.getCollateralAssets(), 0.5e18 + 7.5e18 + interest - daoAndDeployerFees,
+            "borrowed token + interest"
+        );
         assertEq(token1.balanceOf(liquidator), 100e18 - (7.5e18 + interest), "liquidator did not used all the tokens");
 
         /*

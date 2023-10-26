@@ -9,7 +9,7 @@ import "../../_mocks/InterestRateModelMock.sol";
 
 // forge test -vv --mc AccrueInterestForAssetTest
 contract AccrueInterestForAssetTest is Test {
-    uint256 constant BASIS_POINTS = 1e4;
+    uint256 constant DECIMAL_POINTS = 1e18;
 
     ISilo.SiloData siloData;
     ISilo.Assets totalCollateral;
@@ -98,8 +98,8 @@ contract AccrueInterestForAssetTest is Test {
         vm.warp(currentTimestamp);
 
         uint256 rcomp = 0.01e18;
-        uint256 daoFeeInBp = 0.02e4;
-        uint256 deployerFeeInBp = 0.03e4;
+        uint256 daoFee = 0.02e18;
+        uint256 deployerFee = 0.03e18;
 
         InterestRateModelMock irm = new InterestRateModelMock();
         irm.getCompoundInterestRateAndUpdateMock(rcomp);
@@ -110,16 +110,24 @@ contract AccrueInterestForAssetTest is Test {
 
         uint256 gasStart = gasleft();
         uint256 accruedInterest = SiloLendingLib.accrueInterestForAsset(
-            irm.ADDRESS(), daoFeeInBp, deployerFeeInBp, siloData, totalCollateral, totalDebt
+            irm.ADDRESS(), daoFee, deployerFee, siloData, totalCollateral, totalDebt
         );
         uint256 gasEnd = gasleft();
 
         assertEq(gasStart - gasEnd, 6023, "optimise accrueInterestForAsset");
 
         assertEq(accruedInterest, 0.005e18, "accruedInterest");
-        assertEq(totalCollateral.assets, 1e18 + accruedInterest * (BASIS_POINTS - daoFeeInBp - deployerFeeInBp) / BASIS_POINTS, "totalCollateral");
+        assertEq(
+            totalCollateral.assets,
+            1e18 + accruedInterest * (DECIMAL_POINTS - daoFee - deployerFee) / DECIMAL_POINTS,
+            "totalCollateral"
+        );
         assertEq(totalDebt.assets, 0.505e18, "totalDebt");
         assertEq(siloData.interestRateTimestamp, currentTimestamp, "interestRateTimestamp");
-        assertEq(siloData.daoAndDeployerFees, accruedInterest * (daoFeeInBp + deployerFeeInBp) / BASIS_POINTS, "daoAndDeployerFees");
+        assertEq(
+            siloData.daoAndDeployerFees,
+            accruedInterest * (daoFee + deployerFee) / DECIMAL_POINTS,
+            "daoAndDeployerFees"
+        );
     }
 }

@@ -15,8 +15,6 @@ import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
     forge test -vv --ffi --mc WithdrawWhenDebtTest
 */
 contract WithdrawWhenDebtTest is SiloLittleHelper, Test {
-    uint256 internal constant _BP2DP_NORMALIZATION = 10 ** (18 - 4);
-
     ISiloConfig siloConfig;
 
     function setUp() public {
@@ -58,7 +56,7 @@ contract WithdrawWhenDebtTest is SiloLittleHelper, Test {
 
         uint256 expectedWithdraw = 882352941176470588;
         uint256 expectedCollateralLeft = 1e18 - expectedWithdraw;
-        assertLe(0.1e18 * 1e18 / expectedCollateralLeft, 8500 * _BP2DP_NORMALIZATION, "LTV holds");
+        assertLe(0.1e18 * 1e18 / expectedCollateralLeft, 0.85e18, "LTV holds");
 
         assertEq(silo0.maxWithdraw(address(this), ISilo.AssetType.Protected), expectedWithdraw, "protected maxWithdraw");
         assertEq(previewWithdraw, gotShares, "previewWithdraw");

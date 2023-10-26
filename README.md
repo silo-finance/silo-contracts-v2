@@ -115,6 +115,7 @@ yarn workspace <workspaceName> <commandName> ...
 brew install lcov
 
 rm lcov.info
+mkdir coverage
 FOUNDRY_PROFILE=core forge coverage --report summary --report lcov --ffi | grep -i 'silo-core/contracts/' > coverage/silo-core.txt
 genhtml -o coverage/silo-core/ lcov.info
 

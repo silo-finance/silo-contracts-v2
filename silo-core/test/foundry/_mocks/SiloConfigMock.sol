@@ -16,13 +16,13 @@ contract SiloConfigMock is Test {
         address _silo,
         uint256 _daoFee,
         uint256 _deployerFee,
-        uint256 _flashloanFeeInBp,
+        uint256 _flashloanFee,
         address _asset
     ) external {
         vm.mockCall(
             ADDRESS,
             abi.encodeWithSelector(ISiloConfig.getFeesWithAsset.selector, _silo),
-            abi.encode(_daoFee, _deployerFee, _flashloanFeeInBp, _asset)
+            abi.encode(_daoFee, _deployerFee, _flashloanFee, _asset)
         );
     }
 }

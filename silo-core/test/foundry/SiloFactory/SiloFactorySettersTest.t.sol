@@ -14,21 +14,21 @@ contract SiloFactorySettersTest is Test {
     address siloImpl = address(100001);
     address shareCollateralTokenImpl = address(100002);
     address shareDebtTokenImpl = address(100003);
-    uint256 daoFeeInBp = 0.20e4;
+    uint256 daoFee = 0.20e18;
     address daoFeeReceiver = address(100004);
 
     address hacker = address(1000099);
 
     function setUp() public {
         siloFactory = new SiloFactory();
-        siloFactory.initialize(siloImpl, shareCollateralTokenImpl, shareDebtTokenImpl, daoFeeInBp, daoFeeReceiver);
+        siloFactory.initialize(siloImpl, shareCollateralTokenImpl, shareDebtTokenImpl, daoFee, daoFeeReceiver);
     }
 
     /*
     forge test -vv --mt test_setDaoFee
     */
     function test_setDaoFee(uint256 _newDaoFee) public {
-        uint256 maxFee = siloFactory.MAX_FEE_IN_BP();
+        uint256 maxFee = siloFactory.MAX_FEE();
 
         vm.assume(_newDaoFee < maxFee);
 
@@ -41,67 +41,67 @@ contract SiloFactorySettersTest is Test {
 
         siloFactory.setDaoFee(_newDaoFee);
 
-        assertEq(siloFactory.daoFeeInBp(), _newDaoFee);
+        assertEq(siloFactory.daoFee(), _newDaoFee);
     }
 
     /*
     forge test -vv --mt test_setMaxDeployerFee
     */
-    function test_setMaxDeployerFee(uint256 _newMaxDeployerFeeInBp) public {
-        uint256 maxFee = siloFactory.MAX_FEE_IN_BP();
+    function test_setMaxDeployerFee(uint256 _newMaxDeployerFee) public {
+        uint256 maxFee = siloFactory.MAX_FEE();
 
-        vm.assume(_newMaxDeployerFeeInBp < maxFee);
+        vm.assume(_newMaxDeployerFee < maxFee);
 
         vm.expectRevert(ISiloFactory.MaxFee.selector);
         siloFactory.setMaxDeployerFee(maxFee + 1);
 
         vm.prank(hacker);
         vm.expectRevert("Ownable: caller is not the owner");
-        siloFactory.setMaxDeployerFee(_newMaxDeployerFeeInBp);
+        siloFactory.setMaxDeployerFee(_newMaxDeployerFee);
 
-        siloFactory.setMaxDeployerFee(_newMaxDeployerFeeInBp);
+        siloFactory.setMaxDeployerFee(_newMaxDeployerFee);
 
-        assertEq(siloFactory.maxDeployerFeeInBp(), _newMaxDeployerFeeInBp);
+        assertEq(siloFactory.maxDeployerFee(), _newMaxDeployerFee);
     }
 
     /*
     forge test -vv --mt test_setMaxFlashloanFee
     */
-    function test_setMaxFlashloanFee(uint256 _newMaxFlashloanFeeInBp) public {
-        uint256 maxFee = siloFactory.MAX_FEE_IN_BP();
+    function test_setMaxFlashloanFee(uint256 _newMaxFlashloanFee) public {
+        uint256 maxFee = siloFactory.MAX_FEE();
 
-        vm.assume(_newMaxFlashloanFeeInBp < maxFee);
+        vm.assume(_newMaxFlashloanFee < maxFee);
 
         vm.expectRevert(ISiloFactory.MaxFee.selector);
         siloFactory.setMaxFlashloanFee(maxFee + 1);
 
         vm.prank(hacker);
         vm.expectRevert("Ownable: caller is not the owner");
-        siloFactory.setMaxFlashloanFee(_newMaxFlashloanFeeInBp);
+        siloFactory.setMaxFlashloanFee(_newMaxFlashloanFee);
 
-        siloFactory.setMaxFlashloanFee(_newMaxFlashloanFeeInBp);
+        siloFactory.setMaxFlashloanFee(_newMaxFlashloanFee);
 
-        assertEq(siloFactory.maxFlashloanFeeInBp(), _newMaxFlashloanFeeInBp);
+        assertEq(siloFactory.maxFlashloanFee(), _newMaxFlashloanFee);
     }
 
     /*
     forge test -vv --mt test_setMaxLiquidationFee
     */
-    function test_setMaxLiquidationFee(uint256 _newMaxLiquidationFeeInBp) public {
-        uint256 maxFee = siloFactory.MAX_FEE_IN_BP();
+    function test_setMaxLiquidationFee(uint256 _newMaxLiquidationFee) public {
+        uint256 maxFee = siloFactory.MAX_FEE();
 
-        vm.assume(_newMaxLiquidationFeeInBp < maxFee);
+        vm.assume(_newMaxLiquidationFee < maxFee);
 
         vm.expectRevert(ISiloFactory.MaxFee.selector);
         siloFactory.setMaxLiquidationFee(maxFee + 1);
 
         vm.prank(hacker);
         vm.expectRevert("Ownable: caller is not the owner");
-        siloFactory.setMaxLiquidationFee(_newMaxLiquidationFeeInBp);
+        siloFactory.setMaxLiquidationFee(_newMaxLiquidationFee);
 
-        siloFactory.setMaxLiquidationFee(_newMaxLiquidationFeeInBp);
+        siloFactory.setMaxLiquidationFee(_newMaxLiquidationFee);
 
-        assertEq(siloFactory.maxLiquidationFeeInBp(), _newMaxLiquidationFeeInBp);
+        assertEq(siloFactory.maxLiquidationFee(), _newMaxLiquidationFee);
     }
 
     /*

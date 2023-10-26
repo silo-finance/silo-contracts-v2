@@ -19,11 +19,9 @@ library SiloLiquidationExecLib {
         address collateralConfigAsset;
         address debtConfigAsset;
         uint256 debtToCover;
-        uint256 liquidationFeeInBp;
+        uint256 liquidationFee;
         bool selfLiquidation;
     }
-
-    uint256 internal constant _BASIS_POINTS = 1e4;
 
     /// @dev that method allow to finish liquidation process by giving up collateral to liquidator
     function withdrawCollateralsToLiquidator(
@@ -69,7 +67,7 @@ library SiloLiquidationExecLib {
         ISiloConfig.ConfigData memory _debtConfig,
         address _user,
         uint256 _debtToCover,
-        uint256 _liquidationFeeInBp,
+        uint256 _liquidationFee,
         bool _selfLiquidation
     )
         external
@@ -96,7 +94,7 @@ library SiloLiquidationExecLib {
                 collateralConfigAsset: _collateralConfig.token,
                 debtConfigAsset: _debtConfig.token,
                 debtToCover: _debtToCover,
-                liquidationFeeInBp: _liquidationFeeInBp,
+                liquidationFee: _liquidationFee,
                 selfLiquidation: _selfLiquidation
             })
         );
@@ -262,14 +260,14 @@ library SiloLiquidationExecLib {
         if (_ltvData.borrowerDebtAssets == 0 || sumOfCollateralAssets == 0) return (0, 0);
 
         (
-            uint256 sumOfBorrowerCollateralValue, uint256 totalBorrowerDebtValue, uint256 ltvBeforeInDp
+            uint256 sumOfBorrowerCollateralValue, uint256 totalBorrowerDebtValue, uint256 ltvBefore
         ) = SiloSolvencyLib.calculateLtv(_ltvData, _params.collateralConfigAsset, _params.debtConfigAsset);
 
-        if (!_params.selfLiquidation && _params.collateralLt >= ltvBeforeInDp) return (0, 0);
+        if (!_params.selfLiquidation && _params.collateralLt >= ltvBefore) return (0, 0);
 
-        uint256 ltvAfterInDp;
+        uint256 ltvAfter;
 
-        (receiveCollateralAssets, repayDebtAssets, ltvAfterInDp) = SiloLiquidationLib.calculateExactLiquidationAmounts(
+        (receiveCollateralAssets, repayDebtAssets, ltvAfter) = SiloLiquidationLib.calculateExactLiquidationAmounts(
             _params.debtToCover,
             sumOfCollateralAssets,
             sumOfBorrowerCollateralValue,
@@ -280,22 +278,22 @@ library SiloLiquidationExecLib {
 
         if (receiveCollateralAssets == 0 || repayDebtAssets == 0) return (0, 0);
 
-        if (ltvAfterInDp != 0) { // it can be 0 in case of full liquidation
+        if (ltvAfter != 0) { // it can be 0 in case of full liquidation
             if (_params.selfLiquidation) {
                 // There is dependency, based on which LTV will be going up and we need to allow for liquidation
                 // dependency is: (collateral value / debt value) - 1 > fee
                 // when above is true, LTV will go down, otherwise it will always go up.
                 // When it will be going up, we are close to bad debt. This "close" depends on how big fee is.
-                // Based on that, we can not check if (ltvAfterInDp > ltvBeforeInDp), we need to allow for liquidation.
+                // Based on that, we can not check if (ltvAfter > ltvBefore), we need to allow for liquidation.
                 // In case of self liquidation:
                 // - if user is solvent after liquidation, LTV before does not matter
                 // - if user was solvent but after liquidation it is not, we need to revert
                 // - if user was not solvent, then we need to allow
-                if (ltvBeforeInDp <= _params.collateralLt && ltvAfterInDp > _params.collateralLt) {
+                if (ltvBefore <= _params.collateralLt && ltvAfter > _params.collateralLt) {
                     revert ISiloLiquidation.Insolvency();
                 }
             } else {
-                if (ltvAfterInDp < SiloLiquidationLib.minAcceptableLTV(_params.collateralLt)) {
+                if (ltvAfter < SiloLiquidationLib.minAcceptableLTV(_params.collateralLt)) {
                     revert ISiloLiquidation.LiquidationTooBig();
                 }
             }

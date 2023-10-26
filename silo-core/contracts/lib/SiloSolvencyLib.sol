@@ -20,7 +20,6 @@ library SiloSolvencyLib {
     }
 
     uint256 internal constant _PRECISION_DECIMALS = 1e18;
-    uint256 internal constant _BASIS_POINTS = 1e4;
     uint256 internal constant _INFINITY = type(uint256).max;
 
     /// @dev check if config was given in correct order
@@ -139,8 +138,8 @@ library SiloSolvencyLib {
             ? SiloStdLib.getTotalCollateralAssetsWithInterest(
                 _collateralConfig.silo,
                 _collateralConfig.interestRateModel,
-                _collateralConfig.daoFeeInBp,
-                _collateralConfig.deployerFeeInBp
+                _collateralConfig.daoFee,
+                _collateralConfig.deployerFee
             )
             : totalCollateralAssets;
 
