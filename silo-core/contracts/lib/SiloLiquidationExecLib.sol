@@ -275,7 +275,7 @@ library SiloLiquidationExecLib {
             sumOfBorrowerCollateralValue,
             _ltvData.borrowerDebtAssets,
             totalBorrowerDebtValue,
-            _params.liquidationFeeInBp
+            _params.selfLiquidation ? 0 : _params.liquidationFee
         );
 
         if (receiveCollateralAssets == 0 || repayDebtAssets == 0) return (0, 0);
