@@ -70,7 +70,7 @@ jobs:
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
         with:
-          version: nightly
+          version: nightly-6ac22dfb99bb5df7f5bdde2290ea500b13356175
         
       - name: Build silo foundry utils
         working-directory: ./gitmodules/silo-foundry-utils
