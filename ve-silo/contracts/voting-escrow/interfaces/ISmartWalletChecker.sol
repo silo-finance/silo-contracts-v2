@@ -5,4 +5,5 @@ pragma solidity >=0.5.0;
 /// The goal is to prevent tokenizing the escrow.
 interface ISmartWalletChecker {
     function check(address _wallet) external;
+    function allowlistAddress(address _wallet) external;
 }
