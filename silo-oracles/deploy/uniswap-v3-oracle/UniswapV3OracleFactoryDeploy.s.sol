@@ -16,9 +16,10 @@ FOUNDRY_PROFILE=oracles \
 contract UniswapV3OracleFactoryDeploy is CommonDeploy {
     function run() public returns (UniswapV3OracleFactory factory) {
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
-        vm.startBroadcast(deployerPrivateKey);
 
         address uniswapFactory = getAddress(AddrKey.UNISWAP_FACTORY);
+
+        vm.startBroadcast(deployerPrivateKey);
 
         factory = new UniswapV3OracleFactory(IUniswapV3Factory(uniswapFactory));
         

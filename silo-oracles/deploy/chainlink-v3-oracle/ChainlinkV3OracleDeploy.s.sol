@@ -17,7 +17,6 @@ FOUNDRY_PROFILE=oracles CONFIG=CHAINLINK_Demo_config \
 contract ChainlinkV3OracleDeploy is CommonDeploy {
     function run() public returns (ChainlinkV3Oracle oracle) {
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
-        vm.startBroadcast(deployerPrivateKey);
 
         string memory configName = vm.envString("CONFIG");
 
@@ -28,10 +27,12 @@ contract ChainlinkV3OracleDeploy is CommonDeploy {
 
         address factory = getDeployedAddress(SiloOraclesFactoriesContracts.CHAINLINK_V3_ORACLE_FACTORY);
 
+        vm.startBroadcast(deployerPrivateKey);
+
         oracle = ChainlinkV3OracleFactory(factory).create(config);
 
-        OraclesDeployments.save(getChainAlias(), configName, address(oracle));
-
         vm.stopBroadcast();
+
+        OraclesDeployments.save(getChainAlias(), configName, address(oracle));
     }
 }

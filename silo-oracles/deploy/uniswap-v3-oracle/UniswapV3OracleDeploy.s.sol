@@ -20,7 +20,6 @@ FOUNDRY_PROFILE=oracles CONFIG=UniV3-ETH-USDC-0.3 \
 contract UniswapV3OracleDeploy is CommonDeploy {
     function run() public returns (UniswapV3Oracle oracle) {
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
-        vm.startBroadcast(deployerPrivateKey);
 
         string memory configName = vm.envString("CONFIG");
 
@@ -31,10 +30,12 @@ contract UniswapV3OracleDeploy is CommonDeploy {
 
         address factory = getDeployedAddress(SiloOraclesFactoriesContracts.UNISWAP_V3_ORACLE_FACTORY);
 
+        vm.startBroadcast(deployerPrivateKey);
+
         oracle = UniswapV3OracleFactory(factory).create(config);
 
-        OraclesDeployments.save(getChainAlias(), configName, address(oracle));
-
         vm.stopBroadcast();
+
+        OraclesDeployments.save(getChainAlias(), configName, address(oracle));
     }
 }
