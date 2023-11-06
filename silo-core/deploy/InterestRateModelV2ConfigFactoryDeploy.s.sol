@@ -27,6 +27,5 @@ contract InterestRateModelV2ConfigFactoryDeploy is CommonDeploy {
         _registerDeployment(
             address(interestRateModelV2ConfigFactory), SiloCoreContracts.INTEREST_RATE_MODEL_V2_CONFIG_FACTORY
         );
-        _syncDeployments();
     }
 }

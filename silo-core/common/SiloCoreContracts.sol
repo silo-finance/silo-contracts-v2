@@ -11,6 +11,9 @@ library SiloCoreContracts {
     string public constant GAUGE_HOOK_RECEIVER = "GaugeHookReceiver.sol";
     string public constant HOOK_RECEIVERS_FACTORY = "HookReceiversFactory.sol";
     string public constant SILO_DEPLOYER = "SiloDeployer.sol";
+    string public constant SILO = "Silo.sol";
+    string public constant SHARE_COLLATERAL_TOKEN = "ShareCollateralToken.sol";
+    string public constant SHARE_DEBT_TOKEN = "ShareDebtToken.sol";
 }
 
 library SiloCoreDeployments {

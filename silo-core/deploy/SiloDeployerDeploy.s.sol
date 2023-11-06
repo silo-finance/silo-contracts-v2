@@ -22,8 +22,6 @@ contract SiloDeployerDeploy is CommonDeploy {
         string memory chainAlias = getChainAlias();
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
 
-        vm.startBroadcast(deployerPrivateKey);
-
         address timelock = VeSiloDeployments.get(VeSiloContracts.TIMELOCK_CONTROLLER, chainAlias);
         address siloFactory = SiloCoreDeployments.get(SiloCoreContracts.SILO_FACTORY, chainAlias);
         address hookReceiversFactory = SiloCoreDeployments.get(SiloCoreContracts.HOOK_RECEIVERS_FACTORY, chainAlias);
@@ -32,6 +30,8 @@ contract SiloDeployerDeploy is CommonDeploy {
             SiloCoreContracts.INTEREST_RATE_MODEL_V2_CONFIG_FACTORY,
             chainAlias
         );
+
+        vm.startBroadcast(deployerPrivateKey);
 
         siloDeployer = ISiloDeployer(address(new SiloDeployer(
             IInterestRateModelV2ConfigFactory(irmConfigFactory),
