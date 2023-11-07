@@ -33,10 +33,9 @@ import {LeverageReentrancyGuard} from "./utils/LeverageReentrancyGuard.sol";
 /// @title Silo vault with lending and borrowing functionality
 /// @notice Silo is a ERC4626-compatible vault that allows users to deposit collateral and borrow debt. This contract
 /// is deployed twice for each asset for two-asset lending markets.
+/// Version: 2.0.0
 contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, LeverageReentrancyGuard {
     using SafeERC20Upgradeable for IERC20Upgradeable;
-
-    string internal constant _VERSION = "2.0.0";
 
     bytes32 internal constant _LEVERAGE_CALLBACK = keccak256("ILeverageBorrower.onLeverage");
 
@@ -65,17 +64,6 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
 
         address interestRateModel = _siloConfig.getConfig(address(this)).interestRateModel;
         IInterestRateModel(interestRateModel).connect(_modelConfigAddress);
-    }
-
-    /// @inheritdoc ISilo
-    function getInfo()
-        external
-        view
-        virtual
-        returns (string memory version, uint256 siloId)
-    {
-        version = _VERSION;
-        siloId = config.SILO_ID();
     }
 
     /// @inheritdoc ISilo

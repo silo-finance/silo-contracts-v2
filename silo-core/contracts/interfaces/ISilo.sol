@@ -140,11 +140,6 @@ interface ISilo is IERC4626, IERC3156FlashLender, ISiloLiquidation {
     /// @return interestRateTimestamp Timestamp of the last interest accrual
     function siloData() external view returns (uint192 daoAndDeployerFees, uint64 interestRateTimestamp);
 
-    /// @notice Fetches details about the contract's version, the associated factory, and the siloId
-    /// @return version The version string of the contract
-    /// @return siloId The unique identifier for the silo
-    function getInfo() external view returns (string memory version, uint256 siloId);
-
     /// @notice Fetches the utilization data of the silo used by IRM
     function utilizationData() external view returns (UtilizationData memory utilizationData);
 
