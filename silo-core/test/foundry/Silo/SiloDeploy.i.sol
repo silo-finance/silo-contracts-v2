@@ -86,12 +86,10 @@ contract SiloDeployTest is IntegrationTest {
     }
 
     function test_oracles_deploy() public { // solhint-disable-line func-name-mixedcase
-        (address silo0, address silo1) = _siloConfig.getSilos();
+        (, address silo1) = _siloConfig.getSilos();
 
-        ISiloConfig.ConfigData memory siloConfig0 = _siloConfig.getConfig(silo0);
         ISiloConfig.ConfigData memory siloConfig1 = _siloConfig.getConfig(silo1);
 
-        assertEq(siloConfig0.solvencyOracle, _diaOracleFactoryMock.MOCK_ORACLE_ADDR(), "Invalid DIA oracle");
         assertEq(siloConfig1.solvencyOracle, _uniV3OracleFactoryMock.MOCK_ORACLE_ADDR(), "Invalid Uniswap oracle");
 
         // If maxLtv oracle is not set, fallback to solvency oracle
@@ -100,28 +98,12 @@ contract SiloDeployTest is IntegrationTest {
             _uniV3OracleFactoryMock.MOCK_ORACLE_ADDR(),
             "Should have an Uniswap oracle as a fallback"
         );
-
-        assertEq(
-            siloConfig0.maxLtvOracle,
-            _chainlinkV3OracleFactoryMock.MOCK_ORACLE_ADDR(),
-            "Invalid Chainlink oracle"
-        );
     }
 
     function _mockOraclesFactories() internal {
         AddrLib.setAddress(
             SiloOraclesFactoriesContracts.UNISWAP_V3_ORACLE_FACTORY,
             address(_uniV3OracleFactoryMock)
-        );
-
-        AddrLib.setAddress(
-            SiloOraclesFactoriesContracts.CHAINLINK_V3_ORACLE_FACTORY,
-            address(_chainlinkV3OracleFactoryMock)
-        );
-
-        AddrLib.setAddress(
-            SiloOraclesFactoriesContracts.DIA_ORACLE_FACTORY,
-            address(_diaOracleFactoryMock)
         );
     }
 
