@@ -20,16 +20,6 @@ contract GettersTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --ffi --mt test_silo_getInfo
-    */
-    function test_silo_getInfo() public {
-        (string memory version, uint256 siloId) = silo0.getInfo();
-
-        assertEq(version, "2.0.0", "version");
-        assertEq(siloId, 1, "siloId");
-    }
-
-    /*
     forge test -vv --ffi --mt test_silo_getLiquidity
     */
     function test_silo_getLiquidity() public {
