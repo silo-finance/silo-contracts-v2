@@ -36,8 +36,8 @@ contract CCIPGaugeCheckpointer is IntegrationTest {
     uint256 internal constant _RELATIVE_WEIGHT_CAP = 1e18;
     address internal constant _LINK = 0x779877A7B0D9E8603169DdbD7836e478b4624789;
     address internal constant _CCIP_BNM = 0xFd57b4ddBf88a4e07fF4e34C487b99af2Fe82a05;
-    bytes32 internal constant _MESSAGE_ID_LINK = 0x28b29e514f38f6b86ae82355a71af1aa40a440a934358022d5188dd872b1b8d1;
-    bytes32 internal constant _MESSAGE_ID_ETH = 0x27cc7c1c21a68ac9076080dc0f3e30cb7cc753f40de4ded0801ffa2d203189e5;
+    bytes32 internal constant _MESSAGE_ID_LINK = 0xc3771874959c84c2774593a3247adc863ce91adc3faaa1d1ba7eb26059f49ec2;
+    bytes32 internal constant _MESSAGE_ID_ETH = 0x62393c4d4b565fdb3b54ffd9cdf0da948ec59c7a975b3fa945bd6e84f7b85ded;
 
     address internal _minter = makeAddr("Minter");
     address internal _tokenAdmin = makeAddr("Token Admin");

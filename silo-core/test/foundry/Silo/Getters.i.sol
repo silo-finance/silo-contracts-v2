@@ -57,8 +57,8 @@ contract GettersTest is SiloLittleHelper, Test {
     forge test -vv --ffi --mt test_silo_asset
     */
     function test_silo_asset() public {
-        assertEq(silo0.asset(), address(0x4c553509592FEb3fc70e11b3ffbCeF3Ff6FcA0F0), "asset 0");
-        assertEq(silo1.asset(), address(0xda3464b755344CF98B5c7386A368F2d065066356), "asset 1");
+        assertEq(silo0.asset(), address(0x4f22fB6CDf1485baf7B25c58c66CdA38f88Acbc3), "asset 0");
+        assertEq(silo1.asset(), address(0xb6F322D9421ae42BBbB5CC277CE23Dbb08b3aC1f), "asset 1");
     }
 
     /*
