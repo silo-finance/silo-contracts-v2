@@ -21,6 +21,5 @@ contract InterestRateModelV2Deploy is CommonDeploy {
         vm.stopBroadcast();
 
         _registerDeployment(address(interestRateModelV2), SiloCoreContracts.INTEREST_RATE_MODEL_V2);
-        _syncDeployments();
     }
 }

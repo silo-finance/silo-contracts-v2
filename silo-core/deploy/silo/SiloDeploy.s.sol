@@ -79,13 +79,14 @@ contract SiloDeploy is CommonDeploy {
         ISiloDeployer.Oracles memory oracles = _getOracles(config, siloData);
 
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
-        vm.startBroadcast(deployerPrivateKey);
 
         beforeCreateSilo(siloInitData);
 
         console2.log("[SiloCommonDeploy] `beforeCreateSilo` executed");
 
         ISiloDeployer deployer = ISiloDeployer(getDeployedAddress(SiloCoreContracts.SILO_DEPLOYER));
+
+        vm.startBroadcast(deployerPrivateKey);
 
         siloConfig = deployer.deploy(
             oracles,
@@ -94,9 +95,9 @@ contract SiloDeploy is CommonDeploy {
             siloInitData
         );
 
-        console2.log("[SiloCommonDeploy] deploy done");
-
         vm.stopBroadcast();
+
+        console2.log("[SiloCommonDeploy] deploy done");
 
         SiloDeployments.save(getChainAlias(), configName, address(siloConfig));
 
