@@ -28,6 +28,9 @@ contract StakelessGaugeCheckpointerAdaptor is Ownable2Step, IStakelessGaugeCheck
     error TheSameCheckpointer();
     error OnlyCheckpointer();
 
+    /// @notice Receive fn to be able to receive ether leftover from the gauge after checkpoint.
+    receive() external payable {}
+
     /// @inheritdoc IStakelessGaugeCheckpointerAdaptor
     function checkpoint(address gauge) external payable returns (bool result) {
         if (msg.sender != checkpointer) revert OnlyCheckpointer();
