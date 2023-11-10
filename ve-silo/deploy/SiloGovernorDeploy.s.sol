@@ -2,7 +2,6 @@
 pragma solidity 0.8.21;
 
 import {CommonDeploy, VeSiloContracts} from "./_CommonDeploy.sol";
-import {IVotes} from "openzeppelin-contracts/governance/extensions/GovernorVotes.sol";
 import {TimelockController} from "openzeppelin-contracts/governance/extensions/GovernorTimelockControl.sol";
 
 import {SiloGovernor} from "ve-silo/contracts/governance/SiloGovernor.sol";
@@ -37,13 +36,16 @@ contract SiloGovernorDeploy is CommonDeploy {
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
 
         timelock = timelockControllerDeploy.run();
+        votingEscrow = votingEscrowDeploy.run();
+        veBoost = veBoostDeploy.run();
 
         vm.startBroadcast(deployerPrivateKey);
 
         siloGovernor = ISiloGovernor(
             address(
                 new SiloGovernor(
-                    TimelockController(payable(address(timelock)))
+                    TimelockController(payable(address(timelock))),
+                    votingEscrow
                 )
             )
         );
@@ -53,19 +55,13 @@ contract SiloGovernorDeploy is CommonDeploy {
         _registerDeployment(address(siloGovernor), VeSiloContracts.SILO_GOVERNOR);
         _syncDeployments();
 
-        votingEscrow = votingEscrowDeploy.run();
-        veBoost = veBoostDeploy.run();
-
-        _configure(siloGovernor, timelock, votingEscrow);
+        _configure(siloGovernor, timelock);
     }
 
-    function _configure(ISiloGovernor _governor, ISiloTimelockController _timelock, IVeSilo _votingEscrow) internal {
+    function _configure(ISiloGovernor _governor, ISiloTimelockController _timelock) internal {
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
 
         vm.startBroadcast(deployerPrivateKey);
-
-        // Configure a veSilo token as the token for voting in the DAO
-        _governor.oneTimeInit(_votingEscrow);
 
         address deployer = vm.addr(deployerPrivateKey);
         address governorAddr = address(_governor);
