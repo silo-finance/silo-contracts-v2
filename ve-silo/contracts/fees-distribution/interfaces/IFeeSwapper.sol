@@ -24,7 +24,7 @@ interface IFeeSwapper {
         IFeeSwap swap;
     }
 
-    function swapFeesAndDeposit(address[] calldata _assets) external;
+    function swapFeesAndDeposit(address[] calldata _assets, bytes[] memory _data) external;
 
     /// @notice Deposit into SILO-80%/WEH-20% Balancer pool
     function joinBalancerPool() external;
@@ -36,7 +36,9 @@ interface IFeeSwapper {
 
     /// @notice Swap all provided assets into WETH
     /// @param _assets A list of the asset to swap
-    function swapFees(address[] calldata _assets) external;
+    /// @param _data Extra data that will be passed into a swap implementation.
+    ///              For example encoded `amountOutMinimum` for an `UniswapSwapper`
+    function swapFees(address[] calldata _assets, bytes[] memory _data) external;
 
     /// @notice Configure swappers
     /// @param _inputs Swappers configurations

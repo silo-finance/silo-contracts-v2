@@ -14,6 +14,8 @@ import {FeeSwapperDeploy} from "ve-silo/deploy/FeeSwapperDeploy.s.sol";
 import {UniswapSwapperDeploy} from "ve-silo/deploy/UniswapSwapperDeploy.s.sol";
 import {UniswapSwapper} from "ve-silo/contracts/fees-distribution/fee-swapper/swappers/UniswapSwapper.sol";
 import {UniswapSwapperTest} from "ve-silo/test/fee-dustribution/UniswapSwapper.integration..sol";
+import {Manageable} from "ve-silo/contracts/access/Manageable.sol";
+import {FeeSwapper} from "ve-silo/contracts/fees-distribution/fee-swapper/FeeSwapper.sol";
 
 // FOUNDRY_PROFILE=ve-silo forge test --mc FeeSwapperTest --ffi -vvv
 contract FeeSwapperTest is IntegrationTest {
@@ -90,10 +92,26 @@ contract FeeSwapperTest is IntegrationTest {
         uint256 balance = _wethToken.balanceOf(address(_feeSwapper));
         assertEq(balance, 0, "Expect has no ETH before the swap");
 
-        _feeSwapper.swapFees(inputs);
+        uint256 expectedAmount = 4005102755468086219;
+        bytes[] memory data = new bytes[](1);
+        data[0] = abi.encodePacked(expectedAmount);
+
+        vm.expectRevert(abi.encodePacked(Manageable.OnlyManager.selector));
+        _feeSwapper.swapFees(inputs, data);
+
+        vm.prank(_deployer);
+        _feeSwapper.swapFees(inputs, data);
 
         balance = _wethToken.balanceOf(address(_feeSwapper));
-        assertEq(balance, 4005102755468086219, "Expect to have ETH after the swap");
+        assertEq(balance, expectedAmount, "Expect to have ETH after the swap");
+
+        data = new bytes[](2);
+        data[0] = abi.encodePacked(expectedAmount);
+        data[1] = abi.encodePacked(expectedAmount);
+
+        vm.prank(_deployer);
+        vm.expectRevert(abi.encodePacked(FeeSwapper.ArraysLengthMissMutch.selector));
+        _feeSwapper.swapFees(inputs, data);
     }
 
     function testBalancerPoolJoin() public {
@@ -129,7 +147,15 @@ contract FeeSwapperTest is IntegrationTest {
         uint256 tokenBalance = _feeDistributor.getTokenLastBalance(_silo80Weth20Token);
         assertEq(tokenBalance, 0, "Expect has no any token balance in the FeeDistributor");
 
-        _feeSwapper.swapFeesAndDeposit(inputs);
+        uint256 expectedAmount = 6587321744;
+        bytes[] memory data = new bytes[](1);
+        data[0] = abi.encodePacked(expectedAmount);
+
+        vm.expectRevert(abi.encodePacked(Manageable.OnlyManager.selector));
+        _feeSwapper.swapFeesAndDeposit(inputs, data);
+
+        vm.prank(_deployer);
+        _feeSwapper.swapFeesAndDeposit(inputs, data);
 
         tokenBalance = _feeDistributor.getTokenLastBalance(_silo80Weth20Token);
         assertEq(tokenBalance, 21185869692299349334413,"Expect to has token balance in the FeeDistributor");

@@ -67,10 +67,17 @@ contract UniswapSwapperTest is IntegrationTest {
         uint256 balance = _wethToken.balanceOf(address(this));
         assertEq(balance, 0, "Expect has no ETH before the swap");
 
-        feeSwap.swap(_snxToken, amount);
+        uint256 expectedAmount = 1163347406737788006;
+        bytes memory data = abi.encodePacked(expectedAmount + 1); // One wei more than we can receive
+
+        vm.expectRevert("Too little received");
+        feeSwap.swap(_snxToken, amount, data);
+        
+        data = abi.encodePacked(expectedAmount);
+        feeSwap.swap(_snxToken, amount, data);
 
         balance = _wethToken.balanceOf(address(this));
-        assertEq(balance, 1163347406737788006, "Expect to have ETH after the swap");
+        assertEq(balance, expectedAmount, "Expect to have ETH after the swap");
     }
 
     function configureSwapper() public {

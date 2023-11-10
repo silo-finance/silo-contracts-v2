@@ -29,6 +29,7 @@ contract FeeSwapper is FeeSwapperConfig {
     bytes32 immutable public BALANCER_POOL_ID;
     // solhint-enable var-name-mixedcase
 
+    error ArraysLengthMissMutch();
     error SwapperIsNotConfigured(address _asset);
 
     constructor(
@@ -48,8 +49,8 @@ contract FeeSwapper is FeeSwapperConfig {
         BALANCER_POOL_ID = _poolId;
     }
 
-    function swapFeesAndDeposit(address[] calldata _assets) external virtual {
-        _swapFees(_assets);
+    function swapFeesAndDeposit(address[] calldata _assets, bytes[] memory _data) external onlyManager virtual {
+        _swapFees(_assets, _data);
         _depositIntoBalancer();
         _depositLPTokens(type(uint256).max);
     }
@@ -65,8 +66,8 @@ contract FeeSwapper is FeeSwapperConfig {
     }
 
     /// @inheritdoc IFeeSwapper
-    function swapFees(address[] calldata _assets) external virtual {
-        _swapFees(_assets);
+    function swapFees(address[] calldata _assets, bytes[] memory _data) external onlyManager virtual {
+        _swapFees(_assets, _data);
     }
 
     /// @notice Deposit into SILO-80%/WEH-20% Balancer pool
@@ -127,9 +128,12 @@ contract FeeSwapper is FeeSwapperConfig {
 
     /// @notice Swap all provided assets into WETH
     /// @param _assets A list of the asset to swap
-    function _swapFees(address[] memory _assets) internal virtual {
+    function _swapFees(address[] memory _assets, bytes[] memory _data) internal virtual {
+        if (_assets.length != _data.length) revert ArraysLengthMissMutch();
+
         for (uint256 i; i < _assets.length;) {
             IERC20 asset = IERC20(_assets[i]);
+            bytes memory data = _data[i];
 
             // Because of the condition, `i < _assets.length` overflow is impossible
             unchecked { i++; }
@@ -145,7 +149,7 @@ contract FeeSwapper is FeeSwapperConfig {
             asset.transfer(address(feeSwap), amount);
 
             // perform swap: asset -> WETH
-            feeSwap.swap(asset, amount);
+            feeSwap.swap(asset, amount, data);
         }
     }
 }

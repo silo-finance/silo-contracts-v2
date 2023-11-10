@@ -46,10 +46,12 @@ contract UniswapSwapper is IFeeSwap, Ownable2Step {
     }
 
     /// @inheritdoc IFeeSwap
-    function swap(IERC20 _asset, uint256 _amount) external {
+    function swap(IERC20 _asset, uint256 _amount, bytes memory _data) external {
         SwapPath[] memory swapPath = config[_asset];
 
         if (swapPath.length == 0) revert AssetIsNotConfigured();
+
+        (uint256 amountOutMinimum) = abi.decode(_data, (uint256));
 
         bytes memory path = createPath(swapPath);
 
@@ -61,7 +63,7 @@ contract UniswapSwapper is IFeeSwap, Ownable2Step {
             recipient: msg.sender,
             deadline: block.timestamp,
             amountIn: _amount,
-            amountOutMinimum: 1
+            amountOutMinimum: amountOutMinimum
         });
 
         router.exactInput(params);

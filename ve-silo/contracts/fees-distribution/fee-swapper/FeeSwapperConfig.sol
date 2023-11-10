@@ -15,13 +15,13 @@
 pragma solidity 0.8.21;
 
 import {IERC20} from "openzeppelin-contracts/token/ERC20/utils/SafeERC20.sol";
-import {Ownable2Step} from "openzeppelin-contracts/access/Ownable2Step.sol";
 
 import {IFeeSwap} from "../interfaces/IFeeSwap.sol";
 import {IFeeSwapper} from "../interfaces/IFeeSwapper.sol";
 import {IFeeDistributor} from "../interfaces/IFeeDistributor.sol";
+import {ExtendedOwnable} from "ve-silo/contracts/access/ExtendedOwnable.sol";
 
-abstract contract FeeSwapperConfig is IFeeSwapper, Ownable2Step {
+abstract contract FeeSwapperConfig is IFeeSwapper, ExtendedOwnable {
     mapping(IERC20 asset => IFeeSwap feeSwap) public swappers;
 
     event SwapperUpdated(IERC20 asset, IFeeSwap swapper);
