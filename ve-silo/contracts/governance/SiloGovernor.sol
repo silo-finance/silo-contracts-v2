@@ -30,7 +30,7 @@ contract SiloGovernor is
     error VeSiloAlreadyInitialized();
 
     /// @param _timelock openzeppelin timelock contract
-    constructor(TimelockController _timelock)
+    constructor(TimelockController _timelock, IVeSilo _veSilo)
         Governor("SiloGovernor")
         GovernorSettings(
             1 /* initial voting deplay - 1 block */,
@@ -40,13 +40,8 @@ contract SiloGovernor is
         GovernorVotesQuorumFraction(1 /* quorum numerator value */)
         GovernorVotes(IVotes(address(0)))
         GovernorTimelockControl(_timelock)
-    {}
-
-    /// @param _token address of SiloGovernanceToken
-    function oneTimeInit(IVeSilo _token) external {
-        if (address(veSiloToken) != address(0)) revert VeSiloAlreadyInitialized();
-
-        veSiloToken = _token;
+    {
+        veSiloToken = _veSilo;
     }
 
     /// @inheritdoc IGovernor
