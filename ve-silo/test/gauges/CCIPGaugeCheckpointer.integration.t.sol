@@ -113,6 +113,38 @@ contract CCIPGaugeCheckpointer is IntegrationTest {
         _afterCheckpointGaugeWithLINK();
     }
 
+    function testCheckpointSingleGaugeETHWithExtraFee() public {
+        _setupGauge();
+
+        address gauge = address(_gauge);
+
+        deal(_CCIP_BNM, gauge, _GAUGE_BALANCE);
+
+        Client.EVM2AnyMessage memory message = _gauge.buildCCIPMessage(_MINT_AMOUNT, ICCIPGauge.PayFeesIn.Native);
+
+        uint256 calculatedFees = _gauge.calculateFee(message);
+        uint256 extraFee = 1; // adding 1 wei to have ether leftover in the gauge after checkpoint
+        uint256 fees = calculatedFees + extraFee;
+
+        payable(_user).transfer(fees);
+
+        uint256 gaugeBalance = IERC20(_CCIP_BNM).balanceOf(gauge);
+
+        assertEq(gaugeBalance, _GAUGE_BALANCE, "Expect to have an initial balance");
+
+        vm.warp(block.timestamp + 1 weeks);
+
+        vm.expectEmit(false, false, false, true);
+        emit CCIPTransferMessage(_MESSAGE_ID_ETH);
+
+        vm.prank(_user);
+        _checkpointer.checkpointSingleGauge{value: fees}(_GAUGE_TYPE, _gauge, ICCIPGauge.PayFeesIn.Native);
+
+        assertEq(_user.balance, extraFee, "Expect to receive extra ether from the fee");
+
+        _afterCheckpointGaugeWithLINK();
+    }
+
     function testCheckpointSingleGaugeETH() public {
         _setupGauge();
 
