@@ -5,7 +5,9 @@ import {IERC20} from "openzeppelin-contracts/token/ERC20/IERC20.sol";
 import {IRouterClient} from "chainlink-ccip/v0.8/ccip/interfaces/IRouterClient.sol";
 import {Client} from "chainlink-ccip/v0.8/ccip/libraries/Client.sol";
 
-interface ICCIPMessageSender {
+import {ICCIPExtraArgsConfig} from "ve-silo/contracts/gauges/interfaces/ICCIPExtraArgsConfig.sol";
+
+interface ICCIPMessageSender is ICCIPExtraArgsConfig {
     /// @notice Define a fee payment method
     enum PayFeesIn {
         Native, // native chain currency (Ethereum - ether)
@@ -25,11 +27,31 @@ abstract contract CCIPMessageSender is ICCIPMessageSender {
     address public immutable LINK;
     // solhint-enable var-name-mixedcase
 
+    bytes public extraArgs;
+
     /// @param _router CCIP router
     /// @param _link LINK token
     constructor(address _router, address _link) {
         ROUTER = _router;
         LINK = _link;
+    }
+
+    /// @notice Create a message for CCIP protocol
+    /// @param _receiver Message receiver in the destination chain
+    /// @param _data Data to be sent
+    /// @param _payFeesIn Pay fees in Native/LINK
+    function getCCIPMessage(
+        address _receiver,
+        bytes memory _data,
+        PayFeesIn _payFeesIn
+    ) public view returns (Client.EVM2AnyMessage memory ccipMessage) {
+        ccipMessage = Client.EVM2AnyMessage({
+            receiver: abi.encode(_receiver),
+            data: abi.encode(_data),
+            tokenAmounts: new Client.EVMTokenAmount[](0),
+            extraArgs: extraArgs,
+            feeToken: _payFeesIn == PayFeesIn.LINK ? LINK : address(0)
+        });
     }
 
     /// @notice Send message via CCIP
@@ -48,7 +70,7 @@ abstract contract CCIPMessageSender is ICCIPMessageSender {
         internal
         returns (bytes32 messageId)
     {
-        Client.EVM2AnyMessage memory ccipMessage = _getCCIPMessage(_receiver, _data, _payFeesIn);
+        Client.EVM2AnyMessage memory ccipMessage = getCCIPMessage(_receiver, _data, _payFeesIn);
 
         uint256 fee = _calculateFee(_dstChainSelector, ccipMessage);
 
@@ -82,23 +104,5 @@ abstract contract CCIPMessageSender is ICCIPMessageSender {
             _dstChainSelector,
             _ccipMessage
         );
-    }
-
-    /// @notice Create a message for CCIP protocol
-    /// @param _receiver Message receiver in the destination chain
-    /// @param _data Data to be sent
-    /// @param _payFeesIn Pay fees in Native/LINK
-    function _getCCIPMessage(
-        address _receiver,
-        bytes memory _data,
-        PayFeesIn _payFeesIn
-    ) internal view returns (Client.EVM2AnyMessage memory ccipMessage) {
-        ccipMessage = Client.EVM2AnyMessage({
-            receiver: abi.encode(_receiver),
-            data: abi.encode(_data),
-            tokenAmounts: new Client.EVMTokenAmount[](0),
-            extraArgs: "",
-            feeToken: _payFeesIn == PayFeesIn.LINK ? LINK : address(0)
-        });
     }
 }

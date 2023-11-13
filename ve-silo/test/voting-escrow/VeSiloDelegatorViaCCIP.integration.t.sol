@@ -3,16 +3,19 @@ pragma solidity 0.8.21;
 
 import {IntegrationTest} from "silo-foundry-utils/networks/IntegrationTest.sol";
 import {IERC20} from "openzeppelin-contracts/token/ERC20/IERC20.sol";
+import {Client} from "chainlink-ccip/v0.8/ccip/libraries/Client.sol";
 
 import {AddrKey} from "common/addresses/AddrKey.sol";
 import {VeSiloDelegatorViaCCIPDeploy} from "ve-silo/deploy/VeSiloDelegatorViaCCIPDeploy.s.sol";
 import {VeSiloContracts} from "ve-silo/deploy/_CommonDeploy.sol";
 import {IVeSilo} from "ve-silo/contracts/voting-escrow/interfaces/IVeSilo.sol";
 import {IVeSiloDelegatorViaCCIP} from "ve-silo/contracts/voting-escrow/interfaces/IVeSiloDelegatorViaCCIP.sol";
-import {ICCIPMessageSender} from "ve-silo/contracts/utils/CCIPMessageSender.sol";
+import {ICCIPMessageSender, CCIPMessageSender} from "ve-silo/contracts/utils/CCIPMessageSender.sol";
 import {IVotingEscrowCCIPRemapper} from "ve-silo/contracts/voting-escrow/interfaces/IVotingEscrowCCIPRemapper.sol";
 import {VotingEscrowTest} from "./VotingEscrow.integration.t.sol";
 import {ISmartWalletChecker} from "ve-silo/contracts/voting-escrow/interfaces/ISmartWalletChecker.sol";
+import {ICCIPExtraArgsConfig} from "ve-silo/contracts/gauges/interfaces/ICCIPExtraArgsConfig.sol";
+import {ICCIPGauge} from "ve-silo/contracts/gauges/interfaces/ICCIPGauge.sol";
 
 // FOUNDRY_PROFILE=ve-silo forge test --mc VeSiloDelegatorViaCCIP --ffi -vvv
 contract VeSiloDelegatorViaCCIP is IntegrationTest {
@@ -51,6 +54,7 @@ contract VeSiloDelegatorViaCCIP is IntegrationTest {
     event SentTotalSupply(uint64 dstChainSelector, IVeSilo.Point totalSupplyPoint);
     event MessageSentVaiCCIP(bytes32 messageId);
     event ChildChainReceiverUpdated(uint64 dstChainSelector, address receiver);
+    event ExtraArgsUpdated(bytes extraArgs);
 
     function setUp() public {
         vm.createSelectFork(
@@ -83,6 +87,39 @@ contract VeSiloDelegatorViaCCIP is IntegrationTest {
         veSiloDelegator.setChildChainReceiver(_DS_CHAIN_SELECTOR, _childChainReceiver);
 
         _setChildChainReceiver();
+    }
+
+    function testSetExtraArgs() public {
+        bytes memory anyExtraArgs = abi.encodePacked("any extra args");
+
+        ICCIPExtraArgsConfig delegator = ICCIPExtraArgsConfig(address(veSiloDelegator));
+
+        // Test permissions and configuration
+        vm.expectRevert("Ownable: caller is not the owner");
+        delegator.setExtraArgs(anyExtraArgs);
+
+        vm.expectEmit(false, false, false, true);
+        emit ICCIPExtraArgsConfig.ExtraArgsUpdated(anyExtraArgs);
+
+        vm.prank(_deployer);
+        delegator.setExtraArgs(anyExtraArgs);
+
+        assertEq(
+            keccak256(delegator.extraArgs()),
+            keccak256(anyExtraArgs),
+            "Args did not match after the config"
+        );
+
+        // Test the message construction
+        bytes memory data;
+
+        Client.EVM2AnyMessage memory message = CCIPMessageSender(address(veSiloDelegator)).getCCIPMessage(
+            _childChainReceiver,
+            data,
+            ICCIPMessageSender.PayFeesIn.LINK
+        );
+
+        assertEq(keccak256(message.extraArgs), keccak256(anyExtraArgs), "Wrong args in the message");
     }
 
     function testUnsupportedChain() public {

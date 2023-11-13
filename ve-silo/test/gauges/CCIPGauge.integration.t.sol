@@ -15,6 +15,7 @@ import {IMainnetBalancerMinter, ILMGetters, IBalancerMinter}
 import {IBalancerTokenAdmin} from "ve-silo/contracts/silo-tokens-minter/interfaces/IBalancerTokenAdmin.sol";
 import {IGaugeController} from "ve-silo/contracts/gauges/interfaces/IGaugeController.sol";
 import {ICCIPGauge} from "ve-silo/contracts/gauges/interfaces/ICCIPGauge.sol";
+import {ICCIPExtraArgsConfig} from "ve-silo/contracts/gauges/interfaces/ICCIPExtraArgsConfig.sol";
 
 import {CCIPGaugeFactorySepoliaMumbai} from "ve-silo/test/_mocks/CCIPGaugeFactorySepoliaMumbai.sol";
 import {CCIPGaugeSepoliaMumbai} from "ve-silo/test/_mocks/CCIPGaugeSepoliaMumbai.sol";
@@ -39,6 +40,7 @@ contract CCIPGaugeTest is IntegrationTest {
     ICCIPGauge internal _gauge;
 
     event CCIPTransferMessage(bytes32 newMessage);
+    event ExtraArgsUpdated(bytes extraArgs);
 
     function setUp() public {
         vm.createSelectFork(
@@ -61,6 +63,27 @@ contract CCIPGaugeTest is IntegrationTest {
         vm.label(address(_gauge), "Gauge");
 
         _mockCallsAfterGaugeCreated();
+    }
+
+    function testSetExtraArgs() public {
+        bytes memory anyExtraArgs = abi.encodePacked("any extra args");
+
+        // Test permissions and configuration
+        vm.expectRevert("Ownable: caller is not the owner");
+        vm.prank(makeAddr("another than an owner"));
+        _gauge.setExtraArgs(anyExtraArgs);
+
+        vm.expectEmit(false, false, false, true);
+        emit ICCIPExtraArgsConfig.ExtraArgsUpdated(anyExtraArgs);
+
+        _gauge.setExtraArgs(anyExtraArgs);
+
+        assertEq(keccak256(_gauge.extraArgs()), keccak256(anyExtraArgs), "Args did not match after the config");
+
+        // Test the message construction
+        uint256 mintAmount = 1;
+        Client.EVM2AnyMessage memory message = _gauge.buildCCIPMessage(mintAmount, ICCIPGauge.PayFeesIn.LINK);
+        assertEq(keccak256(message.extraArgs), keccak256(anyExtraArgs), "Wrong args in the message");
     }
 
     function testTransferWithFeesInLINK() public {
