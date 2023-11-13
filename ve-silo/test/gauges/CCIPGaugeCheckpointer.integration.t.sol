@@ -39,10 +39,14 @@ contract CCIPGaugeCheckpointer is IntegrationTest {
     bytes32 internal constant _MESSAGE_ID_LINK = 0xc3771874959c84c2774593a3247adc863ce91adc3faaa1d1ba7eb26059f49ec2;
     bytes32 internal constant _MESSAGE_ID_ETH = 0x62393c4d4b565fdb3b54ffd9cdf0da948ec59c7a975b3fa945bd6e84f7b85ded;
 
+    bytes32 internal constant _MESSAGE_ID_LINK_WITH_ETH =
+        0x2e05bc523aef3b198631df198295854faae05fb718658c5e45088b3901d58717;
+
     address internal _minter = makeAddr("Minter");
     address internal _tokenAdmin = makeAddr("Token Admin");
     address internal _gaugeController = makeAddr("Gauge Controller");
     address internal _chaildChainGauge = makeAddr("Chaild Chain Gauge");
+    address internal _chaildChainGauge2 = makeAddr("Chaild Chain Gauge 2");
     address internal _gaugeAdder = makeAddr("Gauge adder");
     address internal _owner = makeAddr("Owner");
     address internal _user = makeAddr("User");
@@ -95,7 +99,7 @@ contract CCIPGaugeCheckpointer is IntegrationTest {
         _gauge = ICCIPGauge(factory.create(_chaildChainGauge, _RELATIVE_WEIGHT_CAP));
         vm.label(address(_gauge), "Gauge");
 
-        _mockCallsAfterGaugeCreated();
+        _mockCallsAfterGaugeCreated(address(_gauge));
 
         vm.prank(_deployer);
         adaptor.setStakelessGaugeCheckpointer(address(_checkpointer));
@@ -103,7 +107,7 @@ contract CCIPGaugeCheckpointer is IntegrationTest {
 
     function testCheckpointSingleGaugeLINK() public {
         _setupGauge();
-        _beforeCheckpointGaugeWithLINK();
+        _beforeCheckpointGaugeWithLINK(_gauge, address(this));
 
         vm.expectEmit(false, false, false, true);
         emit CCIPTransferMessage(_MESSAGE_ID_LINK);
@@ -111,6 +115,31 @@ contract CCIPGaugeCheckpointer is IntegrationTest {
         _checkpointer.checkpointSingleGauge(_GAUGE_TYPE, _gauge, ICCIPGauge.PayFeesIn.LINK);
 
         _afterCheckpointGaugeWithLINK();
+    }
+
+    function testCheckpointSingleGaugeLINKWithFrontLoadedETH() public {
+        // Front-loading 1 wei of ether to the gauge balance before it will be created
+        uint256 amountOfEthToFrontLoad = 1;
+        address userCheckpointer = makeAddr("User checkpointer");
+
+
+        ICCIPGauge gaugeWithETH = _setupGaugeWithFrontLoadedEth(amountOfEthToFrontLoad);
+        _beforeCheckpointGaugeWithLINK(gaugeWithETH, userCheckpointer);
+
+        // Ensure we have correct balances
+        assertEq(userCheckpointer.balance, 0, "User checkpointer should not have ether");
+        assertEq(address(gaugeWithETH).balance, amountOfEthToFrontLoad, "Gauge should have ether");
+
+        vm.expectEmit(false, false, false, true);
+        emit CCIPTransferMessage(_MESSAGE_ID_LINK_WITH_ETH);
+
+        vm.prank(userCheckpointer);
+        _checkpointer.checkpointSingleGauge(_GAUGE_TYPE, gaugeWithETH, ICCIPGauge.PayFeesIn.LINK);
+
+        // Ensure we have correct balances
+        // User should receive an ether from the gauge balance after checkpoint
+        assertEq(userCheckpointer.balance, amountOfEthToFrontLoad, "User checkpointer should receive ether");
+        assertEq(address(gaugeWithETH).balance, 0, "Gauge should not have ether");
     }
 
     function testCheckpointSingleGaugeETHWithExtraFee() public {
@@ -171,13 +200,18 @@ contract CCIPGaugeCheckpointer is IntegrationTest {
         _afterCheckpointGaugeWithLINK();
     }
 
-    function _beforeCheckpointGaugeWithLINK() internal {
-        Client.EVM2AnyMessage memory message = _gauge.buildCCIPMessage(_MINT_AMOUNT, ICCIPGauge.PayFeesIn.LINK);
-        uint256 fees = _gauge.calculateFee(message);
+    function _beforeCheckpointGaugeWithLINK(ICCIPGauge _gaugeToCheckpoint, address _userCheckpointer) internal {
+        Client.EVM2AnyMessage memory message = _gaugeToCheckpoint.buildCCIPMessage(
+            _MINT_AMOUNT,
+            ICCIPGauge.PayFeesIn.LINK
+        );
 
-        deal(_LINK, address(this), fees);
-        deal(_CCIP_BNM, address(_gauge), _GAUGE_BALANCE);
+        uint256 fees = _gaugeToCheckpoint.calculateFee(message);
 
+        deal(_LINK,_userCheckpointer, fees);
+        deal(_CCIP_BNM, address(_gaugeToCheckpoint), _GAUGE_BALANCE);
+        
+        vm.prank(_userCheckpointer);
         IERC20(_LINK).approve(address(_checkpointer), fees);
 
         vm.warp(block.timestamp + 1 weeks);
@@ -193,6 +227,28 @@ contract CCIPGaugeCheckpointer is IntegrationTest {
     function _setupGauge() internal {
         ICCIPGauge[] memory gauges = new ICCIPGauge[](1);
         gauges[0] = _gauge;
+
+        vm.prank(_deployer);
+        _checkpointer.addGaugesWithVerifiedType(_GAUGE_TYPE, gauges);
+    }
+
+    function _setupGaugeWithFrontLoadedEth(uint256 _ethAmount) internal returns (ICCIPGauge _createdGauge) {
+        address expectedGauge = 0xf46d12809B92D0bea694ACdcF3396493b3e1F6bc;
+
+        payable(expectedGauge).transfer(_ethAmount);
+
+        _createdGauge = ICCIPGauge(
+            CCIPGaugeFactorySepoliaMumbai(_gaugeFactory).create(_chaildChainGauge2, _RELATIVE_WEIGHT_CAP)
+        );
+
+        assertEq(expectedGauge, address(_createdGauge), "Unexpected gauge address");
+
+        vm.label(address(_createdGauge), "Gauge with ETH");
+
+        _mockCallsAfterGaugeCreated(address(_createdGauge));
+
+        ICCIPGauge[] memory gauges = new ICCIPGauge[](1);
+        gauges[0] = _createdGauge;
 
         vm.prank(_deployer);
         _checkpointer.addGaugesWithVerifiedType(_GAUGE_TYPE, gauges);
@@ -255,22 +311,22 @@ contract CCIPGaugeCheckpointer is IntegrationTest {
         );
     }
 
-    function _mockCallsAfterGaugeCreated() internal {
+    function _mockCallsAfterGaugeCreated(address _gaugeToMock) internal {
         vm.mockCall(
             _gaugeController,
-            abi.encodeWithSelector(IGaugeController.checkpoint_gauge.selector, address(_gauge)),
+            abi.encodeWithSelector(IGaugeController.checkpoint_gauge.selector, _gaugeToMock),
             abi.encode(true)
         );
 
         vm.mockCall(
             _gaugeController,
-            abi.encodeWithSelector(IGaugeController.gauge_relative_weight.selector, address(_gauge), 1694649600),
+            abi.encodeWithSelector(IGaugeController.gauge_relative_weight.selector, _gaugeToMock, 1694649600),
             abi.encode(1e18)
         );
 
         vm.mockCall(
             _minter,
-            abi.encodeWithSelector(IBalancerMinter.mint.selector, address(_gauge)),
+            abi.encodeWithSelector(IBalancerMinter.mint.selector, _gaugeToMock),
             abi.encode(true)
         );
 
@@ -296,7 +352,7 @@ contract CCIPGaugeCheckpointer is IntegrationTest {
             _gaugeController,
             abi.encodeWithSelector(
                 IGaugeController.gauge_exists.selector,
-                _gauge
+                _gaugeToMock
             ),
             abi.encode(true)
         );
