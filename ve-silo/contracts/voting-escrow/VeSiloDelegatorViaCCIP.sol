@@ -7,6 +7,7 @@ import {Client} from "chainlink-ccip/v0.8/ccip/libraries/Client.sol";
 
 import {IVeSilo} from "ve-silo/contracts/voting-escrow/interfaces/IVeSilo.sol";
 import {IVotingEscrowCCIPRemapper} from "ve-silo/contracts/voting-escrow/interfaces/IVotingEscrowCCIPRemapper.sol";
+import {ICCIPExtraArgsConfig} from "ve-silo/contracts/gauges/interfaces/ICCIPExtraArgsConfig.sol";
 import {IVeSiloDelegatorViaCCIP} from "ve-silo/contracts/voting-escrow/interfaces/IVeSiloDelegatorViaCCIP.sol";
 import {CCIPMessageSender, ICCIPMessageSender} from "ve-silo/contracts/utils/CCIPMessageSender.sol";
 
@@ -114,6 +115,13 @@ contract VeSiloDelegatorViaCCIP is CCIPMessageSender, Ownable2Step, IVeSiloDeleg
 
         emit ChildChainReceiverUpdated(uint64(_dstChainSelector), _receiver);
     }
+    
+    /// @inheritdoc ICCIPExtraArgsConfig
+    function setExtraArgs(bytes calldata _extraArgs) external onlyOwner {
+        extraArgs = _extraArgs;
+
+        emit ExtraArgsUpdated(_extraArgs);
+    }
 
     /// @inheritdoc IVeSiloDelegatorViaCCIP
     function estimateSendUserBalance(
@@ -126,7 +134,7 @@ contract VeSiloDelegatorViaCCIP is CCIPMessageSender, Ownable2Step, IVeSiloDeleg
         if (childChainReceiver == address(0)) revert ChainIsNotSupported(_dstChainSelector);
 
         (,bytes memory data,,) = _getBalanceAndTotalSupplyData(_localUser, _dstChainSelector);
-        Client.EVM2AnyMessage memory ccipMessage = _getCCIPMessage(childChainReceiver, data, _payFeesIn);
+        Client.EVM2AnyMessage memory ccipMessage = getCCIPMessage(childChainReceiver, data, _payFeesIn);
         fee = _calculateFee(_dstChainSelector, ccipMessage);
     }
 
@@ -141,7 +149,7 @@ contract VeSiloDelegatorViaCCIP is CCIPMessageSender, Ownable2Step, IVeSiloDeleg
 
         uint256 totalSupplyEpoch = VOTING_ESCROW.epoch();
         bytes memory data = _getTotalSupplyData(totalSupplyEpoch);
-        Client.EVM2AnyMessage memory ccipMessage = _getCCIPMessage(childChainReceiver, data, _payFeesIn);
+        Client.EVM2AnyMessage memory ccipMessage = getCCIPMessage(childChainReceiver, data, _payFeesIn);
         fee = _calculateFee(_dstChainSelector, ccipMessage);
     }
 

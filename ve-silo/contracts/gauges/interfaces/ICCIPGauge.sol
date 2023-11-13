@@ -4,8 +4,9 @@ pragma solidity ^0.8.0;
 import {Client} from "chainlink-ccip/v0.8/ccip/libraries/Client.sol";
 
 import {IStakelessGauge} from "./IStakelessGauge.sol";
+import {ICCIPExtraArgsConfig} from "./ICCIPExtraArgsConfig.sol";
 
-interface ICCIPGauge is IStakelessGauge {
+interface ICCIPGauge is IStakelessGauge, ICCIPExtraArgsConfig {
     enum PayFeesIn {
         Native,
         LINK

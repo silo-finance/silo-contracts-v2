@@ -16,6 +16,8 @@ abstract contract CCIPGauge is StakelessGauge, ICCIPGauge {
     uint64 public immutable DESTINATION_CHAIN;
     // solhint-enable var-name-mixedcase
 
+    bytes public extraArgs;
+
     address internal _chaildChainGauge;
 
     event CCIPTransferMessage(bytes32 messageId);
@@ -47,6 +49,12 @@ abstract contract CCIPGauge is StakelessGauge, ICCIPGauge {
         _transferOwnership(Ownable2Step(msg.sender).owner());
 
         _chaildChainGauge = _recepient;
+    }
+
+    function setExtraArgs(bytes calldata _extraArgs) external onlyOwner {
+        extraArgs = _extraArgs;
+
+        emit ExtraArgsUpdated(_extraArgs);
     }
 
     /// @inheritdoc ICCIPGauge
@@ -149,7 +157,7 @@ abstract contract CCIPGauge is StakelessGauge, ICCIPGauge {
             receiver: abi.encode(_chaildChainGauge),
             data: "",
             tokenAmounts: tokenAmounts,
-            extraArgs: "",
+            extraArgs: extraArgs,
             feeToken: _payFeesIn == PayFeesIn.Native ? address(0) : LINK
         });
     }
