@@ -75,38 +75,50 @@ abstract contract CCIPGauge is StakelessGauge, ICCIPGauge {
         _balToken.approve(address(ROUTER), _mintAmount);
 
         bytes32 messageId;
-        Client.EVM2AnyMessage memory evm2AnyMessage;
+        uint256 balance = address(this).balance;
 
-        if (address(this).balance != 0) {
-            evm2AnyMessage = _buildCCIPMessage(_mintAmount, PayFeesIn.Native);
+        if (balance != 0) {
+            Client.EVM2AnyMessage memory evm2AnyMessage = _buildCCIPMessage(_mintAmount, PayFeesIn.Native);
             // Get the fee required to send the message
             uint256 fees = _calculateFee(evm2AnyMessage);
 
-            messageId = ROUTER.ccipSend{ value: fees }(
-                DESTINATION_CHAIN,
-                evm2AnyMessage
-            );
-
-            uint256 balance = address(this).balance;
-
-            if (balance > 0) {
-                Address.sendValue(payable(msg.sender), balance);
+            if (balance >= fees) { // Ensure that we have enough ether to pay fees
+                messageId = ROUTER.ccipSend{ value: fees }(
+                    DESTINATION_CHAIN,
+                    evm2AnyMessage
+                );
+            } else { // If we don't have enough ether to pay fees, try to pay with LINK
+                messageId = _transferMessageAndPayInLINK(_mintAmount);
             }
+
+            _returnLeftoverEthIfAny();
         } else {
-            evm2AnyMessage = _buildCCIPMessage(_mintAmount, PayFeesIn.LINK);
-            // Get the fee required to send the message
-            uint256 fees = _calculateFee(evm2AnyMessage);
-
-            // Expect tokens to be already transferred to the gauge balance by the `CCIPGaugeCheckpointer`
-            IERC20(LINK).approve(address(ROUTER), fees);
-
-            messageId = ROUTER.ccipSend(
-                DESTINATION_CHAIN,
-                evm2AnyMessage
-            );
+            messageId = _transferMessageAndPayInLINK(_mintAmount);
         }
 
         emit CCIPTransferMessage(messageId);
+    }
+
+    function _transferMessageAndPayInLINK(uint256 _mintAmount) internal returns (bytes32 messageId) {
+        Client.EVM2AnyMessage memory evm2AnyMessage = _buildCCIPMessage(_mintAmount, PayFeesIn.LINK);
+        // Get the fee required to send the message
+        uint256 fees = _calculateFee(evm2AnyMessage);
+
+        // Expect tokens to be already transferred to the gauge balance by the `CCIPGaugeCheckpointer`
+        IERC20(LINK).approve(address(ROUTER), fees);
+
+        messageId = ROUTER.ccipSend(
+            DESTINATION_CHAIN,
+            evm2AnyMessage
+        );
+    }
+
+    function _returnLeftoverEthIfAny() internal {
+        uint256 remainingBalance = address(this).balance;
+
+        if (remainingBalance > 0) {
+            Address.sendValue(payable(msg.sender), remainingBalance);
+        }
     }
 
     function _calculateFee(Client.EVM2AnyMessage memory _message) internal view returns (uint256 fee) {
