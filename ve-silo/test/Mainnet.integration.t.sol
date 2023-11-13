@@ -423,7 +423,7 @@ contract MainnetTest is IntegrationTest {
         vm.prank(_daoVoter);
         _siloGovernor.castVote(proposalId, 1);
 
-        vm.warp(snapshot + 24 * 3_600);
+        vm.warp(snapshot + 1 weeks + 1 seconds);
 
         _siloGovernor.queue(
             targets,
