@@ -108,12 +108,15 @@ def __init__(
     _version: String[128]
 ):
     self.version = _version
-    self.factory = 0x000000000000000000000000000000000000dEaD
 
     VE_DELEGATION_PROXY = _voting_escrow_delegation_proxy
     BAL_PSEUDO_MINTER = _bal_pseudo_minter
     BAL = Minter(_bal_pseudo_minter).getBalancerToken()
     AUTHORIZER_ADAPTOR = _authorizer_adaptor
+
+    # Set the hook_receiver variable to a non-zero value
+    # in order to prevent the implementation contracts from being initialized
+    self.hook_receiver = 0x000000000000000000000000000000000000dEaD
 
 
 @internal

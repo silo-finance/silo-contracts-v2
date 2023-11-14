@@ -159,6 +159,10 @@ def __init__(minter: address, veBoostProxy: address, authorizerAdaptor: address)
     VOTING_ESCROW = Controller(gaugeController).voting_escrow()
     VEBOOST_PROXY = veBoostProxy
 
+    # Set the hook_receiver variable to a non-zero value
+    # in order to prevent the implementation contracts from being initialized
+    self.hook_receiver = 0x000000000000000000000000000000000000dEaD
+
 # Internal Functions
 
 
