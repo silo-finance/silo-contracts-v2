@@ -47,12 +47,12 @@ contract ChildChainGaugeFactory is Version, BaseGaugeFactory {
      * @notice Deploys a new gauge for a ERC-20 balances handler (Silo shares token)
      *
      * It is possible to deploy multiple gauges for a single pool.
-     * @param erc20BalancesHandler ERC-20 balances handler for which to deploy a gauge
+     * @param hookReceiver The address of the Silo hook receiver
      * @return The address of the deployed gauge
      */
-    function create(address erc20BalancesHandler) external returns (address) { //solhint-disable-line ordering
+    function create(address hookReceiver) external returns (address) { //solhint-disable-line ordering
         address gauge = _create();
-        IChildChainGauge(gauge).initialize(erc20BalancesHandler, getProductVersion());
+        IChildChainGauge(gauge).initialize(hookReceiver, getProductVersion());
         return gauge;
     }
 }

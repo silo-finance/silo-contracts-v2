@@ -2,7 +2,7 @@
 pragma solidity >=0.5.0;
 
 interface ISiloLiquidityGauge {
-    function initialize(uint256 relativeWeightCap, address erc20BalancesHandler) external;
+    function initialize(uint256 relativeWeightCap, address hookReceiver) external;
     // solhint-disable func-name-mixedcase
     // solhint-disable func-param-name-mixedcase
     // solhint-disable var-name-mixedcase

@@ -33,12 +33,12 @@ contract LiquidityGaugeFactory is BaseGaugeFactory {
      *
      * It is possible to deploy multiple gauges for a single pool.
      * @param relativeWeightCap The relative weight cap for the created gauge
-     * @param erc20BalancesHandler The address of the pool for which to deploy a gauge
+     * @param hookReceiver The address of the Silo hook receiver
      * @return The address of the deployed gauge
      */
-    function create(uint256 relativeWeightCap, address erc20BalancesHandler) external returns (address) {
+    function create(uint256 relativeWeightCap, address hookReceiver) external returns (address) {
         address gauge = _create();
-        ISiloLiquidityGauge(gauge).initialize(relativeWeightCap, erc20BalancesHandler);
+        ISiloLiquidityGauge(gauge).initialize(relativeWeightCap, hookReceiver);
         return gauge;
     }
 }
