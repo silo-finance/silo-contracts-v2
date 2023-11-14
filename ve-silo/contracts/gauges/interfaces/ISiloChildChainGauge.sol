@@ -4,7 +4,7 @@ pragma solidity >=0.5.0;
 import {ILiquidityGaugeFactory} from "./ILiquidityGaugeFactory.sol";
 
 interface ISiloChildChainGauge {
-    function initialize(address _erc20BalancesHandler, string memory _version) external;
+    function initialize(address _hookReceiver, string memory _version) external;
     // solhint-disable func-name-mixedcase
     // solhint-disable func-param-name-mixedcase
     // solhint-disable var-name-mixedcase
