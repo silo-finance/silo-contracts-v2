@@ -112,7 +112,7 @@ contract UniswapV3OracleFactory is OracleFactory {
     /// @return requiredCardinality when config is valid, returns required Cardinality value
     function verifyConfig(IUniswapV3Oracle.UniswapV3DeploymentConfig memory _config)
         public
-        view
+        pure
         virtual
         returns (uint16 requiredCardinality)
     {
