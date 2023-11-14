@@ -40,7 +40,7 @@ contract CCIPGaugeCheckpointer is IntegrationTest {
     bytes32 internal constant _MESSAGE_ID_ETH = 0x62393c4d4b565fdb3b54ffd9cdf0da948ec59c7a975b3fa945bd6e84f7b85ded;
 
     bytes32 internal constant _MESSAGE_ID_LINK_WITH_ETH =
-        0x2e05bc523aef3b198631df198295854faae05fb718658c5e45088b3901d58717;
+        0x85d350066ad6c52f52bde9af24f275055f441740f44945c70f0d4640481728a5;
 
     address internal _minter = makeAddr("Minter");
     address internal _tokenAdmin = makeAddr("Token Admin");
@@ -233,7 +233,7 @@ contract CCIPGaugeCheckpointer is IntegrationTest {
     }
 
     function _setupGaugeWithFrontLoadedEth(uint256 _ethAmount) internal returns (ICCIPGauge _createdGauge) {
-        address expectedGauge = 0xf46d12809B92D0bea694ACdcF3396493b3e1F6bc;
+        address expectedGauge = 0xf5Ba21691a8bC011B7b430854B41d5be0B78b938;
 
         payable(expectedGauge).transfer(_ethAmount);
 
