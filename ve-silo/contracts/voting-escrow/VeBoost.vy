@@ -2,6 +2,7 @@
 """
 @title Boost Delegation V2
 @author CurveFi
+@modified Silo Finance
 """
 
 
@@ -40,9 +41,9 @@ struct Point:
     ts: uint256
 
 
-NAME: constant(String[32]) = "Vote-Escrowed Boost"
+NAME: constant(String[32]) = "Silo Vote-Escrowed Boost"
 SYMBOL: constant(String[8]) = "veBoost"
-VERSION: constant(String[8]) = "v2.0.0"
+VERSION: constant(String[8]) = "v1.0.0"
 
 EIP712_TYPEHASH: constant(bytes32) = keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)")
 PERMIT_TYPEHASH: constant(bytes32) = keccak256("Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)")
