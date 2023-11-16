@@ -80,6 +80,11 @@ rm -rf gitmodules/silo-foundry-utils
 git submodule update --remote gitmodules/<submodule>
 ```
 
+If you want to update to specific commit:
+1. cd `gitmodules/<module>`
+2. `git checkout <commit>`
+3. commit changes (optinally update `branch` section in `.gitmodules`, however this make no difference)
+
 ## Adding new working space
 
 - create new workflow in `.github/workflows`
