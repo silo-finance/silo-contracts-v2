@@ -26,11 +26,6 @@ event Migrate:
     _token_id: indexed(uint256)
 
 
-interface BoostV1:
-    def ownerOf(_token_id: uint256) -> address: view
-    def token_boost(_token_id: uint256) -> int256: view
-    def token_expiry(_token_id: uint256) -> uint256: view
-
 interface VotingEscrow:
     def balanceOf(_user: address) -> uint256: view
     def totalSupply() -> uint256: view
@@ -59,7 +54,6 @@ ERC1271_MAGIC_VAL: constant(bytes32) = 0x1626ba7e0000000000000000000000000000000
 WEEK: constant(uint256) = 86400 * 7
 
 
-BOOST_V1: immutable(address)
 DOMAIN_SEPARATOR: immutable(bytes32)
 VE: immutable(address)
 
@@ -77,8 +71,7 @@ migrated: public(HashMap[uint256, bool])
 
 
 @external
-def __init__(_boost_v1: address, _ve: address):
-    BOOST_V1 = _boost_v1
+def __init__(_ve: address):
     DOMAIN_SEPARATOR = keccak256(_abi_encode(EIP712_TYPEHASH, keccak256(NAME), keccak256(VERSION), chain.id, self))
     VE = _ve
 
@@ -234,30 +227,6 @@ def boost(_to: address, _amount: uint256, _endtime: uint256, _from: address = ms
 
     self._boost(_from, _to, _amount, _endtime)
 
-@internal
-def _migrate(_token_id: uint256):
-    assert not self.migrated[_token_id]
-
-    self._boost(
-        convert(shift(_token_id, -96), address),  # from
-        BoostV1(BOOST_V1).ownerOf(_token_id),  # to
-        convert(BoostV1(BOOST_V1).token_boost(_token_id), uint256),  # amount
-        BoostV1(BOOST_V1).token_expiry(_token_id),  # expiry
-    )
-
-    self.migrated[_token_id] = True
-    log Migrate(_token_id)
-
-@external
-def migrate(_token_id: uint256):
-    self._migrate(_token_id)
-
-@external
-def migrate_many(_token_ids: uint256[16]):
-    for i in range(16):
-        if _token_ids[i] == 0:
-            break
-        self._migrate(_token_ids[i])
 
 @external
 def checkpoint_user(_user: address):
@@ -374,11 +343,6 @@ def symbol() -> String[8]:
 def decimals() -> uint8:
     return 18
 
-
-@pure
-@external
-def BOOST_V1() -> address:
-    return BOOST_V1
 
 @pure
 @external
