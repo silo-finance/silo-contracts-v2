@@ -26,6 +26,9 @@ event Boost:
 event Migrate:
     _token_id: indexed(uint256)
 
+interface ERC20:
+    def balanceOf(addr: address) -> uint256: view
+    def totalSupply() -> uint256: view
 
 interface VotingEscrow:
     def balanceOf(_user: address) -> uint256: view
@@ -40,10 +43,17 @@ struct Point:
     slope: uint256
     ts: uint256
 
+struct BoostPoint:
+    linear_blance: uint256
+    bias: uint256
+    slope: uint256
+    ts: uint256
+
 
 NAME: constant(String[32]) = "Silo Vote-Escrowed Boost"
 SYMBOL: constant(String[8]) = "veBoost"
 VERSION: constant(String[8]) = "v1.0.0"
+TOKENLESS_PRODUCTION: constant(uint256) = 40
 
 EIP712_TYPEHASH: constant(bytes32) = keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)")
 PERMIT_TYPEHASH: constant(bytes32) = keccak256("Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)")
@@ -70,6 +80,7 @@ received_slope_changes: public(HashMap[address, HashMap[uint256, uint256]])
 
 migrated: public(HashMap[uint256, bool])
 
+boost_points: public(HashMap[address, BoostPoint])
 
 @external
 def __init__(_ve: address):
@@ -166,6 +177,12 @@ def _checkpoint_write(_user: address, _delegated: bool) -> Point:
 @view
 @internal
 def _balance_of(_user: address) -> uint256:
+    # if _user_is_vault(_user)
+    #     point: BoostPoint = self._read_boost_checkpoint(msg.sender)
+
+    #     return point.linear_balance + point.bias
+
+
     amount: uint256 = VotingEscrow(VE).balanceOf(_user)
 
     point: Point = self._checkpoint_read(_user, True)
@@ -216,6 +233,122 @@ def _boost(_from: address, _to: address, _amount: uint256, _endtime: uint256):
     self.received[_from] = self._checkpoint_write(_from, False)
     self.delegated[_to] = self._checkpoint_write(_to, True)
 
+
+@internal
+def _calculate_curvature_point(
+        _user: address,
+        _user_liquidity: uint256,
+        _total_liquidity: uint256,
+        _voting_balance: uint256
+    ) -> (uint256, uint256): # Need to return a voting power
+    # calculate curvature_point (where we are starting receiving less incentives, it based on a balance)
+    #   lim: uint256 = l * TOKENLESS_PRODUCTION / 100
+    #   if voting_total > 0:
+    #       lim += L * voting_balance / voting_total * (100 - TOKENLESS_PRODUCTION) / 100
+    #   lim = min(l, lim)
+
+    voting_total: uint256 = ERC20(VOTING_ESCROW).totalSupply()
+    lim: uint256 = _user_liquidity * TOKENLESS_PRODUCTION / 100
+
+    if voting_total > :
+        lim += _total_liquidity * _voting_balance / voting_total * (100 - TOKENLESS_PRODUCTION) / 100
+
+
+
+
+@internal
+def _boost_based_on_deposit(_user: address, _user_liquidity: uint256, _total_liquidity):
+    assert _user not in [msg.sender, empty(address)]
+    assert _amount != 0
+
+    locked_end: uint256 = VotingEscrow(VE).locked__end(_user) / WEEK * WEEK
+
+    assert locked_end > block.timestamp
+
+    voting_balance: uint256 = ERC20(VE).balanceOf(_user)
+
+    linear_balance: uint256 = 0
+    curvature_point: uint256 = 0
+
+    (
+        linear_balance,
+        curvature_point
+    ) = self._calculate_curvature_point(_user, _user_liquidity, voting_balance)
+
+    point: BoostPoint = self._read_boost_checkpoint(msg.sender)
+
+    if linear_balance == 0:
+        time_diff = locked_end - block.timestamp
+
+        slope: uint256 = voting_balance / time_diff # ?
+
+        point.slope += slope
+        point.bias += slope * time_diff
+
+        slope_decrease[msg.sender][locked_end] += slope
+        boost_points[msg.sender] = point
+
+        return
+
+    point.linear_balance += linear_balance
+    linear_balance_decrease[msg.sender][curvature_point] += linear_balance
+    slope_increase[msg.sender][curvature_point] += slope
+
+    boost_points[msg.sender] = point
+
+    # All boosts boosts for max voting power
+
+    # calculate linear_balance
+
+    
+
+    # linear_balance will go to bias, and slope should be added after the curvature_point
+
+    # we have two slope_changes
+    #       - slope_increase - it is updated on a boost (in the case if linear_balance != 0)
+    #       - slope_decrease - it is updated when we reach curvature_point or on a boost if it is not enough 
+
+@view
+@internal
+def _read_boost_checkpoint(_user: address) -> BoostPoint:
+    point: BoostPoint = boost_points[msg.sender]
+
+    if point.ts == 0:
+        point.ts = block.timestamp
+
+    if point.ts == block.timestamp:
+        return point
+
+    ts: uint256 = (point.ts / WEEK) * WEEK
+
+    for _ in range(255):
+        ts += WEEK
+        d_slope: uint256 = 0
+
+        if block.timestamp < ts:
+            ts = block.timestamp
+        else
+            d_slope = slope_decrease[msg.sender][ts]
+
+        # recalculating last/current week
+        point.bias -= point.slope * (ts - point.ts)
+        point.slope -= d_slope
+        point.ts = ts
+
+        if block.timestamp != ts:
+            # entering curvature points
+            linear_balance: uint256 = linear_balance_decrease[msg.sender][ts]
+            i_slope: uint256 = slope_increase[msg.sender][ts]
+
+            # reducing linear balance and increasing bias and slope
+            point.linear_balance -= linear_balance
+            point.bias += linear_balance
+            point.slope += i_slope
+
+        if ts == block.timestamp:
+            break
+
+    return point
 
 @external
 def boost(_to: address, _amount: uint256, _endtime: uint256, _from: address = msg.sender):
