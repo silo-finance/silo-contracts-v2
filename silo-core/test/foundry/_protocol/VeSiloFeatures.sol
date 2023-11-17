@@ -139,7 +139,7 @@ contract VeSiloFeatures is CommonSiloIntegration {
         vm.prank(_bob);
         siloGovernor.castVote(proposalId, 1);
 
-        vm.warp(snapshot + 24 * 3_600);
+        vm.warp(snapshot + 1 weeks + 1 seconds);
 
         siloGovernor.queue(
             targets,

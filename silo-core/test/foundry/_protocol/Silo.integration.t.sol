@@ -40,6 +40,7 @@ contract SiloIntegrationTest is VeSiloFeatures {
         _verifyClaimable(ISiloLiquidityGauge(gauge));
         _getIncentives(gauge);
         _borrowFromSilo(siloConfig);
+        _repay(siloConfig);
     }
 
     function _configureGaugeHookReceiver(address _hookReceiver, address _gauge) internal {
@@ -103,6 +104,20 @@ contract SiloIntegrationTest is VeSiloFeatures {
         ISilo(silo1).borrow(borrowAmount, _alice, _alice);
 
         assertEq(IERC20(debtShareToken).balanceOf(_alice), borrowAmount, "Should have debt shares tokens");
+    }
+
+    function _repay(ISiloConfig _siloConfig) internal {
+        (, address silo1) = _siloConfig.getSilos();
+        (,,address debtShareToken) = _siloConfig.getShareTokens(silo1);
+
+        uint256 toRepay = ISilo(silo1).maxRepay(_alice);
+
+        vm.startPrank(_alice);
+        _usdcToken.approve(silo1, toRepay);
+        ISilo(silo1).repay(toRepay, _alice);
+        vm.stopPrank();
+
+        assertEq(IERC20(debtShareToken).balanceOf(_alice), 0, "Should not have debt shares tokens");
     }
 
     function _getHookReceiverForCollateralToken(ISiloConfig _siloConfig) internal returns (address hookReceiver) {
