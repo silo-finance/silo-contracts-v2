@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.0;
 
+import {Strings} from "openzeppelin-contracts/utils/Strings.sol";
+
 import "silo-core/contracts/interestRateModel/InterestRateModelV2.sol";
 import "silo-core/contracts/interestRateModel/InterestRateModelV2ConfigFactory.sol";
 
@@ -9,7 +11,7 @@ import "../_common/InterestRateModelConfigs.sol";
 import "../data-readers/RcompTestData.sol";
 
 
-// forge test -vv --ffi --mc InterestRateModelV2RcurTest
+// forge test -vv --ffi --mc InterestRateModelV2RcompTest
 contract InterestRateModelV2RcompTest is RcompTestData, InterestRateModelConfigs {
     InterestRateModelV2ConfigFactory immutable CONFIG_FACTORY;
     InterestRateModelV2Impl immutable INTEREST_RATE_MODEL;
@@ -47,33 +49,33 @@ contract InterestRateModelV2RcompTest is RcompTestData, InterestRateModelConfigs
                 testCase.input.currentTime
             );
 
-            assertEq(overflow, testCase.expected.didOverflow == 1, "didOverflow");
+            assertEq(overflow, testCase.expected.didOverflow == 1, _concatMsg(i, "didOverflow"));
 
             if (testCase.expected.compoundInterest == 0) {
-                assertEq(rcomp, testCase.expected.compoundInterest, "compoundInterest");
+                assertEq(rcomp, testCase.expected.compoundInterest, _concatMsg(i, "compoundInterest"));
             } else {
                 uint256 diff = _diff(rcomp, testCase.expected.compoundInterest);
 
                 // allow maximum of 0.25% (25bps) deviation between high precision test results and smart contracts output
-                assertLe(diff, 25, "[rcomp] allow maximum of 0.25% (25bps) ");
+                assertLe(diff, 25, _concatMsg(i, "[rcomp] allow maximum of 0.25% (25bps) "));
             }
 
             if (testCase.expected.newIntegratorState == 0) {
-                assertEq(ri, testCase.expected.newIntegratorState, "newIntegratorState");
+                assertEq(ri, testCase.expected.newIntegratorState, _concatMsg(i, "newIntegratorState"));
             } else {
                 uint256 diff = _diff(ri, testCase.expected.newIntegratorState);
 
                 // allow maximum of 0.25% (25bps) deviation between high precision test results and smart contracts output
-                assertLe(diff, 25, "[ri] allow maximum of 0.25% (25bps) ");
+                assertLe(diff, 25, _concatMsg(i, "[ri] allow maximum of 0.25% (25bps) "));
             }
 
             if (testCase.expected.newTcrit == 0) {
-                assertEq(Tcrit, testCase.expected.newTcrit, "newTcrit");
+                assertEq(Tcrit, testCase.expected.newTcrit, _concatMsg(i, "newTcrit"));
             } else {
                 uint256 diff = _diff(Tcrit, testCase.expected.newTcrit);
 
                 // allow maximum of 0.25% (25bps) deviation between high precision test results and smart contracts output
-                assertLe(diff, 25, "[newTcrit] allow maximum of 0.25% (25bps) ");
+                assertLe(diff, 25, _concatMsg(i, "[newTcrit] allow maximum of 0.25% (25bps) "));
             }
 
             ISilo.UtilizationData memory utilizationData = ISilo.UtilizationData(
@@ -101,7 +103,7 @@ contract InterestRateModelV2RcompTest is RcompTestData, InterestRateModelConfigs
             INTEREST_RATE_MODEL.mockSetup(silo, testCase.input.integratorState, testCase.input.Tcrit);
             vm.mockCall(silo, abi.encodeWithSelector(ISilo.utilizationData.selector), abi.encode(utilizationData));
             uint256 compoundInterestRate = INTEREST_RATE_MODEL.getCompoundInterestRate(silo, testCase.input.currentTime);
-            assertEq(compoundInterestRate, rcomp, "getCompoundInterestRate()");
+            assertEq(compoundInterestRate, rcomp, _concatMsg(i, "getCompoundInterestRate()"));
         }
 
         emit log_named_uint("totalBorrowAmountOverflows", totalBorrowAmountOverflows);
@@ -148,8 +150,8 @@ contract InterestRateModelV2RcompTest is RcompTestData, InterestRateModelConfigs
 
             (int256 storageRi, int256 storageTcrit,)= INTEREST_RATE_MODEL.getSetup(silo);
 
-            assertEq(storageRi, ri, "storageRi");
-            assertEq(storageTcrit, Tcrit, "storageTcrit");
+            assertEq(storageRi, ri, _concatMsg(i, "storageRi"));
+            assertEq(storageTcrit, Tcrit, _concatMsg(i, "storageTcrit"));
         }
     }
 
@@ -163,5 +165,9 @@ contract InterestRateModelV2RcompTest is RcompTestData, InterestRateModelConfigs
     function _diff(uint256 _a, uint256 _b) internal pure returns (uint256 diff) {
         uint256 positiveDeviation = (_a * BASIS_POINTS) / _b;
         diff = positiveDeviation > BASIS_POINTS ? positiveDeviation - BASIS_POINTS : BASIS_POINTS - positiveDeviation;
+    }
+
+    function _concatMsg(uint256 _i, string memory _msg) internal pure returns (string memory) {
+        return string.concat("[", Strings.toString(_i), "] ", _msg);
     }
 }

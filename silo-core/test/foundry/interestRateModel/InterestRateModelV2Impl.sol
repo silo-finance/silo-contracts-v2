@@ -14,4 +14,12 @@ contract InterestRateModelV2Impl is InterestRateModelV2 {
         getSetup[_silo].Tcrit = int128(_Tcrit);
         getSetup[_silo].ri = int128(_ri);
     }
+
+    function calculateRComp(
+        uint256 _totalDeposits,
+        uint256 _totalBorrowAmount,
+        int256 _x
+    ) external pure virtual returns (uint256 rcomp, bool overflow) {
+        return _calculateRComp(_totalDeposits, _totalBorrowAmount, _x);
+    }
 }
