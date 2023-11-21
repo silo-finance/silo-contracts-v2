@@ -8,6 +8,8 @@ import {InterestRateModelV2} from "silo-core/contracts/interestRateModel/Interes
 import {InterestRateModelV2ConfigFactory} from "silo-core/contracts/interestRateModel/InterestRateModelV2ConfigFactory.sol";
 
 import {InterestRateModelConfigs} from "../_common/InterestRateModelConfigs.sol";
+import {InterestRateModelV2Impl} from "./InterestRateModelV2Impl.sol";
+import {InterestRateModelV2Checked} from "../_checkedMath/InterestRateModelV2Checked.sol";
 
 // forge test -vv --mc InterestRateModelV2Test
 contract InterestRateModelV2Test is Test, InterestRateModelConfigs {
@@ -32,8 +34,9 @@ contract InterestRateModelV2Test is Test, InterestRateModelConfigs {
         assertEq(INTEREST_RATE_MODEL.X_MAX(), 11090370147631773313);
     }
 
+    // forge test -vvv --mt test_IRM_ASSET_DATA_OVERFLOW_LIMIT
     function test_IRM_ASSET_DATA_OVERFLOW_LIMIT() public {
-        assertEq(INTEREST_RATE_MODEL.ASSET_DATA_OVERFLOW_LIMIT(), 2 ** 196);
+        assertEq(INTEREST_RATE_MODEL.ASSET_DATA_OVERFLOW_LIMIT(), uint256(type(uint256).max / (2 ** 16 * DP)));
     }
 
     function test_IRM_calculateCompoundInterestRate_InvalidTimestamps() public {
@@ -101,5 +104,26 @@ contract InterestRateModelV2Test is Test, InterestRateModelConfigs {
         );
 
         assertEq(rcur, 0, "expect to get 0 for time 0");
+    }
+
+    // forge test -vv --mt test_IRM_calculateRComp
+    /// forge-config: core.fuzz.runs = 10000
+    function test_IRM_calculateRComp(uint256 _totalDeposits, uint256 _totalBorrowAmount, int256 _x) public {
+        InterestRateModelV2Impl impl = new InterestRateModelV2Impl();
+        InterestRateModelV2Checked implChecked = new InterestRateModelV2Checked();
+
+        (uint256 rcomp1, bool overflow1) = impl.calculateRComp(_totalDeposits, _totalBorrowAmount, _x);
+        emit log_named_uint("rcomp1", rcomp1);
+
+        (uint256 rcomp2, bool overflow2) = implChecked._calculateRComp(_totalDeposits, _totalBorrowAmount, _x);
+        emit log_named_uint("rcomp2", rcomp2);
+
+        emit log_named_string(
+            "overflow",
+            overflow1 == overflow2 ? "same" : string.concat("different: 1st is ", overflow1 ? "true" : "false")
+        );
+
+        assertEq(rcomp1, rcomp2, "expect exact rcomp value");
+        assertEq(overflow1, overflow2, "expect exact overflow value");
     }
 }

@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.0;
 
+import {Strings} from "openzeppelin-contracts/utils/Strings.sol";
+
 import "silo-core/contracts/interestRateModel/InterestRateModelV2.sol";
 import "silo-core/contracts/interestRateModel/InterestRateModelV2ConfigFactory.sol";
 
@@ -43,13 +45,13 @@ contract InterestRateModelV2RcurTest is RcurTestData, InterestRateModelConfigs {
             );
 
             if (testCase.expected.currentAnnualInterest == 0) {
-                assertEq(rcur, testCase.expected.currentAnnualInterest, "currentAnnualInterest");
+                assertEq(rcur, testCase.expected.currentAnnualInterest, _concatMsg(i, "currentAnnualInterest"));
             } else {
                 uint256 deviation = (rcur * BASIS_POINTS) / testCase.expected.currentAnnualInterest;
                 uint256 diff = deviation > BASIS_POINTS ? deviation - BASIS_POINTS : BASIS_POINTS - deviation;
 
                 // allow maximum of 0.01% (1bps) deviation between high precision test results and smart contracts output
-                assertLe(diff, 1, "allow maximum of 0.01% (1bps) deviation");
+                assertLe(diff, 1, _concatMsg(i, "allow maximum of 0.01% (1bps) deviation"));
             }
 
             ISilo.UtilizationData memory utilizationData = ISilo.UtilizationData(
@@ -68,10 +70,14 @@ contract InterestRateModelV2RcurTest is RcurTestData, InterestRateModelConfigs {
             INTEREST_RATE_MODEL.mockSetup(silo, testCase.input.integratorState, testCase.input.Tcrit);
             vm.mockCall(silo, abi.encodeWithSelector(ISilo.utilizationData.selector), abi.encode(utilizationData));
             uint256 mockedRcur = INTEREST_RATE_MODEL.getCurrentInterestRate(silo, testCase.input.currentTime);
-            assertEq(mockedRcur, rcur, "getCurrentInterestRate()");
+            assertEq(mockedRcur, rcur, _concatMsg(i, "getCurrentInterestRate()"));
 
             bool overflow = INTEREST_RATE_MODEL.overflowDetected(silo, testCase.input.currentTime);
-            assertEq(overflow, testCase.expected.didOverflow == 1, "expect overflowDetected() = expected.didOverflow");
+            assertEq(overflow, testCase.expected.didOverflow == 1, _concatMsg(i, "expect overflowDetected() = expected.didOverflow"));
         }
+    }
+
+    function _concatMsg(uint256 _i, string memory _msg) internal pure returns (string memory) {
+        return string.concat("[", Strings.toString(_i), "] ", _msg);
     }
 }
