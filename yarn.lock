@@ -167,7 +167,7 @@ __metadata:
     "@balancer-labs/v2-interfaces": "workspace:*"
     "@balancer-labs/v2-solidity-utils": "workspace:*"
     "@nomiclabs/hardhat-ethers": ^2.2.1
-    "@nomiclabs/hardhat-vyper": ^3.0.3
+    "@nomiclabs/hardhat-vyper": 3.0.5
     "@nomiclabs/hardhat-waffle": ^2.0.3
     "@types/chai": ^4.3.3
     "@types/lodash": ^4.14.186
@@ -1363,9 +1363,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nomiclabs/hardhat-vyper@npm:^3.0.3":
-  version: 3.0.3
-  resolution: "@nomiclabs/hardhat-vyper@npm:3.0.3"
+"@nomiclabs/hardhat-vyper@npm:3.0.5":
+  version: 3.0.5
+  resolution: "@nomiclabs/hardhat-vyper@npm:3.0.5"
   dependencies:
     debug: ^4.1.1
     fs-extra: ^7.0.1
@@ -1374,7 +1374,7 @@ __metadata:
     semver: ^6.3.0
   peerDependencies:
     hardhat: ^2.8.3
-  checksum: fc5b98825cb766c52b7c7a90b794d29f62f632b2107be6cc770184c54f5f9110c11289910eb9893a2b8b53ed205802410ab05a74910af0c2316aa0689fadbafd
+  checksum: edcfc723ef6abe716dd8307c6cd85bd837721a309d22394c86c97ade5cd1ba0ff6ffccc3d893e64f0cb694d74038f00e70a8c36804c3c9b63297a5d3ed7c4492
   languageName: node
   linkType: hard
 

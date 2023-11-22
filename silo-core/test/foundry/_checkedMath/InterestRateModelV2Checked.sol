@@ -4,25 +4,18 @@ pragma solidity 0.8.21;
 import {SafeCast} from "openzeppelin-contracts/utils/math/SafeCast.sol";
 import {Math} from "openzeppelin-contracts/utils/math/Math.sol";
 
-import {PRBMathSD59x18} from "../lib/PRBMathSD59x18.sol";
-import {SiloMathLib} from "../lib/SiloMathLib.sol";
-import {ISilo} from "../interfaces/ISilo.sol";
-import {IInterestRateModel} from "../interfaces/IInterestRateModel.sol";
-import {IInterestRateModelV2} from "../interfaces/IInterestRateModelV2.sol";
-import {IInterestRateModelV2Config} from "../interfaces/IInterestRateModelV2Config.sol";
+import {PRBMathSD59x18} from "silo-core/contracts/lib/PRBMathSD59x18.sol";
+import {SiloMathLib} from "silo-core/contracts/lib/SiloMathLib.sol";
+import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
+import {IInterestRateModel} from "silo-core/contracts/interfaces/IInterestRateModel.sol";
+import {IInterestRateModelV2} from "silo-core/contracts/interfaces/IInterestRateModelV2.sol";
+import {IInterestRateModelV2Config} from "silo-core/contracts/interfaces/IInterestRateModelV2Config.sol";
 
 // solhint-disable var-name-mixedcase
 // solhint-disable func-name-mixedcase
 
-/// @title InterestRateModelV2
-/// @notice This model is for one silo/asset set. So one silo need to have as many IRMs as many assets it holds.
-/// @dev Model stores some Silo specific data. If model is replaced, it needs to set proper config after redeployment
-/// for seamless service. Please refer to separate litepaper about model for design details.
-/// Difference between original `InterestRateModel` is that we made methods to be `virtual` and :
-///     if (_config.ki < 0) revert InvalidKi();  --- was ... <= 0
-//      if (_config.kcrit < 0) revert InvalidKcrit();  --- was ... <= 0
-/// @custom:security-contact security@silo.finance
-contract InterestRateModelV2 is IInterestRateModel, IInterestRateModelV2 {
+/// @dev same as `InterestRateModelV2` but with checked math and all public methods
+contract InterestRateModelV2Checked is IInterestRateModel, IInterestRateModelV2 {
     using PRBMathSD59x18 for int256;
     using SafeCast for int256;
     using SafeCast for uint256;
@@ -51,7 +44,7 @@ contract InterestRateModelV2 is IInterestRateModel, IInterestRateModelV2 {
     }
 
     /// @dev DP is 18 decimal points used for integer calculations
-    uint256 internal constant _DP = 1e18;
+    uint256 public constant _DP = 1e18;
 
     /// @dev maximum value of compound interest the model will return
     uint256 public constant RCOMP_MAX = (2**16) * 1e18;
@@ -225,7 +218,7 @@ contract InterestRateModelV2 is IInterestRateModel, IInterestRateModelV2 {
         }
 
         // There can't be an underflow in the subtraction because of the previous check
-        unchecked {
+        /* unchecked */ {
             // T := t1 - t0 # length of time period in seconds
             _l.T = (_blockTimestamp - _interestRateTimestamp).toInt256();
         }
@@ -297,7 +290,7 @@ contract InterestRateModelV2 is IInterestRateModel, IInterestRateModelV2 {
         if (_interestRateTimestamp > _blockTimestamp) revert InvalidTimestamps();
 
         // There can't be an underflow in the subtraction because of the previous check
-        unchecked {
+        /* unchecked */ {
             // length of time period in seconds
             _l.T = (_blockTimestamp - _interestRateTimestamp).toInt256();
         }
@@ -381,7 +374,7 @@ contract InterestRateModelV2 is IInterestRateModel, IInterestRateModelV2 {
         uint256 _totalDeposits,
         uint256 _totalBorrowAmount,
         int256 _x
-    ) internal pure virtual returns (uint256 rcomp, bool overflow) {
+    ) public pure virtual returns (uint256 rcomp, bool overflow) {
         int256 rcompSigned;
 
         if (_x >= X_MAX) {
@@ -394,7 +387,7 @@ contract InterestRateModelV2 is IInterestRateModel, IInterestRateModelV2 {
             rcomp = rcompSigned > 0 ? rcompSigned.toUint256() : 0;
         }
 
-        unchecked {
+        /* unchecked */ {
             // maxAmount = max(_totalDeposits, _totalBorrowAmount) to see
             // if any of this variables overflow in result.
             uint256 maxAmount = _totalDeposits > _totalBorrowAmount ? _totalDeposits : _totalBorrowAmount;
@@ -421,12 +414,12 @@ contract InterestRateModelV2 is IInterestRateModel, IInterestRateModelV2 {
     }
 
     /// @dev Returns the largest of two numbers
-    function _max(int256 a, int256 b) internal pure virtual returns (int256) {
+    function _max(int256 a, int256 b) public pure virtual returns (int256) {
         return a > b ? a : b;
     }
 
     /// @dev Returns the smallest of two numbers
-    function _min(int256 a, int256 b) internal pure virtual returns (int256) {
+    function _min(int256 a, int256 b) public pure virtual returns (int256) {
         return a < b ? a : b;
     }
 
@@ -440,7 +433,7 @@ contract InterestRateModelV2 is IInterestRateModel, IInterestRateModelV2 {
     /// If we got this limit, we should make Tcrit and Ri equal to zero, otherwise there is a low probability of the
     /// market going back below the limit.
     function _compoundInterestRateCAP(uint256 _rcomp, uint256 _t)
-        internal
+        public
         pure
         virtual
         returns (uint256 updatedRcomp, bool capApplied)
@@ -458,7 +451,7 @@ contract InterestRateModelV2 is IInterestRateModel, IInterestRateModelV2 {
     /// We don’t read the current interest rate in our protocol, because we care only about the interest we compounded
     /// over the past time since the last update. It is used in UI and other protocols integrations,
     /// for example investing strategies.
-    function _currentInterestRateCAP(uint256 _rcur) internal pure virtual returns (uint256) {
+    function _currentInterestRateCAP(uint256 _rcur) public pure virtual returns (uint256) {
         uint256 cap = 1e20; // 10**20; this is 10,000% APR in the 18-decimals format.
         return _rcur > cap ? cap : _rcur;
     }
