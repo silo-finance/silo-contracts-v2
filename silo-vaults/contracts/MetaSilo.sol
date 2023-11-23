@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.18;
+pragma solidity 0.8.21;
 
 import {SafeERC20Upgradeable as SafeERC20} from
     "openzeppelin-contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
@@ -19,22 +19,20 @@ import {ISilo} from "../../silo-core/contracts/Silo.sol";
 import {ISiloConfig} from "../../silo-core/contracts/SiloConfig.sol";
 import {IBalancerMinter} from "../../ve-silo/contracts/silo-tokens-minter/BalancerMinter.sol";
 
-import "./lib/SolverLib.sol";
+import {SolverLib} from "./lib/SolverLib.sol";
+import {MetaSiloERC4626} from "./utils/MetaSiloERC4626.sol";
 
 /**
  * @title MetaSilo
  * @notice An ERC4626 compliant single asset vault that dynamically lends to multiple silos.
  * @notice This contract handles multiple rewards, which can be claimed by the depositors.
  */
-contract MetaSilo is ERC4626Upgradeable, Ownable {
+contract MetaSilo is MetaSiloERC4626, ERC4626Upgradeable, Ownable {
     using SafeERC20 for IERC20;
     using SafeCastLib for uint256;
     using FixedPointMathLib for uint256;
     using Math for uint256;
 
-    string private _name;
-    string private _symbol;
-    uint8 private _decimals;
 
     bool public isEmergency;
 
