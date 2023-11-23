@@ -27,7 +27,7 @@ import {MetaSiloERC4626} from "./utils/MetaSiloERC4626.sol";
  * @notice An ERC4626 compliant single asset vault that dynamically lends to multiple silos.
  * @notice This contract handles multiple rewards, which can be claimed by the depositors.
  */
-contract MetaSilo is MetaSiloERC4626, ERC4626Upgradeable, Ownable {
+contract MetaSilo is MetaSiloERC4626, Ownable {
     using SafeERC20 for IERC20;
     using SafeCastLib for uint256;
     using FixedPointMathLib for uint256;
@@ -71,58 +71,25 @@ contract MetaSilo is MetaSiloERC4626, ERC4626Upgradeable, Ownable {
     /**
      * @notice Initialize a new MetaSilo contract.
      * @param _asset The native asset to be deposited.
-     * @param _nameParam Name of the contract.
-     * @param _symbolParam Symbol of the contract.
      * @param _owner Owner of the contract.
      * @param _balancerMinter balancerMinter contract.
      */
     function initialize(
         IERC20 _asset,
-        string calldata _nameParam,
-        string calldata _symbolParam,
         address _owner,
         address _balancerMinter
     ) external initializer {
         __ERC4626_init(IERC20Metadata(address(_asset)));
         __Owned_init(_owner);
 
-        _name = _nameParam;
-        _symbol = _symbolParam;
-        _decimals = IERC20Metadata(address(_asset)).decimals();
         balancerMinter = IBalancerMinter(_balancerMinter);
-    }
-
-    function name() public view override(ERC20Upgradeable, IERC20Metadata) returns (string memory) {
-        return _name;
-    }
-
-    function symbol() public view override(ERC20Upgradeable, IERC20Metadata) returns (string memory) {
-        return _symbol;
-    }
-
-    function decimals() public view override returns (uint8) {
-        return _decimals;
     }
 
     /*//////////////////////////////////////////////////////////////
                     ERC4626 MUTATIVE FUNCTIONS
     //////////////////////////////////////////////////////////////*/
 
-    function deposit(uint256 _amount) external returns (uint256) {
-        return deposit(_amount, msg.sender);
-    }
 
-    function mint(uint256 _amount) external returns (uint256) {
-        return mint(_amount, msg.sender);
-    }
-
-    function withdraw(uint256 _amount) external returns (uint256) {
-        return withdraw(_amount, msg.sender, msg.sender);
-    }
-
-    function redeem(uint256 _amount) external returns (uint256) {
-        return redeem(_amount, msg.sender, msg.sender);
-    }
 
     /*//////////////////////////////////////////////////////////////
                         ERC4626 OVERRIDES

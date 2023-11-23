@@ -8,53 +8,22 @@ IERC20Upgradeable,
 IERC20MetadataUpgradeable
 } from "openzeppelin-contracts-upgradeable/token/ERC20/extensions/ERC4626Upgradeable.sol";
 
+/// @dev MetaSilo is compatible with ERC4626 and all default methods fits here
+///
 contract MetaSiloERC4626 is ERC4626Upgradeable {
-    address asset;
-/// @inheritdoc IERC20
-    function approve(address _spender, uint256 _amount) external returns (bool) {
-        IShareToken(_getShareToken()).forwardApprove(msg.sender, _spender, _amount);
-        return true;
+    function deposit(uint256 _amount) external returns (uint256) {
+        return deposit(_amount, msg.sender);
     }
 
-    /// @inheritdoc IERC20
-    function transfer(address _to, uint256 _amount) external returns (bool) {
-        IShareToken(_getShareToken()).forwardTransfer(msg.sender, _to, _amount);
-        return true;
+    function mint(uint256 _amount) external returns (uint256) {
+        return mint(_amount, msg.sender);
     }
 
-    /// @inheritdoc IERC20
-    function transferFrom(address _from, address _to, uint256 _amount) external returns (bool) {
-        IShareToken(_getShareToken()).forwardTransferFrom(msg.sender, _from, _to, _amount);
-        return true;
+    function withdraw(uint256 _amount) external returns (uint256) {
+        return withdraw(_amount, msg.sender, msg.sender);
     }
 
-    /// @inheritdoc IERC20Metadata
-    function decimals() external view virtual returns (uint8) {
-        return IShareToken(_getShareToken()).decimals();
-    }
-
-    /// @inheritdoc IERC20Metadata
-    function name() external view virtual returns (string memory) {
-        return IShareToken(_getShareToken()).name();
-    }
-
-    /// @inheritdoc IERC20Metadata
-    function symbol() external view virtual returns (string memory) {
-        return IShareToken(_getShareToken()).symbol();
-    }
-
-    /// @inheritdoc IERC20
-    function allowance(address _owner, address _spender) external view returns (uint256) {
-        return IShareToken(_getShareToken()).allowance(_owner, _spender);
-    }
-
-    /// @inheritdoc IERC20
-    function balanceOf(address _account) external view returns (uint256) {
-        return IShareToken(_getShareToken()).balanceOf(_account);
-    }
-
-    /// @inheritdoc IERC20
-    function totalSupply() external view returns (uint256) {
-        return IShareToken(_getShareToken()).totalSupply();
+    function redeem(uint256 _amount) external returns (uint256) {
+        return redeem(_amount, msg.sender, msg.sender);
     }
 }
