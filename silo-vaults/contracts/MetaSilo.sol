@@ -85,63 +85,12 @@ contract MetaSilo is MetaSiloERC4626, Ownable {
         balancerMinter = IBalancerMinter(_balancerMinter);
     }
 
-    /*//////////////////////////////////////////////////////////////
-                    ERC4626 MUTATIVE FUNCTIONS
-    //////////////////////////////////////////////////////////////*/
-
-
 
     /*//////////////////////////////////////////////////////////////
                         ERC4626 OVERRIDES
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice This fct returns the amount of shares needed by the vault for the amount of assets provided.
-    function _convertToShares(uint256 assets, Math.Rounding) internal pure override returns (uint256) {
-        uint256 supply = totalSupply();
-        return supply == 0 ? assets : assets.mulDivDown(supply, _nav());
-    }
 
-    /// @notice This fct returns the amount of assets needed by the vault for the amount of shares provided.
-    function _convertToAssets(uint256 shares, Math.Rounding) internal pure override returns (uint256) {
-        uint256 supply = totalSupply();
-        return supply == 0 ? shares : shares.mulDivDown(_nav(), supply);
-    }
-
-    /// @notice Internal deposit fct used by `deposit()` and `mint()`. Accrues rewards for `caller` and `receiver`.
-    function _deposit(address caller, address receiver, uint256 assets, uint256 shares)
-        internal
-        override
-        accrueRewards(caller, receiver)
-    {
-        if (isEmergency) revert DepositNotAllowedEmergency();
-        IERC20(asset()).safeTransferFrom(caller, address(this), assets);
-        _mint(receiver, shares);
-        emit Deposit(caller, receiver, assets, shares);
-        _afterDeposit(assets);
-    }
-
-    /// @notice Internal withdraw fct used by `withdraw()` and `redeem()`. Accrues rewards for `caller` and `receiver`.
-    function _withdraw(address caller, address receiver, address owner, uint256 assets, uint256 shares)
-        internal
-        override
-        accrueRewards(owner, receiver)
-    {
-        if (caller != owner) _approve(owner, msg.sender, allowance(owner, msg.sender) - shares);
-        _burn(owner, shares);
-        emit Withdraw(caller, receiver, owner, assets, shares);
-        _beforeWithdraw(assets, receiver);
-        IERC20(asset()).safeTransfer(receiver, assets);
-    }
-
-    /// @notice Internal transfer fct used by `transfer()` and `transferFrom()`. Accrues rewards for `from` and `to`.
-    function _transfer(address from, address to, uint256 amount) internal override accrueRewards(from, to) {
-        if (from == address(0) || to == address(0)) revert ZeroAddressTransfer(from, to);
-        uint256 fromBalance = balanceOf(from);
-        if (fromBalance < amount) revert InsufficentBalance();
-        _burn(from, amount);
-        _mint(to, amount);
-        emit Transfer(from, to, amount);
-    }
 
     /*//////////////////////////////////////////////////////////////
                             CLAIM LOGIC
