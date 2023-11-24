@@ -60,7 +60,6 @@ contract MetaSilo is MetaSiloERC4626, Ownable {
     error ZeroAddressTransfer(address from, address to);
     error InsufficentBalance();
     error RewardTokenAlreadyAdded(IERC20 rewardToken);
-    error DepositNotAllowedEmergency();
     error SiloAlreadyAdded();
 
     /// Events
@@ -84,12 +83,6 @@ contract MetaSilo is MetaSiloERC4626, Ownable {
 
         balancerMinter = IBalancerMinter(_balancerMinter);
     }
-
-
-    /*//////////////////////////////////////////////////////////////
-                        ERC4626 OVERRIDES
-    //////////////////////////////////////////////////////////////*/
-
 
 
     /*//////////////////////////////////////////////////////////////

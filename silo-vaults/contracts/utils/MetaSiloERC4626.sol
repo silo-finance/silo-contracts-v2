@@ -11,6 +11,11 @@ IERC20MetadataUpgradeable
 /// @dev MetaSilo is compatible with ERC4626 and all default methods fits here
 ///
 abstract contract MetaSiloERC4626 is ERC4626Upgradeable {
+    // TODO is this needed? if so, only for deposit?
+    bool public isEmergency;
+
+    error NotAllowedWhenEmergency();
+
     function deposit(uint256 _amount) external returns (uint256) {
         return deposit(_amount, msg.sender);
     }
@@ -33,10 +38,12 @@ abstract contract MetaSiloERC4626 is ERC4626Upgradeable {
         override
         accrueRewards(caller, receiver)
     {
-        if (isEmergency) revert DepositNotAllowedEmergency();
-        IERC20(asset()).safeTransferFrom(caller, address(this), assets);
-        _mint(receiver, shares);
-        emit Deposit(caller, receiver, assets, shares);
+        if (isEmergency) revert NotAllowedWhenEmergency();
+
+        _beforeDeposit(assets);
+
+        super._deposit(caller, receiver, assets, shares);
+
         _afterDeposit(assets);
     }
 
@@ -44,16 +51,18 @@ abstract contract MetaSiloERC4626 is ERC4626Upgradeable {
     function _withdraw(address caller, address receiver, address owner, uint256 assets, uint256 shares)
         internal
         override
-        accrueRewards(owner, receiver)
     {
-        if (caller != owner) _approve(owner, msg.sender, allowance(owner, msg.sender) - shares);
-        _burn(owner, shares);
-        emit Withdraw(caller, receiver, owner, assets, shares);
+        // if (caller != owner) _approve(owner, msg.sender, allowance(owner, msg.sender) - shares); TODO ??
+
+        // TODO make sure we have enough assets to withdraw
+        // TODO can we use _before hook?
         _beforeWithdraw(assets, receiver);
-        IERC20(asset()).safeTransfer(receiver, assets);
+
+        super._withdraw(caller, receiver, owner, assets, shares);
     }
 
     /// @notice Internal transfer fct used by `transfer()` and `transferFrom()`. Accrues rewards for `from` and `to`.
+    // TODO do we need this??
     function _transfer(address from, address to, uint256 amount) internal override accrueRewards(from, to) {
         if (from == address(0) || to == address(0)) revert ZeroAddressTransfer(from, to);
         uint256 fromBalance = balanceOf(from);
@@ -62,4 +71,12 @@ abstract contract MetaSiloERC4626 is ERC4626Upgradeable {
         _mint(to, amount);
         emit Transfer(from, to, amount);
     }
+
+    // eg for accrueRewards
+    // can I use before/afte token transfer??
+    function _beforeDeposit(address owner, uint256 _amount) internal;
+
+    function _afterDeposit(uint256 _amount) internal;
+
+    function _beforeWithdraw(uint256 _amount) internal returns (uint256 _withdrawn);
 }
