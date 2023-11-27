@@ -9,25 +9,30 @@ IERC20MetadataUpgradeable
 } from "openzeppelin-contracts-upgradeable/token/ERC20/extensions/ERC4626Upgradeable.sol";
 
 /// @dev MetaSilo is compatible with ERC4626 and all default methods fits here
-///
+// TODO what is total supply here? would it be just deposited assets or with earnings??
+
 abstract contract MetaSiloERC4626 is ERC4626Upgradeable {
     // TODO is this needed? if so, only for deposit?
     bool public isEmergency;
 
     error NotAllowedWhenEmergency();
 
+    /// @dev helper method for when receiver == msg.sender
     function deposit(uint256 _amount) external returns (uint256) {
         return deposit(_amount, msg.sender);
     }
 
+    /// @dev helper method for when receiver == msg.sender
     function mint(uint256 _amount) external returns (uint256) {
         return mint(_amount, msg.sender);
     }
 
+    /// @dev helper method for when receiver == msg.sender
     function withdraw(uint256 _amount) external returns (uint256) {
         return withdraw(_amount, msg.sender, msg.sender);
     }
 
+    /// @dev helper method for when receiver == msg.sender
     function redeem(uint256 _amount) external returns (uint256) {
         return redeem(_amount, msg.sender, msg.sender);
     }
@@ -62,7 +67,7 @@ abstract contract MetaSiloERC4626 is ERC4626Upgradeable {
     }
 
     /// @notice Internal transfer fct used by `transfer()` and `transferFrom()`. Accrues rewards for `from` and `to`.
-    // TODO do we need this??
+    // TODO do we need this? and why this guy burning and minting shares insetead of simply transfering?
     function _transfer(address from, address to, uint256 amount) internal override accrueRewards(from, to) {
         if (from == address(0) || to == address(0)) revert ZeroAddressTransfer(from, to);
         uint256 fromBalance = balanceOf(from);
@@ -72,8 +77,9 @@ abstract contract MetaSiloERC4626 is ERC4626Upgradeable {
         emit Transfer(from, to, amount);
     }
 
-    // eg for accrueRewards
-    // can I use before/afte token transfer??
+    /// originally this "hooks" should accrueRewards etc but
+    /// TODO this is concept version, we need to check if we can simplify all this before/after methods and
+    /// use simply before/after transfer
     function _beforeDeposit(address owner, uint256 _amount) internal;
 
     function _afterDeposit(uint256 _amount) internal;

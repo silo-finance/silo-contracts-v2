@@ -33,9 +33,6 @@ contract MetaSilo is MetaSiloERC4626, Ownable {
     using FixedPointMathLib for uint256;
     using Math for uint256;
 
-
-    bool public isEmergency;
-
     IBalancerMinter public balancerMinter;
 
     /// Silo
