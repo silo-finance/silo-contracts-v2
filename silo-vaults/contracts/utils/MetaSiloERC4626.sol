@@ -79,7 +79,10 @@ abstract contract MetaSiloERC4626 is ERC4626Upgradeable {
 
     /// originally this "hooks" should accrueRewards etc but
     /// TODO this is concept version, we need to check if we can simplify all this before/after methods and
-    /// use simply before/after transfer
+    /// use simply before/after transfer SHARES!
+    /// unfortunately we do not know asset amount so I think we need to stick with dediated hooks
+    /// deposit: _beforeTokenTransfer(0, amount, account)
+    /// transfer: _beforeTokenTransfer(not this, amount, not this)
     function _beforeDeposit(address owner, uint256 _amount) internal;
 
     function _afterDeposit(uint256 _amount) internal;

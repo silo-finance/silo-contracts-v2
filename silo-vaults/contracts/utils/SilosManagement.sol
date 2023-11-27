@@ -154,6 +154,7 @@ abstract contract SilosManagement is Ownable {
             address silo = silos[i];
             D[i] = ISilo(silo).getCollateralAssets();
         }
+
         return D;
     }
 
