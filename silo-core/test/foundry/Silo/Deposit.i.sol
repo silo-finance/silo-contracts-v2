@@ -140,7 +140,7 @@ contract DepositTest is SiloLittleHelper, Test {
     forge test -vv --ffi --mt test_maxDeposit
     */
     function test_maxDeposit() public {
-        assertEq(silo0.maxDeposit(address(1)), type(uint256).max - 1, "ERC4626 expect to return MAX - 1");
-        assertEq(silo0.maxMint(address(1)), type(uint256).max - 1, "ERC4626 expect to return MAX - 1 (maxMint)");
+        assertEq(silo0.maxDeposit(address(1)), 2 ** 256 - 1, "ERC4626 expect to return 2 ** 256 - 1");
+        assertEq(silo0.maxMint(address(1)), 2 ** 256 - 1, "ERC4626 expect to return 2 ** 256 - 1 (maxMint)");
     }
 }
