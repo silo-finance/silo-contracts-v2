@@ -5,13 +5,18 @@ import {Test} from "forge-std/Test.sol";
 import {OwnableUpgradeable} from "openzeppelin-contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 import {GaugeHookReceiver} from "silo-core/contracts/utils/hook-receivers/gauge/GaugeHookReceiver.sol";
-import {GaugeHookReceiverDeploy} from "silo-core/deploy/GaugeHookReceiverDeploy.s.sol";
 import {IGaugeHookReceiver} from "silo-core/contracts/utils/hook-receivers/gauge/interfaces/IGaugeHookReceiver.sol";
+import {IHookReceiversFactory} from "silo-core/contracts/utils/hook-receivers/interfaces/IHookReceiversFactory.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {IGaugeLike as IGauge} from "silo-core/contracts/utils/hook-receivers/gauge/interfaces/IGaugeLike.sol";
+import {HookReceiversFactory} from "silo-core/contracts/utils/hook-receivers/HookReceiversFactory.sol";
+
+import {GaugeHookReceiverDeploy} from "silo-core/deploy/GaugeHookReceiverDeploy.s.sol";
+import "../../../deploy/HookReceiversFactoryDeploy.s.sol";
 
 // FOUNDRY_PROFILE=core forge test -vv --ffi --mc GaugeHookReceiverTest
 contract GaugeHookReceiverTest is Test {
+    IHookReceiversFactory internal _hookReceiverFactory;
     IGaugeHookReceiver internal _hookReceiver;
 
     uint256 internal constant _SENDER_BAL = 1;
@@ -32,7 +37,16 @@ contract GaugeHookReceiverTest is Test {
         GaugeHookReceiverDeploy deploy = new GaugeHookReceiverDeploy();
         deploy.disableDeploymentsSync();
 
-        _hookReceiver = deploy.run();
+        HookReceiversFactoryDeploy factoryDeploy = new HookReceiversFactoryDeploy();
+        factoryDeploy.disableDeploymentsSync();
+
+        IGaugeHookReceiver gaugeHookReceiver = deploy.run();
+        _hookReceiverFactory = factoryDeploy.run();
+
+        IHookReceiversFactory.HookReceivers memory hooks;
+        hooks.collateralHookReceiver0 = address(gaugeHookReceiver);
+
+        _hookReceiver = IGaugeHookReceiver(_hookReceiverFactory.create(hooks).collateralHookReceiver0);
     }
 
     function testInitializationParamsValidation() public {
@@ -53,6 +67,7 @@ contract GaugeHookReceiverTest is Test {
         _hookReceiver.initialize(_dao, IShareToken(_shareToken));
     }
 
+    // forge test -vv --ffi --mt testInitialize
     function testInitialize() public {
         _initializeHookReceiver();
 
