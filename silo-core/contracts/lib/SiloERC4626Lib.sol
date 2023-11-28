@@ -21,7 +21,7 @@ library SiloERC4626Lib {
 
     /// @dev ERC4626: MUST return 2 ** 256 - 1 if there is no limit on the maximum amount of assets that may be
     ///      deposited.
-    uint256 internal constant _NO_DEPOSIT_LIMIT = type(uint256).max - 1;
+    uint256 internal constant _NO_DEPOSIT_LIMIT = type(uint256).max;
 
     /// @notice Determines the maximum amount a user can deposit or mint
     /// @dev The function checks if deposit is possible for the given user, and if so, returns a constant
