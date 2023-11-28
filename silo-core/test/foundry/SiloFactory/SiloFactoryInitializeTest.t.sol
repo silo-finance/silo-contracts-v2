@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
 
-import {ISiloFactory, SiloFactory} from "silo-core/contracts/SiloFactory.sol";
+import {ISiloFactory, SiloFactory, Creator} from "silo-core/contracts/SiloFactory.sol";
 
 /*
 forge test -vv --mc SiloFactoryInitializeTest
@@ -13,6 +13,25 @@ contract SiloFactoryInitializeTest is Test {
 
     function setUp() public {
         siloFactory = new SiloFactory();
+    }
+
+    /*
+    forge test -vv --mt test_initialize_onlyCreator
+    */
+    function test_initialize_onlyCreator() public {
+        SiloFactory f = new SiloFactory();
+
+        address siloImpl = address(1);
+        address shareCollateralTokenImpl = address(1);
+        address shareDebtTokenImpl = address(1);
+        uint256 daoFee;
+        address daoFeeReceiver = address(1);
+
+        vm.expectRevert(Creator.OnlyCreatorCanInitialise.selector);
+        vm.prank(address(1));
+        f.initialize(siloImpl, shareCollateralTokenImpl, shareDebtTokenImpl, daoFee, daoFeeReceiver);
+
+        f.initialize(siloImpl, shareCollateralTokenImpl, shareDebtTokenImpl, daoFee, daoFeeReceiver);
     }
 
     /*

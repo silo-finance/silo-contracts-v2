@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [0.0.15] - 2023-11-28
+### Fixed
+- TOB-SILO2-1: ensure silo factory initialization can not be front-run
+
+## [0.0.14] - 2023-11-28
+### Fixed
+- tob-silo2-5: fix deposit limit
+
 ## [0.0.13] - 2023-11-21
 ### Fixed
 - fix `ASSET_DATA_OVERFLOW_LIMIT` in IRM model
