@@ -11,8 +11,9 @@ import {IShareToken} from "./interfaces/IShareToken.sol";
 import {ISiloFactory} from "./interfaces/ISiloFactory.sol";
 import {ISiloConfig, SiloConfig} from "./SiloConfig.sol";
 import {ISilo, Silo} from "./Silo.sol";
+import {Creator} from "./utils/Creator.sol";
 
-contract SiloFactory is ISiloFactory, ERC721Upgradeable, OwnableUpgradeable {
+contract SiloFactory is ISiloFactory, ERC721Upgradeable, OwnableUpgradeable, Creator {
     using CountersUpgradeable for CountersUpgradeable.Counter;
 
     /// @dev max fee is 40%, 1e18 == 100%
@@ -47,7 +48,7 @@ contract SiloFactory is ISiloFactory, ERC721Upgradeable, OwnableUpgradeable {
         address _shareDebtTokenImpl,
         uint256 _daoFee,
         address _daoFeeReceiver
-    ) external virtual initializer {
+    ) external virtual initializer onlyCreator {
         __ERC721_init("Silo Finance Fee Receiver", "feeSILO");
         __Ownable_init();
 
