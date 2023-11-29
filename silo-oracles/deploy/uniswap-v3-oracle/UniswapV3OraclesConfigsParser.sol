@@ -3,12 +3,14 @@ pragma solidity >=0.7.6;
 pragma abicoder v2;
 
 import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
+import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";
 import {KeyValueStorage as KV} from "silo-foundry-utils/key-value/KeyValueStorage.sol";
 import {IUniswapV3Oracle} from "silo-oracles/contracts/interfaces/IUniswapV3Oracle.sol";
 import {IUniswapV3Pool} from "uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
 
 library UniswapV3OraclesConfigsParser {
-    string constant public CONFIGS_FILE = "silo-oracles/deploy/uniswap-v3-oracle/_configs.json";
+    string constant public CONFIGS_DIR = "silo-oracles/deploy/uniswap-v3-oracle/configs/";
+    string constant internal _EXTENSION = ".json";
 
     function getConfig(
         string memory _network,
@@ -17,10 +19,12 @@ library UniswapV3OraclesConfigsParser {
         internal
         returns (IUniswapV3Oracle.UniswapV3DeploymentConfig memory config)
     {
-        string memory poolKey = KV.getString(CONFIGS_FILE, _name, "pool");
-        string memory quoteTokenKey = KV.getString(CONFIGS_FILE, _name, "quoteToken");
-        uint256 periodForAvgPrice = KV.getUint(CONFIGS_FILE, _name, "periodForAvgPrice");
-        uint256 blockTime = KV.getUint(CONFIGS_FILE, _name, "blockTime");
+        string memory configFile = string(abi.encodePacked(CONFIGS_DIR, ChainsLib.chainAlias(), _EXTENSION));
+
+        string memory poolKey = KV.getString(configFile, _name, "pool");
+        string memory quoteTokenKey = KV.getString(configFile, _name, "quoteToken");
+        uint256 periodForAvgPrice = KV.getUint(configFile, _name, "periodForAvgPrice");
+        uint256 blockTime = KV.getUint(configFile, _name, "blockTime");
 
         require(periodForAvgPrice <= type(uint32).max, "periodForAvgPrice should be uint32");
         require(blockTime <= type(uint8).max, "blockTime should be uint8");
