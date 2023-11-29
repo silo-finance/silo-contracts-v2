@@ -14,6 +14,10 @@ contract GaugeHookReceiver is IGaugeHookReceiver, OwnableUpgradeable {
     IGauge public gauge;
     IShareToken public shareToken;
 
+    constructor() {
+        _disableInitializers();
+    }
+
     /// @inheritdoc IHookReceiver
     function initialize(address _owner, IShareToken _token) external virtual initializer {
         if (_owner == address(0)) revert OwnerIsZeroAddress();

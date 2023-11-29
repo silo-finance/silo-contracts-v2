@@ -27,7 +27,7 @@ contract SiloFactoryInitializeTest is Test {
         uint256 daoFee;
         address daoFeeReceiver = address(1);
 
-        vm.expectRevert(Creator.OnlyCreatorCanInitialise.selector);
+        vm.expectRevert(Creator.OnlyCreator.selector);
         vm.prank(address(1));
         f.initialize(siloImpl, shareCollateralTokenImpl, shareDebtTokenImpl, daoFee, daoFeeReceiver);
 
