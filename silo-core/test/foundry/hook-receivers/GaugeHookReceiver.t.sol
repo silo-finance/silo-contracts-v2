@@ -2,7 +2,7 @@
 pragma solidity 0.8.21;
 
 import {Test} from "forge-std/Test.sol";
-import {OwnableUpgradeable} from "openzeppelin-contracts-upgradeable/access/OwnableUpgradeable.sol";
+import {Ownable2StepUpgradeable} from "openzeppelin-contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
 
 import {GaugeHookReceiver} from "silo-core/contracts/utils/hook-receivers/gauge/GaugeHookReceiver.sol";
 import {IGaugeHookReceiver} from "silo-core/contracts/utils/hook-receivers/gauge/interfaces/IGaugeHookReceiver.sol";
@@ -12,10 +12,12 @@ import {IGaugeLike as IGauge} from "silo-core/contracts/utils/hook-receivers/gau
 import {HookReceiversFactory} from "silo-core/contracts/utils/hook-receivers/HookReceiversFactory.sol";
 
 import {GaugeHookReceiverDeploy} from "silo-core/deploy/GaugeHookReceiverDeploy.s.sol";
-import "../../../deploy/HookReceiversFactoryDeploy.s.sol";
+import {HookReceiversFactoryDeploy} from "../../../deploy/HookReceiversFactoryDeploy.s.sol";
+import {IHookReceiversFactory} from "../../../contracts/utils/hook-receivers/interfaces/IHookReceiversFactory.sol";
+import {TransferOwnership} from  "../_common/TransferOwnership.sol";
 
 // FOUNDRY_PROFILE=core forge test -vv --ffi --mc GaugeHookReceiverTest
-contract GaugeHookReceiverTest is Test {
+contract GaugeHookReceiverTest is Test, TransferOwnership {
     IHookReceiversFactory internal _hookReceiverFactory;
     IGaugeHookReceiver internal _hookReceiver;
 
@@ -73,7 +75,7 @@ contract GaugeHookReceiverTest is Test {
 
         assertEq(
             _dao,
-            OwnableUpgradeable(address(_hookReceiver)).owner(),
+            Ownable2StepUpgradeable(address(_hookReceiver)).owner(),
             "Invalid owner after initialization"
         );
 
@@ -82,6 +84,13 @@ contract GaugeHookReceiverTest is Test {
             address(GaugeHookReceiver(address(_hookReceiver)).shareToken()),
             "Invalid share token after initialization"
         );
+    }
+
+    // forge test -vv --ffi --mt test_HookReceiver_transferOwnership
+    function test_HookReceiver_transferOwnership() public {
+        _initializeHookReceiver();
+
+        assertTrue(_test_transfer2StepOwnership(address(_hookReceiver), _dao));
     }
 
     function testReinitialization() public {
