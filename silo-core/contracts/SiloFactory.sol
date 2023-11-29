@@ -42,6 +42,10 @@ contract SiloFactory is ISiloFactory, ERC721Upgradeable, OwnableUpgradeable, Cre
     mapping(uint256 id => address[2] silos) private _idToSilos;
     mapping(address silo => uint256 id) public siloToId;
 
+    /// @dev SiloFactory is not clonable contract. initialize() method is here only because we have
+    /// circular dependency: SiloFactory needs to know Silo address and Silo needs to know factory address.
+    /// Because of that, `initialize()` will be always executed on deployed factory, so there is no need for
+    /// disabling initializer by calling `_disableInitializers()` in constructor, especially that only creator can init.
     function initialize(
         address _siloImpl,
         address _shareCollateralTokenImpl,
