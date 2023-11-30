@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.21;
 
-import {OwnableUpgradeable} from "openzeppelin-contracts-upgradeable/access/OwnableUpgradeable.sol";
+import {Ownable2StepUpgradeable} from "openzeppelin-contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
 
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
@@ -10,7 +10,7 @@ import {IGaugeHookReceiver, IHookReceiver} from "./interfaces/IGaugeHookReceiver
 
 /// @notice Silo share token hook receiver for the gauge.
 /// It notifies the gauge (if configured) about any balance update in the Silo share token.
-contract GaugeHookReceiver is IGaugeHookReceiver, OwnableUpgradeable {
+contract GaugeHookReceiver is IGaugeHookReceiver, Ownable2StepUpgradeable {
     IGauge public gauge;
     IShareToken public shareToken;
 

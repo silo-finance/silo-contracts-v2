@@ -4,11 +4,12 @@ pragma solidity ^0.8.0;
 import "forge-std/Test.sol";
 
 import {ISiloFactory, SiloFactory, Creator} from "silo-core/contracts/SiloFactory.sol";
+import {TransferOwnership} from "../_common/TransferOwnership.sol";
 
 /*
 forge test -vv --mc SiloFactoryInitializeTest
 */
-contract SiloFactoryInitializeTest is Test {
+contract SiloFactoryInitializeTest is Test, TransferOwnership {
     SiloFactory public siloFactory;
 
     function setUp() public {
@@ -83,5 +84,7 @@ contract SiloFactoryInitializeTest is Test {
         assertEq(siloFactory.maxDeployerFee(), 0.15e18);
         assertEq(siloFactory.maxFlashloanFee(), 0.15e18);
         assertEq(siloFactory.maxLiquidationFee(), 0.3e18);
+
+        assertTrue(_test_transfer2StepOwnership(address(siloFactory), address(this)));
     }
 }

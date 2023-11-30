@@ -4,7 +4,7 @@ pragma solidity 0.8.21;
 import {CountersUpgradeable} from "openzeppelin-contracts-upgradeable/utils/CountersUpgradeable.sol";
 import {ClonesUpgradeable} from "openzeppelin-contracts-upgradeable/proxy/ClonesUpgradeable.sol";
 import {Initializable} from "openzeppelin-contracts-upgradeable/proxy/utils/Initializable.sol";
-import {OwnableUpgradeable} from "openzeppelin-contracts-upgradeable/access/OwnableUpgradeable.sol";
+import {Ownable2StepUpgradeable} from "openzeppelin-contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
 import {ERC721Upgradeable} from "openzeppelin-contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
 
 import {IShareToken} from "./interfaces/IShareToken.sol";
@@ -13,7 +13,7 @@ import {ISiloConfig, SiloConfig} from "./SiloConfig.sol";
 import {ISilo, Silo} from "./Silo.sol";
 import {Creator} from "./utils/Creator.sol";
 
-contract SiloFactory is ISiloFactory, ERC721Upgradeable, OwnableUpgradeable, Creator {
+contract SiloFactory is ISiloFactory, ERC721Upgradeable, Ownable2StepUpgradeable, Creator {
     using CountersUpgradeable for CountersUpgradeable.Counter;
 
     /// @dev max fee is 40%, 1e18 == 100%
