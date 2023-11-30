@@ -71,17 +71,38 @@ contract BorrowTest is Test {
         for (uint256 i; i < testDatas.length; i++) {
             vm.clearMockedCalls();
             emit log_string(testDatas[i].name);
+            bool txReverts = testDatas[i].output.reverts != bytes4(0);
 
             totalDebt.assets = testDatas[i].input.initTotalDebt;
 
-            protectedShareToken.balanceOfMock(testDatas[i].input.borrower, testDatas[i].mocks.protectedShareTokenBalanceOf);
-            collateralShareToken.balanceOfMock(testDatas[i].input.borrower, testDatas[i].mocks.collateralShareTokenBalanceOf);
-            debtShareToken.totalSupplyMock(testDatas[i].mocks.debtSharesTotalSupply);
+            protectedShareToken.balanceOfMock(
+                testDatas[i].input.borrower,
+                testDatas[i].mocks.protectedShareTokenBalanceOf,
+                !txReverts
+            );
 
-            debtShareToken.mintMock(testDatas[i].input.borrower, testDatas[i].input.spender, testDatas[i].output.borrowedShare);
-            debtToken.transferFromMock(address(this), testDatas[i].input.receiver, testDatas[i].output.borrowedAssets);
+            if (testDatas[i].mocks.protectedShareTokenBalanceOf == 0) {
+                collateralShareToken.balanceOfMock(
+                    testDatas[i].input.borrower,
+                    testDatas[i].mocks.collateralShareTokenBalanceOf,
+                    !txReverts
+                );
+            }
 
-            if (testDatas[i].output.reverts != bytes4(0)) {
+            if (testDatas[i].mocks.debtSharesTotalSupplyMock) {
+                debtShareToken.totalSupplyMock(testDatas[i].mocks.debtSharesTotalSupply, !txReverts);
+            }
+
+            if (testDatas[i].output.borrowedShare != 0) {
+                debtToken.transferMock(
+                    testDatas[i].input.receiver,
+                    testDatas[i].output.borrowedAssets
+                );
+
+                debtShareToken.mintMock(testDatas[i].input.borrower, testDatas[i].input.spender, testDatas[i].output.borrowedShare);
+            }
+
+            if (txReverts) {
                 vm.expectRevert(testDatas[i].output.reverts);
             }
 

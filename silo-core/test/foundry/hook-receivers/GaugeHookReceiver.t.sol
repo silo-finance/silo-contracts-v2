@@ -16,6 +16,7 @@ import {HookReceiversFactoryDeploy} from "../../../deploy/HookReceiversFactoryDe
 import {IHookReceiversFactory} from "../../../contracts/utils/hook-receivers/interfaces/IHookReceiversFactory.sol";
 import {TransferOwnership} from  "../_common/TransferOwnership.sol";
 
+
 // FOUNDRY_PROFILE=core forge test -vv --ffi --mc GaugeHookReceiverTest
 contract GaugeHookReceiverTest is Test, TransferOwnership {
     IHookReceiversFactory internal _hookReceiverFactory;
@@ -51,6 +52,7 @@ contract GaugeHookReceiverTest is Test, TransferOwnership {
         _hookReceiver = IGaugeHookReceiver(_hookReceiverFactory.create(hooks).collateralHookReceiver0);
     }
 
+    // forge test -vvv --mt testInitializationParamsValidation
     function testInitializationParamsValidation() public {
         vm.expectRevert(abi.encodePacked(IGaugeHookReceiver.OwnerIsZeroAddress.selector));
         _hookReceiver.initialize(address(0), IShareToken(_shareToken));
@@ -59,17 +61,15 @@ contract GaugeHookReceiverTest is Test, TransferOwnership {
         vm.expectRevert();
         _hookReceiver.initialize(_dao, IShareToken(_shareToken));
 
-        vm.mockCall(
-            _shareToken,
-            abi.encodePacked(IShareToken.hookReceiver.selector),
-            abi.encode(address(1)) // an invalid hook receiver
-        );
+        bytes memory data = abi.encodePacked(IShareToken.hookReceiver.selector);
+        vm.mockCall(_shareToken, data, abi.encode(address(1))); // an invalid hook receiver
+        vm.expectCall(_shareToken, data);
 
         vm.expectRevert(IGaugeHookReceiver.InvalidShareToken.selector);
         _hookReceiver.initialize(_dao, IShareToken(_shareToken));
     }
 
-    // forge test -vv --ffi --mt testInitialize
+    // forge test -vv --mt testInitialize
     function testInitialize() public {
         _initializeHookReceiver();
 
@@ -109,11 +109,9 @@ contract GaugeHookReceiverTest is Test, TransferOwnership {
         vm.expectRevert("Ownable: caller is not the owner");
         _hookReceiver.setGauge(IGauge(_gauge));
 
-        vm.mockCall(
-            _gauge,
-            abi.encodePacked(IGauge.shareToken.selector),
-            abi.encode(address(_shareToken)) // valid share token
-        );
+        bytes memory data = abi.encodePacked(IGauge.shareToken.selector);
+        vm.mockCall(_gauge, data, abi.encode(address(_shareToken))); // valid share token
+        vm.expectCall(_gauge, data);
 
         vm.expectEmit(false, false, false, true);
         emit IGaugeHookReceiver.GaugeConfigured(_gauge);
@@ -130,11 +128,9 @@ contract GaugeHookReceiverTest is Test, TransferOwnership {
         vm.prank(_dao);
         _hookReceiver.setGauge(IGauge(_gauge));
 
-        vm.mockCall(
-            _gauge,
-            abi.encodePacked(IGauge.shareToken.selector),
-            abi.encode(address(1)) // invalid share token
-        );
+        bytes memory data = abi.encodePacked(IGauge.shareToken.selector);
+        vm.mockCall(_gauge, data, abi.encode(address(1))); // invalid share token
+        vm.expectCall(_gauge, data);
 
         vm.prank(_dao);
         vm.expectRevert(IGaugeHookReceiver.WrongGaugeShareToken.selector);
@@ -144,17 +140,13 @@ contract GaugeHookReceiverTest is Test, TransferOwnership {
     function testUpdateGauge() public {
         _initializeHookReceiver();
 
-        vm.mockCall(
-            _gauge,
-            abi.encodePacked(IGauge.shareToken.selector),
-            abi.encode(address(_shareToken)) // valid share token
-        );
+        bytes memory data = abi.encodePacked(IGauge.shareToken.selector);
+        vm.mockCall(_gauge, data, abi.encode(address(_shareToken))); // valid share token
+        vm.expectCall(_gauge, data);
 
-        vm.mockCall(
-            _gauge,
-            abi.encodePacked(IGauge.is_killed.selector),
-            abi.encode(false)
-        );
+        bytes memory data2 = abi.encodePacked(IGauge.is_killed.selector);
+        vm.mockCall(_gauge, data2, abi.encode(false));
+        vm.expectCall(_gauge, data2);
 
         vm.prank(_dao);
         _hookReceiver.setGauge(IGauge(_gauge));
@@ -163,17 +155,13 @@ contract GaugeHookReceiverTest is Test, TransferOwnership {
         vm.expectRevert(IGaugeHookReceiver.CantUpdateActiveGauge.selector);
         _hookReceiver.setGauge(IGauge(_gauge2));
 
-        vm.mockCall(
-            _gauge,
-            abi.encodePacked(IGauge.is_killed.selector),
-            abi.encode(true)
-        );
+        bytes memory data3 = abi.encodePacked(IGauge.is_killed.selector);
+        vm.mockCall(_gauge, data3, abi.encode(true));
+        vm.expectCall(_gauge, data3);
 
-        vm.mockCall(
-            _gauge2,
-            abi.encodePacked(IGauge.shareToken.selector),
-            abi.encode(address(_shareToken)) // valid share token
-        );
+        bytes memory data4 = abi.encodePacked(IGauge.shareToken.selector);
+        vm.mockCall(_gauge2, data4, abi.encode(address(_shareToken))); // valid share token
+        vm.expectCall(_gauge2, data4);
 
         vm.expectEmit(false, false, false, true);
         emit IGaugeHookReceiver.GaugeConfigured(_gauge2);
@@ -182,6 +170,7 @@ contract GaugeHookReceiverTest is Test, TransferOwnership {
         _hookReceiver.setGauge(IGauge(_gauge2));
     }
 
+    // forge test -vvv --mt testAfterTokenTransfer
     function testAfterTokenTransfer() public {
         _initializeHookReceiver();
 
@@ -217,11 +206,9 @@ contract GaugeHookReceiverTest is Test, TransferOwnership {
             _AMOUNT
         );
 
-        vm.mockCall(
-            _gauge,
-            abi.encodePacked(IGauge.is_killed.selector),
-            abi.encode(true)
-        );
+        bytes memory data = abi.encodePacked(IGauge.is_killed.selector);
+        vm.mockCall(_gauge, data, abi.encode(true));
+        vm.expectCall(_gauge, data);
 
         // will do nothing as gauge is killed
         _hookReceiver.afterTokenTransfer(
@@ -235,45 +222,40 @@ contract GaugeHookReceiverTest is Test, TransferOwnership {
     }
 
     function _mockAfterTransfer() internal {
-        vm.mockCall(
-            _gauge,
-            abi.encodeCall(
-                IGauge.afterTokenTransfer,
-                (
-                    _sender,
-                    _SENDER_BAL,
-                    _recipient,
-                    _RECEPIENT_BAL,
-                    _TS
-                )
-            ),
-            abi.encode(true)
+        bytes memory data = abi.encodeCall(
+            IGauge.afterTokenTransfer,
+            (
+                _sender,
+                _SENDER_BAL,
+                _recipient,
+                _RECEPIENT_BAL,
+                _TS
+            )
         );
+
+        vm.mockCall(_gauge, data, abi.encode(true));
+        vm.expectCall(_gauge, data);
     }
 
     function _setGauge() internal {
-        vm.mockCall(
-            _gauge,
-            abi.encodePacked(IGauge.shareToken.selector),
-            abi.encode(address(_shareToken)) // valid share token
-        );
+        bytes memory data = abi.encodePacked(IGauge.shareToken.selector);
+        vm.mockCall(_gauge, data, abi.encode(address(_shareToken))); // valid share token
+        vm.expectCall(_gauge, data);
 
-        vm.mockCall(
-            _gauge,
-            abi.encodePacked(IGauge.is_killed.selector),
-            abi.encode(false)
-        );
+        bytes memory data2 = abi.encodePacked(IGauge.is_killed.selector);
+        vm.mockCall(_gauge, data2, abi.encode(false));
+        vm.expectCall(_gauge, data2);
 
         vm.prank(_dao);
         _hookReceiver.setGauge(IGauge(_gauge));
     }
 
     function _initializeHookReceiver() internal {
-        vm.mockCall(
-            _shareToken,
-            abi.encodePacked(IShareToken.hookReceiver.selector),
-            abi.encode(address(_hookReceiver)) // valid hook receiver
-        );
+        // IShareToken.hookReceiver.selector: 0x8fea8062
+        bytes memory data = abi.encodePacked(IShareToken.hookReceiver.selector);
+
+        vm.mockCall(_shareToken, data, abi.encode(address(_hookReceiver))); // valid hook receiver
+        vm.expectCall(_shareToken, data);
 
         _hookReceiver.initialize(_dao, IShareToken(_shareToken));
     }

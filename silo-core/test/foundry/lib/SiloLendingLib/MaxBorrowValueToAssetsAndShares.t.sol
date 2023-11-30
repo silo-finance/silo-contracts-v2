@@ -35,7 +35,9 @@ contract MaxBorrowValueToAssetsAndSharesTest is Test {
             emit log_string(testDatas[i].name);
 
             if (testDatas[i].input.borrowerDebtValue == 0) {
-                debtToken.decimalsMock(testDatas[i].mocks.debtTokenDecimals);
+                if (testDatas[i].input.maxBorrowValue != 0) {
+                    debtToken.decimalsMock(testDatas[i].mocks.debtTokenDecimals);
+                }
             } else {
                 debtShareToken.balanceOfMock(testDatas[i].input.borrower, testDatas[i].mocks.debtShareTokenBalanceOf);
             }

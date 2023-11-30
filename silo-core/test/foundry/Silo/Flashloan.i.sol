@@ -124,25 +124,19 @@ contract FlashloanTest is SiloLittleHelper, Test {
 
         (uint256 daoAndDeployerFeesBefore,) = silo0.siloData();
 
-        vm.mockCall(
-            address(receiver),
-            abi.encodeWithSelector(
-                IERC3156FlashBorrower.onFlashLoan.selector, address(this), address(token0), amount, fee, _data
-            ),
-            abi.encode(FLASHLOAN_CALLBACK)
+        bytes memory data = abi.encodeWithSelector(
+            IERC3156FlashBorrower.onFlashLoan.selector, address(this), address(token0), amount, fee, _data
         );
+
+        vm.mockCall(address(receiver), data, abi.encode(FLASHLOAN_CALLBACK));
+        vm.expectCall(address(receiver), data);
 
         vm.expectCall(address(token0), abi.encodeWithSelector(IERC20.transfer.selector, address(receiver), amount));
         vm.expectCall(
             address(token0),
             abi.encodeWithSelector(IERC20.transferFrom.selector, address(receiver), address(silo0), amount + fee)
         );
-        vm.expectCall(
-            address(receiver),
-            abi.encodeWithSelector(
-                IERC3156FlashBorrower.onFlashLoan.selector, address(this), address(token0), amount, fee, _data
-            )
-        );
+
         silo0.flashLoan(receiver, address(token0), amount, _data);
 
         (uint256 daoAndDeployerFeesAfter,) = silo0.siloData();
