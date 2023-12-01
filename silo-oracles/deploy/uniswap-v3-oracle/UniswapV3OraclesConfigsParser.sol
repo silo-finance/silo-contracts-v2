@@ -19,12 +19,12 @@ library UniswapV3OraclesConfigsParser {
         internal
         returns (IUniswapV3Oracle.UniswapV3DeploymentConfig memory config)
     {
-        string memory configFile = string(abi.encodePacked(CONFIGS_DIR, ChainsLib.chainAlias(), _EXTENSION));
+        string memory configJson = configFile();
 
-        string memory poolKey = KV.getString(configFile, _name, "pool");
-        string memory quoteTokenKey = KV.getString(configFile, _name, "quoteToken");
-        uint256 periodForAvgPrice = KV.getUint(configFile, _name, "periodForAvgPrice");
-        uint256 blockTime = KV.getUint(configFile, _name, "blockTime");
+        string memory poolKey = KV.getString(configJson, _name, "pool");
+        string memory quoteTokenKey = KV.getString(configJson, _name, "quoteToken");
+        uint256 periodForAvgPrice = KV.getUint(configJson, _name, "periodForAvgPrice");
+        uint256 blockTime = KV.getUint(configJson, _name, "blockTime");
 
         require(periodForAvgPrice <= type(uint32).max, "periodForAvgPrice should be uint32");
         require(blockTime <= type(uint8).max, "blockTime should be uint8");
@@ -35,5 +35,9 @@ library UniswapV3OraclesConfigsParser {
             periodForAvgPrice: uint32(periodForAvgPrice),
             blockTime: uint8(blockTime)
         });
+    }
+
+    function configFile() internal view returns (string memory file) {
+        file = string(abi.encodePacked(CONFIGS_DIR, ChainsLib.chainAlias(), _EXTENSION));
     }
 }

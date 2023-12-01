@@ -229,7 +229,7 @@ contract SiloDeploy is CommonDeploy {
 
     function _isUniswapOracle(string memory _oracleConfigName) internal returns (bool isUniswapOracle) {
         address pool = KV.getAddress(
-            UniswapV3OraclesConfigsParser.CONFIGS_FILE,
+            UniswapV3OraclesConfigsParser.configFile(),
             _oracleConfigName,
             "pool"
         );
@@ -239,7 +239,7 @@ contract SiloDeploy is CommonDeploy {
 
     function _isChainlinkOracle(string memory _oracleConfigName) internal returns (bool isChainlinkOracle) {
         address baseToken = KV.getAddress(
-            ChainlinkV3OraclesConfigsParser.CONFIGS_FILE,
+            ChainlinkV3OraclesConfigsParser.configFile(),
             _oracleConfigName,
             "baseToken"
         );
@@ -249,7 +249,7 @@ contract SiloDeploy is CommonDeploy {
 
     function _isDiaOracle(string memory _oracleConfigName) internal returns (bool isDiaOracle) {
         address diaOracle = KV.getAddress(
-            DIAOraclesConfigsParser.CONFIGS_FILE,
+            DIAOraclesConfigsParser.configFile(),
             _oracleConfigName,
             "diaOracle"
         );

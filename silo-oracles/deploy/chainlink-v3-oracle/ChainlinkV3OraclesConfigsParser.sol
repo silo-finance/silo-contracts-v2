@@ -19,14 +19,14 @@ library ChainlinkV3OraclesConfigsParser {
         internal
         returns (IChainlinkV3Oracle.ChainlinkV3DeploymentConfig memory config)
     {
-        string memory configFile = string.concat(CONFIGS_DIR, ChainsLib.chainAlias(), _EXTENSION);
+        string memory configJson = configFile();
 
-        string memory baseTokenKey = KV.getString(configFile, _name, "baseToken");
-        string memory quoteTokenKey = KV.getString(configFile, _name, "quoteToken");
-        string memory primaryAggregatorKey = KV.getString(configFile, _name, "primaryAggregator");
-        string memory secondaryAggregatorKey = KV.getString(configFile, _name, "secondaryAggregator");
-        uint256 primaryHeartbeat = KV.getUint(configFile, _name, "primaryHeartbeat");
-        uint256 secondaryHeartbeat = KV.getUint(configFile, _name, "secondaryHeartbeat");
+        string memory baseTokenKey = KV.getString(configJson, _name, "baseToken");
+        string memory quoteTokenKey = KV.getString(configJson, _name, "quoteToken");
+        string memory primaryAggregatorKey = KV.getString(configJson, _name, "primaryAggregator");
+        string memory secondaryAggregatorKey = KV.getString(configJson, _name, "secondaryAggregator");
+        uint256 primaryHeartbeat = KV.getUint(configJson, _name, "primaryHeartbeat");
+        uint256 secondaryHeartbeat = KV.getUint(configJson, _name, "secondaryHeartbeat");
 
         require(primaryHeartbeat <= type(uint32).max, "primaryHeartbeat should be uint32");
         require(secondaryHeartbeat <= type(uint32).max, "secondaryHeartbeat should be uint32");
@@ -39,5 +39,9 @@ library ChainlinkV3OraclesConfigsParser {
             secondaryAggregator: AggregatorV3Interface(AddrLib.getAddressSafe(_network, secondaryAggregatorKey)),
             secondaryHeartbeat: uint32(secondaryHeartbeat)
         });
+    }
+
+    function configFile() internal view returns (string memory file) {
+        file = string.concat(CONFIGS_DIR, ChainsLib.chainAlias(), _EXTENSION);
     }
 }
