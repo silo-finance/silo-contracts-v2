@@ -7,6 +7,7 @@ env:
   FOUNDRY_PROFILE: oracles
   RPC_MAINNET: ${{ vars.RPC_MAINNET }}
   RPC_ARBITRUM: ${{ vars.RPC_ARBITRUM }}
+  RPC_ANVIL: ${{ vars.RPC_ANVIL }}
 
 on:
   push:
@@ -21,6 +22,7 @@ on:
       - yarn.lock
       - gitmodules/*
       - .gitmodules
+      - .github/workflows/silo-oracles.yml
 
   pull_request:
     paths:
@@ -33,6 +35,7 @@ on:
       - yarn.lock
       - gitmodules/*
       - .gitmodules
+      - .github/workflows/silo-oracles.yml
 
 jobs:
 
