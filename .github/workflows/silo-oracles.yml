@@ -22,6 +22,7 @@ on:
       - yarn.lock
       - gitmodules/*
       - .gitmodules
+      - .github/workflows/silo-oracles.yml
 
   pull_request:
     paths:
@@ -34,6 +35,7 @@ on:
       - yarn.lock
       - gitmodules/*
       - .gitmodules
+      - .github/workflows/silo-oracles.yml
 
 jobs:
 
