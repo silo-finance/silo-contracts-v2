@@ -18,6 +18,10 @@ on:
       - silo-core/**/*.ts
       - silo-core/**/*.js
       - silo-core/**/*.json
+      - silo-oracles/**/*.sol
+      - silo-oracles/**/*.ts
+      - silo-oracles/**/*.js
+      - silo-oracles/**/*.json
       - package.json
       - yarn.lock
       - gitmodules/*
@@ -29,6 +33,10 @@ on:
       - silo-core/**/*.ts
       - silo-core/**/*.js
       - silo-core/**/*.json
+      - silo-oracles/**/*.sol
+      - silo-oracles/**/*.ts
+      - silo-oracles/**/*.js
+      - silo-oracles/**/*.json
       - package.json
       - yarn.lock
       - gitmodules/*

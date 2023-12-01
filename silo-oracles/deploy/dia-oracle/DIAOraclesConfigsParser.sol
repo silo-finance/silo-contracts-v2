@@ -19,14 +19,14 @@ library DIAOraclesConfigsParser {
         internal
         returns (IDIAOracle.DIADeploymentConfig memory config)
     {
-        string memory configFile = string.concat(CONFIGS_DIR, ChainsLib.chainAlias(), _EXTENSION);
+        string memory configJson = configFile();
 
-        string memory diaOracleKey = KV.getString(configFile, _name, "diaOracle");
-        string memory baseTokenKey = KV.getString(configFile, _name, "baseToken");
-        string memory quoteTokenKey = KV.getString(configFile, _name, "quoteToken");
-        string memory primaryKey = KV.getString(configFile, _name, "primaryKey");
-        string memory secondaryKey = KV.getString(configFile, _name, "secondaryKey");
-        uint256 heartbeat = KV.getUint(configFile, _name, "heartbeat");
+        string memory diaOracleKey = KV.getString(configJson, _name, "diaOracle");
+        string memory baseTokenKey = KV.getString(configJson, _name, "baseToken");
+        string memory quoteTokenKey = KV.getString(configJson, _name, "quoteToken");
+        string memory primaryKey = KV.getString(configJson, _name, "primaryKey");
+        string memory secondaryKey = KV.getString(configJson, _name, "secondaryKey");
+        uint256 heartbeat = KV.getUint(configJson, _name, "heartbeat");
 
         require(heartbeat <= type(uint32).max, "heartbeat should be uint32");
 
@@ -38,5 +38,9 @@ library DIAOraclesConfigsParser {
             primaryKey: primaryKey,
             secondaryKey: secondaryKey
         });
+    }
+
+    function configFile() internal view returns (string memory file) {
+        file = string.concat(CONFIGS_DIR, ChainsLib.chainAlias(), _EXTENSION);
     }
 }
