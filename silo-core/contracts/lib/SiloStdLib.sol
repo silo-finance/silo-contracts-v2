@@ -57,7 +57,7 @@ library SiloStdLib {
 
             unchecked {
                 // fees are % in decimal point so safe to uncheck
-                daoFees = daoFee / (daoFee + deployerFee);
+                daoFees = daoFees / (daoFee + deployerFee);
                 // `daoFees` is chunk of earnedFees, so safe to uncheck
                 deployerFees = earnedFees - daoFees;
             }
