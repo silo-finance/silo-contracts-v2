@@ -19,10 +19,9 @@ contract SiloConfigMock is Test {
         uint256 _flashloanFee,
         address _asset
     ) external {
-        vm.mockCall(
-            ADDRESS,
-            abi.encodeWithSelector(ISiloConfig.getFeesWithAsset.selector, _silo),
-            abi.encode(_daoFee, _deployerFee, _flashloanFee, _asset)
-        );
+        bytes memory data = abi.encodeWithSelector(ISiloConfig.getFeesWithAsset.selector, _silo);
+
+        vm.mockCall(ADDRESS, data, abi.encode(_daoFee, _deployerFee, _flashloanFee, _asset));
+        vm.expectCall(ADDRESS, data);
     }
 }

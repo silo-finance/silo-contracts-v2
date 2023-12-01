@@ -9,12 +9,13 @@ import {SiloSolvencyLib} from "silo-core/contracts/lib/SiloSolvencyLib.sol";
 import {SiloLiquidationExecLib} from "silo-core/contracts/lib/SiloLiquidationExecLib.sol";
 import {SiloLiquidationLib} from "silo-core/contracts/lib/SiloLiquidationLib.sol";
 
-import {MockOracleQuote} from "../../_common/MockOracleQuote.sol";
+import {OraclesHelper} from "../../_common/OraclesHelper.sol";
+import {OracleMock} from "../../_mocks/OracleMock.sol";
 import {SiloLiquidationExecLibImpl} from "../../_common/SiloLiquidationExecLibImpl.sol";
 
 
 // forge test -vv --mc LiquidationPreviewTest
-contract LiquidationPreviewTest is Test, MockOracleQuote {
+contract LiquidationPreviewTest is Test, OraclesHelper {
     // this must match value from SiloLiquidationLib
     uint256 internal constant _LT_LIQUIDATION_MARGIN = 0.9e18; // 90%
 
@@ -52,8 +53,8 @@ contract LiquidationPreviewTest is Test, MockOracleQuote {
     */
     function test_liquidationPreview_zero() public {
         SiloSolvencyLib.LtvData memory ltvData;
-        ltvData.collateralOracle = ISiloOracle(COLLATERAL_ORACLE);
-        ltvData.debtOracle = ISiloOracle(DEBT_ORACLE);
+        ltvData.collateralOracle = ISiloOracle(collateralOracle.ADDRESS());
+        ltvData.debtOracle = ISiloOracle(debtOracle.ADDRESS());
 
         SiloLiquidationExecLib.LiquidationPreviewParams memory params;
         params.collateralConfigAsset = COLLATERAL_ASSET;
@@ -62,7 +63,9 @@ contract LiquidationPreviewTest is Test, MockOracleQuote {
         ltvData.borrowerCollateralAssets = 1;
         ltvData.borrowerDebtAssets = 1;
 
-        _oraclesQuoteMocks(ltvData, 0, 0);
+        uint256 collateralSum = ltvData.borrowerCollateralAssets + ltvData.borrowerProtectedAssets;
+        collateralOracle.quoteMock(collateralSum, COLLATERAL_ASSET, 0);
+        debtOracle.quoteMock(ltvData.borrowerDebtAssets, DEBT_ASSET, 0);
 
         (uint256 receiveCollateral, uint256 repayDebt) = SiloLiquidationExecLib.liquidationPreview(ltvData, params);
         assertEq(receiveCollateral, 0, "zero collateral on empty values");
@@ -76,8 +79,8 @@ contract LiquidationPreviewTest is Test, MockOracleQuote {
         SiloLiquidationExecLibImpl impl = new SiloLiquidationExecLibImpl();
 
         SiloSolvencyLib.LtvData memory ltvData;
-        ltvData.collateralOracle = ISiloOracle(COLLATERAL_ORACLE);
-        ltvData.debtOracle = ISiloOracle(DEBT_ORACLE);
+        ltvData.collateralOracle = ISiloOracle(collateralOracle.ADDRESS());
+        ltvData.debtOracle = ISiloOracle(debtOracle.ADDRESS());
         ltvData.borrowerCollateralAssets = 1e18;
         ltvData.borrowerDebtAssets = 0.8e18;
 
@@ -99,7 +102,9 @@ contract LiquidationPreviewTest is Test, MockOracleQuote {
 
         params.debtToCover = maxDebtToCover;
         // price is 1:1
-        _oraclesQuoteMocks(ltvData, ltvData.borrowerCollateralAssets, ltvData.borrowerDebtAssets);
+        uint256 collateralSum = ltvData.borrowerCollateralAssets + ltvData.borrowerProtectedAssets;
+        collateralOracle.quoteMock(collateralSum, COLLATERAL_ASSET, collateralSum);
+        debtOracle.quoteMock(ltvData.borrowerDebtAssets, DEBT_ASSET, ltvData.borrowerDebtAssets);
 
         // does not revert - counter example first
         (uint256 receiveCollateralAssets, uint256 repayDebtAssets) = impl.liquidationPreview(ltvData, params);
@@ -126,8 +131,8 @@ contract LiquidationPreviewTest is Test, MockOracleQuote {
     */
     function test_liquidationPreview_selfLiquidation_whenSolvent() public {
         SiloSolvencyLib.LtvData memory ltvData;
-        ltvData.collateralOracle = ISiloOracle(COLLATERAL_ORACLE);
-        ltvData.debtOracle = ISiloOracle(DEBT_ORACLE);
+        ltvData.collateralOracle = ISiloOracle(collateralOracle.ADDRESS());
+        ltvData.debtOracle = ISiloOracle(debtOracle.ADDRESS());
         ltvData.borrowerCollateralAssets = 1e18;
         ltvData.borrowerDebtAssets = 1e18;
 
@@ -137,7 +142,9 @@ contract LiquidationPreviewTest is Test, MockOracleQuote {
         params.collateralLt = 0.8e18;
         params.debtToCover = 2;
 
-        _oraclesQuoteMocks(ltvData, 1e18, 0.5e18); // ltv 50% - user solvent
+        // ltv 50% - user solvent
+        collateralOracle.quoteMock(ltvData.borrowerCollateralAssets + ltvData.borrowerProtectedAssets, COLLATERAL_ASSET, 1e18);
+        debtOracle.quoteMock(ltvData.borrowerDebtAssets, DEBT_ASSET, 0.5e18);
 
         (uint256 receiveCollateral, uint256 repayDebt) = SiloLiquidationExecLib.liquidationPreview(ltvData, params);
         assertEq(receiveCollateral, 0, "no collateral - user is solvent");
@@ -163,7 +170,8 @@ contract LiquidationPreviewTest is Test, MockOracleQuote {
         params.collateralLt = 0.8e18;
         params.debtToCover = 2;
 
-        _oraclesQuoteMocks(ltvData, 1e18, 2e18); // ltv 200% - user NOT solvent
+        // ltv 200% - user NOT solvent
+        // no oracle calls
 
         (uint256 receiveCollateral, uint256 repayDebt) = SiloLiquidationExecLib.liquidationPreview(ltvData, params);
         assertEq(receiveCollateral, 2, "receiveCollateral");

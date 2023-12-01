@@ -4,12 +4,12 @@ pragma solidity ^0.8.0;
 import "forge-std/Test.sol";
 import "silo-core/contracts/lib/SiloSolvencyLib.sol";
 
-import "../../_common/MockOracleQuote.sol";
+import {OraclesHelper} from "../../_common/OraclesHelper.sol";
 
 /*
 forge test -vv --mc CalculateLtvTest
 */
-contract CalculateLtvTest is Test, MockOracleQuote {
+contract CalculateLtvTest is Test, OraclesHelper {
     uint256 internal constant DECIMALS_POINTS = 1e18;
 
     /*
@@ -103,7 +103,9 @@ contract CalculateLtvTest is Test, MockOracleQuote {
             ISiloOracle(COLLATERAL_ORACLE), ISiloOracle(DEBT_ORACLE), _protectedAssets, _collateralAssets, _debtAssets
         );
 
-        _oraclesQuoteMocks(ltvData, 9999, 1111);
+        uint256 collateralSum = ltvData.borrowerCollateralAssets + ltvData.borrowerProtectedAssets;
+        collateralOracle.quoteMock(collateralSum, COLLATERAL_ASSET, 9999);
+        debtOracle.quoteMock(ltvData.borrowerDebtAssets, DEBT_ASSET, 1111);
 
         (,, uint256 ltv) = SiloSolvencyLib.calculateLtv(ltvData, COLLATERAL_ASSET, DEBT_ASSET);
 

@@ -75,17 +75,13 @@ contract GetFeesAndFeeReceiversWithAssetTest is SiloLittleHelper, IntegrationTes
         assertEq(deployerFeeReceiver, _newDeployer, "deployerFeeReceiver silo1");
         assertEq(siloFactory.ownerOf(siloId), _newDeployer, "ownerOf(siloId) silo1");
 
-        vm.mockCall(
-            address(siloConfig),
-            abi.encodeWithSelector(ISiloConfig.getFeesWithAsset.selector, address(this)),
-            abi.encode(daoFee, deployerFee, 0, asset)
-        );
+        bytes memory data = abi.encodeWithSelector(ISiloConfig.getFeesWithAsset.selector, address(this));
+        vm.mockCall(address(siloConfig), data, abi.encode(daoFee, deployerFee, 0, asset));
+        vm.expectCall(address(siloConfig), data);
 
-        vm.mockCall(
-            address(siloFactory),
-            abi.encodeWithSelector(ISiloFactory.getFeeReceivers.selector, address(this)),
-            abi.encode(daoFeeReceiver, deployerFeeReceiver)
-        );
+        bytes memory data2 = abi.encodeWithSelector(ISiloFactory.getFeeReceivers.selector, address(this));
+        vm.mockCall(address(siloFactory), data2, abi.encode(daoFeeReceiver, deployerFeeReceiver));
+        vm.expectCall(address(siloFactory), data2);
 
         (
             address mockedDaoFeeReceiver,

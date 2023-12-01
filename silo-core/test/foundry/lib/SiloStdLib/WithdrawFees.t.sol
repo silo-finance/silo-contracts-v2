@@ -13,6 +13,7 @@ import {SiloFactoryMock} from "../../_mocks/SiloFactoryMock.sol";
 import "../TokenHelper.t.sol";
 import "../../_mocks/TokenMock.sol";
 
+// forge test -vv --ffi --mc WithdrawFeesTest
 contract WithdrawFeesTest is Test {
     ISilo.SiloData siloData;
     ISiloConfig config;
@@ -157,16 +158,19 @@ contract WithdrawFeesTest is Test {
         uint256 daoFee = 0.20e18;
         uint256 deployerFee = 0.20e18;
         uint256 daoAndDeployerFees = 1e18;
+        uint256 daoFees = daoAndDeployerFees/2;
 
-        _withdrawFees_pass(daoFee, deployerFee, daoAndDeployerFees/2, daoAndDeployerFees/2);
+        _withdrawFees_pass(daoFee, deployerFee, daoFees, daoAndDeployerFees - daoFees);
 
         daoFee = 0.20e18;
         deployerFee = 0.10e18;
-        _withdrawFees_pass(daoFee, deployerFee, daoAndDeployerFees * 2/3, daoAndDeployerFees / 3);
+        daoFees = daoAndDeployerFees * 2/3;
+        _withdrawFees_pass(daoFee, deployerFee, daoFees, daoAndDeployerFees - daoFees);
 
         daoFee = 0.20e18;
         deployerFee = 0.01e18;
-        _withdrawFees_pass(daoFee, deployerFee, daoAndDeployerFees * 20/21, daoAndDeployerFees / 21);
+        daoFees = daoAndDeployerFees * 20/21;
+        _withdrawFees_pass(daoFee, deployerFee, daoFees, daoAndDeployerFees - daoFees);
     }
 
     function _withdrawFees_pass(
@@ -189,8 +193,8 @@ contract WithdrawFeesTest is Test {
 
         siloData.daoAndDeployerFees = 1e18;
 
-        token.transferMock(dao, _transferDao);
-        token.transferMock(deployer, _transferDeployer);
+        if (_transferDao != 0) token.transferMock(dao, _transferDao);
+        if (_transferDeployer != 0) token.transferMock(deployer, _transferDeployer);
 
         SiloStdLib.withdrawFees(config, factory, siloData);
         assertEq(siloData.daoAndDeployerFees, 0, "fees cleared");

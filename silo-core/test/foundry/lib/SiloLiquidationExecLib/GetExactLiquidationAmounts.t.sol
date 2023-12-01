@@ -38,8 +38,8 @@ contract GetExactLiquidationAmountsHelper is Test {
     InterestRateModelMock immutable INTEREST_RATE_MODEL;
 
     constructor () {
-        SILO_A = new SiloMock(vm, makeAddr("SILO_A"));
-        SILO_B = new SiloMock(vm, makeAddr("SILO_B"));
+        SILO_A = new SiloMock(makeAddr("SILO_A"));
+        SILO_B = new SiloMock(makeAddr("SILO_B"));
 
         TOKEN_A = new TokenMock(makeAddr("TOKEN_A"));
         C_SHARE_TOKEN_A = new TokenMock(makeAddr("C_SHARE_TOKEN_A"));

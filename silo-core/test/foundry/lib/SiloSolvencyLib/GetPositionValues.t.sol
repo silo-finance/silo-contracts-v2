@@ -4,12 +4,12 @@ pragma solidity ^0.8.0;
 import "forge-std/Test.sol";
 import "silo-core/contracts/lib/SiloSolvencyLib.sol";
 
-import "../../_common/MockOracleQuote.sol";
+import {OraclesHelper} from "../../_common/OraclesHelper.sol";
 
 /*
 forge test -vv --mc GetPositionValuesTest
 */
-contract GetPositionValuesTest is Test, MockOracleQuote {
+contract GetPositionValuesTest is Test, OraclesHelper {
     uint256 internal constant _PRECISION_DECIMALS = 1e18;
 
     /*

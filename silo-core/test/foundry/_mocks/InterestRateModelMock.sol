@@ -12,21 +12,20 @@ contract InterestRateModelMock is Test {
         ADDRESS = makeAddr("InterestRateModelMock");
     }
 
+    // IInterestRateModel.getCompoundInterestRate.selector: 0xcfdfcffa
     function getCompoundInterestRateMock(address _silo, uint256 _blockTimestamp, uint256 _rcomp) external {
-        vm.mockCall(
-            ADDRESS,
-            abi.encodeWithSelector(
-                bytes4(keccak256(abi.encodePacked("getCompoundInterestRate(address,uint256)"))), _silo, _blockTimestamp
-            ),
-            abi.encode(_rcomp)
+        bytes memory data = abi.encodeWithSelector(
+            bytes4(keccak256(abi.encodePacked("getCompoundInterestRate(address,uint256)"))), _silo, _blockTimestamp
         );
+
+        vm.mockCall(ADDRESS, data, abi.encode(_rcomp));
+        vm.expectCall(ADDRESS, data);
     }
 
+    // IInterestRateModel.getCompoundInterestRateAndUpdate.selector:
     function getCompoundInterestRateAndUpdateMock(uint256 _rcomp) external {
-        vm.mockCall(
-            ADDRESS,
-            abi.encodeWithSelector(IInterestRateModel.getCompoundInterestRateAndUpdate.selector),
-            abi.encode(_rcomp)
-        );
+        bytes memory data = abi.encodeWithSelector(IInterestRateModel.getCompoundInterestRateAndUpdate.selector);
+        vm.mockCall(ADDRESS, data, abi.encode(_rcomp));
+        vm.expectCall(ADDRESS, data);
     }
 }
