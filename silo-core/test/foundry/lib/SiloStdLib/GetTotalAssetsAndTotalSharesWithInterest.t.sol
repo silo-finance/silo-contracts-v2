@@ -43,7 +43,7 @@ contract GetTotalAssetsAndTotalSharesWithInterestTest is Test {
     uint256 collateralTestCasesIndex;
 
     constructor() {
-        SILO = new SiloMock(vm, address(1));
+        SILO = new SiloMock(address(1));
         INTEREST_RATE_MODEL = new InterestRateModelMock();
         PROTECTED_SHARE_TOKEN = new TokenMock(address(2));
         COLLATERAL_SHARE_TOKEN = new TokenMock(address(3));

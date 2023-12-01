@@ -15,7 +15,7 @@ contract GetTotalDebtAssetsWithInterestTest is Test {
     InterestRateModelMock immutable INTEREST_RATE_MODEL;
 
     constructor () {
-        SILO = new SiloMock(vm, address(0));
+        SILO = new SiloMock(address(0));
         INTEREST_RATE_MODEL = new InterestRateModelMock();
     }
 

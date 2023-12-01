@@ -13,10 +13,9 @@ contract SiloFactoryMock is Test {
     }
 
     function getFeeReceiversMock(address _silo, address _dao, address _deployer) external {
-        vm.mockCall(
-            ADDRESS,
-            abi.encodeWithSelector(ISiloFactory.getFeeReceivers.selector, _silo),
-            abi.encode(_dao, _deployer)
-        );
+        bytes memory data = abi.encodeWithSelector(ISiloFactory.getFeeReceivers.selector, _silo);
+
+        vm.mockCall(ADDRESS, data, abi.encode(_dao, _deployer));
+        vm.expectCall(ADDRESS, data);
     }
 }

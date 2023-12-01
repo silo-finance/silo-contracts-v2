@@ -20,6 +20,7 @@ contract SiloLendingLibBorrowTestData {
         uint256 protectedShareTokenBalanceOf;
         uint256 collateralShareTokenBalanceOf;
         uint256 debtSharesTotalSupply;
+        bool debtSharesTotalSupplyMock;
     }
 
     struct Output {
@@ -58,6 +59,7 @@ contract SiloLendingLibBorrowTestData {
 
         _init(data[i], "#0 all zeros");
         data[i].output.reverts = ISilo.ZeroAssets.selector;
+        data[i].mocks.debtSharesTotalSupplyMock = false;
 
         i++;
         _init(data[i], "#1 NotEnoughLiquidity if no collateral");
@@ -166,6 +168,8 @@ contract SiloLendingLibBorrowTestData {
         _src.input.receiver = address(0x123333333);
         _src.input.borrower = address(0x345555555);
         _src.input.spender = address(0x567777777);
+
+        _src.mocks.debtSharesTotalSupplyMock = true;
     }
 
     function _clone(SLLBData memory _src) private pure returns (SLLBData memory dst) {
@@ -199,7 +203,8 @@ contract SiloLendingLibBorrowTestData {
         dst.mocks = Mocks({
             protectedShareTokenBalanceOf: _src.mocks.protectedShareTokenBalanceOf,
             collateralShareTokenBalanceOf: _src.mocks.collateralShareTokenBalanceOf,
-            debtSharesTotalSupply: _src.mocks.debtSharesTotalSupply
+            debtSharesTotalSupply: _src.mocks.debtSharesTotalSupply,
+            debtSharesTotalSupplyMock: _src.mocks.debtSharesTotalSupplyMock
         });
         dst.output = Output({
             borrowedAssets: _src.output.borrowedAssets,

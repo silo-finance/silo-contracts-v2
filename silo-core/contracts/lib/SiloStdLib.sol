@@ -46,7 +46,7 @@ library SiloStdLib {
             revert ISilo.NothingToPay();
         } else if (deployerFeeReceiver == address(0)) {
             // deployer was never setup or deployer NFT has been burned
-            IERC20Upgradeable(asset).safeTransferFrom(address(this), daoFeeReceiver, earnedFees);
+            IERC20Upgradeable(asset).safeTransfer(daoFeeReceiver, earnedFees);
         } else if (daoFeeReceiver == address(0)) {
             // should never happen... but we assume DAO does not want to make money so all is going to deployer
             IERC20Upgradeable(asset).safeTransfer(deployerFeeReceiver, earnedFees);
@@ -57,7 +57,7 @@ library SiloStdLib {
 
             unchecked {
                 // fees are % in decimal point so safe to uncheck
-                daoFees = daoFee / (daoFee + deployerFee);
+                daoFees = daoFees / (daoFee + deployerFee);
                 // `daoFees` is chunk of earnedFees, so safe to uncheck
                 deployerFees = earnedFees - daoFees;
             }
