@@ -4,7 +4,7 @@ pragma solidity >=0.7.6;
 import {KeyValueStorage} from "silo-foundry-utils/key-value/KeyValueStorage.sol";
 import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 
-library LiquidityGagugesDeployments {
+library LiquidityGaugesDeployments {
     string constant public DEPLOYMENTS_FILE = "ve-silo/deploy/gauges/liquidity-gauge/_liquidityGaugesDeployments.json";
 
     function save(
