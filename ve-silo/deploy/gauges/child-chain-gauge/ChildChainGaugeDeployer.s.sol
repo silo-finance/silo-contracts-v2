@@ -10,6 +10,7 @@ import {GaugeDeployScript} from "../GaugeDeployScript.sol";
 
 /**
 Supported tokens: protectedShareToken | collateralShareToken | debtShareToken
+Silo deployments: silo-core/deploy/silo/_siloDeployments.json
 MAX_RELATIVE_WEIGHT_CAP = 10 ** 18
 
 FOUNDRY_PROFILE=ve-silo \
