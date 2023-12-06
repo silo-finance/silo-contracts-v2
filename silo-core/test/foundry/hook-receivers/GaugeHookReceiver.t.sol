@@ -17,7 +17,7 @@ import {IHookReceiversFactory} from "../../../contracts/utils/hook-receivers/int
 import {TransferOwnership} from  "../_common/TransferOwnership.sol";
 
 
-// FOUNDRY_PROFILE=core forge test -vv --ffi --mc GaugeHookReceiverTest
+// FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc GaugeHookReceiverTest
 contract GaugeHookReceiverTest is Test, TransferOwnership {
     IHookReceiversFactory internal _hookReceiverFactory;
     IGaugeHookReceiver internal _hookReceiver;
