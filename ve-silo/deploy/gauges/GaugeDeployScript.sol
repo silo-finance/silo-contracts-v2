@@ -16,7 +16,7 @@ abstract contract GaugeDeployScript is Script {
     bytes32 constant internal _TYPE_SHARE_D_TOKEN = keccak256(abi.encodePacked("debtShareToken"));
     bytes32 constant internal _TYPE_SHARE_C_TOKEN = keccak256(abi.encodePacked("collateralShareToken"));
 
-    error InvalidSiloAsset():
+    error InvalidSiloAsset();
     error UnsupportedShareTokenType();
 
     function _resolveSiloHookReceiver() internal returns(address hookReceiver) {

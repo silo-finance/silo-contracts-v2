@@ -31,7 +31,7 @@ contract LiquidityGaugeDeployer is GaugeDeployScript {
         ILiquidityGaugeFactory factory = ILiquidityGaugeFactory(
             VeSiloDeployments.get(
                 VeSiloContracts.LIQUIDITY_GAUGE_FACTORY,
-                chainAlias;
+                chainAlias
             )
         );
 

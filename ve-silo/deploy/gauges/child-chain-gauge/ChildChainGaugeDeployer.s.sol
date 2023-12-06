@@ -29,7 +29,7 @@ contract ChildChainGaugeDeployer is GaugeDeployScript {
         IChildChainGaugeFactory factory = IChildChainGaugeFactory(
             VeSiloDeployments.get(
                 VeSiloContracts.CHILD_CHAIN_GAUGE_FACTORY,
-                chainAlias;
+                chainAlias
             )
         );
 
