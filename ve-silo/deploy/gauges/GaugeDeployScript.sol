@@ -16,6 +16,9 @@ abstract contract GaugeDeployScript is Script {
     bytes32 constant internal _TYPE_SHARE_D_TOKEN = keccak256(abi.encodePacked("debtShareToken"));
     bytes32 constant internal _TYPE_SHARE_C_TOKEN = keccak256(abi.encodePacked("collateralShareToken"));
 
+    error InvalidSiloAsset():
+    error UnsupportedShareTokenType();
+
     function _resolveSiloHookReceiver() internal returns(address hookReceiver) {
         string memory siloConfigKey = vm.envString("SILO");
         string memory assetKey = vm.envString("ASSET");
@@ -34,7 +37,7 @@ abstract contract GaugeDeployScript is Script {
         } else if (silo1Asset == siloAsset) {
             hookReceiver = _getHookReceiver(siloConfig, silo1);
         } else {
-            revert("Invalid silo asset");
+            revert InvalidSiloAsset();
         }
     }
 
@@ -56,7 +59,7 @@ abstract contract GaugeDeployScript is Script {
         } else if (_TYPE_SHARE_C_TOKEN == tokenType) {
             token = collateralShareToken;
         } else {
-            revert("Unsupported share token type");
+            revert UnsupportedShareTokenType();
         }
 
         hookReceiver = IShareToken(token).hookReceiver();
