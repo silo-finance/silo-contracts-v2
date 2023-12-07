@@ -1,0 +1,8 @@
+{
+    "EXAMPLE_TEST": {
+        "silo": "USDC_UniswapV3_Silo",
+        "asset": "USDC",
+        "token": "protectedShareToken",
+        "relativeWeightCap": 0
+    }
+}

@@ -7,24 +7,33 @@ import {VeSiloContracts, VeSiloDeployments} from "ve-silo/common/VeSiloContracts
 import {IChildChainGaugeFactory} from "ve-silo/contracts/gauges/interfaces/IChildChainGaugeFactory.sol";
 import {ChildChainGaugesDeployments} from "./ChildChainGaugesDeployments.sol";
 import {GaugeDeployScript} from "../GaugeDeployScript.sol";
+import {ChildChainGaugeConfigsParser} from "./ChildChainGaugeConfigsParser.sol";
 
 /**
 Supported tokens: protectedShareToken | collateralShareToken | debtShareToken
 Silo deployments: silo-core/deploy/silo/_siloDeployments.json
-MAX_RELATIVE_WEIGHT_CAP = 10 ** 18
 
-FOUNDRY_PROFILE=ve-silo \
-    SILO=ETH-USDC_UniswapV3_Silo \
-    ASSET=USDC \
-    TOKEN=protectedShareToken \
+FOUNDRY_PROFILE=ve-silo CONFIG=EXAMPLE_TEST \
     forge script ve-silo/deploy/gauges/child-chain-gauge/ChildChainGaugeDeployer.s.sol \
     --ffi --broadcast --rpc-url http://127.0.0.1:8545
  */
 contract ChildChainGaugeDeployer is GaugeDeployScript {
+    struct ChildChainGaugeDeploymentConfig {
+        string silo;
+        string asset;
+        string token;
+    }
+
     function run() public returns (address gauge) {
         string memory chainAlias = ChainsLib.chainAlias();
+        string memory cofigName = vm.envString("CONFIG");
 
-        uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
+        ChildChainGaugeDeploymentConfig memory config = ChildChainGaugeConfigsParser.getConfig(
+            chainAlias,
+            cofigName
+        );
+
+        address hookReceiver = _resolveSiloHookReceiver(config.silo, config.asset, config.token);
 
         IChildChainGaugeFactory factory = IChildChainGaugeFactory(
             VeSiloDeployments.get(
@@ -33,18 +42,11 @@ contract ChildChainGaugeDeployer is GaugeDeployScript {
             )
         );
 
-        address hookReceiver = _resolveSiloHookReceiver();
-
+        uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
         vm.startBroadcast(deployerPrivateKey);
-        gauge = factory.create(relativeWeightCap, hookReceiver);
+        gauge = factory.create(hookReceiver);
         vm.stopBroadcast();
 
-        ChildChainGaugesDeployments.save(
-            chainAlias,
-            vm.envString("SILO"),
-            vm.envString("ASSET"),
-            vm.envString("TOKEN"),
-            gauge
-        );
+        ChildChainGaugesDeployments.save(chainAlias, cofigName, gauge);
     }
 }

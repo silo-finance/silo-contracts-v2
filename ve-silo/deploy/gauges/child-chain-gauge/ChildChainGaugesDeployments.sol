@@ -10,23 +10,19 @@ library ChildChainGaugesDeployments {
 
     function save(
         string memory _chain,
-        string memory _silo,
-        string memory _asset,
-        string memory _token,
+        string memory _configName,
         address _gauge
     ) internal {
-        string memory key = string(abi.encodePacked(_silo, "/", _asset, "/", _token));
-
         KeyValueStorage.setAddress(
             DEPLOYMENTS_FILE,
             _chain,
-            key,
+            _configName,
             _gauge
         );
     }
 
-    function get(string memory _chain, string memory _key) internal returns (address) {
-        address shared = AddrLib.getAddress(_key);
+    function get(string memory _chain, string memory _configName) internal returns (address) {
+        address shared = AddrLib.getAddress(_configName);
 
         if (shared != address(0)) {
             return shared;
@@ -35,7 +31,7 @@ library ChildChainGaugesDeployments {
         return KeyValueStorage.getAddress(
             DEPLOYMENTS_FILE,
             _chain,
-            _key
+            _configName
         );
     }
 }
