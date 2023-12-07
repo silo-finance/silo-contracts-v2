@@ -785,7 +785,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
         address _borrower,
         uint256 _debtToCover,
         bool _receiveSToken
-    ) external virtual {
+    ) external virtual leverageNonReentrant {
         (ISiloConfig.ConfigData memory debtConfig, ISiloConfig.ConfigData memory collateralConfig) =
             config.getConfigs(address(this));
 
