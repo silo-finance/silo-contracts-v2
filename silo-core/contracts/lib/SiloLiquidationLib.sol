@@ -77,7 +77,8 @@ library SiloLiquidationLib {
         }
 
         // full on dust OR when _debtToCover higher then total assets
-        if (_debtToCover * _PRECISION_DECIMALS / _totalBorrowerDebtAssets > _POSITION_DUST_LEVEL) {
+        // keeping _debtToCover to original value and do math on _totalBorrowerDebtAssets prevents overflow on hi values
+        if (_debtToCover > _POSITION_DUST_LEVEL * _totalBorrowerDebtAssets / _PRECISION_DECIMALS) {
             uint256 liquidationValue = calculateCollateralToLiquidate(
                 _totalBorrowerDebtValue, _sumOfBorrowerCollateralValue, _liquidationFee
             );
