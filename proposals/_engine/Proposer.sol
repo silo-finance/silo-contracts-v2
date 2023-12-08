@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.21;
 
-import {IProposalEngine} from "ve-silo/proposals/_engine/interfaces/IProposalEngine.sol";
+import {IProposalEngine} from "proposals/_engine/interfaces/IProposalEngine.sol";
 import {ProposalEngineLib} from "./ProposalEngineLib.sol";
 
 abstract contract Proposer {

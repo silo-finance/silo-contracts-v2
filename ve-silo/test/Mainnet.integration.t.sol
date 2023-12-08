@@ -5,6 +5,7 @@ import {StdStorage, stdStorage} from "forge-std/StdStorage.sol";
 import {IERC20} from "openzeppelin-contracts/token/ERC20/ERC20.sol";
 import {Ownable2Step} from "openzeppelin-contracts/access/Ownable2Step.sol";
 import {IntegrationTest} from "silo-foundry-utils/networks/IntegrationTest.sol";
+import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 
 import {MainnetDeploy} from "ve-silo/deploy/MainnetDeploy.s.sol";
 import {VeSiloContracts} from "ve-silo/deploy/_CommonDeploy.sol";
@@ -25,6 +26,9 @@ import {IHookReceiverMock as IHookReceiver} from "./_mocks/IHookReceiverMock.sol
 import {IShareTokenLike as IShareToken} from "ve-silo/contracts/gauges/interfaces/IShareTokenLike.sol";
 import {ISiloMock as ISilo} from "ve-silo/test/_mocks/ISiloMock.sol";
 import {IFeesManager} from "ve-silo/contracts/silo-tokens-minter/interfaces/IFeesManager.sol";
+import {VETSIP01} from "ve-silo/test/proposals/VETSIP01.sol";
+import {ProposalEngineLib} from "proposals/_engine/ProposalEngineLib.sol";
+import {Proposal} from "proposals/_engine/Proposal.sol";
 
 import {
     ISiloFactoryWithFeeDetails as ISiloFactory
@@ -66,15 +70,19 @@ contract MainnetTest is IntegrationTest {
     address internal _bob = makeAddr("_bob");
     address internal _alice = makeAddr("_alice");
     address internal _john = makeAddr("_john");
-    address internal _daoVoter = makeAddr("_daoVoter");
     address internal _smartValletChecker = makeAddr("_smartValletChecker");
     address internal _deployer;
+    address internal _daoVoter;
+
+    uint256 internal _daoVoterPK;
 
     function setUp() public {
         vm.createSelectFork(
             getChainRpcUrl(MAINNET_ALIAS),
             _FORKING_BLOCK_NUMBER
         );
+
+        (_daoVoter, _daoVoterPK) = makeAddrAndKey("_daoVoter");
 
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
         _deployer = vm.addr(deployerPrivateKey);
@@ -264,30 +272,16 @@ contract MainnetTest is IntegrationTest {
     }
 
     function _addGauge(address _gauge) internal {
-        address[] memory targets = new address[](6);
-        targets[0] = address(_gaugeController);
-        targets[1] = address(_gaugeController);
-        targets[2] = address(_gaugeAdder);
-        targets[3] = address(_gaugeAdder);
-        targets[4] = address(_gaugeAdder);
-        targets[5] = address(_gaugeAdder);
+        // pushing time a little bit forward
+        vm.warp(block.timestamp + 3_600);
 
-        // Empty values
-        uint256[] memory values = new uint256[](6);
+        VETSIP01 addGaugeProposal = new VETSIP01();
 
-        // Functions inputs
-        bytes[] memory calldatas = new bytes[](6);
-        
-        string memory gaugeTypeName = new string(64);
-        gaugeTypeName = "Mainnet gauge";
-        calldatas[0] = abi.encodeWithSignature("add_type(string,uint256)", gaugeTypeName, 1e18);
-        calldatas[1] = abi.encodeWithSignature("set_gauge_adder(address)", address(_gaugeAdder));
-        calldatas[2] = abi.encodeWithSignature("acceptOwnership()");
-        calldatas[3] = abi.encodeWithSignature("addGaugeType(string)", gaugeTypeName);
-        calldatas[4] = abi.encodeWithSignature("setGaugeFactory(address,string)", address(_factory), gaugeTypeName);
-        calldatas[5] = abi.encodeWithSignature("addGauge(address,string)", address(_gauge), gaugeTypeName);
+        AddrLib.setAddress(addGaugeProposal.GAUGE_KEY(), _gauge);
 
-        _executeProposal(targets, values, calldatas);
+        addGaugeProposal.setVoterPK(_daoVoterPK).run();
+
+        _executeProposal(Proposal(address(addGaugeProposal)));
 
         assertEq(_gaugeController.n_gauge_types(), 1, "An invalid number of the gauge types");
         assertEq(_gaugeController.n_gauges(), 1, "Should be 1 gauge in the gaugeController");
@@ -395,26 +389,8 @@ contract MainnetTest is IntegrationTest {
     }
 
     // solhint-disable-next-line function-max-lines
-    function _executeProposal(
-        address[] memory targets,
-        uint256[] memory values,
-        bytes[] memory calldatas
-    )
-        internal
-    {
-        string memory description = "Test proposal";
-
-        // pushing time a little bit forward
-        vm.warp(block.timestamp + 3_600);
-
-        vm.prank(_daoVoter);
-
-        uint256 proposalId = _siloGovernor.propose(
-            targets,
-            values,
-            calldatas,
-            description
-        );
+    function _executeProposal(Proposal _proposal) internal {
+        uint256 proposalId = _proposal.getProposalId();
 
         uint256 snapshot = _siloGovernor.proposalSnapshot(proposalId);
         // pushing time to change a proposal to an active status
@@ -425,11 +401,17 @@ contract MainnetTest is IntegrationTest {
 
         vm.warp(snapshot + 1 weeks + 1 seconds);
 
+        address[] memory targets = _proposal.getTargets();
+        uint256[] memory values = _proposal.getValues();
+        bytes[] memory calldatas = _proposal.getCalldatas();
+
+        bytes32 descriptionHash = keccak256(bytes(_proposal.getDescription()));
+
         _siloGovernor.queue(
             targets,
             values,
             calldatas,
-            keccak256(bytes(description))
+            descriptionHash
         );
 
         vm.warp(block.timestamp + 3_600);
@@ -438,7 +420,7 @@ contract MainnetTest is IntegrationTest {
             targets,
             values,
             calldatas,
-            keccak256(bytes(description))
+            descriptionHash
         );
     }
 

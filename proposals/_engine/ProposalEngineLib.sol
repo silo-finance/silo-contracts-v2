@@ -7,7 +7,7 @@ import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";
 
 import {VeSiloContracts, VeSiloDeployments} from "ve-silo/common/VeSiloContracts.sol";
 import {ProposalEngine} from "./ProposalEngine.sol";
-import {IProposalEngine} from ".interfaces/IProposalEngine.sol";
+import {IProposalEngine} from "./interfaces/IProposalEngine.sol";
 
 library ProposalEngineLib {
     address internal constant ENGINE_ADDR = address(uint160(uint256(keccak256("silo proposal engine"))));
@@ -22,7 +22,8 @@ library ProposalEngineLib {
         code = Utils.getCodeAt(address(deployedEngine));
 
         VmLib.vm().etch(ENGINE_ADDR, code);
-        VmLib.vm().label(ENGINE_ADDR, "SiloProposalEngine");
+        VmLib.vm().allowCheatcodes(ENGINE_ADDR);
+        VmLib.vm().label(ENGINE_ADDR, "ProposalEngine.sol");
 
         address siloGovernor = VeSiloDeployments.get(
             VeSiloContracts.SILO_GOVERNOR,

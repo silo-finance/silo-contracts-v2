@@ -11,7 +11,7 @@ FOUNDRY_PROFILE=ve-silo \
     --ffi --broadcast --rpc-url http://127.0.0.1:8545
  */
 contract SIP104 is Script, Proposal {
-    function run() public {
+    function run() public override {
         gaugeAdder.addGaugeType("Ethereum");
         gaugeAdder.addGauge(address(1), "Ethereum");
 
