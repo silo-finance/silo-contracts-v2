@@ -115,40 +115,59 @@ contract PreviewTest is SiloLittleHelper, Test {
     function test_previewMint_beforeInterest_fuzz(uint256 _shares) public {
         vm.assume(_shares > 0);
 
-        _assertPreviewMint(_shares);
+        _assertPreviewMint(_shares, true, uint8(ISilo.AssetType.Collateral));
     }
 
     /*
-    forge test -vv --ffi --mt test_previewMint_afterNoInterest
+    forge test -vv --ffi --mt test_previewMintType_beforeInterest_fuzz
     */
     /// forge-config: core.fuzz.runs = 10000
-    function test_previewMint_afterNoInterest_fuzz(uint256 _depositAmount, uint256 _shares) public {
-        vm.assume(_depositAmount < type(uint128).max);
-        vm.assume(_depositAmount > 0);
-        vm.assume(_shares < type(uint128).max);
+    function test_previewMintType_beforeInterest_fuzz(uint256 _shares, uint8 _type) public {
         vm.assume(_shares > 0);
 
-        // deposit something
-        _deposit(_depositAmount, makeAddr("any"));
-
-        vm.warp(block.timestamp + 365 days);
-        silo0.accrueInterest();
-
-        _assertPreviewMint(_shares);
+        _assertPreviewMint(_shares, false, _type);
     }
 
-
     /*
-    forge test -vv --ffi --mt test_previewMint_withInterest
+    forge test -vv --ffi --mt test_previewMint_afterNoInterest_fuzz
     */
     /// forge-config: core.fuzz.runs = 10000
-    function test_previewMint_withInterest_fuzz(uint256 _shares) public {
-        vm.assume(_shares < type(uint128).max);
+    function test_previewMint_afterNoInterest_fuzz(uint128 _depositAmount, uint128 _shares) public {
+        _previewMint_afterNoInterest(_depositAmount, _shares, true, uint8(ISilo.AssetType.Collateral));
+        _assertPreviewMint(_shares, true, uint8(ISilo.AssetType.Collateral));
+    }
+
+    /*
+    forge test -vv --ffi --mt test_previewMintType_afterNoInterest_fuzz
+    */
+    /// forge-config: core.fuzz.runs = 10000
+    function test_previewMintType_afterNoInterest_fuzz(uint128 _depositAmount, uint128 _shares, uint8 _type) public {
+        _previewMint_afterNoInterest(_depositAmount, _shares, false, _type);
+        _assertPreviewMint(_shares, false, _type);
+    }
+
+    /*
+    forge test -vv --ffi --mt test_previewMint_withInterest_fuzz
+    */
+    /// forge-config: core.fuzz.runs = 10000
+    function test_previewMint_withInterest_fuzz(uint128 _shares) public {
         vm.assume(_shares > 0);
 
         _createInterest();
 
-        _assertPreviewMint(_shares);
+        _assertPreviewMint(_shares, true, uint8(ISilo.AssetType.Collateral));
+    }
+
+    /*
+    forge test -vv --ffi --mt test_previewMintType_withInterest_fuzz
+    */
+    /// forge-config: core.fuzz.runs = 10000
+    function test_previewMintType_withInterest_fuzz(uint128 _shares, uint8 _type) public {
+        vm.assume(_shares > 0);
+
+        _createInterest();
+
+        _assertPreviewMint(_shares, false, _type);
     }
 
     /*
@@ -273,7 +292,7 @@ contract PreviewTest is SiloLittleHelper, Test {
     }
 
     function _createInterest() internal {
-        uint256 assets = 1e18 + 123456789;
+        uint256 assets = 1e18 + 123456789; // some not even number
 
         _deposit(assets, depositor);
         _depositForBorrow(assets, depositor);
@@ -287,17 +306,42 @@ contract PreviewTest is SiloLittleHelper, Test {
         silo1.accrueInterest();
     }
 
-    function _assertPreviewMint(uint256 _shares) internal {
-        // uint256 shares = 1e18 + 987654211;
-        uint256 previewMint = silo0.previewMint(_shares);
+    function _previewMint_afterNoInterest(
+        uint128 _depositAmount,
+        uint128 _shares,
+        bool _defaultType,
+        uint8 _type
+    ) internal {
+        vm.assume(_depositAmount > 0);
+        vm.assume(_shares > 0);
+        vm.assume(_type == 0 || _type == 1);
+
+        // deposit something
+        _deposit(_depositAmount, makeAddr("any"));
+
+        vm.warp(block.timestamp + 365 days);
+        silo0.accrueInterest();
+
+        _assertPreviewMint(_shares, _defaultType, _type);
+    }
+
+    function _assertPreviewMint(uint256 _shares, bool _defaultType, uint8 _type) internal {
+        vm.assume(_type == 0 || _type == 1);
+
+        uint256 previewMint = _defaultType
+            ? silo0.previewMint(_shares)
+            : silo0.previewMint(_shares, ISilo.AssetType(_type));
 
         token0.mint(depositor, previewMint);
 
         vm.startPrank(depositor);
         token0.approve(address(silo0), previewMint);
-        uint256 depositedAssets = silo0.mint(_shares, depositor);
 
-        assertEq(depositedAssets, previewMint, "previewMint == depositedAssets");
+        uint256 depositedAssets = _defaultType
+            ? silo0.mint(_shares, depositor)
+            : silo0.mint(_shares, depositor, ISilo.AssetType(_type));
+
+        assertEq(depositedAssets, previewMint, "previewMint == depositedAssets, NOT fewer");
     }
 
     function _previewDeposit_beforeInterest(uint256 _assets, bool _defaultType, uint8 _type) internal {
