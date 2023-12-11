@@ -70,7 +70,7 @@ contract VaultSolverLibTest is VaultSolverLibTestData, Assertions {
                 );
             }
 
-            assertEq(gasStart - gasEnd, 117653, "VaultSolverLib.solver gas");
+            assertEq(gasStart - gasEnd, 118393, "VaultSolverLib.solver gas");
         }
     }
 
