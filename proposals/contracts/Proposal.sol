@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.21;
 
-import {IProposalEngine} from "proposals/_engine/interfaces/IProposalEngine.sol";
+import {IProposalEngine} from "proposals/contracts/interfaces/IProposalEngine.sol";
 import {ProposalEngineLib} from "./ProposalEngineLib.sol";
 import {GaugeAdderProposer} from "./proposers/ve-silo/GaugeAdderProposer.sol";
 import {GaugeControllerProposer} from "./proposers/ve-silo/GaugeControllerProposer.sol";
 
 abstract contract Proposal {
-    IProposalEngine public constant ENGINE = IProposalEngine(ProposalEngineLib.ENGINE_ADDR);
+    IProposalEngine public constant ENGINE = IProposalEngine(ProposalEngineLib._ENGINE_ADDR);
 
     GaugeAdderProposer public gaugeAdder;
     GaugeControllerProposer public gaugeController;

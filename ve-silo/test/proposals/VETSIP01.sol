@@ -5,7 +5,7 @@ import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";
 
 import {VeSiloContracts, VeSiloDeployments} from "ve-silo/common/VeSiloContracts.sol";
-import {Proposal} from "proposals/_engine/Proposal.sol";
+import {Proposal} from "proposals/contracts/Proposal.sol";
 
 contract VETSIP01 is Proposal {
     string constant public GAUGE_KEY = "Test gauge";

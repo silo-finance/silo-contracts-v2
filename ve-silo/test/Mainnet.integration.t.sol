@@ -27,8 +27,8 @@ import {IShareTokenLike as IShareToken} from "ve-silo/contracts/gauges/interface
 import {ISiloMock as ISilo} from "ve-silo/test/_mocks/ISiloMock.sol";
 import {IFeesManager} from "ve-silo/contracts/silo-tokens-minter/interfaces/IFeesManager.sol";
 import {VETSIP01} from "ve-silo/test/proposals/VETSIP01.sol";
-import {ProposalEngineLib} from "proposals/_engine/ProposalEngineLib.sol";
-import {Proposal} from "proposals/_engine/Proposal.sol";
+import {ProposalEngineLib} from "proposals/contracts/ProposalEngineLib.sol";
+import {Proposal} from "proposals/contracts/Proposal.sol";
 
 import {
     ISiloFactoryWithFeeDetails as ISiloFactory

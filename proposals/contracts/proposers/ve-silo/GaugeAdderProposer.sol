@@ -10,15 +10,16 @@ import {IGaugeAdder} from "ve-silo/contracts/gauges/interfaces/IGaugeAdder.sol";
 import {ILiquidityGaugeFactory} from "ve-silo/contracts/gauges/interfaces/ILiquidityGaugeFactory.sol";
 
 contract GaugeAdderProposer is Proposer {
-    address public immutable _GAUGE_ADDER;
+    // solhint-disable-next-line var-name-mixedcase
+    address public immutable GAUGE_ADDER;
 
     constructor(address _proposal) Proposer(_proposal) {
-        _GAUGE_ADDER = VeSiloDeployments.get(
+        GAUGE_ADDER = VeSiloDeployments.get(
             VeSiloContracts.GAUGE_ADDER,
             ChainsLib.chainAlias()
         );
 
-        if (_GAUGE_ADDER == address (0)) revert DeploymentNotFound(
+        if (GAUGE_ADDER == address (0)) revert DeploymentNotFound(
             VeSiloContracts.GAUGE_ADDER,
             ChainsLib.chainAlias()
         );
@@ -49,6 +50,6 @@ contract GaugeAdderProposer is Proposer {
     }
 
     function _addAction(bytes memory _input) internal {
-        _addAction({_target: _GAUGE_ADDER, _value: 0, _input: _input});
+        _addAction({_target: GAUGE_ADDER, _value: 0, _input: _input});
     }
 }

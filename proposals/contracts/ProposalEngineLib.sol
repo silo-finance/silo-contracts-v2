@@ -10,10 +10,10 @@ import {ProposalEngine} from "./ProposalEngine.sol";
 import {IProposalEngine} from "./interfaces/IProposalEngine.sol";
 
 library ProposalEngineLib {
-    address internal constant ENGINE_ADDR = address(uint160(uint256(keccak256("silo proposal engine"))));
+    address internal constant _ENGINE_ADDR = address(uint160(uint256(keccak256("silo proposal engine"))));
 
     function initializeEngine() internal {
-        bytes memory code = Utils.getCodeAt(ENGINE_ADDR);
+        bytes memory code = Utils.getCodeAt(_ENGINE_ADDR);
 
         if (code.length != 0) return;
 
@@ -21,15 +21,15 @@ library ProposalEngineLib {
 
         code = Utils.getCodeAt(address(deployedEngine));
 
-        VmLib.vm().etch(ENGINE_ADDR, code);
-        VmLib.vm().allowCheatcodes(ENGINE_ADDR);
-        VmLib.vm().label(ENGINE_ADDR, "ProposalEngine.sol");
+        VmLib.vm().etch(_ENGINE_ADDR, code);
+        VmLib.vm().allowCheatcodes(_ENGINE_ADDR);
+        VmLib.vm().label(_ENGINE_ADDR, "ProposalEngine.sol");
 
         address siloGovernor = VeSiloDeployments.get(
             VeSiloContracts.SILO_GOVERNOR,
             ChainsLib.chainAlias()
         );
 
-        IProposalEngine(ENGINE_ADDR).setGovernor(siloGovernor);
+        IProposalEngine(_ENGINE_ADDR).setGovernor(siloGovernor);
     }
 }

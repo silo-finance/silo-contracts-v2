@@ -106,15 +106,15 @@ contract ProposalEngine is IProposalEngine {
         description = proposalDescription[_proposal];
     }
 
-    function _getProposerPK() internal view returns (uint256 pk) {
-        if (_proposerPK != 0) return _proposerPK;
-
-        pk = uint256(VmLib.vm().envBytes32("PROPOSER_PRIVATE_KEY"));
-    }
-
     function _addAction(address _proposal, address _target, uint256 _value, bytes calldata _input) internal {
         if (proposalIsProposed[_proposal]) revert ProposalIsProposed();
 
         proposalActions[_proposal].push(ProposalAction(_target, _value, _input));
+    }
+
+    function _getProposerPK() internal view returns (uint256 pk) {
+        if (_proposerPK != 0) return _proposerPK;
+
+        pk = uint256(VmLib.vm().envBytes32("PROPOSER_PRIVATE_KEY"));
     }
 }
