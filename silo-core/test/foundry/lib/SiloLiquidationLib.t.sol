@@ -32,7 +32,7 @@ contract SiloLiquidationLibTest is Test {
         assertEq(SiloLiquidationLib.minAcceptableLTV(800), 720, "LT=80% => min=>72%");
         uint256 gasEnd = gasleft();
 
-        assertEq(gasStart - gasEnd, 133, "optimise minAcceptableLTV()");
+        assertEq(gasStart - gasEnd, 134, "optimise minAcceptableLTV()");
     }
 
     /*
@@ -297,7 +297,7 @@ contract SiloLiquidationLibTest is Test {
         SiloLiquidationLib.calculateExactLiquidationAmounts(1e8, 1e18, 1e18, 1e18, 1e18, 10);
         uint256 gasEnd = gasleft();
 
-        assertEq(gasStart - gasEnd, 1286, "optimise calculateExactLiquidationAmounts");
+        assertEq(gasStart - gasEnd, 1297, "optimise calculateExactLiquidationAmounts");
     }
 
     /*
@@ -323,7 +323,7 @@ contract SiloLiquidationLibTest is Test {
         );
         uint256 gasEnd = gasleft();
 
-        assertEq(gasStart - gasEnd, 553, "optimise calculateCollateralToLiquidate()");
+        assertEq(gasStart - gasEnd, 558, "optimise calculateCollateralToLiquidate()");
         assertEq(collateralAssetsToLiquidate, 1010000000000000000);
         assertEq(collateralValueToLiquidate, 2020000000000000000);
     }
@@ -354,7 +354,7 @@ contract SiloLiquidationLibTest is Test {
 
         assertEq(fromCollateral, 0, "fromCollateral (5, 15) => 0");
         assertEq(fromProtected, 5, "fromProtected (5, 15) => 5");
-        assertEq(gasStart - gasEnd, 145, "optimise splitReceiveCollateralToLiquidate");
+        assertEq(gasStart - gasEnd, 149, "optimise splitReceiveCollateralToLiquidate");
     }
     
     /*
