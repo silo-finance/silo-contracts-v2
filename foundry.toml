@@ -9,7 +9,7 @@ libs = [
     'silo-vaults/node_modules'
 ]
 out = 'cache/foundry/out'
-evm_version = 'shanghai'
+evm_version = 'paris'
 
 [profile.amm-periphery]
 src = 'silo-amm-periphery/contracts'

@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [0.0.20] - 2023-12-11
+### Fixed
+EVM version changed to `paris`
+- [Issue #285](https://github.com/silo-finance/silo-contracts-v2/issues/285)
+- [Issue #215](https://github.com/silo-finance/silo-contracts-v2/issues/215)
+
 ## [0.0.19] - 2023-12-01
 ### Fixed
 - TOB-SILO2-9: fix avoiding paying the flash loan fee
