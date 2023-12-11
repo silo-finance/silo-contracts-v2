@@ -39,8 +39,8 @@ abstract contract Proposal {
         description = ENGINE.getDescription(address(this));
     }
 
-    function setVoterPK(uint256 _voterPK) public returns (Proposal) {
-        ENGINE.setVoterPK(_voterPK);
+    function setProposerPK(uint256 _voterPK) public returns (Proposal) {
+        ENGINE.setProposerPK(_voterPK);
 
         return this;
     }
@@ -53,7 +53,7 @@ abstract contract Proposal {
      function run() public virtual returns (uint256 propopsalId) {}
 
     function _initializeProposers() private {
-        gaugeAdder = new GaugeAdderProposer();
-        gaugeController = new GaugeControllerProposer();
+        gaugeAdder = new GaugeAdderProposer({_proposal: address(this)});
+        gaugeController = new GaugeControllerProposer({_proposal: address(this)});
     }
 }

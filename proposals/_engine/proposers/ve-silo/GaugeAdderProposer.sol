@@ -12,7 +12,7 @@ import {ILiquidityGaugeFactory} from "ve-silo/contracts/gauges/interfaces/ILiqui
 contract GaugeAdderProposer is Proposer {
     address public immutable _GAUGE_ADDER;
 
-    constructor() {
+    constructor(address _proposal) Proposer(_proposal) {
         _GAUGE_ADDER = VeSiloDeployments.get(
             VeSiloContracts.GAUGE_ADDER,
             ChainsLib.chainAlias()
@@ -25,30 +25,30 @@ contract GaugeAdderProposer is Proposer {
     }
 
     function acceptOwnership() external {
-        bytes memory data = abi.encodePacked(Ownable2Step.acceptOwnership.selector);
-        _addAction(data);
+        bytes memory input = abi.encodePacked(Ownable2Step.acceptOwnership.selector);
+        _addAction(input);
     }
 
     function addGaugeType(string memory _gaugeType) external {
-        bytes memory data = abi.encodeCall(IGaugeAdder.addGaugeType, _gaugeType);
-        _addAction(data);
+        bytes memory input = abi.encodeCall(IGaugeAdder.addGaugeType, _gaugeType);
+        _addAction(input);
     }
 
     function addGauge(address _gauge, string memory _gaugeType) external {
-         bytes memory data = abi.encodeCall(IGaugeAdder.addGauge, (_gauge, _gaugeType));
-        _addAction(data);
+         bytes memory input = abi.encodeCall(IGaugeAdder.addGauge, (_gauge, _gaugeType));
+        _addAction(input);
     }
 
     function setGaugeFactory(address _factory, string memory _gaugeType) external {
-         bytes memory data = abi.encodeCall(
+         bytes memory input = abi.encodeCall(
             IGaugeAdder.setGaugeFactory,
             (ILiquidityGaugeFactory(_factory), _gaugeType)
         );
 
-        _addAction(data);
+        _addAction(input);
     }
 
-    function _addAction(bytes memory _data) internal {
-        PROPOSAL_ENGINE.addAction({_target: _GAUGE_ADDER, _data: _data});
+    function _addAction(bytes memory _input) internal {
+        _addAction({_target: _GAUGE_ADDER, _value: 0, _input: _input});
     }
 }

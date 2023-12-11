@@ -10,7 +10,7 @@ import {IGaugeController} from "ve-silo/contracts/gauges/interfaces/IGaugeContro
 contract GaugeControllerProposer is Proposer {
     address private immutable _GAUGE_CONTROLLER;
 
-    constructor() {
+    constructor(address _proposal) Proposer(_proposal) {
         _GAUGE_CONTROLLER = VeSiloDeployments.get(
             VeSiloContracts.GAUGE_CONTROLLER,
             ChainsLib.chainAlias()
@@ -23,16 +23,16 @@ contract GaugeControllerProposer is Proposer {
     }
 
     function add_type(string memory _gaugeType) external {
-        bytes memory data = abi.encodeWithSignature("add_type(string,uint256)", _gaugeType, 1e18);
-        _addAction(data);
+        bytes memory input = abi.encodeWithSignature("add_type(string,uint256)", _gaugeType, 1e18);
+        _addAction(input);
     }
 
     function set_gauge_adder(address _gaugeAdder) external {
-        bytes memory data = abi.encodeCall(IGaugeController.set_gauge_adder, _gaugeAdder);
-        _addAction(data);
+        bytes memory input = abi.encodeCall(IGaugeController.set_gauge_adder, _gaugeAdder);
+        _addAction(input);
     }
 
-    function _addAction(bytes memory _data) internal {
-        PROPOSAL_ENGINE.addAction({_target: _GAUGE_CONTROLLER, _data: _data});
+    function _addAction(bytes memory _input) internal {
+        _addAction({_target: _GAUGE_CONTROLLER, _value: 0, _input: _input});
     }
 }

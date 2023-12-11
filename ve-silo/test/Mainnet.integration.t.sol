@@ -279,7 +279,7 @@ contract MainnetTest is IntegrationTest {
 
         AddrLib.setAddress(addGaugeProposal.GAUGE_KEY(), _gauge);
 
-        addGaugeProposal.setVoterPK(_daoVoterPK).run();
+        addGaugeProposal.setProposerPK(_daoVoterPK).run();
 
         _executeProposal(Proposal(address(addGaugeProposal)));
 
@@ -404,8 +404,9 @@ contract MainnetTest is IntegrationTest {
         address[] memory targets = _proposal.getTargets();
         uint256[] memory values = _proposal.getValues();
         bytes[] memory calldatas = _proposal.getCalldatas();
+        string memory description = _proposal.getDescription();
 
-        bytes32 descriptionHash = keccak256(bytes(_proposal.getDescription()));
+        bytes32 descriptionHash = keccak256(bytes(description));
 
         _siloGovernor.queue(
             targets,

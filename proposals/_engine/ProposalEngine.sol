@@ -6,8 +6,6 @@ import {VmLib} from "silo-foundry-utils/lib/VmLib.sol";
 import {ISiloGovernor} from "ve-silo/contracts/governance/interfaces/ISiloGovernor.sol";
 import {IProposalEngine} from "./interfaces/IProposalEngine.sol";
 
-import {console} from "forge-std/console.sol";
-
 contract ProposalEngine is IProposalEngine {
     struct ProposalAction {
         address target;
@@ -23,29 +21,27 @@ contract ProposalEngine is IProposalEngine {
     // proposal => description
     mapping(address => string) public proposalDescription;
 
-    uint256 private _voterPK;
+    uint256 private _proposerPK;
 
     error ProposalIsProposed();
 
-    function addAction(address _target, uint256 _value, bytes calldata _input) external {
-        _addAction(_target, _value, _input);
+    function addAction(address _proposal, address _target, uint256 _value, bytes calldata _input) external {
+        _addAction(_proposal, _target, _value, _input);
     }
 
-    function addAction(address _target, bytes calldata _input) external {
-        _addAction(_target, 0, _input);
+    function addAction(address _proposal, address _target, bytes calldata _input) external {
+        _addAction(_proposal, _target, 0, _input);
     }
 
     function setGovernor(address _governor) external {
         siloGovernor = ISiloGovernor(_governor);
     }
 
-    function setVoterPK(uint256 _pk) external {
-        _voterPK = _pk;
+    function setProposerPK(uint256 _pk) external {
+        _proposerPK = _pk;
     }
 
     function proposeProposal(string memory _description) external returns (uint256 proposalId) {
-        console.log("proposer while proposing: ", msg.sender);
-
         if (proposalIsProposed[msg.sender]) revert ProposalIsProposed();
 
         ProposalAction[] storage actions = proposalActions[msg.sender];
@@ -62,7 +58,7 @@ contract ProposalEngine is IProposalEngine {
             calldatas[i] = actions[i].input;
         }
 
-        uint256 proposerPrivateKey = _getVoterPK();
+        uint256 proposerPrivateKey = _getProposerPK();
 
         VmLib.vm().startBroadcast(proposerPrivateKey);
 
@@ -76,6 +72,7 @@ contract ProposalEngine is IProposalEngine {
         VmLib.vm().stopBroadcast();
 
         proposalIsProposed[msg.sender] = true;
+        proposalDescription[msg.sender] = _description;
     }
 
     function getTargets(address _proposal) external view returns (address[] memory targets) {
@@ -109,21 +106,15 @@ contract ProposalEngine is IProposalEngine {
         description = proposalDescription[_proposal];
     }
 
-    function _getVoterPK() internal view returns (uint256 pk) {
-        if (_voterPK != 0) return _voterPK;
+    function _getProposerPK() internal view returns (uint256 pk) {
+        if (_proposerPK != 0) return _proposerPK;
 
         pk = uint256(VmLib.vm().envBytes32("PROPOSER_PRIVATE_KEY"));
     }
 
-    function _addAction(address _target, uint256 _value, bytes calldata _input) internal {
-        console.log("proposer: ", msg.sender);
+    function _addAction(address _proposal, address _target, uint256 _value, bytes calldata _input) internal {
+        if (proposalIsProposed[_proposal]) revert ProposalIsProposed();
 
-        if (proposalIsProposed[msg.sender]) revert ProposalIsProposed();
-
-        proposalActions[msg.sender].push(ProposalAction({
-            target: _target,
-            value: _value,
-            input: _input
-        }));
+        proposalActions[_proposal].push(ProposalAction(_target, _value, _input));
     }
 }

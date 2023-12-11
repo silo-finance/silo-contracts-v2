@@ -34,6 +34,6 @@ contract VETSIP01 is Proposal {
         gaugeAdder.setGaugeFactory(gaugeFactoryAddr, GAUGE_TYPE);
         gaugeAdder.addGauge(gauge, GAUGE_TYPE);
 
-        proposalId = proposeProposal(PROPOSAL_DESCRIPTION); // propose
+        proposalId = proposeProposal(PROPOSAL_DESCRIPTION);
     }
 }
