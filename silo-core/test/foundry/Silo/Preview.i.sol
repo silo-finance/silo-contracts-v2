@@ -237,17 +237,15 @@ contract PreviewTest is SiloLittleHelper, Test {
     */
     /// forge-config: core.fuzz.runs = 10000
     function test_previewRepay_noInterestNoDebt_fuzz(uint128 _assets) public {
-        vm.assume(_assets > 0);
+        _previewRepay_noInterestNoDebt(_assets, false);
+    }
 
-        // preview before debt creation
-        uint256 sharesToRepay = silo1.previewRepay(_assets);
-
-        _createDebt(_assets, borrower);
-
-        assertEq(sharesToRepay, _assets, "previewRepay == assets == shares");
-
-        uint256 returnedShares = _repay(_assets, borrower);
-        assertEq(returnedShares, sharesToRepay, "preview should give us exact assets");
+    /*
+    forge test -vv --ffi --mt test_previewRepay_noInterestNoDebt
+    */
+    /// forge-config: core.fuzz.runs = 10000
+    function test_previewRepayShares_noInterestNoDebt_fuzz(uint128 _assets) public {
+        _previewRepay_noInterestNoDebt(_assets, true);
     }
 
     /*
@@ -255,17 +253,15 @@ contract PreviewTest is SiloLittleHelper, Test {
     */
     /// forge-config: core.fuzz.runs = 10000
     function test_previewRepay_noInterest_fuzz(uint128 _assets) public {
-        vm.assume(_assets > 0);
+        _previewRepay_noInterest(_assets, false);
+    }
 
-        _createDebt(_assets, borrower);
-
-        uint256 sharesToRepay = silo1.previewRepay(_assets);
-        vm.assume(sharesToRepay > 0);
-
-        assertEq(sharesToRepay, _assets, "previewRepay == assets == shares");
-
-        uint256 returnedShares = _repay(_assets, borrower);
-        assertEq(returnedShares, sharesToRepay, "preview should give us exact assets");
+    /*
+    forge test -vv --ffi --mt test_previewRepayShares_noInterest_fuzz
+    */
+    /// forge-config: core.fuzz.runs = 10000
+    function test_previewRepayShares_noInterest_fuzz(uint128 _assets) public {
+        _previewRepay_noInterest(_assets, true);
     }
 
     /*
@@ -273,18 +269,63 @@ contract PreviewTest is SiloLittleHelper, Test {
     */
     /// forge-config: core.fuzz.runs = 10000
     function test_previewRepay_withInterest_fuzz(uint128 _assets) public {
-        vm.assume(_assets > 0);
+        _previewRepay_withInterest(_assets, false);
+    }
 
-        _createDebt(_assets, borrower);
+    /*
+    forge test -vv --ffi --mt test_previewRepayShares_withInterest_fuzz
+    */
+    /// forge-config: core.fuzz.runs = 10000
+    function test_previewRepayShares_withInterest_fuzz(uint128 _assets) public {
+        _previewRepay_withInterest(_assets, true);
+    }
+
+    function _previewRepay_noInterestNoDebt(uint128 _assetsOrShares, bool _useShares) internal {
+        vm.assume(_assetsOrShares > 0);
+
+        // preview before debt creation
+        uint256 preview = _useShares ? silo1.previewRepayShares(_assetsOrShares) : silo1.previewRepay(_assetsOrShares);
+
+        _createDebt(_assetsOrShares, borrower);
+
+        assertEq(preview, _assetsOrShares, "previewRepay == assets == shares, when no interest");
+
+        _assertPreviewRepay(preview, _assetsOrShares, _useShares);
+    }
+
+    function _previewRepay_noInterest(uint128 _assetsOrShares, bool _useShares) internal {
+        vm.assume(_assetsOrShares > 0);
+
+        _createDebt(_assetsOrShares, borrower);
+
+        uint256 preview = _useShares ? silo1.previewRepayShares(_assetsOrShares) : silo1.previewRepay(_assetsOrShares);
+
+        assertEq(preview, _assetsOrShares, "previewRepay == assets == shares, when no interest");
+
+        _assertPreviewRepay(preview, _assetsOrShares, _useShares);
+    }
+
+    function _previewRepay_withInterest(uint128 _assetsOrShares, bool _useShares) internal {
+        vm.assume(_assetsOrShares > 0);
+
+        _createDebt(_assetsOrShares, borrower);
         vm.warp(block.timestamp + 100 days);
 
-        uint256 sharesToRepay = silo1.previewRepay(_assets);
-        vm.assume(sharesToRepay > 0);
+        uint256 preview = _useShares ? silo1.previewRepayShares(_assetsOrShares) : silo1.previewRepay(_assetsOrShares);
 
-        assertLe(sharesToRepay, _assets, "when assets includes interest, shares amount can be lower");
+        _assertPreviewRepay(preview, _assetsOrShares, _useShares);
+    }
 
-        uint256 returnedShares = _repay(_assets, borrower);
-        assertEq(returnedShares, sharesToRepay, "preview should give us exact assets");
+    function _assertPreviewRepay(uint256 _preview, uint128 _assetsOrShares, bool _useShares) internal {
+        vm.assume(_preview > 0);
+
+        uint256 repayResult = _useShares
+            ? _repayShares(type(uint256).max, _assetsOrShares, borrower)
+            : _repay(_assetsOrShares, borrower);
+
+        assertGt(repayResult, 0, "expect any repay amount > 0");
+
+        assertEq(repayResult, _preview, "preview should give us exact repay result");
     }
 
     function _createInterest() internal {
