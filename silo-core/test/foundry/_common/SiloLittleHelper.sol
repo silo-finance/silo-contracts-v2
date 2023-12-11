@@ -111,9 +111,9 @@ abstract contract SiloLittleHelper is CommonBase {
         }
     }
 
-    function _createDebt(uint256 _amount, address _borrower) internal returns (uint256 debtShares){
+    function _createDebt(uint128 _amount, address _borrower) internal returns (uint256 debtShares){
         _depositForBorrow(_amount, address(0x987654321));
-        _deposit(_amount * 2, _borrower);
+        _deposit(uint256(_amount) * 2, _borrower);
         debtShares = _borrow(_amount, _borrower);
     }
 

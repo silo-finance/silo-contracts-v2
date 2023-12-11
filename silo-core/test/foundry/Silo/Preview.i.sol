@@ -236,53 +236,55 @@ contract PreviewTest is SiloLittleHelper, Test {
     forge test -vv --ffi --mt test_previewRepay_noInterestNoDebt
     */
     /// forge-config: core.fuzz.runs = 10000
-    function test_previewRepay_noInterestNoDebt_fuzz(uint256 _assets) public {
-        vm.assume(_assets < type(uint128).max);
-        vm.assume(_assets > 10);
+    function test_previewRepay_noInterestNoDebt_fuzz(uint128 _assets) public {
+        vm.assume(_assets > 0);
 
+        // preview before debt creation
         uint256 sharesToRepay = silo1.previewRepay(_assets);
 
         _createDebt(_assets, borrower);
 
         assertEq(sharesToRepay, _assets, "previewRepay == assets == shares");
 
-        uint256 returnedAssets = _repayShares(_assets, sharesToRepay, borrower);
-        assertEq(returnedAssets, _assets, "preview should give us exact assets");
+        uint256 returnedShares = _repay(_assets, borrower);
+        assertEq(returnedShares, sharesToRepay, "preview should give us exact assets");
     }
 
     /*
-    forge test -vv --ffi --mt test_previewRepay_noInterest
+    forge test -vv --ffi --mt test_previewRepay_noInterest_fuzz
     */
     /// forge-config: core.fuzz.runs = 10000
-    function test_previewRepay_noInterest_fuzz(uint256 _assets) public {
-        vm.assume(_assets < type(uint128).max);
-        vm.assume(_assets > 10);
+    function test_previewRepay_noInterest_fuzz(uint128 _assets) public {
+        vm.assume(_assets > 0);
 
         _createDebt(_assets, borrower);
 
         uint256 sharesToRepay = silo1.previewRepay(_assets);
+        vm.assume(sharesToRepay > 0);
+
         assertEq(sharesToRepay, _assets, "previewRepay == assets == shares");
 
-        uint256 returnedAssets = _repayShares(_assets, sharesToRepay, borrower);
-        assertEq(returnedAssets, _assets, "preview should give us exact assets");
+        uint256 returnedShares = _repay(_assets, borrower);
+        assertEq(returnedShares, sharesToRepay, "preview should give us exact assets");
     }
 
     /*
-    forge test -vv --ffi --mt test_previewRepay_withInterest
+    forge test -vv --ffi --mt test_previewRepay_withInterest_fuzz
     */
     /// forge-config: core.fuzz.runs = 10000
-    function test_previewRepay_withInterest_fuzz(uint256 _assets) public {
-        vm.assume(_assets < type(uint128).max);
-        vm.assume(_assets > 10);
+    function test_previewRepay_withInterest_fuzz(uint128 _assets) public {
+        vm.assume(_assets > 0);
 
         _createDebt(_assets, borrower);
-        vm.warp(block.timestamp + 1 days);
+        vm.warp(block.timestamp + 100 days);
 
         uint256 sharesToRepay = silo1.previewRepay(_assets);
+        vm.assume(sharesToRepay > 0);
+
         assertLe(sharesToRepay, _assets, "when assets includes interest, shares amount can be lower");
 
-        uint256 returnedAssets = _repayShares(_assets, sharesToRepay, borrower);
-        assertEq(returnedAssets, _assets, "preview should give us exact assets");
+        uint256 returnedShares = _repay(_assets, borrower);
+        assertEq(returnedShares, sharesToRepay, "preview should give us exact assets");
     }
 
     function _createInterest() internal {
