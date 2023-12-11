@@ -241,7 +241,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
             _getTotalAssetsAndTotalSharesWithInterest(AssetType.Collateral);
 
         return SiloMathLib.convertToAssets(
-            _shares, totalSiloAssets, totalShares, MathUpgradeable.Rounding.Down, AssetType.Collateral
+            _shares, totalSiloAssets, totalShares, MathUpgradeable.Rounding.Up, AssetType.Collateral
         );
     }
 
