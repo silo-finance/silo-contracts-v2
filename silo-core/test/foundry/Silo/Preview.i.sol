@@ -171,7 +171,7 @@ contract PreviewTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --ffi --mt test_previewBorrow_zero
+    forge test -vv --ffi --mt test_previewBorrow_zero_fuzz
     */
     /// forge-config: core.fuzz.runs = 10000
     function test_previewBorrow_zero_fuzz(uint256 _assets) public {
@@ -179,39 +179,33 @@ contract PreviewTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --ffi --mt test_previewBorrow_beforeInterest
+    forge test -vv --ffi --mt test_previewBorrow_beforeInterest_fuzz
     */
     /// forge-config: core.fuzz.runs = 10000
-    function test_previewBorrow_beforeInterest_fuzz(uint256 _assets) public {
-        vm.assume(_assets < type(uint128).max);
+    function test_previewBorrow_beforeInterest_fuzz(uint128 _assets) public {
         vm.assume(_assets > 0);
 
         uint256 assetsToBorrow = _assets / 10;
 
+        // can be 0 if _assets < 10
         if (assetsToBorrow == 0) {
             _assets = 3;
             assetsToBorrow = 1;
         }
 
-        address somebody = makeAddr("Somebody");
-
-        _deposit(_assets, borrower);
-
-        // deposit to both silos
-        _deposit(_assets, somebody);
-        _depositForBorrow(_assets, somebody);
+        _createBorrowCase(_assets);
 
         uint256 previewBorrowShares = silo1.previewBorrow(assetsToBorrow);
-        assertEq(previewBorrowShares, assetsToBorrow, "previewBorrow shares");
-        assertEq(previewBorrowShares, _borrow(assetsToBorrow, borrower), "previewBorrow");
+
+        assertEq(previewBorrowShares, assetsToBorrow, "previewBorrow shares are exact as amount when no interest");
+        assertEq(previewBorrowShares, _borrow(assetsToBorrow, borrower), "previewBorrow - expect exact match");
     }
 
     /*
     forge test -vv --ffi --mt test_previewBorrow_withInterest
     */
     /// forge-config: core.fuzz.runs = 10000
-    function test_previewBorrow_withInterest_fuzz(uint256 _assets) public {
-        vm.assume(_assets < type(uint128).max);
+    function test_previewBorrow_withInterest_fuzz(uint128 _assets) public {
         vm.assume(_assets > 0);
 
         uint256 assetsToBorrow = _assets / 10;
@@ -221,21 +215,21 @@ contract PreviewTest is SiloLittleHelper, Test {
             assetsToBorrow = 1;
         }
 
-        address somebody = makeAddr("Somebody");
-
-        _deposit(_assets, borrower);
-
-        // deposit to both silos
-        _deposit(_assets, somebody);
-        _depositForBorrow(_assets, somebody);
+        _createBorrowCase(_assets);
 
         uint256 sharesBefore = _borrow(assetsToBorrow, borrower);
 
         vm.warp(block.timestamp + 365 days);
 
         uint256 previewBorrowShares = silo1.previewBorrow(assetsToBorrow);
+
+        assertGe(
+            sharesBefore,
+            previewBorrowShares,
+            "shares before interest will always be eq or more, than result with interest, because with interest there is higher total"
+        );
+
         assertEq(previewBorrowShares, _borrow(assetsToBorrow, borrower), "previewBorrow after accrueInterest");
-        assertLe(previewBorrowShares, sharesBefore, "shares before interest can not be higher for same borrow amount");
     }
 
     /*
@@ -304,6 +298,16 @@ contract PreviewTest is SiloLittleHelper, Test {
 
         silo0.accrueInterest();
         silo1.accrueInterest();
+    }
+
+    function _createBorrowCase(uint128 _assets) internal {
+        address somebody = makeAddr("Somebody");
+
+        _deposit(_assets, borrower);
+
+        // deposit to both silos
+        _deposit(_assets, somebody);
+        _depositForBorrow(_assets, somebody);
     }
 
     function _previewMint_afterNoInterest(
