@@ -32,66 +32,39 @@ contract PreviewTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_previewDeposit_beforeInterest
     */
-    /// forge-config: core.fuzz.runs = 1000
+    /// forge-config: core.fuzz.runs = 10000
     function test_previewDeposit_beforeInterest_fuzz(uint256 _assets) public {
-        vm.assume(_assets > 0);
-
-        uint256 previewShares = silo0.previewDeposit(_assets);
-        uint256 shares = _deposit(_assets, depositor);
-        assertEq(previewShares, shares, "previewDeposit");
+        _previewDeposit_beforeInterest(_assets, true, uint8(ISilo.AssetType.Collateral));
     }
 
     /*
-    forge test -vv --ffi --mt test_previewMint_beforeInterest
+    forge test -vv --ffi --mt test_previewDepositType_beforeInterest_fuzz
     */
-    /// forge-config: core.fuzz.runs = 1000
-    function test_previewMint_beforeInterest_fuzz(uint256 _shares) public {
-        vm.assume(_shares > 0);
-
-        _assertPreviewMint(_shares);
+    /// forge-config: core.fuzz.runs = 10000
+    function test_previewDepositType_beforeInterest_fuzz(uint256 _assets, uint8 _type) public {
+        _previewDeposit_beforeInterest(_assets, false, _type);
     }
 
     /*
     forge test -vv --ffi --mt test_previewDeposit_afterNoInterest
     */
-    /// forge-config: core.fuzz.runs = 1000
-    function test_previewDeposit_afterNoInterest_fuzz(uint256 _assets) public {
-        vm.assume(_assets > 0);
-        vm.assume(_assets < type(uint128).max);
-
-        uint256 sharesBefore = _deposit(_assets, depositor);
-
-        vm.warp(block.timestamp + 365 days);
-        silo0.accrueInterest();
-
-        uint256 previewShares = silo0.previewDeposit(_assets);
-        assertEq(previewShares, _deposit(_assets, depositor), "previewDeposit");
-        assertEq(previewShares, sharesBefore, "without interest shares are the same");
+    /// forge-config: core.fuzz.runs = 10000
+    function test_previewDeposit_afterNoInterest_fuzz(uint128 _assets) public {
+        _previewDeposit_afterNoInterest_(_assets, true, uint8(ISilo.AssetType.Collateral));
     }
 
     /*
-    forge test -vv --ffi --mt test_previewMint_afterNoInterest
+    forge test -vv --ffi --mt test_previewDepositType_afterNoInterest_fuzz
     */
-    /// forge-config: core.fuzz.runs = 1000
-    function test_previewMint_afterNoInterest_fuzz(uint256 _depositAmount, uint256 _shares) public {
-        vm.assume(_depositAmount < type(uint128).max);
-        vm.assume(_depositAmount > 0);
-        vm.assume(_shares < type(uint128).max);
-        vm.assume(_shares > 0);
-
-        // deposit something
-        _deposit(_depositAmount, makeAddr("any"));
-
-        vm.warp(block.timestamp + 365 days);
-        silo0.accrueInterest();
-
-        _assertPreviewMint(_shares);
+    /// forge-config: core.fuzz.runs = 10000
+    function test_previewDepositType_afterNoInterest_fuzz(uint128 _assets, uint8 _type) public {
+        _previewDeposit_afterNoInterest_(_assets, false, _type);
     }
 
     /*
     forge test -vv --ffi --mt test_previewDeposit_withInterest
     */
-    /// forge-config: core.fuzz.runs = 1000
+    /// forge-config: core.fuzz.runs = 10000
     function test_previewDeposit_withInterest_fuzz(uint256 _assets) public {
         vm.assume(_assets < type(uint128).max);
         vm.assume(_assets > 0);
@@ -107,8 +80,17 @@ contract PreviewTest is SiloLittleHelper, Test {
         uint256 previewShares0 = silo0.previewDeposit(_assets);
         uint256 previewShares1 = silo1.previewDeposit(_assets);
 
-        assertLe(previewShares1, previewShares0, "you can get less shares on silo1 because we have interests here");
-        assertEq(previewShares1, _depositForBorrow(_assets, depositor), "previewDeposit with interest on the fly");
+        assertLe(
+            previewShares1,
+            previewShares0,
+            "you can get less shares on silo1 than on silo0, because we have interests here"
+        );
+
+        assertEq(
+            previewShares1,
+            _depositForBorrow(_assets, depositor),
+            "previewDeposit with interest on the fly - must be as close but NOT more"
+        );
 
         silo0.accrueInterest();
         silo1.accrueInterest();
@@ -116,14 +98,50 @@ contract PreviewTest is SiloLittleHelper, Test {
         assertEq(sharesBefore, silo0.previewDeposit(_assets), "no interest in silo0, so preview should be the same");
 
         previewShares1 = silo1.previewDeposit(_assets);
+
         assertLe(previewShares1, _assets, "with interests, we can receive less shares than assets amount");
-        assertEq(previewShares1, _depositForBorrow(_assets, depositor), "previewDeposit after accrueInterest()");
+
+        assertEq(
+            previewShares1,
+            _depositForBorrow(_assets, depositor),
+            "previewDeposit after accrueInterest() - as close, but NOT more"
+        );
     }
+
+    /*
+    forge test -vv --ffi --mt test_previewMint_beforeInterest
+    */
+    /// forge-config: core.fuzz.runs = 10000
+    function test_previewMint_beforeInterest_fuzz(uint256 _shares) public {
+        vm.assume(_shares > 0);
+
+        _assertPreviewMint(_shares);
+    }
+
+    /*
+    forge test -vv --ffi --mt test_previewMint_afterNoInterest
+    */
+    /// forge-config: core.fuzz.runs = 10000
+    function test_previewMint_afterNoInterest_fuzz(uint256 _depositAmount, uint256 _shares) public {
+        vm.assume(_depositAmount < type(uint128).max);
+        vm.assume(_depositAmount > 0);
+        vm.assume(_shares < type(uint128).max);
+        vm.assume(_shares > 0);
+
+        // deposit something
+        _deposit(_depositAmount, makeAddr("any"));
+
+        vm.warp(block.timestamp + 365 days);
+        silo0.accrueInterest();
+
+        _assertPreviewMint(_shares);
+    }
+
 
     /*
     forge test -vv --ffi --mt test_previewMint_withInterest
     */
-    /// forge-config: core.fuzz.runs = 1000
+    /// forge-config: core.fuzz.runs = 10000
     function test_previewMint_withInterest_fuzz(uint256 _shares) public {
         vm.assume(_shares < type(uint128).max);
         vm.assume(_shares > 0);
@@ -136,7 +154,7 @@ contract PreviewTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_previewBorrow_zero
     */
-    /// forge-config: core.fuzz.runs = 1000
+    /// forge-config: core.fuzz.runs = 10000
     function test_previewBorrow_zero_fuzz(uint256 _assets) public {
         assertEq(_assets, silo0.previewBorrow(_assets));
     }
@@ -144,7 +162,7 @@ contract PreviewTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_previewBorrow_beforeInterest
     */
-    /// forge-config: core.fuzz.runs = 1000
+    /// forge-config: core.fuzz.runs = 10000
     function test_previewBorrow_beforeInterest_fuzz(uint256 _assets) public {
         vm.assume(_assets < type(uint128).max);
         vm.assume(_assets > 0);
@@ -172,7 +190,7 @@ contract PreviewTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_previewBorrow_withInterest
     */
-    /// forge-config: core.fuzz.runs = 1000
+    /// forge-config: core.fuzz.runs = 10000
     function test_previewBorrow_withInterest_fuzz(uint256 _assets) public {
         vm.assume(_assets < type(uint128).max);
         vm.assume(_assets > 0);
@@ -204,7 +222,7 @@ contract PreviewTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_previewRepay_noInterestNoDebt
     */
-    /// forge-config: core.fuzz.runs = 1000
+    /// forge-config: core.fuzz.runs = 10000
     function test_previewRepay_noInterestNoDebt_fuzz(uint256 _assets) public {
         vm.assume(_assets < type(uint128).max);
         vm.assume(_assets > 10);
@@ -222,7 +240,7 @@ contract PreviewTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_previewRepay_noInterest
     */
-    /// forge-config: core.fuzz.runs = 1000
+    /// forge-config: core.fuzz.runs = 10000
     function test_previewRepay_noInterest_fuzz(uint256 _assets) public {
         vm.assume(_assets < type(uint128).max);
         vm.assume(_assets > 10);
@@ -239,7 +257,7 @@ contract PreviewTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_previewRepay_withInterest
     */
-    /// forge-config: core.fuzz.runs = 1000
+    /// forge-config: core.fuzz.runs = 10000
     function test_previewRepay_withInterest_fuzz(uint256 _assets) public {
         vm.assume(_assets < type(uint128).max);
         vm.assume(_assets > 10);
@@ -280,5 +298,43 @@ contract PreviewTest is SiloLittleHelper, Test {
         uint256 depositedAssets = silo0.mint(_shares, depositor);
 
         assertEq(depositedAssets, previewMint, "previewMint == depositedAssets");
+    }
+
+    function _previewDeposit_beforeInterest(uint256 _assets, bool _defaultType, uint8 _type) internal {
+        vm.assume(_assets > 0);
+        vm.assume(_type == 0 || _type == 1);
+
+        uint256 previewShares = _defaultType
+            ? silo0.previewDeposit(_assets)
+            : silo0.previewDeposit(_assets, ISilo.AssetType(_type));
+
+        uint256 shares = _defaultType
+            ? _deposit(_assets, depositor)
+            : _deposit(_assets, depositor, ISilo.AssetType(_type));
+
+        assertEq(previewShares, shares, "previewDeposit must return as close but NOT more");
+    }
+
+    function _previewDeposit_afterNoInterest_(uint128 _assets, bool _defaultType, uint8 _type) internal {
+        vm.assume(_assets > 0);
+        vm.assume(_type == 0 || _type == 1);
+
+        uint256 sharesBefore = _defaultType
+            ? _deposit(_assets, depositor)
+            : _deposit(_assets, depositor, ISilo.AssetType(_type));
+
+        vm.warp(block.timestamp + 365 days);
+        silo0.accrueInterest();
+
+        uint256 previewShares = _defaultType
+            ? silo0.previewDeposit(_assets)
+            : silo0.previewDeposit(_assets, ISilo.AssetType(_type));
+
+        uint256 gotShares = _defaultType
+            ? _deposit(_assets, depositor)
+            : _deposit(_assets, depositor, ISilo.AssetType(_type));
+
+        assertEq(previewShares, gotShares, "previewDeposit must return as close but NOT more");
+        assertEq(previewShares, sharesBefore, "without interest shares must be the same");
     }
 }
