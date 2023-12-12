@@ -133,62 +133,58 @@ contract PreviewTest is SiloLittleHelper, Test {
     forge test -vv --ffi --mt test_previewBorrow_zero_fuzz
     */
     /// forge-config: core.fuzz.runs = 10000
-    function test_previewBorrow_zero_fuzz(uint256 _assets) public {
-        assertEq(silo0.previewBorrow(_assets), _assets);
+    function test_previewBorrow_zero_fuzz(uint256 _assets, bool _useShares) public {
+        assertEq(_useShares ? silo0.previewBorrowShares(_assets) : silo0.previewBorrow(_assets), _assets);
     }
 
     /*
     forge test -vv --ffi --mt test_previewBorrow_beforeInterest_fuzz
     */
     /// forge-config: core.fuzz.runs = 10000
-    function test_previewBorrow_beforeInterest_fuzz(uint128 _assets) public {
-        vm.assume(_assets > 0);
-
-        uint256 assetsToBorrow = _assets / 10;
+    function test_previewBorrow_beforeInterest_fuzz(uint128 _assets, bool _useShares) public {
+        uint256 assetsOrSharesToBorrow = _assets / 10 + (_assets % 2); // keep even/odd
+        vm.assume(assetsOrSharesToBorrow < _assets);
 
         // can be 0 if _assets < 10
-        if (assetsToBorrow == 0) {
+        if (assetsOrSharesToBorrow == 0) {
             _assets = 3;
-            assetsToBorrow = 1;
+            assetsOrSharesToBorrow = 1;
         }
 
         _createBorrowCase(_assets);
 
-        uint256 previewBorrowShares = silo1.previewBorrow(assetsToBorrow);
+        uint256 preview = _useShares ? silo1.previewBorrowShares(assetsOrSharesToBorrow) : silo1.previewBorrow(assetsOrSharesToBorrow);
+        uint256 result = _useShares ? _borrow(assetsOrSharesToBorrow, borrower) : _borrowShares(assetsOrSharesToBorrow, borrower);
 
-        assertEq(previewBorrowShares, assetsToBorrow, "previewBorrow shares are exact as amount when no interest");
-        assertEq(previewBorrowShares, _borrow(assetsToBorrow, borrower), "previewBorrow - expect exact match");
+        assertEq(preview, assetsOrSharesToBorrow, "previewBorrow shares are exact as amount when no interest");
+        assertEq(preview, result, "previewBorrow - expect exact match");
     }
 
     /*
     forge test -vv --ffi --mt test_previewBorrow_withInterest
     */
     /// forge-config: core.fuzz.runs = 10000
-    function test_previewBorrow_withInterest_fuzz(uint128 _assets) public {
-        vm.assume(_assets > 0);
+    function test_previewBorrow_withInterest_fuzz(uint128 _assets, bool _useShares) public {
+        uint256 assetsOrSharesToBorrow = _assets / 10 + (_assets % 2); // keep even/odd
+        vm.assume(assetsOrSharesToBorrow < _assets);
 
-        uint256 assetsToBorrow = _assets / 10;
-
-        if (assetsToBorrow == 0) {
+        if (assetsOrSharesToBorrow == 0) {
             _assets = 3;
-            assetsToBorrow = 1;
+            assetsOrSharesToBorrow = 1;
         }
 
         _createBorrowCase(_assets);
 
-        uint256 sharesBefore = _borrow(assetsToBorrow, borrower);
-
         vm.warp(block.timestamp + 365 days);
 
-        uint256 previewBorrowShares = silo1.previewBorrow(assetsToBorrow);
+        uint256 preview = _useShares ? silo1.previewBorrowShares(assetsOrSharesToBorrow) : silo1.previewBorrow(assetsOrSharesToBorrow);
+        uint256 result = _useShares ? _borrowShares(assetsOrSharesToBorrow, borrower) : _borrow(assetsOrSharesToBorrow, borrower);
 
-        assertGe(
-            sharesBefore,
-            previewBorrowShares,
-            "shares before interest will always be eq or more, than result with interest, because with interest there is higher total"
+        assertEq(
+            preview,
+            result,
+            string.concat(_useShares ? "[shares]" : "[assets]", " previewBorrow - expect exact match")
         );
-
-        assertEq(previewBorrowShares, _borrow(assetsToBorrow, borrower), "previewBorrow after accrueInterest");
     }
 
     /*
