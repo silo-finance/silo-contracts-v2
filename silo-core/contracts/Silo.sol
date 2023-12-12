@@ -214,7 +214,13 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
     }
 
     /// @inheritdoc IERC4626
-    function deposit(uint256 _assets, address _receiver) external virtual nonReentrant returns (uint256 shares) {
+    function deposit(uint256 _assets, address _receiver)
+        external
+        virtual
+        nonReentrant
+        leverageNonReentrant
+        returns (uint256 shares)
+    {
         if (_assets == 0) revert ISilo.ZeroAssets();
 
         (, ISiloConfig.ConfigData memory configData) = _accrueInterest();
