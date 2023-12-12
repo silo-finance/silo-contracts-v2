@@ -334,7 +334,11 @@ contract PreviewTest is SiloLittleHelper, Test {
 
         assertGt(repayResult, 0, "expect any repay amount > 0");
 
-        assertEq(_preview, repayResult, "preview should give us exact repay result");
+        assertEq(
+            _preview,
+            repayResult,
+            string.concat(_useShares ? "[shares]" : "[amount]", " preview should give us exact repay result")
+        );
     }
 
     function _assertPreviewWithdraw(uint256 _preview, uint128 _assetsOrShares, bool _useRedeem) internal {
