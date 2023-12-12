@@ -35,15 +35,45 @@ contract PreviewTest is SiloLittleHelper, Test {
     */
     /// forge-config: core.fuzz.runs = 10000
     function test_previewDeposit_beforeInterest_fuzz(uint256 _assets, bool _defaultType, uint8 _type) public {
-        _previewDeposit_beforeInterest(_assets, _defaultType, _type);
+        vm.assume(_assets > 0);
+        vm.assume(_type == 0 || _type == 1);
+
+        uint256 previewShares = _defaultType
+            ? silo0.previewDeposit(_assets)
+            : silo0.previewDeposit(_assets, ISilo.AssetType(_type));
+
+        uint256 shares = _defaultType
+            ? _deposit(_assets, depositor)
+            : _deposit(_assets, depositor, ISilo.AssetType(_type));
+
+        assertEq(previewShares, shares, "previewDeposit must return as close but NOT more");
     }
 
     /*
     forge test -vv --ffi --mt test_previewDeposit_afterNoInterest
     */
     /// forge-config: core.fuzz.runs = 10000
-    function test_previewDeposit_afterNoInterest_fuzz(uint128 _assets, bool _defaultType) public {
-        _previewDeposit_afterNoInterest_(_assets, _defaultType, uint8(ISilo.AssetType.Collateral));
+    function test_previewDeposit_afterNoInterest_fuzz(uint128 _assets, bool _defaultType, uint8 _type) public {
+        vm.assume(_assets > 0);
+        vm.assume(_type == 0 || _type == 1);
+
+        uint256 sharesBefore = _defaultType
+            ? _deposit(_assets, depositor)
+            : _deposit(_assets, depositor, ISilo.AssetType(_type));
+
+        vm.warp(block.timestamp + 365 days);
+        silo0.accrueInterest();
+
+        uint256 previewShares = _defaultType
+            ? silo0.previewDeposit(_assets)
+            : silo0.previewDeposit(_assets, ISilo.AssetType(_type));
+
+        uint256 gotShares = _defaultType
+            ? _deposit(_assets, depositor)
+            : _deposit(_assets, depositor, ISilo.AssetType(_type));
+
+        assertEq(previewShares, gotShares, "previewDeposit must return as close but NOT more");
+        assertEq(previewShares, sharesBefore, "without interest shares must be the same");
     }
 
     /*
@@ -191,51 +221,58 @@ contract PreviewTest is SiloLittleHelper, Test {
     forge test -vv --ffi --mt test_previewRepay_noInterestNoDebt_fuzz
     */
     /// forge-config: core.fuzz.runs = 10000
-    function test_previewRepay_noInterestNoDebt_fuzz(uint128 _assets, bool _useShares, bool _repayFull) public {
-        _previewRepay_noInterestNoDebt(_assets, _useShares, _repayFull);
+    function test_previewRepay_noInterestNoDebt_fuzz(uint128 _assetsOrShares, bool _useShares, bool _repayFull) public {
+        uint128 amountToUse = _repayFull ? _assetsOrShares : uint128(uint256(_assetsOrShares) * 37 / 100);
+        vm.assume(amountToUse > 0);
+
+        // preview before debt creation
+        uint256 preview = _useShares ? silo1.previewRepayShares(amountToUse) : silo1.previewRepay(amountToUse);
+
+        _createDebt(_assetsOrShares, borrower);
+
+        assertEq(preview, amountToUse, "previewRepay == assets == shares, when no interest");
+
+        _assertPreviewRepay(preview, amountToUse, _useShares);
     }
 
     /*
     forge test -vv --ffi --mt test_previewRepayShares_noInterest_fuzz
     */
     /// forge-config: core.fuzz.runs = 10000
-    function test_previewRepay_noInterest_fuzz(uint128 _assets, bool _useShares, bool _repayFull) public {
-        _previewRepay_noInterest(_assets, _useShares, _repayFull);
+    function test_previewRepay_noInterest_fuzz(uint128 _assetsOrShares, bool _useShares, bool _repayFull) public {
+        uint128 amountToUse = _repayFull ? _assetsOrShares : uint128(uint256(_assetsOrShares) * 37 / 100);
+        vm.assume(amountToUse > 0);
+
+        _createDebt(_assetsOrShares, borrower);
+
+        uint256 preview = _useShares ? silo1.previewRepayShares(amountToUse) : silo1.previewRepay(amountToUse);
+
+        assertEq(preview, amountToUse, "previewRepay == assets == shares, when no interest");
+
+        _assertPreviewRepay(preview, amountToUse, _useShares);
     }
 
     /*
     forge test -vv --ffi --mt test_previewRepay_withInterest_fuzz
     */
     /// forge-config: core.fuzz.runs = 10000
-    function test_previewRepay_withInterest_fuzz(uint128 _assets, bool _useShares, bool _repayFull) public {
-        _previewRepay_withInterest(_assets, _useShares, _repayFull);
+    function test_previewRepay_withInterest_fuzz(uint128 _assetsOrShares, bool _useShares, bool _repayFull) public {
+        uint128 amountToUse = _repayFull ? _assetsOrShares : uint128(uint256(_assetsOrShares) * 37 / 100);
+        vm.assume(amountToUse > 0);
+
+        _createDebt(_assetsOrShares, borrower);
+        vm.warp(block.timestamp + 100 days);
+
+        uint256 preview = _useShares ? silo1.previewRepayShares(amountToUse) : silo1.previewRepay(amountToUse);
+
+        _assertPreviewRepay(preview, amountToUse, _useShares);
     }
 
     /*
     forge test -vv --ffi --mt test_previewWithdraw_noInterestNoDebt_fuzz
     */
     /// forge-config: core.fuzz.runs = 10000
-    function test_previewWithdraw_noInterestNoDebt_fuzz(uint128 _assets, bool _doRedeem, bool _partial) public {
-        _previewWithdraw_noInterestNoDebt(_assets, _doRedeem, _partial);
-    }
-
-    /*
-    forge test -vv --ffi --mt test_previewWithdraw_noDebt_fuzz
-    */
-    /// forge-config: core.fuzz.runs = 10000
-    function test_previewWithdraw_noDebt_fuzz(uint128 _assets, bool _doRedeem, bool _partial) public {
-        _previewWithdraw_depositNoInterest(_assets, _doRedeem, _partial);
-    }
-
-    /*
-    forge test -vv --ffi --mt test_previewWithdraw_debt_fuzz
-    */
-    /// forge-config: core.fuzz.runs = 10000
-    function test_previewWithdraw_debt_fuzz(uint128 _assets, bool _doRedeem, bool _interest, bool _partial) public {
-        _previewWithdraw_debt(_assets, _doRedeem, _interest, _partial);
-    }
-
-    function _previewWithdraw_noInterestNoDebt(uint128 _assetsOrShares, bool _doRedeem, bool _partial) internal {
+    function test_previewWithdraw_noInterestNoDebt_fuzz(uint128 _assetsOrShares, bool _doRedeem, bool _partial) public {
         uint128 amountToUse = _partial ? uint128(uint256(_assetsOrShares) * 37 / 100) : _assetsOrShares;
         vm.assume(amountToUse > 0);
 
@@ -249,7 +286,11 @@ contract PreviewTest is SiloLittleHelper, Test {
         _assertPreviewWithdraw(preview, amountToUse, _doRedeem);
     }
 
-    function _previewWithdraw_depositNoInterest(uint128 _assetsOrShares, bool _doRedeem, bool _partial) internal {
+    /*
+    forge test -vv --ffi --mt test_previewWithdraw_noDebt_fuzz
+    */
+    /// forge-config: core.fuzz.runs = 10000
+    function test_previewWithdraw_noDebt_fuzz(uint128 _assetsOrShares, bool _doRedeem, bool _partial) public {
         uint128 amountToUse = _partial ? uint128(uint256(_assetsOrShares) * 37 / 100) : _assetsOrShares;
         vm.assume(amountToUse > 0);
 
@@ -262,7 +303,11 @@ contract PreviewTest is SiloLittleHelper, Test {
         _assertPreviewWithdraw(preview, amountToUse, _doRedeem);
     }
 
-    function _previewWithdraw_debt(uint128 _assetsOrShares, bool _doRedeem, bool _interest, bool _partial) internal {
+    /*
+    forge test -vv --ffi --mt test_previewWithdraw_debt_fuzz
+    */
+    /// forge-config: core.fuzz.runs = 10000
+    function test_previewWithdraw_debt_fuzz(uint128 _assetsOrShares, bool _doRedeem, bool _interest, bool _partial) public {
         uint128 amountToUse = _partial ? uint128(uint256(_assetsOrShares) * 37 / 100) : _assetsOrShares;
         vm.assume(amountToUse > 0);
 
@@ -280,45 +325,6 @@ contract PreviewTest is SiloLittleHelper, Test {
         if (!_interest) assertEq(preview, amountToUse, "previewWithdraw == assets == shares, when no interest");
 
         _assertPreviewWithdraw(preview, amountToUse, _doRedeem);
-    }
-
-    function _previewRepay_noInterestNoDebt(uint128 _assetsOrShares, bool _useShares, bool _repayFull) internal {
-        uint128 amountToUse = _repayFull ? _assetsOrShares : uint128(uint256(_assetsOrShares) * 37 / 100);
-        vm.assume(amountToUse > 0);
-
-        // preview before debt creation
-        uint256 preview = _useShares ? silo1.previewRepayShares(amountToUse) : silo1.previewRepay(amountToUse);
-
-        _createDebt(_assetsOrShares, borrower);
-
-        assertEq(preview, amountToUse, "previewRepay == assets == shares, when no interest");
-
-        _assertPreviewRepay(preview, amountToUse, _useShares);
-    }
-
-    function _previewRepay_noInterest(uint128 _assetsOrShares, bool _useShares, bool _repayFull) internal {
-        uint128 amountToUse = _repayFull ? _assetsOrShares : uint128(uint256(_assetsOrShares) * 37 / 100);
-        vm.assume(amountToUse > 0);
-
-        _createDebt(_assetsOrShares, borrower);
-
-        uint256 preview = _useShares ? silo1.previewRepayShares(amountToUse) : silo1.previewRepay(amountToUse);
-
-        assertEq(preview, amountToUse, "previewRepay == assets == shares, when no interest");
-
-        _assertPreviewRepay(preview, amountToUse, _useShares);
-    }
-
-    function _previewRepay_withInterest(uint128 _assetsOrShares, bool _useShares, bool _repayFull) internal {
-        uint128 amountToUse = _repayFull ? _assetsOrShares : uint128(uint256(_assetsOrShares) * 37 / 100);
-        vm.assume(amountToUse > 0);
-
-        _createDebt(_assetsOrShares, borrower);
-        vm.warp(block.timestamp + 100 days);
-
-        uint256 preview = _useShares ? silo1.previewRepayShares(amountToUse) : silo1.previewRepay(amountToUse);
-
-        _assertPreviewRepay(preview, amountToUse, _useShares);
     }
 
     function _assertPreviewRepay(uint256 _preview, uint128 _assetsOrShares, bool _useShares) internal {
@@ -412,43 +418,5 @@ contract PreviewTest is SiloLittleHelper, Test {
             : silo0.mint(_shares, depositor, ISilo.AssetType(_type));
 
         assertEq(previewMint, depositedAssets, "previewMint == depositedAssets, NOT fewer");
-    }
-
-    function _previewDeposit_beforeInterest(uint256 _assets, bool _defaultType, uint8 _type) internal {
-        vm.assume(_assets > 0);
-        vm.assume(_type == 0 || _type == 1);
-
-        uint256 previewShares = _defaultType
-            ? silo0.previewDeposit(_assets)
-            : silo0.previewDeposit(_assets, ISilo.AssetType(_type));
-
-        uint256 shares = _defaultType
-            ? _deposit(_assets, depositor)
-            : _deposit(_assets, depositor, ISilo.AssetType(_type));
-
-        assertEq(previewShares, shares, "previewDeposit must return as close but NOT more");
-    }
-
-    function _previewDeposit_afterNoInterest_(uint128 _assets, bool _defaultType, uint8 _type) internal {
-        vm.assume(_assets > 0);
-        vm.assume(_type == 0 || _type == 1);
-
-        uint256 sharesBefore = _defaultType
-            ? _deposit(_assets, depositor)
-            : _deposit(_assets, depositor, ISilo.AssetType(_type));
-
-        vm.warp(block.timestamp + 365 days);
-        silo0.accrueInterest();
-
-        uint256 previewShares = _defaultType
-            ? silo0.previewDeposit(_assets)
-            : silo0.previewDeposit(_assets, ISilo.AssetType(_type));
-
-        uint256 gotShares = _defaultType
-            ? _deposit(_assets, depositor)
-            : _deposit(_assets, depositor, ISilo.AssetType(_type));
-
-        assertEq(previewShares, gotShares, "previewDeposit must return as close but NOT more");
-        assertEq(previewShares, sharesBefore, "without interest shares must be the same");
     }
 }
