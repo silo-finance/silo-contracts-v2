@@ -6,12 +6,14 @@ import "forge-std/Test.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
+import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
 
 import {MintableToken} from "../_common/MintableToken.sol";
 import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
 
 /*
     forge test -vv --ffi --mc PreviewTest
+    TODO make this test not use 100% of amount
 */
 contract PreviewTest is SiloLittleHelper, Test {
     uint256 constant DEPOSIT_BEFORE = 1e18 + 9876543211;
@@ -26,7 +28,7 @@ contract PreviewTest is SiloLittleHelper, Test {
     }
 
     function setUp() public {
-        siloConfig = _setUpLocalFixture();
+        siloConfig = _setUpLocalFixture(SiloConfigsNames.LOCAL_NO_ORACLE_NO_LTV_SILO);
     }
 
     /*
@@ -280,6 +282,109 @@ contract PreviewTest is SiloLittleHelper, Test {
         _previewRepay_withInterest(_assets, true);
     }
 
+    /*
+    forge test -vv --ffi --mt test_previewWithdraw_noInterestNoDebt_fuzz
+    */
+    /// forge-config: core.fuzz.runs = 10000
+    function test_previewWithdraw_noInterestNoDebt_fuzz(uint128 _assets) public {
+        _previewWithdraw_noInterestNoDebt(_assets, false);
+    }
+
+    /*
+    forge test -vv --ffi --mt test_previewRedeem_noInterestNoDebt_fuzz
+    */
+    /// forge-config: core.fuzz.runs = 10000
+    function test_previewRedeem_noInterestNoDebt_fuzz(uint128 _assets) public {
+        _previewWithdraw_noInterestNoDebt(_assets, true);
+    }
+
+    /*
+    forge test -vv --ffi --mt test_previewWithdraw_depositNoInterest_fuzz
+    */
+    /// forge-config: core.fuzz.runs = 10000
+    function test_previewWithdraw_depositNoInterest_fuzz(uint128 _assets) public {
+        _previewWithdraw_depositNoInterest(_assets, false);
+    }
+
+    /*
+    forge test -vv --ffi --mt test_previewRedeem_depositNoInterest_fuzz
+    */
+    /// forge-config: core.fuzz.runs = 10000
+    function test_previewRedeem_depositNoInterest_fuzz(uint128 _assets) public {
+        _previewWithdraw_depositNoInterest(_assets, true);
+    }
+
+    /*
+    forge test -vv --ffi --mt test_previewWithdraw_deptNoInterest_fuzz
+    */
+    /// forge-config: core.fuzz.runs = 10000
+    function test_previewWithdraw_deptNoInterest_fuzz(uint128 _assets) public {
+        _previewWithdraw_debt(_assets, false, false);
+    }
+
+    /*
+    forge test -vv --ffi --mt test_previewRedeem_debtNoInterest_fuzz
+    */
+    /// forge-config: core.fuzz.runs = 10000
+    function test_previewRedeem_debtNoInterest_fuzz(uint128 _assets) public {
+        _previewWithdraw_debt(_assets, true, false);
+    }
+
+    /*
+    forge test -vv --ffi --mt test_previewWithdraw_interest_fuzz
+    */
+    /// forge-config: core.fuzz.runs = 10000
+    function test_previewWithdraw_interest_fuzz(uint128 _assets) public {
+        _previewWithdraw_debt(_assets, false, true);
+    }
+
+    /*
+    forge test -vv --ffi --mt test_previewRedeem_interest_fuzz
+    */
+    /// forge-config: core.fuzz.runs = 10000
+    function test_previewRedeem_interest_fuzz(uint128 _assets) public {
+        _previewWithdraw_debt(_assets, true, true);
+    }
+
+    function _previewWithdraw_noInterestNoDebt(uint128 _assetsOrShares, bool _doRedeem) internal {
+        vm.assume(_assetsOrShares > 0);
+
+        // preview before debt creation
+        uint256 preview = _doRedeem ? silo1.previewRedeem(_assetsOrShares) : silo1.previewWithdraw(_assetsOrShares);
+
+        _deposit(_assetsOrShares, depositor);
+
+        assertEq(preview, _assetsOrShares, "previewWithdraw == assets == shares, when no interest");
+
+        _assertPreviewWithdraw(preview, _assetsOrShares, _doRedeem);
+    }
+
+    function _previewWithdraw_depositNoInterest(uint128 _assetsOrShares, bool _doRedeem) internal {
+        vm.assume(_assetsOrShares > 0);
+
+        _deposit(uint256(_assetsOrShares) * 2 - (_assetsOrShares % 2), depositor);
+
+        uint256 preview = _doRedeem ? silo1.previewRedeem(_assetsOrShares) : silo1.previewWithdraw(_assetsOrShares);
+
+        assertEq(preview, _assetsOrShares, "previewWithdraw == assets == shares, when no interest");
+
+        _assertPreviewWithdraw(preview, _assetsOrShares, _doRedeem);
+    }
+
+    function _previewWithdraw_debt(uint128 _assetsOrShares, bool _doRedeem, bool _interest) internal {
+        vm.assume(_assetsOrShares > 0);
+
+        _createDebt(_assetsOrShares, depositor);
+
+        if (_interest) vm.warp(block.timestamp + 100 days);
+
+        uint256 preview = _doRedeem ? silo1.previewRedeem(_assetsOrShares) : silo1.previewWithdraw(_assetsOrShares);
+
+        if (!_interest) assertEq(preview, _assetsOrShares, "previewWithdraw == assets == shares, when no interest");
+
+        _assertPreviewWithdraw(preview, _assetsOrShares, _doRedeem);
+    }
+
     function _previewRepay_noInterestNoDebt(uint128 _assetsOrShares, bool _useShares) internal {
         vm.assume(_assetsOrShares > 0);
 
@@ -326,6 +431,19 @@ contract PreviewTest is SiloLittleHelper, Test {
         assertGt(repayResult, 0, "expect any repay amount > 0");
 
         assertEq(repayResult, _preview, "preview should give us exact repay result");
+    }
+
+    function _assertPreviewWithdraw(uint256 _preview, uint128 _assetsOrShares, bool _useRedeem) internal {
+        vm.assume(_preview > 0);
+        vm.prank(depositor);
+
+        uint256 repayResult = _useRedeem
+            ? silo0.redeem(_assetsOrShares, depositor, depositor)
+            : silo0.withdraw(_assetsOrShares, depositor, depositor);
+
+        assertGt(repayResult, 0, "expect any withdraw amount > 0");
+
+        assertEq(repayResult, _preview, "preview should give us exact result");
     }
 
     function _createInterest() internal {
