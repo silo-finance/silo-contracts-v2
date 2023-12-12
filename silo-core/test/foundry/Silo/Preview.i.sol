@@ -349,8 +349,8 @@ contract PreviewTest is SiloLittleHelper, Test {
     function _previewWithdraw_noInterestNoDebt(uint128 _assetsOrShares, bool _doRedeem) internal {
         vm.assume(_assetsOrShares > 0);
 
-        // preview before debt creation
-        uint256 preview = _doRedeem ? silo1.previewRedeem(_assetsOrShares) : silo1.previewWithdraw(_assetsOrShares);
+        // preview before deposit creation
+        uint256 preview = _doRedeem ? silo0.previewRedeem(_assetsOrShares) : silo0.previewWithdraw(_assetsOrShares);
 
         _deposit(_assetsOrShares, depositor);
 
@@ -364,7 +364,7 @@ contract PreviewTest is SiloLittleHelper, Test {
 
         _deposit(uint256(_assetsOrShares) * 2 - (_assetsOrShares % 2), depositor);
 
-        uint256 preview = _doRedeem ? silo1.previewRedeem(_assetsOrShares) : silo1.previewWithdraw(_assetsOrShares);
+        uint256 preview = _doRedeem ? silo0.previewRedeem(_assetsOrShares) : silo0.previewWithdraw(_assetsOrShares);
 
         assertEq(preview, _assetsOrShares, "previewWithdraw == assets == shares, when no interest");
 
@@ -383,7 +383,7 @@ contract PreviewTest is SiloLittleHelper, Test {
 
         if (_interest) vm.warp(block.timestamp + 100 days);
 
-        uint256 preview = _doRedeem ? silo1.previewRedeem(_assetsOrShares) : silo1.previewWithdraw(_assetsOrShares);
+        uint256 preview = _doRedeem ? silo0.previewRedeem(_assetsOrShares) : silo0.previewWithdraw(_assetsOrShares);
 
         if (!_interest) assertEq(preview, _assetsOrShares, "previewWithdraw == assets == shares, when no interest");
 
@@ -443,8 +443,8 @@ contract PreviewTest is SiloLittleHelper, Test {
         vm.prank(depositor);
 
         uint256 results = _useRedeem
-            ? silo0.redeem(_assetsOrShares, depositor, depositor) // => assets
-            : silo0.withdraw(_assetsOrShares, depositor, depositor); // => shares
+            ? silo0.redeem(_assetsOrShares, depositor, depositor)
+            : silo0.withdraw(_assetsOrShares, depositor, depositor);
 
         assertGt(results, 0, "expect any withdraw amount > 0");
 
