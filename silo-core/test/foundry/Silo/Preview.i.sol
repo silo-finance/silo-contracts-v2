@@ -31,41 +31,25 @@ contract PreviewTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --ffi --mt test_previewDeposit_beforeInterest
+    forge test -vv --ffi --mt test_previewDepositType_beforeInterest_fuzz2
     */
-    /// forge-config: core.fuzz.runs = 10000
-    function test_previewDeposit_beforeInterest_fuzz(uint256 _assets) public {
-        _previewDeposit_beforeInterest(_assets, true, uint8(ISilo.AssetType.Collateral));
-    }
-
-    /*
-    forge test -vv --ffi --mt test_previewDepositType_beforeInterest_fuzz
-    */
-    /// forge-config: core.fuzz.runs = 10000
-    function test_previewDepositType_beforeInterest_fuzz(uint256 _assets, uint8 _type) public {
-        _previewDeposit_beforeInterest(_assets, false, _type);
+    /// forge-config: core.fuzz.runs = 50000
+    function test_previewDeposit_beforeInterest_fuzz(uint256 _assets, bool _defaultType, uint8 _type) public {
+        _previewDeposit_beforeInterest(_assets, _defaultType, _type);
     }
 
     /*
     forge test -vv --ffi --mt test_previewDeposit_afterNoInterest
     */
-    /// forge-config: core.fuzz.runs = 10000
-    function test_previewDeposit_afterNoInterest_fuzz(uint128 _assets) public {
-        _previewDeposit_afterNoInterest_(_assets, true, uint8(ISilo.AssetType.Collateral));
-    }
-
-    /*
-    forge test -vv --ffi --mt test_previewDepositType_afterNoInterest_fuzz
-    */
-    /// forge-config: core.fuzz.runs = 10000
-    function test_previewDepositType_afterNoInterest_fuzz(uint128 _assets, uint8 _type) public {
-        _previewDeposit_afterNoInterest_(_assets, false, _type);
+    /// forge-config: core.fuzz.runs = 50000
+    function test_previewDeposit_afterNoInterest_fuzz(uint128 _assets, bool _defaultType) public {
+        _previewDeposit_afterNoInterest_(_assets, _defaultType, uint8(ISilo.AssetType.Collateral));
     }
 
     /*
     forge test -vv --ffi --mt test_previewDeposit_withInterest
     */
-    /// forge-config: core.fuzz.runs = 10000
+    /// forge-config: core.fuzz.runs = 50000
     function test_previewDeposit_withInterest_fuzz(uint256 _assets) public {
         vm.assume(_assets < type(uint128).max);
         vm.assume(_assets > 0);
@@ -112,69 +96,43 @@ contract PreviewTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_previewMint_beforeInterest
     */
-    /// forge-config: core.fuzz.runs = 10000
-    function test_previewMint_beforeInterest_fuzz(uint256 _shares) public {
+    /// forge-config: core.fuzz.runs = 50000
+    function test_previewMint_beforeInterest_fuzz(uint256 _shares, bool _defaultType, uint8 _type) public {
         vm.assume(_shares > 0);
 
-        _assertPreviewMint(_shares, true, uint8(ISilo.AssetType.Collateral));
-    }
-
-    /*
-    forge test -vv --ffi --mt test_previewMintType_beforeInterest_fuzz
-    */
-    /// forge-config: core.fuzz.runs = 10000
-    function test_previewMintType_beforeInterest_fuzz(uint256 _shares, uint8 _type) public {
-        vm.assume(_shares > 0);
-
-        _assertPreviewMint(_shares, false, _type);
+        _assertPreviewMint(_shares, _defaultType, _type);
     }
 
     /*
     forge test -vv --ffi --mt test_previewMint_afterNoInterest_fuzz
     */
-    /// forge-config: core.fuzz.runs = 10000
-    function test_previewMint_afterNoInterest_fuzz(uint128 _depositAmount, uint128 _shares) public {
-        _previewMint_afterNoInterest(_depositAmount, _shares, true, uint8(ISilo.AssetType.Collateral));
-        _assertPreviewMint(_shares, true, uint8(ISilo.AssetType.Collateral));
-    }
-
-    /*
-    forge test -vv --ffi --mt test_previewMintType_afterNoInterest_fuzz
-    */
-    /// forge-config: core.fuzz.runs = 10000
-    function test_previewMintType_afterNoInterest_fuzz(uint128 _depositAmount, uint128 _shares, uint8 _type) public {
-        _previewMint_afterNoInterest(_depositAmount, _shares, false, _type);
-        _assertPreviewMint(_shares, false, _type);
+    /// forge-config: core.fuzz.runs = 50000
+    function test_previewMint_afterNoInterest_fuzz(
+        uint128 _depositAmount,
+        uint128 _shares,
+        bool _defaultType,
+        uint8 _type
+    ) public {
+        _previewMint_afterNoInterest(_depositAmount, _shares, _defaultType, _type);
+        _assertPreviewMint(_shares, _defaultType, _type);
     }
 
     /*
     forge test -vv --ffi --mt test_previewMint_withInterest_fuzz
     */
-    /// forge-config: core.fuzz.runs = 10000
-    function test_previewMint_withInterest_fuzz(uint128 _shares) public {
+    /// forge-config: core.fuzz.runs = 50000
+    function test_previewMint_withInterest_fuzz(uint128 _shares, bool _defaultType, uint8 _type) public {
         vm.assume(_shares > 0);
 
         _createInterest();
 
-        _assertPreviewMint(_shares, true, uint8(ISilo.AssetType.Collateral));
-    }
-
-    /*
-    forge test -vv --ffi --mt test_previewMintType_withInterest_fuzz
-    */
-    /// forge-config: core.fuzz.runs = 10000
-    function test_previewMintType_withInterest_fuzz(uint128 _shares, uint8 _type) public {
-        vm.assume(_shares > 0);
-
-        _createInterest();
-
-        _assertPreviewMint(_shares, false, _type);
+        _assertPreviewMint(_shares, _defaultType, _type);
     }
 
     /*
     forge test -vv --ffi --mt test_previewBorrow_zero_fuzz
     */
-    /// forge-config: core.fuzz.runs = 10000
+    /// forge-config: core.fuzz.runs = 50000
     function test_previewBorrow_zero_fuzz(uint256 _assets) public {
         assertEq(_assets, silo0.previewBorrow(_assets));
     }
@@ -182,7 +140,7 @@ contract PreviewTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_previewBorrow_beforeInterest_fuzz
     */
-    /// forge-config: core.fuzz.runs = 10000
+    /// forge-config: core.fuzz.runs = 50000
     function test_previewBorrow_beforeInterest_fuzz(uint128 _assets) public {
         vm.assume(_assets > 0);
 
@@ -205,7 +163,7 @@ contract PreviewTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_previewBorrow_withInterest
     */
-    /// forge-config: core.fuzz.runs = 10000
+    /// forge-config: core.fuzz.runs = 50000
     function test_previewBorrow_withInterest_fuzz(uint128 _assets) public {
         vm.assume(_assets > 0);
 
@@ -236,7 +194,7 @@ contract PreviewTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_previewRepay_noInterestNoDebt_fuzz
     */
-    /// forge-config: core.fuzz.runs = 10000
+    /// forge-config: core.fuzz.runs = 50000
     function test_previewRepay_noInterestNoDebt_fuzz(uint128 _assets, bool _useShares, bool _repayFull) public {
         _previewRepay_noInterestNoDebt(_assets, _useShares, _repayFull);
     }
@@ -244,16 +202,15 @@ contract PreviewTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_previewRepayShares_noInterest_fuzz
     */
-    /// forge-config: core.fuzz.runs = 10000
+    /// forge-config: core.fuzz.runs = 50000
     function test_previewRepay_noInterest_fuzz(uint128 _assets, bool _useShares, bool _repayFull) public {
         _previewRepay_noInterest(_assets, _useShares, _repayFull);
     }
 
-
     /*
     forge test -vv --ffi --mt test_previewRepay_withInterest_fuzz
     */
-    /// forge-config: core.fuzz.runs = 10000
+    /// forge-config: core.fuzz.runs = 50000
     function test_previewRepay_withInterest_fuzz(uint128 _assets, bool _useShares, bool _repayFull) public {
         _previewRepay_withInterest(_assets, _useShares, _repayFull);
     }
@@ -261,7 +218,7 @@ contract PreviewTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_previewWithdraw_noInterestNoDebt_fuzz
     */
-    /// forge-config: core.fuzz.runs = 10000
+    /// forge-config: core.fuzz.runs = 50000
     function test_previewWithdraw_noInterestNoDebt_fuzz(uint128 _assets, bool _doRedeem, bool _partial) public {
         _previewWithdraw_noInterestNoDebt(_assets, _doRedeem, _partial);
     }
@@ -269,7 +226,7 @@ contract PreviewTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_previewWithdraw_noDebt_fuzz
     */
-    /// forge-config: core.fuzz.runs = 10000
+    /// forge-config: core.fuzz.runs = 50000
     function test_previewWithdraw_noDebt_fuzz(uint128 _assets, bool _doRedeem, bool _partial) public {
         _previewWithdraw_depositNoInterest(_assets, _doRedeem, _partial);
     }
@@ -277,7 +234,7 @@ contract PreviewTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_previewWithdraw_debt_fuzz
     */
-    /// forge-config: core.fuzz.runs = 10000
+    /// forge-config: core.fuzz.runs = 50000
     function test_previewWithdraw_debt_fuzz(uint128 _assets, bool _doRedeem, bool _interest, bool _partial) public {
         _previewWithdraw_debt(_assets, _doRedeem, _interest, _partial);
     }
