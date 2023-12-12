@@ -80,7 +80,7 @@ contract PreviewTest is SiloLittleHelper, Test {
         silo0.accrueInterest();
         silo1.accrueInterest();
 
-        assertEq(sharesBefore, silo0.previewDeposit(_assets), "no interest in silo0, so preview should be the same");
+        assertEq(silo0.previewDeposit(_assets), sharesBefore, "no interest in silo0, so preview should be the same");
 
         previewShares1 = silo1.previewDeposit(_assets);
 
@@ -134,7 +134,7 @@ contract PreviewTest is SiloLittleHelper, Test {
     */
     /// forge-config: core.fuzz.runs = 50000
     function test_previewBorrow_zero_fuzz(uint256 _assets) public {
-        assertEq(_assets, silo0.previewBorrow(_assets));
+        assertEq(silo0.previewBorrow(_assets), _assets);
     }
 
     /*
@@ -334,7 +334,7 @@ contract PreviewTest is SiloLittleHelper, Test {
 
         assertGt(repayResult, 0, "expect any repay amount > 0");
 
-        assertEq(repayResult, _preview, "preview should give us exact repay result");
+        assertEq(_preview, repayResult, "preview should give us exact repay result");
     }
 
     function _assertPreviewWithdraw(uint256 _preview, uint128 _assetsOrShares, bool _useRedeem) internal {
@@ -347,8 +347,8 @@ contract PreviewTest is SiloLittleHelper, Test {
 
         assertGt(results, 0, "expect any withdraw amount > 0");
 
-        if (_useRedeem) assertLe(_preview, results, "preview should give us exact result, NOT more");
-        else assertGe(_preview, results, "preview should give us exact result, NOT fewer");
+        if (_useRedeem) assertEq(_preview, results, "preview should give us exact result, NOT more");
+        else assertEq(_preview, results, "preview should give us exact result, NOT fewer");
     }
 
     function _createInterest() internal {
@@ -411,7 +411,7 @@ contract PreviewTest is SiloLittleHelper, Test {
             ? silo0.mint(_shares, depositor)
             : silo0.mint(_shares, depositor, ISilo.AssetType(_type));
 
-        assertEq(depositedAssets, previewMint, "previewMint == depositedAssets, NOT fewer");
+        assertEq(previewMint, depositedAssets, "previewMint == depositedAssets, NOT fewer");
     }
 
     function _previewDeposit_beforeInterest(uint256 _assets, bool _defaultType, uint8 _type) internal {
