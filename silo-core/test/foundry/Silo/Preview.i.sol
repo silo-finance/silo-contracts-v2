@@ -374,7 +374,12 @@ contract PreviewTest is SiloLittleHelper, Test {
     function _previewWithdraw_debt(uint128 _assetsOrShares, bool _doRedeem, bool _interest) internal {
         vm.assume(_assetsOrShares > 0);
 
-        _createDebt(_assetsOrShares, depositor);
+        // we need interest on silo0, where we doing deposit
+        _depositForBorrow(uint256(_assetsOrShares) * 2, borrower);
+        _deposit(uint256(_assetsOrShares) * 2 + (_assetsOrShares % 2), depositor);
+
+        vm.prank(borrower);
+        silo0.borrow(_assetsOrShares / 2 == 0 ? 1 : _assetsOrShares / 2, borrower, borrower);
 
         if (_interest) vm.warp(block.timestamp + 100 days);
 
@@ -437,13 +442,14 @@ contract PreviewTest is SiloLittleHelper, Test {
         vm.assume(_preview > 0);
         vm.prank(depositor);
 
-        uint256 repayResult = _useRedeem
-            ? silo0.redeem(_assetsOrShares, depositor, depositor)
-            : silo0.withdraw(_assetsOrShares, depositor, depositor);
+        uint256 results = _useRedeem
+            ? silo0.redeem(_assetsOrShares, depositor, depositor) // => assets
+            : silo0.withdraw(_assetsOrShares, depositor, depositor); // => shares
 
-        assertGt(repayResult, 0, "expect any withdraw amount > 0");
+        assertGt(results, 0, "expect any withdraw amount > 0");
 
-        assertEq(repayResult, _preview, "preview should give us exact result");
+        if (_useRedeem) assertLe(_preview, results, "preview should give us exact result, NOT more");
+        else assertGe(_preview, results, "preview should give us exact result, NOT fewer");
     }
 
     function _createInterest() internal {
