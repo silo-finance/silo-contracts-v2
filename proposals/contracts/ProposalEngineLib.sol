@@ -10,8 +10,10 @@ import {ProposalEngine} from "./ProposalEngine.sol";
 import {IProposalEngine} from "./interfaces/IProposalEngine.sol";
 
 library ProposalEngineLib {
+    /// @notice Constant address of the proposal engine
     address internal constant _ENGINE_ADDR = address(uint160(uint256(keccak256("silo proposal engine"))));
 
+    /// @notice Initialize the proposal engine contract on the `_ENGINE_ADDR`
     function initializeEngine() internal {
         bytes memory code = Utils.getCodeAt(_ENGINE_ADDR);
 
