@@ -24,6 +24,8 @@ library SiloLendingLib {
 
     uint256 internal constant _PRECISION_DECIMALS = 1e18;
 
+    error FeeOverflow();
+
     /// @notice Allows a user or a delegate to borrow assets against their collateral
     /// @dev The function checks for necessary conditions such as borrow possibility, enough liquidity, and zero
     /// values
@@ -103,6 +105,7 @@ library SiloLendingLib {
     {
         // flashFee will revert for wrong token
         uint256 fee = SiloStdLib.flashFee(_config, _token, _amount);
+        if (fee > type(uint192).max) revert FeeOverflow();
 
         IERC20Upgradeable(_token).safeTransfer(address(_receiver), _amount);
 
@@ -112,11 +115,8 @@ library SiloLendingLib {
 
         IERC20Upgradeable(_token).safeTransferFrom(address(_receiver), address(this), _amount + fee);
 
-        unchecked {
-            // we operating on chunks of real tokens, so overflow should not happen
-            // fee is simply to small to overflow on cast to uint192, even if, we will get lower fee
-            _siloData.daoAndDeployerFees += uint192(fee);
-        }
+        // cast safe, because we checked `fee > type(uint192).max`
+        _siloData.daoAndDeployerFees += uint192(fee);
 
         success = true;
     }

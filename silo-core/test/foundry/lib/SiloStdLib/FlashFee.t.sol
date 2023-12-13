@@ -34,8 +34,7 @@ contract FlashFeeTest is Test {
     /*
     forge test -vv --mt test_flashFee_fuzz
     */
-    function test_flashFee_fuzz(address _silo, address _asset) public {
-        vm.assume(_silo != address(0));
+    function test_flashFee_fuzz(address _asset) public {
         vm.assume(_asset != address(0));
 
         ISiloConfig siloConfig = ISiloConfig(SILO_CONFIG.ADDRESS());
