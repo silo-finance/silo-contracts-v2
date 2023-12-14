@@ -12,10 +12,10 @@ import {SiloLiquidationLib} from "silo-core/contracts/lib/SiloLiquidationLib.sol
 import {OraclesHelper} from "../../_common/OraclesHelper.sol";
 import {OracleMock} from "../../_mocks/OracleMock.sol";
 import {SiloLiquidationExecLibImpl} from "../../_common/SiloLiquidationExecLibImpl.sol";
-
+import "../SiloLiquidationLib/MaxRepayRawMath.sol";
 
 // forge test -vv --mc MaxLiquidationTest
-contract MaxLiquidationTest is Test, OraclesHelper {
+contract MaxLiquidationTest is Test, MaxRepayRawMath {
     // this must match value from SiloLiquidationLib
     uint256 internal constant _LT_LIQUIDATION_MARGIN = 0.9e18; // 90%
     uint256 internal constant _DECIMALS_POINTS = 1e18; // 90%
@@ -140,25 +140,5 @@ contract MaxLiquidationTest is Test, OraclesHelper {
 
         uint256 debtLeft = _borrowerDebtAssets - _debtToRepay;
         ltv = debtLeft * 1e18 / collateralValueAfter;
-    }
-
-    /// @dev the math is based on: (Dv - x)/(Cv - (x + xf)) = LT
-    /// where Dv: debt value, Cv: collateral value, LT: expected LT, f: liquidation fee, x: is value we looking for
-    /// x = (Dv - LT * Cv) / (DP - LT - LT * f)
-    function _estimateMaxRepayValueRaw(
-        uint256 _totalBorrowerDebtValue,
-        uint256 _totalBorrowerCollateralValue,
-        uint256 _ltvAfterLiquidation,
-        uint256 _liquidityFee
-    )
-        private pure returns (uint256 repayValue)
-    {
-        repayValue = (
-            _totalBorrowerDebtValue - _ltvAfterLiquidation * _totalBorrowerCollateralValue / _DECIMALS_POINTS
-        ) * _DECIMALS_POINTS / (
-            _DECIMALS_POINTS - _ltvAfterLiquidation - _ltvAfterLiquidation * _liquidityFee / _DECIMALS_POINTS
-        );
-
-        return repayValue > _totalBorrowerDebtValue ? _totalBorrowerDebtValue : repayValue;
     }
 }

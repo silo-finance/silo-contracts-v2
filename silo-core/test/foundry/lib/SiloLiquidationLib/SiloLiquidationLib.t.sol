@@ -7,15 +7,16 @@ import {Strings} from "openzeppelin-contracts/utils/Strings.sol";
 
 import "silo-core/contracts/lib/SiloLiquidationLib.sol";
 
-import "../_checkedMath/SiloLiquidationLibChecked.sol";
-import "../data-readers/CalculateCollateralToLiquidateTestData.sol";
-import "../data-readers/CalculateExactLiquidationAmountsTestData.sol";
-import "../data-readers/MaxLiquidationPreviewTestData.sol";
-import "../data-readers/EstimateMaxRepayValueTestData.sol";
+import "../../_checkedMath/SiloLiquidationLibChecked.sol";
+import "../../data-readers/CalculateCollateralToLiquidateTestData.sol";
+import "../../data-readers/CalculateExactLiquidationAmountsTestData.sol";
+import "../../data-readers/MaxLiquidationPreviewTestData.sol";
+import "../../data-readers/EstimateMaxRepayValueTestData.sol";
+import "./MaxRepayRawMath.sol";
 
 
 // forge test -vv --mc SiloLiquidationLibTest
-contract SiloLiquidationLibTest is Test {
+contract SiloLiquidationLibTest is Test, MaxRepayRawMath {
     uint256 internal constant _DECIMALS_POINTS = 1e18;
 
     /*
@@ -433,26 +434,6 @@ contract SiloLiquidationLibTest is Test {
 
         _chunkAssets = _chunkValue * _totalAssets;
         unchecked { _chunkAssets /= _totalValue; }
-    }
-
-    /// @dev the math is based on: (Dv - x)/(Cv - (x + xf)) = LT
-    /// where Dv: debt value, Cv: collateral value, LT: expected LT, f: liquidation fee, x: is value we looking for
-    /// x = (Dv - LT * Cv) / (DP - LT - LT * f)
-    function _estimateMaxRepayValueRaw(
-        uint256 _totalBorrowerDebtValue,
-        uint256 _totalBorrowerCollateralValue,
-        uint256 _ltvAfterLiquidation,
-        uint256 _liquidityFee
-    )
-        private pure returns (uint256 repayValue)
-    {
-        repayValue = (
-            _totalBorrowerDebtValue - _ltvAfterLiquidation * _totalBorrowerCollateralValue / _DECIMALS_POINTS
-        ) * _DECIMALS_POINTS / (
-            _DECIMALS_POINTS - _ltvAfterLiquidation - _ltvAfterLiquidation * _liquidityFee / _DECIMALS_POINTS
-        );
-
-        return repayValue > _totalBorrowerDebtValue ? _totalBorrowerDebtValue : repayValue;
     }
 
     function _concatMsg(uint256 _i, string memory _msg) internal pure returns (string memory) {

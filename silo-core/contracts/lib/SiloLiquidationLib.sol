@@ -4,8 +4,6 @@ pragma solidity 0.8.21;
 import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
 import {ISiloLiquidation} from "../interfaces/ISiloLiquidation.sol";
 
-import {console} from "forge-std/console.sol";
-
 library SiloLiquidationLib {
     uint256 internal constant _PRECISION_DECIMALS = 1e18;
 
@@ -29,7 +27,7 @@ library SiloLiquidationLib {
         uint256 _liquidityFee
     )
         external
-        view
+        pure
         returns (uint256 collateralToLiquidate, uint256 debtToRepay)
     {
         (
@@ -40,8 +38,6 @@ library SiloLiquidationLib {
             minAcceptableLTV(_lt),
             _liquidityFee
         );
-        console.log("[collateralValueToLiquidate]: %s", collateralValueToLiquidate);
-        console.log("[repayValue]: %s", repayValue);
 
         collateralToLiquidate = valueToAssetsByRatio(
             collateralValueToLiquidate,
@@ -49,11 +45,7 @@ library SiloLiquidationLib {
             _sumOfCollateralValue
         );
 
-        console.log("[collateralToLiquidate]: %s", collateralToLiquidate);
-
         debtToRepay = valueToAssetsByRatio(repayValue, _borrowerDebtAssets, _borrowerDebtValue);
-        console.log("[debtToRepay]: %s", debtToRepay);
-
     }
 
     /// @notice this method does not care about ltv, it will calculate based on any values, this is just a pure math
@@ -172,7 +164,7 @@ library SiloLiquidationLib {
         uint256 _totalBorrowerDebtValue,
         uint256 _ltvAfterLiquidation,
         uint256 _liquidityFee
-    ) internal view returns (uint256 collateralValueToLiquidate, uint256 repayValue) {
+    ) internal pure returns (uint256 collateralValueToLiquidate, uint256 repayValue) {
         repayValue = estimateMaxRepayValue(
             _totalBorrowerDebtValue, _totalBorrowerCollateralValue, _ltvAfterLiquidation, _liquidityFee
         );
@@ -212,7 +204,7 @@ library SiloLiquidationLib {
         uint256 _totalBorrowerCollateralValue,
         uint256 _ltvAfterLiquidation,
         uint256 _liquidityFee
-    ) internal view returns (uint256 repayValue) {
+    ) internal pure returns (uint256 repayValue) {
         if (_totalBorrowerDebtValue == 0) return 0;
         if (_liquidityFee >= _PRECISION_DECIMALS) return 0;
 
@@ -227,8 +219,7 @@ library SiloLiquidationLib {
 
         // x = (Dv - LT * Cv) / (DP - LT - LT * f) ==> (Dv - LT * Cv) / (DP - (LT + LT * f))
         uint256 ltCv = _ltvAfterLiquidation * _totalBorrowerCollateralValue;
-        console.log("ltCv", ltCv);
-//        unchecked { ltCv /= _PRECISION_DECIMALS; }
+        // to lose as low precision as possible, instead of `ltCv/1e18`, we increase precision of DebtValue
         _totalBorrowerDebtValue *= _PRECISION_DECIMALS;
 
         // negative value means our current LT is lower than _ltvAfterLiquidation
@@ -246,10 +237,9 @@ library SiloLiquidationLib {
 
         // if dividerR is more than 100%, means it is impossible to go down to _ltvAfterLiquidation, return all
         if (dividerR >= _PRECISION_DECIMALS) {
-            return _totalBorrowerDebtValue / _PRECISION_DECIMALS;
+            unchecked { return _totalBorrowerDebtValue / _PRECISION_DECIMALS; }
         }
 
-//        repayValue *= _PRECISION_DECIMALS;
         unchecked { repayValue /= (_PRECISION_DECIMALS - dividerR); }
 
         // here is weird case, sometimes it is impossible to go down to target LTV, however math can calculate it
