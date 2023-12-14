@@ -16,11 +16,17 @@ contract MaxRepayRawMath {
     )
         internal pure returns (uint256 repayValue)
     {
+        uint256 tmp = _ltvAfterLiquidation * _liquidityFee / _DECIMALS_POINTS;
+        if (_ltvAfterLiquidation + tmp > _DECIMALS_POINTS) return _totalBorrowerDebtValue;
+
+        uint256 divider =
+            _DECIMALS_POINTS - _ltvAfterLiquidation - _ltvAfterLiquidation * _liquidityFee / _DECIMALS_POINTS;
+
+        if (divider == 0) return 0;
+
         repayValue = (
             _totalBorrowerDebtValue - _ltvAfterLiquidation * _totalBorrowerCollateralValue / _DECIMALS_POINTS
-        ) * _DECIMALS_POINTS / (
-            _DECIMALS_POINTS - _ltvAfterLiquidation - _ltvAfterLiquidation * _liquidityFee / _DECIMALS_POINTS
-        );
+        ) * _DECIMALS_POINTS / divider;
 
         return repayValue > _totalBorrowerDebtValue ? _totalBorrowerDebtValue : repayValue;
     }
