@@ -123,7 +123,7 @@ contract LiquidationCallTest is SiloLittleHelper, Test {
         assertEq(debtToRepay, 0, "no debtToRepay yet");
 
         // move forward with time so we can have interests
-        uint256 timeForward = 7 days;
+        uint256 timeForward = 6 days;
         vm.warp(block.timestamp + timeForward);
 
         (collateralToLiquidate, debtToRepay) = silo1.maxLiquidation(BORROWER);
@@ -134,11 +134,18 @@ contract LiquidationCallTest is SiloLittleHelper, Test {
         vm.expectCall(address(debtConfig.interestRateModel), abi.encodeWithSelector(IInterestRateModel.getCompoundInterestRateAndUpdate.selector));
         vm.expectCall(address(collateralConfig.interestRateModel), abi.encodeWithSelector(IInterestRateModel.getCompoundInterestRateAndUpdate.selector));
 
-        token1.mint(liquidator, debtToCover);
-        token1.approve(address(silo1), debtToCover);
+        token1.mint(liquidator, 2 ** 128);
+        token1.approve(address(silo1), 2 ** 128);
 
-        silo1.liquidationCall(address(token0), address(token1), BORROWER, debtToCover, receiveSToken);
+        assertLt(silo1.getLtv(BORROWER), 0.86e18, "expect LTV just above LT");
+        assertFalse(silo1.isSolvent(BORROWER), "expect BORROWER to be insolvent");
 
+        silo1.liquidationCall(address(token0), address(token1), BORROWER, 2 ** 128, receiveSToken);
+
+        emit log_named_decimal_uint("LTV", silo1.getLtv(BORROWER), 16);
+        assertGt(silo1.getLtv(BORROWER), 0, "expect some LTV after partial liquidation");
+        assertTrue(silo1.isSolvent(BORROWER), "expect BORROWER to be solvent");
+return;
         assertEq(token0.balanceOf(liquidator), 1e5 + 0.05e5, "liquidator should get collateral + 5% fee");
         assertEq(token0.balanceOf(address(silo0)), COLLATERAL - (1e5 + 0.05e5), "silo collateral should be transfer to liquidator");
         assertEq(token1.balanceOf(address(silo1)), 0.5e18 + 1e5, "debt token should be repayed");

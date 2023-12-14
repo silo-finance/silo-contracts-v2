@@ -265,10 +265,22 @@ library SiloLiquidationExecLib {
 
         if (!_params.selfLiquidation && _params.collateralLt >= ltvBefore) return (0, 0);
 
+        // based on ltvBefore - what is "normal" max?
+        // uint256 minAcceptableLTV = SiloLiquidationLib.minAcceptableLTV(_params.collateralLt);
+        // can I calcualte max debt to cover based on ltvBefore?
+        (uint256 maxCollateralToLiquidate, uint256 maxDebtToRepay) = SiloLiquidationLib.maxLiquidation(
+            sumOfCollateralAssets,
+            sumOfBorrowerCollateralValue,
+            _ltvData.borrowerDebtAssets,
+            totalBorrowerDebtValue,
+            _params.collateralLt,
+            _params.selfLiquidation ? 0 : _params.liquidationFee
+        );
+
         uint256 ltvAfter;
 
         (receiveCollateralAssets, repayDebtAssets, ltvAfter) = SiloLiquidationLib.calculateExactLiquidationAmounts(
-            _params.debtToCover,
+            _params.debtToCover > maxDebtToRepay && !_params.selfLiquidation ? maxDebtToRepay - 1 : _params.debtToCover,
             sumOfCollateralAssets,
             sumOfBorrowerCollateralValue,
             _ltvData.borrowerDebtAssets,
