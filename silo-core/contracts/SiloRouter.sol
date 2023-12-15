@@ -8,7 +8,6 @@ import {ReentrancyGuard} from "openzeppelin-contracts/security/ReentrancyGuard.s
 import {IPermit2, ISignatureTransfer} from "./interfaces/permit2/IPermit2.sol";
 import {IWrappedNativeToken} from "./interfaces/IWrappedNativeToken.sol";
 import {ISilo} from "./interfaces/ISilo.sol";
-import {IERC3156FlashBorrower} from "./interfaces/IERC3156FlashBorrower.sol";
 import {ILeverageBorrower} from "./interfaces/ILeverageBorrower.sol";
 
 import {TokenHelper} from "./lib/TokenHelper.sol";
@@ -18,7 +17,7 @@ import {TokenHelper} from "./lib/TokenHelper.sol";
 /// of actions (Deposit, Withdraw, Borrow, Repay) and execute them in a single transaction.
 /// @dev SiloRouter requires only first action asset to be approved
 /// @custom:security-contact security@silo.finance
-contract SiloRouter is ReentrancyGuard, IERC3156FlashBorrower {
+contract SiloRouter is ReentrancyGuard {
     using SafeERC20 for IERC20;
 
     // @notice Action types that are supported
@@ -32,7 +31,6 @@ contract SiloRouter is ReentrancyGuard, IERC3156FlashBorrower {
         Repay,
         RepayShares,
         Transition,
-        Flashloan,
         Leverage
     }
 
@@ -41,12 +39,6 @@ contract SiloRouter is ReentrancyGuard, IERC3156FlashBorrower {
         uint256 nonce;
         uint256 deadline;
         bytes signature;
-    }
-
-    struct Flashloan {
-        ISilo silo;
-        IERC20 asset;
-        uint256 amount;
     }
 
     struct Action {
@@ -60,7 +52,7 @@ contract SiloRouter is ReentrancyGuard, IERC3156FlashBorrower {
         uint256 amount;
         // receiver of leveraged funds that will sell them on DEXes
         ILeverageBorrower receiver;
-        // optional data for flashloan or leverage
+        // optional data for leverage
         bytes data;
         // are you using Protected, Collateral or Debt?
         ISilo.AssetType assetType;
@@ -74,14 +66,11 @@ contract SiloRouter is ReentrancyGuard, IERC3156FlashBorrower {
     // solhint-disable-next-line var-name-mixedcase
     IPermit2 public immutable PERMIT2;
 
-    Flashloan public flashloan;
-
     error ApprovalFailed();
     error ERC20TransferFailed();
     error EthTransferFailed();
     error InvalidSilo();
     error UnsupportedAction();
-    error PendingFlashloan();
 
     constructor(address _wrappedNativeToken, address _permit2) {
         TokenHelper.assertAndGetDecimals(_wrappedNativeToken);
@@ -96,12 +85,6 @@ contract SiloRouter is ReentrancyGuard, IERC3156FlashBorrower {
         // and we need to receive the withdrawn ETH unconditionally
     }
 
-    function onFlashLoan(address, address, uint256 _amount, uint256 _fee, bytes calldata) external returns (bytes32) {
-        flashloan.amount = _amount + _fee;
-
-        return keccak256(bytes("ERC3156FlashBorrower.onFlashLoan"));
-    }
-
     /// @notice Execute actions
     /// @dev User can bundle any combination and number of actions. It's possible to do multiple deposits,
     /// withdraws etc. For that reason router may need to send multiple tokens back to the user. Combining
@@ -113,12 +96,6 @@ contract SiloRouter is ReentrancyGuard, IERC3156FlashBorrower {
         // execute actions
         for (uint256 i = 0; i < len; i++) {
             _executeAction(_actions[i]);
-        }
-
-        // repay flashloan
-        if (address(flashloan.silo) != address(0)) {
-            _approveIfNeeded(flashloan.asset, address(flashloan.silo), flashloan.amount);
-            delete flashloan;
         }
 
         // send all assets to user
@@ -172,17 +149,6 @@ contract SiloRouter is ReentrancyGuard, IERC3156FlashBorrower {
             _action.silo.repayShares(_action.amount, msg.sender);
         } else if (_action.actionType == ActionType.Transition) {
             _action.silo.transitionCollateral(_action.amount, msg.sender, _action.assetType);
-        } else if (_action.actionType == ActionType.Flashloan) {
-            if (address(flashloan.silo) != address(0)) {
-                revert PendingFlashloan();
-            } else {
-                flashloan.silo = _action.silo;
-                flashloan.amount = _action.amount;
-            }
-
-            _action.silo.flashLoan(
-                IERC3156FlashBorrower(address(this)), address(_action.asset), _action.amount, _action.data
-            );
         } else if (_action.actionType == ActionType.Leverage) {
             _action.silo.leverage(_action.amount, _action.receiver, msg.sender, _action.data);
         } else {
