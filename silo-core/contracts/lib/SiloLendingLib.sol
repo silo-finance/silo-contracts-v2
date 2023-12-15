@@ -155,11 +155,11 @@ library SiloLendingLib {
 
         if (shares == 0) revert ISilo.ZeroShares();
 
+        // subtract repayment from debt
+        _totalDebt.assets = totalDebtAssets - assets;
         // fee-on-transfer is ignored
         // If token reenters, no harm done because we didn't change the state yet.
         IERC20Upgradeable(_configData.token).safeTransferFrom(_repayer, address(this), assets);
-        // subtract repayment from debt
-        _totalDebt.assets = totalDebtAssets - assets;
         // Anyone can repay anyone's debt so no approval check is needed. If hook receiver reenters then
         // no harm done because state changes are completed.
         debtShareToken.burn(_borrower, _repayer, shares);
