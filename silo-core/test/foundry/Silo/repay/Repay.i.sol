@@ -55,7 +55,7 @@ contract RepayTest is SiloLittleHelper, Test {
     forge test -vv --ffi --mt test_repay_throwZeroShares
     */
     function test_repay_throwZeroShares() public {
-        uint256 assets = 1; // after interest this is to small to convert to shares
+        uint128 assets = 1; // after interest this is to small to convert to shares
         address borrower = makeAddr("Borrower");
 
         _createDebt(assets, borrower);
@@ -69,7 +69,7 @@ contract RepayTest is SiloLittleHelper, Test {
     forge test -vv --ffi --mt test_repay_tinyAmount
     */
     function test_repay_tinyAmount() public {
-        uint256 assets = 1;
+        uint128 assets = 1;
         address borrower = makeAddr("Borrower");
 
         _createDebt(assets, borrower);
@@ -81,7 +81,7 @@ contract RepayTest is SiloLittleHelper, Test {
     forge test -vv --ffi --mt test_repay_partialWithInterest
     */
     function test_repay_partialWithInterest() public {
-        uint256 assets = 10;
+        uint128 assets = 10;
         address borrower = makeAddr("Borrower");
 
         _createDebt(assets, borrower);
@@ -94,7 +94,7 @@ contract RepayTest is SiloLittleHelper, Test {
     forge test -vv --ffi --mt test_repay_tooMuch
     */
     function test_repay_tooMuch() public {
-        uint256 assets = 1e18;
+        uint128 assets = 1e18;
         uint256 assetsToRepay = assets * 2;
         address borrower = address(this);
 
@@ -113,7 +113,7 @@ contract RepayTest is SiloLittleHelper, Test {
     forge test -vv --ffi --mt test_repayShares_fullNoInterest_noDust
     */
     function test_repayShares_fullNoInterest_noDust() public {
-        uint256 assets = 1e18;
+        uint128 assets = 1e18;
         address borrower = makeAddr("Borrower");
 
         uint256 shares = _createDebt(assets, borrower);
@@ -133,7 +133,7 @@ contract RepayTest is SiloLittleHelper, Test {
     forge test -vv --ffi --mt test_repayShares_fullWithInterest_noDust
     */
     function test_repayShares_fullWithInterest_noDust() public {
-        uint256 assets = 1e18;
+        uint128 assets = 1e18;
         address borrower = makeAddr("Borrower");
 
         uint256 shares = _createDebt(assets, borrower);
@@ -155,7 +155,7 @@ contract RepayTest is SiloLittleHelper, Test {
     forge test -vv --ffi --mt test_repayShares_insufficientAllowance
     */
     function test_repayShares_insufficientAllowance() public {
-        uint256 assets = 1e18;
+        uint128 assets = 1e18;
         address borrower = makeAddr("Borrower");
 
         uint256 shares = _createDebt(assets, borrower);
@@ -173,7 +173,7 @@ contract RepayTest is SiloLittleHelper, Test {
     forge test -vv --ffi --mt test_repayShares_notFullWithInterest_withDust
     */
     function test_repayShares_notFullWithInterest_withDust() public {
-        uint256 assets = 1e18;
+        uint128 assets = 1e18;
         address borrower = makeAddr("Borrower");
 
         uint256 shares = _createDebt(assets, borrower);
@@ -198,7 +198,7 @@ contract RepayTest is SiloLittleHelper, Test {
     forge test -vv --ffi --mt test_repay_twice
     */
     function test_repay_twice() public {
-        uint256 assets = 1e18;
+        uint128 assets = 1e18;
         address borrower = makeAddr("Borrower");
 
         _createDebt(assets, borrower);
