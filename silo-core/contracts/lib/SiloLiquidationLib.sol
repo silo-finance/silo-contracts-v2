@@ -4,6 +4,9 @@ pragma solidity 0.8.21;
 import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
 import {ISiloLiquidation} from "../interfaces/ISiloLiquidation.sol";
 
+import {console} from "forge-std/console.sol";
+
+
 library SiloLiquidationLib {
     uint256 internal constant _PRECISION_DECIMALS = 1e18;
 
@@ -27,7 +30,7 @@ library SiloLiquidationLib {
         uint256 _liquidityFee
     )
         external
-        pure
+        view
         returns (uint256 collateralToLiquidate, uint256 debtToRepay)
     {
         (
@@ -164,10 +167,12 @@ library SiloLiquidationLib {
         uint256 _totalBorrowerDebtValue,
         uint256 _ltvAfterLiquidation,
         uint256 _liquidityFee
-    ) internal pure returns (uint256 collateralValueToLiquidate, uint256 repayValue) {
+    ) internal view returns (uint256 collateralValueToLiquidate, uint256 repayValue) {
         repayValue = estimateMaxRepayValue(
             _totalBorrowerDebtValue, _totalBorrowerCollateralValue, _ltvAfterLiquidation, _liquidityFee
         );
+
+        console.log("[repayValue]", repayValue);
 
         collateralValueToLiquidate = calculateCollateralToLiquidate(
             repayValue, _totalBorrowerCollateralValue, _liquidityFee
@@ -204,7 +209,7 @@ library SiloLiquidationLib {
         uint256 _totalBorrowerCollateralValue,
         uint256 _ltvAfterLiquidation,
         uint256 _liquidityFee
-    ) internal pure returns (uint256 repayValue) {
+    ) internal view returns (uint256 repayValue) {
         if (_totalBorrowerDebtValue == 0) return 0;
         if (_liquidityFee >= _PRECISION_DECIMALS) return 0;
 
@@ -241,7 +246,7 @@ library SiloLiquidationLib {
         }
 
         unchecked { repayValue /= (_PRECISION_DECIMALS - dividerR); }
-
+console.log("[repayValue2]", repayValue);
         // here is weird case, sometimes it is impossible to go down to target LTV, however math can calculate it
         // eg with negative numerator and denominator and result will be positive, that's why we simply return all
         // we also cover dust case here
