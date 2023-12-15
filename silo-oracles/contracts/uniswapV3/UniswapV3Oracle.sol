@@ -2,7 +2,6 @@
 pragma solidity 0.7.6;
 pragma abicoder v2;
 
-import {Initializable} from  "openzeppelin-contracts-upgradeable@v3.4.2/proxy/Initializable.sol";
 import {OracleLibrary} from  "uniswap/v3-periphery/contracts/libraries/OracleLibrary.sol";
 import {IUniswapV3Pool} from  "uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
 
@@ -12,7 +11,7 @@ import {RevertBytes} from  "../lib/RevertBytes.sol";
 import {IUniswapV3Oracle} from "../interfaces/IUniswapV3Oracle.sol";
 import {UniswapV3OracleConfig} from "./UniswapV3OracleConfig.sol";
 
-contract UniswapV3Oracle is ISiloOracle, IUniswapV3Oracle, Initializable {
+contract UniswapV3Oracle is ISiloOracle, IUniswapV3Oracle {
     using RevertBytes for bytes;
 
     /// @dev Uniswap can revert with "Old" error when begin of TWAP period is older than oldest observation.
@@ -29,10 +28,16 @@ contract UniswapV3Oracle is ISiloOracle, IUniswapV3Oracle, Initializable {
     /// @dev deployment with configuration setup, can not be immutable because it is initialized
     UniswapV3OracleConfig public oracleConfig;
 
-    /// @param _configAddress UniswapV3OracleConfig address
-    function initialize(UniswapV3OracleConfig _configAddress) external virtual initializer {
-        oracleConfig = _configAddress;
+    constructor() {
+        // disable initializer
+        oracleConfig = UniswapV3OracleConfig(address(this));
+    }
 
+    /// @param _configAddress UniswapV3OracleConfig address
+    function initialize(UniswapV3OracleConfig _configAddress) external virtual {
+        if (address(oracleConfig) != address(0)) revert("Initializable: contract is already initialized");
+
+        oracleConfig = _configAddress;
         emit UniswapV3ConfigDeployed(_configAddress);
     }
 
