@@ -6,6 +6,7 @@ import "forge-std/Test.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
+import {SiloERC4626Lib} from "silo-core/contracts/lib/SiloERC4626Lib.sol";
 
 import {MintableToken} from "../_common/MintableToken.sol";
 import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
@@ -21,7 +22,6 @@ contract DepositTest is SiloLittleHelper, Test {
 
     event Deposit(address indexed sender, address indexed owner, uint256 assets, uint256 shares);
     event DepositProtected(address indexed sender, address indexed owner, uint256 assets, uint256 shares);
-
 
     function setUp() public {
         siloConfig = _setUpLocalFixture();
@@ -142,5 +142,31 @@ contract DepositTest is SiloLittleHelper, Test {
     function test_maxDeposit() public {
         assertEq(silo0.maxDeposit(address(1)), 2 ** 256 - 1, "ERC4626 expect to return 2 ** 256 - 1");
         assertEq(silo0.maxMint(address(1)), 2 ** 256 - 1, "ERC4626 expect to return 2 ** 256 - 1 (maxMint)");
+    }
+
+    /*
+    forge test -vv --ffi --mt test_deposit_zeroShares
+    */
+    function test_deposit_zeroShares() public {
+        _deposit(2 ** 128, address(1));
+        _depositForBorrow(2 ** 128, address(2));
+
+        _borrow(2 ** 128 / 2, address(1));
+
+        address anyAddress = makeAddr("any");
+        // no interest, so shares are 1:1
+        _depositForBorrow(1, anyAddress);
+
+        vm.warp(block.timestamp + 365 days);
+
+        // with interest assets > shares, so we can get zero
+
+        _mintTokens(token1, 1, anyAddress);
+
+        vm.startPrank(anyAddress);
+        token1.approve(address(silo1), 1);
+        vm.expectRevert(SiloERC4626Lib.ZeroShares.selector);
+        silo1.deposit(1, anyAddress);
+        vm.stopPrank();
     }
 }

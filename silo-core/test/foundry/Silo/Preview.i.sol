@@ -101,11 +101,15 @@ contract PreviewTest is SiloLittleHelper, Test {
             "you can get less shares on silo1 than on silo0, because we have interests here"
         );
 
-        assertEq(
-            previewShares1,
-            _depositForBorrow(_assets, depositor),
-            "previewDeposit with interest on the fly - must be as close but NOT more"
-        );
+        if (previewShares1 == 0) {
+            _depositForBorrowRevert(_assets, depositor, ISilo.ZeroShares.selector);
+        } else {
+            assertEq(
+                previewShares1,
+                _depositForBorrow(_assets, depositor),
+                "previewDeposit with interest on the fly - must be as close but NOT more"
+            );
+        }
 
         silo0.accrueInterest();
         silo1.accrueInterest();
@@ -116,11 +120,17 @@ contract PreviewTest is SiloLittleHelper, Test {
 
         assertLe(previewShares1, _assets, "with interests, we can receive less shares than assets amount");
 
-        assertEq(
-            previewShares1,
-            _depositForBorrow(_assets, depositor),
-            "previewDeposit after accrueInterest() - as close, but NOT more"
-        );
+        emit log_named_uint("previewShares1", previewShares1);
+
+        if (previewShares1 == 0) {
+            _depositForBorrowRevert(_assets, depositor, ISilo.ZeroShares.selector);
+        } else {
+            assertEq(
+                previewShares1,
+                _depositForBorrow(_assets, depositor),
+                "previewDeposit after accrueInterest() - as close, but NOT more"
+            );
+        }
     }
 
     /*
