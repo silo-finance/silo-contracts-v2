@@ -47,6 +47,11 @@ abstract contract SiloLittleHelper is CommonBase {
         shares = silo1.borrow(_amount, _borrower, _borrower);
     }
 
+    function _borrowShares(uint256 _shares, address _borrower) internal returns (uint256 amount) {
+        vm.prank(_borrower);
+        amount = silo1.borrowShares(_shares, _borrower, _borrower);
+    }
+
     function _repay(uint256 _amount, address _borrower) internal returns (uint256 shares) {
         _mintTokens(token1, _amount, _borrower);
         vm.prank(_borrower);
@@ -111,9 +116,9 @@ abstract contract SiloLittleHelper is CommonBase {
         }
     }
 
-    function _createDebt(uint256 _amount, address _borrower) internal returns (uint256 debtShares){
+    function _createDebt(uint128 _amount, address _borrower) internal returns (uint256 debtShares){
         _depositForBorrow(_amount, address(0x987654321));
-        _deposit(_amount * 2, _borrower);
+        _deposit(uint256(_amount) * 2 + (_amount % 2), _borrower);
         debtShares = _borrow(_amount, _borrower);
     }
 

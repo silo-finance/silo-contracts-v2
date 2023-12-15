@@ -4,9 +4,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [0.0.22] - 2023-12-15
+### Fixed
+- [TOB-SILO2-10](https://github.com/silo-finance/silo-contracts-v2/issues/300): Incorrect rounding direction in preview 
+  functions
+
 ## [0.0.21] - 2023-12-12
 ### Fixed
-- [TOB-SILO2-13](https://github.com/silo-finance/silo-contracts-v2/issues/306): Users can borrow from and deposit to the same silo vault to farm rewards
+- [TOB-SILO2-13](https://github.com/silo-finance/silo-contracts-v2/issues/306): Users can borrow from and deposit to the 
+  same silo vault to farm rewards
 
 ## [0.0.20] - 2023-12-11
 ### Fixed
