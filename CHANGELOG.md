@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [0.0.26] - 2023-12-15
+### Fixed
+- [TOB-SILO2-17](https://github.com/silo-finance/silo-contracts-v2/issues/318): Flashloan fee can round down to zero
+
 ## [0.0.25] - 2023-12-15
 ### Fixed
 - [TOB-SILO2-16](https://github.com/silo-finance/silo-contracts-v2/issues/317): Minting zero collateral shares can 
