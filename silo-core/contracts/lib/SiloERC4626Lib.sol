@@ -161,11 +161,6 @@ library SiloERC4626Lib {
 
         if (shares == 0) revert ZeroShares();
 
-        if (_token != address(0)) {
-            // Transfer tokens before minting. No state changes have been made so reentrancy does nothing
-            IERC20Upgradeable(_token).safeTransferFrom(_depositor, address(this), assets);
-        }
-
         // `assets` and `totalAssets` can never be more than uint256 because totalSupply cannot be either
         unchecked {
             _totalCollateral.assets = totalAssets + assets;
