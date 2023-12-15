@@ -30,6 +30,17 @@ abstract contract SiloLittleHelper is CommonBase {
         return _localFixture(_configName);
     }
 
+    function _depositForBorrowRevert(uint256 _assets, address _depositor, bytes4 _error) internal {
+        _mintTokens(token1, _assets, _depositor);
+
+        vm.startPrank(_depositor);
+        token1.approve(address(silo1), _assets);
+
+        vm.expectRevert(_error);
+        silo1.deposit(_assets, _depositor);
+        vm.stopPrank();
+    }
+
     function _depositForBorrow(uint256 _assets, address _depositor) internal returns (uint256 shares) {
         return _makeDeposit(silo1, token1, _assets, _depositor, ISilo.AssetType.Collateral);
     }

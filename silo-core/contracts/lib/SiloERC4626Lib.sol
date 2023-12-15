@@ -23,6 +23,8 @@ library SiloERC4626Lib {
     ///      deposited.
     uint256 internal constant _NO_DEPOSIT_LIMIT = type(uint256).max;
 
+    error ZeroShares();
+
     /// @notice Determines the maximum amount a user can deposit or mint
     /// @dev The function checks if deposit is possible for the given user, and if so, returns a constant
     /// representing no deposit limit
@@ -156,6 +158,8 @@ library SiloERC4626Lib {
             MathUpgradeable.Rounding.Down,
             ISilo.AssetType.Collateral
         );
+
+        if (shares == 0) revert ZeroShares();
 
         if (_token != address(0)) {
             // Transfer tokens before minting. No state changes have been made so reentrancy does nothing
