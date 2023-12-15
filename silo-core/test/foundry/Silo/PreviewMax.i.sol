@@ -55,7 +55,7 @@ contract PreviewMaxTest is SiloLittleHelper, Test {
         vm.prank(_DEPOSITOR);
         uint256 sharesWithdraw = silo1.withdraw(maxAssets, _DEPOSITOR, _DEPOSITOR);
 
-        assertEq(sharesWithdraw, maxShare, "maxWithdraw, maxRedeem returned invalid values");
+        assertEq(sharesWithdraw, maxShare, "sharesWithdraw == maxShare");
     }
 
     // FOUNDRY_PROFILE=core forge test -vvv --ffi --mt test_maxFlashLoan_fuzz
@@ -212,6 +212,6 @@ contract PreviewMaxTest is SiloLittleHelper, Test {
         vm.prank(_DEPOSITOR);
         uint256 sharesWithdraw = silo1.withdraw(maxAssets, _DEPOSITOR, _DEPOSITOR);
 
-        assertEq(sharesWithdraw, maxShare, "maxWithdraw, maxRedeem returned invalid values");
+        assertEq(sharesWithdraw, maxShare, "sharesWithdraw == maxShare");
     }
 }
