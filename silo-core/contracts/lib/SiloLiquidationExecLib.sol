@@ -263,24 +263,36 @@ library SiloLiquidationExecLib {
             uint256 sumOfBorrowerCollateralValue, uint256 totalBorrowerDebtValue, uint256 ltvBefore
         ) = SiloSolvencyLib.calculateLtv(_ltvData, _params.collateralConfigAsset, _params.debtConfigAsset);
 
-        if (!_params.selfLiquidation && _params.collateralLt >= ltvBefore) return (0, 0);
+        if (!_params.selfLiquidation) {
+            if (_params.collateralLt >= ltvBefore) return (0, 0);
 
-        // based on ltvBefore - what is "normal" max?
-        // uint256 minAcceptableLTV = SiloLiquidationLib.minAcceptableLTV(_params.collateralLt);
-        // can I calcualte max debt to cover based on ltvBefore?
-        (uint256 maxCollateralToLiquidate, uint256 maxDebtToRepay) = SiloLiquidationLib.maxLiquidation(
-            sumOfCollateralAssets,
-            sumOfBorrowerCollateralValue,
-            _ltvData.borrowerDebtAssets,
-            totalBorrowerDebtValue,
-            _params.collateralLt,
-            _params.selfLiquidation ? 0 : _params.liquidationFee
-        );
+            // based on ltvBefore - what is "normal" max?
+            // uint256 minAcceptableLTV = SiloLiquidationLib.minAcceptableLTV(_params.collateralLt);
+            // can I calcualte max debt to cover based on ltvBefore?
+            // we need to know max limit when it is not self liquidation
+            (uint256 maxCollateralToLiquidate, uint256 maxDebtToRepay) = SiloLiquidationLib.maxLiquidation(
+                sumOfCollateralAssets,
+                sumOfBorrowerCollateralValue,
+                _ltvData.borrowerDebtAssets,
+                totalBorrowerDebtValue,
+                _params.collateralLt,
+                _params.selfLiquidation ? 0 : _params.liquidationFee
+            );
+
+            if (_params.debtToCover >= maxDebtToRepay) {
+                return (maxCollateralToLiquidate, maxDebtToRepay);
+            }
+        }
+
+        // can I take dust and check wha twill be the dust level and if we will be below min acceptable LTV?
+
+
+        // at this point `_params.debtToCover` is consider valid value
 
         uint256 ltvAfter;
 
         (receiveCollateralAssets, repayDebtAssets, ltvAfter) = SiloLiquidationLib.calculateExactLiquidationAmounts(
-            _params.debtToCover > maxDebtToRepay && !_params.selfLiquidation ? maxDebtToRepay - 1 : _params.debtToCover,
+            _params.debtToCover,
             sumOfCollateralAssets,
             sumOfBorrowerCollateralValue,
             _ltvData.borrowerDebtAssets,
