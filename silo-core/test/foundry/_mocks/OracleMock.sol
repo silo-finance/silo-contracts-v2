@@ -18,4 +18,21 @@ contract OracleMock is Test {
         vm.mockCall(ADDRESS, data, abi.encode(_quoteAmount));
         vm.expectCall(ADDRESS, data);
     }
+
+    function expectQuote(uint256 _baseAmount, address _baseToken) external {
+        bytes memory data = abi.encodeWithSelector(ISiloOracle.quote.selector, _baseAmount, _baseToken);
+        vm.expectCall(ADDRESS, data);
+    }
+
+    // ISiloOracle.beforeQuote.selector: 0xf9fa619a
+    function beforeQuoteMock(address _baseToken) external {
+        bytes memory data = abi.encodeWithSelector(ISiloOracle.beforeQuote.selector, _baseToken);
+        vm.mockCall(ADDRESS, data, abi.encode());
+        vm.expectCall(ADDRESS, data);
+    }
+
+    function expectBeforeQuote(address _baseToken) external {
+        bytes memory data = abi.encodeWithSelector(ISiloOracle.beforeQuote.selector, _baseToken);
+        vm.expectCall(ADDRESS, data);
+    }
 }

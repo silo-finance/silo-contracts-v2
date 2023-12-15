@@ -45,9 +45,13 @@ library SiloSolvencyLib {
         ISiloConfig.ConfigData memory _collateralConfig,
         ISiloConfig.ConfigData memory _debtConfig,
         address _borrower,
-        ISilo.AccrueInterestInMemory _accrueInMemory
+        ISilo.AccrueInterestInMemory _accrueInMemory,
+        uint256 debtShareBalance
     ) external view returns (bool) {
-        uint256 ltv = getLtv(_collateralConfig, _debtConfig, _borrower, ISilo.OracleType.Solvency, _accrueInMemory);
+        uint256 ltv = getLtv(
+            _collateralConfig, _debtConfig, _borrower, ISilo.OracleType.Solvency, _accrueInMemory, debtShareBalance
+        );
+
         return ltv <= _collateralConfig.lt;
     }
 
@@ -63,7 +67,12 @@ library SiloSolvencyLib {
         address _borrower,
         ISilo.AccrueInterestInMemory _accrueInMemory
     ) external view returns (bool) {
-        uint256 ltv = getLtv(_collateralConfig, _debtConfig, _borrower, ISilo.OracleType.MaxLtv, _accrueInMemory);
+        uint256 debtShareBalance = IShareToken(_debtConfig.debtShareToken).balanceOf(_borrower);
+
+        uint256 ltv = getLtv(
+            _collateralConfig, _debtConfig, _borrower, ISilo.OracleType.MaxLtv, _accrueInMemory, debtShareBalance
+        );
+
         return ltv <= _collateralConfig.maxLtv;
     }
 
@@ -203,14 +212,13 @@ library SiloSolvencyLib {
         ISiloConfig.ConfigData memory _debtConfig,
         address _borrower,
         ISilo.OracleType _oracleType,
-        ISilo.AccrueInterestInMemory _accrueInMemory
+        ISilo.AccrueInterestInMemory _accrueInMemory,
+        uint256 _debtShareBalance
     ) internal view returns (uint256 ltvInDp) {
-        uint256 debtShareBalance = IShareToken(_debtConfig.debtShareToken).balanceOf(_borrower);
-
-        if (debtShareBalance == 0) return 0;
+        if (_debtShareBalance == 0) return 0;
 
         LtvData memory ltvData = getAssetsDataForLtvCalculations(
-            _collateralConfig, _debtConfig, _borrower, _oracleType, _accrueInMemory, debtShareBalance
+            _collateralConfig, _debtConfig, _borrower, _oracleType, _accrueInMemory, _debtShareBalance
         );
 
         if (ltvData.borrowerDebtAssets == 0) return 0;
