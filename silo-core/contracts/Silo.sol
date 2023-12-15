@@ -86,7 +86,11 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
             ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig
         ) = _getOrderedConfigs(_borrower);
 
-        return SiloSolvencyLib.isSolvent(collateralConfig, debtConfig, _borrower, AccrueInterestInMemory.Yes);
+        uint256 debtShareBalance = IShareToken(debtConfig.debtShareToken).balanceOf(_borrower);
+
+        return SiloSolvencyLib.isSolvent(
+            collateralConfig, debtConfig, _borrower, AccrueInterestInMemory.Yes, debtShareBalance
+        );
     }
 
     /// @inheritdoc ISilo
@@ -121,7 +125,12 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
         ) = _getOrderedConfigs(_borrower);
 
         ltv = SiloSolvencyLib.getLtv(
-            collateralConfig, debtConfig, _borrower, ISilo.OracleType.Solvency, AccrueInterestInMemory.Yes
+            collateralConfig,
+            debtConfig,
+            _borrower,
+            ISilo.OracleType.Solvency,
+            AccrueInterestInMemory.Yes,
+            IShareToken(debtConfig.debtShareToken).balanceOf(_borrower)
         );
     }
 
@@ -972,6 +981,12 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
             emit WithdrawProtected(msg.sender, _receiver, _owner, assets, shares);
         }
 
+        uint256 debtShareBalance = IShareToken(debtConfig.debtShareToken).balanceOf(_owner);
+
+        if (debtShareBalance == 0) {
+            return (assets, shares);
+        }
+
         if (collateralConfig.callBeforeQuote) {
             ISiloOracle(collateralConfig.solvencyOracle).beforeQuote(collateralConfig.token);
         }
@@ -981,7 +996,10 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
         }
 
         // `_params.owner` must be solvent
-        if (!SiloSolvencyLib.isSolvent(collateralConfig, debtConfig, _owner, AccrueInterestInMemory.No)) {
+        if (!SiloSolvencyLib.isSolvent(
+                collateralConfig, debtConfig, _owner, AccrueInterestInMemory.No, debtShareBalance
+            )
+        ) {
             revert NotSolvent();
         }
     }
