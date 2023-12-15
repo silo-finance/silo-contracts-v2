@@ -171,6 +171,11 @@ library SiloERC4626Lib {
             _totalCollateral.assets = totalAssets + assets;
         }
 
+        if (_token != address(0)) {
+            // Transfer tokens before minting. No state changes have been made so reentrancy does nothing
+            IERC20Upgradeable(_token).safeTransferFrom(_depositor, address(this), assets);
+        }
+
         // Hook receiver is called after `mint` and can reentry but state changes are completed already
         _collateralShareToken.mint(_receiver, _depositor, shares);
     }
