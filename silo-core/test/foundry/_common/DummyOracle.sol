@@ -8,6 +8,7 @@ contract DummyOracle is ISiloOracle {
     address public quoteToken;
 
     bool _expectBeforeQuote;
+    bool _oracleBroken;
 
     constructor(uint256 _price, address _quoteToken) {
         price = _price;
@@ -15,8 +16,9 @@ contract DummyOracle is ISiloOracle {
     }
 
     function beforeQuote(address _baseToken) external view {
-        if (_baseToken == quoteToken) revert("beforeQuote(): wrong base token");
-        if (!_expectBeforeQuote) revert("beforeQuote() was not expected, but was called anyway");
+        if (_baseToken == quoteToken) revert("beforeQuote: wrong base token");
+        if (_oracleBroken) revert("beforeQuote: oracle is broken");
+        if (!_expectBeforeQuote) revert("beforeQuote: was not expected, but was called anyway");
     }
 
     function setExpectBeforeQuote(bool _expect) external {
@@ -24,8 +26,17 @@ contract DummyOracle is ISiloOracle {
     }
 
     function quote(uint256 _baseAmount, address _baseToken) external view returns (uint256 quoteAmount) {
-        if (_baseToken == quoteToken) revert("wrong base token");
+        if (_baseToken == quoteToken) revert("quote: wrong base token");
+        if (_oracleBroken) revert("quote: oracle is broken");
 
         quoteAmount = _baseAmount * price / 1e18;
+    }
+
+    function breakOracle() external {
+        _oracleBroken = true;
+    }
+
+    function fixOracle() external {
+        _oracleBroken = false;
     }
 }

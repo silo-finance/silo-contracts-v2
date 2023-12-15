@@ -143,7 +143,8 @@ interface ISilo is IERC4626, IERC3156FlashLender, ISiloLiquidation {
     /// @notice Fetches the utilization data of the silo used by IRM
     function utilizationData() external view returns (UtilizationData memory utilizationData);
 
-    /// @notice Fetches the available liquidity in the silo
+    /// @notice Fetches the available liquidity in the silo, it does not include interest, so real liquidity will be
+    /// smaller
     /// @return liquidity The amount of available liquidity
     function getLiquidity() external view returns (uint256 liquidity);
 
