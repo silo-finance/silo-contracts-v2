@@ -8,6 +8,15 @@ import {ISiloLiquidation} from "../interfaces/ISiloLiquidation.sol";
 
 
 library SiloLiquidationLib {
+    struct LiquidationPreviewParams {
+        uint256 collateralLt;
+        address collateralConfigAsset;
+        address debtConfigAsset;
+        uint256 debtToCover;
+        uint256 liquidationFee;
+        bool selfLiquidation;
+    }
+
     uint256 internal constant _PRECISION_DECIMALS = 1e18;
 
     /// @dev when user is insolvent with some LT, we will allow to liquidate to some minimal level of ltv
@@ -51,70 +60,83 @@ library SiloLiquidationLib {
         debtToRepay = valueToAssetsByRatio(repayValue, _borrowerDebtAssets, _borrowerDebtValue);
     }
 
-    /// @notice this method does not care about ltv, it will calculate based on any values, this is just a pure math
-    /// if ltv is over 100% this method should not be called, it should be full liquidation right away
-    /// This function never reverts
-    /// This function unchecks LTV calculations. Uncheck is safe only when we already calculate LTV before
-    /// @param _debtToCover amount of debt token to use for repay
-    /// @return collateralAssetsToLiquidate this is how much collateral liquidator will get
-    /// @return debtAssetsToRepay this is how much debt had been repay, it might be less or eq than `_debtToCover`
-    /// @return ltvAfterLiquidation if 0, means this is full liquidation
-    function calculateExactLiquidationAmounts(
-        uint256 _debtToCover,
-        uint256 _sumOfBorrowerCollateralAssets,
-        uint256 _sumOfBorrowerCollateralValue,
-        uint256 _totalBorrowerDebtAssets,
-        uint256 _totalBorrowerDebtValue,
-        uint256 _liquidationFee
+    /// @dev in case of self liquidation, we do not apply any restrictions, we do not have restriction how much
+    /// user need to repay, so there is no point of having restrictions on liquidation
+    /// the only rule is - we do not apply fee, because in some cases it can lead to increasing LTV
+    function liquidationPreview(
+        uint256 _sumOfCollateralAssets,
+        uint256 _sumOfCollateralValue,
+        uint256 _borrowerDebtAssets,
+        uint256 _borrowerDebtValue,
+        LiquidationPreviewParams memory _params
+    )
+        external
+        pure
+        returns (uint256 collateralToLiquidate, uint256 debtToRepay, uint256 ltvAfter)
+    {
+        uint256 collateralValueToLiquidate;
+        uint256 debtValueToRepay;
+
+        if (_params.selfLiquidation) {
+            debtToRepay = _params.debtToCover > _borrowerDebtAssets ? _borrowerDebtAssets : _params.debtToCover;
+            debtValueToRepay = valueToAssetsByRatio(debtToRepay, _borrowerDebtValue, _borrowerDebtAssets);
+        } else {
+            uint256 maxRepayValue = estimateMaxRepayValue(
+                _borrowerDebtValue, _sumOfCollateralValue, minAcceptableLTV(_params.collateralLt), _params.liquidationFee
+            );
+
+            if (maxRepayValue == _borrowerDebtValue) {
+                // forced full liquidation
+                debtToRepay = _borrowerDebtAssets;
+                debtValueToRepay = _borrowerDebtValue;
+            } else {
+                // partial liquidation
+                uint256 maxDebtToRepay = valueToAssetsByRatio(maxRepayValue, _borrowerDebtAssets, _borrowerDebtValue);
+                debtToRepay = _params.debtToCover > maxDebtToRepay ? maxDebtToRepay : _params.debtToCover;
+                debtValueToRepay = valueToAssetsByRatio(debtToRepay, _borrowerDebtValue, _borrowerDebtAssets);
+            }
+        }
+
+        collateralValueToLiquidate = calculateCollateralToLiquidate(
+            debtValueToRepay, _sumOfCollateralValue, _params.selfLiquidation ? 0 : _params.liquidationFee
+        );
+
+        collateralToLiquidate = valueToAssetsByRatio(
+            collateralValueToLiquidate,
+            _sumOfCollateralAssets,
+            _sumOfCollateralValue
+        );
+
+        ltvAfter = calculateLtvAfter(
+            _sumOfCollateralValue, _borrowerDebtValue, collateralValueToLiquidate, debtValueToRepay
+        );
+    }
+
+    function calculateLtvAfter(
+        uint256 _sumOfCollateralValue,
+        uint256 _totalDebtValue,
+        uint256 _collateralValueToLiquidate,
+        uint256 _debtValueToCover
     )
         internal
         pure
-        returns (uint256 collateralAssetsToLiquidate, uint256 debtAssetsToRepay, uint256 ltvAfterLiquidation)
+        returns (uint256 ltvAfterLiquidation)
     {
-        if (_sumOfBorrowerCollateralValue == 0) { // we need to support this weird case to not revert on /0
-            return (_sumOfBorrowerCollateralAssets, _debtToCover, 0);
+        if (_sumOfCollateralValue == _collateralValueToLiquidate || _totalDebtValue == _debtValueToCover) {
+            return 0;
         }
 
-        if (_debtToCover == 0 || _totalBorrowerDebtValue == 0 || _totalBorrowerDebtAssets == 0) {
-            return (0, 0, _ltvAfter(_sumOfBorrowerCollateralValue, _totalBorrowerDebtValue));
-        }
-
-        // full on dust OR when _debtToCover higher then total assets
-        // keeping _debtToCover to original value and do math on _totalBorrowerDebtAssets prevents overflow on hi values
-        if (_debtToCover > _POSITION_DUST_LEVEL * _totalBorrowerDebtAssets / _PRECISION_DECIMALS) {
-            uint256 liquidationValue = calculateCollateralToLiquidate(
-                _totalBorrowerDebtValue, _sumOfBorrowerCollateralValue, _liquidationFee
+        unchecked { // all subs are safe because this values are chunks of total, so we will not underflow
+            ltvAfterLiquidation = _ltvAfter(
+                _sumOfCollateralValue - _collateralValueToLiquidate,
+                _totalDebtValue - _debtValueToCover
             );
-
-            collateralAssetsToLiquidate = valueToAssetsByRatio(
-                liquidationValue, _sumOfBorrowerCollateralAssets, _sumOfBorrowerCollateralValue
-            );
-
-            return (collateralAssetsToLiquidate, _totalBorrowerDebtAssets, 0);
-        }
-
-        debtAssetsToRepay = _debtToCover;
-        uint256 collateralValueToLiquidate;
-        uint256 debtValueToCover = _totalBorrowerDebtValue * debtAssetsToRepay / _totalBorrowerDebtAssets;
-
-        (collateralAssetsToLiquidate, collateralValueToLiquidate) = calculateCollateralsToLiquidate(
-            debtValueToCover, _sumOfBorrowerCollateralValue, _sumOfBorrowerCollateralAssets, _liquidationFee
-        );
-
-        if (_sumOfBorrowerCollateralValue == collateralValueToLiquidate) {
-            ltvAfterLiquidation = 0;
-        } else {
-            unchecked { // all subs are safe because this values are chunks of total, so we will not underflow
-                ltvAfterLiquidation = _ltvAfter(
-                    _sumOfBorrowerCollateralValue - collateralValueToLiquidate,
-                    _totalBorrowerDebtValue - debtValueToCover
-                );
-            }
         }
     }
 
     /// @notice reverts on `_totalValue` == 0
     /// @dev calculate assets based on ratio: assets = (value, totalAssets, totalValue)
+    /// to calculate assets => value, use it like: value = (assets, totalValue, totalAssets)
     function valueToAssetsByRatio(uint256 _value, uint256 _totalAssets, uint256 _totalValue)
         internal
         pure
@@ -198,10 +220,13 @@ library SiloLiquidationLib {
     /// @dev the math is based on: (Dv - x)/(Cv - (x + xf)) = LT
     /// where Dv: debt value, Cv: collateral value, LT: expected LT, f: liquidation fee, x: is value we looking for
     /// x = (Dv - LT * Cv) / (DP - LT - LT * f)
+    /// result also take into consideration the dust
     /// @notice protocol does not uses this method, because in protocol our input is debt to cover in assets
     /// however this is useful to figure out what is max debt to cover.
     /// @param _totalBorrowerCollateralValue regular and protected
     /// @param _ltvAfterLiquidation % of `repayValue` that liquidator will use as profit from liquidating
+    /// @return repayValue max repay value that is allowed for partial liquidation. if this value equals
+    /// `_totalBorrowerDebtValue`, that means dust threshold was triggered and result force to do full liquidation
     function estimateMaxRepayValue(
         uint256 _totalBorrowerDebtValue,
         uint256 _totalBorrowerCollateralValue,

@@ -14,15 +14,6 @@ import {SiloSolvencyLib} from "./SiloSolvencyLib.sol";
 import {SiloLiquidationLib} from "./SiloLiquidationLib.sol";
 
 library SiloLiquidationExecLib {
-    struct LiquidationPreviewParams {
-        uint256 collateralLt;
-        address collateralConfigAsset;
-        address debtConfigAsset;
-        uint256 debtToCover;
-        uint256 liquidationFee;
-        bool selfLiquidation;
-    }
-
     /// @dev that method allow to finish liquidation process by giving up collateral to liquidator
     function withdrawCollateralsToLiquidator(
         ISiloConfig _config,
@@ -89,7 +80,7 @@ library SiloLiquidationExecLib {
             borrowerCollateralToLiquidate, repayDebtAssets
         ) = liquidationPreview(
             ltvData,
-            LiquidationPreviewParams({
+            SiloLiquidationLib.LiquidationPreviewParams({
                 collateralLt: _collateralConfig.lt,
                 collateralConfigAsset: _collateralConfig.token,
                 debtConfigAsset: _debtConfig.token,
@@ -247,13 +238,14 @@ library SiloLiquidationExecLib {
     /// @return repayDebtAssets
     function liquidationPreview( // solhint-disable-line function-max-lines, code-complexity
         SiloSolvencyLib.LtvData memory _ltvData,
-        LiquidationPreviewParams memory _params
+        SiloLiquidationLib.LiquidationPreviewParams memory _params
     )
         internal
         view
         returns (uint256 receiveCollateralAssets, uint256 repayDebtAssets)
     {
         uint256 sumOfCollateralAssets;
+
         // safe because same asset can not overflow
         unchecked  { sumOfCollateralAssets = _ltvData.borrowerCollateralAssets + _ltvData.borrowerProtectedAssets; }
 
@@ -263,42 +255,25 @@ library SiloLiquidationExecLib {
             uint256 sumOfBorrowerCollateralValue, uint256 totalBorrowerDebtValue, uint256 ltvBefore
         ) = SiloSolvencyLib.calculateLtv(_ltvData, _params.collateralConfigAsset, _params.debtConfigAsset);
 
-        if (!_params.selfLiquidation) {
-            if (_params.collateralLt >= ltvBefore) return (0, 0);
-
-            // based on ltvBefore - what is "normal" max?
-            // uint256 minAcceptableLTV = SiloLiquidationLib.minAcceptableLTV(_params.collateralLt);
-            // can I calcualte max debt to cover based on ltvBefore?
-            // we need to know max limit when it is not self liquidation
-            (uint256 maxCollateralToLiquidate, uint256 maxDebtToRepay) = SiloLiquidationLib.maxLiquidation(
-                sumOfCollateralAssets,
-                sumOfBorrowerCollateralValue,
-                _ltvData.borrowerDebtAssets,
-                totalBorrowerDebtValue,
-                _params.collateralLt,
-                _params.selfLiquidation ? 0 : _params.liquidationFee
-            );
-
-            if (_params.debtToCover >= maxDebtToRepay) {
-                return (maxCollateralToLiquidate, maxDebtToRepay);
+        if (_params.selfLiquidation) {
+            if (_params.debtToCover >= _ltvData.borrowerDebtAssets) {
+                // only because it is self liquidation, we return all collateral on repay all debt
+                return (sumOfCollateralAssets, _ltvData.borrowerDebtAssets);
             }
         }
 
-        // can I take dust and check wha twill be the dust level and if we will be below min acceptable LTV?
-
-
-        // at this point `_params.debtToCover` is consider valid value
+        if (_params.collateralLt >= ltvBefore) return (0, 0);
 
         uint256 ltvAfter;
 
-        (receiveCollateralAssets, repayDebtAssets, ltvAfter) = SiloLiquidationLib.calculateExactLiquidationAmounts(
-            _params.debtToCover,
+        (receiveCollateralAssets, repayDebtAssets, ltvAfter) = SiloLiquidationLib.liquidationPreview(
             sumOfCollateralAssets,
             sumOfBorrowerCollateralValue,
             _ltvData.borrowerDebtAssets,
             totalBorrowerDebtValue,
-            _params.selfLiquidation ? 0 : _params.liquidationFee
+            _params
         );
+        
 
         if (receiveCollateralAssets == 0 || repayDebtAssets == 0) return (0, 0);
 
@@ -317,9 +292,9 @@ library SiloLiquidationExecLib {
                     revert ISiloLiquidation.Insolvency();
                 }
             } else {
-                if (ltvAfter < SiloLiquidationLib.minAcceptableLTV(_params.collateralLt)) {
-                    revert ISiloLiquidation.LiquidationTooBig();
-                }
+//                if (ltvAfter < SiloLiquidationLib.minAcceptableLTV(_params.collateralLt)) {
+//                    revert ISiloLiquidation.LiquidationTooBig();
+//                }
             }
         }
     }
