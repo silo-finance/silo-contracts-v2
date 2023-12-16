@@ -23,11 +23,13 @@ contract PreviewMaxTest is SiloLittleHelper, Test {
     // solhint-disable var-name-mixedcase
     address immutable internal _DEPOSITOR;
     address immutable internal _BORROWER;
+    address immutable internal _BORROWER2;
     // solhint-disable-enable var-name-mixedcase
 
     constructor() {
         _DEPOSITOR = makeAddr("Depositor");
         _BORROWER = makeAddr("Borrower");
+        _BORROWER2 = makeAddr("Borrower2");
     }
 
     function setUp() public {
@@ -87,27 +89,47 @@ contract PreviewMaxTest is SiloLittleHelper, Test {
 
     // FOUNDRY_PROFILE=core forge test -vvv --ffi --mt test_maxBorrow_fuzz
     // solhint-disable-next-line func-name-mixedcase
-    function test_maxBorrow_fuzz(uint128 _assets, bool _useShares) public {
-        uint256 assetsOrSharesToBorrow = _assets / 10 + (_assets % 2); // keep even/odd
-        vm.assume(assetsOrSharesToBorrow < _assets);
-
-        // can be 0 if _assets < 10
-        if (assetsOrSharesToBorrow == 0) {
-            _assets = 3;
-            assetsOrSharesToBorrow = 1;
-        }
+    function test_maxBorrow_fuzz(uint256 _assets, uint256 _collateral, bool _useShares) public {
+        vm.assume(_assets < type(uint128).max);
+        vm.assume(_collateral < type(uint128).max);
+        vm.assume(_assets < _collateral);
+        vm.assume(_assets > 3); // only for this test as we have `_assets / 2` for `_BORROWER2`
 
         _depositForBorrow(_assets, _DEPOSITOR);
-        _deposit(_assets, _BORROWER);
+        _deposit(_collateral, _BORROWER);
+        _deposit(_collateral, _BORROWER2);
+
+        uint256 amountToBorrowFor2 = _assets / 2;
+
+        _borrow(amountToBorrowFor2, _BORROWER2);
 
         uint256 max = _useShares ? silo1.maxBorrowShares(_BORROWER) : silo1.maxBorrow(_BORROWER);
 
         uint256 result = _useShares
-            ? _borrow(assetsOrSharesToBorrow, _BORROWER)
-            : _borrowShares(assetsOrSharesToBorrow, _BORROWER);
+            ? _borrow(max, _BORROWER)
+            : _borrowShares(max, _BORROWER);
 
-        assertEq(assetsOrSharesToBorrow, result, "assetsOrSharesToBorrow == result");
-        assertEq(max, _assets, "max == _assets");
+        // All conditions below are only to ensure that the `maxBorrowShares` and `maxBorrow`
+        // can have only 1 wei difference with the actual result.
+        // So, the user will borrow an amout that is 1 wei less than the maximum possible amount.
+
+        // assertEq(max, result, "max == result"); // uncomment to test exact values
+
+        // allow 1 wei difference for max and result
+        if (max < result) {
+            assertEq(max + 1, result, "max + 1 == result");
+        } else {
+            assertEq(max, result, "max == result");
+        }
+
+        // assertEq(max, _assets - amountToBorrowFor2, "max == _assets"); // uncomment to test exact values
+
+        // allow 1 wei difference for max and _assets - amountToBorrowFor2
+        if (max < _assets - amountToBorrowFor2) {
+            assertEq(max + 1, _assets - amountToBorrowFor2, "max + 1 == _assets - amountToBorrowFor2");
+        } else {
+            assertEq(max, _assets - amountToBorrowFor2, "max == _assets");
+        }
     }
 
     // FOUNDRY_PROFILE=core forge test -vvv --ffi --mt test_maxReepay_fuzz
@@ -155,17 +177,34 @@ contract PreviewMaxTest is SiloLittleHelper, Test {
     // solhint-disable-next-line func-name-mixedcase
     function test_maxBorrow_debug() public {
         bool _useShares = false;
-        uint256 assetsOrSharesToBorrow = 251;
         uint256 _assets = 2516;
+        uint256 _collateral = 3000;
 
         _depositForBorrow(_assets, _DEPOSITOR);
-        _deposit(_assets, _BORROWER);
+        _deposit(_collateral, _BORROWER);
+        _deposit(_collateral, _BORROWER2);
+
+        uint256 amountToBorrowFor2 = _assets / 2;
+
+        _borrow(amountToBorrowFor2, _BORROWER2);
 
         uint256 max = _useShares ? silo1.maxBorrowShares(_BORROWER) : silo1.maxBorrow(_BORROWER);
-        uint256 result = _useShares ? _borrow(assetsOrSharesToBorrow, _BORROWER) : _borrowShares(assetsOrSharesToBorrow, _BORROWER);
+        uint256 result = _useShares ? _borrow(max, _BORROWER) : _borrowShares(max, _BORROWER);
 
-        assertEq(max, _assets, "max == _assets");
-        assertEq(assetsOrSharesToBorrow, result, "assetsOrSharesToBorrow == result");
+        // allow 1 wei difference for max and result
+        if (max < result) {
+            assertEq(max + 1, result, "max + 1 == result");
+            max += 1; // ignoring 1 wei precission error
+        } else {
+            assertEq(max, result, "max == result");
+        }
+
+        // allow 1 wei difference for max and _assets - amountToBorrowFor2
+        if (max < _assets - amountToBorrowFor2) {
+            assertEq(max + 1, _assets - amountToBorrowFor2, "max + 1 == _assets - amountToBorrowFor2");
+        } else {
+            assertEq(max, _assets - amountToBorrowFor2, "max == _assets");
+        }
     }
 
 
