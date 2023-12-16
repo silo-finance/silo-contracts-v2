@@ -39,16 +39,14 @@ contract PreviewMaxTest is SiloLittleHelper, Test {
     // FOUNDRY_PROFILE=core forge test -vvv --ffi --mt test_maxWithdrawRedeem_fuzz
     /// forge-config: core.fuzz.runs = 10000
     function test_maxWithdrawRedeem_fuzz( // solhint-disable-line func-name-mixedcase
-        uint256 _assetsToDepositForBorrow,
-        uint256 _assetsToDepositAsCollateral,
+        uint128 _assetsToDepositForBorrow,
         uint256 _assetsToBorrow
     ) public {
-        vm.assume(_assetsToDepositForBorrow > 1 && _assetsToDepositForBorrow < type(uint128).max);
-        vm.assume(_assetsToBorrow > 1 && _assetsToBorrow < _assetsToDepositForBorrow);
-        vm.assume(_assetsToDepositAsCollateral > 1 && _assetsToDepositAsCollateral > _assetsToBorrow);
+        vm.assume(_assetsToDepositForBorrow > 1);
+        vm.assume(_assetsToBorrow > 1 && _assetsToBorrow < _assetsToDepositForBorrow / 2);
 
         _depositForBorrow(_assetsToDepositForBorrow, _DEPOSITOR);
-        _deposit(_assetsToDepositAsCollateral, _BORROWER);
+        _deposit(_assetsToBorrow * 2, _BORROWER);
         _borrow(_assetsToBorrow, _BORROWER);
 
         uint256 maxAssets = silo1.maxWithdraw(_DEPOSITOR);
