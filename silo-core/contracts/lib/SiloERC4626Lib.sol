@@ -89,6 +89,17 @@ library SiloERC4626Lib {
                     _assetType
                 );
 
+                if (assets > _liquidity) {
+                    assets = _liquidity;
+                    shares = SiloMathLib.convertToShares(
+                        assets,
+                        _totalAssets,
+                        shareTokenTotalSupply,
+                        MathUpgradeable.Rounding.Up,
+                        _assetType
+                    );
+                }
+
                 return (assets, shares);
             }
 
