@@ -4,10 +4,13 @@ pragma solidity 0.8.21;
 import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
 import {ISiloLiquidation} from "../interfaces/ISiloLiquidation.sol";
 
-//import {console} from "forge-std/console.sol";
+import {console} from "forge-std/console.sol";
 
 
 library SiloLiquidationLib {
+    /// @dev this is basically LTV == 100%
+    uint256 internal constant _BAD_DEBT = 1e18;
+
     struct LiquidationPreviewParams {
         uint256 collateralLt;
         address collateralConfigAsset;
@@ -64,6 +67,7 @@ library SiloLiquidationLib {
     /// user need to repay, so there is no point of having restrictions on liquidation
     /// the only rule is - we do not apply fee, because in some cases it can lead to increasing LTV
     function liquidationPreview(
+        uint256 _ltvBefore,
         uint256 _sumOfCollateralAssets,
         uint256 _sumOfCollateralValue,
         uint256 _borrowerDebtAssets,
@@ -71,19 +75,25 @@ library SiloLiquidationLib {
         LiquidationPreviewParams memory _params
     )
         external
-        pure
+        view
         returns (uint256 collateralToLiquidate, uint256 debtToRepay, uint256 ltvAfter)
     {
         uint256 collateralValueToLiquidate;
         uint256 debtValueToRepay;
 
-        if (_params.selfLiquidation) {
+        if (_params.selfLiquidation || _ltvBefore > _BAD_DEBT) {
+            // in case of self liquidation OR when we have bad debt, we allow for any amount
             debtToRepay = _params.debtToCover > _borrowerDebtAssets ? _borrowerDebtAssets : _params.debtToCover;
             debtValueToRepay = valueToAssetsByRatio(debtToRepay, _borrowerDebtValue, _borrowerDebtAssets);
         } else {
             uint256 maxRepayValue = estimateMaxRepayValue(
                 _borrowerDebtValue, _sumOfCollateralValue, minAcceptableLTV(_params.collateralLt), _params.liquidationFee
             );
+
+            console.log("[maxRepayValue]", maxRepayValue);
+            console.log("[_borrowerDebtValue]", _borrowerDebtValue);
+
+            //todo problem - in case of bad debt, we should allow for any liquidation
 
             if (maxRepayValue == _borrowerDebtValue) {
                 // forced full liquidation
@@ -96,6 +106,10 @@ library SiloLiquidationLib {
                 debtValueToRepay = valueToAssetsByRatio(debtToRepay, _borrowerDebtValue, _borrowerDebtAssets);
             }
         }
+
+        console.log("[debtToRepay]", debtToRepay);
+        console.log("[debtValueToRepay]", debtValueToRepay);
+
 
         collateralValueToLiquidate = calculateCollateralToLiquidate(
             debtValueToRepay, _sumOfCollateralValue, _params.selfLiquidation ? 0 : _params.liquidationFee
@@ -110,6 +124,9 @@ library SiloLiquidationLib {
         ltvAfter = calculateLtvAfter(
             _sumOfCollateralValue, _borrowerDebtValue, collateralValueToLiquidate, debtValueToRepay
         );
+
+        console.log("[ltvAfter]", ltvAfter);
+
     }
 
     function calculateLtvAfter(
