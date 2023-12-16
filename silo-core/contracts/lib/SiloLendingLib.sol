@@ -263,7 +263,7 @@ library SiloLendingLib {
             borrowerDebtValue
         );
 
-        return maxBorrowValueToAssetsAndShares(
+        (assets, shares) = maxBorrowValueToAssetsAndShares(
             maxBorrowValue,
             borrowerDebtValue,
             _borrower,
@@ -273,6 +273,13 @@ library SiloLendingLib {
             _totalDebtAssets,
             _totalDebtShares
         );
+
+        if (assets > _totalDebtAssets) {
+            assets = _totalDebtAssets;
+            shares = SiloMathLib.convertToShares(
+                assets, _totalDebtAssets, _totalDebtShares, MathUpgradeable.Rounding.Down, ISilo.AssetType.Debt
+            );
+        }
     }
 
     /// @notice Checks if a borrower can borrow
