@@ -268,9 +268,7 @@ library SiloLiquidationExecLib {
                 // only because it is self liquidation, we return all collateral on repay all debt
                 return (sumOfCollateralAssets, _ltvData.borrowerDebtAssets);
             }
-        }
-
-        if (_params.collateralLt >= ltvBefore) return (0, 0);
+        } else if (_params.collateralLt >= ltvBefore) return (0, 0); // user is solvent
 
         uint256 ltvAfter;
 
