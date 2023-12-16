@@ -37,13 +37,13 @@ contract PreviewMaxTest is SiloLittleHelper, Test {
     }
 
     // FOUNDRY_PROFILE=core forge test -vvv --ffi --mt test_maxWithdrawRedeem_fuzz
-    // solhint-disable-next-line func-name-mixedcase
-    function test_maxWithdrawRedeem_fuzz(
+    /// forge-config: core.fuzz.runs = 10000
+    function test_maxWithdrawRedeem_fuzz( // solhint-disable-line func-name-mixedcase
         uint256 _assetsToDepositForBorrow,
         uint256 _assetsToDepositAsCollateral,
         uint256 _assetsToBorrow
     ) public {
-        vm.assume(_assetsToDepositForBorrow > 1);
+        vm.assume(_assetsToDepositForBorrow > 1 && _assetsToDepositForBorrow < type(uint128).max);
         vm.assume(_assetsToBorrow > 1 && _assetsToBorrow < _assetsToDepositForBorrow);
         vm.assume(_assetsToDepositAsCollateral > 1 && _assetsToDepositAsCollateral > _assetsToBorrow);
 
@@ -58,6 +58,9 @@ contract PreviewMaxTest is SiloLittleHelper, Test {
         uint256 sharesWithdraw = silo1.withdraw(maxAssets, _DEPOSITOR, _DEPOSITOR);
 
         assertEq(sharesWithdraw, maxShare, "sharesWithdraw == maxShare");
+
+        uint256 balance = IERC20(address(token1)).balanceOf(_DEPOSITOR);
+        assertEq(balance, maxAssets, "balance == maxAssets");
     }
 
     // FOUNDRY_PROFILE=core forge test -vvv --ffi --mt test_maxFlashLoan_fuzz
@@ -243,10 +246,6 @@ contract PreviewMaxTest is SiloLittleHelper, Test {
 
         uint256 maxAssets = silo1.maxWithdraw(_DEPOSITOR);
         uint256 maxShare = silo1.maxRedeem(_DEPOSITOR);
-
-        console.log("maxAssets", maxAssets);
-        console.log("maxShare", maxShare);
-        console.log("liquidity", token1.balanceOf(address(silo1)));
 
         vm.prank(_DEPOSITOR);
         uint256 sharesWithdraw = silo1.withdraw(maxAssets, _DEPOSITOR, _DEPOSITOR);
