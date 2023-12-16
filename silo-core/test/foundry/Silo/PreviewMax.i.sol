@@ -62,19 +62,16 @@ contract PreviewMaxTest is SiloLittleHelper, Test {
     }
 
     // FOUNDRY_PROFILE=core forge test -vvv --ffi --mt test_maxFlashLoan_fuzz
-    // solhint-disable-next-line func-name-mixedcase
-    function test_maxFlashLoan_fuzz(
-        uint256 _assetsToDepositForBorrow,
-        uint256 _assetsToDepositAsCollateral,
+    /// forge-config: core.fuzz.runs = 10000
+    function test_maxFlashLoan_fuzz( // solhint-disable-line func-name-mixedcase
+        uint128 _assetsToDepositForBorrow,
         uint256 _assetsToBorrow
     ) public {
-        vm.assume(_assetsToDepositForBorrow < type(uint128).max);
         vm.assume(_assetsToDepositForBorrow > 1);
-        vm.assume(_assetsToBorrow > 1 && _assetsToBorrow < _assetsToDepositForBorrow);
-        vm.assume(_assetsToDepositAsCollateral > 1 && _assetsToDepositAsCollateral > _assetsToBorrow);
+        vm.assume(_assetsToBorrow > 1 && _assetsToBorrow < _assetsToDepositForBorrow / 2);
 
         _depositForBorrow(_assetsToDepositForBorrow, _DEPOSITOR);
-        _deposit(_assetsToDepositAsCollateral, _BORROWER);
+        _deposit(_assetsToBorrow * 2, _BORROWER);
         _borrow(_assetsToBorrow, _BORROWER);
 
         uint256 maxFlashLoan = silo1.maxFlashLoan(address(token1));
@@ -89,6 +86,7 @@ contract PreviewMaxTest is SiloLittleHelper, Test {
     }
 
     // FOUNDRY_PROFILE=core forge test -vvv --ffi --mt test_maxBorrow_fuzz
+    /// forge-config: core.fuzz.runs = 10000
     // solhint-disable-next-line func-name-mixedcase
     function test_maxBorrow_fuzz(uint256 _assets, uint256 _collateral, bool _useShares) public {
         vm.assume(_assets < type(uint128).max);
@@ -134,20 +132,17 @@ contract PreviewMaxTest is SiloLittleHelper, Test {
     }
 
     // FOUNDRY_PROFILE=core forge test -vvv --ffi --mt test_maxReepay_fuzz
-    // solhint-disable-next-line func-name-mixedcase
-    function test_maxReepay_fuzz(
-        uint256 _assetsToDepositForBorrow,
-        uint256 _assetsToDepositAsCollateral,
+    /// forge-config: core.fuzz.runs = 10000
+    function test_maxReepay_fuzz( // solhint-disable-line func-name-mixedcase
+        uint128 _assetsToDepositForBorrow,
         uint256 _assetsToBorrow,
         bool _useShares
     ) public {
         vm.assume(_assetsToDepositForBorrow > 1);
-        vm.assume(_assetsToBorrow > 1 && _assetsToBorrow < _assetsToDepositForBorrow);
-        vm.assume(_assetsToDepositAsCollateral > 1 && _assetsToDepositAsCollateral > _assetsToBorrow);
-        vm.assume(_assetsToBorrow < type(uint128).max);
+        vm.assume(_assetsToBorrow > 1 && _assetsToBorrow < _assetsToDepositForBorrow / 2);
 
         _depositForBorrow(_assetsToDepositForBorrow, _DEPOSITOR);
-        _deposit(_assetsToDepositAsCollateral, _BORROWER);
+        _deposit(_assetsToBorrow * 2, _BORROWER);
         _borrow(_assetsToBorrow, _BORROWER);
 
         uint256 maxRepay = _useShares ? silo1.maxRepayShares(_BORROWER) : silo1.maxRepay(_BORROWER);
