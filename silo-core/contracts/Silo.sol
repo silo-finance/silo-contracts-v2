@@ -571,9 +571,14 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
         (uint256 totalDebtAssets, uint256 totalDebtShares) =
             SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(debtConfig, AssetType.Debt);
 
-        (
-            maxAssets,
-        ) = SiloLendingLib.maxBorrow(collateralConfig, debtConfig, _borrower, totalDebtAssets, totalDebtShares);
+        (maxAssets,) = SiloLendingLib.maxBorrow(
+            collateralConfig,
+            debtConfig,
+            _borrower,
+            totalDebtAssets,
+            totalDebtShares,
+            getLiquidity()
+        );
     }
 
     /// @inheritdoc ISilo
@@ -608,7 +613,14 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
         (uint256 totalSiloAssets, uint256 totalShares) =
             SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(debtConfig, AssetType.Debt);
 
-        (, maxShares) = SiloLendingLib.maxBorrow(collateralConfig, debtConfig, _borrower, totalSiloAssets, totalShares);
+        (, maxShares) = SiloLendingLib.maxBorrow(
+            collateralConfig,
+            debtConfig,
+            _borrower,
+            totalSiloAssets,
+            totalShares,
+            getLiquidity()
+        );
     }
 
     /// @inheritdoc ISilo
