@@ -91,6 +91,7 @@ library SiloERC4626Lib {
 
                 if (assets > _liquidity) {
                     assets = _liquidity;
+
                     shares = SiloMathLib.convertToShares(
                         assets,
                         _totalAssets,

@@ -232,12 +232,14 @@ library SiloLendingLib {
     /// @param _totalDebtShares The total debt shares in the system
     /// @return assets The maximum amount in assets that can be borrowed
     /// @return shares The equivalent amount in shares for the maximum assets that can be borrowed
+    /// @param _liquidity The available liquidity in the silo
     function maxBorrow(
         ISiloConfig.ConfigData memory _collateralConfig,
         ISiloConfig.ConfigData memory _debtConfig,
         address _borrower,
         uint256 _totalDebtAssets,
-        uint256 _totalDebtShares
+        uint256 _totalDebtShares,
+        uint256 _liquidity
     )
         external
         view
@@ -272,8 +274,9 @@ library SiloLendingLib {
             _totalDebtShares
         );
 
-        if (assets > _totalDebtAssets) {
-            assets = _totalDebtAssets;
+        if (assets > _liquidity) {
+            assets = _liquidity;
+
             shares = SiloMathLib.convertToShares(
                 assets, _totalDebtAssets, _totalDebtShares, MathUpgradeable.Rounding.Down, ISilo.AssetType.Debt
             );
