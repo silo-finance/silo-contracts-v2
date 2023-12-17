@@ -195,8 +195,9 @@ contract SiloLiquidationLibTest is Test, MaxRepayRawMath {
 
             assertEq(
                 collateralValueToLiquidate, data[i].output.collateralValueToLiquidate,
-                _concatMsg(i, "expect collateral value")
+                _concatMsg(i, "invalid value for collateralValueToLiquidate")
             );
+
             assertEq(repayValue, data[i].output.repayValue, _concatMsg(i, "expect repayValue"));
 
             // cross check, but only when totalBorrowerDebtValue > 0
