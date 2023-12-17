@@ -83,7 +83,7 @@ library SiloLiquidationLib {
         uint256 collateralValueToLiquidate;
         uint256 debtValueToRepay;
 
-        if (_params.selfLiquidation || _ltvBefore > _BAD_DEBT) {
+        if (_params.selfLiquidation || _ltvBefore >= _BAD_DEBT) {
             // in case of self liquidation OR when we have bad debt, we allow for any amount
             debtToRepay = _params.debtToCover > _borrowerDebtAssets ? _borrowerDebtAssets : _params.debtToCover;
             debtValueToRepay = valueToAssetsByRatio(debtToRepay, _borrowerDebtValue, _borrowerDebtAssets);
