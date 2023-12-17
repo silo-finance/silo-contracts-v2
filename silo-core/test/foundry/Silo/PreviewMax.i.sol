@@ -141,7 +141,7 @@ contract PreviewMaxTest is SiloLittleHelper, Test {
     // solhint-disable-next-line func-name-mixedcase
     function test_maxBorrow_withDebt_fuzz(uint128 _assets, uint128 _collateral, bool _useShares) public {
         vm.assume(_assets < _collateral);
-        vm.assume(_assets > 3); // only for this test as we have `_assets / 2` for `_BORROWER2`
+        vm.assume(_assets > 6); // only for this test as we have `_assets / 3` for `_BORROWER2`
 
         _depositForBorrow(_assets, _DEPOSITOR);
         _deposit(_collateral, _BORROWER);
