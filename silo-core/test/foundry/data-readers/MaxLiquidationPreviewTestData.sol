@@ -3,6 +3,7 @@ pragma solidity ^0.8.0;
 
 contract MaxLiquidationPreviewTestData {
     struct Input {
+        uint256 lt;
         uint256 totalBorrowerDebtValue;
         uint256 totalBorrowerCollateralValue;
         uint256 ltvAfterLiquidation;
@@ -27,6 +28,7 @@ contract MaxLiquidationPreviewTestData {
         // no debt no liquidation
         data[i++] = MLPData({
             input: Input({
+                lt: 0.8e18,
                 totalBorrowerDebtValue: 0,
                 totalBorrowerCollateralValue: 1e18,
                 ltvAfterLiquidation: 0.7e18,
@@ -42,21 +44,23 @@ contract MaxLiquidationPreviewTestData {
         // when bad debt
         data[i++] = MLPData({
             input: Input({
+                lt: 0.8e18,
                 totalBorrowerDebtValue: 180e18,
                 totalBorrowerCollateralValue: 100e18,
-                ltvAfterLiquidation: 0.7e18,
+                ltvAfterLiquidation: 0,
                 liquidityFee: 0.05e18
             }),
                 output: Output({
                 collateralValueToLiquidate: 100e18,
                 repayValue: 180e18,
-                targetLtvPossible: false
+                targetLtvPossible: true
             })
         });
 
         // if we expect ltv to be 0, we need full liquidation
         data[i++] = MLPData({
             input: Input({
+                lt: 0.05e18,
                 totalBorrowerDebtValue: 80e18,
                 totalBorrowerCollateralValue: 100e18,
                 ltvAfterLiquidation: 0,
@@ -72,6 +76,7 @@ contract MaxLiquidationPreviewTestData {
         // if we over 100% with fee, then we return all
         data[i++] = MLPData({
             input: Input({
+                lt: 0.8e18,
                 totalBorrowerDebtValue: 98e18,
                 totalBorrowerCollateralValue: 100e18,
                 ltvAfterLiquidation: 0.97e18,
@@ -84,10 +89,11 @@ contract MaxLiquidationPreviewTestData {
             })
         });
 
-        // if we over 100% with fee, then we return all - COUNTEREXAMPLE
+        // "if we over 100% with fee, then we return all" - COUNTEREXAMPLE to above case
         // but we caught dust, so again full liquidation
         data[i++] = MLPData({
             input: Input({
+                lt: 0.8e18,
                 totalBorrowerDebtValue: 98e18,
                 totalBorrowerCollateralValue: 100e18,
                 ltvAfterLiquidation: 0.97e18,
@@ -103,6 +109,7 @@ contract MaxLiquidationPreviewTestData {
         // example from excel simulation
         data[i++] = MLPData({
             input: Input({
+                lt: uint256(0.7e18) * 1e18 / 0.9e18, // ~77,77%
                 totalBorrowerDebtValue: 80e18,
                 totalBorrowerCollateralValue: 100e18,
                 ltvAfterLiquidation: 0.7e18,

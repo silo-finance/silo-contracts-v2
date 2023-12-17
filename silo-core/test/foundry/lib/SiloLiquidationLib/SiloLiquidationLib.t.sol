@@ -207,34 +207,50 @@ contract SiloLiquidationLibTest is Test, MaxRepayRawMath {
             uint256 totalBorrowerDebtAssets = data[i].input.totalBorrowerDebtValue * 2;
             uint256 totalBorrowerCollateralAssets = data[i].input.totalBorrowerCollateralValue * 3;
 
+            SiloLiquidationLib.LiquidationPreviewParams memory params = SiloLiquidationLib.LiquidationPreviewParams({
+                collateralLt: data[i].input.lt,
+                collateralConfigAsset: address(0),
+                debtConfigAsset: address(0),
+                debtToCover: _assetsChunk(data[i].input.totalBorrowerDebtValue, totalBorrowerDebtAssets, repayValue),
+                liquidationFee: data[i].input.liquidityFee,
+                selfLiquidation: false
+            });
+
             (
                 uint256 collateralAssetsToLiquidate,
                 uint256 debtAssetsToRepay,
                 uint256 ltvAfterLiquidation
-            ) = SiloLiquidationLib.calculateExactLiquidationAmounts(
-                _assetsChunk(data[i].input.totalBorrowerDebtValue, totalBorrowerDebtAssets, repayValue),
+            ) = SiloLiquidationLib.liquidationPreview(
+                // ltvBefore:
+                data[i].input.totalBorrowerCollateralValue == 0
+                    ? 0
+                    : data[i].input.totalBorrowerDebtValue * 1e18 / data[i].input.totalBorrowerCollateralValue,
                 totalBorrowerCollateralAssets,
                 data[i].input.totalBorrowerCollateralValue,
                 totalBorrowerDebtAssets,
                 data[i].input.totalBorrowerDebtValue,
-                data[i].input.liquidityFee
+                params
             );
 
-            // emit log_named_uint("cross check #", i);
+            emit log_named_uint("cross check #", i);
 
             if (data[i].output.targetLtvPossible) {
-                assertEq(
-                    ltvAfterLiquidation, data[i].input.ltvAfterLiquidation,
-                    _concatMsg(i, "ltvAfterLiquidation cross check")
-                );
+                if (ltvAfterLiquidation != data[i].input.ltvAfterLiquidation) {
+                    uint256 diff = ltvAfterLiquidation > data[i].input.ltvAfterLiquidation
+                        ? ltvAfterLiquidation -  data[i].input.ltvAfterLiquidation
+                    :  data[i].input.ltvAfterLiquidation - ltvAfterLiquidation;
+
+                    assertLe(diff, 1, _concatMsg(i, "ltvAfterLiquidation cross check"));
+                }
             } else {
-                assertEq(ltvAfterLiquidation, 0, _concatMsg(i, "ltvAfterLiquidation cross check"));
+                assertEq(ltvAfterLiquidation, 0, _concatMsg(i, "[!targetLtvPossible] ltvAfterLiquidation cross check"));
             }
 
             // calculateExactLiquidationAmounts VS maxLiquidationPreview
             assertEq(
                 collateralAssetsToLiquidate / 3, collateralValueToLiquidate, _concatMsg(i, "collateral cross check")
             );
+
             assertEq(debtAssetsToRepay / 2, repayValue, _concatMsg(i, "debt cross check"));
         }
     }
