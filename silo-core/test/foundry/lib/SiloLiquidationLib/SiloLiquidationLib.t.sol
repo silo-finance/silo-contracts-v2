@@ -287,26 +287,35 @@ contract SiloLiquidationLibTest is Test, MaxRepayRawMath {
         // we assume here, we are under 100% of ltv, otherwise it is full liquidation
         vm.assume(totalBorrowerDebtValue * _DECIMALS_POINTS / totalBorrowerCollateralValue <= _DECIMALS_POINTS);
 
+        SiloLiquidationLib.LiquidationPreviewParams memory params = SiloLiquidationLib.LiquidationPreviewParams({
+            collateralLt: 0.8e18,
+            collateralConfigAsset: address(0),
+            debtConfigAsset: address(0),
+            debtToCover: _debtToCover,
+            liquidationFee: _liquidationFee,
+            selfLiquidation: false
+        });
+
         (
             uint256 collateralAssetsToLiquidate, uint256 debtAssetsToRepay,
-        ) = SiloLiquidationLib.calculateExactLiquidationAmounts(
-            _debtToCover,
+        ) = SiloLiquidationLib.liquidationPreview(
+            totalBorrowerDebtValue * _DECIMALS_POINTS / totalBorrowerCollateralValue,
             _totalBorrowerCollateralAssets,
             totalBorrowerCollateralValue,
             _totalBorrowerDebtAssets,
             totalBorrowerDebtValue,
-            _liquidationFee
+            params
         );
 
         (
             uint256 collateralAssetsToLiquidate2, uint256 debtAssetsToRepay2,
-        ) = SiloLiquidationLibChecked.calculateExactLiquidationAmounts(
-            _debtToCover,
+        ) = SiloLiquidationLibChecked.liquidationPreview(
+            totalBorrowerDebtValue * _DECIMALS_POINTS / totalBorrowerCollateralValue,
             _totalBorrowerCollateralAssets,
             totalBorrowerCollateralValue,
             _totalBorrowerDebtAssets,
             totalBorrowerDebtValue,
-            _liquidationFee
+            params
         );
 
         assertEq(collateralAssetsToLiquidate2, collateralAssetsToLiquidate, "collateralAssetsToLiquidate");

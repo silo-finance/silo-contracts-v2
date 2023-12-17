@@ -3,20 +3,12 @@ pragma solidity 0.8.21;
 
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISiloLiquidation} from "silo-core/contracts/interfaces/ISiloLiquidation.sol";
+import {SiloLiquidationLib} from "silo-core/contracts/lib/SiloLiquidationLib.sol";
 
 /// @dev exact copy of SiloLiquidationLib but without `/* unchecked */`
 library SiloLiquidationLibChecked {
     /// @dev this is basically LTV == 100%
     uint256 internal constant _BAD_DEBT = 1e18;
-
-    struct LiquidationPreviewParams {
-        uint256 collateralLt;
-        address collateralConfigAsset;
-        address debtConfigAsset;
-        uint256 debtToCover;
-        uint256 liquidationFee;
-        bool selfLiquidation;
-    }
 
     uint256 internal constant _PRECISION_DECIMALS = 1e18;
 
@@ -72,7 +64,7 @@ library SiloLiquidationLibChecked {
         uint256 _sumOfCollateralValue,
         uint256 _borrowerDebtAssets,
         uint256 _borrowerDebtValue,
-        LiquidationPreviewParams memory _params
+        SiloLiquidationLib.LiquidationPreviewParams memory _params
     )
         external
         view
