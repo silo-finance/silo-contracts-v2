@@ -4,9 +4,6 @@ pragma solidity 0.8.21;
 import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
 import {ISiloLiquidation} from "../interfaces/ISiloLiquidation.sol";
 
-import {console} from "forge-std/console.sol";
-
-
 library SiloLiquidationLib {
     /// @dev this is basically LTV == 100%
     uint256 internal constant _BAD_DEBT = 1e18;
@@ -42,7 +39,7 @@ library SiloLiquidationLib {
         uint256 _liquidityFee
     )
         external
-        view
+        pure
         returns (uint256 collateralToLiquidate, uint256 debtToRepay)
     {
         (
@@ -79,7 +76,7 @@ library SiloLiquidationLib {
         LiquidationPreviewParams memory _params
     )
         external
-        view
+        pure
         returns (uint256 collateralToLiquidate, uint256 debtToRepay, uint256 ltvAfter)
     {
         uint256 collateralValueToLiquidate;
@@ -198,7 +195,7 @@ library SiloLiquidationLib {
         uint256 _totalBorrowerDebtValue,
         uint256 _ltvAfterLiquidation,
         uint256 _liquidityFee
-    ) internal view returns (uint256 collateralValueToLiquidate, uint256 repayValue) {
+    ) internal pure returns (uint256 collateralValueToLiquidate, uint256 repayValue) {
         repayValue = estimateMaxRepayValue(
             _totalBorrowerDebtValue, _totalBorrowerCollateralValue, _ltvAfterLiquidation, _liquidityFee
         );
@@ -241,7 +238,7 @@ library SiloLiquidationLib {
         uint256 _totalBorrowerCollateralValue,
         uint256 _ltvAfterLiquidation,
         uint256 _liquidityFee
-    ) internal view returns (uint256 repayValue) {
+    ) internal pure returns (uint256 repayValue) {
         if (_totalBorrowerDebtValue == 0) return 0;
         if (_liquidityFee >= _PRECISION_DECIMALS) return 0;
 
@@ -253,8 +250,6 @@ library SiloLiquidationLib {
         if (_ltvAfterLiquidation == 0) { // full liquidation
             return _totalBorrowerDebtValue;
         }
-
-        console.log("[estimateMaxRepayValue]:");
 
         // x = (Dv - LT * Cv) / (DP - LT - LT * f) ==> (Dv - LT * Cv) / (DP - (LT + LT * f))
         uint256 ltCv = _ltvAfterLiquidation * _totalBorrowerCollateralValue;

@@ -1,9 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.21;
 
-import {console} from "forge-std/console.sol";
-
-
 import {MathUpgradeable} from "openzeppelin-contracts-upgradeable/utils/math/MathUpgradeable.sol";
 
 import {ISilo} from "../interfaces/ISilo.sol";
@@ -98,11 +95,6 @@ library SiloLiquidationExecLib {
         ) = SiloLiquidationLib.splitReceiveCollateralToLiquidate(
             borrowerCollateralToLiquidate, ltvData.borrowerProtectedAssets
         );
-
-
-        console.log("_debtToCover", _debtToCover);
-        console.log("borrowerCollateralToLiquidate", borrowerCollateralToLiquidate);
-        console.log("repayDebtAssets", repayDebtAssets);
     }
 
     /// @dev debt keeps growing over time, so when dApp use this view to calculate max, tx should never revert
@@ -282,9 +274,6 @@ library SiloLiquidationExecLib {
             totalBorrowerDebtValue,
             _params
         );
-
-        console.log("sumOfBorrowerCollateralValue", sumOfBorrowerCollateralValue);
-        console.log("_ltvData.borrowerDebtAssets", _ltvData.borrowerDebtAssets);
 
         if (receiveCollateralAssets == 0 || repayDebtAssets == 0) return (0, 0);
 

@@ -69,7 +69,7 @@ library SiloLiquidationLibChecked {
         SiloLiquidationLib.LiquidationPreviewParams memory _params
     )
         external
-        view
+        pure
         returns (uint256 collateralToLiquidate, uint256 debtToRepay, uint256 ltvAfter)
     {
         uint256 collateralValueToLiquidate;
