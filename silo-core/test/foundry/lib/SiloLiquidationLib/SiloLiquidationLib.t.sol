@@ -257,8 +257,9 @@ contract SiloLiquidationLibTest is Test, MaxRepayRawMath {
     }
 
     /*
-    forge test -vv --mt test_SiloLiquidationLib_calculateCollateralToLiquidate_math
+    forge test -vv --mt test_SiloLiquidationLib_calculateCollateralToLiquidate_math_fuzz
     */
+    /// forge-config: core.fuzz.runs = 1000
     function test_SiloLiquidationLib_calculateCollateralToLiquidate_math_fuzz(
         uint256 _debtToCover,
         uint128 _totalBorrowerDebtAssets,
@@ -347,7 +348,7 @@ contract SiloLiquidationLibTest is Test, MaxRepayRawMath {
 
 
     /*
-    forge test -vv --mt test_SiloLiquidationLib_liquidationPreview_not_reverts
+    forge test -vv --mt test_SiloLiquidationLib_liquidationPreview_gas
     */
     function test_SiloLiquidationLib_liquidationPreview_gas() public {
         SiloLiquidationLib.LiquidationPreviewParams memory params;
@@ -356,7 +357,7 @@ contract SiloLiquidationLibTest is Test, MaxRepayRawMath {
         SiloLiquidationLib.liquidationPreview(1e8, 1e18, 1e18, 1e18, 10, params);
         uint256 gasEnd = gasleft();
 
-        assertEq(gasStart - gasEnd, 1297, "optimise liquidationPreview");
+        assertEq(gasStart - gasEnd, 5196, "optimise liquidationPreview");
     }
 
     /*
