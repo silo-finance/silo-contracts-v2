@@ -5,9 +5,6 @@ import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
 import {ISiloLiquidation} from "../interfaces/ISiloLiquidation.sol";
 
 library SiloLiquidationLib {
-    /// @dev this is basically LTV == 100%
-    uint256 internal constant _BAD_DEBT = 1e18;
-
     struct LiquidationPreviewParams {
         uint256 collateralLt;
         address collateralConfigAsset;
@@ -16,6 +13,9 @@ library SiloLiquidationLib {
         uint256 liquidationFee;
         bool selfLiquidation;
     }
+
+    /// @dev this is basically LTV == 100%
+    uint256 internal constant _BAD_DEBT = 1e18;
 
     uint256 internal constant _PRECISION_DECIMALS = 1e18;
 
@@ -67,7 +67,7 @@ library SiloLiquidationLib {
     /// tokens, because sToken transfer fail when we leave user insolvent
     /// @notice might revert when one of this values will be zero:
     /// `_sumOfCollateralValue`, `_borrowerDebtAssets`, `_borrowerDebtValue`
-    function liquidationPreview(
+    function liquidationPreview( // solhint-disable-line function-max-lines
         uint256 _ltvBefore,
         uint256 _sumOfCollateralAssets,
         uint256 _sumOfCollateralValue,
@@ -88,7 +88,10 @@ library SiloLiquidationLib {
             debtValueToRepay = valueToAssetsByRatio(debtToRepay, _borrowerDebtValue, _borrowerDebtAssets);
         } else {
             uint256 maxRepayValue = estimateMaxRepayValue(
-                _borrowerDebtValue, _sumOfCollateralValue, minAcceptableLTV(_params.collateralLt), _params.liquidationFee
+                _borrowerDebtValue,
+                _sumOfCollateralValue,
+                minAcceptableLTV(_params.collateralLt),
+                _params.liquidationFee
             );
 
             if (maxRepayValue == _borrowerDebtValue) {
@@ -233,7 +236,7 @@ library SiloLiquidationLib {
     /// @param _ltvAfterLiquidation % of `repayValue` that liquidator will use as profit from liquidating
     /// @return repayValue max repay value that is allowed for partial liquidation. if this value equals
     /// `_totalBorrowerDebtValue`, that means dust threshold was triggered and result force to do full liquidation
-    function estimateMaxRepayValue(
+    function estimateMaxRepayValue( // solhint-disable-line code-complexity
         uint256 _totalBorrowerDebtValue,
         uint256 _totalBorrowerCollateralValue,
         uint256 _ltvAfterLiquidation,
@@ -243,13 +246,8 @@ library SiloLiquidationLib {
         if (_liquidityFee >= _PRECISION_DECIMALS) return 0;
 
         // this will cover case, when _totalBorrowerCollateralValue == 0
-        if (_totalBorrowerDebtValue >= _totalBorrowerCollateralValue) {
-            return _totalBorrowerDebtValue;
-        }
-
-        if (_ltvAfterLiquidation == 0) { // full liquidation
-            return _totalBorrowerDebtValue;
-        }
+        if (_totalBorrowerDebtValue >= _totalBorrowerCollateralValue) return _totalBorrowerDebtValue;
+        if (_ltvAfterLiquidation == 0) return _totalBorrowerDebtValue; // full liquidation
 
         // x = (Dv - LT * Cv) / (DP - LT - LT * f) ==> (Dv - LT * Cv) / (DP - (LT + LT * f))
         uint256 ltCv = _ltvAfterLiquidation * _totalBorrowerCollateralValue;

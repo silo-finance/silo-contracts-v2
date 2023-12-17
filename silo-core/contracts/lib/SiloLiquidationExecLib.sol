@@ -237,7 +237,7 @@ library SiloLiquidationExecLib {
     /// @return receiveCollateralAssets collateral + protected to liquidate, on self liquidation when borrower repay
     /// all debt, he will receive all collateral back
     /// @return repayDebtAssets
-    function liquidationPreview(
+    function liquidationPreview( // solhint-disable-line function-max-lines, code-complexity
         SiloSolvencyLib.LtvData memory _ltvData,
         SiloLiquidationLib.LiquidationPreviewParams memory _params
     )
@@ -246,7 +246,6 @@ library SiloLiquidationExecLib {
         returns (uint256 receiveCollateralAssets, uint256 repayDebtAssets)
     {
         uint256 sumOfCollateralAssets;
-
         // safe because same asset can not overflow
         unchecked  { sumOfCollateralAssets = _ltvData.borrowerCollateralAssets + _ltvData.borrowerProtectedAssets; }
 
