@@ -63,9 +63,11 @@ library SiloLiquidationLib {
         debtToRepay = valueToAssetsByRatio(repayValue, _borrowerDebtAssets, _borrowerDebtValue);
     }
 
-    /// @dev in case of self liquidation, we do not apply any restrictions, we do not have restriction how much
-    /// user need to repay, so there is no point of having restrictions on liquidation
-    /// the only rule is - we do not apply fee, because in some cases it can lead to increasing LTV
+    /// @dev in case of self liquidation or in case of bad debt, we do not apply any restrictions.
+    /// We do not have restriction how much user need to repay, so there is no point of having restrictions on self
+    /// liquidation, the only rule is - we do not apply fee, because in some cases it can lead to increasing LTV
+    /// In case of bad debt, liquidation without restriction will be possible only in case of receiving underlying
+    /// tokens, because sToken transfer fail when we leave user insolvent
     function liquidationPreview(
         uint256 _ltvBefore,
         uint256 _sumOfCollateralAssets,
