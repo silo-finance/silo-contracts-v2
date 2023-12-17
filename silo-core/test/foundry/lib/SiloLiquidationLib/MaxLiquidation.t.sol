@@ -16,7 +16,7 @@ import "../SiloLiquidationLib/MaxRepayRawMath.sol";
 
 // forge test -vv --mc MaxLiquidationTest
 contract MaxLiquidationTest is Test, MaxRepayRawMath {
-    // this must match value from SiloLiquidationLib
+    /// @dev _LT_LIQUIDATION_MARGIN must match value from SiloLiquidationLib
     uint256 internal constant _LT_LIQUIDATION_MARGIN = 0.9e18; // 90%
     uint256 internal constant _DECIMALS_POINTS = 1e18; // 90%
 
@@ -30,10 +30,6 @@ contract MaxLiquidationTest is Test, MaxRepayRawMath {
         uint128 _borrowerDebtAssets,
         uint64 _liquidityFee
     ) public {
-//        (
-//            uint128 _sumOfCollateralAssets, uint128 _sumOfCollateralValue, uint128 _borrowerDebtAssets, uint64 _liquidityFee
-//        ) = (35, 983, 964, 2373);
-
         vm.assume(_liquidityFee < 0.40e18); // some reasonable fee
         vm.assume(_sumOfCollateralAssets > 0);
         // for tiny assets we doing full liquidation because it is to small to get down to expected minimal LTV
