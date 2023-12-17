@@ -5,11 +5,11 @@ import "forge-std/Test.sol";
 
 import {Strings} from "openzeppelin-contracts/utils/Strings.sol";
 
-import "silo-core/contracts/lib/SiloLiquidationLib.sol";
+import {SiloLiquidationLib} from "silo-core/contracts/lib/SiloLiquidationLib.sol";
 
-import "../../_checkedMath/SiloLiquidationLibChecked.sol";
+import {SiloLiquidationLibChecked} from "../../_checkedMath/SiloLiquidationLibChecked.sol";
 import "../../data-readers/CalculateCollateralToLiquidateTestData.sol";
-import "../../data-readers/CalculateExactLiquidationAmountsTestData.sol";
+import "../../data-readers/LiquidationPreviewTestData.sol";
 import "../../data-readers/MaxLiquidationPreviewTestData.sol";
 import "../../data-readers/EstimateMaxRepayValueTestData.sol";
 import "./MaxRepayRawMath.sol";
@@ -77,11 +77,11 @@ contract SiloLiquidationLibTest is Test, MaxRepayRawMath {
 
 
     /*
-    forge test -vv --mt test_SiloLiquidationLib_calculateExactLiquidationAmounts_pass
+    forge test -vv --mt test_SiloLiquidationLib_liquidationPreview_pass
     */
-    function test_SiloLiquidationLib_calculateExactLiquidationAmounts_pass() public {
-        CalculateExactLiquidationAmountsTestData json = new CalculateExactLiquidationAmountsTestData();
-        CalculateExactLiquidationAmountsTestData.CELAData[] memory data = json.readDataFromJson();
+    function test_SiloLiquidationLib_liquidationPreview_pass() public {
+        LiquidationPreviewTestData json = new LiquidationPreviewTestData();
+        LiquidationPreviewTestData.CELAData[] memory data = json.readDataFromJson();
 
         assertGe(data.length, 1, "expect to have tests");
 
@@ -247,7 +247,7 @@ contract SiloLiquidationLibTest is Test, MaxRepayRawMath {
                 assertEq(ltvAfterLiquidation, 0, _concatMsg(i, "[!targetLtvPossible] ltvAfterLiquidation cross check"));
             }
 
-            // calculateExactLiquidationAmounts VS maxLiquidationPreview
+            // liquidationPreview VS maxLiquidationPreview
             assertEq(
                 collateralAssetsToLiquidate / 3, collateralValueToLiquidate, _concatMsg(i, "collateral cross check")
             );
@@ -325,19 +325,38 @@ contract SiloLiquidationLibTest is Test, MaxRepayRawMath {
     }
 
     /*
-    forge test -vv --mt test_SiloLiquidationLib_calculateExactLiquidationAmounts_not_reverts
+    forge test -vv --mt test_SiloLiquidationLib_liquidationPreview_not_reverts
     */
-    function test_SiloLiquidationLib_calculateExactLiquidationAmounts_not_reverts() public {
-        SiloLiquidationLib.calculateExactLiquidationAmounts(0, 0, 1e18, 1e18, 0, 0);
-        SiloLiquidationLib.calculateExactLiquidationAmounts(1, 0, 1e18, 0, 1e18, 0);
-        SiloLiquidationLib.calculateExactLiquidationAmounts(0, 0, 0, 1e18, 1e18, 0);
-        SiloLiquidationLib.calculateExactLiquidationAmounts(1, 0, 0, 1e18, 1e18, 0);
+    function test_SiloLiquidationLib_liquidationPreview_not_reverts(
+        uint128 _ltvBefore,
+        uint128 _sumOfCollateralAssets,
+        uint128 _debtToCover
+    ) public {
+        // total assets/values must be != 0, if they are not, then revert possible
+        uint256 borrowerDebtAssets = 1e18;
+        uint256 borrowerDebtValue = 1e18;
+        uint256 sumOfCollateralValue = 1e18;
+
+        SiloLiquidationLib.LiquidationPreviewParams memory params;
+        params.debtToCover = _debtToCover;
+
+        SiloLiquidationLib.liquidationPreview(
+            _ltvBefore, _sumOfCollateralAssets, sumOfCollateralValue, borrowerDebtAssets, borrowerDebtValue, params
+        );
+    }
+
+
+    /*
+    forge test -vv --mt test_SiloLiquidationLib_liquidationPreview_not_reverts
+    */
+    function test_SiloLiquidationLib_liquidationPreview_gas() public {
+        SiloLiquidationLib.LiquidationPreviewParams memory params;
 
         uint256 gasStart = gasleft();
-        SiloLiquidationLib.calculateExactLiquidationAmounts(1e8, 1e18, 1e18, 1e18, 1e18, 10);
+        SiloLiquidationLib.liquidationPreview(1e8, 1e18, 1e18, 1e18, 10, params);
         uint256 gasEnd = gasleft();
 
-        assertEq(gasStart - gasEnd, 1297, "optimise calculateExactLiquidationAmounts");
+        assertEq(gasStart - gasEnd, 1297, "optimise liquidationPreview");
     }
 
     /*

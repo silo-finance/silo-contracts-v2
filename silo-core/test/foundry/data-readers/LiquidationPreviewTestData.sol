@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.0;
 
-contract CalculateExactLiquidationAmountsTestData {
+contract LiquidationPreviewTestData {
     struct Input {
         uint256 lt;
         uint256 debtToCover;
