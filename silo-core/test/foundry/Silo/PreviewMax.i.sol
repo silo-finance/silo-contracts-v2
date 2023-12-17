@@ -108,12 +108,10 @@ contract PreviewMaxTest is SiloLittleHelper, Test {
         flasLoanTakerMock.takeFlashLoan(silo1, address(token1), maxFlashLoan);
     }
 
-    // FOUNDRY_PROFILE=core forge test -vvv --ffi --mt test_maxBorrow_fuzz
+    // FOUNDRY_PROFILE=core forge test -vvv --ffi --mt test_maxBorrow_noDebt_fuzz
     /// forge-config: core.fuzz.runs = 10000
     // solhint-disable-next-line func-name-mixedcase
-    function test_maxBorrow_fuzz(uint256 _assets, uint256 _collateral, bool _useShares) public {
-        vm.assume(_assets < type(uint128).max);
-        vm.assume(_collateral < type(uint128).max);
+    function test_maxBorrow_noDebt_fuzz(uint128 _assets, uint128 _collateral, bool _useShares) public {
         vm.assume(_assets < _collateral);
         vm.assume(_assets > 3); // only for this test as we have `_assets / 2` for `_BORROWER2`
 
@@ -128,30 +126,14 @@ contract PreviewMaxTest is SiloLittleHelper, Test {
         uint256 max = _useShares ? silo1.maxBorrowShares(_BORROWER) : silo1.maxBorrow(_BORROWER);
 
         uint256 result = _useShares
-            ? _borrow(max, _BORROWER)
-            : _borrowShares(max, _BORROWER);
+            ? _borrowShares(max, _BORROWER)
+            : _borrow(max, _BORROWER);
 
-        // All conditions below are only to ensure that the `maxBorrowShares` and `maxBorrow`
-        // can have only 1 wei difference with the actual result.
-        // So, the user will borrow an amout that is 1 wei less than the maximum possible amount.
+        assertEq(max, result, "max == result");
 
-        // assertEq(max, result, "max == result"); // uncomment to test exact values
+        uint256 balance = IERC20(address(token1)).balanceOf(_BORROWER);
 
-        // allow 1 wei difference for max and result
-        if (max < result) {
-            assertEq(max + 1, result, "max + 1 == result");
-        } else {
-            assertEq(max, result, "max == result");
-        }
-
-        // assertEq(max, _assets - amountToBorrowFor2, "max == _assets"); // uncomment to test exact values
-
-        // allow 1 wei difference for max and _assets - amountToBorrowFor2
-        if (max < _assets - amountToBorrowFor2) {
-            assertEq(max + 1, _assets - amountToBorrowFor2, "max + 1 == _assets - amountToBorrowFor2");
-        } else {
-            assertEq(max, _assets - amountToBorrowFor2, "max == _assets");
-        }
+        assertEq(balance, max, "balance == max");
     }
 
     // FOUNDRY_PROFILE=core forge test -vvv --ffi --mt test_maxReepay_fuzz
@@ -208,22 +190,13 @@ contract PreviewMaxTest is SiloLittleHelper, Test {
         _borrow(amountToBorrowFor2, _BORROWER2);
 
         uint256 max = _useShares ? silo1.maxBorrowShares(_BORROWER) : silo1.maxBorrow(_BORROWER);
-        uint256 result = _useShares ? _borrow(max, _BORROWER) : _borrowShares(max, _BORROWER);
+        uint256 result = _useShares ? _borrowShares(max, _BORROWER) : _borrow(max, _BORROWER);
 
-        // allow 1 wei difference for max and result
-        if (max < result) {
-            assertEq(max + 1, result, "max + 1 == result");
-            max += 1; // ignoring 1 wei precission error
-        } else {
-            assertEq(max, result, "max == result");
-        }
+        assertEq(max, result, "max == result");
 
-        // allow 1 wei difference for max and _assets - amountToBorrowFor2
-        if (max < _assets - amountToBorrowFor2) {
-            assertEq(max + 1, _assets - amountToBorrowFor2, "max + 1 == _assets - amountToBorrowFor2");
-        } else {
-            assertEq(max, _assets - amountToBorrowFor2, "max == _assets");
-        }
+        uint256 balance = IERC20(address(token1)).balanceOf(_BORROWER);
+
+        assertEq(balance, max, "balance == max");
     }
 
 
