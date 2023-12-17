@@ -242,7 +242,8 @@ library SiloLiquidationExecLib {
         _shareToken.forwardTransfer(_borrower, _liquidator, shares);
     }
 
-    /// @return receiveCollateralAssets collateral + protected to liquidate
+    /// @return receiveCollateralAssets collateral + protected to liquidate, on self liquidation when borrower repay
+    /// all debt, he will receive all collateral back
     /// @return repayDebtAssets
     function liquidationPreview(
         SiloSolvencyLib.LtvData memory _ltvData,
