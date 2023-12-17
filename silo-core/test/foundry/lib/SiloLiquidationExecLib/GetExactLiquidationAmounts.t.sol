@@ -156,7 +156,6 @@ contract GetExactLiquidationAmountsTest is GetExactLiquidationAmountsHelper {
         GetExactLiquidationAmountsTestData.GELAData[] memory testDatas = new GetExactLiquidationAmountsTestData().getData();
 
         for (uint256 i; i < testDatas.length; i++) {
-            // emit log("----------------------------");
             GetExactLiquidationAmountsTestData.GELAData memory testData = testDatas[i];
 
             P_SHARE_TOKEN_A.balanceOfMock(testData.input.user, testData.mocks.protectedUserSharesBalanceOf);

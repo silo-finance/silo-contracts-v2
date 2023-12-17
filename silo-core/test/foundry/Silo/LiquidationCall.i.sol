@@ -108,7 +108,6 @@ contract LiquidationCallTest is SiloLittleHelper, Test {
     */
     function test_liquidationCall_partial() public {
         uint256 debtToCover = 1e5;
-//        bool receiveSToken;
         address liquidator = address(this);
 
         (
