@@ -58,6 +58,8 @@ library SiloLiquidationLibChecked {
     /// liquidation, the only rule is - we do not apply fee, because in some cases it can lead to increasing LTV
     /// In case of bad debt, liquidation without restriction will be possible only in case of receiving underlying
     /// tokens, because sToken transfer fail when we leave user insolvent
+    /// @notice might revert when one of this values will be zero:
+    /// `_sumOfCollateralValue`, `_borrowerDebtAssets`, `_borrowerDebtValue`
     function liquidationPreview(
         uint256 _ltvBefore,
         uint256 _sumOfCollateralAssets,
@@ -73,7 +75,7 @@ library SiloLiquidationLibChecked {
         uint256 collateralValueToLiquidate;
         uint256 debtValueToRepay;
 
-        if (_params.selfLiquidation || _ltvBefore > _BAD_DEBT) {
+        if (_params.selfLiquidation || _ltvBefore >= _BAD_DEBT) {
             // in case of self liquidation OR when we have bad debt, we allow for any amount
             debtToRepay = _params.debtToCover > _borrowerDebtAssets ? _borrowerDebtAssets : _params.debtToCover;
             debtValueToRepay = valueToAssetsByRatio(debtToRepay, _borrowerDebtValue, _borrowerDebtAssets);
@@ -269,6 +271,7 @@ library SiloLiquidationLibChecked {
         }
 
         /* unchecked */ { repayValue /= (_PRECISION_DECIMALS - dividerR); }
+
         // early return so we do not have to check for dust
         if (repayValue > _totalBorrowerDebtValue) return _totalBorrowerDebtValue;
 
@@ -307,3 +310,4 @@ library SiloLiquidationLibChecked {
         /* unchecked */ { ltv /= _collateral; }
     }
 }
+

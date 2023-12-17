@@ -42,7 +42,7 @@ library SiloLiquidationLib {
         uint256 _liquidityFee
     )
         external
-        pure
+        view
         returns (uint256 collateralToLiquidate, uint256 debtToRepay)
     {
         (
@@ -68,6 +68,8 @@ library SiloLiquidationLib {
     /// liquidation, the only rule is - we do not apply fee, because in some cases it can lead to increasing LTV
     /// In case of bad debt, liquidation without restriction will be possible only in case of receiving underlying
     /// tokens, because sToken transfer fail when we leave user insolvent
+    /// @notice might revert when one of this values will be zero:
+    /// `_sumOfCollateralValue`, `_borrowerDebtAssets`, `_borrowerDebtValue`
     function liquidationPreview(
         uint256 _ltvBefore,
         uint256 _sumOfCollateralAssets,
@@ -92,9 +94,6 @@ library SiloLiquidationLib {
                 _borrowerDebtValue, _sumOfCollateralValue, minAcceptableLTV(_params.collateralLt), _params.liquidationFee
             );
 
-            console.log("[maxRepayValue]", maxRepayValue);
-            console.log("[_borrowerDebtValue]", _borrowerDebtValue);
-
             if (maxRepayValue == _borrowerDebtValue) {
                 // forced full liquidation
                 debtToRepay = _borrowerDebtAssets;
@@ -106,10 +105,6 @@ library SiloLiquidationLib {
                 debtValueToRepay = valueToAssetsByRatio(debtToRepay, _borrowerDebtValue, _borrowerDebtAssets);
             }
         }
-
-        console.log("[debtToRepay]", debtToRepay);
-        console.log("[debtValueToRepay]", debtValueToRepay);
-
 
         collateralValueToLiquidate = calculateCollateralToLiquidate(
             debtValueToRepay, _sumOfCollateralValue, _params.selfLiquidation ? 0 : _params.liquidationFee
@@ -124,9 +119,6 @@ library SiloLiquidationLib {
         ltvAfter = calculateLtvAfter(
             _sumOfCollateralValue, _borrowerDebtValue, collateralValueToLiquidate, debtValueToRepay
         );
-
-        console.log("[ltvAfter]", ltvAfter);
-
     }
 
     function calculateLtvAfter(
@@ -206,7 +198,7 @@ library SiloLiquidationLib {
         uint256 _totalBorrowerDebtValue,
         uint256 _ltvAfterLiquidation,
         uint256 _liquidityFee
-    ) internal pure returns (uint256 collateralValueToLiquidate, uint256 repayValue) {
+    ) internal view returns (uint256 collateralValueToLiquidate, uint256 repayValue) {
         repayValue = estimateMaxRepayValue(
             _totalBorrowerDebtValue, _totalBorrowerCollateralValue, _ltvAfterLiquidation, _liquidityFee
         );
@@ -249,7 +241,7 @@ library SiloLiquidationLib {
         uint256 _totalBorrowerCollateralValue,
         uint256 _ltvAfterLiquidation,
         uint256 _liquidityFee
-    ) internal pure returns (uint256 repayValue) {
+    ) internal view returns (uint256 repayValue) {
         if (_totalBorrowerDebtValue == 0) return 0;
         if (_liquidityFee >= _PRECISION_DECIMALS) return 0;
 
@@ -261,6 +253,8 @@ library SiloLiquidationLib {
         if (_ltvAfterLiquidation == 0) { // full liquidation
             return _totalBorrowerDebtValue;
         }
+
+        console.log("[estimateMaxRepayValue]:");
 
         // x = (Dv - LT * Cv) / (DP - LT - LT * f) ==> (Dv - LT * Cv) / (DP - (LT + LT * f))
         uint256 ltCv = _ltvAfterLiquidation * _totalBorrowerCollateralValue;
@@ -289,6 +283,7 @@ library SiloLiquidationLib {
         }
 
         unchecked { repayValue /= (_PRECISION_DECIMALS - dividerR); }
+
         // early return so we do not have to check for dust
         if (repayValue > _totalBorrowerDebtValue) return _totalBorrowerDebtValue;
 
