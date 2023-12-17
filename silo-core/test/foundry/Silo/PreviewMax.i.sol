@@ -136,7 +136,7 @@ contract PreviewMaxTest is SiloLittleHelper, Test {
         assertEq(balance, max, "balance == max");
     }
 
-    // FOUNDRY_PROFILE=core forge test -vvv --ffi --mt test_maxBorrow_noDebt_fuzz
+    // FOUNDRY_PROFILE=core forge test -vvv --ffi --mt test_maxBorrow_withDebt_fuzz
     /// forge-config: core.fuzz.runs = 10000
     // solhint-disable-next-line func-name-mixedcase
     function test_maxBorrow_withDebt_fuzz(uint128 _assets, uint128 _collateral, bool _useShares) public {
@@ -144,11 +144,14 @@ contract PreviewMaxTest is SiloLittleHelper, Test {
         vm.assume(_assets > 3); // only for this test as we have `_assets / 2` for `_BORROWER2`
 
         _depositForBorrow(_assets, _DEPOSITOR);
+        _deposit(_collateral, _BORROWER);
         _deposit(_collateral, _BORROWER2);
 
-        uint256 amountToBorrowFor2 = _assets / 2;
+        uint256 amountToBorrowFor = _assets / 3;
 
-        uint256 borrowedBefore = _borrow(amountToBorrowFor2, _BORROWER2);
+        _borrow(amountToBorrowFor, _BORROWER);
+
+        uint256 borrowedBefore = _borrow(amountToBorrowFor, _BORROWER2);
 
         uint256 max = _useShares ? silo1.maxBorrowShares(_BORROWER2) : silo1.maxBorrow(_BORROWER2);
 
