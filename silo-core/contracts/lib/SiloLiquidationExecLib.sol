@@ -257,7 +257,8 @@ library SiloLiquidationExecLib {
         // safe because same asset can not overflow
         unchecked  { sumOfCollateralAssets = _ltvData.borrowerCollateralAssets + _ltvData.borrowerProtectedAssets; }
 
-        if (_ltvData.borrowerDebtAssets == 0 || sumOfCollateralAssets == 0) return (0, 0);
+        if (_ltvData.borrowerDebtAssets == 0) return (0, 0);
+        if (sumOfCollateralAssets == 0) return (0, _params.debtToCover);
 
         (
             uint256 sumOfBorrowerCollateralValue, uint256 totalBorrowerDebtValue, uint256 ltvBefore
