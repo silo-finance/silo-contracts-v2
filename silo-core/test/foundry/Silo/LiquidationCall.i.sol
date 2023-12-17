@@ -26,6 +26,7 @@ contract LiquidationCallTest is SiloLittleHelper, Test {
     ISiloConfig siloConfig;
 
     event LiquidationCall(address indexed liquidator, bool receiveSToken);
+    error SenderNotSolventAfterTransfer();
 
     function setUp() public {
         siloConfig = _setUpLocalFixture();
@@ -107,7 +108,7 @@ contract LiquidationCallTest is SiloLittleHelper, Test {
     */
     function test_liquidationCall_partial() public {
         uint256 debtToCover = 1e5;
-        bool receiveSToken;
+//        bool receiveSToken;
         address liquidator = address(this);
 
         (
@@ -122,6 +123,8 @@ contract LiquidationCallTest is SiloLittleHelper, Test {
         assertEq(collateralToLiquidate, 0, "no collateralToLiquidate yet");
         assertEq(debtToRepay, 0, "no debtToRepay yet");
 
+        emit log_named_decimal_uint("[test] LTV", silo1.getLtv(BORROWER), 16);
+
         // move forward with time so we can have interests
         uint256 timeForward = 6 days;
         vm.warp(block.timestamp + timeForward);
@@ -134,18 +137,23 @@ contract LiquidationCallTest is SiloLittleHelper, Test {
         vm.expectCall(address(debtConfig.interestRateModel), abi.encodeWithSelector(IInterestRateModel.getCompoundInterestRateAndUpdate.selector));
         vm.expectCall(address(collateralConfig.interestRateModel), abi.encodeWithSelector(IInterestRateModel.getCompoundInterestRateAndUpdate.selector));
 
-        token1.mint(liquidator, 2 ** 128);
-        token1.approve(address(silo1), 2 ** 128);
-
+        emit log_named_decimal_uint("[test] LTV after interest", silo1.getLtv(BORROWER), 16);
         assertLt(silo1.getLtv(BORROWER), 0.86e18, "expect LTV just above LT");
         assertFalse(silo1.isSolvent(BORROWER), "expect BORROWER to be insolvent");
 
-        silo1.liquidationCall(address(token0), address(token1), BORROWER, 2 ** 128, receiveSToken);
+        token1.mint(liquidator, 2 ** 128);
+        token1.approve(address(silo1), 2 ** 128);
 
-        emit log_named_decimal_uint("LTV", silo1.getLtv(BORROWER), 16);
-        assertGt(silo1.getLtv(BORROWER), 0, "expect some LTV after partial liquidation");
-        assertTrue(silo1.isSolvent(BORROWER), "expect BORROWER to be solvent");
-return;
+        silo1.liquidationCall(address(token0), address(token1), BORROWER, debtToCover, false /* receiveSToken */);
+
+        emit log_named_decimal_uint("[test] LTV after small liquidation", silo1.getLtv(BORROWER), 16);
+        assertGt(silo1.getLtv(BORROWER), 0, "expect user to be still insolvent LTV after small partial liquidation");
+        assertTrue(!silo1.isSolvent(BORROWER), "expect BORROWER to be insolvent after small partial liquidation");
+
+        assertEq(token0.balanceOf(liquidator), 1e5 + 0.05e5, "liquidator should get collateral + 5% fee");
+        assertEq(token0.balanceOf(address(silo0)), COLLATERAL - (1e5 + 0.05e5), "silo collateral should be transfer to liquidator");
+        assertEq(token1.balanceOf(address(silo1)), 0.5e18 + 1e5, "debt token should be repayed");
+
         assertEq(token0.balanceOf(liquidator), 1e5 + 0.05e5, "liquidator should get collateral + 5% fee");
         assertEq(token0.balanceOf(address(silo0)), COLLATERAL - (1e5 + 0.05e5), "silo collateral should be transfer to liquidator");
         assertEq(token1.balanceOf(address(silo1)), 0.5e18 + 1e5, "debt token should be repayed");
@@ -162,6 +170,12 @@ return;
         (collateralToLiquidate, debtToRepay) = silo1.maxLiquidation(BORROWER);
         assertGt(collateralToLiquidate, 0, "expect collateralToLiquidate after partial liquidation");
         assertGt(debtToRepay, 0, "expect debtToRepay after partial liquidation");
+
+        silo1.liquidationCall(address(token0), address(token1), BORROWER, 2 ** 128, false /* receiveSToken */);
+
+        emit log_named_decimal_uint("[test] LTV after max liquidation", silo1.getLtv(BORROWER), 16);
+        assertGt(silo1.getLtv(BORROWER), 0, "expect some LTV after partial liquidation");
+        assertTrue(silo1.isSolvent(BORROWER), "expect BORROWER to be solvent");
     }
 
     /*
@@ -303,17 +317,45 @@ return;
         token1.mint(liquidator, debtToCover);
         token1.approve(address(silo1), debtToCover);
 
-        vm.expectRevert("ERC20: insufficient allowance"); // because of dust, debt is 110 and we want to repay 100
+        emit log_named_decimal_uint("[test] debtToCover", debtToCover, 18);
+
+        if (_receiveSToken) {
+            // on bad debt we allow to liquidate any chunk of it
+            // however, if we want to receive sTokens, then only full liquidation is possible
+            vm.expectRevert(SenderNotSolventAfterTransfer.selector);
+        }
         silo1.liquidationCall(address(token0), address(token1), BORROWER, debtToCover, _receiveSToken);
 
-        token1.mint(liquidator, maxRepay - debtToCover);
-        token1.increaseAllowance(address(silo1), maxRepay - debtToCover);
+        if (!_receiveSToken) {
+            maxRepay = silo1.maxRepay(BORROWER);
+            assertGt(maxRepay, 0, "there will be leftover");
+        }
 
-        vm.expectCall(address(token1), abi.encodeWithSelector(IERC20.transferFrom.selector, liquidator, address(silo1), maxRepay));
+        token1.mint(liquidator, maxRepay);
+        token1.increaseAllowance(address(silo1), maxRepay);
+
+        emit log_named_decimal_uint("[test] maxRepay", maxRepay, 18);
+
+        vm.expectCall(
+            address(token1),
+            abi.encodeWithSelector(IERC20.transferFrom.selector, liquidator, address(silo1), maxRepay)
+        );
 
         silo1.liquidationCall(address(token0), address(token1), BORROWER, maxRepay, _receiveSToken);
 
-        assertEq(token1.balanceOf(address(silo1)), maxRepay + 0.5e18, "silo has debt token == to cover + original 0.5");
+        if (_receiveSToken) {
+            assertEq(
+                token1.balanceOf(address(silo1)),
+                maxRepay + 0.5e18,
+                "[_receiveSToken] silo has debt token == to cover + original 0.5"
+            );
+        } else {
+            assertEq(
+                token1.balanceOf(address(silo1)),
+                debtToCover + maxRepay + 0.5e18,
+                "[!_receiveSToken] silo has debt token == to cover + original 0.5"
+            );
+        }
 
         assertEq(silo1.getDebtAssets(), 0, "debt is repay");
         assertGt(silo1.getCollateralAssets(), 8e18, "collateral ready to borrow (with interests)");
