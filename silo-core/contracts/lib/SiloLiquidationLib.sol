@@ -95,8 +95,6 @@ library SiloLiquidationLib {
             console.log("[maxRepayValue]", maxRepayValue);
             console.log("[_borrowerDebtValue]", _borrowerDebtValue);
 
-            //todo problem - in case of bad debt, we should allow for any liquidation
-
             if (maxRepayValue == _borrowerDebtValue) {
                 // forced full liquidation
                 debtToRepay = _borrowerDebtAssets;
