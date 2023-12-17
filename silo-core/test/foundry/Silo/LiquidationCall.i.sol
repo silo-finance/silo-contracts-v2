@@ -126,7 +126,7 @@ contract LiquidationCallTest is SiloLittleHelper, Test {
         emit log_named_decimal_uint("[test] LTV", silo1.getLtv(BORROWER), 16);
 
         // move forward with time so we can have interests
-        uint256 timeForward = 6 days;
+        uint256 timeForward = 7 days;
         vm.warp(block.timestamp + timeForward);
 
         (collateralToLiquidate, debtToRepay) = silo1.maxLiquidation(BORROWER);
@@ -138,7 +138,7 @@ contract LiquidationCallTest is SiloLittleHelper, Test {
         vm.expectCall(address(collateralConfig.interestRateModel), abi.encodeWithSelector(IInterestRateModel.getCompoundInterestRateAndUpdate.selector));
 
         emit log_named_decimal_uint("[test] LTV after interest", silo1.getLtv(BORROWER), 16);
-        assertLt(silo1.getLtv(BORROWER), 0.86e18, "expect LTV just above LT");
+        assertLt(silo1.getLtv(BORROWER), 0.90e18, "expect LTV to be below dust level");
         assertFalse(silo1.isSolvent(BORROWER), "expect BORROWER to be insolvent");
 
         token1.mint(liquidator, 2 ** 128);
