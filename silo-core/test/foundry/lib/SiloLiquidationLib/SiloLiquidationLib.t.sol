@@ -86,17 +86,30 @@ contract SiloLiquidationLibTest is Test, MaxRepayRawMath {
         assertGe(data.length, 1, "expect to have tests");
 
         for (uint256 i; i < data.length; i++) {
+            uint256 ltvBefore = data[i].input.totalBorrowerCollateralValue == 0
+                ? 0
+                : data[i].input.totalBorrowerDebtValue * 1e18 / data[i].input.totalBorrowerCollateralValue;
+
+            SiloLiquidationLib.LiquidationPreviewParams memory params = SiloLiquidationLib.LiquidationPreviewParams({
+                collateralLt: data[i].input.lt,
+                collateralConfigAsset: address(0),
+                debtConfigAsset: address(0),
+                debtToCover: data[i].input.debtToCover,
+                liquidationFee: data[i].input.liquidationFee,
+                selfLiquidation: false
+            });
+
             (
                 uint256 collateralAssetsToLiquidate,
                 uint256 debtAssetsToRepay,
                 uint256 ltvAfterLiquidation
-            ) = SiloLiquidationLib.calculateExactLiquidationAmounts(
-                data[i].input.debtToCover,
+            ) = SiloLiquidationLib.liquidationPreview(
+                ltvBefore,
                 data[i].input.totalBorrowerCollateralAssets,
                 data[i].input.totalBorrowerCollateralValue,
                 data[i].input.totalBorrowerDebtAssets,
                 data[i].input.totalBorrowerDebtValue,
-                data[i].input.liquidationFee
+                params
             );
 
             assertEq(
