@@ -133,11 +133,14 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
         assertEq(maxBorrow, 0, "maxBorrow should be 0 because this is where collateral is");
 
         maxBorrow = silo1.maxBorrow(borrower);
-        // emit log_named_decimal_uint("maxBorrow #1", maxBorrow, 18);
-        assertEq(maxBorrow, 0.75e18, "maxBorrow borrower can do, maxLTV is 75%");
+        assertEq(maxBorrow, 0, "maxBorrow should be 0 because there is no liquidity in the silo");
 
         // deposit, so we can borrow
-        _depositForBorrow(maxBorrow * 2, depositor);
+        _depositForBorrow(0.75e18 * 2, depositor);
+
+        maxBorrow = silo1.maxBorrow(borrower);
+        // emit log_named_decimal_uint("maxBorrow #1", maxBorrow, 18);
+        assertEq(maxBorrow, 0.75e18, "maxBorrow borrower can do, maxLTV is 75%");
 
         uint256 borrowAmount = maxBorrow / 2;
         // emit log_named_decimal_uint("borrowAmount", borrowAmount, 18);
@@ -190,11 +193,11 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
 
         _deposit(depositAssets, borrower, ISilo.AssetType.Collateral);
 
-        uint256 maxBorrow = silo1.maxBorrow(borrower);
-
         // deposit, so we can borrow
         _depositForBorrow(100e18, depositor);
         assertEq(silo1.getLtv(borrower), 0, "no debt, so LT == 0");
+
+        uint256 maxBorrow = silo1.maxBorrow(borrower);
 
         _borrow(200e18, borrower, ISilo.NotEnoughLiquidity.selector);
         _borrow(maxBorrow * 2, borrower, ISilo.AboveMaxLtv.selector);
