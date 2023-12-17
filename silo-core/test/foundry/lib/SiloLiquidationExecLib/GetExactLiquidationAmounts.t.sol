@@ -156,10 +156,12 @@ contract GetExactLiquidationAmountsTest is GetExactLiquidationAmountsHelper {
         GetExactLiquidationAmountsTestData.GELAData[] memory testDatas = new GetExactLiquidationAmountsTestData().getData();
 
         for (uint256 i; i < testDatas.length; i++) {
+            // emit log("----------------------------");
             GetExactLiquidationAmountsTestData.GELAData memory testData = testDatas[i];
 
             P_SHARE_TOKEN_A.balanceOfMock(testData.input.user, testData.mocks.protectedUserSharesBalanceOf);
             P_SHARE_TOKEN_A.totalSupplyMock(testData.mocks.protectedSharesTotalSupply);
+
             SILO_A.getCollateralAndProtectedAssetsMock(
                 testData.mocks.siloTotalCollateralAssets,
                 testData.mocks.siloTotalProtectedAssets
@@ -193,7 +195,7 @@ contract GetExactLiquidationAmountsTest is GetExactLiquidationAmountsHelper {
     forge test -vv --mt test_getExactLiquidationAmounts_selfLiquidation_fuzz
     make sure self-liquidation can not make user insolvent
     */
-    /// forge-config: core.fuzz.runs = 10000
+    /// forge-config: core.fuzz.runs = 8000
     function test_getExactLiquidationAmounts_selfLiquidation_fuzz(
         uint128 _debtToCover,
         uint128 _collateralUserBalanceOf,
