@@ -14,8 +14,6 @@ import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
 
 import {FlasLoanTakerMock} from "silo-core/test/foundry/_mocks/FlasLoanTakerMock.sol";
 
-import {console} from "forge-std/console.sol";
-
 // FOUNDRY_PROFILE=core forge test -vv --ffi --mc PreviewMaxTest
 contract PreviewMaxTest is SiloLittleHelper, Test {
     ISiloConfig internal _siloConfig;
@@ -36,9 +34,9 @@ contract PreviewMaxTest is SiloLittleHelper, Test {
         _siloConfig = _setUpLocalFixture(SiloConfigsNames.LOCAL_NO_ORACLE_NO_LTV_SILO);
     }
 
-    // FOUNDRY_PROFILE=core forge test -vvv --ffi --mt test_maxWithdrawRedeem_fuzz
+    // FOUNDRY_PROFILE=core forge test -vvv --ffi --mt test_maxWithdrawRedeem_noDebt_fuzz
     /// forge-config: core.fuzz.runs = 10000
-    function test_maxWithdrawRedeem_fuzz( // solhint-disable-line func-name-mixedcase
+    function test_maxWithdrawRedeem_noDebt_fuzz( // solhint-disable-line func-name-mixedcase
         uint128 _assetsToDepositForBorrow,
         uint256 _assetsToBorrow
     ) public {
@@ -58,6 +56,31 @@ contract PreviewMaxTest is SiloLittleHelper, Test {
         assertEq(sharesWithdraw, maxShare, "sharesWithdraw == maxShare");
 
         uint256 balance = IERC20(address(token1)).balanceOf(_DEPOSITOR);
+        assertEq(balance, maxAssets, "balance == maxAssets");
+    }
+
+    // FOUNDRY_PROFILE=core forge test -vvv --ffi --mt test_maxWithdrawRedeem_withDebt_fuzz
+    /// forge-config: core.fuzz.runs = 10000
+    function test_maxWithdrawRedeem_withDebt_fuzz( // solhint-disable-line func-name-mixedcase
+        uint128 _assetsToDepositForBorrow,
+        uint256 _assetsToBorrow
+    ) public {
+        vm.assume(_assetsToDepositForBorrow > 1);
+        vm.assume(_assetsToBorrow > 1 && _assetsToBorrow < _assetsToDepositForBorrow / 2);
+
+        _depositForBorrow(_assetsToDepositForBorrow, _DEPOSITOR);
+        _deposit(_assetsToBorrow * 2, _BORROWER);
+        _borrow(_assetsToBorrow, _BORROWER);
+
+        uint256 maxAssets = silo0.maxWithdraw(_BORROWER);
+        uint256 maxShare = silo0.maxRedeem(_BORROWER);
+
+        vm.prank(_BORROWER);
+        uint256 sharesWithdraw = silo0.withdraw(maxAssets, _BORROWER, _BORROWER);
+
+        assertEq(sharesWithdraw, maxShare, "sharesWithdraw == maxShare");
+
+        uint256 balance = IERC20(address(token0)).balanceOf(_BORROWER);
         assertEq(balance, maxAssets, "balance == maxAssets");
     }
 
