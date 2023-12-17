@@ -136,6 +136,33 @@ contract PreviewMaxTest is SiloLittleHelper, Test {
         assertEq(balance, max, "balance == max");
     }
 
+    // FOUNDRY_PROFILE=core forge test -vvv --ffi --mt test_maxBorrow_noDebt_fuzz
+    /// forge-config: core.fuzz.runs = 10000
+    // solhint-disable-next-line func-name-mixedcase
+    function test_maxBorrow_withDebt_fuzz(uint128 _assets, uint128 _collateral, bool _useShares) public {
+        vm.assume(_assets < _collateral);
+        vm.assume(_assets > 3); // only for this test as we have `_assets / 2` for `_BORROWER2`
+
+        _depositForBorrow(_assets, _DEPOSITOR);
+        _deposit(_collateral, _BORROWER2);
+
+        uint256 amountToBorrowFor2 = _assets / 2;
+
+        uint256 borrowedBefore = _borrow(amountToBorrowFor2, _BORROWER2);
+
+        uint256 max = _useShares ? silo1.maxBorrowShares(_BORROWER2) : silo1.maxBorrow(_BORROWER2);
+
+        uint256 result = _useShares
+            ? _borrowShares(max, _BORROWER2)
+            : _borrow(max, _BORROWER2);
+
+        assertEq(max, result, "max == result");
+
+        uint256 balance = IERC20(address(token1)).balanceOf(_BORROWER2);
+
+        assertEq(balance - borrowedBefore, max, "balance == max");
+    }
+
     // FOUNDRY_PROFILE=core forge test -vvv --ffi --mt test_maxReepay_fuzz
     /// forge-config: core.fuzz.runs = 10000
     function test_maxReepay_fuzz( // solhint-disable-line func-name-mixedcase
