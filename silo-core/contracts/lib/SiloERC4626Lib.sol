@@ -12,6 +12,8 @@ import {SiloSolvencyLib} from "./SiloSolvencyLib.sol";
 import {SiloMathLib} from "./SiloMathLib.sol";
 import {SiloStdLib} from "./SiloStdLib.sol";
 
+import {console} from "forge-std/console.sol";
+
 // solhint-disable function-max-lines
 
 library SiloERC4626Lib {
@@ -32,7 +34,12 @@ library SiloERC4626Lib {
     /// @param _config Configuration of the silo
     /// @param _receiver The address of the user
     /// @return maxAssets Maximum assets a user can deposit
-    function maxDeposit(ISiloConfig _config, address _receiver, mapping(ISilo.AssetType => ISilo.Assets) storage _total)
+    function maxDeposit(
+        ISiloConfig _config,
+        address _receiver,
+        uint256 _daoAndDeployerFees,
+        mapping(ISilo.AssetType => ISilo.Assets) storage _total
+    )
         external
         view
         returns (uint256 maxAssets)
@@ -40,18 +47,28 @@ library SiloERC4626Lib {
         ISiloConfig.ConfigData memory configData = _config.getConfig(address(this));
 
         if (depositPossible(configData.debtShareToken, _receiver)) {
-            uint256 totalShares = IShareToken(configData.collateralShareToken).totalSupply();
+            // calculating interest is not important here, because when we depositing, interest are not "taking space"
+            // in theory, we can deposit up to max, unless someone repay?
+//            uint256 totalShares = IShareToken(configData.collateralShareToken).totalSupply();
+//
+//            uint256 totalCollateralAssets = SiloStdLib.getTotalCollateralAssetsWithInterest(
+//                address(this),
+//                configData.interestRateModel,
+//                configData.daoFee,
+//                configData.deployerFee
+//            );
 
-            uint256 totalCollateralAssets = SiloStdLib.getTotalCollateralAssetsWithInterest(
-                address(this),
-                configData.interestRateModel,
-                configData.daoFee,
-                configData.deployerFee
-            );
+//            uint256 allCollaterals = SiloMathLib.convertToAssets(
+//                totalShares, totalCollateralAssets, totalShares, MathUpgradeable.Rounding.Down, ISilo.AssetType.Collateral
+//            ) + _total[ISilo.AssetType.Protected].assets;
 
-            uint256 allCollaterals = SiloMathLib.convertToAssets(
-                totalShares, totalCollateralAssets, totalShares, MathUpgradeable.Rounding.Down, ISilo.AssetType.Collateral
-            ) + _total[ISilo.AssetType.Protected].assets;
+            console.log("_total[ISilo.AssetType.Collateral].assets", _total[ISilo.AssetType.Collateral].assets);
+            console.log("_total[ISilo.AssetType.Protected].assets", _total[ISilo.AssetType.Protected].assets);
+            console.log("_daoAndDeployerFees", _daoAndDeployerFees);
+
+            uint256 allCollaterals =_total[ISilo.AssetType.Collateral].assets
+                + _total[ISilo.AssetType.Protected].assets
+                + _daoAndDeployerFees;
 
             maxAssets = _NO_DEPOSIT_LIMIT - allCollaterals;
         }

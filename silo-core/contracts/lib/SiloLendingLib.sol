@@ -163,6 +163,9 @@ library SiloLendingLib {
             ISilo.AssetType.Debt
         );
 
+        console.log("[repay] assets", assets);
+        console.log("[repay] shares", shares);
+
         if (shares == 0) revert ISilo.ZeroShares();
 
         // fee-on-transfer is ignored
@@ -225,8 +228,18 @@ library SiloLendingLib {
             _deployerFee
         );
 
+        console.log("[accrueInterestForAsset]                        totalFees", totalFees);
+        console.log("[accrueInterestForAsset]           debtAssetsWithInterest", _totalDebt.assets);
+        console.log("[accrueInterestForAsset] accruedInterest (including fees)", accruedInterest);
+        console.log("[accrueInterestForAsset]       debt - interest == deposit", _totalDebt.assets - accruedInterest);
+
+
+
         // update remaining contract state
         _siloData.interestRateTimestamp = uint64(block.timestamp);
+
+        console.log("[accrueInterestForAsset] accruedInterest", accruedInterest);
+//        console.log("[accrueInterestForAsset]             sum", totalFees + accruedInterest);
 
         // we operating on chunks (fees) of real tokens, so overflow should not happen
         // fee is simply to small to overflow on cast to uint192, even if, we will get lower fee
