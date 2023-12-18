@@ -34,36 +34,98 @@ contract PreviewMaxTest is SiloLittleHelper, Test {
         _siloConfig = _setUpLocalFixture(SiloConfigsNames.LOCAL_NO_ORACLE_NO_LTV_SILO);
     }
 
-    // FOUNDRY_PROFILE=core forge test -vvv --ffi --mt test_maxWithdrawRedeem_noDebt_fuzz
+    // FOUNDRY_PROFILE=core forge test -vvv --ffi --mt test_maxWithdrawRedeem_noDebt_noInterest_fuzz
     /// forge-config: core.fuzz.runs = 10000
-    function test_maxWithdrawRedeem_noDebt_fuzz( // solhint-disable-line func-name-mixedcase
+    function test_maxWithdrawRedeem_noDebt_noInterest_fuzz( // solhint-disable-line func-name-mixedcase
         uint128 _assetsToDepositForBorrow,
         uint256 _assetsToBorrow
     ) public {
-        vm.assume(_assetsToDepositForBorrow > 1);
-        vm.assume(_assetsToBorrow > 1 && _assetsToBorrow < _assetsToDepositForBorrow / 2);
-
-        _depositForBorrow(_assetsToDepositForBorrow, _DEPOSITOR);
-        _deposit(_assetsToBorrow * 2, _BORROWER);
-        _borrow(_assetsToBorrow, _BORROWER);
-
-        uint256 maxAssets = silo1.maxWithdraw(_DEPOSITOR);
-        uint256 maxShare = silo1.maxRedeem(_DEPOSITOR);
-
-        vm.prank(_DEPOSITOR);
-        uint256 sharesWithdraw = silo1.withdraw(maxAssets, _DEPOSITOR, _DEPOSITOR);
-
-        assertEq(sharesWithdraw, maxShare, "sharesWithdraw == maxShare");
-
-        uint256 balance = IERC20(address(token1)).balanceOf(_DEPOSITOR);
-        assertEq(balance, maxAssets, "balance == maxAssets");
+        _maxWithdrawRedeem_noDebt(_assetsToDepositForBorrow, _assetsToBorrow, 0);
     }
 
-    // FOUNDRY_PROFILE=core forge test -vvv --ffi --mt test_maxWithdrawRedeem_withDebt_fuzz
+    // FOUNDRY_PROFILE=core forge test -vvv --ffi --mt test_maxWithdrawRedeem_noDebt_withInterest_fuzz
     /// forge-config: core.fuzz.runs = 10000
-    function test_maxWithdrawRedeem_withDebt_fuzz( // solhint-disable-line func-name-mixedcase
+    function test_maxWithdrawRedeem_noDebt_withInterest_fuzz( // solhint-disable-line func-name-mixedcase
         uint128 _assetsToDepositForBorrow,
         uint256 _assetsToBorrow
+    ) public {
+        _maxWithdrawRedeem_noDebt(_assetsToDepositForBorrow, _assetsToBorrow, 365 days);
+    }
+
+    // FOUNDRY_PROFILE=core forge test -vvv --ffi --mt test_maxWithdrawRedeem_withDebt_noInterest_fuzz
+    /// forge-config: core.fuzz.runs = 10000
+    function test_maxWithdrawRedeem_withDebt_noInterest_fuzz( // solhint-disable-line func-name-mixedcase
+        uint128 _assetsToDepositForBorrow,
+        uint256 _assetsToBorrow
+    ) public {
+        _maxWithdrawRedeem_withDebt(_assetsToDepositForBorrow, _assetsToBorrow, 0);
+    }
+
+    // FOUNDRY_PROFILE=core forge test -vvv --ffi --mt test_maxWithdrawRedeem_withDebt_withInterest_fuzz
+    /// forge-config: core.fuzz.runs = 10000
+    function test_maxWithdrawRedeem_withDebt_withInterest_fuzz( // solhint-disable-line func-name-mixedcase
+        uint128 _assetsToDepositForBorrow,
+        uint256 _assetsToBorrow
+    ) public {
+        _maxWithdrawRedeem_withDebt(_assetsToDepositForBorrow, _assetsToBorrow, 365 days);
+    }
+
+    // FOUNDRY_PROFILE=core forge test -vvv --ffi --mt test_maxBorrow_noDebt_noInterest_fuzz
+    /// forge-config: core.fuzz.runs = 10000
+    // solhint-disable-next-line func-name-mixedcase
+    function test_maxBorrow_noDebt_noInterest_fuzz(uint128 _assets, uint128 _collateral, bool _useShares) public {
+        _maxBorrow_noDebt(_assets, _collateral, _useShares, 0);
+    }
+
+    // TODO fails as lozing 1 wei
+    // FOUNDRY_PROFILE=core forge test -vvv --ffi --mt test_maxBorrow_noDebt_withInterest_fuzz
+    /// forge-config: core.fuzz.runs = 10000
+    // solhint-disable-next-line func-name-mixedcase
+    function test_maxBorrow_noDebt_withInterest_fuzz(uint128 _assets, uint128 _collateral, bool _useShares) public {
+        _maxBorrow_noDebt(_assets, _collateral, _useShares, 365 days);
+    }
+
+    // FOUNDRY_PROFILE=core forge test -vvv --ffi --mt test_maxBorrow_withDebt_noInterest_fuzz
+    /// forge-config: core.fuzz.runs = 10000
+    // solhint-disable-next-line func-name-mixedcase
+    function test_maxBorrow_withDebt_noInterest_fuzz(uint128 _assets, uint128 _collateral, bool _useShares) public {
+        _maxBorrow_withDebt_fuzz(_assets, _collateral, _useShares, 0);
+    }
+
+    // TODO fails ZeroAssets()
+    // FOUNDRY_PROFILE=core forge test -vvv --ffi --mt test_maxBorrow_withDebt_withInterest_fuzz
+    /// forge-config: core.fuzz.runs = 10000
+    // solhint-disable-next-line func-name-mixedcase
+    function test_maxBorrow_withDebt_withInterest_fuzz(uint128 _assets, uint128 _collateral, bool _useShares) public {
+        _maxBorrow_withDebt_fuzz(_assets, _collateral, _useShares, 365 days);
+    }
+
+    // FOUNDRY_PROFILE=core forge test -vvv --ffi --mt test_maxReepay_noInterest_fuzz
+    /// forge-config: core.fuzz.runs = 10000
+    function test_maxReepay_noInterest_fuzz( // solhint-disable-line func-name-mixedcase
+        uint128 _assetsToDepositForBorrow,
+        uint256 _assetsToBorrow,
+        bool _useShares
+    ) public {
+        _maxReepay_fuzz(_assetsToDepositForBorrow, _assetsToBorrow, _useShares, 0);
+    }
+
+    // TODO fails maxRepay (8526) == result (7971)
+    // FOUNDRY_PROFILE=core forge test -vvv --ffi --mt test_maxReepay_withInterest_fuzz
+    /// forge-config: core.fuzz.runs = 10000
+    function test_maxReepay_withInterest_fuzz( // solhint-disable-line func-name-mixedcase
+        uint128 _assetsToDepositForBorrow,
+        uint256 _assetsToBorrow,
+        bool _useShares
+    ) public {
+        _maxReepay_fuzz(_assetsToDepositForBorrow, _assetsToBorrow, _useShares, 365 days);
+    }
+
+    function _maxReepay_fuzz( // solhint-disable-line func-name-mixedcase
+        uint128 _assetsToDepositForBorrow,
+        uint256 _assetsToBorrow,
+        bool _useShares,
+        uint256 _time
     ) public {
         vm.assume(_assetsToDepositForBorrow > 1);
         vm.assume(_assetsToBorrow > 1 && _assetsToBorrow < _assetsToDepositForBorrow / 2);
@@ -72,16 +134,28 @@ contract PreviewMaxTest is SiloLittleHelper, Test {
         _deposit(_assetsToBorrow * 2, _BORROWER);
         _borrow(_assetsToBorrow, _BORROWER);
 
-        uint256 maxAssets = silo0.maxWithdraw(_BORROWER);
-        uint256 maxShare = silo0.maxRedeem(_BORROWER);
+        if (_time > 0) {
+            vm.warp(block.timestamp + _time);
+        }
 
-        vm.prank(_BORROWER);
-        uint256 sharesWithdraw = silo0.withdraw(maxAssets, _BORROWER, _BORROWER);
+        uint256 maxRepay = _useShares ? silo1.maxRepayShares(_BORROWER) : silo1.maxRepay(_BORROWER);
 
-        assertEq(sharesWithdraw, maxShare, "sharesWithdraw == maxShare");
+        uint256 result = _useShares
+            ? _repayShares(maxRepay, maxRepay, _BORROWER)
+            : _repay(maxRepay, _BORROWER);
 
-        uint256 balance = IERC20(address(token0)).balanceOf(_BORROWER);
-        assertEq(balance, maxAssets, "balance == maxAssets");
+        assertEq(maxRepay, result, "maxRepay == result");
+        assertEq(maxRepay, _assetsToBorrow, "maxRepay == _assetsToBorrow");
+
+        (,,address debtToken) = _siloConfig.getShareTokens(address(silo1));
+
+        assertTrue(
+            silo1.isSolvent(_BORROWER),
+            string.concat(
+                "User is not solved. Debt share token balance: ",
+                vm.toString(IERC20(debtToken).balanceOf(_BORROWER))
+            )
+        );
     }
 
     // FOUNDRY_PROFILE=core forge test -vvv --ffi --mt test_maxFlashLoan_fuzz
@@ -108,101 +182,7 @@ contract PreviewMaxTest is SiloLittleHelper, Test {
         flasLoanTakerMock.takeFlashLoan(silo1, address(token1), maxFlashLoan);
     }
 
-    // FOUNDRY_PROFILE=core forge test -vvv --ffi --mt test_maxBorrow_noDebt_fuzz
-    /// forge-config: core.fuzz.runs = 10000
-    // solhint-disable-next-line func-name-mixedcase
-    function test_maxBorrow_noDebt_fuzz(uint128 _assets, uint128 _collateral, bool _useShares) public {
-        vm.assume(_assets < _collateral);
-        vm.assume(_assets > 3); // only for this test as we have `_assets / 2` for `_BORROWER2`
-
-        _depositForBorrow(_assets, _DEPOSITOR);
-        _deposit(_collateral, _BORROWER);
-        _deposit(_collateral, _BORROWER2);
-
-        uint256 amountToBorrowFor2 = _assets / 2;
-
-        _borrow(amountToBorrowFor2, _BORROWER2);
-
-        uint256 max = _useShares ? silo1.maxBorrowShares(_BORROWER) : silo1.maxBorrow(_BORROWER);
-
-        uint256 result = _useShares
-            ? _borrowShares(max, _BORROWER)
-            : _borrow(max, _BORROWER);
-
-        assertEq(max, result, "max == result");
-
-        uint256 balance = IERC20(address(token1)).balanceOf(_BORROWER);
-
-        assertEq(balance, max, "balance == max");
-    }
-
-    // FOUNDRY_PROFILE=core forge test -vvv --ffi --mt test_maxBorrow_withDebt_fuzz
-    /// forge-config: core.fuzz.runs = 10000
-    // solhint-disable-next-line func-name-mixedcase
-    function test_maxBorrow_withDebt_fuzz(uint128 _assets, uint128 _collateral, bool _useShares) public {
-        vm.assume(_assets < _collateral);
-        vm.assume(_assets > 6); // only for this test as we have `_assets / 3` for `_BORROWER2`
-
-        _depositForBorrow(_assets, _DEPOSITOR);
-        _deposit(_collateral, _BORROWER);
-        _deposit(_collateral, _BORROWER2);
-
-        uint256 amountToBorrowFor = _assets / 3;
-
-        _borrow(amountToBorrowFor, _BORROWER);
-
-        uint256 borrowedBefore = _borrow(amountToBorrowFor, _BORROWER2);
-
-        uint256 max = _useShares ? silo1.maxBorrowShares(_BORROWER2) : silo1.maxBorrow(_BORROWER2);
-
-        uint256 result = _useShares
-            ? _borrowShares(max, _BORROWER2)
-            : _borrow(max, _BORROWER2);
-
-        assertEq(max, result, "max == result");
-
-        uint256 balance = IERC20(address(token1)).balanceOf(_BORROWER2);
-
-        assertEq(balance - borrowedBefore, max, "balance == max");
-    }
-
-    // FOUNDRY_PROFILE=core forge test -vvv --ffi --mt test_maxReepay_fuzz
-    /// forge-config: core.fuzz.runs = 10000
-    function test_maxReepay_fuzz( // solhint-disable-line func-name-mixedcase
-        uint128 _assetsToDepositForBorrow,
-        uint256 _assetsToBorrow,
-        bool _useShares
-    ) public {
-        vm.assume(_assetsToDepositForBorrow > 1);
-        vm.assume(_assetsToBorrow > 1 && _assetsToBorrow < _assetsToDepositForBorrow / 2);
-
-        _depositForBorrow(_assetsToDepositForBorrow, _DEPOSITOR);
-        _deposit(_assetsToBorrow * 2, _BORROWER);
-        _borrow(_assetsToBorrow, _BORROWER);
-
-        uint256 maxRepay = _useShares ? silo1.maxRepayShares(_BORROWER) : silo1.maxRepay(_BORROWER);
-
-        uint256 result = _useShares
-            ? _repayShares(maxRepay, maxRepay, _BORROWER)
-            : _repay(maxRepay, _BORROWER);
-
-        assertEq(maxRepay, result, "maxRepay == result");
-        assertEq(maxRepay, _assetsToBorrow, "maxRepay == _assetsToBorrow");
-
-        (,,address debtToken) = _siloConfig.getShareTokens(address(silo1));
-
-        assertTrue(
-            silo1.isSolvent(_BORROWER),
-            string.concat(
-                "User is not solved. Debt share token balance: ",
-                vm.toString(IERC20(debtToken).balanceOf(_BORROWER))
-            )
-        );
-    }
-
-
     // DEBUGGING
-
 
     // FOUNDRY_PROFILE=core forge test -vvv --ffi --mt test_maxBorrow_debug
     // solhint-disable-next-line func-name-mixedcase
@@ -270,5 +250,123 @@ contract PreviewMaxTest is SiloLittleHelper, Test {
         uint256 sharesWithdraw = silo1.withdraw(maxAssets, _DEPOSITOR, _DEPOSITOR);
 
         assertEq(sharesWithdraw, maxShare, "sharesWithdraw == maxShare");
+    }
+
+    function _maxWithdrawRedeem_noDebt(
+        uint128 _assetsToDepositForBorrow,
+        uint256 _assetsToBorrow,
+        uint256 _time
+    ) internal {
+        vm.assume(_assetsToDepositForBorrow > 1);
+        vm.assume(_assetsToBorrow > 1 && _assetsToBorrow < _assetsToDepositForBorrow / 2);
+
+        _depositForBorrow(_assetsToDepositForBorrow, _DEPOSITOR);
+        _deposit(_assetsToBorrow * 2, _BORROWER);
+        _borrow(_assetsToBorrow, _BORROWER);
+
+        if (_time > 0) {
+            vm.warp(block.timestamp + _time);
+        }
+
+        uint256 maxAssets = silo1.maxWithdraw(_DEPOSITOR);
+        uint256 maxShare = silo1.maxRedeem(_DEPOSITOR);
+
+        vm.prank(_DEPOSITOR);
+        uint256 sharesWithdraw = silo1.withdraw(maxAssets, _DEPOSITOR, _DEPOSITOR);
+
+        assertEq(sharesWithdraw, maxShare, "sharesWithdraw == maxShare");
+
+        uint256 balance = IERC20(address(token1)).balanceOf(_DEPOSITOR);
+        assertEq(balance, maxAssets, "balance == maxAssets");
+    }
+
+    function _maxWithdrawRedeem_withDebt( // solhint-disable-line func-name-mixedcase
+        uint128 _assetsToDepositForBorrow,
+        uint256 _assetsToBorrow,
+        uint256 _time
+    ) internal {
+        vm.assume(_assetsToDepositForBorrow > 1);
+        vm.assume(_assetsToBorrow > 1 && _assetsToBorrow < _assetsToDepositForBorrow / 2);
+
+        _depositForBorrow(_assetsToDepositForBorrow, _DEPOSITOR);
+        _deposit(_assetsToBorrow * 2, _BORROWER);
+        _borrow(_assetsToBorrow, _BORROWER);
+
+        if (_time > 0) {
+            vm.warp(block.timestamp + _time);
+        }
+
+        uint256 maxAssets = silo0.maxWithdraw(_BORROWER);
+        uint256 maxShare = silo0.maxRedeem(_BORROWER);
+
+        vm.prank(_BORROWER);
+        uint256 sharesWithdraw = silo0.withdraw(maxAssets, _BORROWER, _BORROWER);
+
+        assertEq(sharesWithdraw, maxShare, "sharesWithdraw == maxShare");
+
+        uint256 balance = IERC20(address(token0)).balanceOf(_BORROWER);
+        assertEq(balance, maxAssets, "balance == maxAssets");
+    }
+
+    // solhint-disable-next-line func-name-mixedcase
+    function _maxBorrow_noDebt(uint128 _assets, uint128 _collateral, bool _useShares, uint256 _time) public {
+        vm.assume(_assets < _collateral);
+        vm.assume(_assets > 3); // only for this test as we have `_assets / 2` for `_BORROWER2`
+
+        _depositForBorrow(_assets, _DEPOSITOR);
+        _deposit(_collateral, _BORROWER);
+        _deposit(_collateral, _BORROWER2);
+
+        uint256 amountToBorrowFor2 = _assets / 2;
+
+        _borrow(amountToBorrowFor2, _BORROWER2);
+
+        if (_time > 0) {
+            vm.warp(block.timestamp + _time);
+        }
+
+        uint256 max = _useShares ? silo1.maxBorrowShares(_BORROWER) : silo1.maxBorrow(_BORROWER);
+
+        uint256 result = _useShares
+            ? _borrowShares(max, _BORROWER)
+            : _borrow(max, _BORROWER);
+
+        assertEq(max, result, "max == result");
+
+        uint256 balance = IERC20(address(token1)).balanceOf(_BORROWER);
+
+        assertEq(balance, max, "balance == max");
+    }
+
+    // solhint-disable-next-line func-name-mixedcase
+    function _maxBorrow_withDebt_fuzz(uint128 _assets, uint128 _collateral, bool _useShares, uint256 _time) public {
+        vm.assume(_assets < _collateral);
+        vm.assume(_assets > 10); // only for this test as we have `_assets / 3` for `_BORROWER2`
+
+        _depositForBorrow(_assets, _DEPOSITOR);
+        _deposit(_collateral, _BORROWER);
+        _deposit(_collateral, _BORROWER2);
+
+        uint256 amountToBorrowFor = _assets / 3;
+
+        _borrow(amountToBorrowFor, _BORROWER);
+
+        uint256 borrowedBefore = _borrow(amountToBorrowFor, _BORROWER2);
+
+        if (_time > 0) {
+            vm.warp(block.timestamp + _time);
+        }
+
+        uint256 max = _useShares ? silo1.maxBorrowShares(_BORROWER2) : silo1.maxBorrow(_BORROWER2);
+
+        uint256 result = _useShares
+            ? _borrowShares(max, _BORROWER2)
+            : _borrow(max, _BORROWER2);
+
+        assertEq(max, result, "max == result");
+
+        uint256 balance = IERC20(address(token1)).balanceOf(_BORROWER2);
+
+        assertEq(balance - borrowedBefore, max, "balance == max");
     }
 }
