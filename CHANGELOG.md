@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [0.0.28] - 2023-12-18
 ### Fixed
+- [issue-322](https://github.com/silo-finance/silo-contracts-v2/issues/322) Repay reentrancy attack can drain all Silo assets
+
+## [0.0.28] - 2023-12-18
+### Fixed
 - [issue-321](https://github.com/silo-finance/silo-contracts-v2/issues/321) Deposit reentrancy attack allows users to steal assets
 
 ## [0.0.27] - 2023-12-15
