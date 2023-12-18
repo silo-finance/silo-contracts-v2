@@ -35,8 +35,24 @@ contract MaxTest is SiloLittleHelper, Test {
     */
     function test_maxDeposit_emptySilo() public {
         uint256 maxDeposit = silo0.maxDeposit(depositor);
-        assertEq(silo0.maxDeposit(depositor), type(uint256).max, "on empty silo, MAX is just no limit");
+        assertEq(maxDeposit, type(uint256).max, "on empty silo, MAX is just no limit");
         _deposit(maxDeposit, depositor);
+
+        _assertWeCanNotDepositMore(silo0, depositor);
+    }
+
+    /*
+    forge test -vv --ffi --mt test_maxDeposit_whenBorrow
+    */
+    function test_maxDeposit_whenBorrow() public {
+        uint256 _initialDeposit = 1e18;
+
+        _depositForBorrow(_initialDeposit / 3, depositor);
+        _deposit(_initialDeposit / 3 * 2, borrower);
+        _borrow(_initialDeposit / 3, borrower);
+
+        assertEq(silo0.maxDeposit(borrower), type(uint256).max - (_initialDeposit / 3 * 2), "no debt - max deposit");
+        assertEq(silo1.maxDeposit(borrower), 0, "can not deposit with debt");
     }
 
     /*
@@ -47,14 +63,14 @@ contract MaxTest is SiloLittleHelper, Test {
         vm.assume(_initialDeposit > 0);
         vm.assume(_initialDeposit < type(uint256).max); // max case is covered on test_maxDeposit_emptySilo
 
-        _depositForBorrow(_initialDeposit, depositor);
+        _deposit(_initialDeposit, depositor);
 
-        uint256 maxDeposit = silo1.maxDeposit(depositor);
-        assertEq(silo1.maxDeposit(depositor), type(uint256).max - _initialDeposit, "with deposit, max is less");
+        uint256 maxDeposit = silo0.maxDeposit(depositor);
+        assertEq(maxDeposit, type(uint256).max - _initialDeposit, "with deposit, max is MAX - deposit");
 
         _deposit(maxDeposit, depositor);
 
-        _assertWeCanNotDepositMore(silo1);
+        _assertWeCanNotDepositMore(silo0, depositor);
     }
 
     /*
@@ -65,20 +81,22 @@ contract MaxTest is SiloLittleHelper, Test {
         vm.assume(_initialDeposit > 3); // we need to be able /3
 
         _depositForBorrow(_initialDeposit / 3, depositor);
+
         _deposit(_initialDeposit / 3 * 2, borrower);
         _borrow(_initialDeposit / 3, borrower);
 
         vm.warp(block.timestamp + 100 days);
 
         uint256 maxDeposit = silo1.maxDeposit(depositor);
+
         assertLt(
-            silo1.maxDeposit(depositor),
-            type(uint256).max - _initialDeposit / 3,
+            maxDeposit,
+            type(uint256).max - (_initialDeposit / 3 * 2),
             "with interest we expecting less than simply sub the initial deposit"
         );
 
         _depositForBorrow(maxDeposit, depositor);
 
-        _assertWeCanNotDepositMore(silo1);
+        _assertWeCanNotDepositMore(silo1, depositor);
     }
 }
