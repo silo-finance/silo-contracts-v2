@@ -26,21 +26,55 @@ library SiloERC4626Lib {
 
     error ZeroShares();
 
-    /// @notice Determines the maximum amount a user can deposit or mint
+    /// @notice Determines the maximum amount of collateral (not protected) a user can deposit
     /// @dev The function checks if deposit is possible for the given user, and if so, returns a constant
     /// representing no deposit limit
     /// @param _config Configuration of the silo
     /// @param _receiver The address of the user
-    /// @return maxAssetsOrShares Maximum assets or shares a user can deposit or mint
-    function maxDepositOrMint(ISiloConfig _config, address _receiver)
+    /// @return maxAssets Maximum assets a user can deposit
+    function maxDeposit(ISiloConfig _config, address _receiver, mapping(ISilo.AssetType => ISilo.Assets) storage _total)
         external
         view
-        returns (uint256 maxAssetsOrShares)
+        returns (uint256 maxAssets)
     {
         ISiloConfig.ConfigData memory configData = _config.getConfig(address(this));
 
         if (depositPossible(configData.debtShareToken, _receiver)) {
-            maxAssetsOrShares = _NO_DEPOSIT_LIMIT;
+            uint256 totalShares = IShareToken(configData.collateralShareToken).totalSupply();
+
+            uint256 totalCollateralAssets = SiloStdLib.getTotalCollateralAssetsWithInterest(
+                address(this),
+                configData.interestRateModel,
+                configData.daoFee,
+                configData.deployerFee
+            );
+
+            uint256 allCollaterals = SiloMathLib.convertToAssets(
+                totalShares, totalCollateralAssets, totalShares, MathUpgradeable.Rounding.Down, ISilo.AssetType.Collateral
+            ) + _total[ISilo.AssetType.Protected].assets;
+
+            maxAssets = _NO_DEPOSIT_LIMIT - allCollaterals;
+        }
+    }
+
+    /// @notice Determines the maximum amount of collateral (not protected) shares a user can deposit
+    /// @dev The function checks if deposit is possible for the given user, and if so, returns a constant
+    /// representing no deposit limit
+    /// @param _config Configuration of the silo
+    /// @param _receiver The address of the user
+    /// @return maxShares Maximum shares a user can mint
+    function maxMint(ISiloConfig _config, address _receiver, mapping(ISilo.AssetType => ISilo.Assets) storage _total)
+        external
+        view
+        returns (uint256 maxShares)
+    {
+        ISiloConfig.ConfigData memory configData = _config.getConfig(address(this));
+
+        if (depositPossible(configData.debtShareToken, _receiver)) {
+            uint256 totalShares = IShareToken(configData.collateralShareToken).totalSupply()
+                + IShareToken(configData.protectedShareToken).totalSupply();
+
+            maxShares = _NO_DEPOSIT_LIMIT - totalShares;
         }
     }
 

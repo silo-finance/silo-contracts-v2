@@ -229,7 +229,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
 
     /// @inheritdoc IERC4626
     function maxDeposit(address _receiver) external view virtual returns (uint256 maxAssets) {
-        return SiloERC4626Lib.maxDepositOrMint(config, _receiver);
+        return SiloERC4626Lib.maxDeposit(config, _receiver, _total);
     }
 
     /// @inheritdoc IERC4626
@@ -267,7 +267,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
 
     /// @inheritdoc IERC4626
     function maxMint(address _receiver) external view virtual returns (uint256 maxShares) {
-        return SiloERC4626Lib.maxDepositOrMint(config, _receiver);
+        return SiloERC4626Lib.maxMint(config, _receiver, _total);
     }
 
     /// @inheritdoc IERC4626
@@ -379,7 +379,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
         virtual
         returns (uint256 maxAssets)
     {
-        return SiloERC4626Lib.maxDepositOrMint(config, _receiver);
+        return SiloERC4626Lib.maxDeposit(config, _receiver, _total);
     }
 
     /// @inheritdoc ISilo
@@ -426,7 +426,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
         virtual
         returns (uint256 maxShares)
     {
-        return SiloERC4626Lib.maxDepositOrMint(config, _receiver);
+        return SiloERC4626Lib.maxMint(config, _receiver, _total);
     }
 
     /// @inheritdoc ISilo
