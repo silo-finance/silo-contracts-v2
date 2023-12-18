@@ -161,11 +161,6 @@ library SiloERC4626Lib {
 
         if (shares == 0) revert ZeroShares();
 
-        if (_token != address(0)) {
-            // Transfer tokens before minting. No state changes have been made so reentrancy does nothing
-            IERC20Upgradeable(_token).safeTransferFrom(_depositor, address(this), assets);
-        }
-
         // `assets` and `totalAssets` can never be more than uint256 because totalSupply cannot be either
         unchecked {
             _totalCollateral.assets = totalAssets + assets;
@@ -173,6 +168,13 @@ library SiloERC4626Lib {
 
         // Hook receiver is called after `mint` and can reentry but state changes are completed already
         _collateralShareToken.mint(_receiver, _depositor, shares);
+
+        if (_token != address(0)) {
+            // Reentrancy is possible only for view methods (read-only reentrancy),
+            // so no harm can be done as the state is already updated.
+            // We do not expect the silo to work with any malicious token that will not send tokens to silo.
+            IERC20Upgradeable(_token).safeTransferFrom(_depositor, address(this), assets);
+        }
     }
 
     /// this helped with stack too deep

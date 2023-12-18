@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [0.0.28] - 2023-12-18
+### Fixed
+- [issue-321](https://github.com/silo-finance/silo-contracts-v2/issues/321) Deposit reentrancy attack allows users to steal assets
+
 ## [0.0.27] - 2023-12-15
 ### Fixed
 - [issue-255](https://github.com/silo-finance/silo-contracts-v2/issues/255): UniswapV3Oracle contract implementation 
