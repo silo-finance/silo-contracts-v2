@@ -14,15 +14,6 @@ import {SiloSolvencyLib} from "./SiloSolvencyLib.sol";
 import {SiloLiquidationLib} from "./SiloLiquidationLib.sol";
 
 library SiloLiquidationExecLib {
-    struct LiquidationPreviewParams {
-        uint256 collateralLt;
-        address collateralConfigAsset;
-        address debtConfigAsset;
-        uint256 debtToCover;
-        uint256 liquidationFee;
-        bool selfLiquidation;
-    }
-
     /// @dev that method allow to finish liquidation process by giving up collateral to liquidator
     function withdrawCollateralsToLiquidator(
         ISiloConfig _config,
@@ -89,7 +80,7 @@ library SiloLiquidationExecLib {
             borrowerCollateralToLiquidate, repayDebtAssets
         ) = liquidationPreview(
             ltvData,
-            LiquidationPreviewParams({
+            SiloLiquidationLib.LiquidationPreviewParams({
                 collateralLt: _collateralConfig.lt,
                 collateralConfigAsset: _collateralConfig.token,
                 debtConfigAsset: _debtConfig.token,
@@ -243,11 +234,12 @@ library SiloLiquidationExecLib {
         _shareToken.forwardTransfer(_borrower, _liquidator, shares);
     }
 
-    /// @return receiveCollateralAssets collateral + protected to liquidate
+    /// @return receiveCollateralAssets collateral + protected to liquidate, on self liquidation when borrower repay
+    /// all debt, he will receive all collateral back
     /// @return repayDebtAssets
     function liquidationPreview( // solhint-disable-line function-max-lines, code-complexity
         SiloSolvencyLib.LtvData memory _ltvData,
-        LiquidationPreviewParams memory _params
+        SiloLiquidationLib.LiquidationPreviewParams memory _params
     )
         internal
         view
@@ -257,23 +249,29 @@ library SiloLiquidationExecLib {
         // safe because same asset can not overflow
         unchecked  { sumOfCollateralAssets = _ltvData.borrowerCollateralAssets + _ltvData.borrowerProtectedAssets; }
 
-        if (_ltvData.borrowerDebtAssets == 0 || sumOfCollateralAssets == 0) return (0, 0);
+        if (_ltvData.borrowerDebtAssets == 0 || _params.debtToCover == 0) return (0, 0);
+        if (sumOfCollateralAssets == 0) return (0, _params.debtToCover);
 
         (
             uint256 sumOfBorrowerCollateralValue, uint256 totalBorrowerDebtValue, uint256 ltvBefore
         ) = SiloSolvencyLib.calculateLtv(_ltvData, _params.collateralConfigAsset, _params.debtConfigAsset);
 
-        if (!_params.selfLiquidation && _params.collateralLt >= ltvBefore) return (0, 0);
+        if (_params.selfLiquidation) {
+            if (_params.debtToCover >= _ltvData.borrowerDebtAssets) {
+                // only because it is self liquidation, we return all collateral on repay all debt
+                return (sumOfCollateralAssets, _ltvData.borrowerDebtAssets);
+            }
+        } else if (_params.collateralLt >= ltvBefore) return (0, 0); // user is solvent
 
         uint256 ltvAfter;
 
-        (receiveCollateralAssets, repayDebtAssets, ltvAfter) = SiloLiquidationLib.calculateExactLiquidationAmounts(
-            _params.debtToCover,
+        (receiveCollateralAssets, repayDebtAssets, ltvAfter) = SiloLiquidationLib.liquidationPreview(
+            ltvBefore,
             sumOfCollateralAssets,
             sumOfBorrowerCollateralValue,
             _ltvData.borrowerDebtAssets,
             totalBorrowerDebtValue,
-            _params.selfLiquidation ? 0 : _params.liquidationFee
+            _params
         );
 
         if (receiveCollateralAssets == 0 || repayDebtAssets == 0) return (0, 0);
@@ -291,10 +289,6 @@ library SiloLiquidationExecLib {
                 // - if user was not solvent, then we need to allow
                 if (ltvBefore <= _params.collateralLt && ltvAfter > _params.collateralLt) {
                     revert ISiloLiquidation.Insolvency();
-                }
-            } else {
-                if (ltvAfter < SiloLiquidationLib.minAcceptableLTV(_params.collateralLt)) {
-                    revert ISiloLiquidation.LiquidationTooBig();
                 }
             }
         }
