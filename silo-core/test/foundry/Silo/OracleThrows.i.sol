@@ -3,6 +3,7 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
 
+import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
@@ -85,8 +86,8 @@ contract OracleThrowsTest is SiloLittleHelper, Test {
         assertEq(token1.balanceOf(depositor), 100e18 + 726118608081294262, "depositor got deposit + interest");
         assertEq(token1.balanceOf(address(silo1)), 1, "everyone got collateral and fees, rounding policy left");
 
-        assertEq(silo0.getLiquidity(), 0, "silo0.getLiquidity");
-        assertEq(silo1.getLiquidity(), 1, "silo1.getLiquidity");
+        assertEq(silo0.getLiquidity(ISilo.AccrueInterestInMemory.No), 0, "silo0.getLiquidity");
+        assertEq(silo1.getLiquidity(ISilo.AccrueInterestInMemory.No), 1, "silo1.getLiquidity");
     }
 
     function _withdrawAll() internal returns (bool success) {
@@ -96,7 +97,7 @@ contract OracleThrowsTest is SiloLittleHelper, Test {
         assertEq(token0.balanceOf(borrower), 0, "borrower can not withdraw even 1 wei when oracle broken");
 
         uint256 silo1Balance = token1.balanceOf(address(silo1));
-        uint256 silo1Liquidity = silo1.getLiquidity();
+        uint256 silo1Liquidity = silo1.getLiquidity(ISilo.AccrueInterestInMemory.No);
         emit log_named_decimal_uint("silo1Balance", silo1Balance, 18);
         emit log_named_decimal_uint("silo1Liquidity", silo1Liquidity, 18);
         assertGt(silo1Balance, 0, "expect tokens in silo");

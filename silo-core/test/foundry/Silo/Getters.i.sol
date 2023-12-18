@@ -5,6 +5,7 @@ import "forge-std/Test.sol";
 
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
+import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 
 import {MintableToken} from "../_common/MintableToken.sol";
 import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
@@ -23,8 +24,8 @@ contract GettersTest is SiloLittleHelper, Test {
     forge test -vv --ffi --mt test_silo_getLiquidity
     */
     function test_silo_getLiquidity() public {
-        assertEq(silo0.getLiquidity(), 0, "no liquidity after deploy 0");
-        assertEq(silo1.getLiquidity(), 0, "no liquidity after deploy 1");
+        assertEq(silo0.getLiquidity(ISilo.AccrueInterestInMemory.No), 0, "no liquidity after deploy 0");
+        assertEq(silo1.getLiquidity(ISilo.AccrueInterestInMemory.No), 0, "no liquidity after deploy 1");
     }
 
     /*
