@@ -17,6 +17,8 @@ import {SiloSolvencyLib} from "./SiloSolvencyLib.sol";
 import {SiloStdLib} from "./SiloStdLib.sol";
 import {SiloMathLib} from "./SiloMathLib.sol";
 
+import {console} from "forge-std/console.sol";
+
 library SiloLendingLib {
     using SafeERC20Upgradeable for IERC20Upgradeable;
 
@@ -59,6 +61,11 @@ library SiloLendingLib {
         IShareToken debtShareToken = IShareToken(_configData.debtShareToken);
         uint256 totalDebtAssets = _totalDebt.assets;
 
+        console.log("[borrow] totalDebtAssets", totalDebtAssets);
+        console.log("[borrow] debtShareToken.totalSupply()", debtShareToken.totalSupply());
+        console.log("[borrow] _assets", _assets);
+        console.log("[borrow] _totalCollateralAssets", _totalCollateralAssets);
+
         (borrowedAssets, borrowedShares) = SiloMathLib.convertToAssetsAndToShares(
             _assets,
             _shares,
@@ -70,6 +77,9 @@ library SiloLendingLib {
         );
 
         if (borrowedShares == 0) revert ISilo.ZeroShares();
+
+        console.log("[borrow] borrowedAssets", borrowedAssets);
+        console.log("[borrow] SiloMathLib.liquidity(_totalCollateralAssets, totalDebtAssets)", SiloMathLib.liquidity(_totalCollateralAssets, totalDebtAssets));
 
         if (borrowedAssets > SiloMathLib.liquidity(_totalCollateralAssets, totalDebtAssets)) {
             revert ISilo.NotEnoughLiquidity();
@@ -280,7 +290,7 @@ library SiloLendingLib {
             assets = _liquidity;
 
             shares = SiloMathLib.convertToShares(
-                assets, _totalDebtAssets, _totalDebtShares, MathUpgradeable.Rounding.Down, ISilo.AssetType.Debt
+                assets, _totalDebtAssets, _totalDebtShares, MathUpgradeable.Rounding.Up, ISilo.AssetType.Debt
             );
         }
     }
@@ -339,14 +349,14 @@ library SiloLendingLib {
             assets = _maxBorrowValue * _PRECISION_DECIMALS / oneDebtTokenValue;
 
             shares = SiloMathLib.convertToShares(
-                assets, _totalDebtAssets, _totalDebtShares, MathUpgradeable.Rounding.Down, ISilo.AssetType.Debt
+                assets, _totalDebtAssets, _totalDebtShares, MathUpgradeable.Rounding.Up, ISilo.AssetType.Debt
             );
         } else {
             uint256 shareBalance = IShareToken(_debtShareToken).balanceOf(_borrower);
             shares = _maxBorrowValue * shareBalance / _borrowerDebtValue;
 
             assets = SiloMathLib.convertToAssets(
-                shares, _totalDebtAssets, _totalDebtShares, MathUpgradeable.Rounding.Up, ISilo.AssetType.Debt
+                shares, _totalDebtAssets, _totalDebtShares, MathUpgradeable.Rounding.Down, ISilo.AssetType.Debt
             );
         }
     }
