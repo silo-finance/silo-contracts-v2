@@ -70,6 +70,7 @@ library SiloERC4626Lib {
                 + _total[ISilo.AssetType.Protected].assets
                 + _daoAndDeployerFees;
 
+
             maxAssets = _NO_DEPOSIT_LIMIT - allCollaterals;
         }
     }
@@ -221,6 +222,7 @@ library SiloERC4626Lib {
         }
 
         uint256 totalAssets = _totalCollateral.assets;
+        console.log("[deposit] _totalCollateral.assets", _totalCollateral.assets);
 
         (assets, shares) = SiloMathLib.convertToAssetsAndToShares(
             _assets,
@@ -240,11 +242,15 @@ library SiloERC4626Lib {
         }
 
         // `assets` and `totalAssets` can never be more than uint256 because totalSupply cannot be either
-        unchecked {
+        // unchecked {
             _totalCollateral.assets = totalAssets + assets;
-        }
+        // }
+
+        console.log("[deposit] _totalCollateral.assets", _totalCollateral.assets);
 
         // Hook receiver is called after `mint` and can reentry but state changes are completed already
+        // TODO this can pass because we will overflow unchecked math because we tranfer tokens from silo to "double spend"
+        // can we do that with borrow few times??
         _collateralShareToken.mint(_receiver, _depositor, shares);
     }
 

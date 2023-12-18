@@ -34,11 +34,11 @@ contract MaxTest is SiloLittleHelper, Test {
     forge test -vv --ffi --mt test_maxDeposit_emptySilo
     */
     function test_maxDeposit_emptySilo() public {
-        uint256 maxDeposit = silo0.maxDeposit(depositor);
+        uint256 maxDeposit = silo1.maxDeposit(depositor);
         assertEq(maxDeposit, type(uint256).max, "on empty silo, MAX is just no limit");
-        _deposit(maxDeposit, depositor);
+        _depositForBorrow(maxDeposit, depositor);
 
-        _assertWeCanNotDepositMore(silo0, depositor);
+        _assertWeCanNotDepositMore(depositor);
     }
 
     /*
@@ -63,14 +63,14 @@ contract MaxTest is SiloLittleHelper, Test {
         vm.assume(_initialDeposit > 0);
         vm.assume(_initialDeposit < type(uint256).max); // max case is covered on test_maxDeposit_emptySilo
 
-        _deposit(_initialDeposit, depositor);
+        _depositForBorrow(_initialDeposit, depositor);
 
-        uint256 maxDeposit = silo0.maxDeposit(depositor);
+        uint256 maxDeposit = silo1.maxDeposit(depositor);
         assertEq(maxDeposit, type(uint256).max - _initialDeposit, "with deposit, max is MAX - deposit");
 
-        _deposit(maxDeposit, depositor);
+        _depositForBorrow(maxDeposit, depositor);
 
-        _assertWeCanNotDepositMore(silo0, depositor);
+        _assertWeCanNotDepositMore(depositor);
     }
 
     /*
@@ -100,8 +100,7 @@ contract MaxTest is SiloLittleHelper, Test {
 
         _depositForBorrow(maxDeposit, depositor);
 
-        //
-//        _assertWeCanNotDepositMore(silo1, depositor, 10);
+        _assertWeCanNotDepositMore(depositor);
     }
 
 
@@ -112,7 +111,7 @@ contract MaxTest is SiloLittleHelper, Test {
     function test_maxDeposit_repayWithInterest_fuzz(
 //        uint128 _initialDeposit
     ) public {
-        uint128 _initialDeposit = 1e18;
+        uint128 _initialDeposit = 4;
         uint128 toBorrow = _initialDeposit / 3;
 
         vm.assume(_initialDeposit > 3); // we need to be able /3
@@ -148,18 +147,21 @@ contract MaxTest is SiloLittleHelper, Test {
 
         _depositForBorrow(maxDeposit, depositor);
 
-        _assertWeCanNotDepositMore(silo1, depositor);
+        emit log_named_decimal_uint("balanceOf(silo)", token1.balanceOf(address(silo1)), 18);
+        emit log_named_decimal_uint("silo.getCollateralAssets", silo1.getCollateralAssets(), 18);
+
+        _assertWeCanNotDepositMore(depositor);
     }
 
     /*
     forge test -vv --ffi --mt test_maxMint_emptySilo
     */
     function test_maxMint_emptySilo() public {
-        uint256 maxMint = silo0.maxMint(depositor);
+        uint256 maxMint = silo1.maxMint(depositor);
         assertEq(maxMint, type(uint256).max, "on empty silo, MAX is just no limit");
-        _deposit(maxMint, depositor);
+        _depositForBorrow(maxMint, depositor);
 
-        _assertWeCanNotDepositMore(silo0, depositor);
+        _assertWeCanNotDepositMore(depositor);
     }
 
     /*
@@ -449,19 +451,23 @@ contract MaxTest is SiloLittleHelper, Test {
         assertEq(previewMint, depositedAssets, "previewMint == depositedAssets, NOT fewer");
     }
 
-    function _assertWeCanNotDepositMore(ISilo _silo, address _user) internal {
-        MintableToken token = address(_silo) == address(silo0) ? token0 : token1;
+    // we check on silo1
+    function _assertWeCanNotDepositMore(address _user) internal {
         uint256 one = 1;
+        address anyUser = makeAddr("any random address ...");
 
         // after max, we can not deposit even 1 wei
-        // we can not mint, because we max out, so we transfering
-        vm.prank(address(_silo));
-        token.transfer(_user, one);
+        // we can not mint, because we max out, so we need to borrow
+        _deposit(one * 10, anyUser);
+        _borrow(one, anyUser);
+
+        vm.prank(address(anyUser));
+        token1.transfer(_user, one);
 
         vm.startPrank(_user);
-        token.approve(address(_silo), one);
+        token1.approve(address(silo1), one);
         vm.expectRevert(); // we can not mint shares
-        _silo.deposit(one, _user);
+        silo1.deposit(one, _user);
         vm.stopPrank();
     }
 }
