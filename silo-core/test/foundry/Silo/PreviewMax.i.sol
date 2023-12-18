@@ -183,8 +183,8 @@ contract PreviewMaxTest is SiloLittleHelper, Test {
         uint256 maxRepay = _useShares ? silo1.maxRepayShares(_BORROWER) : silo1.maxRepay(_BORROWER);
 
         uint256 result = _useShares
-            ? _repay(maxRepay, _BORROWER)
-            : _repayShares(maxRepay, maxRepay, _BORROWER);
+            ? _repayShares(maxRepay, maxRepay, _BORROWER)
+            : _repay(maxRepay, _BORROWER);
 
         assertEq(maxRepay, result, "maxRepay == result");
         assertEq(maxRepay, _assetsToBorrow, "maxRepay == _assetsToBorrow");
