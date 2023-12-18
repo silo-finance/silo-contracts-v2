@@ -110,8 +110,9 @@ contract GetExactLiquidationAmountsTestData {
         data[i].input.debtToCover = 99999e18;
         data[i].input.selfLiquidation = true;
 
+        // on self liquidation, when we repay all, we receive all collateral back
         data[i].output.fromProtected = 1e18;
-        data[i].output.fromCollateral = 0.59e18;
+        data[i].output.fromCollateral = 1e18;
         data[i].output.repayDebtAssets = 1.59e18;
     }
 
