@@ -157,12 +157,14 @@ library SiloLendingLib {
 
         // subtract repayment from debt
         _totalDebt.assets = totalDebtAssets - assets;
-        // fee-on-transfer is ignored
-        // If token reenters, no harm done because we didn't change the state yet.
-        IERC20Upgradeable(_configData.token).safeTransferFrom(_repayer, address(this), assets);
         // Anyone can repay anyone's debt so no approval check is needed. If hook receiver reenters then
         // no harm done because state changes are completed.
         debtShareToken.burn(_borrower, _repayer, shares);
+        // fee-on-transfer is ignored
+        // Reentrancy is possible only for view methods (read-only reentrancy),
+        // so no harm can be done as the state is already updated.
+        // We do not expect the silo to work with any malicious token that will not send tokens back.
+        IERC20Upgradeable(_configData.token).safeTransferFrom(_repayer, address(this), assets);
     }
 
 
