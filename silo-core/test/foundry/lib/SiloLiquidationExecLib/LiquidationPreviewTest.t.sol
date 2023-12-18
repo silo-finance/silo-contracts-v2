@@ -24,7 +24,7 @@ contract LiquidationPreviewTest is Test, OraclesHelper {
     */
     function test_liquidationPreview_noOracle_zero() public {
         SiloSolvencyLib.LtvData memory ltvData;
-        SiloLiquidationExecLib.LiquidationPreviewParams memory params;
+        SiloLiquidationLib.LiquidationPreviewParams memory params;
 
         (uint256 receiveCollateral, uint256 repayDebt) = SiloLiquidationExecLib.liquidationPreview(ltvData, params);
         assertEq(receiveCollateral, 0, "zero collateral on empty values");
@@ -56,9 +56,10 @@ contract LiquidationPreviewTest is Test, OraclesHelper {
         ltvData.collateralOracle = ISiloOracle(collateralOracle.ADDRESS());
         ltvData.debtOracle = ISiloOracle(debtOracle.ADDRESS());
 
-        SiloLiquidationExecLib.LiquidationPreviewParams memory params;
+        SiloLiquidationLib.LiquidationPreviewParams memory params;
         params.collateralConfigAsset = COLLATERAL_ASSET;
         params.debtConfigAsset = DEBT_ASSET;
+        params.debtToCover = 1;
 
         ltvData.borrowerCollateralAssets = 1;
         ltvData.borrowerDebtAssets = 1;
@@ -84,7 +85,7 @@ contract LiquidationPreviewTest is Test, OraclesHelper {
         ltvData.borrowerCollateralAssets = 1e18;
         ltvData.borrowerDebtAssets = 0.8e18;
 
-        SiloLiquidationExecLib.LiquidationPreviewParams memory params;
+        SiloLiquidationLib.LiquidationPreviewParams memory params;
         params.collateralConfigAsset = COLLATERAL_ASSET;
         params.debtConfigAsset = DEBT_ASSET;
         params.collateralLt = 0.8000e18 - 1; // must be below LTV that is present in `ltvData`
@@ -122,8 +123,9 @@ contract LiquidationPreviewTest is Test, OraclesHelper {
         assertEq(repayDebtAssets, maxDebtToCover + 1, "repayDebtAssets #2");
 
         params.selfLiquidation = false;
-        vm.expectRevert(ISiloLiquidation.LiquidationTooBig.selector);
-        impl.liquidationPreview(ltvData, params);
+        (receiveCollateralAssets, repayDebtAssets) = impl.liquidationPreview(ltvData, params);
+        assertEq(receiveCollateralAssets, maxDebtToCover, "receiveCollateralAssets #3 - cap to max");
+        assertEq(repayDebtAssets, maxDebtToCover, "repayDebtAssets #3 - cap to max");
     }
 
     /*
@@ -136,7 +138,7 @@ contract LiquidationPreviewTest is Test, OraclesHelper {
         ltvData.borrowerCollateralAssets = 1e18;
         ltvData.borrowerDebtAssets = 1e18;
 
-        SiloLiquidationExecLib.LiquidationPreviewParams memory params;
+        SiloLiquidationLib.LiquidationPreviewParams memory params;
         params.collateralConfigAsset = COLLATERAL_ASSET;
         params.debtConfigAsset = DEBT_ASSET;
         params.collateralLt = 0.8e18;
@@ -164,7 +166,7 @@ contract LiquidationPreviewTest is Test, OraclesHelper {
         ltvData.borrowerCollateralAssets = 1e18;
         ltvData.borrowerDebtAssets = 2e18; // 200% LTV
 
-        SiloLiquidationExecLib.LiquidationPreviewParams memory params;
+        SiloLiquidationLib.LiquidationPreviewParams memory params;
         params.collateralConfigAsset = COLLATERAL_ASSET;
         params.debtConfigAsset = DEBT_ASSET;
         params.collateralLt = 0.8e18;
