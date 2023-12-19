@@ -577,11 +577,6 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
         (uint256 totalDebtAssets, uint256 totalDebtShares) =
             SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(debtConfig, AssetType.Debt);
 
-        //// console.log("[maxBorrow] totalDebtAssets", totalDebtAssets);
-        //// console.log("[maxBorrow] totalDebtShares", totalDebtShares);
-        //// console.log("[maxBorrow] IERC20Upgradeable(debtConfig.token).balanceOf(address(this))", IERC20Upgradeable(debtConfig.token).balanceOf(address(this)));
-        //// console.log("[maxBorrow] getLiquidity(AccrueInterestInMemory.Yes)", getLiquidity(AccrueInterestInMemory.Yes));
-
         (maxAssets,) = SiloLendingLib.maxBorrow(
             collateralConfig, debtConfig, _borrower, totalDebtAssets, totalDebtShares, getLiquidityAccrueInterest()
         );

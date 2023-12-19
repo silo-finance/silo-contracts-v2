@@ -17,8 +17,6 @@ import {SiloSolvencyLib} from "./SiloSolvencyLib.sol";
 import {SiloStdLib} from "./SiloStdLib.sol";
 import {SiloMathLib} from "./SiloMathLib.sol";
 
-import {console} from "forge-std/console.sol";
-
 library SiloLendingLib {
     using SafeERC20Upgradeable for IERC20Upgradeable;
 
@@ -27,24 +25,6 @@ library SiloLendingLib {
     uint256 internal constant _PRECISION_DECIMALS = 1e18;
 
     error FeeOverflow();
-
-    function getLiquidityAccrueInterest(ISiloConfig _config) external view returns (uint256 liquidity) {
-        ISiloConfig.ConfigData memory config = _config.getConfig(address(this));
-
-        uint256 totalCollateralAssets = SiloStdLib.getTotalCollateralAssetsWithInterest(
-            address(this),
-            config.interestRateModel,
-            config.daoFee,
-            config.deployerFee
-        );
-
-        uint256 totalDebtAssets = SiloStdLib.getTotalDebtAssetsWithInterest(
-            address(this),
-            config.interestRateModel
-        );
-
-        liquidity = SiloMathLib.liquidity(totalCollateralAssets, totalDebtAssets);
-    }
 
     /// @notice Allows a user or a delegate to borrow assets against their collateral
     /// @dev The function checks for necessary conditions such as borrow possibility, enough liquidity, and zero
@@ -79,11 +59,6 @@ library SiloLendingLib {
         IShareToken debtShareToken = IShareToken(_configData.debtShareToken);
         uint256 totalDebtAssets = _totalDebt.assets;
 
-        //// console.log("[borrow] totalDebtAssets", totalDebtAssets);
-        //// console.log("[borrow] debtShareToken.totalSupply()", debtShareToken.totalSupply());
-        //// console.log("[borrow] _assets", _assets);
-        //// console.log("[borrow] _totalCollateralAssets", _totalCollateralAssets);
-
         (borrowedAssets, borrowedShares) = SiloMathLib.convertToAssetsAndToShares(
             _assets,
             _shares,
@@ -95,9 +70,6 @@ library SiloLendingLib {
         );
 
         if (borrowedShares == 0) revert ISilo.ZeroShares();
-
-        //// console.log("[borrow] borrowedAssets", borrowedAssets);
-        //// console.log("[borrow] SiloMathLib.liquidity(_totalCollateralAssets, totalDebtAssets)", SiloMathLib.liquidity(_totalCollateralAssets, totalDebtAssets));
 
         if (borrowedAssets > SiloMathLib.liquidity(_totalCollateralAssets, totalDebtAssets)) {
             revert ISilo.NotEnoughLiquidity();
@@ -181,9 +153,6 @@ library SiloLendingLib {
             ISilo.AssetType.Debt
         );
 
-        //// console.log("[repay] assets", assets);
-        //// console.log("[repay] shares", shares);
-
         if (shares == 0) revert ISilo.ZeroShares();
 
         // subtract repayment from debt
@@ -247,24 +216,31 @@ library SiloLendingLib {
             _deployerFee
         );
 
-        //// console.log("[accrueInterestForAsset]                        totalFees", totalFees);
-        //// console.log("[accrueInterestForAsset]           debtAssetsWithInterest", _totalDebt.assets);
-        //// console.log("[accrueInterestForAsset] accruedInterest (including fees)", accruedInterest);
-        //// console.log("[accrueInterestForAsset]       debt - interest == deposit", _totalDebt.assets - accruedInterest);
-
-
-
         // update remaining contract state
         _siloData.interestRateTimestamp = uint64(block.timestamp);
-
-        //// console.log("[accrueInterestForAsset] accruedInterest", accruedInterest);
-//        //// console.log("[accrueInterestForAsset]             sum", totalFees + accruedInterest);
 
         // we operating on chunks (fees) of real tokens, so overflow should not happen
         // fee is simply to small to overflow on cast to uint192, even if, we will get lower fee
         unchecked { _siloData.daoAndDeployerFees += uint192(totalFees); }
     }
 
+    function getLiquidityAccrueInterest(ISiloConfig _config) external view returns (uint256 liquidity) {
+        ISiloConfig.ConfigData memory config = _config.getConfig(address(this));
+
+        uint256 totalCollateralAssets = SiloStdLib.getTotalCollateralAssetsWithInterest(
+            address(this),
+            config.interestRateModel,
+            config.daoFee,
+            config.deployerFee
+        );
+
+        uint256 totalDebtAssets = SiloStdLib.getTotalDebtAssetsWithInterest(
+            address(this),
+            config.interestRateModel
+        );
+
+        liquidity = SiloMathLib.liquidity(totalCollateralAssets, totalDebtAssets);
+    }
 
     /// @notice Determines the maximum amount (both in assets and shares) that a borrower can borrow
     /// @param _collateralConfig Configuration data for the collateral
@@ -314,9 +290,6 @@ library SiloLendingLib {
             _totalDebtAssets,
             _totalDebtShares
         );
-
-        console.log("[lib.maxBorrow] _liquidityWithInterest", _liquidityWithInterest);
-        console.log("[lib.maxBorrow] assets", assets);
 
         if (assets > _liquidityWithInterest) {
             assets = _liquidityWithInterest;

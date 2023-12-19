@@ -103,6 +103,11 @@ abstract contract SiloLittleHelper is CommonBase {
         shares = silo1.repayShares(_shares, _borrower);
     }
 
+    function _redeem(uint256 _amount, address _depositor) internal returns (uint256 assets) {
+        vm.prank(_depositor);
+        return silo0.redeem(_amount, _depositor, _depositor);
+    }
+
     function _withdraw(uint256 _amount, address _depositor) internal returns (uint256 assets){
         vm.prank(_depositor);
         return silo0.withdraw(_amount, _depositor, _depositor);

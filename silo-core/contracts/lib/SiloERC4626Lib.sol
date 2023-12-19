@@ -11,8 +11,6 @@ import {IShareToken} from "../interfaces/IShareToken.sol";
 import {SiloSolvencyLib} from "./SiloSolvencyLib.sol";
 import {SiloMathLib} from "./SiloMathLib.sol";
 
-import {console} from "forge-std/console.sol";
-
 // solhint-disable function-max-lines
 
 library SiloERC4626Lib {
@@ -47,7 +45,9 @@ library SiloERC4626Lib {
         ISiloConfig.ConfigData memory configData = _config.getConfig(address(this));
 
         if (depositPossible(configData.debtShareToken, _receiver)) {
-            maxAssetsOrShares = _totalCollateralAssets == 0 ? _NO_DEPOSIT_LIMIT : _NO_DEPOSIT_LIMIT - _totalCollateralAssets;
+            maxAssetsOrShares = _totalCollateralAssets == 0
+                ? _NO_DEPOSIT_LIMIT
+                : _NO_DEPOSIT_LIMIT - _totalCollateralAssets;
         }
     }
 
@@ -175,8 +175,6 @@ library SiloERC4626Lib {
         // unchecked {
             _totalCollateral.assets = totalAssets + assets;
         // }
-
-        //// console.log("[deposit] _totalCollateral.assets", _totalCollateral.assets);
 
         // Hook receiver is called after `mint` and can reentry but state changes are completed already
         _collateralShareToken.mint(_receiver, _depositor, shares);
