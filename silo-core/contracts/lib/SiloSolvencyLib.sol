@@ -98,7 +98,7 @@ library SiloSolvencyLib {
         } else if (sumOfBorrowerCollateralValue == 0) {
             ltvInDp = _INFINITY;
         } else {
-        ltvInDp = totalBorrowerDebtValue * _PRECISION_DECIMALS / sumOfBorrowerCollateralValue;
+            ltvInDp = totalBorrowerDebtValue * _PRECISION_DECIMALS / sumOfBorrowerCollateralValue;
         }
     }
 
