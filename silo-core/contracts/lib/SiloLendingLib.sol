@@ -58,7 +58,6 @@ library SiloLendingLib {
 
         IShareToken debtShareToken = IShareToken(_configData.debtShareToken);
         uint256 totalDebtAssets = _totalDebt.assets;
-        uint256 liquidity = SiloMathLib.liquidity(_totalCollateralAssets, totalDebtAssets);
 
         (borrowedAssets, borrowedShares) = SiloMathLib.convertToAssetsAndToShares(
             _assets,
@@ -71,20 +70,6 @@ library SiloLendingLib {
         );
 
         if (borrowedShares == 0) revert ISilo.ZeroShares();
-
-        if (borrowedAssets > liquidity) {
-            uint256 diff;
-            // Math is safe because `borrowedAssets > liquidity`
-            unchecked { diff = borrowedAssets - liquidity; }
-
-            // Allow for one wei precision error.
-            // This error is possible only when borrowing max amount and it is the same as the available liquidity
-            if (diff != 1 wei || liquidity == 0) {
-                revert ISilo.NotEnoughLiquidity();
-            }
-
-            borrowedAssets = liquidity;
-        }
 
         // add new debt
         _totalDebt.assets = totalDebtAssets + borrowedAssets;
