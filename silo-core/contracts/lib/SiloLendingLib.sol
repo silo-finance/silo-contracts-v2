@@ -17,8 +17,6 @@ import {SiloSolvencyLib} from "./SiloSolvencyLib.sol";
 import {SiloStdLib} from "./SiloStdLib.sol";
 import {SiloMathLib} from "./SiloMathLib.sol";
 
-import {console} from "forge-std/console.sol";
-
 library SiloLendingLib {
     using SafeERC20Upgradeable for IERC20Upgradeable;
 
@@ -60,11 +58,7 @@ library SiloLendingLib {
 
         IShareToken debtShareToken = IShareToken(_configData.debtShareToken);
         uint256 totalDebtAssets = _totalDebt.assets;
-
-        console.log("[borrow] totalDebtAssets", totalDebtAssets);
-        console.log("[borrow] debtShareToken.totalSupply()", debtShareToken.totalSupply());
-        console.log("[borrow] _assets", _assets);
-        console.log("[borrow] _totalCollateralAssets", _totalCollateralAssets);
+        uint256 liquidity = SiloMathLib.liquidity(_totalCollateralAssets, totalDebtAssets);
 
         (borrowedAssets, borrowedShares) = SiloMathLib.convertToAssetsAndToShares(
             _assets,
@@ -76,14 +70,19 @@ library SiloLendingLib {
             ISilo.AssetType.Debt
         );
 
-        if (borrowedShares == 0) revert ISilo.ZeroShares();
+        if (borrowedAssets > liquidity) {
+            borrowedAssets = liquidity;
 
-        console.log("[borrow] borrowedAssets", borrowedAssets);
-        console.log("[borrow] SiloMathLib.liquidity(_totalCollateralAssets, totalDebtAssets)", SiloMathLib.liquidity(_totalCollateralAssets, totalDebtAssets));
-
-        if (borrowedAssets > SiloMathLib.liquidity(_totalCollateralAssets, totalDebtAssets)) {
-            revert ISilo.NotEnoughLiquidity();
+            borrowedShares = SiloMathLib.convertToShares(
+                borrowedAssets,
+                totalDebtAssets,
+                debtShareToken.totalSupply(),
+                MathUpgradeable.Rounding.Up,
+                ISilo.AssetType.Debt
+            );
         }
+
+        if (borrowedShares == 0) revert ISilo.ZeroShares();
 
         // add new debt
         _totalDebt.assets = totalDebtAssets + borrowedAssets;
