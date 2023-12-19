@@ -110,7 +110,7 @@ contract MaxTest is SiloLittleHelper, Test {
     function test_maxDeposit_repayWithInterest_fuzz(
         uint128 _initialDeposit
     ) public {
-//        uint128 _initialDeposit = 4;
+    //    uint128 _initialDeposit = 9;
         uint128 toBorrow = _initialDeposit / 3;
 
         vm.assume(_initialDeposit > 3); // we need to be able /3
@@ -137,10 +137,14 @@ contract MaxTest is SiloLittleHelper, Test {
 
         assertEq(
             maxDeposit,
-            type(uint256).max - token1.balanceOf(address(silo1)),
+            type(uint256).max - silo1.getCollateralAssets(),
             "with interest we expecting less than simply sub the initial deposit"
         );
 
+        vm.startPrank(address(silo1));
+        token1.transfer(depositor, token1.balanceOf(address(silo1)));
+        vm.stopPrank();
+        
         vm.startPrank(borrower);
         token1.transfer(depositor, token1.balanceOf(borrower));
 

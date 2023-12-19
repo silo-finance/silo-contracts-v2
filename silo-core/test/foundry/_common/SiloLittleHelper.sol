@@ -7,6 +7,7 @@ import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {MintableToken} from "./MintableToken.sol";
 import {SiloFixture, SiloConfigOverride} from "./fixtures/SiloFixture.sol";
 import {CommonBase} from "forge-std/Base.sol";
+import {console} from "forge-std/console.sol";
 
 abstract contract SiloLittleHelper is CommonBase {
     MintableToken token0;
@@ -120,9 +121,14 @@ abstract contract SiloLittleHelper is CommonBase {
 
     function _mintTokens(MintableToken _token, uint256 _assets, address _user) internal {
         uint256 balanceOf = _token.balanceOf(_user);
+        console.log("_mintTokens.balanceOf", balanceOf);
+        console.log("_mintTokens._assets", _assets);
 
         if (balanceOf < _assets) {
             uint256 toMint = _assets - balanceOf;
+            console.log("_mintTokens.toMint", toMint);
+            console.log("_mintTokens.totalSupply", _token.totalSupply());
+            console.log("type(uint256).max", type(uint256).max);
             _token.mint(_user, toMint);
         }
     }

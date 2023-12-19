@@ -51,12 +51,12 @@ library SiloERC4626Lib {
             // in theory, we can deposit up to max, unless someone repay?
 //            uint256 totalShares = IShareToken(configData.collateralShareToken).totalSupply();
 //
-//            uint256 totalCollateralAssets = SiloStdLib.getTotalCollateralAssetsWithInterest(
-//                address(this),
-//                configData.interestRateModel,
-//                configData.daoFee,
-//                configData.deployerFee
-//            );
+           uint256 totalCollateralAssets = SiloStdLib.getTotalCollateralAssetsWithInterest(
+               address(this),
+               configData.interestRateModel,
+               configData.daoFee,
+               configData.deployerFee
+           );
 
 //            uint256 allCollaterals = SiloMathLib.convertToAssets(
 //                totalShares, totalCollateralAssets, totalShares, MathUpgradeable.Rounding.Down, ISilo.AssetType.Collateral
@@ -66,12 +66,12 @@ library SiloERC4626Lib {
             console.log("_total[ISilo.AssetType.Protected].assets", _total[ISilo.AssetType.Protected].assets);
             console.log("_daoAndDeployerFees", _daoAndDeployerFees);
 
-            uint256 allCollaterals =_total[ISilo.AssetType.Collateral].assets
-                + _total[ISilo.AssetType.Protected].assets
-                + _daoAndDeployerFees;
+            // uint256 allCollaterals =_total[ISilo.AssetType.Collateral].assets
+            //     + _total[ISilo.AssetType.Protected].assets
+            //     + _daoAndDeployerFees;
 
 
-            maxAssets = _NO_DEPOSIT_LIMIT - allCollaterals;
+            maxAssets = _NO_DEPOSIT_LIMIT - totalCollateralAssets;
         }
     }
 
