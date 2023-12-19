@@ -259,7 +259,7 @@ library SiloMathLib {
         uint256 _totalAssets,
         uint256 _assetTypeShareTokenTotalSupply,
         uint256 _liquidity
-    ) internal view returns (uint256 assets, uint256 shares) {
+    ) internal pure returns (uint256 assets, uint256 shares) {
         if (_maxAssets == 0) return (0, 0);
         if (_assetTypeShareTokenTotalSupply == 0) return (0, 0);
 
