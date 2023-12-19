@@ -35,7 +35,7 @@ library SiloERC4626Lib {
     /// @param _receiver The address of the user
     /// @param _totalCollateralAssets total deposited collateral
     /// @return maxAssetsOrShares Maximum assets/shares a user can deposit
-    function maxDeposit(
+    function maxDepositOrMint(
         ISiloConfig _config,
         address _receiver,
         uint256 _totalCollateralAssets
