@@ -296,7 +296,11 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
     /// @inheritdoc IERC4626
     function maxWithdraw(address _owner) external view virtual returns (uint256 maxAssets) {
         (maxAssets,) = SiloERC4626Lib.maxWithdraw(
-            config, _owner, AssetType.Collateral, _total[AssetType.Collateral].assets, getLiquidity(AccrueInterestInMemory.Yes)
+            config,
+            _owner,
+            AssetType.Collateral,
+            _total[AssetType.Collateral].assets,
+            getLiquidity(AccrueInterestInMemory.Yes)
         );
     }
 
@@ -324,7 +328,11 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
     /// @inheritdoc IERC4626
     function maxRedeem(address _owner) external view virtual returns (uint256 maxShares) {
         (, maxShares) = SiloERC4626Lib.maxWithdraw(
-            config, _owner, AssetType.Collateral, _total[AssetType.Collateral].assets, getLiquidity(AccrueInterestInMemory.Yes)
+            config,
+            _owner,
+            AssetType.Collateral,
+            _total[AssetType.Collateral].assets,
+            getLiquidity(AccrueInterestInMemory.Yes)
         );
     }
 
@@ -467,7 +475,13 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
     /// @inheritdoc ISilo
     function maxWithdraw(address _owner, AssetType _assetType) external view virtual returns (uint256 maxAssets) {
         (maxAssets,) =
-            SiloERC4626Lib.maxWithdraw(config, _owner, _assetType, _total[_assetType].assets, getLiquidity(AccrueInterestInMemory.Yes));
+            SiloERC4626Lib.maxWithdraw(
+                config,
+                _owner,
+                _assetType,
+                _total[_assetType].assets,
+                getLiquidity(AccrueInterestInMemory.Yes)
+            );
     }
 
     /// @inheritdoc ISilo
@@ -495,7 +509,13 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
     /// @inheritdoc ISilo
     function maxRedeem(address _owner, AssetType _assetType) external view virtual returns (uint256 maxShares) {
         (, maxShares) =
-            SiloERC4626Lib.maxWithdraw(config, _owner, _assetType, _total[_assetType].assets, getLiquidity(AccrueInterestInMemory.Yes));
+            SiloERC4626Lib.maxWithdraw(
+                config,
+                _owner,
+                _assetType,
+                _total[_assetType].assets,
+                getLiquidity(AccrueInterestInMemory.Yes)
+            );
     }
 
     /// @inheritdoc ISilo
