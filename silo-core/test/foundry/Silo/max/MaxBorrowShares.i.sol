@@ -15,10 +15,6 @@ import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
     forge test -vv --ffi --mc MaxBorrowSharesTest
 */
 contract MaxBorrowSharesTest is SiloLittleHelper, Test {
-    uint256 internal constant _REAL_ASSETS_LIMIT = type(uint128).max;
-
-    uint256 constant DEPOSIT_BEFORE = 1e18 + 9876543211;
-
     ISiloConfig siloConfig;
     address immutable depositor;
     address immutable borrower;
