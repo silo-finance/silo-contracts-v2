@@ -85,7 +85,6 @@ contract MaxViewsTest is SiloLittleHelper, Test {
     function test_maxDeposit_withInterest_fuzz(
         uint256 _initialDeposit
     ) public {
-//        uint256 _initialDeposit = 237;
         vm.assume(_initialDeposit > 3); // we need to be able /3
         vm.assume(_initialDeposit <= _REAL_ASSETS_LIMIT);
 
@@ -118,12 +117,12 @@ contract MaxViewsTest is SiloLittleHelper, Test {
     */
     /// forge-config: core.fuzz.runs = 10000
     function test_maxDeposit_repayWithInterest_fuzz(
-        uint128 _initialDeposit
+        uint64 _initialDeposit // 64b because this is initial deposit, and we care about max after initial
     ) public {
-//        uint128 _initialDeposit = 30864197532;
+        // uint128 _initialDeposit = 1020847100762815390392;
         vm.assume(_initialDeposit / 3 > 0);
 
-        uint128 toBorrow = _initialDeposit / 3;
+        uint256 toBorrow = _initialDeposit / 3;
 
         _depositForBorrow(toBorrow + 1e18, depositor);
 
@@ -134,7 +133,10 @@ contract MaxViewsTest is SiloLittleHelper, Test {
 
         (,, address debtShareToken) = silo1.config().getShareTokens(address(silo1));
 
-        _repayShares(type(uint192).max, IShareToken(debtShareToken).balanceOf(borrower), borrower);
+        token1.setOnDemand(true);
+        _repayShares(1, IShareToken(debtShareToken).balanceOf(borrower), borrower);
+        token1.setOnDemand(false);
+
         assertGt(token1.balanceOf(address(silo1)), toBorrow, "we expect to repay with interest");
         assertEq(IShareToken(debtShareToken).balanceOf(borrower), 0, "all debt must be repay");
 
@@ -172,7 +174,6 @@ contract MaxViewsTest is SiloLittleHelper, Test {
         assertEq(silo0.maxMint(borrower), _REAL_ASSETS_LIMIT - toBorrow * 2, "real max deposit");
         assertEq(silo1.maxMint(borrower), 0, "can not deposit with debt");
     }
-
 
     /*
     forge test -vv --ffi --mt test_maxMint_withDeposit_fuzz
@@ -222,6 +223,7 @@ contract MaxViewsTest is SiloLittleHelper, Test {
 
         token1.setOnDemand(true);
         uint256 minted = _mintForBorrow(maxMint, maxMint, depositor);
+        token1.setOnDemand(false);
 
         _assertWeCanBorrowAfterMaxDeposit(minted, borrower);
     }
@@ -236,7 +238,7 @@ contract MaxViewsTest is SiloLittleHelper, Test {
         uint128 _initialDeposit = 1020847100762815390392;
         vm.assume(_initialDeposit / 3 > 0);
 
-        uint128 toBorrow = _initialDeposit / 3;
+        uint256 toBorrow = _initialDeposit / 3;
 
         _depositForBorrow(toBorrow + 1e18, depositor);
 
@@ -247,21 +249,26 @@ contract MaxViewsTest is SiloLittleHelper, Test {
         vm.warp(block.timestamp + 100 days);
 
         (,, address debtShareToken) = silo1.config().getShareTokens(address(silo1));
-        _repayShares(type(uint192).max, IShareToken(debtShareToken).balanceOf(borrower), borrower);
+
+        token1.setOnDemand(true);
+        _repayShares(1, IShareToken(debtShareToken).balanceOf(borrower), borrower);
+        token1.setOnDemand(false);
+
         assertGt(token1.balanceOf(address(silo1)), toBorrow, "we expect to repay with interest");
         assertEq(IShareToken(debtShareToken).balanceOf(borrower), 0, "all debt must be repay");
 
         uint256 maxMint = silo1.maxMint(depositor);
         vm.assume(maxMint > 0);
 
-        // all tokens to depositor
+        // all tokens to depositor, so we can transfer hi amounts
         vm.startPrank(borrower);
         token1.transfer(depositor, token1.balanceOf(borrower));
 
         token1.setOnDemand(true);
-//        _mintForBorrow(maxMint, maxMint, depositor);
+        _mintForBorrow(maxMint, maxMint, depositor);
+        token1.setOnDemand(false);
 
-//        _assertWeCanBorrowAfterMaxDeposit(maxMint, borrower);
+        _assertWeCanBorrowAfterMaxDeposit(maxMint, borrower);
     }
 
     // we check on silo1
