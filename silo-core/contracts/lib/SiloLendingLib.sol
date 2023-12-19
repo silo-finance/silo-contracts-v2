@@ -70,19 +70,21 @@ library SiloLendingLib {
             ISilo.AssetType.Debt
         );
 
-        if (borrowedAssets > liquidity) {
-            borrowedAssets = liquidity;
-
-            borrowedShares = SiloMathLib.convertToShares(
-                borrowedAssets,
-                totalDebtAssets,
-                debtShareToken.totalSupply(),
-                MathUpgradeable.Rounding.Up,
-                ISilo.AssetType.Debt
-            );
-        }
-
         if (borrowedShares == 0) revert ISilo.ZeroShares();
+
+        if (borrowedAssets > liquidity) {
+            uint256 diff;
+            // Math is safe because `borrowedAssets > liquidity`
+            unchecked { diff = borrowedAssets - liquidity; }
+
+            // Allow for one wei precision error.
+            // This error is possible only when borrowing max amount and it is the same as the available liquidity
+            if (diff != 1 wei) {
+                revert ISilo.NotEnoughLiquidity();
+            }
+
+            borrowedAssets = liquidity;
+        }
 
         // add new debt
         _totalDebt.assets = totalDebtAssets + borrowedAssets;
