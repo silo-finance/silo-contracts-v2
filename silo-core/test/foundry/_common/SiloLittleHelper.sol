@@ -53,6 +53,14 @@ abstract contract SiloLittleHelper is CommonBase {
         return _makeDeposit(silo0, token0, _assets, _depositor, ISilo.AssetType.Collateral);
     }
 
+    function _mint(uint256 _approve, uint256 _shares, address _depositor) internal returns (uint256 assets) {
+        return _makeMint(_approve, silo0, token0, _shares, _depositor, ISilo.AssetType.Collateral);
+    }
+
+    function _mintForBorrow(uint256 _approve, uint256 _shares, address _depositor) internal returns (uint256 assets) {
+        return _makeMint(_approve, silo1, token1, _shares, _depositor, ISilo.AssetType.Collateral);
+    }
+
     function _borrow(uint256 _amount, address _borrower) internal returns (uint256 shares) {
         vm.prank(_borrower);
         shares = silo1.borrow(_amount, _borrower, _borrower);
@@ -115,7 +123,25 @@ abstract contract SiloLittleHelper is CommonBase {
         _token.approve(address(_silo), _assets);
         shares = _silo.deposit(_assets, _depositor, _type);
         vm.stopPrank();
+    }
 
+    function _makeMint(
+        uint256 _approve,
+        ISilo _silo,
+        MintableToken _token,
+        uint256 _shares,
+        address _depositor,
+        ISilo.AssetType _type
+    )
+        internal
+        returns (uint256 assets)
+    {
+        _mintTokens(_token, _approve, _depositor);
+
+        vm.startPrank(_depositor);
+        _token.approve(address(_silo), _approve);
+        assets = _silo.mint(_shares, _depositor, _type);
+        vm.stopPrank();
     }
 
     function _mintTokens(MintableToken _token, uint256 _assets, address _user) internal {

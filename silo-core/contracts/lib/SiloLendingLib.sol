@@ -59,6 +59,11 @@ library SiloLendingLib {
         IShareToken debtShareToken = IShareToken(_configData.debtShareToken);
         uint256 totalDebtAssets = _totalDebt.assets;
 
+        //// console.log("[borrow] totalDebtAssets", totalDebtAssets);
+        //// console.log("[borrow] debtShareToken.totalSupply()", debtShareToken.totalSupply());
+        //// console.log("[borrow] _assets", _assets);
+        //// console.log("[borrow] _totalCollateralAssets", _totalCollateralAssets);
+
         (borrowedAssets, borrowedShares) = SiloMathLib.convertToAssetsAndToShares(
             _assets,
             _shares,
@@ -70,6 +75,9 @@ library SiloLendingLib {
         );
 
         if (borrowedShares == 0) revert ISilo.ZeroShares();
+
+        //// console.log("[borrow] borrowedAssets", borrowedAssets);
+        //// console.log("[borrow] SiloMathLib.liquidity(_totalCollateralAssets, totalDebtAssets)", SiloMathLib.liquidity(_totalCollateralAssets, totalDebtAssets));
 
         if (borrowedAssets > SiloMathLib.liquidity(_totalCollateralAssets, totalDebtAssets)) {
             revert ISilo.NotEnoughLiquidity();
@@ -153,6 +161,9 @@ library SiloLendingLib {
             ISilo.AssetType.Debt
         );
 
+        //// console.log("[repay] assets", assets);
+        //// console.log("[repay] shares", shares);
+
         if (shares == 0) revert ISilo.ZeroShares();
 
         // subtract repayment from debt
@@ -166,7 +177,6 @@ library SiloLendingLib {
         // We do not expect the silo to work with any malicious token that will not send tokens back.
         IERC20Upgradeable(_configData.token).safeTransferFrom(_repayer, address(this), assets);
     }
-
 
     /// @notice Accrues interest on assets, updating the collateral and debt balances
     /// @dev This method will accrue interest for ONE asset ONLY, to calculate for both silos you have to call it twice
@@ -217,8 +227,18 @@ library SiloLendingLib {
             _deployerFee
         );
 
+        //// console.log("[accrueInterestForAsset]                        totalFees", totalFees);
+        //// console.log("[accrueInterestForAsset]           debtAssetsWithInterest", _totalDebt.assets);
+        //// console.log("[accrueInterestForAsset] accruedInterest (including fees)", accruedInterest);
+        //// console.log("[accrueInterestForAsset]       debt - interest == deposit", _totalDebt.assets - accruedInterest);
+
+
+
         // update remaining contract state
         _siloData.interestRateTimestamp = uint64(block.timestamp);
+
+        //// console.log("[accrueInterestForAsset] accruedInterest", accruedInterest);
+//        //// console.log("[accrueInterestForAsset]             sum", totalFees + accruedInterest);
 
         // we operating on chunks (fees) of real tokens, so overflow should not happen
         // fee is simply to small to overflow on cast to uint192, even if, we will get lower fee
