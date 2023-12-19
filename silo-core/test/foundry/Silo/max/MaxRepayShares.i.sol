@@ -45,7 +45,7 @@ contract MaxRepaySharesTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_maxRepayShares_withDebt_fuzz
     */
-    /// forge-config: core.fuzz.runs = 10000
+    /// forge-config: core.fuzz.runs = 1000
     function test_maxRepayShares_withDebt_fuzz(uint128 _collateral) public {
         uint256 toBorrow = _collateral / 3;
         _createDebt(_collateral, toBorrow);

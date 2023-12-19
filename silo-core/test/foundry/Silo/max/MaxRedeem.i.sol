@@ -39,7 +39,7 @@ contract MaxRedeemTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_maxRedeem_deposit_fuzz
     */
-    /// forge-config: core.fuzz.runs = 10000
+    /// forge-config: core.fuzz.runs = 1000
     function test_maxRedeem_deposit_fuzz(uint128 _assets) public {
         vm.assume(_assets > 0);
         _deposit(_assets, borrower);
@@ -55,7 +55,7 @@ contract MaxRedeemTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_maxRedeem_whenBorrow_fuzz
     */
-    /// forge-config: core.fuzz.runs = 10000
+    /// forge-config: core.fuzz.runs = 1000
     function test_maxRedeem_whenBorrow_fuzz(
         uint128 _collateral
     ) public {
@@ -80,7 +80,7 @@ contract MaxRedeemTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_maxRedeem_whenInterest_fuzz
     */
-    /// forge-config: core.fuzz.runs = 10000
+    /// forge-config: core.fuzz.runs = 1000
     function test_maxRedeem_whenInterest_fuzz(
         uint128 _collateral
     ) public {

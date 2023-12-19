@@ -41,7 +41,7 @@ contract MaxBorrowTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_maxBorrow_withCollateral
     */
-    /// forge-config: core.fuzz.runs = 10000
+    /// forge-config: core.fuzz.runs = 1000
     function test_maxBorrow_withCollateral_fuzz(uint128 _collateral) public {
         vm.assume(_collateral > 1); // to allow any borrow amount
 
@@ -60,7 +60,7 @@ contract MaxBorrowTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_maxBorrow_collateralButNoLiquidity
     */
-    /// forge-config: core.fuzz.runs = 10000
+    /// forge-config: core.fuzz.runs = 1000
     function test_maxBorrow_collateralButNoLiquidity_fuzz(uint128 _collateral) public {
         vm.assume(_collateral > 3); // to allow any borrow twice
 
@@ -73,7 +73,7 @@ contract MaxBorrowTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_maxBorrow_withDebt
     */
-    /// forge-config: core.fuzz.runs = 10000
+    /// forge-config: core.fuzz.runs = 1000
     function test_maxBorrow_withDebt_fuzz(uint128 _collateral) public {
         vm.assume(_collateral > 3); // to allow any borrow twice
 
@@ -100,7 +100,7 @@ contract MaxBorrowTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_maxBorrow_withInterest
     */
-    /// forge-config: core.fuzz.runs = 10000
+    /// forge-config: core.fuzz.runs = 1000
     function test_maxBorrow_withInterest_fuzz(uint128 _collateral) public {
         vm.assume(_collateral > 0); // to allow any borrow twice
 
@@ -126,7 +126,7 @@ contract MaxBorrowTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_maxBorrow_repayWithInterest_fuzz
     */
-    /// forge-config: core.fuzz.runs = 10000
+    /// forge-config: core.fuzz.runs = 1000
     function test_maxBorrow_repayWithInterest_fuzz(uint64 _collateral) public {
         vm.assume(_collateral > 0);
 

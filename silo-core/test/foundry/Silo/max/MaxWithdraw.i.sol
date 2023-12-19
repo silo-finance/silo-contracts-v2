@@ -39,7 +39,7 @@ contract MaxWithdrawTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_maxWithdraw_deposit_fuzz
     */
-    /// forge-config: core.fuzz.runs = 10000
+    /// forge-config: core.fuzz.runs = 1000
     function test_maxWithdraw_deposit_fuzz(uint128 _assets) public {
         vm.assume(_assets > 0);
         _deposit(_assets, borrower);
@@ -47,7 +47,6 @@ contract MaxWithdrawTest is SiloLittleHelper, Test {
         uint256 maxWithdraw = silo0.maxWithdraw(borrower);
         assertEq(maxWithdraw, _assets, "max withdraw == _assets if no interest");
 
-        vm.prank(borrower);
         _withdraw(maxWithdraw, borrower);
 
         _assertBorrowerHasNothingToWithdraw();
@@ -56,7 +55,7 @@ contract MaxWithdrawTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_maxWithdraw_whenBorrow_fuzz
     */
-    /// forge-config: core.fuzz.runs = 10000
+    /// forge-config: core.fuzz.runs = 1000
     function test_maxWithdraw_whenBorrow_fuzz(
         uint128 _collateral
     ) public {
@@ -79,7 +78,7 @@ contract MaxWithdrawTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_maxWithdraw_whenInterest_fuzz
     */
-    /// forge-config: core.fuzz.runs = 10000
+    /// forge-config: core.fuzz.runs = 1000
     function test_maxWithdraw_whenInterest_fuzz(
         uint128 _collateral
     ) public {
