@@ -102,21 +102,13 @@ library SiloERC4626Lib {
                 if (assets > _liquidity) {
                     assets = _liquidity;
 
-                    uint256 diff;
-                    // Math is safe because `assets > _liquidity`
-                    unchecked { diff = assets - _liquidity; }
-
-                    // Recalculating shares only in the case if the precision error is more than one wei
-                    // This should never happen, but just in case.
-                    if (diff != 1 wei) {
-                        shares = SiloMathLib.convertToShares(
-                            assets,
-                            _totalAssets,
-                            shareTokenTotalSupply,
-                            MathUpgradeable.Rounding.Up,
-                            _assetType
-                        );
-                    }
+                    shares = SiloMathLib.convertToShares(
+                        assets,
+                        _totalAssets,
+                        shareTokenTotalSupply,
+                        MathUpgradeable.Rounding.Up,
+                        _assetType
+                    );
                 }
 
                 return (assets, shares);
