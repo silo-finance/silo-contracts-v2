@@ -17,6 +17,8 @@ import {SiloSolvencyLib} from "./SiloSolvencyLib.sol";
 import {SiloStdLib} from "./SiloStdLib.sol";
 import {SiloMathLib} from "./SiloMathLib.sol";
 
+import {console} from "forge-std/console.sol";
+
 library SiloLendingLib {
     using SafeERC20Upgradeable for IERC20Upgradeable;
 
@@ -25,6 +27,24 @@ library SiloLendingLib {
     uint256 internal constant _PRECISION_DECIMALS = 1e18;
 
     error FeeOverflow();
+
+    function getLiquidityAccrueInterest(ISiloConfig _config) external view returns (uint256 liquidity) {
+        ISiloConfig.ConfigData memory config = _config.getConfig(address(this));
+
+        uint256 totalCollateralAssets = SiloStdLib.getTotalCollateralAssetsWithInterest(
+            address(this),
+            config.interestRateModel,
+            config.daoFee,
+            config.deployerFee
+        );
+
+        uint256 totalDebtAssets = SiloStdLib.getTotalDebtAssetsWithInterest(
+            address(this),
+            config.interestRateModel
+        );
+
+        liquidity = SiloMathLib.liquidity(totalCollateralAssets, totalDebtAssets);
+    }
 
     /// @notice Allows a user or a delegate to borrow assets against their collateral
     /// @dev The function checks for necessary conditions such as borrow possibility, enough liquidity, and zero
@@ -259,7 +279,8 @@ library SiloLendingLib {
         ISiloConfig.ConfigData memory _debtConfig,
         address _borrower,
         uint256 _totalDebtAssets,
-        uint256 _totalDebtShares
+        uint256 _totalDebtShares,
+        uint256 _liquidityWithInterest
     )
         external
         view
@@ -283,7 +304,7 @@ library SiloLendingLib {
             borrowerDebtValue
         );
 
-        return maxBorrowValueToAssetsAndShares(
+        (assets, shares) = maxBorrowValueToAssetsAndShares(
             maxBorrowValue,
             borrowerDebtValue,
             _borrower,
@@ -293,6 +314,17 @@ library SiloLendingLib {
             _totalDebtAssets,
             _totalDebtShares
         );
+
+        console.log("[lib.maxBorrow] _liquidityWithInterest", _liquidityWithInterest);
+        console.log("[lib.maxBorrow] assets", assets);
+
+        if (assets > _liquidityWithInterest) {
+            assets = _liquidityWithInterest;
+
+            shares = SiloMathLib.convertToShares(
+                assets, _totalDebtAssets, _totalDebtShares, MathUpgradeable.Rounding.Up, ISilo.AssetType.Debt
+            );
+        }
     }
 
     /// @notice Checks if a borrower can borrow

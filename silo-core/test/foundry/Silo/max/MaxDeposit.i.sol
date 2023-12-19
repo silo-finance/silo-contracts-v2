@@ -8,16 +8,14 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
 
-import {MintableToken} from "../_common/MintableToken.sol";
-import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
+import {MintableToken} from "../../_common/MintableToken.sol";
+import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
 
 /*
-    forge test -vv --ffi --mc MaxViewsTest
+    forge test -vv --ffi --mc MaxDepositTest
 */
-contract MaxViewsTest is SiloLittleHelper, Test {
+contract MaxDepositTest is SiloLittleHelper, Test {
     uint256 internal constant _REAL_ASSETS_LIMIT = type(uint128).max;
-
-    uint256 constant DEPOSIT_BEFORE = 1e18 + 9876543211;
 
     ISiloConfig siloConfig;
     address immutable depositor;
