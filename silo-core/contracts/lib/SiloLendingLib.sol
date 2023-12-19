@@ -79,7 +79,7 @@ library SiloLendingLib {
 
             // Allow for one wei precision error.
             // This error is possible only when borrowing max amount and it is the same as the available liquidity
-            if (diff != 1 wei) {
+            if (diff != 1 wei || liquidity == 0) {
                 revert ISilo.NotEnoughLiquidity();
             }
 

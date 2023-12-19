@@ -70,7 +70,7 @@ contract SiloLendingLibBorrowTestData {
         _init(data[i], "#2 NotEnoughLiquidity if not enough collateral");
         data[i].input.assets = 3;
         data[i].input.totalCollateralAssets = 3;
-        data[i].input.initTotalDebt = 1;
+        data[i].input.initTotalDebt = 2;
         data[i].output.reverts = ISilo.NotEnoughLiquidity.selector;
 
         i++;
