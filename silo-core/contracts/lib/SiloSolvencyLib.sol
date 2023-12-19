@@ -10,6 +10,8 @@ import {SiloERC4626Lib} from "./SiloERC4626Lib.sol";
 import {SiloLiquidationLib} from "./SiloLiquidationLib.sol";
 import {SiloMathLib} from "./SiloMathLib.sol";
 
+import {console} from "forge-std/console.sol";
+
 library SiloSolvencyLib {
     struct LtvData {
         ISiloOracle collateralOracle;
@@ -68,10 +70,13 @@ library SiloSolvencyLib {
         ISilo.AccrueInterestInMemory _accrueInMemory
     ) external view returns (bool) {
         uint256 debtShareBalance = IShareToken(_debtConfig.debtShareToken).balanceOf(_borrower);
+//// console.log("[isBelowMaxLtv] debtShareBalance", debtShareBalance);
 
         uint256 ltv = getLtv(
             _collateralConfig, _debtConfig, _borrower, ISilo.OracleType.MaxLtv, _accrueInMemory, debtShareBalance
         );
+
+    //// console.log("[isBelowMaxLtv] ltv", ltv);
 
         return ltv <= _collateralConfig.maxLtv;
     }
@@ -92,13 +97,17 @@ library SiloSolvencyLib {
         (
             sumOfBorrowerCollateralValue, totalBorrowerDebtValue
         ) = getPositionValues(_ltvData, _collateralToken, _debtToken);
+        //// console.log("[calculateLtv] sumOfBorrowerCollateralValue", sumOfBorrowerCollateralValue);
+        //// console.log("[calculateLtv] totalBorrowerDebtValue", totalBorrowerDebtValue);
 
         if (sumOfBorrowerCollateralValue == 0 && totalBorrowerDebtValue == 0) {
             return (0, 0, 0);
         } else if (sumOfBorrowerCollateralValue == 0) {
             ltvInDp = _INFINITY;
         } else {
-            ltvInDp = totalBorrowerDebtValue * _PRECISION_DECIMALS / sumOfBorrowerCollateralValue;
+            //// console.log("[calculateLtv] totalBorrowerDebtValue", totalBorrowerDebtValue);
+
+        ltvInDp = totalBorrowerDebtValue * _PRECISION_DECIMALS / sumOfBorrowerCollateralValue;
         }
     }
 
@@ -127,13 +136,17 @@ library SiloSolvencyLib {
         uint256 totalShares;
         uint256 shares;
 
-        (shares, totalShares) = SiloStdLib.getSharesAndTotalSupply(
+        //// console.log("[getAssetsDataForLtvCalculations]:");
+
+    (shares, totalShares) = SiloStdLib.getSharesAndTotalSupply(
             _collateralConfig.protectedShareToken, _borrower, 0 /* no cache */
         );
+        //// console.log("[getAssetsDataForLtvCalculations] totalShares", totalShares);
 
         (
             uint256 totalCollateralAssets, uint256 totalProtectedAssets
         ) = ISilo(_collateralConfig.silo).getCollateralAndProtectedAssets();
+        //// console.log("[getAssetsDataForLtvCalculations] totalCollateralAssets", totalCollateralAssets);
 
         ltvData.borrowerProtectedAssets = SiloMathLib.convertToAssets(
             shares, totalProtectedAssets, totalShares, MathUpgradeable.Rounding.Down, ISilo.AssetType.Protected
@@ -151,6 +164,7 @@ library SiloSolvencyLib {
                 _collateralConfig.deployerFee
             )
             : totalCollateralAssets;
+        //// console.log("[getAssetsDataForLtvCalculations] totalCollateralAssets+", totalCollateralAssets);
 
         ltvData.borrowerCollateralAssets = SiloMathLib.convertToAssets(
             shares, totalCollateralAssets, totalShares, MathUpgradeable.Rounding.Down, ISilo.AssetType.Collateral
@@ -163,10 +177,13 @@ library SiloSolvencyLib {
         uint256 totalDebtAssets = _accrueInMemory == ISilo.AccrueInterestInMemory.Yes
             ? SiloStdLib.getTotalDebtAssetsWithInterest(_debtConfig.silo, _debtConfig.interestRateModel)
             : ISilo(_debtConfig.silo).getDebtAssets();
+        //// console.log("[getAssetsDataForLtvCalculations] totalDebtAssets", totalDebtAssets);
 
         ltvData.borrowerDebtAssets = SiloMathLib.convertToAssets(
             shares, totalDebtAssets, totalShares, MathUpgradeable.Rounding.Up, ISilo.AssetType.Debt
         );
+        //// console.log("[getAssetsDataForLtvCalculations] ltvData.borrowerDebtAssets", ltvData.borrowerDebtAssets);
+
     }
 
     /// @notice Computes the value of collateral and debt positions based on given LTV data and asset addresses
@@ -220,6 +237,8 @@ library SiloSolvencyLib {
         LtvData memory ltvData = getAssetsDataForLtvCalculations(
             _collateralConfig, _debtConfig, _borrower, _oracleType, _accrueInMemory, _debtShareBalance
         );
+
+        //// console.log("[getLtv]");
 
         if (ltvData.borrowerDebtAssets == 0) return 0;
 
