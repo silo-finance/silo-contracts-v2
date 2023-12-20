@@ -189,9 +189,11 @@ library SiloMathLib {
             return 0;
         }
 
-        uint256 maxDebtValue = _sumOfBorrowerCollateralValue * _configMaxLtv / _PRECISION_DECIMALS;
+        uint256 maxDebtValue = _sumOfBorrowerCollateralValue * (_configMaxLtv + 1) / _PRECISION_DECIMALS;
 
         unchecked {
+            if (maxDebtValue > 0) maxDebtValue -= 1;
+
             // we will not underflow because we checking `maxDebtValue > _borrowerDebtValue`
             maxBorrowValue = maxDebtValue > _borrowerDebtValue ? maxDebtValue - _borrowerDebtValue : 0;
         }
