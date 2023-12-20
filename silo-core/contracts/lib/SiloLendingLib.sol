@@ -158,10 +158,16 @@ library SiloLendingLib {
             ISilo.AssetType.Debt
         );
 
+        console.log("[repay] shares", shares);
+        console.log("[repay] assets", assets);
+        console.log("[repay] totalDebtAssets", totalDebtAssets);
+
         if (shares == 0) revert ISilo.ZeroShares();
 
         // subtract repayment from debt
         _totalDebt.assets = totalDebtAssets - assets;
+        console.log("[repay] _totalDebt.assets ", _totalDebt.assets);
+
         // Anyone can repay anyone's debt so no approval check is needed. If hook receiver reenters then
         // no harm done because state changes are completed.
         debtShareToken.burn(_borrower, _repayer, shares);
@@ -207,6 +213,10 @@ library SiloLendingLib {
         uint256 totalCollateralAssets = _totalCollateral.assets;
         uint256 totalDebtAssets = _totalDebt.assets;
 
+        console.log("[interest] _totalCollateral.assets", _totalCollateral.assets);
+        console.log("[interest] _totalDebt.assets", _totalDebt.assets);
+        console.log("[interest] totalFees", totalFees);
+
         (
             _totalCollateral.assets, _totalDebt.assets, totalFees, accruedInterest
         ) = SiloMathLib.getCollateralAmountsWithInterest(
@@ -220,6 +230,11 @@ library SiloLendingLib {
             _daoFee,
             _deployerFee
         );
+
+        console.log("[interest] _totalCollateral.assets >>", _totalCollateral.assets);
+        console.log("[interest] _totalDebt.assets >>", _totalDebt.assets);
+        console.log("[interest] totalFees >>", totalFees);
+        console.log("[interest] accruedInterest", accruedInterest);
 
         // update remaining contract state
         _siloData.interestRateTimestamp = uint64(block.timestamp);
