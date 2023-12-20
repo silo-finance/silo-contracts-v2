@@ -105,9 +105,9 @@ contract MaxBorrowTest is SiloLittleHelper, Test {
         uint128 _collateral,
         uint128 _liquidity
     ) public {
-//        (uint128 _collateral, uint128 _liquidity) = (3, 3);
+        // (uint128 _collateral, uint128 _liquidity) = (3, 3);
 
-        vm.assume(_collateral > 0); // to allow any borrow twice
+        vm.assume(_collateral > 0);
         vm.assume(_liquidity > 0);
 
         _deposit(_collateral, borrower);
