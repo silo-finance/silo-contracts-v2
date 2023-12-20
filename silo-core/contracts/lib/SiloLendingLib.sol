@@ -248,6 +248,7 @@ library SiloLendingLib {
     /// @param _borrower The address of the borrower whose maximum borrow limit is being queried
     /// @param _totalDebtAssets The total debt assets in the system
     /// @param _totalDebtShares The total debt shares in the system
+    /// @param _liquidityWithInterest liquidity for collateral asset
     /// @return assets The maximum amount in assets that can be borrowed
     /// @return shares The equivalent amount in shares for the maximum assets that can be borrowed
     function maxBorrow(
