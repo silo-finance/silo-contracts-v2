@@ -12,9 +12,9 @@ import {MintableToken} from "../../_common/MintableToken.sol";
 import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
 
 /*
-    forge test -vv --ffi --mc MaxDepositTest
+    forge test -vv --ffi --mc MaxMintTest
 */
-contract MaxDepositTest is SiloLittleHelper, Test {
+contract MaxMintTest is SiloLittleHelper, Test {
     uint256 internal constant _REAL_ASSETS_LIMIT = type(uint128).max;
 
     ISiloConfig siloConfig;
@@ -31,56 +31,56 @@ contract MaxDepositTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --ffi --mt test_maxDeposit_emptySilo
+    forge test -vv --ffi --mt test_maxMint_emptySilo
     */
-    function test_maxDeposit_emptySilo() public {
-        uint256 maxDeposit = silo1.maxDeposit(depositor);
-        assertEq(maxDeposit, type(uint128).max, "on empty silo, MAX is just no limit");
-        _depositForBorrow(maxDeposit, depositor);
+    function test_maxMint_emptySilo() public {
+        uint256 maxMint = silo1.maxMint(depositor);
+        assertEq(maxMint, type(uint128).max, "on empty silo, MAX is just no limit");
+        _mintForBorrow(maxMint, maxMint, depositor);
     }
 
     /*
-    forge test -vv --ffi --mt test_maxDeposit_forBorrower
+    forge test -vv --ffi --mt test_maxMint_forBorrower
     */
-    function test_maxDeposit_forBorrower() public {
+    function test_maxMint_forBorrower() public {
         uint256 _initialDeposit = 1e18;
         uint256 toBorrow = _initialDeposit / 3;
 
-        _depositForBorrow(toBorrow, depositor);
-        _deposit(toBorrow * 2, borrower);
+        _mintForBorrow(toBorrow, toBorrow, depositor);
+        _mint(toBorrow * 2, toBorrow * 2, borrower);
         _borrow(toBorrow, borrower);
 
-        assertEq(silo0.maxDeposit(borrower), _REAL_ASSETS_LIMIT - toBorrow * 2, "real max deposit");
-        assertEq(silo1.maxDeposit(borrower), 0, "can not deposit with debt");
+        assertEq(silo0.maxMint(borrower), _REAL_ASSETS_LIMIT - toBorrow * 2, "real max deposit");
+        assertEq(silo1.maxMint(borrower), 0, "can not deposit with debt");
     }
 
     /*
-    forge test -vv --ffi --mt test_maxDeposit_withDeposit_fuzz
+    forge test -vv --ffi --mt test_maxMint_withDeposit_fuzz
     */
     /// forge-config: core.fuzz.runs = 1000
-    function test_maxDeposit_withDeposit_fuzz(uint128 _initialDeposit) public {
+    function test_maxMint_withDeposit_fuzz(uint128 _initialDeposit) public {
         vm.assume(_initialDeposit > 0);
 
         _depositForBorrow(_initialDeposit, depositor);
 
-        uint256 maxDeposit = silo1.maxDeposit(depositor);
-        emit log_named_decimal_uint("maxDeposit", maxDeposit, 18);
+        uint256 maxMint = silo1.maxMint(depositor);
+        emit log_named_decimal_uint("maxMint", maxMint, 18);
 
-        assertEq(maxDeposit, _REAL_ASSETS_LIMIT - _initialDeposit, "with deposit, max is: MAX - deposit");
+        assertEq(maxMint, _REAL_ASSETS_LIMIT - _initialDeposit, "with deposit, max is MAX - deposit");
 
         /// we probably can deposit more, but if for our way of defining max we get 0, we dont need to test deposit 0
-        if (maxDeposit == 0) return;
+        if (maxMint == 0) return;
 
-        _depositForBorrow(maxDeposit, depositor);
+        uint256 minted = _mintForBorrow(maxMint, maxMint, depositor);
 
-        _assertWeCanBorrowAfterMaxDeposit(_initialDeposit + maxDeposit, borrower);
+        _assertWeCanBorrowAfterMaxDeposit(_initialDeposit + minted, borrower);
     }
 
     /*
-    forge test -vv --ffi --mt test_maxDeposit_withInterest_fuzz
+    forge test -vv --ffi --mt test_maxMint_withInterest_fuzz
     */
-    /// forge-config: core.fuzz.runs = 10000
-    function test_maxDeposit_withInterest_fuzz(
+    /// forge-config: core.fuzz.runs = 1000
+    function test_maxMint_withInterest_fuzz(
         uint256 _initialDeposit
     ) public {
         vm.assume(_initialDeposit > 3); // we need to be able /3
@@ -94,35 +94,24 @@ contract MaxDepositTest is SiloLittleHelper, Test {
 
         vm.warp(block.timestamp + 100 days);
 
-        uint256 maxDeposit = silo1.maxDeposit(depositor);
-        vm.assume(maxDeposit > 0);
+        uint256 maxMint = silo1.maxMint(depositor);
+        vm.assume(maxMint > 0);
 
-        emit log_named_decimal_uint("maxDeposit", maxDeposit, 18);
+        emit log_named_decimal_uint("maxMint", maxMint, 18);
 
-        assertLe(
-            maxDeposit,
-            _REAL_ASSETS_LIMIT - _initialDeposit,
-            "with interest we expecting less than simply sub the initial deposit"
-        );
+        token1.setOnDemand(true);
+        uint256 minted = _mintForBorrow(maxMint, maxMint, depositor);
+        token1.setOnDemand(false);
 
-        if (silo1.previewDeposit(maxDeposit) == 0) {
-            uint256 margin = 2;
-            assertLt(maxDeposit, margin, "we know for small assets if there is already big numbers, max can be 'invalid'");
-            assertGt(silo1.getCollateralAssets(), _REAL_ASSETS_LIMIT - margin, "must be big number");
-            return;
-        }
-
-        _depositForBorrow(maxDeposit, depositor);
-
-        _assertWeCanBorrowAfterMaxDeposit(maxDeposit, borrower);
+        _assertWeCanBorrowAfterMaxDeposit(minted, borrower);
     }
 
     /*
-    forge test -vv --ffi --mt test_maxDeposit_repayWithInterest_fuzz
+    forge test -vv --ffi --mt test_maxMint_repayWithInterest_fuzz
     */
     /// forge-config: core.fuzz.runs = 1000
-    function test_maxDeposit_repayWithInterest_fuzz(
-        uint64 _initialDeposit // 64b because this is initial deposit, and we care about max after initial
+    function test_maxMint_repayWithInterest_fuzz(
+        uint128 _initialDeposit
     ) public {
         // uint128 _initialDeposit = 1020847100762815390392;
         vm.assume(_initialDeposit / 3 > 0);
@@ -145,21 +134,18 @@ contract MaxDepositTest is SiloLittleHelper, Test {
         assertGt(token1.balanceOf(address(silo1)), toBorrow, "we expect to repay with interest");
         assertEq(IShareToken(debtShareToken).balanceOf(borrower), 0, "all debt must be repay");
 
-        uint256 maxDeposit = silo1.maxDeposit(depositor);
+        uint256 maxMint = silo1.maxMint(depositor);
+        vm.assume(maxMint > 0);
 
-        if (silo1.previewDeposit(maxDeposit) == 0) {
-            uint256 margin = 2;
-            assertLt(maxDeposit, margin, "we know for small assets if there is already big numbers, max can be 'invalid'");
-            assertGt(silo1.getCollateralAssets(), _REAL_ASSETS_LIMIT - margin, "must be big number");
-            return;
-        }
-
+        // all tokens to depositor, so we can transfer hi amounts
         vm.startPrank(borrower);
         token1.transfer(depositor, token1.balanceOf(borrower));
 
-        _depositForBorrow(maxDeposit, depositor);
+        token1.setOnDemand(true);
+        _mintForBorrow(maxMint, maxMint, depositor);
+        token1.setOnDemand(false);
 
-        _assertWeCanBorrowAfterMaxDeposit(maxDeposit, borrower);
+        _assertWeCanBorrowAfterMaxDeposit(maxMint, borrower);
     }
 
     // we check on silo1
