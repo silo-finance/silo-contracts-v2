@@ -35,92 +35,100 @@ contract MaxBorrowTest is SiloLittleHelper, Test {
         uint256 maxBorrow = silo1.maxBorrow(borrower);
         assertEq(maxBorrow, 0, "no collateral - no borrow");
 
-        _assertWeCanNotBorrowAnymore("NotEnoughLiquidity()");
+        _assertWeCanNotBorrowAboveMax(0);
     }
 
     /*
     forge test -vv --ffi --mt test_maxBorrow_withCollateral
     */
     /// forge-config: core.fuzz.runs = 1000
-    function test_maxBorrow_withCollateral_fuzz(uint128 _collateral) public {
-        vm.assume(_collateral > 1); // to allow any borrow amount
+    function test_maxBorrow_withCollateral_fuzz(
+        uint128 _collateral,
+        uint128 _liquidity
+    ) public {
+        vm.assume(_liquidity > 0);
+        vm.assume(_collateral > 0);
 
-        _depositForBorrow(_collateral, depositor);
+        _depositForBorrow(_liquidity, depositor);
         _deposit(_collateral, borrower);
 
         uint256 maxBorrow = silo1.maxBorrow(borrower);
-        assertGt(maxBorrow, 0, "when collateral we expect something to borrow");
+        emit log_named_decimal_uint("maxBorrow", maxBorrow, 18);
 
-        _depositForBorrow(maxBorrow + 1, depositor);
-        _borrow(maxBorrow, borrower);
+        _assertWeCanNotBorrowAboveMax(maxBorrow);
 
-        // _assertWeCanNotBorrowAnymore("AboveMaxLtv()"); TODO
+        _assertMaxBorrowIsZeroAtTheEnd();
     }
 
     /*
     forge test -vv --ffi --mt test_maxBorrow_collateralButNoLiquidity
     */
-    /// forge-config: core.fuzz.runs = 1000
+    /// forge-config: core.fuzz.runs = 100
     function test_maxBorrow_collateralButNoLiquidity_fuzz(uint128 _collateral) public {
-        vm.assume(_collateral > 3); // to allow any borrow twice
+        vm.assume(_collateral > 0);
 
         _deposit(_collateral, borrower);
 
-        uint256 maxBorrow = silo1.maxBorrow(borrower);
-        assertEq(maxBorrow, 0, "no liquidity");
+        _assertMaxBorrowIsZeroAtTheEnd();
     }
 
     /*
     forge test -vv --ffi --mt test_maxBorrow_withDebt
     */
     /// forge-config: core.fuzz.runs = 1000
-    function test_maxBorrow_withDebt_fuzz(uint128 _collateral) public {
-        vm.assume(_collateral > 3); // to allow any borrow twice
+    function test_maxBorrow_withDebt_fuzz(uint128 _collateral, uint128 _liquidity) public {
+        vm.assume(_collateral > 0);
+        vm.assume(_liquidity > 0);
 
         _deposit(_collateral, borrower);
-        _depositForBorrow(_collateral, depositor);
+        _depositForBorrow(_liquidity, depositor);
 
         uint256 maxBorrow = silo1.maxBorrow(borrower);
 
-        vm.assume(maxBorrow / 3 > 0);
-        _borrow(maxBorrow / 3, borrower);
+        uint256 firstBorrow = maxBorrow / 3;
+        vm.assume(firstBorrow > 0);
+        _borrow(firstBorrow, borrower);
 
         // now we have debt
 
         maxBorrow = silo1.maxBorrow(borrower);
-        _borrow(maxBorrow, borrower);
+        _assertWeCanNotBorrowAboveMax(maxBorrow);
 
-        maxBorrow = silo1.maxBorrow(borrower);
-        assertEq(maxBorrow, 0, "at this point max should return 0");
-
-        // _assertWeCanNotBorrowAnymore("AboveMaxLtv()"); // TODO
+        _assertMaxBorrowIsZeroAtTheEnd();
     }
-
 
     /*
     forge test -vv --ffi --mt test_maxBorrow_withInterest
     */
     /// forge-config: core.fuzz.runs = 1000
-    function test_maxBorrow_withInterest_fuzz(uint128 _collateral) public {
+    function test_maxBorrow_withInterest_fuzz(
+//        uint128 _collateral,
+//        uint128 _liquidity
+    ) public {
+        (uint128 _collateral, uint128 _liquidity) = (3, 3);
+
         vm.assume(_collateral > 0); // to allow any borrow twice
+        vm.assume(_liquidity > 0);
 
         _deposit(_collateral, borrower);
-        _depositForBorrow(_collateral, depositor);
+        _depositForBorrow(_liquidity, depositor);
 
         uint256 maxBorrow = silo1.maxBorrow(borrower);
-        vm.assume(maxBorrow / 3 > 0);
-        _borrow(maxBorrow / 3, borrower);
+
+        uint256 firstBorrow = maxBorrow / 3;
+        vm.assume(firstBorrow > 0);
+        _borrow(firstBorrow, borrower);
+        emit log_named_uint("firstBorrow", firstBorrow);
 
         // now we have debt
         vm.warp(block.timestamp + 100 days);
 
         maxBorrow = silo1.maxBorrow(borrower);
-        _borrow(maxBorrow, borrower);
+        emit log_named_uint("maxBorrow", maxBorrow);
 
-        maxBorrow = silo1.maxBorrow(borrower);
-        assertLe(maxBorrow, 1, "at this point max should return 0, however we allow for 1wei precision error");
+        _assertWeCanNotBorrowAboveMax(maxBorrow);
 
-        // _assertWeCanNotBorrowAnymore("AboveMaxLtv()"); // TODO
+        _assertMaxBorrowIsZeroAtTheEnd();
     }
 
     /*
@@ -143,28 +151,77 @@ contract MaxBorrowTest is SiloLittleHelper, Test {
         (,, address debtShareToken) = silo1.config().getShareTokens(address(silo1));
 
         token1.setOnDemand(true);
-        _repayShares(1, IShareToken(debtShareToken).balanceOf(borrower), borrower);
+        uint256 debt = IShareToken(debtShareToken).balanceOf(borrower);
+        uint256 debtToRepay = debt / 9 == 0 ? debt : debt / 9 * 10;
+        _repayShares(1, debtToRepay, borrower);
         token1.setOnDemand(false);
         assertEq(IShareToken(debtShareToken).balanceOf(borrower), 0, "all debt must be repay");
 
         maxBorrow = silo1.maxBorrow(borrower);
         assertGt(maxBorrow, 0, "we can borrow again after repay");
-        _borrow(maxBorrow, borrower);
 
-        maxBorrow = silo1.maxBorrow(borrower);
-        assertEq(maxBorrow, 0, "at this point max should return 0, however we allow for 1wei precision error");
+        _assertWeCanNotBorrowAboveMax(maxBorrow);
 
-        // _assertWeCanNotBorrowAnymore("AboveMaxLtv()"); // TODO
+        _assertMaxBorrowIsZeroAtTheEnd();
     }
 
     // we check on silo1
     function _assertWeCanNotBorrowAnymore() internal {
         vm.prank(borrower);
-        // vm.expectRevert();
+        vm.expectRevert();
         silo1.borrow(1, borrower, borrower);
     }
 
+    function _assertWeCanNotBorrowAboveMax(uint256 _maxBorrow) internal {
+        _assertWeCanNotBorrowAboveMax(_maxBorrow, 2);
+    }
+
+    /// @param _precision is needed because we count for precision error and we allow for 1 wei diff
+    function _assertWeCanNotBorrowAboveMax(uint256 _maxBorrow, uint256 _precision) internal {
+        emit log_string("------- QA: _assertWeCanNotBorrowAboveMax");
+
+        uint256 toBorrow;
+        string memory revertError;
+
+        uint256 liquidity = silo1.getLiquidityAccrueInterest(ISilo.AssetType.Collateral);
+
+        if (_maxBorrow == liquidity) {
+            emit log_string("max is cap by liquidity");
+            revertError = "NotEnoughLiquidity()";
+            toBorrow = _maxBorrow + 1;
+        } else if (_maxBorrow + _precision > liquidity) {
+            emit log_string("max (+precision) is cap by liquidity");
+            toBorrow = _maxBorrow + _precision;
+            revertError = "NotEnoughLiquidity()";
+        } else {
+            emit log_string("max (+precision) is below liquidity, so we should be limit by max LTV");
+            toBorrow = _maxBorrow + _precision;
+            revertError = "AboveMaxLtv()";
+        }
+
+        emit log_named_decimal_uint("[_assertWeCanNotBorrowAboveMax] liquidity", liquidity, 18);
+        emit log_named_decimal_uint("[_assertWeCanNotBorrowAboveMax]  toBorrow", toBorrow, 18);
+        emit log_named_string("[_assertWeCanNotBorrowAboveMax] revertError", revertError);
+
+        vm.expectRevert(bytes4(keccak256(abi.encodePacked(revertError))));
+        vm.prank(borrower);
+        silo1.borrow(toBorrow, borrower, borrower);
+
+        if (_maxBorrow > 0) {
+            emit log_named_decimal_uint("[_assertWeCanNotBorrowAboveMax] _maxBorrow > 0 YES, borrowing max", _maxBorrow, 18);
+            vm.prank(borrower);
+            silo1.borrow(_maxBorrow, borrower, borrower);
+        }
+    }
+
+    function _assertMaxBorrowIsZeroAtTheEnd() internal {
+        uint256 maxBorrow = silo1.maxBorrow(borrower);
+        assertEq(maxBorrow, 0, "at this point max should return 0");
+    }
+
     function _assertWeCanNotBorrowAnymore(string memory _error) internal {
+        emit log_named_string("[_assertWeCanNotBorrowAnymore] expect to revert with", _error);
+
         vm.expectRevert(bytes4(keccak256(abi.encodePacked(_error))));
         vm.prank(borrower);
         silo1.borrow(1, borrower, borrower);

@@ -27,6 +27,9 @@ import {SiloLiquidationLib} from "./lib/SiloLiquidationLib.sol";
 import {SiloLiquidationExecLib} from "./lib/SiloLiquidationExecLib.sol";
 import {LeverageReentrancyGuard} from "./utils/LeverageReentrancyGuard.sol";
 
+import {console} from "forge-std/console.sol";
+
+
 // Keep ERC4626 ordering
 // solhint-disable ordering
 
@@ -589,6 +592,9 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
         (uint256 totalDebtAssets, uint256 totalDebtShares) =
             SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(debtConfig, AssetType.Debt);
 
+        console.log("[maxBorrow] totalDebtAssets", totalDebtAssets);
+//        console.log("[maxBorrow] getLiquidityAccrueInterest(AssetType.Collateral)", getLiquidityAccrueInterest(AssetType.Collateral));
+
         (maxAssets,) = SiloLendingLib.maxBorrow(
             collateralConfig,
             debtConfig,
@@ -1043,6 +1049,9 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
             config.getConfigs(address(this));
 
         _accrueInterest(debtConfig.interestRateModel, debtConfig.daoFee, debtConfig.deployerFee);
+
+        console.log("[_borrow] _total[AssetType.Debt].assets", _total[AssetType.Debt].assets);
+        console.log("[_borrow] _total[AssetType.Collateral].assets", _total[AssetType.Collateral].assets);
 
         (assets, shares) = SiloLendingLib.borrow(
             debtConfig,

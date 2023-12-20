@@ -10,7 +10,11 @@ import {SiloERC4626Lib} from "./SiloERC4626Lib.sol";
 import {SiloLiquidationLib} from "./SiloLiquidationLib.sol";
 import {SiloMathLib} from "./SiloMathLib.sol";
 
+import {console} from "forge-std/console.sol";
+
 library SiloSolvencyLib {
+    using MathUpgradeable for uint256;
+
     struct LtvData {
         ISiloOracle collateralOracle;
         ISiloOracle debtOracle;
@@ -73,6 +77,8 @@ library SiloSolvencyLib {
             _collateralConfig, _debtConfig, _borrower, ISilo.OracleType.MaxLtv, _accrueInMemory, debtShareBalance
         );
 
+        console.log("[isBelowMaxLtv] ltv", ltv);
+
         return ltv <= _collateralConfig.maxLtv;
     }
 
@@ -93,12 +99,21 @@ library SiloSolvencyLib {
             sumOfBorrowerCollateralValue, totalBorrowerDebtValue
         ) = getPositionValues(_ltvData, _collateralToken, _debtToken);
 
+        console.log("[calculateLtv] sumOfBorrowerCollateralValue", sumOfBorrowerCollateralValue);
+        console.log("[calculateLtv] totalBorrowerDebtValue", totalBorrowerDebtValue);
+
         if (sumOfBorrowerCollateralValue == 0 && totalBorrowerDebtValue == 0) {
             return (0, 0, 0);
         } else if (sumOfBorrowerCollateralValue == 0) {
             ltvInDp = _INFINITY;
         } else {
-            ltvInDp = totalBorrowerDebtValue * _PRECISION_DECIMALS / sumOfBorrowerCollateralValue;
+            console.log("[calculateLtv] %s * %s / %s", totalBorrowerDebtValue, _PRECISION_DECIMALS, sumOfBorrowerCollateralValue);
+
+            ltvInDp = totalBorrowerDebtValue.mulDiv(_PRECISION_DECIMALS, sumOfBorrowerCollateralValue, MathUpgradeable.Rounding.Up);
+            console.log("[calculateLtv] ltvInDp", ltvInDp);
+//            ltvInDp = SiloMathLib.preciseDiv(totalBorrowerDebtValue, _PRECISION_DECIMALS, sumOfBorrowerCollateralValue);
+//            console.log("[calculateLtv] ltvInDp precise!!", ltvInDp);
+
         }
     }
 

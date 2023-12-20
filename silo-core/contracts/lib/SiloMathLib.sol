@@ -4,6 +4,9 @@ pragma solidity 0.8.21;
 import {MathUpgradeable} from "openzeppelin-contracts-upgradeable/utils/math/MathUpgradeable.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 
+import {console} from "forge-std/console.sol";
+
+
 library SiloMathLib {
     using MathUpgradeable for uint256;
 
@@ -11,6 +14,24 @@ library SiloMathLib {
 
     /// @dev this is constant version of openzeppelin-contracts/contracts/token/ERC20/extensions/ERC4626._decimalsOffset
     uint256 internal constant _DECIMALS_OFFSET_POW = 10 ** 0;
+
+    /// @dev _sumOfBorrowerCollateralValue * _configMaxLtv / _PRECISION_DECIMALS => max possible
+    /// @param _a must not overflow on `_a + 1`
+    /// @param _b must not overflow on `_a + 1`
+    function preciseDiv(uint256 _a, uint256 _b, uint256 _c) internal pure returns (uint256 precise) {
+        if ((_a == 1 || _b == 1) && _c == 1) return _a;
+
+        unchecked {
+            if (_a < _b) _a += 1; else _b += 1;
+        } // shareBalance will not be higher than total, and total never overflow
+
+        precise = _a * _b;
+
+        unchecked {
+            precise /= _c;
+            if (precise > 0) precise -= 1;
+        }
+    }
 
     /// @notice Returns available liquidity to be borrowed
     /// @dev Accrued interest is entirely added to `debtAssets` but only part of it is added to `collateralAssets`. The
@@ -99,7 +120,7 @@ library SiloMathLib {
     {
         if (_collateralAssets == 0 || _debtAssets == 0) return 0;
 
-        utilization = _debtAssets * _dp;
+        utilization = _debtAssets * _dp; // TODO precise!
         // _collateralAssets is not 0 based on above check, so it is safe to uncheck this division
         unchecked {
             utilization /= _collateralAssets;
@@ -184,16 +205,27 @@ library SiloMathLib {
         uint256 _configMaxLtv,
         uint256 _sumOfBorrowerCollateralValue,
         uint256 _borrowerDebtValue
-    ) internal pure returns (uint256 maxBorrowValue) {
+    ) internal view returns (uint256 maxBorrowValue) {
         if (_sumOfBorrowerCollateralValue == 0) {
             return 0;
         }
 
-        uint256 maxDebtValue = _sumOfBorrowerCollateralValue * (_configMaxLtv + 1) / _PRECISION_DECIMALS;
+        // if we want to calculate max without precision error, we need to move bar up (that's why +1)
+        // then the result will be smallest number that will allow to reach ltv+1, when we subtract 1 from it
+        // precision error will make max amount to fix exactly under our max LTV.
+//        unchecked { _configMaxLtv = _configMaxLtv + 1; } // _configMaxLtv is less than _PRECISION_DECIMALS
+        uint256 maxDebtValue = _sumOfBorrowerCollateralValue * _configMaxLtv / _PRECISION_DECIMALS;
+
+        console.log("[calculateMaxBorrowValue] %s * %s / %s", _sumOfBorrowerCollateralValue, _configMaxLtv, _PRECISION_DECIMALS);
+        console.log("[calculateMaxBorrowValue] maxDebtValue", maxDebtValue);
+//
+//        maxDebtValue = preciseDiv(_sumOfBorrowerCollateralValue, _configMaxLtv, _PRECISION_DECIMALS);
+//        console.log("[calculateMaxBorrowValue] maxDebtValue preceise!", maxDebtValue);
+//
+//        maxDebtValue = _sumOfBorrowerCollateralValue.mulDiv(_configMaxLtv, _PRECISION_DECIMALS, MathUpgradeable.Rounding.Up);
+//        console.log("[calculateMaxBorrowValue] maxDebtValue mulDiv!", maxDebtValue);
 
         unchecked {
-            if (maxDebtValue > 0) maxDebtValue -= 1;
-
             // we will not underflow because we checking `maxDebtValue > _borrowerDebtValue`
             maxBorrowValue = maxDebtValue > _borrowerDebtValue ? maxDebtValue - _borrowerDebtValue : 0;
         }

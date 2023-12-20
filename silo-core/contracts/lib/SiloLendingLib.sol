@@ -17,8 +17,11 @@ import {SiloSolvencyLib} from "./SiloSolvencyLib.sol";
 import {SiloStdLib} from "./SiloStdLib.sol";
 import {SiloMathLib} from "./SiloMathLib.sol";
 
+import {console} from "forge-std/console.sol";
+
 library SiloLendingLib {
     using SafeERC20Upgradeable for IERC20Upgradeable;
+    using MathUpgradeable for uint256;
 
     bytes32 internal constant _FLASHLOAN_CALLBACK = keccak256("ERC3156FlashBorrower.onFlashLoan");
 
@@ -70,6 +73,8 @@ library SiloLendingLib {
         );
 
         if (borrowedShares == 0) revert ISilo.ZeroShares();
+
+        console.log("SiloMathLib.liquidity(%s, %s)=",_totalCollateralAssets, totalDebtAssets, SiloMathLib.liquidity(_totalCollateralAssets, totalDebtAssets));
 
         if (borrowedAssets > SiloMathLib.liquidity(_totalCollateralAssets, totalDebtAssets)) {
             revert ISilo.NotEnoughLiquidity();
@@ -263,6 +268,10 @@ library SiloLendingLib {
         view
         returns (uint256 assets, uint256 shares)
     {
+        if (!borrowPossible(_debtConfig.protectedShareToken, _debtConfig.collateralShareToken, _borrower)) {
+            return (0, 0);
+        }
+
         SiloSolvencyLib.LtvData memory ltvData = SiloSolvencyLib.getAssetsDataForLtvCalculations(
             _collateralConfig,
             _debtConfig,
@@ -275,11 +284,17 @@ library SiloLendingLib {
         (uint256 sumOfBorrowerCollateralValue, uint256 borrowerDebtValue) =
             SiloSolvencyLib.getPositionValues(ltvData, _collateralConfig.token, _debtConfig.token);
 
+        console.log("[maxBorrow] _collateralConfig.maxLtv", _collateralConfig.maxLtv);
+        console.log("[maxBorrow] sumOfBorrowerCollateralValue", sumOfBorrowerCollateralValue);
+        console.log("[maxBorrow] borrowerDebtValue", borrowerDebtValue);
+
         uint256 maxBorrowValue = SiloMathLib.calculateMaxBorrowValue(
             _collateralConfig.maxLtv,
             sumOfBorrowerCollateralValue,
             borrowerDebtValue
         );
+
+        console.log("[maxBorrow] maxBorrowValue --- >>>> ", maxBorrowValue);
 
         (assets, shares) = maxBorrowValueToAssetsAndShares(
             maxBorrowValue,
@@ -291,6 +306,9 @@ library SiloLendingLib {
             _totalDebtAssets,
             _totalDebtShares
         );
+
+        console.log("[maxBorrow] maxBorrowValue -> assets ", assets);
+        console.log("[maxBorrow] maxBorrowValue -> shares ", shares);
 
         if (assets > _liquidityWithInterest) {
             assets = _liquidityWithInterest;
@@ -359,11 +377,28 @@ library SiloLendingLib {
             );
         } else {
             uint256 shareBalance = IShareToken(_debtShareToken).balanceOf(_borrower);
+            console.log("[maxBorrowValueToAssetsAndShares] _maxBorrowValue", _maxBorrowValue);
+            console.log("[maxBorrowValueToAssetsAndShares] shareBalance", shareBalance);
+            console.log("[maxBorrowValueToAssetsAndShares] _borrowerDebtValue", _borrowerDebtValue);
+
+
+//            unchecked { shareBalance += 1; } // shareBalance will not be higher than total, and total never overflow
             shares = _maxBorrowValue * shareBalance / _borrowerDebtValue;
+//            console.log("[maxBorrowValueToAssetsAndShares] shares", shares);
+//            shares = SiloMathLib.preciseDiv(_maxBorrowValue, shareBalance, _borrowerDebtValue);
+//            console.log("[maxBorrowValueToAssetsAndShares] shares precise!", shares);
+//
+//            shares = _maxBorrowValue.mulDiv(shareBalance, _borrowerDebtValue, MathUpgradeable.Rounding.Down);
+//            console.log("[maxBorrowValueToAssetsAndShares] shares mulDiv!", shares);
+//
+//            console.log("%s * %s / %s", _maxBorrowValue, shareBalance, _borrowerDebtValue);
+
 
             assets = SiloMathLib.convertToAssets(
                 shares, _totalDebtAssets, _totalDebtShares, MathUpgradeable.Rounding.Down, ISilo.AssetType.Debt
             );
+            console.log("[maxBorrowValueToAssetsAndShares] assets", assets);
+
         }
     }
 }
