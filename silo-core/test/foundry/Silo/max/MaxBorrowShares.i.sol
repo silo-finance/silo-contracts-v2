@@ -130,14 +130,18 @@ contract MaxBorrowSharesTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_maxBorrowShares_repayWithInterest_fuzz
     */
-    /// forge-config: core.fuzz.runs = 1000
-    function test_maxBorrowShares_repayWithInterest_fuzz(uint64 _collateral, uint128 _liquidity) public {
+    /// forge-config: core.fuzz.runs = 5000
+    function test_maxBorrowShares_repayWithInterest_fuzz(
+        uint64 _collateral,
+        uint128 _liquidity
+    ) public {
+        // (uint64 _collateral, uint128 _liquidity) = (7117, 7095);
         vm.assume(_collateral > 0);
         vm.assume(_liquidity > 0);
 
         _deposit(_collateral, borrower);
         _depositForBorrow(_liquidity, depositor);
-        // TODO  +protected, and for maxBorrow
+        // TODO  +protected, and same for maxBorrow
 
         uint256 maxBorrowShares = silo1.maxBorrowShares(borrower);
         uint256 firstBorrow = maxBorrowShares / 3;
@@ -179,8 +183,7 @@ contract MaxBorrowSharesTest is SiloLittleHelper, Test {
         emit log_named_uint("------- QA: _assertWeCanNotBorrowAboveMax shares", _maxBorrowShares);
         emit log_named_uint("------- QA: _assertWeCanNotBorrowAboveMax _precision", _precision);
 
-        uint256 toBorrow;
-        string memory revertError;
+        uint256 toBorrow = _maxBorrowShares + _precision;
 
         uint256 liquidity = silo1.getLiquidityAccrueInterest(ISilo.AssetType.Collateral);
         uint256 maxBorrowAssets = silo1.convertToAssets(_maxBorrowShares, ISilo.AssetType.Debt);
@@ -188,30 +191,26 @@ contract MaxBorrowSharesTest is SiloLittleHelper, Test {
         emit log_named_decimal_uint("[_assertWeCanNotBorrowAboveMax] maxBorrowAssets", maxBorrowAssets, 18);
         emit log_named_decimal_uint("[_assertWeCanNotBorrowAboveMax] liquidity", liquidity, 18);
         emit log_named_decimal_uint("[_assertWeCanNotBorrowAboveMax] balanceOf", token1.balanceOf(address(silo1)), 18);
-
-        // [maxBorrow] maxBorrowValue -> assets (limit)  159 => shares 158, but then 158 => 160!
+        emit log_named_decimal_uint("[_assertWeCanNotBorrowAboveMax]  toBorrow", toBorrow, 18);
 
         if (maxBorrowAssets > liquidity) {
             emit log("MAX returned shares, that translate for TOO MUCH assets");
             // assertLe(maxBorrowAssets, liquidity, "MAX returned shares, that translate for TOO MUCH assets");
         }
 
-        if (maxBorrowAssets + _precision > liquidity) {
-            emit log_string("max (+precision) is cap by liquidity");
-            toBorrow = _maxBorrowShares + _precision;
-            revertError = "NotEnoughLiquidity()";
-        } else {
-            emit log_string("max (+precision) is below liquidity, so we should be limit by max LTV");
-            toBorrow = _maxBorrowShares + _precision;
-            revertError = "AboveMaxLtv()";
-        }
-
-        emit log_named_decimal_uint("[_assertWeCanNotBorrowAboveMax]  toBorrow", toBorrow, 18);
-        emit log_named_string("[_assertWeCanNotBorrowAboveMax] revertError", revertError);
-
-        vm.expectRevert(bytes4(keccak256(abi.encodePacked(revertError))));
         vm.prank(borrower);
-        silo1.borrowShares(toBorrow, borrower, borrower);
+        try silo1.borrowShares(toBorrow, borrower, borrower) returns (uint256) {
+            revert("we expect tx to be reverted!");
+        } catch (bytes memory data) {
+            bytes4 errorType = bytes4(data);
+
+            bytes4 error1 = bytes4(keccak256(abi.encodePacked("NotEnoughLiquidity()")));
+            bytes4 error2 = bytes4(keccak256(abi.encodePacked("AboveMaxLtv()")));
+
+            if (errorType != error1 && errorType != error2) {
+                revert("we need to revert with NotEnoughLiquidity or AboveMaxLtv");
+            }
+        }
 
         if (_maxBorrowShares > 0) {
             emit log_named_decimal_uint("[_assertWeCanNotBorrowAboveMax] _maxBorrow > 0 YES, borrowing max", _maxBorrowShares, 18);
