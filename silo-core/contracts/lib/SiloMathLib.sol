@@ -214,7 +214,7 @@ library SiloMathLib {
         // then the result will be smallest number that will allow to reach ltv+1, when we subtract 1 from it
         // precision error will make max amount to fix exactly under our max LTV.
 //        unchecked { _configMaxLtv = _configMaxLtv + 1; } // _configMaxLtv is less than _PRECISION_DECIMALS
-        uint256 maxDebtValue = _sumOfBorrowerCollateralValue * _configMaxLtv / _PRECISION_DECIMALS;
+        uint256 maxDebtValue = _sumOfBorrowerCollateralValue * _configMaxLtv / _PRECISION_DECIMALS; // DOWN
 
         console.log("[calculateMaxBorrowValue] %s * %s / %s", _sumOfBorrowerCollateralValue, _configMaxLtv, _PRECISION_DECIMALS);
         console.log("[calculateMaxBorrowValue] maxDebtValue", maxDebtValue);

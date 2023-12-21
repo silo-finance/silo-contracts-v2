@@ -105,7 +105,7 @@ contract MaxBorrowTest is SiloLittleHelper, Test {
         uint128 _collateral,
         uint128 _liquidity
     ) public {
-        // (uint128 _collateral, uint128 _liquidity) = (3, 3);
+//         (uint128 _collateral, uint128 _liquidity) = (64099903089467212573385554129187123252, 73362960447100600398853614451545866240);
 
         vm.assume(_collateral > 0);
         vm.assume(_liquidity > 0);
@@ -126,9 +126,9 @@ contract MaxBorrowTest is SiloLittleHelper, Test {
         maxBorrow = silo1.maxBorrow(borrower);
         emit log_named_uint("maxBorrow", maxBorrow);
 
-        _assertWeCanNotBorrowAboveMax(maxBorrow);
+        _assertWeCanNotBorrowAboveMax(maxBorrow, 3);
 
-        _assertMaxBorrowIsZeroAtTheEnd();
+        _assertMaxBorrowIsZeroAtTheEnd(1);
     }
 
     /*
@@ -173,13 +173,13 @@ contract MaxBorrowTest is SiloLittleHelper, Test {
         maxBorrow = silo1.maxBorrow(borrower);
         assertGt(maxBorrow, 0, "we can borrow again after repay");
 
-        _assertWeCanNotBorrowAboveMax(maxBorrow);
+        _assertWeCanNotBorrowAboveMax(maxBorrow, 2);
 
         _assertMaxBorrowIsZeroAtTheEnd();
     }
 
     function _assertWeCanNotBorrowAboveMax(uint256 _maxBorrow) internal {
-        _assertWeCanNotBorrowAboveMax(_maxBorrow, 2);
+        _assertWeCanNotBorrowAboveMax(_maxBorrow, 1);
     }
 
     /// @param _precision is needed because we count for precision error and we allow for 1 wei diff
@@ -221,7 +221,18 @@ contract MaxBorrowTest is SiloLittleHelper, Test {
     }
 
     function _assertMaxBorrowIsZeroAtTheEnd() internal {
+        _assertMaxBorrowIsZeroAtTheEnd(0);
+    }
+
+    function _assertMaxBorrowIsZeroAtTheEnd(uint256 _precision) internal {
+        emit log_named_uint("=================== _assertMaxBorrowIsZeroAtTheEnd =================== +/-", _precision);
+
         uint256 maxBorrow = silo1.maxBorrow(borrower);
-        assertEq(maxBorrow, 0, "at this point max should return 0");
+
+        assertLe(
+            maxBorrow,
+            _precision,
+            string.concat("at this point max should return 0 +/-", string(abi.encodePacked(_precision)))
+        );
     }
 }

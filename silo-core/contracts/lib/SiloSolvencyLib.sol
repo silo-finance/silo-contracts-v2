@@ -179,9 +179,14 @@ library SiloSolvencyLib {
             ? SiloStdLib.getTotalDebtAssetsWithInterest(_debtConfig.silo, _debtConfig.interestRateModel)
             : ISilo(_debtConfig.silo).getDebtAssets();
 
+        // BORROW value -> to assets -> UP
         ltvData.borrowerDebtAssets = SiloMathLib.convertToAssets(
             shares, totalDebtAssets, totalShares, MathUpgradeable.Rounding.Up, ISilo.AssetType.Debt
         );
+
+        console.log("[getAssetsDataForLtvCalculations] shares", shares);
+        console.log("[getAssetsDataForLtvCalculations] totalShares", totalShares);
+        console.log("[getAssetsDataForLtvCalculations] ltvData.borrowerDebtAssets", ltvData.borrowerDebtAssets);
     }
 
     /// @notice Computes the value of collateral and debt positions based on given LTV data and asset addresses

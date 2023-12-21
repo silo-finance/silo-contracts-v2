@@ -366,8 +366,12 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
     function convertToAssets(uint256 _shares, AssetType _assetType) external view virtual returns (uint256 assets) {
         (uint256 totalSiloAssets, uint256 totalShares) = _getTotalAssetsAndTotalSharesWithInterest(_assetType);
 
+        console.log("[convertToAssets] _shares", _shares);
+        console.log("[convertToAssets] totalSiloAssets", totalSiloAssets);
+        console.log("[convertToAssets] totalShares", totalShares);
+
         return SiloMathLib.convertToAssets(
-            _shares, totalSiloAssets, totalShares, MathUpgradeable.Rounding.Down, _assetType
+            _shares, totalSiloAssets, totalShares, _assetType == AssetType.Debt ? MathUpgradeable.Rounding.Up : MathUpgradeable.Rounding.Down, _assetType
         );
     }
 

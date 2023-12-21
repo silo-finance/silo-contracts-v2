@@ -62,6 +62,9 @@ library SiloLendingLib {
         IShareToken debtShareToken = IShareToken(_configData.debtShareToken);
         uint256 totalDebtAssets = _totalDebt.assets;
 
+        console.log("[borrow] _assets=", _assets);
+        console.log("[borrow] _shares=", _shares);
+
         (borrowedAssets, borrowedShares) = SiloMathLib.convertToAssetsAndToShares(
             _assets,
             _shares,
@@ -74,7 +77,9 @@ library SiloLendingLib {
 
         if (borrowedShares == 0) revert ISilo.ZeroShares();
 
-        console.log("SiloMathLib.liquidity(%s, %s)=",_totalCollateralAssets, totalDebtAssets, SiloMathLib.liquidity(_totalCollateralAssets, totalDebtAssets));
+        console.log("[borrow] borrowedAssets=", borrowedAssets);
+        console.log("[borrow] borrowedShares=", borrowedShares);
+        console.log("[borrow] SiloMathLib.liquidity(%s, %s)=",_totalCollateralAssets, totalDebtAssets, SiloMathLib.liquidity(_totalCollateralAssets, totalDebtAssets));
 
         if (borrowedAssets > SiloMathLib.liquidity(_totalCollateralAssets, totalDebtAssets)) {
             revert ISilo.NotEnoughLiquidity();
@@ -324,13 +329,21 @@ library SiloLendingLib {
 
         console.log("[maxBorrow] maxBorrowValue -> assets ", assets);
         console.log("[maxBorrow] maxBorrowValue -> shares ", shares);
+        console.log("[maxBorrow] maxBorrowValue -> _liquidityWithInterest ", _liquidityWithInterest);
 
         if (assets > _liquidityWithInterest) {
             assets = _liquidityWithInterest;
 
+            // for borrow to shares, we rounding Up, to "create more debt".
+            // But we already did that in maxBorrowValueToAssetsAndShares in below case, where is the same
             shares = SiloMathLib.convertToShares(
+                // assets, _totalDebtAssets, _totalDebtShares, borrowerDebtValue == 0 ? MathUpgradeable.Rounding.Up : MathUpgradeable.Rounding.Down, ISilo.AssetType.Debt
                 assets, _totalDebtAssets, _totalDebtShares, MathUpgradeable.Rounding.Up, ISilo.AssetType.Debt
             );
+
+            console.log("[maxBorrow] rounding ", borrowerDebtValue == 0 ? "Up" : "Down");
+            console.log("[maxBorrow] maxBorrowValue -> assets (limit) ", assets);
+            console.log("[maxBorrow] maxBorrowValue -> shares (limit) ", shares);
         }
     }
 
@@ -385,7 +398,7 @@ library SiloLendingLib {
                 ? oneDebtToken
                 : _debtOracle.quote(oneDebtToken, _debtToken);
 
-            assets = _maxBorrowValue * _PRECISION_DECIMALS / oneDebtTokenValue;
+            assets = _maxBorrowValue * _PRECISION_DECIMALS / oneDebtTokenValue; // TODO apply rounding?
 
             shares = SiloMathLib.convertToShares(
                 assets, _totalDebtAssets, _totalDebtShares, MathUpgradeable.Rounding.Up, ISilo.AssetType.Debt
@@ -396,10 +409,14 @@ library SiloLendingLib {
             console.log("[maxBorrowValueToAssetsAndShares] shareBalance", shareBalance);
             console.log("[maxBorrowValueToAssetsAndShares] _borrowerDebtValue", _borrowerDebtValue);
 
+            // on LTV calculation, we taking debt value, and we round UP when we calculating shares
+            // so here, when we want to calculate shares from value, we need to round down.
+            shares = _maxBorrowValue * shareBalance / _borrowerDebtValue; // by default rounding DOWN
+            console.log("[maxBorrowValueToAssetsAndShares] shares", shares);
 
-//            unchecked { shareBalance += 1; } // shareBalance will not be higher than total, and total never overflow
-            shares = _maxBorrowValue * shareBalance / _borrowerDebtValue;
-//            console.log("[maxBorrowValueToAssetsAndShares] shares", shares);
+
+//            shares = _maxBorrowValue.mulDiv(shareBalance, _borrowerDebtValue, MathUpgradeable.Rounding.Up);
+//            console.log("[maxBorrowValueToAssetsAndShares] shares UP", shares);
 //            shares = SiloMathLib.preciseDiv(_maxBorrowValue, shareBalance, _borrowerDebtValue);
 //            console.log("[maxBorrowValueToAssetsAndShares] shares precise!", shares);
 //
