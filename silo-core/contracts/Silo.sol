@@ -419,13 +419,18 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
     }
 
     /// @inheritdoc ISilo
-    function maxMint(address _receiver, AssetType /* _assetType */ )
+    function maxMint(address _receiver, AssetType _assetType)
         external
         view
         virtual
         returns (uint256 maxShares)
     {
-        return SiloERC4626Lib.maxDepositOrMint(config, _receiver, IShareToken(_getShareToken()).totalSupply());
+        if (_assetType == AssetType.Debt) revert ISilo.WrongAssetType();
+
+        (address protectedToken, address collateralToken, ) = config.getShareTokens(address(this));
+        address shareToken = _assetType == AssetType.Collateral ? collateralToken : protectedToken;
+
+        return SiloERC4626Lib.maxDepositOrMint(config, _receiver, IShareToken(shareToken).totalSupply());
     }
 
     /// @inheritdoc ISilo
