@@ -985,6 +985,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
             config.getConfigs(address(this));
 
         _accrueInterest();
+        ISilo(debtConfig.silo).accrueInterest();
 
         // this if helped with Stack too deep
         if (_assetType == AssetType.Collateral) {

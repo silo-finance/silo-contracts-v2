@@ -40,16 +40,21 @@ contract MaxWithdrawTest is SiloLittleHelper, Test {
     forge test -vv --ffi --mt test_maxWithdraw_deposit_fuzz
     */
     /// forge-config: core.fuzz.runs = 1000
-    function test_maxWithdraw_deposit_fuzz(uint128 _assets) public {
+    function test_maxWithdraw_deposit_fuzz(
+        uint112 _assets,
+        uint16 _assets2
+    ) public {
         vm.assume(_assets > 0);
+        vm.assume(_assets2 > 0);
+
         _deposit(_assets, borrower);
+        _deposit(_assets2, address(1)); // any
 
         uint256 maxWithdraw = silo0.maxWithdraw(borrower);
         assertEq(maxWithdraw, _assets, "max withdraw == _assets if no interest");
 
-        _withdraw(maxWithdraw, borrower);
-
-        _assertBorrowerHasNothingToWithdraw();
+        _assertBorrowerCanNotWithdrawMore(maxWithdraw);
+        _assertMaxWithdrawIsZeroAtTheEnd();
     }
 
     /*
@@ -57,22 +62,19 @@ contract MaxWithdrawTest is SiloLittleHelper, Test {
     */
     /// forge-config: core.fuzz.runs = 1000
     function test_maxWithdraw_whenBorrow_fuzz(
-        uint128 _collateral
+        uint128 _collateral,
+        uint128 _toBorrow
     ) public {
-        // uint128 _collateral = 100;
-        uint256 toBorrow = _collateral / 3;
-        _createDebt(_collateral, toBorrow);
+//        (uint128 _collateral, uint256 _toBorrow) = (5526, 1842);
+        _createDebtSilo1(_collateral, _toBorrow);
 
         uint256 maxWithdraw = silo0.maxWithdraw(borrower);
         assertLt(maxWithdraw, _collateral, "with debt you can not withdraw all");
 
         emit log_named_decimal_uint("LTV", silo1.getLtv(borrower), 18);
 
-        if (maxWithdraw > 0) {
-            _withdraw(maxWithdraw, borrower);
-        }
-
-        _assertBorrowerCanNotWithdrawMore();
+        _assertBorrowerCanNotWithdrawMore(maxWithdraw, 2);
+        _assertMaxWithdrawIsZeroAtTheEnd();
     }
 
     /*
@@ -80,33 +82,102 @@ contract MaxWithdrawTest is SiloLittleHelper, Test {
     */
     /// forge-config: core.fuzz.runs = 1000
     function test_maxWithdraw_whenInterest_fuzz(
-        uint128 _collateral
+        uint128 _collateral,
+        uint128 _toBorrow
     ) public {
-        // uint128 _collateral = 100;
-        uint256 toBorrow = _collateral / 3;
-        _createDebt(_collateral, toBorrow);
+//        (uint128 _collateral, uint128 _toBorrow) = (16278, 10070);
+        _createDebtSilo1(_collateral, _toBorrow);
 
         vm.warp(block.timestamp + 100 days);
 
         uint256 maxWithdraw = silo0.maxWithdraw(borrower);
         assertLt(maxWithdraw, _collateral, "with debt you can not withdraw all");
 
-        emit log_named_decimal_uint("LTV", silo1.getLtv(borrower), 18);
+        emit log_named_decimal_uint("LTV before withdraw", silo1.getLtv(borrower), 16);
+        emit log_named_uint("maxWithdraw", maxWithdraw);
 
-        if (maxWithdraw > 0) {
-            _withdraw(maxWithdraw, borrower);
-        }
-
-        _assertBorrowerCanNotWithdrawMore();
+        _assertBorrowerCanNotWithdrawMore(maxWithdraw, 2);
+        _assertMaxWithdrawIsZeroAtTheEnd(1);
     }
 
-    function _createDebt(uint256 _collateral, uint256 _toBorrow) internal {
-        vm.assume(_collateral > 0);
+    /*
+    forge test -vv --ffi --mt test_maxWithdraw_bothSilosWithInterest_fuzz
+    */
+    /// forge-config: core.fuzz.runs = 1000
+    function test_maxWithdraw_bothSilosWithInterest_fuzz(
+        uint128 _collateral,
+        uint128 _toBorrow
+    ) public {
+//        (uint128 _collateral, uint128 _toBorrow) = (4323, 3821);
+        _createDebtSilo0(_collateral, _toBorrow);
+        _createDebtSilo1(_collateral, _toBorrow);
+
+        vm.warp(block.timestamp + 100 days);
+
+        uint256 maxWithdraw = silo0.maxWithdraw(borrower);
+        assertLt(maxWithdraw, _collateral, "with debt you can not withdraw all");
+
+        emit log_named_decimal_uint("LTV before withdraw", silo1.getLtv(borrower), 16);
+        emit log_named_uint("maxWithdraw", maxWithdraw);
+
+        _assertBorrowerCanNotWithdrawMore(maxWithdraw, 2);
+        _assertMaxWithdrawIsZeroAtTheEnd(1);
+    }
+
+    function _createDebtSilo1(uint256 _collateral, uint256 _toBorrow) internal {
         vm.assume(_toBorrow > 0);
+        vm.assume(_collateral > _toBorrow);
 
         _depositForBorrow(_collateral, depositor);
         _deposit(_collateral, borrower);
-        _borrow(_toBorrow, borrower);
+        uint256 maxBorrow = silo1.maxBorrow(borrower);
+        vm.assume(maxBorrow > 0);
+
+        uint256 assets = _toBorrow > maxBorrow ? maxBorrow : _toBorrow;
+        _borrow(assets, borrower);
+
+        emit log_named_uint("[_createDebt] _collateral", _collateral);
+        emit log_named_uint("[_createDebt] maxBorrow", maxBorrow);
+        emit log_named_uint("[_createDebt] _toBorrow", _toBorrow);
+        emit log_named_uint("[_createDebt] borrowed", assets);
+
+        emit log_named_decimal_uint("LTV after borrow", silo1.getLtv(borrower), 16);
+        assertEq(silo0.getLtv(borrower), silo1.getLtv(borrower), "LTV should be the same on both silos");
+
+        _ensureBorrowerHasDebt(silo1, borrower);
+    }
+
+    function _createDebtSilo0(uint256 _collateral, uint256 _toBorrow) internal {
+        vm.assume(_toBorrow > 0);
+        vm.assume(_collateral > _toBorrow);
+
+        address otherBorrower = makeAddr("other borrower");
+
+        _deposit(_collateral, depositor);
+        _depositForBorrow(_collateral, otherBorrower);
+        uint256 maxBorrow = silo0.maxBorrow(otherBorrower);
+        vm.assume(maxBorrow > 0);
+
+        uint256 assets = _toBorrow > maxBorrow ? maxBorrow : _toBorrow;
+        vm.prank(otherBorrower);
+        silo0.borrow(assets, otherBorrower, otherBorrower);
+
+        emit log_named_uint("[_createDebt] _collateral", _collateral);
+        emit log_named_uint("[_createDebt] maxBorrow", maxBorrow);
+        emit log_named_uint("[_createDebt] _toBorrow", _toBorrow);
+        emit log_named_uint("[_createDebt] borrowed", assets);
+
+        emit log_named_decimal_uint("LTV after borrow", silo0.getLtv(otherBorrower), 16);
+        assertEq(silo0.getLtv(otherBorrower), silo1.getLtv(otherBorrower), "LTV should be the same on both silos");
+
+        _ensureBorrowerHasDebt(silo0, otherBorrower);
+    }
+
+    function _ensureBorrowerHasDebt(ISilo _silo, address _borrower) internal {
+        (,, address debtShareToken) = _silo.config().getShareTokens(address(_silo));
+
+        assertGt(_silo.maxRepayShares(_borrower), 0, "expect debt");
+        assertGt(IShareToken(debtShareToken).balanceOf(_borrower), 0, "expect debtShareToken balance > 0");
     }
 
     function _assertBorrowerHasNothingToWithdraw() internal {
@@ -116,15 +187,45 @@ contract MaxWithdrawTest is SiloLittleHelper, Test {
         assertEq(IShareToken(collateralShareToken).balanceOf(borrower), 0, "expect share balance to be 0");
     }
 
-    function _assertBorrowerCanNotWithdrawMore() internal {
-        (, address collateralShareToken, ) = silo0.config().getShareTokens(address(silo0));
+    function _assertBorrowerCanNotWithdrawMore(uint256 _maxWithdraw) internal {
+        _assertBorrowerCanNotWithdrawMore(_maxWithdraw, 1);
+    }
 
-        assertEq(silo0.maxWithdraw(borrower), 0, "expect maxWithdraw to be 0");
-        assertGt(IShareToken(collateralShareToken).balanceOf(borrower), 0, "expect share balance to be > 0");
+    function _assertBorrowerCanNotWithdrawMore(uint256 _maxWithdraw, uint256 _underestimate) internal {
+        assertGt(_underestimate, 0, "_underestimate must be at least 1");
+
+        if (_maxWithdraw > 0) {
+            _withdraw(_maxWithdraw, borrower);
+        }
+
+        bool isSolvent = silo0.isSolvent(borrower);
+
+        if (!isSolvent) {
+            assertEq(_maxWithdraw, 0, "if user is insolvent, MAX should be always 0");
+        }
+
+        uint256 counterExample  = isSolvent ? _underestimate : 1;
+        emit log_named_uint("=========== [counterexample] testing counterexample for maxWithdraw with", counterExample);
 
         // TODO
-//        vm.prank(borrower);
-//        vm.expectRevert();
-//        silo0.withdraw(1, borrower, borrower);
+        vm.prank(borrower);
+        vm.expectRevert();
+        silo0.withdraw(counterExample, borrower, borrower);
+    }
+
+    function _assertMaxWithdrawIsZeroAtTheEnd() internal {
+        _assertMaxWithdrawIsZeroAtTheEnd(0);
+    }
+
+    function _assertMaxWithdrawIsZeroAtTheEnd(uint256 _underestimate) internal {
+        emit log_named_uint("================= _assertMaxWithdrawIsZeroAtTheEnd ================= +/-", _underestimate);
+
+        uint256 maxWithdraw = silo0.maxWithdraw(borrower);
+
+        assertLe(
+            maxWithdraw,
+            _underestimate,
+            string.concat("at this point max should return 0 +/-", string(abi.encodePacked(_underestimate)))
+        );
     }
 }
