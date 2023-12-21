@@ -1,31 +1,18 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.0;
 
-import "forge-std/Test.sol";
-
-import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
 
-import {MintableToken} from "../../_common/MintableToken.sol";
-import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
+import {MaxWithdrawCommon} from "./MaxWithdrawCommon.i.sol";
 
 /*
     forge test -vv --ffi --mc MaxWithdrawTest
 */
-contract MaxWithdrawTest is SiloLittleHelper, Test {
-    ISiloConfig siloConfig;
-    address immutable depositor;
-    address immutable borrower;
-
-    constructor() {
-        depositor = makeAddr("Depositor");
-        borrower = makeAddr("Borrower");
-    }
-
+contract MaxWithdrawTest is MaxWithdrawCommon {
     function setUp() public {
-        siloConfig = _setUpLocalFixture(SiloConfigsNames.LOCAL_NO_ORACLE_NO_LTV_SILO);
+        _setUpLocalFixture(SiloConfigsNames.LOCAL_NO_ORACLE_NO_LTV_SILO);
     }
 
     /*
@@ -124,62 +111,6 @@ contract MaxWithdrawTest is SiloLittleHelper, Test {
         _assertMaxWithdrawIsZeroAtTheEnd(1);
     }
 
-    function _createDebtSilo1(uint256 _collateral, uint256 _toBorrow) internal {
-        vm.assume(_toBorrow > 0);
-        vm.assume(_collateral > _toBorrow);
-
-        _depositForBorrow(_collateral, depositor);
-        _deposit(_collateral, borrower);
-        uint256 maxBorrow = silo1.maxBorrow(borrower);
-        vm.assume(maxBorrow > 0);
-
-        uint256 assets = _toBorrow > maxBorrow ? maxBorrow : _toBorrow;
-        _borrow(assets, borrower);
-
-        emit log_named_uint("[_createDebt] _collateral", _collateral);
-        emit log_named_uint("[_createDebt] maxBorrow", maxBorrow);
-        emit log_named_uint("[_createDebt] _toBorrow", _toBorrow);
-        emit log_named_uint("[_createDebt] borrowed", assets);
-
-        emit log_named_decimal_uint("LTV after borrow", silo1.getLtv(borrower), 16);
-        assertEq(silo0.getLtv(borrower), silo1.getLtv(borrower), "LTV should be the same on both silos");
-
-        _ensureBorrowerHasDebt(silo1, borrower);
-    }
-
-    function _createDebtSilo0(uint256 _collateral, uint256 _toBorrow) internal {
-        vm.assume(_toBorrow > 0);
-        vm.assume(_collateral > _toBorrow);
-
-        address otherBorrower = makeAddr("other borrower");
-
-        _deposit(_collateral, depositor);
-        _depositForBorrow(_collateral, otherBorrower);
-        uint256 maxBorrow = silo0.maxBorrow(otherBorrower);
-        vm.assume(maxBorrow > 0);
-
-        uint256 assets = _toBorrow > maxBorrow ? maxBorrow : _toBorrow;
-        vm.prank(otherBorrower);
-        silo0.borrow(assets, otherBorrower, otherBorrower);
-
-        emit log_named_uint("[_createDebt] _collateral", _collateral);
-        emit log_named_uint("[_createDebt] maxBorrow", maxBorrow);
-        emit log_named_uint("[_createDebt] _toBorrow", _toBorrow);
-        emit log_named_uint("[_createDebt] borrowed", assets);
-
-        emit log_named_decimal_uint("LTV after borrow", silo0.getLtv(otherBorrower), 16);
-        assertEq(silo0.getLtv(otherBorrower), silo1.getLtv(otherBorrower), "LTV should be the same on both silos");
-
-        _ensureBorrowerHasDebt(silo0, otherBorrower);
-    }
-
-    function _ensureBorrowerHasDebt(ISilo _silo, address _borrower) internal {
-        (,, address debtShareToken) = _silo.config().getShareTokens(address(_silo));
-
-        assertGt(_silo.maxRepayShares(_borrower), 0, "expect debt");
-        assertGt(IShareToken(debtShareToken).balanceOf(_borrower), 0, "expect debtShareToken balance > 0");
-    }
-
     function _assertBorrowerHasNothingToWithdraw() internal {
         (, address collateralShareToken, ) = silo0.config().getShareTokens(address(silo0));
 
@@ -207,7 +138,6 @@ contract MaxWithdrawTest is SiloLittleHelper, Test {
         uint256 counterExample  = isSolvent ? _underestimate : 1;
         emit log_named_uint("=========== [counterexample] testing counterexample for maxWithdraw with", counterExample);
 
-        // TODO
         vm.prank(borrower);
         vm.expectRevert();
         silo0.withdraw(counterExample, borrower, borrower);
