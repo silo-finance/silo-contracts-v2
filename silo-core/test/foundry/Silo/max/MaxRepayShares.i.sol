@@ -39,7 +39,7 @@ contract MaxRepaySharesTest is SiloLittleHelper, Test {
 
         _depositForBorrow(11e18, borrower);
 
-        _assertBorrowerHadNoDebt();
+        _assertBorrowerHasNoDebt();
     }
 
     /*
@@ -54,7 +54,7 @@ contract MaxRepaySharesTest is SiloLittleHelper, Test {
         assertEq(maxRepayShares, toBorrow, "max repay is what was borrower if no interest");
 
         _repayShares(maxRepayShares, maxRepayShares, borrower);
-        _assertBorrowerHadNoDebt();
+        _assertBorrowerHasNoDebt();
     }
 
     /*
@@ -72,7 +72,7 @@ contract MaxRepaySharesTest is SiloLittleHelper, Test {
 
         token1.setOnDemand(true);
         _repayShares(1, maxRepayShares, borrower);
-        _assertBorrowerHadNoDebt();
+        _assertBorrowerHasNoDebt();
     }
 
     function _createDebt(uint256 _collateral, uint256 _toBorrow) internal returns (uint256 shares) {
@@ -81,10 +81,20 @@ contract MaxRepaySharesTest is SiloLittleHelper, Test {
 
         _depositForBorrow(_collateral, depositor);
         _deposit(_collateral, borrower);
+
+        _ensureBorrowerHasDebt();
+
         return _borrow(_toBorrow, borrower);
     }
 
-    function _assertBorrowerHadNoDebt() internal {
+    function _ensureBorrowerHasDebt() internal {
+        (,, address debtShareToken) = silo1.config().getShareTokens(address(silo1));
+
+        assertGt(silo1.maxRepayShares(borrower), 0, "expect debt");
+        assertGt(IShareToken(debtShareToken).balanceOf(borrower), 0, "expect debtShareToken balance > 0");
+    }
+
+    function _assertBorrowerHasNoDebt() internal {
         (,, address debtShareToken) = silo1.config().getShareTokens(address(silo1));
 
         assertEq(silo1.maxRepayShares(borrower), 0, "expect maxRepayShares to be 0");
