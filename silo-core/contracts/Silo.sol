@@ -27,8 +27,6 @@ import {SiloLiquidationLib} from "./lib/SiloLiquidationLib.sol";
 import {SiloLiquidationExecLib} from "./lib/SiloLiquidationExecLib.sol";
 import {LeverageReentrancyGuard} from "./utils/LeverageReentrancyGuard.sol";
 
-import {console} from "forge-std/console.sol";
-
 
 // Keep ERC4626 ordering
 // solhint-disable ordering
@@ -366,12 +364,12 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
     function convertToAssets(uint256 _shares, AssetType _assetType) external view virtual returns (uint256 assets) {
         (uint256 totalSiloAssets, uint256 totalShares) = _getTotalAssetsAndTotalSharesWithInterest(_assetType);
 
-        console.log("[convertToAssets] _shares", _shares);
-        console.log("[convertToAssets] totalSiloAssets", totalSiloAssets);
-        console.log("[convertToAssets] totalShares", totalShares);
-
         return SiloMathLib.convertToAssets(
-            _shares, totalSiloAssets, totalShares, _assetType == AssetType.Debt ? MathUpgradeable.Rounding.Up : MathUpgradeable.Rounding.Down, _assetType
+            _shares,
+            totalSiloAssets,
+            totalShares,
+            _assetType == AssetType.Debt ? MathUpgradeable.Rounding.Up : MathUpgradeable.Rounding.Down,
+            _assetType
         );
     }
 
@@ -595,9 +593,6 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
 
         (uint256 totalDebtAssets, uint256 totalDebtShares) =
             SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(debtConfig, AssetType.Debt);
-
-        console.log("[maxBorrow] totalDebtAssets", totalDebtAssets);
-//        console.log("[maxBorrow] getLiquidityAccrueInterest(AssetType.Collateral)", getLiquidityAccrueInterest(AssetType.Collateral));
 
         (maxAssets,) = SiloLendingLib.maxBorrow(
             collateralConfig,
@@ -1054,9 +1049,6 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
             config.getConfigs(address(this));
 
         _accrueInterest(debtConfig.interestRateModel, debtConfig.daoFee, debtConfig.deployerFee);
-
-        console.log("[_borrow] _total[AssetType.Debt].assets", _total[AssetType.Debt].assets);
-        console.log("[_borrow] _total[AssetType.Collateral].assets", _total[AssetType.Collateral].assets);
 
         (assets, shares) = SiloLendingLib.borrow(
             debtConfig,

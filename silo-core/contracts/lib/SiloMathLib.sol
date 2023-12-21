@@ -4,9 +4,6 @@ pragma solidity 0.8.21;
 import {MathUpgradeable} from "openzeppelin-contracts-upgradeable/utils/math/MathUpgradeable.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 
-import {console} from "forge-std/console.sol";
-
-
 library SiloMathLib {
     using MathUpgradeable for uint256;
 
@@ -205,25 +202,12 @@ library SiloMathLib {
         uint256 _configMaxLtv,
         uint256 _sumOfBorrowerCollateralValue,
         uint256 _borrowerDebtValue
-    ) internal view returns (uint256 maxBorrowValue) {
+    ) internal pure returns (uint256 maxBorrowValue) {
         if (_sumOfBorrowerCollateralValue == 0) {
             return 0;
         }
 
-        // if we want to calculate max without precision error, we need to move bar up (that's why +1)
-        // then the result will be smallest number that will allow to reach ltv+1, when we subtract 1 from it
-        // precision error will make max amount to fix exactly under our max LTV.
-//        unchecked { _configMaxLtv = _configMaxLtv + 1; } // _configMaxLtv is less than _PRECISION_DECIMALS
         uint256 maxDebtValue = _sumOfBorrowerCollateralValue * _configMaxLtv / _PRECISION_DECIMALS; // DOWN
-
-        console.log("[calculateMaxBorrowValue] %s * %s / %s", _sumOfBorrowerCollateralValue, _configMaxLtv, _PRECISION_DECIMALS);
-        console.log("[calculateMaxBorrowValue] maxDebtValue", maxDebtValue);
-//
-//        maxDebtValue = preciseDiv(_sumOfBorrowerCollateralValue, _configMaxLtv, _PRECISION_DECIMALS);
-//        console.log("[calculateMaxBorrowValue] maxDebtValue preceise!", maxDebtValue);
-//
-//        maxDebtValue = _sumOfBorrowerCollateralValue.mulDiv(_configMaxLtv, _PRECISION_DECIMALS, MathUpgradeable.Rounding.Up);
-//        console.log("[calculateMaxBorrowValue] maxDebtValue mulDiv!", maxDebtValue);
 
         unchecked {
             // we will not underflow because we checking `maxDebtValue > _borrowerDebtValue`

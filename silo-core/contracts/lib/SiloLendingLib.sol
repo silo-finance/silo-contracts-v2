@@ -17,8 +17,6 @@ import {SiloSolvencyLib} from "./SiloSolvencyLib.sol";
 import {SiloStdLib} from "./SiloStdLib.sol";
 import {SiloMathLib} from "./SiloMathLib.sol";
 
-import {console} from "forge-std/console.sol";
-
 library SiloLendingLib {
     using SafeERC20Upgradeable for IERC20Upgradeable;
     using MathUpgradeable for uint256;
@@ -62,9 +60,6 @@ library SiloLendingLib {
         IShareToken debtShareToken = IShareToken(_configData.debtShareToken);
         uint256 totalDebtAssets = _totalDebt.assets;
 
-        console.log("[borrow] _assets=", _assets);
-        console.log("[borrow] _shares=", _shares);
-
         (borrowedAssets, borrowedShares) = SiloMathLib.convertToAssetsAndToShares(
             _assets,
             _shares,
@@ -76,10 +71,6 @@ library SiloLendingLib {
         );
 
         if (borrowedShares == 0) revert ISilo.ZeroShares();
-
-        console.log("[borrow] borrowedAssets=", borrowedAssets);
-        console.log("[borrow] borrowedShares=", borrowedShares);
-        console.log("[borrow] SiloMathLib.liquidity(%s, %s)=",_totalCollateralAssets, totalDebtAssets, SiloMathLib.liquidity(_totalCollateralAssets, totalDebtAssets));
 
         if (borrowedAssets > SiloMathLib.liquidity(_totalCollateralAssets, totalDebtAssets)) {
             revert ISilo.NotEnoughLiquidity();
@@ -163,15 +154,10 @@ library SiloLendingLib {
             ISilo.AssetType.Debt
         );
 
-        console.log("[repay] shares", shares);
-        console.log("[repay] assets", assets);
-        console.log("[repay] totalDebtAssets", totalDebtAssets);
-
         if (shares == 0) revert ISilo.ZeroShares();
 
         // subtract repayment from debt
         _totalDebt.assets = totalDebtAssets - assets;
-        console.log("[repay] _totalDebt.assets ", _totalDebt.assets);
 
         // Anyone can repay anyone's debt so no approval check is needed. If hook receiver reenters then
         // no harm done because state changes are completed.
@@ -218,10 +204,6 @@ library SiloLendingLib {
         uint256 totalCollateralAssets = _totalCollateral.assets;
         uint256 totalDebtAssets = _totalDebt.assets;
 
-        console.log("[interest] _totalCollateral.assets", _totalCollateral.assets);
-        console.log("[interest] _totalDebt.assets", _totalDebt.assets);
-        console.log("[interest] totalFees", totalFees);
-
         (
             _totalCollateral.assets, _totalDebt.assets, totalFees, accruedInterest
         ) = SiloMathLib.getCollateralAmountsWithInterest(
@@ -235,11 +217,6 @@ library SiloLendingLib {
             _daoFee,
             _deployerFee
         );
-
-        console.log("[interest] _totalCollateral.assets >>", _totalCollateral.assets);
-        console.log("[interest] _totalDebt.assets >>", _totalDebt.assets);
-        console.log("[interest] totalFees >>", totalFees);
-        console.log("[interest] accruedInterest", accruedInterest);
 
         // update remaining contract state
         _siloData.interestRateTimestamp = uint64(block.timestamp);
@@ -276,7 +253,7 @@ library SiloLendingLib {
     /// @param _liquidityWithInterest liquidity for collateral asset
     /// @return assets The maximum amount in assets that can be borrowed
     /// @return shares The equivalent amount in shares for the maximum assets that can be borrowed
-    function maxBorrow(
+    function maxBorrow( // solhint-disable-line function-max-lines
         ISiloConfig.ConfigData memory _collateralConfig,
         ISiloConfig.ConfigData memory _debtConfig,
         address _borrower,
@@ -304,17 +281,11 @@ library SiloLendingLib {
         (uint256 sumOfBorrowerCollateralValue, uint256 borrowerDebtValue) =
             SiloSolvencyLib.getPositionValues(ltvData, _collateralConfig.token, _debtConfig.token);
 
-        console.log("[maxBorrow] _collateralConfig.maxLtv", _collateralConfig.maxLtv);
-        console.log("[maxBorrow] sumOfBorrowerCollateralValue", sumOfBorrowerCollateralValue);
-        console.log("[maxBorrow] borrowerDebtValue", borrowerDebtValue);
-
         uint256 maxBorrowValue = SiloMathLib.calculateMaxBorrowValue(
             _collateralConfig.maxLtv,
             sumOfBorrowerCollateralValue,
             borrowerDebtValue
         );
-
-        console.log("[maxBorrow] maxBorrowValue --- >>>> ", maxBorrowValue);
 
         (assets, shares) = maxBorrowValueToAssetsAndShares(
             maxBorrowValue,
@@ -327,23 +298,17 @@ library SiloLendingLib {
             _totalDebtShares
         );
 
-        console.log("[maxBorrow] maxBorrowValue -> assets ", assets);
-        console.log("[maxBorrow] maxBorrowValue -> shares ", shares);
-        console.log("[maxBorrow] maxBorrowValue -> _liquidityWithInterest ", _liquidityWithInterest);
-
         if (assets > _liquidityWithInterest) {
             assets = _liquidityWithInterest;
 
-            // for borrow to shares, we rounding Up, to "create more debt".
-            // But we already did that in maxBorrowValueToAssetsAndShares in below case, where is the same
+            // rounding must follow same flow as in `maxBorrowValueToAssetsAndShares()`
             shares = SiloMathLib.convertToShares(
-                 assets, _totalDebtAssets, _totalDebtShares, borrowerDebtValue == 0 ? MathUpgradeable.Rounding.Up : MathUpgradeable.Rounding.Down, ISilo.AssetType.Debt
-//                assets, _totalDebtAssets, _totalDebtShares, MathUpgradeable.Rounding.Up, ISilo.AssetType.Debt
+                 assets,
+                _totalDebtAssets,
+                _totalDebtShares,
+                borrowerDebtValue == 0 ? MathUpgradeable.Rounding.Up : MathUpgradeable.Rounding.Down,
+                ISilo.AssetType.Debt
             );
-
-            console.log("[maxBorrow] rounding ", borrowerDebtValue == 0 ? "Up" : "Down");
-            console.log("[maxBorrow] maxBorrowValue -> assets (limit) ", assets);
-            console.log("[maxBorrow] maxBorrowValue -> shares (limit) ", shares);
         }
     }
 
@@ -398,39 +363,21 @@ library SiloLendingLib {
                 ? oneDebtToken
                 : _debtOracle.quote(oneDebtToken, _debtToken);
 
-            assets = _maxBorrowValue * _PRECISION_DECIMALS / oneDebtTokenValue; // TODO apply rounding?
+            assets = _maxBorrowValue * _PRECISION_DECIMALS / oneDebtTokenValue;
 
             shares = SiloMathLib.convertToShares(
                 assets, _totalDebtAssets, _totalDebtShares, MathUpgradeable.Rounding.Up, ISilo.AssetType.Debt
             );
         } else {
             uint256 shareBalance = IShareToken(_debtShareToken).balanceOf(_borrower);
-            console.log("[maxBorrowValueToAssetsAndShares] _maxBorrowValue", _maxBorrowValue);
-            console.log("[maxBorrowValueToAssetsAndShares] shareBalance", shareBalance);
-            console.log("[maxBorrowValueToAssetsAndShares] _borrowerDebtValue", _borrowerDebtValue);
 
             // on LTV calculation, we taking debt value, and we round UP when we calculating shares
             // so here, when we want to calculate shares from value, we need to round down.
             shares = _maxBorrowValue * shareBalance / _borrowerDebtValue; // by default rounding DOWN
-            console.log("[maxBorrowValueToAssetsAndShares] shares", shares);
-
-
-//            shares = _maxBorrowValue.mulDiv(shareBalance, _borrowerDebtValue, MathUpgradeable.Rounding.Up);
-//            console.log("[maxBorrowValueToAssetsAndShares] shares UP", shares);
-//            shares = SiloMathLib.preciseDiv(_maxBorrowValue, shareBalance, _borrowerDebtValue);
-//            console.log("[maxBorrowValueToAssetsAndShares] shares precise!", shares);
-//
-//            shares = _maxBorrowValue.mulDiv(shareBalance, _borrowerDebtValue, MathUpgradeable.Rounding.Down);
-//            console.log("[maxBorrowValueToAssetsAndShares] shares mulDiv!", shares);
-//
-//            console.log("%s * %s / %s", _maxBorrowValue, shareBalance, _borrowerDebtValue);
-
 
             assets = SiloMathLib.convertToAssets(
                 shares, _totalDebtAssets, _totalDebtShares, MathUpgradeable.Rounding.Down, ISilo.AssetType.Debt
             );
-            console.log("[maxBorrowValueToAssetsAndShares] assets", assets);
-
         }
     }
 }
