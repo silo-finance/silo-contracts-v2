@@ -174,8 +174,7 @@ contract MaxBorrowTest is SiloLittleHelper, Test {
         assertGt(maxBorrow, 0, "we can borrow again after repay");
 
         _assertWeCanNotBorrowAboveMax(maxBorrow, 2);
-
-        _assertMaxBorrowIsZeroAtTheEnd();
+        _assertMaxBorrowIsZeroAtTheEnd(1);
     }
 
     function _assertWeCanNotBorrowAboveMax(uint256 _maxBorrow) internal {
@@ -224,15 +223,15 @@ contract MaxBorrowTest is SiloLittleHelper, Test {
         _assertMaxBorrowIsZeroAtTheEnd(0);
     }
 
-    function _assertMaxBorrowIsZeroAtTheEnd(uint256 _precision) internal {
-        emit log_named_uint("=================== _assertMaxBorrowIsZeroAtTheEnd =================== +/-", _precision);
+    function _assertMaxBorrowIsZeroAtTheEnd(uint256 _underestimatedBy) internal {
+        emit log_named_uint("================ _assertMaxBorrowIsZeroAtTheEnd ================ +/-", _underestimatedBy);
 
         uint256 maxBorrow = silo1.maxBorrow(borrower);
 
         assertLe(
             maxBorrow,
-            _precision,
-            string.concat("at this point max should return 0 +/-", string(abi.encodePacked(_precision)))
+            _underestimatedBy,
+            string.concat("at this point max should return 0 +/-", string(abi.encodePacked(_underestimatedBy)))
         );
     }
 }
