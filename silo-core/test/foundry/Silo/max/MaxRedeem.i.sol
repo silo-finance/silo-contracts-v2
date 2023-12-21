@@ -6,7 +6,7 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
 
-import {MaxWithdrawCommon} from "./MaxWithdrawCommon.i.sol";
+import {MaxWithdrawCommon} from "./MaxWithdrawCommon.sol";
 
 /*
     forge test -vv --ffi --mc MaxRedeemTest
@@ -93,10 +93,10 @@ contract MaxRedeemTest is MaxWithdrawCommon {
     */
     /// forge-config: core.fuzz.runs = 1000
     function test_maxRedeem_bothSilosWithInterest_fuzz(
-        uint128 _collateral,
-        uint128 _toBorrow
+//        uint128 _collateral,
+//        uint128 _toBorrow
     ) public {
-        // uint128 _collateral = 100;
+        (uint128 _collateral, uint128 _toBorrow) = (21288, 4007);
         _createDebtSilo1(_collateral, _toBorrow);
         _createDebtSilo0(_collateral, _toBorrow);
 

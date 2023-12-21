@@ -5,7 +5,7 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
 
-import {MaxWithdrawCommon} from "./MaxWithdrawCommon.i.sol";
+import {MaxWithdrawCommon} from "./MaxWithdrawCommon.sol";
 
 /*
     forge test -vv --ffi --mc MaxWithdrawTest
