@@ -27,7 +27,6 @@ import {SiloLiquidationLib} from "./lib/SiloLiquidationLib.sol";
 import {SiloLiquidationExecLib} from "./lib/SiloLiquidationExecLib.sol";
 import {LeverageReentrancyGuard} from "./utils/LeverageReentrancyGuard.sol";
 
-
 // Keep ERC4626 ordering
 // solhint-disable ordering
 

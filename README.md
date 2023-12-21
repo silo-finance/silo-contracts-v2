@@ -143,7 +143,8 @@ genhtml -o coverage/silo-oracles/ lcov.info
 - to shares: Up
 - to assets: Down
 
-### Debt
+### Repay
 - to assets: Up
+- to shares: Down
 
 
