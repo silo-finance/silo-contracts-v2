@@ -372,13 +372,13 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
     }
 
     /// @inheritdoc ISilo
-    function maxDeposit(address _receiver, AssetType /* _assetType */ )
+    function maxDeposit(address _receiver, AssetType _assetType)
         external
         view
         virtual
         returns (uint256 maxAssets)
     {
-        return SiloERC4626Lib.maxDepositOrMint(config, _receiver, _total[AssetType.Collateral].assets);
+        return SiloERC4626Lib.maxDepositOrMint(config, _receiver, _total[_assetType].assets);
     }
 
     /// @inheritdoc ISilo
