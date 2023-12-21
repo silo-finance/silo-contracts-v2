@@ -12,7 +12,7 @@ import {MintableToken} from "../../_common/MintableToken.sol";
 import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
 
 /*
-    forge test -vv --ffi --mc MaxRepayTest
+    forge test -vv --ffi --mc MaxRepaySharesTest
 */
 contract MaxRepaySharesTest is SiloLittleHelper, Test {
     uint256 internal constant _REAL_ASSETS_LIMIT = type(uint128).max;
@@ -82,9 +82,9 @@ contract MaxRepaySharesTest is SiloLittleHelper, Test {
         _depositForBorrow(_collateral, depositor);
         _deposit(_collateral, borrower);
 
-        _ensureBorrowerHasDebt();
+        shares = _borrow(_toBorrow, borrower);
 
-        return _borrow(_toBorrow, borrower);
+        _ensureBorrowerHasDebt();
     }
 
     function _ensureBorrowerHasDebt() internal {
