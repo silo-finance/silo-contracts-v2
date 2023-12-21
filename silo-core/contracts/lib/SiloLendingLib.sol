@@ -337,8 +337,8 @@ library SiloLendingLib {
             // for borrow to shares, we rounding Up, to "create more debt".
             // But we already did that in maxBorrowValueToAssetsAndShares in below case, where is the same
             shares = SiloMathLib.convertToShares(
-                // assets, _totalDebtAssets, _totalDebtShares, borrowerDebtValue == 0 ? MathUpgradeable.Rounding.Up : MathUpgradeable.Rounding.Down, ISilo.AssetType.Debt
-                assets, _totalDebtAssets, _totalDebtShares, MathUpgradeable.Rounding.Up, ISilo.AssetType.Debt
+                 assets, _totalDebtAssets, _totalDebtShares, borrowerDebtValue == 0 ? MathUpgradeable.Rounding.Up : MathUpgradeable.Rounding.Down, ISilo.AssetType.Debt
+//                assets, _totalDebtAssets, _totalDebtShares, MathUpgradeable.Rounding.Up, ISilo.AssetType.Debt
             );
 
             console.log("[maxBorrow] rounding ", borrowerDebtValue == 0 ? "Up" : "Down");
