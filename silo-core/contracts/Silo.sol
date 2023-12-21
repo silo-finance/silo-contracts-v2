@@ -75,17 +75,16 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
         });
     }
 
-    /// @inheritdoc ISilo
     function getLiquidity() public view virtual returns (uint256 liquidity) {
-        liquidity = SiloMathLib.liquidity(_total[AssetType.Collateral].assets, _total[AssetType.Debt].assets);
+        return SiloLendingLib.getLiquidity(config);
     }
 
-    function getLiquidityAccrueInterest(AssetType _assetType) public view virtual returns (uint256 liquidity) {
+    function getLiquidity(AssetType _assetType) public view virtual returns (uint256 liquidity) {
         if (_assetType == AssetType.Debt) revert WrongAssetType();
 
         liquidity = _assetType == AssetType.Protected
             ? _total[AssetType.Protected].assets
-            : SiloLendingLib.getLiquidityAccrueInterest(config);
+            : SiloLendingLib.getLiquidity(config);
     }
 
     /// @inheritdoc ISilo
@@ -290,7 +289,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
             _owner,
             AssetType.Collateral,
             _total[AssetType.Collateral].assets,
-            getLiquidityAccrueInterest(AssetType.Collateral)
+            getLiquidity(AssetType.Collateral)
         );
     }
 
@@ -322,7 +321,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
             _owner,
             AssetType.Collateral,
             _total[AssetType.Collateral].assets,
-            getLiquidityAccrueInterest(AssetType.Collateral)
+            getLiquidity(AssetType.Collateral)
         );
     }
 
@@ -469,7 +468,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
     /// @inheritdoc ISilo
     function maxWithdraw(address _owner, AssetType _assetType) external view virtual returns (uint256 maxAssets) {
         (maxAssets,) = SiloERC4626Lib.maxWithdraw(
-            config, _owner, _assetType, _total[_assetType].assets, getLiquidityAccrueInterest(_assetType)
+            config, _owner, _assetType, _total[_assetType].assets, getLiquidity(_assetType)
         );
     }
 
@@ -498,7 +497,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
     /// @inheritdoc ISilo
     function maxRedeem(address _owner, AssetType _assetType) external view virtual returns (uint256 maxShares) {
         (, maxShares) = SiloERC4626Lib.maxWithdraw(
-            config, _owner, _assetType, _total[_assetType].assets, getLiquidityAccrueInterest(_assetType)
+            config, _owner, _assetType, _total[_assetType].assets, getLiquidity(_assetType)
         );
     }
 
@@ -544,7 +543,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
 
         { // Stack too deep
             (address shareTokenFrom, uint256 liquidity) = _withdrawType == AssetType.Collateral
-                ? (configData.collateralShareToken, getLiquidity())
+                ? (configData.collateralShareToken, _getRawLiquidity())
                 : (configData.protectedShareToken, _total[AssetType.Protected].assets);
 
             (assets, _shares) = SiloERC4626Lib.transitionCollateralWithdraw(
@@ -599,7 +598,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
             _borrower,
             totalDebtAssets,
             totalDebtShares,
-            getLiquidityAccrueInterest(AssetType.Collateral)
+            getLiquidity(AssetType.Collateral)
         );
     }
 
@@ -641,7 +640,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
             _borrower,
             totalSiloAssets,
             totalShares,
-            getLiquidityAccrueInterest(AssetType.Collateral)
+            getLiquidity(AssetType.Collateral)
         );
     }
 
@@ -880,7 +879,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
             _borrower,
             _liquidator,
             _receiveSToken,
-            getLiquidity(),
+            _getRawLiquidity(),
             _total
         );
     }
@@ -925,6 +924,10 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
             _total[AssetType.Collateral],
             _total[AssetType.Debt]
         );
+    }
+
+    function _getRawLiquidity() internal view virtual returns (uint256 liquidity) {
+        liquidity = SiloMathLib.liquidity(_total[AssetType.Collateral].assets, _total[AssetType.Debt].assets);
     }
 
     function _deposit(
@@ -992,7 +995,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
                 _owner,
                 _spender,
                 _assetType,
-                getLiquidity(),
+                _getRawLiquidity(),
                 _total[AssetType.Collateral]
             );
         } else {

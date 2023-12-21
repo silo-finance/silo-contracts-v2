@@ -143,15 +143,14 @@ interface ISilo is IERC4626, IERC3156FlashLender, ISiloLiquidation {
     /// @notice Fetches the utilization data of the silo used by IRM
     function utilizationData() external view returns (UtilizationData memory utilizationData);
 
-    /// @notice Fetches the liquidity in the silo, it does not include interest, so real liquidity will be smaller
+    /// @notice Fetches the real (available to borrow) liquidity in the silo, it does include interest
     /// @return liquidity The amount of liquidity
     function getLiquidity() external view returns (uint256 liquidity);
 
-    /// @notice Fetches the real (available to borrow) liquidity in the silo, it does include interest
-
+    /// @notice Fetches the liquidity in the silo for specified asset type, it does include interest
     /// @param _assetType Collateral or Protected asset
     /// @return liquidity The amount of available liquidity
-    function getLiquidityAccrueInterest(AssetType _assetType) external view returns (uint256 liquidity);
+    function getLiquidity(AssetType _assetType) external view returns (uint256 liquidity);
 
     /// @notice Determines if a borrower is solvent
     /// @param _borrower Address of the borrower to check for solvency

@@ -226,7 +226,7 @@ library SiloLendingLib {
         unchecked { _siloData.daoAndDeployerFees += uint192(totalFees); }
     }
 
-    function getLiquidityAccrueInterest(ISiloConfig _config) external view returns (uint256 liquidity) {
+    function getLiquidity(ISiloConfig _config) external view returns (uint256 liquidity) {
         ISiloConfig.ConfigData memory config = _config.getConfig(address(this));
 
         uint256 totalCollateralAssets = SiloStdLib.getTotalCollateralAssetsWithInterest(

@@ -188,7 +188,7 @@ contract MaxBorrowTest is SiloLittleHelper, Test {
         uint256 toBorrow;
         string memory revertError;
 
-        uint256 liquidity = silo1.getLiquidityAccrueInterest(ISilo.AssetType.Collateral);
+        uint256 liquidity = silo1.getLiquidity();
 
         if (_maxBorrow == liquidity) {
             emit log_string("max is cap by liquidity");
