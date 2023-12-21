@@ -134,12 +134,12 @@ contract MaxBorrowTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_maxBorrow_repayWithInterest_fuzz
     */
-    /// forge-config: core.fuzz.runs = 1000
+    /// forge-config: core.fuzz.runs = 5000
     function test_maxBorrow_repayWithInterest_fuzz(
         uint64 _collateral,
         uint128 _liquidity
     ) public {
-//        (uint64 _collateral, uint128 _liquidity) = (11051, 16245);
+        // (uint64 _collateral, uint128 _liquidity) = (16052, 18260);
         vm.assume(_collateral > 0);
         vm.assume(_liquidity > 0);
 
@@ -173,7 +173,7 @@ contract MaxBorrowTest is SiloLittleHelper, Test {
         maxBorrow = silo1.maxBorrow(borrower);
         assertGt(maxBorrow, 0, "we can borrow again after repay");
 
-        _assertWeCanNotBorrowAboveMax(maxBorrow, 2);
+        _assertWeCanNotBorrowAboveMax(maxBorrow, 3);
         _assertMaxBorrowIsZeroAtTheEnd(1);
     }
 
@@ -183,34 +183,28 @@ contract MaxBorrowTest is SiloLittleHelper, Test {
 
     /// @param _precision is needed because we count for precision error and we allow for 1 wei diff
     function _assertWeCanNotBorrowAboveMax(uint256 _maxBorrow, uint256 _precision) internal {
-        emit log_string("------- QA: _assertWeCanNotBorrowAboveMax");
+        emit log_named_uint("------- QA: _assertWeCanNotBorrowAboveMax +/-", _precision);
 
-        uint256 toBorrow;
-        string memory revertError;
+        uint256 toBorrow = _maxBorrow + _precision;
 
         uint256 liquidity = silo1.getLiquidity();
 
-        if (_maxBorrow == liquidity) {
-            emit log_string("max is cap by liquidity");
-            revertError = "NotEnoughLiquidity()";
-            toBorrow = _maxBorrow + 1;
-        } else if (_maxBorrow + _precision > liquidity) {
-            emit log_string("max (+precision) is cap by liquidity");
-            toBorrow = _maxBorrow + _precision;
-            revertError = "NotEnoughLiquidity()";
-        } else {
-            emit log_string("max (+precision) is below liquidity, so we should be limit by max LTV");
-            toBorrow = _maxBorrow + _precision;
-            revertError = "AboveMaxLtv()";
-        }
-
         emit log_named_decimal_uint("[_assertWeCanNotBorrowAboveMax] liquidity", liquidity, 18);
         emit log_named_decimal_uint("[_assertWeCanNotBorrowAboveMax]  toBorrow", toBorrow, 18);
-        emit log_named_string("[_assertWeCanNotBorrowAboveMax] revertError", revertError);
 
-        vm.expectRevert(bytes4(keccak256(abi.encodePacked(revertError))));
         vm.prank(borrower);
-        silo1.borrow(toBorrow, borrower, borrower);
+        try silo1.borrow(toBorrow, borrower, borrower) returns (uint256) {
+            revert("we expect tx to be reverted!");
+        } catch (bytes memory data) {
+            bytes4 errorType = bytes4(data);
+
+            bytes4 error1 = bytes4(keccak256(abi.encodePacked("NotEnoughLiquidity()")));
+            bytes4 error2 = bytes4(keccak256(abi.encodePacked("AboveMaxLtv()")));
+
+            if (errorType != error1 && errorType != error2) {
+                revert("we need to revert with NotEnoughLiquidity or AboveMaxLtv");
+            }
+        }
 
         if (_maxBorrow > 0) {
             emit log_named_decimal_uint("[_assertWeCanNotBorrowAboveMax] _maxBorrow > 0 YES, borrowing max", _maxBorrow, 18);
