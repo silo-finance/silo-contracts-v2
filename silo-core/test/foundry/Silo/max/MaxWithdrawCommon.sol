@@ -35,12 +35,12 @@ contract MaxWithdrawCommon is SiloLittleHelper, Test {
         uint256 assets = _toBorrow > maxBorrow ? maxBorrow : _toBorrow;
         _borrow(assets, borrower);
 
-        emit log_named_uint("[_createDebt] _collateral", _collateral);
-        emit log_named_uint("[_createDebt] maxBorrow", maxBorrow);
-        emit log_named_uint("[_createDebt] _toBorrow", _toBorrow);
-        emit log_named_uint("[_createDebt] borrowed", assets);
+        emit log_named_uint("[_createDebtSilo1] _collateral", _collateral);
+        emit log_named_uint("[_createDebtSilo1] maxBorrow", maxBorrow);
+        emit log_named_uint("[_createDebtSilo1] _toBorrow", _toBorrow);
+        emit log_named_uint("[_createDebtSilo1] borrowed", assets);
 
-        emit log_named_decimal_uint("LTV after borrow", silo1.getLtv(borrower), 16);
+        emit log_named_decimal_uint("[_createDebtSilo1] LTV after borrow", silo1.getLtv(borrower), 16);
         assertEq(silo0.getLtv(borrower), silo1.getLtv(borrower), "LTV should be the same on both silos");
 
         _ensureBorrowerHasDebt(silo1, borrower);
@@ -61,12 +61,12 @@ contract MaxWithdrawCommon is SiloLittleHelper, Test {
         vm.prank(otherBorrower);
         silo0.borrow(assets, otherBorrower, otherBorrower);
 
-        emit log_named_uint("[_createDebt] _collateral", _collateral);
-        emit log_named_uint("[_createDebt] maxBorrow", maxBorrow);
-        emit log_named_uint("[_createDebt] _toBorrow", _toBorrow);
-        emit log_named_uint("[_createDebt] borrowed", assets);
+        emit log_named_uint("[_createDebtSilo0] _collateral", _collateral);
+        emit log_named_uint("[_createDebtSilo0] maxBorrow", maxBorrow);
+        emit log_named_uint("[_createDebtSilo0] _toBorrow", _toBorrow);
+        emit log_named_uint("[_createDebtSilo0] borrowed", assets);
 
-        emit log_named_decimal_uint("LTV after borrow", silo0.getLtv(otherBorrower), 16);
+        emit log_named_decimal_uint("[_createDebtSilo0] LTV after borrow", silo0.getLtv(otherBorrower), 16);
         assertEq(silo0.getLtv(otherBorrower), silo1.getLtv(otherBorrower), "LTV should be the same on both silos");
 
         _ensureBorrowerHasDebt(silo0, otherBorrower);
