@@ -213,12 +213,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
 
     /// @inheritdoc IERC4626
     function previewDeposit(uint256 _assets) external view virtual returns (uint256 shares) {
-        (uint256 totalSiloAssets, uint256 totalShares) =
-            _getTotalAssetsAndTotalSharesWithInterest(AssetType.Collateral);
-
-        return SiloMathLib.convertToShares(
-            _assets, totalSiloAssets, totalShares, MathUpgradeable.Rounding.Down, AssetType.Collateral
-        );
+        return _previewDeposit(_assets, AssetType.Collateral);
     }
 
     /// @inheritdoc IERC4626
@@ -251,12 +246,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
 
     /// @inheritdoc IERC4626
     function previewMint(uint256 _shares) external view virtual returns (uint256 assets) {
-        (uint256 totalSiloAssets, uint256 totalShares) =
-            _getTotalAssetsAndTotalSharesWithInterest(AssetType.Collateral);
-
-        return SiloMathLib.convertToAssets(
-            _shares, totalSiloAssets, totalShares, MathUpgradeable.Rounding.Up, AssetType.Collateral
-        );
+        return _previewMint(_shares, AssetType.Collateral);
     }
 
     /// @inheritdoc IERC4626
@@ -369,13 +359,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
 
     /// @inheritdoc ISilo
     function previewDeposit(uint256 _assets, AssetType _assetType) external view virtual returns (uint256 shares) {
-        if (_assetType == AssetType.Debt) revert ISilo.WrongAssetType();
-
-        (uint256 totalSiloAssets, uint256 totalShares) = _getTotalAssetsAndTotalSharesWithInterest(_assetType);
-
-        return SiloMathLib.convertToShares(
-            _assets, totalSiloAssets, totalShares, MathUpgradeable.Rounding.Down, AssetType.Collateral
-        );
+        return _previewDeposit(_assets, _assetType);
     }
 
     /// @inheritdoc ISilo
@@ -421,13 +405,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
 
     /// @inheritdoc ISilo
     function previewMint(uint256 _shares, AssetType _assetType) external view virtual returns (uint256 assets) {
-        if (_assetType == AssetType.Debt) revert ISilo.WrongAssetType();
-
-        (uint256 totalSiloAssets, uint256 totalShares) = _getTotalAssetsAndTotalSharesWithInterest(_assetType);
-
-        return SiloMathLib.convertToAssets(
-            _shares, totalSiloAssets, totalShares, MathUpgradeable.Rounding.Up, _assetType
-        );
+        return _previewMint(_shares, _assetType);
     }
 
     /// @inheritdoc ISilo
@@ -1117,6 +1095,26 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
         if (!SiloSolvencyLib.validConfigOrder(collateralConfig.debtShareToken, debtConfig.debtShareToken, _borrower)) {
             (collateralConfig, debtConfig) = (debtConfig, collateralConfig);
         }
+    }
+
+    function _previewMint(uint256 _shares, AssetType _assetType) internal view virtual returns (uint256 assets) {
+        if (_assetType == AssetType.Debt) revert ISilo.WrongAssetType();
+
+        (uint256 totalSiloAssets, uint256 totalShares) = _getTotalAssetsAndTotalSharesWithInterest(_assetType);
+
+        return SiloMathLib.convertToAssets(
+            _shares, totalSiloAssets, totalShares, MathUpgradeable.Rounding.Up, _assetType
+        );
+    }
+
+    function _previewDeposit(uint256 _assets, AssetType _assetType) internal view virtual returns (uint256 shares) {
+        if (_assetType == AssetType.Debt) revert ISilo.WrongAssetType();
+
+        (uint256 totalSiloAssets, uint256 totalShares) = _getTotalAssetsAndTotalSharesWithInterest(_assetType);
+
+        return SiloMathLib.convertToShares(
+            _assets, totalSiloAssets, totalShares, MathUpgradeable.Rounding.Down, _assetType
+        );
     }
 
     function _previewRedeem(
