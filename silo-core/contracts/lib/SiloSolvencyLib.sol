@@ -11,6 +11,8 @@ import {SiloLiquidationLib} from "./SiloLiquidationLib.sol";
 import {SiloMathLib} from "./SiloMathLib.sol";
 
 library SiloSolvencyLib {
+    using MathUpgradeable for uint256;
+
     struct LtvData {
         ISiloOracle collateralOracle;
         ISiloOracle debtOracle;
@@ -98,7 +100,9 @@ library SiloSolvencyLib {
         } else if (sumOfBorrowerCollateralValue == 0) {
             ltvInDp = _INFINITY;
         } else {
-            ltvInDp = totalBorrowerDebtValue * _PRECISION_DECIMALS / sumOfBorrowerCollateralValue;
+            ltvInDp = totalBorrowerDebtValue.mulDiv(
+                _PRECISION_DECIMALS, sumOfBorrowerCollateralValue, MathUpgradeable.Rounding.Up
+            );
         }
     }
 
@@ -164,6 +168,7 @@ library SiloSolvencyLib {
             ? SiloStdLib.getTotalDebtAssetsWithInterest(_debtConfig.silo, _debtConfig.interestRateModel)
             : ISilo(_debtConfig.silo).getDebtAssets();
 
+        // BORROW value -> to assets -> UP
         ltvData.borrowerDebtAssets = SiloMathLib.convertToAssets(
             shares, totalDebtAssets, totalShares, MathUpgradeable.Rounding.Up, ISilo.AssetType.Debt
         );
