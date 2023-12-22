@@ -25,7 +25,6 @@ import {SiloERC4626Lib} from "./lib/SiloERC4626Lib.sol";
 import {SiloMathLib} from "./lib/SiloMathLib.sol";
 import {SiloLiquidationLib} from "./lib/SiloLiquidationLib.sol";
 import {SiloLiquidationExecLib} from "./lib/SiloLiquidationExecLib.sol";
-import {LeverageReentrancyGuard} from "./utils/LeverageReentrancyGuard.sol";
 
 // Keep ERC4626 ordering
 // solhint-disable ordering
@@ -34,7 +33,7 @@ import {LeverageReentrancyGuard} from "./utils/LeverageReentrancyGuard.sol";
 /// @notice Silo is a ERC4626-compatible vault that allows users to deposit collateral and borrow debt. This contract
 /// is deployed twice for each asset for two-asset lending markets.
 /// Version: 2.0.0
-contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, LeverageReentrancyGuard {
+contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
     using SafeERC20Upgradeable for IERC20Upgradeable;
 
     bytes32 internal constant _LEVERAGE_CALLBACK = keccak256("ILeverageBorrower.onLeverage");
@@ -58,7 +57,6 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
     /// @inheritdoc ISilo
     function initialize(ISiloConfig _siloConfig, address _modelConfigAddress) external virtual initializer {
         __ReentrancyGuard_init();
-        __LeverageReentrancyGuard_init();
 
         config = _siloConfig;
 
@@ -226,7 +224,6 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
         external
         virtual
         nonReentrant
-        leverageNonReentrant
         returns (uint256 shares)
     {
         if (_assets == 0) revert ISilo.ZeroAssets();
@@ -302,7 +299,6 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
         external
         virtual
         nonReentrant
-        leverageNonReentrant
         returns (uint256 shares)
     {
         (, shares) = _withdraw(_assets, 0 /* shares */, _receiver, _owner, msg.sender, AssetType.Collateral);
@@ -336,7 +332,6 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
         external
         virtual
         nonReentrant
-        leverageNonReentrant
         returns (uint256 assets)
     {
         // avoid magic number 0
@@ -499,7 +494,6 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
         external
         virtual
         nonReentrant
-        leverageNonReentrant
         returns (uint256 shares)
     {
         (, shares) = _withdraw(_assets, 0 /* shares */, _receiver, _owner, msg.sender, _assetType);
@@ -538,7 +532,6 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
         external
         virtual
         nonReentrant
-        leverageNonReentrant
         returns (uint256 assets)
     {
         (assets,) = _withdraw(0 /* assets */, _shares, _receiver, _owner, msg.sender, _assetType);
@@ -553,7 +546,6 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
         external
         virtual
         nonReentrant
-        leverageNonReentrant
         returns (uint256 assets)
     {
         if (_withdrawType == AssetType.Debt) revert ISilo.WrongAssetType();
@@ -639,7 +631,6 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
         external
         virtual
         nonReentrant
-        leverageNonReentrant
         returns (uint256 shares)
     {
         // avoid magic number 0
@@ -683,7 +674,6 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
         external
         virtual
         nonReentrant
-        leverageNonReentrant
         returns (uint256 assets)
     {
         // avoid magic number 0
@@ -719,7 +709,6 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
         external
         virtual
         nonReentrant
-        leverageNonReentrant
         returns (uint256 shares)
     {
         // avoid magic number 0
@@ -748,7 +737,6 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
         external
         virtual
         nonReentrant
-        leverageNonReentrant
         returns (uint256 assets)
     {
         // avoid magic number 0
@@ -772,7 +760,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
     function flashLoan(IERC3156FlashBorrower _receiver, address _token, uint256 _amount, bytes calldata _data)
         external
         virtual
-        leverageNonReentrant
+        nonReentrant
         returns (bool success)
     {
         return SiloLendingLib.flashLoan(config, siloData, _receiver, _token, _amount, _data);
@@ -782,7 +770,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
     function leverage(uint256 _assets, ILeverageBorrower _receiver, address _borrower, bytes calldata _data)
         external
         virtual
-        leverageNonReentrant
+        nonReentrant
         returns (uint256 shares)
     {
         // config for this Silo is always at index 0
@@ -846,7 +834,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable, Leverag
         address _borrower,
         uint256 _debtToCover,
         bool _receiveSToken
-    ) external virtual leverageNonReentrant {
+    ) external virtual nonReentrant {
         (ISiloConfig.ConfigData memory debtConfig, ISiloConfig.ConfigData memory collateralConfig) =
             config.getConfigs(address(this));
 

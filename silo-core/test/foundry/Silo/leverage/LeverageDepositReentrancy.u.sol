@@ -3,7 +3,6 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
 
-import {LeverageReentrancyGuard} from "silo-core/contracts/utils/LeverageReentrancyGuard.sol";
 import {SiloLeverageNonReentrant} from "silo-core/test/foundry/_mocks/SiloLeverageNonReentrant.sol";
 import {ISiloFactory} from "silo-core/contracts/interfaces/ISiloFactory.sol";
 import {ILeverageBorrower} from "silo-core/contracts/interfaces/ILeverageBorrower.sol";
@@ -19,7 +18,7 @@ contract LeverageDepositReentrancy is Test {
     function testLeverageReentrancyCallOnDeposit() public {
         bytes memory data;
 
-        vm.expectRevert(abi.encodePacked(LeverageReentrancyGuard.LeverageReentrancyCall.selector));
+        vm.expectRevert(abi.encodePacked("ReentrancyGuard: reentrant call"));
         // Inputs don't matter. We only need to activate/verify reentrancy protection.
         _silo.leverage(
             0, // _assets

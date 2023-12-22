@@ -12,7 +12,6 @@ import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {IInterestRateModel} from "silo-core/contracts/interfaces/IInterestRateModel.sol";
 import {IERC3156FlashBorrower} from "silo-core/contracts/interfaces/IERC3156FlashBorrower.sol";
 import {Silo, ILeverageBorrower} from "silo-core/contracts/Silo.sol";
-import {LeverageReentrancyGuard} from "silo-core/contracts/utils/LeverageReentrancyGuard.sol";
 
 import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
 import {MintableToken} from "../_common/MintableToken.sol";
@@ -158,7 +157,7 @@ contract FlashloanTest is SiloLittleHelper, Test {
 
         (uint256 daoAndDeployerFeesBefore,) = silo0.siloData();
 
-        vm.expectRevert(LeverageReentrancyGuard.LeverageReentrancyCall.selector);
+        vm.expectRevert("ReentrancyGuard: reentrant call");
         silo0.flashLoan(receiver, address(token0), amount, abi.encodePacked(_data));
 
         (uint256 daoAndDeployerFeesAfter,) = silo0.siloData();
