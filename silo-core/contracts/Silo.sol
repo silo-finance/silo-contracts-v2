@@ -760,7 +760,6 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
     function flashLoan(IERC3156FlashBorrower _receiver, address _token, uint256 _amount, bytes calldata _data)
         external
         virtual
-        nonReentrant
         returns (bool success)
     {
         return SiloLendingLib.flashLoan(config, siloData, _receiver, _token, _amount, _data);
