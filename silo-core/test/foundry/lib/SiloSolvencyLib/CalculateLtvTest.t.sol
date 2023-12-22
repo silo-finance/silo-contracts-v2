@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.0;
 
+import {MathUpgradeable} from "openzeppelin-contracts-upgradeable/utils/math/MathUpgradeable.sol";
+
 import "forge-std/Test.sol";
 import "silo-core/contracts/lib/SiloSolvencyLib.sol";
 
@@ -79,7 +81,7 @@ contract CalculateLtvTest is Test, OraclesHelper {
         } else if (sumOfCollateralAssets == 0) {
             expectedLtv = SiloSolvencyLib._INFINITY;
         } else {
-            expectedLtv = _debtAssets * DECIMALS_POINTS / sumOfCollateralAssets;
+            expectedLtv = MathUpgradeable.mulDiv(_debtAssets, DECIMALS_POINTS, sumOfCollateralAssets, MathUpgradeable.Rounding.Up);
         }
 
         assertEq(ltv, expectedLtv, "ltv");
@@ -109,6 +111,10 @@ contract CalculateLtvTest is Test, OraclesHelper {
 
         (,, uint256 ltv) = SiloSolvencyLib.calculateLtv(ltvData, COLLATERAL_ASSET, DEBT_ASSET);
 
-        assertEq(ltv, 1111 * DECIMALS_POINTS / 9999, "constant values, constant ltv");
+        assertEq(
+            ltv,
+            MathUpgradeable.mulDiv(1111, DECIMALS_POINTS, 9999, MathUpgradeable.Rounding.Up),
+            "constant values, constant ltv"
+        );
     }
 }
