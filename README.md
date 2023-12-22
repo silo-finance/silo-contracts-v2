@@ -128,3 +128,23 @@ rm lcov.info
 FOUNDRY_PROFILE=oracles forge coverage --report summary --report lcov | grep -i 'silo-oracles/contracts/' > coverage/silo-oracles.txt
 genhtml -o coverage/silo-oracles/ lcov.info
 ```
+
+## Rounding policy
+
+### Deposit (including preview, max and mint)
+- to assets: Up
+- to shares: Down
+
+### Borrow (including preview and max)
+- to assets: Down
+- to shares: Up
+
+### Withdraw
+- to shares: Up
+- to assets: Down
+
+### Repay
+- to assets: Up
+- to shares: Down
+
+

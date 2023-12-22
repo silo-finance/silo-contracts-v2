@@ -20,18 +20,27 @@ library SiloERC4626Lib {
     uint256 internal constant _PRECISION_DECIMALS = 1e18;
 
     /// @dev ERC4626: MUST return 2 ** 256 - 1 if there is no limit on the maximum amount of assets that may be
-    ///      deposited.
-    uint256 internal constant _NO_DEPOSIT_LIMIT = type(uint256).max;
+    ///      deposited. In our case, we want to limit this value in a way, that after max deposit we can do borrow.
+    ///      That's why we decided to go with type(uint128).max - which is anyway high enough to consume any totalSupply
+    uint256 internal constant _VIRTUAL_DEPOSIT_LIMIT = type(uint128).max;
 
     error ZeroShares();
 
-    /// @notice Determines the maximum amount a user can deposit or mint
-    /// @dev The function checks if deposit is possible for the given user, and if so, returns a constant
+    /// @notice Determines the maximum amount of collateral a user can deposit
+    /// This function is estimation to reduce gas usage. In theory, if silo total assets will be close to virtual limit
+    /// and returned max assets will be eg 1, then it might be not possible to actually deposit 1wei because
+    /// tx will revert with ZeroShares error. This is unreal case in real world scenario so we ignoring it.
+    /// @dev The function checks, if deposit is possible for the given user, and if so, returns a constant
     /// representing no deposit limit
     /// @param _config Configuration of the silo
     /// @param _receiver The address of the user
-    /// @return maxAssetsOrShares Maximum assets or shares a user can deposit or mint
-    function maxDepositOrMint(ISiloConfig _config, address _receiver)
+    /// @param _totalCollateralAssets total deposited collateral
+    /// @return maxAssetsOrShares Maximum assets/shares a user can deposit
+    function maxDepositOrMint(
+        ISiloConfig _config,
+        address _receiver,
+        uint256 _totalCollateralAssets
+    )
         external
         view
         returns (uint256 maxAssetsOrShares)
@@ -39,7 +48,9 @@ library SiloERC4626Lib {
         ISiloConfig.ConfigData memory configData = _config.getConfig(address(this));
 
         if (depositPossible(configData.debtShareToken, _receiver)) {
-            maxAssetsOrShares = _NO_DEPOSIT_LIMIT;
+            maxAssetsOrShares = _totalCollateralAssets == 0
+                ? _VIRTUAL_DEPOSIT_LIMIT
+                : _VIRTUAL_DEPOSIT_LIMIT - _totalCollateralAssets;
         }
     }
 
@@ -162,9 +173,11 @@ library SiloERC4626Lib {
         if (shares == 0) revert ZeroShares();
 
         // `assets` and `totalAssets` can never be more than uint256 because totalSupply cannot be either
-        unchecked {
+        // however, there is (probably unreal but also untested) possibility, where you might borrow from silo
+        // and deposit (like double spend) and with that we could overflow. Better safe than sorry - unchecked removed
+        // unchecked {
             _totalCollateral.assets = totalAssets + assets;
-        }
+        // }
 
         // Hook receiver is called after `mint` and can reentry but state changes are completed already
         _collateralShareToken.mint(_receiver, _depositor, shares);

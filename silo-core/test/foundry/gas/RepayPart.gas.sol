@@ -29,7 +29,7 @@ contract RepayPartGasTest is Gas, Test {
             address(silo1),
             abi.encodeCall(ISilo.repay, (ASSETS / 2, BORROWER)),
             "RepayPart partial (no interest)",
-            91794
+            93908
         );
     }
 }
