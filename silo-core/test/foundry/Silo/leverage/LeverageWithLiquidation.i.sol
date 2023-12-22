@@ -6,7 +6,6 @@ import "forge-std/Test.sol";
 
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
-import {LeverageReentrancyGuard} from "silo-core/contracts/utils/LeverageReentrancyGuard.sol";
 
 import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
 import {LeverageBorrower, ILeverageBorrower} from "../../_common/LeverageBorrower.sol";
@@ -37,7 +36,7 @@ contract LeverageWithLiquidationTest is SiloLittleHelper, Test, ILeverageBorrowe
         bytes memory data;
         vm.prank(borrower);
         // before reentrancy protection, if debt or collateral is 0, then liquidation will fail with NoDebtToCover
-        vm.expectRevert(LeverageReentrancyGuard.LeverageReentrancyCall.selector);
+        vm.expectRevert("ReentrancyGuard: reentrant call");
         silo1.leverage(borrowAssets, leverageBorrower, borrower, data);
     }
 
@@ -58,7 +57,7 @@ contract LeverageWithLiquidationTest is SiloLittleHelper, Test, ILeverageBorrowe
         vm.prank(borrower);
         // this will revert, because we can not enter liquidation when we do leverage
         // without reentrancy it is possible
-        vm.expectRevert(LeverageReentrancyGuard.LeverageReentrancyCall.selector);
+        vm.expectRevert("ReentrancyGuard: reentrant call");
         silo1.leverage(borrowAssets, leverageBorrower, borrower, data);
     }
 
