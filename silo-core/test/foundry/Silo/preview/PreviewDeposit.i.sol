@@ -1,0 +1,136 @@
+// SPDX-License-Identifier: BUSL-1.1
+pragma solidity ^0.8.0;
+
+import "forge-std/Test.sol";
+
+import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
+import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
+import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
+import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
+
+import {MintableToken} from "../../_common/MintableToken.sol";
+import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
+
+/*
+    forge test -vv --ffi --mc PreviewDepositTest
+*/
+contract PreviewDepositTest is SiloLittleHelper, Test {
+    uint256 constant DEPOSIT_BEFORE = 1e18 + 9876543211;
+
+    ISiloConfig siloConfig;
+    address immutable depositor;
+    address immutable borrower;
+
+    constructor() {
+        depositor = makeAddr("Depositor");
+        borrower = makeAddr("Borrower");
+    }
+
+    function setUp() public {
+        siloConfig = _setUpLocalFixture(SiloConfigsNames.LOCAL_NO_ORACLE_NO_LTV_SILO);
+    }
+
+    /*
+    forge test -vv --ffi --mt test_previewDepositType_beforeInterest_fuzz2
+    */
+    /// forge-config: core.fuzz.runs = 10000
+    function test_previewDeposit_beforeInterest_fuzz(uint256 _assets, bool _defaultType, uint8 _type) public {
+        vm.assume(_assets > 0);
+        vm.assume(_type == 0 || _type == 1);
+
+        uint256 previewShares = _defaultType
+            ? silo0.previewDeposit(_assets)
+            : silo0.previewDeposit(_assets, ISilo.AssetType(_type));
+
+        uint256 shares = _defaultType
+            ? _deposit(_assets, depositor)
+            : _deposit(_assets, depositor, ISilo.AssetType(_type));
+
+        assertEq(previewShares, shares, "previewDeposit must return as close but NOT more");
+    }
+
+    /*
+    forge test -vv --ffi --mt test_previewDeposit_afterNoInterest
+    */
+    /// forge-config: core.fuzz.runs = 10000
+    function test_previewDeposit_afterNoInterest_fuzz(uint128 _assets, bool _defaultType, uint8 _type) public {
+        vm.assume(_assets > 0);
+        vm.assume(_type == 0 || _type == 1);
+
+        uint256 sharesBefore = _defaultType
+            ? _deposit(_assets, depositor)
+            : _deposit(_assets, depositor, ISilo.AssetType(_type));
+
+        vm.warp(block.timestamp + 365 days);
+        silo0.accrueInterest();
+
+        uint256 previewShares = _defaultType
+            ? silo0.previewDeposit(_assets)
+            : silo0.previewDeposit(_assets, ISilo.AssetType(_type));
+
+        uint256 gotShares = _defaultType
+            ? _deposit(_assets, depositor)
+            : _deposit(_assets, depositor, ISilo.AssetType(_type));
+
+        assertEq(previewShares, gotShares, "previewDeposit must return as close but NOT more");
+        assertEq(previewShares, sharesBefore, "without interest shares must be the same");
+    }
+
+    /*
+    forge test -vv --ffi --mt test_previewDeposit_withInterest
+    */
+    /// forge-config: core.fuzz.runs = 10000
+    function test_previewDeposit_withInterest_fuzz(uint256 _assets) public {
+        vm.assume(_assets < type(uint128).max);
+        vm.assume(_assets > 0);
+
+        uint256 sharesBefore = _deposit(_assets, depositor);
+        _depositForBorrow(_assets, depositor);
+
+        _deposit(_assets / 10 == 0 ? 2 : _assets, borrower);
+        _borrow(_assets / 10 + 1, borrower); // +1 ensure we not borrowing 0
+
+        vm.warp(block.timestamp + 365 days);
+
+        uint256 previewShares0 = silo0.previewDeposit(_assets);
+        uint256 previewShares1 = silo1.previewDeposit(_assets);
+
+        assertLe(
+            previewShares1,
+            previewShares0,
+            "you can get less shares on silo1 than on silo0, because we have interests here"
+        );
+
+        if (previewShares1 == 0) {
+            // if preview is zero for `_assets`, then deposit should also reverts
+            _depositForBorrowRevert(_assets, depositor, ISilo.ZeroShares.selector);
+        } else {
+            assertEq(
+                previewShares1,
+                _depositForBorrow(_assets, depositor),
+                "previewDeposit with interest on the fly - must be as close but NOT more"
+            );
+        }
+
+        silo0.accrueInterest();
+        silo1.accrueInterest();
+
+        assertEq(silo0.previewDeposit(_assets), sharesBefore, "no interest in silo0, so preview should be the same");
+
+        previewShares1 = silo1.previewDeposit(_assets);
+
+        assertLe(previewShares1, _assets, "with interests, we can receive less shares than assets amount");
+
+        emit log_named_uint("previewShares1", previewShares1);
+
+        if (previewShares1 == 0) {
+            _depositForBorrowRevert(_assets, depositor, ISilo.ZeroShares.selector);
+        } else {
+            assertEq(
+                previewShares1,
+                _depositForBorrow(_assets, depositor),
+                "previewDeposit after accrueInterest() - as close, but NOT more"
+            );
+        }
+    }
+}
