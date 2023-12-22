@@ -10,6 +10,7 @@ import {ISilo} from "../interfaces/ISilo.sol";
 import {IShareToken} from "../interfaces/IShareToken.sol";
 import {SiloSolvencyLib} from "./SiloSolvencyLib.sol";
 import {SiloMathLib} from "./SiloMathLib.sol";
+import {SiloStdLib} from "./SiloStdLib.sol";
 
 // solhint-disable function-max-lines
 
@@ -202,6 +203,42 @@ library SiloERC4626Lib {
     ) public returns (uint256 assets, uint256 shares) {
         return withdraw(
             address(0), _shareToken, 0, _shares, _owner, _owner, _spender, _assetType, _liquidity, _totalCollateral
+        );
+    }
+
+    function previewWithdraw(
+        ISiloConfig _siloConfig,
+        uint256 _assets,
+        ISilo.AssetType _assetType
+    ) external view returns (uint256 shares) {
+        if (_assetType == ISilo.AssetType.Debt) revert ISilo.WrongAssetType();
+
+        ISiloConfig.ConfigData memory configData = _siloConfig.getConfig(address(this));
+
+        (
+            uint256 totalSiloAssets, uint256 totalShares
+        ) = SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(configData, _assetType);
+
+        return SiloMathLib.convertToShares(
+            _assets, totalSiloAssets, totalShares, MathUpgradeable.Rounding.Up, _assetType
+        );
+    }
+
+    function previewRedeem(
+        ISiloConfig _siloConfig,
+        uint256 _shares,
+        ISilo.AssetType _assetType
+    ) external view returns (uint256 assets) {
+        if (_assetType == ISilo.AssetType.Debt) revert ISilo.WrongAssetType();
+
+        ISiloConfig.ConfigData memory configData = _siloConfig.getConfig(address(this));
+
+        (
+            uint256 totalSiloAssets, uint256 totalShares
+        ) = SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(configData, _assetType);
+
+        return SiloMathLib.convertToAssets(
+            _shares, totalSiloAssets, totalShares, MathUpgradeable.Rounding.Down, _assetType
         );
     }
 
