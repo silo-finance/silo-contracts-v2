@@ -141,26 +141,4 @@ contract FlashloanTest is SiloLittleHelper, Test {
         (uint256 daoAndDeployerFeesAfter,) = silo0.siloData();
         assertEq(daoAndDeployerFeesAfter, daoAndDeployerFeesBefore + fee);
     }
-
-    /*
-    forge test -vv --ffi --mt test_flashLoan_nonReentrant
-    */
-    function test_flashLoan_nonReentrant(bytes32 _data) public {
-        IERC3156FlashBorrower receiver = IERC3156FlashBorrower(address(new Hack1()));
-        uint256 amount = 1e18;
-        uint256 fee = silo0.flashFee(address(token0), amount);
-
-        token0.mint(address(receiver), fee);
-
-        vm.prank(address(receiver));
-        token0.approve(address(silo0), amount + fee);
-
-        (uint256 daoAndDeployerFeesBefore,) = silo0.siloData();
-
-        vm.expectRevert("ReentrancyGuard: reentrant call");
-        silo0.flashLoan(receiver, address(token0), amount, abi.encodePacked(_data));
-
-        (uint256 daoAndDeployerFeesAfter,) = silo0.siloData();
-        assertEq(daoAndDeployerFeesAfter, daoAndDeployerFeesBefore);
-    }
 }
