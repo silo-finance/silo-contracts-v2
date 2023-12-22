@@ -147,11 +147,6 @@ interface ISilo is IERC4626, IERC3156FlashLender, ISiloLiquidation {
     /// @return liquidity The amount of liquidity
     function getLiquidity() external view returns (uint256 liquidity);
 
-    /// @notice Fetches the liquidity in the silo for specified asset type, it does include interest
-    /// @param _assetType Collateral or Protected asset
-    /// @return liquidity The amount of available liquidity
-    function getLiquidity(AssetType _assetType) external view returns (uint256 liquidity);
-
     /// @notice Determines if a borrower is solvent
     /// @param _borrower Address of the borrower to check for solvency
     /// @return True if the borrower is solvent, otherwise false

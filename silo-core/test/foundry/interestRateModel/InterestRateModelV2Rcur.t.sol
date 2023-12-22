@@ -69,9 +69,9 @@ contract InterestRateModelV2RcurTest is RcurTestData, InterestRateModelConfigs {
 
             INTEREST_RATE_MODEL.mockSetup(silo, testCase.input.integratorState, testCase.input.Tcrit);
 
-            bytes memory data = abi.encodeWithSelector(ISilo.utilizationData.selector);
-            vm.mockCall(silo, data, abi.encode(utilizationData));
-            vm.expectCall(silo, data);
+            bytes memory encodedData = abi.encodeWithSelector(ISilo.utilizationData.selector);
+            vm.mockCall(silo, encodedData, abi.encode(utilizationData));
+            vm.expectCall(silo, encodedData);
 
             uint256 mockedRcur = INTEREST_RATE_MODEL.getCurrentInterestRate(silo, testCase.input.currentTime);
             assertEq(mockedRcur, rcur, _concatMsg(i, "getCurrentInterestRate()"));
