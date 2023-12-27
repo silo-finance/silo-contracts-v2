@@ -198,8 +198,13 @@ contract MaxBorrowTest is SiloLittleHelper, Test {
         _mintForBorrow(1, 57553484963063775982514231325194206610732636, user2);
         token1.setOnDemand(false);
 
+        emit log_named_uint("User 1 max borrow on silo1", silo0.maxBorrow(user1));
+        emit log_named_uint("User 1 max borrow on silo2", silo1.maxBorrow(user1));
+
         emit log("User 1 borrows the maximum returned from maxBorrow from Silo 1");
-        _borrow(silo0.maxBorrow(user1), user1);
+        vm.startPrank(user1);
+        silo0.borrow(silo0.maxBorrow(user1), user1, user1);
+        vm.stopPrank();
 
         vm.warp(block.timestamp + 41);
         emit log("Timestamp is increased by 41 seconds");
@@ -212,7 +217,7 @@ contract MaxBorrowTest is SiloLittleHelper, Test {
 
         emit log("User 2 attempts to borrow maxBorrow assets, it fails with AboveMaxLtv()");
         vm.prank(user2);
-        silo0.borrow(maxBorrow, user2, user2);
+        silo0.borrow(maxBorrow - 1, user2, user2);
     }
 
     function _assertWeCanNotBorrowAboveMax(uint256 _maxBorrow) internal {
