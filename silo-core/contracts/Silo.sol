@@ -571,6 +571,8 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
             totalDebtShares,
             SiloLendingLib.getLiquidity(cachedConfig)
         );
+
+        unchecked { if (maxAssets > 0) return maxAssets - 1; }
     }
 
     /// @inheritdoc ISilo

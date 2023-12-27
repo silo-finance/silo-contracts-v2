@@ -94,10 +94,10 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
 
         uint256 maxBorrow = silo0.maxBorrow(borrower);
         uint256 maxBorrowShares = silo0.maxBorrowShares(borrower);
-        assertEq(maxBorrow, 0.85e18, "invalid maxBorrow");
+        assertEq(maxBorrow, 0.85e18 - 1, "invalid maxBorrow");
         assertEq(maxBorrowShares, 0.85e18, "invalid maxBorrowShares");
 
-        uint256 borrowToMuch = maxBorrow + 1;
+        uint256 borrowToMuch = maxBorrow + 2;
         // emit log_named_uint("borrowToMuch", borrowToMuch);
 
         vm.expectRevert(ISilo.AboveMaxLtv.selector);
@@ -135,7 +135,7 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
         // deposit, so we can borrow
         _depositForBorrow(depositAssets * 2, depositor);
 
-        maxBorrow = silo1.maxBorrow(borrower);
+        maxBorrow = silo1.maxBorrow(borrower) + 1; // +1 to balance out underestimation
         // emit log_named_decimal_uint("maxBorrow #1", maxBorrow, 18);
         assertEq(maxBorrow, 0.75e18, "maxBorrow borrower can do, maxLTV is 75%");
 
@@ -155,7 +155,7 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
         assertEq(gotShares, convertToShares, "convertToShares returns same result");
         assertEq(borrowAmount, silo1.convertToAssets(gotShares), "convertToAssets returns borrowAmount");
 
-        borrowAmount = silo1.maxBorrow(borrower);
+        borrowAmount = silo1.maxBorrow(borrower) + 1; // +1 to balance out underestimation
         // emit log_named_decimal_uint("borrowAmount #2", borrowAmount, 18);
         assertEq(borrowAmount, 0.75e18 / 2, "~");
 
@@ -194,7 +194,7 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
         _depositForBorrow(100e18, depositor);
         assertEq(silo1.getLtv(borrower), 0, "no debt, so LT == 0");
 
-        uint256 maxBorrow = silo1.maxBorrow(borrower);
+        uint256 maxBorrow = silo1.maxBorrow(borrower) + 1; // +1 to balance out underestimation
 
         _borrow(200e18, borrower, ISilo.NotEnoughLiquidity.selector);
         _borrow(maxBorrow * 2, borrower, ISilo.AboveMaxLtv.selector);
