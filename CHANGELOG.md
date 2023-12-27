@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [0.0.36] - 2023-12-27
+### Fixed
+- [issue-320](https://github.com/silo-finance/silo-contracts-v2/issues/320) TOB-SILO2-19: max* functions return
+  incorrect values: underestimate `maxBorrow` more, to cover big amounts
+
 ## [0.0.35] - 2023-12-27
 ### Fixed
 - [issue-320](https://github.com/silo-finance/silo-contracts-v2/issues/320) TOB-SILO2-19: max* functions return
