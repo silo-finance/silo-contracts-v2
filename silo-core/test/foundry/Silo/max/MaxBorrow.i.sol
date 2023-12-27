@@ -177,6 +177,44 @@ contract MaxBorrowTest is SiloLittleHelper, Test {
         _assertMaxBorrowIsZeroAtTheEnd(1);
     }
 
+
+    /*
+    forge test -vv --ffi --mt test_maxBorrow_tobCase
+    */
+    function test_maxBorrow_tobCase() public {
+        address user0 = makeAddr("user0");
+        address user1 = makeAddr("user1");
+        address user2 = makeAddr("user2");
+
+        emit log("User 1 deposits 54901887191424375183106916902 assets into Silo 2");
+        _depositForBorrow(54901887191424375183106916902, user1);
+
+        emit log("User 0 deposits 37778931862957161709569 assets into Silo 1");
+        _deposit(37778931862957161709569, user0);
+
+        emit log("User 2 mints 57553484963063775982514231325194206610732636 shares from Silo 2");
+
+        token1.setOnDemand(true);
+        _mintForBorrow(1, 57553484963063775982514231325194206610732636, user2);
+        token1.setOnDemand(false);
+
+        emit log("User 1 borrows the maximum returned from maxBorrow from Silo 1");
+        _borrow(silo0.maxBorrow(user1), user1);
+
+        vm.warp(block.timestamp + 41);
+        emit log("Timestamp is increased by 41 seconds");
+
+        emit log("User 0 deposits 115792089237316195417293883273301227089434195242432897623355228563449095127042 assets into Silo 1");
+        _deposit(115792089237316195417293883273301227089434195242432897623355228563449095127042, user0);
+
+        uint256 maxBorrow = silo0.maxBorrow(user2);
+        emit log_named_uint("user2 maxBorrow", maxBorrow);
+
+        emit log("User 2 attempts to borrow maxBorrow assets, it fails with AboveMaxLtv()");
+        vm.prank(user2);
+        silo0.borrow(maxBorrow, user2, user2);
+    }
+
     function _assertWeCanNotBorrowAboveMax(uint256 _maxBorrow) internal {
         _assertWeCanNotBorrowAboveMax(_maxBorrow, 1);
     }
