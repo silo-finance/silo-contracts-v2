@@ -54,7 +54,7 @@ contract MaxRedeemTest is MaxWithdrawCommon {
         uint128 _toBorrow
     ) public {
 //        (uint128 _collateral, uint256 _toBorrow) = (52874512, 1);
-        _createDebtSilo1(_collateral, _toBorrow);
+        _createDebtOnSilo1(_collateral, _toBorrow);
 
         uint256 maxRedeem = silo0.maxRedeem(borrower);
 
@@ -75,7 +75,7 @@ contract MaxRedeemTest is MaxWithdrawCommon {
         uint128 _toBorrow
     ) public {
         // uint128 _collateral = 100;
-        _createDebtSilo1(_collateral, _toBorrow);
+        _createDebtOnSilo1(_collateral, _toBorrow);
 
         vm.warp(block.timestamp + 100 days);
 
@@ -97,8 +97,8 @@ contract MaxRedeemTest is MaxWithdrawCommon {
         uint128 _toBorrow
     ) public {
         // (uint128 _collateral, uint128 _toBorrow) = (21288, 4007);
-        _createDebtSilo1(_collateral, _toBorrow);
-        _createDebtSilo0(_collateral, _toBorrow);
+        _createDebtOnSilo1(_collateral, _toBorrow);
+        _createDebtOnSilo0(_collateral, _toBorrow);
 
         vm.warp(block.timestamp + 100 days);
         emit log("----- time travel -------");

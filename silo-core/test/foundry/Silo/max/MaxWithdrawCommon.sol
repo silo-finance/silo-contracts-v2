@@ -23,7 +23,7 @@ contract MaxWithdrawCommon is SiloLittleHelper, Test {
         borrower = makeAddr("Borrower");
     }
 
-    function _createDebtSilo1(uint256 _collateral, uint256 _toBorrow) internal {
+    function _createDebtOnSilo1(uint256 _collateral, uint256 _toBorrow) internal {
         vm.assume(_toBorrow > 0);
         vm.assume(_collateral > _toBorrow);
 
@@ -46,7 +46,7 @@ contract MaxWithdrawCommon is SiloLittleHelper, Test {
         _ensureBorrowerHasDebt(silo1, borrower);
     }
 
-    function _createDebtSilo0(uint256 _collateral, uint256 _toBorrow) internal {
+    function _createDebtOnSilo0(uint256 _collateral, uint256 _toBorrow) internal {
         vm.assume(_toBorrow > 0);
         vm.assume(_collateral > _toBorrow);
 
