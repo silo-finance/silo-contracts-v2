@@ -86,11 +86,12 @@ library SiloERC4626Lib {
 
         { // stack too deep
             uint256 debt = IShareToken(debtConfig.debtShareToken).balanceOf(_owner);
+            bool protected = _assetType == ISilo.AssetType.Protected;
 
             if (debt == 0) {
-                shares = _assetType == ISilo.AssetType.Collateral
-                    ? IShareToken(collateralConfig.collateralShareToken).balanceOf(_owner)
-                    : IShareToken(collateralConfig.protectedShareToken).balanceOf(_owner);
+                shares = protected
+                    ? IShareToken(collateralConfig.protectedShareToken).balanceOf(_owner)
+                    : IShareToken(collateralConfig.collateralShareToken).balanceOf(_owner);
 
                 assets = SiloMathLib.convertToAssets(
                     shares,
@@ -98,6 +99,18 @@ library SiloERC4626Lib {
                     shareTokenTotalSupply,
                     MathUpgradeable.Rounding.Down,
                     _assetType
+                );
+
+                if (protected || assets <= _liquidity) return (assets, shares);
+
+                assets = _liquidity;
+
+                shares = SiloMathLib.convertToShares(
+                    assets,
+                    _totalAssets,
+                    shareTokenTotalSupply,
+                    MathUpgradeable.Rounding.Up,
+                    ISilo.AssetType.Collateral
                 );
 
                 return (assets, shares);
