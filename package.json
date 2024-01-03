@@ -10,7 +10,6 @@
   "workspaces": [
     "silo-core",
     "silo-oracles",
-    "silo-vaults",
     "ve-silo",
     "external/*"
   ],
