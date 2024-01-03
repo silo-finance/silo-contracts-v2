@@ -17,8 +17,6 @@ FOUNDRY_PROFILE=oracles CONFIG=DIA_Demo_config \
 contract DIAOracleDeploy is CommonDeploy {
     function run() public returns (DIAOracle oracle) {
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
-        vm.startBroadcast(deployerPrivateKey);
-
         string memory configName = vm.envString("CONFIG");
 
         IDIAOracle.DIADeploymentConfig memory config = ConfigParser.getConfig(
@@ -28,10 +26,12 @@ contract DIAOracleDeploy is CommonDeploy {
 
         address factory = getDeployedAddress(SiloOraclesFactoriesContracts.DIA_ORACLE_FACTORY);
 
+        vm.startBroadcast(deployerPrivateKey);
+
         oracle = DIAOracleFactory(factory).create(config);
 
-        OraclesDeployments.save(getChainAlias(), configName, address(oracle));
-
         vm.stopBroadcast();
+
+        OraclesDeployments.save(getChainAlias(), configName, address(oracle));
     }
 }

@@ -26,15 +26,15 @@ contract VeSiloDelegatorViaCCIP is IntegrationTest {
     uint256 internal constant _FORKING_BLOCK_NUMBER = 4319390;
     uint64 internal constant _DS_CHAIN_SELECTOR = 12532609583862916517; // Polygon Mumbai
 
-    bytes32 internal constant _MESSAGE_ID_BAL_LINK = 0x420b0b07341c2ecb1c2a53c73299975006e080fae2c5df87681760ed829e196f;
+    bytes32 internal constant _MESSAGE_ID_BAL_LINK = 0x5baae221057907fbbab9c28f9bb6ccfbdcde0fbaf0a4423b25cd727a54db05d2;
 
     bytes32 internal constant _MESSAGE_ID_SUPPL_LINK =
-        0xca9a71a55f584d0b32ceb3678e2a91146509f2f246204ec7ad7f62a73cc2129d;
+        0xe4660e8210828df9ada21a55b116fa8b89d57f22461390c26c0b7c41e460b662;
 
-    bytes32 internal constant _MESSAGE_ID_BAL_ETH = 0x7ddab87f5224418df6be14d78cbc83dbef10aa7bfd4c6ea0c0efcdcd48f7d80a;
+    bytes32 internal constant _MESSAGE_ID_BAL_ETH = 0xff590182a631f467fa84fac5a5f7ddcdcfb22ed8abd4de8b68e69655a34b8ad8;
 
     bytes32 internal constant _MESSAGE_ID_SUPPL_ETH =
-        0x719cc498ff7ccd7e7b7611a9fdb74cab1672f7400ccd143744e384da98f77984;
+        0x0328164d30c9c60787c13003f20c4f59a037aa2c4d585eab71811a1e38a0a837;
 
     address internal _localUser = makeAddr("localUser");
     address internal _votingEscrowCCIPRemapper = makeAddr("VotingEscrowCCIPRemapper");

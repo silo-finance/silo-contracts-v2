@@ -27,8 +27,8 @@ contract CCIPGaugeTest is IntegrationTest {
     uint256 internal constant _RELATIVE_WEIGHT_CAP = 1e18;
     address internal constant _LINK = 0x779877A7B0D9E8603169DdbD7836e478b4624789;
     address internal constant _CCIP_BNM = 0xFd57b4ddBf88a4e07fF4e34C487b99af2Fe82a05;
-    bytes32 internal constant _MESSAGE_ID_LINK = 0x6e7b8a0bf405741a3848e0ddb8a7dfddf2f66e8488c07b5cb1470ee27a5970ee;
-    bytes32 internal constant _MESSAGE_ID_ETH = 0x03acf45ab5b693039baf1c7c829f6ab76d6a6452bf4d2796f18d41222f55858c;
+    bytes32 internal constant _MESSAGE_ID_LINK = 0xb25ab84f0aa9cf2627b7f14ac84894ed2b20cd21c73827ff98441a8a1e5e0edd;
+    bytes32 internal constant _MESSAGE_ID_ETH = 0x40a85bd54f8009e4a3b9b107dcc8429a3c3e6d2f26d6c221915408d32add73db;
 
     address internal _minter = makeAddr("Minter");
     address internal _tokenAdmin = makeAddr("TokenAdmin");

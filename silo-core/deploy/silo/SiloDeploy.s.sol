@@ -79,13 +79,14 @@ contract SiloDeploy is CommonDeploy {
         ISiloDeployer.Oracles memory oracles = _getOracles(config, siloData);
 
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
-        vm.startBroadcast(deployerPrivateKey);
 
         beforeCreateSilo(siloInitData);
 
         console2.log("[SiloCommonDeploy] `beforeCreateSilo` executed");
 
         ISiloDeployer deployer = ISiloDeployer(getDeployedAddress(SiloCoreContracts.SILO_DEPLOYER));
+
+        vm.startBroadcast(deployerPrivateKey);
 
         siloConfig = deployer.deploy(
             oracles,
@@ -94,9 +95,9 @@ contract SiloDeploy is CommonDeploy {
             siloInitData
         );
 
-        console2.log("[SiloCommonDeploy] deploy done");
-
         vm.stopBroadcast();
+
+        console2.log("[SiloCommonDeploy] deploy done");
 
         SiloDeployments.save(getChainAlias(), configName, address(siloConfig));
 
@@ -228,7 +229,7 @@ contract SiloDeploy is CommonDeploy {
 
     function _isUniswapOracle(string memory _oracleConfigName) internal returns (bool isUniswapOracle) {
         address pool = KV.getAddress(
-            UniswapV3OraclesConfigsParser.CONFIGS_FILE,
+            UniswapV3OraclesConfigsParser.configFile(),
             _oracleConfigName,
             "pool"
         );
@@ -238,7 +239,7 @@ contract SiloDeploy is CommonDeploy {
 
     function _isChainlinkOracle(string memory _oracleConfigName) internal returns (bool isChainlinkOracle) {
         address baseToken = KV.getAddress(
-            ChainlinkV3OraclesConfigsParser.CONFIGS_FILE,
+            ChainlinkV3OraclesConfigsParser.configFile(),
             _oracleConfigName,
             "baseToken"
         );
@@ -248,7 +249,7 @@ contract SiloDeploy is CommonDeploy {
 
     function _isDiaOracle(string memory _oracleConfigName) internal returns (bool isDiaOracle) {
         address diaOracle = KV.getAddress(
-            DIAOraclesConfigsParser.CONFIGS_FILE,
+            DIAOraclesConfigsParser.configFile(),
             _oracleConfigName,
             "diaOracle"
         );

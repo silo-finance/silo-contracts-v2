@@ -20,17 +20,17 @@ contract VotingEscrowRemapperTest is IntegrationTest {
     uint64 internal constant _DS_CHAIN_SELECTOR = 12532609583862916517; // Polygon Mumbai
 
     bytes32 internal constant _MESSAGE_ID_REMAP_ETH =
-        0x6033df476de5e97423bc4d9e61a6496f22496118f6c216854e4b85607b69675e;
+        0x8783dbc0975bc995aaf015ea1639cda6672c1f400392b2bb145df341646b581d;
     bytes32 internal constant _MESSAGE_ID_REMAP_LINK =
-        0x4c90654f822920121a60d48aee7c073b6f68611d494417cac5609ab68338cec9;
+        0x6d53a764c4a7fcfa04c9f26652d931fe4ce65f8362b3dbfae392d69efab66c2e;
     bytes32 internal constant _MESSAGE_ID_CLEAR1_ETH =
-        0x2c3014a32205f7644e12c22f2234cea2d61c307610e37274a73cd928a4d56809;
+        0x01a29a32fb4bd33b255c9d9f3882486e409e33f658a6a772b274a71f4fd8af80;
     bytes32 internal constant _MESSAGE_ID_CLEAR2_ETH =
-        0x3f2b2b53e39b21c1ce78fd5a63b0a6d2a3c68a6645f0f15b13aa0a3cf66ba9b9;
+        0x118182c54287e04b644e526cc5dcb8ffb35857992cbc7ce0e44a8416b5b4be8d;
     bytes32 internal constant _MESSAGE_ID_CLEAR1_LINK =
-        0xec0255073ee9ba68934c64e58667c5d90809d4b7ae026cf41e94b88ba500df42;
+        0x88586931608dcb855afe3101a68a0585b1934513aa5532d5fc4b939ee645b26b;
     bytes32 internal constant _MESSAGE_ID_CLEAR2_LINK =
-        0x9928f6bbde7a1ef6d4f282ec577fee40db396515598f54fdbde1b2d587db2d0c;
+        0x30d1568d44769ef648c0b324e870d5a5f53b667170340fa3c4887603e7e2c8b7;
 
     IVeSiloDelegatorViaCCIP public veSiloDelegator;
     IVotingEscrowCCIPRemapper public remapper;

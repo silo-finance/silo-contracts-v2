@@ -49,6 +49,7 @@ src = 'silo-vaults/contracts'
 out = 'cache/foundry/out/silo-vaults'
 test = 'silo-vaults/test/foundry'
 broadcast = 'silo-vaults/broadcast'
+fs_permissions = [{ access = "read", path = "./silo-vaults/test/foundry/data/"}]
 
 [profile.oracles]
 src = 'silo-oracles/contracts'
@@ -60,5 +61,6 @@ broadcast = 'silo-oracles/broadcast'
 mainnet = "${RPC_MAINNET}"
 sepolia = "${RPC_SEPOLIA}"
 arbitrum_one = "${RPC_ARBITRUM}"
+anvil = "${RPC_ANVIL}"
 
 # See more config options https://github.com/foundry-rs/foundry/tree/master/config

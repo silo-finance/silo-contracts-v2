@@ -4,12 +4,13 @@ pragma solidity ^0.8.18;
 import {IERC20Metadata} from "openzeppelin-contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {AggregatorV3Interface} from "chainlink/v0.8/interfaces/AggregatorV3Interface.sol";
 import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
-
+import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";
 import {KeyValueStorage as KV} from "silo-foundry-utils/key-value/KeyValueStorage.sol";
 import {IChainlinkV3Oracle} from "silo-oracles/contracts/interfaces/IChainlinkV3Oracle.sol";
 
 library ChainlinkV3OraclesConfigsParser {
-    string constant public CONFIGS_FILE = "silo-oracles/deploy/chainlink-v3-oracle/_configs.json";
+    string constant public CONFIGS_DIR = "silo-oracles/deploy/chainlink-v3-oracle/configs/";
+    string constant internal _EXTENSION = ".json";
 
     function getConfig(
         string memory _network,
@@ -18,12 +19,14 @@ library ChainlinkV3OraclesConfigsParser {
         internal
         returns (IChainlinkV3Oracle.ChainlinkV3DeploymentConfig memory config)
     {
-        string memory baseTokenKey = KV.getString(CONFIGS_FILE, _name, "baseToken");
-        string memory quoteTokenKey = KV.getString(CONFIGS_FILE, _name, "quoteToken");
-        string memory primaryAggregatorKey = KV.getString(CONFIGS_FILE, _name, "primaryAggregator");
-        string memory secondaryAggregatorKey = KV.getString(CONFIGS_FILE, _name, "secondaryAggregator");
-        uint256 primaryHeartbeat = KV.getUint(CONFIGS_FILE, _name, "primaryHeartbeat");
-        uint256 secondaryHeartbeat = KV.getUint(CONFIGS_FILE, _name, "secondaryHeartbeat");
+        string memory configJson = configFile();
+
+        string memory baseTokenKey = KV.getString(configJson, _name, "baseToken");
+        string memory quoteTokenKey = KV.getString(configJson, _name, "quoteToken");
+        string memory primaryAggregatorKey = KV.getString(configJson, _name, "primaryAggregator");
+        string memory secondaryAggregatorKey = KV.getString(configJson, _name, "secondaryAggregator");
+        uint256 primaryHeartbeat = KV.getUint(configJson, _name, "primaryHeartbeat");
+        uint256 secondaryHeartbeat = KV.getUint(configJson, _name, "secondaryHeartbeat");
 
         require(primaryHeartbeat <= type(uint32).max, "primaryHeartbeat should be uint32");
         require(secondaryHeartbeat <= type(uint32).max, "secondaryHeartbeat should be uint32");
@@ -36,5 +39,9 @@ library ChainlinkV3OraclesConfigsParser {
             secondaryAggregator: AggregatorV3Interface(AddrLib.getAddressSafe(_network, secondaryAggregatorKey)),
             secondaryHeartbeat: uint32(secondaryHeartbeat)
         });
+    }
+
+    function configFile() internal view returns (string memory file) {
+        file = string.concat(CONFIGS_DIR, ChainsLib.chainAlias(), _EXTENSION);
     }
 }

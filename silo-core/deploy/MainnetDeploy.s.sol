@@ -11,7 +11,7 @@ import {HookReceiversFactoryDeploy} from "./HookReceiversFactoryDeploy.s.sol";
 import {SiloDeployerDeploy} from "./SiloDeployerDeploy.s.sol";
 
 /**
-    FOUNDRY_PROFILE=silo-core \
+    FOUNDRY_PROFILE=core \
         forge script silo-core/deploy/MainnetDeploy.s.sol \
         --ffi --broadcast --rpc-url http://127.0.0.1:8545
  */

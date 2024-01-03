@@ -8,7 +8,8 @@ env:
   RPC_MAINNET: ${{ vars.RPC_MAINNET }}
   RPC_ARBITRUM: ${{ vars.RPC_ARBITRUM }}
   RPC_SEPOLIA: ${{ vars.RPC_SEPOLIA }}
-  PRIVATE_KEY: '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80' # anvil (only for tests)
+  RPC_ANVIL: ${{ vars.RPC_ANVIL }}
+  PRIVATE_KEY: ${{ vars.ANVIL_PRIVATE_KEY }}
 
 on:
   push:
@@ -28,6 +29,7 @@ on:
       - yarn.lock
       - gitmodules/*
       - .gitmodules
+      - .github/workflows/ve-silo.yml
 
   pull_request:
     paths:
@@ -45,6 +47,7 @@ on:
       - yarn.lock
       - gitmodules/*
       - .gitmodules
+      - .github/workflows/ve-silo.yml
 
 jobs:
   ve-silo-foundry:
@@ -61,7 +64,7 @@ jobs:
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
         with:
-          version: nightly-5be158ba6dc7c798a6f032026fe60fc01686b33b
+          version: nightly
 
       - name: yarn install
         run: yarn install

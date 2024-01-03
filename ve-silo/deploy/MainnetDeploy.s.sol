@@ -13,6 +13,7 @@ import {StakelessGaugeCheckpointerAdaptorDeploy} from "ve-silo/deploy/StakelessG
 import {FeeDistributorDeploy} from "ve-silo/deploy/FeeDistributorDeploy.s.sol";
 import {FeeSwapperDeploy} from "ve-silo/deploy/FeeSwapperDeploy.s.sol";
 import {UniswapSwapperDeploy} from "ve-silo/deploy/UniswapSwapperDeploy.s.sol";
+import {SmartWalletCheckerDeploy} from "./SmartWalletCheckerDeploy.s.sol";
 
 import {IExtendedOwnable} from "ve-silo/contracts/access/IExtendedOwnable.sol";
 
@@ -46,6 +47,7 @@ contract MainnetDeploy is CommonDeploy {
         FeeDistributorDeploy feeDistributorDeploy = new FeeDistributorDeploy();
         FeeSwapperDeploy feeSwapperDeploy = new FeeSwapperDeploy();
         UniswapSwapperDeploy uniswapSwapperDeploy = new UniswapSwapperDeploy();
+        SmartWalletCheckerDeploy smartWalletCheckerDeploy = new SmartWalletCheckerDeploy();
 
         governorDeploy.run();
         controllerDeploy.run();
@@ -55,6 +57,7 @@ contract MainnetDeploy is CommonDeploy {
         feeDistributorDeploy.run();
         feeSwapperDeploy.run();
         uniswapSwapperDeploy.run();
+        smartWalletCheckerDeploy.run();
     }
 
     function _deployL1ForL2() internal {
