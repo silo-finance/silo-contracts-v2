@@ -148,3 +148,13 @@ genhtml -o coverage/silo-oracles/ lcov.info
 - to shares: Down
 
 
+```shell
+brew install echidna
+
+pip3.11 install slither-analyzer
+
+solc-select install 0.8.21
+cd /silo-core/contracts
+
+SOLC_VERSION=0.8.21 slither .
+```
