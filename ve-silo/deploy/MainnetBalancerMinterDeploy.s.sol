@@ -19,17 +19,18 @@ contract MainnetBalancerMinterDeploy is CommonDeploy {
     function run() public returns (IBalancerMinter minter, IBalancerTokenAdmin balancerTokenAdmin) {
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
 
+        address siloToken = getAddress(SILO_TOKEN);
+        address gaugeController = getDeployedAddress(VeSiloContracts.GAUGE_CONTROLLER);
+
         vm.startBroadcast(deployerPrivateKey);
 
         balancerTokenAdmin = IBalancerTokenAdmin(
             address(
                 new BalancerTokenAdmin(
-                    IBalancerToken(getAddress(SILO_TOKEN))
+                    IBalancerToken(siloToken)
                 )
             )
         );
-
-        address gaugeController = getDeployedAddress(VeSiloContracts.GAUGE_CONTROLLER);
 
         minter = IBalancerMinter(
             address(
@@ -41,7 +42,5 @@ contract MainnetBalancerMinterDeploy is CommonDeploy {
 
         _registerDeployment(address(balancerTokenAdmin), VeSiloContracts.BALANCER_TOKEN_ADMIN);
         _registerDeployment(address(minter), VeSiloContracts.MAINNET_BALANCER_MINTER);
-
-        _syncDeployments();
     }
 }

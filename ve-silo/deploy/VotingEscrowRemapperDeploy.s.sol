@@ -15,17 +15,15 @@ contract VotingEscrowRemapperDeploy is CommonDeploy {
      function run() public returns (IVotingEscrowCCIPRemapper remapper) {
           uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
 
-          vm.startBroadcast(deployerPrivateKey);
-
-          
           IVotingEscrow votingEscrow = IVotingEscrow(getDeployedAddress(VeSiloContracts.VOTING_ESCROW));
           IERC20 link = IERC20(getAddress(AddrKey.LINK));
 
+          vm.startBroadcast(deployerPrivateKey);
+
           remapper = IVotingEscrowCCIPRemapper(new VotingEscrowRemapper(votingEscrow, link));
-          _registerDeployment(address(remapper), VeSiloContracts.VOTING_ESCROW_REMAPPER);
 
           vm.stopBroadcast();
 
-          _syncDeployments();
+          _registerDeployment(address(remapper), VeSiloContracts.VOTING_ESCROW_REMAPPER);
      }
 }

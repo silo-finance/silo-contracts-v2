@@ -53,7 +53,6 @@ contract SiloGovernorDeploy is CommonDeploy {
         vm.stopBroadcast();
 
         _registerDeployment(address(siloGovernor), VeSiloContracts.SILO_GOVERNOR);
-        _syncDeployments();
 
         _configure(siloGovernor, timelock);
     }
@@ -61,10 +60,10 @@ contract SiloGovernorDeploy is CommonDeploy {
     function _configure(ISiloGovernor _governor, ISiloTimelockController _timelock) internal {
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
 
-        vm.startBroadcast(deployerPrivateKey);
-
         address deployer = vm.addr(deployerPrivateKey);
         address governorAddr = address(_governor);
+
+        vm.startBroadcast(deployerPrivateKey);
 
         // Set the DAO as a proposer, an executor and a canceller
         _timelock.grantRole(_timelock.PROPOSER_ROLE(), governorAddr);

@@ -20,18 +20,26 @@ contract FeeSwapperDeploy is CommonDeploy {
     function run() public returns (IFeeSwapper feeSwapper) {
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
 
+        address weth = getAddress(AddrKey.WETH);
+        address silo80weth20 = getAddress(SILO80_WETH20_TOKEN);
+        address silo = getAddress(SILO_TOKEN);
+        address balancerVault = getAddress(AddrKey.BALANCER_VAULT);
+        address feeDistributor = getDeployedAddress(VeSiloContracts.FEE_DISTRIBUTOR);
+
+        bytes32 poolId = _poolId();
+
         vm.startBroadcast(deployerPrivateKey);
 
         IFeeSwapper.SwapperConfigInput[] memory _configs;
 
         feeSwapper = IFeeSwapper(address(
             new FeeSwapper(
-                IERC20(getAddress(AddrKey.WETH)),
-                IERC20(getAddress(SILO80_WETH20_TOKEN)),
-                IERC20(getAddress(SILO_TOKEN)),
-                getAddress(AddrKey.BALANCER_VAULT),
-                _poolId(),
-                IFeeDistributor(getDeployedAddress(VeSiloContracts.FEE_DISTRIBUTOR)),
+                IERC20(weth),
+                IERC20(silo80weth20),
+                IERC20(silo),
+                balancerVault,
+                poolId,
+                IFeeDistributor(feeDistributor),
                 _configs
             )
         ));
@@ -39,8 +47,6 @@ contract FeeSwapperDeploy is CommonDeploy {
         vm.stopBroadcast();
 
         _registerDeployment(address(feeSwapper), VeSiloContracts.FEE_SWAPPER);
-
-        _syncDeployments();
     }
 
     function _poolId() internal returns (bytes32 poolId) {

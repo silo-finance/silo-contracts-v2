@@ -20,10 +20,10 @@ contract CCIPGaugeCheckpointerDeploy is CommonDeploy {
     function run() public returns (ICCIPGaugeCheckpointer checkpointer) {
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
 
-        vm.startBroadcast(deployerPrivateKey);
-
         address gaugeAdder = getDeployedAddress(VeSiloContracts.GAUGE_ADDER);
         address checkpointerAdaptor = getDeployedAddress(VeSiloContracts.STAKELESS_GAUGE_CHECKPOINTER_ADAPTOR);
+
+        vm.startBroadcast(deployerPrivateKey);
 
         checkpointer = ICCIPGaugeCheckpointer(address(
             new CCIPGaugeCheckpointer(
@@ -36,7 +36,5 @@ contract CCIPGaugeCheckpointerDeploy is CommonDeploy {
         vm.stopBroadcast();
 
         _registerDeployment(address(checkpointer), VeSiloContracts.CCIP_GAUGE_CHECKPOINTER);
-
-        _syncDeployments();
     }
 }
