@@ -166,7 +166,7 @@ library SiloERC4626Lib {
         IShareToken _collateralShareToken,
         IShareToken _debtShareToken,
         ISilo.Assets storage _totalCollateral
-    ) public returns (uint256 assets, uint256 shares) {
+    ) internal returns (uint256 assets, uint256 shares) {
         if (!depositPossible(address(_debtShareToken), _receiver)) {
             revert ISilo.DepositNotPossible();
         }
@@ -244,7 +244,7 @@ library SiloERC4626Lib {
         ISilo.AssetType _assetType,
         uint256 _liquidity,
         ISilo.Assets storage _totalCollateral
-    ) public returns (uint256 assets, uint256 shares) {
+    ) internal returns (uint256 assets, uint256 shares) {
         uint256 shareTotalSupply = IShareToken(_shareToken).totalSupply();
         if (shareTotalSupply == 0) revert ISilo.NothingToWithdraw();
 
