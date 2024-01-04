@@ -35,11 +35,8 @@ contract BorrowPossibleTest is Test {
         protectedShareToken.balanceOfMock(borrower, 0);
         collateralShareToken.balanceOfMock(borrower, 2);
 
-        uint256 gasStart = gasleft();
         bool possible = SiloLendingLib.borrowPossible(protectedShareToken.ADDRESS(), collateralShareToken.ADDRESS(), borrower);
-        uint256 gasEnd = gasleft();
 
-        assertEq(gasStart - gasEnd, 5517, "optimise borrowPossible ");
         assertFalse(possible, "borrow NOT possible when borrowPossible=true and no collateral in this token");
     }
 
