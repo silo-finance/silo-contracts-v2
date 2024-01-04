@@ -117,8 +117,10 @@ contract GetAssetsDataForLtvCalculationsTest is Test {
         SiloMock siloMock0 = new SiloMock(silo0);
 
         if (scenario.input.accrueInMemory) {
-            siloMock0.getCollateralAssetsMock(scenario.input.collateralConfig.totalCollateralAssets);
-            siloMock0.getDebtAssetsMock(scenario.input.collateralConfig.totalDebtAssets);
+            siloMock0.getCollateralAndDebtAssetsMock(
+                scenario.input.collateralConfig.totalCollateralAssets,
+                scenario.input.collateralConfig.totalDebtAssets
+            );
         }
 
         siloMock0.getCollateralAndProtectedAssetsMock(

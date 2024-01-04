@@ -12,6 +12,12 @@ contract SiloMock is Test {
         ADDRESS = _silo == address(0) ? makeAddr("SiloMock") : _silo;
     }
 
+    function getCollateralAndDebtAssetsMock(uint256 _totalCollateralAssets, uint256 _totalDebtAssets) external {
+        bytes memory data = abi.encodeWithSelector(ISilo.getCollateralAndDebtAssets.selector);
+        vm.mockCall(ADDRESS, data, abi.encode(_totalCollateralAssets, _totalDebtAssets));
+        vm.expectCall(ADDRESS, data);
+    }
+
     // ISilo.getCollateralAssets.selector: 0xa1ff9bee
     function getCollateralAssetsMock(uint256 _totalCollateralAssets) external {
         bytes memory data = abi.encodeWithSelector(ISilo.getCollateralAssets.selector);
