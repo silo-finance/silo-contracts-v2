@@ -23,6 +23,8 @@ FOUNDRY_PROFILE=ve-silo \
     --ffi --broadcast --rpc-url http://127.0.0.1:8545
  */
 contract MainnetDeploy is CommonDeploy {
+    bool internal _isMainnetSimulation = false;
+
     function run() public {
         _deployL1();
         _deployL1ForL2();
@@ -38,6 +40,10 @@ contract MainnetDeploy is CommonDeploy {
         vm.stopBroadcast();
     }
 
+    function enableMainnetSimulation() public {
+        _isMainnetSimulation = true;
+    }
+
     function _deployL1() internal {
         SiloGovernorDeploy governorDeploy = new SiloGovernorDeploy();
         GaugeControllerDeploy controllerDeploy = new GaugeControllerDeploy();
@@ -49,15 +55,22 @@ contract MainnetDeploy is CommonDeploy {
         UniswapSwapperDeploy uniswapSwapperDeploy = new UniswapSwapperDeploy();
         SmartWalletCheckerDeploy smartWalletCheckerDeploy = new SmartWalletCheckerDeploy();
 
+        if (_isMainnetSimulation) {
+            governorDeploy.veBoostDeploy().enableMainnetSimulation();
+        }
+
         governorDeploy.run();
         controllerDeploy.run();
         minterDeploy.run();
         factoryDeploy.run();
         gaugeAdderDeploy.run();
-        feeDistributorDeploy.run();
-        feeSwapperDeploy.run();
-        uniswapSwapperDeploy.run();
         smartWalletCheckerDeploy.run();
+
+        if (!_isMainnetSimulation) {
+            feeDistributorDeploy.run();
+            feeSwapperDeploy.run();
+            uniswapSwapperDeploy.run();
+        }
     }
 
     function _deployL1ForL2() internal {
