@@ -15,13 +15,13 @@ import {VeSiloFeatures} from "./VeSiloFeatures.sol";
 /**
     Steps to run the test:
 
-    1. Run Anvil './silo-core/test/foundry/_protocol/bash/anvil.sh'
-    2. Run deployments './silo-core/test/foundry/_protocol/bash/mainnet-deployments.sh'
-    3. Run test './silo-core/test/foundry/_protocol/bash/run-test.sh'
-    4. Clean deployments artifacts './silo-core/test/foundry/_protocol/bash/deployments-clean.sh'
+    1. Run Anvil './silo-core/test/scripts/anvil.sh'
+    2. Run deployments './silo-core/test/scripts/mainnet-deployments.sh'
+    3. Run test './silo-core/test/scripts/run-test.sh'
+    4. Clean deployments artifacts './silo-core/test/scripts/deployments-clean.sh'
  */
 contract SiloIntegrationTest is VeSiloFeatures {
-    function testIt() public {
+    function testVeSiloWithSiloCoreAndSiloOracles() public {
         _printContracts();
         _configureSmartWalletChecker();
         _setVeSiloFees();

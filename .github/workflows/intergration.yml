@@ -9,7 +9,7 @@ env:
   RPC_SEPOLIA: ${{ vars.RPC_SEPOLIA }}
   PRIVATE_KEY: ${{ vars.ANVIL_PRIVATE_KEY }}
   ANVIL_PORT: 8586
-  ANVIL_FORK_BLOCK_NUMBER: 18333500
+  ANVIL_FORK_BLOCK_NUMBER: 18938600
   SILO_DEPLOYMENT_NODE: "http://127.0.0.1:8586"
 
 on:
@@ -128,7 +128,7 @@ jobs:
         run: anvil --fork-url $RPC_MAINNET --fork-block-number $ANVIL_FORK_BLOCK_NUMBER --port $ANVIL_PORT &
 
       - name: Deploy Silo protocol
-        run: ./silo-core/test/foundry/_protocol/bash/mainnet-deployments.sh
+        run: ./silo-core/test/scripts/mainnet-deployments.sh
 
       - name: Test
         run: FOUNDRY_PROFILE=core-test forge test --mc SiloIntegrationTest --ffi -vvv --rpc-url $SILO_DEPLOYMENT_NODE

@@ -11,7 +11,7 @@ import {
     IBalancerVaultLike as Vault
 } from "ve-silo/contracts/fees-distribution/interfaces/IBalancerVaultLike.sol";
 
-contract CommonSiloIntegration is IntegrationTest, SiloContracts {
+abstract contract CommonSiloIntegration is IntegrationTest, SiloContracts {
     address internal _bob = makeAddr("Bob");
     address internal _alice = makeAddr("Alice");
     address internal _deployer;
