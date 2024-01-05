@@ -14,10 +14,9 @@ import {Strings} from "openzeppelin-contracts/utils/Strings.sol";
 // Note: In order to run this campaign all library functions marked as `public` or `external`
 // Need to be changed to be `internal`. This includes all library contracts in contracts/lib/
 
-// Command to run:
 /*
-// SOLC_VERSION=0.8.21 echidna silo-core/test/echidna/EchidnaDemo.e.sol
-
+Command to run:
+./silo-core/scripts/echidnaBefore.sh
 SOLC_VERSION=0.8.21 echidna silo-core/test/echidna/EchidnaE2E.sol --contract EchidnaE2E --config silo-core/test/echidna/e2e-internal.yaml --workers 10
 */
 contract EchidnaE2E is Deployers, PropertiesAsserts {

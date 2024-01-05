@@ -7,7 +7,10 @@ import {ISiloFactory, SiloFactory} from "silo-core/contracts/SiloFactory.sol";
 import {CryticERC4626PropertyTests} from "properties/ERC4626/ERC4626PropertyTests.sol";
 import {TestERC20Token} from "properties/ERC4626/util/TestERC20Token.sol";
 
-// echidna ./silo-core/contracts/echidna/EchidnaSiloERC4626.sol --contract EchidnaSiloERC4626 --config ./silo-core/contracts/echidna/erc4626.yaml --workers 10
+/*
+./silo-core/scripts/echidnaBefore.sh
+SOLC_VERSION=0.8.21 echidna silo-core/test/echidna/EchidnaSiloERC4626.sol --contract EchidnaSiloERC4626 --config silo-core/test/echidna/erc4626.yaml --workers 10
+*/
 contract EchidnaSiloERC4626 is CryticERC4626PropertyTests, Deployers {
     ISiloConfig siloConfig;
     event AssertionFailed(string msg, bytes reason);

@@ -1,4 +1,4 @@
-corpusDir: corpus_IRMv2
+corpusDir: corpus/IRMv2
 coverage: true
 testMode: assertion
 codeSize: 0x9000

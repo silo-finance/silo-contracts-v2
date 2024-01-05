@@ -2,8 +2,10 @@ import {PRBMathSD59x18} from "silo-core/contracts/lib/PRBMathSD59x18.sol";
 import {PRBMathCommon} from "silo-core/contracts/lib/PRBMathCommon.sol";
 import {PropertiesAsserts} from "properties/util/PropertiesHelper.sol";
 
-// echidna ./silo-core/contracts/echidna/EchidnaPRBMath.sol --contract EchidnaPRBMath --config ./silo-core/contracts/echidna/irm.yaml --workers 10
-
+/*
+./silo-core/scripts/echidnaBefore.sh
+SOLC_VERSION=0.8.21 echidna silo-core/test/echidna/EchidnaPRBMath.sol --contract EchidnaPRBMath --config silo-core/test/echidna/irm.yaml --workers 10
+*/
 contract EchidnaPRBMath is PropertiesAsserts {
     using PRBMathSD59x18 for int256;
     /* ================================================================

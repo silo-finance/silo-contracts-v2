@@ -6,7 +6,10 @@ import {PropertiesAsserts} from "properties/util/PropertiesHelper.sol";
 import {SafeCast} from "openzeppelin-contracts/utils/math/SafeCast.sol";
 import {SiloMathLib} from "silo-core/contracts/lib/SiloMathLib.sol";
 
-// echidna ./silo-core/contracts/echidna/EchidnaIRMv2.sol --contract EchidnaIRMv2 --config ./silo-core/contracts/echidna/irm.yaml --workers 10
+/*
+./silo-core/scripts/echidnaBefore.sh
+SOLC_VERSION=0.8.21 echidna silo-core/test/echidna/EchidnaIRMv2.sol --contract EchidnaIRMv2 --config silo-core/test/echidna/irm.yaml --workers 10
+*/
 contract EchidnaIRMv2 is PropertiesAsserts {
     using SafeCast for int256;
     using SafeCast for uint256;
