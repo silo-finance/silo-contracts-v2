@@ -21,6 +21,8 @@ contract VotingEscrowDelegationProxyDeploy is CommonDeploy {
         function run() public returns (IVotingEscrowDelegationProxy proxy) {
             uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
 
+            address veBoost = getDeployedAddress(VeSiloContracts.VE_BOOST);
+
             vm.startBroadcast(deployerPrivateKey);
 
             address nullVotingEscrow = address(new NullVotingEscrow());
@@ -28,15 +30,13 @@ contract VotingEscrowDelegationProxyDeploy is CommonDeploy {
             proxy = IVotingEscrowDelegationProxy(address(
                 new VotingEscrowDelegationProxy(
                     IERC20(nullVotingEscrow),
-                    IVeDelegation(getDeployedAddress(VeSiloContracts.VE_BOOST))
+                    IVeDelegation(veBoost)
                 )
             ));
 
-            _registerDeployment(nullVotingEscrow, VeSiloContracts.NULL_VOTING_ESCROW);
-            _registerDeployment(address(proxy), VeSiloContracts.VOTING_ESCROW_DELEGATION_PROXY);
-
             vm.stopBroadcast();
 
-            _syncDeployments();
+            _registerDeployment(nullVotingEscrow, VeSiloContracts.NULL_VOTING_ESCROW);
+            _registerDeployment(address(proxy), VeSiloContracts.VOTING_ESCROW_DELEGATION_PROXY);
         }
 }

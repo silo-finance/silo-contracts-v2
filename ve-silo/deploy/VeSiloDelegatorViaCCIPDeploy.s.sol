@@ -21,23 +21,24 @@ contract VeSiloDelegatorViaCCIPDeploy is CommonDeploy {
     function run() public returns (IVeSiloDelegatorViaCCIP delegator) {
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
 
-        vm.startBroadcast(deployerPrivateKey);
-
         address veSilo = getDeployedAddress(VeSiloContracts.VOTING_ESCROW);
         address remapper = getDeployedAddress(VeSiloContracts.VOTING_ESCROW_REMAPPER);
+        address chainlinkCCIPRouter = getAddress(AddrKey.CHAINLINK_CCIP_ROUTER);
+        address link = getAddress(AddrKey.LINK);
+
+        vm.startBroadcast(deployerPrivateKey);
 
         delegator = IVeSiloDelegatorViaCCIP(address(
             new VeSiloDelegatorViaCCIP(
                 IVeSilo(veSilo),
                 IVotingEscrowCCIPRemapper(remapper),
-                getAddress(AddrKey.CHAINLINK_CCIP_ROUTER),
-                getAddress(AddrKey.LINK)
+                chainlinkCCIPRouter,
+                link
             )
         ));
 
         vm.stopBroadcast();
 
         _registerDeployment(address(delegator), VeSiloContracts.VE_SILO_DELEGATOR_VIA_CCIP);
-        _syncDeployments();
     }
 }
