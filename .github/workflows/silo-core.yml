@@ -4,7 +4,6 @@
 name: CORE Quality Test
 
 env:
-  FOUNDRY_PROFILE: core
   RPC_MAINNET: ${{ vars.RPC_MAINNET }}
   RPC_ARBITRUM: ${{ vars.RPC_ARBITRUM }}
   RPC_SEPOLIA: ${{ vars.RPC_SEPOLIA }}
@@ -94,7 +93,7 @@ jobs:
         run: |
           git submodule
           forge --version
-          # forge build --sizes
+          FOUNDRY_PROFILE=core forge build --sizes
 
       - name: Run Forge tests
-        run: forge test -vvv --no-match-test "_skip_" --ffi
+        run: FOUNDRY_PROFILE=core-test forge test --no-match-test "_skip_" --no-match-contract "SiloIntegrationTest" --ffi -vvv

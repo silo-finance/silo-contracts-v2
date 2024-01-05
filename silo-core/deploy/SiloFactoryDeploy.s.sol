@@ -19,6 +19,7 @@ import {console2} from "forge-std/console2.sol";
         --ffi --broadcast --rpc-url http://127.0.0.1:8545
  */
 contract SiloFactoryDeploy is CommonDeploy {
+    uint256 public constant DAO_FEE = 0.15e18;
     function run() public returns (ISiloFactory siloFactory) {
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
 

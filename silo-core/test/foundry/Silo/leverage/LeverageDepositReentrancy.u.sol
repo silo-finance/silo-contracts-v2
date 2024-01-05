@@ -7,7 +7,7 @@ import {SiloLeverageNonReentrant} from "silo-core/test/foundry/_mocks/SiloLevera
 import {ISiloFactory} from "silo-core/contracts/interfaces/ISiloFactory.sol";
 import {ILeverageBorrower} from "silo-core/contracts/interfaces/ILeverageBorrower.sol";
 
-// FOUNDRY_PROFILE=core forge test -vv --ffi --mc LeverageDepositReentrancy
+// FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc LeverageDepositReentrancy
 contract LeverageDepositReentrancy is Test {
     SiloLeverageNonReentrant internal _silo;
 

@@ -16,7 +16,7 @@ import {
     SiloERC4626LibConsumerNonVulnerable
 } from "silo-core/test/foundry/_mocks/SiloERC4626Lib/SiloERC4626LibConsumerNonVulnerable.sol";
 
-// FOUNDRY_PROFILE=core forge test -vv --mc ReentrancyOnDepositTest --ffi
+// FOUNDRY_PROFILE=core-test forge test -vv --mc ReentrancyOnDepositTest --ffi
 contract ReentrancyOnDepositTest is Test {
     SiloERC4626LibConsumerVulnerable internal _vulnerable;
     SiloERC4626LibConsumerNonVulnerable internal _nonVulnerable;

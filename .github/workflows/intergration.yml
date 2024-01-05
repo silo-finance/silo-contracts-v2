@@ -1,0 +1,134 @@
+# This workflow will do a clean install of node dependencies, build the source code and run tests across different versions of node
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-nodejs-with-github-actions
+
+name: The Silo protocol integration
+
+env:
+  RPC_MAINNET: ${{ vars.RPC_MAINNET }}
+  RPC_ARBITRUM: ${{ vars.RPC_ARBITRUM }}
+  RPC_SEPOLIA: ${{ vars.RPC_SEPOLIA }}
+  PRIVATE_KEY: ${{ vars.ANVIL_PRIVATE_KEY }}
+  ANVIL_PORT: 8586
+  ANVIL_FORK_BLOCK_NUMBER: 18938600
+  SILO_DEPLOYMENT_NODE: "http://127.0.0.1:8586"
+
+on:
+  push:
+    branches: [ master, develop ]
+    paths:
+      - external/balancer-v2-monorepo/**/*.sol
+      - external/balancer-v2-monorepo/**/*.vy
+      - external/balancer-v2-monorepo/**/*.ts
+      - external/balancer-v2-monorepo/**/*.js
+      - external/balancer-v2-monorepo/**/*.json
+      - ve-silo/**/*.sol
+      - ve-silo/**/*.vy
+      - ve-silo/**/*.ts
+      - ve-silo/**/*.js
+      - ve-silo/**/*.json
+      - silo-core/**/*.sol
+      - silo-core/**/*.ts
+      - silo-core/**/*.js
+      - silo-core/**/*.json
+      - silo-oracles/**/*.sol
+      - silo-oracles/**/*.ts
+      - silo-oracles/**/*.js
+      - silo-oracles/**/*.json
+      - silo-core/contracts/interfaces/ISiloOracle.sol
+      - silo-vaults/**/*.sol
+      - silo-vaults/**/*.ts
+      - silo-vaults/**/*.js
+      - silo-vaults/**/*.json
+      - package.json
+      - yarn.lock
+      - gitmodules/*
+      - .gitmodules
+
+  pull_request:
+    paths:
+      - external/balancer-v2-monorepo/**/*.sol
+      - external/balancer-v2-monorepo/**/*.vy
+      - external/balancer-v2-monorepo/**/*.ts
+      - external/balancer-v2-monorepo/**/*.js
+      - external/balancer-v2-monorepo/**/*.json
+      - ve-silo/**/*.sol
+      - ve-silo/**/*.vy
+      - ve-silo/**/*.ts
+      - ve-silo/**/*.js
+      - ve-silo/**/*.json
+      - silo-core/**/*.sol
+      - silo-core/**/*.ts
+      - silo-core/**/*.js
+      - silo-core/**/*.json
+      - silo-oracles/**/*.sol
+      - silo-oracles/**/*.ts
+      - silo-oracles/**/*.js
+      - silo-oracles/**/*.json
+      - silo-core/contracts/interfaces/ISiloOracle.sol
+      - silo-vaults/**/*.sol
+      - silo-vaults/**/*.ts
+      - silo-vaults/**/*.js
+      - silo-vaults/**/*.json
+      - package.json
+      - yarn.lock
+      - gitmodules/*
+      - .gitmodules
+
+jobs:
+  ve-silo-foundry:
+    strategy:
+      fail-fast: true
+
+    name: Deploy & test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
+
+      - name: yarn install
+        run: yarn install
+
+      - name: Install Vyper compiler
+        run: |
+          pip install vyper==0.3.7
+          vyper --version
+
+      - name: Build silo foundry utils
+        working-directory: ./gitmodules/silo-foundry-utils
+        run: |
+          cargo build --release
+          cp target/release/silo-foundry-utils ../../silo-foundry-utils
+          ../../silo-foundry-utils --version
+
+      - name: Print versions
+        run: |
+          echo "git submodule:"
+          git submodule
+          echo "forge --version:"
+          forge --version
+          echo "vyper --version:"
+          vyper --version
+          echo "./silo-foundry-utils --version:"
+          ./silo-foundry-utils --version
+
+      - name: Forge build (all workspace)
+        run: |
+          FOUNDRY_PROFILE=core forge build
+          FOUNDRY_PROFILE=oracles forge build
+          FOUNDRY_PROFILE=vaults forge build
+          FOUNDRY_PROFILE=ve-silo forge build
+
+      - name: Start Anvil (mainnet fork)
+        run: anvil --fork-url $RPC_MAINNET --fork-block-number $ANVIL_FORK_BLOCK_NUMBER --port $ANVIL_PORT &
+
+      - name: Deploy Silo protocol
+        run: ./silo-core/test/scripts/mainnet-deployments.sh
+
+      - name: Test
+        run: FOUNDRY_PROFILE=core-test forge test --mc SiloIntegrationTest --ffi -vvv --rpc-url $SILO_DEPLOYMENT_NODE
