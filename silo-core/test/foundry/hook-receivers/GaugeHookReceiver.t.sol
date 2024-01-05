@@ -109,7 +109,7 @@ contract GaugeHookReceiverTest is Test, TransferOwnership {
         vm.expectRevert("Ownable: caller is not the owner");
         _hookReceiver.setGauge(IGauge(_gauge));
 
-        bytes memory data = abi.encodePacked(IGauge.shareToken.selector);
+        bytes memory data = abi.encodePacked(IGauge.share_token.selector);
         vm.mockCall(_gauge, data, abi.encode(address(_shareToken))); // valid share token
         vm.expectCall(_gauge, data);
 
@@ -128,7 +128,7 @@ contract GaugeHookReceiverTest is Test, TransferOwnership {
         vm.prank(_dao);
         _hookReceiver.setGauge(IGauge(_gauge));
 
-        bytes memory data = abi.encodePacked(IGauge.shareToken.selector);
+        bytes memory data = abi.encodePacked(IGauge.share_token.selector);
         vm.mockCall(_gauge, data, abi.encode(address(1))); // invalid share token
         vm.expectCall(_gauge, data);
 
@@ -140,7 +140,7 @@ contract GaugeHookReceiverTest is Test, TransferOwnership {
     function testUpdateGauge() public {
         _initializeHookReceiver();
 
-        bytes memory data = abi.encodePacked(IGauge.shareToken.selector);
+        bytes memory data = abi.encodePacked(IGauge.share_token.selector);
         vm.mockCall(_gauge, data, abi.encode(address(_shareToken))); // valid share token
         vm.expectCall(_gauge, data);
 
@@ -159,7 +159,7 @@ contract GaugeHookReceiverTest is Test, TransferOwnership {
         vm.mockCall(_gauge, data3, abi.encode(true));
         vm.expectCall(_gauge, data3);
 
-        bytes memory data4 = abi.encodePacked(IGauge.shareToken.selector);
+        bytes memory data4 = abi.encodePacked(IGauge.share_token.selector);
         vm.mockCall(_gauge2, data4, abi.encode(address(_shareToken))); // valid share token
         vm.expectCall(_gauge2, data4);
 
@@ -238,7 +238,7 @@ contract GaugeHookReceiverTest is Test, TransferOwnership {
     }
 
     function _setGauge() internal {
-        bytes memory data = abi.encodePacked(IGauge.shareToken.selector);
+        bytes memory data = abi.encodePacked(IGauge.share_token.selector);
         vm.mockCall(_gauge, data, abi.encode(address(_shareToken))); // valid share token
         vm.expectCall(_gauge, data);
 
