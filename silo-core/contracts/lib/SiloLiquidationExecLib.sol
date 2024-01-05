@@ -24,7 +24,7 @@ library SiloLiquidationExecLib {
         bool _receiveSToken,
         uint256 _liquidity,
         mapping(ISilo.AssetType => ISilo.Assets) storage _total
-    ) external {
+    ) internal /*ori_ext*/ {
         ISiloConfig.ConfigData memory collateralConfig = _config.getConfig(address(this));
         if (msg.sender != collateralConfig.otherSilo) revert ISiloLiquidation.OnlySilo();
 
@@ -61,7 +61,7 @@ library SiloLiquidationExecLib {
         uint256 _liquidationFee,
         bool _selfLiquidation
     )
-        external
+        internal /*ori_ext*/
         view
         returns (uint256 withdrawAssetsFromCollateral, uint256 withdrawAssetsFromProtected, uint256 repayDebtAssets)
     {
@@ -103,7 +103,7 @@ library SiloLiquidationExecLib {
         ISilo _silo,
         address _borrower
     )
-        external
+        internal /*ori_ext*/
         view
         returns (uint256 collateralToLiquidate, uint256 debtToRepay)
     {

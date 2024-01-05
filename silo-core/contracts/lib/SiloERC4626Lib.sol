@@ -41,7 +41,7 @@ library SiloERC4626Lib {
         address _receiver,
         uint256 _totalCollateralAssets
     )
-        external
+        internal /*ori_ext*/
         view
         returns (uint256 maxAssetsOrShares)
     {
@@ -71,7 +71,7 @@ library SiloERC4626Lib {
         ISilo.AssetType _assetType,
         uint256 _totalAssets,
         uint256 _liquidity
-    ) external view returns (uint256 assets, uint256 shares) {
+    ) internal /*ori_ext*/ view returns (uint256 assets, uint256 shares) {
         if (_assetType == ISilo.AssetType.Debt) revert ISilo.WrongAssetType();
 
         (
@@ -212,7 +212,7 @@ library SiloERC4626Lib {
         ISilo.AssetType _assetType,
         uint256 _liquidity,
         ISilo.Assets storage _totalCollateral
-    ) public returns (uint256 assets, uint256 shares) {
+    ) internal /*ori_pub*/ returns (uint256 assets, uint256 shares) {
         return withdraw(
             address(0), _shareToken, 0, _shares, _owner, _owner, _spender, _assetType, _liquidity, _totalCollateral
         );
@@ -285,7 +285,7 @@ library SiloERC4626Lib {
     /// @param _debtShareToken Address of the debt share token
     /// @param _depositor Address of the user attempting to deposit
     /// @return Returns `true` if the depositor can deposit, otherwise `false`
-    function depositPossible(address _debtShareToken, address _depositor) public view returns (bool) {
+    function depositPossible(address _debtShareToken, address _depositor) internal /*ori_pub*/ view returns (bool) {
         return IShareToken(_debtShareToken).balanceOf(_depositor) == 0;
     }
 }

@@ -22,7 +22,7 @@ library SiloStdLib {
     /// @param _config The configuration contract for retrieving fee-related data
     /// @param _factory The factory contract for retrieving fee-related data
     /// @param _siloData Storage reference containing silo-related data, including accumulated fees
-    function withdrawFees(ISiloConfig _config, ISiloFactory _factory, ISilo.SiloData storage _siloData) external {
+    function withdrawFees(ISiloConfig _config, ISiloFactory _factory, ISilo.SiloData storage _siloData) internal /*ori_ext*/ {
         (
             address daoFeeReceiver,
             address deployerFeeReceiver,
@@ -72,7 +72,7 @@ library SiloStdLib {
     /// @param _token for which fee is calculated
     /// @param _amount for which fee is calculated
     /// @return fee flash fee amount
-    function flashFee(ISiloConfig _config, address _token, uint256 _amount) external view returns (uint256 fee) {
+    function flashFee(ISiloConfig _config, address _token, uint256 _amount) internal /*ori_ext*/ view returns (uint256 fee) {
         if (_amount == 0) return 0;
 
         // all user set fees are in 18 decimals points
@@ -98,7 +98,7 @@ library SiloStdLib {
         ISiloConfig.ConfigData memory _configData,
         ISilo.AssetType _assetType
     )
-        external
+        internal /*ori_ext*/
         view
         returns (uint256 totalAssets, uint256 totalShares)
     {
@@ -131,7 +131,7 @@ library SiloStdLib {
     /// @return deployerFee Deployer fee amount in 18 decimals points
     /// @return asset Address of the associated asset
     function getFeesAndFeeReceiversWithAsset(ISiloConfig _config, ISiloFactory _factory)
-        public
+        internal /*ori_pub*/
         view
         returns (
             address daoFeeReceiver,
@@ -157,7 +157,7 @@ library SiloStdLib {
         address _interestRateModel,
         uint256 _daoFee,
         uint256 _deployerFee
-    ) public view returns (uint256 totalCollateralAssetsWithInterest) {
+    ) internal /*ori_pub*/ view returns (uint256 totalCollateralAssetsWithInterest) {
         uint256 rcomp = IInterestRateModel(_interestRateModel).getCompoundInterestRate(_silo, block.timestamp);
 
         (uint256 collateralAssets, uint256 debtAssets) = ISilo(_silo).getCollateralAndDebtAssets();
