@@ -8,8 +8,7 @@ contract Data {
     mapping(string tokenName => address tokenAdddress) internal _tokens;
     mapping(string oracleName => address oracleAddress) internal oracles;
     mapping(string IRMConfigName => address IRMConfigAddress) internal IRMConfigs;
-    mapping(string hookReceiverName => address hookReceiverAddress)
-        internal hookReceivers;
+    mapping(string hookReceiverName => address hookReceiverAddress) internal hookReceivers;
 
     IInterestRateModelV2.Config[] presetIRMConfigs;
 

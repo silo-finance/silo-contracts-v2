@@ -157,12 +157,8 @@ brew install echidna
 git submodule add --name crytic-properties https://github.com/crytic/properties gitmodules/crytic/properties
 
 
-
-
-pip3.11 install slither-analyzer
-
-solc-select install 0.8.21
-cd /silo-core/contracts
-
-SOLC_VERSION=0.8.21 slither .
+# before you can run any echidna tests, run the script:
+./silo-core/scripts/echidnaBefore.sh
+# after you done run this to revert changes:
+./silo-core/scripts/echidnaAfter.sh
 ```
