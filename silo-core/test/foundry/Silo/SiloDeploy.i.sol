@@ -37,7 +37,7 @@ interface IHookReceiverLike {
     function shareToken() external view returns (address);
 }
 
-// FOUNDRY_PROFILE=core forge test -vv --ffi --mc SiloDeployTest
+// FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc SiloDeployTest
 contract SiloDeployTest is IntegrationTest {
     uint256 internal constant _FORKING_BLOCK_NUMBER = 17336000;
 
@@ -77,7 +77,7 @@ contract SiloDeployTest is IntegrationTest {
         _siloConfig = _siloDeploy.useConfig(SiloConfigsNames.FULL_CONFIG_TEST).run();
     }
 
-    // FOUNDRY_PROFILE=core forge test -vv --ffi -mt test_hooks_are_initialized
+    // FOUNDRY_PROFILE=core-test forge test -vv --ffi -mt test_hooks_are_initialized
     function test_hooks_are_initialized() public { // solhint-disable-line func-name-mixedcase
         (address silo0, address silo1) = _siloConfig.getSilos();
 
