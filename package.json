@@ -11,6 +11,7 @@
     "silo-core",
     "silo-oracles",
     "ve-silo",
+    "proposals",
     "external/*"
   ],
   "scripts": {

@@ -57,6 +57,12 @@ out = 'cache/foundry/out/silo-oracles'
 test = 'silo-oracles/test'
 broadcast = 'silo-oracles/broadcast'
 
+[profile.proposals]
+src = 'proposals/contracts'
+out = 'cache/foundry/out/proposals'
+test = 'proposals/test'
+broadcast = 'proposals/broadcast'
+
 [rpc_endpoints]
 mainnet = "${RPC_MAINNET}"
 sepolia = "${RPC_SEPOLIA}"
