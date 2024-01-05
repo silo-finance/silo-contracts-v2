@@ -27,6 +27,5 @@ contract SmartWalletCheckerDeploy is CommonDeploy {
         vm.stopBroadcast();
 
         _registerDeployment(address(smartWalletChecker), VeSiloContracts.SMART_WALLET_CHECKER);
-        _syncDeployments();
     }
 }

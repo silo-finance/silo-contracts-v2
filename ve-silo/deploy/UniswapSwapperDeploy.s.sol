@@ -18,16 +18,14 @@ contract UniswapSwapperDeploy is CommonDeploy {
     function run() public returns (IFeeSwap uniswapSwapper) {
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
 
+        address uniswapRouter = getAddress(AddrKey.UNISWAP_ROUTER);
+
         vm.startBroadcast(deployerPrivateKey);
 
-        uniswapSwapper = IFeeSwap(address(
-            new UniswapSwapper(getAddress(AddrKey.UNISWAP_ROUTER))
-        ));
+        uniswapSwapper = IFeeSwap(address(new UniswapSwapper(uniswapRouter)));
 
         vm.stopBroadcast();
 
         _registerDeployment(address(uniswapSwapper), VeSiloContracts.UNISWAP_SWAPPER);
-
-        _syncDeployments();
     }
 }

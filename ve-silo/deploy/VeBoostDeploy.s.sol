@@ -15,19 +15,21 @@ contract VeBoostDeploy is CommonDeploy {
     function run() public returns (IVeBoost veBoost) {
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
 
+        address votingEscrow = _votingEscrowAddress();
+
         vm.startBroadcast(deployerPrivateKey);
 
          address veBoostAddr = _deploy(
             VeSiloContracts.VE_BOOST,
             abi.encode(
                 address(0), // veBoostV1 - an empty address
-                _votingEscrowAddress()
+                votingEscrow
             )
          );
 
-        veBoost = IVeBoost(veBoostAddr);
-
         vm.stopBroadcast();
+
+        veBoost = IVeBoost(veBoostAddr);
 
         _syncDeployments();
     }
