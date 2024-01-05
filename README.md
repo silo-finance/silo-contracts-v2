@@ -147,9 +147,17 @@ genhtml -o coverage/silo-oracles/ lcov.info
 - to assets: Up
 - to shares: Down
 
+## Setup Echidna
+
+- https://github.com/crytic/echidna
+- https://github.com/crytic/properties
 
 ```shell
 brew install echidna
+git submodule add --name crytic-properties https://github.com/crytic/properties gitmodules/crytic/properties
+
+
+
 
 pip3.11 install slither-analyzer
 
