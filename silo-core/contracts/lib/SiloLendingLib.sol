@@ -101,7 +101,7 @@ library SiloLendingLib {
         uint256 _amount,
         bytes calldata _data
     )
-        internal /*ori_ext*/
+        external
         returns (bool success)
     {
         // flashFee will revert for wrong token
@@ -243,7 +243,7 @@ library SiloLendingLib {
         uint256 _totalDebtShares,
         ISiloConfig _siloConfig
     )
-        internal /*ori_ext*/
+        external
         view
         returns (uint256 assets, uint256 shares)
     {
@@ -297,7 +297,7 @@ library SiloLendingLib {
         }
     }
 
-    function getLiquidity(ISiloConfig _config) internal /*ori_pub*/ view returns (uint256 liquidity) {
+    function getLiquidity(ISiloConfig _config) public view returns (uint256 liquidity) {
         ISiloConfig.ConfigData memory config = _config.getConfig(address(this));
 
         uint256 totalCollateralAssets = SiloStdLib.getTotalCollateralAssetsWithInterest(
@@ -324,7 +324,7 @@ library SiloLendingLib {
         address _protectedShareToken,
         address _collateralShareToken,
         address _borrower
-    ) internal /*ori_pub*/ view returns (bool possible) {
+    ) public view returns (bool possible) {
         // _borrower cannot have any collateral deposited
         possible = IShareToken(_protectedShareToken).balanceOf(_borrower) == 0
             && IShareToken(_collateralShareToken).balanceOf(_borrower) == 0;

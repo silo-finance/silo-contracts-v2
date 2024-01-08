@@ -38,7 +38,7 @@ library SiloLiquidationLib {
         uint256 _lt,
         uint256 _liquidityFee
     )
-        internal /*ori_ext*/
+        external
         pure
         returns (uint256 collateralToLiquidate, uint256 debtToRepay)
     {
@@ -75,7 +75,7 @@ library SiloLiquidationLib {
         uint256 _borrowerDebtValue,
         LiquidationPreviewParams memory _params
     )
-        internal /*ori_ext*/
+        external
         pure
         returns (uint256 collateralToLiquidate, uint256 debtToRepay, uint256 ltvAfter)
     {
