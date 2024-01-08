@@ -17,18 +17,17 @@ contract GaugeAdderDeploy is CommonDeploy {
     function run() public returns (IGaugeAdder gaugeAdder) {
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
 
-        vm.startBroadcast(deployerPrivateKey);
-
         address controller = getDeployedAddress(VeSiloContracts.GAUGE_CONTROLLER);
+        address timelock = getDeployedAddress(VeSiloContracts.TIMELOCK_CONTROLLER);
+
+        vm.startBroadcast(deployerPrivateKey);
 
         gaugeAdder = IGaugeAdder(address(new GaugeAdder(IGaugeController(controller))));
 
-        address timelock = getDeployedAddress(VeSiloContracts.TIMELOCK_CONTROLLER);
         Ownable2Step(address(gaugeAdder)).transferOwnership(timelock);
 
         vm.stopBroadcast();
 
         _registerDeployment(address(gaugeAdder), VeSiloContracts.GAUGE_ADDER);
-        _syncDeployments();
     }
 }

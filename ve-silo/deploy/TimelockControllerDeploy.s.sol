@@ -14,12 +14,12 @@ contract TimelockControllerDeploy is CommonDeploy {
     function run() public returns (ISiloTimelockController timelockController) {
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
 
-        vm.startBroadcast(deployerPrivateKey);
-
         uint256 minDelay = 1;
         address[] memory proposers = new address[](0);
         address[] memory executors = new address[](0);
         address admin = vm.addr(deployerPrivateKey);
+
+        vm.startBroadcast(deployerPrivateKey);
 
         timelockController = ISiloTimelockController(address(
             new TimelockController(
@@ -30,10 +30,8 @@ contract TimelockControllerDeploy is CommonDeploy {
             )
         ));
 
-        _registerDeployment(address(timelockController), VeSiloContracts.TIMELOCK_CONTROLLER);
-
         vm.stopBroadcast();
 
-        _syncDeployments();
+        _registerDeployment(address(timelockController), VeSiloContracts.TIMELOCK_CONTROLLER);
     }
 }

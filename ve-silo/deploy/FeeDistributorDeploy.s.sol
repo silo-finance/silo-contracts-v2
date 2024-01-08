@@ -18,9 +18,9 @@ contract FeeDistributorDeploy is CommonDeploy {
     function run() public returns (IFeeDistributor feeDistributor) {
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
 
-        vm.startBroadcast(deployerPrivateKey);
-
         address votingEscrow = getDeployedAddress(VeSiloContracts.VOTING_ESCROW);
+
+        vm.startBroadcast(deployerPrivateKey);
 
         feeDistributor = IFeeDistributor(address(
             new FeeDistributor(IVotingEscrow(votingEscrow), startTime)
@@ -29,7 +29,5 @@ contract FeeDistributorDeploy is CommonDeploy {
         vm.stopBroadcast();
 
         _registerDeployment(address(feeDistributor), VeSiloContracts.FEE_DISTRIBUTOR);
-
-        _syncDeployments();
     }
 }

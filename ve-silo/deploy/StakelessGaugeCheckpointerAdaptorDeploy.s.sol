@@ -27,7 +27,5 @@ contract StakelessGaugeCheckpointerAdaptorDeploy is CommonDeploy {
         vm.stopBroadcast();
 
         _registerDeployment(address(adaptor), VeSiloContracts.STAKELESS_GAUGE_CHECKPOINTER_ADAPTOR);
-
-        _syncDeployments();
     }
 }

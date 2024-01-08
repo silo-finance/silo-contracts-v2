@@ -27,7 +27,16 @@ fs_permissions = [{ access = "read", path = "./silo-amm-core/test/foundry/data/"
 [profile.core]
 src = 'silo-core/contracts'
 out = 'cache/foundry/out/silo-core'
-test = 'silo-core/test'
+broadcast = 'silo-core/broadcast'
+
+fs_permissions = [
+    { access = "read", path = "./silo-core/test/foundry/data/"},
+    { access = "read", path = "./silo-core/deploy/input/"}
+]
+
+[profile.core-test]
+src = 'silo-core/test'
+out = 'cache/foundry/out/silo-core'
 broadcast = 'silo-core/broadcast'
 
 fs_permissions = [
@@ -56,6 +65,12 @@ src = 'silo-oracles/contracts'
 out = 'cache/foundry/out/silo-oracles'
 test = 'silo-oracles/test'
 broadcast = 'silo-oracles/broadcast'
+
+[profile.proposals]
+src = 'proposals/contracts'
+out = 'cache/foundry/out/proposals'
+test = 'proposals/test'
+broadcast = 'proposals/broadcast'
 
 [rpc_endpoints]
 mainnet = "${RPC_MAINNET}"

@@ -26,16 +26,6 @@ contract VeSiloDelegatorViaCCIP is IntegrationTest {
     uint256 internal constant _FORKING_BLOCK_NUMBER = 4319390;
     uint64 internal constant _DS_CHAIN_SELECTOR = 12532609583862916517; // Polygon Mumbai
 
-    bytes32 internal constant _MESSAGE_ID_BAL_LINK = 0x5baae221057907fbbab9c28f9bb6ccfbdcde0fbaf0a4423b25cd727a54db05d2;
-
-    bytes32 internal constant _MESSAGE_ID_SUPPL_LINK =
-        0xe4660e8210828df9ada21a55b116fa8b89d57f22461390c26c0b7c41e460b662;
-
-    bytes32 internal constant _MESSAGE_ID_BAL_ETH = 0xff590182a631f467fa84fac5a5f7ddcdcfb22ed8abd4de8b68e69655a34b8ad8;
-
-    bytes32 internal constant _MESSAGE_ID_SUPPL_ETH =
-        0x0328164d30c9c60787c13003f20c4f59a037aa2c4d585eab71811a1e38a0a837;
-
     address internal _localUser = makeAddr("localUser");
     address internal _votingEscrowCCIPRemapper = makeAddr("VotingEscrowCCIPRemapper");
     address internal _smartValletChecker = makeAddr("Smart wallet checker");
@@ -156,7 +146,7 @@ contract VeSiloDelegatorViaCCIP is IntegrationTest {
 
         vm.deal(_localUser, fee);
 
-        _sendUserBalance(ICCIPMessageSender.PayFeesIn.Native, fee, _MESSAGE_ID_BAL_ETH);
+        _sendUserBalance(ICCIPMessageSender.PayFeesIn.Native, fee);
     }
 
     function testSendUserBalanceLINKFee() public {
@@ -173,7 +163,7 @@ contract VeSiloDelegatorViaCCIP is IntegrationTest {
         vm.prank(_localUser);
         IERC20(_link).approve(address(veSiloDelegator), fee);
 
-        _sendUserBalance(ICCIPMessageSender.PayFeesIn.LINK, fee, _MESSAGE_ID_BAL_LINK);
+        _sendUserBalance(ICCIPMessageSender.PayFeesIn.LINK, fee);
     }
 
     function testSendTotalSupplyNativeFee() public {
@@ -186,7 +176,7 @@ contract VeSiloDelegatorViaCCIP is IntegrationTest {
 
         vm.deal(_localUser, fee);
 
-        _sendTotalSupply(ICCIPMessageSender.PayFeesIn.Native, fee, _MESSAGE_ID_SUPPL_ETH);
+        _sendTotalSupply(ICCIPMessageSender.PayFeesIn.Native, fee);
     }
 
     function testSendTotalSupplyLINKFee() public {
@@ -202,15 +192,12 @@ contract VeSiloDelegatorViaCCIP is IntegrationTest {
         vm.prank(_localUser);
         IERC20(_link).approve(address(veSiloDelegator), fee);
 
-        _sendTotalSupply(ICCIPMessageSender.PayFeesIn.LINK, fee, _MESSAGE_ID_SUPPL_LINK);
+        _sendTotalSupply(ICCIPMessageSender.PayFeesIn.LINK, fee);
     }
 
-    function _sendTotalSupply(ICCIPMessageSender.PayFeesIn _payFeesIn, uint256 _fee, bytes32 _messageId) internal {
+    function _sendTotalSupply(ICCIPMessageSender.PayFeesIn _payFeesIn, uint256 _fee) internal {
         uint totalSupplyEpoch = votingEscrow.epoch();
         IVeSilo.Point memory totalSupplyPoint = votingEscrow.point_history(totalSupplyEpoch);
-
-        vm.expectEmit(false, false, false, true);
-        emit MessageSentVaiCCIP(_messageId);
 
         vm.expectEmit(false, false, true, true);
         emit SentTotalSupply(_DS_CHAIN_SELECTOR, totalSupplyPoint);
@@ -232,16 +219,13 @@ contract VeSiloDelegatorViaCCIP is IntegrationTest {
         veSiloDelegator.setChildChainReceiver(_DS_CHAIN_SELECTOR, _childChainReceiver);
     }
 
-    function _sendUserBalance(ICCIPMessageSender.PayFeesIn _payFeesIn, uint256 _fee, bytes32 _messageId) internal {
+    function _sendUserBalance(ICCIPMessageSender.PayFeesIn _payFeesIn, uint256 _fee) internal {
         uint userEpoch = votingEscrow.user_point_epoch(_localUser);
         IVeSilo.Point memory userPoint = votingEscrow.user_point_history(_localUser, userEpoch);
 
         // always send total supply along with a user update
         uint totalSupplyEpoch = votingEscrow.epoch();
         IVeSilo.Point memory totalSupplyPoint = votingEscrow.point_history(totalSupplyEpoch);
-
-        vm.expectEmit(false, false, false, true);
-        emit MessageSentVaiCCIP(_messageId);
 
         vm.expectEmit(false, false, false, true);
         emit SentUserBalance(

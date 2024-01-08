@@ -30,7 +30,5 @@ contract L2BalancerPseudoMinterDeploy is CommonDeploy {
         vm.stopBroadcast();
 
         _registerDeployment(address(minter), VeSiloContracts.L2_BALANCER_PSEUDO_MINTER);
-
-        _syncDeployments();
     }
 }
