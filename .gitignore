@@ -42,3 +42,6 @@ lcov.info
 # echidna
 corpus/
 crytic-export
+
+
+.certora_internal
