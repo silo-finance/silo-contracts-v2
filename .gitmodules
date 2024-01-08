@@ -30,3 +30,6 @@
 [submodule "chainlink-ccip"]
 	path = gitmodules/chainlink-ccip
 	url = https://github.com/smartcontractkit/ccip
+[submodule "crytic-properties"]
+	path = gitmodules/crytic/properties
+	url = https://github.com/crytic/properties

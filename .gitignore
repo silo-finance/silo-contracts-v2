@@ -38,3 +38,10 @@ coverage
 !coverage/silo-core.txt
 !coverage/silo-oracles.txt
 lcov.info
+
+# echidna
+corpus/
+crytic-export
+
+
+.certora_internal

@@ -1,5 +1,6 @@
 forge-std/=gitmodules/forge-std/src/
 silo-foundry-utils/=gitmodules/silo-foundry-utils/contracts/
+properties/=gitmodules/crytic/properties/contracts/
 
 silo-core/=silo-core/
 silo-oracles/=silo-oracles/
