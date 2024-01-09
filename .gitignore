@@ -38,3 +38,6 @@ coverage
 !coverage/silo-core.txt
 !coverage/silo-oracles.txt
 lcov.info
+
+
+.certora_internal
