@@ -76,20 +76,24 @@ contract MainnetTest is IntegrationTest {
 
     uint256 internal _daoVoterPK;
 
-    function setUp() public {
-        vm.createSelectFork(
-            getChainRpcUrl(MAINNET_ALIAS),
-            _FORKING_BLOCK_NUMBER
-        );
+    bool internal _executeMainnetDeploy = true;
 
+    function setUp() public virtual {
         (_daoVoter, _daoVoterPK) = makeAddrAndKey("_daoVoter");
 
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
         _deployer = vm.addr(deployerPrivateKey);
 
-        MainnetDeploy deploy = new MainnetDeploy();
-        deploy.disableDeploymentsSync();
-        deploy.run();
+        if (_executeMainnetDeploy) {
+            vm.createSelectFork(
+                getChainRpcUrl(MAINNET_ALIAS),
+                _FORKING_BLOCK_NUMBER
+            );
+
+            MainnetDeploy deploy = new MainnetDeploy();
+            deploy.disableDeploymentsSync();
+            deploy.run();
+        }
 
         _veSilo = IVeSilo(getAddress(VeSiloContracts.VOTING_ESCROW));
         _timelock = ISiloTimelockController(getAddress(VeSiloContracts.TIMELOCK_CONTROLLER));

@@ -21,7 +21,7 @@ import {IBalancerTokenAdmin} from "ve-silo/contracts/silo-tokens-minter/interfac
 import {IGaugeController} from "ve-silo/contracts/gauges/interfaces/IGaugeController.sol";
 import {ICCIPGauge} from "ve-silo/contracts/gauges/interfaces/ICCIPGauge.sol";
 import {ICCIPGaugeCheckpointer} from "ve-silo/contracts/gauges/interfaces/ICCIPGaugeCheckpointer.sol";
-import {CCIPGaugeFactorySepoliaMumbai} from "ve-silo/test/_mocks/CCIPGaugeFactorySepoliaMumbai.sol";
+import {CCIPGaugeFactoryAnyChain} from "ve-silo/test/_mocks/CCIPGaugeFactoryAnyChain.sol";
 import {CCIPGaugeSepoliaMumbai} from "ve-silo/test/_mocks/CCIPGaugeSepoliaMumbai.sol";
 import {VeSiloContracts} from "ve-silo/deploy/_CommonDeploy.sol";
 import {CheckpointerAdaptorMock} from "../_mocks/CheckpointerAdaptorMock.sol";
@@ -89,7 +89,7 @@ contract CCIPGaugeCheckpointer is IntegrationTest {
 
         CCIPGaugeSepoliaMumbai gaugeImpl = new CCIPGaugeSepoliaMumbai(IMainnetBalancerMinter(_minter));
 
-        CCIPGaugeFactorySepoliaMumbai factory = new CCIPGaugeFactorySepoliaMumbai(
+        CCIPGaugeFactoryAnyChain factory = new CCIPGaugeFactoryAnyChain(
             address(adaptor),
             address(gaugeImpl)
         );
@@ -238,7 +238,7 @@ contract CCIPGaugeCheckpointer is IntegrationTest {
         payable(expectedGauge).transfer(_ethAmount);
 
         _createdGauge = ICCIPGauge(
-            CCIPGaugeFactorySepoliaMumbai(_gaugeFactory).create(_chaildChainGauge2, _RELATIVE_WEIGHT_CAP)
+            CCIPGaugeFactoryAnyChain(_gaugeFactory).create(_chaildChainGauge2, _RELATIVE_WEIGHT_CAP)
         );
 
         assertEq(expectedGauge, address(_createdGauge), "Unexpected gauge address");

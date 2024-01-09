@@ -5,6 +5,7 @@ import {CommonDeploy, VeSiloContracts} from "ve-silo/deploy/_CommonDeploy.sol";
 
 import {AddrKey} from "common/addresses/AddrKey.sol";
 import {CCIPRouterClientLike} from "ve-silo/test/_mocks/for-testnet-deployments/ccip/CCIPRouterClientLike.sol";
+import {VeSiloMocksContracts} from "./VeSiloMocksContracts.sol";
 
 /**
 FOUNDRY_PROFILE=ve-silo \
@@ -24,6 +25,6 @@ contract CCIPRouterClientLikeDeploy is CommonDeploy {
 
         vm.stopBroadcast();
 
-        _registerDeployment(address(routerClient), "CCIPRouterClientLike.sol");
+        _registerDeployment(address(routerClient), VeSiloMocksContracts.CCIP_ROUTER_CLIENT_LIKE);
     }
 }

@@ -6,6 +6,7 @@ import {CommonDeploy, VeSiloContracts} from "ve-silo/deploy/_CommonDeploy.sol";
 import {BPTTokenLike} from "ve-silo/test/_mocks/for-testnet-deployments/tokens/BPTTokenLike.sol";
 import {LINKTokenLike} from "ve-silo/test/_mocks/for-testnet-deployments/tokens/LINKTokenLike.sol";
 import {SILOTokenLike} from "ve-silo/test/_mocks/for-testnet-deployments/tokens/SILOTokenLike.sol";
+import {VeSiloMocksContracts} from "./VeSiloMocksContracts.sol";
 
 /**
 FOUNDRY_PROFILE=ve-silo \
@@ -24,8 +25,8 @@ contract TestTokensMainnetLikeDeploy is CommonDeploy {
 
         vm.stopBroadcast();
 
-        _registerDeployment(address(bptToken), "BPTTokenLike.sol");
-        _registerDeployment(address(linkToken), "LINKTokenLike.sol");
-        _registerDeployment(address(siloToken), "SILOTokenLike.sol");
+        _registerDeployment(address(bptToken), VeSiloMocksContracts.BPT_TOKEN_LIKE);
+        _registerDeployment(address(linkToken), VeSiloMocksContracts.LINK_TOKEN_LIKE);
+        _registerDeployment(address(siloToken), VeSiloMocksContracts.SILO_TOKEN_LIKE);
     }
 }

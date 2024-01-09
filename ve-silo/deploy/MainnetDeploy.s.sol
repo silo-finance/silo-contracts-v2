@@ -14,6 +14,7 @@ import {FeeDistributorDeploy} from "ve-silo/deploy/FeeDistributorDeploy.s.sol";
 import {FeeSwapperDeploy} from "ve-silo/deploy/FeeSwapperDeploy.s.sol";
 import {UniswapSwapperDeploy} from "ve-silo/deploy/UniswapSwapperDeploy.s.sol";
 import {SmartWalletCheckerDeploy} from "./SmartWalletCheckerDeploy.s.sol";
+import {VeSiloDelegatorViaCCIPDeploy} from "ve-silo/deploy/VeSiloDelegatorViaCCIPDeploy.s.sol";
 
 import {IExtendedOwnable} from "ve-silo/contracts/access/IExtendedOwnable.sol";
 
@@ -76,8 +77,10 @@ contract MainnetDeploy is CommonDeploy {
     function _deployL1ForL2() internal {
         StakelessGaugeCheckpointerAdaptorDeploy adaptorDeploy = new StakelessGaugeCheckpointerAdaptorDeploy();
         VotingEscrowRemapperDeploy remapperDeploy = new VotingEscrowRemapperDeploy();
+        VeSiloDelegatorViaCCIPDeploy veSiloDelegatorDeploy = new VeSiloDelegatorViaCCIPDeploy();
 
         adaptorDeploy.run();
         remapperDeploy.run();
+        veSiloDelegatorDeploy.run();
     }
 }

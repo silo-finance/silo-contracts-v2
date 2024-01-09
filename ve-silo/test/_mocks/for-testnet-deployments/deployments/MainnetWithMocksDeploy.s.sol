@@ -7,9 +7,12 @@ import {MainnetDeploy} from "ve-silo/deploy/MainnetDeploy.s.sol";
 import {BPTTokenLike} from "ve-silo/test/_mocks/for-testnet-deployments/tokens/BPTTokenLike.sol";
 import {LINKTokenLike} from "ve-silo/test/_mocks/for-testnet-deployments/tokens/LINKTokenLike.sol";
 import {SILOTokenLike} from "ve-silo/test/_mocks/for-testnet-deployments/tokens/SILOTokenLike.sol";
+import {CCIPGaugeWithMocks} from "ve-silo/test/_mocks/for-testnet-deployments/gauges/CCIPGaugeWithMocks.sol";
 import {CCIPRouterClientLike} from "ve-silo/test/_mocks/for-testnet-deployments/ccip/CCIPRouterClientLike.sol";
 import {TestTokensMainnetLikeDeploy} from "./TestTokensMainnetLikeDeploy.s.sol";
 import {CCIPRouterClientLikeDeploy} from "./CCIPRouterClientLikeDeploy.s.sol";
+import {CCIPGaugeWithMocksDeploy} from "./CCIPGaugeWithMocksDeploy.s.sol";
+import {CCIPGaugeFactoryAnyChainDeploy} from "./CCIPGaugeFactoryAnyChainDeploy.s.sol";
 
 /**
 FOUNDRY_PROFILE=ve-silo \
@@ -35,5 +38,11 @@ contract MainnetWithMocksDeploy is CommonDeploy {
         mainnetDeploy.enableMainnetSimulation();
 
         mainnetDeploy.run();
+
+        CCIPGaugeWithMocksDeploy gaugeDeploy = new CCIPGaugeWithMocksDeploy();
+        gaugeDeploy.run();
+
+        CCIPGaugeFactoryAnyChainDeploy factoryDeploy = new CCIPGaugeFactoryAnyChainDeploy();
+        factoryDeploy.run();
     }
 }

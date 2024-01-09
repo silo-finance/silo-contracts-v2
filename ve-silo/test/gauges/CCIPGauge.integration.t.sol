@@ -17,7 +17,7 @@ import {IGaugeController} from "ve-silo/contracts/gauges/interfaces/IGaugeContro
 import {ICCIPGauge} from "ve-silo/contracts/gauges/interfaces/ICCIPGauge.sol";
 import {ICCIPExtraArgsConfig} from "ve-silo/contracts/gauges/interfaces/ICCIPExtraArgsConfig.sol";
 
-import {CCIPGaugeFactorySepoliaMumbai} from "ve-silo/test/_mocks/CCIPGaugeFactorySepoliaMumbai.sol";
+import {CCIPGaugeFactoryAnyChain} from "ve-silo/test/_mocks/CCIPGaugeFactoryAnyChain.sol";
 import {CCIPGaugeSepoliaMumbai} from "ve-silo/test/_mocks/CCIPGaugeSepoliaMumbai.sol";
 import {VeSiloContracts} from "ve-silo/deploy/_CommonDeploy.sol";
 
@@ -54,7 +54,7 @@ contract CCIPGaugeTest is IntegrationTest {
 
         CCIPGaugeSepoliaMumbai gaugeImpl = new CCIPGaugeSepoliaMumbai(IMainnetBalancerMinter(_minter));
 
-        CCIPGaugeFactorySepoliaMumbai factory = new CCIPGaugeFactorySepoliaMumbai(
+        CCIPGaugeFactoryAnyChain factory = new CCIPGaugeFactoryAnyChain(
             _checkpointer,
             address(gaugeImpl)
         );
