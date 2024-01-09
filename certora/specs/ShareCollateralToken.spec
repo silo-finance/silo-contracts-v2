@@ -93,3 +93,52 @@ rule transferOrder() {
     assert optionTwoState == optionOneState;
 
 }
+
+
+rule noDecreaseByOther(method f, address account) filtered { f -> !f.isView } {
+    env e;
+
+    require e.msg.sender != account;
+    uint256 allowance = allowance(account, e.msg.sender); 
+    requireInvariant sumOfBalancesInvariant();
+    require balanceOf(account) + balanceOf(e.msg.sender) <= to_mathint(totalSupply()); //todo - prove this! 
+
+    
+    uint256 before = balanceOf(account);
+    calldataarg args;
+    f(e,args); /* check on all possible arguments */
+    uint256 after = balanceOf(account);
+    /* logic implication : true when: (a) the left hand side is false or (b) right hand side is true  */
+    assert after < before =>  (e.msg.sender == account  ||  to_mathint(allowance) >= (before-after) || 
+    (e.msg.sender == currentContract.silo && f.selector== sig:burn(address,address,uint256).selector))  ;
+    
+}
+
+
+
+invariant balanceOfZero()  
+    balanceOf(0) == 0 ;
+
+/*
+invariant singleBalance() 
+    forall address u. balanceOf(u) <= totalSupply(); 
+*/
+
+ghost mathint sumOfBalances {
+     init_state axiom sumOfBalances == 0; 
+}
+/* old_value := balance[user]
+balance[user] := new_value 
+sumOfBalances =  sumOfBalances +  new_value - old_value  */
+
+hook Sstore _balances[KEY address user] uint256 newValue (uint256 oldValue) STORAGE {
+    sumOfBalances = sumOfBalances + newValue - oldValue;
+}
+
+hook Sload uint256 value _balances[KEY address user] STORAGE {
+    require to_mathint(value) <= sumOfBalances;
+}
+
+invariant sumOfBalancesInvariant() 
+        sumOfBalances == to_mathint(totalSupply()); 
+
