@@ -30,3 +30,9 @@ rule transferIsNotPossibleWithoutReverseApproval(method f) filtered { f -> !f.is
     // recipient should not receive any debt tokens
     assert balanceOf(recipient) == recipientBalanceBefore;
 }
+
+// idk if this is the way to go,
+// if I use this hook I probably need to prove, that nobody can set this other than recipient
+hook Sload uint256 value _receiveAllowances[KEY address owner][KEY address recipient] STORAGE {
+    require value == 0;
+}
