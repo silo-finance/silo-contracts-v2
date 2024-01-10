@@ -24,8 +24,8 @@ contract MainnetWithMocksIntegrationTest is MainnetTest {
         _executeMainnetDeploy = false;
 
         vm.createSelectFork(
-            getChainRpcUrl(MAINNET_ALIAS),
-            _FORKING_BLOCK_NUMBER
+            getChainRpcUrl(ARBITRUM_ONE_ALIAS),
+            169076190
         );
 
         // deploy with mocks
@@ -104,17 +104,5 @@ contract MainnetWithMocksIntegrationTest is MainnetTest {
             ICCIPGauge(gauge),
             ICCIPGauge.PayFeesIn.Native
         );
-
-        // vm.warp(block.timestamp + 1 weeks);
-        // _voteForGauge(gauge);
-
-        // vm.prank(checkpointer);
-        // ccipCheckpointer.checkpointSingleGauge{value: ethFees}(
-        //     initialConfig.GAUGE_TYPE_CC(),
-        //     ICCIPGauge(gauge),
-        //     ICCIPGauge.PayFeesIn.Native
-        // );
-
-        assertTrue(false);
     }
 }

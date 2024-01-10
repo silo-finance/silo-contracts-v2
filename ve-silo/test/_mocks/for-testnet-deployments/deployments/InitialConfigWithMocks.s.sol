@@ -62,8 +62,6 @@ contract InitialConfigWithMocks is CommonDeploy {
 
         vm.startBroadcast(deployerPrivateKey);
 
-        address owner = Ownable(siloToken).owner();
-
         Ownable(siloToken).transferOwnership(address(balancerTokenAdmin));
 
         balancerTokenAdmin.activate();

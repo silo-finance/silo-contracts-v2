@@ -27,7 +27,7 @@ contract MainnetWithMocksDeploy is CommonDeploy {
         (BPTTokenLike bptToken, LINKTokenLike linkToken, SILOTokenLike siloToken) = tokensDeploy.run();
 
         setAddress(AddrKey.LINK, address(linkToken));
-        setAddress(AddrKey.SILO_TOKEN, address(siloToken));
+        setAddress(SILO_TOKEN, address(siloToken));
         setAddress(SILO80_WETH20_TOKEN, address(bptToken));
 
         CCIPRouterClientLike router = routerDeploy.run();
