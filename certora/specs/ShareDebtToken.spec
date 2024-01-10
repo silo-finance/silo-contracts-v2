@@ -5,27 +5,28 @@ methods {
     function receiveAllowance(address,address) external returns(uint) envfree;
     function balanceOf(address)         external returns(uint) envfree;
     function totalSupply()              external returns(uint) envfree;
-
-    // function forwardTransfer(address _owner, address _recipient, uint256 _amount) external;
-    // function forwardTransferFrom(address _spender, address _from, address _to, uint256 _amount);
-    // function forwardApprove(address _owner, address _spender, uint256 _amount) public;
 }
 
 // certoraRun certora/confs/silo-core/share_debt_token_sanity.conf 
+// certoraRun certora/confs/silo-core/share_debt.conf
 /// @title Transfer is possible`
-rule transferIsNotPossibleWithoutReverseApproval(method f) {
+rule transferIsNotPossibleWithoutReverseApproval(method f) filtered { f -> !f.isView } {
     address recipient;
 
     env e;
 
+    // we don't want recipient to do any action
     require e.msg.sender != recipient;
-    require balanceOf(recipient) == 0;
+    // silo can mint or force transfer, so we need to exclude it
+    require e.msg.sender != currentContract.silo;
+    // we assuming recipient did not allow sender to send debt
     require receiveAllowance(e.msg.sender, recipient) == 0;
+
+    uint256 recipientBalanceBefore = balanceOf(recipient);
 
     calldataarg args;
     f(e, args);
 
-    uint256 balance_sender_before = balanceOf(sender);
-
-    assert balanceOf(recipient) == 0;
+    // recipient should not receive any debt tokens
+    assert balanceOf(recipient) == recipientBalanceBefore;
 }
