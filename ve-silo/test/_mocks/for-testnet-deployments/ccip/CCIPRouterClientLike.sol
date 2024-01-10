@@ -6,14 +6,16 @@ import {Client} from "chainlink-ccip/v0.8/ccip/interfaces/IAny2EVMMessageReceive
 import {IERC20} from "openzeppelin-contracts/token/ERC20/ERC20.sol";
 import {Address} from "openzeppelin-contracts/utils/Address.sol";
 
+import {console} from "forge-std/console.sol";
+
 contract CCIPRouterClientLike is IRouterClient {
+    uint256 public constant FEE = 0.001e18;
+
     // solhint-disable var-name-mixedcase
     address public immutable SILO_LIKE_TOKEN;
     address public immutable LINK_LIKE_TOKEN;
     address private immutable _DEPLOYER;
     // solhint-enable var-name-mixedcase
-
-    uint256 public immutable FEE = 0.001e18;
 
     constructor(address _siloLikeToken, address _linkLikeToken) {
         SILO_LIKE_TOKEN = _siloLikeToken;
@@ -57,6 +59,10 @@ contract CCIPRouterClientLike is IRouterClient {
         }
 
         if (message.tokenAmounts.length != 0) {
+            uint256 balance = IERC20(SILO_LIKE_TOKEN).balanceOf(msg.sender);
+            console.log("balance", balance);
+            console.log("SILO_LIKE_TOKEN", SILO_LIKE_TOKEN);
+
             IERC20(SILO_LIKE_TOKEN).transferFrom(msg.sender, address(this), message.tokenAmounts[0].amount);
         }
 

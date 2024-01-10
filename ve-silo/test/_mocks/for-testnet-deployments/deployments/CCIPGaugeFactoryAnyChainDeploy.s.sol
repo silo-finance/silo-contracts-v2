@@ -16,7 +16,7 @@ contract CCIPGaugeFactoryAnyChainDeploy is CommonDeploy {
     function run() public returns (CCIPGaugeFactoryAnyChain factory) {
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
 
-        address gaugeImplementation = getAddress("CCIP_GAUGE_WITH_MOCKS_CUSTOM_IMPL");
+        address gaugeImplementation = getAddress(VeSiloMocksContracts.CCIP_GAUGE_WITH_MOCKS);
         address adaptor = getAddress(VeSiloContracts.STAKELESS_GAUGE_CHECKPOINTER_ADAPTOR);
 
         vm.startBroadcast(deployerPrivateKey);

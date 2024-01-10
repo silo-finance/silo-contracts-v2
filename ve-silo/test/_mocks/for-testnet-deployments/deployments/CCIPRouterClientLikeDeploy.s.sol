@@ -17,11 +17,11 @@ contract CCIPRouterClientLikeDeploy is CommonDeploy {
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
 
         address link = getAddress(AddrKey.LINK);
-        address silo = getAddress(AddrKey.SILO_TOKEN);
+        address silo = getAddress(SILO_TOKEN);
 
         vm.startBroadcast(deployerPrivateKey);
 
-        routerClient = new CCIPRouterClientLike(link, silo);
+        routerClient = new CCIPRouterClientLike(silo, link);
 
         vm.stopBroadcast();
 
