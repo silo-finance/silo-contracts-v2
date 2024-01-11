@@ -6,6 +6,19 @@ import {IProposalEngine} from "proposals/contracts/interfaces/IProposalEngine.so
 import {ProposalEngineLib} from "./ProposalEngineLib.sol";
 import {GaugeAdderProposer} from "./proposers/ve-silo/GaugeAdderProposer.sol";
 import {GaugeControllerProposer} from "./proposers/ve-silo/GaugeControllerProposer.sol";
+import {UniswapSwapperProposer} from "./proposers/ve-silo/UniswapSwapperProposer.sol";
+import {CCIPGaugeCheckpointerProposer} from "./proposers/ve-silo/CCIPGaugeCheckpointerProposer.sol";
+import {FeeDistributorProposer} from "./proposers/ve-silo/FeeDistributorProposer.sol";
+import {SmartWalletCheckerProposer} from "./proposers/ve-silo/SmartWalletCheckerProposer.sol";
+import {VeSiloDelegatorViaCCIPProposer} from "./proposers/ve-silo/VeSiloDelegatorViaCCIPProposer.sol";
+import {VotingEscrowDelegationProxyProposer} from "./proposers/ve-silo/VotingEscrowDelegationProxyProposer.sol";
+import {VotingEscrowCCIPRemapperProposer} from "./proposers/ve-silo/VotingEscrowCCIPRemapperProposer.sol";
+import {SiloFactoryProposer} from "./proposers/ve-silo/SiloFactoryProposer.sol";
+
+import {
+    StakelessGaugeCheckpointerAdaptorProposer
+} from "./proposers/ve-silo/StakelessGaugeCheckpointerAdaptorProposer.sol";
+
 
 /// @notice Abstract contract for proposal
 /// @dev Any proposal should be derived from this contract
@@ -15,6 +28,15 @@ abstract contract Proposal is IProposal {
 
     GaugeAdderProposer public gaugeAdder;
     GaugeControllerProposer public gaugeController;
+    UniswapSwapperProposer public uniswapSwapper;
+    CCIPGaugeCheckpointerProposer public ccipGaugeCheckpointer;
+    StakelessGaugeCheckpointerAdaptorProposer public stakelessGaugeCheckpointerAdaptor;
+    FeeDistributorProposer public feeDistributor;
+    SmartWalletCheckerProposer public smartWalletChecker;
+    VeSiloDelegatorViaCCIPProposer public veSiloDelegatorViaCCIP;
+    VotingEscrowDelegationProxyProposer public votingEscrowDelegationProxy;
+    VotingEscrowCCIPRemapperProposer public votingEscrowCCIPRemapper;
+    SiloFactoryProposer public siloFactory;
 
     /// @notice The id of the proposed proposal
     uint256 private _proposalId;
@@ -72,5 +94,14 @@ abstract contract Proposal is IProposal {
     function _initializeProposers() private {
         gaugeAdder = new GaugeAdderProposer({_proposal: address(this)});
         gaugeController = new GaugeControllerProposer({_proposal: address(this)});
+        uniswapSwapper = new UniswapSwapperProposer({_proposal: address(this)});
+        ccipGaugeCheckpointer = new CCIPGaugeCheckpointerProposer({_proposal: address(this)});
+        stakelessGaugeCheckpointerAdaptor = new StakelessGaugeCheckpointerAdaptorProposer({_proposal: address(this)});
+        feeDistributor = new FeeDistributorProposer({_proposal: address(this)});
+        smartWalletChecker = new SmartWalletCheckerProposer({_proposal: address(this)});
+        veSiloDelegatorViaCCIP = new VeSiloDelegatorViaCCIPProposer({_proposal: address(this)});
+        votingEscrowDelegationProxy = new VotingEscrowDelegationProxyProposer({_proposal: address(this)});
+        votingEscrowCCIPRemapper = new VotingEscrowCCIPRemapperProposer({_proposal: address(this)});
+        siloFactory = new SiloFactoryProposer({_proposal: address(this)});
     }
 }
