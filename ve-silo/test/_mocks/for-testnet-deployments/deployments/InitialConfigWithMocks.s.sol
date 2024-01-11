@@ -76,7 +76,7 @@ contract InitialConfigWithMocks is CommonDeploy {
         gaugeAdder.setGaugeFactory(ILiquidityGaugeFactory(gaugeFactoryAddr), GAUGE_TYPE_MC);
         gaugeAdder.setGaugeFactory(ILiquidityGaugeFactory(gaugeFactoryAnyChainAddr), GAUGE_TYPE_CC);
 
-        gauge = CCIPGaugeFactory(gaugeFactoryAnyChainAddr).create(address(gaugeAdder), 1e18 /** weight cup */);
+        gauge = CCIPGaugeFactory(gaugeFactoryAnyChainAddr).create(address(gaugeAdder), 1e18 /** weight cap */);
 
         gaugeAdder.addGauge(gauge, GAUGE_TYPE_CC);
 
