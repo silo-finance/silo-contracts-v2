@@ -24,7 +24,7 @@ contract L2WithMocksDeploy is CommonDeploy {
         (LINKTokenLike linkToken, SILOTokenLike siloToken) = tokensDeploy.run();
 
         setAddress(AddrKey.LINK, address(linkToken));
-        setAddress(AddrKey.SILO_TOKEN, address(siloToken));
+        setAddress(SILO_TOKEN, address(siloToken));
 
         CCIPRouterReceiverLike router = routerDeploy.run();
 
@@ -36,6 +36,7 @@ contract L2WithMocksDeploy is CommonDeploy {
         setAddress(VeSiloContracts.FEE_DISTRIBUTOR, deployer);
 
         L2Deploy l2Deploy = new L2Deploy();
+        l2Deploy.votingEscrowChild().enableMainnetSimulation();
         l2Deploy.run();
     }
 }

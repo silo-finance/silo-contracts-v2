@@ -15,13 +15,13 @@ FOUNDRY_PROFILE=ve-silo \
     --ffi --broadcast --rpc-url http://127.0.0.1:8545
  */
 contract L2Deploy is CommonDeploy {
-    function run() public {
-        L2BalancerPseudoMinterDeploy pseudeMinterDeploy = new L2BalancerPseudoMinterDeploy();
-        VotingEscrowChildChainDeploy votingEscrowChild = new VotingEscrowChildChainDeploy();
-        VeBoostDeploy veBoostDeploy = new VeBoostDeploy();
-        VotingEscrowDelegationProxyDeploy deplegationProxyDeploy = new VotingEscrowDelegationProxyDeploy();
-        ChildChainGaugeFactoryDeploy gaugeFactory = new ChildChainGaugeFactoryDeploy();
+    L2BalancerPseudoMinterDeploy public pseudeMinterDeploy = new L2BalancerPseudoMinterDeploy();
+    VotingEscrowChildChainDeploy public votingEscrowChild = new VotingEscrowChildChainDeploy();
+    VeBoostDeploy public veBoostDeploy = new VeBoostDeploy();
+    VotingEscrowDelegationProxyDeploy public deplegationProxyDeploy = new VotingEscrowDelegationProxyDeploy();
+    ChildChainGaugeFactoryDeploy public gaugeFactory = new ChildChainGaugeFactoryDeploy();
 
+    function run() public {
         pseudeMinterDeploy.run();
         votingEscrowChild.run();
         veBoostDeploy.run();

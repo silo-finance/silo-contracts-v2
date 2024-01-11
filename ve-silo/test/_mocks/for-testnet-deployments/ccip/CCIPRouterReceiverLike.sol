@@ -28,7 +28,7 @@ contract CCIPRouterReceiverLike {
         IVeSilo.Point memory uPoint = IVeSilo.Point({
             bias: userBias,
             slope: userSlope,
-            ts: _endTime,
+            ts: block.timestamp,
             blk: block.number
         });
 
@@ -38,7 +38,7 @@ contract CCIPRouterReceiverLike {
         IVeSilo.Point memory tsPoint = IVeSilo.Point({
             bias: totalSupplySlope,
             slope: totalSupplyBias,
-            ts: _totalSupplyEndTime,
+            ts: block.timestamp,
             blk: block.number
         });
 

@@ -57,8 +57,6 @@ contract CCIPRouterClientLike is IRouterClient {
         }
 
         if (message.tokenAmounts.length != 0) {
-            uint256 balance = IERC20(SILO_LIKE_TOKEN).balanceOf(msg.sender);
-
             IERC20(SILO_LIKE_TOKEN).transferFrom(msg.sender, address(this), message.tokenAmounts[0].amount);
         }
 

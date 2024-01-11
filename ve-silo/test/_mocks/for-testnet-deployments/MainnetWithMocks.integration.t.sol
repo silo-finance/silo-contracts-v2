@@ -19,13 +19,15 @@ import {IGaugeController} from "ve-silo/contracts/gauges/interfaces/IGaugeContro
 
 // FOUNDRY_PROFILE=ve-silo forge test --mc MainnetWithMocksIntegrationTest --ffi -vvv
 contract MainnetWithMocksIntegrationTest is MainnetTest {
+    uint256 constant public ARBITRUM_FORKING_BLOCK = 169076190;
+
     function setUp() public override {
         // disabling `ve-silo/deploy/MainnetDeploy.s.sol` deployment
         _executeMainnetDeploy = false;
 
         vm.createSelectFork(
             getChainRpcUrl(ARBITRUM_ONE_ALIAS),
-            169076190
+            ARBITRUM_FORKING_BLOCK
         );
 
         // deploy with mocks
