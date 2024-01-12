@@ -9,7 +9,7 @@ import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 
 import {MainnetDeploy} from "ve-silo/deploy/MainnetDeploy.s.sol";
 import {VeSiloContracts} from "ve-silo/deploy/_CommonDeploy.sol";
-
+import {SiloCoreContracts} from "silo-core/common/SiloCoreContracts.sol";
 import {ISiloGovernor} from "ve-silo/contracts/governance/interfaces/ISiloGovernor.sol";
 import {IVeBoost} from "ve-silo/contracts/voting-escrow/interfaces/IVeBoost.sol";
 import {IVeSilo} from "ve-silo/contracts/voting-escrow/interfaces/IVeSilo.sol";
@@ -104,23 +104,7 @@ contract MainnetTest is IntegrationTest {
         _minter = IBalancerMinter(getAddress(VeSiloContracts.MAINNET_BALANCER_MINTER));
         _gaugeAdder = IGaugeAdder(getAddress(VeSiloContracts.GAUGE_ADDER));
 
-        vm.mockCall(
-            _hookReceiver,
-            abi.encodeWithSelector(IHookReceiver.shareToken.selector),
-            abi.encode(_shareToken)
-        );
-
-        vm.mockCall(
-            _shareToken,
-            abi.encodeWithSelector(IShareToken.silo.selector),
-            abi.encode(_silo)
-        );
-
-        vm.mockCall(
-            _silo,
-            abi.encodeWithSelector(ISilo.factory.selector),
-            abi.encode(_siloFactory)
-        );
+        _mockSiloCore(); // silo core is not deployed
     }
 
     function testMainnet() public {
@@ -444,5 +428,29 @@ contract MainnetTest is IntegrationTest {
         siloTokenOwner = siloToken.owner();
 
         assertEq(owner, siloTokenOwner, "Expect an ownership to be transferred");
+    }
+
+    function _mockSiloCore() internal {
+        address siloFactory = makeAddr("SiloFactoryMock");
+        AddrLib.setAddress(SiloCoreContracts.SILO_FACTORY, siloFactory);
+        vm.mockCall(siloFactory, abi.encodeWithSelector(Ownable2Step.acceptOwnership.selector), abi.encode(true));
+
+        vm.mockCall(
+            _hookReceiver,
+            abi.encodeWithSelector(IHookReceiver.shareToken.selector),
+            abi.encode(_shareToken)
+        );
+
+        vm.mockCall(
+            _shareToken,
+            abi.encodeWithSelector(IShareToken.silo.selector),
+            abi.encode(_silo)
+        );
+
+        vm.mockCall(
+            _silo,
+            abi.encodeWithSelector(ISilo.factory.selector),
+            abi.encode(_siloFactory)
+        );
     }
 }

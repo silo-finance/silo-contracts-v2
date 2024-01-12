@@ -5,7 +5,6 @@ import {Ownable2Step} from "openzeppelin-contracts/access/Ownable2Step.sol";
 import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";
 import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 
-import {SiloCoreContracts} from "silo-core/common/SiloCoreContracts.sol";
 import {VeSiloContracts, VeSiloDeployments} from "ve-silo/common/VeSiloContracts.sol";
 import {MainnetTest} from "ve-silo/test/Mainnet.integration.t.sol";
 import {VeSiloContracts} from "ve-silo/deploy/_CommonDeploy.sol";
@@ -43,7 +42,6 @@ contract MainnetWithMocksIntegrationTest is MainnetTest {
         deploy.run();
 
         _mockFeesDistributor(); // we doploy without it, so we need to mock it
-        _mockSiloFactory(); // silo core is not deployed
 
         super.setUp();
     }
@@ -126,14 +124,6 @@ contract MainnetWithMocksIntegrationTest is MainnetTest {
         gauge = CCIPGaugeFactory(gaugeFactoryAnyChainAddr).create(gaugeAdder, 1e18 /** weight cap */);
 
         vm.label(gauge, "CCIP_Gauge");
-    }
-
-    function _mockSiloFactory() internal {
-        address siloFactory = makeAddr("SiloFactoryMock");
-
-        AddrLib.setAddress(SiloCoreContracts.SILO_FACTORY, siloFactory);
-
-        vm.mockCall(siloFactory, abi.encodeWithSelector(Ownable2Step.acceptOwnership.selector), abi.encode(true));
     }
 
     function _mockFeesDistributor() internal {
