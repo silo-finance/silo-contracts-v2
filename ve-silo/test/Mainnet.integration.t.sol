@@ -36,7 +36,7 @@ import {
 
 // solhint-disable max-states-count
 
-// FOUNDRY_PROFILE=ve-silo forge test --mc MainnetTest --ffi -vvv
+// FOUNDRY_PROFILE=ve-silo-test forge test --mc MainnetTest --ffi -vvv
 contract MainnetTest is IntegrationTest {
     using stdStorage for StdStorage;
 

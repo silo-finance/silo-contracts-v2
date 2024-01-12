@@ -15,7 +15,7 @@ import {ICCIPGaugeCheckpointer} from "ve-silo/contracts/gauges/interfaces/ICCIPG
 import {CCIPGaugeCheckpointer} from "ve-silo/contracts/gauges/stakeless-gauge/CCIPGaugeCheckpointer.sol";
 
 /**
-FOUNDRY_PROFILE=ve-silo \
+FOUNDRY_PROFILE=ve-silo-test \
     forge script ve-silo/deploy/CCIPGaugeCheckpointerDeploy.s.sol \
     --ffi --broadcast --rpc-url http://127.0.0.1:8545
  */

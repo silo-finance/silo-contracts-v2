@@ -53,6 +53,11 @@ out = 'cache/foundry/out/ve-silo'
 test = 've-silo/test'
 broadcast = 've-silo/broadcast'
 
+[profile.ve-silo-test]
+src = 've-silo/test'
+out = 'cache/foundry/out/ve-silo'
+broadcast = 've-silo/broadcast'
+
 [profile.vaults]
 src = 'silo-vaults/contracts'
 out = 'cache/foundry/out/silo-vaults'

@@ -25,7 +25,7 @@ interface IVotingEscrowDelegationProxy {
     function adjustedBalanceOf(address _user) external view returns (uint256);
 }
 
-// FOUNDRY_PROFILE=ve-silo forge test --mc ChildChainGaugesTest --ffi -vvv
+// FOUNDRY_PROFILE=ve-silo-test forge test --mc ChildChainGaugesTest --ffi -vvv
 contract ChildChainGaugesTest is IntegrationTest {
     uint256 internal constant _BOB_BAL = 20e18;
     uint256 internal constant _ALICE_BAL = 20e18;

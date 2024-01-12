@@ -15,7 +15,7 @@ import {VeBoostDeploy} from "./VeBoostDeploy.s.sol";
 import {TimelockControllerDeploy} from "./TimelockControllerDeploy.s.sol";
 
 /**
-FOUNDRY_PROFILE=ve-silo \
+FOUNDRY_PROFILE=ve-silo-test \
     forge script ve-silo/deploy/SiloGovernorDeploy.s.sol \
     --ffi --broadcast --rpc-url http://127.0.0.1:8545
  */

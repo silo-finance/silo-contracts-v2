@@ -34,7 +34,7 @@ contract ERC20 is ERC20WithoutMint {
     }
 }
 
-// FOUNDRY_PROFILE=ve-silo forge test --mc L2Test --ffi -vvv
+// FOUNDRY_PROFILE=ve-silo-test forge test --mc L2Test --ffi -vvv
 contract L2Test is IntegrationTest {
     uint256 internal constant _FORKING_BLOCK_NUMBER = 4413530;
     uint256 internal constant _INCENTIVES_AMOUNT = 2_000_000e18;

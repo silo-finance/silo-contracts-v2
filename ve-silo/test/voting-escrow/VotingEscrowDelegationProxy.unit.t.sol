@@ -11,7 +11,7 @@ import {VotingEscrowDelegationProxyDeploy} from "ve-silo/deploy/VotingEscrowDele
 import {IVotingEscrowDelegationProxy}
     from "ve-silo/contracts/voting-escrow/interfaces/IVotingEscrowDelegationProxy.sol";
 
-// FOUNDRY_PROFILE=ve-silo forge test --mc VotingEscrowDelegationProxyTest --ffi -vvv
+// FOUNDRY_PROFILE=ve-silo-test forge test --mc VotingEscrowDelegationProxyTest --ffi -vvv
 contract VotingEscrowDelegationProxyTest is IntegrationTest {
     address internal _veBoost = makeAddr("VeBoost");
 

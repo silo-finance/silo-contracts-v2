@@ -4,7 +4,6 @@
 name: veSilo
 
 env:
-  FOUNDRY_PROFILE: ve-silo
   RPC_MAINNET: ${{ vars.RPC_MAINNET }}
   RPC_ARBITRUM: ${{ vars.RPC_ARBITRUM }}
   RPC_SEPOLIA: ${{ vars.RPC_SEPOLIA }}
@@ -89,7 +88,7 @@ jobs:
         run: |
           git submodule
           forge --version
-          forge build --sizes
+          FOUNDRY_PROFILE=ve-silo forge build --sizes
 
       - name: Forge test
-        run: forge test --ffi -vvv
+        run: FOUNDRY_PROFILE=ve-silo-test forge test --ffi -vvv

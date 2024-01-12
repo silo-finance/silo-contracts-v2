@@ -10,7 +10,7 @@ import {ChildChainGaugeFactoryDeploy} from "ve-silo/deploy/ChildChainGaugeFactor
 import {VotingEscrowChildChainDeploy} from "ve-silo/deploy/VotingEscrowChildChainDeploy.s.sol";
 
 /**
-FOUNDRY_PROFILE=ve-silo \
+FOUNDRY_PROFILE=ve-silo-test \
     forge script ve-silo/deploy/L2Deploy.s.sol \
     --ffi --broadcast --rpc-url http://127.0.0.1:8545
  */

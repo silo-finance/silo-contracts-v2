@@ -11,7 +11,7 @@ import {IExtendedOwnable} from "ve-silo/contracts/access/IExtendedOwnable.sol";
 import {CommonDeploy, VeSiloContracts} from "./_CommonDeploy.sol";
 
 /**
-FOUNDRY_PROFILE=ve-silo \
+FOUNDRY_PROFILE=ve-silo-test \
     forge script ve-silo/deploy/L2BalancerPseudoMinterDeploy.s.sol \
     --ffi --broadcast --rpc-url http://127.0.0.1:8545
  */

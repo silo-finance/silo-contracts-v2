@@ -5,7 +5,7 @@ import {CommonDeploy, VeSiloContracts} from "./_CommonDeploy.sol";
 import {IVeBoost} from "ve-silo/contracts/voting-escrow/interfaces/IVeBoost.sol";
 
 /**
-FOUNDRY_PROFILE=ve-silo \
+FOUNDRY_PROFILE=ve-silo-test \
     forge script ve-silo/deploy/VeBoostDeploy.s.sol \
     --ffi --broadcast --rpc-url http://127.0.0.1:8545
  */

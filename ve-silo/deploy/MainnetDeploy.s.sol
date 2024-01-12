@@ -21,7 +21,7 @@ import {VotingEscrowDelegationProxyDeploy} from "ve-silo/deploy/VotingEscrowDele
 import {IExtendedOwnable} from "ve-silo/contracts/access/IExtendedOwnable.sol";
 
 /**
-FOUNDRY_PROFILE=ve-silo \
+FOUNDRY_PROFILE=ve-silo-test \
     forge script ve-silo/deploy/MainnetDeploy.s.sol \
     --ffi --broadcast --rpc-url http://127.0.0.1:8545
  */

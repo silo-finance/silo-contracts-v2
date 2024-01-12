@@ -26,7 +26,7 @@ import {CCIPGaugeSepoliaMumbai} from "ve-silo/test/_mocks/CCIPGaugeSepoliaMumbai
 import {VeSiloContracts} from "ve-silo/deploy/_CommonDeploy.sol";
 import {CheckpointerAdaptorMock} from "../_mocks/CheckpointerAdaptorMock.sol";
 
-// FOUNDRY_PROFILE=ve-silo forge test --mc CCIPGaugeCheckpointer --ffi -vvv
+// FOUNDRY_PROFILE=ve-silo-test forge test --mc CCIPGaugeCheckpointer --ffi -vvv
 contract CCIPGaugeCheckpointer is IntegrationTest {
     string constant internal _GAUGE_TYPE = "Ethereum";
 

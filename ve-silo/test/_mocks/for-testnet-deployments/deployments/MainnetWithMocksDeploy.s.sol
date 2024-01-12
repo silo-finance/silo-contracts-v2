@@ -15,7 +15,7 @@ import {CCIPGaugeWithMocksDeploy} from "./CCIPGaugeWithMocksDeploy.s.sol";
 import {CCIPGaugeFactoryAnyChainDeploy} from "./CCIPGaugeFactoryAnyChainDeploy.s.sol";
 
 /**
-FOUNDRY_PROFILE=ve-silo \
+FOUNDRY_PROFILE=ve-silo-test \
     forge script ve-silo/test/_mocks/for-testnet-deployments/deployments/MainnetWithMocksDeploy.s.sol \
     --ffi --broadcast --rpc-url http://127.0.0.1:8545
  */

@@ -34,7 +34,7 @@ contract ERC20 is ERC20WithoutMint {
     }
 }
 
-// FOUNDRY_PROFILE=ve-silo forge test --mc MainnetBalancerMinterTest --ffi -vvv
+// FOUNDRY_PROFILE=ve-silo-test forge test --mc MainnetBalancerMinterTest --ffi -vvv
 contract MainnetBalancerMinterTest is IntegrationTest {
     uint256 internal constant _WEIGHT_CAP = 1e18;
     uint256 internal constant _BOB_BALANCE = 1e18;

@@ -11,7 +11,7 @@ import {ISmartWalletChecker} from "balancer-labs/v2-interfaces/liquidity-mining/
 import {SmartWalletChecker} from "ve-silo/contracts/voting-escrow/SmartWalletChecker.sol";
 
 /**
-FOUNDRY_PROFILE=ve-silo \
+FOUNDRY_PROFILE=ve-silo-test \
     forge script ve-silo/deploy/SmartWalletCheckerDeploy.s.sol \
     --ffi --broadcast --rpc-url http://127.0.0.1:8545
  */

@@ -13,7 +13,7 @@ import {StakelessGaugeCheckpointerAdaptor}
     from "ve-silo/contracts/gauges/stakeless-gauge/StakelessGaugeCheckpointerAdaptor.sol";
 
 /**
-FOUNDRY_PROFILE=ve-silo \
+FOUNDRY_PROFILE=ve-silo-test \
     forge script ve-silo/deploy/StakelessGaugeCheckpointerAdaptorDeploy.s.sol \
     --ffi --broadcast --rpc-url http://127.0.0.1:8545
  */

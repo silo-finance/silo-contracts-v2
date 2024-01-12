@@ -21,7 +21,7 @@ import {CCIPGaugeFactoryAnyChain} from "ve-silo/test/_mocks/CCIPGaugeFactoryAnyC
 import {CCIPGaugeSepoliaMumbai} from "ve-silo/test/_mocks/CCIPGaugeSepoliaMumbai.sol";
 import {VeSiloContracts} from "ve-silo/deploy/_CommonDeploy.sol";
 
-// FOUNDRY_PROFILE=ve-silo forge test --mc CCIPGaugeTest --ffi -vvv
+// FOUNDRY_PROFILE=ve-silo-test forge test --mc CCIPGaugeTest --ffi -vvv
 contract CCIPGaugeTest is IntegrationTest {
     uint256 internal constant _FORKING_BLOCK_NUMBER = 4291900;
     uint256 internal constant _RELATIVE_WEIGHT_CAP = 1e18;

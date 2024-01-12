@@ -16,7 +16,7 @@ interface IVeChaildChainGetter {
     function userPoints(address _user) external view returns (IVeSilo.Point memory);
 }
 
-// FOUNDRY_PROFILE=ve-silo forge test --mc L2WithMocksIntegrationTest --ffi -vvv
+// FOUNDRY_PROFILE=ve-silo-test forge test --mc L2WithMocksIntegrationTest --ffi -vvv
 contract L2WithMocksIntegrationTest is L2Test {
     uint256 constant public OPTIMISM_FORKING_BLOCK = 114680480;
 

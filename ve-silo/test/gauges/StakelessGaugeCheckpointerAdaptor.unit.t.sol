@@ -10,7 +10,7 @@ import {IStakelessGauge} from "ve-silo/contracts/gauges/interfaces/IStakelessGau
 
 import {VeSiloContracts} from "ve-silo/deploy/_CommonDeploy.sol";
 
-// FOUNDRY_PROFILE=ve-silo forge test --mc StakelessGaugeCheckpointerAdaptorTest --ffi -vvv
+// FOUNDRY_PROFILE=ve-silo-test forge test --mc StakelessGaugeCheckpointerAdaptorTest --ffi -vvv
 contract StakelessGaugeCheckpointerAdaptorTest is IntegrationTest {
     IStakelessGaugeCheckpointerAdaptor internal _checkpointerAdaptor;
 

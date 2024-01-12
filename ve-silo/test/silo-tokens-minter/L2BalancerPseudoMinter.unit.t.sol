@@ -19,7 +19,7 @@ import {
     IL2BalancerPseudoMinter
 } from "ve-silo/deploy/L2BalancerPseudoMinterDeploy.s.sol";
 
-// FOUNDRY_PROFILE=ve-silo forge test --mc L2BalancerPseudoMinterTest --ffi -vvv
+// FOUNDRY_PROFILE=ve-silo-test forge test --mc L2BalancerPseudoMinterTest --ffi -vvv
 contract L2BalancerPseudoMinterTest is IntegrationTest {
     uint256 internal constant _BOB_BALANCE = 1e18;
     uint256 internal constant _DAO_FEE = 1e3; // 10%

@@ -17,7 +17,7 @@ import {ISmartWalletChecker} from "ve-silo/contracts/voting-escrow/interfaces/IS
 import {ICCIPExtraArgsConfig} from "ve-silo/contracts/gauges/interfaces/ICCIPExtraArgsConfig.sol";
 import {ICCIPGauge} from "ve-silo/contracts/gauges/interfaces/ICCIPGauge.sol";
 
-// FOUNDRY_PROFILE=ve-silo forge test --mc VeSiloDelegatorViaCCIP --ffi -vvv
+// FOUNDRY_PROFILE=ve-silo-test forge test --mc VeSiloDelegatorViaCCIP --ffi -vvv
 contract VeSiloDelegatorViaCCIP is IntegrationTest {
     IVeSiloDelegatorViaCCIP public veSiloDelegator;
     VotingEscrowTest public veTest;

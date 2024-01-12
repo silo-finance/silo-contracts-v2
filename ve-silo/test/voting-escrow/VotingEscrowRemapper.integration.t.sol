@@ -15,7 +15,7 @@ import {VeSiloDelegatorViaCCIPDeploy} from "ve-silo/deploy/VeSiloDelegatorViaCCI
 import {IVeSiloDelegatorViaCCIP} from "ve-silo/contracts/voting-escrow/interfaces/IVeSiloDelegatorViaCCIP.sol";
 import {ICCIPMessageSender} from "ve-silo/contracts/utils/CCIPMessageSender.sol";
 
-// FOUNDRY_PROFILE=ve-silo forge test --mc VotingEscrowRemapperTest --ffi -vvv
+// FOUNDRY_PROFILE=ve-silo-test forge test --mc VotingEscrowRemapperTest --ffi -vvv
 contract VotingEscrowRemapperTest is IntegrationTest {
     uint64 internal constant _DS_CHAIN_SELECTOR = 12532609583862916517; // Polygon Mumbai
 

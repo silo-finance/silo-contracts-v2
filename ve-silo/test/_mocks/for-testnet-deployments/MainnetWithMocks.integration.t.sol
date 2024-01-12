@@ -24,7 +24,7 @@ import {SIPV2InitWithMocks} from "./proposals/SIPV2InitWithMocks.sol";
 import {SIPV2GaugeSetUpWithMocks} from "./proposals/SIPV2GaugeSetUpWithMocks.sol";
 import {SIPV2GaugeWeightWithMocks} from "./proposals/SIPV2GaugeWeightWithMocks.sol";
 
-// FOUNDRY_PROFILE=ve-silo forge test --mc MainnetWithMocksIntegrationTest --ffi -vvv
+// FOUNDRY_PROFILE=ve-silo-test forge test --mc MainnetWithMocksIntegrationTest --ffi -vvv
 contract MainnetWithMocksIntegrationTest is MainnetTest {
     uint256 constant public ARBITRUM_FORKING_BLOCK = 169076190;
 
@@ -76,7 +76,7 @@ contract MainnetWithMocksIntegrationTest is MainnetTest {
         );
     }
 
-    // FOUNDRY_PROFILE=ve-silo forge test --mt testIncentivesTransferCCIP --ffi -vvv
+    // FOUNDRY_PROFILE=ve-silo-test forge test --mt testIncentivesTransferCCIP --ffi -vvv
     function testIncentivesTransferCCIP() public {
         _configureFakeSmartWalletChecker();
         _giveVeSiloTokensToUsers();

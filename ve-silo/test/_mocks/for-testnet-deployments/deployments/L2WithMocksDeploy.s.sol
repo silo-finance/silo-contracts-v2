@@ -12,7 +12,7 @@ import {TestTokensChildChainLikeDeploy} from "./TestTokensChildChainLikeDeploy.s
 import {CCIPRouterReceiverLikeDeploy} from "./CCIPRouterReceiverLikeDeploy.s.sol";
 
 /**
-FOUNDRY_PROFILE=ve-silo \
+FOUNDRY_PROFILE=ve-silo-test \
     forge script ve-silo/test/_mocks/for-testnet-deployments/deployments/L2WithMocksDeploy.s.sol \
     --ffi --broadcast --rpc-url http://127.0.0.1:8545
  */

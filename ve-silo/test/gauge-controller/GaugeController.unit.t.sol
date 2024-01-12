@@ -9,7 +9,7 @@ import {SiloGovernorDeploy} from "ve-silo/deploy/SiloGovernorDeploy.s.sol";
 import {GaugeControllerDeploy} from "ve-silo/deploy/GaugeControllerDeploy.s.sol";
 import {VeSiloContracts} from "ve-silo/deploy/_CommonDeploy.sol";
 
-// FOUNDRY_PROFILE=ve-silo forge test --mc GaugeControllerTest --ffi -vvv
+// FOUNDRY_PROFILE=ve-silo-test forge test --mc GaugeControllerTest --ffi -vvv
 contract GaugeControllerTest is IntegrationTest {
     string constant internal _ETHEREUM = "Ethereum";
     int128 constant internal _GAUGE_TYPE = 0;
