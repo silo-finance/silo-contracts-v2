@@ -123,7 +123,7 @@ contract MainnetTest is IntegrationTest {
         );
     }
 
-    function testIt() public {
+    function testMainnet() public {
         _configureFakeSmartWalletChecker();
         _giveVeSiloTokensToUsers();
         _activeteBlancerTokenAdmin();

@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.21;
 
-import {CommonDeploy, VeSiloContracts} from "./_CommonDeploy.sol";
+import {Ownable} from "openzeppelin-contracts/access/Ownable.sol";
+
+import {CommonDeploy} from "./_CommonDeploy.sol";
+import {VeSiloContracts, VeSiloDeployments} from "ve-silo/common/VeSiloContracts.sol";
 
 import {IStakelessGaugeCheckpointerAdaptor}
     from "ve-silo/contracts/gauges/interfaces/IStakelessGaugeCheckpointerAdaptor.sol";
@@ -17,12 +20,15 @@ FOUNDRY_PROFILE=ve-silo \
 contract StakelessGaugeCheckpointerAdaptorDeploy is CommonDeploy {
     function run() public returns (IStakelessGaugeCheckpointerAdaptor adaptor) {
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
+        address timelock = VeSiloDeployments.get(VeSiloContracts.TIMELOCK_CONTROLLER, getChainAlias());
 
         vm.startBroadcast(deployerPrivateKey);
 
         adaptor = IStakelessGaugeCheckpointerAdaptor(address(
             new StakelessGaugeCheckpointerAdaptor()
         ));
+
+        Ownable(address(adaptor)).transferOwnership(timelock);
         
         vm.stopBroadcast();
 

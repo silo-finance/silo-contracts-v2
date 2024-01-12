@@ -1,8 +1,11 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.21;
 
+import {Ownable2Step} from "openzeppelin-contracts/access/Ownable2Step.sol";
 import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";
+import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 
+import {SiloCoreContracts} from "silo-core/common/SiloCoreContracts.sol";
 import {VeSiloContracts, VeSiloDeployments} from "ve-silo/common/VeSiloContracts.sol";
 import {MainnetTest} from "ve-silo/test/Mainnet.integration.t.sol";
 import {VeSiloContracts} from "ve-silo/deploy/_CommonDeploy.sol";
@@ -16,6 +19,11 @@ import {InitialConfigWithMocks} from "./deployments/InitialConfigWithMocks.s.sol
 import {ICCIPGaugeCheckpointer} from "ve-silo/contracts/gauges/interfaces/ICCIPGaugeCheckpointer.sol";
 import {ICCIPGauge} from "ve-silo/contracts/gauges/interfaces/ICCIPGauge.sol";
 import {IGaugeController} from "ve-silo/contracts/gauges/interfaces/IGaugeController.sol";
+import {Proposal} from "proposals/contracts/Proposal.sol";
+import {Constants} from "proposals/sip/_common/Constants.sol";
+import {SIPV2InitWithMocks} from "./proposals/SIPV2InitWithMocks.sol";
+import {SIPV2GaugeSetUpWithMocks} from "./proposals/SIPV2GaugeSetUpWithMocks.sol";
+import {SIPV2GaugeWeightWithMocks} from "./proposals/SIPV2GaugeWeightWithMocks.sol";
 
 // FOUNDRY_PROFILE=ve-silo forge test --mc MainnetWithMocksIntegrationTest --ffi -vvv
 contract MainnetWithMocksIntegrationTest is MainnetTest {
@@ -34,6 +42,9 @@ contract MainnetWithMocksIntegrationTest is MainnetTest {
         MainnetWithMocksDeploy deploy = new MainnetWithMocksDeploy();
         deploy.disableDeploymentsSync();
         deploy.run();
+
+        _mockFeesDistributor(); // we doploy without it, so we need to mock it
+        _mockSiloFactory(); // silo core is not deployed
 
         super.setUp();
     }
@@ -66,45 +77,104 @@ contract MainnetWithMocksIntegrationTest is MainnetTest {
         );
     }
 
+    // FOUNDRY_PROFILE=ve-silo forge test --mt testIncentivesTransferCCIP --ffi -vvv
     function testIncentivesTransferCCIP() public {
         _configureFakeSmartWalletChecker();
         _giveVeSiloTokensToUsers();
 
-        InitialConfigWithMocks initialConfig = new InitialConfigWithMocks();
-        address gauge = initialConfig.run();
-        vm.label(gauge, "CCIP_Gauge");
+        // transfer silo token ownership to the Balancer Token Admin
+        address balancerTokenAdmin = getAddress(VeSiloContracts.BALANCER_TOKEN_ADMIN);
+        address siloToken = getAddress(SILO_TOKEN);
+
+        vm.prank(_deployer);
+        Ownable2Step(siloToken).transferOwnership(balancerTokenAdmin);
 
         vm.warp(block.timestamp + 1 weeks);
-        _voteForGauge(gauge);
+
+        // initial proposal
+        SIPV2InitWithMocks initialPropsal = new SIPV2InitWithMocks();
+        initialPropsal.setProposerPK(_daoVoterPK).run();
+
+        _executeProposal(initialPropsal);
+
+        address gauge = _createCCIPGauge();
+
+        // set up gauge
+        SIPV2GaugeSetUpWithMocks gaugeSetUpProposal = new SIPV2GaugeSetUpWithMocks();
+        gaugeSetUpProposal.setGauge(gauge).setProposerPK(_daoVoterPK).run();
+
+        _executeProposal(gaugeSetUpProposal);
+
+        // _voteForGauge(gauge);
 
         ICCIPGaugeCheckpointer ccipCheckpointer = ICCIPGaugeCheckpointer(
             VeSiloDeployments.get(VeSiloContracts.CCIP_GAUGE_CHECKPOINTER, ChainsLib.chainAlias())
         );
 
-        IGaugeController controller = IGaugeController(VeSiloDeployments.get(
-            VeSiloContracts.GAUGE_CONTROLLER,
-            ChainsLib.chainAlias()
-        ));
-
         uint256 ethFees = ccipCheckpointer.getTotalBridgeCost(
             0,
-            initialConfig.GAUGE_TYPE_CC(),
+            Constants._GAUGE_TYPE_CHILD,
             ICCIPGauge.PayFeesIn.Native
         );
 
-        address checkpointer = makeAddr("CCIP Gauge Checkpointer");
+        // chage gauge type weight
+        SIPV2GaugeWeightWithMocks gaugeWeightProposal = new SIPV2GaugeWeightWithMocks();
 
-        controller.change_type_weight(1, 1e18);
-        controller.change_type_weight(0, 1e18);
+        gaugeWeightProposal
+            .setGauge(gauge)
+            .setWeight(1e18)
+            .setProposerPK(_daoVoterPK)
+            .run();
+
+        _executeProposal(gaugeWeightProposal);
+
+        address checkpointer = makeAddr("CCIP Gauge Checkpointer");
 
         vm.warp(block.timestamp + 2 weeks);
 
         vm.deal(checkpointer, ethFees);
         vm.prank(checkpointer);
         ccipCheckpointer.checkpointSingleGauge{value: ethFees}(
-            initialConfig.GAUGE_TYPE_CC(),
+            Constants._GAUGE_TYPE_CHILD,
             ICCIPGauge(gauge),
             ICCIPGauge.PayFeesIn.Native
         );
+    }
+
+    function _createCCIPGauge() internal returns (address gauge) {
+        string memory chainAlias = ChainsLib.chainAlias();
+
+        address gaugeAdder = VeSiloDeployments.get(VeSiloContracts.GAUGE_ADDER, chainAlias);
+
+        address gaugeFactoryAnyChainAddr = VeSiloDeployments.get(
+            VeSiloMocksContracts.CCIP_GAUGE_FACTORY_ANY_CHAIN,
+            chainAlias
+        );
+
+        gauge = CCIPGaugeFactory(gaugeFactoryAnyChainAddr).create(gaugeAdder, 1e18 /** weight cap */);
+
+        vm.label(gauge, "CCIP_Gauge");
+    }
+
+    function _mockSiloFactory() internal {
+        address siloFactory = makeAddr("SiloFactoryMock");
+
+        AddrLib.setAddress(SiloCoreContracts.SILO_FACTORY, siloFactory);
+
+        vm.mockCall(siloFactory, abi.encodeWithSelector(Ownable2Step.acceptOwnership.selector), abi.encode(true));
+    }
+
+    function _mockFeesDistributor() internal {
+        address feesDistributor = makeAddr("FeesDistributorMock");
+        AddrLib.setAddress(VeSiloContracts.FEE_DISTRIBUTOR, feesDistributor);
+        vm.mockCall(feesDistributor, abi.encodeWithSelector(Ownable2Step.acceptOwnership.selector), abi.encode(true));
+
+        address uniswapSwapper = makeAddr("UniswapSwapperMock");
+        AddrLib.setAddress(VeSiloContracts.UNISWAP_SWAPPER, uniswapSwapper);
+        vm.mockCall(uniswapSwapper, abi.encodeWithSelector(Ownable2Step.acceptOwnership.selector), abi.encode(true));
+
+        address feeSwapper = makeAddr("FeeSwapperMock");
+        AddrLib.setAddress(VeSiloContracts.FEE_SWAPPER, feeSwapper);
+        vm.mockCall(feeSwapper, abi.encodeWithSelector(Ownable2Step.acceptOwnership.selector), abi.encode(true));
     }
 }

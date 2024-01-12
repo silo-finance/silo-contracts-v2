@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.21;
 
-import {CommonDeploy, VeSiloContracts} from "./_CommonDeploy.sol";
+import {Ownable} from "openzeppelin-contracts/access/Ownable.sol";
+
+import {CommonDeploy} from "./_CommonDeploy.sol";
+import {VeSiloContracts, VeSiloDeployments} from "ve-silo/common/VeSiloContracts.sol";
 
 import {IStakelessGaugeCheckpointerAdaptor}
     from "ve-silo/contracts/gauges/interfaces/IStakelessGaugeCheckpointerAdaptor.sol";
@@ -20,8 +23,15 @@ contract CCIPGaugeCheckpointerDeploy is CommonDeploy {
     function run() public returns (ICCIPGaugeCheckpointer checkpointer) {
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
 
-        address gaugeAdder = getDeployedAddress(VeSiloContracts.GAUGE_ADDER);
-        address checkpointerAdaptor = getDeployedAddress(VeSiloContracts.STAKELESS_GAUGE_CHECKPOINTER_ADAPTOR);
+        string memory chainAlias = getChainAlias();
+
+        address gaugeAdder = VeSiloDeployments.get(VeSiloContracts.GAUGE_ADDER, chainAlias);
+        address timelock = VeSiloDeployments.get(VeSiloContracts.TIMELOCK_CONTROLLER, chainAlias);
+
+        address checkpointerAdaptor = VeSiloDeployments.get(
+            VeSiloContracts.STAKELESS_GAUGE_CHECKPOINTER_ADAPTOR,
+            chainAlias
+        );
 
         vm.startBroadcast(deployerPrivateKey);
 
@@ -32,6 +42,8 @@ contract CCIPGaugeCheckpointerDeploy is CommonDeploy {
                 getAddress(AddrKey.LINK)
             )
         ));
+
+        Ownable(address(checkpointer)).transferOwnership(timelock);
         
         vm.stopBroadcast();
 

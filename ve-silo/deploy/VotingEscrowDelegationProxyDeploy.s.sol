@@ -3,8 +3,10 @@ pragma solidity 0.8.21;
 
 import {IVeDelegation} from "@balancer-labs/v2-interfaces/contracts/liquidity-mining/IVeDelegation.sol";
 import {IERC20} from "openzeppelin-contracts/token/ERC20/ERC20.sol";
+import {Ownable} from "openzeppelin-contracts/access/Ownable.sol";
 
-import {CommonDeploy, VeSiloContracts} from "./_CommonDeploy.sol";
+import {CommonDeploy} from "./_CommonDeploy.sol";
+import {VeSiloContracts, VeSiloDeployments} from "ve-silo/common/VeSiloContracts.sol";
 import {IVeBoost} from "ve-silo/contracts/voting-escrow/interfaces/IVeBoost.sol";
 import {VotingEscrowDelegationProxy} from "ve-silo/contracts/voting-escrow/VotingEscrowDelegationProxy.sol";
 import {NullVotingEscrow} from "ve-silo/contracts/voting-escrow/NullVotingEscrow.sol";
@@ -20,8 +22,8 @@ FOUNDRY_PROFILE=ve-silo \
 contract VotingEscrowDelegationProxyDeploy is CommonDeploy {
         function run() public returns (IVotingEscrowDelegationProxy proxy) {
             uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
-
-            address veBoost = getDeployedAddress(VeSiloContracts.VE_BOOST);
+            address timelock = VeSiloDeployments.get(VeSiloContracts.TIMELOCK_CONTROLLER, getChainAlias());
+            address veBoost = VeSiloDeployments.get(VeSiloContracts.VE_BOOST, getChainAlias());
 
             vm.startBroadcast(deployerPrivateKey);
 
@@ -33,6 +35,8 @@ contract VotingEscrowDelegationProxyDeploy is CommonDeploy {
                     IVeDelegation(veBoost)
                 )
             ));
+
+            Ownable(address(proxy)).transferOwnership(timelock);
 
             vm.stopBroadcast();
 

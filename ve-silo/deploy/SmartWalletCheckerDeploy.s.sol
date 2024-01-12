@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.21;
 
-import {CommonDeploy, VeSiloContracts} from "./_CommonDeploy.sol";
+import {Ownable} from "openzeppelin-contracts/access/Ownable.sol";
+
+import {CommonDeploy} from "./_CommonDeploy.sol";
+import {VeSiloContracts, VeSiloDeployments} from "ve-silo/common/VeSiloContracts.sol";
 
 import {ISmartWalletChecker} from "balancer-labs/v2-interfaces/liquidity-mining/ISmartWalletChecker.sol";
 
@@ -15,6 +18,7 @@ FOUNDRY_PROFILE=ve-silo \
 contract SmartWalletCheckerDeploy is CommonDeploy {
     function run() public returns (ISmartWalletChecker smartWalletChecker) {
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
+        address timelock = VeSiloDeployments.get(VeSiloContracts.TIMELOCK_CONTROLLER, getChainAlias());
 
         vm.startBroadcast(deployerPrivateKey);
 
@@ -23,6 +27,8 @@ contract SmartWalletCheckerDeploy is CommonDeploy {
         smartWalletChecker = ISmartWalletChecker(address(
             new SmartWalletChecker(initialAllowedAddresses)
         ));
+
+        Ownable(address(smartWalletChecker)).transferOwnership(timelock);
 
         vm.stopBroadcast();
 

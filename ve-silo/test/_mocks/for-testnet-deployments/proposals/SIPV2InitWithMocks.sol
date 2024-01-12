@@ -9,8 +9,8 @@ import {VeSiloMocksContracts} from "ve-silo/test/_mocks/for-testnet-deployments/
 import {Proposal} from "proposals/contracts/Proposal.sol";
 import {Constants} from "proposals/sip/_common/Constants.sol";
 
-contract SIPV2Init is Proposal {
-    string constant public PROPOSAL_DESCRIPTION = "Silo V2 initialization";
+contract SIPV2InitWithMocks is Proposal {
+    string constant public PROPOSAL_DESCRIPTION = "Initialization with mocks";
 
     function run() public override returns (uint256 proposalId) {
         string memory chainAlias = ChainsLib.chainAlias();
@@ -28,15 +28,14 @@ contract SIPV2Init is Proposal {
 
         // ownership acceptance
         ccipGaugeCheckpointer.acceptOwnership();
-        feeDistributor.acceptOwnership();
         gaugeAdder.acceptOwnership();
         siloFactory.acceptOwnership();
         smartWalletChecker.acceptOwnership();
         stakelessGaugeCheckpointerAdaptor.acceptOwnership();
-        uniswapSwapper.acceptOwnership();
         veSiloDelegatorViaCCIP.acceptOwnership();
         votingEscrowCCIPRemapper.acceptOwnership();
         votingEscrowDelegationProxy.acceptOwnership();
+        balancerTokenAdmin.acceptOwnership();
 
         // gauge related configuration
         gaugeController.add_type(Constants._GAUGE_TYPE_ETHEREUM);
@@ -50,8 +49,24 @@ contract SIPV2Init is Proposal {
 
         stakelessGaugeCheckpointerAdaptor.setStakelessGaugeCheckpointer(ccipCheckpointerAddr);
 
+        // activation of the Balancer token admin
+        balancerTokenAdmin.activate();
+
         /* PROPOSAL END */
 
         proposalId = proposeProposal(PROPOSAL_DESCRIPTION);
+    }
+
+    function initializeProposers() public override {
+        initCCIPGaugeCheckpointer();
+        initGaugeAdder();
+        initSiloFactory();
+        initSmartWalletChecker();
+        initStakelessGaugeCheckpointerAdaptor();
+        initVeSiloDelegatorViaCCIP();
+        initVotingEscrowCCIPRemapper();
+        initVotingEscrowDelegationProxy();
+        initGaugeController();
+        initBalancerTokenAdmin();
     }
 }
