@@ -15,7 +15,6 @@ import {ICCIPMessageSender, CCIPMessageSender} from "ve-silo/contracts/utils/CCI
 import {VeSiloMocksContracts} from "ve-silo/test/_mocks/for-testnet-deployments/deployments/VeSiloMocksContracts.sol";
 import {ICCIPGauge} from "ve-silo/contracts/gauges/interfaces/ICCIPGauge.sol";
 import {CCIPGaugeFactory} from "ve-silo/contracts/gauges/ccip/CCIPGaugeFactory.sol";
-import {InitialConfigWithMocks} from "./deployments/InitialConfigWithMocks.s.sol";
 import {ICCIPGaugeCheckpointer} from "ve-silo/contracts/gauges/interfaces/ICCIPGaugeCheckpointer.sol";
 import {ICCIPGauge} from "ve-silo/contracts/gauges/interfaces/ICCIPGauge.sol";
 import {IGaugeController} from "ve-silo/contracts/gauges/interfaces/IGaugeController.sol";
