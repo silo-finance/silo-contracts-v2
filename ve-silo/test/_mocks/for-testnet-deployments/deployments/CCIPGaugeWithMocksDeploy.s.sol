@@ -7,8 +7,6 @@ import {CCIPGaugeWithMocks} from "ve-silo/test/_mocks/for-testnet-deployments/ga
 import {IMainnetBalancerMinter} from "ve-silo/contracts/silo-tokens-minter/interfaces/IMainnetBalancerMinter.sol";
 import {VeSiloMocksContracts} from "./VeSiloMocksContracts.sol";
 
-import {console} from "forge-std/console.sol";
-
 /**
 FOUNDRY_PROFILE=ve-silo \
     forge script ve-silo/test/_mocks/for-testnet-deployments/deployments/CCIPGaugeWithMocksDeploy.s.sol \

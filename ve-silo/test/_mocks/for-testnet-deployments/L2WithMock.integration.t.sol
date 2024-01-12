@@ -12,8 +12,6 @@ import {L2WithMocksDeploy} from "./deployments/L2WithMocksDeploy.s.sol";
 import {VeSiloMocksContracts} from "./deployments/VeSiloMocksContracts.sol";
 import {CCIPRouterReceiverLike} from "./ccip/CCIPRouterReceiverLike.sol";
 
-import {console} from "forge-std/console.sol";
-
 interface IVeChaildChainGetter {
     function userPoints(address _user) external view returns (IVeSilo.Point memory);
 }

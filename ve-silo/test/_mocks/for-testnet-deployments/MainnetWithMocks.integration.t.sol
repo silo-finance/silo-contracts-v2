@@ -90,43 +90,16 @@ contract MainnetWithMocksIntegrationTest is MainnetTest {
         Ownable2Step(siloToken).transferOwnership(balancerTokenAdmin);
 
         vm.warp(block.timestamp + 1 weeks);
-
-        // initial proposal
-        SIPV2InitWithMocks initialPropsal = new SIPV2InitWithMocks();
-        initialPropsal.setProposerPK(_daoVoterPK).run();
-
-        _executeProposal(initialPropsal);
+        _executeInitalProposal();
 
         address gauge = _createCCIPGauge();
 
-        // set up gauge
-        SIPV2GaugeSetUpWithMocks gaugeSetUpProposal = new SIPV2GaugeSetUpWithMocks();
-        gaugeSetUpProposal.setGauge(gauge).setProposerPK(_daoVoterPK).run();
+        _executeGaugeSetUpProposal(gauge);
 
-        _executeProposal(gaugeSetUpProposal);
-
-        // _voteForGauge(gauge);
-
-        ICCIPGaugeCheckpointer ccipCheckpointer = ICCIPGaugeCheckpointer(
-            VeSiloDeployments.get(VeSiloContracts.CCIP_GAUGE_CHECKPOINTER, ChainsLib.chainAlias())
-        );
-
-        uint256 ethFees = ccipCheckpointer.getTotalBridgeCost(
-            0,
-            Constants._GAUGE_TYPE_CHILD,
-            ICCIPGauge.PayFeesIn.Native
-        );
+        (ICCIPGaugeCheckpointer ccipCheckpointer, uint256 ethFees) = _checkpointerAndFees();
 
         // chage gauge type weight
-        SIPV2GaugeWeightWithMocks gaugeWeightProposal = new SIPV2GaugeWeightWithMocks();
-
-        gaugeWeightProposal
-            .setGauge(gauge)
-            .setWeight(1e18)
-            .setProposerPK(_daoVoterPK)
-            .run();
-
-        _executeProposal(gaugeWeightProposal);
+        _executeChangeGaugeWeightProposal(gauge);
 
         address checkpointer = makeAddr("CCIP Gauge Checkpointer");
 
@@ -176,5 +149,43 @@ contract MainnetWithMocksIntegrationTest is MainnetTest {
         address feeSwapper = makeAddr("FeeSwapperMock");
         AddrLib.setAddress(VeSiloContracts.FEE_SWAPPER, feeSwapper);
         vm.mockCall(feeSwapper, abi.encodeWithSelector(Ownable2Step.acceptOwnership.selector), abi.encode(true));
+    }
+
+    function _executeInitalProposal() internal {
+        SIPV2InitWithMocks initialPropsal = new SIPV2InitWithMocks();
+        initialPropsal.setProposerPK(_daoVoterPK).run();
+
+        _executeProposal(initialPropsal);
+    }
+
+    function _executeGaugeSetUpProposal(address _gauge) internal {
+        SIPV2GaugeSetUpWithMocks gaugeSetUpProposal = new SIPV2GaugeSetUpWithMocks();
+        gaugeSetUpProposal.setGauge(_gauge).setProposerPK(_daoVoterPK).run();
+
+        _executeProposal(gaugeSetUpProposal);
+    }
+
+    function _executeChangeGaugeWeightProposal(address _gauge) internal {
+        SIPV2GaugeWeightWithMocks gaugeWeightProposal = new SIPV2GaugeWeightWithMocks();
+
+        gaugeWeightProposal
+            .setGauge(_gauge)
+            .setWeight(1e18)
+            .setProposerPK(_daoVoterPK)
+            .run();
+
+        _executeProposal(gaugeWeightProposal);
+    }
+
+    function _checkpointerAndFees() internal returns (ICCIPGaugeCheckpointer ccipCheckpointer, uint256 ethFees) {
+        ccipCheckpointer = ICCIPGaugeCheckpointer(
+            VeSiloDeployments.get(VeSiloContracts.CCIP_GAUGE_CHECKPOINTER, ChainsLib.chainAlias())
+        );
+
+        ethFees = ccipCheckpointer.getTotalBridgeCost(
+            0,
+            Constants._GAUGE_TYPE_CHILD,
+            ICCIPGauge.PayFeesIn.Native
+        );
     }
 }

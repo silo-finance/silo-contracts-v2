@@ -22,25 +22,6 @@ contract CCIPRouterClientLike is IRouterClient {
     }
 
     /// @inheritdoc IRouterClient
-    function isChainSupported(uint64) external pure returns (bool supported) {
-        supported = true;
-    }
-
-    /// @inheritdoc IRouterClient
-    function getSupportedTokens(uint64) external pure returns (address[] memory tokens) {
-        tokens = new address[](1);
-        tokens[0] = address(0);
-    }
-
-    /// @inheritdoc IRouterClient
-    function getFee(
-        uint64,
-        Client.EVM2AnyMessage memory
-    ) external pure returns (uint256 fee) {
-        fee = FEE;
-    }
-
-    /// @inheritdoc IRouterClient
     function ccipSend(
         uint64 destinationChainSelector,
         Client.EVM2AnyMessage calldata message
@@ -61,5 +42,24 @@ contract CCIPRouterClientLike is IRouterClient {
         }
 
         return keccak256(abi.encode(destinationChainSelector, message));
+    }
+
+    /// @inheritdoc IRouterClient
+    function isChainSupported(uint64) external pure returns (bool supported) {
+        supported = true;
+    }
+
+    /// @inheritdoc IRouterClient
+    function getSupportedTokens(uint64) external pure returns (address[] memory tokens) {
+        tokens = new address[](1);
+        tokens[0] = address(0);
+    }
+
+    /// @inheritdoc IRouterClient
+    function getFee(
+        uint64,
+        Client.EVM2AnyMessage memory
+    ) external pure returns (uint256 fee) {
+        fee = FEE;
     }
 }
