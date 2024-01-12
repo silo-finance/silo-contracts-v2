@@ -28,6 +28,8 @@ contract StakelessGaugeCheckpointerAdaptorProposer is TwoStepOwnableProposer {
         );
     }
 
+    /// @notice Add a `setStakelessGaugeCheckpointer` action to the proposal engine
+    /// @param _checkpointer The address of the checkpointer to be set
     function setStakelessGaugeCheckpointer(address _checkpointer) external {
         bytes memory input = abi.encodeWithSelector(
             IStakelessGaugeCheckpointerAdaptor.setStakelessGaugeCheckpointer.selector,

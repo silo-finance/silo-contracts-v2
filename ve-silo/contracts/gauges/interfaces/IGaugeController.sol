@@ -20,7 +20,6 @@ interface IGaugeController {
     function vote_for_gauge_weights(address _gauge_addr, uint256 _user_weight) external;
     function vote_for_many_gauge_weights(address[8] memory _gauge_addrs, uint256[8] memory _user_weight) external;
     function set_gauge_adder(address _addr) external;
-    function gauge_relative_weight_write(address _addr, uint256 _time) external returns (uint256);
 
     function token() external view returns (address);
     function voting_escrow() external view returns (address);
