@@ -50,7 +50,6 @@ line_length=119
 [profile.ve-silo]
 src = 've-silo/contracts'
 out = 'cache/foundry/out/ve-silo'
-test = 've-silo/test'
 broadcast = 've-silo/broadcast'
 
 [profile.ve-silo-test]
