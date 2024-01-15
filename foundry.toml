@@ -80,7 +80,7 @@ broadcast = 'proposals/broadcast'
 mainnet = "${RPC_MAINNET}"
 sepolia = "${RPC_SEPOLIA}"
 arbitrum_one = "${RPC_ARBITRUM}"
-optimist = "${RPC_OPTIMISM}"
+optimism = "${RPC_OPTIMISM}"
 anvil = "${RPC_ANVIL}"
 
 # See more config options https://github.com/foundry-rs/foundry/tree/master/config
