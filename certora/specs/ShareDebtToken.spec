@@ -7,7 +7,7 @@ methods {
     function totalSupply()              external returns(uint) envfree;
 }
 
-// certoraRun certora/confs/silo-core/share_debt_token_sanity.conf 
+// certoraRun certora/confs/silo-core/share_debt_token_sanity.conf
 // certoraRun certora/confs/silo-core/share_debt.conf
 /// @title Transfer is possible`
 rule transferIsNotPossibleWithoutReverseApproval(method f) filtered { f -> !f.isView } {
@@ -19,20 +19,22 @@ rule transferIsNotPossibleWithoutReverseApproval(method f) filtered { f -> !f.is
     require e.msg.sender != recipient;
     // silo can mint or force transfer, so we need to exclude it
     require e.msg.sender != currentContract.silo;
-    // we assuming recipient did not allow sender to send debt
-    require receiveAllowance(e.msg.sender, recipient) == 0;
 
     uint256 recipientBalanceBefore = balanceOf(recipient);
 
-    calldataarg args;
-    f(e, args);
+    if (f.selector == sig:transferFrom(address, address, uint256).selector) {
+        address from;
+        uint256 amount;
+        // when transfering from, all we care that recipient did not allow for transfer from owner
+        require receiveAllowance(from, recipient) == 0;
+        transferFrom(e, from, recipient, amount);
+    } else {
+        require receiveAllowance(e.msg.sender, recipient) == 0;
+
+        calldataarg args;
+        f(e, args);
+    }
 
     // recipient should not receive any debt tokens
     assert balanceOf(recipient) == recipientBalanceBefore;
-}
-
-// idk if this is the way to go,
-// if I use this hook I probably need to prove, that nobody can set this other than recipient
-hook Sload uint256 value _receiveAllowances[KEY address owner][KEY address recipient] STORAGE {
-    require value == 0;
 }
