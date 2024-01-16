@@ -1,0 +1,9 @@
+{
+    "UniswapV3-WETH-USDC-0.05-optimism": {
+        "pool": "USDC_ETH_UNI_POOL",
+        "quoteToken": "WETH",
+        "periodForAvgPrice": 1800,
+        "blockTime": 5,
+        "requiredCardinality": true
+    }
+}
