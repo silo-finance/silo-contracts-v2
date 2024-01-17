@@ -3,7 +3,7 @@
         "pool": "USDC_ETH_UNI_POOL",
         "quoteToken": "WETH",
         "periodForAvgPrice": 1800,
-        "blockTime": 5,
+        "blockTime": 50,
         "requiredCardinality": true
     }
 }
