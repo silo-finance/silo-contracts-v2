@@ -37,12 +37,11 @@
 - _siloData.interestRateTimestamp can only increase on accrueInterest, it hould not change if the block.timestamp did not change.\
   Implementation: rule `VC_Silo_interestRateTimestamp_accrueInterest`
 
-* Discuss
-- shareDebtToke.balanceOf(user) increases => Silo._total[ISilo.AssetType.Debt].assets increase
+- shareDebtToke.balanceOf(user) increases/decrease => Silo._total[ISilo.AssetType.Debt].assets increases/decrease
 
-- protectedShareToken.balanceOf(user) increases => Silo._total[ISilo.AssetType.Protected].assets increases
+- protectedShareToken.balanceOf(user) increases/decrease => Silo._total[ISilo.AssetType.Protected].assets increases/decrease
 
-- collateralShareToken.balanceOf(user) increases => Silo._total[ISilo.AssetType.Collateral].assets increases
+- collateralShareToken.balanceOf(user) increases/decrease => Silo._total[ISilo.AssetType.Collateral].assets increases/decrease
 
 - _siloData.daoAndDeployerFees increased => _siloData.interestRateTimestamp and
   Silo._total[ISilo.AssetType.Collateral].assets, and Silo._total[ISilo.AssetType.Debt].assets are increased too.\
@@ -58,11 +57,13 @@
 - _siloData.interestRateTimestamp is zero => _siloData.daoAndDeployerFees is zero.\
   Implementation: rule `VS_Silo_interestRateTimestamp_daoAndDeployerFees`
 
-* Discuss 41, 43, 45 and 62, 65
 - Silo._total[ISilo.AssetType.Debt].assets is not zero => Silo._total[ISilo.AssetType.Collateral].assets is not zero.\
   Implementation: rule `VS_Silo_totalBorrowAmount`
 
-- shareDebtToke.balanceOf(user) is not zero => protectedShareToken.balanceOf(user) + collateralShareToken.balanceOf(user) is not zero
+- shareDebtToke.balanceOf(user) is not zero => protectedShareToken.balanceOf(user) + collateralShareToken.balanceOf(user) is zero
+
+- share token totalSypply is not 0 => share token totalSypply <= Silo._total[ISilo.AssetType.*].assets.\
+  share token totalSypply is 0 <=> Silo._total[ISilo.AssetType.*].assets is 0
 
 ### State Transitions
 
@@ -78,21 +79,47 @@
 ### High-Level Properties
 
 - Inverse deposit - withdraw for collateralToken. For any user, the balance before deposit
-  should be equal to the balance after depositing and then withdrawing the same amount.\
-  Implementation: rule `HLP_inverse_deposit_withdraw_collateral`
+  should be equal to the balance after depositing and then withdrawing the same amount. Silo Silo._total[ISilo.AssetType.*].assets should be the same.\
+  Implementation: rule `HLP_inverse_deposit_withdraw_collateral`\
+  Apply for mint, withdraw, redeem, repay, repayShares, borrow, borrowShares.\
 
-- Inverse deposit - redeem for collateralToken. For any user, the balance before deposit
-  should be equal to the balance after depositing and then withdrawing the same amount.\
-  Implementation: rule `HLP_inverse_deposit_redeem_collateral`
+- Additive deposit for the state while do deposit(x + y)
+  should be the same as deposit(x) + deposit(y). \
+  Implementation: rule `HLP_additive_deposit_collateral`
+  Apply for mint, withdraw, redeem, repay, repayShares, borrow, borrowShares, transitionCollateral.\
 
-- Inverse mint - withdraw for collateralToken. For any user, the balance before deposit
-  should be equal to the balance after depositing and then withdrawing the same amount.\
-  Implementation: rule `HLP_inverse_mint_withdraw_collateral`
+- Integrity of deposit for collateralToken, Silo._total[ISilo.AssetType.Collateral].assets after deposit
+  should be equal to the Silo._total[ISilo.AssetType.Collateral].assets before deposit + amount of the deposit.\
+  Implementation: rule `HLP_integrity_deposit_collateral`
+  Apply for mint, withdraw, redeem, repay, repayShares, borrow, borrowShares, transitionCollateral.\
 
-- Inverse mint - redeem for collateralToken. For any user, the balance before deposit
-  should be equal to the balance after depositing and then withdrawing the same amount.\
-  Implementation: rule `HLP_inverse_mint_redeem_collateral`
+- Deposit of the collateral will update the balance of only recepient.\
+  Implementation: rule `HLP_deposit_collateral_update_only_recepient`
+  Apply for mint, withdraw, redeem, repay, repayShares, borrow, borrowShares.\
 
-- Inverse borrow - repay for debtToken. For any user, the balance before borrowing should be equal
-  to the balance after borrowing and then repaying the same amount.\
-  Implementation: rule `HLP_inverse_borrow_repay_debtToken`
+- Transition of the collateral will increase one balance and decrease another of only owner.\
+  Implementation: rule `HLP_transition_collateral_update_only_recepient`
+
+- LiquidationCall will only update the balances of the provided user.
+  Implementation: rule `HLP_liquidationCall_shares_tokens_balances`
+
+### Risk Assessment
+
+- A user cannot withdraw anything after withdrawing whole balance.\
+  Implementation: rule `RA_Silo_no_withdraw_after_withdrawing_all`
+
+- A user should not be able to fully repay a loan with less amount than he borrowed.\
+  Implementation: rule `RA_Silo_no_negative_interest_for_loan`
+
+- With protected collateral deposit, there is no scenario when the balance of
+  a contract is less than that deposit amount.\
+  Implementation: rule `RA_Silo_balance_more_than_protected_collateral_deposit`
+
+- A user should not be able to deposit an asset that he borrowed in the Silo.\
+  Implementation: rule `RA_Silo_borrowed_asset_not_depositable`
+
+- A user has no debt after being repaid with max shares amount. \
+  Implementation: rule `RA_Silo_repay_all_shares`
+
+- A user can withdraw all with max shares amount. \
+  Implementation: rule `RA_Silo_withdraw_all_shares`
