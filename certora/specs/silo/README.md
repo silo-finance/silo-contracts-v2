@@ -5,6 +5,8 @@
 - Variable Changes
 - Unit Tests
 - Valid State
+- High-Level Properties
+- Risk Assessment
 
 ### Unit Tests
 - accrueInterest can only be executed on deposit, mint, withdraw,
