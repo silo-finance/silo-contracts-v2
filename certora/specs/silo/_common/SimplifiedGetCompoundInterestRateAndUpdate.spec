@@ -16,7 +16,7 @@ function simplified_getCompoundInterestRateAndUpdate(
     uint256 _interestRateTimestamp
 ) returns uint256 {
     uint256 result;
+    // InterestRateModelV2.RCOMP_MAX() == (2**16) * 1e18
     require result <= 2^16 * 10^18;
-
     return result;
 }

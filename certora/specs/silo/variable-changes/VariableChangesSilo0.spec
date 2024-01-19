@@ -9,9 +9,9 @@ import "../_common/SimplifiedGetCompoundInterestRateAndUpdate.spec";
 /**
 certoraRun certora/config/silo/silo0.conf \
     --parametric_contracts Silo0 \
-    --msg "Viriables change Silo0 deposit" \
+    --msg "Viriables change Silo0 accrueInterest" \
     --rule "VC_Silo_total_collateral_increase" \
-    --method "deposit(uint256,address)" \
+    --method "accrueInterest()" \
     --verify "Silo0:certora/specs/silo/variable-changes/VariableChangesSilo0.spec"
 
 to verify the particular function add:
@@ -32,10 +32,14 @@ rule VC_Silo_total_collateral_increase(
     mathint totalDepositsBefore = getCollateralAssets();
     mathint shareTokenTotalSupplyBefore = shareCollateralToken0.totalSupply();
     mathint siloBalanceBefore = token0.balanceOf(silo0);
-    mathint siloIRTimestamp = getSiloDataInterestRateTimestamp();
+    uint256 siloIRTimestamp = getSiloDataInterestRateTimestamp();
 
-    require assets >= 3;
+    require assets >= 3; // 1:2 ratio for shares conversion
+    require siloIRTimestamp <= e.block.timestamp;
+    require shareTokenTotalSupplyBefore + assets <= max_uint256;
+    require totalDepositsBefore + assets <= max_uint256;
     require siloBalanceBefore + assets <= max_uint256;
+    require assert_uint256(siloBalanceBefore) <= token0.totalSupply();
 
     siloFnSelectorWithAmount(e, f, assets);
 
@@ -43,16 +47,20 @@ rule VC_Silo_total_collateral_increase(
     mathint shareTokenTotalSupplyAfter = shareCollateralToken0.totalSupply();
     mathint siloBalanceAfter = token0.balanceOf(silo0);
 
+    bool withInterest = siloIRTimestamp != 0 && siloIRTimestamp < e.block.timestamp;
+
     assert totalDepositsBefore < totalDepositsAfter && shareTokenTotalSupplyBefore < shareTokenTotalSupplyAfter =>
         (f.selector == depositSig() || f.selector == mintSig()) &&
         siloBalanceBefore + assets == siloBalanceAfter &&
-        totalDepositsBefore + assets == totalDepositsAfter,
+        (
+            (!withInterest && totalDepositsBefore + assets == totalDepositsAfter) ||
+            // with an interest it should be bigger or the same
+            (withInterest && totalDepositsBefore + assets <= totalDepositsAfter)
+        ),
         "Deposit and mint fn should increase total deposits and silo balance";
 
-    bool withInterest = siloIRTimestamp != 0 && assert_uint256(siloIRTimestamp) < e.block.timestamp;
-
     assert f.selector == accrueInterestSig() && withInterest =>
-         totalDepositsBefore < totalDepositsAfter &&
+         totalDepositsBefore <= totalDepositsAfter && // it may be the same if the interest is 0
          shareTokenTotalSupplyBefore == shareTokenTotalSupplyAfter,
         "AccrueInterest increase only Silo._total[ISilo.AssetType.Collateral].assets";
 }

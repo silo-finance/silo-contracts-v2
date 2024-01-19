@@ -47,11 +47,12 @@ function silo0SetUp(env e) {
     uint256 daoFee; uint256 deployerFee; uint256 flashloanFee; address asset;
     daoFee, deployerFee, flashloanFee, asset = siloConfig.getFeesWithAsset(silo0);
 
-    require daoFee + deployerFee < 3000; 
+    require daoFee + deployerFee < 3000;
 
     require e.msg.sender != shareProtectedCollateralToken0;
     require e.msg.sender != shareDebtToken0;
     require e.msg.sender != shareCollateralToken0;
     require e.msg.sender != siloConfig;
     require e.msg.sender != configSilo1;
+    require e.msg.sender != silo0;
 }
