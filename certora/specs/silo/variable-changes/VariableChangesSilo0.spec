@@ -9,9 +9,7 @@ import "../_common/SimplifiedGetCompoundInterestRateAndUpdate.spec";
 /**
 certoraRun certora/config/silo/silo0.conf \
     --parametric_contracts Silo0 \
-    --msg "Viriables change Silo0 accrueInterest" \
-    --rule "VC_Silo_total_collateral_increase" \
-    --method "accrueInterest()" \
+    --msg "Viriables change Silo0" \
     --verify "Silo0:certora/specs/silo/variable-changes/VariableChangesSilo0.spec"
 
 to verify the particular function add:
