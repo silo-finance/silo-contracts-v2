@@ -3,20 +3,22 @@ import "./ERC20MethodsDispatch.spec";
 import "./Token0Methods.spec";
 import "./Silo0ShareTokensMethods.spec";
 
+using Silo0 as silo0;
+
 function silo0SetUp(env e) {
-    address silo0;
-    address silo1;
+    address configSilo0;
+    address configSilo1;
 
-    silo0, silo1 = siloConfig.getSilos();
+    configSilo0, configSilo1 = siloConfig.getSilos();
 
-    require silo0 == currentContract;
+    require configSilo0 == currentContract;
 
-    require silo1 != Token0;
-    require silo1 != shareProtectedCollateralToken0;
-    require silo1 != shareDebtToken0;
-    require silo1 != shareCollateralToken0;
-    require silo1 != siloConfig;
-    require silo1 != currentContract;
+    require configSilo1 != token0;
+    require configSilo1 != shareProtectedCollateralToken0;
+    require configSilo1 != shareDebtToken0;
+    require configSilo1 != shareCollateralToken0;
+    require configSilo1 != siloConfig;
+    require configSilo1 != currentContract;
 
     address configProtectedShareToken;
     address configCollateralShareToken;
@@ -29,13 +31,13 @@ function silo0SetUp(env e) {
     require configDebtShareToken == shareDebtToken0;
 
     address configToken0 = siloConfig.getAssetForSilo(silo0);
-    address configSiloToken1 = siloConfig.getAssetForSilo(silo1);
+    address configSiloToken1 = siloConfig.getAssetForSilo(configSilo1);
 
-    require configToken0 == Token0;
+    require configToken0 == token0;
 
     require configSiloToken1 != silo0;
-    require configSiloToken1 != silo1;
-    require configSiloToken1 != Token0;
+    require configSiloToken1 != configSilo1;
+    require configSiloToken1 != token0;
     require configSiloToken1 != shareProtectedCollateralToken0;
     require configSiloToken1 != shareDebtToken0;
     require configSiloToken1 != shareCollateralToken0;
@@ -46,5 +48,5 @@ function silo0SetUp(env e) {
     require e.msg.sender != shareDebtToken0;
     require e.msg.sender != shareCollateralToken0;
     require e.msg.sender != siloConfig;
-    require e.msg.sender != silo1;
+    require e.msg.sender != configSilo1;
 }

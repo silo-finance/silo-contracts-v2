@@ -1,6 +1,6 @@
-using Token0 as Token0;
+using Token0 as token0;
 
 methods {
-    function Token0.balanceOf(address) external returns(uint256) envfree;
-    function Token0.totalSupply() external returns(uint256) envfree;
+    function token0.balanceOf(address) external returns(uint256) envfree;
+    function token0.totalSupply() external returns(uint256) envfree;
 }
