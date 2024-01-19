@@ -1,5 +1,10 @@
 import "./SiloFunctionSig.spec";
 
+function siloFnSelectorWithAmount(env e, method f, uint256 amount) {
+    address receiver;
+    siloFnSelector(e, f, amount, receiver);
+}
+
 function siloFnSelector(
     env e,
     method f,

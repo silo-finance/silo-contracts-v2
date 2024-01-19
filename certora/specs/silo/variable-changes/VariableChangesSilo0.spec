@@ -4,47 +4,55 @@ import "../_common/SiloMethods.spec";
 import "../_common/Helpers.spec";
 import "../_common/IsSolventGhost.spec";
 import "../_common/SimplifiedConvertions1to2Ratio.spec";
+import "../_common/SimplifiedGetCompoundInterestRateAndUpdate.spec";
 
 /**
 certoraRun certora/config/silo/silo0.conf \
     --parametric_contracts Silo0 \
-    --msg "Viriables change Silo0" \
+    --msg "Viriables change Silo0 deposit" \
+    --rule "VC_Silo_total_collateral_increase" \
+    --method "deposit(uint256,address)" \
     --verify "Silo0:certora/specs/silo/variable-changes/VariableChangesSilo0.spec"
 
 to verify the particular function add:
 --method "deposit(uint256,address)"
 
 to run the particular rule add:
---rule "VC_Silo_totalDeposits_change_on_Deposit"
+--rule "VC_Silo_total_collateral_increase"
 */
-rule VC_Silo_totalDeposits_change_on_Deposit(
+rule VC_Silo_total_collateral_increase(
     env e,
     method f,
-    address receiver,
     uint256 assets
 )
     filtered { f -> !f.isView && !f.isFallback }
 {
     silo0SetUp(e);
-    disableAccrueInterest(e);
 
-    require receiver == e.msg.sender;
+    mathint totalDepositsBefore = getCollateralAssets();
+    mathint shareTokenTotalSupplyBefore = shareCollateralToken0.totalSupply();
+    mathint siloBalanceBefore = token0.balanceOf(silo0);
+    mathint siloIRTimestamp = getSiloDataInterestRateTimestamp();
 
-    uint256 totalDepositsBefore = getCollateralAssets();
-    uint256 shareTokenTotalSupplyBefore = shareCollateralToken0.totalSupply();
-    uint256 shareTokenBalanceBefore = shareCollateralToken0.balanceOf(e.msg.sender);
+    require assets >= 3;
+    require siloBalanceBefore + assets <= max_uint256;
 
-    require shareTokenBalanceBefore <= shareTokenTotalSupplyBefore;
+    siloFnSelectorWithAmount(e, f, assets);
 
-    siloFnSelector(e, f, assets, receiver);
+    mathint totalDepositsAfter = getCollateralAssets();
+    mathint shareTokenTotalSupplyAfter = shareCollateralToken0.totalSupply();
+    mathint siloBalanceAfter = token0.balanceOf(silo0);
 
-    uint256 totalDepositsAfter = getCollateralAssets();
-    uint256 shareTokenTotalSupplyAfter = shareCollateralToken0.totalSupply();
-    uint256 shareTokenBalanceAfter = shareCollateralToken0.balanceOf(e.msg.sender);
+    assert totalDepositsBefore < totalDepositsAfter && shareTokenTotalSupplyBefore < shareTokenTotalSupplyAfter =>
+        (f.selector == depositSig() || f.selector == mintSig()) &&
+        siloBalanceBefore + assets == siloBalanceAfter &&
+        totalDepositsBefore + assets == totalDepositsAfter,
+        "Deposit and mint fn should increase total deposits and silo balance";
 
-    assert f.selector == depositSig() =>
-        totalDepositsBefore < totalDepositsAfter &&
-        shareTokenTotalSupplyBefore < shareTokenTotalSupplyAfter &&
-        shareTokenBalanceBefore < shareTokenBalanceAfter,
-        "deposit fn should increase total deposits and balance";
+    bool withInterest = siloIRTimestamp != 0 && assert_uint256(siloIRTimestamp) < e.block.timestamp;
+
+    assert f.selector == accrueInterestSig() && withInterest =>
+         totalDepositsBefore < totalDepositsAfter &&
+         shareTokenTotalSupplyBefore == shareTokenTotalSupplyAfter,
+        "AccrueInterest increase only Silo._total[ISilo.AssetType.Collateral].assets";
 }
