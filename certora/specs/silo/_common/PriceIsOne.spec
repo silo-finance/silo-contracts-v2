@@ -4,5 +4,5 @@ methods {
 }
 
 function price_is_one(uint256 _baseAmount, address _baseToken) returns uint256 {
-    return 1000000000000000000;
+    return _baseAmount;
 }

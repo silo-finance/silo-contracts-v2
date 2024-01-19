@@ -28,6 +28,7 @@ methods {
     );
 }
 
+// assume 1:2 ratio share per amount
 function simplified_convertToShares(
     uint256 _assets,
     uint256 _totalAssets,
@@ -35,9 +36,14 @@ function simplified_convertToShares(
     MathUpgradeable.Rounding _rounding,
     ISilo.AssetType _assetType
 ) returns uint256 {
-    return 100;
+    if (_rounding == MathUpgradeable.Rounding.Up) {
+        return assert_uint256(_assets / 2 + 1);
+    }
+
+    return assert_uint256(_assets / 2);
 }
 
+// assume 1:2 ratio share per amount
 function simplified_convertToAssets(
     uint256 _shares,
     uint256 _totalAssets,
@@ -45,5 +51,11 @@ function simplified_convertToAssets(
     MathUpgradeable.Rounding _rounding,
     ISilo.AssetType _assetType
 ) returns uint256 {
-    return 100;
+    require _shares * 2 < max_uint256;
+
+    if (_rounding == MathUpgradeable.Rounding.Up) {
+        return assert_uint256(_shares * 2 + 1);
+    }
+
+    return assert_uint256(_shares * 2);
 }

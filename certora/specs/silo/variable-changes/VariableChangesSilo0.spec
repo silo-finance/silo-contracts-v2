@@ -5,6 +5,18 @@ import "../_common/Helpers.spec";
 import "../_common/IsSolventGhost.spec";
 import "../_common/SimplifiedConvertions.spec";
 
+/**
+certoraRun certora/config/silo/silo0.conf \
+    --parametric_contracts Silo0 \
+    --msg "Viriables change Silo0" \
+    --verify "Silo0:certora/specs/silo/variable-changes/VariableChangesSilo0.spec"
+
+to verify the particular function add:
+--method "deposit(uint256,address)"
+
+to run the particular rule add:
+--rule "VC_Silo_totalDeposits_change_on_Deposit"
+*/
 rule VC_Silo_totalDeposits_change_on_Deposit(
     env e,
     method f,
