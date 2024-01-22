@@ -5,8 +5,8 @@ methods {
 }
 
 function simplified_accrueInterest() returns (uint256, ISiloConfig.ConfigData) {
-    ISiloConfig.ConfigData anyConfig;
+    ISiloConfig.ConfigData config = siloConfig.getConfig(silo0);
     uint256 anyInterest;
 
-    return (anyInterest, anyConfig);
+    return (anyInterest, config);
 }
