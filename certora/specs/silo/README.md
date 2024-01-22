@@ -35,7 +35,6 @@
 
 - `siloData` can only change on accrueInterest. \
   Implementation: rule `VC_Silo_siloData_change_on_accrueInterest`
-  Apply it for `interestRateTimestamp`.
 
 - shareDebtToke.balanceOf(user) increases/decrease => Silo._total[ISilo.AssetType.Debt].assets increases/decrease \
   Implementation: rule `VC_Silo_debt_share_balance`
