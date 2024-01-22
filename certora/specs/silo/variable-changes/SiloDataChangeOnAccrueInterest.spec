@@ -8,7 +8,7 @@ import "../_common/SimplifiedConvertions1to2Ratio.spec";
 
 /**
 certoraRun certora/config/silo/silo0.conf \
-    --verify "Silo0:certora/specs/silo/variable-changes/SiloDataChangeOnAccrueInterest.spec"
+    --verify "Silo0:certora/specs/silo/variable-changes/SiloDataChangeOnAccrueInterest.spec" \
     --parametric_contracts Silo0 \
     --msg "SiloDataChangeOnAccrueInterest"  --method "deposit(uint256,address)" // to speed up use --method flag
 */
