@@ -28,7 +28,6 @@ methods {
     );
 }
 
-// assume 1:2 ratio share per amount
 function simplified_convertToShares(
     uint256 _assets,
     uint256 _totalAssets,
@@ -37,13 +36,12 @@ function simplified_convertToShares(
     ISilo.AssetType _assetType
 ) returns uint256 {
     if (_rounding == MathUpgradeable.Rounding.Up) {
-        return assert_uint256(_assets / 2 + 1);
+        return assert_uint256(_assets / 5 * 3 + 1);
     }
 
-    return assert_uint256(_assets / 2);
+    return assert_uint256(_assets / 5 * 3);
 }
 
-// assume 1:2 ratio share per amount
 function simplified_convertToAssets(
     uint256 _shares,
     uint256 _totalAssets,
@@ -54,8 +52,17 @@ function simplified_convertToAssets(
     require _shares * 2 < max_uint256;
 
     if (_rounding == MathUpgradeable.Rounding.Up) {
-        return assert_uint256(_shares * 2 + 1);
+        return assert_uint256(_shares * 5 / 3 + 1);
     }
 
-    return assert_uint256(_shares * 2);
+    return assert_uint256(_shares * 5 / 3);
 }
+
+
+// function _.mulDiv(uint x, uint y, uint denominator) internal => cvlMulDiv(x,y,denominator) expect uint;
+
+
+// function cvlMulDiv(uint x, uint y, uint denominator) returns uint {
+//     require(denominator != 0);
+//     return require_uint256(x*y/denominator);
+// }

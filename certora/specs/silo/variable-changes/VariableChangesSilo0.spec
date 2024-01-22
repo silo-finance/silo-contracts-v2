@@ -6,14 +6,26 @@ import "../_common/IsSolventGhost.spec";
 import "../_common/SimplifiedConvertions1to2Ratio.spec";
 import "../_common/SimplifiedGetCompoundInterestRateAndUpdate.spec";
 
+methods {
+    // applies only to EVM calls
+    function _.accrueInterest() external => DISPATCHER(true);
+    function _.beforeQuote(address) external => NONDET;
+    function _.connect(address) external => NONDET; // IRM
+    function _.afterTokenTransfer(address,uint256,address,uint256,uint256,uint256) external => ALWAYS(true); // Hook Reveiver
+}
+
 /**
 certoraRun certora/config/silo/silo0.conf \
     --parametric_contracts Silo0 \
     --msg "Viriables change Silo0" \
+    --method "withdraw(uint256,address,address)" \
+    --rule "VC_Silo_total_collateral_increase" \
     --verify "Silo0:certora/specs/silo/variable-changes/VariableChangesSilo0.spec"
 
 to verify the particular function add:
 --method "deposit(uint256,address)"
+
+    --method "withdraw(uint256,address,address)" \
 
 to run the particular rule add:
 --rule "VC_Silo_total_collateral_increase"
@@ -27,25 +39,19 @@ rule VC_Silo_total_collateral_increase(
 {
     silo0SetUp(e);
 
+    require assets >= 3;
+
     mathint totalDepositsBefore = getCollateralAssets();
     mathint shareTokenTotalSupplyBefore = shareCollateralToken0.totalSupply();
     mathint siloBalanceBefore = token0.balanceOf(silo0);
-    uint256 siloIRTimestamp = getSiloDataInterestRateTimestamp();
 
-    require assets >= 3; // 1:2 ratio for shares conversion
-    require siloIRTimestamp <= e.block.timestamp;
-    require shareTokenTotalSupplyBefore + assets <= max_uint256;
-    require totalDepositsBefore + assets <= max_uint256;
-    require siloBalanceBefore + assets <= max_uint256;
-    require assert_uint256(siloBalanceBefore) <= token0.totalSupply();
+    bool withInterest = isWithInterest(e);
 
-    siloFnSelectorWithAmount(e, f, assets);
+    siloFnSelectorWithAssets(e, f, assets);
 
     mathint totalDepositsAfter = getCollateralAssets();
     mathint shareTokenTotalSupplyAfter = shareCollateralToken0.totalSupply();
     mathint siloBalanceAfter = token0.balanceOf(silo0);
-
-    bool withInterest = siloIRTimestamp != 0 && siloIRTimestamp < e.block.timestamp;
 
     assert totalDepositsBefore < totalDepositsAfter && shareTokenTotalSupplyBefore < shareTokenTotalSupplyAfter =>
         (f.selector == depositSig() || f.selector == mintSig()) &&

@@ -7,4 +7,6 @@ methods {
     function getDebtAssets() external returns(uint256) envfree;
     // Harness:
     function getSiloDataInterestRateTimestamp() external returns(uint256) envfree;
+
+    function initialize(address,address) external => NONDET;
 }

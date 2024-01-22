@@ -55,4 +55,7 @@ function silo0SetUp(env e) {
     require e.msg.sender != siloConfig;
     require e.msg.sender != configSilo1;
     require e.msg.sender != silo0;
+
+    requireSharesTokens0Balances();
+    requireToken0Balances();
 }
