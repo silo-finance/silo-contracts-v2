@@ -14,16 +14,4 @@ contract SiloHarness is Silo {
     function getSiloDataDaoAndDeployerFees() external view returns (uint256) {
         return siloData.daoAndDeployerFees;
     }
-
-    function _accrueInterest()
-        internal
-        virtual
-        returns (uint256 accruedInterest, ISiloConfig.ConfigData memory configData)
-    {
-        configData = config.getConfig(address(this));
-
-        accruedInterest = _callAccrueInterestForAsset(
-            configData.interestRateModel, configData.daoFee, configData.deployerFee
-        );
-    }
 }

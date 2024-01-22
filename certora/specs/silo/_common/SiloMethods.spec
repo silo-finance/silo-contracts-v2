@@ -8,4 +8,5 @@ methods {
     function getCollateralAndProtectedAssets() external returns(uint256,uint256) envfree;
     // Harness:
     function getSiloDataInterestRateTimestamp() external returns(uint256) envfree;
+    function getSiloDataDaoAndDeployerFees() external returns(uint256) envfree;
 }
