@@ -7,13 +7,10 @@ import "../_common/SimplifiedConvertions1to2Ratio.spec";
 
 
 /**
-to speed up checking if rule works use --method
-
 certoraRun certora/config/silo/silo0.conf \
+    --verify "Silo0:certora/specs/silo/variable-changes/SiloDataChangeOnAccrueInterest.spec"
     --parametric_contracts Silo0 \
-    --msg "SiloDataChangeOnAccrueInterest" \
-    --verify "Silo0:certora/specs/silo/variable-changes/SiloDataChangeOnAccrueInterest.spec" \
-    --method "deposit(uint256,address)"
+    --msg "SiloDataChangeOnAccrueInterest"  --method "deposit(uint256,address)" // to speed up use --method flag
 */
 rule VC_Silo_siloData_change_on_accrueInterest(env e, method f) filtered { f -> !f.isView } {
     silo0SetUp(e);
