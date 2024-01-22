@@ -33,8 +33,8 @@
 - debtShareToken.totalSupply and Silo._total[ISilo.AssetType.Debt].assets should decrease only on repay, repayShares, liquidationCall. accrueInterest increase only Silo._total[ISilo.AssetType.Debt].assets. The balance of the silo in the underlying asset should increase for the same amount as Silo._total[ISilo.AssetType.Debt].assets decreased. \
   Implementation: rule `VC_Silo_total_debt_decrease`
 
-- _siloData.daoAndDeployerFees can only change on accrueInterest. \
-  Implementation: rule `VC_Silo_dao_and_deployer_fees`
+- `siloData` can only change on accrueInterest. \
+  Implementation: rule `VC_Silo_siloData_change_on_accrueInterest`
   Apply it for `interestRateTimestamp`.
 
 - shareDebtToke.balanceOf(user) increases/decrease => Silo._total[ISilo.AssetType.Debt].assets increases/decrease \
