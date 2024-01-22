@@ -3,7 +3,7 @@ import "../silo/_common/ShareTokensCommonMethods.spec";
 
 
 /*
-certoraRun certora/config/shareDebt.conf \
+certoraRun certora/config/shareDebt.conf --commit_sha1 47eaba97a3be0e1d992dba93788e52e2e85c30c6 \
     --parametric_contracts ShareDebtToken \
     --msg "SiloDebtToken reverse allowance" \
     --verify "ShareDebtToken:certora/specs/share-debt-token/RA_DebtToken_NoDebtTransferWithoutApproval.spec"
