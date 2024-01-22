@@ -35,9 +35,7 @@
 
 - _siloData.daoAndDeployerFees can only change on accrueInterest. \
   Implementation: rule `VC_Silo_dao_and_deployer_fees`
-
-- _siloData.interestRateTimestamp can only increase on accrueInterest, it hould not change if the block.timestamp did not change. \
-  Implementation: rule `VC_Silo_interestRateTimestamp_accrueInterest`
+  Apply it for `interestRateTimestamp`.
 
 - shareDebtToke.balanceOf(user) increases/decrease => Silo._total[ISilo.AssetType.Debt].assets increases/decrease \
   Implementation: rule `VC_Silo_debt_share_balance`
