@@ -34,7 +34,7 @@ contract SIPV2GaugeWeightWithMocks is Proposal {
         proposal = this;
     }
 
-    function initializeProposers() public override {
+    function _initializeProposers() internal override {
         initGaugeController();
     }
 }

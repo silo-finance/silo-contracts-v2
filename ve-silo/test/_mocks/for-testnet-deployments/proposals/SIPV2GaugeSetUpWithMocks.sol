@@ -33,7 +33,7 @@ contract SIPV2GaugeSetUpWithMocks is Proposal {
         proposal = this;
     }
 
-    function initializeProposers() public override {
+    function _initializeProposers() internal override {
         initCCIPGaugeCheckpointer();
         initGaugeAdder();
     }

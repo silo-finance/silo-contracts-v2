@@ -45,7 +45,7 @@ abstract contract Proposal is IProposal {
 
     constructor() {
         ProposalEngineLib.initializeEngine();
-        initializeProposers();
+        _initializeProposers();
     }
 
     /// @inheritdoc IProposal
@@ -93,7 +93,7 @@ abstract contract Proposal is IProposal {
 
     function run() public virtual returns (uint256 propopsalId) {}
 
-    function initializeProposers() public virtual {
+    function _initializeProposers() internal virtual {
         initGaugeAdder();
         initGaugeController();
         initUniswapSwapper();

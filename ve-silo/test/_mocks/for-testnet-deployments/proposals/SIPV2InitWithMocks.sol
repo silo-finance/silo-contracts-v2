@@ -57,7 +57,7 @@ contract SIPV2InitWithMocks is Proposal {
         proposalId = proposeProposal(PROPOSAL_DESCRIPTION);
     }
 
-    function initializeProposers() public override {
+    function _initializeProposers() internal override {
         initCCIPGaugeCheckpointer();
         initGaugeAdder();
         initSiloFactory();
