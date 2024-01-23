@@ -1,9 +1,9 @@
-import "../silo/_common/DebtShareTokenMethods.spec";
-import "../silo/_common/ShareTokensCommonMethods.spec";
+import "../_common/DebtShareTokenMethods.spec";
+import "../_common/ShareTokensCommonMethods.spec";
 
 
 /*
-certoraRun certora/config/shareDebt.conf --commit_sha1 47eaba97a3be0e1d992dba93788e52e2e85c30c6 \
+certoraRun certora/config/shareDebt.conf \
     --parametric_contracts ShareDebtToken \
     --msg "SiloDebtToken reverse allowance" \
     --verify "ShareDebtToken:certora/specs/share-debt-token/RA_DebtToken_NoDebtTransferWithoutApproval.spec"
@@ -19,6 +19,7 @@ rule transferIsNotPossibleWithoutReverseApproval(method f) filtered { f -> !f.is
 
     // we don't want recipient to do any action
     require e.msg.sender != recipient;
+
     // silo can mint or force transfer, so we need to exclude it
     require e.msg.sender != currentContract.silo;
 

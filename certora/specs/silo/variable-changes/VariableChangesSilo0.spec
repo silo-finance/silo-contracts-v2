@@ -1,9 +1,9 @@
-import "../_common/OnlySilo0SetUp.spec";
-import "../_common/SiloFunctionSelector.spec";
-import "../_common/SiloMethods.spec";
-import "../_common/Helpers.spec";
-import "../_common/IsSolventGhost.spec";
-import "../_common/SimplifiedConvertions1to2Ratio.spec";
+import "../../_common/OnlySilo0SetUp.spec";
+import "../../_common/SiloFunctionSelector.spec";
+import "../../_common/SiloMethods.spec";
+import "../../_common/Helpers.spec";
+import "../../_common/IsSolventGhost.spec";
+import "../../_common/SimplifiedConvertions1to2Ratio.spec";
 
 /**
 certoraRun certora/config/silo/silo0.conf \
