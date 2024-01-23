@@ -3,7 +3,7 @@ import "../_common/SiloFunctionSelector.spec";
 import "../_common/SiloMethods.spec";
 import "../../_simplifications/Silo_isSolvent_ghost.spec";
 import "../../_simplifications/Silo_accrueInterest_simplification.spec";
-// import "../../_simplifications/Token_transfer_simplification.spec"; TODO why I can not do it?
+import "../../_simplifications/Token_transfer_simplification.spec";
 import "../_common/SimplifiedConvertions1to2Ratio.spec";
 
 
@@ -22,7 +22,7 @@ rule VC_Silo_siloData_change_on_accrueInterest(env e, method f) filtered { f -> 
     calldataarg args;
     f(e, args);
 
-    if (f.selector != withdrawFeesSig()) {
+    if (f.selector == withdrawFeesSig()) {
         assert
             prevAccrueInterest >= currentContract.getSiloDataDaoAndDeployerFees(),
             "withdrawFees() is able to decrease fees";

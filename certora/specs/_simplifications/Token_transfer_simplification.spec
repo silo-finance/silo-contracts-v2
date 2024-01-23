@@ -1,13 +1,9 @@
 methods {
-    function Token0.transferFrom(address _from, address _to, uint256 _amount)
+    function Token0.transferFrom(address from, address to, uint256 amount)
         external
-        returns (bool) => simplified_transferFrom(_from, _to, _amount);
+        returns (bool) => NONDET;
 
-    function Token0.transfer(address _to, uint256 _amount)
+    function Token0.transfer(address to, uint256 amount)
         external
-        returns (bool) => simplified_transfer(_to, _amount);
+        returns (bool) => NONDET;
 }
-
-ghost simplified_transferFrom(address, address, uint256) returns bool;
-
-ghost simplified_transfer(address, uint256) returns bool;
