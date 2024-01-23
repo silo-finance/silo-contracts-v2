@@ -9,9 +9,9 @@ import "../_common/SimplifiedConvertions1to2Ratio.spec";
 
 /**
 certoraRun certora/config/silo/silo0.conf \
-    --verify "Silo0:certora/specs/silo/variable-changes/SiloDataChangeOnAccrueInterest.spec" \
+    --verify "Silo0:certora/specs/silo/variable-changes/SiloDataManagement.spec" \
     --parametric_contracts Silo0 \
-    --msg "SiloDataChangeOnAccrueInterest"  --method "withdrawFees()" // to speed up use --method flag
+    --msg "SiloDataManagement (tokens simplified)"  --method "withdrawFees()" // to speed up use --method flag
 */
 rule VC_Silo_siloData_change_on_accrueInterest(env e, method f) filtered { f -> !f.isView } {
     silo0SetUp(e);
