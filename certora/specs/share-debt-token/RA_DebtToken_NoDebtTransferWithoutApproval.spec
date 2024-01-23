@@ -7,9 +7,6 @@ certoraRun certora/config/shareDebt.conf \
     --parametric_contracts ShareDebtToken \
     --msg "SiloDebtToken reverse allowance" \
     --verify "ShareDebtToken:certora/specs/share-debt-token/RA_DebtToken_NoDebtTransferWithoutApproval.spec"
-
-    certoraRun certora/config/shareDebt.conf \
-    --verify "ShareDebtToken:certora/specs/share-debt-token/RA_DebtToken_NoDebtTransferWithoutApproval.spec"
 */
 /// @title User cannot transfer debt to other user without approval
 rule transferIsNotPossibleWithoutReverseApproval(method f) filtered { f -> !f.isView } {
