@@ -11,7 +11,7 @@ import "../_common/SimplifiedConvertions1to2Ratio.spec";
 certoraRun certora/config/silo/silo0.conf \
     --verify "Silo0:certora/specs/silo/variable-changes/SiloDataManagement.spec" \
     --parametric_contracts Silo0 \
-    --msg "SiloDataManagement (tokens simplified)"  --method "withdrawFees()" // to speed up use --method flag
+    --msg "SiloDataManagement (tokens simplified)"  --method "borrowShares(uint256,address,address)" // to speed up use --method flag
 */
 rule VC_Silo_siloData_change_on_accrueInterest(env e, method f) filtered { f -> !f.isView } {
     silo0SetUp(e);
@@ -23,20 +23,26 @@ rule VC_Silo_siloData_change_on_accrueInterest(env e, method f) filtered { f -> 
     f(e, args);
 
     if (f.selector == withdrawFeesSig()) {
+        assert prevAccrueInterest == 0 => currentContract.getSiloDataDaoAndDeployerFees() == 0;
+
+        assert
+            prevAccrueInterest > 0 => prevAccrueInterest > currentContract.getSiloDataDaoAndDeployerFees(),
+            "only decreasing is possible for withdrawFees";
+
         assert
             prevAccrueInterest >= currentContract.getSiloDataDaoAndDeployerFees(),
             "withdrawFees() is able to decrease fees";
-
+    } else if (f.selector == flashLoanSig() || f.selector == liquidationCallSig()) {
         assert
-            prevTimestamp == currentContract.getSiloDataInterestRateTimestamp(),
-            "when _accrueInterest is OFF by AccrueInterestSimplification, no other method should change timestamp";
+            prevAccrueInterest < currentContract.getSiloDataDaoAndDeployerFees(),
+            "flashLoan will increase fees";
     } else {
         assert
             prevAccrueInterest == currentContract.getSiloDataDaoAndDeployerFees(),
             "when _accrueInterest is OFF by AccrueInterestSimplification, no other method should change fees";
-
-        assert
-            prevTimestamp == currentContract.getSiloDataInterestRateTimestamp(),
-            "when _accrueInterest is OFF by AccrueInterestSimplification, no other method should change timestamp";
     }
+
+    assert
+        prevTimestamp == currentContract.getSiloDataInterestRateTimestamp(),
+        "when _accrueInterest is OFF by AccrueInterestSimplification, no other method should change timestamp";
 }
