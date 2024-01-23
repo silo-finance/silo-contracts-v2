@@ -2,17 +2,11 @@ import "../_common/OnlySilo0SetUp.spec";
 import "../_common/SiloFunctionSelector.spec";
 import "../_common/SiloMethods.spec";
 import "../_common/Helpers.spec";
+import "../_common/PriceIsOne.spec";
 import "../_common/IsSolventGhost.spec";
 import "../_common/SimplifiedConvertions1to2Ratio.spec";
 import "../_common/SimplifiedGetCompoundInterestRateAndUpdate.spec";
-
-methods {
-    // applies only to EVM calls
-    function _.accrueInterest() external => DISPATCHER(true);
-    function _.beforeQuote(address) external => NONDET;
-    function _.connect(address) external => NONDET; // IRM
-    function _.afterTokenTransfer(address,uint256,address,uint256,uint256,uint256) external => ALWAYS(true); // Hook Reveiver
-}
+import "../_common/CommonSummarizations.spec";
 
 /**
 certoraRun certora/config/silo/silo0.conf \

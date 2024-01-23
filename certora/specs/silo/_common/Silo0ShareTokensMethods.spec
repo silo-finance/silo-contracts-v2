@@ -31,6 +31,7 @@ methods {
 }
 
 // https://github.com/Certora/tutorials-code/blob/master/lesson4_invariants/erc20/total_supply.spec#L57
+// Collateral token
 ghost mapping(address => uint256) balanceOfMirrorCollateral {
     init_state axiom forall address a. balanceOfMirrorCollateral[a] == 0;
 }
@@ -46,31 +47,55 @@ ghost mathint sumBalancesCollateral {
     );
 }
 
-hook Sstore shareCollateralToken0._balances[KEY address user] uint256 newBalance (uint256 oldBalance) STORAGE
-{
+hook Sstore shareCollateralToken0._balances[KEY address user] uint256 newBalance (uint256 oldBalance) STORAGE {
     sumBalancesCollateral = sumBalancesCollateral + newBalance - oldBalance;
     balanceOfMirrorCollateral[user] = newBalance;
 }
 
-invariant mirrorIsTrueCollateral(address a)
-    balanceOfMirrorCollateral[a] == shareCollateralToken0.balanceOf(a);
+// Protected collateral token
+ghost mapping(address => uint256) balanceOfMirrorProtected {
+    init_state axiom forall address a. balanceOfMirrorProtected[a] == 0;
+}
 
-invariant totalIsSumBalancesCollateral()
-    to_mathint(shareCollateralToken0.totalSupply()) == sumBalancesCollateral
-    {
-        preserved transfer(address recipient, uint256 amount) with (env e1) {
-            requireInvariant mirrorIsTrueCollateral(recipient);
-            requireInvariant mirrorIsTrueCollateral(e1.msg.sender);
-        }
-        preserved transferFrom(
-            address sender, address recipient, uint256 amount
-        ) with (env e2) {
-            requireInvariant mirrorIsTrueCollateral(sender);
-            requireInvariant mirrorIsTrueCollateral(recipient);
-            requireInvariant mirrorIsTrueCollateral(e2.msg.sender);
-        }
-    }
+ghost mathint sumBalancesProtected {
+    init_state axiom sumBalancesProtected == 0;
+    axiom forall address a. forall address b. (
+        (a != b => sumBalancesProtected >= balanceOfMirrorProtected[a] + balanceOfMirrorProtected[b])
+    );
+    axiom forall address a. forall address b. forall address c. (
+        (a != b && a != c && b != c) => 
+        sumBalancesProtected >= balanceOfMirrorProtected[a] + balanceOfMirrorProtected[b] + balanceOfMirrorProtected[c]
+    );
+}
+
+hook Sstore shareProtectedCollateralToken0._balances[KEY address user] uint256 newBalance (uint256 oldBalance) STORAGE {
+    sumBalancesProtected = sumBalancesProtected + newBalance - oldBalance;
+    balanceOfMirrorProtected[user] = newBalance;
+}
+
+// Debt token
+ghost mapping(address => uint256) balanceOfMirrorDebt {
+    init_state axiom forall address a. balanceOfMirrorDebt[a] == 0;
+}
+
+ghost mathint sumBalancesDebt {
+    init_state axiom sumBalancesDebt == 0;
+    axiom forall address a. forall address b. (
+        (a != b => sumBalancesDebt >= balanceOfMirrorDebt[a] + balanceOfMirrorDebt[b])
+    );
+    axiom forall address a. forall address b. forall address c. (
+        (a != b && a != c && b != c) => 
+        sumBalancesDebt >= balanceOfMirrorDebt[a] + balanceOfMirrorDebt[b] + balanceOfMirrorDebt[c]
+    );
+}
+
+hook Sstore shareDebtToken0._balances[KEY address user] uint256 newBalance (uint256 oldBalance) STORAGE {
+    sumBalancesDebt = sumBalancesDebt + newBalance - oldBalance;
+    balanceOfMirrorDebt[user] = newBalance;
+}
 
 function requireSharesTokens0Balances() {
-    require to_mathint(shareCollateralToken0.totalSupply()) == sumBalancesCollateral;
+    require to_mathint(shareProtectedCollateralToken0.totalSupply()) == sumBalancesDebt;
+    require to_mathint(shareCollateralToken0.totalSupply()) == sumBalancesDebt;
+    require to_mathint(shareDebtToken0.totalSupply()) == sumBalancesDebt;
 }

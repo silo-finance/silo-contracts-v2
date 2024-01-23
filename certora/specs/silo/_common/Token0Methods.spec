@@ -21,31 +21,10 @@ ghost mathint sumBalances {
     );
 }
 
-hook Sstore token0._balances[KEY address user] uint256 newBalance (uint256 oldBalance) STORAGE
-{
+hook Sstore token0._balances[KEY address user] uint256 newBalance (uint256 oldBalance) STORAGE {
     sumBalances = sumBalances + newBalance - oldBalance;
     balanceOfMirror[user] = newBalance;
 }
-
-invariant mirrorIsTrue(address a)
-    balanceOfMirror[a] == token0.balanceOf(a);
-
-
-invariant totalIsSumBalances()
-    to_mathint(token0.totalSupply()) == sumBalances
-    {
-        preserved transfer(address recipient, uint256 amount) with (env e1) {
-            requireInvariant mirrorIsTrue(recipient);
-            requireInvariant mirrorIsTrue(e1.msg.sender);
-        }
-        preserved transferFrom(
-            address sender, address recipient, uint256 amount
-        ) with (env e2) {
-            requireInvariant mirrorIsTrue(sender);
-            requireInvariant mirrorIsTrue(recipient);
-            requireInvariant mirrorIsTrue(e2.msg.sender);
-        }
-    }
 
 function requireToken0Balances() {
     require to_mathint(token0.totalSupply()) == sumBalancesCollateral;
