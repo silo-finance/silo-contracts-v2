@@ -12,8 +12,6 @@ import "../_common/CommonSummarizations.spec";
 certoraRun certora/config/silo/silo0.conf \
     --parametric_contracts Silo0 \
     --msg "Viriables change Silo0" \
-    --method "withdraw(uint256,address,address)" \
-    --rule "VC_Silo_total_collateral_increase" \
     --verify "Silo0:certora/specs/silo/variable-changes/VariableChangesSilo0.spec"
 
 to verify the particular function add:
@@ -32,6 +30,8 @@ rule VC_Silo_total_collateral_increase(
     filtered { f -> !f.isView && !f.isFallback }
 {
     silo0SetUp(e);
+    requireToken0Balances();
+    requireShareCollateralToken0Balances();
 
     require assets >= 3;
 

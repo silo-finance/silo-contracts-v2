@@ -10,4 +10,6 @@ methods {
     function siloConfig.getShareTokens(address) external returns(address, address, address) envfree;
     // returns (uint256 daoFee, uint256 deployerFee, uint256 flashloanFee, address asset)
     function siloConfig.getFeesWithAsset(address) external returns(uint256, uint256, uint256, address) envfree;
+
+    function siloConfig.getConfig(address) external returns(ISiloConfig.ConfigData memory) envfree;
 }

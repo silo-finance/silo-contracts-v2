@@ -94,8 +94,14 @@ hook Sstore shareDebtToken0._balances[KEY address user] uint256 newBalance (uint
     balanceOfMirrorDebt[user] = newBalance;
 }
 
-function requireSharesTokens0Balances() {
-    require to_mathint(shareProtectedCollateralToken0.totalSupply()) == sumBalancesDebt;
-    require to_mathint(shareCollateralToken0.totalSupply()) == sumBalancesDebt;
+function requireShareProtectedCollateralToken0Balances() {
+    require to_mathint(shareProtectedCollateralToken0.totalSupply()) == sumBalancesProtected;
+}
+
+function requireShareDebtToken0Balances() {
     require to_mathint(shareDebtToken0.totalSupply()) == sumBalancesDebt;
+}
+
+function requireShareCollateralToken0Balances() {
+    require to_mathint(shareCollateralToken0.totalSupply()) == sumBalancesCollateral;
 }
