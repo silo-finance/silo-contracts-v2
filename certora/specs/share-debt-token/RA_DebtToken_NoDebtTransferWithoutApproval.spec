@@ -1,5 +1,5 @@
-import "../_common/DebtShareTokenMethods.spec";
-import "../_common/ShareTokensCommonMethods.spec";
+import "../silo/_common/DebtShareTokenMethods.spec";
+import "../silo/_common/ShareTokensCommonMethods.spec";
 
 
 /*
