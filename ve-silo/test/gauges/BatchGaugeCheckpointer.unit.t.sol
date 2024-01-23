@@ -9,7 +9,7 @@ import {IBatchGaugeCheckpointer} from "ve-silo/contracts/gauges/interfaces/IBatc
 import {BatchGaugeCheckpointerDeploy} from "ve-silo/deploy/BatchGaugeCheckpointerDeploy.s.sol";
 import {ISiloChildChainGauge} from "ve-silo/contracts/gauges/interfaces/ISiloChildChainGauge.sol";
 
-// FOUNDRY_PROFILE=ve-silo forge test --mc BatchGaugeCheckpointerTest --ffi -vvv
+// FOUNDRY_PROFILE=ve-silo-test forge test --mc BatchGaugeCheckpointerTest --ffi -vvv
 contract BatchGaugeCheckpointerTest is IntegrationTest {
     IBatchGaugeCheckpointer internal _checkpointer;
 

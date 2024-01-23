@@ -16,7 +16,7 @@ import {VeBoostDeploy} from "ve-silo/deploy/VeBoostDeploy.s.sol";
 import {VeSiloContracts} from "ve-silo/deploy/_CommonDeploy.sol";
 import {VotingEscrowChildChainDeploy} from "ve-silo/deploy/VotingEscrowChildChainDeploy.s.sol";
 
-// FOUNDRY_PROFILE=ve-silo forge test --mc VotingEscrowTest --ffi -vvv
+// FOUNDRY_PROFILE=ve-silo-test forge test --mc VotingEscrowTest --ffi -vvv
 contract VotingEscrowTest is IntegrationTest {
     IVeSilo internal _votingEscrow;
     IVeBoost internal _veBoost;

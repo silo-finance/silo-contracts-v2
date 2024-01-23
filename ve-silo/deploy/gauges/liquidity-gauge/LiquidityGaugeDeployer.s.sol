@@ -14,7 +14,7 @@ Supported tokens: protectedShareToken | collateralShareToken | debtShareToken
 Silo deployments: silo-core/deploy/silo/_siloDeployments.json
 MAX_RELATIVE_WEIGHT_CAP = 10 ** 18
 
-FOUNDRY_PROFILE=ve-silo CONFIG=EXAMPLE_TEST \
+FOUNDRY_PROFILE=ve-silo-test CONFIG=EXAMPLE_TEST \
     forge script ve-silo/deploy/gauges/liquidity-gauge/LiquidityGaugeDeployer.s.sol \
     --ffi --broadcast --rpc-url http://127.0.0.1:8545
  */

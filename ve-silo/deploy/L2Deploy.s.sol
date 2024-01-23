@@ -10,18 +10,18 @@ import {ChildChainGaugeFactoryDeploy} from "ve-silo/deploy/ChildChainGaugeFactor
 import {VotingEscrowChildChainDeploy} from "ve-silo/deploy/VotingEscrowChildChainDeploy.s.sol";
 
 /**
-FOUNDRY_PROFILE=ve-silo \
+FOUNDRY_PROFILE=ve-silo-test \
     forge script ve-silo/deploy/L2Deploy.s.sol \
     --ffi --broadcast --rpc-url http://127.0.0.1:8545
  */
 contract L2Deploy is CommonDeploy {
-    function run() public {
-        L2BalancerPseudoMinterDeploy pseudeMinterDeploy = new L2BalancerPseudoMinterDeploy();
-        VotingEscrowChildChainDeploy votingEscrowChild = new VotingEscrowChildChainDeploy();
-        VeBoostDeploy veBoostDeploy = new VeBoostDeploy();
-        VotingEscrowDelegationProxyDeploy deplegationProxyDeploy = new VotingEscrowDelegationProxyDeploy();
-        ChildChainGaugeFactoryDeploy gaugeFactory = new ChildChainGaugeFactoryDeploy();
+    L2BalancerPseudoMinterDeploy public pseudeMinterDeploy = new L2BalancerPseudoMinterDeploy();
+    VotingEscrowChildChainDeploy public votingEscrowChild = new VotingEscrowChildChainDeploy();
+    VeBoostDeploy public veBoostDeploy = new VeBoostDeploy();
+    VotingEscrowDelegationProxyDeploy public deplegationProxyDeploy = new VotingEscrowDelegationProxyDeploy();
+    ChildChainGaugeFactoryDeploy public gaugeFactory = new ChildChainGaugeFactoryDeploy();
 
+    function run() public {
         pseudeMinterDeploy.run();
         votingEscrowChild.run();
         veBoostDeploy.run();

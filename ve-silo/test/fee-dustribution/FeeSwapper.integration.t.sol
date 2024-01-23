@@ -17,7 +17,7 @@ import {UniswapSwapperTest} from "ve-silo/test/fee-dustribution/UniswapSwapper.i
 import {Manageable} from "ve-silo/contracts/access/Manageable.sol";
 import {FeeSwapper} from "ve-silo/contracts/fees-distribution/fee-swapper/FeeSwapper.sol";
 
-// FOUNDRY_PROFILE=ve-silo forge test --mc FeeSwapperTest --ffi -vvv
+// FOUNDRY_PROFILE=ve-silo-test forge test --mc FeeSwapperTest --ffi -vvv
 contract FeeSwapperTest is IntegrationTest {
     uint256 constant internal _FORKING_BLOCK_NUMBER = 18040200;
     address constant internal _SNX_WHALE = 0x5Fd79D46EBA7F351fe49BFF9E87cdeA6c821eF9f;

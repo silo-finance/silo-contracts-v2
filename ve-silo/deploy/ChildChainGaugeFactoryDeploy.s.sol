@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.21;
 
+import {VeSiloContracts, VeSiloDeployments} from "ve-silo/common/VeSiloContracts.sol";
+
 import {IChildChainGauge} from "balancer-labs/v2-interfaces/liquidity-mining/IChildChainGauge.sol";
 
 import {IChildChainGaugeFactory} from "ve-silo/contracts/gauges/interfaces/IChildChainGaugeFactory.sol";
@@ -9,7 +11,7 @@ import {AddrKey} from "common/addresses/AddrKey.sol";
 import {CommonDeploy, VeSiloContracts} from "./_CommonDeploy.sol";
 
 /**
-FOUNDRY_PROFILE=ve-silo \
+FOUNDRY_PROFILE=ve-silo-test \
     forge script ve-silo/deploy/ChildChainGaugeFactoryDeploy.s.sol \
     --ffi --broadcast --rpc-url http://127.0.0.1:8545
  */

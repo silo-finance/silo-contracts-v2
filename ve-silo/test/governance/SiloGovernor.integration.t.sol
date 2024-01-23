@@ -12,7 +12,7 @@ import {IVeSilo} from "ve-silo/contracts/voting-escrow/interfaces/IVeSilo.sol";
 import {ISiloTimelockController} from "ve-silo/contracts/governance/interfaces/ISiloTimelockController.sol";
 import {ISmartWalletChecker} from "ve-silo/contracts/voting-escrow/interfaces/ISmartWalletChecker.sol";
 
-// FOUNDRY_PROFILE=ve-silo forge test --mc SiloGovernorTest --ffi -vvv
+// FOUNDRY_PROFILE=ve-silo-test forge test --mc SiloGovernorTest --ffi -vvv
 contract SiloGovernorTest is IntegrationTest {
     uint256 internal constant _FORKING_BLOCK_NUMBER = 17436270;
 

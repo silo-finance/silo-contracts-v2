@@ -5,21 +5,23 @@ import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";
 
 import {VeSiloContracts, VeSiloDeployments} from "ve-silo/common/VeSiloContracts.sol";
+import {VeSiloMocksContracts} from "ve-silo/test/_mocks/for-testnet-deployments/deployments/VeSiloMocksContracts.sol";
 import {Proposal} from "proposals/contracts/Proposal.sol";
+import {Constants} from "proposals/sip/_common/Constants.sol";
 
 contract SIPV2Init is Proposal {
-    string constant public GAUGE_TYPE = "Ethereum";
     string constant public PROPOSAL_DESCRIPTION = "Silo V2 initialization";
 
     function run() public override returns (uint256 proposalId) {
-        address gaugeFactoryAddr = VeSiloDeployments.get(
-            VeSiloContracts.LIQUIDITY_GAUGE_FACTORY,
-            ChainsLib.chainAlias()
-        );
+        string memory chainAlias = ChainsLib.chainAlias();
 
-        address gaugeAdderAddr = VeSiloDeployments.get(
-            VeSiloContracts.GAUGE_ADDER,
-            ChainsLib.chainAlias()
+        address gaugeFactoryAddr = VeSiloDeployments.get(VeSiloContracts.LIQUIDITY_GAUGE_FACTORY, chainAlias);
+        address gaugeAdderAddr = VeSiloDeployments.get(VeSiloContracts.GAUGE_ADDER, chainAlias);
+        address ccipCheckpointerAddr = VeSiloDeployments.get(VeSiloContracts.CCIP_GAUGE_CHECKPOINTER, chainAlias);
+
+        address ccipGaugeFactoryAddr = VeSiloDeployments.get(
+            VeSiloMocksContracts.CCIP_GAUGE_FACTORY_ANY_CHAIN,
+            chainAlias
         );
 
         /* PROPOSAL START */
@@ -37,11 +39,18 @@ contract SIPV2Init is Proposal {
         votingEscrowDelegationProxy.acceptOwnership();
 
         // gauge related configuration
-        gaugeController.add_type(GAUGE_TYPE);
+        gaugeController.add_type(Constants._GAUGE_TYPE_ETHEREUM);
+        gaugeController.add_type(Constants._GAUGE_TYPE_CHILD);
         gaugeController.set_gauge_adder(gaugeAdderAddr);
 
-        gaugeAdder.addGaugeType(GAUGE_TYPE);
-        gaugeAdder.setGaugeFactory(gaugeFactoryAddr, GAUGE_TYPE);
+        gaugeAdder.addGaugeType(Constants._GAUGE_TYPE_ETHEREUM);
+        gaugeAdder.addGaugeType(Constants._GAUGE_TYPE_CHILD);
+        gaugeAdder.setGaugeFactory(gaugeFactoryAddr, Constants._GAUGE_TYPE_ETHEREUM);
+        gaugeAdder.setGaugeFactory(ccipGaugeFactoryAddr, Constants._GAUGE_TYPE_CHILD);
+
+        stakelessGaugeCheckpointerAdaptor.setStakelessGaugeCheckpointer(ccipCheckpointerAddr);
+
+        /* PROPOSAL END */
 
         proposalId = proposeProposal(PROPOSAL_DESCRIPTION);
     }

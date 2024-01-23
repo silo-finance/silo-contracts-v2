@@ -10,7 +10,7 @@ import {IFeeDistributor} from "ve-silo/contracts/fees-distribution/interfaces/IF
 import {FeeSwapper, IFeeSwapper} from "ve-silo/contracts/fees-distribution/fee-swapper/FeeSwapper.sol";
 
 /**
-FOUNDRY_PROFILE=ve-silo \
+FOUNDRY_PROFILE=ve-silo-test \
     forge script ve-silo/deploy/FeeSwapperDeploy.s.sol \
     --ffi --broadcast --rpc-url http://127.0.0.1:8545
  */

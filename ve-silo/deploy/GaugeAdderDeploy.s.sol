@@ -9,7 +9,7 @@ import {IGaugeController} from "ve-silo/contracts/gauges/interfaces/IGaugeContro
 import {GaugeAdder, IGaugeAdder} from "ve-silo/contracts/gauges/gauge-adder/GaugeAdder.sol";
 
 /**
-FOUNDRY_PROFILE=ve-silo \
+FOUNDRY_PROFILE=ve-silo-test \
     forge script ve-silo/deploy/GaugeAdderDeploy.s.sol \
     --ffi --broadcast --rpc-url http://127.0.0.1:8545
  */

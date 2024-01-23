@@ -8,7 +8,7 @@ import {IVotingEscrow} from "balancer-labs/v2-interfaces/liquidity-mining/IVotin
 import {FeeDistributor, IFeeDistributor} from "ve-silo/contracts/fees-distribution/FeeDistributor.sol";
 
 /**
-FOUNDRY_PROFILE=ve-silo \
+FOUNDRY_PROFILE=ve-silo-test \
     forge script ve-silo/deploy/FeeDistributorDeploy.s.sol \
     --ffi --broadcast --rpc-url http://127.0.0.1:8545
  */
