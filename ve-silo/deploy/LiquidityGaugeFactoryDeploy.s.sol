@@ -7,7 +7,7 @@ import {LiquidityGaugeFactory} from "ve-silo/contracts/gauges/ethereum/Liquidity
 import {CommonDeploy, VeSiloContracts} from "./_CommonDeploy.sol";
 
 /**
-FOUNDRY_PROFILE=ve-silo \
+FOUNDRY_PROFILE=ve-silo-test \
     forge script ve-silo/deploy/LiquidityGaugeFactoryDeploy.s.sol \
     --ffi --broadcast --rpc-url http://127.0.0.1:8545
  */

@@ -29,7 +29,7 @@ interface ITokenAdminLike {
     function rate() external view returns (uint256);
 }
 
-// FOUNDRY_PROFILE=ve-silo forge test --mc LiquidityGaugesTest --ffi -vvv
+// FOUNDRY_PROFILE=ve-silo-test forge test --mc LiquidityGaugesTest --ffi -vvv
 contract LiquidityGaugesTest is IntegrationTest {
     uint256 internal constant _WEIGHT_CAP = 987;
     uint256 internal constant _BOB_BAL = 20e18;

@@ -17,6 +17,13 @@ contract MintableToken is ERC20 {
         onDemand = _onDemand;
     }
 
+    function mintOnDemand(address _owner, uint256 _amount) public virtual {
+        uint256 balance = balanceOf(_owner);
+        if (balance >= _amount) return;
+
+        _mint(_owner, _amount - balance);
+    }
+
     function transferFrom(
         address sender,
         address recipient,
@@ -27,8 +34,8 @@ contract MintableToken is ERC20 {
         }
 
         // do whatever to be able to transfer from
-        uint256 missing = balanceOf(sender) >= amount ? 0 : amount - balanceOf(sender);
-        _mint(sender, missing);
+
+        mintOnDemand(sender, amount);
 
         _transfer(sender, recipient, amount);
 

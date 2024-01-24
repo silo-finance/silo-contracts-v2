@@ -6,7 +6,7 @@ import {IBatchGaugeCheckpointer} from "ve-silo/contracts/gauges/interfaces/IBatc
 import {BatchGaugeCheckpointer} from "ve-silo/contracts/gauges/l2-common/BatchGaugeCheckpointer.sol";
 
 /**
-FOUNDRY_PROFILE=ve-silo \
+FOUNDRY_PROFILE=ve-silo-test \
     forge script ve-silo/deploy/BatchGaugeCheckpointerDeploy.s.sol \
     --ffi --broadcast --rpc-url http://127.0.0.1:8545
  */

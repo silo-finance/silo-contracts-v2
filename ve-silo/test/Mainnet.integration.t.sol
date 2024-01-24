@@ -9,7 +9,7 @@ import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 
 import {MainnetDeploy} from "ve-silo/deploy/MainnetDeploy.s.sol";
 import {VeSiloContracts} from "ve-silo/deploy/_CommonDeploy.sol";
-
+import {SiloCoreContracts} from "silo-core/common/SiloCoreContracts.sol";
 import {ISiloGovernor} from "ve-silo/contracts/governance/interfaces/ISiloGovernor.sol";
 import {IVeBoost} from "ve-silo/contracts/voting-escrow/interfaces/IVeBoost.sol";
 import {IVeSilo} from "ve-silo/contracts/voting-escrow/interfaces/IVeSilo.sol";
@@ -36,7 +36,7 @@ import {
 
 // solhint-disable max-states-count
 
-// FOUNDRY_PROFILE=ve-silo forge test --mc MainnetTest --ffi -vvv
+// FOUNDRY_PROFILE=ve-silo-test forge test --mc MainnetTest --ffi -vvv
 contract MainnetTest is IntegrationTest {
     using stdStorage for StdStorage;
 
@@ -76,20 +76,24 @@ contract MainnetTest is IntegrationTest {
 
     uint256 internal _daoVoterPK;
 
-    function setUp() public {
-        vm.createSelectFork(
-            getChainRpcUrl(MAINNET_ALIAS),
-            _FORKING_BLOCK_NUMBER
-        );
+    bool internal _executeMainnetDeploy = true;
 
+    function setUp() public virtual {
         (_daoVoter, _daoVoterPK) = makeAddrAndKey("_daoVoter");
 
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
         _deployer = vm.addr(deployerPrivateKey);
 
-        MainnetDeploy deploy = new MainnetDeploy();
-        deploy.disableDeploymentsSync();
-        deploy.run();
+        if (_executeMainnetDeploy) {
+            vm.createSelectFork(
+                getChainRpcUrl(MAINNET_ALIAS),
+                _FORKING_BLOCK_NUMBER
+            );
+
+            MainnetDeploy deploy = new MainnetDeploy();
+            deploy.disableDeploymentsSync();
+            deploy.run();
+        }
 
         _veSilo = IVeSilo(getAddress(VeSiloContracts.VOTING_ESCROW));
         _timelock = ISiloTimelockController(getAddress(VeSiloContracts.TIMELOCK_CONTROLLER));
@@ -100,26 +104,10 @@ contract MainnetTest is IntegrationTest {
         _minter = IBalancerMinter(getAddress(VeSiloContracts.MAINNET_BALANCER_MINTER));
         _gaugeAdder = IGaugeAdder(getAddress(VeSiloContracts.GAUGE_ADDER));
 
-        vm.mockCall(
-            _hookReceiver,
-            abi.encodeWithSelector(IHookReceiver.shareToken.selector),
-            abi.encode(_shareToken)
-        );
-
-        vm.mockCall(
-            _shareToken,
-            abi.encodeWithSelector(IShareToken.silo.selector),
-            abi.encode(_silo)
-        );
-
-        vm.mockCall(
-            _silo,
-            abi.encodeWithSelector(ISilo.factory.selector),
-            abi.encode(_siloFactory)
-        );
+        _mockSiloCore(); // silo core is not deployed
     }
 
-    function testIt() public {
+    function testMainnet() public {
         _configureFakeSmartWalletChecker();
         _giveVeSiloTokensToUsers();
         _activeteBlancerTokenAdmin();
@@ -440,5 +428,29 @@ contract MainnetTest is IntegrationTest {
         siloTokenOwner = siloToken.owner();
 
         assertEq(owner, siloTokenOwner, "Expect an ownership to be transferred");
+    }
+
+    function _mockSiloCore() internal {
+        address siloFactory = makeAddr("SiloFactoryMock");
+        AddrLib.setAddress(SiloCoreContracts.SILO_FACTORY, siloFactory);
+        vm.mockCall(siloFactory, abi.encodeWithSelector(Ownable2Step.acceptOwnership.selector), abi.encode(true));
+
+        vm.mockCall(
+            _hookReceiver,
+            abi.encodeWithSelector(IHookReceiver.shareToken.selector),
+            abi.encode(_shareToken)
+        );
+
+        vm.mockCall(
+            _shareToken,
+            abi.encodeWithSelector(IShareToken.silo.selector),
+            abi.encode(_silo)
+        );
+
+        vm.mockCall(
+            _silo,
+            abi.encodeWithSelector(ISilo.factory.selector),
+            abi.encode(_siloFactory)
+        );
     }
 }

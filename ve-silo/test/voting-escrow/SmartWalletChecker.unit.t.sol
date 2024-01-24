@@ -6,7 +6,7 @@ import {IntegrationTest} from "silo-foundry-utils/networks/IntegrationTest.sol";
 import {SmartWalletChecker} from "ve-silo/contracts/voting-escrow/SmartWalletChecker.sol";
 import {SmartWalletCheckerDeploy} from "ve-silo/deploy/SmartWalletCheckerDeploy.s.sol";
 
-// FOUNDRY_PROFILE=ve-silo forge test --mc SmartWalletCheckerTest --ffi -vvv
+// FOUNDRY_PROFILE=ve-silo-test forge test --mc SmartWalletCheckerTest --ffi -vvv
 contract SmartWalletCheckerTest is IntegrationTest {
     SmartWalletChecker internal _smartWalletChecker;
 

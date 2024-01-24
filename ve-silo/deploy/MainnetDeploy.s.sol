@@ -14,15 +14,20 @@ import {FeeDistributorDeploy} from "ve-silo/deploy/FeeDistributorDeploy.s.sol";
 import {FeeSwapperDeploy} from "ve-silo/deploy/FeeSwapperDeploy.s.sol";
 import {UniswapSwapperDeploy} from "ve-silo/deploy/UniswapSwapperDeploy.s.sol";
 import {SmartWalletCheckerDeploy} from "./SmartWalletCheckerDeploy.s.sol";
+import {VeSiloDelegatorViaCCIPDeploy} from "ve-silo/deploy/VeSiloDelegatorViaCCIPDeploy.s.sol";
+import {CCIPGaugeCheckpointerDeploy} from "ve-silo/deploy/CCIPGaugeCheckpointerDeploy.s.sol";
+import {VotingEscrowDelegationProxyDeploy} from "ve-silo/deploy/VotingEscrowDelegationProxyDeploy.s.sol";
 
 import {IExtendedOwnable} from "ve-silo/contracts/access/IExtendedOwnable.sol";
 
 /**
-FOUNDRY_PROFILE=ve-silo \
+FOUNDRY_PROFILE=ve-silo-test \
     forge script ve-silo/deploy/MainnetDeploy.s.sol \
     --ffi --broadcast --rpc-url http://127.0.0.1:8545
  */
 contract MainnetDeploy is CommonDeploy {
+    bool internal _isMainnetSimulation = false;
+
     function run() public {
         _deployL1();
         _deployL1ForL2();
@@ -38,6 +43,10 @@ contract MainnetDeploy is CommonDeploy {
         vm.stopBroadcast();
     }
 
+    function enableMainnetSimulation() public {
+        _isMainnetSimulation = true;
+    }
+
     function _deployL1() internal {
         SiloGovernorDeploy governorDeploy = new SiloGovernorDeploy();
         GaugeControllerDeploy controllerDeploy = new GaugeControllerDeploy();
@@ -49,22 +58,35 @@ contract MainnetDeploy is CommonDeploy {
         UniswapSwapperDeploy uniswapSwapperDeploy = new UniswapSwapperDeploy();
         SmartWalletCheckerDeploy smartWalletCheckerDeploy = new SmartWalletCheckerDeploy();
 
+        if (_isMainnetSimulation) {
+            governorDeploy.veBoostDeploy().enableMainnetSimulation();
+        }
+
         governorDeploy.run();
         controllerDeploy.run();
         minterDeploy.run();
         factoryDeploy.run();
         gaugeAdderDeploy.run();
-        feeDistributorDeploy.run();
-        feeSwapperDeploy.run();
-        uniswapSwapperDeploy.run();
         smartWalletCheckerDeploy.run();
+
+        if (!_isMainnetSimulation) {
+            feeDistributorDeploy.run();
+            feeSwapperDeploy.run();
+            uniswapSwapperDeploy.run();
+        }
     }
 
     function _deployL1ForL2() internal {
         StakelessGaugeCheckpointerAdaptorDeploy adaptorDeploy = new StakelessGaugeCheckpointerAdaptorDeploy();
         VotingEscrowRemapperDeploy remapperDeploy = new VotingEscrowRemapperDeploy();
+        VeSiloDelegatorViaCCIPDeploy veSiloDelegatorDeploy = new VeSiloDelegatorViaCCIPDeploy();
+        CCIPGaugeCheckpointerDeploy ccipGaugeCheckpointerDeploy = new CCIPGaugeCheckpointerDeploy();
+        VotingEscrowDelegationProxyDeploy delegationProxyDeploy = new VotingEscrowDelegationProxyDeploy();
 
         adaptorDeploy.run();
         remapperDeploy.run();
+        veSiloDelegatorDeploy.run();
+        ccipGaugeCheckpointerDeploy.run();
+        delegationProxyDeploy.run();
     }
 }

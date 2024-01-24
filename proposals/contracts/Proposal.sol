@@ -6,6 +6,20 @@ import {IProposalEngine} from "proposals/contracts/interfaces/IProposalEngine.so
 import {ProposalEngineLib} from "./ProposalEngineLib.sol";
 import {GaugeAdderProposer} from "./proposers/ve-silo/GaugeAdderProposer.sol";
 import {GaugeControllerProposer} from "./proposers/ve-silo/GaugeControllerProposer.sol";
+import {UniswapSwapperProposer} from "./proposers/ve-silo/UniswapSwapperProposer.sol";
+import {CCIPGaugeCheckpointerProposer} from "./proposers/ve-silo/CCIPGaugeCheckpointerProposer.sol";
+import {FeeDistributorProposer} from "./proposers/ve-silo/FeeDistributorProposer.sol";
+import {SmartWalletCheckerProposer} from "./proposers/ve-silo/SmartWalletCheckerProposer.sol";
+import {VeSiloDelegatorViaCCIPProposer} from "./proposers/ve-silo/VeSiloDelegatorViaCCIPProposer.sol";
+import {VotingEscrowDelegationProxyProposer} from "./proposers/ve-silo/VotingEscrowDelegationProxyProposer.sol";
+import {VotingEscrowCCIPRemapperProposer} from "./proposers/ve-silo/VotingEscrowCCIPRemapperProposer.sol";
+import {SiloFactoryProposer} from "./proposers/ve-silo/SiloFactoryProposer.sol";
+import {BalancerTokenAdminProposer} from "./proposers/ve-silo/BalancerTokenAdminProposer.sol";
+
+import {
+    StakelessGaugeCheckpointerAdaptorProposer
+} from "./proposers/ve-silo/StakelessGaugeCheckpointerAdaptorProposer.sol";
+
 
 /// @notice Abstract contract for proposal
 /// @dev Any proposal should be derived from this contract
@@ -15,6 +29,16 @@ abstract contract Proposal is IProposal {
 
     GaugeAdderProposer public gaugeAdder;
     GaugeControllerProposer public gaugeController;
+    UniswapSwapperProposer public uniswapSwapper;
+    CCIPGaugeCheckpointerProposer public ccipGaugeCheckpointer;
+    StakelessGaugeCheckpointerAdaptorProposer public stakelessGaugeCheckpointerAdaptor;
+    FeeDistributorProposer public feeDistributor;
+    SmartWalletCheckerProposer public smartWalletChecker;
+    VeSiloDelegatorViaCCIPProposer public veSiloDelegatorViaCCIP;
+    VotingEscrowDelegationProxyProposer public votingEscrowDelegationProxy;
+    VotingEscrowCCIPRemapperProposer public votingEscrowCCIPRemapper;
+    SiloFactoryProposer public siloFactory;
+    BalancerTokenAdminProposer public balancerTokenAdmin;
 
     /// @notice The id of the proposed proposal
     uint256 private _proposalId;
@@ -69,8 +93,78 @@ abstract contract Proposal is IProposal {
 
     function run() public virtual returns (uint256 propopsalId) {}
 
-    function _initializeProposers() private {
+    function _initializeProposers() internal virtual {
+        initGaugeAdder();
+        initGaugeController();
+        initUniswapSwapper();
+        initCCIPGaugeCheckpointer();
+        initStakelessGaugeCheckpointerAdaptor();
+        initFeeDistributor();
+        initSmartWalletChecker();
+        initVeSiloDelegatorViaCCIP();
+        initVotingEscrowDelegationProxy();
+        initVotingEscrowCCIPRemapper();
+        initSiloFactory();
+        initBalancerTokenAdmin();
+    }
+    
+    function initGaugeAdder() public returns (Proposal proposal) {
         gaugeAdder = new GaugeAdderProposer({_proposal: address(this)});
+        proposal = this;
+    }
+
+    function initGaugeController() public returns (Proposal proposal) {
         gaugeController = new GaugeControllerProposer({_proposal: address(this)});
+        proposal = this;
+    }
+
+    function initUniswapSwapper() public returns (Proposal proposal) {
+        uniswapSwapper = new UniswapSwapperProposer({_proposal: address(this)});
+        proposal = this;
+    }
+
+    function initCCIPGaugeCheckpointer() public returns (Proposal proposal) {
+        ccipGaugeCheckpointer = new CCIPGaugeCheckpointerProposer({_proposal: address(this)});
+        proposal = this;
+    }
+
+    function initStakelessGaugeCheckpointerAdaptor() public returns (Proposal proposal) {
+        stakelessGaugeCheckpointerAdaptor = new StakelessGaugeCheckpointerAdaptorProposer({_proposal: address(this)});
+        proposal = this;
+    }
+
+    function initFeeDistributor() public returns (Proposal proposal) {
+        feeDistributor = new FeeDistributorProposer({_proposal: address(this)});
+        proposal = this;
+    }
+
+    function initSmartWalletChecker() public returns (Proposal proposal) {
+        smartWalletChecker = new SmartWalletCheckerProposer({_proposal: address(this)});
+        proposal = this;
+    }
+
+    function initVeSiloDelegatorViaCCIP() public returns (Proposal proposal) {
+        veSiloDelegatorViaCCIP = new VeSiloDelegatorViaCCIPProposer({_proposal: address(this)});
+        proposal = this;
+    }
+
+    function initVotingEscrowDelegationProxy() public returns (Proposal proposal) {
+        votingEscrowDelegationProxy = new VotingEscrowDelegationProxyProposer({_proposal: address(this)});
+        proposal = this;
+    }
+
+    function initVotingEscrowCCIPRemapper() public returns (Proposal proposal) {
+        votingEscrowCCIPRemapper = new VotingEscrowCCIPRemapperProposer({_proposal: address(this)});
+        proposal = this;
+    }
+
+    function initSiloFactory() public returns (Proposal proposal) {
+        siloFactory = new SiloFactoryProposer({_proposal: address(this)});
+        proposal = this;
+    }
+
+    function initBalancerTokenAdmin() public returns (Proposal proposal) {
+        balancerTokenAdmin = new BalancerTokenAdminProposer({_proposal: address(this)});
+        proposal = this;
     }
 }

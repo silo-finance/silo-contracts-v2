@@ -2,8 +2,8 @@
 pragma solidity 0.8.21;
 
 import {MathUpgradeable} from "openzeppelin-contracts-upgradeable/utils/math/MathUpgradeable.sol";
-// import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISilo} from "../interfaces/ISilo.sol";
+
 library SiloMathLib {
     using MathUpgradeable for uint256;
 

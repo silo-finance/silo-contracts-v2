@@ -41,6 +41,24 @@ contract GaugeControllerProposer is Proposer {
         _addAction(input);
     }
 
+    /// @notice Add a `change_type_weight` action to the proposal engine
+    /// @param _gaugeType The type of the gauge to be changed
+    /// @param _weight The weight to be set
+    // solhint-disable-next-line func-name-mixedcase
+    function change_type_weight(int128 _gaugeType, uint256 _weight) external {
+        bytes memory input = abi.encodeCall(IGaugeController.change_type_weight, (_gaugeType, _weight));
+        _addAction(input);
+    }
+
+    /// @notice Add a `change_gauge_weight` action to the proposal engine
+    /// @param _gauge The address of the gauge for which the weight is to be set
+    /// @param _weight The weight to be set
+    // solhint-disable-next-line func-name-mixedcase
+    function change_gauge_weight(address _gauge, uint256 _weight) external {
+        bytes memory input = abi.encodeCall(IGaugeController.change_gauge_weight, (_gauge, _weight));
+        _addAction(input);
+    }
+
     function _addAction(bytes memory _input) internal {
         _addAction({_target: GAUGE_CONTROLLER, _value: 0, _input: _input});
     }

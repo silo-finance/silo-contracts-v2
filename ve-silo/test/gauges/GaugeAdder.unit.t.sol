@@ -15,7 +15,7 @@ interface IGaugeController {
     function add_gauge(address _gauge, int128 _gaugeType) external;
 }
 
-// FOUNDRY_PROFILE=ve-silo forge test --mc GaugeAdderTest --ffi -vvv
+// FOUNDRY_PROFILE=ve-silo-test forge test --mc GaugeAdderTest --ffi -vvv
 contract GaugeAdderTest is IntegrationTest {
     int128 internal constant _ETHEREUM_GAUGE_CONTROLLER_TYPE = 0;
     string internal constant _ETHEREUM = "Ethereum";
