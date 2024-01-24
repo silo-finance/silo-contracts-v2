@@ -11,9 +11,10 @@ import "../_common/SimplifiedConvertions1to2Ratio.spec";
 certoraRun certora/config/silo/silo0.conf \
     --verify "Silo0:certora/specs/silo/variable-changes/SiloDataManagement.spec" \
     --parametric_contracts Silo0 \
-    --msg "SiloDataManagement (tokens simplified)"  --method "borrowShares(uint256,address,address)" // to speed up use --method flag
+    --msg "SiloDataManagement (tokens simplified)" \
+    --method "flashLoan(address,address,uint256,bytes)" // to speed up use --method flag
 */
-rule VC_Silo_siloData_change_on_accrueInterest(env e, method f) filtered { f -> !f.isView } {
+rule VC_Silo_siloData_change(env e, method f) filtered { f -> !f.isView } {
     silo0SetUp(e);
 
     uint256 prevAccrueInterest = currentContract.getSiloDataDaoAndDeployerFees();
@@ -32,7 +33,7 @@ rule VC_Silo_siloData_change_on_accrueInterest(env e, method f) filtered { f -> 
         assert
             prevAccrueInterest >= currentContract.getSiloDataDaoAndDeployerFees(),
             "withdrawFees() is able to decrease fees";
-    } else if (f.selector == flashLoanSig() || f.selector == liquidationCallSig()) {
+    } else if (f.selector == flashLoanSig()) {
         assert
             prevAccrueInterest < currentContract.getSiloDataDaoAndDeployerFees(),
             "flashLoan will increase fees";
