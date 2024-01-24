@@ -1,4 +1,5 @@
 import "./SiloFunctionSig.spec";
+import "./SiloConfigMethods.spec";
 
 function siloFnSelectorWithAssets(env e, method f, uint256 assets) {
     address receiver;
@@ -15,6 +16,9 @@ function siloFnSelector(
 
     if (f.selector == depositSig()) {
         deposit(e, assets, receiver);
+    } else if (f.selector == initalizeSig()) {
+        address anyModel;
+        initialize(e, siloConfig, anyModel);
     } else {
         calldataarg args;
         f(e, args);

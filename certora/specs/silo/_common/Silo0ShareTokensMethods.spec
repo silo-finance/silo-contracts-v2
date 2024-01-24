@@ -32,66 +32,78 @@ methods {
 
 // https://github.com/Certora/tutorials-code/blob/master/lesson4_invariants/erc20/total_supply.spec#L57
 // Collateral token
-ghost mapping(address => uint256) balanceOfMirrorCollateral {
-    init_state axiom forall address a. balanceOfMirrorCollateral[a] == 0;
+ghost mapping(address => uint256) collateral0BalanceOfMirror {
+    init_state axiom forall address a. collateral0BalanceOfMirror[a] == 0;
 }
 
 ghost mathint sumBalancesCollateral {
     init_state axiom sumBalancesCollateral == 0;
     axiom forall address a. forall address b. (
-        (a != b => sumBalancesCollateral >= balanceOfMirrorCollateral[a] + balanceOfMirrorCollateral[b])
+        (a != b => sumBalancesCollateral >= collateral0BalanceOfMirror[a] + collateral0BalanceOfMirror[b])
     );
     axiom forall address a. forall address b. forall address c. (
         (a != b && a != c && b != c) => 
-        sumBalancesCollateral >= balanceOfMirrorCollateral[a] + balanceOfMirrorCollateral[b] + balanceOfMirrorCollateral[c]
+        sumBalancesCollateral >= collateral0BalanceOfMirror[a] + collateral0BalanceOfMirror[b] + collateral0BalanceOfMirror[c]
     );
 }
 
 hook Sstore shareCollateralToken0._balances[KEY address user] uint256 newBalance (uint256 oldBalance) STORAGE {
     sumBalancesCollateral = sumBalancesCollateral + newBalance - oldBalance;
-    balanceOfMirrorCollateral[user] = newBalance;
+    collateral0BalanceOfMirror[user] = newBalance;
+}
+
+hook Sload uint256 balance shareCollateralToken0._balances[KEY address user] STORAGE {
+    require collateral0BalanceOfMirror[user] == balance;
 }
 
 // Protected collateral token
-ghost mapping(address => uint256) balanceOfMirrorProtected {
-    init_state axiom forall address a. balanceOfMirrorProtected[a] == 0;
+ghost mapping(address => uint256) protected0BalanceOfMirror {
+    init_state axiom forall address a. protected0BalanceOfMirror[a] == 0;
 }
 
 ghost mathint sumBalancesProtected {
     init_state axiom sumBalancesProtected == 0;
     axiom forall address a. forall address b. (
-        (a != b => sumBalancesProtected >= balanceOfMirrorProtected[a] + balanceOfMirrorProtected[b])
+        (a != b => sumBalancesProtected >= protected0BalanceOfMirror[a] + protected0BalanceOfMirror[b])
     );
     axiom forall address a. forall address b. forall address c. (
         (a != b && a != c && b != c) => 
-        sumBalancesProtected >= balanceOfMirrorProtected[a] + balanceOfMirrorProtected[b] + balanceOfMirrorProtected[c]
+        sumBalancesProtected >= protected0BalanceOfMirror[a] + protected0BalanceOfMirror[b] + protected0BalanceOfMirror[c]
     );
 }
 
 hook Sstore shareProtectedCollateralToken0._balances[KEY address user] uint256 newBalance (uint256 oldBalance) STORAGE {
     sumBalancesProtected = sumBalancesProtected + newBalance - oldBalance;
-    balanceOfMirrorProtected[user] = newBalance;
+    protected0BalanceOfMirror[user] = newBalance;
+}
+
+hook Sload uint256 balance shareProtectedCollateralToken0._balances[KEY address user] STORAGE {
+    require protected0BalanceOfMirror[user] == balance;
 }
 
 // Debt token
-ghost mapping(address => uint256) balanceOfMirrorDebt {
-    init_state axiom forall address a. balanceOfMirrorDebt[a] == 0;
+ghost mapping(address => uint256) debt0BalanceOfMirror {
+    init_state axiom forall address a. debt0BalanceOfMirror[a] == 0;
 }
 
 ghost mathint sumBalancesDebt {
     init_state axiom sumBalancesDebt == 0;
     axiom forall address a. forall address b. (
-        (a != b => sumBalancesDebt >= balanceOfMirrorDebt[a] + balanceOfMirrorDebt[b])
+        (a != b => sumBalancesDebt >= debt0BalanceOfMirror[a] + debt0BalanceOfMirror[b])
     );
     axiom forall address a. forall address b. forall address c. (
         (a != b && a != c && b != c) => 
-        sumBalancesDebt >= balanceOfMirrorDebt[a] + balanceOfMirrorDebt[b] + balanceOfMirrorDebt[c]
+        sumBalancesDebt >= debt0BalanceOfMirror[a] + debt0BalanceOfMirror[b] + debt0BalanceOfMirror[c]
     );
 }
 
 hook Sstore shareDebtToken0._balances[KEY address user] uint256 newBalance (uint256 oldBalance) STORAGE {
     sumBalancesDebt = sumBalancesDebt + newBalance - oldBalance;
-    balanceOfMirrorDebt[user] = newBalance;
+    debt0BalanceOfMirror[user] = newBalance;
+}
+
+hook Sload uint256 balance shareDebtToken0._balances[KEY address user] STORAGE {
+    require debt0BalanceOfMirror[user] == balance;
 }
 
 function requireShareProtectedCollateralToken0Balances() {
