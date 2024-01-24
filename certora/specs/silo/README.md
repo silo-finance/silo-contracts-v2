@@ -47,8 +47,9 @@
 - collateralShareToken.balanceOf(user) increases/decrease => Silo._total[ISilo.AssetType.Collateral].assets increases/decrease \
   Implementation: rule `VC_Silo_collateral_share_balance`
 
-- _siloData.daoAndDeployerFees increased => _siloData.interestRateTimestamp and
-  Silo._total[ISilo.AssetType.Collateral].assets, and Silo._total[ISilo.AssetType.Debt].assets are increased too. \
+- _siloData.daoAndDeployerFees increased => Silo._total[ISilo.AssetType.Collateral].assets 
+  and Silo._total[ISilo.AssetType.Debt].assets are increased too. \
+  _siloData.interestRateTimestamp can only increase.
   Implementation: rule `VS_Silo_daoAndDeployerFees_and_totals`
 
 ### Valid States
