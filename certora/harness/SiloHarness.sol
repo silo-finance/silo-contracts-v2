@@ -14,4 +14,8 @@ contract SiloHarness is Silo {
     function getSiloDataDaoAndDeployerFees() external view returns (uint256) {
         return siloData.daoAndDeployerFees;
     }
+
+    function getFlashloanFee() external view returns (uint256 flashloanFee) {
+        (,, uint256 flashloanFee, ) = config.getFeesWithAsset(address(this));
+    }
 }
