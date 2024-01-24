@@ -30,6 +30,6 @@ hook Sload uint256 balance token0._balances[KEY address user] STORAGE {
     require token0BalanceOfMirror[user] == balance;
 }
 
-function requireToken0Balances() {
+function requireToken0TotalAndBalancesIntegrity() {
     require to_mathint(token0.totalSupply()) == sumBalancesToken0;
 }

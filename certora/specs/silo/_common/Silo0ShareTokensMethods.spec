@@ -106,14 +106,14 @@ hook Sload uint256 balance shareDebtToken0._balances[KEY address user] STORAGE {
     require debt0BalanceOfMirror[user] == balance;
 }
 
-function requireShareProtectedCollateralToken0Balances() {
+function requireProtectedToken0TotalAndBalancesIntegrity() {
     require to_mathint(shareProtectedCollateralToken0.totalSupply()) == sumBalancesProtected;
 }
 
-function requireShareDebtToken0Balances() {
+function requireDebtToken0TotalAndBalancesIntegrity() {
     require to_mathint(shareDebtToken0.totalSupply()) == sumBalancesDebt;
 }
 
-function requireShareCollateralToken0Balances() {
+function requireCollateralToken0TotalAndBalancesIntegrity() {
     require to_mathint(shareCollateralToken0.totalSupply()) == sumBalancesCollateral;
 }
