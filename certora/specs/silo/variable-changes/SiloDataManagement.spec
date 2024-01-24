@@ -11,7 +11,7 @@ import "../_common/SimplifiedConvertions1to2Ratio.spec";
 certoraRun certora/config/silo/silo0.conf \
     --verify "Silo0:certora/specs/silo/variable-changes/SiloDataManagement.spec" \
     --parametric_contracts Silo0 \
-    --msg "SiloDataManagement (tokens simplified)" \
+    --msg "SiloDataManagement - flashLoan V1" \
     --method "flashLoan(address,address,uint256,bytes)" // to speed up use --method flag
 */
 rule VC_Silo_siloData_change(env e, method f) filtered { f -> !f.isView } {
