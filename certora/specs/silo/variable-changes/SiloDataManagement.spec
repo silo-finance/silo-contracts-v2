@@ -1,9 +1,11 @@
+import "../_common/CommonSummarizations.spec";
 import "../_common/OnlySilo0SetUp.spec";
 import "../_common/SiloFunctionSelector.spec";
 import "../_common/SiloMethods.spec";
 import "../../_simplifications/Silo_isSolvent_ghost.spec";
 import "../../_simplifications/Silo_accrueInterest_simplification.spec";
 import "../../_simplifications/Token_transfer_simplification.spec";
+import "../../_simplifications/SiloStdLib_flashFee_notZero_sumarization.spec";
 import "../_common/SimplifiedConvertions1to2Ratio.spec";
 
 
@@ -11,7 +13,7 @@ import "../_common/SimplifiedConvertions1to2Ratio.spec";
 certoraRun certora/config/silo/silo0.conf \
     --verify "Silo0:certora/specs/silo/variable-changes/SiloDataManagement.spec" \
     --parametric_contracts Silo0 \
-    --msg "SiloDataManagement - flashLoan V1" \
+    --msg "SiloDataManagement - flashLoan V2 fee gt 0" \
     --method "flashLoan(address,address,uint256,bytes)" // to speed up use --method flag
 */
 rule VC_Silo_siloData_change(env e, method f) filtered { f -> !f.isView } {
