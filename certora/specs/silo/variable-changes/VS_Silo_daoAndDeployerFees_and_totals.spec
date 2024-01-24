@@ -3,6 +3,7 @@ import "../_common/OnlySilo0SetUp.spec";
 import "../_common/SiloFunctionSelector.spec";
 import "../_common/SiloMethods.spec";
 import "../../_simplifications/Silo_isSolvent_ghost.spec";
+import "../../_simplifications/SimplifiedGetCompoundInterestRateAndUpdate.spec";
 import "../_common/SimplifiedConvertions1to2Ratio.spec";
 
 /**
