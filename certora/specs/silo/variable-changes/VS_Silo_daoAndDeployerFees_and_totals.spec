@@ -4,12 +4,13 @@ import "../_common/SiloFunctionSelector.spec";
 import "../_common/SiloMethods.spec";
 import "../../_simplifications/Silo_isSolvent_ghost.spec";
 import "../../_simplifications/SimplifiedGetCompoundInterestRateAndUpdate.spec";
+import "../../_simplifications/Oracle_quote_one.spec";
 import "../_common/SimplifiedConvertions1to2Ratio.spec";
 
 /**
 certoraRun certora/config/silo/silo0.conf \
     --verify "Silo0:certora/specs/silo/variable-changes/VS_Silo_daoAndDeployerFees_and_totals.spec" \
-    --msg "fee and totals" \
+    --msg "fee and totals (quote)" \
     --parametric_contracts Silo0 \
     --method "borrowShares(uint256,address,address)" // to speed up use --method flag
 */
