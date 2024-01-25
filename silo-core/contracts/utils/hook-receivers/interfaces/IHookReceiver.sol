@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.5.0;
 
-import {ISilo} from "../../../interfaces/ISilo.sol";
-import {IShareToken} from "../../../interfaces/IShareToken.sol";
+import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
+import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 
 interface IHookReceiver {
     /// @notice Initialize a hook receiver
