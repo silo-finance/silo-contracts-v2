@@ -14,7 +14,7 @@ import "../_common/SimplifiedConvertions1to2Ratio.spec";
 certoraRun certora/config/silo/silo0.conf \
     --verify "Silo0:certora/specs/silo/variable-changes/SiloDataManagement.spec" \
     --parametric_contracts Silo0 \
-    --msg "SiloDataManagement - V4" \
+    --msg "SiloDataManagement - V5" \
     --method "flashLoan(address,address,uint256,bytes)" // to speed up use --method flag
 */
 rule VC_Silo_siloData_change(env e, method f) filtered { f -> !f.isView } {
@@ -22,7 +22,8 @@ rule VC_Silo_siloData_change(env e, method f) filtered { f -> !f.isView } {
 
     uint256 accrueInterestBefore = currentContract.getSiloDataDaoAndDeployerFees();
     uint256 prevTimestamp = currentContract.getSiloDataInterestRateTimestamp();
-    uint256 flashloanFee = currentContract.getFlashloanFee();
+    uint256 flashloanFee = currentContract.getFlashloanFee0();
+    uint256 otherFlashloanFee = currentContract.getFlashloanFee1(); // just for debug
     uint256 flashloanAmount;
 
     // we can not have block.timestamp less than interestRateTimestamp, however is this something to prove as well?

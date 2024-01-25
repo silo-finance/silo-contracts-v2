@@ -10,5 +10,6 @@ methods {
     // Harness:
     function getSiloDataInterestRateTimestamp() external returns(uint256) envfree;
     function getSiloDataDaoAndDeployerFees() external returns(uint256) envfree;
-    function getFlashloanFee() external returns(uint256) envfree;
+    function getFlashloanFee0() external returns(uint256) envfree;
+    function getFlashloanFee1() external returns(uint256) envfree;
 }
