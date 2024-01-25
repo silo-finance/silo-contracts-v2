@@ -25,7 +25,9 @@ rule VC_Silo_siloData_change(env e, method f) filtered { f -> !f.isView } {
     uint256 flashloanFee = currentContract.getFlashloanFee();
     uint256 flashloanAmount;
 
-    require block.timestamp >= prevTimestamp;
+    // we can no have block.timestamp less than InterestRateTimestamp, however is this something to prove as well?
+    require e.block.timestamp >= prevTimestamp;
+    require e.block.timestamp < max_uint64;
 
     if (f.selector == flashLoanSig()) {
         address receiver;
@@ -44,23 +46,20 @@ rule VC_Silo_siloData_change(env e, method f) filtered { f -> !f.isView } {
         assert accrueInterestBefore == 0 => accrueInterestAfter == 0;
 
         assert accrueInterestBefore > 0 => accrueInterestBefore > accrueInterestAfter, 
-            "only decreasing is possible for withdrawFees";
+            "withdrawFees can only decrease fee";
 
         assert  accrueInterestBefore >= accrueInterestAfter,  "withdrawFees() is able to decrease fees";
     } else if (f.selector == flashLoanSig()) {
         if (flashloanAmount > 0 && flashloanFee > 0) {
-            assert accrueInterestBefore < accrueInterestAfter, 
-                "flashLoan will increase fees if there is amount and fee";
+            assert accrueInterestBefore < accrueInterestAfter, "flashLoan will increase fees";
         } else {
             assert accrueInterestBefore == accrueInterestAfter, "when no fee or no amount => no change to fees";
         }
     } else {
-        assert
-            accrueInterestBefore == accrueInterestAfter,
+        assert accrueInterestBefore == accrueInterestAfter,
             "when _accrueInterest is OFF by AccrueInterestSimplification, no other method should change fees";
     }
 
-    assert
-        prevTimestamp == currentContract.getSiloDataInterestRateTimestamp(),
+    assert prevTimestamp == currentContract.getSiloDataInterestRateTimestamp(),
         "when _accrueInterest is OFF by AccrueInterestSimplification, no other method should change timestamp";
 }
