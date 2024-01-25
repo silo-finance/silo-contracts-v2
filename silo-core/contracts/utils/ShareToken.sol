@@ -7,7 +7,7 @@ import {
 } from "openzeppelin-contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 import {StringsUpgradeable} from "openzeppelin-contracts-upgradeable/utils/StringsUpgradeable.sol";
 
-import {IHookReceiver} from "./hook-receivers/interfaces/IHookReceiver.sol";
+import {IHookReceiver} from "silo-core/contracts/utils/hook-receivers/interfaces/IHookReceiver.sol";
 import {ISiloFactory} from "../interfaces/ISiloFactory.sol";
 import {IShareToken, ISilo} from "../interfaces/IShareToken.sol";
 import {ISiloConfig} from "../SiloConfig.sol";
