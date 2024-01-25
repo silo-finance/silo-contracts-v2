@@ -25,6 +25,8 @@ rule VC_Silo_siloData_change(env e, method f) filtered { f -> !f.isView } {
     uint256 flashloanFee = currentContract.getFlashloanFee();
     uint256 flashloanAmount;
 
+    require block.timestamp >= prevTimestamp;
+
     if (f.selector == flashLoanSig()) {
         address receiver;
         address token;
