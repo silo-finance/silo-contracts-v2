@@ -5,7 +5,7 @@ import "../_common/SiloMethods.spec";
 import "../../_simplifications/Silo_isSolvent_ghost.spec";
 import "../../_simplifications/Silo_accrueInterest_simplification.spec";
 import "../../_simplifications/Token_transfer_simplification.spec";
-import "../../_simplifications/SiloStdLib_flashFee_nonZero.spec";
+// import "../../_simplifications/SiloStdLib_flashFee_nonZero.spec";
 import "../_common/SimplifiedConvertions1to2Ratio.spec";
 
 
@@ -25,7 +25,7 @@ rule VC_Silo_siloData_change(env e, method f) filtered { f -> !f.isView } {
     uint256 flashloanFee = currentContract.getFlashloanFee();
     uint256 flashloanAmount;
 
-    // we can no have block.timestamp less than InterestRateTimestamp, however is this something to prove as well?
+    // we can not have block.timestamp less than interestRateTimestamp, however is this something to prove as well?
     require e.block.timestamp >= prevTimestamp;
     require e.block.timestamp < max_uint64;
 
