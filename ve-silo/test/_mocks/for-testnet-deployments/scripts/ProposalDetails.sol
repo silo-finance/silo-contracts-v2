@@ -63,7 +63,12 @@ contract ProposalDetails is Script {
         result.blockTimestamp = block.timestamp;
         result.proposalEta = ISiloGovernor(governor).proposalEta(proposalId);
         result.proposalDeadline = ISiloGovernor(governor).proposalDeadline(proposalId);
-        (result.againstVotes, result.forVotes, result.abstainVotes) = GovernorCountingSimple(payable(governor)).proposalVotes(proposalId);
         result.minDelay = TimelockController(payable(timelock)).getMinDelay();
+
+        (
+            result.againstVotes,
+            result.forVotes,
+            result.abstainVotes
+        ) = GovernorCountingSimple(payable(governor)).proposalVotes(proposalId);
     }
 }
