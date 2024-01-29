@@ -16,6 +16,11 @@ function siloFnSelector(
 
     if (f.selector == depositSig()) {
         deposit(e, assets, receiver);
+    } else if (f.selector == flashLoanSig()) {
+        address token;
+        bytes data;
+
+        flashLoan(e, receiver, token, assets, data);
     } else if (f.selector == initalizeSig()) {
         address anyModel;
         initialize(e, siloConfig, anyModel);

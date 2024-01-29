@@ -50,4 +50,8 @@ function silo0SetUp(env e) {
     require e.msg.sender != siloConfig;
     require e.msg.sender != configSilo1;
     require e.msg.sender != silo0;
+
+    // we can not have block.timestamp less than interestRateTimestamp
+    require e.block.timestamp >= silo0.getSiloDataInterestRateTimestamp();
+    require e.block.timestamp < max_uint64;
 }
