@@ -36,7 +36,7 @@
 - `siloData.daoAndDeployerFees` can only be changes (increased) by accrueInterest. withdrawFees can only decrease fees. 
   flashLoan can only increase fees. \
   `siloData.timestamp` can be increased by accrueInterest only. \
-  Implementation: rule `VC_Silo_siloData_management` [done]
+  Implementation: rule `VC_Silo_siloData_management`
 
 - shareDebtToke.balanceOf(user) increases/decrease => Silo._total[ISilo.AssetType.Debt].assets increases/decrease \
   Implementation: rule `VC_Silo_debt_share_balance`
@@ -50,7 +50,7 @@
 - _siloData.daoAndDeployerFees increased => Silo._total[ISilo.AssetType.Collateral].assets 
   and Silo._total[ISilo.AssetType.Debt].assets are increased too. \
   _siloData.interestRateTimestamp can only increase.
-  Implementation: rule `VS_Silo_daoAndDeployerFees_and_totals` [in progress]
+  Implementation: rule `VS_Silo_daoAndDeployerFees_and_totals`
 
 ### Valid States
 
@@ -113,7 +113,7 @@
   Implementation: rule `HLP_transition_collateral_update_only_recepient`
 
 - LiquidationCall will only update the balances of the provided user. \
-  Implementation: rule `HLP_liquidationCall_shares_tokens_balances` [in progress]
+  Implementation: rule `HLP_liquidationCall_shares_tokens_balances`
 
 - Anyone can deposit for anyone and anyone can repay anyone
   Implementation: rule `HLP_silo_anyone_for_anyone`

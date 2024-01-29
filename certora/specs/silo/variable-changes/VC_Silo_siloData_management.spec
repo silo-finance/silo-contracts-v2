@@ -25,9 +25,6 @@ rule VC_Silo_siloData_management(env e, method f) filtered { f -> !f.isView } {
     uint256 otherFlashloanFee = currentContract.getFlashloanFee1(); // just for debug
     uint256 flashloanAmount;
     address receiver;
-    // we can not have block.timestamp less than interestRateTimestamp, however is this something to prove as well?
-    require e.block.timestamp >= prevTimestamp;
-    require e.block.timestamp < max_uint64;
 
     siloFnSelector(e, f, flashloanAmount, receiver);
 
