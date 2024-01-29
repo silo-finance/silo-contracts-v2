@@ -16,12 +16,13 @@ contract SiloHarness is Silo {
         return siloData.daoAndDeployerFees;
     }
 
-    function getFlashloanFee0() external view returns (uint256 flashloanFee) {
+    function getFlashloanFee0() external view returns (uint256) {
         (,, uint256 flashloanFee, ) = config.getFeesWithAsset(address(this));
+        return flashloanFee;
     }
 
-    function getFlashloanFee1() external view returns (uint256 flashloanFee) {
+    function getFlashloanFee1() external view returns (uint256) {
         (, ISiloConfig.ConfigData memory otherConfig) = config.getConfigs(address(this));
-        flashloanFee = otherConfig.flashloanFee;
+        return otherConfig.flashloanFee;
     }
 }
