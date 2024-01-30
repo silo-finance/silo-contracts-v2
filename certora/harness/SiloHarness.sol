@@ -25,4 +25,8 @@ contract SiloHarness is Silo {
         (, ISiloConfig.ConfigData memory otherConfig) = config.getConfigs(address(this));
         return otherConfig.flashloanFee;
     }
+
+    function reentrancyGuardEntered() external view returns (bool) {
+        return _reentrancyGuardEntered();
+    }
 }
