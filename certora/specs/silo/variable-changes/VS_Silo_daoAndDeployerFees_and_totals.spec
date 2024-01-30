@@ -11,7 +11,7 @@ import "../../_simplifications/Sqrt_simplification.spec";
 /**
 certoraRun certora/config/silo/silo0.conf \
     --verify "Silo0:certora/specs/silo/variable-changes/VS_Silo_daoAndDeployerFees_and_totals.spec" \
-    --msg "fee and totals (muldiv, sqrt)" \
+    --msg "fee and totals (fees)" \
     --parametric_contracts Silo0 \
     --method "borrowShares(uint256,address,address)" // to speed up use --method flag
 */
@@ -23,6 +23,9 @@ rule VS_Silo_daoAndDeployerFees_and_totals(env e, method f) filtered { f -> !f.i
     uint256 debtBefore = currentContract.getDebtAssets();
     uint256 prevTimestamp = currentContract.getSiloDataInterestRateTimestamp();
 
+    uint256 daoFee = currentContract.getDaoFee();
+    uint256 deployerFee = currentContract.getDeployerFee();
+
     uint256 amount;
     address receiver;
 
@@ -32,7 +35,15 @@ rule VS_Silo_daoAndDeployerFees_and_totals(env e, method f) filtered { f -> !f.i
     bool totalCollateralIncreased = currentContract.getCollateralAssets() > collateralBefore;
     bool totalDebtIncreased = currentContract.getCollateralAssets() > debtBefore;
 
-    assert accrueInterestIncreased => totalCollateralIncreased && totalDebtIncreased;
+    uint256 hundredPercent = 10 ^ 18;
+
+    // TODO: should I use `assert_uint256`? or maybe require that?
+    if (assert_uint256(daoFee + deployerFee) >= hundredPercent) {
+        assert accrueInterestIncreased => !totalCollateralIncreased && totalDebtIncreased, 
+            "when all fees goes to dao/deployer, users get no interest";
+    } else {
+        assert accrueInterestIncreased => totalCollateralIncreased && totalDebtIncreased;
+    }
 
     assert prevTimestamp <= currentContract.getSiloDataInterestRateTimestamp(), "timestamp can only increase";
 }

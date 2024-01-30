@@ -13,4 +13,6 @@ methods {
     function getFlashloanFee0() external returns(uint256) envfree;
     function getFlashloanFee1() external returns(uint256) envfree;
     function reentrancyGuardEntered() external returns(bool) envfree;
+    function getDaoFee() external returns(uint256) envfree;
+    function getDeployerFee() external returns(uint256) envfree;
 }
