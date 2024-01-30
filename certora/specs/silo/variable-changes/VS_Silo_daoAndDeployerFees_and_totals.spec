@@ -37,7 +37,6 @@ rule VS_Silo_daoAndDeployerFees_and_totals(env e, method f) filtered { f -> !f.i
 
     uint256 hundredPercent = 10 ^ 18;
 
-    // TODO: should I use `assert_uint256`? or maybe require that?
     if (assert_uint256(daoFee + deployerFee) >= hundredPercent) {
         assert accrueInterestIncreased => !totalCollateralIncreased && totalDebtIncreased, 
             "when all fees goes to dao/deployer, users get no interest";
