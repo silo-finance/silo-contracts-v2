@@ -5,12 +5,13 @@ import "../_common/SiloMethods.spec";
 import "../../_simplifications/Silo_isSolvent_ghost.spec";
 import "../../_simplifications/SimplifiedGetCompoundInterestRateAndUpdate.spec";
 import "../../_simplifications/Oracle_quote_one.spec";
-import "../_common/SimplifiedConvertions1to2Ratio.spec";
+import "../../_simplifications/MulDiv_simplification.spec";
+import "../../_simplifications/Sqrt_simplification.spec";
 
 /**
 certoraRun certora/config/silo/silo0.conf \
     --verify "Silo0:certora/specs/silo/variable-changes/VS_Silo_daoAndDeployerFees_and_totals.spec" \
-    --msg "fee and totals (quote)" \
+    --msg "fee and totals (muldiv, sqrt)" \
     --parametric_contracts Silo0 \
     --method "borrowShares(uint256,address,address)" // to speed up use --method flag
 */
@@ -26,7 +27,6 @@ rule VS_Silo_daoAndDeployerFees_and_totals(env e, method f) filtered { f -> !f.i
     address receiver;
 
     siloFnSelector(e, f, amount, receiver);
-
 
     bool accrueInterestIncreased = currentContract.getSiloDataDaoAndDeployerFees() > accrueInterestBefore;
     bool totalCollateralIncreased = currentContract.getCollateralAssets() > collateralBefore;
