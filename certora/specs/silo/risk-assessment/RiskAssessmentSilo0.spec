@@ -13,7 +13,7 @@ certoraRun certora/config/silo/silo0.conf \
 rule RA_silo_reentrancy_modifier(env e, method f, calldataarg args) filtered { f -> !f.isView } {
     silo0SetUp(e);
 
-    bool reentrancyGuardEntered = reentrancyGuardEntered();
+    require reentrancyGuardEntered();
 
     storage storageBeforeCall = lastStorage;
 
@@ -29,6 +29,6 @@ rule RA_silo_reentrancy_modifier(env e, method f, calldataarg args) filtered { f
                                     accrueInterestSig() == f.selector ||
                                     transferFromSig() == f.selector;
 
-    assert reentrancyGuardEntered && !fnAllowedToModifyStorage => storageBeforeCall == storageAfterCall,
+    assert !fnAllowedToModifyStorage => storageBeforeCall == storageAfterCall,
         "Reentrancy modifier is not working properly";
 }
