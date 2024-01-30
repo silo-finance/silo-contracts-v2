@@ -1,5 +1,5 @@
 methods {
-    function MathUpgradeable.sqrt(uint256 y) internal returns (uint256) => floorSqrt(y);
+    function _.sqrt(uint256 y) internal => floorSqrt(y) expect uint256;
 }
 
 // A precise summarization of sqrt

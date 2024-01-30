@@ -5,7 +5,8 @@ import "../_common/SiloMethods.spec";
 import "../../_simplifications/Silo_isSolvent_ghost.spec";
 import "../../_simplifications/Silo_noAccrueInterest_simplification.spec";
 import "../../_simplifications/Token_transfer_simplification.spec";
-import "../_common/SimplifiedConvertions1to2Ratio.spec";
+import "../../_simplifications/MulDiv_simplification.spec";
+import "../../_simplifications/Sqrt_simplification.spec";
 
 /**
 certoraRun certora/config/silo/silo0.conf \
@@ -20,7 +21,7 @@ rule VC_Silo_siloData_management(env e, method f) filtered { f -> !f.isView } {
     uint256 accrueInterestBefore = currentContract.getSiloDataDaoAndDeployerFees();
     uint256 prevTimestamp = currentContract.getSiloDataInterestRateTimestamp();
     uint256 flashloanFee = currentContract.getFlashloanFee0();
-    
+
     uint256 flashloanAmount;
     address receiver;
 
