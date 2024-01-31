@@ -165,7 +165,7 @@ contract DepositTest is SiloLittleHelper, Test {
 
         vm.startPrank(anyAddress);
         token1.approve(address(silo1), 1);
-        vm.expectRevert(SiloERC4626Lib.ZeroShares.selector);
+        vm.expectRevert(ISilo.ZeroShares.selector);
         silo1.deposit(1, anyAddress);
         vm.stopPrank();
     }
