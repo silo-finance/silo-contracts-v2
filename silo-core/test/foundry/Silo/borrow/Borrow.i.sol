@@ -229,6 +229,24 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
         assertEq(silo1.maxMint(borrower), 0, "can not mint when already borrowed (maxMint)");
     }
 
+    /*
+    forge test -vv --ffi --mt test_borrowShares_revertsOnZeroAssets
+    */
+    /// forge-config: core.fuzz.runs = 1000
+    function test_borrowShares_revertsOnZeroAssets_fuzz(uint256 _depositAmount, uint256 _forBorrow) public {
+        vm.assume(_depositAmount > _forBorrow);
+        vm.assume(_forBorrow > 0);
+
+        address borrower = makeAddr("Borrower");
+        address depositor = makeAddr("depositor");
+
+        _deposit(_depositAmount, borrower);
+        _depositForBorrow(_forBorrow, depositor);
+        uint256 amount = _borrowShares(1, borrower);
+
+        assertGt(amount, 0, "amount can never be 0");
+    }
+
     function _borrow(uint256 _amount, address _borrower, bytes4 _revert) internal returns (uint256 shares) {
         vm.expectRevert(_revert);
         vm.prank(_borrower);
