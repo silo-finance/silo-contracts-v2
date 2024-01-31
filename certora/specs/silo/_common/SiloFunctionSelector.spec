@@ -19,12 +19,7 @@ function siloFnSelector(
         address token;
         bytes data;
 
-        flashLoan(e, receiver, token, assetsOrShares, data);
-    } else if (f.selector == mintSig()) {
-        mint(e, assetsOrShares, receiver);
-    } else if (f.selector == mintWithTypeSig()) {
-        ISilo.AssetType anyType;
-        mint(e, assetsOrShares, receiver, anyType);
+        flashLoan(e, receiver, token, assets, data);
     } else {
         calldataarg args;
         f(e, args);
