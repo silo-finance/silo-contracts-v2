@@ -55,9 +55,8 @@ function silo0SetUp(env e) {
     require e.block.timestamp >= silo0.getSiloDataInterestRateTimestamp();
     require e.block.timestamp < max_uint64;
 
-    // it is possible to deplo config with any fees, but not when you do it via factory
-    // also it make no sense if fees will be crazy high so this requirement is more like arbitrary common sense setup
-    uint256 hundredPercent = 10 ^ 18;
-    require silo0.getDaoFee() <= hundredPercent;
-    require silo0.getDeployerFee() <= hundredPercent;
+    // it is possible to deploy config with any fees, but not when you do it via factory
+    // below are restrictions for fees we have in factory, if we not keep them we can overflow,
+    require silo0.getDaoFee() <= 4 * (10 ^ 17); // 0.4e18;
+    require silo0.getDeployerFee() <= 15 * (10 ^ 16); // 0.15e18;
 }

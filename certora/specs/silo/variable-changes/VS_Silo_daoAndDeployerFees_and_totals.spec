@@ -11,7 +11,7 @@ import "../../_simplifications/Sqrt_simplification.spec";
 /**
 certoraRun certora/config/silo/silo0.conf \
     --verify "Silo0:certora/specs/silo/variable-changes/VS_Silo_daoAndDeployerFees_and_totals.spec" \
-    --msg "fee and totals (fees lt 200 with fix)" \
+    --msg "fee and totals (feea as in factory)" \
     --parametric_contracts Silo0 \
     --method "borrowShares(uint256,address,address)" // to speed up use --method flag
 */
