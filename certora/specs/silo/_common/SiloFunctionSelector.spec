@@ -1,5 +1,4 @@
 import "./SiloFunctionSig.spec";
-import "./SiloConfigMethods.spec";
 
 function siloFnSelectorWithAssets(env e, method f, uint256 assets) {
     address receiver;
@@ -20,10 +19,12 @@ function siloFnSelector(
         address token;
         bytes data;
 
-        flashLoan(e, receiver, token, assets, data);
-    } else if (f.selector == initalizeSig()) {
-        address anyModel;
-        initialize(e, siloConfig, anyModel);
+        flashLoan(e, receiver, token, assetsOrShares, data);
+    } else if (f.selector == mintSig()) {
+        mint(e, assetsOrShares, receiver);
+    } else if (f.selector == mintWithTypeSig()) {
+        ISilo.AssetType anyType;
+        mint(e, assetsOrShares, receiver, anyType);
     } else {
         calldataarg args;
         f(e, args);
