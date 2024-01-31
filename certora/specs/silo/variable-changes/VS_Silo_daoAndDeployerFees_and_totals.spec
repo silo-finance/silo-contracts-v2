@@ -11,7 +11,7 @@ import "../../_simplifications/Sqrt_simplification.spec";
 /**
 certoraRun certora/config/silo/silo0.conf \
     --verify "Silo0:certora/specs/silo/variable-changes/VS_Silo_daoAndDeployerFees_and_totals.spec" \
-    --msg "fee and totals (V6)" \
+    --msg "fee and totals (V7 fix copy pasta)" \
     --parametric_contracts Silo0 \
     --method "accrueInterest()" // to speed up use --method flag
 */
@@ -32,11 +32,11 @@ rule VS_Silo_daoAndDeployerFees_and_totals(env e, method f) filtered { f -> !f.i
     siloFnSelector(e, f, amount, receiver);
 
     mathint accrueInterestDiff = currentContract.getSiloDataDaoAndDeployerFees() - accrueInterestBefore;
-    assert accrueInterestDiff == currentContract.getCollateralAssets() - debtBefore, "interest must be cover from debt";
+    assert accrueInterestDiff == currentContract.getDebtAssets() - debtBefore, "interest must be cover from debt";
 
     bool accrueInterestIncreased = accrueInterestDiff > 0;
     bool totalCollateralIncreased = currentContract.getCollateralAssets() > collateralBefore;
-    bool totalDebtIncreased = currentContract.getCollateralAssets() > debtBefore;
+    bool totalDebtIncreased = currentContract.getDebtAssets() > debtBefore;
 
     uint256 hundredPercent = 10 ^ 18;
 
