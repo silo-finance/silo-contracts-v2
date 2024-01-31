@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Fixed
 - ensure we can not borrow shares with `0` assets
 
+## [0.1.2] - 2024-01-31
+### Fixed
+- ensure we can not deposit shares with `0` assets
+
 ## [0.1.0] - 2024-01-03
 - code after first audit + develop changes
 

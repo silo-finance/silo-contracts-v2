@@ -24,8 +24,6 @@ library SiloERC4626Lib {
     ///      That's why we decided to go with type(uint128).max - which is anyway high enough to consume any totalSupply
     uint256 internal constant _VIRTUAL_DEPOSIT_LIMIT = type(uint128).max;
 
-    error ZeroShares();
-
     /// @notice Determines the maximum amount of collateral a user can deposit
     /// This function is estimation to reduce gas usage. In theory, if silo total assets will be close to virtual limit
     /// and returned max assets will be eg 1, then it might be not possible to actually deposit 1wei because
@@ -183,7 +181,8 @@ library SiloERC4626Lib {
             ISilo.AssetType.Collateral
         );
 
-        if (shares == 0) revert ZeroShares();
+        if (shares == 0) revert ISilo.ZeroShares();
+        if (assets == 0) revert ISilo.ZeroAssets();
 
         // `assets` and `totalAssets` can never be more than uint256 because totalSupply cannot be either
         // however, there is (probably unreal but also untested) possibility, where you might borrow from silo
