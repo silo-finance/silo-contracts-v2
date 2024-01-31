@@ -11,9 +11,9 @@ import "../../_simplifications/Sqrt_simplification.spec";
 /**
 certoraRun certora/config/silo/silo0.conf \
     --verify "Silo0:certora/specs/silo/variable-changes/VS_Silo_daoAndDeployerFees_and_totals.spec" \
-    --msg "fee and totals (V1)" \
+    --msg "fee and totals (V3)" \
     --parametric_contracts Silo0 \
-    --method "borrowShares(uint256,address,address)" // to speed up use --method flag
+    --method "accrueInterest()" // to speed up use --method flag
 */
 rule VS_Silo_daoAndDeployerFees_and_totals(env e, method f) filtered { f -> !f.isView } {
     silo0SetUp(e);
