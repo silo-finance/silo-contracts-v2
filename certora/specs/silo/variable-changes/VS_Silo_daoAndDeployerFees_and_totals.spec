@@ -11,7 +11,7 @@ import "../../_simplifications/Sqrt_simplification.spec";
 /**
 certoraRun certora/config/silo/silo0.conf \
     --verify "Silo0:certora/specs/silo/variable-changes/VS_Silo_daoAndDeployerFees_and_totals.spec" \
-    --msg "fee and totals (V4)" \
+    --msg "fee and totals (V5)" \
     --parametric_contracts Silo0 \
     --method "accrueInterest()" // to speed up use --method flag
 */
@@ -31,7 +31,8 @@ rule VS_Silo_daoAndDeployerFees_and_totals(env e, method f) filtered { f -> !f.i
 
     siloFnSelector(e, f, amount, receiver);
 
-    bool accrueInterestIncreased = currentContract.getSiloDataDaoAndDeployerFees() > accrueInterestBefore;
+    mathint accrueInterestDiff = currentContract.getSiloDataDaoAndDeployerFees() - accrueInterestBefore;
+    bool accrueInterestIncreased = accrueInterestDiff > 0;
     bool totalCollateralIncreased = currentContract.getCollateralAssets() > collateralBefore;
     bool totalDebtIncreased = currentContract.getCollateralAssets() > debtBefore;
 
@@ -39,9 +40,9 @@ rule VS_Silo_daoAndDeployerFees_and_totals(env e, method f) filtered { f -> !f.i
 
     if (debtBefore == 0) {
         assert !accrueInterestIncreased, "without debt there is no interest";
-    } else if (assert_uint256(daoFee + deployerFee) >= hundredPercent) {
-        assert accrueInterestIncreased => !totalCollateralIncreased && totalDebtIncreased, 
-            "when all fees goes to dao/deployer, users get no interest";
+    } else if (accrueInterestDiff == 1 && (daoFee + deployerFee) > 0) {
+        assert !totalCollateralIncreased && totalDebtIncreased,
+            "with just 1 interest, all goes to dao and deployer";
     } else {
         assert accrueInterestIncreased => totalCollateralIncreased && totalDebtIncreased;
     }
