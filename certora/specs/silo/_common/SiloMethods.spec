@@ -12,4 +12,5 @@ methods {
     function getSiloDataDaoAndDeployerFees() external returns(uint256) envfree;
     function getFlashloanFee0() external returns(uint256) envfree;
     function getFlashloanFee1() external returns(uint256) envfree;
+    function reentrancyGuardEntered() external returns(bool) envfree;
 }
