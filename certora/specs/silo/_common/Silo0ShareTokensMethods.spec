@@ -54,6 +54,7 @@ hook Sstore shareCollateralToken0._balances[KEY address user] uint256 newBalance
 
 hook Sload uint256 balance shareCollateralToken0._balances[KEY address user] STORAGE {
     require collateral0BalanceOfMirror[user] == balance;
+    require sumBalancesCollateral >= to_mathint(collateral0BalanceOfMirror[user]);
 }
 
 // Protected collateral token
@@ -79,6 +80,7 @@ hook Sstore shareProtectedCollateralToken0._balances[KEY address user] uint256 n
 
 hook Sload uint256 balance shareProtectedCollateralToken0._balances[KEY address user] STORAGE {
     require protected0BalanceOfMirror[user] == balance;
+    require sumBalancesProtected >= to_mathint(protected0BalanceOfMirror[user]);
 }
 
 // Debt token
@@ -104,6 +106,7 @@ hook Sstore shareDebtToken0._balances[KEY address user] uint256 newBalance (uint
 
 hook Sload uint256 balance shareDebtToken0._balances[KEY address user] STORAGE {
     require debt0BalanceOfMirror[user] == balance;
+    require sumBalancesDebt >= to_mathint(debt0BalanceOfMirror[user]);
 }
 
 function requireProtectedToken0TotalAndBalancesIntegrity() {
