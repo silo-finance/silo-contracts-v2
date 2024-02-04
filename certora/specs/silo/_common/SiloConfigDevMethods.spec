@@ -1,4 +1,4 @@
-using SiloConfig as siloConfig;
+using SiloConfigWithStorage as siloConfig;
 
 methods {
     // Getters:

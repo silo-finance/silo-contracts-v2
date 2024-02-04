@@ -71,6 +71,7 @@ library SiloLendingLib {
         );
 
         if (borrowedShares == 0) revert ISilo.ZeroShares();
+        if (borrowedAssets == 0) revert ISilo.ZeroAssets();
 
         if (borrowedAssets > SiloMathLib.liquidity(_totalCollateralAssets, totalDebtAssets)) {
             revert ISilo.NotEnoughLiquidity();
