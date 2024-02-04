@@ -3,6 +3,67 @@ import "../_common/SiloFunctionSelector.spec";
 import "../_common/SiloMethods.spec";
 import "../_common/Helpers.spec";
 import "../_common/SimplifiedConvertions1to2Ratio.spec";
+import "../../_simplifications/Oracle_quote_one.spec";
+import "../../_simplifications/Silo_isSolvent_ghost.spec";
+import "../../_simplifications/SimplifiedGetCompoundInterestRateAndUpdate.spec";
+
+methods {
+    function _.mint(address _owner, address _spender, uint256 _amount) external with (env e) => mintSumm(e, calledContract, _owner, _spender, _amount) expect void UNRESOLVED;
+    function _._afterTokenTransfer(address,address,uint256) internal => CONSTANT; // All calls to _afterTokenTransfer always return the same result
+    function _.totalSupply() external => totalSupplySumm(calledContract) expect uint256 UNRESOLVED; // Apply the summary only if the calledContract cannot be resolved
+    function _.balanceOf(address account) external => balanceOfSumm(calledContract, account) expect uint256 UNRESOLVED;
+    function _.transferFrom(address from, address to, uint256 amount) external with (env e) => transferFromSumm(e, calledContract, from, to, amount) expect bool UNRESOLVED;
+}
+
+// This summary assumes that the callees are either ShareCollateralToken0 or ShareProtectedCollateralToken0.
+function mintSumm(env e, address callee, address _owner, address _spender, uint256 _amount) {
+    if(callee == shareCollateralToken0){
+        shareCollateralToken0.mint(e, _owner, _spender, _amount);
+    } else if(callee == shareProtectedCollateralToken0) {
+        shareProtectedCollateralToken0.mint(e, _owner, _spender, _amount);
+    }
+    else {
+        // You could make this statement an 'assert false' to verify that all call-sites are only for the above alternative callees
+        require false;
+    }
+}
+
+function totalSupplySumm(address callee) returns uint256 {
+    uint256 totalSupply;
+    if(callee == shareCollateralToken0){
+        require totalSupply == shareCollateralToken0.totalSupply();
+    } else if(callee == shareProtectedCollateralToken0) {
+        require totalSupply == shareProtectedCollateralToken0.totalSupply();
+    }
+    else {
+        // You could make this statement an 'assert false' to verify that all call-sites are only for the above alternative callees
+        require false;
+    }
+    return totalSupply;
+}
+
+function balanceOfSumm(address callee, address account) returns uint256 {
+    uint256 balanceOfAccount;
+    if(callee == shareDebtToken0){
+        require balanceOfAccount == shareDebtToken0.balanceOf(account);
+    }
+    else {
+       // Assert that we could only have feasible unresolved calls to shareDebtToken0.balanceOf
+        assert false, "Unresolved call to balanceOf(address) where the callee is not ShareDebtToken0";
+    }
+    return balanceOfAccount;
+}
+
+function transferFromSumm(env e, address callee, address from, address to, uint256 amount) returns bool {
+    bool success;
+    if(callee == token0) {
+        require success == token0.transferFrom(e, from, to, amount);
+    } else {
+        assert false, "Unresolved call to transferFrom(address,address,uint256) where the callee is not Token0";
+    }
+    return success;
+}
+
 
 /**
 certoraRun certora/config/silo/silo0.conf \

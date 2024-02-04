@@ -1,5 +1,4 @@
 import "./SiloConfigMethods.spec";
-import "./ERC20MethodsDispatch.spec";
 import "./Token0Methods.spec";
 import "./Silo0ShareTokensMethods.spec";
 
