@@ -25,7 +25,7 @@ rule RA_silo_reentrancy_modifier(env e, method f, calldataarg args) filtered { f
                                     approveSig() == f.selector ||
                                     withdrawFeesSig() == f.selector ||
                                     flashLoanSig() == f.selector ||
-                                    initalizeSig() == f.selector ||
+                                    initializeSig() == f.selector ||
                                     accrueInterestSig() == f.selector ||
                                     transferFromSig() == f.selector;
 

@@ -15,7 +15,7 @@
 
 ### Variable Changes
 
-- collateralShareToken.totalSupply and Silo._total[ISilo.AssetType.Collateral].assets should increase only on deposit and mint. accrueInterest increase only Silo._total[ISilo.AssetType.Collateral].assets. The balance of the silo in the underlying asset should increase for the same amount as Silo._total[ISilo.AssetType.Collateral].assets increased. \
+- collateralShareToken.totalSupply and Silo._total[ISilo.AssetType.Collateral].assets should increase only on deposit, mint, and transitionCollateral. accrueInterest increase only Silo._total[ISilo.AssetType.Collateral].assets. The balance of the silo in the underlying asset should increase for the same amount as Silo._total[ISilo.AssetType.Collateral].assets increased. \
   Implementation: rule `VC_Silo_total_collateral_increase`
 
 - collateralShareToken.totalSupply and Silo._total[ISilo.AssetType.Collateral].assets should decrease only on withdraw, redeem, liquidationCall.The balance of the silo in the underlying asset should decrease for the same amount as Silo._total[ISilo.AssetType.Collateral].assets decreased.
