@@ -13,23 +13,28 @@ certoraRun certora/config/silo/silo0.conf \
     --msg "VC_Silo_total_collateral_increase" \
     --verify "Silo0:certora/specs/silo/variable-changes/VariableChangesSilo0.spec"
 */
-rule VC_Silo_total_collateral_increase(env e, method f, uint256 assetsOrShares) filtered { f -> !f.isView} {
+rule VC_Silo_total_collateral_increase(
+    env e,
+    method f,
+    uint256 assetsOrShares,
+    address receiver
+) filtered { f -> !f.isView} {
     silo0SetUp(e);
     requireToken0TotalAndBalancesIntegrity();
     requireCollateralToken0TotalAndBalancesIntegrity();
 
     mathint totalDepositsBefore = getCollateralAssets();
     mathint shareTokenTotalSupplyBefore = shareCollateralToken0.totalSupply();
-    mathint balanceSharesBefore = shareCollateralToken0.balanceOf(silo0);
+    mathint balanceSharesBefore = shareCollateralToken0.balanceOf(receiver);
     mathint siloBalanceBefore = token0.balanceOf(silo0);
 
     bool withInterest = isWithInterest(e);
 
-    siloFnSelectorWithAssets(e, f, assetsOrShares);
+    siloFnSelector(e, f, assetsOrShares, receiver);
 
     mathint totalDepositsAfter = getCollateralAssets();
     mathint shareTokenTotalSupplyAfter = shareCollateralToken0.totalSupply();
-    mathint balanceSharesAfter = shareCollateralToken0.balanceOf(silo0);
+    mathint balanceSharesAfter = shareCollateralToken0.balanceOf(receiver);
     mathint siloBalanceAfter = token0.balanceOf(silo0);
 
     bool isDeposit =  f.selector == depositSig() || f.selector == depositWithTypeSig();

@@ -29,7 +29,7 @@ function mintSumm(env e, address callee, address _owner, address _spender, uint2
     } else if (callee == shareDebtToken0) {
         shareDebtToken0.mint(e, _owner, _spender, _amount);
     } else {
-        require false;
+        assert false;
     }
 }
 
@@ -41,7 +41,7 @@ function burnSumm(env e, address callee, address _owner, address _spender, uint2
     } else if (callee == shareDebtToken0) {
         shareDebtToken0.burn(e, _owner, _spender, _amount);
     } else {
-        require false;
+        assert false;
     }
 }
 
@@ -53,7 +53,7 @@ function summForwardTransfer(env e, address callee, address _owner, address _rec
     } else if (callee == shareDebtToken0) {
         shareDebtToken0.forwardTransfer(e, _owner, _recipient, _amount);
     } else {
-        require false;
+        assert false;
     }
 }
 
@@ -65,7 +65,7 @@ function summForwardTransferFrom(env e, address callee, address _spender, addres
     } else if (callee == shareDebtToken0) {
         shareDebtToken0.forwardTransferFrom(e, _spender, _from, _to, _amount);
     } else {
-        require false;
+        assert false;
     }
 }
 
@@ -77,6 +77,6 @@ function summForwardApprove(env e, address callee, address _owner, address _spen
     } else if (callee == shareDebtToken0) {
         shareDebtToken0.forwardApprove(e, _owner, _spender, _amount);
     } else {
-        require false;
+        assert false;
     }
 }

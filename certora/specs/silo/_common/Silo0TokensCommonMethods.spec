@@ -19,7 +19,7 @@ function totalSupplySumm(address callee) returns uint256 {
     } else if (callee == token0) {
         require totalSupply == token0.totalSupply();
     } else {
-        require false;
+        assert false;
     }
 
     return totalSupply;
@@ -37,7 +37,7 @@ function balanceOfSumm(address callee, address account) returns uint256 {
     } else if (callee == token0) {
         require balanceOfAccount == token0.balanceOf(account);
     } else {
-       require false;
+       assert false;
     }
 
     return balanceOfAccount;
@@ -55,7 +55,7 @@ function transferFromSumm(env e, address callee, address from, address to, uint2
     } else if(callee == token0) {
         require success == token0.transferFrom(e, from, to, amount);
     } else {
-        require false;
+        assert false;
     }
 
     return success;
@@ -73,7 +73,7 @@ function transferSumm(env e, address callee, address to, uint256 amount) returns
     } else if(callee == token0) {
         require success == token0.transfer(e, to, amount);
     } else {
-        require false;
+        assert false;
     }
 
     return success;
