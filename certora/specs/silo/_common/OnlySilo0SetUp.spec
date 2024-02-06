@@ -11,14 +11,11 @@ function silo0SetUp(env e) {
 
     configSilo0, configSilo1 = siloConfig.getSilos();
 
-    require configSilo0 == currentContract;
-
     require configSilo1 != token0;
     require configSilo1 != shareProtectedCollateralToken0;
     require configSilo1 != shareDebtToken0;
     require configSilo1 != shareCollateralToken0;
     require configSilo1 != siloConfig;
-    require configSilo1 != currentContract;
 
     address configProtectedShareToken;
     address configCollateralShareToken;
@@ -32,17 +29,10 @@ function silo0SetUp(env e) {
 
     configProtectedShareToken1, configCollateralShareToken1, configDebtShareToken1 = siloConfig.getShareTokens(configSilo1);
 
-    require configCollateralShareToken1 == shareCollateralToken1;
-    require configProtectedShareToken1 == shareProtectedCollateralToken1;
-    require configDebtShareToken1 != configDebtShareToken;
-    require configProtectedShareToken1 != configDebtShareToken;
-    require configSilo1 != configCollateralShareToken1;
-    require configSilo1 != configProtectedShareToken1;
-    require configSilo1 != configDebtShareToken1;
-
-    require configProtectedShareToken == shareProtectedCollateralToken0;
-    require configCollateralShareToken == shareCollateralToken0;
-    require configDebtShareToken == shareDebtToken0;
+    require configDebtShareToken1 != configProtectedShareToken1;
+    require configDebtShareToken1 != configCollateralShareToken1;
+    require configDebtShareToken1 != configProtectedShareToken;
+    require configDebtShareToken1 != configCollateralShareToken;
 
     address configToken0 = siloConfig.getAssetForSilo(silo0);
     address configSiloToken1 = siloConfig.getAssetForSilo(configSilo1);
