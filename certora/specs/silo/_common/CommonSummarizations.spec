@@ -10,5 +10,5 @@ methods {
     function _.onLeverage(address,address,address,uint256,bytes) external => NONDET; // leverage receiver
     function _.onFlashLoan(address,address,uint256,uint256,bytes) external => NONDET; // flash loan receiver
     function _.getFeeReceivers(address) external => CONSTANT; // factory
-    function _.getConfig(address) external => CONSTANT; // config
+    // function _.getConfig(address) external => CONSTANT; // config
 }
