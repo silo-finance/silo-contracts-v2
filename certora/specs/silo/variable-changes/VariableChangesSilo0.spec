@@ -10,6 +10,7 @@ import "../../_simplifications/SimplifiedGetCompoundInterestRateAndUpdate.spec";
 /**
 certoraRun certora/config/silo/silo0.conf \
     --parametric_contracts Silo0 \
+    --method "borrow(uint256,address,address)" \
     --msg "VC_Silo_total_collateral_increase" \
     --verify "Silo0:certora/specs/silo/variable-changes/VariableChangesSilo0.spec"
 */

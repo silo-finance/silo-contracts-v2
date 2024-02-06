@@ -26,6 +26,20 @@ function silo0SetUp(env e) {
 
     configProtectedShareToken, configCollateralShareToken, configDebtShareToken = siloConfig.getShareTokens(currentContract);
 
+    address configProtectedShareToken1;
+    address configCollateralShareToken1;
+    address configDebtShareToken1;
+
+    configProtectedShareToken1, configCollateralShareToken1, configDebtShareToken1 = siloConfig.getShareTokens(configSilo1);
+
+    require configCollateralShareToken1 == shareCollateralToken1;
+    require configProtectedShareToken1 == shareProtectedCollateralToken1;
+    require configDebtShareToken1 != configDebtShareToken;
+    require configProtectedShareToken1 != configDebtShareToken;
+    require configSilo1 != configCollateralShareToken1;
+    require configSilo1 != configProtectedShareToken1;
+    require configSilo1 != configDebtShareToken1;
+
     require configProtectedShareToken == shareProtectedCollateralToken0;
     require configCollateralShareToken == shareCollateralToken0;
     require configDebtShareToken == shareDebtToken0;
@@ -43,10 +57,16 @@ function silo0SetUp(env e) {
     require configSiloToken1 != shareCollateralToken0;
     require configSiloToken1 != siloConfig;
     require configSiloToken1 != currentContract;
+    require configSiloToken1 != configProtectedShareToken1;
+    require configSiloToken1 != configDebtShareToken1;
+    require configSiloToken1 != configCollateralShareToken1;
 
     require e.msg.sender != shareProtectedCollateralToken0;
     require e.msg.sender != shareDebtToken0;
     require e.msg.sender != shareCollateralToken0;
+    require e.msg.sender != configProtectedShareToken1;
+    require e.msg.sender != configDebtShareToken1;
+    require e.msg.sender != configCollateralShareToken1;
     require e.msg.sender != siloConfig;
     require e.msg.sender != configSilo1;
     require e.msg.sender != silo0;
