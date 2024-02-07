@@ -1,24 +1,20 @@
 import "./SiloConfigMethods.spec";
-import "./ERC20MethodsDispatch.spec";
 import "./Token0Methods.spec";
+import "./Silo0TokensCommonMethods.spec";
 import "./Silo0ShareTokensMethods.spec";
 
 using Silo0 as silo0;
 
 function silo0SetUp(env e) {
-    address configSilo0;
     address configSilo1;
 
-    configSilo0, configSilo1 = siloConfig.getSilos();
-
-    require configSilo0 == currentContract;
+    _, configSilo1 = siloConfig.getSilos();
 
     require configSilo1 != token0;
     require configSilo1 != shareProtectedCollateralToken0;
     require configSilo1 != shareDebtToken0;
     require configSilo1 != shareCollateralToken0;
     require configSilo1 != siloConfig;
-    require configSilo1 != currentContract;
 
     address configProtectedShareToken;
     address configCollateralShareToken;
@@ -26,14 +22,19 @@ function silo0SetUp(env e) {
 
     configProtectedShareToken, configCollateralShareToken, configDebtShareToken = siloConfig.getShareTokens(currentContract);
 
-    require configProtectedShareToken == shareProtectedCollateralToken0;
-    require configCollateralShareToken == shareCollateralToken0;
-    require configDebtShareToken == shareDebtToken0;
+    address configProtectedShareToken1;
+    address configCollateralShareToken1;
+    address configDebtShareToken1;
+
+    configProtectedShareToken1, configCollateralShareToken1, configDebtShareToken1 = siloConfig.getShareTokens(configSilo1);
+
+    require configDebtShareToken1 != configProtectedShareToken1;
+    require configDebtShareToken1 != configCollateralShareToken1;
+    require configDebtShareToken1 != configProtectedShareToken;
+    require configDebtShareToken1 != configCollateralShareToken;
 
     address configToken0 = siloConfig.getAssetForSilo(silo0);
     address configSiloToken1 = siloConfig.getAssetForSilo(configSilo1);
-
-    require configToken0 == token0;
 
     require configSiloToken1 != silo0;
     require configSiloToken1 != configSilo1;
@@ -43,10 +44,16 @@ function silo0SetUp(env e) {
     require configSiloToken1 != shareCollateralToken0;
     require configSiloToken1 != siloConfig;
     require configSiloToken1 != currentContract;
+    require configSiloToken1 != configProtectedShareToken1;
+    require configSiloToken1 != configDebtShareToken1;
+    require configSiloToken1 != configCollateralShareToken1;
 
     require e.msg.sender != shareProtectedCollateralToken0;
     require e.msg.sender != shareDebtToken0;
     require e.msg.sender != shareCollateralToken0;
+    require e.msg.sender != configProtectedShareToken1;
+    require e.msg.sender != configDebtShareToken1;
+    require e.msg.sender != configCollateralShareToken1;
     require e.msg.sender != siloConfig;
     require e.msg.sender != configSilo1;
     require e.msg.sender != silo0;

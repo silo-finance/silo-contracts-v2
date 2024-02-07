@@ -20,14 +20,6 @@ methods {
     function shareProtectedCollateralToken0.silo() external returns(address) envfree;
     function shareDebtToken0.silo() external returns(address) envfree;
     function shareCollateralToken0.silo() external returns(address) envfree;
-
-    function shareProtectedCollateralToken0.name() internal returns(string memory) => simplified_name();
-    function shareDebtToken0.name() internal returns(string memory) => simplified_name();
-    function shareCollateralToken0.name() internal returns(string memory) => simplified_name();
-
-    function shareProtectedCollateralToken0.symbol() internal returns(string memory) => simplified_symbol();
-    function shareDebtToken0.symbol() internal returns(string memory) => simplified_symbol();
-    function shareCollateralToken0.symbol() internal returns(string memory) => simplified_symbol();
 }
 
 // https://github.com/Certora/tutorials-code/blob/master/lesson4_invariants/erc20/total_supply.spec#L57
