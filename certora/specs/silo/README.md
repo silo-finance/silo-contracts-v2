@@ -10,7 +10,7 @@
 
 ### Unit Tests
 - accrueInterest can only be executed on deposit, mint, withdraw,
-  redeem, liquidationCall, accrueInterest, leverage.\
+  redeem, liquidationCall, accrueInterest, leverage, repay, repayShares. \
   Implementation: rule `UT_Silo_accrueInterest`
 
 ### Variable Changes
