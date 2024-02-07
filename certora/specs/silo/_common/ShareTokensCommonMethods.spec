@@ -29,7 +29,7 @@ function mintSumm(env e, address callee, address _owner, address _spender, uint2
     } else if (callee == shareDebtToken0) {
         shareDebtToken0.mint(e, _owner, _spender, _amount);
     } else {
-        assert false;
+        assert false, "Unresolved call to share token mint(address,address,uint256)";
     }
 }
 
@@ -41,7 +41,7 @@ function burnSumm(env e, address callee, address _owner, address _spender, uint2
     } else if (callee == shareDebtToken0) {
         shareDebtToken0.burn(e, _owner, _spender, _amount);
     } else {
-        assert false;
+        assert false, "Unresolved call to share token burn(address,address,uint256)";
     }
 }
 
@@ -53,7 +53,7 @@ function summForwardTransfer(env e, address callee, address _owner, address _rec
     } else if (callee == shareDebtToken0) {
         shareDebtToken0.forwardTransfer(e, _owner, _recipient, _amount);
     } else {
-        assert false;
+        assert false, "Unresolved call to share token forwardTransfer(address,address,uint256)";
     }
 }
 
@@ -65,7 +65,7 @@ function summForwardTransferFrom(env e, address callee, address _spender, addres
     } else if (callee == shareDebtToken0) {
         shareDebtToken0.forwardTransferFrom(e, _spender, _from, _to, _amount);
     } else {
-        assert false;
+        assert false, "Unresolved call to share token forwardTransferFrom(address,address,address,uint256)";
     }
 }
 
@@ -77,6 +77,6 @@ function summForwardApprove(env e, address callee, address _owner, address _spen
     } else if (callee == shareDebtToken0) {
         shareDebtToken0.forwardApprove(e, _owner, _spender, _amount);
     } else {
-        assert false;
+        assert false, "Unresolved call to share token forwardApprove(address,address,uint256)";
     }
 }

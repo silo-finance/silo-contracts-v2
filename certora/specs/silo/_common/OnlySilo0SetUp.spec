@@ -6,10 +6,9 @@ import "./Silo0ShareTokensMethods.spec";
 using Silo0 as silo0;
 
 function silo0SetUp(env e) {
-    address configSilo0;
     address configSilo1;
 
-    configSilo0, configSilo1 = siloConfig.getSilos();
+    _, configSilo1 = siloConfig.getSilos();
 
     require configSilo1 != token0;
     require configSilo1 != shareProtectedCollateralToken0;
@@ -36,8 +35,6 @@ function silo0SetUp(env e) {
 
     address configToken0 = siloConfig.getAssetForSilo(silo0);
     address configSiloToken1 = siloConfig.getAssetForSilo(configSilo1);
-
-    require configToken0 == token0;
 
     require configSiloToken1 != silo0;
     require configSiloToken1 != configSilo1;

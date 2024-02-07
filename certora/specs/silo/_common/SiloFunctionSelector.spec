@@ -13,7 +13,7 @@ function siloFnSelector(
 ) {
     require e.block.timestamp < max_uint64;
     require e.msg.sender != silo0;
-    require receiver != silo0;
+    require receiver != currentContract;
 
     if (f.selector == depositSig()) {
         require receiver != currentContract;

@@ -32,7 +32,7 @@ function totalSupplySumm(address callee) returns uint256 {
     } else if (callee == shareProtectedCollateralToken1) {
         require totalSupply == shareProtectedCollateralToken1.totalSupply();
     } else {
-        assert false;
+        assert false, "Unresolved call to ERC-20 totalSupply()";
     }
 
     return totalSupply;
@@ -54,7 +54,7 @@ function balanceOfSumm(address callee, address account) returns uint256 {
     } else if (callee == token0) {
         require balanceOfAccount == token0.balanceOf(account);
     } else {
-       assert false;
+       assert false, "Unresolved call to ERC-20 balanceOf(address)";
     }
 
     return balanceOfAccount;
@@ -76,7 +76,7 @@ function transferFromSumm(env e, address callee, address from, address to, uint2
     } else if(callee == token0) {
         require success == token0.transferFrom(e, from, to, amount);
     } else {
-        assert false;
+        assert false, "Unresolved call to ERC-20 transferFrom(address,address,address,uint256)";
     }
 
     return success;
@@ -98,7 +98,7 @@ function transferSumm(env e, address callee, address to, uint256 amount) returns
     } else if(callee == token0) {
         require success == token0.transfer(e, to, amount);
     } else {
-        assert false;
+        assert false, "Unresolved call to ERC-20 transfer(address,address,uint256)";
     }
 
     return success;
