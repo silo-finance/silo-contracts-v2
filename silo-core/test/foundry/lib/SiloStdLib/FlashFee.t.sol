@@ -41,8 +41,6 @@ contract FlashFeeTest is Test {
 
         feeTestCases[feeTestCasesIndex++] = FeeTestCase({flashloanFee: 0.1e18, amount: 1e18, fee: 0.1e18});
         feeTestCases[feeTestCasesIndex++] = FeeTestCase({flashloanFee: 0, amount: 1e18, fee: 0});
-        feeTestCases[feeTestCasesIndex++] = FeeTestCase({flashloanFee: 0.1e18, amount: 0, fee: 0});
-        feeTestCases[feeTestCasesIndex++] = FeeTestCase({flashloanFee: 0, amount: 0, fee: 0});
         feeTestCases[feeTestCasesIndex++] = FeeTestCase({flashloanFee: 1, amount: 1, fee: 1});
         feeTestCases[feeTestCasesIndex++] = FeeTestCase({flashloanFee: 0.125e18, amount: 1e18, fee: 0.125e18});
         feeTestCases[feeTestCasesIndex++] = FeeTestCase({flashloanFee: 0.65e18, amount: 1e18, fee: 0.65e18});

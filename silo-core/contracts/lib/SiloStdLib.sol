@@ -16,6 +16,8 @@ library SiloStdLib {
 
     uint256 internal constant _PRECISION_DECIMALS = 1e18;
 
+    error ZeroAmount();
+
     /// @notice Withdraws accumulated fees and distributes them proportionally to the DAO and deployer
     /// @dev This function takes into account scenarios where either the DAO or deployer may not be set, distributing
     /// accordingly
@@ -73,7 +75,7 @@ library SiloStdLib {
     /// @param _amount for which fee is calculated
     /// @return fee flash fee amount
     function flashFee(ISiloConfig _config, address _token, uint256 _amount) external view returns (uint256 fee) {
-        if (_amount == 0) return 0;
+        if (_amount == 0) revert ZeroAmount();
 
         // all user set fees are in 18 decimals points
         (,, uint256 flashloanFee, address asset) = _config.getFeesWithAsset(address(this));
