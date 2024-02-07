@@ -12,6 +12,7 @@ import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {IInterestRateModel} from "silo-core/contracts/interfaces/IInterestRateModel.sol";
 import {IERC3156FlashBorrower} from "silo-core/contracts/interfaces/IERC3156FlashBorrower.sol";
 import {Silo, ILeverageBorrower} from "silo-core/contracts/Silo.sol";
+import {SiloStdLib} from "silo-core/contracts/lib/SiloStdLib.sol";
 
 import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
 import {MintableToken} from "../_common/MintableToken.sol";
@@ -102,8 +103,12 @@ contract FlashloanTest is SiloLittleHelper, Test {
         vm.expectRevert(ISilo.Unsupported.selector);
         silo1.flashFee(address(token0), 1e18);
 
-        assertEq(silo0.flashFee(address(token0), 0), 0);
-        assertEq(silo1.flashFee(address(token1), 0), 0);
+        vm.expectRevert(SiloStdLib.ZeroAmount.selector);
+        silo0.flashFee(address(token0), 0);
+
+        vm.expectRevert(SiloStdLib.ZeroAmount.selector);
+        silo1.flashFee(address(token1), 0);
+
         assertEq(silo0.flashFee(address(token0), 1e18), 0.01e18);
         assertEq(silo1.flashFee(address(token1), 1e18), 0.01e18);
     }
