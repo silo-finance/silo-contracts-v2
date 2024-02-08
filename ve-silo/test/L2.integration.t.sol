@@ -34,7 +34,7 @@ contract ERC20 is ERC20WithoutMint {
     }
 }
 
-// FOUNDRY_PROFILE=ve-silo forge test --mc L2Test --ffi -vvv
+// FOUNDRY_PROFILE=ve-silo-test forge test --mc L2Test --ffi -vvv
 contract L2Test is IntegrationTest {
     uint256 internal constant _FORKING_BLOCK_NUMBER = 4413530;
     uint256 internal constant _INCENTIVES_AMOUNT = 2_000_000e18;
@@ -63,25 +63,28 @@ contract L2Test is IntegrationTest {
 
     ERC20 internal _siloToken;
 
-    function setUp() public {
-        // only to make deployment scripts work
-        vm.createSelectFork(
-            getChainRpcUrl(SEPOLIA_ALIAS),
-            _FORKING_BLOCK_NUMBER
-        );
+    bool internal _executeDeploy = true;
 
-        uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
-        _deployer = vm.addr(deployerPrivateKey);
-
-        _dummySiloToken();
-
-        L2Deploy deploy = new L2Deploy();
-        deploy.disableDeploymentsSync();
-
+    function setUp() public virtual {
         setAddress(AddrKey.L2_MULTISIG, _l2Multisig);
-        // setAddress(AddrKey.CHAINLINK_CCIP_ROUTER, address(1));
 
-        deploy.run();
+        if (_executeDeploy) {
+            uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
+            _deployer = vm.addr(deployerPrivateKey);
+
+            // only to make deployment scripts work
+            vm.createSelectFork(
+                getChainRpcUrl(SEPOLIA_ALIAS),
+                _FORKING_BLOCK_NUMBER
+            );
+
+            _dummySiloToken();
+
+            L2Deploy deploy = new L2Deploy();
+            deploy.disableDeploymentsSync();
+
+            deploy.run();
+        }
 
         _factory = IChildChainGaugeFactory(getAddress(VeSiloContracts.CHILD_CHAIN_GAUGE_FACTORY));
         _l2PseudoMinter = IL2BalancerPseudoMinter(getAddress(VeSiloContracts.L2_BALANCER_PSEUDO_MINTER));

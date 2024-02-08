@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.21;
 
+import {VeSiloContracts, VeSiloDeployments} from "ve-silo/common/VeSiloContracts.sol";
+
 import {IChildChainGauge} from "balancer-labs/v2-interfaces/liquidity-mining/IChildChainGauge.sol";
 
 import {IChildChainGaugeFactory} from "ve-silo/contracts/gauges/interfaces/IChildChainGaugeFactory.sol";
@@ -9,7 +11,7 @@ import {AddrKey} from "common/addresses/AddrKey.sol";
 import {CommonDeploy, VeSiloContracts} from "./_CommonDeploy.sol";
 
 /**
-FOUNDRY_PROFILE=ve-silo \
+FOUNDRY_PROFILE=ve-silo-test \
     forge script ve-silo/deploy/ChildChainGaugeFactoryDeploy.s.sol \
     --ffi --broadcast --rpc-url http://127.0.0.1:8545
  */
@@ -20,14 +22,18 @@ contract ChildChainGaugeFactoryDeploy is CommonDeploy {
     function run() public returns (IChildChainGaugeFactory gaugeFactory) {
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
 
+        address l2Multisig = getAddress(AddrKey.L2_MULTISIG);
+        address l2BalancerPseudoMinter = getDeployedAddress(VeSiloContracts.L2_BALANCER_PSEUDO_MINTER);
+        address votingEscrowDelegationProxy = getDeployedAddress(VeSiloContracts.VOTING_ESCROW_DELEGATION_PROXY);
+
         vm.startBroadcast(deployerPrivateKey);
 
         address childChainGaugeImpl = _deploy(
             VeSiloContracts.CHILD_CHAIN_GAUGE,
             abi.encode(
-                getDeployedAddress(VeSiloContracts.VOTING_ESCROW_DELEGATION_PROXY),
-                getDeployedAddress(VeSiloContracts.L2_BALANCER_PSEUDO_MINTER),
-                getAddress(AddrKey.L2_MULTISIG),
+                votingEscrowDelegationProxy,
+                l2BalancerPseudoMinter,
+                l2Multisig,
                 _VERSION
             )
         );
@@ -38,12 +44,11 @@ contract ChildChainGaugeFactoryDeploy is CommonDeploy {
             _VERSION
         );
 
-        _registerDeployment(address(factory), VeSiloContracts.CHILD_CHAIN_GAUGE_FACTORY);
+        vm.stopBroadcast();
 
         gaugeFactory = IChildChainGaugeFactory(address(factory));
 
-        vm.stopBroadcast();
-
+        _registerDeployment(address(factory), VeSiloContracts.CHILD_CHAIN_GAUGE_FACTORY);
         _syncDeployments();
     }
 

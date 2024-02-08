@@ -13,7 +13,7 @@ import {VotingEscrowChildChainDeploy} from "ve-silo/deploy/VotingEscrowChildChai
 import {IVotingEscrowChildChain} from "ve-silo/contracts/voting-escrow/interfaces/IVotingEscrowChildChain.sol";
 import {IAny2EVMMessageReceiver} from "ve-silo/contracts/voting-escrow/interfaces/IVotingEscrowChildChain.sol";
 
-// FOUNDRY_PROFILE=ve-silo forge test --mc VotingEscrowChildChainTest --ffi -vvv
+// FOUNDRY_PROFILE=ve-silo-test forge test --mc VotingEscrowChildChainTest --ffi -vvv
 contract VotingEscrowChildChainTest is IntegrationTest {
     bytes32 internal constant _TEST_MESSAGE_ID = keccak256(abi.encodePacked(bytes("test message id")));
     uint256 internal constant _LOCKED_END_TEST = 1726099200;

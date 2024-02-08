@@ -31,7 +31,7 @@ contract GaugeHookReceiver is IGaugeHookReceiver, Ownable2StepUpgradeable {
     /// @inheritdoc IGaugeHookReceiver
     function setGauge(IGauge _gauge) external virtual onlyOwner {
         if (address(gauge) != address(0) && !gauge.is_killed()) revert CantUpdateActiveGauge();
-        if (_gauge.shareToken() != address(shareToken)) revert WrongGaugeShareToken();
+        if (_gauge.share_token() != address(shareToken)) revert WrongGaugeShareToken();
 
         gauge = _gauge;
 

@@ -10,7 +10,7 @@ import {IFeeDistributor} from "ve-silo/contracts/fees-distribution/interfaces/IF
 import {FeeSwapper, IFeeSwapper} from "ve-silo/contracts/fees-distribution/fee-swapper/FeeSwapper.sol";
 
 /**
-FOUNDRY_PROFILE=ve-silo \
+FOUNDRY_PROFILE=ve-silo-test \
     forge script ve-silo/deploy/FeeSwapperDeploy.s.sol \
     --ffi --broadcast --rpc-url http://127.0.0.1:8545
  */
@@ -20,18 +20,26 @@ contract FeeSwapperDeploy is CommonDeploy {
     function run() public returns (IFeeSwapper feeSwapper) {
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
 
+        address weth = getAddress(AddrKey.WETH);
+        address silo80weth20 = getAddress(SILO80_WETH20_TOKEN);
+        address silo = getAddress(SILO_TOKEN);
+        address balancerVault = getAddress(AddrKey.BALANCER_VAULT);
+        address feeDistributor = getDeployedAddress(VeSiloContracts.FEE_DISTRIBUTOR);
+
+        bytes32 poolId = _poolId();
+
         vm.startBroadcast(deployerPrivateKey);
 
         IFeeSwapper.SwapperConfigInput[] memory _configs;
 
         feeSwapper = IFeeSwapper(address(
             new FeeSwapper(
-                IERC20(getAddress(AddrKey.WETH)),
-                IERC20(getAddress(SILO80_WETH20_TOKEN)),
-                IERC20(getAddress(SILO_TOKEN)),
-                getAddress(AddrKey.BALANCER_VAULT),
-                _poolId(),
-                IFeeDistributor(getDeployedAddress(VeSiloContracts.FEE_DISTRIBUTOR)),
+                IERC20(weth),
+                IERC20(silo80weth20),
+                IERC20(silo),
+                balancerVault,
+                poolId,
+                IFeeDistributor(feeDistributor),
                 _configs
             )
         ));
@@ -39,8 +47,6 @@ contract FeeSwapperDeploy is CommonDeploy {
         vm.stopBroadcast();
 
         _registerDeployment(address(feeSwapper), VeSiloContracts.FEE_SWAPPER);
-
-        _syncDeployments();
     }
 
     function _poolId() internal returns (bytes32 poolId) {

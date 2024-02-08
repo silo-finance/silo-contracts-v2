@@ -195,6 +195,14 @@ interface ISilo is IERC4626, IERC3156FlashLender, ISiloLiquidation {
         view
         returns (uint256 totalCollateralAssets, uint256 totalProtectedAssets);
 
+    /// @notice Retrieves the total amounts of collateral and debt assets
+    /// @return totalCollateralAssets The total amount of assets of type 'Collateral'
+    /// @return totalDebtAssets The total amount of debt assets of type 'Debt'
+    function getCollateralAndDebtAssets()
+        external
+        view
+        returns (uint256 totalCollateralAssets, uint256 totalDebtAssets);
+
     /// @notice Retrieves the fee details in 18 decimals points and the addresses of the DAO and deployer fee receivers
     /// @return daoFeeReceiver The address of the DAO fee receiver
     /// @return deployerFeeReceiver The address of the deployer fee receiver

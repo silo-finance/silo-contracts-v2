@@ -30,4 +30,7 @@ interface IGaugeHookReceiver is IHookReceiver {
     /// The `_gauge` can be updated by an owner (DAO)
     /// @param _gauge Gauge that should receive notifications
     function setGauge(IGauge _gauge) external;
+
+    function gauge() external view returns (IGauge);
+    function shareToken() external view returns (IShareToken);
 }

@@ -89,29 +89,6 @@ library SiloStdLib {
         if (fee == 0) return 1;
     }
 
-    /// @notice Retrieves fee amounts in 18 decimals points and their respective receivers along with the asset
-    /// @param _config The configuration contract used to fetch fee-related data
-    /// @param _factory The factory contract used to fetch fee receiver addresses
-    /// @return daoFeeReceiver Address of the DAO fee receiver
-    /// @return deployerFeeReceiver Address of the deployer fee receiver
-    /// @return daoFee DAO fee amount in 18 decimals points
-    /// @return deployerFee Deployer fee amount in 18 decimals points
-    /// @return asset Address of the associated asset
-    function getFeesAndFeeReceiversWithAsset(ISiloConfig _config, ISiloFactory _factory)
-        public
-        view
-        returns (
-            address daoFeeReceiver,
-            address deployerFeeReceiver,
-            uint256 daoFee,
-            uint256 deployerFee,
-            address asset
-        )
-    {
-        (daoFee, deployerFee,, asset) = _config.getFeesWithAsset(address(this));
-        (daoFeeReceiver, deployerFeeReceiver) = _factory.getFeeReceivers(address(this));
-    }
-
     /// @notice Returns totalAssets and totalShares for conversion math (convertToAssets and convertToShares)
     /// @dev This is useful for view functions that do not accrue interest before doing calculations. To work on
     ///      updated numbers, interest should be added on the fly.
@@ -123,7 +100,7 @@ library SiloStdLib {
         ISiloConfig.ConfigData memory _configData,
         ISilo.AssetType _assetType
     )
-        internal
+        external
         view
         returns (uint256 totalAssets, uint256 totalShares)
     {
@@ -147,14 +124,27 @@ library SiloStdLib {
         }
     }
 
-    /// @param _balanceCached if balance of `_owner` is unknown beforehand, then pass `0`
-    function getSharesAndTotalSupply(address _shareToken, address _owner, uint256 _balanceCached)
-        internal
+    /// @notice Retrieves fee amounts in 18 decimals points and their respective receivers along with the asset
+    /// @param _config The configuration contract used to fetch fee-related data
+    /// @param _factory The factory contract used to fetch fee receiver addresses
+    /// @return daoFeeReceiver Address of the DAO fee receiver
+    /// @return deployerFeeReceiver Address of the deployer fee receiver
+    /// @return daoFee DAO fee amount in 18 decimals points
+    /// @return deployerFee Deployer fee amount in 18 decimals points
+    /// @return asset Address of the associated asset
+    function getFeesAndFeeReceiversWithAsset(ISiloConfig _config, ISiloFactory _factory)
+        public
         view
-        returns (uint256 shares, uint256 totalSupply)
+        returns (
+            address daoFeeReceiver,
+            address deployerFeeReceiver,
+            uint256 daoFee,
+            uint256 deployerFee,
+            address asset
+        )
     {
-        shares = _balanceCached == 0 ? IShareToken(_shareToken).balanceOf(_owner) : _balanceCached;
-        totalSupply = IShareToken(_shareToken).totalSupply();
+        (daoFee, deployerFee,, asset) = _config.getFeesWithAsset(address(this));
+        (daoFeeReceiver, deployerFeeReceiver) = _factory.getFeeReceivers(address(this));
     }
 
     /// @notice Calculates the total collateral assets with accrued interest
@@ -169,12 +159,24 @@ library SiloStdLib {
         address _interestRateModel,
         uint256 _daoFee,
         uint256 _deployerFee
-    ) internal view returns (uint256 totalCollateralAssetsWithInterest) {
+    ) public view returns (uint256 totalCollateralAssetsWithInterest) {
         uint256 rcomp = IInterestRateModel(_interestRateModel).getCompoundInterestRate(_silo, block.timestamp);
 
+        (uint256 collateralAssets, uint256 debtAssets) = ISilo(_silo).getCollateralAndDebtAssets();
+
         (totalCollateralAssetsWithInterest,,,) = SiloMathLib.getCollateralAmountsWithInterest(
-            ISilo(_silo).getCollateralAssets(), ISilo(_silo).getDebtAssets(), rcomp, _daoFee, _deployerFee
+            collateralAssets, debtAssets, rcomp, _daoFee, _deployerFee
         );
+    }
+
+    /// @param _balanceCached if balance of `_owner` is unknown beforehand, then pass `0`
+    function getSharesAndTotalSupply(address _shareToken, address _owner, uint256 _balanceCached)
+        internal
+        view
+        returns (uint256 shares, uint256 totalSupply)
+    {
+        shares = _balanceCached == 0 ? IShareToken(_shareToken).balanceOf(_owner) : _balanceCached;
+        totalSupply = IShareToken(_shareToken).totalSupply();
     }
 
     /// @notice Calculates the total debt assets with accrued interest

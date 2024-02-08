@@ -147,4 +147,18 @@ genhtml -o coverage/silo-oracles/ lcov.info
 - to assets: Up
 - to shares: Down
 
+## Setup Echidna
 
+- https://github.com/crytic/echidna
+- https://github.com/crytic/properties
+
+```shell
+brew install echidna
+git submodule add --name crytic-properties https://github.com/crytic/properties gitmodules/crytic/properties
+
+
+# before you can run any echidna tests, run the script:
+./silo-core/scripts/echidnaBefore.sh
+# after you done run this to revert changes:
+./silo-core/scripts/echidnaAfter.sh
+```

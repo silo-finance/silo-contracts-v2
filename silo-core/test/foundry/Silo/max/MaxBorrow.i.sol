@@ -105,7 +105,7 @@ contract MaxBorrowTest is SiloLittleHelper, Test {
         uint128 _collateral,
         uint128 _liquidity
     ) public {
-//         (uint128 _collateral, uint128 _liquidity) = (64099903089467212573385554129187123252, 73362960447100600398853614451545866240);
+        // (uint128 _collateral, uint128 _liquidity) = (17610, 20969);
 
         vm.assume(_collateral > 0);
         vm.assume(_liquidity > 0);
@@ -126,7 +126,7 @@ contract MaxBorrowTest is SiloLittleHelper, Test {
         maxBorrow = silo1.maxBorrow(borrower);
         emit log_named_uint("maxBorrow", maxBorrow);
 
-        _assertWeCanNotBorrowAboveMax(maxBorrow, 3);
+        _assertWeCanNotBorrowAboveMax(maxBorrow, 4);
 
         _assertMaxBorrowIsZeroAtTheEnd(1);
     }

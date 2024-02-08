@@ -8,19 +8,23 @@ import {IVotingEscrowChildChain} from "ve-silo/contracts/voting-escrow/interface
 import {VotingEscrowChildChain} from "ve-silo/contracts/voting-escrow/VotingEscrowChildChain.sol";
 
 /**
-FOUNDRY_PROFILE=ve-silo \
+FOUNDRY_PROFILE=ve-silo-test \
     forge script ve-silo/deploy/VotingEscrowChildChainDeploy.s.sol \
     --ffi --broadcast --rpc-url http://127.0.0.1:8545
  */
 contract VotingEscrowChildChainDeploy is CommonDeploy {
+    bool internal _isMainnetSimulation = false;
+
     function run() public returns (IVotingEscrowChildChain votingEscrow) {
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
+
+        address chainlinkCcipRouter = getAddress(AddrKey.CHAINLINK_CCIP_ROUTER);
 
         vm.startBroadcast(deployerPrivateKey);
 
         votingEscrow = IVotingEscrowChildChain(address(
             new VotingEscrowChildChain(
-                getAddress(AddrKey.CHAINLINK_CCIP_ROUTER),
+                chainlinkCcipRouter,
                 _sourceChainSelector()
             )
         ));
@@ -28,12 +32,15 @@ contract VotingEscrowChildChainDeploy is CommonDeploy {
         vm.stopBroadcast();
 
         _registerDeployment(address(votingEscrow), VeSiloContracts.VOTING_ESCROW_CHILD_CHAIN);
-        _syncDeployments();
+    }
+
+    function enableMainnetSimulation() public {
+        _isMainnetSimulation = true;
     }
 
     function _sourceChainSelector() internal returns (uint64 sourceChainSelector) {
-         if (isChain(ANVIL_ALIAS) || isChain(SEPOLIA_ALIAS)) {
-            return 1; // only for local tests
+         if (isChain(ANVIL_ALIAS) || isChain(SEPOLIA_ALIAS) || _isMainnetSimulation) {
+            return 1; // only for tests
          }
     }
 }

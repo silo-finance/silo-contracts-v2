@@ -1,0 +1,7 @@
+corpusDir: corpus/erc4626
+deployContracts: [["0x1f", "SiloERC4626Lib"], ["0x2f", "SiloLendingLib"], ["0x3f", "SiloLiquidationExecLib"], ["0x4f", "SiloLiquidationLib"], ["0x5f", "SiloSolvencyLib"], ["0x6f", "SiloStdLib"]]
+cryticArgs: ["--ignore-compile","--skip-clean","--compile-libraries=(SiloERC4626Lib,0x1f),(SiloLendingLib,0x2f),(SiloLiquidationExecLib,0x3f),(SiloLiquidationLib,0x4f),(SiloSolvencyLib,0x5f),(SiloStdLib,0x6f)"]
+testMode: assertion
+testLimit: 10000000
+codeSize: 0x9000
+coverage: true
