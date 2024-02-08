@@ -38,9 +38,6 @@ rule VC_Silo_total_collateral_increase(
     mathint balanceSharesAfter = shareCollateralToken0.balanceOf(receiver);
     mathint siloBalanceAfter = token0.balanceOf(silo0);
 
-    bool isDeposit =  f.selector == depositSig() || f.selector == depositWithTypeSig();
-    bool isMint = f.selector == mintSig() || f.selector == mintWithTypeSig();
-
     bool totalSupplyIncreased = shareTokenTotalSupplyBefore < shareTokenTotalSupplyAfter;
 
     mathint expectedBalance = siloBalanceBefore + assetsOrShares;
@@ -49,10 +46,10 @@ rule VC_Silo_total_collateral_increase(
     assert totalSupplyIncreased => totalDepositsBefore < totalDepositsAfter,
         "Total deposits should increase if total supply of share tokens increased";
 
-    assert totalSupplyIncreased => isDeposit || isMint || f.selector == transitionCollateralSig(),
+    assert totalSupplyIncreased => fnAllowedToIncreaseShareCollateralTotalSupply(f),
         "Total supply of share tokens should increase only if deposit, mint or transitionCollateral fn was called";
 
-    assert totalSupplyIncreased && isDeposit => expectedBalance == siloBalanceAfter &&
+    assert totalSupplyIncreased && isDeposit() => expectedBalance == siloBalanceAfter &&
         (
             (!withInterest && expectedTotalDeposits == totalDepositsAfter) ||
             // with an interest it should be bigger or the same
@@ -62,7 +59,7 @@ rule VC_Silo_total_collateral_increase(
 
     mathint expectedSharesBalance = balanceSharesBefore + assetsOrShares;
 
-    assert totalSupplyIncreased && isMint =>
+    assert totalSupplyIncreased && isMint() =>
         expectedSharesBalance - 1 == balanceSharesAfter || expectedSharesBalance == balanceSharesAfter,
         "Mint fn should increase balance of share tokens";
 

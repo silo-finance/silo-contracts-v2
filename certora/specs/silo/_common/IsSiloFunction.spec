@@ -1,5 +1,13 @@
 import "../_common/SiloFunctionSelector.spec";
 
+function isDeposit(method f) returns bool {
+    return f.selector == depositSig() || f.selector == depositWithTypeSig();
+}
+
+function isMint(method f) returns bool {
+    return f.selector == mintSig() || f.selector == mintWithTypeSig();
+}
+
 function fnAllowedToCallAccrueInterest(method f) returns bool {
     return accrueInterestSig() == f.selector ||
             depositSig() == f.selector ||
@@ -42,4 +50,8 @@ function fnAllowedToIncreaseShareProtectedTotalSupply(method f) returns bool {
         f.selector == mintSig() ||
         f.selector == mintWithTypeSig() ||
         f.selector == transitionCollateralSig();
+}
+
+function fnAllowedToIncreaseShareCollateralTotalSupply(method f) returns bool {
+    return fnAllowedToIncreaseShareProtectedTotalSupply(f); // the same as for share protected collateral token
 }
