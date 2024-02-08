@@ -1,5 +1,5 @@
 import "../_common/OnlySilo0SetUp.spec";
-import "../_common/SiloFunctionSelector.spec";
+import "../_common/IsSiloFunction.spec";
 import "../_common/SiloMethods.spec";
 import "../_common/Helpers.spec";
 import "../_common/CommonSummarizations.spec";
@@ -8,7 +8,8 @@ import "../../_simplifications/Silo_isSolvent_ghost.spec";
 import "../../_simplifications/SimplifiedGetCompoundInterestRateAndUpdate.spec";
 
 methods {
-    function Silo._accrueInterest() internal returns (uint256, ISiloConfig.ConfigData memory) => _accrueInterestCallChecker();
+    function Silo._accrueInterest() internal returns (uint256, ISiloConfig.ConfigData memory) =>
+        _accrueInterestCallChecker();
 }
 
 ghost bool callToAccrueInterest;
@@ -33,20 +34,6 @@ rule UT_Silo_accrueInterest(env e, method f, calldataarg args) filtered { f -> !
 
     f(e, args);
 
-    bool fnAllowedToCallAccrueInterest =
-        accrueInterestSig() == f.selector ||
-        depositSig() == f.selector ||
-        depositWithTypeSig() == f.selector ||
-        withdrawSig() == f.selector ||
-        withdrawWithTypeSig() == f.selector ||
-        mintSig() == f.selector ||
-        mintWithTypeSig() == f.selector ||
-        liquidationCallSig() == f.selector ||
-        transitionCollateralSig() == f.selector ||
-        redeemSig() == f.selector ||
-        repaySig() == f.selector ||
-        repaySharesSig() == f.selector;
-
-    assert callToAccrueInterest <=> fnAllowedToCallAccrueInterest,
+    assert callToAccrueInterest <=> fnAllowedToCallAccrueInterest(f),
         "Only some functions can call accrueInterest";
 }
