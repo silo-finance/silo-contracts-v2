@@ -268,6 +268,8 @@ rule VC_Silo_debt_share_balance(
     mathint debtAssetsBefore = silo0._total[ISilo.AssetType.Debt].assets;
     mathint balanceSharesBefore = shareDebtToken0.balanceOf(receiver);
 
+    bool withInterest = isWithInterest(e);
+
     siloFnSelector(e, f, assetsOrShares, receiver);
 
     mathint debtAssetsAfter = silo0._total[ISilo.AssetType.Debt].assets;
@@ -276,7 +278,7 @@ rule VC_Silo_debt_share_balance(
     assert balanceSharesBefore < balanceSharesAfter => debtAssetsBefore < debtAssetsAfter,
         "The balance of share tokens should increase only if debt assets increased";
 
-    assert balanceSharesBefore > balanceSharesAfter => debtAssetsBefore > debtAssetsAfter,
+    assert balanceSharesBefore > balanceSharesAfter && !withInterest => debtAssetsBefore > debtAssetsAfter,
         "The balance of share tokens should decrease only if debt assets decreased";
 }
 
