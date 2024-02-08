@@ -197,7 +197,7 @@ rule VC_Silo_total_debt_increase(
     assert totalSupplyIncreased => debtAssetsBefore < debtAssetsAfter,
         "Total debt should increase if total supply of share tokens increased";
 
-     assert totalSupplyIncreased => fnAllowedToIncreaseShareDebtTotalSupply(f),
+    assert totalSupplyIncreased => fnAllowedToIncreaseShareDebtTotalSupply(f),
         "Total supply of share tokens should increase only if borrow, borrowShare or leverage fn was called";
 
     assert debtAssetsBefore < debtAssetsAfter && !withInterest =>
@@ -241,7 +241,7 @@ rule VC_Silo_total_debt_decrease(
     assert totalSupplyDecreased && !withInterest => debtAssetsBefore > debtAssetsAfter,
         "Total debt should decrease if total supply of share tokens decreased";
 
-     assert totalSupplyDecreased => fnAllowedToDecreaseShareDebtTotalSupply(f),
+    assert totalSupplyDecreased => fnAllowedToDecreaseShareDebtTotalSupply(f),
         "Total supply of share tokens should decrease only if repay, repayShare or iquidationCall fn was called";
 
     assert debtAssetsBefore > debtAssetsAfter && !withInterest =>
