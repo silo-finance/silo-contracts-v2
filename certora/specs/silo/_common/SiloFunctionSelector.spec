@@ -34,6 +34,14 @@ function siloFnSelector(
         require receiver != currentContract;
         ISilo.AssetType anyType;
         mint(e, assetsOrShares, receiver, anyType);
+    } else if (f.selector == borrowSig()) {
+        address anyBorrower;
+        require receiver != currentContract;
+        borrow(e, assetsOrShares, receiver, anyBorrower);
+    } else if (f.selector == borrowSharesSig()) {
+        address anyBorrower;
+        require receiver != currentContract;
+        borrowShares(e, assetsOrShares, receiver, anyBorrower);
     } else {
         calldataarg args;
         f(e, args);

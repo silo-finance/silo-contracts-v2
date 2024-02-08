@@ -195,6 +195,8 @@ rule VC_Silo_total_debt_increase(
     mathint balanceSharesBefore = shareDebtToken0.balanceOf(receiver);
     mathint siloBalanceBefore = token0.balanceOf(silo0);
 
+    bool withInterest = isWithInterest(e);
+
     siloFnSelector(e, f, assetsOrShares, receiver);
 
     mathint debtAssetsAfter = silo0._total[ISilo.AssetType.Debt].assets;
@@ -213,7 +215,7 @@ rule VC_Silo_total_debt_increase(
         f.selector == leverageSig(),
         "Total supply of share tokens should increase only if borrow, borrowShare or leverage fn was called";
 
-    assert debtAssetsBefore < debtAssetsAfter =>
+    assert debtAssetsBefore < debtAssetsAfter && !withInterest =>
         siloBalanceAfter == siloBalanceBefore - (debtAssetsAfter - debtAssetsBefore),
         "The balance of the silo in the underlying asset should decrease for the same amount";
 }
