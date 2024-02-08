@@ -98,14 +98,13 @@ contract MaxBorrowTest is SiloLittleHelper, Test {
 
     /*
     forge test -vv --ffi --mt test_maxBorrow_withInterest
-    TODO: fails with (21257, 22568)
     */
     /// forge-config: core.fuzz.runs = 1000
-    function test_skip_maxBorrow_withInterest_fuzz(
+    function test_maxBorrow_withInterest_fuzz(
         uint128 _collateral,
         uint128 _liquidity
     ) public {
-        // (uint128 _collateral, uint128 _liquidity) = (17610, 20969);
+        // (uint128 _collateral, uint128 _liquidity) = (21257, 22568);
 
         vm.assume(_collateral > 0);
         vm.assume(_liquidity > 0);
@@ -173,8 +172,8 @@ contract MaxBorrowTest is SiloLittleHelper, Test {
         maxBorrow = silo1.maxBorrow(borrower);
         assertGt(maxBorrow, 0, "we can borrow again after repay");
 
-        _assertWeCanNotBorrowAboveMax(maxBorrow, 4);
-        _assertMaxBorrowIsZeroAtTheEnd(1);
+        _assertWeCanNotBorrowAboveMax(maxBorrow, 3);
+        _assertMaxBorrowIsZeroAtTheEnd(0);
     }
 
     /*
@@ -209,7 +208,7 @@ contract MaxBorrowTest is SiloLittleHelper, Test {
 
         emit log("Timestamp is increased by 41 seconds");
 
-        emit log("User 0 deposits 115792089237316195417293883273301227089434195242432897623355228563449095127042 assets into Silo 1");
+        emit log("User 0 deposits 1157...127042 assets into Silo 1");
         _deposit(115792089237316195417293883273301227089434195242432897623355228563449095127042, user0);
 
         uint256 liquidity = silo0.getLiquidity();
@@ -220,9 +219,9 @@ contract MaxBorrowTest is SiloLittleHelper, Test {
         uint256 maxBorrow = silo0.maxBorrow(user2);
         emit log_named_uint("user2 maxBorrow", maxBorrow);
 
-        emit log("User 2 attempts to borrow maxBorrow assets, it fails with AboveMaxLtv()");
+        emit log("User 2 attempts to borrow maxBorrow assets, it should NOT fail with AboveMaxLtv()");
         vm.prank(user2);
-        silo0.borrow(maxBorrow, user2, user2);
+        silo0.borrow(maxBorrow, user2, user2); // expect to pass
     }
 
     function _assertWeCanNotBorrowAboveMax(uint256 _maxBorrow) internal {
