@@ -40,6 +40,14 @@ function siloFnSelector(
         bytes data;
         require anyBorrower != currentContract;
         leverage(e, assetsOrShares, receiver, anyBorrower, data);
+    } else if (f.selector == repaySig()) {
+        address anyBorrower;
+        require anyBorrower != currentContract;
+        repay(e, assetsOrShares, anyBorrower);
+    } else if (f.selector == repaySharesSig()) {
+        address anyBorrower;
+        require anyBorrower != currentContract;
+        repayShares(e, assetsOrShares, anyBorrower);
     } else {
         calldataarg args;
         f(e, args);

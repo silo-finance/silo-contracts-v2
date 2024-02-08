@@ -49,7 +49,7 @@ rule VC_Silo_total_collateral_increase(
     assert totalSupplyIncreased => fnAllowedToIncreaseShareCollateralTotalSupply(f),
         "Total supply of share tokens should increase only if deposit, mint or transitionCollateral fn was called";
 
-    assert totalSupplyIncreased && isDeposit() => expectedBalance == siloBalanceAfter &&
+    assert totalSupplyIncreased && isDeposit(f) => expectedBalance == siloBalanceAfter &&
         (
             (!withInterest && expectedTotalDeposits == totalDepositsAfter) ||
             // with an interest it should be bigger or the same
@@ -59,7 +59,7 @@ rule VC_Silo_total_collateral_increase(
 
     mathint expectedSharesBalance = balanceSharesBefore + assetsOrShares;
 
-    assert totalSupplyIncreased && isMint() =>
+    assert totalSupplyIncreased && isMint(f) =>
         expectedSharesBalance - 1 == balanceSharesAfter || expectedSharesBalance == balanceSharesAfter,
         "Mint fn should increase balance of share tokens";
 
@@ -247,4 +247,99 @@ rule VC_Silo_total_debt_decrease(
     assert debtAssetsBefore > debtAssetsAfter && !withInterest =>
         siloBalanceAfter == siloBalanceBefore + (debtAssetsBefore - debtAssetsAfter),
         "The balance of the silo in the underlying asset should increase for the same amount";
+}
+
+/**
+certoraRun certora/config/silo/silo0.conf \
+    --parametric_contracts Silo0 \
+    --msg "VC_Silo_debt_share_balance" \
+    --rule "VC_Silo_debt_share_balance" \
+    --verify "Silo0:certora/specs/silo/variable-changes/VariableChangesSilo0.spec"
+*/
+rule VC_Silo_debt_share_balance(
+    env e,
+    method f,
+    uint256 assetsOrShares,
+    address receiver
+) filtered { f -> !f.isView} {
+    silo0SetUp(e);
+    requireDebtToken0TotalAndBalancesIntegrity();
+
+    mathint debtAssetsBefore = silo0._total[ISilo.AssetType.Debt].assets;
+    mathint balanceSharesBefore = shareDebtToken0.balanceOf(receiver);
+
+    siloFnSelector(e, f, assetsOrShares, receiver);
+
+    mathint debtAssetsAfter = silo0._total[ISilo.AssetType.Debt].assets;
+    mathint balanceSharesAfter = shareDebtToken0.balanceOf(receiver);
+
+    assert balanceSharesBefore < balanceSharesAfter => debtAssetsBefore < debtAssetsAfter,
+        "The balance of share tokens should increase only if debt assets increased";
+
+    assert balanceSharesBefore > balanceSharesAfter => debtAssetsBefore > debtAssetsAfter,
+        "The balance of share tokens should decrease only if debt assets decreased";
+}
+
+/**
+certoraRun certora/config/silo/silo0.conf \
+    --parametric_contracts Silo0 \
+    --msg "VC_Silo_protected_share_balance" \
+    --rule "VC_Silo_protected_share_balance" \
+    --verify "Silo0:certora/specs/silo/variable-changes/VariableChangesSilo0.spec"
+*/
+rule VC_Silo_protected_share_balance(
+    env e,
+    method f,
+    uint256 assetsOrShares,
+    address receiver
+) filtered { f -> !f.isView} {
+    silo0SetUp(e);
+    requireProtectedToken0TotalAndBalancesIntegrity();
+
+    mathint protectedtAssetsBefore = silo0._total[ISilo.AssetType.Protected].assets;
+    mathint balanceSharesBefore = shareProtectedCollateralToken0.balanceOf(receiver);
+
+    siloFnSelector(e, f, assetsOrShares, receiver);
+
+    mathint protectedAssetsAfter = silo0._total[ISilo.AssetType.Protected].assets;
+    mathint balanceSharesAfter = shareProtectedCollateralToken0.balanceOf(receiver);
+
+    assert balanceSharesBefore < balanceSharesAfter => protectedtAssetsBefore < protectedAssetsAfter,
+        "The balance of share tokens should increase only if protected assets increased";
+
+    assert balanceSharesBefore > balanceSharesAfter => protectedtAssetsBefore > protectedAssetsAfter,
+        "The balance of share tokens should decrease only if protected assets decreased";
+}
+
+/**
+certoraRun certora/config/silo/silo0.conf \
+    --parametric_contracts Silo0 \
+    --msg "VC_Silo_collateral_share_balance" \
+    --rule "VC_Silo_collateral_share_balance" \
+    --verify "Silo0:certora/specs/silo/variable-changes/VariableChangesSilo0.spec"
+*/
+rule VC_Silo_collateral_share_balance(
+    env e,
+    method f,
+    uint256 assetsOrShares,
+    address receiver
+) filtered { f -> !f.isView} {
+    silo0SetUp(e);
+    requireCollateralToken0TotalAndBalancesIntegrity();
+
+    mathint collateralAssetsBefore = silo0._total[ISilo.AssetType.Collateral].assets;
+    mathint balanceSharesBefore = shareCollateralToken0.balanceOf(receiver);
+
+    siloFnSelector(e, f, assetsOrShares, receiver);
+
+    mathint collateralAssetsAfter = silo0._total[ISilo.AssetType.Collateral].assets;
+    mathint balanceSharesAfter = shareCollateralToken0.balanceOf(receiver);
+
+    assert balanceSharesBefore < balanceSharesAfter && !fnAllowedToChangeCollateralBalanceWithoutTotalAssets(f) =>
+        collateralAssetsBefore < collateralAssetsAfter,
+        "The balance of share tokens should increase only if collateral assets increased";
+
+    assert balanceSharesBefore > balanceSharesAfter && !fnAllowedToChangeCollateralBalanceWithoutTotalAssets(f) =>
+        collateralAssetsBefore > collateralAssetsAfter,
+        "The balance of share tokens should decrease only if collateral assets decreased";
 }

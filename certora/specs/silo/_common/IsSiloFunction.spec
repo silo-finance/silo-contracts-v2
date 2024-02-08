@@ -55,3 +55,9 @@ function fnAllowedToIncreaseShareProtectedTotalSupply(method f) returns bool {
 function fnAllowedToIncreaseShareCollateralTotalSupply(method f) returns bool {
     return fnAllowedToIncreaseShareProtectedTotalSupply(f); // the same as for share protected collateral token
 }
+
+function fnAllowedToChangeCollateralBalanceWithoutTotalAssets(method f) returns bool {
+    return f.selector == transitionCollateralSig() ||
+        f.selector == transferSig() ||
+        f.selector == transferFromSig();
+}
