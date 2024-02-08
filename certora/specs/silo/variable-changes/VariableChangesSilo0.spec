@@ -1,5 +1,5 @@
 import "../_common/OnlySilo0SetUp.spec";
-import "../_common/SiloFunctionSelector.spec";
+import "../_common/IsSiloFunction.spec";
 import "../_common/SiloMethods.spec";
 import "../_common/Helpers.spec";
 import "../_common/CommonSummarizations.spec";
@@ -101,15 +101,12 @@ rule VC_Silo_total_protected_increase(
     mathint balanceSharesAfter = shareProtectedCollateralToken0.balanceOf(receiver);
     mathint siloBalanceAfter = token0.balanceOf(silo0);
 
-    bool isDeposit =  f.selector == depositSig() || f.selector == depositWithTypeSig();
-    bool isMint = f.selector == mintSig() || f.selector == mintWithTypeSig();
-
     bool totalSupplyIncreased = shareTokenTotalSupplyBefore < shareTokenTotalSupplyAfter;
 
     assert totalSupplyIncreased => protectedAssetsBefore < protectedAssetsAfter,
         "Total deposits should increase if total supply of share tokens increased";
 
-    assert totalSupplyIncreased => isDeposit || isMint || f.selector == transitionCollateralSig(),
+    assert totalSupplyIncreased => fnAllowedToIncreaseShareProtectedTotalSupply(f),
         "Total supply of share tokens should increase only if deposit, mint or transitionCollateral fn was called";
 
     assert protectedAssetsBefore < protectedAssetsAfter &&  f.selector != transitionCollateralSig() =>
@@ -155,13 +152,7 @@ rule VC_Silo_total_protected_decrease(
     assert totalSupplyDecreased => protectedAssetsBefore > protectedAssetsAfter,
         "Total deposits should decrease if total supply of share tokens decreased";
 
-    assert totalSupplyDecreased =>
-        f.selector == withdrawSig() ||
-        f.selector == withdrawWithTypeSig() ||
-        f.selector == withdrawWithTypeSig() ||
-        f.selector == redeemSig() ||
-        f.selector == liquidationCallSig() ||
-        f.selector == transitionCollateralSig(),
+    assert totalSupplyDecreased => fnAllowedToDecreaseShareProtectedTotalSupply(f),
         "Total supply of share tokens should decrease only if deposit, mint or transitionCollateral fn was called";
 
     assert protectedAssetsBefore > protectedAssetsAfter && f.selector != transitionCollateralSig() =>
@@ -209,10 +200,7 @@ rule VC_Silo_total_debt_increase(
     assert totalSupplyIncreased => debtAssetsBefore < debtAssetsAfter,
         "Total debt should increase if total supply of share tokens increased";
 
-     assert totalSupplyIncreased =>
-        f.selector == borrowSig() ||
-        f.selector == borrowSharesSig() ||
-        f.selector == leverageSig(),
+     assert totalSupplyIncreased => fnAllowedToIncreaseShareDebtTotalSupply(f),
         "Total supply of share tokens should increase only if borrow, borrowShare or leverage fn was called";
 
     assert debtAssetsBefore < debtAssetsAfter && !withInterest =>
@@ -256,10 +244,7 @@ rule VC_Silo_total_debt_decrease(
     assert totalSupplyDecreased && !withInterest => debtAssetsBefore > debtAssetsAfter,
         "Total debt should decrease if total supply of share tokens decreased";
 
-     assert totalSupplyDecreased =>
-        f.selector == repaySig() ||
-        f.selector == repaySharesSig() ||
-        f.selector == liquidationCallSig(),
+     assert totalSupplyDecreased => fnAllowedToDecreaseShareDebtTotalSupply(f),
         "Total supply of share tokens should decrease only if repay, repayShare or iquidationCall fn was called";
 
     assert debtAssetsBefore > debtAssetsAfter && !withInterest =>
