@@ -577,12 +577,12 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
             ISiloConfig.ConfigData memory debtConfig, ISiloConfig.ConfigData memory collateralConfig
         ) = cachedConfig.getConfigs(address(this));
 
-        (uint256 totalSiloAssets, uint256 totalShares) =
+        (uint256 totalDebtAssets, uint256 totalDebtShares) =
             SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(debtConfig, AssetType.Debt);
 
         (
             ,maxShares
-        ) = _callMaxBorrow(collateralConfig, debtConfig, _borrower, totalSiloAssets, totalShares, cachedConfig);
+        ) = _callMaxBorrow(collateralConfig, debtConfig, _borrower, totalDebtAssets, totalDebtShares, cachedConfig);
     }
 
     /// @inheritdoc ISilo
@@ -701,7 +701,9 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
         (ISiloConfig.ConfigData memory debtConfig, ISiloConfig.ConfigData memory collateralConfig) =
             config.getConfigs(address(this));
 
-        _callAccrueInterestForAsset(debtConfig.interestRateModel, debtConfig.daoFee, debtConfig.deployerFee);
+        _callAccrueInterestForAsset(
+            debtConfig.interestRateModel, debtConfig.daoFee, debtConfig.deployerFee, debtConfig.otherSilo
+        );
 
         uint256 assets;
 
@@ -758,8 +760,9 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
         if (_collateralAsset != collateralConfig.token) revert UnexpectedCollateralToken();
         if (_debtAsset != debtConfig.token) revert UnexpectedDebtToken();
 
-        _callAccrueInterestForAsset(debtConfig.interestRateModel, debtConfig.daoFee, debtConfig.deployerFee);
-        ISilo(debtConfig.otherSilo).accrueInterest();
+        _callAccrueInterestForAsset(
+            debtConfig.interestRateModel, debtConfig.daoFee, debtConfig.deployerFee, debtConfig.otherSilo
+        );
 
         if (collateralConfig.callBeforeQuote) {
             ISiloOracle(collateralConfig.solvencyOracle).beforeQuote(collateralConfig.token);
@@ -832,7 +835,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
         configData = config.getConfig(address(this));
 
         accruedInterest = _callAccrueInterestForAsset(
-            configData.interestRateModel, configData.daoFee, configData.deployerFee
+            configData.interestRateModel, configData.daoFee, configData.deployerFee, address(0)
         );
     }
 
@@ -891,8 +894,12 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
         (ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig) =
             config.getConfigs(address(this));
 
-        _accrueInterest();
-        ISilo(debtConfig.silo).accrueInterest();
+        _callAccrueInterestForAsset(
+            collateralConfig.interestRateModel,
+            collateralConfig.daoFee,
+            collateralConfig.deployerFee,
+            collateralConfig.otherSilo
+        );
 
         // this if helped with Stack too deep
         if (_assetType == AssetType.Collateral) {
@@ -957,7 +964,9 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
         (ISiloConfig.ConfigData memory debtConfig, ISiloConfig.ConfigData memory collateralConfig) =
             config.getConfigs(address(this));
 
-        _callAccrueInterestForAsset(debtConfig.interestRateModel, debtConfig.daoFee, debtConfig.deployerFee);
+        _callAccrueInterestForAsset(
+            debtConfig.interestRateModel, debtConfig.daoFee, debtConfig.deployerFee, debtConfig.otherSilo
+        );
 
         (assets, shares) = _callBorrow(debtConfig, _assets, _shares, _receiver, _borrower, msg.sender);
 
@@ -1063,16 +1072,16 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
         ISiloConfig.ConfigData memory collateralConfig,
         ISiloConfig.ConfigData memory debtConfig,
         address _borrower,
-        uint256 _totalSiloAssets,
-        uint256 _totalShares,
+        uint256 _totalDebtAssets,
+        uint256 _totalDebtShares,
         ISiloConfig cachedConfig
     ) internal view virtual returns (uint256 maxAssets, uint256 maxShares) {
         return SiloLendingLib.maxBorrow(
             collateralConfig,
             debtConfig,
             _borrower,
-            _totalSiloAssets,
-            _totalShares,
+            _totalDebtAssets,
+            _totalDebtShares,
             cachedConfig
         );
     }
@@ -1162,8 +1171,13 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
     function _callAccrueInterestForAsset(
         address _interestRateModel,
         uint256 _daoFee,
-        uint256 _deployerFee
+        uint256 _deployerFee,
+        address _otherSilo
     ) internal virtual returns (uint256 accruedInterest) {
+        if (_otherSilo != address(0)) {
+            ISilo(_otherSilo).accrueInterest();
+        }
+
         return SiloLendingLib.accrueInterestForAsset(
             _interestRateModel,
             _daoFee,
