@@ -10,6 +10,7 @@ import {ISilo} from "../interfaces/ISilo.sol";
 import {IShareToken} from "../interfaces/IShareToken.sol";
 import {SiloSolvencyLib} from "./SiloSolvencyLib.sol";
 import {SiloMathLib} from "./SiloMathLib.sol";
+import {SiloStdLib} from "./SiloStdLib.sol";
 
 // solhint-disable function-max-lines
 
@@ -59,7 +60,8 @@ library SiloERC4626Lib {
     /// @param _config Configuration of the silo
     /// @param _owner Address of the user for which the maximum withdrawal amount is calculated
     /// @param _assetType The type of asset being considered for withdrawal
-    /// @param _totalAssets The total assets in the silo. Can be collateral or protected depending on `_assetType`.
+    /// @param _totalAssets The total PROTECTED assets in the silo. In case of collateral use `0`, total
+    /// collateral will be calculated internally with interest
     /// @param _liquidity The available liquidity in the silo
     /// @return assets The maximum assets that the user can withdraw
     /// @return shares The maximum shares that the user can withdraw
@@ -76,9 +78,20 @@ library SiloERC4626Lib {
             ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig
         ) = _config.getConfigs(address(this));
 
-        uint256 shareTokenTotalSupply = _assetType == ISilo.AssetType.Collateral
-            ? IShareToken(collateralConfig.collateralShareToken).totalSupply()
-            : IShareToken(collateralConfig.protectedShareToken).totalSupply();
+        uint256 shareTokenTotalSupply;
+
+        if (_assetType == ISilo.AssetType.Collateral) {
+            shareTokenTotalSupply = IShareToken(collateralConfig.collateralShareToken).totalSupply();
+
+            _totalAssets = SiloStdLib.getTotalCollateralAssetsWithInterest(
+                address(this),
+                collateralConfig.interestRateModel,
+                collateralConfig.daoFee,
+                collateralConfig.deployerFee
+            );
+        } else {
+            shareTokenTotalSupply = IShareToken(collateralConfig.protectedShareToken).totalSupply();
+        }
 
         SiloSolvencyLib.LtvData memory ltvData;
 
