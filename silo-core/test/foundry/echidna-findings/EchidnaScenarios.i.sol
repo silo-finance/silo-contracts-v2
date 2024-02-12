@@ -74,4 +74,35 @@ Revert NotEnoughLiquidity
         _dumpState(4);
         __maxRedeem_correctMax(4);
     }
+
+    /*
+maxBorrowShares_correctReturnValue(uint8): failed!💥
+Call sequence, shrinking 294/500:
+deposit(1,false,18362350053917916671701463106358)
+previewDeposit_doesNotReturnMoreThanDeposit(44,5021491078257170633099496333274079409660413512867881700899062515742671857130)
+mint(0,false,127287174252953083636439506782)
+maxBorrow_correctReturnValue(21)
+maxWithdraw_correctMax(110)
+previewDeposit_doesNotReturnMoreThanDeposit(2,62718039246364723308705975150828086672) Time delay: 3865 seconds Block delay: 1791
+maxBorrowShares_correctReturnValue(1)
+
+Revert AboveMaxLtv ()
+
+    forge test -vv --ffi --mt test_cover_echidna_scenario_3
+
+    this case covers the bug with maxBorrowShare
+    */
+    function test_cover_echidna_scenario_3() public {
+        __deposit(1,false,18362350053917916671701463106358);
+        __previewDeposit_doesNotReturnMoreThanDeposit(44,5021491078257170633099496333274079409660413512867881700899062515742671857130);
+        __mint(0,false,127287174252953083636439506782);
+        __maxBorrow_correctReturnValue(21);
+        __maxWithdraw_correctMax(110);
+
+        __timeDelay(3865, 1791);
+        // Time delay: 3865 seconds Block delay: 1791
+        __previewDeposit_doesNotReturnMoreThanDeposit(2,62718039246364723308705975150828086672); // Time delay: 3865 seconds Block delay: 1791
+
+        __maxBorrowShares_correctReturnValue(1);
+    }
 }
