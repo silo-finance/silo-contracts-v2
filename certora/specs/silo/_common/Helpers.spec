@@ -10,3 +10,14 @@ function isWithInterest(env e) returns bool {
 
     return siloIRTimestamp != 0 && siloIRTimestamp < e.block.timestamp && debt != 0;
 }
+
+function requireCorrectSiloBalance() {
+    mathint collateralAssets = silo0._total[ISilo.AssetType.Collateral].assets;
+    mathint protectedAssets = silo0._total[ISilo.AssetType.Protected].assets;
+    mathint siloBalance = token0.balanceOf(silo0);
+
+    mathint balanceSum = collateralAssets + protectedAssets;
+
+    require balanceSum < max_uint256;
+    require siloBalance >= protectedAssets && siloBalance <= balanceSum;
+}

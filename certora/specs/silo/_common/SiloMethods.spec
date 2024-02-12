@@ -6,6 +6,7 @@ methods {
     function getCollateralAssets() external returns(uint256) envfree;
     function getDebtAssets() external returns(uint256) envfree;
     function getCollateralAndProtectedAssets() external returns(uint256,uint256) envfree;
+    function getLiquidity() external returns(uint256) envfree;
     
     // Harness:
     function getSiloDataInterestRateTimestamp() external returns(uint256) envfree;

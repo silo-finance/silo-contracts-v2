@@ -60,6 +60,7 @@
   Implementation: rule `VS_Silo_totals_share_token_totalSupply`
 
 - _siloData.interestRateTimestamp is zero => _siloData.daoAndDeployerFees is zero. \
+  _siloData.daoAndDeployerFees can encrease without _siloData.interestRateTimestamp only on flashLoan fn. \
   Implementation: rule `VS_Silo_interestRateTimestamp_daoAndDeployerFees`
 
 - Silo._total[ISilo.AssetType.Debt].assets is not zero => Silo._total[ISilo.AssetType.Collateral].assets is not zero. \
@@ -73,7 +74,7 @@
   Implementation: rule `VS`
 
 - balance of the silo should never be less than Silo._total[ISilo.AssetType.Protected].assets
-  Implementation: rule `VS`
+  Implementation: rule `VS_Silo_balance_totalAssets`
 
 - Available liquidity returned by the 'getLiquidity' fn should not be higher than the balance of the silo - Silo._total[ISilo.AssetType.Protected].assets. \
   Implementation: rule `VS_silo_getLiquidity_less_equal_balance`
