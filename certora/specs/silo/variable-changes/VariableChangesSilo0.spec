@@ -24,7 +24,7 @@ rule VC_Silo_total_collateral_increase(
     requireToken0TotalAndBalancesIntegrity();
     requireCollateralToken0TotalAndBalancesIntegrity();
 
-    mathint totalDepositsBefore = getCollateralAssets();
+    mathint totalDepositsBefore = silo0._total[ISilo.AssetType.Collateral].assets;
     mathint shareTokenTotalSupplyBefore = shareCollateralToken0.totalSupply();
     mathint balanceSharesBefore = shareCollateralToken0.balanceOf(receiver);
     mathint siloBalanceBefore = token0.balanceOf(silo0);
@@ -33,7 +33,7 @@ rule VC_Silo_total_collateral_increase(
 
     siloFnSelector(e, f, assetsOrShares, receiver);
 
-    mathint totalDepositsAfter = getCollateralAssets();
+    mathint totalDepositsAfter = silo0._total[ISilo.AssetType.Collateral].assets;
     mathint shareTokenTotalSupplyAfter = shareCollateralToken0.totalSupply();
     mathint balanceSharesAfter = shareCollateralToken0.balanceOf(receiver);
     mathint siloBalanceAfter = token0.balanceOf(silo0);
@@ -55,7 +55,7 @@ rule VC_Silo_total_collateral_increase(
             // with an interest it should be bigger or the same
             (withInterest && expectedTotalDeposits <= totalDepositsAfter)
         ),
-        "Deposit and mint fn should increase total deposits and silo balance";
+        "Deposit fn should increase total deposits and silo balance";
 
     mathint expectedSharesBalance = balanceSharesBefore + assetsOrShares;
 
@@ -111,7 +111,7 @@ rule VC_Silo_total_protected_increase(
         "The balance of the silo in the underlying asset should increase for the same amount";
 
     assert protectedAssetsBefore < protectedAssetsAfter &&  f.selector == transitionCollateralSig() =>
-            siloBalanceAfter == siloBalanceBefore,
+            siloBalanceAfter == siloBalanceBefore && totalSupplyIncreased,
         "The balance of the silo should not change on transitionCollateral fn";
 }
 
@@ -150,7 +150,7 @@ rule VC_Silo_total_protected_decrease(
         "Total deposits should decrease if total supply of share tokens decreased";
 
     assert totalSupplyDecreased => fnAllowedToDecreaseShareProtectedTotalSupply(f),
-        "Total supply of share tokens should decrease only if deposit, mint or transitionCollateral fn was called";
+        "The total supply of share tokens should decrease only if allowed fn was called";
 
     assert protectedAssetsBefore > protectedAssetsAfter && f.selector != transitionCollateralSig() =>
         siloBalanceAfter == siloBalanceBefore - (protectedAssetsBefore - protectedAssetsAfter),
@@ -331,6 +331,9 @@ rule VC_Silo_collateral_share_balance(
 
     mathint collateralAssetsBefore = silo0._total[ISilo.AssetType.Collateral].assets;
     mathint balanceSharesBefore = shareCollateralToken0.balanceOf(receiver);
+
+    // Turning off an interest as otherwise `decrease` can't be verified.
+    require isWithInterest(e) == false;
 
     siloFnSelector(e, f, assetsOrShares, receiver);
 

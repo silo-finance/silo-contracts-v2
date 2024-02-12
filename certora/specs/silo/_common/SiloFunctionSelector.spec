@@ -48,6 +48,9 @@ function siloFnSelector(
         address anyBorrower;
         require anyBorrower != currentContract;
         repayShares(e, assetsOrShares, anyBorrower);
+    } else if (f.selector == transitionCollateralSig()) {
+        ISilo.AssetType anyType;
+        transitionCollateral(e, assetsOrShares, receiver, anyType);
     } else {
         calldataarg args;
         f(e, args);

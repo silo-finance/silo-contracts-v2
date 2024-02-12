@@ -57,7 +57,5 @@ function fnAllowedToIncreaseShareCollateralTotalSupply(method f) returns bool {
 }
 
 function fnAllowedToChangeCollateralBalanceWithoutTotalAssets(method f) returns bool {
-    return f.selector == transitionCollateralSig() ||
-        f.selector == transferSig() ||
-        f.selector == transferFromSig();
+    return f.selector == transferSig() || f.selector == transferFromSig();
 }
