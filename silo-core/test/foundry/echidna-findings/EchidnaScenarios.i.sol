@@ -1,45 +1,14 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.0;
 
-import "forge-std/Test.sol";
 import {Strings} from "openzeppelin-contracts/utils/Strings.sol";
-
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
-import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
-import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
-
-import {MintableToken} from "../_common/MintableToken.sol";
-import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
-import {SiloFixture, SiloConfigOverride} from "../_common/fixtures/SiloFixture.sol";
+import {EchidnaMiddleman} from "./EchidnaMiddleman.sol";
 
 /*
     forge test -vv --ffi --mc EchidnaScenariosTest
 */
-contract EchidnaScenariosTest is SiloLittleHelper, Test {
-    uint256 constant ACTORS_COUNT = 3;
-    mapping (uint256 index => address actor) actors;
-
-    ISiloConfig siloConfig;
-
-    constructor() {
-        actors[0] = makeAddr("Index 0");
-        actors[1] = makeAddr("Index 1");
-        actors[2] = makeAddr("Index 2");
-    }
-
-    function setUp() public {
-        siloConfig = _setUpLocalFixture("Echidna_MOCK");
-
-        assertTrue(siloConfig.getConfig(address(silo0)).maxLtv != 0, "we need borrow to be allowed");
-
-        token0.setOnDemand(true);
-        token1.setOnDemand(true);
-
-        // same block and time as for E2E Echidna
-        vm.warp(1706745600);
-        vm.roll(17336000);
-    }
-
+contract EchidnaScenariosTest is EchidnaMiddleman {
     /*
 mint(uint8,bool,uint256): passing
 maxBorrow_correctReturnValue(uint8): failed!💥
@@ -62,53 +31,47 @@ error Revert AboveMaxLtv ()
 error Revert AboveMaxLtv ()
 
     forge test -vv --ffi --mt test_cover_echidna_scenario_1
+
+    this test case covers the bug we had in maxBorrow
     */
     function test_cover_echidna_scenario_1() public {
-        //        depositNeverMintsZeroShares(0,false,39962600816669483677151)
-        vm.prank(_chooseActor(0));
-        silo1.deposit(39962600816669483677151, _chooseActor(0));
-        //        depositNeverMintsZeroShares(161,true,22168924613129761549643809883710869859261573373213864899764932836300336298504)
-        vm.prank(_chooseActor(161));
-        silo0.deposit(22168924613129761549643809883710869859261573373213864899764932836300336298504, _chooseActor(161));
-        //        borrow(2,false,39858486983777211695540)
-        vm.prank(_chooseActor(2));
-        silo1.borrow(39858486983777211695540, _chooseActor(2), _chooseActor(2));
+        __depositNeverMintsZeroShares(0,false,39962600816669483677151);
+        __depositNeverMintsZeroShares(161,true,22168924613129761549643809883710869859261573373213864899764932836300336298504);
+        __borrow(2,false,39858486983777211695540);
+
         //        *wait* Time delay: 1 seconds Block delay: 1
         vm.warp(block.timestamp + 1);
-        //        maxBorrow_correctReturnValue(0)
 
-        address actor = _chooseActor(0);
-        uint256 maxAssets = silo0.maxBorrow(actor);
+        (uint256 maxAssets, uint256 shares) = __maxBorrow_correctReturnValue(0);
 
-        (address protected, address collateral, ) = siloConfig.getShareTokens(address(silo1));
-        emit log_named_decimal_uint("collateral shares", IShareToken(collateral).balanceOf(actor), 18);
-        emit log_named_decimal_uint("maxAssets", maxAssets, 18);
-        // assertEq(maxAssets, 339682116, "maxAssets from echidna simulation"); // TODO why echidna shows 339682116?
-
-        vm.prank(actor);
-        silo0.borrow(maxAssets, actor, actor); // should not revert!
+        assertEq(maxAssets, 33968211591454069532969, "echidna borrow amount (339682116)");
     }
 
-    function _chooseActor(
-        uint256 value
-    ) internal returns (address) {
-        uint256 low = 0;
-        uint256 high = ACTORS_COUNT - 1;
+    /*
+maxRedeem_correctMax(uint8): failed!💥
+  Call sequence, shrinking 316/500:
+    mint(220,true,39843190113244004124792096928447682291)
+    depositNeverMintsZeroShares(2,false,22786647965505400975764605899155696411742225287612091359740640699919114746382)
+    borrowShares(32,true,20769187434139310514121985316880385)
+    debtSharesNeverLargerThanDebt() Time delay: 2369 seconds Block delay: 4358
+    maxRedeem_correctMax(4)
 
-        if (value < low || value > high) {
-            uint ans = low + (value % (high - low + 1));
-            string memory valueStr = Strings.toString(value);
-            string memory ansStr = Strings.toString(ans);
-            bytes memory message = abi.encodePacked(
-                "Clamping value ",
-                valueStr,
-                " to ",
-                ansStr
-            );
-            emit log(string(message));
-            return actors[ans];
-        }
+Revert NotEnoughLiquidity
 
-        return actors[value];
+    forge test -vv --ffi --mt test_cover_echidna_scenario_2
+
+    this case covers the bug with maxRedeem
+    */
+    function test_cover_echidna_scenario_2() public {
+        __mint(220,true,39843190113244004124792096928447682291);
+        __depositNeverMintsZeroShares(2,false,22786647965505400975764605899155696411742225287612091359740640699919114746382);
+        __borrowShares(32,true,20769187434139310514121985316880385);
+
+        __timeDelay(2369, 4358);
+
+        __debtSharesNeverLargerThanDebt(); // Time delay: 2369 seconds Block delay: 4358
+
+        _dumpState(4);
+        __maxRedeem_correctMax(4);
     }
 }

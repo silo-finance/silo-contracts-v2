@@ -1128,7 +1128,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
             _config,
             _owner,
             _assetType,
-            _total[_assetType].assets,
+            _assetType == AssetType.Protected ? _total[AssetType.Protected].assets : 0, // will be calculated internally
             _assetType == AssetType.Protected ? _total[AssetType.Protected].assets : _callGetLiquidity(_config)
         );
     }
