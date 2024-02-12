@@ -333,7 +333,7 @@ rule VC_Silo_collateral_share_balance(
     mathint balanceSharesBefore = shareCollateralToken0.balanceOf(receiver);
 
     // Turning off an interest as otherwise `decrease` can't be verified.
-    require isWithInterest(e) == false;
+    require !isWithInterest(e);
 
     siloFnSelector(e, f, assetsOrShares, receiver);
 
