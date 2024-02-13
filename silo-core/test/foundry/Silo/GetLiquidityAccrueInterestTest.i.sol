@@ -183,6 +183,6 @@ contract GetLiquidityAccrueInterestTest is SiloLittleHelper, Test {
     }
 
     function _getRawLiquidity(ISilo _silo) internal view returns (uint256) {
-        return _silo.getCollateralAssets() - _silo.getDebtAssets();
+        return _silo.total(ISilo.AssetType.Collateral) - _silo.total(ISilo.AssetType.Debt);
     }
 }

@@ -189,6 +189,9 @@ library SiloStdLib {
         returns (uint256 totalDebtAssetsWithInterest)
     {
         uint256 rcomp = IInterestRateModel(_interestRateModel).getCompoundInterestRate(_silo, block.timestamp);
-        (totalDebtAssetsWithInterest,) = SiloMathLib.getDebtAmountsWithInterest(ISilo(_silo).getDebtAssets(), rcomp);
+
+        (
+            totalDebtAssetsWithInterest,
+        ) = SiloMathLib.getDebtAmountsWithInterest(ISilo(_silo).total(ISilo.AssetType.Debt), rcomp);
     }
 }

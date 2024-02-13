@@ -47,7 +47,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
     /// struct instead of uint256 to pass storage reference to functions.
     /// `total` can have outdated value (without interest), if you doing view call (of off-chain call) please use
     /// getters eg `getCollateralAssets()` to fetch value that includes interest.
-    mapping(AssetType => Assets) public total;
+    mapping(AssetType => Assets) public override total;
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor(ISiloFactory _siloFactory) {
@@ -137,12 +137,23 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
 
     /// @inheritdoc ISilo
     function getCollateralAssets() external view virtual returns (uint256 totalCollateralAssets) {
-        totalCollateralAssets = total[AssetType.Collateral].assets;
+        ISiloConfig.ConfigData memory thisSiloConfig = config.getConfig(address(this));
+
+        totalCollateralAssets = SiloStdLib.getTotalCollateralAssetsWithInterest(
+            thisSiloConfig.silo,
+            thisSiloConfig.interestRateModel,
+            thisSiloConfig.daoFee,
+            thisSiloConfig.deployerFee
+        );
     }
 
     /// @inheritdoc ISilo
     function getDebtAssets() external view virtual returns (uint256 totalDebtAssets) {
-        totalDebtAssets = total[AssetType.Debt].assets;
+        ISiloConfig.ConfigData memory thisSiloConfig = config.getConfig(address(this));
+
+        totalDebtAssets = SiloStdLib.getTotalDebtAssetsWithInterest(
+            thisSiloConfig.silo, thisSiloConfig.interestRateModel
+        );
     }
 
     /// @inheritdoc ISilo
