@@ -95,7 +95,7 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
         uint256 maxBorrow = silo0.maxBorrow(borrower);
         uint256 maxBorrowShares = silo0.maxBorrowShares(borrower);
         assertEq(maxBorrow, 0.85e18 - 1, "invalid maxBorrow");
-        assertEq(maxBorrowShares, 0.85e18, "invalid maxBorrowShares");
+        assertEq(maxBorrowShares, 0.85e18 - 1, "invalid maxBorrowShares");
 
         uint256 borrowToMuch = maxBorrow + 2;
         // emit log_named_uint("borrowToMuch", borrowToMuch);

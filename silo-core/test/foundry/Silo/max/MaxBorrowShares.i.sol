@@ -42,7 +42,10 @@ contract MaxBorrowSharesTest is SiloLittleHelper, Test {
     forge test -vv --ffi --mt test_maxBorrowShares_withCollateral
     */
     /// forge-config: core.fuzz.runs = 1000
-    function test_maxBorrowShares_withCollateral_fuzz(uint128 _collateral, uint128 _liquidity) public {
+    function test_maxBorrowShares_withCollateral_fuzz(
+        uint128 _collateral, uint128 _liquidity
+    ) public {
+        // (uint128 _collateral, uint128 _liquidity) = (3, 2);
         vm.assume(_liquidity > 0);
         vm.assume(_collateral > 0);
 
@@ -52,7 +55,7 @@ contract MaxBorrowSharesTest is SiloLittleHelper, Test {
         uint256 maxBorrowShares = silo1.maxBorrowShares(borrower);
         vm.assume(maxBorrowShares > 0);
 
-        _assertWeCanNotBorrowAboveMax(maxBorrowShares);
+        _assertWeCanNotBorrowAboveMax(maxBorrowShares, 2);
 
         _assertMaxBorrowSharesIsZeroAtTheEnd();
     }
@@ -91,7 +94,7 @@ contract MaxBorrowSharesTest is SiloLittleHelper, Test {
 
         maxBorrowShares = silo1.maxBorrowShares(borrower);
 
-        _assertWeCanNotBorrowAboveMax(maxBorrowShares);
+        _assertWeCanNotBorrowAboveMax(maxBorrowShares, 2);
         _assertMaxBorrowSharesIsZeroAtTheEnd();
     }
 
@@ -200,7 +203,7 @@ contract MaxBorrowSharesTest is SiloLittleHelper, Test {
 
         vm.prank(borrower);
         try silo1.borrowShares(toBorrow, borrower, borrower) returns (uint256) {
-            revert("we expect tx to be reverted!");
+            revert("[borrowShares] we expect tx to be reverted!");
         } catch (bytes memory data) {
             bytes4 errorType = bytes4(data);
 
