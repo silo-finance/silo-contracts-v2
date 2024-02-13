@@ -14,10 +14,20 @@ function isWithInterest(env e) returns bool {
 function requireCorrectSiloBalance() {
     mathint collateralAssets = silo0._total[ISilo.AssetType.Collateral].assets;
     mathint protectedAssets = silo0._total[ISilo.AssetType.Protected].assets;
+    mathint debtAssets = silo0._total[ISilo.AssetType.Debt].assets;
+    mathint daoAndDeployerFees = getSiloDataDaoAndDeployerFees();
     mathint siloBalance = token0.balanceOf(silo0);
 
-    mathint balanceSum = collateralAssets + protectedAssets;
+    require collateralAssets < max_uint256;
+    require protectedAssets < max_uint256;
+    require debtAssets < max_uint256;
+    require siloBalance < max_uint256;
+    require daoAndDeployerFees < max_uint256;
 
-    require balanceSum < max_uint256;
-    require siloBalance >= protectedAssets && siloBalance <= balanceSum;
+    mathint liquidity = debtAssets > collateralAssets ? 0 : collateralAssets - debtAssets;
+
+    mathint expectedBalance = liquidity + protectedAssets + daoAndDeployerFees;
+
+    require expectedBalance < max_uint256;
+    require siloBalance == expectedBalance;
 }
