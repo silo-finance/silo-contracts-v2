@@ -21,9 +21,8 @@ contract L2WithMocksDeploy is CommonDeploy {
         TestTokensChildChainLikeDeploy tokensDeploy = new TestTokensChildChainLikeDeploy();
         CCIPRouterReceiverLikeDeploy routerDeploy = new CCIPRouterReceiverLikeDeploy();
 
-        (LINKTokenLike linkToken, SILOTokenLike siloToken) = tokensDeploy.run();
+        SILOTokenLike siloToken = tokensDeploy.run();
 
-        setAddress(AddrKey.LINK, address(linkToken));
         setAddress(SILO_TOKEN, address(siloToken));
 
         CCIPRouterReceiverLike router = routerDeploy.run();
