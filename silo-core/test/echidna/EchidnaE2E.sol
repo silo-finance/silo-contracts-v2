@@ -75,7 +75,7 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         return actors[actorIndex];
     }
 
-    function _overflowCheck(uint256 a, uint256 b) internal returns (bool overflow) {
+    function _overflowCheck(uint256 a, uint256 b) internal pure {
         uint256 c;
         unchecked {
             c = a + b;
@@ -454,7 +454,7 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         require(isSolvent, "user not solvent");
 
         (, uint256 debtToRepay) = vault.maxLiquidation(address(actor));
-        try liquidator.liquidationCall(vaultZero, address(actor), debtToRepay, false, siloConfig) {
+        try liquidator.liquidationCall(vaultZero, address(actor), debtToRepay, receiveShares, siloConfig) {
             emit LogString("Solvent user liquidated!");
             assert(false);
         } catch {
@@ -473,7 +473,7 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         // TODO check that the user has borrow shares
 
         (, uint256 debtToRepay) = vault.maxLiquidation(address(actor));
-        try liquidator.liquidationCall(vaultZero, address(actor), debtToRepay, false, siloConfig) {
+        try liquidator.liquidationCall(vaultZero, address(actor), debtToRepay, receiveShares, siloConfig) {
 
         } catch {
             emit LogString("Cannot liquidate insolvent user!");

@@ -101,7 +101,7 @@ contract EchidnaMiddleman is EchidnaSetup {
         address actor = _chooseActor(_actor);
 
         ISilo vault = __chooseSilo(_siloZero);
-        bool noInterest = _invariant_checkForInterest(vault);
+        _invariant_checkForInterest(vault);
 
         vm.prank(actor);
         return vault.transitionCollateral(_amount, actor, ISilo.AssetType(_type));
@@ -112,7 +112,6 @@ contract EchidnaMiddleman is EchidnaSetup {
         bool _siloZero,
         bool _receiveShares
     ) internal {
-        ISilo vault = __chooseSilo(_siloZero);
         address actor = _chooseActor(_actor);
 
         (bool isSolvent, ISilo siloWithDebt) = _invariant_insolventHasDebt(actor);
