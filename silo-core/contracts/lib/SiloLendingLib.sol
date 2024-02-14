@@ -135,7 +135,8 @@ library SiloLendingLib {
         }
     }
 
-    function getLiquidity(ISiloConfig _config) public view returns (uint256 liquidity) {
+    // this does not change gas a lot if itis public
+    function getLiquidity(ISiloConfig _config) internal view returns (uint256 liquidity) {
         ISiloConfig.ConfigData memory config = _config.getConfig(address(this));
 
         uint256 totalCollateralAssets = SiloStdLib.getTotalCollateralAssetsWithInterest(
