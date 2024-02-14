@@ -87,7 +87,7 @@
 
 - _siloData.interestRateTimestamp is changed and it was not 0
   and Silo._total[ISilo.AssetType.Debt].assets was not 0 and Silo.getFeesAndFeeReceivers().daoFee or Silo.getFeesAndFeeReceivers().deployerFee was not 0 => _siloData.daoAndDeployerFees increased.\
-  Implementation: rule `ST_Silo_interestRateTimestamp_totalBorrowAmount_dependency`
+  Implementation: rule `ST_Silo_interestRateTimestamp_totalBorrowAmount_fee_dependency`
 
 ### High-Level Properties
 
