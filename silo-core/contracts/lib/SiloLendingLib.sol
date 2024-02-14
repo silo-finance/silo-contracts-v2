@@ -138,19 +138,25 @@ library SiloLendingLib {
     function getLiquidity(ISiloConfig _config) public view returns (uint256 liquidity) {
         ISiloConfig.ConfigData memory config = _config.getConfig(address(this));
 
+        (uint256 totalCollateral, uint256 totalDebt) = ISilo(address(this)).getCollateralAndDebtAssets();
+
+        // TODO we using raw debt to calculate interst then again raw to calculate debt intersy, issue?
         uint256 totalCollateralAssets = SiloStdLib.getTotalCollateralAssetsWithInterest(
             address(this),
             config.interestRateModel,
             config.daoFee,
-            config.deployerFee
+            config.deployerFee,
+            totalCollateral,
+            totalDebt
         );
 
-        uint256 totalDebtAssets = SiloStdLib.getTotalDebtAssetsWithInterest(
+        uint256 totalDebtAssetsWithInterest = SiloStdLib.getTotalDebtAssetsWithInterest(
             address(this),
-            config.interestRateModel
+            config.interestRateModel,
+            totalDebt
         );
 
-        liquidity = SiloMathLib.liquidity(totalCollateralAssets, totalDebtAssets);
+        liquidity = SiloMathLib.liquidity(totalCollateralAssets, totalDebtAssetsWithInterest);
     }
 
     /// @notice Checks if a borrower can borrow

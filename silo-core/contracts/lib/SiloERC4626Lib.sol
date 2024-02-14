@@ -83,11 +83,14 @@ library SiloERC4626Lib {
         if (_assetType == ISilo.AssetType.Collateral) {
             shareTokenTotalSupply = IShareToken(collateralConfig.collateralShareToken).totalSupply();
 
+            (uint256 totalCollateralAssets, uint256 totalDebtAssets) = ISilo(collateralConfig.silo).getCollateralAndDebtAssets();
             _totalAssets = SiloStdLib.getTotalCollateralAssetsWithInterest(
                 address(this),
                 collateralConfig.interestRateModel,
                 collateralConfig.daoFee,
-                collateralConfig.deployerFee
+                collateralConfig.deployerFee,
+                totalCollateralAssets,
+                totalDebtAssets
             );
         } else {
             shareTokenTotalSupply = IShareToken(collateralConfig.protectedShareToken).totalSupply();

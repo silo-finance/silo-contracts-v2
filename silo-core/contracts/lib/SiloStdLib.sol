@@ -93,35 +93,43 @@ library SiloStdLib {
     /// @dev This is useful for view functions that do not accrue interest before doing calculations. To work on
     ///      updated numbers, interest should be added on the fly.
     /// @param _configData for a single token for which to do calculations
-    /// @param _assetType used to read proper storage data
+    /// @param _totalDebtAssets total debt assets
     /// @return totalAssets total assets in Silo with interest for given asset type
     /// @return totalShares total shares in Silo for given asset type
-    function getTotalAssetsAndTotalSharesWithInterest(
+    function getDebtTotalAssetsAndTotalSharesWithInterest(
         ISiloConfig.ConfigData memory _configData,
-        ISilo.AssetType _assetType
+        uint256 _totalDebtAssets
+    )
+        external
+        view
+        returns (uint256 totalDebtAssetsWithInterest, uint256 totalShares)
+    {
+        totalDebtAssetsWithInterest = getTotalDebtAssetsWithInterest(
+            _configData.silo, _configData.interestRateModel, _totalDebtAssets
+        );
+
+        totalShares = IShareToken(_configData.debtShareToken).totalSupply();
+    }
+
+    function getCollateralTotalAssetsAndTotalSharesWithInterest(
+        ISiloConfig.ConfigData memory _configData,
+        uint256 _totalCollateralAssets,
+        uint256 _totalDebtAssets
     )
         external
         view
         returns (uint256 totalAssets, uint256 totalShares)
     {
-        if (_assetType == ISilo.AssetType.Protected) {
-            totalAssets = ISilo(_configData.silo).total(ISilo.AssetType.Protected);
-            totalShares = IShareToken(_configData.protectedShareToken).totalSupply();
-        } else if (_assetType == ISilo.AssetType.Collateral) {
-            totalAssets = getTotalCollateralAssetsWithInterest(
-                _configData.silo,
-                _configData.interestRateModel,
-                _configData.daoFee,
-                _configData.deployerFee
-            );
+        totalAssets = getTotalCollateralAssetsWithInterest(
+            _configData.silo,
+            _configData.interestRateModel,
+            _configData.daoFee,
+            _configData.deployerFee,
+            _totalCollateralAssets,
+            _totalDebtAssets
+        );
 
-            totalShares = IShareToken(_configData.collateralShareToken).totalSupply();
-        } else if (_assetType == ISilo.AssetType.Debt) {
-            totalAssets = getTotalDebtAssetsWithInterest(_configData.silo, _configData.interestRateModel);
-            totalShares = IShareToken(_configData.debtShareToken).totalSupply();
-        } else {
-            revert ISilo.WrongAssetType();
-        }
+        totalShares = IShareToken(_configData.collateralShareToken).totalSupply();
     }
 
     /// @notice Retrieves fee amounts in 18 decimals points and their respective receivers along with the asset
@@ -158,14 +166,16 @@ library SiloStdLib {
         address _silo,
         address _interestRateModel,
         uint256 _daoFee,
-        uint256 _deployerFee
+        uint256 _deployerFee,
+        uint256 _totalCollateralAssets,
+        uint256 _totalDebtAssets
     ) public view returns (uint256 totalCollateralAssetsWithInterest) {
         uint256 rcomp = IInterestRateModel(_interestRateModel).getCompoundInterestRate(_silo, block.timestamp);
 
-        (uint256 collateralAssets, uint256 debtAssets) = ISilo(_silo).getCollateralAndDebtAssets();
+        // (uint256 collateralAssets, uint256 debtAssets) = ISilo(_silo).getCollateralAndDebtAssets();
 
         (totalCollateralAssetsWithInterest,,,) = SiloMathLib.getCollateralAmountsWithInterest(
-            collateralAssets, debtAssets, rcomp, _daoFee, _deployerFee
+            _totalCollateralAssets, _totalDebtAssets, rcomp, _daoFee, _deployerFee
         );
     }
 
@@ -183,7 +193,7 @@ library SiloStdLib {
     /// @param _silo Address of the silo contract
     /// @param _interestRateModel Interest rate model to fetch compound interest rates
     /// @return totalDebtAssetsWithInterest Accumulated debt amount with interest
-    function getTotalDebtAssetsWithInterest(address _silo, address _interestRateModel)
+    function getTotalDebtAssetsWithInterest(address _silo, address _interestRateModel, uint256 _totalDebtAssets)
         internal
         view
         returns (uint256 totalDebtAssetsWithInterest)
@@ -192,6 +202,6 @@ library SiloStdLib {
 
         (
             totalDebtAssetsWithInterest,
-        ) = SiloMathLib.getDebtAmountsWithInterest(ISilo(_silo).total(ISilo.AssetType.Debt), rcomp);
+        ) = SiloMathLib.getDebtAmountsWithInterest(_totalDebtAssets, rcomp);
     }
 }

@@ -107,9 +107,12 @@ library SiloSolvencyLib {
             _collateralConfig.protectedShareToken, _borrower, 0 /* no cache */
         );
 
+        // TODO additional getter for all 3 assets??
         (
             uint256 totalCollateralAssets, uint256 totalProtectedAssets
         ) = ISilo(_collateralConfig.silo).getCollateralAndProtectedAssets();
+
+        uint256 totalDebtAssets = ISilo(_debtConfig.silo).total(ISilo.AssetType.Debt);
 
         ltvData.borrowerProtectedAssets = SiloMathLib.convertToAssets(
             shares, totalProtectedAssets, totalShares, MathUpgradeable.Rounding.Down, ISilo.AssetType.Protected
@@ -124,7 +127,9 @@ library SiloSolvencyLib {
                 _collateralConfig.silo,
                 _collateralConfig.interestRateModel,
                 _collateralConfig.daoFee,
-                _collateralConfig.deployerFee
+                _collateralConfig.deployerFee,
+                totalCollateralAssets,
+                totalDebtAssets
             )
             : totalCollateralAssets;
 
@@ -136,9 +141,11 @@ library SiloSolvencyLib {
             _debtConfig.debtShareToken, _borrower, _debtShareBalanceCached
         );
 
-        uint256 totalDebtAssets = _accrueInMemory == ISilo.AccrueInterestInMemory.Yes
-            ? SiloStdLib.getTotalDebtAssetsWithInterest(_debtConfig.silo, _debtConfig.interestRateModel)
-            : ISilo(_debtConfig.silo).total(ISilo.AssetType.Debt);
+        if (_accrueInMemory == ISilo.AccrueInterestInMemory.Yes) {
+            totalDebtAssets = SiloStdLib.getTotalDebtAssetsWithInterest(
+                _debtConfig.silo, _debtConfig.interestRateModel, totalDebtAssets
+            );
+        }
 
         // BORROW value -> to assets -> UP
         ltvData.borrowerDebtAssets = SiloMathLib.convertToAssets(
