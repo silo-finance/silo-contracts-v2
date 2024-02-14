@@ -348,9 +348,9 @@ contract SiloLiquidationLibTest is Test, MaxRepayRawMath {
 
 
     /*
-    forge test -vv --mt test_SiloLiquidationLib_liquidationPreview_gas
+    forge test -vv --mt test_gas_SiloLiquidationLib_liquidationPreview
     */
-    function test_SiloLiquidationLib_liquidationPreview_gas() public {
+    function test_gas_SiloLiquidationLib_liquidationPreview() public {
         SiloLiquidationLib.LiquidationPreviewParams memory params;
 
         uint256 gasStart = gasleft();
