@@ -30,7 +30,7 @@ library SiloSolvencyLib {
         address _collateralConfigDebtShareToken,
         address _debtConfigDebtShareToken,
         address _borrower
-    ) external view returns (bool orderCorrect) {
+    ) internal view returns (bool orderCorrect) {
         uint256 debtShareTokenBalance = IShareToken(_debtConfigDebtShareToken).balanceOf(_borrower);
 
         return
@@ -160,7 +160,7 @@ library SiloSolvencyLib {
         ISilo.OracleType _oracleType,
         ISilo.AccrueInterestInMemory _accrueInMemory,
         uint256 _debtShareBalance
-    ) public view returns (uint256 ltvInDp) {
+    ) internal view returns (uint256 ltvInDp) {
         if (_debtShareBalance == 0) return 0;
 
         LtvData memory ltvData = getAssetsDataForLtvCalculations(
