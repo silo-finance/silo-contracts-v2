@@ -173,7 +173,7 @@ library SiloERC4626Lib {
     /// @param _debtShareToken Address of the debt share token
     /// @param _depositor Address of the user attempting to deposit
     /// @return Returns `true` if the depositor can deposit, otherwise `false`
-    function depositPossible(address _debtShareToken, address _depositor) public view returns (bool) {
+    function depositPossible(address _debtShareToken, address _depositor) internal view returns (bool) {
         return IShareToken(_debtShareToken).balanceOf(_depositor) == 0;
     }
 
