@@ -100,7 +100,7 @@ library SiloStdLib {
         ISiloConfig.ConfigData memory _configData,
         ISilo.AssetType _assetType
     )
-        external
+        internal
         view
         returns (uint256 totalAssets, uint256 totalShares)
     {
@@ -159,7 +159,7 @@ library SiloStdLib {
         address _interestRateModel,
         uint256 _daoFee,
         uint256 _deployerFee
-    ) public view returns (uint256 totalCollateralAssetsWithInterest) {
+    ) internal view returns (uint256 totalCollateralAssetsWithInterest) {
         uint256 rcomp = IInterestRateModel(_interestRateModel).getCompoundInterestRate(_silo, block.timestamp);
 
         (uint256 collateralAssets, uint256 debtAssets) = ISilo(_silo).getCollateralAndDebtAssets();
