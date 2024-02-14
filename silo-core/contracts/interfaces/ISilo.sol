@@ -150,7 +150,7 @@ interface ISilo is IERC4626, IERC3156FlashLender, ISiloLiquidation {
     /// @notice Determines if a borrower is solvent
     /// @param _borrower Address of the borrower to check for solvency
     /// @return True if the borrower is solvent, otherwise false
-//    function isSolvent(address _borrower) external view returns (bool);
+    function isSolvent(address _borrower) external view returns (bool);
 
     /// @notice Checks if a deposit is possible for a given depositor
     /// @param _depositor Address of the depositor to check for deposit possibility
@@ -168,16 +168,14 @@ interface ISilo is IERC4626, IERC3156FlashLender, ISiloLiquidation {
 
     /// @notice Retrieves the LT value
     /// @return lt The LT value in 18 decimals points
-//    function getLt() external view returns (uint256 lt);
+    function getLt() external view returns (uint256 lt);
 
     /// @notice Retrieves the loan-to-value (LTV) for a specific borrower
     /// @param _borrower Address of the borrower
     /// @return ltv The LTV for the borrower in 18 decimals points
-//    function getLtv(address _borrower) external view returns (uint256 ltv);
+    function getLtv(address _borrower) external view returns (uint256 ltv);
 
     /// @notice Retrieves the raw total amount of assets based on provided type (direct storage access)
-    /// `total()` can return outdated value (without interest), if you doing view call (or off-chain call) please use
-    /// getters eg `getCollateralAssets()` to fetch value that includes interest.
     function total(AssetType _assetType) external view returns (uint256);
 
     /// @notice Retrieves the total amount of collateral (borrowable) assets with interest
