@@ -131,11 +131,6 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
     }
 
     /// @inheritdoc ISilo
-    function getProtectedAssets() external view virtual returns (uint256 totalProtectedAssets) {
-        totalProtectedAssets = total[AssetType.Protected].assets;
-    }
-
-    /// @inheritdoc ISilo
     function getCollateralAssets() external view virtual returns (uint256 totalCollateralAssets) {
         ISiloConfig.ConfigData memory thisSiloConfig = config.getConfig(address(this));
 
