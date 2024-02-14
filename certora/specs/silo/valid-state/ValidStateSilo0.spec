@@ -146,8 +146,8 @@ rule VS_Silo_debtShareToken_balance_notZero(env e, method f, address receiver) f
     mathint collateralBalanceAfter = shareCollateralToken0.balanceOf(receiver);
     mathint protectedBalanceAfter = shareProtectedCollateralToken0.balanceOf(receiver);
 
-    assert debtBalanceAfter != 0 => (collateralBalanceAfter + protectedBalanceAfter) != 0,
-        "Debt balance != 0 => collateral balance + protected balance != 0";
+    assert debtBalanceAfter != 0 => (collateralBalanceAfter + protectedBalanceAfter) == 0,
+        "Debt balance != 0 => collateral balance + protected balance == 0";
 }
 
 /**
