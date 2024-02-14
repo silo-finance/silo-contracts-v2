@@ -4,6 +4,7 @@ import {Deployers} from "./utils/Deployers.sol";
 import {Actor} from "./utils/Actor.sol";
 import {ISiloConfig} from "silo-core/contracts/SiloConfig.sol";
 import {Silo, ISilo} from "silo-core/contracts/Silo.sol";
+import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {PropertiesAsserts} from "properties/util/PropertiesHelper.sol";
 
@@ -20,6 +21,7 @@ Command to run:
 SOLC_VERSION=0.8.21 echidna silo-core/test/echidna/EchidnaE2E.sol --contract EchidnaE2E --config silo-core/test/echidna/e2e-internal.yaml --workers 10
 */
 contract EchidnaE2E is Deployers, PropertiesAsserts {
+    using SiloLensLib for Silo;
     using Strings for uint256;
     ISiloConfig siloConfig;
 

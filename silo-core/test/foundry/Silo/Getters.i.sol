@@ -3,8 +3,9 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
 
-import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
+import {ISilo, ISiloConfig} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
+import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
 
 import {MintableToken} from "../_common/MintableToken.sol";
 import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
@@ -13,6 +14,8 @@ import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
     forge test -vv --ffi --mc DepositTest
 */
 contract GettersTest is SiloLittleHelper, Test {
+    using SiloLensLib for ISilo;
+
     ISiloConfig siloConfig;
 
     function setUp() public {
@@ -47,8 +50,8 @@ contract GettersTest is SiloLittleHelper, Test {
     forge test -vv --ffi --mt test_silo_asset
     */
     function test_silo_asset() public {
-        assertEq(silo0.asset(), address(0x4f22fB6CDf1485baf7B25c58c66CdA38f88Acbc3), "asset 0");
-        assertEq(silo1.asset(), address(0xb6F322D9421ae42BBbB5CC277CE23Dbb08b3aC1f), "asset 1");
+        assertEq(silo0.asset(), address(address(token0)), "asset 0");
+        assertEq(silo1.asset(), address(address(token1)), "asset 1");
     }
 
     /*

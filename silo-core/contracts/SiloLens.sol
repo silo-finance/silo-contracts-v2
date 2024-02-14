@@ -14,44 +14,35 @@ import {SiloSolvencyLib} from "./lib/SiloSolvencyLib.sol";
 /// is deployed twice for each asset for two-asset lending markets.
 /// Version: 2.0.0
 contract SiloLens is ISiloLens {
+    using SiloLensLib for ISilo;
+
     /// @inheritdoc ISiloLens
     function isSolvent(ISilo _silo, address _borrower) external view virtual returns (bool) {
-        return SiloLensLib.isSolvent(_silo, _borrower);
+        return _silo.isSolvent(_borrower);
     }
 
     /// @inheritdoc ISiloLens
     function depositPossible(ISilo _silo, address _depositor) external view virtual returns (bool) {
-        return SiloLensLib.depositPossible(_silo, _depositor);
+        return _silo.depositPossible(_depositor);
     }
 
     /// @inheritdoc ISiloLens
     function borrowPossible(ISilo _silo, address _borrower) external view virtual returns (bool) {
-        return SiloLensLib.borrowPossible(_silo, _borrower);
+        return _silo.borrowPossible(_borrower);
     }
 
     /// @inheritdoc ISiloLens
     function getMaxLtv(ISilo _silo) external view virtual returns (uint256 maxLtv) {
-        maxLtv = _silo.config().getConfig(address(_silo)).maxLtv;
+        return _silo.getMaxLtv();
     }
 
     /// @inheritdoc ISiloLens
     function getLt(ISilo _silo) external view virtual returns (uint256 lt) {
-        lt = _silo.config().getConfig(address(_silo)).lt;
+        return _silo.getLt();
     }
 
     /// @inheritdoc ISiloLens
     function getLtv(ISilo _silo, address _borrower) external view virtual returns (uint256 ltv) {
-        (
-            ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig
-        ) = SiloLensLib.getOrderedConfigs(_silo, _borrower);
-
-        ltv = SiloSolvencyLib.getLtv(
-            collateralConfig,
-            debtConfig,
-            _borrower,
-            ISilo.OracleType.Solvency,
-            ISilo.AccrueInterestInMemory.Yes,
-            IShareToken(debtConfig.debtShareToken).balanceOf(_borrower)
-        );
+        return _silo.getLtv(_borrower);
     }
 }
