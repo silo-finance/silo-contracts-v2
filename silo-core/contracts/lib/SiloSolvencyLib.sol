@@ -94,7 +94,7 @@ library SiloSolvencyLib {
         ISilo.OracleType _oracleType,
         ISilo.AccrueInterestInMemory _accrueInMemory,
         uint256 _debtShareBalanceCached
-    ) public view returns (LtvData memory ltvData) {
+    ) internal view returns (LtvData memory ltvData) {
         // When calculating maxLtv, use maxLtv oracle.
         (ltvData.collateralOracle, ltvData.debtOracle) = _oracleType == ISilo.OracleType.MaxLtv
             ? (ISiloOracle(_collateralConfig.maxLtvOracle), ISiloOracle(_debtConfig.maxLtvOracle))
