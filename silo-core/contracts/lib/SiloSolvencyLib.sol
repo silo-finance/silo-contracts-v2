@@ -172,7 +172,7 @@ library SiloSolvencyLib {
         ISilo.OracleType _oracleType,
         ISilo.AccrueInterestInMemory _accrueInMemory,
         uint256 _debtShareBalance
-    ) public view returns (uint256 ltvInDp) {
+    ) internal view returns (uint256 ltvInDp) {
         if (_debtShareBalance == 0) return 0;
 
         LtvData memory ltvData = getAssetsDataForLtvCalculations(
