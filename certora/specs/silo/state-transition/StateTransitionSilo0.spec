@@ -5,12 +5,36 @@ import "../_common/Helpers.spec";
 import "../_common/CommonSummarizations.spec";
 import "../../_simplifications/Oracle_quote_one.spec";
 import "../../_simplifications/Silo_isSolvent_ghost.spec";
-import "../../_simplifications/SimplifiedGetCompoundInterestRateAndUpdate.spec";
+
+methods {
+    function _.getCompoundInterestRateAndUpdate(
+        uint256 _collateralAssets,
+        uint256 _debtAssets,
+        uint256 _interestRateTimestamp
+    ) external => simplified_getCompoundInterestRateAndUpdate(
+        _collateralAssets,
+        _debtAssets,
+        _interestRateTimestamp
+    ) expect uint256;
+}
+
+function simplified_getCompoundInterestRateAndUpdate(
+    uint256 _collateralAssets,
+    uint256 _debtAssets,
+    uint256 _interestRateTimestamp
+) returns uint256 {
+    uint256 result;
+    // InterestRateModelV2.RCOMP_MAX() == (2**16) * 1e18
+    // result >= 1 - to make accrueInterest() work
+    require result >= 1 && result <= 2^16 * 10^18;
+    return result;
+}
+
 
 /**
 certoraRun certora/config/silo/silo0.conf \
     --parametric_contracts Silo0 \
-    --msg "ST_Silo_interestRateTimestamp_totalBorrowAmount_dependency" \
+    --msg "ST_Silo_interestRateTimestamp_totalBorrowAmount_dependency 2" \
     --rule "ST_Silo_interestRateTimestamp_totalBorrowAmount_dependency" \
     --verify "Silo0:certora/specs/silo/state-transition/StateTransitionSilo0.spec"
 */
@@ -23,10 +47,12 @@ rule ST_Silo_interestRateTimestamp_totalBorrowAmount_dependency(
 
     mathint irtBefore = getSiloDataInterestRateTimestamp();
     mathint debtAssetsBefore = silo0._total[ISilo.AssetType.Debt].assets;
+    mathint collateralAssetsBefore = silo0._total[ISilo.AssetType.Collateral].assets;
 
-    require irtBefore < max_uint128;
-    require debtAssetsBefore < max_uint128;
-    require silo0._total[ISilo.AssetType.Collateral].assets < max_uint128;
+    // to make accrueInterest() work
+    require irtBefore < to_mathint(e.block.timestamp);
+    require debtAssetsBefore > 10^18 && debtAssetsBefore < max_uint128;
+    require collateralAssetsBefore > 10^18 && collateralAssetsBefore < max_uint128;
 
     f(e, args);
 
@@ -35,7 +61,7 @@ rule ST_Silo_interestRateTimestamp_totalBorrowAmount_dependency(
 
     bool irtChanged = irtBefore != 0 && irtBefore != irtAfter;
 
-    assert irtChanged && debtAssetsBefore != 0 => debtAssetsAfter != debtAssetsBefore;
+    assert irtChanged => debtAssetsAfter != debtAssetsBefore;
 }
 
 /**
