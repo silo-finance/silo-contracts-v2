@@ -14,17 +14,15 @@ FOUNDRY_PROFILE=ve-silo-test \
     --ffi --broadcast --rpc-url http://127.0.0.1:8545
  */
 contract TestTokensChildChainLikeDeploy is CommonDeploy {
-    function run() public returns (LINKTokenLike linkToken, SILOTokenLike siloToken) {
+    function run() public returns (SILOTokenLike siloToken) {
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
 
         vm.startBroadcast(deployerPrivateKey);
 
-        linkToken = new LINKTokenLike();
         siloToken = new SILOTokenLike();
 
         vm.stopBroadcast();
 
-        _registerDeployment(address(linkToken), VeSiloMocksContracts.LINK_TOKEN_LIKE);
         _registerDeployment(address(siloToken), VeSiloMocksContracts.SILO_TOKEN_LIKE);
     }
 }

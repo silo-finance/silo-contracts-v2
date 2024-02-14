@@ -21,10 +21,10 @@
 - collateralShareToken.totalSupply and Silo._total[ISilo.AssetType.Collateral].assets should decrease only on withdraw, redeem, liquidationCall.The balance of the silo in the underlying asset should decrease for the same amount as Silo._total[ISilo.AssetType.Collateral].assets decreased.
   Implementation: rule `VC_Silo_total_collateral_decrease` \
 
-- protectedShareToken.totalSupply and Silo._total[ISilo.AssetType.Protected].assets should increase only on deposit and mint. The balance of the silo in the underlying asset should increase for the same amount as Silo._total[ISilo.AssetType.Protected].assets increased.
+- protectedShareToken.totalSupply and Silo._total[ISilo.AssetType.Protected].assets should increase only on deposit, mint, and transitionCollateral. The balance of the silo in the underlying asset should increase for the same amount as Silo._total[ISilo.AssetType.Protected].assets increased. `accrueInterest` fn does not increase the protected assets.
   Implementation: rule `VC_Silo_total_protected_increase` \
 
-- protectedShareToken.totalSupply and Silo._total[ISilo.AssetType.Protected].assets should decrease only on withdraw, redeem, liquidationCall. The balance of the silo in the underlying asset should decrease for the same amount as Silo._total[ISilo.AssetType.Protected].assets decreased.
+- protectedShareToken.totalSupply and Silo._total[ISilo.AssetType.Protected].assets should decrease only on withdraw, redeem, liquidationCall, and transitionCollateral. The balance of the silo in the underlying asset should decrease for the same amount as Silo._total[ISilo.AssetType.Protected].assets decreased.
   Implementation: rule `VC_Silo_total_protected_decrease` \
 
 - debtShareToken.totalSupply and Silo._total[ISilo.AssetType.Debt].assets should increase only on borrow, borrowShares, leverage. The balance of the silo in the underlying asset should decrease for the same amount as Silo._total[ISilo.AssetType.Debt].assets increased.
