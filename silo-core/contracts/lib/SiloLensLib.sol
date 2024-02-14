@@ -38,6 +38,29 @@ library SiloLensLib {
         );
     }
 
+    function getMaxLtv(ISilo _silo) external view returns (uint256 maxLtv) {
+        maxLtv = _silo.config().getConfig(address(_silo)).maxLtv;
+    }
+
+    function getLt(ISilo _silo) external view returns (uint256 lt) {
+        lt = _silo.config().getConfig(address(_silo)).lt;
+    }
+
+    function getLtv(ISilo _silo, address _borrower) external view returns (uint256 ltv) {
+        (
+            ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig
+        ) = SiloLensLib.getOrderedConfigs(_silo, _borrower);
+
+        ltv = SiloSolvencyLib.getLtv(
+            collateralConfig,
+            debtConfig,
+            _borrower,
+            ISilo.OracleType.Solvency,
+            ISilo.AccrueInterestInMemory.Yes,
+            IShareToken(debtConfig.debtShareToken).balanceOf(_borrower)
+        );
+    }
+
     function getOrderedConfigs(ISilo _silo, address _borrower)
         internal
         view

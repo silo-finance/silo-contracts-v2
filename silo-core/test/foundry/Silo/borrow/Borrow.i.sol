@@ -6,6 +6,7 @@ import "forge-std/Test.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
+import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
 
 import {MintableToken} from "../../_common/MintableToken.sol";
 import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
@@ -14,6 +15,8 @@ import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
     forge test -vv --ffi --mc BorrowIntegrationTest
 */
 contract BorrowIntegrationTest is SiloLittleHelper, Test {
+    using SiloLensLib for ISilo;
+
     ISiloConfig siloConfig;
 
     function setUp() public {

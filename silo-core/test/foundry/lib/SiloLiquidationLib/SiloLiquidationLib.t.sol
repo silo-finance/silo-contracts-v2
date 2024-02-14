@@ -357,7 +357,7 @@ contract SiloLiquidationLibTest is Test, MaxRepayRawMath {
         SiloLiquidationLib.liquidationPreview(1e8, 1e18, 1e18, 1e18, 10, params);
         uint256 gasEnd = gasleft();
 
-        assertEq(gasStart - gasEnd, 5196, "optimise liquidationPreview");
+        assertEq(gasStart - gasEnd, 5162, "optimise liquidationPreview");
     }
 
     /*
