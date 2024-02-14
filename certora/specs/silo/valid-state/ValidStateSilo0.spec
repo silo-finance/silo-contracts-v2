@@ -123,3 +123,95 @@ rule VS_Silo_balance_totalAssets(env e, method f, calldataarg args) filtered { f
     assert siloBalanceAfter >= protectedAssetsAfter,
         "Silo balance should be greater than or equal to the total protected assets";
 }
+
+/**
+certoraRun certora/config/silo/silo0.conf \
+    --parametric_contracts Silo0 \
+    --msg "VS_Silo_debtShareToken_balance_notZero" \
+    --rule "VS_Silo_debtShareToken_balance_notZero" \
+    --verify "Silo0:certora/specs/silo/valid-state/ValidStateSilo0.spec"
+*/
+rule VS_Silo_debtShareToken_balance_notZero(env e, method f, address receiver) filtered { f -> !f.isView} {
+    silo0SetUp(e);
+    requireDebtToken0TotalAndBalancesIntegrity();
+    requireCollateralToken0TotalAndBalancesIntegrity();
+    requireProtectedToken0TotalAndBalancesIntegrity();
+
+    mathint debtBalanceBefore = shareDebtToken0.balanceOf(receiver);
+    require debtBalanceBefore == 0;
+
+    siloFnSelectorWithReceiver(e, f, receiver);
+
+    mathint debtBalanceAfter = shareDebtToken0.balanceOf(receiver);
+    mathint collateralBalanceAfter = shareCollateralToken0.balanceOf(receiver);
+    mathint protectedBalanceAfter = shareProtectedCollateralToken0.balanceOf(receiver);
+
+    assert debtBalanceAfter != 0 => (collateralBalanceAfter + protectedBalanceAfter) != 0,
+        "Debt balance != 0 => collateral balance + protected balance != 0";
+}
+
+/**
+certoraRun certora/config/silo/silo0.conf \
+    --parametric_contracts Silo0 \
+    --msg "VS_Silo_shareToken_supply_totalAssets_debt" \
+    --rule "VS_Silo_shareToken_supply_totalAssets_debt" \
+    --verify "Silo0:certora/specs/silo/valid-state/ValidStateSilo0.spec"
+*/
+rule VS_Silo_shareToken_supply_totalAssets_debt(env e, method f, calldataarg args) filtered { f -> !f.isView} {
+    silo0SetUp(e);
+    requireDebtToken0TotalAndBalancesIntegrity();
+
+    require shareDebtToken0.totalSupply() == 0;
+    require silo0._total[ISilo.AssetType.Debt].assets == 0;
+
+    f(e, args);
+
+    mathint totalSupplyAfter = shareDebtToken0.totalSupply();
+
+    assert totalSupplyAfter != 0 => totalSupplyAfter <= to_mathint(silo0._total[ISilo.AssetType.Debt].assets),
+        "Debt total supply != 0 => total supply <= total debt assets";
+}
+
+/**
+certoraRun certora/config/silo/silo0.conf \
+    --parametric_contracts Silo0 \
+    --msg "VS_Silo_shareToken_supply_totalAssets_collateral" \
+    --rule "VS_Silo_shareToken_supply_totalAssets_collateral" \
+    --verify "Silo0:certora/specs/silo/valid-state/ValidStateSilo0.spec"
+*/
+rule VS_Silo_shareToken_supply_totalAssets_collateral(env e, method f, calldataarg args) filtered { f -> !f.isView} {
+    silo0SetUp(e);
+    requireCollateralToken0TotalAndBalancesIntegrity();
+
+    require shareCollateralToken0.totalSupply() == 0;
+    require silo0._total[ISilo.AssetType.Collateral].assets == 0;
+
+    f(e, args);
+
+    mathint totalSupplyAfter = shareCollateralToken0.totalSupply();
+
+    assert totalSupplyAfter != 0 => totalSupplyAfter <= to_mathint(silo0._total[ISilo.AssetType.Collateral].assets),
+        "Collateral total supply != 0 => total supply <= total collateral assets";
+}
+
+/**
+certoraRun certora/config/silo/silo0.conf \
+    --parametric_contracts Silo0 \
+    --msg "VS_Silo_shareToken_supply_totalAssets_protected" \
+    --rule "VS_Silo_shareToken_supply_totalAssets_protected" \
+    --verify "Silo0:certora/specs/silo/valid-state/ValidStateSilo0.spec"
+*/
+rule VS_Silo_shareToken_supply_totalAssets_protected(env e, method f, calldataarg args) filtered { f -> !f.isView} {
+    silo0SetUp(e);
+    requireProtectedToken0TotalAndBalancesIntegrity();
+
+    require shareProtectedCollateralToken0.totalSupply() == 0;
+    require silo0._total[ISilo.AssetType.Protected].assets == 0;
+
+    f(e, args);
+
+    mathint totalSupplyAfter = shareProtectedCollateralToken0.totalSupply();
+
+    assert totalSupplyAfter != 0 => totalSupplyAfter <= to_mathint(silo0._total[ISilo.AssetType.Protected].assets),
+        "Protected total supply != 0 => total supply <= total protected assets";
+}
