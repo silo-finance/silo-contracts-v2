@@ -22,7 +22,6 @@ library SiloLensLib {
         return SiloSolvencyLib.isSolvent(
             collateralConfig, debtConfig, _borrower, ISilo.AccrueInterestInMemory.Yes, debtShareBalance
         );
-
     }
 
     function depositPossible(ISilo _silo, address _depositor) internal view returns (bool) {
@@ -38,15 +37,15 @@ library SiloLensLib {
         );
     }
 
-    function getMaxLtv(ISilo _silo) external view returns (uint256 maxLtv) {
+    function getMaxLtv(ISilo _silo) internal view returns (uint256 maxLtv) {
         maxLtv = _silo.config().getConfig(address(_silo)).maxLtv;
     }
 
-    function getLt(ISilo _silo) external view returns (uint256 lt) {
+    function getLt(ISilo _silo) internal view returns (uint256 lt) {
         lt = _silo.config().getConfig(address(_silo)).lt;
     }
 
-    function getLtv(ISilo _silo, address _borrower) external view returns (uint256 ltv) {
+    function getLtv(ISilo _silo, address _borrower) internal view returns (uint256 ltv) {
         (
             ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig
         ) = SiloLensLib.getOrderedConfigs(_silo, _borrower);
