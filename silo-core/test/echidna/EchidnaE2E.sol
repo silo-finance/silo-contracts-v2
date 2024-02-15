@@ -73,7 +73,7 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         return actors[actorIndex];
     }
 
-    function _overflowCheck(uint256 a, uint256 b) internal returns (bool overflow) {
+    function _overflowCheck(uint256 a, uint256 b) internal pure {
         uint256 c;
         unchecked {
             c = a + b;
@@ -402,7 +402,7 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
        ================================================================ */
 
     // Property: Total debt shares should never be larger than total debt
-    function debtSharesNeverLargerThanDebt() public {
+    function debtSharesNeverLargerThanDebt() public view {
         uint256 debt0 = vault0.getDebtAssets();
         uint256 debt1 = vault1.getDebtAssets();
 
@@ -452,7 +452,7 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         require(isSolvent, "user not solvent");
 
         (, uint256 debtToRepay) = vault.maxLiquidation(address(actor));
-        try liquidator.liquidationCall(vaultZero, address(actor), debtToRepay, false, siloConfig) {
+        try liquidator.liquidationCall(vaultZero, address(actor), debtToRepay, receiveShares, siloConfig) {
             emit LogString("Solvent user liquidated!");
             assert(false);
         } catch {
@@ -471,7 +471,7 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         // TODO check that the user has borrow shares
 
         (, uint256 debtToRepay) = vault.maxLiquidation(address(actor));
-        try liquidator.liquidationCall(vaultZero, address(actor), debtToRepay, false, siloConfig) {
+        try liquidator.liquidationCall(vaultZero, address(actor), debtToRepay, receiveShares, siloConfig) {
 
         } catch {
             emit LogString("Cannot liquidate insolvent user!");
@@ -495,7 +495,7 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
 
         actorTwo.liquidationCall(true, address(actor), debtToRepay, false, siloConfig);
 
-        uint256 afterLtv = vault.getLtv(address(actor));
+        vault.getLtv(address(actor));
         assert(false);
     }
 
