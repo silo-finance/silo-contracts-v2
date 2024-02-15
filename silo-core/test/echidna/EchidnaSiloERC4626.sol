@@ -26,7 +26,7 @@ contract EchidnaSiloERC4626 is CryticERC4626PropertyTests, Deployers {
 
         // deploy silo
         siloConfig = siloFactory.createSilo(siloData["MOCK"]);
-        (address _vault0, address _vault1) = siloConfig.getSilos();
+        (address _vault0, /* address _vault1 */) = siloConfig.getSilos();
 
         initialize(address(_vault0), address(_asset0), false);
     }
