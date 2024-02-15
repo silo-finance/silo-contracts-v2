@@ -178,10 +178,6 @@ interface ISilo is IERC4626, IERC3156FlashLender, ISiloLiquidation {
     /// @notice Retrieves the raw total amount of assets based on provided type (direct storage access)
     function total(AssetType _assetType) external view returns (uint256);
 
-    /// @notice Retrieves the total amount of protected (non-borrowable) collateral assets
-    /// @return totalProtectedAssets The total amount of assets of type 'Protected'
-    function getProtectedAssets() external view returns (uint256 totalProtectedAssets);
-
     /// @notice Retrieves the total amount of collateral (borrowable) assets with interest
     /// @return totalCollateralAssets The total amount of assets of type 'Collateral'
     function getCollateralAssets() external view returns (uint256 totalCollateralAssets);
