@@ -15,6 +15,8 @@ import {IShareToken, ShareToken, ISiloFactory, ISilo} from "./ShareToken.sol";
 /// take someone else's debt without asking.
 /// @custom:security-contact security@silo.finance
 contract ShareDebtToken is IERC20R, ShareToken {
+    using SiloLensLib for ISilo;
+
     /// @dev maps _owner => _recipient => amount
     mapping(address => mapping(address => uint256)) private _receiveAllowances;
 
@@ -80,7 +82,7 @@ contract ShareDebtToken is IERC20R, ShareToken {
         // If we are minting or burning, Silo is responsible to check all necessary conditions
         if (_isTransfer(_sender, _recipient)) {
             // Silo forbids having debt and collateral position of the same asset in given Silo
-            if (!SiloLensLib.borrowPossible(silo, _recipient)) revert ShareTransferNotAllowed();
+            if (!silo.borrowPossible(_recipient)) revert ShareTransferNotAllowed();
 
             // _recipient must approve debt transfer, _sender does not have to
             uint256 currentAllowance = receiveAllowance(_sender, _recipient);

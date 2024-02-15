@@ -8,6 +8,8 @@ import {IShareToken, ShareToken, ISiloFactory, ISilo} from "./ShareToken.sol";
 /// @notice ERC20 compatible token representing collateral position in Silo
 /// @custom:security-contact security@silo.finance
 contract ShareCollateralToken is ShareToken {
+    using SiloLensLib for ISilo;
+
     error SenderNotSolventAfterTransfer();
     error ShareTransferNotAllowed();
 
@@ -31,7 +33,7 @@ contract ShareCollateralToken is ShareToken {
         // if we minting or burning, Silo is responsible to check all necessary conditions
         if (_isTransfer(_sender, _recipient)) {
             // Silo forbids having debt and collateral position of the same asset in given Silo
-            if (!SiloLensLib.depositPossible(silo, _recipient)) revert ShareTransferNotAllowed();
+            if (!silo.depositPossible(_recipient)) revert ShareTransferNotAllowed();
         }
     }
 
