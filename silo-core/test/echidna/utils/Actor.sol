@@ -44,8 +44,13 @@ contract Actor is PropertiesAsserts {
         }
     }
 
-    function accountForClosedPosition(ISilo.AssetType assetType, bool vaultZero, uint256 _tokensReceived, uint256 _sharesBurned) internal {
-        address vault = vaultZero ? address(vault0) : address(vault1);
+    function accountForClosedPosition(
+        ISilo.AssetType /* assetType */,
+        bool vaultZero,
+        uint256 /* _tokensReceived */,
+        uint256 /* _sharesBurned */
+    ) internal pure {
+        // address vault = vaultZero ? address(vault0) : address(vault1);
 
         // note: The below code can lead to false positives since it does not account for interest.
         // In order to properly check these properties it needs to be modified so the accounting is correct.

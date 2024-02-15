@@ -101,7 +101,7 @@ contract EchidnaMiddleman is EchidnaSetup {
         address actor = _chooseActor(_actor);
 
         ISilo vault = __chooseSilo(_siloZero);
-        bool noInterest = _invariant_checkForInterest(vault);
+        _invariant_checkForInterest(vault);
 
         vm.prank(actor);
         return vault.transitionCollateral(_amount, actor, ISilo.AssetType(_type));
@@ -109,10 +109,9 @@ contract EchidnaMiddleman is EchidnaSetup {
 
     function __cannotPreventInsolventUserFromBeingLiquidated(
         uint8 _actor,
-        bool _siloZero,
+        bool /* _siloZero */,
         bool _receiveShares
     ) internal {
-        ISilo vault = __chooseSilo(_siloZero);
         address actor = _chooseActor(_actor);
 
         (bool isSolvent, ISilo siloWithDebt) = _invariant_insolventHasDebt(actor);
@@ -161,11 +160,11 @@ contract EchidnaMiddleman is EchidnaSetup {
         silo0.redeem(maxShares, actor, actor); // expect not to fail!
     }
 
-    function __chooseSilo(bool _siloZero) private returns (ISilo) {
+    function __chooseSilo(bool _siloZero) private view returns (ISilo) {
         return _siloZero ? silo0 : silo1;
     }
 
-    function __liquidationTokens(address _siloWithDebt) private returns (address collateral, address debt) {
+    function __liquidationTokens(address _siloWithDebt) private view returns (address collateral, address debt) {
         (collateral, debt) = _siloWithDebt == address(silo0)
             ? (address(token0), address(token1))
             : (address(token1), address(token0));
