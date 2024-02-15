@@ -96,6 +96,7 @@ contract SiloHandler2 is Test {
 
     function _depositPossible(ISilo _silo, uint256 _assets, uint8 _type)
         internal
+        view
         returns (uint256 assets, ISilo.AssetType assetType)
     {
         if (!_silo.depositPossible(msg.sender)) {
