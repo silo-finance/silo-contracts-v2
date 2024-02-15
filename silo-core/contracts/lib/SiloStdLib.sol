@@ -21,17 +21,16 @@ library SiloStdLib {
     /// @notice Withdraws accumulated fees and distributes them proportionally to the DAO and deployer
     /// @dev This function takes into account scenarios where either the DAO or deployer may not be set, distributing
     /// accordingly
-    /// @param _config The configuration contract for retrieving fee-related data
-    /// @param _factory The factory contract for retrieving fee-related data
+    /// @param _silo Silo address
     /// @param _siloData Storage reference containing silo-related data, including accumulated fees
-    function withdrawFees(ISiloConfig _config, ISiloFactory _factory, ISilo.SiloData storage _siloData) external {
+    function withdrawFees(ISilo _silo, ISilo.SiloData storage _siloData) external {
         (
             address daoFeeReceiver,
             address deployerFeeReceiver,
             uint256 daoFee,
             uint256 deployerFee,
             address asset
-        ) = getFeesAndFeeReceiversWithAsset(_config, _factory);
+        ) = getFeesAndFeeReceiversWithAsset(_silo);
 
         uint256 earnedFees = _siloData.daoAndDeployerFees;
         uint256 balanceOf = IERC20Upgradeable(asset).balanceOf(address(this));
@@ -125,14 +124,13 @@ library SiloStdLib {
     }
 
     /// @notice Retrieves fee amounts in 18 decimals points and their respective receivers along with the asset
-    /// @param _config The configuration contract used to fetch fee-related data
-    /// @param _factory The factory contract used to fetch fee receiver addresses
+    /// @param _silo Silo address
     /// @return daoFeeReceiver Address of the DAO fee receiver
     /// @return deployerFeeReceiver Address of the deployer fee receiver
     /// @return daoFee DAO fee amount in 18 decimals points
     /// @return deployerFee Deployer fee amount in 18 decimals points
     /// @return asset Address of the associated asset
-    function getFeesAndFeeReceiversWithAsset(ISiloConfig _config, ISiloFactory _factory)
+    function getFeesAndFeeReceiversWithAsset(ISilo _silo)
         public
         view
         returns (
@@ -143,8 +141,8 @@ library SiloStdLib {
             address asset
         )
     {
-        (daoFee, deployerFee,, asset) = _config.getFeesWithAsset(address(this));
-        (daoFeeReceiver, deployerFeeReceiver) = _factory.getFeeReceivers(address(this));
+        (daoFee, deployerFee,, asset) = _silo.config().getFeesWithAsset(address(_silo));
+        (daoFeeReceiver, deployerFeeReceiver) = _silo.factory().getFeeReceivers(address(_silo));
     }
 
     /// @notice Calculates the total collateral assets with accrued interest

@@ -5,6 +5,7 @@ import "forge-std/Test.sol";
 
 import {IntegrationTest} from "silo-foundry-utils/networks/IntegrationTest.sol";
 
+import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISiloFactory} from "silo-core/contracts/SiloFactory.sol";
 import {SiloStdLib} from "silo-core/contracts/lib/SiloStdLib.sol";
@@ -61,7 +62,7 @@ contract GetFeesAndFeeReceiversWithAssetTest is SiloLittleHelper, IntegrationTes
         assertEq(deployerFeeReceiver, siloFactory.ownerOf(siloId), "ownerOf(siloId) silo1");
 
         assertEq(siloFactory.getNextSiloId(), siloId + 1, "getNextSiloId");
-        
+
         vm.prank(initData.deployer);
         siloFactory.transferFrom(initData.deployer, _newDeployer, siloId);
 
@@ -83,16 +84,30 @@ contract GetFeesAndFeeReceiversWithAssetTest is SiloLittleHelper, IntegrationTes
         vm.mockCall(address(siloFactory), data2, abi.encode(daoFeeReceiver, deployerFeeReceiver));
         vm.expectCall(address(siloFactory), data2);
 
+        _assertGetFeesAndFeeReceiversWithAsset(
+            ISilo(silo0), daoFeeReceiver, deployerFeeReceiver, daoFee, deployerFee, asset
+        );
+
+        _assertGetFeesAndFeeReceiversWithAsset(
+            ISilo(silo1), daoFeeReceiver, deployerFeeReceiver, daoFee, deployerFee, asset
+        );
+    }
+
+    function _assertGetFeesAndFeeReceiversWithAsset(
+        ISilo _silo,
+        address daoFeeReceiver,
+        address deployerFeeReceiver,
+        uint256 daoFee,
+        uint256 deployerFee,
+        address asset
+    ) internal {
         (
             address mockedDaoFeeReceiver,
             address mockedDeployerFeeReceiver,
             uint256 mockedDaoFee,
             uint256 mockedDeployerFee,
             address mockedAsset
-        ) = SiloStdLib.getFeesAndFeeReceiversWithAsset(
-            siloConfig,
-            siloFactory
-        );
+        ) = SiloStdLib.getFeesAndFeeReceiversWithAsset(_silo);
 
         assertEq(mockedDaoFeeReceiver, daoFeeReceiver, "mockedDaoFeeReceiver");
         assertEq(mockedDeployerFeeReceiver, deployerFeeReceiver, "mockedDeployerFeeReceiver");
