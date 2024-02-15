@@ -179,16 +179,6 @@ interface ISilo is IERC4626, IERC3156FlashLender, ISiloLiquidation {
         view
         returns (uint256 totalCollateralAssets, uint256 totalDebtAssets);
 
-    /// @notice Retrieves the fee details in 18 decimals points and the addresses of the DAO and deployer fee receivers
-    /// @return daoFeeReceiver The address of the DAO fee receiver
-    /// @return deployerFeeReceiver The address of the deployer fee receiver
-    /// @return daoFee The total fee for the DAO in 18 decimals points
-    /// @return deployerFee The total fee for the deployer in 18 decimals points
-    function getFeesAndFeeReceivers()
-        external
-        view
-        returns (address daoFeeReceiver, address deployerFeeReceiver, uint256 daoFee, uint256 deployerFee);
-
     /// @notice Implements IERC4626.convertToShares for each asset type
     function convertToShares(uint256 _assets, AssetType _assetType) external view returns (uint256 shares);
 

@@ -134,17 +134,6 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
         totalDebtAssets = total[AssetType.Debt].assets;
     }
 
-    /// @inheritdoc ISilo
-    function getFeesAndFeeReceivers()
-        external
-        view
-        virtual
-        returns (address daoFeeReceiver, address deployerFeeReceiver, uint256 daoFee, uint256 deployerFee)
-    {
-        (daoFeeReceiver, deployerFeeReceiver, daoFee, deployerFee,) =
-            SiloStdLib.getFeesAndFeeReceiversWithAsset(config, factory);
-    }
-
     // ERC4626
 
     /// @inheritdoc IERC4626

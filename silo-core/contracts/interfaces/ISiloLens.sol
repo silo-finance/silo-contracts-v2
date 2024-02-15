@@ -31,4 +31,15 @@ interface ISiloLens {
     /// @param _borrower Address of the borrower
     /// @return ltv The LTV for the borrower in 18 decimals points
     function getLtv(ISilo _silo, address _borrower) external view returns (uint256 ltv);
+
+    /// @notice Retrieves the fee details in 18 decimals points and the addresses of the DAO and deployer fee receivers
+    /// @param _silo Address of the silo
+    /// @return daoFeeReceiver The address of the DAO fee receiver
+    /// @return deployerFeeReceiver The address of the deployer fee receiver
+    /// @return daoFee The total fee for the DAO in 18 decimals points
+    /// @return deployerFee The total fee for the deployer in 18 decimals points
+    function getFeesAndFeeReceivers(ISilo _silo)
+        external
+        view
+        returns (address daoFeeReceiver, address deployerFeeReceiver, uint256 daoFee, uint256 deployerFee);
 }
