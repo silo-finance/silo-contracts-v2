@@ -8,12 +8,9 @@ import {ERC20} from "openzeppelin-contracts/token/ERC20/ERC20.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
-import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
 
 
 contract SiloInvariants is Test {
-    using SiloLensLib for ISilo;
-
     ISiloConfig immutable siloConfig;
 
     ISilo immutable silo0;

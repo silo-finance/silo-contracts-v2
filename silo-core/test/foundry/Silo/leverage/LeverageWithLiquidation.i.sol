@@ -6,7 +6,6 @@ import "forge-std/Test.sol";
 
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
-import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
 
 import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
 import {LeverageBorrower, ILeverageBorrower} from "../../_common/LeverageBorrower.sol";
@@ -15,8 +14,6 @@ import {LeverageBorrower, ILeverageBorrower} from "../../_common/LeverageBorrowe
     forge test -vv --ffi --mc LeverageWithLiquidationTest
 */
 contract LeverageWithLiquidationTest is SiloLittleHelper, Test, ILeverageBorrower {
-    using SiloLensLib for ISilo;
-
     bytes32 public constant LEVERAGE_CALLBACK = keccak256("ILeverageBorrower.onLeverage");
 
     function setUp() public {
