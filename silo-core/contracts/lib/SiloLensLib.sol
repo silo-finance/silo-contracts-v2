@@ -36,7 +36,7 @@ library SiloLensLib {
     function getLtv(ISilo _silo, address _borrower) external view returns (uint256 ltv) {
         (
             ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig
-        ) = SiloLensLib.getOrderedConfigs(_silo, _borrower);
+        ) = SiloSolvencyLib.getOrderedConfigs(_silo, _silo.config(), _borrower);
 
         ltv = SiloSolvencyLib.getLtv(
             collateralConfig,
@@ -46,17 +46,5 @@ library SiloLensLib {
             ISilo.AccrueInterestInMemory.Yes,
             IShareToken(debtConfig.debtShareToken).balanceOf(_borrower)
         );
-    }
-
-    function getOrderedConfigs(ISilo _silo, address _borrower)
-        internal
-        view
-        returns (ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig)
-    {
-        (collateralConfig, debtConfig) = _silo.config().getConfigs(address(_silo));
-
-        if (!SiloSolvencyLib.validConfigOrder(collateralConfig.debtShareToken, debtConfig.debtShareToken, _borrower)) {
-            (collateralConfig, debtConfig) = (debtConfig, collateralConfig);
-        }
     }
 }

@@ -30,11 +30,23 @@ library SiloSolvencyLib {
         address _collateralConfigDebtShareToken,
         address _debtConfigDebtShareToken,
         address _borrower
-    ) external view returns (bool orderCorrect) {
+    ) internal view returns (bool orderCorrect) {
         uint256 debtShareTokenBalance = IShareToken(_debtConfigDebtShareToken).balanceOf(_borrower);
 
         return
             debtShareTokenBalance == 0 ? IShareToken(_collateralConfigDebtShareToken).balanceOf(_borrower) == 0 : true;
+    }
+
+    function getOrderedConfigs(ISilo _silo, ISiloConfig _config, address _borrower)
+        internal
+        view
+        returns (ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig)
+    {
+        (collateralConfig, debtConfig) = _config.getConfigs(address(_silo));
+
+        if (!validConfigOrder(collateralConfig.debtShareToken, debtConfig.debtShareToken, _borrower)) {
+            (collateralConfig, debtConfig) = (debtConfig, collateralConfig);
+        }
     }
 
     /// @notice Determines if a borrower is solvent based on the Loan-to-Value (LTV) ratio
