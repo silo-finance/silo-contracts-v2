@@ -1023,6 +1023,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
         );
     }
 
+    // reduces Silo size
     function _callMaxDepositOrMint(address _receiver, uint256 _totalCollateralAssets)
         internal
         view
