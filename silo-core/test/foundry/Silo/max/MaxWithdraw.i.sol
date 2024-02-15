@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
+import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
 
 import {MaxWithdrawCommon} from "./MaxWithdrawCommon.sol";
 
@@ -11,6 +12,8 @@ import {MaxWithdrawCommon} from "./MaxWithdrawCommon.sol";
     forge test -vv --ffi --mc MaxWithdrawTest
 */
 contract MaxWithdrawTest is MaxWithdrawCommon {
+    using SiloLensLib for ISilo;
+
     function setUp() public {
         _setUpLocalFixture(SiloConfigsNames.LOCAL_NO_ORACLE_NO_LTV_SILO);
     }

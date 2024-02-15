@@ -2,6 +2,7 @@
 pragma solidity 0.8.21;
 
 import {IERC20R} from "../interfaces/IERC20R.sol";
+import {SiloLensLib} from "../lib/SiloLensLib.sol";
 import {IShareToken, ShareToken, ISiloFactory, ISilo} from "./ShareToken.sol";
 
 /// @title ShareDebtToken
@@ -14,6 +15,8 @@ import {IShareToken, ShareToken, ISiloFactory, ISilo} from "./ShareToken.sol";
 /// take someone else's debt without asking.
 /// @custom:security-contact security@silo.finance
 contract ShareDebtToken is IERC20R, ShareToken {
+    using SiloLensLib for ISilo;
+
     /// @dev maps _owner => _recipient => amount
     mapping(address => mapping(address => uint256)) private _receiveAllowances;
 

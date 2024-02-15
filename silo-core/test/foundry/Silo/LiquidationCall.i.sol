@@ -10,6 +10,7 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloLiquidation} from "silo-core/contracts/interfaces/ISiloLiquidation.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {IInterestRateModel} from "silo-core/contracts/interfaces/IInterestRateModel.sol";
+import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
 
 import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
 import {MintableToken} from "../_common/MintableToken.sol";
@@ -19,6 +20,8 @@ import {MintableToken} from "../_common/MintableToken.sol";
     forge test -vv --ffi --mc LiquidationCallTest
 */
 contract LiquidationCallTest is SiloLittleHelper, Test {
+    using SiloLensLib for ISilo;
+
     address constant BORROWER = address(0x123);
     uint256 constant COLLATERAL = 10e18;
     uint256 constant DEBT = 7.5e18;

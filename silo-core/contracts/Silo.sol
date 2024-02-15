@@ -82,51 +82,12 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
     function isSolvent(address _borrower) external view virtual returns (bool) {
         (
             ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig
-        ) = _getOrderedConfigs(_borrower);
+        ) = SiloSolvencyLib.getOrderedConfigs(this, config, _borrower);
 
         uint256 debtShareBalance = IShareToken(debtConfig.debtShareToken).balanceOf(_borrower);
 
-        return _callIsSolvent(collateralConfig, debtConfig, _borrower, AccrueInterestInMemory.Yes, debtShareBalance);
-    }
-
-    /// @inheritdoc ISilo
-    function depositPossible(address _depositor) external view virtual returns (bool) {
-        address debtShareToken = config.getConfig(address(this)).debtShareToken;
-        return SiloERC4626Lib.depositPossible(debtShareToken, _depositor);
-    }
-
-    /// @inheritdoc ISilo
-    function borrowPossible(address _borrower) external view virtual returns (bool) {
-        ISiloConfig.ConfigData memory configData = config.getConfig(address(this));
-
-        return SiloLendingLib.borrowPossible(
-            configData.protectedShareToken, configData.collateralShareToken, _borrower
-        );
-    }
-
-    /// @inheritdoc ISilo
-    function getMaxLtv() external view virtual returns (uint256 maxLtv) {
-        maxLtv = config.getConfig(address(this)).maxLtv;
-    }
-
-    /// @inheritdoc ISilo
-    function getLt() external view virtual returns (uint256 lt) {
-        lt = config.getConfig(address(this)).lt;
-    }
-
-    /// @inheritdoc ISilo
-    function getLtv(address _borrower) external view virtual returns (uint256 ltv) {
-        (
-            ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig
-        ) = _getOrderedConfigs(_borrower);
-
-        ltv = SiloSolvencyLib.getLtv(
-            collateralConfig,
-            debtConfig,
-            _borrower,
-            ISilo.OracleType.Solvency,
-            AccrueInterestInMemory.Yes,
-            IShareToken(debtConfig.debtShareToken).balanceOf(_borrower)
+        return SiloSolvencyLib.isSolvent(
+            collateralConfig, debtConfig, _borrower, AccrueInterestInMemory.Yes, debtShareBalance
         );
     }
 
@@ -171,17 +132,6 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
     {
         totalCollateralAssets = total[AssetType.Collateral].assets;
         totalDebtAssets = total[AssetType.Debt].assets;
-    }
-
-    /// @inheritdoc ISilo
-    function getFeesAndFeeReceivers()
-        external
-        view
-        virtual
-        returns (address daoFeeReceiver, address deployerFeeReceiver, uint256 daoFee, uint256 deployerFee)
-    {
-        (daoFeeReceiver, deployerFeeReceiver, daoFee, deployerFee,) =
-            SiloStdLib.getFeesAndFeeReceiversWithAsset(config, factory);
     }
 
     // ERC4626
@@ -752,7 +702,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
 
     /// @inheritdoc ISilo
     function withdrawFees() external virtual {
-        SiloStdLib.withdrawFees(config, factory, siloData);
+        SiloStdLib.withdrawFees(this, siloData);
     }
 
     /// @dev it can be called on "debt silo" only
@@ -961,7 +911,9 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
         }
 
         // `_params.owner` must be solvent
-        if (!_callIsSolvent(collateralConfig, debtConfig, _owner, AccrueInterestInMemory.No, debtShareBalance)) {
+        if (!SiloSolvencyLib.isSolvent(
+            collateralConfig, debtConfig, _owner, AccrueInterestInMemory.No, debtShareBalance
+        )) {
             revert NotSolvent();
         }
     }
@@ -1018,18 +970,6 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
 
     function _getShareToken() internal view virtual override returns (address collateralShareToken) {
         (, collateralShareToken,) = config.getShareTokens(address(this));
-    }
-
-    function _getOrderedConfigs(address _borrower)
-        internal
-        view
-        virtual
-        returns (ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig) {
-        (collateralConfig, debtConfig) = config.getConfigs(address(this));
-
-        if (!SiloSolvencyLib.validConfigOrder(collateralConfig.debtShareToken, debtConfig.debtShareToken, _borrower)) {
-            (collateralConfig, debtConfig) = (debtConfig, collateralConfig);
-        }
     }
 
     function _previewMint(uint256 _shares, AssetType _assetType) internal view virtual returns (uint256 assets) {
@@ -1094,16 +1034,6 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
             _totalDebtShares,
             cachedConfig
         );
-    }
-
-    function _callIsSolvent(
-        ISiloConfig.ConfigData memory _collateralConfig,
-        ISiloConfig.ConfigData memory _debtConfig,
-        address _borrower,
-        ISilo.AccrueInterestInMemory _accrueInMemory,
-        uint256 debtShareBalance
-    ) internal view virtual returns (bool) {
-        return SiloSolvencyLib.isSolvent(_collateralConfig, _debtConfig, _borrower, _accrueInMemory, debtShareBalance);
     }
 
     function _callIsBelowMaxLtv(
