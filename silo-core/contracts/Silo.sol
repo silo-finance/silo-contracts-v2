@@ -702,7 +702,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
 
     /// @inheritdoc ISilo
     function withdrawFees() external virtual {
-        SiloStdLib.withdrawFees(config, factory, siloData);
+        SiloStdLib.withdrawFees(this, siloData);
     }
 
     /// @dev it can be called on "debt silo" only

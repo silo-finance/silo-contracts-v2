@@ -49,7 +49,6 @@ contract SiloLens is ISiloLens {
         virtual
         returns (address daoFeeReceiver, address deployerFeeReceiver, uint256 daoFee, uint256 deployerFee)
     {
-        (daoFeeReceiver, deployerFeeReceiver, daoFee, deployerFee,) =
-            SiloStdLib.getFeesAndFeeReceiversWithAsset(_silo.config(), _silo.factory());
+        (daoFeeReceiver, deployerFeeReceiver, daoFee, deployerFee,) = SiloStdLib.getFeesAndFeeReceiversWithAsset(_silo);
     }
 }
