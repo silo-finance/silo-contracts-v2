@@ -6,7 +6,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 ### Changed
-- change visibility of `total` mapping to public (Silo size | 24.249 | 0.327)
+- change visibility of `total` mapping to public
+- ensure total getters returns values with interest
 
 ## [0.2.0] - 2024-02-13
 ### Added
