@@ -33,6 +33,14 @@ contract GetFeesAndFeeReceiversWithAssetTest is SiloLittleHelper, IntegrationTes
         siloFactory = ISiloFactory(getAddress(SiloCoreContracts.SILO_FACTORY));
     }
 
+    function config() external view returns (ISiloConfig) {
+        return siloConfig;
+    }
+
+    function factory() external view returns (ISiloFactory) {
+        return siloFactory;
+    }
+
     /*
     forge test -vv --ffi --mt test_getFeesAndFeeReceiversWithAsset
     */
@@ -84,30 +92,13 @@ contract GetFeesAndFeeReceiversWithAssetTest is SiloLittleHelper, IntegrationTes
         vm.mockCall(address(siloFactory), data2, abi.encode(daoFeeReceiver, deployerFeeReceiver));
         vm.expectCall(address(siloFactory), data2);
 
-        _assertGetFeesAndFeeReceiversWithAsset(
-            ISilo(silo0), daoFeeReceiver, deployerFeeReceiver, daoFee, deployerFee, asset
-        );
-
-        _assertGetFeesAndFeeReceiversWithAsset(
-            ISilo(silo1), daoFeeReceiver, deployerFeeReceiver, daoFee, deployerFee, asset
-        );
-    }
-
-    function _assertGetFeesAndFeeReceiversWithAsset(
-        ISilo _silo,
-        address daoFeeReceiver,
-        address deployerFeeReceiver,
-        uint256 daoFee,
-        uint256 deployerFee,
-        address asset
-    ) internal {
         (
             address mockedDaoFeeReceiver,
             address mockedDeployerFeeReceiver,
             uint256 mockedDaoFee,
             uint256 mockedDeployerFee,
             address mockedAsset
-        ) = SiloStdLib.getFeesAndFeeReceiversWithAsset(_silo);
+        ) = SiloStdLib.getFeesAndFeeReceiversWithAsset(ISilo(address(this)));
 
         assertEq(mockedDaoFeeReceiver, daoFeeReceiver, "mockedDaoFeeReceiver");
         assertEq(mockedDeployerFeeReceiver, deployerFeeReceiver, "mockedDeployerFeeReceiver");
