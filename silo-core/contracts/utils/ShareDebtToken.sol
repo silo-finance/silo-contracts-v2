@@ -2,6 +2,7 @@
 pragma solidity 0.8.21;
 
 import {IERC20R} from "../interfaces/IERC20R.sol";
+import {SiloLensLib} from "../lib/SiloLensLib.sol";
 import {IShareToken, ShareToken, ISiloFactory, ISilo} from "./ShareToken.sol";
 
 /// @title ShareDebtToken
@@ -79,7 +80,7 @@ contract ShareDebtToken is IERC20R, ShareToken {
         // If we are minting or burning, Silo is responsible to check all necessary conditions
         if (_isTransfer(_sender, _recipient)) {
             // Silo forbids having debt and collateral position of the same asset in given Silo
-            if (!silo.borrowPossible(_recipient)) revert ShareTransferNotAllowed();
+            if (!SiloLensLib.borrowPossible(silo, _recipient)) revert ShareTransferNotAllowed();
 
             // _recipient must approve debt transfer, _sender does not have to
             uint256 currentAllowance = receiveAllowance(_sender, _recipient);
@@ -100,7 +101,7 @@ contract ShareDebtToken is IERC20R, ShareToken {
         // if we are minting or burning, Silo is responsible to check all necessary conditions
         // if we are NOT minting and not burning, it means we are transferring
         // make sure that _recipient is solvent after transfer
-        if (_isTransfer(_sender, _recipient) && !silo.isSolvent(_recipient)) {
+        if (_isTransfer(_sender, _recipient) && !SiloLensLib.isSolvent(silo, _recipient)) {
             revert RecipientNotSolventAfterTransfer();
         }
     }

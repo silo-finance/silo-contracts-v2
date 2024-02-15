@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.21;
 
+import {SiloLensLib} from "../lib/SiloLensLib.sol";
 import {IShareToken, ShareToken, ISiloFactory, ISilo} from "./ShareToken.sol";
 
 /// @title ShareCollateralToken
@@ -30,7 +31,7 @@ contract ShareCollateralToken is ShareToken {
         // if we minting or burning, Silo is responsible to check all necessary conditions
         if (_isTransfer(_sender, _recipient)) {
             // Silo forbids having debt and collateral position of the same asset in given Silo
-            if (!silo.depositPossible(_recipient)) revert ShareTransferNotAllowed();
+            if (!SiloLensLib.depositPossible(silo, _recipient)) revert ShareTransferNotAllowed();
         }
     }
 
@@ -41,6 +42,8 @@ contract ShareCollateralToken is ShareToken {
 
         // for minting or burning, Silo is responsible to check all necessary conditions
         // for transfer make sure that _sender is solvent after transfer
-        if (_isTransfer(_sender, _recipient) && !silo.isSolvent(_sender)) revert SenderNotSolventAfterTransfer();
+        if (_isTransfer(_sender, _recipient) && !SiloLensLib.isSolvent(silo, _sender)) {
+            revert SenderNotSolventAfterTransfer();
+        }
     }
 }
