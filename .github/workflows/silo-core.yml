@@ -94,7 +94,7 @@ jobs:
         run: |
           git submodule
           forge --version
-          # FOUNDRY_PROFILE=core forge build --sizes TEMPORARY DISABLED
+          FOUNDRY_PROFILE=core forge build --sizes
 
       - name: Run Forge tests
         run: FOUNDRY_PROFILE=core-test forge test --no-match-test "_skip_" --no-match-contract "SiloIntegrationTest" --ffi -vvv

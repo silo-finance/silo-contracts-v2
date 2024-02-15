@@ -10,10 +10,7 @@ import {SiloStdLib} from "./lib/SiloStdLib.sol";
 import {SiloSolvencyLib} from "./lib/SiloSolvencyLib.sol";
 
 
-/// @title Silo vault with lending and borrowing functionality
-/// @notice Silo is a ERC4626-compatible vault that allows users to deposit collateral and borrow debt. This contract
-/// is deployed twice for each asset for two-asset lending markets.
-/// Version: 2.0.0
+/// @title SiloLens has some helper methods that can be useful with integration
 contract SiloLens is ISiloLens {
     using SiloLensLib for ISilo;
 
