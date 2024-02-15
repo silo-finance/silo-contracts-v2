@@ -24,7 +24,7 @@ library SiloLiquidationExecLib {
         bool _receiveSToken,
         uint256 _liquidity,
         mapping(ISilo.AssetType => ISilo.Assets) storage _total
-    ) external {
+    ) external { // making it internal can save 1K gas
         ISiloConfig.ConfigData memory collateralConfig = _config.getConfig(address(this));
         if (msg.sender != collateralConfig.otherSilo) revert ISiloLiquidation.OnlySilo();
 
