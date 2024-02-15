@@ -7,6 +7,7 @@ import {Strings} from "openzeppelin-contracts/utils/Strings.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
+import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
 
 import {MintableToken} from "../_common/MintableToken.sol";
 import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
@@ -14,6 +15,8 @@ import {SiloFixture, SiloConfigOverride} from "../_common/fixtures/SiloFixture.s
 
 // setup must match what was set for `EchidnaE2E`
 contract EchidnaSetup is SiloLittleHelper, Test {
+    using SiloLensLib for ISilo;
+
     uint256 constant ACTORS_COUNT = 3;
     mapping (uint256 index => address actor) actors;
 
@@ -107,14 +110,19 @@ contract EchidnaSetup is SiloLittleHelper, Test {
         emit log_named_decimal_uint("LTV0:", silo0.getLtv(_actor), 16);
         emit log_named_decimal_uint("LTV1:", silo1.getLtv(_actor), 16);
 
-        (address protectedToken0, address collateralToken0, address debtShareToken0) = siloConfig.getShareTokens(address(silo0));
-        (address protectedToken1, address collateralToken1,  address debtShareToken1 ) = siloConfig.getShareTokens(address(silo1));
+        (
+            address protectedToken0, address collateralToken0, address debtShareToken0
+        ) = siloConfig.getShareTokens(address(silo0));
 
-        emit log_named_decimal_uint("protectedToken0.balanceOf:", IShareToken(debtShareToken0).balanceOf(_actor), 18);
+        (
+            address protectedToken1, address collateralToken1,  address debtShareToken1
+        ) = siloConfig.getShareTokens(address(silo1));
+
+        emit log_named_decimal_uint("protectedToken0.balanceOf:", IShareToken(protectedToken0).balanceOf(_actor), 18);
         emit log_named_decimal_uint("collateralToken0.balanceOf:", IShareToken(collateralToken0).balanceOf(_actor), 18);
         emit log_named_decimal_uint("debtShareToken0.balanceOf:", IShareToken(debtShareToken0).balanceOf(_actor), 18);
 
-        emit log_named_decimal_uint("protectedToken1.balanceOf:", IShareToken(debtShareToken1).balanceOf(_actor), 18);
+        emit log_named_decimal_uint("protectedToken1.balanceOf:", IShareToken(protectedToken1).balanceOf(_actor), 18);
         emit log_named_decimal_uint("collateralToken1.balanceOf:", IShareToken(collateralToken1).balanceOf(_actor), 18);
         emit log_named_decimal_uint("debtShareToken1.balanceOf:", IShareToken(debtShareToken1).balanceOf(_actor), 18);
 

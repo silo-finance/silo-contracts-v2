@@ -152,38 +152,14 @@ interface ISilo is IERC4626, IERC3156FlashLender, ISiloLiquidation {
     /// @return True if the borrower is solvent, otherwise false
     function isSolvent(address _borrower) external view returns (bool);
 
-    /// @notice Checks if a deposit is possible for a given depositor
-    /// @param _depositor Address of the depositor to check for deposit possibility
-    /// @return True if deposit is possible for the depositor, otherwise false
-    function depositPossible(address _depositor) external view returns (bool);
+    /// @notice Retrieves the raw total amount of assets based on provided type (direct storage access)
+    function total(AssetType _assetType) external view returns (uint256);
 
-    /// @notice Checks if borrowing is possible for a given borrower
-    /// @param _borrower Address of the borrower to check for borrowing possibility
-    /// @return True if borrowing is possible for the borrower, otherwise false
-    function borrowPossible(address _borrower) external view returns (bool);
-
-    /// @notice Retrieves the maximum loan-to-value (LTV) ratio
-    /// @return maxLtv The maximum LTV ratio configured for the silo in 18 decimals points
-    function getMaxLtv() external view returns (uint256 maxLtv);
-
-    /// @notice Retrieves the LT value
-    /// @return lt The LT value in 18 decimals points
-    function getLt() external view returns (uint256 lt);
-
-    /// @notice Retrieves the loan-to-value (LTV) for a specific borrower
-    /// @param _borrower Address of the borrower
-    /// @return ltv The LTV for the borrower in 18 decimals points
-    function getLtv(address _borrower) external view returns (uint256 ltv);
-
-    /// @notice Retrieves the total amount of protected (non-borrowable) collateral assets
-    /// @return totalProtectedAssets The total amount of assets of type 'Protected'
-    function getProtectedAssets() external view returns (uint256 totalProtectedAssets);
-
-    /// @notice Retrieves the total amount of collateral (borrowable) assets
+    /// @notice Retrieves the total amount of collateral (borrowable) assets with interest
     /// @return totalCollateralAssets The total amount of assets of type 'Collateral'
     function getCollateralAssets() external view returns (uint256 totalCollateralAssets);
 
-    /// @notice Retrieves the total amount of debt assets
+    /// @notice Retrieves the total amount of debt assets with interest
     /// @return totalDebtAssets The total amount of assets of type 'Debt'
     function getDebtAssets() external view returns (uint256 totalDebtAssets);
 
@@ -202,16 +178,6 @@ interface ISilo is IERC4626, IERC3156FlashLender, ISiloLiquidation {
         external
         view
         returns (uint256 totalCollateralAssets, uint256 totalDebtAssets);
-
-    /// @notice Retrieves the fee details in 18 decimals points and the addresses of the DAO and deployer fee receivers
-    /// @return daoFeeReceiver The address of the DAO fee receiver
-    /// @return deployerFeeReceiver The address of the deployer fee receiver
-    /// @return daoFee The total fee for the DAO in 18 decimals points
-    /// @return deployerFee The total fee for the deployer in 18 decimals points
-    function getFeesAndFeeReceivers()
-        external
-        view
-        returns (address daoFeeReceiver, address deployerFeeReceiver, uint256 daoFee, uint256 deployerFee);
 
     /// @notice Implements IERC4626.convertToShares for each asset type
     function convertToShares(uint256 _assets, AssetType _assetType) external view returns (uint256 shares);

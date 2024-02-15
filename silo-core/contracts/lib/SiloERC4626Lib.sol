@@ -154,6 +154,29 @@ library SiloERC4626Lib {
         );
     }
 
+    /// this helped with stack too deep
+    function transitionCollateralWithdraw(
+        address _shareToken,
+        uint256 _shares,
+        address _owner,
+        address _spender,
+        ISilo.AssetType _assetType,
+        uint256 _liquidity,
+        ISilo.Assets storage _totalCollateral
+    ) external returns (uint256 assets, uint256 shares) {
+        return withdraw(
+            address(0), _shareToken, 0, _shares, _owner, _owner, _spender, _assetType, _liquidity, _totalCollateral
+        );
+    }
+
+    /// @notice Checks if a depositor can make a deposit
+    /// @param _debtShareToken Address of the debt share token
+    /// @param _depositor Address of the user attempting to deposit
+    /// @return Returns `true` if the depositor can deposit, otherwise `false`
+    function depositPossible(address _debtShareToken, address _depositor) internal view returns (bool) {
+        return IShareToken(_debtShareToken).balanceOf(_depositor) == 0;
+    }
+
     /// @notice Deposit assets into the silo
     /// @dev Deposits are not allowed if the receiver already has some debt
     /// @param _token The ERC20 token address being deposited; 0 means tokens will not be transferred. Useful for
@@ -201,7 +224,7 @@ library SiloERC4626Lib {
         // however, there is (probably unreal but also untested) possibility, where you might borrow from silo
         // and deposit (like double spend) and with that we could overflow. Better safe than sorry - unchecked removed
         // unchecked {
-            _totalCollateral.assets = totalAssets + assets;
+        _totalCollateral.assets = totalAssets + assets;
         // }
 
         // Hook receiver is called after `mint` and can reentry but state changes are completed already
@@ -213,21 +236,6 @@ library SiloERC4626Lib {
             // We do not expect the silo to work with any malicious token that will not send tokens to silo.
             IERC20Upgradeable(_token).safeTransferFrom(_depositor, address(this), assets);
         }
-    }
-
-    /// this helped with stack too deep
-    function transitionCollateralWithdraw(
-        address _shareToken,
-        uint256 _shares,
-        address _owner,
-        address _spender,
-        ISilo.AssetType _assetType,
-        uint256 _liquidity,
-        ISilo.Assets storage _totalCollateral
-    ) public returns (uint256 assets, uint256 shares) {
-        return withdraw(
-            address(0), _shareToken, 0, _shares, _owner, _owner, _spender, _assetType, _liquidity, _totalCollateral
-        );
     }
 
     /// @notice Withdraw assets from the silo
@@ -291,13 +299,5 @@ library SiloERC4626Lib {
             // fee-on-transfer is ignored
             IERC20Upgradeable(_asset).safeTransfer(_receiver, assets);
         }
-    }
-
-    /// @notice Checks if a depositor can make a deposit
-    /// @param _debtShareToken Address of the debt share token
-    /// @param _depositor Address of the user attempting to deposit
-    /// @return Returns `true` if the depositor can deposit, otherwise `false`
-    function depositPossible(address _debtShareToken, address _depositor) public view returns (bool) {
-        return IShareToken(_debtShareToken).balanceOf(_depositor) == 0;
     }
 }

@@ -8,9 +8,12 @@ import {ERC20} from "openzeppelin-contracts/token/ERC20/ERC20.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
+import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
 
 
 contract SiloInvariants is Test {
+    using SiloLensLib for ISilo;
+
     ISiloConfig immutable siloConfig;
 
     ISilo immutable silo0;
@@ -53,7 +56,7 @@ contract SiloInvariants is Test {
     function siloInvariant_balanceOfSiloMustBeEqToAssets() external {
         assertEq(
             token0.balanceOf(address(silo0)), // this is only true if we do not transfer tokens directly
-            silo0.getCollateralAssets() + silo0.getProtectedAssets(),
+            silo0.getCollateralAssets() + silo0.total(ISilo.AssetType.Protected),
             "balanceOf"
         );
     }
@@ -68,7 +71,7 @@ contract SiloInvariants is Test {
         );
 
         assertEq(
-            silo0.getProtectedAssets(),
+            silo0.total(ISilo.AssetType.Protected),
             IShareToken(collateral.protectedShareToken).totalSupply(),
             "silo0: protected shares == assets"
         );
@@ -86,7 +89,7 @@ contract SiloInvariants is Test {
         );
 
         assertEq(
-            silo1.getProtectedAssets(),
+            silo1.total(ISilo.AssetType.Protected),
             IShareToken(debt.protectedShareToken).totalSupply(),
             "silo1: protected shares == assets"
         );

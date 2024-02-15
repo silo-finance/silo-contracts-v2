@@ -42,7 +42,7 @@ error Revert AboveMaxLtv ()
         //        *wait* Time delay: 1 seconds Block delay: 1
         vm.warp(block.timestamp + 1);
 
-        (uint256 maxAssets, uint256 shares) = __maxBorrow_correctReturnValue(0);
+        (uint256 maxAssets,) = __maxBorrow_correctReturnValue(0);
 
         assertEq(maxAssets, 33968211591454069532969, "echidna borrow amount (339682116)");
     }

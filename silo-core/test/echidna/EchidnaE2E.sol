@@ -4,6 +4,7 @@ import {Deployers} from "./utils/Deployers.sol";
 import {Actor} from "./utils/Actor.sol";
 import {ISiloConfig} from "silo-core/contracts/SiloConfig.sol";
 import {Silo, ISilo} from "silo-core/contracts/Silo.sol";
+import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {PropertiesAsserts} from "properties/util/PropertiesHelper.sol";
 
@@ -20,6 +21,7 @@ Command to run:
 SOLC_VERSION=0.8.21 echidna silo-core/test/echidna/EchidnaE2E.sol --contract EchidnaE2E --config silo-core/test/echidna/e2e-internal.yaml --workers 10
 */
 contract EchidnaE2E is Deployers, PropertiesAsserts {
+    using SiloLensLib for Silo;
     using Strings for uint256;
     ISiloConfig siloConfig;
 
@@ -73,7 +75,7 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         return actors[actorIndex];
     }
 
-    function _overflowCheck(uint256 a, uint256 b) internal returns (bool overflow) {
+    function _overflowCheck(uint256 a, uint256 b) internal pure {
         uint256 c;
         unchecked {
             c = a + b;
@@ -402,7 +404,7 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
        ================================================================ */
 
     // Property: Total debt shares should never be larger than total debt
-    function debtSharesNeverLargerThanDebt() public {
+    function debtSharesNeverLargerThanDebt() public view {
         uint256 debt0 = vault0.getDebtAssets();
         uint256 debt1 = vault1.getDebtAssets();
 
@@ -452,7 +454,7 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         require(isSolvent, "user not solvent");
 
         (, uint256 debtToRepay) = vault.maxLiquidation(address(actor));
-        try liquidator.liquidationCall(vaultZero, address(actor), debtToRepay, false, siloConfig) {
+        try liquidator.liquidationCall(vaultZero, address(actor), debtToRepay, receiveShares, siloConfig) {
             emit LogString("Solvent user liquidated!");
             assert(false);
         } catch {
@@ -471,7 +473,7 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         // TODO check that the user has borrow shares
 
         (, uint256 debtToRepay) = vault.maxLiquidation(address(actor));
-        try liquidator.liquidationCall(vaultZero, address(actor), debtToRepay, false, siloConfig) {
+        try liquidator.liquidationCall(vaultZero, address(actor), debtToRepay, receiveShares, siloConfig) {
 
         } catch {
             emit LogString("Cannot liquidate insolvent user!");
@@ -495,7 +497,7 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
 
         actorTwo.liquidationCall(true, address(actor), debtToRepay, false, siloConfig);
 
-        uint256 afterLtv = vault.getLtv(address(actor));
+        vault.getLtv(address(actor));
         assert(false);
     }
 

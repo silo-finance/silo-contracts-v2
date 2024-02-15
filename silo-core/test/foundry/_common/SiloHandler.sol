@@ -5,11 +5,14 @@ import "forge-std/Test.sol";
 
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
+import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
 
 import {MintableToken} from "../_common/MintableToken.sol";
 
 // TODO make all ...possible methods in a way, that we can turn ON: forge-config: core.invariant.fail-on-revert = true
 contract SiloHandler is Test {
+    using SiloLensLib for ISilo;
+
     ISilo public immutable SILO_0;
     ISilo public immutable SILO_1;
 
