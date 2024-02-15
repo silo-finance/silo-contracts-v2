@@ -461,7 +461,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
                 ? (AssetType.Protected, configData.protectedShareToken)
                 : (AssetType.Collateral, configData.collateralShareToken);
 
-            (assets, toShares) = _callDeposit(
+            (assets, toShares) = SiloERC4626Lib.deposit(
                 address(0), // empty token because we don't want to transfer
                 _owner,
                 assets,
@@ -818,7 +818,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
     {
         if (_assetType == AssetType.Debt) revert ISilo.WrongAssetType();
 
-        (assets, shares) = _callDeposit(
+        (assets, shares) = SiloERC4626Lib.deposit(
             _token,
             msg.sender,
             _assets,
@@ -1070,21 +1070,6 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
             _assetType,
             _assetType == AssetType.Protected ? total[AssetType.Protected].assets : 0, // will be calculated internally
             _assetType == AssetType.Protected ? total[AssetType.Protected].assets : _callGetLiquidity(_config)
-        );
-    }
-
-    function _callDeposit(
-        address _token,
-        address _depositor,
-        uint256 _assets,
-        uint256 _shares,
-        address _receiver,
-        IShareToken _collateralShareToken,
-        IShareToken _debtShareToken,
-        ISilo.Assets storage _totalCollateral
-    ) internal virtual returns (uint256 assets, uint256 shares) {
-        return SiloERC4626Lib.deposit(
-            _token, _depositor, _assets, _shares, _receiver, _collateralShareToken, _debtShareToken, _totalCollateral
         );
     }
 
