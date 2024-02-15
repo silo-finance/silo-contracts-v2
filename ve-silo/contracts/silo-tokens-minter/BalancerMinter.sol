@@ -15,7 +15,6 @@
 pragma solidity 0.8.21;
 
 import {IBalancerMinter, IERC20} from "./interfaces/IBalancerMinter.sol";
-import {ISiloWithFeeDetails as ISilo} from "./interfaces/ISiloWithFeeDetails.sol";
 import {ISiloLiquidityGauge} from "ve-silo/contracts/gauges/interfaces/ISiloLiquidityGauge.sol";
 
 import {ReentrancyGuard} from "openzeppelin-contracts/security/ReentrancyGuard.sol";
