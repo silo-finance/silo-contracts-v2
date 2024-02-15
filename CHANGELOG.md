@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [0.2.1] - 2024-02-14
 ### Changed
 - change visibility of `total` mapping to public
-- SiloLens reduced Silo size by 1.6
+- SiloLens reduced Silo size by ~1.9
 
 ## [0.2.0] - 2024-02-13
 ### Added

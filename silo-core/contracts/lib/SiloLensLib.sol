@@ -12,18 +12,6 @@ import {SiloLendingLib} from "./SiloLendingLib.sol";
 import {SiloERC4626Lib} from "./SiloERC4626Lib.sol";
 
 library SiloLensLib {
-    function isSolvent(ISilo _silo, address _borrower) external view returns (bool) {
-        (
-            ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig
-        ) = getOrderedConfigs(_silo, _borrower);
-
-        uint256 debtShareBalance = IShareToken(debtConfig.debtShareToken).balanceOf(_borrower);
-
-        return SiloSolvencyLib.isSolvent(
-            collateralConfig, debtConfig, _borrower, ISilo.AccrueInterestInMemory.Yes, debtShareBalance
-        );
-    }
-
     function depositPossible(ISilo _silo, address _depositor) internal view returns (bool) {
         address debtShareToken = _silo.config().getConfig(address(_silo)).debtShareToken;
         return SiloERC4626Lib.depositPossible(debtShareToken, _depositor);

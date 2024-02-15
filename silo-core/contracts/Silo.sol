@@ -79,6 +79,19 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
     }
 
     /// @inheritdoc ISilo
+    function isSolvent(address _borrower) external view virtual returns (bool) {
+        (
+            ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig
+        ) = config.getConfigs(address(this));
+
+        uint256 debtShareBalance = IShareToken(debtConfig.debtShareToken).balanceOf(_borrower);
+
+        return SiloSolvencyLib.isSolvent(
+            collateralConfig, debtConfig, _borrower, AccrueInterestInMemory.Yes, debtShareBalance
+        );
+    }
+
+    /// @inheritdoc ISilo
     function getCollateralAssets() external view virtual returns (uint256 totalCollateralAssets) {
         ISiloConfig.ConfigData memory thisSiloConfig = config.getConfig(address(this));
 

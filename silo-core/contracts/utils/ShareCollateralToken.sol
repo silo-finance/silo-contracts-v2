@@ -42,7 +42,7 @@ contract ShareCollateralToken is ShareToken {
 
         // for minting or burning, Silo is responsible to check all necessary conditions
         // for transfer make sure that _sender is solvent after transfer
-        if (_isTransfer(_sender, _recipient) && !SiloLensLib.isSolvent(silo, _sender)) {
+        if (_isTransfer(_sender, _recipient) && !silo.isSolvent(_sender)) {
             revert SenderNotSolventAfterTransfer();
         }
     }
