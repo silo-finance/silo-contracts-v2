@@ -677,7 +677,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
             ISiloOracle(debtConfig.maxLtvOracle).beforeQuote(debtConfig.token);
         }
 
-        if (!_callIsBelowMaxLtv(collateralConfig, debtConfig, _borrower, AccrueInterestInMemory.No)) {
+        if (!SiloSolvencyLib.isBelowMaxLtv(collateralConfig, debtConfig, _borrower, AccrueInterestInMemory.No)) {
             revert AboveMaxLtv();
         }
     }
@@ -929,7 +929,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
             ISiloOracle(debtConfig.maxLtvOracle).beforeQuote(debtConfig.token);
         }
 
-        if (!_callIsBelowMaxLtv(collateralConfig, debtConfig, _borrower, AccrueInterestInMemory.No)) {
+        if (!SiloSolvencyLib.isBelowMaxLtv(collateralConfig, debtConfig, _borrower, AccrueInterestInMemory.No)) {
             revert AboveMaxLtv();
         }
     }
@@ -1021,15 +1021,6 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
             _totalDebtShares,
             cachedConfig
         );
-    }
-
-    function _callIsBelowMaxLtv(
-        ISiloConfig.ConfigData memory _collateralConfig,
-        ISiloConfig.ConfigData memory _debtConfig,
-        address _borrower,
-        ISilo.AccrueInterestInMemory _accrueInMemory
-    ) internal view virtual returns (bool) {
-        return SiloSolvencyLib.isBelowMaxLtv(_collateralConfig, _debtConfig, _borrower, _accrueInMemory);
     }
 
     function _callMaxDepositOrMint(address _receiver, uint256 _totalCollateralAssets)
