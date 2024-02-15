@@ -50,6 +50,8 @@ library SiloSolvencyLib {
         ISilo.AccrueInterestInMemory _accrueInMemory,
         uint256 debtShareBalance
     ) internal view returns (bool) {
+        if (debtShareBalance == 0) return true;
+
         uint256 ltv = getLtv(
             _collateralConfig, _debtConfig, _borrower, ISilo.OracleType.Solvency, _accrueInMemory, debtShareBalance
         );
