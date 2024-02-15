@@ -73,7 +73,7 @@ contract DepositTest is SiloLittleHelper, Test {
 
         assertEq(token0.balanceOf(address(silo0)), assets * 2);
         assertEq(silo0.getCollateralAssets(), assets);
-        assertEq(silo0.getProtectedAssets(), assets);
+        assertEq(silo0.total(ISilo.AssetType.Protected), assets);
         assertEq(silo0.getDebtAssets(), 0);
 
         assertEq(IShareToken(collateral.collateralShareToken).balanceOf(depositor), assets, "collateral shares");
@@ -81,7 +81,7 @@ contract DepositTest is SiloLittleHelper, Test {
 
         assertEq(token1.balanceOf(address(silo1)), assets * 2);
         assertEq(silo1.getCollateralAssets(), assets);
-        assertEq(silo1.getProtectedAssets(), assets);
+        assertEq(silo1.total(ISilo.AssetType.Protected), assets);
         assertEq(silo1.getDebtAssets(), 0);
 
         assertEq(IShareToken(debt.collateralShareToken).balanceOf(depositor), assets, "collateral shares (on other silo)");

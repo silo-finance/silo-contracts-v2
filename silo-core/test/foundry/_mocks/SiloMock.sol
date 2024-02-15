@@ -33,7 +33,7 @@ contract SiloMock is Test {
     }
 
     function getProtectedAssetsMock(uint256 _totalProtectedAssets) external {
-        bytes memory data = abi.encodeWithSelector(ISilo.getProtectedAssets.selector);
+        bytes memory data = abi.encodeWithSelector(ISilo.total.selector, ISilo.AssetType.Protected);
         vm.mockCall(ADDRESS, data, abi.encode(_totalProtectedAssets));
         vm.expectCall(ADDRESS, data);
     }
