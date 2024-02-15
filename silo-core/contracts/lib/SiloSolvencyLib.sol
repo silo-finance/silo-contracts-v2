@@ -24,6 +24,18 @@ library SiloSolvencyLib {
     uint256 internal constant _PRECISION_DECIMALS = 1e18;
     uint256 internal constant _INFINITY = type(uint256).max;
 
+    function getOrderedConfigs(ISilo _silo, ISiloConfig _config, address _borrower)
+        external
+        view
+        returns (ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig)
+    {
+        (collateralConfig, debtConfig) = _config.getConfigs(address(_silo));
+
+        if (!validConfigOrder(collateralConfig.debtShareToken, debtConfig.debtShareToken, _borrower)) {
+            (collateralConfig, debtConfig) = (debtConfig, collateralConfig);
+        }
+    }
+
     /// @dev check if config was given in correct order
     /// @return orderCorrect TRUE means that order is correct OR `_borrower` has no debt and we can not really tell
     function validConfigOrder(
@@ -35,18 +47,6 @@ library SiloSolvencyLib {
 
         return
             debtShareTokenBalance == 0 ? IShareToken(_collateralConfigDebtShareToken).balanceOf(_borrower) == 0 : true;
-    }
-
-    function getOrderedConfigs(ISilo _silo, ISiloConfig _config, address _borrower)
-        internal
-        view
-        returns (ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig)
-    {
-        (collateralConfig, debtConfig) = _config.getConfigs(address(_silo));
-
-        if (!validConfigOrder(collateralConfig.debtShareToken, debtConfig.debtShareToken, _borrower)) {
-            (collateralConfig, debtConfig) = (debtConfig, collateralConfig);
-        }
     }
 
     /// @notice Determines if a borrower is solvent based on the Loan-to-Value (LTV) ratio
