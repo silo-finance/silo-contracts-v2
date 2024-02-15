@@ -49,7 +49,7 @@ library SiloSolvencyLib {
         address _borrower,
         ISilo.AccrueInterestInMemory _accrueInMemory,
         uint256 debtShareBalance
-    ) external view returns (bool) {
+    ) internal view returns (bool) {
         uint256 ltv = getLtv(
             _collateralConfig, _debtConfig, _borrower, ISilo.OracleType.Solvency, _accrueInMemory, debtShareBalance
         );
