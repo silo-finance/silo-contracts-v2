@@ -6,6 +6,7 @@ import {IShareToken} from "./interfaces/IShareToken.sol";
 import {ISiloConfig} from "./interfaces/ISiloConfig.sol";
 
 import {SiloLensLib} from "./lib/SiloLensLib.sol";
+import {SiloStdLib} from "./lib/SiloStdLib.sol";
 import {SiloSolvencyLib} from "./lib/SiloSolvencyLib.sol";
 
 
@@ -44,5 +45,16 @@ contract SiloLens is ISiloLens {
     /// @inheritdoc ISiloLens
     function getLtv(ISilo _silo, address _borrower) external view virtual returns (uint256 ltv) {
         return _silo.getLtv(_borrower);
+    }
+
+    /// @inheritdoc ISiloLens
+    function getFeesAndFeeReceivers(ISilo _silo)
+        external
+        view
+        virtual
+        returns (address daoFeeReceiver, address deployerFeeReceiver, uint256 daoFee, uint256 deployerFee)
+    {
+        (daoFeeReceiver, deployerFeeReceiver, daoFee, deployerFee,) =
+            SiloStdLib.getFeesAndFeeReceiversWithAsset(_silo.config(), _silo.factory());
     }
 }
