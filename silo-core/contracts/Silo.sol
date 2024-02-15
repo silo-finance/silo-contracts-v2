@@ -75,7 +75,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
     }
 
     function getLiquidity() external view virtual returns (uint256 liquidity) {
-        return _callGetLiquidity(config);
+        return SiloLendingLib.getLiquidity(config);
     }
 
     /// @inheritdoc ISilo
@@ -1032,10 +1032,6 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
         return SiloSolvencyLib.isBelowMaxLtv(_collateralConfig, _debtConfig, _borrower, _accrueInMemory);
     }
 
-    function _callGetLiquidity(ISiloConfig _config) internal view virtual returns (uint256 liquidity) {
-        return SiloLendingLib.getLiquidity(_config);
-    }
-
     function _callMaxDepositOrMint(address _receiver, uint256 _totalCollateralAssets)
         internal
         view
@@ -1056,7 +1052,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
             _owner,
             _assetType,
             _assetType == AssetType.Protected ? total[AssetType.Protected].assets : 0, // will be calculated internally
-            _assetType == AssetType.Protected ? total[AssetType.Protected].assets : _callGetLiquidity(_config)
+            _assetType == AssetType.Protected ? total[AssetType.Protected].assets : SiloLendingLib.getLiquidity(_config)
         );
     }
 
