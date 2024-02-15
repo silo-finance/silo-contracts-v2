@@ -68,7 +68,7 @@ library SiloSolvencyLib {
         ISiloConfig.ConfigData memory _debtConfig,
         address _borrower,
         ISilo.AccrueInterestInMemory _accrueInMemory
-    ) external view returns (bool) {
+    ) internal view returns (bool) {
         uint256 debtShareBalance = IShareToken(_debtConfig.debtShareToken).balanceOf(_borrower);
 
         uint256 ltv = getLtv(
