@@ -6,6 +6,7 @@ import "forge-std/Test.sol";
 import {Strings} from "openzeppelin-contracts/utils/Strings.sol";
 
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
+import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloLiquidation} from "silo-core/contracts/interfaces/ISiloLiquidation.sol";
 import {SiloLiquidationLib} from "silo-core/contracts/lib/SiloLiquidationLib.sol";
 import {SiloLiquidationExecLib} from "silo-core/contracts/lib/SiloLiquidationExecLib.sol";
@@ -74,7 +75,7 @@ contract GetExactLiquidationAmountsHelper is Test {
 
         D_SHARE_TOKEN_B.balanceOfMock(makeAddr("borrower"), _debtUserBalanceOf * sharesOffset);
         D_SHARE_TOKEN_B.totalSupplyMock(_debtUserBalanceOf * sharesOffset);
-        SILO_B.getDebtAssetsMock(_debtUserBalanceOf);
+        SILO_B.totalMock(ISilo.AssetType.Debt, _debtUserBalanceOf);
 
         return SiloLiquidationExecLib.getExactLiquidationAmounts(
             collateralConfig,
@@ -136,7 +137,7 @@ contract GetExactLiquidationAmountsTest is GetExactLiquidationAmountsHelper {
 
         D_SHARE_TOKEN_B.balanceOfMock(user, 0);
         D_SHARE_TOKEN_B.totalSupplyMock(0);
-        SILO_B.getDebtAssetsMock(0);
+        SILO_B.totalMock(ISilo.AssetType.Debt, 0);
 
         (
             uint256 fromCollateral, uint256 fromProtected, uint256 repayDebtAssets
@@ -171,7 +172,7 @@ contract GetExactLiquidationAmountsTest is GetExactLiquidationAmountsHelper {
 
             D_SHARE_TOKEN_B.balanceOfMock(testData.input.user, testData.mocks.debtUserSharesBalanceOf);
             D_SHARE_TOKEN_B.totalSupplyMock(testData.mocks.debtSharesTotalSupply);
-            SILO_B.getDebtAssetsMock(testData.mocks.siloTotalDebtAssets);
+            SILO_B.totalMock(ISilo.AssetType.Debt, testData.mocks.siloTotalDebtAssets);
 
             (
                 uint256 fromCollateral, uint256 fromProtected, uint256 repayDebtAssets

@@ -38,7 +38,7 @@ contract SiloDebugTest is IntegrationTest {
         vm.label(_SILO_ADDR, "silo");
     }
 
-    function testIt() public {
+    function testIt() public view {
         // IInterestRateModelV2.ConfigWithState memory config = _IRM.getConfig(_SILO_ADDR);
 
         IRMGetters.Setup memory setup = _IRM_GETTERS.getSetup(_SILO_ADDR);

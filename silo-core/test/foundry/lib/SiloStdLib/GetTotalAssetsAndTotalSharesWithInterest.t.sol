@@ -78,7 +78,7 @@ contract GetTotalAssetsAndTotalSharesWithInterestTest is Test {
         assertEq(totalShares, 0);
 
         DEBT_SHARE_TOKEN.totalSupplyMock(0);
-        SILO.getDebtAssetsMock(0);
+        SILO.totalMock(ISilo.AssetType.Debt, 0);
         (totalAssets, totalShares) =
             SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(_config(), ISilo.AssetType.Debt);
 
@@ -114,7 +114,7 @@ contract GetTotalAssetsAndTotalSharesWithInterestTest is Test {
         assertEq(totalShares, _totalSupply);
 
         DEBT_SHARE_TOKEN.totalSupplyMock(_totalSupply);
-        SILO.getDebtAssetsMock(0);
+        SILO.totalMock(ISilo.AssetType.Debt, 0);
         (totalAssets, totalShares) =
             SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(_config(), ISilo.AssetType.Debt);
 
@@ -158,7 +158,7 @@ contract GetTotalAssetsAndTotalSharesWithInterestTest is Test {
         uint256 totalShares;
 
         for (uint256 index = 0; index < debtTestCasesIndex; index++) {
-            SILO.getDebtAssetsMock(debtTestCases[index].debtAssets);
+            SILO.totalMock(ISilo.AssetType.Debt, debtTestCases[index].debtAssets);
             DEBT_SHARE_TOKEN.totalSupplyMock(_totalSupply);
             INTEREST_RATE_MODEL.getCompoundInterestRateMock(silo, block.timestamp, debtTestCases[index].rcomp);
 

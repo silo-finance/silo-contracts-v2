@@ -175,15 +175,18 @@ interface ISilo is IERC4626, IERC3156FlashLender, ISiloLiquidation {
     /// @return ltv The LTV for the borrower in 18 decimals points
     function getLtv(address _borrower) external view returns (uint256 ltv);
 
+    /// @notice Retrieves the raw total amount of assets based on provided type (direct storage access)
+    function total(AssetType _assetType) external view returns (uint256);
+
     /// @notice Retrieves the total amount of protected (non-borrowable) collateral assets
     /// @return totalProtectedAssets The total amount of assets of type 'Protected'
     function getProtectedAssets() external view returns (uint256 totalProtectedAssets);
 
-    /// @notice Retrieves the total amount of collateral (borrowable) assets
+    /// @notice Retrieves the total amount of collateral (borrowable) assets with interest
     /// @return totalCollateralAssets The total amount of assets of type 'Collateral'
     function getCollateralAssets() external view returns (uint256 totalCollateralAssets);
 
-    /// @notice Retrieves the total amount of debt assets
+    /// @notice Retrieves the total amount of debt assets with interest
     /// @return totalDebtAssets The total amount of assets of type 'Debt'
     function getDebtAssets() external view returns (uint256 totalDebtAssets);
 
