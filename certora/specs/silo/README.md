@@ -95,8 +95,7 @@
   Implementation: rule `HLP_inverse_deposit_withdraw_collateral`\
   Apply for mint, withdraw, redeem, repay, repayShares, borrow, borrowShares.
 
-- Additive deposit for the state while do deposit(x + y)
-  should be the same as deposit(x) + deposit(y). \
+- An additive deposit for the silo state, while making a deposit(x + y), should be the same as a deposit(x) and deposit(y). \
   Implementation: rule `HLP_additive_deposit_collateral` \
   Apply for mint, withdraw, redeem, repay, repayShares, borrow, borrowShares, transitionCollateral.
 
