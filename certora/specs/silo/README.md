@@ -60,7 +60,7 @@
   Implementation: rule `VS_Silo_totals_share_token_totalSupply`
 
 - _siloData.interestRateTimestamp is zero => _siloData.daoAndDeployerFees is zero. \
-  _siloData.daoAndDeployerFees can encrease without _siloData.interestRateTimestamp only on flashLoan fn. \
+  _siloData.daoAndDeployerFees can increase without _siloData.interestRateTimestamp only on flashLoan fn. \
   Implementation: rule `VS_Silo_interestRateTimestamp_daoAndDeployerFees`
 
 - Silo._total[ISilo.AssetType.Debt].assets is not zero => Silo._total[ISilo.AssetType.Collateral].assets is not zero. \
