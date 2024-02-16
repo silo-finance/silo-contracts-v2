@@ -5,6 +5,9 @@ import "./Silo0ShareTokensMethods.spec";
 
 using Silo0 as silo0;
 
+definition maxDaoFee() returns uint256 = 4 * (10 ^ 17); // 0.4e18;
+definition maxDeployerFee() returns uint256 = 15 * (10 ^ 16); // 0.15e18;
+
 function silo0SetUp(env e) {
     address configSilo1;
 
@@ -64,6 +67,6 @@ function silo0SetUp(env e) {
 
     // it is possible to deploy config with any fees, but not when you do it via factory
     // below are restrictions for fees we have in factory, if we do not keep them we can overflow,
-    require silo0.getDaoFee() <= 4 * (10 ^ 17); // 0.4e18;
-    require silo0.getDeployerFee() <= 15 * (10 ^ 16); // 0.15e18;
+    require silo0.getDaoFee() <= maxDaoFee(); 
+    require silo0.getDeployerFee() <= maxDeployerFee();
 }

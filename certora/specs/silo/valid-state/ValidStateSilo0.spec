@@ -47,7 +47,11 @@ certoraRun certora/config/silo/silo0.conf \
     --rule "VS_Silo_interestRateTimestamp_daoAndDeployerFees" \
     --verify "Silo0:certora/specs/silo/valid-state/ValidStateSilo0.spec"
 */
-rule VS_Silo_interestRateTimestamp_daoAndDeployerFees(env e, method f, calldataarg args) filtered { f -> !f.isView} {
+rule VS_Silo_interestRateTimestamp_daoAndDeployerFees(
+    env e,
+    method f,
+    calldataarg args
+) filtered { f -> !f.isView && f.selector != flashLoanSig()} {
     silo0SetUp(e);
 
     require getSiloDataInterestRateTimestamp() == 0;
@@ -57,9 +61,8 @@ rule VS_Silo_interestRateTimestamp_daoAndDeployerFees(env e, method f, calldataa
 
     mathint feesAfter = getSiloDataDaoAndDeployerFees();
 
-    assert getSiloDataInterestRateTimestamp() == 0 =>
-        feesAfter == 0 || (f.selector == flashLoanSig() && feesAfter != 0),
-        "Interest rate timestamp 0 <=> dao and deployer fees 0";
+    assert getSiloDataInterestRateTimestamp() == 0 => feesAfter == 0,
+        "Interest rate timestamp 0 => dao and deployer fees 0";
 }
 
 /**

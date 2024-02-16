@@ -18,12 +18,6 @@ function requireCorrectSiloBalance() {
     mathint daoAndDeployerFees = getSiloDataDaoAndDeployerFees();
     mathint siloBalance = token0.balanceOf(silo0);
 
-    require collateralAssets < max_uint256;
-    require protectedAssets < max_uint256;
-    require debtAssets < max_uint256;
-    require siloBalance < max_uint256;
-    require daoAndDeployerFees < max_uint256;
-
     mathint liquidity = debtAssets > collateralAssets ? 0 : collateralAssets - debtAssets;
 
     mathint expectedBalance = liquidity + protectedAssets + daoAndDeployerFees;
