@@ -41,7 +41,7 @@ contract WithdrawFeesTest is Test {
         _reset();
 
         vm.expectRevert();
-        SiloStdLib.withdrawFees(ISilo(address(this)), siloData);
+        _withdrawFees(ISilo(address(this)), siloData);
     }
 
     /*
@@ -61,7 +61,7 @@ contract WithdrawFeesTest is Test {
         token.balanceOfMock(address(this), 0);
 
         vm.expectRevert(ISilo.BalanceZero.selector);
-        SiloStdLib.withdrawFees(ISilo(address(this)), siloData);
+        _withdrawFees(ISilo(address(this)), siloData);
     }
 
     /*
@@ -81,7 +81,7 @@ contract WithdrawFeesTest is Test {
         token.balanceOfMock(address(this), 1);
 
         vm.expectRevert(ISilo.EarnedZero.selector);
-        SiloStdLib.withdrawFees(ISilo(address(this)), siloData);
+        _withdrawFees(ISilo(address(this)), siloData);
     }
 
     /*
@@ -103,7 +103,7 @@ contract WithdrawFeesTest is Test {
         siloData.daoAndDeployerFees = 2;
 
         vm.expectRevert(ISilo.NothingToPay.selector);
-        SiloStdLib.withdrawFees(ISilo(address(this)), siloData);
+        _withdrawFees(ISilo(address(this)), siloData);
     }
 
     /*
@@ -126,7 +126,7 @@ contract WithdrawFeesTest is Test {
 
         token.transferMock(dao, 9);
 
-        SiloStdLib.withdrawFees(ISilo(address(this)), siloData);
+        _withdrawFees(ISilo(address(this)), siloData);
     }
 
     /*
@@ -149,7 +149,7 @@ contract WithdrawFeesTest is Test {
 
         token.transferMock(deployer, 2);
 
-        SiloStdLib.withdrawFees(ISilo(address(this)), siloData);
+        _withdrawFees(ISilo(address(this)), siloData);
     }
 
     /*
@@ -197,8 +197,12 @@ contract WithdrawFeesTest is Test {
         if (_transferDao != 0) token.transferMock(dao, _transferDao);
         if (_transferDeployer != 0) token.transferMock(deployer, _transferDeployer);
 
-        SiloStdLib.withdrawFees(ISilo(address(this)), siloData);
+        _withdrawFees(ISilo(address(this)), siloData);
         assertEq(siloData.daoAndDeployerFees, 0, "fees cleared");
+    }
+
+    function _withdrawFees(ISilo _silo, ISilo.SiloData storage _siloData) internal {
+        SiloStdLib.withdrawFees(_silo, _siloData);
     }
 
     function _reset() internal {
