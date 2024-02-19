@@ -66,3 +66,6 @@ jobs:
 
       - name: Share debt token RiskAssessment typecheck
         run: certoraRun certora/config/shareDebt.conf --parametric_contracts ShareDebtToken --typecheck_only --verify "ShareDebtToken:certora/specs/share-debt-token/RiskAssessment.spec"
+
+      - name: Share debt token RiskAssessment typecheck
+        run: certoraRun certora/config/silo/silo0.conf --parametric_contracts Silo0 --typecheck_only --verify "certora/specs/silo/state-transition/StateTransitionSilo0.spec"

@@ -23,7 +23,7 @@ rule ST_Silo_interestRateTimestamp_totalBorrowAmount_dependency(
     requireDebtToken0TotalAndBalancesIntegrity();
 
     mathint irtBefore = getSiloDataInterestRateTimestamp();
-    mathint debtAssetsBefore = silo0._total[ISilo.AssetType.Debt].assets;
+    mathint debtAssetsBefore = silo0.total(ISilo.AssetType.Debt);
 
     require irtBefore < to_mathint(e.block.timestamp);
 
@@ -34,7 +34,7 @@ rule ST_Silo_interestRateTimestamp_totalBorrowAmount_dependency(
         require to_mathint(assetsOrShare) != accruedInterest;
     } else if (f.selector == repaySharesSig()) {
         mathint shareDebtTokenTotal = shareDebtToken0.totalSupply();
-        mathint debtAssetsWithInterest = silo0._total[ISilo.AssetType.Debt].assets;
+        mathint debtAssetsWithInterest = silo0.total(ISilo.AssetType.Debt);
 
         require toAssetsRoundUpLike(assetsOrShare, debtAssetsWithInterest, shareDebtTokenTotal) != accruedInterest;
     }
@@ -42,7 +42,7 @@ rule ST_Silo_interestRateTimestamp_totalBorrowAmount_dependency(
     siloFnSelectorWithAssets(e, f, assetsOrShare);
 
     mathint irtAfter = getSiloDataInterestRateTimestamp();
-    mathint debtAssetsAfter = silo0._total[ISilo.AssetType.Debt].assets;
+    mathint debtAssetsAfter = silo0.total(ISilo.AssetType.Debt);
 
     bool irtChanged = irtBefore != 0 && irtBefore != irtAfter;
 
@@ -52,7 +52,7 @@ rule ST_Silo_interestRateTimestamp_totalBorrowAmount_dependency(
 /**
 certoraRun certora/config/silo/silo0.conf \
     --parametric_contracts Silo0 \
-    --msg "ST_Silo_interestRateTimestamp_totalBorrowAmount_fee_dependency 2" \
+    --msg "ST_Silo_interestRateTimestamp_totalBorrowAmount_fee_dependency" \
     --rule "ST_Silo_interestRateTimestamp_totalBorrowAmount_fee_dependency" \
     --verify "Silo0:certora/specs/silo/state-transition/StateTransitionSilo0.spec"
 */
@@ -64,7 +64,7 @@ rule ST_Silo_interestRateTimestamp_totalBorrowAmount_fee_dependency(
     silo0SetUp(e);
 
     mathint irtBefore = getSiloDataInterestRateTimestamp();
-    mathint debtAssetsBefore = silo0._total[ISilo.AssetType.Debt].assets;
+    mathint debtAssetsBefore = silo0.total(ISilo.AssetType.Debt);
     mathint daoFee = getDaoFee();
     mathint deployerFee = getDeployerFee();
     mathint daoAndDeployerFeesBefore = getSiloDataDaoAndDeployerFees();
@@ -74,7 +74,7 @@ rule ST_Silo_interestRateTimestamp_totalBorrowAmount_fee_dependency(
     f(e, args);
 
     mathint irtAfter = getSiloDataInterestRateTimestamp();
-    mathint debtAssetsAfter = silo0._total[ISilo.AssetType.Debt].assets;
+    mathint debtAssetsAfter = silo0.total(ISilo.AssetType.Debt);
     mathint daoAndDeployerFeesAfter = getSiloDataDaoAndDeployerFees();
 
     bool irtChanged = irtBefore != 0 && irtBefore != irtAfter;
