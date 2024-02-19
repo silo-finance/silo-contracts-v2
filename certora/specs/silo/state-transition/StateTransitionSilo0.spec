@@ -24,7 +24,6 @@ rule ST_Silo_interestRateTimestamp_totalBorrowAmount_dependency(
 
     mathint irtBefore = getSiloDataInterestRateTimestamp();
     mathint debtAssetsBefore = silo0._total[ISilo.AssetType.Debt].assets;
-    mathint collateralAssetsBefore = silo0._total[ISilo.AssetType.Collateral].assets;
 
     require irtBefore < to_mathint(e.block.timestamp);
 
