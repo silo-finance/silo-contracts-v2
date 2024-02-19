@@ -2,14 +2,14 @@ methods {
     // Getters:
     function config() external returns(address) envfree;
     function factory() external returns(address) envfree;
-    function getProtectedAssets() external returns(uint256) envfree;
+    function total(ISilo.AssetType) external returns(uint256) envfree;
     function getCollateralAssets() external returns(uint256) envfree;
     function getDebtAssets() external returns(uint256) envfree;
     function getCollateralAndDebtAssets() external returns(uint256,uint256) envfree;
     function getCollateralAndProtectedAssets() external returns(uint256,uint256) envfree;
     function getLiquidity() external returns(uint256) envfree;
 
-    function _.getDebtAssets() external => getDebtAssetsSumm(calledContract) expect uint256 UNRESOLVED;
+    function _.total(ISilo.AssetType assetType) external => totalAssetsSumm(calledContract, assetType) expect uint256 UNRESOLVED;
 
     function _.getCollateralAndDebtAssets() external
         => getCollateralAndDebtAssetsSumm(calledContract) expect (uint256,uint256) UNRESOLVED;
@@ -24,16 +24,16 @@ methods {
     function getDeployerFee() external returns(uint256) envfree;
 }
 
-function getDebtAssetsSumm(address callee) returns uint256 {
-    uint256 debtAssets;
+function totalAssetsSumm(address callee, ISilo.AssetType assetType) returns uint256 {
+    uint256 totalAssets;
 
     if(callee == silo0) {
-        require debtAssets == silo0.getDebtAssets();
+        require totalAssets == silo0.total(assetType);
     } else {
-        assert false, "Unresolved call to Silo getDebtAssets()";
+        assert false, "Unresolved call to Silo total(ISilo.AssetType)";
     }
 
-    return debtAssets;
+    return totalAssets;
 }
 
 function getCollateralAndDebtAssetsSumm(address callee) returns (uint256, uint256) {
