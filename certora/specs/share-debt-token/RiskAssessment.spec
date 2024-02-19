@@ -1,5 +1,8 @@
 import "../silo/_common/DebtShareTokenMethods.spec";
-import "../silo/_common/ShareTokensCommonMethods.spec";
+
+methods {
+    function balanceOf(address) external returns(uint256) envfree;
+}
 
 /*
 certoraRun certora/config/shareDebt.conf \
