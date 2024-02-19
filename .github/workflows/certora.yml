@@ -32,7 +32,7 @@ jobs:
     strategy:
       fail-fast: true
 
-    name: Deploy & test
+    name: CVL typecheck only
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -56,3 +56,9 @@ jobs:
         run: |
           certoraRun --version
           solc --version
+
+      - name: Run typecheck
+        run: certoraRun certora/config/silo/silo0.conf \
+            --parametric_contracts Silo0 \
+            --typecheck_only \
+            --verify "Silo0:certora/specs/silo/variable-changes/VariableChangesSilo0.spec"
