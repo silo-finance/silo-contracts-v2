@@ -5,6 +5,11 @@ function siloFnSelectorWithAssets(env e, method f, uint256 assetsOrShares) {
     siloFnSelector(e, f, assetsOrShares, receiver);
 }
 
+function siloFnSelectorWithReceiver(env e, method f, address receiver) {
+    uint256 assetsOrShares;
+    siloFnSelector(e, f, assetsOrShares, receiver);
+}
+
 function siloFnSelector(
     env e,
     method f,

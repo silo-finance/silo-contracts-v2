@@ -66,14 +66,13 @@
   Implementation: rule `VS_Silo_totalBorrowAmount`
 
 - shareDebtToke.balanceOf(user) is not zero => protectedShareToken.balanceOf(user) + collateralShareToken.balanceOf(user) is zero
-  Implementation: rule `VS`
+  Implementation: rule `VS_Silo_debtShareToken_balance_notZero`
 
 - share token totalSypply is not 0 => share token totalSypply <= Silo._total[ISilo.AssetType.*].assets. \
-  share token totalSypply is 0 <=> Silo._total[ISilo.AssetType.*].assets is 0
-  Implementation: rule `VS`
+  Implementation: rule `VS_Silo_shareToken_supply_totalAssets_*`
 
 - balance of the silo should never be less than Silo._total[ISilo.AssetType.Protected].assets
-  Implementation: rule `VS`
+  Implementation: rule `VS_Silo_balance_totalAssets`
 
 - Available liquidity returned by the 'getLiquidity' fn should not be higher than the balance of the silo - Silo._total[ISilo.AssetType.Protected].assets. \
   Implementation: rule `VS_silo_getLiquidity_less_equal_balance`
