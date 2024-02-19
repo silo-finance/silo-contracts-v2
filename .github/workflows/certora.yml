@@ -58,7 +58,4 @@ jobs:
           solc --version
 
       - name: Run typecheck
-        run: certoraRun certora/config/silo/silo0.conf \
-            --parametric_contracts Silo0 \
-            --typecheck_only \
-            --verify "Silo0:certora/specs/silo/variable-changes/VariableChangesSilo0.spec"
+        run: certoraRun certora/config/silo/silo0.conf --parametric_contracts Silo0 --typecheck_only --verify "Silo0:certora/specs/silo/variable-changes/VariableChangesSilo0.spec"
