@@ -6,15 +6,15 @@ function isWithInterest(env e) returns bool {
     uint256 siloIRTimestamp = getSiloDataInterestRateTimestamp();
     require siloIRTimestamp <= e.block.timestamp;
 
-    uint256 debt = silo0._total[ISilo.AssetType.Debt].assets;
+    uint256 debt = silo0.total(ISilo.AssetType.Debt);
 
     return siloIRTimestamp != 0 && siloIRTimestamp < e.block.timestamp && debt != 0;
 }
 
 function requireCorrectSiloBalance() {
-    mathint collateralAssets = silo0._total[ISilo.AssetType.Collateral].assets;
-    mathint protectedAssets = silo0._total[ISilo.AssetType.Protected].assets;
-    mathint debtAssets = silo0._total[ISilo.AssetType.Debt].assets;
+    mathint collateralAssets = silo0.total(ISilo.AssetType.Collateral);
+    mathint protectedAssets = silo0.total(ISilo.AssetType.Protected);
+    mathint debtAssets = silo0.total(ISilo.AssetType.Debt);
     mathint daoAndDeployerFees = getSiloDataDaoAndDeployerFees();
     mathint siloBalance = token0.balanceOf(silo0);
 
