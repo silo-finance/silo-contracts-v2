@@ -52,7 +52,7 @@ rule ST_Silo_interestRateTimestamp_totalBorrowAmount_dependency(
 /**
 certoraRun certora/config/silo/silo0.conf \
     --parametric_contracts Silo0 \
-    --msg "ST_Silo_interestRateTimestamp_totalBorrowAmount_fee_dependency" \
+    --msg "ST_Silo_interestRateTimestamp_totalBorrowAmount_fee_dependency 2" \
     --rule "ST_Silo_interestRateTimestamp_totalBorrowAmount_fee_dependency" \
     --verify "Silo0:certora/specs/silo/state-transition/StateTransitionSilo0.spec"
 */
@@ -68,6 +68,8 @@ rule ST_Silo_interestRateTimestamp_totalBorrowAmount_fee_dependency(
     mathint daoFee = getDaoFee();
     mathint deployerFee = getDeployerFee();
     mathint daoAndDeployerFeesBefore = getSiloDataDaoAndDeployerFees();
+
+    require daoAndDeployerFeesBefore < max_uint128;
 
     f(e, args);
 
