@@ -40,12 +40,10 @@ jobs:
           submodules: recursive
 
       - name: Install the solc-select
-        run: |
-          pip3 install solc-select
+        run: pip3 install solc-select
 
       - name: Install the Certora Prover package
-        run: |
-          pip3 install certora-cli
+        run: pip3 install certora-cli
 
       - name: Install/select solidity
         run: |
