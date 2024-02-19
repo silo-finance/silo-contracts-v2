@@ -69,6 +69,8 @@ rule ST_Silo_interestRateTimestamp_totalBorrowAmount_fee_dependency(
     mathint deployerFee = getDeployerFee();
     mathint daoAndDeployerFeesBefore = getSiloDataDaoAndDeployerFees();
 
+    require debtAssetsBefore < max_uint128;
+    require silo0.total(ISilo.AssetType.Collateral) < max_uint128;
     require daoAndDeployerFeesBefore < max_uint128;
 
     f(e, args);
