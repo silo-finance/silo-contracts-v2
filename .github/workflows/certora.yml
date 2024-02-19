@@ -70,4 +70,4 @@ jobs:
         run: certoraRun certora/config/silo/silo0.conf --parametric_contracts Silo0 --typecheck_only --verify "Silo0:certora/specs/silo/risk-assessment/RiskAssessmentSilo0.spec"
 
       - name: RA_DebtToken_NoDebtTransferWithoutApproval typecheck
-          certoraRun certora/config/shareDebt.conf --parametric_contracts ShareDebtToken --typecheck_only --verify "ShareDebtToken:certora/specs/share-debt-token/RA_DebtToken_NoDebtTransferWithoutApproval.spec"
+        run: certoraRun certora/config/shareDebt.conf --parametric_contracts ShareDebtToken --typecheck_only --verify "ShareDebtToken:certora/specs/share-debt-token/RA_DebtToken_NoDebtTransferWithoutApproval.spec"
