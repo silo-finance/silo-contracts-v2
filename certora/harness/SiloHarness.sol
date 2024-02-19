@@ -29,4 +29,14 @@ contract SiloHarness is Silo {
     function reentrancyGuardEntered() external view returns (bool) {
         return _reentrancyGuardEntered();
     }
+
+    function getDaoFee() external view returns (uint256) {
+        (uint256 daoFee,,, ) = config.getFeesWithAsset(address(this));
+        return daoFee;
+    }
+
+    function getDeployerFee() external view returns (uint256) {
+        (, uint256 deployerFee,, ) = config.getFeesWithAsset(address(this));
+        return deployerFee;
+    }
 }

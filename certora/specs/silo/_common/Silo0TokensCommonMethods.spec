@@ -1,5 +1,6 @@
 using ShareCollateralToken1 as shareCollateralToken1;
 using ShareProtectedCollateralToken1 as shareProtectedCollateralToken1;
+using ShareDebtToken1 as shareDebtToken1;
 
 methods {
     function _.transferFrom(address from, address to, uint256 amount) external with (env e)
@@ -14,6 +15,8 @@ methods {
     function shareCollateralToken1.totalSupply() external returns(uint256) envfree;
     function shareProtectedCollateralToken1.balanceOf(address) external returns(uint256) envfree;
     function shareProtectedCollateralToken1.totalSupply() external returns(uint256) envfree;
+    function shareDebtToken1.balanceOf(address) external returns(uint256) envfree;
+    function shareDebtToken1.totalSupply() external returns(uint256) envfree;
 }
 
 function totalSupplySumm(address callee) returns uint256 {
@@ -31,6 +34,8 @@ function totalSupplySumm(address callee) returns uint256 {
         require totalSupply == shareCollateralToken1.totalSupply();
     } else if (callee == shareProtectedCollateralToken1) {
         require totalSupply == shareProtectedCollateralToken1.totalSupply();
+    } else if (callee == shareDebtToken1) {
+        require totalSupply == shareDebtToken1.totalSupply();
     } else {
         assert false, "Unresolved call to ERC-20 totalSupply()";
     }
@@ -51,6 +56,8 @@ function balanceOfSumm(address callee, address account) returns uint256 {
         require balanceOfAccount == shareCollateralToken1.balanceOf(account);
     } else if (callee == shareProtectedCollateralToken1) {
         require balanceOfAccount == shareProtectedCollateralToken1.balanceOf(account);
+    } else if (callee == shareDebtToken1) {
+        require balanceOfAccount == shareDebtToken1.balanceOf(account);
     } else if (callee == token0) {
         require balanceOfAccount == token0.balanceOf(account);
     } else {
@@ -73,6 +80,8 @@ function transferFromSumm(env e, address callee, address from, address to, uint2
         require success == shareCollateralToken1.transferFrom(e, from, to, amount);
     } else if (callee == shareProtectedCollateralToken1) {
         require success == shareProtectedCollateralToken1.transferFrom(e, from, to, amount);
+    } else if (callee == shareDebtToken1) {
+        require success == shareDebtToken1.transferFrom(e, from, to, amount);
     } else if(callee == token0) {
         require success == token0.transferFrom(e, from, to, amount);
     } else {
@@ -95,6 +104,8 @@ function transferSumm(env e, address callee, address to, uint256 amount) returns
         require success == shareCollateralToken1.transfer(e, to, amount);
     } else if (callee == shareProtectedCollateralToken1) {
         require success == shareProtectedCollateralToken1.transfer(e, to, amount);
+    } else if (callee == shareDebtToken1) {
+        require success == shareDebtToken1.transfer(e, to, amount);
     } else if(callee == token0) {
         require success == token0.transfer(e, to, amount);
     } else {
