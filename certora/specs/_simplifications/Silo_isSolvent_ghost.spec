@@ -1,6 +1,6 @@
 methods {
     // Summarizations:
-    function Silo._callIsSolvent(
+    function SiloSolvencyLib.isSolvent(
         ISiloConfig.ConfigData memory collateralConfig,
         ISiloConfig.ConfigData memory debtConfig,
         address borrower,

@@ -24,19 +24,19 @@ rule VS_Silo_totals_share_token_totalSupply(env e, method f, calldataarg args) f
     require shareProtectedCollateralToken0.totalSupply() == 0;
     require shareDebtToken0.totalSupply() == 0;
 
-    require silo0._total[ISilo.AssetType.Collateral].assets == 0;
-    require silo0._total[ISilo.AssetType.Protected].assets == 0;
-    require silo0._total[ISilo.AssetType.Debt].assets == 0;
+    require silo0.total(ISilo.AssetType.Collateral) == 0;
+    require silo0.total(ISilo.AssetType.Protected) == 0;
+    require silo0.total(ISilo.AssetType.Debt) == 0;
 
     f(e, args);
 
-    assert silo0._total[ISilo.AssetType.Collateral].assets == 0 <=> shareCollateralToken0.totalSupply() == 0,
+    assert silo0.total(ISilo.AssetType.Collateral) == 0 <=> shareCollateralToken0.totalSupply() == 0,
         "Collateral total supply 0 <=> silo collateral assets 0";
 
-    assert silo0._total[ISilo.AssetType.Protected].assets == 0 <=> shareProtectedCollateralToken0.totalSupply() == 0,
+    assert silo0.total(ISilo.AssetType.Protected) == 0 <=> shareProtectedCollateralToken0.totalSupply() == 0,
         "Protected total supply 0 <=> silo protected assets 0";
 
-    assert silo0._total[ISilo.AssetType.Debt].assets == 0 <=> shareDebtToken0.totalSupply() == 0,
+    assert silo0.total(ISilo.AssetType.Debt) == 0 <=> shareDebtToken0.totalSupply() == 0,
         "Debt total supply 0 <=> silo debt assets 0";
 }
 
@@ -75,12 +75,12 @@ certoraRun certora/config/silo/silo0.conf \
 rule VS_Silo_totalBorrowAmount(env e, method f, calldataarg args) filtered { f -> !f.isView} {
     silo0SetUp(e);
 
-    require silo0._total[ISilo.AssetType.Collateral].assets == 0;
-    require silo0._total[ISilo.AssetType.Debt].assets == 0;
+    require silo0.total(ISilo.AssetType.Collateral) == 0;
+    require silo0.total(ISilo.AssetType.Debt) == 0;
 
     f(e, args);
 
-    assert silo0._total[ISilo.AssetType.Debt].assets != 0 => silo0._total[ISilo.AssetType.Collateral].assets != 0,
+    assert silo0.total(ISilo.AssetType.Debt) != 0 => silo0.total(ISilo.AssetType.Collateral) != 0,
         "Total debt assets != 0 => total collateral assets != 0";
 }
 
@@ -98,7 +98,7 @@ rule VS_silo_getLiquidity_less_equal_balance(env e, method f, calldataarg args) 
 
     f(e, args);
 
-    mathint protectedAssetsAfter = silo0._total[ISilo.AssetType.Protected].assets;
+    mathint protectedAssetsAfter = silo0.total(ISilo.AssetType.Protected);
     mathint siloBalanceAfter = token0.balanceOf(silo0);
     mathint liquidityAfter = silo0.getLiquidity();
 
@@ -120,7 +120,7 @@ rule VS_Silo_balance_totalAssets(env e, method f, calldataarg args) filtered { f
 
     f(e, args);
 
-    mathint protectedAssetsAfter = silo0._total[ISilo.AssetType.Protected].assets;
+    mathint protectedAssetsAfter = silo0.total(ISilo.AssetType.Protected);
     mathint siloBalanceAfter = token0.balanceOf(silo0);
 
     assert siloBalanceAfter >= protectedAssetsAfter,
@@ -165,13 +165,13 @@ rule VS_Silo_shareToken_supply_totalAssets_debt(env e, method f, calldataarg arg
     requireDebtToken0TotalAndBalancesIntegrity();
 
     require shareDebtToken0.totalSupply() == 0;
-    require silo0._total[ISilo.AssetType.Debt].assets == 0;
+    require silo0.total(ISilo.AssetType.Debt) == 0;
 
     f(e, args);
 
     mathint totalSupplyAfter = shareDebtToken0.totalSupply();
 
-    assert totalSupplyAfter != 0 => totalSupplyAfter <= to_mathint(silo0._total[ISilo.AssetType.Debt].assets),
+    assert totalSupplyAfter != 0 => totalSupplyAfter <= to_mathint(silo0.total(ISilo.AssetType.Debt)),
         "Debt total supply != 0 => total supply <= total debt assets";
 }
 
@@ -187,13 +187,13 @@ rule VS_Silo_shareToken_supply_totalAssets_collateral(env e, method f, calldataa
     requireCollateralToken0TotalAndBalancesIntegrity();
 
     require shareCollateralToken0.totalSupply() == 0;
-    require silo0._total[ISilo.AssetType.Collateral].assets == 0;
+    require silo0.total(ISilo.AssetType.Collateral) == 0;
 
     f(e, args);
 
     mathint totalSupplyAfter = shareCollateralToken0.totalSupply();
 
-    assert totalSupplyAfter != 0 => totalSupplyAfter <= to_mathint(silo0._total[ISilo.AssetType.Collateral].assets),
+    assert totalSupplyAfter != 0 => totalSupplyAfter <= to_mathint(silo0.total(ISilo.AssetType.Collateral)),
         "Collateral total supply != 0 => total supply <= total collateral assets";
 }
 
@@ -209,12 +209,12 @@ rule VS_Silo_shareToken_supply_totalAssets_protected(env e, method f, calldataar
     requireProtectedToken0TotalAndBalancesIntegrity();
 
     require shareProtectedCollateralToken0.totalSupply() == 0;
-    require silo0._total[ISilo.AssetType.Protected].assets == 0;
+    require silo0.total(ISilo.AssetType.Protected) == 0;
 
     f(e, args);
 
     mathint totalSupplyAfter = shareProtectedCollateralToken0.totalSupply();
 
-    assert totalSupplyAfter != 0 => totalSupplyAfter <= to_mathint(silo0._total[ISilo.AssetType.Protected].assets),
+    assert totalSupplyAfter != 0 => totalSupplyAfter <= to_mathint(silo0.total(ISilo.AssetType.Protected)),
         "Protected total supply != 0 => total supply <= total protected assets";
 }
