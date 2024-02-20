@@ -501,8 +501,6 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
             totalDebtShares,
             cachedConfig
         );
-
-        unchecked { if (maxAssets != 0) return maxAssets - 1; }
     }
 
     /// @inheritdoc ISilo
@@ -541,8 +539,6 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
         (
             ,maxShares
         ) = _callMaxBorrow(collateralConfig, debtConfig, _borrower, totalDebtAssets, totalDebtShares, cachedConfig);
-
-        unchecked { if (maxShares != 0) return maxShares - 1; }
     }
 
     /// @inheritdoc ISilo

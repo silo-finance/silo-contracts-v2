@@ -189,7 +189,7 @@ library SiloMathLib {
             return 0;
         }
 
-        uint256 maxDebtValue = _sumOfBorrowerCollateralValue * _configMaxLtv / _PRECISION_DECIMALS; // DOWN
+        uint256 maxDebtValue = _sumOfBorrowerCollateralValue * _configMaxLtv / _PRECISION_DECIMALS; // Rounding.Down
 
         unchecked {
             // we will not underflow because we checking `maxDebtValue > _borrowerDebtValue`
