@@ -66,12 +66,11 @@ Revert NotEnoughLiquidity
         __mint(220,true,39843190113244004124792096928447682291);
         __depositNeverMintsZeroShares(2,false,22786647965505400975764605899155696411742225287612091359740640699919114746382);
         __borrowShares(32,true,20769187434139310514121985316880385);
-
+        // Time delay: 2369 seconds Block delay: 4358
         __timeDelay(2369, 4358);
 
-        __debtSharesNeverLargerThanDebt(); // Time delay: 2369 seconds Block delay: 4358
+        __debtSharesNeverLargerThanDebt();
 
-        _dumpState(4);
         __maxRedeem_correctMax(4);
     }
 
@@ -100,7 +99,7 @@ Revert AboveMaxLtv ()
         __maxWithdraw_correctMax(110);
 
         __timeDelay(3865, 1791);
-        // Time delay: 3865 seconds Block delay: 1791
+
         __previewDeposit_doesNotReturnMoreThanDeposit(2,62718039246364723308705975150828086672); // Time delay: 3865 seconds Block delay: 1791
 
         __maxBorrowShares_correctReturnValue(1);
