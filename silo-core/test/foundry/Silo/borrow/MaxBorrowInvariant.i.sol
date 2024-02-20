@@ -27,8 +27,8 @@ contract MaxBorrowInvariantTest is SiloLittleHelper, Test {
     address user3 = makeAddr("User 3");
 
     function setUp() public {
-        MintableToken token0 = new MintableToken();
-        MintableToken token1 = new MintableToken();
+        MintableToken token0 = new MintableToken(18);
+        MintableToken token1 = new MintableToken(18);
 
         SiloConfigOverride memory overrides;
         overrides.token0 = address(token0);
