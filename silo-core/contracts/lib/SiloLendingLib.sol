@@ -135,19 +135,26 @@ library SiloLendingLib {
         }
     }
 
-    function getLiquidity(ISiloConfig _config) public view returns (uint256 liquidity) {
-        ISiloConfig.ConfigData memory config = _config.getConfig(address(this));
+    function getLiquidity(ISiloConfig _siloConfig) public view returns (uint256 liquidity) {
+        ISiloConfig.ConfigData memory config = _siloConfig.getConfig(address(this));
+        (liquidity,,) = getLiquidityAndAssetsWithInterest(config);
+    }
 
-        uint256 totalCollateralAssets = SiloStdLib.getTotalCollateralAssetsWithInterest(
+    function getLiquidityAndAssetsWithInterest(ISiloConfig.ConfigData memory _config)
+        public
+        view
+        returns (uint256 liquidity, uint256 totalCollateralAssets, uint256 totalDebtAssets)
+    {
+        totalCollateralAssets = SiloStdLib.getTotalCollateralAssetsWithInterest(
             address(this),
-            config.interestRateModel,
-            config.daoFee,
-            config.deployerFee
+            _config.interestRateModel,
+            _config.daoFee,
+            _config.deployerFee
         );
 
-        uint256 totalDebtAssets = SiloStdLib.getTotalDebtAssetsWithInterest(
+        totalDebtAssets = SiloStdLib.getTotalDebtAssetsWithInterest(
             address(this),
-            config.interestRateModel
+            _config.interestRateModel
         );
 
         liquidity = SiloMathLib.liquidity(totalCollateralAssets, totalDebtAssets);

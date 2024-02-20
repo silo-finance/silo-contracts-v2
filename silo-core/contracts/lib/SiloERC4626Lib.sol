@@ -11,6 +11,7 @@ import {IShareToken} from "../interfaces/IShareToken.sol";
 import {SiloSolvencyLib} from "./SiloSolvencyLib.sol";
 import {SiloMathLib} from "./SiloMathLib.sol";
 import {SiloStdLib} from "./SiloStdLib.sol";
+import {SiloLendingLib} from "./SiloLendingLib.sol";
 
 // solhint-disable function-max-lines
 
@@ -62,15 +63,13 @@ library SiloERC4626Lib {
     /// @param _assetType The type of asset being considered for withdrawal
     /// @param _totalAssets The total PROTECTED assets in the silo. In case of collateral use `0`, total
     /// collateral will be calculated internally with interest
-    /// @param _liquidity The available liquidity in the silo
     /// @return assets The maximum assets that the user can withdraw
     /// @return shares The maximum shares that the user can withdraw
     function maxWithdraw(
         ISiloConfig _config,
         address _owner,
         ISilo.AssetType _assetType,
-        uint256 _totalAssets,
-        uint256 _liquidity
+        uint256 _totalAssets
     ) external view returns (uint256 assets, uint256 shares) {
         if (_assetType == ISilo.AssetType.Debt) revert ISilo.WrongAssetType();
 
@@ -79,18 +78,14 @@ library SiloERC4626Lib {
         ) = _config.getConfigs(address(this));
 
         uint256 shareTokenTotalSupply;
+        uint256 liquidity;
 
         if (_assetType == ISilo.AssetType.Collateral) {
             shareTokenTotalSupply = IShareToken(collateralConfig.collateralShareToken).totalSupply();
-
-            _totalAssets = SiloStdLib.getTotalCollateralAssetsWithInterest(
-                address(this),
-                collateralConfig.interestRateModel,
-                collateralConfig.daoFee,
-                collateralConfig.deployerFee
-            );
+            (liquidity, _totalAssets, ) = SiloLendingLib.getLiquidityAndAssetsWithInterest(collateralConfig);
         } else {
             shareTokenTotalSupply = IShareToken(collateralConfig.protectedShareToken).totalSupply();
+            liquidity = _totalAssets;
         }
 
         SiloSolvencyLib.LtvData memory ltvData;
@@ -112,9 +107,9 @@ library SiloERC4626Lib {
                     _assetType
                 );
 
-                if (protected || assets <= _liquidity) return (assets, shares);
+                if (protected || assets <= liquidity) return (assets, shares);
 
-                assets = _liquidity;
+                assets = liquidity;
 
                 shares = SiloMathLib.convertToShares(
                     assets,
@@ -150,7 +145,7 @@ library SiloERC4626Lib {
             _assetType,
             _totalAssets,
             shareTokenTotalSupply,
-            _liquidity
+            liquidity
         );
     }
 
