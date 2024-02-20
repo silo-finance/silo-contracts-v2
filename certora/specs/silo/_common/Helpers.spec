@@ -25,3 +25,17 @@ function requireCorrectSiloBalance() {
     require expectedBalance < max_uint256;
     require siloBalance == expectedBalance;
 }
+
+function toAssetsRoundUpLike(mathint shares, mathint totalAssets, mathint totalShares) returns mathint {
+    if (totalShares == 0 || totalAssets == 0) {
+        return 0;
+    }
+
+    mathint numerator = shares * totalAssets;
+
+    if (numerator % totalShares != 0) {
+        return numerator / totalShares + 1;
+    }
+
+    return numerator / totalShares;
+}
