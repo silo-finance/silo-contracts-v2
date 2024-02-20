@@ -129,9 +129,14 @@ library SiloLendingLib {
                 assets,
                 _totalDebtAssets,
                 _totalDebtShares,
-                borrowerDebtValue == 0 ? MathUpgradeable.Rounding.Up : MathUpgradeable.Rounding.Down,
+                MathUpgradeable.Rounding.Down,
                 ISilo.AssetType.Debt
             );
+        }
+
+        if (assets != 0) {
+            // sometimes even with rounding down, we need to do -1 wei to not revert on borrow
+            unchecked { assets--; }
         }
     }
 
@@ -376,8 +381,11 @@ library SiloLendingLib {
 
             assets = _maxBorrowValue * _PRECISION_DECIMALS / oneDebtTokenValue;
 
+            // when we borrow, we convertToShares with rounding.Up, to create higher debt, however here,
+            // when we want to calculate "max borrow", we can not round.Up, because it can create issue with max ltv,
+            // because we not creating debt here, we calculating max assets/shares, so we need to round.Down here
             shares = SiloMathLib.convertToShares(
-                assets, _totalDebtAssets, _totalDebtShares, MathUpgradeable.Rounding.Up, ISilo.AssetType.Debt
+                assets, _totalDebtAssets, _totalDebtShares, MathUpgradeable.Rounding.Down, ISilo.AssetType.Debt
             );
         } else {
             uint256 shareBalance = IShareToken(_debtShareToken).balanceOf(_borrower);

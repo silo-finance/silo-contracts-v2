@@ -115,7 +115,10 @@ library SiloERC4626Lib {
                     assets,
                     _totalAssets,
                     shareTokenTotalSupply,
-                    MathUpgradeable.Rounding.Up,
+                    // when we doing withdraw, we using Rounding.Up, because we want to burn as many shares
+                    // however here, we will be using shares as input to withdraw, if we round up, we can overflow
+                    // because we will want to withdraw too much, so we have to use Rounding.Down
+                    MathUpgradeable.Rounding.Down,
                     ISilo.AssetType.Collateral
                 );
 

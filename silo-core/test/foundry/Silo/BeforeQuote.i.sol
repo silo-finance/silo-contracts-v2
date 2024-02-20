@@ -35,8 +35,8 @@ contract BeforeQuoteTest is SiloLittleHelper, Test {
     }
 
     function setUp() public {
-        token0 = new MintableToken();
-        token1 = new MintableToken();
+        token0 = new MintableToken(18);
+        token1 = new MintableToken(18);
         solvencyOracle0 = new DummyOracle(1e18, address(token1));
         maxLtvOracle0 = new DummyOracle(1e18, address(token1));
 

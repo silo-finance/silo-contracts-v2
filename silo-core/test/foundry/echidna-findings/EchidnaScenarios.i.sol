@@ -66,12 +66,11 @@ Revert NotEnoughLiquidity
         __mint(220,true,39843190113244004124792096928447682291);
         __depositNeverMintsZeroShares(2,false,22786647965505400975764605899155696411742225287612091359740640699919114746382);
         __borrowShares(32,true,20769187434139310514121985316880385);
-
+        // Time delay: 2369 seconds Block delay: 4358
         __timeDelay(2369, 4358);
 
-        __debtSharesNeverLargerThanDebt(); // Time delay: 2369 seconds Block delay: 4358
+        __debtSharesNeverLargerThanDebt();
 
-        _dumpState(4);
         __maxRedeem_correctMax(4);
     }
 
@@ -100,9 +99,36 @@ Revert AboveMaxLtv ()
         __maxWithdraw_correctMax(110);
 
         __timeDelay(3865, 1791);
-        // Time delay: 3865 seconds Block delay: 1791
+
         __previewDeposit_doesNotReturnMoreThanDeposit(2,62718039246364723308705975150828086672); // Time delay: 3865 seconds Block delay: 1791
 
         __maxBorrowShares_correctReturnValue(1);
+    }
+
+    /*
+maxRedeem_correctMax(uint8): failed!💥
+  Call sequence:
+    depositNeverMintsZeroShares(161,true,22168924613129761549643809883710869859261573373213864899764932836300336298504)
+    depositNeverMintsZeroShares(0,false,22033284938236427192887)
+    borrow(2,false,143)
+    maxRedeem_correctMax(0)
+    deposit(0,false,8889521246853316927242844750202102194149874260909366919319008) Time delay: 76512 seconds Block delay: 1269
+    maxRedeem_correctMax(0)
+
+
+    forge test -vv --ffi --mt test_cover_echidna_scenario_4
+
+    this test covers maxRedeem bug
+    */
+    function test_cover_echidna_scenario_4() public {
+        __depositNeverMintsZeroShares(161,true,22168924613129761549643809883710869859261573373213864899764932836300336298504);
+        __depositNeverMintsZeroShares(0,false,22033284938236427192887);
+        __borrow(2,false,143);
+        __maxRedeem_correctMax(0);
+
+        __timeDelay(76512, 1269);
+        __deposit(0,false,8889521246853316927242844750202102194149874260909366919319008);
+
+        __maxRedeem_correctMax(0);
     }
 }

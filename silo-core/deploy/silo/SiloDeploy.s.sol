@@ -64,7 +64,14 @@ contract SiloDeploy is CommonDeploy {
 
         address interestRateModel = getDeployedAddress(SiloCoreContracts.INTEREST_RATE_MODEL_V2);
 
-        console2.log("[SiloCommonDeploy] SILO_DEPLOYER and INTEREST_RATE_MODEL_V2 resolved");
+        console2.log(
+            string.concat(
+                "[SiloCommonDeploy] SILO_DEPLOYER and ",
+                SiloCoreContracts.INTEREST_RATE_MODEL_V2,
+                " @ %s resolved "
+            ),
+            interestRateModel
+        );
 
         siloInitData.interestRateModel0 = interestRateModel;
         siloInitData.interestRateModel1 = interestRateModel;

@@ -172,8 +172,8 @@ abstract contract SiloLittleHelper is CommonBase {
         private
         returns (ISiloConfig siloConfig)
     {
-        token0 = new MintableToken();
-        token1 = new MintableToken();
+        token0 = new MintableToken(18);
+        token1 = new MintableToken(18);
 
         SiloConfigOverride memory overrides;
         overrides.token0 = address(token0);
