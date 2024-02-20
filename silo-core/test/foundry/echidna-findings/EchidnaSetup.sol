@@ -7,6 +7,7 @@ import {Strings} from "openzeppelin-contracts/utils/Strings.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
+import {IInterestRateModel} from "silo-core/contracts/interfaces/IInterestRateModel.sol";
 import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
 
 import {MintableToken} from "../_common/MintableToken.sol";
@@ -73,7 +74,7 @@ contract EchidnaSetup is SiloLittleHelper, Test {
         internal
         returns (bool isSolvent, ISilo _siloWithDebt)
     {
-        _dumpState(_user);
+        // _dumpState(_user);
 
         isSolvent = silo0.isSolvent(_user);
         if (isSolvent) return (isSolvent, ISilo(address(0)));
@@ -85,11 +86,63 @@ contract EchidnaSetup is SiloLittleHelper, Test {
         uint256 balance1 = IShareToken(debtShareToken1).balanceOf(_user);
 
         assertEq(balance0 * balance1, 0, "[_invariant_insolventHasDebt] one balance must be 0");
-        assertGt(balance0 + balance1, 0, "user should have debt if he is insolvent");
+        assertGt(balance0 + balance1, 0, "[_invariant_insolventHasDebt] user should have debt if he is insolvent");
 
         return (isSolvent, balance0 > 0 ? silo0 : silo1);
     }
 
+    function _invariant_onlySolventUserCanRedeem(address _user)
+        internal
+        returns (bool isSolvent, ISilo siloWithCollateral)
+    {
+        // _dumpState(_user);
+
+        isSolvent = silo0.isSolvent(_user);
+
+        (
+            address protectedShareToken0, address collateralShareToken0, address debtShareToken0
+        ) = siloConfig.getShareTokens(address(silo0));
+
+        (,, address debtShareToken1) = siloConfig.getShareTokens(address(silo1));
+
+        uint256 debtBalance0 = IShareToken(debtShareToken0).balanceOf(_user);
+        uint256 debtBalance1 = IShareToken(debtShareToken1).balanceOf(_user);
+
+        emit log_named_decimal_uint("debtBalance0 (one of it must be 0)", debtBalance0, 18);
+        emit log_named_decimal_uint("debtBalance1 (one of it must be 0)", debtBalance1, 18);
+
+        assertEq(debtBalance0 * debtBalance1, 0, "[onlySolventUserCanRedeem] one balance must be 0");
+
+        if (debtBalance0 + debtBalance1 != 0) return (isSolvent, debtBalance0 > 0 ? silo1 : silo0);
+
+        uint256 protectedBalance0 = IShareToken(protectedShareToken0).balanceOf(_user);
+        uint256 collateralBalance0 = IShareToken(collateralShareToken0).balanceOf(_user);
+
+        siloWithCollateral = protectedBalance0 + collateralBalance0 == 0 ? silo1 : silo0;
+    }
+
+    function _requireHealthySilos() internal {
+        _requireHealthySilo(silo0);
+        _requireHealthySilo(silo1);
+    }
+
+    function _requireHealthySilo(ISilo _silo) internal {
+        ISiloConfig.ConfigData memory cfg = siloConfig.getConfig(address(_silo));
+
+        try IInterestRateModel(cfg.interestRateModel).getCompoundInterestRate(address(_silo), block.timestamp) {
+            // we only accepting cased were we do not revert
+        } catch {
+            // we dont want case, where IRM fail
+            assertTrue(false, "IRM fail");
+        }
+    }
+
+    function _checkForInterest(ISilo _silo) internal returns (bool noInterest) {
+        (, uint256 interestRateTimestamp) = _silo.siloData();
+        noInterest = block.timestamp == interestRateTimestamp;
+
+        if (noInterest) assertEq(_silo.accrueInterest(), 0, "no interest should be applied");
+    }
 
     function _dumpState(uint256 _actorIndex) internal {
         _dumpState(_chooseActor(_actorIndex));
@@ -101,6 +154,10 @@ contract EchidnaSetup is SiloLittleHelper, Test {
 
         (uint256 collectedFees0, uint256 irmTimestamp0) = silo0.siloData();
         (uint256 collectedFees1, uint256 irmTimestamp1) = silo1.siloData();
+
+
+        emit log_named_decimal_uint("getLiquidity0:", silo0.getLiquidity(), 18);
+        emit log_named_decimal_uint("getLiquidity1:", silo1.getLiquidity(), 18);
 
         emit log_named_decimal_uint("collectedFees0:", collectedFees0, 18);
         emit log_named_uint("irmTimestamp0:", irmTimestamp0);
@@ -127,7 +184,9 @@ contract EchidnaSetup is SiloLittleHelper, Test {
         emit log_named_decimal_uint("debtShareToken1.balanceOf:", IShareToken(debtShareToken1).balanceOf(_actor), 18);
 
         emit log_named_decimal_uint("maxWithdraw0:", silo0.maxWithdraw(_actor), 18);
+        emit log_named_decimal_uint("maxRedeem0:", silo0.maxRedeem(_actor), 18);
         emit log_named_decimal_uint("maxWithdraw1:", silo1.maxWithdraw(_actor), 18);
+        emit log_named_decimal_uint("maxRedeem1:", silo1.maxRedeem(_actor), 18);
 
         uint256 maxBorrow0 = silo0.maxBorrow(_actor);
         uint256 maxBorrow1 = silo1.maxBorrow(_actor);

@@ -3,10 +3,13 @@ pragma solidity ^0.8.0;
 
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
+import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
 
 import {EchidnaSetup} from "./EchidnaSetup.sol";
 
 contract EchidnaMiddleman is EchidnaSetup {
+    using SiloLensLib for ISilo;
+
     function __depositNeverMintsZeroShares(uint8 _actor, bool _siloZero, uint256 _amount) internal {
         address actor = _chooseActor(_actor);
         ISilo silo = __chooseSilo(_siloZero);
@@ -81,15 +84,22 @@ contract EchidnaMiddleman is EchidnaSetup {
 
     function __maxWithdraw_correctMax(uint8 _actor) internal {
         address actor = _chooseActor(_actor);
-        uint256 maxWithdraw = silo0.maxWithdraw(actor);
-        _withdraw(maxWithdraw, actor);
+
+        (, ISilo _siloWithCollateral) = _invariant_onlySolventUserCanRedeem(actor);
+        _requireHealthySilo(_siloWithCollateral);
+
+        uint256 maxWithdraw = _siloWithCollateral.maxWithdraw(actor);
+
+        vm.prank(actor);
+        _siloWithCollateral.withdraw(maxWithdraw, actor, actor);
     }
 
     function __deposit(uint8 _actor, bool _siloZero, uint256 _amount) internal {
         address actor = _chooseActor(_actor);
-        vm.startPrank(actor);
+        ISilo silo = __chooseSilo(_siloZero);
 
-        __chooseSilo(_siloZero).deposit(_amount, actor);
+        vm.prank(actor);
+        silo.deposit(_amount, actor);
     }
 
     function __transitionCollateral_doesNotResultInMoreShares(
@@ -97,21 +107,56 @@ contract EchidnaMiddleman is EchidnaSetup {
         bool _siloZero,
         uint256 _amount,
         uint8 _type
-    ) internal returns (uint256) {
+    ) internal returns (uint256 transitionedAssets) {
         address actor = _chooseActor(_actor);
 
         ISilo vault = __chooseSilo(_siloZero);
         _invariant_checkForInterest(vault);
 
+        (address protected, address collateral, ) = siloConfig.getShareTokens(address(vault));
+
+        uint256 shareSumBefore;
+        uint256 previewAssetsSumBefore;
+
+        { // too deep
+            uint256 protBalanceBefore = IShareToken(protected).balanceOf(address(actor));
+            uint256 collBalanceBefore = IShareToken(collateral).balanceOf(address(actor));
+            uint256 previewCollateralBefore = vault.previewRedeem(collBalanceBefore, ISilo.AssetType.Collateral);
+            uint256 previewProtectedBefore = vault.previewRedeem(protBalanceBefore, ISilo.AssetType.Protected);
+
+            shareSumBefore = protBalanceBefore + collBalanceBefore;
+            previewAssetsSumBefore = previewCollateralBefore + previewProtectedBefore;
+        }
+
+        bool noInterest = _checkForInterest(vault);
+
         vm.prank(actor);
-        return vault.transitionCollateral(_amount, actor, ISilo.AssetType(_type));
+        transitionedAssets = vault.transitionCollateral(_amount, actor, ISilo.AssetType(_type));
+
+        uint256 protBalanceAfter = IShareToken(protected).balanceOf(address(actor));
+        uint256 collBalanceAfter = IShareToken(collateral).balanceOf(address(actor));
+
+        uint256 shareSumAfter = protBalanceAfter + collBalanceAfter;
+
+        // note: this could result in false positives due to interest calculation, and differences between
+        // protected and unprotected shares/balances. Another way to check this property would be to
+        // transitionCollateral in one direction, and then in the opposite direction, and only check shares/assets
+        // after the second transition.
+        // because of above condition is off
+        if (noInterest) {
+            assertEq(shareSumBefore, shareSumAfter, "Gained shares after transitionCollateral (no interest)");
+        }
+
+        uint256 previewCollateralAfter = vault.previewRedeem(collBalanceAfter, ISilo.AssetType.Collateral);
+        uint256 previewProtectedAfter = vault.previewRedeem(protBalanceAfter, ISilo.AssetType.Protected);
+
+        assertEq(
+            previewAssetsSumBefore, previewCollateralAfter + previewProtectedAfter,
+            "price is flat, so there should be no gains"
+        );
     }
 
-    function __cannotPreventInsolventUserFromBeingLiquidated(
-        uint8 _actor,
-        bool /* _siloZero */,
-        bool _receiveShares
-    ) internal {
+    function __cannotPreventInsolventUserFromBeingLiquidated(uint8 _actor, bool _receiveShares) internal {
         address actor = _chooseActor(_actor);
 
         (bool isSolvent, ISilo siloWithDebt) = _invariant_insolventHasDebt(actor);
@@ -148,16 +193,139 @@ contract EchidnaMiddleman is EchidnaSetup {
     function __maxRedeem_correctMax(uint8 _actorIndex) internal {
         address actor = _chooseActor(_actorIndex);
 
-        // you need to repay when debt is?!
-        uint256 maxShares = silo0.maxRedeem(address(actor));
-        (, address collShareToken, ) = siloConfig.getShareTokens(address(silo0));
-        assertGt(IShareToken(collShareToken).balanceOf(actor), 0, "No deposits");
+        (, ISilo _siloWithCollateral) = _invariant_onlySolventUserCanRedeem(actor);
+        _requireHealthySilos();
+
+        // you can redeem where there is no debt
+        uint256 maxShares = _siloWithCollateral.maxRedeem(address(actor));
         assertGt(maxShares, 0, "Zero shares to withdraw");
 
         emit log_named_decimal_uint("Max Shares to redeem", maxShares, 18);
 
         vm.prank(actor);
-        silo0.redeem(maxShares, actor, actor); // expect not to fail!
+        _siloWithCollateral.redeem(maxShares, actor, actor); // expect not to fail!
+    }
+
+    function __mintAssetType(uint8 _actorIndex, bool _vaultZero, uint256 _shares, uint8 _assetType)
+        public returns (uint256 assets)
+    {
+        address actor = _chooseActor(_actorIndex);
+        ISilo silo = __chooseSilo(_vaultZero);
+
+        vm.prank(actor);
+        assets = silo.mint(_shares, actor, ISilo.AssetType(_assetType));
+
+        assertLe(_assetType, 3, "we have only 3 types");
+    }
+
+    function __withdraw(uint8 _actorIndex, bool _vaultZero, uint256 _assets) public {
+        address actor = _chooseActor(_actorIndex);
+        ISilo silo = __chooseSilo(_vaultZero);
+
+        vm.prank(actor);
+        silo.withdraw(_assets, actor, actor);
+    }
+
+    function __maxMint_correctMax(uint8 _actorIndex, bool _vaultZero) public {
+        address actor = _chooseActor(_actorIndex);
+        ISilo silo = __chooseSilo(_vaultZero);
+
+        uint256 maxShares = silo.maxMint(address(actor));
+        assertGt(maxShares, 0, "max mint is zero");
+
+        uint256 assets = silo.previewMint(maxShares);
+        assertGt(assets, 0, "expect assets not to be 0");
+
+        emit log_named_decimal_uint("Max Shares to mint:", maxShares, 18);
+
+        vm.prank(actor);
+        assertEq(silo.mint(maxShares, actor), assets, "expect preview to be correct");
+    }
+
+    function __accrueInterest(bool _vaultZero) public {
+        ISilo silo = __chooseSilo(_vaultZero);
+        silo.accrueInterest();
+    }
+
+    function __depositAssetType(
+        uint8 _actorIndex,
+        bool _vaultZero,
+        uint256 _amount,
+        uint8 _assetType
+    )
+        public returns (uint256 shares)
+    {
+        address actor = _chooseActor(_actorIndex);
+        ISilo silo = __chooseSilo(_vaultZero);
+
+        vm.prank(actor);
+        shares = silo.deposit(_amount, actor, ISilo.AssetType(_assetType));
+
+        assertLe(_assetType, 3, "we have only 3 types");
+    }
+
+    function __cannotLiquidateASolventUser(uint8 _actorIndex, bool _receiveShares) public {
+        address actor = _chooseActor(_actorIndex);
+        (bool isSolvent, ISilo siloWithDebt) = _invariant_insolventHasDebt(actor);
+
+        assertFalse(isSolvent, "user not solvent");
+
+        (, uint256 debtToRepay) = siloWithDebt.maxLiquidation(address(actor));
+        (address collateral, address debt) = __liquidationTokens(address(siloWithDebt));
+
+        try siloWithDebt.liquidationCall(debt, collateral, actor, debtToRepay, _receiveShares) {
+            emit log("Solvent user liquidated!");
+            assert(false);
+        } catch {
+            // do nothing
+        }
+    }
+
+    function __cannotFullyLiquidateSmallLtv(uint8 _actorIndex) public {
+        address actor = _chooseActor(_actorIndex);
+        (bool isSolvent, ISilo siloWithDebt) = _invariant_insolventHasDebt(actor);
+
+        assertFalse(isSolvent, "expect not solvent user");
+
+        uint256 lt = siloWithDebt.getLt();
+        uint256 ltv = siloWithDebt.getLtv(address(actor));
+
+        (, uint256 debtToRepay) = siloWithDebt.maxLiquidation(address(actor));
+        assertFalse(isSolvent, "expect user to be not insolvent");
+
+        emit log_named_decimal_uint("User LTV:", ltv, 16);
+        emit log_named_decimal_uint("Liq Threshold:", lt, 16);
+
+        (address collateral, address debt) = __liquidationTokens(address(siloWithDebt));
+        siloWithDebt.liquidationCall(debt, collateral, actor, debtToRepay, false);
+
+        uint256 afterLtv = siloWithDebt.getLtv(address(actor));
+        assertGt(afterLtv, 0, "expect some debt");
+        assertGt(afterLtv, lt, "expect user to be solvent");
+        assertTrue(siloWithDebt.isSolvent(address(actor)), "expect user to be solvent (isSolvent)");
+    }
+
+    function __cannotLiquidateUserUnderLt(uint8 _actorIndex, bool _receiveShares) public {
+        address actor = _chooseActor(_actorIndex);
+        (bool isSolvent, ISilo siloWithDebt) = _invariant_insolventHasDebt(actor);
+
+        assertTrue(isSolvent, "expect not solvent user");
+
+        uint256 lt = siloWithDebt.getLt();
+        uint256 ltv = siloWithDebt.getLtv(address(actor));
+
+        (, uint256 debtToRepay) = siloWithDebt.maxLiquidation(address(actor));
+
+        (address collateral, address debt) = __liquidationTokens(address(siloWithDebt));
+
+        try siloWithDebt.liquidationCall(debt, collateral, actor, debtToRepay, _receiveShares) {
+            emit log_named_decimal_uint("User LTV:", ltv, 16);
+            emit log_named_decimal_uint("Liq Threshold:", lt, 16);
+            emit log("User liquidated!");
+            assert(false);
+        } catch {
+            // do nothing, it is expected to throw
+        }
     }
 
     function __chooseSilo(bool _siloZero) private view returns (ISilo) {
