@@ -11,6 +11,7 @@ import {IShareToken} from "../interfaces/IShareToken.sol";
 import {SiloSolvencyLib} from "./SiloSolvencyLib.sol";
 import {SiloMathLib} from "./SiloMathLib.sol";
 import {SiloStdLib} from "./SiloStdLib.sol";
+import {SiloLendingLib} from "./SiloLendingLib.sol";
 
 // solhint-disable function-max-lines
 
@@ -81,20 +82,7 @@ library SiloERC4626Lib {
 
         if (_assetType == ISilo.AssetType.Collateral) {
             shareTokenTotalSupply = IShareToken(collateralConfig.collateralShareToken).totalSupply();
-
-            _totalAssets = SiloStdLib.getTotalCollateralAssetsWithInterest(
-                address(this),
-                collateralConfig.interestRateModel,
-                collateralConfig.daoFee,
-                collateralConfig.deployerFee
-            );
-
-            uint256 totalDebtAssetsWithInterest = SiloStdLib.getTotalDebtAssetsWithInterest(
-                address(this),
-                collateralConfig.interestRateModel
-            );
-
-            liquidity = SiloMathLib.liquidity(_totalAssets, totalDebtAssetsWithInterest);
+            (liquidity, _totalAssets, ) = SiloLendingLib.getLiquidityAndAssetsWithInterest(collateralConfig);
         } else {
             shareTokenTotalSupply = IShareToken(collateralConfig.protectedShareToken).totalSupply();
             liquidity = _totalAssets;
