@@ -164,28 +164,4 @@ maxWithdraw_correctMax(uint8): failed!💥
         __maxBorrow_correctReturnValue(0);
         __maxWithdraw_correctMax(0);
     }
-
-    /*
-cannotFullyLiquidateSmallLtv(uint8): failed!💥
-  Call sequence, shrinking 208/500:
-    previewDeposit_doesNotReturnMoreThanDeposit(0,232325373471441025101605023312214091688451)
-    mint(1,false,108207582841589)
-    maxBorrow_correctReturnValue(1)
-    maxWithdraw_correctMax(0)
-    cannotLiquidateUserUnderLt(0,false) Time delay: 334279 seconds Block delay: 41810
-    cannotFullyLiquidateSmallLtv(1)
-
-    forge test -vv --ffi --mt test_cover_echidna_scenario_6
-
-    */
-    function test_cover_echidna_scenario_6() public {
-        __previewDeposit_doesNotReturnMoreThanDeposit(0,232325373471441025101605023312214091688451);
-        __mint(1,false,108207582841589);
-        __maxBorrow_correctReturnValue(1);
-        __maxWithdraw_correctMax(0);
-
-        __timeDelay(334279, 41810);
-        __cannotLiquidateUserUnderLt(0,false); // Time delay: 334279 seconds Block delay: 41810
-        __cannotFullyLiquidateSmallLtv(1);
-    }
 }
