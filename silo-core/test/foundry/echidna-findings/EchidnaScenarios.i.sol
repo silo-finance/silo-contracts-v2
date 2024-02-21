@@ -131,4 +131,37 @@ maxRedeem_correctMax(uint8): failed!💥
 
         __maxRedeem_correctMax(0);
     }
+
+    /*
+maxWithdraw_correctMax(uint8): failed!💥
+  Call sequence, shrinking 318/500:
+    depositNeverMintsZeroShares(161,true,22168924613129761549643809883710869859261573373213864899764932836300336298504)
+    depositNeverMintsZeroShares(0,false,4584498224059781313847754095738)
+    borrow(2,false,382)
+    maxRedeem_correctMax(0)
+    deposit(1,false,4)
+    accrueInterest(false) Time delay: 159643 seconds Block delay: 16746
+    depositNeverMintsZeroShares(1,false,37148972519749285132903713312934615554658075164406276880551013092746735413)
+    maxBorrow_correctReturnValue(0)
+    maxWithdraw_correctMax(0)
+
+
+    forge test -vv --ffi --mt test_cover_echidna_scenario_5
+
+    this test covers bug with maxWithdraw
+    */
+    function test_cover_echidna_scenario_5() public {
+        __depositNeverMintsZeroShares(161,true,22168924613129761549643809883710869859261573373213864899764932836300336298504);
+        __depositNeverMintsZeroShares(0,false,4584498224059781313847754095738);
+        __borrow(2,false,382);
+        __maxRedeem_correctMax(0);
+        __deposit(1,false,4);
+
+        __timeDelay(159643, 16746);
+
+        __accrueInterest(false); // Time delay: 159643 seconds Block delay: 16746
+        __depositNeverMintsZeroShares(1,false,37148972519749285132903713312934615554658075164406276880551013092746735413);
+        __maxBorrow_correctReturnValue(0);
+        __maxWithdraw_correctMax(0);
+    }
 }

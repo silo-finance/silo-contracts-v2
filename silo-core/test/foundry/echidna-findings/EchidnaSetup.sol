@@ -72,23 +72,24 @@ contract EchidnaSetup is SiloLittleHelper, Test {
 
     function _invariant_insolventHasDebt(address _user)
         internal
-        returns (bool isSolvent, ISilo _siloWithDebt)
+        returns (bool isSolvent, ISilo _siloWithDebt, ISilo _siloWithCollateral)
     {
         // _dumpState(_user);
 
         isSolvent = silo0.isSolvent(_user);
-        if (isSolvent) return (isSolvent, ISilo(address(0)));
 
         (,, address debtShareToken0 ) = siloConfig.getShareTokens(address(silo0));
         (,, address debtShareToken1 ) = siloConfig.getShareTokens(address(silo1));
 
-        uint256 balance0 = IShareToken(debtShareToken0).balanceOf(_user);
-        uint256 balance1 = IShareToken(debtShareToken1).balanceOf(_user);
+        uint256 debtShareBalance0 = IShareToken(debtShareToken0).balanceOf(_user);
+        uint256 debtShareBalance1 = IShareToken(debtShareToken1).balanceOf(_user);
 
-        assertEq(balance0 * balance1, 0, "[_invariant_insolventHasDebt] one balance must be 0");
-        assertGt(balance0 + balance1, 0, "[_invariant_insolventHasDebt] user should have debt if he is insolvent");
+        if (!isSolvent) {
+            assertEq(debtShareBalance0 * debtShareBalance1, 0, "[_invariant_insolventHasDebt] one balance must be 0");
+            assertGt(debtShareBalance0 + debtShareBalance1, 0, "[_invariant_insolventHasDebt] user should have debt");
+        }
 
-        return (isSolvent, balance0 > 0 ? silo0 : silo1);
+        (_siloWithDebt, _siloWithCollateral) = debtShareBalance0 > 0 ? (silo0, silo1) : (silo1, silo0);
     }
 
     function _invariant_onlySolventUserCanRedeem(address _user)
