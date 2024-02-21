@@ -189,8 +189,14 @@ contract Actor is PropertiesAsserts {
         accountForOpenedPosition(withdrawType, vaultZero, assets, shares);
     }
 
-    function liquidationCall(bool vaultZero, address borrower, uint256 debtToCover, bool receiveSToken, ISiloConfig config) public {
-        Silo vault = prepareForDeposit(vaultZero, debtToCover);
+    function liquidationCall(
+        bool _vaultZeroWithDebt,
+        address borrower,
+        uint256 debtToCover,
+        bool receiveSToken,
+        ISiloConfig config
+    ) public {
+        Silo vault = prepareForDeposit(_vaultZeroWithDebt, debtToCover);
         (ISiloConfig.ConfigData memory debtConfig, ISiloConfig.ConfigData memory collateralConfig) =
             config.getConfigs(address(vault));
         vault.liquidationCall(collateralConfig.token, debtConfig.token, borrower, debtToCover, receiveSToken);

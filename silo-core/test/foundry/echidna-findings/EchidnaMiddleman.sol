@@ -70,7 +70,7 @@ contract EchidnaMiddleman is EchidnaSetup {
         address actor = _chooseActor(_actor);
         vm.startPrank(actor);
 
-        (bool isSolvent, ISilo siloWithDebt) = _invariant_insolventHasDebt(actor);
+        (bool isSolvent, ISilo siloWithDebt, ) = _invariant_insolventHasDebt(actor);
         assertFalse(isSolvent, "expect not solvent user");
 
         (, uint256 debtToRepay) = siloWithDebt.maxLiquidation(actor);
@@ -89,6 +89,7 @@ contract EchidnaMiddleman is EchidnaSetup {
         _requireHealthySilo(_siloWithCollateral);
 
         uint256 maxWithdraw = _siloWithCollateral.maxWithdraw(actor);
+        emit log_named_decimal_uint("maxWithdraw", maxWithdraw, 18);
 
         vm.prank(actor);
         _siloWithCollateral.withdraw(maxWithdraw, actor, actor);
@@ -159,7 +160,7 @@ contract EchidnaMiddleman is EchidnaSetup {
     function __cannotPreventInsolventUserFromBeingLiquidated(uint8 _actor, bool _receiveShares) internal {
         address actor = _chooseActor(_actor);
 
-        (bool isSolvent, ISilo siloWithDebt) = _invariant_insolventHasDebt(actor);
+        (bool isSolvent, ISilo siloWithDebt, ) = _invariant_insolventHasDebt(actor);
         assertFalse(isSolvent, "expect not solvent user");
 
         (, uint256 debtToRepay) = siloWithDebt.maxLiquidation(actor);
@@ -266,7 +267,7 @@ contract EchidnaMiddleman is EchidnaSetup {
 
     function __cannotLiquidateASolventUser(uint8 _actorIndex, bool _receiveShares) public {
         address actor = _chooseActor(_actorIndex);
-        (bool isSolvent, ISilo siloWithDebt) = _invariant_insolventHasDebt(actor);
+        (bool isSolvent, ISilo siloWithDebt, ) = _invariant_insolventHasDebt(actor);
 
         assertFalse(isSolvent, "user not solvent");
 
@@ -283,11 +284,11 @@ contract EchidnaMiddleman is EchidnaSetup {
 
     function __cannotFullyLiquidateSmallLtv(uint8 _actorIndex) public {
         address actor = _chooseActor(_actorIndex);
-        (bool isSolvent, ISilo siloWithDebt) = _invariant_insolventHasDebt(actor);
+        (bool isSolvent, ISilo siloWithDebt, ISilo siloWithCollateral) = _invariant_insolventHasDebt(actor);
 
         assertFalse(isSolvent, "expect not solvent user");
 
-        uint256 lt = siloWithDebt.getLt();
+        uint256 lt = siloWithCollateral.getLt();
         uint256 ltv = siloWithDebt.getLtv(address(actor));
 
         (, uint256 debtToRepay) = siloWithDebt.maxLiquidation(address(actor));
@@ -300,14 +301,18 @@ contract EchidnaMiddleman is EchidnaSetup {
         siloWithDebt.liquidationCall(debt, collateral, actor, debtToRepay, false);
 
         uint256 afterLtv = siloWithDebt.getLtv(address(actor));
-        assertGt(afterLtv, 0, "expect some debt");
-        assertGt(afterLtv, lt, "expect user to be solvent");
+        emit log_named_decimal_uint("afterLtv:", afterLtv, 16);
+
+        assertEq(silo0.getLtv(address(actor)), silo1.getLtv(address(actor)), "LTV must match on both silos");
+
         assertTrue(siloWithDebt.isSolvent(address(actor)), "expect user to be solvent (isSolvent)");
+        assertGt(afterLtv, 0, "expect some debt");
+        assertLt(afterLtv, lt, "expect user LTV to be below LT");
     }
 
     function __cannotLiquidateUserUnderLt(uint8 _actorIndex, bool _receiveShares) public {
         address actor = _chooseActor(_actorIndex);
-        (bool isSolvent, ISilo siloWithDebt) = _invariant_insolventHasDebt(actor);
+        (bool isSolvent, ISilo siloWithDebt, ISilo siloWithCollateral) = _invariant_insolventHasDebt(actor);
 
         assertTrue(isSolvent, "expect not solvent user");
 
@@ -324,7 +329,13 @@ contract EchidnaMiddleman is EchidnaSetup {
             emit log("User liquidated!");
             assert(false);
         } catch {
-            // do nothing, it is expected to throw
+            assertLe(ltv, lt, "ltv <= lt");
+
+            emit log_named_string(
+                "it is expected liquidationCall to throw, because user is solvent",
+                isSolvent ? "YES" : "NO?!"
+            );
+
         }
     }
 
