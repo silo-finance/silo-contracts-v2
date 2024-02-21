@@ -141,7 +141,7 @@ library SiloERC4626Lib {
             ltvData.borrowerCollateralAssets
         );
 
-        return SiloMathLib.maxWithdrawToAssetsAndShares(
+        (assets, shares) = SiloMathLib.maxWithdrawToAssetsAndShares(
             assets,
             ltvData.borrowerCollateralAssets,
             ltvData.borrowerProtectedAssets,
@@ -150,6 +150,11 @@ library SiloERC4626Lib {
             shareTokenTotalSupply,
             liquidity
         );
+
+        if (assets != 0) {
+            // even if we using rounding Down, we still need underestimation with 1wei
+            unchecked { assets--; }
+        }
     }
 
     /// this helped with stack too deep
