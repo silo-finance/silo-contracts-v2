@@ -174,7 +174,18 @@ contract GaugeHookReceiverTest is Test, TransferOwnership {
     function testAfterTokenTransfer() public {
         _initializeHookReceiver();
 
+        vm.expectRevert(IGaugeHookReceiver.Unauthorized.selector); // only share token
+        _hookReceiver.afterTokenTransfer(
+            _sender,
+            _SENDER_BAL,
+            _recipient,
+            _RECEPIENT_BAL,
+            _TS,
+            _AMOUNT
+        );
+
         // will do nothing as gauge is not configured
+        vm.prank(_shareToken);
         _hookReceiver.afterTokenTransfer(
             _sender,
             _SENDER_BAL,
@@ -186,16 +197,8 @@ contract GaugeHookReceiverTest is Test, TransferOwnership {
 
         _setGauge();
 
-        vm.expectRevert(IGaugeHookReceiver.Unauthorized.selector); // only share token
-        _hookReceiver.afterTokenTransfer(
-            _sender,
-            _SENDER_BAL,
-            _recipient,
-            _RECEPIENT_BAL,
-            _TS,
-            _AMOUNT
-        );
-
+        // will do nothing when gauge is killed
+        _mockGaugeIsKilled(true);
         vm.prank(_shareToken);
         _hookReceiver.afterTokenTransfer(
             _sender,
@@ -206,11 +209,10 @@ contract GaugeHookReceiverTest is Test, TransferOwnership {
             _AMOUNT
         );
 
-        bytes memory data = abi.encodePacked(IGauge.is_killed.selector);
-        vm.mockCall(_gauge, data, abi.encode(true));
-        vm.expectCall(_gauge, data);
-
-        // will do nothing as gauge is killed
+        // gauge is set and not killed, notification will be send
+        _mockGaugeIsKilled(false);
+        _mockGaugeAfterTransfer();
+        vm.prank(_shareToken);
         _hookReceiver.afterTokenTransfer(
             _sender,
             _SENDER_BAL,
@@ -221,7 +223,7 @@ contract GaugeHookReceiverTest is Test, TransferOwnership {
         );
     }
 
-    function _mockAfterTransfer() internal {
+    function _mockGaugeAfterTransfer() internal {
         bytes memory data = abi.encodeCall(
             IGauge.afterTokenTransfer,
             (
@@ -233,7 +235,7 @@ contract GaugeHookReceiverTest is Test, TransferOwnership {
             )
         );
 
-        vm.mockCall(_gauge, data, abi.encode(true));
+        vm.mockCall(_gauge, data, abi.encode(false));
         vm.expectCall(_gauge, data);
     }
 
@@ -242,12 +244,14 @@ contract GaugeHookReceiverTest is Test, TransferOwnership {
         vm.mockCall(_gauge, data, abi.encode(address(_shareToken))); // valid share token
         vm.expectCall(_gauge, data);
 
-        bytes memory data2 = abi.encodePacked(IGauge.is_killed.selector);
-        vm.mockCall(_gauge, data2, abi.encode(false));
-        vm.expectCall(_gauge, data2);
-
         vm.prank(_dao);
         _hookReceiver.setGauge(IGauge(_gauge));
+    }
+
+    function _mockGaugeIsKilled(bool _killed) internal {
+        bytes memory data2 = abi.encodePacked(IGauge.is_killed.selector); // selector:0x9c868ac0
+        vm.mockCall(_gauge, data2, abi.encode(_killed));
+        vm.expectCall(_gauge, data2);
     }
 
     function _initializeHookReceiver() internal {
