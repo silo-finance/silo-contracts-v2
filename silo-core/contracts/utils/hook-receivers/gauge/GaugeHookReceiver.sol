@@ -46,12 +46,12 @@ contract GaugeHookReceiver is IGaugeHookReceiver, Ownable2StepUpgradeable {
         uint256 _recipientBalance,
         uint256 _totalSupply,
         uint256 /* _amount */
-    ) external virtual {
+    ) external virtual returns (IHookReceiver.HookReturnCode code) {
+        if (msg.sender != address(shareToken)) revert Unauthorized();
+
         IGauge theGauge = gauge;
 
-        if (address(theGauge) == address(0) || theGauge.is_killed()) return;
-
-        if (msg.sender != address(shareToken)) revert Unauthorized();
+        if (address(theGauge) == address(0) || theGauge.is_killed()) return IHookReceiver.HookReturnCode.SUCCESS;
 
         theGauge.afterTokenTransfer(
             _sender,

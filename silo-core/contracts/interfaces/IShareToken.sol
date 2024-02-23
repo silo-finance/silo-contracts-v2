@@ -13,6 +13,8 @@ interface IShareToken is IERC20MetadataUpgradeable {
     event NotificationSent(address indexed notificationReceiver, bool success);
 
     error Forbidden();
+    error OnlySilo();
+    error RevertRequestFromHook();
 
     /// @param _silo Silo address for which tokens was deployed
     /// @param _hookReceiver address that will get a callback on mint, burn and transfer of the token

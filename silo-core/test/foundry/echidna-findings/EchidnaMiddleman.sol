@@ -312,7 +312,7 @@ contract EchidnaMiddleman is EchidnaSetup {
 
     function __cannotLiquidateUserUnderLt(uint8 _actorIndex, bool _receiveShares) public {
         address actor = _chooseActor(_actorIndex);
-        (bool isSolvent, ISilo siloWithDebt, ISilo siloWithCollateral) = _invariant_insolventHasDebt(actor);
+        (bool isSolvent, ISilo siloWithDebt, ) = _invariant_insolventHasDebt(actor);
 
         assertTrue(isSolvent, "expect not solvent user");
 
