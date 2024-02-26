@@ -5,6 +5,6 @@ function disableAccrueInterest(env e) {
 function isWithInterest(env e) returns bool {
     uint256 debt = currentContract._total[ISilo.AssetType.Debt].assets;
 
-    uint256 siloIRTimestamp = currentContract.siloData.interestRateTimestamp;
+    uint256 siloIRTimestamp = getSiloDataInterestRateTimestamp();
     return siloIRTimestamp != 0 && siloIRTimestamp < e.block.timestamp && debt != 0;
 }
