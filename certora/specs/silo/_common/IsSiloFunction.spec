@@ -1,4 +1,4 @@
-import "../_common/SiloFunctionSelector.spec";
+import "./SiloFunctionSelector.spec";
 
 function isDeposit(method f) returns bool {
     return f.selector == depositSig() || f.selector == depositWithTypeSig();
@@ -38,7 +38,6 @@ function fnAllowedToIncreaseShareDebtTotalSupply(method f) returns bool {
 function fnAllowedToDecreaseShareProtectedTotalSupply(method f) returns bool {
     return f.selector == withdrawSig() ||
         f.selector == withdrawWithTypeSig() ||
-        f.selector == withdrawWithTypeSig() ||
         f.selector == redeemSig() ||
         f.selector == liquidationCallSig() ||
         f.selector == transitionCollateralSig();
@@ -54,6 +53,10 @@ function fnAllowedToIncreaseShareProtectedTotalSupply(method f) returns bool {
 
 function fnAllowedToIncreaseShareCollateralTotalSupply(method f) returns bool {
     return fnAllowedToIncreaseShareProtectedTotalSupply(f); // the same as for share protected collateral token
+}
+
+function fnAllowedToDecreaseShareCollateralTotalSupply(method f) returns bool {
+    return fnAllowedToDecreaseShareProtectedTotalSupply(f);
 }
 
 function fnAllowedToChangeCollateralBalanceWithoutTotalAssets(method f) returns bool {

@@ -1,10 +1,10 @@
 methods {
     // applies only to EVM calls
-    function _.accrueInterest() external => DISPATCHER(true); // silo
-    function _.initialize(address,address) external => DISPATCHER(true); // silo
+    function _.accrueInterest() external => DISPATCHER(false); // silo
+    function _.initialize(address,address) external => DISPATCHER(false); // silo
     function _.getDebtAssets() external => NONDET; // silo
     function _.getCollateralAndProtectedAssets() external => NONDET; // silo
-    function _.withdrawCollateralsToLiquidator(uint256,uint256,address,address,bool) external => DISPATCHER(true); // silo
+    function _.withdrawCollateralsToLiquidator(uint256,uint256,address,address,bool) external => DISPATCHER(false); // silo
     function _.beforeQuote(address) external => NONDET;
     function _.connect(address) external => NONDET; // IRM
     function _.onLeverage(address,address,address,uint256,bytes) external => NONDET; // leverage receiver

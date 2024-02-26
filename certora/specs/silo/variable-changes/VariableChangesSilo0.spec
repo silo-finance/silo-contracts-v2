@@ -1,8 +1,4 @@
-import "../_common/OnlySilo0SetUp.spec";
-import "../_common/IsSiloFunction.spec";
-import "../_common/SiloMethods.spec";
-import "../_common/Helpers.spec";
-import "../_common/CommonSummarizations.spec";
+import "../_common/CompleteSiloSetup.spec";
 import "../../_simplifications/Oracle_quote_one.spec";
 import "../../_simplifications/Silo_isSolvent_ghost.spec";
 import "../../_simplifications/SimplifiedGetCompoundInterestRateAndUpdate.spec";
@@ -20,7 +16,7 @@ rule VC_Silo_total_collateral_increase(
     uint256 assetsOrShares,
     address receiver
 ) filtered { f -> !f.isView} {
-    silo0SetUp(e);
+    completeSiloSetupEnv(e);
     requireToken0TotalAndBalancesIntegrity();
     requireCollateralToken0TotalAndBalancesIntegrity();
 
@@ -72,6 +68,63 @@ rule VC_Silo_total_collateral_increase(
 /**
 certoraRun certora/config/silo/silo0.conf \
     --parametric_contracts Silo0 \
+    --msg "VC_Silo_total_collateral_increase" \
+    --rule "VC_Silo_total_collateral_increase" \
+    --verify "Silo0:certora/specs/silo/variable-changes/VariableChangesSilo0.spec"
+
+     collateralShareToken.totalSupply and Silo._total[ISilo.AssetType.Collateral].assets should decrease only on withdraw, redeem, liquidationCall.The balance of the silo in the underlying asset should decrease for the same amount as Silo._total[ISilo.AssetType.Collateral].assets decreased.
+  Implementation: rule `VC_Silo_total_collateral_decrease` \
+*/
+rule VC_Silo_total_collateral_decrease(
+    env e,
+    method f,
+    uint256 assetsOrShares,
+    address receiver
+) filtered { f -> !f.isView } {
+    completeSiloSetupEnv(e);
+    requireToken0TotalAndBalancesIntegrity();
+    requireProtectedToken0TotalAndBalancesIntegrity();
+
+    mathint totalDepositsBefore = silo0._total[ISilo.AssetType.Collateral].assets;
+    mathint shareTokenTotalSupplyBefore = shareCollateralToken0.totalSupply();
+    mathint balanceSharesBefore = shareCollateralToken0.balanceOf(receiver);
+    mathint siloBalanceBefore = token0.balanceOf(silo0);
+
+    siloFnSelector(e, f, assetsOrShares, receiver);
+
+    mathint totalDepositsAfter = silo0._total[ISilo.AssetType.Collateral].assets;
+    mathint shareTokenTotalSupplyAfter = shareCollateralToken0.totalSupply();
+    mathint balanceSharesAfter = shareCollateralToken0.balanceOf(receiver);
+    mathint siloBalanceAfter = token0.balanceOf(silo0);
+
+    bool totalSupplyDecreased = shareTokenTotalSupplyBefore > shareTokenTotalSupplyAfter;
+
+    assert totalSupplyDecreased => totalDepositsBefore > totalDepositsAfter,
+        "Total deposits should decrease if total supply of share tokens decreased";
+
+    assert totalSupplyDecreased => fnAllowedToDecreaseShareCollateralTotalSupply(f),
+        "The total supply of share tokens should decrease only if allowed fn was called";
+
+    // mathint totalSupplyDecrease = shareTokenTotalSupplyBefore - shareTokenTotalSupplyAfter;
+    mathint siloBalanceDecrease = siloBalanceBefore - siloBalanceAfter;
+    mathint totalDepositsDecrease = totalDepositsBefore - totalDepositsAfter;
+
+    assert totalSupplyDecreased => //(totalSupplyDecrease == assetsOrShares &&
+            totalDepositsDecrease == siloBalanceDecrease;
+    
+    // assert totalDepositsBefore > totalDepositsAfter && f.selector != transitionCollateralSig() =>
+    //     siloBalanceAfter == siloBalanceBefore - (totalDepositsBefore - totalDepositsAfter),
+    //     "The balance of the silo in the underlying asset should decrease for the same amount";
+
+    // assert totalDepositsBefore > totalDepositsAfter && f.selector == transitionCollateralSig() =>
+    //     siloBalanceAfter == siloBalanceBefore,
+    //     "The balance of the silo should not change on transitionCollateral fn";
+   }
+
+
+/**
+certoraRun certora/config/silo/silo0.conf \
+    --parametric_contracts Silo0 \
     --msg "VC_Silo_total_protected_increase" \
     --rule "VC_Silo_total_protected_increase" \
     --verify "Silo0:certora/specs/silo/variable-changes/VariableChangesSilo0.spec"
@@ -82,7 +135,7 @@ rule VC_Silo_total_protected_increase(
     uint256 assetsOrShares,
     address receiver
 ) filtered { f -> !f.isView} {
-    silo0SetUp(e);
+    completeSiloSetupEnv(e);
     requireToken0TotalAndBalancesIntegrity();
     requireProtectedToken0TotalAndBalancesIntegrity();
 
@@ -128,7 +181,7 @@ rule VC_Silo_total_protected_decrease(
     uint256 assetsOrShares,
     address receiver
 ) filtered { f -> !f.isView} {
-    silo0SetUp(e);
+    completeSiloSetupEnv(e);
     requireToken0TotalAndBalancesIntegrity();
     requireProtectedToken0TotalAndBalancesIntegrity();
 
@@ -174,7 +227,7 @@ rule VC_Silo_total_debt_increase(
     uint256 assetsOrShares,
     address receiver
 ) filtered { f -> !f.isView} {
-    silo0SetUp(e);
+    completeSiloSetupEnv(e);
     requireToken0TotalAndBalancesIntegrity();
     requireDebtToken0TotalAndBalancesIntegrity();
 
@@ -218,7 +271,7 @@ rule VC_Silo_total_debt_decrease(
     uint256 assetsOrShares,
     address receiver
 ) filtered { f -> !f.isView} {
-    silo0SetUp(e);
+    completeSiloSetupEnv(e);
     requireToken0TotalAndBalancesIntegrity();
     requireDebtToken0TotalAndBalancesIntegrity();
 
@@ -262,7 +315,7 @@ rule VC_Silo_debt_share_balance(
     uint256 assetsOrShares,
     address receiver
 ) filtered { f -> !f.isView} {
-    silo0SetUp(e);
+    completeSiloSetupEnv(e);
     requireDebtToken0TotalAndBalancesIntegrity();
 
     mathint debtAssetsBefore = silo0._total[ISilo.AssetType.Debt].assets;
@@ -295,7 +348,7 @@ rule VC_Silo_protected_share_balance(
     uint256 assetsOrShares,
     address receiver
 ) filtered { f -> !f.isView} {
-    silo0SetUp(e);
+    completeSiloSetupEnv(e);
     requireProtectedToken0TotalAndBalancesIntegrity();
 
     mathint protectedtAssetsBefore = silo0._total[ISilo.AssetType.Protected].assets;
@@ -326,7 +379,7 @@ rule VC_Silo_collateral_share_balance(
     uint256 assetsOrShares,
     address receiver
 ) filtered { f -> !f.isView} {
-    silo0SetUp(e);
+    completeSiloSetupEnv(e);
     requireCollateralToken0TotalAndBalancesIntegrity();
 
     mathint collateralAssetsBefore = silo0._total[ISilo.AssetType.Collateral].assets;
