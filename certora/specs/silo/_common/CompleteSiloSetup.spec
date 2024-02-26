@@ -25,7 +25,7 @@ function completeSiloSetupEnv(env e) {
     require e.msg.sender != token1;
 
     // we can not have block.timestamp less than interestRateTimestamp
-    uint64 blockTimestamp = require_uint64(e.block.timestamp);
-    require blockTimestamp >= silo0.getSiloDataInterestRateTimestamp();
-    require blockTimestamp >= silo1.getSiloDataInterestRateTimestamp();
+    uint256 blockTimestamp = require_uint64(e.block.timestamp);
+    require blockTimestamp >= silo0.getSiloDataInterestRateTimestamp(e);
+    require blockTimestamp >= silo1.getSiloDataInterestRateTimestamp(e);
 }
