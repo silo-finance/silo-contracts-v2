@@ -26,6 +26,8 @@ methods {
 
     function _.getCollateralAndProtectedAssets() external => DISPATCHER(true);
 
+    function _.getCollateralAndDebtAssets() external => DISPATCHER(true);
+
     // Harness:
     function silo0.getSiloDataInterestRateTimestamp() external returns(uint256) envfree;
     function silo1.getSiloDataInterestRateTimestamp() external returns(uint256) envfree;
