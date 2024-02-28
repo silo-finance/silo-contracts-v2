@@ -13,6 +13,8 @@ methods {
     function silo0.total(ISilo.AssetType) external returns(uint256) envfree;
     function silo1.total(ISilo.AssetType) external returns(uint256) envfree;
 
+    function _.total(ISilo.AssetType) external => DISPATCHER(true);
+
     function silo0.getCollateralAssets() external returns(uint256);
     function silo1.getCollateralAssets() external returns(uint256);
 
@@ -21,7 +23,9 @@ methods {
 
     function silo0.getCollateralAndProtectedAssets() external returns(uint256,uint256) envfree;
     function silo1.getCollateralAndProtectedAssets() external returns(uint256,uint256) envfree;
-    
+
+    function _.getCollateralAndProtectedAssets() external => DISPATCHER(true);
+
     // Harness:
     function silo0.getSiloDataInterestRateTimestamp() external returns(uint256) envfree;
     function silo1.getSiloDataInterestRateTimestamp() external returns(uint256) envfree;
