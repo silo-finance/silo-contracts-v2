@@ -66,7 +66,7 @@ rule VC_Silo_total_collateral_increase(
     assert f.selector == accrueInterestSig() && withInterest =>
          totalDepositsBefore <= totalDepositsAfter && // it may be the same if the interest is 0
          shareTokenTotalSupplyBefore == shareTokenTotalSupplyAfter,
-        "AccrueInterest increase only Silo._total[ISilo.AssetType.Collateral).assets";
+        "AccrueInterest increase only Silo.total(ISilo.AssetType.Collateral)";
 }
 
 /**
@@ -89,14 +89,14 @@ rule VC_Silo_total_collateral_decrease(
     requireToken0TotalAndBalancesIntegrity();
     requireProtectedToken0TotalAndBalancesIntegrity();
 
-    mathint totalDepositsBefore = silo0.total[ISilo.AssetType.Collateral].assets;
+    mathint totalDepositsBefore = silo0.total(ISilo.AssetType.Collateral);
     mathint shareTokenTotalSupplyBefore = shareCollateralToken0.totalSupply();
     mathint balanceSharesBefore = shareCollateralToken0.balanceOf(receiver);
     mathint siloBalanceBefore = token0.balanceOf(silo0);
 
     siloFnSelector(e, f, assetsOrShares, receiver);
 
-    mathint totalDepositsAfter = silo0.total[ISilo.AssetType.Collateral].assets;
+    mathint totalDepositsAfter = silo0.total(ISilo.AssetType.Collateral);
     mathint shareTokenTotalSupplyAfter = shareCollateralToken0.totalSupply();
     mathint balanceSharesAfter = shareCollateralToken0.balanceOf(receiver);
     mathint siloBalanceAfter = token0.balanceOf(silo0);
