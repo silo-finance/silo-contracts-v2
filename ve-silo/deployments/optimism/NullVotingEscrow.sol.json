@@ -1,0 +1,192 @@
+{
+  "address": "0x32a4Bcd8DEa5E18a12a50584682f8E4B77fFF2DF",
+  "abi": [
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "owner",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "spender",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "value",
+          "type": "uint256"
+        }
+      ],
+      "name": "Approval",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "from",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "to",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "value",
+          "type": "uint256"
+        }
+      ],
+      "name": "Transfer",
+      "type": "event"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "allowance",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "approve",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "balanceOf",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "totalSupply",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "transfer",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "transferFrom",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x608060405234801561001057600080fd5b50610280806100206000396000f3fe608060405234801561001057600080fd5b50600436106100625760003560e01c8063095ea7b31461006757806318160ddd1461008f57806323b872dd146100a057806370a08231146100b3578063a9059cbb14610067578063dd62ed3e146100c7575b600080fd5b61007a610075366004610196565b6100dd565b60405190151581526020015b60405180910390f35b60005b604051908152602001610086565b61007a6100ae3660046101c0565b6100f0565b6100926100c13660046101fc565b50600090565b6100926100d5366004610217565b600092915050565b60006100ea6103e6610104565b92915050565b60006100fd6103e6610104565b9392505050565b610114816210905360ea1b610117565b50565b62461bcd60e51b600090815260206004526007602452600a808404818106603090810160081b958390069590950190829004918206850160101b01602363ffffff0060e086901c160160181b0190930160c81b604481905260e883901c91606490fd5b80356001600160a01b038116811461019157600080fd5b919050565b600080604083850312156101a957600080fd5b6101b28361017a565b946020939093013593505050565b6000806000606084860312156101d557600080fd5b6101de8461017a565b92506101ec6020850161017a565b9150604084013590509250925092565b60006020828403121561020e57600080fd5b6100fd8261017a565b6000806040838503121561022a57600080fd5b6102338361017a565b91506102416020840161017a565b9050925092905056fea26469706673582212204f77d84e8de3297449ed293f2de2b5639a77bab03bc7adf1bddf9854a1131b5b64736f6c63430008150033",
+  "deployedBytecode": "0x608060405234801561001057600080fd5b50600436106100625760003560e01c8063095ea7b31461006757806318160ddd1461008f57806323b872dd146100a057806370a08231146100b3578063a9059cbb14610067578063dd62ed3e146100c7575b600080fd5b61007a610075366004610196565b6100dd565b60405190151581526020015b60405180910390f35b60005b604051908152602001610086565b61007a6100ae3660046101c0565b6100f0565b6100926100c13660046101fc565b50600090565b6100926100d5366004610217565b600092915050565b60006100ea6103e6610104565b92915050565b60006100fd6103e6610104565b9392505050565b610114816210905360ea1b610117565b50565b62461bcd60e51b600090815260206004526007602452600a808404818106603090810160081b958390069590950190829004918206850160101b01602363ffffff0060e086901c160160181b0190930160c81b604481905260e883901c91606490fd5b80356001600160a01b038116811461019157600080fd5b919050565b600080604083850312156101a957600080fd5b6101b28361017a565b946020939093013593505050565b6000806000606084860312156101d557600080fd5b6101de8461017a565b92506101ec6020850161017a565b9150604084013590509250925092565b60006020828403121561020e57600080fd5b6100fd8261017a565b6000806040838503121561022a57600080fd5b6102338361017a565b91506102416020840161017a565b9050925092905056fea26469706673582212204f77d84e8de3297449ed293f2de2b5639a77bab03bc7adf1bddf9854a1131b5b64736f6c63430008150033",
+  "language": "Solidity",
+  "compiler": "0.8.21+commit.d9974bed"
+}

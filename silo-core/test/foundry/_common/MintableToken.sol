@@ -5,9 +5,13 @@ import {ERC20} from "openzeppelin-contracts/token/ERC20/ERC20.sol";
 
 
 contract MintableToken is ERC20 {
+    uint8 immutable private _decimals;
+
     bool onDemand;
 
-    constructor() ERC20("a", "b") {}
+    constructor(uint8 _setDecimals) ERC20("a", "b") {
+        _decimals = _setDecimals;
+    }
 
     function mint(address _owner, uint256 _amount) external virtual {
         _mint(_owner, _amount);
@@ -15,6 +19,10 @@ contract MintableToken is ERC20 {
 
     function setOnDemand(bool _onDemand) external {
         onDemand = _onDemand;
+    }
+
+    function decimals() public view virtual override returns (uint8) {
+        return _decimals;
     }
 
     function mintOnDemand(address _owner, uint256 _amount) public virtual {

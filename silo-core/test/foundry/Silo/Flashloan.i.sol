@@ -114,9 +114,9 @@ contract FlashloanTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --ffi --mt test_flashLoan
+    forge test -vv --ffi --mt test_gas_flashLoan
     */
-    function test_flashLoan(bytes calldata _data) public {
+    function test_gas_flashLoan(bytes calldata _data) public {
         IERC3156FlashBorrower receiver = IERC3156FlashBorrower(makeAddr("IERC3156FlashBorrower"));
         uint256 amount = 1e18;
         uint256 fee = silo0.flashFee(address(token0), amount);

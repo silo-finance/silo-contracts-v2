@@ -9,10 +9,23 @@ import {VeSiloMocksContracts} from "ve-silo/test/_mocks/for-testnet-deployments/
 import {Proposal} from "proposals/contracts/Proposal.sol";
 import {Constants} from "proposals/sip/_common/Constants.sol";
 
+/**
+FOUNDRY_PROFILE=ve-silo-test \
+    forge script ve-silo/test/_mocks/for-testnet-deployments/proposals/SIPV2InitWithMocks.sol \
+    --ffi --broadcast --rpc-url http://127.0.0.1:8545
+
+cast rpc evm_increaseTime 3601 --rpc-url http://127.0.0.1:8545
+ */
 contract SIPV2InitWithMocks is Proposal {
     string constant public PROPOSAL_DESCRIPTION = "Initialization with mocks";
 
     function run() public override returns (uint256 proposalId) {
+        initializeActions();
+
+        proposalId = proposeProposal(PROPOSAL_DESCRIPTION);
+    }
+
+    function initializeActions() public {
         string memory chainAlias = ChainsLib.chainAlias();
 
         address gaugeFactoryAddr = VeSiloDeployments.get(VeSiloContracts.LIQUIDITY_GAUGE_FACTORY, chainAlias);
@@ -53,8 +66,6 @@ contract SIPV2InitWithMocks is Proposal {
         balancerTokenAdmin.activate();
 
         /* PROPOSAL END */
-
-        proposalId = proposeProposal(PROPOSAL_DESCRIPTION);
     }
 
     function _initializeProposers() internal override {

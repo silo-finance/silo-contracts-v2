@@ -4,6 +4,48 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+## [0.4.0] - 2024-02-22
+### Added
+- add returned code for `IHookReceiver.afterTokenTransfer`
+
+## [0.3.3] - 2024-02-21
+### Fixed
+- underestimate `maxWithdraw`
+
+## [0.3.2] - 2024-02-20
+### Fixed
+- fix rounding on `maxRedeem`
+- fix rounding on `maxBorrow`
+
+## [0.3.1] - 2024-02-19
+### Fixed
+- optimise `maxWithdraw`: do not run `getTotalCollateralAssetsWithInterest` twice
+
+## [0.3.0] - 2024-02-15
+### Added
+- add `SiloLens` to reduced Silo size
+
+### Changed
+- change visibility of `total` mapping to public
+- ensure total getters returns values with interest
+
+### Removed
+- remove `getProtectedAssets()`
+
+## [0.2.0] - 2024-02-13
+### Added
+- Arbitrum and Optimism deployments
+
+## [0.1.7] - 2024-02-12
+### Fixed
+- fix `maxBorrowShares` by using `-1`, same solution as we have for `maxBorrow`
+
+## [0.1.6] - 2024-02-12
+### Fixed
+- fix max redeem: include interest for collateral assets
+
 ## [0.1.5] - 2024-02-08
 ### Fixed
 - accrue interest on both silos for borrow

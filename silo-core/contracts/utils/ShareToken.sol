@@ -62,8 +62,6 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
     /// @notice Address of hook contract called on each token transfer, mint and burn
     address public hookReceiver;
 
-    error OnlySilo();
-
     modifier onlySilo() {
         if (msg.sender != address(silo)) revert OnlySilo();
 
@@ -184,14 +182,18 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
         if (hookReceiver == address(0)) return;
 
         // report mint, burn or transfer
-        (bool resultIgnored,) = hookReceiver.call( // solhint-disable-line avoid-low-level-calls
+        (bool callSuccessful, bytes memory code) = hookReceiver.call( // solhint-disable-line avoid-low-level-calls
             abi.encodeCall(
                 IHookReceiver.afterTokenTransfer,
                 (_sender, balanceOf(_sender), _recipient, balanceOf(_recipient), totalSupply(), _amount)
             )
         );
 
-        resultIgnored; // this is to fix: Warning (2072): Unused local variable
+        if (!callSuccessful || code.length == 0) return;
+
+        if (abi.decode(code, (IHookReceiver.HookReturnCode)) == IHookReceiver.HookReturnCode.REQUEST_TO_REVERT_TX) {
+            revert RevertRequestFromHook();
+        }
     }
 
     /// @dev checks if operation is "real" transfer

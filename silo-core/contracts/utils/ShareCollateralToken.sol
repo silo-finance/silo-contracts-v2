@@ -1,12 +1,15 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.21;
 
+import {SiloLensLib} from "../lib/SiloLensLib.sol";
 import {IShareToken, ShareToken, ISiloFactory, ISilo} from "./ShareToken.sol";
 
 /// @title ShareCollateralToken
 /// @notice ERC20 compatible token representing collateral position in Silo
 /// @custom:security-contact security@silo.finance
 contract ShareCollateralToken is ShareToken {
+    using SiloLensLib for ISilo;
+
     error SenderNotSolventAfterTransfer();
     error ShareTransferNotAllowed();
 

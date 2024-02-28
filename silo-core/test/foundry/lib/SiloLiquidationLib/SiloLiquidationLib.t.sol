@@ -332,7 +332,7 @@ contract SiloLiquidationLibTest is Test, MaxRepayRawMath {
         uint128 _ltvBefore,
         uint128 _sumOfCollateralAssets,
         uint128 _debtToCover
-    ) public {
+    ) public pure {
         // total assets/values must be != 0, if they are not, then revert possible
         uint256 borrowerDebtAssets = 1e18;
         uint256 borrowerDebtValue = 1e18;
@@ -348,9 +348,9 @@ contract SiloLiquidationLibTest is Test, MaxRepayRawMath {
 
 
     /*
-    forge test -vv --mt test_SiloLiquidationLib_liquidationPreview_gas
+    forge test -vv --mt test_gas_SiloLiquidationLib_liquidationPreview
     */
-    function test_SiloLiquidationLib_liquidationPreview_gas() public {
+    function test_gas_SiloLiquidationLib_liquidationPreview() public {
         SiloLiquidationLib.LiquidationPreviewParams memory params;
 
         uint256 gasStart = gasleft();

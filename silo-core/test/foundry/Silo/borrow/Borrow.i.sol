@@ -6,6 +6,7 @@ import "forge-std/Test.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
+import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
 
 import {MintableToken} from "../../_common/MintableToken.sol";
 import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
@@ -14,6 +15,8 @@ import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
     forge test -vv --ffi --mc BorrowIntegrationTest
 */
 contract BorrowIntegrationTest is SiloLittleHelper, Test {
+    using SiloLensLib for ISilo;
+
     ISiloConfig siloConfig;
 
     function setUp() public {
@@ -135,29 +138,32 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
         // deposit, so we can borrow
         _depositForBorrow(depositAssets * 2, depositor);
 
-        maxBorrow = silo1.maxBorrow(borrower) + 1; // +1 to balance out underestimation
-        // emit log_named_decimal_uint("maxBorrow #1", maxBorrow, 18);
+        // in this particular scenario max borrow is underestimated by 1, so we compensate by +1, to max out
+        maxBorrow = silo1.maxBorrow(borrower) + 1;
+        emit log_named_decimal_uint("maxBorrow #1", maxBorrow, 18);
         assertEq(maxBorrow, 0.75e18, "maxBorrow borrower can do, maxLTV is 75%");
 
         uint256 borrowAmount = maxBorrow / 2;
-        // emit log_named_decimal_uint("borrowAmount", borrowAmount, 18);
+        emit log_named_decimal_uint("first borrow amount", borrowAmount, 18);
 
         uint256 convertToShares = silo1.convertToShares(borrowAmount);
         uint256 previewBorrowShares = silo1.previewBorrowShares(convertToShares);
         assertEq(previewBorrowShares, borrowAmount, "previewBorrowShares crosscheck");
 
         uint256 gotShares = _borrow(borrowAmount, borrower);
+        uint256 shareTokenCurrentDebt = 0.375e18;
 
-        assertEq(IShareToken(debtShareToken).balanceOf(borrower), 0.375e18, "expect borrower to have 1/2 of debt");
+        assertEq(IShareToken(debtShareToken).balanceOf(borrower), shareTokenCurrentDebt, "expect borrower to have 1/2 of debt");
         assertEq(IShareToken(collateralShareToken).balanceOf(borrower), 1e18, "collateral silo: borrower has collateral");
-        assertEq(silo1.getDebtAssets(), 0.375e18, "silo debt");
-        assertEq(gotShares, 0.375e18, "got debt shares");
+        assertEq(silo1.getDebtAssets(), shareTokenCurrentDebt, "silo debt");
+        assertEq(gotShares, shareTokenCurrentDebt, "got debt shares");
         assertEq(gotShares, convertToShares, "convertToShares returns same result");
         assertEq(borrowAmount, silo1.convertToAssets(gotShares), "convertToAssets returns borrowAmount");
 
-        borrowAmount = silo1.maxBorrow(borrower) + 1; // +1 to balance out underestimation
-        // emit log_named_decimal_uint("borrowAmount #2", borrowAmount, 18);
-        assertEq(borrowAmount, 0.75e18 / 2, "~");
+        // in this particular scenario max borrow is underestimated by 1, so we compensate by +1, to max out
+        borrowAmount = silo1.maxBorrow(borrower) + 1;
+        emit log_named_decimal_uint("borrowAmount #2", borrowAmount, 18);
+        assertEq(borrowAmount, 0.75e18 / 2, "borrow second time");
 
         convertToShares = silo1.convertToShares(borrowAmount);
         gotShares = _borrow(borrowAmount, borrower);

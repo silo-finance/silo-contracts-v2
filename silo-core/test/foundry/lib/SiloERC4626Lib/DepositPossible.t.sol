@@ -6,16 +6,29 @@ import "forge-std/Test.sol";
 import {SiloERC4626Lib} from "silo-core/contracts/lib/SiloERC4626Lib.sol";
 import {TokenMock} from "../../_mocks/TokenMock.sol";
 
+contract SiloERC4626LibImpl {
+    function depositPossible(address _debtShareToken, address _depositor) external view returns (bool) {
+        return SiloERC4626Lib.depositPossible(_debtShareToken, _depositor);
+    }
+}
+
 /*
-forge test -vv --mc DepositPossibleTest --ffi
+forge test -vv --mc DepositPossibleTest
 */
 contract DepositPossibleTest is Test {
+    SiloERC4626LibImpl private immutable _impl;
+
+    constructor() {
+        _impl = new SiloERC4626LibImpl();
+    }
+
+    // forge test -vv --mt test_depositPossible_throwOnZeros
     function test_depositPossible_throwOnZeros() public {
         address debtShareToken;
         address depositor;
 
         vm.expectRevert();
-        SiloERC4626Lib.depositPossible(debtShareToken, depositor);
+        _impl.depositPossible(debtShareToken, depositor);
     }
 
     function test_depositPossible_throwOnWrongTokenAddress() public {
@@ -23,7 +36,7 @@ contract DepositPossibleTest is Test {
         address depositor;
 
         vm.expectRevert();
-        SiloERC4626Lib.depositPossible(debtShareToken, depositor);
+        _impl.depositPossible(debtShareToken, depositor);
     }
 
     function test_depositPossible_falseWhenBalance() public {

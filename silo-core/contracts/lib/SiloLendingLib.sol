@@ -27,65 +27,6 @@ library SiloLendingLib {
 
     error FeeOverflow();
 
-    /// @notice Allows a user or a delegate to borrow assets against their collateral
-    /// @dev The function checks for necessary conditions such as borrow possibility, enough liquidity, and zero
-    /// values
-    /// @param _configData Contains configurations such as associated share tokens and underlying tokens
-    /// @param _assets Number of assets the borrower intends to borrow. Use 0 if shares are provided.
-    /// @param _shares Number of shares corresponding to the assets that the borrower intends to borrow. Use 0 if
-    /// assets are provided.
-    /// @param _receiver Address that will receive the borrowed assets
-    /// @param _borrower The user who is borrowing the assets
-    /// @param _spender Address which initiates the borrowing action on behalf of the borrower
-    /// @param _totalDebt Current total outstanding debt in the system
-    /// @param _totalCollateralAssets Total collateralized assets currently in the system
-    /// @return borrowedAssets Actual number of assets that the user has borrowed
-    /// @return borrowedShares Number of debt share tokens corresponding to the borrowed assets
-    function borrow(
-        ISiloConfig.ConfigData memory _configData,
-        uint256 _assets,
-        uint256 _shares,
-        address _receiver,
-        address _borrower,
-        address _spender,
-        ISilo.Assets storage _totalDebt,
-        uint256 _totalCollateralAssets
-    ) internal returns (uint256 borrowedAssets, uint256 borrowedShares) {
-        if (_assets == 0 && _shares == 0) revert ISilo.ZeroAssets();
-
-        if (!borrowPossible(_configData.protectedShareToken, _configData.collateralShareToken, _borrower)) {
-            revert ISilo.BorrowNotPossible();
-        }
-
-        IShareToken debtShareToken = IShareToken(_configData.debtShareToken);
-        uint256 totalDebtAssets = _totalDebt.assets;
-
-        (borrowedAssets, borrowedShares) = SiloMathLib.convertToAssetsAndToShares(
-            _assets,
-            _shares,
-            totalDebtAssets,
-            debtShareToken.totalSupply(),
-            MathUpgradeable.Rounding.Down,
-            MathUpgradeable.Rounding.Up,
-            ISilo.AssetType.Debt
-        );
-
-        if (borrowedShares == 0) revert ISilo.ZeroShares();
-        if (borrowedAssets == 0) revert ISilo.ZeroAssets();
-
-        if (borrowedAssets > SiloMathLib.liquidity(_totalCollateralAssets, totalDebtAssets)) {
-            revert ISilo.NotEnoughLiquidity();
-        }
-
-        // add new debt
-        _totalDebt.assets = totalDebtAssets + borrowedAssets;
-        // `mint` checks if _spender is allowed to borrow on the account of _borrower. Hook receiver can
-        // potentially reenter but the state is correct.
-        debtShareToken.mint(_borrower, _spender, borrowedShares);
-        // fee-on-transfer is ignored. If token reenters, state is already finalized, no harm done.
-        IERC20Upgradeable(_configData.token).safeTransfer(_receiver, borrowedAssets);
-    }
-
     /// @notice Executes a flash loan, sending the requested amount to the receiver and expecting it back with a fee
     /// @param _config Configuration data relevant to the silo asset borrowed
     /// @param _siloData Storage containing data related to fees
@@ -121,6 +62,122 @@ library SiloLendingLib {
         _siloData.daoAndDeployerFees += uint192(fee);
 
         success = true;
+    }
+
+    /// @notice Determines the maximum amount (both in assets and shares) that a borrower can borrow
+    /// @param _collateralConfig Configuration data for the collateral
+    /// @param _debtConfig Configuration data for the debt
+    /// @param _borrower The address of the borrower whose maximum borrow limit is being queried
+    /// @param _totalDebtAssets The total debt assets in the system
+    /// @param _totalDebtShares The total debt shares in the system
+    /// @param _siloConfig address of SiloConfig contract
+    /// @return assets The maximum amount in assets that can be borrowed
+    /// @return shares The equivalent amount in shares for the maximum assets that can be borrowed
+    function maxBorrow( // solhint-disable-line function-max-lines
+        ISiloConfig.ConfigData memory _collateralConfig,
+        ISiloConfig.ConfigData memory _debtConfig,
+        address _borrower,
+        uint256 _totalDebtAssets,
+        uint256 _totalDebtShares,
+        ISiloConfig _siloConfig
+    )
+        external
+        view
+        returns (uint256 assets, uint256 shares)
+    {
+        if (!borrowPossible(_debtConfig.protectedShareToken, _debtConfig.collateralShareToken, _borrower)) {
+            return (0, 0);
+        }
+
+        SiloSolvencyLib.LtvData memory ltvData = SiloSolvencyLib.getAssetsDataForLtvCalculations(
+            _collateralConfig,
+            _debtConfig,
+            _borrower,
+            ISilo.OracleType.MaxLtv,
+            ISilo.AccrueInterestInMemory.Yes,
+            0 /* no cached balance */
+        );
+
+        (
+            uint256 sumOfBorrowerCollateralValue, uint256 borrowerDebtValue
+        ) = SiloSolvencyLib.getPositionValues(ltvData, _collateralConfig.token, _debtConfig.token);
+
+        uint256 maxBorrowValue = SiloMathLib.calculateMaxBorrowValue(
+            _collateralConfig.maxLtv,
+            sumOfBorrowerCollateralValue,
+            borrowerDebtValue
+        );
+
+        (assets, shares) = maxBorrowValueToAssetsAndShares(
+            maxBorrowValue,
+            borrowerDebtValue,
+            _borrower,
+            _debtConfig.token,
+            _debtConfig.debtShareToken,
+            ltvData.debtOracle,
+            _totalDebtAssets,
+            _totalDebtShares
+        );
+
+        uint256 liquidityWithInterest = getLiquidity(_siloConfig);
+
+        if (assets > liquidityWithInterest) {
+            assets = liquidityWithInterest;
+
+            // rounding must follow same flow as in `maxBorrowValueToAssetsAndShares()`
+            shares = SiloMathLib.convertToShares(
+                assets,
+                _totalDebtAssets,
+                _totalDebtShares,
+                MathUpgradeable.Rounding.Down,
+                ISilo.AssetType.Debt
+            );
+        }
+
+        if (assets != 0) {
+            // sometimes even with rounding down, we need to do -1 wei to not revert on borrow
+            unchecked { assets--; }
+        }
+    }
+
+    function getLiquidity(ISiloConfig _siloConfig) public view returns (uint256 liquidity) {
+        ISiloConfig.ConfigData memory config = _siloConfig.getConfig(address(this));
+        (liquidity,,) = getLiquidityAndAssetsWithInterest(config);
+    }
+
+    function getLiquidityAndAssetsWithInterest(ISiloConfig.ConfigData memory _config)
+        public
+        view
+        returns (uint256 liquidity, uint256 totalCollateralAssets, uint256 totalDebtAssets)
+    {
+        totalCollateralAssets = SiloStdLib.getTotalCollateralAssetsWithInterest(
+            address(this),
+            _config.interestRateModel,
+            _config.daoFee,
+            _config.deployerFee
+        );
+
+        totalDebtAssets = SiloStdLib.getTotalDebtAssetsWithInterest(
+            address(this),
+            _config.interestRateModel
+        );
+
+        liquidity = SiloMathLib.liquidity(totalCollateralAssets, totalDebtAssets);
+    }
+
+    /// @notice Checks if a borrower can borrow
+    /// @param _protectedShareToken Address of the protected share token
+    /// @param _collateralShareToken Address of the collateral share token
+    /// @param _borrower The address of the borrower being checked
+    /// @return possible `true` if the borrower can borrow, `false` otherwise
+    function borrowPossible(
+        address _protectedShareToken,
+        address _collateralShareToken,
+        address _borrower
+    ) internal view returns (bool possible) {
+        // _borrower cannot have any collateral deposited
+        possible = IShareToken(_protectedShareToken).balanceOf(_borrower) == 0
+            && IShareToken(_collateralShareToken).balanceOf(_borrower) == 0;
     }
 
     /// @notice Allows repaying borrowed assets either partially or in full
@@ -227,108 +284,63 @@ library SiloLendingLib {
         unchecked { _siloData.daoAndDeployerFees += uint192(totalFees); }
     }
 
-    /// @notice Determines the maximum amount (both in assets and shares) that a borrower can borrow
-    /// @param _collateralConfig Configuration data for the collateral
-    /// @param _debtConfig Configuration data for the debt
-    /// @param _borrower The address of the borrower whose maximum borrow limit is being queried
-    /// @param _totalDebtAssets The total debt assets in the system
-    /// @param _totalDebtShares The total debt shares in the system
-    /// @param _siloConfig address of SiloConfig contract
-    /// @return assets The maximum amount in assets that can be borrowed
-    /// @return shares The equivalent amount in shares for the maximum assets that can be borrowed
-    function maxBorrow( // solhint-disable-line function-max-lines
-        ISiloConfig.ConfigData memory _collateralConfig,
-        ISiloConfig.ConfigData memory _debtConfig,
+    /// @notice Allows a user or a delegate to borrow assets against their collateral
+    /// @dev The function checks for necessary conditions such as borrow possibility, enough liquidity, and zero
+    /// values
+    /// @param _configData Contains configurations such as associated share tokens and underlying tokens
+    /// @param _assets Number of assets the borrower intends to borrow. Use 0 if shares are provided.
+    /// @param _shares Number of shares corresponding to the assets that the borrower intends to borrow. Use 0 if
+    /// assets are provided.
+    /// @param _receiver Address that will receive the borrowed assets
+    /// @param _borrower The user who is borrowing the assets
+    /// @param _spender Address which initiates the borrowing action on behalf of the borrower
+    /// @param _totalDebt Current total outstanding debt in the system
+    /// @param _totalCollateralAssets Total collateralized assets currently in the system
+    /// @return borrowedAssets Actual number of assets that the user has borrowed
+    /// @return borrowedShares Number of debt share tokens corresponding to the borrowed assets
+    function borrow(
+        ISiloConfig.ConfigData memory _configData,
+        uint256 _assets,
+        uint256 _shares,
+        address _receiver,
         address _borrower,
-        uint256 _totalDebtAssets,
-        uint256 _totalDebtShares,
-        ISiloConfig _siloConfig
-    )
-        external
-        view
-        returns (uint256 assets, uint256 shares)
-    {
-        if (!borrowPossible(_debtConfig.protectedShareToken, _debtConfig.collateralShareToken, _borrower)) {
-            return (0, 0);
+        address _spender,
+        ISilo.Assets storage _totalDebt,
+        uint256 _totalCollateralAssets
+    ) internal returns (uint256 borrowedAssets, uint256 borrowedShares) {
+        if (_assets == 0 && _shares == 0) revert ISilo.ZeroAssets();
+
+        if (!borrowPossible(_configData.protectedShareToken, _configData.collateralShareToken, _borrower)) {
+            revert ISilo.BorrowNotPossible();
         }
 
-        SiloSolvencyLib.LtvData memory ltvData = SiloSolvencyLib.getAssetsDataForLtvCalculations(
-            _collateralConfig,
-            _debtConfig,
-            _borrower,
-            ISilo.OracleType.MaxLtv,
-            ISilo.AccrueInterestInMemory.Yes,
-            0 /* no cached balance */
+        IShareToken debtShareToken = IShareToken(_configData.debtShareToken);
+        uint256 totalDebtAssets = _totalDebt.assets;
+
+        (borrowedAssets, borrowedShares) = SiloMathLib.convertToAssetsAndToShares(
+            _assets,
+            _shares,
+            totalDebtAssets,
+            debtShareToken.totalSupply(),
+            MathUpgradeable.Rounding.Down,
+            MathUpgradeable.Rounding.Up,
+            ISilo.AssetType.Debt
         );
 
-        (
-            uint256 sumOfBorrowerCollateralValue, uint256 borrowerDebtValue
-        ) = SiloSolvencyLib.getPositionValues(ltvData, _collateralConfig.token, _debtConfig.token);
+        if (borrowedShares == 0) revert ISilo.ZeroShares();
+        if (borrowedAssets == 0) revert ISilo.ZeroAssets();
 
-        uint256 maxBorrowValue = SiloMathLib.calculateMaxBorrowValue(
-            _collateralConfig.maxLtv,
-            sumOfBorrowerCollateralValue,
-            borrowerDebtValue
-        );
-
-        (assets, shares) = maxBorrowValueToAssetsAndShares(
-            maxBorrowValue,
-            borrowerDebtValue,
-            _borrower,
-            _debtConfig.token,
-            _debtConfig.debtShareToken,
-            ltvData.debtOracle,
-            _totalDebtAssets,
-            _totalDebtShares
-        );
-
-        uint256 liquidityWithInterest = getLiquidity(_siloConfig);
-
-        if (assets > liquidityWithInterest) {
-            assets = liquidityWithInterest;
-
-            // rounding must follow same flow as in `maxBorrowValueToAssetsAndShares()`
-            shares = SiloMathLib.convertToShares(
-                assets,
-                _totalDebtAssets,
-                _totalDebtShares,
-                borrowerDebtValue == 0 ? MathUpgradeable.Rounding.Up : MathUpgradeable.Rounding.Down,
-                ISilo.AssetType.Debt
-            );
+        if (borrowedAssets > SiloMathLib.liquidity(_totalCollateralAssets, totalDebtAssets)) {
+            revert ISilo.NotEnoughLiquidity();
         }
-    }
 
-    function getLiquidity(ISiloConfig _config) public view returns (uint256 liquidity) {
-        ISiloConfig.ConfigData memory config = _config.getConfig(address(this));
-
-        uint256 totalCollateralAssets = SiloStdLib.getTotalCollateralAssetsWithInterest(
-            address(this),
-            config.interestRateModel,
-            config.daoFee,
-            config.deployerFee
-        );
-
-        uint256 totalDebtAssets = SiloStdLib.getTotalDebtAssetsWithInterest(
-            address(this),
-            config.interestRateModel
-        );
-
-        liquidity = SiloMathLib.liquidity(totalCollateralAssets, totalDebtAssets);
-    }
-
-    /// @notice Checks if a borrower can borrow
-    /// @param _protectedShareToken Address of the protected share token
-    /// @param _collateralShareToken Address of the collateral share token
-    /// @param _borrower The address of the borrower being checked
-    /// @return possible `true` if the borrower can borrow, `false` otherwise
-    function borrowPossible(
-        address _protectedShareToken,
-        address _collateralShareToken,
-        address _borrower
-    ) public view returns (bool possible) {
-        // _borrower cannot have any collateral deposited
-        possible = IShareToken(_protectedShareToken).balanceOf(_borrower) == 0
-            && IShareToken(_collateralShareToken).balanceOf(_borrower) == 0;
+        // add new debt
+        _totalDebt.assets = totalDebtAssets + borrowedAssets;
+        // `mint` checks if _spender is allowed to borrow on the account of _borrower. Hook receiver can
+        // potentially reenter but the state is correct.
+        debtShareToken.mint(_borrower, _spender, borrowedShares);
+        // fee-on-transfer is ignored. If token reenters, state is already finalized, no harm done.
+        IERC20Upgradeable(_configData.token).safeTransfer(_receiver, borrowedAssets);
     }
 
     /// @notice Calculates the maximum borrowable assets and shares
@@ -369,8 +381,11 @@ library SiloLendingLib {
 
             assets = _maxBorrowValue * _PRECISION_DECIMALS / oneDebtTokenValue;
 
+            // when we borrow, we convertToShares with rounding.Up, to create higher debt, however here,
+            // when we want to calculate "max borrow", we can not round.Up, because it can create issue with max ltv,
+            // because we not creating debt here, we calculating max assets/shares, so we need to round.Down here
             shares = SiloMathLib.convertToShares(
-                assets, _totalDebtAssets, _totalDebtShares, MathUpgradeable.Rounding.Up, ISilo.AssetType.Debt
+                assets, _totalDebtAssets, _totalDebtShares, MathUpgradeable.Rounding.Down, ISilo.AssetType.Debt
             );
         } else {
             uint256 shareBalance = IShareToken(_debtShareToken).balanceOf(_borrower);

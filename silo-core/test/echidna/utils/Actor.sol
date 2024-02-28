@@ -44,8 +44,13 @@ contract Actor is PropertiesAsserts {
         }
     }
 
-    function accountForClosedPosition(ISilo.AssetType assetType, bool vaultZero, uint256 _tokensReceived, uint256 _sharesBurned) internal {
-        address vault = vaultZero ? address(vault0) : address(vault1);
+    function accountForClosedPosition(
+        ISilo.AssetType /* assetType */,
+        bool vaultZero,
+        uint256 /* _tokensReceived */,
+        uint256 /* _sharesBurned */
+    ) internal pure {
+        // address vault = vaultZero ? address(vault0) : address(vault1);
 
         // note: The below code can lead to false positives since it does not account for interest.
         // In order to properly check these properties it needs to be modified so the accounting is correct.
@@ -184,8 +189,14 @@ contract Actor is PropertiesAsserts {
         accountForOpenedPosition(withdrawType, vaultZero, assets, shares);
     }
 
-    function liquidationCall(bool vaultZero, address borrower, uint256 debtToCover, bool receiveSToken, ISiloConfig config) public {
-        Silo vault = prepareForDeposit(vaultZero, debtToCover);
+    function liquidationCall(
+        bool _vaultZeroWithDebt,
+        address borrower,
+        uint256 debtToCover,
+        bool receiveSToken,
+        ISiloConfig config
+    ) public {
+        Silo vault = prepareForDeposit(_vaultZeroWithDebt, debtToCover);
         (ISiloConfig.ConfigData memory debtConfig, ISiloConfig.ConfigData memory collateralConfig) =
             config.getConfigs(address(vault));
         vault.liquidationCall(collateralConfig.token, debtConfig.token, borrower, debtToCover, receiveSToken);

@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
+import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
 
 import {MaxWithdrawCommon} from "./MaxWithdrawCommon.sol";
 
@@ -11,6 +12,8 @@ import {MaxWithdrawCommon} from "./MaxWithdrawCommon.sol";
     forge test -vv --ffi --mc MaxWithdrawTest
 */
 contract MaxWithdrawTest is MaxWithdrawCommon {
+    using SiloLensLib for ISilo;
+
     function setUp() public {
         _setUpLocalFixture(SiloConfigsNames.LOCAL_NO_ORACLE_NO_LTV_SILO);
     }
@@ -60,7 +63,7 @@ contract MaxWithdrawTest is MaxWithdrawCommon {
 
         emit log_named_decimal_uint("LTV", silo1.getLtv(borrower), 18);
 
-        _assertBorrowerCanNotWithdrawMore(maxWithdraw, 2);
+        _assertBorrowerCanNotWithdrawMore(maxWithdraw, 3);
         _assertMaxWithdrawIsZeroAtTheEnd();
     }
 
@@ -91,7 +94,7 @@ contract MaxWithdrawTest is MaxWithdrawCommon {
 
         emit log_named_decimal_uint("LTV", silo1.getLtv(borrower), 18);
 
-        _assertBorrowerCanNotWithdrawMore(maxWithdraw, 2);
+        _assertBorrowerCanNotWithdrawMore(maxWithdraw, 3);
         _assertMaxWithdrawIsZeroAtTheEnd();
     }
 
@@ -114,7 +117,7 @@ contract MaxWithdrawTest is MaxWithdrawCommon {
         emit log_named_decimal_uint("LTV before withdraw", silo1.getLtv(borrower), 16);
         emit log_named_uint("maxWithdraw", maxWithdraw);
 
-        _assertBorrowerCanNotWithdrawMore(maxWithdraw, 2);
+        _assertBorrowerCanNotWithdrawMore(maxWithdraw, 3);
         _assertMaxWithdrawIsZeroAtTheEnd(1);
     }
 
@@ -138,7 +141,7 @@ contract MaxWithdrawTest is MaxWithdrawCommon {
         emit log_named_decimal_uint("LTV before withdraw", silo1.getLtv(borrower), 16);
         emit log_named_uint("maxWithdraw", maxWithdraw);
 
-        _assertBorrowerCanNotWithdrawMore(maxWithdraw, 2);
+        _assertBorrowerCanNotWithdrawMore(maxWithdraw, 4);
         _assertMaxWithdrawIsZeroAtTheEnd(1);
     }
 

@@ -20,8 +20,8 @@ contract Gas is SiloLittleHelper {
     address constant DEPOSITOR = address(0x9988);
 
     function _gasTestsInit() internal {
-        token0 = new MintableToken();
-        token1 = new MintableToken();
+        token0 = new MintableToken(18);
+        token1 = new MintableToken(18);
 
         SiloFixture siloFixture = new SiloFixture();
         SiloConfigOverride memory overrides;

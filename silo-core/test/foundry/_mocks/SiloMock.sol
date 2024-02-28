@@ -26,14 +26,14 @@ contract SiloMock is Test {
     }
 
     // ISilo.getDebtAssets.selector: 0xecd658b4
-    function getDebtAssetsMock(uint256 _totalDebtAssets) external {
-        bytes memory data = abi.encodeWithSelector(ISilo.getDebtAssets.selector);
+    function totalMock(ISilo.AssetType _assetType, uint256 _totalDebtAssets) external {
+        bytes memory data = abi.encodeWithSelector(ISilo.total.selector, _assetType);
         vm.mockCall(ADDRESS, data, abi.encode(_totalDebtAssets));
         vm.expectCall(ADDRESS, data);
     }
 
     function getProtectedAssetsMock(uint256 _totalProtectedAssets) external {
-        bytes memory data = abi.encodeWithSelector(ISilo.getProtectedAssets.selector);
+        bytes memory data = abi.encodeWithSelector(ISilo.total.selector, ISilo.AssetType.Protected);
         vm.mockCall(ADDRESS, data, abi.encode(_totalProtectedAssets));
         vm.expectCall(ADDRESS, data);
     }

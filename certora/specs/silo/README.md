@@ -60,20 +60,20 @@
   Implementation: rule `VS_Silo_totals_share_token_totalSupply`
 
 - _siloData.interestRateTimestamp is zero => _siloData.daoAndDeployerFees is zero. \
+  _siloData.daoAndDeployerFees can encrease without _siloData.interestRateTimestamp only on flashLoan fn. \
   Implementation: rule `VS_Silo_interestRateTimestamp_daoAndDeployerFees`
 
 - Silo._total[ISilo.AssetType.Debt].assets is not zero => Silo._total[ISilo.AssetType.Collateral].assets is not zero. \
   Implementation: rule `VS_Silo_totalBorrowAmount`
 
 - shareDebtToke.balanceOf(user) is not zero => protectedShareToken.balanceOf(user) + collateralShareToken.balanceOf(user) is zero
-  Implementation: rule `VS`
+  Implementation: rule `VS_Silo_debtShareToken_balance_notZero`
 
 - share token totalSypply is not 0 => share token totalSypply <= Silo._total[ISilo.AssetType.*].assets. \
-  share token totalSypply is 0 <=> Silo._total[ISilo.AssetType.*].assets is 0
-  Implementation: rule `VS`
+  Implementation: rule `VS_Silo_shareToken_supply_totalAssets_*`
 
 - balance of the silo should never be less than Silo._total[ISilo.AssetType.Protected].assets
-  Implementation: rule `VS`
+  Implementation: rule `VS_Silo_balance_totalAssets`
 
 - Available liquidity returned by the 'getLiquidity' fn should not be higher than the balance of the silo - Silo._total[ISilo.AssetType.Protected].assets. \
   Implementation: rule `VS_silo_getLiquidity_less_equal_balance`
@@ -87,7 +87,7 @@
 
 - _siloData.interestRateTimestamp is changed and it was not 0
   and Silo._total[ISilo.AssetType.Debt].assets was not 0 and Silo.getFeesAndFeeReceivers().daoFee or Silo.getFeesAndFeeReceivers().deployerFee was not 0 => _siloData.daoAndDeployerFees increased.\
-  Implementation: rule `ST_Silo_interestRateTimestamp_totalBorrowAmount_dependency`
+  Implementation: rule `ST_Silo_interestRateTimestamp_totalBorrowAmount_fee_dependency`
 
 ### High-Level Properties
 

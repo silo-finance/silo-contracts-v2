@@ -138,7 +138,7 @@ contract MaxBorrowTest is SiloLittleHelper, Test {
         uint64 _collateral,
         uint128 _liquidity
     ) public {
-        // (uint64 _collateral, uint128 _liquidity) = (16052, 18260);
+        // (uint64 _collateral, uint128 _liquidity) = (14342, 20038);
         vm.assume(_collateral > 0);
         vm.assume(_liquidity > 0);
 
@@ -172,8 +172,8 @@ contract MaxBorrowTest is SiloLittleHelper, Test {
         maxBorrow = silo1.maxBorrow(borrower);
         assertGt(maxBorrow, 0, "we can borrow again after repay");
 
-        _assertWeCanNotBorrowAboveMax(maxBorrow, 3);
-        _assertMaxBorrowIsZeroAtTheEnd(0);
+        _assertWeCanNotBorrowAboveMax(maxBorrow, 4);
+        _assertMaxBorrowIsZeroAtTheEnd(1);
     }
 
     /*
@@ -241,7 +241,7 @@ contract MaxBorrowTest is SiloLittleHelper, Test {
 
         vm.prank(borrower);
         try silo1.borrow(toBorrow, borrower, borrower) returns (uint256) {
-            revert("we expect tx to be reverted!");
+            revert("we expect tx to be reverted for _maxBorrow + _precision!");
         } catch (bytes memory data) {
             bytes4 errorType = bytes4(data);
 
