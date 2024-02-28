@@ -414,7 +414,7 @@ certoraRun certora/config/silo/silo0.conf \
     --method "flashLoan(address,address,uint256,bytes)" // to speed up use --method flag
 */
 rule VC_Silo_siloData_management(env e, method f) filtered { f -> !f.isView } {
-    silo0SetUp(e);
+    completeSiloSetupEnv(e);
 
     uint256 accrueInterestBefore = currentContract.getSiloDataDaoAndDeployerFees();
     uint256 prevTimestamp = currentContract.getSiloDataInterestRateTimestamp();
