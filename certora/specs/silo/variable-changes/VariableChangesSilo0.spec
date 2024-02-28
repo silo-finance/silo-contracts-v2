@@ -89,14 +89,14 @@ rule VC_Silo_total_collateral_decrease(
     requireToken0TotalAndBalancesIntegrity();
     requireProtectedToken0TotalAndBalancesIntegrity();
 
-    mathint totalDepositsBefore = silo0.total(ISilo.AssetType.Collateral);
+    mathint totalDepositsBefore = silo0.getCollateralAssets(e);
     mathint shareTokenTotalSupplyBefore = shareCollateralToken0.totalSupply();
     mathint balanceSharesBefore = shareCollateralToken0.balanceOf(receiver);
     mathint siloBalanceBefore = token0.balanceOf(silo0);
 
     siloFnSelector(e, f, assetsOrShares, receiver);
 
-    mathint totalDepositsAfter = silo0.total(ISilo.AssetType.Collateral);
+    mathint totalDepositsAfter = silo0.getCollateralAssets(e);
     mathint shareTokenTotalSupplyAfter = shareCollateralToken0.totalSupply();
     mathint balanceSharesAfter = shareCollateralToken0.balanceOf(receiver);
     mathint siloBalanceAfter = token0.balanceOf(silo0);
