@@ -1,7 +1,7 @@
-// erc20 methods
+// ERC20 methods
 methods {
-    function _.name() external => PER_CALLEE_CONSTANT;
-    function _.symbol() external => PER_CALLEE_CONSTANT;
+    function _.name() external => PER_CALLEE_CONSTANT DELETE;
+    function _.symbol() external => PER_CALLEE_CONSTANT DELETE;
     function _.decimals() external => DISPATCHER(true);
     function _.totalSupply() external => DISPATCHER(true);
     function _.balanceOf(address) external => DISPATCHER(true);

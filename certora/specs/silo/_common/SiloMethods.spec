@@ -1,3 +1,6 @@
+using Silo0 as silo0;
+using Silo1 as silo1;
+
 methods {
     // Getters:
 
@@ -7,8 +10,8 @@ methods {
     function silo0.factory() external returns(address) envfree;
     function silo1.factory() external returns(address) envfree;
 
-    function silo0.total(ISilo.AssetType) external returns(ISilo.Assets) envfree;
-    function silo1.total(ISilo.AssetType) external returns(ISilo.Assets) envfree;
+    function silo0.total(ISilo.AssetType) external returns(uint256) envfree;
+    function silo1.total(ISilo.AssetType) external returns(uint256) envfree;
 
     function silo0.getCollateralAssets() external returns(uint256);
     function silo1.getCollateralAssets() external returns(uint256);

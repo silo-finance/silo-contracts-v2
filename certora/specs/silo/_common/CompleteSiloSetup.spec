@@ -8,9 +8,6 @@ import "./Token1Methods.spec";
 import "./Silo0ShareTokensMethods.spec";
 import "./Silo1ShareTokensMethods.spec";
 
-using Silo0 as silo0;
-using Silo1 as silo1;
-
 function completeSiloSetupEnv(env e) {
     require e.msg.sender != shareProtectedCollateralToken0;
     require e.msg.sender != shareDebtToken0;

@@ -21,12 +21,12 @@ ghost mathint sumBalancesToken1 {
     );
 }
 
-hook Sstore token1._balances[KEY address user] uint256 newBalance (uint256 oldBalance) STORAGE {
+hook Sstore token1._balances[KEY address user] uint256 newBalance (uint256 oldBalance)  {
     sumBalancesToken1 = sumBalancesToken1 + newBalance - oldBalance;
     token1BalanceOfMirror[user] = newBalance;
 }
 
-hook Sload uint256 balance token1._balances[KEY address user] STORAGE {
+hook Sload uint256 balance token1._balances[KEY address user]  {
     require token1BalanceOfMirror[user] == balance;
 }
 

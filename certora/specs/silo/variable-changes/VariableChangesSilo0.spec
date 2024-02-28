@@ -1,4 +1,8 @@
 import "../_common/CompleteSiloSetup.spec";
+import "../_common/IsSiloFunction.spec";
+import "../_common/SiloMethods.spec";
+import "../_common/Helpers.spec";
+import "../_common/CommonSummarizations.spec";
 import "../../_simplifications/Oracle_quote_one.spec";
 import "../../_simplifications/Silo_isSolvent_ghost.spec";
 import "../../_simplifications/SimplifiedGetCompoundInterestRateAndUpdate.spec";
@@ -85,14 +89,14 @@ rule VC_Silo_total_collateral_decrease(
     requireToken0TotalAndBalancesIntegrity();
     requireProtectedToken0TotalAndBalancesIntegrity();
 
-    mathint totalDepositsBefore = silo0._total[ISilo.AssetType.Collateral].assets;
+    mathint totalDepositsBefore = silo0.total[ISilo.AssetType.Collateral].assets;
     mathint shareTokenTotalSupplyBefore = shareCollateralToken0.totalSupply();
     mathint balanceSharesBefore = shareCollateralToken0.balanceOf(receiver);
     mathint siloBalanceBefore = token0.balanceOf(silo0);
 
     siloFnSelector(e, f, assetsOrShares, receiver);
 
-    mathint totalDepositsAfter = silo0._total[ISilo.AssetType.Collateral].assets;
+    mathint totalDepositsAfter = silo0.total[ISilo.AssetType.Collateral].assets;
     mathint shareTokenTotalSupplyAfter = shareCollateralToken0.totalSupply();
     mathint balanceSharesAfter = shareCollateralToken0.balanceOf(receiver);
     mathint siloBalanceAfter = token0.balanceOf(silo0);
