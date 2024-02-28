@@ -3,8 +3,8 @@ methods {
     function config() external returns(address) envfree;
     function factory() external returns(address) envfree;
     function total(ISilo.AssetType) external returns(uint256) envfree;
-    function getCollateralAssets() external returns(uint256) envfree;
-    function getDebtAssets() external returns(uint256) envfree;
+    function getCollateralAssets() external returns(uint256);
+    function getDebtAssets() external returns(uint256);
     function getCollateralAndDebtAssets() external returns(uint256,uint256) envfree;
     function getCollateralAndProtectedAssets() external returns(uint256,uint256) envfree;
     function getLiquidity() external returns(uint256) envfree;
