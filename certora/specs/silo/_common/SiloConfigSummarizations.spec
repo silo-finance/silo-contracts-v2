@@ -17,7 +17,6 @@ methods {
     function siloConfig.getConfigs(address _silo) external returns(ISiloConfig.ConfigData memory,ISiloConfig.ConfigData memory) envfree => getConfigsSumm(_silo) DELETE;
 }
 
-
 function getShareTokensSumm(address _silo) returns (address, address, address) {
 	if(_silo == silo0) {
 		  return (shareProtectedCollateralToken0, shareCollateralToken0, shareDebtToken0);
@@ -72,8 +71,21 @@ function getAssetForSiloSumm(address _silo) returns address {
     }
 }
 
-ghost uint256 daoFee;
-ghost uint256 deployerFee;
+definition maxDaoFee() returns uint256 = 4 * (10 ^ 17); // 0.4e18;
+definition maxDeployerFee() returns uint256 = 15 * (10 ^ 16); // 0.15e18;
+
+ /** 
+ @notice It is possible to deploy config with any fees, but not when you do it via factory.
+ Below are restrictions (specified through axioms) for fees we have in factory; if we do not keep them, we can overflow.
+ */
+ghost uint256 daoFee {
+    axiom daoFee <= maxDaoFee();
+}
+
+ghost uint256 deployerFee {
+    axiom deployerFee <= maxDeployerFee();
+}
+
 ghost uint256 flashloanFee0;
 ghost uint256 flashloanFee1;
 
