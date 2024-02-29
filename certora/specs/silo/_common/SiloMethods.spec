@@ -26,6 +26,9 @@ methods {
 
     function _.getCollateralAndProtectedAssets() external => DISPATCHER(true);
 
+    function silo0.getCollateralAndDebtAssets() external returns(uint256,uint256) envfree;
+    function silo1.getCollateralAndDebtAssets() external returns(uint256,uint256) envfree;
+    
     function _.getCollateralAndDebtAssets() external => DISPATCHER(true);
 
     // Harness:
