@@ -1,7 +1,7 @@
-// erc20 methods
+// ERC20 methods
 methods {
-    function _.name() external => NONDET;
-    function _.symbol() external => NONDET;
+    function _.name() external => PER_CALLEE_CONSTANT DELETE;
+    function _.symbol() external => PER_CALLEE_CONSTANT DELETE;
     function _.decimals() external => DISPATCHER(true);
     function _.totalSupply() external => DISPATCHER(true);
     function _.balanceOf(address) external => DISPATCHER(true);
@@ -13,7 +13,4 @@ methods {
     function _.burn(address,address,uint256) external => DISPATCHER(true);
     function _.transfer(address,uint256) external => DISPATCHER(true);
     function _.transferFrom(address,address,uint256) external => DISPATCHER(true);
-    function _._afterTokenTransfer(address,address,uint256) internal => simplified_afterTokenTransfer() expect bool;
 }
-
-ghost simplified_afterTokenTransfer() returns bool;
