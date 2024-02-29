@@ -23,10 +23,10 @@ ghost compoundInterestRate(uint256) returns uint256 {
 function getCompoundInterestRateSumm(address _silo, uint256 _blockTimestamp) returns uint256 {
     uint256 interestRateTimestamp;
     if(_silo == silo0) {
-        interestRateTimestamp = silo0.siloData.interestRateTimestamp;
+        interestRateTimestamp = silo0.getSiloDataInterestRateTimestamp();
     }
     else if(_silo == silo1) {
-        interestRateTimestamp = silo1.siloData.interestRateTimestamp;
+        interestRateTimestamp = silo1.getSiloDataInterestRateTimestamp();
     }
     else {
         interestRateTimestamp = _;
