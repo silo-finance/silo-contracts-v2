@@ -15,9 +15,10 @@ definition RCOMP_MAX() returns uint256 = 2^16 * 10^18;
 
 ghost compoundInterestRate(uint256) returns uint256 {
     axiom forall uint256 timestampDiff0. forall uint256 timestampDiff1. timestampDiff1 >= timestampDiff0 => 
-    compoundInterestRate(timestampDiff1) >= compoundInterestRate(timestampDiff0);
+        compoundInterestRate(timestampDiff1) >= compoundInterestRate(timestampDiff0);
 
     axiom forall uint256 timestampDiff. compoundInterestRate(timestampDiff) <= RCOMP_MAX();
+    axiom compoundInterestRate(0) == 0;
 }
 
 function getCompoundInterestRateSumm(address _silo, uint256 _blockTimestamp) returns uint256 {
