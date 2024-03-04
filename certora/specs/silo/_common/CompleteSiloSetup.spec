@@ -26,3 +26,91 @@ function completeSiloSetupEnv(env e) {
     require blockTimestamp >= silo0.getSiloDataInterestRateTimestamp(e);
     require blockTimestamp >= silo1.getSiloDataInterestRateTimestamp(e);
 }
+
+definition canIncreaseAccrueInterest(method f) returns bool =
+    f.selector == sig:accrueInterest().selector ||
+    f.selector == sig:borrow(uint256,address,address).selector ||
+    f.selector == sig:borrowShares(uint256,address,address).selector ||
+    f.selector == sig:deposit(uint256,address).selector ||
+    f.selector == sig:deposit(uint256,address,ISilo.AssetType).selector ||
+    f.selector == sig:flashLoan(address,address,uint256,bytes).selector ||
+    f.selector == sig:leverage(uint256,address,address,bytes).selector ||
+    f.selector == sig:liquidationCall(address,address,address,uint256,bool).selector ||
+    f.selector == sig:mint(uint256,address).selector ||
+    f.selector == sig:mint(uint256,address,ISilo.AssetType).selector ||
+    f.selector == sig:redeem(uint256,address,address).selector ||
+    f.selector == sig:redeem(uint256,address,address,ISilo.AssetType).selector ||
+    f.selector == sig:repay(uint256,address).selector ||
+    f.selector == sig:repayShares(uint256,address).selector ||
+    f.selector == sig:transitionCollateral(uint256,address,ISilo.AssetType).selector ||
+    f.selector == sig:withdrawFees().selector ||
+    f.selector == sig:withdraw(uint256,address,address).selector ||
+    f.selector == sig:withdraw(uint256,address,address,ISilo.AssetType).selector;
+
+definition canDecreaseAccrueInterest(method f) returns bool =
+    f.selector == sig:accrueInterest().selector ||
+    f.selector == sig:borrow(uint256,address,address).selector ||
+    f.selector == sig:borrowShares(uint256,address,address).selector ||
+    f.selector == sig:deposit(uint256,address).selector ||
+    f.selector == sig:deposit(uint256,address,ISilo.AssetType).selector ||
+    f.selector == sig:leverage(uint256,address,address,bytes).selector ||
+    f.selector == sig:mint(uint256,address).selector ||
+    f.selector == sig:mint(uint256,address,ISilo.AssetType).selector ||
+    f.selector == sig:liquidationCall(address,address,address,uint256,bool).selector ||
+    f.selector == sig:transitionCollateral(uint256,address,ISilo.AssetType).selector ||
+    f.selector == sig:redeem(uint256,address,address).selector ||
+    f.selector == sig:redeem(uint256,address,address,ISilo.AssetType).selector ||
+    f.selector == sig:repay(uint256,address).selector ||
+    f.selector == sig:repayShares(uint256,address).selector ||
+    f.selector == sig:withdraw(uint256,address,address).selector ||
+    f.selector == sig:withdrawFees().selector ||
+    f.selector == sig:withdraw(uint256,address,address,ISilo.AssetType).selector;
+
+definition canIncreaseTimestamp(method f) returns bool =
+    f.selector == sig:accrueInterest().selector ||
+    f.selector == sig:borrow(uint256,address,address).selector ||
+    f.selector == sig:borrowShares(uint256,address,address).selector ||
+    f.selector == sig:leverage(uint256,address,address,bytes).selector ||
+    f.selector == sig:liquidationCall(address,address,address,uint256,bool).selector ||
+    f.selector == sig:transitionCollateral(uint256,address,ISilo.AssetType).selector ||
+    f.selector == sig:withdraw(uint256,address,address).selector ||
+    f.selector == sig:withdraw(uint256,address,address,ISilo.AssetType).selector ||
+    f.selector == sig:deposit(uint256,address).selector ||
+    f.selector == sig:deposit(uint256,address,ISilo.AssetType).selector ||
+    f.selector == sig:mint(uint256,address).selector ||
+    f.selector == sig:mint(uint256,address,ISilo.AssetType).selector ||
+    f.selector == sig:redeem(uint256,address,address).selector ||
+    f.selector == sig:redeem(uint256,address,address,ISilo.AssetType).selector ||
+    f.selector == sig:repay(uint256,address).selector ||
+    f.selector == sig:repayShares(uint256,address).selector;
+
+definition canDecreaseTimestamp(method f) returns bool =
+    false;
+
+definition canIncreaseSharesBalance(method f) returns bool =
+    f.selector == sig:mint(uint256,address,ISilo.AssetType).selector ||
+    f.selector == sig:mint(uint256,address).selector ||
+    f.selector == sig:transfer(address,uint256).selector ||
+    f.selector == sig:transferFrom(address,address,uint256).selector ||
+    f.selector == sig:transitionCollateral(uint256,address,ISilo.AssetType).selector ||
+    f.selector == sig:deposit(uint256,address,ISilo.AssetType).selector ||
+    f.selector == sig:deposit(uint256,address).selector;
+
+definition canDecreaseSharesBalance(method f) returns bool =
+    f.selector == sig:redeem(uint256,address,address).selector ||
+    f.selector == sig:redeem(uint256,address,address,ISilo.AssetType).selector ||
+    f.selector == sig:transfer(address,uint256).selector ||
+    f.selector == sig:transferFrom(address,address,uint256).selector ||
+    f.selector == sig:transitionCollateral(uint256,address,ISilo.AssetType).selector ||
+    f.selector == sig:withdraw(uint256,address,address).selector ||
+    f.selector == sig:withdraw(uint256,address,address,ISilo.AssetType).selector;   
+    
+definition canIncreaseProtectedAssets(method f) returns bool =
+    f.selector == sig:deposit(uint256,address,ISilo.AssetType).selector ||
+    f.selector == sig:mint(uint256,address,ISilo.AssetType).selector ||
+    f.selector == sig:transitionCollateral(uint256,address,ISilo.AssetType).selector;
+
+definition canDecreaseProtectedAssets(method f) returns bool =
+    f.selector == sig:redeem(uint256,address,address,ISilo.AssetType).selector ||
+    f.selector == sig:withdraw(uint256,address,address,ISilo.AssetType).selector ||
+    f.selector == sig:transitionCollateral(uint256,address,ISilo.AssetType).selector;
