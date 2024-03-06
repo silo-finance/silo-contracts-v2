@@ -125,7 +125,9 @@ contract BeforeQuoteTest is SiloLittleHelper, Test {
 
         _expectCallsToSolvencyOracle(0x1bd942c37174f394000); // amount with interest
 
-        silo0.liquidationCall(address(token1), address(token0), borrower, borrowAmount / 2, false);
+        siloLiquidation.liquidationCall(
+            address(silo0), address(token1), address(token0), borrower, borrowAmount / 2, false
+        );
     }
 
     function _setupForBorrow0() internal {

@@ -3,6 +3,7 @@ pragma solidity ^0.8.0;
 
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
+import {ISiloLiquidation} from "silo-core/contracts/interfaces/ISiloLiquidation.sol";
 
 import {MintableToken} from "./MintableToken.sol";
 import {SiloFixture, SiloConfigOverride} from "./fixtures/SiloFixture.sol";
@@ -14,6 +15,7 @@ abstract contract SiloLittleHelper is CommonBase {
 
     ISilo silo0;
     ISilo silo1;
+    ISiloLiquidation siloLiquidation;
 
     function __init(MintableToken _token0, MintableToken _token1, ISilo _silo0, ISilo _silo1) internal {
         token0 = _token0;
@@ -182,5 +184,6 @@ abstract contract SiloLittleHelper is CommonBase {
 
         SiloFixture siloFixture = new SiloFixture();
         (siloConfig, silo0, silo1,,) = siloFixture.deploy_local(overrides);
+        siloLiquidation = ISiloLiquidation(siloConfig.getConfig(address(silo0)).liquidator);
     }
 }
