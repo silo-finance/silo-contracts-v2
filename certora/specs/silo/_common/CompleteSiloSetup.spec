@@ -27,6 +27,23 @@ function completeSiloSetupEnv(env e) {
     require blockTimestamp >= silo1.getSiloDataInterestRateTimestamp(e);
 }
 
+function totalSupplyMoreThanBalance(address receiver)
+{
+    require shareProtectedCollateralToken0.totalSupply() >= shareProtectedCollateralToken0.balanceOf(receiver);
+    require shareDebtToken0.totalSupply() >= shareDebtToken0.balanceOf(receiver);
+    require shareCollateralToken0.totalSupply() >= shareCollateralToken0.balanceOf(receiver);
+    require shareProtectedCollateralToken1.totalSupply() >= shareProtectedCollateralToken1.balanceOf(receiver);
+    require shareDebtToken1.totalSupply() >= shareDebtToken1.balanceOf(receiver);
+    require shareCollateralToken1.totalSupply() >= shareCollateralToken1.balanceOf(receiver);
+}
+
+function differsAtMost(mathint x, mathint y, mathint diff) returns bool
+{
+    if (x == y) return true;
+    if (x < y) return y - x <= diff;
+    return x - y <= diff;
+}
+
 definition canIncreaseAccrueInterest(method f) returns bool =
     f.selector == sig:accrueInterest().selector ||
     f.selector == sig:borrow(uint256,address,address).selector ||
