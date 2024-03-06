@@ -21,11 +21,12 @@ interface ISiloLiquidation {
     error InsufficientLiquidation();
     error LiquidationTooBig();
     error Insolvency();
-    error OnlySilo();
+    error OnlyLiquidator();
 
     /// @notice Function to liquidate a non-healthy position collateral-wise
     /// - The caller (liquidator) covers `debtToCover` amount of debt of the user getting liquidated, and receives
     ///   a amount of the `collateralAsset` plus a bonus to cover market risk
+    /// @param _siloWithDebt The address of the silo where the debt it
     /// @param _collateralAsset The address of the underlying asset used as collateral, to receive as result
     /// @param _debtAsset The address of the underlying borrowed asset to be repaid with the liquidation
     /// @param _user The address of the borrower getting liquidated
@@ -34,6 +35,7 @@ interface ISiloLiquidation {
     /// @param _receiveSToken True if the liquidators wants to receive the collateral sTokens, `false` if he wants
     /// to receive the underlying collateral asset directly
     function liquidationCall(
+        address _siloWithDebt,
         address _collateralAsset,
         address _debtAsset,
         address _user,
@@ -51,7 +53,7 @@ interface ISiloLiquidation {
 
     /// @dev debt is keep growing over time, so when dApp use this view to calculate max, tx should never revert
     /// because actual max can be only higher
-    function maxLiquidation(address _borrower)
+    function maxLiquidation(address _siloWithDebt, address _borrower)
         external
         view
         returns (uint256 collateralToLiquidate, uint256 debtToRepay);

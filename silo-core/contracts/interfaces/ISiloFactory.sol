@@ -12,6 +12,7 @@ interface ISiloFactory is IERC721Upgradeable {
     event MaxLiquidationFeeChanged(uint256 maxLiquidationFee);
     event DaoFeeReceiverChanged(address daoFeeReceiver);
 
+    error MissingLiquidator();
     error ZeroAddress();
     error MaxFee();
     error SameAsset();

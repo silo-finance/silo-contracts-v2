@@ -13,6 +13,7 @@ contract SiloConfig is ISiloConfig {
 
     uint256 private immutable _DAO_FEE;
     uint256 private immutable _DEPLOYER_FEE;
+    address private immutable _LIQUIDATOR;
 
     // TOKEN #0
 
@@ -65,13 +66,16 @@ contract SiloConfig is ISiloConfig {
     bool private immutable _CALL_BEFORE_QUOTE1;
 
     /// @param _siloId ID of this pool assigned by factory
+    /// @param _liquidator address of contract that will be responsible for executing liquidations
     /// @param _configData0 silo configuration data for token0
     /// @param _configData1 silo configuration data for token1
-    constructor(uint256 _siloId, ConfigData memory _configData0, ConfigData memory _configData1) {
+    constructor(uint256 _siloId, address _liquidator, ConfigData memory _configData0, ConfigData memory _configData1) {
         SILO_ID = _siloId;
 
         _DAO_FEE = _configData0.daoFee;
         _DEPLOYER_FEE = _configData0.deployerFee;
+
+        _LIQUIDATOR = _liquidator;
 
         // TOKEN #0
 
@@ -167,6 +171,7 @@ contract SiloConfig is ISiloConfig {
             lt: _LT0,
             liquidationFee: _LIQUIDATION_FEE0,
             flashloanFee: _FLASHLOAN_FEE0,
+            liquidator: _LIQUIDATOR,
             callBeforeQuote: _CALL_BEFORE_QUOTE0
         });
 
@@ -186,6 +191,7 @@ contract SiloConfig is ISiloConfig {
             lt: _LT1,
             liquidationFee: _LIQUIDATION_FEE1,
             flashloanFee: _FLASHLOAN_FEE1,
+            liquidator: _LIQUIDATOR,
             callBeforeQuote: _CALL_BEFORE_QUOTE1
         });
 
@@ -218,6 +224,7 @@ contract SiloConfig is ISiloConfig {
                 lt: _LT0,
                 liquidationFee: _LIQUIDATION_FEE0,
                 flashloanFee: _FLASHLOAN_FEE0,
+                liquidator: _LIQUIDATOR,
                 callBeforeQuote: _CALL_BEFORE_QUOTE0
             });
         } else if (_silo == _SILO1) {
@@ -237,6 +244,7 @@ contract SiloConfig is ISiloConfig {
                 lt: _LT1,
                 liquidationFee: _LIQUIDATION_FEE1,
                 flashloanFee: _FLASHLOAN_FEE1,
+                liquidator: _LIQUIDATOR,
                 callBeforeQuote: _CALL_BEFORE_QUOTE1
             });
         } else {

@@ -97,7 +97,7 @@ contract SiloFactory is ISiloFactory, ERC721Upgradeable, Ownable2StepUpgradeable
         configData0.silo = ClonesUpgradeable.clone(siloImpl);
         configData1.silo = ClonesUpgradeable.clone(siloImpl);
 
-        siloConfig = ISiloConfig(address(new SiloConfig(nextSiloId, configData0, configData1)));
+        siloConfig = ISiloConfig(address(new SiloConfig(nextSiloId, _initData.liquidator, configData0, configData1)));
 
         ISilo(configData0.silo).initialize(siloConfig, _initData.interestRateModelConfig0);
         ISilo(configData1.silo).initialize(siloConfig, _initData.interestRateModelConfig1);
@@ -153,18 +153,23 @@ contract SiloFactory is ISiloFactory, ERC721Upgradeable, Ownable2StepUpgradeable
 
     function validateSiloInitData(ISiloConfig.InitData memory _initData) public view virtual returns (bool) {
         // solhint-disable-previous-line code-complexity
+        if (_initData.liquidator == address(0)) revert MissingLiquidator();
         if (_initData.token0 == _initData.token1) revert SameAsset();
         if (_initData.maxLtv0 == 0 && _initData.maxLtv1 == 0) revert InvalidMaxLtv();
         if (_initData.maxLtv0 > _initData.lt0) revert InvalidMaxLtv();
         if (_initData.maxLtv1 > _initData.lt1) revert InvalidMaxLtv();
         if (_initData.lt0 > MAX_PERCENT || _initData.lt1 > MAX_PERCENT) revert InvalidLt();
+
         if (_initData.maxLtvOracle0 != address(0) && _initData.solvencyOracle0 == address(0)) {
             revert OracleMisconfiguration();
         }
+
         if (_initData.callBeforeQuote0 && _initData.solvencyOracle0 == address(0)) revert BeforeCall();
+
         if (_initData.maxLtvOracle1 != address(0) && _initData.solvencyOracle1 == address(0)) {
             revert OracleMisconfiguration();
         }
+
         if (_initData.callBeforeQuote1 && _initData.solvencyOracle1 == address(0)) revert BeforeCall();
         if (_initData.deployerFee > 0 && _initData.deployer == address(0)) revert InvalidDeployer();
         if (_initData.deployerFee > maxDeployerFee) revert MaxDeployerFee();

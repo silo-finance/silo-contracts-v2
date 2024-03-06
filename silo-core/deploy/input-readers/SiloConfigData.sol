@@ -75,6 +75,7 @@ contract SiloConfigData is Test, CommonDeploy {
 
         initData = ISiloConfig.InitData({
             deployer: config.deployer,
+            liquidator: config.liquidator,
             deployerFee: config.deployerFee * BP2DP_NORMALIZATION,
             token0: getAddress(config.token0),
             solvencyOracle0: address(0),

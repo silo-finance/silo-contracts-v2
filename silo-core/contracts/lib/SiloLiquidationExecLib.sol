@@ -26,7 +26,7 @@ library SiloLiquidationExecLib {
         mapping(ISilo.AssetType => ISilo.Assets) storage _total
     ) external {
         ISiloConfig.ConfigData memory collateralConfig = _config.getConfig(address(this));
-        if (msg.sender != collateralConfig.otherSilo) revert ISiloLiquidation.OnlySilo();
+        if (msg.sender != collateralConfig.liquidator) revert ISiloLiquidation.OnlyLiquidator();
 
         if (_receiveSToken) {
             withdrawSCollateralToLiquidator(
@@ -109,7 +109,7 @@ library SiloLiquidationExecLib {
     {
         (
             ISiloConfig.ConfigData memory debtConfig, ISiloConfig.ConfigData memory collateralConfig
-        ) = _silo.config().getConfigs(address(this));
+        ) = _silo.config().getConfigs(address(_silo));
 
         SiloSolvencyLib.LtvData memory ltvData = SiloSolvencyLib.getAssetsDataForLtvCalculations(
             collateralConfig,

@@ -7,7 +7,7 @@ import {MathUpgradeable} from "openzeppelin-contracts-upgradeable/utils/math/Mat
 import {SafeERC20Upgradeable} from "openzeppelin-contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
 import {IERC20Upgradeable} from "openzeppelin-contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 
-import {ISilo, ISiloLiquidation, IERC4626, IERC3156FlashLender} from "./interfaces/ISilo.sol";
+import {ISilo, IERC4626, IERC3156FlashLender} from "./interfaces/ISilo.sol";
 import {ISiloOracle} from "./interfaces/ISiloOracle.sol";
 import {IShareToken} from "./interfaces/IShareToken.sol";
 
@@ -701,58 +701,6 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
         SiloStdLib.withdrawFees(this, siloData);
     }
 
-    /// @dev it can be called on "debt silo" only
-    /// @notice user can use this method to do self liquidation, it that case check for LT requirements will be ignored
-    function liquidationCall(
-        address _collateralAsset,
-        address _debtAsset,
-        address _borrower,
-        uint256 _debtToCover,
-        bool _receiveSToken
-    ) external virtual nonReentrant {
-        (ISiloConfig.ConfigData memory debtConfig, ISiloConfig.ConfigData memory collateralConfig) =
-            config.getConfigs(address(this));
-
-        if (_collateralAsset != collateralConfig.token) revert UnexpectedCollateralToken();
-        if (_debtAsset != debtConfig.token) revert UnexpectedDebtToken();
-
-        _callAccrueInterestForAsset(
-            debtConfig.interestRateModel, debtConfig.daoFee, debtConfig.deployerFee, debtConfig.otherSilo
-        );
-
-        if (collateralConfig.callBeforeQuote) {
-            ISiloOracle(collateralConfig.solvencyOracle).beforeQuote(collateralConfig.token);
-        }
-
-        if (debtConfig.callBeforeQuote) {
-            ISiloOracle(debtConfig.solvencyOracle).beforeQuote(debtConfig.token);
-        }
-
-        bool selfLiquidation = _borrower == msg.sender;
-
-        (
-            uint256 withdrawAssetsFromCollateral, uint256 withdrawAssetsFromProtected, uint256 repayDebtAssets
-        ) = SiloLiquidationExecLib.getExactLiquidationAmounts(
-            collateralConfig,
-            debtConfig,
-            _borrower,
-            _debtToCover,
-            selfLiquidation ? 0 : collateralConfig.liquidationFee,
-            selfLiquidation
-        );
-
-        if (repayDebtAssets == 0) revert NoDebtToCover();
-
-        // always ZERO, we can receive shares, but we can not repay with shares
-        uint256 zeroShares;
-        emit LiquidationCall(msg.sender, _receiveSToken);
-        _callRepay(debtConfig, repayDebtAssets, zeroShares, _borrower, msg.sender);
-
-        ISiloLiquidation(debtConfig.otherSilo).withdrawCollateralsToLiquidator(
-            withdrawAssetsFromCollateral, withdrawAssetsFromProtected, _borrower, msg.sender, _receiveSToken
-        );
-    }
-
     /// @dev that method allow to finish liquidation process by giving up collateral to liquidator
     function withdrawCollateralsToLiquidator(
         uint256 _withdrawAssetsFromCollateral,
@@ -771,16 +719,6 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
             _getRawLiquidity(),
             total
         );
-    }
-
-    /// @inheritdoc ISiloLiquidation
-    function maxLiquidation(address _borrower)
-        external
-        view
-        virtual
-        returns (uint256 collateralToLiquidate, uint256 debtToRepay)
-    {
-        return SiloLiquidationExecLib.maxLiquidation(this, _borrower);
     }
 
     function _accrueInterest()
