@@ -13,6 +13,7 @@ contract SiloConfigTest is Test {
 
     function siloConfigDeploy(
         uint256 _siloId,
+        address _liquidator,
         ISiloConfig.ConfigData memory _configData0,
         ISiloConfig.ConfigData memory _configData1
     ) public returns (SiloConfig siloConfig) {
@@ -25,7 +26,7 @@ contract SiloConfigTest is Test {
         _configData1.daoFee = _configData0.daoFee;
         _configData1.deployerFee = _configData0.deployerFee;
 
-        siloConfig = new SiloConfig(_siloId, _configData0, _configData1);
+        siloConfig = new SiloConfig(_siloId, _liquidator, _configData0, _configData1);
     }
 
     /*

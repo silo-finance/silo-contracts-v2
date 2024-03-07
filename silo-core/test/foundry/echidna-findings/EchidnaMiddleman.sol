@@ -73,11 +73,11 @@ contract EchidnaMiddleman is EchidnaSetup {
         (bool isSolvent, ISilo siloWithDebt, ) = _invariant_insolventHasDebt(actor);
         assertFalse(isSolvent, "expect not solvent user");
 
-        (, uint256 debtToRepay) = siloWithDebt.maxLiquidation(actor);
+        (, uint256 debtToRepay) = siloLiquidation.maxLiquidation(address(siloWithDebt), actor);
 
         (address collateral, address debt) = __liquidationTokens(address(siloWithDebt));
 
-        siloWithDebt.liquidationCall(debt, collateral, actor, debtToRepay, false);
+        siloLiquidation.liquidationCall(address(siloWithDebt), debt, collateral, actor, debtToRepay, false);
 
         vm.stopPrank();
     }

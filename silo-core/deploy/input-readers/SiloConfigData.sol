@@ -39,6 +39,7 @@ contract SiloConfigData is Test, CommonDeploy {
         string interestRateModelConfig1;
         uint64 liquidationFee0;
         uint64 liquidationFee1;
+        address liquidator;
         uint64 lt0;
         uint64 lt1;
         uint64 maxLtv0;
