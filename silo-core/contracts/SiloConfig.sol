@@ -171,7 +171,7 @@ contract SiloConfig is ISiloConfig {
             lt: _LT0,
             liquidationFee: _LIQUIDATION_FEE0,
             flashloanFee: _FLASHLOAN_FEE0,
-            liquidator: _LIQUIDATOR,
+            liquidation: _LIQUIDATOR,
             callBeforeQuote: _CALL_BEFORE_QUOTE0
         });
 
@@ -191,7 +191,7 @@ contract SiloConfig is ISiloConfig {
             lt: _LT1,
             liquidationFee: _LIQUIDATION_FEE1,
             flashloanFee: _FLASHLOAN_FEE1,
-            liquidator: _LIQUIDATOR,
+            liquidation: _LIQUIDATOR,
             callBeforeQuote: _CALL_BEFORE_QUOTE1
         });
 
@@ -224,7 +224,7 @@ contract SiloConfig is ISiloConfig {
                 lt: _LT0,
                 liquidationFee: _LIQUIDATION_FEE0,
                 flashloanFee: _FLASHLOAN_FEE0,
-                liquidator: _LIQUIDATOR,
+                liquidation: _LIQUIDATOR,
                 callBeforeQuote: _CALL_BEFORE_QUOTE0
             });
         } else if (_silo == _SILO1) {
@@ -244,7 +244,7 @@ contract SiloConfig is ISiloConfig {
                 lt: _LT1,
                 liquidationFee: _LIQUIDATION_FEE1,
                 flashloanFee: _FLASHLOAN_FEE1,
-                liquidator: _LIQUIDATOR,
+                liquidation: _LIQUIDATOR,
                 callBeforeQuote: _CALL_BEFORE_QUOTE1
             });
         } else {

@@ -121,6 +121,8 @@ interface ISilo is IERC4626, IERC3156FlashLender {
     error WrongAssetType();
     error ZeroAssets();
     error ZeroShares();
+    error OnlyLiquidation();
+    error Insolvency();
 
     /// @notice Initialize Silo
     /// @param _siloConfig address of ISiloConfig with full config for this Silo

@@ -7,7 +7,7 @@ interface ISiloConfig {
         address deployer;
 
         /// @notice The address of contract that will be responsible for executing liquidations
-        address liquidator;
+        address liquidation;
 
         /// @notice Deployer's fee in 18 decimals points. Deployer will earn this fee based on the interest earned by
         /// the Silo.
@@ -121,7 +121,7 @@ interface ISiloConfig {
         uint256 lt;
         uint256 liquidationFee;
         uint256 flashloanFee;
-        address liquidator;
+        address liquidation;
         bool callBeforeQuote;
     }
 

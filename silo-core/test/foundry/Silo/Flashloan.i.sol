@@ -7,7 +7,6 @@ import {IERC20} from "openzeppelin-contracts/token/ERC20/IERC20.sol";
 
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
-import {ISiloLiquidation} from "silo-core/contracts/interfaces/ISiloLiquidation.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {IInterestRateModel} from "silo-core/contracts/interfaces/IInterestRateModel.sol";
 import {IERC3156FlashBorrower} from "silo-core/contracts/interfaces/IERC3156FlashBorrower.sol";

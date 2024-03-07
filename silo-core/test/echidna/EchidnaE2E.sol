@@ -68,7 +68,7 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         (_vault0, _vault1) = siloConfig.getSilos();
         vault0 = Silo(_vault0);
         vault1 = Silo(_vault1);
-        liquidation = SiloLiquidation(vault0.config().getConfig(_vault0).liquidator);
+        liquidation = SiloLiquidation(vault0.config().getConfig(_vault0).liquidation);
 
         // Set up actors
         for(uint256 i; i < 3; i++) {

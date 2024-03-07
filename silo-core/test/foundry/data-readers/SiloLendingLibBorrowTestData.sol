@@ -190,7 +190,7 @@ contract SiloLendingLibBorrowTestData {
                 lt: _src.input.configData.lt,
                 liquidationFee: _src.input.configData.liquidationFee,
                 flashloanFee: _src.input.configData.flashloanFee,
-                liquidator: _src.input.configData.liquidator,
+                liquidation: _src.input.configData.liquidation,
                 callBeforeQuote: _src.input.configData.callBeforeQuote
             }),
             assets: _src.input.assets,

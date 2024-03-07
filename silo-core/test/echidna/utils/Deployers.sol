@@ -72,7 +72,7 @@ contract Deployers is VyperDeployer, Data {
         // The FULL data relies on addresses set in _setupBasicData()
         siloData["FULL"] = ISiloConfig.InitData({
             deployer: timelockAdmin,
-            liquidator: address(siloLiquidation),
+            liquidation: address(siloLiquidation),
             deployerFee: 0.1000e18,
             token0: _tokens["WETH"],
             solvencyOracle0: oracles["DIA"],

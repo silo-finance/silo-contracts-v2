@@ -6,7 +6,6 @@ import {MathUpgradeable} from "openzeppelin-contracts-upgradeable/utils/math/Mat
 import {ISilo} from "../interfaces/ISilo.sol";
 import {IShareToken} from "../interfaces/IShareToken.sol";
 import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
-import {ISiloLiquidation} from "../interfaces/ISiloLiquidation.sol";
 import {SiloMathLib} from "./SiloMathLib.sol";
 import {SiloERC4626Lib} from "./SiloERC4626Lib.sol";
 import {SiloLendingLib} from "./SiloLendingLib.sol";
@@ -26,7 +25,7 @@ library SiloLiquidationExecLib {
         mapping(ISilo.AssetType => ISilo.Assets) storage _total
     ) external {
         ISiloConfig.ConfigData memory collateralConfig = _config.getConfig(address(this));
-        if (msg.sender != collateralConfig.liquidator) revert ISiloLiquidation.OnlyLiquidator();
+        if (msg.sender != collateralConfig.liquidation) revert ISilo.OnlyLiquidation();
 
         if (_receiveSToken) {
             withdrawSCollateralToLiquidator(
@@ -288,7 +287,7 @@ library SiloLiquidationExecLib {
                 // - if user was solvent but after liquidation it is not, we need to revert
                 // - if user was not solvent, then we need to allow
                 if (ltvBefore <= _params.collateralLt && ltvAfter > _params.collateralLt) {
-                    revert ISiloLiquidation.Insolvency();
+                    revert ISilo.Insolvency();
                 }
             }
         }

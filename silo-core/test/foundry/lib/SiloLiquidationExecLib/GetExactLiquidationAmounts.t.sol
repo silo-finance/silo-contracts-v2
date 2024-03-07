@@ -226,7 +226,7 @@ contract GetExactLiquidationAmountsTest is GetExactLiquidationAmountsHelper {
             }
         } else {
             assertFalse(true, "do we ever revert with our assumptions?");
-            assertTrue(bytes4(errorType) == ISiloLiquidation.Insolvency.selector, "this is the only error we expect");
+            assertTrue(bytes4(errorType) == ISilo.Insolvency.selector, "this is the only error we expect");
         }
     }
 

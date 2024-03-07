@@ -2,7 +2,6 @@
 pragma solidity 0.8.21;
 
 import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
-import {ISiloLiquidation} from "../interfaces/ISiloLiquidation.sol";
 
 library SiloLiquidationLib {
     struct LiquidationPreviewParams {

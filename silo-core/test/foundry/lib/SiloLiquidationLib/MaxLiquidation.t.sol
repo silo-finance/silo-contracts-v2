@@ -3,8 +3,6 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
 
-import {ISiloLiquidation} from "silo-core/contracts/interfaces/ISiloLiquidation.sol";
-import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 import {SiloSolvencyLib} from "silo-core/contracts/lib/SiloSolvencyLib.sol";
 import {SiloLiquidationExecLib} from "silo-core/contracts/lib/SiloLiquidationExecLib.sol";
 import {SiloLiquidationLib} from "silo-core/contracts/lib/SiloLiquidationLib.sol";

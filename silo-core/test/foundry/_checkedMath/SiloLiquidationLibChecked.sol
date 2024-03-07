@@ -2,7 +2,6 @@
 pragma solidity 0.8.21;
 
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
-import {ISiloLiquidation} from "silo-core/contracts/interfaces/ISiloLiquidation.sol";
 import {SiloLiquidationLib} from "silo-core/contracts/lib/SiloLiquidationLib.sol";
 
 /// @dev exact copy of SiloLiquidationLib but without `/* unchecked */`
