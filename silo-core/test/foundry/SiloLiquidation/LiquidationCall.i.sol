@@ -171,7 +171,7 @@ contract LiquidationCallTest is SiloLittleHelper, Test {
         { // too deep
             vm.expectCall(
                 address(token0),
-                abi.encodeWithSelector(IERC20.transfer.selector, address(silo0), address(this), debtToCover + 0.05e5)
+                abi.encodeWithSelector(IERC20.transfer.selector, address(this), debtToCover + 0.05e5)
             );
 
             vm.expectCall(
@@ -218,7 +218,7 @@ contract LiquidationCallTest is SiloLittleHelper, Test {
 
             vm.expectCall(
                 address(token0),
-                abi.encodeWithSelector(IERC20.transfer.selector, address(silo0), address(this), 6_734327389593616466)
+                abi.encodeWithSelector(IERC20.transfer.selector, address(this), 6_734327389593616466)
             );
 
             vm.expectCall(
