@@ -35,7 +35,12 @@ contract SiloLiquidation is ISiloLiquidation, ReentrancyGuardUpgradeable {
         address _borrower,
         uint256 _debtToCover,
         bool _receiveSToken
-    ) external virtual nonReentrant {
+    )
+        external
+        virtual
+        nonReentrant
+        returns (uint256 withdrawAssetsFromCollateral, uint256 withdrawAssetsFromProtected, uint256 repayDebtAssets)
+    {
         (ISiloConfig.ConfigData memory debtConfig, ISiloConfig.ConfigData memory collateralConfig) =
             ISilo(_siloWithDebt).config().getConfigs(_siloWithDebt);
 
@@ -56,7 +61,7 @@ contract SiloLiquidation is ISiloLiquidation, ReentrancyGuardUpgradeable {
         bool selfLiquidation = _borrower == msg.sender;
 
         (
-            uint256 withdrawAssetsFromCollateral, uint256 withdrawAssetsFromProtected, uint256 repayDebtAssets
+            withdrawAssetsFromCollateral, withdrawAssetsFromProtected, repayDebtAssets
         ) = SiloLiquidationExecLib.getExactLiquidationAmounts(
             collateralConfig,
             debtConfig,
@@ -75,4 +80,46 @@ contract SiloLiquidation is ISiloLiquidation, ReentrancyGuardUpgradeable {
             withdrawAssetsFromCollateral, withdrawAssetsFromProtected, _borrower, msg.sender, _receiveSToken
         );
     }
+//
+//    /// @inheritdoc ISiloLiquidation
+//    /// @dev it can be called on "debt silo" only
+//    /// @notice user can use this method to do self liquidation, it that case check for LT requirements will be ignored
+//    function liquidationPreview(
+//        address _siloWithDebt,
+//        address _collateralAsset,
+//        address _debtAsset,
+//        address _borrower,
+//        uint256 _debtToCover,
+//        bool _receiveSToken
+//    ) external virtual view returns () {
+//        (ISiloConfig.ConfigData memory debtConfig, ISiloConfig.ConfigData memory collateralConfig) =
+//            ISilo(_siloWithDebt).config().getConfigs(_siloWithDebt);
+//
+//        if (_collateralAsset != collateralConfig.token) revert UnexpectedCollateralToken();
+//        if (_debtAsset != debtConfig.token) revert UnexpectedDebtToken();
+//
+//        ISilo(_siloWithDebt).accrueInterest();
+//        ISilo(debtConfig.otherSilo).accrueInterest();
+//
+//        if (collateralConfig.callBeforeQuote) {
+//            ISiloOracle(collateralConfig.solvencyOracle).beforeQuote(collateralConfig.token);
+//        }
+//
+//        if (debtConfig.callBeforeQuote) {
+//            ISiloOracle(debtConfig.solvencyOracle).beforeQuote(debtConfig.token);
+//        }
+//
+//        bool selfLiquidation = _borrower == msg.sender;
+//
+//        (
+//            uint256 withdrawAssetsFromCollateral, uint256 withdrawAssetsFromProtected, uint256 repayDebtAssets
+//        ) = SiloLiquidationExecLib.getExactLiquidationAmounts(
+//            collateralConfig,
+//            debtConfig,
+//            _borrower,
+//            _debtToCover,
+//            selfLiquidation ? 0 : collateralConfig.liquidationFee,
+//            selfLiquidation
+//        );
+//    }
 }

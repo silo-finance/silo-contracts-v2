@@ -39,7 +39,9 @@ interface ISiloLiquidation {
         address _user,
         uint256 _debtToCover,
         bool _receiveSToken
-    ) external;
+    )
+        external
+        returns (uint256 withdrawAssetsFromCollateral, uint256 withdrawAssetsFromProtected, uint256 repayDebtAssets);
 
     /// @dev debt is keep growing over time, so when dApp use this view to calculate max, tx should never revert
     /// because actual max can be only higher
