@@ -595,7 +595,17 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
         // avoid magic number 0
         uint256 repaySharesZero = 0;
 
-        (, shares) = _repay(_assets, repaySharesZero, _borrower);
+        (, shares) = _repay(_assets, repaySharesZero, _borrower, msg.sender, false /* _liquidation */);
+    }
+
+    /// @inheritdoc ISilo
+    function repay(uint256 _assets, address _borrower, address _repayer)
+        external
+        virtual
+        nonReentrant
+        returns (uint256 shares)
+    {
+        (, shares) = _repay(_assets, 0 /* repaySharesZero */, _borrower, _repayer, true /* _liquidation */);
     }
 
     /// @inheritdoc ISilo
@@ -623,7 +633,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
         // avoid magic number 0
         uint256 zeroAssets = 0;
 
-        (assets,) = _repay(zeroAssets, _shares, _borrower);
+        (assets,) = _repay(zeroAssets, _shares, _borrower, msg.sender, false /* _liquidation */);
     }
 
     /// @inheritdoc IERC3156FlashLender
@@ -881,16 +891,18 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
         }
     }
 
-    function _repay(uint256 _assets, uint256 _shares, address _borrower)
+    function _repay(uint256 _assets, uint256 _shares, address _borrower, address _repayer, bool _liquidation)
         internal
         virtual
         returns (uint256 assets, uint256 shares)
     {
         (, ISiloConfig.ConfigData memory configData) = _accrueInterest();
 
-        (assets, shares) = _callRepay(configData, _assets, _shares, _borrower, msg.sender);
+        if (_liquidation && configData.liquidation != msg.sender) revert ISilo.OnlyLiquidation();
 
-        emit Repay(msg.sender, _borrower, assets, shares);
+        (assets, shares) = _callRepay(configData, _assets, _shares, _borrower, _repayer);
+
+        emit Repay(_repayer, _borrower, assets, shares);
     }
 
     function _getTotalAssetsAndTotalSharesWithInterest(AssetType _assetType)

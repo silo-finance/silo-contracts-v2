@@ -35,7 +35,7 @@ contract RepaySharesFullAccrueInterestGasTest is Gas, Test {
         _action(
             BORROWER,
             address(silo1),
-            abi.encodeCall(ISilo.repayShares, (ASSETS, BORROWER)),
+            abi.encodeWithSignature("repay(uint256,address)", ASSETS, BORROWER),
             "RepaySharesFullAccrueInterest full (shares) with accrue interest",
             123503
         );
