@@ -61,7 +61,7 @@ library SiloLiquidationExecLib {
         bool _selfLiquidation
     )
         external
-        view
+
         returns (uint256 withdrawAssetsFromCollateral, uint256 withdrawAssetsFromProtected, uint256 repayDebtAssets)
     {
         SiloSolvencyLib.LtvData memory ltvData = SiloSolvencyLib.getAssetsDataForLtvCalculations(
@@ -241,7 +241,7 @@ library SiloLiquidationExecLib {
         SiloLiquidationLib.LiquidationPreviewParams memory _params
     )
         internal
-        view
+
         returns (uint256 receiveCollateralAssets, uint256 repayDebtAssets)
     {
         uint256 sumOfCollateralAssets;

@@ -11,7 +11,7 @@ contract SiloLiquidationExecLibImpl {
         SiloLiquidationLib.LiquidationPreviewParams memory _params
     )
         external
-        view
+
         returns (uint256 receiveCollateralAssets, uint256 repayDebtAssets)
     {
         return SiloLiquidationExecLib.liquidationPreview(_ltvData, _params);
