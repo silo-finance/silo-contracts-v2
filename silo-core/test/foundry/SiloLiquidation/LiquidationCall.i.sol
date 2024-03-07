@@ -156,11 +156,12 @@ contract LiquidationCallTest is SiloLittleHelper, Test {
         vm.expectCall(address(collateralConfig.interestRateModel), abi.encodeWithSelector(IInterestRateModel.getCompoundInterestRateAndUpdate.selector));
 
         emit log_named_decimal_uint("[test] LTV after interest", silo1.getLtv(BORROWER), 16);
+        assertEq(silo1.getLtv(BORROWER), 89_1188467990720448, "LTV after interest");
         assertLt(silo1.getLtv(BORROWER), 0.90e18, "expect LTV to be below dust level");
         assertFalse(silo1.isSolvent(BORROWER), "expect BORROWER to be insolvent");
 
-        token1.mint(address(this), debtToCover);
-        token1.approve(address(silo1), debtToCover);
+        token1.mint(address(this), 2 ** 128);
+        token1.approve(address(silo1), debtToCover + 100e18);
 
         // uint256 collateralWithFee = debtToCover + 0.05e5; // too deep
 
@@ -171,7 +172,7 @@ contract LiquidationCallTest is SiloLittleHelper, Test {
 
         { // too deep
             (
-                uint256 withdrawAssetsFromCollateral, , uint256 repayDebtAssets
+                uint256 withdrawAssetsFromCollateral,, uint256 repayDebtAssets
             ) = siloLiquidation.liquidationCall(
                 address(silo1), address(token0), address(token1), BORROWER, debtToCover, false /* receiveSToken */
             );
@@ -180,8 +181,9 @@ contract LiquidationCallTest is SiloLittleHelper, Test {
             emit log_named_decimal_uint("[test] repayDebtAssets", repayDebtAssets, 18);
         }
 
-        {
+        { // too deep
             emit log_named_decimal_uint("[test] LTV after small liquidation", silo1.getLtv(BORROWER), 16);
+            assertEq(silo1.getLtv(BORROWER), 89_1188467990719805, "LTV after small liquidation");
             assertGt(silo1.getLtv(BORROWER), 0, "expect user to be still insolvent after small partial liquidation");
             assertTrue(!silo1.isSolvent(BORROWER), "expect BORROWER to be insolvent after small partial liquidation");
 
@@ -193,7 +195,7 @@ contract LiquidationCallTest is SiloLittleHelper, Test {
             assertEq(silo1.getDebtAssets(), 8e18 + 911884679907104475, "debt token + interest");
         }
 
-        {
+        { // too deep
             (, uint64 interestRateTimestamp0After) = silo0.siloData();
             (, uint64 interestRateTimestamp1After) = silo1.siloData();
 
@@ -203,6 +205,8 @@ contract LiquidationCallTest is SiloLittleHelper, Test {
             (collateralToLiquidate, debtToRepay) = siloLiquidation.maxLiquidation(address(silo1), BORROWER);
             assertGt(collateralToLiquidate, 0, "expect collateralToLiquidate after partial liquidation");
             assertGt(debtToRepay, 0, "expect debtToRepay after partial liquidation");
+
+            token1.approve(address(silo1), debtToRepay);
 
             siloLiquidation.liquidationCall(
                 address(silo1), address(token0), address(token1), BORROWER, 2 ** 128, false /* receiveSToken */
