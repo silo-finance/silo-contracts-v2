@@ -7,7 +7,7 @@ import {SiloLiquidation, ISiloLiquidation} from "silo-core/contracts/SiloLiquida
 
 /**
     FOUNDRY_PROFILE=core \
-        forge script silo-core/deploy/InterestRateModelV2Deploy.s.sol:InterestRateModelV2Deploy \
+        forge script silo-core/deploy/SiloLiquidationDeploy.s.sol:SiloLiquidationDeploy \
         --ffi --broadcast --rpc-url http://127.0.0.1:8545
  */
 contract SiloLiquidationDeploy is CommonDeploy {

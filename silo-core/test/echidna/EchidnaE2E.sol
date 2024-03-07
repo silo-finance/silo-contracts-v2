@@ -489,7 +489,7 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
     // Property: A user who's position is above the liquidation threshold cannot be liquidated by another user
     function cannotLiquidateUserUnderLt(uint8 actorIndex, bool receiveShares) public {
         Actor actor = _selectActor(actorIndex);
-        Actor executor = _selectActor(actorIndex + 1);
+        Actor liquidator = _selectActor(actorIndex + 1);
 
         (bool isSolvent, bool _vaultZeroWithDebt) = _invariant_insolventHasDebt(address(actor));
 
@@ -502,7 +502,7 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
 
         (, uint256 debtToRepay) = liquidation.maxLiquidation(address(vault), address(actor));
 
-        try executor.liquidationCall(_vaultZeroWithDebt, address(actor), debtToRepay, receiveShares, siloConfig) {
+        try liquidator.liquidationCall(_vaultZeroWithDebt, address(actor), debtToRepay, receiveShares, siloConfig) {
             emit LogString(string.concat("User LTV:", ltv.toString(), " Liq Threshold:", lt.toString()));
             emit LogString("User liquidated!");
             assert(false);
@@ -514,7 +514,7 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
     // Property: A user who's position is above the liquidation threshold cannot be liquidated by another user
     function cannotLiquidateASolventUser(uint8 actorIndex, bool receiveShares) public {
         Actor actor = _selectActor(actorIndex);
-        Actor executor = _selectActor(actorIndex + 1);
+        Actor liquidator = _selectActor(actorIndex + 1);
 
         (bool isSolvent, bool _vaultZeroWithDebt) = _invariant_insolventHasDebt(address(actor));
 
@@ -523,7 +523,7 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
 
         (, uint256 debtToRepay) = liquidation.maxLiquidation(address(vault), address(actor));
 
-        try executor.liquidationCall(_vaultZeroWithDebt, address(actor), debtToRepay, receiveShares, siloConfig) {
+        try liquidator.liquidationCall(_vaultZeroWithDebt, address(actor), debtToRepay, receiveShares, siloConfig) {
             emit LogString("Solvent user liquidated!");
             assert(false);
         } catch {
@@ -534,7 +534,7 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
     // Property: An insolvent user cannot prevent others from liquidating his position
     function cannotPreventInsolventUserFromBeingLiquidated(uint8 actorIndex, bool receiveShares) public {
         Actor actor = _selectActor(actorIndex);
-        Actor executor = _selectActor(actorIndex + 1);
+        Actor liquidator = _selectActor(actorIndex + 1);
 
         (bool isSolvent, bool _vaultZeroWithDebt) = _invariant_insolventHasDebt(address(actor));
         require(!isSolvent, "user not solvent");
@@ -542,7 +542,7 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         Silo siloWithDebt = _vaultZeroWithDebt ? vault0 : vault1;
         (, uint256 debtToRepay) = liquidation.maxLiquidation(address(siloWithDebt), address(actor));
 
-        try executor.liquidationCall(_vaultZeroWithDebt, address(actor), debtToRepay, receiveShares, siloConfig) {
+        try liquidator.liquidationCall(_vaultZeroWithDebt, address(actor), debtToRepay, receiveShares, siloConfig) {
         } catch {
             emit LogString("Cannot liquidate insolvent user!");
             assert(false);
