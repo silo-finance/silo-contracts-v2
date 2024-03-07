@@ -205,7 +205,6 @@ contract LiquidationCallTest is SiloLittleHelper, Test {
     function test_liquidationCall_badDebt_partial() public {
         uint256 debtToCover = 100e18;
         bool receiveSToken;
-        address liquidator = address(this);
 
         (
             ISiloConfig.ConfigData memory debtConfig,
@@ -232,7 +231,7 @@ contract LiquidationCallTest is SiloLittleHelper, Test {
         vm.expectCall(address(debtConfig.interestRateModel), abi.encodeWithSelector(IInterestRateModel.getCompoundInterestRateAndUpdate.selector));
         vm.expectCall(address(collateralConfig.interestRateModel), abi.encodeWithSelector(IInterestRateModel.getCompoundInterestRateAndUpdate.selector));
 
-        token1.mint(liquidator, debtToCover);
+        token1.mint(address(this), debtToCover);
         token1.approve(address(silo1), debtToCover);
 
         siloLiquidation.liquidationCall(
@@ -245,24 +244,32 @@ contract LiquidationCallTest is SiloLittleHelper, Test {
         assertEq(debtConfig.daoFee, 0.15e18, "just checking on daoFee");
         assertEq(debtConfig.deployerFee, 0.10e18, "just checking on deployerFee");
 
-        uint256 daoAndDeployerFees = interest * (0.15e18 + 0.10e18) / 1e18; // dao fee + deployer fee
+        { // too deep
+            uint256 daoAndDeployerFees = interest * (0.15e18 + 0.10e18) / 1e18; // dao fee + deployer fee
 
-        assertEq(
-            token0.balanceOf(liquidator), COLLATERAL,
-            "liquidator should get all borrower collateral, no fee because of bad debt"
-        );
-        assertEq(token0.balanceOf(address(silo0)), 0, "all silo collateral should be transfer to liquidator");
-        assertEq(silo0.getCollateralAssets(), 0, "total collateral == 0");
+            assertEq(
+                token0.balanceOf(address(this)), COLLATERAL,
+                "liquidator should get all borrower collateral, no fee because of bad debt"
+            );
 
-        assertEq(
-            token1.balanceOf(address(silo1)), 0.5e18 + 7.5e18 + interest,
-            "silo has debt token fully repay, debt deposit + interest"
-        );
-        assertEq(
-            silo1.getCollateralAssets(), 0.5e18 + 7.5e18 + interest - daoAndDeployerFees,
-            "borrowed token + interest"
-        );
-        assertEq(token1.balanceOf(liquidator), 100e18 - (7.5e18 + interest), "liquidator did not used all the tokens");
+            assertEq(token0.balanceOf(address(silo0)), 0, "all silo collateral should be transfer to liquidator");
+            assertEq(silo0.getCollateralAssets(), 0, "total collateral == 0");
+
+            assertEq(
+                token1.balanceOf(address(silo1)), 0.5e18 + 7.5e18 + interest,
+                "silo has debt token fully repay, debt deposit + interest"
+            );
+            assertEq(
+                silo1.getCollateralAssets(), 0.5e18 + 7.5e18 + interest - daoAndDeployerFees,
+                "borrowed token + interest"
+            );
+
+            assertEq(
+                token1.balanceOf(address(this)),
+                100e18 - (7.5e18 + interest),
+                "liquidator did not used all the tokens"
+            );
+        }
 
         /*
           _totalCollateral.assets before %   8000000000000000000
@@ -275,11 +282,13 @@ contract LiquidationCallTest is SiloLittleHelper, Test {
           accruedInterest %                 61643835616429440000
         */
 
-        (, uint64 interestRateTimestamp0After) = silo0.siloData();
-        (, uint64 interestRateTimestamp1After) = silo1.siloData();
+        { // too deep
+            (, uint64 interestRateTimestamp0After) = silo0.siloData();
+            (, uint64 interestRateTimestamp1After) = silo1.siloData();
 
-        assertEq(interestRateTimestamp0 + timeForward, interestRateTimestamp0After, "interestRateTimestamp #0");
-        assertEq(interestRateTimestamp1 + timeForward, interestRateTimestamp1After, "interestRateTimestamp #1");
+            assertEq(interestRateTimestamp0 + timeForward, interestRateTimestamp0After, "interestRateTimestamp #0");
+            assertEq(interestRateTimestamp1 + timeForward, interestRateTimestamp1After, "interestRateTimestamp #1");
+        }
     }
 
     /*

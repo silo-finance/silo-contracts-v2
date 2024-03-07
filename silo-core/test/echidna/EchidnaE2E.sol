@@ -39,7 +39,7 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
     address public _vault1;
     Silo public vault0;
     Silo public vault1;
-    SiloLiquidation liquidator;
+    SiloLiquidation liquidation;
 
     TestERC20Token _asset0;
     TestERC20Token _asset1;
@@ -68,7 +68,7 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         (_vault0, _vault1) = siloConfig.getSilos();
         vault0 = Silo(_vault0);
         vault1 = Silo(_vault1);
-        liquidator = SiloLiquidation(vault0.config().getConfig(_vault0).liquidator);
+        liquidation = SiloLiquidation(vault0.config().getConfig(_vault0).liquidator);
 
         // Set up actors
         for(uint256 i; i < 3; i++) {
@@ -79,12 +79,14 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
                             Echodna invariants
        ================================================================ */
 
-    function echidna_isSolventIsTheSameEverywhere() public view returns (bool) {
+    function echidna_isSolventIsTheSameEverywhere() public view returns (bool success) {
         for(uint256 i; i < actors.length; i++) {
             address actor = address(actors[i]);
             assert(vault0.isSolvent(actor) == vault1.isSolvent(actor));
             assert(vault0.getLtv(actor) == vault1.getLtv(actor));
         }
+
+        success = true;
     }
 
     /* ================================================================
@@ -403,7 +405,7 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
 
         (
             uint256 collateralToLiquidate, uint256 debtToRepay
-        ) = liquidator.maxLiquidation(address(siloWithDebt), address(actor));
+        ) = liquidation.maxLiquidation(address(siloWithDebt), address(actor));
 
         require(collateralToLiquidate != 0 && debtToRepay != 0, "Nothing to liquidate");
 
@@ -498,7 +500,7 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         uint256 lt = vault.getLt();
         uint256 ltv = vault.getLtv(address(actor));
 
-        (, uint256 debtToRepay) = liquidator.maxLiquidation(address(vault), address(actor));
+        (, uint256 debtToRepay) = liquidation.maxLiquidation(address(vault), address(actor));
 
         try executor.liquidationCall(_vaultZeroWithDebt, address(actor), debtToRepay, receiveShares, siloConfig) {
             emit LogString(string.concat("User LTV:", ltv.toString(), " Liq Threshold:", lt.toString()));
@@ -519,7 +521,7 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         Silo vault = _vaultZeroWithDebt ? vault0 : vault1;
         require(isSolvent, "user not solvent");
 
-        (, uint256 debtToRepay) = liquidator.maxLiquidation(address(vault), address(actor));
+        (, uint256 debtToRepay) = liquidation.maxLiquidation(address(vault), address(actor));
 
         try executor.liquidationCall(_vaultZeroWithDebt, address(actor), debtToRepay, receiveShares, siloConfig) {
             emit LogString("Solvent user liquidated!");
@@ -538,7 +540,7 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         require(!isSolvent, "user not solvent");
 
         Silo siloWithDebt = _vaultZeroWithDebt ? vault0 : vault1;
-        (, uint256 debtToRepay) = liquidator.maxLiquidation(address(siloWithDebt), address(actor));
+        (, uint256 debtToRepay) = liquidation.maxLiquidation(address(siloWithDebt), address(actor));
 
         try executor.liquidationCall(_vaultZeroWithDebt, address(actor), debtToRepay, receiveShares, siloConfig) {
         } catch {
@@ -560,7 +562,7 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         uint256 lt = siloWithCollateral.getLt();
         uint256 ltv = vault.getLtv(address(actor));
 
-        (, uint256 debtToRepay) = liquidator.maxLiquidation(address(vault), address(actor));
+        (, uint256 debtToRepay) = liquidation.maxLiquidation(address(vault), address(actor));
         require(!isSolvent, "Not insolvent");
 
         emit LogString(string.concat("User LTV:", ltv.toString(), " Liq Threshold:", lt.toString()));

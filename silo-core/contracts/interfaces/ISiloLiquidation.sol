@@ -43,14 +43,6 @@ interface ISiloLiquidation {
         bool _receiveSToken
     ) external;
 
-    function withdrawCollateralsToLiquidator(
-        uint256 _withdrawAssetsFromCollateral,
-        uint256 _withdrawAssetsFromProtected,
-        address _borrower,
-        address _liquidator,
-        bool _receiveSToken
-    ) external;
-
     /// @dev debt is keep growing over time, so when dApp use this view to calculate max, tx should never revert
     /// because actual max can be only higher
     function maxLiquidation(address _siloWithDebt, address _borrower)

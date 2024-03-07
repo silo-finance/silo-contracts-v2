@@ -71,7 +71,7 @@ contract SiloLiquidation is ISiloLiquidation, ReentrancyGuardUpgradeable {
         emit LiquidationCall(msg.sender, _receiveSToken);
         ISilo(_siloWithDebt).repay(repayDebtAssets, _borrower);
 
-        ISiloLiquidation(debtConfig.otherSilo).withdrawCollateralsToLiquidator(
+        ISilo(debtConfig.otherSilo).withdrawCollateralsToLiquidator(
             withdrawAssetsFromCollateral, withdrawAssetsFromProtected, _borrower, msg.sender, _receiveSToken
         );
     }
