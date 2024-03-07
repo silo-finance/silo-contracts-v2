@@ -164,7 +164,7 @@ contract LiquidationCallTest is SiloLittleHelper, Test {
         assertFalse(silo1.isSolvent(BORROWER), "expect BORROWER to be insolvent");
 
         token1.mint(address(this), 2 ** 128);
-        token1.approve(address(silo1), debtToCover + 100e18);
+        token1.approve(address(silo1), debtToCover);
 
         // uint256 collateralWithFee = debtToCover + 0.05e5; // too deep
 
@@ -176,13 +176,11 @@ contract LiquidationCallTest is SiloLittleHelper, Test {
 
             vm.expectCall(
                 address(token1),
-                abi.encodeWithSelector(IERC20.transfer.selector, address(this), address(silo1), debtToCover)
+                abi.encodeWithSelector(IERC20.transferFrom.selector, address(this), address(silo1), debtToCover)
             );
-        }
 
-        { // too deep
             (
-                uint256 withdrawAssetsFromCollateral,, uint256 repayDebtAssets
+                uint256 withdrawAssetsFromCollateral, uint256 repayDebtAssets
             ) = siloLiquidation.liquidationCall(
                 address(silo1), address(token0), address(token1), BORROWER, debtToCover, false /* receiveSToken */
             );
@@ -225,11 +223,11 @@ contract LiquidationCallTest is SiloLittleHelper, Test {
 
             vm.expectCall(
                 address(token1),
-                abi.encodeWithSelector(IERC20.transfer.selector, address(this), address(silo1), 6_413645132946301397)
+                abi.encodeWithSelector(IERC20.transferFrom.selector, address(this), address(silo1), 6_413645132946301397)
             );
 
             (
-                uint256 withdrawAssetsFromCollateral,, uint256 repayDebtAssets
+                uint256 withdrawAssetsFromCollateral, uint256 repayDebtAssets
             ) = siloLiquidation.liquidationCall(
                 address(silo1), address(token0), address(token1), BORROWER, 2 ** 128, false /* receiveSToken */
             );
