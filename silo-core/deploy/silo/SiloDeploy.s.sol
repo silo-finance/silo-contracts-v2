@@ -84,11 +84,11 @@ contract SiloDeploy is CommonDeploy {
 
         console2.log("[SiloCommonDeploy] `beforeCreateSilo` executed");
 
-        ISiloDeployer deployer = ISiloDeployer(_resolveDeployedContract(SiloCoreContracts.SILO_DEPLOYER));
+        ISiloDeployer siloDeployer = ISiloDeployer(_resolveDeployedContract(SiloCoreContracts.SILO_DEPLOYER));
 
         vm.startBroadcast(deployerPrivateKey);
 
-        siloConfig = deployer.deploy(
+        siloConfig = siloDeployer.deploy(
             oracles,
             irmConfigData0,
             irmConfigData1,

@@ -89,7 +89,7 @@ contract SiloFixture is StdCheats, CommonBase {
         console2.log("[SiloFixture] _deploy: mainnetDeploy.run() done.");
 
         siloConfig = _siloDeploy.useConfig(_configName).run();
-        console2.log("[SiloFixture] _deploy: _siloDeploy.run() done.");
+        console2.log("[SiloFixture] _deploy: _siloDeploy(", _configName, ").run() done.");
 
         (address silo,) = siloConfig.getSilos();
         (ISiloConfig.ConfigData memory siloConfig0, ISiloConfig.ConfigData memory siloConfig1) = siloConfig.getConfigs(silo);
