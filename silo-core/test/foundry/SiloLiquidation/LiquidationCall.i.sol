@@ -169,8 +169,15 @@ contract LiquidationCallTest is SiloLittleHelper, Test {
         // uint256 collateralWithFee = debtToCover + 0.05e5; // too deep
 
         { // too deep
-            vm.expectCall(address(token0), abi.encodeWithSelector(IERC20.transfer.selector, address(silo0), address(this), debtToCover + 0.05e5));
-            vm.expectCall(address(token1), abi.encodeWithSelector(IERC20.transfer.selector, address(this), address(silo1), 10e18));
+            vm.expectCall(
+                address(token0),
+                abi.encodeWithSelector(IERC20.transfer.selector, address(silo0), address(this), debtToCover + 0.05e5)
+            );
+
+            vm.expectCall(
+                address(token1),
+                abi.encodeWithSelector(IERC20.transfer.selector, address(this), address(silo1), debtToCover)
+            );
         }
 
         { // too deep
@@ -210,6 +217,16 @@ contract LiquidationCallTest is SiloLittleHelper, Test {
             assertGt(debtToRepay, 0, "expect debtToRepay after partial liquidation");
 
             token1.approve(address(silo1), debtToRepay);
+
+            vm.expectCall(
+                address(token0),
+                abi.encodeWithSelector(IERC20.transfer.selector, address(silo0), address(this), COLLATERAL - (debtToCover + 0.05e5))
+            );
+
+            vm.expectCall(
+                address(token1),
+                abi.encodeWithSelector(IERC20.transfer.selector, address(this), address(silo1), DEBT - debtToCover)
+            );
 
             siloLiquidation.liquidationCall(
                 address(silo1), address(token0), address(token1), BORROWER, 2 ** 128, false /* receiveSToken */
