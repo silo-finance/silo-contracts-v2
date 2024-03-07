@@ -42,6 +42,9 @@ contract LiquidationCallTest is SiloLittleHelper, Test {
         assertEq(token0.balanceOf(address(this)), 0, "liquidation should have no collateral");
         assertEq(token0.balanceOf(address(silo0)), COLLATERAL, "silo0 has borrower collateral");
         assertEq(token1.balanceOf(address(silo1)), 0.5e18, "silo1 has only 0.5 debt token (8 - 7.5)");
+
+        assertEq(siloConfig.getConfig(address(silo0)).liquidationFee, 0.05e18, "liquidationFee0");
+        assertEq(siloConfig.getConfig(address(silo1)).liquidationFee, 0.025e18, "liquidationFee1");
     }
 
     /*
