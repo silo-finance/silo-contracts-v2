@@ -39,7 +39,7 @@ ghost mathint sumBalancesCollateral {
     );
 }
 
-hook Sstore shareCollateralToken0._balances[KEY address user] uint256 newBalance (uint256 oldBalance) STORAGE {
+hook Sstore shareCollateralToken0._balances[KEY address user] uint256 newBalance (uint256 oldBalance) {
     sumBalancesCollateral = sumBalancesCollateral + newBalance - oldBalance;
     collateral0BalanceOfMirror[user] = newBalance;
 }
