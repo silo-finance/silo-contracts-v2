@@ -2,7 +2,6 @@
 pragma solidity 0.8.21;
 
 import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
-import {console} from "forge-std/console.sol";
 
 library SiloLiquidationLib {
     struct LiquidationPreviewParams {
@@ -76,15 +75,9 @@ library SiloLiquidationLib {
         LiquidationPreviewParams memory _params
     )
         external
-
+        pure
         returns (uint256 collateralToLiquidate, uint256 debtToRepay, uint256 ltvAfter)
     {
-        console.log("_ltvBefore", _ltvBefore);
-        console.log("_sumOfCollateralAssets", _sumOfCollateralAssets);
-        console.log("_sumOfCollateralValue", _sumOfCollateralValue);
-        console.log("_borrowerDebtAssets", _borrowerDebtAssets);
-        console.log("_borrowerDebtValue", _borrowerDebtValue);
-        console.log("_params.collateralLt", _params.collateralLt);
         uint256 collateralValueToLiquidate;
         uint256 debtValueToRepay;
 
