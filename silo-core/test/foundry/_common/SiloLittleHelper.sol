@@ -183,9 +183,6 @@ abstract contract SiloLittleHelper is CommonBase {
         overrides.configName = _configName;
 
         SiloFixture siloFixture = new SiloFixture();
-        (siloConfig, silo0, silo1,,) = siloFixture.deploy_local(overrides);
-        siloLiquidation = ISiloLiquidation(siloConfig.getConfig(address(silo0)).liquidation);
-
-        if (address(siloLiquidation) == address(0)) revert("siloLiquidation is empty");
+        (siloConfig, silo0, silo1,,, siloLiquidation) = siloFixture.deploy_local(overrides);
     }
 }

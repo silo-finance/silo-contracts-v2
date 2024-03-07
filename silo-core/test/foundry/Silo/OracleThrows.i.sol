@@ -44,7 +44,7 @@ contract OracleThrowsTest is SiloLittleHelper, Test {
         overrides.configName = SiloConfigsNames.LOCAL_BEFORE_CALL;
 
         SiloFixture siloFixture = new SiloFixture();
-        (, silo0, silo1,,) = siloFixture.deploy_local(overrides);
+        (, silo0, silo1,,, siloLiquidation) = siloFixture.deploy_local(overrides);
     }
 
     /*

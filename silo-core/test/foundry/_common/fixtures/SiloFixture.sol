@@ -16,6 +16,7 @@ import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
 
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
+import {ISiloLiquidation} from "silo-core/contracts/interfaces/ISiloLiquidation.sol";
 
 import {TokenMock} from "../../_mocks/TokenMock.sol";
 
@@ -47,20 +48,23 @@ contract SiloFixture is StdCheats, CommonBase {
 
     function deploy_ETH_USDC()
         external
-        returns (ISiloConfig siloConfig, ISilo silo0, ISilo silo1, address weth, address usdc)
+        returns (
+            ISiloConfig siloConfig, ISilo silo0, ISilo silo1, address weth, address usdc, ISiloLiquidation liquidation
+        )
     {
         return _deploy(new SiloDeploy(), SiloConfigsNames.ETH_USDC_UNI_V3_SILO);
     }
 
     function deploy_local(SiloConfigOverride memory _override)
         external
-        returns (ISiloConfig siloConfig, ISilo silo0, ISilo silo1, address weth, address usdc)
+        returns (
+            ISiloConfig siloConfig, ISilo silo0, ISilo silo1, address weth, address usdc, ISiloLiquidation liquidation
+        )
     {
         // Mock addresses that we need for the `SiloFactoryDeploy` script
         AddrLib.setAddress(VeSiloContracts.TIMELOCK_CONTROLLER, makeAddr("Timelock"));
         AddrLib.setAddress(VeSiloContracts.FEE_DISTRIBUTOR, makeAddr("FeeDistributor"));
         console2.log("[SiloFixture] _deploy: setAddress done.");
-
 
         return _deploy(
             new SiloDeploy_Local(_override),
@@ -70,7 +74,14 @@ contract SiloFixture is StdCheats, CommonBase {
 
     function _deploy(SiloDeploy _siloDeploy, string memory _configName)
         internal
-        returns (ISiloConfig siloConfig, ISilo silo0, ISilo silo1, address token0, address token1)
+        returns (
+            ISiloConfig siloConfig,
+            ISilo silo0,
+            ISilo silo1,
+            address token0,
+            address token1,
+            ISiloLiquidation liquidation
+        )
     {
         MainnetDeploy mainnetDeploy = new MainnetDeploy();
         mainnetDeploy.disableDeploymentsSync();
@@ -87,5 +98,8 @@ contract SiloFixture is StdCheats, CommonBase {
 
         token0 = siloConfig0.token;
         token1 = siloConfig1.token;
+
+        liquidation = ISiloLiquidation(siloConfig0.liquidation);
+        if (address(liquidation) == address(0)) revert("siloLiquidation is empty");
     }
 }

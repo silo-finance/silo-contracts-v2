@@ -40,7 +40,7 @@ contract DepositInvariantTest is Test {
         overrides.token1 = address(token1);
 
         SiloFixture siloFixture = new SiloFixture();
-        (siloConfig, silo0, silo1,,) = siloFixture.deploy_local(overrides);
+        (siloConfig, silo0, silo1,,,) = siloFixture.deploy_local(overrides);
 
         siloHandler = new SiloHandler2(silo0, silo1, token0, token1);
     }

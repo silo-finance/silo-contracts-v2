@@ -35,7 +35,7 @@ contract MaxBorrowInvariantTest is SiloLittleHelper, Test {
         overrides.token1 = address(token1);
 
         SiloFixture siloFixture = new SiloFixture();
-        (ISiloConfig siloConfig, ISilo silo0, ISilo silo1,,) = siloFixture.deploy_local(overrides);
+        (ISiloConfig siloConfig, ISilo silo0, ISilo silo1,,,) = siloFixture.deploy_local(overrides);
 
         SiloHandler2 siloHandler = new SiloHandler2(silo0, silo1, token0, token1);
         bytes4[] memory selectors = new bytes4[](4);
