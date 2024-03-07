@@ -74,8 +74,6 @@ contract SiloConfigData is Test, CommonDeploy {
     {
         config = _readDataFromJson(_name);
 
-        console2.log("[config.deployer]: %s", config.deployer);
-
         initData = ISiloConfig.InitData({
             deployer: config.deployer,
             liquidation: config.liquidation,
