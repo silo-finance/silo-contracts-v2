@@ -13,20 +13,20 @@ contract SiloConfigTest is Test {
 
     function siloConfigDeploy(
         uint256 _siloId,
-        address _liquidator,
         ISiloConfig.ConfigData memory _configData0,
         ISiloConfig.ConfigData memory _configData1
     ) public returns (SiloConfig siloConfig) {
         vm.assume(_configData0.silo != wrongSilo);
         vm.assume(_configData1.silo != wrongSilo);
         vm.assume(_configData0.silo != _configData1.silo);
+        vm.assume(_configData0.liquidation != _configData1.liquidation);
 
         _configData0.otherSilo = _configData1.silo;
         _configData1.otherSilo = _configData0.silo;
         _configData1.daoFee = _configData0.daoFee;
         _configData1.deployerFee = _configData0.deployerFee;
 
-        siloConfig = new SiloConfig(_siloId, _liquidator, _configData0, _configData1);
+        siloConfig = new SiloConfig(_siloId, _configData0, _configData1);
     }
 
     /*
@@ -34,11 +34,10 @@ contract SiloConfigTest is Test {
     */
     function test_getSilos_fuzz(
         uint256 _siloId,
-        address _liquidator,
         ISiloConfig.ConfigData memory _configData0,
         ISiloConfig.ConfigData memory _configData1
     ) public {
-        SiloConfig siloConfig = siloConfigDeploy(_siloId, _liquidator, _configData0, _configData1);
+        SiloConfig siloConfig = siloConfigDeploy(_siloId, _configData0, _configData1);
 
         (address silo0, address silo1) = siloConfig.getSilos();
         assertEq(silo0, _configData0.silo);
@@ -50,11 +49,10 @@ contract SiloConfigTest is Test {
     */
     function test_getShareTokens_fuzz(
         uint256 _siloId,
-        address _liquidator,
         ISiloConfig.ConfigData memory _configData0,
         ISiloConfig.ConfigData memory _configData1
     ) public {
-        SiloConfig siloConfig = siloConfigDeploy(_siloId, _liquidator, _configData0, _configData1);
+        SiloConfig siloConfig = siloConfigDeploy(_siloId, _configData0, _configData1);
 
         vm.expectRevert(ISiloConfig.WrongSilo.selector);
         siloConfig.getShareTokens(wrongSilo);
@@ -75,11 +73,10 @@ contract SiloConfigTest is Test {
     */
     function test_getAssetForSilo_fuzz(
         uint256 _siloId,
-        address _liquidator,
         ISiloConfig.ConfigData memory _configData0,
         ISiloConfig.ConfigData memory _configData1
     ) public {
-        SiloConfig siloConfig = siloConfigDeploy(_siloId, _liquidator, _configData0, _configData1);
+        SiloConfig siloConfig = siloConfigDeploy(_siloId, _configData0, _configData1);
 
         vm.expectRevert(ISiloConfig.WrongSilo.selector);
         siloConfig.getAssetForSilo(wrongSilo);
@@ -93,11 +90,10 @@ contract SiloConfigTest is Test {
     */
     function test_getConfigs_fuzz(
         uint256 _siloId,
-        address _liquidator,
         ISiloConfig.ConfigData memory _configData0,
         ISiloConfig.ConfigData memory _configData1
     ) public {
-        SiloConfig siloConfig = siloConfigDeploy(_siloId, _liquidator, _configData0, _configData1);
+        SiloConfig siloConfig = siloConfigDeploy(_siloId, _configData0, _configData1);
 
         vm.expectRevert(ISiloConfig.WrongSilo.selector);
         siloConfig.getConfigs(wrongSilo);
@@ -113,11 +109,10 @@ contract SiloConfigTest is Test {
     */
     function test_getConfig_fuzz(
         uint256 _siloId,
-        address _liquidator,
         ISiloConfig.ConfigData memory _configData0,
         ISiloConfig.ConfigData memory _configData1
     ) public {
-        SiloConfig siloConfig = siloConfigDeploy(_siloId, _liquidator, _configData0, _configData1);
+        SiloConfig siloConfig = siloConfigDeploy(_siloId, _configData0, _configData1);
 
         vm.expectRevert(ISiloConfig.WrongSilo.selector);
         siloConfig.getConfig(wrongSilo);
@@ -134,11 +129,10 @@ contract SiloConfigTest is Test {
     */
     function test_getFeesWithAsset_fuzz(
         uint256 _siloId,
-        address _liquidator,
         ISiloConfig.ConfigData memory _configData0,
         ISiloConfig.ConfigData memory _configData1
     ) public {
-        SiloConfig siloConfig = siloConfigDeploy(_siloId, _liquidator, _configData0, _configData1);
+        SiloConfig siloConfig = siloConfigDeploy(_siloId, _configData0, _configData1);
 
         vm.expectRevert(ISiloConfig.WrongSilo.selector);
         siloConfig.getFeesWithAsset(wrongSilo);

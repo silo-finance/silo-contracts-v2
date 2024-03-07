@@ -97,7 +97,7 @@ contract SiloFactory is ISiloFactory, ERC721Upgradeable, Ownable2StepUpgradeable
         configData0.silo = ClonesUpgradeable.clone(siloImpl);
         configData1.silo = ClonesUpgradeable.clone(siloImpl);
 
-        siloConfig = ISiloConfig(address(new SiloConfig(nextSiloId, _initData.liquidation, configData0, configData1)));
+        siloConfig = ISiloConfig(address(new SiloConfig(nextSiloId, configData0, configData1)));
 
         ISilo(configData0.silo).initialize(siloConfig, _initData.interestRateModelConfig0);
         ISilo(configData1.silo).initialize(siloConfig, _initData.interestRateModelConfig1);
@@ -293,6 +293,7 @@ contract SiloFactory is ISiloFactory, ERC721Upgradeable, Ownable2StepUpgradeable
         virtual
         returns (ISiloConfig.ConfigData memory configData0, ISiloConfig.ConfigData memory configData1)
     {
+        configData0.liquidation = _initData.liquidation;
         configData0.token = _initData.token0;
         configData0.solvencyOracle = _initData.solvencyOracle0;
         // If maxLtv oracle is not set, fallback to solvency oracle
@@ -307,6 +308,7 @@ contract SiloFactory is ISiloFactory, ERC721Upgradeable, Ownable2StepUpgradeable
         configData0.flashloanFee = _initData.flashloanFee0;
         configData0.callBeforeQuote = _initData.callBeforeQuote0 && configData0.maxLtvOracle != address(0);
 
+        configData1.liquidation = _initData.liquidation;
         configData1.token = _initData.token1;
         configData1.solvencyOracle = _initData.solvencyOracle1;
         // If maxLtv oracle is not set, fallback to solvency oracle
