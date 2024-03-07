@@ -1,5 +1,5 @@
 {
-    "deployer": "0x",
+    "deployer": "0xdededededededededededededededededededede",
     "liquidation": "SiloLiquidation",
     "deployerFee": 1000,
     "token0": "WETH",

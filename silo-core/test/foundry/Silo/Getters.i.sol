@@ -66,14 +66,14 @@ contract GettersTest is SiloLittleHelper, Test {
         ) = siloLens.getFeesAndFeeReceivers(silo0);
 
         assertEq(daoFeeReceiver, address(0x19dD10675e508168B181f7acEc4D6E7eD3cbB737), "daoFeeReceiver");
-        assertEq(deployerFeeReceiver, address(0x0000000000000000000000000000000000000480), "deployerFeeReceiver");
+        assertEq(deployerFeeReceiver, address(0xdededededededededededededededededededede), "deployerFeeReceiver/silo owner");
         assertEq(daoFee, 0.15e18, "daoFee");
         assertEq(deployerFee, 0.1e18, "deployerFee");
 
         (daoFeeReceiver, deployerFeeReceiver, daoFee, deployerFee) = siloLens.getFeesAndFeeReceivers(silo1);
 
         assertEq(daoFeeReceiver, address(0x19dD10675e508168B181f7acEc4D6E7eD3cbB737), "daoFeeReceiver 1");
-        assertEq(deployerFeeReceiver, address(0x0000000000000000000000000000000000000480), "deployerFeeReceiver 1");
+        assertEq(deployerFeeReceiver, address(0xdededededededededededededededededededede), "deployerFeeReceiver/silo owner 1");
         assertEq(daoFee, 0.15e18, "daoFee 1");
         assertEq(deployerFee, 0.1e18, "deployerFee 1");
     }
