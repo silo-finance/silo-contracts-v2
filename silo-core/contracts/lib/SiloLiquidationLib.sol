@@ -93,7 +93,7 @@ library SiloLiquidationLib {
                 _params.liquidationFee
             );
 
-            if (maxRepayValue == _borrowerDebtValue) { revert("MAX!");
+            if (maxRepayValue == _borrowerDebtValue) {
                 // forced full liquidation
                 debtToRepay = _borrowerDebtAssets;
                 debtValueToRepay = _borrowerDebtValue;

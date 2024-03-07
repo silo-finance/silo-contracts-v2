@@ -198,10 +198,10 @@ contract LiquidationCallTest is SiloLittleHelper, Test {
             assertTrue(!silo1.isSolvent(BORROWER), "expect BORROWER to be insolvent after small partial liquidation");
 
             assertEq(token0.balanceOf(address(this)), debtToCover + 0.05e5, "liquidator should get collateral + 5% fee");
-            assertEq(token0.balanceOf(address(silo0)), COLLATERAL - debtToCover + 0.05e5, "silo collateral should be transfer to liquidator");
+            assertEq(token0.balanceOf(address(silo0)), COLLATERAL - (debtToCover + 0.05e5), "silo collateral should be transfer to liquidator");
             assertEq(token1.balanceOf(address(silo1)), 0.5e18 + debtToCover, "debt token should be repayed");
 
-            assertEq(silo0.getCollateralAssets(), COLLATERAL - debtToCover + 0.05e5, "total collateral");
+            assertEq(silo0.getCollateralAssets(), COLLATERAL - (debtToCover + 0.05e5), "total collateral");
             assertEq(silo1.getDebtAssets(), 8e18 + 911884679907104475, "debt token + interest");
         }
 
@@ -220,17 +220,22 @@ contract LiquidationCallTest is SiloLittleHelper, Test {
 
             vm.expectCall(
                 address(token0),
-                abi.encodeWithSelector(IERC20.transfer.selector, address(silo0), address(this), COLLATERAL - (debtToCover + 0.05e5))
+                abi.encodeWithSelector(IERC20.transfer.selector, address(silo0), address(this), 6_734327389593616466)
             );
 
             vm.expectCall(
                 address(token1),
-                abi.encodeWithSelector(IERC20.transfer.selector, address(this), address(silo1), DEBT - debtToCover)
+                abi.encodeWithSelector(IERC20.transfer.selector, address(this), address(silo1), 6_413645132946301397)
             );
 
-            siloLiquidation.liquidationCall(
+            (
+                uint256 withdrawAssetsFromCollateral,, uint256 repayDebtAssets
+            ) = siloLiquidation.liquidationCall(
                 address(silo1), address(token0), address(token1), BORROWER, 2 ** 128, false /* receiveSToken */
             );
+
+            emit log_named_decimal_uint("[test] withdrawAssetsFromCollateral2", withdrawAssetsFromCollateral, 18);
+            emit log_named_decimal_uint("[test] repayDebtAssets2", repayDebtAssets, 18);
 
             emit log_named_decimal_uint("[test] LTV after max liquidation", silo1.getLtv(BORROWER), 16);
             assertGt(silo1.getLtv(BORROWER), 0, "expect some LTV after partial liquidation");

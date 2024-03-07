@@ -32,6 +32,8 @@ interface ISiloLiquidation {
     /// in case this amount is too big, it will be reduced to maximum allowed liquidation amount
     /// @param _receiveSToken True if the liquidators wants to receive the collateral sTokens, `false` if he wants
     /// to receive the underlying collateral asset directly
+    /// @return withdrawCollateral collateral that was send to `msg.sender`
+    /// @return repayDebtAssets actual debt value that was repayed by `msg.sender`
     function liquidationCall(
         address _siloWithDebt,
         address _collateralAsset,
@@ -41,7 +43,7 @@ interface ISiloLiquidation {
         bool _receiveSToken
     )
         external
-        returns (uint256 withdrawAssetsFromCollateral, uint256 withdrawAssetsFromProtected, uint256 repayDebtAssets);
+        returns (uint256 withdrawCollateral, uint256 repayDebtAssets);
 
     /// @dev debt is keep growing over time, so when dApp use this view to calculate max, tx should never revert
     /// because actual max can be only higher

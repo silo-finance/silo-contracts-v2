@@ -39,7 +39,7 @@ contract SiloLiquidation is ISiloLiquidation, ReentrancyGuardUpgradeable {
         external
         virtual
         nonReentrant
-        returns (uint256 withdrawAssetsFromCollateral, uint256 withdrawAssetsFromProtected, uint256 repayDebtAssets)
+        returns (uint256 withdrawCollateral, uint256 repayDebtAssets)
     {
         (ISiloConfig.ConfigData memory debtConfig, ISiloConfig.ConfigData memory collateralConfig) =
             ISilo(_siloWithDebt).config().getConfigs(_siloWithDebt);
@@ -60,6 +60,8 @@ contract SiloLiquidation is ISiloLiquidation, ReentrancyGuardUpgradeable {
         }
 
         bool selfLiquidation = _borrower == msg.sender;
+        uint256 withdrawAssetsFromCollateral;
+        uint256 withdrawAssetsFromProtected;
 
         (
             withdrawAssetsFromCollateral, withdrawAssetsFromProtected, repayDebtAssets
@@ -73,6 +75,8 @@ contract SiloLiquidation is ISiloLiquidation, ReentrancyGuardUpgradeable {
         );
 
         if (repayDebtAssets == 0) revert NoDebtToCover();
+        // this two value were split from total collateral to withdraw, so we will not overflow
+        unchecked { withdrawCollateral = withdrawAssetsFromCollateral + withdrawAssetsFromProtected; }
 
         emit LiquidationCall(msg.sender, _receiveSToken);
         ISilo(_siloWithDebt).repay(repayDebtAssets, _borrower, msg.sender);
