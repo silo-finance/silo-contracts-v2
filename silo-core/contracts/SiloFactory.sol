@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.21;
+import {console2} from "forge-std/console2.sol";
 
 import {CountersUpgradeable} from "openzeppelin-contracts-upgradeable/utils/CountersUpgradeable.sol";
 import {ClonesUpgradeable} from "openzeppelin-contracts-upgradeable/proxy/ClonesUpgradeable.sol";
@@ -110,6 +111,8 @@ contract SiloFactory is ISiloFactory, ERC721Upgradeable, Ownable2StepUpgradeable
 
         if (_initData.deployer != address(0)) {
             _mint(_initData.deployer, nextSiloId);
+            console2.log("[_mint] nextSiloId", nextSiloId);
+            console2.log("[_mint] _initData.deployer", _initData.deployer);
         }
 
         emit NewSilo(configData0.token, configData1.token, configData0.silo, configData1.silo, address(siloConfig));
@@ -229,6 +232,7 @@ contract SiloFactory is ISiloFactory, ERC721Upgradeable, Ownable2StepUpgradeable
         if (_newDaoFeeReceiver == address(0)) revert ZeroAddress();
 
         daoFeeReceiver = _newDaoFeeReceiver;
+        console2.log("[_setDaoFeeReceiver] _newDaoFeeReceiver", _newDaoFeeReceiver);
 
         emit DaoFeeReceiverChanged(_newDaoFeeReceiver);
     }

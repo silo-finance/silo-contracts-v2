@@ -40,6 +40,7 @@ contract SiloFactoryDeploy is CommonDeploy {
         vm.startBroadcast(deployerPrivateKey);
 
         siloFactory.initialize(siloImpl, shareCollateralTokenImpl, shareDebtTokenImpl, daoFee, daoFeeReceiver);
+        console2.log("[SiloFactoryDeploy] daoFeeReceiver", daoFeeReceiver);
         OwnableUpgradeable(address(siloFactory)).transferOwnership(timelock);
 
         vm.stopBroadcast();
