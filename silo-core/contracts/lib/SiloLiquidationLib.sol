@@ -100,12 +100,6 @@ library SiloLiquidationLib {
                 _params.liquidationFee
             );
 
-            console.log("[debug] maxRepayValue", maxRepayValue);
-            console.log("[debug] _borrowerDebtValue", _borrowerDebtValue);
-            console.log("[debug] _sumOfCollateralValue", _sumOfCollateralValue);
-            console.log("[debug] minAcceptableLTV(_params.collateralLt)", minAcceptableLTV(_params.collateralLt));
-            console.log("[debug] _params.liquidationFee", _params.liquidationFee);
-
             if (maxRepayValue == _borrowerDebtValue) { revert("MAX!");
                 // forced full liquidation
                 debtToRepay = _borrowerDebtAssets;
