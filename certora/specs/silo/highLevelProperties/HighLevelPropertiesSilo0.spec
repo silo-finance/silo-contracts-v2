@@ -8,64 +8,43 @@ import "../../_simplifications/Silo_isSolvent_ghost.spec";
 import "../../_simplifications/SimplifiedGetCompoundInterestRateAndUpdate.spec";
 
 
-rule HLP_deposit_breakingUpNotBeneficial_protectedCollateral(
-    env e,
-    address receiver) 
-{
-    completeSiloSetupEnv(e);
-    totalSupplyMoreThanBalance(receiver);
-    requireDebtToken0TotalAndBalancesIntegrity();
-    uint256 assets1;
-    uint256 assets2;
-    uint256 assetsSum;
-    require assetsSum == require_uint256(assets1 + assets2);
-    mathint balanceProtectedCollateralBefore = shareProtectedCollateralToken0.balanceOf(receiver);
-    storage init = lastStorage;
-    ISilo.AssetType anyType;
-    
-    deposit(e, assetsSum, receiver, anyType);
-    mathint balanceProtectedCollateralAfterSum = shareProtectedCollateralToken0.balanceOf(receiver);
-    
-    deposit(e, assets1, receiver, anyType) at init;
-    mathint balanceProtectedCollateralAfter1 = shareProtectedCollateralToken0.balanceOf(receiver);
-    deposit(e, assets2, receiver, anyType);
-    mathint balanceProtectedCollateralAfter1_2 = shareProtectedCollateralToken0.balanceOf(receiver);
-    
-    assert balanceProtectedCollateralAfter1_2 <= balanceProtectedCollateralAfterSum;
-}
-
 /*
-    Breaking-up larger withdraw to two smaller ones doesn't benefit the user.
+    Breaking-up larger mint to two smaller ones doesn't benefit the user.
+    holds
+    https://prover.certora.com/output/6893/c0e41ae8e7bd47149d6c9cbdd9ce4295/?anonymousKey=937b56fbb72f8b0b2293f90d539860b2d976da67
 */
-rule HLP_withdraw_breakingUpNotBeneficial(env e, address receiver, address owner)
+rule HLP_mint_breakingUpNotBeneficial(env e, address receiver)
 {
     completeSiloSetupEnv(e);
     requireDebtToken0TotalAndBalancesIntegrity();
     totalSupplyMoreThanBalance(receiver);
-    totalSupplyMoreThanBalance(owner);
-    uint256 assets1;
-    uint256 assets2;
-    uint256 assetsSum;
-    require assetsSum == require_uint256(assets1 + assets2);
+    uint256 shares1;
+    uint256 shares2;
+    uint256 sharesSum;
+    require sharesSum == require_uint256(shares1 + shares2);
 
+    mathint balanceTokenBefore = token0.balanceOf(receiver);
     mathint balanceSharesBefore = shareDebtToken0.balanceOf(receiver);
     mathint balanceCollateralBefore = shareCollateralToken0.balanceOf(receiver);
     mathint balanceProtectedCollateralBefore = shareProtectedCollateralToken0.balanceOf(receiver);
 
     storage init = lastStorage;
-
     ISilo.AssetType anyType;
-    withdraw(e, assetsSum, receiver, owner, anyType);
+    
+    mint(e, sharesSum, receiver, anyType);
+    mathint balanceTokenAfterSum = token0.balanceOf(receiver);
     mathint balanceSharesAfterSum = shareDebtToken0.balanceOf(receiver);
     mathint balanceCollateralAfterSum = shareCollateralToken0.balanceOf(receiver);
     mathint balanceProtectedCollateralAfterSum = shareProtectedCollateralToken0.balanceOf(receiver);
     
-    withdraw(e, assets1, receiver, owner, anyType) at init;
+    mint(e, shares1, receiver, anyType) at init;
+    mathint balanceTokenAfter1 = token0.balanceOf(receiver);
     mathint balanceSharesAfter1 = shareDebtToken0.balanceOf(receiver);
     mathint balanceCollateralAfter1 = shareCollateralToken0.balanceOf(receiver);
     mathint balanceProtectedCollateralAfter1 = shareProtectedCollateralToken0.balanceOf(receiver);
 
-    withdraw(e, assets2, receiver, owner, anyType);
+    mint(e, shares2, receiver, anyType);
+    mathint balanceTokenAfter1_2 = token0.balanceOf(receiver);
     mathint balanceSharesAfter1_2 = shareDebtToken0.balanceOf(receiver);
     mathint balanceCollateralAfter1_2 = shareCollateralToken0.balanceOf(receiver);
     mathint balanceProtectedCollateralAfter1_2 = shareProtectedCollateralToken0.balanceOf(receiver);
@@ -73,22 +52,148 @@ rule HLP_withdraw_breakingUpNotBeneficial(env e, address receiver, address owner
     assert balanceSharesAfter1_2 <= balanceSharesAfterSum;
     assert balanceCollateralAfter1_2 <= balanceCollateralAfterSum;
     assert balanceProtectedCollateralAfter1_2 <= balanceProtectedCollateralAfterSum;
+
+    satisfy balanceCollateralAfter1_2 <= balanceCollateralAfterSum;
+    satisfy balanceProtectedCollateralAfter1_2 <= balanceProtectedCollateralAfterSum;
+    satisfy balanceSharesAfter1_2 <= balanceSharesAfterSum;
 }
 
-rule HLP_depositAndInverse(env e, address receiver)
+rule HLP_mint_breakingUpNotBeneficial_full(env e, address receiver)
+{
+    completeSiloSetupEnv(e);
+    totalSupplyMoreThanBalance(receiver);
+
+    uint256 shares;
+    uint256 sharesAttempt1; uint256 sharesAttempt2;
+
+    mathint balanceTokenBefore = token0.balanceOf(e.msg.sender);
+    mathint balanceCollateralBefore = shareCollateralToken0.balanceOf(receiver);
+    mathint balanceProtectedCollateralBefore = shareProtectedCollateralToken0.balanceOf(receiver);
+
+    storage init = lastStorage;
+    ISilo.AssetType anyType;
+    
+    mint(e, shares, receiver, anyType);
+        mathint balanceTokenAfterSum = token0.balanceOf(e.msg.sender);
+        mathint balanceCollateralAfterSum = shareCollateralToken0.balanceOf(receiver);
+        mathint balanceProtectedCollateralAfterSum = shareProtectedCollateralToken0.balanceOf(receiver);
+    
+    mint(e, sharesAttempt1, receiver, anyType) at init;
+        mathint balanceTokenAfter1 = token0.balanceOf(e.msg.sender);
+        mathint balanceCollateralAfter1 = shareCollateralToken0.balanceOf(receiver);
+        mathint balanceProtectedCollateralAfter1 = shareProtectedCollateralToken0.balanceOf(receiver);
+
+    mint(e, sharesAttempt2, receiver, anyType);
+        mathint balanceTokenAfter1_2 = token0.balanceOf(e.msg.sender);
+        mathint balanceCollateralAfter1_2 = shareCollateralToken0.balanceOf(receiver);
+        mathint balanceProtectedCollateralAfter1_2 = shareProtectedCollateralToken0.balanceOf(receiver);
+
+    mathint diffTokenCombined = balanceTokenAfterSum - balanceTokenBefore;
+    mathint diffCollateraCombined = balanceCollateralAfterSum - balanceCollateralBefore;
+    mathint diffProtectedCombined = balanceProtectedCollateralAfterSum - balanceProtectedCollateralBefore;
+
+    mathint diffTokenBrokenUp = balanceTokenAfter1_2 - balanceTokenBefore;
+    mathint diffCollateraBrokenUp = balanceCollateralAfter1_2 - balanceCollateralBefore;
+    mathint diffProtectedBrokenUp = balanceProtectedCollateralAfter1_2 - balanceProtectedCollateralBefore;
+
+    assert !(diffTokenBrokenUp >= diffTokenCombined  && 
+        (diffCollateraBrokenUp > diffCollateraCombined + 1 || diffProtectedBrokenUp > diffProtectedCombined + 1));
+
+    assert !(diffCollateraBrokenUp >= diffCollateraCombined && 
+        diffProtectedBrokenUp >= diffProtectedCombined && 
+        diffTokenBrokenUp >diffTokenCombined);
+
+}
+
+rule HLP_borrowAndInverse(env e, address receiver)
 {
     completeSiloSetupEnv(e);
     requireDebtToken0TotalAndBalancesIntegrity();
     totalSupplyMoreThanBalance(receiver);
     
     uint256 assets;
+    mathint debtBefore = shareDebtToken0.balanceOf(receiver);
+    mathint sharesB = borrow(e, assets, receiver, receiver);
+    mathint debtAfterB = shareDebtToken0.balanceOf(receiver);
+    mathint sharesR = repay(e, assets, receiver);
+    mathint debtAfterR = shareDebtToken0.balanceOf(receiver);
+    
+    mathint debtAfter = shareDebtToken0.balanceOf(receiver);  
+    
+    assert differsAtMost(debtAfter, debtBefore, 100);
+    assert differsAtMost(debtAfter, debtBefore, 10);
+    assert differsAtMost(debtAfter, debtBefore, 1);
+    satisfy debtAfter == debtBefore;
+}
+
+rule HLP_transitionColateral_additivity_revert(env e, address receiver)
+{
+    completeSiloSetupEnv(e);
+    //requireDebtToken0TotalAndBalancesIntegrity();
+    totalSupplyMoreThanBalance(receiver);
+    
+    uint256 shares1; uint256 shares2;
+    uint256 sharesSum;
+    require sharesSum == require_uint256(shares1 + shares2);
+    require sharesSum < 2^100;
+    ISilo.AssetType anyType;
+
+    storage init = lastStorage;
+    transitionCollateral@withrevert(e, sharesSum, receiver, anyType); 
+    bool sumReverted = lastReverted;
+    
+    transitionCollateral@withrevert(e, shares1, receiver, anyType) at init;
+    bool reverted1 = lastReverted;
+    transitionCollateral@withrevert(e, shares2, receiver, anyType);
+    bool reverted2 = lastReverted;
+
+    assert sumReverted == (reverted1 || reverted2);
+}
+
+rule HLP_transitionColateral_additivity(env e, address receiver)
+{
+    //require receiver == e.msg.sender;
+    completeSiloSetupEnv(e);
+    totalSupplyMoreThanBalance(receiver);
+    
+    uint256 shares1; uint256 shares2;
+    uint256 sharesSum;
+    require sharesSum == require_uint256(shares1 + shares2);
+    ISilo.AssetType anyType;
     mathint balanceCollateralBefore = shareCollateralToken0.balanceOf(receiver);
-    mathint sharesD = deposit(e, assets, receiver);
-    mathint sharesW = withdraw(e, assets, receiver, receiver);
+    mathint balanceProtectedCollateralBefore = shareProtectedCollateralToken0.balanceOf(receiver);
+
+    storage init = lastStorage;
+    transitionCollateral(e, sharesSum, receiver, anyType); 
+    mathint balanceCollateralSum = shareCollateralToken0.balanceOf(receiver);
+    mathint balanceProtectedCollateralSum = shareProtectedCollateralToken0.balanceOf(receiver);
     
+    transitionCollateral(e, shares1, receiver, anyType) at init;
+    mathint balanceCollateral1 = shareCollateralToken0.balanceOf(receiver);
+    mathint balanceProtectedCollateral1 = shareProtectedCollateralToken0.balanceOf(receiver);
+    transitionCollateral(e, shares2, receiver, anyType);
+    mathint balanceCollateral1_2 = shareCollateralToken0.balanceOf(receiver);
+    mathint balanceProtectedCollateral1_2 = shareProtectedCollateralToken0.balanceOf(receiver);
+
+    assert balanceCollateralSum + balanceProtectedCollateralSum >= balanceCollateral1_2 + balanceProtectedCollateral1_2;
+    satisfy balanceCollateralSum + balanceProtectedCollateralSum >= balanceCollateral1_2 + balanceProtectedCollateral1_2;
+}
+
+rule HLP_integrityOfWithdraw(env e, address receiver)
+{
+    completeSiloSetupEnv(e);
+    totalSupplyMoreThanBalance(receiver);
+    
+    uint256 assets;
+    mathint balanceCollateralBefore = shareCollateralToken0.balanceOf(receiver);
+    mathint balanceTokenBefore = token0.balanceOf(receiver);    
+
+    mathint shares = withdraw(e, assets, receiver, receiver);
     mathint balanceCollateralAfter = shareCollateralToken0.balanceOf(receiver);  
-    
-    assert differsAtMost(balanceCollateralAfter, balanceCollateralBefore, 100);
-    assert differsAtMost(balanceCollateralAfter, balanceCollateralBefore, 10);
-    assert differsAtMost(balanceCollateralAfter, balanceCollateralBefore, 1);
+    mathint balanceTokenAfter = token0.balanceOf(receiver);
+   
+    assert balanceCollateralAfter == balanceCollateralBefore - shares;
+    assert balanceTokenAfter == balanceTokenBefore + assets;
+    satisfy balanceCollateralAfter == balanceCollateralBefore - shares;
+    satisfy balanceTokenAfter == balanceTokenBefore + assets;
 }

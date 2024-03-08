@@ -29,12 +29,15 @@ function completeSiloSetupEnv(env e) {
 
 function totalSupplyMoreThanBalance(address receiver)
 {
-    require shareProtectedCollateralToken0.totalSupply() >= shareProtectedCollateralToken0.balanceOf(receiver);
-    require shareDebtToken0.totalSupply() >= shareDebtToken0.balanceOf(receiver);
-    require shareCollateralToken0.totalSupply() >= shareCollateralToken0.balanceOf(receiver);
-    require shareProtectedCollateralToken1.totalSupply() >= shareProtectedCollateralToken1.balanceOf(receiver);
-    require shareDebtToken1.totalSupply() >= shareDebtToken1.balanceOf(receiver);
-    require shareCollateralToken1.totalSupply() >= shareCollateralToken1.balanceOf(receiver);
+    require receiver != currentContract;
+    require token0.totalSupply() >= require_uint256(token0.balanceOf(receiver) + token0.balanceOf(currentContract));
+    require shareProtectedCollateralToken0.totalSupply() >= require_uint256(shareProtectedCollateralToken0.balanceOf(receiver) + shareProtectedCollateralToken0.balanceOf(currentContract));
+    require shareDebtToken0.totalSupply() >= require_uint256(shareDebtToken0.balanceOf(receiver) + shareDebtToken0.balanceOf(currentContract));
+    require shareCollateralToken0.totalSupply() >= require_uint256(shareCollateralToken0.balanceOf(receiver) + shareCollateralToken0.balanceOf(currentContract));
+    require token1.totalSupply() >= require_uint256(token1.balanceOf(receiver) + token1.balanceOf(currentContract));
+    require shareProtectedCollateralToken1.totalSupply() >= require_uint256(shareProtectedCollateralToken1.balanceOf(receiver) + shareProtectedCollateralToken1.balanceOf(currentContract));
+    require shareDebtToken1.totalSupply() >= require_uint256(shareDebtToken1.balanceOf(receiver) + shareDebtToken1.balanceOf(currentContract));
+    require shareCollateralToken1.totalSupply() >= require_uint256(shareCollateralToken1.balanceOf(receiver) + shareCollateralToken1.balanceOf(currentContract));
 }
 
 function differsAtMost(mathint x, mathint y, mathint diff) returns bool
