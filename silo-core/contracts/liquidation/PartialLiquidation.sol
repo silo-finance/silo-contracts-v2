@@ -33,7 +33,6 @@ contract PartialLiquidation is IPartialLiquidation, ReentrancyGuardUpgradeable {
         if (_collateralAsset != collateralConfig.token) revert UnexpectedCollateralToken();
         if (_debtAsset != debtConfig.token) revert UnexpectedDebtToken();
 
-        // can we avoid?
         ISilo(_siloWithDebt).accrueInterest();
         ISilo(debtConfig.otherSilo).accrueInterest();
 
