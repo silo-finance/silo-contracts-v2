@@ -16,7 +16,6 @@ import "../../_simplifications/SimplifiedGetCompoundInterestRateAndUpdate.spec";
 rule HLP_mint_breakingUpNotBeneficial(env e, address receiver)
 {
     completeSiloSetupEnv(e);
-    requireDebtToken0TotalAndBalancesIntegrity();
     totalSupplyMoreThanBalance(receiver);
     uint256 shares1;
     uint256 shares2;
@@ -105,10 +104,56 @@ rule HLP_mint_breakingUpNotBeneficial_full(env e, address receiver)
 
 }
 
+rule HLP_mint_breakingUpNotBeneficial_full2(env e, address receiver)
+{
+    completeSiloSetupEnv(e);
+    totalSupplyMoreThanBalance(receiver);
+
+    uint256 shares;
+    uint256 sharesAttempt1; uint256 sharesAttempt2;
+
+    mathint balanceTokenBefore = token0.balanceOf(e.msg.sender);
+    mathint balanceCollateralBefore = shareCollateralToken0.balanceOf(receiver);
+    mathint balanceProtectedCollateralBefore = shareProtectedCollateralToken0.balanceOf(receiver);
+
+    storage init = lastStorage;
+    ISilo.AssetType anyType;
+    
+    mint(e, shares, receiver, anyType);
+        mathint balanceTokenAfterSum = token0.balanceOf(e.msg.sender);
+        mathint balanceCollateralAfterSum = shareCollateralToken0.balanceOf(receiver);
+        mathint balanceProtectedCollateralAfterSum = shareProtectedCollateralToken0.balanceOf(receiver);
+    
+    mint(e, sharesAttempt1, receiver, anyType) at init;
+        mathint balanceTokenAfter1 = token0.balanceOf(e.msg.sender);
+        mathint balanceCollateralAfter1 = shareCollateralToken0.balanceOf(receiver);
+        mathint balanceProtectedCollateralAfter1 = shareProtectedCollateralToken0.balanceOf(receiver);
+
+    mint(e, sharesAttempt2, receiver, anyType);
+        mathint balanceTokenAfter1_2 = token0.balanceOf(e.msg.sender);
+        mathint balanceCollateralAfter1_2 = shareCollateralToken0.balanceOf(receiver);
+        mathint balanceProtectedCollateralAfter1_2 = shareProtectedCollateralToken0.balanceOf(receiver);
+
+    mathint diffTokenCombined = balanceTokenAfterSum - balanceTokenBefore;
+    mathint diffCollateraCombined = balanceCollateralAfterSum - balanceCollateralBefore;
+    mathint diffProtectedCombined = balanceProtectedCollateralAfterSum - balanceProtectedCollateralBefore;
+
+    mathint diffTokenBrokenUp = balanceTokenAfter1_2 - balanceTokenBefore;
+    mathint diffCollateraBrokenUp = balanceCollateralAfter1_2 - balanceCollateralBefore;
+    mathint diffProtectedBrokenUp = balanceProtectedCollateralAfter1_2 - balanceProtectedCollateralBefore;
+
+    assert !(diffTokenBrokenUp >= diffTokenCombined  && 
+        (diffCollateraBrokenUp > diffCollateraCombined || diffProtectedBrokenUp > diffProtectedCombined));
+
+    assert !(diffCollateraBrokenUp >= diffCollateraCombined && 
+        diffProtectedBrokenUp >= diffProtectedCombined && 
+        diffTokenBrokenUp > diffTokenCombined);
+
+}
+
 rule HLP_borrowAndInverse(env e, address receiver)
 {
     completeSiloSetupEnv(e);
-    requireDebtToken0TotalAndBalancesIntegrity();
     totalSupplyMoreThanBalance(receiver);
     
     uint256 assets;
@@ -179,21 +224,100 @@ rule HLP_transitionColateral_additivity(env e, address receiver)
     satisfy balanceCollateralSum + balanceProtectedCollateralSum >= balanceCollateral1_2 + balanceProtectedCollateral1_2;
 }
 
-rule HLP_integrityOfWithdraw(env e, address receiver)
+rule HLP_Mint2RedeemNotProfitable(env e, address receiver)
 {
     completeSiloSetupEnv(e);
     totalSupplyMoreThanBalance(receiver);
+    totalSupplyMoreThanBalance(e.msg.sender);
     
-    uint256 assets;
     mathint balanceCollateralBefore = shareCollateralToken0.balanceOf(receiver);
-    mathint balanceTokenBefore = token0.balanceOf(receiver);    
+    mathint balanceTokenBefore = token0.balanceOf(e.msg.sender);    
 
-    mathint shares = withdraw(e, assets, receiver, receiver);
-    mathint balanceCollateralAfter = shareCollateralToken0.balanceOf(receiver);  
-    mathint balanceTokenAfter = token0.balanceOf(receiver);
+    uint256 assets1; uint256 assets2; uint256 shares;
+    mathint sharesM1 = mint(e, assets1, receiver);
+    mathint balanceCollateralM1 = shareCollateralToken0.balanceOf(receiver);  
+    mathint balanceTokenM1 = token0.balanceOf(e.msg.sender);    
+
+    mathint sharesM2 = mint(e, assets2, receiver);
+    mathint balanceCollateralM2 = shareCollateralToken0.balanceOf(receiver);  
+    mathint balanceTokenM2 = token0.balanceOf(e.msg.sender);    
    
-    assert balanceCollateralAfter == balanceCollateralBefore - shares;
-    assert balanceTokenAfter == balanceTokenBefore + assets;
-    satisfy balanceCollateralAfter == balanceCollateralBefore - shares;
-    satisfy balanceTokenAfter == balanceTokenBefore + assets;
+    mathint assetsR = redeem(e, shares, receiver, receiver);
+    mathint balanceCollateralR = shareCollateralToken0.balanceOf(receiver);  
+    mathint balanceTokenR = token0.balanceOf(e.msg.sender);    
+   
+    assert balanceCollateralR >= balanceCollateralBefore => balanceTokenR <= balanceTokenBefore;
 }
+
+rule HLP_Mint2Redeem2NotProfitable(env e, address receiver)
+{
+    completeSiloSetupEnv(e);
+    totalSupplyMoreThanBalance(receiver);
+    totalSupplyMoreThanBalance(e.msg.sender);
+    
+    mathint balanceCollateralBefore = shareCollateralToken0.balanceOf(receiver);
+    mathint balanceTokenBefore = token0.balanceOf(e.msg.sender);    
+
+    uint256 assets1; uint256 assets2; uint256 shares1; uint256 shares2;
+    mathint sharesM1 = mint(e, assets1, receiver);
+    mathint balanceCollateralM1 = shareCollateralToken0.balanceOf(receiver);  
+    mathint balanceTokenM1 = token0.balanceOf(e.msg.sender);    
+
+    mathint sharesM2 = mint(e, assets2, receiver);
+    mathint balanceCollateralM2 = shareCollateralToken0.balanceOf(receiver);  
+    mathint balanceTokenM2 = token0.balanceOf(e.msg.sender);    
+   
+    mathint assetsR1 = redeem(e, shares1, receiver, receiver);
+    mathint balanceCollateralR1 = shareCollateralToken0.balanceOf(receiver);  
+    mathint balanceTokenR1 = token0.balanceOf(e.msg.sender);    
+    
+    mathint assetsR2 = redeem(e, shares2, receiver, receiver);
+    mathint balanceCollateralR2 = shareCollateralToken0.balanceOf(receiver);  
+    mathint balanceTokenR2 = token0.balanceOf(e.msg.sender);    
+   
+    assert balanceCollateralR2 >= balanceCollateralBefore => balanceTokenR2 <= balanceTokenBefore;
+}
+
+rule HLP_MintRedeem2NotProfitable(env e, address receiver)
+{
+    completeSiloSetupEnv(e);
+    totalSupplyMoreThanBalance(receiver);
+    totalSupplyMoreThanBalance(e.msg.sender);
+    
+    mathint balanceCollateralBefore = shareCollateralToken0.balanceOf(receiver);
+    mathint balanceTokenBefore = token0.balanceOf(e.msg.sender);    
+
+    uint256 assets1; uint256 assets2; uint256 shares1; uint256 shares2;
+    mathint sharesM1 = mint(e, assets1, receiver);
+    mathint balanceCollateralM1 = shareCollateralToken0.balanceOf(receiver);  
+    mathint balanceTokenM1 = token0.balanceOf(e.msg.sender);    
+
+    //mathint sharesM2 = mint(e, assets2, receiver);
+    //mathint balanceCollateralM2 = shareCollateralToken0.balanceOf(receiver);  
+    //mathint balanceTokenM2 = token0.balanceOf(e.msg.sender);    
+   
+    mathint assetsR1 = redeem(e, shares1, receiver, receiver);
+    mathint balanceCollateralR1 = shareCollateralToken0.balanceOf(receiver);  
+    mathint balanceTokenR1 = token0.balanceOf(e.msg.sender);    
+    
+    mathint assetsR2 = redeem(e, shares2, receiver, receiver);
+    mathint balanceCollateralR2 = shareCollateralToken0.balanceOf(receiver);  
+    mathint balanceTokenR2 = token0.balanceOf(e.msg.sender);    
+   
+    assert balanceCollateralR2 >= balanceCollateralBefore => balanceTokenR2 <= balanceTokenBefore;
+}
+
+rule HLP_PreviewMintCorrectness(env e, address receiver)
+{
+    completeSiloSetupEnv(e);
+    totalSupplyMoreThanBalance(receiver);
+    totalSupplyMoreThanBalance(e.msg.sender);
+    
+    uint256 shares; uint256 shares2;
+    uint256 assetsReported = previewMint(e, shares);
+    storage init = lastStorage;
+    uint256 assetsPaid = mint(e, shares, receiver);
+    assert assetsPaid <= assetsReported;
+}
+
+

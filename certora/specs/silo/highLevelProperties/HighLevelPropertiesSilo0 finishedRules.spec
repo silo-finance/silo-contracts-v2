@@ -48,7 +48,6 @@ rule HLP_deposit_breakingUpNotBeneficial_protectedCollateral(
 {
     completeSiloSetupEnv(e);
     totalSupplyMoreThanBalance(receiver);
-    requireDebtToken0TotalAndBalancesIntegrity();
     uint256 assets1;
     uint256 assets2;
     uint256 assetsSum;
@@ -132,6 +131,27 @@ rule HLP_integrityOfDeposit(env e, address receiver)
     satisfy balanceTokenAfter == balanceTokenBefore - assets;
 }
 
+// holds
+// https://prover.certora.com/output/6893/5004415c5d1f412a87149b3dc5d30aa2/?anonymousKey=a6e1d304fb214e83a690497243a23faebea53bd2
+rule HLP_integrityOfWithdraw(env e, address receiver)
+{
+    completeSiloSetupEnv(e);
+    totalSupplyMoreThanBalance(receiver);
+    
+    uint256 assets;
+    mathint balanceCollateralBefore = shareCollateralToken0.balanceOf(receiver);
+    mathint balanceTokenBefore = token0.balanceOf(receiver);    
+
+    mathint shares = withdraw(e, assets, receiver, receiver);
+    mathint balanceCollateralAfter = shareCollateralToken0.balanceOf(receiver);  
+    mathint balanceTokenAfter = token0.balanceOf(receiver);
+   
+    assert balanceCollateralAfter == balanceCollateralBefore - shares;
+    assert balanceTokenAfter == balanceTokenBefore + assets;
+    satisfy balanceCollateralAfter == balanceCollateralBefore - shares;
+    satisfy balanceTokenAfter == balanceTokenBefore + assets;
+}
+
 // holds 
 // https://prover.certora.com/output/6893/ca2e8fdc835340c4a7fc2ba97092f21a/?anonymousKey=8dc2bfc842b1659011bb0c6534843683daaa8f78
 rule HLP_integrityOfMint(env e, address receiver)
@@ -154,13 +174,55 @@ rule HLP_integrityOfMint(env e, address receiver)
 }
 
 // holds
+// https://prover.certora.com/output/6893/a6caffc038034717b762ba7a059b5f5f/?anonymousKey=501b833ea142883e27d15df11edaeec39a65af37
+rule HLP_integrityOfRedeem(env e, address receiver)
+{
+    completeSiloSetupEnv(e);
+    totalSupplyMoreThanBalance(receiver);
+    
+    uint256 shares;
+    mathint balanceCollateralBefore = shareCollateralToken0.balanceOf(receiver);
+    mathint balanceTokenBefore = token0.balanceOf(receiver);  
+        
+    mathint assets = redeem(e, shares, receiver, receiver);
+    mathint balanceCollateralAfter = shareCollateralToken0.balanceOf(receiver);  
+    mathint balanceTokenAfter = token0.balanceOf(receiver);  
+   
+    assert balanceCollateralAfter == balanceCollateralBefore - shares;
+    satisfy balanceCollateralAfter == balanceCollateralBefore - shares;
+    assert balanceTokenAfter == balanceTokenBefore + assets;
+    satisfy balanceTokenAfter == balanceTokenBefore + assets;
+}
+
+// holds
+// https://prover.certora.com/output/6893/aa725d07720a46ccb2fd5c1a33991862/?anonymousKey=499a5a0078ba61e6578ce1460377a257371b9db3
+rule HLP_integrityOfBorrowShares(env e, address receiver)
+{
+    completeSiloSetupEnv(e);
+    totalSupplyMoreThanBalance(receiver);
+    
+    uint256 shares;
+    mathint balanceTokenBefore = token0.balanceOf(receiver);  
+    mathint shareDebtTokenBefore = shareDebtToken0.balanceOf(receiver);  
+       
+    mathint assets = borrowShares(e, shares, receiver, receiver);
+    mathint balanceTokenAfter = token0.balanceOf(receiver);  
+    mathint shareDebtTokenAfter = shareDebtToken0.balanceOf(receiver);  
+   
+    assert balanceTokenAfter == balanceTokenBefore + assets;
+    satisfy balanceTokenAfter == balanceTokenBefore + assets;
+
+    assert shareDebtTokenAfter == shareDebtTokenBefore + shares;
+    satisfy shareDebtTokenAfter == shareDebtTokenBefore + shares;
+}
+
+// holds
 // https://prover.certora.com/output/6893/23e6c7a9f5574fbc9545ad732360ce65/?anonymousKey=8bc60c373fee4ce8935b34dd2196e0df1bfa94f6
 rule HLP_depositCollateralUpdatesOnlyRecepient(env e, address receiver)
 {
     address other;
     require other != receiver;
     completeSiloSetupEnv(e);
-    requireDebtToken0TotalAndBalancesIntegrity();
     totalSupplyMoreThanBalance(receiver);
     totalSupplyMoreThanBalance(other);
     
@@ -179,7 +241,6 @@ rule HLP_depositCollateralUpdatesOnlyRecepient(env e, address receiver)
 rule HLP_depositAndInverse(env e, address receiver)
 {
     completeSiloSetupEnv(e);
-    requireDebtToken0TotalAndBalancesIntegrity();
     totalSupplyMoreThanBalance(receiver);
     
     uint256 assets;
@@ -198,7 +259,6 @@ rule HLP_depositAndInverse(env e, address receiver)
 rule HLP_mintAndInverse(env e, address receiver)
 {
     completeSiloSetupEnv(e);
-    requireDebtToken0TotalAndBalancesIntegrity();
     totalSupplyMoreThanBalance(receiver);
     
     uint256 shares;
@@ -217,7 +277,6 @@ rule HLP_mintAndInverse(env e, address receiver)
 rule HLP_borrowSharesAndInverse(env e, address receiver)
 {
     completeSiloSetupEnv(e);
-    requireDebtToken0TotalAndBalancesIntegrity();
     totalSupplyMoreThanBalance(receiver);
     
     uint256 shares;
@@ -230,3 +289,4 @@ rule HLP_borrowSharesAndInverse(env e, address receiver)
     assert debtAfter == debtBefore;
     satisfy debtAfter == debtBefore;
 }
+
