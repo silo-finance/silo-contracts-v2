@@ -7,7 +7,7 @@ import {MathUpgradeable} from "openzeppelin-contracts-upgradeable/utils/math/Mat
 import {SafeERC20Upgradeable} from "openzeppelin-contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
 import {IERC20Upgradeable} from "openzeppelin-contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 
-import {ISilo, IERC4626, IERC3156FlashLender} from "./interfaces/ISilo.sol";
+import {ISilo, IERC4626, IERC3156FlashLender, ILiquidationProcess} from "./interfaces/ISilo.sol";
 import {ISiloOracle} from "./interfaces/ISiloOracle.sol";
 import {IShareToken} from "./interfaces/IShareToken.sol";
 
@@ -23,7 +23,7 @@ import {SiloSolvencyLib} from "./lib/SiloSolvencyLib.sol";
 import {SiloLendingLib} from "./lib/SiloLendingLib.sol";
 import {SiloERC4626Lib} from "./lib/SiloERC4626Lib.sol";
 import {SiloMathLib} from "./lib/SiloMathLib.sol";
-import {SiloLiquidationExecLib} from "./lib/SiloLiquidationExecLib.sol";
+import {LiquidationWithdrawLib} from "./lib/LiquidationWithdrawLib.sol";
 
 // Keep ERC4626 ordering
 // solhint-disable ordering
@@ -598,8 +598,8 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
         (, shares) = _repay(_assets, repaySharesZero, _borrower, msg.sender, false /* _liquidation */);
     }
 
-    /// @inheritdoc ISilo
-    function repay(uint256 _assets, address _borrower, address _repayer)
+    /// @inheritdoc ILiquidationProcess
+    function liquidationRepay(uint256 _assets, address _borrower, address _repayer)
         external
         virtual
         nonReentrant
@@ -719,7 +719,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
         address _liquidator,
         bool _receiveSToken
     ) external virtual {
-        SiloLiquidationExecLib.withdrawCollateralsToLiquidator(
+        LiquidationWithdrawLib.withdrawCollateralsToLiquidator(
             config,
             _withdrawAssetsFromCollateral,
             _withdrawAssetsFromProtected,

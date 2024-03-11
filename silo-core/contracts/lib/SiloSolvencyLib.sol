@@ -6,7 +6,6 @@ import {MathUpgradeable} from "openzeppelin-contracts-upgradeable/utils/math/Mat
 import {ISiloOracle} from "../interfaces/ISiloOracle.sol";
 import {SiloStdLib, ISiloConfig, IShareToken, ISilo} from "./SiloStdLib.sol";
 import {SiloERC4626Lib} from "./SiloERC4626Lib.sol";
-import {SiloLiquidationLib} from "./SiloLiquidationLib.sol";
 import {SiloMathLib} from "./SiloMathLib.sol";
 
 library SiloSolvencyLib {

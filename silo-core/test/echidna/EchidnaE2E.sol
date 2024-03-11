@@ -4,7 +4,7 @@ import {Deployers} from "./utils/Deployers.sol";
 import {Actor} from "./utils/Actor.sol";
 import {ISiloConfig} from "silo-core/contracts/SiloConfig.sol";
 import {Silo, ISilo} from "silo-core/contracts/Silo.sol";
-import {SiloLiquidation} from "silo-core/contracts/SiloLiquidation.sol";
+import {PartialLiquidation} from "silo-core/contracts/liquidation/PartialLiquidation.sol";
 import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
 import {IInterestRateModel} from "silo-core/contracts/interfaces/IInterestRateModel.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
@@ -39,7 +39,7 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
     address public _vault1;
     Silo public vault0;
     Silo public vault1;
-    SiloLiquidation liquidation;
+    PartialLiquidation liquidation;
 
     TestERC20Token _asset0;
     TestERC20Token _asset1;
@@ -68,7 +68,7 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         (_vault0, _vault1) = siloConfig.getSilos();
         vault0 = Silo(_vault0);
         vault1 = Silo(_vault1);
-        liquidation = SiloLiquidation(vault0.config().getConfig(_vault0).liquidation);
+        liquidation = PartialLiquidation(vault0.config().getConfig(_vault0).liquidation);
 
         // Set up actors
         for(uint256 i; i < 3; i++) {

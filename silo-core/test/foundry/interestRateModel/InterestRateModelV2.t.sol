@@ -9,7 +9,7 @@ import {InterestRateModelV2ConfigFactory} from "silo-core/contracts/interestRate
 
 import {InterestRateModelConfigs} from "../_common/InterestRateModelConfigs.sol";
 import {InterestRateModelV2Impl} from "./InterestRateModelV2Impl.sol";
-import {InterestRateModelV2Checked} from "../_checkedMath/InterestRateModelV2Checked.sol";
+import {InterestRateModelV2Checked} from "./InterestRateModelV2Checked.sol";
 
 // forge test -vv --mc InterestRateModelV2Test
 contract InterestRateModelV2Test is Test, InterestRateModelConfigs {

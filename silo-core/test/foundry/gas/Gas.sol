@@ -27,7 +27,7 @@ contract Gas is SiloLittleHelper {
         SiloConfigOverride memory overrides;
         overrides.token0 = address(token0);
         overrides.token1 = address(token1);
-        (, silo0, silo1,,, siloLiquidation) = siloFixture.deploy_local(overrides);
+        (, silo0, silo1,,, partialLiquidation) = siloFixture.deploy_local(overrides);
 
         __init(token0, token1, silo0, silo1);
 

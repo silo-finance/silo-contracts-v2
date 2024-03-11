@@ -5,55 +5,55 @@ import "forge-std/Test.sol";
 
 import {Strings} from "openzeppelin-contracts/utils/Strings.sol";
 
-import {SiloLiquidationLib} from "silo-core/contracts/lib/SiloLiquidationLib.sol";
+import {PartialLiquidationLib} from "silo-core/contracts/liquidation/lib/PartialLiquidationLib.sol";
 
-import {SiloLiquidationLibChecked} from "../../_checkedMath/SiloLiquidationLibChecked.sol";
-import "../../data-readers/CalculateCollateralToLiquidateTestData.sol";
-import "../../data-readers/LiquidationPreviewTestData.sol";
-import "../../data-readers/MaxLiquidationPreviewTestData.sol";
-import "../../data-readers/EstimateMaxRepayValueTestData.sol";
+import {PartialLiquidationLibChecked} from "./PartialLiquidationLibChecked.sol";
+import "../../../data-readers/CalculateCollateralToLiquidateTestData.sol";
+import "../../../data-readers/LiquidationPreviewTestData.sol";
+import "../../../data-readers/MaxLiquidationPreviewTestData.sol";
+import "../../../data-readers/EstimateMaxRepayValueTestData.sol";
 import "./MaxRepayRawMath.sol";
 
 
-// forge test -vv --mc SiloLiquidationLibTest
-contract SiloLiquidationLibTest is Test, MaxRepayRawMath {
+// forge test -vv --mc PartialLiquidationLibTest
+contract PartialLiquidationLibTest is Test, MaxRepayRawMath {
     uint256 internal constant _DECIMALS_POINTS = 1e18;
 
     /*
-    forge test -vv --mt test_SiloLiquidationLib_minAcceptableLTV
+    forge test -vv --mt test_PartialLiquidationLib_minAcceptableLTV
     */
-    function test_SiloLiquidationLib_minAcceptableLTV() public {
-        assertEq(SiloLiquidationLib.minAcceptableLTV(0), 0);
-        assertEq(SiloLiquidationLib.minAcceptableLTV(1), 0);
-        assertEq(SiloLiquidationLib.minAcceptableLTV(10), 9);
-        assertEq(SiloLiquidationLib.minAcceptableLTV(500), 450);
-        assertEq(SiloLiquidationLib.minAcceptableLTV(1e4), 9000);
+    function test_PartialLiquidationLib_minAcceptableLTV() public {
+        assertEq(PartialLiquidationLib.minAcceptableLTV(0), 0);
+        assertEq(PartialLiquidationLib.minAcceptableLTV(1), 0);
+        assertEq(PartialLiquidationLib.minAcceptableLTV(10), 9);
+        assertEq(PartialLiquidationLib.minAcceptableLTV(500), 450);
+        assertEq(PartialLiquidationLib.minAcceptableLTV(1e4), 9000);
 
         uint256 gasStart = gasleft();
-        assertEq(SiloLiquidationLib.minAcceptableLTV(800), 720, "LT=80% => min=>72%");
+        assertEq(PartialLiquidationLib.minAcceptableLTV(800), 720, "LT=80% => min=>72%");
         uint256 gasEnd = gasleft();
 
         assertEq(gasStart - gasEnd, 134, "optimise minAcceptableLTV()");
     }
 
     /*
-    forge test -vv --mt test_SiloLiquidationLib_collateralToLiquidate
+    forge test -vv --mt test_PartialLiquidationLib_collateralToLiquidate
     */
-    function test_SiloLiquidationLib_collateralToLiquidate() public {
+    function test_PartialLiquidationLib_collateralToLiquidate() public {
         // uint256 _debtToCover, uint256 _totalCollateral, uint256 _liquidityFee
-        assertEq(SiloLiquidationLib.calculateCollateralToLiquidate(0, 0, 0), 0);
-        assertEq(SiloLiquidationLib.calculateCollateralToLiquidate(1, 1, 0), 1);
-        assertEq(SiloLiquidationLib.calculateCollateralToLiquidate(1, 1, 0.0001e18), 1);
-        assertEq(SiloLiquidationLib.calculateCollateralToLiquidate(10, 10, 0.0999e18), 10);
-        assertEq(SiloLiquidationLib.calculateCollateralToLiquidate(10, 11, 0.1e18), 11);
-        assertEq(SiloLiquidationLib.calculateCollateralToLiquidate(10, 9, 0.1e18), 9);
-        assertEq(SiloLiquidationLib.calculateCollateralToLiquidate(100, 1000, 0.12e18), 112);
+        assertEq(PartialLiquidationLib.calculateCollateralToLiquidate(0, 0, 0), 0);
+        assertEq(PartialLiquidationLib.calculateCollateralToLiquidate(1, 1, 0), 1);
+        assertEq(PartialLiquidationLib.calculateCollateralToLiquidate(1, 1, 0.0001e18), 1);
+        assertEq(PartialLiquidationLib.calculateCollateralToLiquidate(10, 10, 0.0999e18), 10);
+        assertEq(PartialLiquidationLib.calculateCollateralToLiquidate(10, 11, 0.1e18), 11);
+        assertEq(PartialLiquidationLib.calculateCollateralToLiquidate(10, 9, 0.1e18), 9);
+        assertEq(PartialLiquidationLib.calculateCollateralToLiquidate(100, 1000, 0.12e18), 112);
     }
 
     /*
-    forge test -vv --mt test_SiloLiquidationLib_calculateCollateralToLiquidate_pass
+    forge test -vv --mt test_PartialLiquidationLib_calculateCollateralToLiquidate_pass
     */
-    function test_SiloLiquidationLib_calculateCollateralToLiquidate_pass() public {
+    function test_PartialLiquidationLib_calculateCollateralToLiquidate_pass() public {
         CalculateCollateralToLiquidateTestData json = new CalculateCollateralToLiquidateTestData();
         CalculateCollateralToLiquidateTestData.CCTLData[] memory data = json.readDataFromJson();
 
@@ -63,7 +63,7 @@ contract SiloLiquidationLibTest is Test, MaxRepayRawMath {
             (
                 uint256 collateralAssets,
                 uint256 collateralValue
-            ) = SiloLiquidationLib.calculateCollateralsToLiquidate(
+            ) = PartialLiquidationLib.calculateCollateralsToLiquidate(
                 data[i].input.debtValueToCover,
                 data[i].input.totalBorrowerCollateralValue,
                 data[i].input.totalBorrowerCollateralAssets,
@@ -77,9 +77,9 @@ contract SiloLiquidationLibTest is Test, MaxRepayRawMath {
 
 
     /*
-    forge test -vv --mt test_SiloLiquidationLib_liquidationPreview_pass
+    forge test -vv --mt test_PartialLiquidationLib_liquidationPreview_pass
     */
-    function test_SiloLiquidationLib_liquidationPreview_pass() public {
+    function test_PartialLiquidationLib_liquidationPreview_pass() public {
         LiquidationPreviewTestData json = new LiquidationPreviewTestData();
         LiquidationPreviewTestData.CELAData[] memory data = json.readDataFromJson();
 
@@ -90,7 +90,7 @@ contract SiloLiquidationLibTest is Test, MaxRepayRawMath {
                 ? 0
                 : data[i].input.totalBorrowerDebtValue * 1e18 / data[i].input.totalBorrowerCollateralValue;
 
-            SiloLiquidationLib.LiquidationPreviewParams memory params = SiloLiquidationLib.LiquidationPreviewParams({
+            PartialLiquidationLib.LiquidationPreviewParams memory params = PartialLiquidationLib.LiquidationPreviewParams({
                 collateralLt: data[i].input.lt,
                 collateralConfigAsset: address(0),
                 debtConfigAsset: address(0),
@@ -103,7 +103,7 @@ contract SiloLiquidationLibTest is Test, MaxRepayRawMath {
                 uint256 collateralAssetsToLiquidate,
                 uint256 debtAssetsToRepay,
                 uint256 ltvAfterLiquidation
-            ) = SiloLiquidationLib.liquidationPreview(
+            ) = PartialLiquidationLib.liquidationPreview(
                 ltvBefore,
                 data[i].input.totalBorrowerCollateralAssets,
                 data[i].input.totalBorrowerCollateralValue,
@@ -126,16 +126,16 @@ contract SiloLiquidationLibTest is Test, MaxRepayRawMath {
     }
 
     /*
-    forge test -vv --mt test_SiloLiquidationLib_estimateMaxRepayValue_pass
+    forge test -vv --mt test_PartialLiquidationLib_estimateMaxRepayValue_pass
     */
-    function test_SiloLiquidationLib_estimateMaxRepayValue_pass() public {
+    function test_PartialLiquidationLib_estimateMaxRepayValue_pass() public {
         EstimateMaxRepayValueTestData json = new EstimateMaxRepayValueTestData();
         EstimateMaxRepayValueTestData.EMRVData[] memory data = json.readDataFromJson();
 
         assertGe(data.length, 1, "expect to have tests");
 
         for (uint256 i; i < data.length; i++) {
-            uint256 repayValue = SiloLiquidationLib.estimateMaxRepayValue(
+            uint256 repayValue = PartialLiquidationLib.estimateMaxRepayValue(
                 data[i].input.totalBorrowerDebtValue,
                 data[i].input.totalBorrowerCollateralValue,
                 data[i].input.ltvAfterLiquidation,
@@ -148,35 +148,35 @@ contract SiloLiquidationLibTest is Test, MaxRepayRawMath {
     }
 
     /*
-    forge test -vv --mt test_SiloLiquidationLib_estimateMaxRepayValue_raw
+    forge test -vv --mt test_PartialLiquidationLib_estimateMaxRepayValue_raw
     */
-    function test_SiloLiquidationLib_estimateMaxRepayValue_raw() public {
+    function test_PartialLiquidationLib_estimateMaxRepayValue_raw() public {
         // debtValue, CollateralValue, ltv, fee
         assertEq(
-            SiloLiquidationLib.estimateMaxRepayValue(1e18, 1e18, 0.0080e18, 0.0010e18),
+            PartialLiquidationLib.estimateMaxRepayValue(1e18, 1e18, 0.0080e18, 0.0010e18),
             _estimateMaxRepayValueRaw(1e18, 1e18, 0.0080e18, 0.0010e18),
             "expect raw == estimateMaxRepayValue (1)"
         );
 
         // simulation values
         assertEq(
-            SiloLiquidationLib.estimateMaxRepayValue(85e18, 1e18, 0.79e18, 0.03e18),
+            PartialLiquidationLib.estimateMaxRepayValue(85e18, 1e18, 0.79e18, 0.03e18),
             _estimateMaxRepayValueRaw(85e18, 1e18, 0.79e18, 0.03e18),
             "expect raw == estimateMaxRepayValue (2)"
         );
 
         // simulation values
         assertEq(
-            SiloLiquidationLib.estimateMaxRepayValue(85e18, 111e18, 0.5e18, 0.1e18),
+            PartialLiquidationLib.estimateMaxRepayValue(85e18, 111e18, 0.5e18, 0.1e18),
             _estimateMaxRepayValueRaw(85e18, 111e18, 0.5e18, 0.1e18),
             "expect raw == estimateMaxRepayValue (3)"
         );
     }
 
     /*
-    forge test -vv --mt test_SiloLiquidationLib_maxLiquidationPreview_pass
+    forge test -vv --mt test_PartialLiquidationLib_maxLiquidationPreview_pass
     */
-    function test_SiloLiquidationLib_maxLiquidationPreview_pass() public {
+    function test_PartialLiquidationLib_maxLiquidationPreview_pass() public {
         MaxLiquidationPreviewTestData json = new MaxLiquidationPreviewTestData();
         MaxLiquidationPreviewTestData.MLPData[] memory data = json.readDataFromJson();
 
@@ -186,7 +186,7 @@ contract SiloLiquidationLibTest is Test, MaxRepayRawMath {
             (
                 uint256 collateralValueToLiquidate,
                 uint256 repayValue
-            ) = SiloLiquidationLib.maxLiquidationPreview(
+            ) = PartialLiquidationLib.maxLiquidationPreview(
                 data[i].input.totalBorrowerCollateralValue,
                 data[i].input.totalBorrowerDebtValue,
                 data[i].input.ltvAfterLiquidation,
@@ -208,7 +208,7 @@ contract SiloLiquidationLibTest is Test, MaxRepayRawMath {
             uint256 totalBorrowerDebtAssets = data[i].input.totalBorrowerDebtValue * 2;
             uint256 totalBorrowerCollateralAssets = data[i].input.totalBorrowerCollateralValue * 3;
 
-            SiloLiquidationLib.LiquidationPreviewParams memory params = SiloLiquidationLib.LiquidationPreviewParams({
+            PartialLiquidationLib.LiquidationPreviewParams memory params = PartialLiquidationLib.LiquidationPreviewParams({
                 collateralLt: data[i].input.lt,
                 collateralConfigAsset: address(0),
                 debtConfigAsset: address(0),
@@ -221,7 +221,7 @@ contract SiloLiquidationLibTest is Test, MaxRepayRawMath {
                 uint256 collateralAssetsToLiquidate,
                 uint256 debtAssetsToRepay,
                 uint256 ltvAfterLiquidation
-            ) = SiloLiquidationLib.liquidationPreview(
+            ) = PartialLiquidationLib.liquidationPreview(
                 // ltvBefore:
                 data[i].input.totalBorrowerCollateralValue == 0
                     ? 0
@@ -257,10 +257,10 @@ contract SiloLiquidationLibTest is Test, MaxRepayRawMath {
     }
 
     /*
-    forge test -vv --mt test_SiloLiquidationLib_calculateCollateralToLiquidate_math_fuzz
+    forge test -vv --mt test_PartialLiquidationLib_calculateCollateralToLiquidate_math_fuzz
     */
     /// forge-config: core.fuzz.runs = 1000
-    function test_SiloLiquidationLib_calculateCollateralToLiquidate_math_fuzz(
+    function test_PartialLiquidationLib_calculateCollateralToLiquidate_math_fuzz(
         uint256 _debtToCover,
         uint128 _totalBorrowerDebtAssets,
         uint128 _totalBorrowerCollateralAssets,
@@ -288,7 +288,7 @@ contract SiloLiquidationLibTest is Test, MaxRepayRawMath {
         // we assume here, we are under 100% of ltv, otherwise it is full liquidation
         vm.assume(totalBorrowerDebtValue * _DECIMALS_POINTS / totalBorrowerCollateralValue <= _DECIMALS_POINTS);
 
-        SiloLiquidationLib.LiquidationPreviewParams memory params = SiloLiquidationLib.LiquidationPreviewParams({
+        PartialLiquidationLib.LiquidationPreviewParams memory params = PartialLiquidationLib.LiquidationPreviewParams({
             collateralLt: 0.8e18,
             collateralConfigAsset: address(0),
             debtConfigAsset: address(0),
@@ -299,7 +299,7 @@ contract SiloLiquidationLibTest is Test, MaxRepayRawMath {
 
         (
             uint256 collateralAssetsToLiquidate, uint256 debtAssetsToRepay,
-        ) = SiloLiquidationLib.liquidationPreview(
+        ) = PartialLiquidationLib.liquidationPreview(
             totalBorrowerDebtValue * _DECIMALS_POINTS / totalBorrowerCollateralValue,
             _totalBorrowerCollateralAssets,
             totalBorrowerCollateralValue,
@@ -310,7 +310,7 @@ contract SiloLiquidationLibTest is Test, MaxRepayRawMath {
 
         (
             uint256 collateralAssetsToLiquidate2, uint256 debtAssetsToRepay2,
-        ) = SiloLiquidationLibChecked.liquidationPreview(
+        ) = PartialLiquidationLibChecked.liquidationPreview(
             totalBorrowerDebtValue * _DECIMALS_POINTS / totalBorrowerCollateralValue,
             _totalBorrowerCollateralAssets,
             totalBorrowerCollateralValue,
@@ -326,9 +326,9 @@ contract SiloLiquidationLibTest is Test, MaxRepayRawMath {
     }
 
     /*
-    forge test -vv --mt test_SiloLiquidationLib_liquidationPreview_not_reverts
+    forge test -vv --mt test_PartialLiquidationLib_liquidationPreview_not_reverts
     */
-    function test_SiloLiquidationLib_liquidationPreview_not_reverts(
+    function test_PartialLiquidationLib_liquidationPreview_not_reverts(
         uint128 _ltvBefore,
         uint128 _sumOfCollateralAssets,
         uint128 _debtToCover
@@ -338,38 +338,38 @@ contract SiloLiquidationLibTest is Test, MaxRepayRawMath {
         uint256 borrowerDebtValue = 1e18;
         uint256 sumOfCollateralValue = 1e18;
 
-        SiloLiquidationLib.LiquidationPreviewParams memory params;
+        PartialLiquidationLib.LiquidationPreviewParams memory params;
         params.debtToCover = _debtToCover;
 
-        SiloLiquidationLib.liquidationPreview(
+        PartialLiquidationLib.liquidationPreview(
             _ltvBefore, _sumOfCollateralAssets, sumOfCollateralValue, borrowerDebtAssets, borrowerDebtValue, params
         );
     }
 
 
     /*
-    forge test -vv --mt test_gas_SiloLiquidationLib_liquidationPreview
+    forge test -vv --mt test_gas_PartialLiquidationLib_liquidationPreview
     */
-    function test_gas_SiloLiquidationLib_liquidationPreview() public {
-        SiloLiquidationLib.LiquidationPreviewParams memory params;
+    function test_gas_PartialLiquidationLib_liquidationPreview() public {
+        PartialLiquidationLib.LiquidationPreviewParams memory params;
 
         uint256 gasStart = gasleft();
-        SiloLiquidationLib.liquidationPreview(1e8, 1e18, 1e18, 1e18, 10, params);
+        PartialLiquidationLib.liquidationPreview(1e8, 1e18, 1e18, 1e18, 10, params);
         uint256 gasEnd = gasleft();
 
-        assertEq(gasStart - gasEnd, 5196, "optimise liquidationPreview");
+        assertEq(gasStart - gasEnd, 1053, "optimise liquidationPreview");
     }
 
     /*
-    forge test -vv --mt test_SiloLiquidationLib_calculateCollateralToLiquidate_not_reverts
+    forge test -vv --mt test_PartialLiquidationLib_calculateCollateralToLiquidate_not_reverts
     */
-    function test_SiloLiquidationLib_calculateCollateralToLiquidate_not_reverts() public {
+    function test_PartialLiquidationLib_calculateCollateralToLiquidate_not_reverts() public {
         uint256 debtValueToCover = 2e18;
         uint256 totalBorrowerCollateralValue = 20e18; // price is 2 per asset
         uint256 totalBorrowerCollateralAssets = 10e18;
         uint256 liquidationFee = 0.01e18; // 1%
 
-        SiloLiquidationLib.calculateCollateralsToLiquidate(
+        PartialLiquidationLib.calculateCollateralsToLiquidate(
             debtValueToCover, 0, totalBorrowerCollateralAssets, liquidationFee
         );
 
@@ -378,7 +378,7 @@ contract SiloLiquidationLibTest is Test, MaxRepayRawMath {
         (
             uint256 collateralAssetsToLiquidate,
             uint256 collateralValueToLiquidate
-        ) = SiloLiquidationLib.calculateCollateralsToLiquidate(
+        ) = PartialLiquidationLib.calculateCollateralsToLiquidate(
             debtValueToCover, totalBorrowerCollateralValue, totalBorrowerCollateralAssets, liquidationFee
         );
         uint256 gasEnd = gasleft();
@@ -389,27 +389,27 @@ contract SiloLiquidationLibTest is Test, MaxRepayRawMath {
     }
 
     /*
-    forge test -vv --mt test_SiloLiquidationLib_splitReceiveCollateralToLiquidate
+    forge test -vv --mt test_PartialLiquidationLib_splitReceiveCollateralToLiquidate
     */
-    function test_SiloLiquidationLib_splitReceiveCollateralToLiquidate() public {
-        (uint256 fromCollateral, uint256 fromProtected) = SiloLiquidationLib.splitReceiveCollateralToLiquidate(0, 0);
+    function test_PartialLiquidationLib_splitReceiveCollateralToLiquidate() public {
+        (uint256 fromCollateral, uint256 fromProtected) = PartialLiquidationLib.splitReceiveCollateralToLiquidate(0, 0);
         assertEq(fromCollateral, 0, "fromCollateral (0,0) => 0");
         assertEq(fromProtected, 0, "fromProtected (0,0) => 0");
 
-        (fromCollateral, fromProtected) = SiloLiquidationLib.splitReceiveCollateralToLiquidate(1, 0);
+        (fromCollateral, fromProtected) = PartialLiquidationLib.splitReceiveCollateralToLiquidate(1, 0);
         assertEq(fromCollateral, 1, "fromCollateral (1,0) => 1");
         assertEq(fromProtected, 0, "fromProtected (1,0) => 0");
 
-        (fromCollateral, fromProtected) = SiloLiquidationLib.splitReceiveCollateralToLiquidate(0, 10);
+        (fromCollateral, fromProtected) = PartialLiquidationLib.splitReceiveCollateralToLiquidate(0, 10);
         assertEq(fromCollateral, 0, "fromCollateral (0, 10) => 0");
         assertEq(fromProtected, 0, "fromProtected (0, 10) => 0");
 
-        (fromCollateral, fromProtected) = SiloLiquidationLib.splitReceiveCollateralToLiquidate(10, 2);
+        (fromCollateral, fromProtected) = PartialLiquidationLib.splitReceiveCollateralToLiquidate(10, 2);
         assertEq(fromCollateral, 8, "fromCollateral (10, 2) => 8");
         assertEq(fromProtected, 2, "fromProtected (10, 2) => 2");
 
         uint256 gasStart = gasleft();
-        (fromCollateral, fromProtected) = SiloLiquidationLib.splitReceiveCollateralToLiquidate(5, 15);
+        (fromCollateral, fromProtected) = PartialLiquidationLib.splitReceiveCollateralToLiquidate(5, 15);
         uint256 gasEnd = gasleft();
 
         assertEq(fromCollateral, 0, "fromCollateral (5, 15) => 0");
@@ -418,9 +418,9 @@ contract SiloLiquidationLibTest is Test, MaxRepayRawMath {
     }
     
     /*
-     forge test -vv --mt test_SiloLiquidationLib_maxLiquidationPreview_unchecked_fuzz
+     forge test -vv --mt test_PartialLiquidationLib_maxLiquidationPreview_unchecked_fuzz
     */
-    function test_SiloLiquidationLib_maxLiquidationPreview_unchecked_fuzz(
+    function test_PartialLiquidationLib_maxLiquidationPreview_unchecked_fuzz(
         uint128 _debtAmount,
         uint128 _collateralAmount,
         uint16 _targetLT,
@@ -433,18 +433,18 @@ contract SiloLiquidationLibTest is Test, MaxRepayRawMath {
         uint256 debtValue = uint256(_debtAmount) * 50_000;
         uint256 collateralValue = uint256(_collateralAmount) * 80_000;
 
-        (uint256 repayValue, uint256 receiveCollateral) = SiloLiquidationLib.maxLiquidationPreview(
+        (uint256 repayValue, uint256 receiveCollateral) = PartialLiquidationLib.maxLiquidationPreview(
             collateralValue,
             debtValue,
             uint256(_targetLT),
             uint256(_liquidityFee)
         );
 
-        emit log_string("SiloLiquidationLib.calculateLiquidationValues PASS");
+        emit log_string("PartialLiquidationLib.calculateLiquidationValues PASS");
 
         (
             uint256 repayValue2, uint256 receiveCollateral2
-        ) = SiloLiquidationLibChecked.maxLiquidationPreview(
+        ) = PartialLiquidationLibChecked.maxLiquidationPreview(
             collateralValue, debtValue, _targetLT, _liquidityFee
         );
 
@@ -460,28 +460,28 @@ contract SiloLiquidationLibTest is Test, MaxRepayRawMath {
         uint256 totalAssets;
         uint256 totalValue = 1; // can not be 0
 
-        assertEq(SiloLiquidationLib.valueToAssetsByRatio(value, totalAssets, totalValue), 0);
+        assertEq(PartialLiquidationLib.valueToAssetsByRatio(value, totalAssets, totalValue), 0);
 
         value; totalAssets = 1; totalValue = 1;
-        assertEq(SiloLiquidationLib.valueToAssetsByRatio(value, totalAssets, totalValue), 0);
+        assertEq(PartialLiquidationLib.valueToAssetsByRatio(value, totalAssets, totalValue), 0);
 
         value = 1; totalAssets = 1; totalValue = 1;
-        assertEq(SiloLiquidationLib.valueToAssetsByRatio(value, totalAssets, totalValue), 1);
+        assertEq(PartialLiquidationLib.valueToAssetsByRatio(value, totalAssets, totalValue), 1);
 
         value = 1; totalAssets = 100; totalValue = 1;
-        assertEq(SiloLiquidationLib.valueToAssetsByRatio(value, totalAssets, totalValue), 100);
+        assertEq(PartialLiquidationLib.valueToAssetsByRatio(value, totalAssets, totalValue), 100);
 
         value = 1; totalAssets = 100; totalValue = 10;
-        assertEq(SiloLiquidationLib.valueToAssetsByRatio(value, totalAssets, totalValue), 10);
+        assertEq(PartialLiquidationLib.valueToAssetsByRatio(value, totalAssets, totalValue), 10);
 
         value = 1; totalAssets = 100; totalValue = 100;
-        assertEq(SiloLiquidationLib.valueToAssetsByRatio(value, totalAssets, totalValue), 1);
+        assertEq(PartialLiquidationLib.valueToAssetsByRatio(value, totalAssets, totalValue), 1);
 
         value = 2; totalAssets = 10; totalValue = 100;
-        assertEq(SiloLiquidationLib.valueToAssetsByRatio(value, totalAssets, totalValue), 0);
+        assertEq(PartialLiquidationLib.valueToAssetsByRatio(value, totalAssets, totalValue), 0);
 
         value = 2; totalAssets = 1000; totalValue = 100;
-        assertEq(SiloLiquidationLib.valueToAssetsByRatio(value, totalAssets, totalValue), 20);
+        assertEq(PartialLiquidationLib.valueToAssetsByRatio(value, totalAssets, totalValue), 20);
     }
 
     function _assetsChunk(uint256 _totalValue, uint256 _totalAssets, uint256 _chunkValue)

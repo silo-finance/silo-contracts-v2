@@ -4,17 +4,17 @@ pragma solidity ^0.8.0;
 import "forge-std/Test.sol";
 
 import {SiloSolvencyLib} from "silo-core/contracts/lib/SiloSolvencyLib.sol";
-import {SiloLiquidationExecLib} from "silo-core/contracts/lib/SiloLiquidationExecLib.sol";
-import {SiloLiquidationLib} from "silo-core/contracts/lib/SiloLiquidationLib.sol";
+import {PartialLiquidationExecLib} from "silo-core/contracts/liquidation/lib/PartialLiquidationExecLib.sol";
+import {PartialLiquidationLib} from "silo-core/contracts/liquidation/lib/PartialLiquidationLib.sol";
 
-import {OraclesHelper} from "../../_common/OraclesHelper.sol";
-import {OracleMock} from "../../_mocks/OracleMock.sol";
-import {SiloLiquidationExecLibImpl} from "../../_common/SiloLiquidationExecLibImpl.sol";
-import "../SiloLiquidationLib/MaxRepayRawMath.sol";
+import {OraclesHelper} from "../../../_common/OraclesHelper.sol";
+import {OracleMock} from "../../../_mocks/OracleMock.sol";
+import {PartialLiquidationExecLibImpl} from "../../../_common/PartialLiquidationExecLibImpl.sol";
+import "./MaxRepayRawMath.sol";
 
 // forge test -vv --mc MaxLiquidationTest
 contract MaxLiquidationTest is Test, MaxRepayRawMath {
-    /// @dev _LT_LIQUIDATION_MARGIN must match value from SiloLiquidationLib
+    /// @dev _LT_LIQUIDATION_MARGIN must match value from PartialLiquidationLib
     uint256 internal constant _LT_LIQUIDATION_MARGIN = 0.9e18; // 90%
     uint256 internal constant _DECIMALS_POINTS = 1e18; // 90%
 
@@ -46,7 +46,7 @@ contract MaxLiquidationTest is Test, MaxRepayRawMath {
 
         (
             uint256 collateralToLiquidate, uint256 debtToRepay
-        ) = SiloLiquidationLib.maxLiquidation(
+        ) = PartialLiquidationLib.maxLiquidation(
             _sumOfCollateralAssets,
             _sumOfCollateralValue,
             _borrowerDebtAssets,
@@ -58,7 +58,7 @@ contract MaxLiquidationTest is Test, MaxRepayRawMath {
         emit log_named_decimal_uint("collateralToLiquidate", collateralToLiquidate, 18);
         emit log_named_decimal_uint("debtToRepay", debtToRepay, 18);
 
-        uint256 minExpectedLtv = SiloLiquidationLib.minAcceptableLTV(lt);
+        uint256 minExpectedLtv = PartialLiquidationLib.minAcceptableLTV(lt);
         emit log_named_decimal_uint("minExpectedLtv", minExpectedLtv, 16);
         emit log_named_decimal_uint("ltvBefore", ltvBefore, 16);
 

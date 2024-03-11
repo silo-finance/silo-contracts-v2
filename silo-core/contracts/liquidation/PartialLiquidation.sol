@@ -3,17 +3,17 @@ pragma solidity 0.8.21;
 
 import {ReentrancyGuardUpgradeable} from "openzeppelin-contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 
-import {ISilo} from "./interfaces/ISilo.sol";
-import {ISiloLiquidation} from "./interfaces/ISiloLiquidation.sol";
-import {ISiloOracle} from "./interfaces/ISiloOracle.sol";
-import {ISiloConfig} from "./interfaces/ISiloConfig.sol";
+import {ISilo, ILiquidationProcess} from "../interfaces/ISilo.sol";
+import {IPartialLiquidation} from "../interfaces/IPartialLiquidation.sol";
+import {ISiloOracle} from "../interfaces/ISiloOracle.sol";
+import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
 
-import {SiloLiquidationExecLib} from "./lib/SiloLiquidationExecLib.sol";
+import {PartialLiquidationExecLib} from "./lib/PartialLiquidationExecLib.sol";
 
 
-/// @title SiloLiquidation module for executing liquidations
-contract SiloLiquidation is ISiloLiquidation, ReentrancyGuardUpgradeable {
-    /// @inheritdoc ISiloLiquidation
+/// @title PartialLiquidation module for executing liquidations
+contract PartialLiquidation is IPartialLiquidation, ReentrancyGuardUpgradeable {
+    /// @inheritdoc IPartialLiquidation
     function liquidationCall( // solhint-disable-line function-max-lines
         address _siloWithDebt,
         address _collateralAsset,
@@ -51,7 +51,7 @@ contract SiloLiquidation is ISiloLiquidation, ReentrancyGuardUpgradeable {
 
         (
             withdrawAssetsFromCollateral, withdrawAssetsFromProtected, repayDebtAssets
-        ) = SiloLiquidationExecLib.getExactLiquidationAmounts(
+        ) = PartialLiquidationExecLib.getExactLiquidationAmounts(
             collateralConfig,
             debtConfig,
             _borrower,
@@ -65,20 +65,20 @@ contract SiloLiquidation is ISiloLiquidation, ReentrancyGuardUpgradeable {
         unchecked { withdrawCollateral = withdrawAssetsFromCollateral + withdrawAssetsFromProtected; }
 
         emit LiquidationCall(msg.sender, _receiveSToken);
-        ISilo(_siloWithDebt).repay(repayDebtAssets, _borrower, msg.sender);
+        ILiquidationProcess(_siloWithDebt).liquidationRepay(repayDebtAssets, _borrower, msg.sender);
 
-        ISilo(debtConfig.otherSilo).withdrawCollateralsToLiquidator(
+        ILiquidationProcess(debtConfig.otherSilo).withdrawCollateralsToLiquidator(
             withdrawAssetsFromCollateral, withdrawAssetsFromProtected, _borrower, msg.sender, _receiveSToken
         );
     }
 
-    /// @inheritdoc ISiloLiquidation
+    /// @inheritdoc IPartialLiquidation
     function maxLiquidation(address _siloWithDebt, address _borrower)
         external
         view
         virtual
         returns (uint256 collateralToLiquidate, uint256 debtToRepay)
     {
-        return SiloLiquidationExecLib.maxLiquidation(ISilo(_siloWithDebt), _borrower);
+        return PartialLiquidationExecLib.maxLiquidation(ISilo(_siloWithDebt), _borrower);
     }
 }

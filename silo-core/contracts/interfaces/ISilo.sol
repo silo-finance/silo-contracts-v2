@@ -7,9 +7,10 @@ import {IERC3156FlashLender} from "./IERC3156FlashLender.sol";
 import {ISiloConfig} from "./ISiloConfig.sol";
 import {ISiloFactory} from "./ISiloFactory.sol";
 import {ILeverageBorrower} from "./ILeverageBorrower.sol";
+import {ILiquidationProcess} from "./ILiquidationProcess.sol";
 
 // solhint-disable ordering
-interface ISilo is IERC4626, IERC3156FlashLender {
+interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
     /// @dev Interest accrual happens on each deposit/withdraw/borrow/repay. View methods work on storage that might be
     ///      outdate. Some calculations require accrued interest to return current state of Silo. This struct is used
     ///      to make a decision inside functions if interest should be accrued in memory to work on updated values.
@@ -301,15 +302,6 @@ interface ISilo is IERC4626, IERC3156FlashLender {
     /// @return shares The equivalent number of shares for the provided asset amount
     function repay(uint256 _assets, address _borrower) external returns (uint256 shares);
 
-    /// @dev Repays a given asset amount and returns the equivalent number of shares
-    /// @notice this repay is only for liquidation because we `_repayer` is pass as argument
-    /// if we leave it open, anyone can exeute repay for someone who gives allowance to silo
-    /// @param _assets Amount of assets to be repaid
-    /// @param _borrower Address of the borrower whose debt is being repaid
-    /// @param _repayer Address of the wallet which will repay debt
-    /// @return shares The equivalent number of shares for the provided asset amount
-    function repay(uint256 _assets, address _borrower, address _repayer) external returns (uint256 shares);
-
     /// @notice Calculates the maximum number of shares that can be repaid for a given borrower
     /// @param _borrower Address of the borrower
     /// @return shares The maximum number of shares that can be repaid for the borrower
@@ -344,12 +336,4 @@ interface ISilo is IERC4626, IERC3156FlashLender {
 
     /// @notice Withdraws earned fees and distributes them to the DAO and deployer fee receivers
     function withdrawFees() external;
-
-    function withdrawCollateralsToLiquidator(
-        uint256 _withdrawAssetsFromCollateral,
-        uint256 _withdrawAssetsFromProtected,
-        address _borrower,
-        address _liquidator,
-        bool _receiveSToken
-    ) external;
 }

@@ -16,7 +16,7 @@ import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
 
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
-import {ISiloLiquidation} from "silo-core/contracts/interfaces/ISiloLiquidation.sol";
+import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquidation.sol";
 
 import {TokenMock} from "../../_mocks/TokenMock.sol";
 
@@ -49,7 +49,7 @@ contract SiloFixture is StdCheats, CommonBase {
     function deploy_ETH_USDC()
         external
         returns (
-            ISiloConfig siloConfig, ISilo silo0, ISilo silo1, address weth, address usdc, ISiloLiquidation liquidation
+            ISiloConfig siloConfig, ISilo silo0, ISilo silo1, address weth, address usdc, IPartialLiquidation liquidation
         )
     {
         return _deploy(new SiloDeploy(), SiloConfigsNames.ETH_USDC_UNI_V3_SILO);
@@ -58,7 +58,7 @@ contract SiloFixture is StdCheats, CommonBase {
     function deploy_local(SiloConfigOverride memory _override)
         external
         returns (
-            ISiloConfig siloConfig, ISilo silo0, ISilo silo1, address weth, address usdc, ISiloLiquidation liquidation
+            ISiloConfig siloConfig, ISilo silo0, ISilo silo1, address weth, address usdc, IPartialLiquidation liquidation
         )
     {
         // Mock addresses that we need for the `SiloFactoryDeploy` script
@@ -80,7 +80,7 @@ contract SiloFixture is StdCheats, CommonBase {
             ISilo silo1,
             address token0,
             address token1,
-            ISiloLiquidation liquidation
+            IPartialLiquidation liquidation
         )
     {
         MainnetDeploy mainnetDeploy = new MainnetDeploy();
@@ -99,7 +99,7 @@ contract SiloFixture is StdCheats, CommonBase {
         token0 = siloConfig0.token;
         token1 = siloConfig1.token;
 
-        liquidation = ISiloLiquidation(siloConfig0.liquidation);
+        liquidation = IPartialLiquidation(siloConfig0.liquidation);
         if (address(liquidation) == address(0)) revert("siloLiquidation is empty");
     }
 }

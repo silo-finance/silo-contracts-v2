@@ -17,7 +17,7 @@ import {ISiloFactory} from "silo-core/contracts/interfaces/ISiloFactory.sol";
 import {SiloFactory} from "silo-core/contracts/SiloFactory.sol";
 import {ISiloDeployer, SiloDeployer} from "silo-core/contracts/SiloDeployer.sol";
 import {Silo} from "silo-core/contracts/Silo.sol";
-import {SiloLiquidation} from "silo-core/contracts/SiloLiquidation.sol";
+import {PartialLiquidation} from "silo-core/contracts/liquidation/PartialLiquidation.sol";
 import {SiloInternal} from "../internal_testing/SiloInternal.sol";
 import {ShareCollateralToken} from "silo-core/contracts/utils/ShareCollateralToken.sol";
 import {ShareDebtToken} from "silo-core/contracts/utils/ShareDebtToken.sol";
@@ -43,7 +43,7 @@ contract Deployers is VyperDeployer, Data {
     IGaugeHookReceiver hookReceiver;
     IHookReceiversFactory hookReceiverFactory;
     ISiloDeployer siloDeployer;
-    SiloLiquidation siloLiquidation;
+    PartialLiquidation siloLiquidation;
 
     // ve-silo
     ISiloTimelockController timelockController;
@@ -250,7 +250,7 @@ contract Deployers is VyperDeployer, Data {
     }
 
     function core_deploySiloLiquidation() internal {
-        siloLiquidation = new SiloLiquidation();
+        siloLiquidation = new PartialLiquidation();
     }
 
     function core_deployHookReceiverFactory() internal {

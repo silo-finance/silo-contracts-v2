@@ -73,11 +73,11 @@ contract EchidnaMiddleman is EchidnaSetup {
         (bool isSolvent, ISilo siloWithDebt, ) = _invariant_insolventHasDebt(actor);
         assertFalse(isSolvent, "expect not solvent user");
 
-        (, uint256 debtToRepay) = siloLiquidation.maxLiquidation(address(siloWithDebt), actor);
+        (, uint256 debtToRepay) = partialLiquidation.maxLiquidation(address(siloWithDebt), actor);
 
         (address collateral, address debt) = __liquidationTokens(address(siloWithDebt));
 
-        siloLiquidation.liquidationCall(address(siloWithDebt), debt, collateral, actor, debtToRepay, false);
+        partialLiquidation.liquidationCall(address(siloWithDebt), debt, collateral, actor, debtToRepay, false);
 
         vm.stopPrank();
     }
@@ -163,10 +163,10 @@ contract EchidnaMiddleman is EchidnaSetup {
         (bool isSolvent, ISilo siloWithDebt, ) = _invariant_insolventHasDebt(actor);
         assertFalse(isSolvent, "expect not solvent user");
 
-        (, uint256 debtToRepay) = siloLiquidation.maxLiquidation(address(siloWithDebt), actor);
+        (, uint256 debtToRepay) = partialLiquidation.maxLiquidation(address(siloWithDebt), actor);
         (address collateral, address debt) = __liquidationTokens(address(siloWithDebt));
 
-        siloLiquidation.liquidationCall(address(siloWithDebt), debt, collateral, actor, debtToRepay, _receiveShares);
+        partialLiquidation.liquidationCall(address(siloWithDebt), debt, collateral, actor, debtToRepay, _receiveShares);
     }
 
     function __debtSharesNeverLargerThanDebt() internal {
@@ -271,10 +271,10 @@ contract EchidnaMiddleman is EchidnaSetup {
 
         assertFalse(isSolvent, "user not solvent");
 
-        (, uint256 debtToRepay) = siloLiquidation.maxLiquidation(address(siloWithDebt), address(actor));
+        (, uint256 debtToRepay) = partialLiquidation.maxLiquidation(address(siloWithDebt), address(actor));
         (address collateral, address debt) = __liquidationTokens(address(siloWithDebt));
 
-        try siloLiquidation.liquidationCall(address(siloWithDebt), debt, collateral, actor, debtToRepay, _receiveShares) {
+        try partialLiquidation.liquidationCall(address(siloWithDebt), debt, collateral, actor, debtToRepay, _receiveShares) {
             emit log("Solvent user liquidated!");
             assert(false);
         } catch {
@@ -291,14 +291,14 @@ contract EchidnaMiddleman is EchidnaSetup {
         uint256 lt = siloWithCollateral.getLt();
         uint256 ltv = siloWithDebt.getLtv(address(actor));
 
-        (, uint256 debtToRepay) = siloLiquidation.maxLiquidation(address(siloWithDebt), address(actor));
+        (, uint256 debtToRepay) = partialLiquidation.maxLiquidation(address(siloWithDebt), address(actor));
         assertFalse(isSolvent, "expect user to be not insolvent");
 
         emit log_named_decimal_uint("User LTV:", ltv, 16);
         emit log_named_decimal_uint("Liq Threshold:", lt, 16);
 
         (address collateral, address debt) = __liquidationTokens(address(siloWithDebt));
-        siloLiquidation.liquidationCall(address(siloWithDebt), debt, collateral, actor, debtToRepay, false);
+        partialLiquidation.liquidationCall(address(siloWithDebt), debt, collateral, actor, debtToRepay, false);
 
         uint256 afterLtv = siloWithDebt.getLtv(address(actor));
         emit log_named_decimal_uint("afterLtv:", afterLtv, 16);
@@ -319,11 +319,11 @@ contract EchidnaMiddleman is EchidnaSetup {
         uint256 lt = siloWithDebt.getLt();
         uint256 ltv = siloWithDebt.getLtv(address(actor));
 
-        (, uint256 debtToRepay) = siloLiquidation.maxLiquidation(address(siloWithDebt), address(actor));
+        (, uint256 debtToRepay) = partialLiquidation.maxLiquidation(address(siloWithDebt), address(actor));
 
         (address collateral, address debt) = __liquidationTokens(address(siloWithDebt));
 
-        try siloLiquidation.liquidationCall(address(siloWithDebt), debt, collateral, actor, debtToRepay, _receiveShares) {
+        try partialLiquidation.liquidationCall(address(siloWithDebt), debt, collateral, actor, debtToRepay, _receiveShares) {
             emit log_named_decimal_uint("User LTV:", ltv, 16);
             emit log_named_decimal_uint("Liq Threshold:", lt, 16);
             emit log("User liquidated!");

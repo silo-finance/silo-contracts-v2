@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity >=0.5.0;
 
-interface ISiloLiquidation {
+interface IPartialLiquidation {
     /// @dev Emitted when a borrower is liquidated.
     /// @param liquidator The address of the liquidator
     /// @param receiveSToken True if the liquidators wants to receive the collateral sTokens, `false` if he wants

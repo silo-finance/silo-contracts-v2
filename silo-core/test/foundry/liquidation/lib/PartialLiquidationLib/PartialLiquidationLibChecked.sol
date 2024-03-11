@@ -2,10 +2,10 @@
 pragma solidity 0.8.21;
 
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
-import {SiloLiquidationLib} from "silo-core/contracts/lib/SiloLiquidationLib.sol";
+import {PartialLiquidationLib} from "silo-core/contracts/liquidation/lib/PartialLiquidationLib.sol";
 
-/// @dev exact copy of SiloLiquidationLib but without `/* unchecked */`
-library SiloLiquidationLibChecked {
+/// @dev exact copy of PartialLiquidationLib but without `/* unchecked */`
+library PartialLiquidationLibChecked {
     /// @dev this is basically LTV == 100%
     uint256 internal constant _BAD_DEBT = 1e18;
 
@@ -65,7 +65,7 @@ library SiloLiquidationLibChecked {
         uint256 _sumOfCollateralValue,
         uint256 _borrowerDebtAssets,
         uint256 _borrowerDebtValue,
-        SiloLiquidationLib.LiquidationPreviewParams memory _params
+        PartialLiquidationLib.LiquidationPreviewParams memory _params
     )
         external
         pure
