@@ -896,9 +896,15 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
         virtual
         returns (uint256 assets, uint256 shares)
     {
-        (, ISiloConfig.ConfigData memory configData) = _accrueInterest();
+        ISiloConfig.ConfigData memory configData;
 
-        if (_liquidation && configData.liquidation != msg.sender) revert ISilo.OnlyLiquidation();
+        if (_liquidation) {
+            // on liquidation we assume accrueInterest was called already
+            configData = config.getConfig(address(this));
+            if (configData.liquidation != msg.sender) revert ISilo.OnlyLiquidation();
+        } else {
+            (, configData) = _accrueInterest();
+        }
 
         (assets, shares) = _callRepay(configData, _assets, _shares, _borrower, _repayer);
 
