@@ -6,7 +6,7 @@ import "forge-std/Test.sol";
 import {IERC20} from "openzeppelin-contracts/token/ERC20/IERC20.sol";
 
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
-import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
+import {ISilo, IERC3156FlashLender} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {IInterestRateModel} from "silo-core/contracts/interfaces/IInterestRateModel.sol";
 import {IERC3156FlashBorrower} from "silo-core/contracts/interfaces/IERC3156FlashBorrower.sol";
@@ -15,6 +15,7 @@ import {SiloStdLib} from "silo-core/contracts/lib/SiloStdLib.sol";
 
 import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
 import {MintableToken} from "../_common/MintableToken.sol";
+import {Gas} from "../gas/Gas.sol";
 
 bytes32 constant FLASHLOAN_CALLBACK = keccak256("ERC3156FlashBorrower.onFlashLoan");
 
@@ -65,9 +66,7 @@ contract Hack1 {
 /*
     forge test -vv --ffi --mc FlashloanTest
 */
-contract FlashloanTest is SiloLittleHelper, Test {
-    address constant BORROWER = address(0x123);
-
+contract FlashloanTest is SiloLittleHelper, Test, Gas {
     ISiloConfig siloConfig;
 
     function setUp() public {
@@ -140,7 +139,15 @@ contract FlashloanTest is SiloLittleHelper, Test {
             abi.encodeWithSelector(IERC20.transferFrom.selector, address(receiver), address(silo0), amount + fee)
         );
 
-        silo0.flashLoan(receiver, address(token0), amount, _data);
+        _action(
+            address(this),
+            address(silo0),
+            abi.encodeCall(IERC3156FlashLender.flashLoan, (receiver, address(token0), amount, _data)),
+            "flashLoan",
+            31330
+        );
+
+        // silo0.flashLoan(receiver, address(token0), amount, _data);
 
         (uint256 daoAndDeployerFeesAfter,) = silo0.siloData();
         assertEq(daoAndDeployerFeesAfter, daoAndDeployerFeesBefore + fee);
