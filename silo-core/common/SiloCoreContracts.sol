@@ -15,6 +15,7 @@ library SiloCoreContracts {
     string public constant PARTIAL_LIQUIDATION = "PartialLiquidation.sol";
     string public constant SHARE_COLLATERAL_TOKEN = "ShareCollateralToken.sol";
     string public constant SHARE_DEBT_TOKEN = "ShareDebtToken.sol";
+    string public constant SILO_LENS = "SiloLens.sol";
 }
 
 library SiloCoreDeployments {
