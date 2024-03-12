@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [0.5.0] - 2024-03-12
+### Added
+- SiloLens deploy
+
 ## [0.4.0] - 2024-02-22
 ### Added
 - add returned code for `IHookReceiver.afterTokenTransfer`
