@@ -4,7 +4,7 @@ pragma solidity >=0.5.0;
 // solhint-disable ordering
 interface ILiquidationProcess {
     /// @dev Repays a given asset amount and returns the equivalent number of shares
-    /// @notice this repay is only for liquidation because we `_repayer` is pass as argument
+    /// @notice this repay is only for liquidation because `_repayer` is passed as argument
     /// if we leave it open, anyone can exeute repay for someone who gives allowance to silo
     /// @param _assets Amount of assets to be repaid
     /// @param _borrower Address of the borrower whose debt is being repaid
