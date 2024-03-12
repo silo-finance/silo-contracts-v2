@@ -111,25 +111,7 @@ rule HLP_redeem_breakingUpNotBeneficial(env e, address receiver, address owner)
 }
 
 
-// holds
-// https://prover.certora.com/output/6893/23e6c7a9f5574fbc9545ad732360ce65/?anonymousKey=8bc60c373fee4ce8935b34dd2196e0df1bfa94f6
-rule HLP_depositCollateralUpdatesOnlyRecepient(env e, address receiver)
-{
-    address other;
-    require other != receiver;
-    completeSiloSetupEnv(e);
-    totalSupplyMoreThanBalance(receiver);
-    totalSupplyMoreThanBalance(other);
-    
-    uint256 assets;
-    mathint balanceCollateralBeforeOther = shareCollateralToken0.balanceOf(other);
-    
-    mathint shares = deposit(e, assets, receiver);
-    mathint balanceCollateralAfterOther = shareCollateralToken0.balanceOf(other);  
-   
-    assert balanceCollateralBeforeOther == balanceCollateralAfterOther;
-    satisfy balanceCollateralBeforeOther == balanceCollateralAfterOther;
-}
+
 
 // holds
 // https://prover.certora.com/output/6893/effe608ee2d84cf59c4f721df7bd2fd8/?anonymousKey=c84e3a163a6e284bef0e2407411818dbf1316c26

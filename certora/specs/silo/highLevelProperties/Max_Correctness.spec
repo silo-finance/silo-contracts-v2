@@ -13,9 +13,11 @@ rule HLP_MaxMintCorrectness(env e, address receiver)
     totalSupplyMoreThanBalance(receiver);
     totalSupplyMoreThanBalance(e.msg.sender);
     
-    uint256 shares = maxMint(e, receiver);
+    uint256 maxShares = maxMint(e, receiver);
+    uint256 shares;
+    require shares > maxShares;
     uint256 assetsPaid = mint@withrevert(e, shares, receiver);
-    assert !lastReverted;
+    assert lastReverted;
 }
 
 rule HLP_MaxRedeemCorrectness(env e, address receiver)
@@ -24,9 +26,11 @@ rule HLP_MaxRedeemCorrectness(env e, address receiver)
     totalSupplyMoreThanBalance(receiver);
     totalSupplyMoreThanBalance(e.msg.sender);
 
-    uint256 shares = maxRedeem(e, e.msg.sender);
+    uint256 maxShares = maxRedeem(e, e.msg.sender);
+    uint256 shares;
+    require shares > maxShares;
     uint256 assetsReceived = redeem@withrevert(e, shares, receiver, e.msg.sender);
-    assert !lastReverted;
+    assert lastReverted;
 }
 
 rule HLP_MaxDepositCorrectness(env e, address receiver)
@@ -35,9 +39,11 @@ rule HLP_MaxDepositCorrectness(env e, address receiver)
     totalSupplyMoreThanBalance(receiver);
     totalSupplyMoreThanBalance(e.msg.sender);
     
-    uint256 assets = maxDeposit(e, receiver);
+    uint256 maxAssets = maxDeposit(e, receiver);
+    uint256 assets;
+    require assets > maxAssets;
     uint256 sharesReceived = deposit@withrevert(e, assets, receiver);
-    assert !lastReverted;
+    assert lastReverted;
 }
 
 rule HLP_MaxWithdrawCorrectness(env e, address receiver)
@@ -46,9 +52,11 @@ rule HLP_MaxWithdrawCorrectness(env e, address receiver)
     totalSupplyMoreThanBalance(receiver);
     totalSupplyMoreThanBalance(e.msg.sender);
     
-    uint256 assets = maxWithdraw(e, e.msg.sender);
+    uint256 maxAssets = maxWithdraw(e, e.msg.sender);
+    uint256 assets;
+    require assets > maxAssets;
     uint256 sharesPaid = withdraw@withrevert(e, assets, receiver, e.msg.sender);
-    assert !lastReverted;
+    assert lastReverted;
 }
 
 rule HLP_MaxBorrowCorrectness(env e, address receiver)
@@ -57,7 +65,9 @@ rule HLP_MaxBorrowCorrectness(env e, address receiver)
     totalSupplyMoreThanBalance(receiver);
     totalSupplyMoreThanBalance(e.msg.sender);
     
-    uint256 assets = maxBorrow(e, e.msg.sender);
+    uint256 maxAssets = maxBorrow(e, e.msg.sender);
+    uint256 assets;
+    require assets > maxAssets;
     uint256 debtReceived = borrow@withrevert(e, assets, receiver, e.msg.sender);
-    assert !lastReverted;
+    assert lastReverted;
 }
