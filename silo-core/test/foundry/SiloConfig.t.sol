@@ -20,6 +20,8 @@ contract SiloConfigTest is Test {
         vm.assume(_configData1.silo != wrongSilo);
         vm.assume(_configData0.silo != _configData1.silo);
 
+        _configData0.liquidationModule = _configData1.liquidationModule; // when using assume, it reject too many inputs
+
         _configData0.otherSilo = _configData1.silo;
         _configData1.otherSilo = _configData0.silo;
         _configData1.daoFee = _configData0.daoFee;

@@ -40,7 +40,7 @@ jobs:
         run: pip3 install solc-select
 
       - name: Install the Certora Prover package
-        run: pip3 install certora-cli
+        run: pip3 install certora-cli-beta
 
       - name: Install/select solidity
         run: |

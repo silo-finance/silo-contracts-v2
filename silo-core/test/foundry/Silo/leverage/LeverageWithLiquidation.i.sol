@@ -81,7 +81,7 @@ contract LeverageWithLiquidationTest is SiloLittleHelper, Test, ILeverageBorrowe
         address debtAsset = _asset;
 
         token1.approve(msg.sender, 1e18);
-        ISilo(msg.sender).liquidationCall(collateralAsset, debtAsset, _borrower, type(uint256).max, false);
+        partialLiquidation.liquidationCall(msg.sender, collateralAsset, debtAsset, _borrower, type(uint256).max, false);
 
         return LEVERAGE_CALLBACK;
     }

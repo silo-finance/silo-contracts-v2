@@ -7,15 +7,15 @@ import {Strings} from "openzeppelin-contracts/utils/Strings.sol";
 
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
-import {ISiloLiquidation} from "silo-core/contracts/interfaces/ISiloLiquidation.sol";
-import {SiloLiquidationLib} from "silo-core/contracts/lib/SiloLiquidationLib.sol";
-import {SiloLiquidationExecLib} from "silo-core/contracts/lib/SiloLiquidationExecLib.sol";
+import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquidation.sol";
+import {PartialLiquidationLib} from "silo-core/contracts/liquidation/lib/PartialLiquidationLib.sol";
+import {PartialLiquidationExecLib} from "silo-core/contracts/liquidation/lib/PartialLiquidationExecLib.sol";
 import {SiloFactory} from "silo-core/contracts/SiloFactory.sol";
 
-import {SiloMock} from "../../_mocks/SiloMock.sol";
-import {InterestRateModelMock} from "../../_mocks/InterestRateModelMock.sol";
-import {TokenMock} from "../../_mocks/TokenMock.sol";
-import {GetExactLiquidationAmountsTestData} from "../../data-readers/GetExactLiquidationAmountsTestData.sol";
+import {SiloMock} from "../../../_mocks/SiloMock.sol";
+import {InterestRateModelMock} from "../../../_mocks/InterestRateModelMock.sol";
+import {TokenMock} from "../../../_mocks/TokenMock.sol";
+import {GetExactLiquidationAmountsTestData} from "../../../data-readers/GetExactLiquidationAmountsTestData.sol";
 
 // this is not test contract, just a helper
 contract GetExactLiquidationAmountsHelper is Test {
@@ -77,7 +77,7 @@ contract GetExactLiquidationAmountsHelper is Test {
         D_SHARE_TOKEN_B.totalSupplyMock(_debtUserBalanceOf * sharesOffset);
         SILO_B.totalMock(ISilo.AssetType.Debt, _debtUserBalanceOf);
 
-        return SiloLiquidationExecLib.getExactLiquidationAmounts(
+        return PartialLiquidationExecLib.getExactLiquidationAmounts(
             collateralConfig,
             debtConfig,
             makeAddr("borrower"),
@@ -141,7 +141,7 @@ contract GetExactLiquidationAmountsTest is GetExactLiquidationAmountsHelper {
 
         (
             uint256 fromCollateral, uint256 fromProtected, uint256 repayDebtAssets
-        ) = SiloLiquidationExecLib.getExactLiquidationAmounts(collateralConfig, debtConfig, user, debtToCover, liquidationFee, selfLiquidation);
+        ) = PartialLiquidationExecLib.getExactLiquidationAmounts(collateralConfig, debtConfig, user, debtToCover, liquidationFee, selfLiquidation);
 
         assertEq(fromCollateral, 0);
         assertEq(fromProtected, 0);
@@ -176,7 +176,7 @@ contract GetExactLiquidationAmountsTest is GetExactLiquidationAmountsHelper {
 
             (
                 uint256 fromCollateral, uint256 fromProtected, uint256 repayDebtAssets
-            ) = SiloLiquidationExecLib.getExactLiquidationAmounts(
+            ) = PartialLiquidationExecLib.getExactLiquidationAmounts(
                 collateralConfig,
                 debtConfig,
                 testData.input.user,
@@ -226,7 +226,7 @@ contract GetExactLiquidationAmountsTest is GetExactLiquidationAmountsHelper {
             }
         } else {
             assertFalse(true, "do we ever revert with our assumptions?");
-            assertTrue(bytes4(errorType) == ISiloLiquidation.Insolvency.selector, "this is the only error we expect");
+            assertTrue(bytes4(errorType) == ISilo.Insolvency.selector, "this is the only error we expect");
         }
     }
 
@@ -263,7 +263,7 @@ contract GetExactLiquidationAmountsTest is GetExactLiquidationAmountsHelper {
         if (success) {
             // there is nothing to check here
         } else {
-            assertTrue(bytes4(errorType) == ISiloLiquidation.LiquidationTooBig.selector, "expect no other errors");
+            assertTrue(bytes4(errorType) == IPartialLiquidation.LiquidationTooBig.selector, "expect no other errors");
         }
     }
 

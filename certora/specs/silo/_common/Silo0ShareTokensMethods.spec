@@ -39,12 +39,12 @@ ghost mathint sumBalancesCollateral {
     );
 }
 
-hook Sstore shareCollateralToken0._balances[KEY address user] uint256 newBalance (uint256 oldBalance) STORAGE {
+hook Sstore shareCollateralToken0._balances[KEY address user] uint256 newBalance (uint256 oldBalance) {
     sumBalancesCollateral = sumBalancesCollateral + newBalance - oldBalance;
     collateral0BalanceOfMirror[user] = newBalance;
 }
 
-hook Sload uint256 balance shareCollateralToken0._balances[KEY address user] STORAGE {
+hook Sload uint256 balance shareCollateralToken0._balances[KEY address user] {
     require collateral0BalanceOfMirror[user] == balance;
     require sumBalancesCollateral >= to_mathint(collateral0BalanceOfMirror[user]);
 }
@@ -65,12 +65,12 @@ ghost mathint sumBalancesProtected {
     );
 }
 
-hook Sstore shareProtectedCollateralToken0._balances[KEY address user] uint256 newBalance (uint256 oldBalance) STORAGE {
+hook Sstore shareProtectedCollateralToken0._balances[KEY address user] uint256 newBalance (uint256 oldBalance) {
     sumBalancesProtected = sumBalancesProtected + newBalance - oldBalance;
     protected0BalanceOfMirror[user] = newBalance;
 }
 
-hook Sload uint256 balance shareProtectedCollateralToken0._balances[KEY address user] STORAGE {
+hook Sload uint256 balance shareProtectedCollateralToken0._balances[KEY address user] {
     require protected0BalanceOfMirror[user] == balance;
     require sumBalancesProtected >= to_mathint(protected0BalanceOfMirror[user]);
 }
@@ -91,12 +91,12 @@ ghost mathint sumBalancesDebt {
     );
 }
 
-hook Sstore shareDebtToken0._balances[KEY address user] uint256 newBalance (uint256 oldBalance) STORAGE {
+hook Sstore shareDebtToken0._balances[KEY address user] uint256 newBalance (uint256 oldBalance) {
     sumBalancesDebt = sumBalancesDebt + newBalance - oldBalance;
     debt0BalanceOfMirror[user] = newBalance;
 }
 
-hook Sload uint256 balance shareDebtToken0._balances[KEY address user] STORAGE {
+hook Sload uint256 balance shareDebtToken0._balances[KEY address user] {
     require debt0BalanceOfMirror[user] == balance;
     require sumBalancesDebt >= to_mathint(debt0BalanceOfMirror[user]);
 }

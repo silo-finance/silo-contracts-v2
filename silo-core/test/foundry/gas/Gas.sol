@@ -27,7 +27,7 @@ contract Gas is SiloLittleHelper {
         SiloConfigOverride memory overrides;
         overrides.token0 = address(token0);
         overrides.token1 = address(token1);
-        (, silo0, silo1,,) = siloFixture.deploy_local(overrides);
+        (, silo0, silo1,,, partialLiquidation) = siloFixture.deploy_local(overrides);
 
         __init(token0, token1, silo0, silo1);
 
@@ -50,14 +50,14 @@ contract Gas is SiloLittleHelper {
     function _action(
         address _sender,
         address _target,
-        bytes memory _data,
+        bytes memory _calldata,
         string memory _msg,
         uint256 _expectedGas
     ) internal returns (uint256 gas) {
         vm.startPrank(_sender, _sender);
 
         uint256 gasStart = gasleft();
-        (bool success,) = _target.call(_data);
+        (bool success,) = _target.call(_calldata);
         uint256 gasEnd = gasleft();
         gas = gasStart - gasEnd;
 

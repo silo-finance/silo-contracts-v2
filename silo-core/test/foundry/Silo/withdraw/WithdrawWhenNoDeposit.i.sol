@@ -32,7 +32,7 @@ contract WithdrawWhenNoDepositTest is IntegrationTest {
         configOverride.token0 = t0;
         configOverride.token1 = t1;
 
-        (siloConfig, silo0, silo1,,) = siloFixture.deploy_local(configOverride);
+        (siloConfig, silo0, silo1,,,) = siloFixture.deploy_local(configOverride);
 
         token0 = new TokenMock(t0);
         token1 = new TokenMock(t1);

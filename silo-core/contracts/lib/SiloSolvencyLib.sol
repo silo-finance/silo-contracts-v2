@@ -4,10 +4,8 @@ pragma solidity 0.8.21;
 import {MathUpgradeable} from "openzeppelin-contracts-upgradeable/utils/math/MathUpgradeable.sol";
 
 import {ISiloOracle} from "../interfaces/ISiloOracle.sol";
-import {ISiloLiquidation} from "../interfaces/ISiloLiquidation.sol";
 import {SiloStdLib, ISiloConfig, IShareToken, ISilo} from "./SiloStdLib.sol";
 import {SiloERC4626Lib} from "./SiloERC4626Lib.sol";
-import {SiloLiquidationLib} from "./SiloLiquidationLib.sol";
 import {SiloMathLib} from "./SiloMathLib.sol";
 
 library SiloSolvencyLib {

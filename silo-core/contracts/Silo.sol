@@ -7,7 +7,7 @@ import {MathUpgradeable} from "openzeppelin-contracts-upgradeable/utils/math/Mat
 import {SafeERC20Upgradeable} from "openzeppelin-contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
 import {IERC20Upgradeable} from "openzeppelin-contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 
-import {ISilo, ISiloLiquidation, IERC4626, IERC3156FlashLender} from "./interfaces/ISilo.sol";
+import {ISilo, IERC4626, IERC3156FlashLender, ILiquidationProcess} from "./interfaces/ISilo.sol";
 import {ISiloOracle} from "./interfaces/ISiloOracle.sol";
 import {IShareToken} from "./interfaces/IShareToken.sol";
 
@@ -23,7 +23,7 @@ import {SiloSolvencyLib} from "./lib/SiloSolvencyLib.sol";
 import {SiloLendingLib} from "./lib/SiloLendingLib.sol";
 import {SiloERC4626Lib} from "./lib/SiloERC4626Lib.sol";
 import {SiloMathLib} from "./lib/SiloMathLib.sol";
-import {SiloLiquidationExecLib} from "./lib/SiloLiquidationExecLib.sol";
+import {LiquidationWithdrawLib} from "./lib/LiquidationWithdrawLib.sol";
 
 // Keep ERC4626 ordering
 // solhint-disable ordering
@@ -595,7 +595,17 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
         // avoid magic number 0
         uint256 repaySharesZero = 0;
 
-        (, shares) = _repay(_assets, repaySharesZero, _borrower);
+        (, shares) = _repay(_assets, repaySharesZero, _borrower, msg.sender, false /* _liquidation */);
+    }
+
+    /// @inheritdoc ILiquidationProcess
+    function liquidationRepay(uint256 _assets, address _borrower, address _repayer)
+        external
+        virtual
+        nonReentrant
+        returns (uint256 shares)
+    {
+        (, shares) = _repay(_assets, 0 /* repaySharesZero */, _borrower, _repayer, true /* _liquidation */);
     }
 
     /// @inheritdoc ISilo
@@ -623,7 +633,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
         // avoid magic number 0
         uint256 zeroAssets = 0;
 
-        (assets,) = _repay(zeroAssets, _shares, _borrower);
+        (assets,) = _repay(zeroAssets, _shares, _borrower, msg.sender, false /* _liquidation */);
     }
 
     /// @inheritdoc IERC3156FlashLender
@@ -701,58 +711,6 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
         SiloStdLib.withdrawFees(this, siloData);
     }
 
-    /// @dev it can be called on "debt silo" only
-    /// @notice user can use this method to do self liquidation, it that case check for LT requirements will be ignored
-    function liquidationCall(
-        address _collateralAsset,
-        address _debtAsset,
-        address _borrower,
-        uint256 _debtToCover,
-        bool _receiveSToken
-    ) external virtual nonReentrant {
-        (ISiloConfig.ConfigData memory debtConfig, ISiloConfig.ConfigData memory collateralConfig) =
-            config.getConfigs(address(this));
-
-        if (_collateralAsset != collateralConfig.token) revert UnexpectedCollateralToken();
-        if (_debtAsset != debtConfig.token) revert UnexpectedDebtToken();
-
-        _callAccrueInterestForAsset(
-            debtConfig.interestRateModel, debtConfig.daoFee, debtConfig.deployerFee, debtConfig.otherSilo
-        );
-
-        if (collateralConfig.callBeforeQuote) {
-            ISiloOracle(collateralConfig.solvencyOracle).beforeQuote(collateralConfig.token);
-        }
-
-        if (debtConfig.callBeforeQuote) {
-            ISiloOracle(debtConfig.solvencyOracle).beforeQuote(debtConfig.token);
-        }
-
-        bool selfLiquidation = _borrower == msg.sender;
-
-        (
-            uint256 withdrawAssetsFromCollateral, uint256 withdrawAssetsFromProtected, uint256 repayDebtAssets
-        ) = SiloLiquidationExecLib.getExactLiquidationAmounts(
-            collateralConfig,
-            debtConfig,
-            _borrower,
-            _debtToCover,
-            selfLiquidation ? 0 : collateralConfig.liquidationFee,
-            selfLiquidation
-        );
-
-        if (repayDebtAssets == 0) revert NoDebtToCover();
-
-        // always ZERO, we can receive shares, but we can not repay with shares
-        uint256 zeroShares;
-        emit LiquidationCall(msg.sender, _receiveSToken);
-        _callRepay(debtConfig, repayDebtAssets, zeroShares, _borrower, msg.sender);
-
-        ISiloLiquidation(debtConfig.otherSilo).withdrawCollateralsToLiquidator(
-            withdrawAssetsFromCollateral, withdrawAssetsFromProtected, _borrower, msg.sender, _receiveSToken
-        );
-    }
-
     /// @dev that method allow to finish liquidation process by giving up collateral to liquidator
     function withdrawCollateralsToLiquidator(
         uint256 _withdrawAssetsFromCollateral,
@@ -761,7 +719,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
         address _liquidator,
         bool _receiveSToken
     ) external virtual {
-        SiloLiquidationExecLib.withdrawCollateralsToLiquidator(
+        LiquidationWithdrawLib.withdrawCollateralsToLiquidator(
             config,
             _withdrawAssetsFromCollateral,
             _withdrawAssetsFromProtected,
@@ -771,16 +729,6 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
             _getRawLiquidity(),
             total
         );
-    }
-
-    /// @inheritdoc ISiloLiquidation
-    function maxLiquidation(address _borrower)
-        external
-        view
-        virtual
-        returns (uint256 collateralToLiquidate, uint256 debtToRepay)
-    {
-        return SiloLiquidationExecLib.maxLiquidation(this, _borrower);
     }
 
     function _accrueInterest()
@@ -943,16 +891,18 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
         }
     }
 
-    function _repay(uint256 _assets, uint256 _shares, address _borrower)
+    function _repay(uint256 _assets, uint256 _shares, address _borrower, address _repayer, bool _liquidation)
         internal
         virtual
         returns (uint256 assets, uint256 shares)
     {
         (, ISiloConfig.ConfigData memory configData) = _accrueInterest();
 
-        (assets, shares) = _callRepay(configData, _assets, _shares, _borrower, msg.sender);
+        if (_liquidation && configData.liquidationModule != msg.sender) revert ISilo.OnlyLiquidationModule();
 
-        emit Repay(msg.sender, _borrower, assets, shares);
+        (assets, shares) = _callRepay(configData, _assets, _shares, _borrower, _repayer);
+
+        emit Repay(_repayer, _borrower, assets, shares);
     }
 
     function _getTotalAssetsAndTotalSharesWithInterest(AssetType _assetType)

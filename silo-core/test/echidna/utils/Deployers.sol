@@ -17,6 +17,7 @@ import {ISiloFactory} from "silo-core/contracts/interfaces/ISiloFactory.sol";
 import {SiloFactory} from "silo-core/contracts/SiloFactory.sol";
 import {ISiloDeployer, SiloDeployer} from "silo-core/contracts/SiloDeployer.sol";
 import {Silo} from "silo-core/contracts/Silo.sol";
+import {PartialLiquidation} from "silo-core/contracts/liquidation/PartialLiquidation.sol";
 import {SiloInternal} from "../internal_testing/SiloInternal.sol";
 import {ShareCollateralToken} from "silo-core/contracts/utils/ShareCollateralToken.sol";
 import {ShareDebtToken} from "silo-core/contracts/utils/ShareDebtToken.sol";
@@ -42,6 +43,7 @@ contract Deployers is VyperDeployer, Data {
     IGaugeHookReceiver hookReceiver;
     IHookReceiversFactory hookReceiverFactory;
     ISiloDeployer siloDeployer;
+    PartialLiquidation liquidationModule;
 
     // ve-silo
     ISiloTimelockController timelockController;
@@ -70,6 +72,7 @@ contract Deployers is VyperDeployer, Data {
         // The FULL data relies on addresses set in _setupBasicData()
         siloData["FULL"] = ISiloConfig.InitData({
             deployer: timelockAdmin,
+            liquidationModule: address(liquidationModule),
             deployerFee: 0.1000e18,
             token0: _tokens["WETH"],
             solvencyOracle0: oracles["DIA"],
@@ -177,6 +180,7 @@ contract Deployers is VyperDeployer, Data {
        ================================================================ */
 
     function core_setUp(address feeReceiver) internal {
+        core_deploySiloLiquidation();
         core_deploySiloFactory(feeReceiver);
         core_deployInterestRateConfigFactory();
         core_deployInterestRateModel();
@@ -231,8 +235,7 @@ contract Deployers is VyperDeployer, Data {
         );
 
         // deploy preset IRM configs
-        (, IInterestRateModelV2Config config) = interestRateModelV2ConfigFactory
-            .create(presetIRMConfigs[0]);
+        (, IInterestRateModelV2Config config) = interestRateModelV2ConfigFactory.create(presetIRMConfigs[0]);
         IRMConfigs["defaultAsset"] = address(config);
     }
 
@@ -244,6 +247,10 @@ contract Deployers is VyperDeployer, Data {
 
     function core_deployGaugeHookReceiver() internal {
         hookReceiver = IGaugeHookReceiver(address(new GaugeHookReceiver()));
+    }
+
+    function core_deploySiloLiquidation() internal {
+        liquidationModule = new PartialLiquidation();
     }
 
     function core_deployHookReceiverFactory() internal {

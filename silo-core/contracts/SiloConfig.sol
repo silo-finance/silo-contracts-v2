@@ -13,6 +13,7 @@ contract SiloConfig is ISiloConfig {
 
     uint256 private immutable _DAO_FEE;
     uint256 private immutable _DEPLOYER_FEE;
+    address private immutable _LIQUIDATION_MODULE;
 
     // TOKEN #0
 
@@ -72,6 +73,8 @@ contract SiloConfig is ISiloConfig {
 
         _DAO_FEE = _configData0.daoFee;
         _DEPLOYER_FEE = _configData0.deployerFee;
+
+        _LIQUIDATION_MODULE = _configData0.liquidationModule;
 
         // TOKEN #0
 
@@ -167,6 +170,7 @@ contract SiloConfig is ISiloConfig {
             lt: _LT0,
             liquidationFee: _LIQUIDATION_FEE0,
             flashloanFee: _FLASHLOAN_FEE0,
+            liquidationModule: _LIQUIDATION_MODULE,
             callBeforeQuote: _CALL_BEFORE_QUOTE0
         });
 
@@ -186,6 +190,7 @@ contract SiloConfig is ISiloConfig {
             lt: _LT1,
             liquidationFee: _LIQUIDATION_FEE1,
             flashloanFee: _FLASHLOAN_FEE1,
+            liquidationModule: _LIQUIDATION_MODULE,
             callBeforeQuote: _CALL_BEFORE_QUOTE1
         });
 
@@ -218,6 +223,7 @@ contract SiloConfig is ISiloConfig {
                 lt: _LT0,
                 liquidationFee: _LIQUIDATION_FEE0,
                 flashloanFee: _FLASHLOAN_FEE0,
+                liquidationModule: _LIQUIDATION_MODULE,
                 callBeforeQuote: _CALL_BEFORE_QUOTE0
             });
         } else if (_silo == _SILO1) {
@@ -237,6 +243,7 @@ contract SiloConfig is ISiloConfig {
                 lt: _LT1,
                 liquidationFee: _LIQUIDATION_FEE1,
                 flashloanFee: _FLASHLOAN_FEE1,
+                liquidationModule: _LIQUIDATION_MODULE,
                 callBeforeQuote: _CALL_BEFORE_QUOTE1
             });
         } else {

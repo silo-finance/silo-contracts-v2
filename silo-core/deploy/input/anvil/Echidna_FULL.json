@@ -1,5 +1,6 @@
 {
-    "deployer": "0x",
+    "deployer": "0xdEDEDEDEdEdEdEDedEDeDedEdEdeDedEdEDedEdE",
+    "liquidationModule": "PartialLiquidation",
     "deployerFee": 1000,
     "token0": "WETH",
     "solvencyOracle0": "DIA",

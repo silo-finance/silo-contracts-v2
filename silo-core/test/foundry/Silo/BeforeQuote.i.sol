@@ -48,7 +48,7 @@ contract BeforeQuoteTest is SiloLittleHelper, Test {
         overrides.configName = SiloConfigsNames.LOCAL_BEFORE_CALL;
 
         SiloFixture siloFixture = new SiloFixture();
-        (, silo0, silo1,,) = siloFixture.deploy_local(overrides);
+        (, silo0, silo1,,, partialLiquidation) = siloFixture.deploy_local(overrides);
 
         (cfg0, cfg1) = silo0.config().getConfigs(address(silo0));
 
@@ -122,10 +122,13 @@ contract BeforeQuoteTest is SiloLittleHelper, Test {
 
         emit log_named_address("maxLtvOracle0", address(maxLtvOracle0));
         emit log_named_address("solvencyOracle0", address(solvencyOracle0));
+        emit log_named_address("liquidationModule", address(partialLiquidation));
 
         _expectCallsToSolvencyOracle(0x1bd942c37174f394000); // amount with interest
 
-        silo0.liquidationCall(address(token1), address(token0), borrower, borrowAmount / 2, false);
+        partialLiquidation.liquidationCall(
+            address(silo0), address(token1), address(token0), borrower, borrowAmount / 2, false
+        );
     }
 
     function _setupForBorrow0() internal {

@@ -1,6 +1,7 @@
 pragma solidity ^0.8.0;
 
 import {Silo, ISilo} from "silo-core/contracts/Silo.sol";
+import {PartialLiquidation} from "silo-core/contracts/liquidation/PartialLiquidation.sol";
 import {ISiloConfig} from "silo-core/contracts/SiloConfig.sol";
 import {TestERC20Token} from "properties/ERC4626/util/TestERC20Token.sol";
 import {PropertiesAsserts} from "properties/util/PropertiesHelper.sol";
@@ -15,6 +16,7 @@ contract Actor is PropertiesAsserts {
     TestERC20Token token1;
     Silo vault0;
     Silo vault1;
+    PartialLiquidation liquidationModule;
 
     mapping(address => uint256) public tokensDepositedCollateral;
     mapping(address => uint256) public tokensDepositedProtected;
@@ -27,6 +29,7 @@ contract Actor is PropertiesAsserts {
         vault1 = _vault1;
         token0 = TestERC20Token(address(_vault0.asset()));
         token1 = TestERC20Token(address(_vault1.asset()));
+        liquidationModule = PartialLiquidation(_vault0.config().getConfig(address(_vault0)).liquidationModule);
     }
 
     function accountForOpenedPosition(ISilo.AssetType assetType, bool vaultZero, uint256 _tokensDeposited, uint256 _sharesMinted) internal {
@@ -197,8 +200,12 @@ contract Actor is PropertiesAsserts {
         ISiloConfig config
     ) public {
         Silo vault = prepareForDeposit(_vaultZeroWithDebt, debtToCover);
+
         (ISiloConfig.ConfigData memory debtConfig, ISiloConfig.ConfigData memory collateralConfig) =
             config.getConfigs(address(vault));
-        vault.liquidationCall(collateralConfig.token, debtConfig.token, borrower, debtToCover, receiveSToken);
+
+        liquidationModule.liquidationCall(
+            address(vault), collateralConfig.token, debtConfig.token, borrower, debtToCover, receiveSToken
+        );
     }
 }
