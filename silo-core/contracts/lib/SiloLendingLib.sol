@@ -14,6 +14,7 @@ import {IShareToken} from "../interfaces/IShareToken.sol";
 import {IInterestRateModel} from "../interfaces/IInterestRateModel.sol";
 import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
 import {SiloSolvencyLib} from "./SiloSolvencyLib.sol";
+import {SiloERC4626Lib} from "./SiloERC4626Lib.sol"; //circular dependency
 import {SiloStdLib} from "./SiloStdLib.sol";
 import {SiloMathLib} from "./SiloMathLib.sol";
 
@@ -85,7 +86,7 @@ library SiloLendingLib {
         view
         returns (uint256 assets, uint256 shares)
     {
-        (bool possible,) = borrowPossible(
+        (bool possible,,) = borrowPossible(
             _debtConfig.protectedShareToken,
             _debtConfig.collateralShareToken,
             _collateralConfig.debtShareToken,
@@ -183,15 +184,15 @@ library SiloLendingLib {
         address _collateralShareToken,
         address _otherSiloDebtShareToken,
         address _borrower
-    ) internal view returns (bool possible, bool withdrawRequired) {
+    ) internal view returns (bool possible, uint256 protectedSharesToWithdraw, uint256 collateralSharesToWithdraw) {
+        protectedSharesToWithdraw = IShareToken(_protectedShareToken).balanceOf(_borrower);
+        collateralSharesToWithdraw = IShareToken(_collateralShareToken).balanceOf(_borrower);
 
         // _borrower cannot have any collateral deposited
-        possible = IShareToken(_protectedShareToken).balanceOf(_borrower) == 0
-            && IShareToken(_collateralShareToken).balanceOf(_borrower) == 0;
+        possible = protectedSharesToWithdraw == 0 && collateralSharesToWithdraw == 0;
 
         if (!possible && IShareToken(_otherSiloDebtShareToken).balanceOf(_borrower) == 0) {
             possible = true;
-            withdrawRequired = true;
         }
     }
 
@@ -323,10 +324,20 @@ library SiloLendingLib {
         address _spender,
         ISilo.Assets storage _totalDebt,
         uint256 _totalCollateralAssets
-    ) internal returns (uint256 borrowedAssets, uint256 borrowedShares) {
+    )
+        internal
+        returns (
+            uint256 borrowedAssets,
+            uint256 borrowedShares,
+            uint256 protectedSharesToWithdraw,
+            uint256 collateralSharesToWithdraw
+        )
+    {
         if (_assets == 0 && _shares == 0) revert ISilo.ZeroAssets();
 
-        (bool possible, bool withdrawRequired) = borrowPossible(
+        bool possible;
+
+        (possible, protectedSharesToWithdraw, collateralSharesToWithdraw) = borrowPossible(
             _configData.protectedShareToken,
             _configData.collateralShareToken,
             _collateralSiloDebtShareToken,

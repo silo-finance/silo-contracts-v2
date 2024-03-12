@@ -1028,7 +1028,10 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
         address _borrower,
         address _spender
     ) internal virtual returns (uint256 borrowedAssets, uint256 borrowedShares) {
-        return SiloLendingLib.borrow(
+        uint256 protectedSharesToWithdraw;
+        uint256 collateralSharesToWithdraw;
+
+        (borrowedAssets, borrowedShares, protectedSharesToWithdraw, collateralSharesToWithdraw) = SiloLendingLib.borrow(
             _configData,
             _collateralSiloDebtShareToken,
             _assets,
@@ -1039,6 +1042,36 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
             total[AssetType.Debt],
             total[AssetType.Collateral].assets
         );
+
+        if (protectedSharesToWithdraw != 0) {
+            SiloERC4626Lib.withdraw(
+                _configData.token,
+                _configData.protectedShareToken,
+                0 /* _assets */,
+                protectedSharesToWithdraw,
+                _borrower,
+                _borrower,
+                _borrower,
+                ISilo.AssetType.Protected,
+                total[AssetType.Protected].assets,
+                total[AssetType.Protected]
+            );
+        }
+
+        if (collateralSharesToWithdraw != 0) {
+            SiloERC4626Lib.withdraw(
+                _configData.token,
+                _configData.protectedShareToken,
+                0 /* _assets */,
+                protectedSharesToWithdraw,
+                _borrower,
+                _borrower,
+                _borrower,
+                ISilo.AssetType.Collateral,
+                _getRawLiquidity(), // TODO this can affect borrow liquidity!
+                total[AssetType.Collateral]
+            );
+        }
     }
 
     function _callAccrueInterestForAsset(
