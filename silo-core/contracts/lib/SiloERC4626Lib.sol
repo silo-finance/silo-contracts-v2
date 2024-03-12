@@ -166,7 +166,7 @@ library SiloERC4626Lib {
         ISilo.AssetType _assetType,
         uint256 _liquidity,
         ISilo.Assets storage _totalCollateral
-    ) external returns (uint256 assets, uint256 shares) {
+    ) internal returns (uint256 assets, uint256 shares) {
         return withdraw(
             address(0), _shareToken, 0, _shares, _owner, _owner, _spender, _assetType, _liquidity, _totalCollateral
         );
