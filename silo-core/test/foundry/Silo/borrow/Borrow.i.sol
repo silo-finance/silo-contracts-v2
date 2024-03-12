@@ -236,6 +236,19 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
     }
 
     /*
+    FOUNDRY_PROFILE=core-test forge test -vv --ffi --mt test_borrow_1wei
+    */
+    function test_borrow_1wei() public {
+        address borrower = makeAddr("Borrower");
+        address depositor = makeAddr("depositor");
+
+        _depositForBorrow(1000, depositor);
+
+        vm.expectRevert(ISilo.AboveMaxLtv.selector);
+        _borrow(1, borrower);
+    }
+
+    /*
     forge test -vv --ffi --mt test_borrowShares_revertsOnZeroAssets
     */
     /// forge-config: core.fuzz.runs = 1000
