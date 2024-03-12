@@ -2,7 +2,7 @@
 pragma solidity 0.8.21;
 
 import {StdStorage, stdStorage} from "forge-std/StdStorage.sol";
-import {IERC20} from "openzeppelin-contracts/token/ERC20/ERC20.sol";
+import {ERC20, IERC20} from "openzeppelin-contracts/token/ERC20/ERC20.sol";
 import {Ownable2Step} from "openzeppelin-contracts/access/Ownable2Step.sol";
 import {IntegrationTest} from "silo-foundry-utils/networks/IntegrationTest.sol";
 import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
@@ -33,6 +33,13 @@ import {Proposal} from "proposals/contracts/Proposal.sol";
 import {
     ISiloFactoryWithFeeDetails as ISiloFactory
 } from "ve-silo/contracts/silo-tokens-minter/interfaces/ISiloFactoryWithFeeDetails.sol";
+
+contract ERC20Mint is ERC20 {
+    constructor(string memory name, string memory symbol) ERC20(name, symbol) {}
+    function mint(address _account, uint256 _amount) external {
+        _mint(_account, _amount);
+    }
+}
 
 // solhint-disable max-states-count
 
@@ -118,6 +125,7 @@ contract MainnetTest is IntegrationTest {
         _checkpointUsers(ISiloLiquidityGauge(gauge));
         _verifyClaimable(ISiloLiquidityGauge(gauge));
         _getIncentives(gauge);
+        _rewardwsFees(ISiloLiquidityGauge(gauge));
         _stopMiningProgram();
     }
 
@@ -452,5 +460,35 @@ contract MainnetTest is IntegrationTest {
             abi.encodeWithSelector(ISilo.factory.selector),
             abi.encode(_siloFactory)
         );
+    }
+
+    function _rewardwsFees(ISiloLiquidityGauge _gauge) internal {
+        vm.prank(_deployer);
+        IFeesManager(address(_factory)).setFees(_DAO_FEE, _DEPLOYER_FEE);
+
+        uint256 rewardsAmount = 100e18;
+
+        address distributor = makeAddr("distributor");
+        address timelock = getAddress(VeSiloContracts.TIMELOCK_CONTROLLER);
+
+        ERC20Mint rewardToken = new ERC20Mint("Test reward token", "TRT");
+        rewardToken.mint(distributor, rewardsAmount);
+
+        vm.prank(distributor);
+        rewardToken.approve(address(_gauge), rewardsAmount);
+
+        vm.prank(timelock);
+        _gauge.add_reward(address(rewardToken), distributor);
+
+        vm.prank(distributor);
+        _gauge.deposit_reward_token(address(rewardToken), rewardsAmount);
+
+        uint256 gaugeBalance = rewardToken.balanceOf(address(_gauge));
+        uint256 daoFeeReceiverBalance = rewardToken.balanceOf(_daoFeeReceiver);
+        uint256 deployerFeeReceiverBalance = rewardToken.balanceOf(_deployerFeeReceiver);
+
+        assertEq(gaugeBalance, 70e18);
+        assertEq(daoFeeReceiverBalance, 10e18);
+        assertEq(deployerFeeReceiverBalance, 20e18);
     }
 }

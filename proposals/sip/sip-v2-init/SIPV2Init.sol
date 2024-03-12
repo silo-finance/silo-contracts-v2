@@ -37,6 +37,7 @@ contract SIPV2Init is Proposal {
         veSiloDelegatorViaCCIP.acceptOwnership();
         votingEscrowCCIPRemapper.acceptOwnership();
         votingEscrowDelegationProxy.acceptOwnership();
+        liquidityGaugeFactory.acceptOwnership();
 
         // gauge related configuration
         gaugeController.add_type(Constants._GAUGE_TYPE_ETHEREUM);

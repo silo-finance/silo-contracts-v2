@@ -29,6 +29,9 @@ interface ISiloLiquidityGauge {
             uint256 fee_deployer
         );
 
+    function add_reward(address _reward_token, address _distributor) external;
+    function deposit_reward_token(address _reward_token, uint256 _amount) external;
+
     /// @notice Returns a silo hook receiver
     function hook_receiver() external view returns (address);
     /// @notice Returns a silo share token
