@@ -131,7 +131,7 @@ library SiloStdLib {
     /// @return deployerFee Deployer fee amount in 18 decimals points
     /// @return asset Address of the associated asset
     function getFeesAndFeeReceiversWithAsset(ISilo _silo)
-        public
+        internal
         view
         returns (
             address daoFeeReceiver,
