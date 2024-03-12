@@ -75,7 +75,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
     }
 
     function getLiquidity() external view virtual returns (uint256 liquidity) {
-        return _callGetLiquidity(config);
+        return SiloLendingLib.getLiquidity(config);
     }
 
     /// @inheritdoc ISilo
@@ -900,7 +900,9 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
 
         if (_liquidation && configData.liquidationModule != msg.sender) revert ISilo.OnlyLiquidationModule();
 
-        (assets, shares) = _callRepay(configData, _assets, _shares, _borrower, _repayer);
+        (
+            assets, shares
+        ) = SiloLendingLib.repay(configData, _assets, _shares, _borrower, _repayer, total[AssetType.Debt]);
 
         emit Repay(_repayer, _borrower, assets, shares);
     }
@@ -980,10 +982,6 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
             _totalDebtShares,
             cachedConfig
         );
-    }
-
-    function _callGetLiquidity(ISiloConfig _config) internal view virtual returns (uint256 liquidity) {
-        return SiloLendingLib.getLiquidity(_config);
     }
 
     function _callMaxDepositOrMint(address _receiver, uint256 _totalCollateralAssets)
@@ -1073,15 +1071,5 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
             _liquidity,
             _totalCollateral
         );
-    }
-
-    function _callRepay(
-        ISiloConfig.ConfigData memory _configData,
-        uint256 _assets,
-        uint256 _shares,
-        address _borrower,
-        address _repayer
-    ) internal virtual returns (uint256 assets, uint256 shares) {
-        return SiloLendingLib.repay(_configData, _assets, _shares, _borrower, _repayer, total[AssetType.Debt]);
     }
 }

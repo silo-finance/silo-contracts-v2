@@ -81,7 +81,7 @@ library SiloLendingLib {
         uint256 _totalDebtShares,
         ISiloConfig _siloConfig
     )
-        external
+        internal
         view
         returns (uint256 assets, uint256 shares)
     {
@@ -140,13 +140,13 @@ library SiloLendingLib {
         }
     }
 
-    function getLiquidity(ISiloConfig _siloConfig) public view returns (uint256 liquidity) {
+    function getLiquidity(ISiloConfig _siloConfig) internal view returns (uint256 liquidity) {
         ISiloConfig.ConfigData memory config = _siloConfig.getConfig(address(this));
         (liquidity,,) = getLiquidityAndAssetsWithInterest(config);
     }
 
     function getLiquidityAndAssetsWithInterest(ISiloConfig.ConfigData memory _config)
-        public
+        internal
         view
         returns (uint256 liquidity, uint256 totalCollateralAssets, uint256 totalDebtAssets)
     {
