@@ -54,6 +54,17 @@ contract Gas is SiloLittleHelper {
         string memory _msg,
         uint256 _expectedGas
     ) internal returns (uint256 gas) {
+        return _action(_sender, _target, _calldata, _msg, _expectedGas, 100);
+    }
+
+    function _action(
+        address _sender,
+        address _target,
+        bytes memory _calldata,
+        string memory _msg,
+        uint256 _expectedGas,
+        uint256 _errorThreshold
+    ) internal returns (uint256 gas) {
         vm.startPrank(_sender, _sender);
 
         uint256 gasStart = gasleft();
@@ -71,7 +82,7 @@ contract Gas is SiloLittleHelper {
             uint256 diff = _expectedGas > gas ? _expectedGas - gas : gas - _expectedGas;
             string memory diffSign = gas < _expectedGas ? "less" : "more";
 
-            if (diff < 100) {
+            if (diff < _errorThreshold) {
                 console2.log(string(abi.encodePacked("[GAS] ", _msg, ": %s (got bit ", diffSign, " by %s)")), gas, diff);
             } else {
                 revert(string(abi.encodePacked(
