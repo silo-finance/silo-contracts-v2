@@ -14,14 +14,18 @@ contract BorrowPossibleTest is Test {
     function test_borrowPossible_borrowable_zeros() public {
         TokenMock protectedShareToken = new TokenMock(address(0x111));
         TokenMock collateralShareToken = new TokenMock(address(0x222));
+        TokenMock debtShareToken = new TokenMock(address(0x333));
         address borrower = address(0x333);
 
         protectedShareToken.balanceOfMock(borrower, 0);
         collateralShareToken.balanceOfMock(borrower, 0);
 
-        bool possible = SiloLendingLib.borrowPossible(protectedShareToken.ADDRESS(), collateralShareToken.ADDRESS(), borrower);
+        (bool possible, bool withdrawRequired) = SiloLendingLib.borrowPossible(
+            protectedShareToken.ADDRESS(), collateralShareToken.ADDRESS(), debtShareToken.ADDRESS(), borrower
+        );
 
         assertTrue(possible, "borrow possible when borrowPossible=true and no collateral in this token");
+        assertFalse(withdrawRequired);
     }
 
     /*
@@ -30,14 +34,18 @@ contract BorrowPossibleTest is Test {
     function test_borrowPossible_borrowable_notPossibleWithCollateral() public {
         TokenMock protectedShareToken = new TokenMock(address(0x111));
         TokenMock collateralShareToken = new TokenMock(address(0x222));
+        TokenMock debtShareToken = new TokenMock(address(0x333));
         address borrower = address(0x333);
 
         protectedShareToken.balanceOfMock(borrower, 0);
         collateralShareToken.balanceOfMock(borrower, 2);
 
-        bool possible = SiloLendingLib.borrowPossible(protectedShareToken.ADDRESS(), collateralShareToken.ADDRESS(), borrower);
+        (bool possible, bool withdrawRequired) = SiloLendingLib.borrowPossible(
+            protectedShareToken.ADDRESS(), collateralShareToken.ADDRESS(), debtShareToken.ADDRESS(), borrower
+        );
 
         assertFalse(possible, "borrow NOT possible when borrowPossible=true and no collateral in this token");
+        assertFalse(withdrawRequired);
     }
 
     /*
@@ -46,12 +54,16 @@ contract BorrowPossibleTest is Test {
     function test_borrowPossible_borrowable_notPossibleWithProtected() public {
         TokenMock protectedShareToken = new TokenMock(address(0x111));
         TokenMock collateralShareToken = new TokenMock(address(0x222));
+        TokenMock debtShareToken = new TokenMock(address(0x333));
         address borrower = address(0x333);
 
         protectedShareToken.balanceOfMock(borrower, 1);
 
-        bool possible = SiloLendingLib.borrowPossible(protectedShareToken.ADDRESS(), collateralShareToken.ADDRESS(), borrower);
+        (bool possible, bool withdrawRequired) = SiloLendingLib.borrowPossible(
+            protectedShareToken.ADDRESS(), collateralShareToken.ADDRESS(), debtShareToken.ADDRESS(), borrower
+        );
 
         assertFalse(possible, "borrow NOT possible when borrowPossible=true and no collateral in this token");
+        assertFalse(withdrawRequired);
     }
 }

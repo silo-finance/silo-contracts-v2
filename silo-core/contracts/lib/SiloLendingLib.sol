@@ -85,7 +85,14 @@ library SiloLendingLib {
         view
         returns (uint256 assets, uint256 shares)
     {
-        if (!borrowPossible(_debtConfig.protectedShareToken, _debtConfig.collateralShareToken, _borrower)) {
+        (bool possible,) = borrowPossible(
+            _debtConfig.protectedShareToken,
+            _debtConfig.collateralShareToken,
+            _collateralConfig.debtShareToken,
+            _borrower
+        );
+
+        if (!possible) {
             return (0, 0);
         }
 
@@ -170,14 +177,22 @@ library SiloLendingLib {
     /// @param _collateralShareToken Address of the collateral share token
     /// @param _borrower The address of the borrower being checked
     /// @return possible `true` if the borrower can borrow, `false` otherwise
+    /// @return withdrawRequired `true` if there is collateral, that needs to be withdrawn before borrow
     function borrowPossible(
         address _protectedShareToken,
         address _collateralShareToken,
+        address _otherSiloDebtShareToken,
         address _borrower
-    ) internal view returns (bool possible) {
+    ) internal view returns (bool possible, bool withdrawRequired) {
+
         // _borrower cannot have any collateral deposited
         possible = IShareToken(_protectedShareToken).balanceOf(_borrower) == 0
             && IShareToken(_collateralShareToken).balanceOf(_borrower) == 0;
+
+        if (!possible && IShareToken(_otherSiloDebtShareToken).balanceOf(_borrower) == 0) {
+            possible = true;
+            withdrawRequired = true;
+        }
     }
 
     /// @notice Allows repaying borrowed assets either partially or in full
@@ -287,7 +302,7 @@ library SiloLendingLib {
     /// @notice Allows a user or a delegate to borrow assets against their collateral
     /// @dev The function checks for necessary conditions such as borrow possibility, enough liquidity, and zero
     /// values
-    /// @param _configData Contains configurations such as associated share tokens and underlying tokens
+    /// @param _configData Configurations for debt silo (from where `_borrower` wants to borrow `_assets`
     /// @param _assets Number of assets the borrower intends to borrow. Use 0 if shares are provided.
     /// @param _shares Number of shares corresponding to the assets that the borrower intends to borrow. Use 0 if
     /// assets are provided.
@@ -300,6 +315,7 @@ library SiloLendingLib {
     /// @return borrowedShares Number of debt share tokens corresponding to the borrowed assets
     function borrow(
         ISiloConfig.ConfigData memory _configData,
+        address _collateralSiloDebtShareToken,
         uint256 _assets,
         uint256 _shares,
         address _receiver,
@@ -310,9 +326,14 @@ library SiloLendingLib {
     ) internal returns (uint256 borrowedAssets, uint256 borrowedShares) {
         if (_assets == 0 && _shares == 0) revert ISilo.ZeroAssets();
 
-        if (!borrowPossible(_configData.protectedShareToken, _configData.collateralShareToken, _borrower)) {
-            revert ISilo.BorrowNotPossible();
-        }
+        (bool possible, bool withdrawRequired) = borrowPossible(
+            _configData.protectedShareToken,
+            _configData.collateralShareToken,
+            _collateralSiloDebtShareToken,
+            _borrower
+        );
+
+        if (!possible) revert ISilo.BorrowNotPossible();
 
         IShareToken debtShareToken = IShareToken(_configData.debtShareToken);
         uint256 totalDebtAssets = _totalDebt.assets;

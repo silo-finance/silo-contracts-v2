@@ -678,7 +678,15 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
 
         (
             assets, shares
-        ) = _callBorrow(debtConfig, _assets, borrowSharesZero, address(_receiver), _borrower, msg.sender);
+        ) = _callBorrow(
+            debtConfig,
+            collateralConfig.debtShareToken,
+            _assets,
+            borrowSharesZero,
+            address(_receiver),
+            _borrower,
+            msg.sender
+        );
 
         emit Borrow(msg.sender, address(_receiver), _borrower, assets, shares);
         emit Leverage();
@@ -874,7 +882,11 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
             debtConfig.interestRateModel, debtConfig.daoFee, debtConfig.deployerFee, debtConfig.otherSilo
         );
 
-        (assets, shares) = _callBorrow(debtConfig, _assets, _shares, _receiver, _borrower, msg.sender);
+        (
+            assets, shares
+        ) = _callBorrow(
+            debtConfig, collateralConfig.debtShareToken, _assets, _shares, _receiver, _borrower, msg.sender
+        );
 
         emit Borrow(msg.sender, _receiver, _borrower, assets, shares);
 
@@ -1009,6 +1021,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
 
     function _callBorrow(
         ISiloConfig.ConfigData memory _configData,
+        address _collateralSiloDebtShareToken,
         uint256 _assets,
         uint256 _shares,
         address _receiver,
@@ -1017,6 +1030,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
     ) internal virtual returns (uint256 borrowedAssets, uint256 borrowedShares) {
         return SiloLendingLib.borrow(
             _configData,
+            _collateralSiloDebtShareToken,
             _assets,
             _shares,
             _receiver,

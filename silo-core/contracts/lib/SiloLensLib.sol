@@ -18,10 +18,15 @@ library SiloLensLib {
     }
 
     function borrowPossible(ISilo _silo, address _borrower) internal view returns (bool) {
-        ISiloConfig.ConfigData memory configData = _silo.config().getConfig(address(_silo));
+        (
+            ISiloConfig.ConfigData memory thisSiloConfig, ISiloConfig.ConfigData memory otherSiloConfig
+        ) = _silo.config().getConfigs(address(_silo));
 
         return SiloLendingLib.borrowPossible(
-            configData.protectedShareToken, configData.collateralShareToken, _borrower
+            thisSiloConfig.protectedShareToken,
+            thisSiloConfig.collateralShareToken,
+            otherSiloConfig.debtShareToken,
+            _borrower
         );
     }
 
