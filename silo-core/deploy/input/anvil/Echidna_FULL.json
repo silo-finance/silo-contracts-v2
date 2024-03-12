@@ -1,6 +1,6 @@
 {
     "deployer": "0xdEDEDEDEdEdEdEDedEDeDedEdEdeDedEdEDedEdE",
-    "liquidation": "SiloLiquidation",
+    "liquidationModule": "PartialLiquidation",
     "deployerFee": 1000,
     "token0": "WETH",
     "solvencyOracle0": "DIA",

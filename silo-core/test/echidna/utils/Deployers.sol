@@ -43,7 +43,7 @@ contract Deployers is VyperDeployer, Data {
     IGaugeHookReceiver hookReceiver;
     IHookReceiversFactory hookReceiverFactory;
     ISiloDeployer siloDeployer;
-    PartialLiquidation siloLiquidation;
+    PartialLiquidation liquidationModule;
 
     // ve-silo
     ISiloTimelockController timelockController;
@@ -72,7 +72,7 @@ contract Deployers is VyperDeployer, Data {
         // The FULL data relies on addresses set in _setupBasicData()
         siloData["FULL"] = ISiloConfig.InitData({
             deployer: timelockAdmin,
-            liquidation: address(siloLiquidation),
+            liquidationModule: address(liquidationModule),
             deployerFee: 0.1000e18,
             token0: _tokens["WETH"],
             solvencyOracle0: oracles["DIA"],
@@ -250,7 +250,7 @@ contract Deployers is VyperDeployer, Data {
     }
 
     function core_deploySiloLiquidation() internal {
-        siloLiquidation = new PartialLiquidation();
+        liquidationModule = new PartialLiquidation();
     }
 
     function core_deployHookReceiverFactory() internal {

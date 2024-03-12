@@ -122,7 +122,7 @@ contract BeforeQuoteTest is SiloLittleHelper, Test {
 
         emit log_named_address("maxLtvOracle0", address(maxLtvOracle0));
         emit log_named_address("solvencyOracle0", address(solvencyOracle0));
-        emit log_named_address("siloLiquidation", address(partialLiquidation));
+        emit log_named_address("liquidationModule", address(partialLiquidation));
 
         _expectCallsToSolvencyOracle(0x1bd942c37174f394000); // amount with interest
 

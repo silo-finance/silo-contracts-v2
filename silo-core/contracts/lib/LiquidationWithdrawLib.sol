@@ -22,7 +22,7 @@ library LiquidationWithdrawLib {
         mapping(ISilo.AssetType => ISilo.Assets) storage _total
     ) external {
         ISiloConfig.ConfigData memory collateralConfig = _config.getConfig(address(this));
-        if (msg.sender != collateralConfig.liquidation) revert ISilo.OnlyLiquidation();
+        if (msg.sender != collateralConfig.liquidationModule) revert ISilo.OnlyLiquidationModule();
 
         if (_receiveSToken) {
             withdrawSCollateralToLiquidator(

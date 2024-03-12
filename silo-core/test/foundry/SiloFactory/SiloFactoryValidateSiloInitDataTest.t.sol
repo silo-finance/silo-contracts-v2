@@ -36,10 +36,10 @@ contract SiloFactoryValidateSiloInitDataTest is Test {
     function test_validateSiloInitData() public {
         ISiloConfig.InitData memory initData;
 
-        vm.expectRevert(ISiloFactory.MissingLiquidation.selector);
+        vm.expectRevert(ISiloFactory.MissingLiquidationModule.selector);
         siloFactory.validateSiloInitData(initData);
 
-        initData.liquidation = address(11);
+        initData.liquidationModule = address(11);
 
         vm.expectRevert(ISiloFactory.SameAsset.selector);
         siloFactory.validateSiloInitData(initData);

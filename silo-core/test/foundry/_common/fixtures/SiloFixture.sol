@@ -49,7 +49,12 @@ contract SiloFixture is StdCheats, CommonBase {
     function deploy_ETH_USDC()
         external
         returns (
-            ISiloConfig siloConfig, ISilo silo0, ISilo silo1, address weth, address usdc, IPartialLiquidation liquidation
+            ISiloConfig siloConfig,
+            ISilo silo0,
+            ISilo silo1,
+            address weth,
+            address usdc,
+            IPartialLiquidation liquidationModule
         )
     {
         return _deploy(new SiloDeploy(), SiloConfigsNames.ETH_USDC_UNI_V3_SILO);
@@ -58,7 +63,12 @@ contract SiloFixture is StdCheats, CommonBase {
     function deploy_local(SiloConfigOverride memory _override)
         external
         returns (
-            ISiloConfig siloConfig, ISilo silo0, ISilo silo1, address weth, address usdc, IPartialLiquidation liquidation
+            ISiloConfig siloConfig,
+            ISilo silo0,
+            ISilo silo1,
+            address weth,
+            address usdc,
+            IPartialLiquidation liquidationModule
         )
     {
         // Mock addresses that we need for the `SiloFactoryDeploy` script
@@ -80,7 +90,7 @@ contract SiloFixture is StdCheats, CommonBase {
             ISilo silo1,
             address token0,
             address token1,
-            IPartialLiquidation liquidation
+            IPartialLiquidation liquidationModule
         )
     {
         MainnetDeploy mainnetDeploy = new MainnetDeploy();
@@ -99,7 +109,7 @@ contract SiloFixture is StdCheats, CommonBase {
         token0 = siloConfig0.token;
         token1 = siloConfig1.token;
 
-        liquidation = IPartialLiquidation(siloConfig0.liquidation);
-        if (address(liquidation) == address(0)) revert("siloLiquidation is empty");
+        liquidationModule = IPartialLiquidation(siloConfig0.liquidationModule);
+        if (address(liquidationModule) == address(0)) revert("liquidationModule is empty");
     }
 }

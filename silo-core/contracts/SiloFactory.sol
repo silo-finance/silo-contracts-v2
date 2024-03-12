@@ -153,7 +153,7 @@ contract SiloFactory is ISiloFactory, ERC721Upgradeable, Ownable2StepUpgradeable
 
     function validateSiloInitData(ISiloConfig.InitData memory _initData) public view virtual returns (bool) {
         // solhint-disable-previous-line code-complexity
-        if (_initData.liquidation == address(0)) revert MissingLiquidation();
+        if (_initData.liquidationModule == address(0)) revert MissingLiquidationModule();
         if (_initData.token0 == _initData.token1) revert SameAsset();
         if (_initData.maxLtv0 == 0 && _initData.maxLtv1 == 0) revert InvalidMaxLtv();
         if (_initData.maxLtv0 > _initData.lt0) revert InvalidMaxLtv();
@@ -293,7 +293,7 @@ contract SiloFactory is ISiloFactory, ERC721Upgradeable, Ownable2StepUpgradeable
         virtual
         returns (ISiloConfig.ConfigData memory configData0, ISiloConfig.ConfigData memory configData1)
     {
-        configData0.liquidation = _initData.liquidation;
+        configData0.liquidationModule = _initData.liquidationModule;
         configData0.token = _initData.token0;
         configData0.solvencyOracle = _initData.solvencyOracle0;
         // If maxLtv oracle is not set, fallback to solvency oracle
@@ -308,7 +308,7 @@ contract SiloFactory is ISiloFactory, ERC721Upgradeable, Ownable2StepUpgradeable
         configData0.flashloanFee = _initData.flashloanFee0;
         configData0.callBeforeQuote = _initData.callBeforeQuote0 && configData0.maxLtvOracle != address(0);
 
-        configData1.liquidation = _initData.liquidation;
+        configData1.liquidationModule = _initData.liquidationModule;
         configData1.token = _initData.token1;
         configData1.solvencyOracle = _initData.solvencyOracle1;
         // If maxLtv oracle is not set, fallback to solvency oracle

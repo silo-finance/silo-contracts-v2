@@ -1,6 +1,6 @@
 {
     "deployer": "0x0000000000000000000000000000000000de0101",
-    "liquidation": "SiloLiquidation",
+    "liquidationModule": "PartialLiquidation",
     "deployerFee": 1000,
     "token0": "PLACEHOLDER",
     "solvencyOracle0": "NO_ORACLE",

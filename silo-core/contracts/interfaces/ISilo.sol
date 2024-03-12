@@ -122,7 +122,7 @@ interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
     error WrongAssetType();
     error ZeroAssets();
     error ZeroShares();
-    error OnlyLiquidation();
+    error OnlyLiquidationModule();
     error Insolvency();
 
     /// @notice Initialize Silo

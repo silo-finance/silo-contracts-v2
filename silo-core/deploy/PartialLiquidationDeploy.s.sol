@@ -11,15 +11,15 @@ import {PartialLiquidation, IPartialLiquidation} from "silo-core/contracts/liqui
         --ffi --broadcast --rpc-url http://127.0.0.1:8545
  */
 contract PartialLiquidationDeploy is CommonDeploy {
-    function run() public returns (IPartialLiquidation siloLiquidation) {
+    function run() public returns (IPartialLiquidation liquidationModule) {
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
 
         vm.startBroadcast(deployerPrivateKey);
 
-        siloLiquidation = IPartialLiquidation(address(new PartialLiquidation()));
+        liquidationModule = IPartialLiquidation(address(new PartialLiquidation()));
 
         vm.stopBroadcast();
 
-        _registerDeployment(address(siloLiquidation), SiloCoreContracts.PARTIAL_LIQUIDATION);
+        _registerDeployment(address(liquidationModule), SiloCoreContracts.PARTIAL_LIQUIDATION);
     }
 }
