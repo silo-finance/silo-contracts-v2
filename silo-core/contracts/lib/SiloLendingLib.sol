@@ -81,7 +81,7 @@ library SiloLendingLib {
         uint256 _totalDebtShares,
         ISiloConfig _siloConfig
     )
-        external
+        internal
         view
         returns (uint256 assets, uint256 shares)
     {
