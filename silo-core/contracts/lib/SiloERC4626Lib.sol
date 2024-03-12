@@ -41,7 +41,7 @@ library SiloERC4626Lib {
         address _receiver,
         uint256 _totalCollateralAssets
     )
-        external
+        internal // size +0.1, no gas change
         view
         returns (uint256 maxAssetsOrShares)
     {
