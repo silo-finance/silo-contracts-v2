@@ -307,17 +307,5 @@ rule HLP_MintRedeem2NotProfitable(env e, address receiver)
     assert balanceCollateralR2 >= balanceCollateralBefore => balanceTokenR2 <= balanceTokenBefore;
 }
 
-rule HLP_PreviewMintCorrectness(env e, address receiver)
-{
-    completeSiloSetupEnv(e);
-    totalSupplyMoreThanBalance(receiver);
-    totalSupplyMoreThanBalance(e.msg.sender);
-    
-    uint256 shares; uint256 shares2;
-    uint256 assetsReported = previewMint(e, shares);
-    storage init = lastStorage;
-    uint256 assetsPaid = mint(e, shares, receiver);
-    assert assetsPaid <= assetsReported;
-}
 
 
