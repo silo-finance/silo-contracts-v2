@@ -140,15 +140,13 @@ library SiloLendingLib {
         }
     }
 
-    // size +0.1, no gas change
-    function getLiquidity(ISiloConfig _siloConfig) internal view returns (uint256 liquidity) {
+    function getLiquidity(ISiloConfig _siloConfig) public view returns (uint256 liquidity) {
         ISiloConfig.ConfigData memory config = _siloConfig.getConfig(address(this));
         (liquidity,,) = getLiquidityAndAssetsWithInterest(config);
     }
 
-    // size: no change once getLiquidity is internal
     function getLiquidityAndAssetsWithInterest(ISiloConfig.ConfigData memory _config)
-        internal
+        public
         view
         returns (uint256 liquidity, uint256 totalCollateralAssets, uint256 totalDebtAssets)
     {
