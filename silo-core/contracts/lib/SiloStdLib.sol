@@ -23,7 +23,7 @@ library SiloStdLib {
     /// accordingly
     /// @param _silo Silo address
     /// @param _siloData Storage reference containing silo-related data, including accumulated fees
-    function withdrawFees(ISilo _silo, ISilo.SiloData storage _siloData) internal { // size + 1, no change in gas
+    function withdrawFees(ISilo _silo, ISilo.SiloData storage _siloData) external {
         (
             address daoFeeReceiver,
             address deployerFeeReceiver,
@@ -131,7 +131,7 @@ library SiloStdLib {
     /// @return deployerFee Deployer fee amount in 18 decimals points
     /// @return asset Address of the associated asset
     function getFeesAndFeeReceiversWithAsset(ISilo _silo)
-        internal
+        public
         view
         returns (
             address daoFeeReceiver,
