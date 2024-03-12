@@ -23,7 +23,7 @@ library SiloSolvencyLib {
     uint256 internal constant _INFINITY = type(uint256).max;
 
     function getOrderedConfigs(ISilo _silo, ISiloConfig _config, address _borrower)
-        internal
+        external
         view
         returns (ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig)
     {
