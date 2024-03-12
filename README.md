@@ -162,3 +162,12 @@ git submodule add --name crytic-properties https://github.com/crytic/properties 
 # after you done run this to revert changes:
 ./silo-core/scripts/echidnaAfter.sh
 ```
+
+## Gas
+
+```shell
+# generate snapshot file
+FOUNDRY_PROFILE=core-test forge snapshot --no-match-test "_skip_" --no-match-contract "SiloIntegrationTest" --ffi
+# check gas difference
+FOUNDRY_PROFILE=core-test forge snapshot --check --no-match-test "_skip_" --no-match-contract "SiloIntegrationTest" --ffi
+```
