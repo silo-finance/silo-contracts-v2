@@ -25,6 +25,9 @@ contract DepositAccrueInterestGasTest is Gas, Test {
         vm.warp(block.timestamp + 1 days);
     }
 
+    /*
+    forge test -vvv --ffi --mt test_gas_depositAccrueInterest
+    */
     function test_gas_depositAccrueInterest() public {
         _action(
             DEPOSITOR,
