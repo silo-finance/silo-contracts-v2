@@ -169,7 +169,7 @@ git submodule add --name crytic-properties https://github.com/crytic/properties 
 # generate snapshot file
 FOUNDRY_PROFILE=core-test forge snapshot --no-match-test "_skip_" --no-match-contract "SiloIntegrationTest" --ffi
 # check gas difference
-FOUNDRY_PROFILE=core-test forge snapshot --check --no-match-test "_skip_" --no-match-contract "SiloIntegrationTest" --ffi
+FOUNDRY_PROFILE=core-test forge snapshot --check --no-match-test "_skip_" --no-match-contract "SiloIntegrationTest" --ffi --desc
 # better view, with % change
-FOUNDRY_PROFILE=core-test forge snapshot --diff --no-match-test "_skip_" --no-match-contract "SiloIntegrationTest" --ffi
+FOUNDRY_PROFILE=core-test forge snapshot --diff --no-match-test "_skip_" --no-match-contract "SiloIntegrationTest" --ffi --desc
 ```

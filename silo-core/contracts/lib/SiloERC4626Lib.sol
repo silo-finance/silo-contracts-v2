@@ -41,7 +41,7 @@ library SiloERC4626Lib {
         address _receiver,
         uint256 _totalCollateralAssets
     )
-        external
+        internal
         view
         returns (uint256 maxAssetsOrShares)
     {
