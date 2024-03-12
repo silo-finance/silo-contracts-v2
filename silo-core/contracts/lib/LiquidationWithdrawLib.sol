@@ -20,7 +20,7 @@ library LiquidationWithdrawLib {
         bool _receiveSToken,
         uint256 _liquidity,
         mapping(ISilo.AssetType => ISilo.Assets) storage _total
-    ) internal { // size +0.8, gas less by 3485
+    ) external {
         ISiloConfig.ConfigData memory collateralConfig = _config.getConfig(address(this));
         if (msg.sender != collateralConfig.liquidationModule) revert ISilo.OnlyLiquidationModule();
 
