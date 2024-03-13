@@ -72,7 +72,7 @@ contract LeverageTest is SiloLittleHelper, Test {
 
         vm.expectCall(address(token0), abi.encodeWithSelector(IERC20.transfer.selector, borrower, assets));
 
-        vm.expectRevert(ISilo.AboveMaxLtv.selector);
+        vm.expectRevert(ISilo.NotEnoughLiquidity.selector); // because we borrow first
         silo0.leverage(assets, leverageBorrower, borrower, bytes(""));
     }
 
@@ -88,7 +88,7 @@ contract LeverageTest is SiloLittleHelper, Test {
 
         vm.expectCall(address(token0), abi.encodeWithSelector(IERC20.transfer.selector, borrower, assets));
 
-        vm.expectRevert(ISilo.AboveMaxLtv.selector);
+        vm.expectRevert(ISilo.NotEnoughLiquidity.selector); // because we borrow first
         silo0.leverage(assets, leverageBorrower, borrower, bytes(""));
     }
 
