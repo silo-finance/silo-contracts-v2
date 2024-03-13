@@ -307,5 +307,28 @@ rule HLP_MintRedeem2NotProfitable(env e, address receiver)
     assert balanceCollateralR2 >= balanceCollateralBefore => balanceTokenR2 <= balanceTokenBefore;
 }
 
+rule HLP_DepositRedeemNotProfitable(env e, address receiver)
+{
+    completeSiloSetupEnv(e);
+    totalSupplyMoreThanBalance(receiver);
+    totalSupplyMoreThanBalance(e.msg.sender);
+    
+    mathint balanceCollateralBefore = shareCollateralToken0.balanceOf(receiver);
+    mathint balanceTokenBefore = token0.balanceOf(e.msg.sender);    
+
+    uint256 assets; 
+    mathint sharesM1 = deposit(e, assets, receiver);
+    mathint balanceCollateralM1 = shareCollateralToken0.balanceOf(receiver);  
+    mathint balanceTokenM1 = token0.balanceOf(e.msg.sender);    
+
+    uint256 shares;
+    mathint assetsR = redeem(e, shares, receiver, receiver);
+    mathint balanceCollateralR = shareCollateralToken0.balanceOf(receiver);  
+    mathint balanceTokenR = token0.balanceOf(e.msg.sender);    
+   
+    assert balanceCollateralR > balanceCollateralBefore => balanceTokenR < balanceTokenBefore;
+    assert balanceTokenR > balanceTokenBefore => balanceCollateralR < balanceCollateralBefore;
+}
+
 
 
