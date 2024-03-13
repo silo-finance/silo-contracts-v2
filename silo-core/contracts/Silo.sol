@@ -1056,8 +1056,6 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
             );
         }
 
-        uint256 totalCollateralAssets = total[AssetType.Collateral].assets;
-
         if (collateralSharesToWithdraw != 0) {
             SiloERC4626Lib.withdraw(
                 _configData.token,
@@ -1068,7 +1066,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
                 _borrower,
                 _borrower,
                 AssetType.Collateral,
-                SiloMathLib.liquidity(totalCollateralAssets, total[AssetType.Debt].assets), // TODO what if not enough to withdraw all??
+                _getRawLiquidity(), // TODO what if not enough to withdraw all??
                 total[AssetType.Collateral]
             );
         }
@@ -1082,7 +1080,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
             _borrower,
             _spender,
             total[AssetType.Debt],
-            totalCollateralAssets
+            total[AssetType.Collateral].assets // do not cache it because withdraw can change this value
         );
     }
 
