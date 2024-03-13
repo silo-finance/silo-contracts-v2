@@ -57,7 +57,15 @@ contract BorrowTest is Test {
         vm.expectRevert(ISilo.ZeroAssets.selector);
 
         SiloLendingLib.borrow(
-            configData, assets, shares, receiver, borrower, spender, totalDebt, totalCollateralAssets
+            configData.debtShareToken,
+            configData.token,
+            assets,
+            shares,
+            receiver,
+            borrower,
+            spender,
+            totalDebt,
+            totalCollateralAssets
         );
     }
 

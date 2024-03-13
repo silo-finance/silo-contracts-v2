@@ -17,12 +17,12 @@ library SiloLensLib {
         return SiloERC4626Lib.depositPossible(debtShareToken, _depositor);
     }
 
-    function borrowPossible(ISilo _silo, address _borrower) internal view returns (bool) {
+    function borrowPossible(ISilo _silo, address _borrower) internal view returns (bool possible) {
         (
             ISiloConfig.ConfigData memory thisSiloConfig, ISiloConfig.ConfigData memory otherSiloConfig
         ) = _silo.config().getConfigs(address(_silo));
 
-        return SiloLendingLib.borrowPossible(
+        (possible,,) = SiloLendingLib.borrowPossible(
             thisSiloConfig.protectedShareToken,
             thisSiloConfig.collateralShareToken,
             otherSiloConfig.debtShareToken,

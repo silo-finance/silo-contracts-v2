@@ -20,12 +20,15 @@ contract BorrowPossibleTest is Test {
         protectedShareToken.balanceOfMock(borrower, 0);
         collateralShareToken.balanceOfMock(borrower, 0);
 
-        (bool possible, bool withdrawRequired) = SiloLendingLib.borrowPossible(
+        (
+            bool possible, uint256 protectedSharesToWithdraw, uint256 collateralSharesToWithdraw
+        ) = SiloLendingLib.borrowPossible(
             protectedShareToken.ADDRESS(), collateralShareToken.ADDRESS(), debtShareToken.ADDRESS(), borrower
         );
 
         assertTrue(possible, "borrow possible when borrowPossible=true and no collateral in this token");
-        assertFalse(withdrawRequired);
+        assertEq(protectedSharesToWithdraw, 0);
+        assertEq(collateralSharesToWithdraw, 0);
     }
 
     /*
@@ -40,12 +43,15 @@ contract BorrowPossibleTest is Test {
         protectedShareToken.balanceOfMock(borrower, 0);
         collateralShareToken.balanceOfMock(borrower, 2);
 
-        (bool possible, bool withdrawRequired) = SiloLendingLib.borrowPossible(
+        (
+            bool possible, uint256 protectedSharesToWithdraw, uint256 collateralSharesToWithdraw
+        ) = SiloLendingLib.borrowPossible(
             protectedShareToken.ADDRESS(), collateralShareToken.ADDRESS(), debtShareToken.ADDRESS(), borrower
         );
 
         assertFalse(possible, "borrow NOT possible when borrowPossible=true and no collateral in this token");
-        assertFalse(withdrawRequired);
+        assertEq(protectedSharesToWithdraw, 0);
+        assertEq(collateralSharesToWithdraw, 0);
     }
 
     /*
@@ -59,11 +65,14 @@ contract BorrowPossibleTest is Test {
 
         protectedShareToken.balanceOfMock(borrower, 1);
 
-        (bool possible, bool withdrawRequired) = SiloLendingLib.borrowPossible(
+        (
+            bool possible, uint256 protectedSharesToWithdraw, uint256 collateralSharesToWithdraw
+        ) = SiloLendingLib.borrowPossible(
             protectedShareToken.ADDRESS(), collateralShareToken.ADDRESS(), debtShareToken.ADDRESS(), borrower
         );
 
         assertFalse(possible, "borrow NOT possible when borrowPossible=true and no collateral in this token");
-        assertFalse(withdrawRequired);
+        assertEq(protectedSharesToWithdraw, 0);
+        assertEq(collateralSharesToWithdraw, 0);
     }
 }
