@@ -73,15 +73,16 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --ffi --mt test_borrow_when_frontRun_WithoutCollateralAllowance
+    forge test -vv --ffi --mt test_borrow_onWrongSilo_for_receiver
     */
-    function test_borrow_when_frontRun_WithoutCollateralAllowance() public {
+    function test_borrow_onWrongSilo_for_receiver_no_collateral() public {
         uint256 assets = 1e18;
         address borrower = makeAddr("borrower");
 
-        _deposit(assets, borrower, ISilo.AssetType.Collateral);
+        _deposit(assets, makeAddr("depositor"), ISilo.AssetType.Collateral);
+        _deposit(assets, borrower, ISilo.AssetType.Protected);
 
-        vm.expectCall(address(token0), abi.encodeWithSelector(IERC20.transfer.selector, borrower, assets));
+        // there will be no withdraw because we borrow for receiver and receiver has no collateral
 
         vm.expectRevert("ERC20: insufficient allowance"); // because we want to mint for receiver
         vm.prank(borrower);
@@ -89,9 +90,44 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --ffi --mt test_borrow_when_frontRun_WithProtected
+    forge test -vv --ffi --mt test_borrow_onWrongSilo_for_receiver_with_collateral
     */
-    function test_borrow_when_frontRun_WithProtected() public {
+    function test_borrow_onWrongSilo_for_receiver_with_collateral() public {
+        uint256 assets = 1e18;
+        address borrower = makeAddr("borrower");
+        address receiver = makeAddr("receiver");
+
+        _deposit(assets, makeAddr("depositor"), ISilo.AssetType.Collateral);
+        _deposit(assets, receiver, ISilo.AssetType.Protected);
+
+        vm.expectCall(address(token0), abi.encodeWithSelector(IERC20.transfer.selector, receiver, assets));
+
+        vm.expectRevert("ERC20: insufficient allowance"); // because we want to mint for receiver
+        vm.prank(borrower);
+        silo0.borrow(assets, borrower, makeAddr("receiver"));
+    }
+
+    /*
+    forge test -vv --ffi --mt test_borrow_onWrongSilo_for_borrower
+    */
+    function test_borrow_onWrongSilo_for_borrower() public {
+        uint256 assets = 1e18;
+        address borrower = makeAddr("borrower");
+
+        _deposit(assets, makeAddr("depositor"), ISilo.AssetType.Collateral);
+        _deposit(assets, borrower, ISilo.AssetType.Collateral);
+
+        vm.expectCall(address(token0), abi.encodeWithSelector(IERC20.transfer.selector, borrower, assets));
+
+        vm.expectRevert(ISilo.AboveMaxLtv.selector);
+        vm.prank(borrower);
+        silo0.borrow(assets, borrower, borrower);
+    }
+
+    /*
+    forge test -vv --ffi --mt test_borrow_onWrongSilo_WithProtected
+    */
+    function test_borrow_onWrongSilo_WithProtected() public {
         uint256 assets = 1e18;
         address borrower = address(this);
 
@@ -104,9 +140,9 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --ffi --mt test_borrow_when_frontRun_WithCollateralAndProtected
+    forge test -vv --ffi --mt test_borrow_onWrongSilo_WithCollateralAndProtected
     */
-    function test_borrow_when_frontRun_WithCollateralAndProtected() public {
+    function test_borrow_onWrongSilo_WithCollateralAndProtected() public {
         uint256 assets = 1e18;
         address borrower = address(this);
 
