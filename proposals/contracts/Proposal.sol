@@ -15,6 +15,7 @@ import {VotingEscrowDelegationProxyProposer} from "./proposers/ve-silo/VotingEsc
 import {VotingEscrowCCIPRemapperProposer} from "./proposers/ve-silo/VotingEscrowCCIPRemapperProposer.sol";
 import {SiloFactoryProposer} from "./proposers/ve-silo/SiloFactoryProposer.sol";
 import {BalancerTokenAdminProposer} from "./proposers/ve-silo/BalancerTokenAdminProposer.sol";
+import {LiquidityGaugeFactoryProposer} from "./proposers/ve-silo/LiquidityGaugeFactoryProposer.sol";
 
 import {
     StakelessGaugeCheckpointerAdaptorProposer
@@ -39,6 +40,7 @@ abstract contract Proposal is IProposal {
     VotingEscrowCCIPRemapperProposer public votingEscrowCCIPRemapper;
     SiloFactoryProposer public siloFactory;
     BalancerTokenAdminProposer public balancerTokenAdmin;
+    LiquidityGaugeFactoryProposer public liquidityGaugeFactory;
 
     /// @notice The id of the proposed proposal
     uint256 private _proposalId;
@@ -106,6 +108,12 @@ abstract contract Proposal is IProposal {
         initVotingEscrowCCIPRemapper();
         initSiloFactory();
         initBalancerTokenAdmin();
+        initLiquidityGaugeFactory();
+    }
+
+    function initLiquidityGaugeFactory() public returns (Proposal proposal) {
+        liquidityGaugeFactory = new LiquidityGaugeFactoryProposer({_proposal: address(this)});
+        proposal = this;
     }
     
     function initGaugeAdder() public returns (Proposal proposal) {

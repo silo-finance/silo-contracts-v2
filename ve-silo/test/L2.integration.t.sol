@@ -129,6 +129,8 @@ contract L2Test is IntegrationTest {
         assertEq(userBalance, _EXPECTED_USER_BAL, "Expect user to receive incentives");
 
         _verifyMintedStats(gauge);
+
+        _rewardwsFees(gauge);
     }
 
     function _verifyMintedStats(ISiloChildChainGauge _gauge) internal {
@@ -246,5 +248,35 @@ contract L2Test is IntegrationTest {
     function _dummySiloToken() internal {
         _siloToken = new ERC20("Silo test token", "SILO");
         setAddress(getChainId(), SILO_TOKEN, address(_siloToken));
+    }
+
+    function _rewardwsFees(ISiloChildChainGauge _gauge) internal {
+        vm.prank(_deployer);
+        IFeesManager(address(_factory)).setFees(_DAO_FEE, _DEPLOYER_FEE);
+
+        uint256 rewardsAmount = 100e18;
+
+        address distributor = makeAddr("distributor");
+        address timelock = getAddress(VeSiloContracts.TIMELOCK_CONTROLLER);
+
+        ERC20 rewardToken = new ERC20("Test reward token", "TRT");
+        rewardToken.mint(distributor, rewardsAmount);
+
+        vm.prank(distributor);
+        rewardToken.approve(address(_gauge), rewardsAmount);
+
+        vm.prank(timelock);
+        _gauge.add_reward(address(rewardToken), distributor);
+
+        vm.prank(distributor);
+        _gauge.deposit_reward_token(address(rewardToken), rewardsAmount);
+
+        uint256 gaugeBalance = rewardToken.balanceOf(address(_gauge));
+        uint256 daoFeeReceiverBalance = rewardToken.balanceOf(_daoFeeReceiver);
+        uint256 deployerFeeReceiverBalance = rewardToken.balanceOf(_deployerFeeReceiver);
+
+        assertEq(gaugeBalance, 70e18);
+        assertEq(daoFeeReceiverBalance, 10e18);
+        assertEq(deployerFeeReceiverBalance, 20e18);
     }
 }

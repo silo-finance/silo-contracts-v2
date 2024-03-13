@@ -15,10 +15,10 @@
 pragma solidity 0.8.21;
 
 import {ISiloLiquidityGauge} from "../interfaces/ISiloLiquidityGauge.sol";
-
+import {FeesManager} from "../../silo-tokens-minter/FeesManager.sol";
 import {BaseGaugeFactory} from "../BaseGaugeFactory.sol";
 
-contract LiquidityGaugeFactory is BaseGaugeFactory {
+contract LiquidityGaugeFactory is BaseGaugeFactory, FeesManager {
     constructor(ISiloLiquidityGauge gauge) BaseGaugeFactory(address(gauge)) {
         // solhint-disable-previous-line no-empty-blocks
     }

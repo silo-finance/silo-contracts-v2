@@ -16,10 +16,10 @@ pragma solidity 0.8.21;
 
 import {IChildChainGauge} from "balancer-labs/v2-interfaces/liquidity-mining/IChildChainGauge.sol";
 import {Version} from "../_common/Version.sol";
-
+import {FeesManager} from "../../silo-tokens-minter/FeesManager.sol";
 import {BaseGaugeFactory} from "../BaseGaugeFactory.sol";
 
-contract ChildChainGaugeFactory is Version, BaseGaugeFactory {
+contract ChildChainGaugeFactory is Version, BaseGaugeFactory, FeesManager {
     string private _productVersion;
 
     constructor(
