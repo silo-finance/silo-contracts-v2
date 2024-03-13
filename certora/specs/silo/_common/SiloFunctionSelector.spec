@@ -56,6 +56,13 @@ function siloFnSelector(
     } else if (f.selector == transitionCollateralSig()) {
         ISilo.AssetType anyType;
         transitionCollateral(e, assetsOrShares, receiver, anyType);
+    } else if (f.selector == withdrawSig()) {
+        address owner;
+        withdraw(e, assetsOrShares, receiver, owner);
+    } else if (f.selector == withdrawWithTypeSig()) {
+        address owner;
+        ISilo.AssetType anyType;
+        withdraw(e, assetsOrShares, receiver, owner, anyType);
     } else {
         calldataarg args;
         f(e, args);

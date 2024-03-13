@@ -89,6 +89,9 @@ rule VC_Silo_total_collateral_decrease(
     requireToken0TotalAndBalancesIntegrity();
     requireProtectedToken0TotalAndBalancesIntegrity();
 
+    require silo0.siloData.interestRateTimestamp == 0 => 
+        silo0.total[ISilo.AssetType.Collateral].assets == 0;
+
     mathint totalDepositsBefore = silo0.getCollateralAssets(e);
     mathint shareTokenTotalSupplyBefore = shareCollateralToken0.totalSupply();
     mathint balanceSharesBefore = shareCollateralToken0.balanceOf(receiver);
