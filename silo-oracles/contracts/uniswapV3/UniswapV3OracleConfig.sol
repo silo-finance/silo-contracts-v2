@@ -12,6 +12,9 @@ contract UniswapV3OracleConfig {
     /// @dev UniV3 pool address that is used for TWAP price
     IUniswapV3Pool internal immutable _POOL; // solhint-disable-line var-name-mixedcase
 
+    /// @dev Base asset
+    address internal immutable _BASE_TOKEN; // solhint-disable-line var-name-mixedcase
+
     /// @dev Asset in which oracle denominates its price
     address internal immutable _QUOTE_TOKEN; // solhint-disable-line var-name-mixedcase
 
@@ -32,6 +35,7 @@ contract UniswapV3OracleConfig {
     ) {
         _REQUIRED_CARDINALITY = _requiredCardinality;
         _POOL = _config.pool;
+        _BASE_TOKEN = _config.baseToken;
         _QUOTE_TOKEN = _config.quoteToken;
         _PERIOD_FOR_AVG_PRICE = _config.periodForAvgPrice;
         _BLOCK_TIME = _config.blockTime;
@@ -39,6 +43,7 @@ contract UniswapV3OracleConfig {
 
     function getConfig() external view virtual returns (IUniswapV3Oracle.UniswapV3Config memory config) {
         config.pool = _POOL;
+        config.baseToken = _BASE_TOKEN;
         config.quoteToken = _QUOTE_TOKEN;
         config.periodForAvgPrice = _PERIOD_FOR_AVG_PRICE;
         config.requiredCardinality = _REQUIRED_CARDINALITY;

@@ -25,6 +25,7 @@ contract UniswapV3OracleTest is UniswapPools {
 
         config = IUniswapV3Oracle.UniswapV3DeploymentConfig(
             pools["USDC_WETH"],
+            address(tokens["WETH"]),
             address(tokens["USDC"]),
             1800,
             120
@@ -78,6 +79,7 @@ contract UniswapV3OracleTest is UniswapPools {
         UniswapV3Oracle oracle = ORACLE_FACTORY.create(IUniswapV3Oracle.UniswapV3DeploymentConfig(
             pools["SP500_WETH"],
             address(tokens["WETH"]),
+            address(tokens["WETH"]),
             15,
             120
         ));
@@ -120,6 +122,7 @@ contract UniswapV3OracleTest is UniswapPools {
 
         config = IUniswapV3Oracle.UniswapV3DeploymentConfig(
             pools["USDC_WETH"],
+            address(tokens["WETH"]),
             address(tokens["USDC"]),
             1800,
             120
