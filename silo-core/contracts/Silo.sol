@@ -1066,7 +1066,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
                 _borrower,
                 _borrower,
                 AssetType.Collateral,
-                _getRawLiquidity(), // TODO what if not enough to withdraw all??
+                _getRawLiquidity(),
                 total[AssetType.Collateral]
             );
         }
