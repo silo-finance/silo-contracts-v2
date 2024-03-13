@@ -42,6 +42,7 @@ contract BorrowPossibleTest is Test {
 
         protectedShareToken.balanceOfMock(borrower, 0);
         collateralShareToken.balanceOfMock(borrower, 2);
+        debtShareToken.balanceOfMock(borrower, 0);
 
         (
             bool possible, uint256 protectedSharesToWithdraw, uint256 collateralSharesToWithdraw
@@ -49,9 +50,9 @@ contract BorrowPossibleTest is Test {
             protectedShareToken.ADDRESS(), collateralShareToken.ADDRESS(), debtShareToken.ADDRESS(), borrower
         );
 
-        assertFalse(possible, "borrow NOT possible when borrowPossible=true and no collateral in this token");
+        assertTrue(possible, "borrow possible (when no debt) conditionally, with withdraw");
         assertEq(protectedSharesToWithdraw, 0);
-        assertEq(collateralSharesToWithdraw, 0);
+        assertEq(collateralSharesToWithdraw, 2);
     }
 
     /*
