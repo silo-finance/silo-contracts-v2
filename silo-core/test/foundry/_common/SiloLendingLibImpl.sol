@@ -9,7 +9,8 @@ contract SiloLendingLibImpl {
     ISilo.Assets totalDebt;
 
     function borrow(
-        ISiloConfig.ConfigData memory _configData,
+        address _debtShareToken,
+        address _token,
         uint256 _assets,
         uint256 _shares,
         address _receiver,
@@ -21,8 +22,8 @@ contract SiloLendingLibImpl {
         totalDebt.assets = _totalDebt.assets;
 
         (borrowedAssets, borrowedShares) = SiloLendingLib.borrow(
-            _configData.debtShareToken,
-            _configData.token,
+            _debtShareToken,
+            _token,
             _assets,
             _shares,
             _receiver,

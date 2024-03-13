@@ -83,20 +83,6 @@ contract BorrowTest is Test {
 
             totalDebt.assets = testDatas[i].input.initTotalDebt;
 
-            protectedShareToken.balanceOfMock(
-                testDatas[i].input.borrower,
-                testDatas[i].mocks.protectedShareTokenBalanceOf,
-                !txReverts
-            );
-
-            if (testDatas[i].mocks.protectedShareTokenBalanceOf == 0) {
-                collateralShareToken.balanceOfMock(
-                    testDatas[i].input.borrower,
-                    testDatas[i].mocks.collateralShareTokenBalanceOf,
-                    !txReverts
-                );
-            }
-
             if (testDatas[i].mocks.debtSharesTotalSupplyMock) {
                 debtShareToken.totalSupplyMock(testDatas[i].mocks.debtSharesTotalSupply, !txReverts);
             }
@@ -115,7 +101,8 @@ contract BorrowTest is Test {
             }
 
             (uint256 borrowedAssets, uint256 borrowedShares) = impl.borrow(
-                testDatas[i].input.configData,
+                testDatas[i].input.configData.debtShareToken,
+                testDatas[i].input.configData.token,
                 testDatas[i].input.assets,
                 testDatas[i].input.shares,
                 testDatas[i].input.receiver,
