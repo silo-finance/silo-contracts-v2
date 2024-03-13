@@ -1021,7 +1021,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
 
     function _callBorrow(
         ISiloConfig.ConfigData memory _configData,
-        address _collateralSiloDebtShareToken,
+        address _otherSiloDebtShareToken,
         uint256 _assets,
         uint256 _shares,
         address _receiver,
@@ -1035,7 +1035,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
         ) = SiloLendingLib.borrowPossible(
             _configData.protectedShareToken,
             _configData.collateralShareToken,
-            _collateralSiloDebtShareToken,
+            _otherSiloDebtShareToken,
             _borrower
         );
 
@@ -1050,23 +1050,25 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
                 _borrower,
                 _borrower,
                 _borrower,
-                ISilo.AssetType.Protected,
+                AssetType.Protected,
                 total[AssetType.Protected].assets,
                 total[AssetType.Protected]
             );
         }
 
+        uint256 totalCollateralAssets = total[AssetType.Collateral].assets;
+
         if (collateralSharesToWithdraw != 0) {
             SiloERC4626Lib.withdraw(
                 _configData.token,
-                _configData.protectedShareToken,
+                _configData.collateralShareToken,
                 0 /* _assets */,
-                protectedSharesToWithdraw,
+                collateralSharesToWithdraw,
                 _borrower,
                 _borrower,
                 _borrower,
-                ISilo.AssetType.Collateral,
-                _getRawLiquidity(),
+                AssetType.Collateral,
+                SiloMathLib.liquidity(totalCollateralAssets, total[AssetType.Debt].assets), // TODO what if not enough to withdraw all??
                 total[AssetType.Collateral]
             );
         }
@@ -1080,7 +1082,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
             _borrower,
             _spender,
             total[AssetType.Debt],
-            total[AssetType.Collateral].assets
+            totalCollateralAssets
         );
     }
 

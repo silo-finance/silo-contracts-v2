@@ -332,6 +332,8 @@ library SiloLendingLib {
         internal
         returns (uint256 borrowedAssets, uint256 borrowedShares)
     {
+        if (_assets == 0 && _shares == 0) revert ISilo.ZeroAssets();
+
         uint256 totalDebtAssets = _totalDebt.assets;
 
         (borrowedAssets, borrowedShares) = SiloMathLib.convertToAssetsAndToShares(
