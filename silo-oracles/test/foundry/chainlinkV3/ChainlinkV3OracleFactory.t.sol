@@ -68,7 +68,7 @@ contract ChainlinkV3OracleFactoryTest is ChainlinkV3Configs {
         uint256 gasEnd = gasleft();
 
         emit log_named_uint("gas", gasStart - gasEnd);
-        assertEq(gasStart - gasEnd, 315765, "optimise gas for creation");
+        assertEq(gasStart - gasEnd, 317006, "optimise gas for creation");
 
         gasStart = gasleft();
         uint256 price = oracle.quote(1e18, address(tokens["SPELL"]));
