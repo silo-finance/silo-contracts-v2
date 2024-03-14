@@ -70,6 +70,20 @@ rule VC_Silo_total_collateral_increase(
 }
 
 /**
+*/
+invariant cannotHaveAssestWithZeroInterestRateTimestamp() 
+    silo0.getSiloDataInterestRateTimestamp() == 0 => 
+        silo0.total[ISilo.AssetType.Collateral].assets + 
+            silo0.total[ISilo.AssetType.Protected].assets == 0 {
+
+                preserved with (env e) {
+                    completeSiloSetupEnv(e);
+                    requireToken0TotalAndBalancesIntegrity();
+                    requireProtectedToken0TotalAndBalancesIntegrity();
+                }
+            }
+
+/**
 certoraRun certora/config/silo/silo0.conf \
     --parametric_contracts Silo0 \
     --msg "VC_Silo_total_collateral_increase" \
@@ -89,9 +103,8 @@ rule VC_Silo_total_collateral_decrease(
     requireToken0TotalAndBalancesIntegrity();
     requireProtectedToken0TotalAndBalancesIntegrity();
 
-    require silo0.getSiloDataInterestRateTimestamp() == 0 => 
-        silo0.total[ISilo.AssetType.Collateral].assets == 0;
-
+    requireInvariant cannotHaveAssestWithZeroInterestRateTimestamp();
+    
     mathint totalDepositsBefore = silo0.getCollateralAssets(e);
     mathint shareTokenTotalSupplyBefore = shareCollateralToken0.totalSupply();
     mathint balanceSharesBefore = shareCollateralToken0.balanceOf(receiver);
