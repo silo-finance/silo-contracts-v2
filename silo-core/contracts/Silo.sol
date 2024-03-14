@@ -678,7 +678,15 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
 
         (
             assets, shares
-        ) = _callBorrow(debtConfig, _assets, borrowSharesZero, address(_receiver), _borrower, msg.sender);
+        ) = _callBorrow(
+            debtConfig,
+            collateralConfig.debtShareToken,
+            _assets,
+            borrowSharesZero,
+            address(_receiver),
+            _borrower,
+            msg.sender
+        );
 
         emit Borrow(msg.sender, address(_receiver), _borrower, assets, shares);
         emit Leverage();
@@ -874,7 +882,11 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
             debtConfig.interestRateModel, debtConfig.daoFee, debtConfig.deployerFee, debtConfig.otherSilo
         );
 
-        (assets, shares) = _callBorrow(debtConfig, _assets, _shares, _receiver, _borrower, msg.sender);
+        (
+            assets, shares
+        ) = _callBorrow(
+            debtConfig, collateralConfig.debtShareToken, _assets, _shares, _receiver, _borrower, msg.sender
+        );
 
         emit Borrow(msg.sender, _receiver, _borrower, assets, shares);
 
@@ -1009,21 +1021,66 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
 
     function _callBorrow(
         ISiloConfig.ConfigData memory _configData,
+        address _otherSiloDebtShareToken,
         uint256 _assets,
         uint256 _shares,
         address _receiver,
         address _borrower,
         address _spender
     ) internal virtual returns (uint256 borrowedAssets, uint256 borrowedShares) {
+        if (_assets == 0 && _shares == 0) revert ISilo.ZeroAssets();
+
+        (
+            bool possible, uint256 protectedSharesToWithdraw, uint256 collateralSharesToWithdraw
+        ) = SiloLendingLib.borrowPossible(
+            _configData.protectedShareToken,
+            _configData.collateralShareToken,
+            _otherSiloDebtShareToken,
+            _borrower
+        );
+
+        if (!possible) revert ISilo.BorrowNotPossible();
+
+        if (protectedSharesToWithdraw != 0) {
+            SiloERC4626Lib.withdraw(
+                _configData.token,
+                _configData.protectedShareToken,
+                0 /* _assets */,
+                protectedSharesToWithdraw,
+                _borrower,
+                _borrower,
+                _borrower,
+                AssetType.Protected,
+                total[AssetType.Protected].assets,
+                total[AssetType.Protected]
+            );
+        }
+
+        if (collateralSharesToWithdraw != 0) {
+            SiloERC4626Lib.withdraw(
+                _configData.token,
+                _configData.collateralShareToken,
+                0 /* _assets */,
+                collateralSharesToWithdraw,
+                _borrower,
+                _borrower,
+                _borrower,
+                AssetType.Collateral,
+                _getRawLiquidity(),
+                total[AssetType.Collateral]
+            );
+        }
+
         return SiloLendingLib.borrow(
-            _configData,
+            _configData.debtShareToken,
+            _configData.token,
             _assets,
             _shares,
             _receiver,
             _borrower,
             _spender,
             total[AssetType.Debt],
-            total[AssetType.Collateral].assets
+            total[AssetType.Collateral].assets // do not cache it because withdraw can change this value
         );
     }
 

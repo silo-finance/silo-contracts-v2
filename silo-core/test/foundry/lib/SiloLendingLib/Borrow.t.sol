@@ -57,7 +57,15 @@ contract BorrowTest is Test {
         vm.expectRevert(ISilo.ZeroAssets.selector);
 
         SiloLendingLib.borrow(
-            configData, assets, shares, receiver, borrower, spender, totalDebt, totalCollateralAssets
+            configData.debtShareToken,
+            configData.token,
+            assets,
+            shares,
+            receiver,
+            borrower,
+            spender,
+            totalDebt,
+            totalCollateralAssets
         );
     }
 
@@ -74,20 +82,6 @@ contract BorrowTest is Test {
             bool txReverts = testDatas[i].output.reverts != bytes4(0);
 
             totalDebt.assets = testDatas[i].input.initTotalDebt;
-
-            protectedShareToken.balanceOfMock(
-                testDatas[i].input.borrower,
-                testDatas[i].mocks.protectedShareTokenBalanceOf,
-                !txReverts
-            );
-
-            if (testDatas[i].mocks.protectedShareTokenBalanceOf == 0) {
-                collateralShareToken.balanceOfMock(
-                    testDatas[i].input.borrower,
-                    testDatas[i].mocks.collateralShareTokenBalanceOf,
-                    !txReverts
-                );
-            }
 
             if (testDatas[i].mocks.debtSharesTotalSupplyMock) {
                 debtShareToken.totalSupplyMock(testDatas[i].mocks.debtSharesTotalSupply, !txReverts);
@@ -107,7 +101,8 @@ contract BorrowTest is Test {
             }
 
             (uint256 borrowedAssets, uint256 borrowedShares) = impl.borrow(
-                testDatas[i].input.configData,
+                testDatas[i].input.configData.debtShareToken,
+                testDatas[i].input.configData.token,
                 testDatas[i].input.assets,
                 testDatas[i].input.shares,
                 testDatas[i].input.receiver,

@@ -3,6 +3,7 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
 
+import {IERC20} from "openzeppelin-contracts/token/ERC20/IERC20.sol";
 
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
@@ -69,7 +70,9 @@ contract LeverageTest is SiloLittleHelper, Test {
 
         _deposit(assets, borrower, ISilo.AssetType.Collateral);
 
-        vm.expectRevert(ISilo.BorrowNotPossible.selector);
+        vm.expectCall(address(token0), abi.encodeWithSelector(IERC20.transfer.selector, borrower, assets));
+
+        vm.expectRevert(ISilo.NotEnoughLiquidity.selector); // because we borrow first
         silo0.leverage(assets, leverageBorrower, borrower, bytes(""));
     }
 
@@ -83,7 +86,9 @@ contract LeverageTest is SiloLittleHelper, Test {
 
         _deposit(assets, borrower, ISilo.AssetType.Protected);
 
-        vm.expectRevert(ISilo.BorrowNotPossible.selector);
+        vm.expectCall(address(token0), abi.encodeWithSelector(IERC20.transfer.selector, borrower, assets));
+
+        vm.expectRevert(ISilo.NotEnoughLiquidity.selector); // because we borrow first
         silo0.leverage(assets, leverageBorrower, borrower, bytes(""));
     }
 

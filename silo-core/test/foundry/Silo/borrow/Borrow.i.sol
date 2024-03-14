@@ -3,6 +3,8 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
 
+import {IERC20} from "openzeppelin-contracts/token/ERC20/IERC20.sol";
+
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
@@ -56,29 +58,179 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --ffi --mt test_borrow_when_BorrowNotPossible_withCollateral
+    forge test -vv --ffi --mt test_borrow_when_frontRun_NoCollateral
     */
-    function test_borrow_when_BorrowNotPossible_withCollateral() public {
+    function test_borrow_when_frontRun_NoCollateral() public {
         uint256 assets = 1e18;
-        address receiver = address(10);
+        address receiver = address(this);
 
         _deposit(assets, receiver, ISilo.AssetType.Collateral);
 
-        vm.expectRevert(ISilo.BorrowNotPossible.selector);
+        vm.expectCall(address(token0), abi.encodeWithSelector(IERC20.transfer.selector, address(receiver), assets));
+
+        vm.expectRevert(ISilo.NotEnoughLiquidity.selector);
         silo0.borrow(assets, receiver, receiver);
     }
 
     /*
-    forge test -vv --ffi --mt test_borrow_when_BorrowNotPossible_withProtected
+    forge test -vv --ffi --mt test_borrow_onWrongSilo_for_receiver
     */
-    function test_borrow_when_BorrowNotPossible_withProtected() public {
+    function test_borrow_onWrongSilo_for_receiver_no_collateral() public {
         uint256 assets = 1e18;
-        address receiver = address(10);
+        address borrower = makeAddr("borrower");
 
+        _deposit(assets, makeAddr("depositor"), ISilo.AssetType.Collateral);
+        _deposit(assets, borrower, ISilo.AssetType.Protected);
+
+        // there will be no withdraw because we borrow for receiver and receiver has no collateral
+
+        vm.expectRevert("ERC20: insufficient allowance"); // because we want to mint for receiver
+        vm.prank(borrower);
+        silo0.borrow(assets, borrower, makeAddr("receiver"));
+    }
+
+    /*
+    forge test -vv --ffi --mt test_borrow_onWrongSilo_for_receiver_with_collateral
+    */
+    function test_borrow_onWrongSilo_for_receiver_with_collateral() public {
+        uint256 assets = 1e18;
+        address borrower = makeAddr("borrower");
+        address receiver = makeAddr("receiver");
+
+        _deposit(assets, makeAddr("depositor"), ISilo.AssetType.Collateral);
         _deposit(assets, receiver, ISilo.AssetType.Protected);
 
+        vm.expectCall(address(token0), abi.encodeWithSelector(IERC20.transfer.selector, receiver, assets));
+
+        vm.expectRevert("ERC20: insufficient allowance"); // because we want to mint for receiver
+        vm.prank(borrower);
+        silo0.borrow(assets, borrower, makeAddr("receiver"));
+    }
+
+    /*
+    forge test -vv --ffi --mt test_borrow_onWrongSilo_for_borrower
+    */
+    function test_borrow_onWrongSilo_for_borrower() public {
+        uint256 assets = 1e18;
+        address borrower = makeAddr("borrower");
+
+        _deposit(assets, makeAddr("depositor"), ISilo.AssetType.Collateral);
+        _deposit(assets, borrower, ISilo.AssetType.Collateral);
+
+        vm.expectCall(address(token0), abi.encodeWithSelector(IERC20.transfer.selector, borrower, assets));
+
+        vm.expectRevert(ISilo.AboveMaxLtv.selector);
+        vm.prank(borrower);
+        silo0.borrow(assets, borrower, borrower);
+    }
+
+    /*
+    forge test -vv --ffi --mt test_borrow_onWrongSilo_WithProtected
+    */
+    function test_borrow_onWrongSilo_WithProtected() public {
+        uint256 assets = 1e18;
+        address borrower = address(this);
+
+        _deposit(assets, borrower, ISilo.AssetType.Protected);
+
+        vm.expectCall(address(token0), abi.encodeWithSelector(IERC20.transfer.selector, borrower, assets));
+
+        vm.expectRevert(ISilo.NotEnoughLiquidity.selector);
+        silo0.borrow(assets, borrower, borrower);
+    }
+
+    /*
+    forge test -vv --ffi --mt test_borrow_onWrongSilo_WithCollateralAndProtected
+    */
+    function test_borrow_onWrongSilo_WithCollateralAndProtected() public {
+        uint256 assets = 1e18;
+        address borrower = address(this);
+
+        _deposit(assets * 2, borrower, ISilo.AssetType.Protected);
+        _deposit(assets, borrower, ISilo.AssetType.Collateral);
+
+        vm.expectCall(address(token0), abi.encodeWithSelector(IERC20.transfer.selector, borrower, assets));
+        vm.expectCall(address(token0), abi.encodeWithSelector(IERC20.transfer.selector, borrower, assets * 2));
+
+        vm.expectRevert(ISilo.NotEnoughLiquidity.selector);
+        silo0.borrow(assets, borrower, borrower);
+    }
+
+    /*
+    forge test -vv --ffi --mt test_borrow_BorrowNotPossible_withDebt
+    */
+    function test_borrow_BorrowNotPossible_withDebt() public {
+        uint256 assets = 1e18;
+        address borrower = address(this);
+
+        _depositForBorrow(assets, makeAddr("depositor"));
+        _deposit(assets, borrower, ISilo.AssetType.Protected);
+        _borrow(1, borrower);
+
         vm.expectRevert(ISilo.BorrowNotPossible.selector);
-        silo0.borrow(assets, receiver, receiver);
+        silo0.borrow(assets, borrower, borrower);
+    }
+
+    /*
+    forge test -vv --ffi --mt test_borrow_frontRun_pass
+    */
+    function test_borrow_frontRun_pass() public {
+        uint256 assets = 1e18;
+        address borrower = address(this);
+
+        _depositForBorrow(assets, makeAddr("depositor"));
+        _deposit(assets, borrower, ISilo.AssetType.Protected);
+
+        vm.prank(makeAddr("frontrunner"));
+        _depositForBorrow(1, borrower);
+
+        vm.expectCall(address(token1), abi.encodeWithSelector(IERC20.transfer.selector, borrower, 1));
+
+        _borrow(12345, borrower);
+    }
+
+    /*
+    forge test -vv --ffi --mt test_borrow_frontRun_transferShare
+    */
+    function test_borrow_frontRun_transferShare() public {
+        uint256 assets = 1e18;
+        address borrower = address(this);
+        address frontrunner = makeAddr("frontrunner");
+
+        _depositForBorrow(assets, makeAddr("depositor"));
+        _deposit(assets, borrower, ISilo.AssetType.Protected);
+
+        (address protectedShareToken, address collateralShareToken,) = siloConfig.getShareTokens(address(silo1));
+        _depositForBorrow(5, frontrunner);
+        _makeDeposit(silo1, token1, 3, frontrunner, ISilo.AssetType.Protected);
+
+        vm.prank(frontrunner);
+        IShareToken(protectedShareToken).transfer(borrower, 3);
+        vm.prank(frontrunner);
+        IShareToken(collateralShareToken).transfer(borrower, 5);
+
+        vm.expectCall(address(token1), abi.encodeWithSelector(IERC20.transfer.selector, borrower, 3));
+        vm.expectCall(address(token1), abi.encodeWithSelector(IERC20.transfer.selector, borrower, 5));
+
+        _borrow(12345, borrower);
+    }
+
+    /*
+    forge test -vv --ffi --mt test_borrow_withTwoCollaterals
+    */
+    function test_borrow_withTwoCollaterals() public {
+        uint256 assets = 1e18;
+        address borrower = address(this);
+
+        _depositForBorrow(assets, makeAddr("depositor"));
+
+        uint256 toWithdraw = 123;
+        _depositForBorrow(toWithdraw, borrower);
+        _deposit(assets, borrower, ISilo.AssetType.Protected);
+
+        vm.expectCall(address(token1), abi.encodeWithSelector(IERC20.transfer.selector, borrower, toWithdraw));
+
+        _borrow(12345, borrower);
     }
 
     /*
