@@ -173,3 +173,19 @@ FOUNDRY_PROFILE=core-test forge snapshot --check --no-match-test "_skip_" --no-m
 # better view, with % change
 FOUNDRY_PROFILE=core-test forge snapshot --diff --no-match-test "_skip_" --no-match-contract "SiloIntegrationTest" --ffi
 ```
+
+2 collateral 1 debt: => 1 collateral, 1 deposit, 1 debt
+
+- we need to track users collateral (this can be done only in sToken)
+- 1 bit squashed with balance (balance not longer 256! overflow checks!)
+  - the other option is constantly checking all options and make decision at-hoc, however:
+    - if we go for approval, then approval might be not available later -> different result
+    - with different results liquidation can be problematic as well, which collateral to use? another decision!
+    - I think deterministic collateral is better, we can have option to switch
+  - we CAN NOT sum up deposits and use sum as collateral!
+- re-do ShareToken contract, eg new method debtBalanceOf() => (balance, collateralType), this will be method Silo will be using
+  - regular balanceOf must be re-writen to return uint256 without collateral type bit.
+  - otherwise we need new slot just for 1 bit
+- on withdraw/isSolvent, with this bit it should be easy to implement
+  - either we choose proper configs, or to make gass efficient, we can have another isSolvent for same asset, only LT required!
+- we can switch collalteral Type any time, change bit and run proper isSolvent.
