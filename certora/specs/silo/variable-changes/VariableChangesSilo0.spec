@@ -70,7 +70,7 @@ rule VC_Silo_total_collateral_increase(
 }
 
 /**
-Silo contract cannot have assets of any time when the interest rate timestamp is 0.
+Silo contract cannot have assets of any type when the interest rate timestamp is 0.
 */
 invariant cannotHaveAssestWithZeroInterestRateTimestamp() silo0.getSiloDataInterestRateTimestamp() == 0 => 
         (silo0.total[ISilo.AssetType.Collateral].assets + 
