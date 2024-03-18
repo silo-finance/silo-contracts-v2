@@ -57,7 +57,6 @@ contract ShareTokenTest is Test {
         configData.token = address(token);
 
         silo.configMock(siloConfig.ADDRESS());
-        siloConfig.getSilosMock(silo.ADDRESS(), makeAddr("otherSilo"));
         siloConfig.getConfigMock(silo.ADDRESS(), configData);
 
         sToken.initialize(ISilo(silo.ADDRESS()), hook);
@@ -70,8 +69,6 @@ contract ShareTokenTest is Test {
     */
     function test_HookReturnCode_notRevertWhenNoHook() public {
         address hook = address(0);
-        siloConfig.getSilosMock(address(this), makeAddr("otherSilo"));
-
         sToken.initialize(ISilo(address(this)), hook);
         sToken.mint(owner, owner, 1);
     }
@@ -80,8 +77,6 @@ contract ShareTokenTest is Test {
     forge test -vv --mt test_HookReturnCode_notRevertWhenHookCallFail
     */
     function test_HookReturnCode_notRevertWhenHookCallFail() public {
-        siloConfig.getSilosMock(address(this), makeAddr("otherSilo"));
-
         sToken.initialize(ISilo(address(this)), hookReceiver.ADDRESS());
         sToken.mint(owner, owner, 1); // no mocking for hook call
     }
@@ -90,8 +85,6 @@ contract ShareTokenTest is Test {
     forge test -vv --mt test_HookReturnCode_notRevertOnCode0
     */
     function test_HookReturnCode_notRevertOnCode0() public {
-        siloConfig.getSilosMock(address(this), makeAddr("otherSilo"));
-
         sToken.initialize(ISilo(address(this)), hookReceiver.ADDRESS());
         uint256 amount = 1;
 
@@ -104,8 +97,6 @@ contract ShareTokenTest is Test {
     forge test -vv --mt test_HookReturnCode_revertOnRequest
     */
     function test_HookReturnCode_revertOnRequest() public {
-        siloConfig.getSilosMock(address(this), makeAddr("otherSilo"));
-
         sToken.initialize(ISilo(address(this)), hookReceiver.ADDRESS());
         uint256 amount = 1;
 

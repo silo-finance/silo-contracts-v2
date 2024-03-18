@@ -17,17 +17,12 @@ import {IShareToken, ShareToken, ISiloFactory, ISilo} from "./ShareToken.sol";
 contract ShareDebtToken is IERC20R, ShareToken {
     using SiloLensLib for ISilo;
 
-    /// @notice Silo address for which tokens was deployed
-    ISilo public collateralSilo;
-
     /// @dev maps _owner => _recipient => amount
     mapping(address => mapping(address => uint256)) private _receiveAllowances;
 
     /// @param _silo Silo address for which tokens was deployed
     function initialize(ISilo _silo, address _hookReceiver) external virtual initializer {
         __ShareToken_init(_silo, _hookReceiver);
-        (address silo0, address silo1) = silo.config().getSilos();
-        collateralSilo = ISilo(address(_silo) == silo0 ? silo1 : silo0);
     }
 
     /// @inheritdoc IShareToken
