@@ -50,6 +50,11 @@ contract IsSolventTest is SiloLittleHelper, Test {
 
         vm.prank(borrower);
         IShareToken(debtShareToken).transfer(recipient, 1);
+
+        assertTrue(silo0.isSolvent(recipient), "recipient must be solvent in silo0");
+        assertTrue(silo1.isSolvent(recipient), "recipient must be solvent in silo1");
+        assertTrue(silo0.isSolvent(borrower), "borrower must be solvent in silo0");
+        assertTrue(silo1.isSolvent(borrower), "borrower must be solvent in silo1");
     }
 
     /*
