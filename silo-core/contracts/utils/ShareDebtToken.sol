@@ -17,18 +17,17 @@ import {IShareToken, ShareToken, ISiloFactory, ISilo} from "./ShareToken.sol";
 contract ShareDebtToken is IERC20R, ShareToken {
     using SiloLensLib for ISilo;
 
+    /// @notice Silo address for which tokens was deployed
+    ISilo public collateralSilo;
+
     /// @dev maps _owner => _recipient => amount
     mapping(address => mapping(address => uint256)) private _receiveAllowances;
-
-    error OwnerIsZero();
-    error RecipientIsZero();
-    error ShareTransferNotAllowed();
-    error AmountExceedsAllowance();
-    error RecipientNotSolventAfterTransfer();
 
     /// @param _silo Silo address for which tokens was deployed
     function initialize(ISilo _silo, address _hookReceiver) external virtual initializer {
         __ShareToken_init(_silo, _hookReceiver);
+        (address silo0, address silo1) = silo.config().getSilos();
+        collateralSilo = ISilo(address(_silo) == silo0 ? silo1 : silo0);
     }
 
     /// @inheritdoc IShareToken
@@ -103,7 +102,7 @@ contract ShareDebtToken is IERC20R, ShareToken {
         // if we are minting or burning, Silo is responsible to check all necessary conditions
         // if we are NOT minting and not burning, it means we are transferring
         // make sure that _recipient is solvent after transfer
-        if (_isTransfer(_sender, _recipient) && !silo.isSolvent(_recipient)) {
+        if (_isTransfer(_sender, _recipient) && !collateralSilo.isSolvent(_recipient)) {
             revert RecipientNotSolventAfterTransfer();
         }
     }

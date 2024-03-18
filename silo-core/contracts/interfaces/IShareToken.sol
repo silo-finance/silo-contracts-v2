@@ -15,6 +15,12 @@ interface IShareToken is IERC20MetadataUpgradeable {
     error Forbidden();
     error OnlySilo();
     error RevertRequestFromHook();
+    error OwnerIsZero();
+    error RecipientIsZero();
+    error ShareTransferNotAllowed();
+    error AmountExceedsAllowance();
+    error RecipientNotSolventAfterTransfer();
+    error SenderNotSolventAfterTransfer();
 
     /// @param _silo Silo address for which tokens was deployed
     /// @param _hookReceiver address that will get a callback on mint, burn and transfer of the token
