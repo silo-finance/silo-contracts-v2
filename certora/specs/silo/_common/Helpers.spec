@@ -9,12 +9,27 @@ function isWithInterest(env e) returns bool {
     return siloIRTimestamp != 0 && siloIRTimestamp < e.block.timestamp && debt != 0;
 }
 
-function requireCorrectSiloBalance() {
+function requireCorrectSilo0Balance() {
     mathint collateralAssets = silo0.total(ISilo.AssetType.Collateral);
     mathint protectedAssets = silo0.total(ISilo.AssetType.Protected);
     mathint debtAssets = silo0.total(ISilo.AssetType.Debt);
     mathint daoAndDeployerFees = getSiloDataDaoAndDeployerFees();
     mathint siloBalance = token0.balanceOf(silo0);
+
+    mathint liquidity = debtAssets > collateralAssets ? 0 : collateralAssets - debtAssets;
+
+    mathint expectedBalance = liquidity + protectedAssets + daoAndDeployerFees;
+
+    require expectedBalance < max_uint256;
+    require siloBalance == expectedBalance;
+}
+
+function requireCorrectSilo1Balance() {
+    mathint collateralAssets = silo1.total(ISilo.AssetType.Collateral);
+    mathint protectedAssets = silo1.total(ISilo.AssetType.Protected);
+    mathint debtAssets = silo1.total(ISilo.AssetType.Debt);
+    mathint daoAndDeployerFees = getSiloDataDaoAndDeployerFees();
+    mathint siloBalance = token1.balanceOf(silo1);
 
     mathint liquidity = debtAssets > collateralAssets ? 0 : collateralAssets - debtAssets;
 

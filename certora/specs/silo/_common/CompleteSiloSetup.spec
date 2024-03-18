@@ -40,6 +40,28 @@ function totalSupplyMoreThanBalance(address receiver)
     require shareCollateralToken1.totalSupply() >= require_uint256(shareCollateralToken1.balanceOf(receiver) + shareCollateralToken1.balanceOf(currentContract));
 }
 
+function requireTokensTotalAndBalanceIntegrity()
+{
+    requireProtectedToken0TotalAndBalancesIntegrity();
+    requireDebtToken0TotalAndBalancesIntegrity();
+    requireCollateralToken0TotalAndBalancesIntegrity();
+    requireProtectedToken1TotalAndBalancesIntegrity();
+    requireDebtToken1TotalAndBalancesIntegrity();
+    requireCollateralToken1TotalAndBalancesIntegrity();
+}
+
+function sharesToAssetsNotTooHigh(env e, mathint max)
+{
+    mathint totalCollateralAssets; mathint totalProtectedAssets;
+    totalCollateralAssets, totalProtectedAssets = getCollateralAndProtectedAssets(e);  
+    mathint totalShares = shareCollateralToken0.totalSupply();
+    mathint totalProtectedShares = shareProtectedCollateralToken0.totalSupply();
+    require totalCollateralAssets <= totalShares * max;
+    require totalShares <= totalCollateralAssets * max;
+    require totalProtectedAssets <= totalProtectedShares * max;
+    require totalProtectedShares <= totalProtectedAssets * max;
+}
+
 function differsAtMost(mathint x, mathint y, mathint diff) returns bool
 {
     if (x == y) return true;
