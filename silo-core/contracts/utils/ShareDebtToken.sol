@@ -98,10 +98,10 @@ contract ShareDebtToken is IERC20R, ShareToken {
         // if we are NOT minting and not burning, it means we are transferring
         // make sure that _recipient is solvent after transfer
         if (_isTransfer(_sender, _recipient)) {
-            // reading silo at hock is bit more gas friendly than creatign storage for it
-            ISilo _silo = silo;
-            (address silo0, address silo1) = _silo.config().getSilos();
-            ISilo c = ISilo(address(_silo) == silo0 ? silo1 : silo0);
+            ISilo cacheSilo =  silo;
+            // reading from silo directly is a bit more gas friendly, than creating storage for it
+            (address silo0, address silo1) = cacheSilo.config().getSilos();
+            ISilo c = ISilo(address(cacheSilo) == silo0 ? silo1 : silo0);
             if (!c.isSolvent(_recipient)) revert RecipientNotSolventAfterTransfer();
         }
     }
