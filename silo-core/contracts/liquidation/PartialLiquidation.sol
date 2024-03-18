@@ -100,7 +100,22 @@ contract PartialLiquidation is ILiquidationModule, IPartialLiquidation, Reentran
         address _borrower,
         ISilo.AccrueInterestInMemory _accrueInMemory,
         uint256 debtShareBalance
-    ) public view virtual returns (bool) {
+    ) external view virtual returns (bool) {
         return SiloSolvencyLib.isSolvent(_collateralConfig, _debtConfig, _borrower, _accrueInMemory, debtShareBalance);
+    }
+
+    /// @notice Determines if a borrower's Loan-to-Value (LTV) ratio is below the maximum allowed LTV
+    /// @param _collateralConfig Configuration data for the collateral
+    /// @param _debtConfig Configuration data for the debt
+    /// @param _borrower Address of the borrower to check against max LTV
+    /// @param _accrueInMemory Determines whether or not to consider un-accrued interest in calculations
+    /// @return True if the borrower's LTV is below the maximum, false otherwise
+    function isBelowMaxLtv(
+        ISiloConfig.ConfigData calldata _collateralConfig,
+        ISiloConfig.ConfigData calldata _debtConfig,
+        address _borrower,
+        ISilo.AccrueInterestInMemory _accrueInMemory
+    ) external view virtual returns (bool) {
+        return SiloSolvencyLib.isBelowMaxLtv(_collateralConfig, _debtConfig, _borrower, _accrueInMemory);
     }
 }

@@ -703,7 +703,9 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
             ISiloOracle(debtConfig.maxLtvOracle).beforeQuote(debtConfig.token);
         }
 
-        if (!SiloSolvencyLib.isBelowMaxLtv(collateralConfig, debtConfig, _borrower, AccrueInterestInMemory.No)) {
+        ILiquidationModule liquidationModule = ILiquidationModule(collateralConfig.liquidationModule);
+
+        if (!liquidationModule.isBelowMaxLtv(collateralConfig, debtConfig, _borrower, AccrueInterestInMemory.No)) {
             revert AboveMaxLtv();
         }
     }
@@ -897,7 +899,9 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
             ISiloOracle(debtConfig.maxLtvOracle).beforeQuote(debtConfig.token);
         }
 
-        if (!SiloSolvencyLib.isBelowMaxLtv(collateralConfig, debtConfig, _borrower, AccrueInterestInMemory.No)) {
+        ILiquidationModule liquidationModule = ILiquidationModule(collateralConfig.liquidationModule);
+
+        if (!liquidationModule.isBelowMaxLtv(collateralConfig, debtConfig, _borrower, AccrueInterestInMemory.No)) {
             revert AboveMaxLtv();
         }
     }
