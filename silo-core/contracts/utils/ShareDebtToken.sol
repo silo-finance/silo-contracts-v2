@@ -101,8 +101,8 @@ contract ShareDebtToken is IERC20R, ShareToken {
             ISilo cacheSilo =  silo;
             // reading from silo directly is a bit more gas friendly, than creating storage for it
             (address silo0, address silo1) = cacheSilo.config().getSilos();
-            ISilo c = ISilo(address(cacheSilo) == silo0 ? silo1 : silo0);
-            if (!c.isSolvent(_recipient)) revert RecipientNotSolventAfterTransfer();
+            ISilo collateralSilo = ISilo(address(cacheSilo) == silo0 ? silo1 : silo0);
+            if (!collateralSilo.isSolvent(_recipient)) revert RecipientNotSolventAfterTransfer();
         }
     }
 }
