@@ -41,6 +41,10 @@ contract ShareTokenTest is Test {
         owner = makeAddr("Owner");
     }
 
+    function config() external view returns (address) {
+        return siloConfig.ADDRESS();
+    }
+
     /*
     forge test -vv --mt test_ShareToken_decimals
     */
@@ -48,14 +52,13 @@ contract ShareTokenTest is Test {
         uint8 decimals = 8;
         Token token = new Token(decimals);
         address hook = address(0);
-        address otherSilo = address(222222);
 
         ISiloConfig.ConfigData memory configData;
         configData.token = address(token);
 
         silo.configMock(siloConfig.ADDRESS());
+        siloConfig.getSilosMock(silo.ADDRESS(), makeAddr("otherSilo"));
         siloConfig.getConfigMock(silo.ADDRESS(), configData);
-        siloConfig.getSilosMock(silo.ADDRESS(), otherSilo);
 
         sToken.initialize(ISilo(silo.ADDRESS()), hook);
 
@@ -67,6 +70,8 @@ contract ShareTokenTest is Test {
     */
     function test_HookReturnCode_notRevertWhenNoHook() public {
         address hook = address(0);
+        siloConfig.getSilosMock(address(this), makeAddr("otherSilo"));
+
         sToken.initialize(ISilo(address(this)), hook);
         sToken.mint(owner, owner, 1);
     }
@@ -75,6 +80,8 @@ contract ShareTokenTest is Test {
     forge test -vv --mt test_HookReturnCode_notRevertWhenHookCallFail
     */
     function test_HookReturnCode_notRevertWhenHookCallFail() public {
+        siloConfig.getSilosMock(address(this), makeAddr("otherSilo"));
+
         sToken.initialize(ISilo(address(this)), hookReceiver.ADDRESS());
         sToken.mint(owner, owner, 1); // no mocking for hook call
     }
@@ -83,6 +90,8 @@ contract ShareTokenTest is Test {
     forge test -vv --mt test_HookReturnCode_notRevertOnCode0
     */
     function test_HookReturnCode_notRevertOnCode0() public {
+        siloConfig.getSilosMock(address(this), makeAddr("otherSilo"));
+
         sToken.initialize(ISilo(address(this)), hookReceiver.ADDRESS());
         uint256 amount = 1;
 
@@ -95,6 +104,8 @@ contract ShareTokenTest is Test {
     forge test -vv --mt test_HookReturnCode_revertOnRequest
     */
     function test_HookReturnCode_revertOnRequest() public {
+        siloConfig.getSilosMock(address(this), makeAddr("otherSilo"));
+
         sToken.initialize(ISilo(address(this)), hookReceiver.ADDRESS());
         uint256 amount = 1;
 
