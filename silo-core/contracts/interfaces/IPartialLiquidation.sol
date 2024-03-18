@@ -45,11 +45,4 @@ interface IPartialLiquidation {
     )
         external
         returns (uint256 withdrawCollateral, uint256 repayDebtAssets);
-
-    /// @dev debt is keep growing over time, so when dApp use this view to calculate max, tx should never revert
-    /// because actual max can be only higher
-    function maxLiquidation(address _siloWithDebt, address _borrower)
-        external
-        view
-        returns (uint256 collateralToLiquidate, uint256 debtToRepay);
 }

@@ -8,6 +8,7 @@ import {SafeERC20Upgradeable} from "openzeppelin-contracts-upgradeable/token/ERC
 import {IERC20Upgradeable} from "openzeppelin-contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 
 import {ISilo, IERC4626, IERC3156FlashLender, ILiquidationProcess} from "./interfaces/ISilo.sol";
+import {ILiquidationModule} from "./interfaces/ILiquidationModule.sol";
 import {ISiloOracle} from "./interfaces/ISiloOracle.sol";
 import {IShareToken} from "./interfaces/IShareToken.sol";
 
@@ -84,10 +85,8 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
             ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig
         ) = SiloSolvencyLib.getOrderedConfigs(this, config, _borrower);
 
-        uint256 debtShareBalance = IShareToken(debtConfig.debtShareToken).balanceOf(_borrower);
-
-        return SiloSolvencyLib.isSolvent(
-            collateralConfig, debtConfig, _borrower, AccrueInterestInMemory.Yes, debtShareBalance
+        return ILiquidationModule(collateralConfig.liquidationModule).isSolvent(
+            collateralConfig, debtConfig, _borrower, AccrueInterestInMemory.Yes
         );
     }
 
@@ -863,7 +862,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
         }
 
         // `_params.owner` must be solvent
-        if (!SiloSolvencyLib.isSolvent(
+        if (!ILiquidationModule(collateralConfig.liquidationModule).isSolvent(
             collateralConfig, debtConfig, _owner, AccrueInterestInMemory.No, debtShareBalance
         )) {
             revert NotSolvent();

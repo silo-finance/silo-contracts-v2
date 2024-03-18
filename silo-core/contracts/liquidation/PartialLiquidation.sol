@@ -5,14 +5,17 @@ import {ReentrancyGuardUpgradeable} from "openzeppelin-contracts-upgradeable/sec
 
 import {ISilo, ILiquidationProcess} from "../interfaces/ISilo.sol";
 import {IPartialLiquidation} from "../interfaces/IPartialLiquidation.sol";
+import {ILiquidationModule} from "../interfaces/ILiquidationModule.sol";
 import {ISiloOracle} from "../interfaces/ISiloOracle.sol";
 import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
+import {IShareToken} from "../interfaces/IShareToken.sol";
 
+import {SiloSolvencyLib} from "../lib/SiloSolvencyLib.sol";
 import {PartialLiquidationExecLib} from "./lib/PartialLiquidationExecLib.sol";
 
 
 /// @title PartialLiquidation module for executing liquidations
-contract PartialLiquidation is IPartialLiquidation, ReentrancyGuardUpgradeable {
+contract PartialLiquidation is ILiquidationModule, IPartialLiquidation, ReentrancyGuardUpgradeable {
     /// @inheritdoc IPartialLiquidation
     function liquidationCall( // solhint-disable-line function-max-lines
         address _siloWithDebt,
@@ -71,7 +74,7 @@ contract PartialLiquidation is IPartialLiquidation, ReentrancyGuardUpgradeable {
         );
     }
 
-    /// @inheritdoc IPartialLiquidation
+    /// @inheritdoc ILiquidationModule
     function maxLiquidation(address _siloWithDebt, address _borrower)
         external
         view
@@ -79,5 +82,25 @@ contract PartialLiquidation is IPartialLiquidation, ReentrancyGuardUpgradeable {
         returns (uint256 collateralToLiquidate, uint256 debtToRepay)
     {
         return PartialLiquidationExecLib.maxLiquidation(ISilo(_siloWithDebt), _borrower);
+    }
+
+    function isSolvent(
+        ISiloConfig.ConfigData calldata _collateralConfig,
+        ISiloConfig.ConfigData calldata _debtConfig,
+        address _borrower,
+        ISilo.AccrueInterestInMemory _accrueInMemory
+    ) external view virtual returns (bool) {
+        uint256 debtShareBalance = IShareToken(_debtConfig.debtShareToken).balanceOf(_borrower);
+        return isSolvent(_collateralConfig, _debtConfig, _borrower, _accrueInMemory, debtShareBalance);
+    }
+
+    function isSolvent(
+        ISiloConfig.ConfigData calldata _collateralConfig,
+        ISiloConfig.ConfigData calldata _debtConfig,
+        address _borrower,
+        ISilo.AccrueInterestInMemory _accrueInMemory,
+        uint256 debtShareBalance
+    ) public view virtual returns (bool) {
+        return SiloSolvencyLib.isSolvent(_collateralConfig, _debtConfig, _borrower, _accrueInMemory, debtShareBalance);
     }
 }
