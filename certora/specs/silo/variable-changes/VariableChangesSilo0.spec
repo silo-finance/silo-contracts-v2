@@ -448,3 +448,80 @@ rule VC_Silo_siloData_management(env e, method f) filtered { f -> !f.isView } {
     assert prevTimestamp == currentContract.getSiloDataInterestRateTimestamp(),
         "when _accrueInterest is OFF by AccrueInterestSimplification, no other method should change timestamp";
 }
+
+rule whoCanChangeAcrueInterest(env e, method f) filtered { f -> !f.isView } 
+{
+    completeSiloSetupEnv(e);
+    uint256 accrueInterestBefore = currentContract.getSiloDataDaoAndDeployerFees();
+    calldataarg args;
+    f(e, args);
+    uint256 accrueInterestAfter = currentContract.getSiloDataDaoAndDeployerFees();
+    
+    assert accrueInterestAfter > accrueInterestBefore => canIncreaseAccrueInterest(f);
+    assert accrueInterestAfter < accrueInterestBefore => canDecreaseAccrueInterest(f);
+}
+
+rule whoCanChangeTimeStamp(env e, method f) filtered { f -> !f.isView } 
+{
+    completeSiloSetupEnv(e);
+    uint256 timestampBefore = currentContract.getSiloDataInterestRateTimestamp();
+    calldataarg args;
+    f(e, args);
+    uint256 timestampAfter = currentContract.getSiloDataInterestRateTimestamp();
+    
+    assert timestampAfter > timestampBefore => canIncreaseTimestamp(f);
+    assert timestampAfter < timestampBefore => canDecreaseTimestamp(f);
+}
+
+rule whoCanChangeBalanceShares(env e, method f) filtered { f -> !f.isView } 
+{
+    completeSiloSetupEnv(e);
+    requireCollateralToken0TotalAndBalancesIntegrity();
+    address receiver;
+
+    mathint balanceSharesBefore = shareCollateralToken0.balanceOf(receiver);
+    calldataarg args;
+    f(e, args);
+    mathint balanceSharesAfter = shareCollateralToken0.balanceOf(receiver);
+    
+    assert balanceSharesAfter > balanceSharesBefore => canIncreaseSharesBalance(f);
+    assert balanceSharesAfter < balanceSharesBefore => canDecreaseSharesBalance(f);
+}
+
+rule whoCanChangeProtectedAssets(env e, method f) filtered { f -> !f.isView } 
+{
+    completeSiloSetupEnv(e);
+    requireCollateralToken0TotalAndBalancesIntegrity();
+    address receiver;
+
+    mathint protectedAssetsBefore = silo0.total(ISilo.AssetType.Protected);
+    calldataarg args;
+    f(e, args);
+    mathint protectedAssetsAfter = silo0.total(ISilo.AssetType.Protected);
+    
+    assert protectedAssetsAfter > protectedAssetsBefore => canIncreaseProtectedAssets(f);
+    assert protectedAssetsAfter < protectedAssetsBefore => canDecreaseProtectedAssets(f);
+}
+
+rule protectedSharesBalance(env e, method f, address receiver) 
+    filtered { f -> !f.isView} 
+{
+    completeSiloSetupEnv(e);
+    requireProtectedToken0TotalAndBalancesIntegrity();
+
+    mathint protectedtAssetsBefore = silo0.total(ISilo.AssetType.Protected);
+    mathint balanceSharesBefore = shareProtectedCollateralToken0.balanceOf(receiver);
+
+    calldataarg args;
+    f(e, args);
+
+    mathint protectedAssetsAfter = silo0.total(ISilo.AssetType.Protected);
+    mathint balanceSharesAfter = shareProtectedCollateralToken0.balanceOf(receiver);
+
+    assert balanceSharesBefore < balanceSharesAfter => protectedtAssetsBefore < protectedAssetsAfter,
+        "The balance of share tokens should increase only if protected assets increased";
+
+    assert balanceSharesBefore > balanceSharesAfter => protectedtAssetsBefore > protectedAssetsAfter,
+        "The balance of share tokens should decrease only if protected assets decreased";
+}
+

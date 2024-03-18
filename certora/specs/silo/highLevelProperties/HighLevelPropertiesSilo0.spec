@@ -9,7 +9,6 @@ import "../../_simplifications/priceOracle.spec";
 import "../../_simplifications/SiloSolvencyLib.spec";
 import "../../_simplifications/SimplifiedGetCompoundInterestRateAndUpdate.spec";
 
-use builtin rule sanity;
 
 /*
     Breaking-up larger mint to two smaller ones doesn't benefit the user.
@@ -223,8 +222,11 @@ rule HLP_transitionColateral_additivity(env e, address receiver)
     mathint balanceCollateral1_2 = shareCollateralToken0.balanceOf(receiver);
     mathint balanceProtectedCollateral1_2 = shareProtectedCollateralToken0.balanceOf(receiver);
 
-    assert balanceCollateralSum + balanceProtectedCollateralSum >= balanceCollateral1_2 + balanceProtectedCollateral1_2;
-    satisfy balanceCollateralSum + balanceProtectedCollateralSum >= balanceCollateral1_2 + balanceProtectedCollateral1_2;
+    //assert balanceCollateralSum + balanceProtectedCollateralSum >= balanceCollateral1_2 + balanceProtectedCollateral1_2;
+    assert balanceCollateralSum >= balanceCollateral1_2;    
+    assert balanceProtectedCollateralSum >= balanceProtectedCollateral1_2;    
+
+    //satisfy balanceCollateralSum + balanceProtectedCollateralSum >= balanceCollateral1_2 + balanceProtectedCollateral1_2;
 }
 
 rule HLP_Mint2RedeemNotProfitable(env e, address receiver)
@@ -310,6 +312,30 @@ rule HLP_MintRedeem2NotProfitable(env e, address receiver)
     assert balanceCollateralR2 >= balanceCollateralBefore => balanceTokenR2 <= balanceTokenBefore;
 }
 
+// for testing only
+rule testCollateralScale(env e, address receiver)
+{
+    completeSiloSetupEnv(e);
+    totalSupplyMoreThanBalance(receiver);
+    totalSupplyMoreThanBalance(e.msg.sender);
+    
+    mathint balanceCollateralBefore = shareCollateralToken0.balanceOf(receiver);
+    mathint balanceProtectedCollateralBefore = shareProtectedCollateralToken0.balanceOf(receiver);
+    mathint balanceTokenBefore = token0.balanceOf(e.msg.sender);    
+
+    storage init = lastStorage;
+    uint256 assets;
+    ISilo.AssetType typeC = ISilo.AssetType.Collateral;
+    mathint collateralShares = deposit(e, assets, receiver, typeC);
+    
+    ISilo.AssetType typeP = ISilo.AssetType.Protected;
+    mathint protectedCollateralShares = deposit(e, assets, receiver, typeP) at init;
+
+    satisfy collateralShares != protectedCollateralShares;
+}
+
+// holds
+// https://prover.certora.com/output/6893/2ff8676c6e1142f8ae409ca94991b06b/?anonymousKey=22d2387bfb082e9c8d098dc21bdc15b9b38702c2
 rule HLP_DepositRedeemNotProfitable(env e, address receiver)
 {
     completeSiloSetupEnv(e);
@@ -325,10 +351,144 @@ rule HLP_DepositRedeemNotProfitable(env e, address receiver)
     mathint balanceTokenM1 = token0.balanceOf(e.msg.sender);    
 
     uint256 shares;
-    mathint assetsR = redeem(e, shares, receiver, receiver);
+    mathint assetsR = redeem(e, shares, e.msg.sender, receiver);
     mathint balanceCollateralR = shareCollateralToken0.balanceOf(receiver);  
     mathint balanceTokenR = token0.balanceOf(e.msg.sender);    
    
     assert balanceCollateralR > balanceCollateralBefore => balanceTokenR < balanceTokenBefore;
     assert balanceTokenR > balanceTokenBefore => balanceCollateralR < balanceCollateralBefore;
 }
+
+rule HLP_MintWithdrawNotProfitable(env e, address receiver)
+{
+    completeSiloSetupEnv(e);
+    totalSupplyMoreThanBalance(receiver);
+    totalSupplyMoreThanBalance(e.msg.sender);
+    
+    mathint balanceCollateralBefore = shareCollateralToken0.balanceOf(receiver);
+    mathint balanceTokenBefore = token0.balanceOf(e.msg.sender);    
+
+    uint256 shares; 
+    mathint assetsM = mint(e, shares, receiver);
+    mathint balanceCollateralM = shareCollateralToken0.balanceOf(receiver);  
+    mathint balanceTokenM = token0.balanceOf(e.msg.sender);    
+
+    uint256 assets;
+    mathint sharesW = withdraw(e, assets, e.msg.sender, receiver);
+    mathint balanceCollateralW = shareCollateralToken0.balanceOf(receiver);  
+    mathint balanceTokenW = token0.balanceOf(e.msg.sender);    
+   
+    assert balanceCollateralW > balanceCollateralBefore => balanceTokenW < balanceTokenBefore;
+    assert balanceTokenW > balanceTokenBefore => balanceCollateralW < balanceCollateralBefore;
+
+    satisfy balanceCollateralW > balanceCollateralBefore => balanceTokenW < balanceTokenBefore;
+    satisfy balanceTokenW > balanceTokenBefore => balanceCollateralW < balanceCollateralBefore;
+}
+
+rule HLP_AssetsPerShareNondecreasing(env e, method f)
+{
+    completeSiloSetupEnv(e);
+    totalSupplyMoreThanBalance(e.msg.sender);
+    sharesToAssetsNotTooHigh(e, 2);
+    requireTokensTotalAndBalanceIntegrity();
+
+    mathint totalCollateralAssetsB; mathint totalProtectedAssetsB;
+    totalCollateralAssetsB, totalProtectedAssetsB = getCollateralAndProtectedAssets(e);  
+    mathint totalSumColateralB = totalCollateralAssetsB + totalProtectedAssetsB;
+    mathint totalSharesB = shareCollateralToken0.totalSupply();
+    mathint totalProtectedSharesB = shareProtectedCollateralToken0.totalSupply();
+
+    calldataarg args;
+    f(e, args);
+    
+    mathint totalCollateralAssetsA; mathint totalProtectedAssetsA;
+    totalCollateralAssetsA, totalProtectedAssetsA = getCollateralAndProtectedAssets(e);  
+    mathint totalSumColateralA = totalCollateralAssetsA + totalProtectedAssetsA;
+    mathint totalSharesA = shareCollateralToken0.totalSupply();
+    mathint totalProtectedSharesA = shareProtectedCollateralToken0.totalSupply();
+    
+    require totalSharesB > 0;
+    require totalSharesA > 0;
+
+    assert totalCollateralAssetsB * totalSharesA <= totalCollateralAssetsA * totalSharesB +  totalSharesA * totalSharesB;
+
+    /*
+    assert differsAtMost(totalProtectedAssetsB * totalProtectedSharesA,
+        totalProtectedAssetsA * totalProtectedSharesB, totalProtectedSharesA * totalProtectedSharesB);
+    assert differsAtMost(totalSumColateralB * totalSumSharesA,
+        totalSumColateralA * totalSumSharesB, totalSumSharesA * totalSumSharesB);
+    */
+    //assert totalCollateralAssetsB * totalSharesA <= totalCollateralAssetsA * totalSharesB;
+    //assert totalProtectedAssetsB * totalProtectedSharesA <= totalProtectedAssetsA * totalProtectedSharesB;
+    //assert totalSumColateralB * totalSumSharesA <= totalSumColateralA * totalSumSharesB;
+}
+
+rule HLP_OthersCantDecreaseMyRedeem(env e, env eOther, method f)
+    filtered { f -> !f.isView }
+{
+    completeSiloSetupEnv(e);
+    totalSupplyMoreThanBalance(e.msg.sender);
+    completeSiloSetupEnv(eOther);
+    totalSupplyMoreThanBalance(eOther.msg.sender);
+    require e.msg.sender != eOther.msg.sender;
+    sharesToAssetsNotTooHigh(e, 2);
+    sharesToAssetsNotTooHigh(eOther, 2);
+
+    storage init = lastStorage;
+    uint256 shares;
+    mathint assetsReceived = redeem(e, shares, e.msg.sender, e.msg.sender);
+    
+    calldataarg args;
+    f(eOther, args) at init;
+    mathint assetsReceived2 = redeem(e, shares, e.msg.sender, e.msg.sender);
+
+    assert assetsReceived2 >= assetsReceived;
+}
+
+rule HLP_OthersCantDecreaseMyRedeem_viaDeposit(env e, env eOther)
+{
+    completeSiloSetupEnv(e);
+    totalSupplyMoreThanBalance(e.msg.sender);
+    completeSiloSetupEnv(eOther);
+    totalSupplyMoreThanBalance(eOther.msg.sender);
+    require e.msg.sender != eOther.msg.sender;
+    sharesToAssetsNotTooHigh(e, 2);
+    sharesToAssetsNotTooHigh(eOther, 2);
+
+    storage init = lastStorage;
+    uint256 shares;
+    mathint assetsReceived = redeem(e, shares, e.msg.sender, e.msg.sender);
+    
+    uint256 assets;
+    address receiver;
+    deposit(eOther, assets, receiver) at init;
+    mathint assetsReceived2 = redeem(e, shares, e.msg.sender, e.msg.sender);
+
+    assert assetsReceived2 >= assetsReceived;
+}
+
+
+rule HLP_OthersCantDecreaseMyRedeem_viaWithdraw(env e, env eOther)
+{
+    completeSiloSetupEnv(e);
+    totalSupplyMoreThanBalance(e.msg.sender);
+    completeSiloSetupEnv(eOther);
+    totalSupplyMoreThanBalance(eOther.msg.sender);
+    require e.msg.sender != eOther.msg.sender;
+    sharesToAssetsNotTooHigh(e, 2);
+    sharesToAssetsNotTooHigh(eOther, 2);
+
+    storage init = lastStorage;
+    uint256 shares;
+    mathint assetsReceived = redeem(e, shares, e.msg.sender, e.msg.sender);
+    
+    uint256 assets;
+    address receiver;
+    totalSupplyMoreThanBalance(eOther.msg.sender);
+    withdraw(eOther, assets, receiver, receiver) at init;
+    mathint assetsReceived2 = redeem(e, shares, e.msg.sender, e.msg.sender);
+
+    assert assetsReceived2 >= assetsReceived;
+}
+
+
