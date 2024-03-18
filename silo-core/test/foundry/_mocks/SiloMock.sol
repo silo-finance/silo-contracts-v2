@@ -54,4 +54,10 @@ contract SiloMock is Test {
         vm.mockCall(ADDRESS, data, abi.encode(_collateral, _debt, _timestamp));
         vm.expectCall(ADDRESS, data);
     }
+
+    function configMock(address _config) external {
+        bytes memory data = abi.encodeWithSelector(ISilo.config.selector);
+        vm.mockCall(ADDRESS, data, abi.encode(_config));
+        vm.expectCall(ADDRESS, data);
+    }
 }

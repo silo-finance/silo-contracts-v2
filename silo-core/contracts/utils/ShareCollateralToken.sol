@@ -10,9 +10,6 @@ import {IShareToken, ShareToken, ISiloFactory, ISilo} from "./ShareToken.sol";
 contract ShareCollateralToken is ShareToken {
     using SiloLensLib for ISilo;
 
-    error SenderNotSolventAfterTransfer();
-    error ShareTransferNotAllowed();
-
     /// @param _silo Silo address for which tokens was deployed
     function initialize(ISilo _silo, address _hookReceiver) external virtual initializer {
         __ShareToken_init(_silo, _hookReceiver);

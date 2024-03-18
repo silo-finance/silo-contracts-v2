@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+### Fixed
+- fix issue with wrong configs in `isSolvent` after debt share transfer
+
 ## [0.5.0] - 2024-03-12
 ### Added
 - SiloLens deploy

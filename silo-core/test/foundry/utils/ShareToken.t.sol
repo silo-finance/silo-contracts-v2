@@ -12,6 +12,8 @@ import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {IHookReceiver} from "silo-core/contracts/utils/hook-receivers/interfaces/IHookReceiver.sol";
 
 import {HookReceiverMock} from "../_mocks/HookReceiverMock.sol";
+import {SiloMock} from "../_mocks/SiloMock.sol";
+import {SiloConfigMock} from "../_mocks/SiloConfigMock.sol";
 
 contract Token {
     uint8 public immutable decimals;
@@ -26,15 +28,21 @@ forge test -vv --mc ShareTokenTest
 */
 contract ShareTokenTest is Test {
     ShareDebtToken sToken;
-    ISilo silo;
+    SiloMock silo;
+    SiloConfigMock siloConfig;
     HookReceiverMock hookReceiver;
     address owner;
 
     function setUp() public {
         sToken = ShareDebtToken(ClonesUpgradeable.clone(address(new ShareDebtToken())));
-        silo = ISilo(address(1));
+        silo = new SiloMock(address(0));
+        siloConfig = new SiloConfigMock(address(0));
         hookReceiver = new HookReceiverMock(makeAddr("HookReceiver"));
         owner = makeAddr("Owner");
+    }
+
+    function config() external view returns (address) {
+        return siloConfig.ADDRESS();
     }
 
     /*
@@ -44,19 +52,14 @@ contract ShareTokenTest is Test {
         uint8 decimals = 8;
         Token token = new Token(decimals);
         address hook = address(0);
-        sToken.initialize(silo, hook);
 
-        address siloConfig = address(2);
         ISiloConfig.ConfigData memory configData;
         configData.token = address(token);
 
-        bytes memory data = abi.encodeWithSelector(ISilo.config.selector);
-        vm.mockCall(address(silo), data, abi.encode(siloConfig));
-        vm.expectCall(address(silo), data);
+        silo.configMock(siloConfig.ADDRESS());
+        siloConfig.getConfigMock(silo.ADDRESS(), configData);
 
-        bytes memory data2 = abi.encodeWithSelector(ISiloConfig.getConfig.selector, address(silo));
-        vm.mockCall(siloConfig, data2, abi.encode(configData));
-        vm.expectCall(siloConfig, data2);
+        sToken.initialize(ISilo(silo.ADDRESS()), hook);
 
         assertEq(10 ** (sToken.decimals() - token.decimals()), SiloMathLib._DECIMALS_OFFSET_POW, "expect valid offset");
     }
