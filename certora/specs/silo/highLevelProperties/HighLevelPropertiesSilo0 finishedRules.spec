@@ -109,3 +109,5 @@ rule HLP_redeem_breakingUpNotBeneficial(env e, address receiver, address owner)
     satisfy balanceCollateralAfter1_2 <= balanceCollateralAfterSum;
     satisfy balanceProtectedCollateralAfter1_2 <= balanceProtectedCollateralAfterSum;
 }
+
+

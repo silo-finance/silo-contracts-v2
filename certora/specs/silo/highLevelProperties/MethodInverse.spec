@@ -26,11 +26,11 @@ rule HLP_depositAndInverse(env e, address receiver)
     mathint balanceCollateralAfter = shareCollateralToken0.balanceOf(receiver);
     mathint balanceProtectedCollateralAfter = shareProtectedCollateralToken0.balanceOf(receiver);
     
-    assert balanceCollateralAfter >= balanceCollateralBefore + 1;
+    assert balanceCollateralAfter <= balanceCollateralBefore;
     assert balanceProtectedCollateralAfter == balanceProtectedCollateralBefore;
     assert balanceTokenBefore == balanceTokenAfter;
 
-    satisfy balanceCollateralAfter >= balanceCollateralBefore + 1;
+    satisfy balanceCollateralAfter <= balanceCollateralBefore;
     satisfy balanceProtectedCollateralAfter == balanceProtectedCollateralBefore;
     satisfy balanceTokenBefore == balanceTokenAfter;
 }
