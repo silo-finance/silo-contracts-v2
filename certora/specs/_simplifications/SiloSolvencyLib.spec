@@ -6,7 +6,7 @@ methods {
         address _debtToken
     ) internal returns (uint256,uint256,uint256) =>
     calculateLtvCVL(_ltvData, _collateralToken, _debtToken);
-    */
+*/
 
     /*function getAssetsDataForLtvCalculations(
         ISiloConfig.ConfigData memory _collateralConfig,
@@ -15,15 +15,15 @@ methods {
         ISilo.OracleType _oracleType,
         ISilo.AccrueInterestInMemory _accrueInMemory,
         uint256 _debtShareBalanceCached
-    ) internal view returns (LtvData memory ltvData);
-    */
+    ) internal view returns (LtvData memory ltvData);*/
+    
 }
 
 /*
 ltvData
 
-address collateralToken
-address debtToken
+address collateralOracle
+address debtOracle
 uint256 borrowerProtectedAssets;
 uint256 borrowerCollateralAssets;
 uint256 borrowerDebtAssets;
