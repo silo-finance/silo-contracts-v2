@@ -70,16 +70,35 @@ rule VC_Silo_total_collateral_increase(
 }
 
 /**
+Silo contract cannot have assets of any time when the interest rate timestamp is 0.
 */
-invariant cannotHaveAssestWithZeroInterestRateTimestamp() 
-    silo0.getSiloDataInterestRateTimestamp() == 0 => 
-        silo0.total[ISilo.AssetType.Collateral].assets + 
-            silo0.total[ISilo.AssetType.Protected].assets == 0 {
+invariant cannotHaveAssestWithZeroInterestRateTimestamp() silo0.getSiloDataInterestRateTimestamp() == 0 => 
+        (silo0.total[ISilo.AssetType.Collateral].assets + 
+            silo0.total[ISilo.AssetType.Protected].assets + 
+             silo0.total[ISilo.AssetType.Debt].assets == 0) {
 
                 preserved with (env e) {
                     completeSiloSetupEnv(e);
                     requireToken0TotalAndBalancesIntegrity();
                     requireProtectedToken0TotalAndBalancesIntegrity();
+                }
+
+                // These functions could change the assets, but they can only be called
+                // with block.timestamp > 0
+                preserved deposit(uint256 _assets, address _receiver) with (env e) {
+                    require e.block.timestamp > 0;
+                }
+
+                preserved deposit(uint256 _assets, address _receiver, ISilo.AssetType _assetType) with (env e) {
+                    require e.block.timestamp > 0;
+                }
+
+                preserved mint(uint256 _shares, address _receiver) with (env e) {
+                    require e.block.timestamp > 0;
+                }
+
+                preserved mint(uint256 _assets, address _receiver, ISilo.AssetType _assetType) with (env e) {
+                    require e.block.timestamp > 0;
                 }
             }
 
@@ -104,7 +123,7 @@ rule VC_Silo_total_collateral_decrease(
     requireProtectedToken0TotalAndBalancesIntegrity();
 
     requireInvariant cannotHaveAssestWithZeroInterestRateTimestamp();
-    
+
     mathint totalDepositsBefore = silo0.getCollateralAssets(e);
     mathint shareTokenTotalSupplyBefore = shareCollateralToken0.totalSupply();
     mathint balanceSharesBefore = shareCollateralToken0.balanceOf(receiver);
