@@ -24,4 +24,24 @@ contract SiloConfigMock is Test {
         vm.mockCall(ADDRESS, data, abi.encode(_daoFee, _deployerFee, _flashloanFee, _asset));
         vm.expectCall(ADDRESS, data);
     }
+
+    function getConfigMock(
+        address _silo,
+        ISiloConfig.ConfigData memory _configData
+    ) external {
+        bytes memory data = abi.encodeWithSelector(ISiloConfig.getConfig.selector, _silo);
+
+        vm.mockCall(ADDRESS, data, abi.encode(_configData));
+        vm.expectCall(ADDRESS, data);
+    }
+
+    function getSilosMock(
+        address _silo0,
+        address _silo1
+    ) external {
+        bytes memory data = abi.encodeWithSelector(ISiloConfig.getSilos.selector);
+
+        vm.mockCall(ADDRESS, data, abi.encode(_silo0, _silo1));
+        vm.expectCall(ADDRESS, data);
+    }
 }
