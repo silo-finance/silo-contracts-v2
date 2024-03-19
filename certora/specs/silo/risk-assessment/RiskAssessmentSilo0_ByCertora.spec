@@ -10,6 +10,7 @@ import "../../_simplifications/SiloSolvencyLib.spec";
 import "../../_simplifications/SimplifiedGetCompoundInterestRateAndUpdate.spec";
 
 use rule assetsToSharesAndBackAxiom;
+use rule mulDiv_axioms_test;
 
 // A user cannot withdraw anything after withdrawing whole balance.
 // holds
@@ -146,6 +147,19 @@ rule RA_silo_cant_borrow_without_collateral(env e, address borrower) {
     assert collateralShares == 0 && protectedCollateralShares ==0 => maxAssets == 0;
 }
 
+invariant no_collateral_assets_no_debt_assets()
+    (
+        silo0.total(ISilo.AssetType.Collateral) ==0 &&
+        silo0.total(ISilo.AssetType.Protected) ==0 =>
+        silo0.total(ISilo.AssetType.Debt) ==0
+    )
+    &&
+    (
+        silo1.total(ISilo.AssetType.Collateral) ==0 &&
+        silo1.total(ISilo.AssetType.Protected) ==0 =>
+        silo1.total(ISilo.AssetType.Debt) ==0
+    );
+
 /// https://prover.certora.com/output/41958/af1acf321bf044c6ab813b243ae08ddd/?anonymousKey=3a898b5d61e73bebff14c4ad88d7f26912b8fbd4
 /*
 Violation analysis:
@@ -173,5 +187,6 @@ invariant zero_assets_iff_zero_shares()
         preserved with (env e) {
             completeSiloSetupEnv(e);
             totalSupplyMoreThanBalance(e.msg.sender);
+            requireInvariant no_collateral_assets_no_debt_assets();
         }
     }

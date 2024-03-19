@@ -22,7 +22,7 @@ definition DECIMALS_OFFSET_POW() returns uint256 = 1;
 
 /// shares, totalAssets, totalShares, (true if round up, false if down)
 /// assets, totalShares, totalAssets, (true if round up, false if down)
-ghost sharesMulDiv(uint256,uint256,uint256,bool) returns uint256 {
+persistent ghost sharesMulDiv(uint256,uint256,uint256,bool) returns uint256 {
     axiom forall uint256 x. forall uint256 y. forall uint256 z.
         sharesMulDiv(x,y,z,true) == sharesMulDiv(x,y,z,false) ||
         sharesMulDiv(x,y,z,true) - sharesMulDiv(x,y,z,false) == 1;
@@ -86,18 +86,55 @@ function assetsToSharesApprox(
 
     return sharesMulDiv(_assets,totalShares,totalAssets,_rounding == MathUpgradeable.Rounding.Up);
 }
+
+function mulDivDown_mathLib(uint256 x, uint256 y, uint256 z) returns uint256 {
+    require z !=0 && x * y <= max_uint256;
+    return assert_uint256(x * y / z);
+}
+
+function mulDivUp_mathLib(uint256 x, uint256 y, uint256 z) returns uint256 {
+    require z !=0 && x * y + z - 1 <= max_uint256;
+    return assert_uint256((x * y + z - 1) / z);
+}
+
+/// Verified
+rule mulDiv_axioms_test(uint256 x, uint256 y, uint256 z) {
+    uint256 resDown = mulDivDown_mathLib(x,y,z);
+    uint256 resUp = mulDivUp_mathLib(x,y,z);
+
+    uint256 resDown_sym = mulDivDown_mathLib(y,x,z);
+    uint256 resUp_sym = mulDivUp_mathLib(y,x,z);
+    
+    uint256 xp;
+    uint256 zp;
+    uint256 resDown_xp = mulDivDown_mathLib(xp,y,z);
+    uint256 resUp_xp = mulDivUp_mathLib(xp,y,z);
+    uint256 resDown_zp = mulDivDown_mathLib(x,y,zp);
+    uint256 resUp_zp = mulDivUp_mathLib(x,y,zp);
+
+    assert resDown == resUp || resUp - resDown == 1;
+    assert resDown_sym == resDown;
+    assert resUp == resUp_sym;
+    assert x <= z => resDown <= y;
+    assert (x == z && z !=0) => resDown == y;
+    assert (y == z && z !=0) => resDown == x;
+    assert x <= xp => resDown <= resDown_xp;
+    assert x <= xp => resUp <= resUp_xp;
+    assert z <= zp => resDown >= resDown_zp;
+    assert z <= zp => resUp >= resUp_zp;
+    assert (x == 0) => resDown == 0;
+    assert (x == 1) => (resDown ==0 <=> (y ==0 || y < z));
+}
+
 /*
 prove that x - roundUp( (z-1) / y ) <= muldivDown(w, z, y) <= x
 where w = muldivDown(x,y,z)
 */
 /// Verified
-/// https://prover.certora.com/output/41958/dd34d0c3c49844c6991899722f457a10/?anonymousKey=f1457c818051cf4f05871dee2529272699803159
 rule assetsToSharesAndBackAxiom(uint256 x, uint256 y, uint256 z) {
-    require z !=0;
-    require y !=0;
-    uint256 w = require_uint256(x * y / z);
-    uint256 xp = require_uint256(w * z / y);
-    mathint delta = (1 * (z - 1)) / y;
+    uint256 w = mulDivDown_mathLib(x, y, z);
+    uint256 xp = mulDivDown_mathLib(w, z, y);
+    mathint delta = mulDivDown_mathLib(1, assert_uint256(z - 1), y);
 
     assert xp <= x && to_mathint(xp) >= x - delta - 1;
 }
