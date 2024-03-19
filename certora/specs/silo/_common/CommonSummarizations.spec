@@ -44,5 +44,3 @@ function mulDivLIA(uint256 x, uint256 y, uint256 z) returns uint256 {
     require x == z => _mulDivGhost[xy][z] == y;
     return _mulDivGhost[xy][z];
 }
-
-

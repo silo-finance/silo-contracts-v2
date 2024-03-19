@@ -19,9 +19,10 @@ persistent ghost priceOracle(address,address,uint256,uint256) returns uint256 {
                 forall uint256 timestamp.
                     forall uint256 amount1. forall uint256 amount2. (
                         (amount1 < amount2 => 
-                            priceOracle(oracle, token, amount1, timestamp) <= priceOracle(oracle, token, amount2, timestamp))) 
-                        && (
+                            priceOracle(oracle, token, amount1, timestamp) <= priceOracle(oracle, token, amount2, timestamp)
+                        ) && (
                         amount1 * 2 == to_mathint(amount2) =>
-                            (2 * priceOracle(oracle, token, amount1, timestamp) == to_mathint(priceOracle(oracle, token, amount2, timestamp)))
+                            2 * priceOracle(oracle, token, amount1, timestamp) == to_mathint(priceOracle(oracle, token, amount2, timestamp))
+                        )
                     );         
 }
