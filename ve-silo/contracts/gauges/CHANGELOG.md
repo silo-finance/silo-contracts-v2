@@ -1,4 +1,6 @@
 ### ethereum/SiloLiquidityGauge.vy
+- SiloLiquidityGauge implementation initialization ([507b11f](https://github.com/silo-finance/silo-contracts-v2/pull/270/commits/507b11f18a78096b77fbaac4835551832c1c1f3a))
+
 - SiloLiquidityGauge with fees for reward tokens ([f4fef9d](https://github.com/silo-finance/silo-contracts-v2/pull/411/commits/f4fef9ddea5aee930bf5325d2b8eb6f6a838df5b))
 
 - Fees receivers from the Silo factory and fees for the gauge from the MainnetBalancerMinter.sol ([35c6ac8](https://github.com/silo-finance/silo-contracts-v2/pull/155/commits/35c6ac87bf4a327758fa22486ef7cf2aec7810f0))
@@ -37,6 +39,8 @@
 - Copy of Balancer's implementation of the BaseGaugeFactory.sol ([c2bc3d5](https://github.com/silo-finance/silo-contracts-v2/pull/34/commits/c2bc3d539244abee8e2cd9b13e70b931eb251735))
 
 ### ethereum/LiquidityGaugeFactory.sol
+- Renamed function parameters ([4c910b3](https://github.com/silo-finance/silo-contracts-v2/pull/272/commits/4c910b301049376dd8b1e71d0ce12f7f2b1f0773))
+
 - Added fee management functionality ([2527de8](https://github.com/silo-finance/silo-contracts-v2/pull/411/commits/2527de8b48e93e2d821c85347b0a2918a2f16a52))
 
 - Bumped solidity to 0.8.21 ([8443b28](https://github.com/silo-finance/silo-contracts-v2/commit/8443b286829f2bdba9181e5a764dd25a7906db13))
@@ -48,6 +52,8 @@
 - Copy of Balancer's implementation of the LiquidityGaugeFactory.sol ([c2bc3d5](https://github.com/silo-finance/silo-contracts-v2/pull/34/commits/c2bc3d539244abee8e2cd9b13e70b931eb251735))
 
 ### l2-common/ChildChainGauge.vy
+- ChildChainGauge implementation initialization ([507b11f](https://github.com/silo-finance/silo-contracts-v2/pull/270/commits/507b11f18a78096b77fbaac4835551832c1c1f3a))
+
 - ChildChainGauge with fees for reward tokens ([cb6bf62](https://github.com/silo-finance/silo-contracts-v2/pull/411/commits/cb6bf6217947deb88e2312cdd7ad7bad8f44ea02))
 
 - Fees receivers from the Silo factory and fees for the gauge from the L2BalancerPseudoMinter.sol ([3f6faaa](https://github.com/silo-finance/silo-contracts-v2/pull/155/commits/3f6faaafe909da7aa2a064660f02c8233e4be86a))
@@ -71,6 +77,8 @@
 - Copy of Balancer's implementation of the ChildChainGauge.vy ([1c535c4](https://github.com/silo-finance/silo-contracts-v2/pull/56/commits/1c535c462b0fa00b4a42531e741caa357894a7ad))
 
 ### l2-common/ChildChainGaugeFactory.sol
+- Renamed function parameters ([4c910b3](https://github.com/silo-finance/silo-contracts-v2/pull/272/commits/4c910b301049376dd8b1e71d0ce12f7f2b1f0773))
+
 - Added fee management functionality ([82375fa](https://github.com/silo-finance/silo-contracts-v2/pull/411/commits/82375fa5e000badeab6f344718f4f4d6aab97035))
 
 - Bumped solidity to 0.8.21 ([8443b28](https://github.com/silo-finance/silo-contracts-v2/commit/8443b286829f2bdba9181e5a764dd25a7906db13))
