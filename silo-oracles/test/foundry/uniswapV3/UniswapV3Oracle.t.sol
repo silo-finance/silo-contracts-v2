@@ -25,6 +25,7 @@ contract UniswapV3OracleTest is UniswapPools {
 
         config = IUniswapV3Oracle.UniswapV3DeploymentConfig(
             pools["USDC_WETH"],
+            address(tokens["WETH"]),
             address(tokens["USDC"]),
             1800,
             120
@@ -78,6 +79,7 @@ contract UniswapV3OracleTest is UniswapPools {
         UniswapV3Oracle oracle = ORACLE_FACTORY.create(IUniswapV3Oracle.UniswapV3DeploymentConfig(
             pools["SP500_WETH"],
             address(tokens["WETH"]),
+            address(tokens["WETH"]),
             15,
             120
         ));
@@ -109,7 +111,7 @@ contract UniswapV3OracleTest is UniswapPools {
         uint256 priceView = PRICE_PROVIDER.quote(1e18, address(tokens["WETH"]));
         uint256 gasSpend = gasStart - gasleft();
         emit log_named_uint("gasSpend", gasSpend);
-        assertEq(gasSpend, 80775, "expect optimised gas #1");
+        assertEq(gasSpend, 80954, "expect optimised gas #1");
 
         assertEq(priceView, 1641_609559, "expect ETH price in USDC");
 
@@ -120,6 +122,7 @@ contract UniswapV3OracleTest is UniswapPools {
 
         config = IUniswapV3Oracle.UniswapV3DeploymentConfig(
             pools["USDC_WETH"],
+            address(tokens["WETH"]),
             address(tokens["USDC"]),
             1800,
             120
@@ -132,7 +135,7 @@ contract UniswapV3OracleTest is UniswapPools {
         gasSpend = gasStart - gasleft();
         emit log_named_uint("at block", otherBlock);
         emit log_named_uint("gasSpend", gasSpend);
-        assertEq(gasSpend, 50257, "expect optimised gas #1");
+        assertEq(gasSpend, 50436, "expect optimised gas #1");
 
         assertEq(priceView, 1657_278376, "expect ETH price in USDC");
     }

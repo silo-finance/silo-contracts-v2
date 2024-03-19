@@ -22,6 +22,7 @@ library UniswapV3OraclesConfigsParser {
         string memory configJson = configFile();
 
         string memory poolKey = KV.getString(configJson, _name, "pool");
+        string memory baseTokenKey = KV.getString(configJson, _name, "baseToken");
         string memory quoteTokenKey = KV.getString(configJson, _name, "quoteToken");
         uint256 periodForAvgPrice = KV.getUint(configJson, _name, "periodForAvgPrice");
         uint256 blockTime = KV.getUint(configJson, _name, "blockTime");
@@ -31,6 +32,7 @@ library UniswapV3OraclesConfigsParser {
 
         config = IUniswapV3Oracle.UniswapV3DeploymentConfig({
             pool: IUniswapV3Pool(AddrLib.getAddressSafe(_network, poolKey)),
+            baseToken: AddrLib.getAddressSafe(_network, baseTokenKey),
             quoteToken: AddrLib.getAddressSafe(_network, quoteTokenKey),
             periodForAvgPrice: uint32(periodForAvgPrice),
             blockTime: uint8(blockTime)
