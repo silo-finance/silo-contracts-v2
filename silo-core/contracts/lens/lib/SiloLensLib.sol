@@ -1,16 +1,15 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.21;
 
-import {ISilo} from "../interfaces/ISilo.sol";
-import {ISiloLens} from "../interfaces/ISiloLens.sol";
-import {IShareToken} from "../interfaces/IShareToken.sol";
+import {ISilo} from "../../interfaces/ISilo.sol";
+import {ISiloLens} from "../../interfaces/ISiloLens.sol";
+import {IShareToken} from "../../interfaces/IShareToken.sol";
+import {ISiloConfig} from "../../interfaces/ISiloConfig.sol";
 
-import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
-
-import {SiloSolvencyLib} from "./SiloSolvencyLib.sol";
-import {SiloSolvencyLib2} from "./SiloSolvencyLib2.sol";
-import {SiloLendingLib} from "./SiloLendingLib.sol";
-import {SiloERC4626Lib} from "./SiloERC4626Lib.sol";
+import {SiloStdLib} from "../../lib/SiloStdLib.sol";
+import {SiloLendingLib} from "../../lib/SiloLendingLib.sol";
+import {SiloERC4626Lib} from "../../lib/SiloERC4626Lib.sol";
+import {SolvencyLib} from "../../liquidation/lib/SolvencyLib.sol";
 
 library SiloLensLib {
     function depositPossible(ISilo _silo, address _depositor) internal view returns (bool) {
@@ -42,9 +41,9 @@ library SiloLensLib {
     function getLtv(ISilo _silo, address _borrower) internal view returns (uint256 ltv) {
         (
             ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig
-        ) = SiloSolvencyLib.getOrderedConfigs(_silo, _silo.config(), _borrower);
+        ) = SiloStdLib.getOrderedConfigs(_silo, _silo.config(), _borrower);
 
-        ltv = SiloSolvencyLib2.getLtv(
+        ltv = SolvencyLib.getLtv(
             collateralConfig,
             debtConfig,
             _borrower,

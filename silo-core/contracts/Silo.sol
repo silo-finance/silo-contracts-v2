@@ -20,7 +20,6 @@ import {IInterestRateModel} from "./interfaces/IInterestRateModel.sol";
 
 import {SiloERC4626} from "./utils/SiloERC4626.sol";
 import {SiloStdLib} from "./lib/SiloStdLib.sol";
-import {SiloSolvencyLib} from "./lib/SiloSolvencyLib.sol";
 import {SiloLendingLib} from "./lib/SiloLendingLib.sol";
 import {SiloERC4626Lib} from "./lib/SiloERC4626Lib.sol";
 import {SiloMathLib} from "./lib/SiloMathLib.sol";
@@ -83,7 +82,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
     function isSolvent(address _borrower) external view virtual returns (bool) {
         (
             ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig
-        ) = SiloSolvencyLib.getOrderedConfigs(this, config, _borrower);
+        ) = SiloStdLib.getOrderedConfigs(this, config, _borrower);
 
         return ILiquidationModule(collateralConfig.liquidationModule).isSolvent(
             collateralConfig, debtConfig, _borrower, AccrueInterestInMemory.Yes

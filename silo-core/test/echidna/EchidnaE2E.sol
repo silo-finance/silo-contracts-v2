@@ -5,7 +5,7 @@ import {Actor} from "./utils/Actor.sol";
 import {ISiloConfig} from "silo-core/contracts/SiloConfig.sol";
 import {Silo, ISilo} from "silo-core/contracts/Silo.sol";
 import {PartialLiquidation} from "silo-core/contracts/liquidation/PartialLiquidation.sol";
-import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
+import {SiloLensLib} from "silo-core/contracts/lens/lib/SiloLensLib.sol";
 import {IInterestRateModel} from "silo-core/contracts/interfaces/IInterestRateModel.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {PropertiesAsserts} from "properties/util/PropertiesHelper.sol";

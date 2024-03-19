@@ -6,7 +6,7 @@ import "forge-std/Test.sol";
 
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
-import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
+import {SiloLensLib} from "silo-core/contracts/lens/lib/SiloLensLib.sol";
 
 import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
 import {LeverageBorrower, ILeverageBorrower} from "../../_common/LeverageBorrower.sol";

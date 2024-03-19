@@ -3,13 +3,12 @@ pragma solidity 0.8.21;
 
 import {MathUpgradeable} from "openzeppelin-contracts-upgradeable/utils/math/MathUpgradeable.sol";
 
-import {ISilo} from "../interfaces/ISilo.sol";
-import {SiloStdLib, ISiloConfig, IShareToken, ISilo} from "./SiloStdLib.sol";
-import {SiloERC4626Lib} from "./SiloERC4626Lib.sol";
-import {SiloMathLib} from "./SiloMathLib.sol";
-import {SiloSolvencyLib} from "./SiloSolvencyLib.sol";
+import {ISilo} from "../../interfaces/ISilo.sol";
+import {SiloStdLib, ISiloConfig, IShareToken, ISilo} from "../../lib/SiloStdLib.sol";
+import {SiloERC4626Lib} from "../../lib/SiloERC4626Lib.sol";
+import {SiloMathLib} from "../../lib/SiloMathLib.sol";
 
-library SiloSolvencyLib2 {
+library SolvencyLib {
     using MathUpgradeable for uint256;
 
     uint256 internal constant _PRECISION_DECIMALS = 1e18;
@@ -76,7 +75,7 @@ library SiloSolvencyLib2 {
     ) internal view returns (uint256 ltvInDp) {
         if (_debtShareBalance == 0) return 0;
 
-        ISilo.LtvData memory ltvData = SiloSolvencyLib.getAssetsDataForLtvCalculations(
+        ISilo.LtvData memory ltvData = SiloStdLib.getAssetsDataForLtvCalculations(
             _collateralConfig, _debtConfig, _borrower, _oracleType, _accrueInMemory, _debtShareBalance
         );
 
@@ -100,7 +99,7 @@ library SiloSolvencyLib2 {
     {
         (
             sumOfBorrowerCollateralValue, totalBorrowerDebtValue
-        ) = SiloSolvencyLib.getPositionValues(_ltvData, _collateralToken, _debtToken);
+        ) = SiloStdLib.getPositionValues(_ltvData, _collateralToken, _debtToken);
 
         if (sumOfBorrowerCollateralValue == 0 && totalBorrowerDebtValue == 0) {
             return (0, 0, 0);

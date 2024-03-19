@@ -6,7 +6,7 @@ import "forge-std/Test.sol";
 import {StringsUpgradeable as Strings} from "openzeppelin-contracts-upgradeable/utils/StringsUpgradeable.sol";
 
 import {SiloFactory} from "silo-core/contracts/SiloFactory.sol";
-import {SiloSolvencyLib} from "silo-core/contracts/lib/SiloSolvencyLib.sol";
+import {SiloStdLib} from "silo-core/contracts/lib/SiloStdLib.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 
@@ -154,7 +154,7 @@ contract GetAssetsDataForLtvCalculationsTest is Test {
                 uint256 cachedShareDebtBalance
             ) = getData(scenarios[index]);
 
-            ISilo.LtvData memory ltvData = SiloSolvencyLib.getAssetsDataForLtvCalculations(
+            ISilo.LtvData memory ltvData = SiloStdLib.getAssetsDataForLtvCalculations(
                 collateralConfig, debtConfig, borrower, oracleType, accrueInMemory, cachedShareDebtBalance
             );
 

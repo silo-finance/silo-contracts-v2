@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import "forge-std/Test.sol";
 
 import {MathUpgradeable} from "openzeppelin-contracts-upgradeable/utils/math/MathUpgradeable.sol";
-import {SiloSolvencyLib2} from "silo-core/contracts/lib/SiloSolvencyLib2.sol";
+import {SolvencyLib} from "silo-core/contracts/liquidation/lib/SolvencyLib.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 
@@ -17,9 +17,9 @@ contract CalculateLtvTest is Test, OraclesHelper {
     uint256 internal constant DECIMALS_POINTS = 1e18;
 
     /*
-    forge test -vv --mt test_SiloSolvencyLib_calculateLtv_noOracle_zero
+    forge test -vv --mt test_SiloStdLib_calculateLtv_noOracle_zero
     */
-    function test_SiloSolvencyLib_calculateLtv_noOracle_zero() public {
+    function test_SiloStdLib_calculateLtv_noOracle_zero() public {
         uint128 zero;
 
         ISiloOracle noOracle;
@@ -30,15 +30,15 @@ contract CalculateLtvTest is Test, OraclesHelper {
 
         address any = address(1);
 
-        (,, uint256 ltv) = SiloSolvencyLib2.calculateLtv(ltvData, any, any);
+        (,, uint256 ltv) = SolvencyLib.calculateLtv(ltvData, any, any);
 
         assertEq(ltv, 0, "no debt no collateral");
     }
 
     /*
-    forge test -vv --mt test_SiloSolvencyLib_calculateLtv_noOracle_infinity
+    forge test -vv --mt test_SiloStdLib_calculateLtv_noOracle_infinity
     */
-    function test_SiloSolvencyLib_calculateLtv_noOracle_infinity() public {
+    function test_SiloStdLib_calculateLtv_noOracle_infinity() public {
         uint128 zero;
         uint128 debtAssets = 1;
 
@@ -50,15 +50,15 @@ contract CalculateLtvTest is Test, OraclesHelper {
 
         address any = address(1);
 
-        (,, uint256 ltv) = SiloSolvencyLib2.calculateLtv(ltvData, any, any);
+        (,, uint256 ltv) = SolvencyLib.calculateLtv(ltvData, any, any);
 
-        assertEq(ltv, SiloSolvencyLib2._INFINITY, "when only debt");
+        assertEq(ltv, SolvencyLib._INFINITY, "when only debt");
     }
 
     /*
-    forge test -vv --mt test_SiloSolvencyLib_calculateLtv_noOracle_fuzz
+    forge test -vv --mt test_SiloStdLib_calculateLtv_noOracle_fuzz
     */
-    function test_SiloSolvencyLib_calculateLtv_noOracle_fuzz(
+    function test_SiloStdLib_calculateLtv_noOracle_fuzz(
         uint128 _collateralAssets,
         uint128 _protectedAssets,
         uint128 _debtAssets
@@ -74,14 +74,14 @@ contract CalculateLtvTest is Test, OraclesHelper {
 
         address any = address(1);
 
-        (,, uint256 ltv) = SiloSolvencyLib2.calculateLtv(ltvData, any, any);
+        (,, uint256 ltv) = SolvencyLib.calculateLtv(ltvData, any, any);
 
         uint256 expectedLtv;
 
         if (sumOfCollateralAssets == 0 && _debtAssets == 0) {
             // expectedLtv is 0;
         } else if (sumOfCollateralAssets == 0) {
-            expectedLtv = SiloSolvencyLib2._INFINITY;
+            expectedLtv = SolvencyLib._INFINITY;
         } else {
             expectedLtv = MathUpgradeable.mulDiv(_debtAssets, DECIMALS_POINTS, sumOfCollateralAssets, MathUpgradeable.Rounding.Up);
         }
@@ -90,9 +90,9 @@ contract CalculateLtvTest is Test, OraclesHelper {
     }
 
     /*
-    forge test -vv --mt test_SiloSolvencyLib_calculateLtv_constant
+    forge test -vv --mt test_SiloStdLib_calculateLtv_constant
     */
-    function test_SiloSolvencyLib_calculateLtv_constant(
+    function test_SiloStdLib_calculateLtv_constant(
         uint128 _collateralAssets,
         uint128 _protectedAssets,
         uint128 _debtAssets
@@ -111,7 +111,7 @@ contract CalculateLtvTest is Test, OraclesHelper {
         collateralOracle.quoteMock(collateralSum, COLLATERAL_ASSET, 9999);
         debtOracle.quoteMock(ltvData.borrowerDebtAssets, DEBT_ASSET, 1111);
 
-        (,, uint256 ltv) = SiloSolvencyLib2.calculateLtv(ltvData, COLLATERAL_ASSET, DEBT_ASSET);
+        (,, uint256 ltv) = SolvencyLib.calculateLtv(ltvData, COLLATERAL_ASSET, DEBT_ASSET);
 
         assertEq(
             ltv,

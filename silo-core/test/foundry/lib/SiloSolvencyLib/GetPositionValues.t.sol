@@ -3,8 +3,8 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
 
-import {SiloSolvencyLib2} from "silo-core/contracts/lib/SiloSolvencyLib2.sol";
-import {SiloSolvencyLib} from "silo-core/contracts/lib/SiloSolvencyLib.sol";
+import {SolvencyLib} from "silo-core/contracts/liquidation/lib/SolvencyLib.sol";
+import {SiloStdLib} from "silo-core/contracts/lib/SiloStdLib.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 
@@ -17,16 +17,16 @@ contract GetPositionValuesTest is Test, OraclesHelper {
     uint256 internal constant _PRECISION_DECIMALS = 1e18;
 
     /*
-    forge test -vv --mt test_SiloSolvencyLib2_PRECISION_DECIMALS
+    forge test -vv --mt test_SolvencyLib_PRECISION_DECIMALS
     */
-    function test_SiloSolvencyLib2_PRECISION_DECIMALS() public {
-        assertEq(_PRECISION_DECIMALS, SiloSolvencyLib2._PRECISION_DECIMALS, "_PRECISION_DECIMALS");
+    function test_SolvencyLib_PRECISION_DECIMALS() public {
+        assertEq(_PRECISION_DECIMALS, SolvencyLib._PRECISION_DECIMALS, "_PRECISION_DECIMALS");
     }
 
     /*
-    forge test -vv --mt test_SiloSolvencyLib_getPositionValues_noOracle
+    forge test -vv --mt test_SiloStdLib_getPositionValues_noOracle
     */
-    function test_SiloSolvencyLib_getPositionValues_noOracle() public {
+    function test_SiloStdLib_getPositionValues_noOracle() public {
         ISiloOracle noOracle;
         uint256 collateralAssets = 20;
         uint256 protectedAssets = 10;
@@ -38,7 +38,7 @@ contract GetPositionValuesTest is Test, OraclesHelper {
 
         address any = address(1);
 
-        (uint256 collateralValue, uint256 debtValue) = SiloSolvencyLib.getPositionValues(ltvData, any, any);
+        (uint256 collateralValue, uint256 debtValue) = SiloStdLib.getPositionValues(ltvData, any, any);
 
         assertEq(collateralValue, collateralAssets + protectedAssets, "collateralValue");
         assertEq(debtValue, debtAssets, "debtValue");

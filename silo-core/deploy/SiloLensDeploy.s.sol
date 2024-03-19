@@ -2,7 +2,7 @@
 pragma solidity 0.8.21;
 
 import {CommonDeploy, SiloCoreContracts} from "./_CommonDeploy.sol";
-import {SiloLens} from "silo-core/contracts/SiloLens.sol";
+import {SiloLens} from "silo-core/contracts/lens/SiloLens.sol";
 import {ISiloLens} from "silo-core/contracts/interfaces/ISiloLens.sol";
 
 /**

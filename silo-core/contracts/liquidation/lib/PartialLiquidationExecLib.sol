@@ -5,8 +5,8 @@ import {MathUpgradeable} from "openzeppelin-contracts-upgradeable/utils/math/Mat
 
 import {ISilo} from "../../interfaces/ISilo.sol";
 import {ISiloConfig} from "../../interfaces/ISiloConfig.sol";
-import {SiloSolvencyLib} from "../../lib/SiloSolvencyLib.sol";
-import {SiloSolvencyLib2} from "../../lib/SiloSolvencyLib2.sol";
+import {SiloStdLib} from "../../lib/SiloStdLib.sol";
+import {SolvencyLib} from "./SolvencyLib.sol";
 import {PartialLiquidationLib} from "./PartialLiquidationLib.sol";
 
 library PartialLiquidationExecLib {
@@ -23,7 +23,7 @@ library PartialLiquidationExecLib {
         view
         returns (uint256 withdrawAssetsFromCollateral, uint256 withdrawAssetsFromProtected, uint256 repayDebtAssets)
     {
-        ISilo.LtvData memory ltvData = SiloSolvencyLib.getAssetsDataForLtvCalculations(
+        ISilo.LtvData memory ltvData = SiloStdLib.getAssetsDataForLtvCalculations(
             _collateralConfig,
             _debtConfig,
             _user,
@@ -69,7 +69,7 @@ library PartialLiquidationExecLib {
             ISiloConfig.ConfigData memory debtConfig, ISiloConfig.ConfigData memory collateralConfig
         ) = _silo.config().getConfigs(address(_silo));
 
-        ISilo.LtvData memory ltvData = SiloSolvencyLib.getAssetsDataForLtvCalculations(
+        ISilo.LtvData memory ltvData = SiloStdLib.getAssetsDataForLtvCalculations(
             collateralConfig,
             debtConfig,
             _borrower,
@@ -82,7 +82,7 @@ library PartialLiquidationExecLib {
 
         (
             uint256 sumOfCollateralValue, uint256 debtValue
-        ) = SiloSolvencyLib.getPositionValues(ltvData, collateralConfig.token, debtConfig.token);
+        ) = SiloStdLib.getPositionValues(ltvData, collateralConfig.token, debtConfig.token);
 
         uint256 sumOfCollateralAssets;
         // safe because we adding same token, so it is under same total supply
@@ -118,7 +118,7 @@ library PartialLiquidationExecLib {
 
         (
             uint256 sumOfBorrowerCollateralValue, uint256 totalBorrowerDebtValue, uint256 ltvBefore
-        ) = SiloSolvencyLib2.calculateLtv(_ltvData, _params.collateralConfigAsset, _params.debtConfigAsset);
+        ) = SolvencyLib.calculateLtv(_ltvData, _params.collateralConfigAsset, _params.debtConfigAsset);
 
         if (_params.selfLiquidation) {
             if (_params.debtToCover >= _ltvData.borrowerDebtAssets) {

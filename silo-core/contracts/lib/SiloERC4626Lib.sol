@@ -8,7 +8,6 @@ import {MathUpgradeable} from "openzeppelin-contracts-upgradeable/utils/math/Mat
 import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
 import {ISilo} from "../interfaces/ISilo.sol";
 import {IShareToken} from "../interfaces/IShareToken.sol";
-import {SiloSolvencyLib} from "./SiloSolvencyLib.sol";
 import {SiloMathLib} from "./SiloMathLib.sol";
 import {SiloStdLib} from "./SiloStdLib.sol";
 import {SiloLendingLib} from "./SiloLendingLib.sol";
@@ -125,13 +124,13 @@ library SiloERC4626Lib {
                 return (assets, shares);
             }
 
-            ltvData = SiloSolvencyLib.getAssetsDataForLtvCalculations(
+            ltvData = SiloStdLib.getAssetsDataForLtvCalculations(
                 collateralConfig, debtConfig, _owner, ISilo.OracleType.Solvency, ISilo.AccrueInterestInMemory.Yes, debt
             );
         }
 
         (uint256 collateralValue, uint256 debtValue) =
-            SiloSolvencyLib.getPositionValues(ltvData, collateralConfig.token, debtConfig.token);
+            SiloStdLib.getPositionValues(ltvData, collateralConfig.token, debtConfig.token);
 
         assets = SiloMathLib.calculateMaxAssetsToWithdraw(
             collateralValue,

@@ -1,13 +1,12 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.21;
 
-import {ISiloLens, ISilo} from "./interfaces/ISiloLens.sol";
-import {IShareToken} from "./interfaces/IShareToken.sol";
-import {ISiloConfig} from "./interfaces/ISiloConfig.sol";
+import {ISiloLens, ISilo} from "../interfaces/ISiloLens.sol";
+import {IShareToken} from "../interfaces/IShareToken.sol";
+import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
 
 import {SiloLensLib} from "./lib/SiloLensLib.sol";
-import {SiloStdLib} from "./lib/SiloStdLib.sol";
-import {SiloSolvencyLib} from "./lib/SiloSolvencyLib.sol";
+import {SiloStdLib} from "../lib/SiloStdLib.sol";
 
 
 /// @title SiloLens has some helper methods that can be useful with integration

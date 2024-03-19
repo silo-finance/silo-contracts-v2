@@ -10,7 +10,7 @@ import {ISiloOracle} from "../interfaces/ISiloOracle.sol";
 import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
 import {IShareToken} from "../interfaces/IShareToken.sol";
 
-import {SiloSolvencyLib2} from "../lib/SiloSolvencyLib2.sol";
+import {SolvencyLib} from "./lib/SolvencyLib.sol";
 import {PartialLiquidationExecLib} from "./lib/PartialLiquidationExecLib.sol";
 
 
@@ -103,7 +103,7 @@ contract PartialLiquidation is ILiquidationModule, IPartialLiquidation, Reentran
         ISilo.AccrueInterestInMemory _accrueInMemory,
         uint256 debtShareBalance
     ) public view virtual returns (bool) {
-        return SiloSolvencyLib2.isSolvent(_collateralConfig, _debtConfig, _borrower, _accrueInMemory, debtShareBalance);
+        return SolvencyLib.isSolvent(_collateralConfig, _debtConfig, _borrower, _accrueInMemory, debtShareBalance);
     }
 
     /// @inheritdoc ILiquidationModule
@@ -113,7 +113,7 @@ contract PartialLiquidation is ILiquidationModule, IPartialLiquidation, Reentran
         address _borrower,
         ISilo.AccrueInterestInMemory _accrueInMemory
     ) external view virtual returns (bool) {
-        return SiloSolvencyLib2.isBelowMaxLtv(_collateralConfig, _debtConfig, _borrower, _accrueInMemory);
+        return SolvencyLib.isBelowMaxLtv(_collateralConfig, _debtConfig, _borrower, _accrueInMemory);
     }
 
     /// @notice Calculates the Loan-To-Value (LTV) ratio for a given borrower
@@ -131,7 +131,7 @@ contract PartialLiquidation is ILiquidationModule, IPartialLiquidation, Reentran
         ISilo.AccrueInterestInMemory _accrueInMemory,
         uint256 _debtShareBalance
     ) external view virtual returns (uint256 ltvInDp) {
-        return SiloSolvencyLib2.getLtv(
+        return SolvencyLib.getLtv(
             _collateralConfig, _debtConfig, _borrower, _oracleType, _accrueInMemory, _debtShareBalance
         );
     }

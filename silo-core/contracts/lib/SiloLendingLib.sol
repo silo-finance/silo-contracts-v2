@@ -13,7 +13,6 @@ import {ISilo} from "../interfaces/ISilo.sol";
 import {IShareToken} from "../interfaces/IShareToken.sol";
 import {IInterestRateModel} from "../interfaces/IInterestRateModel.sol";
 import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
-import {SiloSolvencyLib} from "./SiloSolvencyLib.sol";
 import {SiloERC4626Lib} from "./SiloERC4626Lib.sol"; //circular dependency
 import {SiloStdLib} from "./SiloStdLib.sol";
 import {SiloMathLib} from "./SiloMathLib.sol";
@@ -99,7 +98,7 @@ library SiloLendingLib {
             }
         }
 
-        ISilo.LtvData memory ltvData = SiloSolvencyLib.getAssetsDataForLtvCalculations(
+        ISilo.LtvData memory ltvData = SiloStdLib.getAssetsDataForLtvCalculations(
             _collateralConfig,
             _debtConfig,
             _borrower,
@@ -110,7 +109,7 @@ library SiloLendingLib {
 
         (
             uint256 sumOfBorrowerCollateralValue, uint256 borrowerDebtValue
-        ) = SiloSolvencyLib.getPositionValues(ltvData, _collateralConfig.token, _debtConfig.token);
+        ) = SiloStdLib.getPositionValues(ltvData, _collateralConfig.token, _debtConfig.token);
 
         uint256 maxBorrowValue = SiloMathLib.calculateMaxBorrowValue(
             _collateralConfig.maxLtv,
