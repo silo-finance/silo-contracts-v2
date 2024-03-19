@@ -17,7 +17,7 @@ contract VotingEscrowDeploy is CommonDeploy {
     function run() public returns (IVeSilo votingEscrow) {
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
 
-        address silo80Weth20Token = getAddress(SILO80_WETH20_TOKEN);
+        address siloToken = getAddress(SILO_TOKEN);
         address timelock = getDeployedAddress(VeSiloContracts.TIMELOCK_CONTROLLER);
 
         vm.startBroadcast(deployerPrivateKey);
@@ -25,7 +25,7 @@ contract VotingEscrowDeploy is CommonDeploy {
         address votingEscrowAddr = _deploy(
             VeSiloContracts.VOTING_ESCROW,
             abi.encode(
-                silo80Weth20Token,
+                siloToken,
                 votingEscrowName(),
                 votingEscrowSymbol(),
                 timelock

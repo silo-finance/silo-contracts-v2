@@ -26,7 +26,7 @@ contract TransferMockSiloTokenOwnership is Script {
 
         string memory chainAlias = ChainsLib.chainAlias();
 
-        address mockToken = VeSiloDeployments.get(VeSiloMocksContracts.BPT_TOKEN_LIKE, chainAlias);
+        address mockToken = VeSiloDeployments.get(VeSiloMocksContracts.SILO_TOKEN_LIKE, chainAlias);
         address veSilo = VeSiloDeployments.get(VeSiloContracts.VOTING_ESCROW, chainAlias);
 
         uint256 balance = IERC20(mockToken).balanceOf(proposer);

@@ -26,8 +26,11 @@ contract SiloIntegrationTest is VeSiloFeatures {
         _configureSmartWalletChecker();
         _setVeSiloFees();
         _whiteListUser(_bob);
-        uint256 receivedBPT = getBPT(_bob);
-        _getVotingPower(_bob, receivedBPT);
+
+        uint256 siloTokens = 1000_000e18;
+        deal(address(_siloToken), _bob, siloTokens);
+
+        _getVotingPower(_bob, siloTokens);
         ISiloConfig siloConfig = ISiloConfig(SiloDeployments.get(getChainAlias(), SiloConfigsNames.FULL_CONFIG_TEST));
         _activeteBlancerTokenAdmin();
         address hookReceiver = _getHookReceiverForCollateralToken(siloConfig);

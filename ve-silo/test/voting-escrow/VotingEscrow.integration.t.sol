@@ -66,19 +66,19 @@ contract VotingEscrowTest is IntegrationTest {
     function getVeSiloTokens(address _userAddr, uint256 _amount, uint256 _unlockTime) public {
         whiteListUser(_userAddr);
 
-        IERC20 silo80Weth20Token = IERC20(getAddress(SILO80_WETH20_TOKEN));
+        IERC20 siloToken = IERC20(getAddress(SILO_TOKEN));
 
-        deal(address(silo80Weth20Token), _userAddr, _amount);
+        deal(address(siloToken), _userAddr, _amount);
 
         vm.prank(_userAddr);
-        silo80Weth20Token.approve(address(_votingEscrow), _amount);
+        siloToken.approve(address(_votingEscrow), _amount);
 
         vm.prank(_userAddr);
         _votingEscrow.create_lock(_amount, _unlockTime);
     }
 
     function testEnsureDeployedWithCorrectData() public {
-        address siloToken = getAddress(SILO80_WETH20_TOKEN);
+        address siloToken = getAddress(SILO_TOKEN);
 
         assertEq(_votingEscrow.token(), siloToken, "Invalid voting escrow token");
         assertEq(_votingEscrow.name(), _veDeploymentScript.votingEscrowName(), "Wrong name");
@@ -125,10 +125,8 @@ contract VotingEscrowTest is IntegrationTest {
     function _dummySiloToken() internal {
         if (isChain(ANVIL_ALIAS) || isChain(SEPOLIA_ALIAS)) {
             ERC20 siloToken = new ERC20("Silo test token", "SILO");
-            ERC20 silo8020Token = new ERC20("Silo 80/20", "SILO-80-20");
 
             setAddress(getChainId(), SILO_TOKEN, address(siloToken));
-            setAddress(getChainId(), SILO80_WETH20_TOKEN, address(silo8020Token));
         }
     }
 }
