@@ -131,6 +131,8 @@ contract PartialLiquidation is ILiquidationModule, IPartialLiquidation, Reentran
         ISilo.AccrueInterestInMemory _accrueInMemory,
         uint256 _debtShareBalance
     ) external view virtual returns (uint256 ltvInDp) {
-        return SiloSolvencyLib2.getLtv(_collateralConfig, _debtConfig, _borrower, _oracleType, _accrueInMemory, _debtShareBalance);
+        return SiloSolvencyLib2.getLtv(
+            _collateralConfig, _debtConfig, _borrower, _oracleType, _accrueInMemory, _debtShareBalance
+        );
     }
 }
