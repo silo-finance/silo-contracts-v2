@@ -28,10 +28,6 @@ library SiloERC4626LibWithReentrancyIssue {
         IShareToken _debtShareToken,
         ISilo.Assets storage _totalCollateral
     ) public returns (uint256 assets, uint256 shares) {
-        if (!depositPossible(address(_debtShareToken), _receiver)) {
-            revert ISilo.DepositNotPossible();
-        }
-
         uint256 totalAssets = _totalCollateral.assets;
 
         (assets, shares) = SiloMathLib.convertToAssetsAndToShares(
@@ -56,13 +52,5 @@ library SiloERC4626LibWithReentrancyIssue {
         
         // Hook receiver is called after `mint` and can reentry but state changes are completed already
         _collateralShareToken.mint(_receiver, _depositor, shares);
-    }
-
-    /// @notice Checks if a depositor can make a deposit
-    /// @param _debtShareToken Address of the debt share token
-    /// @param _depositor Address of the user attempting to deposit
-    /// @return Returns `true` if the depositor can deposit, otherwise `false`
-    function depositPossible(address _debtShareToken, address _depositor) public view returns (bool) {
-        return IShareToken(_debtShareToken).balanceOf(_depositor) == 0;
     }
 }

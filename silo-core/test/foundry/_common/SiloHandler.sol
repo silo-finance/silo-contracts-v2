@@ -27,11 +27,6 @@ contract SiloHandler is Test {
     }
 
     function mint(uint128 _shares) external {
-        if (!_depositPossible(_shares, uint8(ISilo.AssetType.Collateral))) {
-            // do not execute invariant
-            return;
-        }
-
         vm.prank(msg.sender);
         token0.approve(address(SILO_0), _shares);
 
@@ -40,8 +35,6 @@ contract SiloHandler is Test {
     }
 
     function deposit(uint128 _assets) external {
-        vm.assume(_depositPossible(_assets, uint8(ISilo.AssetType.Collateral)));
-
         vm.prank(msg.sender);
         token0.approve(address(SILO_0), _assets);
 
@@ -50,8 +43,6 @@ contract SiloHandler is Test {
     }
 
     function depositType(uint128 _assets, ISilo.AssetType _assetType) external {
-        vm.assume(_depositPossible(_assets, uint8(ISilo.AssetType.Collateral)));
-
         vm.prank(msg.sender);
         token0.approve(address(SILO_0), _assets);
 
@@ -89,11 +80,6 @@ contract SiloHandler is Test {
 
     function _depositPossible(uint256 _assets, uint8 _type) internal returns (bool) {
         _assets = bound(_assets, 1, 2 ** 128 - 1);
-
-        if (!SILO_0.depositPossible(msg.sender)) {
-            // do not execute invariant
-            return false;
-        }
 
         _type = uint8(bound(_type, 1, 2));
 

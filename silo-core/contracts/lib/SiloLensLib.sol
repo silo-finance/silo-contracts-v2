@@ -12,11 +12,6 @@ import {SiloLendingLib} from "./SiloLendingLib.sol";
 import {SiloERC4626Lib} from "./SiloERC4626Lib.sol";
 
 library SiloLensLib {
-    function depositPossible(ISilo _silo, address _depositor) internal view returns (bool) {
-        address debtShareToken = _silo.config().getConfig(address(_silo)).debtShareToken;
-        return SiloERC4626Lib.depositPossible(debtShareToken, _depositor);
-    }
-
     function borrowPossible(ISilo _silo, address _borrower) internal view returns (bool possible) {
         (
             ISiloConfig.ConfigData memory thisSiloConfig, ISiloConfig.ConfigData memory otherSiloConfig

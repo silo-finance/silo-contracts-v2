@@ -107,7 +107,6 @@ interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
     event Leverage();
 
     error Unsupported();
-    error DepositNotPossible();
     error NothingToWithdraw();
     error NotEnoughLiquidity();
     error NotSolvent();

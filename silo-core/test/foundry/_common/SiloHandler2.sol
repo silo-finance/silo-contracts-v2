@@ -102,11 +102,6 @@ contract SiloHandler2 is Test {
         view
         returns (uint256 assets, ISilo.AssetType assetType)
     {
-        if (!_silo.depositPossible(msg.sender)) {
-            // do not execute invariant
-            return (0, ISilo.AssetType.Collateral);
-        }
-
         assetType = ISilo.AssetType(bound(_type, 1, 2));
 
         uint256 balanceOf = _token(_silo).balanceOf(msg.sender);

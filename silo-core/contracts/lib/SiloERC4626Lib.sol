@@ -47,11 +47,9 @@ library SiloERC4626Lib {
     {
         ISiloConfig.ConfigData memory configData = _config.getConfig(address(this));
 
-        if (depositPossible(configData.debtShareToken, _receiver)) {
-            maxAssetsOrShares = _totalCollateralAssets == 0
-                ? _VIRTUAL_DEPOSIT_LIMIT
-                : _VIRTUAL_DEPOSIT_LIMIT - _totalCollateralAssets;
-        }
+        maxAssetsOrShares = _totalCollateralAssets == 0
+            ? _VIRTUAL_DEPOSIT_LIMIT
+            : _VIRTUAL_DEPOSIT_LIMIT - _totalCollateralAssets;
     }
 
     /// @notice Determines the maximum amount a user can withdraw, either in terms of assets or shares
@@ -172,14 +170,6 @@ library SiloERC4626Lib {
         );
     }
 
-    /// @notice Checks if a depositor can make a deposit
-    /// @param _debtShareToken Address of the debt share token
-    /// @param _depositor Address of the user attempting to deposit
-    /// @return Returns `true` if the depositor can deposit, otherwise `false`
-    function depositPossible(address _debtShareToken, address _depositor) internal view returns (bool) {
-        return IShareToken(_debtShareToken).balanceOf(_depositor) == 0;
-    }
-
     /// @notice Deposit assets into the silo
     /// @dev Deposits are not allowed if the receiver already has some debt
     /// @param _token The ERC20 token address being deposited; 0 means tokens will not be transferred. Useful for
@@ -204,10 +194,6 @@ library SiloERC4626Lib {
         IShareToken _debtShareToken,
         ISilo.Assets storage _totalCollateral
     ) internal returns (uint256 assets, uint256 shares) {
-        if (!depositPossible(address(_debtShareToken), _receiver)) {
-            revert ISilo.DepositNotPossible();
-        }
-
         uint256 totalAssets = _totalCollateral.assets;
 
         (assets, shares) = SiloMathLib.convertToAssetsAndToShares(

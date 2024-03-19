@@ -26,14 +26,6 @@ contract ShareCollateralToken is ShareToken {
         _burn(_owner, _amount);
     }
 
-    function _beforeTokenTransfer(address _sender, address _recipient, uint256) internal view virtual override {
-        // if we minting or burning, Silo is responsible to check all necessary conditions
-        if (_isTransfer(_sender, _recipient)) {
-            // Silo forbids having debt and collateral position of the same asset in given Silo
-            if (!silo.depositPossible(_recipient)) revert ShareTransferNotAllowed();
-        }
-    }
-
     /// @dev Check if sender is solvent after the transfer
     function _afterTokenTransfer(address _sender, address _recipient, uint256 _amount) internal virtual override {
         // solhint-disable-previous-line ordering

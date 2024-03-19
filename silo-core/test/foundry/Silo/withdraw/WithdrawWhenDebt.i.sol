@@ -33,14 +33,6 @@ contract WithdrawWhenDebtTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --ffi --mt test_depositPossible
-    */
-    function test_integration_depositPossible() public {
-        assertTrue(silo0.depositPossible(address(this)), "user has collateral in silo0");
-        assertFalse(silo1.depositPossible(address(this)), "user has debt in silo1");
-    }
-
-    /*
     forge test -vv --ffi --mt test_withdraw_all_possible_Collateral
     */
     function test_withdraw_all_possible_Collateral() public {
