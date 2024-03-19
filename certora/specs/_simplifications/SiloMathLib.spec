@@ -29,7 +29,9 @@ ghost sharesMulDiv(uint256,uint256,uint256,bool) returns uint256 {
     axiom forall uint256 x. forall uint256 y. forall uint256 z.
         sharesMulDiv(x,y,z,false) <= y;
     axiom forall uint256 x1. forall uint256 x2. forall uint256 y. forall uint256 z.
-        sharesMulDiv(x1,y,z,false) <= sharesMulDiv(x2,y,z,false);
+        x1 <= x2 => sharesMulDiv(x1,y,z,false) <= sharesMulDiv(x2,y,z,false);
+    axiom forall uint256 x1. forall uint256 x2. forall uint256 y. forall uint256 z.
+        x1 <= x2 => sharesMulDiv(x1,y,z,true) <= sharesMulDiv(x2,y,z,true);
     axiom forall uint256 y. forall uint256 z.
         sharesMulDiv(0,y,z,false) == 0 && sharesMulDiv(y,0,z,false) == 0;
 }
