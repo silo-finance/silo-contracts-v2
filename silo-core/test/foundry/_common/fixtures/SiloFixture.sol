@@ -16,7 +16,7 @@ import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
 
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
-import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquidation.sol";
+import {PartialLiquidation} from "silo-core/contracts/liquidation/PartialLiquidation.sol";
 
 import {TokenMock} from "../../_mocks/TokenMock.sol";
 
@@ -54,7 +54,7 @@ contract SiloFixture is StdCheats, CommonBase {
             ISilo silo1,
             address weth,
             address usdc,
-            IPartialLiquidation liquidationModule
+            PartialLiquidation liquidationModule
         )
     {
         return _deploy(new SiloDeploy(), SiloConfigsNames.ETH_USDC_UNI_V3_SILO);
@@ -68,7 +68,7 @@ contract SiloFixture is StdCheats, CommonBase {
             ISilo silo1,
             address weth,
             address usdc,
-            IPartialLiquidation liquidationModule
+            PartialLiquidation liquidationModule
         )
     {
         // Mock addresses that we need for the `SiloFactoryDeploy` script
@@ -90,7 +90,7 @@ contract SiloFixture is StdCheats, CommonBase {
             ISilo silo1,
             address token0,
             address token1,
-            IPartialLiquidation liquidationModule
+            PartialLiquidation liquidationModule
         )
     {
         MainnetDeploy mainnetDeploy = new MainnetDeploy();
@@ -109,7 +109,7 @@ contract SiloFixture is StdCheats, CommonBase {
         token0 = siloConfig0.token;
         token1 = siloConfig1.token;
 
-        liquidationModule = IPartialLiquidation(siloConfig0.liquidationModule);
+        liquidationModule = PartialLiquidation(siloConfig0.liquidationModule);
         if (address(liquidationModule) == address(0)) revert("liquidationModule is empty");
     }
 }

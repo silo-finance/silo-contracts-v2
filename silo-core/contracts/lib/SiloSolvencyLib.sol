@@ -11,9 +11,6 @@ import {SiloMathLib} from "./SiloMathLib.sol";
 library SiloSolvencyLib {
     using MathUpgradeable for uint256;
 
-    uint256 internal constant _PRECISION_DECIMALS = 1e18;
-    uint256 internal constant _INFINITY = type(uint256).max;
-
     function getOrderedConfigs(ISilo _silo, ISiloConfig _config, address _borrower)
         external
         view

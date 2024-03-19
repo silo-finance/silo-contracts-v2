@@ -2,7 +2,11 @@
 pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
-import "silo-core/contracts/lib/SiloSolvencyLib.sol";
+
+import {SiloSolvencyLib2} from "silo-core/contracts/lib/SiloSolvencyLib2.sol";
+import {SiloSolvencyLib} from "silo-core/contracts/lib/SiloSolvencyLib.sol";
+import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
+import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 
 import {OraclesHelper} from "../../_common/OraclesHelper.sol";
 
@@ -13,10 +17,10 @@ contract GetPositionValuesTest is Test, OraclesHelper {
     uint256 internal constant _PRECISION_DECIMALS = 1e18;
 
     /*
-    forge test -vv --mt test_SiloSolvencyLib_PRECISION_DECIMALS
+    forge test -vv --mt test_SiloSolvencyLib2_PRECISION_DECIMALS
     */
-    function test_SiloSolvencyLib_PRECISION_DECIMALS() public {
-        assertEq(_PRECISION_DECIMALS, SiloSolvencyLib._PRECISION_DECIMALS, "_PRECISION_DECIMALS");
+    function test_SiloSolvencyLib2_PRECISION_DECIMALS() public {
+        assertEq(_PRECISION_DECIMALS, SiloSolvencyLib2._PRECISION_DECIMALS, "_PRECISION_DECIMALS");
     }
 
     /*

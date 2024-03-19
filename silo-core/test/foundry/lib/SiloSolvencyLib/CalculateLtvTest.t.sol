@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.0;
 
-import {MathUpgradeable} from "openzeppelin-contracts-upgradeable/utils/math/MathUpgradeable.sol";
-
 import "forge-std/Test.sol";
-import "silo-core/contracts/lib/SiloSolvencyLib.sol";
+
+import {MathUpgradeable} from "openzeppelin-contracts-upgradeable/utils/math/MathUpgradeable.sol";
+import {SiloSolvencyLib2} from "silo-core/contracts/lib/SiloSolvencyLib2.sol";
+import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
+import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 
 import {OraclesHelper} from "../../_common/OraclesHelper.sol";
 
@@ -28,7 +30,7 @@ contract CalculateLtvTest is Test, OraclesHelper {
 
         address any = address(1);
 
-        (,, uint256 ltv) = SiloSolvencyLib.calculateLtv(ltvData, any, any);
+        (,, uint256 ltv) = SiloSolvencyLib2.calculateLtv(ltvData, any, any);
 
         assertEq(ltv, 0, "no debt no collateral");
     }
@@ -48,9 +50,9 @@ contract CalculateLtvTest is Test, OraclesHelper {
 
         address any = address(1);
 
-        (,, uint256 ltv) = SiloSolvencyLib.calculateLtv(ltvData, any, any);
+        (,, uint256 ltv) = SiloSolvencyLib2.calculateLtv(ltvData, any, any);
 
-        assertEq(ltv, SiloSolvencyLib._INFINITY, "when only debt");
+        assertEq(ltv, SiloSolvencyLib2._INFINITY, "when only debt");
     }
 
     /*
@@ -72,14 +74,14 @@ contract CalculateLtvTest is Test, OraclesHelper {
 
         address any = address(1);
 
-        (,, uint256 ltv) = SiloSolvencyLib.calculateLtv(ltvData, any, any);
+        (,, uint256 ltv) = SiloSolvencyLib2.calculateLtv(ltvData, any, any);
 
         uint256 expectedLtv;
 
         if (sumOfCollateralAssets == 0 && _debtAssets == 0) {
             // expectedLtv is 0;
         } else if (sumOfCollateralAssets == 0) {
-            expectedLtv = SiloSolvencyLib._INFINITY;
+            expectedLtv = SiloSolvencyLib2._INFINITY;
         } else {
             expectedLtv = MathUpgradeable.mulDiv(_debtAssets, DECIMALS_POINTS, sumOfCollateralAssets, MathUpgradeable.Rounding.Up);
         }
@@ -109,7 +111,7 @@ contract CalculateLtvTest is Test, OraclesHelper {
         collateralOracle.quoteMock(collateralSum, COLLATERAL_ASSET, 9999);
         debtOracle.quoteMock(ltvData.borrowerDebtAssets, DEBT_ASSET, 1111);
 
-        (,, uint256 ltv) = SiloSolvencyLib.calculateLtv(ltvData, COLLATERAL_ASSET, DEBT_ASSET);
+        (,, uint256 ltv) = SiloSolvencyLib2.calculateLtv(ltvData, COLLATERAL_ASSET, DEBT_ASSET);
 
         assertEq(
             ltv,

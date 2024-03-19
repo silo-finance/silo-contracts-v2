@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
-import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquidation.sol";
+import {PartialLiquidation} from "silo-core/contracts/liquidation/PartialLiquidation.sol";
 
 import {MintableToken} from "./MintableToken.sol";
 import {SiloFixture, SiloConfigOverride} from "./fixtures/SiloFixture.sol";
@@ -15,7 +15,7 @@ abstract contract SiloLittleHelper is CommonBase {
 
     ISilo silo0;
     ISilo silo1;
-    IPartialLiquidation partialLiquidation;
+    PartialLiquidation partialLiquidation;
 
     function __init(MintableToken _token0, MintableToken _token1, ISilo _silo0, ISilo _silo1) internal {
         token0 = _token0;
