@@ -57,4 +57,20 @@ contract BorrowNotPossibleTest is SiloLittleHelper, Test {
         vm.expectRevert(ISilo.AboveMaxLtv.selector);
         silo1.borrow(1, borrower, borrower);
     }
+
+    /*
+    FOUNDRY_PROFILE=core-test forge test -vv --ffi --mt test_borrow_without_collateral
+    */
+    /// forge-config: core.fuzz.runs = 1000
+    function test_borrow_without_collateral(uint256 _depositAmount, uint256 _borrowAmount) public {
+        vm.assume(_borrowAmount > 0);
+        vm.assume(_depositAmount > _borrowAmount);
+
+        address depositor = makeAddr("Depositor");
+
+        _depositForBorrow(_depositAmount, depositor);
+
+        vm.expectRevert(ISilo.AboveMaxLtv.selector);
+        _borrow(_borrowAmount, address(this));
+    }
 }
