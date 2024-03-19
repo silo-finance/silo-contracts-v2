@@ -10,7 +10,7 @@ import {ISiloOracle} from "../interfaces/ISiloOracle.sol";
 import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
 import {IShareToken} from "../interfaces/IShareToken.sol";
 
-import {SiloSolvencyLib} from "../lib/SiloSolvencyLib.sol";
+import {SiloSolvencyLib2} from "../lib/SiloSolvencyLib2.sol";
 import {PartialLiquidationExecLib} from "./lib/PartialLiquidationExecLib.sol";
 
 
@@ -84,6 +84,7 @@ contract PartialLiquidation is ILiquidationModule, IPartialLiquidation, Reentran
         return PartialLiquidationExecLib.maxLiquidation(ISilo(_siloWithDebt), _borrower);
     }
 
+    /// @inheritdoc ILiquidationModule
     function isSolvent(
         ISiloConfig.ConfigData calldata _collateralConfig,
         ISiloConfig.ConfigData calldata _debtConfig,
@@ -94,28 +95,42 @@ contract PartialLiquidation is ILiquidationModule, IPartialLiquidation, Reentran
         return isSolvent(_collateralConfig, _debtConfig, _borrower, _accrueInMemory, debtShareBalance);
     }
 
+    /// @inheritdoc ILiquidationModule
     function isSolvent(
         ISiloConfig.ConfigData calldata _collateralConfig,
         ISiloConfig.ConfigData calldata _debtConfig,
         address _borrower,
         ISilo.AccrueInterestInMemory _accrueInMemory,
         uint256 debtShareBalance
-    ) external view virtual returns (bool) {
-        return SiloSolvencyLib.isSolvent(_collateralConfig, _debtConfig, _borrower, _accrueInMemory, debtShareBalance);
+    ) public view virtual returns (bool) {
+        return SiloSolvencyLib2.isSolvent(_collateralConfig, _debtConfig, _borrower, _accrueInMemory, debtShareBalance);
     }
 
-    /// @notice Determines if a borrower's Loan-to-Value (LTV) ratio is below the maximum allowed LTV
-    /// @param _collateralConfig Configuration data for the collateral
-    /// @param _debtConfig Configuration data for the debt
-    /// @param _borrower Address of the borrower to check against max LTV
-    /// @param _accrueInMemory Determines whether or not to consider un-accrued interest in calculations
-    /// @return True if the borrower's LTV is below the maximum, false otherwise
+    /// @inheritdoc ILiquidationModule
     function isBelowMaxLtv(
         ISiloConfig.ConfigData calldata _collateralConfig,
         ISiloConfig.ConfigData calldata _debtConfig,
         address _borrower,
         ISilo.AccrueInterestInMemory _accrueInMemory
     ) external view virtual returns (bool) {
-        return SiloSolvencyLib.isBelowMaxLtv(_collateralConfig, _debtConfig, _borrower, _accrueInMemory);
+        return SiloSolvencyLib2.isBelowMaxLtv(_collateralConfig, _debtConfig, _borrower, _accrueInMemory);
+    }
+
+    /// @notice Calculates the Loan-To-Value (LTV) ratio for a given borrower
+    /// @param _collateralConfig Configuration data related to the collateral asset
+    /// @param _debtConfig Configuration data related to the debt asset
+    /// @param _borrower Address of the borrower whose LTV is to be computed
+    /// @param _oracleType Oracle type to use for fetching the asset prices
+    /// @param _accrueInMemory Determines whether or not to consider un-accrued interest in calculations
+    /// @return ltvInDp The computed LTV ratio in 18 decimals precision
+    function getLtv(
+        ISiloConfig.ConfigData calldata _collateralConfig,
+        ISiloConfig.ConfigData calldata _debtConfig,
+        address _borrower,
+        ISilo.OracleType _oracleType,
+        ISilo.AccrueInterestInMemory _accrueInMemory,
+        uint256 _debtShareBalance
+    ) external view virtual returns (uint256 ltvInDp) {
+        return SiloSolvencyLib2.getLtv(_collateralConfig, _debtConfig, _borrower, _oracleType, _accrueInMemory, _debtShareBalance);
     }
 }

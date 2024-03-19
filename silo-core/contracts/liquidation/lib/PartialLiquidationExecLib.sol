@@ -6,6 +6,7 @@ import {MathUpgradeable} from "openzeppelin-contracts-upgradeable/utils/math/Mat
 import {ISilo} from "../../interfaces/ISilo.sol";
 import {ISiloConfig} from "../../interfaces/ISiloConfig.sol";
 import {SiloSolvencyLib} from "../../lib/SiloSolvencyLib.sol";
+import {SiloSolvencyLib2} from "../../lib/SiloSolvencyLib2.sol";
 import {PartialLiquidationLib} from "./PartialLiquidationLib.sol";
 
 library PartialLiquidationExecLib {
@@ -117,7 +118,7 @@ library PartialLiquidationExecLib {
 
         (
             uint256 sumOfBorrowerCollateralValue, uint256 totalBorrowerDebtValue, uint256 ltvBefore
-        ) = SiloSolvencyLib.calculateLtv(_ltvData, _params.collateralConfigAsset, _params.debtConfigAsset);
+        ) = SiloSolvencyLib2.calculateLtv(_ltvData, _params.collateralConfigAsset, _params.debtConfigAsset);
 
         if (_params.selfLiquidation) {
             if (_params.debtToCover >= _ltvData.borrowerDebtAssets) {

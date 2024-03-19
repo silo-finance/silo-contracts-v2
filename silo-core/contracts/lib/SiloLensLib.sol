@@ -8,6 +8,7 @@ import {IShareToken} from "../interfaces/IShareToken.sol";
 import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
 
 import {SiloSolvencyLib} from "./SiloSolvencyLib.sol";
+import {SiloSolvencyLib2} from "./SiloSolvencyLib2.sol";
 import {SiloLendingLib} from "./SiloLendingLib.sol";
 import {SiloERC4626Lib} from "./SiloERC4626Lib.sol";
 
@@ -43,7 +44,7 @@ library SiloLensLib {
             ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig
         ) = SiloSolvencyLib.getOrderedConfigs(_silo, _silo.config(), _borrower);
 
-        ltv = SiloSolvencyLib.getLtv(
+        ltv = SiloSolvencyLib2.getLtv(
             collateralConfig,
             debtConfig,
             _borrower,

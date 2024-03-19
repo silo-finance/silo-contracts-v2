@@ -5,6 +5,7 @@ import {IERC4626, IERC20, IERC20Metadata} from "openzeppelin-contracts/interface
 
 import {IERC3156FlashLender} from "./IERC3156FlashLender.sol";
 import {ISiloConfig} from "./ISiloConfig.sol";
+import {ISiloOracle} from "./ISiloOracle.sol";
 import {ISiloFactory} from "./ISiloFactory.sol";
 import {ILeverageBorrower} from "./ILeverageBorrower.sol";
 import {ILiquidationProcess} from "./ILiquidationProcess.sol";
@@ -67,6 +68,14 @@ interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
         uint256 debtAssets;
         /// @dev timestamp of the last interest accrual
         uint64 interestRateTimestamp;
+    }
+
+    struct LtvData {
+        ISiloOracle collateralOracle;
+        ISiloOracle debtOracle;
+        uint256 borrowerProtectedAssets;
+        uint256 borrowerCollateralAssets;
+        uint256 borrowerDebtAssets;
     }
 
     /// @notice Emitted on protected deposit
