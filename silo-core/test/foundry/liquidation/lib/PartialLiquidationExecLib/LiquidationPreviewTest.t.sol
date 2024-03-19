@@ -22,7 +22,7 @@ contract LiquidationPreviewTest is Test, OraclesHelper {
     forge test -vv --mt test_liquidationPreview_noOracle_zero
     */
     function test_liquidationPreview_noOracle_zero() public {
-        SiloSolvencyLib.LtvData memory ltvData;
+        ISilo.LtvData memory ltvData;
         PartialLiquidationLib.LiquidationPreviewParams memory params;
 
         (uint256 receiveCollateral, uint256 repayDebt) = PartialLiquidationExecLib.liquidationPreview(ltvData, params);
@@ -51,7 +51,7 @@ contract LiquidationPreviewTest is Test, OraclesHelper {
     forge test -vv --mt test_liquidationPreview_zero
     */
     function test_liquidationPreview_zero() public {
-        SiloSolvencyLib.LtvData memory ltvData;
+        ISilo.LtvData memory ltvData;
         ltvData.collateralOracle = ISiloOracle(collateralOracle.ADDRESS());
         ltvData.debtOracle = ISiloOracle(debtOracle.ADDRESS());
 
@@ -78,7 +78,7 @@ contract LiquidationPreviewTest is Test, OraclesHelper {
     function test_liquidationPreview_revert_LiquidationTooBig() public {
         PartialLiquidationExecLibImpl impl = new PartialLiquidationExecLibImpl();
 
-        SiloSolvencyLib.LtvData memory ltvData;
+        ISilo.LtvData memory ltvData;
         ltvData.collateralOracle = ISiloOracle(collateralOracle.ADDRESS());
         ltvData.debtOracle = ISiloOracle(debtOracle.ADDRESS());
         ltvData.borrowerCollateralAssets = 1e18;
@@ -131,7 +131,7 @@ contract LiquidationPreviewTest is Test, OraclesHelper {
     forge test -vv --mt test_liquidationPreview_selfLiquidation_whenSolvent
     */
     function test_liquidationPreview_selfLiquidation_whenSolvent() public {
-        SiloSolvencyLib.LtvData memory ltvData;
+        ISilo.LtvData memory ltvData;
         ltvData.collateralOracle = ISiloOracle(collateralOracle.ADDRESS());
         ltvData.debtOracle = ISiloOracle(debtOracle.ADDRESS());
         ltvData.borrowerCollateralAssets = 1e18;
@@ -161,7 +161,7 @@ contract LiquidationPreviewTest is Test, OraclesHelper {
     forge test -vv --mt test_liquidationPreview_whenNotSolvent
     */
     function test_liquidationPreview_whenNotSolvent() public {
-        SiloSolvencyLib.LtvData memory ltvData;
+        ISilo.LtvData memory ltvData;
         ltvData.borrowerCollateralAssets = 1e18;
         ltvData.borrowerDebtAssets = 2e18; // 200% LTV
 

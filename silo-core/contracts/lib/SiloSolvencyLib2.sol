@@ -76,7 +76,7 @@ library SiloSolvencyLib2 {
     ) internal view returns (uint256 ltvInDp) {
         if (_debtShareBalance == 0) return 0;
 
-        LtvData memory ltvData = SiloSolvencyLib.getAssetsDataForLtvCalculations(
+        ISilo.LtvData memory ltvData = SiloSolvencyLib.getAssetsDataForLtvCalculations(
             _collateralConfig, _debtConfig, _borrower, _oracleType, _accrueInMemory, _debtShareBalance
         );
 
@@ -93,7 +93,7 @@ library SiloSolvencyLib2 {
     /// @return sumOfBorrowerCollateralValue Total value of borrower's collateral
     /// @return totalBorrowerDebtValue Total debt value for the borrower
     /// @return ltvInDp Calculated LTV in 18 decimal precision
-    function calculateLtv(SiloSolvencyLib.LtvData memory _ltvData, address _collateralToken, address _debtToken)
+    function calculateLtv(ISilo.LtvData memory _ltvData, address _collateralToken, address _debtToken)
         internal
         view
         returns (uint256 sumOfBorrowerCollateralValue, uint256 totalBorrowerDebtValue, uint256 ltvInDp)

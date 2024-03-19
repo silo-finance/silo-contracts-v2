@@ -7,7 +7,7 @@ import {PartialLiquidationExecLib} from "silo-core/contracts/liquidation/lib/Par
 
 contract PartialLiquidationExecLibImpl {
     function liquidationPreview(
-        SiloSolvencyLib.LtvData memory _ltvData,
+        ISilo.LtvData memory _ltvData,
         PartialLiquidationLib.LiquidationPreviewParams memory _params
     )
         external

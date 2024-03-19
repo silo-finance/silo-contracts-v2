@@ -22,7 +22,7 @@ contract CalculateLtvTest is Test, OraclesHelper {
 
         ISiloOracle noOracle;
 
-        SiloSolvencyLib.LtvData memory ltvData = SiloSolvencyLib.LtvData(
+        ISilo.LtvData memory ltvData = ISilo.LtvData(
             noOracle, noOracle, zero, zero, zero
         );
 
@@ -42,7 +42,7 @@ contract CalculateLtvTest is Test, OraclesHelper {
 
         ISiloOracle noOracle;
 
-        SiloSolvencyLib.LtvData memory ltvData = SiloSolvencyLib.LtvData(
+        ISilo.LtvData memory ltvData = ISilo.LtvData(
             noOracle, noOracle, zero, zero, debtAssets
         );
 
@@ -66,7 +66,7 @@ contract CalculateLtvTest is Test, OraclesHelper {
         // because this is the same token, we assume the sum can not be higher than uint128
         vm.assume(sumOfCollateralAssets < type(uint256).max / DECIMALS_POINTS);
 
-        SiloSolvencyLib.LtvData memory ltvData = SiloSolvencyLib.LtvData(
+        ISilo.LtvData memory ltvData = ISilo.LtvData(
             noOracle, noOracle, _collateralAssets, _protectedAssets, _debtAssets
         );
 
@@ -101,7 +101,7 @@ contract CalculateLtvTest is Test, OraclesHelper {
         vm.assume(sumOfCollateralAssets < type(uint256).max / DECIMALS_POINTS);
         vm.assume(sumOfCollateralAssets != 0);
 
-        SiloSolvencyLib.LtvData memory ltvData = SiloSolvencyLib.LtvData(
+        ISilo.LtvData memory ltvData = ISilo.LtvData(
             ISiloOracle(COLLATERAL_ORACLE), ISiloOracle(DEBT_ORACLE), _protectedAssets, _collateralAssets, _debtAssets
         );
 

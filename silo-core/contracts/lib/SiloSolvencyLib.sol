@@ -3,6 +3,7 @@ pragma solidity 0.8.21;
 
 import {MathUpgradeable} from "openzeppelin-contracts-upgradeable/utils/math/MathUpgradeable.sol";
 
+import {ISiloOracle} from "../interfaces/ISiloOracle.sol";
 import {SiloStdLib, ISiloConfig, IShareToken, ISilo} from "./SiloStdLib.sol";
 import {SiloERC4626Lib} from "./SiloERC4626Lib.sol";
 import {SiloMathLib} from "./SiloMathLib.sol";
@@ -113,7 +114,7 @@ library SiloSolvencyLib {
     /// @return sumOfCollateralValue Total value of collateral assets considering both protected and regular collateral
     /// assets
     /// @return debtValue Total value of debt assets
-    function getPositionValues(LtvData memory _ltvData, address _collateralAsset, address _debtAsset)
+    function getPositionValues(ISilo.LtvData memory _ltvData, address _collateralAsset, address _debtAsset)
         internal
         view
         returns (uint256 sumOfCollateralValue, uint256 debtValue)

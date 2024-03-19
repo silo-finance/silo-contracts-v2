@@ -23,7 +23,7 @@ library PartialLiquidationExecLib {
         view
         returns (uint256 withdrawAssetsFromCollateral, uint256 withdrawAssetsFromProtected, uint256 repayDebtAssets)
     {
-        SiloSolvencyLib.LtvData memory ltvData = SiloSolvencyLib.getAssetsDataForLtvCalculations(
+        ISilo.LtvData memory ltvData = SiloSolvencyLib.getAssetsDataForLtvCalculations(
             _collateralConfig,
             _debtConfig,
             _user,
@@ -69,7 +69,7 @@ library PartialLiquidationExecLib {
             ISiloConfig.ConfigData memory debtConfig, ISiloConfig.ConfigData memory collateralConfig
         ) = _silo.config().getConfigs(address(_silo));
 
-        SiloSolvencyLib.LtvData memory ltvData = SiloSolvencyLib.getAssetsDataForLtvCalculations(
+        ISilo.LtvData memory ltvData = SiloSolvencyLib.getAssetsDataForLtvCalculations(
             collateralConfig,
             debtConfig,
             _borrower,
@@ -102,7 +102,7 @@ library PartialLiquidationExecLib {
     /// all debt, he will receive all collateral back
     /// @return repayDebtAssets
     function liquidationPreview( // solhint-disable-line function-max-lines, code-complexity
-        SiloSolvencyLib.LtvData memory _ltvData,
+        ISilo.LtvData memory _ltvData,
         PartialLiquidationLib.LiquidationPreviewParams memory _params
     )
         internal

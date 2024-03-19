@@ -154,7 +154,7 @@ contract GetAssetsDataForLtvCalculationsTest is Test {
                 uint256 cachedShareDebtBalance
             ) = getData(scenarios[index]);
 
-            SiloSolvencyLib.LtvData memory ltvData = SiloSolvencyLib.getAssetsDataForLtvCalculations(
+            ISilo.LtvData memory ltvData = SiloSolvencyLib.getAssetsDataForLtvCalculations(
                 collateralConfig, debtConfig, borrower, oracleType, accrueInMemory, cachedShareDebtBalance
             );
 

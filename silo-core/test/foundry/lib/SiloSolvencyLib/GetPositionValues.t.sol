@@ -28,7 +28,7 @@ contract GetPositionValuesTest is Test, OraclesHelper {
         uint256 protectedAssets = 10;
         uint256 debtAssets = 3;
 
-        SiloSolvencyLib.LtvData memory ltvData = SiloSolvencyLib.LtvData(
+        ISilo.LtvData memory ltvData = ISilo.LtvData(
             noOracle, noOracle, protectedAssets, collateralAssets, debtAssets
         );
 

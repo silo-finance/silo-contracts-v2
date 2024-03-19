@@ -88,7 +88,7 @@ library SiloERC4626Lib {
             liquidity = _totalAssets;
         }
 
-        SiloSolvencyLib.LtvData memory ltvData;
+        ISilo.LtvData memory ltvData;
 
         { // stack too deep
             uint256 debt = IShareToken(debtConfig.debtShareToken).balanceOf(_owner);
