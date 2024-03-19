@@ -491,4 +491,26 @@ rule HLP_OthersCantDecreaseMyRedeem_viaWithdraw(env e, env eOther)
     assert assetsReceived2 >= assetsReceived;
 }
 
+rule HLP_maxWithdraw_preserved_after_collateral_transition(env e, address user) 
+{
+    completeSiloSetupEnv(e);
+    totalSupplyMoreThanBalance(user);
+    totalSupplyMoreThanBalance(e.msg.sender);
+
+    /// Invariants to prove
+    require silo0.total(ISilo.AssetType.Protected) ==0 <=> shareProtectedCollateralToken0.totalSupply() == 0;
+    require silo0.total(ISilo.AssetType.Collateral) ==0 <=> shareCollateralToken0.totalSupply() == 0;
+    require silo1.total(ISilo.AssetType.Protected) ==0 <=> shareProtectedCollateralToken1.totalSupply() == 0;
+    require silo1.total(ISilo.AssetType.Collateral) ==0 <=> shareCollateralToken1.totalSupply() == 0;
+
+    uint256 maxAssets_before = maxWithdraw(e, user);
+        uint256 shares;
+        address owner;
+        ISilo.AssetType type;
+        transitionCollateral(e, shares, owner, type);
+    uint256 maxAssets_after = maxWithdraw(e, user);
+
+    assert maxAssets_after - maxAssets_before <= 2;
+    assert maxAssets_after - maxAssets_before >= -2;
+}
 
