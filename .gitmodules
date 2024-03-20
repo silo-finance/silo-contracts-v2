@@ -33,3 +33,7 @@
 [submodule "crytic-properties"]
 	path = gitmodules/crytic/properties
 	url = https://github.com/crytic/properties
+[submodule "openzeppelin5"]
+	path = gitmodules/openzeppelin-contracts-5
+	url = https://github.com/OpenZeppelin/openzeppelin-contracts
+	branch = v5.0.2
