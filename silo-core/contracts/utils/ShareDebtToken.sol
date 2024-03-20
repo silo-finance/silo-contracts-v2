@@ -4,7 +4,7 @@ pragma solidity 0.8.21;
 import {IERC20R} from "../interfaces/IERC20R.sol";
 import {IShareDebtToken} from "../interfaces/IShareDebtToken.sol";
 import {SiloLensLib} from "../lib/SiloLensLib.sol";
-import {TypesLip} from "../lib/TypesLip.sol";
+import {TypesLib} from "../lib/TypesLib.sol";
 import {IShareToken, ShareToken, ISiloFactory, ISilo} from "./ShareToken.sol";
 
 /// @title ShareDebtToken

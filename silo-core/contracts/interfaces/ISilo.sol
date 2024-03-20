@@ -123,6 +123,7 @@ interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
     error ZeroShares();
     error OnlyLiquidationModule();
     error Insolvency();
+    error DebtWithUndefinedPosition();
 
     /// @notice Initialize Silo
     /// @param _siloConfig address of ISiloConfig with full config for this Silo
