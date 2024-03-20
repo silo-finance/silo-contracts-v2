@@ -79,37 +79,27 @@ invariant cannotHaveAssestWithZeroInterestRateTimestamp() silo0.getSiloDataInter
 
                 preserved with (env e) {
                     completeSiloSetupEnv(e);
-                    // requireToken0TotalAndBalancesIntegrity();
-                    // requireProtectedToken0TotalAndBalancesIntegrity();
                 }
 
                 // These functions could change the assets, but they can only be called
                 // with block.timestamp > 0
                 preserved deposit(uint256 _assets, address _receiver) with (env e) {
                     completeSiloSetupEnv(e);
-                    // requireToken0TotalAndBalancesIntegrity();
-                    // requireProtectedToken0TotalAndBalancesIntegrity();
                     require e.block.timestamp > 0;
                 }
 
                 preserved deposit(uint256 _assets, address _receiver, ISilo.AssetType _assetType) with (env e) {
                     completeSiloSetupEnv(e);
-                    // requireToken0TotalAndBalancesIntegrity();
-                    // requireProtectedToken0TotalAndBalancesIntegrity();
                     require e.block.timestamp > 0;
                 }
 
                 preserved mint(uint256 _shares, address _receiver) with (env e) {
                     completeSiloSetupEnv(e);
-                    // requireToken0TotalAndBalancesIntegrity();
-                    // requireProtectedToken0TotalAndBalancesIntegrity();
                     require e.block.timestamp > 0;
                 }
 
                 preserved mint(uint256 _assets, address _receiver, ISilo.AssetType _assetType) with (env e) {
                     completeSiloSetupEnv(e);
-                    // requireToken0TotalAndBalancesIntegrity();
-                    // requireProtectedToken0TotalAndBalancesIntegrity();
                     require e.block.timestamp > 0;
                 }
             }
