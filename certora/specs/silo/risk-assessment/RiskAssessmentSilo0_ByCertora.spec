@@ -190,3 +190,47 @@ invariant zero_assets_iff_zero_shares()
             requireInvariant no_collateral_assets_no_debt_assets();
         }
     }
+
+rule maxWithdraw_collateral_assets_independence(env e, address user) {
+    require e.block.timestamp < 2^64;
+    ISilo.AssetType typeA;
+    ISilo.AssetType typeB;
+    /// Invariants to prove
+    requireInvariant zero_assets_iff_zero_shares();
+    requireInvariant no_collateral_assets_no_debt_assets();
+    require typeA != typeB;
+
+    mathint maxAssets_before = maxWithdraw(e, user, typeA);
+        uint256 assets;
+        address receiver;
+        address owner;
+        withdraw(e, assets, receiver, owner, typeB);
+    mathint maxAssets_after = maxWithdraw(e, user, typeA);
+
+    assert maxAssets_before == maxAssets_after;
+} 
+
+rule RA_maxWithdraw_preserved_after_collateral_transition(env e, address user) 
+{
+    completeSiloSetupEnv(e);
+    totalSupplyMoreThanBalance(user);
+    totalSupplyMoreThanBalance(e.msg.sender);
+
+    /// Invariants to prove
+    requireInvariant zero_assets_iff_zero_shares();
+    requireInvariant no_collateral_assets_no_debt_assets();
+
+    mathint maxAssets_before = 
+        maxWithdraw(e, user, ISilo.AssetType.Protected) + 
+        maxWithdraw(e, user, ISilo.AssetType.Collateral);
+        uint256 shares;
+        address owner;
+        ISilo.AssetType type;
+        transitionCollateral(e, shares, owner, type);
+    mathint maxAssets_after = 
+        maxWithdraw(e, user, ISilo.AssetType.Protected) + 
+        maxWithdraw(e, user, ISilo.AssetType.Collateral);
+
+    assert maxAssets_after - maxAssets_before <= 2;
+    assert maxAssets_after - maxAssets_before >= -2;
+}

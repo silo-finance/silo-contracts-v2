@@ -16,9 +16,13 @@ methods {
         ISilo.AssetType _assetType
     ) internal returns (uint256) =>
     assetsToSharesApprox(_assets, _totalAssets, _totalShares, _rounding, _assetType);
+
+    function SiloMathLib.getDebtAmountsWithInterest(uint256 _debtAssets, uint256 _rcomp) 
+        internal returns (uint256,uint256) => getDebtAmountsWithInterestCVL(_debtAssets, _rcomp);
 }
 
 definition DECIMALS_OFFSET_POW() returns uint256 = 1;
+definition PRECISION_DECIMALS() returns uint256 = 10^18;
 
 /// shares, totalAssets, totalShares, (true if round up, false if down)
 /// assets, totalShares, totalAssets, (true if round up, false if down)
@@ -51,6 +55,25 @@ persistent ghost sharesMulDiv(uint256,uint256,uint256,bool) returns uint256 {
     axiom forall uint256 y. forall uint256 z.
         (sharesMulDiv(0,y,z,false) == 0) && 
         (sharesMulDiv(1,y,z,false) ==0 <=> (y ==0 || y < z));
+
+    axiom forall uint256 x. forall uint256 y. forall uint256 z. forall uint256 w.
+        (w == sharesMulDiv(x,y,z,false) && y !=0) => (
+            sharesMulDiv(w,z,y,false) <= x && 
+            sharesMulDiv(w,z,y,false) + sharesMulDiv(z,1,y,true) >= to_mathint(x));
+}
+
+/// interestRatio(_debtAssets,_rcomp) = _debtAssets * _rcomp / _PRECISION_DECIMALS;
+persistent ghost interestRatio(uint256,uint256) returns uint256 {
+    axiom forall uint256 x1. forall uint256 x2. forall uint256 y.
+        x1 <= x2 => (
+            interestRatio(x1,y) <= interestRatio(x2,y) &&
+            interestRatio(y,x1) <= interestRatio(y,x2)
+        );
+    axiom forall uint256 x. forall uint256 y.
+        (interestRatio(x,y) == interestRatio(y,x)) &&
+        (y > PRECISION_DECIMALS() => interestRatio(x,y) >= x) &&
+        (y < PRECISION_DECIMALS() => interestRatio(x,y) <= x) &&
+        (y == PRECISION_DECIMALS() => interestRatio(x,y) == x);
 }
 
 function sharesToAssetsApprox(
@@ -67,6 +90,9 @@ function sharesToAssetsApprox(
 
     if (totalShares == 0 || totalAssets == 0) return _shares;
 
+    //Replace for exact mulDiv
+    //return mulDiv_mathLib(_shares,totalAssets,totalShares,_rounding == MathUpgradeable.Rounding.Up);
+    
     return sharesMulDiv(_shares,totalAssets,totalShares,_rounding == MathUpgradeable.Rounding.Up);
 }
 
@@ -84,7 +110,24 @@ function assetsToSharesApprox(
 
     if (totalShares == 0 || totalAssets == 0) return _assets;
 
+    //Replace for exact mulDiv
+    //return mulDiv_mathLib(_assets,totalShares,totalAssets,_rounding == MathUpgradeable.Rounding.Up);
+    
     return sharesMulDiv(_assets,totalShares,totalAssets,_rounding == MathUpgradeable.Rounding.Up);
+}
+
+function getDebtAmountsWithInterestCVL(uint256 _debtAssets, uint256 _rcomp) returns (uint256,uint256) {
+    if (_debtAssets == 0 || _rcomp == 0) {
+        return (_debtAssets, 0);
+    }
+    uint256 accruedInterest = interestRatio(_debtAssets, _rcomp);
+
+    return (require_uint256(_debtAssets + accruedInterest), accruedInterest);
+}
+
+function mulDiv_mathLib(uint256 x, uint256 y, uint256 z, bool true_if_up) returns uint256 {
+    if(true_if_up) return mulDivUp_mathLib(x,y,z);
+    return mulDivDown_mathLib(x,y,z);
 }
 
 function mulDivDown_mathLib(uint256 x, uint256 y, uint256 z) returns uint256 {
@@ -127,14 +170,14 @@ rule mulDiv_axioms_test(uint256 x, uint256 y, uint256 z) {
 }
 
 /*
-prove that x - roundUp( (z-1) / y ) <= muldivDown(w, z, y) <= x
+proof that x - roundUp(z / y) <= muldivDown(w, z, y) <= x
 where w = muldivDown(x,y,z)
 */
 /// Verified
 rule assetsToSharesAndBackAxiom(uint256 x, uint256 y, uint256 z) {
     uint256 w = mulDivDown_mathLib(x, y, z);
     uint256 xp = mulDivDown_mathLib(w, z, y);
-    mathint delta = mulDivDown_mathLib(1, assert_uint256(z - 1), y);
+    mathint delta = mulDivUp_mathLib(1, z, y);
 
-    assert xp <= x && to_mathint(xp) >= x - delta - 1;
+    assert xp <= x && xp + delta >= to_mathint(x);
 }
