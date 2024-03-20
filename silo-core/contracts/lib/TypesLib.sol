@@ -5,7 +5,7 @@ library TypesLib {
     uint256 constant POSITION_TYPE_UNKNOWN = 0;
     uint256 constant POSITION_TYPE_ONE_TOKEN = 1;
     uint256 constant POSITION_TYPE_TWO_TOKENS = 2;
-    uint256 constant POSITION_TYPE_DEPOSIT = 2;
+    uint256 constant POSITION_TYPE_DEPOSIT = 3;
 
     uint256 constant CONFIG_FOR_BORROW = 1;
     uint256 constant CONFIG_FOR_WITHDRAW = 1;

@@ -202,59 +202,55 @@ contract SiloConfig is ISiloConfig {
         });
 
         bool isSilo0 = _silo == _SILO0;
+        if (!isSilo0 && _silo != _SILO1) revert WrongSilo();
+
         bool configForBorrow = _configFor == TypesLib.CONFIG_FOR_BORROW;
 
         positionType = IShareDebtToken(isSilo0 ? _DEBT_SHARE_TOKEN0 : _DEBT_SHARE_TOKEN1).positionType(_user);
 
-        if (isSilo0) {
-            if (positionType == TypesLib.POSITION_TYPE_ONE_TOKEN) {
-                return (configData0, configData0, TypesLib.POSITION_TYPE_ONE_TOKEN);
-            }
-
-            if (positionType == TypesLib.POSITION_TYPE_TWO_TOKENS) {
-                if (configForBorrow) {
-                    return (configData1, configData0, TypesLib.POSITION_TYPE_TWO_TOKENS);
-                } else {
-                    return (configData0, debt /* empty config */, TypesLib.POSITION_TYPE_DEPOSIT);
-                }
-            }
-        } else {
-            if (positionType == TypesLib.POSITION_TYPE_ONE_TOKEN) {
-                return (configData0, configData0, TypesLib.POSITION_TYPE_ONE_TOKEN);
-            }
-
-            if (positionType == TypesLib.POSITION_TYPE_TWO_TOKENS) {
-                if (configForBorrow) {
-                    return (configData1, configData0, TypesLib.POSITION_TYPE_TWO_TOKENS);
-                } else {
-                    return (configData0, debt /* empty config */, TypesLib.POSITION_TYPE_DEPOSIT);
-                }
-            }
+        if (positionType == TypesLib.POSITION_TYPE_ONE_TOKEN) { // this _silo is debt
+            // this _silo is debt
+            return isSilo0
+                ? (configData0, configData0, TypesLib.POSITION_TYPE_ONE_TOKEN)
+                : (configData1, configData1, TypesLib.POSITION_TYPE_ONE_TOKEN);
         }
 
-        positionType = IShareDebtToken(_DEBT_SHARE_TOKEN1).positionType(_user);
-
-        if (isSilo0 && positionType == TypesLib.POSITION_TYPE_ONE_TOKEN) {
-            return (configData0, configData0, TypesLib.POSITION_TYPE_ONE_TOKEN);
-        }
-
-        if (isSilo0 && positionType == TypesLib.POSITION_TYPE_TWO_TOKENS) {
+        if (positionType == TypesLib.POSITION_TYPE_TWO_TOKENS) { // this _silo is debt
             if (configForBorrow) {
-                return (configData1, configData0, TypesLib.POSITION_TYPE_TWO_TOKENS);
-            } else {
-                return (configData0, debt /* empty config */, TypesLib.POSITION_TYPE_DEPOSIT);
+                return isSilo0
+                    ? (configData1, configData0, TypesLib.POSITION_TYPE_TWO_TOKENS)
+                    : (configData0, configData1, TypesLib.POSITION_TYPE_TWO_TOKENS);
+            } else { // withdraw
+                return isSilo0
+                    ? (configData0, debt /* empty config */, TypesLib.POSITION_TYPE_DEPOSIT)
+                    : (configData1, debt /* empty config */, TypesLib.POSITION_TYPE_DEPOSIT);
             }
         }
 
+        // this _silo has no debt, checking the other one
+
+        positionType = IShareDebtToken(isSilo0 ? _DEBT_SHARE_TOKEN1 : _DEBT_SHARE_TOKEN0).positionType(_user);
+
+        if (positionType == TypesLib.POSITION_TYPE_ONE_TOKEN) { // this _silo is with collateral
+            return configForBorrow
+                ? (collateral, debt, TypesLib.POSITION_TYPE_DEPOSIT) // can not borrow
+                : (isSilo0 ? configData0 : configData1, debt, TypesLib.POSITION_TYPE_DEPOSIT);
+        }
+
+        if (positionType == TypesLib.POSITION_TYPE_TWO_TOKENS) { // this _silo is with collateral
+            if (configForBorrow) {
+                return (collateral, debt, TypesLib.POSITION_TYPE_DEPOSIT); // can not borrow
+            } else {
+                return isSilo0
+                    ? (configData0, configData1, TypesLib.POSITION_TYPE_TWO_TOKENS)
+                    : (configData1, configData0, TypesLib.POSITION_TYPE_TWO_TOKENS);
+            }
+        }
+
+        // there is no debt if we got to this point
 
         // Silo that is asking for configs will have its config at index 0
-        if (_silo == _SILO0) {
-            return (configData0, configData1);
-        } else if (_silo == _SILO1) {
-            return (configData1, configData0);
-        } else {
-            revert WrongSilo();
-        }
+        return isSilo0 ? (configData0, configData1) : (configData1, configData0);
     }
 
     /// @inheritdoc ISiloConfig
