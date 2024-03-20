@@ -17,7 +17,7 @@ FOUNDRY_PROFILE=ve-silo-test \
     --ffi --broadcast --rpc-url http://127.0.0.1:8545
  */
 contract UserDetails is Script {
-    function run() external returns (uint256 bptBalance, uint256 veSiloBalance, uint256 blockTimestamp) {
+    function run() external returns (uint256 siloBalance, uint256 veSiloBalance, uint256 blockTimestamp) {
         AddrLib.init();
         VmLib.vm().label(AddrLib._ADDRESS_COLLECTION, "AddressesCollection");
 
@@ -26,10 +26,10 @@ contract UserDetails is Script {
 
         string memory chainAlias = ChainsLib.chainAlias();
 
-        address bptToken = VeSiloDeployments.get(VeSiloMocksContracts.BPT_TOKEN_LIKE, chainAlias);
+        address siloToken = VeSiloDeployments.get(VeSiloMocksContracts.SILO_TOKEN_LIKE, chainAlias);
         address veSilo = VeSiloDeployments.get(VeSiloContracts.VOTING_ESCROW, chainAlias);
 
-        bptBalance = IERC20(bptToken).balanceOf(proposer);
+        siloBalance = IERC20(siloToken).balanceOf(proposer);
         veSiloBalance = IERC20(veSilo).balanceOf(proposer);
         blockTimestamp = block.timestamp;
     }

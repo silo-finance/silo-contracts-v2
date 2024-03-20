@@ -21,7 +21,6 @@ contract FeeSwapperDeploy is CommonDeploy {
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
 
         address weth = getAddress(AddrKey.WETH);
-        address silo80weth20 = getAddress(SILO80_WETH20_TOKEN);
         address silo = getAddress(SILO_TOKEN);
         address balancerVault = getAddress(AddrKey.BALANCER_VAULT);
         address feeDistributor = getDeployedAddress(VeSiloContracts.FEE_DISTRIBUTOR);
@@ -35,7 +34,6 @@ contract FeeSwapperDeploy is CommonDeploy {
         feeSwapper = IFeeSwapper(address(
             new FeeSwapper(
                 IERC20(weth),
-                IERC20(silo80weth20),
                 IERC20(silo),
                 balancerVault,
                 poolId,

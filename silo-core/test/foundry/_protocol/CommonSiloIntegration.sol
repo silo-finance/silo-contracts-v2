@@ -18,13 +18,13 @@ abstract contract CommonSiloIntegration is IntegrationTest, SiloContracts {
 
     Vault internal _balancerVault;
     IERC20 internal _wethToken;
-    IERC20 internal _silo80Weth20Token;
+    IERC20 internal _siloToken;
     IERC20 internal _usdcToken;
 
     constructor() {
         _wethToken = IERC20(getAddress(AddrKey.WETH));
         _usdcToken = IERC20(getAddress(AddrKey.USDC));
-        _silo80Weth20Token = IERC20(getAddress(SILO80_WETH20_TOKEN));
+        _siloToken = IERC20(getAddress(SILO_TOKEN));
         _balancerVault = Vault(getAddress(AddrKey.BALANCER_VAULT));
 
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
