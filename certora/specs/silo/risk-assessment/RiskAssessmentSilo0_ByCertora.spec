@@ -9,6 +9,9 @@ import "../../_simplifications/priceOracle.spec";
 import "../../_simplifications/SiloSolvencyLib.spec";
 import "../../_simplifications/SimplifiedGetCompoundInterestRateAndUpdate.spec";
 
+use rule assetsToSharesAndBackAxiom;
+use rule mulDiv_axioms_test;
+
 // A user cannot withdraw anything after withdrawing whole balance.
 // holds
 // https://prover.certora.com/output/6893/6ebdfe9df3f04b4b887bdb1c5372637c/?anonymousKey=af1886c64a28e05f1ee50a3c98745a75596a38ad
@@ -103,5 +106,131 @@ rule RA_Silo_repay_all_shares(env e, address receiver)
     satisfy debtAfter == 0;
 }
 
+// User should not be able to borrow more than maxBorrow().
+rule RA_silo_cant_borrow_more_than_max(env e, address borrower) {
+    completeSiloSetupEnv(e);
+    totalSupplyMoreThanBalance(borrower);
 
+    require silo0.total(ISilo.AssetType.Protected) + silo0.total(ISilo.AssetType.Collateral) <= max_uint256;
+    require silo1.total(ISilo.AssetType.Protected) + silo1.total(ISilo.AssetType.Collateral) <= max_uint256;
+    require shareProtectedCollateralToken0.totalSupply() + shareCollateralToken0.totalSupply() <= max_uint256;
+    require shareProtectedCollateralToken1.totalSupply() + shareCollateralToken1.totalSupply() <= max_uint256;
+    require silo0.total(ISilo.AssetType.Protected) ==0 <=> shareProtectedCollateralToken0.totalSupply() == 0;
+    require silo0.total(ISilo.AssetType.Collateral) ==0 <=> shareCollateralToken0.totalSupply() == 0;
+    require silo1.total(ISilo.AssetType.Protected) ==0 <=> shareProtectedCollateralToken1.totalSupply() == 0;
+    require silo1.total(ISilo.AssetType.Collateral) ==0 <=> shareCollateralToken1.totalSupply() == 0;
 
+    uint256 maxAssets = maxBorrow(e, borrower);
+    uint256 assets; address receiver; 
+    borrow(e, assets, receiver, borrower);
+
+    assert assets <= maxAssets;
+}
+
+// User should not be able to borrow without collateral.
+rule RA_silo_cant_borrow_without_collateral(env e, address borrower) {
+    completeSiloSetupEnv(e);
+    totalSupplyMoreThanBalance(borrower);
+
+    require silo0.total(ISilo.AssetType.Protected) + silo0.total(ISilo.AssetType.Collateral) <= max_uint256;
+    require silo1.total(ISilo.AssetType.Protected) + silo1.total(ISilo.AssetType.Collateral) <= max_uint256;
+    require shareProtectedCollateralToken0.totalSupply() + shareCollateralToken0.totalSupply() <= max_uint256;
+    require shareProtectedCollateralToken1.totalSupply() + shareCollateralToken1.totalSupply() <= max_uint256;
+    require silo0.total(ISilo.AssetType.Protected) ==0 <=> shareProtectedCollateralToken0.totalSupply() == 0;
+    require silo0.total(ISilo.AssetType.Collateral) ==0 <=> shareCollateralToken0.totalSupply() == 0;
+    require silo1.total(ISilo.AssetType.Protected) ==0 <=> shareProtectedCollateralToken1.totalSupply() == 0;
+    require silo1.total(ISilo.AssetType.Collateral) ==0 <=> shareCollateralToken1.totalSupply() == 0;
+
+    uint256 collateralShares = shareCollateralToken1.balanceOf(borrower);
+    uint256 protectedCollateralShares = shareProtectedCollateralToken1.balanceOf(borrower);
+    uint256 maxAssets = maxBorrow(e, borrower);
+    assert collateralShares == 0 && protectedCollateralShares ==0 => maxAssets == 0;
+}
+
+invariant no_collateral_assets_no_debt_assets()
+    (
+        silo0.total(ISilo.AssetType.Collateral) ==0 &&
+        silo0.total(ISilo.AssetType.Protected) ==0 =>
+        silo0.total(ISilo.AssetType.Debt) ==0
+    )
+    &&
+    (
+        silo1.total(ISilo.AssetType.Collateral) ==0 &&
+        silo1.total(ISilo.AssetType.Protected) ==0 =>
+        silo1.total(ISilo.AssetType.Debt) ==0
+    );
+
+/// https://prover.certora.com/output/41958/af1acf321bf044c6ab813b243ae08ddd/?anonymousKey=3a898b5d61e73bebff14c4ad88d7f26912b8fbd4
+/*
+Violation analysis:
+
+- accrueInterest:
+    While the total supply of the collateral share token is zero,
+    interest accretion from the debt token is possible through
+    SiloMathLib.getCollateralAmountsWithInterest which will increase
+    total[AssetType.collateral].assets by the interest.
+
+    hence the violation shows:
+    ShareCollateralToken.totalSupply() == 0 but total[AssetType.collateral].assets ! =0
+
+    Conclusion:
+    Need to make sure no debt shares are available without collateral shares.
+*/
+invariant zero_assets_iff_zero_shares() 
+    (silo0.total(ISilo.AssetType.Protected) ==0 <=> shareProtectedCollateralToken0.totalSupply() == 0) &&
+    (silo0.total(ISilo.AssetType.Collateral) ==0 <=> shareCollateralToken0.totalSupply() == 0) &&
+    (silo0.total(ISilo.AssetType.Debt) ==0 <=> shareDebtToken0.totalSupply() == 0) && 
+    (silo1.total(ISilo.AssetType.Protected) ==0 <=> shareProtectedCollateralToken1.totalSupply() == 0) &&
+    (silo1.total(ISilo.AssetType.Collateral) ==0 <=> shareCollateralToken1.totalSupply() == 0) &&
+    (silo1.total(ISilo.AssetType.Debt) ==0 <=> shareDebtToken1.totalSupply() == 0)
+    {
+        preserved with (env e) {
+            completeSiloSetupEnv(e);
+            totalSupplyMoreThanBalance(e.msg.sender);
+            requireInvariant no_collateral_assets_no_debt_assets();
+        }
+    }
+
+rule maxWithdraw_collateral_assets_independence(env e, address user) {
+    require e.block.timestamp < 2^64;
+    ISilo.AssetType typeA;
+    ISilo.AssetType typeB;
+    /// Invariants to prove
+    requireInvariant zero_assets_iff_zero_shares();
+    requireInvariant no_collateral_assets_no_debt_assets();
+    require typeA != typeB;
+
+    mathint maxAssets_before = maxWithdraw(e, user, typeA);
+        uint256 assets;
+        address receiver;
+        address owner;
+        withdraw(e, assets, receiver, owner, typeB);
+    mathint maxAssets_after = maxWithdraw(e, user, typeA);
+
+    assert maxAssets_before == maxAssets_after;
+} 
+
+rule RA_maxWithdraw_preserved_after_collateral_transition(env e, address user) 
+{
+    completeSiloSetupEnv(e);
+    totalSupplyMoreThanBalance(user);
+    totalSupplyMoreThanBalance(e.msg.sender);
+
+    /// Invariants to prove
+    requireInvariant zero_assets_iff_zero_shares();
+    requireInvariant no_collateral_assets_no_debt_assets();
+
+    mathint maxAssets_before = 
+        maxWithdraw(e, user, ISilo.AssetType.Protected) + 
+        maxWithdraw(e, user, ISilo.AssetType.Collateral);
+        uint256 shares;
+        address owner;
+        ISilo.AssetType type;
+        transitionCollateral(e, shares, owner, type);
+    mathint maxAssets_after = 
+        maxWithdraw(e, user, ISilo.AssetType.Protected) + 
+        maxWithdraw(e, user, ISilo.AssetType.Collateral);
+
+    assert maxAssets_after - maxAssets_before <= 2;
+    assert maxAssets_after - maxAssets_before >= -2;
+}
