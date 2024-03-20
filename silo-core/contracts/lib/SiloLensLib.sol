@@ -38,7 +38,7 @@ library SiloLensLib {
     function getLtv(ISilo _silo, address _borrower) internal view returns (uint256 ltv) {
         (
             ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig
-        ) = SiloSolvencyLib.getOrderedConfigs(_silo, _silo.config(), _borrower);
+        ) = _silo.config().getConfigs(_silo, _borrower, TypesLib.CONFIG_FOR_BORROW); // TODO is is only for borrow here?
 
         ltv = SiloSolvencyLib.getLtv(
             collateralConfig,

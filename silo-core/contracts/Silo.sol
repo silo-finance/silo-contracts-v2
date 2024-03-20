@@ -82,7 +82,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
     function isSolvent(address _borrower) external view virtual returns (bool) {
         (
             ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig
-        ) = SiloSolvencyLib.getOrderedConfigs(this, config, _borrower);
+        ) = config.getConfigs(this, _borrower, TypesLib.CONFIG_FOR_BORROW); // TODO always ofr borrow?
 
         uint256 debtShareBalance = IShareToken(debtConfig.debtShareToken).balanceOf(_borrower);
 

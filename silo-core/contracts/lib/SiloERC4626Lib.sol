@@ -92,8 +92,7 @@ library SiloERC4626Lib {
         SiloSolvencyLib.LtvData memory ltvData;
 
         { // stack too deep
-            uint256 debt;
-            (debt, ltvData.positionType) = IShareDebtToken(debtConfig.debtShareToken).getBalanceAndPosition(_owner);
+            uint256 debt = IShareToken(debtConfig.debtShareToken).balanceOf(_owner);
             bool protected = _assetType == ISilo.AssetType.Protected;
 
             if (debt == 0) {
