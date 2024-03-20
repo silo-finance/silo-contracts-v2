@@ -4,6 +4,7 @@ pragma solidity 0.8.21;
 import {IERC20R} from "../interfaces/IERC20R.sol";
 import {IShareDebtToken} from "../interfaces/IShareDebtToken.sol";
 import {SiloLensLib} from "../lib/SiloLensLib.sol";
+import {TypesLip} from "../lib/TypesLip.sol";
 import {IShareToken, ShareToken, ISiloFactory, ISilo} from "./ShareToken.sol";
 
 /// @title ShareDebtToken
@@ -54,7 +55,7 @@ contract ShareDebtToken is IShareDebtToken, IERC20R, ShareToken {
         returns (uint256 balance, uint256 positionType)
     {
         balance = _balances[_owner];
-        positionType = _positionType[_owner];
+        positionType = balance == 0 ? TypesLip.POSITION_TYPE_UNKNOWN : _positionType[_owner];
     }
 
     /// @inheritdoc IERC20R

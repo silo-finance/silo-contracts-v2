@@ -7,6 +7,7 @@ import {ISiloOracle} from "../interfaces/ISiloOracle.sol";
 import {SiloStdLib, ISiloConfig, IShareToken, ISilo} from "./SiloStdLib.sol";
 import {SiloERC4626Lib} from "./SiloERC4626Lib.sol";
 import {SiloMathLib} from "./SiloMathLib.sol";
+import {TypesLib} from "./TypesLib.sol";
 
 library SiloSolvencyLib {
     using MathUpgradeable for uint256;
@@ -91,6 +92,24 @@ library SiloSolvencyLib {
         return ltv <= _collateralConfig.maxLtv;
     }
 
+    function detectPositionType(
+        IShareToken _currentSiloCollateralShareToken,
+        IShareToken _currentSiloProtectedShareToken,
+        IShareToken _otherSiloCollateralShareToken,
+        IShareToken _otherSiloProtectedShareToken,
+        uint256 _currentDebtShareBalance,
+        uint256 _positionType,
+        address _borrower
+    ) internal view returns (uint256 debtShareBalance, uint256 positionType) {
+        if (_currentDebtShareBalance != 0) return
+        uint256 collateralBalance = _currentSiloCollateralShareToken.balanceOf(_borrower);
+        uint256 protectedBalance = _currentSiloProtectedShareToken.balanceOf(_borrower);
+
+        if (collateralBalance + protectedBalance != 0) {
+            // check if enough
+        }
+    }
+
     /// @notice Retrieves assets data required for LTV calculations
     /// @param _collateralConfig Configuration data for the collateral
     /// @param _debtConfig Configuration data for the debt
@@ -109,9 +128,16 @@ library SiloSolvencyLib {
         uint256 _debtShareBalanceCached,
         uint256 _positionType
     ) internal view returns (LtvData memory ltvData) {
-        if (_collateralConfig.token != _debtConfig.token) {
+        if (_positionType == TypesLib.POSITION_TYPE_ONE_TOKEN) {
+            _collateralConfig = _debtConfig;
+        } else if (_positionType == TypesLib.POSITION_TYPE_UNKNOWN) {
+            // TODO determine type, but for this we actually need to know collateral state
+            // 1. do we have debtSilo.collateral?
+        } // else: by default two configs are for two silos
+
+        // TODO move this below, when we have deterministic _positionType
+        if (_positionType == TypesLib.POSITION_TYPE_TWO_TOKENS) {
             // When calculating maxLtv, use maxLtv oracle.
-            // TODO make sure we not using it in other places for same tokens
             (ltvData.collateralOracle, ltvData.debtOracle) = _oracleType == ISilo.OracleType.MaxLtv
                 ? (ISiloOracle(_collateralConfig.maxLtvOracle), ISiloOracle(_debtConfig.maxLtvOracle))
                 : (ISiloOracle(_collateralConfig.solvencyOracle), ISiloOracle(_debtConfig.solvencyOracle));
@@ -119,16 +145,87 @@ library SiloSolvencyLib {
 
         uint256 totalShares;
         uint256 shares;
-
-        (shares, totalShares) = SiloStdLib.getSharesAndTotalSupply(
-            _collateralConfig.protectedShareToken, _borrower, 0 /* no cache */
-        );
+        uint256 totalCollateralAssets;
+        uint256 totalProtectedAssets;
 
         (
-            uint256 totalCollateralAssets, uint256 totalProtectedAssets
-        ) = ISilo(_collateralConfig.silo).getCollateralAndProtectedAssets();
+            totalShares,
+            shares,
+            totalCollateralAssets,
+            totalProtectedAssets,
+            ltvData.borrowerCollateralAssets,
+            ltvData.borrowerProtectedAssets
+        ) = getCollateralDataFromSilo(_collateralConfig, _borrower, _accrueInMemory);
 
-        ltvData.borrowerProtectedAssets = SiloMathLib.convertToAssets(
+//        uint256 totalShares;
+//        uint256 shares;
+//
+//        (shares, totalShares) = SiloStdLib.getSharesAndTotalSupply(
+//            _collateralConfig.protectedShareToken, _borrower, _debtShareBalanceCached
+//        );
+//
+//        (
+//            uint256 totalCollateralAssets, uint256 totalProtectedAssets
+//        ) = ISilo(_collateralConfig.silo).getCollateralAndProtectedAssets();
+//
+//        ltvData.borrowerProtectedAssets = SiloMathLib.convertToAssets(
+//            shares, totalProtectedAssets, totalShares, MathUpgradeable.Rounding.Down, ISilo.AssetType.Protected
+//        );
+//
+//        (shares, totalShares) = SiloStdLib.getSharesAndTotalSupply(
+//            _collateralConfig.collateralShareToken, _borrower, 0 /* no cache */
+//        );
+//
+//        totalCollateralAssets = _accrueInMemory == ISilo.AccrueInterestInMemory.Yes
+//            ? SiloStdLib.getTotalCollateralAssetsWithInterest(
+//                _collateralConfig.silo,
+//                _collateralConfig.interestRateModel,
+//                _collateralConfig.daoFee,
+//                _collateralConfig.deployerFee
+//            )
+//            : totalCollateralAssets;
+//
+//        ltvData.borrowerCollateralAssets = SiloMathLib.convertToAssets(
+//            shares, totalCollateralAssets, totalShares, MathUpgradeable.Rounding.Down, ISilo.AssetType.Collateral
+//        );
+//
+//        (shares, totalShares) = SiloStdLib.getSharesAndTotalSupply(
+//            _debtConfig.debtShareToken, _borrower, _debtShareBalanceCached
+//        );
+
+        uint256 totalDebtAssets = _accrueInMemory == ISilo.AccrueInterestInMemory.Yes
+            ? SiloStdLib.getTotalDebtAssetsWithInterest(_debtConfig.silo, _debtConfig.interestRateModel)
+            : ISilo(_debtConfig.silo).total(ISilo.AssetType.Debt);
+
+        // BORROW value -> to assets -> UP
+        ltvData.borrowerDebtAssets = SiloMathLib.convertToAssets(
+            shares, totalDebtAssets, totalShares, MathUpgradeable.Rounding.Up, ISilo.AssetType.Debt
+        );
+    }
+
+    function getCollateralDataFromSilo(
+        ISiloConfig.ConfigData memory _siloConfig,
+        address _borrower,
+        ISilo.AccrueInterestInMemory _accrueInMemory
+    )
+        internal
+        view
+        returns (
+            uint256 totalShares,
+            uint256 shares,
+            uint256 totalCollateralAssets,
+            uint256 totalProtectedAssets,
+            uint256 borrowerCollateralAssets,
+            uint256 borrowerProtectedAssets
+        )
+    {
+        (shares, totalShares) = SiloStdLib.getSharesAndTotalSupply(
+            _siloConfig.protectedShareToken, _borrower, _debtShareBalanceCached
+        );
+
+        (totalCollateralAssets, totalProtectedAssets) = ISilo(_siloConfig.silo).getCollateralAndProtectedAssets();
+
+        borrowerProtectedAssets = SiloMathLib.convertToAssets(
             shares, totalProtectedAssets, totalShares, MathUpgradeable.Rounding.Down, ISilo.AssetType.Protected
         );
 
@@ -138,28 +235,15 @@ library SiloSolvencyLib {
 
         totalCollateralAssets = _accrueInMemory == ISilo.AccrueInterestInMemory.Yes
             ? SiloStdLib.getTotalCollateralAssetsWithInterest(
-                _collateralConfig.silo,
-                _collateralConfig.interestRateModel,
-                _collateralConfig.daoFee,
-                _collateralConfig.deployerFee
+                _siloConfig.silo,
+                _siloConfig.interestRateModel,
+                _siloConfig.daoFee,
+                _siloConfig.deployerFee
             )
             : totalCollateralAssets;
 
-        ltvData.borrowerCollateralAssets = SiloMathLib.convertToAssets(
+        borrowerCollateralAssets = SiloMathLib.convertToAssets(
             shares, totalCollateralAssets, totalShares, MathUpgradeable.Rounding.Down, ISilo.AssetType.Collateral
-        );
-
-        (shares, totalShares) = SiloStdLib.getSharesAndTotalSupply(
-            _debtConfig.debtShareToken, _borrower, _debtShareBalanceCached
-        );
-
-        uint256 totalDebtAssets = _accrueInMemory == ISilo.AccrueInterestInMemory.Yes
-            ? SiloStdLib.getTotalDebtAssetsWithInterest(_debtConfig.silo, _debtConfig.interestRateModel)
-            : ISilo(_debtConfig.silo).total(ISilo.AssetType.Debt);
-
-        // BORROW value -> to assets -> UP
-        ltvData.borrowerDebtAssets = SiloMathLib.convertToAssets(
-            shares, totalDebtAssets, totalShares, MathUpgradeable.Rounding.Up, ISilo.AssetType.Debt
         );
     }
 

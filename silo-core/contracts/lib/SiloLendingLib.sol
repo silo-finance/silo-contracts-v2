@@ -191,21 +191,6 @@ library SiloLendingLib {
         }
     }
 
-    function detectPositionType(
-        IShareToken _currentSiloCollateralShareToken,
-        IShareToken _currentSiloProtectedShareToken,
-        IShareToken _otherSiloCollateralShareToken,
-        IShareToken _otherSiloProtectedShareToken,
-        address _borrower
-    ) internal view returns (uint256 debtShareBalance, uint256 positionType) {
-        uint256 collateralBalance = _currentSiloCollateralShareToken.balanceOf(_borrower);
-        uint256 protectedBalance = _currentSiloProtectedShareToken.balanceOf(_borrower);
-
-        if (collateralBalance + protectedBalance != 0) {
-            // check if enough
-        }
-    }
-
     /// @notice Allows repaying borrowed assets either partially or in full
     /// @param _configData Configuration data relevant to the silo asset
     /// @param _assets The amount of assets to repay. Use 0 if shares are used.
