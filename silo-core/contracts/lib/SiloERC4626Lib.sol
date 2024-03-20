@@ -73,8 +73,10 @@ library SiloERC4626Lib {
         if (_assetType == ISilo.AssetType.Debt) revert ISilo.WrongAssetType();
 
         (
-            ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig
-        ) = _config.getConfigs(address(this));
+            ISiloConfig.ConfigData memory collateralConfig,
+            ISiloConfig.ConfigData memory debtConfig,
+            uint256 positionType
+        ) = _config.getConfigs(address(this), _owner, TypesLib.CONFIG_FOR_WITHDRAW);
 
         uint256 shareTokenTotalSupply;
         uint256 liquidity;

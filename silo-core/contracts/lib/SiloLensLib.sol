@@ -14,8 +14,10 @@ import {SiloERC4626Lib} from "./SiloERC4626Lib.sol";
 library SiloLensLib {
     function borrowPossible(ISilo _silo, address _borrower) internal view returns (bool possible) {
         (
-            ISiloConfig.ConfigData memory thisSiloConfig, ISiloConfig.ConfigData memory otherSiloConfig
-        ) = _silo.config().getConfigs(address(_silo));
+            ISiloConfig.ConfigData memory thisSiloConfig,
+            ISiloConfig.ConfigData memory otherSiloConfig,
+            uint256 positionType
+        ) = _silo.config().getConfigs(address(_silo), _borrower, TypesLib.CONFIG_FOR_BORROW);
 
         (possible,,) = SiloLendingLib.borrowPossible(
             thisSiloConfig.protectedShareToken,

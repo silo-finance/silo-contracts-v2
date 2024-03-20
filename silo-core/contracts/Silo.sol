@@ -484,23 +484,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
 
     /// @inheritdoc ISilo
     function maxBorrow(address _borrower) external view virtual returns (uint256 maxAssets) {
-        ISiloConfig cachedConfig = config;
-
-        (
-            ISiloConfig.ConfigData memory debtConfig, ISiloConfig.ConfigData memory collateralConfig
-        ) = cachedConfig.getConfigs(address(this));
-
-        (uint256 totalDebtAssets, uint256 totalDebtShares) =
-            SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(debtConfig, AssetType.Debt);
-
-        (maxAssets,) = _callMaxBorrow(
-            collateralConfig,
-            debtConfig,
-            _borrower,
-            totalDebtAssets,
-            totalDebtShares,
-            cachedConfig
-        );
+        (maxAssets,) = _callMaxBorrow(_borrower);
     }
 
     /// @inheritdoc ISilo
@@ -527,18 +511,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
 
     /// @inheritdoc ISilo
     function maxBorrowShares(address _borrower) external view virtual returns (uint256 maxShares) {
-        ISiloConfig cachedConfig = config;
-
-        (
-            ISiloConfig.ConfigData memory debtConfig, ISiloConfig.ConfigData memory collateralConfig
-        ) = cachedConfig.getConfigs(address(this));
-
-        (uint256 totalDebtAssets, uint256 totalDebtShares) =
-            SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(debtConfig, AssetType.Debt);
-
-        (
-            ,maxShares
-        ) = _callMaxBorrow(collateralConfig, debtConfig, _borrower, totalDebtAssets, totalDebtShares, cachedConfig);
+        (,maxShares) = _callMaxBorrow(_borrower);
     }
 
     /// @inheritdoc ISilo
@@ -663,9 +636,13 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
         nonReentrant
         returns (uint256 shares)
     {
-        // config for this Silo is always at index 0
-        (ISiloConfig.ConfigData memory debtConfig, ISiloConfig.ConfigData memory collateralConfig) =
-            config.getConfigs(address(this));
+        (
+            ISiloConfig.ConfigData memory collateralConfig,
+            ISiloConfig.ConfigData memory debtConfig,
+            uint256 positionType
+        ) = config.getConfigs(address(this), _borrower, TypesLib.CONFIG_FOR_BORROW);
+
+        if (positionType == TypesLib.POSITION_TYPE_DEPOSIT) revert ISilo.ThereIsDebtInOtherSilo();
 
         _callAccrueInterestForAsset(
             debtConfig.interestRateModel, debtConfig.daoFee, debtConfig.deployerFee, debtConfig.otherSilo
@@ -803,8 +780,10 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
     {
         if (_assetType == AssetType.Debt) revert ISilo.WrongAssetType();
 
-        (ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig) =
-            config.getConfigs(address(this));
+        (
+            ISiloConfig.ConfigData memory collateralConfig,
+            ISiloConfig.ConfigData memory debtConfig,
+        ) = config.getConfigs(address(this), _owner, TypesLib.CONFIG_FOR_WITHDRAW);
 
         _callAccrueInterestForAsset(
             collateralConfig.interestRateModel,
@@ -875,8 +854,13 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
         virtual
         returns (uint256 assets, uint256 shares)
     {
-        (ISiloConfig.ConfigData memory debtConfig, ISiloConfig.ConfigData memory collateralConfig) =
-            config.getConfigs(address(this));
+        (
+            ISiloConfig.ConfigData memory collateralConfig,
+            ISiloConfig.ConfigData memory debtConfig,
+            uint256 positionType
+        ) = config.getConfigs(address(this), _borrower, TypesLib.CONFIG_FOR_BORROW);
+
+        if (positionType == TypesLib.POSITION_TYPE_DEPOSIT) revert ISilo.ThereIsDebtInOtherSilo();
 
         _callAccrueInterestForAsset(
             debtConfig.interestRateModel, debtConfig.daoFee, debtConfig.deployerFee, debtConfig.otherSilo
@@ -978,20 +962,26 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
         );
     }
 
-    function _callMaxBorrow(
-        ISiloConfig.ConfigData memory collateralConfig,
-        ISiloConfig.ConfigData memory debtConfig,
-        address _borrower,
-        uint256 _totalDebtAssets,
-        uint256 _totalDebtShares,
-        ISiloConfig cachedConfig
-    ) internal view virtual returns (uint256 maxAssets, uint256 maxShares) {
+    function _callMaxBorrow(address _borrower) internal view virtual returns (uint256 maxAssets, uint256 maxShares) {
+        ISiloConfig cachedConfig = config;
+
+        (
+            ISiloConfig.ConfigData memory collateralConfig,
+            ISiloConfig.ConfigData memory debtConfig,
+            uint256 positionType
+        ) = cachedConfig.getConfigs(address(this), _borrower, TypesLib.CONFIG_FOR_BORROW);
+
+        if (positionType == TypesLib.POSITION_TYPE_DEPOSIT) return 0;
+
+        (uint256 totalDebtAssets, uint256 totalDebtShares) =
+            SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(debtConfig, AssetType.Debt);
+
         return SiloLendingLib.maxBorrow(
             collateralConfig,
             debtConfig,
             _borrower,
-            _totalDebtAssets,
-            _totalDebtShares,
+            totalDebtAssets,
+            totalDebtShares,
             cachedConfig
         );
     }

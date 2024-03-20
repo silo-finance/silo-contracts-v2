@@ -220,7 +220,7 @@ contract SiloConfig is ISiloConfig {
                 return isSilo0
                     ? (configData1, configData0, TypesLib.POSITION_TYPE_TWO_TOKENS)
                     : (configData0, configData1, TypesLib.POSITION_TYPE_TWO_TOKENS);
-            } else { // withdraw
+            } else {
                 return isSilo0
                     ? (configData0, debt /* empty config */, TypesLib.POSITION_TYPE_DEPOSIT)
                     : (configData1, debt /* empty config */, TypesLib.POSITION_TYPE_DEPOSIT);
