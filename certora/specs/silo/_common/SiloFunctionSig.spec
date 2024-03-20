@@ -14,6 +14,7 @@ definition transferSig() returns uint32 = sig:transfer(address,uint256).selector
 definition transferFromSig() returns uint32 = sig:transferFrom(address,address,uint256).selector;
 definition approveSig() returns uint32 = sig:approve(address,uint256).selector;
 definition redeemSig() returns uint32 = sig:redeem(uint256,address,address).selector;
+definition redeemWithTypeSig() returns uint32 = sig:redeem(uint256,address,address,ISilo.AssetType).selector;
 definition repaySig() returns uint32 = sig:repay(uint256,address).selector;
 definition repaySharesSig() returns uint32 = sig:repayShares(uint256,address).selector;
 definition borrowSig() returns uint32 = sig:borrow(uint256,address,address).selector;

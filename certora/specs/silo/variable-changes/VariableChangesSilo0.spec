@@ -79,25 +79,37 @@ invariant cannotHaveAssestWithZeroInterestRateTimestamp() silo0.getSiloDataInter
 
                 preserved with (env e) {
                     completeSiloSetupEnv(e);
-                    requireToken0TotalAndBalancesIntegrity();
-                    requireProtectedToken0TotalAndBalancesIntegrity();
+                    // requireToken0TotalAndBalancesIntegrity();
+                    // requireProtectedToken0TotalAndBalancesIntegrity();
                 }
 
                 // These functions could change the assets, but they can only be called
                 // with block.timestamp > 0
                 preserved deposit(uint256 _assets, address _receiver) with (env e) {
+                    completeSiloSetupEnv(e);
+                    // requireToken0TotalAndBalancesIntegrity();
+                    // requireProtectedToken0TotalAndBalancesIntegrity();
                     require e.block.timestamp > 0;
                 }
 
                 preserved deposit(uint256 _assets, address _receiver, ISilo.AssetType _assetType) with (env e) {
+                    completeSiloSetupEnv(e);
+                    // requireToken0TotalAndBalancesIntegrity();
+                    // requireProtectedToken0TotalAndBalancesIntegrity();
                     require e.block.timestamp > 0;
                 }
 
                 preserved mint(uint256 _shares, address _receiver) with (env e) {
+                    completeSiloSetupEnv(e);
+                    // requireToken0TotalAndBalancesIntegrity();
+                    // requireProtectedToken0TotalAndBalancesIntegrity();
                     require e.block.timestamp > 0;
                 }
 
                 preserved mint(uint256 _assets, address _receiver, ISilo.AssetType _assetType) with (env e) {
+                    completeSiloSetupEnv(e);
+                    // requireToken0TotalAndBalancesIntegrity();
+                    // requireProtectedToken0TotalAndBalancesIntegrity();
                     require e.block.timestamp > 0;
                 }
             }
@@ -125,6 +137,7 @@ rule VC_Silo_total_collateral_decrease(
     requireInvariant cannotHaveAssestWithZeroInterestRateTimestamp();
 
     mathint totalDepositsBefore = silo0.getCollateralAssets(e);
+    mathint protectedAssetsBefore =  silo0.total[ISilo.AssetType.Protected].assets;
     mathint shareTokenTotalSupplyBefore = shareCollateralToken0.totalSupply();
     mathint balanceSharesBefore = shareCollateralToken0.balanceOf(receiver);
     mathint siloBalanceBefore = token0.balanceOf(silo0);
@@ -132,6 +145,7 @@ rule VC_Silo_total_collateral_decrease(
     siloFnSelector(e, f, assetsOrShares, receiver);
 
     mathint totalDepositsAfter = silo0.getCollateralAssets(e);
+    mathint protectedAssetsAfter = silo0.total[ISilo.AssetType.Protected].assets;
     mathint shareTokenTotalSupplyAfter = shareCollateralToken0.totalSupply();
     mathint balanceSharesAfter = shareCollateralToken0.balanceOf(receiver);
     mathint siloBalanceAfter = token0.balanceOf(silo0);
@@ -144,20 +158,18 @@ rule VC_Silo_total_collateral_decrease(
     assert totalSupplyDecreased => fnAllowedToDecreaseShareCollateralTotalSupply(f),
         "The total supply of share tokens should decrease only if allowed fn was called";
 
-    // mathint totalSupplyDecrease = shareTokenTotalSupplyBefore - shareTokenTotalSupplyAfter;
     mathint siloBalanceDecrease = siloBalanceBefore - siloBalanceAfter;
     mathint totalDepositsDecrease = totalDepositsBefore - totalDepositsAfter;
+    mathint protectedAssetsIncrease = protectedAssetsAfter - protectedAssetsBefore;
 
-    assert totalSupplyDecreased => //(totalSupplyDecrease == assetsOrShares &&
-            totalDepositsDecrease == siloBalanceDecrease;
-    
-    // assert totalDepositsBefore > totalDepositsAfter && f.selector != transitionCollateralSig() =>
-    //     siloBalanceAfter == siloBalanceBefore - (totalDepositsBefore - totalDepositsAfter),
-    //     "The balance of the silo in the underlying asset should decrease for the same amount";
-
-    // assert totalDepositsBefore > totalDepositsAfter && f.selector == transitionCollateralSig() =>
-    //     siloBalanceAfter == siloBalanceBefore,
-    //     "The balance of the silo should not change on transitionCollateral fn";
+    assert (totalSupplyDecreased && totalDepositsDecrease == protectedAssetsIncrease) => siloBalanceDecrease == 0, 
+    "The balance of the silo in the underlying asset should not change when making collateral protected";
+           
+    assert (totalSupplyDecreased && protectedAssetsIncrease == 0) => 
+            ((receiver == silo0 && siloBalanceDecrease == 0) || 
+                (receiver != silo0 && totalDepositsDecrease == siloBalanceDecrease)), 
+                "The balance of the silo in the underlying asset should decrease for the 
+                    same amount unless the reciever is the silo itself";
    }
 
 

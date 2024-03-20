@@ -16,9 +16,6 @@ function siloFnSelector(
     uint256 assetsOrShares,
     address receiver
 ) {
-    require e.block.timestamp < max_uint64;
-    require receiver != currentContract;
-
     if (f.selector == depositSig()) {
         deposit(e, assetsOrShares, receiver);
     } else if (f.selector == depositWithTypeSig()) {
@@ -27,7 +24,6 @@ function siloFnSelector(
     } else if (f.selector == flashLoanSig()) {
         address token;
         bytes data;
-
         flashLoan(e, receiver, token, assetsOrShares, data);
     } else if (f.selector == mintSig()) {
         mint(e, assetsOrShares, receiver);
@@ -63,6 +59,13 @@ function siloFnSelector(
         address owner;
         ISilo.AssetType anyType;
         withdraw(e, assetsOrShares, receiver, owner, anyType);
+    } else if(f.selector == redeemSig()) {
+        address owner;
+        redeem(e, assetsOrShares, receiver, owner);
+    } else if(f.selector == redeemWithTypeSig()) {
+        address owner;
+        ISilo.AssetType anyType;
+        redeem(e, assetsOrShares, receiver, owner, anyType);
     } else {
         calldataarg args;
         f(e, args);
