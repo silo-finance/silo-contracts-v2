@@ -43,19 +43,18 @@ contract ShareDebtToken is IShareDebtToken, IERC20R, ShareToken {
     }
 
     /// @inheritdoc IShareDebtToken
-    function positionType(address _owner) external view virtual returns (ISilo.PositionType) {
-        return ISilo.PositionType(_positionType[_owner]);
+    function positionType(address _owner) external view virtual returns (uint256) {
+        return _positionType[_owner];
     }
 
-    function balanceOfAndPositionType(address _owner)
+    function getBalanceAndPosition(address _owner)
         external
         view
         virtual
-        returns (uint256 balance, ISilo.PositionType positionType)
+        returns (uint256 balance, uint256 positionType)
     {
         balance = _balances[_owner];
-        positionType = ISilo.PositionType(_positionType[_owner]);
-
+        positionType = _positionType[_owner];
     }
 
     /// @inheritdoc IERC20R

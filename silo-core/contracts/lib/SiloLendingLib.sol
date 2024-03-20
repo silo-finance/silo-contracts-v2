@@ -179,14 +179,33 @@ library SiloLendingLib {
     /// @return possible `true` if the borrower can borrow, `false` otherwise
     /// @return positionType will be set ONLY when `possible` is TRUE
     function borrowPossible(
-        address _currentSiloDebtShareToken,
-        address _otherSiloDebtShareToken,
+        IShareDebtToken _currentSiloDebtShareToken,
+        IShareToken _otherSiloDebtShareToken,
         address _borrower
     ) internal view returns (bool possible, uint256 debtShareBalance, uint256 positionType) {
-        possible = IShareToken(_otherSiloDebtShareToken).balanceOf(_borrower) == 0;
+        possible = _otherSiloDebtShareToken.balanceOf(_borrower) == 0;
 
         if (possible) {
-            (debtShareBalance, positionType) = IShareDebtToken(_currentSiloDebtShareToken).positionType(_borrower);
+            (debtShareBalance, positionType) = _currentSiloDebtShareToken.getBalanceAndPosition(_borrower);
+
+            if (debtShareBalance == 0) {
+                positionType = detectPositionType();
+            }
+        }
+    }
+
+    function detectPositionType(
+        IShareToken _currentSiloCollateralShareToken,
+        IShareToken _currentSiloProtectedShareToken,
+        IShareToken _otherSiloCollateralShareToken,
+        IShareToken _otherSiloProtectedShareToken,
+        address _borrower
+    ) internal view returns (uint256 debtShareBalance, uint256 positionType) {
+        uint256 collateralBalance = _currentSiloCollateralShareToken.balanceOf(_borrower);
+        uint256 protectedBalance = _currentSiloProtectedShareToken.balanceOf(_borrower);
+
+        if (collateralBalance + protectedBalance != 0) {
+            // check if enough
         }
     }
 

@@ -4,8 +4,10 @@ pragma solidity >=0.5.0;
 import {ISilo} from "../interfaces/ISilo.sol";
 
 interface IShareDebtToken {
-    event PositionTypeSet(address indexed user, ISilo.PositionType positionType);
+    /// @props owner borrower address
+    /// @props positionType ConstantsLib.POSITION_TYPE_
+    event PositionTypeSet(address indexed owner, uint256 positionType);
 
-    function positionType(address _owner) external view returns (ISilo.PositionType);
-    function balanceOfAndPositionType(address _owner) external view returns (uint256, ISilo.PositionType);
+    function positionType(address _owner) external view returns (uint256);
+    function getBalanceAndPosition(address _owner) external view returns (uint256, uint256);
 }
