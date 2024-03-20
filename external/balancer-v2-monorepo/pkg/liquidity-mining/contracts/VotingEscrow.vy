@@ -6,7 +6,7 @@
 @notice Votes have a weight depending on time, so that users are
         committed to the future of (whatever they are voting for)
 @dev Vote weight decays linearly over time. Lock time cannot be
-     more than `MAXTIME` (1 year).
+     more than `MAXTIME` (3 years).
 """
 
 # Voting escrow to have time-weighted votes
@@ -20,7 +20,7 @@
 #   |  /
 #   |/
 # 0 +--------+------> time
-#       maxtime (1 year?)
+#       maxtime (3 years)
 
 struct Point:
     bias: int128
@@ -75,8 +75,9 @@ event Supply:
 
 
 WEEK: constant(uint256) = 7 * 86400  # all future times are rounded by week
-MAXTIME: constant(uint256) = 365 * 86400  # 1 year
-MAXTIME_INT128: constant(int128) = 365 * 86400  # 1 year
+TWO_WEEKS: constant(uint256) = 7 * 86400 * 2
+MAXTIME: constant(uint256) = 365 * 86400 * 3  # 3 years
+MAXTIME_INT128: constant(int128) = 365 * 86400 * 3 # 3 years
 MULTIPLIER: constant(uint256) = 10 ** 18
 
 TOKEN: immutable(address)
@@ -409,7 +410,10 @@ def create_lock(_value: uint256, _unlock_time: uint256):
     assert _value > 0  # dev: need non-zero value
     assert _locked.amount == 0, "Withdraw old tokens first"
     assert unlock_time > block.timestamp, "Can only lock until time in the future"
-    assert unlock_time <= block.timestamp + MAXTIME, "Voting lock can be 1 year max"
+    assert unlock_time <= block.timestamp + MAXTIME, "Voting lock can be 3 years max"
+
+    current_week: uint256 = (block.timestamp / WEEK) * WEEK
+    assert unlock_time - current_week >= TWO_WEEKS, "Voting lock can be 2 weeks min"
 
     self._deposit_for(msg.sender, _value, unlock_time, _locked, CREATE_LOCK_TYPE)
 
@@ -446,7 +450,8 @@ def increase_unlock_time(_unlock_time: uint256):
     assert _locked.end > block.timestamp, "Lock expired"
     assert _locked.amount > 0, "Nothing is locked"
     assert unlock_time > _locked.end, "Can only increase lock duration"
-    assert unlock_time <= block.timestamp + MAXTIME, "Voting lock can be 1 year max"
+    assert unlock_time <= block.timestamp + MAXTIME, "Voting lock can be 3 years max"
+    assert unlock_time - _locked.end >= TWO_WEEKS, "Voting lock can be 2 weeks min"
 
     self._deposit_for(msg.sender, 0, unlock_time, _locked, INCREASE_UNLOCK_TIME)
 
