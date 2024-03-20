@@ -115,18 +115,17 @@ library SiloSolvencyLib {
     ) internal view returns (LtvData memory ltvData) {
         ltvData.positionType = _positionType;
 
-        if (_positionType == TypesLib.POSITION_TYPE_ONE_TOKEN) {
-            _collateralConfig = _debtConfig;
-        } else if (_positionType == TypesLib.POSITION_TYPE_UNKNOWN) {
+        if (_positionType == TypesLib.POSITION_TYPE_UNKNOWN) {
             if (_debtShareBalanceCached != 0) revert ISIlo.DebtWithUndefinedPosition();
 
             ltvData.positionType = _assetsToBorrow == 0
                 ? detectTypeForLtv(_collateralConfig, _debtConfig, _accrueInMemory, _borrower, _assetsToBorrow)
                 : detectTypeForMax(_collateralConfig, _debtConfig, _accrueInMemory, _borrower, _assetsToBorrow);
-        } // else: by default two configs are for two silos
+        }
 
-        // TODO move this below, when we have deterministic _positionType
-        if (ltvData.positionType == TypesLib.POSITION_TYPE_TWO_TOKENS) {
+        if (ltvData.positionType == TypesLib.POSITION_TYPE_ONE_TOKEN) {
+            _collateralConfig = _debtConfig;
+        } else {
             // When calculating maxLtv, use maxLtv oracle.
             (ltvData.collateralOracle, ltvData.debtOracle) = _oracleType == ISilo.OracleType.MaxLtv
                 ? (ISiloOracle(_collateralConfig.maxLtvOracle), ISiloOracle(_debtConfig.maxLtvOracle))

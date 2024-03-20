@@ -103,7 +103,8 @@ library SiloLendingLib {
             ISilo.OracleType.MaxLtv,
             ISilo.AccrueInterestInMemory.Yes,
             debtShareBalance, /* cached balance available when possible=true */
-            positionType
+            positionType,
+            0 /* assets to borrow */
         );
 
         (

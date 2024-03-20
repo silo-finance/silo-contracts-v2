@@ -147,7 +147,7 @@ interface ISiloConfig {
     /// be at index 0.
     /// @return configData0 The configuration data for the specified silo.
     /// @return configData1 The configuration data for the other silo.
-    function getConfigs(address _silo) external view returns (ConfigData memory, ConfigData memory);
+    function getConfigs(address _silo, address _user) external view returns (ConfigData memory, ConfigData memory, uint256 positionType);
 
     /// @notice Retrieves configuration data for a specific silo
     /// @dev This function reverts for incorrect silo address input

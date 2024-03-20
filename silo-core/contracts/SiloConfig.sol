@@ -2,6 +2,8 @@
 pragma solidity 0.8.21;
 
 import {ISiloConfig} from "./interfaces/ISiloConfig.sol";
+import {IShareDebtToken} from "./interfaces/IShareDebtToken.sol";
+import {TypesLib} from "./lib/TypesLib.sol";
 
 // solhint-disable var-name-mixedcase
 
@@ -153,7 +155,12 @@ contract SiloConfig is ISiloConfig {
     }
 
     /// @inheritdoc ISiloConfig
-    function getConfigs(address _silo) external view virtual returns (ConfigData memory, ConfigData memory) {
+    function getConfigs(address _silo, address _user, uint256 _configFor)
+        external
+        view
+        virtual
+        returns (ConfigData memory collateral, ConfigData memory debt, uint256 positionType)
+    {
         ConfigData memory configData0 = ConfigData({
             daoFee: _DAO_FEE,
             deployerFee: _DEPLOYER_FEE,
@@ -193,6 +200,52 @@ contract SiloConfig is ISiloConfig {
             liquidationModule: _LIQUIDATION_MODULE,
             callBeforeQuote: _CALL_BEFORE_QUOTE1
         });
+
+        bool isSilo0 = _silo == _SILO0;
+        bool configForBorrow = _configFor == TypesLib.CONFIG_FOR_BORROW;
+
+        positionType = IShareDebtToken(isSilo0 ? _DEBT_SHARE_TOKEN0 : _DEBT_SHARE_TOKEN1).positionType(_user);
+
+        if (isSilo0) {
+            if (positionType == TypesLib.POSITION_TYPE_ONE_TOKEN) {
+                return (configData0, configData0, TypesLib.POSITION_TYPE_ONE_TOKEN);
+            }
+
+            if (positionType == TypesLib.POSITION_TYPE_TWO_TOKENS) {
+                if (configForBorrow) {
+                    return (configData1, configData0, TypesLib.POSITION_TYPE_TWO_TOKENS);
+                } else {
+                    return (configData0, debt /* empty config */, TypesLib.POSITION_TYPE_DEPOSIT);
+                }
+            }
+        } else {
+            if (positionType == TypesLib.POSITION_TYPE_ONE_TOKEN) {
+                return (configData0, configData0, TypesLib.POSITION_TYPE_ONE_TOKEN);
+            }
+
+            if (positionType == TypesLib.POSITION_TYPE_TWO_TOKENS) {
+                if (configForBorrow) {
+                    return (configData1, configData0, TypesLib.POSITION_TYPE_TWO_TOKENS);
+                } else {
+                    return (configData0, debt /* empty config */, TypesLib.POSITION_TYPE_DEPOSIT);
+                }
+            }
+        }
+
+        positionType = IShareDebtToken(_DEBT_SHARE_TOKEN1).positionType(_user);
+
+        if (isSilo0 && positionType == TypesLib.POSITION_TYPE_ONE_TOKEN) {
+            return (configData0, configData0, TypesLib.POSITION_TYPE_ONE_TOKEN);
+        }
+
+        if (isSilo0 && positionType == TypesLib.POSITION_TYPE_TWO_TOKENS) {
+            if (configForBorrow) {
+                return (configData1, configData0, TypesLib.POSITION_TYPE_TWO_TOKENS);
+            } else {
+                return (configData0, debt /* empty config */, TypesLib.POSITION_TYPE_DEPOSIT);
+            }
+        }
+
 
         // Silo that is asking for configs will have its config at index 0
         if (_silo == _SILO0) {

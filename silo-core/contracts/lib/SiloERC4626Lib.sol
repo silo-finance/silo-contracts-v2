@@ -8,6 +8,7 @@ import {MathUpgradeable} from "openzeppelin-contracts-upgradeable/utils/math/Mat
 import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
 import {ISilo} from "../interfaces/ISilo.sol";
 import {IShareToken} from "../interfaces/IShareToken.sol";
+import {IShareDebtToken} from "../interfaces/IShareDebtToken.sol";
 import {SiloSolvencyLib} from "./SiloSolvencyLib.sol";
 import {SiloMathLib} from "./SiloMathLib.sol";
 import {SiloStdLib} from "./SiloStdLib.sol";
@@ -89,7 +90,8 @@ library SiloERC4626Lib {
         SiloSolvencyLib.LtvData memory ltvData;
 
         { // stack too deep
-            uint256 debt = IShareToken(debtConfig.debtShareToken).balanceOf(_owner);
+            uint256 debt;
+            (debt, ltvData.positionType) = IShareDebtToken(debtConfig.debtShareToken).getBalanceAndPosition(_owner);
             bool protected = _assetType == ISilo.AssetType.Protected;
 
             if (debt == 0) {
