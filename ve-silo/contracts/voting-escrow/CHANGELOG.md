@@ -41,6 +41,8 @@
 - Copy of Balancer's implementation of the SmartWalletChecker.sol ([984507b](https://github.com/silo-finance/silo-contracts-v2/pull/139/commits/984507b1a541e1a1683e3b540b3d2a78a8da1046))
 
 ### external/balancer-v2-monorepo/pkg/liquidity-mining/contracts/VotingEscrow.vy
+- Changed lock periods min 2 weeks - max 3 years ([e914f15][https://github.com/silo-finance/silo-contracts-v2/pull/423/commits/e914f15c59d8a5fcddaaa5aed0bb845381ce0b26])
+
 - Bumped VotingEscrow.vy Vyper version to 0.3.7 ([3ff7446](https://github.com/silo-finance/silo-contracts-v2/commit/3ff7446dc08b8ec951fef20558748f6e5c7dc5e9))
 
 ### external/balancer-v2-monorepo/pkg/liquidity-mining/contracts/VeBoostV2.vy
