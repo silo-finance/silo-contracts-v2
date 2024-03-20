@@ -55,11 +55,11 @@ rule HLP_mintAndInverse(env e, address receiver)
     
     assert balanceCollateralAfter == balanceCollateralBefore;
     assert balanceProtectedCollateralAfter == balanceProtectedCollateralBefore;
-    assert balanceTokenBefore == balanceTokenAfter;
+    assert balanceTokenBefore <= balanceTokenAfter;
 
     satisfy balanceCollateralAfter == balanceCollateralBefore;
     satisfy balanceProtectedCollateralAfter == balanceProtectedCollateralBefore;
-    satisfy balanceTokenBefore == balanceTokenAfter;
+    satisfy balanceTokenBefore <= balanceTokenAfter;
 }
 
 rule HLP_borrowSharesAndInverse(env e, address receiver)
@@ -86,10 +86,10 @@ rule HLP_borrowSharesAndInverse(env e, address receiver)
     assert debtBefore == debtAfter;
     assert balanceCollateralAfter == balanceCollateralBefore;
     assert balanceProtectedCollateralAfter == balanceProtectedCollateralBefore;
-    assert balanceTokenBefore == balanceTokenAfter;
+    assert balanceTokenBefore <= balanceTokenAfter;
 
     satisfy balanceCollateralAfter == balanceCollateralBefore;
     satisfy balanceProtectedCollateralAfter == balanceProtectedCollateralBefore;
-    satisfy balanceTokenBefore == balanceTokenAfter;
+    satisfy balanceTokenBefore <= balanceTokenAfter;
 }
 

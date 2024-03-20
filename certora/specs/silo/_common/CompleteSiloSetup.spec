@@ -156,3 +156,11 @@ definition canDecreaseProtectedAssets(method f) returns bool =
     f.selector == sig:redeem(uint256,address,address,ISilo.AssetType).selector ||
     f.selector == sig:withdraw(uint256,address,address,ISilo.AssetType).selector ||
     f.selector == sig:transitionCollateral(uint256,address,ISilo.AssetType).selector;
+
+definition canIncreaseTotalCollateral(method f) returns bool = false;
+
+definition canDecreaseTotalCollateral(method f) returns bool = false;
+
+definition canIncreaseTotalDebt(method f) returns bool = false;
+
+definition canDecreaseTotalDebt(method f) returns bool = false;

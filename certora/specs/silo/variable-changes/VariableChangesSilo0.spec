@@ -525,3 +525,53 @@ rule protectedSharesBalance(env e, method f, address receiver)
         "The balance of share tokens should decrease only if protected assets decreased";
 }
 
+rule whoCanChangeShareTokenTotalSupply(env e, method f) filtered { f -> !f.isView } 
+{
+    address receiver;
+    completeSiloSetupEnv(e);
+    totalSupplyMoreThanBalance(e.msg.sender);
+    totalSupplyMoreThanBalance(receiver);
+
+    mathint collateralTotalSupplyBefore = shareCollateralToken0.totalSupply();
+    mathint totalColateralBefore;
+    totalColateralBefore, _ = getCollateralAndProtectedAssets();
+    
+    calldataarg args;
+    f(e, args);
+    mathint collateralTotalSupplyAfter = shareCollateralToken0.totalSupply();
+    mathint totalColateralAfter;
+    totalColateralAfter, _ = getCollateralAndProtectedAssets();
+    
+    assert collateralTotalSupplyAfter > collateralTotalSupplyBefore <=> 
+        totalColateralAfter > totalColateralBefore;
+
+    assert totalColateralAfter > totalColateralBefore => canIncreaseTotalCollateral(f);
+    assert totalColateralAfter < totalColateralBefore => canDecreaseTotalCollateral(f);
+}
+
+rule whoCanChangeDebtShareTokenTotalSupply(env e, method f) filtered { f -> !f.isView } 
+{
+    // debtShareToken.totalSupply and Silo._total[ISilo.AssetType.Debt].assets should decrease only on repay, repayShares, liquidationCall. accrueInterest 
+    // increase only Silo._total[ISilo.AssetType.Debt].assets.
+    address receiver;
+    completeSiloSetupEnv(e);
+    totalSupplyMoreThanBalance(e.msg.sender);
+    totalSupplyMoreThanBalance(receiver);
+
+    mathint debtTotalSupplyBefore = shareDebtToken0.totalSupply();
+    mathint totalDebtBefore;
+    _, totalDebtBefore = getCollateralAndDebtAssets();
+    
+    calldataarg args;
+    f(e, args);
+    mathint debtTotalSupplyAfter = shareDebtToken0.totalSupply();
+    mathint totalDebtAfter;
+    _, totalDebtAfter = getCollateralAndDebtAssets();
+    
+    assert debtTotalSupplyAfter > debtTotalSupplyBefore <=> 
+        totalDebtAfter > totalDebtBefore;
+
+    assert debtTotalSupplyAfter > debtTotalSupplyBefore => canIncreaseTotalCollateral(f);
+    assert debtTotalSupplyAfter < debtTotalSupplyBefore => canDecreaseTotalCollateral(f);
+}
+
