@@ -108,10 +108,13 @@ library SiloSolvencyLib {
         ISilo.AccrueInterestInMemory _accrueInMemory,
         uint256 _debtShareBalanceCached
     ) internal view returns (LtvData memory ltvData) {
-        // When calculating maxLtv, use maxLtv oracle.
-        (ltvData.collateralOracle, ltvData.debtOracle) = _oracleType == ISilo.OracleType.MaxLtv
-            ? (ISiloOracle(_collateralConfig.maxLtvOracle), ISiloOracle(_debtConfig.maxLtvOracle))
-            : (ISiloOracle(_collateralConfig.solvencyOracle), ISiloOracle(_debtConfig.solvencyOracle));
+        if (_collateralConfig.token != _debtConfig.token) {
+            // When calculating maxLtv, use maxLtv oracle.
+            // TODO make sure we not using it in other places for same tokens
+            (ltvData.collateralOracle, ltvData.debtOracle) = _oracleType == ISilo.OracleType.MaxLtv
+                ? (ISiloOracle(_collateralConfig.maxLtvOracle), ISiloOracle(_debtConfig.maxLtvOracle))
+                : (ISiloOracle(_collateralConfig.solvencyOracle), ISiloOracle(_debtConfig.solvencyOracle));
+        }
 
         uint256 totalShares;
         uint256 shares;
@@ -193,7 +196,8 @@ library SiloSolvencyLib {
     /// @return sumOfBorrowerCollateralValue Total value of borrower's collateral
     /// @return totalBorrowerDebtValue Total debt value for the borrower
     /// @return ltvInDp Calculated LTV in 18 decimal precision
-    function calculateLtv(SiloSolvencyLib.LtvData memory _ltvData, address _collateralToken, address _debtToken)
+    function calculateLtv(
+        SiloSolvencyLib.LtvData memory _ltvData, address _collateralToken, address _debtToken)
         internal
         view
         returns (uint256 sumOfBorrowerCollateralValue, uint256 totalBorrowerDebtValue, uint256 ltvInDp)
@@ -229,16 +233,18 @@ library SiloSolvencyLib {
         // safe because we adding same token, so it is under same total supply
         unchecked { sumOfCollateralAssets = _ltvData.borrowerProtectedAssets + _ltvData.borrowerCollateralAssets; }
 
+        bool differentTokens = _collateralAsset != _debtAsset;
+
         if (sumOfCollateralAssets != 0) {
             // if no oracle is set, assume price 1, we should also not set oracle for quote token
-            sumOfCollateralValue = address(_ltvData.collateralOracle) != address(0)
+            sumOfCollateralValue = differentTokens && address(_ltvData.collateralOracle) != address(0)
                 ? _ltvData.collateralOracle.quote(sumOfCollateralAssets, _collateralAsset)
                 : sumOfCollateralAssets;
         }
 
         if (_ltvData.borrowerDebtAssets != 0) {
             // if no oracle is set, assume price 1, we should also not set oracle for quote token
-            debtValue = address(_ltvData.debtOracle) != address(0)
+            debtValue = differentTokens && address(_ltvData.debtOracle) != address(0)
                 ? _ltvData.debtOracle.quote(_ltvData.borrowerDebtAssets, _debtAsset)
                 : _ltvData.borrowerDebtAssets;
         }

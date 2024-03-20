@@ -86,17 +86,14 @@ library SiloLendingLib {
         view
         returns (uint256 assets, uint256 shares)
     {
-        { // too deep
-            (bool possible,,) = borrowPossible(
-                _debtConfig.protectedShareToken,
-                _debtConfig.collateralShareToken,
-                _collateralConfig.debtShareToken,
-                _borrower
-            );
+        (bool possible, uint256 debtShareBalance, uint256 positionType) = borrowPossible(
+            _debtConfig.debtShareToken,
+            _collateralConfig.debtShareToken,
+            _borrower
+        );
 
-            if (!possible) {
-                return (0, 0);
-            }
+        if (!possible) {
+            return (0, 0);
         }
 
         SiloSolvencyLib.LtvData memory ltvData = SiloSolvencyLib.getAssetsDataForLtvCalculations(
@@ -105,7 +102,7 @@ library SiloLendingLib {
             _borrower,
             ISilo.OracleType.MaxLtv,
             ISilo.AccrueInterestInMemory.Yes,
-            0 /* no cached balance */
+            debtShareBalance /* cached balance available when possible=true */
         );
 
         (
@@ -176,26 +173,20 @@ library SiloLendingLib {
     }
 
     /// @notice Checks if a borrower can borrow
-    /// @param _protectedShareToken Address of the protected share token
-    /// @param _collateralShareToken Address of the collateral share token
+    /// @param _currentSiloDebtShareToken Address of the debt share token of current silo
+    /// @param _otherSiloDebtShareToken Address of the debt share token of other silo
     /// @param _borrower The address of the borrower being checked
     /// @return possible `true` if the borrower can borrow, `false` otherwise
-    /// @return protectedSharesToWithdraw amount of protected shares, that have to be withdrawn before borrow
-    /// @return collateralSharesToWithdraw amount of collateral shares, that have to be withdrawn before borrow
+    /// @return positionType will be set ONLY when `possible` is TRUE
     function borrowPossible(
-        address _protectedShareToken,
-        address _collateralShareToken,
+        address _currentSiloDebtShareToken,
         address _otherSiloDebtShareToken,
         address _borrower
-    ) internal view returns (bool possible, uint256 protectedSharesToWithdraw, uint256 collateralSharesToWithdraw) {
-        protectedSharesToWithdraw = IShareToken(_protectedShareToken).balanceOf(_borrower);
-        collateralSharesToWithdraw = IShareToken(_collateralShareToken).balanceOf(_borrower);
+    ) internal view returns (bool possible, uint256 debtShareBalance, uint256 positionType) {
+        possible = IShareToken(_otherSiloDebtShareToken).balanceOf(_borrower) == 0;
 
-        // _borrower cannot have any collateral deposited
-        possible = protectedSharesToWithdraw == 0 && collateralSharesToWithdraw == 0;
-
-        if (!possible && IShareToken(_otherSiloDebtShareToken).balanceOf(_borrower) == 0) {
-            possible = true;
+        if (possible) {
+            (debtShareBalance, positionType) = IShareDebtToken(_currentSiloDebtShareToken).positionType(_borrower);
         }
     }
 

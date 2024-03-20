@@ -2,6 +2,7 @@
 pragma solidity 0.8.21;
 
 import {IERC20R} from "../interfaces/IERC20R.sol";
+import {IShareDebtToken} from "../interfaces/IShareDebtToken.sol";
 import {SiloLensLib} from "../lib/SiloLensLib.sol";
 import {IShareToken, ShareToken, ISiloFactory, ISilo} from "./ShareToken.sol";
 
@@ -14,11 +15,11 @@ import {IShareToken, ShareToken, ISiloFactory, ISilo} from "./ShareToken.sol";
 /// to any recipient as long as receiving wallet approves the transfer. In other words, anyone can
 /// take someone else's debt without asking.
 /// @custom:security-contact security@silo.finance
-contract ShareDebtToken is IERC20R, ShareToken {
+contract ShareDebtToken is IShareDebtToken, IERC20R, ShareToken {
     using SiloLensLib for ISilo;
 
-    /// @dev maps _owner => _recipient => amount
-    mapping(address => mapping(address => uint256)) private _receiveAllowances;
+    mapping(address owner => mapping(address recipient => uint256 allowance)) private _receiveAllowances;
+    mapping(address user => uint256 positionType) private _positionType;
 
     /// @param _silo Silo address for which tokens was deployed
     function initialize(ISilo _silo, address _hookReceiver) external virtual initializer {
@@ -39,6 +40,22 @@ contract ShareDebtToken is IERC20R, ShareToken {
     /// @inheritdoc IERC20R
     function setReceiveApproval(address owner, uint256 _amount) external virtual override {
         _setReceiveApproval(owner, _msgSender(), _amount);
+    }
+
+    /// @inheritdoc IShareDebtToken
+    function positionType(address _owner) external view virtual returns (ISilo.PositionType) {
+        return ISilo.PositionType(_positionType[_owner]);
+    }
+
+    function balanceOfAndPositionType(address _owner)
+        external
+        view
+        virtual
+        returns (uint256 balance, ISilo.PositionType positionType)
+    {
+        balance = _balances[_owner];
+        positionType = ISilo.PositionType(_positionType[_owner]);
+
     }
 
     /// @inheritdoc IERC20R

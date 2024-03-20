@@ -1031,45 +1031,10 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
         if (_assets == 0 && _shares == 0) revert ISilo.ZeroAssets();
 
         (
-            bool possible, uint256 protectedSharesToWithdraw, uint256 collateralSharesToWithdraw
-        ) = SiloLendingLib.borrowPossible(
-            _configData.protectedShareToken,
-            _configData.collateralShareToken,
-            _otherSiloDebtShareToken,
-            _borrower
-        );
+            bool possible,,
+        ) = SiloLendingLib.borrowPossible(_configData.debtShareToken, _otherSiloDebtShareToken, _borrower);
 
         if (!possible) revert ISilo.BorrowNotPossible();
-
-        if (protectedSharesToWithdraw != 0) {
-            SiloERC4626Lib.withdraw(
-                _configData.token,
-                _configData.protectedShareToken,
-                0 /* _assets */,
-                protectedSharesToWithdraw,
-                _borrower,
-                _borrower,
-                _borrower,
-                AssetType.Protected,
-                total[AssetType.Protected].assets,
-                total[AssetType.Protected]
-            );
-        }
-
-        if (collateralSharesToWithdraw != 0) {
-            SiloERC4626Lib.withdraw(
-                _configData.token,
-                _configData.collateralShareToken,
-                0 /* _assets */,
-                collateralSharesToWithdraw,
-                _borrower,
-                _borrower,
-                _borrower,
-                AssetType.Collateral,
-                _getRawLiquidity(),
-                total[AssetType.Collateral]
-            );
-        }
 
         return SiloLendingLib.borrow(
             _configData.debtShareToken,
