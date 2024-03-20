@@ -102,7 +102,8 @@ library SiloLendingLib {
             _borrower,
             ISilo.OracleType.MaxLtv,
             ISilo.AccrueInterestInMemory.Yes,
-            debtShareBalance /* cached balance available when possible=true */
+            debtShareBalance, /* cached balance available when possible=true */
+            positionType
         );
 
         (
@@ -187,10 +188,6 @@ library SiloLendingLib {
 
         if (possible) {
             (debtShareBalance, positionType) = _currentSiloDebtShareToken.getBalanceAndPosition(_borrower);
-
-            if (debtShareBalance == 0) {
-                positionType = detectPositionType();
-            }
         }
     }
 

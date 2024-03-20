@@ -106,7 +106,8 @@ library SiloSolvencyLib {
         address _borrower,
         ISilo.OracleType _oracleType,
         ISilo.AccrueInterestInMemory _accrueInMemory,
-        uint256 _debtShareBalanceCached
+        uint256 _debtShareBalanceCached,
+        uint256 _positionType
     ) internal view returns (LtvData memory ltvData) {
         if (_collateralConfig.token != _debtConfig.token) {
             // When calculating maxLtv, use maxLtv oracle.
