@@ -250,7 +250,9 @@ contract SiloConfig is ISiloConfig {
         // there is no debt if we got to this point
 
         // Silo that is asking for configs will have its config at index 0
-        return isSilo0 ? (configData0, configData1) : (configData1, configData0);
+        return isSilo0
+            ? (configData0, configData1, TypesLib.POSITION_TYPE_UNKNOWN)
+            : (configData1, configData0, TypesLib.POSITION_TYPE_UNKNOWN);
     }
 
     /// @inheritdoc ISiloConfig

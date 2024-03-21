@@ -85,27 +85,18 @@ library SiloSolvencyLib {
         ISilo.OracleType _oracleType,
         ISilo.AccrueInterestInMemory _accrueInMemory,
         uint256 _debtShareBalanceCached,
-        uint256 _positionType,
-        uint256 _assetsToBorrow
+        uint256 _positionType // must be determined by this point!
     ) internal view returns (LtvData memory ltvData) {
-        ltvData.positionType = _positionType;
+        if (_positionType == TypesLib.POSITION_TYPE_UNKNOWN) revert UndefinedPosition();
 
-        if (_positionType == TypesLib.POSITION_TYPE_UNKNOWN) {
-            if (_debtShareBalanceCached != 0) revert ISIlo.DebtWithUndefinedPosition();
-
-            ltvData.positionType = _assetsToBorrow == 0
-                ? detectTypeForLtv(_collateralConfig, _debtConfig, _accrueInMemory, _borrower, _assetsToBorrow)
-                : detectTypeForMax(_collateralConfig, _debtConfig, _accrueInMemory, _borrower, _assetsToBorrow);
-        }
-
-        if (ltvData.positionType == TypesLib.POSITION_TYPE_ONE_TOKEN) {
-            _collateralConfig = _debtConfig;
-        } else {
+        if (_positionType == TypesLib.POSITION_TYPE_TWO_TOKENS) {
             // When calculating maxLtv, use maxLtv oracle.
             (ltvData.collateralOracle, ltvData.debtOracle) = _oracleType == ISilo.OracleType.MaxLtv
                 ? (ISiloOracle(_collateralConfig.maxLtvOracle), ISiloOracle(_debtConfig.maxLtvOracle))
                 : (ISiloOracle(_collateralConfig.solvencyOracle), ISiloOracle(_debtConfig.solvencyOracle));
         }
+
+        ltvData.positionType = _positionType;
 
         uint256 totalShares;
         uint256 shares;
@@ -167,7 +158,7 @@ library SiloSolvencyLib {
         // TODO
     }
 
-    // for one token type, we dont need to check LTV again
+    /// @dev we need to detect only when we have two deposits and no debt
     function detectTypeForLtv(
         ISiloConfig.ConfigData memory _siloConfig,
         ISiloConfig.ConfigData memory _otherSiloConfig,
@@ -177,7 +168,7 @@ library SiloSolvencyLib {
     )
         internal
         view
-        returns (uint256 positionType)
+        returns (uint256 positionType, uint256 oneTokenLtv)
     {
         uint256 borrowerProtectedShareBalance = IShareToken(_siloConfig.protectedShareToken).balanceOf(_borrower);
         uint256 borrowerCollateralShareBalance = IShareToken(_siloConfig.collateralShareToken).balanceOf(_borrower);
@@ -190,9 +181,10 @@ library SiloSolvencyLib {
                 : TypeLib.POSITION_TYPE_TWO_TOKENS;
         }
 
-        // we do have collateral in both silos, so check if current collateral is enough, we need pre-calculate LTV
-
         if (_assetsToBorrow == 0) return TypeLib.POSITION_TYPE_ONE_TOKEN;
+
+        // at this point we know we do have collateral in both silos, we need to calculate LTV for one-token position
+        // to make final decision about position type
 
         if (borrowerProtectedShareBalance != 0 && borrowerCollateralShareBalance != 0 && !_accrueInMemory) {
             (totalCollateralAssets, totalProtectedAssets) = ISilo(_siloConfig.silo).getCollateralAndProtectedAssets();
@@ -206,7 +198,7 @@ library SiloSolvencyLib {
         // if (otherProtectedShareBalance + otherCollateralShareBalance > )
 
             // we have to calculate LTV to establish, if this is one token
-        // TODO if we can have debt assets, we can also simply compate (collateral < debt => two)
+        // TODO if we can have debt assets, we can also simply compare (collateral < debt => two)
 
         uint256 borrowerProtectedAssets;
 
@@ -223,14 +215,14 @@ library SiloSolvencyLib {
         uint256 borrowerCollateralAssets;
 
         if (borrowerCollateralShareBalance != 0) {
-            totalCollateralAssets = _accrueInMemory == ISilo.AccrueInterestInMemory.Yes
-                ? SiloStdLib.getTotalCollateralAssetsWithInterest(
+            if (_accrueInMemory == ISilo.AccrueInterestInMemory.Yes) {
+                totalCollateralAssets = SiloStdLib.getTotalCollateralAssetsWithInterest(
                     _siloConfig.silo,
                     _siloConfig.interestRateModel,
                     _siloConfig.daoFee,
                     _siloConfig.deployerFee
-                )
-                : totalCollateralAssets;
+                );
+            }
 
             borrowerCollateralAssets = SiloMathLib.convertToAssets(
                 borrowerCollateralShareBalance,
@@ -249,7 +241,9 @@ library SiloSolvencyLib {
         oneTokenLtv = _assetsToBorrow.mulDiv(_PRECISION_DECIMALS, sumOfCollateralAssets, MathUpgradeable.Rounding.Up);
 
         //  TODO should I use maxLtv??
-        return oneTokenLtv <= _siloConfig.lt ? TypeLib.POSITION_TYPE_ONE_TOKEN : TypeLib.POSITION_TYPE_TWO_TOKENS;
+        positionType = oneTokenLtv <= _siloConfig.lt
+            ? TypeLib.POSITION_TYPE_ONE_TOKEN
+            : TypeLib.POSITION_TYPE_TWO_TOKENS;
     }
 
     /// @notice Calculates the Loan-To-Value (LTV) ratio for a given borrower
