@@ -982,7 +982,8 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
             _borrower,
             totalDebtAssets,
             totalDebtShares,
-            cachedConfig
+            cachedConfig,
+            positionType
         );
     }
 
