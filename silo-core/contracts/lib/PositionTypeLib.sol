@@ -20,6 +20,8 @@ import {SiloMathLib} from "./SiloMathLib.sol";
 import {TypesLib} from "./TypesLib.sol";
 
 library PositionTypeLib {
+    using MathUpgradeable for uint256;
+
     uint256 internal constant _PRECISION_DECIMALS = 1e18;
 
     function adjustConfigsAfterPositionDiscovery(
@@ -78,7 +80,7 @@ library PositionTypeLib {
         ISiloConfig.ConfigData memory _otherSiloConfig,
         ISilo.AccrueInterestInMemory _accrueInMemory,
         address _borrower,
-        address _assetsToBorrow
+        uint256 _assetsToBorrow
     )
         internal
         view
@@ -143,7 +145,7 @@ library PositionTypeLib {
         if (borrowerProtectedShareBalance != 0 && borrowerCollateralShareBalance != 0 && !_accrueInMemory) {
             (totalCollateralAssets, totalProtectedAssets) = ISilo(_siloConfig.silo).getCollateralAndProtectedAssets();
         } else if (borrowerProtectedShareBalance != 0) {
-            totalProtectedAssets = ISilo(_siloConfig.silo).getProtectedAssets();
+            totalProtectedAssets = ISilo(_siloConfig.silo).total(ISilo.AssetType.Protected);
         } else if (borrowerCollateralShareBalance != 0 && !_accrueInMemory) {
             totalCollateralAssets = ISilo(_siloConfig.silo).getCollateralAssets();
         }

@@ -852,7 +852,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
             emit Leverage();
 
             // allow for deposit reentry only to provide collateral
-            if (_receiver.onLeverage(msg.sender, _borrower, debtConfig.token, assets, _data) != _LEVERAGE_CALLBACK) {
+            if (ILeverageBorrower(_receiver).onLeverage(msg.sender, _borrower, debtConfig.token, assets, _data) != _LEVERAGE_CALLBACK) {
                 revert LeverageFailed();
             }
         }
