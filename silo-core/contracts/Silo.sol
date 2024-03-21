@@ -636,54 +636,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
         nonReentrant
         returns (uint256 shares)
     {
-        (
-            ISiloConfig.ConfigData memory collateralConfig,
-            ISiloConfig.ConfigData memory debtConfig,
-            uint256 positionType
-        ) = config.getConfigs(address(this), _borrower, TypesLib.CONFIG_FOR_BORROW);
-
-        if (positionType == TypesLib.POSITION_TYPE_DEPOSIT) revert ISilo.ThereIsDebtInOtherSilo();
-
-        _callAccrueInterestForAsset(
-            debtConfig.interestRateModel, debtConfig.daoFee, debtConfig.deployerFee, debtConfig.otherSilo
-        );
-
-        uint256 assets;
-
-        // avoid magic number 0
-        uint256 borrowSharesZero = 0;
-
-        (
-            assets, shares
-        ) = _callBorrow(
-            debtConfig,
-            collateralConfig.debtShareToken,
-            _assets,
-            borrowSharesZero,
-            address(_receiver),
-            _borrower,
-            msg.sender
-        );
-
-        emit Borrow(msg.sender, address(_receiver), _borrower, assets, shares);
-        emit Leverage();
-
-        // allow for deposit reentry only to provide collateral
-        if (_receiver.onLeverage(msg.sender, _borrower, debtConfig.token, assets, _data) != _LEVERAGE_CALLBACK) {
-            revert LeverageFailed();
-        }
-
-        if (collateralConfig.callBeforeQuote) {
-            ISiloOracle(collateralConfig.maxLtvOracle).beforeQuote(collateralConfig.token);
-        }
-
-        if (debtConfig.callBeforeQuote) {
-            ISiloOracle(debtConfig.maxLtvOracle).beforeQuote(debtConfig.token);
-        }
-
-        if (!SiloSolvencyLib.isBelowMaxLtv(collateralConfig, debtConfig, _borrower, AccrueInterestInMemory.No)) {
-            revert AboveMaxLtv();
-        }
+        (, shares) = _borrow(_assets, 0 /* _shares */, address(_receiver), _borrower, true /* _leverage */);
     }
 
     /// @inheritdoc ISilo
@@ -849,7 +802,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
         }
     }
 
-    function _borrow(uint256 _assets, uint256 _shares, address _receiver, address _borrower)
+    function _borrow(uint256 _assets, uint256 _shares, address _receiver, address _borrower, bool _leverage)
         internal
         virtual
         returns (uint256 assets, uint256 shares)
@@ -873,6 +826,15 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
         );
 
         emit Borrow(msg.sender, _receiver, _borrower, assets, shares);
+
+        if (_leverage) {
+            emit Leverage();
+
+            // allow for deposit reentry only to provide collateral
+            if (_receiver.onLeverage(msg.sender, _borrower, debtConfig.token, assets, _data) != _LEVERAGE_CALLBACK) {
+                revert LeverageFailed();
+            }
+        }
 
         if (collateralConfig.callBeforeQuote) {
             ISiloOracle(collateralConfig.maxLtvOracle).beforeQuote(collateralConfig.token);
