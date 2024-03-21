@@ -148,7 +148,14 @@ library SiloLendingLib {
         }
     }
 
-    /// @dev this method should be called only when there is no debt
+    /// @dev it detects position type for max borrow method, however we need to check two tokens max as well
+    /// and pick the highest value of this two, because if method detects, that there is a way to have one-token
+    /// position, it does not check, if there is also the way to have two-tokens position, if we can borrow more
+    /// using two-tokens position and borrower will use higher amount then allowed for on-token position, two-token
+    /// position iwll be created
+    /// @notice this method should be called only when there is no debt
+    /// @return positionType detected position type
+    /// @return maxAssets max borrow amount for `positionType`
     function detectPositionTypeForMaxBorrow(
         ISiloConfig.ConfigData memory _siloConfig,
         ISiloConfig.ConfigData memory _otherSiloConfig,
@@ -224,12 +231,7 @@ library SiloLendingLib {
         unchecked { sumOfCollateralAssets = borrowerProtectedAssets + borrowerCollateralAssets; }
 
         maxAssets = sumOfCollateralAssets * _siloConfig.maxLtv / _PRECISION_DECIMALS; // rounding down
-        oneTokenLtv = _assetsToBorrow.mulDiv(_PRECISION_DECIMALS, sumOfCollateralAssets, MathUpgradeable.Rounding.Up);
-
-        // here we calculating for borrow, so we using LT, not maxLtv
-        positionType = oneTokenLtv <= _siloConfig.lt
-            ? TypeLib.POSITION_TYPE_ONE_TOKEN
-            : TypeLib.POSITION_TYPE_TWO_TOKENS;
+        positionType = maxAssets != 0 ? TypeLib.POSITION_TYPE_ONE_TOKEN : TypeLib.POSITION_TYPE_TWO_TOKENS;
     }
 
     /// @dev we need to detect only when we have two deposits and no debt
