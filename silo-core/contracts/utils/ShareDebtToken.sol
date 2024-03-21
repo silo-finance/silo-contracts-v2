@@ -55,7 +55,7 @@ contract ShareDebtToken is IShareDebtToken, IERC20R, ShareToken {
         returns (uint256 balance, uint256 positionType)
     {
         balance = _balances[_owner];
-        positionType = balance == 0 ? TypesLip.POSITION_TYPE_UNKNOWN : _positionType[_owner];
+        positionType = balance == 0 ? TypesLib.POSITION_TYPE_UNKNOWN : _positionType[_owner];
     }
 
     /// @inheritdoc IERC20R

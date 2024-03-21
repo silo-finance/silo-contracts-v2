@@ -24,6 +24,7 @@ import {SiloLendingLib} from "./lib/SiloLendingLib.sol";
 import {SiloERC4626Lib} from "./lib/SiloERC4626Lib.sol";
 import {SiloMathLib} from "./lib/SiloMathLib.sol";
 import {LiquidationWithdrawLib} from "./lib/LiquidationWithdrawLib.sol";
+import {TypesLib} from "./lib/TypesLib.sol";
 
 // Keep ERC4626 ordering
 // solhint-disable ordering
@@ -636,7 +637,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
         nonReentrant
         returns (uint256 shares)
     {
-        (, shares) = _borrow(_assets, 0 /* _shares */, address(_receiver), _borrower, true /* _leverage */);
+        (, shares) = _borrow(_assets, 0 /* _shares */, address(_receiver), _borrower, true, _data);
     }
 
     /// @inheritdoc ISilo
@@ -802,7 +803,27 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
         }
     }
 
-    function _borrow(uint256 _assets, uint256 _shares, address _receiver, address _borrower, bool _leverage)
+    function _borrow(
+        uint256 _assets,
+        uint256 _shares,
+        address _receiver,
+        address _borrower
+    )
+        internal
+        virtual
+        returns (uint256 assets, uint256 shares)
+    {
+        return _borrow(_assets, _shares, _receiver, _borrower, false /* _leverage */, "" /* data */);
+    }
+
+    function _borrow(
+        uint256 _assets,
+        uint256 _shares,
+        address _receiver,
+        address _borrower,
+        bool _leverage,
+        bytes memory _data
+    )
         internal
         virtual
         returns (uint256 assets, uint256 shares)

@@ -17,6 +17,7 @@ import {SiloSolvencyLib} from "./SiloSolvencyLib.sol";
 import {SiloERC4626Lib} from "./SiloERC4626Lib.sol"; //circular dependency
 import {SiloStdLib} from "./SiloStdLib.sol";
 import {SiloMathLib} from "./SiloMathLib.sol";
+import {TypesLib} from "./TypesLib.sol";
 
 library PositionTypeLib {
     uint256 internal constant _PRECISION_DECIMALS = 1e18;
@@ -44,10 +45,8 @@ library PositionTypeLib {
     /// @return positionType detected position type
     /// @return maxAssets max borrow amount for `positionType`
     function detectPositionTypeForMaxBorrow(
-        IShareToken _protectedShareToken,
-        IShareToken _collateralShareToken,
-        IShareToken _otherProtectedShareToken,
-        IShareToken _otherCollateralShareToken,
+        ISiloConfig.ConfigData memory _siloConfig,
+        ISiloConfig.ConfigData memory _otherSiloConfig,
         ISilo.AccrueInterestInMemory _accrueInMemory,
         address _borrower
     )
@@ -56,31 +55,27 @@ library PositionTypeLib {
         returns (uint256 positionType, uint256 maxAssets)
     {
         (uint256 positionType, uint256 maxAssets, uint256 sumOfCollateralAssets) = _detectPositionType(
-            _protectedShareToken,
-            _collateralShareToken,
-            _otherProtectedShareToken,
-            _otherCollateralShareToken,
+            _siloConfig,
+            _otherSiloConfig,
             _accrueInMemory,
             _borrower,
             // this is case where we can do "fast borrow", TODO we will require transfer TO silo here!
             1 // TODO we can use max deposit constant here _siloConfig.maxLtv
         );
 
-        if (positionType != TypeLib.POSITION_TYPE_UNKNOWN) {
+        if (positionType != TypesLib.POSITION_TYPE_UNKNOWN) {
             return (positionType, maxAssets);
         }
 
         maxAssets = sumOfCollateralAssets * _siloConfig.maxLtv / _PRECISION_DECIMALS; // rounding down
-        positionType = maxAssets != 0 ? TypeLib.POSITION_TYPE_ONE_TOKEN : TypeLib.POSITION_TYPE_TWO_TOKENS;
+        positionType = maxAssets != 0 ? TypesLib.POSITION_TYPE_ONE_TOKEN : TypesLib.POSITION_TYPE_TWO_TOKENS;
     }
 
     /// @dev we need to detect only when we have two deposits and no debt
     /// @return oneTokenLtv LTV calculated for one-token position, otherwise zero
     function detectPositionTypeForFirstBorrow(
-        IShareToken _protectedShareToken,
-        IShareToken _collateralShareToken,
-        IShareToken _otherProtectedShareToken,
-        IShareToken _otherCollateralShareToken,
+        ISiloConfig.ConfigData memory _siloConfig,
+        ISiloConfig.ConfigData memory _otherSiloConfig,
         ISilo.AccrueInterestInMemory _accrueInMemory,
         address _borrower,
         address _assetsToBorrow
@@ -89,20 +84,18 @@ library PositionTypeLib {
         view
         returns (uint256 positionType, uint256 oneTokenLtv)
     {
-        if (_assetsToBorrow == 0) return (TypeLib.POSITION_TYPE_UNKNOWN, 0);
+        if (_assetsToBorrow == 0) return (TypesLib.POSITION_TYPE_UNKNOWN, 0);
 
         (uint256 positionType, uint256 oneTokenLtv, uint256 sumOfCollateralAssets) = _detectPositionType(
-            _protectedShareToken,
-            _collateralShareToken,
-            _otherProtectedShareToken,
-            _otherCollateralShareToken,
+            _siloConfig,
+            _otherSiloConfig,
             _accrueInMemory,
             _borrower,
             // this is case where we can do "fast borrow", TODO we will require transfer TO silo here!
             _siloConfig.lt
         );
 
-        if (positionType != TypeLib.POSITION_TYPE_UNKNOWN) {
+        if (positionType != TypesLib.POSITION_TYPE_UNKNOWN) {
             return (positionType, oneTokenLtv);
         }
 
@@ -110,18 +103,16 @@ library PositionTypeLib {
 
         // here we calculating for borrow, so we using LT, not maxLtv
         positionType = oneTokenLtv <= _siloConfig.lt
-            ? TypeLib.POSITION_TYPE_ONE_TOKEN
-            : TypeLib.POSITION_TYPE_TWO_TOKENS;
+            ? TypesLib.POSITION_TYPE_ONE_TOKEN
+            : TypesLib.POSITION_TYPE_TWO_TOKENS;
     }
 
     /// @dev we need to detect only when we have two deposits and no debt
     /// @param _valueForCase there is one case, where we need specific value for max borrow or LTV
     /// @return oneTokenLtv LTV calculated for one-token position, otherwise zero
     function _detectPositionType(
-        IShareToken _protectedShareToken,
-        IShareToken _collateralShareToken,
-        IShareToken _otherProtectedShareToken,
-        IShareToken _otherCollateralShareToken,
+        ISiloConfig.ConfigData memory _siloConfig,
+        ISiloConfig.ConfigData memory _otherSiloConfig,
         ISilo.AccrueInterestInMemory _accrueInMemory,
         address _borrower,
         address _assetsToBorrow,
@@ -131,20 +122,23 @@ library PositionTypeLib {
         view
         returns (uint256 positionType, uint256 valueForCase, uint256 sumOfCollateralAssets)
     {
-        uint256 borrowerProtectedShareBalance = _protectedShareToken.balanceOf(_borrower);
-        uint256 borrowerCollateralShareBalance = _collateralShareToken.balanceOf(_borrower);
-        uint256 otherProtectedShareBalance = _otherProtectedShareToken.balanceOf(_borrower);
-        uint256 otherCollateralShareBalance = _otherCollateralShareToken).balanceOf(_borrower);
+        uint256 borrowerProtectedShareBalance = IShareToken(_siloConfig.protectedShareToken).balanceOf(_borrower);
+        uint256 borrowerCollateralShareBalance = IShareToken(_siloConfig.collateralShareToken).balanceOf(_borrower);
+        uint256 otherProtectedShareBalance = IShareToken(_otherSiloConfig.protectedShareToken).balanceOf(_borrower);
+        uint256 otherCollateralShareBalance = IShareToken(_otherSiloConfig.collateralShareToken).balanceOf(_borrower);
 
         if (borrowerProtectedShareBalance == 0 && borrowerCollateralShareBalance == 0) {
             return otherProtectedShareBalance == 0 && otherCollateralShareBalance == 0
-                ? (TypeLib.POSITION_TYPE_ONE_TOKEN, _valueForCase)
-                : (TypeLib.POSITION_TYPE_TWO_TOKENS, 0);
+                ? (TypesLib.POSITION_TYPE_ONE_TOKEN, _valueForCase)
+                : (TypesLib.POSITION_TYPE_TWO_TOKENS, 0);
         } else if (otherProtectedShareBalance == 0 && otherCollateralShareBalance == 0) {
-            return (TypeLib.POSITION_TYPE_TWO_TOKENS, 0);
+            return (TypesLib.POSITION_TYPE_TWO_TOKENS, 0);
         }
 
         // at this point we know we do have collateral in both silos
+
+        uint256 totalCollateralAssets;
+        uint256 totalProtectedAssets;
 
         if (borrowerProtectedShareBalance != 0 && borrowerCollateralShareBalance != 0 && !_accrueInMemory) {
             (totalCollateralAssets, totalProtectedAssets) = ISilo(_siloConfig.silo).getCollateralAndProtectedAssets();

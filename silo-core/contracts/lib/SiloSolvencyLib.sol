@@ -87,7 +87,7 @@ library SiloSolvencyLib {
         uint256 _debtShareBalanceCached,
         uint256 _positionType // must be determined by this point!
     ) internal view returns (LtvData memory ltvData) {
-        if (_positionType == TypesLib.POSITION_TYPE_UNKNOWN) revert UndefinedPosition();
+        if (_positionType == TypesLib.POSITION_TYPE_UNKNOWN) revert ISilo.UndefinedPosition();
 
         if (_positionType == TypesLib.POSITION_TYPE_TWO_TOKENS) {
             // When calculating maxLtv, use maxLtv oracle.

@@ -6,6 +6,7 @@ import {MathUpgradeable} from "openzeppelin-contracts-upgradeable/utils/math/Mat
 import {ISilo} from "../../interfaces/ISilo.sol";
 import {ISiloConfig} from "../../interfaces/ISiloConfig.sol";
 import {SiloSolvencyLib} from "../../lib/SiloSolvencyLib.sol";
+import {TypesLib} from "../../lib/TypesLib.sol";
 import {PartialLiquidationLib} from "./PartialLiquidationLib.sol";
 
 library PartialLiquidationExecLib {

@@ -18,6 +18,7 @@ import {SiloERC4626Lib} from "./SiloERC4626Lib.sol"; //circular dependency
 import {SiloStdLib} from "./SiloStdLib.sol";
 import {SiloMathLib} from "./SiloMathLib.sol";
 import {PositionTypeLib} from "./PositionTypeLib.sol";
+import {TypesLib} from "./TypesLib.sol";
 
 library SiloLendingLib {
     using SafeERC20Upgradeable for IERC20Upgradeable;

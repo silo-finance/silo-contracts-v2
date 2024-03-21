@@ -13,6 +13,7 @@ import {SiloSolvencyLib} from "./SiloSolvencyLib.sol";
 import {SiloMathLib} from "./SiloMathLib.sol";
 import {SiloStdLib} from "./SiloStdLib.sol";
 import {SiloLendingLib} from "./SiloLendingLib.sol";
+import {TypesLib} from "./TypesLib.sol";
 
 // solhint-disable function-max-lines
 

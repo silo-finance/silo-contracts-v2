@@ -8,6 +8,7 @@ import {IPartialLiquidation} from "../interfaces/IPartialLiquidation.sol";
 import {ISiloOracle} from "../interfaces/ISiloOracle.sol";
 import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
 
+import {TypesLib} from "../lib/TypesLib.sol";
 import {PartialLiquidationExecLib} from "./lib/PartialLiquidationExecLib.sol";
 
 

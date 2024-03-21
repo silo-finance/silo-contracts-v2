@@ -10,6 +10,7 @@ import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
 import {SiloSolvencyLib} from "./SiloSolvencyLib.sol";
 import {SiloLendingLib} from "./SiloLendingLib.sol";
 import {SiloERC4626Lib} from "./SiloERC4626Lib.sol";
+import {TypesLib} from "./TypesLib.sol";
 
 library SiloLensLib {
     function borrowPossible(ISilo _silo, address _borrower) internal view returns (bool possible) {
