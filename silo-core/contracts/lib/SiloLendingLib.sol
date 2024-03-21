@@ -108,9 +108,12 @@ library SiloLendingLib {
             return (0, 0);
         }
 
-        // if initialPositionUnknown we have two configs (current, other), so:
-        // - if detected position is one token: both configs will be current
-        // - if detected is two tokens, then we need to switch, because current is debt
+        if (initialPositionUnknown) {
+            (
+                _collateralConfig, _debtConfig
+            ) = PositionTypeLib.adjustConfigsAfterPositionDiscovery(_collateralConfig, _debtConfig);
+        }
+
         SiloSolvencyLib.LtvData memory ltvData = SiloSolvencyLib.getAssetsDataForLtvCalculations(
             _collateralConfig,
             _debtConfig,
@@ -143,6 +146,14 @@ library SiloLendingLib {
             _totalDebtShares
         );
 
+        if (assets < oneTokenMaxAssets) {
+            assets = oneTokenMaxAssets;
+
+            shares = SiloMathLib.convertToShares(
+                assets, _totalDebtAssets, _totalDebtShares, MathUpgradeable.Rounding.Down, ISilo.AssetType.Debt
+            );
+        }
+
         uint256 liquidityWithInterest = getLiquidity(_siloConfig);
 
         if (assets > liquidityWithInterest) {
@@ -163,7 +174,7 @@ library SiloLendingLib {
             unchecked { assets--; }
         }
     }
-    
+
     function getLiquidity(ISiloConfig _siloConfig) internal view returns (uint256 liquidity) {
         ISiloConfig.ConfigData memory config = _siloConfig.getConfig(address(this));
         (liquidity,,) = getLiquidityAndAssetsWithInterest(config);

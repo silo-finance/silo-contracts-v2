@@ -21,12 +21,18 @@ import {SiloMathLib} from "./SiloMathLib.sol";
 library PositionTypeLib {
     uint256 internal constant _PRECISION_DECIMALS = 1e18;
 
-    function adjustConfigs(
-        ISiloConfig.ConfigData memory _collateralConfig,
-        ISiloConfig.ConfigData memory _debtConfig,
+    function adjustConfigsAfterPositionDiscovery(
+        ISiloConfig.ConfigData memory _currentConfig,
+        ISiloConfig.ConfigData memory _otherConfig,
         uint256 _positionType
-    ) internal view {
-        // TBD
+    )
+        internal
+        view
+        returns (ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig)
+    {
+        return _positionType == TypesLib.POSITION_TYPE_ONE_TOKEN
+            ? (_currentConfig, _currentConfig)
+            : (_otherConfig, _currentConfig);
     }
 
     /// @dev it detects position type for max borrow method, however we need to check two tokens max as well
