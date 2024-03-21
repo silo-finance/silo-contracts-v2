@@ -178,7 +178,7 @@ library SiloLendingLib {
                 return (TypeLib.POSITION_TYPE_ONE_TOKEN, maxAssets);
             } else return (TypeLib.POSITION_TYPE_TWO_TOKENS, 0);
         } else if (otherProtectedShareBalance == 0 && otherCollateralShareBalance == 0) {
-            return (TypeLib.POSITION_TYPE_ONE_TOKEN, 0);  // TODO calulate LTV
+            return (TypeLib.POSITION_TYPE_TWO_TOKENS, 0);  // calulate max in standard way
         }
 
         // at this point we know we do have collateral in both silos, we need to calculate max borrow
@@ -235,6 +235,7 @@ library SiloLendingLib {
     }
 
     /// @dev we need to detect only when we have two deposits and no debt
+    /// @return oneTokenLtv LTV calculated for one-token position, otherwise zero
     function detectPositionTypeForFirstBorrow(
         ISiloConfig.ConfigData memory _siloConfig,
         ISiloConfig.ConfigData memory _otherSiloConfig,
@@ -254,10 +255,10 @@ library SiloLendingLib {
         if (borrowerProtectedShareBalance == 0 && borrowerCollateralShareBalance == 0) {
             return otherProtectedShareBalance == 0 && otherCollateralShareBalance == 0
                 // this is case where we can do "fast borrow", otherwise we need to disalow
-                ? (TypeLib.POSITION_TYPE_ONE_TOKEN, 0)  // TODO calulate LTV
+                ? (TypeLib.POSITION_TYPE_ONE_TOKEN, _siloConfig.lt)  // TODO we will require transfer TO silo here!
                 : (TypeLib.POSITION_TYPE_TWO_TOKENS, 0);
         } else if (otherProtectedShareBalance == 0 && otherCollateralShareBalance == 0) {
-            return (TypeLib.POSITION_TYPE_ONE_TOKEN, 0);  // TODO calulate LTV
+            return (TypeLib.POSITION_TYPE_TWO_TOKENS, 0);  // calculate LTV in standard way
         }
 
         if (_assetsToBorrow == 0) return TypeLib.POSITION_TYPE_ONE_TOKEN;
