@@ -20,3 +20,4 @@ definition repaySharesSig() returns uint32 = sig:repayShares(uint256,address).se
 definition borrowSig() returns uint32 = sig:borrow(uint256,address,address).selector;
 definition borrowSharesSig() returns uint32 = sig:borrowShares(uint256,address,address).selector;
 definition leverageSig() returns uint32 = sig:leverage(uint256,address,address,bytes).selector;
+definition withdrawCollateralToLiquidatorSig() returns uint32 = sig:withdrawCollateralsToLiquidator(uint256,uint256,address,address,bool).selector;

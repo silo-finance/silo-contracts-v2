@@ -39,6 +39,7 @@ function fnAllowedToDecreaseShareProtectedTotalSupply(method f) returns bool {
     return f.selector == withdrawWithTypeSig() ||
         f.selector == redeemWithTypeSig() ||
         f.selector == liquidationCallSig() ||
+        f.selector == withdrawCollateralToLiquidatorSig() ||
         f.selector == transitionCollateralSig();
 }
 
