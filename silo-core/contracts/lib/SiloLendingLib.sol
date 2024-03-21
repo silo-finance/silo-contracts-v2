@@ -91,29 +91,17 @@ library SiloLendingLib {
     {
         uint256 oneTokenMaxAssets;
 
-        { // too deep
-            bool initialPositionUnknown;
+        if (_positionType == TypesLib.POSITION_TYPE_UNKNOWN) {
+            (_positionType, oneTokenMaxAssets) = PositionTypeLib.detectPositionTypeForMaxBorrow(
+                _collateralConfig,
+                _debtConfig,
+                ISilo.AccrueInterestInMemory.Yes,
+                _borrower
+            );
+        }
 
-            if (_positionType == TypesLib.POSITION_TYPE_UNKNOWN) {
-                initialPositionUnknown = true;
-
-                (_positionType, oneTokenMaxAssets) = PositionTypeLib.detectPositionTypeForMaxBorrow(
-                    _collateralConfig,
-                    _debtConfig,
-                    ISilo.AccrueInterestInMemory.Yes,
-                    _borrower
-                );
-            }
-
-            if (!borrowPossible(_positionType)) {
-                return (0, 0);
-            }
-
-            if (initialPositionUnknown) {
-                (
-                    _collateralConfig, _debtConfig
-                ) = PositionTypeLib.adjustConfigsAfterPositionDiscovery(_collateralConfig, _debtConfig, _positionType);
-            }
+        if (!borrowPossible(_positionType)) {
+            return (0, 0);
         }
 
         { // too deep
@@ -126,7 +114,7 @@ library SiloLendingLib {
                 0, /* no cache */
                 _positionType
             );
-            
+
             (
                 uint256 sumOfBorrowerCollateralValue, uint256 borrowerDebtValue
             ) = SiloSolvencyLib.getPositionValues(ltvData, _collateralConfig.token, _debtConfig.token);
@@ -161,19 +149,21 @@ library SiloLendingLib {
             );
         }
 
-        uint256 liquidityWithInterest = getLiquidity(_siloConfig);
+        {
+            uint256 liquidityWithInterest = getLiquidity(_siloConfig);
 
-        if (assets > liquidityWithInterest) {
-            assets = liquidityWithInterest;
+            if (assets > liquidityWithInterest) {
+                assets = liquidityWithInterest;
 
-            // rounding must follow same flow as in `maxBorrowValueToAssetsAndShares()`
-            shares = SiloMathLib.convertToShares(
-                assets,
-                _totalDebtAssets,
-                _totalDebtShares,
-                MathUpgradeable.Rounding.Down,
-                ISilo.AssetType.Debt
-            );
+                // rounding must follow same flow as in `maxBorrowValueToAssetsAndShares()`
+                shares = SiloMathLib.convertToShares(
+                    assets,
+                    _totalDebtAssets,
+                    _totalDebtShares,
+                    MathUpgradeable.Rounding.Down,
+                    ISilo.AssetType.Debt
+                );
+            }
         }
 
         if (assets != 0) {

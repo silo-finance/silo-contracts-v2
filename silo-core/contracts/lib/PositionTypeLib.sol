@@ -71,6 +71,10 @@ library PositionTypeLib {
 
         maxAssets = sumOfCollateralAssets * _siloConfig.maxLtv / _PRECISION_DECIMALS; // rounding down
         positionType = maxAssets != 0 ? TypesLib.POSITION_TYPE_ONE_TOKEN : TypesLib.POSITION_TYPE_TWO_TOKENS;
+
+        (
+            _siloConfig, _otherSiloConfig
+        ) = PositionTypeLib.adjustConfigsAfterPositionDiscovery(_siloConfig, _otherSiloConfig, positionType);
     }
 
     /// @dev we need to detect only when we have two deposits and no debt
