@@ -159,7 +159,7 @@ library SiloSolvencyLib {
     }
 
     /// @dev we need to detect only when we have two deposits and no debt
-    function detectTypeForLtv(
+    function detectPositionTypeForFirstBorrow(
         ISiloConfig.ConfigData memory _siloConfig,
         ISiloConfig.ConfigData memory _otherSiloConfig,
         ISilo.AccrueInterestInMemory _accrueInMemory,
@@ -240,7 +240,7 @@ library SiloSolvencyLib {
 
         oneTokenLtv = _assetsToBorrow.mulDiv(_PRECISION_DECIMALS, sumOfCollateralAssets, MathUpgradeable.Rounding.Up);
 
-        //  TODO should I use maxLtv??
+        // here we calculating for borrow, so we using LT, not maxLtv
         positionType = oneTokenLtv <= _siloConfig.lt
             ? TypeLib.POSITION_TYPE_ONE_TOKEN
             : TypeLib.POSITION_TYPE_TWO_TOKENS;

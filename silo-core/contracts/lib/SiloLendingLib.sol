@@ -80,19 +80,14 @@ library SiloLendingLib {
         address _borrower,
         uint256 _totalDebtAssets,
         uint256 _totalDebtShares,
-        ISiloConfig _siloConfig
+        ISiloConfig _siloConfig,
+        uint256 _positionType
     )
         internal
         view
         returns (uint256 assets, uint256 shares)
     {
-        (bool possible, uint256 debtShareBalance, uint256 positionType) = borrowPossible(
-            _debtConfig.debtShareToken,
-            _collateralConfig.debtShareToken,
-            _borrower
-        );
-
-        if (!possible) {
+        if (!borrowPossible(_positionType)) {
             return (0, 0);
         }
 
@@ -102,8 +97,8 @@ library SiloLendingLib {
             _borrower,
             ISilo.OracleType.MaxLtv,
             ISilo.AccrueInterestInMemory.Yes,
-            debtShareBalance, /* cached balance available when possible=true */
-            positionType,
+            0, /* no cache */
+            _positionType,
             0 /* assets to borrow */
         );
 
@@ -175,21 +170,10 @@ library SiloLendingLib {
     }
 
     /// @notice Checks if a borrower can borrow
-    /// @param _currentSiloDebtShareToken Address of the debt share token of current silo
-    /// @param _otherSiloDebtShareToken Address of the debt share token of other silo
-    /// @param _borrower The address of the borrower being checked
+    /// @param _positionType type of position in current silo
     /// @return possible `true` if the borrower can borrow, `false` otherwise
-    /// @return positionType will be set ONLY when `possible` is TRUE
-    function borrowPossible(
-        IShareDebtToken _currentSiloDebtShareToken,
-        IShareToken _otherSiloDebtShareToken,
-        address _borrower
-    ) internal view returns (bool possible, uint256 debtShareBalance, uint256 positionType) {
-        possible = _otherSiloDebtShareToken.balanceOf(_borrower) == 0;
-
-        if (possible) {
-            (debtShareBalance, positionType) = _currentSiloDebtShareToken.getBalanceAndPosition(_borrower);
-        }
+    function borrowPossible(uint256 _positionType) internal view returns (bool possible) {
+        possible = _positionType != TypesLib.POSITION_TYPE_DEPOSIT;
     }
 
     /// @notice Allows repaying borrowed assets either partially or in full

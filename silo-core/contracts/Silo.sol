@@ -1016,15 +1016,12 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
         uint256 _shares,
         address _receiver,
         address _borrower,
-        address _spender
+        address _spender,
+        uint256 _positionType
     ) internal virtual returns (uint256 borrowedAssets, uint256 borrowedShares) {
         if (_assets == 0 && _shares == 0) revert ISilo.ZeroAssets();
 
-        (
-            bool possible,,
-        ) = SiloLendingLib.borrowPossible(_configData.debtShareToken, _otherSiloDebtShareToken, _borrower);
-
-        if (!possible) revert ISilo.BorrowNotPossible();
+        if (!SiloLendingLib.borrowPossible(_positionType)) revert ISilo.BorrowNotPossible();
 
         return SiloLendingLib.borrow(
             _configData.debtShareToken,
