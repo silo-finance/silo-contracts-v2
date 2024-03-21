@@ -36,9 +36,8 @@ function fnAllowedToIncreaseShareDebtTotalSupply(method f) returns bool {
 }
 
 function fnAllowedToDecreaseShareProtectedTotalSupply(method f) returns bool {
-    return f.selector == withdrawSig() ||
-        f.selector == withdrawWithTypeSig() ||
-        f.selector == redeemSig() ||
+    return f.selector == withdrawWithTypeSig() ||
+        f.selector == redeemWithTypeSig() ||
         f.selector == liquidationCallSig() ||
         f.selector == transitionCollateralSig();
 }
@@ -56,7 +55,7 @@ function fnAllowedToIncreaseShareCollateralTotalSupply(method f) returns bool {
 }
 
 function fnAllowedToDecreaseShareCollateralTotalSupply(method f) returns bool {
-    return fnAllowedToDecreaseShareProtectedTotalSupply(f);
+    return fnAllowedToDecreaseShareProtectedTotalSupply(f) || f.selector == redeemSig() || f.selector == withdrawSig();
 }
 
 function fnAllowedToChangeCollateralBalanceWithoutTotalAssets(method f) returns bool {
