@@ -74,6 +74,7 @@ library PositionTypeLib {
     }
 
     /// @dev we need to detect only when we have two deposits and no debt
+    /// @return positionType detected type
     /// @return oneTokenLtv LTV calculated for one-token position, otherwise zero
     function detectPositionTypeForFirstBorrow(
         ISiloConfig.ConfigData memory _siloConfig,
@@ -111,13 +112,14 @@ library PositionTypeLib {
 
     /// @dev we need to detect only when we have two deposits and no debt
     /// @param _valueForCase there is one case, where we need specific value for max borrow or LTV
-    /// @return oneTokenLtv LTV calculated for one-token position, otherwise zero
+    /// @return positionType detected type
+    /// @return valueForCase if special case is reached it will return `_valueForCase`
+    /// @return sumOfCollateralAssets sum of all deposits
     function _detectPositionType(
         ISiloConfig.ConfigData memory _siloConfig,
         ISiloConfig.ConfigData memory _otherSiloConfig,
         ISilo.AccrueInterestInMemory _accrueInMemory,
         address _borrower,
-        address _assetsToBorrow,
         uint256 _valueForCase
     )
         private
@@ -129,12 +131,13 @@ library PositionTypeLib {
         uint256 otherProtectedShareBalance = IShareToken(_otherSiloConfig.protectedShareToken).balanceOf(_borrower);
         uint256 otherCollateralShareBalance = IShareToken(_otherSiloConfig.collateralShareToken).balanceOf(_borrower);
 
+        // TODO sumOfCollateralAssets is ZERO here, is it ok?
         if (borrowerProtectedShareBalance == 0 && borrowerCollateralShareBalance == 0) {
             return otherProtectedShareBalance == 0 && otherCollateralShareBalance == 0
-                ? (TypesLib.POSITION_TYPE_ONE_TOKEN, _valueForCase)
-                : (TypesLib.POSITION_TYPE_TWO_TOKENS, 0);
+                ? (TypesLib.POSITION_TYPE_ONE_TOKEN, _valueForCase, 0)
+                : (TypesLib.POSITION_TYPE_TWO_TOKENS, 0, 0);
         } else if (otherProtectedShareBalance == 0 && otherCollateralShareBalance == 0) {
-            return (TypesLib.POSITION_TYPE_TWO_TOKENS, 0);
+            return (TypesLib.POSITION_TYPE_TWO_TOKENS, 0, 0);
         }
 
         // at this point we know we do have collateral in both silos
@@ -142,11 +145,14 @@ library PositionTypeLib {
         uint256 totalCollateralAssets;
         uint256 totalProtectedAssets;
 
-        if (borrowerProtectedShareBalance != 0 && borrowerCollateralShareBalance != 0 && !_accrueInMemory) {
+        if (
+            borrowerProtectedShareBalance != 0 && borrowerCollateralShareBalance != 0 &&
+            _accrueInMemory == ISilo.AccrueInterestInMemory.No
+        ) {
             (totalCollateralAssets, totalProtectedAssets) = ISilo(_siloConfig.silo).getCollateralAndProtectedAssets();
         } else if (borrowerProtectedShareBalance != 0) {
             totalProtectedAssets = ISilo(_siloConfig.silo).total(ISilo.AssetType.Protected);
-        } else if (borrowerCollateralShareBalance != 0 && !_accrueInMemory) {
+        } else if (borrowerCollateralShareBalance != 0 && _accrueInMemory == ISilo.AccrueInterestInMemory.No) {
             totalCollateralAssets = ISilo(_siloConfig.silo).getCollateralAssets();
         }
 

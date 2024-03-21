@@ -64,7 +64,8 @@ contract PartialLiquidation is IPartialLiquidation, ReentrancyGuardUpgradeable {
             _borrower,
             _debtToCover,
             selfLiquidation ? 0 : collateralConfig.liquidationFee,
-            selfLiquidation
+            selfLiquidation,
+            positionType
         );
 
         if (repayDebtAssets == 0) revert NoDebtToCover();

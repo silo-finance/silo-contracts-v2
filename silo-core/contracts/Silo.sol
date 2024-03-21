@@ -82,13 +82,15 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
     /// @inheritdoc ISilo
     function isSolvent(address _borrower) external view virtual returns (bool) {
         (
-            ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig
-        ) = config.getConfigs(this, _borrower, TypesLib.CONFIG_FOR_BORROW); // TODO always ofr borrow?
+            ISiloConfig.ConfigData memory collateralConfig,
+            ISiloConfig.ConfigData memory debtConfig,
+            uint256 positionType
+        ) = config.getConfigs(address(this), _borrower, TypesLib.CONFIG_FOR_BORROW); // TODO always ofr borrow?
 
         uint256 debtShareBalance = IShareToken(debtConfig.debtShareToken).balanceOf(_borrower);
 
         return SiloSolvencyLib.isSolvent(
-            collateralConfig, debtConfig, _borrower, AccrueInterestInMemory.Yes, debtShareBalance
+            collateralConfig, debtConfig, _borrower, AccrueInterestInMemory.Yes, debtShareBalance, positionType
         );
     }
 
@@ -737,6 +739,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
         (
             ISiloConfig.ConfigData memory collateralConfig,
             ISiloConfig.ConfigData memory debtConfig,
+            uint256 positionType
         ) = config.getConfigs(address(this), _owner, TypesLib.CONFIG_FOR_WITHDRAW);
 
         _callAccrueInterestForAsset(
@@ -797,7 +800,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
 
         // `_params.owner` must be solvent
         if (!SiloSolvencyLib.isSolvent(
-            collateralConfig, debtConfig, _owner, AccrueInterestInMemory.No, debtShareBalance
+            collateralConfig, debtConfig, _owner, AccrueInterestInMemory.No, debtShareBalance, positionType
         )) {
             revert NotSolvent();
         }
@@ -843,7 +846,14 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
         (
             assets, shares
         ) = _callBorrow(
-            debtConfig, collateralConfig.debtShareToken, _assets, _shares, _receiver, _borrower, msg.sender
+            debtConfig,
+            collateralConfig.debtShareToken,
+            _assets,
+            _shares,
+            _receiver,
+            _borrower,
+            msg.sender,
+            positionType
         );
 
         emit Borrow(msg.sender, _receiver, _borrower, assets, shares);
@@ -851,10 +861,11 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
         if (_leverage) {
             emit Leverage();
 
+            bytes32 result = ILeverageBorrower(_receiver)
+                .onLeverage(msg.sender, _borrower, debtConfig.token, assets, _data);
+
             // allow for deposit reentry only to provide collateral
-            if (ILeverageBorrower(_receiver).onLeverage(msg.sender, _borrower, debtConfig.token, assets, _data) != _LEVERAGE_CALLBACK) {
-                revert LeverageFailed();
-            }
+            if (result != _LEVERAGE_CALLBACK) revert LeverageFailed();
         }
 
         if (collateralConfig.callBeforeQuote) {
@@ -865,7 +876,9 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
             ISiloOracle(debtConfig.maxLtvOracle).beforeQuote(debtConfig.token);
         }
 
-        if (!SiloSolvencyLib.isBelowMaxLtv(collateralConfig, debtConfig, _borrower, AccrueInterestInMemory.No)) {
+        if (!SiloSolvencyLib.isBelowMaxLtv(
+            collateralConfig, debtConfig, _borrower, AccrueInterestInMemory.No, positionType
+        )) {
             revert AboveMaxLtv();
         }
     }
@@ -954,7 +967,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
             uint256 positionType
         ) = cachedConfig.getConfigs(address(this), _borrower, TypesLib.CONFIG_FOR_BORROW);
 
-        if (positionType == TypesLib.POSITION_TYPE_DEPOSIT) return 0;
+        if (positionType == TypesLib.POSITION_TYPE_DEPOSIT) return (0, 0);
 
         (uint256 totalDebtAssets, uint256 totalDebtShares) =
             SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(debtConfig, AssetType.Debt);

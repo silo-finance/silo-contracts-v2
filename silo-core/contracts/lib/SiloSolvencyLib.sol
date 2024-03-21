@@ -35,12 +35,19 @@ library SiloSolvencyLib {
         ISiloConfig.ConfigData memory _debtConfig,
         address _borrower,
         ISilo.AccrueInterestInMemory _accrueInMemory,
-        uint256 debtShareBalance
+        uint256 debtShareBalance,
+        uint256 _positionType
     ) internal view returns (bool) {
         if (debtShareBalance == 0) return true;
 
         uint256 ltv = getLtv(
-            _collateralConfig, _debtConfig, _borrower, ISilo.OracleType.Solvency, _accrueInMemory, debtShareBalance
+            _collateralConfig,
+            _debtConfig,
+            _borrower,
+            ISilo.OracleType.Solvency,
+            _accrueInMemory,
+            debtShareBalance,
+            _positionType
         );
 
         return ltv <= _collateralConfig.lt;
@@ -56,13 +63,20 @@ library SiloSolvencyLib {
         ISiloConfig.ConfigData memory _collateralConfig,
         ISiloConfig.ConfigData memory _debtConfig,
         address _borrower,
-        ISilo.AccrueInterestInMemory _accrueInMemory
+        ISilo.AccrueInterestInMemory _accrueInMemory,
+        uint256 _positionType
     ) internal view returns (bool) {
         uint256 debtShareBalance = IShareToken(_debtConfig.debtShareToken).balanceOf(_borrower);
         if (debtShareBalance == 0) return true;
 
         uint256 ltv = getLtv(
-            _collateralConfig, _debtConfig, _borrower, ISilo.OracleType.MaxLtv, _accrueInMemory, debtShareBalance
+            _collateralConfig,
+            _debtConfig,
+            _borrower,
+            ISilo.OracleType.MaxLtv,
+            _accrueInMemory,
+            debtShareBalance,
+            _positionType
         );
 
         return ltv <= _collateralConfig.maxLtv;
@@ -157,12 +171,13 @@ library SiloSolvencyLib {
         address _borrower,
         ISilo.OracleType _oracleType,
         ISilo.AccrueInterestInMemory _accrueInMemory,
-        uint256 _debtShareBalance
+        uint256 _debtShareBalance,
+        uint256 _positionType
     ) internal view returns (uint256 ltvInDp) {
         if (_debtShareBalance == 0) return 0;
 
         LtvData memory ltvData = getAssetsDataForLtvCalculations(
-            _collateralConfig, _debtConfig, _borrower, _oracleType, _accrueInMemory, _debtShareBalance
+            _collateralConfig, _debtConfig, _borrower, _oracleType, _accrueInMemory, _debtShareBalance, _positionType
         );
 
         if (ltvData.borrowerDebtAssets == 0) return 0;

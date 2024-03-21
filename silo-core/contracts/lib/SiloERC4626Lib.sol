@@ -94,10 +94,9 @@ library SiloERC4626Lib {
 
         { // stack too deep
             uint256 debt = IShareToken(debtConfig.debtShareToken).balanceOf(_owner);
-            bool protected = _assetType == ISilo.AssetType.Protected;
 
             if (debt == 0) {
-                shares = protected
+                shares = _assetType == ISilo.AssetType.Protected
                     ? IShareToken(collateralConfig.protectedShareToken).balanceOf(_owner)
                     : IShareToken(collateralConfig.collateralShareToken).balanceOf(_owner);
 
@@ -109,7 +108,7 @@ library SiloERC4626Lib {
                     _assetType
                 );
 
-                if (protected || assets <= liquidity) return (assets, shares);
+                if (_assetType == ISilo.AssetType.Protected || assets <= liquidity) return (assets, shares);
 
                 assets = liquidity;
 
@@ -128,7 +127,13 @@ library SiloERC4626Lib {
             }
 
             ltvData = SiloSolvencyLib.getAssetsDataForLtvCalculations(
-                collateralConfig, debtConfig, _owner, ISilo.OracleType.Solvency, ISilo.AccrueInterestInMemory.Yes, debt
+                collateralConfig,
+                debtConfig,
+                _owner,
+                ISilo.OracleType.Solvency,
+                ISilo.AccrueInterestInMemory.Yes,
+                debt,
+                positionType
             );
         }
 

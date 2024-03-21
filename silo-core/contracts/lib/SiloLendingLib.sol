@@ -90,62 +90,68 @@ library SiloLendingLib {
         returns (uint256 assets, uint256 shares)
     {
         uint256 oneTokenMaxAssets;
-        bool initialPositionUnknown;
 
-        if (_positionType == TypesLib.POSITION_TYPE_UNKNOWN) {
-            initialPositionUnknown = true;
+        { // too deep
+            bool initialPositionUnknown;
 
-            (_positionType, oneTokenMaxAssets) = PositionTypeLib.detectPositionTypeForMaxBorrow(
-                IShareToken(_collateralConfig.protectedShareToken),
-                IShareToken(_collateralConfig.collateralShareToken),
-                IShareToken(_debtConfig.protectedShareToken),
-                IShareToken(_debtConfig.collateralShareToken),
+            if (_positionType == TypesLib.POSITION_TYPE_UNKNOWN) {
+                initialPositionUnknown = true;
+
+                (_positionType, oneTokenMaxAssets) = PositionTypeLib.detectPositionTypeForMaxBorrow(
+                    _collateralConfig,
+                    _debtConfig,
+                    ISilo.AccrueInterestInMemory.Yes,
+                    _borrower
+                );
+            }
+
+            if (!borrowPossible(_positionType)) {
+                return (0, 0);
+            }
+
+            if (initialPositionUnknown) {
+                (
+                    _collateralConfig, _debtConfig
+                ) = PositionTypeLib.adjustConfigsAfterPositionDiscovery(_collateralConfig, _debtConfig, _positionType);
+            }
+        }
+
+        { // too deep
+            SiloSolvencyLib.LtvData memory ltvData = SiloSolvencyLib.getAssetsDataForLtvCalculations(
+                _collateralConfig,
+                _debtConfig,
+                _borrower,
+                ISilo.OracleType.MaxLtv,
                 ISilo.AccrueInterestInMemory.Yes,
-                _borrower
+                0, /* no cache */
+                _positionType
+            );
+            
+            (
+                uint256 sumOfBorrowerCollateralValue, uint256 borrowerDebtValue
+            ) = SiloSolvencyLib.getPositionValues(ltvData, _collateralConfig.token, _debtConfig.token);
+
+//            uint256 maxBorrowValue = SiloMathLib.calculateMaxBorrowValue(
+//                _collateralConfig.maxLtv,
+//                sumOfBorrowerCollateralValue,
+//                borrowerDebtValue
+//            );
+
+            (assets, shares) = maxBorrowValueToAssetsAndShares(
+                SiloMathLib.calculateMaxBorrowValue(
+                    _collateralConfig.maxLtv,
+                    sumOfBorrowerCollateralValue,
+                    borrowerDebtValue
+                ),
+                borrowerDebtValue,
+                _borrower,
+                _debtConfig.token,
+                _debtConfig.debtShareToken,
+                ltvData.debtOracle,
+                _totalDebtAssets,
+                _totalDebtShares
             );
         }
-
-        if (!borrowPossible(_positionType)) {
-            return (0, 0);
-        }
-
-        if (initialPositionUnknown) {
-            (
-                _collateralConfig, _debtConfig
-            ) = PositionTypeLib.adjustConfigsAfterPositionDiscovery(_collateralConfig, _debtConfig);
-        }
-
-        SiloSolvencyLib.LtvData memory ltvData = SiloSolvencyLib.getAssetsDataForLtvCalculations(
-            _collateralConfig,
-            _debtConfig,
-            _borrower,
-            ISilo.OracleType.MaxLtv,
-            ISilo.AccrueInterestInMemory.Yes,
-            0, /* no cache */
-            _positionType,
-            0 /* assets to borrow */
-        );
-
-        (
-            uint256 sumOfBorrowerCollateralValue, uint256 borrowerDebtValue
-        ) = SiloSolvencyLib.getPositionValues(ltvData, _collateralConfig.token, _debtConfig.token);
-
-        uint256 maxBorrowValue = SiloMathLib.calculateMaxBorrowValue(
-            _collateralConfig.maxLtv,
-            sumOfBorrowerCollateralValue,
-            borrowerDebtValue
-        );
-
-        (assets, shares) = maxBorrowValueToAssetsAndShares(
-            maxBorrowValue,
-            borrowerDebtValue,
-            _borrower,
-            _debtConfig.token,
-            _debtConfig.debtShareToken,
-            ltvData.debtOracle,
-            _totalDebtAssets,
-            _totalDebtShares
-        );
 
         if (assets < oneTokenMaxAssets) {
             assets = oneTokenMaxAssets;

@@ -17,7 +17,8 @@ library PartialLiquidationExecLib {
         address _user,
         uint256 _debtToCover,
         uint256 _liquidationFee,
-        bool _selfLiquidation
+        bool _selfLiquidation,
+        uint256 _positionType
     )
         internal
         view
@@ -29,7 +30,8 @@ library PartialLiquidationExecLib {
             _user,
             ISilo.OracleType.Solvency,
             ISilo.AccrueInterestInMemory.No,
-            0 /* no cached balance */
+            0 /* no cached balance */,
+            _positionType
         );
 
         uint256 borrowerCollateralToLiquidate;
@@ -81,7 +83,8 @@ library PartialLiquidationExecLib {
             _borrower,
             ISilo.OracleType.Solvency,
             ISilo.AccrueInterestInMemory.Yes,
-            0 /* no cached balance */
+            0 /* no cached balance */,
+            positionType
         );
 
         if (ltvData.borrowerDebtAssets == 0) return (0, 0);
