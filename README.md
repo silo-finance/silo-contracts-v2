@@ -135,9 +135,13 @@ genhtml -o coverage/silo-oracles/ lcov.info
 - to assets: Up
 - to shares: Down
 
-### Borrow (including preview and max)
+### Borrow (including preview)
 - to assets: Down
 - to shares: Up
+
+### MaxBorrow
+- to assets: Down
+- to shares: Down
 
 ### Withdraw
 - to shares: Up
