@@ -16,6 +16,7 @@ interface IVeSilo {
     // solhint-disable func-name-mixedcase
     function checkpoint() external;
     function create_lock(uint256 _value, uint256 _timestamp) external;
+    function increase_unlock_time(uint256 _timestamp) external;
     function commit_smart_wallet_checker(address _addr) external;
     function apply_smart_wallet_checker() external;
     function point_history(uint _epoch) external view returns (Point memory);
