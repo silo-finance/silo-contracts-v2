@@ -9,22 +9,27 @@ import "./Silo0ShareTokensMethods.spec";
 import "./Silo1ShareTokensMethods.spec";
 
 function completeSiloSetupEnv(env e) {
-    require e.msg.sender != shareProtectedCollateralToken0;
-    require e.msg.sender != shareDebtToken0;
-    require e.msg.sender != shareCollateralToken0;
-    require e.msg.sender != shareProtectedCollateralToken1;
-    require e.msg.sender != shareDebtToken1;
-    require e.msg.sender != shareCollateralToken1;
-    require e.msg.sender != siloConfig;
-    require e.msg.sender != silo0;
-    //require e.msg.sender != silo1;    // -> Causes vacuity for silo.withdrawCollateralsToLiquidator()
-    require e.msg.sender != token0;
-    require e.msg.sender != token1;
-
+    
+    completeSiloSetupAddress(e.msg.sender);
     // we can not have block.timestamp less than interestRateTimestamp
     uint256 blockTimestamp = require_uint64(e.block.timestamp);
     require blockTimestamp >= silo0.getSiloDataInterestRateTimestamp(e);
     require blockTimestamp >= silo1.getSiloDataInterestRateTimestamp(e);
+}
+
+function completeSiloSetupAddress(address sender)
+{
+    require sender != shareCollateralToken0;
+    require sender != shareDebtToken0;
+    require sender != shareProtectedCollateralToken0;
+    require sender != shareProtectedCollateralToken1;
+    require sender != shareDebtToken1;
+    require sender != shareCollateralToken1;
+    require sender != siloConfig;
+    require sender != silo0;
+    //require sender != silo1;    // -> Causes vacuity for silo.withdrawCollateralsToLiquidator()
+    require sender != token0;
+    require sender != token1;
 }
 
 function totalSupplyMoreThanBalance(address receiver)
@@ -159,8 +164,17 @@ definition canDecreaseProtectedAssets(method f) returns bool =
 
 definition canIncreaseTotalCollateral(method f) returns bool = false;
 
-definition canDecreaseTotalCollateral(method f) returns bool = false;
+definition canDecreaseTotalCollateral(method f) returns bool =
+    f.selector == sig:redeem(uint256,address,address,ISilo.AssetType).selector ||
+    f.selector == sig:withdraw(uint256,address,address,ISilo.AssetType).selector ||
+    f.selector == sig:liquidationCall(address,address,address,uint256,bool).selector;
 
-definition canIncreaseTotalDebt(method f) returns bool = false;
+definition canIncreaseTotalDebt(method f) returns bool =
+    f.selector == sig:borrow(uint256,address,address).selector ||
+    f.selector == sig:borrowShares(uint256,address,address).selector ||
+    f.selector == sig:leverage(uint256,address,address,bytes).selector;
 
-definition canDecreaseTotalDebt(method f) returns bool = false;
+definition canDecreaseTotalDebt(method f) returns bool =
+    f.selector == sig:liquidationCall(address,address,address,uint256,bool).selector ||    
+    f.selector == sig:repay(uint256,address).selector ||
+    f.selector == sig:repayShares(uint256,address).selector;
