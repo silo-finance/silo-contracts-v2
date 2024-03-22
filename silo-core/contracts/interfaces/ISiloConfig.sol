@@ -152,9 +152,10 @@ interface ISiloConfig {
     /// @dev This function reverts for incorrect silo address input
     /// @param _silo The address of the silo for which configuration data is being retrieved. Config for this silo will
     /// be at index 0.
+    /// @param _borrowSameToken this is only in use if you pulling configs for borrow functionality, ignored otherwise
     /// @return configData0 The configuration data for the specified silo.
     /// @return configData1 The configuration data for the other silo.
-    function getConfigs(address _silo, address _user)
+    function getConfigs(address _silo, address _user, bool _borrowSameToken)
         external view returns (ConfigData memory, ConfigData memory, PositionInfo memory);
 
     /// @notice Retrieves configuration data for a specific silo

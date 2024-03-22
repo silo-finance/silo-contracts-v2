@@ -156,7 +156,7 @@ contract SiloConfig is ISiloConfig {
     }
 
     /// @inheritdoc ISiloConfig
-    function getConfigs(address _silo, address _user)
+    function getConfigs(address _silo, address _user, bool _borrowSameToken)
         external
         view
         virtual
@@ -217,6 +217,13 @@ contract SiloConfig is ISiloConfig {
         } else {
             (collateral, debt) = callForSilo0 ? (configData0, configData1) : (configData1, configData0);
         }
+
+//        if (!positionInfo.positionOpen) {
+//            (collateralConfig, debtConfig) = _sameToken
+//                ? (collateralConfig, collateralConfig)
+//                : (debtConfig, collateralConfig);
+//        }
+
     }
 
     /// @inheritdoc ISiloConfig
