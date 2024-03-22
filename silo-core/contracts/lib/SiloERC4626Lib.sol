@@ -167,7 +167,7 @@ library SiloERC4626Lib {
         ISilo.AssetType _assetType,
         uint256 _liquidity,
         ISilo.Assets storage _totalCollateral
-    ) internal returns (uint256 assets, uint256 shares) {
+    ) external returns (uint256 assets, uint256 shares) {
         return withdraw(
             address(0), _shareToken, 0, _shares, _owner, _owner, _spender, _assetType, _liquidity, _totalCollateral
         );
@@ -196,7 +196,7 @@ library SiloERC4626Lib {
         IShareToken _collateralShareToken,
         IShareToken _debtShareToken,
         ISilo.Assets storage _totalCollateral
-    ) internal returns (uint256 assets, uint256 shares) {
+    ) public returns (uint256 assets, uint256 shares) {
         uint256 totalAssets = _totalCollateral.assets;
 
         (assets, shares) = SiloMathLib.convertToAssetsAndToShares(
@@ -256,7 +256,7 @@ library SiloERC4626Lib {
         ISilo.AssetType _assetType,
         uint256 _liquidity,
         ISilo.Assets storage _totalCollateral
-    ) internal returns (uint256 assets, uint256 shares) {
+    ) public returns (uint256 assets, uint256 shares) {
         uint256 shareTotalSupply = IShareToken(_shareToken).totalSupply();
         if (shareTotalSupply == 0) revert ISilo.NothingToWithdraw();
 
