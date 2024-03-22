@@ -17,8 +17,6 @@ import {SiloSolvencyLib} from "./SiloSolvencyLib.sol";
 import {SiloERC4626Lib} from "./SiloERC4626Lib.sol"; //circular dependency
 import {SiloStdLib} from "./SiloStdLib.sol";
 import {SiloMathLib} from "./SiloMathLib.sol";
-import {PositionTypeLib} from "./PositionTypeLib.sol";
-import {TypesLib} from "./TypesLib.sol";
 
 library SiloLendingLib {
     using SafeERC20Upgradeable for IERC20Upgradeable;
@@ -82,27 +80,14 @@ library SiloLendingLib {
         address _borrower,
         uint256 _totalDebtAssets,
         uint256 _totalDebtShares,
-        ISiloConfig _siloConfig,
-        uint256 _positionType
+        ISiloConfig _siloConfig
     )
         internal
         view
         returns (uint256 assets, uint256 shares)
     {
-        uint256 oneTokenMaxAssets;
+        // TODO uint256 oneTokenMaxAssets;
 
-        if (_positionType == TypesLib.POSITION_TYPE_UNKNOWN) {
-            (_positionType, oneTokenMaxAssets) = PositionTypeLib.detectPositionTypeForMaxBorrow(
-                _collateralConfig,
-                _debtConfig,
-                ISilo.AccrueInterestInMemory.Yes,
-                _borrower
-            );
-        }
-
-        if (!borrowPossible(_positionType)) {
-            return (0, 0);
-        }
 
         { // too deep
             SiloSolvencyLib.LtvData memory ltvData = SiloSolvencyLib.getAssetsDataForLtvCalculations(
@@ -111,26 +96,21 @@ library SiloLendingLib {
                 _borrower,
                 ISilo.OracleType.MaxLtv,
                 ISilo.AccrueInterestInMemory.Yes,
-                0, /* no cache */
-                _positionType
+                0 /* no cache */
             );
 
             (
                 uint256 sumOfBorrowerCollateralValue, uint256 borrowerDebtValue
             ) = SiloSolvencyLib.getPositionValues(ltvData, _collateralConfig.token, _debtConfig.token);
 
-//            uint256 maxBorrowValue = SiloMathLib.calculateMaxBorrowValue(
-//                _collateralConfig.maxLtv,
-//                sumOfBorrowerCollateralValue,
-//                borrowerDebtValue
-//            );
+            uint256 maxBorrowValue = SiloMathLib.calculateMaxBorrowValue(
+                _collateralConfig.maxLtv,
+                sumOfBorrowerCollateralValue,
+                borrowerDebtValue
+            );
 
             (assets, shares) = maxBorrowValueToAssetsAndShares(
-                SiloMathLib.calculateMaxBorrowValue(
-                    _collateralConfig.maxLtv,
-                    sumOfBorrowerCollateralValue,
-                    borrowerDebtValue
-                ),
+                maxBorrowValue,
                 borrowerDebtValue,
                 _borrower,
                 _debtConfig.token,
@@ -141,13 +121,13 @@ library SiloLendingLib {
             );
         }
 
-        if (assets < oneTokenMaxAssets) {
-            assets = oneTokenMaxAssets;
-
-            shares = SiloMathLib.convertToShares(
-                assets, _totalDebtAssets, _totalDebtShares, MathUpgradeable.Rounding.Down, ISilo.AssetType.Debt
-            );
-        }
+//        if (assets < oneTokenMaxAssets) {
+//            assets = oneTokenMaxAssets;
+//
+//            shares = SiloMathLib.convertToShares(
+//                assets, _totalDebtAssets, _totalDebtShares, MathUpgradeable.Rounding.Down, ISilo.AssetType.Debt
+//            );
+//        }
 
         {
             uint256 liquidityWithInterest = getLiquidity(_siloConfig);
@@ -195,13 +175,6 @@ library SiloLendingLib {
         );
 
         liquidity = SiloMathLib.liquidity(totalCollateralAssets, totalDebtAssets);
-    }
-
-    /// @notice Checks if a borrower can borrow
-    /// @param _positionType type of position in current silo
-    /// @return possible `true` if the borrower can borrow, `false` otherwise
-    function borrowPossible(uint256 _positionType) internal view returns (bool possible) {
-        possible = _positionType != TypesLib.POSITION_TYPE_DEPOSIT;
     }
 
     /// @notice Allows repaying borrowed assets either partially or in full

@@ -133,10 +133,10 @@ contract SiloRouter is ReentrancyGuard {
             _action.silo.withdraw(_action.amount, address(this), msg.sender, _action.assetType);
         } else if (_action.actionType == ActionType.Redeem) {
             _action.silo.redeem(_action.amount, address(this), msg.sender, _action.assetType);
-        } else if (_action.actionType == ActionType.Borrow) {
-            _action.silo.borrow(_action.amount, address(this), msg.sender);
-        } else if (_action.actionType == ActionType.BorrowShares) {
-            _action.silo.borrowShares(_action.amount, address(this), msg.sender);
+//        } else if (_action.actionType == ActionType.Borrow) {
+//            _action.silo.borrow(_action.amount, address(this), msg.sender);
+//        } else if (_action.actionType == ActionType.BorrowShares) {
+//            _action.silo.borrowShares(_action.amount, address(this), msg.sender);
         } else if (_action.actionType == ActionType.Repay) {
             _pullAssetIfNeeded(_action.asset, _action.amount, _action.permit);
             _approveIfNeeded(_action.asset, address(_action.silo), _action.amount);
@@ -149,8 +149,8 @@ contract SiloRouter is ReentrancyGuard {
             _action.silo.repayShares(_action.amount, msg.sender);
         } else if (_action.actionType == ActionType.Transition) {
             _action.silo.transitionCollateral(_action.amount, msg.sender, _action.assetType);
-        } else if (_action.actionType == ActionType.Leverage) {
-            _action.silo.leverage(_action.amount, _action.receiver, msg.sender, _action.data);
+//        } else if (_action.actionType == ActionType.Leverage) {
+//            _action.silo.leverage(_action.amount, _action.receiver, msg.sender, _action.data);
         } else {
             revert UnsupportedAction();
         }

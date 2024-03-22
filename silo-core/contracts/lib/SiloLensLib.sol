@@ -10,12 +10,11 @@ import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
 import {SiloSolvencyLib} from "./SiloSolvencyLib.sol";
 import {SiloLendingLib} from "./SiloLendingLib.sol";
 import {SiloERC4626Lib} from "./SiloERC4626Lib.sol";
-import {TypesLib} from "./TypesLib.sol";
 
 library SiloLensLib {
     function borrowPossible(ISilo _silo, address _borrower) internal view returns (bool possible) {
-        (,, uint256 positionType) = _silo.config().getConfigs(address(_silo), _borrower, TypesLib.CONFIG_FOR_BORROW);
-        possible = SiloLendingLib.borrowPossible(positionType);
+        (,, ISiloConfig.PositionInfo memory positionInfo) = _silo.config().getConfigs(address(_silo), _borrower);
+        possible = positionInfo.borrowPossible;
     }
 
     function getMaxLtv(ISilo _silo) internal view returns (uint256 maxLtv) {
@@ -30,8 +29,7 @@ library SiloLensLib {
         (
             ISiloConfig.ConfigData memory collateralConfig,
             ISiloConfig.ConfigData memory debtConfig,
-            uint256 positionType
-        ) = _silo.config().getConfigs(address(_silo), _borrower, TypesLib.CONFIG_FOR_BORROW); // TODO is is only for borrow here?
+        ) = _silo.config().getConfigs(address(_silo), _borrower);
 
         ltv = SiloSolvencyLib.getLtv(
             collateralConfig,
@@ -39,8 +37,7 @@ library SiloLensLib {
             _borrower,
             ISilo.OracleType.Solvency,
             ISilo.AccrueInterestInMemory.Yes,
-            IShareToken(debtConfig.debtShareToken).balanceOf(_borrower),
-            positionType
+            IShareToken(debtConfig.debtShareToken).balanceOf(_borrower)
         );
     }
 }

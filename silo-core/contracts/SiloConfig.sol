@@ -3,7 +3,6 @@ pragma solidity 0.8.21;
 
 import {ISiloConfig} from "./interfaces/ISiloConfig.sol";
 import {IShareDebtToken} from "./interfaces/IShareDebtToken.sol";
-import {TypesLib} from "./lib/TypesLib.sol";
 
 // solhint-disable var-name-mixedcase
 
@@ -66,6 +65,8 @@ contract SiloConfig is ISiloConfig {
     uint256 private immutable _FLASHLOAN_FEE1;
 
     bool private immutable _CALL_BEFORE_QUOTE1;
+
+    mapping (address borrower => PositionInfo positionInfo) internal _positionInfo;
 
     /// @param _siloId ID of this pool assigned by factory
     /// @param _configData0 silo configuration data for token0
@@ -155,11 +156,11 @@ contract SiloConfig is ISiloConfig {
     }
 
     /// @inheritdoc ISiloConfig
-    function getConfigs(address _silo, address _user, uint256 _configFor)
+    function getConfigs(address _silo, address _user)
         external
         view
         virtual
-        returns (ConfigData memory collateral, ConfigData memory debt, uint256 positionType)
+        returns (ConfigData memory collateral, ConfigData memory debt, PositionInfo memory positionInfo)
     {
         ConfigData memory configData0 = ConfigData({
             daoFee: _DAO_FEE,
@@ -201,58 +202,21 @@ contract SiloConfig is ISiloConfig {
             callBeforeQuote: _CALL_BEFORE_QUOTE1
         });
 
-        bool isSilo0 = _silo == _SILO0;
-        if (!isSilo0 && _silo != _SILO1) revert WrongSilo();
+        if (_silo != _SILO0 && _silo != _SILO1) revert WrongSilo();
 
-        bool configForBorrow = _configFor == TypesLib.CONFIG_FOR_BORROW;
+        bool callForSilo0 = _silo == _SILO0;
+        positionInfo = _positionInfo[_user];
+        positionInfo.borrowPossible = _borrowPossible(positionInfo, callForSilo0);
 
-        positionType = IShareDebtToken(isSilo0 ? _DEBT_SHARE_TOKEN0 : _DEBT_SHARE_TOKEN1).positionType(_user);
-
-        if (positionType == TypesLib.POSITION_TYPE_ONE_TOKEN) { // this _silo is debt
-            // this _silo is debt
-            return isSilo0
-                ? (configData0, configData0, TypesLib.POSITION_TYPE_ONE_TOKEN)
-                : (configData1, configData1, TypesLib.POSITION_TYPE_ONE_TOKEN);
-        }
-
-        if (positionType == TypesLib.POSITION_TYPE_TWO_TOKENS) { // this _silo is debt
-            if (configForBorrow) {
-                return isSilo0
-                    ? (configData1, configData0, TypesLib.POSITION_TYPE_TWO_TOKENS)
-                    : (configData0, configData1, TypesLib.POSITION_TYPE_TWO_TOKENS);
+        if (positionInfo.positionOpen) {
+            if (positionInfo.oneTokenPosition) {
+                (collateral, debt) = positionInfo.debtInSilo0 ? (configData0, configData0) : (configData1, configData1);
             } else {
-                return isSilo0
-                    ? (configData0, debt /* empty config */, TypesLib.POSITION_TYPE_DEPOSIT)
-                    : (configData1, debt /* empty config */, TypesLib.POSITION_TYPE_DEPOSIT);
+                (collateral, debt) = positionInfo.debtInSilo0 ? (configData1, configData0) : (configData0, configData1);
             }
+        } else {
+            (collateral, debt) = callForSilo0 ? (configData0, configData1) : (configData1, configData0);
         }
-
-        // this _silo has no debt, checking the other one
-
-        positionType = IShareDebtToken(isSilo0 ? _DEBT_SHARE_TOKEN1 : _DEBT_SHARE_TOKEN0).positionType(_user);
-
-        if (positionType == TypesLib.POSITION_TYPE_ONE_TOKEN) { // this _silo is with collateral
-            return configForBorrow
-                ? (collateral, debt, TypesLib.POSITION_TYPE_DEPOSIT) // can not borrow
-                : (isSilo0 ? configData0 : configData1, debt, TypesLib.POSITION_TYPE_DEPOSIT);
-        }
-
-        if (positionType == TypesLib.POSITION_TYPE_TWO_TOKENS) { // this _silo is with collateral
-            if (configForBorrow) {
-                return (collateral, debt, TypesLib.POSITION_TYPE_DEPOSIT); // can not borrow
-            } else {
-                return isSilo0
-                    ? (configData0, configData1, TypesLib.POSITION_TYPE_TWO_TOKENS)
-                    : (configData1, configData0, TypesLib.POSITION_TYPE_TWO_TOKENS);
-            }
-        }
-
-        // there is no debt if we got to this point
-
-        // Silo that is asking for configs will have its config at index 0
-        return isSilo0
-            ? (configData0, configData1, TypesLib.POSITION_TYPE_UNKNOWN)
-            : (configData1, configData0, TypesLib.POSITION_TYPE_UNKNOWN);
     }
 
     /// @inheritdoc ISiloConfig
@@ -321,5 +285,9 @@ contract SiloConfig is ISiloConfig {
         } else {
             revert WrongSilo();
         }
+    }
+
+    function _borrowPossible(PositionInfo memory _info, bool _callForSilo0) internal view returns (bool) {
+        return !_info.positionOpen || (_info.debtInSilo0 && _callForSilo0);
     }
 }

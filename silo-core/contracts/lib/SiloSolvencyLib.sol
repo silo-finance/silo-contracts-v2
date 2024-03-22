@@ -7,7 +7,6 @@ import {ISiloOracle} from "../interfaces/ISiloOracle.sol";
 import {SiloStdLib, ISiloConfig, IShareToken, ISilo} from "./SiloStdLib.sol";
 import {SiloERC4626Lib} from "./SiloERC4626Lib.sol";
 import {SiloMathLib} from "./SiloMathLib.sol";
-import {TypesLib} from "./TypesLib.sol";
 
 library SiloSolvencyLib {
     using MathUpgradeable for uint256;
@@ -18,7 +17,6 @@ library SiloSolvencyLib {
         uint256 borrowerProtectedAssets;
         uint256 borrowerCollateralAssets;
         uint256 borrowerDebtAssets;
-        uint256 positionType;
     }
 
     uint256 internal constant _PRECISION_DECIMALS = 1e18;
@@ -35,8 +33,7 @@ library SiloSolvencyLib {
         ISiloConfig.ConfigData memory _debtConfig,
         address _borrower,
         ISilo.AccrueInterestInMemory _accrueInMemory,
-        uint256 debtShareBalance,
-        uint256 _positionType
+        uint256 debtShareBalance
     ) internal view returns (bool) {
         if (debtShareBalance == 0) return true;
 
@@ -46,8 +43,7 @@ library SiloSolvencyLib {
             _borrower,
             ISilo.OracleType.Solvency,
             _accrueInMemory,
-            debtShareBalance,
-            _positionType
+            debtShareBalance
         );
 
         return ltv <= _collateralConfig.lt;
@@ -63,8 +59,7 @@ library SiloSolvencyLib {
         ISiloConfig.ConfigData memory _collateralConfig,
         ISiloConfig.ConfigData memory _debtConfig,
         address _borrower,
-        ISilo.AccrueInterestInMemory _accrueInMemory,
-        uint256 _positionType
+        ISilo.AccrueInterestInMemory _accrueInMemory
     ) internal view returns (bool) {
         uint256 debtShareBalance = IShareToken(_debtConfig.debtShareToken).balanceOf(_borrower);
         if (debtShareBalance == 0) return true;
@@ -75,13 +70,11 @@ library SiloSolvencyLib {
             _borrower,
             ISilo.OracleType.MaxLtv,
             _accrueInMemory,
-            debtShareBalance,
-            _positionType
+            debtShareBalance
         );
 
         return ltv <= _collateralConfig.maxLtv;
     }
-
 
     /// @notice Retrieves assets data required for LTV calculations
     /// @param _collateralConfig Configuration data for the collateral
@@ -98,19 +91,14 @@ library SiloSolvencyLib {
         address _borrower,
         ISilo.OracleType _oracleType,
         ISilo.AccrueInterestInMemory _accrueInMemory,
-        uint256 _debtShareBalanceCached,
-        uint256 _positionType // must be determined by this point!
+        uint256 _debtShareBalanceCached
     ) internal view returns (LtvData memory ltvData) {
-        if (_positionType == TypesLib.POSITION_TYPE_UNKNOWN) revert ISilo.UndefinedPosition();
-
-        if (_positionType == TypesLib.POSITION_TYPE_TWO_TOKENS) {
+        if (_collateralConfig.token != _debtConfig.token) {
             // When calculating maxLtv, use maxLtv oracle.
             (ltvData.collateralOracle, ltvData.debtOracle) = _oracleType == ISilo.OracleType.MaxLtv
                 ? (ISiloOracle(_collateralConfig.maxLtvOracle), ISiloOracle(_debtConfig.maxLtvOracle))
                 : (ISiloOracle(_collateralConfig.solvencyOracle), ISiloOracle(_debtConfig.solvencyOracle));
         }
-
-        ltvData.positionType = _positionType;
 
         uint256 totalShares;
         uint256 shares;
@@ -171,13 +159,12 @@ library SiloSolvencyLib {
         address _borrower,
         ISilo.OracleType _oracleType,
         ISilo.AccrueInterestInMemory _accrueInMemory,
-        uint256 _debtShareBalance,
-        uint256 _positionType
+        uint256 _debtShareBalance
     ) internal view returns (uint256 ltvInDp) {
         if (_debtShareBalance == 0) return 0;
 
         LtvData memory ltvData = getAssetsDataForLtvCalculations(
-            _collateralConfig, _debtConfig, _borrower, _oracleType, _accrueInMemory, _debtShareBalance, _positionType
+            _collateralConfig, _debtConfig, _borrower, _oracleType, _accrueInMemory, _debtShareBalance
         );
 
         if (ltvData.borrowerDebtAssets == 0) return 0;

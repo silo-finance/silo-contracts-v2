@@ -13,7 +13,6 @@ import {SiloSolvencyLib} from "./SiloSolvencyLib.sol";
 import {SiloMathLib} from "./SiloMathLib.sol";
 import {SiloStdLib} from "./SiloStdLib.sol";
 import {SiloLendingLib} from "./SiloLendingLib.sol";
-import {TypesLib} from "./TypesLib.sol";
 
 // solhint-disable function-max-lines
 
@@ -76,8 +75,8 @@ library SiloERC4626Lib {
         (
             ISiloConfig.ConfigData memory collateralConfig,
             ISiloConfig.ConfigData memory debtConfig,
-            uint256 positionType
-        ) = _config.getConfigs(address(this), _owner, TypesLib.CONFIG_FOR_WITHDRAW);
+            ISiloConfig.PositionInfo memory positionInfo
+        ) = _config.getConfigs(address(this), _owner);
 
         uint256 shareTokenTotalSupply;
         uint256 liquidity;
@@ -90,63 +89,58 @@ library SiloERC4626Lib {
             liquidity = _totalAssets;
         }
 
-        SiloSolvencyLib.LtvData memory ltvData;
+        if (!positionInfo.positionOpen) {
+            shares = _assetType == ISilo.AssetType.Protected
+                ? IShareToken(collateralConfig.protectedShareToken).balanceOf(_owner)
+                : IShareToken(collateralConfig.collateralShareToken).balanceOf(_owner);
 
-        { // stack too deep
-            uint256 debt = IShareToken(debtConfig.debtShareToken).balanceOf(_owner);
+            assets = SiloMathLib.convertToAssets(
+                shares,
+                _totalAssets,
+                shareTokenTotalSupply,
+                MathUpgradeable.Rounding.Down,
+                _assetType
+            );
 
-            if (debt == 0) {
-                shares = _assetType == ISilo.AssetType.Protected
-                    ? IShareToken(collateralConfig.protectedShareToken).balanceOf(_owner)
-                    : IShareToken(collateralConfig.collateralShareToken).balanceOf(_owner);
+            if (_assetType == ISilo.AssetType.Protected || assets <= liquidity) return (assets, shares);
 
-                assets = SiloMathLib.convertToAssets(
-                    shares,
-                    _totalAssets,
-                    shareTokenTotalSupply,
-                    MathUpgradeable.Rounding.Down,
-                    _assetType
-                );
+            assets = liquidity;
 
-                if (_assetType == ISilo.AssetType.Protected || assets <= liquidity) return (assets, shares);
+            shares = SiloMathLib.convertToShares(
+                assets,
+                _totalAssets,
+                shareTokenTotalSupply,
+                // when we doing withdraw, we using Rounding.Up, because we want to burn as many shares
+                // however here, we will be using shares as input to withdraw, if we round up, we can overflow
+                // because we will want to withdraw too much, so we have to use Rounding.Down
+                MathUpgradeable.Rounding.Down,
+                ISilo.AssetType.Collateral
+            );
 
-                assets = liquidity;
+            return (assets, shares);
+        }
+        
+        SiloSolvencyLib.LtvData memory ltvData = SiloSolvencyLib.getAssetsDataForLtvCalculations(
+            collateralConfig,
+            debtConfig,
+            _owner,
+            ISilo.OracleType.Solvency,
+            ISilo.AccrueInterestInMemory.Yes,
+            IShareToken(debtConfig.debtShareToken).balanceOf(_owner)
+        );
 
-                shares = SiloMathLib.convertToShares(
-                    assets,
-                    _totalAssets,
-                    shareTokenTotalSupply,
-                    // when we doing withdraw, we using Rounding.Up, because we want to burn as many shares
-                    // however here, we will be using shares as input to withdraw, if we round up, we can overflow
-                    // because we will want to withdraw too much, so we have to use Rounding.Down
-                    MathUpgradeable.Rounding.Down,
-                    ISilo.AssetType.Collateral
-                );
+        {
+            (uint256 collateralValue, uint256 debtValue) =
+                SiloSolvencyLib.getPositionValues(ltvData, collateralConfig.token, debtConfig.token);
 
-                return (assets, shares);
-            }
-
-            ltvData = SiloSolvencyLib.getAssetsDataForLtvCalculations(
-                collateralConfig,
-                debtConfig,
-                _owner,
-                ISilo.OracleType.Solvency,
-                ISilo.AccrueInterestInMemory.Yes,
-                debt,
-                positionType
+            assets = SiloMathLib.calculateMaxAssetsToWithdraw(
+                collateralValue,
+                debtValue,
+                collateralConfig.lt,
+                ltvData.borrowerProtectedAssets,
+                ltvData.borrowerCollateralAssets
             );
         }
-
-        (uint256 collateralValue, uint256 debtValue) =
-            SiloSolvencyLib.getPositionValues(ltvData, collateralConfig.token, debtConfig.token);
-
-        assets = SiloMathLib.calculateMaxAssetsToWithdraw(
-            collateralValue,
-            debtValue,
-            collateralConfig.lt,
-            ltvData.borrowerProtectedAssets,
-            ltvData.borrowerCollateralAssets
-        );
 
         (assets, shares) = SiloMathLib.maxWithdrawToAssetsAndShares(
             assets,

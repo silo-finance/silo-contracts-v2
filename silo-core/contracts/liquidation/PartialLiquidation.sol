@@ -8,7 +8,6 @@ import {IPartialLiquidation} from "../interfaces/IPartialLiquidation.sol";
 import {ISiloOracle} from "../interfaces/ISiloOracle.sol";
 import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
 
-import {TypesLib} from "../lib/TypesLib.sol";
 import {PartialLiquidationExecLib} from "./lib/PartialLiquidationExecLib.sol";
 
 
@@ -31,15 +30,12 @@ contract PartialLiquidation is IPartialLiquidation, ReentrancyGuardUpgradeable {
         (
             ISiloConfig.ConfigData memory collateralConfig,
             ISiloConfig.ConfigData memory debtConfig,
-            uint256 positionType
-        ) = ISilo(_siloWithDebt).config().getConfigs(_siloWithDebt, _borrower, TypesLib.CONFIG_FOR_BORROW);
+            ISiloConfig.PositionInfo memory positionInfo
+        ) = ISilo(_siloWithDebt).config().getConfigs(_siloWithDebt, _borrower);
 
         if (_collateralAsset != collateralConfig.token) revert UnexpectedCollateralToken();
         if (_debtAsset != debtConfig.token) revert UnexpectedDebtToken();
-
-        if (positionType != TypesLib.POSITION_TYPE_ONE_TOKEN && positionType != TypesLib.POSITION_TYPE_TWO_TOKENS) {
-            revert ISilo.ThereIsDebtInOtherSilo();
-        }
+        if (!positionInfo.borrowPossible) revert ISilo.ThereIsDebtInOtherSilo();
 
         ISilo(_siloWithDebt).accrueInterest();
         ISilo(debtConfig.otherSilo).accrueInterest();
@@ -64,8 +60,7 @@ contract PartialLiquidation is IPartialLiquidation, ReentrancyGuardUpgradeable {
             _borrower,
             _debtToCover,
             selfLiquidation ? 0 : collateralConfig.liquidationFee,
-            selfLiquidation,
-            positionType
+            selfLiquidation
         );
 
         if (repayDebtAssets == 0) revert NoDebtToCover();

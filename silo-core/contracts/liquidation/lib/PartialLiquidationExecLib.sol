@@ -6,7 +6,6 @@ import {MathUpgradeable} from "openzeppelin-contracts-upgradeable/utils/math/Mat
 import {ISilo} from "../../interfaces/ISilo.sol";
 import {ISiloConfig} from "../../interfaces/ISiloConfig.sol";
 import {SiloSolvencyLib} from "../../lib/SiloSolvencyLib.sol";
-import {TypesLib} from "../../lib/TypesLib.sol";
 import {PartialLiquidationLib} from "./PartialLiquidationLib.sol";
 
 library PartialLiquidationExecLib {
@@ -17,8 +16,7 @@ library PartialLiquidationExecLib {
         address _user,
         uint256 _debtToCover,
         uint256 _liquidationFee,
-        bool _selfLiquidation,
-        uint256 _positionType
+        bool _selfLiquidation
     )
         internal
         view
@@ -30,8 +28,7 @@ library PartialLiquidationExecLib {
             _user,
             ISilo.OracleType.Solvency,
             ISilo.AccrueInterestInMemory.No,
-            0 /* no cached balance */,
-            _positionType
+            0 /* no cached balance */
         );
 
         uint256 borrowerCollateralToLiquidate;
@@ -70,10 +67,10 @@ library PartialLiquidationExecLib {
         (
             ISiloConfig.ConfigData memory collateralConfig,
             ISiloConfig.ConfigData memory debtConfig,
-            uint256 positionType
-        ) = _silo.config().getConfigs(address(_silo), _borrower, TypesLib.CONFIG_FOR_BORROW);
+            ISiloConfig.PositionInfo memory positionInfo
+        ) = _silo.config().getConfigs(address(_silo), _borrower);
 
-        if (positionType != TypesLib.POSITION_TYPE_ONE_TOKEN && positionType != TypesLib.POSITION_TYPE_TWO_TOKENS) {
+        if (!positionInfo.positionOpen || !positionInfo.borrowPossible) {
             return (0, 0);
         }
 
@@ -83,8 +80,7 @@ library PartialLiquidationExecLib {
             _borrower,
             ISilo.OracleType.Solvency,
             ISilo.AccrueInterestInMemory.Yes,
-            0 /* no cached balance */,
-            positionType
+            0 /* no cached balance */
         );
 
         if (ltvData.borrowerDebtAssets == 0) return (0, 0);

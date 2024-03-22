@@ -4,7 +4,6 @@ pragma solidity 0.8.21;
 import {IERC20R} from "../interfaces/IERC20R.sol";
 import {IShareDebtToken} from "../interfaces/IShareDebtToken.sol";
 import {SiloLensLib} from "../lib/SiloLensLib.sol";
-import {TypesLib} from "../lib/TypesLib.sol";
 import {IShareToken, ShareToken, ISiloFactory, ISilo} from "./ShareToken.sol";
 
 /// @title ShareDebtToken
@@ -20,7 +19,6 @@ contract ShareDebtToken is IShareDebtToken, IERC20R, ShareToken {
     using SiloLensLib for ISilo;
 
     mapping(address owner => mapping(address recipient => uint256 allowance)) private _receiveAllowances;
-    mapping(address user => uint256 positionType) private _positionType;
 
     /// @param _silo Silo address for which tokens was deployed
     function initialize(ISilo _silo, address _hookReceiver) external virtual initializer {
@@ -31,31 +29,19 @@ contract ShareDebtToken is IShareDebtToken, IERC20R, ShareToken {
     function mint(address _owner, address _spender, uint256 _amount) external virtual override onlySilo {
         if (_owner != _spender) _spendAllowance(_owner, _spender, _amount);
         _mint(_owner, _amount);
+        // TODO open position Info
+
     }
 
     /// @inheritdoc IShareToken
     function burn(address _owner, address, uint256 _amount) external virtual override onlySilo {
         _burn(_owner, _amount);
+        // TODO save position Info if burned all
     }
 
     /// @inheritdoc IERC20R
     function setReceiveApproval(address owner, uint256 _amount) external virtual override {
         _setReceiveApproval(owner, _msgSender(), _amount);
-    }
-
-    /// @inheritdoc IShareDebtToken
-    function positionType(address _owner) external view virtual returns (uint256) {
-        return _positionType[_owner];
-    }
-
-    function getBalanceAndPosition(address _owner)
-        external
-        view
-        virtual
-        returns (uint256 balance, uint256 positionType)
-    {
-        balance = balanceOf(_owner);
-        positionType = balance == 0 ? TypesLib.POSITION_TYPE_UNKNOWN : _positionType[_owner];
     }
 
     /// @inheritdoc IERC20R
