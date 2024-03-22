@@ -117,26 +117,26 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
     }
 
     /// @inheritdoc ISilo
-//    function getCollateralAndProtectedAssets()
-//        external
-//        view
-//        virtual
-//        returns (uint256 totalCollateralAssets, uint256 totalProtectedAssets)
-//    {
-//        totalCollateralAssets = total[AssetType.Collateral].assets;
-//        totalProtectedAssets = total[AssetType.Protected].assets;
-//    }
-//
-//    /// @inheritdoc ISilo
-//    function getCollateralAndDebtAssets()
-//        external
-//        view
-//        virtual
-//        returns (uint256 totalCollateralAssets, uint256 totalDebtAssets)
-//    {
-//        totalCollateralAssets = total[AssetType.Collateral].assets;
-//        totalDebtAssets = total[AssetType.Debt].assets;
-//    }
+    function getCollateralAndProtectedAssets()
+        external
+        view
+        virtual
+        returns (uint256 totalCollateralAssets, uint256 totalProtectedAssets)
+    {
+        totalCollateralAssets = total[AssetType.Collateral].assets;
+        totalProtectedAssets = total[AssetType.Protected].assets;
+    }
+
+    /// @inheritdoc ISilo
+    function getCollateralAndDebtAssets()
+        external
+        view
+        virtual
+        returns (uint256 totalCollateralAssets, uint256 totalDebtAssets)
+    {
+        totalCollateralAssets = total[AssetType.Collateral].assets;
+        totalDebtAssets = total[AssetType.Debt].assets;
+    }
 
     // ERC4626
 
