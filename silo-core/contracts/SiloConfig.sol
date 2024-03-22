@@ -3,6 +3,7 @@ pragma solidity 0.8.21;
 
 import {ISiloConfig} from "./interfaces/ISiloConfig.sol";
 import {IShareDebtToken} from "./interfaces/IShareDebtToken.sol";
+import {SiloStdLib} from "./lib/SiloStdLib.sol";
 
 // solhint-disable var-name-mixedcase
 
@@ -217,6 +218,73 @@ contract SiloConfig is ISiloConfig {
         } else {
             (collateral, debt) = callForSilo0 ? (configData0, configData1) : (configData1, configData0);
         }
+    }
+
+
+    /// @inheritdoc ISiloConfig
+    function getConfigs2(address _silo, address _user)
+        external
+        view
+        virtual
+        returns (ConfigData memory collateral, ConfigData memory debt, uint256 info)
+    {
+        ConfigData memory configData0 = ConfigData({
+            daoFee: _DAO_FEE,
+            deployerFee: _DEPLOYER_FEE,
+            silo: _SILO0,
+            otherSilo: _SILO1,
+            token: _TOKEN0,
+            protectedShareToken: _PROTECTED_COLLATERAL_SHARE_TOKEN0,
+            collateralShareToken: _COLLATERAL_SHARE_TOKEN0,
+            debtShareToken: _DEBT_SHARE_TOKEN0,
+            solvencyOracle: _SOLVENCY_ORACLE0,
+            maxLtvOracle: _MAX_LTV_ORACLE0,
+            interestRateModel: _INTEREST_RATE_MODEL0,
+            maxLtv: _MAX_LTV0,
+            lt: _LT0,
+            liquidationFee: _LIQUIDATION_FEE0,
+            flashloanFee: _FLASHLOAN_FEE0,
+            liquidationModule: _LIQUIDATION_MODULE,
+            callBeforeQuote: _CALL_BEFORE_QUOTE0
+        });
+
+        ConfigData memory configData1 = ConfigData({
+            daoFee: _DAO_FEE,
+            deployerFee: _DEPLOYER_FEE,
+            silo: _SILO1,
+            otherSilo: _SILO0,
+            token: _TOKEN1,
+            protectedShareToken: _PROTECTED_COLLATERAL_SHARE_TOKEN1,
+            collateralShareToken: _COLLATERAL_SHARE_TOKEN1,
+            debtShareToken: _DEBT_SHARE_TOKEN1,
+            solvencyOracle: _SOLVENCY_ORACLE1,
+            maxLtvOracle: _MAX_LTV_ORACLE1,
+            interestRateModel: _INTEREST_RATE_MODEL1,
+            maxLtv: _MAX_LTV1,
+            lt: _LT1,
+            liquidationFee: _LIQUIDATION_FEE1,
+            flashloanFee: _FLASHLOAN_FEE1,
+            liquidationModule: _LIQUIDATION_MODULE,
+            callBeforeQuote: _CALL_BEFORE_QUOTE1
+        });
+
+        if (_silo != _SILO0 && _silo != _SILO1) revert WrongSilo();
+
+        bool callForSilo0 = _silo == _SILO0;
+        PositionInfo memory positionInfo = _positionInfo[_user];
+        positionInfo.borrowPossible = _borrowPossible(positionInfo, callForSilo0);
+
+        if (positionInfo.positionOpen) {
+            if (positionInfo.oneTokenPosition) {
+                (collateral, debt) = positionInfo.debtInSilo0 ? (configData0, configData0) : (configData1, configData1);
+            } else {
+                (collateral, debt) = positionInfo.debtInSilo0 ? (configData1, configData0) : (configData0, configData1);
+            }
+        } else {
+            (collateral, debt) = callForSilo0 ? (configData0, configData1) : (configData1, configData0);
+        }
+
+        info = SiloStdLib.infoToUint(positionInfo);
     }
 
     /// @inheritdoc ISiloConfig

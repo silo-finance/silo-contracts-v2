@@ -193,4 +193,18 @@ library SiloStdLib {
             totalDebtAssetsWithInterest,
         ) = SiloMathLib.getDebtAmountsWithInterest(ISilo(_silo).total(ISilo.AssetType.Debt), rcomp);
     }
+
+    function infoToUint(ISiloConfig.PositionInfo memory _i) internal pure returns (uint256 u) {
+        if (_i.borrowPossible) u |= 1;
+        if (_i.positionOpen) u |= 2;
+        if (_i.oneTokenPosition) u |= 4;
+        if (_i.debtInSilo0) u |= 8;
+    }
+
+    function uintToInfo(uint256 _u) internal pure returns (ISiloConfig.PositionInfo memory i) {
+        i.borrowPossible = 1 & _u == 1;
+        i.positionOpen = 2 & _u == 2;
+        i.oneTokenPosition = 4 & _u == 4;
+        i.debtInSilo0 = 8 & _u == 8;
+    }
 }
