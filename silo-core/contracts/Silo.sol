@@ -837,9 +837,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
         if (!positionInfo.borrowPossible) revert ISilo.BorrowNotPossible();
 
         if (!positionInfo.positionOpen) {
-            (collateralConfig, debtConfig) = _sameToken
-                ? (collateralConfig, collateralConfig)
-                : (debtConfig, collateralConfig);
+            _orderConfigs(collateralConfig, debtConfig, _sameToken);
         }
 
         _callAccrueInterestForAsset(
@@ -975,9 +973,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
         if (!positionInfo.borrowPossible) return (0, 0);
 
         if (!positionInfo.positionOpen) {
-            (collateralConfig, debtConfig) = _sameToken
-                ? (collateralConfig, collateralConfig)
-                : (debtConfig, collateralConfig);
+            _orderConfigs(collateralConfig, debtConfig, _sameToken);
         }
 
         (uint256 totalDebtAssets, uint256 totalDebtShares) =
@@ -1060,5 +1056,13 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
             _liquidity,
             _totalCollateral
         );
+    }
+
+    function _orderConfigs(
+        ISiloConfig.ConfigData memory _collateral,
+        ISiloConfig.ConfigData memory _debt,
+        bool _sameToken
+    ) internal pure {
+        (_collateral, _debt) = _sameToken ? (_collateral, _collateral) : (_debt, _collateral);
     }
 }
