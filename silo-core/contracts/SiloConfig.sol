@@ -160,13 +160,8 @@ contract SiloConfig is ISiloConfig {
         external
         view
         virtual
-        returns (ConfigData memory collateral, ConfigData memory debt)
+        returns (ConfigData memory collateral, ConfigData memory debt, PositionInfo memory positionInfo)
     {
-        if (_silo != _SILO0 && _silo != _SILO1) revert WrongSilo();
-
-        PositionInfo memory positionInfo = _positionInfo[_user];
-        bool callForSilo0 = _silo == _SILO0;
-
         ConfigData memory configData0 = ConfigData({
             daoFee: _DAO_FEE,
             deployerFee: _DEPLOYER_FEE,
@@ -184,11 +179,7 @@ contract SiloConfig is ISiloConfig {
             liquidationFee: _LIQUIDATION_FEE0,
             flashloanFee: _FLASHLOAN_FEE0,
             liquidationModule: _LIQUIDATION_MODULE,
-            callBeforeQuote: _CALL_BEFORE_QUOTE0,
-            borrowPossible: _borrowPossible(positionInfo, callForSilo0),
-            debtInSilo0: positionInfo.debtInSilo0,
-            oneTokenPosition: positionInfo.oneTokenPosition,
-            positionOpen: positionInfo.positionOpen
+            callBeforeQuote: _CALL_BEFORE_QUOTE0
         });
 
         ConfigData memory configData1 = ConfigData({
@@ -208,12 +199,14 @@ contract SiloConfig is ISiloConfig {
             liquidationFee: _LIQUIDATION_FEE1,
             flashloanFee: _FLASHLOAN_FEE1,
             liquidationModule: _LIQUIDATION_MODULE,
-            callBeforeQuote: _CALL_BEFORE_QUOTE1,
-            borrowPossible: _borrowPossible(positionInfo, callForSilo0),
-            debtInSilo0: positionInfo.debtInSilo0,
-            oneTokenPosition: positionInfo.oneTokenPosition,
-            positionOpen: positionInfo.positionOpen
+            callBeforeQuote: _CALL_BEFORE_QUOTE1
         });
+
+        if (_silo != _SILO0 && _silo != _SILO1) revert WrongSilo();
+
+        bool callForSilo0 = _silo == _SILO0;
+        positionInfo = _positionInfo[_user];
+        positionInfo.borrowPossible = _borrowPossible(positionInfo, callForSilo0);
 
         if (positionInfo.positionOpen) {
             if (positionInfo.oneTokenPosition) {
@@ -228,8 +221,6 @@ contract SiloConfig is ISiloConfig {
 
     /// @inheritdoc ISiloConfig
     function getConfig(address _silo) external view virtual returns (ConfigData memory) {
-        PositionInfo memory positionInfo; // = _positionInfo[_user];
-
         if (_silo == _SILO0) {
             return ConfigData({
                 daoFee: _DAO_FEE,
@@ -248,11 +239,7 @@ contract SiloConfig is ISiloConfig {
                 liquidationFee: _LIQUIDATION_FEE0,
                 flashloanFee: _FLASHLOAN_FEE0,
                 liquidationModule: _LIQUIDATION_MODULE,
-                callBeforeQuote: _CALL_BEFORE_QUOTE0,
-                borrowPossible: _borrowPossible(positionInfo, true),
-                debtInSilo0: positionInfo.debtInSilo0,
-                oneTokenPosition: positionInfo.oneTokenPosition,
-                positionOpen: positionInfo.positionOpen
+                callBeforeQuote: _CALL_BEFORE_QUOTE0
             });
         } else if (_silo == _SILO1) {
             return ConfigData({
@@ -272,11 +259,7 @@ contract SiloConfig is ISiloConfig {
                 liquidationFee: _LIQUIDATION_FEE1,
                 flashloanFee: _FLASHLOAN_FEE1,
                 liquidationModule: _LIQUIDATION_MODULE,
-                callBeforeQuote: _CALL_BEFORE_QUOTE1,
-                borrowPossible: _borrowPossible(positionInfo, false),
-                debtInSilo0: positionInfo.debtInSilo0,
-                oneTokenPosition: positionInfo.oneTokenPosition,
-                positionOpen: positionInfo.positionOpen
+                callBeforeQuote: _CALL_BEFORE_QUOTE1
             });
         } else {
             revert WrongSilo();
