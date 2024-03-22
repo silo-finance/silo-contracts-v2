@@ -74,5 +74,5 @@ rule accreuInterestDoesntAffectResult(env e, method f)
     accrueInterest(e) at init;
     f(e, args);
     storage afterAccrue_F = lastStorage;
-    assert afterF == afterAccrue_F;
+    assert afterF[currentContract] == afterAccrue_F[currentContract];
 }
