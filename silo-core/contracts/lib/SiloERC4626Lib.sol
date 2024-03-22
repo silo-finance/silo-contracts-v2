@@ -119,7 +119,7 @@ library SiloERC4626Lib {
 
             return (assets, shares);
         }
-        
+
         SiloSolvencyLib.LtvData memory ltvData = SiloSolvencyLib.getAssetsDataForLtvCalculations(
             collateralConfig,
             debtConfig,
