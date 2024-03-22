@@ -167,21 +167,21 @@ interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
     /// @return totalDebtAssets The total amount of assets of type 'Debt'
     function getDebtAssets() external view returns (uint256 totalDebtAssets);
 
-    /// @notice Retrieves the total amounts of collateral and protected (non-borrowable) assets
-    /// @return totalCollateralAssets The total amount of assets of type 'Collateral'
-    /// @return totalProtectedAssets The total amount of protected (non-borrowable) assets
-    function getCollateralAndProtectedAssets()
-        external
-        view
-        returns (uint256 totalCollateralAssets, uint256 totalProtectedAssets);
-
-    /// @notice Retrieves the total amounts of collateral and debt assets
-    /// @return totalCollateralAssets The total amount of assets of type 'Collateral'
-    /// @return totalDebtAssets The total amount of debt assets of type 'Debt'
-    function getCollateralAndDebtAssets()
-        external
-        view
-        returns (uint256 totalCollateralAssets, uint256 totalDebtAssets);
+//    /// @notice Retrieves the total amounts of collateral and protected (non-borrowable) assets
+//    /// @return totalCollateralAssets The total amount of assets of type 'Collateral'
+//    /// @return totalProtectedAssets The total amount of protected (non-borrowable) assets
+//    function getCollateralAndProtectedAssets()
+//        external
+//        view
+//        returns (uint256 totalCollateralAssets, uint256 totalProtectedAssets);
+//
+//    /// @notice Retrieves the total amounts of collateral and debt assets
+//    /// @return totalCollateralAssets The total amount of assets of type 'Collateral'
+//    /// @return totalDebtAssets The total amount of debt assets of type 'Debt'
+//    function getCollateralAndDebtAssets()
+//        external
+//        view
+//        returns (uint256 totalCollateralAssets, uint256 totalDebtAssets);
 
     /// @notice Implements IERC4626.convertToShares for each asset type
     function convertToShares(uint256 _assets, AssetType _assetType) external view returns (uint256 shares);

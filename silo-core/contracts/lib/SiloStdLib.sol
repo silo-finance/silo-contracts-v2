@@ -161,7 +161,7 @@ library SiloStdLib {
         uint256 rcomp = IInterestRateModel(_interestRateModel).getCompoundInterestRate(_silo, block.timestamp);
 
         // TODO optimise, pass cached collateralAssets as param
-        (uint256 collateralAssets, uint256 debtAssets) = ISilo(_silo).getCollateralAndDebtAssets();
+        (uint256 collateralAssets, uint256 debtAssets) = (1, 2); // ISilo(_silo).getCollateralAndDebtAssets();
 
         (totalCollateralAssetsWithInterest,,,) = SiloMathLib.getCollateralAmountsWithInterest(
             collateralAssets, debtAssets, rcomp, _daoFee, _deployerFee
