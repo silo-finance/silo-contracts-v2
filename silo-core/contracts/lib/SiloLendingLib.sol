@@ -82,7 +82,7 @@ library SiloLendingLib {
         uint256 _totalDebtShares,
         ISiloConfig _siloConfig
     )
-        external
+        internal
         view
         returns (uint256 assets, uint256 shares)
     {
@@ -152,13 +152,13 @@ library SiloLendingLib {
         }
     }
 
-    function getLiquidity(ISiloConfig _siloConfig) public view returns (uint256 liquidity) {
+    function getLiquidity(ISiloConfig _siloConfig) internal view returns (uint256 liquidity) {
         ISiloConfig.ConfigData memory config = _siloConfig.getConfig(address(this));
         (liquidity,,) = getLiquidityAndAssetsWithInterest(config);
     }
 
     function getLiquidityAndAssetsWithInterest(ISiloConfig.ConfigData memory _config)
-        public
+        internal
         view
         returns (uint256 liquidity, uint256 totalCollateralAssets, uint256 totalDebtAssets)
     {
@@ -193,7 +193,7 @@ library SiloLendingLib {
         address _borrower,
         address _repayer,
         ISilo.Assets storage _totalDebt
-    ) public returns (uint256 assets, uint256 shares) {
+    ) internal returns (uint256 assets, uint256 shares) {
         if (_assets == 0 && _shares == 0) revert ISilo.ZeroAssets();
 
         IShareToken debtShareToken = IShareToken(_configData.debtShareToken);
@@ -241,7 +241,7 @@ library SiloLendingLib {
         ISilo.SiloData storage _siloData,
         ISilo.Assets storage _totalCollateral,
         ISilo.Assets storage _totalDebt
-    ) public returns (uint256 accruedInterest) {
+    ) internal returns (uint256 accruedInterest) {
         uint64 lastTimestamp = _siloData.interestRateTimestamp;
 
         // This is the first time, so we can return early and save some gas
@@ -307,7 +307,7 @@ library SiloLendingLib {
         ISilo.Assets storage _totalDebt,
         uint256 _totalCollateralAssets
     )
-        public
+        internal
         returns (uint256 borrowedAssets, uint256 borrowedShares)
     {
         if (_assets == 0 && _shares == 0) revert ISilo.ZeroAssets();
@@ -361,7 +361,7 @@ library SiloLendingLib {
         uint256 _totalDebtAssets,
         uint256 _totalDebtShares
     )
-        public
+        internal
         view
         returns (uint256 assets, uint256 shares)
     {

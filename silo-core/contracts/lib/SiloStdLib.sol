@@ -99,7 +99,7 @@ library SiloStdLib {
         ISiloConfig.ConfigData memory _configData,
         ISilo.AssetType _assetType
     )
-        public
+        internal
         view
         returns (uint256 totalAssets, uint256 totalShares)
     {
@@ -131,7 +131,7 @@ library SiloStdLib {
     /// @return deployerFee Deployer fee amount in 18 decimals points
     /// @return asset Address of the associated asset
     function getFeesAndFeeReceiversWithAsset(ISilo _silo)
-        public
+        internal
         view
         returns (
             address daoFeeReceiver,
@@ -157,7 +157,7 @@ library SiloStdLib {
         address _interestRateModel,
         uint256 _daoFee,
         uint256 _deployerFee
-    ) public view returns (uint256 totalCollateralAssetsWithInterest) {
+    ) internal view returns (uint256 totalCollateralAssetsWithInterest) {
         uint256 rcomp = IInterestRateModel(_interestRateModel).getCompoundInterestRate(_silo, block.timestamp);
 
         // TODO optimise, pass cached collateralAssets as param
@@ -170,7 +170,7 @@ library SiloStdLib {
 
     /// @param _balanceCached if balance of `_owner` is unknown beforehand, then pass `0`
     function getSharesAndTotalSupply(address _shareToken, address _owner, uint256 _balanceCached)
-        public
+        internal
         view
         returns (uint256 shares, uint256 totalSupply)
     {
@@ -183,7 +183,7 @@ library SiloStdLib {
     /// @param _interestRateModel Interest rate model to fetch compound interest rates
     /// @return totalDebtAssetsWithInterest Accumulated debt amount with interest
     function getTotalDebtAssetsWithInterest(address _silo, address _interestRateModel)
-        public
+        internal
         view
         returns (uint256 totalDebtAssetsWithInterest)
     {

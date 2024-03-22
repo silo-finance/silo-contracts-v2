@@ -34,7 +34,7 @@ library SiloSolvencyLib {
         address _borrower,
         ISilo.AccrueInterestInMemory _accrueInMemory,
         uint256 debtShareBalance
-    ) external view returns (bool) {
+    ) internal view returns (bool) {
         if (debtShareBalance == 0) return true;
 
         uint256 ltv = getLtv(
@@ -160,7 +160,7 @@ library SiloSolvencyLib {
         ISilo.OracleType _oracleType,
         ISilo.AccrueInterestInMemory _accrueInMemory,
         uint256 _debtShareBalance
-    ) public view returns (uint256 ltvInDp) {
+    ) internal view returns (uint256 ltvInDp) {
         if (_debtShareBalance == 0) return 0;
 
         LtvData memory ltvData = getAssetsDataForLtvCalculations(
@@ -182,7 +182,7 @@ library SiloSolvencyLib {
     /// @return ltvInDp Calculated LTV in 18 decimal precision
     function calculateLtv(
         SiloSolvencyLib.LtvData memory _ltvData, address _collateralToken, address _debtToken)
-        public
+        internal
         view
         returns (uint256 sumOfBorrowerCollateralValue, uint256 totalBorrowerDebtValue, uint256 ltvInDp)
     {
@@ -209,7 +209,7 @@ library SiloSolvencyLib {
     /// assets
     /// @return debtValue Total value of debt assets
     function getPositionValues(LtvData memory _ltvData, address _collateralAsset, address _debtAsset)
-        public
+        internal
         view
         returns (uint256 sumOfCollateralValue, uint256 debtValue)
     {
