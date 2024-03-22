@@ -74,8 +74,7 @@ library SiloERC4626Lib {
 
         (
             ISiloConfig.ConfigData memory collateralConfig,
-            ISiloConfig.ConfigData memory debtConfig,
-            ISiloConfig.PositionInfo memory positionInfo
+            ISiloConfig.ConfigData memory debtConfig
         ) = _config.getConfigs(address(this), _owner);
 
         uint256 shareTokenTotalSupply;
@@ -89,7 +88,7 @@ library SiloERC4626Lib {
             liquidity = _totalAssets;
         }
 
-        if (!positionInfo.positionOpen) {
+        if (!collateralConfig.positionOpen) {
             shares = _assetType == ISilo.AssetType.Protected
                 ? IShareToken(collateralConfig.protectedShareToken).balanceOf(_owner)
                 : IShareToken(collateralConfig.collateralShareToken).balanceOf(_owner);
