@@ -86,7 +86,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
             ISiloConfig.PositionInfo memory positionInfo
         ) = config.getConfigs(address(this), _borrower);
 
-        return _callIsSolvent(
+        return SiloSolvencyLib.isSolvent(
             collateralConfig,
             debtConfig,
             _borrower,
@@ -802,7 +802,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
         }
 
         // `_params.owner` must be solvent
-        if (!_callIsSolvent(
+        if (!SiloSolvencyLib.isSolvent(
             collateralConfig,
             debtConfig,
             _owner,
@@ -1033,22 +1033,6 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
             siloData,
             total[AssetType.Collateral],
             total[AssetType.Debt]
-        );
-    }
-
-    function _callIsSolvent(
-        ISiloConfig.ConfigData memory _collateralConfig,
-        ISiloConfig.ConfigData memory _debtConfig,
-        address _borrower,
-        ISilo.AccrueInterestInMemory _accrueInMemory,
-        uint256 _debtShareBalance
-    ) internal view returns (bool) {
-        return SiloSolvencyLib.isSolvent(
-            _collateralConfig,
-            _debtConfig,
-            _borrower,
-            _accrueInMemory,
-            _debtShareBalance
         );
     }
 
