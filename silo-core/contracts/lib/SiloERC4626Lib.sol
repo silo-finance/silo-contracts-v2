@@ -47,7 +47,7 @@ library SiloERC4626Lib {
         view
         returns (uint256 maxAssetsOrShares)
     {
-        (ISiloConfig.ConfigData memory configData,) = _config.getConfigs(address(this), bytes32(0));
+        ISiloConfig.ConfigData memory configData = _config.getConfig(address(this));
 
         maxAssetsOrShares = _totalCollateralAssets == 0
             ? _VIRTUAL_DEPOSIT_LIMIT

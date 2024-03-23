@@ -153,7 +153,7 @@ library SiloLendingLib {
     }
 
     function getLiquidity(ISiloConfig _siloConfig) internal view returns (uint256 liquidity) {
-        (ISiloConfig.ConfigData memory config,) = _siloConfig.getConfigs(address(this), bytes32(0));
+        ISiloConfig.ConfigData memory config = _siloConfig.getConfig(address(this));
         (liquidity,,) = getLiquidityAndAssetsWithInterest(config);
     }
 
