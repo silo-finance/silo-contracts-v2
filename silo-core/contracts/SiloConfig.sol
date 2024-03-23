@@ -161,7 +161,7 @@ contract SiloConfig is ISiloConfig {
         external
         view
         virtual
-        returns (ConfigData memory collateral, ConfigData memory debt)
+        returns (ConfigData memory collateral, ConfigData memory debt, PositionInfo memory positionInfo)
     {
         ConfigData memory configData0 = ConfigData({
             daoFee: _DAO_FEE,
@@ -208,7 +208,7 @@ contract SiloConfig is ISiloConfig {
         bool callForSilo0 = _silo == _SILO0;
         (address borrower,,) = BorrowerLib.extractMetadata(_userInfo);
 
-        PositionInfo memory positionInfo = _positionInfo[borrower];
+        positionInfo = _positionInfo[borrower];
         positionInfo.borrowPossible = _borrowPossible(positionInfo, callForSilo0);
 
         if (positionInfo.positionOpen) {

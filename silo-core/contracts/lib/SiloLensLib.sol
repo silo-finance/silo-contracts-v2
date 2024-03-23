@@ -14,8 +14,8 @@ import {BorrowerLib} from "./BorrowerLib.sol";
 
 library SiloLensLib {
     function borrowPossible(ISilo _silo, address _borrower) internal view returns (bool possible) {
-        (ISiloConfig.ConfigData memory config, ) = _silo.config().getConfigs(address(_silo), BorrowerLib.addMetadata(_borrower, false, true));
-        possible = config.token != address(0);
+        (,, ISiloConfig.PositionInfo memory positionInfo) = _silo.config().getConfigs(address(_silo), BorrowerLib.addMetadata(_borrower, false, true));
+        possible = positionInfo.borrowPossible;
     }
 
     function getMaxLtv(ISilo _silo) internal view returns (uint256 maxLtv) {
@@ -29,7 +29,7 @@ library SiloLensLib {
     function getLtv(ISilo _silo, address _borrower) internal view returns (uint256 ltv) {
         (
             ISiloConfig.ConfigData memory collateralConfig,
-            ISiloConfig.ConfigData memory debtConfig
+            ISiloConfig.ConfigData memory debtConfig,
         ) = _silo.config().getConfigs(address(_silo), BorrowerLib.addMetadata(_borrower, false, false));
 
         ltv = SiloSolvencyLib.getLtv(
