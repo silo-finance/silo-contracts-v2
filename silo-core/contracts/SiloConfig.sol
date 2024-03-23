@@ -179,8 +179,7 @@ contract SiloConfig is ISiloConfig {
             liquidationFee: _LIQUIDATION_FEE0,
             flashloanFee: _FLASHLOAN_FEE0,
             liquidationModule: _LIQUIDATION_MODULE,
-            callBeforeQuote: _CALL_BEFORE_QUOTE0,
-            callBeforeQuote2: _CALL_BEFORE_QUOTE0
+            callBeforeQuote: _CALL_BEFORE_QUOTE0
         });
 
         ConfigData memory configData1 = ConfigData({
@@ -200,8 +199,7 @@ contract SiloConfig is ISiloConfig {
             liquidationFee: _LIQUIDATION_FEE1,
             flashloanFee: _FLASHLOAN_FEE1,
             liquidationModule: _LIQUIDATION_MODULE,
-            callBeforeQuote: _CALL_BEFORE_QUOTE1,
-            callBeforeQuote2: _CALL_BEFORE_QUOTE1
+            callBeforeQuote: _CALL_BEFORE_QUOTE1
         });
 
         if (_silo != _SILO0 && _silo != _SILO1) revert WrongSilo();
@@ -241,8 +239,7 @@ contract SiloConfig is ISiloConfig {
                 liquidationFee: _LIQUIDATION_FEE0,
                 flashloanFee: _FLASHLOAN_FEE0,
                 liquidationModule: _LIQUIDATION_MODULE,
-                callBeforeQuote: _CALL_BEFORE_QUOTE0,
-                callBeforeQuote2: _CALL_BEFORE_QUOTE0
+                callBeforeQuote: _CALL_BEFORE_QUOTE0
             });
         } else if (_silo == _SILO1) {
             return ConfigData({
@@ -262,8 +259,7 @@ contract SiloConfig is ISiloConfig {
                 liquidationFee: _LIQUIDATION_FEE1,
                 flashloanFee: _FLASHLOAN_FEE1,
                 liquidationModule: _LIQUIDATION_MODULE,
-                callBeforeQuote: _CALL_BEFORE_QUOTE1,
-                callBeforeQuote2: _CALL_BEFORE_QUOTE1
+                callBeforeQuote: _CALL_BEFORE_QUOTE1
             });
         } else {
             revert WrongSilo();
