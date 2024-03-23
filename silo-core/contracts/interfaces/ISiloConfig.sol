@@ -2,8 +2,14 @@
 pragma solidity >=0.5.0;
 
 interface ISiloConfig {
-    struct PositionInfo {
+    struct PositionState {
         bool debtInSilo0;
+        bool oneTokenPosition;
+        bool positionOpen;
+        bool borrowPossible; // at-hock, depends which silo asking
+    }
+
+    struct PositionInfo {
         bool oneTokenPosition;
         bool positionOpen;
         bool borrowPossible; // at-hock, depends which silo asking

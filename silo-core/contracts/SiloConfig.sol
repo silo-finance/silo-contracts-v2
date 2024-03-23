@@ -66,7 +66,7 @@ contract SiloConfig is ISiloConfig {
 
     bool private immutable _CALL_BEFORE_QUOTE1;
 
-    mapping (address borrower => PositionInfo positionInfo) internal _positionInfo;
+    mapping (address borrower => PositionState state) internal _positionState;
 
     /// @param _siloId ID of this pool assigned by factory
     /// @param _configData0 silo configuration data for token0
@@ -205,14 +205,18 @@ contract SiloConfig is ISiloConfig {
         if (_silo != _SILO0 && _silo != _SILO1) revert WrongSilo();
 
         bool callForSilo0 = _silo == _SILO0;
-        positionInfo = _positionInfo[_user];
-        positionInfo.borrowPossible = _borrowPossible(positionInfo, callForSilo0);
+        PositionState storage state = _positionState[_user];
+        bool debtInSilo0 = state.debtInSilo0;
+
+        positionInfo.positionOpen = state.positionOpen;
+        positionInfo.oneTokenPosition = state.oneTokenPosition;
+        positionInfo.borrowPossible = _borrowPossible(positionInfo.positionOpen, debtInSilo0, callForSilo0);
 
         if (positionInfo.positionOpen) {
             if (positionInfo.oneTokenPosition) {
-                (collateral, debt) = positionInfo.debtInSilo0 ? (configData0, configData0) : (configData1, configData1);
+                (collateral, debt) = debtInSilo0 ? (configData0, configData0) : (configData1, configData1);
             } else {
-                (collateral, debt) = positionInfo.debtInSilo0 ? (configData1, configData0) : (configData0, configData1);
+                (collateral, debt) = debtInSilo0 ? (configData1, configData0) : (configData0, configData1);
             }
         } else {
             (collateral, debt) = callForSilo0 ? (configData0, configData1) : (configData1, configData0);
@@ -287,7 +291,7 @@ contract SiloConfig is ISiloConfig {
         }
     }
 
-    function _borrowPossible(PositionInfo memory _info, bool _callForSilo0) internal view returns (bool) {
-        return !_info.positionOpen || (_info.debtInSilo0 && _callForSilo0);
+    function _borrowPossible(bool _positionOpen,  bool _debtInSilo0, bool _callForSilo0) internal view returns (bool) {
+        return !_positionOpen || (_debtInSilo0 && _callForSilo0);
     }
 }
