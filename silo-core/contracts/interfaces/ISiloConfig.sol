@@ -9,6 +9,12 @@ interface ISiloConfig {
         bool borrowPossible; // at-hock, depends which silo asking
     }
 
+    struct BorrowerInfo {
+        address borrower;
+        bool sameToken;
+        bool configForBorrow;
+    }
+
     struct InitData {
         /// @notice The address of the deployer of the Silo
         address deployer;
@@ -154,8 +160,14 @@ interface ISiloConfig {
     /// be at index 0.
     /// @return configData0 The configuration data for the specified silo.
     /// @return configData1 The configuration data for the other silo.
-    function getConfigs(address _silo, address _user)
+    function getConfigs(address _silo, BorrowerInfo calldata _user)
         external view returns (ConfigData memory, ConfigData memory, PositionInfo memory);
+
+//    function getConfigsForBorrow(address _silo, address _user)
+//        external view returns (ConfigData memory, ConfigData memory);
+//
+//    function getConfigForBorrow(address _silo, address _user)
+//        external view returns (ConfigData memory);
 
     /// @notice Retrieves configuration data for a specific silo
     /// @dev This function reverts for incorrect silo address input

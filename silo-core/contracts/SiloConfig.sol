@@ -156,7 +156,7 @@ contract SiloConfig is ISiloConfig {
     }
 
     /// @inheritdoc ISiloConfig
-    function getConfigs(address _silo, address _user)
+    function getConfigs(address _silo, BorrowerInfo calldata _user)
         external
         view
         virtual
@@ -205,7 +205,7 @@ contract SiloConfig is ISiloConfig {
         if (_silo != _SILO0 && _silo != _SILO1) revert WrongSilo();
 
         bool callForSilo0 = _silo == _SILO0;
-        positionInfo = _positionInfo[_user];
+        positionInfo = _positionInfo[_user.borrower];
         positionInfo.borrowPossible = _borrowPossible(positionInfo, callForSilo0);
 
         if (positionInfo.positionOpen) {
