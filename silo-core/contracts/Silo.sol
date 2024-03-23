@@ -83,8 +83,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
     function isSolvent(address _borrower) external view virtual returns (bool) {
         (
             ISiloConfig.ConfigData memory collateralConfig,
-            ISiloConfig.ConfigData memory debtConfig,
-            ISiloConfig.PositionInfo memory positionInfo
+            ISiloConfig.ConfigData memory debtConfig
         ) = config.getConfigs(address(this), BorrowerLib.addMetadata(_borrower, false, false));
 
         return SiloSolvencyLib.isSolvent(
@@ -744,8 +743,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
 
         (
             ISiloConfig.ConfigData memory collateralConfig,
-            ISiloConfig.ConfigData memory debtConfig,
-            ISiloConfig.PositionInfo memory positionInfo
+            ISiloConfig.ConfigData memory debtConfig
         ) = config.getConfigs(address(this), BorrowerLib.addMetadata(_owner, false, false));
 
         _callAccrueInterestForAsset(
@@ -790,7 +788,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
             emit WithdrawProtected(msg.sender, _receiver, _owner, assets, shares);
         }
 
-        if (!positionInfo.positionOpen) {
+        if (IShareToken(collateralConfig.debtShareToken).balanceOf(_owner) == 0) {
             return (assets, shares);
         }
 
@@ -831,13 +829,12 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
 
         (
             ISiloConfig.ConfigData memory collateralConfig,
-            ISiloConfig.ConfigData memory debtConfig,
-            ISiloConfig.PositionInfo memory positionInfo
+            ISiloConfig.ConfigData memory debtConfig
         ) = config.getConfigs(address(this), BorrowerLib.addMetadata(_borrower, _sameToken, true));
 
-        if (!positionInfo.borrowPossible) revert ISilo.BorrowNotPossible();
+        if (collateralConfig.silo == address(0)) revert ISilo.BorrowNotPossible();
 
-        if (!positionInfo.positionOpen) {
+        if (IShareToken(collateralConfig.debtShareToken).balanceOf(_borrower) == 0) {
             _orderConfigs(collateralConfig, debtConfig, _sameToken);
         }
 
@@ -967,13 +964,12 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
 
         (
             ISiloConfig.ConfigData memory collateralConfig,
-            ISiloConfig.ConfigData memory debtConfig,
-            ISiloConfig.PositionInfo memory positionInfo
+            ISiloConfig.ConfigData memory debtConfig
         ) = cachedConfig.getConfigs(address(this), BorrowerLib.addMetadata(_borrower, _sameToken, true));
 
-        if (!positionInfo.borrowPossible) return (0, 0);
+        if (collateralConfig.silo == address(0)) return (0, 0);
 
-        if (!positionInfo.positionOpen) {
+        if (IShareToken(debtConfig.debtShareToken).balanceOf(_borrower) == 0) {
             _orderConfigs(collateralConfig, debtConfig, _sameToken);
         }
 
