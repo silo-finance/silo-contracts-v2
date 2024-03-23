@@ -13,6 +13,7 @@ import {SiloSolvencyLib} from "./SiloSolvencyLib.sol";
 import {SiloMathLib} from "./SiloMathLib.sol";
 import {SiloStdLib} from "./SiloStdLib.sol";
 import {SiloLendingLib} from "./SiloLendingLib.sol";
+import {BorrowerLib} from "./BorrowerLib.sol";
 
 // solhint-disable function-max-lines
 
@@ -76,7 +77,7 @@ library SiloERC4626Lib {
             ISiloConfig.ConfigData memory collateralConfig,
             ISiloConfig.ConfigData memory debtConfig,
             ISiloConfig.PositionInfo memory positionInfo
-        ) = _config.getConfigs(address(this), ISiloConfig.BorrowerInfo(_owner, false, false));
+        ) = _config.getConfigs(address(this), BorrowerLib.addMetadata(_owner, false, false));
 
         uint256 shareTokenTotalSupply;
         uint256 liquidity;

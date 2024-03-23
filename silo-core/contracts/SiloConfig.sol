@@ -3,6 +3,7 @@ pragma solidity 0.8.21;
 
 import {ISiloConfig} from "./interfaces/ISiloConfig.sol";
 import {IShareDebtToken} from "./interfaces/IShareDebtToken.sol";
+import {BorrowerLib} from "./lib/BorrowerLib.sol";
 
 // solhint-disable var-name-mixedcase
 
@@ -156,7 +157,7 @@ contract SiloConfig is ISiloConfig {
     }
 
     /// @inheritdoc ISiloConfig
-    function getConfigs(address _silo, BorrowerInfo calldata _user)
+    function getConfigs(address _silo, bytes32 _userInfo)
         external
         view
         virtual
@@ -205,7 +206,9 @@ contract SiloConfig is ISiloConfig {
         if (_silo != _SILO0 && _silo != _SILO1) revert WrongSilo();
 
         bool callForSilo0 = _silo == _SILO0;
-        positionInfo = _positionInfo[_user.borrower];
+        (address borrower,,) = BorrowerLib.extractMetadata(_userInfo);
+
+        positionInfo = _positionInfo[borrower];
         positionInfo.borrowPossible = _borrowPossible(positionInfo, callForSilo0);
 
         if (positionInfo.positionOpen) {
