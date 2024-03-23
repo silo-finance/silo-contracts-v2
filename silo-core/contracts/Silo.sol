@@ -793,11 +793,11 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
             return (assets, shares);
         }
 
-        if (collateralConfig.callBeforeQuote == 1) {
+        if (collateralConfig.callBeforeQuote) {
             ISiloOracle(collateralConfig.solvencyOracle).beforeQuote(collateralConfig.token);
         }
 
-        if (debtConfig.callBeforeQuote == 1) {
+        if (debtConfig.callBeforeQuote) {
             ISiloOracle(debtConfig.solvencyOracle).beforeQuote(debtConfig.token);
         }
 
@@ -868,11 +868,11 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
             if (result != _LEVERAGE_CALLBACK) revert LeverageFailed();
         }
 
-        if (collateralConfig.callBeforeQuote == 1) {
+        if (collateralConfig.callBeforeQuote) {
             ISiloOracle(collateralConfig.maxLtvOracle).beforeQuote(collateralConfig.token);
         }
 
-        if (debtConfig.callBeforeQuote == 1) {
+        if (debtConfig.callBeforeQuote) {
             ISiloOracle(debtConfig.maxLtvOracle).beforeQuote(debtConfig.token);
         }
 

@@ -99,7 +99,7 @@ contract SiloConfig is ISiloConfig {
         _LIQUIDATION_FEE0 = _configData0.liquidationFee;
         _FLASHLOAN_FEE0 = _configData0.flashloanFee;
 
-        _CALL_BEFORE_QUOTE0 = _configData0.callBeforeQuote == 1;
+        _CALL_BEFORE_QUOTE0 = _configData0.callBeforeQuote;
 
         // TOKEN #1
 
@@ -121,7 +121,7 @@ contract SiloConfig is ISiloConfig {
         _LIQUIDATION_FEE1 = _configData1.liquidationFee;
         _FLASHLOAN_FEE1 = _configData1.flashloanFee;
 
-        _CALL_BEFORE_QUOTE1 = _configData1.callBeforeQuote == 1;
+        _CALL_BEFORE_QUOTE1 = _configData1.callBeforeQuote;
     }
 
     /// @inheritdoc ISiloConfig
@@ -179,7 +179,7 @@ contract SiloConfig is ISiloConfig {
             liquidationFee: _LIQUIDATION_FEE0,
             flashloanFee: _FLASHLOAN_FEE0,
             liquidationModule: _LIQUIDATION_MODULE,
-            callBeforeQuote: _CALL_BEFORE_QUOTE0 ? 1 : 0
+            callBeforeQuote: _CALL_BEFORE_QUOTE0
         });
 
         ConfigData memory configData1 = ConfigData({
@@ -199,7 +199,7 @@ contract SiloConfig is ISiloConfig {
             liquidationFee: _LIQUIDATION_FEE1,
             flashloanFee: _FLASHLOAN_FEE1,
             liquidationModule: _LIQUIDATION_MODULE,
-            callBeforeQuote: _CALL_BEFORE_QUOTE1 ? 1: 0
+            callBeforeQuote: _CALL_BEFORE_QUOTE1
         });
 
         if (_silo != _SILO0 && _silo != _SILO1) revert WrongSilo();
@@ -239,7 +239,7 @@ contract SiloConfig is ISiloConfig {
                 liquidationFee: _LIQUIDATION_FEE0,
                 flashloanFee: _FLASHLOAN_FEE0,
                 liquidationModule: _LIQUIDATION_MODULE,
-                callBeforeQuote: _CALL_BEFORE_QUOTE0 ? 1 : 0
+                callBeforeQuote: _CALL_BEFORE_QUOTE0
             });
         } else if (_silo == _SILO1) {
             return ConfigData({
@@ -259,7 +259,7 @@ contract SiloConfig is ISiloConfig {
                 liquidationFee: _LIQUIDATION_FEE1,
                 flashloanFee: _FLASHLOAN_FEE1,
                 liquidationModule: _LIQUIDATION_MODULE,
-                callBeforeQuote: _CALL_BEFORE_QUOTE1 ? 1 : 0
+                callBeforeQuote: _CALL_BEFORE_QUOTE1
             });
         } else {
             revert WrongSilo();

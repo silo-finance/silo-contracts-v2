@@ -129,7 +129,7 @@ interface ISiloConfig {
         uint256 liquidationFee;
         uint256 flashloanFee;
         address liquidationModule;
-        uint8 callBeforeQuote;
+        bool callBeforeQuote;
     }
 
     error WrongSilo();

@@ -40,11 +40,11 @@ contract PartialLiquidation is IPartialLiquidation, ReentrancyGuardUpgradeable {
         ISilo(_siloWithDebt).accrueInterest();
         ISilo(debtConfig.otherSilo).accrueInterest();
 
-        if (collateralConfig.callBeforeQuote == 1) {
+        if (collateralConfig.callBeforeQuote) {
             ISiloOracle(collateralConfig.solvencyOracle).beforeQuote(collateralConfig.token);
         }
 
-        if (debtConfig.callBeforeQuote == 1) {
+        if (debtConfig.callBeforeQuote) {
             ISiloOracle(debtConfig.solvencyOracle).beforeQuote(debtConfig.token);
         }
 
