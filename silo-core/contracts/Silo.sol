@@ -97,7 +97,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
 
     /// @inheritdoc ISilo
     function getCollateralAssets() external view virtual returns (uint256 totalCollateralAssets) {
-        ISiloConfig.ConfigData memory thisSiloConfig = config.getConfig(address(this));
+        (ISiloConfig.ConfigData memory thisSiloConfig,) = config.getConfigs(address(this), bytes32(0));
 
         totalCollateralAssets = SiloStdLib.getTotalCollateralAssetsWithInterest(
             thisSiloConfig.silo,
@@ -109,7 +109,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
 
     /// @inheritdoc ISilo
     function getDebtAssets() external view virtual returns (uint256 totalDebtAssets) {
-        ISiloConfig.ConfigData memory thisSiloConfig = config.getConfig(address(this));
+        (ISiloConfig.ConfigData memory thisSiloConfig, ) = config.getConfigs(address(this), bytes32(0));
 
         totalDebtAssets = SiloStdLib.getTotalDebtAssetsWithInterest(
             thisSiloConfig.silo, thisSiloConfig.interestRateModel
@@ -540,7 +540,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
 
     /// @inheritdoc ISilo
     function maxRepay(address _borrower) external view virtual returns (uint256 assets) {
-        ISiloConfig.ConfigData memory configData = config.getConfig(address(this));
+        (ISiloConfig.ConfigData memory configData,) = config.getConfigs(address(this), bytes32(0));
         uint256 shares = IShareToken(configData.debtShareToken).balanceOf(_borrower);
 
         (uint256 totalSiloAssets, uint256 totalShares) =
@@ -585,7 +585,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
 
     /// @inheritdoc ISilo
     function maxRepayShares(address _borrower) external view virtual returns (uint256 shares) {
-        ISiloConfig.ConfigData memory configData = config.getConfig(address(this));
+        (ISiloConfig.ConfigData memory configData,) = config.getConfigs(address(this), bytes32(0));
         shares = IShareToken(configData.debtShareToken).balanceOf(_borrower);
     }
 
@@ -682,7 +682,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
         virtual
         returns (uint256 accruedInterest, ISiloConfig.ConfigData memory configData)
     {
-        configData = config.getConfig(address(this));
+        (configData,) = config.getConfigs(address(this), bytes32(0));
 
         accruedInterest = _callAccrueInterestForAsset(
             configData.interestRateModel, configData.daoFee, configData.deployerFee, address(0)
@@ -900,7 +900,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
         view
         returns (uint256 assets, uint256 shares)
     {
-        ISiloConfig.ConfigData memory configData = config.getConfig(address(this));
+        (ISiloConfig.ConfigData memory configData,) = config.getConfigs(address(this), bytes32(0));
         (assets, shares) = SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(configData, _assetType);
     }
 
