@@ -6,7 +6,6 @@ import {MathUpgradeable} from "openzeppelin-contracts-upgradeable/utils/math/Mat
 import {ISilo} from "../../interfaces/ISilo.sol";
 import {ISiloConfig} from "../../interfaces/ISiloConfig.sol";
 import {SiloSolvencyLib} from "../../lib/SiloSolvencyLib.sol";
-import {BorrowerLib} from "../../lib/BorrowerLib.sol";
 import {PartialLiquidationLib} from "./PartialLiquidationLib.sol";
 
 library PartialLiquidationExecLib {
@@ -69,7 +68,7 @@ library PartialLiquidationExecLib {
             ISiloConfig.ConfigData memory collateralConfig,
             ISiloConfig.ConfigData memory debtConfig,
             ISiloConfig.PositionInfo memory positionInfo
-        ) = _silo.config().getConfigs(address(_silo), BorrowerLib.addMetadata(_borrower, false, false));
+        ) = _silo.config().getConfigs(address(_silo), ISiloConfig.BorrowerInfo(_borrower, false, false));
 
         if (!positionInfo.positionOpen || !positionInfo.borrowPossible) {
             return (0, 0);

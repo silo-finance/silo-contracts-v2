@@ -160,7 +160,7 @@ interface ISiloConfig {
     /// be at index 0.
     /// @return configData0 The configuration data for the specified silo.
     /// @return configData1 The configuration data for the other silo.
-    function getConfigs(address _silo, bytes32 _user)
+    function getConfigs(address _silo, BorrowerInfo calldata _user)
         external view returns (ConfigData memory, ConfigData memory, PositionInfo memory);
 
 //    function getConfigsForBorrow(address _silo, address _user)

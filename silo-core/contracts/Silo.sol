@@ -24,7 +24,6 @@ import {SiloLendingLib} from "./lib/SiloLendingLib.sol";
 import {SiloERC4626Lib} from "./lib/SiloERC4626Lib.sol";
 import {SiloMathLib} from "./lib/SiloMathLib.sol";
 import {LiquidationWithdrawLib} from "./lib/LiquidationWithdrawLib.sol";
-import {BorrowerLib} from "./lib/BorrowerLib.sol";
 
 // Keep ERC4626 ordering
 // solhint-disable ordering
@@ -85,7 +84,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
             ISiloConfig.ConfigData memory collateralConfig,
             ISiloConfig.ConfigData memory debtConfig,
             ISiloConfig.PositionInfo memory positionInfo
-        ) = config.getConfigs(address(this), BorrowerLib.addMetadata(_borrower, false, false));
+        ) = config.getConfigs(address(this), ISiloConfig.BorrowerInfo(_borrower, false, false));
 
         return SiloSolvencyLib.isSolvent(
             collateralConfig,
@@ -746,7 +745,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
             ISiloConfig.ConfigData memory collateralConfig,
             ISiloConfig.ConfigData memory debtConfig,
             ISiloConfig.PositionInfo memory positionInfo
-        ) = config.getConfigs(address(this), BorrowerLib.addMetadata(_owner, false, false));
+        ) = config.getConfigs(address(this), ISiloConfig.BorrowerInfo(_owner, false, false));
 
         _callAccrueInterestForAsset(
             collateralConfig.interestRateModel,
@@ -833,7 +832,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
             ISiloConfig.ConfigData memory collateralConfig,
             ISiloConfig.ConfigData memory debtConfig,
             ISiloConfig.PositionInfo memory positionInfo
-        ) = config.getConfigs(address(this), BorrowerLib.addMetadata(_borrower, _sameToken, true));
+        ) = config.getConfigs(address(this), ISiloConfig.BorrowerInfo(_borrower, _sameToken, true));
 
         if (!positionInfo.borrowPossible) revert ISilo.BorrowNotPossible();
 
@@ -969,7 +968,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
             ISiloConfig.ConfigData memory collateralConfig,
             ISiloConfig.ConfigData memory debtConfig,
             ISiloConfig.PositionInfo memory positionInfo
-        ) = cachedConfig.getConfigs(address(this), BorrowerLib.addMetadata(_borrower, _sameToken, true));
+        ) = cachedConfig.getConfigs(address(this), ISiloConfig.BorrowerInfo(_borrower, _sameToken, true));
 
         if (!positionInfo.borrowPossible) return (0, 0);
 
