@@ -66,7 +66,27 @@ function siloFnSelector(
         address owner;
         ISilo.AssetType anyType;
         redeem(e, assetsOrShares, receiver, owner, anyType);
-    } else {
+    } else if (f.selector == withdrawCollateralToLiquidatorSig()) {
+        uint256 _withdrawAssetsFromCollateral;
+        uint256 _withdrawAssetsFromProtected;
+        
+        address _borrower;
+        address _liquidator;
+        bool _receiveSToken;
+         
+        require receiver == _liquidator;
+        require assetsOrShares == require_uint256(_withdrawAssetsFromCollateral + _withdrawAssetsFromProtected);
+       
+        withdrawCollateralsToLiquidator(
+            e,
+            _withdrawAssetsFromCollateral,
+            _withdrawAssetsFromProtected,
+            _borrower,
+            _liquidator,
+            _receiveSToken
+        );
+    }
+    else {
         calldataarg args;
         f(e, args);
     }
