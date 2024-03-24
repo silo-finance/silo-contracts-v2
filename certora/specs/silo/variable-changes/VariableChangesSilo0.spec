@@ -70,6 +70,37 @@ rule VC_Silo_total_collateral_increase(
 }
 
 /**
+Notice that this invariant implies the following invariant:
+
+silo0.total[ISilo.AssetType.Protected].assets == 0 => shareProtectedCollateralToken0.totalSupply() == 0;
+
+*/
+invariant protectedAssetsBoundsProtectedShareToken() 
+    silo0.total[ISilo.AssetType.Protected].assets >= shareProtectedCollateralToken0.totalSupply() {
+
+            preserved withdrawCollateralsToLiquidator(
+                uint256 _withdrawAssetsFromCollateral,
+                uint256 _withdrawAssetsFromProtected,
+                address _borrower,
+                address _liquidator,
+                bool _receiveSToken) with (env e) {
+                    requireProtectedToken0TotalAndBalancesIntegrity();
+                }
+
+            preserved redeem(uint256 _shares, address _receiver, address _owner, ISilo.AssetType _assetType) with (env e){
+                requireProtectedToken0TotalAndBalancesIntegrity();
+            }
+
+            preserved transitionCollateral(uint256 _shares, address _owner, ISilo.AssetType _withdrawType) with (env e) {
+                requireProtectedToken0TotalAndBalancesIntegrity();
+            }
+
+            preserved withdraw(uint256 _assets, address _receiver, address _owner, ISilo.AssetType _assetType) with (env e) {
+                requireProtectedToken0TotalAndBalancesIntegrity();
+            }
+    }
+
+/**
 Silo contract cannot have assets of any type when the interest rate timestamp is 0.
 */
 invariant cannotHaveAssestWithZeroInterestRateTimestamp() silo0.getSiloDataInterestRateTimestamp() == 0 => 
