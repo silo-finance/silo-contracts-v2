@@ -23,6 +23,7 @@ rule HLP_integrityOfDeposit(env e, address receiver)
     mathint balanceCollateralAfter = shareCollateralToken0.balanceOf(receiver);  
     mathint balanceTokenAfter = token0.balanceOf(e.msg.sender);  
 
+    assert shares > 0;
     assert balanceCollateralAfter == balanceCollateralBefore + shares;
     satisfy balanceCollateralAfter == balanceCollateralBefore + shares;
     assert balanceTokenAfter == balanceTokenBefore - assets;

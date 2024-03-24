@@ -3,10 +3,10 @@ methods {
         => calculateTokenValue(calledContract, _baseToken, _baseAmount, e.block.timestamp) expect uint256;
 }
 
-definition VALUE1() returns uint256 = 16;    /// price is 0.5
-definition VALUE2() returns uint256 = 32;   /// price is 1
-definition VALUE3() returns uint256 = 96;   /// price is 3
-definition PRECISION() returns uint256 = 32;
+definition VALUE1() returns uint256 = 1;    /// price is 0.5
+definition VALUE2() returns uint256 = 2;   /// price is 1
+definition VALUE3() returns uint256 = 6;   /// price is 3
+definition PRECISION() returns uint256 = 2;
 
 /*
 Generic price oracle : 

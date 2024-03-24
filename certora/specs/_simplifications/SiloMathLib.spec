@@ -1,5 +1,5 @@
 methods {
-    /*
+    
     function SiloMathLib.convertToAssets(
         uint256 _shares,
         uint256 _totalAssets,
@@ -17,7 +17,7 @@ methods {
         ISilo.AssetType _assetType
     ) internal returns (uint256) =>
     assetsToSharesApprox(_assets, _totalAssets, _totalShares, _rounding, _assetType);
-    */
+    
 
     function SiloMathLib.getDebtAmountsWithInterest(uint256 _debtAssets, uint256 _rcomp) 
         internal returns (uint256,uint256) => getDebtAmountsWithInterestCVL(_debtAssets, _rcomp);
@@ -47,7 +47,7 @@ function discreteRatioMulDiv(uint256 x, uint256 y, uint256 z) returns uint256
         (x == z && res == y) ||
         (y == z && res == x) ||
         constRatio(x, y, z, 2, 1, res) || // f = 2*x or f = x/2 (same for y)
-        constRatio(x, y, z, 3, 5, res)    // f = 3*x or f = x/3 (same for y)
+        constRatio(x, y, z, 3, 1, res)    // f = 3*x or f = x/3 (same for y)
         );
     return res;
 }
@@ -80,14 +80,16 @@ persistent ghost sharesMulDiv(uint256,uint256,uint256,bool) returns uint256 {
         y1 <= y2 => sharesMulDiv(x,y1,z,true) <= sharesMulDiv(x,y2,z,true);
     axiom forall uint256 z1. forall uint256 z2. forall uint256 x. forall uint256 y.
         z1 <= z2 => sharesMulDiv(x,y,z1,false) >= sharesMulDiv(x,y,z2,false);
+    
     axiom forall uint256 y. forall uint256 z.
         (sharesMulDiv(0,y,z,false) == 0) && 
         (sharesMulDiv(1,y,z,false) ==0 <=> (y ==0 || y < z));
-
+    /*
     axiom forall uint256 x. forall uint256 y. forall uint256 z. forall uint256 w.
         (w == sharesMulDiv(x,y,z,false) && y !=0) => (
             sharesMulDiv(w,z,y,false) <= x && 
             sharesMulDiv(w,z,y,false) + sharesMulDiv(z,1,y,true) >= to_mathint(x));
+    */
 }
 
 /// interestRatio(_debtAssets,_rcomp) = _debtAssets * _rcomp / _PRECISION_DECIMALS;
@@ -119,8 +121,8 @@ function sharesToAssetsApprox(
     if (totalShares == 0 || totalAssets == 0) return _shares;
 
     //Replace for exact mulDiv
-    //return mulDiv_mathLib(_shares,totalAssets,totalShares,_rounding == MathUpgradeable.Rounding.Up);
-    return sharesMulDiv(_shares,totalAssets,totalShares,_rounding == MathUpgradeable.Rounding.Up);
+    return mulDiv_mathLib(_shares,totalAssets,totalShares,_rounding == MathUpgradeable.Rounding.Up);
+    //return sharesMulDiv(_shares,totalAssets,totalShares,_rounding == MathUpgradeable.Rounding.Up);
     //return discreteRatioMulDiv(_shares, totalAssets, totalShares);
 }
 
@@ -139,8 +141,8 @@ function assetsToSharesApprox(
     if (totalShares == 0 || totalAssets == 0) return _assets;
 
     //Replace for exact mulDiv
-    //return mulDiv_mathLib(_assets,totalShares,totalAssets,_rounding == MathUpgradeable.Rounding.Up);
-    return sharesMulDiv(_assets,totalShares,totalAssets,_rounding == MathUpgradeable.Rounding.Up);
+    return mulDiv_mathLib(_assets,totalShares,totalAssets,_rounding == MathUpgradeable.Rounding.Up);
+    //return sharesMulDiv(_assets,totalShares,totalAssets,_rounding == MathUpgradeable.Rounding.Up);
     //return discreteRatioMulDiv(_assets, totalShares, totalAssets);
 }
 
