@@ -100,6 +100,36 @@ invariant protectedAssetsBoundsProtectedShareToken()
             }
     }
 
+
+    invariant collateralAssetsBoundsShareToken() 
+    silo0.total[ISilo.AssetType.Collateral].assets >= shareCollateralToken0.totalSupply() {
+
+            preserved withdrawCollateralsToLiquidator(
+                uint256 _withdrawAssetsFromCollateral,
+                uint256 _withdrawAssetsFromProtected,
+                address _borrower,
+                address _liquidator,
+                bool _receiveSToken) with (env e) {
+                    requireCollateralToken0TotalAndBalancesIntegrity();
+                }
+
+            preserved redeem(uint256 _shares, address _receiver, address _owner, ISilo.AssetType _assetType) with (env e){
+                requireCollateralToken0TotalAndBalancesIntegrity();
+            }
+
+            preserved transitionCollateral(uint256 _shares, address _owner, ISilo.AssetType _withdrawType) with (env e) {
+                requireCollateralToken0TotalAndBalancesIntegrity();
+            }
+
+            preserved withdraw(uint256 _assets, address _receiver, address _owner, ISilo.AssetType _assetType) with (env e) {
+                requireCollateralToken0TotalAndBalancesIntegrity();
+            }
+
+             preserved withdraw(uint256 _assets, address _receiver, address _owner) with (env e) {
+                requireCollateralToken0TotalAndBalancesIntegrity();
+            }
+    }
+
 /**
 Silo contract cannot have assets of any type when the interest rate timestamp is 0.
 */
