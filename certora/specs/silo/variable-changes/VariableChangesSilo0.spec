@@ -102,7 +102,18 @@ invariant cannotHaveAssestWithZeroInterestRateTimestamp() silo0.getSiloDataInter
                     completeSiloSetupEnv(e);
                     require e.block.timestamp > 0;
                 }
-            }
+
+                preserved withdrawCollateralsToLiquidator(
+                    uint256 _withdrawAssetsFromCollateral,
+                    uint256 _withdrawAssetsFromProtected,
+                    address _borrower,
+                    address _liquidator,
+                    bool _receiveSToken) with (env e) {
+                        completeSiloSetupEnv(e);
+                        requireProtectedToken0TotalAndBalancesIntegrity();
+                    }
+
+    }
 
 /**
 certoraRun certora/config/silo/silo0.conf \
