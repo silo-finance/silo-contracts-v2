@@ -75,7 +75,7 @@ Notice that this invariant implies the following invariant:
 silo0.total[ISilo.AssetType.Protected].assets == 0 => shareProtectedCollateralToken0.totalSupply() == 0;
 
 */
-invariant protectedAssetsBoundsProtectedShareToken() 
+invariant protectedAssetsBoundProtectedShareTokenTotalSupply()
     silo0.total[ISilo.AssetType.Protected].assets >= shareProtectedCollateralToken0.totalSupply() {
 
             preserved withdrawCollateralsToLiquidator(
@@ -101,7 +101,7 @@ invariant protectedAssetsBoundsProtectedShareToken()
     }
 
 
-    invariant collateralAssetsBoundsShareToken() 
+    invariant collateralAssetsBoundShareTokenTotalSupply()
     silo0.total[ISilo.AssetType.Collateral].assets >= shareCollateralToken0.totalSupply() {
 
             preserved withdrawCollateralsToLiquidator(
@@ -194,12 +194,12 @@ rule VC_Silo_total_collateral_decrease(
 ) filtered { f -> !f.isView } {
     completeSiloSetupEnv(e);
     requireToken0TotalAndBalancesIntegrity();
-    requireProtectedToken0TotalAndBalancesIntegrity();
-
+    // requireProtectedToken0TotalAndBalancesIntegrity();
+   
     requireInvariant cannotHaveAssestWithZeroInterestRateTimestamp();
 
     mathint totalDepositsBefore = silo0.getCollateralAssets(e);
-    mathint protectedAssetsBefore =  silo0.total[ISilo.AssetType.Protected].assets;
+    mathint protectedAssetsBefore = silo0.total[ISilo.AssetType.Protected].assets;
     mathint shareTokenTotalSupplyBefore = shareCollateralToken0.totalSupply();
     mathint balanceSharesBefore = shareCollateralToken0.balanceOf(receiver);
     mathint siloBalanceBefore = token0.balanceOf(silo0);
