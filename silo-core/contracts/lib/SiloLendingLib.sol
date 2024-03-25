@@ -65,6 +65,10 @@ library SiloLendingLib {
         success = true;
     }
 
+    function borrowPossible(ISiloConfig.PositionInfo memory _positionInfo) internal view returns (bool) {
+        return !_positionInfo.positionOpen || _positionInfo.debtInThisSilo;
+    }
+
     /// @notice Determines the maximum amount (both in assets and shares) that a borrower can borrow
     /// @param _collateralConfig Configuration data for the collateral
     /// @param _debtConfig Configuration data for the debt

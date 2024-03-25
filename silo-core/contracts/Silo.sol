@@ -825,7 +825,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
             ISiloConfig.PositionInfo memory positionInfo
         ) = config.getConfigs(address(this), _borrower);
 
-        if (positionInfo.positionOpen && !positionInfo.debtInThisSilo) revert ISilo.BorrowNotPossible();
+        if (!SiloLendingLib.borrowPossible(positionInfo)) revert ISilo.BorrowNotPossible();
 
         _callAccrueInterestForAsset(
             debtConfig.interestRateModel, debtConfig.daoFee, debtConfig.deployerFee, debtConfig.otherSilo
@@ -957,7 +957,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
             ISiloConfig.PositionInfo memory positionInfo
         ) = cachedConfig.getConfigs(address(this), _borrower);
 
-        if (positionInfo.positionOpen && !positionInfo.debtInThisSilo) return (0, 0);
+        if (!SiloLendingLib.borrowPossible(positionInfo)) return (0, 0);
 
         (uint256 totalDebtAssets, uint256 totalDebtShares) =
             SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(debtConfig, AssetType.Debt);

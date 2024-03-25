@@ -7,6 +7,7 @@ import {ISilo, ILiquidationProcess} from "../interfaces/ISilo.sol";
 import {IPartialLiquidation} from "../interfaces/IPartialLiquidation.sol";
 import {ISiloOracle} from "../interfaces/ISiloOracle.sol";
 import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
+import {SiloLendingLib} from "../lib/SiloLendingLib.sol";
 
 import {PartialLiquidationExecLib} from "./lib/PartialLiquidationExecLib.sol";
 
@@ -35,7 +36,7 @@ contract PartialLiquidation is IPartialLiquidation, ReentrancyGuardUpgradeable {
 
         if (_collateralAsset != collateralConfig.token) revert UnexpectedCollateralToken();
         if (_debtAsset != debtConfig.token) revert UnexpectedDebtToken();
-        if (positionInfo.positionOpen && !positionInfo.debtInThisSilo) revert ISilo.ThereIsDebtInOtherSilo();
+        if (!SiloLendingLib.borrowPossible(positionInfo)) revert ISilo.ThereIsDebtInOtherSilo();
 
         ISilo(_siloWithDebt).accrueInterest();
         ISilo(debtConfig.otherSilo).accrueInterest();
