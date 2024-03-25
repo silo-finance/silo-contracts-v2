@@ -217,6 +217,7 @@ rule VC_Silo_total_collateral_decrease(
 ) filtered { f -> !f.isView } {
     completeSiloSetupEnv(e);
     requireInvariant cannotHaveAssestWithZeroInterestRateTimestamp();
+    requireProtectedToken0TotalAndBalancesIntegrity();
 
     mathint totalDepositsBefore = silo0.getCollateralAssets(e);
     mathint protectedAssetsBefore = silo0.total[ISilo.AssetType.Protected].assets;
