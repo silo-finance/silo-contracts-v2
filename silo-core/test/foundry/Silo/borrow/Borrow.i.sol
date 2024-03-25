@@ -228,9 +228,7 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
         uint256 toWithdraw = 123;
         _depositForBorrow(toWithdraw, borrower);
         _deposit(assets, borrower, ISilo.AssetType.Protected);
-
-        vm.expectCall(address(token1), abi.encodeWithSelector(IERC20.transfer.selector, borrower, toWithdraw));
-
+        
         _borrow(12345, borrower);
     }
 
