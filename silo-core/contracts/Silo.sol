@@ -201,8 +201,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
             0, // shares
             _receiver,
             AssetType.Collateral,
-            IShareToken(configData.collateralShareToken),
-            IShareToken(configData.debtShareToken)
+            IShareToken(configData.collateralShareToken)
         );
     }
 
@@ -226,8 +225,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
             _shares,
             _receiver,
             AssetType.Collateral,
-            IShareToken(configData.collateralShareToken),
-            IShareToken(configData.debtShareToken)
+            IShareToken(configData.collateralShareToken)
         );
     }
 
@@ -332,8 +330,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
             0, // shares
             _receiver,
             _assetType,
-            IShareToken(collateralShareToken),
-            IShareToken(configData.debtShareToken)
+            IShareToken(collateralShareToken)
         );
     }
 
@@ -378,8 +375,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
             _shares,
             _receiver,
             _assetType,
-            IShareToken(collateralShareToken),
-            IShareToken(configData.debtShareToken)
+            IShareToken(collateralShareToken)
         );
     }
 
@@ -460,22 +456,19 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
             );
         }
 
-        { // Stack too deep
-            (AssetType depositType, address shareTokenTo) = _withdrawType == AssetType.Collateral
-                ? (AssetType.Protected, configData.protectedShareToken)
-                : (AssetType.Collateral, configData.collateralShareToken);
+        (AssetType depositType, address shareTokenTo) = _withdrawType == AssetType.Collateral
+            ? (AssetType.Protected, configData.protectedShareToken)
+            : (AssetType.Collateral, configData.collateralShareToken);
 
-            (assets, toShares) = SiloERC4626Lib.deposit(
-                address(0), // empty token because we don't want to transfer
-                _owner,
-                assets,
-                0, // shares
-                _owner,
-                IShareToken(shareTokenTo),
-                IShareToken(configData.debtShareToken),
-                total[depositType]
-            );
-        }
+        (assets, toShares) = SiloERC4626Lib.deposit(
+            address(0), // empty token because we don't want to transfer
+            _owner,
+            assets,
+            0, // shares
+            _owner,
+            IShareToken(shareTokenTo),
+            total[depositType]
+        );
 
         if (_withdrawType == AssetType.Collateral) {
             emit Withdraw(msg.sender, _owner, _owner, assets, _shares);
@@ -699,8 +692,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
         uint256 _shares,
         address _receiver,
         ISilo.AssetType _assetType,
-        IShareToken _collateralShareToken,
-        IShareToken _debtShareToken
+        IShareToken _collateralShareToken
     )
         internal
         virtual
@@ -715,7 +707,6 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
             _shares,
             _receiver,
             _collateralShareToken,
-            _debtShareToken,
             total[_assetType]
         );
 
@@ -835,10 +826,6 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
         ) = config.getConfigs(address(this), ISiloConfig.BorrowerInfo(_borrower, _sameToken, true));
 
         if (!positionInfo.borrowPossible) revert ISilo.BorrowNotPossible();
-
-        if (!positionInfo.positionOpen) {
-            _orderConfigs(collateralConfig, debtConfig, _sameToken);
-        }
 
         _callAccrueInterestForAsset(
             debtConfig.interestRateModel, debtConfig.daoFee, debtConfig.deployerFee, debtConfig.otherSilo
@@ -972,10 +959,6 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
 
         if (!positionInfo.borrowPossible) return (0, 0);
 
-        if (!positionInfo.positionOpen) {
-            _orderConfigs(collateralConfig, debtConfig, _sameToken);
-        }
-
         (uint256 totalDebtAssets, uint256 totalDebtShares) =
             SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(debtConfig, AssetType.Debt);
 
@@ -1056,13 +1039,5 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
             _liquidity,
             _totalCollateral
         );
-    }
-
-    function _orderConfigs(
-        ISiloConfig.ConfigData memory _collateral,
-        ISiloConfig.ConfigData memory _debt,
-        bool _sameToken
-    ) internal pure {
-        (_collateral, _debt) = _sameToken ? (_collateral, _collateral) : (_debt, _collateral);
     }
 }

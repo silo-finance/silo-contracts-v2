@@ -197,7 +197,6 @@ library SiloERC4626Lib {
     /// provided.
     /// @param _receiver The address that will receive the collateral shares
     /// @param _collateralShareToken The collateral share token
-    /// @param _debtShareToken The debt share token
     /// @param _totalCollateral Reference to the total collateral assets in the silo
     /// @return assets The exact amount of assets being deposited
     /// @return shares The exact number of collateral shares being minted in exchange for the deposited assets
@@ -208,7 +207,6 @@ library SiloERC4626Lib {
         uint256 _shares,
         address _receiver,
         IShareToken _collateralShareToken,
-        IShareToken _debtShareToken,
         ISilo.Assets storage _totalCollateral
     ) internal returns (uint256 assets, uint256 shares) {
         uint256 totalAssets = _totalCollateral.assets;
