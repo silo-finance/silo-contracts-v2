@@ -66,6 +66,7 @@ contract SiloConfig is ISiloConfig {
 
     bool private immutable _CALL_BEFORE_QUOTE1;
 
+    // TODO do we need events for this? this is internal state only
     mapping (address borrower => PositionInfo positionInfo) internal _positionInfo;
 
     /// @param _siloId ID of this pool assigned by factory
@@ -201,8 +202,8 @@ contract SiloConfig is ISiloConfig {
         virtual
         returns (ConfigData memory _siloConfig, ConfigData memory _otherSiloConfig, PositionInfo memory positionInfo)
     {
-        bool callForSilo0 = _silo == _SILO0;
-        if (!callForSilo0 && _silo != _SILO1) revert WrongSilo();
+        bool callFromSilo0 = _silo == _SILO0;
+        if (!callFromSilo0 && _silo != _SILO1) revert WrongSilo();
 
         _siloConfig = ConfigData({
             daoFee: _DAO_FEE,
@@ -246,13 +247,11 @@ contract SiloConfig is ISiloConfig {
 
         positionInfo = _positionInfo[_borrower];
 
-        if (callForSilo0) {
+        if (callFromSilo0) {
             positionInfo.debtInThisSilo = positionInfo.debtInSilo0;
-        } else if (_silo == _SILO1) {
+        } else {
             positionInfo.debtInThisSilo = !positionInfo.debtInSilo0;
             (_siloConfig, _otherSiloConfig) = (_otherSiloConfig, _siloConfig);
-        } else {
-            revert WrongSilo();
         }
     }
 
@@ -324,7 +323,7 @@ contract SiloConfig is ISiloConfig {
         }
     }
 
-    function _borrowPossible(PositionInfo memory _info, bool _callForSilo0) internal view returns (bool) {
+    function _borrowPossible(PositionInfo memory _info, bool _callForSilo0) internal pure returns (bool) {
         return !_info.positionOpen || (_info.debtInSilo0 && _callForSilo0);
     }
 }

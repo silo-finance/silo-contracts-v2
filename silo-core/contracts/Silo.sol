@@ -81,18 +81,12 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
     /// @inheritdoc ISilo
     function isSolvent(address _borrower) external view virtual returns (bool) {
         (
-            ISiloConfig.ConfigData memory collateralConfig,
-            ISiloConfig.ConfigData memory debtConfig,
+            ISiloConfig.ConfigData memory collateral,
+            ISiloConfig.ConfigData memory debt,
             ISiloConfig.PositionInfo memory positionInfo
         ) = config.getConfigs(address(this), _borrower);
 
-        return SiloSolvencyLib.isSolvent(
-            collateralConfig,
-            debtConfig,
-            positionInfo,
-            _borrower,
-            AccrueInterestInMemory.Yes
-        );
+        return SiloSolvencyLib.isSolvent(collateral, debt, positionInfo, _borrower, AccrueInterestInMemory.Yes);
     }
 
     /// @inheritdoc ISilo
@@ -175,8 +169,8 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
     }
 
     /// @inheritdoc IERC4626
-    function maxDeposit(address _receiver) external view virtual returns (uint256 maxAssets) {
-        return _callMaxDepositOrMint(_receiver, total[AssetType.Collateral].assets);
+    function maxDeposit(address /* _receiver */) external view virtual returns (uint256 maxAssets) {
+        return _callMaxDepositOrMint(total[AssetType.Collateral].assets);
     }
 
     /// @inheritdoc IERC4626
@@ -206,8 +200,8 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
     }
 
     /// @inheritdoc IERC4626
-    function maxMint(address _receiver) external view virtual returns (uint256 maxShares) {
-        return _callMaxDepositOrMint(_receiver, IShareToken(_getShareToken()).totalSupply());
+    function maxMint(address /* _receiver */) external view virtual returns (uint256 maxShares) {
+        return _callMaxDepositOrMint(IShareToken(_getShareToken()).totalSupply());
     }
 
     /// @inheritdoc IERC4626
@@ -295,13 +289,13 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
     }
 
     /// @inheritdoc ISilo
-    function maxDeposit(address _receiver, AssetType _assetType)
+    function maxDeposit(address /* _receiver */, AssetType _assetType)
         external
         view
         virtual
         returns (uint256 maxAssets)
     {
-        return _callMaxDepositOrMint(_receiver, total[_assetType].assets);
+        return _callMaxDepositOrMint(total[_assetType].assets);
     }
 
     /// @inheritdoc ISilo
@@ -335,7 +329,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
     }
 
     /// @inheritdoc ISilo
-    function maxMint(address _receiver, AssetType _assetType)
+    function maxMint(address /* _receiver */, AssetType _assetType)
         external
         view
         virtual
@@ -346,7 +340,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
         (address protectedToken, address collateralToken, ) = config.getShareTokens(address(this));
         address shareToken = _assetType == AssetType.Collateral ? collateralToken : protectedToken;
 
-        return _callMaxDepositOrMint(_receiver, IShareToken(shareToken).totalSupply());
+        return _callMaxDepositOrMint(IShareToken(shareToken).totalSupply());
     }
 
     /// @inheritdoc ISilo
@@ -798,11 +792,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
 
         // `_params.owner` must be solvent
         if (!SiloSolvencyLib.isSolvent(
-            collateralConfig,
-            debtConfig,
-            positionInfo,
-            _owner,
-            AccrueInterestInMemory.No
+            collateralConfig, debtConfig, positionInfo, _owner, AccrueInterestInMemory.No
         )) {
             revert NotSolvent();
         }
@@ -825,8 +815,8 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
         ISiloConfig cachedConfig = config;
 
         (
-            ISiloConfig.ConfigData memory collateralConfig, // this silo config
-            ISiloConfig.ConfigData memory debtConfig, // other silo config
+            ISiloConfig.ConfigData memory collateralConfig,
+            ISiloConfig.ConfigData memory debtConfig,
             ISiloConfig.PositionInfo memory positionInfo
         ) = cachedConfig.getConfigs(address(this), _borrower);
 
@@ -849,7 +839,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
             _borrower,
             msg.sender,
             total[AssetType.Debt],
-            total[AssetType.Collateral].assets // do not cache it because withdraw can change this value
+            total[AssetType.Collateral].assets
         );
 
         if (!positionInfo.positionOpen) {
@@ -989,13 +979,13 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
         );
     }
 
-    function _callMaxDepositOrMint(address _receiver, uint256 _totalCollateralAssets)
+    function _callMaxDepositOrMint(uint256 _totalCollateralAssets)
         internal
         view
         virtual
         returns (uint256 maxAssetsOrShares)
     {
-        return SiloERC4626Lib.maxDepositOrMint(config, _receiver, _totalCollateralAssets);
+        return SiloERC4626Lib.maxDepositOrMint(_totalCollateralAssets);
     }
 
     function _callMaxWithdraw(ISiloConfig _config, address _owner, ISilo.AssetType _assetType)

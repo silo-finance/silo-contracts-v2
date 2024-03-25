@@ -33,21 +33,13 @@ library SiloERC4626Lib {
     /// tx will revert with ZeroShares error. This is unreal case in real world scenario so we ignoring it.
     /// @dev The function checks, if deposit is possible for the given user, and if so, returns a constant
     /// representing no deposit limit
-    /// @param _config Configuration of the silo
-    /// @param _receiver The address of the user
     /// @param _totalCollateralAssets total deposited collateral
     /// @return maxAssetsOrShares Maximum assets/shares a user can deposit
-    function maxDepositOrMint(
-        ISiloConfig _config,
-        address _receiver,
-        uint256 _totalCollateralAssets
-    )
+    function maxDepositOrMint(uint256 _totalCollateralAssets)
         external
-        view
+        pure
         returns (uint256 maxAssetsOrShares)
     {
-        ISiloConfig.ConfigData memory configData = _config.getConfig(address(this));
-
         maxAssetsOrShares = _totalCollateralAssets == 0
             ? _VIRTUAL_DEPOSIT_LIMIT
             : _VIRTUAL_DEPOSIT_LIMIT - _totalCollateralAssets;

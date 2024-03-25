@@ -22,13 +22,6 @@ library SiloSolvencyLib {
     uint256 internal constant _PRECISION_DECIMALS = 1e18;
     uint256 internal constant _INFINITY = type(uint256).max;
 
-    /// @return TRUE when current silo has collateral attached to debt, FALSE otherwise
-    function collateralInThisSilo(ISiloConfig.PositionInfo memory _positionInfo) internal view returns (bool) {
-        if (!_positionInfo.positionOpen) return false;
-
-        return _positionInfo.debtInThisSilo && _positionInfo.oneTokenPosition;
-    }
-
     /// @notice Determines if a borrower is solvent based on the Loan-to-Value (LTV) ratio
     /// @param _collateralConfig Configuration data for the collateral
     /// @param _debtConfig Configuration data for the debt
@@ -243,5 +236,12 @@ library SiloSolvencyLib {
                 ? _ltvData.debtOracle.quote(_ltvData.borrowerDebtAssets, _debtAsset)
                 : _ltvData.borrowerDebtAssets;
         }
+    }
+
+    /// @return TRUE when current silo has collateral attached to debt, FALSE otherwise
+    function collateralInThisSilo(ISiloConfig.PositionInfo memory _positionInfo) internal pure returns (bool) {
+        if (!_positionInfo.positionOpen) return false;
+
+        return _positionInfo.debtInThisSilo && _positionInfo.oneTokenPosition;
     }
 }

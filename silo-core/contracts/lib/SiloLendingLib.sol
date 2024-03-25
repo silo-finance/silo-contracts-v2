@@ -65,10 +65,6 @@ library SiloLendingLib {
         success = true;
     }
 
-    function borrowPossible(ISiloConfig.PositionInfo memory _positionInfo) internal view returns (bool) {
-        return !_positionInfo.positionOpen || _positionInfo.debtInThisSilo;
-    }
-
     /// @notice Determines the maximum amount (both in assets and shares) that a borrower can borrow
     /// @param _collateralConfig Configuration data for the collateral
     /// @param _debtConfig Configuration data for the debt
@@ -226,6 +222,10 @@ library SiloLendingLib {
         // so no harm can be done as the state is already updated.
         // We do not expect the silo to work with any malicious token that will not send tokens back.
         IERC20Upgradeable(_configData.token).safeTransferFrom(_repayer, address(this), assets);
+    }
+
+    function borrowPossible(ISiloConfig.PositionInfo memory _positionInfo) internal pure returns (bool) {
+        return !_positionInfo.positionOpen || _positionInfo.debtInThisSilo;
     }
 
     /// @notice Accrues interest on assets, updating the collateral and debt balances
