@@ -126,12 +126,41 @@ contract SiloConfig is ISiloConfig {
 
     /// @inheritdoc ISiloConfig
     function openPosition(address _borrower, bool _sameToken) external {
-        if (msg.sender != _SILO0 && msg.sender == _SILO1) revert WrongSilo();
-        if (_positionInfo[_borrower].positionOpen) revert PositionAlreadyOpen();
+        if (msg.sender != _SILO0 && msg.sender != _SILO1) revert WrongSilo();
 
-        _positionInfo[_borrower].positionOpen = true;
-        _positionInfo[_borrower].oneTokenPosition = _sameToken;
-        _positionInfo[_borrower].debtInSilo0 = msg.sender == _SILO0;
+        PositionInfo storage positionInfo = _positionInfo[_borrower];
+
+        if (positionInfo.positionOpen) revert PositionAlreadyOpen();
+
+        positionInfo.positionOpen = true;
+        positionInfo.oneTokenPosition = _sameToken;
+        positionInfo.debtInSilo0 = msg.sender == _SILO0;
+    }
+
+    function closePosition(address _borrower) external {
+        if (msg.sender != _SILO0 && msg.sender != _SILO1 &&
+            msg.sender != _DEBT_SHARE_TOKEN0 && msg.sender != _DEBT_SHARE_TOKEN1
+        ) revert WrongSilo();
+
+        delete _positionInfo[_borrower];
+    }
+
+    /// @inheritdoc ISiloConfig
+    function onPositionTransfer(address _from, address _to) external {
+        if (msg.sender != _DEBT_SHARE_TOKEN0 && msg.sender != _DEBT_SHARE_TOKEN1) revert OnlyDebtShareToken();
+
+        PositionInfo storage positionInfo = _positionInfo[_to];
+
+        if (positionInfo.positionOpen) {
+            if (msg.sender == _DEBT_SHARE_TOKEN1 && positionInfo.debtInSilo0) revert PositionExistInOtherSilo();
+            if (msg.sender == _DEBT_SHARE_TOKEN0 && !positionInfo.debtInSilo0) revert PositionExistInOtherSilo();
+
+            // transferring debt allowed in scope of same silo
+        } else {
+            positionInfo.positionOpen = true;
+            positionInfo.oneTokenPosition = _positionInfo[_from].oneTokenPosition;
+            positionInfo.debtInSilo0 = msg.sender == _DEBT_SHARE_TOKEN0;
+        }
     }
 
     /// @inheritdoc ISiloConfig

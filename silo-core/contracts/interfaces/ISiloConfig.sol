@@ -133,13 +133,18 @@ interface ISiloConfig {
     }
 
     error WrongSilo();
+    error OnlyDebtShareToken();
+    error PositionExistInOtherSilo();
     error PositionAlreadyOpen();
 
     /// @dev can be called only by silo, it opens position for `_borrower`
     /// @param _borrower borrower address
-    /// @param _sameToken TRUE if `_borrower` open position in the same token (collateral token and debt token
-    /// are the same)
+    /// @param _sameToken TRUE if `_borrower` open position in the same token
     function openPosition(address _borrower, bool _sameToken) external;
+
+    function onPositionTransfer(address _from, address _to) external;
+
+    function closePosition(address _from) external;
 
     // solhint-disable-next-line func-name-mixedcase
     function SILO_ID() external view returns (uint256);

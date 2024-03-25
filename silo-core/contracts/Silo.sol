@@ -814,7 +814,6 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
         address _receiver,
         address _borrower,
         bool _sameToken,
-        bool _positionOpen,
         bool _leverage,
         bytes memory _data
     )
@@ -853,7 +852,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
             total[AssetType.Collateral].assets // do not cache it because withdraw can change this value
         );
 
-        if (!_positionOpen) {
+        if (!positionInfo.positionOpen) {
             cachedConfig.openPosition(_borrower, _sameToken);
         }
 
