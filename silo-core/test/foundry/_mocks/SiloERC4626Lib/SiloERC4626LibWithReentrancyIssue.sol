@@ -25,7 +25,6 @@ library SiloERC4626LibWithReentrancyIssue {
         uint256 _shares,
         address _receiver,
         IShareToken _collateralShareToken,
-        IShareToken _debtShareToken,
         ISilo.Assets storage _totalCollateral
     ) public returns (uint256 assets, uint256 shares) {
         uint256 totalAssets = _totalCollateral.assets;

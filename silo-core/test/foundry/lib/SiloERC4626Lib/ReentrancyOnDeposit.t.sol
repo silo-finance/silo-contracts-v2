@@ -61,8 +61,7 @@ contract ReentrancyOnDepositTest is Test {
             _ASSETS,
             _SHARES,
             _receiver,
-            _shareCollateralToken,
-            _debtShareToken
+            _shareCollateralToken
         );
     }
 
@@ -102,12 +101,6 @@ contract ReentrancyOnDepositTest is Test {
             address(_shareCollateralToken),
             abi.encodeCall(IShareToken.mint, (_receiver, _depositor, 991)),
             abi.encode(true)
-        );
-
-        vm.mockCall(
-            address(_debtShareToken),
-            abi.encodeCall(IERC20.balanceOf, _receiver),
-            abi.encode(0)
         );
     }
 }
