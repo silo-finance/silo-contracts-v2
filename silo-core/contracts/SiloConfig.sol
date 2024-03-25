@@ -125,6 +125,16 @@ contract SiloConfig is ISiloConfig {
     }
 
     /// @inheritdoc ISiloConfig
+    function openPosition(address _borrower, bool _sameToken) external {
+        if (msg.sender != _SILO0 && msg.sender == _SILO1) revert WrongSilo();
+        if (_positionInfo[_borrower].positionOpen) revert PositionAlreadyOpen();
+
+        _positionInfo[_borrower].positionOpen = true;
+        _positionInfo[_borrower].oneTokenPosition = _sameToken;
+        _positionInfo[_borrower].debtInSilo0 = msg.sender == _SILO0;
+    }
+
+    /// @inheritdoc ISiloConfig
     function getSilos() external view returns (address silo0, address silo1) {
         return (_SILO0, _SILO1);
     }

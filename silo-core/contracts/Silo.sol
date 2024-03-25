@@ -814,6 +814,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
         address _receiver,
         address _borrower,
         bool _sameToken,
+        bool _positionOpen,
         bool _leverage,
         bytes memory _data
     )
@@ -822,12 +823,13 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
         returns (uint256 assets, uint256 shares)
     {
         if (_assets == 0 && _shares == 0) revert ISilo.ZeroAssets();
+        ISiloConfig cachedConfig = config;
 
         (
             ISiloConfig.ConfigData memory collateralConfig, // this silo config
             ISiloConfig.ConfigData memory debtConfig, // other silo config
             ISiloConfig.PositionInfo memory positionInfo
-        ) = config.getConfigs(address(this), _borrower);
+        ) = cachedConfig.getConfigs(address(this), _borrower);
 
         if (!SiloLendingLib.borrowPossible(positionInfo)) revert ISilo.BorrowNotPossible();
 
@@ -850,6 +852,10 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
             total[AssetType.Debt],
             total[AssetType.Collateral].assets // do not cache it because withdraw can change this value
         );
+
+        if (!_positionOpen) {
+            cachedConfig.openPosition(_borrower, _sameToken);
+        }
 
         emit Borrow(msg.sender, _receiver, _borrower, assets, shares);
 
