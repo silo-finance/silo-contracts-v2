@@ -966,6 +966,8 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
 
         if (_sameToken) {
             debtConfig = collateralConfig;
+        } else {
+            (collateralConfig, debtConfig) = (debtConfig, collateralConfig);
         }
 
         (uint256 totalDebtAssets, uint256 totalDebtShares) =
