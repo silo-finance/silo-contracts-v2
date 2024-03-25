@@ -101,7 +101,7 @@ invariant protectedAssetsBoundProtectedShareTokenTotalSupply()
     }
 
 
-    invariant collateralAssetsBoundShareTokenTotalSupply()
+invariant collateralAssetsBoundShareTokenTotalSupply()
     silo0.total[ISilo.AssetType.Collateral].assets >= shareCollateralToken0.totalSupply() {
 
             preserved withdrawCollateralsToLiquidator(
@@ -193,9 +193,6 @@ rule VC_Silo_total_collateral_decrease(
     address receiver
 ) filtered { f -> !f.isView } {
     completeSiloSetupEnv(e);
-    requireToken0TotalAndBalancesIntegrity();
-    // requireProtectedToken0TotalAndBalancesIntegrity();
-   
     requireInvariant cannotHaveAssestWithZeroInterestRateTimestamp();
 
     mathint totalDepositsBefore = silo0.getCollateralAssets(e);
