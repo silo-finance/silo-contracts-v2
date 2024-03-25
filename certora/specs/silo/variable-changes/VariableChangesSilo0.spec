@@ -19,7 +19,7 @@ rule VC_Silo_total_collateral_increase(
     method f,
     uint256 assetsOrShares,
     address receiver
-) filtered { f -> !f.isView} {
+) filtered { f -> !f.isView } {
     completeSiloSetupEnv(e);
     requireToken0TotalAndBalancesIntegrity();
     requireCollateralToken0TotalAndBalancesIntegrity();
@@ -70,6 +70,113 @@ rule VC_Silo_total_collateral_increase(
 }
 
 /**
+Notice that this invariant implies the following invariant:
+
+silo0.total[ISilo.AssetType.Protected].assets == 0 => shareProtectedCollateralToken0.totalSupply() == 0;
+
+*/
+invariant protectedAssetsBoundProtectedShareTokenTotalSupply()
+    silo0.total[ISilo.AssetType.Protected].assets >= shareProtectedCollateralToken0.totalSupply() {
+
+            preserved withdrawCollateralsToLiquidator(
+                uint256 _withdrawAssetsFromCollateral,
+                uint256 _withdrawAssetsFromProtected,
+                address _borrower,
+                address _liquidator,
+                bool _receiveSToken) with (env e) {
+                    requireProtectedToken0TotalAndBalancesIntegrity();
+                }
+
+            preserved redeem(uint256 _shares, address _receiver, address _owner, ISilo.AssetType _assetType) with (env e){
+                requireProtectedToken0TotalAndBalancesIntegrity();
+            }
+
+            preserved transitionCollateral(uint256 _shares, address _owner, ISilo.AssetType _withdrawType) with (env e) {
+                requireProtectedToken0TotalAndBalancesIntegrity();
+            }
+
+            preserved withdraw(uint256 _assets, address _receiver, address _owner, ISilo.AssetType _assetType) with (env e) {
+                requireProtectedToken0TotalAndBalancesIntegrity();
+            }
+    }
+
+
+invariant collateralAssetsBoundShareTokenTotalSupply()
+    silo0.total[ISilo.AssetType.Collateral].assets >= shareCollateralToken0.totalSupply() {
+
+            preserved withdrawCollateralsToLiquidator(
+                uint256 _withdrawAssetsFromCollateral,
+                uint256 _withdrawAssetsFromProtected,
+                address _borrower,
+                address _liquidator,
+                bool _receiveSToken) with (env e) {
+                    requireCollateralToken0TotalAndBalancesIntegrity();
+                }
+
+            preserved redeem(uint256 _shares, address _receiver, address _owner, ISilo.AssetType _assetType) with (env e){
+                requireCollateralToken0TotalAndBalancesIntegrity();
+            }
+
+            preserved transitionCollateral(uint256 _shares, address _owner, ISilo.AssetType _withdrawType) with (env e) {
+                requireCollateralToken0TotalAndBalancesIntegrity();
+            }
+
+            preserved withdraw(uint256 _assets, address _receiver, address _owner, ISilo.AssetType _assetType) with (env e) {
+                requireCollateralToken0TotalAndBalancesIntegrity();
+            }
+
+             preserved withdraw(uint256 _assets, address _receiver, address _owner) with (env e) {
+                requireCollateralToken0TotalAndBalancesIntegrity();
+            }
+    }
+
+/**
+Silo contract cannot have assets of any type when the interest rate timestamp is 0.
+*/
+invariant cannotHaveAssestWithZeroInterestRateTimestamp() silo0.getSiloDataInterestRateTimestamp() == 0 => 
+        (silo0.total[ISilo.AssetType.Collateral].assets + 
+            silo0.total[ISilo.AssetType.Protected].assets + 
+             silo0.total[ISilo.AssetType.Debt].assets == 0) {
+
+                preserved with (env e) {
+                    completeSiloSetupEnv(e);
+                }
+
+                // These functions could change the assets, but they can only be called
+                // with block.timestamp > 0
+                preserved deposit(uint256 _assets, address _receiver) with (env e) {
+                    completeSiloSetupEnv(e);
+                    require e.block.timestamp > 0;
+                }
+
+                preserved deposit(uint256 _assets, address _receiver, ISilo.AssetType _assetType) with (env e) {
+                    completeSiloSetupEnv(e);
+                    require e.block.timestamp > 0;
+                }
+
+                preserved mint(uint256 _shares, address _receiver) with (env e) {
+                    completeSiloSetupEnv(e);
+                    require e.block.timestamp > 0;
+                }
+
+                preserved mint(uint256 _assets, address _receiver, ISilo.AssetType _assetType) with (env e) {
+                    completeSiloSetupEnv(e);
+                    require e.block.timestamp > 0;
+                }
+
+                preserved withdrawCollateralsToLiquidator(
+                    uint256 _withdrawAssetsFromCollateral,
+                    uint256 _withdrawAssetsFromProtected,
+                    address _borrower,
+                    address _liquidator,
+                    bool _receiveSToken) with (env e) {
+                        completeSiloSetupEnv(e);
+                        requireProtectedToken0TotalAndBalancesIntegrity();
+                    }
+
+    }
+
+/**
 certoraRun certora/config/silo/silo0.conf \
     --parametric_contracts Silo0 \
     --msg "VC_Silo_total_collateral_increase" \
@@ -86,10 +193,10 @@ rule VC_Silo_total_collateral_decrease(
     address receiver
 ) filtered { f -> !f.isView } {
     completeSiloSetupEnv(e);
-    requireToken0TotalAndBalancesIntegrity();
-    requireProtectedToken0TotalAndBalancesIntegrity();
+    requireInvariant cannotHaveAssestWithZeroInterestRateTimestamp();
 
     mathint totalDepositsBefore = silo0.getCollateralAssets(e);
+    mathint protectedAssetsBefore = silo0.total[ISilo.AssetType.Protected].assets;
     mathint shareTokenTotalSupplyBefore = shareCollateralToken0.totalSupply();
     mathint balanceSharesBefore = shareCollateralToken0.balanceOf(receiver);
     mathint siloBalanceBefore = token0.balanceOf(silo0);
@@ -97,6 +204,7 @@ rule VC_Silo_total_collateral_decrease(
     siloFnSelector(e, f, assetsOrShares, receiver);
 
     mathint totalDepositsAfter = silo0.getCollateralAssets(e);
+    mathint protectedAssetsAfter = silo0.total[ISilo.AssetType.Protected].assets;
     mathint shareTokenTotalSupplyAfter = shareCollateralToken0.totalSupply();
     mathint balanceSharesAfter = shareCollateralToken0.balanceOf(receiver);
     mathint siloBalanceAfter = token0.balanceOf(silo0);
@@ -109,20 +217,18 @@ rule VC_Silo_total_collateral_decrease(
     assert totalSupplyDecreased => fnAllowedToDecreaseShareCollateralTotalSupply(f),
         "The total supply of share tokens should decrease only if allowed fn was called";
 
-    // mathint totalSupplyDecrease = shareTokenTotalSupplyBefore - shareTokenTotalSupplyAfter;
     mathint siloBalanceDecrease = siloBalanceBefore - siloBalanceAfter;
     mathint totalDepositsDecrease = totalDepositsBefore - totalDepositsAfter;
+    mathint protectedAssetsIncrease = protectedAssetsAfter - protectedAssetsBefore;
 
-    assert totalSupplyDecreased => //(totalSupplyDecrease == assetsOrShares &&
-            totalDepositsDecrease == siloBalanceDecrease;
-    
-    // assert totalDepositsBefore > totalDepositsAfter && f.selector != transitionCollateralSig() =>
-    //     siloBalanceAfter == siloBalanceBefore - (totalDepositsBefore - totalDepositsAfter),
-    //     "The balance of the silo in the underlying asset should decrease for the same amount";
-
-    // assert totalDepositsBefore > totalDepositsAfter && f.selector == transitionCollateralSig() =>
-    //     siloBalanceAfter == siloBalanceBefore,
-    //     "The balance of the silo should not change on transitionCollateral fn";
+    assert (totalSupplyDecreased && totalDepositsDecrease == protectedAssetsIncrease) => siloBalanceDecrease == 0, 
+    "The balance of the silo in the underlying asset should not change when making collateral protected";
+           
+    assert (totalSupplyDecreased && protectedAssetsIncrease == 0) => 
+            ((receiver == silo0 && siloBalanceDecrease == 0) || 
+                (receiver != silo0 && totalDepositsDecrease == siloBalanceDecrease)), 
+                "The balance of the silo in the underlying asset should decrease for the 
+                    same amount unless the reciever is the silo itself";
    }
 
 
@@ -138,7 +244,7 @@ rule VC_Silo_total_protected_increase(
     method f,
     uint256 assetsOrShares,
     address receiver
-) filtered { f -> !f.isView} {
+) filtered { f -> !f.isView } {
     completeSiloSetupEnv(e);
     requireToken0TotalAndBalancesIntegrity();
     requireProtectedToken0TotalAndBalancesIntegrity();
@@ -184,7 +290,7 @@ rule VC_Silo_total_protected_decrease(
     method f,
     uint256 assetsOrShares,
     address receiver
-) filtered { f -> !f.isView} {
+) filtered { f -> !f.isView } {
     completeSiloSetupEnv(e);
     requireToken0TotalAndBalancesIntegrity();
     requireProtectedToken0TotalAndBalancesIntegrity();
@@ -230,7 +336,7 @@ rule VC_Silo_total_debt_increase(
     method f,
     uint256 assetsOrShares,
     address receiver
-) filtered { f -> !f.isView} {
+) filtered { f -> !f.isView } {
     completeSiloSetupEnv(e);
     requireToken0TotalAndBalancesIntegrity();
     requireDebtToken0TotalAndBalancesIntegrity();
@@ -274,7 +380,7 @@ rule VC_Silo_total_debt_decrease(
     method f,
     uint256 assetsOrShares,
     address receiver
-) filtered { f -> !f.isView} {
+) filtered { f -> !f.isView } {
     completeSiloSetupEnv(e);
     requireToken0TotalAndBalancesIntegrity();
     requireDebtToken0TotalAndBalancesIntegrity();
@@ -318,7 +424,7 @@ rule VC_Silo_debt_share_balance(
     method f,
     uint256 assetsOrShares,
     address receiver
-) filtered { f -> !f.isView} {
+) filtered { f -> !f.isView } {
     completeSiloSetupEnv(e);
     requireDebtToken0TotalAndBalancesIntegrity();
 
@@ -351,7 +457,7 @@ rule VC_Silo_protected_share_balance(
     method f,
     uint256 assetsOrShares,
     address receiver
-) filtered { f -> !f.isView} {
+) filtered { f -> !f.isView } {
     completeSiloSetupEnv(e);
     requireProtectedToken0TotalAndBalancesIntegrity();
 
@@ -382,7 +488,7 @@ rule VC_Silo_collateral_share_balance(
     method f,
     uint256 assetsOrShares,
     address receiver
-) filtered { f -> !f.isView} {
+) filtered { f -> !f.isView } {
     completeSiloSetupEnv(e);
     requireCollateralToken0TotalAndBalancesIntegrity();
 

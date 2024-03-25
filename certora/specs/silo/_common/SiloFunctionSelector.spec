@@ -16,9 +16,6 @@ function siloFnSelector(
     uint256 assetsOrShares,
     address receiver
 ) {
-    require e.block.timestamp < max_uint64;
-    require receiver != currentContract;
-
     if (f.selector == depositSig()) {
         deposit(e, assetsOrShares, receiver);
     } else if (f.selector == depositWithTypeSig()) {
@@ -27,7 +24,6 @@ function siloFnSelector(
     } else if (f.selector == flashLoanSig()) {
         address token;
         bytes data;
-
         flashLoan(e, receiver, token, assetsOrShares, data);
     } else if (f.selector == mintSig()) {
         mint(e, assetsOrShares, receiver);
@@ -56,7 +52,41 @@ function siloFnSelector(
     } else if (f.selector == transitionCollateralSig()) {
         ISilo.AssetType anyType;
         transitionCollateral(e, assetsOrShares, receiver, anyType);
-    } else {
+    } else if (f.selector == withdrawSig()) {
+        address owner;
+        withdraw(e, assetsOrShares, receiver, owner);
+    } else if (f.selector == withdrawWithTypeSig()) {
+        address owner;
+        ISilo.AssetType anyType;
+        withdraw(e, assetsOrShares, receiver, owner, anyType);
+    } else if(f.selector == redeemSig()) {
+        address owner;
+        redeem(e, assetsOrShares, receiver, owner);
+    } else if(f.selector == redeemWithTypeSig()) {
+        address owner;
+        ISilo.AssetType anyType;
+        redeem(e, assetsOrShares, receiver, owner, anyType);
+    } else if (f.selector == withdrawCollateralToLiquidatorSig()) {
+        uint256 _withdrawAssetsFromCollateral;
+        uint256 _withdrawAssetsFromProtected;
+        
+        address _borrower;
+        address _liquidator;
+        bool _receiveSToken;
+         
+        require receiver == _liquidator;
+        require assetsOrShares == require_uint256(_withdrawAssetsFromCollateral + _withdrawAssetsFromProtected);
+       
+        withdrawCollateralsToLiquidator(
+            e,
+            _withdrawAssetsFromCollateral,
+            _withdrawAssetsFromProtected,
+            _borrower,
+            _liquidator,
+            _receiveSToken
+        );
+    }
+    else {
         calldataarg args;
         f(e, args);
     }
