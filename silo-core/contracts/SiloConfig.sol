@@ -156,23 +156,16 @@ contract SiloConfig is ISiloConfig {
     }
 
     /// @inheritdoc ISiloConfig
-    function getConfigs(address _silo, address _borrower, bool _sameToken, bool _configForBorrow)
+    function getConfigs(address _silo, address _borrower)
         external
         view
         virtual
-        returns (ConfigData memory collateral, ConfigData memory debt, PositionInfo memory positionInfo)
+        returns (ConfigData memory _siloConfig, ConfigData memory _otherSiloConfig, PositionInfo memory positionInfo)
     {
-        if (_silo != _SILO0 && _silo != _SILO1) revert WrongSilo();
-
         bool callForSilo0 = _silo == _SILO0;
-        positionInfo = _positionInfo[_borrower];
-        positionInfo.borrowPossible = _configForBorrow ? _borrowPossible(positionInfo, callForSilo0) : false;
+        if (!callForSilo0 && _silo != _SILO1) revert WrongSilo();
 
-        if (_configForBorrow && !positionInfo.borrowPossible) {
-            return (collateral, debt, positionInfo);
-        }
-
-        ConfigData memory configData0 = ConfigData({
+        _siloConfig = ConfigData({
             daoFee: _DAO_FEE,
             deployerFee: _DEPLOYER_FEE,
             silo: _SILO0,
@@ -192,7 +185,7 @@ contract SiloConfig is ISiloConfig {
             callBeforeQuote: _CALL_BEFORE_QUOTE0
         });
 
-        ConfigData memory configData1 = ConfigData({
+        _otherSiloConfig = ConfigData({
             daoFee: _DAO_FEE,
             deployerFee: _DEPLOYER_FEE,
             silo: _SILO1,
@@ -212,24 +205,15 @@ contract SiloConfig is ISiloConfig {
             callBeforeQuote: _CALL_BEFORE_QUOTE1
         });
 
-        // this method should be used only for borrow, liquidation, withdraw
+        positionInfo = _positionInfo[_borrower];
 
-        if (positionInfo.positionOpen) {
-            if (positionInfo.oneTokenPosition) {
-                (collateral, debt) = positionInfo.debtInSilo0 ? (configData0, configData0) : (configData1, configData1);
-            } else {
-                (collateral, debt) = positionInfo.debtInSilo0 ? (configData1, configData0) : (configData0, configData1);
-            }
-        } else { // no debt
-            if (_configForBorrow) {
-                if (_sameToken) {
-                    collateral = callForSilo0 ? configData0 : configData1;
-                } else {
-                    (collateral, debt) = callForSilo0 ? (configData1, configData0) : (configData0, configData1);
-                }
-            } else {
-                (collateral, debt) = callForSilo0 ? (configData0, configData1) : (configData1, configData0);
-            }
+        if (callForSilo0) {
+            positionInfo.debtInThisSilo = positionInfo.debtInSilo0;
+        } else if (_silo == _SILO1) {
+            positionInfo.debtInThisSilo = !positionInfo.debtInSilo0;
+            (_siloConfig, _otherSiloConfig) = (_otherSiloConfig, _siloConfig);
+        } else {
+            revert WrongSilo();
         }
     }
 

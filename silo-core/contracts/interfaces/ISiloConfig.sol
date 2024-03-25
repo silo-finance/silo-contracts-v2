@@ -3,10 +3,10 @@ pragma solidity >=0.5.0;
 
 interface ISiloConfig {
     struct PositionInfo {
-        bool debtInSilo0;
-        bool oneTokenPosition;
         bool positionOpen;
-        bool borrowPossible; // at-hock, depends which silo asking
+        bool oneTokenPosition;
+        bool debtInSilo0;
+        bool debtInThisSilo; // at-hoc when getting configs
     }
 
     struct InitData {
@@ -149,12 +149,12 @@ interface ISiloConfig {
     function getAssetForSilo(address _silo) external view returns (address asset);
 
     /// @notice Retrieves configuration data for both silos. First config is for the silo that is asking for configs.
-    /// @dev This function reverts for incorrect silo address input. For deposit or repay use `getConfig`
+    /// @dev This function reverts for incorrect silo address input.
     /// @param _silo The address of the silo for which configuration data is being retrieved. Config for this silo will
     /// be at index 0.
     /// @return configData0 The configuration data for the specified silo.
     /// @return configData1 The configuration data for the other silo.
-    function getConfigs(address _silo, address borrower, bool sameToken, bool configForBorrow)
+    function getConfigs(address _silo, address borrower)
         external view returns (ConfigData memory, ConfigData memory, PositionInfo memory);
 
 //    function getConfigsForBorrow(address _silo, address _user)
@@ -164,7 +164,7 @@ interface ISiloConfig {
 //        external view returns (ConfigData memory);
 
     /// @notice Retrieves configuration data for a specific silo
-    /// @dev This function reverts for incorrect silo address input. Use it for deposit and repay.
+    /// @dev This function reverts for incorrect silo address input.
     /// @param _silo The address of the silo for which configuration data is being retrieved
     /// @return configData The configuration data for the specified silo
     function getConfig(address _silo) external view returns (ConfigData memory);

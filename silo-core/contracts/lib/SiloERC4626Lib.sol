@@ -76,7 +76,7 @@ library SiloERC4626Lib {
             ISiloConfig.ConfigData memory collateralConfig,
             ISiloConfig.ConfigData memory debtConfig,
             ISiloConfig.PositionInfo memory positionInfo
-        ) = _config.getConfigs(address(this), _owner, false, false);
+        ) = _config.getConfigs(address(this), _owner);
 
         uint256 shareTokenTotalSupply;
         uint256 liquidity;
