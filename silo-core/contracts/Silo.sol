@@ -84,7 +84,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
             ISiloConfig.ConfigData memory collateralConfig,
             ISiloConfig.ConfigData memory debtConfig,
             ISiloConfig.PositionInfo memory positionInfo
-        ) = config.getConfigs(address(this), ISiloConfig.BorrowerInfo(_borrower, false, false));
+        ) = config.getConfigs(address(this), _borrower, false, false);
 
         return SiloSolvencyLib.isSolvent(
             collateralConfig,
@@ -736,7 +736,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
             ISiloConfig.ConfigData memory collateralConfig,
             ISiloConfig.ConfigData memory debtConfig,
             ISiloConfig.PositionInfo memory positionInfo
-        ) = config.getConfigs(address(this), ISiloConfig.BorrowerInfo(_owner, false, false));
+        ) = config.getConfigs(address(this), _owner, false, false);
 
         _callAccrueInterestForAsset(
             collateralConfig.interestRateModel,
@@ -823,7 +823,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
             ISiloConfig.ConfigData memory collateralConfig,
             ISiloConfig.ConfigData memory debtConfig,
             ISiloConfig.PositionInfo memory positionInfo
-        ) = config.getConfigs(address(this), ISiloConfig.BorrowerInfo(_borrower, _sameToken, true));
+        ) = config.getConfigs(address(this), _borrower, _sameToken, true);
 
         if (!positionInfo.borrowPossible) revert ISilo.BorrowNotPossible();
 
@@ -955,7 +955,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
             ISiloConfig.ConfigData memory collateralConfig,
             ISiloConfig.ConfigData memory debtConfig,
             ISiloConfig.PositionInfo memory positionInfo
-        ) = cachedConfig.getConfigs(address(this), ISiloConfig.BorrowerInfo(_borrower, _sameToken, true));
+        ) = cachedConfig.getConfigs(address(this), _borrower, _sameToken, true);
 
         if (!positionInfo.borrowPossible) return (0, 0);
 

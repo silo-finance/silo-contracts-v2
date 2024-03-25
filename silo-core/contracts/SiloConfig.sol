@@ -156,12 +156,22 @@ contract SiloConfig is ISiloConfig {
     }
 
     /// @inheritdoc ISiloConfig
-    function getConfigs(address _silo, BorrowerInfo calldata _user)
+    function getConfigs(address _silo, address _borrower, bool _sameToken, bool _configForBorrow)
         external
         view
         virtual
         returns (ConfigData memory collateral, ConfigData memory debt, PositionInfo memory positionInfo)
     {
+        if (_silo != _SILO0 && _silo != _SILO1) revert WrongSilo();
+
+        bool callForSilo0 = _silo == _SILO0;
+        positionInfo = _positionInfo[_borrower];
+        positionInfo.borrowPossible = _configForBorrow ? _borrowPossible(positionInfo, callForSilo0) : false;
+
+        if (_configForBorrow && !positionInfo.borrowPossible) {
+            return (collateral, debt, positionInfo);
+        }
+
         ConfigData memory configData0 = ConfigData({
             daoFee: _DAO_FEE,
             deployerFee: _DEPLOYER_FEE,
@@ -202,11 +212,7 @@ contract SiloConfig is ISiloConfig {
             callBeforeQuote: _CALL_BEFORE_QUOTE1
         });
 
-        if (_silo != _SILO0 && _silo != _SILO1) revert WrongSilo();
-
-        bool callForSilo0 = _silo == _SILO0;
-        positionInfo = _positionInfo[_user.borrower];
-        positionInfo.borrowPossible = _borrowPossible(positionInfo, callForSilo0);
+        // this method should be used only for borrow, liquidation, withdraw
 
         if (positionInfo.positionOpen) {
             if (positionInfo.oneTokenPosition) {
@@ -214,8 +220,16 @@ contract SiloConfig is ISiloConfig {
             } else {
                 (collateral, debt) = positionInfo.debtInSilo0 ? (configData1, configData0) : (configData0, configData1);
             }
-        } else {
-            (collateral, debt) = callForSilo0 ? (configData0, configData1) : (configData1, configData0);
+        } else { // no debt
+            if (_configForBorrow) {
+                if (_sameToken) {
+                    collateral = callForSilo0 ? configData0 : configData1;
+                } else {
+                    (collateral, debt) = callForSilo0 ? (configData1, configData0) : (configData0, configData1);
+                }
+            } else {
+                (collateral, debt) = callForSilo0 ? (configData0, configData1) : (configData1, configData0);
+            }
         }
     }
 
