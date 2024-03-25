@@ -13,7 +13,7 @@ Generic price oracle :
     priceOracle(address oracle, address base token, uint256 timestamp)
 */
 function calculateTokenValue(address oracle, address token, uint256 baseAmount, uint256 time) returns uint256 {
-    return require_uint256(priceOracle(oracle,token,time) * baseAmount / PRECISION());
+    return require_uint256((priceOracle(oracle,token,time) * baseAmount + 1) / PRECISION());
 }
 
 persistent ghost priceOracle(address,address,uint256) returns uint256 {

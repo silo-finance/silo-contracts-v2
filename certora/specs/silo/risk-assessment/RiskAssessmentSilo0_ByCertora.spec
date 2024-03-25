@@ -122,6 +122,7 @@ rule RA_silo_cant_borrow_more_than_max(env e, address borrower) {
     requireCollateralToken1TotalAndBalancesIntegrity();
     requireDebtToken1TotalAndBalancesIntegrity();
     requireInvariant RA_no_collateral_assets_no_debt_assets();
+    requireInvariant RA_zero_assets_iff_zero_shares();
 
     uint256 maxAssets = maxBorrow(e, borrower);
     uint256 assets; address receiver; 
@@ -163,12 +164,6 @@ invariant RA_no_collateral_assets_no_debt_assets()
         /// Solvency constraint
         silo1.total(ISilo.AssetType.Debt) ==0
     )
-    /*&&
-    (
-        silo1.total(ISilo.AssetType.Collateral) ==0 &&
-        silo1.total(ISilo.AssetType.Protected) ==0 =>
-        silo1.total(ISilo.AssetType.Debt) ==0
-    )*/
     {
         preserved with (env e) {
             completeSiloSetupEnv(e);
@@ -193,6 +188,9 @@ Violation analysis:
 
     hence the violation shows:
     ShareCollateralToken.totalSupply() == 0 but total[AssetType.collateral].assets ! =0
+
+    TOTAL SUPPLY = 0 ; TOTAL ASSETS = Y
+    TOTAL_SUPPLY = +X ; TOTAL_ASSETS = Y + X
 
     Conclusion:
     Need to make sure no debt shares are available without collateral shares.
@@ -241,6 +239,7 @@ rule RA_maxWithdraw_collateral_assets_independence(env e, address user) {
 rule RA_maxWithdraw_preserved_after_collateral_transition(env e, address user) 
 {
     completeSiloSetupEnv(e);
+    require silo0.getSiloDataInterestRateTimestamp() > 0;
     totalSupplyMoreThanBalance(user);
     totalSupplyMoreThanBalance(e.msg.sender);
     requireProtectedToken0TotalAndBalancesIntegrity();
