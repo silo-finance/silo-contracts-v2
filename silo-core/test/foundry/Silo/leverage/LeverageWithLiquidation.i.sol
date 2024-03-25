@@ -17,6 +17,8 @@ import {LeverageBorrower, ILeverageBorrower} from "../../_common/LeverageBorrowe
 contract LeverageWithLiquidationTest is SiloLittleHelper, Test, ILeverageBorrower {
     using SiloLensLib for ISilo;
 
+    bool sameToken;
+
     bytes32 public constant LEVERAGE_CALLBACK = keccak256("ILeverageBorrower.onLeverage");
 
     function setUp() public {
@@ -40,7 +42,7 @@ contract LeverageWithLiquidationTest is SiloLittleHelper, Test, ILeverageBorrowe
         vm.prank(borrower);
         // before reentrancy protection, if debt or collateral is 0, then liquidation will fail with NoDebtToCover
         vm.expectRevert("ReentrancyGuard: reentrant call");
-        silo1.leverage(borrowAssets, leverageBorrower, borrower, data);
+        silo1.leverage(borrowAssets, leverageBorrower, borrower, sameToken, data);
     }
 
     /*
@@ -61,7 +63,7 @@ contract LeverageWithLiquidationTest is SiloLittleHelper, Test, ILeverageBorrowe
         // this will revert, because we can not enter liquidation when we do leverage
         // without reentrancy it is possible
         vm.expectRevert("ReentrancyGuard: reentrant call");
-        silo1.leverage(borrowAssets, leverageBorrower, borrower, data);
+        silo1.leverage(borrowAssets, leverageBorrower, borrower, sameToken, data);
     }
 
     function onLeverage(

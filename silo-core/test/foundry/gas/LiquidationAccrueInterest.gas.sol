@@ -19,7 +19,7 @@ contract LiquidationAccrueInterestGasTest is Gas, Test {
 
         vm.startPrank(BORROWER);
         silo0.deposit(ASSETS * 5, BORROWER);
-        silo1.borrow(ASSETS, BORROWER, BORROWER);
+        silo1.borrow(ASSETS, BORROWER, BORROWER, false /* _sameToken */);
         vm.stopPrank();
 
         vm.warp(block.timestamp + 13 days);

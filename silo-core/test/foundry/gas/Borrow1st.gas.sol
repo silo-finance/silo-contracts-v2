@@ -25,7 +25,7 @@ contract Borrow1stGasTest is Gas, Test {
         _action(
             BORROWER,
             address(silo1),
-            abi.encodeCall(ISilo.borrow, (ASSETS, BORROWER, BORROWER)),
+            abi.encodeCall(ISilo.borrow, (ASSETS, BORROWER, BORROWER, false /* sameToken */)),
             "Borrow1st (no interest)",
             202683
         );

@@ -20,7 +20,7 @@ contract BorrowNotPossibleTest is SiloLittleHelper, Test {
         _setUpLocalFixture(SiloConfigsNames.LOCAL_NOT_BORROWABLE);
 
         (
-            ISiloConfig.ConfigData memory cfg0, ISiloConfig.ConfigData memory cfg1
+            ISiloConfig.ConfigData memory cfg0, ISiloConfig.ConfigData memory cfg1,
         ) = silo0.config().getConfigs(address(silo0));
 
         assertEq(cfg0.maxLtv, 0, "borrow OFF");
@@ -34,12 +34,13 @@ contract BorrowNotPossibleTest is SiloLittleHelper, Test {
         uint256 depositAssets = 1e18;
         address borrower = makeAddr("Borrower");
         address depositor = makeAddr("Depositor");
+        bool sameToken;
 
         _deposit(depositAssets, depositor, ISilo.AssetType.Collateral);
         _depositForBorrow(depositAssets, borrower);
 
         vm.prank(borrower);
-        silo0.borrow(1, borrower, borrower);
+        silo0.borrow(1, borrower, borrower, sameToken);
     }
 
     /*
@@ -49,13 +50,14 @@ contract BorrowNotPossibleTest is SiloLittleHelper, Test {
         uint256 depositAssets = 1e18;
         address borrower = makeAddr("Borrower");
         address depositor = makeAddr("Depositor");
+        bool sameToken;
 
         _deposit(depositAssets, borrower, ISilo.AssetType.Collateral);
         _depositForBorrow(depositAssets, depositor);
 
         vm.prank(borrower);
         vm.expectRevert(ISilo.AboveMaxLtv.selector);
-        silo1.borrow(1, borrower, borrower);
+        silo1.borrow(1, borrower, borrower, sameToken);
     }
 
     /*

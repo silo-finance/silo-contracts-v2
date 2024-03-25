@@ -99,7 +99,10 @@ contract SiloConfigTest is Test {
         vm.expectRevert(ISiloConfig.WrongSilo.selector);
         siloConfig.getConfigs(wrongSilo);
 
-        (ISiloConfig.ConfigData memory c0, ISiloConfig.ConfigData memory c1) = siloConfig.getConfigs(_configData0.silo);
+        (
+            ISiloConfig.ConfigData memory c0,
+            ISiloConfig.ConfigData memory c1,
+        ) = siloConfig.getConfigs(_configData0.silo);
         
         assertEq(keccak256(abi.encode(c0)), keccak256(abi.encode(_configData0)));
         assertEq(keccak256(abi.encode(c1)), keccak256(abi.encode(_configData1)));

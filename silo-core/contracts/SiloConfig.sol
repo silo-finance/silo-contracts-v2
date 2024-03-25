@@ -195,9 +195,19 @@ contract SiloConfig is ISiloConfig {
         }
     }
 
+    // TODO temporary function for tests
+    function getConfigs(address _silo)
+        public
+        view
+        virtual
+        returns (ConfigData memory _siloConfig, ConfigData memory _otherSiloConfig, PositionInfo memory positionInfo)
+    {
+        return getConfigs(_silo, address(0));
+    }
+
     /// @inheritdoc ISiloConfig
     function getConfigs(address _silo, address _borrower)
-        external
+        public
         view
         virtual
         returns (ConfigData memory _siloConfig, ConfigData memory _otherSiloConfig, PositionInfo memory positionInfo)

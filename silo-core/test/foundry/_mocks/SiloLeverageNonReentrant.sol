@@ -6,7 +6,7 @@ import {Silo, ILeverageBorrower, ISiloFactory} from "silo-core/contracts/Silo.so
 contract SiloLeverageNonReentrant is Silo {
     constructor(ISiloFactory _siloFactory) Silo(_siloFactory) {}
 
-    function leverage(uint256, ILeverageBorrower, address, bytes calldata)
+    function leverage(uint256, ILeverageBorrower, address, bool, bytes calldata)
         external
         override
         nonReentrant

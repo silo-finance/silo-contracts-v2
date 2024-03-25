@@ -169,11 +169,8 @@ interface ISiloConfig {
     function getConfigs(address _silo, address borrower)
         external view returns (ConfigData memory, ConfigData memory, PositionInfo memory);
 
-//    function getConfigsForBorrow(address _silo, address _user)
-//        external view returns (ConfigData memory, ConfigData memory);
-//
-//    function getConfigForBorrow(address _silo, address _user)
-//        external view returns (ConfigData memory);
+    function getConfigs(address _silo)
+        external view returns (ConfigData memory, ConfigData memory, PositionInfo memory);
 
     /// @notice Retrieves configuration data for a specific silo
     /// @dev This function reverts for incorrect silo address input.

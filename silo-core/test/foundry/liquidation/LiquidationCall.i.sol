@@ -132,7 +132,7 @@ contract LiquidationCallTest is SiloLittleHelper, Test {
 
         (
             ISiloConfig.ConfigData memory debtConfig,
-            ISiloConfig.ConfigData memory collateralConfig
+            ISiloConfig.ConfigData memory collateralConfig,
         ) = siloConfig.getConfigs(address(silo1));
 
         (, uint64 interestRateTimestamp0) = silo0.siloData();
@@ -250,7 +250,7 @@ contract LiquidationCallTest is SiloLittleHelper, Test {
 
         (
             ISiloConfig.ConfigData memory debtConfig,
-            ISiloConfig.ConfigData memory collateralConfig
+            ISiloConfig.ConfigData memory collateralConfig,
         ) = siloConfig.getConfigs(address(silo1));
 
         (, uint64 interestRateTimestamp0) = silo0.siloData();
@@ -357,7 +357,7 @@ contract LiquidationCallTest is SiloLittleHelper, Test {
         uint256 collateralSharesToLiquidate = 10e18;
         address liquidator = address(this);
 
-        (, ISiloConfig.ConfigData memory collateralConfig) = siloConfig.getConfigs(address(silo1));
+        (, ISiloConfig.ConfigData memory collateralConfig,) = siloConfig.getConfigs(address(silo1));
 
         vm.expectCall(
             collateralConfig.collateralShareToken,

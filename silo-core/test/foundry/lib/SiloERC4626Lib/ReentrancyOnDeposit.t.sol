@@ -87,8 +87,7 @@ contract ReentrancyOnDepositTest is Test {
             _ASSETS,
             _SHARES,
             _receiver,
-            _shareCollateralToken,
-            _debtShareToken
+            _shareCollateralToken
         );
     }
 

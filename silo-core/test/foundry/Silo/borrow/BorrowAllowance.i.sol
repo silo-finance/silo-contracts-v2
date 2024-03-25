@@ -24,6 +24,7 @@ contract BorrowAllowanceTest is SiloLittleHelper, Test {
     address immutable BORROWER;
 
     ISiloConfig siloConfig;
+    bool sameToken = false;
 
     constructor() {
         DEPOSITOR = makeAddr("Depositor");
@@ -41,9 +42,9 @@ contract BorrowAllowanceTest is SiloLittleHelper, Test {
     /*
     forge test --ffi -vv --mt test_borrow_WithoutAllowance
     */
-    function test_borrow_WithoutAllowance() public {
+    function test_borrow_WithoutAllowance(bool _sameToken) public { // TODO will it do just two runs?
         vm.expectRevert("ERC20: insufficient allowance");
-        silo1.borrow(ASSETS, RECEIVER, BORROWER);
+        silo1.borrow(ASSETS, RECEIVER, BORROWER, _sameToken);
     }
 
     /*
@@ -61,7 +62,7 @@ contract BorrowAllowanceTest is SiloLittleHelper, Test {
 
         assertEq(token1.balanceOf(RECEIVER), 0, "RECEIVER no tokens before");
 
-        silo1.borrow(ASSETS / 2, RECEIVER, BORROWER);
+        silo1.borrow(ASSETS / 2, RECEIVER, BORROWER, sameToken);
 
         assertEq(IShareToken(debtShareToken).balanceOf(BORROWER), ASSETS / 2, "BORROWER has debt after");
         assertEq(IShareToken(debtShareToken).balanceOf(DEPOSITOR), 0, "DEPOSITOR no debt after");

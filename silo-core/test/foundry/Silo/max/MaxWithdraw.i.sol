@@ -86,7 +86,7 @@ contract MaxWithdrawTest is MaxWithdrawCommon {
             address any = makeAddr("yet another user");
             _depositForBorrow(borrowOnSilo0 * 2, any);
             vm.prank(any);
-            silo0.borrow(borrowOnSilo0, any, any);
+            silo0.borrow(borrowOnSilo0, any, any, false /* sameToken */);
         }
 
         uint256 maxWithdraw = silo0.maxWithdraw(borrower);

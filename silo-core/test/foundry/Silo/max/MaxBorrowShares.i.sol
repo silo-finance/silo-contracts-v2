@@ -18,6 +18,7 @@ contract MaxBorrowSharesTest is SiloLittleHelper, Test {
     ISiloConfig siloConfig;
     address immutable depositor;
     address immutable borrower;
+    bool sameToken;
 
     constructor() {
         depositor = makeAddr("Depositor");
@@ -32,7 +33,7 @@ contract MaxBorrowSharesTest is SiloLittleHelper, Test {
     forge test -vv --ffi --mt test_maxBorrowShares_noCollateral
     */
     function test_maxBorrowShares_noCollateral() public {
-        uint256 maxBorrowShares = silo1.maxBorrowShares(borrower);
+        uint256 maxBorrowShares = silo1.maxBorrowShares(borrower, sameToken);
         assertEq(maxBorrowShares, 0, "no collateral - no borrowShares");
 
         _assertMaxBorrowSharesIsZeroAtTheEnd();
@@ -52,7 +53,7 @@ contract MaxBorrowSharesTest is SiloLittleHelper, Test {
         _depositForBorrow(_liquidity, depositor);
         _deposit(_collateral, borrower);
 
-        uint256 maxBorrowShares = silo1.maxBorrowShares(borrower);
+        uint256 maxBorrowShares = silo1.maxBorrowShares(borrower, sameToken);
         vm.assume(maxBorrowShares > 0);
 
         _assertWeCanNotBorrowAboveMax(maxBorrowShares, 2);
@@ -84,7 +85,7 @@ contract MaxBorrowSharesTest is SiloLittleHelper, Test {
         _deposit(_collateral, borrower);
         _depositForBorrow(_liquidity, depositor);
 
-        uint256 maxBorrowShares = silo1.maxBorrowShares(borrower);
+        uint256 maxBorrowShares = silo1.maxBorrowShares(borrower, sameToken);
 
         uint256 firstBorrow = maxBorrowShares / 3;
         vm.assume(firstBorrow > 0);
@@ -92,7 +93,7 @@ contract MaxBorrowSharesTest is SiloLittleHelper, Test {
 
         // now we have debt
 
-        maxBorrowShares = silo1.maxBorrowShares(borrower);
+        maxBorrowShares = silo1.maxBorrowShares(borrower, sameToken);
 
         _assertWeCanNotBorrowAboveMax(maxBorrowShares, 2);
         _assertMaxBorrowSharesIsZeroAtTheEnd();
@@ -113,7 +114,7 @@ contract MaxBorrowSharesTest is SiloLittleHelper, Test {
         _depositForBorrow(_liquidity, depositor);
         // TODO  +protected, and for maxBorrow
 
-        uint256 maxBorrowShares = silo1.maxBorrowShares(borrower);
+        uint256 maxBorrowShares = silo1.maxBorrowShares(borrower, sameToken);
         uint256 firstBorrow = maxBorrowShares / 3;
         emit log_named_uint("____ firstBorrow", firstBorrow);
 
@@ -123,7 +124,7 @@ contract MaxBorrowSharesTest is SiloLittleHelper, Test {
         // now we have debt
         vm.warp(block.timestamp + 100 days);
 
-        maxBorrowShares = silo1.maxBorrowShares(borrower);
+        maxBorrowShares = silo1.maxBorrowShares(borrower, sameToken);
         emit log_named_uint("____ maxBorrowShares", maxBorrowShares);
 
         _assertWeCanNotBorrowAboveMax(maxBorrowShares, 3);
@@ -146,7 +147,7 @@ contract MaxBorrowSharesTest is SiloLittleHelper, Test {
         _depositForBorrow(_liquidity, depositor);
         // TODO  +protected, and same for maxBorrow
 
-        uint256 maxBorrowShares = silo1.maxBorrowShares(borrower);
+        uint256 maxBorrowShares = silo1.maxBorrowShares(borrower, sameToken);
         uint256 firstBorrow = maxBorrowShares / 3;
         emit log_named_uint("____ firstBorrow", firstBorrow);
 
@@ -170,7 +171,7 @@ contract MaxBorrowSharesTest is SiloLittleHelper, Test {
 
         // maybe we have some debt left, maybe not
 
-        maxBorrowShares = silo1.maxBorrowShares(borrower);
+        maxBorrowShares = silo1.maxBorrowShares(borrower, sameToken);
         emit log_named_uint("____ maxBorrowShares", maxBorrowShares);
 
         _assertWeCanNotBorrowAboveMax(maxBorrowShares, 3);
@@ -202,7 +203,7 @@ contract MaxBorrowSharesTest is SiloLittleHelper, Test {
         }
 
         vm.prank(borrower);
-        try silo1.borrowShares(toBorrow, borrower, borrower) returns (uint256) {
+        try silo1.borrowShares(toBorrow, borrower, borrower, sameToken) returns (uint256) {
             revert("[borrowShares] we expect tx to be reverted!");
         } catch (bytes memory data) {
             bytes4 errorType = bytes4(data);
@@ -218,7 +219,7 @@ contract MaxBorrowSharesTest is SiloLittleHelper, Test {
         if (_maxBorrowShares > 0) {
             emit log_named_decimal_uint("[_assertWeCanNotBorrowAboveMax] _maxBorrow > 0 YES, borrowing max", _maxBorrowShares, 18);
             vm.prank(borrower);
-            silo1.borrowShares(_maxBorrowShares, borrower, borrower);
+            silo1.borrowShares(_maxBorrowShares, borrower, borrower, sameToken);
         }
     }
 
@@ -229,7 +230,7 @@ contract MaxBorrowSharesTest is SiloLittleHelper, Test {
     function _assertMaxBorrowSharesIsZeroAtTheEnd(uint256 _precision) internal {
         emit log_named_uint("=================== _assertMaxBorrowIsZeroAtTheEnd =================== +/-", _precision);
 
-        uint256 maxBorrowShares = silo1.maxBorrowShares(borrower);
+        uint256 maxBorrowShares = silo1.maxBorrowShares(borrower, sameToken);
 
         assertLe(
             maxBorrowShares,
