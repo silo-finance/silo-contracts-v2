@@ -89,9 +89,9 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
         return SiloSolvencyLib.isSolvent(
             collateralConfig,
             debtConfig,
+            positionInfo,
             _borrower,
-            AccrueInterestInMemory.Yes,
-            IShareToken(debtConfig.debtShareToken).balanceOf(_borrower)
+            AccrueInterestInMemory.Yes
         );
     }
 
@@ -780,7 +780,11 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
             emit WithdrawProtected(msg.sender, _receiver, _owner, assets, shares);
         }
 
-        if (!positionInfo.positionOpen) {
+        if (SiloSolvencyLib.collateralInThisSilo(positionInfo)) {
+            if (positionInfo.oneTokenPosition) {
+                debtConfig = collateralConfig;
+            }
+        } else {
             return (assets, shares);
         }
 
@@ -796,9 +800,9 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
         if (!SiloSolvencyLib.isSolvent(
             collateralConfig,
             debtConfig,
+            positionInfo,
             _owner,
-            AccrueInterestInMemory.No,
-            IShareToken(debtConfig.debtShareToken).balanceOf(_owner)
+            AccrueInterestInMemory.No
         )) {
             revert NotSolvent();
         }
@@ -820,12 +824,16 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
         if (_assets == 0 && _shares == 0) revert ISilo.ZeroAssets();
 
         (
-            ISiloConfig.ConfigData memory collateralConfig,
-            ISiloConfig.ConfigData memory debtConfig,
+            ISiloConfig.ConfigData memory collateralConfig, // this silo config
+            ISiloConfig.ConfigData memory debtConfig, // other silo config
             ISiloConfig.PositionInfo memory positionInfo
         ) = config.getConfigs(address(this), _borrower);
 
         if (!SiloLendingLib.borrowPossible(positionInfo)) revert ISilo.BorrowNotPossible();
+
+        if (_sameToken) {
+            debtConfig = collateralConfig;
+        }
 
         _callAccrueInterestForAsset(
             debtConfig.interestRateModel, debtConfig.daoFee, debtConfig.deployerFee, debtConfig.otherSilo
@@ -958,6 +966,10 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
         ) = cachedConfig.getConfigs(address(this), _borrower);
 
         if (!SiloLendingLib.borrowPossible(positionInfo)) return (0, 0);
+
+        if (_sameToken) {
+            debtConfig = collateralConfig;
+        }
 
         (uint256 totalDebtAssets, uint256 totalDebtShares) =
             SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(debtConfig, AssetType.Debt);

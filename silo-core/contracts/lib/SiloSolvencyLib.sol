@@ -22,6 +22,13 @@ library SiloSolvencyLib {
     uint256 internal constant _PRECISION_DECIMALS = 1e18;
     uint256 internal constant _INFINITY = type(uint256).max;
 
+    /// @return TRUE when current silo has collateral attached to debt, FALSE otherwise
+    function collateralInThisSilo(ISiloConfig.PositionInfo memory _positionInfo) internal view returns (bool) {
+        if (!_positionInfo.positionOpen) return false;
+
+        return _positionInfo.debtInThisSilo && _positionInfo.oneTokenPosition;
+    }
+
     /// @notice Determines if a borrower is solvent based on the Loan-to-Value (LTV) ratio
     /// @param _collateralConfig Configuration data for the collateral
     /// @param _debtConfig Configuration data for the debt
@@ -31,11 +38,15 @@ library SiloSolvencyLib {
     function isSolvent(
         ISiloConfig.ConfigData memory _collateralConfig,
         ISiloConfig.ConfigData memory _debtConfig,
+        ISiloConfig.PositionInfo memory _positionInfo,
         address _borrower,
-        ISilo.AccrueInterestInMemory _accrueInMemory,
-        uint256 debtShareBalance
+        ISilo.AccrueInterestInMemory _accrueInMemory
     ) internal view returns (bool) {
-        if (debtShareBalance == 0) return true;
+        if (!_positionInfo.positionOpen) return true;
+
+        if (!SiloSolvencyLib.collateralInThisSilo(_positionInfo)) {
+            (_collateralConfig, _debtConfig) = (_debtConfig, _collateralConfig);
+        }
 
         uint256 ltv = getLtv(
             _collateralConfig,
@@ -43,7 +54,7 @@ library SiloSolvencyLib {
             _borrower,
             ISilo.OracleType.Solvency,
             _accrueInMemory,
-            debtShareBalance
+            IShareToken(_debtConfig.debtShareToken).balanceOf(_borrower)
         );
 
         return ltv <= _collateralConfig.lt;

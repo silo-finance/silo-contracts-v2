@@ -89,7 +89,15 @@ library SiloERC4626Lib {
             liquidity = _totalAssets;
         }
 
-        if (!positionInfo.positionOpen) {
+        if (SiloSolvencyLib.collateralInThisSilo(positionInfo)) {
+            if (positionInfo.oneTokenPosition) {
+                debtConfig = collateralConfig;
+            }
+
+            return _maxWithdrawWhenDebt(
+                collateralConfig, debtConfig, _owner, liquidity, shareTokenTotalSupply, _assetType, _totalAssets
+            );
+        } else {
             shares = _assetType == ISilo.AssetType.Protected
                 ? IShareToken(collateralConfig.protectedShareToken).balanceOf(_owner)
                 : IShareToken(collateralConfig.collateralShareToken).balanceOf(_owner);
@@ -118,10 +126,6 @@ library SiloERC4626Lib {
             );
 
             return (assets, shares);
-        } else {
-            return _maxWithdrawWhenDebt(
-                collateralConfig, debtConfig, _owner, liquidity, shareTokenTotalSupply, _assetType, _totalAssets
-            );
         }
     }
 
