@@ -17,7 +17,6 @@ function completeSiloSetupEnv(env e) {
     require e.msg.sender != shareCollateralToken1;
     require e.msg.sender != siloConfig;
     require e.msg.sender != silo0;
-    require e.msg.sender != silo1;
     require e.msg.sender != token0;
     require e.msg.sender != token1;
 
