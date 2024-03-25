@@ -19,7 +19,7 @@ rule VC_Silo_total_collateral_increase(
     method f,
     uint256 assetsOrShares,
     address receiver
-) filtered { f -> !f.isView} {
+) filtered { f -> !f.isView } {
     completeSiloSetupEnv(e);
     requireToken0TotalAndBalancesIntegrity();
     requireCollateralToken0TotalAndBalancesIntegrity();
@@ -247,7 +247,7 @@ rule VC_Silo_total_protected_increase(
     method f,
     uint256 assetsOrShares,
     address receiver
-) filtered { f -> !f.isView} {
+) filtered { f -> !f.isView } {
     completeSiloSetupEnv(e);
     requireToken0TotalAndBalancesIntegrity();
     requireProtectedToken0TotalAndBalancesIntegrity();
@@ -293,7 +293,7 @@ rule VC_Silo_total_protected_decrease(
     method f,
     uint256 assetsOrShares,
     address receiver
-) filtered { f -> !f.isView} {
+) filtered { f -> !f.isView } {
     completeSiloSetupEnv(e);
     requireToken0TotalAndBalancesIntegrity();
     requireProtectedToken0TotalAndBalancesIntegrity();
@@ -339,7 +339,7 @@ rule VC_Silo_total_debt_increase(
     method f,
     uint256 assetsOrShares,
     address receiver
-) filtered { f -> !f.isView} {
+) filtered { f -> !f.isView } {
     completeSiloSetupEnv(e);
     requireToken0TotalAndBalancesIntegrity();
     requireDebtToken0TotalAndBalancesIntegrity();
@@ -383,7 +383,7 @@ rule VC_Silo_total_debt_decrease(
     method f,
     uint256 assetsOrShares,
     address receiver
-) filtered { f -> !f.isView} {
+) filtered { f -> !f.isView } {
     completeSiloSetupEnv(e);
     requireToken0TotalAndBalancesIntegrity();
     requireDebtToken0TotalAndBalancesIntegrity();
@@ -427,7 +427,7 @@ rule VC_Silo_debt_share_balance(
     method f,
     uint256 assetsOrShares,
     address receiver
-) filtered { f -> !f.isView} {
+) filtered { f -> !f.isView } {
     completeSiloSetupEnv(e);
     requireDebtToken0TotalAndBalancesIntegrity();
 
@@ -460,7 +460,7 @@ rule VC_Silo_protected_share_balance(
     method f,
     uint256 assetsOrShares,
     address receiver
-) filtered { f -> !f.isView} {
+) filtered { f -> !f.isView } {
     completeSiloSetupEnv(e);
     requireProtectedToken0TotalAndBalancesIntegrity();
 
@@ -491,7 +491,7 @@ rule VC_Silo_collateral_share_balance(
     method f,
     uint256 assetsOrShares,
     address receiver
-) filtered { f -> !f.isView} {
+) filtered { f -> !f.isView } {
     completeSiloSetupEnv(e);
     requireCollateralToken0TotalAndBalancesIntegrity();
 
