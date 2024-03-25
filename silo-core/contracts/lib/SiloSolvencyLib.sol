@@ -108,7 +108,7 @@ library SiloSolvencyLib {
         uint256 shares;
 
         (shares, totalShares) = SiloStdLib.getSharesAndTotalSupply(
-            _collateralConfig.protectedShareToken, _borrower, _debtShareBalanceCached
+            _collateralConfig.protectedShareToken, _borrower, 0 /* no cache */
         );
 
         (
