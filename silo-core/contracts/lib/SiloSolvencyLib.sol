@@ -238,10 +238,12 @@ library SiloSolvencyLib {
         }
     }
 
-    /// @return TRUE when current silo has collateral attached to debt, FALSE otherwise
+    /// @return TRUE when current silo has collateral attached to debt (in this case we need to run solvency math),
+    /// FALSE otherwise
     function collateralInThisSilo(ISiloConfig.PositionInfo memory _positionInfo) internal pure returns (bool) {
         if (!_positionInfo.positionOpen) return false;
 
-        return _positionInfo.debtInThisSilo && _positionInfo.oneTokenPosition;
+        if (_positionInfo.debtInThisSilo) return _positionInfo.oneTokenPosition;
+        return !_positionInfo.oneTokenPosition;
     }
 }
