@@ -48,8 +48,6 @@ contract SiloRouter is ReentrancyGuard {
     }
 
     struct AnyAction {
-        // what asset do you want to use?
-        IERC20 asset;
         // how much assets or shares do you want to use?
         uint256 amount;
         // receiver of leveraged funds that will sell them on DEXes
@@ -67,6 +65,8 @@ contract SiloRouter is ReentrancyGuard {
         ActionType actionType;
         // which Silo are you interacting with?
         ISilo silo;
+        // what asset do you want to use?
+        IERC20 asset;
         // options specific for actions
         bytes options;
     }
@@ -111,10 +111,11 @@ contract SiloRouter is ReentrancyGuard {
 
         // send all assets to user
         for (uint256 i = 0; i < len; i++) {
-            uint256 remainingBalance = _actions[i].asset.balanceOf(address(this));
+            IERC20 asset = _actions[i].asset;
+            uint256 remainingBalance = asset.balanceOf(address(this));
 
             if (remainingBalance != 0) {
-                _sendAsset(_actions[i].asset, remainingBalance);
+                _sendAsset(asset, remainingBalance);
             }
         }
 
@@ -133,15 +134,15 @@ contract SiloRouter is ReentrancyGuard {
         if (_action.actionType == ActionType.Deposit) {
             AnyAction memory data = abi.decode(_action.options, (AnyAction));
 
-            _pullAssetIfNeeded(data.asset, data.amount, data.permit);
-            _approveIfNeeded(data.asset, address(_action.silo), data.amount);
+            _pullAssetIfNeeded(_action.asset, data.amount, data.permit);
+            _approveIfNeeded(_action.asset, address(_action.silo), data.amount);
 
             _action.silo.deposit(data.amount, msg.sender, data.assetType);
         } else if (_action.actionType == ActionType.Mint) {
             AnyAction memory data = abi.decode(_action.options, (AnyAction));
 
-            _pullAssetIfNeeded(data.asset, data.amount, data.permit);
-            _approveIfNeeded(data.asset, address(_action.silo), data.amount);
+            _pullAssetIfNeeded(_action.asset, data.amount, data.permit);
+            _approveIfNeeded(_action.asset, address(_action.silo), data.amount);
 
             _action.silo.mint(data.amount, msg.sender, data.assetType);
         } else if (_action.actionType == ActionType.Withdraw) {
@@ -158,14 +159,14 @@ contract SiloRouter is ReentrancyGuard {
             _action.silo.borrowShares(data.amount, address(this), msg.sender, data.sameToken);
         } else if (_action.actionType == ActionType.Repay) {
             AnyAction memory data = abi.decode(_action.options, (AnyAction));
-            _pullAssetIfNeeded(data.asset, data.amount, data.permit);
-            _approveIfNeeded(data.asset, address(_action.silo), data.amount);
+            _pullAssetIfNeeded(_action.asset, data.amount, data.permit);
+            _approveIfNeeded(_action.asset, address(_action.silo), data.amount);
 
             _action.silo.repay(data.amount, msg.sender);
         } else if (_action.actionType == ActionType.RepayShares) {
             AnyAction memory data = abi.decode(_action.options, (AnyAction));
-            _pullAssetIfNeeded(data.asset, data.amount, data.permit);
-            _approveIfNeeded(data.asset, address(_action.silo), data.amount);
+            _pullAssetIfNeeded(_action.asset, data.amount, data.permit);
+            _approveIfNeeded(_action.asset, address(_action.silo), data.amount);
 
             _action.silo.repayShares(data.amount, msg.sender);
         } else if (_action.actionType == ActionType.Transition) {
