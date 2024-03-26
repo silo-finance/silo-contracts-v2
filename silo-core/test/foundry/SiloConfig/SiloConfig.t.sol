@@ -331,11 +331,11 @@ contract SiloConfigTest is Test {
         _siloConfig.onPositionTransfer(to, from);
 
         vm.prank(debtShareToken1);
-        vm.expectRevert(ISiloConfig.PositionExistInOtherSilo.selector);
+        // this will pass, because `to` has position in 1
         _siloConfig.onPositionTransfer(from, to);
 
         vm.prank(debtShareToken1);
-        // this will pass, because `from` has position in 1
+        vm.expectRevert(ISiloConfig.PositionExistInOtherSilo.selector);
         _siloConfig.onPositionTransfer(to, from);
     }
 
