@@ -44,8 +44,6 @@ contract SiloRouter is ReentrancyGuard {
     struct BorrowOptions {
         // how much assets or shares do you want to use?
         uint256 amount;
-        // receiver of funds
-        address receiver;
         bool sameToken;
     }
 
