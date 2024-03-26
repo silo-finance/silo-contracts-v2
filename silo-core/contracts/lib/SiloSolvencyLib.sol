@@ -37,8 +37,16 @@ library SiloSolvencyLib {
     ) internal view returns (bool) {
         if (!_positionInfo.positionOpen) return true;
 
-        if (!SiloSolvencyLib.collateralInThisSilo(_positionInfo)) {
-            (_collateralConfig, _debtConfig) = (_debtConfig, _collateralConfig);
+        if (SiloSolvencyLib.collateralInThisSilo(_positionInfo)) {
+            if (_positionInfo.oneTokenPosition) {
+                _debtConfig = _collateralConfig;
+            }
+        } else {
+            if (_positionInfo.oneTokenPosition) {
+                _collateralConfig = _debtConfig;
+            } else {
+                (_collateralConfig, _debtConfig) = (_debtConfig, _collateralConfig);
+            }
         }
 
         uint256 ltv = getLtv(
