@@ -145,8 +145,10 @@ contract SiloConfig is ISiloConfig {
         PositionInfo storage recipientPosition = _positionInfo[_recipient];
 
         if (recipientPosition.positionOpen) {
-            if (msg.sender == _DEBT_SHARE_TOKEN0 && recipientPosition.debtInSilo0) return;
-            if (msg.sender == _DEBT_SHARE_TOKEN1 && !recipientPosition.debtInSilo0) return;
+            bool debtInSilo0 = recipientPosition.debtInSilo0;
+
+            if (msg.sender == _DEBT_SHARE_TOKEN0 && debtInSilo0) return;
+            if (msg.sender == _DEBT_SHARE_TOKEN1 && !debtInSilo0) return;
 
             // transferring debt not allowed, if _recipient has position in other silo
             revert PositionExistInOtherSilo();
