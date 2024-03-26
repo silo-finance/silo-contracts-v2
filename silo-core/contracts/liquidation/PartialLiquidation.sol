@@ -15,7 +15,7 @@ import {PartialLiquidationExecLib} from "./lib/PartialLiquidationExecLib.sol";
 /// @title PartialLiquidation module for executing liquidations
 contract PartialLiquidation is IPartialLiquidation, ReentrancyGuardUpgradeable {
     /// @inheritdoc IPartialLiquidation
-    function liquidationCall( // solhint-disable-line function-max-lines
+    function liquidationCall( // solhint-disable-line function-max-lines, code-complexity
         address _siloWithDebt,
         address _collateralAsset,
         address _debtAsset,

@@ -798,7 +798,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
         }
     }
 
-    function _borrow(
+    function _borrow( // solhint-disable-line function-max-lines, code-complexity
         uint256 _assets,
         uint256 _shares,
         address _receiver,
@@ -812,6 +812,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
         returns (uint256 assets, uint256 shares)
     {
         if (_assets == 0 && _shares == 0) revert ISilo.ZeroAssets();
+
         ISiloConfig cachedConfig = config;
 
         (

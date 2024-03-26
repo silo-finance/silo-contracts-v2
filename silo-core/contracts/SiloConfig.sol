@@ -195,9 +195,9 @@ contract SiloConfig is ISiloConfig {
         }
     }
 
-    // TODO temporary function for tests
+    // TODO temporary function for tests, remove it to reduce contract size
     function getConfigs(address _silo)
-        public
+        external
         view
         virtual
         returns (ConfigData memory _siloConfig, ConfigData memory _otherSiloConfig, PositionInfo memory positionInfo)
@@ -206,7 +206,7 @@ contract SiloConfig is ISiloConfig {
     }
 
     /// @inheritdoc ISiloConfig
-    function getConfigs(address _silo, address _borrower)
+    function getConfigs(address _silo, address _borrower) // solhint-disable-line function-max-lines
         public
         view
         virtual

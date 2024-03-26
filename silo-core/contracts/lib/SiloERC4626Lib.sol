@@ -86,7 +86,7 @@ library SiloERC4626Lib {
                 debtConfig = collateralConfig;
             }
 
-            return _maxWithdrawWhenDebt(
+            return maxWithdrawWhenDebt(
                 collateralConfig, debtConfig, _owner, liquidity, shareTokenTotalSupply, _assetType, _totalAssets
             );
         } else {
@@ -121,9 +121,9 @@ library SiloERC4626Lib {
         }
     }
 
-    function _maxWithdrawWhenDebt(
-        ISiloConfig.ConfigData memory collateralConfig,
-        ISiloConfig.ConfigData memory debtConfig,
+    function maxWithdrawWhenDebt(
+        ISiloConfig.ConfigData memory _collateralConfig,
+        ISiloConfig.ConfigData memory _debtConfig,
         address _owner,
         uint256 _liquidity,
         uint256 _shareTokenTotalSupply,
@@ -131,8 +131,8 @@ library SiloERC4626Lib {
         uint256 _totalAssets
     ) internal view returns (uint256 assets, uint256 shares) {
         SiloSolvencyLib.LtvData memory ltvData = SiloSolvencyLib.getAssetsDataForLtvCalculations(
-            collateralConfig,
-            debtConfig,
+            _collateralConfig,
+            _debtConfig,
             _owner,
             ISilo.OracleType.Solvency,
             ISilo.AccrueInterestInMemory.Yes,
@@ -141,7 +141,7 @@ library SiloERC4626Lib {
 
         {
             (uint256 collateralValue, uint256 debtValue) =
-                SiloSolvencyLib.getPositionValues(ltvData, collateralConfig.token, debtConfig.token);
+                SiloSolvencyLib.getPositionValues(ltvData, _collateralConfig.token, _debtConfig.token);
 
             assets = SiloMathLib.calculateMaxAssetsToWithdraw(
                 collateralValue,
