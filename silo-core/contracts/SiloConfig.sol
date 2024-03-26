@@ -138,14 +138,6 @@ contract SiloConfig is ISiloConfig {
         positionInfo.debtInSilo0 = msg.sender == _SILO0;
     }
 
-    function closePosition(address _borrower) external {
-        if (msg.sender != _SILO0 && msg.sender != _SILO1 &&
-            msg.sender != _DEBT_SHARE_TOKEN0 && msg.sender != _DEBT_SHARE_TOKEN1
-        ) revert WrongSilo();
-
-        delete _positionInfo[_borrower];
-    }
-
     /// @inheritdoc ISiloConfig
     function onPositionTransfer(address _from, address _to) external {
         if (msg.sender != _DEBT_SHARE_TOKEN0 && msg.sender != _DEBT_SHARE_TOKEN1) revert OnlyDebtShareToken();
@@ -162,6 +154,15 @@ contract SiloConfig is ISiloConfig {
             positionInfo.oneTokenPosition = _positionInfo[_from].oneTokenPosition;
             positionInfo.debtInSilo0 = msg.sender == _DEBT_SHARE_TOKEN0;
         }
+    }
+
+    /// @inheritdoc ISiloConfig
+    function closePosition(address _borrower) external {
+        if (msg.sender != _SILO0 && msg.sender != _SILO1 &&
+            msg.sender != _DEBT_SHARE_TOKEN0 && msg.sender != _DEBT_SHARE_TOKEN1
+        ) revert WrongSilo();
+
+        delete _positionInfo[_borrower];
     }
 
     /// @inheritdoc ISiloConfig

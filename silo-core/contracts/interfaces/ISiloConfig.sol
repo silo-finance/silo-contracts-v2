@@ -142,9 +142,14 @@ interface ISiloConfig {
     /// @param _sameToken TRUE if `_borrower` open position in the same token
     function openPosition(address _borrower, bool _sameToken) external;
 
+    /// @dev should be called on debt transfer, it opens position if `_to` address don't have one
+    /// @param _from sender address
+    /// @param _to recipient address
     function onPositionTransfer(address _from, address _to) external;
 
-    function closePosition(address _from) external;
+    /// @dev must be called when `_borrower` repay all debt
+    /// @param _borrower borrower address
+    function closePosition(address _borrower) external;
 
     // solhint-disable-next-line func-name-mixedcase
     function SILO_ID() external view returns (uint256);

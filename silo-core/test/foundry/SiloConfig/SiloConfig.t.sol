@@ -10,6 +10,21 @@ forge test -vv --mc SiloConfigTest
 */
 contract SiloConfigTest is Test {
     address wrongSilo = address(10000000001);
+    SiloConfig _siloConfig;
+
+    function setUp() public {
+        ISiloConfig.ConfigData memory _configData0;
+        _configData0.silo = makeAddr("silo0");
+        _configData0.token = makeAddr("token0");
+        _configData0.debtShareToken = makeAddr("debtShareToken0");
+
+        ISiloConfig.ConfigData memory _configData1;
+        _configData1.silo = makeAddr("silo1");
+        _configData1.token = makeAddr("token1");
+        _configData1.debtShareToken = makeAddr("debtShareToken1");
+
+        _siloConfig = siloConfigDeploy(1, _configData0, _configData1);
+    }
 
     function siloConfigDeploy(
         uint256 _siloId,
@@ -154,5 +169,220 @@ contract SiloConfigTest is Test {
         assertEq(deployerFee, _configData1.deployerFee);
         assertEq(flashloanFee, _configData1.flashloanFee);
         assertEq(asset, _configData1.token);
+    }
+
+    /*
+    forge test -vv --mt test_openPosition_revertOnWrongSilo
+    */
+    function test_openPosition_revertOnWrongSilo() public {
+        vm.expectRevert(ISiloConfig.WrongSilo.selector);
+        _siloConfig.openPosition(address(1), false);
+    }
+
+    /*
+    forge test -vv --mt test_openPosition_pass
+    */
+    function test_openPosition_pass() public {
+        vm.prank(makeAddr("silo0"));
+        _siloConfig.openPosition(address(1), false);
+
+        // counter example
+        vm.prank(makeAddr("silo1"));
+        _siloConfig.openPosition(address(2), false);
+    }
+
+    /*
+    forge test -vv --mt test_getConfigs_zero
+    */
+    function test_getConfigs_zero() public {
+        address silo = makeAddr("silo0");
+
+        (
+            ISiloConfig.ConfigData memory siloConfig,
+            ISiloConfig.ConfigData memory otherSiloConfig,
+            ISiloConfig.PositionInfo memory positionInfo
+        ) = _siloConfig.getConfigs(silo, address(0));
+
+        ISiloConfig.PositionInfo memory positionEmpty;
+
+        assertEq(siloConfig.silo, silo, "first config should be for silo");
+        assertEq(otherSiloConfig.silo, makeAddr("silo1"));
+        assertEq(abi.encode(positionEmpty), abi.encode(positionInfo), "positionInfo should be empty");
+    }
+
+    /*
+    forge test -vv --mt test_openPosition_debtInThisSilo
+    */
+    function test_openPosition_revertIfAlreadyOpen() public {
+        address silo = makeAddr("silo0");
+        address borrower = makeAddr("borrower");
+        bool oneTokenPosition = true;
+
+        vm.prank(silo);
+        _siloConfig.openPosition(borrower, oneTokenPosition);
+
+        vm.prank(silo);
+        vm.expectRevert(ISiloConfig.PositionAlreadyOpen.selector);
+        _siloConfig.openPosition(borrower, oneTokenPosition);
+    }
+
+    /*
+    forge test -vv --mt test_openPosition_debtInThisSilo
+    */
+    function test_openPosition_debtInThisSilo() public {
+        address silo = makeAddr("silo0");
+        address borrower = makeAddr("borrower");
+        bool oneTokenPosition = true;
+
+        vm.prank(silo);
+        _siloConfig.openPosition(borrower, oneTokenPosition);
+
+        (,, ISiloConfig.PositionInfo memory positionInfo) = _siloConfig.getConfigs(silo, borrower);
+
+        assertTrue(positionInfo.positionOpen);
+        assertTrue(positionInfo.oneTokenPosition == oneTokenPosition);
+        assertTrue(positionInfo.debtInSilo0);
+        assertTrue(positionInfo.debtInThisSilo);
+    }
+
+    /*
+    forge test -vv --mt test_openPosition_debtInOtherSilo
+    */
+    function test_openPosition_debtInOtherSilo() public {
+        address silo = makeAddr("silo0");
+        address borrower = makeAddr("borrower");
+        bool oneTokenPosition;
+
+        vm.prank(makeAddr("silo1"));
+        _siloConfig.openPosition(borrower, oneTokenPosition);
+
+        (,, ISiloConfig.PositionInfo memory positionInfo) = _siloConfig.getConfigs(silo, borrower);
+
+        assertTrue(positionInfo.positionOpen);
+        assertTrue(positionInfo.oneTokenPosition == oneTokenPosition);
+        assertTrue(!positionInfo.debtInSilo0);
+        assertTrue(!positionInfo.debtInThisSilo);
+
+        (,, positionInfo) = _siloConfig.getConfigs(silo, address(1));
+        ISiloConfig.PositionInfo memory positionEmpty;
+
+        assertEq(abi.encode(positionEmpty), abi.encode(positionInfo), "positionInfo should be empty");
+    }
+
+    /*
+    forge test -vv --mt test_onPositionTransfer_clone
+    */
+    function test_onPositionTransfer_clone() public {
+        address silo = makeAddr("silo0");
+        address silo1 = makeAddr("silo1");
+        address from = makeAddr("from");
+        address to = makeAddr("to");
+
+        bool oneTokenPosition = true;
+
+        vm.prank(silo);
+        _siloConfig.openPosition(from, oneTokenPosition);
+
+        vm.prank(silo);
+        _siloConfig.onPositionTransfer(from, to);
+
+        (,, ISiloConfig.PositionInfo memory positionFrom) = _siloConfig.getConfigs(silo1, from);
+        (,, ISiloConfig.PositionInfo memory positionTo) = _siloConfig.getConfigs(silo1, to);
+
+        assertEq(abi.encode(positionFrom), abi.encode(positionTo), "position should be cloned");
+    }
+
+    /*
+    forge test -vv --mt test_onPositionTransfer_revertIfNotDebtToken
+    */
+    function test_onPositionTransfer_revertIfNotDebtToken() public {
+        address silo = makeAddr("silo1");
+        address from = makeAddr("from");
+        address to = makeAddr("to");
+
+        vm.prank(silo);
+        vm.expectRevert(ISiloConfig.OnlyDebtShareToken.selector);
+        _siloConfig.onPositionTransfer(from, to);
+    }
+
+    /*
+    forge test -vv --mt test_onPositionTransfer_PositionExistInOtherSilo
+    */
+    function test_onPositionTransfer_PositionExistInOtherSilo() public {
+        address debtShareToken0 = makeAddr("debtShareToken0");
+        address from = makeAddr("from");
+        address to = makeAddr("to");
+
+        bool oneTokenPosition = true;
+
+        vm.prank(makeAddr("silo0"));
+        _siloConfig.openPosition(from, oneTokenPosition);
+
+        vm.prank(makeAddr("silo1"));
+        _siloConfig.openPosition(to, oneTokenPosition);
+
+        vm.prank(debtShareToken0);
+        vm.expectRevert(ISiloConfig.PositionExistInOtherSilo.selector);
+        _siloConfig.onPositionTransfer(from, to);
+
+        vm.prank(debtShareToken0);
+        vm.expectRevert(ISiloConfig.PositionExistInOtherSilo.selector);
+        _siloConfig.onPositionTransfer(to, from);
+    }
+
+    /*
+    forge test -vv --mt test_onPositionTransfer_pass
+    */
+    function test_onPositionTransfer_pass() public {
+        address debtShareToken0 = makeAddr("debtShareToken0");
+        address silo = makeAddr("silo1");
+        address from = makeAddr("from");
+        address to = makeAddr("to");
+
+        bool oneTokenPosition = true;
+
+        vm.prank(makeAddr("silo0"));
+        _siloConfig.openPosition(from, oneTokenPosition);
+
+        vm.prank(makeAddr("silo0"));
+        _siloConfig.openPosition(to, !oneTokenPosition);
+
+        vm.prank(debtShareToken0);
+        _siloConfig.onPositionTransfer(from, to);
+
+        (,, ISiloConfig.PositionInfo memory positionTo) = _siloConfig.getConfigs(silo, to);
+
+        assertTrue(positionTo.positionOpen);
+        assertTrue(!positionTo.oneTokenPosition, "oneTokenPosition is not cloned");
+        assertTrue(positionTo.debtInSilo0);
+        assertTrue(!positionTo.debtInThisSilo, "call is from silo1");
+    }
+
+    /*
+    forge test -vv --mt test_closePosition_revert
+    */
+    function test_closePosition_revert() public {
+        vm.expectRevert(ISiloConfig.WrongSilo.selector);
+        _siloConfig.closePosition(address(0));
+    }
+
+    /*
+    forge test -vv --mt test_closePosition_pass
+    */
+    function test_closePosition_pass() public {
+        address silo = makeAddr("silo1");
+        address borrower = makeAddr("borrower");
+
+        bool oneTokenPosition = true;
+
+        vm.prank(silo);
+        _siloConfig.openPosition(borrower, oneTokenPosition);
+
+        vm.prank(makeAddr("silo0"));
+        _siloConfig.closePosition(borrower);
+
+        ISiloConfig.PositionInfo memory positionEmpty;
+        (,, ISiloConfig.PositionInfo memory position) = _siloConfig.getConfigs(silo, borrower);
+        assertEq(abi.encode(positionEmpty), abi.encode(position), "position should be deleted");
     }
 }
