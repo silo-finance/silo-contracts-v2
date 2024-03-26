@@ -270,26 +270,42 @@ contract SiloConfigTest is Test {
     }
 
     /*
+    forge test -vv --mt test_onPositionTransfer_revertOnCrossSilo
+    */
+    function test_onPositionTransfer_revertOnCrossSilo() public {
+        address from = makeAddr("from");
+        address to = makeAddr("to");
+        bool oneTokenPosition;
+
+        vm.prank(makeAddr("silo0"));
+        _siloConfig.openPosition(from, oneTokenPosition);
+
+        vm.prank(makeAddr("debtShareToken1"));
+        vm.expectRevert(ISiloConfig.PositionExistInOtherSilo.selector);
+        _siloConfig.onPositionTransfer(from, to);
+    }
+
+
+    /*
     forge test -vv --mt test_onPositionTransfer_clone
     */
-    function test_onPositionTransfer_clone() public {
-        address silo = makeAddr("silo0");
+    /// forge-config: core-test.fuzz.runs = 10
+    function test_onPositionTransfer_clone_fuzz(bool _silo0, bool oneTokenPosition) public {
+        address silo = _silo0 ? makeAddr("silo0") : makeAddr("silo1");
         address silo1 = makeAddr("silo1");
         address from = makeAddr("from");
         address to = makeAddr("to");
 
-        bool oneTokenPosition = true;
-
         vm.prank(silo);
         _siloConfig.openPosition(from, oneTokenPosition);
 
-        vm.prank(makeAddr("debtShareToken0"));
+        vm.prank(_silo0 ? makeAddr("debtShareToken0") : makeAddr("debtShareToken1"));
         _siloConfig.onPositionTransfer(from, to);
 
-        (,, ISiloConfig.PositionInfo memory positionFrom) = _siloConfig.getConfigs(silo, from);
+        (,, ISiloConfig.PositionInfo memory positionFrom) = _siloConfig.getConfigs(silo1, from);
         (,, ISiloConfig.PositionInfo memory positionTo) = _siloConfig.getConfigs(silo1, to);
 
-        assertEq(abi.encode(positionFrom), abi.encode(positionTo), "position should be cloned");
+        assertEq(abi.encode(positionFrom), abi.encode(positionTo), "position should be same if called for same silo");
     }
 
     /*
