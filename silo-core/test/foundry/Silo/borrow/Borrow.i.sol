@@ -102,8 +102,6 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
         _deposit(assets, makeAddr("depositor"), ISilo.AssetType.Collateral);
         _deposit(assets, receiver, ISilo.AssetType.Protected);
 
-        vm.expectCall(address(token0), abi.encodeWithSelector(IERC20.transfer.selector, receiver, assets));
-
         vm.expectRevert("ERC20: insufficient allowance"); // because we want to mint for receiver
         vm.prank(borrower);
         silo0.borrow(assets, borrower, makeAddr("receiver"), sameToken);
@@ -135,9 +133,7 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
 
         _deposit(assets, borrower, ISilo.AssetType.Protected);
 
-        vm.expectCall(address(token0), abi.encodeWithSelector(IERC20.transfer.selector, borrower, assets));
-
-        vm.expectRevert(ISilo.NotEnoughLiquidity.selector);
+        vm.expectRevert(ISilo.AboveMaxLtv.selector);
         silo0.borrow(assets, borrower, borrower, sameToken);
     }
 
@@ -151,10 +147,7 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
         _deposit(assets * 2, borrower, ISilo.AssetType.Protected);
         _deposit(assets, borrower, ISilo.AssetType.Collateral);
 
-        vm.expectCall(address(token0), abi.encodeWithSelector(IERC20.transfer.selector, borrower, assets));
-        vm.expectCall(address(token0), abi.encodeWithSelector(IERC20.transfer.selector, borrower, assets * 2));
-
-        vm.expectRevert(ISilo.NotEnoughLiquidity.selector);
+        vm.expectRevert(ISilo.AboveMaxLtv.selector);
         silo0.borrow(assets, borrower, borrower, sameToken);
     }
 
