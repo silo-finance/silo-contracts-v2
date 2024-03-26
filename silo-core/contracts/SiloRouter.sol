@@ -47,6 +47,15 @@ contract SiloRouter is ReentrancyGuard {
         bool sameToken;
     }
 
+    struct LeverageOptions {
+        // how much assets or shares do you want to use?
+        uint256 amount;
+        ILeverageBorrower leverageBorrower;
+        bool sameToken;
+        // optional data that will be send to leverageBorrower
+        bytes data;
+    }
+
     struct AnyAction {
         // how much assets or shares do you want to use?
         uint256 amount;
@@ -173,8 +182,8 @@ contract SiloRouter is ReentrancyGuard {
             AnyAction memory data = abi.decode(_action.options, (AnyAction));
             _action.silo.transitionCollateral(data.amount, msg.sender, data.assetType);
         } else if (_action.actionType == ActionType.Leverage) {
-            AnyAction memory data = abi.decode(_action.options, (AnyAction));
-            _action.silo.leverage(data.amount, data.receiver, msg.sender, data.data);
+            LeverageOptions memory data = abi.decode(_action.options, (LeverageOptions));
+            _action.silo.leverage(data.amount, data.leverageBorrower, msg.sender, data.sameToken, data.data);
         } else {
             revert UnsupportedAction();
         }
