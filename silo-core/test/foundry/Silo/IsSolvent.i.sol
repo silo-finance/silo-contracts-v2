@@ -3,6 +3,8 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
 
+import {IERC20} from "openzeppelin-contracts/token/ERC20/IERC20.sol";
+
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {IERC20R} from "silo-core/contracts/interfaces/IERC20R.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
@@ -39,21 +41,23 @@ contract IsSolventTest is SiloLittleHelper, Test {
 
         _borrow(assets / 2, borrower);
 
+        (, address collateralShareToken,) = silo0.config().getShareTokens(address(silo0));
         (,, address debtShareToken) = silo1.config().getShareTokens(address(silo1));
 
         vm.prank(recipient);
         IERC20R(debtShareToken).setReceiveApproval(borrower, 1);
 
-        // isSolvent fetching getConfings() for "this" silo and first confing is collateral onc,
-        // so on after transferring debt, when we call silo.isSolvent, we want to call OTHER/collateral silo
-        vm.expectCall(address(silo0), abi.encodeWithSelector(ISilo.isSolvent.selector, recipient));
+        // it does not matter which silo we will call for checking borrower solvency
+        vm.expectCall(address(silo1), abi.encodeWithSelector(ISilo.isSolvent.selector, recipient));
+        vm.expectCall(debtShareToken, abi.encodeWithSelector(IERC20.balanceOf.selector, recipient));
+        vm.expectCall(collateralShareToken, abi.encodeWithSelector(IERC20.balanceOf.selector, recipient));
 
         vm.prank(borrower);
         IShareToken(debtShareToken).transfer(recipient, 1);
     }
 
     /*
-    forge test -vv --ffi --mt test_isSolvent_onDebtTransfer
+    forge test -vv --ffi --mt test_isSolvent_RecipientNotSolventAfterTransfer
     */
     function test_isSolvent_RecipientNotSolventAfterTransfer() public {
         uint256 assets = 1e18;
