@@ -68,9 +68,7 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
 
         _deposit(assets, receiver, ISilo.AssetType.Collateral);
 
-        vm.expectCall(address(token0), abi.encodeWithSelector(IERC20.transfer.selector, address(receiver), assets));
-
-        vm.expectRevert(ISilo.NotEnoughLiquidity.selector);
+        vm.expectRevert(ISilo.AboveMaxLtv.selector);
         silo0.borrow(assets, receiver, receiver, sameToken);
     }
 
@@ -133,7 +131,7 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
 
         _deposit(assets, borrower, ISilo.AssetType.Protected);
 
-        vm.expectRevert(ISilo.AboveMaxLtv.selector);
+        vm.expectRevert(ISilo.NotEnoughLiquidity.selector);
         silo0.borrow(assets, borrower, borrower, sameToken);
     }
 
