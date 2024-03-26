@@ -147,7 +147,7 @@ interface ISiloConfig {
     /// @param _to recipient address
     function onPositionTransfer(address _from, address _to) external;
 
-    /// @dev must be called when `_borrower` repay all debt
+    /// @dev must be called when `_borrower` repay all debt, there is no restriction from which silo call will be done
     /// @param _borrower borrower address
     function closePosition(address _borrower) external;
 
