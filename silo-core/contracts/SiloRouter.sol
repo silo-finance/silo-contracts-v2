@@ -41,11 +41,15 @@ contract SiloRouter is ReentrancyGuard {
         bytes signature;
     }
 
-    struct Action {
-        // what do you want to do?
-        ActionType actionType;
-        // which Silo are you interacting with?
-        ISilo silo;
+    struct BorrowOptions {
+        // how much assets or shares do you want to use?
+        uint256 amount;
+        // receiver of funds
+        address receiver;
+        bool sameToken;
+    }
+
+    struct AnyAction {
         // what asset do you want to use?
         IERC20 asset;
         // how much assets or shares do you want to use?
@@ -58,6 +62,15 @@ contract SiloRouter is ReentrancyGuard {
         ISilo.AssetType assetType;
         // optional Permit2
         PermitData permit;
+    }
+
+    struct Action {
+        // what do you want to do?
+        ActionType actionType;
+        // which Silo are you interacting with?
+        ISilo silo;
+        // options specific for actions
+        bytes options;
     }
 
     // @dev native asset wrapped token. In case of Ether, it's WETH.
@@ -120,37 +133,49 @@ contract SiloRouter is ReentrancyGuard {
     // solhint-disable-next-line code-complexity
     function _executeAction(Action calldata _action) internal {
         if (_action.actionType == ActionType.Deposit) {
-            _pullAssetIfNeeded(_action.asset, _action.amount, _action.permit);
-            _approveIfNeeded(_action.asset, address(_action.silo), _action.amount);
+            AnyAction memory data = abi.decode(_action.options, (AnyAction));
 
-            _action.silo.deposit(_action.amount, msg.sender, _action.assetType);
+            _pullAssetIfNeeded(data.asset, data.amount, data.permit);
+            _approveIfNeeded(data.asset, address(_action.silo), data.amount);
+
+            _action.silo.deposit(data.amount, msg.sender, data.assetType);
         } else if (_action.actionType == ActionType.Mint) {
-            _pullAssetIfNeeded(_action.asset, _action.amount, _action.permit);
-            _approveIfNeeded(_action.asset, address(_action.silo), _action.amount);
+            AnyAction memory data = abi.decode(_action.options, (AnyAction));
 
-            _action.silo.mint(_action.amount, msg.sender, _action.assetType);
+            _pullAssetIfNeeded(data.asset, data.amount, data.permit);
+            _approveIfNeeded(data.asset, address(_action.silo), data.amount);
+
+            _action.silo.mint(data.amount, msg.sender, data.assetType);
         } else if (_action.actionType == ActionType.Withdraw) {
-            _action.silo.withdraw(_action.amount, address(this), msg.sender, _action.assetType);
+            AnyAction memory data = abi.decode(_action.options, (AnyAction));
+            _action.silo.withdraw(data.amount, address(this), msg.sender, data.assetType);
         } else if (_action.actionType == ActionType.Redeem) {
-            _action.silo.redeem(_action.amount, address(this), msg.sender, _action.assetType);
-//        } else if (_action.actionType == ActionType.Borrow) {
-//            _action.silo.borrow(_action.amount, address(this), msg.sender);
-//        } else if (_action.actionType == ActionType.BorrowShares) {
-//            _action.silo.borrowShares(_action.amount, address(this), msg.sender);
+            AnyAction memory data = abi.decode(_action.options, (AnyAction));
+            _action.silo.redeem(data.amount, address(this), msg.sender, data.assetType);
+        } else if (_action.actionType == ActionType.Borrow) {
+            BorrowOptions memory data = abi.decode(_action.options, (BorrowOptions));
+            _action.silo.borrow(data.amount, address(this), msg.sender, data.sameToken);
+        } else if (_action.actionType == ActionType.BorrowShares) {
+            BorrowOptions memory data = abi.decode(_action.options, (BorrowOptions));
+            _action.silo.borrowShares(data.amount, address(this), msg.sender, data.sameToken);
         } else if (_action.actionType == ActionType.Repay) {
-            _pullAssetIfNeeded(_action.asset, _action.amount, _action.permit);
-            _approveIfNeeded(_action.asset, address(_action.silo), _action.amount);
+            AnyAction memory data = abi.decode(_action.options, (AnyAction));
+            _pullAssetIfNeeded(data.asset, data.amount, data.permit);
+            _approveIfNeeded(data.asset, address(_action.silo), data.amount);
 
-            _action.silo.repay(_action.amount, msg.sender);
+            _action.silo.repay(data.amount, msg.sender);
         } else if (_action.actionType == ActionType.RepayShares) {
-            _pullAssetIfNeeded(_action.asset, _action.amount, _action.permit);
-            _approveIfNeeded(_action.asset, address(_action.silo), _action.amount);
+            AnyAction memory data = abi.decode(_action.options, (AnyAction));
+            _pullAssetIfNeeded(data.asset, data.amount, data.permit);
+            _approveIfNeeded(data.asset, address(_action.silo), data.amount);
 
-            _action.silo.repayShares(_action.amount, msg.sender);
+            _action.silo.repayShares(data.amount, msg.sender);
         } else if (_action.actionType == ActionType.Transition) {
-            _action.silo.transitionCollateral(_action.amount, msg.sender, _action.assetType);
-//        } else if (_action.actionType == ActionType.Leverage) {
-//            _action.silo.leverage(_action.amount, _action.receiver, msg.sender, _action.data);
+            AnyAction memory data = abi.decode(_action.options, (AnyAction));
+            _action.silo.transitionCollateral(data.amount, msg.sender, data.assetType);
+        } else if (_action.actionType == ActionType.Leverage) {
+            AnyAction memory data = abi.decode(_action.options, (AnyAction));
+            _action.silo.leverage(data.amount, data.receiver, msg.sender, data.data);
         } else {
             revert UnsupportedAction();
         }
