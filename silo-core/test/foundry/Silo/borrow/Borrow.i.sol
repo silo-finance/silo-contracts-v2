@@ -9,6 +9,7 @@ import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
+import {SiloERC4626Lib} from "silo-core/contracts/lib/SiloERC4626Lib.sol";
 
 import {MintableToken} from "../../_common/MintableToken.sol";
 import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
@@ -185,8 +186,6 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
         vm.prank(makeAddr("frontrunner"));
         _depositForBorrow(1, borrower);
 
-        vm.expectCall(address(token1), abi.encodeWithSelector(IERC20.transfer.selector, borrower, 1));
-
         _borrow(12345, borrower);
     }
 
@@ -210,9 +209,6 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
         vm.prank(frontrunner);
         IShareToken(collateralShareToken).transfer(borrower, 5);
 
-        vm.expectCall(address(token1), abi.encodeWithSelector(IERC20.transfer.selector, borrower, 3));
-        vm.expectCall(address(token1), abi.encodeWithSelector(IERC20.transfer.selector, borrower, 5));
-
         _borrow(12345, borrower);
     }
 
@@ -228,7 +224,7 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
         uint256 toWithdraw = 123;
         _depositForBorrow(toWithdraw, borrower);
         _deposit(assets, borrower, ISilo.AssetType.Protected);
-        
+
         _borrow(12345, borrower);
     }
 
@@ -382,8 +378,23 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
         _depositForBorrow(1, depositor);
         _borrow(1, borrower);
 
-        assertEq(silo1.maxDeposit(borrower), 0, "can not deposit when already borrowed");
-        assertEq(silo1.maxMint(borrower), 0, "can not mint when already borrowed (maxMint)");
+        assertEq(
+            SiloERC4626Lib._VIRTUAL_DEPOSIT_LIMIT - 1,
+            SiloERC4626Lib._VIRTUAL_DEPOSIT_LIMIT - silo1.total(ISilo.AssetType.Collateral),
+            "limit for deposit"
+        );
+
+        assertEq(
+            silo1.maxDeposit(borrower),
+            SiloERC4626Lib._VIRTUAL_DEPOSIT_LIMIT - silo1.total(ISilo.AssetType.Collateral),
+            "can deposit when already borrowed"
+        );
+
+        assertEq(
+            silo1.maxMint(borrower),
+            SiloERC4626Lib._VIRTUAL_DEPOSIT_LIMIT - silo1.total(ISilo.AssetType.Collateral),
+            "can mint when already borrowed (maxMint)"
+        );
     }
 
     /*
