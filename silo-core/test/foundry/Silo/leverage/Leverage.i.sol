@@ -13,12 +13,15 @@ import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
 import {MintableToken} from "../../_common/MintableToken.sol";
 import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
 import {LeverageBorrower, ILeverageBorrower} from "../../_common/LeverageBorrower.sol";
+import {LeverageBorrowerMock} from "../../_mocks/LeverageBorrowerMock.sol";
 
 /*
     forge test -vv --ffi --mc LeverageTest
 */
 contract LeverageTest is SiloLittleHelper, Test {
     using SiloLensLib for ISilo;
+
+    bytes32 public constant LEVERAGE_CALLBACK = keccak256("ILeverageBorrower.onLeverage");
 
     ISiloConfig siloConfig;
     bool sameToken;
@@ -66,15 +69,21 @@ contract LeverageTest is SiloLittleHelper, Test {
     */
     function test_leverage_when_BorrowNotPossible_withCollateral() public {
         uint256 assets = 1e18;
-        ILeverageBorrower leverageBorrower = ILeverageBorrower(makeAddr("leverageBorrower"));
+        LeverageBorrowerMock leverageBorrower = new LeverageBorrowerMock(address(0));
         address borrower = makeAddr("borrower");
 
         _deposit(assets, borrower, ISilo.AssetType.Collateral);
 
+        // it will transfer it's own deposit, but because leverage is not for same token, we will fail eventually
         vm.expectCall(address(token0), abi.encodeWithSelector(IERC20.transfer.selector, borrower, assets));
 
-        vm.expectRevert(ISilo.NotEnoughLiquidity.selector); // because we borrow first
-        silo0.leverage(assets, leverageBorrower, borrower, sameToken, bytes(""));
+        // only mock, no deposit
+        leverageBorrower.onLeverageMock(borrower, borrower, address(token0), assets, bytes(""), LEVERAGE_CALLBACK);
+
+        vm.startPrank(borrower);
+        vm.expectRevert(ISilo.AboveMaxLtv.selector);
+        silo0.leverage(assets, ILeverageBorrower(leverageBorrower.ADDRESS()), borrower, sameToken, bytes(""));
+        vm.stopPrank();
     }
 
     /*
