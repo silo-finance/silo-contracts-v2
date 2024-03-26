@@ -94,7 +94,7 @@ certoraRun certora/config/silo/silo0.conf \
 rule VS_silo_getLiquidity_less_equal_balance(env e, method f, calldataarg args) filtered { f -> !f.isView} {
     silo0SetUp(e);
     requireToken0TotalAndBalancesIntegrity();
-    requireCorrectSiloBalance();
+    requireCorrectSilo0Balance();
 
     f(e, args);
 
@@ -116,7 +116,7 @@ certoraRun certora/config/silo/silo0.conf \
 rule VS_Silo_balance_totalAssets(env e, method f, calldataarg args) filtered { f -> !f.isView} {
     silo0SetUp(e);
     requireToken0TotalAndBalancesIntegrity();
-    requireCorrectSiloBalance();
+    requireCorrectSilo0Balance();
 
     f(e, args);
 

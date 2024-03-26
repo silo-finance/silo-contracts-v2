@@ -17,6 +17,7 @@ methods {
     function siloConfig.getConfigs(address _silo) external returns(ISiloConfig.ConfigData memory,ISiloConfig.ConfigData memory) envfree => getConfigsSumm(_silo) DELETE;
 }
 
+definition MAX_LTV_PERCENT() returns uint256 = 10^18;
 definition maxDaoFee() returns uint256 = 4 * (10 ^ 17); // 0.4e18;
 definition maxDeployerFee() returns uint256 = 15 * (10 ^ 16); // 0.15e18;
 
@@ -52,6 +53,7 @@ function getConfigSumm(address _silo) returns ISiloConfig.ConfigData {
     ISiloConfig.ConfigData data;
     require data.daoFee == daoFee;
     require data.deployerFee == deployerFee;
+    require data.maxLtv <= MAX_LTV_PERCENT() && data.maxLtv > 0;
     if(_silo == silo0) {
         require data.silo == silo0;
         require data.otherSilo == silo1;

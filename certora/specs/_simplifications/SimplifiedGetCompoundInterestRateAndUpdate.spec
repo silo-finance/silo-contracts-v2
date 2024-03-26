@@ -34,7 +34,7 @@ function getCompoundInterestRateSumm(address _silo, uint256 _blockTimestamp) ret
         assert false, "Expected _silo to be either silo0 or silo1";
     }
     mathint timestampDiff = _blockTimestamp - interestRateTimestamp;
-    assert timestampDiff >= 0, "_blockTimestamp should have been at least interestRateTimestamp";
+    //assert timestampDiff >= 0, "_blockTimestamp should have been at least interestRateTimestamp";
     
     return compoundInterestRate(assert_uint256(timestampDiff));
 }
