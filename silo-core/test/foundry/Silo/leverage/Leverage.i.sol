@@ -74,13 +74,13 @@ contract LeverageTest is SiloLittleHelper, Test {
 
         _deposit(assets, borrower, ISilo.AssetType.Collateral);
 
+        ILeverageBorrower leverageBorrower = ILeverageBorrower(leverageBorrowerMocked.ADDRESS());
+
         // it will transfer it's own deposit, but because leverage is not for same token, we will fail eventually
-        vm.expectCall(address(token0), abi.encodeWithSelector(IERC20.transfer.selector, borrower, assets));
+        vm.expectCall(address(token0), abi.encodeWithSelector(IERC20.transfer.selector, address(leverageBorrower), assets));
 
         // only mock, no deposit
         leverageBorrowerMocked.onLeverageMock(borrower, borrower, address(token0), assets, bytes(""), LEVERAGE_CALLBACK);
-
-        ILeverageBorrower leverageBorrower = ILeverageBorrower(leverageBorrowerMocked.ADDRESS());
 
         vm.prank(borrower);
         vm.expectRevert(ISilo.AboveMaxLtv.selector);
