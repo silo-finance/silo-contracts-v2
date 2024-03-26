@@ -249,9 +249,9 @@ contract SiloConfig is ISiloConfig {
         positionInfo = _positionInfo[_borrower];
 
         if (callFromSilo0) {
-            positionInfo.debtInThisSilo = positionInfo.debtInSilo0;
+            positionInfo.debtInThisSilo = positionInfo.positionOpen && positionInfo.debtInSilo0;
         } else {
-            positionInfo.debtInThisSilo = !positionInfo.debtInSilo0;
+            positionInfo.debtInThisSilo = positionInfo.positionOpen && !positionInfo.debtInSilo0;
             (_siloConfig, _otherSiloConfig) = (_otherSiloConfig, _siloConfig);
         }
     }
