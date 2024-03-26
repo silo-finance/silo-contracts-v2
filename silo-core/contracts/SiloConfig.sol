@@ -145,14 +145,11 @@ contract SiloConfig is ISiloConfig {
         PositionInfo storage recipientPosition = _positionInfo[_recipient];
 
         if (recipientPosition.positionOpen) {
-            bool debtInSilo0 = recipientPosition.debtInSilo0;
-
-            if (msg.sender == _DEBT_SHARE_TOKEN0 && debtInSilo0) return;
-            if (msg.sender == _DEBT_SHARE_TOKEN1 && !debtInSilo0) return;
-
             // transferring debt not allowed, if _recipient has position in other silo
-            revert PositionExistInOtherSilo();
+            _forbidCrossSiloTransfers(recipientPosition.debtInSilo0);
         } else {
+            _forbidCrossSiloTransfers(_positionInfo[_sender].debtInSilo0);
+            
             recipientPosition.positionOpen = true;
             recipientPosition.oneTokenPosition = _positionInfo[_sender].oneTokenPosition;
             recipientPosition.debtInSilo0 = msg.sender == _DEBT_SHARE_TOKEN0;
@@ -326,8 +323,11 @@ contract SiloConfig is ISiloConfig {
             revert WrongSilo();
         }
     }
+    
+    function _forbidCrossSiloTransfers(bool _debtInSilo0) internal view {
+        if (msg.sender == _DEBT_SHARE_TOKEN0 && _debtInSilo0) return;
+        if (msg.sender == _DEBT_SHARE_TOKEN1 && !_debtInSilo0) return;
 
-    function _borrowPossible(PositionInfo memory _info, bool _callForSilo0) internal pure returns (bool) {
-        return !_info.positionOpen || (_info.debtInSilo0 && _callForSilo0);
+        revert PositionExistInOtherSilo();
     }
 }
