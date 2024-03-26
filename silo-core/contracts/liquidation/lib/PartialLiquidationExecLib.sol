@@ -58,7 +58,7 @@ library PartialLiquidationExecLib {
     /// @dev debt keeps growing over time, so when dApp use this view to calculate max, tx should never revert
     /// because actual max can be only higher
     function maxLiquidation(
-        ISilo _silo,
+        ISilo _siloWithDebt,
         address _borrower
     )
         internal
@@ -66,10 +66,10 @@ library PartialLiquidationExecLib {
         returns (uint256 collateralToLiquidate, uint256 debtToRepay)
     {
         (
-            ISiloConfig.ConfigData memory collateralConfig,
             ISiloConfig.ConfigData memory debtConfig,
+            ISiloConfig.ConfigData memory collateralConfig,
             ISiloConfig.PositionInfo memory positionInfo
-        ) = _silo.config().getConfigs(address(_silo), _borrower);
+        ) = _siloWithDebt.config().getConfigs(address(_siloWithDebt), _borrower);
 
         if (!SiloLendingLib.borrowPossible(positionInfo)) {
             return (0, 0);
