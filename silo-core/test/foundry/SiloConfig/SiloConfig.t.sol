@@ -283,10 +283,10 @@ contract SiloConfigTest is Test {
         vm.prank(silo);
         _siloConfig.openPosition(from, oneTokenPosition);
 
-        vm.prank(silo);
+        vm.prank(makeAddr("debtShareToken0"));
         _siloConfig.onPositionTransfer(from, to);
 
-        (,, ISiloConfig.PositionInfo memory positionFrom) = _siloConfig.getConfigs(silo1, from);
+        (,, ISiloConfig.PositionInfo memory positionFrom) = _siloConfig.getConfigs(silo, from);
         (,, ISiloConfig.PositionInfo memory positionTo) = _siloConfig.getConfigs(silo1, to);
 
         assertEq(abi.encode(positionFrom), abi.encode(positionTo), "position should be cloned");
