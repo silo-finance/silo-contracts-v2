@@ -143,9 +143,9 @@ interface ISiloConfig {
     function openPosition(address _borrower, bool _sameToken) external;
 
     /// @dev should be called on debt transfer, it opens position if `_to` address don't have one
-    /// @param _from sender address
-    /// @param _to recipient address
-    function onPositionTransfer(address _from, address _to) external;
+    /// @param _sender sender address
+    /// @param _recipient recipient address
+    function onPositionTransfer(address _sender, address _recipient) external;
 
     /// @dev must be called when `_borrower` repay all debt, there is no restriction from which silo call will be done
     /// @param _borrower borrower address

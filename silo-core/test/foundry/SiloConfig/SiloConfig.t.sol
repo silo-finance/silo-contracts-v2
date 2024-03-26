@@ -310,6 +310,7 @@ contract SiloConfigTest is Test {
     */
     function test_onPositionTransfer_PositionExistInOtherSilo() public {
         address debtShareToken0 = makeAddr("debtShareToken0");
+        address debtShareToken1 = makeAddr("debtShareToken1");
         address from = makeAddr("from");
         address to = makeAddr("to");
 
@@ -326,7 +327,15 @@ contract SiloConfigTest is Test {
         _siloConfig.onPositionTransfer(from, to);
 
         vm.prank(debtShareToken0);
+        // this will pass, because `from` has position in 0
+        _siloConfig.onPositionTransfer(to, from);
+
+        vm.prank(debtShareToken1);
         vm.expectRevert(ISiloConfig.PositionExistInOtherSilo.selector);
+        _siloConfig.onPositionTransfer(from, to);
+
+        vm.prank(debtShareToken1);
+        // this will pass, because `from` has position in 1
         _siloConfig.onPositionTransfer(to, from);
     }
 
@@ -375,10 +384,10 @@ contract SiloConfigTest is Test {
 
         bool oneTokenPosition = true;
 
-        vm.prank(silo);
+        vm.prank(makeAddr("silo1"));
         _siloConfig.openPosition(borrower, oneTokenPosition);
 
-        vm.prank(makeAddr("silo0"));
+        vm.prank(makeAddr("silo0")); // other silo can close position
         _siloConfig.closePosition(borrower);
 
         ISiloConfig.PositionInfo memory positionEmpty;
