@@ -391,7 +391,7 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_borrowShares_revertsOnZeroAssets
     */
-    /// forge-config: core.fuzz.runs = 1000
+    /// forge-config: core-test.fuzz.runs = 1000
     function test_borrowShares_revertsOnZeroAssets_fuzz(uint256 _depositAmount, uint256 _forBorrow) public {
         vm.assume(_depositAmount > _forBorrow);
         vm.assume(_forBorrow > 0);

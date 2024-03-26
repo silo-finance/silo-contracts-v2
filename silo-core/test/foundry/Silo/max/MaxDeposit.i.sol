@@ -57,7 +57,7 @@ contract MaxDepositTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_maxDeposit_withDeposit_fuzz
     */
-    /// forge-config: core.fuzz.runs = 1000
+    /// forge-config: core-test.fuzz.runs = 1000
     function test_maxDeposit_withDeposit_fuzz(uint128 _initialDeposit) public {
         vm.assume(_initialDeposit > 0);
 
@@ -79,7 +79,7 @@ contract MaxDepositTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_maxDeposit_withInterest_fuzz
     */
-    /// forge-config: core.fuzz.runs = 10000
+    /// forge-config: core-test.fuzz.runs = 10000
     function test_maxDeposit_withInterest_fuzz(
         uint256 _initialDeposit
     ) public {
@@ -120,7 +120,7 @@ contract MaxDepositTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_maxDeposit_repayWithInterest_fuzz
     */
-    /// forge-config: core.fuzz.runs = 1000
+    /// forge-config: core-test.fuzz.runs = 1000
     function test_maxDeposit_repayWithInterest_fuzz(
         uint64 _initialDeposit // 64b because this is initial deposit, and we care about max after initial
     ) public {

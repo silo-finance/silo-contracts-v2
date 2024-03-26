@@ -259,7 +259,7 @@ contract PartialLiquidationLibTest is Test, MaxRepayRawMath {
     /*
     forge test -vv --mt test_PartialLiquidationLib_calculateCollateralToLiquidate_math_fuzz
     */
-    /// forge-config: core.fuzz.runs = 1000
+    /// forge-config: core-test.fuzz.runs = 1000
     function test_PartialLiquidationLib_calculateCollateralToLiquidate_math_fuzz(
         uint256 _debtToCover,
         uint128 _totalBorrowerDebtAssets,

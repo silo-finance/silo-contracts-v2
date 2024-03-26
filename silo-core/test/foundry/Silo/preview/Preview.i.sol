@@ -33,7 +33,7 @@ contract PreviewTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_previewBorrow_zero_fuzz
     */
-    /// forge-config: core.fuzz.runs = 10000
+    /// forge-config: core-test.fuzz.runs = 10000
     function test_previewBorrow_zero_fuzz(uint256 _assets, bool _useShares) public {
         assertEq(_useShares ? silo0.previewBorrowShares(_assets) : silo0.previewBorrow(_assets), _assets);
     }
@@ -41,7 +41,7 @@ contract PreviewTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_previewBorrow_beforeInterest_fuzz
     */
-    /// forge-config: core.fuzz.runs = 10000
+    /// forge-config: core-test.fuzz.runs = 10000
     function test_previewBorrow_beforeInterest_fuzz(uint128 _assets, bool _useShares) public {
         uint256 assetsOrSharesToBorrow = _assets / 10 + (_assets % 2); // keep even/odd
         vm.assume(assetsOrSharesToBorrow < _assets);
@@ -64,7 +64,7 @@ contract PreviewTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_previewBorrow_withInterest
     */
-    /// forge-config: core.fuzz.runs = 10000
+    /// forge-config: core-test.fuzz.runs = 10000
     function test_previewBorrow_withInterest_fuzz(uint128 _assets, bool _useShares) public {
         uint256 assetsOrSharesToBorrow = _assets / 10 + (_assets % 2); // keep even/odd
         vm.assume(assetsOrSharesToBorrow < _assets);
@@ -91,7 +91,7 @@ contract PreviewTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_previewRepay_noInterestNoDebt_fuzz
     */
-    /// forge-config: core.fuzz.runs = 10000
+    /// forge-config: core-test.fuzz.runs = 10000
     function test_previewRepay_noInterestNoDebt_fuzz(uint128 _assetsOrShares, bool _useShares, bool _repayFull) public {
         uint128 amountToUse = _repayFull ? _assetsOrShares : uint128(uint256(_assetsOrShares) * 37 / 100);
         vm.assume(amountToUse > 0);
@@ -109,7 +109,7 @@ contract PreviewTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_previewRepayShares_noInterest_fuzz
     */
-    /// forge-config: core.fuzz.runs = 10000
+    /// forge-config: core-test.fuzz.runs = 10000
     function test_previewRepay_noInterest_fuzz(uint128 _assetsOrShares, bool _useShares, bool _repayFull) public {
         uint128 amountToUse = _repayFull ? _assetsOrShares : uint128(uint256(_assetsOrShares) * 37 / 100);
         vm.assume(amountToUse > 0);
@@ -126,7 +126,7 @@ contract PreviewTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_previewRepay_withInterest_fuzz
     */
-    /// forge-config: core.fuzz.runs = 10000
+    /// forge-config: core-test.fuzz.runs = 10000
     function test_previewRepay_withInterest_fuzz(uint128 _assetsOrShares, bool _useShares, bool _repayFull) public {
         uint128 amountToUse = _repayFull ? _assetsOrShares : uint128(uint256(_assetsOrShares) * 37 / 100);
         vm.assume(amountToUse > 0);

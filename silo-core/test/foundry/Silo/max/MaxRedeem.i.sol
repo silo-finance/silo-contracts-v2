@@ -30,7 +30,7 @@ contract MaxRedeemTest is MaxWithdrawCommon {
     /*
     forge test -vv --ffi --mt test_maxRedeem_deposit_fuzz
     */
-    /// forge-config: core.fuzz.runs = 1000
+    /// forge-config: core-test.fuzz.runs = 1000
     function test_maxRedeem_deposit_fuzz(
         uint112 _assets,
         uint16 _assets2
@@ -51,7 +51,7 @@ contract MaxRedeemTest is MaxWithdrawCommon {
     /*
     forge test -vv --ffi --mt test_maxRedeem_whenBorrow_fuzz
     */
-    /// forge-config: core.fuzz.runs = 1000
+    /// forge-config: core-test.fuzz.runs = 1000
     function test_maxRedeem_whenBorrow_fuzz(
         uint128 _collateral,
         uint128 _toBorrow
@@ -72,7 +72,7 @@ contract MaxRedeemTest is MaxWithdrawCommon {
     /*
     forge test -vv --ffi --mt test_maxRedeem_whenInterest_fuzz
     */
-    /// forge-config: core.fuzz.runs = 1000
+    /// forge-config: core-test.fuzz.runs = 1000
     function test_maxRedeem_whenInterest_fuzz(
         uint128 _collateral,
         uint128 _toBorrow
@@ -94,7 +94,7 @@ contract MaxRedeemTest is MaxWithdrawCommon {
     /*
     forge test -vv --ffi --mt test_maxRedeem_bothSilosWithInterest_fuzz
     */
-    /// forge-config: core.fuzz.runs = 1000
+    /// forge-config: core-test.fuzz.runs = 1000
     function test_maxRedeem_bothSilosWithInterest_fuzz(
         uint128 _collateral,
         uint128 _toBorrow

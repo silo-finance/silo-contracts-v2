@@ -29,7 +29,7 @@ contract MaxWithdrawTest is MaxWithdrawCommon {
     /*
     forge test -vv --ffi --mt test_maxWithdraw_deposit_fuzz
     */
-    /// forge-config: core.fuzz.runs = 1000
+    /// forge-config: core-test.fuzz.runs = 1000
     function test_maxWithdraw_deposit_fuzz(
         uint112 _assets,
         uint16 _assets2
@@ -50,7 +50,7 @@ contract MaxWithdrawTest is MaxWithdrawCommon {
     /*
     forge test -vv --ffi --mt test_maxWithdraw_withDebt_fuzz
     */
-    /// forge-config: core.fuzz.runs = 1000
+    /// forge-config: core-test.fuzz.runs = 1000
     function test_maxWithdraw_withDebt_fuzz(
         uint128 _collateral,
         uint128 _toBorrow
@@ -70,7 +70,7 @@ contract MaxWithdrawTest is MaxWithdrawCommon {
     /*
     forge test -vv --ffi --mt test_maxWithdraw_withDebtAndNotEnoughLiquidity_fuzz
     */
-    /// forge-config: core.fuzz.runs = 1000
+    /// forge-config: core-test.fuzz.runs = 1000
     function test_maxWithdraw_withDebtAndNotEnoughLiquidity_fuzz(
         uint128 _collateral,
         uint128 _toBorrow,
@@ -101,7 +101,7 @@ contract MaxWithdrawTest is MaxWithdrawCommon {
     /*
     forge test -vv --ffi --mt test_maxWithdraw_whenInterest_fuzz
     */
-    /// forge-config: core.fuzz.runs = 1000
+    /// forge-config: core-test.fuzz.runs = 1000
     function test_maxWithdraw_whenInterest_fuzz(
         uint128 _collateral,
         uint128 _toBorrow
@@ -124,7 +124,7 @@ contract MaxWithdrawTest is MaxWithdrawCommon {
     /*
     forge test -vv --ffi --mt test_maxWithdraw_bothSilosWithInterest_fuzz
     */
-    /// forge-config: core.fuzz.runs = 1000
+    /// forge-config: core-test.fuzz.runs = 1000
     function test_maxWithdraw_bothSilosWithInterest_fuzz(
         uint128 _collateral,
         uint128 _toBorrow

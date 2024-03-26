@@ -33,7 +33,7 @@ contract PreviewWithdrawTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_previewWithdraw_noInterestNoDebt_fuzz
     */
-    /// forge-config: core.fuzz.runs = 10000
+    /// forge-config: core-test.fuzz.runs = 10000
     function test_previewWithdraw_noInterestNoDebt_fuzz(
         uint128 _assetsOrShares,
         bool _doRedeem,
@@ -61,7 +61,7 @@ contract PreviewWithdrawTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_previewWithdraw_noDebt_fuzz
     */
-    /// forge-config: core.fuzz.runs = 10000
+    /// forge-config: core-test.fuzz.runs = 10000
     function test_previewWithdraw_noDebt_fuzz(
         uint128 _assetsOrShares,
         bool _doRedeem,
@@ -87,7 +87,7 @@ contract PreviewWithdrawTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_previewWithdraw_debt_fuzz
     */
-    /// forge-config: core.fuzz.runs = 10000
+    /// forge-config: core-test.fuzz.runs = 10000
     function test_previewWithdraw_debt_fuzz(
         uint128 _assetsOrShares,
         bool _doRedeem,

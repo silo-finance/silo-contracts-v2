@@ -57,7 +57,7 @@ contract MaxMintTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_maxMint_withDeposit_fuzz
     */
-    /// forge-config: core.fuzz.runs = 1000
+    /// forge-config: core-test.fuzz.runs = 1000
     function test_maxMint_withDeposit_fuzz(uint128 _initialDeposit) public {
         vm.assume(_initialDeposit > 0);
 
@@ -79,7 +79,7 @@ contract MaxMintTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_maxMint_withInterest_fuzz
     */
-    /// forge-config: core.fuzz.runs = 1000
+    /// forge-config: core-test.fuzz.runs = 1000
     function test_maxMint_withInterest_fuzz(
         uint256 _initialDeposit
     ) public {
@@ -109,7 +109,7 @@ contract MaxMintTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_maxMint_repayWithInterest_fuzz
     */
-    /// forge-config: core.fuzz.runs = 1000
+    /// forge-config: core-test.fuzz.runs = 1000
     function test_maxMint_repayWithInterest_fuzz(
         uint128 _initialDeposit
     ) public {

@@ -33,7 +33,7 @@ contract PreviewMintTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_previewMint_beforeInterest
     */
-    /// forge-config: core.fuzz.runs = 10000
+    /// forge-config: core-test.fuzz.runs = 10000
     function test_previewMint_beforeInterest_fuzz(uint256 _shares, bool _defaultType, uint8 _type) public {
         vm.assume(_shares > 0);
 
@@ -43,7 +43,7 @@ contract PreviewMintTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_previewMint_afterNoInterest_fuzz
     */
-    /// forge-config: core.fuzz.runs = 10000
+    /// forge-config: core-test.fuzz.runs = 10000
     function test_previewMint_afterNoInterest_fuzz(
         uint128 _depositAmount,
         uint128 _shares,
@@ -57,7 +57,7 @@ contract PreviewMintTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_previewMint_withInterest_fuzz
     */
-    /// forge-config: core.fuzz.runs = 10000
+    /// forge-config: core-test.fuzz.runs = 10000
     function test_previewMint_withInterest_fuzz(uint128 _shares, bool _defaultType, uint8 _type) public {
         vm.assume(_shares > 0);
 

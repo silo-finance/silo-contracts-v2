@@ -107,7 +107,7 @@ contract InterestRateModelV2Test is Test, InterestRateModelConfigs {
     }
 
     // forge test -vv --mt test_IRM_calculateRComp
-    /// forge-config: core.fuzz.runs = 10000
+    /// forge-config: core-test.fuzz.runs = 10000
     function test_IRM_calculateRComp(uint256 _totalDeposits, uint256 _totalBorrowAmount, int256 _x) public {
         InterestRateModelV2Impl impl = new InterestRateModelV2Impl();
         InterestRateModelV2Checked implChecked = new InterestRateModelV2Checked();
