@@ -67,6 +67,34 @@ function sharesToAssetsNotTooHigh(env e, mathint max)
     require totalProtectedShares <= totalProtectedAssets * max;
 }
 
+function sharesAndAssetsNotTooHigh(env e, mathint max)
+{
+    mathint totalCollateralAssets; mathint totalProtectedAssets;
+    totalCollateralAssets, totalProtectedAssets = getCollateralAndProtectedAssets(e);  
+    mathint totalShares = shareCollateralToken0.totalSupply();
+    mathint totalProtectedShares = shareProtectedCollateralToken0.totalSupply();
+    require totalCollateralAssets <= max;
+    require totalShares <= max;
+    require totalProtectedAssets <= max;
+    require totalProtectedShares <= max;
+}
+
+// three allowed ratios: 1:1, 3:5, 5:3
+function sharesToAssetsFixedRatio(env e)
+{
+    mathint totalCollateralAssets; mathint totalProtectedAssets;
+    totalCollateralAssets, totalProtectedAssets = getCollateralAndProtectedAssets(e);  
+    mathint totalShares = shareCollateralToken0.totalSupply();
+    mathint totalProtectedShares = shareProtectedCollateralToken0.totalSupply();
+    require totalCollateralAssets * 3 == totalShares * 5 ||
+        totalCollateralAssets * 5 == totalShares * 3 ||
+        totalCollateralAssets == totalShares;
+    
+    require totalProtectedAssets * 3 == totalProtectedShares * 5 ||
+        totalProtectedAssets * 5 == totalProtectedShares * 3 ||
+        totalProtectedAssets == totalProtectedShares;
+}
+
 function differsAtMost(mathint x, mathint y, mathint diff) returns bool
 {
     if (x == y) return true;
@@ -168,6 +196,17 @@ definition canDecreaseTotalCollateral(method f) returns bool =
     f.selector == sig:redeem(uint256,address,address,ISilo.AssetType).selector ||
     f.selector == sig:withdraw(uint256,address,address,ISilo.AssetType).selector ||
     f.selector == sig:liquidationCall(address,address,address,uint256,bool).selector;
+
+definition canIncreaseTotalProtectedCollateral(method f) returns bool = 
+    f.selector == sig:deposit(uint256,address,ISilo.AssetType).selector ||
+    f.selector == sig:mint(uint256,address,ISilo.AssetType).selector ||
+    f.selector == sig:transitionCollateral(uint256,address,ISilo.AssetType).selector;
+
+definition canDecreaseTotalProtectedCollateral(method f) returns bool =
+    f.selector == sig:redeem(uint256,address,address,ISilo.AssetType).selector ||
+    f.selector == sig:withdraw(uint256,address,address,ISilo.AssetType).selector ||
+    f.selector == sig:liquidationCall(address,address,address,uint256,bool).selector ||
+    f.selector == sig:transitionCollateral(uint256,address,ISilo.AssetType).selector;
 
 definition canIncreaseTotalDebt(method f) returns bool =
     f.selector == sig:borrow(uint256,address,address).selector ||

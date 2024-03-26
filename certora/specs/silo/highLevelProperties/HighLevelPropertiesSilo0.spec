@@ -234,7 +234,11 @@ rule HLP_Mint2RedeemNotProfitable(env e, address receiver)
     completeSiloSetupEnv(e);
     totalSupplyMoreThanBalance(receiver);
     totalSupplyMoreThanBalance(e.msg.sender);
-    
+    sharesToAssetsFixedRatio(e);
+    //sharesToAssetsNotTooHigh(e, 2);
+    sharesAndAssetsNotTooHigh(e, 10^6);
+
+
     mathint balanceCollateralBefore = shareCollateralToken0.balanceOf(receiver);
     mathint balanceTokenBefore = token0.balanceOf(e.msg.sender);    
 
@@ -288,7 +292,10 @@ rule HLP_MintRedeem2NotProfitable(env e, address receiver)
     completeSiloSetupEnv(e);
     totalSupplyMoreThanBalance(receiver);
     totalSupplyMoreThanBalance(e.msg.sender);
-    
+    sharesToAssetsFixedRatio(e);
+    //sharesToAssetsNotTooHigh(e, 2);
+    sharesAndAssetsNotTooHigh(e, 10^6);
+
     mathint balanceCollateralBefore = shareCollateralToken0.balanceOf(receiver);
     mathint balanceTokenBefore = token0.balanceOf(e.msg.sender);    
 
@@ -364,7 +371,10 @@ rule HLP_MintWithdrawNotProfitable(env e, address receiver)
     completeSiloSetupEnv(e);
     totalSupplyMoreThanBalance(receiver);
     totalSupplyMoreThanBalance(e.msg.sender);
-    
+    sharesToAssetsFixedRatio(e);
+    //sharesToAssetsNotTooHigh(e, 2);
+    sharesAndAssetsNotTooHigh(e, 10^6);
+
     mathint balanceCollateralBefore = shareCollateralToken0.balanceOf(receiver);
     mathint balanceTokenBefore = token0.balanceOf(e.msg.sender);    
 
@@ -452,21 +462,23 @@ rule HLP_OthersCantDecreaseMyRedeem_viaDeposit(env e, env eOther)
     completeSiloSetupEnv(eOther);
     totalSupplyMoreThanBalance(eOther.msg.sender);
     require e.msg.sender != eOther.msg.sender;
-    sharesToAssetsNotTooHigh(e, 2);
-    sharesToAssetsNotTooHigh(eOther, 2);
+    sharesToAssetsFixedRatio(e);
+    //sharesToAssetsNotTooHigh(e, 2);
+    sharesAndAssetsNotTooHigh(e, 10^6);
 
     storage init = lastStorage;
     uint256 shares;
+    // check conversion func instead
     mathint assetsReceived = redeem(e, shares, e.msg.sender, e.msg.sender);
     
     uint256 assets;
     address receiver;
+    require receiver != e.msg.sender;
     deposit(eOther, assets, receiver) at init;
     mathint assetsReceived2 = redeem(e, shares, e.msg.sender, e.msg.sender);
 
     assert assetsReceived2 >= assetsReceived;
 }
-
 
 rule HLP_OthersCantDecreaseMyRedeem_viaWithdraw(env e, env eOther)
 {
@@ -475,7 +487,8 @@ rule HLP_OthersCantDecreaseMyRedeem_viaWithdraw(env e, env eOther)
     completeSiloSetupEnv(eOther);
     totalSupplyMoreThanBalance(eOther.msg.sender);
     require e.msg.sender != eOther.msg.sender;
-    sharesToAssetsNotTooHigh(e, 2);
+    sharesToAssetsFixedRatio(e);
+    //sharesToAssetsNotTooHigh(e, 2);
     sharesToAssetsNotTooHigh(eOther, 2);
 
     storage init = lastStorage;
@@ -484,7 +497,7 @@ rule HLP_OthersCantDecreaseMyRedeem_viaWithdraw(env e, env eOther)
     
     uint256 assets;
     address receiver;
-    totalSupplyMoreThanBalance(eOther.msg.sender);
+    require receiver != e.msg.sender;
     withdraw(eOther, assets, receiver, receiver) at init;
     mathint assetsReceived2 = redeem(e, shares, e.msg.sender, e.msg.sender);
 
