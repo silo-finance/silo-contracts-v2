@@ -51,7 +51,7 @@ contract MaxMintTest is SiloLittleHelper, Test {
         _borrow(toBorrow, borrower);
 
         assertEq(silo0.maxMint(borrower), _REAL_ASSETS_LIMIT - toBorrow * 2, "real max deposit");
-        assertEq(silo1.maxMint(borrower), 0, "can not deposit with debt");
+        assertEq(silo1.maxMint(borrower), _REAL_ASSETS_LIMIT - toBorrow, "can deposit with debt");
     }
 
     /*
