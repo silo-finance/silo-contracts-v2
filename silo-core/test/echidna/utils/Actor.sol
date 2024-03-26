@@ -206,7 +206,7 @@ contract Actor is PropertiesAsserts {
         Silo vault = prepareForDeposit(_vaultZeroWithDebt, debtToCover);
 
         (ISiloConfig.ConfigData memory debtConfig, ISiloConfig.ConfigData memory collateralConfig,) =
-            config.getConfigs(address(vault));
+            config.getConfigs(address(vault), borrower);
 
         liquidationModule.liquidationCall(
             address(vault), collateralConfig.token, debtConfig.token, borrower, debtToCover, receiveSToken

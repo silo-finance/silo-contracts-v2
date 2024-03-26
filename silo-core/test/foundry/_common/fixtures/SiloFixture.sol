@@ -106,7 +106,7 @@ contract SiloFixture is StdCheats, CommonBase {
         (
             ISiloConfig.ConfigData memory siloConfig0,
             ISiloConfig.ConfigData memory siloConfig1,
-        ) = siloConfig.getConfigs(silo);
+        ) = siloConfig.getConfigs(silo, address(0));
 
         silo0 = ISilo(siloConfig0.silo);
         silo1 = ISilo(siloConfig1.silo);

@@ -136,7 +136,7 @@ library SiloERC4626Lib {
             _owner,
             ISilo.OracleType.Solvency,
             ISilo.AccrueInterestInMemory.Yes,
-            IShareToken(debtConfig.debtShareToken).balanceOf(_owner)
+            IShareToken(_debtConfig.debtShareToken).balanceOf(_owner)
         );
 
         {
@@ -146,7 +146,7 @@ library SiloERC4626Lib {
             assets = SiloMathLib.calculateMaxAssetsToWithdraw(
                 collateralValue,
                 debtValue,
-                collateralConfig.lt,
+                _collateralConfig.lt,
                 ltvData.borrowerProtectedAssets,
                 ltvData.borrowerCollateralAssets
             );
