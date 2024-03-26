@@ -815,17 +815,15 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
         ISiloConfig cachedConfig = config;
 
         (
-            ISiloConfig.ConfigData memory collateralConfig,
             ISiloConfig.ConfigData memory debtConfig,
+            ISiloConfig.ConfigData memory collateralConfig,
             ISiloConfig.PositionInfo memory positionInfo
         ) = cachedConfig.getConfigs(address(this), _borrower);
 
         if (!SiloLendingLib.borrowPossible(positionInfo)) revert ISilo.BorrowNotPossible();
 
         if (_sameToken) {
-            debtConfig = collateralConfig;
-        } else {
-            (collateralConfig, debtConfig) = (debtConfig, collateralConfig);
+            collateralConfig = debtConfig;
         }
 
         _callAccrueInterestForAsset(
@@ -957,8 +955,8 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
         ISiloConfig cachedConfig = config;
 
         (
-            ISiloConfig.ConfigData memory collateralConfig,
             ISiloConfig.ConfigData memory debtConfig,
+            ISiloConfig.ConfigData memory collateralConfig,
             ISiloConfig.PositionInfo memory positionInfo
         ) = cachedConfig.getConfigs(address(this), _borrower);
 
@@ -966,8 +964,6 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
 
         if (_sameToken) {
             debtConfig = collateralConfig;
-        } else {
-            (collateralConfig, debtConfig) = (debtConfig, collateralConfig);
         }
 
         (uint256 totalDebtAssets, uint256 totalDebtShares) =
