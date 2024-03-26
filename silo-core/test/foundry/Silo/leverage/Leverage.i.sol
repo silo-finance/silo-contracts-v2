@@ -69,7 +69,7 @@ contract LeverageTest is SiloLittleHelper, Test {
     */
     function test_leverage_when_BorrowNotPossible_withCollateral() public {
         uint256 assets = 1e18;
-        LeverageBorrowerMock leverageBorrower = new LeverageBorrowerMock(address(0));
+        LeverageBorrowerMock leverageBorrowerMocked = new LeverageBorrowerMock(address(0));
         address borrower = makeAddr("borrower");
 
         _deposit(assets, borrower, ISilo.AssetType.Collateral);
@@ -78,12 +78,13 @@ contract LeverageTest is SiloLittleHelper, Test {
         vm.expectCall(address(token0), abi.encodeWithSelector(IERC20.transfer.selector, borrower, assets));
 
         // only mock, no deposit
-        leverageBorrower.onLeverageMock(borrower, borrower, address(token0), assets, bytes(""), LEVERAGE_CALLBACK);
+        leverageBorrowerMocked.onLeverageMock(borrower, borrower, address(token0), assets, bytes(""), LEVERAGE_CALLBACK);
 
-        vm.startPrank(borrower);
+        ILeverageBorrower leverageBorrower = ILeverageBorrower(leverageBorrowerMocked.ADDRESS());
+
+        vm.prank(borrower);
         vm.expectRevert(ISilo.AboveMaxLtv.selector);
-        silo0.leverage(assets, ILeverageBorrower(leverageBorrower.ADDRESS()), borrower, sameToken, bytes(""));
-        vm.stopPrank();
+        silo0.leverage(assets, leverageBorrower, borrower, sameToken, bytes(""));
     }
 
     /*
@@ -91,12 +92,12 @@ contract LeverageTest is SiloLittleHelper, Test {
     */
     function test_leverage_when_BorrowNotPossible_withProtected() public {
         uint256 assets = 1e18;
-        ILeverageBorrower leverageBorrower = ILeverageBorrower(makeAddr("leverageBorrower"));
+        LeverageBorrowerMock leverageBorrowerMocked = new LeverageBorrowerMock(address(0));
         address borrower = makeAddr("borrower");
 
         _deposit(assets, borrower, ISilo.AssetType.Protected);
 
-        vm.expectCall(address(token0), abi.encodeWithSelector(IERC20.transfer.selector, borrower, assets));
+        ILeverageBorrower leverageBorrower = ILeverageBorrower(leverageBorrowerMocked.ADDRESS());
 
         vm.expectRevert(ISilo.NotEnoughLiquidity.selector); // because we borrow first
         silo0.leverage(assets, leverageBorrower, borrower, sameToken, bytes(""));
