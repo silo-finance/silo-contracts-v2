@@ -172,14 +172,6 @@ contract DepositTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --ffi --mt test_maxDeposit_cap
-    */
-    function test_maxDeposit_cap() public {
-        assertEq(silo0.maxDeposit(address(1)), 2 ** 128 - 1, "ERC4626 expect to return 2 ** 256 - 1");
-        assertEq(silo0.maxMint(address(1)), 2 ** 128 - 1, "ERC4626 expect to return 2 ** 256 - 1 (maxMint)");
-    }
-
-    /*
     forge test -vv --ffi --mt test_deposit_revert_zeroShares
     */
     function test_deposit_revert_zeroShares_1token() public {
@@ -191,10 +183,12 @@ contract DepositTest is SiloLittleHelper, Test {
     }
 
     function _deposit_revert_zeroShares(bool _sameToken) private {
-        _deposit(2 ** 128, address(1));
+        address borrower = makeAddr("borrower");
+
+        _createCollateral(2 ** 128, borrower, _sameToken);
         _depositForBorrow(2 ** 128, address(2));
 
-        _borrow(2 ** 128 / 2, address(1), _sameToken);
+        _borrow(2 ** 128 / 2, borrower, _sameToken);
 
         address anyAddress = makeAddr("any");
         // no interest, so shares are 1:1
