@@ -31,6 +31,14 @@ contract MaxDepositTest is SiloLittleHelper, Test {
     }
 
     /*
+    forge test -vv --ffi --mt test_maxDeposit_cap
+    */
+    function test_maxDeposit_cap() public {
+        assertEq(silo0.maxDeposit(address(1)), 2 ** 128 - 1, "ERC4626 expect to return 2 ** 256 - 1");
+        assertEq(silo0.maxMint(address(1)), 2 ** 128 - 1, "ERC4626 expect to return 2 ** 256 - 1 (maxMint)");
+    }
+
+    /*
     forge test -vv --ffi --mt test_maxDeposit_emptySilo
     */
     function test_maxDeposit_emptySilo() public {
@@ -42,21 +50,30 @@ contract MaxDepositTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_maxDeposit_forBorrower
     */
-    function test_maxDeposit_forBorrower() public {
-        _maxDeposit_forBorrower(true);
-        _maxDeposit_forBorrower(false);
-    }
-
-    function _maxDeposit_forBorrower(bool _sameToken) internal {
+    function test_maxDeposit_forBorrower_2tokens() public {
         uint256 _initialDeposit = 1e18;
         uint256 toBorrow = _initialDeposit / 3;
+        bool sameToken;
 
         _depositForBorrow(toBorrow, depositor);
         _deposit(toBorrow * 2, borrower);
-        _borrow(toBorrow, borrower, _sameToken);
+        _borrow(toBorrow, borrower, sameToken);
 
         assertEq(silo0.maxDeposit(borrower), _REAL_ASSETS_LIMIT - toBorrow * 2, "real max deposit");
         assertEq(silo1.maxDeposit(borrower), _REAL_ASSETS_LIMIT - toBorrow, "can deposit with debt");
+    }
+
+    function test_maxDeposit_forBorrower_1token() public {
+        uint256 _initialDeposit = 1e18;
+        uint256 toBorrow = _initialDeposit / 3;
+        bool sameToken = true;
+
+        _depositForBorrow(toBorrow, depositor);
+        _depositForBorrow(toBorrow * 2, borrower);
+        _borrow(toBorrow, borrower, sameToken);
+
+        assertEq(silo0.maxDeposit(borrower), _REAL_ASSETS_LIMIT, "real max deposit");
+        assertEq(silo1.maxDeposit(borrower), _REAL_ASSETS_LIMIT - toBorrow * 3, "can deposit with debt");
     }
 
     /*
@@ -128,13 +145,19 @@ contract MaxDepositTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --ffi --mt test_maxDeposit_repayWithInterest_fuzz
+    forge test -vv --ffi --mt test_maxDeposit_repayWithInterest_
     */
     /// forge-config: core-test.fuzz.runs = 1000
-    function test_maxDeposit_repayWithInterest_fuzz(
+    function test_maxDeposit_repayWithInterest_1token_fuzz(
         uint64 _initialDeposit // 64b because this is initial deposit, and we care about max after initial
     ) public {
         _maxDeposit_repayWithInterest_fuzz(_initialDeposit, true);
+    }
+
+    /// forge-config: core-test.fuzz.runs = 1000
+    function test_maxDeposit_repayWithInterest_2tokens_fuzz(
+        uint64 _initialDeposit // 64b because this is initial deposit, and we care about max after initial
+    ) public {
         _maxDeposit_repayWithInterest_fuzz(_initialDeposit, false);
     }
 
@@ -146,7 +169,7 @@ contract MaxDepositTest is SiloLittleHelper, Test {
 
         _depositForBorrow(toBorrow + 1e18, depositor);
 
-        _deposit(toBorrow * 1e18, borrower);
+        _createCollateral(toBorrow * 1e18, borrower, _sameToken);
         _borrow(toBorrow, borrower, _sameToken);
 
         vm.warp(block.timestamp + 100 days);
@@ -181,8 +204,8 @@ contract MaxDepositTest is SiloLittleHelper, Test {
     function _assertWeCanBorrowAfterMaxDeposit(uint256 _assets, address _borrower) internal {
         uint256 collateral = _REAL_ASSETS_LIMIT * 1e18;
         emit log_named_decimal_uint("[_assertWeCanBorrowAfterMaxDeposit] collateral", collateral, 18);
-
-        _deposit(collateral, _borrower);
-        _borrow(_assets, _borrower, false /* sameToken */);
+        bool sameToken;
+        _createCollateral(collateral, _borrower, sameToken);
+        _borrow(_assets, _borrower, sameToken);
     }
 }
