@@ -112,7 +112,6 @@ library SiloLendingLib {
         IERC20Upgradeable(_configData.token).safeTransferFrom(_repayer, address(this), assets);
     }
 
-
     /// @notice Accrues interest on assets, updating the collateral and debt balances
     /// @dev This method will accrue interest for ONE asset ONLY, to calculate for both silos you have to call it twice
     /// with `_configData` for each token
@@ -250,53 +249,49 @@ library SiloLendingLib {
         view
         returns (uint256 assets, uint256 shares)
     {
-        { // too deep
-            SiloSolvencyLib.LtvData memory ltvData = SiloSolvencyLib.getAssetsDataForLtvCalculations(
-                _collateralConfig,
-                _debtConfig,
-                _borrower,
-                ISilo.OracleType.MaxLtv,
-                ISilo.AccrueInterestInMemory.Yes,
-                0 /* no cache */
-            );
+        SiloSolvencyLib.LtvData memory ltvData = SiloSolvencyLib.getAssetsDataForLtvCalculations(
+            _collateralConfig,
+            _debtConfig,
+            _borrower,
+            ISilo.OracleType.MaxLtv,
+            ISilo.AccrueInterestInMemory.Yes,
+            0 /* no cache */
+        );
 
-            (
-                uint256 sumOfBorrowerCollateralValue, uint256 borrowerDebtValue
-            ) = SiloSolvencyLib.getPositionValues(ltvData, _collateralConfig.token, _debtConfig.token);
+        (
+            uint256 sumOfBorrowerCollateralValue, uint256 borrowerDebtValue
+        ) = SiloSolvencyLib.getPositionValues(ltvData, _collateralConfig.token, _debtConfig.token);
 
-            uint256 maxBorrowValue = SiloMathLib.calculateMaxBorrowValue(
-                _collateralConfig.maxLtv,
-                sumOfBorrowerCollateralValue,
-                borrowerDebtValue
-            );
+        uint256 maxBorrowValue = SiloMathLib.calculateMaxBorrowValue(
+            _collateralConfig.maxLtv,
+            sumOfBorrowerCollateralValue,
+            borrowerDebtValue
+        );
 
-            (assets, shares) = maxBorrowValueToAssetsAndShares(
-                maxBorrowValue,
-                borrowerDebtValue,
-                _borrower,
-                _debtConfig.token,
-                _debtConfig.debtShareToken,
-                ltvData.debtOracle,
+        (assets, shares) = maxBorrowValueToAssetsAndShares(
+            maxBorrowValue,
+            borrowerDebtValue,
+            _borrower,
+            _debtConfig.token,
+            _debtConfig.debtShareToken,
+            ltvData.debtOracle,
+            _totalDebtAssets,
+            _totalDebtShares
+        );
+
+        uint256 liquidityWithInterest = getLiquidity(_siloConfig);
+
+        if (assets > liquidityWithInterest) {
+            assets = liquidityWithInterest;
+
+            // rounding must follow same flow as in `maxBorrowValueToAssetsAndShares()`
+            shares = SiloMathLib.convertToShares(
+                assets,
                 _totalDebtAssets,
-                _totalDebtShares
+                _totalDebtShares,
+                MathUpgradeable.Rounding.Down,
+                ISilo.AssetType.Debt
             );
-        }
-
-        {
-            uint256 liquidityWithInterest = getLiquidity(_siloConfig);
-
-            if (assets > liquidityWithInterest) {
-                assets = liquidityWithInterest;
-
-                // rounding must follow same flow as in `maxBorrowValueToAssetsAndShares()`
-                shares = SiloMathLib.convertToShares(
-                    assets,
-                    _totalDebtAssets,
-                    _totalDebtShares,
-                    MathUpgradeable.Rounding.Down,
-                    ISilo.AssetType.Debt
-                );
-            }
         }
 
         if (assets != 0) {
