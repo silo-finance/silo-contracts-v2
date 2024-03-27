@@ -16,6 +16,8 @@ import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
     forge test -vv --ffi --mc BorrowNotPossibleTest
 */
 contract BorrowNotPossibleTest is SiloLittleHelper, Test {
+    bool sameToken;
+
     function setUp() public {
         _setUpLocalFixture(SiloConfigsNames.LOCAL_NOT_BORROWABLE);
 
@@ -34,7 +36,6 @@ contract BorrowNotPossibleTest is SiloLittleHelper, Test {
         uint256 depositAssets = 1e18;
         address borrower = makeAddr("Borrower");
         address depositor = makeAddr("Depositor");
-        bool sameToken;
 
         _deposit(depositAssets, depositor, ISilo.AssetType.Collateral);
         _depositForBorrow(depositAssets, borrower);
@@ -50,7 +51,6 @@ contract BorrowNotPossibleTest is SiloLittleHelper, Test {
         uint256 depositAssets = 1e18;
         address borrower = makeAddr("Borrower");
         address depositor = makeAddr("Depositor");
-        bool sameToken;
 
         _deposit(depositAssets, borrower, ISilo.AssetType.Collateral);
         _depositForBorrow(depositAssets, depositor);
@@ -73,6 +73,6 @@ contract BorrowNotPossibleTest is SiloLittleHelper, Test {
         _depositForBorrow(_depositAmount, depositor);
 
         vm.expectRevert(ISilo.AboveMaxLtv.selector);
-        _borrow(_borrowAmount, address(this));
+        _borrow(_borrowAmount, address(this), sameToken);
     }
 }
