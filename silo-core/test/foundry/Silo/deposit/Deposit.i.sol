@@ -182,11 +182,19 @@ contract DepositTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_deposit_revert_zeroShares
     */
-    function test_deposit_revert_zeroShares() public {
+    function test_deposit_revert_zeroShares_1token() public {
+        _deposit_revert_zeroShares(true);
+    }
+
+    function test_deposit_revert_zeroShares_2tokens() public {
+        _deposit_revert_zeroShares(false);
+    }
+
+    function _deposit_revert_zeroShares(bool _sameToken) private {
         _deposit(2 ** 128, address(1));
         _depositForBorrow(2 ** 128, address(2));
 
-        _borrow(2 ** 128 / 2, address(1));
+        _borrow(2 ** 128 / 2, address(1), _sameToken);
 
         address anyAddress = makeAddr("any");
         // no interest, so shares are 1:1
