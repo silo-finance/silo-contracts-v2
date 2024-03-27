@@ -402,13 +402,11 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
         uint256 depositAssets = 1e18;
         address borrower = address(0x22334455);
         address depositor = address(0x9876123);
-        uint256 maxLtv = _sameToken ? 0.75e18 : 0.85e18;
+        uint256 maxLtv = _sameToken ? 0.85e18 : 0.75e18;
 
         _depositCollateral(depositAssets, borrower, _sameToken);
 
-        (
-            address protectedShareToken, address collateralShareToken,
-        ) = siloConfig.getShareTokens(address(_sameToken ? silo1 : silo0));
+        (, address collateralShareToken,) = siloConfig.getShareTokens(address(_sameToken ? silo1 : silo0));
 
         (,, address debtShareToken) = siloConfig.getShareTokens(address(silo1));
         assertEq(IShareToken(collateralShareToken).balanceOf(borrower), depositAssets, "expect borrower to have collateral");
@@ -456,7 +454,7 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
         assertEq(borrowAmount, silo1.convertToAssets(gotShares), "convertToAssets returns borrowAmount (2)");
 
         // collateral silo
-        (protectedShareToken, collateralShareToken, debtShareToken) = siloConfig.getShareTokens(address(silo0));
+        (, collateralShareToken, debtShareToken) = siloConfig.getShareTokens(address(silo0));
         assertEq(IShareToken(debtShareToken).balanceOf(borrower), 0, "collateral silo: expect borrower to NOT have debt");
         assertEq(IShareToken(collateralShareToken).balanceOf(borrower), 1e18, "collateral silo: borrower has collateral");
         assertEq(silo0.getDebtAssets(), 0, "collateral silo: NO debt");
@@ -470,35 +468,43 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_borrow_scenarios
     */
-    function test_borrow_scenarios() public {
+    function test_borrow_scenarios_1token() public {
+        _borrow_scenarios(true);
+    }
+
+    function test_borrow_scenarios_2tokens() public {
+        _borrow_scenarios(false);
+    }
+
+    function _borrow_scenarios(bool _sameToken) private {
         uint256 depositAssets = 1e18;
         address borrower = address(0x22334455);
         address depositor = address(0x9876123);
 
-        _deposit(depositAssets, borrower, ISilo.AssetType.Collateral);
+        _depositCollateral(depositAssets, borrower, _sameToken, ISilo.AssetType.Collateral);
 
         // deposit, so we can borrow
         _depositForBorrow(100e18, depositor);
         assertEq(silo1.getLtv(borrower), 0, "no debt, so LT == 0");
 
-        uint256 maxBorrow = silo1.maxBorrow(borrower, sameToken) + 1; // +1 to balance out underestimation
+        uint256 maxBorrow = silo1.maxBorrow(borrower, _sameToken) + 1; // +1 to balance out underestimation
 
-        _borrow(200e18, borrower, sameToken, ISilo.NotEnoughLiquidity.selector);
-        _borrow(maxBorrow * 2, borrower, sameToken, ISilo.AboveMaxLtv.selector);
-        _borrow(maxBorrow / 2, borrower, sameToken);
+        _borrow(200e18, borrower, _sameToken, ISilo.NotEnoughLiquidity.selector);
+        _borrow(maxBorrow * 2, borrower, _sameToken, ISilo.AboveMaxLtv.selector);
+        _borrow(maxBorrow / 2, borrower, _sameToken);
         assertEq(silo1.getLtv(borrower), 0.375e18, "borrow 50% of max, and maxLTV is 75%, so LT == 37,5%");
 
-        _borrow(200e18, borrower, sameToken, ISilo.NotEnoughLiquidity.selector);
-        _borrow(maxBorrow, borrower, sameToken, ISilo.AboveMaxLtv.selector);
-        _borrow(maxBorrow / 2, borrower, sameToken);
+        _borrow(200e18, borrower, _sameToken, ISilo.NotEnoughLiquidity.selector);
+        _borrow(maxBorrow, borrower, _sameToken, ISilo.AboveMaxLtv.selector);
+        _borrow(maxBorrow / 2, borrower, _sameToken);
         assertEq(silo1.getLtv(borrower), 0.75e18, "borrow 100% of max, so LT == 75%%");
 
-        assertEq(silo0.maxBorrow(borrower, sameToken), 0, "maxBorrow 0");
+        assertEq(silo0.maxBorrow(borrower, _sameToken), 0, "maxBorrow 0");
         assertTrue(silo0.isSolvent(borrower), "still isSolvent");
         assertTrue(silo1.isSolvent(borrower), "still isSolvent");
         assertTrue(silo1.borrowPossible(borrower), "borrow is still possible, we just reached CAP");
 
-        _borrow(1, borrower, sameToken, ISilo.AboveMaxLtv.selector);
+        _borrow(1, borrower, _sameToken, ISilo.AboveMaxLtv.selector);
     }
 
     /*
