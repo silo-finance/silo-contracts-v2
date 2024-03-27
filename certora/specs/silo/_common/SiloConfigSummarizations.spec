@@ -54,6 +54,7 @@ function getConfigSumm(address _silo) returns ISiloConfig.ConfigData {
     require data.daoFee == daoFee;
     require data.deployerFee == deployerFee;
     require data.maxLtv <= MAX_LTV_PERCENT() && data.maxLtv > 0;
+    require data.maxLtv <= data.lt;
     if(_silo == silo0) {
         require data.silo == silo0;
         require data.otherSilo == silo1;

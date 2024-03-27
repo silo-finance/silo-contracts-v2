@@ -54,12 +54,12 @@ function discreteRatioMulDiv(uint256 x, uint256 y, uint256 z) returns uint256
 
 /// shares, totalAssets, totalShares, (true if round up, false if down)
 /// assets, totalShares, totalAssets, (true if round up, false if down)
-persistent ghost sharesMulDiv(uint256,uint256,uint256,bool) returns uint256 {
+persistent ghost sharesMulDiv(uint256,uint256,uint256,bool) returns uint256 {       
     axiom forall uint256 x. forall uint256 y. forall uint256 z.
-        sharesMulDiv(x,y,z,true) == sharesMulDiv(x,y,z,false) ||
-        sharesMulDiv(x,y,z,true) - sharesMulDiv(x,y,z,false) == 1;
-    axiom forall uint256 x. forall uint256 y. forall uint256 z.
-    /// Symmetry:
+    /// Rounding up is equal or +1 from rounding down:
+        (sharesMulDiv(x,y,z,true) == sharesMulDiv(x,y,z,false) ||
+        sharesMulDiv(x,y,z,true) - sharesMulDiv(x,y,z,false) == 1) &&
+    /// Multiplication symmetry:
         sharesMulDiv(x,y,z,false) == sharesMulDiv(y,x,z,false) &&
         sharesMulDiv(x,y,z,true) == sharesMulDiv(y,x,z,true) &&
     /// For shares conversion calculations, one expects 
@@ -67,23 +67,23 @@ persistent ghost sharesMulDiv(uint256,uint256,uint256,bool) returns uint256 {
     ///     assets <= total assets
     /// hence : x <= z => assets (shares) = x * y / z <= y = total assets (total shares)
         (sharesMulDiv(x,y,z,false) <= y) &&
+    /// Nominator-denominator cancellation:
         ((x == z && z !=0) => sharesMulDiv(x,y,z,false) == y) &&
         ((y == z && z !=0) => sharesMulDiv(x,y,z,false) == x);
-
+    /// Monotonicity:
     axiom forall uint256 x1. forall uint256 x2. forall uint256 y. forall uint256 z.
-        x1 <= x2 => sharesMulDiv(x1,y,z,false) <= sharesMulDiv(x2,y,z,false);
-    axiom forall uint256 x1. forall uint256 x2. forall uint256 y. forall uint256 z.
-        x1 <= x2 => sharesMulDiv(x1,y,z,true) <= sharesMulDiv(x2,y,z,true);
-    axiom forall uint256 y1. forall uint256 y2. forall uint256 x. forall uint256 z.
-        y1 <= y2 => sharesMulDiv(x,y1,z,false) <= sharesMulDiv(x,y2,z,false);
-    axiom forall uint256 y1. forall uint256 y2. forall uint256 x. forall uint256 z.
-        y1 <= y2 => sharesMulDiv(x,y1,z,true) <= sharesMulDiv(x,y2,z,true);
-    axiom forall uint256 z1. forall uint256 z2. forall uint256 x. forall uint256 y.
-        z1 <= z2 => sharesMulDiv(x,y,z1,false) >= sharesMulDiv(x,y,z2,false);
-    
+        x1 <= x2 => (
+            sharesMulDiv(x1,y,z,false) <= sharesMulDiv(x2,y,z,false) &&
+            sharesMulDiv(x1,y,z,true) <= sharesMulDiv(x2,y,z,true) &&
+            sharesMulDiv(z,y,x1,false) >= sharesMulDiv(z,y,x2,false)
+        );
     axiom forall uint256 y. forall uint256 z.
         (sharesMulDiv(0,y,z,false) == 0) && 
-        (sharesMulDiv(1,y,z,false) ==0 <=> (y ==0 || y < z));
+        (sharesMulDiv(1,y,z,false) ==0 <=> (y ==0 || y < z)) &&
+        (sharesMulDiv(1,y,z,true) ==0 <=> y ==0);
+
+    axiom forall uint256 x. forall uint256 y. forall uint256 z.
+        (x >= 1 && y >= 1 && z !=0) => 2 * sharesMulDiv(x,y,z,false) >= (x + y) / z;
     /*
     axiom forall uint256 x. forall uint256 y. forall uint256 z. forall uint256 w.
         (w == sharesMulDiv(x,y,z,false) && y !=0) => (
@@ -121,8 +121,8 @@ function sharesToAssetsApprox(
     if (totalShares == 0 || totalAssets == 0) return _shares;
 
     //Replace for exact mulDiv
-    return mulDiv_mathLib(_shares,totalAssets,totalShares,_rounding == MathUpgradeable.Rounding.Up);
-    //return sharesMulDiv(_shares,totalAssets,totalShares,_rounding == MathUpgradeable.Rounding.Up);
+    //return mulDiv_mathLib(_shares,totalAssets,totalShares,_rounding == MathUpgradeable.Rounding.Up);
+    return sharesMulDiv(_shares,totalAssets,totalShares,_rounding == MathUpgradeable.Rounding.Up);
     //return discreteRatioMulDiv(_shares, totalAssets, totalShares);
 }
 
@@ -141,8 +141,8 @@ function assetsToSharesApprox(
     if (totalShares == 0 || totalAssets == 0) return _assets;
 
     //Replace for exact mulDiv
-    return mulDiv_mathLib(_assets,totalShares,totalAssets,_rounding == MathUpgradeable.Rounding.Up);
-    //return sharesMulDiv(_assets,totalShares,totalAssets,_rounding == MathUpgradeable.Rounding.Up);
+    //return mulDiv_mathLib(_assets,totalShares,totalAssets,_rounding == MathUpgradeable.Rounding.Up);
+    return sharesMulDiv(_assets,totalShares,totalAssets,_rounding == MathUpgradeable.Rounding.Up);
     //return discreteRatioMulDiv(_assets, totalShares, totalAssets);
 }
 
@@ -197,6 +197,8 @@ rule mulDiv_axioms_test(uint256 x, uint256 y, uint256 z) {
     assert z <= zp => resUp >= resUp_zp;
     assert (x == 0) => resDown == 0;
     assert (x == 1) => (resDown ==0 <=> (y ==0 || y < z));
+    assert (x == 1) => (resUp == 0 <=> y ==0);
+    assert (x >= 1 && y >= 1 && z !=0) => to_mathint(resDown) >= (x + y) / (2 * z);
 }
 
 /*
