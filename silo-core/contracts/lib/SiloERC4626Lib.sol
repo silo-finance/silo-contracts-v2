@@ -40,9 +40,12 @@ library SiloERC4626Lib {
         pure
         returns (uint256 maxAssetsOrShares)
     {
-        maxAssetsOrShares = _totalCollateralAssets == 0
-            ? _VIRTUAL_DEPOSIT_LIMIT
-            : _VIRTUAL_DEPOSIT_LIMIT - _totalCollateralAssets;
+        // safe to unchecked because we checking manually to prevent revert
+        unchecked {
+            maxAssetsOrShares = _totalCollateralAssets == 0
+                ? _VIRTUAL_DEPOSIT_LIMIT
+                : (_totalCollateralAssets >= _VIRTUAL_DEPOSIT_LIMIT) ? 0 : _VIRTUAL_DEPOSIT_LIMIT - _totalCollateralAssets;
+        }
     }
 
     /// @notice Determines the maximum amount a user can withdraw, either in terms of assets or shares
