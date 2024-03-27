@@ -105,6 +105,7 @@ contract MaxDepositTest is SiloLittleHelper, Test {
     function test_maxDeposit_withInterest_1token_fuzz(
         uint256 _initialDeposit
     ) public {
+        // uint256 _initialDeposit = 1020847100762815387329;
         _maxDeposit_withInterest_fuzz(_initialDeposit, true);
     }
 
@@ -122,7 +123,7 @@ contract MaxDepositTest is SiloLittleHelper, Test {
         uint256 toBorrow = _initialDeposit / 3;
 
         _depositForBorrow(_initialDeposit, depositor);
-        _deposit(toBorrow * 1e18, borrower);
+        _depositCollateral(toBorrow * 1e18, borrower, _sameToken);
         _borrow(toBorrow, borrower, _sameToken);
 
         vm.warp(block.timestamp + 100 days);
