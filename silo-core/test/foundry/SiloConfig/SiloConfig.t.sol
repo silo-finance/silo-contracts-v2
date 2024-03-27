@@ -285,7 +285,6 @@ contract SiloConfigTest is Test {
         _siloConfig.onPositionTransfer(from, to);
     }
 
-
     /*
     forge test -vv --mt test_onPositionTransfer_clone
     */
