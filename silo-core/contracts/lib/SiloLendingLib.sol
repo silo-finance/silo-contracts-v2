@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.21;
 
+import {console} from "forge-std/console.sol";
+
 import {SafeERC20Upgradeable} from "openzeppelin-contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
 import {IERC20Upgradeable} from "openzeppelin-contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import {IERC20MetadataUpgradeable} from "openzeppelin-contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
@@ -201,6 +203,7 @@ library SiloLendingLib {
         if (_assets == 0 && _shares == 0) revert ISilo.ZeroAssets();
 
         uint256 totalDebtAssets = _totalDebt.assets;
+        console.log("[borrow] totalDebtAssets", totalDebtAssets);
 
         (borrowedAssets, borrowedShares) = SiloMathLib.convertToAssetsAndToShares(
             _assets,
@@ -211,6 +214,11 @@ library SiloLendingLib {
             MathUpgradeable.Rounding.Up,
             ISilo.AssetType.Debt
         );
+
+        console.log("[borrow] _assets", _assets);
+        console.log("[borrow] borrowedAssets", borrowedAssets);
+        console.log("[borrow] _totalCollateralAssets", _totalCollateralAssets);
+        console.log("[borrow] liquidity", SiloMathLib.liquidity(_totalCollateralAssets, totalDebtAssets));
 
         if (borrowedShares == 0) revert ISilo.ZeroShares();
         if (borrowedAssets == 0) revert ISilo.ZeroAssets();

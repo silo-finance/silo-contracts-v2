@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.21;
 
+import {console} from "forge-std/console.sol";
+
 import {MathUpgradeable} from "openzeppelin-contracts-upgradeable/utils/math/MathUpgradeable.sol";
 
 import {ISiloOracle} from "../interfaces/ISiloOracle.sol";
@@ -74,6 +76,8 @@ library SiloSolvencyLib {
         ISilo.AccrueInterestInMemory _accrueInMemory
     ) internal view returns (bool) {
         uint256 debtShareBalance = IShareToken(_debtConfig.debtShareToken).balanceOf(_borrower);
+        console.log("[isBelowMaxLtv].debtShareBalance", debtShareBalance);
+
         if (debtShareBalance == 0) return true;
 
         uint256 ltv = getLtv(
@@ -84,6 +88,8 @@ library SiloSolvencyLib {
             _accrueInMemory,
             debtShareBalance
         );
+        console.log("[isBelowMaxLtv].ltv", ltv);
+        console.log("[isBelowMaxLtv] collateralConfig.maxLtv", _collateralConfig.maxLtv);
 
         return ltv <= _collateralConfig.maxLtv;
     }
@@ -173,11 +179,17 @@ library SiloSolvencyLib {
         ISilo.AccrueInterestInMemory _accrueInMemory,
         uint256 _debtShareBalance
     ) internal view returns (uint256 ltvInDp) {
+        console.log("[getLtv]._debtShareBalance", _debtShareBalance);
+
         if (_debtShareBalance == 0) return 0;
 
         LtvData memory ltvData = getAssetsDataForLtvCalculations(
             _collateralConfig, _debtConfig, _borrower, _oracleType, _accrueInMemory, _debtShareBalance
         );
+
+        console.log("[ltvData].borrowerCollateralAssets", ltvData.borrowerCollateralAssets);
+        console.log("[ltvData].borrowerDebtAssets", ltvData.borrowerDebtAssets);
+        console.log("[ltvData].borrowerProtectedAssets", ltvData.borrowerProtectedAssets);
 
         if (ltvData.borrowerDebtAssets == 0) return 0;
 
