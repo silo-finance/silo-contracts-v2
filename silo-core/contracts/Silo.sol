@@ -964,7 +964,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
         if (!SiloLendingLib.borrowPossible(positionInfo)) return (0, 0);
 
         if (_sameToken) {
-            debtConfig = collateralConfig;
+            collateralConfig = debtConfig;
         }
 
         (uint256 totalDebtAssets, uint256 totalDebtShares) =
