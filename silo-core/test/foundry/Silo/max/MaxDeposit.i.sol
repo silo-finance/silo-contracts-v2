@@ -99,13 +99,19 @@ contract MaxDepositTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --ffi --mt test_maxDeposit_withInterest_fuzz
+    forge test -vv --ffi --mt test_maxDeposit_withInterest_
     */
     /// forge-config: core-test.fuzz.runs = 10000
-    function test_maxDeposit_withInterest_fuzz(
+    function test_maxDeposit_withInterest_1token_fuzz(
         uint256 _initialDeposit
     ) public {
         _maxDeposit_withInterest_fuzz(_initialDeposit, true);
+    }
+
+    /// forge-config: core-test.fuzz.runs = 10000
+    function test_maxDeposit_withInterest_2tokens_fuzz(
+        uint256 _initialDeposit
+    ) public {
         _maxDeposit_withInterest_fuzz(_initialDeposit, false);
     }
 
