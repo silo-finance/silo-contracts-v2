@@ -59,6 +59,15 @@ abstract contract SiloLittleHelper is CommonBase {
         return _makeDeposit(silo0, token0, _assets, _depositor, ISilo.AssetType.Collateral);
     }
 
+    function _createCollateral(uint256 _assets, address _depositor, bool _forSameToken)
+        internal
+        returns (uint256 shares)
+    {
+        return _forSameToken
+            ? _makeDeposit(silo1, token1, _assets, _depositor, ISilo.AssetType.Collateral)
+            : _makeDeposit(silo0, token0, _assets, _depositor, ISilo.AssetType.Collateral);
+    }
+
     function _mint(uint256 _approve, uint256 _shares, address _depositor) internal returns (uint256 assets) {
         return _makeMint(_approve, silo0, token0, _shares, _depositor, ISilo.AssetType.Collateral);
     }
@@ -72,14 +81,9 @@ abstract contract SiloLittleHelper is CommonBase {
         shares = silo1.borrow(_amount, _borrower, _borrower, _sameToken);
     }
 
-    function _borrow(uint256 _amount, address _borrower) internal returns (uint256 shares) {
+    function _borrowShares(uint256 _shares, address _borrower, bool _sameToken) internal returns (uint256 amount) {
         vm.prank(_borrower);
-        shares = silo1.borrow(_amount, _borrower, _borrower, false /* sameToken */);
-    }
-
-    function _borrowShares(uint256 _shares, address _borrower) internal returns (uint256 amount) {
-        vm.prank(_borrower);
-        amount = silo1.borrowShares(_shares, _borrower, _borrower, false /* sameToken */);
+        amount = silo1.borrowShares(_shares, _borrower, _borrower, _sameToken);
     }
 
     function _repay(uint256 _amount, address _borrower) internal returns (uint256 shares) {
@@ -169,10 +173,10 @@ abstract contract SiloLittleHelper is CommonBase {
         }
     }
 
-    function _createDebt(uint128 _amount, address _borrower) internal returns (uint256 debtShares){
+    function _createDebt(uint128 _amount, address _borrower, bool _sameToken) internal returns (uint256 debtShares){
         _depositForBorrow(_amount, address(0x987654321));
         _deposit(uint256(_amount) * 2 + (_amount % 2), _borrower);
-        debtShares = _borrow(_amount, _borrower);
+        debtShares = _borrow(_amount, _borrower, _sameToken);
     }
 
     function _localFixture(string memory _configName)
