@@ -175,7 +175,7 @@ contract MaxDepositTest is SiloLittleHelper, Test {
 
         _depositForBorrow(toBorrow + 1e18, depositor);
 
-        _createCollateral(toBorrow * 1e18, borrower, _sameToken);
+        _depositCollateral(toBorrow * 1e18, borrower, _sameToken);
         _borrow(toBorrow, borrower, _sameToken);
 
         vm.warp(block.timestamp + 100 days);
@@ -211,7 +211,7 @@ contract MaxDepositTest is SiloLittleHelper, Test {
         uint256 collateral = _REAL_ASSETS_LIMIT * 1e18;
         emit log_named_decimal_uint("[_assertWeCanBorrowAfterMaxDeposit] collateral", collateral, 18);
         bool sameToken;
-        _createCollateral(collateral, _borrower, sameToken);
+        _depositCollateral(collateral, _borrower, sameToken);
         _borrow(_assets, _borrower, sameToken);
     }
 }

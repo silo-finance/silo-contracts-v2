@@ -185,7 +185,7 @@ contract DepositTest is SiloLittleHelper, Test {
     function _deposit_revert_zeroShares(bool _sameToken) private {
         address borrower = makeAddr("borrower");
 
-        _createCollateral(2 ** 128, borrower, _sameToken);
+        _depositCollateral(2 ** 128, borrower, _sameToken);
         _depositForBorrow(2 ** 128, address(2));
 
         _borrow(2 ** 128 / 2, borrower, _sameToken);
