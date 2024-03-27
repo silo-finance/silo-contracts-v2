@@ -84,7 +84,10 @@ contract MaxBorrowSharesTest is SiloLittleHelper, Test {
     forge test -vv --ffi --mt test_maxBorrowShares_collateralButNoLiquidity
     */
     /// forge-config: core-test.fuzz.runs = 100
-    function test_maxBorrowShares_collateralButNoLiquidity_1token_fuzz(uint128 _collateral) public {
+    function test_maxBorrowShares_collateralButNoLiquidity_1token_fuzz(
+        uint128 _collateral
+    ) public {
+        // uint128 _collateral = 2;
         _maxBorrowShares_collateralButNoLiquidity_fuzz(_collateral, true);
     }
 
@@ -94,11 +97,17 @@ contract MaxBorrowSharesTest is SiloLittleHelper, Test {
     }
 
     function _maxBorrowShares_collateralButNoLiquidity_fuzz(uint128 _collateral, bool _sameToken) private {
-        vm.assume(_collateral > 3); // to allow any borrowShares twice
+        vm.assume(_collateral > uint128(_sameToken ? 0 : 3)); // to allow any borrowShares twice
 
         _sameToken ? _depositForBorrow(_collateral, borrower) : _deposit(_collateral, borrower);
 
-        _assertWeCanNotBorrowAboveMax(0, _sameToken);
+        uint256 maxBorrowShares = silo1.maxBorrowShares(borrower, _sameToken);
+
+        if (!_sameToken) {
+            assertEq(maxBorrowShares, 0, "if 2 tokens and no liquidity, max should be 0");
+        }
+
+        _assertWeCanNotBorrowAboveMax(maxBorrowShares, _sameToken);
         _assertMaxBorrowSharesIsZeroAtTheEnd(_sameToken);
     }
 
