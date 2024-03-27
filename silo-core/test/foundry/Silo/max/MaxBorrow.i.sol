@@ -78,7 +78,7 @@ contract MaxBorrowTest is SiloLittleHelper, Test {
         emit log_named_string("_sameToken", _sameToken ? "yes" : "no");
 
         _depositForBorrow(_liquidity, depositor);
-        _sameToken ? _depositForBorrow(_collateral, borrower) : _deposit(_collateral, borrower);
+        _depositCollateral(_collateral, borrower, _sameToken);
 
         maxBorrow = silo1.maxBorrow(borrower, _sameToken);
         emit log_named_decimal_uint("maxBorrow", maxBorrow, 18);
@@ -107,7 +107,7 @@ contract MaxBorrowTest is SiloLittleHelper, Test {
         vm.assume(_collateral > 0);
         vm.assume(_liquidity > 0);
 
-        _sameToken ? _depositForBorrow(_collateral, borrower) : _deposit(_collateral, borrower);
+        _depositCollateral(_collateral, borrower, _sameToken);
         _depositForBorrow(_liquidity, depositor);
 
         uint256 maxBorrow = silo1.maxBorrow(borrower, _sameToken);
@@ -138,7 +138,7 @@ contract MaxBorrowTest is SiloLittleHelper, Test {
         vm.assume(_collateral > 0);
         vm.assume(_liquidity > 0);
 
-        _sameToken ? _depositForBorrow(_collateral, borrower) : _deposit(_collateral, borrower);
+        _depositCollateral(_collateral, borrower, _sameToken);
         _depositForBorrow(_liquidity, depositor);
 
         uint256 maxBorrow = silo1.maxBorrow(borrower, _sameToken);
@@ -187,7 +187,7 @@ contract MaxBorrowTest is SiloLittleHelper, Test {
         vm.assume(_collateral > 0);
         vm.assume(_liquidity > 0);
 
-        _sameToken ? _depositForBorrow(_collateral, borrower) : _deposit(_collateral, borrower);
+        _depositCollateral(_collateral, borrower, _sameToken);
         _depositForBorrow(_liquidity, depositor);
 
         uint256 maxBorrow = silo1.maxBorrow(borrower, _sameToken);

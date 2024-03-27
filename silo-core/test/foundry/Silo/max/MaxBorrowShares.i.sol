@@ -70,7 +70,7 @@ contract MaxBorrowSharesTest is SiloLittleHelper, Test {
         vm.assume(_collateral > 0);
 
         _depositForBorrow(_liquidity, depositor);
-        _sameToken ? _depositForBorrow(_collateral, borrower) : _deposit(_collateral, borrower);
+        _depositCollateral(_collateral, borrower, _sameToken);
 
         uint256 maxBorrowShares = silo1.maxBorrowShares(borrower, _sameToken);
         vm.assume(maxBorrowShares > 0);
@@ -99,7 +99,7 @@ contract MaxBorrowSharesTest is SiloLittleHelper, Test {
     function _maxBorrowShares_collateralButNoLiquidity_fuzz(uint128 _collateral, bool _sameToken) private {
         vm.assume(_collateral > uint128(_sameToken ? 0 : 3)); // to allow any borrowShares twice
 
-        _sameToken ? _depositForBorrow(_collateral, borrower) : _deposit(_collateral, borrower);
+        _depositCollateral(_collateral, borrower, _sameToken);
 
         uint256 maxBorrowShares = silo1.maxBorrowShares(borrower, _sameToken);
 
@@ -128,7 +128,7 @@ contract MaxBorrowSharesTest is SiloLittleHelper, Test {
         vm.assume(_collateral > 0);
         vm.assume(_liquidity > 0);
 
-        _sameToken ? _depositForBorrow(_collateral, borrower) : _deposit(_collateral, borrower);
+        _depositCollateral(_collateral, borrower, _sameToken);
         _depositForBorrow(_liquidity, depositor);
 
         uint256 maxBorrowShares = silo1.maxBorrowShares(borrower, _sameToken);
@@ -172,7 +172,7 @@ contract MaxBorrowSharesTest is SiloLittleHelper, Test {
         vm.assume(_collateral > 0);
         vm.assume(_liquidity > 0);
 
-        _sameToken ? _depositForBorrow(_collateral, borrower) : _deposit(_collateral, borrower);
+        _depositCollateral(_collateral, borrower, _sameToken);
         _depositForBorrow(_liquidity, depositor);
         // TODO  +protected, and for maxBorrow
 
@@ -222,7 +222,7 @@ contract MaxBorrowSharesTest is SiloLittleHelper, Test {
         vm.assume(_collateral > 0);
         vm.assume(_liquidity > 0);
 
-        _sameToken ? _depositForBorrow(_collateral, borrower) : _deposit(_collateral, borrower);
+        _depositCollateral(_collateral, borrower, _sameToken);
         _depositForBorrow(_liquidity, depositor);
         // TODO  +protected, and same for maxBorrow
 
