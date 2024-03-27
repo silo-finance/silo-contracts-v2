@@ -8,8 +8,8 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {SiloERC4626Lib} from "silo-core/contracts/lib/SiloERC4626Lib.sol";
 
-import {MintableToken} from "../_common/MintableToken.sol";
-import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
+import {MintableToken} from "../../_common/MintableToken.sol";
+import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
 
 /*
     forge test -vv --ffi --mc DepositTest
@@ -92,6 +92,38 @@ contract DepositTest is SiloLittleHelper, Test {
     }
 
     /*
+    forge test -vv --ffi --mt test_deposit_withDebt_2tokens
+    */
+    function test_deposit_withDebt_2tokens() public {
+        _deposit_withDebt(false);
+    }
+
+    /*
+    forge test -vv --ffi --mt test_deposit_withDebt_1token
+    */
+    function test_deposit_withDebt_1token() public {
+        _deposit_withDebt(true);
+    }
+
+    function _deposit_withDebt(bool _sameToken) internal {
+        uint256 assets = 1e18;
+        address depositor = makeAddr("Depositor");
+
+        _makeDeposit(silo0, token0, assets, depositor, ISilo.AssetType.Collateral);
+        _makeDeposit(silo0, token0, assets, depositor, ISilo.AssetType.Protected);
+        _makeDeposit(silo1, token1, assets, depositor, ISilo.AssetType.Collateral);
+        _makeDeposit(silo1, token1, assets, depositor, ISilo.AssetType.Protected);
+
+        uint256 maxBorrow = silo1.maxBorrow(depositor, _sameToken);
+        _borrow(maxBorrow, depositor, _sameToken);
+
+        _makeDeposit(silo0, token0, assets, depositor, ISilo.AssetType.Collateral);
+        _makeDeposit(silo0, token0, assets, depositor, ISilo.AssetType.Protected);
+        _makeDeposit(silo1, token1, assets, depositor, ISilo.AssetType.Collateral);
+        _makeDeposit(silo1, token1, assets, depositor, ISilo.AssetType.Protected);
+    }
+
+    /*
     forge test -vv --ffi --mt test_deposit_toWrongSilo
     */
     function test_deposit_toWrongSilo() public {
@@ -148,9 +180,9 @@ contract DepositTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --ffi --mt test_deposit_zeroShares
+    forge test -vv --ffi --mt test_deposit_revert_zeroShares
     */
-    function test_deposit_zeroShares() public {
+    function test_deposit_revert_zeroShares() public {
         _deposit(2 ** 128, address(1));
         _depositForBorrow(2 ** 128, address(2));
 

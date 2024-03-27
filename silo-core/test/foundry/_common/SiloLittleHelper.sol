@@ -67,6 +67,11 @@ abstract contract SiloLittleHelper is CommonBase {
         return _makeMint(_approve, silo1, token1, _shares, _depositor, ISilo.AssetType.Collateral);
     }
 
+    function _borrow(uint256 _amount, address _borrower, bool _sameToken) internal returns (uint256 shares) {
+        vm.prank(_borrower);
+        shares = silo1.borrow(_amount, _borrower, _borrower, _sameToken);
+    }
+
     function _borrow(uint256 _amount, address _borrower) internal returns (uint256 shares) {
         vm.prank(_borrower);
         shares = silo1.borrow(_amount, _borrower, _borrower, false /* sameToken */);
