@@ -390,27 +390,39 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_borrow_twice
     */
-    function test_borrow_twice_fuzz() public {
+    function test_borrow_twice_1token() public {
+        _borrow_twice(true);
+    }
+
+    function test_borrow_twice_2tokens() public {
+        _borrow_twice(false);
+    }
+
+    function _borrow_twice(bool _sameToken) private {
         uint256 depositAssets = 1e18;
         address borrower = address(0x22334455);
         address depositor = address(0x9876123);
+        uint256 maxLtv = _sameToken ? 0.75e18 : 0.85e18;
 
-        _deposit(depositAssets, borrower);
+        _depositCollateral(depositAssets, borrower, _sameToken);
 
-        (address protectedShareToken, address collateralShareToken,) = siloConfig.getShareTokens(address(silo0));
+        (
+            address protectedShareToken, address collateralShareToken,
+        ) = siloConfig.getShareTokens(address(_sameToken ? silo1 : silo0));
+
         (,, address debtShareToken) = siloConfig.getShareTokens(address(silo1));
         assertEq(IShareToken(collateralShareToken).balanceOf(borrower), depositAssets, "expect borrower to have collateral");
 
-        uint256 maxBorrow = silo0.maxBorrow(borrower, sameToken);
+        uint256 maxBorrow = silo0.maxBorrow(borrower, _sameToken);
         assertEq(maxBorrow, 0, "maxBorrow should be 0, because this is where collateral is");
 
         // deposit, so we can borrow
         _depositForBorrow(depositAssets * 2, depositor);
 
         // in this particular scenario max borrow is underestimated by 1, so we compensate by +1, to max out
-        maxBorrow = silo1.maxBorrow(borrower, sameToken) + 1;
+        maxBorrow = silo1.maxBorrow(borrower, _sameToken) + 1;
         emit log_named_decimal_uint("maxBorrow #1", maxBorrow, 18);
-        assertEq(maxBorrow, 0.75e18, "maxBorrow borrower can do, maxLTV is 75%");
+        assertEq(maxBorrow, maxLtv, "maxBorrow borrower can do, maxLTV is 75%");
 
         uint256 borrowAmount = maxBorrow / 2;
         emit log_named_decimal_uint("first borrow amount", borrowAmount, 18);
@@ -419,8 +431,8 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
         uint256 previewBorrowShares = silo1.previewBorrowShares(convertToShares);
         assertEq(previewBorrowShares, borrowAmount, "previewBorrowShares crosscheck");
 
-        uint256 gotShares = _borrow(borrowAmount, borrower, sameToken);
-        uint256 shareTokenCurrentDebt = 0.375e18;
+        uint256 gotShares = _borrow(borrowAmount, borrower, _sameToken);
+        uint256 shareTokenCurrentDebt = maxLtv / 2;
 
         assertEq(IShareToken(debtShareToken).balanceOf(borrower), shareTokenCurrentDebt, "expect borrower to have 1/2 of debt");
         assertEq(IShareToken(collateralShareToken).balanceOf(borrower), 1e18, "collateral silo: borrower has collateral");
@@ -430,15 +442,15 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
         assertEq(borrowAmount, silo1.convertToAssets(gotShares), "convertToAssets returns borrowAmount");
 
         // in this particular scenario max borrow is underestimated by 1, so we compensate by +1, to max out
-        borrowAmount = silo1.maxBorrow(borrower, sameToken) + 1;
+        borrowAmount = silo1.maxBorrow(borrower, _sameToken) + 1;
         emit log_named_decimal_uint("borrowAmount #2", borrowAmount, 18);
-        assertEq(borrowAmount, 0.75e18 / 2, "borrow second time");
+        assertEq(borrowAmount, maxLtv / 2, "borrow second time");
 
         convertToShares = silo1.convertToShares(borrowAmount);
-        gotShares = _borrow(borrowAmount, borrower, sameToken);
+        gotShares = _borrow(borrowAmount, borrower, _sameToken);
 
-        assertEq(IShareToken(debtShareToken).balanceOf(borrower), 0.75e18, "debt silo: borrower has debt");
-        assertEq(gotShares, 0.375e18, "got shares");
+        assertEq(IShareToken(debtShareToken).balanceOf(borrower), maxLtv, "debt silo: borrower has debt");
+        assertEq(gotShares, maxLtv / 2, "got shares");
         assertEq(silo1.getDebtAssets(), maxBorrow, "debt silo: has debt");
         assertEq(gotShares, convertToShares, "convertToShares returns same result (2)");
         assertEq(borrowAmount, silo1.convertToAssets(gotShares), "convertToAssets returns borrowAmount (2)");
@@ -452,7 +464,7 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
         assertTrue(silo0.isSolvent(borrower), "still isSolvent");
         assertTrue(silo1.isSolvent(borrower), "still isSolvent");
 
-        _borrow(0.0001e18, borrower, sameToken, ISilo.AboveMaxLtv.selector);
+        _borrow(0.0001e18, borrower, _sameToken, ISilo.AboveMaxLtv.selector);
     }
 
     /*
