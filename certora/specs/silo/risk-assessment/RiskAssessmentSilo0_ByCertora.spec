@@ -122,7 +122,7 @@ rule RA_silo_cant_borrow_more_than_max(env e, address borrower) {
     requireCollateralToken1TotalAndBalancesIntegrity();
     requireDebtToken1TotalAndBalancesIntegrity();
     requireInvariant RA_no_collateral_assets_no_debt_assets();
-    requireInvariant RA_zero_assets_iff_zero_shares();
+    requireInvariant RA_more_assets_than_shares();
 
     uint256 maxAssets = maxBorrow(e, borrower);
     uint256 assets; address receiver; 
@@ -199,13 +199,29 @@ invariant RA_zero_assets_iff_zero_shares()
     (silo0.total(ISilo.AssetType.Protected) ==0 <=> shareProtectedCollateralToken0.totalSupply() == 0) &&
     (silo0.total(ISilo.AssetType.Collateral) ==0 <=> shareCollateralToken0.totalSupply() == 0) &&
     (silo0.total(ISilo.AssetType.Debt) ==0 <=> shareDebtToken0.totalSupply() == 0) 
-    //(silo1.total(ISilo.AssetType.Protected) ==0 <=> shareProtectedCollateralToken1.totalSupply() == 0) &&
-    //(silo1.total(ISilo.AssetType.Collateral) ==0 <=> shareCollateralToken1.totalSupply() == 0) &&
-    //(silo1.total(ISilo.AssetType.Debt) ==0 <=> shareDebtToken1.totalSupply() == 0)
     {
         preserved with (env e) {
             completeSiloSetupEnv(e);
             totalSupplyMoreThanBalance(e.msg.sender);
+            requireInvariant RA_no_collateral_assets_no_debt_assets();
+        }
+    }
+
+invariant RA_more_assets_than_shares() 
+    (silo0.total(ISilo.AssetType.Protected) >= shareProtectedCollateralToken0.totalSupply()) &&
+    (silo0.total(ISilo.AssetType.Collateral) >= shareCollateralToken0.totalSupply()) &&
+    (silo0.total(ISilo.AssetType.Debt) >= shareDebtToken0.totalSupply()) 
+    {
+        preserved with (env e) {
+            completeSiloSetupEnv(e);
+            totalSupplyMoreThanBalance(e.msg.sender);
+            requireProtectedToken0TotalAndBalancesIntegrity();
+            requireCollateralToken0TotalAndBalancesIntegrity();
+            requireDebtToken0TotalAndBalancesIntegrity();
+            requireProtectedToken1TotalAndBalancesIntegrity();
+            requireCollateralToken1TotalAndBalancesIntegrity();
+            requireDebtToken1TotalAndBalancesIntegrity();
+            requireInvariant RA_zero_assets_iff_zero_shares();
             requireInvariant RA_no_collateral_assets_no_debt_assets();
         }
     }
@@ -266,4 +282,41 @@ rule RA_maxWithdraw_preserved_after_collateral_transition(env e, address user)
 
     assert maxAssets_after - maxAssets_before <= 10;
     //assert maxAssets_after - maxAssets_before >= -2;
+}
+
+rule RA_silo_solvent_after_repaying(env e, address borrower) {
+    completeSiloSetupEnv(e);
+    require silo0.getSiloDataInterestRateTimestamp() > 0;
+    totalSupplyMoreThanBalance(borrower);
+    totalSupplyMoreThanBalance(e.msg.sender);
+    requireProtectedToken0TotalAndBalancesIntegrity();
+    requireCollateralToken0TotalAndBalancesIntegrity();
+    requireDebtToken0TotalAndBalancesIntegrity();
+    requireProtectedToken1TotalAndBalancesIntegrity();
+    requireCollateralToken1TotalAndBalancesIntegrity();
+    requireDebtToken1TotalAndBalancesIntegrity();
+
+    requireInvariant RA_more_assets_than_shares();
+
+    require isSolvent(e, borrower);
+        uint256 assets;
+        repay(e, assets, borrower);
+    assert isSolvent(e, borrower);
+}
+
+rule RA_silo_solvent_after_borrow(env e, address borrower) {
+    completeSiloSetupEnv(e);
+    require silo0.getSiloDataInterestRateTimestamp() > 0;
+    totalSupplyMoreThanBalance(borrower);
+    totalSupplyMoreThanBalance(e.msg.sender);
+    requireProtectedToken0TotalAndBalancesIntegrity();
+    requireCollateralToken0TotalAndBalancesIntegrity();
+    requireDebtToken0TotalAndBalancesIntegrity();
+    requireProtectedToken1TotalAndBalancesIntegrity();
+    requireCollateralToken1TotalAndBalancesIntegrity();
+    requireDebtToken1TotalAndBalancesIntegrity();
+    uint256 assets;
+    address receiver;
+    borrow(e, assets, receiver, borrower);
+    assert isSolvent(e, borrower);
 }

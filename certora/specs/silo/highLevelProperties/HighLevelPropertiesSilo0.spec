@@ -9,7 +9,7 @@ import "../../_simplifications/priceOracle.spec";
 import "../../_simplifications/SiloSolvencyLib.spec";
 import "../../_simplifications/SimplifiedGetCompoundInterestRateAndUpdate.spec";
 
-
+use rule mulDiv_axioms_test;
 /*
     Breaking-up larger mint to two smaller ones doesn't benefit the user.
     holds
@@ -491,26 +491,28 @@ rule HLP_OthersCantDecreaseMyRedeem_viaWithdraw(env e, env eOther)
     assert assetsReceived2 >= assetsReceived;
 }
 
-rule HLP_maxWithdraw_preserved_after_collateral_transition(env e, address user) 
+rule HLP_transition_collateral_preserves_solvent(env e, address user) 
 {
     completeSiloSetupEnv(e);
+    require silo0.getSiloDataInterestRateTimestamp() > 0;
     totalSupplyMoreThanBalance(user);
     totalSupplyMoreThanBalance(e.msg.sender);
+    requireProtectedToken0TotalAndBalancesIntegrity();
+    requireCollateralToken0TotalAndBalancesIntegrity();
+    requireDebtToken0TotalAndBalancesIntegrity();
+    requireProtectedToken1TotalAndBalancesIntegrity();
+    requireCollateralToken1TotalAndBalancesIntegrity();
+    requireDebtToken1TotalAndBalancesIntegrity();
 
-    /// Invariants to prove
-    require silo0.total(ISilo.AssetType.Protected) ==0 <=> shareProtectedCollateralToken0.totalSupply() == 0;
-    require silo0.total(ISilo.AssetType.Collateral) ==0 <=> shareCollateralToken0.totalSupply() == 0;
-    require silo1.total(ISilo.AssetType.Protected) ==0 <=> shareProtectedCollateralToken1.totalSupply() == 0;
-    require silo1.total(ISilo.AssetType.Collateral) ==0 <=> shareCollateralToken1.totalSupply() == 0;
+    require
+    (silo0.total(ISilo.AssetType.Protected) >= shareProtectedCollateralToken0.totalSupply()) &&
+    (silo0.total(ISilo.AssetType.Collateral) >= shareCollateralToken0.totalSupply()) &&
+    (silo0.total(ISilo.AssetType.Debt) >= shareDebtToken0.totalSupply());
 
-    uint256 maxAssets_before = maxWithdraw(e, user);
+    require isSolvent(e, user);
         uint256 shares;
         address owner;
         ISilo.AssetType type;
         transitionCollateral(e, shares, owner, type);
-    uint256 maxAssets_after = maxWithdraw(e, user);
-
-    assert maxAssets_after - maxAssets_before <= 2;
-    assert maxAssets_after - maxAssets_before >= -2;
+    assert isSolvent(e, user);
 }
-
