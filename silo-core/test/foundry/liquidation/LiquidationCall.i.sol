@@ -104,6 +104,45 @@ contract LiquidationCallTest is SiloLittleHelper, Test {
     }
 
     /*
+    forge test -vv --ffi --mt test_liquidationCall_revert_noPosition
+        if (!positionInfo.debtInThisSilo) revert ISilo.ThereIsDebtInOtherSilo();
+    */
+    function test_liquidationCall_revert_noPosition() public {
+        address userWithoutDebt = address(1);
+        uint256 debtToCover = 1e18;
+        bool receiveSToken;
+
+        (,, ISiloConfig.PositionInfo memory positionInto) = siloConfig.getConfigs(address(silo1), userWithoutDebt);
+
+        assertTrue(!positionInto.positionOpen, "we need user without position for this test");
+
+        vm.expectRevert(IPartialLiquidation.UserIsSolvent.selector);
+
+        partialLiquidation.liquidationCall(
+            address(silo1), address(token0), address(token1), userWithoutDebt, debtToCover, receiveSToken
+        );
+    }
+
+    /*
+    forge test -vv --ffi --mt test_liquidationCall_revert_otherSiloDebt
+    */
+    function test_liquidationCall_revert_otherSiloDebt() public {
+        uint256 debtToCover = 1e18;
+        bool receiveSToken;
+
+        (,, ISiloConfig.PositionInfo memory positionInto) = siloConfig.getConfigs(address(silo1), BORROWER);
+
+        assertTrue(positionInto.positionOpen, "we need user with position for this test");
+        assertTrue(!positionInto.debtInSilo0, "we need debt in silo1");
+
+        vm.expectRevert(ISilo.ThereIsDebtInOtherSilo.selector);
+
+        partialLiquidation.liquidationCall(
+            address(silo0), address(token0), address(token1), BORROWER, debtToCover, receiveSToken
+        );
+    }
+
+    /*
     forge test -vv --ffi --mt test_liquidationCall_self
     */
     function test_liquidationCall_self() public {
