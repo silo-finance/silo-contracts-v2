@@ -78,11 +78,7 @@ contract GetLiquidityAccrueInterestTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_liquidity_whenDepositAndBorrow_
     */
-    function test_liquidity_whenDepositAndBorrow_1token_fuzz(
-//        uint128 _toDeposit,
-//        uint128 _toBorrow
-    ) public {
-        (uint128 _toDeposit, uint128 _toBorrow) = (5137356170513162, 1);
+    function test_liquidity_whenDepositAndBorrow_1token_fuzz(uint128 _toDeposit, uint128 _toBorrow) public {
         _liquidity_whenDepositAndBorrow(_toDeposit, _toBorrow, true);
     }
 
@@ -115,11 +111,7 @@ contract GetLiquidityAccrueInterestTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_liquidity_whenDepositAndBorrowWithInterest_
     */
-    function test_liquidity_whenDepositAndBorrowWithInterest_1token_fuzz(
-        uint128 _toDeposit,
-        uint128 _toBorrow
-    ) public {
-//        (uint128 _toDeposit, uint128 _toBorrow) = ();
+    function test_liquidity_whenDepositAndBorrowWithInterest_1token_fuzz(uint128 _toDeposit, uint128 _toBorrow) public {
         _liquidity_whenDepositAndBorrowWithInterest(_toDeposit, _toBorrow, true);
     }
 
