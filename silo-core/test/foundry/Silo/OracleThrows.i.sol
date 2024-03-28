@@ -6,6 +6,7 @@ import "forge-std/Test.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
+import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 
 import {MintableToken} from "../_common/MintableToken.sol";
 import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
@@ -50,14 +51,22 @@ contract OracleThrowsTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_throwing_oracle
     */
-    function test_throwing_oracle() public {
+    function test_throwing_oracle_1token() public {
+        _throwing_oracle(true);
+    }
+
+    function test_throwing_oracle_2tokens() public {
+        _throwing_oracle(false);
+    }
+
+    function _throwing_oracle(bool _sameToken) private {
         uint256 depositAmount = 100e18;
         uint256 borrowAmount = 50e18;
 
-        _deposit(depositAmount, borrower);
+        _depositCollateral(depositAmount, borrower, _sameToken);
         _depositForBorrow(depositAmount, depositor);
 
-        _borrow(borrowAmount, borrower);
+        _borrow(borrowAmount, borrower, _sameToken);
 
         assertEq(token0.balanceOf(borrower), 0);
         assertEq(token0.balanceOf(depositor), 0);
@@ -74,7 +83,7 @@ contract OracleThrowsTest is SiloLittleHelper, Test {
         maxLtvOracle0.breakOracle();
 
 
-        assertTrue(_withdrawAll(), "expect all tx to be executed till the end");
+        assertTrue(_withdrawAll(_sameToken), "expect all tx to be executed till the end");
 
 
         assertEq(token0.balanceOf(borrower), 100e18, "borrower got all collateral");
@@ -89,11 +98,15 @@ contract OracleThrowsTest is SiloLittleHelper, Test {
         assertEq(silo1.getLiquidity(), 1, "silo1.getLiquidity");
     }
 
-    function _withdrawAll() internal returns (bool success) {
+    function _withdrawAll(bool _sameToken) internal returns (bool success) {
         vm.prank(borrower);
         vm.expectRevert("beforeQuote: oracle is broken");
-        silo0.redeem(1, borrower, borrower);
-        assertEq(token0.balanceOf(borrower), 0, "borrower can not withdraw even 1 wei when oracle broken");
+
+        ISilo collateralSilo = _sameToken ? silo1 : silo0;
+        MintableToken collateralToken = _sameToken ? token1 : token0;
+
+        collateralSilo.redeem(1, borrower, borrower);
+        assertEq(collateralToken.balanceOf(borrower), 0, "borrower can not withdraw even 1 wei when oracle broken");
 
         uint256 silo1Balance = token1.balanceOf(address(silo1));
         uint256 silo1Liquidity = silo1.getLiquidity();
@@ -121,10 +134,10 @@ contract OracleThrowsTest is SiloLittleHelper, Test {
         _repayShares(silo1.previewRepayShares(borrowerDebtShares), borrowerDebtShares, borrower);
         assertEq(IShareToken(debtShareToken).balanceOf(borrower), 0, "repay all without oracle - expect no share debt");
 
-        (, address collateralShareToken,) = silo0.config().getShareTokens(address(silo0));
+        (, address collateralShareToken,) = collateralSilo.config().getShareTokens(address(collateralSilo));
 
         vm.startPrank(borrower);
-        silo0.redeem(IShareToken(collateralShareToken).balanceOf(borrower), borrower, borrower);
+        collateralSilo.redeem(IShareToken(collateralShareToken).balanceOf(borrower), borrower, borrower);
 
         vm.startPrank(depositor);
         silo1.redeem(IShareToken(collateralShareToken1).balanceOf(depositor), depositor, depositor);
