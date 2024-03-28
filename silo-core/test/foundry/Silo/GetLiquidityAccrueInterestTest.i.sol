@@ -11,7 +11,7 @@ import {MintableToken} from "../_common/MintableToken.sol";
 import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
 
 /*
-    forge test -vv --ffi --mc DepositTest
+    forge test -vv --ffi --mc GetLiquidityAccrueInterestTest
 */
 contract GetLiquidityAccrueInterestTest is SiloLittleHelper, Test {
     ISiloConfig siloConfig;
@@ -76,9 +76,17 @@ contract GetLiquidityAccrueInterestTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --ffi --mt test_liquidity_whenDepositAndBorrow
+    forge test -vv --ffi --mt test_liquidity_whenDepositAndBorrow_
     */
-    function test_liquidity_whenDepositAndBorrow(uint128 _toDeposit, uint128 _toBorrow) public {
+    function test_liquidity_whenDepositAndBorrow_1token_fuzz(uint128 _toDeposit, uint128 _toBorrow) public {
+        _liquidity_whenDepositAndBorrow(_toDeposit, _toBorrow, true);
+    }
+
+    function test_liquidity_whenDepositAndBorrow_2tokens_fuzz(uint128 _toDeposit, uint128 _toBorrow) public {
+        _liquidity_whenDepositAndBorrow(_toDeposit, _toBorrow, false);
+    }
+
+    function _liquidity_whenDepositAndBorrow(uint128 _toDeposit, uint128 _toBorrow, bool _sameToken) private {
         vm.assume(_toDeposit > 0);
         vm.assume(_toBorrow > 0);
         vm.assume(_toBorrow < _toDeposit / 2);
@@ -86,12 +94,14 @@ contract GetLiquidityAccrueInterestTest is SiloLittleHelper, Test {
         _makeDeposit(silo1, token1, _toDeposit / 2, depositor, ISilo.AssetType.Protected);
         _depositForBorrow(_toDeposit, depositor);
 
-        _deposit(_toDeposit, borrower);
-        _borrow(_toBorrow, borrower);
+        _depositCollateral(_toDeposit, borrower, _sameToken);
+        _borrow(_toBorrow, borrower, _sameToken);
 
-        assertEq(silo0.getLiquidity(), _toDeposit, "[0] expect collateral");
-        assertEq(silo0.getLiquidity(), _toDeposit, "[0] expect collateral, no interest");
-        assertEq(silo0.total(ISilo.AssetType.Protected), 0, "[0] no protected, no interest");
+        ISilo collateralSilo = _sameToken ? silo1: silo0;
+
+        assertEq(collateralSilo.getLiquidity(), _toDeposit, "[0] expect collateral");
+        assertEq(collateralSilo.getLiquidity(), _toDeposit, "[0] expect collateral, no interest");
+        assertEq(collateralSilo.total(ISilo.AssetType.Protected), 0, "[0] no protected, no interest");
 
         assertEq(silo1.getLiquidity(), _toDeposit - _toBorrow, "[1] expect diff after borrow");
         assertEq(silo1.getLiquidity(), _toDeposit - _toBorrow, "[1] expect diff after borrow (interest)");
@@ -99,9 +109,17 @@ contract GetLiquidityAccrueInterestTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --ffi --mt test_liquidity_whenDepositAndBorrowWithInterest
+    forge test -vv --ffi --mt test_liquidity_whenDepositAndBorrowWithInterest_
     */
-    function test_liquidity_whenDepositAndBorrowWithInterest(uint128 _toDeposit, uint128 _toBorrow) public {
+    function test_liquidity_whenDepositAndBorrowWithInterest_1token_fuzz(uint128 _toDeposit, uint128 _toBorrow) public {
+        _liquidity_whenDepositAndBorrowWithInterest(_toDeposit, _toBorrow, true);
+    }
+
+    function test_liquidity_whenDepositAndBorrowWithInterest_2tokens_fuzz(uint128 _toDeposit, uint128 _toBorrow) public {
+        _liquidity_whenDepositAndBorrowWithInterest(_toDeposit, _toBorrow, false);
+    }
+
+    function _liquidity_whenDepositAndBorrowWithInterest(uint128 _toDeposit, uint128 _toBorrow, bool _sameToken) private {
         vm.assume(_toDeposit > 0);
         vm.assume(_toBorrow > 0);
         vm.assume(_toBorrow < _toDeposit / 2);
@@ -113,19 +131,21 @@ contract GetLiquidityAccrueInterestTest is SiloLittleHelper, Test {
         _depositForBorrow(_toDeposit, depositor);
 
         _deposit(protectedDeposit0, borrower, ISilo.AssetType.Protected);
-        _deposit(_toDeposit, borrower);
-        _borrow(_toBorrow, borrower);
+        _depositCollateral(_toDeposit, borrower, _sameToken);
+        _borrow(_toBorrow, borrower, _sameToken);
+
+        ISilo collateralSilo = _sameToken ? silo1: silo0;
 
         vm.warp(block.timestamp + 100 days);
 
-        uint256 silo0_rawLiquidity = _getRawLiquidity(silo0);
+        uint256 silo0_rawLiquidity = _getRawLiquidity(collateralSilo);
         uint256 silo1_rawLiquidity = _getRawLiquidity(silo1);
-        uint256 silo0_liquidityWithInterest = silo0.getLiquidity();
+        uint256 silo0_liquidityWithInterest = collateralSilo.getLiquidity();
         uint256 silo1_liquidityWithInterest = silo1.getLiquidity();
-        uint256 silo0_protectedLiquidity = silo0.total(ISilo.AssetType.Protected);
+        uint256 silo0_protectedLiquidity = collateralSilo.total(ISilo.AssetType.Protected);
         uint256 silo1_protectedLiquidity = silo1.total(ISilo.AssetType.Protected);
 
-        uint256 accruedInterest0 = silo0.accrueInterest();
+        uint256 accruedInterest0 = collateralSilo.accrueInterest();
         assertEq(accruedInterest0, 0, "[0] expect no interest on silo0");
 
         uint256 accruedInterest1 = silo1.accrueInterest();
@@ -135,9 +155,9 @@ contract GetLiquidityAccrueInterestTest is SiloLittleHelper, Test {
         assertEq(silo0_liquidityWithInterest, _toDeposit, "[0] same liquidity, no interest");
 
         assertEq(silo1_rawLiquidity, _toDeposit - _toBorrow, "[1] expect liquidity without counting in interest");
-        assertLe(silo1_rawLiquidity, silo0.getLiquidity(), "[1] new liquidity() must not be smaller after interest");
+        assertLe(silo1_rawLiquidity, collateralSilo.getLiquidity(), "[1] new liquidity() must not be smaller after interest");
 
-        assertLe(silo0.getLiquidity(), silo0_rawLiquidity, "[0] no interest on silo0, liquidity the same");
+        assertLe(collateralSilo.getLiquidity(), silo0_rawLiquidity, "[0] no interest on silo0, liquidity the same");
 
         assertEq(
             silo0_liquidityWithInterest,
@@ -149,7 +169,7 @@ contract GetLiquidityAccrueInterestTest is SiloLittleHelper, Test {
 
         assertEq(
             silo0_protectedLiquidity,
-            silo0.total(ISilo.AssetType.Protected),
+            collateralSilo.total(ISilo.AssetType.Protected),
             "[0] expect total(ISilo.AssetType.Protected) calculations correct"
         );
 
