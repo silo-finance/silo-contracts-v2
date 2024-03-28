@@ -32,8 +32,16 @@ library SiloLensLib {
             ISiloConfig.PositionInfo memory positionInfo
         ) = _silo.config().getConfigs(address(_silo), _borrower);
 
-        if (!SiloSolvencyLib.collateralInThisSilo(positionInfo)) {
-            (collateralConfig, debtConfig) = (debtConfig, collateralConfig);
+        if (positionInfo.positionOpen) {
+            if (positionInfo.debtInThisSilo) {
+                if (positionInfo.oneTokenPosition) {
+                    debtConfig = collateralConfig;
+                } else {
+                    (collateralConfig, debtConfig) = (debtConfig, collateralConfig);
+                }
+            } else if (positionInfo.oneTokenPosition) {
+                collateralConfig = debtConfig;
+            }
         }
 
         ltv = SiloSolvencyLib.getLtv(
