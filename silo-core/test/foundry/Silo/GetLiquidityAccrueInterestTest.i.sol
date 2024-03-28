@@ -181,7 +181,11 @@ contract GetLiquidityAccrueInterestTest is SiloLittleHelper, Test {
             "[1] expect liquidity without counting in interest"
         );
 
-        assertLe(silo1_rawLiquidity, silo0.getLiquidity(), "[1] new liquidity() must not be smaller after interest");
+        assertLe(
+            silo1_rawLiquidity,
+            silo1.getLiquidity(),
+            "[1] new liquidity() must not be smaller after interest"
+        );
 
         assertLe(silo0.getLiquidity(), silo0_rawLiquidity, "[0] no interest on silo0, liquidity the same");
 
@@ -199,7 +203,11 @@ contract GetLiquidityAccrueInterestTest is SiloLittleHelper, Test {
             "[0] expect total(ISilo.AssetType.Protected) calculations correct"
         );
 
-        assertEq(silo0_protectedLiquidity, protectedDeposit0, "[0] no interest on protected");
+        assertEq(
+            silo0_protectedLiquidity,
+            _sameToken ? 0 : protectedDeposit0,
+            "[0] no interest on protected"
+        );
 
         assertEq(
             silo1_liquidityWithInterest,
@@ -213,10 +221,14 @@ contract GetLiquidityAccrueInterestTest is SiloLittleHelper, Test {
             "[1] expect getLiquidity(ISilo.AssetType.Collateral) calculations correct"
         );
 
-        assertEq(protectedDeposit1, silo1_protectedLiquidity, "[1] protected liquidity");
+        assertEq(
+            _sameToken ? protectedDeposit0 + protectedDeposit1 : protectedDeposit1,
+            silo1_protectedLiquidity,
+            "[1] protected liquidity"
+        );
 
         assertEq(
-            protectedDeposit1,
+            _sameToken ? protectedDeposit0 + protectedDeposit1 : protectedDeposit1,
             silo1.total(ISilo.AssetType.Protected),
             "[1] protected does not get interest"
         );
