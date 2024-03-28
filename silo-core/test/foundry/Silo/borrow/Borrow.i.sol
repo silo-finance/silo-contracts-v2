@@ -100,15 +100,12 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
         _borrow_onWrongSilo_for_receiver_no_collateral(false);
     }
 
-    function _borrow_onWrongSilo_for_receiver_no_collateral(bool _sameToken) public {
+    function _borrow_onWrongSilo_for_receiver_no_collateral(bool _sameToken) private {
         uint256 assets = 1e18;
         address borrower = makeAddr("borrower");
 
-        _depositForBorrow(assets, makeAddr("depositor"));
-        // !_sameToken to move collateral to wrong silo
+        _deposit(assets, makeAddr("depositor"));
         _depositCollateral(assets, borrower, _sameToken, ISilo.AssetType.Protected);
-
-        // there will be no withdraw because we borrow for receiver and receiver has no collateral
 
         vm.expectRevert("ERC20: insufficient allowance"); // because we want to mint for receiver
         vm.prank(borrower);
@@ -406,8 +403,8 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
         _depositCollateral(depositAssets, borrower, _sameToken);
 
         (, address collateralShareToken,) = siloConfig.getShareTokens(address(_sameToken ? silo1 : silo0));
-
         (,, address debtShareToken) = siloConfig.getShareTokens(address(silo1));
+
         assertEq(IShareToken(collateralShareToken).balanceOf(borrower), depositAssets, "expect borrower to have collateral");
 
         uint256 maxBorrow = silo0.maxBorrow(borrower, _sameToken);
@@ -453,13 +450,21 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
         assertEq(borrowAmount, silo1.convertToAssets(gotShares), "convertToAssets returns borrowAmount (2)");
 
         // collateral silo
-        (, collateralShareToken, debtShareToken) = siloConfig.getShareTokens(address(silo0));
-        assertEq(IShareToken(debtShareToken).balanceOf(borrower), 0, "collateral silo: expect borrower to NOT have debt");
+        (,, debtShareToken) = siloConfig.getShareTokens(address(_sameToken ? silo1 : silo0));
+
+        if (!_sameToken) {
+            assertEq(
+                IShareToken(debtShareToken).balanceOf(borrower),
+                0,
+                "collateral silo: expect borrower NOT have debt"
+            );
+        }
+
         assertEq(IShareToken(collateralShareToken).balanceOf(borrower), 1e18, "collateral silo: borrower has collateral");
         assertEq(silo0.getDebtAssets(), 0, "collateral silo: NO debt");
 
-        assertTrue(silo0.isSolvent(borrower), "still isSolvent");
-        assertTrue(silo1.isSolvent(borrower), "still isSolvent");
+        assertTrue(silo0.isSolvent(borrower), "still isSolvent (silo0)");
+        assertTrue(silo1.isSolvent(borrower), "still isSolvent (silo1)");
 
         _borrow(0.0001e18, borrower, _sameToken, ISilo.AboveMaxLtv.selector);
     }
