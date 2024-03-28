@@ -58,22 +58,31 @@ contract PreviewMintTest is SiloLittleHelper, Test {
     forge test -vv --ffi --mt test_previewMint_withInterest_fuzz
     */
     /// forge-config: core-test.fuzz.runs = 10000
-    function test_previewMint_withInterest_fuzz(uint128 _shares, bool _defaultType, uint8 _type) public {
+    function test_previewMint_withInterest_1token_fuzz(uint128 _shares, bool _defaultType, uint8 _type) public {
         vm.assume(_shares > 0);
 
-        _createInterest();
+        _createInterest(true);
 
         _assertPreviewMint(_shares, _defaultType, _type);
     }
 
-    function _createInterest() internal {
+    /// forge-config: core-test.fuzz.runs = 10000
+    function test_previewMint_withInterest_2tokens_fuzz(uint128 _shares, bool _defaultType, uint8 _type) public {
+        vm.assume(_shares > 0);
+
+        _createInterest(false);
+
+        _assertPreviewMint(_shares, _defaultType, _type);
+    }
+
+    function _createInterest(bool _sameToken) internal {
         uint256 assets = 1e18 + 123456789; // some not even number
 
         _deposit(assets, depositor);
         _depositForBorrow(assets, depositor);
 
-        _deposit(assets, borrower);
-        _borrow(assets / 10, borrower);
+        _depositCollateral(assets, borrower, _sameToken);
+        _borrow(assets / 10, borrower, _sameToken);
 
         vm.warp(block.timestamp + 365 days);
 
