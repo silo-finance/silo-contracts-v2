@@ -21,7 +21,6 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
     using SiloLensLib for ISilo;
 
     ISiloConfig siloConfig;
-    bool sameToken;
 
     function setUp() public {
         siloConfig = _setUpLocalFixture();
@@ -480,28 +479,32 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
         uint256 depositAssets = 1e18;
         address borrower = address(0x22334455);
         address depositor = address(0x9876123);
+        uint256 expectedLtv = _sameToken ? 0.85e18 : 0.75e18;
 
         _depositCollateral(depositAssets, borrower, _sameToken, ISilo.AssetType.Collateral);
 
         // deposit, so we can borrow
         _depositForBorrow(100e18, depositor);
-        assertEq(silo1.getLtv(borrower), 0, "no debt, so LT == 0");
+        assertEq(silo0.getLtv(borrower), 0, "no debt, so LT == 0 (silo0)");
+        assertEq(silo1.getLtv(borrower), 0, "no debt, so LT == 0 (silo1)");
 
         uint256 maxBorrow = silo1.maxBorrow(borrower, _sameToken) + 1; // +1 to balance out underestimation
 
         _borrow(200e18, borrower, _sameToken, ISilo.NotEnoughLiquidity.selector);
         _borrow(maxBorrow * 2, borrower, _sameToken, ISilo.AboveMaxLtv.selector);
         _borrow(maxBorrow / 2, borrower, _sameToken);
-        assertEq(silo1.getLtv(borrower), 0.375e18, "borrow 50% of max, and maxLTV is 75%, so LT == 37,5%");
+        assertEq(silo0.getLtv(borrower), expectedLtv / 2, "borrow 50% of max, maxLTV is 75%, so LT == 37,5% (silo0)");
+        assertEq(silo1.getLtv(borrower), expectedLtv / 2, "borrow 50% of max, maxLTV is 75%, so LT == 37,5% (silo1)");
 
         _borrow(200e18, borrower, _sameToken, ISilo.NotEnoughLiquidity.selector);
         _borrow(maxBorrow, borrower, _sameToken, ISilo.AboveMaxLtv.selector);
         _borrow(maxBorrow / 2, borrower, _sameToken);
-        assertEq(silo1.getLtv(borrower), 0.75e18, "borrow 100% of max, so LT == 75%%");
+        assertEq(silo0.getLtv(borrower), expectedLtv, "borrow 100% of max, so LT == 75% (silo0)");
+        assertEq(silo1.getLtv(borrower), expectedLtv, "borrow 100% of max, so LT == 75% (silo1)");
 
         assertEq(silo0.maxBorrow(borrower, _sameToken), 0, "maxBorrow 0");
-        assertTrue(silo0.isSolvent(borrower), "still isSolvent");
-        assertTrue(silo1.isSolvent(borrower), "still isSolvent");
+        assertTrue(silo0.isSolvent(borrower), "still isSolvent (silo0)");
+        assertTrue(silo1.isSolvent(borrower), "still isSolvent (silo1)");
         assertTrue(silo1.borrowPossible(borrower), "borrow is still possible, we just reached CAP");
 
         _borrow(1, borrower, _sameToken, ISilo.AboveMaxLtv.selector);
@@ -510,16 +513,26 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_borrow_maxDeposit
     */
-    function test_borrow_maxDeposit() public {
+    function test_borrow_maxDeposit_1token() public {
+        _borrow_maxDeposit(true);
+    }
+
+    function test_borrow_maxDeposit_2tokens() public {
+        _borrow_maxDeposit(false);
+    }
+
+    function _borrow_maxDeposit(bool _sameToken) private {
         address borrower = makeAddr("Borrower");
         address depositor = makeAddr("depositor");
 
-        _deposit(10, borrower);
+        _depositCollateral(10, borrower, _sameToken);
         _depositForBorrow(1, depositor);
-        _borrow(1, borrower, sameToken);
+        _borrow(1, borrower, _sameToken);
+
+        uint256 silo1TotalCollateral = _sameToken ? 10 + 1 : 1;
 
         assertEq(
-            SiloERC4626Lib._VIRTUAL_DEPOSIT_LIMIT - 1,
+            SiloERC4626Lib._VIRTUAL_DEPOSIT_LIMIT - silo1TotalCollateral,
             SiloERC4626Lib._VIRTUAL_DEPOSIT_LIMIT - silo1.total(ISilo.AssetType.Collateral),
             "limit for deposit"
         );
@@ -541,16 +554,29 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
     forge test -vv --ffi --mt test_borrowShares_revertsOnZeroAssets
     */
     /// forge-config: core-test.fuzz.runs = 1000
-    function test_borrowShares_revertsOnZeroAssets_fuzz(uint256 _depositAmount, uint256 _forBorrow) public {
+    function test_borrowShares_revertsOnZeroAssets_1token_fuzz(uint256 _depositAmount, uint256 _forBorrow) public {
+        _borrowShares_revertsOnZeroAssets(_depositAmount, _forBorrow, true);
+    }
+
+    /// forge-config: core-test.fuzz.runs = 1000
+    function test_borrowShares_revertsOnZeroAssets_2tokens_fuzz(uint256 _depositAmount, uint256 _forBorrow) public {
+        _borrowShares_revertsOnZeroAssets(_depositAmount, _forBorrow, false);
+    }
+
+    function _borrowShares_revertsOnZeroAssets(uint256 _depositAmount, uint256 _forBorrow, bool _sameToken) private {
         vm.assume(_depositAmount > _forBorrow);
         vm.assume(_forBorrow > 0);
+
+        if (_sameToken) {
+            vm.assume(type(uint256).max - _depositAmount > _forBorrow);
+        }
 
         address borrower = makeAddr("Borrower");
         address depositor = makeAddr("depositor");
 
-        _deposit(_depositAmount, borrower);
+        _depositCollateral(_depositAmount, borrower, _sameToken);
         _depositForBorrow(_forBorrow, depositor);
-        uint256 amount = _borrowShares(1, borrower, sameToken);
+        uint256 amount = _borrowShares(1, borrower, _sameToken);
 
         assertGt(amount, 0, "amount can never be 0");
     }
