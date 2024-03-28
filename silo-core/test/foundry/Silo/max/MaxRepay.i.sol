@@ -43,7 +43,7 @@ contract MaxRepayTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --ffi --mt test_maxRepay_withDebt_fuzz
+    forge test -vv --ffi --mt test_maxRepay_withDebt_
     */
     /// forge-config: core-test.fuzz.runs = 1000
     function test_maxRepay_withDebt_1token_fuzz(uint128 _collateral) public {
