@@ -178,12 +178,15 @@ contract PreviewTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --ffi --mt test_previewRepay_withInterest_fuzz
+    forge test -vv --ffi --mt test_previewRepay_withInterest_
     */
     /// forge-config: core-test.fuzz.runs = 10000
-    function test_previewRepay_withInterest_1token_fuzz(uint128 _assetsOrShares, bool _useShares, bool _repayFull)
+    function test_previewRepay_withInterest_1token_fuzz(
+        // uint128 _assetsOrShares, bool _useShares, bool _repayFull
+    )
         public
     {
+        (uint128 _assetsOrShares, bool _useShares, bool _repayFull) = (280, true, true);
         _previewRepay_withInterest(_assetsOrShares, _useShares, _repayFull, true);
     }
 

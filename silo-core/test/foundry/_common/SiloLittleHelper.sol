@@ -191,7 +191,6 @@ abstract contract SiloLittleHelper is CommonBase {
         if (balanceOf < _assets) {
             uint256 toMint = _assets - balanceOf;
             if (toMint > cap) toMint = cap;
-
             _token.mint(_user, toMint);
         }
     }
