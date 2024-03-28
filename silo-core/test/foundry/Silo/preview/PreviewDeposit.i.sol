@@ -28,7 +28,7 @@ contract PreviewDepositTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --ffi --mt test_previewDepositType_beforeInterest_fuzz2
+    forge test -vv --ffi --mt test_previewDepositType_beforeInterest_fuzz
     */
     /// forge-config: core-test.fuzz.runs = 10000
     function test_previewDeposit_beforeInterest_fuzz(uint256 _assets, bool _defaultType, uint8 _type) public {
