@@ -68,7 +68,7 @@ contract RepayTest is SiloLittleHelper, Test {
         address borrower = makeAddr("Borrower");
 
         _createDebt(assets, borrower, _sameToken);
-        vm.warp(block.timestamp + 365 days);
+        vm.warp(block.timestamp + 50 * 365 days); // interest must be big, so conversion 1 asset => share be 0
 
         vm.expectRevert(ISilo.ZeroShares.selector);
         silo1.repay(assets, borrower);
@@ -188,7 +188,7 @@ contract RepayTest is SiloLittleHelper, Test {
         uint256 shares = _createDebt(assets, borrower, _sameToken);
         vm.warp(block.timestamp + 1 days);
 
-        uint256 interest = 11684166722553653;
+        uint256 interest = _sameToken ? 127862054884613 : 11684166722553653; // interest less when more collateral
         uint256 assetsToRepay = silo1.previewRepayShares(shares);
         assertEq(assetsToRepay, 1e18 + interest, "assets with interest");
 
@@ -244,7 +244,7 @@ contract RepayTest is SiloLittleHelper, Test {
         uint256 shares = _createDebt(assets, borrower, _sameToken);
         vm.warp(block.timestamp + 1 days);
 
-        uint256 interest = 11684166722553653;
+        uint256 interest = _sameToken ? 127862054884613 : 11684166722553653; // interest less when more collateral
         uint256 previewRepay = silo1.previewRepayShares(shares);
 
         // after previewRepayShares we move time, so we will not be able to repay all
