@@ -255,8 +255,9 @@ contract RepayTest is SiloLittleHelper, Test {
         (,, address debtShareToken) = siloConfig.getShareTokens(address(silo1));
         assertEq(IShareToken(debtShareToken).balanceOf(borrower), 0, "debt fully repayed");
 
-        // 5697763189689604 is just copy/paste, IRM model QA should test if interest are correct
-        assertEq(token1.allowance(borrower, address(silo1)), 5697763189689604, "allowance dust");
+        // 5697763189689604/255707761064146 is just copy/paste, IRM model QA should test if interest are correct
+        uint256 dust = _sameToken ? 255707761064146 : 5697763189689604;
+        assertEq(token1.allowance(borrower, address(silo1)), dust, "allowance dust");
     }
 
     /*
@@ -283,6 +284,7 @@ contract RepayTest is SiloLittleHelper, Test {
         _repay(assets / 2, borrower);
 
         (,, address debtShareToken) = siloConfig.getShareTokens(address(silo1));
-        assertEq(IShareToken(debtShareToken).balanceOf(borrower), 12011339784578816, "interest left");
+        uint256 interestLeft = _sameToken ? 159811221148187 : 12011339784578816; // interest smaller for one token
+        assertEq(IShareToken(debtShareToken).balanceOf(borrower), interestLeft, "interest left");
     }
 }
