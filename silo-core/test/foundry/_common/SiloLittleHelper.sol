@@ -1,13 +1,14 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
+import {CommonBase} from "forge-std/Base.sol";
+
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquidation.sol";
 
 import {MintableToken} from "./MintableToken.sol";
 import {SiloFixture, SiloConfigOverride} from "./fixtures/SiloFixture.sol";
-import {CommonBase} from "forge-std/Base.sol";
 
 abstract contract SiloLittleHelper is CommonBase {
     MintableToken token0;
@@ -106,10 +107,11 @@ abstract contract SiloLittleHelper is CommonBase {
 
     function _repay(uint256 _amount, address _borrower) internal returns (uint256 shares) {
         _mintTokens(token1, _amount, _borrower);
+
         vm.prank(_borrower);
         token1.approve(address(silo1), _amount);
-        vm.prank(_borrower);
 
+        vm.prank(_borrower);
         shares = silo1.repay(_amount, _borrower);
     }
 
@@ -183,10 +185,13 @@ abstract contract SiloLittleHelper is CommonBase {
     }
 
     function _mintTokens(MintableToken _token, uint256 _assets, address _user) internal {
+        uint256 cap = type(uint256).max - _token.totalSupply();
         uint256 balanceOf = _token.balanceOf(_user);
 
         if (balanceOf < _assets) {
             uint256 toMint = _assets - balanceOf;
+            if (toMint > cap) toMint = cap;
+
             _token.mint(_user, toMint);
         }
     }
