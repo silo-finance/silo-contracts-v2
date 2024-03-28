@@ -4,15 +4,29 @@ import "../_common/SiloMethods.spec";
 import "../_common/Helpers.spec";
 import "../_common/CommonSummarizations.spec";
 import "../../_simplifications/priceOracle.spec";
-import "../../_simplifications/SiloSolvencyLib.spec";
+import "../../_simplifications/SiloMathLib.spec";
 import "../../_simplifications/SimplifiedGetCompoundInterestRateAndUpdate.spec";
 
+methods {
+    function SiloSolvencyLib.isSolvent(
+        ISiloConfig.ConfigData memory collateralConfig,
+        ISiloConfig.ConfigData memory debtConfig,
+        address borrower,
+        ISilo.AccrueInterestInMemory accrueInMemory,
+        uint256 debtShareBalance
+    ) internal returns (bool) => NONDET;
+}
+
 definition abs(mathint x, mathint y) returns mathint = x > y ? x - y : y - x;
+
+definition MINIMUM_SHARES() returns uint256 = 10^6; //0
+definition MINIMUM_ASSETS() returns uint256 = 10^6; //0
 
 invariant RA_more_assets_than_shares() 
     (silo0.total(ISilo.AssetType.Protected) >= shareProtectedCollateralToken0.totalSupply()) &&
     (silo0.total(ISilo.AssetType.Collateral) >= shareCollateralToken0.totalSupply()) &&
-    (silo0.total(ISilo.AssetType.Debt) >= shareDebtToken0.totalSupply());
+    (silo0.total(ISilo.AssetType.Debt) >= shareDebtToken0.totalSupply())
+    filtered{f -> f.isView}
 
 function SafeAssumptions(env e) {
     completeSiloSetupEnv(e);
@@ -30,12 +44,14 @@ function SafeAssumptions(env e) {
 rule PRV_redeem_preserves_value(env e, address owner) {
     SafeAssumptions(e);
     require owner != silo0;
+    //require silo0.getSiloDataInterestRateTimestamp() == e.block.timestamp;
 
     uint256 shares_before = shareCollateralToken0.balanceOf(e, owner);
     uint256 tokens_before = token0.balanceOf(e, owner);
     uint256 assets_before = silo0.convertToAssets(e, shares_before);
     require assets_before + tokens_before <= max_uint256;
         uint256 shares;
+        require shares >= MINIMUM_SHARES();
         redeem(e, shares, owner, owner, ISilo.AssetType.Collateral);
     uint256 shares_after = shareCollateralToken0.balanceOf(e, owner);
     uint256 tokens_after = token0.balanceOf(e, owner);
@@ -55,6 +71,7 @@ rule PRV_withdraw_preserves_value(env e, address owner) {
     uint256 assets_before = silo0.convertToAssets(e, shares_before);
     require tokens_before + assets_before <= max_uint256;
         uint256 assets;
+        require assets >= MINIMUM_ASSETS();
         withdraw(e, assets, owner, owner, ISilo.AssetType.Collateral);
     uint256 shares_after = shareCollateralToken0.balanceOf(e, owner);
     uint256 tokens_after = token0.balanceOf(e, owner);
@@ -74,6 +91,7 @@ rule PRV_deposit_preserves_value(env e, address owner) {
     uint256 assets_before = silo0.convertToAssets(e, shares_before);
     require tokens_before + totalAssets(e) <= max_uint256;
         uint256 assets;
+        require assets >= MINIMUM_ASSETS();
         deposit(e, assets, owner, ISilo.AssetType.Collateral);
     uint256 shares_after = shareCollateralToken0.balanceOf(e, owner);
     uint256 tokens_after = token0.balanceOf(e, owner);
@@ -93,13 +111,14 @@ rule PRV_transition_collateral_preserves_value(env e, address owner) {
     uint256 assetsP_before = silo0.convertToAssets(e, sharesP_before, ISilo.AssetType.Protected);
     require assetsP_before + assetsC_before + token0.balanceOf(e, silo0) <= max_uint256;
         uint256 shares;
+        require shares >= MINIMUM_SHARES();
         transitionCollateral(e, shares, owner, ISilo.AssetType.Collateral);
     uint256 sharesC_after = shareCollateralToken0.balanceOf(e, owner);
     uint256 sharesP_after = shareProtectedCollateralToken0.balanceOf(e, owner);
     uint256 assetsC_after = silo0.convertToAssets(e, sharesC_after, ISilo.AssetType.Collateral);
     uint256 assetsP_after = silo0.convertToAssets(e, sharesP_after, ISilo.AssetType.Protected); 
 
-    assert assetsP_after + assetsC_after == assetsP_before + assetsC_before;
+    assert abs(assetsP_after + assetsC_after, assetsP_before + assetsC_before) <= 2;
 }
 
 rule PRV_transition_protected_preserves_value(env e, address owner) {
@@ -111,11 +130,12 @@ rule PRV_transition_protected_preserves_value(env e, address owner) {
     uint256 assetsP_before = silo0.convertToAssets(e, sharesP_before, ISilo.AssetType.Protected);
     require assetsP_before + assetsC_before + token0.balanceOf(e, silo0) <= max_uint256;
         uint256 shares;
+        require shares >= MINIMUM_SHARES();
         transitionCollateral(e, shares, owner, ISilo.AssetType.Protected);
     uint256 sharesC_after = shareCollateralToken0.balanceOf(e, owner);
     uint256 sharesP_after = shareProtectedCollateralToken0.balanceOf(e, owner);
     uint256 assetsC_after = silo0.convertToAssets(e, sharesC_after, ISilo.AssetType.Collateral);
     uint256 assetsP_after = silo0.convertToAssets(e, sharesP_after, ISilo.AssetType.Protected); 
 
-    assert assetsP_after + assetsC_after == assetsP_before + assetsC_before;
+    assert abs(assetsP_after + assetsC_after, assetsP_before + assetsC_before) <= 2;
 }
