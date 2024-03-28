@@ -33,7 +33,7 @@ contract WithdrawWhenDebtTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --ffi --mt test_withdraw_all_possible_Collateral
+    forge test -vv --ffi --mt test_withdraw_all_possible_Collateral_
     */
     function test_withdraw_all_possible_Collateral_1token() public {
         _withdraw_all_possible_Collateral(true);
@@ -64,9 +64,12 @@ contract WithdrawWhenDebtTest is SiloLittleHelper, Test {
 
         assertEq(collateralSilo.maxWithdraw(address(this)), 0, "no collateral left");
 
-        uint256 expectedProtectedWithdraw = 882352941176470588;
+        // you can withdraw more because interest are smaller
+        uint256 expectedProtectedWithdraw = _sameToken ? 894736842105263157 : 882352941176470588;
         uint256 expectedCollateralLeft = 1e18 - expectedProtectedWithdraw;
-        assertLe(0.1e18 * 1e18 / expectedCollateralLeft, 0.85e18, "LTV holds");
+        assertLe(0.1e18 * 1e18 / expectedCollateralLeft, _sameToken ? 0.95e18 : 0.85e18, "LTV holds");
+
+        assertTrue(collateralSilo.isSolvent(address(this)), "must stay solvent");
 
         assertEq(
             collateralSilo.maxWithdraw(address(this), ISilo.AssetType.Protected),
@@ -81,8 +84,8 @@ contract WithdrawWhenDebtTest is SiloLittleHelper, Test {
 
         assertLe(
             collateralSilo.getCollateralAssets(),
-            1,
-            "#1 CollateralAssets should be withdrawn (if we withdaw based on max assets, we can underestimate by 1)"
+            1 + (_sameToken ? 0.5e18 : 0), // there is additional collateral
+            "#1 CollateralAssets should be withdrawn (if we withdraw based on max assets, we can underestimate by 1)"
         );
 
         // protected
@@ -93,16 +96,26 @@ contract WithdrawWhenDebtTest is SiloLittleHelper, Test {
         previewWithdraw = collateralSilo.previewWithdraw(maxWithdraw, ISilo.AssetType.Protected);
         gotShares = collateralSilo.withdraw(maxWithdraw, borrower, borrower, ISilo.AssetType.Protected);
 
-        assertEq(collateralSilo.maxWithdraw(address(this), ISilo.AssetType.Protected), 0, "no protected withdrawn left");
+        assertEq(
+            collateralSilo.maxWithdraw(address(this), ISilo.AssetType.Protected),
+            0,
+            "no protected withdrawn left"
+        );
+
         assertEq(previewWithdraw, gotShares, "protected previewWithdraw");
 
         assertEq(IShareToken(debtShareToken).balanceOf(address(this)), 0.1e18, "debtShareToken");
-        assertEq(IShareToken(protectedShareToken).balanceOf(address(this)), expectedCollateralLeft, "protectedShareToken");
+
+        assertEq(
+            IShareToken(protectedShareToken).balanceOf(address(this)),
+            expectedCollateralLeft,
+            "protectedShareToken"
+        );
 
         assertLe(
             collateralSilo.getCollateralAssets(),
-            1,
-            "#2 CollateralAssets should be withdrawn (if we withdaw based on max assets, we can underestimate by 1)"
+            1 + (_sameToken ? 0.5e18 : 0), // there is additional collateral
+            "#2 CollateralAssets should be withdrawn (if we withdraw based on max assets, we can underestimate by 1)"
         );
 
         assertTrue(collateralSilo.isSolvent(address(this)), "must be solvent 1");
