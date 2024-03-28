@@ -39,7 +39,7 @@ contract PreviewTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --ffi --mt test_previewBorrow_beforeInterest_fuzz
+    forge test -vv --ffi --mt test_previewBorrow_beforeInterest_
     */
     /// forge-config: core-test.fuzz.runs = 10000
     function test_previewBorrow_beforeInterest_1token_fuzz(uint128 _assets, bool _useShares) public {
@@ -61,7 +61,7 @@ contract PreviewTest is SiloLittleHelper, Test {
             assetsOrSharesToBorrow = 1;
         }
 
-        _createBorrowCase(_assets);
+        _createBorrowCase(_assets, _sameToken);
 
         uint256 preview = _useShares
             ? silo1.previewBorrowShares(assetsOrSharesToBorrow)
@@ -97,7 +97,7 @@ contract PreviewTest is SiloLittleHelper, Test {
             assetsOrSharesToBorrow = 1;
         }
 
-        _createBorrowCase(_assets);
+        _createBorrowCase(_assets, _sameToken);
 
         vm.warp(block.timestamp + 365 days);
 
@@ -116,7 +116,7 @@ contract PreviewTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --ffi --mt test_previewRepay_noInterestNoDebt_fuzz
+    forge test -vv --ffi --mt test_previewRepay_noInterestNoDebt_
     */
     /// forge-config: core-test.fuzz.runs = 10000
     function test_previewRepay_noInterestNoDebt_1token_fuzz(uint128 _assetsOrShares, bool _useShares, bool _repayFull)
@@ -227,10 +227,10 @@ contract PreviewTest is SiloLittleHelper, Test {
         );
     }
 
-    function _createBorrowCase(uint128 _assets) internal {
+    function _createBorrowCase(uint128 _assets, bool _sameToken) internal {
         address somebody = makeAddr("Somebody");
 
-        _deposit(_assets, borrower);
+        _depositCollateral(_assets, borrower, _sameToken);
 
         // deposit to both silos
         _deposit(_assets, somebody);
