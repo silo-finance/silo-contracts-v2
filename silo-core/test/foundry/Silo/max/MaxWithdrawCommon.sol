@@ -26,19 +26,17 @@ contract MaxWithdrawCommon is SiloLittleHelper, Test {
         borrower = makeAddr("Borrower");
     }
 
-    function _createDebtOnSilo1(uint256 _collateral, uint256 _toBorrow) internal {
+    function _createDebtOnSilo1(uint256 _collateral, uint256 _toBorrow, bool _sameToken) internal {
         vm.assume(_toBorrow > 0);
         vm.assume(_collateral > _toBorrow);
 
-        bool sameToken;
-
         _depositForBorrow(_collateral, depositor);
-        _deposit(_collateral, borrower);
-        uint256 maxBorrow = silo1.maxBorrow(borrower, sameToken);
+        _depositCollateral(_collateral, borrower, _sameToken);
+        uint256 maxBorrow = silo1.maxBorrow(borrower, _sameToken);
         vm.assume(maxBorrow > 0);
 
         uint256 assets = _toBorrow > maxBorrow ? maxBorrow : _toBorrow;
-        _borrow(assets, borrower);
+        _borrow(assets, borrower, _sameToken);
 
         emit log_named_uint("[_createDebtSilo1] _collateral", _collateral);
         emit log_named_uint("[_createDebtSilo1] maxBorrow", maxBorrow);
@@ -51,21 +49,20 @@ contract MaxWithdrawCommon is SiloLittleHelper, Test {
         _ensureBorrowerHasDebt(silo1, borrower);
     }
 
-    function _createDebtOnSilo0(uint256 _collateral, uint256 _toBorrow) internal {
+    function _createDebtOnSilo0(uint256 _collateral, uint256 _toBorrow, bool _sameToken) internal {
         vm.assume(_toBorrow > 0);
         vm.assume(_collateral > _toBorrow);
 
-        address otherBorrower = makeAddr("other borrower");
-        bool sameToken;
+        address otherBorrower = makeAddr("some other borrower");
 
         _deposit(_collateral, depositor);
-        _depositForBorrow(_collateral, otherBorrower);
-        uint256 maxBorrow = silo0.maxBorrow(otherBorrower, sameToken);
+        _depositCollateral(_collateral, otherBorrower, !_sameToken);
+        uint256 maxBorrow = silo0.maxBorrow(otherBorrower, _sameToken);
         vm.assume(maxBorrow > 0);
 
         uint256 assets = _toBorrow > maxBorrow ? maxBorrow : _toBorrow;
         vm.prank(otherBorrower);
-        silo0.borrow(assets, otherBorrower, otherBorrower, sameToken);
+        silo0.borrow(assets, otherBorrower, otherBorrower, _sameToken);
 
         emit log_named_uint("[_createDebtSilo0] _collateral", _collateral);
         emit log_named_uint("[_createDebtSilo0] maxBorrow", maxBorrow);
