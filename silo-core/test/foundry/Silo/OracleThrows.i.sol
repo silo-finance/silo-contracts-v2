@@ -70,11 +70,11 @@ contract OracleThrowsTest is SiloLittleHelper, Test {
 
         assertEq(token0.balanceOf(borrower), 0);
         assertEq(token0.balanceOf(depositor), 0);
-        assertEq(token0.balanceOf(address(silo0)), 100e18, "borrower collateral");
+        assertEq(token0.balanceOf(address(silo0)), _sameToken ? 0 : 100e18, "borrower collateral");
 
         assertEq(token1.balanceOf(borrower), 50e18, "borrower debt");
         assertEq(token1.balanceOf(depositor), 0);
-        assertEq(token1.balanceOf(address(silo1)), 50e18, "depositor's deposit");
+        assertEq(token1.balanceOf(address(silo1)), _sameToken ? 150e18 : 50e18, "depositor's deposit");
 
         vm.warp(block.timestamp + 100 days);
         silo1.accrueInterest();

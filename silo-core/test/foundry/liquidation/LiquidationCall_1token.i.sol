@@ -417,7 +417,7 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
         (uint256 collateralToLiquidate, uint256 debtToRepay) = partialLiquidation.maxLiquidation(address(silo0), BORROWER);
         assertEq(silo0.getLiquidity(), 0, "bad debt too big to have liquidity");
 
-        { // to dep
+        { // too deep
             address depositor = makeAddr("depositor");
             vm.prank(depositor);
             vm.expectRevert();
@@ -490,7 +490,7 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
         { // to deep
             address depositor = makeAddr("depositor");
             vm.prank(depositor);
-            silo0.redeem(1, depositor, depositor);
+            silo0.redeem(1e18, depositor, depositor);
             assertEq(token0.balanceOf(depositor), 1e18 + 4_491873366236992444, "depositor can withdraw");
             assertEq(token0.balanceOf(address(silo0)),0, "silo should be empty");
         }
