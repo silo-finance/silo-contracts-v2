@@ -36,7 +36,7 @@ library SiloERC4626Lib {
     /// @param _totalCollateralAssets total deposited collateral
     /// @return maxAssetsOrShares Maximum assets/shares a user can deposit
     function maxDepositOrMint(uint256 _totalCollateralAssets)
-        external
+        internal
         pure
         returns (uint256 maxAssetsOrShares)
     {
@@ -44,7 +44,9 @@ library SiloERC4626Lib {
         unchecked {
             maxAssetsOrShares = _totalCollateralAssets == 0
                 ? _VIRTUAL_DEPOSIT_LIMIT
-                : (_totalCollateralAssets >= _VIRTUAL_DEPOSIT_LIMIT) ? 0 : _VIRTUAL_DEPOSIT_LIMIT - _totalCollateralAssets;
+                : (_totalCollateralAssets >= _VIRTUAL_DEPOSIT_LIMIT)
+                        ? 0
+                        : _VIRTUAL_DEPOSIT_LIMIT - _totalCollateralAssets;
         }
     }
 
