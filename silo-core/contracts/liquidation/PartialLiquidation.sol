@@ -37,6 +37,10 @@ contract PartialLiquidation is IPartialLiquidation, ReentrancyGuardUpgradeable {
         if (!positionInfo.positionOpen) revert UserIsSolvent();
         if (!positionInfo.debtInThisSilo) revert ISilo.ThereIsDebtInOtherSilo();
 
+        if (positionInfo.oneTokenPosition) {
+            collateralConfig = debtConfig;
+        }
+
         if (_collateralAsset != collateralConfig.token) revert UnexpectedCollateralToken();
         if (_debtAsset != debtConfig.token) revert UnexpectedDebtToken();
 
