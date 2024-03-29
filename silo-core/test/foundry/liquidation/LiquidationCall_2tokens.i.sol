@@ -17,14 +17,15 @@ import {MintableToken} from "../_common/MintableToken.sol";
 
 
 /*
-    forge test -vv --ffi --mc LiquidationCallTest
+    forge test -vv --ffi --mc LiquidationCall2TokensTest
 */
-contract LiquidationCallTest is SiloLittleHelper, Test {
+contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
     using SiloLensLib for ISilo;
 
     address constant BORROWER = address(0x123);
     uint256 constant COLLATERAL = 10e18;
     uint256 constant DEBT = 7.5e18;
+    bool constant SAME_TOKEN = false;
 
     ISiloConfig siloConfig;
 
@@ -36,8 +37,8 @@ contract LiquidationCallTest is SiloLittleHelper, Test {
 
         _depositForBorrow(8e18, address(1));
 
-        _deposit(COLLATERAL, BORROWER);
-        _borrow(DEBT, BORROWER);
+        _depositCollateral(COLLATERAL, BORROWER, SAME_TOKEN);
+        _borrow(DEBT, BORROWER, SAME_TOKEN);
 
         assertEq(token0.balanceOf(address(this)), 0, "liquidation should have no collateral");
         assertEq(token0.balanceOf(address(silo0)), COLLATERAL, "silo0 has borrower collateral");
