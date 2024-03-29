@@ -827,6 +827,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
             collateralConfig = debtConfig;
         }
 
+        // TODO optimisation, use collateralConfig.silo instead of debtConfig.otherSilo
         _callAccrueInterestForAsset(
             debtConfig.interestRateModel, debtConfig.daoFee, debtConfig.deployerFee, debtConfig.otherSilo
         );
