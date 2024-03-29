@@ -304,6 +304,7 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
         uint256 timeForward = 30 days;
         vm.warp(block.timestamp + timeForward);
         // expected debt should grow from 7.5 => ~70
+        assertGt(silo0.getLtv(BORROWER), 1e18, "expect bad debt");
 
         (uint256 collateralToLiquidate, uint256 debtToRepay) = partialLiquidation.maxLiquidation(address(silo1), BORROWER);
         assertEq(collateralToLiquidate, COLLATERAL, "expect full collateralToLiquidate on bad debt");
@@ -325,6 +326,7 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
 
         assertTrue(silo0.isSolvent(BORROWER), "user is solvent after liquidation");
         assertTrue(silo1.isSolvent(BORROWER), "user is solvent after liquidation");
+        assertEq(silo1.getLtv(BORROWER), 0, "user has no debt");
 
         assertEq(debtConfig.daoFee, 0.15e18, "just checking on daoFee");
         assertEq(debtConfig.deployerFee, 0.10e18, "just checking on deployerFee");
