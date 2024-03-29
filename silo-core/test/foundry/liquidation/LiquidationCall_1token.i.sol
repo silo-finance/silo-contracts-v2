@@ -136,7 +136,7 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
         (,, ISiloConfig.PositionInfo memory positionInto) = siloConfig.getConfigs(address(silo0), BORROWER);
 
         assertTrue(positionInto.positionOpen, "we need user with position for this test");
-        assertTrue(!positionInto.debtInSilo0, "we need debt in silo0");
+        assertTrue(positionInto.debtInSilo0, "we need debt in silo0");
 
         vm.expectRevert(ISilo.ThereIsDebtInOtherSilo.selector);
 
