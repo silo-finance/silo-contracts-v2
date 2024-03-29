@@ -162,6 +162,7 @@ contract GetLiquidityAccrueInterestTest is SiloLittleHelper, Test {
 
         uint256 accruedInterest1 = silo1.accrueInterest();
         vm.assume(accruedInterest1 > 0);
+        emit log_named_decimal_uint("accruedInterest1", accruedInterest1, 18);
 
         assertEq(
             silo0_rawLiquidity,
@@ -181,11 +182,20 @@ contract GetLiquidityAccrueInterestTest is SiloLittleHelper, Test {
             "[1] expect liquidity without counting in interest"
         );
 
-        assertLe(
-            silo1_rawLiquidity,
-            silo1.getLiquidity(),
-            "[1] new liquidity() must not be smaller after interest"
-        );
+        if (accruedInterest1 < 4) {
+            assertEq(
+                silo1_rawLiquidity, // getting data from storage (collateral - debt)
+                silo1.getLiquidity(),
+                // (collateral + 0.x* interest) - (debt + 1.0 interest) => (collateral - debt) + 0.x*interest - interest
+                "[1] raw liquidity == new liquidity, because daoFee is 25% * 3 => 0"
+            );
+        } else {
+            assertGt(
+                silo1_rawLiquidity,
+                silo1.getLiquidity(),
+                "[1] raw liquidity (without interest) must be bigger than new liquidity (with interest)"
+            );
+        }
 
         assertLe(silo0.getLiquidity(), silo0_rawLiquidity, "[0] no interest on silo0, liquidity the same");
 
