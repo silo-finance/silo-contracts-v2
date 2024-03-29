@@ -110,7 +110,6 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
 
     /*
     forge test -vv --ffi --mt test_liquidationCall_revert_noPosition
-        if (!positionInfo.debtInThisSilo) revert ISilo.ThereIsDebtInOtherSilo();
     */
     function test_liquidationCall_revert_noPosition_2tokens() public {
         address userWithoutDebt = address(1);
