@@ -51,26 +51,30 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_liquidationCall_UnexpectedCollateralToken
     */
-    function test_liquidationCall_UnexpectedCollateralToken() public {
+    function test_liquidationCall_UnexpectedCollateralToken_2tokens() public {
         uint256 debtToCover;
         bool receiveSToken;
 
         vm.expectRevert(IPartialLiquidation.UnexpectedCollateralToken.selector);
-
         partialLiquidation.liquidationCall(
             address(silo1), address(token1), address(token1), BORROWER, debtToCover, receiveSToken
+        );
+
+
+        vm.expectRevert(IPartialLiquidation.UnexpectedCollateralToken.selector);
+        partialLiquidation.liquidationCall(
+            address(silo1), address(token1), address(token0), BORROWER, debtToCover, receiveSToken
         );
     }
 
     /*
     forge test -vv --ffi --mt test_liquidationCall_UnexpectedDebtToken
     */
-    function test_liquidationCall_UnexpectedDebtToken() public {
+    function test_liquidationCall_UnexpectedDebtToken_2tokens() public {
         uint256 debtToCover;
         bool receiveSToken;
 
         vm.expectRevert(IPartialLiquidation.UnexpectedDebtToken.selector);
-
         partialLiquidation.liquidationCall(
             address(silo1), address(token0), address(token0), BORROWER, debtToCover, receiveSToken
         );
@@ -79,7 +83,7 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_liquidationCall_NoDebtToCover_whenZero
     */
-    function test_liquidationCall_NoDebtToCover_whenZero() public {
+    function test_liquidationCall_NoDebtToCover_whenZero_2tokens() public {
         uint256 debtToCover;
         bool receiveSToken;
 
@@ -93,7 +97,7 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_liquidationCall_NoDebtToCover_whenUserSolvent
     */
-    function test_liquidationCall_NoDebtToCover_whenUserSolvent() public {
+    function test_liquidationCall_NoDebtToCover_whenUserSolvent_2tokens() public {
         uint256 debtToCover = 1e18;
         bool receiveSToken;
 
@@ -108,7 +112,7 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
     forge test -vv --ffi --mt test_liquidationCall_revert_noPosition
         if (!positionInfo.debtInThisSilo) revert ISilo.ThereIsDebtInOtherSilo();
     */
-    function test_liquidationCall_revert_noPosition() public {
+    function test_liquidationCall_revert_noPosition_2tokens() public {
         address userWithoutDebt = address(1);
         uint256 debtToCover = 1e18;
         bool receiveSToken;
@@ -127,7 +131,7 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_liquidationCall_revert_otherSiloDebt
     */
-    function test_liquidationCall_revert_otherSiloDebt() public {
+    function test_liquidationCall_revert_otherSiloDebt_2tokens() public {
         uint256 debtToCover = 1e18;
         bool receiveSToken;
 
@@ -146,7 +150,7 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_liquidationCall_self
     */
-    function test_liquidationCall_self() public {
+    function test_liquidationCall_self_2tokens() public {
         uint256 debtToCover = 1e18;
         bool receiveSToken;
 
@@ -167,7 +171,7 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_liquidationCall_partial
     */
-    function test_liquidationCall_partial() public {
+    function test_liquidationCall_partial_2tokens() public {
         uint256 debtToCover = 1e5;
 
         (
@@ -284,7 +288,7 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_liquidationCall_badDebt_partial
     */
-    function test_liquidationCall_badDebt_partial() public {
+    function test_liquidationCall_badDebt_partial_2tokens() public {
         uint256 debtToCover = 100e18;
         bool receiveSToken;
 
@@ -376,7 +380,7 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_liquidationCall_badDebt_full_withToken
     */
-    function test_liquidationCall_badDebt_full_withToken() public {
+    function test_liquidationCall_badDebt_full_withToken_2tokens() public {
         bool receiveSToken;
         address liquidator = address(this);
 
@@ -392,7 +396,7 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_liquidationCall_badDebt_full_withSToken
     */
-    function test_liquidationCall_badDebt_full_withSToken() public {
+    function test_liquidationCall_badDebt_full_withSToken_2tokens() public {
         bool receiveSToken = true;
         uint256 collateralSharesToLiquidate = 10e18;
         address liquidator = address(this);
