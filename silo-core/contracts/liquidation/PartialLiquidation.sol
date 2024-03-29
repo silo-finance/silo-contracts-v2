@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.21;
 
-import {console} from "forge-std/console.sol";
-
 import {ReentrancyGuardUpgradeable} from "openzeppelin-contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 
 import {ISilo, ILiquidationProcess} from "../interfaces/ISilo.sol";
@@ -71,10 +69,6 @@ contract PartialLiquidation is IPartialLiquidation, ReentrancyGuardUpgradeable {
             selfLiquidation ? 0 : collateralConfig.liquidationFee,
             selfLiquidation
         );
-
-        console.log("[liquidationCall] withdrawAssetsFromCollateral", withdrawAssetsFromCollateral);
-        console.log("[liquidationCall] withdrawAssetsFromProtected", withdrawAssetsFromProtected);
-        console.log("[liquidationCall] repayDebtAssets", repayDebtAssets);
 
         if (repayDebtAssets == 0) revert NoDebtToCover();
         // this two value were split from total collateral to withdraw, so we will not overflow

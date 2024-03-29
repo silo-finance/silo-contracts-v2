@@ -1,9 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.21;
 
-import {console} from "forge-std/console.sol";
-
-
 import {MathUpgradeable} from "openzeppelin-contracts-upgradeable/utils/math/MathUpgradeable.sol";
 
 import {ISilo} from "../../interfaces/ISilo.sol";
@@ -90,10 +87,6 @@ library PartialLiquidationExecLib {
             ISilo.AccrueInterestInMemory.Yes,
             0 /* no cached balance */
         );
-
-        console.log("[maxLiquidation] borrowerDebtAssets", ltvData.borrowerDebtAssets);
-        console.log("[maxLiquidation] borrowerCollateralAssets", ltvData.borrowerCollateralAssets);
-        console.log("[maxLiquidation] borrowerProtectedAssets", ltvData.borrowerProtectedAssets);
 
         if (ltvData.borrowerDebtAssets == 0) return (0, 0);
 
