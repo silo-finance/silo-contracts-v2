@@ -71,8 +71,12 @@ library PartialLiquidationExecLib {
             ISiloConfig.PositionInfo memory positionInfo
         ) = _siloWithDebt.config().getConfigs(address(_siloWithDebt), _borrower);
 
-        if (!SiloLendingLib.borrowPossible(positionInfo)) {
+        if (!positionInfo.positionOpen || !SiloLendingLib.borrowPossible(positionInfo)) {
             return (0, 0);
+        }
+
+        if (positionInfo.oneTokenPosition) {
+            collateralConfig = debtConfig;
         }
 
         SiloSolvencyLib.LtvData memory ltvData = SiloSolvencyLib.getAssetsDataForLtvCalculations(
