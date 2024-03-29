@@ -503,13 +503,21 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
         bool receiveSToken;
         address liquidator = address(this);
 
-        vm.expectCall(address(token0), abi.encodeWithSelector(IERC20.transfer.selector, liquidator, 10e18));
+        vm.expectCall(address(token0), abi.encodeWithSelector(IERC20.transfer.selector, liquidator, silo0.getCollateralAssets()));
+        vm.expectCall(address(token0), abi.encodeWithSelector(IERC20.transferFrom.selector, liquidator, address(silo0), silo0.getDebtAssets()));
 
         _liquidationCall_badDebt_full(receiveSToken);
 
-        assertEq(token0.balanceOf(liquidator), 10e18, "liquidator should get all collateral because of full liquidation");
-        assertEq(silo0.getCollateralAssets(), 0, "total collateral");
-        assertEq(token0.balanceOf(address(silo0)), 0, "silo collateral should be transfer to liquidator");
+        assertEq(silo0.getCollateralAssets(), 2, "total collateral (dust)");
+
+        uint256 interest = 30_372197335919815515 - 7.5e18;
+        uint256 daoAndDeployerFees = interest * (0.15e18 + 0.10e18) / 1e18; // dao fee + deployer fee
+
+        assertEq(
+            token0.balanceOf(address(silo0)),
+            daoAndDeployerFees + 2, // dust
+            "silo collateral should be transfer to liquidator, fees left"
+        );
     }
 
     /*
@@ -548,10 +556,20 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
         assertGt(silo0.getLtv(BORROWER), 1e18, "[_liquidationCall_badDebt_full] expect bad debt");
 
         uint256 maxRepay = silo0.maxRepay(BORROWER);
+        uint256 interest = 30_372197335919815515 - 7.5e18;
+        uint256 daoAndDeployerFees = interest * (0.15e18 + 0.10e18) / 1e18; // dao fee + deployer fee
 
         (uint256 collateralToLiquidate, uint256 debtToRepay) = partialLiquidation.maxLiquidation(address(silo0), BORROWER);
-        assertEq(collateralToLiquidate, COLLATERAL, "expect full collateralToLiquidate on bad debt");
+        emit log_named_decimal_uint("[test] getDebtAssets", silo0.getDebtAssets(), 18);
+
+        assertEq(
+            collateralToLiquidate + 2, // dust
+            silo0.getCollateralAssets(),
+            "expect full collateralToLiquidate on bad debt"
+        );
+
         assertEq(debtToRepay, maxRepay, "debtToRepay == maxRepay");
+        assertEq(debtToRepay, silo0.getDebtAssets(), "debtToRepay == all debt");
 
         token0.mint(liquidator, debtToCover);
         token0.approve(address(silo0), debtToCover);
@@ -568,24 +586,22 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
             address(silo0), address(token0), address(token0), BORROWER, debtToCover, _receiveSToken
         );
 
-        if (!_receiveSToken) {
-            maxRepay = silo0.maxRepay(BORROWER);
-            assertGt(maxRepay, 0, "there will be leftover");
-        }
+        maxRepay = silo0.maxRepay(BORROWER);
+        assertEq(maxRepay, 0, "there will be NO leftover for same token");
 
-        token0.mint(liquidator, maxRepay);
-        token0.increaseAllowance(address(silo0), maxRepay);
-
-        emit log_named_decimal_uint("[test] maxRepay", maxRepay, 18);
-
-        vm.expectCall(
-            address(token0),
-            abi.encodeWithSelector(IERC20.transferFrom.selector, liquidator, address(silo0), maxRepay)
-        );
-
-        partialLiquidation.liquidationCall(
-            address(silo0), address(token0), address(token0), BORROWER, maxRepay, _receiveSToken
-        );
+//        token0.mint(liquidator, maxRepay);
+//        token0.increaseAllowance(address(silo0), maxRepay);
+//
+//        emit log_named_decimal_uint("[test] maxRepay", maxRepay, 18);
+//
+//        vm.expectCall(
+//            address(token0),
+//            abi.encodeWithSelector(IERC20.transferFrom.selector, liquidator, address(silo0), maxRepay)
+//        );
+//
+//        partialLiquidation.liquidationCall(
+//            address(silo0), address(token0), address(token0), BORROWER, maxRepay, _receiveSToken
+//        );
 
         if (_receiveSToken) {
             assertEq(
@@ -595,17 +611,21 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
             );
         } else {
             assertEq(
-                token0.balanceOf(address(silo0)),
-                debtToCover + maxRepay + 0.5e18,
+                token0.balanceOf(address(silo0)) - 2, // dust
+                daoAndDeployerFees,
                 "[!_receiveSToken] silo has debt token == to cover + original 0.5"
             );
         }
 
         assertEq(silo0.getDebtAssets(), 0, "debt is repay");
-        assertGt(silo0.getCollateralAssets(), 8e18, "collateral ready to borrow (with interests)");
+        assertEq(silo0.getCollateralAssets(), 2, "only dust left from collateral");
 
         if (!_receiveSToken) {
-            assertEq(token0.balanceOf(address(this)), collateralToLiquidate, "expect to have liquidated collateral");
+            assertEq(
+                token0.balanceOf(liquidator),
+                100e18 - debtToRepay + collateralToLiquidate,
+                "liquidator should get all collateral because of full liquidation"
+            );
         }
     }
 }
