@@ -77,7 +77,7 @@ contract PartialLiquidation is IPartialLiquidation, ReentrancyGuardUpgradeable {
         emit LiquidationCall(msg.sender, _receiveSToken);
         ILiquidationProcess(_siloWithDebt).liquidationRepay(repayDebtAssets, _borrower, msg.sender);
 
-        ILiquidationProcess(debtConfig.otherSilo).withdrawCollateralsToLiquidator(
+        ILiquidationProcess(collateralConfig.silo).withdrawCollateralsToLiquidator(
             withdrawAssetsFromCollateral, withdrawAssetsFromProtected, _borrower, msg.sender, _receiveSToken
         );
     }
