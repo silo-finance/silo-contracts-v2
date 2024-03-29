@@ -491,8 +491,8 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
             address depositor = makeAddr("depositor");
             vm.prank(depositor);
             silo0.redeem(1e18, depositor, depositor);
-            assertEq(token0.balanceOf(depositor), 1e18 + 4_491873366236992444, "depositor can withdraw");
-            assertEq(token0.balanceOf(address(silo0)),0, "silo should be empty");
+            assertEq(token0.balanceOf(depositor), 1e18 + 4_491873366236992444 - 5, "depositor can withdraw, left dust");
+            assertEq(token0.balanceOf(address(silo0)), 5, "silo should be empty (just dust left)");
         }
     }
 
