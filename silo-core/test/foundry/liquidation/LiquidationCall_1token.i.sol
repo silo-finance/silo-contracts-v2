@@ -502,20 +502,28 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
     function test_liquidationCall_badDebt_full_withToken_1token() public {
         bool receiveSToken;
         address liquidator = address(this);
+        uint256 dust = 2;
 
-        vm.expectCall(address(token0), abi.encodeWithSelector(IERC20.transfer.selector, liquidator, silo0.getCollateralAssets()));
-        vm.expectCall(address(token0), abi.encodeWithSelector(IERC20.transferFrom.selector, liquidator, address(silo0), silo0.getDebtAssets()));
+        vm.expectCall(
+            address(token0),
+            abi.encodeWithSelector(IERC20.transferFrom.selector, liquidator, address(silo0), 30_372197335919815515)
+        );
+
+        vm.expectCall(
+            address(token0),
+            abi.encodeWithSelector(IERC20.transfer.selector, liquidator, 27_154148001939861635)
+        );
 
         _liquidationCall_badDebt_full(receiveSToken);
 
-        assertEq(silo0.getCollateralAssets(), 2, "total collateral (dust)");
+        assertEq(silo0.getCollateralAssets(), dust, "total collateral (dust)");
 
         uint256 interest = 30_372197335919815515 - 7.5e18;
         uint256 daoAndDeployerFees = interest * (0.15e18 + 0.10e18) / 1e18; // dao fee + deployer fee
 
         assertEq(
             token0.balanceOf(address(silo0)),
-            daoAndDeployerFees + 2, // dust
+            daoAndDeployerFees + dust,
             "silo collateral should be transfer to liquidator, fees left"
         );
     }
