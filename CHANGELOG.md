@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 - deposit to any silo without restrictions
 - borrow same token
+  - liquidation for same token can be done with sToken without reverting
 
 ### Fixed
 - fix issue with wrong configs in `isSolvent` after debt share transfer
