@@ -37,8 +37,6 @@ library SiloSolvencyLib {
         address _borrower,
         ISilo.AccrueInterestInMemory _accrueInMemory
     ) internal view returns (bool) {
-        console.log("[isSolvent] positionOpen", _positionInfo.positionOpen ? "yes" : "no");
-
         if (!_positionInfo.positionOpen) return true;
 
         if (SiloSolvencyLib.collateralInThisSilo(_positionInfo)) {
@@ -61,9 +59,6 @@ library SiloSolvencyLib {
             _accrueInMemory,
             IShareToken(_debtConfig.debtShareToken).balanceOf(_borrower)
         );
-
-        console.log("[isSolvent] ltv", ltv);
-        console.log("[isSolvent] _collateralConfig.lt", _collateralConfig.lt);
 
         return ltv <= _collateralConfig.lt;
     }
