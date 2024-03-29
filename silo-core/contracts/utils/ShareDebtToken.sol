@@ -3,7 +3,6 @@ pragma solidity 0.8.21;
 
 import {IERC20R} from "../interfaces/IERC20R.sol";
 import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
-import {IShareDebtToken} from "../interfaces/IShareDebtToken.sol";
 import {SiloLensLib} from "../lib/SiloLensLib.sol";
 import {IShareToken, ShareToken, ISiloFactory, ISilo} from "./ShareToken.sol";
 
@@ -16,7 +15,7 @@ import {IShareToken, ShareToken, ISiloFactory, ISilo} from "./ShareToken.sol";
 /// to any recipient as long as receiving wallet approves the transfer. In other words, anyone can
 /// take someone else's debt without asking.
 /// @custom:security-contact security@silo.finance
-contract ShareDebtToken is IShareDebtToken, IERC20R, ShareToken {
+contract ShareDebtToken is IERC20R, ShareToken {
     using SiloLensLib for ISilo;
 
     /// @dev cached silo config address

@@ -8,7 +8,6 @@ import {MathUpgradeable} from "openzeppelin-contracts-upgradeable/utils/math/Mat
 import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
 import {ISilo} from "../interfaces/ISilo.sol";
 import {IShareToken} from "../interfaces/IShareToken.sol";
-import {IShareDebtToken} from "../interfaces/IShareDebtToken.sol";
 import {SiloSolvencyLib} from "./SiloSolvencyLib.sol";
 import {SiloMathLib} from "./SiloMathLib.sol";
 import {SiloStdLib} from "./SiloStdLib.sol";

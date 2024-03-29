@@ -2,7 +2,6 @@
 pragma solidity 0.8.21;
 
 import {ISiloConfig} from "./interfaces/ISiloConfig.sol";
-import {IShareDebtToken} from "./interfaces/IShareDebtToken.sol";
 
 // solhint-disable var-name-mixedcase
 
