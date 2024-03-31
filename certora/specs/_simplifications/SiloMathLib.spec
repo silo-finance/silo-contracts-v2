@@ -121,8 +121,8 @@ function sharesToAssetsApprox(
     if (totalShares == 0 || totalAssets == 0) return _shares;
 
     //Replace for exact mulDiv
-    return mulDiv_mathLib(_shares,totalAssets,totalShares,_rounding == MathUpgradeable.Rounding.Up);
-    //return sharesMulDiv(_shares,totalAssets,totalShares,_rounding == MathUpgradeable.Rounding.Up);
+    //return mulDiv_mathLib(_shares,totalAssets,totalShares,_rounding == MathUpgradeable.Rounding.Up);
+    return sharesMulDiv(_shares,totalAssets,totalShares,_rounding == MathUpgradeable.Rounding.Up);
     //return discreteRatioMulDiv(_shares, totalAssets, totalShares);
 }
 
@@ -141,8 +141,8 @@ function assetsToSharesApprox(
     if (totalShares == 0 || totalAssets == 0) return _assets;
 
     //Replace for exact mulDiv
-    return mulDiv_mathLib(_assets,totalShares,totalAssets,_rounding == MathUpgradeable.Rounding.Up);
-    //return sharesMulDiv(_assets,totalShares,totalAssets,_rounding == MathUpgradeable.Rounding.Up);
+    //return mulDiv_mathLib(_assets,totalShares,totalAssets,_rounding == MathUpgradeable.Rounding.Up);
+    return sharesMulDiv(_assets,totalShares,totalAssets,_rounding == MathUpgradeable.Rounding.Up);
     //return discreteRatioMulDiv(_assets, totalShares, totalAssets);
 }
 

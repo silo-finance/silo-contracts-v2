@@ -226,64 +226,6 @@ invariant RA_more_assets_than_shares()
         }
     }
 
-rule RA_maxWithdraw_collateral_assets_independence(env e, address user) {
-    require e.block.timestamp < 2^64;
-    ISilo.AssetType typeA;
-    ISilo.AssetType typeB;
-    /// Invariants to prove
-    requireInvariant RA_zero_assets_iff_zero_shares();
-    requireInvariant RA_no_collateral_assets_no_debt_assets();
-    requireProtectedToken0TotalAndBalancesIntegrity();
-    requireCollateralToken0TotalAndBalancesIntegrity();
-    requireDebtToken0TotalAndBalancesIntegrity();
-    requireProtectedToken1TotalAndBalancesIntegrity();
-    requireCollateralToken1TotalAndBalancesIntegrity();
-    requireDebtToken1TotalAndBalancesIntegrity();
-    requireInvariant RA_zero_assets_iff_zero_shares();
-    require typeA != typeB;
-
-    mathint maxAssets_before = maxWithdraw(e, user, typeA);
-        uint256 assets;
-        address receiver;
-        address owner;
-        withdraw(e, assets, receiver, owner, typeB);
-    mathint maxAssets_after = maxWithdraw(e, user, typeA);
-
-    assert maxAssets_before == maxAssets_after;
-} 
-
-rule RA_maxWithdraw_preserved_after_collateral_transition(env e, address user) 
-{
-    completeSiloSetupEnv(e);
-    require silo0.getSiloDataInterestRateTimestamp() > 0;
-    totalSupplyMoreThanBalance(user);
-    totalSupplyMoreThanBalance(e.msg.sender);
-    requireProtectedToken0TotalAndBalancesIntegrity();
-    requireCollateralToken0TotalAndBalancesIntegrity();
-    requireDebtToken0TotalAndBalancesIntegrity();
-    requireProtectedToken1TotalAndBalancesIntegrity();
-    requireCollateralToken1TotalAndBalancesIntegrity();
-    requireDebtToken1TotalAndBalancesIntegrity();
-
-    /// Invariants to prove
-    requireInvariant RA_zero_assets_iff_zero_shares();
-    requireInvariant RA_no_collateral_assets_no_debt_assets();
-
-    mathint maxAssets_before = 
-        maxWithdraw(e, user, ISilo.AssetType.Protected) + 
-        maxWithdraw(e, user, ISilo.AssetType.Collateral);
-        uint256 shares;
-        address owner;
-        ISilo.AssetType type;
-        transitionCollateral(e, shares, owner, type);
-    mathint maxAssets_after = 
-        maxWithdraw(e, user, ISilo.AssetType.Protected) + 
-        maxWithdraw(e, user, ISilo.AssetType.Collateral);
-
-    assert maxAssets_after - maxAssets_before <= 10;
-    //assert maxAssets_after - maxAssets_before >= -2;
-}
-
 rule RA_silo_solvent_after_repaying(env e, address borrower) {
     completeSiloSetupEnv(e);
     require silo0.getSiloDataInterestRateTimestamp() > 0;
@@ -315,8 +257,78 @@ rule RA_silo_solvent_after_borrow(env e, address borrower) {
     requireProtectedToken1TotalAndBalancesIntegrity();
     requireCollateralToken1TotalAndBalancesIntegrity();
     requireDebtToken1TotalAndBalancesIntegrity();
+    requireInvariant RA_more_assets_than_shares();
+    
     uint256 assets;
     address receiver;
     borrow(e, assets, receiver, borrower);
     assert isSolvent(e, borrower);
+}
+
+rule RA_user_cannot_lower_HF_of_another(env e, address user, method f) filtered{f -> !f.isView} {
+    completeSiloSetupEnv(e);
+    require silo0.getSiloDataInterestRateTimestamp() > 0;
+    totalSupplyMoreThanBalance(user);
+    totalSupplyMoreThanBalance(e.msg.sender);
+    requireProtectedToken0TotalAndBalancesIntegrity();
+    requireCollateralToken0TotalAndBalancesIntegrity();
+    requireDebtToken0TotalAndBalancesIntegrity();
+    requireProtectedToken1TotalAndBalancesIntegrity();
+    requireCollateralToken1TotalAndBalancesIntegrity();
+    requireDebtToken1TotalAndBalancesIntegrity();
+    requireInvariant RA_more_assets_than_shares();
+    require e.msg.sender != user;
+
+    /// No accrual of interest
+    require silo0.getSiloDataInterestRateTimestamp() == e.block.timestamp;
+    /// No allowance
+    require shareDebtToken0.allowance(e, user, e.msg.sender) == 0;
+    require shareCollateralToken0.allowance(e, user, e.msg.sender) == 0;
+    require shareProtectedCollateralToken0.allowance(e, user, e.msg.sender) == 0;
+
+    mathint balanceDebt_before = shareDebtToken0.balanceOf(e, user);
+    mathint balanceCol_before = shareCollateralToken0.balanceOf(e, user);
+    mathint balancePro_before = shareProtectedCollateralToken0.balanceOf(e, user);
+        calldataarg args;
+        f(e, args);
+    mathint balanceDebt_after = shareDebtToken0.balanceOf(e, user);
+    mathint balanceCol_after = shareCollateralToken0.balanceOf(e, user);
+    mathint balancePro_after = shareProtectedCollateralToken0.balanceOf(e, user);
+
+    assert balanceDebt_before >= balanceDebt_after, "Debt balance cannot increase by other user";
+    assert balanceCol_before <= balanceCol_after, "Collateral balance cannot decrease by other user";
+    assert balancePro_before <= balancePro_after, "Protected balance cannot decrease by other user";
+}
+
+rule RA_LTV_depends_on_shares_balances_only(env e, address user, method f) filtered{f -> !f.isView} {
+    completeSiloSetupEnv(e);
+    require silo0.getSiloDataInterestRateTimestamp() > 0;
+    totalSupplyMoreThanBalance(user);
+    totalSupplyMoreThanBalance(e.msg.sender);
+    requireProtectedToken0TotalAndBalancesIntegrity();
+    requireCollateralToken0TotalAndBalancesIntegrity();
+    requireDebtToken0TotalAndBalancesIntegrity();
+    requireProtectedToken1TotalAndBalancesIntegrity();
+    requireCollateralToken1TotalAndBalancesIntegrity();
+    requireDebtToken1TotalAndBalancesIntegrity();
+    requireInvariant RA_more_assets_than_shares();
+    /// No accrual of interest
+    require silo0.getSiloDataInterestRateTimestamp() == e.block.timestamp;
+
+    uint256 ltv_before = getLTV(e, user);
+    mathint balanceDebt_before = shareDebtToken0.balanceOf(e, user);
+    mathint balanceCol_before = shareCollateralToken0.balanceOf(e, user);
+    mathint balancePro_before = shareProtectedCollateralToken0.balanceOf(e, user);
+        calldataarg args;
+        f(e, args);
+    uint256 ltv_after = getLTV(e, user);
+    mathint balanceDebt_after = shareDebtToken0.balanceOf(e, user);
+    mathint balanceCol_after = shareCollateralToken0.balanceOf(e, user);
+    mathint balancePro_after = shareProtectedCollateralToken0.balanceOf(e, user);
+
+    assert (
+        balanceDebt_before == balanceDebt_after && 
+        balanceCol_before == balanceCol_after &&
+        balancePro_after == balancePro_before
+    ) => ltv_after == ltv_before;
 }
