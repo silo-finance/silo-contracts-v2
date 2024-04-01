@@ -51,7 +51,7 @@ contract SiloHarness is Silo {
         uint256 debtShareBalance = IShareToken(debtConfig.debtShareToken).balanceOf(borrower);
         
         return SiloSolvencyLib.getLtv(
-            collateralConfig, debtConfig, borrower, ISilo.OracleType.MaxLtv, AccrueInterestInMemory.No, debtShareBalance
+            collateralConfig, debtConfig, borrower, ISilo.OracleType.MaxLtv, AccrueInterestInMemory.Yes, debtShareBalance
         );
     }
 
@@ -63,7 +63,7 @@ contract SiloHarness is Silo {
         uint256 debtShareBalance = IShareToken(debtConfig.debtShareToken).balanceOf(borrower);
         
         return SiloSolvencyLib.getAssetsDataForLtvCalculations(
-            collateralConfig, debtConfig, borrower, ISilo.OracleType.MaxLtv, AccrueInterestInMemory.No, debtShareBalance
+            collateralConfig, debtConfig, borrower, ISilo.OracleType.MaxLtv, AccrueInterestInMemory.Yes, debtShareBalance
         );
     }
 }

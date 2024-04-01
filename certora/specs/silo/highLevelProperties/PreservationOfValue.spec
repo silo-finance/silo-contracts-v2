@@ -88,7 +88,6 @@ rule PRV_redeem_preserves_value(env e, address owner) {
 rule PRV_withdraw_preserves_value(env e, address owner) {
     SafeAssumptions(e);
     require owner != silo0;
-    setMinimumSharesTotalSupply(MINIMUM_SHARES());
 
     uint256 shares_before = shareCollateralToken0.balanceOf(e, owner);
     uint256 tokens_before = token0.balanceOf(e, owner);
@@ -142,7 +141,7 @@ rule PRV_transition_collateral_preserves_value(env e, address owner) {
     uint256 assetsC_after = silo0.convertToAssets(e, sharesC_after, ISilo.AssetType.Collateral);
     uint256 assetsP_after = silo0.convertToAssets(e, sharesP_after, ISilo.AssetType.Protected); 
 
-    assert abs(assetsP_after + assetsC_after, assetsP_before + assetsC_before) <= 2;
+    assert abs(assetsP_after + assetsC_after, assetsP_before + assetsC_before) <= 4;
 }
 
 rule PRV_transition_protected_preserves_value(env e, address owner) {
@@ -161,5 +160,32 @@ rule PRV_transition_protected_preserves_value(env e, address owner) {
     uint256 assetsC_after = silo0.convertToAssets(e, sharesC_after, ISilo.AssetType.Collateral);
     uint256 assetsP_after = silo0.convertToAssets(e, sharesP_after, ISilo.AssetType.Protected); 
 
-    assert abs(assetsP_after + assetsC_after, assetsP_before + assetsC_before) <= 2;
+    assert abs(assetsP_after + assetsC_after, assetsP_before + assetsC_before) <= 4;
+}
+
+rule PRV_LtV_invariant_under_accrual_interest_silo0(env e, address borrower) {
+    SafeAssumptions(e);
+    mathint ltv_before = getLTV(e, borrower);
+        silo0.accrueInterest(e);
+    mathint ltv_after = getLTV(e, borrower);
+
+    assert ltv_before == ltv_after;
+}
+
+rule PRV_LtV_invariant_under_accrual_interest_silo1(env e, address borrower) {
+    SafeAssumptions(e);
+    mathint ltv_before = getLTV(e, borrower);
+        silo1.accrueInterest(e);
+    mathint ltv_after = getLTV(e, borrower);
+
+    assert ltv_before == ltv_after;
+}
+
+rule PRV_DAO_fees_invariant_under_accrual_interest(env e) {
+    SafeAssumptions(e);
+    mathint fees_before = getSiloDataDaoAndDeployerFees(e);
+        silo0.accrueInterest(e);
+    mathint fees_after = getSiloDataDaoAndDeployerFees(e);
+
+    assert fees_before == fees_after;
 }

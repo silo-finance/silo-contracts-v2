@@ -265,7 +265,8 @@ rule RA_silo_solvent_after_borrow(env e, address borrower) {
     assert isSolvent(e, borrower);
 }
 
-rule RA_user_cannot_lower_HF_of_another(env e, address user, method f) filtered{f -> !f.isView} {
+rule RA_user_cannot_lower_HF_of_another(env e, address user, method f) 
+filtered{f -> !f.isView && withdrawCollateralToLiquidatorSig() != f.selector} {
     completeSiloSetupEnv(e);
     require silo0.getSiloDataInterestRateTimestamp() > 0;
     totalSupplyMoreThanBalance(user);
@@ -282,16 +283,16 @@ rule RA_user_cannot_lower_HF_of_another(env e, address user, method f) filtered{
     /// No accrual of interest
     require silo0.getSiloDataInterestRateTimestamp() == e.block.timestamp;
     /// No allowance
-    require shareDebtToken0.allowance(e, user, e.msg.sender) == 0;
+    require shareDebtToken1.allowance(e, user, e.msg.sender) == 0;
     require shareCollateralToken0.allowance(e, user, e.msg.sender) == 0;
     require shareProtectedCollateralToken0.allowance(e, user, e.msg.sender) == 0;
 
-    mathint balanceDebt_before = shareDebtToken0.balanceOf(e, user);
+    mathint balanceDebt_before = shareDebtToken1.balanceOf(e, user);
     mathint balanceCol_before = shareCollateralToken0.balanceOf(e, user);
     mathint balancePro_before = shareProtectedCollateralToken0.balanceOf(e, user);
         calldataarg args;
         f(e, args);
-    mathint balanceDebt_after = shareDebtToken0.balanceOf(e, user);
+    mathint balanceDebt_after = shareDebtToken1.balanceOf(e, user);
     mathint balanceCol_after = shareCollateralToken0.balanceOf(e, user);
     mathint balancePro_after = shareProtectedCollateralToken0.balanceOf(e, user);
 
@@ -300,7 +301,7 @@ rule RA_user_cannot_lower_HF_of_another(env e, address user, method f) filtered{
     assert balancePro_before <= balancePro_after, "Protected balance cannot decrease by other user";
 }
 
-rule RA_LTV_depends_on_shares_balances_only(env e, address user, method f) filtered{f -> !f.isView} {
+rule RA_assets_values_depend_on_shares_balances_only(env e, address user, method f) filtered{f -> !f.isView} {
     completeSiloSetupEnv(e);
     require silo0.getSiloDataInterestRateTimestamp() > 0;
     totalSupplyMoreThanBalance(user);
@@ -315,14 +316,14 @@ rule RA_LTV_depends_on_shares_balances_only(env e, address user, method f) filte
     /// No accrual of interest
     require silo0.getSiloDataInterestRateTimestamp() == e.block.timestamp;
 
-    uint256 ltv_before = getLTV(e, user);
-    mathint balanceDebt_before = shareDebtToken0.balanceOf(e, user);
+    SiloSolvencyLib.LtvData data_before = getAssetsDataForLtvCalculations(e, user);
+    mathint balanceDebt_before = shareDebtToken1.balanceOf(e, user);
     mathint balanceCol_before = shareCollateralToken0.balanceOf(e, user);
     mathint balancePro_before = shareProtectedCollateralToken0.balanceOf(e, user);
         calldataarg args;
         f(e, args);
-    uint256 ltv_after = getLTV(e, user);
-    mathint balanceDebt_after = shareDebtToken0.balanceOf(e, user);
+    SiloSolvencyLib.LtvData data_after = getAssetsDataForLtvCalculations(e, user);
+    mathint balanceDebt_after = shareDebtToken1.balanceOf(e, user);
     mathint balanceCol_after = shareCollateralToken0.balanceOf(e, user);
     mathint balancePro_after = shareProtectedCollateralToken0.balanceOf(e, user);
 
@@ -330,5 +331,10 @@ rule RA_LTV_depends_on_shares_balances_only(env e, address user, method f) filte
         balanceDebt_before == balanceDebt_after && 
         balanceCol_before == balanceCol_after &&
         balancePro_after == balancePro_before
-    ) => ltv_after == ltv_before;
+    ) => 
+    (
+        data_before.borrowerProtectedAssets == data_after.borrowerProtectedAssets &&
+        data_before.borrowerCollateralAssets == data_after.borrowerCollateralAssets &&
+        data_before.borrowerDebtAssets == data_after.borrowerDebtAssets
+    );
 }

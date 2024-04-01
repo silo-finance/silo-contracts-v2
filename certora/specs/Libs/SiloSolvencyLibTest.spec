@@ -3,8 +3,8 @@ import "../silo/_common/CommonSummarizations.spec";
 import "../_simplifications/SimplifiedGetCompoundInterestRateAndUpdate.spec";
 import "../_simplifications/SiloMathLib.spec";
 
-using SiloMock0 as silo0;
-using SiloMock1 as silo1;
+using Silo0 as silo0;
+using Silo1 as silo1;
 using SiloSolvencyLibHarness as Lib;
 
 methods {
