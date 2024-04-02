@@ -115,10 +115,14 @@ rule RA_silo_cant_borrow_more_than_max(env e, address borrower) {
     require silo1.total(ISilo.AssetType.Protected) + silo1.total(ISilo.AssetType.Collateral) <= max_uint256;
     require shareProtectedCollateralToken0.totalSupply() + shareCollateralToken0.totalSupply() <= max_uint256;
     require shareProtectedCollateralToken1.totalSupply() + shareCollateralToken1.totalSupply() <= max_uint256;
-    require silo0.total(ISilo.AssetType.Protected) ==0 <=> shareProtectedCollateralToken0.totalSupply() == 0;
-    require silo0.total(ISilo.AssetType.Collateral) ==0 <=> shareCollateralToken0.totalSupply() == 0;
-    require silo1.total(ISilo.AssetType.Protected) ==0 <=> shareProtectedCollateralToken1.totalSupply() == 0;
-    require silo1.total(ISilo.AssetType.Collateral) ==0 <=> shareCollateralToken1.totalSupply() == 0;
+    requireProtectedToken0TotalAndBalancesIntegrity();
+    requireCollateralToken0TotalAndBalancesIntegrity();
+    requireDebtToken0TotalAndBalancesIntegrity();
+    requireProtectedToken1TotalAndBalancesIntegrity();
+    requireCollateralToken1TotalAndBalancesIntegrity();
+    requireDebtToken1TotalAndBalancesIntegrity();
+    requireInvariant RA_no_collateral_assets_no_debt_assets();
+    requireInvariant RA_more_assets_than_shares();
 
     uint256 maxAssets = maxBorrow(e, borrower);
     uint256 assets; address receiver; 
@@ -136,10 +140,13 @@ rule RA_silo_cant_borrow_without_collateral(env e, address borrower) {
     require silo1.total(ISilo.AssetType.Protected) + silo1.total(ISilo.AssetType.Collateral) <= max_uint256;
     require shareProtectedCollateralToken0.totalSupply() + shareCollateralToken0.totalSupply() <= max_uint256;
     require shareProtectedCollateralToken1.totalSupply() + shareCollateralToken1.totalSupply() <= max_uint256;
-    require silo0.total(ISilo.AssetType.Protected) ==0 <=> shareProtectedCollateralToken0.totalSupply() == 0;
-    require silo0.total(ISilo.AssetType.Collateral) ==0 <=> shareCollateralToken0.totalSupply() == 0;
-    require silo1.total(ISilo.AssetType.Protected) ==0 <=> shareProtectedCollateralToken1.totalSupply() == 0;
-    require silo1.total(ISilo.AssetType.Collateral) ==0 <=> shareCollateralToken1.totalSupply() == 0;
+    requireProtectedToken0TotalAndBalancesIntegrity();
+    requireCollateralToken0TotalAndBalancesIntegrity();
+    requireDebtToken0TotalAndBalancesIntegrity();
+    requireProtectedToken1TotalAndBalancesIntegrity();
+    requireCollateralToken1TotalAndBalancesIntegrity();
+    requireDebtToken1TotalAndBalancesIntegrity();
+    requireInvariant RA_no_collateral_assets_no_debt_assets();
 
     uint256 collateralShares = shareCollateralToken1.balanceOf(borrower);
     uint256 protectedCollateralShares = shareProtectedCollateralToken1.balanceOf(borrower);
@@ -147,18 +154,27 @@ rule RA_silo_cant_borrow_without_collateral(env e, address borrower) {
     assert collateralShares == 0 && protectedCollateralShares ==0 => maxAssets == 0;
 }
 
-invariant no_collateral_assets_no_debt_assets()
-    (
-        silo0.total(ISilo.AssetType.Collateral) ==0 &&
-        silo0.total(ISilo.AssetType.Protected) ==0 =>
-        silo0.total(ISilo.AssetType.Debt) ==0
-    )
-    &&
-    (
-        silo1.total(ISilo.AssetType.Collateral) ==0 &&
-        silo1.total(ISilo.AssetType.Protected) ==0 =>
+invariant RA_no_collateral_assets_no_debt_assets()
+    silo0.total(ISilo.AssetType.Collateral) ==0 &&
+    silo0.total(ISilo.AssetType.Protected) ==0 =>
+    (   
+        /// Liquidity constraint
+        silo0.total(ISilo.AssetType.Debt) ==0 
+        &&
+        /// Solvency constraint
         silo1.total(ISilo.AssetType.Debt) ==0
-    );
+    )
+    {
+        preserved with (env e) {
+            completeSiloSetupEnv(e);
+            requireProtectedToken0TotalAndBalancesIntegrity();
+            requireCollateralToken0TotalAndBalancesIntegrity();
+            requireDebtToken0TotalAndBalancesIntegrity();
+            requireProtectedToken1TotalAndBalancesIntegrity();
+            requireCollateralToken1TotalAndBalancesIntegrity();
+            requireDebtToken1TotalAndBalancesIntegrity();
+        }
+    }
 
 /// https://prover.certora.com/output/41958/af1acf321bf044c6ab813b243ae08ddd/?anonymousKey=3a898b5d61e73bebff14c4ad88d7f26912b8fbd4
 /*
@@ -173,64 +189,152 @@ Violation analysis:
     hence the violation shows:
     ShareCollateralToken.totalSupply() == 0 but total[AssetType.collateral].assets ! =0
 
+    TOTAL SUPPLY = 0 ; TOTAL ASSETS = Y
+    TOTAL_SUPPLY = +X ; TOTAL_ASSETS = Y + X
+
     Conclusion:
     Need to make sure no debt shares are available without collateral shares.
 */
-invariant zero_assets_iff_zero_shares() 
+invariant RA_zero_assets_iff_zero_shares() 
     (silo0.total(ISilo.AssetType.Protected) ==0 <=> shareProtectedCollateralToken0.totalSupply() == 0) &&
     (silo0.total(ISilo.AssetType.Collateral) ==0 <=> shareCollateralToken0.totalSupply() == 0) &&
-    (silo0.total(ISilo.AssetType.Debt) ==0 <=> shareDebtToken0.totalSupply() == 0) && 
-    (silo1.total(ISilo.AssetType.Protected) ==0 <=> shareProtectedCollateralToken1.totalSupply() == 0) &&
-    (silo1.total(ISilo.AssetType.Collateral) ==0 <=> shareCollateralToken1.totalSupply() == 0) &&
-    (silo1.total(ISilo.AssetType.Debt) ==0 <=> shareDebtToken1.totalSupply() == 0)
+    (silo0.total(ISilo.AssetType.Debt) ==0 <=> shareDebtToken0.totalSupply() == 0) 
     {
         preserved with (env e) {
             completeSiloSetupEnv(e);
             totalSupplyMoreThanBalance(e.msg.sender);
-            requireInvariant no_collateral_assets_no_debt_assets();
+            requireInvariant RA_no_collateral_assets_no_debt_assets();
         }
     }
 
-rule maxWithdraw_collateral_assets_independence(env e, address user) {
-    require e.block.timestamp < 2^64;
-    ISilo.AssetType typeA;
-    ISilo.AssetType typeB;
-    /// Invariants to prove
-    requireInvariant zero_assets_iff_zero_shares();
-    requireInvariant no_collateral_assets_no_debt_assets();
-    require typeA != typeB;
+invariant RA_more_assets_than_shares() 
+    (silo0.total(ISilo.AssetType.Protected) >= shareProtectedCollateralToken0.totalSupply()) &&
+    (silo0.total(ISilo.AssetType.Collateral) >= shareCollateralToken0.totalSupply()) &&
+    (silo0.total(ISilo.AssetType.Debt) >= shareDebtToken0.totalSupply()) 
+    {
+        preserved with (env e) {
+            completeSiloSetupEnv(e);
+            totalSupplyMoreThanBalance(e.msg.sender);
+            requireProtectedToken0TotalAndBalancesIntegrity();
+            requireCollateralToken0TotalAndBalancesIntegrity();
+            requireDebtToken0TotalAndBalancesIntegrity();
+            requireProtectedToken1TotalAndBalancesIntegrity();
+            requireCollateralToken1TotalAndBalancesIntegrity();
+            requireDebtToken1TotalAndBalancesIntegrity();
+            requireInvariant RA_zero_assets_iff_zero_shares();
+            requireInvariant RA_no_collateral_assets_no_debt_assets();
+        }
+    }
 
-    mathint maxAssets_before = maxWithdraw(e, user, typeA);
-        uint256 assets;
-        address receiver;
-        address owner;
-        withdraw(e, assets, receiver, owner, typeB);
-    mathint maxAssets_after = maxWithdraw(e, user, typeA);
-
-    assert maxAssets_before == maxAssets_after;
-} 
-
-rule RA_maxWithdraw_preserved_after_collateral_transition(env e, address user) 
-{
+rule RA_silo_solvent_after_repaying(env e, address borrower) {
     completeSiloSetupEnv(e);
+    require silo0.getSiloDataInterestRateTimestamp() > 0;
+    totalSupplyMoreThanBalance(borrower);
+    totalSupplyMoreThanBalance(e.msg.sender);
+    requireProtectedToken0TotalAndBalancesIntegrity();
+    requireCollateralToken0TotalAndBalancesIntegrity();
+    requireDebtToken0TotalAndBalancesIntegrity();
+    requireProtectedToken1TotalAndBalancesIntegrity();
+    requireCollateralToken1TotalAndBalancesIntegrity();
+    requireDebtToken1TotalAndBalancesIntegrity();
+
+    requireInvariant RA_more_assets_than_shares();
+
+    require isSolvent(e, borrower);
+        uint256 assets;
+        repay(e, assets, borrower);
+    assert isSolvent(e, borrower);
+}
+
+rule RA_silo_solvent_after_borrow(env e, address borrower) {
+    completeSiloSetupEnv(e);
+    require silo0.getSiloDataInterestRateTimestamp() > 0;
+    totalSupplyMoreThanBalance(borrower);
+    totalSupplyMoreThanBalance(e.msg.sender);
+    requireProtectedToken0TotalAndBalancesIntegrity();
+    requireCollateralToken0TotalAndBalancesIntegrity();
+    requireDebtToken0TotalAndBalancesIntegrity();
+    requireProtectedToken1TotalAndBalancesIntegrity();
+    requireCollateralToken1TotalAndBalancesIntegrity();
+    requireDebtToken1TotalAndBalancesIntegrity();
+    requireInvariant RA_more_assets_than_shares();
+    
+    uint256 assets;
+    address receiver;
+    borrow(e, assets, receiver, borrower);
+    assert isSolvent(e, borrower);
+}
+
+rule RA_user_cannot_lower_HF_of_another(env e, address user, method f) 
+filtered{f -> !f.isView && withdrawCollateralToLiquidatorSig() != f.selector} {
+    completeSiloSetupEnv(e);
+    require silo0.getSiloDataInterestRateTimestamp() > 0;
     totalSupplyMoreThanBalance(user);
     totalSupplyMoreThanBalance(e.msg.sender);
+    requireProtectedToken0TotalAndBalancesIntegrity();
+    requireCollateralToken0TotalAndBalancesIntegrity();
+    requireDebtToken0TotalAndBalancesIntegrity();
+    requireProtectedToken1TotalAndBalancesIntegrity();
+    requireCollateralToken1TotalAndBalancesIntegrity();
+    requireDebtToken1TotalAndBalancesIntegrity();
+    requireInvariant RA_more_assets_than_shares();
+    require e.msg.sender != user;
 
-    /// Invariants to prove
-    requireInvariant zero_assets_iff_zero_shares();
-    requireInvariant no_collateral_assets_no_debt_assets();
+    /// No accrual of interest
+    require silo0.getSiloDataInterestRateTimestamp() == e.block.timestamp;
+    /// No allowance
+    require shareDebtToken1.allowance(e, user, e.msg.sender) == 0;
+    require shareCollateralToken0.allowance(e, user, e.msg.sender) == 0;
+    require shareProtectedCollateralToken0.allowance(e, user, e.msg.sender) == 0;
 
-    mathint maxAssets_before = 
-        maxWithdraw(e, user, ISilo.AssetType.Protected) + 
-        maxWithdraw(e, user, ISilo.AssetType.Collateral);
-        uint256 shares;
-        address owner;
-        ISilo.AssetType type;
-        transitionCollateral(e, shares, owner, type);
-    mathint maxAssets_after = 
-        maxWithdraw(e, user, ISilo.AssetType.Protected) + 
-        maxWithdraw(e, user, ISilo.AssetType.Collateral);
+    mathint balanceDebt_before = shareDebtToken1.balanceOf(e, user);
+    mathint balanceCol_before = shareCollateralToken0.balanceOf(e, user);
+    mathint balancePro_before = shareProtectedCollateralToken0.balanceOf(e, user);
+        calldataarg args;
+        f(e, args);
+    mathint balanceDebt_after = shareDebtToken1.balanceOf(e, user);
+    mathint balanceCol_after = shareCollateralToken0.balanceOf(e, user);
+    mathint balancePro_after = shareProtectedCollateralToken0.balanceOf(e, user);
 
-    assert maxAssets_after - maxAssets_before <= 2;
-    assert maxAssets_after - maxAssets_before >= -2;
+    assert balanceDebt_before >= balanceDebt_after, "Debt balance cannot increase by other user";
+    assert balanceCol_before <= balanceCol_after, "Collateral balance cannot decrease by other user";
+    assert balancePro_before <= balancePro_after, "Protected balance cannot decrease by other user";
+}
+
+rule RA_assets_values_depend_on_shares_balances_only(env e, address user, method f) filtered{f -> !f.isView} {
+    completeSiloSetupEnv(e);
+    require silo0.getSiloDataInterestRateTimestamp() > 0;
+    totalSupplyMoreThanBalance(user);
+    totalSupplyMoreThanBalance(e.msg.sender);
+    requireProtectedToken0TotalAndBalancesIntegrity();
+    requireCollateralToken0TotalAndBalancesIntegrity();
+    requireDebtToken0TotalAndBalancesIntegrity();
+    requireProtectedToken1TotalAndBalancesIntegrity();
+    requireCollateralToken1TotalAndBalancesIntegrity();
+    requireDebtToken1TotalAndBalancesIntegrity();
+    requireInvariant RA_more_assets_than_shares();
+    /// No accrual of interest
+    require silo0.getSiloDataInterestRateTimestamp() == e.block.timestamp;
+
+    SiloSolvencyLib.LtvData data_before = getAssetsDataForLtvCalculations(e, user);
+    mathint balanceDebt_before = shareDebtToken1.balanceOf(e, user);
+    mathint balanceCol_before = shareCollateralToken0.balanceOf(e, user);
+    mathint balancePro_before = shareProtectedCollateralToken0.balanceOf(e, user);
+        calldataarg args;
+        f(e, args);
+    SiloSolvencyLib.LtvData data_after = getAssetsDataForLtvCalculations(e, user);
+    mathint balanceDebt_after = shareDebtToken1.balanceOf(e, user);
+    mathint balanceCol_after = shareCollateralToken0.balanceOf(e, user);
+    mathint balancePro_after = shareProtectedCollateralToken0.balanceOf(e, user);
+
+    assert (
+        balanceDebt_before == balanceDebt_after && 
+        balanceCol_before == balanceCol_after &&
+        balancePro_after == balancePro_before
+    ) => 
+    (
+        data_before.borrowerProtectedAssets == data_after.borrowerProtectedAssets &&
+        data_before.borrowerCollateralAssets == data_after.borrowerCollateralAssets &&
+        data_before.borrowerDebtAssets == data_after.borrowerDebtAssets
+    );
 }

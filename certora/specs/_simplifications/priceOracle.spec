@@ -1,28 +1,28 @@
 methods {
     function _.quote(uint256 _baseAmount, address _baseToken) external with (env e)
-        => priceOracle(calledContract, _baseToken, _baseAmount, e.block.timestamp) expect uint256;
+        => calculateTokenValue(calledContract, _baseToken, _baseAmount, e.block.timestamp) expect uint256;
 }
+
+definition VALUE1() returns uint256 = 1;    /// price is 0.5
+definition VALUE2() returns uint256 = 2;   /// price is 1
+definition VALUE3() returns uint256 = 6;   /// price is 3
+definition PRECISION() returns uint256 = 2;
+
 /*
 Generic price oracle : 
-    priceOracle(address oracle, address base token, uint256 amount, uint256 timestamp)
+    priceOracle(address oracle, address base token, uint256 timestamp)
 */
-persistent ghost priceOracle(address,address,uint256,uint256) returns uint256 {
-    axiom 
-        forall address oracle.
-            forall address token.
-                forall uint256 timestamp.
-                    priceOracle(oracle, token, 0, timestamp) == 0;
+function calculateTokenValue(address oracle, address token, uint256 baseAmount, uint256 time) returns uint256 {
+    return require_uint256((priceOracle(oracle,token,time) * baseAmount + 1) / PRECISION());
+}
 
+persistent ghost priceOracle(address,address,uint256) returns uint256 {
     axiom 
         forall address oracle.
             forall address token.
-                forall uint256 timestamp.
-                    forall uint256 amount1. forall uint256 amount2. (
-                        (amount1 < amount2 => 
-                            priceOracle(oracle, token, amount1, timestamp) <= priceOracle(oracle, token, amount2, timestamp)
-                        ) && (
-                        amount1 * 2 == to_mathint(amount2) =>
-                            2 * priceOracle(oracle, token, amount1, timestamp) == to_mathint(priceOracle(oracle, token, amount2, timestamp))
-                        )
-                    );         
+                forall uint256 timestamp. (
+                    priceOracle(oracle, token, timestamp) == VALUE1() ||
+                    priceOracle(oracle, token, timestamp) == VALUE2() ||
+                    priceOracle(oracle, token, timestamp) == VALUE3()
+                );
 }

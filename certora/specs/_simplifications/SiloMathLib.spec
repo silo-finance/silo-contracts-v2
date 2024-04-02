@@ -1,4 +1,5 @@
 methods {
+    
     function SiloMathLib.convertToAssets(
         uint256 _shares,
         uint256 _totalAssets,
@@ -16,6 +17,7 @@ methods {
         ISilo.AssetType _assetType
     ) internal returns (uint256) =>
     assetsToSharesApprox(_assets, _totalAssets, _totalShares, _rounding, _assetType);
+    
 
     function SiloMathLib.getDebtAmountsWithInterest(uint256 _debtAssets, uint256 _rcomp) 
         internal returns (uint256,uint256) => getDebtAmountsWithInterestCVL(_debtAssets, _rcomp);
@@ -24,14 +26,40 @@ methods {
 definition DECIMALS_OFFSET_POW() returns uint256 = 1;
 definition PRECISION_DECIMALS() returns uint256 = 10^18;
 
+// A restriction on the value of w = x * y / z
+// The ratio between x (or y) and z is a rational number a/b or b/a.
+// Important : do not set a = 0 or b = 0.
+// Note: constRatio(x,y,z,a,b,w) <=> constRatio(x,y,z,b,a,w)
+definition constRatio(uint256 x, uint256 y, uint256 z,
+ uint256 a, uint256 b, uint256 w) 
+        returns bool = 
+        ( a * x == b * z && to_mathint(w) == (b * y) / a ) || 
+        ( b * x == a * z && to_mathint(w) == (a * y) / b ) ||
+        ( a * y == b * z && to_mathint(w) == (b * x) / a ) || 
+        ( b * y == a * z && to_mathint(w) == (a * x) / b );
+
+function discreteRatioMulDiv(uint256 x, uint256 y, uint256 z) returns uint256 
+{
+    uint256 res;
+    require z != 0 && x*y <=max_uint256;
+    // Discrete ratios:
+    require( 
+        (x == z && res == y) ||
+        (y == z && res == x) ||
+        constRatio(x, y, z, 2, 1, res) || // f = 2*x or f = x/2 (same for y)
+        constRatio(x, y, z, 3, 1, res)    // f = 3*x or f = x/3 (same for y)
+        );
+    return res;
+}
+
 /// shares, totalAssets, totalShares, (true if round up, false if down)
 /// assets, totalShares, totalAssets, (true if round up, false if down)
-persistent ghost sharesMulDiv(uint256,uint256,uint256,bool) returns uint256 {
+persistent ghost sharesMulDiv(uint256,uint256,uint256,bool) returns uint256 {       
     axiom forall uint256 x. forall uint256 y. forall uint256 z.
-        sharesMulDiv(x,y,z,true) == sharesMulDiv(x,y,z,false) ||
-        sharesMulDiv(x,y,z,true) - sharesMulDiv(x,y,z,false) == 1;
-    axiom forall uint256 x. forall uint256 y. forall uint256 z.
-    /// Symmetry:
+    /// Rounding up is equal or +1 from rounding down:
+        (sharesMulDiv(x,y,z,true) == sharesMulDiv(x,y,z,false) ||
+        sharesMulDiv(x,y,z,true) - sharesMulDiv(x,y,z,false) == 1) &&
+    /// Multiplication symmetry:
         sharesMulDiv(x,y,z,false) == sharesMulDiv(y,x,z,false) &&
         sharesMulDiv(x,y,z,true) == sharesMulDiv(y,x,z,true) &&
     /// For shares conversion calculations, one expects 
@@ -39,27 +67,29 @@ persistent ghost sharesMulDiv(uint256,uint256,uint256,bool) returns uint256 {
     ///     assets <= total assets
     /// hence : x <= z => assets (shares) = x * y / z <= y = total assets (total shares)
         (sharesMulDiv(x,y,z,false) <= y) &&
+    /// Nominator-denominator cancellation:
         ((x == z && z !=0) => sharesMulDiv(x,y,z,false) == y) &&
         ((y == z && z !=0) => sharesMulDiv(x,y,z,false) == x);
-
+    /// Monotonicity:
     axiom forall uint256 x1. forall uint256 x2. forall uint256 y. forall uint256 z.
-        x1 <= x2 => sharesMulDiv(x1,y,z,false) <= sharesMulDiv(x2,y,z,false);
-    axiom forall uint256 x1. forall uint256 x2. forall uint256 y. forall uint256 z.
-        x1 <= x2 => sharesMulDiv(x1,y,z,true) <= sharesMulDiv(x2,y,z,true);
-    axiom forall uint256 y1. forall uint256 y2. forall uint256 x. forall uint256 z.
-        y1 <= y2 => sharesMulDiv(x,y1,z,false) <= sharesMulDiv(x,y2,z,false);
-    axiom forall uint256 y1. forall uint256 y2. forall uint256 x. forall uint256 z.
-        y1 <= y2 => sharesMulDiv(x,y1,z,true) <= sharesMulDiv(x,y2,z,true);
-    axiom forall uint256 z1. forall uint256 z2. forall uint256 x. forall uint256 y.
-        z1 <= z2 => sharesMulDiv(x,y,z1,false) >= sharesMulDiv(x,y,z2,false);
+        x1 <= x2 => (
+            sharesMulDiv(x1,y,z,false) <= sharesMulDiv(x2,y,z,false) &&
+            sharesMulDiv(x1,y,z,true) <= sharesMulDiv(x2,y,z,true) &&
+            sharesMulDiv(z,y,x1,false) >= sharesMulDiv(z,y,x2,false)
+        );
     axiom forall uint256 y. forall uint256 z.
         (sharesMulDiv(0,y,z,false) == 0) && 
-        (sharesMulDiv(1,y,z,false) ==0 <=> (y ==0 || y < z));
+        (sharesMulDiv(1,y,z,false) ==0 <=> (y ==0 || y < z)) &&
+        (sharesMulDiv(1,y,z,true) ==0 <=> y ==0);
 
+    axiom forall uint256 x. forall uint256 y. forall uint256 z.
+        (x >= 1 && y >= 1 && z !=0) => 2 * sharesMulDiv(x,y,z,false) >= (x + y) / z;
+    /*
     axiom forall uint256 x. forall uint256 y. forall uint256 z. forall uint256 w.
         (w == sharesMulDiv(x,y,z,false) && y !=0) => (
             sharesMulDiv(w,z,y,false) <= x && 
             sharesMulDiv(w,z,y,false) + sharesMulDiv(z,1,y,true) >= to_mathint(x));
+    */
 }
 
 /// interestRatio(_debtAssets,_rcomp) = _debtAssets * _rcomp / _PRECISION_DECIMALS;
@@ -93,6 +123,7 @@ function sharesToAssetsApprox(
     //Replace for exact mulDiv
     return mulDiv_mathLib(_shares,totalAssets,totalShares,_rounding == MathUpgradeable.Rounding.Up);  //exact
     //return sharesMulDiv(_shares,totalAssets,totalShares,_rounding == MathUpgradeable.Rounding.Up);  //summ
+    //return discreteRatioMulDiv(_shares, totalAssets, totalShares);
 }
 
 function assetsToSharesApprox(
@@ -112,6 +143,7 @@ function assetsToSharesApprox(
     //Replace for exact mulDiv
     return mulDiv_mathLib(_assets,totalShares,totalAssets,_rounding == MathUpgradeable.Rounding.Up);  //exact
     //return sharesMulDiv(_assets,totalShares,totalAssets,_rounding == MathUpgradeable.Rounding.Up);  //summ
+    //return discreteRatioMulDiv(_shares, totalAssets, totalShares);
 }
 
 function getDebtAmountsWithInterestCVL(uint256 _debtAssets, uint256 _rcomp) returns (uint256,uint256) {
@@ -165,6 +197,8 @@ rule mulDiv_axioms_test(uint256 x, uint256 y, uint256 z) {
     assert z <= zp => resUp >= resUp_zp;
     assert (x == 0) => resDown == 0;
     assert (x == 1) => (resDown ==0 <=> (y ==0 || y < z));
+    assert (x == 1) => (resUp == 0 <=> y ==0);
+    assert (x >= 1 && y >= 1 && z !=0) => to_mathint(resDown) >= (x + y) / (2 * z);
 }
 
 /*

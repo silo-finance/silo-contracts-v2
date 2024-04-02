@@ -9,7 +9,7 @@ import "../../_simplifications/priceOracle.spec";
 import "../../_simplifications/SiloSolvencyLib.spec";
 import "../../_simplifications/SimplifiedGetCompoundInterestRateAndUpdate.spec";
 
-
+use rule mulDiv_axioms_test;
 
 // checks that if I mint X shares for Y assets, it's not possible to
 // get X shares for <Y assets via two mints.
@@ -379,4 +379,31 @@ rule HLP_repayShares_breakingUpNotBeneficial(env e, address receiver)
     satisfy balanceCollateralAfter1_2 >= balanceCollateralAfterSum;
     satisfy balanceProtectedCollateralAfter1_2 <= balanceProtectedCollateralAfterSum;
     satisfy balanceSharesAfter1_2 <= balanceSharesAfterSum;
+}
+
+
+rule HLP_transition_collateral_preserves_solvent(env e, address user) 
+{
+    completeSiloSetupEnv(e);
+    require silo0.getSiloDataInterestRateTimestamp() > 0;
+    totalSupplyMoreThanBalance(user);
+    totalSupplyMoreThanBalance(e.msg.sender);
+    requireProtectedToken0TotalAndBalancesIntegrity();
+    requireCollateralToken0TotalAndBalancesIntegrity();
+    requireDebtToken0TotalAndBalancesIntegrity();
+    requireProtectedToken1TotalAndBalancesIntegrity();
+    requireCollateralToken1TotalAndBalancesIntegrity();
+    requireDebtToken1TotalAndBalancesIntegrity();
+
+    require
+    (silo0.total(ISilo.AssetType.Protected) >= shareProtectedCollateralToken0.totalSupply()) &&
+    (silo0.total(ISilo.AssetType.Collateral) >= shareCollateralToken0.totalSupply()) &&
+    (silo0.total(ISilo.AssetType.Debt) >= shareDebtToken0.totalSupply());
+
+    require isSolvent(e, user);
+        uint256 shares;
+        address owner;
+        ISilo.AssetType type;
+        transitionCollateral(e, shares, owner, type);
+    assert isSolvent(e, user);
 }
