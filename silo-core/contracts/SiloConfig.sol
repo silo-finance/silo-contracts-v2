@@ -196,7 +196,7 @@ contract SiloConfig is ISiloConfig {
     }
 
     /// @inheritdoc ISiloConfig
-    function getConfigs(address _silo, address _borrower) // solhint-disable-line function-max-lines
+    function getConfigs(address _silo, address _borrower, uint256 _openPositionForSameToken) // solhint-disable-line function-max-lines
         external
         view
         virtual

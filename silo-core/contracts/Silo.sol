@@ -84,7 +84,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
             ISiloConfig.ConfigData memory collateral,
             ISiloConfig.ConfigData memory debt,
             ISiloConfig.PositionInfo memory positionInfo
-        ) = config.getConfigs(address(this), _borrower);
+        ) = config.getConfigs(address(this), _borrower, 555);
 
         return SiloSolvencyLib.isSolvent(collateral, debt, positionInfo, _borrower, AccrueInterestInMemory.Yes);
     }
@@ -730,7 +730,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
             ISiloConfig.ConfigData memory collateralConfig,
             ISiloConfig.ConfigData memory debtConfig,
             ISiloConfig.PositionInfo memory positionInfo
-        ) = config.getConfigs(address(this), _owner);
+        ) = config.getConfigs(address(this), _owner, 555);
 
         _callAccrueInterestForAsset(
             collateralConfig.interestRateModel,
@@ -819,7 +819,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
             ISiloConfig.ConfigData memory debtConfig,
             ISiloConfig.ConfigData memory collateralConfig,
             ISiloConfig.PositionInfo memory positionInfo
-        ) = cachedConfig.getConfigs(address(this), _borrower);
+        ) = cachedConfig.getConfigs(address(this), _borrower, 555);
 
         if (!SiloLendingLib.borrowPossible(positionInfo)) revert ISilo.BorrowNotPossible();
 
@@ -960,7 +960,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
             ISiloConfig.ConfigData memory debtConfig,
             ISiloConfig.ConfigData memory collateralConfig,
             ISiloConfig.PositionInfo memory positionInfo
-        ) = cachedConfig.getConfigs(address(this), _borrower);
+        ) = cachedConfig.getConfigs(address(this), _borrower, 555);
 
         if (!SiloLendingLib.borrowPossible(positionInfo)) return (0, 0);
 
