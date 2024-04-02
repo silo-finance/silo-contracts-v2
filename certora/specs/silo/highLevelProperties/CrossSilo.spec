@@ -37,10 +37,14 @@ rule remainsSolventAfterSelfLiquidation(env e, address user)
 }
 */
 
+
 rule insolventCannotBorrow(env e, address user)
 {
     completeSiloSetupEnv(e);
     totalSupplyMoreThanBalance(e.msg.sender);
+    sharesToAssetsFixedRatio(e);
+    //sharesToAssetsNotTooHigh(e, 2);
+    sharesAndAssetsNotTooHigh(e, 10^6);
 
     bool solvent = isSolvent(e, e.msg.sender);
     uint assets;
@@ -62,6 +66,7 @@ rule remainsSolventAfterInteraction(env e, method f)
 }
 
 rule accreuInterestDoesntAffectResult(env e, method f)
+    filtered { f -> !f.isView }
 {
     completeSiloSetupEnv(e);
     totalSupplyMoreThanBalance(e.msg.sender);

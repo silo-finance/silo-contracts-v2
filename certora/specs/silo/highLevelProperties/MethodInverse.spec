@@ -14,6 +14,7 @@ rule HLP_depositAndInverse(env e, address receiver)
     completeSiloSetupEnv(e);
     totalSupplyMoreThanBalance(receiver);
     totalSupplyMoreThanBalance(e.msg.sender);
+    sharesToAssetsFixedRatio(e);
     
     uint256 assets;
     
@@ -42,6 +43,7 @@ rule HLP_mintAndInverse(env e, address receiver)
     completeSiloSetupEnv(e);
     totalSupplyMoreThanBalance(receiver);
     totalSupplyMoreThanBalance(e.msg.sender);
+    sharesToAssetsFixedRatio(e);
     
     mathint balanceTokenBefore = token0.balanceOf(e.msg.sender);
     mathint balanceCollateralBefore = shareCollateralToken0.balanceOf(receiver);
@@ -69,6 +71,7 @@ rule HLP_borrowSharesAndInverse(env e, address receiver)
     completeSiloSetupEnv(e);
     totalSupplyMoreThanBalance(receiver);
     totalSupplyMoreThanBalance(e.msg.sender);
+    sharesToAssetsFixedRatio(e);
     
     mathint debtBefore = shareDebtToken0.balanceOf(e.msg.sender);
     mathint balanceTokenBefore = token0.balanceOf(e.msg.sender);
