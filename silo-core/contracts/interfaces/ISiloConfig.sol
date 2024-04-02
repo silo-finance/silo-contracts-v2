@@ -151,6 +151,8 @@ interface ISiloConfig {
     /// @param _borrower borrower address
     function closePosition(address _borrower) external;
 
+    function changePosition(address _borrower, bool _sameToken) external;
+
     // solhint-disable-next-line func-name-mixedcase
     function SILO_ID() external view returns (uint256);
 

@@ -409,4 +409,32 @@ contract SiloConfigTest is Test {
         (,, ISiloConfig.PositionInfo memory position) = _siloConfig.getConfigs(silo, borrower);
         assertEq(abi.encode(positionEmpty), abi.encode(position), "position should be deleted");
     }
+
+    /*
+    forge test -vv --mt test_changePosition_reverts
+    */
+    function test_changePosition_reverts_WrongSilo() public {
+        vm.expectRevert(ISiloConfig.WrongSilo.selector);
+        _siloConfig.changePosition(makeAddr("borrower"), true);
+    }
+
+    /*
+    forge test -vv --mt test_changePosition_pass
+    */
+    function test_changePosition_pass() public {
+        address silo = makeAddr("silo1");
+        address borrower = makeAddr("borrower");
+
+        vm.prank(silo);
+        _siloConfig.changePosition(borrower, true);
+
+        (,, ISiloConfig.PositionInfo memory position) = _siloConfig.getConfigs(silo, borrower);
+        assertEq(position.oneTokenPosition, true);
+
+        vm.prank(makeAddr("silo0"));
+        _siloConfig.changePosition(borrower, false);
+
+        (,, position) = _siloConfig.getConfigs(silo, borrower);
+        assertEq(position.oneTokenPosition, false);
+    }
 }
