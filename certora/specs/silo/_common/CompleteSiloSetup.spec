@@ -79,7 +79,7 @@ function sharesAndAssetsNotTooHigh(env e, mathint max)
     require totalProtectedShares <= max;
 }
 
-// three allowed ratios: 1:1, 3:5, 5:3
+// three allowed ratios: 1:1, 3:5
 function sharesToAssetsFixedRatio(env e)
 {
     mathint totalCollateralAssets; mathint totalProtectedAssets;
@@ -87,11 +87,11 @@ function sharesToAssetsFixedRatio(env e)
     mathint totalShares = shareCollateralToken0.totalSupply();
     mathint totalProtectedShares = shareProtectedCollateralToken0.totalSupply();
     require totalCollateralAssets * 3 == totalShares * 5 ||
-        totalCollateralAssets * 5 == totalShares * 3 ||
+        //totalCollateralAssets * 5 == totalShares * 3 ||
         totalCollateralAssets == totalShares;
     
     require totalProtectedAssets * 3 == totalProtectedShares * 5 ||
-        totalProtectedAssets * 5 == totalProtectedShares * 3 ||
+        //totalProtectedAssets * 5 == totalProtectedShares * 3 ||
         totalProtectedAssets == totalProtectedShares;
 }
 
