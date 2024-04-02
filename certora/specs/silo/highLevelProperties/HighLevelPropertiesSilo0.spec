@@ -353,19 +353,19 @@ rule HLP_repayShares_breakingUpNotBeneficial(env e, address receiver)
 
     storage init = lastStorage;
     
-    repayShares(e, sharesSum, receiver, receiver);
+    repayShares(e, sharesSum, receiver);
     mathint balanceTokenAfterSum = token0.balanceOf(receiver);
     mathint balanceSharesAfterSum = shareDebtToken0.balanceOf(receiver);
     mathint balanceCollateralAfterSum = shareCollateralToken0.balanceOf(receiver);
     mathint balanceProtectedCollateralAfterSum = shareProtectedCollateralToken0.balanceOf(receiver);
     
-    repayShares(e, shares1, receiver, receiver) at init;
+    repayShares(e, shares1, receiver) at init;
     mathint balanceTokenAfter1 = token0.balanceOf(receiver);
     mathint balanceSharesAfter1 = shareDebtToken0.balanceOf(receiver);
     mathint balanceCollateralAfter1 = shareCollateralToken0.balanceOf(receiver);
     mathint balanceProtectedCollateralAfter1 = shareProtectedCollateralToken0.balanceOf(receiver);
 
-    repayShares(e, shares2, receiver, receiver);
+    repayShares(e, shares2, receiver);
     mathint balanceTokenAfter1_2 = token0.balanceOf(receiver);
     mathint balanceSharesAfter1_2 = shareDebtToken0.balanceOf(receiver);
     mathint balanceCollateralAfter1_2 = shareCollateralToken0.balanceOf(receiver);
