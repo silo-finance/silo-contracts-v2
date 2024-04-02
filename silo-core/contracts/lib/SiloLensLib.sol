@@ -13,7 +13,7 @@ import {SiloERC4626Lib} from "./SiloERC4626Lib.sol";
 
 library SiloLensLib {
     function borrowPossible(ISilo _silo, address _borrower) internal view returns (bool possible) {
-        (,, ISiloConfig.PositionInfo memory positionInfo) = _silo.config().getConfigs(address(_silo), _borrower, 555);
+        (,, ISiloConfig.PositionInfo memory positionInfo) = _silo.config().getConfigs(address(_silo), _borrower);
         possible = SiloLendingLib.borrowPossible(positionInfo);
     }
 
@@ -30,7 +30,7 @@ library SiloLensLib {
             ISiloConfig.ConfigData memory collateralConfig,
             ISiloConfig.ConfigData memory debtConfig,
             ISiloConfig.PositionInfo memory positionInfo
-        ) = _silo.config().getConfigs(address(_silo), _borrower, 555);
+        ) = _silo.config().getConfigs(address(_silo), _borrower);
 
         if (positionInfo.positionOpen) {
             if (positionInfo.debtInThisSilo) {
