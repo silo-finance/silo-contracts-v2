@@ -106,9 +106,6 @@ interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
     /// @notice Emitted on leverage
     event Leverage();
 
-    /// @notice emitted only when position has been switched to other type
-    event PositionTypeChanged(address indexed borrower, bool sameToken);
-
     error Unsupported();
     error NothingToWithdraw();
     error NotEnoughLiquidity();
@@ -129,8 +126,6 @@ interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
     error UndefinedPosition();
     error DebtWithUndefinedPosition();
     error ThereIsDebtInOtherSilo();
-    error PositionNotOpen();
-    error PositionDidNotChanged();
 
     /// @notice Initialize Silo
     /// @param _siloConfig address of ISiloConfig with full config for this Silo
@@ -256,8 +251,6 @@ interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
     function transitionCollateral(uint256 _shares, address _owner, AssetType _withdrawType)
         external
         returns (uint256 assets);
-
-    function switchPositionTypeTo(bool _sameToken) external;
 
     /// @notice Calculates the maximum amount of assets that can be borrowed by the given address
     /// @param _borrower Address of the potential borrower

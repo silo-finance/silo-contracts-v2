@@ -487,36 +487,6 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
         );
     }
 
-    function switchPositionTypeTo(bool _sameToken) external virtual nonReentrant {
-        ISiloConfig cacheConfig = config;
-
-        (
-            ISiloConfig.ConfigData memory collateral,
-            ISiloConfig.ConfigData memory debt,
-            ISiloConfig.PositionInfo memory positionInfo
-        ) = cacheConfig.getConfigs(address(this), msg.sender);
-
-        if (!positionInfo.positionOpen) revert PositionNotOpen();
-        if (positionInfo.oneTokenPosition == _sameToken) revert PositionDidNotChanged();
-
-        cacheConfig.changePosition(msg.sender, _sameToken);
-        positionInfo.oneTokenPosition = _sameToken;
-
-        if (_sameToken) {
-            if (positionInfo.debtInThisSilo) {
-                debt = collateral;
-            }
-        } else if (positionInfo.debtInThisSilo) {
-            (collateral, debt) = (debt, collateral);
-        }
-
-        emit PositionTypeChanged(msg.sender, _sameToken);
-
-        if (!SiloSolvencyLib.isSolvent(collateral, debt, positionInfo, msg.sender, AccrueInterestInMemory.Yes)) {
-            revert NotSolvent();
-        }
-    }
-
     /// @inheritdoc ISilo
     function borrow(uint256 _assets, address _receiver, address _borrower, bool _sameToken)
         external
