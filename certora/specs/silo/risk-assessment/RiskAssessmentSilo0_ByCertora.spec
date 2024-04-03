@@ -338,3 +338,87 @@ rule RA_assets_values_depend_on_shares_balances_only(env e, address user, method
         data_before.borrowerDebtAssets == data_after.borrowerDebtAssets
     );
 }
+
+/// Verified
+rule RA_anyone_may_deposit(env e1, env e2) {
+    require e1.block.timestamp == e2.block.timestamp;
+    require e1.msg.value == e2.msg.value;
+
+    completeSiloSetupEnv(e1);
+    completeSiloSetupEnv(e2);
+    require silo0.getSiloDataInterestRateTimestamp() > 0;
+    totalSupplyMoreThanBalance(e1.msg.sender);
+    totalSupplyMoreThanBalance(e2.msg.sender);
+    requireProtectedToken0TotalAndBalancesIntegrity();
+    requireCollateralToken0TotalAndBalancesIntegrity();
+    requireDebtToken0TotalAndBalancesIntegrity();
+    requireProtectedToken1TotalAndBalancesIntegrity();
+    requireCollateralToken1TotalAndBalancesIntegrity();
+    requireDebtToken1TotalAndBalancesIntegrity();
+    requireInvariant RA_more_assets_than_shares();
+
+    storage initState = lastStorage;
+    uint256 amount;
+    address recipient;
+
+    require silo0 !=0;
+    require token0.allowance(e2, e2.msg.sender, silo0) >= amount;
+    /// Assuming sufficient balance:
+    require token0.balanceOf(e2, e2.msg.sender) >= amount;
+
+    deposit(e1, amount, recipient) at initState;
+    deposit@withrevert(e2, amount, recipient) at initState;
+
+    assert e2.msg.sender !=0 => !lastReverted;
+}
+
+/// Verified
+rule RA_deposit_recipient_is_not_restricted(env e, address user1, address user2) {
+    completeSiloSetupEnv(e);
+    require silo0.getSiloDataInterestRateTimestamp() > 0;
+    require silo1.getSiloDataInterestRateTimestamp() > 0;
+    totalSupplyMoreThanBalance(e.msg.sender);
+    requireProtectedToken0TotalAndBalancesIntegrity();
+    requireCollateralToken0TotalAndBalancesIntegrity();
+    requireDebtToken0TotalAndBalancesIntegrity();
+    requireProtectedToken1TotalAndBalancesIntegrity();
+    requireCollateralToken1TotalAndBalancesIntegrity();
+    requireDebtToken1TotalAndBalancesIntegrity();
+    requireInvariant RA_more_assets_than_shares();
+
+    storage initState = lastStorage;
+    uint256 amount;
+
+    /// deposit possible for user2
+    require silo0 !=0;
+    require shareDebtToken0.balanceOf(e, user2) == 0;
+
+    deposit(e, amount, user1) at initState;
+    deposit@withrevert(e, amount, user2) at initState;
+
+    assert user2 !=0 => !lastReverted;
+}
+
+/// Violated (burn shares over-estimated)
+rule RA_can_withdraw_after_deposit(env e) {
+    completeSiloSetupEnv(e);
+    require silo0.getSiloDataInterestRateTimestamp() > 0;
+    require silo1.getSiloDataInterestRateTimestamp() > 0;
+    totalSupplyMoreThanBalance(e.msg.sender);
+    requireProtectedToken0TotalAndBalancesIntegrity();
+    requireCollateralToken0TotalAndBalancesIntegrity();
+    requireDebtToken0TotalAndBalancesIntegrity();
+    requireProtectedToken1TotalAndBalancesIntegrity();
+    requireCollateralToken1TotalAndBalancesIntegrity();
+    requireDebtToken1TotalAndBalancesIntegrity();
+    requireInvariant RA_more_assets_than_shares();
+
+    uint256 amount;
+    require silo0.total(ISilo.AssetType.Protected) + silo0.total(ISilo.AssetType.Collateral) + amount <= max_uint128;
+    require silo1.total(ISilo.AssetType.Protected) + silo1.total(ISilo.AssetType.Collateral) + amount <= max_uint128;
+
+    deposit(e, amount, e.msg.sender);
+    withdraw@withrevert(e, amount, e.msg.sender, e.msg.sender);
+
+    assert !lastReverted;
+}
