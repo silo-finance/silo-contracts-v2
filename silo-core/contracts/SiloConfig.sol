@@ -148,7 +148,7 @@ contract SiloConfig is ISiloConfig {
     }
 
     /// @inheritdoc ISiloConfig
-    function onPositionTransfer(address _sender, address _recipient) external {
+    function onDebtTransfer(address _sender, address _recipient) external {
         if (msg.sender != _DEBT_SHARE_TOKEN0 && msg.sender != _DEBT_SHARE_TOKEN1) revert OnlyDebtShareToken();
 
         DebtInfo storage recipientPosition = _debtsInfo[_recipient];

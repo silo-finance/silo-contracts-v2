@@ -147,7 +147,7 @@ interface ISiloConfig {
     /// @dev should be called on debt transfer, it opens debt if `_to` address don't have one
     /// @param _sender sender address
     /// @param _recipient recipient address
-    function onPositionTransfer(address _sender, address _recipient) external;
+    function onDebtTransfer(address _sender, address _recipient) external;
 
     /// @dev must be called when `_borrower` repay all debt, there is no restriction from which silo call will be done
     /// @param _borrower borrower address

@@ -271,9 +271,9 @@ contract SiloConfigTest is Test {
     }
 
     /*
-    forge test -vv --mt test_onPositionTransfer_revertOnCrossSilo
+    forge test -vv --mt test_onDebtTransfer_revertOnCrossSilo
     */
-    function test_onPositionTransfer_revertOnCrossSilo() public {
+    function test_onDebtTransfer_revertOnCrossSilo() public {
         address from = makeAddr("from");
         address to = makeAddr("to");
         bool singleAsset;
@@ -283,14 +283,14 @@ contract SiloConfigTest is Test {
 
         vm.prank(makeAddr("debtShareToken1"));
         vm.expectRevert(ISiloConfig.PositionExistInOtherSilo.selector);
-        _siloConfig.onPositionTransfer(from, to);
+        _siloConfig.onDebtTransfer(from, to);
     }
 
     /*
-    forge test -vv --mt test_onPositionTransfer_clone
+    forge test -vv --mt test_onDebtTransfer_clone
     */
     /// forge-config: core-test.fuzz.runs = 10
-    function test_onPositionTransfer_clone_fuzz(bool _silo0, bool singleAsset) public {
+    function test_onDebtTransfer_clone_fuzz(bool _silo0, bool singleAsset) public {
         address silo = _silo0 ? makeAddr("silo0") : makeAddr("silo1");
         address from = makeAddr("from");
         address to = makeAddr("to");
@@ -299,7 +299,7 @@ contract SiloConfigTest is Test {
         (,, ISiloConfig.DebtInfo memory positionFrom) = _siloConfig.openPosition(from, singleAsset);
 
         vm.prank(_silo0 ? makeAddr("debtShareToken0") : makeAddr("debtShareToken1"));
-        _siloConfig.onPositionTransfer(from, to);
+        _siloConfig.onDebtTransfer(from, to);
 
         (
             ,, ISiloConfig.DebtInfo memory positionTo
@@ -309,22 +309,22 @@ contract SiloConfigTest is Test {
     }
 
     /*
-    forge test -vv --mt test_onPositionTransfer_revertIfNotDebtToken
+    forge test -vv --mt test_onDebtTransfer_revertIfNotDebtToken
     */
-    function test_onPositionTransfer_revertIfNotDebtToken() public {
+    function test_onDebtTransfer_revertIfNotDebtToken() public {
         address silo = makeAddr("silo1");
         address from = makeAddr("from");
         address to = makeAddr("to");
 
         vm.prank(silo);
         vm.expectRevert(ISiloConfig.OnlyDebtShareToken.selector);
-        _siloConfig.onPositionTransfer(from, to);
+        _siloConfig.onDebtTransfer(from, to);
     }
 
     /*
-    forge test -vv --mt test_onPositionTransfer_PositionExistInOtherSilo
+    forge test -vv --mt test_onDebtTransfer_PositionExistInOtherSilo
     */
-    function test_onPositionTransfer_PositionExistInOtherSilo() public {
+    function test_onDebtTransfer_PositionExistInOtherSilo() public {
         address debtShareToken0 = makeAddr("debtShareToken0");
         address debtShareToken1 = makeAddr("debtShareToken1");
         address from = makeAddr("from");
@@ -340,25 +340,25 @@ contract SiloConfigTest is Test {
 
         vm.prank(debtShareToken0);
         vm.expectRevert(ISiloConfig.PositionExistInOtherSilo.selector);
-        _siloConfig.onPositionTransfer(from, to);
+        _siloConfig.onDebtTransfer(from, to);
 
         vm.prank(debtShareToken0);
         // this will pass, because `from` has debt in 0
-        _siloConfig.onPositionTransfer(to, from);
+        _siloConfig.onDebtTransfer(to, from);
 
         vm.prank(debtShareToken1);
         // this will pass, because `to` has debt in 1
-        _siloConfig.onPositionTransfer(from, to);
+        _siloConfig.onDebtTransfer(from, to);
 
         vm.prank(debtShareToken1);
         vm.expectRevert(ISiloConfig.PositionExistInOtherSilo.selector);
-        _siloConfig.onPositionTransfer(to, from);
+        _siloConfig.onDebtTransfer(to, from);
     }
 
     /*
-    forge test -vv --mt test_onPositionTransfer_pass
+    forge test -vv --mt test_onDebtTransfer_pass
     */
-    function test_onPositionTransfer_pass() public {
+    function test_onDebtTransfer_pass() public {
         address debtShareToken0 = makeAddr("debtShareToken0");
         address from = makeAddr("from");
         address to = makeAddr("to");
@@ -372,7 +372,7 @@ contract SiloConfigTest is Test {
         _siloConfig.openPosition(to, !sameAsset);
 
         vm.prank(debtShareToken0);
-        _siloConfig.onPositionTransfer(from, to);
+        _siloConfig.onDebtTransfer(from, to);
 
         (
             ,, ISiloConfig.DebtInfo memory positionTo
