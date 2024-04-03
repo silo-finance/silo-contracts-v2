@@ -20,7 +20,7 @@ library PRBMathCommon {
             // may get very close to 2^256, which doesn't fit in int256.
             result = 0x80000000000000000000000000000000;
 
-            // Multiply the result by root(2, 2^-i) when the bit at position i is 1. None of the intermediary results overflows
+            // Multiply the result by root(2, 2^-i) when the bit at debt i is 1. None of the intermediary results overflows
             // because the initial result is 2^127 and all magic factors are less than 2^129.
             if (x & 0x80000000000000000000000000000000 > 0) result = (result * 0x16A09E667F3BCC908B2FB1366EA957D3E) >> 128;
             if (x & 0x40000000000000000000000000000000 > 0) result = (result * 0x1306FE0A31B7152DE8D5A46305C85EDED) >> 128;

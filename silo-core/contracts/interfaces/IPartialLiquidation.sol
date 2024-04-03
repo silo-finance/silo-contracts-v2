@@ -21,7 +21,7 @@ interface IPartialLiquidation {
     error InsufficientLiquidation();
     error LiquidationTooBig();
 
-    /// @notice Function to liquidate a non-healthy position collateral-wise
+    /// @notice Function to liquidate a non-healthy debt collateral-wise
     /// - The caller (liquidator) covers `debtToCover` amount of debt of the user getting liquidated, and receives
     ///   a amount of the `collateralAsset` plus a bonus to cover market risk
     /// @dev user can use this method to do self liquidation, it that case, check for LT requirements will be ignored

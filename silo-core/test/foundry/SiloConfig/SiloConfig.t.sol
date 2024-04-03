@@ -305,7 +305,7 @@ contract SiloConfigTest is Test {
             ,, ISiloConfig.DebtInfo memory positionTo
         ) = _siloConfig.getConfigs(silo, to, 0 /* always 0 for external calls */);
 
-        assertEq(abi.encode(positionFrom), abi.encode(positionTo), "position should be same if called for same silo");
+        assertEq(abi.encode(positionFrom), abi.encode(positionTo), "debt should be same if called for same silo");
     }
 
     /*
@@ -343,11 +343,11 @@ contract SiloConfigTest is Test {
         _siloConfig.onPositionTransfer(from, to);
 
         vm.prank(debtShareToken0);
-        // this will pass, because `from` has position in 0
+        // this will pass, because `from` has debt in 0
         _siloConfig.onPositionTransfer(to, from);
 
         vm.prank(debtShareToken1);
-        // this will pass, because `to` has position in 1
+        // this will pass, because `to` has debt in 1
         _siloConfig.onPositionTransfer(from, to);
 
         vm.prank(debtShareToken1);
@@ -379,7 +379,7 @@ contract SiloConfigTest is Test {
         ) = _siloConfig.getConfigs(makeAddr("silo1"), to, 0 /* always 0 for external calls */);
 
         assertTrue(positionTo.positionOpen, "positionOpen");
-        assertTrue(!positionTo.oneAssetPosition, "oneAssetPosition is not cloned when position already open");
+        assertTrue(!positionTo.oneAssetPosition, "oneAssetPosition is not cloned when debt already open");
         assertTrue(positionTo.debtInSilo0, "debtInSilo0");
         assertTrue(!positionTo.debtInThisSilo, "call is from silo1, so debt should not be in THIS silo");
     }
@@ -404,13 +404,13 @@ contract SiloConfigTest is Test {
         vm.prank(makeAddr("silo1"));
         _siloConfig.openPosition(borrower, oneAssetPosition);
 
-        vm.prank(makeAddr("silo0")); // other silo can close position
+        vm.prank(makeAddr("silo0")); // other silo can close debt
         _siloConfig.closePosition(borrower);
 
         ISiloConfig.DebtInfo memory positionEmpty;
         (
-            ,, ISiloConfig.DebtInfo memory position
+            ,, ISiloConfig.DebtInfo memory debt
         ) = _siloConfig.getConfigs(silo, borrower, 0 /* always 0 for external calls */);
-        assertEq(abi.encode(positionEmpty), abi.encode(position), "position should be deleted");
+        assertEq(abi.encode(positionEmpty), abi.encode(debt), "debt should be deleted");
     }
 }

@@ -487,7 +487,7 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         assert(debt1 >= debtShareBalance1);
     }
 
-    // Property: A user who's position is above the liquidation threshold cannot be liquidated by another user
+    // Property: A user who's debt is above the liquidation threshold cannot be liquidated by another user
     function cannotLiquidateUserUnderLt(uint8 actorIndex, bool receiveShares) public {
         Actor actor = _selectActor(actorIndex);
         Actor liquidator = _selectActor(actorIndex + 1);
@@ -512,7 +512,7 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         }
     }
 
-    // Property: A user who's position is above the liquidation threshold cannot be liquidated by another user
+    // Property: A user who's debt is above the liquidation threshold cannot be liquidated by another user
     function cannotLiquidateASolventUser(uint8 actorIndex, bool receiveShares) public {
         Actor actor = _selectActor(actorIndex);
         Actor liquidator = _selectActor(actorIndex + 1);
@@ -532,7 +532,7 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         }
     }
 
-    // Property: An insolvent user cannot prevent others from liquidating his position
+    // Property: An insolvent user cannot prevent others from liquidating his debt
     function cannotPreventInsolventUserFromBeingLiquidated(uint8 actorIndex, bool receiveShares) public {
         Actor actor = _selectActor(actorIndex);
         Actor liquidator = _selectActor(actorIndex + 1);

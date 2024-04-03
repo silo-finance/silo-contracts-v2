@@ -137,14 +137,14 @@ interface ISiloConfig {
     error PositionExistInOtherSilo();
     error PositionAlreadyOpen();
 
-    /// @dev can be called only by silo, it opens position for `_borrower`
+    /// @dev can be called only by silo, it opens debt for `_borrower`
     /// @param _borrower borrower address
-    /// @param _sameAsset TRUE if `_borrower` open position in the same token
+    /// @param _sameAsset TRUE if `_borrower` open debt in the same token
     function openPosition(address _borrower, bool _sameAsset)
         external
         returns (ConfigData memory, ConfigData memory, DebtInfo memory);
 
-    /// @dev should be called on debt transfer, it opens position if `_to` address don't have one
+    /// @dev should be called on debt transfer, it opens debt if `_to` address don't have one
     /// @param _sender sender address
     /// @param _recipient recipient address
     function onPositionTransfer(address _sender, address _recipient) external;

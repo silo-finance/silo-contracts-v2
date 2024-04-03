@@ -144,7 +144,7 @@ contract SiloConfig is ISiloConfig {
             _debtsInfo[_borrower] = debtInfo;
         }
 
-        return _getConfigs(msg.sender, 0 /* method does not mather when position open */, debtInfo);
+        return _getConfigs(msg.sender, 0 /* method does not mather when debt open */, debtInfo);
     }
 
     /// @inheritdoc ISiloConfig
@@ -154,7 +154,7 @@ contract SiloConfig is ISiloConfig {
         DebtInfo storage recipientPosition = _debtsInfo[_recipient];
 
         if (recipientPosition.positionOpen) {
-            // transferring debt not allowed, if _recipient has position in other silo
+            // transferring debt not allowed, if _recipient has debt in other silo
             _forbidCrossSiloTransfers(recipientPosition.debtInSilo0);
         } else {
             _forbidCrossSiloTransfers(_debtsInfo[_sender].debtInSilo0);

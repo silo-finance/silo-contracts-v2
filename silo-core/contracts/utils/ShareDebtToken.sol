@@ -7,7 +7,7 @@ import {SiloLensLib} from "../lib/SiloLensLib.sol";
 import {IShareToken, ShareToken, ISiloFactory, ISilo} from "./ShareToken.sol";
 
 /// @title ShareDebtToken
-/// @notice ERC20 compatible token representing debt position in Silo
+/// @notice ERC20 compatible token representing debt in Silo
 /// @dev It implements reversed approvals and checks solvency of recipient on transfer.
 ///
 /// It is assumed that there is no attack vector on taking someone else's debt because we don't see
@@ -110,7 +110,7 @@ contract ShareDebtToken is IERC20R, ShareToken {
             if (!silo.isSolvent(_recipient)) revert RecipientNotSolventAfterTransfer();
         }
 
-        // we need to close position on transfer and burn
+        // we need to close debt on transfer and burn
         if (_sender != address(0) && balanceOf(_sender) == 0) siloConfig.closePosition(_sender);
     }
 }
