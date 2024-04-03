@@ -138,7 +138,7 @@ contract SiloConfig is ISiloConfig {
 
         if (!debtInfo.positionOpen) {
             debtInfo.positionOpen = true;
-            debtInfo.oneAssetPosition = _sameAsset;
+            debtInfo.singleAsset = _sameAsset;
             debtInfo.debtInSilo0 = msg.sender == _SILO0;
 
             _debtsInfo[_borrower] = debtInfo;
@@ -155,12 +155,12 @@ contract SiloConfig is ISiloConfig {
 
         if (recipientPosition.positionOpen) {
             // transferring debt not allowed, if _recipient has debt in other silo
-            _forbidCrossSiloTransfers(recipientPosition.debtInSilo0);
+            _forbidDebtInTwoSilos(recipientPosition.debtInSilo0);
         } else {
-            _forbidCrossSiloTransfers(_debtsInfo[_sender].debtInSilo0);
+            _forbidDebtInTwoSilos(_debtsInfo[_sender].debtInSilo0);
             
             recipientPosition.positionOpen = true;
-            recipientPosition.oneAssetPosition = _debtsInfo[_sender].oneAssetPosition;
+            recipientPosition.singleAsset = _debtsInfo[_sender].singleAsset;
             recipientPosition.debtInSilo0 = msg.sender == _DEBT_SHARE_TOKEN0;
         }
     }
@@ -346,7 +346,7 @@ contract SiloConfig is ISiloConfig {
         if (_debtInfo.debtInSilo0) {
             _debtInfo.debtInThisSilo = callForSilo0;
 
-            if (_debtInfo.oneAssetPosition) {
+            if (_debtInfo.singleAsset) {
                 debt = collateral;
             } else {
                 (collateral, debt) = (debt, collateral);
@@ -354,7 +354,7 @@ contract SiloConfig is ISiloConfig {
         } else {
             _debtInfo.debtInThisSilo = !callForSilo0;
 
-            if (_debtInfo.oneAssetPosition) {
+            if (_debtInfo.singleAsset) {
                 collateral = debt;
             }
         }
@@ -362,7 +362,7 @@ contract SiloConfig is ISiloConfig {
         return (collateral, debt, _debtInfo);
     }
 
-    function _forbidCrossSiloTransfers(bool _debtInSilo0) internal view {
+    function _forbidDebtInTwoSilos(bool _debtInSilo0) internal view {
         if (msg.sender == _DEBT_SHARE_TOKEN0 && _debtInSilo0) return;
         if (msg.sender == _DEBT_SHARE_TOKEN1 && !_debtInSilo0) return;
 

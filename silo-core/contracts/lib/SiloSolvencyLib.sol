@@ -238,6 +238,6 @@ library SiloSolvencyLib {
     function depositWithoutDebt(ISiloConfig.DebtInfo memory _debtInfo) internal pure returns (bool) {
         if (!_debtInfo.positionOpen) return true;
 
-        return _debtInfo.debtInThisSilo ? !_debtInfo.oneAssetPosition : _debtInfo.oneAssetPosition;
+        return _debtInfo.debtInThisSilo ? !_debtInfo.singleAsset : _debtInfo.singleAsset;
     }
 }

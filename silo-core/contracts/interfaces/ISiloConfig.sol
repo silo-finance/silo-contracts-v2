@@ -4,7 +4,7 @@ pragma solidity >=0.5.0;
 interface ISiloConfig {
     struct DebtInfo {
         bool positionOpen;
-        bool oneAssetPosition;
+        bool singleAsset;
         bool debtInSilo0;
         bool debtInThisSilo; // at-hoc when getting configs
     }
