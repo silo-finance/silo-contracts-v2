@@ -66,17 +66,13 @@ library PartialLiquidationExecLib {
         returns (uint256 collateralToLiquidate, uint256 debtToRepay)
     {
         (
-            ISiloConfig.ConfigData memory debtConfig,
             ISiloConfig.ConfigData memory collateralConfig,
+            ISiloConfig.ConfigData memory debtConfig,
             ISiloConfig.PositionInfo memory positionInfo
-        ) = _siloWithDebt.config().getConfigs(address(_siloWithDebt), _borrower);
+        ) = _siloWithDebt.config().getConfigs(address(_siloWithDebt), _borrower, 0 /* method matters only on borrow */);
 
         if (!positionInfo.positionOpen || !positionInfo.debtInThisSilo) {
             return (0, 0);
-        }
-
-        if (positionInfo.oneTokenPosition) {
-            collateralConfig = debtConfig;
         }
 
         SiloSolvencyLib.LtvData memory ltvData = SiloSolvencyLib.getAssetsDataForLtvCalculations(

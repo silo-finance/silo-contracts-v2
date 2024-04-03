@@ -62,7 +62,7 @@ contract SiloFactoryCreateSiloTest is SiloLittleHelper, IntegrationTest {
         (
             ISiloConfig.ConfigData memory configData0,
             ISiloConfig.ConfigData memory configData1,
-        ) = siloConfig.getConfigs(address(silo0), address(0));
+        ) = siloConfig.getConfigs(address(silo0), address(0), 0 /* always 0 for external calls */);
         
         assertEq(configData0.daoFee, siloFactory.daoFee(), "configData0.daoFee");
         assertEq(configData0.deployerFee, initData.deployerFee, "configData0.deployerFee");

@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.21;
 
+import {console} from "forge-std/console.sol";
+
 import {SafeERC20Upgradeable} from "openzeppelin-contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
 import {IERC20Upgradeable} from "openzeppelin-contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import {MathUpgradeable} from "openzeppelin-contracts-upgradeable/utils/math/MathUpgradeable.sol";
@@ -72,7 +74,7 @@ library SiloERC4626Lib {
             ISiloConfig.ConfigData memory collateralConfig,
             ISiloConfig.ConfigData memory debtConfig,
             ISiloConfig.PositionInfo memory positionInfo
-        ) = _config.getConfigs(address(this), _owner);
+        ) = _config.getConfigs(address(this), _owner, 0 /* method matters only for borrow */);
 
         uint256 shareTokenTotalSupply;
         uint256 liquidity;
@@ -85,15 +87,7 @@ library SiloERC4626Lib {
             liquidity = _totalAssets;
         }
 
-        if (SiloSolvencyLib.collateralInThisSilo(positionInfo)) {
-            if (positionInfo.oneTokenPosition) {
-                debtConfig = collateralConfig;
-            }
-
-            return maxWithdrawWhenDebt(
-                collateralConfig, debtConfig, _owner, liquidity, shareTokenTotalSupply, _assetType, _totalAssets
-            );
-        } else {
+        if (SiloSolvencyLib.depositWithoutDebt(positionInfo)) {
             shares = _assetType == ISilo.AssetType.Protected
                 ? IShareToken(collateralConfig.protectedShareToken).balanceOf(_owner)
                 : IShareToken(collateralConfig.collateralShareToken).balanceOf(_owner);
@@ -122,6 +116,10 @@ library SiloERC4626Lib {
             );
 
             return (assets, shares);
+        } else {
+            return maxWithdrawWhenDebt(
+                collateralConfig, debtConfig, _owner, liquidity, shareTokenTotalSupply, _assetType, _totalAssets
+            );
         }
     }
 

@@ -6,17 +6,24 @@ import {CommonBase} from "forge-std/Base.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquidation.sol";
+import {SiloLens} from "silo-core/contracts/SiloLens.sol";
 
 import {MintableToken} from "./MintableToken.sol";
 import {SiloFixture, SiloConfigOverride} from "./fixtures/SiloFixture.sol";
 
 abstract contract SiloLittleHelper is CommonBase {
+    SiloLens immutable siloLens;
+
     MintableToken token0;
     MintableToken token1;
 
     ISilo silo0;
     ISilo silo1;
     IPartialLiquidation partialLiquidation;
+
+    constructor() {
+        siloLens = new SiloLens();
+    }
 
     function __init(MintableToken _token0, MintableToken _token1, ISilo _silo0, ISilo _silo1) internal {
         token0 = _token0;

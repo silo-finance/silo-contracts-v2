@@ -113,7 +113,9 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
         uint256 debtToCover = 1e18;
         bool receiveSToken;
 
-        (,, ISiloConfig.PositionInfo memory positionInto) = siloConfig.getConfigs(address(silo0), userWithoutDebt);
+        (
+            ,, ISiloConfig.PositionInfo memory positionInto
+        ) = siloConfig.getConfigs(address(silo0), userWithoutDebt, 0 /* always 0 for external calls */);
 
         assertTrue(!positionInto.positionOpen, "we need user without position for this test");
 
@@ -131,7 +133,9 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
         uint256 debtToCover = 1e18;
         bool receiveSToken;
 
-        (,, ISiloConfig.PositionInfo memory positionInto) = siloConfig.getConfigs(address(silo0), BORROWER);
+        (
+            ,, ISiloConfig.PositionInfo memory positionInto
+        ) = siloConfig.getConfigs(address(silo0), BORROWER, 0 /* always 0 for external calls */);
 
         assertTrue(positionInto.positionOpen, "we need user with position for this test");
         assertTrue(positionInto.debtInSilo0, "we need debt in silo0");
@@ -170,7 +174,9 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
     function test_liquidationCall_partial_1token() public {
         uint256 debtToCover = 1e5;
 
-        (ISiloConfig.ConfigData memory debtConfig,,) = siloConfig.getConfigs(address(silo0), address(0));
+        (
+            , ISiloConfig.ConfigData memory debtConfig,
+        ) = siloConfig.getConfigs(address(silo0), address(0), 0 /* always 0 for external calls */);
 
         (, uint64 interestRateTimestamp0) = silo1.siloData();
         (, uint64 interestRateTimestamp1) = silo0.siloData();
@@ -305,9 +311,9 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
         bool receiveSToken;
 
         (
-            ISiloConfig.ConfigData memory debtConfig,
             ISiloConfig.ConfigData memory collateralConfig,
-        ) = siloConfig.getConfigs(address(silo0), address(0));
+            ISiloConfig.ConfigData memory debtConfig,
+        ) = siloConfig.getConfigs(address(silo0), address(0), 0 /* always 0 for external calls */);
 
         (, uint64 interestRateTimestamp0) = silo0.siloData();
         (, uint64 interestRateTimestamp1) = silo0.siloData();
@@ -399,9 +405,9 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
         bool receiveSToken;
 
         (
-            ISiloConfig.ConfigData memory debtConfig,
             ISiloConfig.ConfigData memory collateralConfig,
-        ) = siloConfig.getConfigs(address(silo0), address(0));
+            ISiloConfig.ConfigData memory debtConfig,
+        ) = siloConfig.getConfigs(address(silo0), address(0), 0 /* always 0 for external calls */);
 
         (, uint64 interestRateTimestamp0) = silo0.siloData();
         (, uint64 interestRateTimestamp1) = silo0.siloData();

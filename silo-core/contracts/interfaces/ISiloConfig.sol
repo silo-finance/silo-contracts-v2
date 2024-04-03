@@ -140,7 +140,9 @@ interface ISiloConfig {
     /// @dev can be called only by silo, it opens position for `_borrower`
     /// @param _borrower borrower address
     /// @param _sameToken TRUE if `_borrower` open position in the same token
-    function openPosition(address _borrower, bool _sameToken) external;
+    function openPosition(address _borrower, bool _sameToken)
+        external
+        returns (ConfigData memory, ConfigData memory, PositionInfo memory);
 
     /// @dev should be called on debt transfer, it opens position if `_to` address don't have one
     /// @param _sender sender address
@@ -169,10 +171,14 @@ interface ISiloConfig {
     /// @dev This function reverts for incorrect silo address input.
     /// @param _silo The address of the silo for which configuration data is being retrieved. Config for this silo will
     /// be at index 0.
-    /// @return configData0 The configuration data for the specified silo.
-    /// @return configData1 The configuration data for the other silo.
-    function getConfigs(address _silo, address borrower)
-        external view returns (ConfigData memory, ConfigData memory, PositionInfo memory);
+    /// @param borrower borrower address for which `positionInfo` will be returned
+    /// @param _method always zero for external usage
+    /// @return collateralConfig The configuration data for collateral silo.
+    /// @return debtConfig The configuration data for debt silo.
+    function getConfigs(address _silo, address borrower, uint256 _method)
+        external
+        view
+        returns (ConfigData memory collateralConfig, ConfigData memory debtConfig, PositionInfo memory positionInfo);
 
     /// @notice Retrieves configuration data for a specific silo
     /// @dev This function reverts for incorrect silo address input.

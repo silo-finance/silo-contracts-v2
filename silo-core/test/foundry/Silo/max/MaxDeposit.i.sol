@@ -80,7 +80,16 @@ contract MaxDepositTest is SiloLittleHelper, Test {
     forge test -vv --ffi --mt test_maxDeposit_withDeposit_fuzz
     */
     /// forge-config: core-test.fuzz.runs = 1000
-    function test_maxDeposit_withDeposit_fuzz(uint128 _initialDeposit) public {
+    function test_maxDeposit_withDeposit_1token_fuzz(uint128 _initialDeposit) public {
+        _maxDeposit_withDeposit(_initialDeposit, true);
+    }
+
+    /// forge-config: core-test.fuzz.runs = 1000
+    function test_maxDeposit_withDeposit_2tokena_fuzz(uint128 _initialDeposit) public {
+        _maxDeposit_withDeposit(_initialDeposit, false);
+    }
+
+    function _maxDeposit_withDeposit(uint128 _initialDeposit, bool _sameToken) private {
         vm.assume(_initialDeposit > 0);
 
         _depositForBorrow(_initialDeposit, depositor);
@@ -95,7 +104,7 @@ contract MaxDepositTest is SiloLittleHelper, Test {
 
         _depositForBorrow(maxDeposit, depositor);
 
-        _assertWeCanBorrowAfterMaxDeposit(_initialDeposit + maxDeposit, borrower);
+        _assertWeCanBorrowAfterMaxDeposit(_initialDeposit + maxDeposit, borrower, _sameToken);
     }
 
     /*
@@ -105,7 +114,7 @@ contract MaxDepositTest is SiloLittleHelper, Test {
     function test_maxDeposit_withInterest_1token_fuzz(
         uint256 _initialDeposit
     ) public {
-        // uint256 _initialDeposit = 1020847100762815387329;
+         // uint256 _initialDeposit = 17100;
         _maxDeposit_withInterest_fuzz(_initialDeposit, true);
     }
 
@@ -123,8 +132,13 @@ contract MaxDepositTest is SiloLittleHelper, Test {
         uint256 toBorrow = _initialDeposit / 3;
 
         _depositForBorrow(_initialDeposit, depositor);
+        emit log_named_decimal_uint("depositor deposits", _initialDeposit, 18);
+
         _depositCollateral(toBorrow * 1e18, borrower, _sameToken);
+        emit log_named_decimal_uint("borrower deposits", toBorrow * 1e18, 18);
+
         _borrow(toBorrow, borrower, _sameToken);
+        emit log_named_decimal_uint("borrower borrow", toBorrow, 18);
 
         vm.warp(block.timestamp + 100 days);
 
@@ -148,7 +162,7 @@ contract MaxDepositTest is SiloLittleHelper, Test {
 
         _depositForBorrow(maxDeposit, depositor);
 
-        _assertWeCanBorrowAfterMaxDeposit(maxDeposit, borrower);
+        _assertWeCanBorrowAfterMaxDeposit(maxDeposit, borrower, _sameToken);
     }
 
     /*
@@ -204,15 +218,19 @@ contract MaxDepositTest is SiloLittleHelper, Test {
 
         _depositForBorrow(maxDeposit, depositor);
 
-        _assertWeCanBorrowAfterMaxDeposit(maxDeposit, borrower);
+        _assertWeCanBorrowAfterMaxDeposit(maxDeposit, borrower, _sameToken);
     }
 
     // we check on silo1
-    function _assertWeCanBorrowAfterMaxDeposit(uint256 _assets, address _borrower) internal {
+    function _assertWeCanBorrowAfterMaxDeposit(uint256 _assets, address _borrower, bool _sameToken) internal {
         uint256 collateral = _REAL_ASSETS_LIMIT * 1e18;
         emit log_named_decimal_uint("[_assertWeCanBorrowAfterMaxDeposit] collateral", collateral, 18);
-        bool sameToken;
-        _depositCollateral(collateral, _borrower, sameToken);
-        _borrow(_assets, _borrower, sameToken);
+        _depositCollateral(collateral, _borrower, _sameToken);
+        emit log_named_decimal_uint("[_assertWeCanBorrowAfterMaxDeposit] _assets", _assets, 18);
+        emit log_named_decimal_uint("[_assertWeCanBorrowAfterMaxDeposit] LTV preview", _assets * 1e18 / collateral, 16);
+        emit log_named_decimal_uint("[_assertWeCanBorrowAfterMaxDeposit] LTV0", siloLens.getLtv(silo0, _borrower), 16);
+        emit log_named_decimal_uint("[_assertWeCanBorrowAfterMaxDeposit] LTV1", siloLens.getLtv(silo1, _borrower), 16);
+
+        _borrow(_assets, _borrower, _sameToken);
     }
 }

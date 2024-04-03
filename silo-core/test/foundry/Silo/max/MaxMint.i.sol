@@ -72,7 +72,16 @@ contract MaxMintTest is SiloLittleHelper, Test {
     forge test -vv --ffi --mt test_maxMint_withDeposit_fuzz
     */
     /// forge-config: core-test.fuzz.runs = 1000
-    function test_maxMint_withDeposit_fuzz(uint128 _initialDeposit) public {
+    function test_maxMint_withDeposit_1token_fuzz(uint128 _initialDeposit) public {
+        _maxMint_withDeposit(_initialDeposit, true);
+    }
+
+    /// forge-config: core-test.fuzz.runs = 1000
+    function test_maxMint_withDeposit_2tokens_fuzz(uint128 _initialDeposit) public {
+        _maxMint_withDeposit(_initialDeposit, false);
+    }
+
+    function _maxMint_withDeposit(uint128 _initialDeposit, bool _sameToken) private {
         vm.assume(_initialDeposit > 0);
 
         _depositForBorrow(_initialDeposit, depositor);
@@ -87,7 +96,7 @@ contract MaxMintTest is SiloLittleHelper, Test {
 
         uint256 minted = _mintForBorrow(maxMint, maxMint, depositor);
 
-        _assertWeCanBorrowAfterMaxDeposit(_initialDeposit + minted, borrower);
+        _assertWeCanBorrowAfterMaxDeposit(_initialDeposit + minted, borrower, _sameToken);
     }
 
     /*
@@ -128,7 +137,7 @@ contract MaxMintTest is SiloLittleHelper, Test {
         uint256 minted = _mintForBorrow(maxMint, maxMint, depositor);
         token1.setOnDemand(false);
 
-        _assertWeCanBorrowAfterMaxDeposit(minted, borrower);
+        _assertWeCanBorrowAfterMaxDeposit(minted, borrower, _sameToken);
     }
 
     /*
@@ -182,16 +191,15 @@ contract MaxMintTest is SiloLittleHelper, Test {
         _mintForBorrow(maxMint, maxMint, depositor);
         token1.setOnDemand(false);
 
-        _assertWeCanBorrowAfterMaxDeposit(maxMint, borrower);
+        _assertWeCanBorrowAfterMaxDeposit(maxMint, borrower, _sameToken);
     }
 
     // we check on silo1
-    function _assertWeCanBorrowAfterMaxDeposit(uint256 _assets, address _borrower) internal {
+    function _assertWeCanBorrowAfterMaxDeposit(uint256 _assets, address _borrower, bool _sameToken) internal {
         uint256 collateral = _REAL_ASSETS_LIMIT * 1e18;
         emit log_named_decimal_uint("[_assertWeCanBorrowAfterMaxDeposit] collateral", collateral, 18);
-        bool sameToken;
 
-        _deposit(collateral, _borrower);
-        _borrow(_assets, _borrower, sameToken);
+        _depositCollateral(collateral, _borrower, _sameToken);
+        _borrow(_assets, _borrower, _sameToken);
     }
 }

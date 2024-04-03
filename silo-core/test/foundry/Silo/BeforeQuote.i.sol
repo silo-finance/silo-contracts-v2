@@ -51,7 +51,7 @@ contract BeforeQuoteTest is SiloLittleHelper, Test {
         SiloFixture siloFixture = new SiloFixture();
         (, silo0, silo1,,, partialLiquidation) = siloFixture.deploy_local(overrides);
 
-        (cfg0, cfg1,) = silo0.config().getConfigs(address(silo0), address(0));
+        (cfg0, cfg1,) = silo0.config().getConfigs(address(silo0), address(0), 0 /* always 0 for external calls */);
 
         assertTrue(cfg0.callBeforeQuote, "beforeQuote0 is required");
         assertFalse(cfg1.callBeforeQuote, "beforeQuote1 is NOT required");

@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.21;
 
+import {console} from "forge-std/console.sol";
+
 import {MathUpgradeable} from "openzeppelin-contracts-upgradeable/utils/math/MathUpgradeable.sol";
 
 import {ISiloOracle} from "../interfaces/ISiloOracle.sol";
@@ -37,18 +39,6 @@ library SiloSolvencyLib {
     ) internal view returns (bool) {
         if (!_positionInfo.positionOpen) return true;
 
-        if (SiloSolvencyLib.collateralInThisSilo(_positionInfo)) {
-            if (_positionInfo.oneTokenPosition) {
-                _debtConfig = _collateralConfig;
-            }
-        } else {
-            if (_positionInfo.oneTokenPosition) {
-                _collateralConfig = _debtConfig;
-            } else {
-                (_collateralConfig, _debtConfig) = (_debtConfig, _collateralConfig);
-            }
-        }
-
         uint256 ltv = getLtv(
             _collateralConfig,
             _debtConfig,
@@ -84,6 +74,9 @@ library SiloSolvencyLib {
             _accrueInMemory,
             debtShareBalance
         );
+
+        console.log("[isBelowMaxLtv] ltv", ltv);
+        console.log("[isBelowMaxLtv] _collateralConfig.maxLtv", _collateralConfig.maxLtv);
 
         return ltv <= _collateralConfig.maxLtv;
     }
@@ -202,6 +195,9 @@ library SiloSolvencyLib {
             sumOfBorrowerCollateralValue, totalBorrowerDebtValue
         ) = getPositionValues(_ltvData, _collateralToken, _debtToken);
 
+        console.log("[calculateLtv] sumOfBorrowerCollateralValue", sumOfBorrowerCollateralValue);
+        console.log("[calculateLtv] totalBorrowerDebtValue", totalBorrowerDebtValue);
+
         if (sumOfBorrowerCollateralValue == 0 && totalBorrowerDebtValue == 0) {
             return (0, 0, 0);
         } else if (sumOfBorrowerCollateralValue == 0) {
@@ -246,12 +242,10 @@ library SiloSolvencyLib {
         }
     }
 
-    /// @return TRUE when current silo has collateral attached to debt (in this case we need to run solvency math),
-    /// FALSE otherwise
-    function collateralInThisSilo(ISiloConfig.PositionInfo memory _positionInfo) internal pure returns (bool) {
-        if (!_positionInfo.positionOpen) return false;
+    /// @return TRUE when current silo deposit is NOT attached to debt, FALSE otherwise
+    function depositWithoutDebt(ISiloConfig.PositionInfo memory _positionInfo) internal pure returns (bool) {
+        if (!_positionInfo.positionOpen) return true;
 
-        if (_positionInfo.debtInThisSilo) return _positionInfo.oneTokenPosition;
-        return !_positionInfo.oneTokenPosition;
+        return _positionInfo.debtInThisSilo ? !_positionInfo.oneTokenPosition : _positionInfo.oneTokenPosition;
     }
 }

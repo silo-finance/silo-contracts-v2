@@ -18,11 +18,9 @@ contract GettersTest is SiloLittleHelper, Test {
     using SiloLensLib for ISilo;
 
     ISiloConfig siloConfig;
-    SiloLens siloLens;
 
     function setUp() public {
         siloConfig = _setUpLocalFixture();
-        siloLens = new SiloLens();
     }
 
     /*

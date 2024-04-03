@@ -9,6 +9,9 @@ import {ISiloConfig} from "./interfaces/ISiloConfig.sol";
 /// @dev Immutable contract is more expensive to deploy than minimal proxy however it provides nearly 10x cheapper
 /// data access using immutable variables.
 contract SiloConfig is ISiloConfig {
+    uint256 private constant _METHOD_BORROW_SAME_TOKEN = 1;
+    uint256 private constant _METHOD_BORROW_TWO_TOKENS = 2;
+
     uint256 public immutable SILO_ID;
 
     uint256 private immutable _DAO_FEE;
@@ -66,7 +69,7 @@ contract SiloConfig is ISiloConfig {
     bool private immutable _CALL_BEFORE_QUOTE1;
 
     // TODO do we need events for this? this is internal state only
-    mapping (address borrower => PositionInfo positionInfo) internal _positionInfo;
+    mapping (address borrower => PositionInfo positionInfo) internal _positionsInfo;
 
     /// @param _siloId ID of this pool assigned by factory
     /// @param _configData0 silo configuration data for token0
@@ -125,32 +128,39 @@ contract SiloConfig is ISiloConfig {
     }
 
     /// @inheritdoc ISiloConfig
-    function openPosition(address _borrower, bool _sameToken) external {
+    function openPosition(address _borrower, bool _sameToken)
+        external
+        returns (ConfigData memory, ConfigData memory, PositionInfo memory)
+    {
         if (msg.sender != _SILO0 && msg.sender != _SILO1) revert WrongSilo();
 
-        PositionInfo storage positionInfo = _positionInfo[_borrower];
+        PositionInfo memory positionInfo = _positionsInfo[_borrower];
 
-        if (positionInfo.positionOpen) revert PositionAlreadyOpen();
+        if (!positionInfo.positionOpen) {
+            positionInfo.positionOpen = true;
+            positionInfo.oneTokenPosition = _sameToken;
+            positionInfo.debtInSilo0 = msg.sender == _SILO0;
 
-        positionInfo.positionOpen = true;
-        positionInfo.oneTokenPosition = _sameToken;
-        positionInfo.debtInSilo0 = msg.sender == _SILO0;
+            _positionsInfo[_borrower] = positionInfo;
+        }
+
+        return _getConfigs(msg.sender, 0 /* method does not mather when position open */, positionInfo);
     }
 
     /// @inheritdoc ISiloConfig
     function onPositionTransfer(address _sender, address _recipient) external {
         if (msg.sender != _DEBT_SHARE_TOKEN0 && msg.sender != _DEBT_SHARE_TOKEN1) revert OnlyDebtShareToken();
 
-        PositionInfo storage recipientPosition = _positionInfo[_recipient];
+        PositionInfo storage recipientPosition = _positionsInfo[_recipient];
 
         if (recipientPosition.positionOpen) {
             // transferring debt not allowed, if _recipient has position in other silo
             _forbidCrossSiloTransfers(recipientPosition.debtInSilo0);
         } else {
-            _forbidCrossSiloTransfers(_positionInfo[_sender].debtInSilo0);
+            _forbidCrossSiloTransfers(_positionsInfo[_sender].debtInSilo0);
             
             recipientPosition.positionOpen = true;
-            recipientPosition.oneTokenPosition = _positionInfo[_sender].oneTokenPosition;
+            recipientPosition.oneTokenPosition = _positionsInfo[_sender].oneTokenPosition;
             recipientPosition.debtInSilo0 = msg.sender == _DEBT_SHARE_TOKEN0;
         }
     }
@@ -161,7 +171,7 @@ contract SiloConfig is ISiloConfig {
             msg.sender != _DEBT_SHARE_TOKEN0 && msg.sender != _DEBT_SHARE_TOKEN1
         ) revert WrongSilo();
 
-        delete _positionInfo[_borrower];
+        delete _positionsInfo[_borrower];
     }
 
     /// @inheritdoc ISiloConfig
@@ -196,63 +206,13 @@ contract SiloConfig is ISiloConfig {
     }
 
     /// @inheritdoc ISiloConfig
-    function getConfigs(address _silo, address _borrower) // solhint-disable-line function-max-lines
+    function getConfigs(address _silo, address _borrower, uint256 _method) // solhint-disable-line function-max-lines
         external
         view
         virtual
-        returns (ConfigData memory _siloConfig, ConfigData memory _otherSiloConfig, PositionInfo memory positionInfo)
+        returns (ConfigData memory collateralConfig, ConfigData memory debtConfig, PositionInfo memory positionInfo)
     {
-        bool callFromSilo0 = _silo == _SILO0;
-        if (!callFromSilo0 && _silo != _SILO1) revert WrongSilo();
-
-        _siloConfig = ConfigData({
-            daoFee: _DAO_FEE,
-            deployerFee: _DEPLOYER_FEE,
-            silo: _SILO0,
-            otherSilo: _SILO1,
-            token: _TOKEN0,
-            protectedShareToken: _PROTECTED_COLLATERAL_SHARE_TOKEN0,
-            collateralShareToken: _COLLATERAL_SHARE_TOKEN0,
-            debtShareToken: _DEBT_SHARE_TOKEN0,
-            solvencyOracle: _SOLVENCY_ORACLE0,
-            maxLtvOracle: _MAX_LTV_ORACLE0,
-            interestRateModel: _INTEREST_RATE_MODEL0,
-            maxLtv: _MAX_LTV0,
-            lt: _LT0,
-            liquidationFee: _LIQUIDATION_FEE0,
-            flashloanFee: _FLASHLOAN_FEE0,
-            liquidationModule: _LIQUIDATION_MODULE,
-            callBeforeQuote: _CALL_BEFORE_QUOTE0
-        });
-
-        _otherSiloConfig = ConfigData({
-            daoFee: _DAO_FEE,
-            deployerFee: _DEPLOYER_FEE,
-            silo: _SILO1,
-            otherSilo: _SILO0,
-            token: _TOKEN1,
-            protectedShareToken: _PROTECTED_COLLATERAL_SHARE_TOKEN1,
-            collateralShareToken: _COLLATERAL_SHARE_TOKEN1,
-            debtShareToken: _DEBT_SHARE_TOKEN1,
-            solvencyOracle: _SOLVENCY_ORACLE1,
-            maxLtvOracle: _MAX_LTV_ORACLE1,
-            interestRateModel: _INTEREST_RATE_MODEL1,
-            maxLtv: _MAX_LTV1,
-            lt: _LT1,
-            liquidationFee: _LIQUIDATION_FEE1,
-            flashloanFee: _FLASHLOAN_FEE1,
-            liquidationModule: _LIQUIDATION_MODULE,
-            callBeforeQuote: _CALL_BEFORE_QUOTE1
-        });
-
-        positionInfo = _positionInfo[_borrower];
-
-        if (callFromSilo0) {
-            positionInfo.debtInThisSilo = positionInfo.positionOpen && positionInfo.debtInSilo0;
-        } else {
-            positionInfo.debtInThisSilo = positionInfo.positionOpen && !positionInfo.debtInSilo0;
-            (_siloConfig, _otherSiloConfig) = (_otherSiloConfig, _siloConfig);
-        }
+        return _getConfigs(_silo, _method, _positionsInfo[_borrower]);
     }
 
     /// @inheritdoc ISiloConfig
@@ -322,7 +282,86 @@ contract SiloConfig is ISiloConfig {
             revert WrongSilo();
         }
     }
-    
+
+    // solhint-disable-next-line function-max-lines
+    function _getConfigs(address _silo, uint256 _method, PositionInfo memory _positionInfo)
+        internal
+        view
+        virtual
+        returns (ConfigData memory collateral, ConfigData memory debt, PositionInfo memory)
+    {
+        bool callForSilo0 = _silo == _SILO0;
+        if (!callForSilo0 && _silo != _SILO1) revert WrongSilo();
+
+        collateral = ConfigData({
+            daoFee: _DAO_FEE,
+            deployerFee: _DEPLOYER_FEE,
+            silo: _SILO0,
+            otherSilo: _SILO1,
+            token: _TOKEN0,
+            protectedShareToken: _PROTECTED_COLLATERAL_SHARE_TOKEN0,
+            collateralShareToken: _COLLATERAL_SHARE_TOKEN0,
+            debtShareToken: _DEBT_SHARE_TOKEN0,
+            solvencyOracle: _SOLVENCY_ORACLE0,
+            maxLtvOracle: _MAX_LTV_ORACLE0,
+            interestRateModel: _INTEREST_RATE_MODEL0,
+            maxLtv: _MAX_LTV0,
+            lt: _LT0,
+            liquidationFee: _LIQUIDATION_FEE0,
+            flashloanFee: _FLASHLOAN_FEE0,
+            liquidationModule: _LIQUIDATION_MODULE,
+            callBeforeQuote: _CALL_BEFORE_QUOTE0
+        });
+
+        debt = ConfigData({
+            daoFee: _DAO_FEE,
+            deployerFee: _DEPLOYER_FEE,
+            silo: _SILO1,
+            otherSilo: _SILO0,
+            token: _TOKEN1,
+            protectedShareToken: _PROTECTED_COLLATERAL_SHARE_TOKEN1,
+            collateralShareToken: _COLLATERAL_SHARE_TOKEN1,
+            debtShareToken: _DEBT_SHARE_TOKEN1,
+            solvencyOracle: _SOLVENCY_ORACLE1,
+            maxLtvOracle: _MAX_LTV_ORACLE1,
+            interestRateModel: _INTEREST_RATE_MODEL1,
+            maxLtv: _MAX_LTV1,
+            lt: _LT1,
+            liquidationFee: _LIQUIDATION_FEE1,
+            flashloanFee: _FLASHLOAN_FEE1,
+            liquidationModule: _LIQUIDATION_MODULE,
+            callBeforeQuote: _CALL_BEFORE_QUOTE1
+        });
+
+        if (!_positionInfo.positionOpen) {
+            if (_method == _METHOD_BORROW_SAME_TOKEN) {
+                return callForSilo0 ? (collateral, collateral, _positionInfo) : (debt, debt, _positionInfo);
+            } else if (_method == _METHOD_BORROW_TWO_TOKENS) {
+                return callForSilo0 ? (debt, collateral, _positionInfo) : (collateral, debt, _positionInfo);
+            } else {
+                return callForSilo0 ? (collateral, debt, _positionInfo) : (debt, collateral, _positionInfo);
+            }
+        }
+
+        if (_positionInfo.debtInSilo0) {
+            _positionInfo.debtInThisSilo = callForSilo0;
+
+            if (_positionInfo.oneTokenPosition) {
+                debt = collateral;
+            } else {
+                (collateral, debt) = (debt, collateral);
+            }
+        } else {
+            _positionInfo.debtInThisSilo = !callForSilo0;
+
+            if (_positionInfo.oneTokenPosition) {
+                collateral = debt;
+            }
+        }
+
+        return (collateral, debt, _positionInfo);
+    }
+
     function _forbidCrossSiloTransfers(bool _debtInSilo0) internal view {
         if (msg.sender == _DEBT_SHARE_TOKEN0 && _debtInSilo0) return;
         if (msg.sender == _DEBT_SHARE_TOKEN1 && !_debtInSilo0) return;
