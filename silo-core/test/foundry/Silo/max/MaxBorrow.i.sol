@@ -223,6 +223,7 @@ contract MaxBorrowTest is SiloLittleHelper, Test {
 
     /*
     forge test -vv --ffi --mt test_maxBorrow_maxOut
+    // this is test from echidna findings
     */
     function test_maxBorrow_maxOut_2tokens() public {
         _maxBorrow_maxOut(TWO_ASSETS);
@@ -238,20 +239,16 @@ contract MaxBorrowTest is SiloLittleHelper, Test {
         address user2 = makeAddr("user2");
 
         emit log("User 1 deposits 54901887191424375183106916902 assets into Silo 2");
-        _sameAsset
-            ? _deposit(54901887191424375183106916902, user1)
-            : _depositForBorrow(54901887191424375183106916902, user1);
+        _depositCollateral(54901887191424375183106916902, user1, !_sameAsset);
 
         emit log("User 0 deposits 37778931862957161709569 assets into Silo 1");
         _deposit(37778931862957161709569, user0);
 
         emit log("User 2 mints 57553484963063775982514231325194206610732636 shares from Silo 2");
 
-        token1.setOnDemand(true);
-        _sameAsset
-            ? _mint(1, 57553484963063775982514231325194206610732636, user2)
-            : _mintForBorrow(1, 57553484963063775982514231325194206610732636, user2);
-        token1.setOnDemand(false);
+        _sameAsset ? token0.setOnDemand(true) : token1.setOnDemand(true);
+        _mintCollateral(1, 57553484963063775982514231325194206610732636, user2, !_sameAsset);
+        _sameAsset ? token0.setOnDemand(false) : token1.setOnDemand(false);
 
         emit log_named_uint("User 1 max borrow on silo1", silo0.maxBorrow(user1, _sameAsset));
         emit log_named_uint("User 1 max borrow on silo2", silo1.maxBorrow(user1, _sameAsset));
