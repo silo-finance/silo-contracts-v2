@@ -266,6 +266,7 @@ interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
     /// @param _assets Amount of assets to borrow
     /// @param _receiver Address receiving the borrowed assets
     /// @param _borrower Address responsible for the borrowed assets
+    /// @param _sameAsset TRUE if user wants to borrow and collateralize the same asset. FALSE otherwise.
     /// @return shares Amount of shares equivalent to the borrowed assets
     function borrow(uint256 _assets, address _receiver, address _borrower, bool _sameAsset)
         external returns (uint256 shares);
