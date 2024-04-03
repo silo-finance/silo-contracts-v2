@@ -106,9 +106,9 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --ffi --mt test_liquidationCall_revert_noPosition
+    forge test -vv --ffi --mt test_liquidationCall_revert_noDebt
     */
-    function test_liquidationCall_revert_noPosition_1token() public {
+    function test_liquidationCall_revert_noDebt_1token() public {
         address userWithoutDebt = address(1);
         uint256 debtToCover = 1e18;
         bool receiveSToken;

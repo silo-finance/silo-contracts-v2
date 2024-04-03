@@ -134,8 +134,7 @@ interface ISiloConfig {
 
     error WrongSilo();
     error OnlyDebtShareToken();
-    error PositionExistInOtherSilo();
-    error PositionAlreadyOpen();
+    error DebtExistInOtherSilo();
 
     /// @dev can be called only by silo, it opens debt for `_borrower`
     /// @param _borrower borrower address

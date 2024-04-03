@@ -201,7 +201,7 @@ library SiloSolvencyLib {
         }
     }
 
-    /// @notice Computes the value of collateral and debt positions based on given LTV data and asset addresses
+    /// @notice Computes the value of collateral and debt based on given LTV data and asset addresses
     /// @param _ltvData Data structure containing the assets data required for LTV calculations
     /// @param _collateralAsset Address of the collateral asset
     /// @param _debtAsset Address of the debt asset
