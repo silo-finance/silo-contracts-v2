@@ -4,7 +4,7 @@ pragma solidity >=0.5.0;
 interface ISiloConfig {
     struct PositionInfo {
         bool positionOpen;
-        bool oneTokenPosition;
+        bool oneAssetPosition;
         bool debtInSilo0;
         bool debtInThisSilo; // at-hoc when getting configs
     }
@@ -139,8 +139,8 @@ interface ISiloConfig {
 
     /// @dev can be called only by silo, it opens position for `_borrower`
     /// @param _borrower borrower address
-    /// @param _sameToken TRUE if `_borrower` open position in the same token
-    function openPosition(address _borrower, bool _sameToken)
+    /// @param _sameAsset TRUE if `_borrower` open position in the same token
+    function openPosition(address _borrower, bool _sameAsset)
         external
         returns (ConfigData memory, ConfigData memory, PositionInfo memory);
 

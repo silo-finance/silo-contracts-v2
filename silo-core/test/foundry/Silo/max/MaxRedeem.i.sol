@@ -67,10 +67,10 @@ contract MaxRedeemTest is MaxWithdrawCommon {
         _maxRedeem_whenBorrow(_collateral, _toBorrow, false);
     }
 
-    function _maxRedeem_whenBorrow(uint128 _collateral, uint128 _toBorrow, bool _sameToken) private {
-        _createDebtOnSilo1(_collateral, _toBorrow, _sameToken);
+    function _maxRedeem_whenBorrow(uint128 _collateral, uint128 _toBorrow, bool _sameAsset) private {
+        _createDebtOnSilo1(_collateral, _toBorrow, _sameAsset);
 
-        ISilo collateralSilo = _sameToken ? silo1 : silo0;
+        ISilo collateralSilo = _sameAsset ? silo1 : silo0;
         uint256 maxRedeem = collateralSilo.maxRedeem(borrower);
 
         (, address collateralShareToken, ) = collateralSilo.config().getShareTokens(address(collateralSilo));
@@ -78,7 +78,7 @@ contract MaxRedeemTest is MaxWithdrawCommon {
 
         emit log_named_decimal_uint("LTV", collateralSilo.getLtv(borrower), 16);
 
-        _assertBorrowerCanNotRedeemMore(maxRedeem, 2, _sameToken);
+        _assertBorrowerCanNotRedeemMore(maxRedeem, 2, _sameAsset);
     }
 
     /*
@@ -100,12 +100,12 @@ contract MaxRedeemTest is MaxWithdrawCommon {
         _maxRedeem_whenInterest(_collateral, _toBorrow, false);
     }
 
-    function _maxRedeem_whenInterest(uint128 _collateral, uint128 _toBorrow, bool _sameToken) private {
-        _createDebtOnSilo1(_collateral, _toBorrow, _sameToken);
+    function _maxRedeem_whenInterest(uint128 _collateral, uint128 _toBorrow, bool _sameAsset) private {
+        _createDebtOnSilo1(_collateral, _toBorrow, _sameAsset);
 
         vm.warp(block.timestamp + 100 days);
 
-        ISilo collateralSilo = _sameToken ? silo1 : silo0;
+        ISilo collateralSilo = _sameAsset ? silo1 : silo0;
 
         uint256 maxRedeem = collateralSilo.maxRedeem(borrower);
         (, address collateralShareToken, ) = collateralSilo.config().getShareTokens(address(collateralSilo));
@@ -113,7 +113,7 @@ contract MaxRedeemTest is MaxWithdrawCommon {
 
         emit log_named_decimal_uint("LTV", collateralSilo.getLtv(borrower), 16);
 
-        _assertBorrowerCanNotRedeemMore(maxRedeem, _sameToken ? 3 : 2, _sameToken);
+        _assertBorrowerCanNotRedeemMore(maxRedeem, _sameAsset ? 3 : 2, _sameAsset);
     }
 
     /*
@@ -137,13 +137,13 @@ contract MaxRedeemTest is MaxWithdrawCommon {
         _maxRedeem_bothSilosWithInterest(_collateral, _toBorrow, false);
     }
 
-    function _maxRedeem_bothSilosWithInterest(uint128 _collateral, uint128 _toBorrow, bool _sameToken) private {
-        _createDebtOnSilo1(_collateral, _toBorrow, _sameToken);
-        _createDebtOnSilo0(_collateral, _toBorrow, _sameToken);
+    function _maxRedeem_bothSilosWithInterest(uint128 _collateral, uint128 _toBorrow, bool _sameAsset) private {
+        _createDebtOnSilo1(_collateral, _toBorrow, _sameAsset);
+        _createDebtOnSilo0(_collateral, _toBorrow, _sameAsset);
 
         vm.warp(block.timestamp + 100 days);
         emit log("----- time travel -------");
-        ISilo collateralSilo = _sameToken ? silo1 : silo0;
+        ISilo collateralSilo = _sameAsset ? silo1 : silo0;
 
         uint256 maxRedeem = collateralSilo.maxRedeem(borrower);
         (, address collateralShareToken, ) = collateralSilo.config().getShareTokens(address(collateralSilo));
@@ -151,7 +151,7 @@ contract MaxRedeemTest is MaxWithdrawCommon {
 
         emit log_named_decimal_uint("LTV", collateralSilo.getLtv(borrower), 16);
 
-        _assertBorrowerCanNotRedeemMore(maxRedeem, 3, _sameToken);
+        _assertBorrowerCanNotRedeemMore(maxRedeem, 3, _sameAsset);
     }
 
     function _assertBorrowerHasNothingToRedeem() internal {
@@ -161,16 +161,16 @@ contract MaxRedeemTest is MaxWithdrawCommon {
         assertEq(IShareToken(collateralShareToken).balanceOf(borrower), 0, "expect share balance to be 0");
     }
 
-    function _assertBorrowerCanNotRedeemMore(uint256 _maxRedeem, bool _sameToken) internal {
-        _assertBorrowerCanNotRedeemMore(_maxRedeem, 1, _sameToken);
+    function _assertBorrowerCanNotRedeemMore(uint256 _maxRedeem, bool _sameAsset) internal {
+        _assertBorrowerCanNotRedeemMore(_maxRedeem, 1, _sameAsset);
     }
 
-    function _assertBorrowerCanNotRedeemMore(uint256 _maxRedeem, uint256 _underestimate, bool _sameToken) internal {
+    function _assertBorrowerCanNotRedeemMore(uint256 _maxRedeem, uint256 _underestimate, bool _sameAsset) internal {
         emit log_named_uint("------- QA: _assertBorrowerCanNotRedeemMore shares", _maxRedeem);
 
         assertGt(_underestimate, 0, "_underestimate must be at least 1");
 
-        ISilo collateralSilo = _sameToken ? silo1 : silo0;
+        ISilo collateralSilo = _sameAsset ? silo1 : silo0;
 
         if (_maxRedeem > 0) {
             vm.prank(borrower);

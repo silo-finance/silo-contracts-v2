@@ -55,9 +55,9 @@ contract MaxRepaySharesTest is SiloLittleHelper, Test {
         _maxRepayShares_withDebt(_collateral, false);
     }
 
-    function _maxRepayShares_withDebt(uint128 _collateral, bool _sameToken) private {
+    function _maxRepayShares_withDebt(uint128 _collateral, bool _sameAsset) private {
         uint256 toBorrow = _collateral / 3;
-        _createDebt(_collateral, toBorrow, _sameToken);
+        _createDebt(_collateral, toBorrow, _sameAsset);
 
         uint256 maxRepayShares = silo1.maxRepayShares(borrower);
         assertEq(maxRepayShares, toBorrow, "max repay is what was borrower if no interest");
@@ -79,9 +79,9 @@ contract MaxRepaySharesTest is SiloLittleHelper, Test {
         _maxRepayShares_withInterest(_collateral, false);
     }
 
-    function _maxRepayShares_withInterest(uint128 _collateral, bool _sameToken) private {
+    function _maxRepayShares_withInterest(uint128 _collateral, bool _sameAsset) private {
         uint256 toBorrow = _collateral / 3;
-        uint256 shares = _createDebt(_collateral, toBorrow, _sameToken);
+        uint256 shares = _createDebt(_collateral, toBorrow, _sameAsset);
 
         vm.warp(block.timestamp + 356 days);
 
@@ -93,14 +93,14 @@ contract MaxRepaySharesTest is SiloLittleHelper, Test {
         _assertBorrowerHasNoDebt();
     }
 
-    function _createDebt(uint256 _collateral, uint256 _toBorrow, bool _sameToken) internal returns (uint256 shares) {
+    function _createDebt(uint256 _collateral, uint256 _toBorrow, bool _sameAsset) internal returns (uint256 shares) {
         vm.assume(_collateral > 0);
         vm.assume(_toBorrow > 0);
 
         _depositForBorrow(_collateral, depositor);
-        _depositCollateral(_collateral, borrower, _sameToken);
+        _depositCollateral(_collateral, borrower, _sameAsset);
 
-        shares = _borrow(_toBorrow, borrower, _sameToken);
+        shares = _borrow(_toBorrow, borrower, _sameAsset);
 
         _ensureBorrowerHasDebt();
     }

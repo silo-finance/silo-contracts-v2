@@ -128,7 +128,7 @@ contract SiloConfig is ISiloConfig {
     }
 
     /// @inheritdoc ISiloConfig
-    function openPosition(address _borrower, bool _sameToken)
+    function openPosition(address _borrower, bool _sameAsset)
         external
         returns (ConfigData memory, ConfigData memory, PositionInfo memory)
     {
@@ -138,7 +138,7 @@ contract SiloConfig is ISiloConfig {
 
         if (!positionInfo.positionOpen) {
             positionInfo.positionOpen = true;
-            positionInfo.oneTokenPosition = _sameToken;
+            positionInfo.oneAssetPosition = _sameAsset;
             positionInfo.debtInSilo0 = msg.sender == _SILO0;
 
             _positionsInfo[_borrower] = positionInfo;
@@ -160,7 +160,7 @@ contract SiloConfig is ISiloConfig {
             _forbidCrossSiloTransfers(_positionsInfo[_sender].debtInSilo0);
             
             recipientPosition.positionOpen = true;
-            recipientPosition.oneTokenPosition = _positionsInfo[_sender].oneTokenPosition;
+            recipientPosition.oneAssetPosition = _positionsInfo[_sender].oneAssetPosition;
             recipientPosition.debtInSilo0 = msg.sender == _DEBT_SHARE_TOKEN0;
         }
     }
@@ -346,7 +346,7 @@ contract SiloConfig is ISiloConfig {
         if (_positionInfo.debtInSilo0) {
             _positionInfo.debtInThisSilo = callForSilo0;
 
-            if (_positionInfo.oneTokenPosition) {
+            if (_positionInfo.oneAssetPosition) {
                 debt = collateral;
             } else {
                 (collateral, debt) = (debt, collateral);
@@ -354,7 +354,7 @@ contract SiloConfig is ISiloConfig {
         } else {
             _positionInfo.debtInThisSilo = !callForSilo0;
 
-            if (_positionInfo.oneTokenPosition) {
+            if (_positionInfo.oneAssetPosition) {
                 collateral = debt;
             }
         }

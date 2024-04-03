@@ -24,7 +24,7 @@ contract LeverageTest is SiloLittleHelper, Test {
     bytes32 public constant LEVERAGE_CALLBACK = keccak256("ILeverageBorrower.onLeverage");
 
     ISiloConfig siloConfig;
-    bool sameToken;
+    bool sameAsset;
 
     function setUp() public {
         siloConfig = _setUpLocalFixture("ETH-USDC_UniswapV3_Silo");
@@ -49,7 +49,7 @@ contract LeverageTest is SiloLittleHelper, Test {
         address borrower = makeAddr("borrower");
 
         vm.expectRevert(ISilo.ZeroAssets.selector);
-        silo0.leverage(assets, leverageBorrower, borrower, sameToken, bytes(""));
+        silo0.leverage(assets, leverageBorrower, borrower, sameAsset, bytes(""));
     }
 
     /*
@@ -61,7 +61,7 @@ contract LeverageTest is SiloLittleHelper, Test {
         address borrower = makeAddr("borrower");
 
         vm.expectRevert(ISilo.NotEnoughLiquidity.selector);
-        silo0.leverage(assets, leverageBorrower, borrower, sameToken, bytes(""));
+        silo0.leverage(assets, leverageBorrower, borrower, sameAsset, bytes(""));
     }
 
     /*
@@ -84,7 +84,7 @@ contract LeverageTest is SiloLittleHelper, Test {
 
         vm.prank(borrower);
         vm.expectRevert(ISilo.AboveMaxLtv.selector);
-        silo0.leverage(assets, leverageBorrower, borrower, sameToken, bytes(""));
+        silo0.leverage(assets, leverageBorrower, borrower, sameAsset, bytes(""));
     }
 
     /*
@@ -100,7 +100,7 @@ contract LeverageTest is SiloLittleHelper, Test {
         ILeverageBorrower leverageBorrower = ILeverageBorrower(leverageBorrowerMocked.ADDRESS());
 
         vm.expectRevert(ISilo.NotEnoughLiquidity.selector); // because we borrow first
-        silo0.leverage(assets, leverageBorrower, borrower, sameToken, bytes(""));
+        silo0.leverage(assets, leverageBorrower, borrower, sameAsset, bytes(""));
     }
 
     /*
@@ -122,10 +122,10 @@ contract LeverageTest is SiloLittleHelper, Test {
 
         vm.expectRevert(ISilo.AboveMaxLtv.selector);
         vm.prank(borrower);
-        silo0.leverage(borrowToMuch, leverageBorrower, borrower, sameToken, data);
+        silo0.leverage(borrowToMuch, leverageBorrower, borrower, sameAsset, data);
 
         vm.prank(borrower);
-        silo0.leverage(borrowAssets, leverageBorrower, borrower, sameToken, data);
+        silo0.leverage(borrowAssets, leverageBorrower, borrower, sameAsset, data);
 
         (address protectedShareToken, address collateralShareToken, address debtShareToken) =
             siloConfig.getShareTokens(address(silo1));
@@ -158,13 +158,13 @@ contract LeverageTest is SiloLittleHelper, Test {
         _deposit(borrowAssets, depositor, ISilo.AssetType.Collateral);
         token1.mint(address(leverageBorrower), depositAssets);
 
-        uint256 maxBorrow = silo0.maxBorrow(borrower, sameToken);
+        uint256 maxBorrow = silo0.maxBorrow(borrower, sameAsset);
         assertEq(maxBorrow, 0, "maxBorrow should be 0 because this is where collateral is");
 
         bytes memory data = abi.encode(address(silo1), address(token1), depositAssets);
 
         vm.prank(borrower);
-        silo0.leverage(borrowAssets, leverageBorrower, borrower, sameToken, data);
+        silo0.leverage(borrowAssets, leverageBorrower, borrower, sameAsset, data);
 
         (,, address debtShareToken) = siloConfig.getShareTokens(address(silo0));
         assertEq(IShareToken(debtShareToken).balanceOf(borrower), borrowAssets, "expect borrower to have 1/2 of debt");
@@ -181,12 +181,12 @@ contract LeverageTest is SiloLittleHelper, Test {
 
         vm.expectRevert(ISilo.NotEnoughLiquidity.selector);
         vm.prank(borrower);
-        silo0.leverage(borrowAssets, leverageBorrower, borrower, sameToken, data);
+        silo0.leverage(borrowAssets, leverageBorrower, borrower, sameAsset, data);
 
         _deposit(borrowAssets, depositor, ISilo.AssetType.Collateral);
 
         vm.prank(borrower);
-        silo0.leverage(borrowAssets, leverageBorrower, borrower, sameToken, data);
+        silo0.leverage(borrowAssets, leverageBorrower, borrower, sameAsset, data);
 
         assertEq(IShareToken(debtShareToken).balanceOf(borrower), borrowAssets * 2, "debt silo: borrower has debt");
         assertEq(silo0.getDebtAssets(), borrowAssets * 2, "debt silo: has debt");

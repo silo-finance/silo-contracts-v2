@@ -102,14 +102,14 @@ abstract contract SiloLittleHelper is CommonBase {
         return _makeMint(_approve, silo1, token1, _shares, _depositor, ISilo.AssetType.Collateral);
     }
 
-    function _borrow(uint256 _amount, address _borrower, bool _sameToken) internal returns (uint256 shares) {
+    function _borrow(uint256 _amount, address _borrower, bool _sameAsset) internal returns (uint256 shares) {
         vm.prank(_borrower);
-        shares = silo1.borrow(_amount, _borrower, _borrower, _sameToken);
+        shares = silo1.borrow(_amount, _borrower, _borrower, _sameAsset);
     }
 
-    function _borrowShares(uint256 _shares, address _borrower, bool _sameToken) internal returns (uint256 amount) {
+    function _borrowShares(uint256 _shares, address _borrower, bool _sameAsset) internal returns (uint256 amount) {
         vm.prank(_borrower);
-        amount = silo1.borrowShares(_shares, _borrower, _borrower, _sameToken);
+        amount = silo1.borrowShares(_shares, _borrower, _borrower, _sameAsset);
     }
 
     function _repay(uint256 _amount, address _borrower) internal returns (uint256 shares) {
@@ -202,10 +202,10 @@ abstract contract SiloLittleHelper is CommonBase {
         }
     }
 
-    function _createDebt(uint128 _amount, address _borrower, bool _sameToken) internal returns (uint256 debtShares){
+    function _createDebt(uint128 _amount, address _borrower, bool _sameAsset) internal returns (uint256 debtShares){
         _depositForBorrow(_amount, address(0x987654321));
-        _depositCollateral(uint256(_amount) * 2 + (_amount % 2), _borrower, _sameToken);
-        debtShares = _borrow(_amount, _borrower, _sameToken);
+        _depositCollateral(uint256(_amount) * 2 + (_amount % 2), _borrower, _sameAsset);
+        debtShares = _borrow(_amount, _borrower, _sameAsset);
     }
 
     function _localFixture(string memory _configName)

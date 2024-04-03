@@ -480,8 +480,8 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
     }
 
     /// @inheritdoc ISilo
-    function maxBorrow(address _borrower, bool _sameToken) external view virtual returns (uint256 maxAssets) {
-        (maxAssets,) = _callMaxBorrow(_borrower, _sameToken);
+    function maxBorrow(address _borrower, bool _sameAsset) external view virtual returns (uint256 maxAssets) {
+        (maxAssets,) = _callMaxBorrow(_borrower, _sameAsset);
     }
 
     /// @inheritdoc ISilo
@@ -494,7 +494,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
     }
 
     /// @inheritdoc ISilo
-    function borrow(uint256 _assets, address _receiver, address _borrower, bool _sameToken)
+    function borrow(uint256 _assets, address _receiver, address _borrower, bool _sameAsset)
         external
         virtual
         nonReentrant
@@ -502,12 +502,12 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
     {
         (
             , shares
-        ) = _borrow(_assets, 0 /* shares */, _receiver, _borrower, _sameToken, false /* _leverage */, "" /* data */);
+        ) = _borrow(_assets, 0 /* shares */, _receiver, _borrower, _sameAsset, false /* _leverage */, "" /* data */);
     }
 
     /// @inheritdoc ISilo
-    function maxBorrowShares(address _borrower, bool _sameToken) external view virtual returns (uint256 maxShares) {
-        (,maxShares) = _callMaxBorrow(_borrower, _sameToken);
+    function maxBorrowShares(address _borrower, bool _sameAsset) external view virtual returns (uint256 maxShares) {
+        (,maxShares) = _callMaxBorrow(_borrower, _sameAsset);
     }
 
     /// @inheritdoc ISilo
@@ -520,7 +520,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
     }
 
     /// @inheritdoc ISilo
-    function borrowShares(uint256 _shares, address _receiver, address _borrower, bool _sameToken)
+    function borrowShares(uint256 _shares, address _receiver, address _borrower, bool _sameAsset)
         external
         virtual
         nonReentrant
@@ -528,7 +528,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
     {
         (
             assets,
-        ) = _borrow(0 /* assets */, _shares, _receiver, _borrower, _sameToken, false /* _leverage */, "" /* data */);
+        ) = _borrow(0 /* assets */, _shares, _receiver, _borrower, _sameAsset, false /* _leverage */, "" /* data */);
     }
 
     /// @inheritdoc ISilo
@@ -629,7 +629,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
         uint256 _assets,
         ILeverageBorrower _receiver,
         address _borrower,
-        bool _sameToken,
+        bool _sameAsset,
         bytes calldata _data
     )
         external
@@ -637,7 +637,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
         nonReentrant
         returns (uint256 shares)
     {
-        (, shares) = _borrow(_assets, 0 /* _shares */, address(_receiver), _borrower, _sameToken, true, _data);
+        (, shares) = _borrow(_assets, 0 /* _shares */, address(_receiver), _borrower, _sameAsset, true, _data);
     }
 
     /// @inheritdoc ISilo
@@ -805,7 +805,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
         uint256 _shares,
         address _receiver,
         address _borrower,
-        bool _sameToken,
+        bool _sameAsset,
         bool _leverage,
         bytes memory _data
     )
@@ -819,7 +819,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
             ISiloConfig.ConfigData memory collateralConfig,
             ISiloConfig.ConfigData memory debtConfig,
             ISiloConfig.PositionInfo memory positionInfo
-        ) = config.openPosition(_borrower, _sameToken);
+        ) = config.openPosition(_borrower, _sameAsset);
 
         if (!SiloLendingLib.borrowPossible(positionInfo)) revert ISilo.BorrowNotPossible();
 
@@ -940,7 +940,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
         );
     }
 
-    function _callMaxBorrow(address _borrower, bool _sameToken)
+    function _callMaxBorrow(address _borrower, bool _sameAsset)
         internal
         view
         virtual
@@ -953,12 +953,12 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
             ISiloConfig.ConfigData memory debtConfig,
             ISiloConfig.PositionInfo memory positionInfo
         ) = cachedConfig.getConfigs(
-            address(this), _borrower, _sameToken ? _METHOD_BORROW_SAME_TOKEN : _METHOD_BORROW_TWO_TOKENS
+            address(this), _borrower, _sameAsset ? _METHOD_BORROW_SAME_TOKEN : _METHOD_BORROW_TWO_TOKENS
         );
 
         if (!SiloLendingLib.borrowPossible(positionInfo)) return (0, 0);
 
-        if (_sameToken) {
+        if (_sameAsset) {
             collateralConfig = debtConfig;
         }
 

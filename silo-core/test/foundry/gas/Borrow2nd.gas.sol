@@ -19,7 +19,7 @@ contract Borrow2ndGasTest is Gas, Test {
 
         vm.startPrank(BORROWER);
         silo0.deposit(ASSETS * 10, BORROWER);
-        silo1.borrow(ASSETS, BORROWER, BORROWER, false /* sameToken */);
+        silo1.borrow(ASSETS, BORROWER, BORROWER, false /* sameAsset */);
         vm.stopPrank();
     }
 
@@ -27,7 +27,7 @@ contract Borrow2ndGasTest is Gas, Test {
         _action(
             BORROWER,
             address(silo1),
-            abi.encodeCall(ISilo.borrow, (ASSETS, BORROWER, BORROWER, false /* sameToken */)),
+            abi.encodeCall(ISilo.borrow, (ASSETS, BORROWER, BORROWER, false /* sameAsset */)),
             "Borrow2nd (no interest)",
             133494
         );

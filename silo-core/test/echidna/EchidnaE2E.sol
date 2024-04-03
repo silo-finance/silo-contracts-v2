@@ -45,7 +45,7 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
 
     Actor[] public actors;
 
-    bool sameToken;
+    bool sameAsset;
 
     event ExactAmount(string msg, uint256 amount);
 
@@ -320,7 +320,7 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
 
     function maxBorrow_correctReturnValue(uint8 actorIndex) public {
         Actor actor = _selectActor(actorIndex);
-        uint256 maxAssets = vault0.maxBorrow(address(actor), sameToken);
+        uint256 maxAssets = vault0.maxBorrow(address(actor), sameAsset);
         require(maxAssets != 0, "Zero assets to borrow");
 
         emit LogString(string.concat("Max Assets to borrow:", maxAssets.toString()));
@@ -342,7 +342,7 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
 
     function maxBorrowShares_correctReturnValue(uint8 actorIndex) public {
         Actor actor = _selectActor(actorIndex);
-        uint256 maxShares = vault0.maxBorrowShares(address(actor), sameToken);
+        uint256 maxShares = vault0.maxBorrowShares(address(actor), sameAsset);
         require(maxShares != 0, "Zero assets to borrow");
 
         emit LogString(string.concat("Max Shares to borrow:", maxShares.toString()));
@@ -755,15 +755,15 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         emit ExactAmount("maxWithdraw0:", vault0.maxWithdraw(_actor));
         emit ExactAmount("maxWithdraw1:", vault1.maxWithdraw(_actor));
 
-        uint256 maxBorrow0 = vault0.maxBorrow(_actor, sameToken);
-        uint256 maxBorrow1 = vault1.maxBorrow(_actor, sameToken);
+        uint256 maxBorrow0 = vault0.maxBorrow(_actor, sameAsset);
+        uint256 maxBorrow1 = vault1.maxBorrow(_actor, sameAsset);
         emit ExactAmount("maxBorrow0:", maxBorrow0);
         emit ExactAmount("maxBorrow1:", maxBorrow1);
 
         emit ExactAmount("convertToShares(maxBorrow0):", vault0.convertToShares(maxBorrow0, ISilo.AssetType.Debt));
         emit ExactAmount("convertToShares(maxBorrow1):", vault1.convertToShares(maxBorrow1, ISilo.AssetType.Debt));
 
-        emit ExactAmount("maxBorrowShares0:", vault0.maxBorrowShares(_actor, sameToken));
-        emit ExactAmount("maxBorrowShares1:", vault1.maxBorrowShares(_actor, sameToken));
+        emit ExactAmount("maxBorrowShares0:", vault0.maxBorrowShares(_actor, sameAsset));
+        emit ExactAmount("maxBorrowShares1:", vault1.maxBorrowShares(_actor, sameAsset));
     }
 }

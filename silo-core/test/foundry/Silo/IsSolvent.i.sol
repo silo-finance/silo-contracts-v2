@@ -36,20 +36,20 @@ contract IsSolventTest is SiloLittleHelper, Test {
         _isSolvent_onDebtTransfer(false);
     }
 
-    function _isSolvent_onDebtTransfer(bool _sameToken) private {
+    function _isSolvent_onDebtTransfer(bool _sameAsset) private {
         uint256 assets = 1e18;
         address depositor = makeAddr("Depositor");
         address borrower = makeAddr("Borrower");
         address recipient = makeAddr("Recipient");
 
-        _depositCollateral(assets, borrower, _sameToken);
+        _depositCollateral(assets, borrower, _sameAsset);
         _depositForBorrow(assets, depositor);
 
-        _depositCollateral(2, recipient, _sameToken);
+        _depositCollateral(2, recipient, _sameAsset);
 
-        _borrow(assets / 2, borrower, _sameToken);
+        _borrow(assets / 2, borrower, _sameAsset);
 
-        ISilo collateralSilo = _sameToken ? silo1 : silo0;
+        ISilo collateralSilo = _sameAsset ? silo1 : silo0;
 
         (, address collateralShareToken,) = collateralSilo.config().getShareTokens(address(collateralSilo));
         (,, address debtShareToken) = silo1.config().getShareTokens(address(silo1));
@@ -77,16 +77,16 @@ contract IsSolventTest is SiloLittleHelper, Test {
         _isSolvent_RecipientNotSolventAfterTransfer(false);
     }
 
-    function _isSolvent_RecipientNotSolventAfterTransfer(bool _sameToken) private {
+    function _isSolvent_RecipientNotSolventAfterTransfer(bool _sameAsset) private {
         uint256 assets = 1e18;
         address depositor = makeAddr("Depositor");
         address borrower = makeAddr("Borrower");
         address recipient = makeAddr("Recipient");
 
-        _depositCollateral(assets, borrower, _sameToken);
+        _depositCollateral(assets, borrower, _sameAsset);
         _depositForBorrow(assets, depositor);
 
-        _borrow(assets / 2, borrower, _sameToken);
+        _borrow(assets / 2, borrower, _sameAsset);
 
         (,, address debtShareToken) = silo1.config().getShareTokens(address(silo1));
 

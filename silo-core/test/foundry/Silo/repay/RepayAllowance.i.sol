@@ -31,12 +31,12 @@ contract RepayAllowanceTest is SiloLittleHelper, Test {
         BORROWER = makeAddr("Borrower");
     }
 
-    function _setUp(bool _sameToken) private {
+    function _setUp(bool _sameAsset) private {
         siloConfig = _setUpLocalFixture();
 
-        _depositCollateral(ASSETS * 10, BORROWER, _sameToken);
+        _depositCollateral(ASSETS * 10, BORROWER, _sameAsset);
         _depositForBorrow(ASSETS, DEPOSITOR);
-        _borrow(ASSETS, BORROWER, _sameToken);
+        _borrow(ASSETS, BORROWER, _sameAsset);
     }
 
     /*
@@ -50,8 +50,8 @@ contract RepayAllowanceTest is SiloLittleHelper, Test {
         _repay_WithoutAllowance(false);
     }
 
-    function _repay_WithoutAllowance(bool _sameToken) private {
-        _setUp(_sameToken);
+    function _repay_WithoutAllowance(bool _sameAsset) private {
+        _setUp(_sameAsset);
 
         (,, address debtShareToken) = siloConfig.getShareTokens(address(silo1));
 

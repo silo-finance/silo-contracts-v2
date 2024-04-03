@@ -39,11 +39,11 @@ contract MaxBorrowSharesTest is SiloLittleHelper, Test {
         _assertMaxBorrowSharesIsZeroAtTheEnd(false);
     }
 
-    function _maxBorrowShares_noCollateral(bool _sameToken) internal {
-        uint256 maxBorrowShares = silo1.maxBorrowShares(borrower, _sameToken);
+    function _maxBorrowShares_noCollateral(bool _sameAsset) internal {
+        uint256 maxBorrowShares = silo1.maxBorrowShares(borrower, _sameAsset);
         assertEq(maxBorrowShares, 0, "no collateral - no borrowShares");
 
-        _assertMaxBorrowSharesIsZeroAtTheEnd(_sameToken);
+        _assertMaxBorrowSharesIsZeroAtTheEnd(_sameAsset);
     }
 
     /*
@@ -65,19 +65,19 @@ contract MaxBorrowSharesTest is SiloLittleHelper, Test {
         _maxBorrowShares_withCollateral_fuzz(_collateral, _liquidity, false);
     }
 
-    function _maxBorrowShares_withCollateral_fuzz(uint128 _collateral, uint128 _liquidity, bool _sameToken) private {
+    function _maxBorrowShares_withCollateral_fuzz(uint128 _collateral, uint128 _liquidity, bool _sameAsset) private {
         vm.assume(_liquidity > 0);
         vm.assume(_collateral > 0);
 
         _depositForBorrow(_liquidity, depositor);
-        _depositCollateral(_collateral, borrower, _sameToken);
+        _depositCollateral(_collateral, borrower, _sameAsset);
 
-        uint256 maxBorrowShares = silo1.maxBorrowShares(borrower, _sameToken);
+        uint256 maxBorrowShares = silo1.maxBorrowShares(borrower, _sameAsset);
         vm.assume(maxBorrowShares > 0);
 
-        _assertWeCanNotBorrowAboveMax(maxBorrowShares, 2, _sameToken);
+        _assertWeCanNotBorrowAboveMax(maxBorrowShares, 2, _sameAsset);
 
-        _assertMaxBorrowSharesIsZeroAtTheEnd(_sameToken);
+        _assertMaxBorrowSharesIsZeroAtTheEnd(_sameAsset);
     }
 
     /*
@@ -96,19 +96,19 @@ contract MaxBorrowSharesTest is SiloLittleHelper, Test {
         _maxBorrowShares_collateralButNoLiquidity_fuzz(_collateral, false);
     }
 
-    function _maxBorrowShares_collateralButNoLiquidity_fuzz(uint128 _collateral, bool _sameToken) private {
-        vm.assume(_collateral > uint128(_sameToken ? 0 : 3)); // to allow any borrowShares twice
+    function _maxBorrowShares_collateralButNoLiquidity_fuzz(uint128 _collateral, bool _sameAsset) private {
+        vm.assume(_collateral > uint128(_sameAsset ? 0 : 3)); // to allow any borrowShares twice
 
-        _depositCollateral(_collateral, borrower, _sameToken);
+        _depositCollateral(_collateral, borrower, _sameAsset);
 
-        uint256 maxBorrowShares = silo1.maxBorrowShares(borrower, _sameToken);
+        uint256 maxBorrowShares = silo1.maxBorrowShares(borrower, _sameAsset);
 
-        if (!_sameToken) {
+        if (!_sameAsset) {
             assertEq(maxBorrowShares, 0, "if 2 tokens and no liquidity, max should be 0");
         }
 
-        _assertWeCanNotBorrowAboveMax(maxBorrowShares, _sameToken);
-        _assertMaxBorrowSharesIsZeroAtTheEnd(_sameToken);
+        _assertWeCanNotBorrowAboveMax(maxBorrowShares, _sameAsset);
+        _assertMaxBorrowSharesIsZeroAtTheEnd(_sameAsset);
     }
 
     /*
@@ -124,25 +124,25 @@ contract MaxBorrowSharesTest is SiloLittleHelper, Test {
         _maxBorrowShares_withDebt_fuzz(_collateral, _liquidity, false);
     }
 
-    function _maxBorrowShares_withDebt_fuzz(uint128 _collateral, uint128 _liquidity, bool _sameToken) private {
+    function _maxBorrowShares_withDebt_fuzz(uint128 _collateral, uint128 _liquidity, bool _sameAsset) private {
         vm.assume(_collateral > 0);
         vm.assume(_liquidity > 0);
 
-        _depositCollateral(_collateral, borrower, _sameToken);
+        _depositCollateral(_collateral, borrower, _sameAsset);
         _depositForBorrow(_liquidity, depositor);
 
-        uint256 maxBorrowShares = silo1.maxBorrowShares(borrower, _sameToken);
+        uint256 maxBorrowShares = silo1.maxBorrowShares(borrower, _sameAsset);
 
         uint256 firstBorrow = maxBorrowShares / 3;
         vm.assume(firstBorrow > 0);
-        _borrowShares(firstBorrow, borrower, _sameToken);
+        _borrowShares(firstBorrow, borrower, _sameAsset);
 
         // now we have debt
 
-        maxBorrowShares = silo1.maxBorrowShares(borrower, _sameToken);
+        maxBorrowShares = silo1.maxBorrowShares(borrower, _sameAsset);
 
-        _assertWeCanNotBorrowAboveMax(maxBorrowShares, 2, _sameToken);
-        _assertMaxBorrowSharesIsZeroAtTheEnd(_sameToken);
+        _assertWeCanNotBorrowAboveMax(maxBorrowShares, 2, _sameAsset);
+        _assertMaxBorrowSharesIsZeroAtTheEnd(_sameAsset);
     }
 
     /*
@@ -167,30 +167,30 @@ contract MaxBorrowSharesTest is SiloLittleHelper, Test {
     function _maxBorrowShares_withInterest_fuzz(
         uint128 _collateral,
         uint128 _liquidity,
-        bool _sameToken
+        bool _sameAsset
     ) private {
         vm.assume(_collateral > 0);
         vm.assume(_liquidity > 0);
 
-        _depositCollateral(_collateral, borrower, _sameToken);
+        _depositCollateral(_collateral, borrower, _sameAsset);
         _depositForBorrow(_liquidity, depositor);
         // TODO  +protected, and for maxBorrow
 
-        uint256 maxBorrowShares = silo1.maxBorrowShares(borrower, _sameToken);
+        uint256 maxBorrowShares = silo1.maxBorrowShares(borrower, _sameAsset);
         uint256 firstBorrow = maxBorrowShares / 3;
         emit log_named_uint("____ firstBorrow", firstBorrow);
 
         vm.assume(firstBorrow > 0);
-        _borrowShares(firstBorrow, borrower, _sameToken);
+        _borrowShares(firstBorrow, borrower, _sameAsset);
 
         // now we have debt
         vm.warp(block.timestamp + 100 days);
 
-        maxBorrowShares = silo1.maxBorrowShares(borrower, _sameToken);
+        maxBorrowShares = silo1.maxBorrowShares(borrower, _sameAsset);
         emit log_named_uint("____ maxBorrowShares", maxBorrowShares);
 
-        _assertWeCanNotBorrowAboveMax(maxBorrowShares, 3, _sameToken);
-        _assertMaxBorrowSharesIsZeroAtTheEnd(1, _sameToken);
+        _assertWeCanNotBorrowAboveMax(maxBorrowShares, 3, _sameAsset);
+        _assertMaxBorrowSharesIsZeroAtTheEnd(1, _sameAsset);
     }
 
     /*
@@ -217,21 +217,21 @@ contract MaxBorrowSharesTest is SiloLittleHelper, Test {
     function _maxBorrowShares_repayWithInterest_fuzz(
         uint64 _collateral,
         uint128 _liquidity,
-        bool _sameToken
+        bool _sameAsset
     ) private {
         vm.assume(_collateral > 0);
         vm.assume(_liquidity > 0);
 
-        _depositCollateral(_collateral, borrower, _sameToken);
+        _depositCollateral(_collateral, borrower, _sameAsset);
         _depositForBorrow(_liquidity, depositor);
         // TODO  +protected, and same for maxBorrow
 
-        uint256 maxBorrowShares = silo1.maxBorrowShares(borrower, _sameToken);
+        uint256 maxBorrowShares = silo1.maxBorrowShares(borrower, _sameAsset);
         uint256 firstBorrow = maxBorrowShares / 3;
         emit log_named_uint("____ firstBorrow", firstBorrow);
 
         vm.assume(firstBorrow > 0);
-        _borrowShares(firstBorrow, borrower, _sameToken);
+        _borrowShares(firstBorrow, borrower, _sameAsset);
 
         // now we have debt
         vm.warp(block.timestamp + 100 days);
@@ -250,19 +250,19 @@ contract MaxBorrowSharesTest is SiloLittleHelper, Test {
 
         // maybe we have some debt left, maybe not
 
-        maxBorrowShares = silo1.maxBorrowShares(borrower, _sameToken);
+        maxBorrowShares = silo1.maxBorrowShares(borrower, _sameAsset);
         emit log_named_uint("____ maxBorrowShares", maxBorrowShares);
 
-        _assertWeCanNotBorrowAboveMax(maxBorrowShares, 3, _sameToken);
-        _assertMaxBorrowSharesIsZeroAtTheEnd(1, _sameToken);
+        _assertWeCanNotBorrowAboveMax(maxBorrowShares, 3, _sameAsset);
+        _assertMaxBorrowSharesIsZeroAtTheEnd(1, _sameAsset);
     }
 
-    function _assertWeCanNotBorrowAboveMax(uint256 _maxBorrow, bool _sameToken) internal {
-        _assertWeCanNotBorrowAboveMax(_maxBorrow, 1, _sameToken);
+    function _assertWeCanNotBorrowAboveMax(uint256 _maxBorrow, bool _sameAsset) internal {
+        _assertWeCanNotBorrowAboveMax(_maxBorrow, 1, _sameAsset);
     }
 
     /// @param _precision is needed because we count for precision error and we allow for 1 wei diff
-    function _assertWeCanNotBorrowAboveMax(uint256 _maxBorrowShares, uint256 _precision, bool _sameToken) internal {
+    function _assertWeCanNotBorrowAboveMax(uint256 _maxBorrowShares, uint256 _precision, bool _sameAsset) internal {
         emit log_named_uint("------- QA: _assertWeCanNotBorrowAboveMax shares", _maxBorrowShares);
         emit log_named_uint("------- QA: _assertWeCanNotBorrowAboveMax _precision", _precision);
 
@@ -282,7 +282,7 @@ contract MaxBorrowSharesTest is SiloLittleHelper, Test {
         }
 
         vm.prank(borrower);
-        try silo1.borrowShares(toBorrow, borrower, borrower, _sameToken) returns (uint256) {
+        try silo1.borrowShares(toBorrow, borrower, borrower, _sameAsset) returns (uint256) {
             revert("[borrowShares] we expect tx to be reverted!");
         } catch (bytes memory data) {
             bytes4 errorType = bytes4(data);
@@ -298,18 +298,18 @@ contract MaxBorrowSharesTest is SiloLittleHelper, Test {
         if (_maxBorrowShares > 0) {
             emit log_named_decimal_uint("[_assertWeCanNotBorrowAboveMax] _maxBorrow > 0 YES, borrowing max", _maxBorrowShares, 18);
             vm.prank(borrower);
-            silo1.borrowShares(_maxBorrowShares, borrower, borrower, _sameToken);
+            silo1.borrowShares(_maxBorrowShares, borrower, borrower, _sameAsset);
         }
     }
 
-    function _assertMaxBorrowSharesIsZeroAtTheEnd(bool _sameToken) internal {
-        _assertMaxBorrowSharesIsZeroAtTheEnd(0, _sameToken);
+    function _assertMaxBorrowSharesIsZeroAtTheEnd(bool _sameAsset) internal {
+        _assertMaxBorrowSharesIsZeroAtTheEnd(0, _sameAsset);
     }
 
-    function _assertMaxBorrowSharesIsZeroAtTheEnd(uint256 _precision, bool _sameToken) internal {
+    function _assertMaxBorrowSharesIsZeroAtTheEnd(uint256 _precision, bool _sameAsset) internal {
         emit log_named_uint("=================== _assertMaxBorrowIsZeroAtTheEnd =================== +/-", _precision);
 
-        uint256 maxBorrowShares = silo1.maxBorrowShares(borrower, _sameToken);
+        uint256 maxBorrowShares = silo1.maxBorrowShares(borrower, _sameAsset);
 
         assertLe(
             maxBorrowShares,

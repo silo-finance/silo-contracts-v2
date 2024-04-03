@@ -75,14 +75,14 @@ contract PreviewMintTest is SiloLittleHelper, Test {
         _assertPreviewMint(_shares, _defaultType, _type);
     }
 
-    function _createInterest(bool _sameToken) internal {
+    function _createInterest(bool _sameAsset) internal {
         uint256 assets = 1e18 + 123456789; // some not even number
 
         _deposit(assets, depositor);
         _depositForBorrow(assets, depositor);
 
-        _depositCollateral(assets, borrower, _sameToken);
-        _borrow(assets / 10, borrower, _sameToken);
+        _depositCollateral(assets, borrower, _sameAsset);
+        _borrow(assets / 10, borrower, _sameAsset);
 
         vm.warp(block.timestamp + 365 days);
 

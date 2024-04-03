@@ -257,7 +257,7 @@ interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
     /// @return maxAssets Maximum amount of assets that the borrower can borrow, this value is underestimated
     /// That means, in some cases when you borrow maxAssets, you will be able to borrow again eg. up to 2wei
     /// Reason for underestimation is to return value that will not cause borrow revert
-    function maxBorrow(address _borrower, bool _sameToken) external view returns (uint256 maxAssets);
+    function maxBorrow(address _borrower, bool _sameAsset) external view returns (uint256 maxAssets);
 
     /// @notice Previews the amount of shares equivalent to the given asset amount for borrowing
     /// @param _assets Amount of assets to preview the equivalent shares for
@@ -269,13 +269,13 @@ interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
     /// @param _receiver Address receiving the borrowed assets
     /// @param _borrower Address responsible for the borrowed assets
     /// @return shares Amount of shares equivalent to the borrowed assets
-    function borrow(uint256 _assets, address _receiver, address _borrower, bool _sameToken)
+    function borrow(uint256 _assets, address _receiver, address _borrower, bool _sameAsset)
         external returns (uint256 shares);
 
     /// @notice Calculates the maximum amount of shares that can be borrowed by the given address
     /// @param _borrower Address of the potential borrower
     /// @return maxShares Maximum number of shares that the borrower can borrow
-    function maxBorrowShares(address _borrower, bool _sameToken) external view returns (uint256 maxShares);
+    function maxBorrowShares(address _borrower, bool _sameAsset) external view returns (uint256 maxShares);
 
     /// @notice Previews the amount of assets equivalent to the given share amount for borrowing
     /// @param _shares Amount of shares to preview the equivalent assets for
@@ -287,7 +287,7 @@ interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
     /// @param _receiver Address to receive the borrowed assets
     /// @param _borrower Address responsible for the borrowed assets
     /// @return assets Amount of assets borrowed
-    function borrowShares(uint256 _shares, address _receiver, address _borrower, bool _sameToken)
+    function borrowShares(uint256 _shares, address _receiver, address _borrower, bool _sameAsset)
         external
         returns (uint256 assets);
 
@@ -335,7 +335,7 @@ interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
         uint256 _assets,
         ILeverageBorrower _receiver,
         address _borrower,
-        bool _sameToken,
+        bool _sameAsset,
         bytes calldata _data
     )
         external

@@ -66,18 +66,18 @@ contract MaxWithdrawTest is MaxWithdrawCommon {
         _maxWithdraw_withDebt(_collateral, _toBorrow, false);
     }
 
-    function _maxWithdraw_withDebt(uint128 _collateral, uint128 _toBorrow, bool _sameToken) private {
-        _createDebtOnSilo1(_collateral, _toBorrow, _sameToken);
+    function _maxWithdraw_withDebt(uint128 _collateral, uint128 _toBorrow, bool _sameAsset) private {
+        _createDebtOnSilo1(_collateral, _toBorrow, _sameAsset);
 
-        ISilo collateralSilo = _sameToken ? silo1 : silo0;
+        ISilo collateralSilo = _sameAsset ? silo1 : silo0;
 
         uint256 maxWithdraw = collateralSilo.maxWithdraw(borrower);
         assertLt(maxWithdraw, _collateral, "with debt you can not withdraw all");
 
         emit log_named_decimal_uint("LTV", collateralSilo.getLtv(borrower), 16);
 
-        _assertBorrowerCanNotWithdrawMore(maxWithdraw, 3, _sameToken);
-        _assertMaxWithdrawIsZeroAtTheEnd(_sameToken);
+        _assertBorrowerCanNotWithdrawMore(maxWithdraw, 3, _sameAsset);
+        _assertMaxWithdrawIsZeroAtTheEnd(_sameAsset);
     }
 
     /*
@@ -106,13 +106,13 @@ contract MaxWithdrawTest is MaxWithdrawCommon {
         uint128 _collateral,
         uint128 _toBorrow,
         uint64 _percentToBorrowOnSilo0,
-        bool _sameToken
+        bool _sameAsset
     ) private {
         vm.assume(_percentToBorrowOnSilo0 <= 1e18);
 
-        _createDebtOnSilo1(_collateral, _toBorrow, _sameToken);
+        _createDebtOnSilo1(_collateral, _toBorrow, _sameAsset);
 
-        ISilo collateralSilo = _sameToken ? silo1 : silo0;
+        ISilo collateralSilo = _sameAsset ? silo1 : silo0;
 
         uint256 borrowOnSilo0 = collateralSilo.getCollateralAssets() * _percentToBorrowOnSilo0 / 1e18;
 
@@ -121,10 +121,10 @@ contract MaxWithdrawTest is MaxWithdrawCommon {
 
         if (borrowOnSilo0 > 0) {
             address any = makeAddr("yet another user");
-            bool collateralSiloSameToken = _sameToken && address(collateralSilo) == address(silo0);
+            bool collateralSiloSameToken = _sameAsset && address(collateralSilo) == address(silo0);
             _depositCollateral(borrowOnSilo0 * 2, any, !collateralSiloSameToken);
             vm.prank(any);
-            collateralSilo.borrow(borrowOnSilo0, any, any, _sameToken);
+            collateralSilo.borrow(borrowOnSilo0, any, any, _sameAsset);
             emit log_named_decimal_uint("LTV any", silo1.getLtv(any), 16);
         }
 
@@ -133,8 +133,8 @@ contract MaxWithdrawTest is MaxWithdrawCommon {
 
         emit log_named_decimal_uint("LTV", silo1.getLtv(borrower), 16);
 
-        _assertBorrowerCanNotWithdrawMore(maxWithdraw, 3, _sameToken);
-        _assertMaxWithdrawIsZeroAtTheEnd(_sameToken);
+        _assertBorrowerCanNotWithdrawMore(maxWithdraw, 3, _sameAsset);
+        _assertMaxWithdrawIsZeroAtTheEnd(_sameAsset);
     }
 
     /*
@@ -156,20 +156,20 @@ contract MaxWithdrawTest is MaxWithdrawCommon {
         _maxWithdraw_whenInterest(_collateral, _toBorrow, false);
     }
 
-    function _maxWithdraw_whenInterest(uint128 _collateral, uint128 _toBorrow, bool _sameToken) private {
-        _createDebtOnSilo1(_collateral, _toBorrow, _sameToken);
+    function _maxWithdraw_whenInterest(uint128 _collateral, uint128 _toBorrow, bool _sameAsset) private {
+        _createDebtOnSilo1(_collateral, _toBorrow, _sameAsset);
 
         vm.warp(block.timestamp + 100 days);
 
-        ISilo collateralSilo = _sameToken ? silo1 : silo0;
+        ISilo collateralSilo = _sameAsset ? silo1 : silo0;
         uint256 maxWithdraw = collateralSilo.maxWithdraw(borrower);
         assertLt(maxWithdraw, _collateral, "with debt you can not withdraw all");
 
         emit log_named_decimal_uint("LTV before withdraw", silo1.getLtv(borrower), 16);
         emit log_named_uint("maxWithdraw", maxWithdraw);
 
-        _assertBorrowerCanNotWithdrawMore(maxWithdraw, 3, _sameToken);
-        _assertMaxWithdrawIsZeroAtTheEnd(1, _sameToken);
+        _assertBorrowerCanNotWithdrawMore(maxWithdraw, 3, _sameAsset);
+        _assertMaxWithdrawIsZeroAtTheEnd(1, _sameAsset);
     }
 
     /*
@@ -192,21 +192,21 @@ contract MaxWithdrawTest is MaxWithdrawCommon {
         _maxWithdraw_bothSilosWithInterest(_collateral, _toBorrow, false);
     }
 
-    function _maxWithdraw_bothSilosWithInterest(uint128 _collateral, uint128 _toBorrow, bool _sameToken) private {
-        _createDebtOnSilo0(_collateral, _toBorrow, _sameToken);
-        _createDebtOnSilo1(_collateral, _toBorrow, _sameToken);
+    function _maxWithdraw_bothSilosWithInterest(uint128 _collateral, uint128 _toBorrow, bool _sameAsset) private {
+        _createDebtOnSilo0(_collateral, _toBorrow, _sameAsset);
+        _createDebtOnSilo1(_collateral, _toBorrow, _sameAsset);
 
         vm.warp(block.timestamp + 100 days);
 
-        ISilo collateralSilo = _sameToken ? silo1 : silo0;
+        ISilo collateralSilo = _sameAsset ? silo1 : silo0;
         uint256 maxWithdraw = collateralSilo.maxWithdraw(borrower);
         assertLt(maxWithdraw, _collateral, "with debt you can not withdraw all");
 
         emit log_named_decimal_uint("LTV before withdraw", silo1.getLtv(borrower), 16);
         emit log_named_uint("maxWithdraw", maxWithdraw);
 
-        _assertBorrowerCanNotWithdrawMore(maxWithdraw, 4, _sameToken);
-        _assertMaxWithdrawIsZeroAtTheEnd(1, _sameToken);
+        _assertBorrowerCanNotWithdrawMore(maxWithdraw, 4, _sameAsset);
+        _assertMaxWithdrawIsZeroAtTheEnd(1, _sameAsset);
     }
 
     function _assertBorrowerHasNothingToWithdraw() internal {
@@ -216,17 +216,17 @@ contract MaxWithdrawTest is MaxWithdrawCommon {
         assertEq(IShareToken(collateralShareToken).balanceOf(borrower), 0, "expect share balance to be 0");
     }
 
-    function _assertBorrowerCanNotWithdrawMore(uint256 _maxWithdraw, bool _sameToken) internal {
-        _assertBorrowerCanNotWithdrawMore(_maxWithdraw, 1, _sameToken);
+    function _assertBorrowerCanNotWithdrawMore(uint256 _maxWithdraw, bool _sameAsset) internal {
+        _assertBorrowerCanNotWithdrawMore(_maxWithdraw, 1, _sameAsset);
     }
 
-    function _assertBorrowerCanNotWithdrawMore(uint256 _maxWithdraw, uint256 _underestimate, bool _sameToken) internal {
+    function _assertBorrowerCanNotWithdrawMore(uint256 _maxWithdraw, uint256 _underestimate, bool _sameAsset) internal {
         assertGt(_underestimate, 0, "_underestimate must be at least 1");
 
         emit log_named_uint("=== QA [_assertBorrowerCanNotWithdrawMore] _maxWithdraw:", _maxWithdraw);
         emit log_named_uint("=== QA [_assertBorrowerCanNotWithdrawMore] _underestimate:", _underestimate);
 
-        ISilo collateralSilo = _sameToken ? silo1 : silo0;
+        ISilo collateralSilo = _sameAsset ? silo1 : silo0;
 
         if (_maxWithdraw > 0) {
             vm.prank(borrower);
@@ -248,14 +248,14 @@ contract MaxWithdrawTest is MaxWithdrawCommon {
         collateralSilo.withdraw(counterExample, borrower, borrower);
     }
 
-    function _assertMaxWithdrawIsZeroAtTheEnd(bool _sameToken) internal {
-        _assertMaxWithdrawIsZeroAtTheEnd(0, _sameToken);
+    function _assertMaxWithdrawIsZeroAtTheEnd(bool _sameAsset) internal {
+        _assertMaxWithdrawIsZeroAtTheEnd(0, _sameAsset);
     }
 
-    function _assertMaxWithdrawIsZeroAtTheEnd(uint256 _underestimate, bool _sameToken) internal {
+    function _assertMaxWithdrawIsZeroAtTheEnd(uint256 _underestimate, bool _sameAsset) internal {
         emit log_named_uint("================= _assertMaxWithdrawIsZeroAtTheEnd ================= +/-", _underestimate);
 
-        ISilo collateralSilo = _sameToken ? silo1 : silo0;
+        ISilo collateralSilo = _sameAsset ? silo1 : silo0;
         uint256 maxWithdraw = collateralSilo.maxWithdraw(borrower);
 
         assertLe(

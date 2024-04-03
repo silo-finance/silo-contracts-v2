@@ -60,22 +60,22 @@ contract OracleThrowsTest is SiloLittleHelper, Test {
         _throwing_oracle(false);
     }
 
-    function _throwing_oracle(bool _sameToken) private {
+    function _throwing_oracle(bool _sameAsset) private {
         uint256 depositAmount = 100e18;
         uint256 borrowAmount = 50e18;
 
-        _depositCollateral(depositAmount, borrower, _sameToken);
+        _depositCollateral(depositAmount, borrower, _sameAsset);
         _depositForBorrow(depositAmount, depositor);
 
-        _borrow(borrowAmount, borrower, _sameToken);
+        _borrow(borrowAmount, borrower, _sameAsset);
 
         assertEq(token0.balanceOf(borrower), 0);
         assertEq(token0.balanceOf(depositor), 0);
-        assertEq(token0.balanceOf(address(silo0)), _sameToken ? 0 : 100e18, "borrower collateral");
+        assertEq(token0.balanceOf(address(silo0)), _sameAsset ? 0 : 100e18, "borrower collateral");
 
         assertEq(token1.balanceOf(borrower), 50e18, "borrower debt");
         assertEq(token1.balanceOf(depositor), 0);
-        assertEq(token1.balanceOf(address(silo1)), _sameToken ? 150e18 : 50e18, "depositor's deposit");
+        assertEq(token1.balanceOf(address(silo1)), _sameAsset ? 150e18 : 50e18, "depositor's deposit");
 
         vm.warp(block.timestamp + 100 days);
         silo1.accrueInterest();
@@ -83,7 +83,7 @@ contract OracleThrowsTest is SiloLittleHelper, Test {
         solvencyOracle0.breakOracle();
         maxLtvOracle0.breakOracle();
 
-        assertTrue(_withdrawAll(_sameToken), "expect all tx to be executed till the end");
+        assertTrue(_withdrawAll(_sameAsset), "expect all tx to be executed till the end");
 
 
         assertEq(token0.balanceOf(borrower), 100e18, "borrower got all collateral");
@@ -98,12 +98,12 @@ contract OracleThrowsTest is SiloLittleHelper, Test {
         assertEq(silo1.getLiquidity(), 1, "silo1.getLiquidity");
     }
 
-    function _withdrawAll(bool _sameToken) internal returns (bool success) {
+    function _withdrawAll(bool _sameAsset) internal returns (bool success) {
         vm.prank(borrower);
         vm.expectRevert("beforeQuote: oracle is broken");
 
-        ISilo collateralSilo = _sameToken ? silo1 : silo0;
-        MintableToken collateralToken = _sameToken ? token1 : token0;
+        ISilo collateralSilo = _sameAsset ? silo1 : silo0;
+        MintableToken collateralToken = _sameAsset ? token1 : token0;
 
         collateralSilo.redeem(1, borrower, borrower);
         assertEq(collateralToken.balanceOf(borrower), 0, "borrower can not withdraw even 1 wei when oracle broken");

@@ -18,7 +18,7 @@ import {LeverageBorrower, ILeverageBorrower} from "../../_common/LeverageBorrowe
 */
 contract LeverageNotPossibleTest is SiloLittleHelper, Test {
     address borrower;
-    bool sameToken;
+    bool sameAsset;
 
     function setUp() public {
         borrower = makeAddr("borrower");
@@ -48,7 +48,7 @@ contract LeverageNotPossibleTest is SiloLittleHelper, Test {
         bytes memory data = abi.encode(address(silo1), address(token1), depositAssets);
         
         vm.prank(borrower);
-        silo0.leverage(borrowAssets, leverageBorrower, borrower, sameToken, data);
+        silo0.leverage(borrowAssets, leverageBorrower, borrower, sameAsset, data);
     }
 
     /*
@@ -68,6 +68,6 @@ contract LeverageNotPossibleTest is SiloLittleHelper, Test {
 
         vm.prank(borrower);
         vm.expectRevert(ISilo.AboveMaxLtv.selector);
-        silo1.leverage(borrowAssets, leverageBorrower, borrower, sameToken, data);
+        silo1.leverage(borrowAssets, leverageBorrower, borrower, sameAsset, data);
     }
 }

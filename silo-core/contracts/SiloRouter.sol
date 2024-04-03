@@ -44,14 +44,14 @@ contract SiloRouter is ReentrancyGuard {
     struct BorrowOptions {
         // how much assets or shares do you want to use?
         uint256 amount;
-        bool sameToken;
+        bool sameAsset;
     }
 
     struct LeverageOptions {
         // how much assets or shares do you want to use?
         uint256 amount;
         ILeverageBorrower leverageBorrower;
-        bool sameToken;
+        bool sameAsset;
         // optional data that will be send to leverageBorrower
         bytes data;
     }
@@ -162,10 +162,10 @@ contract SiloRouter is ReentrancyGuard {
             _action.silo.redeem(data.amount, address(this), msg.sender, data.assetType);
         } else if (_action.actionType == ActionType.Borrow) {
             BorrowOptions memory data = abi.decode(_action.options, (BorrowOptions));
-            _action.silo.borrow(data.amount, address(this), msg.sender, data.sameToken);
+            _action.silo.borrow(data.amount, address(this), msg.sender, data.sameAsset);
         } else if (_action.actionType == ActionType.BorrowShares) {
             BorrowOptions memory data = abi.decode(_action.options, (BorrowOptions));
-            _action.silo.borrowShares(data.amount, address(this), msg.sender, data.sameToken);
+            _action.silo.borrowShares(data.amount, address(this), msg.sender, data.sameAsset);
         } else if (_action.actionType == ActionType.Repay) {
             AnyAction memory data = abi.decode(_action.options, (AnyAction));
             _pullAssetIfNeeded(_action.asset, data.amount, data.permit);
@@ -183,7 +183,7 @@ contract SiloRouter is ReentrancyGuard {
             _action.silo.transitionCollateral(data.amount, msg.sender, data.assetType);
         } else if (_action.actionType == ActionType.Leverage) {
             LeverageOptions memory data = abi.decode(_action.options, (LeverageOptions));
-            _action.silo.leverage(data.amount, data.leverageBorrower, msg.sender, data.sameToken, data.data);
+            _action.silo.leverage(data.amount, data.leverageBorrower, msg.sender, data.sameAsset, data.data);
         } else {
             revert UnsupportedAction();
         }

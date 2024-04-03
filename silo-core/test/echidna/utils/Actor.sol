@@ -17,7 +17,7 @@ contract Actor is PropertiesAsserts {
     Silo vault0;
     Silo vault1;
     PartialLiquidation liquidationModule;
-    bool sameToken;
+    bool sameAsset;
 
     mapping(address => uint256) public tokensDepositedCollateral;
     mapping(address => uint256) public tokensDepositedProtected;
@@ -166,13 +166,13 @@ contract Actor is PropertiesAsserts {
 
     function borrow(bool vaultZero, uint256 assets) public returns (uint256 shares) {
         Silo vault = vaultZero ? vault0 : vault1;
-        shares = vault.borrow(assets, address(this), address(this), sameToken);
+        shares = vault.borrow(assets, address(this), address(this), sameAsset);
         accountForOpenedPosition(ISilo.AssetType.Debt, vaultZero, assets, shares);
     }
 
     function borrowShares(bool vaultZero, uint256 shares) public returns (uint256 assets) {
         Silo vault = vaultZero ? vault0 : vault1;
-        assets = vault.borrowShares(shares, address(this), address(this), sameToken);
+        assets = vault.borrowShares(shares, address(this), address(this), sameAsset);
         accountForOpenedPosition(ISilo.AssetType.Debt, vaultZero, assets, shares);
     }
 

@@ -63,11 +63,11 @@ contract RepayTest is SiloLittleHelper, Test {
         _repay_throwZeroShares(false);
     }
 
-    function _repay_throwZeroShares(bool _sameToken) private {
+    function _repay_throwZeroShares(bool _sameAsset) private {
         uint128 assets = 1; // after interest this is to small to convert to shares
         address borrower = makeAddr("Borrower");
 
-        _createDebt(assets, borrower, _sameToken);
+        _createDebt(assets, borrower, _sameAsset);
         vm.warp(block.timestamp + 50 * 365 days); // interest must be big, so conversion 1 asset => share be 0
 
         vm.expectRevert(ISilo.ZeroShares.selector);
@@ -85,11 +85,11 @@ contract RepayTest is SiloLittleHelper, Test {
         _repay_tinyAmount(false);
     }
 
-    function _repay_tinyAmount(bool _sameToken) private {
+    function _repay_tinyAmount(bool _sameAsset) private {
         uint128 assets = 1;
         address borrower = makeAddr("Borrower");
 
-        _createDebt(assets, borrower, _sameToken);
+        _createDebt(assets, borrower, _sameAsset);
 
         _repay(assets, borrower);
     }
@@ -105,11 +105,11 @@ contract RepayTest is SiloLittleHelper, Test {
         _repay_partialWithInterest(false);
     }
 
-    function _repay_partialWithInterest(bool _sameToken) private {
+    function _repay_partialWithInterest(bool _sameAsset) private {
         uint128 assets = 10;
         address borrower = makeAddr("Borrower");
 
-        _createDebt(assets, borrower, _sameToken);
+        _createDebt(assets, borrower, _sameAsset);
         vm.warp(block.timestamp + 1 days);
 
         _repay(assets, borrower);
@@ -126,12 +126,12 @@ contract RepayTest is SiloLittleHelper, Test {
         _repay_tooMuch(false);
     }
 
-    function _repay_tooMuch(bool _sameToken) private {
+    function _repay_tooMuch(bool _sameAsset) private {
         uint128 assets = 1e18;
         uint256 assetsToRepay = assets * 2;
         address borrower = address(this);
 
-        _createDebt(assets, borrower, _sameToken);
+        _createDebt(assets, borrower, _sameAsset);
         _mintTokens(token1, assetsToRepay, borrower);
 
         vm.warp(block.timestamp + 1 days);
@@ -153,11 +153,11 @@ contract RepayTest is SiloLittleHelper, Test {
         _repayShares_fullNoInterest_noDust(false);
     }
 
-    function _repayShares_fullNoInterest_noDust(bool _sameToken) public {
+    function _repayShares_fullNoInterest_noDust(bool _sameAsset) public {
         uint128 assets = 1e18;
         address borrower = makeAddr("Borrower");
 
-        uint256 shares = _createDebt(assets, borrower, _sameToken);
+        uint256 shares = _createDebt(assets, borrower, _sameAsset);
 
         uint256 assetsToRepay = silo1.previewRepayShares(shares);
         assertEq(assetsToRepay, assets, "previewRepay == assets == allowance => when no interest");
@@ -181,14 +181,14 @@ contract RepayTest is SiloLittleHelper, Test {
         _repayShares_fullWithInterest_noDust(false);
     }
 
-    function _repayShares_fullWithInterest_noDust(bool _sameToken) private {
+    function _repayShares_fullWithInterest_noDust(bool _sameAsset) private {
         uint128 assets = 1e18;
         address borrower = makeAddr("Borrower");
 
-        uint256 shares = _createDebt(assets, borrower, _sameToken);
+        uint256 shares = _createDebt(assets, borrower, _sameAsset);
         vm.warp(block.timestamp + 1 days);
 
-        uint256 interest = _sameToken ? 127862054884613 : 11684166722553653; // interest less when more collateral
+        uint256 interest = _sameAsset ? 127862054884613 : 11684166722553653; // interest less when more collateral
         uint256 assetsToRepay = silo1.previewRepayShares(shares);
         assertEq(assetsToRepay, 1e18 + interest, "assets with interest");
 
@@ -211,11 +211,11 @@ contract RepayTest is SiloLittleHelper, Test {
         _repayShares_insufficientAllowance(false);
     }
 
-    function _repayShares_insufficientAllowance(bool _sameToken) private {
+    function _repayShares_insufficientAllowance(bool _sameAsset) private {
         uint128 assets = 1e18;
         address borrower = makeAddr("Borrower");
 
-        uint256 shares = _createDebt(assets, borrower, _sameToken);
+        uint256 shares = _createDebt(assets, borrower, _sameAsset);
         vm.warp(block.timestamp + 1 days);
 
         uint256 previewRepay = silo1.previewRepayShares(shares);
@@ -237,14 +237,14 @@ contract RepayTest is SiloLittleHelper, Test {
         _repayShares_notFullWithInterest_withDust(false);
     }
 
-    function _repayShares_notFullWithInterest_withDust(bool _sameToken) private {
+    function _repayShares_notFullWithInterest_withDust(bool _sameAsset) private {
         uint128 assets = 1e18;
         address borrower = makeAddr("Borrower");
 
-        uint256 shares = _createDebt(assets, borrower, _sameToken);
+        uint256 shares = _createDebt(assets, borrower, _sameAsset);
         vm.warp(block.timestamp + 1 days);
 
-        uint256 interest = _sameToken ? 127862054884613 : 11684166722553653; // interest less when more collateral
+        uint256 interest = _sameAsset ? 127862054884613 : 11684166722553653; // interest less when more collateral
         uint256 previewRepay = silo1.previewRepayShares(shares);
 
         // after previewRepayShares we move time, so we will not be able to repay all
@@ -256,7 +256,7 @@ contract RepayTest is SiloLittleHelper, Test {
         assertEq(IShareToken(debtShareToken).balanceOf(borrower), 0, "debt fully repayed");
 
         // 5697763189689604/255707761064146 is just copy/paste, IRM model QA should test if interest are correct
-        uint256 dust = _sameToken ? 255707761064146 : 5697763189689604;
+        uint256 dust = _sameAsset ? 255707761064146 : 5697763189689604;
         assertEq(token1.allowance(borrower, address(silo1)), dust, "allowance dust");
     }
 
@@ -271,11 +271,11 @@ contract RepayTest is SiloLittleHelper, Test {
         _repay_twice(false);
     }
 
-    function _repay_twice(bool _sameToken) private {
+    function _repay_twice(bool _sameAsset) private {
         uint128 assets = 1e18;
         address borrower = makeAddr("Borrower");
 
-        _createDebt(assets, borrower, _sameToken);
+        _createDebt(assets, borrower, _sameAsset);
 
         vm.warp(block.timestamp + 1 days);
         _repay(assets / 2, borrower);
@@ -284,7 +284,7 @@ contract RepayTest is SiloLittleHelper, Test {
         _repay(assets / 2, borrower);
 
         (,, address debtShareToken) = siloConfig.getShareTokens(address(silo1));
-        uint256 interestLeft = _sameToken ? 159811221148187 : 12011339784578816; // interest smaller for one token
+        uint256 interestLeft = _sameAsset ? 159811221148187 : 12011339784578816; // interest smaller for one token
         assertEq(IShareToken(debtShareToken).balanceOf(borrower), interestLeft, "interest left");
     }
 }

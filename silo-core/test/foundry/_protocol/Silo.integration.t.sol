@@ -101,7 +101,7 @@ contract SiloIntegrationTest is VeSiloFeatures {
         uint256 borrowAmount = 10_000e6;
 
         vm.prank(_alice);
-        ISilo(silo1).borrow(borrowAmount, _alice, _alice, false /* sameToken */);
+        ISilo(silo1).borrow(borrowAmount, _alice, _alice, false /* sameAsset */);
 
         assertEq(IERC20(debtShareToken).balanceOf(_alice), borrowAmount, "Should have debt shares tokens");
     }

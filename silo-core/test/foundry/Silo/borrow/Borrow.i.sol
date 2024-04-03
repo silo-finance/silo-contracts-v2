@@ -33,10 +33,10 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
     */
     function test_borrow_all_zeros() public {
         vm.expectRevert(ISilo.ZeroAssets.selector);
-        silo0.borrow(0, address(0), address(0), false /* sameToken */);
+        silo0.borrow(0, address(0), address(0), false /* sameAsset */);
 
         vm.expectRevert(ISilo.ZeroAssets.selector);
-        silo0.borrow(0, address(0), address(0), true /* sameToken */);
+        silo0.borrow(0, address(0), address(0), true /* sameAsset */);
     }
 
     /*
@@ -78,15 +78,15 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
         _borrow_when_frontRun_NoCollateral(false);
     }
 
-    function _borrow_when_frontRun_NoCollateral(bool _sameToken) private {
+    function _borrow_when_frontRun_NoCollateral(bool _sameAsset) private {
         uint256 assets = 1e18;
         address borrower = address(this);
 
         // frontrun on other silo
-        _depositCollateral(assets, borrower, !_sameToken);
+        _depositCollateral(assets, borrower, !_sameAsset);
 
-        vm.expectRevert(_sameToken ? ISilo.NotEnoughLiquidity.selector : ISilo.AboveMaxLtv.selector);
-        silo1.borrow(assets, borrower, borrower, _sameToken);
+        vm.expectRevert(_sameAsset ? ISilo.NotEnoughLiquidity.selector : ISilo.AboveMaxLtv.selector);
+        silo1.borrow(assets, borrower, borrower, _sameAsset);
     }
 
     /*
@@ -100,16 +100,16 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
         _borrow_onWrongSilo_for_receiver_no_collateral(false);
     }
 
-    function _borrow_onWrongSilo_for_receiver_no_collateral(bool _sameToken) private {
+    function _borrow_onWrongSilo_for_receiver_no_collateral(bool _sameAsset) private {
         uint256 assets = 1e18;
         address borrower = makeAddr("borrower");
 
         _deposit(assets, makeAddr("depositor"));
-        _depositCollateral(assets, borrower, _sameToken, ISilo.AssetType.Protected);
+        _depositCollateral(assets, borrower, _sameAsset, ISilo.AssetType.Protected);
 
         vm.expectRevert("ERC20: insufficient allowance"); // because we want to mint for receiver
         vm.prank(borrower);
-        silo0.borrow(1, borrower, makeAddr("receiver"), _sameToken);
+        silo0.borrow(1, borrower, makeAddr("receiver"), _sameAsset);
     }
 
     /*
@@ -123,16 +123,16 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
         _borrow_onWrongSilo_for_receiver_with_collateral(false);
     }
 
-    function _borrow_onWrongSilo_for_receiver_with_collateral(bool _sameToken) private {
+    function _borrow_onWrongSilo_for_receiver_with_collateral(bool _sameAsset) private {
         uint256 assets = 1e18;
         address borrower = makeAddr("borrower");
         address receiver = makeAddr("receiver");
 
-        _depositCollateral(assets, receiver, _sameToken, ISilo.AssetType.Protected);
+        _depositCollateral(assets, receiver, _sameAsset, ISilo.AssetType.Protected);
 
         vm.expectRevert(ISilo.NotEnoughLiquidity.selector);
         vm.prank(borrower);
-        silo0.borrow(1, borrower, receiver, _sameToken);
+        silo0.borrow(1, borrower, receiver, _sameAsset);
     }
 
     /*
@@ -146,17 +146,17 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
         _borrow_revert_for_receiver_with_collateral(false);
     }
 
-    function _borrow_revert_for_receiver_with_collateral(bool _sameToken) private {
+    function _borrow_revert_for_receiver_with_collateral(bool _sameAsset) private {
         uint256 assets = 1e18;
         address borrower = makeAddr("borrower");
         address receiver = makeAddr("receiver");
 
         _depositForBorrow(assets, makeAddr("depositor"));
-        _depositCollateral(assets, receiver, _sameToken, ISilo.AssetType.Protected);
+        _depositCollateral(assets, receiver, _sameAsset, ISilo.AssetType.Protected);
 
         vm.expectRevert("ERC20: insufficient allowance"); // because we want to mint for receiver
         vm.prank(borrower);
-        silo1.borrow(1, borrower, receiver, _sameToken);
+        silo1.borrow(1, borrower, receiver, _sameAsset);
     }
 
     /*
@@ -170,18 +170,18 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
         _borrow_onWrongSilo_for_borrower(false);
     }
 
-    function _borrow_onWrongSilo_for_borrower(bool _sameToken) private {
+    function _borrow_onWrongSilo_for_borrower(bool _sameAsset) private {
         uint256 assets = 1e18;
         address borrower = makeAddr("borrower");
 
-        _depositCollateral(assets, makeAddr("depositor"), !_sameToken);
-        _depositCollateral(assets, borrower, _sameToken, ISilo.AssetType.Collateral);
+        _depositCollateral(assets, makeAddr("depositor"), !_sameAsset);
+        _depositCollateral(assets, borrower, _sameAsset, ISilo.AssetType.Collateral);
 
         vm.expectCall(address(token0), abi.encodeWithSelector(IERC20.transfer.selector, borrower, assets));
 
         vm.expectRevert(ISilo.AboveMaxLtv.selector);
         vm.prank(borrower);
-        silo0.borrow(assets, borrower, borrower, _sameToken);
+        silo0.borrow(assets, borrower, borrower, _sameAsset);
     }
 
     /*
@@ -195,14 +195,14 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
         _borrow_onWrongSilo_WithProtected(false);
     }
 
-    function _borrow_onWrongSilo_WithProtected(bool _sameToken) private {
+    function _borrow_onWrongSilo_WithProtected(bool _sameAsset) private {
         uint256 assets = 1e18;
         address borrower = address(this);
 
-        _depositCollateral(assets, borrower, _sameToken, ISilo.AssetType.Protected);
+        _depositCollateral(assets, borrower, _sameAsset, ISilo.AssetType.Protected);
 
         vm.expectRevert(ISilo.NotEnoughLiquidity.selector);
-        silo0.borrow(assets, borrower, borrower, _sameToken);
+        silo0.borrow(assets, borrower, borrower, _sameAsset);
     }
 
     /*
@@ -216,15 +216,15 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
         _borrow_onWrongSilo_WithCollateralAndProtected(false);
     }
 
-    function _borrow_onWrongSilo_WithCollateralAndProtected(bool _sameToken) private {
+    function _borrow_onWrongSilo_WithCollateralAndProtected(bool _sameAsset) private {
         uint256 assets = 1e18;
         address borrower = address(this);
 
-        _depositCollateral(assets * 2, borrower, _sameToken, ISilo.AssetType.Protected);
-        _depositCollateral(assets, borrower, _sameToken);
+        _depositCollateral(assets * 2, borrower, _sameAsset, ISilo.AssetType.Protected);
+        _depositCollateral(assets, borrower, _sameAsset);
 
-        vm.expectRevert(_sameToken ? ISilo.NotEnoughLiquidity.selector : ISilo.AboveMaxLtv.selector);
-        silo0.borrow(assets, borrower, borrower, _sameToken);
+        vm.expectRevert(_sameAsset ? ISilo.NotEnoughLiquidity.selector : ISilo.AboveMaxLtv.selector);
+        silo0.borrow(assets, borrower, borrower, _sameAsset);
     }
 
     /*
@@ -238,16 +238,16 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
         _borrow_BorrowNotPossible_withDebt(false);
     }
 
-    function _borrow_BorrowNotPossible_withDebt(bool _sameToken) private {
+    function _borrow_BorrowNotPossible_withDebt(bool _sameAsset) private {
         uint256 assets = 1e18;
         address borrower = address(this);
 
         _depositForBorrow(assets, makeAddr("depositor"));
-        _depositCollateral(assets, borrower, _sameToken, ISilo.AssetType.Protected);
-        _borrow(1, borrower, _sameToken);
+        _depositCollateral(assets, borrower, _sameAsset, ISilo.AssetType.Protected);
+        _borrow(1, borrower, _sameAsset);
 
         vm.expectRevert(ISilo.BorrowNotPossible.selector);
-        silo0.borrow(assets, borrower, borrower, _sameToken);
+        silo0.borrow(assets, borrower, borrower, _sameAsset);
     }
 
     /*
@@ -261,17 +261,17 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
         _borrow_frontRun_pass(false);
     }
 
-    function _borrow_frontRun_pass(bool _sameToken) private {
+    function _borrow_frontRun_pass(bool _sameAsset) private {
         uint256 assets = 1e18;
         address borrower = address(this);
 
         _depositForBorrow(assets, makeAddr("depositor"));
-        _depositCollateral(assets, borrower, _sameToken, ISilo.AssetType.Protected);
+        _depositCollateral(assets, borrower, _sameAsset, ISilo.AssetType.Protected);
 
         vm.prank(makeAddr("frontrunner"));
-        _depositCollateral(1, borrower, !_sameToken);
+        _depositCollateral(1, borrower, !_sameAsset);
 
-        _borrow(12345, borrower, _sameToken);
+        _borrow(12345, borrower, _sameAsset);
     }
 
     /*
@@ -285,27 +285,27 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
         _borrow_frontRun_transferShare(false);
     }
 
-    function _borrow_frontRun_transferShare(bool _sameToken) private {
+    function _borrow_frontRun_transferShare(bool _sameAsset) private {
         uint256 assets = 1e18;
         address borrower = address(this);
         address frontrunner = makeAddr("frontrunner");
 
         _depositForBorrow(assets, makeAddr("depositor"));
-        _depositCollateral(assets, borrower, _sameToken, ISilo.AssetType.Protected);
+        _depositCollateral(assets, borrower, _sameAsset, ISilo.AssetType.Protected);
 
         (
             address protectedShareToken, address collateralShareToken,
-        ) = siloConfig.getShareTokens(address(_sameToken ? silo0 : silo1));
+        ) = siloConfig.getShareTokens(address(_sameAsset ? silo0 : silo1));
 
-        _depositCollateral(5, frontrunner, !_sameToken);
-        _depositCollateral(3, frontrunner, !_sameToken, ISilo.AssetType.Protected);
+        _depositCollateral(5, frontrunner, !_sameAsset);
+        _depositCollateral(3, frontrunner, !_sameAsset, ISilo.AssetType.Protected);
 
         vm.prank(frontrunner);
         IShareToken(collateralShareToken).transfer(borrower, 5);
         vm.prank(frontrunner);
         IShareToken(protectedShareToken).transfer(borrower, 3);
 
-        _borrow(12345, borrower, _sameToken); // frontrun does not work
+        _borrow(12345, borrower, _sameAsset); // frontrun does not work
     }
 
     /*
@@ -319,17 +319,17 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
         _borrow_withTwoCollaterals(false);
     }
 
-    function _borrow_withTwoCollaterals(bool _sameToken) private {
+    function _borrow_withTwoCollaterals(bool _sameAsset) private {
         uint256 assets = 1e18;
         address borrower = address(this);
 
         _depositForBorrow(assets, makeAddr("depositor"));
 
         uint256 notCollateral = 123;
-        _depositCollateral(notCollateral, borrower, !_sameToken);
-        _depositCollateral(assets, borrower, _sameToken, ISilo.AssetType.Protected);
+        _depositCollateral(notCollateral, borrower, !_sameAsset);
+        _depositCollateral(assets, borrower, _sameAsset, ISilo.AssetType.Protected);
 
-        _borrow(12345, borrower, _sameToken);
+        _borrow(12345, borrower, _sameAsset);
     }
 
     /*
@@ -343,24 +343,24 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
         _borrow_pass(false);
     }
 
-    function _borrow_pass(bool _sameToken) private {
+    function _borrow_pass(bool _sameAsset) private {
         uint256 depositAssets = 1e18;
         address borrower = makeAddr("Borrower");
         address depositor = makeAddr("Depositor");
 
         _depositForBorrow(depositAssets, depositor);
-        _depositCollateral(depositAssets, borrower, _sameToken);
+        _depositCollateral(depositAssets, borrower, _sameAsset);
 
         (
             address protectedShareToken, address collateralShareToken, address debtShareToken
         ) = siloConfig.getShareTokens(address(silo0));
 
-        uint256 maxBorrow = silo1.maxBorrow(borrower, _sameToken);
-        uint256 maxBorrowShares = silo1.maxBorrowShares(borrower, _sameToken);
+        uint256 maxBorrow = silo1.maxBorrow(borrower, _sameAsset);
+        uint256 maxBorrowShares = silo1.maxBorrowShares(borrower, _sameAsset);
 
-        if (_sameToken) {
-            assertEq(maxBorrow, 0.85e18 - 1, "invalid maxBorrow for sameToken");
-            assertEq(maxBorrowShares, 0.85e18, "invalid maxBorrowShares for sameToken");
+        if (_sameAsset) {
+            assertEq(maxBorrow, 0.85e18 - 1, "invalid maxBorrow for sameAsset");
+            assertEq(maxBorrowShares, 0.85e18, "invalid maxBorrowShares for sameAsset");
         } else {
             assertEq(maxBorrow, 0.75e18 - 1, "invalid maxBorrow for two tokens");
             assertEq(maxBorrowShares, 0.75e18, "invalid maxBorrowShares for two tokens");
@@ -371,9 +371,9 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
 
         vm.expectRevert(ISilo.AboveMaxLtv.selector);
         vm.prank(borrower);
-        silo1.borrow(borrowToMuch, borrower, borrower, _sameToken);
+        silo1.borrow(borrowToMuch, borrower, borrower, _sameAsset);
 
-        _borrow(maxBorrow, borrower, _sameToken);
+        _borrow(maxBorrow, borrower, _sameAsset);
 
         assertEq(IShareToken(debtShareToken).balanceOf(borrower), 0, "expect borrower to NOT have debt in collateral silo");
         assertEq(silo0.getDebtAssets(), 0, "expect collateral silo to NOT have debt");
@@ -394,27 +394,27 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
         _borrow_twice(false);
     }
 
-    function _borrow_twice(bool _sameToken) private {
+    function _borrow_twice(bool _sameAsset) private {
         uint256 depositAssets = 1e18;
         address borrower = address(0x22334455);
         address depositor = address(0x9876123);
-        uint256 maxLtv = _sameToken ? 0.85e18 : 0.75e18;
+        uint256 maxLtv = _sameAsset ? 0.85e18 : 0.75e18;
 
-        _depositCollateral(depositAssets, borrower, _sameToken);
+        _depositCollateral(depositAssets, borrower, _sameAsset);
 
-        (, address collateralShareToken,) = siloConfig.getShareTokens(address(_sameToken ? silo1 : silo0));
+        (, address collateralShareToken,) = siloConfig.getShareTokens(address(_sameAsset ? silo1 : silo0));
         (,, address debtShareToken) = siloConfig.getShareTokens(address(silo1));
 
         assertEq(IShareToken(collateralShareToken).balanceOf(borrower), depositAssets, "expect borrower to have collateral");
 
-        uint256 maxBorrow = silo0.maxBorrow(borrower, _sameToken);
+        uint256 maxBorrow = silo0.maxBorrow(borrower, _sameAsset);
         assertEq(maxBorrow, 0, "maxBorrow should be 0, because this is where collateral is");
 
         // deposit, so we can borrow
         _depositForBorrow(depositAssets * 2, depositor);
 
         // in this particular scenario max borrow is underestimated by 1, so we compensate by +1, to max out
-        maxBorrow = silo1.maxBorrow(borrower, _sameToken) + 1;
+        maxBorrow = silo1.maxBorrow(borrower, _sameAsset) + 1;
         emit log_named_decimal_uint("maxBorrow #1", maxBorrow, 18);
         assertEq(maxBorrow, maxLtv, "maxBorrow borrower can do, maxLTV is 75%");
 
@@ -425,7 +425,7 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
         uint256 previewBorrowShares = silo1.previewBorrowShares(convertToShares);
         assertEq(previewBorrowShares, borrowAmount, "previewBorrowShares crosscheck");
 
-        uint256 gotShares = _borrow(borrowAmount, borrower, _sameToken);
+        uint256 gotShares = _borrow(borrowAmount, borrower, _sameAsset);
         uint256 shareTokenCurrentDebt = maxLtv / 2;
 
         assertEq(IShareToken(debtShareToken).balanceOf(borrower), shareTokenCurrentDebt, "expect borrower to have 1/2 of debt");
@@ -436,12 +436,12 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
         assertEq(borrowAmount, silo1.convertToAssets(gotShares), "convertToAssets returns borrowAmount");
 
         // in this particular scenario max borrow is underestimated by 1, so we compensate by +1, to max out
-        borrowAmount = silo1.maxBorrow(borrower, _sameToken) + 1;
+        borrowAmount = silo1.maxBorrow(borrower, _sameAsset) + 1;
         emit log_named_decimal_uint("borrowAmount #2", borrowAmount, 18);
         assertEq(borrowAmount, maxLtv / 2, "borrow second time");
 
         convertToShares = silo1.convertToShares(borrowAmount);
-        gotShares = _borrow(borrowAmount, borrower, _sameToken);
+        gotShares = _borrow(borrowAmount, borrower, _sameAsset);
 
         assertEq(IShareToken(debtShareToken).balanceOf(borrower), maxLtv, "debt silo: borrower has debt");
         assertEq(gotShares, maxLtv / 2, "got shares");
@@ -450,9 +450,9 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
         assertEq(borrowAmount, silo1.convertToAssets(gotShares), "convertToAssets returns borrowAmount (2)");
 
         // collateral silo
-        (,, debtShareToken) = siloConfig.getShareTokens(address(_sameToken ? silo1 : silo0));
+        (,, debtShareToken) = siloConfig.getShareTokens(address(_sameAsset ? silo1 : silo0));
 
-        if (!_sameToken) {
+        if (!_sameAsset) {
             assertEq(
                 IShareToken(debtShareToken).balanceOf(borrower),
                 0,
@@ -466,7 +466,7 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
         assertTrue(silo0.isSolvent(borrower), "still isSolvent (silo0)");
         assertTrue(silo1.isSolvent(borrower), "still isSolvent (silo1)");
 
-        _borrow(0.0001e18, borrower, _sameToken, ISilo.AboveMaxLtv.selector);
+        _borrow(0.0001e18, borrower, _sameAsset, ISilo.AboveMaxLtv.selector);
     }
 
     /*
@@ -480,39 +480,39 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
         _borrow_scenarios(false);
     }
 
-    function _borrow_scenarios(bool _sameToken) private {
+    function _borrow_scenarios(bool _sameAsset) private {
         uint256 depositAssets = 1e18;
         address borrower = address(0x22334455);
         address depositor = address(0x9876123);
-        uint256 expectedLtv = _sameToken ? 0.85e18 : 0.75e18;
+        uint256 expectedLtv = _sameAsset ? 0.85e18 : 0.75e18;
 
-        _depositCollateral(depositAssets, borrower, _sameToken, ISilo.AssetType.Collateral);
+        _depositCollateral(depositAssets, borrower, _sameAsset, ISilo.AssetType.Collateral);
 
         // deposit, so we can borrow
         _depositForBorrow(100e18, depositor);
         assertEq(silo0.getLtv(borrower), 0, "no debt, so LT == 0 (silo0)");
         assertEq(silo1.getLtv(borrower), 0, "no debt, so LT == 0 (silo1)");
 
-        uint256 maxBorrow = silo1.maxBorrow(borrower, _sameToken) + 1; // +1 to balance out underestimation
+        uint256 maxBorrow = silo1.maxBorrow(borrower, _sameAsset) + 1; // +1 to balance out underestimation
 
-        _borrow(200e18, borrower, _sameToken, ISilo.NotEnoughLiquidity.selector);
-        _borrow(maxBorrow * 2, borrower, _sameToken, ISilo.AboveMaxLtv.selector);
-        _borrow(maxBorrow / 2, borrower, _sameToken);
+        _borrow(200e18, borrower, _sameAsset, ISilo.NotEnoughLiquidity.selector);
+        _borrow(maxBorrow * 2, borrower, _sameAsset, ISilo.AboveMaxLtv.selector);
+        _borrow(maxBorrow / 2, borrower, _sameAsset);
         assertEq(silo0.getLtv(borrower), expectedLtv / 2, "borrow 50% of max, maxLTV is 75%, so LT == 37,5% (silo0)");
         assertEq(silo1.getLtv(borrower), expectedLtv / 2, "borrow 50% of max, maxLTV is 75%, so LT == 37,5% (silo1)");
 
-        _borrow(200e18, borrower, _sameToken, ISilo.NotEnoughLiquidity.selector);
-        _borrow(maxBorrow, borrower, _sameToken, ISilo.AboveMaxLtv.selector);
-        _borrow(maxBorrow / 2, borrower, _sameToken);
+        _borrow(200e18, borrower, _sameAsset, ISilo.NotEnoughLiquidity.selector);
+        _borrow(maxBorrow, borrower, _sameAsset, ISilo.AboveMaxLtv.selector);
+        _borrow(maxBorrow / 2, borrower, _sameAsset);
         assertEq(silo0.getLtv(borrower), expectedLtv, "borrow 100% of max, so LT == 75% (silo0)");
         assertEq(silo1.getLtv(borrower), expectedLtv, "borrow 100% of max, so LT == 75% (silo1)");
 
-        assertEq(silo0.maxBorrow(borrower, _sameToken), 0, "maxBorrow 0");
+        assertEq(silo0.maxBorrow(borrower, _sameAsset), 0, "maxBorrow 0");
         assertTrue(silo0.isSolvent(borrower), "still isSolvent (silo0)");
         assertTrue(silo1.isSolvent(borrower), "still isSolvent (silo1)");
         assertTrue(silo1.borrowPossible(borrower), "borrow is still possible, we just reached CAP");
 
-        _borrow(1, borrower, _sameToken, ISilo.AboveMaxLtv.selector);
+        _borrow(1, borrower, _sameAsset, ISilo.AboveMaxLtv.selector);
     }
 
     /*
@@ -526,15 +526,15 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
         _borrow_maxDeposit(false);
     }
 
-    function _borrow_maxDeposit(bool _sameToken) private {
+    function _borrow_maxDeposit(bool _sameAsset) private {
         address borrower = makeAddr("Borrower");
         address depositor = makeAddr("depositor");
 
-        _depositCollateral(10, borrower, _sameToken);
+        _depositCollateral(10, borrower, _sameAsset);
         _depositForBorrow(1, depositor);
-        _borrow(1, borrower, _sameToken);
+        _borrow(1, borrower, _sameAsset);
 
-        uint256 silo1TotalCollateral = _sameToken ? 10 + 1 : 1;
+        uint256 silo1TotalCollateral = _sameAsset ? 10 + 1 : 1;
 
         assertEq(
             SiloERC4626Lib._VIRTUAL_DEPOSIT_LIMIT - silo1TotalCollateral,
@@ -568,27 +568,27 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
         _borrowShares_revertsOnZeroAssets(_depositAmount, _forBorrow, false);
     }
 
-    function _borrowShares_revertsOnZeroAssets(uint256 _depositAmount, uint256 _forBorrow, bool _sameToken) private {
+    function _borrowShares_revertsOnZeroAssets(uint256 _depositAmount, uint256 _forBorrow, bool _sameAsset) private {
         vm.assume(_depositAmount > _forBorrow);
         vm.assume(_forBorrow > 0);
 
-        if (_sameToken) {
+        if (_sameAsset) {
             vm.assume(type(uint256).max - _depositAmount > _forBorrow);
         }
 
         address borrower = makeAddr("Borrower");
         address depositor = makeAddr("depositor");
 
-        _depositCollateral(_depositAmount, borrower, _sameToken);
+        _depositCollateral(_depositAmount, borrower, _sameAsset);
         _depositForBorrow(_forBorrow, depositor);
-        uint256 amount = _borrowShares(1, borrower, _sameToken);
+        uint256 amount = _borrowShares(1, borrower, _sameAsset);
 
         assertGt(amount, 0, "amount can never be 0");
     }
 
-    function _borrow(uint256 _amount, address _borrower, bool _sameToken, bytes4 _revert) internal returns (uint256 shares) {
+    function _borrow(uint256 _amount, address _borrower, bool _sameAsset, bytes4 _revert) internal returns (uint256 shares) {
         vm.expectRevert(_revert);
         vm.prank(_borrower);
-        shares = silo1.borrow(_amount, _borrower, _borrower, _sameToken);
+        shares = silo1.borrow(_amount, _borrower, _borrower, _sameAsset);
     }
 }

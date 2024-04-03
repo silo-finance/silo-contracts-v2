@@ -86,7 +86,7 @@ contract PreviewDepositTest is SiloLittleHelper, Test {
         _previewDeposit_withInterest(_assets, _protected, false);
     }
 
-    function _previewDeposit_withInterest(uint256 _assets, bool _protected, bool _sameToken) private {
+    function _previewDeposit_withInterest(uint256 _assets, bool _protected, bool _sameAsset) private {
         vm.assume(_assets < type(uint128).max);
         vm.assume(_assets > 0);
 
@@ -99,8 +99,8 @@ contract PreviewDepositTest is SiloLittleHelper, Test {
             _makeDeposit(silo1, token1, _assets, depositor, ISilo.AssetType.Protected);
         }
 
-        _depositCollateral(_assets / 10 == 0 ? 2 : _assets, borrower, _sameToken);
-        _borrow(_assets / 10 + 1, borrower, _sameToken); // +1 ensure we not borrowing 0
+        _depositCollateral(_assets / 10 == 0 ? 2 : _assets, borrower, _sameAsset);
+        _borrow(_assets / 10 + 1, borrower, _sameAsset); // +1 ensure we not borrowing 0
 
         vm.warp(block.timestamp + 365 days);
 

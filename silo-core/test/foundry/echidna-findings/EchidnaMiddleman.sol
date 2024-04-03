@@ -23,7 +23,7 @@ contract EchidnaMiddleman is EchidnaSetup {
         ISilo silo = __chooseSilo(_siloZero);
 
         vm.prank(actor);
-        silo.borrow(_amount, actor, actor, false /* sameToken */);
+        silo.borrow(_amount, actor, actor, false /* sameAsset */);
     }
 
     function __previewDeposit_doesNotReturnMoreThanDeposit(uint8 _actor, uint256 _assets)
@@ -42,10 +42,10 @@ contract EchidnaMiddleman is EchidnaSetup {
 
     function __maxBorrow_correctReturnValue(uint8 _actor) internal returns (uint256 maxAssets, uint256 shares) {
         address actor = _chooseActor(_actor);
-        maxAssets = silo0.maxBorrow(actor, false /* sameToken */);
+        maxAssets = silo0.maxBorrow(actor, false /* sameAsset */);
 
         vm.prank(actor);
-        shares = silo0.borrow(maxAssets, actor, actor, false /* sameToken */); // should not revert!
+        shares = silo0.borrow(maxAssets, actor, actor, false /* sameAsset */); // should not revert!
     }
 
     function __mint(uint8 _actor, bool _siloZero, uint256 _shares) internal {
@@ -59,11 +59,11 @@ contract EchidnaMiddleman is EchidnaSetup {
     function __maxBorrowShares_correctReturnValue(uint8 _actor) internal returns (uint256 maxBorrow, uint256 shares) {
         address actor = _chooseActor(_actor);
 
-        maxBorrow = silo0.maxBorrowShares(actor, false /* sameToken */);
+        maxBorrow = silo0.maxBorrowShares(actor, false /* sameAsset */);
         assertGt(maxBorrow, 0, "in echidna scenarios we exclude zeros, so we should not get it here as well");
 
         vm.prank(actor);
-        shares = silo0.borrowShares(maxBorrow, actor, actor, false /* sameToken */);
+        shares = silo0.borrowShares(maxBorrow, actor, actor, false /* sameAsset */);
     }
 
     function __maxLiquidation_correctReturnValue(uint8 _actor) internal {
@@ -188,7 +188,7 @@ contract EchidnaMiddleman is EchidnaSetup {
         ISilo silo = __chooseSilo(_siloZero);
 
         vm.prank(actor);
-        silo.borrowShares(_shares, actor, actor, false /* sameToken */);
+        silo.borrowShares(_shares, actor, actor, false /* sameAsset */);
     }
 
     function __maxRedeem_correctMax(uint8 _actorIndex) internal {

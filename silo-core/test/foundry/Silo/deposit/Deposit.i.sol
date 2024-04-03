@@ -105,7 +105,7 @@ contract DepositTest is SiloLittleHelper, Test {
         _deposit_withDebt(true);
     }
 
-    function _deposit_withDebt(bool _sameToken) internal {
+    function _deposit_withDebt(bool _sameAsset) internal {
         uint256 assets = 1e18;
         address depositor = makeAddr("Depositor");
 
@@ -114,8 +114,8 @@ contract DepositTest is SiloLittleHelper, Test {
         _makeDeposit(silo1, token1, assets, depositor, ISilo.AssetType.Collateral);
         _makeDeposit(silo1, token1, assets, depositor, ISilo.AssetType.Protected);
 
-        uint256 maxBorrow = silo1.maxBorrow(depositor, _sameToken);
-        _borrow(maxBorrow, depositor, _sameToken);
+        uint256 maxBorrow = silo1.maxBorrow(depositor, _sameAsset);
+        _borrow(maxBorrow, depositor, _sameAsset);
 
         _makeDeposit(silo0, token0, assets, depositor, ISilo.AssetType.Collateral);
         _makeDeposit(silo0, token0, assets, depositor, ISilo.AssetType.Protected);
@@ -182,13 +182,13 @@ contract DepositTest is SiloLittleHelper, Test {
         _deposit_revert_zeroShares(false);
     }
 
-    function _deposit_revert_zeroShares(bool _sameToken) private {
+    function _deposit_revert_zeroShares(bool _sameAsset) private {
         address borrower = makeAddr("borrower");
 
-        _depositCollateral(2 ** 128, borrower, _sameToken);
+        _depositCollateral(2 ** 128, borrower, _sameAsset);
         _depositForBorrow(2 ** 128, address(2));
 
-        _borrow(2 ** 128 / 2, borrower, _sameToken);
+        _borrow(2 ** 128 / 2, borrower, _sameAsset);
 
         address anyAddress = makeAddr("any");
         // no interest, so shares are 1:1
