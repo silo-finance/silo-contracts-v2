@@ -117,7 +117,7 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
         bool receiveSToken;
 
         (
-            ,, ISiloConfig.PositionInfo memory positionInto
+            ,, ISiloConfig.DebtInfo memory positionInto
         ) = siloConfig.getConfigs(address(silo1), userWithoutDebt, 0 /* always 0 for external calls */);
 
         assertTrue(!positionInto.positionOpen, "we need user without position for this test");
@@ -137,7 +137,7 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
         bool receiveSToken;
 
         (
-            ,, ISiloConfig.PositionInfo memory positionInto
+            ,, ISiloConfig.DebtInfo memory positionInto
         ) = siloConfig.getConfigs(address(silo1), BORROWER, 0 /* always 0 for external calls */);
 
         assertTrue(positionInto.positionOpen, "we need user with position for this test");

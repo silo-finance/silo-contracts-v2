@@ -31,11 +31,11 @@ library SiloSolvencyLib {
     function isSolvent(
         ISiloConfig.ConfigData memory _collateralConfig,
         ISiloConfig.ConfigData memory _debtConfig,
-        ISiloConfig.PositionInfo memory _positionInfo,
+        ISiloConfig.DebtInfo memory _debtInfo,
         address _borrower,
         ISilo.AccrueInterestInMemory _accrueInMemory
     ) internal view returns (bool) {
-        if (!_positionInfo.positionOpen) return true;
+        if (!_debtInfo.positionOpen) return true;
 
         uint256 ltv = getLtv(
             _collateralConfig,
@@ -235,9 +235,9 @@ library SiloSolvencyLib {
     }
 
     /// @return TRUE when current silo deposit is NOT attached to debt, FALSE otherwise
-    function depositWithoutDebt(ISiloConfig.PositionInfo memory _positionInfo) internal pure returns (bool) {
-        if (!_positionInfo.positionOpen) return true;
+    function depositWithoutDebt(ISiloConfig.DebtInfo memory _debtInfo) internal pure returns (bool) {
+        if (!_debtInfo.positionOpen) return true;
 
-        return _positionInfo.debtInThisSilo ? !_positionInfo.oneAssetPosition : _positionInfo.oneAssetPosition;
+        return _debtInfo.debtInThisSilo ? !_debtInfo.oneAssetPosition : _debtInfo.oneAssetPosition;
     }
 }

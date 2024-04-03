@@ -382,7 +382,7 @@ library SiloLendingLib {
         }
     }
 
-    function borrowPossible(ISiloConfig.PositionInfo memory _positionInfo) internal pure returns (bool) {
-        return !_positionInfo.positionOpen || _positionInfo.debtInThisSilo;
+    function borrowPossible(ISiloConfig.DebtInfo memory _debtInfo) internal pure returns (bool) {
+        return !_debtInfo.positionOpen || _debtInfo.debtInThisSilo;
     }
 }

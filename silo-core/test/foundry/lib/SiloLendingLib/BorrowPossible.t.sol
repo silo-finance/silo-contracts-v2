@@ -16,15 +16,15 @@ contract BorrowPossibleTest is Test {
         bool _debtInSilo0,
         bool _debtInThisSilo
     ) public {
-        ISiloConfig.PositionInfo memory positionInfo;
+        ISiloConfig.DebtInfo memory debtInfo;
 
-        positionInfo.oneAssetPosition = _oneAssetPosition;
-        positionInfo.debtInSilo0 = _debtInSilo0;
-        positionInfo.debtInThisSilo = _debtInThisSilo;
+        debtInfo.oneAssetPosition = _oneAssetPosition;
+        debtInfo.debtInSilo0 = _debtInSilo0;
+        debtInfo.debtInThisSilo = _debtInThisSilo;
 
-        positionInfo.positionOpen = false;
+        debtInfo.positionOpen = false;
 
-        assertTrue(SiloLendingLib.borrowPossible(positionInfo));
+        assertTrue(SiloLendingLib.borrowPossible(debtInfo));
     }
 
     /*
@@ -32,14 +32,14 @@ contract BorrowPossibleTest is Test {
     */
     /// forge-config: core-test.fuzz.runs = 10
     function test_borrowPossible_notPossible_withDebtInOtherSilo_fuzz(bool _oneAssetPosition, bool _debtInSilo0) public {
-        ISiloConfig.PositionInfo memory positionInfo;
+        ISiloConfig.DebtInfo memory debtInfo;
 
-        positionInfo.oneAssetPosition = _oneAssetPosition;
-        positionInfo.debtInSilo0 = _debtInSilo0;
+        debtInfo.oneAssetPosition = _oneAssetPosition;
+        debtInfo.debtInSilo0 = _debtInSilo0;
 
-        positionInfo.positionOpen = true;
-        positionInfo.debtInThisSilo = false;
+        debtInfo.positionOpen = true;
+        debtInfo.debtInThisSilo = false;
 
-        assertTrue(!SiloLendingLib.borrowPossible(positionInfo));
+        assertTrue(!SiloLendingLib.borrowPossible(debtInfo));
     }
 }

@@ -14,9 +14,9 @@ import {SiloERC4626Lib} from "./SiloERC4626Lib.sol";
 library SiloLensLib {
     function borrowPossible(ISilo _silo, address _borrower) internal view returns (bool possible) {
         (
-            ,, ISiloConfig.PositionInfo memory positionInfo
+            ,, ISiloConfig.DebtInfo memory debtInfo
         ) = _silo.config().getConfigs(address(_silo), _borrower, 0 /* method matters only for borrow */);
-        possible = SiloLendingLib.borrowPossible(positionInfo);
+        possible = SiloLendingLib.borrowPossible(debtInfo);
     }
 
     function getMaxLtv(ISilo _silo) internal view returns (uint256 maxLtv) {

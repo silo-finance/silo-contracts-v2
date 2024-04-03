@@ -31,11 +31,11 @@ contract PartialLiquidation is IPartialLiquidation, ReentrancyGuardUpgradeable {
         (
             ISiloConfig.ConfigData memory collateralConfig,
             ISiloConfig.ConfigData memory debtConfig,
-            ISiloConfig.PositionInfo memory positionInfo
+            ISiloConfig.DebtInfo memory debtInfo
         ) = ISilo(_siloWithDebt).config().getConfigs(_siloWithDebt, _borrower, 0 /* method matters only for borrow */);
 
-        if (!positionInfo.positionOpen) revert UserIsSolvent();
-        if (!positionInfo.debtInThisSilo) revert ISilo.ThereIsDebtInOtherSilo();
+        if (!debtInfo.positionOpen) revert UserIsSolvent();
+        if (!debtInfo.debtInThisSilo) revert ISilo.ThereIsDebtInOtherSilo();
 
         if (_collateralAsset != collateralConfig.token) revert UnexpectedCollateralToken();
         if (_debtAsset != debtConfig.token) revert UnexpectedDebtToken();

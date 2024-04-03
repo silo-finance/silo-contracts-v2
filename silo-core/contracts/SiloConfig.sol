@@ -69,7 +69,7 @@ contract SiloConfig is ISiloConfig {
     bool private immutable _CALL_BEFORE_QUOTE1;
 
     // TODO do we need events for this? this is internal state only
-    mapping (address borrower => PositionInfo positionInfo) internal _positionsInfo;
+    mapping (address borrower => DebtInfo debtInfo) internal _debtsInfo;
 
     /// @param _siloId ID of this pool assigned by factory
     /// @param _configData0 silo configuration data for token0
@@ -130,37 +130,37 @@ contract SiloConfig is ISiloConfig {
     /// @inheritdoc ISiloConfig
     function openPosition(address _borrower, bool _sameAsset)
         external
-        returns (ConfigData memory, ConfigData memory, PositionInfo memory)
+        returns (ConfigData memory, ConfigData memory, DebtInfo memory)
     {
         if (msg.sender != _SILO0 && msg.sender != _SILO1) revert WrongSilo();
 
-        PositionInfo memory positionInfo = _positionsInfo[_borrower];
+        DebtInfo memory debtInfo = _debtsInfo[_borrower];
 
-        if (!positionInfo.positionOpen) {
-            positionInfo.positionOpen = true;
-            positionInfo.oneAssetPosition = _sameAsset;
-            positionInfo.debtInSilo0 = msg.sender == _SILO0;
+        if (!debtInfo.positionOpen) {
+            debtInfo.positionOpen = true;
+            debtInfo.oneAssetPosition = _sameAsset;
+            debtInfo.debtInSilo0 = msg.sender == _SILO0;
 
-            _positionsInfo[_borrower] = positionInfo;
+            _debtsInfo[_borrower] = debtInfo;
         }
 
-        return _getConfigs(msg.sender, 0 /* method does not mather when position open */, positionInfo);
+        return _getConfigs(msg.sender, 0 /* method does not mather when position open */, debtInfo);
     }
 
     /// @inheritdoc ISiloConfig
     function onPositionTransfer(address _sender, address _recipient) external {
         if (msg.sender != _DEBT_SHARE_TOKEN0 && msg.sender != _DEBT_SHARE_TOKEN1) revert OnlyDebtShareToken();
 
-        PositionInfo storage recipientPosition = _positionsInfo[_recipient];
+        DebtInfo storage recipientPosition = _debtsInfo[_recipient];
 
         if (recipientPosition.positionOpen) {
             // transferring debt not allowed, if _recipient has position in other silo
             _forbidCrossSiloTransfers(recipientPosition.debtInSilo0);
         } else {
-            _forbidCrossSiloTransfers(_positionsInfo[_sender].debtInSilo0);
+            _forbidCrossSiloTransfers(_debtsInfo[_sender].debtInSilo0);
             
             recipientPosition.positionOpen = true;
-            recipientPosition.oneAssetPosition = _positionsInfo[_sender].oneAssetPosition;
+            recipientPosition.oneAssetPosition = _debtsInfo[_sender].oneAssetPosition;
             recipientPosition.debtInSilo0 = msg.sender == _DEBT_SHARE_TOKEN0;
         }
     }
@@ -171,7 +171,7 @@ contract SiloConfig is ISiloConfig {
             msg.sender != _DEBT_SHARE_TOKEN0 && msg.sender != _DEBT_SHARE_TOKEN1
         ) revert WrongSilo();
 
-        delete _positionsInfo[_borrower];
+        delete _debtsInfo[_borrower];
     }
 
     /// @inheritdoc ISiloConfig
@@ -210,9 +210,9 @@ contract SiloConfig is ISiloConfig {
         external
         view
         virtual
-        returns (ConfigData memory collateralConfig, ConfigData memory debtConfig, PositionInfo memory positionInfo)
+        returns (ConfigData memory collateralConfig, ConfigData memory debtConfig, DebtInfo memory debtInfo)
     {
-        return _getConfigs(_silo, _method, _positionsInfo[_borrower]);
+        return _getConfigs(_silo, _method, _debtsInfo[_borrower]);
     }
 
     /// @inheritdoc ISiloConfig
@@ -284,11 +284,11 @@ contract SiloConfig is ISiloConfig {
     }
 
     // solhint-disable-next-line function-max-lines, code-complexity
-    function _getConfigs(address _silo, uint256 _method, PositionInfo memory _positionInfo)
+    function _getConfigs(address _silo, uint256 _method, DebtInfo memory _debtInfo)
         internal
         view
         virtual
-        returns (ConfigData memory collateral, ConfigData memory debt, PositionInfo memory)
+        returns (ConfigData memory collateral, ConfigData memory debt, DebtInfo memory)
     {
         bool callForSilo0 = _silo == _SILO0;
         if (!callForSilo0 && _silo != _SILO1) revert WrongSilo();
@@ -333,33 +333,33 @@ contract SiloConfig is ISiloConfig {
             callBeforeQuote: _CALL_BEFORE_QUOTE1
         });
 
-        if (!_positionInfo.positionOpen) {
+        if (!_debtInfo.positionOpen) {
             if (_method == _METHOD_BORROW_SAME_TOKEN) {
-                return callForSilo0 ? (collateral, collateral, _positionInfo) : (debt, debt, _positionInfo);
+                return callForSilo0 ? (collateral, collateral, _debtInfo) : (debt, debt, _debtInfo);
             } else if (_method == _METHOD_BORROW_TWO_TOKENS) {
-                return callForSilo0 ? (debt, collateral, _positionInfo) : (collateral, debt, _positionInfo);
+                return callForSilo0 ? (debt, collateral, _debtInfo) : (collateral, debt, _debtInfo);
             } else {
-                return callForSilo0 ? (collateral, debt, _positionInfo) : (debt, collateral, _positionInfo);
+                return callForSilo0 ? (collateral, debt, _debtInfo) : (debt, collateral, _debtInfo);
             }
         }
 
-        if (_positionInfo.debtInSilo0) {
-            _positionInfo.debtInThisSilo = callForSilo0;
+        if (_debtInfo.debtInSilo0) {
+            _debtInfo.debtInThisSilo = callForSilo0;
 
-            if (_positionInfo.oneAssetPosition) {
+            if (_debtInfo.oneAssetPosition) {
                 debt = collateral;
             } else {
                 (collateral, debt) = (debt, collateral);
             }
         } else {
-            _positionInfo.debtInThisSilo = !callForSilo0;
+            _debtInfo.debtInThisSilo = !callForSilo0;
 
-            if (_positionInfo.oneAssetPosition) {
+            if (_debtInfo.oneAssetPosition) {
                 collateral = debt;
             }
         }
 
-        return (collateral, debt, _positionInfo);
+        return (collateral, debt, _debtInfo);
     }
 
     function _forbidCrossSiloTransfers(bool _debtInSilo0) internal view {
