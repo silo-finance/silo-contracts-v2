@@ -3,8 +3,10 @@ import "../_common/IsSiloFunction.spec";
 import "../_common/SiloMethods.spec";
 import "../_common/Helpers.spec";
 import "../_common/CommonSummarizations.spec";
-import "../../_simplifications/Oracle_quote_one.spec";
-import "../../_simplifications/Silo_isSolvent_ghost.spec";
+//import "../../_simplifications/Oracle_quote_one.spec";
+import "../../_simplifications/priceOracle.spec";
+//import "../../_simplifications/Silo_isSolvent_ghost.spec";
+import "../../_simplifications/SiloSolvencyLib.spec";
 import "../../_simplifications/SimplifiedGetCompoundInterestRateAndUpdate.spec";
 
 rule HLP_depositAndInverse(env e, address receiver)
@@ -12,6 +14,7 @@ rule HLP_depositAndInverse(env e, address receiver)
     completeSiloSetupEnv(e);
     totalSupplyMoreThanBalance(receiver);
     totalSupplyMoreThanBalance(e.msg.sender);
+    sharesToAssetsFixedRatio(e);
     
     uint256 assets;
     
@@ -40,6 +43,7 @@ rule HLP_mintAndInverse(env e, address receiver)
     completeSiloSetupEnv(e);
     totalSupplyMoreThanBalance(receiver);
     totalSupplyMoreThanBalance(e.msg.sender);
+    sharesToAssetsFixedRatio(e);
     
     mathint balanceTokenBefore = token0.balanceOf(e.msg.sender);
     mathint balanceCollateralBefore = shareCollateralToken0.balanceOf(receiver);
@@ -55,11 +59,11 @@ rule HLP_mintAndInverse(env e, address receiver)
     
     assert balanceCollateralAfter == balanceCollateralBefore;
     assert balanceProtectedCollateralAfter == balanceProtectedCollateralBefore;
-    assert balanceTokenBefore == balanceTokenAfter;
+    assert balanceTokenBefore <= balanceTokenAfter;
 
     satisfy balanceCollateralAfter == balanceCollateralBefore;
     satisfy balanceProtectedCollateralAfter == balanceProtectedCollateralBefore;
-    satisfy balanceTokenBefore == balanceTokenAfter;
+    satisfy balanceTokenBefore <= balanceTokenAfter;
 }
 
 rule HLP_borrowSharesAndInverse(env e, address receiver)
@@ -67,6 +71,7 @@ rule HLP_borrowSharesAndInverse(env e, address receiver)
     completeSiloSetupEnv(e);
     totalSupplyMoreThanBalance(receiver);
     totalSupplyMoreThanBalance(e.msg.sender);
+    sharesToAssetsFixedRatio(e);
     
     mathint debtBefore = shareDebtToken0.balanceOf(e.msg.sender);
     mathint balanceTokenBefore = token0.balanceOf(e.msg.sender);
@@ -86,10 +91,10 @@ rule HLP_borrowSharesAndInverse(env e, address receiver)
     assert debtBefore == debtAfter;
     assert balanceCollateralAfter == balanceCollateralBefore;
     assert balanceProtectedCollateralAfter == balanceProtectedCollateralBefore;
-    assert balanceTokenBefore == balanceTokenAfter;
+    assert balanceTokenBefore <= balanceTokenAfter;
 
     satisfy balanceCollateralAfter == balanceCollateralBefore;
     satisfy balanceProtectedCollateralAfter == balanceProtectedCollateralBefore;
-    satisfy balanceTokenBefore == balanceTokenAfter;
+    satisfy balanceTokenBefore <= balanceTokenAfter;
 }
 

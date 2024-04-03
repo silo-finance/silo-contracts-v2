@@ -631,3 +631,98 @@ rule protectedSharesBalance(env e, method f, address receiver)
         "The balance of share tokens should decrease only if protected assets decreased";
 }
 
+// save the run that violates the customers spec
+// document what methods actually change it..
+// the same for others
+rule whoCanChangeShareTokenTotalSupply(env e, method f) filtered { f -> !f.isView } 
+{
+    address receiver;
+    completeSiloSetupEnv(e);
+    totalSupplyMoreThanBalance(e.msg.sender);
+    totalSupplyMoreThanBalance(receiver);
+
+    mathint collateralTotalSupplyBefore = shareCollateralToken0.totalSupply();
+    mathint totalColateralBefore;
+    totalColateralBefore, _ = getCollateralAndProtectedAssets();
+    
+    calldataarg args;
+    f(e, args);
+    mathint collateralTotalSupplyAfter = shareCollateralToken0.totalSupply();
+    mathint totalColateralAfter;
+    totalColateralAfter, _ = getCollateralAndProtectedAssets();
+    
+    assert collateralTotalSupplyAfter > collateralTotalSupplyBefore <=> 
+        totalColateralAfter > totalColateralBefore;
+
+    assert totalColateralAfter > totalColateralBefore => canIncreaseTotalCollateral(f);
+    assert totalColateralAfter < totalColateralBefore => canDecreaseTotalCollateral(f);
+}
+
+// debtShareToken.totalSupply and Silo._total[ISilo.AssetType.Debt].assets should decrease only on repay, repayShares, liquidationCall. accrueInterest 
+// increase only Silo._total[ISilo.AssetType.Debt].assets.
+rule whoCanChangeDebtShareTokenTotalSupply(env e, method f) filtered { f -> !f.isView } 
+{
+    address receiver;
+    completeSiloSetupEnv(e);
+    totalSupplyMoreThanBalance(e.msg.sender);
+    totalSupplyMoreThanBalance(receiver);
+
+    mathint debtTotalSupplyBefore = shareDebtToken0.totalSupply();
+    mathint totalDebtBefore;
+    _, totalDebtBefore = getCollateralAndDebtAssets();
+    
+    calldataarg args;
+    f(e, args);
+    mathint debtTotalSupplyAfter = shareDebtToken0.totalSupply();
+    mathint totalDebtAfter;
+    _, totalDebtAfter = getCollateralAndDebtAssets();
+    
+    assert debtTotalSupplyAfter > debtTotalSupplyBefore <=> 
+        totalDebtAfter > totalDebtBefore;
+
+    assert debtTotalSupplyAfter > debtTotalSupplyBefore => canIncreaseTotalCollateral(f);
+    assert debtTotalSupplyAfter < debtTotalSupplyBefore => canDecreaseTotalCollateral(f);
+}
+
+rule whoCanChangeProtectedShareTokenTotalSupply(env e, method f) filtered { f -> !f.isView } 
+{
+    address receiver;
+    completeSiloSetupEnv(e);
+    totalSupplyMoreThanBalance(e.msg.sender);
+    totalSupplyMoreThanBalance(receiver);
+
+    mathint protectedCollateralTotalSupplyBefore = shareProtectedCollateralToken0.totalSupply();
+    mathint totalProtectedColateralBefore;
+    _, totalProtectedColateralBefore = getCollateralAndProtectedAssets();
+    
+    calldataarg args;
+    f(e, args);
+    mathint protectedCollateralTotalSupplyAfter = shareProtectedCollateralToken0.totalSupply();
+    mathint totalProtectedColateralAfter;
+    _, totalProtectedColateralAfter = getCollateralAndProtectedAssets();
+    
+    assert protectedCollateralTotalSupplyAfter > protectedCollateralTotalSupplyBefore <=> 
+        totalProtectedColateralAfter > totalProtectedColateralBefore;
+
+    assert totalProtectedColateralAfter > totalProtectedColateralBefore => canIncreaseTotalProtectedCollateral(f);
+    assert totalProtectedColateralAfter < totalProtectedColateralBefore => canDecreaseTotalProtectedCollateral(f);
+}
+
+rule siloTotalsEqualBalance(env e, method f) filtered { f -> !f.isView } 
+{
+    completeSiloSetupEnv(e);
+    totalSupplyMoreThanBalance(e.msg.sender);
+
+    mathint tokensBefore = token0.balanceOf(currentContract);
+    mathint totalProtectedColateralBefore; mathint totalColateralBefore;
+    totalColateralBefore, totalProtectedColateralBefore = getCollateralAndProtectedAssets();
+    
+    calldataarg args;
+    f(e, args);
+    mathint tokensAfter = token0.balanceOf(currentContract);
+    mathint totalProtectedColateralAfter; mathint totalColateralAfter;
+    totalColateralAfter, totalProtectedColateralAfter = getCollateralAndProtectedAssets();
+    
+    assert tokensBefore >= totalColateralBefore + totalProtectedColateralBefore =>
+        tokensAfter >= totalColateralAfter + totalProtectedColateralAfter;
+}

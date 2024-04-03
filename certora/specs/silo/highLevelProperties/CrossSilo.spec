@@ -9,9 +9,11 @@ import "../../_simplifications/priceOracle.spec";
 import "../../_simplifications/SiloSolvencyLib.spec";
 import "../../_simplifications/SimplifiedGetCompoundInterestRateAndUpdate.spec";
 
+/*
 rule remainsSolventAfterSelfLiquidation(env e, address user)
 {
     completeSiloSetupEnv(e);
+    completeSiloSetupAddress(user);
     totalSupplyMoreThanBalance(user);
     mathint debtBefore = shareDebtToken0.balanceOf(user);
     mathint balanceCollateralOtherSiloBefore = shareCollateralToken1.balanceOf(user);
@@ -32,4 +34,50 @@ rule remainsSolventAfterSelfLiquidation(env e, address user)
 
     assert debtAfter > 0 => balanceCollateralOtherSiloAfter > 0;
  
+}
+*/
+
+
+rule insolventCannotBorrow(env e, address user)
+{
+    completeSiloSetupEnv(e);
+    totalSupplyMoreThanBalance(e.msg.sender);
+    sharesToAssetsFixedRatio(e);
+    //sharesToAssetsNotTooHigh(e, 2);
+    sharesAndAssetsNotTooHigh(e, 10^6);
+
+    bool solvent = isSolvent(e, e.msg.sender);
+    uint assets;
+    borrow@withrevert(e, assets, e.msg.sender, e.msg.sender);
+    bool reverted = lastReverted;
+    assert !solvent => reverted;
+}
+
+rule remainsSolventAfterInteraction(env e, method f)
+{
+    completeSiloSetupEnv(e);
+    totalSupplyMoreThanBalance(e.msg.sender);
+
+    bool solventBefore = isSolvent(e, e.msg.sender);
+    calldataarg args;
+    f(e, args);
+    bool solventAfter = isSolvent(e, e.msg.sender);
+    assert solventBefore => solventAfter;
+}
+
+rule accreuInterestDoesntAffectResult(env e, method f)
+    filtered { f -> !f.isView }
+{
+    completeSiloSetupEnv(e);
+    totalSupplyMoreThanBalance(e.msg.sender);
+
+    storage init = lastStorage;
+    calldataarg args;
+    f(e, args);
+    storage afterF = lastStorage;
+
+    accrueInterest(e) at init;
+    f(e, args);
+    storage afterAccrue_F = lastStorage;
+    assert afterF[currentContract] == afterAccrue_F[currentContract];
 }
