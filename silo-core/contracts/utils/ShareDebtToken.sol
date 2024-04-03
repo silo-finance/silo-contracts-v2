@@ -100,7 +100,8 @@ contract ShareDebtToken is IERC20R, ShareToken {
     function _afterTokenTransfer(address _sender, address _recipient, uint256 _amount) internal virtual override {
         ShareToken._afterTokenTransfer(_sender, _recipient, _amount);
 
-        if (_amount == 0) return;
+        // debt transfer is such a rare use case and extra gas is worth additional security, so we not return
+        // if (_amount == 0) return;
 
         // if we are minting or burning, Silo is responsible to check all necessary conditions
         // if we are NOT minting and not burning, it means we are transferring
