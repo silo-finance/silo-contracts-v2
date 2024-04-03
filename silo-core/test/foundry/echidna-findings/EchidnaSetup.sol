@@ -197,10 +197,10 @@ contract EchidnaSetup is SiloLittleHelper, Test {
         emit log_named_decimal_uint("convertToShares(maxBorrow0):", silo0.convertToShares(maxBorrow0, ISilo.AssetType.Debt), 18);
         emit log_named_decimal_uint("convertToShares(maxBorrow1):", silo1.convertToShares(maxBorrow1, ISilo.AssetType.Debt), 18);
 
-        emit log_named_decimal_uint("maxBorrowShares0:", silo0.maxBorrowShares(_actor, false /* sameAsset */), 18);
-        emit log_named_decimal_uint("maxBorrowShares0:", silo0.maxBorrowShares(_actor, true /* sameAsset */), 18);
-        emit log_named_decimal_uint("maxBorrowShares1:", silo1.maxBorrowShares(_actor, false /* sameAsset */), 18);
-        emit log_named_decimal_uint("maxBorrowShares1:", silo1.maxBorrowShares(_actor, true /* sameAsset */), 18);
+        emit log_named_decimal_uint("maxBorrowShares0:", silo0.maxBorrowShares(_actor, TWO_ASSETS), 18);
+        emit log_named_decimal_uint("maxBorrowShares0:", silo0.maxBorrowShares(_actor, SAME_ASSET), 18);
+        emit log_named_decimal_uint("maxBorrowShares1:", silo1.maxBorrowShares(_actor, TWO_ASSETS), 18);
+        emit log_named_decimal_uint("maxBorrowShares1:", silo1.maxBorrowShares(_actor, SAME_ASSET), 18);
 
         emit log_named_decimal_uint("liquidity0", silo0.getLiquidity(), 18);
         emit log_named_decimal_uint("liquidity1", silo1.getLiquidity(), 18);

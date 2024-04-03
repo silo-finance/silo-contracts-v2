@@ -56,11 +56,11 @@ contract RepayTest is SiloLittleHelper, Test {
     forge test -vv --ffi --mt test_repay_throwZeroShares
     */
     function test_repay_throwZeroShares_1token() public {
-        _repay_throwZeroShares(true);
+        _repay_throwZeroShares(SAME_ASSET);
     }
 
     function test_repay_throwZeroShares_2tokens() public {
-        _repay_throwZeroShares(false);
+        _repay_throwZeroShares(TWO_ASSETS);
     }
 
     function _repay_throwZeroShares(bool _sameAsset) private {
@@ -78,11 +78,11 @@ contract RepayTest is SiloLittleHelper, Test {
     forge test -vv --ffi --mt test_repay_tinyAmount
     */
     function test_repay_tinyAmount_1token() public {
-        _repay_tinyAmount(true);
+        _repay_tinyAmount(SAME_ASSET);
     }
 
     function test_repay_tinyAmount_2tokens() public {
-        _repay_tinyAmount(false);
+        _repay_tinyAmount(TWO_ASSETS);
     }
 
     function _repay_tinyAmount(bool _sameAsset) private {
@@ -98,11 +98,11 @@ contract RepayTest is SiloLittleHelper, Test {
     forge test -vv --ffi --mt test_repay_partialWithInterest
     */
     function test_repay_partialWithInterest_1token() public {
-        _repay_partialWithInterest(true);
+        _repay_partialWithInterest(SAME_ASSET);
     }
 
     function test_repay_partialWithInterest_2tokens() public {
-        _repay_partialWithInterest(false);
+        _repay_partialWithInterest(TWO_ASSETS);
     }
 
     function _repay_partialWithInterest(bool _sameAsset) private {
@@ -119,11 +119,11 @@ contract RepayTest is SiloLittleHelper, Test {
     forge test -vv --ffi --mt test_repay_tooMuch
     */
     function test_repay_tooMuch_1token() public {
-        _repay_tooMuch(true);
+        _repay_tooMuch(SAME_ASSET);
     }
 
     function test_repay_tooMuch_2tokens() public {
-        _repay_tooMuch(false);
+        _repay_tooMuch(TWO_ASSETS);
     }
 
     function _repay_tooMuch(bool _sameAsset) private {
@@ -146,11 +146,11 @@ contract RepayTest is SiloLittleHelper, Test {
     forge test -vv --ffi --mt test_repayShares_fullNoInterest_noDust
     */
     function test_repayShares_fullNoInterest_noDust_1token() public {
-        _repayShares_fullNoInterest_noDust(true);
+        _repayShares_fullNoInterest_noDust(SAME_ASSET);
     }
 
     function test_repayShares_fullNoInterest_noDust_2tokens() public {
-        _repayShares_fullNoInterest_noDust(false);
+        _repayShares_fullNoInterest_noDust(TWO_ASSETS);
     }
 
     function _repayShares_fullNoInterest_noDust(bool _sameAsset) public {
@@ -174,11 +174,11 @@ contract RepayTest is SiloLittleHelper, Test {
     forge test -vv --ffi --mt test_repayShares_fullWithInterest_noDust
     */
     function test_repayShares_fullWithInterest_noDust_1token() public {
-        _repayShares_fullWithInterest_noDust(true);
+        _repayShares_fullWithInterest_noDust(SAME_ASSET);
     }
 
     function test_repayShares_fullWithInterest_noDust_2tokens() public {
-        _repayShares_fullWithInterest_noDust(false);
+        _repayShares_fullWithInterest_noDust(TWO_ASSETS);
     }
 
     function _repayShares_fullWithInterest_noDust(bool _sameAsset) private {
@@ -204,11 +204,11 @@ contract RepayTest is SiloLittleHelper, Test {
     forge test -vv --ffi --mt test_repayShares_insufficientAllowance
     */
     function test_repayShares_insufficientAllowance_1token() public {
-        _repayShares_insufficientAllowance(true);
+        _repayShares_insufficientAllowance(SAME_ASSET);
     }
 
     function test_repayShares_insufficientAllowance_2tokens() public {
-        _repayShares_insufficientAllowance(false);
+        _repayShares_insufficientAllowance(TWO_ASSETS);
     }
 
     function _repayShares_insufficientAllowance(bool _sameAsset) private {
@@ -230,11 +230,11 @@ contract RepayTest is SiloLittleHelper, Test {
     forge test -vv --ffi --mt test_repayShares_notFullWithInterest_withDust
     */
     function test_repayShares_notFullWithInterest_withDust_1token() public {
-        _repayShares_notFullWithInterest_withDust(true);
+        _repayShares_notFullWithInterest_withDust(SAME_ASSET);
     }
 
     function test_repayShares_notFullWithInterest_withDust_2tokens() public {
-        _repayShares_notFullWithInterest_withDust(false);
+        _repayShares_notFullWithInterest_withDust(TWO_ASSETS);
     }
 
     function _repayShares_notFullWithInterest_withDust(bool _sameAsset) private {
@@ -264,11 +264,11 @@ contract RepayTest is SiloLittleHelper, Test {
     forge test -vv --ffi --mt test_repay_twice
     */
     function test_repay_twice_1token() public {
-        _repay_twice(true);
+        _repay_twice(SAME_ASSET);
     }
 
     function test_repay_twice_2tokens() public {
-        _repay_twice(false);
+        _repay_twice(TWO_ASSETS);
     }
 
     function _repay_twice(bool _sameAsset) private {

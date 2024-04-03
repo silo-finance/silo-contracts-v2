@@ -81,12 +81,12 @@ contract MaxDepositTest is SiloLittleHelper, Test {
     */
     /// forge-config: core-test.fuzz.runs = 1000
     function test_maxDeposit_withDeposit_1token_fuzz(uint128 _initialDeposit) public {
-        _maxDeposit_withDeposit(_initialDeposit, true);
+        _maxDeposit_withDeposit(_initialDeposit, SAME_ASSET);
     }
 
     /// forge-config: core-test.fuzz.runs = 1000
     function test_maxDeposit_withDeposit_2tokena_fuzz(uint128 _initialDeposit) public {
-        _maxDeposit_withDeposit(_initialDeposit, false);
+        _maxDeposit_withDeposit(_initialDeposit, TWO_ASSETS);
     }
 
     function _maxDeposit_withDeposit(uint128 _initialDeposit, bool _sameAsset) private {
@@ -115,14 +115,14 @@ contract MaxDepositTest is SiloLittleHelper, Test {
         uint256 _initialDeposit
     ) public {
          // uint256 _initialDeposit = 17100;
-        _maxDeposit_withInterest_fuzz(_initialDeposit, true);
+        _maxDeposit_withInterest_fuzz(_initialDeposit, SAME_ASSET);
     }
 
     /// forge-config: core-test.fuzz.runs = 10000
     function test_maxDeposit_withInterest_2tokens_fuzz(
         uint256 _initialDeposit
     ) public {
-        _maxDeposit_withInterest_fuzz(_initialDeposit, false);
+        _maxDeposit_withInterest_fuzz(_initialDeposit, TWO_ASSETS);
     }
 
     function _maxDeposit_withInterest_fuzz(uint256 _initialDeposit, bool _sameAsset) public {
@@ -172,14 +172,14 @@ contract MaxDepositTest is SiloLittleHelper, Test {
     function test_maxDeposit_repayWithInterest_1token_fuzz(
         uint64 _initialDeposit // 64b because this is initial deposit, and we care about max after initial
     ) public {
-        _maxDeposit_repayWithInterest_fuzz(_initialDeposit, true);
+        _maxDeposit_repayWithInterest_fuzz(_initialDeposit, SAME_ASSET);
     }
 
     /// forge-config: core-test.fuzz.runs = 1000
     function test_maxDeposit_repayWithInterest_2tokens_fuzz(
         uint64 _initialDeposit // 64b because this is initial deposit, and we care about max after initial
     ) public {
-        _maxDeposit_repayWithInterest_fuzz(_initialDeposit, false);
+        _maxDeposit_repayWithInterest_fuzz(_initialDeposit, TWO_ASSETS);
     }
 
     function _maxDeposit_repayWithInterest_fuzz(uint64 _initialDeposit, bool _sameAsset) public {

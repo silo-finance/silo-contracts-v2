@@ -43,8 +43,8 @@ contract MaxWithdrawTest is MaxWithdrawCommon {
         uint256 maxWithdraw = silo0.maxWithdraw(borrower);
         assertEq(maxWithdraw, _assets, "max withdraw == _assets if no interest");
 
-        _assertBorrowerCanNotWithdrawMore(maxWithdraw, false);
-        _assertMaxWithdrawIsZeroAtTheEnd(false);
+        _assertBorrowerCanNotWithdrawMore(maxWithdraw, TWO_ASSETS);
+        _assertMaxWithdrawIsZeroAtTheEnd(TWO_ASSETS);
     }
 
     /*
@@ -55,7 +55,7 @@ contract MaxWithdrawTest is MaxWithdrawCommon {
         uint128 _collateral,
         uint128 _toBorrow
     ) public {
-        _maxWithdraw_withDebt(_collateral, _toBorrow, true);
+        _maxWithdraw_withDebt(_collateral, _toBorrow, SAME_ASSET);
     }
 
     /// forge-config: core-test.fuzz.runs = 1000
@@ -63,7 +63,7 @@ contract MaxWithdrawTest is MaxWithdrawCommon {
         uint128 _collateral,
         uint128 _toBorrow
     ) public {
-        _maxWithdraw_withDebt(_collateral, _toBorrow, false);
+        _maxWithdraw_withDebt(_collateral, _toBorrow, TWO_ASSETS);
     }
 
     function _maxWithdraw_withDebt(uint128 _collateral, uint128 _toBorrow, bool _sameAsset) private {
@@ -90,7 +90,7 @@ contract MaxWithdrawTest is MaxWithdrawCommon {
         uint64 _percentToBorrowOnSilo0
     ) public {
         // (uint128 _collateral, uint128 _toBorrow, uint64 _percentToBorrowOnSilo0) = (27114386650, 1, 18440395);
-        _maxWithdraw_withDebtAndNotEnoughLiquidity(_collateral, _toBorrow, _percentToBorrowOnSilo0, true);
+        _maxWithdraw_withDebtAndNotEnoughLiquidity(_collateral, _toBorrow, _percentToBorrowOnSilo0, SAME_ASSET);
     }
 
     /// forge-config: core-test.fuzz.runs = 1000
@@ -99,7 +99,7 @@ contract MaxWithdrawTest is MaxWithdrawCommon {
         uint128 _toBorrow,
         uint64 _percentToBorrowOnSilo0
     ) public {
-        _maxWithdraw_withDebtAndNotEnoughLiquidity(_collateral, _toBorrow, _percentToBorrowOnSilo0, false);
+        _maxWithdraw_withDebtAndNotEnoughLiquidity(_collateral, _toBorrow, _percentToBorrowOnSilo0, TWO_ASSETS);
     }
 
     function _maxWithdraw_withDebtAndNotEnoughLiquidity(
@@ -145,7 +145,7 @@ contract MaxWithdrawTest is MaxWithdrawCommon {
         uint128 _collateral,
         uint128 _toBorrow
     ) public {
-        _maxWithdraw_whenInterest(_collateral, _toBorrow, true);
+        _maxWithdraw_whenInterest(_collateral, _toBorrow, SAME_ASSET);
     }
 
     /// forge-config: core-test.fuzz.runs = 1000
@@ -153,7 +153,7 @@ contract MaxWithdrawTest is MaxWithdrawCommon {
         uint128 _collateral,
         uint128 _toBorrow
     ) public {
-        _maxWithdraw_whenInterest(_collateral, _toBorrow, false);
+        _maxWithdraw_whenInterest(_collateral, _toBorrow, TWO_ASSETS);
     }
 
     function _maxWithdraw_whenInterest(uint128 _collateral, uint128 _toBorrow, bool _sameAsset) private {
@@ -181,7 +181,7 @@ contract MaxWithdrawTest is MaxWithdrawCommon {
         uint128 _toBorrow
     ) public {
         // (uint128 _collateral, uint128 _toBorrow) = (13637, 380);
-        _maxWithdraw_bothSilosWithInterest(_collateral, _toBorrow, true);
+        _maxWithdraw_bothSilosWithInterest(_collateral, _toBorrow, SAME_ASSET);
     }
 
     /// forge-config: core-test.fuzz.runs = 1000
@@ -189,7 +189,7 @@ contract MaxWithdrawTest is MaxWithdrawCommon {
         uint128 _collateral,
         uint128 _toBorrow
     ) public {
-        _maxWithdraw_bothSilosWithInterest(_collateral, _toBorrow, false);
+        _maxWithdraw_bothSilosWithInterest(_collateral, _toBorrow, TWO_ASSETS);
     }
 
     function _maxWithdraw_bothSilosWithInterest(uint128 _collateral, uint128 _toBorrow, bool _sameAsset) private {

@@ -73,12 +73,12 @@ contract MaxMintTest is SiloLittleHelper, Test {
     */
     /// forge-config: core-test.fuzz.runs = 1000
     function test_maxMint_withDeposit_1token_fuzz(uint128 _initialDeposit) public {
-        _maxMint_withDeposit(_initialDeposit, true);
+        _maxMint_withDeposit(_initialDeposit, SAME_ASSET);
     }
 
     /// forge-config: core-test.fuzz.runs = 1000
     function test_maxMint_withDeposit_2tokens_fuzz(uint128 _initialDeposit) public {
-        _maxMint_withDeposit(_initialDeposit, false);
+        _maxMint_withDeposit(_initialDeposit, TWO_ASSETS);
     }
 
     function _maxMint_withDeposit(uint128 _initialDeposit, bool _sameAsset) private {
@@ -106,14 +106,14 @@ contract MaxMintTest is SiloLittleHelper, Test {
     function test_maxMint_withInterest_1token_fuzz(
         uint256 _initialDeposit
     ) public {
-        _maxMint_withInterest_fuzz(_initialDeposit, true);
+        _maxMint_withInterest_fuzz(_initialDeposit, SAME_ASSET);
     }
 
     /// forge-config: core-test.fuzz.runs = 1000
     function test_maxMint_withInterest_2tokens_fuzz(
         uint256 _initialDeposit
     ) public {
-        _maxMint_withInterest_fuzz(_initialDeposit, false);
+        _maxMint_withInterest_fuzz(_initialDeposit, TWO_ASSETS);
     }
 
     function _maxMint_withInterest_fuzz(uint256 _initialDeposit, bool _sameAsset) private {
@@ -148,7 +148,7 @@ contract MaxMintTest is SiloLittleHelper, Test {
         uint128 _initialDeposit
     ) public {
         // uint128 _initialDeposit = 1020847100762815390392;
-        _maxMint_repayWithInterest_fuzz(_initialDeposit, true);
+        _maxMint_repayWithInterest(_initialDeposit, SAME_ASSET);
     }
 
     /// forge-config: core-test.fuzz.runs = 1000
@@ -156,10 +156,10 @@ contract MaxMintTest is SiloLittleHelper, Test {
         uint128 _initialDeposit
     ) public {
         // uint128 _initialDeposit = 1020847100762815390392;
-        _maxMint_repayWithInterest_fuzz(_initialDeposit, false);
+        _maxMint_repayWithInterest(_initialDeposit, TWO_ASSETS);
     }
 
-    function _maxMint_repayWithInterest_fuzz(uint128 _initialDeposit, bool _sameAsset) private {
+    function _maxMint_repayWithInterest(uint128 _initialDeposit, bool _sameAsset) private {
         vm.assume(_initialDeposit / 3 > 0);
 
         uint256 toBorrow = _initialDeposit / 3;

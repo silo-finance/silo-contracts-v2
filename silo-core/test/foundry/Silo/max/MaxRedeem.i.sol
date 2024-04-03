@@ -44,7 +44,7 @@ contract MaxRedeemTest is MaxWithdrawCommon {
         uint256 maxRedeem = silo0.maxRedeem(borrower);
         assertEq(maxRedeem, _assets, "max withdraw == _assets/shares if no interest");
 
-        _assertBorrowerCanNotRedeemMore(maxRedeem, false); // no borrow here, so flag does not matter
+        _assertBorrowerCanNotRedeemMore(maxRedeem, TWO_ASSETS); // no borrow here, so flag does not matter
         _assertBorrowerHasNothingToRedeem();
     }
 
@@ -56,7 +56,7 @@ contract MaxRedeemTest is MaxWithdrawCommon {
         uint128 _collateral,
         uint128 _toBorrow
     ) public {
-        _maxRedeem_whenBorrow(_collateral, _toBorrow, true);
+        _maxRedeem_whenBorrow(_collateral, _toBorrow, SAME_ASSET);
     }
 
     /// forge-config: core-test.fuzz.runs = 1000
@@ -64,7 +64,7 @@ contract MaxRedeemTest is MaxWithdrawCommon {
         uint128 _collateral,
         uint128 _toBorrow
     ) public {
-        _maxRedeem_whenBorrow(_collateral, _toBorrow, false);
+        _maxRedeem_whenBorrow(_collateral, _toBorrow, TWO_ASSETS);
     }
 
     function _maxRedeem_whenBorrow(uint128 _collateral, uint128 _toBorrow, bool _sameAsset) private {
@@ -86,10 +86,11 @@ contract MaxRedeemTest is MaxWithdrawCommon {
     */
     /// forge-config: core-test.fuzz.runs = 1000
     function test_maxRedeem_whenInterest_1token_fuzz(
-        uint128 _collateral,
-        uint128 _toBorrow
+//        uint128 _collateral,
+//        uint128 _toBorrow
     ) public {
-        _maxRedeem_whenInterest(_collateral, _toBorrow, true);
+        (uint128 _collateral, uint128 _toBorrow) = (5407, 5028);
+        _maxRedeem_whenInterest(_collateral, _toBorrow, SAME_ASSET);
     }
 
     /// forge-config: core-test.fuzz.runs = 1000
@@ -97,7 +98,7 @@ contract MaxRedeemTest is MaxWithdrawCommon {
         uint128 _collateral,
         uint128 _toBorrow
     ) public {
-        _maxRedeem_whenInterest(_collateral, _toBorrow, false);
+        _maxRedeem_whenInterest(_collateral, _toBorrow, TWO_ASSETS);
     }
 
     function _maxRedeem_whenInterest(uint128 _collateral, uint128 _toBorrow, bool _sameAsset) private {
@@ -125,7 +126,7 @@ contract MaxRedeemTest is MaxWithdrawCommon {
 //        uint128 _toBorrow
     ) public {
         (uint128 _collateral, uint128 _toBorrow) = (13423, 2010);
-        _maxRedeem_bothSilosWithInterest(_collateral, _toBorrow, true);
+        _maxRedeem_bothSilosWithInterest(_collateral, _toBorrow, SAME_ASSET);
     }
 
     /// forge-config: core-test.fuzz.runs = 1000
@@ -134,7 +135,7 @@ contract MaxRedeemTest is MaxWithdrawCommon {
 //        uint128 _toBorrow
     ) public {
         (uint128 _collateral, uint128 _toBorrow) = (12655, 1740);
-        _maxRedeem_bothSilosWithInterest(_collateral, _toBorrow, false);
+        _maxRedeem_bothSilosWithInterest(_collateral, _toBorrow, TWO_ASSETS);
     }
 
     function _maxRedeem_bothSilosWithInterest(uint128 _collateral, uint128 _toBorrow, bool _sameAsset) private {

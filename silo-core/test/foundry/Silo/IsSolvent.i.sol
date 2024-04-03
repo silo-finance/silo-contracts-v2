@@ -29,11 +29,11 @@ contract IsSolventTest is SiloLittleHelper, Test {
     this test covers the bug when wrong configs are fetched after debt transfer
     */
     function test_isSolvent_onDebtTransfer_1token() public {
-        _isSolvent_onDebtTransfer(true);
+        _isSolvent_onDebtTransfer(SAME_ASSET);
     }
 
     function test_isSolvent_onDebtTransfer_2tokens() public {
-        _isSolvent_onDebtTransfer(false);
+        _isSolvent_onDebtTransfer(TWO_ASSETS);
     }
 
     function _isSolvent_onDebtTransfer(bool _sameAsset) private {
@@ -70,11 +70,11 @@ contract IsSolventTest is SiloLittleHelper, Test {
     forge test -vv --ffi --mt test_isSolvent_RecipientNotSolventAfterTransfer
     */
     function test_isSolvent_RecipientNotSolventAfterTransfer_1token() public {
-        _isSolvent_RecipientNotSolventAfterTransfer(true);
+        _isSolvent_RecipientNotSolventAfterTransfer(SAME_ASSET);
     }
 
     function test_isSolvent_RecipientNotSolventAfterTransfer_2tokens() public {
-        _isSolvent_RecipientNotSolventAfterTransfer(false);
+        _isSolvent_RecipientNotSolventAfterTransfer(TWO_ASSETS);
     }
 
     function _isSolvent_RecipientNotSolventAfterTransfer(bool _sameAsset) private {

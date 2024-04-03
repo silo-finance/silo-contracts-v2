@@ -43,11 +43,11 @@ contract RepayAllowanceTest is SiloLittleHelper, Test {
     forge test --ffi -vv --mt test_repay_WithoutAllowance
     */
     function test_repay_WithoutAllowance_1token() public {
-        _repay_WithoutAllowance(true);
+        _repay_WithoutAllowance(SAME_ASSET);
     }
 
     function test_repay_WithoutAllowance_2tokens() public {
-        _repay_WithoutAllowance(false);
+        _repay_WithoutAllowance(TWO_ASSETS);
     }
 
     function _repay_WithoutAllowance(bool _sameAsset) private {

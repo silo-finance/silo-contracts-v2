@@ -9,6 +9,9 @@ import {ISiloConfig, SiloConfig} from "silo-core/contracts/SiloConfig.sol";
 forge test -vv --mc SiloConfigTest
 */
 contract SiloConfigTest is Test {
+    bool constant SAME_ASSET = true;
+    bool constant TWO_ASSETS = false;
+
     address wrongSilo = address(10000000001);
     SiloConfig _siloConfig;
 
@@ -176,7 +179,7 @@ contract SiloConfigTest is Test {
     */
     function test_openDebt_revertOnWrongSilo() public {
         vm.expectRevert(ISiloConfig.WrongSilo.selector);
-        _siloConfig.openDebt(address(1), false);
+        _siloConfig.openDebt(address(1), TWO_ASSETS);
     }
 
     /*
@@ -184,11 +187,10 @@ contract SiloConfigTest is Test {
     */
     function test_openDebt_pass() public {
         vm.prank(makeAddr("silo0"));
-        _siloConfig.openDebt(address(1), false);
+        _siloConfig.openDebt(address(1), TWO_ASSETS);
 
-        // counter example
         vm.prank(makeAddr("silo1"));
-        _siloConfig.openDebt(address(2), false);
+        _siloConfig.openDebt(address(2), TWO_ASSETS);
     }
 
     /*

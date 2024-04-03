@@ -43,12 +43,12 @@ contract PreviewTest is SiloLittleHelper, Test {
     */
     /// forge-config: core-test.fuzz.runs = 10000
     function test_previewBorrow_beforeInterest_1token_fuzz(uint128 _assets, bool _useShares) public {
-        _previewBorrow_beforeInterest(_assets, _useShares, true);
+        _previewBorrow_beforeInterest(_assets, _useShares, SAME_ASSET);
     }
 
     /// forge-config: core-test.fuzz.runs = 10000
     function test_previewBorrow_beforeInterest_2tokens_fuzz(uint128 _assets, bool _useShares) public {
-        _previewBorrow_beforeInterest(_assets, _useShares, false);
+        _previewBorrow_beforeInterest(_assets, _useShares, TWO_ASSETS);
     }
 
     function _previewBorrow_beforeInterest(uint128 _assets, bool _useShares, bool _sameAsset) private {
@@ -80,12 +80,12 @@ contract PreviewTest is SiloLittleHelper, Test {
     */
     /// forge-config: core-test.fuzz.runs = 10000
     function test_previewBorrow_withInterest_1token_fuzz(uint128 _assets, bool _useShares) public {
-        _previewBorrow_withInterest(_assets, _useShares, true);
+        _previewBorrow_withInterest(_assets, _useShares, SAME_ASSET);
     }
 
     /// forge-config: core-test.fuzz.runs = 10000
     function test_previewBorrow_withInterest_2tokens_fuzz(uint128 _assets, bool _useShares) public {
-        _previewBorrow_withInterest(_assets, _useShares, false);
+        _previewBorrow_withInterest(_assets, _useShares, TWO_ASSETS);
     }
 
     function _previewBorrow_withInterest(uint128 _assets, bool _useShares, bool _sameAsset) private {
@@ -122,14 +122,14 @@ contract PreviewTest is SiloLittleHelper, Test {
     function test_previewRepay_noInterestNoDebt_1token_fuzz(uint128 _assetsOrShares, bool _useShares, bool _repayFull)
         public
     {
-        _previewRepay_noInterestNoDebt(_assetsOrShares, _useShares, _repayFull, true);
+        _previewRepay_noInterestNoDebt(_assetsOrShares, _useShares, _repayFull, SAME_ASSET);
     }
 
     /// forge-config: core-test.fuzz.runs = 10000
     function test_previewRepay_noInterestNoDebt_2tokens_fuzz(uint128 _assetsOrShares, bool _useShares, bool _repayFull)
         public
     {
-        _previewRepay_noInterestNoDebt(_assetsOrShares, _useShares, _repayFull, false);
+        _previewRepay_noInterestNoDebt(_assetsOrShares, _useShares, _repayFull, TWO_ASSETS);
     }
 
     function _previewRepay_noInterestNoDebt(
@@ -156,12 +156,12 @@ contract PreviewTest is SiloLittleHelper, Test {
     */
     /// forge-config: core-test.fuzz.runs = 10000
     function test_previewRepay_noInterest_1token_fuzz(uint128 _assetsOrShares, bool _useShares, bool _repayFull) public {
-        _previewRepay_noInterest(_assetsOrShares, _useShares, _repayFull, true);
+        _previewRepay_noInterest(_assetsOrShares, _useShares, _repayFull, SAME_ASSET);
     }
 
     /// forge-config: core-test.fuzz.runs = 10000
     function test_previewRepay_noInterest_2tokens_fuzz(uint128 _assetsOrShares, bool _useShares, bool _repayFull) public {
-        _previewRepay_noInterest(_assetsOrShares, _useShares, _repayFull, false);
+        _previewRepay_noInterest(_assetsOrShares, _useShares, _repayFull, TWO_ASSETS);
     }
 
     function _previewRepay_noInterest(uint128 _assetsOrShares, bool _useShares, bool _repayFull, bool _sameAsset) private {
@@ -187,14 +187,14 @@ contract PreviewTest is SiloLittleHelper, Test {
         public
     {
         (uint128 _assetsOrShares, bool _useShares, bool _repayFull) = (280, true, true);
-        _previewRepay_withInterest(_assetsOrShares, _useShares, _repayFull, true);
+        _previewRepay_withInterest(_assetsOrShares, _useShares, _repayFull, SAME_ASSET);
     }
 
     /// forge-config: core-test.fuzz.runs = 10000
     function test_previewRepay_withInterest_2tokens_fuzz(uint128 _assetsOrShares, bool _useShares, bool _repayFull)
         public
     {
-        _previewRepay_withInterest(_assetsOrShares, _useShares, _repayFull, false);
+        _previewRepay_withInterest(_assetsOrShares, _useShares, _repayFull, TWO_ASSETS);
     }
 
     function _previewRepay_withInterest(

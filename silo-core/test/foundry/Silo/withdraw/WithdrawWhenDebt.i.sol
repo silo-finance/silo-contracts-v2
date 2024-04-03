@@ -36,11 +36,11 @@ contract WithdrawWhenDebtTest is SiloLittleHelper, Test {
     forge test -vv --ffi --mt test_withdraw_all_possible_Collateral_
     */
     function test_withdraw_all_possible_Collateral_1token() public {
-        _withdraw_all_possible_Collateral(true);
+        _withdraw_all_possible_Collateral(SAME_ASSET);
     }
 
     function test_withdraw_all_possible_Collateral_2tokens() public {
-        _withdraw_all_possible_Collateral(false);
+        _withdraw_all_possible_Collateral(TWO_ASSETS);
     }
 
     function _withdraw_all_possible_Collateral(bool _sameAsset) private {

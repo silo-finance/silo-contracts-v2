@@ -55,7 +55,7 @@ contract MaxBorrowTest is SiloLittleHelper, Test {
     ) public {
         // uint128 _collateral = 401;
         // uint128 _liquidity = 1;
-        _maxBorrow_withCollateral_fuzz(_collateral, _liquidity, true);
+        _maxBorrow_withCollateral_fuzz(_collateral, _liquidity, SAME_ASSET);
     }
 
     /// forge-config: core-test.fuzz.runs = 1000
@@ -64,7 +64,7 @@ contract MaxBorrowTest is SiloLittleHelper, Test {
     ) public {
         // uint128 _collateral = 401;
         // uint128 _liquidity = 1;
-        _maxBorrow_withCollateral_fuzz(_collateral, _liquidity, false);
+        _maxBorrow_withCollateral_fuzz(_collateral, _liquidity, TWO_ASSETS);
     }
 
     function _maxBorrow_withCollateral_fuzz(
@@ -96,7 +96,7 @@ contract MaxBorrowTest is SiloLittleHelper, Test {
 
         _deposit(_collateral, borrower);
 
-        _assertMaxBorrowIsZeroAtTheEnd(false);
+        _assertMaxBorrowIsZeroAtTheEnd(TWO_ASSETS);
     }
 
     /*
@@ -168,7 +168,7 @@ contract MaxBorrowTest is SiloLittleHelper, Test {
         uint128 _liquidity
     ) public {
         // (uint64 _collateral, uint128 _liquidity) = (5, 1);
-        _maxBorrow_repayWithInterest_fuzz(_collateral, _liquidity, false);
+        _maxBorrow_repayWithInterest_fuzz(_collateral, _liquidity, TWO_ASSETS);
     }
 
     function test_maxBorrow_repayWithInterest_1token_fuzz(
@@ -176,7 +176,7 @@ contract MaxBorrowTest is SiloLittleHelper, Test {
         uint128 _liquidity
     ) public {
         // (uint64 _collateral, uint128 _liquidity) = (5, 1);
-        _maxBorrow_repayWithInterest_fuzz(_collateral, _liquidity, true);
+        _maxBorrow_repayWithInterest_fuzz(_collateral, _liquidity, SAME_ASSET);
     }
 
     function _maxBorrow_repayWithInterest_fuzz(
@@ -225,11 +225,11 @@ contract MaxBorrowTest is SiloLittleHelper, Test {
     forge test -vv --ffi --mt test_maxBorrow_maxOut
     */
     function test_maxBorrow_maxOut_2tokens() public {
-        _maxBorrow_maxOut(false);
+        _maxBorrow_maxOut(TWO_ASSETS);
     }
 
     function test_maxBorrow_maxOut_1token() public {
-        _maxBorrow_maxOut(false);
+        _maxBorrow_maxOut(SAME_ASSET);
     }
 
     function _maxBorrow_maxOut(bool _sameAsset) internal {

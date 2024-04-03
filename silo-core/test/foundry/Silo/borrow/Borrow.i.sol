@@ -33,10 +33,10 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
     */
     function test_borrow_all_zeros() public {
         vm.expectRevert(ISilo.ZeroAssets.selector);
-        silo0.borrow(0, address(0), address(0), false /* sameAsset */);
+        silo0.borrow(0, address(0), address(0), TWO_ASSETS);
 
         vm.expectRevert(ISilo.ZeroAssets.selector);
-        silo0.borrow(0, address(0), address(0), true /* sameAsset */);
+        silo0.borrow(0, address(0), address(0), SAME_ASSET);
     }
 
     /*
@@ -47,10 +47,10 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
         address borrower = address(1);
 
         vm.expectRevert(ISilo.ZeroAssets.selector);
-        silo0.borrow(assets, borrower, borrower, true);
+        silo0.borrow(assets, borrower, borrower, SAME_ASSET);
 
         vm.expectRevert(ISilo.ZeroAssets.selector);
-        silo0.borrow(assets, borrower, borrower, false);
+        silo0.borrow(assets, borrower, borrower, TWO_ASSETS);
     }
 
     /*
@@ -61,21 +61,21 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
         address receiver = address(10);
 
         vm.expectRevert(ISilo.NotEnoughLiquidity.selector);
-        silo0.borrow(assets, receiver, receiver, true);
+        silo0.borrow(assets, receiver, receiver, SAME_ASSET);
 
         vm.expectRevert(ISilo.NotEnoughLiquidity.selector);
-        silo0.borrow(assets, receiver, receiver, false);
+        silo0.borrow(assets, receiver, receiver, TWO_ASSETS);
     }
 
     /*
     forge test -vv --ffi --mt test_borrow_when_frontRun_NoCollateral
     */
     function test_borrow_when_frontRun_NoCollateral_1token() public {
-        _borrow_when_frontRun_NoCollateral(true);
+        _borrow_when_frontRun_NoCollateral(SAME_ASSET);
     }
 
     function test_borrow_when_frontRun_NoCollateral_2tokens() public {
-        _borrow_when_frontRun_NoCollateral(false);
+        _borrow_when_frontRun_NoCollateral(TWO_ASSETS);
     }
 
     function _borrow_when_frontRun_NoCollateral(bool _sameAsset) private {
@@ -93,11 +93,11 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
     forge test -vv --ffi --mt test_borrow_onWrongSilo_for_receiver_no_collateral_
     */
     function test_borrow_onWrongSilo_for_receiver_no_collateral_1token() public {
-        _borrow_onWrongSilo_for_receiver_no_collateral(true);
+        _borrow_onWrongSilo_for_receiver_no_collateral(SAME_ASSET);
     }
 
     function test_borrow_onWrongSilo_for_receiver_no_collateral_2tokens() public {
-        _borrow_onWrongSilo_for_receiver_no_collateral(false);
+        _borrow_onWrongSilo_for_receiver_no_collateral(TWO_ASSETS);
     }
 
     function _borrow_onWrongSilo_for_receiver_no_collateral(bool _sameAsset) private {
@@ -116,11 +116,11 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
     forge test -vv --ffi --mt test_borrow_onWrongSilo_for_receiver_with_collateral_
     */
     function test_borrow_onWrongSilo_for_receiver_with_collateral_1token() public {
-        _borrow_onWrongSilo_for_receiver_with_collateral(true);
+        _borrow_onWrongSilo_for_receiver_with_collateral(SAME_ASSET);
     }
 
     function test_borrow_onWrongSilo_for_receiver_with_collateral_2tokens() public {
-        _borrow_onWrongSilo_for_receiver_with_collateral(false);
+        _borrow_onWrongSilo_for_receiver_with_collateral(TWO_ASSETS);
     }
 
     function _borrow_onWrongSilo_for_receiver_with_collateral(bool _sameAsset) private {
@@ -139,11 +139,11 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
     forge test -vv --ffi --mt test_borrow_revert_for_receiver_with_collateral_
     */
     function test_borrow_revert_for_receiver_with_collateral_1token() public {
-        _borrow_revert_for_receiver_with_collateral(true);
+        _borrow_revert_for_receiver_with_collateral(SAME_ASSET);
     }
 
     function test_borrow_revert_for_receiver_with_collateral_2tokens() public {
-        _borrow_revert_for_receiver_with_collateral(false);
+        _borrow_revert_for_receiver_with_collateral(TWO_ASSETS);
     }
 
     function _borrow_revert_for_receiver_with_collateral(bool _sameAsset) private {
@@ -163,11 +163,11 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
     forge test -vv --ffi --mt test_borrow_onWrongSilo_for_borrower
     */
     function test_borrow_onWrongSilo_for_borrower_1token() public {
-        _borrow_onWrongSilo_for_borrower(true);
+        _borrow_onWrongSilo_for_borrower(SAME_ASSET);
     }
 
     function test_borrow_onWrongSilo_for_borrower_2tokens() public {
-        _borrow_onWrongSilo_for_borrower(false);
+        _borrow_onWrongSilo_for_borrower(TWO_ASSETS);
     }
 
     function _borrow_onWrongSilo_for_borrower(bool _sameAsset) private {
@@ -188,11 +188,11 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
     forge test -vv --ffi --mt test_borrow_onWrongSilo_WithProtected
     */
     function test_borrow_onWrongSilo_WithProtected_1token() public {
-        _borrow_onWrongSilo_WithProtected(true);
+        _borrow_onWrongSilo_WithProtected(SAME_ASSET);
     }
 
     function test_borrow_onWrongSilo_WithProtected_2tokens() public {
-        _borrow_onWrongSilo_WithProtected(false);
+        _borrow_onWrongSilo_WithProtected(TWO_ASSETS);
     }
 
     function _borrow_onWrongSilo_WithProtected(bool _sameAsset) private {
@@ -209,11 +209,11 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
     forge test -vv --ffi --mt test_borrow_onWrongSilo_WithCollateralAndProtected
     */
     function test_borrow_onWrongSilo_WithCollateralAndProtected_1token() public {
-        _borrow_onWrongSilo_WithCollateralAndProtected(true);
+        _borrow_onWrongSilo_WithCollateralAndProtected(SAME_ASSET);
     }
 
     function test_borrow_onWrongSilo_WithCollateralAndProtected_2tokens() public {
-        _borrow_onWrongSilo_WithCollateralAndProtected(false);
+        _borrow_onWrongSilo_WithCollateralAndProtected(TWO_ASSETS);
     }
 
     function _borrow_onWrongSilo_WithCollateralAndProtected(bool _sameAsset) private {
@@ -231,11 +231,11 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
     forge test -vv --ffi --mt test_borrow_BorrowNotPossible_withDebt
     */
     function test_borrow_BorrowNotPossible_withDebt_1token() public {
-        _borrow_BorrowNotPossible_withDebt(true);
+        _borrow_BorrowNotPossible_withDebt(SAME_ASSET);
     }
 
     function test_borrow_BorrowNotPossible_withDebt_2tokens() public {
-        _borrow_BorrowNotPossible_withDebt(false);
+        _borrow_BorrowNotPossible_withDebt(TWO_ASSETS);
     }
 
     function _borrow_BorrowNotPossible_withDebt(bool _sameAsset) private {
@@ -254,11 +254,11 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
     forge test -vv --ffi --mt test_borrow_frontRun_pass
     */
     function test_borrow_frontRun_pass_1token() public {
-        _borrow_frontRun_pass(true);
+        _borrow_frontRun_pass(SAME_ASSET);
     }
 
     function test_borrow_frontRun_pass_2tokens() public {
-        _borrow_frontRun_pass(false);
+        _borrow_frontRun_pass(TWO_ASSETS);
     }
 
     function _borrow_frontRun_pass(bool _sameAsset) private {
@@ -278,11 +278,11 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
     forge test -vv --ffi --mt test_borrow_frontRun_transferShare
     */
     function test_borrow_frontRun_transferShare_1token() public {
-        _borrow_frontRun_transferShare(true);
+        _borrow_frontRun_transferShare(SAME_ASSET);
     }
 
     function test_borrow_frontRun_transferShare_2token() public {
-        _borrow_frontRun_transferShare(false);
+        _borrow_frontRun_transferShare(TWO_ASSETS);
     }
 
     function _borrow_frontRun_transferShare(bool _sameAsset) private {
@@ -312,11 +312,11 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
     forge test -vv --ffi --mt test_borrow_withTwoCollaterals
     */
     function test_borrow_withTwoCollaterals_1token() public {
-        _borrow_withTwoCollaterals(true);
+        _borrow_withTwoCollaterals(SAME_ASSET);
     }
 
     function test_borrow_withTwoCollaterals_2tokens() public {
-        _borrow_withTwoCollaterals(false);
+        _borrow_withTwoCollaterals(TWO_ASSETS);
     }
 
     function _borrow_withTwoCollaterals(bool _sameAsset) private {
@@ -336,11 +336,11 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
     forge test -vv --ffi --mt test_borrow_pass
     */
     function test_borrow_pass_1token() public {
-        _borrow_pass(true);
+        _borrow_pass(SAME_ASSET);
     }
 
     function test_borrow_pass_2tokens() public {
-        _borrow_pass(false);
+        _borrow_pass(TWO_ASSETS);
     }
 
     function _borrow_pass(bool _sameAsset) private {
@@ -387,11 +387,11 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
     forge test -vv --ffi --mt test_borrow_twice
     */
     function test_borrow_twice_1token() public {
-        _borrow_twice(true);
+        _borrow_twice(SAME_ASSET);
     }
 
     function test_borrow_twice_2tokens() public {
-        _borrow_twice(false);
+        _borrow_twice(TWO_ASSETS);
     }
 
     function _borrow_twice(bool _sameAsset) private {
@@ -473,11 +473,11 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
     forge test -vv --ffi --mt test_borrow_scenarios
     */
     function test_borrow_scenarios_1token() public {
-        _borrow_scenarios(true);
+        _borrow_scenarios(SAME_ASSET);
     }
 
     function test_borrow_scenarios_2tokens() public {
-        _borrow_scenarios(false);
+        _borrow_scenarios(TWO_ASSETS);
     }
 
     function _borrow_scenarios(bool _sameAsset) private {
@@ -519,11 +519,11 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
     forge test -vv --ffi --mt test_borrow_maxDeposit
     */
     function test_borrow_maxDeposit_1token() public {
-        _borrow_maxDeposit(true);
+        _borrow_maxDeposit(SAME_ASSET);
     }
 
     function test_borrow_maxDeposit_2tokens() public {
-        _borrow_maxDeposit(false);
+        _borrow_maxDeposit(TWO_ASSETS);
     }
 
     function _borrow_maxDeposit(bool _sameAsset) private {
@@ -560,12 +560,12 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
     */
     /// forge-config: core-test.fuzz.runs = 1000
     function test_borrowShares_revertsOnZeroAssets_1token_fuzz(uint256 _depositAmount, uint256 _forBorrow) public {
-        _borrowShares_revertsOnZeroAssets(_depositAmount, _forBorrow, true);
+        _borrowShares_revertsOnZeroAssets(_depositAmount, _forBorrow, SAME_ASSET);
     }
 
     /// forge-config: core-test.fuzz.runs = 1000
     function test_borrowShares_revertsOnZeroAssets_2tokens_fuzz(uint256 _depositAmount, uint256 _forBorrow) public {
-        _borrowShares_revertsOnZeroAssets(_depositAmount, _forBorrow, false);
+        _borrowShares_revertsOnZeroAssets(_depositAmount, _forBorrow, TWO_ASSETS);
     }
 
     function _borrowShares_revertsOnZeroAssets(uint256 _depositAmount, uint256 _forBorrow, bool _sameAsset) private {

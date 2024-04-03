@@ -57,7 +57,7 @@ contract OracleThrowsTest is SiloLittleHelper, Test {
     }
 
     function test_throwing_oracle_2tokens() public {
-        _throwing_oracle(false);
+        _throwing_oracle(TWO_ASSETS);
     }
 
     function _throwing_oracle(bool _sameAsset) private {

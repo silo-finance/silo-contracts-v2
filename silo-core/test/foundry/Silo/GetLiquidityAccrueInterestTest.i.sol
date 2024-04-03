@@ -79,11 +79,11 @@ contract GetLiquidityAccrueInterestTest is SiloLittleHelper, Test {
     forge test -vv --ffi --mt test_liquidity_whenDepositAndBorrow
     */
     function test_liquidity_whenDepositAndBorrow_1token(uint128 _toDeposit, uint128 _toBorrow) public {
-        _liquidity_whenDepositAndBorrow(_toDeposit, _toBorrow, true);
+        _liquidity_whenDepositAndBorrow(_toDeposit, _toBorrow, SAME_ASSET);
     }
 
     function test_liquidity_whenDepositAndBorrow_2tokens(uint128 _toDeposit, uint128 _toBorrow) public {
-        _liquidity_whenDepositAndBorrow(_toDeposit, _toBorrow, false);
+        _liquidity_whenDepositAndBorrow(_toDeposit, _toBorrow, TWO_ASSETS);
     }
 
     function _liquidity_whenDepositAndBorrow(uint128 _toDeposit, uint128 _toBorrow, bool _sameAsset) private {
@@ -123,11 +123,11 @@ contract GetLiquidityAccrueInterestTest is SiloLittleHelper, Test {
     forge test -vv --ffi --mt test_liquidity_whenDepositAndBorrowWithInterest
     */
     function test_liquidity_whenDepositAndBorrowWithInterest_1token(uint128 _toDeposit, uint128 _toBorrow) public {
-        _liquidity_whenDepositAndBorrowWithInterest(_toDeposit, _toBorrow, true);
+        _liquidity_whenDepositAndBorrowWithInterest(_toDeposit, _toBorrow, SAME_ASSET);
     }
 
     function test_liquidity_whenDepositAndBorrowWithInterest_2tokens(uint128 _toDeposit, uint128 _toBorrow) public {
-        _liquidity_whenDepositAndBorrowWithInterest(_toDeposit, _toBorrow, false);
+        _liquidity_whenDepositAndBorrowWithInterest(_toDeposit, _toBorrow, TWO_ASSETS);
     }
 
     function _liquidity_whenDepositAndBorrowWithInterest(uint128 _toDeposit, uint128 _toBorrow, bool _sameAsset)

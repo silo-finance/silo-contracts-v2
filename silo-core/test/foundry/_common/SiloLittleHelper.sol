@@ -12,6 +12,9 @@ import {MintableToken} from "./MintableToken.sol";
 import {SiloFixture, SiloConfigOverride} from "./fixtures/SiloFixture.sol";
 
 abstract contract SiloLittleHelper is CommonBase {
+    bool constant SAME_ASSET = true;
+    bool constant TWO_ASSETS = false;
+
     SiloLens immutable siloLens;
 
     MintableToken token0;

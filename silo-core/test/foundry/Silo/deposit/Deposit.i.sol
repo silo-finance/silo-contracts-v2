@@ -95,14 +95,14 @@ contract DepositTest is SiloLittleHelper, Test {
     forge test -vv --ffi --mt test_deposit_withDebt_2tokens
     */
     function test_deposit_withDebt_2tokens() public {
-        _deposit_withDebt(false);
+        _deposit_withDebt(TWO_ASSETS);
     }
 
     /*
     forge test -vv --ffi --mt test_deposit_withDebt_1token
     */
     function test_deposit_withDebt_1token() public {
-        _deposit_withDebt(true);
+        _deposit_withDebt(SAME_ASSET);
     }
 
     function _deposit_withDebt(bool _sameAsset) internal {
@@ -175,11 +175,11 @@ contract DepositTest is SiloLittleHelper, Test {
     forge test -vv --ffi --mt test_deposit_revert_zeroShares
     */
     function test_deposit_revert_zeroShares_1token() public {
-        _deposit_revert_zeroShares(true);
+        _deposit_revert_zeroShares(SAME_ASSET);
     }
 
     function test_deposit_revert_zeroShares_2tokens() public {
-        _deposit_revert_zeroShares(false);
+        _deposit_revert_zeroShares(TWO_ASSETS);
     }
 
     function _deposit_revert_zeroShares(bool _sameAsset) private {
