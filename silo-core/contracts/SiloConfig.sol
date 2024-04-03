@@ -166,7 +166,7 @@ contract SiloConfig is ISiloConfig {
     }
 
     /// @inheritdoc ISiloConfig
-    function closePosition(address _borrower) external {
+    function closeDebt(address _borrower) external {
         if (msg.sender != _SILO0 && msg.sender != _SILO1 &&
             msg.sender != _DEBT_SHARE_TOKEN0 && msg.sender != _DEBT_SHARE_TOKEN1
         ) revert WrongSilo();

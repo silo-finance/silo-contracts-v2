@@ -385,17 +385,17 @@ contract SiloConfigTest is Test {
     }
 
     /*
-    forge test -vv --mt test_closePosition_revert
+    forge test -vv --mt test_closeDebt_revert
     */
-    function test_closePosition_revert() public {
+    function test_closeDebt_revert() public {
         vm.expectRevert(ISiloConfig.WrongSilo.selector);
-        _siloConfig.closePosition(address(0));
+        _siloConfig.closeDebt(address(0));
     }
 
     /*
-    forge test -vv --mt test_closePosition_pass
+    forge test -vv --mt test_closeDebt_pass
     */
-    function test_closePosition_pass() public {
+    function test_closeDebt_pass() public {
         address silo = makeAddr("silo1");
         address borrower = makeAddr("borrower");
 
@@ -405,7 +405,7 @@ contract SiloConfigTest is Test {
         _siloConfig.openDebt(borrower, singleAsset);
 
         vm.prank(makeAddr("silo0")); // other silo can close debt
-        _siloConfig.closePosition(borrower);
+        _siloConfig.closeDebt(borrower);
 
         ISiloConfig.DebtInfo memory positionEmpty;
         (

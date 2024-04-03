@@ -151,7 +151,7 @@ interface ISiloConfig {
 
     /// @dev must be called when `_borrower` repay all debt, there is no restriction from which silo call will be done
     /// @param _borrower borrower address
-    function closePosition(address _borrower) external;
+    function closeDebt(address _borrower) external;
 
     // solhint-disable-next-line func-name-mixedcase
     function SILO_ID() external view returns (uint256);

@@ -111,6 +111,6 @@ contract ShareDebtToken is IERC20R, ShareToken {
         }
 
         // we need to close debt on transfer and burn
-        if (_sender != address(0) && balanceOf(_sender) == 0) siloConfig.closePosition(_sender);
+        if (_sender != address(0) && balanceOf(_sender) == 0) siloConfig.closeDebt(_sender);
     }
 }
