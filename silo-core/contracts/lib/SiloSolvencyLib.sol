@@ -217,18 +217,16 @@ library SiloSolvencyLib {
         // safe because we adding same token, so it is under same total supply
         unchecked { sumOfCollateralAssets = _ltvData.borrowerProtectedAssets + _ltvData.borrowerCollateralAssets; }
 
-        bool differentTokens = _collateralAsset != _debtAsset;
-
         if (sumOfCollateralAssets != 0) {
             // if no oracle is set, assume price 1, we should also not set oracle for quote token
-            sumOfCollateralValue = differentTokens && address(_ltvData.collateralOracle) != address(0)
+            sumOfCollateralValue = address(_ltvData.collateralOracle) != address(0)
                 ? _ltvData.collateralOracle.quote(sumOfCollateralAssets, _collateralAsset)
                 : sumOfCollateralAssets;
         }
 
         if (_ltvData.borrowerDebtAssets != 0) {
             // if no oracle is set, assume price 1, we should also not set oracle for quote token
-            debtValue = differentTokens && address(_ltvData.debtOracle) != address(0)
+            debtValue = address(_ltvData.debtOracle) != address(0)
                 ? _ltvData.debtOracle.quote(_ltvData.borrowerDebtAssets, _debtAsset)
                 : _ltvData.borrowerDebtAssets;
         }
