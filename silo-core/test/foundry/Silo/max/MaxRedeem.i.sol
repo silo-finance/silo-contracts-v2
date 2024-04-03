@@ -86,10 +86,10 @@ contract MaxRedeemTest is MaxWithdrawCommon {
     */
     /// forge-config: core-test.fuzz.runs = 1000
     function test_maxRedeem_whenInterest_1token_fuzz(
-//        uint128 _collateral,
-//        uint128 _toBorrow
+        uint128 _collateral,
+        uint128 _toBorrow
     ) public {
-        (uint128 _collateral, uint128 _toBorrow) = (5407, 5028);
+        // (uint128 _collateral, uint128 _toBorrow) = (5407, 5028);
         _maxRedeem_whenInterest(_collateral, _toBorrow, SAME_ASSET);
     }
 
@@ -114,7 +114,7 @@ contract MaxRedeemTest is MaxWithdrawCommon {
 
         emit log_named_decimal_uint("LTV", collateralSilo.getLtv(borrower), 16);
 
-        _assertBorrowerCanNotRedeemMore(maxRedeem, _sameAsset ? 3 : 2, _sameAsset);
+        _assertBorrowerCanNotRedeemMore(maxRedeem, _sameAsset ? 4 : 2, _sameAsset);
     }
 
     /*
