@@ -283,7 +283,7 @@ contract SiloConfig is ISiloConfig {
         }
     }
 
-    // solhint-disable-next-line function-max-lines
+    // solhint-disable-next-line function-max-lines, code-complexity
     function _getConfigs(address _silo, uint256 _method, PositionInfo memory _positionInfo)
         internal
         view
