@@ -22,7 +22,7 @@ contract SiloHarness is Silo {
     }
 
     function getFlashloanFee1() external view returns (uint256) {
-        (, ISiloConfig.ConfigData memory otherConfig, ) = config.getConfigs(address(this), address(0));
+        (, ISiloConfig.ConfigData memory otherConfig, ) = config.getConfigs(address(this), address(0), 0);
         return otherConfig.flashloanFee;
     }
 
