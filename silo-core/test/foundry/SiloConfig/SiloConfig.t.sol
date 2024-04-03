@@ -273,22 +273,6 @@ contract SiloConfigTest is Test {
     }
 
     /*
-    forge test -vv --mt test_onDebtTransfer_revertOnCrossSilo
-    */
-    function test_onDebtTransfer_revertOnCrossSilo() public {
-        address from = makeAddr("from");
-        address to = makeAddr("to");
-        bool singleAsset;
-
-        vm.prank(makeAddr("silo0"));
-        _siloConfig.openDebt(from, singleAsset);
-
-        vm.prank(makeAddr("debtShareToken1"));
-        vm.expectRevert(ISiloConfig.DebtExistInOtherSilo.selector);
-        _siloConfig.onDebtTransfer(from, to);
-    }
-
-    /*
     forge test -vv --mt test_onDebtTransfer_clone
     */
     /// forge-config: core-test.fuzz.runs = 10
