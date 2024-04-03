@@ -46,6 +46,7 @@ function SafeAssumptions(env e) {
     requireDebtToken1TotalAndBalancesIntegrity();
     requireInvariant RA_more_assets_than_shares();
     require silo0.getSiloDataInterestRateTimestamp() > 0;
+    require silo1.getSiloDataInterestRateTimestamp() > 0;
 }
 
 rule PRV_maxWithdraw_collateral_assets_independence(env e, address user) {
@@ -163,6 +164,7 @@ rule PRV_transition_protected_preserves_value(env e, address owner) {
     assert abs(assetsP_after + assetsC_after, assetsP_before + assetsC_before) <= 4;
 }
 
+/// Verified
 rule PRV_LtV_invariant_under_accrual_interest_silo0(env e, address borrower) {
     SafeAssumptions(e);
     mathint ltv_before = getLTV(e, borrower);
@@ -172,6 +174,7 @@ rule PRV_LtV_invariant_under_accrual_interest_silo0(env e, address borrower) {
     assert ltv_before == ltv_after;
 }
 
+/// Verified
 rule PRV_LtV_invariant_under_accrual_interest_silo1(env e, address borrower) {
     SafeAssumptions(e);
     mathint ltv_before = getLTV(e, borrower);
@@ -181,6 +184,7 @@ rule PRV_LtV_invariant_under_accrual_interest_silo1(env e, address borrower) {
     assert ltv_before == ltv_after;
 }
 
+/// Violated
 rule PRV_DAO_fees_invariant_under_accrual_interest(env e) {
     SafeAssumptions(e);
     mathint fees_before = getSiloDataDaoAndDeployerFees(e);
