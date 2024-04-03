@@ -238,7 +238,7 @@ contract SiloConfigTest is Test {
         vm.prank(silo);
         (,, ISiloConfig.DebtInfo memory debtInfo) = _siloConfig.openDebt(borrower, singleAsset);
 
-        assertTrue(debtInfo.positionOpen);
+        assertTrue(debtInfo.debtPresent);
         assertTrue(debtInfo.singleAsset == singleAsset);
         assertTrue(debtInfo.debtInSilo0);
         assertTrue(debtInfo.debtInThisSilo);
@@ -259,7 +259,7 @@ contract SiloConfigTest is Test {
             ,, ISiloConfig.DebtInfo memory debtInfo
         ) = _siloConfig.getConfigs(silo, borrower, 0 /* always 0 for external calls */);
 
-        assertTrue(debtInfo.positionOpen);
+        assertTrue(debtInfo.debtPresent);
         assertTrue(debtInfo.singleAsset == singleAsset);
         assertTrue(!debtInfo.debtInSilo0);
         assertTrue(!debtInfo.debtInThisSilo);
@@ -378,7 +378,7 @@ contract SiloConfigTest is Test {
             ,, ISiloConfig.DebtInfo memory positionTo
         ) = _siloConfig.getConfigs(makeAddr("silo1"), to, 0 /* always 0 for external calls */);
 
-        assertTrue(positionTo.positionOpen, "positionOpen");
+        assertTrue(positionTo.debtPresent, "debtPresent");
         assertTrue(!positionTo.singleAsset, "singleAsset is not cloned when debt already open");
         assertTrue(positionTo.debtInSilo0, "debtInSilo0");
         assertTrue(!positionTo.debtInThisSilo, "call is from silo1, so debt should not be in THIS silo");

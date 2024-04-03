@@ -22,7 +22,7 @@ contract BorrowPossibleTest is Test {
         debtInfo.debtInSilo0 = _debtInSilo0;
         debtInfo.debtInThisSilo = _debtInThisSilo;
 
-        debtInfo.positionOpen = false;
+        debtInfo.debtPresent = false;
 
         assertTrue(SiloLendingLib.borrowPossible(debtInfo));
     }
@@ -37,7 +37,7 @@ contract BorrowPossibleTest is Test {
         debtInfo.singleAsset = _singleAsset;
         debtInfo.debtInSilo0 = _debtInSilo0;
 
-        debtInfo.positionOpen = true;
+        debtInfo.debtPresent = true;
         debtInfo.debtInThisSilo = false;
 
         assertTrue(!SiloLendingLib.borrowPossible(debtInfo));

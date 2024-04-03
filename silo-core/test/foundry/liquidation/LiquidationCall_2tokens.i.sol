@@ -120,7 +120,7 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
             ,, ISiloConfig.DebtInfo memory positionInto
         ) = siloConfig.getConfigs(address(silo1), userWithoutDebt, 0 /* always 0 for external calls */);
 
-        assertTrue(!positionInto.positionOpen, "we need user without debt for this test");
+        assertTrue(!positionInto.debtPresent, "we need user without debt for this test");
 
         vm.expectRevert(IPartialLiquidation.UserIsSolvent.selector);
 
@@ -140,7 +140,7 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
             ,, ISiloConfig.DebtInfo memory positionInto
         ) = siloConfig.getConfigs(address(silo1), BORROWER, 0 /* always 0 for external calls */);
 
-        assertTrue(positionInto.positionOpen, "we need user with debt for this test");
+        assertTrue(positionInto.debtPresent, "we need user with debt for this test");
         assertTrue(!positionInto.debtInSilo0, "we need debt in silo1");
 
         vm.expectRevert(ISilo.ThereIsDebtInOtherSilo.selector);

@@ -136,8 +136,8 @@ contract SiloConfig is ISiloConfig {
 
         DebtInfo memory debtInfo = _debtsInfo[_borrower];
 
-        if (!debtInfo.positionOpen) {
-            debtInfo.positionOpen = true;
+        if (!debtInfo.debtPresent) {
+            debtInfo.debtPresent = true;
             debtInfo.singleAsset = _sameAsset;
             debtInfo.debtInSilo0 = msg.sender == _SILO0;
 
@@ -153,13 +153,13 @@ contract SiloConfig is ISiloConfig {
 
         DebtInfo storage recipientPosition = _debtsInfo[_recipient];
 
-        if (recipientPosition.positionOpen) {
+        if (recipientPosition.debtPresent) {
             // transferring debt not allowed, if _recipient has debt in other silo
             _forbidDebtInTwoSilos(recipientPosition.debtInSilo0);
         } else {
             _forbidDebtInTwoSilos(_debtsInfo[_sender].debtInSilo0);
             
-            recipientPosition.positionOpen = true;
+            recipientPosition.debtPresent = true;
             recipientPosition.singleAsset = _debtsInfo[_sender].singleAsset;
             recipientPosition.debtInSilo0 = msg.sender == _DEBT_SHARE_TOKEN0;
         }
@@ -333,7 +333,7 @@ contract SiloConfig is ISiloConfig {
             callBeforeQuote: _CALL_BEFORE_QUOTE1
         });
 
-        if (!_debtInfo.positionOpen) {
+        if (!_debtInfo.debtPresent) {
             if (_method == _METHOD_BORROW_SAME_TOKEN) {
                 return callForSilo0 ? (collateral, collateral, _debtInfo) : (debt, debt, _debtInfo);
             } else if (_method == _METHOD_BORROW_TWO_TOKENS) {

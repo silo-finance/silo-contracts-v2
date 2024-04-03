@@ -35,7 +35,7 @@ library SiloSolvencyLib {
         address _borrower,
         ISilo.AccrueInterestInMemory _accrueInMemory
     ) internal view returns (bool) {
-        if (!_debtInfo.positionOpen) return true;
+        if (!_debtInfo.debtPresent) return true;
 
         uint256 ltv = getLtv(
             _collateralConfig,
@@ -236,7 +236,7 @@ library SiloSolvencyLib {
 
     /// @return TRUE when current silo deposit is NOT attached to debt, FALSE otherwise
     function depositWithoutDebt(ISiloConfig.DebtInfo memory _debtInfo) internal pure returns (bool) {
-        if (!_debtInfo.positionOpen) return true;
+        if (!_debtInfo.debtPresent) return true;
 
         return _debtInfo.debtInThisSilo ? !_debtInfo.singleAsset : _debtInfo.singleAsset;
     }
