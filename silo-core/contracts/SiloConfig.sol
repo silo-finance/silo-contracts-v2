@@ -157,8 +157,6 @@ contract SiloConfig is ISiloConfig {
             // transferring debt not allowed, if _recipient has debt in other silo
             _forbidDebtInTwoSilos(recipientDebtInfo.debtInSilo0);
         } else {
-            _forbidDebtInTwoSilos(_debtsInfo[_sender].debtInSilo0);
-            
             recipientDebtInfo.debtPresent = true;
             recipientDebtInfo.singleAsset = _debtsInfo[_sender].singleAsset;
             recipientDebtInfo.debtInSilo0 = msg.sender == _DEBT_SHARE_TOKEN0;
