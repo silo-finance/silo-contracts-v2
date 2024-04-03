@@ -33,7 +33,7 @@ contract PreviewMintTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_previewMint_beforeInterest
     */
-    /// forge-config: core.fuzz.runs = 10000
+    /// forge-config: core-test.fuzz.runs = 10000
     function test_previewMint_beforeInterest_fuzz(uint256 _shares, bool _defaultType, uint8 _type) public {
         vm.assume(_shares > 0);
 
@@ -43,7 +43,7 @@ contract PreviewMintTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_previewMint_afterNoInterest_fuzz
     */
-    /// forge-config: core.fuzz.runs = 10000
+    /// forge-config: core-test.fuzz.runs = 10000
     function test_previewMint_afterNoInterest_fuzz(
         uint128 _depositAmount,
         uint128 _shares,
@@ -57,23 +57,32 @@ contract PreviewMintTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_previewMint_withInterest_fuzz
     */
-    /// forge-config: core.fuzz.runs = 10000
-    function test_previewMint_withInterest_fuzz(uint128 _shares, bool _defaultType, uint8 _type) public {
+    /// forge-config: core-test.fuzz.runs = 10000
+    function test_previewMint_withInterest_1token_fuzz(uint128 _shares, bool _defaultType, uint8 _type) public {
         vm.assume(_shares > 0);
 
-        _createInterest();
+        _createInterest(SAME_ASSET);
 
         _assertPreviewMint(_shares, _defaultType, _type);
     }
 
-    function _createInterest() internal {
+    /// forge-config: core-test.fuzz.runs = 10000
+    function test_previewMint_withInterest_2tokens_fuzz(uint128 _shares, bool _defaultType, uint8 _type) public {
+        vm.assume(_shares > 0);
+
+        _createInterest(TWO_ASSETS);
+
+        _assertPreviewMint(_shares, _defaultType, _type);
+    }
+
+    function _createInterest(bool _sameAsset) internal {
         uint256 assets = 1e18 + 123456789; // some not even number
 
         _deposit(assets, depositor);
         _depositForBorrow(assets, depositor);
 
-        _deposit(assets, borrower);
-        _borrow(assets / 10, borrower);
+        _depositCollateral(assets, borrower, _sameAsset);
+        _borrow(assets / 10, borrower, _sameAsset);
 
         vm.warp(block.timestamp + 365 days);
 

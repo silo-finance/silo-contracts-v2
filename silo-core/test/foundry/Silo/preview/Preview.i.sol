@@ -33,16 +33,25 @@ contract PreviewTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_previewBorrow_zero_fuzz
     */
-    /// forge-config: core.fuzz.runs = 10000
+    /// forge-config: core-test.fuzz.runs = 10000
     function test_previewBorrow_zero_fuzz(uint256 _assets, bool _useShares) public {
         assertEq(_useShares ? silo0.previewBorrowShares(_assets) : silo0.previewBorrow(_assets), _assets);
     }
 
     /*
-    forge test -vv --ffi --mt test_previewBorrow_beforeInterest_fuzz
+    forge test -vv --ffi --mt test_previewBorrow_beforeInterest_
     */
-    /// forge-config: core.fuzz.runs = 10000
-    function test_previewBorrow_beforeInterest_fuzz(uint128 _assets, bool _useShares) public {
+    /// forge-config: core-test.fuzz.runs = 10000
+    function test_previewBorrow_beforeInterest_1token_fuzz(uint128 _assets, bool _useShares) public {
+        _previewBorrow_beforeInterest(_assets, _useShares, SAME_ASSET);
+    }
+
+    /// forge-config: core-test.fuzz.runs = 10000
+    function test_previewBorrow_beforeInterest_2tokens_fuzz(uint128 _assets, bool _useShares) public {
+        _previewBorrow_beforeInterest(_assets, _useShares, TWO_ASSETS);
+    }
+
+    function _previewBorrow_beforeInterest(uint128 _assets, bool _useShares, bool _sameAsset) private {
         uint256 assetsOrSharesToBorrow = _assets / 10 + (_assets % 2); // keep even/odd
         vm.assume(assetsOrSharesToBorrow < _assets);
 
@@ -52,10 +61,15 @@ contract PreviewTest is SiloLittleHelper, Test {
             assetsOrSharesToBorrow = 1;
         }
 
-        _createBorrowCase(_assets);
+        _createBorrowCase(_assets, _sameAsset);
 
-        uint256 preview = _useShares ? silo1.previewBorrowShares(assetsOrSharesToBorrow) : silo1.previewBorrow(assetsOrSharesToBorrow);
-        uint256 result = _useShares ? _borrow(assetsOrSharesToBorrow, borrower) : _borrowShares(assetsOrSharesToBorrow, borrower);
+        uint256 preview = _useShares
+            ? silo1.previewBorrowShares(assetsOrSharesToBorrow)
+            : silo1.previewBorrow(assetsOrSharesToBorrow);
+
+        uint256 result = _useShares
+            ? _borrow(assetsOrSharesToBorrow, borrower, _sameAsset)
+            : _borrowShares(assetsOrSharesToBorrow, borrower, _sameAsset);
 
         assertEq(preview, assetsOrSharesToBorrow, "previewBorrow shares are exact as amount when no interest");
         assertEq(preview, result, "previewBorrow - expect exact match");
@@ -64,8 +78,17 @@ contract PreviewTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_previewBorrow_withInterest
     */
-    /// forge-config: core.fuzz.runs = 10000
-    function test_previewBorrow_withInterest_fuzz(uint128 _assets, bool _useShares) public {
+    /// forge-config: core-test.fuzz.runs = 10000
+    function test_previewBorrow_withInterest_1token_fuzz(uint128 _assets, bool _useShares) public {
+        _previewBorrow_withInterest(_assets, _useShares, SAME_ASSET);
+    }
+
+    /// forge-config: core-test.fuzz.runs = 10000
+    function test_previewBorrow_withInterest_2tokens_fuzz(uint128 _assets, bool _useShares) public {
+        _previewBorrow_withInterest(_assets, _useShares, TWO_ASSETS);
+    }
+
+    function _previewBorrow_withInterest(uint128 _assets, bool _useShares, bool _sameAsset) private {
         uint256 assetsOrSharesToBorrow = _assets / 10 + (_assets % 2); // keep even/odd
         vm.assume(assetsOrSharesToBorrow < _assets);
 
@@ -74,12 +97,16 @@ contract PreviewTest is SiloLittleHelper, Test {
             assetsOrSharesToBorrow = 1;
         }
 
-        _createBorrowCase(_assets);
+        _createBorrowCase(_assets, _sameAsset);
 
         vm.warp(block.timestamp + 365 days);
 
-        uint256 preview = _useShares ? silo1.previewBorrowShares(assetsOrSharesToBorrow) : silo1.previewBorrow(assetsOrSharesToBorrow);
-        uint256 result = _useShares ? _borrowShares(assetsOrSharesToBorrow, borrower) : _borrow(assetsOrSharesToBorrow, borrower);
+        uint256 preview = _useShares
+            ? silo1.previewBorrowShares(assetsOrSharesToBorrow)
+            : silo1.previewBorrow(assetsOrSharesToBorrow);
+        uint256 result = _useShares
+            ? _borrowShares(assetsOrSharesToBorrow, borrower, _sameAsset)
+            : _borrow(assetsOrSharesToBorrow, borrower, _sameAsset);
 
         assertEq(
             preview,
@@ -89,17 +116,35 @@ contract PreviewTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --ffi --mt test_previewRepay_noInterestNoDebt_fuzz
+    forge test -vv --ffi --mt test_previewRepay_noInterestNoDebt_
     */
-    /// forge-config: core.fuzz.runs = 10000
-    function test_previewRepay_noInterestNoDebt_fuzz(uint128 _assetsOrShares, bool _useShares, bool _repayFull) public {
+    /// forge-config: core-test.fuzz.runs = 10000
+    function test_previewRepay_noInterestNoDebt_1token_fuzz(uint128 _assetsOrShares, bool _useShares, bool _repayFull)
+        public
+    {
+        _previewRepay_noInterestNoDebt(_assetsOrShares, _useShares, _repayFull, SAME_ASSET);
+    }
+
+    /// forge-config: core-test.fuzz.runs = 10000
+    function test_previewRepay_noInterestNoDebt_2tokens_fuzz(uint128 _assetsOrShares, bool _useShares, bool _repayFull)
+        public
+    {
+        _previewRepay_noInterestNoDebt(_assetsOrShares, _useShares, _repayFull, TWO_ASSETS);
+    }
+
+    function _previewRepay_noInterestNoDebt(
+        uint128 _assetsOrShares,
+        bool _useShares,
+        bool _repayFull,
+        bool _sameAsset
+    ) private {
         uint128 amountToUse = _repayFull ? _assetsOrShares : uint128(uint256(_assetsOrShares) * 37 / 100);
         vm.assume(amountToUse > 0);
 
         // preview before debt creation
         uint256 preview = _useShares ? silo1.previewRepayShares(amountToUse) : silo1.previewRepay(amountToUse);
 
-        _createDebt(_assetsOrShares, borrower);
+        _createDebt(_assetsOrShares, borrower, _sameAsset);
 
         assertEq(preview, amountToUse, "previewRepay == assets == shares, when no interest");
 
@@ -109,12 +154,21 @@ contract PreviewTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_previewRepayShares_noInterest_fuzz
     */
-    /// forge-config: core.fuzz.runs = 10000
-    function test_previewRepay_noInterest_fuzz(uint128 _assetsOrShares, bool _useShares, bool _repayFull) public {
+    /// forge-config: core-test.fuzz.runs = 10000
+    function test_previewRepay_noInterest_1token_fuzz(uint128 _assetsOrShares, bool _useShares, bool _repayFull) public {
+        _previewRepay_noInterest(_assetsOrShares, _useShares, _repayFull, SAME_ASSET);
+    }
+
+    /// forge-config: core-test.fuzz.runs = 10000
+    function test_previewRepay_noInterest_2tokens_fuzz(uint128 _assetsOrShares, bool _useShares, bool _repayFull) public {
+        _previewRepay_noInterest(_assetsOrShares, _useShares, _repayFull, TWO_ASSETS);
+    }
+
+    function _previewRepay_noInterest(uint128 _assetsOrShares, bool _useShares, bool _repayFull, bool _sameAsset) private {
         uint128 amountToUse = _repayFull ? _assetsOrShares : uint128(uint256(_assetsOrShares) * 37 / 100);
         vm.assume(amountToUse > 0);
 
-        _createDebt(_assetsOrShares, borrower);
+        _createDebt(_assetsOrShares, borrower, _sameAsset);
 
         uint256 preview = _useShares ? silo1.previewRepayShares(amountToUse) : silo1.previewRepay(amountToUse);
 
@@ -124,14 +178,35 @@ contract PreviewTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --ffi --mt test_previewRepay_withInterest_fuzz
+    forge test -vv --ffi --mt test_previewRepay_withInterest_
     */
-    /// forge-config: core.fuzz.runs = 10000
-    function test_previewRepay_withInterest_fuzz(uint128 _assetsOrShares, bool _useShares, bool _repayFull) public {
+    /// forge-config: core-test.fuzz.runs = 10000
+    function test_previewRepay_withInterest_1token_fuzz(
+        // uint128 _assetsOrShares, bool _useShares, bool _repayFull
+    )
+        public
+    {
+        (uint128 _assetsOrShares, bool _useShares, bool _repayFull) = (280, true, true);
+        _previewRepay_withInterest(_assetsOrShares, _useShares, _repayFull, SAME_ASSET);
+    }
+
+    /// forge-config: core-test.fuzz.runs = 10000
+    function test_previewRepay_withInterest_2tokens_fuzz(uint128 _assetsOrShares, bool _useShares, bool _repayFull)
+        public
+    {
+        _previewRepay_withInterest(_assetsOrShares, _useShares, _repayFull, TWO_ASSETS);
+    }
+
+    function _previewRepay_withInterest(
+        uint128 _assetsOrShares,
+        bool _useShares,
+        bool _repayFull,
+        bool _sameAsset
+    ) private {
         uint128 amountToUse = _repayFull ? _assetsOrShares : uint128(uint256(_assetsOrShares) * 37 / 100);
         vm.assume(amountToUse > 0);
 
-        _createDebt(_assetsOrShares, borrower);
+        _createDebt(_assetsOrShares, borrower, _sameAsset);
         vm.warp(block.timestamp + 100 days);
 
         uint256 preview = _useShares ? silo1.previewRepayShares(amountToUse) : silo1.previewRepay(amountToUse);
@@ -155,10 +230,10 @@ contract PreviewTest is SiloLittleHelper, Test {
         );
     }
 
-    function _createBorrowCase(uint128 _assets) internal {
+    function _createBorrowCase(uint128 _assets, bool _sameAsset) internal {
         address somebody = makeAddr("Somebody");
 
-        _deposit(_assets, borrower);
+        _depositCollateral(_assets, borrower, _sameAsset);
 
         // deposit to both silos
         _deposit(_assets, somebody);

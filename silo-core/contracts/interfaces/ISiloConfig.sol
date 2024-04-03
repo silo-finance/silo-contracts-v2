@@ -2,6 +2,13 @@
 pragma solidity >=0.5.0;
 
 interface ISiloConfig {
+    struct DebtInfo {
+        bool debtPresent;
+        bool sameAsset;
+        bool debtInSilo0;
+        bool debtInThisSilo; // at-hoc when getting configs
+    }
+
     struct InitData {
         /// @notice The address of the deployer of the Silo
         address deployer;
@@ -126,6 +133,24 @@ interface ISiloConfig {
     }
 
     error WrongSilo();
+    error OnlyDebtShareToken();
+    error DebtExistInOtherSilo();
+
+    /// @dev can be called only by silo, it opens debt for `_borrower`
+    /// @param _borrower borrower address
+    /// @param _sameAsset TRUE if `_borrower` open debt in the same token
+    function openDebt(address _borrower, bool _sameAsset)
+        external
+        returns (ConfigData memory, ConfigData memory, DebtInfo memory);
+
+    /// @dev should be called on debt transfer, it opens debt if `_to` address don't have one
+    /// @param _sender sender address
+    /// @param _recipient recipient address
+    function onDebtTransfer(address _sender, address _recipient) external;
+
+    /// @dev must be called when `_borrower` repay all debt, there is no restriction from which silo call will be done
+    /// @param _borrower borrower address
+    function closeDebt(address _borrower) external;
 
     // solhint-disable-next-line func-name-mixedcase
     function SILO_ID() external view returns (uint256);
@@ -142,15 +167,20 @@ interface ISiloConfig {
     function getAssetForSilo(address _silo) external view returns (address asset);
 
     /// @notice Retrieves configuration data for both silos. First config is for the silo that is asking for configs.
-    /// @dev This function reverts for incorrect silo address input
+    /// @dev This function reverts for incorrect silo address input.
     /// @param _silo The address of the silo for which configuration data is being retrieved. Config for this silo will
     /// be at index 0.
-    /// @return configData0 The configuration data for the specified silo.
-    /// @return configData1 The configuration data for the other silo.
-    function getConfigs(address _silo) external view returns (ConfigData memory, ConfigData memory);
+    /// @param borrower borrower address for which `debtInfo` will be returned
+    /// @param _method always zero for external usage
+    /// @return collateralConfig The configuration data for collateral silo.
+    /// @return debtConfig The configuration data for debt silo.
+    function getConfigs(address _silo, address borrower, uint256 _method)
+        external
+        view
+        returns (ConfigData memory collateralConfig, ConfigData memory debtConfig, DebtInfo memory debtInfo);
 
     /// @notice Retrieves configuration data for a specific silo
-    /// @dev This function reverts for incorrect silo address input
+    /// @dev This function reverts for incorrect silo address input.
     /// @param _silo The address of the silo for which configuration data is being retrieved
     /// @return configData The configuration data for the specified silo
     function getConfig(address _silo) external view returns (ConfigData memory);

@@ -14,7 +14,7 @@ import {ISiloConfig} from "../SiloConfig.sol";
 import {TokenHelper} from "../lib/TokenHelper.sol";
 
 /// @title ShareToken
-/// @notice Implements common interface for Silo tokens representing debt or collateral positions.
+/// @notice Implements common interface for Silo tokens representing debt or collateral.
 /// @dev Docs borrowed from https://github.com/OpenZeppelin/openzeppelin-contracts/tree/v4.9.3
 ///
 /// Implementation of the ERC4626 "Tokenized Vault Standard" as defined in

@@ -33,7 +33,7 @@ contract PartialLiquidationLibTest is Test, MaxRepayRawMath {
         assertEq(PartialLiquidationLib.minAcceptableLTV(800), 720, "LT=80% => min=>72%");
         uint256 gasEnd = gasleft();
 
-        assertEq(gasStart - gasEnd, 134, "optimise minAcceptableLTV()");
+        assertLe(gasStart - gasEnd, 133, "optimise minAcceptableLTV()");
     }
 
     /*
@@ -259,7 +259,7 @@ contract PartialLiquidationLibTest is Test, MaxRepayRawMath {
     /*
     forge test -vv --mt test_PartialLiquidationLib_calculateCollateralToLiquidate_math_fuzz
     */
-    /// forge-config: core.fuzz.runs = 1000
+    /// forge-config: core-test.fuzz.runs = 1000
     function test_PartialLiquidationLib_calculateCollateralToLiquidate_math_fuzz(
         uint256 _debtToCover,
         uint128 _totalBorrowerDebtAssets,
@@ -357,7 +357,7 @@ contract PartialLiquidationLibTest is Test, MaxRepayRawMath {
         PartialLiquidationLib.liquidationPreview(1e8, 1e18, 1e18, 1e18, 10, params);
         uint256 gasEnd = gasleft();
 
-        assertEq(gasStart - gasEnd, 1053, "optimise liquidationPreview");
+        assertEq(gasStart - gasEnd, 1040, "optimise liquidationPreview");
     }
 
     /*
@@ -383,7 +383,7 @@ contract PartialLiquidationLibTest is Test, MaxRepayRawMath {
         );
         uint256 gasEnd = gasleft();
 
-        assertEq(gasStart - gasEnd, 558, "optimise calculateCollateralToLiquidate()");
+        assertLe(gasStart - gasEnd, 553, "optimise calculateCollateralToLiquidate()");
         assertEq(collateralAssetsToLiquidate, 1010000000000000000);
         assertEq(collateralValueToLiquidate, 2020000000000000000);
     }
@@ -414,7 +414,7 @@ contract PartialLiquidationLibTest is Test, MaxRepayRawMath {
 
         assertEq(fromCollateral, 0, "fromCollateral (5, 15) => 0");
         assertEq(fromProtected, 5, "fromProtected (5, 15) => 5");
-        assertEq(gasStart - gasEnd, 149, "optimise splitReceiveCollateralToLiquidate");
+        assertLe(gasStart - gasEnd, 149, "optimise splitReceiveCollateralToLiquidate");
     }
     
     /*

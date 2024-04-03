@@ -28,9 +28,9 @@ contract PreviewDepositTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --ffi --mt test_previewDepositType_beforeInterest_fuzz2
+    forge test -vv --ffi --mt test_previewDepositType_beforeInterest_fuzz
     */
-    /// forge-config: core.fuzz.runs = 10000
+    /// forge-config: core-test.fuzz.runs = 10000
     function test_previewDeposit_beforeInterest_fuzz(uint256 _assets, bool _defaultType, uint8 _type) public {
         vm.assume(_assets > 0);
         vm.assume(_type == 0 || _type == 1);
@@ -49,7 +49,7 @@ contract PreviewDepositTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_previewDeposit_afterNoInterest
     */
-    /// forge-config: core.fuzz.runs = 10000
+    /// forge-config: core-test.fuzz.runs = 10000
     function test_previewDeposit_afterNoInterest_fuzz(uint128 _assets, bool _defaultType, uint8 _type) public {
         vm.assume(_assets > 0);
         vm.assume(_type == 0 || _type == 1);
@@ -76,8 +76,17 @@ contract PreviewDepositTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_previewDeposit_withInterest
     */
-    /// forge-config: core.fuzz.runs = 10000
-    function test_previewDeposit_withInterest_fuzz(uint256 _assets, bool _protected) public {
+    /// forge-config: core-test.fuzz.runs = 10000
+    function test_previewDeposit_withInterest_1token_fuzz(uint256 _assets, bool _protected) public {
+        _previewDeposit_withInterest(_assets, _protected, SAME_ASSET);
+    }
+
+    /// forge-config: core-test.fuzz.runs = 10000
+    function test_previewDeposit_withInterest_2tokens_fuzz(uint256 _assets, bool _protected) public {
+        _previewDeposit_withInterest(_assets, _protected, TWO_ASSETS);
+    }
+
+    function _previewDeposit_withInterest(uint256 _assets, bool _protected, bool _sameAsset) private {
         vm.assume(_assets < type(uint128).max);
         vm.assume(_assets > 0);
 
@@ -90,8 +99,8 @@ contract PreviewDepositTest is SiloLittleHelper, Test {
             _makeDeposit(silo1, token1, _assets, depositor, ISilo.AssetType.Protected);
         }
 
-        _deposit(_assets / 10 == 0 ? 2 : _assets, borrower);
-        _borrow(_assets / 10 + 1, borrower); // +1 ensure we not borrowing 0
+        _depositCollateral(_assets / 10 == 0 ? 2 : _assets, borrower, _sameAsset);
+        _borrow(_assets / 10 + 1, borrower, _sameAsset); // +1 ensure we not borrowing 0
 
         vm.warp(block.timestamp + 365 days);
 

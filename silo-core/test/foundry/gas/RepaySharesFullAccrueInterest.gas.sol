@@ -19,7 +19,7 @@ contract RepaySharesFullAccrueInterestGasTest is Gas, Test {
 
         vm.startPrank(BORROWER);
         silo0.deposit(ASSETS * 10, BORROWER);
-        silo1.borrow(ASSETS, BORROWER, BORROWER);
+        silo1.borrow(ASSETS, BORROWER, BORROWER, false /* sameAsset */);
         vm.stopPrank();
 
         vm.warp(block.timestamp + 1 days);
@@ -37,7 +37,7 @@ contract RepaySharesFullAccrueInterestGasTest is Gas, Test {
             address(silo1),
             abi.encodeWithSignature("repay(uint256,address)", ASSETS, BORROWER),
             "RepaySharesFullAccrueInterest full (shares) with accrue interest",
-            123610
+            123823
         );
     }
 }

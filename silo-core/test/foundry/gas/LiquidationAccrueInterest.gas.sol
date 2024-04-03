@@ -19,7 +19,7 @@ contract LiquidationAccrueInterestGasTest is Gas, Test {
 
         vm.startPrank(BORROWER);
         silo0.deposit(ASSETS * 5, BORROWER);
-        silo1.borrow(ASSETS, BORROWER, BORROWER);
+        silo1.borrow(ASSETS, BORROWER, BORROWER, false /* _sameAsset */);
         vm.stopPrank();
 
         vm.warp(block.timestamp + 13 days);
@@ -37,7 +37,7 @@ contract LiquidationAccrueInterestGasTest is Gas, Test {
                 (address(silo1), address(token0), address(token1), BORROWER, ASSETS / 2, false)
             ),
             "LiquidationCall with accrue interest",
-            319816
+            324073
         );
     }
 }

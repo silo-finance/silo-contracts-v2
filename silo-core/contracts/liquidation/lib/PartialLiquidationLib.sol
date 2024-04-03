@@ -22,10 +22,10 @@ library PartialLiquidationLib {
     /// eg. LT=80%, allowance to liquidate 10% below LT, then min ltv will be: LT80% * 90% = 72%
     uint256 internal constant _LT_LIQUIDATION_MARGIN = 0.9e18; // 90%
 
-    /// @dev if repay value : total position value during liquidation is higher than _POSITION_DUST_LEVEL_IN_BP
+    /// @dev if repay value : total debt value during liquidation is higher than _DEBT_DUST_LEVEL_IN_BP
     /// then we will force full liquidation,
     /// eg total value = 51 and dust level = 98%, then when we can not liquidate 50, we have to liquidate 51.
-    uint256 internal constant _POSITION_DUST_LEVEL = 0.9e18; // 90%
+    uint256 internal constant _DEBT_DUST_LEVEL = 0.9e18; // 90%
 
     /// @dev debt keeps growing over time, so when dApp use this view to calculate max, tx should never revert
     /// because actual max can be only higher
@@ -282,7 +282,7 @@ library PartialLiquidationLib {
         // here is weird case, sometimes it is impossible to go down to target LTV, however math can calculate it
         // eg with negative numerator and denominator and result will be positive, that's why we simply return all
         // we also cover dust case here
-        return repayValue * _PRECISION_DECIMALS / _totalBorrowerDebtValue > _POSITION_DUST_LEVEL
+        return repayValue * _PRECISION_DECIMALS / _totalBorrowerDebtValue > _DEBT_DUST_LEVEL
             ? _totalBorrowerDebtValue
             : repayValue;
     }

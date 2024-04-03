@@ -26,13 +26,13 @@ interface IShareToken is IERC20MetadataUpgradeable {
     /// @param _hookReceiver address that will get a callback on mint, burn and transfer of the token
     function initialize(ISilo _silo, address _hookReceiver) external;
 
-    /// @notice Mint method for Silo to create debt position
+    /// @notice Mint method for Silo to create debt
     /// @param _owner wallet for which to mint token
     /// @param _spender wallet that asks for mint
     /// @param _amount amount of token to be minted
     function mint(address _owner, address _spender, uint256 _amount) external;
 
-    /// @notice Burn method for Silo to close debt position
+    /// @notice Burn method for Silo to close debt
     /// @param _owner wallet for which to burn token
     /// @param _spender wallet that asks for burn
     /// @param _amount amount of token to be burned

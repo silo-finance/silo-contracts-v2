@@ -22,31 +22,6 @@ library SiloSolvencyLib {
     uint256 internal constant _PRECISION_DECIMALS = 1e18;
     uint256 internal constant _INFINITY = type(uint256).max;
 
-    function getOrderedConfigs(ISilo _silo, ISiloConfig _config, address _borrower)
-        external
-        view
-        returns (ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig)
-    {
-        (collateralConfig, debtConfig) = _config.getConfigs(address(_silo));
-
-        if (!validConfigOrder(collateralConfig.debtShareToken, debtConfig.debtShareToken, _borrower)) {
-            (collateralConfig, debtConfig) = (debtConfig, collateralConfig);
-        }
-    }
-
-    /// @dev check if config was given in correct order
-    /// @return orderCorrect TRUE means that order is correct OR `_borrower` has no debt and we can not really tell
-    function validConfigOrder(
-        address _collateralConfigDebtShareToken,
-        address _debtConfigDebtShareToken,
-        address _borrower
-    ) internal view returns (bool orderCorrect) {
-        uint256 debtShareTokenBalance = IShareToken(_debtConfigDebtShareToken).balanceOf(_borrower);
-
-        return
-            debtShareTokenBalance == 0 ? IShareToken(_collateralConfigDebtShareToken).balanceOf(_borrower) == 0 : true;
-    }
-
     /// @notice Determines if a borrower is solvent based on the Loan-to-Value (LTV) ratio
     /// @param _collateralConfig Configuration data for the collateral
     /// @param _debtConfig Configuration data for the debt
@@ -56,14 +31,19 @@ library SiloSolvencyLib {
     function isSolvent(
         ISiloConfig.ConfigData memory _collateralConfig,
         ISiloConfig.ConfigData memory _debtConfig,
+        ISiloConfig.DebtInfo memory _debtInfo,
         address _borrower,
-        ISilo.AccrueInterestInMemory _accrueInMemory,
-        uint256 debtShareBalance
+        ISilo.AccrueInterestInMemory _accrueInMemory
     ) internal view returns (bool) {
-        if (debtShareBalance == 0) return true;
+        if (!_debtInfo.debtPresent) return true;
 
         uint256 ltv = getLtv(
-            _collateralConfig, _debtConfig, _borrower, ISilo.OracleType.Solvency, _accrueInMemory, debtShareBalance
+            _collateralConfig,
+            _debtConfig,
+            _borrower,
+            ISilo.OracleType.Solvency,
+            _accrueInMemory,
+            IShareToken(_debtConfig.debtShareToken).balanceOf(_borrower)
         );
 
         return ltv <= _collateralConfig.lt;
@@ -85,7 +65,12 @@ library SiloSolvencyLib {
         if (debtShareBalance == 0) return true;
 
         uint256 ltv = getLtv(
-            _collateralConfig, _debtConfig, _borrower, ISilo.OracleType.MaxLtv, _accrueInMemory, debtShareBalance
+            _collateralConfig,
+            _debtConfig,
+            _borrower,
+            ISilo.OracleType.MaxLtv,
+            _accrueInMemory,
+            debtShareBalance
         );
 
         return ltv <= _collateralConfig.maxLtv;
@@ -108,10 +93,12 @@ library SiloSolvencyLib {
         ISilo.AccrueInterestInMemory _accrueInMemory,
         uint256 _debtShareBalanceCached
     ) internal view returns (LtvData memory ltvData) {
-        // When calculating maxLtv, use maxLtv oracle.
-        (ltvData.collateralOracle, ltvData.debtOracle) = _oracleType == ISilo.OracleType.MaxLtv
-            ? (ISiloOracle(_collateralConfig.maxLtvOracle), ISiloOracle(_debtConfig.maxLtvOracle))
-            : (ISiloOracle(_collateralConfig.solvencyOracle), ISiloOracle(_debtConfig.solvencyOracle));
+        if (_collateralConfig.token != _debtConfig.token) {
+            // When calculating maxLtv, use maxLtv oracle.
+            (ltvData.collateralOracle, ltvData.debtOracle) = _oracleType == ISilo.OracleType.MaxLtv
+                ? (ISiloOracle(_collateralConfig.maxLtvOracle), ISiloOracle(_debtConfig.maxLtvOracle))
+                : (ISiloOracle(_collateralConfig.solvencyOracle), ISiloOracle(_debtConfig.solvencyOracle));
+        }
 
         uint256 totalShares;
         uint256 shares;
@@ -193,7 +180,8 @@ library SiloSolvencyLib {
     /// @return sumOfBorrowerCollateralValue Total value of borrower's collateral
     /// @return totalBorrowerDebtValue Total debt value for the borrower
     /// @return ltvInDp Calculated LTV in 18 decimal precision
-    function calculateLtv(SiloSolvencyLib.LtvData memory _ltvData, address _collateralToken, address _debtToken)
+    function calculateLtv(
+        SiloSolvencyLib.LtvData memory _ltvData, address _collateralToken, address _debtToken)
         internal
         view
         returns (uint256 sumOfBorrowerCollateralValue, uint256 totalBorrowerDebtValue, uint256 ltvInDp)
@@ -213,7 +201,7 @@ library SiloSolvencyLib {
         }
     }
 
-    /// @notice Computes the value of collateral and debt positions based on given LTV data and asset addresses
+    /// @notice Computes the value of collateral and debt based on given LTV data and asset addresses
     /// @param _ltvData Data structure containing the assets data required for LTV calculations
     /// @param _collateralAsset Address of the collateral asset
     /// @param _debtAsset Address of the debt asset
@@ -242,5 +230,12 @@ library SiloSolvencyLib {
                 ? _ltvData.debtOracle.quote(_ltvData.borrowerDebtAssets, _debtAsset)
                 : _ltvData.borrowerDebtAssets;
         }
+    }
+
+    /// @return TRUE when current silo deposit is NOT attached to debt, FALSE otherwise
+    function depositWithoutDebt(ISiloConfig.DebtInfo memory _debtInfo) internal pure returns (bool) {
+        if (!_debtInfo.debtPresent) return true;
+
+        return _debtInfo.debtInThisSilo ? !_debtInfo.sameAsset : _debtInfo.sameAsset;
     }
 }

@@ -20,8 +20,7 @@ contract SiloERC4626LibConsumerNonVulnerable {
         uint256 _assets,
         uint256 _shares,
         address _receiver,
-        IShareToken _collateralShareToken,
-        IShareToken _debtShareToken
+        IShareToken _collateralShareToken
     ) public {
         SiloERC4626Lib.deposit(
             _token,
@@ -30,7 +29,6 @@ contract SiloERC4626LibConsumerNonVulnerable {
             _shares,
             _receiver,
             _collateralShareToken,
-            _debtShareToken,
             _total[ISilo.AssetType.Collateral]
         );
     }

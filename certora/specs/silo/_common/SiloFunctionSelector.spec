@@ -36,15 +36,18 @@ function siloFnSelector(
         mint(e, assetsOrShares, receiver, anyType);
     } else if (f.selector == borrowSig()) {
         address anyBorrower;
-        borrow(e, assetsOrShares, receiver, anyBorrower);
+        bool sameAsset;
+        borrow(e, assetsOrShares, receiver, anyBorrower, sameAsset);
     } else if (f.selector == borrowSharesSig()) {
         address anyBorrower;
-        borrowShares(e, assetsOrShares, receiver, anyBorrower);
+        bool sameAsset;
+        borrowShares(e, assetsOrShares, receiver, anyBorrower, sameAsset);
     } else if (f.selector == leverageSig()) {
         address anyBorrower;
         bytes data;
+        bool sameAsset;
         require anyBorrower != currentContract;
-        leverage(e, assetsOrShares, receiver, anyBorrower, data);
+        leverage(e, assetsOrShares, receiver, anyBorrower, sameAsset, data);
     } else if (f.selector == repaySig()) {
         address anyBorrower;
         require anyBorrower != currentContract;

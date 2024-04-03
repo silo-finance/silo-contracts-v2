@@ -75,9 +75,11 @@ contract GetAssetsDataForLtvCalculationsTest is Test {
         collateralConfig.collateralShareToken = collateralShareToken;
         collateralConfig.daoFee = scenario.input.collateralConfig.daoFee;
         collateralConfig.silo = silo0;
+        collateralConfig.token = makeAddr("collateral.token");
 
         debtConfig.debtShareToken = debtShareToken;
         debtConfig.silo = silo1;
+        debtConfig.token = makeAddr("debt.token");
 
         accrueInMemory = scenario.input.accrueInMemory
             ? ISilo.AccrueInterestInMemory.Yes

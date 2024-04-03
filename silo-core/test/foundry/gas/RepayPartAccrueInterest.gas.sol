@@ -19,7 +19,7 @@ contract RepayPartAccrueInterestGasTest is Gas, Test {
 
         vm.startPrank(BORROWER);
         silo0.deposit(ASSETS * 10, BORROWER);
-        silo1.borrow(ASSETS, BORROWER, BORROWER);
+        silo1.borrow(ASSETS, BORROWER, BORROWER, false /* sameAsset */);
         vm.stopPrank();
 
         vm.warp(block.timestamp + 1 days);
@@ -31,7 +31,7 @@ contract RepayPartAccrueInterestGasTest is Gas, Test {
             address(silo1),
             abi.encodeWithSignature("repay(uint256,address)", ASSETS / 2, BORROWER),
             "RepayPartAccrueInterest partial with accrue interest",
-            130910
+            131123
         );
     }
 }

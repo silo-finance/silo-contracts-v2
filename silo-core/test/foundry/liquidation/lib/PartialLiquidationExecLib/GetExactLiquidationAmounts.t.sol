@@ -195,7 +195,7 @@ contract GetExactLiquidationAmountsTest is GetExactLiquidationAmountsHelper {
     forge test -vv --mt test_getExactLiquidationAmounts_selfLiquidation_fuzz
     make sure self-liquidation can not make user insolvent
     */
-    /// forge-config: core.fuzz.runs = 8000
+    /// forge-config: core-test.fuzz.runs = 8000
     function test_getExactLiquidationAmounts_selfLiquidation_fuzz(
         uint128 _debtToCover,
         uint128 _collateralUserBalanceOf,
@@ -234,7 +234,7 @@ contract GetExactLiquidationAmountsTest is GetExactLiquidationAmountsHelper {
     forge test -vv --mt test_getExactLiquidationAmounts_liquidation_fuzz
     goal here is to check if we can get unexpected reverts
     */
-    /// forge-config: core.fuzz.runs = 1000
+    /// forge-config: core-test.fuzz.runs = 1000
     function test_getExactLiquidationAmounts_liquidation_fuzz(
         uint128 _debtToCover,
         uint128 _collateralUserBalanceOf,

@@ -6,6 +6,7 @@ import {MathUpgradeable} from "openzeppelin-contracts-upgradeable/utils/math/Mat
 import {ISilo} from "../../interfaces/ISilo.sol";
 import {ISiloConfig} from "../../interfaces/ISiloConfig.sol";
 import {SiloSolvencyLib} from "../../lib/SiloSolvencyLib.sol";
+import {SiloLendingLib} from "../../lib/SiloLendingLib.sol";
 import {PartialLiquidationLib} from "./PartialLiquidationLib.sol";
 
 library PartialLiquidationExecLib {
@@ -57,7 +58,7 @@ library PartialLiquidationExecLib {
     /// @dev debt keeps growing over time, so when dApp use this view to calculate max, tx should never revert
     /// because actual max can be only higher
     function maxLiquidation(
-        ISilo _silo,
+        ISilo _siloWithDebt,
         address _borrower
     )
         internal
@@ -65,8 +66,14 @@ library PartialLiquidationExecLib {
         returns (uint256 collateralToLiquidate, uint256 debtToRepay)
     {
         (
-            ISiloConfig.ConfigData memory debtConfig, ISiloConfig.ConfigData memory collateralConfig
-        ) = _silo.config().getConfigs(address(_silo));
+            ISiloConfig.ConfigData memory collateralConfig,
+            ISiloConfig.ConfigData memory debtConfig,
+            ISiloConfig.DebtInfo memory debtInfo
+        ) = _siloWithDebt.config().getConfigs(address(_siloWithDebt), _borrower, 0 /* method matters only on borrow */);
+
+        if (!debtInfo.debtPresent || !debtInfo.debtInThisSilo) {
+            return (0, 0);
+        }
 
         SiloSolvencyLib.LtvData memory ltvData = SiloSolvencyLib.getAssetsDataForLtvCalculations(
             collateralConfig,

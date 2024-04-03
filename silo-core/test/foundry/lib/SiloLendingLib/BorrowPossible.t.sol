@@ -3,79 +3,43 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
 import {SiloLendingLib} from "silo-core/contracts/lib/SiloLendingLib.sol";
-import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
-import "../../_mocks/TokenMock.sol";
+import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 
 // forge test -vv --mc BorrowPossibleTest
 contract BorrowPossibleTest is Test {
     /*
-    forge test -vv --mt test_borrowPossible_borrowable_zeros
+    forge test -vv --mt test_borrowPossible_notPossible_withDebtInOtherSilo_fuzz
     */
-    function test_borrowPossible_borrowable_zeros() public {
-        TokenMock protectedShareToken = new TokenMock(address(0x111));
-        TokenMock collateralShareToken = new TokenMock(address(0x222));
-        TokenMock debtShareToken = new TokenMock(address(0x333));
-        address borrower = address(0x333);
+    /// forge-config: core-test.fuzz.runs = 20
+    function test_borrowPossible_possible_withoutDebt_fuzz(
+        bool _sameAsset,
+        bool _debtInSilo0,
+        bool _debtInThisSilo
+    ) public {
+        ISiloConfig.DebtInfo memory debtInfo;
 
-        protectedShareToken.balanceOfMock(borrower, 0);
-        collateralShareToken.balanceOfMock(borrower, 0);
+        debtInfo.sameAsset = _sameAsset;
+        debtInfo.debtInSilo0 = _debtInSilo0;
+        debtInfo.debtInThisSilo = _debtInThisSilo;
 
-        (
-            bool possible, uint256 protectedSharesToWithdraw, uint256 collateralSharesToWithdraw
-        ) = SiloLendingLib.borrowPossible(
-            protectedShareToken.ADDRESS(), collateralShareToken.ADDRESS(), debtShareToken.ADDRESS(), borrower
-        );
+        debtInfo.debtPresent = false;
 
-        assertTrue(possible, "borrow possible when borrowPossible=true and no collateral in this token");
-        assertEq(protectedSharesToWithdraw, 0);
-        assertEq(collateralSharesToWithdraw, 0);
+        assertTrue(SiloLendingLib.borrowPossible(debtInfo));
     }
 
     /*
-    forge test -vv --mt test_borrowPossible_notPossibleWithDebt
+    forge test -vv --mt test_borrowPossible_notPossible_withDebtInOtherSilo_fuzz
     */
-    function test_borrowPossible_notPossibleWithDebt() public {
-        TokenMock protectedShareToken = new TokenMock(address(0x111));
-        TokenMock collateralShareToken = new TokenMock(address(0x222));
-        TokenMock debtShareToken = new TokenMock(address(0x333));
-        address borrower = address(0x333);
+    /// forge-config: core-test.fuzz.runs = 10
+    function test_borrowPossible_notPossible_withDebtInOtherSilo_fuzz(bool _sameAsset, bool _debtInSilo0) public {
+        ISiloConfig.DebtInfo memory debtInfo;
 
-        protectedShareToken.balanceOfMock(borrower, 0);
-        collateralShareToken.balanceOfMock(borrower, 2);
-        debtShareToken.balanceOfMock(borrower, 1);
+        debtInfo.sameAsset = _sameAsset;
+        debtInfo.debtInSilo0 = _debtInSilo0;
 
-        (
-            bool possible, uint256 protectedSharesToWithdraw, uint256 collateralSharesToWithdraw
-        ) = SiloLendingLib.borrowPossible(
-            protectedShareToken.ADDRESS(), collateralShareToken.ADDRESS(), debtShareToken.ADDRESS(), borrower
-        );
+        debtInfo.debtPresent = true;
+        debtInfo.debtInThisSilo = false;
 
-        assertFalse(possible, "borrow NOT possible when debt");
-        assertEq(protectedSharesToWithdraw, 0);
-        assertEq(collateralSharesToWithdraw, 2);
-    }
-
-    /*
-    forge test -vv --mt test_borrowPossible_possibleWithWithdraw
-    */
-    function test_borrowPossible_possibleWithWithdraw() public {
-        TokenMock protectedShareToken = new TokenMock(address(0x111));
-        TokenMock collateralShareToken = new TokenMock(address(0x222));
-        TokenMock debtShareToken = new TokenMock(address(0x333));
-        address borrower = address(0x333);
-
-        protectedShareToken.balanceOfMock(borrower, 3);
-        collateralShareToken.balanceOfMock(borrower, 2);
-        debtShareToken.balanceOfMock(borrower, 0);
-
-        (
-            bool possible, uint256 protectedSharesToWithdraw, uint256 collateralSharesToWithdraw
-        ) = SiloLendingLib.borrowPossible(
-            protectedShareToken.ADDRESS(), collateralShareToken.ADDRESS(), debtShareToken.ADDRESS(), borrower
-        );
-
-        assertTrue(possible, "borrow possible (when no debt) conditionally, with withdraw");
-        assertEq(protectedSharesToWithdraw, 3);
-        assertEq(collateralSharesToWithdraw, 2);
+        assertTrue(!SiloLendingLib.borrowPossible(debtInfo));
     }
 }

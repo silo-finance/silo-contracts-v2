@@ -21,7 +21,7 @@ contract MaxLiquidationTest is Test, MaxRepayRawMath {
     /*
     forge test -vv --mt test_maxLiquidation_fuzz
     */
-    /// forge-config: core.fuzz.runs = 5000
+    /// forge-config: core-test.fuzz.runs = 5000
     function test_maxLiquidation_fuzz(
         uint128 _sumOfCollateralAssets,
         uint128 _sumOfCollateralValue,

@@ -8,8 +8,8 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {SiloERC4626Lib} from "silo-core/contracts/lib/SiloERC4626Lib.sol";
 
-import {MintableToken} from "../_common/MintableToken.sol";
-import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
+import {MintableToken} from "../../_common/MintableToken.sol";
+import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
 
 /*
     forge test -vv --ffi --mc DepositTest
@@ -69,7 +69,10 @@ contract DepositTest is SiloLittleHelper, Test {
         _makeDeposit(silo1, token1, assets, depositor, ISilo.AssetType.Collateral);
         _makeDeposit(silo1, token1, assets, depositor, ISilo.AssetType.Protected);
 
-        (ISiloConfig.ConfigData memory collateral, ISiloConfig.ConfigData memory debt) = siloConfig.getConfigs(address(silo0));
+        (
+            ISiloConfig.ConfigData memory collateral,
+            ISiloConfig.ConfigData memory debt,
+        ) = siloConfig.getConfigs(address(silo0), address(0), 0 /* always 0 for external calls */);
 
         assertEq(token0.balanceOf(address(silo0)), assets * 2);
         assertEq(silo0.getCollateralAssets(), assets);
@@ -86,6 +89,38 @@ contract DepositTest is SiloLittleHelper, Test {
 
         assertEq(IShareToken(debt.collateralShareToken).balanceOf(depositor), assets, "collateral shares (on other silo)");
         assertEq(IShareToken(debt.protectedShareToken).balanceOf(depositor), assets, "protected shares (on other silo)");
+    }
+
+    /*
+    forge test -vv --ffi --mt test_deposit_withDebt_2tokens
+    */
+    function test_deposit_withDebt_2tokens() public {
+        _deposit_withDebt(TWO_ASSETS);
+    }
+
+    /*
+    forge test -vv --ffi --mt test_deposit_withDebt_1token
+    */
+    function test_deposit_withDebt_1token() public {
+        _deposit_withDebt(SAME_ASSET);
+    }
+
+    function _deposit_withDebt(bool _sameAsset) internal {
+        uint256 assets = 1e18;
+        address depositor = makeAddr("Depositor");
+
+        _makeDeposit(silo0, token0, assets, depositor, ISilo.AssetType.Collateral);
+        _makeDeposit(silo0, token0, assets, depositor, ISilo.AssetType.Protected);
+        _makeDeposit(silo1, token1, assets, depositor, ISilo.AssetType.Collateral);
+        _makeDeposit(silo1, token1, assets, depositor, ISilo.AssetType.Protected);
+
+        uint256 maxBorrow = silo1.maxBorrow(depositor, _sameAsset);
+        _borrow(maxBorrow, depositor, _sameAsset);
+
+        _makeDeposit(silo0, token0, assets, depositor, ISilo.AssetType.Collateral);
+        _makeDeposit(silo0, token0, assets, depositor, ISilo.AssetType.Protected);
+        _makeDeposit(silo1, token1, assets, depositor, ISilo.AssetType.Collateral);
+        _makeDeposit(silo1, token1, assets, depositor, ISilo.AssetType.Protected);
     }
 
     /*
@@ -137,21 +172,23 @@ contract DepositTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --ffi --mt test_maxDeposit_cap
+    forge test -vv --ffi --mt test_deposit_revert_zeroShares
     */
-    function test_maxDeposit_cap() public {
-        assertEq(silo0.maxDeposit(address(1)), 2 ** 128 - 1, "ERC4626 expect to return 2 ** 256 - 1");
-        assertEq(silo0.maxMint(address(1)), 2 ** 128 - 1, "ERC4626 expect to return 2 ** 256 - 1 (maxMint)");
+    function test_deposit_revert_zeroShares_1token() public {
+        _deposit_revert_zeroShares(SAME_ASSET);
     }
 
-    /*
-    forge test -vv --ffi --mt test_deposit_zeroShares
-    */
-    function test_deposit_zeroShares() public {
-        _deposit(2 ** 128, address(1));
+    function test_deposit_revert_zeroShares_2tokens() public {
+        _deposit_revert_zeroShares(TWO_ASSETS);
+    }
+
+    function _deposit_revert_zeroShares(bool _sameAsset) private {
+        address borrower = makeAddr("borrower");
+
+        _depositCollateral(2 ** 128, borrower, _sameAsset);
         _depositForBorrow(2 ** 128, address(2));
 
-        _borrow(2 ** 128 / 2, address(1));
+        _borrow(2 ** 128 / 2, borrower, _sameAsset);
 
         address anyAddress = makeAddr("any");
         // no interest, so shares are 1:1

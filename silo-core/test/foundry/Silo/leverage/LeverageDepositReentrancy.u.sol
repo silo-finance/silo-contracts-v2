@@ -24,6 +24,7 @@ contract LeverageDepositReentrancy is Test {
             0, // _assets
             ILeverageBorrower(address(0)), // _receiver
             address(0), // _borrower
+            false, // sameAsset
             data // _data
         );
     }

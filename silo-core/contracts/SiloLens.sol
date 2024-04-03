@@ -15,11 +15,6 @@ contract SiloLens is ISiloLens {
     using SiloLensLib for ISilo;
 
     /// @inheritdoc ISiloLens
-    function depositPossible(ISilo _silo, address _depositor) external view virtual returns (bool) {
-        return _silo.depositPossible(_depositor);
-    }
-
-    /// @inheritdoc ISiloLens
     function borrowPossible(ISilo _silo, address _borrower) external view virtual returns (bool possible) {
         return _silo.borrowPossible(_borrower);
     }

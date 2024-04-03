@@ -5,7 +5,7 @@ import {SiloLensLib} from "../lib/SiloLensLib.sol";
 import {IShareToken, ShareToken, ISiloFactory, ISilo} from "./ShareToken.sol";
 
 /// @title ShareCollateralToken
-/// @notice ERC20 compatible token representing collateral position in Silo
+/// @notice ERC20 compatible token representing collateral in Silo
 /// @custom:security-contact security@silo.finance
 contract ShareCollateralToken is ShareToken {
     using SiloLensLib for ISilo;
@@ -24,14 +24,6 @@ contract ShareCollateralToken is ShareToken {
     function burn(address _owner, address _spender, uint256 _amount) external virtual onlySilo {
         if (_owner != _spender) _spendAllowance(_owner, _spender, _amount);
         _burn(_owner, _amount);
-    }
-
-    function _beforeTokenTransfer(address _sender, address _recipient, uint256) internal view virtual override {
-        // if we minting or burning, Silo is responsible to check all necessary conditions
-        if (_isTransfer(_sender, _recipient)) {
-            // Silo forbids having debt and collateral position of the same asset in given Silo
-            if (!silo.depositPossible(_recipient)) revert ShareTransferNotAllowed();
-        }
     }
 
     /// @dev Check if sender is solvent after the transfer

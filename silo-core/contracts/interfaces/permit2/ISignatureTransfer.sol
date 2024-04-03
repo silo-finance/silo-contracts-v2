@@ -128,9 +128,9 @@ interface ISignatureTransfer is IEIP712 {
         bytes calldata signature
     ) external;
 
-    /// @notice Invalidates the bits specified in mask for the bitmap at the word position
+    /// @notice Invalidates the bits specified in mask for the bitmap at the word debt
     /// @dev The wordPos is maxed at type(uint248).max
     /// @param wordPos A number to index the nonceBitmap at
-    /// @param mask A bitmap masked against msg.sender's current bitmap at the word position
+    /// @param mask A bitmap masked against msg.sender's current bitmap at the word debt
     function invalidateUnorderedNonces(uint256 wordPos, uint256 mask) external;
 }

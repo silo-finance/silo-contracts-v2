@@ -34,6 +34,7 @@ contract Hack1 {
         uint256 assets = 1e18;
         uint256 shares = 1e18;
         address receiver = address(this);
+        bool sameAsset = false;
 
         option = option % 10;
 
@@ -48,15 +49,15 @@ contract Hack1 {
         } else if (option == 4) {
             Silo(msg.sender).transitionCollateral(shares, _initiator, ISilo.AssetType.Collateral);
         } else if (option == 5) {
-            Silo(msg.sender).borrow(assets, receiver, _initiator);
+            Silo(msg.sender).borrow(assets, receiver, _initiator, sameAsset);
         } else if (option == 6) {
-            Silo(msg.sender).borrowShares(shares, receiver, _initiator);
+            Silo(msg.sender).borrowShares(shares, receiver, _initiator, sameAsset);
         } else if (option == 7) {
             Silo(msg.sender).repay(assets, _initiator);
         } else if (option == 8) {
             Silo(msg.sender).repayShares(shares, _initiator);
         } else {
-            Silo(msg.sender).leverage(assets, ILeverageBorrower(receiver), _initiator, bytes(""));
+            Silo(msg.sender).leverage(assets, ILeverageBorrower(receiver), _initiator, sameAsset, bytes(""));
         }
 
         return FLASHLOAN_CALLBACK;

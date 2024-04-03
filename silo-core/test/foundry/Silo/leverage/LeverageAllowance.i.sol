@@ -25,6 +25,7 @@ contract LeverageAllowanceTest is SiloLittleHelper, Test {
     address immutable BORROWER;
 
     ISiloConfig siloConfig;
+    bool sameAsset;
 
     ILeverageBorrower leverageBorrower = ILeverageBorrower(new LeverageBorrower());
 
@@ -50,7 +51,7 @@ contract LeverageAllowanceTest is SiloLittleHelper, Test {
         token1.mint(address(leverageBorrower), ASSETS);
 
         vm.expectRevert("ERC20: insufficient allowance");
-        silo0.leverage(ASSETS, leverageBorrower, BORROWER, data);
+        silo0.leverage(ASSETS, leverageBorrower, BORROWER, sameAsset, data);
     }
 
     /*
@@ -71,7 +72,7 @@ contract LeverageAllowanceTest is SiloLittleHelper, Test {
         token1.mint(address(leverageBorrower), ASSETS);
         bytes memory data = abi.encode(address(silo1), address(token1), ASSETS);
 
-        silo0.leverage(ASSETS / 2, leverageBorrower, BORROWER, data);
+        silo0.leverage(ASSETS / 2, leverageBorrower, BORROWER, sameAsset, data);
 
         assertEq(IShareToken(debtShareToken).balanceOf(BORROWER), ASSETS / 2, "BORROWER has debt after");
         assertEq(IShareToken(debtShareToken).balanceOf(DEPOSITOR), 0, "DEPOSITOR no debt after");
