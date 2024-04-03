@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.21;
 
-import {console} from "forge-std/console.sol";
-
 import {MathUpgradeable} from "openzeppelin-contracts-upgradeable/utils/math/MathUpgradeable.sol";
 
 import {ISiloOracle} from "../interfaces/ISiloOracle.sol";
@@ -74,9 +72,6 @@ library SiloSolvencyLib {
             _accrueInMemory,
             debtShareBalance
         );
-
-        console.log("[isBelowMaxLtv] ltv", ltv);
-        console.log("[isBelowMaxLtv] _collateralConfig.maxLtv", _collateralConfig.maxLtv);
 
         return ltv <= _collateralConfig.maxLtv;
     }
@@ -194,9 +189,6 @@ library SiloSolvencyLib {
         (
             sumOfBorrowerCollateralValue, totalBorrowerDebtValue
         ) = getPositionValues(_ltvData, _collateralToken, _debtToken);
-
-        console.log("[calculateLtv] sumOfBorrowerCollateralValue", sumOfBorrowerCollateralValue);
-        console.log("[calculateLtv] totalBorrowerDebtValue", totalBorrowerDebtValue);
 
         if (sumOfBorrowerCollateralValue == 0 && totalBorrowerDebtValue == 0) {
             return (0, 0, 0);
