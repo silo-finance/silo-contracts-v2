@@ -12,13 +12,13 @@ contract BorrowPossibleTest is Test {
     */
     /// forge-config: core-test.fuzz.runs = 20
     function test_borrowPossible_possible_withoutDebt_fuzz(
-        bool _singleAsset,
+        bool _sameAsset,
         bool _debtInSilo0,
         bool _debtInThisSilo
     ) public {
         ISiloConfig.DebtInfo memory debtInfo;
 
-        debtInfo.singleAsset = _singleAsset;
+        debtInfo.sameAsset = _sameAsset;
         debtInfo.debtInSilo0 = _debtInSilo0;
         debtInfo.debtInThisSilo = _debtInThisSilo;
 
@@ -31,10 +31,10 @@ contract BorrowPossibleTest is Test {
     forge test -vv --mt test_borrowPossible_notPossible_withDebtInOtherSilo_fuzz
     */
     /// forge-config: core-test.fuzz.runs = 10
-    function test_borrowPossible_notPossible_withDebtInOtherSilo_fuzz(bool _singleAsset, bool _debtInSilo0) public {
+    function test_borrowPossible_notPossible_withDebtInOtherSilo_fuzz(bool _sameAsset, bool _debtInSilo0) public {
         ISiloConfig.DebtInfo memory debtInfo;
 
-        debtInfo.singleAsset = _singleAsset;
+        debtInfo.sameAsset = _sameAsset;
         debtInfo.debtInSilo0 = _debtInSilo0;
 
         debtInfo.debtPresent = true;

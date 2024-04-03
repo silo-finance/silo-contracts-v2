@@ -138,7 +138,7 @@ contract SiloConfig is ISiloConfig {
 
         if (!debtInfo.debtPresent) {
             debtInfo.debtPresent = true;
-            debtInfo.singleAsset = _sameAsset;
+            debtInfo.sameAsset = _sameAsset;
             debtInfo.debtInSilo0 = msg.sender == _SILO0;
 
             _debtsInfo[_borrower] = debtInfo;
@@ -158,7 +158,7 @@ contract SiloConfig is ISiloConfig {
             _forbidDebtInTwoSilos(recipientDebtInfo.debtInSilo0);
         } else {
             recipientDebtInfo.debtPresent = true;
-            recipientDebtInfo.singleAsset = _debtsInfo[_sender].singleAsset;
+            recipientDebtInfo.sameAsset = _debtsInfo[_sender].sameAsset;
             recipientDebtInfo.debtInSilo0 = msg.sender == _DEBT_SHARE_TOKEN0;
         }
     }
@@ -344,7 +344,7 @@ contract SiloConfig is ISiloConfig {
         if (_debtInfo.debtInSilo0) {
             _debtInfo.debtInThisSilo = callForSilo0;
 
-            if (_debtInfo.singleAsset) {
+            if (_debtInfo.sameAsset) {
                 debt = collateral;
             } else {
                 (collateral, debt) = (debt, collateral);
@@ -352,7 +352,7 @@ contract SiloConfig is ISiloConfig {
         } else {
             _debtInfo.debtInThisSilo = !callForSilo0;
 
-            if (_debtInfo.singleAsset) {
+            if (_debtInfo.sameAsset) {
                 collateral = debt;
             }
         }
