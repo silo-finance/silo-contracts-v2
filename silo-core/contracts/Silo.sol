@@ -816,7 +816,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
             ISiloConfig.ConfigData memory collateralConfig,
             ISiloConfig.ConfigData memory debtConfig,
             ISiloConfig.DebtInfo memory debtInfo
-        ) = config.openPosition(_borrower, _sameAsset);
+        ) = config.openDebt(_borrower, _sameAsset);
 
         if (!SiloLendingLib.borrowPossible(debtInfo)) revert ISilo.BorrowNotPossible();
 

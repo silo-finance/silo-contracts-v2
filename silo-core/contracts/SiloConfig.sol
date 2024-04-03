@@ -128,7 +128,7 @@ contract SiloConfig is ISiloConfig {
     }
 
     /// @inheritdoc ISiloConfig
-    function openPosition(address _borrower, bool _sameAsset)
+    function openDebt(address _borrower, bool _sameAsset)
         external
         returns (ConfigData memory, ConfigData memory, DebtInfo memory)
     {

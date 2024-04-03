@@ -172,23 +172,23 @@ contract SiloConfigTest is Test {
     }
 
     /*
-    forge test -vv --mt test_openPosition_revertOnWrongSilo
+    forge test -vv --mt test_openDebt_revertOnWrongSilo
     */
-    function test_openPosition_revertOnWrongSilo() public {
+    function test_openDebt_revertOnWrongSilo() public {
         vm.expectRevert(ISiloConfig.WrongSilo.selector);
-        _siloConfig.openPosition(address(1), false);
+        _siloConfig.openDebt(address(1), false);
     }
 
     /*
-    forge test -vv --mt test_openPosition_pass
+    forge test -vv --mt test_openDebt_pass
     */
-    function test_openPosition_pass() public {
+    function test_openDebt_pass() public {
         vm.prank(makeAddr("silo0"));
-        _siloConfig.openPosition(address(1), false);
+        _siloConfig.openDebt(address(1), false);
 
         // counter example
         vm.prank(makeAddr("silo1"));
-        _siloConfig.openPosition(address(2), false);
+        _siloConfig.openDebt(address(2), false);
     }
 
     /*
@@ -211,32 +211,32 @@ contract SiloConfigTest is Test {
     }
 
     /*
-    forge test -vv --mt test_openPosition_debtInThisSilo
+    forge test -vv --mt test_openDebt_debtInThisSilo
     */
-    function test_openPosition_skipsIfAlreadyOpen() public {
+    function test_openDebt_skipsIfAlreadyOpen() public {
         address silo = makeAddr("silo0");
         address borrower = makeAddr("borrower");
         bool singleAsset = true;
 
         vm.prank(silo);
-        (,, ISiloConfig.DebtInfo memory positionInfo1) = _siloConfig.openPosition(borrower, singleAsset);
+        (,, ISiloConfig.DebtInfo memory positionInfo1) = _siloConfig.openDebt(borrower, singleAsset);
 
         vm.prank(silo);
-        (,, ISiloConfig.DebtInfo memory positionInfo2) = _siloConfig.openPosition(borrower, singleAsset);
+        (,, ISiloConfig.DebtInfo memory positionInfo2) = _siloConfig.openDebt(borrower, singleAsset);
 
         assertEq(abi.encode(positionInfo1), abi.encode(positionInfo2), "nothing should change");
     }
 
     /*
-    forge test -vv --mt test_openPosition_debtInThisSilo
+    forge test -vv --mt test_openDebt_debtInThisSilo
     */
-    function test_openPosition_debtInThisSilo() public {
+    function test_openDebt_debtInThisSilo() public {
         address silo = makeAddr("silo0");
         address borrower = makeAddr("borrower");
         bool singleAsset = true;
 
         vm.prank(silo);
-        (,, ISiloConfig.DebtInfo memory debtInfo) = _siloConfig.openPosition(borrower, singleAsset);
+        (,, ISiloConfig.DebtInfo memory debtInfo) = _siloConfig.openDebt(borrower, singleAsset);
 
         assertTrue(debtInfo.positionOpen);
         assertTrue(debtInfo.singleAsset == singleAsset);
@@ -245,15 +245,15 @@ contract SiloConfigTest is Test {
     }
 
     /*
-    forge test -vv --mt test_openPosition_debtInOtherSilo
+    forge test -vv --mt test_openDebt_debtInOtherSilo
     */
-    function test_openPosition_debtInOtherSilo() public {
+    function test_openDebt_debtInOtherSilo() public {
         address silo = makeAddr("silo0");
         address borrower = makeAddr("borrower");
         bool singleAsset;
 
         vm.prank(makeAddr("silo1"));
-        _siloConfig.openPosition(borrower, singleAsset);
+        _siloConfig.openDebt(borrower, singleAsset);
 
         (
             ,, ISiloConfig.DebtInfo memory debtInfo
@@ -279,7 +279,7 @@ contract SiloConfigTest is Test {
         bool singleAsset;
 
         vm.prank(makeAddr("silo0"));
-        _siloConfig.openPosition(from, singleAsset);
+        _siloConfig.openDebt(from, singleAsset);
 
         vm.prank(makeAddr("debtShareToken1"));
         vm.expectRevert(ISiloConfig.PositionExistInOtherSilo.selector);
@@ -296,7 +296,7 @@ contract SiloConfigTest is Test {
         address to = makeAddr("to");
 
         vm.prank(silo);
-        (,, ISiloConfig.DebtInfo memory positionFrom) = _siloConfig.openPosition(from, singleAsset);
+        (,, ISiloConfig.DebtInfo memory positionFrom) = _siloConfig.openDebt(from, singleAsset);
 
         vm.prank(_silo0 ? makeAddr("debtShareToken0") : makeAddr("debtShareToken1"));
         _siloConfig.onDebtTransfer(from, to);
@@ -333,10 +333,10 @@ contract SiloConfigTest is Test {
         bool singleAsset = true;
 
         vm.prank(makeAddr("silo0"));
-        _siloConfig.openPosition(from, singleAsset);
+        _siloConfig.openDebt(from, singleAsset);
 
         vm.prank(makeAddr("silo1"));
-        _siloConfig.openPosition(to, singleAsset);
+        _siloConfig.openDebt(to, singleAsset);
 
         vm.prank(debtShareToken0);
         vm.expectRevert(ISiloConfig.PositionExistInOtherSilo.selector);
@@ -366,10 +366,10 @@ contract SiloConfigTest is Test {
         bool sameAsset = true;
 
         vm.prank(makeAddr("silo0"));
-        _siloConfig.openPosition(from, sameAsset);
+        _siloConfig.openDebt(from, sameAsset);
 
         vm.prank(makeAddr("silo0"));
-        _siloConfig.openPosition(to, !sameAsset);
+        _siloConfig.openDebt(to, !sameAsset);
 
         vm.prank(debtShareToken0);
         _siloConfig.onDebtTransfer(from, to);
@@ -402,7 +402,7 @@ contract SiloConfigTest is Test {
         bool singleAsset = true;
 
         vm.prank(makeAddr("silo1"));
-        _siloConfig.openPosition(borrower, singleAsset);
+        _siloConfig.openDebt(borrower, singleAsset);
 
         vm.prank(makeAddr("silo0")); // other silo can close debt
         _siloConfig.closePosition(borrower);

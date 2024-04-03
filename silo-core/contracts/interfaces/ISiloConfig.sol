@@ -140,7 +140,7 @@ interface ISiloConfig {
     /// @dev can be called only by silo, it opens debt for `_borrower`
     /// @param _borrower borrower address
     /// @param _sameAsset TRUE if `_borrower` open debt in the same token
-    function openPosition(address _borrower, bool _sameAsset)
+    function openDebt(address _borrower, bool _sameAsset)
         external
         returns (ConfigData memory, ConfigData memory, DebtInfo memory);
 
