@@ -128,6 +128,7 @@ interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
     error Insolvency();
     error ThereIsDebtInOtherSilo();
     error NoDebt();
+    error TwoAssetsDebt();
 
     /// @notice Initialize Silo
     /// @param _siloConfig address of ISiloConfig with full config for this Silo

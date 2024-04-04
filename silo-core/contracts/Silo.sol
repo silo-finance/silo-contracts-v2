@@ -527,6 +527,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
         ) = config.getConfigs(address(this), _borrower, Methods.BORROW_SAME_ASSET);
 
         if (!SiloLendingLib.borrowPossible(debtInfo)) revert ISilo.BorrowNotPossible();
+        if (debtInfo.debtPresent && !debtInfo.sameAsset) revert ISilo.TwoAssetsDebt();
 
         _callAccrueInterestForAsset(
             collateralConfig.interestRateModel,
