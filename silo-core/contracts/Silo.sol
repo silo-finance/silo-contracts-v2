@@ -538,16 +538,14 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
         uint256 requiredCollateral;
 
         { // too deep
-            (_assets, borrowedShares) = SiloLendingLib.borrow(
+            (_assets, borrowedShares) = _callBorrow(
                 debtConfig.debtShareToken,
                 address(0), // we do not transferring debt
                 _assets,
                 0 /* _shares */,
                 _borrower,
                 _borrower,
-                msg.sender,
-                total[AssetType.Debt],
-                total[AssetType.Collateral].assets
+                msg.sender
             );
 
             requiredCollateral = _assets * SiloLendingLib._PRECISION_DECIMALS;
@@ -910,16 +908,14 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
             debtConfig.interestRateModel, debtConfig.daoFee, debtConfig.deployerFee, debtConfig.otherSilo
         );
 
-        (assets, shares) = SiloLendingLib.borrow(
+        (assets, shares) = _callBorrow(
             debtConfig.debtShareToken,
             debtConfig.token,
             _assets,
             _shares,
             _receiver,
             _borrower,
-            msg.sender,
-            total[AssetType.Debt],
-            total[AssetType.Collateral].assets
+            msg.sender
         );
 
         emit Borrow(msg.sender, _receiver, _borrower, assets, shares);
@@ -1125,6 +1121,28 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
             _assetType,
             _liquidity,
             _totalCollateral
+        );
+    }
+
+    function _callBorrow(
+        address _debtShareToken,
+        address _token,
+        uint256 _assets,
+        uint256 _shares,
+        address _receiver,
+        address _borrower,
+        address _spender
+    ) internal returns (uint256 borrowedAssets, uint256 borrowedShares) {
+        return SiloLendingLib.borrow(
+            _debtShareToken,
+            _token,
+            _assets,
+            _shares,
+            _receiver,
+            _borrower,
+            _spender,
+            total[AssetType.Debt],
+            total[AssetType.Collateral].assets
         );
     }
 }
