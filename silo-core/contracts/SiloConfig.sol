@@ -2,6 +2,7 @@
 pragma solidity 0.8.21;
 
 import {ISiloConfig} from "./interfaces/ISiloConfig.sol";
+import {ConstantsLib} from "./lib/ConstantsLib.sol";
 
 // solhint-disable var-name-mixedcase
 
@@ -9,9 +10,6 @@ import {ISiloConfig} from "./interfaces/ISiloConfig.sol";
 /// @dev Immutable contract is more expensive to deploy than minimal proxy however it provides nearly 10x cheapper
 /// data access using immutable variables.
 contract SiloConfig is ISiloConfig {
-    uint256 private constant _METHOD_BORROW_SAME_TOKEN = 1;
-    uint256 private constant _METHOD_BORROW_TWO_TOKENS = 2;
-
     uint256 public immutable SILO_ID;
 
     uint256 private immutable _DAO_FEE;
@@ -170,6 +168,21 @@ contract SiloConfig is ISiloConfig {
         ) revert WrongSilo();
 
         delete _debtsInfo[_borrower];
+    }
+
+    function changeCollateralType(address _borrower, bool _sameAsset)
+        external
+        returns (ConfigData memory, ConfigData memory, DebtInfo memory debtInfo)
+    {
+        debtInfo = _debtsInfo[_borrower];
+
+        if (!debtInfo.debtPresent) revert NoDebt();
+        if (debtInfo.sameAsset == _sameAsset) revert CollateralTypeDidNotChanged();
+
+        _debtsInfo[_borrower].sameAsset = _sameAsset;
+        debtInfo.sameAsset = _sameAsset;
+
+        return _getConfigs(msg.sender, 0 /* method does not mather when debt open */, debtInfo);
     }
 
     /// @inheritdoc ISiloConfig
@@ -332,12 +345,36 @@ contract SiloConfig is ISiloConfig {
         });
 
         if (!_debtInfo.debtPresent) {
-            if (_method == _METHOD_BORROW_SAME_TOKEN) {
+            if (_method == ConstantsLib.METHOD_BORROW_SAME_TOKEN) {
                 return callForSilo0 ? (collateral, collateral, _debtInfo) : (debt, debt, _debtInfo);
-            } else if (_method == _METHOD_BORROW_TWO_TOKENS) {
+            } else if (_method == ConstantsLib.METHOD_BORROW_TWO_TOKENS) {
                 return callForSilo0 ? (debt, collateral, _debtInfo) : (collateral, debt, _debtInfo);
             } else {
                 return callForSilo0 ? (collateral, debt, _debtInfo) : (debt, collateral, _debtInfo);
+            }
+        } else if (_method == ConstantsLib.METHOD_WITHDRAW) {
+            _debtInfo.debtInThisSilo = callForSilo0 == _debtInfo.debtInSilo0;
+
+            if (_debtInfo.sameAsset) {
+                if (_debtInfo.debtInSilo0) {
+                    return callForSilo0
+                        ? (collateral, collateral, _debtInfo)
+                        : (debt, collateral, _debtInfo); // only deposit
+                } else {
+                    return callForSilo0
+                        ? (collateral, debt, _debtInfo) // only deposit
+                        : (debt, debt, _debtInfo);
+                }
+            } else {
+                if (_debtInfo.debtInSilo0) {
+                    return callForSilo0
+                        ? (collateral, debt, _debtInfo)
+                        : (debt, collateral, _debtInfo); // only deposit
+                } else {
+                    return callForSilo0
+                        ? (collateral, debt, _debtInfo) // only deposit
+                        : (debt, collateral, _debtInfo);
+                }
             }
         }
 

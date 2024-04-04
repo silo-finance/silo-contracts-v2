@@ -24,6 +24,7 @@ import {SiloERC4626Lib} from "./lib/SiloERC4626Lib.sol";
 import {SiloMathLib} from "./lib/SiloMathLib.sol";
 import {LiquidationWithdrawLib} from "./lib/LiquidationWithdrawLib.sol";
 import {Rounding} from "./lib/Rounding.sol";
+import {ConstantsLib} from "./lib/ConstantsLib.sol";
 
 // Keep ERC4626 ordering
 // solhint-disable ordering
@@ -35,9 +36,6 @@ import {Rounding} from "./lib/Rounding.sol";
 contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
     using SafeERC20Upgradeable for IERC20Upgradeable;
 
-    uint256 private constant _METHOD_BORROW_SAME_TOKEN = 1;
-    uint256 private constant _METHOD_BORROW_TWO_TOKENS = 2;
-    
     bytes32 internal constant _LEVERAGE_CALLBACK = keccak256("ILeverageBorrower.onLeverage");
 
     ISiloFactory public immutable factory;
@@ -87,7 +85,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
             ISiloConfig.ConfigData memory collateral,
             ISiloConfig.ConfigData memory debt,
             ISiloConfig.DebtInfo memory debtInfo
-        ) = config.getConfigs(address(this), _borrower, 0 /* method matters only for borrow */);
+        ) = config.getConfigs(address(this), _borrower, ConstantsLib.METHOD_IS_SOLVENT);
 
         return SiloSolvencyLib.isSolvent(collateral, debt, debtInfo, _borrower, AccrueInterestInMemory.Yes);
     }
@@ -733,7 +731,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
             ISiloConfig.ConfigData memory collateralConfig,
             ISiloConfig.ConfigData memory debtConfig,
             ISiloConfig.DebtInfo memory debtInfo
-        ) = config.getConfigs(address(this), _owner, 0 /* method matters only for borrow */);
+        ) = config.getConfigs(address(this), _owner, ConstantsLib.METHOD_WITHDRAW);
 
         _callAccrueInterestForAsset(
             collateralConfig.interestRateModel,
@@ -950,7 +948,9 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
             ISiloConfig.ConfigData memory debtConfig,
             ISiloConfig.DebtInfo memory debtInfo
         ) = cachedConfig.getConfigs(
-            address(this), _borrower, _sameAsset ? _METHOD_BORROW_SAME_TOKEN : _METHOD_BORROW_TWO_TOKENS
+            address(this),
+            _borrower,
+            _sameAsset ? ConstantsLib.METHOD_BORROW_SAME_TOKEN : ConstantsLib.METHOD_BORROW_TWO_TOKENS
         );
 
         if (!SiloLendingLib.borrowPossible(debtInfo)) return (0, 0);
