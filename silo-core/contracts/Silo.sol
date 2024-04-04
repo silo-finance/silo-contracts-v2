@@ -537,8 +537,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
 
         uint256 requiredCollateral;
 
-        // borrow first
-        {
+        { // too deep
             (_assets, borrowShares) = SiloLendingLib.borrow(
                 debtConfig.debtShareToken,
                 address(0), // we do not transferring debt
@@ -551,18 +550,17 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
                 total[AssetType.Collateral].assets
             );
 
-            requiredCollateral = _assets * 1e18 / collateralConfig.maxLtv;
+            requiredCollateral = _assets * SiloLendingLib._PRECISION_DECIMALS;
             uint256 transferDiff;
 
             unchecked {
+                requiredCollateral = requiredCollateral / collateralConfig.maxLtv;
                 // safe because `requiredCollateral` is chunk of `_assets`, so it can not be higher
                 transferDiff = _assets - requiredCollateral;
             }
 
             IERC20Upgradeable(collateralConfig.token).safeTransferFrom(msg.sender, address(this), transferDiff);
         }
-
-        // deposit
 
         (, depositShares) = SiloERC4626Lib.deposit(
             address(0), // we do not transferring token
