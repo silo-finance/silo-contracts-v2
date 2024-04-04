@@ -135,13 +135,18 @@ interface ISiloConfig {
     error WrongSilo();
     error OnlyDebtShareToken();
     error DebtExistInOtherSilo();
+    error NoDebt();
+    error CollateralTypeDidNotChanged();
 
     /// @dev can be called only by silo, it opens debt for `_borrower`
     /// @param _borrower borrower address
     /// @param _sameAsset TRUE if `_borrower` open debt in the same token
+    /// @return collateralConfig The configuration data for collateral silo.
+    /// @return debtConfig The configuration data for debt silo.
+    /// @return debtInfo details about `borrower` debt
     function openDebt(address _borrower, bool _sameAsset)
         external
-        returns (ConfigData memory, ConfigData memory, DebtInfo memory);
+        returns (ConfigData memory collateralConfig, ConfigData memory debtConfig, DebtInfo memory debtInfo);
 
     /// @dev should be called on debt transfer, it opens debt if `_to` address don't have one
     /// @param _sender sender address
@@ -151,6 +156,15 @@ interface ISiloConfig {
     /// @dev must be called when `_borrower` repay all debt, there is no restriction from which silo call will be done
     /// @param _borrower borrower address
     function closeDebt(address _borrower) external;
+
+    /// @notice it will change collateral for existing debt, only silo can call it
+    /// @return collateralConfig The configuration data for collateral silo.
+    /// @return debtConfig The configuration data for debt silo.
+    /// @return debtInfo details about `borrower` debt
+    function changeCollateralType(address _borrower, bool _sameAsset)
+        external
+        returns (ConfigData memory collateralConfig, ConfigData memory debtConfig, DebtInfo memory debtInfo);
+
 
     // solhint-disable-next-line func-name-mixedcase
     function SILO_ID() external view returns (uint256);
@@ -174,6 +188,7 @@ interface ISiloConfig {
     /// @param _method always zero for external usage
     /// @return collateralConfig The configuration data for collateral silo.
     /// @return debtConfig The configuration data for debt silo.
+    /// @return debtInfo details about `borrower` debt
     function getConfigs(address _silo, address borrower, uint256 _method)
         external
         view

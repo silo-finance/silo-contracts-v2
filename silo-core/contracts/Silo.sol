@@ -24,7 +24,7 @@ import {SiloERC4626Lib} from "./lib/SiloERC4626Lib.sol";
 import {SiloMathLib} from "./lib/SiloMathLib.sol";
 import {LiquidationWithdrawLib} from "./lib/LiquidationWithdrawLib.sol";
 import {Rounding} from "./lib/Rounding.sol";
-import {ConstantsLib} from "./lib/ConstantsLib.sol";
+import {Methods} from "./lib/Methods.sol";
 
 // Keep ERC4626 ordering
 // solhint-disable ordering
@@ -85,7 +85,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
             ISiloConfig.ConfigData memory collateral,
             ISiloConfig.ConfigData memory debt,
             ISiloConfig.DebtInfo memory debtInfo
-        ) = config.getConfigs(address(this), _borrower, ConstantsLib.METHOD_IS_SOLVENT);
+        ) = config.getConfigs(address(this), _borrower, Methods.IS_SOLVENT);
 
         return SiloSolvencyLib.isSolvent(collateral, debt, debtInfo, _borrower, AccrueInterestInMemory.Yes);
     }
@@ -488,6 +488,29 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
         );
     }
 
+    function switchCollateralTo(bool _sameAsset) external virtual nonReentrant {
+        ISiloConfig cacheConfig = config;
+
+        (
+            ISiloConfig.ConfigData memory collateral,
+            ISiloConfig.ConfigData memory debt,
+            ISiloConfig.DebtInfo memory debtInfo
+        ) = cacheConfig.changeCollateralType(msg.sender, _sameAsset);
+
+        emit CollateralTypeChanged(msg.sender, _sameAsset);
+
+        _callAccrueInterestForAsset(
+            collateral.interestRateModel,
+            collateral.daoFee,
+            collateral.deployerFee,
+            collateral.otherSilo
+        );
+
+        if (!SiloSolvencyLib.isSolvent(collateral, debt, debtInfo, msg.sender, AccrueInterestInMemory.No)) {
+            revert NotSolvent();
+        }
+    }
+
     /// @inheritdoc ISilo
     function borrow(uint256 _assets, address _receiver, address _borrower, bool _sameAsset)
         external
@@ -731,7 +754,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
             ISiloConfig.ConfigData memory collateralConfig,
             ISiloConfig.ConfigData memory debtConfig,
             ISiloConfig.DebtInfo memory debtInfo
-        ) = config.getConfigs(address(this), _owner, ConstantsLib.METHOD_WITHDRAW);
+        ) = config.getConfigs(address(this), _owner, Methods.WITHDRAW);
 
         _callAccrueInterestForAsset(
             collateralConfig.interestRateModel,
@@ -950,7 +973,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
         ) = cachedConfig.getConfigs(
             address(this),
             _borrower,
-            _sameAsset ? ConstantsLib.METHOD_BORROW_SAME_TOKEN : ConstantsLib.METHOD_BORROW_TWO_TOKENS
+            _sameAsset ? Methods.BORROW_SAME_TOKEN : Methods.BORROW_TWO_TOKENS
         );
 
         if (!SiloLendingLib.borrowPossible(debtInfo)) return (0, 0);

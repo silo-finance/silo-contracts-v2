@@ -2,7 +2,7 @@
 pragma solidity 0.8.21;
 
 import {ISiloConfig} from "./interfaces/ISiloConfig.sol";
-import {ConstantsLib} from "./lib/ConstantsLib.sol";
+import {Methods} from "./lib/Methods.sol";
 
 // solhint-disable var-name-mixedcase
 
@@ -174,6 +174,8 @@ contract SiloConfig is ISiloConfig {
         external
         returns (ConfigData memory, ConfigData memory, DebtInfo memory debtInfo)
     {
+        if (msg.sender != _SILO0 && msg.sender != _SILO1) revert WrongSilo();
+
         debtInfo = _debtsInfo[_borrower];
 
         if (!debtInfo.debtPresent) revert NoDebt();
@@ -345,14 +347,14 @@ contract SiloConfig is ISiloConfig {
         });
 
         if (!_debtInfo.debtPresent) {
-            if (_method == ConstantsLib.METHOD_BORROW_SAME_TOKEN) {
+            if (_method == Methods.BORROW_SAME_TOKEN) {
                 return callForSilo0 ? (collateral, collateral, _debtInfo) : (debt, debt, _debtInfo);
-            } else if (_method == ConstantsLib.METHOD_BORROW_TWO_TOKENS) {
+            } else if (_method == Methods.BORROW_TWO_TOKENS) {
                 return callForSilo0 ? (debt, collateral, _debtInfo) : (collateral, debt, _debtInfo);
             } else {
                 return callForSilo0 ? (collateral, debt, _debtInfo) : (debt, collateral, _debtInfo);
             }
-        } else if (_method == ConstantsLib.METHOD_WITHDRAW) {
+        } else if (_method == Methods.WITHDRAW) {
             _debtInfo.debtInThisSilo = callForSilo0 == _debtInfo.debtInSilo0;
 
             if (_debtInfo.sameAsset) {
