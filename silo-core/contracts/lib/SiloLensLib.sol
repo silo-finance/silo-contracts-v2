@@ -10,12 +10,13 @@ import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
 import {SiloSolvencyLib} from "./SiloSolvencyLib.sol";
 import {SiloLendingLib} from "./SiloLendingLib.sol";
 import {SiloERC4626Lib} from "./SiloERC4626Lib.sol";
+import {ConstantsLib} from "./ConstantsLib.sol";
 
 library SiloLensLib {
     function borrowPossible(ISilo _silo, address _borrower) internal view returns (bool possible) {
         (
             ,, ISiloConfig.DebtInfo memory debtInfo
-        ) = _silo.config().getConfigs(address(_silo), _borrower, 0 /* method matters only for borrow */);
+        ) = _silo.config().getConfigs(address(_silo), _borrower, ConstantsLib.METHOD_BORROW_POSSIBLE);
         possible = SiloLendingLib.borrowPossible(debtInfo);
     }
 
@@ -31,7 +32,7 @@ library SiloLensLib {
         (
             ISiloConfig.ConfigData memory collateralConfig,
             ISiloConfig.ConfigData memory debtConfig,
-        ) = _silo.config().getConfigs(address(_silo), _borrower, 0 /* method matters only for borrow */);
+        ) = _silo.config().getConfigs(address(_silo), _borrower, ConstantsLib.METHOD_EXTERNAL);
 
         ltv = SiloSolvencyLib.getLtv(
             collateralConfig,
