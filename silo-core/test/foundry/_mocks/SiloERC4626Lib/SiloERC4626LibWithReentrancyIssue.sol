@@ -9,6 +9,7 @@ import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {SiloMathLib} from "silo-core/contracts/lib/SiloMathLib.sol";
+import {Rounding} from "silo-core/contracts/lib/Rounding.sol";
 
 // solhint-disable function-max-lines
 
@@ -34,8 +35,8 @@ library SiloERC4626LibWithReentrancyIssue {
             _shares,
             totalAssets,
             _collateralShareToken.totalSupply(),
-            MathUpgradeable.Rounding.Up,
-            MathUpgradeable.Rounding.Down,
+            Rounding.DEPOSIT_TO_ASSETS,
+            Rounding.DEPOSIT_TO_SHARES,
             ISilo.AssetType.Collateral
         );
 

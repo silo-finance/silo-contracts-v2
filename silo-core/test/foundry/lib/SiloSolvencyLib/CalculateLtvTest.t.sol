@@ -4,7 +4,8 @@ pragma solidity ^0.8.0;
 import {MathUpgradeable} from "openzeppelin-contracts-upgradeable/utils/math/MathUpgradeable.sol";
 
 import "forge-std/Test.sol";
-import "silo-core/contracts/lib/SiloSolvencyLib.sol";
+import {SiloSolvencyLib, ISiloOracle} from "silo-core/contracts/lib/SiloSolvencyLib.sol";
+import {Rounding} from "silo-core/contracts/lib/Rounding.sol";
 
 import {OraclesHelper} from "../../_common/OraclesHelper.sol";
 
@@ -81,7 +82,7 @@ contract CalculateLtvTest is Test, OraclesHelper {
         } else if (sumOfCollateralAssets == 0) {
             expectedLtv = SiloSolvencyLib._INFINITY;
         } else {
-            expectedLtv = MathUpgradeable.mulDiv(_debtAssets, DECIMALS_POINTS, sumOfCollateralAssets, MathUpgradeable.Rounding.Up);
+            expectedLtv = MathUpgradeable.mulDiv(_debtAssets, DECIMALS_POINTS, sumOfCollateralAssets, MathUpgradeable.Rounding(Rounding.LTV));
         }
 
         assertEq(ltv, expectedLtv, "ltv");
@@ -113,7 +114,7 @@ contract CalculateLtvTest is Test, OraclesHelper {
 
         assertEq(
             ltv,
-            MathUpgradeable.mulDiv(1111, DECIMALS_POINTS, 9999, MathUpgradeable.Rounding.Up),
+            MathUpgradeable.mulDiv(1111, DECIMALS_POINTS, 9999, MathUpgradeable.Rounding(Rounding.LTV)),
             "constant values, constant ltv"
         );
     }

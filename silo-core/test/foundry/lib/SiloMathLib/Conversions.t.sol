@@ -13,7 +13,7 @@ contract ConversionsTest is Test {
         uint256 _assets = 1;
         uint256 _totalAssets;
         uint256 _totalShares;
-        MathUpgradeable.Rounding _rounding = MathUpgradeable.Rounding.Down;
+        uint256 _rounding = Rounding.DOWN;
 
         uint256 shares = SiloMathLib.convertToShares(_assets, _totalAssets, _totalShares, _rounding, ISilo.AssetType.Collateral);
         assertEq(shares, 1 * SiloMathLib._DECIMALS_OFFSET_POW);

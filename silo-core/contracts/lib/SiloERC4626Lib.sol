@@ -12,6 +12,7 @@ import {SiloSolvencyLib} from "./SiloSolvencyLib.sol";
 import {SiloMathLib} from "./SiloMathLib.sol";
 import {SiloStdLib} from "./SiloStdLib.sol";
 import {SiloLendingLib} from "./SiloLendingLib.sol";
+import {Rounding} from "./Rounding.sol";
 
 // solhint-disable function-max-lines
 
@@ -94,7 +95,7 @@ library SiloERC4626Lib {
                 shares,
                 _totalAssets,
                 shareTokenTotalSupply,
-                MathUpgradeable.Rounding.Down,
+                Rounding.MAX_WITHDRAW_TO_ASSETS,
                 _assetType
             );
 
@@ -109,7 +110,7 @@ library SiloERC4626Lib {
                 // when we doing withdraw, we using Rounding.Up, because we want to burn as many shares
                 // however here, we will be using shares as input to withdraw, if we round up, we can overflow
                 // because we will want to withdraw too much, so we have to use Rounding.Down
-                MathUpgradeable.Rounding.Down,
+                Rounding.MAX_WITHDRAW_TO_SHARES,
                 ISilo.AssetType.Collateral
             );
 
@@ -212,8 +213,8 @@ library SiloERC4626Lib {
             _shares,
             totalAssets,
             _collateralShareToken.totalSupply(),
-            MathUpgradeable.Rounding.Up,
-            MathUpgradeable.Rounding.Down,
+            Rounding.DEPOSIT_TO_ASSETS,
+            Rounding.DEPOSIT_TO_SHARES,
             ISilo.AssetType.Collateral
         );
 
@@ -276,8 +277,8 @@ library SiloERC4626Lib {
                 _shares,
                 totalAssets,
                 shareTotalSupply,
-                MathUpgradeable.Rounding.Down,
-                MathUpgradeable.Rounding.Up,
+                Rounding.WITHDRAW_TO_ASSETS,
+                Rounding.WITHDRAW_TO_SHARES,
                 _assetType
             );
 
