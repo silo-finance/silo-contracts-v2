@@ -521,17 +521,17 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
         if (_assets == 0) revert ISilo.ZeroAssets();
 
         (
-            ISiloConfig.ConfigData memory collateral,
-            ISiloConfig.ConfigData memory debt,
+            ISiloConfig.ConfigData memory collateralConfig,
+            ISiloConfig.ConfigData memory debtConfig,
             ISiloConfig.DebtInfo memory debtInfo
         ) = config.getConfigs(address(this), _borrower, Methods.BORROW_SAME_ASSET);
 
         if (!SiloLendingLib.borrowPossible(debtInfo)) revert ISilo.BorrowNotPossible();
 
         _callAccrueInterestForAsset(
-            collateral.interestRateModel,
-            collateral.daoFee,
-            collateral.deployerFee,
+            collateralConfig.interestRateModel,
+            collateralConfig.daoFee,
+            collateralConfig.deployerFee,
             address(0) // no need to accrue for other silo
         );
 
@@ -539,20 +539,18 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
 
         // borrow first
         {
-            uint256 borrowAssets;
-
-            (borrowAssets, borrowShares) = SiloMathLib.convertToAssetsAndToShares(
+            (_assets, borrowShares) = SiloLendingLib.borrow(
+                debtConfig.debtShareToken,
+                address(0), // we do not transferring debt
                 _assets,
                 0 /* _shares */,
-                total[AssetType.Debt].assets,
-                IShareToken(debt.debtShareToken).totalSupply(),
-                Rounding.BORROW_TO_ASSETS,
-                Rounding.BORROW_TO_SHARES,
-                AssetType.Debt
+                _borrower,
+                _borrower,
+                msg.sender,
+                total[AssetType.Debt],
+                total[AssetType.Collateral].assets
             );
 
-            if (borrowShares == 0) revert ISilo.ZeroShares();
-            if (borrowAssets == 0) revert ISilo.ZeroAssets();
 
             IShareToken(debt.debtShareToken).mint(_borrower, msg.sender, borrowShares);
 
@@ -566,8 +564,8 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
         // deposit
         
         IShareToken shareToken = _assetType == AssetType.Collateral
-            ? IShareToken(collateral.collateralShareToken)
-            : IShareToken(collateral.protectedShareToken);
+            ? IShareToken(collateralConfig.collateralShareToken)
+            : IShareToken(collateralConfig.protectedShareToken);
 
         uint256 depositAssets;
 
