@@ -3,7 +3,7 @@ methods {
         uint256 _shares,
         uint256 _totalAssets,
         uint256 _totalShares,
-        uint256 _rounding,
+        MathUpgradeable.Rounding _rounding,
         ISilo.AssetType _assetType
     ) internal returns (uint256) => simplified_convertToAssets(
         _shares,
@@ -17,7 +17,7 @@ methods {
         uint256 _assets,
         uint256 _totalAssets,
         uint256 _totalShares,
-        uint256 _rounding,
+        MathUpgradeable.Rounding _rounding,
         ISilo.AssetType _assetType
     ) internal returns (uint256) => simplified_convertToShares(
         _assets,
