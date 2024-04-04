@@ -3,7 +3,7 @@ methods {
         uint256 _shares,
         uint256 _totalAssets,
         uint256 _totalShares,
-        MathUpgradeable.Rounding _rounding,
+        uint256 _rounding,
         ISilo.AssetType _assetType
     ) internal returns (uint256) => simplified_convertToAssets(
         _shares,
@@ -17,7 +17,7 @@ methods {
         uint256 _assets,
         uint256 _totalAssets,
         uint256 _totalShares,
-        MathUpgradeable.Rounding _rounding,
+        uint256 _rounding,
         ISilo.AssetType _assetType
     ) internal returns (uint256) => simplified_convertToShares(
         _assets,
@@ -32,10 +32,10 @@ function simplified_convertToShares(
     uint256 _assets,
     uint256 _totalAssets,
     uint256 _totalShares,
-    MathUpgradeable.Rounding _rounding,
+    uint256 _rounding,
     ISilo.AssetType _assetType
 ) returns uint256 {
-    if (_rounding == MathUpgradeable.Rounding.Up) {
+    if (MathUpgradeable.Rounding(_rounding) == MathUpgradeable.Rounding.Up) {
         return assert_uint256(_assets / 5 * 3 + 1);
     }
 
@@ -46,12 +46,12 @@ function simplified_convertToAssets(
     uint256 _shares,
     uint256 _totalAssets,
     uint256 _totalShares,
-    MathUpgradeable.Rounding _rounding,
+    uint256 _rounding,
     ISilo.AssetType _assetType
 ) returns uint256 {
     require _shares * 2 < max_uint256;
 
-    if (_rounding == MathUpgradeable.Rounding.Up) {
+    if (MathUpgradeable.Rounding(_rounding) == MathUpgradeable.Rounding.Up) {
         return assert_uint256(_shares * 5 / 3 + 1);
     }
 
