@@ -268,6 +268,10 @@ interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
     /// @return shares Amount of shares equivalent to the provided asset amount
     function previewBorrow(uint256 _assets) external view returns (uint256 shares);
 
+    function fastBorrow(uint256 _assets, address _borrower, AssetType _assetType)
+        external
+        returns (uint256 borrowShares, uint256 depositShares);
+
     /// @notice Allows an address to borrow a specified amount of assets
     /// @param _assets Amount of assets to borrow
     /// @param _receiver Address receiving the borrowed assets

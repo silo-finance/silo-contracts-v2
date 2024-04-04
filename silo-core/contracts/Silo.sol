@@ -512,6 +512,82 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
     }
 
     /// @inheritdoc ISilo
+    function fastBorrow(uint256 _assets, address _borrower, AssetType _assetType)
+        external
+        virtual
+        nonReentrant
+        returns (uint256 borrowShares, uint256 depositShares)
+    {
+        if (_assets == 0) revert ISilo.ZeroAssets();
+
+        (
+            ISiloConfig.ConfigData memory collateral,
+            ISiloConfig.ConfigData memory debt,
+            ISiloConfig.DebtInfo memory debtInfo
+        ) = config.getConfigs(address(this), _borrower, Methods.BORROW_SAME_ASSET);
+
+        if (!SiloLendingLib.borrowPossible(debtInfo)) revert ISilo.BorrowNotPossible();
+
+        _callAccrueInterestForAsset(
+            collateral.interestRateModel,
+            collateral.daoFee,
+            collateral.deployerFee,
+            address(0) // no need to accrue for other silo
+        );
+
+        uint256 requiredCollateral;
+
+        // borrow first
+        {
+            uint256 borrowAssets;
+
+            (borrowAssets, borrowShares) = SiloMathLib.convertToAssetsAndToShares(
+                _assets,
+                0 /* _shares */,
+                total[AssetType.Debt].assets,
+                IShareToken(debt.debtShareToken).totalSupply(),
+                Rounding.BORROW_TO_ASSETS,
+                Rounding.BORROW_TO_SHARES,
+                AssetType.Debt
+            );
+
+            if (borrowShares == 0) revert ISilo.ZeroShares();
+            if (borrowAssets == 0) revert ISilo.ZeroAssets();
+
+            IShareToken(debt.debtShareToken).mint(_borrower, msg.sender, borrowShares);
+
+            requiredCollateral = borrowAssets * 1e18 / collateral.maxLtv;
+            uint256 transferDiff = borrowAssets - requiredCollateral;
+
+            // fee-on-transfer is ignored. If token reenters, state is already finalized, no harm done.
+            IERC20Upgradeable(collateral.token).safeTransferFrom(msg.sender, address(this), transferDiff);
+        }
+
+        // deposit
+        
+        IShareToken shareToken = _assetType == AssetType.Collateral
+            ? IShareToken(collateral.collateralShareToken)
+            : IShareToken(collateral.protectedShareToken);
+
+        uint256 depositAssets;
+
+        (depositAssets, depositShares) = SiloMathLib.convertToAssetsAndToShares(
+            requiredCollateral,
+            0 /* _shares */,
+            total[_assetType].assets,
+            shareToken.totalSupply(),
+            Rounding.DEPOSIT_TO_ASSETS,
+            Rounding.DEPOSIT_TO_SHARES,
+            _assetType
+        );
+
+        if (depositAssets == 0) revert ISilo.ZeroAssets();
+        if (depositShares == 0) revert ISilo.ZeroShares();
+
+        shareToken.mint(_borrower, _borrower, depositShares);
+    }
+
+    /// @inheritdoc ISilo
     function borrow(uint256 _assets, address _receiver, address _borrower, bool _sameAsset)
         external
         virtual
@@ -973,7 +1049,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
         ) = cachedConfig.getConfigs(
             address(this),
             _borrower,
-            _sameAsset ? Methods.BORROW_SAME_TOKEN : Methods.BORROW_TWO_TOKENS
+            _sameAsset ? Methods.BORROW_SAME_ASSET : Methods.BORROW_TWO_ASSETS
         );
 
         if (!SiloLendingLib.borrowPossible(debtInfo)) return (0, 0);
