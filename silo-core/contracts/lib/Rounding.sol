@@ -3,6 +3,7 @@ pragma solidity ^0.8.0;
 
 import {MathUpgradeable} from "openzeppelin-contracts-upgradeable/utils/math/MathUpgradeable.sol";
 
+// solhint-disable private-vars-leading-underscore
 library Rounding {
     uint256 internal constant DEFAULT_TO_ASSETS = uint256(MathUpgradeable.Rounding.Down);
     uint256 internal constant DEFAULT_TO_SHARES = uint256(MathUpgradeable.Rounding.Down);
