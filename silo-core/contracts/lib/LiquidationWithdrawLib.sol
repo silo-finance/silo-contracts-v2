@@ -1,13 +1,12 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.21;
 
-import {MathUpgradeable} from "openzeppelin-contracts-upgradeable/utils/math/MathUpgradeable.sol";
-
 import {ISilo} from "../interfaces/ISilo.sol";
 import {IShareToken} from "../interfaces/IShareToken.sol";
 import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
 import {SiloMathLib} from "./SiloMathLib.sol";
 import {SiloERC4626Lib} from "./SiloERC4626Lib.sol";
+import {Rounding} from "./Rounding.sol";
 
 library LiquidationWithdrawLib {
     /// @dev that method allow to finish liquidation process by giving up collateral to liquidator
@@ -135,7 +134,7 @@ library LiquidationWithdrawLib {
             _amountToLiquidate,
             _totalAssets,
             _shareToken.totalSupply(),
-            MathUpgradeable.Rounding.Down,
+            Rounding.LIQUIDATE_TO_SHARES,
             ISilo.AssetType.Collateral
         );
 

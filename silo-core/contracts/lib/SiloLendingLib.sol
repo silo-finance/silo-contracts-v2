@@ -17,6 +17,7 @@ import {SiloSolvencyLib} from "./SiloSolvencyLib.sol";
 import {SiloERC4626Lib} from "./SiloERC4626Lib.sol"; //circular dependency
 import {SiloStdLib} from "./SiloStdLib.sol";
 import {SiloMathLib} from "./SiloMathLib.sol";
+import {Rounding} from "./Rounding.sol";
 
 library SiloLendingLib {
     using SafeERC20Upgradeable for IERC20Upgradeable;
@@ -92,8 +93,8 @@ library SiloLendingLib {
             _shares,
             totalDebtAssets,
             debtShareToken.totalSupply(),
-            MathUpgradeable.Rounding.Up,
-            MathUpgradeable.Rounding.Down,
+            Rounding.REPAY_TO_ASSETS,
+            Rounding.REPAY_TO_SHARES,
             ISilo.AssetType.Debt
         );
 
@@ -207,8 +208,8 @@ library SiloLendingLib {
             _shares,
             totalDebtAssets,
             IShareToken(_debtShareToken).totalSupply(),
-            MathUpgradeable.Rounding.Down,
-            MathUpgradeable.Rounding.Up,
+            Rounding.BORROW_TO_ASSETS,
+            Rounding.BORROW_TO_SHARES,
             ISilo.AssetType.Debt
         );
 
@@ -289,7 +290,7 @@ library SiloLendingLib {
                 assets,
                 _totalDebtAssets,
                 _totalDebtShares,
-                MathUpgradeable.Rounding.Down,
+                Rounding.MAX_BORROW_TO_SHARES,
                 ISilo.AssetType.Debt
             );
         }
@@ -367,7 +368,7 @@ library SiloLendingLib {
             // when we want to calculate "max borrow", we can not round.Up, because it can create issue with max ltv,
             // because we not creating debt here, we calculating max assets/shares, so we need to round.Down here
             shares = SiloMathLib.convertToShares(
-                assets, _totalDebtAssets, _totalDebtShares, MathUpgradeable.Rounding.Down, ISilo.AssetType.Debt
+                assets, _totalDebtAssets, _totalDebtShares, Rounding.MAX_BORROW_TO_SHARES, ISilo.AssetType.Debt
             );
         } else {
             uint256 shareBalance = IShareToken(_debtShareToken).balanceOf(_borrower);
@@ -377,7 +378,7 @@ library SiloLendingLib {
             shares = _maxBorrowValue * shareBalance / _borrowerDebtValue; // by default rounding DOWN
 
             assets = SiloMathLib.convertToAssets(
-                shares, _totalDebtAssets, _totalDebtShares, MathUpgradeable.Rounding.Down, ISilo.AssetType.Debt
+                shares, _totalDebtAssets, _totalDebtShares, Rounding.MAX_BORROW_TO_ASSETS, ISilo.AssetType.Debt
             );
         }
     }

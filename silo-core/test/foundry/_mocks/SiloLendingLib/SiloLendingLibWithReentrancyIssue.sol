@@ -9,6 +9,7 @@ import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {SiloMathLib} from "silo-core/contracts/lib/SiloMathLib.sol";
+import {Rounding} from "silo-core/contracts/lib/Rounding.sol";
 
 library SiloLendingLibWithReentrancyIssue {
     using SafeERC20Upgradeable for IERC20Upgradeable;
@@ -34,8 +35,8 @@ library SiloLendingLibWithReentrancyIssue {
             _shares,
             totalDebtAssets,
             debtShareToken.totalSupply(),
-            MathUpgradeable.Rounding.Up,
-            MathUpgradeable.Rounding.Down,
+            Rounding.REPAY_TO_ASSETS,
+            Rounding.REPAY_TO_SHARES,
             ISilo.AssetType.Debt
         );
 

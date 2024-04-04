@@ -7,6 +7,7 @@ import {ISiloOracle} from "../interfaces/ISiloOracle.sol";
 import {SiloStdLib, ISiloConfig, IShareToken, ISilo} from "./SiloStdLib.sol";
 import {SiloERC4626Lib} from "./SiloERC4626Lib.sol";
 import {SiloMathLib} from "./SiloMathLib.sol";
+import {Rounding} from "./Rounding.sol";
 
 library SiloSolvencyLib {
     using MathUpgradeable for uint256;
@@ -112,7 +113,7 @@ library SiloSolvencyLib {
         ) = ISilo(_collateralConfig.silo).getCollateralAndProtectedAssets();
 
         ltvData.borrowerProtectedAssets = SiloMathLib.convertToAssets(
-            shares, totalProtectedAssets, totalShares, MathUpgradeable.Rounding.Down, ISilo.AssetType.Protected
+            shares, totalProtectedAssets, totalShares, Rounding.COLLATERAL_TO_ASSETS, ISilo.AssetType.Protected
         );
 
         (shares, totalShares) = SiloStdLib.getSharesAndTotalSupply(
@@ -129,7 +130,7 @@ library SiloSolvencyLib {
             : totalCollateralAssets;
 
         ltvData.borrowerCollateralAssets = SiloMathLib.convertToAssets(
-            shares, totalCollateralAssets, totalShares, MathUpgradeable.Rounding.Down, ISilo.AssetType.Collateral
+            shares, totalCollateralAssets, totalShares, Rounding.COLLATERAL_TO_ASSETS, ISilo.AssetType.Collateral
         );
 
         (shares, totalShares) = SiloStdLib.getSharesAndTotalSupply(
@@ -142,7 +143,7 @@ library SiloSolvencyLib {
 
         // BORROW value -> to assets -> UP
         ltvData.borrowerDebtAssets = SiloMathLib.convertToAssets(
-            shares, totalDebtAssets, totalShares, MathUpgradeable.Rounding.Up, ISilo.AssetType.Debt
+            shares, totalDebtAssets, totalShares, Rounding.DEBT_TO_ASSETS, ISilo.AssetType.Debt
         );
     }
 
@@ -196,7 +197,7 @@ library SiloSolvencyLib {
             ltvInDp = _INFINITY;
         } else {
             ltvInDp = totalBorrowerDebtValue.mulDiv(
-                _PRECISION_DECIMALS, sumOfBorrowerCollateralValue, MathUpgradeable.Rounding.Up
+                _PRECISION_DECIMALS, sumOfBorrowerCollateralValue, MathUpgradeable.Rounding(Rounding.LTV)
             );
         }
     }

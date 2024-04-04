@@ -2,6 +2,7 @@
 pragma solidity 0.8.21;
 
 import {MathUpgradeable} from "openzeppelin-contracts-upgradeable/utils/math/MathUpgradeable.sol";
+import {Rounding} from "../lib/Rounding.sol";
 import {ISilo} from "../interfaces/ISilo.sol";
 
 library SiloMathLib {
@@ -277,7 +278,7 @@ library SiloMathLib {
             assets,
             _totalAssets,
             _assetTypeShareTokenTotalSupply,
-            MathUpgradeable.Rounding.Down,
+            Rounding.MAX_WITHDRAW_TO_SHARES,
             _assetType
         );
     }
