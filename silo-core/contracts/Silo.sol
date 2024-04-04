@@ -551,38 +551,30 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
                 total[AssetType.Collateral].assets
             );
 
+            requiredCollateral = _assets * 1e18 / collateralConfig.maxLtv;
+            uint256 transferDiff;
 
-            IShareToken(debt.debtShareToken).mint(_borrower, msg.sender, borrowShares);
+            unchecked {
+                // safe because `requiredCollateral` is chunk of `_assets`, so it can not be higher
+                transferDiff = _assets - requiredCollateral;
+            }
 
-            requiredCollateral = borrowAssets * 1e18 / collateral.maxLtv;
-            uint256 transferDiff = borrowAssets - requiredCollateral;
-
-            // fee-on-transfer is ignored. If token reenters, state is already finalized, no harm done.
-            IERC20Upgradeable(collateral.token).safeTransferFrom(msg.sender, address(this), transferDiff);
+            IERC20Upgradeable(collateralConfig.token).safeTransferFrom(msg.sender, address(this), transferDiff);
         }
 
         // deposit
-        
-        IShareToken shareToken = _assetType == AssetType.Collateral
-            ? IShareToken(collateralConfig.collateralShareToken)
-            : IShareToken(collateralConfig.protectedShareToken);
 
-        uint256 depositAssets;
-
-        (depositAssets, depositShares) = SiloMathLib.convertToAssetsAndToShares(
+        (, depositShares) = SiloERC4626Lib.deposit(
+            address(0), // we do not transferring token
+            msg.sender,
             requiredCollateral,
             0 /* _shares */,
-            total[_assetType].assets,
-            shareToken.totalSupply(),
-            Rounding.DEPOSIT_TO_ASSETS,
-            Rounding.DEPOSIT_TO_SHARES,
-            _assetType
+            _borrower,
+            _assetType == AssetType.Collateral
+                ? IShareToken(collateralConfig.collateralShareToken)
+                : IShareToken(collateralConfig.protectedShareToken),
+            total[_assetType]
         );
-
-        if (depositAssets == 0) revert ISilo.ZeroAssets();
-        if (depositShares == 0) revert ISilo.ZeroShares();
-
-        shareToken.mint(_borrower, _borrower, depositShares);
     }
 
     /// @inheritdoc ISilo
