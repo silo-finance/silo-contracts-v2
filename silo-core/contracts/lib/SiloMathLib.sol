@@ -115,8 +115,8 @@ library SiloMathLib {
         uint256 _shares,
         uint256 _totalAssets,
         uint256 _totalShares,
-        uint256 _roundingToAssets,
-        uint256 _roundingToShares,
+        MathUpgradeable.Rounding _roundingToAssets,
+        MathUpgradeable.Rounding _roundingToShares,
         ISilo.AssetType _assetType
     ) internal pure returns (uint256 assets, uint256 shares) {
         if (_assets == 0) {
@@ -134,7 +134,7 @@ library SiloMathLib {
         uint256 _assets,
         uint256 _totalAssets,
         uint256 _totalShares,
-        uint256 _rounding,
+        MathUpgradeable.Rounding _rounding,
         ISilo.AssetType _assetType
     ) internal pure returns (uint256) {
         // Debt calculations should not lower the result. Debt is a liability so protocol should not take any for
@@ -151,7 +151,7 @@ library SiloMathLib {
 
         if (totalShares == 0 || totalAssets == 0) return _assets;
 
-        return _assets.mulDiv(totalShares, totalAssets, MathUpgradeable.Rounding(_rounding));
+        return _assets.mulDiv(totalShares, totalAssets, _rounding);
     }
 
     /// @dev Math for collateral is exact copy of
@@ -160,7 +160,7 @@ library SiloMathLib {
         uint256 _shares,
         uint256 _totalAssets,
         uint256 _totalShares,
-        uint256 _rounding,
+        MathUpgradeable.Rounding _rounding,
         ISilo.AssetType _assetType
     ) internal pure returns (uint256 assets) {
         // Debt calculations should not lower the result. Debt is a liability so protocol should not take any for
@@ -177,7 +177,7 @@ library SiloMathLib {
 
         if (totalShares == 0 || totalAssets == 0) return _shares;
 
-        assets = _shares.mulDiv(totalAssets, totalShares, MathUpgradeable.Rounding(_rounding));
+        assets = _shares.mulDiv(totalAssets, totalShares, _rounding);
     }
 
     /// @return maxBorrowValue max borrow value yet available for borrower

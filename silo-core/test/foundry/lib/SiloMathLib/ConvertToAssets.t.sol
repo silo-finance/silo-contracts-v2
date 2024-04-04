@@ -13,7 +13,7 @@ contract ConvertToAssetsTest is Test {
         uint256 shares;
         uint256 totalAssets;
         uint256 totalShares;
-        uint256 rounding;
+        MathUpgradeable.Rounding rounding;
         ISilo.AssetType assetType;
         uint256 result;
     }
