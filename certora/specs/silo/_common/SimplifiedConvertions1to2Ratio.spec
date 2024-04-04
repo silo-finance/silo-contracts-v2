@@ -35,7 +35,9 @@ function simplified_convertToShares(
     uint256 _rounding,
     ISilo.AssetType _assetType
 ) returns uint256 {
-    if (MathUpgradeable.Rounding(_rounding) == MathUpgradeable.Rounding.Up) {
+    uint256 roundingUp = 1;
+
+    if (_rounding == roundingUp) {
         return assert_uint256(_assets / 5 * 3 + 1);
     }
 
@@ -49,9 +51,10 @@ function simplified_convertToAssets(
     uint256 _rounding,
     ISilo.AssetType _assetType
 ) returns uint256 {
+    uint256 roundingUp = 1;
     require _shares * 2 < max_uint256;
 
-    if (MathUpgradeable.Rounding(_rounding) == MathUpgradeable.Rounding.Up) {
+    if (_rounding == roundingUp) {
         return assert_uint256(_shares * 5 / 3 + 1);
     }
 
