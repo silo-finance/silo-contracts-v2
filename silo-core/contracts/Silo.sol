@@ -512,13 +512,14 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
     }
 
     /// @inheritdoc ISilo
-    function leverageSameAsset(uint256 _assets, address _borrower, AssetType _assetType)
+    // solhint-disable-next-line code-complexity, function-max-lines
+    function leverageSameAsset(uint256 _depositAssets, uint256 _borrowAssets, address _borrower, AssetType _assetType)
         external
         virtual
         nonReentrant
-        returns (uint256 borrowedShares, uint256 depositedShares)
+        returns (uint256 depositedShares, uint256 borrowedShares)
     {
-        if (_assets == 0) revert ISilo.ZeroAssets();
+        if (_depositAssets == 0 || _borrowAssets == 0) revert ISilo.ZeroAssets();
 
         (
             ISiloConfig.ConfigData memory collateralConfig,
@@ -536,26 +537,27 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
             address(0) // no need to accrue for other silo
         );
 
-        uint256 requiredCollateral;
-
         { // too deep
-            (_assets, borrowedShares) = _callBorrow(
+            (_borrowAssets, borrowedShares) = _callBorrow(
                 debtConfig.debtShareToken,
                 address(0), // we do not transferring debt
-                _assets,
+                _borrowAssets,
                 0 /* _shares */,
                 _borrower,
                 _borrower,
                 msg.sender
             );
 
-            requiredCollateral = _assets * SiloLendingLib._PRECISION_DECIMALS;
+            uint256 requiredCollateral = _borrowAssets * SiloLendingLib._PRECISION_DECIMALS;
             uint256 transferDiff;
 
+            unchecked { requiredCollateral = requiredCollateral / collateralConfig.maxLtv; }
+            if (_depositAssets < requiredCollateral) revert ISilo.LeverageToHigh();
+
             unchecked {
-                requiredCollateral = requiredCollateral / collateralConfig.maxLtv;
-                // safe because `requiredCollateral` is always higher, `_assets` is chunk of `requiredCollateral`
-                transferDiff = requiredCollateral - _assets;
+                // safe because `requiredCollateral` > `_depositAssets`
+                // and `_borrowAssets` is chunk of `requiredCollateral`
+                transferDiff = _depositAssets - _borrowAssets;
             }
 
             IERC20Upgradeable(collateralConfig.token).safeTransferFrom(msg.sender, address(this), transferDiff);
@@ -564,7 +566,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
         (, depositedShares) = SiloERC4626Lib.deposit(
             address(0), // we do not transferring token
             msg.sender,
-            requiredCollateral,
+            _depositAssets,
             0 /* _shares */,
             _borrower,
             _assetType == AssetType.Collateral

@@ -19,19 +19,19 @@ contract LeverageSameAsset2ndGasTest is Gas, Test {
         _borrow(ASSETS, BORROWER, SAME_ASSET);
     }
 
-    function test_gas_secondLeverageSameAsset() public {
+    function test_gas_leverageSameAsset2nd() public {
         ISiloConfig.ConfigData memory config = ISiloConfig(silo1.config()).getConfig(address(silo1));
 
-        uint256 transferDiff = (ASSETS * 1e18 / config.maxLtv) - ASSETS;
-        token1.mint(BORROWER, transferDiff);
+//        uint256 transferDiff = (ASSETS * 1e18 / config.maxLtv) - ASSETS;
+//        token1.mint(BORROWER, transferDiff);
 
         vm.prank(BORROWER);
-        token1.approve(address(silo1), transferDiff);
+        token1.approve(address(silo1), ASSETS);
 
         _action(
             BORROWER,
             address(silo1),
-            abi.encodeCall(ISilo.leverageSameAsset, (ASSETS, BORROWER, ISilo.AssetType.Collateral)),
+            abi.encodeCall(ISilo.leverageSameAsset, (ASSETS * 2, ASSETS, BORROWER, ISilo.AssetType.Collateral)),
             "LeverageSameAsset 2nd (no interest)",
             96575
         );
