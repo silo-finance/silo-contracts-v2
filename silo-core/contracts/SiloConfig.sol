@@ -347,9 +347,9 @@ contract SiloConfig is ISiloConfig {
         });
 
         if (!_debtInfo.debtPresent) {
-            if (_method == Methods.BORROW_SAME_TOKEN) {
+            if (_method == Methods.BORROW_SAME_ASSET) {
                 return callForSilo0 ? (collateral, collateral, _debtInfo) : (debt, debt, _debtInfo);
-            } else if (_method == Methods.BORROW_TWO_TOKENS) {
+            } else if (_method == Methods.BORROW_TWO_ASSETS) {
                 return callForSilo0 ? (debt, collateral, _debtInfo) : (collateral, debt, _debtInfo);
             } else {
                 return callForSilo0 ? (collateral, debt, _debtInfo) : (debt, collateral, _debtInfo);

@@ -512,6 +512,69 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
     }
 
     /// @inheritdoc ISilo
+    function leverageSameAsset(uint256 _assets, address _borrower, AssetType _assetType)
+        external
+        virtual
+        nonReentrant
+        returns (uint256 borrowedShares, uint256 depositedShares)
+    {
+        if (_assets == 0) revert ISilo.ZeroAssets();
+
+        (
+            ISiloConfig.ConfigData memory collateralConfig,
+            ISiloConfig.ConfigData memory debtConfig,
+            ISiloConfig.DebtInfo memory debtInfo
+        ) = config.getConfigs(address(this), _borrower, Methods.BORROW_SAME_ASSET);
+
+        if (!SiloLendingLib.borrowPossible(debtInfo)) revert ISilo.BorrowNotPossible();
+        if (debtInfo.debtPresent && !debtInfo.sameAsset) revert ISilo.TwoAssetsDebt();
+
+        _callAccrueInterestForAsset(
+            collateralConfig.interestRateModel,
+            collateralConfig.daoFee,
+            collateralConfig.deployerFee,
+            address(0) // no need to accrue for other silo
+        );
+
+        uint256 requiredCollateral;
+
+        { // too deep
+            (_assets, borrowedShares) = _callBorrow(
+                debtConfig.debtShareToken,
+                address(0), // we do not transferring debt
+                _assets,
+                0 /* _shares */,
+                _borrower,
+                _borrower,
+                msg.sender
+            );
+
+            requiredCollateral = _assets * SiloLendingLib._PRECISION_DECIMALS;
+            uint256 transferDiff;
+
+            unchecked {
+                requiredCollateral = requiredCollateral / collateralConfig.maxLtv;
+                // safe because `requiredCollateral` is always higher, `_assets` is chunk of `requiredCollateral`
+                transferDiff = requiredCollateral - _assets;
+            }
+
+            IERC20Upgradeable(collateralConfig.token).safeTransferFrom(msg.sender, address(this), transferDiff);
+        }
+
+        (, depositedShares) = SiloERC4626Lib.deposit(
+            address(0), // we do not transferring token
+            msg.sender,
+            requiredCollateral,
+            0 /* _shares */,
+            _borrower,
+            _assetType == AssetType.Collateral
+                ? IShareToken(collateralConfig.collateralShareToken)
+                : IShareToken(collateralConfig.protectedShareToken),
+            total[_assetType]
+        );
+    }
+
+    /// @inheritdoc ISilo
     function borrow(uint256 _assets, address _receiver, address _borrower, bool _sameAsset)
         external
         virtual
@@ -846,16 +909,14 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
             debtConfig.interestRateModel, debtConfig.daoFee, debtConfig.deployerFee, debtConfig.otherSilo
         );
 
-        (assets, shares) = SiloLendingLib.borrow(
+        (assets, shares) = _callBorrow(
             debtConfig.debtShareToken,
             debtConfig.token,
             _assets,
             _shares,
             _receiver,
             _borrower,
-            msg.sender,
-            total[AssetType.Debt],
-            total[AssetType.Collateral].assets
+            msg.sender
         );
 
         emit Borrow(msg.sender, _receiver, _borrower, assets, shares);
@@ -973,7 +1034,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
         ) = cachedConfig.getConfigs(
             address(this),
             _borrower,
-            _sameAsset ? Methods.BORROW_SAME_TOKEN : Methods.BORROW_TWO_TOKENS
+            _sameAsset ? Methods.BORROW_SAME_ASSET : Methods.BORROW_TWO_ASSETS
         );
 
         if (!SiloLendingLib.borrowPossible(debtInfo)) return (0, 0);
@@ -1061,6 +1122,28 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
             _assetType,
             _liquidity,
             _totalCollateral
+        );
+    }
+
+    function _callBorrow(
+        address _debtShareToken,
+        address _token,
+        uint256 _assets,
+        uint256 _shares,
+        address _receiver,
+        address _borrower,
+        address _spender
+    ) internal returns (uint256 borrowedAssets, uint256 borrowedShares) {
+        return SiloLendingLib.borrow(
+            _debtShareToken,
+            _token,
+            _assets,
+            _shares,
+            _receiver,
+            _borrower,
+            _spender,
+            total[AssetType.Debt],
+            total[AssetType.Collateral].assets
         );
     }
 }

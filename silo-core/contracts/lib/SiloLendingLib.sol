@@ -216,17 +216,21 @@ library SiloLendingLib {
         if (borrowedShares == 0) revert ISilo.ZeroShares();
         if (borrowedAssets == 0) revert ISilo.ZeroAssets();
 
-        if (borrowedAssets > SiloMathLib.liquidity(_totalCollateralAssets, totalDebtAssets)) {
+        if (_token != address(0) && borrowedAssets > SiloMathLib.liquidity(_totalCollateralAssets, totalDebtAssets)) {
             revert ISilo.NotEnoughLiquidity();
         }
 
         // add new debt
         _totalDebt.assets = totalDebtAssets + borrowedAssets;
+
         // `mint` checks if _spender is allowed to borrow on the account of _borrower. Hook receiver can
         // potentially reenter but the state is correct.
         IShareToken(_debtShareToken).mint(_borrower, _spender, borrowedShares);
-        // fee-on-transfer is ignored. If token reenters, state is already finalized, no harm done.
-        IERC20Upgradeable(_token).safeTransfer(_receiver, borrowedAssets);
+
+        if (_token != address(0)) {
+            // fee-on-transfer is ignored. If token reenters, state is already finalized, no harm done.
+            IERC20Upgradeable(_token).safeTransfer(_receiver, borrowedAssets);
+        }
     }
 
     /// @notice Determines the maximum amount (both in assets and shares) that a borrower can borrow

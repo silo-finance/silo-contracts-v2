@@ -31,7 +31,7 @@ contract BorrowAccrueInterestGasTest is Gas, Test {
             address(silo1),
             abi.encodeCall(ISilo.borrow, (ASSETS, BORROWER, BORROWER, false /* sameAsset */)),
             "BorrowAccrueInterest",
-            195041
+            195266
         );
     }
 }
