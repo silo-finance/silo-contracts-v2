@@ -277,7 +277,7 @@ interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
     /// @param _assetType asset type for collateral
     /// @return borrowShares Amount of shares equivalent to the borrowed assets
     /// @return depositShares Amount of shares equivalent to the collateral assets
-    function fastBorrow(uint256 _assets, address _borrower, AssetType _assetType)
+    function leverageSameAsset(uint256 _assets, address _borrower, AssetType _assetType)
         external
         returns (uint256 borrowShares, uint256 depositShares);
 

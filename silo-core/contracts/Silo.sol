@@ -512,7 +512,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
     }
 
     /// @inheritdoc ISilo
-    function fastBorrow(uint256 _assets, address _borrower, AssetType _assetType)
+    function leverageSameAsset(uint256 _assets, address _borrower, AssetType _assetType)
         external
         virtual
         nonReentrant

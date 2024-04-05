@@ -9,17 +9,17 @@ import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {Gas} from "./Gas.sol";
 
 /*
-forge test -vv --ffi --mt test_gas_ | grep -i '\[GAS\]'
+forge test -vv --ffi --mt test_gas_ | grep -i '\[GAS\]' | sort
 */
-contract FastBorrow1stGasTest is Gas, Test {
+contract LeverageSameAsset2ndGasTest is Gas, Test {
     function setUp() public {
         _gasTestsInit();
+
+        _depositCollateral(ASSETS * 10, BORROWER, SAME_ASSET);
+        _borrow(ASSETS, BORROWER, SAME_ASSET);
     }
 
-    /*
-    forge test -vv --ffi --mt test_gas_fastBorrow
-    */
-    function test_gas_fastBorrow() public {
+    function test_gas_secondLeverageSameAsset() public {
         ISiloConfig.ConfigData memory config = ISiloConfig(silo1.config()).getConfig(address(silo1));
 
         uint256 transferDiff = (ASSETS * 1e18 / config.maxLtv) - ASSETS;
@@ -31,9 +31,9 @@ contract FastBorrow1stGasTest is Gas, Test {
         _action(
             BORROWER,
             address(silo1),
-            abi.encodeCall(ISilo.fastBorrow, (ASSETS, BORROWER, ISilo.AssetType.Collateral)),
-            "FastBorrow 1st (no interest)",
-            235899
+            abi.encodeCall(ISilo.leverageSameAsset, (ASSETS, BORROWER, ISilo.AssetType.Collateral)),
+            "LeverageSameAsset 2nd (no interest)",
+            96575
         );
     }
 }
