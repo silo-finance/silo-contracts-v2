@@ -3,14 +3,28 @@ import "../_common/IsSiloFunction.spec";
 import "../_common/SiloMethods.spec";
 import "../_common/Helpers.spec";
 import "../_common/CommonSummarizations.spec";
-//import "../../_simplifications/Oracle_quote_one.spec";
 import "../../_simplifications/priceOracle.spec";
-//import "../../_simplifications/Silo_isSolvent_ghost.spec";
 import "../../_simplifications/SiloSolvencyLib.spec";
 import "../../_simplifications/SimplifiedGetCompoundInterestRateAndUpdate.spec";
 
 use rule assetsToSharesAndBackAxiom;
 use rule mulDiv_axioms_test;
+
+function SafeAssumptions(env e) {
+    completeSiloSetupEnv(e);
+    totalSupplyMoreThanBalance(e.msg.sender);
+    requireProtectedToken0TotalAndBalancesIntegrity();
+    requireCollateralToken0TotalAndBalancesIntegrity();
+    requireDebtToken0TotalAndBalancesIntegrity();
+    requireProtectedToken1TotalAndBalancesIntegrity();
+    requireCollateralToken1TotalAndBalancesIntegrity();
+    requireDebtToken1TotalAndBalancesIntegrity();
+    requireInvariant RA_more_assets_than_shares();
+    require silo0.getSiloDataInterestRateTimestamp() > 0;
+    require silo0.getSiloDataInterestRateTimestamp() <= e.block.timestamp;
+    require silo1.getSiloDataInterestRateTimestamp() > 0;
+    require silo1.getSiloDataInterestRateTimestamp() <= e.block.timestamp;
+}
 
 // A user cannot withdraw anything after withdrawing whole balance.
 // holds
@@ -20,7 +34,6 @@ rule RA_Silo_no_withdraw_after_withdrawing_all(env e, address user)
     completeSiloSetupEnv(e);
     totalSupplyMoreThanBalance(user);
     totalSupplyMoreThanBalance(e.msg.sender);
-    
 
     uint256 balanceCollateralBefore = shareCollateralToken0.balanceOf(user);
     uint256 balanceProtectedCollateralBefore = shareProtectedCollateralToken0.balanceOf(user);
@@ -87,7 +100,7 @@ rule RA_Silo_borrowed_asset_not_depositable(env e, address user)
     assert lastReverted;
 }
 
-// A user has no debt after being repaid with max shares amount.
+/// @title A user has no debt after being repaid with max shares amount.
 // holds
 // https://prover.certora.com/output/6893/a22af9f11ffb407bb7e4cf394cb3055e/?anonymousKey=9509c87048a98ee81867020227f1441090132ff9
 rule RA_Silo_repay_all_shares(env e, address receiver)
@@ -106,7 +119,8 @@ rule RA_Silo_repay_all_shares(env e, address receiver)
     satisfy debtAfter == 0;
 }
 
-// User should not be able to borrow more than maxBorrow().
+/// @title User should not be able to borrow more than maxBorrow().
+/// Violated: rounding errors.
 rule RA_silo_cant_borrow_more_than_max(env e, address borrower) {
     completeSiloSetupEnv(e);
     totalSupplyMoreThanBalance(borrower);
@@ -131,7 +145,7 @@ rule RA_silo_cant_borrow_more_than_max(env e, address borrower) {
     assert assets <= maxAssets;
 }
 
-// User should not be able to borrow without collateral.
+/// @title User should not be able to borrow without collateral.
 rule RA_silo_cant_borrow_without_collateral(env e, address borrower) {
     completeSiloSetupEnv(e);
     totalSupplyMoreThanBalance(borrower);
@@ -154,6 +168,8 @@ rule RA_silo_cant_borrow_without_collateral(env e, address borrower) {
     assert collateralShares == 0 && protectedCollateralShares ==0 => maxAssets == 0;
 }
 
+/// @title If there is no collateral in the system, there couldn't be any debt.
+/// Violated: case of bad debt.
 invariant RA_no_collateral_assets_no_debt_assets()
     silo0.total(ISilo.AssetType.Collateral) ==0 &&
     silo0.total(ISilo.AssetType.Protected) ==0 =>
@@ -176,7 +192,6 @@ invariant RA_no_collateral_assets_no_debt_assets()
         }
     }
 
-/// https://prover.certora.com/output/41958/af1acf321bf044c6ab813b243ae08ddd/?anonymousKey=3a898b5d61e73bebff14c4ad88d7f26912b8fbd4
 /*
 Violation analysis:
 
@@ -193,7 +208,8 @@ Violation analysis:
     TOTAL_SUPPLY = +X ; TOTAL_ASSETS = Y + X
 
     Conclusion:
-    Need to make sure no debt shares are available without collateral shares.
+    For the case of bad debt (debt shares are available without collateral shares),
+
 */
 invariant RA_zero_assets_iff_zero_shares() 
     (silo0.total(ISilo.AssetType.Protected) ==0 <=> shareProtectedCollateralToken0.totalSupply() == 0) &&
@@ -213,32 +229,13 @@ invariant RA_more_assets_than_shares()
     (silo0.total(ISilo.AssetType.Debt) >= shareDebtToken0.totalSupply()) 
     {
         preserved with (env e) {
-            completeSiloSetupEnv(e);
-            totalSupplyMoreThanBalance(e.msg.sender);
-            requireProtectedToken0TotalAndBalancesIntegrity();
-            requireCollateralToken0TotalAndBalancesIntegrity();
-            requireDebtToken0TotalAndBalancesIntegrity();
-            requireProtectedToken1TotalAndBalancesIntegrity();
-            requireCollateralToken1TotalAndBalancesIntegrity();
-            requireDebtToken1TotalAndBalancesIntegrity();
-            requireInvariant RA_zero_assets_iff_zero_shares();
-            requireInvariant RA_no_collateral_assets_no_debt_assets();
+            SafeAssumptions(e);
         }
     }
 
+/// @title Repaying cannot turn a user to insolvent.
 rule RA_silo_solvent_after_repaying(env e, address borrower) {
-    completeSiloSetupEnv(e);
-    require silo0.getSiloDataInterestRateTimestamp() > 0;
-    totalSupplyMoreThanBalance(borrower);
-    totalSupplyMoreThanBalance(e.msg.sender);
-    requireProtectedToken0TotalAndBalancesIntegrity();
-    requireCollateralToken0TotalAndBalancesIntegrity();
-    requireDebtToken0TotalAndBalancesIntegrity();
-    requireProtectedToken1TotalAndBalancesIntegrity();
-    requireCollateralToken1TotalAndBalancesIntegrity();
-    requireDebtToken1TotalAndBalancesIntegrity();
-
-    requireInvariant RA_more_assets_than_shares();
+    SafeAssumptions(e);
 
     require isSolvent(e, borrower);
         uint256 assets;
@@ -246,18 +243,9 @@ rule RA_silo_solvent_after_repaying(env e, address borrower) {
     assert isSolvent(e, borrower);
 }
 
+/// @title A borrower must be solvent after borrowing.
 rule RA_silo_solvent_after_borrow(env e, address borrower) {
-    completeSiloSetupEnv(e);
-    require silo0.getSiloDataInterestRateTimestamp() > 0;
-    totalSupplyMoreThanBalance(borrower);
-    totalSupplyMoreThanBalance(e.msg.sender);
-    requireProtectedToken0TotalAndBalancesIntegrity();
-    requireCollateralToken0TotalAndBalancesIntegrity();
-    requireDebtToken0TotalAndBalancesIntegrity();
-    requireProtectedToken1TotalAndBalancesIntegrity();
-    requireCollateralToken1TotalAndBalancesIntegrity();
-    requireDebtToken1TotalAndBalancesIntegrity();
-    requireInvariant RA_more_assets_than_shares();
+    SafeAssumptions(e);
     
     uint256 assets;
     address receiver;
@@ -265,19 +253,22 @@ rule RA_silo_solvent_after_borrow(env e, address borrower) {
     assert isSolvent(e, borrower);
 }
 
-rule RA_user_cannot_lower_HF_of_another(env e, address user, method f) 
-filtered{f -> !f.isView && withdrawCollateralToLiquidatorSig() != f.selector} {
-    completeSiloSetupEnv(e);
-    require silo0.getSiloDataInterestRateTimestamp() > 0;
+/// @title deposit() preserves the user's solvency.
+rule RA_silo_solvent_after_deposit(env e, address borrower) {
+    SafeAssumptions(e);
+    
+    uint256 assets;
+    address receiver;
+    require isSolvent(e, borrower);
+        deposit(e, assets, receiver);
+    assert isSolvent(e, borrower);
+}
+
+/// @title An actor without allowance cannot decrease (increase) the collateral (debt) share balance of any user.
+rule RA_user_cannot_lower_shares_balance_of_another(env e, address user, method f) 
+filtered{f -> !f.isView} {
     totalSupplyMoreThanBalance(user);
-    totalSupplyMoreThanBalance(e.msg.sender);
-    requireProtectedToken0TotalAndBalancesIntegrity();
-    requireCollateralToken0TotalAndBalancesIntegrity();
-    requireDebtToken0TotalAndBalancesIntegrity();
-    requireProtectedToken1TotalAndBalancesIntegrity();
-    requireCollateralToken1TotalAndBalancesIntegrity();
-    requireDebtToken1TotalAndBalancesIntegrity();
-    requireInvariant RA_more_assets_than_shares();
+    SafeAssumptions(e);
     require e.msg.sender != user;
 
     /// No accrual of interest
@@ -296,24 +287,22 @@ filtered{f -> !f.isView && withdrawCollateralToLiquidatorSig() != f.selector} {
     mathint balanceCol_after = shareCollateralToken0.balanceOf(e, user);
     mathint balancePro_after = shareProtectedCollateralToken0.balanceOf(e, user);
 
-    assert balanceDebt_before >= balanceDebt_after, "Debt balance cannot increase by other user";
-    assert balanceCol_before <= balanceCol_after, "Collateral balance cannot decrease by other user";
-    assert balancePro_before <= balancePro_after, "Protected balance cannot decrease by other user";
+    if (f.selector == withdrawCollateralToLiquidatorSig()) {
+        /// The function is called from within liquidationCall() of the other Silo.
+        assert e.msg.sender == silo1;
+    }
+    else {
+        assert balanceDebt_before >= balanceDebt_after, "Debt balance cannot increase by other user";
+        assert balanceCol_before <= balanceCol_after, "Collateral balance cannot decrease by other user";
+        assert balancePro_before <= balancePro_after, "Protected balance cannot decrease by other user";
+    }
 }
 
+/// @title If the collateral and debt shares balance of a user aren't changed,
+/// then the assets data aren't changed too.
 rule RA_assets_values_depend_on_shares_balances_only(env e, address user, method f) filtered{f -> !f.isView} {
-    completeSiloSetupEnv(e);
-    require silo0.getSiloDataInterestRateTimestamp() > 0;
-    totalSupplyMoreThanBalance(user);
-    totalSupplyMoreThanBalance(e.msg.sender);
-    requireProtectedToken0TotalAndBalancesIntegrity();
-    requireCollateralToken0TotalAndBalancesIntegrity();
-    requireDebtToken0TotalAndBalancesIntegrity();
-    requireProtectedToken1TotalAndBalancesIntegrity();
-    requireCollateralToken1TotalAndBalancesIntegrity();
-    requireDebtToken1TotalAndBalancesIntegrity();
-    requireInvariant RA_more_assets_than_shares();
-    /// No accrual of interest
+    SafeAssumptions(e);
+    /// No accrual of interest - we have proven that the assets value are conserved under interest accrual.
     require silo0.getSiloDataInterestRateTimestamp() == e.block.timestamp;
 
     SiloSolvencyLib.LtvData data_before = getAssetsDataForLtvCalculations(e, user);
@@ -339,31 +328,22 @@ rule RA_assets_values_depend_on_shares_balances_only(env e, address user, method
     );
 }
 
-/// Verified
+/// @title If a user may deposit some amount, any other user also may.
 rule RA_anyone_may_deposit(env e1, env e2) {
+    /// Assuming same context (time and value).
     require e1.block.timestamp == e2.block.timestamp;
     require e1.msg.value == e2.msg.value;
-
-    completeSiloSetupEnv(e1);
-    completeSiloSetupEnv(e2);
-    require silo0.getSiloDataInterestRateTimestamp() > 0;
-    totalSupplyMoreThanBalance(e1.msg.sender);
-    totalSupplyMoreThanBalance(e2.msg.sender);
-    requireProtectedToken0TotalAndBalancesIntegrity();
-    requireCollateralToken0TotalAndBalancesIntegrity();
-    requireDebtToken0TotalAndBalancesIntegrity();
-    requireProtectedToken1TotalAndBalancesIntegrity();
-    requireCollateralToken1TotalAndBalancesIntegrity();
-    requireDebtToken1TotalAndBalancesIntegrity();
-    requireInvariant RA_more_assets_than_shares();
+    SafeAssumptions(e1);
+    SafeAssumptions(e2);
 
     storage initState = lastStorage;
     uint256 amount;
     address recipient;
 
     require silo0 !=0;
+    /// Given the other user has approved the Silo allowance.
     require token0.allowance(e2, e2.msg.sender, silo0) >= amount;
-    /// Assuming sufficient balance:
+    /// Assuming sufficient balance for deposit.
     require token0.balanceOf(e2, e2.msg.sender) >= amount;
 
     deposit(e1, amount, recipient) at initState;
@@ -372,25 +352,39 @@ rule RA_anyone_may_deposit(env e1, env e2) {
     assert e2.msg.sender !=0 => !lastReverted;
 }
 
-/// Verified
+/// @title If a user may repay some borrower's debt amount, any other user also may.
+rule RA_anyone_may_repay(env e1, env e2) {
+    /// Assuming same context (time and value).
+    require e1.block.timestamp == e2.block.timestamp;
+    require e1.msg.value == e2.msg.value;
+    SafeAssumptions(e1);
+    SafeAssumptions(e2);
+
+    storage initState = lastStorage;
+    uint256 amount;
+    address borrower;
+
+    require silo0 !=0;
+    /// Given the other user has approved the Silo allowance.
+    require token0.allowance(e2, e2.msg.sender, silo0) >= amount;
+    /// Assuming sufficient balance:
+    require token0.balanceOf(e2, e2.msg.sender) >= amount;
+
+    repay(e1, amount, borrower) at initState;
+    repay@withrevert(e2, amount, borrower) at initState;
+
+    assert e2.msg.sender !=0 => !lastReverted;
+}
+
+/// @title The deposit recipient is not discriminated.
 rule RA_deposit_recipient_is_not_restricted(env e, address user1, address user2) {
-    completeSiloSetupEnv(e);
-    require silo0.getSiloDataInterestRateTimestamp() > 0;
-    require silo1.getSiloDataInterestRateTimestamp() > 0;
-    totalSupplyMoreThanBalance(e.msg.sender);
-    requireProtectedToken0TotalAndBalancesIntegrity();
-    requireCollateralToken0TotalAndBalancesIntegrity();
-    requireDebtToken0TotalAndBalancesIntegrity();
-    requireProtectedToken1TotalAndBalancesIntegrity();
-    requireCollateralToken1TotalAndBalancesIntegrity();
-    requireDebtToken1TotalAndBalancesIntegrity();
-    requireInvariant RA_more_assets_than_shares();
+    SafeAssumptions(e);
 
     storage initState = lastStorage;
     uint256 amount;
 
-    /// deposit possible for user2
     require silo0 !=0;
+    /// deposit possible for user2 (might be deprecated in the future).
     require shareDebtToken0.balanceOf(e, user2) == 0;
 
     deposit(e, amount, user1) at initState;
@@ -399,26 +393,61 @@ rule RA_deposit_recipient_is_not_restricted(env e, address user1, address user2)
     assert user2 !=0 => !lastReverted;
 }
 
+/// @title The repay action of a borrower is not discriminated.
+rule RA_repay_borrower_is_not_restricted(env e, address borrower1, address borrower2) {
+    SafeAssumptions(e);
+
+    storage initState = lastStorage;
+    uint256 amount;
+
+    require silo0 !=0;
+    /// Get the borrower's debt in assets.
+    uint256 borrower2_debt = silo0.convertToAssets(
+        e, shareDebtToken0.balanceOf(e, borrower2), ISilo.AssetType.Debt
+    );
+
+    repay(e, amount, borrower1) at initState;
+    repay@withrevert(e, amount, borrower2) at initState;
+
+    /// If the repaid amount is less than the borrower's debt then the operation must succeed.
+    assert (amount <= borrower2_debt && borrower2 !=0) => !lastReverted;
+}
+
+/// @title An immediate withdraw after deposit by the same actor of the same amount must succeed.
 /// Violated (burn shares over-estimated)
 rule RA_can_withdraw_after_deposit(env e) {
-    completeSiloSetupEnv(e);
-    require silo0.getSiloDataInterestRateTimestamp() > 0;
-    require silo1.getSiloDataInterestRateTimestamp() > 0;
-    totalSupplyMoreThanBalance(e.msg.sender);
-    requireProtectedToken0TotalAndBalancesIntegrity();
-    requireCollateralToken0TotalAndBalancesIntegrity();
-    requireDebtToken0TotalAndBalancesIntegrity();
-    requireProtectedToken1TotalAndBalancesIntegrity();
-    requireCollateralToken1TotalAndBalancesIntegrity();
-    requireDebtToken1TotalAndBalancesIntegrity();
-    requireInvariant RA_more_assets_than_shares();
+    SafeAssumptions(e);
 
     uint256 amount;
     require silo0.total(ISilo.AssetType.Protected) + silo0.total(ISilo.AssetType.Collateral) + amount <= max_uint128;
     require silo1.total(ISilo.AssetType.Protected) + silo1.total(ISilo.AssetType.Collateral) + amount <= max_uint128;
+    
+    /// If the user isn't solvent in the first place, withdrawal cannot succeed. 
+    // require isSolvent(e, e.msg.sender);
+    /// If there is bad debt in the system, the deposit will cover the bad debt and the withdrawal will be limited.
+    // require getLiquidity(e) > 0 ;
 
     deposit(e, amount, e.msg.sender);
     withdraw@withrevert(e, amount, e.msg.sender, e.msg.sender);
+
+    assert !lastReverted;
+}
+
+/// @title An immediate redeem after deposit by the same actor of the minted shares must succeed.
+/// Violated (burn shares over-estimated)
+rule RA_can_redeem_after_deposit(env e) {
+    SafeAssumptions(e);
+
+    uint256 amount;
+    require silo0.total(ISilo.AssetType.Protected) + silo0.total(ISilo.AssetType.Collateral) + amount <= max_uint128;
+    require silo1.total(ISilo.AssetType.Protected) + silo1.total(ISilo.AssetType.Collateral) + amount <= max_uint128;
+    /// If the user isn't solvent in the first place, withdrawal cannot succeed. 
+    require isSolvent(e, e.msg.sender);
+    /// If there is bad debt in the system, the deposit will cover the bad debt and the withdrawal will be limited.
+    require getLiquidity(e) > 0;
+
+    uint256 shares = deposit(e, amount, e.msg.sender);
+    redeem@withrevert(e, shares, e.msg.sender, e.msg.sender);
 
     assert !lastReverted;
 }

@@ -11,6 +11,8 @@ definition PRECISION() returns uint256 = 2;
 /*
 Generic price oracle : 
     priceOracle(address oracle, address base token, uint256 timestamp)
+
+Assuming rounding-up to get non-zero value.
 */
 function calculateTokenValue(address oracle, address token, uint256 baseAmount, uint256 time) returns uint256 {
     return require_uint256((priceOracle(oracle,token,time) * baseAmount + 1) / PRECISION());

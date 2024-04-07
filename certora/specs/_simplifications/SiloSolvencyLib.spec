@@ -23,36 +23,25 @@ methods {
     */
 }
 
-
-/*
-ltvData
-
-address collateralOracle
-address debtOracle
-uint256 borrowerProtectedAssets;
-uint256 borrowerCollateralAssets;
-uint256 borrowerDebtAssets;
-*/
-
 ghost abstractLTV_collateralValue(address,address,uint256,uint256,uint256) returns uint256;
 ghost abstractLTV_debtValue(address,address,uint256,uint256,uint256) returns uint256;
 ghost abstractLTV_ltvBefore(address,address,uint256,uint256,uint256) returns uint256;
 
-
 function calculateLtvCVL(SiloSolvencyLib.LtvData ltvData, address collateralToken, address debtToken) returns (uint256,uint256,uint256) {
-    uint256 x = ltvData.borrowerProtectedAssets;
-    uint256 y = ltvData.borrowerCollateralAssets;
-    uint256 z = ltvData.borrowerDebtAssets;
+    uint256 P = ltvData.borrowerProtectedAssets;
+    uint256 C = ltvData.borrowerCollateralAssets;
+    uint256 D = ltvData.borrowerDebtAssets;
     return (
-        abstractLTV_collateralValue(collateralToken, debtToken, x, y, z),
-        abstractLTV_debtValue(collateralToken, debtToken, x, y, z),
-        abstractLTV_ltvBefore(collateralToken, debtToken, x, y, z)
+        abstractLTV_collateralValue(collateralToken, debtToken, P, C, D),
+        abstractLTV_debtValue(collateralToken, debtToken, P, C, D),
+        abstractLTV_ltvBefore(collateralToken, debtToken, P, C, D)
     );
 }
 
 function calculateAssetsDataCVL(address silo_collateral, address silo_debt, address borrower, uint256 debtShareBalanceCached) returns SiloSolvencyLib.LtvData {
     uint256 balanceCollateral;
     uint256 balanceProtectedCollateral;
+    uint256 balanceDebt;
     SiloSolvencyLib.LtvData ltvData;
     /// Fetch collateral data
     if(silo_collateral == silo0) {

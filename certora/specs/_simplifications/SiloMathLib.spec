@@ -38,6 +38,7 @@ definition constRatio(uint256 x, uint256 y, uint256 z,
         ( a * y == b * z && to_mathint(w) == (b * x) / a ) || 
         ( b * y == a * z && to_mathint(w) == (a * x) / b );
 
+// Forces the (x*y/z) to behave linearly, with the specified ratios.
 function discreteRatioMulDiv(uint256 x, uint256 y, uint256 z) returns uint256 
 {
     uint256 res;
@@ -81,7 +82,7 @@ persistent ghost sharesMulDiv(uint256,uint256,uint256,bool) returns uint256 {
         (sharesMulDiv(0,y,z,false) == 0) && 
         (sharesMulDiv(1,y,z,false) ==0 <=> (y ==0 || y < z)) &&
         (sharesMulDiv(1,y,z,true) ==0 <=> y ==0);
-
+    /// x*y >= (x+y)/2 (product is larger than average)
     axiom forall uint256 x. forall uint256 y. forall uint256 z.
         (x >= 1 && y >= 1 && z !=0) => 2 * sharesMulDiv(x,y,z,false) >= (x + y) / z;
     /*
@@ -94,6 +95,9 @@ persistent ghost sharesMulDiv(uint256,uint256,uint256,bool) returns uint256 {
 
 /// interestRatio(_debtAssets,_rcomp) = _debtAssets * _rcomp / _PRECISION_DECIMALS;
 persistent ghost interestRatio(uint256,uint256) returns uint256 {
+    /// We assume a ceiling on possible debt values.
+    axiom forall uint256 x. forall uint256 y. interestRatio(x,y) <= 10^50;
+
     axiom forall uint256 x1. forall uint256 x2. forall uint256 y.
         x1 <= x2 => (
             interestRatio(x1,y) <= interestRatio(x2,y) &&
@@ -106,6 +110,7 @@ persistent ghost interestRatio(uint256,uint256) returns uint256 {
         (y == PRECISION_DECIMALS() => interestRatio(x,y) == x);
 }
 
+/// A copy of the Solidity implementation, with the ability to tune the mulDiv approx.
 function sharesToAssetsApprox(
     uint256 _shares,
     uint256 _totalAssets,
@@ -121,11 +126,12 @@ function sharesToAssetsApprox(
     if (totalShares == 0 || totalAssets == 0) return _shares;
 
     //Replace for exact mulDiv
-    return mulDiv_mathLib(_shares,totalAssets,totalShares,_rounding == MathUpgradeable.Rounding.Up);  //exact
-    //return sharesMulDiv(_shares,totalAssets,totalShares,_rounding == MathUpgradeable.Rounding.Up);  //summ
-    //return discreteRatioMulDiv(_shares, totalAssets, totalShares);
+    //return mulDiv_mathLib(_shares,totalAssets,totalShares,_rounding == MathUpgradeable.Rounding.Up);  //exact
+    return sharesMulDiv(_shares,totalAssets,totalShares,_rounding == MathUpgradeable.Rounding.Up);  //summ
+    //return discreteRatioMulDiv(_shares, totalAssets, totalShares); // under-approx (rarely used)
 }
 
+/// A copy of the Solidity implementation, with the ability to tune the mulDiv approx.
 function assetsToSharesApprox(
     uint256 _assets,
     uint256 _totalAssets,
@@ -141,11 +147,12 @@ function assetsToSharesApprox(
     if (totalShares == 0 || totalAssets == 0) return _assets;
 
     //Replace for exact mulDiv
-    return mulDiv_mathLib(_assets,totalShares,totalAssets,_rounding == MathUpgradeable.Rounding.Up);  //exact
-    //return sharesMulDiv(_assets,totalShares,totalAssets,_rounding == MathUpgradeable.Rounding.Up);  //summ
-    //return discreteRatioMulDiv(_shares, totalAssets, totalShares);
+    //return mulDiv_mathLib(_assets,totalShares,totalAssets,_rounding == MathUpgradeable.Rounding.Up);  //exact
+    return sharesMulDiv(_assets,totalShares,totalAssets,_rounding == MathUpgradeable.Rounding.Up);  //summ
+    //return discreteRatioMulDiv(_shares, totalAssets, totalShares); // under-approx (rarely used)
 }
 
+/// A copy of the Solidity implementation, 
 function getDebtAmountsWithInterestCVL(uint256 _debtAssets, uint256 _rcomp) returns (uint256,uint256) {
     if (_debtAssets == 0 || _rcomp == 0) {
         return (_debtAssets, 0);

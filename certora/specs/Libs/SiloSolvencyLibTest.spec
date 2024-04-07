@@ -36,6 +36,10 @@ ghost generalBalance(address, address) returns uint256 {
 
 ghost generalTotalSupply(address) returns uint256;
 
+function boundTotalCollateral(SiloSolvencyLib.LtvData data) {
+    require data.borrowerProtectedAssets + data.borrowerCollateralAssets < max_uint256;
+}
+
 rule sanity(method f) {
     env e;
     calldataarg args;
@@ -124,10 +128,24 @@ rule calculateLtVisMonotonic() {
     require totalBorrowerDebtValue2 !=0;
     require ltvData1.collateralOracle == ltvData2.collateralOracle;
     require ltvData1.debtOracle == ltvData2.debtOracle;
+    boundTotalCollateral(ltvData1);
+    boundTotalCollateral(ltvData2);
 
     assert
         ltvData1.borrowerProtectedAssets == ltvData2.borrowerProtectedAssets &&
         ltvData1.borrowerCollateralAssets == ltvData2.borrowerCollateralAssets &&
         ltvData1.borrowerDebtAssets < ltvData2.borrowerDebtAssets =>
         ltvInDp1 <= ltvInDp2;
+
+    assert
+        ltvData1.borrowerProtectedAssets < ltvData2.borrowerProtectedAssets &&
+        ltvData1.borrowerCollateralAssets == ltvData2.borrowerCollateralAssets &&
+        ltvData1.borrowerDebtAssets == ltvData2.borrowerDebtAssets =>
+        ltvInDp1 >= ltvInDp2;
+
+    assert
+        ltvData1.borrowerProtectedAssets == ltvData2.borrowerProtectedAssets &&
+        ltvData1.borrowerCollateralAssets < ltvData2.borrowerCollateralAssets &&
+        ltvData1.borrowerDebtAssets == ltvData2.borrowerDebtAssets =>
+        ltvInDp1 >= ltvInDp2;
 }
