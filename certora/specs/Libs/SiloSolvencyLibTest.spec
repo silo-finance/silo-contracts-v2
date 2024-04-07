@@ -73,12 +73,13 @@ function setup() {
     require silo1 == Lib.getSiloForCollateralConfig(false);
     require silo1 == Lib.getSiloForDebtConfig(true);
     require silo0 == Lib.getSiloForDebtConfig(false);
+
+    require e.block.timestamp >= silo0.getSiloDataInterestRateTimestamp();
+    require e.block.timestamp >= silo1.getSiloDataInterestRateTimestamp();
 }
 
 rule getAssetsDataForLtvCalculationsIsAmountMonotonic(uint256 amount1, uint256 amount2) {
     env e;
-    require e.block.timestamp >= silo0.getSiloDataInterestRateTimestamp();
-    require e.block.timestamp >= silo1.getSiloDataInterestRateTimestamp();
     setup();
 
     address borrower;
@@ -101,6 +102,7 @@ rule getAssetsDataForLtvCalculationsIsAmountMonotonic(uint256 amount1, uint256 a
 rule calculateLtVisMonotonic() {
     env e;
     setup();
+    
     address collateralToken;
     address debtToken;
     SiloSolvencyLib.LtvData ltvData1;

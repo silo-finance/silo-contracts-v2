@@ -1,4 +1,5 @@
 import "../silo/_common/Silo0ShareTokensMethods.spec";
+import "../silo/_common/Silo1ShareTokensMethods.spec";
 import "./SiloMathLib.spec";
 
 methods {
@@ -10,7 +11,7 @@ methods {
     ) internal returns (uint256,uint256,uint256) =>
     calculateLtvCVL(_ltvData, _collateralToken, _debtToken);
     */
-    /*
+    
     function SiloSolvencyLib.getAssetsDataForLtvCalculations(
         ISiloConfig.ConfigData memory _collateralConfig,
         ISiloConfig.ConfigData memory _debtConfig,
@@ -20,7 +21,6 @@ methods {
         uint256 _debtShareBalanceCached
     ) internal returns (SiloSolvencyLib.LtvData memory) =>
     calculateAssetsDataCVL(_collateralConfig.silo, _debtConfig.silo, _borrower, _debtShareBalanceCached);
-    */
 }
 
 ghost abstractLTV_collateralValue(address,address,uint256,uint256,uint256) returns uint256;
@@ -38,36 +38,73 @@ function calculateLtvCVL(SiloSolvencyLib.LtvData ltvData, address collateralToke
     );
 }
 
+/*
+/// Shares to assets abstract conversion : f(shares balance, total assets) -> assets 
+*/
+ghost assetsData_collateral(uint256,uint256) returns uint256 {
+    axiom forall uint256 balance1. forall uint256 balance2. forall uint256 assets.
+        balance1 <= balance2 => assetsData_collateral(balance1, assets) <= assetsData_collateral(balance2, assets);
+    axiom forall uint256 assets1. forall uint256 assets2. forall uint256 balance.
+        assets1 <= assets2 => assetsData_collateral(balance, assets1) <= assetsData_collateral(balance, assets2);
+    axiom forall uint256 assets. assetsData_collateral(0, assets) == 0;
+    axiom forall uint256 balance. assetsData_collateral(balance, 0) == 0;
+}
+
+ghost assetsData_protected(uint256,uint256) returns uint256 {
+    axiom forall uint256 balance1. forall uint256 balance2. forall uint256 assets.
+        balance1 <= balance2 => assetsData_protected(balance1, assets) <= assetsData_protected(balance2, assets);
+    axiom forall uint256 assets1. forall uint256 assets2. forall uint256 balance.
+        assets1 <= assets2 => assetsData_protected(balance, assets1) <= assetsData_protected(balance, assets2);
+    axiom forall uint256 assets. assetsData_protected(0, assets) == 0;
+    axiom forall uint256 balance. assetsData_protected(balance, 0) == 0;
+}
+
+ghost assetsData_debt(uint256,uint256) returns uint256 {
+    axiom forall uint256 balance1. forall uint256 balance2. forall uint256 assets.
+        balance1 <= balance2 => assetsData_debt(balance1, assets) <= assetsData_debt(balance2, assets);
+    axiom forall uint256 assets1. forall uint256 assets2. forall uint256 balance.
+        assets1 <= assets2 => assetsData_debt(balance, assets1) <= assetsData_debt(balance, assets2);
+    axiom forall uint256 assets. assetsData_debt(0, assets) == 0;
+    axiom forall uint256 balance. assetsData_debt(balance, 0) == 0;
+}
+
 function calculateAssetsDataCVL(address silo_collateral, address silo_debt, address borrower, uint256 debtShareBalanceCached) returns SiloSolvencyLib.LtvData {
     uint256 balanceCollateral;
-    uint256 balanceProtectedCollateral;
+    uint256 balanceProtected;
     uint256 balanceDebt;
-    SiloSolvencyLib.LtvData ltvData;
-    /// Fetch collateral data
-    if(silo_collateral == silo0) {
-        assert true;
+
+    uint256 totalCollateral;
+    uint256 totalProtected;
+    uint256 totalDebt;
+
+    /// Fetch shares balances and total assets for each token:
+    if(silo_collateral == silo0 && silo_debt == silo1) {
+        require balanceProtected == ProtectedCollateralToken0.balanceOf(borrower);
+        require balanceCollateral == shareCollateralToken0.balanceOf(borrower);
+        require balanceDebt == debtShareBalanceCached == 0 ? shareDebtToken1.balanceOf(borrower) : debtShareBalanceCached;
+
+        require totalProtected == silo0.total[ISilo.AssetType.Protected];
+        require totalDebt == silo1.total[ISilo.AssetType.Debt];
+        require totalCollateral == silo0.total[ISilo.AssetType.Collateral];
     }
-    else if(silo_collateral == silo1) {
-        assert true;
+    else if(silo_collateral == silo1 && silo_debt == silo0) {
+        require balanceProtected == ProtectedCollateralToken1.balanceOf(borrower);
+        require balanceCollateral == shareCollateralToken1.balanceOf(borrower);
+        require balanceDebt == debtShareBalanceCached == 0 ? shareDebtToken0.balanceOf(borrower) : debtShareBalanceCached;
+
+        require totalProtected == silo1.total[ISilo.AssetType.Protected];
+        require totalDebt == silo0.total[ISilo.AssetType.Debt];
+        require totalCollateral == silo1.total[ISilo.AssetType.Collateral];
     }
     else {
-        assert false, "Only silo0 or silo1 are expected.";
+        assert false, "Only (silo0,silo1) or (silo1,silo0) are expected.";
     }
 
-    /// Fetch debt data
-    if(silo_debt == silo0) {
-        assert true;
-    }
-    else if(silo_debt == silo1) {
-        assert true;
-    }
-    else {
-        assert false, "Only silo0 or silo1 are expected.";
-    }
+    SiloSolvencyLib.LtvData ltvData; 
 
-    //require ltvData.borrowerProtectedAssets == F();
-    //require ltvData.borrowerCollateralAssets == G();
-    //require ltvData.borrowerDebtAssets == H();
+    require ltvData.borrowerCollateralAssets == assetsData_collateral(balanceCollateral, totalCollateral);
+    require ltvData.borrowerProtectedAssets == assetsData_protected(balanceProtected, totalProtected);
+    require ltvData.borrowerDebtAssets == assetsData_debt(balanceDebt, totalDebt);
 
     return ltvData;
 }

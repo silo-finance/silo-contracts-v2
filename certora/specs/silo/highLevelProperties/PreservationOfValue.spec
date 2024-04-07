@@ -69,7 +69,7 @@ rule PRV_maxWithdraw_collateral_assets_independence(env e, address user) {
         withdraw(e, assets, receiver, owner, typeB);
     mathint maxAssets_after = maxWithdraw(e, user, typeA);
 
-    assert abs(maxAssets_before, maxAssets_after) <= 2
+    assert abs(maxAssets_before, maxAssets_after) <= 2;
 } 
 
 /// @title Redeeming shares preserves the sum of the user shares value and underlying tokens balance.

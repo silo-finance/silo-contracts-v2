@@ -425,7 +425,7 @@ rule RA_can_withdraw_after_deposit(env e) {
     /// If the user isn't solvent in the first place, withdrawal cannot succeed. 
     // require isSolvent(e, e.msg.sender);
     /// If there is bad debt in the system, the deposit will cover the bad debt and the withdrawal will be limited.
-    // require getLiquidity(e) > 0 ;
+    // require getLiquidity(e) > 0;
 
     deposit(e, amount, e.msg.sender);
     withdraw@withrevert(e, amount, e.msg.sender, e.msg.sender);
