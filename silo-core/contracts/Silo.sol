@@ -424,8 +424,7 @@ contract Silo is Initializable, SiloERC4626 {
     {
         if (_withdrawType == AssetType.Debt) revert ISilo.WrongAssetType();
 
-        ISiloConfig cacheConfig = config;
-        cacheConfig.xNonReentrantBefore();
+        ISiloConfig cacheConfig = _xNonReentrantBefore();
         
         ISiloConfig.ConfigData memory configData = cacheConfig.getConfig(address(this));
 
@@ -491,8 +490,7 @@ contract Silo is Initializable, SiloERC4626 {
     }
 
     function switchCollateralTo(bool _sameAsset) external virtual {
-        ISiloConfig cacheConfig = config;
-        cacheConfig.xNonReentrantBefore();
+        ISiloConfig cacheConfig = _xNonReentrantBefore();
 
         (
             ISiloConfig.ConfigData memory collateral,
@@ -525,8 +523,7 @@ contract Silo is Initializable, SiloERC4626 {
     {
         if (_depositAssets == 0 || _borrowAssets == 0) revert ISilo.ZeroAssets();
 
-        ISiloConfig cacheConfig = config;
-        cacheConfig.xNonReentrantBefore();
+        ISiloConfig cacheConfig = _xNonReentrantBefore();
 
         (
             ISiloConfig.ConfigData memory collateralConfig,
@@ -815,8 +812,7 @@ contract Silo is Initializable, SiloERC4626 {
     {
         if (_assetType == AssetType.Debt) revert ISilo.WrongAssetType();
 
-        ISiloConfig cacheConfig = config;
-        cacheConfig.xNonReentrantBefore();
+        ISiloConfig cacheConfig = _xNonReentrantBefore();
 
         (
             ISiloConfig.ConfigData memory collateralConfig,
@@ -904,8 +900,7 @@ contract Silo is Initializable, SiloERC4626 {
     {
         if (_assets == 0 && _shares == 0) revert ISilo.ZeroAssets();
 
-        ISiloConfig cacheConfig = config;
-        cacheConfig.xNonReentrantBefore();
+        ISiloConfig cacheConfig = _xNonReentrantBefore();
 
         (
             ISiloConfig.ConfigData memory collateralConfig,
@@ -1067,6 +1062,11 @@ contract Silo is Initializable, SiloERC4626 {
             totalDebtShares,
             cachedConfig
         );
+    }
+
+    function _xNonReentrantBefore() internal virtual returns (ISiloConfig cacheConfig) {
+        cacheConfig = config;
+        cacheConfig.xNonReentrantBefore();
     }
 
     function _callMaxDepositOrMint(uint256 _totalCollateralAssets)
