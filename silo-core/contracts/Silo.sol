@@ -552,7 +552,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
             uint256 transferDiff;
 
             unchecked { requiredCollateral = requiredCollateral / collateralConfig.maxLtv; }
-            if (_depositAssets < requiredCollateral) revert ISilo.LeverageToHigh();
+            if (_depositAssets < requiredCollateral) revert ISilo.LeverageTooHigh();
 
             unchecked {
                 // safe because `requiredCollateral` > `_depositAssets`
