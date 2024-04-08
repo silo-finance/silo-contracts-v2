@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import "forge-std/Test.sol";
 
 import {ISiloFactory} from "silo-core/contracts/interfaces/ISiloFactory.sol";
-import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
+import {SiloConfig, ISiloConfig} from "silo-core/contracts/SiloConfig.sol";
 import {ILeverageBorrower} from "silo-core/contracts/interfaces/ILeverageBorrower.sol";
 
 import {SiloLeverageNonReentrant} from "../../_mocks/SiloLeverageNonReentrant.sol";
@@ -12,12 +12,30 @@ import {SiloLeverageNonReentrant} from "../../_mocks/SiloLeverageNonReentrant.so
 // FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc LeverageDepositReentrancy
 contract LeverageDepositReentrancy is Test {
     SiloLeverageNonReentrant internal _silo;
+    SiloConfig internal _siloConfig;
 
     function setUp() public {
         _silo = new SiloLeverageNonReentrant(ISiloFactory(address(0)));
+
+        ISiloConfig.ConfigData memory _configData0;
+        _configData0.silo = address(_silo);
+        _configData0.token = makeAddr("token0");
+        _configData0.debtShareToken = makeAddr("debtShareToken0");
+
+        ISiloConfig.ConfigData memory _configData1;
+        _configData1.silo = makeAddr("silo1");
+        _configData1.token = makeAddr("token1");
+        _configData1.debtShareToken = makeAddr("debtShareToken1");
+
+        _siloConfig = new SiloConfig(1, _configData0, _configData1);
+
+        _silo.initialize(_siloConfig, address(1));
     }
 
-    function test_LeverageReentrancyCallOnDeposit() public {
+    /*
+    forge test -vv --ffi --mt test_LeverageReentrancyCall
+    */
+    function test_LeverageReentrancyCall() public {
         bytes memory data;
 
         vm.expectRevert(ISiloConfig.XReentrantCall.selector);

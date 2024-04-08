@@ -9,13 +9,15 @@ contract SiloLeverageNonReentrant is Silo {
     function leverage(uint256, ILeverageBorrower, address, bool, bytes calldata)
         external
         override
-        xNonReentrant(Silo(address(this)).config())
         returns (uint256 shares)
     {
+        Silo(address(this)).config().xNonReentrantBefore();
         shares = 0;
 
         // Inputs don't matter. We only need to verify reentrancy protection.
         // Expect to revert with `ISiloConfig.XReentrantCall.selector`
-        Silo(address(this)).deposit({_assets: 0, _receiver: address(0)});
+        Silo(address(this)).borrow({_assets: 0, _borrower: address(0), _receiver: address(0), _sameAsset: false});
+
+        Silo(address(this)).config().xNonReentrantAfter();
     }
 }
