@@ -4,7 +4,6 @@ pragma solidity ^0.8.0;
 import "forge-std/Test.sol";
 
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
-import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 
 import {Gas} from "./Gas.sol";
 
@@ -19,21 +18,20 @@ contract LeverageSameAsset2ndGasTest is Gas, Test {
         _borrow(ASSETS, BORROWER, SAME_ASSET);
     }
 
-    function test_gas_secondLeverageSameAsset() public {
-        ISiloConfig.ConfigData memory config = ISiloConfig(silo1.config()).getConfig(address(silo1));
-
-        uint256 transferDiff = (ASSETS * 1e18 / config.maxLtv) - ASSETS;
-        token1.mint(BORROWER, transferDiff);
+    function test_gas_leverageSameAsset2nd() public {
+        token1.mint(BORROWER, ASSETS);
 
         vm.prank(BORROWER);
-        token1.approve(address(silo1), transferDiff);
+        token1.approve(address(silo1), ASSETS);
+
+        uint256 depositAssets = ASSETS * 2;
 
         _action(
             BORROWER,
             address(silo1),
-            abi.encodeCall(ISilo.leverageSameAsset, (ASSETS, BORROWER, ISilo.AssetType.Collateral)),
+            abi.encodeCall(ISilo.leverageSameAsset, (depositAssets, ASSETS, BORROWER, ISilo.AssetType.Collateral)),
             "LeverageSameAsset 2nd (no interest)",
-            96575
+            106186
         );
     }
 }

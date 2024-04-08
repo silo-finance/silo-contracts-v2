@@ -129,6 +129,7 @@ interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
     error ThereIsDebtInOtherSilo();
     error NoDebt();
     error TwoAssetsDebt();
+    error LeverageTooHigh();
 
     /// @notice Initialize Silo
     /// @param _siloConfig address of ISiloConfig with full config for this Silo
@@ -272,14 +273,15 @@ interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
     /// @notice Allows an address to borrow a specified amount of same assets in efficient way
     /// @dev In opposite to regular borrow, Silo will transfer necessary collateral (difference between collateral
     /// and debt amount) FROM `_borrower`. Existing collateral is not taken into consideration.
-    /// @param _assets Amount of assets to borrow
+    /// @param _deposit Amount of deposit to leverage
+    /// @param _borrow Amount of assets to borrow
     /// @param _borrower Address responsible for the borrowed assets
     /// @param _assetType asset type for collateral
-    /// @return borrowShares Amount of shares equivalent to the borrowed assets
     /// @return depositShares Amount of shares equivalent to the collateral assets
-    function leverageSameAsset(uint256 _assets, address _borrower, AssetType _assetType)
+    /// @return borrowShares Amount of shares equivalent to the borrowed assets
+    function leverageSameAsset(uint256 _deposit, uint256 _borrow, address _borrower, AssetType _assetType)
         external
-        returns (uint256 borrowShares, uint256 depositShares);
+        returns (uint256 depositShares, uint256 borrowShares);
 
     /// @notice Allows an address to borrow a specified amount of assets
     /// @param _assets Amount of assets to borrow
