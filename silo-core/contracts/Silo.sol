@@ -868,6 +868,7 @@ contract Silo is Initializable, SiloERC4626, XReentrancyGuard {
         }
 
         if (SiloSolvencyLib.depositWithoutDebt(debtInfo)) {
+            cacheConfig.xNonReentrantAfter();
             return (assets, shares);
         }
 
