@@ -79,22 +79,22 @@ function calculateAssetsDataCVL(address silo_collateral, address silo_debt, addr
 
     /// Fetch shares balances and total assets for each token:
     if(silo_collateral == silo0 && silo_debt == silo1) {
-        require balanceProtected == ProtectedCollateralToken0.balanceOf(borrower);
+        require balanceProtected == shareProtectedCollateralToken0.balanceOf(borrower);
         require balanceCollateral == shareCollateralToken0.balanceOf(borrower);
-        require balanceDebt == debtShareBalanceCached == 0 ? shareDebtToken1.balanceOf(borrower) : debtShareBalanceCached;
+        require balanceDebt == (debtShareBalanceCached == 0 ? shareDebtToken1.balanceOf(borrower) : debtShareBalanceCached);
 
-        require totalProtected == silo0.total[ISilo.AssetType.Protected];
-        require totalDebt == silo1.total[ISilo.AssetType.Debt];
-        require totalCollateral == silo0.total[ISilo.AssetType.Collateral];
+        require totalProtected == silo0.total(ISilo.AssetType.Protected);
+        require totalDebt == silo1.total(ISilo.AssetType.Debt);
+        require totalCollateral == silo0.total(ISilo.AssetType.Collateral);
     }
     else if(silo_collateral == silo1 && silo_debt == silo0) {
-        require balanceProtected == ProtectedCollateralToken1.balanceOf(borrower);
+        require balanceProtected == shareProtectedCollateralToken1.balanceOf(borrower);
         require balanceCollateral == shareCollateralToken1.balanceOf(borrower);
-        require balanceDebt == debtShareBalanceCached == 0 ? shareDebtToken0.balanceOf(borrower) : debtShareBalanceCached;
+        require balanceDebt == (debtShareBalanceCached == 0 ? shareDebtToken0.balanceOf(borrower) : debtShareBalanceCached);
 
-        require totalProtected == silo1.total[ISilo.AssetType.Protected];
-        require totalDebt == silo0.total[ISilo.AssetType.Debt];
-        require totalCollateral == silo1.total[ISilo.AssetType.Collateral];
+        require totalProtected == silo1.total(ISilo.AssetType.Protected);
+        require totalDebt == silo0.total(ISilo.AssetType.Debt);
+        require totalCollateral == silo1.total(ISilo.AssetType.Collateral);
     }
     else {
         assert false, "Only (silo0,silo1) or (silo1,silo0) are expected.";

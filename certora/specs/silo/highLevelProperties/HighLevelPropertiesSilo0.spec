@@ -412,6 +412,7 @@ rule HLP_transition_collateral_preserves_solvent(env e, address user)
 /// @title When the liquidation value is smaller than the value to get to 
 /// the liquidation threshold, a self-liquidation should be equivalent to third-party liquidation.
 /// IN-PROGRESS
+/*
 rule HLP_self_liquidation_is_equivalent_to_external(env e1, env e2) {
     require e1.block.timestamp == e2.block.timestamp;
     require e1.msg.value == e2.msg.value;
@@ -452,3 +453,4 @@ rule HLP_self_liquidation_is_equivalent_to_external(env e1, env e2) {
     assert borrower_balance_after_1 - borrower_balance_before_1 ==
         liquidator_balance_after_2 - liquidator_balance_before_2;
 }
+*/

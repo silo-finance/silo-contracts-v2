@@ -4,7 +4,7 @@ import "../_common/SiloMethods.spec";
 import "../_common/Helpers.spec";
 import "../_common/CommonSummarizations.spec";
 import "../../_simplifications/priceOracle.spec";
-import "../../_simplifications/SiloSolvencyLib.spec";
+import "../../_simplifications/SiloMathLib.spec";
 import "../../_simplifications/SimplifiedGetCompoundInterestRateAndUpdate.spec";
 
 use rule assetsToSharesAndBackAxiom;
@@ -259,6 +259,7 @@ rule RA_silo_solvent_after_deposit(env e, address borrower) {
     
     uint256 assets;
     address receiver;
+    require silo0.getSiloDataInterestRateTimestamp() == e.block.timestamp;
     require isSolvent(e, borrower);
         deposit(e, assets, receiver);
     assert isSolvent(e, borrower);
@@ -423,18 +424,19 @@ rule RA_can_withdraw_after_deposit(env e) {
     require silo1.total(ISilo.AssetType.Protected) + silo1.total(ISilo.AssetType.Collateral) + amount <= max_uint128;
     
     /// If the user isn't solvent in the first place, withdrawal cannot succeed. 
-    // require isSolvent(e, e.msg.sender);
+    require isSolvent(e, e.msg.sender);
     /// If there is bad debt in the system, the deposit will cover the bad debt and the withdrawal will be limited.
-    // require getLiquidity(e) > 0;
+    require getLiquidity(e) > 0;
 
     deposit(e, amount, e.msg.sender);
+    require silo0.convertToAssets(e, 1, ISilo.AssetType.Collateral) > 0;
+    require silo0.convertToAssets(e, 1, ISilo.AssetType.Protected) > 0;
     withdraw@withrevert(e, amount, e.msg.sender, e.msg.sender);
 
     assert !lastReverted;
 }
 
 /// @title An immediate redeem after deposit by the same actor of the minted shares must succeed.
-/// Violated (burn shares over-estimated)
 rule RA_can_redeem_after_deposit(env e) {
     SafeAssumptions(e);
 

@@ -54,7 +54,7 @@ rule sanity(method f) {
     satisfy true;
 }
 
-function setup() {
+function setup(env e) {
     address token0; address protected0; address coll0; address debt0;
     address token1; address protected1; address coll1; address debt1;
     token0, protected0, coll0, debt0 = Lib.getTokensOfDebtConfig();
@@ -80,7 +80,7 @@ function setup() {
 
 rule getAssetsDataForLtvCalculationsIsAmountMonotonic(uint256 amount1, uint256 amount2) {
     env e;
-    setup();
+    setup(e);
 
     address borrower;
     ISilo.OracleType oracleType;
@@ -101,7 +101,7 @@ rule getAssetsDataForLtvCalculationsIsAmountMonotonic(uint256 amount1, uint256 a
 
 rule calculateLtVisMonotonic() {
     env e;
-    setup();
+    setup(e);
     
     address collateralToken;
     address debtToken;
