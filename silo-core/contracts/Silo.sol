@@ -181,7 +181,6 @@ contract Silo is Initializable, SiloERC4626, XReentrancyGuard {
     function deposit(uint256 _assets, address _receiver)
         external
         virtual
-        xNonReentrant(config)
         returns (uint256 shares)
     {
         if (_assets == 0) revert ISilo.ZeroAssets();
@@ -212,7 +211,6 @@ contract Silo is Initializable, SiloERC4626, XReentrancyGuard {
     function mint(uint256 _shares, address _receiver)
         external
         virtual
-        xNonReentrant(config)
         returns (uint256 assets)
     {
         (, ISiloConfig.ConfigData memory configData) = _accrueInterest();
@@ -311,7 +309,6 @@ contract Silo is Initializable, SiloERC4626, XReentrancyGuard {
     function deposit(uint256 _assets, address _receiver, AssetType _assetType)
         external
         virtual
-        xNonReentrant(config)
         returns (uint256 shares)
     {
         if (_assets == 0) revert ISilo.ZeroAssets();
@@ -356,7 +353,6 @@ contract Silo is Initializable, SiloERC4626, XReentrancyGuard {
     function mint(uint256 _shares, address _receiver, AssetType _assetType)
         external
         virtual
-        xNonReentrant(config)
         returns (uint256 assets)
     {
         if (_shares == 0) revert ISilo.ZeroShares();
@@ -643,13 +639,9 @@ contract Silo is Initializable, SiloERC4626, XReentrancyGuard {
     function repay(uint256 _assets, address _borrower)
         external
         virtual
-        xNonReentrant(config)
         returns (uint256 shares)
     {
-        // avoid magic number 0
-        uint256 repaySharesZero = 0;
-
-        (, shares) = _repay(_assets, repaySharesZero, _borrower, msg.sender, false /* _liquidation */);
+        (, shares) = _repay(_assets, 0 /* repaySharesZero */, _borrower, msg.sender, false /* _liquidation */);
     }
 
     /// @inheritdoc ILiquidationProcess
@@ -680,7 +672,6 @@ contract Silo is Initializable, SiloERC4626, XReentrancyGuard {
     function repayShares(uint256 _shares, address _borrower)
         external
         virtual
-        xNonReentrant(config)
         returns (uint256 assets)
     {
         // avoid magic number 0
