@@ -656,7 +656,6 @@ contract Silo is Initializable, SiloERC4626, XReentrancyGuard {
     function liquidationRepay(uint256 _assets, address _borrower, address _repayer)
         external
         virtual
-        xNonReentrant(config)
         returns (uint256 shares)
     {
         (, shares) = _repay(_assets, 0 /* repaySharesZero */, _borrower, _repayer, true /* _liquidation */);
