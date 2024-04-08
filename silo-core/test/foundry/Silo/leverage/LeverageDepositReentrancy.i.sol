@@ -29,7 +29,7 @@ contract LeverageDepositReentrancy is Test {
 
         _siloConfig = new SiloConfig(1, _configData0, _configData1);
 
-        _silo.initialize(_siloConfig, address(1));
+        _silo.forceConfigSetup(_siloConfig);
     }
 
     /*

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import {Silo, ILeverageBorrower, ISiloFactory} from "silo-core/contracts/Silo.sol";
+import {Silo, ILeverageBorrower, ISiloFactory, ISiloConfig} from "silo-core/contracts/Silo.sol";
 
 contract SiloLeverageNonReentrant is Silo {
     constructor(ISiloFactory _siloFactory) Silo(_siloFactory) {}
@@ -16,8 +16,12 @@ contract SiloLeverageNonReentrant is Silo {
 
         // Inputs don't matter. We only need to verify reentrancy protection.
         // Expect to revert with `ISiloConfig.XReentrantCall.selector`
-        Silo(address(this)).borrow({_assets: 0, _borrower: address(0), _receiver: address(0), _sameAsset: false});
+        Silo(address(this)).borrow({_assets: 1, _borrower: address(0), _receiver: address(0), _sameAsset: false});
 
         Silo(address(this)).config().xNonReentrantAfter();
+    }
+
+    function forceConfigSetup(ISiloConfig _siloConfig) external {
+        config = _siloConfig;
     }
 }
