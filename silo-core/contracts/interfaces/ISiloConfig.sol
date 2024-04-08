@@ -132,11 +132,14 @@ interface ISiloConfig {
         bool callBeforeQuote;
     }
 
+    error OnlySilo();
     error WrongSilo();
     error OnlyDebtShareToken();
     error DebtExistInOtherSilo();
     error NoDebt();
     error CollateralTypeDidNotChanged();
+
+    error XReentrantCall();
 
     /// @dev can be called only by silo, it opens debt for `_borrower`
     /// @param _borrower borrower address
@@ -222,4 +225,13 @@ interface ISiloConfig {
         external
         view
         returns (address protectedShareToken, address collateralShareToken, address debtShareToken);
+
+    /// @notice only silo method for cross reentrancy
+    function xNonReentrantBefore() external;
+
+    /// @notice only silo method for cross reentrancy
+    function xNonReentrantAfter() external;
+
+    /// @notice vew method for checking cross reentrancy flag
+    function xReentrancyGuardEntered() external view returns (bool);
 }

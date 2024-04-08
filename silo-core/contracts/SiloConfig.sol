@@ -10,6 +10,9 @@ import {Methods} from "./lib/Methods.sol";
 /// @dev Immutable contract is more expensive to deploy than minimal proxy however it provides nearly 10x cheapper
 /// data access using immutable variables.
 contract SiloConfig is ISiloConfig {
+    uint256 private constant _NOT_ENTERED = 1;
+    uint256 private constant _ENTERED = 2;
+    
     uint256 public immutable SILO_ID;
 
     uint256 private immutable _DAO_FEE;
@@ -68,11 +71,16 @@ contract SiloConfig is ISiloConfig {
 
     // TODO do we need events for this? this is internal state only
     mapping (address borrower => DebtInfo debtInfo) internal _debtsInfo;
+    
+    uint256 private _xReentrantStatus;
 
     /// @param _siloId ID of this pool assigned by factory
     /// @param _configData0 silo configuration data for token0
     /// @param _configData1 silo configuration data for token1
     constructor(uint256 _siloId, ConfigData memory _configData0, ConfigData memory _configData1) {
+        // based on __ReentrancyGuard_init_unchained
+        _xReentrantStatus = _NOT_ENTERED;
+
         SILO_ID = _siloId;
 
         _DAO_FEE = _configData0.daoFee;
@@ -128,9 +136,10 @@ contract SiloConfig is ISiloConfig {
     /// @inheritdoc ISiloConfig
     function openDebt(address _borrower, bool _sameAsset)
         external
+        virtual
         returns (ConfigData memory, ConfigData memory, DebtInfo memory)
     {
-        if (msg.sender != _SILO0 && msg.sender != _SILO1) revert WrongSilo();
+        if (msg.sender != _SILO0 && msg.sender != _SILO1) revert OnlySilo();
 
         DebtInfo memory debtInfo = _debtsInfo[_borrower];
 
@@ -146,7 +155,7 @@ contract SiloConfig is ISiloConfig {
     }
 
     /// @inheritdoc ISiloConfig
-    function onDebtTransfer(address _sender, address _recipient) external {
+    function onDebtTransfer(address _sender, address _recipient) external virtual {
         if (msg.sender != _DEBT_SHARE_TOKEN0 && msg.sender != _DEBT_SHARE_TOKEN1) revert OnlyDebtShareToken();
 
         DebtInfo storage recipientDebtInfo = _debtsInfo[_recipient];
@@ -162,19 +171,20 @@ contract SiloConfig is ISiloConfig {
     }
 
     /// @inheritdoc ISiloConfig
-    function closeDebt(address _borrower) external {
+    function closeDebt(address _borrower) external virtual {
         if (msg.sender != _SILO0 && msg.sender != _SILO1 &&
             msg.sender != _DEBT_SHARE_TOKEN0 && msg.sender != _DEBT_SHARE_TOKEN1
-        ) revert WrongSilo();
+        ) revert OnlySilo();
 
         delete _debtsInfo[_borrower];
     }
 
     function changeCollateralType(address _borrower, bool _sameAsset)
         external
+        virtual
         returns (ConfigData memory, ConfigData memory, DebtInfo memory debtInfo)
     {
-        if (msg.sender != _SILO0 && msg.sender != _SILO1) revert WrongSilo();
+        if (msg.sender != _SILO0 && msg.sender != _SILO1) revert OnlySilo();
 
         debtInfo = _debtsInfo[_borrower];
 
@@ -186,7 +196,35 @@ contract SiloConfig is ISiloConfig {
 
         return _getConfigs(msg.sender, 0 /* method does not mather when debt open */, debtInfo);
     }
+    
+    /// @inheritdoc ISiloConfig
+    function xNonReentrantBefore() external virtual {
+        if (msg.sender != _SILO0 && msg.sender != _SILO1) revert OnlySilo();
 
+        // On the first call to nonReentrant, _status will be _NOT_ENTERED
+        if (_xReentrantStatus == _ENTERED) revert XReentrantCall();
+
+        // Any calls to nonReentrant after this point will fail
+        _xReentrantStatus = _ENTERED;
+    }
+
+    /// @inheritdoc ISiloConfig
+    function xNonReentrantAfter() external virtual {
+        if (msg.sender != _SILO0 && msg.sender != _SILO1) revert OnlySilo();
+
+        // By storing the original value once again, a refund is triggered (see
+        // https://eips.ethereum.org/EIPS/eip-2200)
+        _xReentrantStatus = _NOT_ENTERED;
+    }
+
+    /**
+     * @dev Returns true if the reentrancy guard is currently set to "entered", which indicates there is a
+     * `nonReentrant` function in the call stack.
+     */
+    function xReentrancyGuardEntered() external view virtual returns (bool) {
+        return _xReentrantStatus == _ENTERED;
+    }
+    
     /// @inheritdoc ISiloConfig
     function getSilos() external view returns (address silo0, address silo1) {
         return (_SILO0, _SILO1);
@@ -399,7 +437,7 @@ contract SiloConfig is ISiloConfig {
         return (collateral, debt, _debtInfo);
     }
 
-    function _forbidDebtInTwoSilos(bool _debtInSilo0) internal view {
+    function _forbidDebtInTwoSilos(bool _debtInSilo0) internal view virtual {
         if (msg.sender == _DEBT_SHARE_TOKEN0 && _debtInSilo0) return;
         if (msg.sender == _DEBT_SHARE_TOKEN1 && !_debtInSilo0) return;
 
