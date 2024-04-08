@@ -3,10 +3,11 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
 
-import {SiloLeverageNonReentrant} from "silo-core/test/foundry/_mocks/SiloLeverageNonReentrant.sol";
 import {ISiloFactory} from "silo-core/contracts/interfaces/ISiloFactory.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ILeverageBorrower} from "silo-core/contracts/interfaces/ILeverageBorrower.sol";
+
+import {SiloLeverageNonReentrant} from "../_mocks/SiloLeverageNonReentrant.sol";
 
 // FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc LeverageDepositReentrancy
 contract LeverageDepositReentrancy is Test {
