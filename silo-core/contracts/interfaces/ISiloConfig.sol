@@ -170,6 +170,14 @@ interface ISiloConfig {
         external
         returns (ConfigData memory collateralConfig, ConfigData memory debtConfig, DebtInfo memory debtInfo);
 
+    /// @notice only silo method for cross reentrancy
+    function xNonReentrantBefore() external;
+
+    /// @notice only silo method for cross reentrancy
+    function xNonReentrantAfter() external;
+
+    /// @notice vew method for checking cross reentrancy flag
+    function xReentrancyGuardEntered() external view returns (bool);
 
     // solhint-disable-next-line func-name-mixedcase
     function SILO_ID() external view returns (uint256);
@@ -227,13 +235,4 @@ interface ISiloConfig {
         external
         view
         returns (address protectedShareToken, address collateralShareToken, address debtShareToken);
-
-    /// @notice only silo method for cross reentrancy
-    function xNonReentrantBefore() external;
-
-    /// @notice only silo method for cross reentrancy
-    function xNonReentrantAfter() external;
-
-    /// @notice vew method for checking cross reentrancy flag
-    function xReentrancyGuardEntered() external view returns (bool);
 }

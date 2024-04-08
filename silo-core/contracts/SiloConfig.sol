@@ -96,13 +96,11 @@ contract SiloConfig is ISiloConfig {
 
         _DAO_FEE = _configData0.daoFee;
         _DEPLOYER_FEE = _configData0.deployerFee;
-
         _LIQUIDATION_MODULE = _configData0.liquidationModule;
 
         // TOKEN #0
 
         _SILO0 = _configData0.silo;
-
         _TOKEN0 = _configData0.token;
 
         _PROTECTED_COLLATERAL_SHARE_TOKEN0 = _configData0.protectedShareToken;
@@ -124,7 +122,6 @@ contract SiloConfig is ISiloConfig {
         // TOKEN #1
 
         _SILO1 = _configData1.silo;
-
         _TOKEN1 = _configData1.token;
 
         _PROTECTED_COLLATERAL_SHARE_TOKEN1 = _configData1.protectedShareToken;
