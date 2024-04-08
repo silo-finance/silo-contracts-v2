@@ -206,7 +206,7 @@ contract SiloConfig is ISiloConfig {
     }
     
     /// @inheritdoc ISiloConfig
-    function xNonReentrantBefore() external virtual {
+    function crossNonReentrantBefore() external virtual {
         if (msg.sender != _SILO0 && msg.sender != _SILO1 && msg.sender != _LIQUIDATION_MODULE) {
             revert OnlySiloOrLiquidationModule();
         }
@@ -219,7 +219,7 @@ contract SiloConfig is ISiloConfig {
     }
 
     /// @inheritdoc ISiloConfig
-    function xNonReentrantAfter() external virtual {
+    function crossNonReentrantAfter() external virtual {
         if (msg.sender != _SILO0 && msg.sender != _SILO1 && msg.sender != _LIQUIDATION_MODULE) {
             revert OnlySiloOrLiquidationModule();
         }
@@ -233,7 +233,7 @@ contract SiloConfig is ISiloConfig {
      * @dev Returns true if the reentrancy guard is currently set to "entered", which indicates there is a
      * `nonReentrant` function in the call stack.
      */
-    function xReentrancyGuardEntered() external view virtual returns (bool) {
+    function crossReentrancyGuardEntered() external view virtual returns (bool) {
         return _xReentrantStatus == _ENTERED;
     }
     

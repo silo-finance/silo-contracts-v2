@@ -27,7 +27,7 @@ contract PartialLiquidation is IPartialLiquidation {
         returns (uint256 withdrawCollateral, uint256 repayDebtAssets)
     {
         ISiloConfig configCached = ISilo(_siloWithDebt).config();
-        configCached.xNonReentrantBefore();
+        configCached.crossNonReentrantBefore();
 
         (
             ISiloConfig.ConfigData memory collateralConfig,
@@ -78,7 +78,7 @@ contract PartialLiquidation is IPartialLiquidation {
             withdrawAssetsFromCollateral, withdrawAssetsFromProtected, _borrower, msg.sender, _receiveSToken
         );
 
-        configCached.xNonReentrantAfter();
+        configCached.crossNonReentrantAfter();
     }
 
     /// @inheritdoc IPartialLiquidation

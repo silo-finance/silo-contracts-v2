@@ -11,14 +11,14 @@ contract SiloLeverageNonReentrant is Silo {
         override
         returns (uint256 shares)
     {
-        Silo(address(this)).config().xNonReentrantBefore();
+        Silo(address(this)).config().crossNonReentrantBefore();
         shares = 0;
 
         // Inputs don't matter. We only need to verify reentrancy protection.
         // Expect to revert with `ISiloConfig.XReentrantCall.selector`
         Silo(address(this)).borrow({_assets: 1, _borrower: address(0), _receiver: address(0), _sameAsset: false});
 
-        Silo(address(this)).config().xNonReentrantAfter();
+        Silo(address(this)).config().crossNonReentrantAfter();
     }
 
     function forceConfigSetup(ISiloConfig _siloConfig) external {
