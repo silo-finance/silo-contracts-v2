@@ -141,7 +141,7 @@ interface ISiloConfig {
     error NoDebt();
     error CollateralTypeDidNotChanged();
 
-    error XReentrantCall();
+    error CrossReentrantCall();
 
     /// @dev can be called only by silo, it opens debt for `_borrower`
     /// @param _borrower borrower address

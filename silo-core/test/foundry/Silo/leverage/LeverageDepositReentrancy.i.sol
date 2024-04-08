@@ -38,7 +38,7 @@ contract LeverageDepositReentrancy is Test {
     function test_LeverageReentrancyCall() public {
         bytes memory data;
 
-        vm.expectRevert(ISiloConfig.XReentrantCall.selector);
+        vm.expectRevert(ISiloConfig.CrossReentrantCall.selector);
         // Inputs don't matter. We only need to activate/verify reentrancy protection.
         _silo.leverage(
             0, // _assets

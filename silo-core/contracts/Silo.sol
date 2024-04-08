@@ -207,11 +207,7 @@ contract Silo is Initializable, SiloERC4626 {
     }
 
     /// @inheritdoc IERC4626
-    function mint(uint256 _shares, address _receiver)
-        external
-        virtual
-        returns (uint256 assets)
-    {
+    function mint(uint256 _shares, address _receiver) external virtual returns (uint256 assets) {
         (, ISiloConfig.ConfigData memory configData) = _accrueInterest();
 
         (assets,) = _deposit(

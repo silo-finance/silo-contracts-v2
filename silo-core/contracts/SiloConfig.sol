@@ -83,14 +83,13 @@ contract SiloConfig is ISiloConfig {
     // TODO do we need events for this? this is internal state only
     mapping (address borrower => DebtInfo debtInfo) internal _debtsInfo;
     
-    uint256 private _xReentrantStatus;
+    uint256 private _crossReentrantStatus;
 
     /// @param _siloId ID of this pool assigned by factory
     /// @param _configData0 silo configuration data for token0
     /// @param _configData1 silo configuration data for token1
     constructor(uint256 _siloId, ConfigData memory _configData0, ConfigData memory _configData1) {
-        // based on __ReentrancyGuard_init_unchained
-        _xReentrantStatus = _NOT_ENTERED;
+        _crossReentrantStatus = _NOT_ENTERED;
 
         SILO_ID = _siloId;
 
@@ -212,10 +211,10 @@ contract SiloConfig is ISiloConfig {
         }
 
         // On the first call to nonReentrant, _status will be _NOT_ENTERED
-        if (_xReentrantStatus == _ENTERED) revert XReentrantCall();
+        if (_crossReentrantStatus == _ENTERED) revert CrossReentrantCall();
 
         // Any calls to nonReentrant after this point will fail
-        _xReentrantStatus = _ENTERED;
+        _crossReentrantStatus = _ENTERED;
     }
 
     /// @inheritdoc ISiloConfig
@@ -226,7 +225,7 @@ contract SiloConfig is ISiloConfig {
 
         // By storing the original value once again, a refund is triggered (see
         // https://eips.ethereum.org/EIPS/eip-2200)
-        _xReentrantStatus = _NOT_ENTERED;
+        _crossReentrantStatus = _NOT_ENTERED;
     }
 
     /**
@@ -234,7 +233,7 @@ contract SiloConfig is ISiloConfig {
      * `nonReentrant` function in the call stack.
      */
     function crossReentrancyGuardEntered() external view virtual returns (bool) {
-        return _xReentrantStatus == _ENTERED;
+        return _crossReentrantStatus == _ENTERED;
     }
     
     /// @inheritdoc ISiloConfig

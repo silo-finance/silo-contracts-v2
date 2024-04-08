@@ -15,7 +15,7 @@ contract SiloLeverageNonReentrant is Silo {
         shares = 0;
 
         // Inputs don't matter. We only need to verify reentrancy protection.
-        // Expect to revert with `ISiloConfig.XReentrantCall.selector`
+        // Expect to revert with `ISiloConfig.CrossReentrantCall.selector`
         Silo(address(this)).borrow({_assets: 1, _borrower: address(0), _receiver: address(0), _sameAsset: false});
 
         Silo(address(this)).config().crossNonReentrantAfter();
