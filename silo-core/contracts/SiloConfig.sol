@@ -174,7 +174,7 @@ contract SiloConfig is ISiloConfig {
     function closeDebt(address _borrower) external virtual {
         if (msg.sender != _SILO0 && msg.sender != _SILO1 &&
             msg.sender != _DEBT_SHARE_TOKEN0 && msg.sender != _DEBT_SHARE_TOKEN1
-        ) revert OnlySilo();
+        ) revert OnlySiloOrDebtShareToken();
 
         delete _debtsInfo[_borrower];
     }
@@ -199,7 +199,9 @@ contract SiloConfig is ISiloConfig {
     
     /// @inheritdoc ISiloConfig
     function xNonReentrantBefore() external virtual {
-        if (msg.sender != _SILO0 && msg.sender != _SILO1) revert OnlySilo();
+        if (msg.sender != _SILO0 && msg.sender != _SILO1 && msg.sender != _LIQUIDATION_MODULE) {
+            revert OnlySiloOrLiquidationModule();
+        }
 
         // On the first call to nonReentrant, _status will be _NOT_ENTERED
         if (_xReentrantStatus == _ENTERED) revert XReentrantCall();
@@ -210,7 +212,9 @@ contract SiloConfig is ISiloConfig {
 
     /// @inheritdoc ISiloConfig
     function xNonReentrantAfter() external virtual {
-        if (msg.sender != _SILO0 && msg.sender != _SILO1) revert OnlySilo();
+        if (msg.sender != _SILO0 && msg.sender != _SILO1 && msg.sender != _LIQUIDATION_MODULE) {
+            revert OnlySiloOrLiquidationModule();
+        }
 
         // By storing the original value once again, a refund is triggered (see
         // https://eips.ethereum.org/EIPS/eip-2200)

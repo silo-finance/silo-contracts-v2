@@ -133,6 +133,8 @@ interface ISiloConfig {
     }
 
     error OnlySilo();
+    error OnlySiloOrLiquidationModule();
+    error OnlySiloOrDebtShareToken();
     error WrongSilo();
     error OnlyDebtShareToken();
     error DebtExistInOtherSilo();
