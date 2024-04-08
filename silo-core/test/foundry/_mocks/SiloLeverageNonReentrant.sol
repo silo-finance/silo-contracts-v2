@@ -15,7 +15,7 @@ contract SiloLeverageNonReentrant is Silo {
         shares = 0;
 
         // Inputs don't matter. We only need to verify reentrancy protection.
-        // Expect to revert with `ReentrancyGuard: reentrant call`
+        // Expect to revert with `ISiloConfig.XReentrantCall.selector`
         Silo(address(this)).deposit({_assets: 0, _receiver: address(0)});
     }
 }
