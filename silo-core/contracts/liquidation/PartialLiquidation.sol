@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.21;
 
-import {XReentrancyGuard} from "../utils/XReentrancyGuard.sol";
 import {ISilo, ILiquidationProcess} from "../interfaces/ISilo.sol";
 import {IPartialLiquidation} from "../interfaces/IPartialLiquidation.sol";
 import {ISiloOracle} from "../interfaces/ISiloOracle.sol";
@@ -13,7 +12,7 @@ import {PartialLiquidationExecLib} from "./lib/PartialLiquidationExecLib.sol";
 
 
 /// @title PartialLiquidation module for executing liquidations
-contract PartialLiquidation is IPartialLiquidation, XReentrancyGuard {
+contract PartialLiquidation is IPartialLiquidation {
     /// @inheritdoc IPartialLiquidation
     function liquidationCall( // solhint-disable-line function-max-lines, code-complexity
         address _siloWithDebt,
@@ -25,14 +24,16 @@ contract PartialLiquidation is IPartialLiquidation, XReentrancyGuard {
     )
         external
         virtual
-        xNonReentrant(ISilo(_siloWithDebt).config())
         returns (uint256 withdrawCollateral, uint256 repayDebtAssets)
     {
+        ISiloConfig configCached = ISilo(_siloWithDebt).config();
+        configCached.xNonReentrantBefore();
+
         (
             ISiloConfig.ConfigData memory collateralConfig,
             ISiloConfig.ConfigData memory debtConfig,
             ISiloConfig.DebtInfo memory debtInfo
-        ) = ISilo(_siloWithDebt).config().getConfigs(_siloWithDebt, _borrower, Methods.EXTERNAL);
+        ) = configCached.getConfigs(_siloWithDebt, _borrower, Methods.EXTERNAL);
 
         if (!debtInfo.debtPresent) revert UserIsSolvent();
         if (!debtInfo.debtInThisSilo) revert ISilo.ThereIsDebtInOtherSilo();
@@ -76,6 +77,8 @@ contract PartialLiquidation is IPartialLiquidation, XReentrancyGuard {
         ILiquidationProcess(collateralConfig.silo).withdrawCollateralsToLiquidator(
             withdrawAssetsFromCollateral, withdrawAssetsFromProtected, _borrower, msg.sender, _receiveSToken
         );
+
+        configCached.xNonReentrantAfter();
     }
 
     /// @inheritdoc IPartialLiquidation

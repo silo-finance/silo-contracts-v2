@@ -15,7 +15,6 @@ import {ISiloConfig} from "./interfaces/ISiloConfig.sol";
 import {ISiloFactory} from "./interfaces/ISiloFactory.sol";
 import {IInterestRateModel} from "./interfaces/IInterestRateModel.sol";
 
-import {XReentrancyGuard} from "./utils/XReentrancyGuard.sol";
 import {SiloERC4626} from "./utils/SiloERC4626.sol";
 import {SiloStdLib} from "./lib/SiloStdLib.sol";
 import {SiloSolvencyLib} from "./lib/SiloSolvencyLib.sol";
@@ -33,7 +32,7 @@ import {Methods} from "./lib/Methods.sol";
 /// @notice Silo is a ERC4626-compatible vault that allows users to deposit collateral and borrow debt. This contract
 /// is deployed twice for each asset for two-asset lending markets.
 /// Version: 2.0.0
-contract Silo is Initializable, SiloERC4626, XReentrancyGuard {
+contract Silo is Initializable, SiloERC4626 {
     using SafeERC20Upgradeable for IERC20Upgradeable;
 
     bytes32 internal constant _LEVERAGE_CALLBACK = keccak256("ILeverageBorrower.onLeverage");

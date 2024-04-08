@@ -373,8 +373,8 @@ contract SiloConfigTest is Test {
     /*
     forge test -vv --mt test_closeDebt_revert
     */
-    function test_closeDebt_OnlySilo() public {
-        vm.expectRevert(ISiloConfig.OnlySilo.selector);
+    function test_closeDebt_OnlySiloOrDebtShareToken() public {
+        vm.expectRevert(ISiloConfig.OnlySiloOrDebtShareToken.selector);
         _siloConfig.closeDebt(address(0));
     }
 
