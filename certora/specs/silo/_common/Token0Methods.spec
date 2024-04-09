@@ -28,6 +28,7 @@ hook Sstore token0._balances[KEY address user] uint256 newBalance (uint256 oldBa
 
 hook Sload uint256 balance token0._balances[KEY address user] {
     require token0BalanceOfMirror[user] == balance;
+    require to_mathint(balance) <= sumBalancesToken0;
 }
 
 function requireToken0TotalAndBalancesIntegrity() {
