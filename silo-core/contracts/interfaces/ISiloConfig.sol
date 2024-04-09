@@ -171,7 +171,7 @@ interface ISiloConfig {
         returns (ConfigData memory collateralConfig, ConfigData memory debtConfig, DebtInfo memory debtInfo);
 
     /// @notice only silo method for cross Silo reentrancy
-    /// @param _entranceFrom see CrossEntrancy lib for possible values, it should match the method from which call is made
+    /// @param _entranceFrom see CrossEntrancy lib for possible values
     function crossNonReentrantBefore(uint256 _entranceFrom) external;
 
     /// @notice only silo method for cross Silo reentrancy
