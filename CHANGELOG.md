@@ -13,7 +13,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Changed
 - standard reentrancy guard was replaced by cross Silo reentrancy check
-- removed reentrancy protection from "positive" methods: deposit, repay
 
 ### Fixed
 - fix issue with wrong configs in `isSolvent` after debt share transfer
