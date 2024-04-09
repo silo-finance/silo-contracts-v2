@@ -1029,13 +1029,13 @@ contract Silo is Initializable, SiloERC4626 {
         virtual
         returns (uint256 maxAssets, uint256 maxShares)
     {
-        ISiloConfig cachedConfig = config;
+        ISiloConfig siloConfigCached = config;
 
         (
             ISiloConfig.ConfigData memory collateralConfig,
             ISiloConfig.ConfigData memory debtConfig,
             ISiloConfig.DebtInfo memory debtInfo
-        ) = cachedConfig.getConfigs(
+        ) = siloConfigCached.getConfigs(
             address(this),
             _borrower,
             _sameAsset ? Methods.BORROW_SAME_ASSET : Methods.BORROW_TWO_ASSETS
@@ -1056,7 +1056,7 @@ contract Silo is Initializable, SiloERC4626 {
             _borrower,
             totalDebtAssets,
             totalDebtShares,
-            cachedConfig
+            siloConfigCached
         );
     }
 

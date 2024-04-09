@@ -26,14 +26,14 @@ contract PartialLiquidation is IPartialLiquidation {
         virtual
         returns (uint256 withdrawCollateral, uint256 repayDebtAssets)
     {
-        ISiloConfig configCached = ISilo(_siloWithDebt).config();
-        configCached.crossNonReentrantBefore();
+        ISiloConfig siloConfigCached = ISilo(_siloWithDebt).config();
+        siloConfigCached.crossNonReentrantBefore();
 
         (
             ISiloConfig.ConfigData memory collateralConfig,
             ISiloConfig.ConfigData memory debtConfig,
             ISiloConfig.DebtInfo memory debtInfo
-        ) = configCached.getConfigs(_siloWithDebt, _borrower, Methods.EXTERNAL);
+        ) = siloConfigCached.getConfigs(_siloWithDebt, _borrower, Methods.EXTERNAL);
 
         if (!debtInfo.debtPresent) revert UserIsSolvent();
         if (!debtInfo.debtInThisSilo) revert ISilo.ThereIsDebtInOtherSilo();
@@ -78,7 +78,7 @@ contract PartialLiquidation is IPartialLiquidation {
             withdrawAssetsFromCollateral, withdrawAssetsFromProtected, _borrower, msg.sender, _receiveSToken
         );
 
-        configCached.crossNonReentrantAfter();
+        siloConfigCached.crossNonReentrantAfter();
     }
 
     /// @inheritdoc IPartialLiquidation
