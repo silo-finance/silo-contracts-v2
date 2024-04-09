@@ -885,6 +885,8 @@ contract Silo is Initializable, SiloERC4626 {
         emit Borrow(msg.sender, _receiver, _borrower, assets, shares);
 
         if (_leverage) {
+            siloConfigCached.crossNonReentrantAfter();
+
             emit Leverage();
 
             bytes32 result = ILeverageBorrower(_receiver)
@@ -892,6 +894,8 @@ contract Silo is Initializable, SiloERC4626 {
 
             // allow for deposit reentry only to provide collateral
             if (result != _LEVERAGE_CALLBACK) revert LeverageFailed();
+
+            siloConfigCached.crossNonReentrantBefore();
         }
 
         if (collateralConfig.callBeforeQuote) {
