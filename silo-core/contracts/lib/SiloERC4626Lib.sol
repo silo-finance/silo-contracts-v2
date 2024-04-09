@@ -219,8 +219,8 @@ library SiloERC4626Lib {
             ISilo.AssetType.Collateral
         );
 
-        if (shares == 0) revert ISilo.ZeroShares();
         if (assets == 0) revert ISilo.ZeroAssets();
+        if (shares == 0) revert ISilo.ZeroShares();
 
         // `assets` and `totalAssets` can never be more than uint256 because totalSupply cannot be either
         // however, there is (probably unreal but also untested) possibility, where you might borrow from silo
