@@ -665,7 +665,7 @@ contract Silo is Initializable, SiloERC4626 {
 
     /// @inheritdoc ISilo
     function accrueInterest() external virtual returns (uint256 accruedInterest) {
-        (accruedInterest,,) = _accrueInterest(false);
+        (accruedInterest,,) = _accrueInterestWithReentrantGuard(false);
     }
 
     /// @inheritdoc ISilo
@@ -693,7 +693,7 @@ contract Silo is Initializable, SiloERC4626 {
         );
     }
 
-    function _accrueInterest(bool _callReentrancyBefore)
+    function _accrueInterestWithReentrantGuard(bool _callReentrancyBefore)
         internal
         virtual
         returns (uint256 accruedInterest, ISiloConfig.ConfigData memory configData, ISiloConfig siloConfig)
@@ -727,7 +727,9 @@ contract Silo is Initializable, SiloERC4626 {
     {
         if (_assetType == AssetType.Debt) revert ISilo.WrongAssetType();
 
-        (, ISiloConfig.ConfigData memory configData, ISiloConfig siloConfigCached) = _accrueInterest(true);
+        (
+            , ISiloConfig.ConfigData memory configData, ISiloConfig siloConfigCached
+        ) = _accrueInterestWithReentrantGuard(true);
 
         address collateralShareToken = _assetType == AssetType.Collateral
             ? configData.collateralShareToken
@@ -907,12 +909,15 @@ contract Silo is Initializable, SiloERC4626 {
         siloConfigCached.crossNonReentrantAfter();
     }
 
+    /// @param _liquidation TRUE when call is from liquidator module
     function _repay(uint256 _assets, uint256 _shares, address _borrower, address _repayer, bool _liquidation)
         internal
         virtual
         returns (uint256 assets, uint256 shares)
     {
-        (, ISiloConfig.ConfigData memory configData, ISiloConfig siloConfigCached) = _accrueInterest(true);
+        (
+            , ISiloConfig.ConfigData memory configData, ISiloConfig siloConfigCached
+        ) = _accrueInterestWithReentrantGuard(!_liquidation);
 
         if (_liquidation && configData.liquidationModule != msg.sender) revert ISilo.OnlyLiquidationModule();
 
@@ -922,7 +927,7 @@ contract Silo is Initializable, SiloERC4626 {
 
         emit Repay(_repayer, _borrower, assets, shares);
 
-        siloConfigCached.crossNonReentrantAfter();
+        if (!_liquidation) siloConfigCached.crossNonReentrantAfter();
     }
 
     function _getTotalAssetsAndTotalSharesWithInterest(AssetType _assetType)
