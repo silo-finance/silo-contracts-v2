@@ -182,18 +182,7 @@ contract Silo is Initializable, SiloERC4626 {
         virtual
         returns (uint256 shares)
     {
-        if (_assets == 0) revert ISilo.ZeroAssets();
-
-        (, ISiloConfig.ConfigData memory configData) = _accrueInterest();
-
-        (, shares) = _deposit(
-            configData.token,
-            _assets,
-            0, // shares
-            _receiver,
-            AssetType.Collateral,
-            IShareToken(configData.collateralShareToken)
-        );
+        (, shares) = _deposit(_assets, 0 /* shares */, _receiver, AssetType.Collateral);
     }
 
     /// @inheritdoc IERC4626
@@ -208,16 +197,7 @@ contract Silo is Initializable, SiloERC4626 {
 
     /// @inheritdoc IERC4626
     function mint(uint256 _shares, address _receiver) external virtual returns (uint256 assets) {
-        (, ISiloConfig.ConfigData memory configData) = _accrueInterest();
-
-        (assets,) = _deposit(
-            configData.token,
-            0, // assets
-            _shares,
-            _receiver,
-            AssetType.Collateral,
-            IShareToken(configData.collateralShareToken)
-        );
+        (assets,) = _deposit(0 /* assets */, _shares, _receiver, AssetType.Collateral);
     }
 
     /// @inheritdoc IERC4626
@@ -304,22 +284,7 @@ contract Silo is Initializable, SiloERC4626 {
         virtual
         returns (uint256 shares)
     {
-        if (_assets == 0) revert ISilo.ZeroAssets();
-
-        (, ISiloConfig.ConfigData memory configData) = _accrueInterest();
-
-        address collateralShareToken = _assetType == AssetType.Collateral
-            ? configData.collateralShareToken
-            : configData.protectedShareToken;
-
-        (, shares) = _deposit(
-            configData.token,
-            _assets,
-            0, // shares
-            _receiver,
-            _assetType,
-            IShareToken(collateralShareToken)
-        );
+        (, shares) = _deposit(_assets, 0, /* shares */ _receiver, _assetType);
     }
 
     /// @inheritdoc ISilo
@@ -348,22 +313,7 @@ contract Silo is Initializable, SiloERC4626 {
         virtual
         returns (uint256 assets)
     {
-        if (_shares == 0) revert ISilo.ZeroShares();
-
-        (, ISiloConfig.ConfigData memory configData) = _accrueInterest();
-
-        address collateralShareToken = _assetType == AssetType.Collateral
-            ? configData.collateralShareToken
-            : configData.protectedShareToken;
-
-        (assets,) = _deposit(
-            configData.token,
-            0, // asstes
-            _shares,
-            _receiver,
-            _assetType,
-            IShareToken(collateralShareToken)
-        );
+        (assets,) = _deposit(0 /* asstes */, _shares, _receiver, _assetType);
     }
 
     /// @inheritdoc ISilo
@@ -715,7 +665,7 @@ contract Silo is Initializable, SiloERC4626 {
 
     /// @inheritdoc ISilo
     function accrueInterest() external virtual returns (uint256 accruedInterest) {
-        (accruedInterest,) = _accrueInterest();
+        (accruedInterest,,) = _accrueInterest(false);
     }
 
     /// @inheritdoc ISilo
@@ -743,12 +693,18 @@ contract Silo is Initializable, SiloERC4626 {
         );
     }
 
-    function _accrueInterest()
+    function _accrueInterest(bool _callReentrancyBefore)
         internal
         virtual
-        returns (uint256 accruedInterest, ISiloConfig.ConfigData memory configData)
+        returns (uint256 accruedInterest, ISiloConfig.ConfigData memory configData, ISiloConfig siloConfig)
     {
-        configData = config.getConfig(address(this));
+        siloConfig = config;
+
+        if (_callReentrancyBefore) {
+            siloConfig.crossNonReentrantBefore();
+        }
+
+        configData = siloConfig.getConfig(address(this));
 
         accruedInterest = _callAccrueInterestForAsset(
             configData.interestRateModel, configData.daoFee, configData.deployerFee, address(0)
@@ -760,12 +716,10 @@ contract Silo is Initializable, SiloERC4626 {
     }
 
     function _deposit(
-        address _token,
         uint256 _assets,
         uint256 _shares,
         address _receiver,
-        ISilo.AssetType _assetType,
-        IShareToken _collateralShareToken
+        ISilo.AssetType _assetType
     )
         internal
         virtual
@@ -773,13 +727,19 @@ contract Silo is Initializable, SiloERC4626 {
     {
         if (_assetType == AssetType.Debt) revert ISilo.WrongAssetType();
 
+        (, ISiloConfig.ConfigData memory configData, ISiloConfig siloConfigCached) = _accrueInterest(true);
+
+        address collateralShareToken = _assetType == AssetType.Collateral
+            ? configData.collateralShareToken
+            : configData.protectedShareToken;
+
         (assets, shares) = SiloERC4626Lib.deposit(
-            _token,
+            configData.token,
             msg.sender,
             _assets,
             _shares,
             _receiver,
-            _collateralShareToken,
+            IShareToken(collateralShareToken),
             total[_assetType]
         );
 
@@ -788,6 +748,8 @@ contract Silo is Initializable, SiloERC4626 {
         } else {
             emit DepositProtected(msg.sender, _receiver, assets, shares);
         }
+
+        siloConfigCached.crossNonReentrantAfter();
     }
 
     // solhint-disable-next-line function-max-lines, code-complexity
@@ -950,7 +912,7 @@ contract Silo is Initializable, SiloERC4626 {
         virtual
         returns (uint256 assets, uint256 shares)
     {
-        (, ISiloConfig.ConfigData memory configData) = _accrueInterest();
+        (, ISiloConfig.ConfigData memory configData, ISiloConfig siloConfigCached) = _accrueInterest(true);
 
         if (_liquidation && configData.liquidationModule != msg.sender) revert ISilo.OnlyLiquidationModule();
 
@@ -959,6 +921,8 @@ contract Silo is Initializable, SiloERC4626 {
         ) = SiloLendingLib.repay(configData, _assets, _shares, _borrower, _repayer, total[AssetType.Debt]);
 
         emit Repay(_repayer, _borrower, assets, shares);
+
+        siloConfigCached.crossNonReentrantAfter();
     }
 
     function _getTotalAssetsAndTotalSharesWithInterest(AssetType _assetType)
