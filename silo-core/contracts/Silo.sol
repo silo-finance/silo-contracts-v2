@@ -24,7 +24,7 @@ import {SiloMathLib} from "./lib/SiloMathLib.sol";
 import {LiquidationWithdrawLib} from "./lib/LiquidationWithdrawLib.sol";
 import {Rounding} from "./lib/Rounding.sol";
 import {Methods} from "./lib/Methods.sol";
-import {CrossReentrant} from "./lib/CrossReentrant.sol";
+import {CrossEntrancy} from "./lib/CrossEntrancy.sol";
 
 // Keep ERC4626 ordering
 // solhint-disable ordering
@@ -371,7 +371,7 @@ contract Silo is Initializable, SiloERC4626 {
     {
         if (_withdrawType == AssetType.Debt) revert ISilo.WrongAssetType();
 
-        ISiloConfig siloConfigCached = _crossNonReentrantBefore(CrossReentrant.ENTERED);
+        ISiloConfig siloConfigCached = _crossNonReentrantBefore(CrossEntrancy.ENTERED);
         
         ISiloConfig.ConfigData memory configData = siloConfigCached.getConfig(address(this));
 
@@ -437,7 +437,7 @@ contract Silo is Initializable, SiloERC4626 {
     }
 
     function switchCollateralTo(bool _sameAsset) external virtual {
-        ISiloConfig siloConfigCached = _crossNonReentrantBefore(CrossReentrant.ENTERED);
+        ISiloConfig siloConfigCached = _crossNonReentrantBefore(CrossEntrancy.ENTERED);
 
         (
             ISiloConfig.ConfigData memory collateral,
@@ -470,7 +470,7 @@ contract Silo is Initializable, SiloERC4626 {
     {
         if (_depositAssets == 0 || _borrowAssets == 0) revert ISilo.ZeroAssets();
 
-        ISiloConfig siloConfigCached = _crossNonReentrantBefore(CrossReentrant.ENTERED);
+        ISiloConfig siloConfigCached = _crossNonReentrantBefore(CrossEntrancy.ENTERED);
 
         (
             ISiloConfig.ConfigData memory collateralConfig,
@@ -730,7 +730,7 @@ contract Silo is Initializable, SiloERC4626 {
 
         (
             , ISiloConfig.ConfigData memory configData, ISiloConfig siloConfigCached
-        ) = _accrueInterestWithReentrantGuard(true, CrossReentrant.ENTERED_FROM_DEPOSIT);
+        ) = _accrueInterestWithReentrantGuard(true, CrossEntrancy.ENTERED_FROM_DEPOSIT);
 
         address collateralShareToken = _assetType == AssetType.Collateral
             ? configData.collateralShareToken
@@ -770,7 +770,7 @@ contract Silo is Initializable, SiloERC4626 {
     {
         if (_assetType == AssetType.Debt) revert ISilo.WrongAssetType();
 
-        ISiloConfig siloConfigCached = _crossNonReentrantBefore(CrossReentrant.ENTERED);
+        ISiloConfig siloConfigCached = _crossNonReentrantBefore(CrossEntrancy.ENTERED);
 
         (
             ISiloConfig.ConfigData memory collateralConfig,
@@ -858,9 +858,7 @@ contract Silo is Initializable, SiloERC4626 {
     {
         if (_assets == 0 && _shares == 0) revert ISilo.ZeroAssets();
 
-        ISiloConfig siloConfigCached = _crossNonReentrantBefore(
-            _leverage ? CrossReentrant.ENTERED_FROM_LEVERAGE : CrossReentrant.ENTERED
-        );
+        ISiloConfig siloConfigCached = _crossNonReentrantBefore(CrossEntrancy.ENTERED);
 
         (
             ISiloConfig.ConfigData memory collateralConfig,
@@ -892,7 +890,7 @@ contract Silo is Initializable, SiloERC4626 {
         emit Borrow(msg.sender, _receiver, _borrower, assets, shares);
 
         if (_leverage) {
-            siloConfigCached.crossLeverage();
+            siloConfigCached.crossNonReentrantBefore(CrossEntrancy.ENTERED_FROM_LEVERAGE);
 
             emit Leverage();
 
@@ -926,7 +924,7 @@ contract Silo is Initializable, SiloERC4626 {
     {
         (
             , ISiloConfig.ConfigData memory configData, ISiloConfig siloConfigCached
-        ) = _accrueInterestWithReentrantGuard(!_liquidation, CrossReentrant.ENTERED);
+        ) = _accrueInterestWithReentrantGuard(!_liquidation, CrossEntrancy.ENTERED);
 
         if (_liquidation && configData.liquidationModule != msg.sender) revert ISilo.OnlyLiquidationModule();
 

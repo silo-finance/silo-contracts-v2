@@ -3,7 +3,7 @@ pragma solidity 0.8.21;
 
 import {ISiloConfig} from "./interfaces/ISiloConfig.sol";
 import {Methods} from "./lib/Methods.sol";
-import {CrossReentrant} from "./lib/CrossReentrant.sol";
+import {CrossEntrancy} from "./lib/CrossEntrancy.sol";
 
 // solhint-disable var-name-mixedcase
 
@@ -87,7 +87,7 @@ contract SiloConfig is ISiloConfig {
     /// @param _configData0 silo configuration data for token0
     /// @param _configData1 silo configuration data for token1
     constructor(uint256 _siloId, ConfigData memory _configData0, ConfigData memory _configData1) {
-        _crossReentrantStatus = CrossReentrant.NOT_ENTERED;
+        _crossReentrantStatus = CrossEntrancy.NOT_ENTERED;
 
         SILO_ID = _siloId;
 
@@ -201,11 +201,6 @@ contract SiloConfig is ISiloConfig {
 
         return _getConfigs(msg.sender, 0 /* method does not mather when debt open */, debtInfo);
     }
-    
-    /// @inheritdoc ISiloConfig
-    function crossLeverage() external virtual {
-        _crossReentrantStatus = CrossReentrant.ENTERED_FROM_LEVERAGE;
-    }
 
     /// @inheritdoc ISiloConfig
     function crossNonReentrantBefore(uint256 _entranceFrom) external virtual {
@@ -213,15 +208,21 @@ contract SiloConfig is ISiloConfig {
             revert OnlySiloOrLiquidationModule();
         }
 
-        // On the first call to nonReentrant, _status will be CrossReentrant.NOT_ENTERED
-        if (_crossReentrantStatus == CrossReentrant.NOT_ENTERED) {
+        // On the first call to nonReentrant, _status will be CrossEntrancy.NOT_ENTERED
+        if (_crossReentrantStatus == CrossEntrancy.NOT_ENTERED) {
             // Any calls to nonReentrant after this point will fail
-            _crossReentrantStatus = CrossReentrant.ENTERED;
+            _crossReentrantStatus = CrossEntrancy.ENTERED;
             return;
         }
         
-        if (_crossReentrantStatus == CrossReentrant.ENTERED_FROM_LEVERAGE && 
-            _entranceFrom == CrossReentrant.ENTERED_FROM_DEPOSIT
+        if (_entranceFrom == CrossEntrancy.ENTERED_FROM_LEVERAGE) {
+            // before leverage callback, we mark status
+            _crossReentrantStatus = CrossEntrancy.ENTERED_FROM_LEVERAGE;
+            return;
+        }
+
+        if (_crossReentrantStatus == CrossEntrancy.ENTERED_FROM_LEVERAGE &&
+            _entranceFrom == CrossEntrancy.ENTERED_FROM_DEPOSIT
         ) {
             // on leverage, entrance from deposit is allowed
             return;
@@ -238,7 +239,7 @@ contract SiloConfig is ISiloConfig {
 
         // By storing the original value once again, a refund is triggered (see
         // https://eips.ethereum.org/EIPS/eip-2200)
-        _crossReentrantStatus = CrossReentrant.NOT_ENTERED;
+        _crossReentrantStatus = CrossEntrancy.NOT_ENTERED;
     }
 
     /**
@@ -246,7 +247,7 @@ contract SiloConfig is ISiloConfig {
      * `nonReentrant` function in the call stack.
      */
     function crossReentrancyGuardEntered() external view virtual returns (bool) {
-        return _crossReentrantStatus == CrossReentrant.ENTERED;
+        return _crossReentrantStatus == CrossEntrancy.ENTERED;
     }
     
     /// @inheritdoc ISiloConfig
