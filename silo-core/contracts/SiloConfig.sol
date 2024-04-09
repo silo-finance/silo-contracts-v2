@@ -3,6 +3,7 @@ pragma solidity 0.8.21;
 
 import {ISiloConfig} from "./interfaces/ISiloConfig.sol";
 import {Methods} from "./lib/Methods.sol";
+import {CrossReentrant} from "./lib/CrossReentrant.sol";
 
 // solhint-disable var-name-mixedcase
 
@@ -10,20 +11,6 @@ import {Methods} from "./lib/Methods.sol";
 /// @dev Immutable contract is more expensive to deploy than minimal proxy however it provides nearly 10x cheapper
 /// data access using immutable variables.
 contract SiloConfig is ISiloConfig {
-    // Booleans are more expensive than uint256 or any type that takes up a full
-    // word because each write operation emits an extra SLOAD to first read the
-    // slot's contents, replace the bits taken up by the boolean, and then write
-    // back. This is the compiler's defense against contract upgrades and
-    // pointer aliasing, and it cannot be disabled.
-
-    // The values being non-zero value makes deployment a bit more expensive,
-    // but in exchange the refund on every call to nonReentrant will be lower in
-    // amount. Since refunds are capped to a percentage of the total
-    // transaction's gas, it is best to keep them low in cases like this one, to
-    // increase the likelihood of the full refund coming into effect.
-    uint256 private constant _NOT_ENTERED = 1;
-    uint256 private constant _ENTERED = 2;
-    
     uint256 public immutable SILO_ID;
 
     uint256 private immutable _DAO_FEE;
@@ -82,14 +69,25 @@ contract SiloConfig is ISiloConfig {
 
     // TODO do we need events for this? this is internal state only
     mapping (address borrower => DebtInfo debtInfo) internal _debtsInfo;
-    
+
+    // Booleans are more expensive than uint256 or any type that takes up a full
+    // word because each write operation emits an extra SLOAD to first read the
+    // slot's contents, replace the bits taken up by the boolean, and then write
+    // back. This is the compiler's defense against contract upgrades and
+    // pointer aliasing, and it cannot be disabled.
+
+    // The values being non-zero value makes deployment a bit more expensive,
+    // but in exchange the refund on every call to nonReentrant will be lower in
+    // amount. Since refunds are capped to a percentage of the total
+    // transaction's gas, it is best to keep them low in cases like this one, to
+    // increase the likelihood of the full refund coming into effect.
     uint256 private _crossReentrantStatus;
 
     /// @param _siloId ID of this pool assigned by factory
     /// @param _configData0 silo configuration data for token0
     /// @param _configData1 silo configuration data for token1
     constructor(uint256 _siloId, ConfigData memory _configData0, ConfigData memory _configData1) {
-        _crossReentrantStatus = _NOT_ENTERED;
+        _crossReentrantStatus = CrossReentrant.NOT_ENTERED;
 
         SILO_ID = _siloId;
 
@@ -205,16 +203,31 @@ contract SiloConfig is ISiloConfig {
     }
     
     /// @inheritdoc ISiloConfig
-    function crossNonReentrantBefore() external virtual {
+    function crossLeverage() external virtual {
+        _crossReentrantStatus = CrossReentrant.ENTERED_FROM_LEVERAGE;
+    }
+
+    /// @inheritdoc ISiloConfig
+    function crossNonReentrantBefore(uint256 _entranceFrom) external virtual {
         if (msg.sender != _SILO0 && msg.sender != _SILO1 && msg.sender != _LIQUIDATION_MODULE) {
             revert OnlySiloOrLiquidationModule();
         }
 
-        // On the first call to nonReentrant, _status will be _NOT_ENTERED
-        if (_crossReentrantStatus == _ENTERED) revert CrossReentrantCall();
+        // On the first call to nonReentrant, _status will be CrossReentrant.NOT_ENTERED
+        if (_crossReentrantStatus == CrossReentrant.NOT_ENTERED) {
+            // Any calls to nonReentrant after this point will fail
+            _crossReentrantStatus = CrossReentrant.ENTERED;
+            return;
+        }
+        
+        if (_crossReentrantStatus == CrossReentrant.ENTERED_FROM_LEVERAGE && 
+            _entranceFrom == CrossReentrant.ENTERED_FROM_DEPOSIT
+        ) {
+            // on leverage, entrance from deposit is allowed
+            return;
+        }
 
-        // Any calls to nonReentrant after this point will fail
-        _crossReentrantStatus = _ENTERED;
+        revert CrossReentrantCall();
     }
 
     /// @inheritdoc ISiloConfig
@@ -225,7 +238,7 @@ contract SiloConfig is ISiloConfig {
 
         // By storing the original value once again, a refund is triggered (see
         // https://eips.ethereum.org/EIPS/eip-2200)
-        _crossReentrantStatus = _NOT_ENTERED;
+        _crossReentrantStatus = CrossReentrant.NOT_ENTERED;
     }
 
     /**
@@ -233,7 +246,7 @@ contract SiloConfig is ISiloConfig {
      * `nonReentrant` function in the call stack.
      */
     function crossReentrancyGuardEntered() external view virtual returns (bool) {
-        return _crossReentrantStatus == _ENTERED;
+        return _crossReentrantStatus == CrossReentrant.ENTERED;
     }
     
     /// @inheritdoc ISiloConfig

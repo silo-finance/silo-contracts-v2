@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 
 import {Silo, ILeverageBorrower, ISiloFactory, ISiloConfig} from "silo-core/contracts/Silo.sol";
+import {CrossReentrant} from "silo-core/contracts/lib/CrossReentrant.sol";
 
 contract SiloLeverageNonReentrant is Silo {
     constructor(ISiloFactory _siloFactory) Silo(_siloFactory) {}
@@ -11,7 +12,7 @@ contract SiloLeverageNonReentrant is Silo {
         override
         returns (uint256 shares)
     {
-        Silo(address(this)).config().crossNonReentrantBefore();
+        Silo(address(this)).config().crossNonReentrantBefore(CrossReentrant.ENTERED_FROM_LEVERAGE);
         shares = 0;
 
         // Inputs don't matter. We only need to verify reentrancy protection.

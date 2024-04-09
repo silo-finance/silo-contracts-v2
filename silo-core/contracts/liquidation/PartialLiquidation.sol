@@ -7,6 +7,7 @@ import {ISiloOracle} from "../interfaces/ISiloOracle.sol";
 import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
 import {SiloLendingLib} from "../lib/SiloLendingLib.sol";
 import {Methods} from "../lib/Methods.sol";
+import {CrossReentrant} from "../lib/CrossReentrant.sol";
 
 import {PartialLiquidationExecLib} from "./lib/PartialLiquidationExecLib.sol";
 
@@ -27,7 +28,7 @@ contract PartialLiquidation is IPartialLiquidation {
         returns (uint256 withdrawCollateral, uint256 repayDebtAssets)
     {
         ISiloConfig siloConfigCached = ISilo(_siloWithDebt).config();
-        siloConfigCached.crossNonReentrantBefore();
+        siloConfigCached.crossNonReentrantBefore(CrossReentrant.ENTERED);
 
         (
             ISiloConfig.ConfigData memory collateralConfig,

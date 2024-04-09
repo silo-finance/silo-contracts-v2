@@ -171,13 +171,16 @@ interface ISiloConfig {
         returns (ConfigData memory collateralConfig, ConfigData memory debtConfig, DebtInfo memory debtInfo);
 
     /// @notice only silo method for cross Silo reentrancy
-    function crossNonReentrantBefore() external;
+    /// @param _entranceFrom see CrossReentrant lib for possible values, it should match the method from which call is made
+    function crossNonReentrantBefore(uint256 _entranceFrom) external;
 
     /// @notice only silo method for cross Silo reentrancy
     function crossNonReentrantAfter() external;
 
     /// @notice vew method for checking cross Silo git pushreentrancy flag
     function crossReentrancyGuardEntered() external view returns (bool);
+
+    function crossLeverage() external;
 
     // solhint-disable-next-line func-name-mixedcase
     function SILO_ID() external view returns (uint256);
