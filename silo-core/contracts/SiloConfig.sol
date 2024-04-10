@@ -204,9 +204,7 @@ contract SiloConfig is ISiloConfig {
 
     /// @inheritdoc ISiloConfig
     function crossNonReentrantBefore(uint256 _entranceFrom) external virtual {
-        if (msg.sender != _SILO0 && msg.sender != _SILO1 && msg.sender != _LIQUIDATION_MODULE) {
-            revert OnlySiloOrLiquidationModule();
-        }
+        _onlySiloTokenOrLiquidation();
 
         // On the first call to nonReentrant, _status will be CrossEntrancy.NOT_ENTERED
         if (_crossReentrantStatus == CrossEntrancy.NOT_ENTERED) {
@@ -234,9 +232,7 @@ contract SiloConfig is ISiloConfig {
 
     /// @inheritdoc ISiloConfig
     function crossNonReentrantAfter() external virtual {
-        if (msg.sender != _SILO0 && msg.sender != _SILO1 && msg.sender != _LIQUIDATION_MODULE) {
-            revert OnlySiloOrLiquidationModule();
-        }
+        _onlySiloTokenOrLiquidation();
 
         // By storing the original value once again, a refund is triggered (see
         // https://eips.ethereum.org/EIPS/eip-2200)
@@ -468,5 +464,20 @@ contract SiloConfig is ISiloConfig {
         if (msg.sender == _DEBT_SHARE_TOKEN1 && !_debtInSilo0) return;
 
         revert DebtExistInOtherSilo();
+    }
+
+    function _onlySiloTokenOrLiquidation() internal view virtual {
+        if (msg.sender == _SILO0 ||
+            msg.sender == _SILO1 ||
+            msg.sender == _LIQUIDATION_MODULE ||
+            msg.sender == _COLLATERAL_SHARE_TOKEN0 ||
+            msg.sender == _COLLATERAL_SHARE_TOKEN1 ||
+            msg.sender == _PROTECTED_COLLATERAL_SHARE_TOKEN0 ||
+            msg.sender == _PROTECTED_COLLATERAL_SHARE_TOKEN1 ||
+            msg.sender == _DEBT_SHARE_TOKEN0 ||
+            msg.sender == _DEBT_SHARE_TOKEN1
+        ) {
+            return;
+        } else revert OnlySiloOrLiquidationModule();
     }
 }
