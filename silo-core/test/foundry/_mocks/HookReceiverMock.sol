@@ -18,7 +18,7 @@ contract HookReceiverMock is CommonBase {
         uint256 _recipientBalance,
         uint256 _totalSupply,
         uint256 _amount,
-        IHookReceiver.HookReturnCode _code
+        uint256 _hookReturnCode
     ) public {
         bytes memory data = abi.encodeWithSelector(
             IHookReceiver.afterTokenTransfer.selector,
@@ -30,7 +30,7 @@ contract HookReceiverMock is CommonBase {
             _amount
         );
 
-        vm.mockCall(ADDRESS, data, abi.encode(_code));
+        vm.mockCall(ADDRESS, data, abi.encode(_hookReturnCode));
         vm.expectCall(ADDRESS, data);
     }
 }

@@ -14,6 +14,7 @@ import {IShareToken, ISilo} from "../interfaces/IShareToken.sol";
 import {ISiloConfig} from "../SiloConfig.sol";
 import {TokenHelper} from "../lib/TokenHelper.sol";
 import {CrossEntrancy} from "../lib/CrossEntrancy.sol";
+import {Hook} from "../lib/Hook.sol";
 
 /// @title ShareToken
 /// @notice Implements common interface for Silo tokens representing debt or collateral.
@@ -224,7 +225,7 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
 
         if (!callSuccessful || code.length == 0) return;
 
-        if (abi.decode(code, (IHookReceiver.HookReturnCode)) == IHookReceiver.HookReturnCode.REQUEST_TO_REVERT_TX) {
+        if (abi.decode(code, (uint256)) == Hook.RETURN_CODE_REQUEST_TO_REVERT_TX) {
             revert RevertRequestFromHook();
         }
     }
