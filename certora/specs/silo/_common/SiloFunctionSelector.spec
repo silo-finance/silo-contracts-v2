@@ -2,24 +2,36 @@ import "./SiloFunctionSig.spec";
 
 function siloFnSelectorWithAssets(env e, method f, uint256 assetsOrShares) {
     address receiver;
-    siloFnSelector(e, f, assetsOrShares, receiver);
+    siloFnSelector_assets_receiver(e, f, assetsOrShares, receiver);
 }
 
 function siloFnSelectorWithReceiver(env e, method f, address receiver) {
     uint256 assetsOrShares;
-    siloFnSelector(e, f, assetsOrShares, receiver);
+    siloFnSelector_assets_receiver(e, f, assetsOrShares, receiver);
+}
+
+function siloFnSelector_assets_receiver(
+    env e,
+    method f,
+    uint256 assetsOrShares,
+    address receiver
+) {
+    address owner;
+    ISilo.AssetType anyType;
+    siloFnSelector(e, f, assetsOrShares, receiver, owner, anyType);
 }
 
 function siloFnSelector(
     env e,
     method f,
     uint256 assetsOrShares,
-    address receiver
+    address receiver,
+    address owner,
+    ISilo.AssetType anyType
 ) {
     if (f.selector == depositSig()) {
         deposit(e, assetsOrShares, receiver);
     } else if (f.selector == depositWithTypeSig()) {
-        ISilo.AssetType anyType;
         deposit(e, assetsOrShares, receiver, anyType);
     } else if (f.selector == flashLoanSig()) {
         address token;
@@ -28,49 +40,41 @@ function siloFnSelector(
     } else if (f.selector == mintSig()) {
         mint(e, assetsOrShares, receiver);
     } else if (f.selector == mintWithTypeSig()) {
-        ISilo.AssetType anyType;
         mint(e, assetsOrShares, receiver, anyType);
     } else if (f.selector == borrowSig()) {
-        address anyBorrower;
-        borrow(e, assetsOrShares, receiver, anyBorrower);
+        // address anyBorrower = owner;
+        borrow(e, assetsOrShares, receiver, owner);
     } else if (f.selector == borrowSharesSig()) {
-        address anyBorrower;
-        borrowShares(e, assetsOrShares, receiver, anyBorrower);
+        // address anyBorrower = owner;
+        borrowShares(e, assetsOrShares, receiver, owner);
     } else if (f.selector == leverageSig()) {
-        address anyBorrower;
+        // address anyBorrower = owner;
         bytes data;
-        require anyBorrower != currentContract;
-        leverage(e, assetsOrShares, receiver, anyBorrower, data);
+        require owner != currentContract;
+        leverage(e, assetsOrShares, receiver, owner, data);
     } else if (f.selector == repaySig()) {
-        address anyBorrower;
-        require anyBorrower != currentContract;
-        repay(e, assetsOrShares, anyBorrower);
+        // address anyBorrower = owner;
+        require owner != currentContract;
+        repay(e, assetsOrShares, owner);
     } else if (f.selector == repaySharesSig()) {
-        address anyBorrower;
-        require anyBorrower != currentContract;
-        repayShares(e, assetsOrShares, anyBorrower);
+        // address anyBorrower = owner;
+        require owner != currentContract;
+        repayShares(e, assetsOrShares, owner);
     } else if (f.selector == transitionCollateralSig()) {
-        ISilo.AssetType anyType;
         transitionCollateral(e, assetsOrShares, receiver, anyType);
     } else if (f.selector == withdrawSig()) {
-        address owner;
         withdraw(e, assetsOrShares, receiver, owner);
     } else if (f.selector == withdrawWithTypeSig()) {
-        address owner;
-        ISilo.AssetType anyType;
         withdraw(e, assetsOrShares, receiver, owner, anyType);
     } else if(f.selector == redeemSig()) {
-        address owner;
         redeem(e, assetsOrShares, receiver, owner);
     } else if(f.selector == redeemWithTypeSig()) {
-        address owner;
-        ISilo.AssetType anyType;
         redeem(e, assetsOrShares, receiver, owner, anyType);
     } else if (f.selector == withdrawCollateralToLiquidatorSig()) {
         uint256 _withdrawAssetsFromCollateral;
         uint256 _withdrawAssetsFromProtected;
         
-        address _borrower;
+        address _borrower = owner;
         address _liquidator;
         bool _receiveSToken;
          

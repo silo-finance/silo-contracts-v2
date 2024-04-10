@@ -6,6 +6,7 @@ import "../_common/CommonSummarizations.spec";
 import "../../_simplifications/priceOracle.spec";
 import "../../_simplifications/SiloMathLib.spec";
 import "../../_simplifications/SimplifiedGetCompoundInterestRateAndUpdate.spec";
+import "../_common/SiloFunctionSelector.spec";
 
 methods {
     function SiloSolvencyLib.isSolvent(
@@ -24,10 +25,22 @@ definition MINIMUM_ASSETS() returns uint256 = 10^6; //0
 
 /// Assume minimal value for the shares tokens supply.
 function setMinimumSharesTotalSupply(uint256 min_value) {
+    uint256 supply_collateral = shareCollateralToken0.totalSupply();
+    uint256 supply_protected = shareProtectedCollateralToken0.totalSupply();
+    uint256 supply_debt = shareDebtToken0.totalSupply();
+    
     require
-        shareCollateralToken0.totalSupply() >= min_value &&
-        shareProtectedCollateralToken0.totalSupply() >= min_value &&
-        shareDebtToken0.totalSupply() >= min_value;
+        (supply_collateral >= min_value || supply_collateral == 0) &&
+        (supply_protected >= min_value || supply_protected == 0) &&
+        (supply_debt >= min_value || supply_debt == 0);
+}
+
+function getPriceOfToken0At(env e, address oracle) returns uint256 {
+    return priceOracle(oracle, token0, e.block.timestamp);
+}
+
+function getPriceOfToken1At(env e, address oracle) returns uint256 {
+    return priceOracle(oracle, token1, e.block.timestamp);
 }
 
 /// Auxiliary invariant (proved elsewhere) - 
@@ -57,7 +70,6 @@ function SafeAssumptions(env e) {
 /// @title maxWithdraw() of asset type is independent of withdraw action of any other asset.
 rule PRV_maxWithdraw_collateral_assets_independence(env e, address user) {
     SafeAssumptions(e);
-    require e.block.timestamp < 2^64;
     ISilo.AssetType typeA;
     ISilo.AssetType typeB;
     require typeA != typeB;
@@ -85,6 +97,34 @@ rule PRV_redeem_preserves_value(env e, address owner) {
     require assets_before + tokens_before <= max_uint256;
         uint256 shares;
         redeem(e, shares, owner, owner, ISilo.AssetType.Collateral);
+    uint256 shares_after = shareCollateralToken0.balanceOf(e, owner);
+    uint256 tokens_after = token0.balanceOf(e, owner);
+    uint256 assets_after = silo0.convertToAssets(e, shares_after);
+
+    mathint tokens_gain = tokens_after - tokens_before;
+    mathint assets_redeemed = assets_before - assets_after;
+    assert abs(tokens_gain, assets_redeemed) <= 2;
+}
+
+rule PRV_function_preserves_user_value(env e, method f) filtered{f -> 
+    f.selector == withdrawWithTypeSig() ||
+    f.selector == depositWithTypeSig() ||
+    f.selector == redeemWithTypeSig() ||
+    f.selector == transitionCollateralSig()
+} {
+    SafeAssumptions(e);
+    address owner = e.msg.sender;
+    require owner != silo0;
+
+    uint256 assetsOrShares;
+    uint256 ownerBalance = token0.balanceOf(e, owner);
+    require getCollateralAssets(e) + ownerBalance <= max_uint256; 
+    setMinimumSharesTotalSupply(MINIMUM_SHARES());
+
+    uint256 shares_before = shareCollateralToken0.balanceOf(e, owner);
+    uint256 tokens_before = token0.balanceOf(e, owner);
+    uint256 assets_before = silo0.convertToAssets(e, shares_before);
+        siloFnSelector(e, f, assetsOrShares, owner, owner, ISilo.AssetType.Collateral);
     uint256 shares_after = shareCollateralToken0.balanceOf(e, owner);
     uint256 tokens_after = token0.balanceOf(e, owner);
     uint256 assets_after = silo0.convertToAssets(e, shares_after);
@@ -223,6 +263,27 @@ rule PRV_LtV_invariant_under_accrual_interest_silo1(env e, address borrower) {
     assert ltv_before == ltv_after;
 }
 
+/// @title LTV increases with time
+rule PRV_LtV_increases_with_time(env e1, address borrower) {
+    SafeAssumptions(e1);
+    env e2;
+    require e2.block.timestamp >= e1.block.timestamp;
+    require e2.block.timestamp < (1 << 64);
+
+    /// Assuming the last timestamp corresponds to the first env.
+    require silo0.getSiloDataInterestRateTimestamp() == e1.block.timestamp;
+    mathint ltv1 = getLTV(e1, borrower);
+    mathint ltv2 = getLTV(e2, borrower);
+
+    /// If the prices between two timestamps do not change, then the ltV cannot decrease.
+    assert ( 
+        getPriceOfToken0At(e1, solvencyOracle0) == getPriceOfToken0At(e2, solvencyOracle0) &&
+        getPriceOfToken1At(e1, solvencyOracle1) == getPriceOfToken1At(e2, solvencyOracle1)
+    ) => ltv1 <= ltv2;
+
+    satisfy ltv1 < ltv2;
+}
+
 /// @title Accruing interest in Silo0 (in the same block) should not change the protocol accrued fees.
 /// Violated
 rule PRV_DAO_fees_invariant_under_accrual_interest_silo0(env e) {
@@ -242,4 +303,18 @@ rule PRV_DAO_fees_invariant_under_accrual_interest_silo1(env e) {
     mathint fees_after = getSiloDataDaoAndDeployerFees(e);
 
     assert fees_before == fees_after;
+}
+
+/// @title Fees interest must increase in time.
+rule PRV_fees_increases_with_time(env e1) {
+    SafeAssumptions(e1);
+    env e2;
+    require e2.block.timestamp >= e1.block.timestamp;
+    require e2.block.timestamp < (1 << 64);
+
+    mathint fees1 = getSiloDataDaoAndDeployerFees(e1);
+    mathint fees2 = getSiloDataDaoAndDeployerFees(e2);
+
+    assert fees1 <= fees2;
+    satisfy fees1 < fees2;
 }

@@ -3,8 +3,8 @@ import "../_common/IsSiloFunction.spec";
 import "../_common/SiloMethods.spec";
 import "../_common/Helpers.spec";
 import "../_common/CommonSummarizations.spec";
-import "../../_simplifications/Oracle_quote_one.spec";
-import "../../_simplifications/Silo_isSolvent_ghost.spec";
+import "../../_simplifications/priceOracle.spec";
+import "../../_simplifications/SiloMathLib.spec";
 import "../../_simplifications/SimplifiedGetCompoundInterestRateAndUpdate.spec";
 
 

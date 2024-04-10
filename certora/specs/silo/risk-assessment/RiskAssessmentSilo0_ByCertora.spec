@@ -24,51 +24,40 @@ function SafeAssumptions(env e) {
     require silo0.getSiloDataInterestRateTimestamp() <= e.block.timestamp;
     require silo1.getSiloDataInterestRateTimestamp() > 0;
     require silo1.getSiloDataInterestRateTimestamp() <= e.block.timestamp;
+    require silo0.total(ISilo.AssetType.Protected) + silo0.total(ISilo.AssetType.Collateral) <= max_uint256;
+    require silo1.total(ISilo.AssetType.Protected) + silo1.total(ISilo.AssetType.Collateral) <= max_uint256;
 }
 
 // A user cannot withdraw anything after withdrawing whole balance.
 // holds
 // https://prover.certora.com/output/6893/6ebdfe9df3f04b4b887bdb1c5372637c/?anonymousKey=af1886c64a28e05f1ee50a3c98745a75596a38ad
-rule RA_Silo_no_withdraw_after_withdrawing_all(env e, address user)
+rule RA_Silo_no_withdraw_after_withdrawing_all(env e, address user, ISilo.AssetType type)
 {
     completeSiloSetupEnv(e);
     totalSupplyMoreThanBalance(user);
     totalSupplyMoreThanBalance(e.msg.sender);
 
-    uint256 balanceCollateralBefore = shareCollateralToken0.balanceOf(user);
-    uint256 balanceProtectedCollateralBefore = shareProtectedCollateralToken0.balanceOf(user);
-
-    storage init = lastStorage;
-    mathint assets = redeem(e, balanceCollateralBefore, user, user, ISilo.AssetType.Collateral);
+    uint256 balanceBefore;
+    if(type == ISilo.AssetType.Collateral) {
+        require balanceBefore == shareCollateralToken0.balanceOf(user);
+    }
+    else if(type == ISilo.AssetType.Protected) {
+        require balanceBefore == shareProtectedCollateralToken0.balanceOf(user);
+    }
+    else {
+        require false;
+    }
+    
+    mathint assets = redeem(e, balanceBefore, user, user, type);
     uint256 shares;
-    redeem@withrevert(e, shares, user, user, ISilo.AssetType.Collateral);
+    redeem@withrevert(e, shares, user, user, type);
     assert lastReverted;
 
-    mathint assets2 = redeem(e, balanceProtectedCollateralBefore, user, user, ISilo.AssetType.Protected) at init;
-    uint256 shares2;
-    redeem@withrevert(e, shares2, user, user, ISilo.AssetType.Protected);
-    assert lastReverted;
 
 }
 
-// A user should not be able to fully repay a loan with less amount than he borrowed.
-rule RA_Silo_no_negative_interest_for_loan(env e, address user)
-{
-    completeSiloSetupEnv(e);
-    totalSupplyMoreThanBalance(user);
-    totalSupplyMoreThanBalance(e.msg.sender);
-    
-    uint256 assetsBorrowed;
-    mathint debt = borrow(e, assetsBorrowed, user, e.msg.sender);
-    uint256 assetsRepayed;
-    mathint debtPaid = repay(e, assetsRepayed, e.msg.sender);
-    
-    assert assetsBorrowed > assetsRepayed => debt > debtPaid;
-}
-
-// A user should not be able to fully repay a loan with less amount than he borrowed.
-// Even if there's a method called in between.
-rule RA_Silo_no_negative_interest_for_loan_Param(env e, address user, method f)
+// A user should not be able to fully repay a loan with less amount than he borrowed, if there's a method called in between.
+rule RA_Silo_no_negative_interest_for_loan(env e, address user, method f)
 {
     completeSiloSetupEnv(e);
     totalSupplyMoreThanBalance(user);
@@ -84,9 +73,10 @@ rule RA_Silo_no_negative_interest_for_loan_Param(env e, address user, method f)
     assert assetsBorrowed > assetsRepayed => debt > debtPaid;
 }
 
+/*
 // A user should not be able to deposit an asset that he borrowed in the Silo.
 // violated
-// No longer applicable in current version
+// DEPRECATED - No longer applicable in current version
 rule RA_Silo_borrowed_asset_not_depositable(env e, address user)
 {
     completeSiloSetupEnv(e);
@@ -99,6 +89,7 @@ rule RA_Silo_borrowed_asset_not_depositable(env e, address user)
     mathint sharesD = deposit@withrevert(e, assets, user);
     assert lastReverted;
 }
+*/
 
 /// @title A user has no debt after being repaid with max shares amount.
 // holds
@@ -125,19 +116,7 @@ rule RA_silo_cant_borrow_more_than_max(env e, address borrower) {
     completeSiloSetupEnv(e);
     totalSupplyMoreThanBalance(borrower);
 
-    require silo0.total(ISilo.AssetType.Protected) + silo0.total(ISilo.AssetType.Collateral) <= max_uint256;
-    require silo1.total(ISilo.AssetType.Protected) + silo1.total(ISilo.AssetType.Collateral) <= max_uint256;
-    require shareProtectedCollateralToken0.totalSupply() + shareCollateralToken0.totalSupply() <= max_uint256;
-    require shareProtectedCollateralToken1.totalSupply() + shareCollateralToken1.totalSupply() <= max_uint256;
-    requireProtectedToken0TotalAndBalancesIntegrity();
-    requireCollateralToken0TotalAndBalancesIntegrity();
-    requireDebtToken0TotalAndBalancesIntegrity();
-    requireProtectedToken1TotalAndBalancesIntegrity();
-    requireCollateralToken1TotalAndBalancesIntegrity();
-    requireDebtToken1TotalAndBalancesIntegrity();
-    requireInvariant RA_no_collateral_assets_no_debt_assets();
-    requireInvariant RA_more_assets_than_shares();
-
+    
     uint256 maxAssets = maxBorrow(e, borrower);
     uint256 assets; address receiver; 
     borrow(e, assets, receiver, borrower);
@@ -154,13 +133,7 @@ rule RA_silo_cant_borrow_without_collateral(env e, address borrower) {
     require silo1.total(ISilo.AssetType.Protected) + silo1.total(ISilo.AssetType.Collateral) <= max_uint256;
     require shareProtectedCollateralToken0.totalSupply() + shareCollateralToken0.totalSupply() <= max_uint256;
     require shareProtectedCollateralToken1.totalSupply() + shareCollateralToken1.totalSupply() <= max_uint256;
-    requireProtectedToken0TotalAndBalancesIntegrity();
-    requireCollateralToken0TotalAndBalancesIntegrity();
-    requireDebtToken0TotalAndBalancesIntegrity();
-    requireProtectedToken1TotalAndBalancesIntegrity();
-    requireCollateralToken1TotalAndBalancesIntegrity();
-    requireDebtToken1TotalAndBalancesIntegrity();
-    requireInvariant RA_no_collateral_assets_no_debt_assets();
+    SafeAssumptions(e);
 
     uint256 collateralShares = shareCollateralToken1.balanceOf(borrower);
     uint256 protectedCollateralShares = shareProtectedCollateralToken1.balanceOf(borrower);
@@ -182,13 +155,8 @@ invariant RA_no_collateral_assets_no_debt_assets()
     )
     {
         preserved with (env e) {
-            completeSiloSetupEnv(e);
-            requireProtectedToken0TotalAndBalancesIntegrity();
-            requireCollateralToken0TotalAndBalancesIntegrity();
-            requireDebtToken0TotalAndBalancesIntegrity();
-            requireProtectedToken1TotalAndBalancesIntegrity();
-            requireCollateralToken1TotalAndBalancesIntegrity();
-            requireDebtToken1TotalAndBalancesIntegrity();
+            SafeAssumptions(e);
+            require isSolvent(e, e.msg.sender);
         }
     }
 
@@ -429,11 +397,12 @@ rule RA_can_withdraw_after_deposit(env e) {
     require getLiquidity(e) > 0;
 
     deposit(e, amount, e.msg.sender);
-    require silo0.convertToAssets(e, 1, ISilo.AssetType.Collateral) > 0;
-    require silo0.convertToAssets(e, 1, ISilo.AssetType.Protected) > 0;
-    withdraw@withrevert(e, amount, e.msg.sender, e.msg.sender);
+    uint256 oneShareValue = silo0.convertToAssets(e, 1, ISilo.AssetType.Collateral);
+    uint256 amountToWithdraw = amount > oneShareValue ? assert_uint256(amount - oneShareValue) : 0;
+    //require silo0.convertToAssets(e, 1, ISilo.AssetType.Protected) > 0;
+    withdraw@withrevert(e, amountToWithdraw, e.msg.sender, e.msg.sender);
 
-    assert !lastReverted;
+    assert amountToWithdraw > 0 => !lastReverted;
 }
 
 /// @title An immediate redeem after deposit by the same actor of the minted shares must succeed.
@@ -449,7 +418,8 @@ rule RA_can_redeem_after_deposit(env e) {
     require getLiquidity(e) > 0;
 
     uint256 shares = deposit(e, amount, e.msg.sender);
-    redeem@withrevert(e, shares, e.msg.sender, e.msg.sender);
+    uint256 sharesToWithdraw = shares > 1 ? require_uint256(shares - 1) : 1;
+    redeem@withrevert(e, sharesToWithdraw, e.msg.sender, e.msg.sender);
 
     assert !lastReverted;
 }

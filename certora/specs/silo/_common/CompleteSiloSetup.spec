@@ -12,9 +12,9 @@ function completeSiloSetupEnv(env e) {
     
     completeSiloSetupAddress(e.msg.sender);
     // we can not have block.timestamp less than interestRateTimestamp
-    uint256 blockTimestamp = require_uint64(e.block.timestamp);
-    require blockTimestamp >= silo0.getSiloDataInterestRateTimestamp(e);
-    require blockTimestamp >= silo1.getSiloDataInterestRateTimestamp(e);
+    require e.block.timestamp < (1 << 64);
+    require e.block.timestamp >= silo0.getSiloDataInterestRateTimestamp(e);
+    require e.block.timestamp >= silo1.getSiloDataInterestRateTimestamp(e);
 }
 
 function completeSiloSetupAddress(address sender)
@@ -26,8 +26,7 @@ function completeSiloSetupAddress(address sender)
     require sender != shareDebtToken1;
     require sender != shareCollateralToken1;
     require sender != siloConfig;
-    require sender != silo0;
-    //require sender != silo1;    // -> Causes vacuity for silo.withdrawCollateralsToLiquidator()
+    require sender != currentContract;  /// Silo0
     require sender != token0;
     require sender != token1;
 }
