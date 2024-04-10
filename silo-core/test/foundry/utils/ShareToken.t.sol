@@ -6,6 +6,7 @@ import "forge-std/Test.sol";
 import {ClonesUpgradeable} from "openzeppelin-contracts-upgradeable/proxy/ClonesUpgradeable.sol";
 
 import {SiloERC4626Lib, SiloMathLib} from "silo-core/contracts/lib/SiloERC4626Lib.sol";
+import {Hook} from "silo-core/contracts/lib/Hook.sol";
 import {ShareDebtToken, IShareToken} from "silo-core/contracts/utils/ShareDebtToken.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";

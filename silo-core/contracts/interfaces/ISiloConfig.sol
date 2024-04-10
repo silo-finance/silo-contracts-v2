@@ -56,16 +56,6 @@ interface ISiloConfig {
         /// @notice Indicates if a beforeQuote on oracle contract should be called before quoting price
         bool callBeforeQuote0;
 
-        /// @notice Address of the hook receiver called on every share token transfer for protected (non-borrowable)
-        /// collateral
-        address protectedHookReceiver0;
-
-        /// @notice Address of the hook receiver called on every share token transfer for collateral
-        address collateralHookReceiver0;
-
-        /// @notice Address of the hook receiver called on every share token transfer for debt
-        address debtHookReceiver0;
-
         /// @notice Address of the second token
         address token1;
 
@@ -100,16 +90,6 @@ interface ISiloConfig {
 
         /// @notice Indicates if a beforeQuote on oracle contract should be called before quoting price
         bool callBeforeQuote1;
-
-        /// @notice Address of the hook receiver called on every share token transfer for protected (non-borrowable)
-        /// collateral
-        address protectedHookReceiver1;
-
-        /// @notice Address of the hook receiver called on every share token transfer for collateral
-        address collateralHookReceiver1;
-
-        /// @notice Address of the hook receiver called on every share token transfer for debt
-        address debtHookReceiver1;
     }
 
     struct ConfigData {
