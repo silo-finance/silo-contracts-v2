@@ -83,7 +83,7 @@ contract CCIPGaugeCheckpointer is ICCIPGaugeCheckpointer, ReentrancyGuard, Ownab
             _checkpointGauges(gaugeTypes[i], minRelativeWeight, currentPeriod, payFeesIn);
         }
 
-        _returnLeftoverEthIfAny();
+        _returnLeftoverIfAny();
     }
 
     /// @inheritdoc ICCIPGaugeCheckpointer
@@ -102,7 +102,7 @@ contract CCIPGaugeCheckpointer is ICCIPGaugeCheckpointer, ReentrancyGuard, Ownab
 
         _checkpointGauges(gaugeType, minRelativeWeight, currentPeriod, payFeesIn);
 
-        _returnLeftoverEthIfAny();
+        _returnLeftoverIfAny();
     }
 
     /// @inheritdoc ICCIPGaugeCheckpointer
@@ -115,7 +115,7 @@ contract CCIPGaugeCheckpointer is ICCIPGaugeCheckpointer, ReentrancyGuard, Ownab
 
         _checkpointGauge(gauge, payFeesIn);
 
-        _returnLeftoverEthIfAny();
+        _returnLeftoverIfAny();
     }
 
     /// @inheritdoc ICCIPGaugeCheckpointer
@@ -139,7 +139,7 @@ contract CCIPGaugeCheckpointer is ICCIPGaugeCheckpointer, ReentrancyGuard, Ownab
             _checkpointGauge(gauges[i], payFeesIn);
         }
 
-        _returnLeftoverEthIfAny();
+        _returnLeftoverIfAny();
     }
 
     /// @inheritdoc ICCIPGaugeCheckpointer
@@ -357,13 +357,19 @@ contract CCIPGaugeCheckpointer is ICCIPGaugeCheckpointer, ReentrancyGuard, Ownab
     }
 
     /**
-     * @dev Send back any leftover ETH to the caller if there is an existing balance in the contract.
+     * @dev Ensure that the contract returns any leftover ether or LINK to the sender
      */
-    function _returnLeftoverEthIfAny() internal {
-        // Most gauge types don't need to send value, and this step can be skipped in those cases.
+    function _returnLeftoverIfAny() internal {
         uint256 remainingBalance = address(this).balance;
+
         if (remainingBalance > 0) {
             Address.sendValue(payable(msg.sender), remainingBalance);
+        }
+
+        uint256 remainingLINKBalance = IERC20(LINK).balanceOf(address(this));
+
+        if (remainingLINKBalance > 0) {
+            IERC20(LINK).transfer(msg.sender, remainingLINKBalance);
         }
     }
 
