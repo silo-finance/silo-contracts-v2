@@ -148,7 +148,6 @@ contract SiloIntegrationTest is VeSiloFeatures {
         emit log_named_address("InterestRateModelV2", address(interestRateModelV2));
         emit log_named_address("InterestRateModelV2ConfigFactory", address(interestRateModelV2ConfigFactory));
         emit log_named_address("HookReceiver", address(gaugeHookReceiver));
-        emit log_named_address("HookReceiversFactory", address(hookReceiversFactory));
         emit log("\n  silo-oracles:");
         emit log_named_address("ChainlinkV3OracleFactory", address(chainlinkV3OracleFactory));
         emit log_named_address("DIAOracleFactory", address(diaOracleFactory));

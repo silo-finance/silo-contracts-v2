@@ -6,20 +6,15 @@ import {Ownable2StepUpgradeable} from "openzeppelin-contracts-upgradeable/access
 
 import {GaugeHookReceiver} from "silo-core/contracts/utils/hook-receivers/gauge/GaugeHookReceiver.sol";
 import {IGaugeHookReceiver} from "silo-core/contracts/utils/hook-receivers/gauge/interfaces/IGaugeHookReceiver.sol";
-import {IHookReceiversFactory} from "silo-core/contracts/utils/hook-receivers/interfaces/IHookReceiversFactory.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {IGaugeLike as IGauge} from "silo-core/contracts/utils/hook-receivers/gauge/interfaces/IGaugeLike.sol";
-import {HookReceiversFactory} from "silo-core/contracts/utils/hook-receivers/HookReceiversFactory.sol";
 
 import {GaugeHookReceiverDeploy} from "silo-core/deploy/GaugeHookReceiverDeploy.s.sol";
-import {HookReceiversFactoryDeploy} from "../../../deploy/HookReceiversFactoryDeploy.s.sol";
-import {IHookReceiversFactory} from "../../../contracts/utils/hook-receivers/interfaces/IHookReceiversFactory.sol";
 import {TransferOwnership} from  "../_common/TransferOwnership.sol";
 
 
 // FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc GaugeHookReceiverTest
 contract GaugeHookReceiverTest is Test, TransferOwnership {
-    IHookReceiversFactory internal _hookReceiverFactory;
     IGaugeHookReceiver internal _hookReceiver;
 
     uint256 internal constant _SENDER_BAL = 1;
@@ -40,16 +35,9 @@ contract GaugeHookReceiverTest is Test, TransferOwnership {
         GaugeHookReceiverDeploy deploy = new GaugeHookReceiverDeploy();
         deploy.disableDeploymentsSync();
 
-        HookReceiversFactoryDeploy factoryDeploy = new HookReceiversFactoryDeploy();
-        factoryDeploy.disableDeploymentsSync();
-
         IGaugeHookReceiver gaugeHookReceiver = deploy.run();
-        _hookReceiverFactory = factoryDeploy.run();
 
-        IHookReceiversFactory.HookReceivers memory hooks;
-        hooks.collateralHookReceiver0 = address(gaugeHookReceiver);
-
-        _hookReceiver = IGaugeHookReceiver(_hookReceiverFactory.create(hooks).collateralHookReceiver0);
+        _hookReceiver = IGaugeHookReceiver(makeAddr("collateralHookReceiver0"));
     }
 
     // forge test -vvv --mt testInitializationParamsValidation
