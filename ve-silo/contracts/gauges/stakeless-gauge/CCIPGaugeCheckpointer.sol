@@ -78,6 +78,8 @@ contract CCIPGaugeCheckpointer is ICCIPGaugeCheckpointer, ReentrancyGuard, Ownab
     ) external payable override nonReentrant {
         uint256 currentPeriod = _roundDownBlockTimestamp();
 
+        _pullLinkToken(payFeesIn);
+
         string[] memory gaugeTypes = GAUGE_ADDER.getGaugeTypes();
         for (uint256 i = 0; i < gaugeTypes.length; ++i) {
             _checkpointGauges(gaugeTypes[i], minRelativeWeight, currentPeriod, payFeesIn);
@@ -100,8 +102,8 @@ contract CCIPGaugeCheckpointer is ICCIPGaugeCheckpointer, ReentrancyGuard, Ownab
     {
         uint256 currentPeriod = _roundDownBlockTimestamp();
 
+        _pullLinkToken(payFeesIn);
         _checkpointGauges(gaugeType, minRelativeWeight, currentPeriod, payFeesIn);
-
         _returnLeftoverIfAny();
     }
 
@@ -113,8 +115,8 @@ contract CCIPGaugeCheckpointer is ICCIPGaugeCheckpointer, ReentrancyGuard, Ownab
     ) external payable override nonReentrant {
         require(_gauges[gaugeType].contains(address(gauge)), "Gauge was not added to the checkpointer");
 
+        _pullLinkToken(payFeesIn);
         _checkpointGauge(gauge, payFeesIn);
-
         _returnLeftoverIfAny();
     }
 
@@ -131,6 +133,8 @@ contract CCIPGaugeCheckpointer is ICCIPGaugeCheckpointer, ReentrancyGuard, Ownab
     {
         require(gaugeTypes.length == gauges.length, "Mismatch between gauge types and addresses");
         require(gauges.length > 0, "No gauges to checkpoint");
+
+        _pullLinkToken(payFeesIn);
 
         uint256 length = gauges.length;
         for (uint256 i = 0; i < length; ++i) {
@@ -337,22 +341,17 @@ contract CCIPGaugeCheckpointer is ICCIPGaugeCheckpointer, ReentrancyGuard, Ownab
         }
     }
 
+    /**
+     * @dev Checkpoints the provided gauge.
+     * @param _gauge Gauge to checkpoint.
+     * @param _payFeesIn Pay fees in LINK or Native.
+     */
     function _checkpointGauge(ICCIPGauge _gauge, ICCIPGauge.PayFeesIn _payFeesIn) internal {
-        uint256 fees = _gauge.calculateFee(type(uint128).max, _payFeesIn);
-
         if (_payFeesIn == ICCIPGauge.PayFeesIn.Native) {
-            uint256 balance = address(this).balance;
-
-            if (balance < fees) revert NotEnougtFundsToPayFees(fees, balance, _payFeesIn);
-
             CHECKPOINTER_ADAPTOR.checkpoint{ value: msg.value }(address(_gauge));
         } else {
-            uint256 allowance = IERC20(LINK).allowance(msg.sender, address(this));
-
-            if (allowance < fees) revert NotEnougtFundsToPayFees(fees, allowance, _payFeesIn);
-
-            // transfer `LINK` directly to the `_gauge`
-            IERC20(LINK).transferFrom(msg.sender, address(_gauge), fees);
+            uint256 balance = IERC20(LINK).balanceOf(address(this));
+            IERC20(LINK).transfer(address(_gauge), balance);
 
             CHECKPOINTER_ADAPTOR.checkpoint(address(_gauge));
         }
@@ -372,6 +371,21 @@ contract CCIPGaugeCheckpointer is ICCIPGaugeCheckpointer, ReentrancyGuard, Ownab
 
         if (remainingLINKBalance > 0) {
             IERC20(LINK).transfer(msg.sender, remainingLINKBalance);
+        }
+    }
+
+    /**
+     * @dev Pulls the allowed amount of LINK tokens from the sender to the contract.
+     * @param _payFeesIn Pay fees in LINK or Native.
+     */
+    function _pullLinkToken(ICCIPGauge.PayFeesIn _payFeesIn) internal {
+        if (_payFeesIn == ICCIPGauge.PayFeesIn.LINK) {
+            uint256 allowance = IERC20(LINK).allowance(msg.sender, address(this));
+            uint256 senderBalance = IERC20(LINK).balanceOf(msg.sender);
+
+            uint256 amountToTransfer = allowance < senderBalance ? allowance : senderBalance;
+
+            IERC20(LINK).transferFrom(msg.sender, address(this), amountToTransfer);
         }
     }
 
