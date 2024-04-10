@@ -65,9 +65,9 @@ contract LeverageTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --ffi --mt test_leverage_when_BorrowNotPossible_withCollateral
+    forge test -vv --ffi --mt test_leverage_CrossReentrantCall_withoutDeposit
     */
-    function test_leverage_when_BorrowNotPossible_withCollateral() public {
+    function test_leverage_CrossReentrantCall_withoutDeposit() public {
         uint256 assets = 1e18;
         LeverageBorrowerMock leverageBorrowerMocked = new LeverageBorrowerMock(address(0));
         address borrower = makeAddr("borrower");
@@ -83,8 +83,33 @@ contract LeverageTest is SiloLittleHelper, Test {
         leverageBorrowerMocked.onLeverageMock(borrower, borrower, address(token0), assets, bytes(""), LEVERAGE_CALLBACK);
 
         vm.prank(borrower);
-        vm.expectRevert(ISilo.AboveMaxLtv.selector);
+        vm.expectRevert(ISiloConfig.CrossReentrantCall.selector);
         silo0.leverage(assets, leverageBorrower, borrower, sameAsset, bytes(""));
+    }
+
+    /*
+    forge test -vv --ffi --mt test_leverage_when_BorrowNotPossible_withCollateral
+    */
+    function test_leverage_when_BorrowNotPossible_withCollateral() public {
+        uint256 assets = 1e18;
+        LeverageBorrower leverageBorrower = new LeverageBorrower();
+        address borrower = makeAddr("borrower");
+
+        _deposit(assets, borrower, ISilo.AssetType.Collateral);
+
+        // it will transfer it's own deposit, but because leverage is not for same token, we will fail eventually
+        vm.expectCall(
+            address(token0), abi.encodeWithSelector(IERC20.transfer.selector, address(leverageBorrower), assets)
+        );
+
+        // deposit is required for re-entrancy to pass, but 1wei is too low to borrow
+        uint256 smallDeposit = 1;
+        token1.mint(address(leverageBorrower), smallDeposit);
+        bytes memory data = abi.encode(address(silo1), address(token1), smallDeposit);
+
+        vm.prank(borrower);
+        vm.expectRevert(ISilo.AboveMaxLtv.selector);
+        silo0.leverage(assets, leverageBorrower, borrower, sameAsset, data);
     }
 
     /*
