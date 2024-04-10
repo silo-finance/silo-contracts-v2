@@ -224,7 +224,8 @@ contract SiloConfig is ISiloConfig {
         if (_crossReentrantStatus == CrossEntrancy.ENTERED_FROM_LEVERAGE &&
             _entranceFrom == CrossEntrancy.ENTERED_FROM_DEPOSIT
         ) {
-            // on leverage, entrance from deposit is allowed
+            // on leverage, entrance from deposit is allowed, but allowance is removed
+            _crossReentrantStatus = CrossEntrancy.ENTERED;
             return;
         }
 
