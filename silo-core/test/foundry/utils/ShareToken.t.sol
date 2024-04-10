@@ -88,7 +88,7 @@ contract ShareTokenTest is Test {
         sToken.initialize(ISilo(address(this)), hookReceiver.ADDRESS());
         uint256 amount = 1;
 
-        _afterTokenTransferMockOnMint(amount, IHookReceiver.HookReturnCode.SUCCESS);
+        _afterTokenTransferMockOnMint(amount, Hook.RETURN_CODE_SUCCESS);
 
         sToken.mint(owner, owner, amount);
     }
@@ -100,13 +100,13 @@ contract ShareTokenTest is Test {
         sToken.initialize(ISilo(address(this)), hookReceiver.ADDRESS());
         uint256 amount = 1;
 
-        _afterTokenTransferMockOnMint(amount, IHookReceiver.HookReturnCode.REQUEST_TO_REVERT_TX);
+        _afterTokenTransferMockOnMint(amount, Hook.RETURN_CODE_REQUEST_TO_REVERT_TX);
 
         vm.expectRevert(IShareToken.RevertRequestFromHook.selector);
         sToken.mint(owner, owner, amount);
     }
 
-    function _afterTokenTransferMockOnMint(uint256 _amount, IHookReceiver.HookReturnCode _code) public {
+    function _afterTokenTransferMockOnMint(uint256 _amount, uint256 _hookReturnCode) public {
         uint256 balance = sToken.balanceOf(owner);
 
         hookReceiver.afterTokenTransferMock(
@@ -116,7 +116,7 @@ contract ShareTokenTest is Test {
             balance + _amount, // owner balance after
             sToken.totalSupply() + _amount, // total supply after mint
             _amount,
-            _code
+            _hookReturnCode
         );
     }
 }
