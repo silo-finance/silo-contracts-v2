@@ -188,6 +188,33 @@ contract CCIPGaugeCheckpointer is ICCIPGaugeCheckpointer, ReentrancyGuard, Ownab
     }
 
     /// @inheritdoc ICCIPGaugeCheckpointer
+    function getTotalBridgeCost(
+        uint256 minRelativeWeight,
+        string calldata gaugeType,
+        ICCIPGauge.PayFeesIn payFeesIn
+    )
+        external
+        override
+        returns (uint256 totalCost)
+    {
+        uint256 currentPeriod = _roundDownBlockTimestamp();
+        uint256 totalGauges = _gauges[gaugeType].length();
+        EnumerableSet.AddressSet storage gauges = _gauges[gaugeType];
+
+        for (uint256 i = 0; i < totalGauges; ++i) {
+            address gauge = gauges.at(i);
+            // Skip gauges that are below the threshold.
+            if (GAUGE_CONTROLLER.gauge_relative_weight(gauge, currentPeriod) < minRelativeWeight) {
+                continue;
+            }
+
+            uint256 incentivesAmount = ICCIPGauge(gauge).unclaimedIncentives();
+
+            totalCost += ICCIPGauge(gauge).calculateFee(incentivesAmount, payFeesIn);
+        }
+    }
+
+    /// @inheritdoc ICCIPGaugeCheckpointer
     function hasGauge(string calldata gaugeType, ICCIPGauge gauge)
         external
         view
@@ -223,33 +250,6 @@ contract CCIPGaugeCheckpointer is ICCIPGaugeCheckpointer, ReentrancyGuard, Ownab
     /// @inheritdoc ICCIPGaugeCheckpointer
     function getRoundedDownBlockTimestamp() external view override returns (uint256) {
         return _roundDownBlockTimestamp();
-    }
-
-    /// @inheritdoc ICCIPGaugeCheckpointer
-    function getTotalBridgeCost(
-        uint256 minRelativeWeight,
-        string calldata gaugeType,
-        ICCIPGauge.PayFeesIn payFeesIn
-    )
-        external
-        override
-        returns (uint256 totalCost)
-    {
-        uint256 currentPeriod = _roundDownBlockTimestamp();
-        uint256 totalGauges = _gauges[gaugeType].length();
-        EnumerableSet.AddressSet storage gauges = _gauges[gaugeType];
-
-        for (uint256 i = 0; i < totalGauges; ++i) {
-            address gauge = gauges.at(i);
-            // Skip gauges that are below the threshold.
-            if (GAUGE_CONTROLLER.gauge_relative_weight(gauge, currentPeriod) < minRelativeWeight) {
-                continue;
-            }
-
-            uint256 incentivesAmount = ICCIPGauge(gauge).unclaimedIncentives();
-
-            totalCost += ICCIPGauge(gauge).calculateFee(incentivesAmount, payFeesIn);
-        }
     }
 
     /// @inheritdoc ICCIPGaugeCheckpointer
