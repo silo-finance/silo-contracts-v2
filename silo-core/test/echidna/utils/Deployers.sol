@@ -25,7 +25,6 @@ import {IInterestRateModelV2ConfigFactory, InterestRateModelV2ConfigFactory} fro
 import {IInterestRateModelV2, InterestRateModelV2} from "silo-core/contracts/interestRateModel/InterestRateModelV2.sol";
 import {IInterestRateModelV2Config, InterestRateModelV2Config} from "silo-core/contracts/interestRateModel/InterestRateModelV2Config.sol";
 import {IGaugeHookReceiver, GaugeHookReceiver} from "silo-core/contracts/utils/hook-receivers/gauge/GaugeHookReceiver.sol";
-import {IHookReceiversFactory, HookReceiversFactory} from "silo-core/contracts/utils/hook-receivers/HookReceiversFactory.sol";
 import {ISiloConfig, SiloConfig} from "silo-core/contracts/SiloConfig.sol";
 
 contract Deployers is VyperDeployer, Data {
@@ -41,7 +40,6 @@ contract Deployers is VyperDeployer, Data {
     IInterestRateModelV2ConfigFactory interestRateModelV2ConfigFactory;
     IInterestRateModelV2 interestRateModelV2;
     IGaugeHookReceiver hookReceiver;
-    IHookReceiversFactory hookReceiverFactory;
     ISiloDeployer siloDeployer;
     PartialLiquidation liquidationModule;
 
@@ -185,7 +183,6 @@ contract Deployers is VyperDeployer, Data {
         core_deployInterestRateConfigFactory();
         core_deployInterestRateModel();
         core_deployGaugeHookReceiver();
-        core_deployHookReceiverFactory();
         core_deploySiloDeployer();
     }
 
@@ -253,19 +250,12 @@ contract Deployers is VyperDeployer, Data {
         liquidationModule = new PartialLiquidation();
     }
 
-    function core_deployHookReceiverFactory() internal {
-        hookReceiverFactory = IHookReceiversFactory(
-            address(new HookReceiversFactory())
-        );
-    }
-
     function core_deploySiloDeployer() internal {
         siloDeployer = ISiloDeployer(
             address(
                 new SiloDeployer(
                     interestRateModelV2ConfigFactory,
                     siloFactory,
-                    hookReceiverFactory,
                     address(timelockController)
                 )
             )

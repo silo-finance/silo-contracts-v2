@@ -77,14 +77,6 @@ contract SiloDeployTest is IntegrationTest {
         _siloConfig = _siloDeploy.useConfig(SiloConfigsNames.FULL_CONFIG_TEST).run();
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vv --ffi -mt test_hooks_are_initialized
-    function test_hooks_are_initialized() public { // solhint-disable-line func-name-mixedcase
-        (address silo0, address silo1) = _siloConfig.getSilos();
-
-         _verifyHookReceiversForSilo(silo0);
-         _verifyHookReceiversForSilo(silo1);
-    }
-
     function test_oracles_deploy() public { // solhint-disable-line func-name-mixedcase
         (, address silo1) = _siloConfig.getSilos();
 
@@ -105,27 +97,5 @@ contract SiloDeployTest is IntegrationTest {
             SiloOraclesFactoriesContracts.UNISWAP_V3_ORACLE_FACTORY,
             address(_uniV3OracleFactoryMock)
         );
-    }
-
-    function _verifyHookReceiversForSilo(address _silo) internal {
-        address protectedShareToken;
-        address collateralShareToken;
-        address debtShareToken;
-
-        (protectedShareToken, collateralShareToken, debtShareToken) = _siloConfig.getShareTokens(_silo);
-
-        _verifyHookReceiverForToken(protectedShareToken, "protectedShareToken");
-        _verifyHookReceiverForToken(collateralShareToken, "collateralShareToken");
-        _verifyHookReceiverForToken(debtShareToken, "debtShareToken");
-    }
-
-    function _verifyHookReceiverForToken(address _token, string memory _tokenName) internal {
-        address hookReceiver = IShareToken(_token).hookReceiver();
-
-        if (hookReceiver != address(0)) {
-            address initializedToken = IHookReceiverLike(hookReceiver).shareToken();
-            assertEq(_token, initializedToken, "Hook receiver initialized with wrong token");
-            emit log_string(string(abi.encodePacked("Hook initialized for ", _tokenName)));
-        }
     }
 }

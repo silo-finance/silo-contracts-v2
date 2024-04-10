@@ -125,8 +125,6 @@ contract SiloFactoryCreateSiloTest is SiloLittleHelper, IntegrationTest {
 
         assertEq(abi.encode(irmConfigUsed1), abi.encode(irmConfigExpected1));
 
-        // TODO: check IHookReceiver initialize when it's supported in deploy scripts
-
         vm.expectRevert("Initializable: contract is already initialized");
         IShareToken(configData0.protectedShareToken).initialize(ISilo(configData0.silo), address(0));
 
