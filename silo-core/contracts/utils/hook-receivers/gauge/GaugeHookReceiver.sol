@@ -7,6 +7,7 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {IGaugeLike as IGauge} from "./interfaces/IGaugeLike.sol";
 import {IGaugeHookReceiver, IHookReceiver} from "./interfaces/IGaugeHookReceiver.sol";
+import {Hook} from "../../../lib/Hook.sol";
 
 /// @notice Silo share token hook receiver for the gauge.
 /// It notifies the gauge (if configured) about any balance update in the Silo share token.
@@ -46,12 +47,12 @@ contract GaugeHookReceiver is IGaugeHookReceiver, Ownable2StepUpgradeable {
         uint256 _recipientBalance,
         uint256 _totalSupply,
         uint256 /* _amount */
-    ) external virtual returns (IHookReceiver.HookReturnCode code) {
+    ) external virtual returns (uint256 hookReturnCode) {
         if (msg.sender != address(shareToken)) revert Unauthorized();
 
         IGauge theGauge = gauge;
 
-        if (address(theGauge) == address(0) || theGauge.is_killed()) return IHookReceiver.HookReturnCode.SUCCESS;
+        if (address(theGauge) == address(0) || theGauge.is_killed()) return Hook.RETURN_CODE_SUCCESS;
 
         theGauge.afterTokenTransfer(
             _sender,
