@@ -3,7 +3,8 @@ pragma solidity 0.8.21;
 
 import {
     ERC20Upgradeable,
-    IERC20MetadataUpgradeable
+    IERC20MetadataUpgradeable,
+    IERC20Upgradeable
 } from "openzeppelin-contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 import {StringsUpgradeable} from "openzeppelin-contracts-upgradeable/utils/StringsUpgradeable.sol";
 
@@ -12,6 +13,7 @@ import {ISiloFactory} from "../interfaces/ISiloFactory.sol";
 import {IShareToken, ISilo} from "../interfaces/IShareToken.sol";
 import {ISiloConfig} from "../SiloConfig.sol";
 import {TokenHelper} from "../lib/TokenHelper.sol";
+import {CrossEntrancy} from "../lib/CrossEntrancy.sol";
 
 /// @title ShareToken
 /// @notice Implements common interface for Silo tokens representing debt or collateral.
@@ -59,6 +61,9 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
     /// @notice Silo address for which tokens was deployed
     ISilo public silo;
 
+    /// @dev cached silo config address
+    ISiloConfig internal _siloConfig;
+
     /// @notice Address of hook contract called on each token transfer, mint and burn
     address public hookReceiver;
 
@@ -71,6 +76,36 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
         _disableInitializers();
+    }
+
+    /// @inheritdoc ERC20Upgradeable
+    function transferFrom(address _from, address _to, uint256 _amount)
+        public
+        virtual
+        override(ERC20Upgradeable, IERC20Upgradeable)
+        returns (bool result)
+    {
+        ISiloConfig siloConfig = _siloConfig;
+        siloConfig.crossNonReentrantBefore(CrossEntrancy.ENTERED);
+
+        result = super.transferFrom(_from, _to, _amount);
+
+        siloConfig.crossNonReentrantAfter();
+    }
+
+    /// @inheritdoc ERC20Upgradeable
+    function transfer(address _to, uint256 _amount)
+        public
+        virtual
+        override(ERC20Upgradeable, IERC20Upgradeable)
+        returns (bool result)
+    {
+        ISiloConfig siloConfig = _siloConfig;
+        siloConfig.crossNonReentrantBefore(CrossEntrancy.ENTERED);
+
+        result = super.transfer(_to, _amount);
+
+        siloConfig.crossNonReentrantAfter();
     }
 
     /// @inheritdoc IShareToken
@@ -175,6 +210,7 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
     function __ShareToken_init(ISilo _silo, address _hookReceiver) internal virtual onlyInitializing {
         silo = _silo;
         hookReceiver = _hookReceiver;
+        _siloConfig = _silo.config();
     }
 
     /// @dev Call an afterTokenTransfer hook if registered and check minimum share requirement on mint/burn
