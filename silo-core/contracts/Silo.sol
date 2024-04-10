@@ -883,9 +883,6 @@ contract Silo is Initializable, SiloERC4626 {
             msg.sender
         );
 
-        // balalnceBefore  = 1
-        // balalnceBefore  = 1 + 1e36
-
         // balanceOf shares
         emit Borrow(msg.sender, _receiver, _borrower, assets, shares);
 
