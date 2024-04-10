@@ -228,7 +228,6 @@ contract CCIPGaugeCheckpointer is ICCIPGaugeCheckpointer, ReentrancyGuard, Ownab
         ICCIPGauge.PayFeesIn payFeesIn
     )
         external
-        view
         override
         returns (uint256 totalCost)
     {
@@ -243,7 +242,9 @@ contract CCIPGaugeCheckpointer is ICCIPGaugeCheckpointer, ReentrancyGuard, Ownab
                 continue;
             }
 
-            totalCost += _calculateFees(ICCIPGauge(gauge), payFeesIn);
+            uint256 incentivesAmount = ICCIPGauge(gauge).unclaimedIncentives();
+
+            totalCost += ICCIPGauge(gauge).calculateFee(incentivesAmount, payFeesIn);
         }
     }
 
@@ -261,11 +262,12 @@ contract CCIPGaugeCheckpointer is ICCIPGaugeCheckpointer, ReentrancyGuard, Ownab
     function getSingleBridgeCost(
         string memory gaugeType,
         ICCIPGauge gauge,
-        ICCIPGauge.PayFeesIn payFeesIn
+        ICCIPGauge.PayFeesIn payFeesIn,
+        uint256 incentivesAmount
     ) public view override returns (uint256 fees) {
         require(_gauges[gaugeType].contains(address(gauge)), "Gauge was not added to the checkpointer");
 
-        fees = _calculateFees(gauge, payFeesIn);
+        fees = gauge.calculateFee(incentivesAmount, payFeesIn);
     }
 
     function _addGauges(
@@ -336,7 +338,7 @@ contract CCIPGaugeCheckpointer is ICCIPGaugeCheckpointer, ReentrancyGuard, Ownab
     }
 
     function _checkpointGauge(ICCIPGauge _gauge, ICCIPGauge.PayFeesIn _payFeesIn) internal {
-        uint256 fees = _calculateFees(_gauge, _payFeesIn);
+        uint256 fees = _gauge.calculateFee(type(uint128).max, _payFeesIn);
 
         if (_payFeesIn == ICCIPGauge.PayFeesIn.Native) {
             uint256 balance = address(this).balance;
@@ -371,11 +373,6 @@ contract CCIPGaugeCheckpointer is ICCIPGaugeCheckpointer, ReentrancyGuard, Ownab
         if (remainingLINKBalance > 0) {
             IERC20(LINK).transfer(msg.sender, remainingLINKBalance);
         }
-    }
-
-    function _calculateFees(ICCIPGauge _gauge, ICCIPGauge.PayFeesIn _payFeesIn) internal view returns (uint256 fees) {
-        Client.EVM2AnyMessage memory evm2AnyMessage = _gauge.buildCCIPMessage(type(uint128).max, _payFeesIn);
-        fees = _gauge.calculateFee(evm2AnyMessage);
     }
 
     /**
