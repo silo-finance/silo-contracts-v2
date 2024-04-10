@@ -890,6 +890,7 @@ contract Silo is Initializable, SiloERC4626 {
         emit Borrow(msg.sender, _receiver, _borrower, assets, shares);
 
         if (_leverage) {
+            // change reentrant flag to leverage, to allow for deposit
             siloConfigCached.crossNonReentrantBefore(CrossEntrancy.ENTERED_FROM_LEVERAGE);
 
             emit Leverage();
@@ -899,6 +900,9 @@ contract Silo is Initializable, SiloERC4626 {
 
             // allow for deposit reentry only to provide collateral
             if (result != _LEVERAGE_CALLBACK) revert LeverageFailed();
+
+            // after deposit, guard is down, for max security we need to enable it again
+            siloConfigCached.crossNonReentrantBefore(CrossEntrancy.ENTERED);
         }
 
         if (collateralConfig.callBeforeQuote) {
