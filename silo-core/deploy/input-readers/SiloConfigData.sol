@@ -24,14 +24,12 @@ contract SiloConfigData is Test, CommonDeploy {
     struct ConfigData {
         bool callBeforeQuote0;
         bool callBeforeQuote1;
-        string collateralHookReceiver0;
-        string collateralHookReceiver1;
-        string debtHookReceiver0;
-        string debtHookReceiver1;
         address deployer;
         uint256 deployerFee;
         uint64 flashloanFee0;
         uint64 flashloanFee1;
+        address hookReceiver0;
+        address hookReceiver1;
         address interestRateModel0;
         address interestRateModel1;
         string interestRateModelConfig0;
@@ -45,8 +43,6 @@ contract SiloConfigData is Test, CommonDeploy {
         uint64 maxLtv1;
         string maxLtvOracle0;
         string maxLtvOracle1;
-        string protectedHookReceiver0;
-        string protectedHookReceiver1;
         string solvencyOracle0;
         string solvencyOracle1;
         string token0;
@@ -87,9 +83,7 @@ contract SiloConfigData is Test, CommonDeploy {
             liquidationFee0: config.liquidationFee0 * BP2DP_NORMALIZATION,
             flashloanFee0: config.flashloanFee0 * BP2DP_NORMALIZATION,
             callBeforeQuote0: config.callBeforeQuote0,
-            protectedHookReceiver0: _resolveHookReceiverImpl(config.protectedHookReceiver0),
-            collateralHookReceiver0: _resolveHookReceiverImpl(config.collateralHookReceiver0),
-            debtHookReceiver0: _resolveHookReceiverImpl(config.debtHookReceiver0),
+            hookReceiver0: config.hookReceiver0,
             token1: getAddress(config.token1),
             solvencyOracle1: address(0),
             maxLtvOracle1: address(0),
@@ -100,9 +94,7 @@ contract SiloConfigData is Test, CommonDeploy {
             liquidationFee1: config.liquidationFee1 * BP2DP_NORMALIZATION,
             flashloanFee1: config.flashloanFee1 * BP2DP_NORMALIZATION,
             callBeforeQuote1: config.callBeforeQuote1,
-            protectedHookReceiver1: _resolveHookReceiverImpl(config.protectedHookReceiver1),
-            collateralHookReceiver1: _resolveHookReceiverImpl(config.collateralHookReceiver1),
-            debtHookReceiver1: _resolveHookReceiverImpl(config.debtHookReceiver1)
+            hookReceiver1: config.hookReceiver1
         });
     }
 

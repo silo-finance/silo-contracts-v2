@@ -25,6 +25,7 @@ import {LiquidationWithdrawLib} from "./lib/LiquidationWithdrawLib.sol";
 import {Rounding} from "./lib/Rounding.sol";
 import {Methods} from "./lib/Methods.sol";
 import {CrossEntrancy} from "./lib/CrossEntrancy.sol";
+import {Hook} from "./lib/Hook.sol";
 
 // Keep ERC4626 ordering
 // solhint-disable ordering
@@ -62,6 +63,13 @@ contract Silo is Initializable, SiloERC4626 {
 
         address interestRateModel = _siloConfig.getConfig(address(this)).interestRateModel;
         IInterestRateModel(interestRateModel).connect(_modelConfigAddress);
+    }
+
+    function updateHooks(uint24 _hooksBitmap) external {
+        if (msg.sender != config.getConfig(address(this)).hookReceiver) revert OnlyHookReceiver();
+
+        siloData.hooks = _hooksBitmap;
+        emit HooksUpdated(_hooksBitmap);
     }
 
     /// @inheritdoc ISilo
@@ -371,7 +379,7 @@ contract Silo is Initializable, SiloERC4626 {
     {
         if (_withdrawType == AssetType.Debt) revert ISilo.WrongAssetType();
 
-        ISiloConfig siloConfigCached = _crossNonReentrantBefore(CrossEntrancy.ENTERED);
+        ISiloConfig siloConfigCached = _crossNonReentrantBefore(CrossEntrancy.ENTERED, Hook.NONE);
         
         ISiloConfig.ConfigData memory configData = siloConfigCached.getConfig(address(this));
 
@@ -701,11 +709,14 @@ contract Silo is Initializable, SiloERC4626 {
     {
         siloConfig = config;
 
+        configData = siloConfig.getConfig(address(this));
+
         if (_callReentrancyBefore) {
+            if (_triggerHook(configData.hookReceiver, Hook.BEFORE_DEPOSIT)) {
+                // TODO exec hook
+            }
             siloConfig.crossNonReentrantBefore(_entranceFrom);
         }
-
-        configData = siloConfig.getConfig(address(this));
 
         accruedInterest = _callAccrueInterestForAsset(
             configData.interestRateModel, configData.daoFee, configData.deployerFee, address(0)
@@ -727,6 +738,12 @@ contract Silo is Initializable, SiloERC4626 {
         returns (uint256 assets, uint256 shares)
     {
         if (_assetType == AssetType.Debt) revert ISilo.WrongAssetType();
+
+        (ISiloConfig.ConfigData memory currentConfig,,) = config.getConfig(address(this));
+        
+        IHookReceiver(currentConfig.hookReceiver).beforeAction(
+            Hook.BEFORE_DEPOSIT, abi.encodePacked(_assets, _shares, _receiver, _assetType)
+        );
 
         (
             , ISiloConfig.ConfigData memory configData, ISiloConfig siloConfigCached
@@ -753,6 +770,10 @@ contract Silo is Initializable, SiloERC4626 {
         }
 
         siloConfigCached.crossNonReentrantAfter();
+
+        if (_triggerHook(configData.hookReceiver, Hook.AFTER_DEPOSIT)) {
+            // TODO exec hook
+        }
     }
 
     // solhint-disable-next-line function-max-lines, code-complexity
@@ -857,6 +878,7 @@ contract Silo is Initializable, SiloERC4626 {
         returns (uint256 assets, uint256 shares)
     {
         if (_assets == 0 && _shares == 0) revert ISilo.ZeroAssets();
+
 
         ISiloConfig siloConfigCached = _crossNonReentrantBefore(CrossEntrancy.ENTERED);
 
@@ -1034,8 +1056,14 @@ contract Silo is Initializable, SiloERC4626 {
         );
     }
 
-    function _crossNonReentrantBefore(uint256 _enteredFrom) internal virtual returns (ISiloConfig siloConfigCached) {
+    function _crossNonReentrantBefore(uint256 _enteredFrom, uint256 _hook) internal virtual returns (ISiloConfig siloConfigCached) {
         siloConfigCached = config;
+        address hookReceiver;
+
+        if (_triggerHook(configData.hookReceiver, _hook)) {
+            // TODO exec hook
+        }
+
         siloConfigCached.crossNonReentrantBefore(_enteredFrom);
     }
 
@@ -1128,5 +1156,13 @@ contract Silo is Initializable, SiloERC4626 {
             total[AssetType.Debt],
             total[AssetType.Collateral].assets
         );
+    }
+
+    function _hookCallNeeded(address _hookReceiver, uint256 _hook) internal returns (bool) {
+        return _hookReceiver != address(0) && (siloData.hooks & _hook != 0);
+    }
+
+    function _beforeHook(IHookReceiver _hookReceiver, bytes memory _options) internal {
+
     }
 }

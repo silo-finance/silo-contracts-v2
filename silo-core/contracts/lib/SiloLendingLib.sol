@@ -135,7 +135,7 @@ library SiloLendingLib {
 
         // This is the first time, so we can return early and save some gas
         if (lastTimestamp == 0) {
-            _siloData.interestRateTimestamp = uint64(block.timestamp);
+            _siloData.interestRateTimestamp = uint40(block.timestamp);
             return 0;
         }
 
@@ -163,7 +163,7 @@ library SiloLendingLib {
         );
 
         // update remaining contract state
-        _siloData.interestRateTimestamp = uint64(block.timestamp);
+        _siloData.interestRateTimestamp = uint40(block.timestamp);
 
         // we operating on chunks (fees) of real tokens, so overflow should not happen
         // fee is simply to small to overflow on cast to uint192, even if, we will get lower fee

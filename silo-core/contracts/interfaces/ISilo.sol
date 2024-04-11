@@ -56,7 +56,8 @@ interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
     /// @param assets map of assets
     struct SiloData {
         uint192 daoAndDeployerFees;
-        uint64 interestRateTimestamp;
+        uint40 interestRateTimestamp;
+        uint24 hooks;
     }
 
     struct UtilizationData {
@@ -96,6 +97,8 @@ interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
         address indexed sender, address indexed receiver, address indexed owner, uint256 assets, uint256 shares
     );
 
+    event HooksUpdated(uint256 hooksBitmap);
+
     /// @notice Emitted on repayment
     /// @param sender wallet address that repaid asset
     /// @param owner wallet address that owed asset
@@ -130,11 +133,14 @@ interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
     error NoDebt();
     error TwoAssetsDebt();
     error LeverageTooHigh();
+    error OnlyHookReceiver();
 
     /// @notice Initialize Silo
     /// @param _siloConfig address of ISiloConfig with full config for this Silo
     /// @param _modelConfigAddress address of a config contract used by IRM
     function initialize(ISiloConfig _siloConfig, address _modelConfigAddress) external;
+
+    function updateHooks(uint24 _hooksBitmap) external;
 
     /// @notice Fetches the silo configuration contract
     /// @return siloConfig Address of the configuration contract associated with the silo
@@ -146,7 +152,8 @@ interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
     /// @notice Fetches the data related to the silo
     /// @return daoAndDeployerFees Current amount of fees accrued by DAO and Deployer
     /// @return interestRateTimestamp Timestamp of the last interest accrual
-    function siloData() external view returns (uint192 daoAndDeployerFees, uint64 interestRateTimestamp);
+    /// @return hooks hooks bitmap
+    function siloData() external view returns (uint192 daoAndDeployerFees, uint40 interestRateTimestamp, uint24 hooks);
 
     /// @notice Fetches the utilization data of the silo used by IRM
     function utilizationData() external view returns (UtilizationData memory utilizationData);
