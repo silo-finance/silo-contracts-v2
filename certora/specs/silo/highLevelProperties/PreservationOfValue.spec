@@ -277,8 +277,8 @@ rule PRV_LtV_increases_with_time(env e1, address borrower) {
 
     /// If the prices between two timestamps do not change, then the ltV cannot decrease.
     assert ( 
-        getPriceOfToken0At(e1, solvencyOracle0) == getPriceOfToken0At(e2, solvencyOracle0) &&
-        getPriceOfToken1At(e1, solvencyOracle1) == getPriceOfToken1At(e2, solvencyOracle1)
+        getPriceOfToken0At(e1, maxLtvOracle0) == getPriceOfToken0At(e2, maxLtvOracle0) &&
+        getPriceOfToken1At(e1, maxLtvOracle1) == getPriceOfToken1At(e2, maxLtvOracle1)
     ) => ltv1 <= ltv2;
 
     satisfy ltv1 < ltv2;

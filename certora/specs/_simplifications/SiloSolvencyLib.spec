@@ -1,6 +1,5 @@
 import "../silo/_common/Silo0ShareTokensMethods.spec";
 import "../silo/_common/Silo1ShareTokensMethods.spec";
-import "./SiloMathLib.spec";
 
 methods {
     // Summarizations:
@@ -23,6 +22,15 @@ methods {
     calculateAssetsDataCVL(_collateralConfig.silo, _debtConfig.silo, _borrower, _debtShareBalanceCached);
 }
 
+/*
+abstractLTV value (
+    address collateralToken
+    address debtToken
+    uint256 borrowerProtectedAssets
+    uint256 borrowerCollateralAssets
+    uint256 borrowerDebtAssets
+)
+*/
 ghost abstractLTV_collateralValue(address,address,uint256,uint256,uint256) returns uint256;
 ghost abstractLTV_debtValue(address,address,uint256,uint256,uint256) returns uint256;
 ghost abstractLTV_ltvBefore(address,address,uint256,uint256,uint256) returns uint256;
@@ -48,6 +56,7 @@ ghost assetsData_collateral(uint256,uint256) returns uint256 {
         assets1 <= assets2 => assetsData_collateral(balance, assets1) <= assetsData_collateral(balance, assets2);
     axiom forall uint256 assets. assetsData_collateral(0, assets) == 0;
     axiom forall uint256 balance. assetsData_collateral(balance, 0) == 0;
+    axiom forall uint256 assets. forall uint256 balance. assetsData_collateral(balance, assets) <= assets;
 }
 
 ghost assetsData_protected(uint256,uint256) returns uint256 {
@@ -57,6 +66,7 @@ ghost assetsData_protected(uint256,uint256) returns uint256 {
         assets1 <= assets2 => assetsData_protected(balance, assets1) <= assetsData_protected(balance, assets2);
     axiom forall uint256 assets. assetsData_protected(0, assets) == 0;
     axiom forall uint256 balance. assetsData_protected(balance, 0) == 0;
+    axiom forall uint256 assets. forall uint256 balance. assetsData_collateral(balance, assets) <= assets;
 }
 
 ghost assetsData_debt(uint256,uint256) returns uint256 {
@@ -66,8 +76,14 @@ ghost assetsData_debt(uint256,uint256) returns uint256 {
         assets1 <= assets2 => assetsData_debt(balance, assets1) <= assetsData_debt(balance, assets2);
     axiom forall uint256 assets. assetsData_debt(0, assets) == 0;
     axiom forall uint256 balance. assetsData_debt(balance, 0) == 0;
+    axiom forall uint256 assets. forall uint256 balance. assetsData_collateral(balance, assets) <= assets;
 }
 
+/*
+Summary for getAssetsDataForLtvCalculations()
+Doesn't include timestamp dependence - assumes last timestamp is the current timestamp, so
+that the total assets values already include the interest.
+*/
 function calculateAssetsDataCVL(address silo_collateral, address silo_debt, address borrower, uint256 debtShareBalanceCached) returns SiloSolvencyLib.LtvData {
     uint256 balanceCollateral;
     uint256 balanceProtected;

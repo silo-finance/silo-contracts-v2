@@ -383,7 +383,6 @@ rule RA_repay_borrower_is_not_restricted(env e, address borrower1, address borro
 }
 
 /// @title An immediate withdraw after deposit by the same actor of the same amount must succeed.
-/// Violated (burn shares over-estimated)
 rule RA_can_withdraw_after_deposit(env e) {
     SafeAssumptions(e);
 
@@ -399,7 +398,6 @@ rule RA_can_withdraw_after_deposit(env e) {
     deposit(e, amount, e.msg.sender);
     uint256 oneShareValue = silo0.convertToAssets(e, 1, ISilo.AssetType.Collateral);
     uint256 amountToWithdraw = amount > oneShareValue ? assert_uint256(amount - oneShareValue) : 0;
-    //require silo0.convertToAssets(e, 1, ISilo.AssetType.Protected) > 0;
     withdraw@withrevert(e, amountToWithdraw, e.msg.sender, e.msg.sender);
 
     assert amountToWithdraw > 0 => !lastReverted;
@@ -418,7 +416,8 @@ rule RA_can_redeem_after_deposit(env e) {
     require getLiquidity(e) > 0;
 
     uint256 shares = deposit(e, amount, e.msg.sender);
-    uint256 sharesToWithdraw = shares > 1 ? require_uint256(shares - 1) : 1;
+    uint256 shareBalance = shareCollateralToken0.balanceOf(e.msg.sender);
+    uint256 sharesToWithdraw = shares > shareBalance ? shareBalance : shares;
     redeem@withrevert(e, sharesToWithdraw, e.msg.sender, e.msg.sender);
 
     assert !lastReverted;
