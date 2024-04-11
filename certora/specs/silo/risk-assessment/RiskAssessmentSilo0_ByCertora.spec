@@ -111,7 +111,7 @@ rule RA_Silo_repay_all_shares(env e, address receiver)
 }
 
 /// @title User should not be able to borrow more than maxBorrow().
-/// Violated: rounding errors.
+/// Violated (but not a real issue - maxBorrow() could under-estimate)
 rule RA_silo_cant_borrow_more_than_max(env e, address borrower) {
     completeSiloSetupEnv(e);
     totalSupplyMoreThanBalance(borrower);
