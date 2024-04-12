@@ -175,10 +175,10 @@ contract SiloConfigTest is Test {
     }
 
     /*
-    forge test -vv --mt test_openDebt_revertOnWrongSilo
+    forge test -vv --mt test_openDebt_revertOnOnlySilo
     */
-    function test_openDebt_revertOnWrongSilo() public {
-        vm.expectRevert(ISiloConfig.WrongSilo.selector);
+    function test_openDebt_revertOnOnlySilo() public {
+        vm.expectRevert(ISiloConfig.OnlySilo.selector);
         _siloConfig.openDebt(address(1), TWO_ASSETS);
     }
 
@@ -373,8 +373,8 @@ contract SiloConfigTest is Test {
     /*
     forge test -vv --mt test_closeDebt_revert
     */
-    function test_closeDebt_revert() public {
-        vm.expectRevert(ISiloConfig.WrongSilo.selector);
+    function test_closeDebt_OnlySiloOrDebtShareToken() public {
+        vm.expectRevert(ISiloConfig.OnlySiloOrDebtShareToken.selector);
         _siloConfig.closeDebt(address(0));
     }
 

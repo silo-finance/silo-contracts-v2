@@ -132,11 +132,16 @@ interface ISiloConfig {
         bool callBeforeQuote;
     }
 
+    error OnlySilo();
+    error OnlySiloOrLiquidationModule();
+    error OnlySiloOrDebtShareToken();
     error WrongSilo();
     error OnlyDebtShareToken();
     error DebtExistInOtherSilo();
     error NoDebt();
     error CollateralTypeDidNotChanged();
+
+    error CrossReentrantCall();
 
     /// @dev can be called only by silo, it opens debt for `_borrower`
     /// @param _borrower borrower address
@@ -165,6 +170,15 @@ interface ISiloConfig {
         external
         returns (ConfigData memory collateralConfig, ConfigData memory debtConfig, DebtInfo memory debtInfo);
 
+    /// @notice only silo method for cross Silo reentrancy
+    /// @param _entranceFrom see CrossEntrancy lib for possible values
+    function crossNonReentrantBefore(uint256 _entranceFrom) external;
+
+    /// @notice only silo method for cross Silo reentrancy
+    function crossNonReentrantAfter() external;
+
+    /// @notice vew method for checking cross Silo git pushreentrancy flag
+    function crossReentrancyGuardEntered() external view returns (bool);
 
     // solhint-disable-next-line func-name-mixedcase
     function SILO_ID() external view returns (uint256);

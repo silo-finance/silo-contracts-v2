@@ -11,6 +11,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   - liquidation for same token can be done with sToken without reverting
   - case observed on full liquidation: when we empty out silo, there is dust left (no shares)
 
+### Changed
+- standard reentrancy guard was replaced by cross Silo reentrancy check
+
 ### Fixed
 - fix issue with wrong configs in `isSolvent` after debt share transfer
 

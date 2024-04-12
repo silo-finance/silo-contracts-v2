@@ -18,15 +18,11 @@ import {IShareToken, ShareToken, ISiloFactory, ISilo} from "./ShareToken.sol";
 contract ShareDebtToken is IERC20R, ShareToken {
     using SiloLensLib for ISilo;
 
-    /// @dev cached silo config address
-    ISiloConfig public siloConfig;
-
     mapping(address owner => mapping(address recipient => uint256 allowance)) private _receiveAllowances;
 
     /// @param _silo Silo address for which tokens was deployed
     function initialize(ISilo _silo, address _hookReceiver) external virtual initializer {
         __ShareToken_init(_silo, _hookReceiver);
-        siloConfig = _silo.config();
     }
 
     /// @inheritdoc IShareToken

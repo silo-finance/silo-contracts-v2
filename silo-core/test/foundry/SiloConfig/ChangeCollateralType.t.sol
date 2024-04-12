@@ -23,37 +23,37 @@ contract ChangeCollateralTypeTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --mt test_changeCollateralType_reverts_WrongSilo
+    forge test -vv --mt test__changeCollateralType_reverts_OnlySilo
     */
-    function test_changeCollateralType_reverts_WrongSilo_1token() public {
-        _changeCollateralType_reverts_WrongSilo(SAME_ASSET);
+    function test__changeCollateralType_reverts_OnlySilo_1token() public {
+        __changeCollateralType_reverts_OnlySilo(SAME_ASSET);
     }
 
-    function test_changeCollateralType_reverts_WrongSilo_2tokens() public {
-        _changeCollateralType_reverts_WrongSilo(TWO_ASSETS);
+    function test__changeCollateralType_reverts_OnlySilo_2tokens() public {
+        __changeCollateralType_reverts_OnlySilo(TWO_ASSETS);
     }
 
-    function _changeCollateralType_reverts_WrongSilo(bool _sameAsset) private {
+    function __changeCollateralType_reverts_OnlySilo(bool _sameAsset) private {
         (
             ISiloConfig.ConfigData memory collateral,
             ISiloConfig.ConfigData memory debt,
         ) = siloConfig.getConfigs(address(silo0), address(0), 0);
 
-        _changeCollateralType_reverts_WrongSilo_From(collateral.collateralShareToken, _sameAsset);
-        _changeCollateralType_reverts_WrongSilo_From(collateral.protectedShareToken, _sameAsset);
-        _changeCollateralType_reverts_WrongSilo_From(collateral.debtShareToken, _sameAsset);
+        _changeCollateralType_reverts_OnlySilo_From(collateral.collateralShareToken, _sameAsset);
+        _changeCollateralType_reverts_OnlySilo_From(collateral.protectedShareToken, _sameAsset);
+        _changeCollateralType_reverts_OnlySilo_From(collateral.debtShareToken, _sameAsset);
 
-        _changeCollateralType_reverts_WrongSilo_From(debt.collateralShareToken, _sameAsset);
-        _changeCollateralType_reverts_WrongSilo_From(debt.protectedShareToken, _sameAsset);
-        _changeCollateralType_reverts_WrongSilo_From(debt.debtShareToken, _sameAsset);
+        _changeCollateralType_reverts_OnlySilo_From(debt.collateralShareToken, _sameAsset);
+        _changeCollateralType_reverts_OnlySilo_From(debt.protectedShareToken, _sameAsset);
+        _changeCollateralType_reverts_OnlySilo_From(debt.debtShareToken, _sameAsset);
 
-        _changeCollateralType_reverts_WrongSilo_From(address(0), _sameAsset);
+        _changeCollateralType_reverts_OnlySilo_From(address(0), _sameAsset);
     }
 
-    function _changeCollateralType_reverts_WrongSilo_From(address _from, bool _sameAsset) private {
+    function _changeCollateralType_reverts_OnlySilo_From(address _from, bool _sameAsset) private {
         _doDeposit(_sameAsset);
 
-        vm.expectRevert(ISiloConfig.WrongSilo.selector);
+        vm.expectRevert(ISiloConfig.OnlySilo.selector);
         vm.prank(_from);
         siloConfig.changeCollateralType(borrower, !_sameAsset);
     }

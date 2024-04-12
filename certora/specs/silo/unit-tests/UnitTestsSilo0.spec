@@ -8,17 +8,18 @@ import "../../_simplifications/Silo_isSolvent_ghost.spec";
 import "../../_simplifications/SimplifiedGetCompoundInterestRateAndUpdate.spec";
 
 methods {
-    function Silo._accrueInterest() internal returns (uint256, ISiloConfig.ConfigData memory) =>
-        _accrueInterestCallChecker();
+    function Silo._accrueInterestWithReentrantGuard(bool, uint256)
+        internal
+        returns (uint256, ISiloConfig.ConfigData memory, address) => _accrueInterestCallChecker();
 }
 
 ghost bool callToAccrueInterest;
 
-function _accrueInterestCallChecker() returns (uint256, ISiloConfig.ConfigData) {
+function _accrueInterestCallChecker() returns (uint256, ISiloConfig.ConfigData, address) {
     callToAccrueInterest = true;
 
     uint256 anyValue;
-    return (anyValue, siloConfig.getConfig(silo0));
+    return (anyValue, siloConfig.getConfig(silo0), siloConfig);
 }
 
 /**

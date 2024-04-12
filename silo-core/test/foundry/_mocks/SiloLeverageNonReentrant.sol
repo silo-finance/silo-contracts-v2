@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import {Silo, ILeverageBorrower, ISiloFactory} from "silo-core/contracts/Silo.sol";
+import {Silo, ILeverageBorrower, ISiloFactory, ISiloConfig} from "silo-core/contracts/Silo.sol";
+import {CrossEntrancy} from "silo-core/contracts/lib/CrossEntrancy.sol";
 
 contract SiloLeverageNonReentrant is Silo {
     constructor(ISiloFactory _siloFactory) Silo(_siloFactory) {}
@@ -9,13 +10,19 @@ contract SiloLeverageNonReentrant is Silo {
     function leverage(uint256, ILeverageBorrower, address, bool, bytes calldata)
         external
         override
-        nonReentrant
         returns (uint256 shares)
     {
+        Silo(address(this)).config().crossNonReentrantBefore(CrossEntrancy.ENTERED_FROM_LEVERAGE);
         shares = 0;
 
         // Inputs don't matter. We only need to verify reentrancy protection.
-        // Expect to revert with `ReentrancyGuard: reentrant call`
-        Silo(address(this)).deposit({_assets: 0, _receiver: address(0)});
+        // Expect to revert with `ISiloConfig.CrossReentrantCall.selector`
+        Silo(address(this)).borrow({_assets: 1, _borrower: address(0), _receiver: address(0), _sameAsset: false});
+
+        Silo(address(this)).config().crossNonReentrantAfter();
+    }
+
+    function forceConfigSetup(ISiloConfig _siloConfig) external {
+        config = _siloConfig;
     }
 }

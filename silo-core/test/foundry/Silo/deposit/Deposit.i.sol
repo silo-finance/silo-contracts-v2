@@ -36,13 +36,13 @@ contract DepositTest is SiloLittleHelper, Test {
     function test_deposit_revertsZeroAssets() public {
         uint256 _assets;
         ISilo.AssetType _type;
-        address _depositor = makeAddr("Depositor");
+        address depositor = makeAddr("Depositor");
 
         vm.expectRevert(ISilo.ZeroAssets.selector);
-        silo0.deposit(_assets, _depositor);
+        silo0.deposit(_assets, depositor);
 
         vm.expectRevert(ISilo.ZeroAssets.selector);
-        silo0.deposit(_assets, _depositor, _type);
+        silo0.deposit(_assets, depositor, _type);
     }
 
     /*
@@ -51,10 +51,10 @@ contract DepositTest is SiloLittleHelper, Test {
     function test_deposit_reverts_WrongAssetType() public {
         uint256 _assets = 1;
         ISilo.AssetType _type = ISilo.AssetType.Debt;
-        address _depositor = makeAddr("Depositor");
+        address depositor = makeAddr("Depositor");
 
         vm.expectRevert(ISilo.WrongAssetType.selector);
-        silo0.deposit(_assets, _depositor, _type);
+        silo0.deposit(_assets, depositor, _type);
     }
 
     /*

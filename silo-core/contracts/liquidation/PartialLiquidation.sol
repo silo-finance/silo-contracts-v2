@@ -1,20 +1,19 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.21;
 
-import {ReentrancyGuardUpgradeable} from "openzeppelin-contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
-
 import {ISilo, ILiquidationProcess} from "../interfaces/ISilo.sol";
 import {IPartialLiquidation} from "../interfaces/IPartialLiquidation.sol";
 import {ISiloOracle} from "../interfaces/ISiloOracle.sol";
 import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
 import {SiloLendingLib} from "../lib/SiloLendingLib.sol";
 import {Methods} from "../lib/Methods.sol";
+import {CrossEntrancy} from "../lib/CrossEntrancy.sol";
 
 import {PartialLiquidationExecLib} from "./lib/PartialLiquidationExecLib.sol";
 
 
 /// @title PartialLiquidation module for executing liquidations
-contract PartialLiquidation is IPartialLiquidation, ReentrancyGuardUpgradeable {
+contract PartialLiquidation is IPartialLiquidation {
     /// @inheritdoc IPartialLiquidation
     function liquidationCall( // solhint-disable-line function-max-lines, code-complexity
         address _siloWithDebt,
@@ -26,14 +25,16 @@ contract PartialLiquidation is IPartialLiquidation, ReentrancyGuardUpgradeable {
     )
         external
         virtual
-        nonReentrant
         returns (uint256 withdrawCollateral, uint256 repayDebtAssets)
     {
+        ISiloConfig siloConfigCached = ISilo(_siloWithDebt).config();
+        siloConfigCached.crossNonReentrantBefore(CrossEntrancy.ENTERED);
+
         (
             ISiloConfig.ConfigData memory collateralConfig,
             ISiloConfig.ConfigData memory debtConfig,
             ISiloConfig.DebtInfo memory debtInfo
-        ) = ISilo(_siloWithDebt).config().getConfigs(_siloWithDebt, _borrower, Methods.EXTERNAL);
+        ) = siloConfigCached.getConfigs(_siloWithDebt, _borrower, Methods.EXTERNAL);
 
         if (!debtInfo.debtPresent) revert UserIsSolvent();
         if (!debtInfo.debtInThisSilo) revert ISilo.ThereIsDebtInOtherSilo();
@@ -77,6 +78,8 @@ contract PartialLiquidation is IPartialLiquidation, ReentrancyGuardUpgradeable {
         ILiquidationProcess(collateralConfig.silo).withdrawCollateralsToLiquidator(
             withdrawAssetsFromCollateral, withdrawAssetsFromProtected, _borrower, msg.sender, _receiveSToken
         );
+
+        siloConfigCached.crossNonReentrantAfter();
     }
 
     /// @inheritdoc IPartialLiquidation

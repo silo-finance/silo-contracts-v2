@@ -41,7 +41,7 @@ contract LeverageWithLiquidationTest is SiloLittleHelper, Test, ILeverageBorrowe
         bytes memory data;
         vm.prank(borrower);
         // before reentrancy protection, if debt or collateral is 0, then liquidation will fail with NoDebtToCover
-        vm.expectRevert("ReentrancyGuard: reentrant call");
+        vm.expectRevert(ISiloConfig.CrossReentrantCall.selector);
         silo1.leverage(borrowAssets, leverageBorrower, borrower, sameAsset, data);
     }
 
@@ -62,7 +62,7 @@ contract LeverageWithLiquidationTest is SiloLittleHelper, Test, ILeverageBorrowe
         vm.prank(borrower);
         // this will revert, because we can not enter liquidation when we do leverage
         // without reentrancy it is possible
-        vm.expectRevert("ReentrancyGuard: reentrant call");
+        vm.expectRevert(ISiloConfig.CrossReentrantCall.selector);
         silo1.leverage(borrowAssets, leverageBorrower, borrower, sameAsset, data);
     }
 

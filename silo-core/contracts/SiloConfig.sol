@@ -3,6 +3,7 @@ pragma solidity 0.8.21;
 
 import {ISiloConfig} from "./interfaces/ISiloConfig.sol";
 import {Methods} from "./lib/Methods.sol";
+import {CrossEntrancy} from "./lib/CrossEntrancy.sol";
 
 // solhint-disable var-name-mixedcase
 
@@ -69,21 +70,34 @@ contract SiloConfig is ISiloConfig {
     // TODO do we need events for this? this is internal state only
     mapping (address borrower => DebtInfo debtInfo) internal _debtsInfo;
 
+    // Booleans are more expensive than uint256 or any type that takes up a full
+    // word because each write operation emits an extra SLOAD to first read the
+    // slot's contents, replace the bits taken up by the boolean, and then write
+    // back. This is the compiler's defense against contract upgrades and
+    // pointer aliasing, and it cannot be disabled.
+
+    // The values being non-zero value makes deployment a bit more expensive,
+    // but in exchange the refund on every call to nonReentrant will be lower in
+    // amount. Since refunds are capped to a percentage of the total
+    // transaction's gas, it is best to keep them low in cases like this one, to
+    // increase the likelihood of the full refund coming into effect.
+    uint256 private _crossReentrantStatus;
+
     /// @param _siloId ID of this pool assigned by factory
     /// @param _configData0 silo configuration data for token0
     /// @param _configData1 silo configuration data for token1
     constructor(uint256 _siloId, ConfigData memory _configData0, ConfigData memory _configData1) {
+        _crossReentrantStatus = CrossEntrancy.NOT_ENTERED;
+
         SILO_ID = _siloId;
 
         _DAO_FEE = _configData0.daoFee;
         _DEPLOYER_FEE = _configData0.deployerFee;
-
         _LIQUIDATION_MODULE = _configData0.liquidationModule;
 
         // TOKEN #0
 
         _SILO0 = _configData0.silo;
-
         _TOKEN0 = _configData0.token;
 
         _PROTECTED_COLLATERAL_SHARE_TOKEN0 = _configData0.protectedShareToken;
@@ -105,7 +119,6 @@ contract SiloConfig is ISiloConfig {
         // TOKEN #1
 
         _SILO1 = _configData1.silo;
-
         _TOKEN1 = _configData1.token;
 
         _PROTECTED_COLLATERAL_SHARE_TOKEN1 = _configData1.protectedShareToken;
@@ -128,9 +141,10 @@ contract SiloConfig is ISiloConfig {
     /// @inheritdoc ISiloConfig
     function openDebt(address _borrower, bool _sameAsset)
         external
+        virtual
         returns (ConfigData memory, ConfigData memory, DebtInfo memory)
     {
-        if (msg.sender != _SILO0 && msg.sender != _SILO1) revert WrongSilo();
+        if (msg.sender != _SILO0 && msg.sender != _SILO1) revert OnlySilo();
 
         DebtInfo memory debtInfo = _debtsInfo[_borrower];
 
@@ -146,7 +160,7 @@ contract SiloConfig is ISiloConfig {
     }
 
     /// @inheritdoc ISiloConfig
-    function onDebtTransfer(address _sender, address _recipient) external {
+    function onDebtTransfer(address _sender, address _recipient) external virtual {
         if (msg.sender != _DEBT_SHARE_TOKEN0 && msg.sender != _DEBT_SHARE_TOKEN1) revert OnlyDebtShareToken();
 
         DebtInfo storage recipientDebtInfo = _debtsInfo[_recipient];
@@ -162,19 +176,20 @@ contract SiloConfig is ISiloConfig {
     }
 
     /// @inheritdoc ISiloConfig
-    function closeDebt(address _borrower) external {
+    function closeDebt(address _borrower) external virtual {
         if (msg.sender != _SILO0 && msg.sender != _SILO1 &&
             msg.sender != _DEBT_SHARE_TOKEN0 && msg.sender != _DEBT_SHARE_TOKEN1
-        ) revert WrongSilo();
+        ) revert OnlySiloOrDebtShareToken();
 
         delete _debtsInfo[_borrower];
     }
 
     function changeCollateralType(address _borrower, bool _sameAsset)
         external
+        virtual
         returns (ConfigData memory, ConfigData memory, DebtInfo memory debtInfo)
     {
-        if (msg.sender != _SILO0 && msg.sender != _SILO1) revert WrongSilo();
+        if (msg.sender != _SILO0 && msg.sender != _SILO1) revert OnlySilo();
 
         debtInfo = _debtsInfo[_borrower];
 
@@ -187,6 +202,51 @@ contract SiloConfig is ISiloConfig {
         return _getConfigs(msg.sender, 0 /* method does not mather when debt open */, debtInfo);
     }
 
+    /// @inheritdoc ISiloConfig
+    function crossNonReentrantBefore(uint256 _entranceFrom) external virtual {
+        _onlySiloTokenOrLiquidation();
+
+        // On the first call to nonReentrant, _status will be CrossEntrancy.NOT_ENTERED
+        if (_crossReentrantStatus == CrossEntrancy.NOT_ENTERED) {
+            // Any calls to nonReentrant after this point will fail
+            _crossReentrantStatus = CrossEntrancy.ENTERED;
+            return;
+        }
+        
+        if (_entranceFrom == CrossEntrancy.ENTERED_FROM_LEVERAGE) {
+            // before leverage callback, we mark status
+            _crossReentrantStatus = CrossEntrancy.ENTERED_FROM_LEVERAGE;
+            return;
+        }
+
+        if (_crossReentrantStatus == CrossEntrancy.ENTERED_FROM_LEVERAGE &&
+            _entranceFrom == CrossEntrancy.ENTERED_FROM_DEPOSIT
+        ) {
+            // on leverage, entrance from deposit is allowed, but allowance is removed
+            _crossReentrantStatus = CrossEntrancy.ENTERED;
+            return;
+        }
+
+        revert CrossReentrantCall();
+    }
+
+    /// @inheritdoc ISiloConfig
+    function crossNonReentrantAfter() external virtual {
+        _onlySiloTokenOrLiquidation();
+
+        // By storing the original value once again, a refund is triggered (see
+        // https://eips.ethereum.org/EIPS/eip-2200)
+        _crossReentrantStatus = CrossEntrancy.NOT_ENTERED;
+    }
+
+    /**
+     * @dev Returns true if the reentrancy guard is currently set to "entered", which indicates there is a
+     * `nonReentrant` function in the call stack.
+     */
+    function crossReentrancyGuardEntered() external view virtual returns (bool) {
+        return _crossReentrantStatus == CrossEntrancy.ENTERED;
+    }
+    
     /// @inheritdoc ISiloConfig
     function getSilos() external view returns (address silo0, address silo1) {
         return (_SILO0, _SILO1);
@@ -399,10 +459,25 @@ contract SiloConfig is ISiloConfig {
         return (collateral, debt, _debtInfo);
     }
 
-    function _forbidDebtInTwoSilos(bool _debtInSilo0) internal view {
+    function _forbidDebtInTwoSilos(bool _debtInSilo0) internal view virtual {
         if (msg.sender == _DEBT_SHARE_TOKEN0 && _debtInSilo0) return;
         if (msg.sender == _DEBT_SHARE_TOKEN1 && !_debtInSilo0) return;
 
         revert DebtExistInOtherSilo();
+    }
+
+    function _onlySiloTokenOrLiquidation() internal view virtual {
+        if (msg.sender == _SILO0 ||
+            msg.sender == _SILO1 ||
+            msg.sender == _LIQUIDATION_MODULE ||
+            msg.sender == _COLLATERAL_SHARE_TOKEN0 ||
+            msg.sender == _COLLATERAL_SHARE_TOKEN1 ||
+            msg.sender == _PROTECTED_COLLATERAL_SHARE_TOKEN0 ||
+            msg.sender == _PROTECTED_COLLATERAL_SHARE_TOKEN1 ||
+            msg.sender == _DEBT_SHARE_TOKEN0 ||
+            msg.sender == _DEBT_SHARE_TOKEN1
+        ) {
+            return;
+        } else revert OnlySiloOrLiquidationModule();
     }
 }
