@@ -959,6 +959,13 @@ contract Silo is Initializable, SiloERC4626 {
         }
 
         siloConfigCached.crossNonReentrantAfter();
+
+        if (_triggerHook(currentConfig.hookReceiver, Hook.AFTER_BORROW)) {
+            IHookReceiver(currentConfig.hookReceiver).beforeAction(
+                Hook.AFTER_BORROW,
+                abi.encodePacked(_assets, _shares, _receiver, _borrower, _sameAsset, _leverage, assets, shares)
+            );
+        }
     }
 
     /// @param _liquidation TRUE when call is from liquidator module
@@ -967,13 +974,17 @@ contract Silo is Initializable, SiloERC4626 {
         virtual
         returns (uint256 assets, uint256 shares)
     {
-        (ISiloConfig.ConfigData memory currentConfig,,) = config.getConfig(address(this));
+        ISiloConfig.ConfigData memory currentConfig;
 
-        if (_triggerHook(currentConfig.hookReceiver, Hook.BEFORE_REPAY)) {
-            // TODO I think we should call after accrued interest?
-            IHookReceiver(currentConfig.hookReceiver).beforeAction(
-                Hook.BEFORE_REPAY, abi.encodePacked(_assets, _shares, _borrower, _repayer, _liquidation)
-            );
+        if (!_liquidation) {
+            (currentConfig,,) = config.getConfig(address(this));
+
+            if (_triggerHook(currentConfig.hookReceiver, Hook.BEFORE_REPAY)) {
+                // TODO I think we should call after accrued interest?
+                IHookReceiver(currentConfig.hookReceiver).beforeAction(
+                    Hook.BEFORE_REPAY, abi.encodePacked(_assets, _shares, _borrower, _repayer)
+                );
+            }
         }
 
         (
@@ -988,7 +999,16 @@ contract Silo is Initializable, SiloERC4626 {
 
         emit Repay(_repayer, _borrower, assets, shares);
 
-        if (!_liquidation) siloConfigCached.crossNonReentrantAfter();
+        if (!_liquidation) {
+            siloConfigCached.crossNonReentrantAfter();
+
+            if (_triggerHook(currentConfig.hookReceiver, Hook.AFTER_REPAY)) {
+                // TODO I think we should call after accrued interest?
+                IHookReceiver(currentConfig.hookReceiver).beforeAction(
+                    Hook.AFTER_REPAY, abi.encodePacked(_assets, _shares, _borrower, _repayer, assets ,shares)
+                );
+            }
+        }
     }
 
     function _getTotalAssetsAndTotalSharesWithInterest(AssetType _assetType)
