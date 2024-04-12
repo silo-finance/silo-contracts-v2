@@ -62,7 +62,7 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
     ISilo public silo;
 
     /// @dev cached silo config address
-    ISiloConfig internal _siloConfig;
+    ISiloConfig public siloConfig;
 
     /// @notice Address of hook contract called on each token transfer, mint and burn
     address public hookReceiver;
@@ -85,12 +85,12 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
         override(ERC20Upgradeable, IERC20Upgradeable)
         returns (bool result)
     {
-        ISiloConfig siloConfig = _siloConfig;
-        siloConfig.crossNonReentrantBefore(CrossEntrancy.ENTERED);
+        ISiloConfig siloConfigCached = siloConfig;
+        siloConfigCached.crossNonReentrantBefore(CrossEntrancy.ENTERED);
 
         result = super.transferFrom(_from, _to, _amount);
 
-        siloConfig.crossNonReentrantAfter();
+        siloConfigCached.crossNonReentrantAfter();
     }
 
     /// @inheritdoc ERC20Upgradeable
@@ -100,12 +100,12 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
         override(ERC20Upgradeable, IERC20Upgradeable)
         returns (bool result)
     {
-        ISiloConfig siloConfig = _siloConfig;
+        ISiloConfig siloConfigCached = siloConfig;
         siloConfig.crossNonReentrantBefore(CrossEntrancy.ENTERED);
 
         result = super.transfer(_to, _amount);
 
-        siloConfig.crossNonReentrantAfter();
+        siloConfigCached.crossNonReentrantAfter();
     }
 
     /// @inheritdoc IShareToken
@@ -183,7 +183,6 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
         override(ERC20Upgradeable, IERC20MetadataUpgradeable)
         returns (string memory)
     {
-        ISiloConfig siloConfig = silo.config();
         ISiloConfig.ConfigData memory configData = siloConfig.getConfig(address(silo));
         string memory siloIdAscii = StringsUpgradeable.toString(siloConfig.SILO_ID());
 
@@ -210,7 +209,7 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
     function __ShareToken_init(ISilo _silo, address _hookReceiver) internal virtual onlyInitializing {
         silo = _silo;
         hookReceiver = _hookReceiver;
-        _siloConfig = _silo.config();
+        siloConfig = _silo.config();
     }
 
     /// @dev Call an afterTokenTransfer hook if registered and check minimum share requirement on mint/burn

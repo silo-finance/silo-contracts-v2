@@ -76,7 +76,7 @@ contract ShareDebtToken is IERC20R, ShareToken {
         // If we are minting or burning, Silo is responsible to check all necessary conditions
         if (_isTransfer(_sender, _recipient)) {
             // Silo forbids having two debts and this condition will be checked inside `onDebtTransfer`
-            _siloConfig.onDebtTransfer(_sender, _recipient);
+            siloConfig.onDebtTransfer(_sender, _recipient);
 
             // _recipient must approve debt transfer, _sender does not have to
             uint256 currentAllowance = receiveAllowance(_sender, _recipient);
@@ -105,6 +105,6 @@ contract ShareDebtToken is IERC20R, ShareToken {
         }
 
         // we need to close debt on transfer and burn
-        if (_sender != address(0) && balanceOf(_sender) == 0) _siloConfig.closeDebt(_sender);
+        if (_sender != address(0) && balanceOf(_sender) == 0) siloConfig.closeDebt(_sender);
     }
 }
