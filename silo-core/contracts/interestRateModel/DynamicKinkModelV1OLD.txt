@@ -5,8 +5,11 @@ import {SafeCast} from "openzeppelin-contracts/utils/math/SafeCast.sol";
 import {Math} from "openzeppelin-contracts/utils/math/Math.sol";
 
 import {PRBMathSD59x18} from "../lib/PRBMathSD59x18.sol";
+import {SiloMathLib} from "../lib/SiloMathLib.sol";
+import {ISilo} from "../interfaces/ISilo.sol";
 import {IInterestRateModel} from "../interfaces/IInterestRateModel.sol";
-import {IDynamicKinkModelV1} from "../interfaces/IDynamicKinkModelV1.sol";
+import {IInterestRateModelV2} from "../interfaces/IInterestRateModelV2.sol";
+import {IInterestRateModelV2Config} from "../interfaces/IInterestRateModelV2Config.sol";
 
 // solhint-disable var-name-mixedcase
 // solhint-disable func-name-mixedcase
@@ -29,10 +32,21 @@ contract DynamicKinkModelV1 is IInterestRateModel, IDynamicKinkModelV1 {
     /// @dev DP is 18 decimal points used for integer calculations
     uint256 internal constant _DP = 1e18;
 
-    uint256 public K; // TODO
-
     /// @dev maximum value of X. If x > X_MAX => exp(x) > (2**16) * 1e18. X_MAX = ln((2**16) * 1e18 + 1)
     int256 public constant X_MAX = 88722839111672999628;
+
+    struct Config {
+        // ucrit ∈ (0, 1) – threshold of critical utilization
+        // ulow ∈ (0, ucrit) – threshold of low utilization
+        // uopt ∈ (ulow, ucrit) – optimal utilization;
+        // rmin ≥ 0 – minimal per-second interest rate
+        // kmin ≥ 0 – minimal slope of central segmend of the kink
+        // kmax ≥ kmin – maximal slope of central segmend of the kink
+        // alpha ≥ 0 - factor for the slope for the critical segment of the kink
+        // cplus ≥ 0 – coefficient of growth of the slope k
+        // cminus ≥ 0 – coefficient of decrease of the slope k
+        // czero ≥ 0 – minimal rate of decrease of the slope k
+    }
 
     constructor() {
         R_CURRENT_MAX = 1e20; // this is 10,000% APR in the 18-decimals format
@@ -57,66 +71,57 @@ contract DynamicKinkModelV1 is IInterestRateModel, IDynamicKinkModelV1 {
     /// @dev get compound interest rate
     /// @param _t0 timestamp of last calculation
     /// @param _t1 current timestamp
+    /// @param _k state of the slope k at time t0
     /// @param _u utilization at time t0
     /// @return rcomp compounded interest rate
     /// @return k updated state of the slope k at time t1
-    function compoundInterestRate(ConfigWithState memory _c, uint256 _t0, uint256 _t1, uint256 _u)
+    function compoundInterestRate(uint256 _t0, uint256 _t1, uint256 _k, uint256 _u)
         public
         pure
         returns (uint256 rcomp, uint256 k)
     {
         if (_t1 <= _t0) revert InvalidTimestamp();
 
-        k = _c.k;
         uint256 T = _t1 - _t0;
         int256 slope; // rate of change for k
 
-        if (_u >= _c.uopt) {
-            slope = _c.cplus * (_u - _c.uopt) / _DP;
+        if (_u >= uopt) {
+            slope = cplus * (_u - uopt) / DP;
         } else {
-            slope = - _c.c0 + _c.cminus * (_u - _c.uopt) / _DP;
+            slope = - c0 + cminus * (_u - uopt) / DP;
         }
 
-        int256 k1 = _c.k + slope * T; // slope of the kink at t1 ignoring lower and upper bounds
+        int256 k1 = _k + slope * T; // slope of the kink at t1 ignoring lower and upper bounds
 
         uint256 x; // an integral of k
 
-        if (k1 > _c.kmax) {
-            x = _c.kmax * T - (_c.kmax - _c.k)**2 / (2 * slope);
-            k = _c.kmax;
-        } else if (k1 < _c.kmin) {
-            x = _c.kmin * T + (k - _c.kmin)**2 / (2 * slope);
-            k = _c.kmin;
+        if (k1 > kmax) {
+            x = kmax * T - (kamx - _k)**2 / (2 * slope);
+            k = kmax;
+        } else if (k1 < kmin) {
+            x = kmin * T + (_k - kmin)**2 / (2 * slope);
+            k = kmin;
         } else {
-            x = (k + k1) * T / 2;
+            x = (_k + k1) * T / 2;
             k = k1;
         }
 
         uint256 f; // factor for the slope in kink
-        if (_u >= _c.ulow) {
-            f = _u - _c.ulow;
+        if (u >= ulow) {
+            f = u - ulow;
 
-            if (_u >= _c.ucrit) {
-                f = f + _c.alpha * (_u - _c.ucrit) / _DP;
+            if (u >= ucrit) {
+                f = f + alpha * (u - ucrit) / DP;
             }
         }
 
-        x = _c.rmin * T + f * x / _DP;
+        x = rmin * T + f * x / DP;
 
         if (x > X_MAX) {
             rcomp = R_COMPOUND_MAX_PER_SECOND * T;
         } else {
-            rcomp = x.exp() - _DP;
+            rcomp = x.exp() - DP;
         }
-    }
-
-    function currentInterestRate(uint256 _t0, uint256 _t1, uint256 _k, uint256 _u)
-        public
-        pure
-        returns (uint256 rcur)
-    {
-        // uint T = t1 - t0;
-        if (_t1 <= _t0) revert InvalidTimestamp();
     }
 
     /// @dev get compound interest rate

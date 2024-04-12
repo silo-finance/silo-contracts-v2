@@ -13,47 +13,51 @@ interface IDynamicKinkModelV1 {
         int256 ucrit;
         // ulow ∈ (0, uopt) – threshold of low utilization
         int256 ulow;
-        // ki > 0 – integrator gain
-        int256 ki;
-        // kcrit > 0 – proportional gain for large utilization
-        int256 kcrit;
-        // klow ≥ 0 – proportional gain for low utilization
-        int256 klow;
-        // klin ≥ 0 – coefficient of the lower linear bound
-        int256 klin;
-        // beta ≥ 0 - a scaling factor
-        int256 beta;
+        // rmin ≥ 0 minimal per-second interest rate
+        int256 rmin;
+        // kmin ≥ 0 minimal slope of central segment of the kink
+        int256 kmin;
+        // kmax ≥ kmin max slope of central segment of the kink
+        int256 kmax;
+        // alpha ≥ 0 factor for the slope for the critical segment of the kink
+        int256 alpha;
+        // cplus ≥ 0 coefficent of growth of the slope k
+        int256 cplus;
+        // cminus ≥ 0 coefficent of decrease of the slope k
+        int256 cminus;
+        // c0 ≥ 0 minimal rate of decrease of the slope k
+        int256 c0;
     }
 
     struct ConfigWithState {
-        // uopt ∈ (0, 1) – optimal utilization;
+         // uopt ∈ (0, 1) – optimal utilization;
         int256 uopt;
         // ucrit ∈ (uopt, 1) – threshold of large utilization;
         int256 ucrit;
         // ulow ∈ (0, uopt) – threshold of low utilization
         int256 ulow;
-        // ki > 0 – integrator gain
-        int256 ki;
-        // kcrit > 0 – proportional gain for large utilization
-        int256 kcrit;
-        // klow ≥ 0 – proportional gain for low utilization
-        int256 klow;
-        // klin ≥ 0 – coefficient of the lower linear bound
-        int256 klin;
-        // beta ≥ 0 - a scaling factor
-        int256 beta;
-        // ri ≥ 0 – initial value of the integrator
-        int256 ri;
-        // Tcrit ≥ 0 - the time during which the utilization exceeds the critical value
-        int256 Tcrit;
+        // rmin ≥ 0 minimal per-second interest rate
+        int256 rmin;
+        // kmin ≥ 0 minimal slope of central segment of the kink
+        int256 kmin;
+        // kmax ≥ kmin max slope of central segment of the kink
+        int256 kmax;
+        // alpha ≥ 0 factor for the slope for the critical segment of the kink
+        int256 alpha;
+        // cplus ≥ 0 coefficent of growth of the slope k
+        int256 cplus;
+        // cminus ≥ 0 coefficent of decrease of the slope k
+        int256 cminus;
+        // c0 ≥ 0 minimal rate of decrease of the slope k
+        int256 c0;
+        // state of the slope after latest interest rate accrual
+        int256 k;
     }
 
     struct Setup {
-        // ri ≥ 0 – initial value of the integrator
-        int128 ri;
-        // Tcrit ≥ 0 - the time during which the utilization exceeds the critical value
-        int128 Tcrit;
-        IInterestRateModelV2Config config;
+        // state of the slope after latest interest rate accrual
+        int256 k;
+        Config config;
     }
     /* solhint-enable */
 
@@ -61,17 +65,17 @@ interface IDynamicKinkModelV1 {
     error DeployConfigFirst();
     error AlreadyConnected();
 
-    error InvalidBeta();
-    error InvalidKcrit();
-    error InvalidKi();
-    error InvalidKlin();
-    error InvalidKlow();
-    error InvalidTcrit();
-    error InvalidTimestamps();
-    error InvalidUcrit();
     error InvalidUlow();
     error InvalidUopt();
-    error InvalidRi();
+    error InvalidUcrit();
+    error InvalidRmin();
+    error InvalidKmin();
+    error InvalidKmax();
+    error InvalidAlpha();
+    error InvalidCplus();
+    error InvalidCminus();
+    error InvalidC0();
+    error InvalidK();
 
     /// @dev Get config for given asset in a Silo. If dedicated config is not set, default one will be returned.
     /// @param _silo Silo address for which config should be set
@@ -121,9 +125,7 @@ interface IDynamicKinkModelV1 {
         pure
         returns (
             uint256 rcomp,
-            int256 ri,
-            int256 Tcrit,
-            bool overflow
+            int256 k
         );
 
     /// @dev pure function that calculates interest rate based on raw input data
@@ -141,5 +143,5 @@ interface IDynamicKinkModelV1 {
         uint256 _totalBorrowAmount,
         uint256 _interestRateTimestamp,
         uint256 _blockTimestamp
-    ) external pure returns (uint256 rcomp, int256 ri, int256 Tcrit);
+    ) external pure returns (uint256 rcomp, int256 k);
 }
