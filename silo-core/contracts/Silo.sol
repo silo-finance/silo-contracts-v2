@@ -14,6 +14,7 @@ import {ILeverageBorrower} from "./interfaces/ILeverageBorrower.sol";
 import {ISiloConfig} from "./interfaces/ISiloConfig.sol";
 import {ISiloFactory} from "./interfaces/ISiloFactory.sol";
 import {IInterestRateModel} from "./interfaces/IInterestRateModel.sol";
+import {IHookReceiver} from "./utils/hook-receivers/interfaces/IHookReceiver.sol";
 
 import {SiloERC4626} from "./utils/SiloERC4626.sol";
 import {SiloStdLib} from "./lib/SiloStdLib.sol";
@@ -738,7 +739,7 @@ contract Silo is Initializable, SiloERC4626 {
 
         (ISiloConfig.ConfigData memory currentConfig,,) = config.getConfig(address(this));
 
-        if (_triggerHook(currentConfig.hookReceiver, Hook.BEFORE_DEPOSIT)) {
+        if (_hookCallNeeded(currentConfig.hookReceiver, Hook.BEFORE_DEPOSIT)) {
             IHookReceiver(currentConfig.hookReceiver).beforeAction(
                 Hook.BEFORE_DEPOSIT, abi.encodePacked(_assets, _shares, _receiver, _assetType)
             );
@@ -770,7 +771,7 @@ contract Silo is Initializable, SiloERC4626 {
 
         siloConfigCached.crossNonReentrantAfter();
 
-        if (_triggerHook(currentConfig.hookReceiver, Hook.AFTER_DEPOSIT)) {
+        if (_hookCallNeeded(currentConfig.hookReceiver, Hook.AFTER_DEPOSIT)) {
             IHookReceiver(currentConfig.hookReceiver).afterAction(
                 Hook.AFTER_DEPOSIT, abi.encodePacked(_assets, _shares, _receiver, _assetType, assets, shares)
             );
@@ -794,7 +795,7 @@ contract Silo is Initializable, SiloERC4626 {
 
         (ISiloConfig.ConfigData memory currentConfig,,) = config.getConfig(address(this));
 
-        if (_triggerHook(currentConfig.hookReceiver, Hook.BEFORE_WITHDRAW)) {
+        if (_hookCallNeeded(currentConfig.hookReceiver, Hook.BEFORE_WITHDRAW)) {
             IHookReceiver(currentConfig.hookReceiver).beforeAction(
                 Hook.BEFORE_WITHDRAW, abi.encodePacked(_assets, _shares, _receiver, _owner, _spender, _assetType)
             );
@@ -872,7 +873,7 @@ contract Silo is Initializable, SiloERC4626 {
 
         siloConfigCached.crossNonReentrantAfter();
 
-        if (_triggerHook(currentConfig.hookReceiver, Hook.AFTER_WITHDRAW)) {
+        if (_hookCallNeeded(currentConfig.hookReceiver, Hook.AFTER_WITHDRAW)) {
             IHookReceiver(currentConfig.hookReceiver).afterAction(
                 Hook.AFTER_WITHDRAW, abi.encodePacked(_assets, _shares, _receiver, _owner, _spender, _assetType, assets, shares)
             );
@@ -896,7 +897,7 @@ contract Silo is Initializable, SiloERC4626 {
 
         (ISiloConfig.ConfigData memory currentConfig,,) = config.getConfig(address(this));
 
-        if (_triggerHook(currentConfig.hookReceiver, Hook.BEFORE_BORROW)) {
+        if (_hookCallNeeded(currentConfig.hookReceiver, Hook.BEFORE_BORROW)) {
             IHookReceiver(currentConfig.hookReceiver).beforeAction(
                 Hook.BEFORE_BORROW, abi.encodePacked(_assets, _shares, _receiver, _borrower, _sameAsset, _leverage)
             );
@@ -960,7 +961,7 @@ contract Silo is Initializable, SiloERC4626 {
 
         siloConfigCached.crossNonReentrantAfter();
 
-        if (_triggerHook(currentConfig.hookReceiver, Hook.AFTER_BORROW)) {
+        if (_hookCallNeeded(currentConfig.hookReceiver, Hook.AFTER_BORROW)) {
             IHookReceiver(currentConfig.hookReceiver).beforeAction(
                 Hook.AFTER_BORROW,
                 abi.encodePacked(_assets, _shares, _receiver, _borrower, _sameAsset, _leverage, assets, shares)
@@ -979,7 +980,7 @@ contract Silo is Initializable, SiloERC4626 {
         if (!_liquidation) {
             (currentConfig,,) = config.getConfig(address(this));
 
-            if (_triggerHook(currentConfig.hookReceiver, Hook.BEFORE_REPAY)) {
+            if (_hookCallNeeded(currentConfig.hookReceiver, Hook.BEFORE_REPAY)) {
                 // TODO I think we should call after accrued interest?
                 IHookReceiver(currentConfig.hookReceiver).beforeAction(
                     Hook.BEFORE_REPAY, abi.encodePacked(_assets, _shares, _borrower, _repayer)
@@ -1002,7 +1003,7 @@ contract Silo is Initializable, SiloERC4626 {
         if (!_liquidation) {
             siloConfigCached.crossNonReentrantAfter();
 
-            if (_triggerHook(currentConfig.hookReceiver, Hook.AFTER_REPAY)) {
+            if (_hookCallNeeded(currentConfig.hookReceiver, Hook.AFTER_REPAY)) {
                 // TODO I think we should call after accrued interest?
                 IHookReceiver(currentConfig.hookReceiver).beforeAction(
                     Hook.AFTER_REPAY, abi.encodePacked(_assets, _shares, _borrower, _repayer, assets ,shares)
@@ -1109,12 +1110,6 @@ contract Silo is Initializable, SiloERC4626 {
 
     function _crossNonReentrantBefore(uint256 _enteredFrom, uint256 _hook) internal virtual returns (ISiloConfig siloConfigCached) {
         siloConfigCached = config;
-        address hookReceiver;
-
-        if (_triggerHook(configData.hookReceiver, _hook)) {
-            // TODO exec hook
-        }
-
         siloConfigCached.crossNonReentrantBefore(_enteredFrom);
     }
 
@@ -1208,12 +1203,8 @@ contract Silo is Initializable, SiloERC4626 {
             total[AssetType.Collateral].assets
         );
     }
-
-    function _hookCallNeeded(address _hookReceiver, uint256 _hook) internal returns (bool) {
-        return _hookReceiver != address(0) && (siloData.hooks & _hook != 0);
-    }
-
-    function _beforeHook(IHookReceiver _hookReceiver, bytes memory _options) internal {
-
+    
+    function _hookCallNeeded(address _hookReceiver, uint256 _hook) internal pure returns (bool) {
+        return Hook.triggerHook(_hookReceiver, siloData.hooks, _hook);
     }
 }
