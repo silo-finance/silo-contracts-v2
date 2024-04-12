@@ -119,6 +119,13 @@ interface ISiloConfig {
         bool callBeforeQuote;
     }
 
+    struct HooksSetup {
+        uint64 silo0HooksBefore;
+        uint64 silo0HooksAfter;
+        uint64 silo1HooksBefore;
+        uint64 silo1HooksAfter;
+    }
+
     error OnlySilo();
     error OnlySiloOrLiquidationModule();
     error OnlySiloOrDebtShareToken();
