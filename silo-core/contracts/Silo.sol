@@ -322,7 +322,7 @@ contract Silo is Initializable, SiloERC4626 {
         virtual
         returns (uint256 assets)
     {
-        (assets,) = _deposit(0 /* asstes */, _shares, _receiver, _assetType);
+        (assets,) = _deposit(0 /* assets */, _shares, _receiver, _assetType);
     }
 
     /// @inheritdoc ISilo
@@ -379,7 +379,7 @@ contract Silo is Initializable, SiloERC4626 {
     {
         if (_withdrawType == AssetType.Debt) revert ISilo.WrongAssetType();
 
-        ISiloConfig siloConfigCached = _crossNonReentrantBefore(CrossEntrancy.ENTERED, Hook.NONE);
+        ISiloConfig siloConfigCached = _crossNonReentrantBefore(CrossEntrancy.ENTERED);
         
         ISiloConfig.ConfigData memory configData = siloConfigCached.getConfig(address(this));
 
@@ -712,9 +712,6 @@ contract Silo is Initializable, SiloERC4626 {
         configData = siloConfig.getConfig(address(this));
 
         if (_callReentrancyBefore) {
-            if (_triggerHook(configData.hookReceiver, Hook.BEFORE_DEPOSIT)) {
-                // TODO exec hook
-            }
             siloConfig.crossNonReentrantBefore(_entranceFrom);
         }
 
@@ -740,10 +737,12 @@ contract Silo is Initializable, SiloERC4626 {
         if (_assetType == AssetType.Debt) revert ISilo.WrongAssetType();
 
         (ISiloConfig.ConfigData memory currentConfig,,) = config.getConfig(address(this));
-        
-        IHookReceiver(currentConfig.hookReceiver).beforeAction(
-            Hook.BEFORE_DEPOSIT, abi.encodePacked(_assets, _shares, _receiver, _assetType)
-        );
+
+        if (_triggerHook(currentConfig.hookReceiver, Hook.BEFORE_DEPOSIT)) {
+            IHookReceiver(currentConfig.hookReceiver).beforeAction(
+                Hook.BEFORE_DEPOSIT, abi.encodePacked(_assets, _shares, _receiver, _assetType)
+            );
+        }
 
         (
             , ISiloConfig.ConfigData memory configData, ISiloConfig siloConfigCached
@@ -771,8 +770,10 @@ contract Silo is Initializable, SiloERC4626 {
 
         siloConfigCached.crossNonReentrantAfter();
 
-        if (_triggerHook(configData.hookReceiver, Hook.AFTER_DEPOSIT)) {
-            // TODO exec hook
+        if (_triggerHook(currentConfig.hookReceiver, Hook.AFTER_DEPOSIT)) {
+            IHookReceiver(currentConfig.hookReceiver).afterAction(
+                Hook.AFTER_DEPOSIT, abi.encodePacked(_assets, _shares, _receiver, _assetType, assets, shares)
+            );
         }
     }
 
@@ -790,6 +791,14 @@ contract Silo is Initializable, SiloERC4626 {
         returns (uint256 assets, uint256 shares)
     {
         if (_assetType == AssetType.Debt) revert ISilo.WrongAssetType();
+
+        (ISiloConfig.ConfigData memory currentConfig,,) = config.getConfig(address(this));
+
+        if (_triggerHook(currentConfig.hookReceiver, Hook.BEFORE_WITHDRAW)) {
+            IHookReceiver(currentConfig.hookReceiver).beforeAction(
+                Hook.BEFORE_WITHDRAW, abi.encodePacked(_assets, _shares, _receiver, _owner, _spender, _assetType)
+            );
+        }
 
         ISiloConfig siloConfigCached = _crossNonReentrantBefore(CrossEntrancy.ENTERED);
 
@@ -862,6 +871,12 @@ contract Silo is Initializable, SiloERC4626 {
         }
 
         siloConfigCached.crossNonReentrantAfter();
+
+        if (_triggerHook(currentConfig.hookReceiver, Hook.AFTER_WITHDRAW)) {
+            IHookReceiver(currentConfig.hookReceiver).afterAction(
+                Hook.AFTER_WITHDRAW, abi.encodePacked(_assets, _shares, _receiver, _owner, _spender, _assetType, assets, shares)
+            );
+        }
     }
 
     function _borrow( // solhint-disable-line function-max-lines, code-complexity
@@ -879,6 +894,13 @@ contract Silo is Initializable, SiloERC4626 {
     {
         if (_assets == 0 && _shares == 0) revert ISilo.ZeroAssets();
 
+        (ISiloConfig.ConfigData memory currentConfig,,) = config.getConfig(address(this));
+
+        if (_triggerHook(currentConfig.hookReceiver, Hook.BEFORE_BORROW)) {
+            IHookReceiver(currentConfig.hookReceiver).beforeAction(
+                Hook.BEFORE_BORROW, abi.encodePacked(_assets, _shares, _receiver, _borrower, _sameAsset, _leverage)
+            );
+        }
 
         ISiloConfig siloConfigCached = _crossNonReentrantBefore(CrossEntrancy.ENTERED);
 
@@ -945,6 +967,15 @@ contract Silo is Initializable, SiloERC4626 {
         virtual
         returns (uint256 assets, uint256 shares)
     {
+        (ISiloConfig.ConfigData memory currentConfig,,) = config.getConfig(address(this));
+
+        if (_triggerHook(currentConfig.hookReceiver, Hook.BEFORE_REPAY)) {
+            // TODO I think we should call after accrued interest?
+            IHookReceiver(currentConfig.hookReceiver).beforeAction(
+                Hook.BEFORE_REPAY, abi.encodePacked(_assets, _shares, _borrower, _repayer, _liquidation)
+            );
+        }
+
         (
             , ISiloConfig.ConfigData memory configData, ISiloConfig siloConfigCached
         ) = _accrueInterestWithReentrantGuard(!_liquidation, CrossEntrancy.ENTERED);
