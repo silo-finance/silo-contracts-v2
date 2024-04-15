@@ -127,6 +127,7 @@ contract DynamicKinkModelV1 is IDynamicKinkModelV1 {
             }
         }
 
+        // todo negative factor
         // x = rmin * T + f * x / DP;
         x = _setup.config.rmin * T + f * x / _DP;
 
