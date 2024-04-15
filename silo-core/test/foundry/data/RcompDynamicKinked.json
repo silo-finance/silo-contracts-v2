@@ -1,0 +1,322 @@
+{"tests":[
+  {
+    "id": 0,
+    "input": {
+      "lastTransactionTime": 35165951,
+      "currentTime": 35167446,
+      "lastSlope": 6241828552,
+      "lastUtilization": 100000000000000000,
+      "totalBorrowAmount": 16105184974190713279348736,
+      "totalDeposits": 161051849741907137088454656
+    },
+    "constants": {
+      "ulow": 200000000000000000,
+      "u1": 800000000000000000,
+      "u2": 600000000000000000,
+      "ucrit": 900000000000000000,
+      "rmin": 31709791,
+      "kmin": 2264985141,
+      "kmax": 9059940566,
+      "dmax": 52430,
+      "alpha": 77000000000000004565,
+      "cminus": 174767,
+      "cplus": 349534,
+      "c1": 0,
+      "c2": 0
+    },
+    "expected": {
+      "compoundInterest": 47406140139,
+      "newSlope": 6058934498,
+      "didOverflow": 0,
+      "didCap": 0
+    }
+  },
+  {
+    "id": 1,
+    "input": {
+      "lastTransactionTime": 91719366,
+      "currentTime": 91719881,
+      "lastSlope": 7410126946,
+      "lastUtilization": 200000000000000000,
+      "totalBorrowAmount": 37412250116325559861510144,
+      "totalDeposits": 187061250581627786422648832
+    },
+    "constants": {
+      "ulow": 200000000000000000,
+      "u1": 800000000000000000,
+      "u2": 600000000000000000,
+      "ucrit": 900000000000000000,
+      "rmin": 31709791,
+      "kmin": 2264985141,
+      "kmax": 9059940566,
+      "dmax": 52430,
+      "alpha": 77000000000000004565,
+      "cminus": 174767,
+      "cplus": 349534,
+      "c1": 0,
+      "c2": 0
+    },
+    "expected": {
+      "compoundInterest": 16330543004,
+      "newSlope": 7356123828,
+      "didOverflow": 0,
+      "didCap": 0
+    }
+  },
+  {
+    "id": 2,
+    "input": {
+      "lastTransactionTime": 38044585,
+      "currentTime": 38045607,
+      "lastSlope": 2780411658,
+      "lastUtilization": 300000000000000000,
+      "totalBorrowAmount": 76944216065478468806115328,
+      "totalDeposits": 256480720218261574140297216
+    },
+    "constants": {
+      "ulow": 200000000000000000,
+      "u1": 800000000000000000,
+      "u2": 600000000000000000,
+      "ucrit": 900000000000000000,
+      "rmin": 31709791,
+      "kmin": 2264985141,
+      "kmax": 9059940566,
+      "dmax": 52430,
+      "alpha": 77000000000000004565,
+      "cminus": 174767,
+      "cplus": 349534,
+      "c1": 0,
+      "c2": 0
+    },
+    "expected": {
+      "compoundInterest": 312001984440,
+      "newSlope": 2691105530,
+      "didOverflow": 0,
+      "didCap": 0
+    }
+  },
+  {
+    "id": 3,
+    "input": {
+      "lastTransactionTime": 53079755,
+      "currentTime": 53081158,
+      "lastSlope": 8611546107,
+      "lastUtilization": 400000000000000000,
+      "totalBorrowAmount": 7343309630215434560077824,
+      "totalDeposits": 18358274075538586400194560
+    },
+    "constants": {
+      "ulow": 200000000000000000,
+      "u1": 800000000000000000,
+      "u2": 600000000000000000,
+      "ucrit": 900000000000000000,
+      "rmin": 31709791,
+      "kmin": 2264985141,
+      "kmax": 9059940566,
+      "dmax": 52430,
+      "alpha": 77000000000000004565,
+      "cminus": 174767,
+      "cplus": 349534,
+      "c1": 0,
+      "c2": 0
+    },
+    "expected": {
+      "compoundInterest": 2447131123443,
+      "newSlope": 8513466658,
+      "didOverflow": 0,
+      "didCap": 0
+    }
+  },
+  {
+    "id": 4,
+    "input": {
+      "lastTransactionTime": 56882366,
+      "currentTime": 56883211,
+      "lastSlope": 2345859173,
+      "lastUtilization": 500000000000000000,
+      "totalBorrowAmount": 22102396048582881325350912,
+      "totalDeposits": 44204792097165762650701824
+    },
+    "constants": {
+      "ulow": 200000000000000000,
+      "u1": 800000000000000000,
+      "u2": 600000000000000000,
+      "ucrit": 900000000000000000,
+      "rmin": 31709791,
+      "kmin": 2264985141,
+      "kmax": 9059940566,
+      "dmax": 52430,
+      "alpha": 77000000000000004565,
+      "cminus": 174767,
+      "cplus": 349534,
+      "c1": 0,
+      "c2": 0
+    },
+    "expected": {
+      "compoundInterest": 615854792050,
+      "newSlope": 2301555644,
+      "didOverflow": 0,
+      "didCap": 0
+    }
+  },
+  {
+    "id": 5,
+    "input": {
+      "lastTransactionTime": 16218231,
+      "currentTime": 16219661,
+      "lastSlope": 4379677480,
+      "lastUtilization": 600000000000000000,
+      "totalBorrowAmount": 68830134827218354084773888,
+      "totalDeposits": 114716891378697265397891072
+    },
+    "constants": {
+      "ulow": 200000000000000000,
+      "u1": 800000000000000000,
+      "u2": 600000000000000000,
+      "ucrit": 900000000000000000,
+      "rmin": 31709791,
+      "kmin": 2264985141,
+      "kmax": 9059940566,
+      "dmax": 52430,
+      "alpha": 77000000000000004565,
+      "cminus": 174767,
+      "cplus": 349534,
+      "c1": 0,
+      "c2": 0
+    },
+    "expected": {
+      "compoundInterest": 2536228465360,
+      "newSlope": 4329694011,
+      "didOverflow": 0,
+      "didCap": 0
+    }
+  },
+  {
+    "id": 6,
+    "input": {
+      "lastTransactionTime": 16564873,
+      "currentTime": 16565957,
+      "lastSlope": 4051863298,
+      "lastUtilization": 700000000000000000,
+      "totalBorrowAmount": 125895354442339410237194240,
+      "totalDeposits": 179850506346199182024376320
+    },
+    "constants": {
+      "ulow": 200000000000000000,
+      "u1": 800000000000000000,
+      "u2": 600000000000000000,
+      "ucrit": 900000000000000000,
+      "rmin": 31709791,
+      "kmin": 2264985141,
+      "kmax": 9059940566,
+      "dmax": 52430,
+      "alpha": 77000000000000004565,
+      "cminus": 174767,
+      "cplus": 349534,
+      "c1": 0,
+      "c2": 0
+    },
+    "expected": {
+      "compoundInterest": 2225351762012,
+      "newSlope": 4032918515,
+      "didOverflow": 0,
+      "didCap": 0
+    }
+  },
+  {
+    "id": 7,
+    "input": {
+      "lastTransactionTime": 68921450,
+      "currentTime": 68922797,
+      "lastSlope": 5326395220,
+      "lastUtilization": 800000000000000000,
+      "totalBorrowAmount": 178057267026554442343251968,
+      "totalDeposits": 222571583783193044339130368
+    },
+    "constants": {
+      "ulow": 200000000000000000,
+      "u1": 800000000000000000,
+      "u2": 600000000000000000,
+      "ucrit": 900000000000000000,
+      "rmin": 31709791,
+      "kmin": 2264985141,
+      "kmax": 9059940566,
+      "dmax": 52430,
+      "alpha": 77000000000000004565,
+      "cminus": 174767,
+      "cplus": 349534,
+      "c1": 0,
+      "c2": 0
+    },
+    "expected": {
+      "compoundInterest": 4347515157565,
+      "newSlope": 5326395220,
+      "didOverflow": 0,
+      "didCap": 0
+    }
+  },
+  {
+    "id": 8,
+    "input": {
+      "lastTransactionTime": 22897697,
+      "currentTime": 22899341,
+      "lastSlope": 3300386988,
+      "lastUtilization": 900000000000000000,
+      "totalBorrowAmount": 25670643213033797482184704,
+      "totalDeposits": 28522936903370884182441984
+    },
+    "constants": {
+      "ulow": 200000000000000000,
+      "u1": 800000000000000000,
+      "u2": 600000000000000000,
+      "ucrit": 900000000000000000,
+      "rmin": 31709791,
+      "kmin": 2264985141,
+      "kmax": 9059940566,
+      "dmax": 52430,
+      "alpha": 77000000000000004565,
+      "cminus": 174767,
+      "cplus": 349534,
+      "c1": 0,
+      "c2": 0
+    },
+    "expected": {
+      "compoundInterest": 3899820605648,
+      "newSlope": 3386582256,
+      "didOverflow": 0,
+      "didCap": 0
+    }
+  },
+  {
+    "id": 9,
+    "input": {
+      "lastTransactionTime": 53834244,
+      "currentTime": 53836037,
+      "lastSlope": 2796184374,
+      "lastUtilization": 1000000000000000000,
+      "totalBorrowAmount": 281010955743638566721290240,
+      "totalDeposits": 281010955743638566721290240
+    },
+    "constants": {
+      "ulow": 200000000000000000,
+      "u1": 800000000000000000,
+      "u2": 600000000000000000,
+      "ucrit": 900000000000000000,
+      "rmin": 31709791,
+      "kmin": 2264985141,
+      "kmax": 9059940566,
+      "dmax": 52430,
+      "alpha": 77000000000000004565,
+      "cminus": 174767,
+      "cplus": 349534,
+      "c1": 0,
+      "c2": 0
+    },
+    "expected": {
+      "compoundInterest": 43389404572648,
+      "newSlope": 2890191744,
+      "didOverflow": 0,
+      "didCap": 0
+    }
+  }
+]}
