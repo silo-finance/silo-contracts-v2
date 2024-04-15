@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.21;
 
+import {IHookReceiver} from "../utils/hook-receivers/interfaces/IHookReceiver.sol";
 import {ISilo, ILiquidationProcess} from "../interfaces/ISilo.sol";
 import {IPartialLiquidation} from "../interfaces/IPartialLiquidation.sol";
 import {ISiloOracle} from "../interfaces/ISiloOracle.sol";
@@ -8,6 +9,7 @@ import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
 import {SiloLendingLib} from "../lib/SiloLendingLib.sol";
 import {Methods} from "../lib/Methods.sol";
 import {CrossEntrancy} from "../lib/CrossEntrancy.sol";
+import {Hook} from "../lib/Hook.sol";
 
 import {PartialLiquidationExecLib} from "./lib/PartialLiquidationExecLib.sol";
 
@@ -16,7 +18,7 @@ import {PartialLiquidationExecLib} from "./lib/PartialLiquidationExecLib.sol";
 contract PartialLiquidation is IPartialLiquidation {
     /// @inheritdoc IPartialLiquidation
     function liquidationCall( // solhint-disable-line function-max-lines, code-complexity
-        address _siloWithDebt,
+        address _siloWithDebt, // TODO bug, we need to verify input
         address _collateralAsset,
         address _debtAsset,
         address _borrower,
@@ -28,13 +30,18 @@ contract PartialLiquidation is IPartialLiquidation {
         returns (uint256 withdrawCollateral, uint256 repayDebtAssets)
     {
         ISiloConfig siloConfigCached = ISilo(_siloWithDebt).config();
-        siloConfigCached.crossNonReentrantBefore(CrossEntrancy.ENTERED);
 
         (
             ISiloConfig.ConfigData memory collateralConfig,
             ISiloConfig.ConfigData memory debtConfig,
-            ISiloConfig.DebtInfo memory debtInfo
-        ) = siloConfigCached.getConfigs(_siloWithDebt, _borrower, Methods.EXTERNAL);
+            ISiloConfig.DebtInfo memory debtInfo,
+            IHookReceiver hookReceiverAfter
+        ) = siloConfigCached.startAction(
+            _siloWithDebt,
+            _borrower,
+            Hook.LIQUIDATION | Hook.BEFORE,
+            abi.encodePacked(_collateralAsset, _debtAsset, _borrower, _debtToCover, _receiveSToken)
+        );
 
         if (!debtInfo.debtPresent) revert UserIsSolvent();
         if (!debtInfo.debtInThisSilo) revert ISilo.ThereIsDebtInOtherSilo();
@@ -79,7 +86,21 @@ contract PartialLiquidation is IPartialLiquidation {
             withdrawAssetsFromCollateral, withdrawAssetsFromProtected, _borrower, msg.sender, _receiveSToken
         );
 
-        siloConfigCached.crossNonReentrantAfter();
+        siloConfigCached.finishAction();
+
+        if (address(hookReceiverAfter) != address(0)) {
+            hookReceiverAfter.afterAction(
+                Hook.LIQUIDATION | Hook.AFTER,
+                abi.encodePacked(
+                    _collateralAsset,
+                    _debtAsset,
+                    _borrower,
+                    _debtToCover,
+                    _receiveSToken,
+                    withdrawCollateral, repayDebtAssets
+                )
+            );
+        }
     }
 
     /// @inheritdoc IPartialLiquidation

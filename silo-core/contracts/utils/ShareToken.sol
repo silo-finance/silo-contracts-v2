@@ -87,25 +87,24 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
         returns (bool result)
     {
         ISiloConfig siloConfigCached = siloConfig;
-        (address hookReceiver, uint24 hooks) = _fetchHookData(siloConfigCached);
 
-        if (hooks != 0) {
-            if (_hookCallNeeded(hooks, Hook.BEFORE_SHARE_TRANSFER)) {
-                IHookReceiver(hookReceiver).beforeAction(
-                    Hook.BEFORE_SHARE_TRANSFER, abi.encodePacked(_from, _to, _amount)
-                );
-            }
-        }
-
-        siloConfigCached.crossNonReentrantBefore(CrossEntrancy.ENTERED);
+        (
+            ,,, IHookReceiver hookReceiverAfter
+        ) = siloConfigCached.startAction(
+            address(silo),
+            _from,
+            Hook.SHARE_TRANSFER | Hook.BEFORE,
+            abi.encodePacked(_from, _to, _amount)
+        );
 
         result = super.transferFrom(_from, _to, _amount);
 
-        siloConfigCached.crossNonReentrantAfter();
+        siloConfigCached.finishAction();
 
-        if (_hookCallNeeded(hooks, Hook.AFTER_SHARE_TRANSFER)) {
-            IHookReceiver(hookReceiver).beforeAction(
-                Hook.AFTER_SHARE_TRANSFER, abi.encodePacked(_from, _to, _amount, result)
+        if (address(hookReceiverAfter) != address(0)) {
+            hookReceiverAfter.afterAction(
+                Hook.SHARE_TRANSFER | Hook.AFTER,
+                abi.encodePacked(_from, _to, _amount, result)
             );
         }
     }
@@ -119,25 +118,23 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
     {
         ISiloConfig siloConfigCached = siloConfig;
 
-        (address hookReceiver, uint24 hooks) = _fetchHookData(siloConfigCached);
-
-        if (hooks != 0) {
-            if (_hookCallNeeded(hooks, Hook.BEFORE_SHARE_TRANSFER)) {
-                IHookReceiver(hookReceiver).beforeAction(
-                    Hook.BEFORE_SHARE_TRANSFER, abi.encodePacked(msg.sender, _to, _amount)
-                );
-            }
-        }
-
-        siloConfig.crossNonReentrantBefore(CrossEntrancy.ENTERED);
+        (
+            ,,, IHookReceiver hookReceiverAfter
+        ) = siloConfigCached.startAction(
+            address(silo),
+            msg.sender,
+            Hook.SHARE_TRANSFER | Hook.BEFORE,
+            abi.encodePacked(msg.sender, _to, _amount)
+        );
 
         result = super.transfer(_to, _amount);
 
-        siloConfigCached.crossNonReentrantAfter();
+        siloConfigCached.finishAction();
 
-        if (_hookCallNeeded(hooks, Hook.AFTER_SHARE_TRANSFER)) {
-            IHookReceiver(hookReceiver).beforeAction(
-                Hook.AFTER_SHARE_TRANSFER, abi.encodePacked(msg.sender, _to, _amount, result)
+        if (address(hookReceiverAfter) != address(0)) {
+            hookReceiverAfter.afterAction(
+                Hook.SHARE_TRANSFER | Hook.AFTER,
+                abi.encodePacked(msg.sender, _to, _amount, result)
             );
         }
     }

@@ -2,8 +2,10 @@
 pragma solidity 0.8.21;
 
 import {ISiloConfig} from "./interfaces/ISiloConfig.sol";
+import {IHookReceiver} from "./utils/hook-receivers/interfaces/IHookReceiver.sol";
 import {Methods} from "./lib/Methods.sol";
 import {CrossEntrancy} from "./lib/CrossEntrancy.sol";
+import {Hook} from "./lib/Hook.sol";
 
 // solhint-disable var-name-mixedcase
 
@@ -195,24 +197,8 @@ contract SiloConfig is ISiloConfig {
         delete _debtsInfo[_borrower];
     }
 
-    function _changeCollateralType(address _borrower, bool _sameAsset)
-        internal
-        virtual
-        returns (DebtInfo memory debtInfo)
-    {
-        _onlySilo();
-
-        debtInfo = _debtsInfo[_borrower];
-
-        if (!debtInfo.debtPresent) revert NoDebt();
-        if (debtInfo.sameAsset == _sameAsset) revert CollateralTypeDidNotChanged();
-
-        _debtsInfo[_borrower].sameAsset = _sameAsset;
-        debtInfo.sameAsset = _sameAsset;
-    }
-
     /// @inheritdoc ISiloConfig
-    function crossLeverageGuard(uint256 _entranceFrom) internal virtual {
+    function crossLeverageGuard(uint256 _entranceFrom) external virtual {
         _onlySilo();
 
         // this case is for been able to set guard after deposit, when we still inside leverege
@@ -308,10 +294,13 @@ contract SiloConfig is ISiloConfig {
 
         _crossNonReentrantBefore(_hook);
 
-        if (_hook & Hooks.BORROW != 0) {
+        if (_hook & Hook.SHARE_TRANSFER != 0) {
+            // share token does not need configs
+            return (collateralConfig, debtConfig, debtInfo, hookReceiverAfter);
+        } else if (_hook & Hook.BORROW != 0) {
             debtInfo = _openDebt(_borrower, _hook);
-        } else if (_hook & Hooks.SWITCH_COLLATERAL != 0) {
-            debtInfo = _changeCollateralType(_borrower, _hook & Hooks.SAME_ASSET != 0);
+        } else if (_hook & Hook.SWITCH_COLLATERAL != 0) {
+            debtInfo = _changeCollateralType(_borrower, _hook & Hook.SAME_ASSET != 0);
         } else {
             debtInfo = _debtsInfo[_borrower];
         }
@@ -404,7 +393,7 @@ contract SiloConfig is ISiloConfig {
         internal
         view
         virtual
-        returns (bytes memory configuration)
+        returns (ConfigData memory collateral, ConfigData memory debt)
     {
         bool callForSilo0 = _silo == _SILO0;
         if (!callForSilo0 && _silo != _SILO1) revert WrongSilo();
@@ -452,14 +441,14 @@ contract SiloConfig is ISiloConfig {
         });
 
         if (!_debtInfo.debtPresent) {
-            if (_method == Methods.BORROW_SAME_ASSET) {
-                return callForSilo0 ? (collateral, collateral, _debtInfo) : (debt, debt);
-            } else if (_method == Methods.BORROW_TWO_ASSETS) {
-                return callForSilo0 ? (debt, collateral, _debtInfo) : (collateral, debt);
+            if (_hook & Hook.BORROW_SAME_ASSET != 0) {
+                return callForSilo0 ? (collateral, collateral) : (debt, debt);
+            } else if (_hook & Hook.BORROW_TWO_ASSETS != 0) {
+                return callForSilo0 ? (debt, collateral) : (collateral, debt);
             } else {
-                return callForSilo0 ? (collateral, debt, _debtInfo) : (debt, collateral);
+                return callForSilo0 ? (collateral, debt) : (debt, collateral);
             }
-        } else if (_method == Methods.WITHDRAW) {
+        } else if (_hook & Hook.WITHDRAW != 0) {
             _debtInfo.debtInThisSilo = callForSilo0 == _debtInfo.debtInSilo0;
 
             if (_debtInfo.sameAsset) {
@@ -520,7 +509,7 @@ contract SiloConfig is ISiloConfig {
         address hookReceiver = _callFromSilo0 ? _HOOK_RECEIVER0 : _HOOK_RECEIVER1;
 
         if (hookReceiver != address(0)) {
-            HookSetup memory setup = hooksSetup;
+            HooksSetup memory setup = hooksSetup;
 
             uint256 hooksToTrigger = _callFromSilo0 ? setup.silo0HooksBefore : setup.silo1HooksBefore;
             hookReceiverBefore = IHookReceiver(hooksToTrigger & _hook == 0 ? address(0) : hookReceiver);
@@ -530,7 +519,7 @@ contract SiloConfig is ISiloConfig {
         }
     }
 
-    function _crossNonReentrantBefore(uint256 _hook) internal virtual {
+    function _crossNonReentrantBefore(uint256 _state) internal virtual {
         // On the first call to nonReentrant, _status will be CrossEntrancy.NOT_ENTERED
         if (_crossReentrantStatus == CrossEntrancy.NOT_ENTERED) {
             // Any calls to nonReentrant after this point will fail
@@ -538,13 +527,29 @@ contract SiloConfig is ISiloConfig {
             return;
         }
 
-        if (_crossReentrantStatus == CrossEntrancy.ENTERED_FROM_LEVERAGE && _hook == Hook.BEFORE_DEPOSIT) {
+        if (_crossReentrantStatus == CrossEntrancy.ENTERED_FROM_LEVERAGE && _state == Hook.BEFORE_DEPOSIT) {
             // on leverage, entrance from deposit is allowed, but allowance is removed when we back to Silo
             _crossReentrantStatus = CrossEntrancy.ENTERED;
             return;
         }
 
         revert CrossReentrantCall();
+    }
+
+    function _changeCollateralType(address _borrower, bool _sameAsset)
+        internal
+        virtual
+        returns (DebtInfo memory debtInfo)
+    {
+        _onlySilo();
+
+        debtInfo = _debtsInfo[_borrower];
+
+        if (!debtInfo.debtPresent) revert NoDebt();
+        if (debtInfo.sameAsset == _sameAsset) revert CollateralTypeDidNotChanged();
+
+        _debtsInfo[_borrower].sameAsset = _sameAsset;
+        debtInfo.sameAsset = _sameAsset;
     }
 
     function _openDebt(address _borrower, uint256 _hook) internal virtual returns (DebtInfo memory debtInfo) {
@@ -554,11 +559,23 @@ contract SiloConfig is ISiloConfig {
 
         if (!debtInfo.debtPresent) {
             debtInfo.debtPresent = true;
-            debtInfo.sameAsset = _hook == Hook.BEFORE_BORROW_SAME_ASSET;
+            debtInfo.sameAsset = _hook & Hook.SAME_ASSET != 0;
             debtInfo.debtInSilo0 = msg.sender == _SILO0;
 
             _debtsInfo[_borrower] = debtInfo;
         }
+    }
+
+    function _onlyShareToken() internal view virtual {
+        if (msg.sender == _COLLATERAL_SHARE_TOKEN0 ||
+            msg.sender == _COLLATERAL_SHARE_TOKEN1 ||
+            msg.sender == _PROTECTED_COLLATERAL_SHARE_TOKEN0 ||
+            msg.sender == _PROTECTED_COLLATERAL_SHARE_TOKEN1 ||
+            msg.sender == _DEBT_SHARE_TOKEN0 ||
+            msg.sender == _DEBT_SHARE_TOKEN1
+        ) {
+            return;
+        } else revert OnlyShareToken();
     }
 
     function _onlySiloTokenOrLiquidation() internal view virtual {

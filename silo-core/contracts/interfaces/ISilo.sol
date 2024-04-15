@@ -56,8 +56,7 @@ interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
     /// @param assets map of assets
     struct SiloData {
         uint192 daoAndDeployerFees;
-        uint40 interestRateTimestamp;
-        uint24 hooks;
+        uint64 interestRateTimestamp;
     }
 
     struct UtilizationData {
@@ -97,8 +96,6 @@ interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
         address indexed sender, address indexed receiver, address indexed owner, uint256 assets, uint256 shares
     );
 
-    event HooksUpdated(uint256 hooksBitmap);
-
     /// @notice Emitted on repayment
     /// @param sender wallet address that repaid asset
     /// @param owner wallet address that owed asset
@@ -133,7 +130,6 @@ interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
     error NoDebt();
     error TwoAssetsDebt();
     error LeverageTooHigh();
-    error OnlyHookReceiver();
 
     /// @notice Initialize Silo
     /// @param _siloConfig address of ISiloConfig with full config for this Silo

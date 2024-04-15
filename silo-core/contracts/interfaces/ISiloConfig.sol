@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.5.0;
 
+import {IHookReceiver} from "../utils/hook-receivers/interfaces/IHookReceiver.sol";
+
 interface ISiloConfig {
     struct DebtInfo {
         bool debtPresent;
@@ -128,6 +130,7 @@ interface ISiloConfig {
 
     error OnlySilo();
     error OnlySiloOrLiquidationModule();
+    error OnlyShareToken();
     error OnlySiloOrDebtShareToken();
     error WrongSilo();
     error OnlyDebtShareToken();
@@ -136,16 +139,27 @@ interface ISiloConfig {
     error CollateralTypeDidNotChanged();
 
     error CrossReentrantCall();
+    error OnlyHookReceiver();
 
-    /// @dev can be called only by silo, it opens debt for `_borrower`
+    event HooksUpdated(address silo, uint256 hooksBefore, uint256 hooksAfter);
+
+    /// @dev Can be called only by silo, share token or liquidation module
+    /// It will call hook if needed, raise reentrancy guard and return necessary configuration to perform action
+    /// @param _silo silo address for which action is called
     /// @param _borrower borrower address
-    /// @param _sameAsset TRUE if `_borrower` open debt in the same token
+    /// @param _hook bitmap with all action flags, see `Hook.sol`
+    /// @param _input encoded input data that will be used for hook call
     /// @return collateralConfig The configuration data for collateral silo.
     /// @return debtConfig The configuration data for debt silo.
     /// @return debtInfo details about `borrower` debt
-    function openDebt(address _borrower, bool _sameAsset)
+    function startAction(address _silo, address _borrower, uint256 _hook, bytes calldata _input)
         external
-        returns (ConfigData memory collateralConfig, ConfigData memory debtConfig, DebtInfo memory debtInfo);
+        returns (
+            ConfigData memory collateralConfig,
+            ConfigData memory debtConfig,
+            DebtInfo memory debtInfo,
+            IHookReceiver hookReceiverAfter
+        );
 
     /// @dev should be called on debt transfer, it opens debt if `_to` address don't have one
     /// @param _sender sender address
@@ -164,12 +178,9 @@ interface ISiloConfig {
         external
         returns (ConfigData memory collateralConfig, ConfigData memory debtConfig, DebtInfo memory debtInfo);
 
-    /// @notice only silo method for cross Silo reentrancy
+    /// @notice method for manipulating reentrancy flag for leverage
     /// @param _entranceFrom see CrossEntrancy lib for possible values
-    function crossNonReentrantBefore(uint256 _entranceFrom) external;
-
-    /// @notice only silo method for cross Silo reentrancy
-    function crossNonReentrantAfter() external;
+    function crossLeverageGuard(uint256 _entranceFrom) external;
 
     /// @notice vew method for checking cross Silo git pushreentrancy flag
     function crossReentrancyGuardEntered() external view returns (bool);
@@ -230,4 +241,8 @@ interface ISiloConfig {
         external
         view
         returns (address protectedShareToken, address collateralShareToken, address debtShareToken);
+
+    /// @dev it will execute necessary actions at the end eg. disable reentrancy flag
+    function finishAction() external;
+
 }

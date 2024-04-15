@@ -433,7 +433,7 @@ contract Silo is Initializable, SiloERC4626 {
         if (address(hookReceiverAfter) != address(0)) {
             hookReceiverAfter.afterAction(
                 Hook.AFTER | Hook.TRANSITION_COLLATERAL,
-                abi.encodePAcked(_shares, _owner, _withdrawType, assets)
+                abi.encodePacked(_shares, _owner, _withdrawType, assets)
             );
         }
     }
@@ -453,7 +453,7 @@ contract Silo is Initializable, SiloERC4626 {
     }
 
     function switchCollateralTo(bool _sameAsset) external virtual {
-        ISiloConfig siloConfigCached = _crossNonReentrantBefore(CrossEntrancy.ENTERED);
+        ISiloConfig siloConfigCached = config;
 
         (
             ISiloConfig.ConfigData memory collateral,
@@ -509,7 +509,7 @@ contract Silo is Initializable, SiloERC4626 {
         ) = siloConfigCached.startAction(
             address(this),
             _borrower,
-            Hook.BORROW | Hook.LEVERAGE | Hook.BEFORE | (_sameAsset ? Hook.SAME_ASSET : Hook.TWO_ASSETS),
+            Hook.BORROW | Hook.LEVERAGE | Hook.BEFORE | Hook.SAME_ASSET,
             abi.encodePacked(_depositAssets, _borrowAssets, _borrower, _assetType)
         );
 
@@ -565,7 +565,7 @@ contract Silo is Initializable, SiloERC4626 {
 
         if (address(hookReceiverAfter) != address(0)) {
             hookReceiverAfter.afterAction(
-                Hook.BORROW | Hook.LEVERAGE | Hook.AFTER | (_sameAsset ? Hook.SAME_ASSET : Hook.TWO_ASSETS),
+                Hook.BORROW | Hook.LEVERAGE | Hook.AFTER | Hook.SAME_ASSET,
                 abi.encodePacked(_depositAssets, _borrowAssets, _borrower, _assetType, depositedShares, borrowedShares)
             );
         }
@@ -708,7 +708,11 @@ contract Silo is Initializable, SiloERC4626 {
 
     /// @inheritdoc ISilo
     function accrueInterest() external virtual returns (uint256 accruedInterest) {
-        (accruedInterest,,) = _accrueInterestWithReentrantGuard(false, 0 /* empty, not in use */);
+        ISiloConfig.ConfigData memory configData = config.getConfig(address(this));
+
+        accruedInterest = _callAccrueInterestForAsset(
+            configData.interestRateModel, configData.daoFee, configData.deployerFee, configData.otherSilo
+        );
     }
 
     /// @inheritdoc ISilo
@@ -736,24 +740,6 @@ contract Silo is Initializable, SiloERC4626 {
         );
     }
 
-    function _accrueInterestWithReentrantGuard(bool _callReentrancyBefore, uint256 _entranceFrom)
-        internal
-        virtual
-        returns (uint256 accruedInterest, ISiloConfig.ConfigData memory configData, ISiloConfig siloConfig)
-    {
-        siloConfig = config;
-
-        configData = siloConfig.getConfig(address(this));
-
-        if (_callReentrancyBefore) {
-            siloConfig.crossNonReentrantBefore(_entranceFrom);
-        }
-
-        accruedInterest = _callAccrueInterestForAsset(
-            configData.interestRateModel, configData.daoFee, configData.deployerFee, address(0)
-        );
-    }
-
     function _getRawLiquidity() internal view virtual returns (uint256 liquidity) {
         liquidity = SiloMathLib.liquidity(total[AssetType.Collateral].assets, total[AssetType.Debt].assets);
     }
@@ -770,33 +756,28 @@ contract Silo is Initializable, SiloERC4626 {
     {
         if (_assetType == AssetType.Debt) revert ISilo.WrongAssetType();
 
+        ISiloConfig siloConfigCached = config;
+
         (
-            ISiloConfig.ConfigData memory currentConfig,,
+            ISiloConfig.ConfigData memory collateralConfig,,
             IHookReceiver hookReceiverAfter
-        ) = config.startAction(
+        ) = siloConfigCached.startAction(
             address(this),
             address(0),
-            false,
             Hook.DEPOSIT | Hook.BEFORE,
             abi.encodePacked(_assets, _shares, _receiver, _assetType)
         );
 
-        if (_hookCallNeeded(currentConfig.hookReceiver, Hook.BEFORE_DEPOSIT)) {
-            IHookReceiver(currentConfig.hookReceiver).beforeAction(
-                Hook.BEFORE_DEPOSIT, abi.encodePacked(_assets, _shares, _receiver, _assetType)
-            );
-        }
-
-        (
-            , ISiloConfig.ConfigData memory configData, ISiloConfig siloConfigCached
-        ) = _accrueInterestWithReentrantGuard(true, CrossEntrancy.ENTERED_FROM_DEPOSIT);
+        _callAccrueInterestForAsset(
+            collateralConfig.interestRateModel, collateralConfig.daoFee, collateralConfig.deployerFee, address(0)
+        );
 
         address collateralShareToken = _assetType == AssetType.Collateral
-            ? configData.collateralShareToken
-            : configData.protectedShareToken;
+            ? collateralConfig.collateralShareToken
+            : collateralConfig.protectedShareToken;
 
         (assets, shares) = SiloERC4626Lib.deposit(
-            configData.token,
+            collateralConfig.token,
             msg.sender,
             _assets,
             _shares,
@@ -846,7 +827,6 @@ contract Silo is Initializable, SiloERC4626 {
         ) = siloConfigCached.startAction(
             address(this),
             _owner,
-            _sameAsset,
             Hook.WITHDRAW | Hook.BEFORE,
             abi.encodePacked(_assets, _shares, _receiver, _owner, _spender, _assetType)
         );
@@ -894,7 +874,15 @@ contract Silo is Initializable, SiloERC4626 {
         }
 
         if (SiloSolvencyLib.depositWithoutDebt(debtInfo)) {
-            siloConfigCached.crossNonReentrantAfter();
+            siloConfigCached.finishAction();
+
+            if (address(hookReceiverAfter) != address(0)) {
+                hookReceiverAfter.afterAction(
+                    Hook.WITHDRAW | Hook.AFTER,
+                    abi.encodePacked(_assets, _shares, _receiver, _owner, _spender, _assetType, assets, shares)
+                );
+            }
+
             return (assets, shares);
         }
 
@@ -1017,6 +1005,7 @@ contract Silo is Initializable, SiloERC4626 {
         virtual
         returns (uint256 assets, uint256 shares)
     {
+        ISiloConfig siloConfigCached = config;
         (,ISiloConfig.ConfigData memory debtConfig,, IHookReceiver hookReceiverAfter) = siloConfigCached.startAction(
             address(this),
             _borrower,
@@ -1024,13 +1013,15 @@ contract Silo is Initializable, SiloERC4626 {
             abi.encodePacked(_assets, _shares, _borrower, _repayer)
         );
 
-        _accrueInterest(!_liquidation);
+        _callAccrueInterestForAsset(
+            debtConfig.interestRateModel, debtConfig.daoFee, debtConfig.deployerFee, address(0)
+        );
 
         if (_liquidation && debtConfig.liquidationModule != msg.sender) revert ISilo.OnlyLiquidationModule();
 
         (
             assets, shares
-        ) = SiloLendingLib.repay(configData, _assets, _shares, _borrower, _repayer, total[AssetType.Debt]);
+        ) = SiloLendingLib.repay(debtConfig, _assets, _shares, _borrower, _repayer, total[AssetType.Debt]);
 
         emit Repay(_repayer, _borrower, assets, shares);
 
