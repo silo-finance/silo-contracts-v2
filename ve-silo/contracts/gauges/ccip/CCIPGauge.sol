@@ -58,8 +58,9 @@ abstract contract CCIPGauge is StakelessGauge, ICCIPGauge {
     }
 
     /// @inheritdoc ICCIPGauge
-    function calculateFee(Client.EVM2AnyMessage calldata _message) external view returns (uint256 fee) {
-        fee = _calculateFee(_message);
+    function calculateFee(uint256 _amount, PayFeesIn _payFeesIn) external view returns (uint256 fee) {
+        Client.EVM2AnyMessage memory evm2AnyMessage = _buildCCIPMessage(_amount, _payFeesIn);
+        fee = _calculateFee(evm2AnyMessage);
     }
 
     /// @inheritdoc ICCIPGauge
@@ -99,7 +100,7 @@ abstract contract CCIPGauge is StakelessGauge, ICCIPGauge {
                 messageId = _transferMessageAndPayInLINK(_mintAmount);
             }
 
-            _returnLeftoverEthIfAny();
+            _returnLeftoverIfAny();
         } else {
             messageId = _transferMessageAndPayInLINK(_mintAmount);
         }
@@ -121,11 +122,18 @@ abstract contract CCIPGauge is StakelessGauge, ICCIPGauge {
         );
     }
 
-    function _returnLeftoverEthIfAny() internal {
+    /// @dev Ensure that the contract returns any leftover ether or LINK to the sender
+    function _returnLeftoverIfAny() internal {
         uint256 remainingBalance = address(this).balance;
 
         if (remainingBalance > 0) {
             Address.sendValue(payable(msg.sender), remainingBalance);
+        }
+
+        uint256 remainingLINKBalance = IERC20(LINK).balanceOf(address(this));
+
+        if (remainingLINKBalance > 0) {
+            IERC20(LINK).transfer(msg.sender, remainingLINKBalance);
         }
     }
 

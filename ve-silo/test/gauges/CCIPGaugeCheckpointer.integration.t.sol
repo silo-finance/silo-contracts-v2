@@ -2,7 +2,7 @@
 pragma solidity 0.8.21;
 
 import {ERC20, IERC20} from "openzeppelin-contracts/token/ERC20/ERC20.sol";
-import {Ownable} from "openzeppelin-contracts/access/Ownable.sol";
+import {Ownable2Step, Ownable} from "openzeppelin5/access/Ownable2Step.sol";
 import {IntegrationTest} from "silo-foundry-utils/networks/IntegrationTest.sol";
 import {Client} from "chainlink-ccip/v0.8/ccip/libraries/Client.sol";
 import {IRouterClient} from "chainlink-ccip/v0.8/ccip/interfaces/IRouterClient.sol";
@@ -12,6 +12,7 @@ import {StakelessGaugeCheckpointerAdaptorDeploy} from "ve-silo/deploy/StakelessG
 
 import {IMainnetBalancerMinter, ILMGetters, IBalancerMinter}
     from "ve-silo/contracts/silo-tokens-minter/interfaces/IMainnetBalancerMinter.sol";
+
 import {IStakelessGaugeCheckpointerAdaptor}
     from "ve-silo/contracts/gauges/interfaces/IStakelessGaugeCheckpointerAdaptor.sol";
 
@@ -21,26 +22,34 @@ import {IBalancerTokenAdmin} from "ve-silo/contracts/silo-tokens-minter/interfac
 import {IGaugeController} from "ve-silo/contracts/gauges/interfaces/IGaugeController.sol";
 import {ICCIPGauge} from "ve-silo/contracts/gauges/interfaces/ICCIPGauge.sol";
 import {ICCIPGaugeCheckpointer} from "ve-silo/contracts/gauges/interfaces/ICCIPGaugeCheckpointer.sol";
-import {CCIPGaugeFactoryAnyChain} from "ve-silo/test/_mocks/CCIPGaugeFactoryAnyChain.sol";
-import {CCIPGaugeSepoliaMumbai} from "ve-silo/test/_mocks/CCIPGaugeSepoliaMumbai.sol";
+import {IStakelessGauge} from "ve-silo/contracts/gauges/interfaces/IStakelessGauge.sol";
+import {CCIPGaugeArbitrumDeploy} from "ve-silo/deploy/CCIPGaugeArbitrumDeploy.sol";
+import {CCIPGaugeArbitrumUpgradeableBeaconDeploy} from "ve-silo/deploy/CCIPGaugeArbitrumUpgradeableBeaconDeploy.sol";
+import {CCIPGaugeFactoryArbitrumDeploy} from "ve-silo/deploy/CCIPGaugeFactoryArbitrumDeploy.sol";
 import {VeSiloContracts} from "ve-silo/deploy/_CommonDeploy.sol";
 import {CheckpointerAdaptorMock} from "../_mocks/CheckpointerAdaptorMock.sol";
+import {CCIPGaugeFactory} from "ve-silo/contracts/gauges/ccip/CCIPGaugeFactory.sol";
+import {IChainlinkPriceFeedLike} from "ve-silo/test/gauges/interfaces/IChainlinkPriceFeedLike.sol";
 
 // FOUNDRY_PROFILE=ve-silo-test forge test --mc CCIPGaugeCheckpointer --ffi -vvv
 contract CCIPGaugeCheckpointer is IntegrationTest {
     string constant internal _GAUGE_TYPE = "Ethereum";
 
-    uint256 internal constant _FORKING_BLOCK_NUMBER = 4291900;
+    uint256 internal constant _FORKING_BLOCK_NUMBER = 192628160;
     uint256 internal constant _GAUGE_BALANCE = 100e18;
-    uint256 internal constant _MINT_AMOUNT = 6048000000000000;
+    uint256 internal constant _MINT_AMOUNT = 32393000;
+    uint64 internal constant _DESTINATION_CHAIN = 5009297550715157269;
     uint256 internal constant _RELATIVE_WEIGHT_CAP = 1e18;
-    address internal constant _LINK = 0x779877A7B0D9E8603169DdbD7836e478b4624789;
-    address internal constant _CCIP_BNM = 0xFd57b4ddBf88a4e07fF4e34C487b99af2Fe82a05;
-    bytes32 internal constant _MESSAGE_ID_LINK = 0xc3771874959c84c2774593a3247adc863ce91adc3faaa1d1ba7eb26059f49ec2;
-    bytes32 internal constant _MESSAGE_ID_ETH = 0x62393c4d4b565fdb3b54ffd9cdf0da948ec59c7a975b3fa945bd6e84f7b85ded;
+    address internal constant _LINK = 0xf97f4df75117a78c1A5a0DBb814Af92458539FB4;
+    address internal constant _WSTLINK = 0x3106E2e148525b3DB36795b04691D444c24972fB;
+    address internal constant _WETH = 0x82aF49447D8a07e3bd95BD0d56f35241523fBab1;
+    address internal constant _CHAINLINK_PRICE_FEED = 0x13015e4E6f839E1Aa1016DF521ea458ecA20438c;
+    address internal constant _CHAINLINL_PRICE_UPDATER = 0x6e37f4c82d9A31cc42B445874dd3c3De97AB553f;
+    bytes32 internal constant _MESSAGE_ID_LINK = 0x3eb650f8a0c216460b663f236fd26522f34ab8bc58047507dc1843338ae3e9eb;
+    bytes32 internal constant _MESSAGE_ID_ETH = 0x56f6f20b128703450d2e8b8ff243cc7f88365fe666e6eec84a366f8b97998ef3;
 
     bytes32 internal constant _MESSAGE_ID_LINK_WITH_ETH =
-        0x85d350066ad6c52f52bde9af24f275055f441740f44945c70f0d4640481728a5;
+        0xc7e48fe05f1ebf70b3b13632a351478b19e3a7a39e0154b72e59417ffc94e2a0;
 
     address internal _minter = makeAddr("Minter");
     address internal _tokenAdmin = makeAddr("Token Admin");
@@ -53,6 +62,7 @@ contract CCIPGaugeCheckpointer is IntegrationTest {
     address internal _gaugeFactory;
     address internal _deployer;
 
+    IStakelessGaugeCheckpointerAdaptor internal _adaptor;
     ICCIPGaugeCheckpointer internal _checkpointer;
     ICCIPGauge internal _gauge;
 
@@ -60,11 +70,9 @@ contract CCIPGaugeCheckpointer is IntegrationTest {
 
     function setUp() public {
         vm.createSelectFork(
-            getChainRpcUrl(SEPOLIA_ALIAS),
+            getChainRpcUrl(ARBITRUM_ONE_ALIAS),
             _FORKING_BLOCK_NUMBER
         );
-
-        vm.warp(1694761200);
 
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
         _deployer = vm.addr(deployerPrivateKey);
@@ -73,41 +81,51 @@ contract CCIPGaugeCheckpointer is IntegrationTest {
         CCIPGaugeCheckpointerDeploy deploy = new CCIPGaugeCheckpointerDeploy();
         deploy.disableDeploymentsSync();
 
-        IStakelessGaugeCheckpointerAdaptor adaptor = adaptorDeploy.run();
+        _adaptor = adaptorDeploy.run();
 
         setAddress(VeSiloContracts.GAUGE_ADDER, _gaugeAdder);
+        setAddress(VeSiloContracts.TIMELOCK_CONTROLLER, _owner);
+        setAddress(VeSiloContracts.MAINNET_BALANCER_MINTER, _minter);
 
         vm.mockCall(
             _gaugeAdder,
             abi.encodeWithSelector(IGaugeAdder.getGaugeController.selector),
             abi.encode(_gaugeController)
         );
-        
+
         _checkpointer = deploy.run();
 
         _mockCallsBeforeGaugeCreation();
 
-        CCIPGaugeSepoliaMumbai gaugeImpl = new CCIPGaugeSepoliaMumbai(IMainnetBalancerMinter(_minter));
+        CCIPGaugeArbitrumDeploy gaugeDeploy = new CCIPGaugeArbitrumDeploy();
+        gaugeDeploy.run();
 
-        CCIPGaugeFactoryAnyChain factory = new CCIPGaugeFactoryAnyChain(
-            address(adaptor),
-            address(gaugeImpl)
-        );
+        CCIPGaugeArbitrumUpgradeableBeaconDeploy beaconDeploy = new CCIPGaugeArbitrumUpgradeableBeaconDeploy();
+        beaconDeploy.run();
+
+        CCIPGaugeFactoryArbitrumDeploy factoryDeploy = new CCIPGaugeFactoryArbitrumDeploy();
+        CCIPGaugeFactory factory = factoryDeploy.run();
+
+        vm.prank(_owner);
+        Ownable2Step(address(factory)).acceptOwnership();
 
         _gaugeFactory = address(factory);
 
-        _gauge = ICCIPGauge(factory.create(_chaildChainGauge, _RELATIVE_WEIGHT_CAP));
+        _gauge = ICCIPGauge(factory.create(_chaildChainGauge, _RELATIVE_WEIGHT_CAP, _DESTINATION_CHAIN));
         vm.label(address(_gauge), "Gauge");
 
         _mockCallsAfterGaugeCreated(address(_gauge));
 
         vm.prank(_deployer);
-        adaptor.setStakelessGaugeCheckpointer(address(_checkpointer));
+        _adaptor.setStakelessGaugeCheckpointer(address(_checkpointer));
     }
 
+    // FOUNDRY_PROFILE=ve-silo-test forge test --mt testCheckpointSingleGaugeLINK --ffi -vvv
     function testCheckpointSingleGaugeLINK() public {
         _setupGauge();
         _beforeCheckpointGaugeWithLINK(_gauge, address(this));
+
+        _updateChainlinkPriceFeed();
 
         vm.expectEmit(false, false, false, true);
         emit CCIPTransferMessage(_MESSAGE_ID_LINK);
@@ -115,13 +133,14 @@ contract CCIPGaugeCheckpointer is IntegrationTest {
         _checkpointer.checkpointSingleGauge(_GAUGE_TYPE, _gauge, ICCIPGauge.PayFeesIn.LINK);
 
         _afterCheckpointGaugeWithLINK();
+        _ensureThereIsNoLeftovers(address(_gauge));
     }
 
+    // FOUNDRY_PROFILE=ve-silo-test forge test --mt testCheckpointSingleGaugeLINKWithFrontLoadedETH --ffi -vvv
     function testCheckpointSingleGaugeLINKWithFrontLoadedETH() public {
         // Front-loading 1 wei of ether to the gauge balance before it will be created
         uint256 amountOfEthToFrontLoad = 1;
         address userCheckpointer = makeAddr("User checkpointer");
-
 
         ICCIPGauge gaugeWithETH = _setupGaugeWithFrontLoadedEth(amountOfEthToFrontLoad);
         _beforeCheckpointGaugeWithLINK(gaugeWithETH, userCheckpointer);
@@ -139,29 +158,34 @@ contract CCIPGaugeCheckpointer is IntegrationTest {
         // Ensure we have correct balances
         // User should receive an ether from the gauge balance after checkpoint
         assertEq(userCheckpointer.balance, amountOfEthToFrontLoad, "User checkpointer should receive ether");
-        assertEq(address(gaugeWithETH).balance, 0, "Gauge should not have ether");
+
+        _ensureThereIsNoLeftovers(address(gaugeWithETH));
     }
 
+    // FOUNDRY_PROFILE=ve-silo-test forge test --mt testCheckpointSingleGaugeETHWithExtraFee --ffi -vvv
     function testCheckpointSingleGaugeETHWithExtraFee() public {
         _setupGauge();
 
         address gauge = address(_gauge);
 
-        deal(_CCIP_BNM, gauge, _GAUGE_BALANCE);
+        deal(_WSTLINK, gauge, _GAUGE_BALANCE);
 
-        Client.EVM2AnyMessage memory message = _gauge.buildCCIPMessage(_MINT_AMOUNT, ICCIPGauge.PayFeesIn.Native);
+        vm.warp(block.timestamp + 1 weeks);
+        _updateChainlinkPriceFeed();
 
-        uint256 calculatedFees = _gauge.calculateFee(message);
+        _mockMinter(gauge);
+
+        uint256 unclaimed = IStakelessGauge(_gauge).unclaimedIncentives();
+
+        uint256 calculatedFees = _gauge.calculateFee(unclaimed, ICCIPGauge.PayFeesIn.Native);
         uint256 extraFee = 1; // adding 1 wei to have ether leftover in the gauge after checkpoint
         uint256 fees = calculatedFees + extraFee;
 
         payable(_user).transfer(fees);
 
-        uint256 gaugeBalance = IERC20(_CCIP_BNM).balanceOf(gauge);
+        uint256 gaugeBalance = IERC20(_WSTLINK).balanceOf(gauge);
 
         assertEq(gaugeBalance, _GAUGE_BALANCE, "Expect to have an initial balance");
-
-        vm.warp(block.timestamp + 1 weeks);
 
         vm.expectEmit(false, false, false, true);
         emit CCIPTransferMessage(_MESSAGE_ID_ETH);
@@ -172,24 +196,34 @@ contract CCIPGaugeCheckpointer is IntegrationTest {
         assertEq(_user.balance, extraFee, "Expect to receive extra ether from the fee");
 
         _afterCheckpointGaugeWithLINK();
+
+        _ensureThereIsNoLeftovers(gauge);
     }
 
+    // FOUNDRY_PROFILE=ve-silo-test forge test --mt testCheckpointSingleGaugeETH --ffi -vvv
     function testCheckpointSingleGaugeETH() public {
         _setupGauge();
 
         address gauge = address(_gauge);
 
-        deal(_CCIP_BNM, gauge, _GAUGE_BALANCE);
-
-        Client.EVM2AnyMessage memory message = _gauge.buildCCIPMessage(_MINT_AMOUNT, ICCIPGauge.PayFeesIn.Native);
-        uint256 fees = _gauge.calculateFee(message);
-        payable(_user).transfer(fees);
-
-        uint256 gaugeBalance = IERC20(_CCIP_BNM).balanceOf(gauge);
-
-        assertEq(gaugeBalance, _GAUGE_BALANCE, "Expect to have an initial balance");
+        deal(_WSTLINK, gauge, _GAUGE_BALANCE);
 
         vm.warp(block.timestamp + 1 weeks);
+        _updateChainlinkPriceFeed();
+
+        _mockMinter(gauge);
+
+        uint256 unclaimedBefore = _gauge.unclaimedIncentives();
+
+        uint256 fees = _gauge.calculateFee(unclaimedBefore, ICCIPGauge.PayFeesIn.Native);
+        // encrease fees by 10% to test leftover
+        fees = fees + fees / 10;
+
+        payable(_user).transfer(fees);
+
+        uint256 gaugeBalance = IERC20(_WSTLINK).balanceOf(gauge);
+
+        assertEq(gaugeBalance, _GAUGE_BALANCE, "Expect to have an initial balance");
 
         vm.expectEmit(false, false, false, true);
         emit CCIPTransferMessage(_MESSAGE_ID_ETH);
@@ -197,28 +231,33 @@ contract CCIPGaugeCheckpointer is IntegrationTest {
         vm.prank(_user);
         _checkpointer.checkpointSingleGauge{value: fees}(_GAUGE_TYPE, _gauge, ICCIPGauge.PayFeesIn.Native);
 
-        _afterCheckpointGaugeWithLINK();
+        uint256 unclaimedAfter = _gauge.unclaimedIncentives();
+        
+        assertEq(unclaimedAfter, 0, "Expect to have no unclaimed incentives");
+
+        _ensureThereIsNoLeftovers(gauge);
     }
 
     function _beforeCheckpointGaugeWithLINK(ICCIPGauge _gaugeToCheckpoint, address _userCheckpointer) internal {
-        Client.EVM2AnyMessage memory message = _gaugeToCheckpoint.buildCCIPMessage(
-            _MINT_AMOUNT,
-            ICCIPGauge.PayFeesIn.LINK
-        );
+        _mockMinter(address(_gaugeToCheckpoint));
 
-        uint256 fees = _gaugeToCheckpoint.calculateFee(message);
+        vm.warp(block.timestamp + 1 weeks);
+
+        _updateChainlinkPriceFeed();
+
+        uint256 unclaimed = _gaugeToCheckpoint.unclaimedIncentives();
+
+        uint256 fees = _gaugeToCheckpoint.calculateFee(unclaimed, ICCIPGauge.PayFeesIn.LINK);
 
         deal(_LINK,_userCheckpointer, fees);
-        deal(_CCIP_BNM, address(_gaugeToCheckpoint), _GAUGE_BALANCE);
+        deal(_WSTLINK, address(_gaugeToCheckpoint), _GAUGE_BALANCE);
         
         vm.prank(_userCheckpointer);
         IERC20(_LINK).approve(address(_checkpointer), fees);
-
-        vm.warp(block.timestamp + 1 weeks);
     }
 
     function _afterCheckpointGaugeWithLINK() internal {
-        uint256 gaugeBalance = IERC20(_CCIP_BNM).balanceOf(address(_gauge));
+        uint256 gaugeBalance = IERC20(_WSTLINK).balanceOf(address(_gauge));
 
         // ensure `_MINT_AMOUNT` was transferred from the `gauge` balance
         assertEq(_GAUGE_BALANCE, gaugeBalance + _MINT_AMOUNT, "Unexpected balance change");
@@ -233,12 +272,12 @@ contract CCIPGaugeCheckpointer is IntegrationTest {
     }
 
     function _setupGaugeWithFrontLoadedEth(uint256 _ethAmount) internal returns (ICCIPGauge _createdGauge) {
-        address expectedGauge = 0xf5Ba21691a8bC011B7b430854B41d5be0B78b938;
+        address expectedGauge = 0x68C0e6E54f5CfA0BbfC93E83758f87845C3B7088;
 
         payable(expectedGauge).transfer(_ethAmount);
 
         _createdGauge = ICCIPGauge(
-            CCIPGaugeFactoryAnyChain(_gaugeFactory).create(_chaildChainGauge2, _RELATIVE_WEIGHT_CAP)
+            CCIPGaugeFactory(_gaugeFactory).create(_chaildChainGauge2, _RELATIVE_WEIGHT_CAP, _DESTINATION_CHAIN)
         );
 
         assertEq(expectedGauge, address(_createdGauge), "Unexpected gauge address");
@@ -252,6 +291,26 @@ contract CCIPGaugeCheckpointer is IntegrationTest {
 
         vm.prank(_deployer);
         _checkpointer.addGaugesWithVerifiedType(_GAUGE_TYPE, gauges);
+    }
+    
+    // Ether/LINK leftover should be returned to the user
+    // All components after checkpoint should not have any ether or LINK leftover
+    function _ensureThereIsNoLeftovers(address _gaugeToVerify) internal {
+        assertEq(_gaugeToVerify.balance, 0, "Gauge should not have ether leftover");
+        assertEq(address(_adaptor).balance, 0, "Adaptor should not have ether leftover");
+        assertEq(address(_checkpointer).balance, 0, "Checkpointer should not have ether leftover");
+
+        assertEq(IERC20(_LINK).balanceOf(_gaugeToVerify), 0, "Gauge should not have LINK leftover");
+        assertEq(IERC20(_LINK).balanceOf(address(_adaptor)), 0, "Adaptor should not have LINK leftover");
+        assertEq(IERC20(_LINK).balanceOf(address(_checkpointer)), 0, "Checkpointer should not have LINK leftover");
+    }
+
+    function _mockMinter(address _gaugeToMock) internal {
+        vm.mockCall(
+            _minter,
+            abi.encodeWithSelector(IBalancerMinter.minted.selector, _gaugeToMock, _gaugeToMock),
+            abi.encode(0)
+        );
     }
 
     // solhint-disable-next-line function-max-lines
@@ -271,25 +330,25 @@ contract CCIPGaugeCheckpointer is IntegrationTest {
         vm.mockCall(
             _tokenAdmin,
             abi.encodeWithSelector(IBalancerTokenAdmin.getBalancerToken.selector),
-            abi.encode(_CCIP_BNM)
+            abi.encode(_WSTLINK)
         );
 
         vm.mockCall(
             _tokenAdmin,
             abi.encodeWithSelector(IBalancerTokenAdmin.RATE_REDUCTION_TIME.selector),
-            abi.encode(100)
+            abi.encode(1)
         );
 
         vm.mockCall(
             _tokenAdmin,
             abi.encodeWithSelector(IBalancerTokenAdmin.RATE_REDUCTION_COEFFICIENT.selector),
-            abi.encode(100)
+            abi.encode(10000000000e18)
         );
 
         vm.mockCall(
             _tokenAdmin,
             abi.encodeWithSelector(IBalancerTokenAdmin.RATE_DENOMINATOR.selector),
-            abi.encode(100)
+            abi.encode(1)
         );
 
         vm.mockCall(
@@ -301,13 +360,7 @@ contract CCIPGaugeCheckpointer is IntegrationTest {
         vm.mockCall(
             _tokenAdmin,
             abi.encodeWithSelector(IBalancerTokenAdmin.rate.selector),
-            abi.encode(1e10)
-        );
-
-        vm.mockCall(
-            address(this),
-            abi.encodeWithSelector(Ownable.owner.selector),
-            abi.encode(_owner)
+            abi.encode(1e3)
         );
     }
 
@@ -320,7 +373,7 @@ contract CCIPGaugeCheckpointer is IntegrationTest {
 
         vm.mockCall(
             _gaugeController,
-            abi.encodeWithSelector(IGaugeController.gauge_relative_weight.selector, _gaugeToMock, 1694649600),
+            abi.encodeWithSelector(IGaugeController.gauge_relative_weight.selector, _gaugeToMock, 1710979200),
             abi.encode(1e18)
         );
 
@@ -356,5 +409,39 @@ contract CCIPGaugeCheckpointer is IntegrationTest {
             ),
             abi.encode(true)
         );
+    }
+
+    function _updateChainlinkPriceFeed() internal {
+        IChainlinkPriceFeedLike.TokenPriceUpdate[] memory tokenPrices =
+            new IChainlinkPriceFeedLike.TokenPriceUpdate[](3);
+
+        tokenPrices[0] = IChainlinkPriceFeedLike.TokenPriceUpdate({
+            sourceToken: _LINK,
+            usdPerToken: 17352748070000000000 // $17.35
+        });
+
+        tokenPrices[1] = IChainlinkPriceFeedLike.TokenPriceUpdate({
+            sourceToken: _WSTLINK,
+            usdPerToken: 17352748070000000000 // $17.35
+        });
+
+        tokenPrices[2] = IChainlinkPriceFeedLike.TokenPriceUpdate({
+            sourceToken: _WETH,
+            usdPerToken: 3539638400000000000000 // $3539.64
+        });
+
+        IChainlinkPriceFeedLike.GasPriceUpdate[] memory gasPrices = new IChainlinkPriceFeedLike.GasPriceUpdate[](1);
+        gasPrices[0] = IChainlinkPriceFeedLike.GasPriceUpdate({
+            destChainSelector: _DESTINATION_CHAIN,
+            usdPerUnitGas: 106827130381460 // $0.00010682713038146
+        });
+
+        IChainlinkPriceFeedLike.PriceUpdates memory priceUpdates = IChainlinkPriceFeedLike.PriceUpdates({
+            tokenPriceUpdates: tokenPrices,
+            gasPriceUpdates: gasPrices
+        });
+
+        vm.prank(_CHAINLINL_PRICE_UPDATER);
+        IChainlinkPriceFeedLike(_CHAINLINK_PRICE_FEED).updatePrices(priceUpdates);
     }
 }

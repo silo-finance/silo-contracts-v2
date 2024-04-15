@@ -9,6 +9,7 @@ import {BaseGaugeFactory} from "../BaseGaugeFactory.sol";
 import {CCIPGauge} from "./CCIPGauge.sol";
 
 abstract contract CCIPGaugeFactory is BaseGaugeFactory, Ownable2Step {
+    // solhint-disable-next-line var-name-mixedcase
     IBeacon public immutable BEACON;
     address public checkpointer;
 
