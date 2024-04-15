@@ -25,7 +25,8 @@ interface ICCIPGauge is IStakelessGauge, ICCIPExtraArgsConfig {
         returns (Client.EVM2AnyMessage memory evm2AnyMessage);
     
     /// @notice Calculates the fee required to send the message
-    /// @param _message Message to be sent
+    /// @param _amount The amount of the token to be transferred.
+    /// @param _payFeesIn Pay fees in LINK or Native
     /// @return fee to send a `_message`
-    function calculateFee(Client.EVM2AnyMessage calldata _message) external view returns (uint256 fee);
+    function calculateFee(uint256 _amount, PayFeesIn _payFeesIn) external view returns (uint256 fee);
 }

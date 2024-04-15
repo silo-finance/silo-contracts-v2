@@ -1,9 +1,15 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.21;
 
+import {IBeacon} from "openzeppelin5/proxy/beacon/IBeacon.sol";
+
 import {CommonDeploy, VeSiloContracts} from "ve-silo/deploy/_CommonDeploy.sol";
 import {CCIPGaugeFactoryAnyChain} from "ve-silo/test/_mocks/CCIPGaugeFactoryAnyChain.sol";
 import {VeSiloMocksContracts} from "./VeSiloMocksContracts.sol";
+
+import {
+    CCIPGaugeArbitrumUpgradeableBeacon
+} from "ve-silo/contracts/gauges/ccip/arbitrum/CCIPGaugeArbitrumUpgradeableBeacon.sol";
 
 /**
 FOUNDRY_PROFILE=ve-silo-test \
@@ -16,12 +22,15 @@ contract CCIPGaugeFactoryAnyChainDeploy is CommonDeploy {
     function run() public returns (CCIPGaugeFactoryAnyChain factory) {
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
 
+        address initialOwner = getAddress(VeSiloContracts.TIMELOCK_CONTROLLER);
         address gaugeImplementation = getAddress(VeSiloMocksContracts.CCIP_GAUGE_WITH_MOCKS);
         address adaptor = getAddress(VeSiloContracts.STAKELESS_GAUGE_CHECKPOINTER_ADAPTOR);
 
         vm.startBroadcast(deployerPrivateKey);
 
-        factory = new CCIPGaugeFactoryAnyChain(adaptor, gaugeImplementation);
+        IBeacon beacon = IBeacon(address(new CCIPGaugeArbitrumUpgradeableBeacon(gaugeImplementation, initialOwner)));
+
+        factory = new CCIPGaugeFactoryAnyChain(address(beacon), adaptor);
 
         vm.stopBroadcast();
 

@@ -121,7 +121,11 @@ contract MainnetWithMocksIntegrationTest is MainnetTest {
             chainAlias
         );
 
-        gauge = CCIPGaugeFactory(gaugeFactoryAnyChainAddr).create(gaugeAdder, 1e18 /** weight cap */);
+        gauge = CCIPGaugeFactory(gaugeFactoryAnyChainAddr).create(
+            gaugeAdder,
+            1e18 /** weight cap */,
+            1 /** destination chain */
+        );
 
         vm.label(gauge, "CCIP_Gauge");
     }

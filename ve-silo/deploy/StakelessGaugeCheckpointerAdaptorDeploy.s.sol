@@ -5,6 +5,7 @@ import {Ownable} from "openzeppelin-contracts/access/Ownable.sol";
 
 import {CommonDeploy} from "./_CommonDeploy.sol";
 import {VeSiloContracts, VeSiloDeployments} from "ve-silo/common/VeSiloContracts.sol";
+import {AddrKey} from "common/addresses/AddrKey.sol";
 
 import {IStakelessGaugeCheckpointerAdaptor}
     from "ve-silo/contracts/gauges/interfaces/IStakelessGaugeCheckpointerAdaptor.sol";
@@ -25,7 +26,7 @@ contract StakelessGaugeCheckpointerAdaptorDeploy is CommonDeploy {
         vm.startBroadcast(deployerPrivateKey);
 
         adaptor = IStakelessGaugeCheckpointerAdaptor(address(
-            new StakelessGaugeCheckpointerAdaptor()
+            new StakelessGaugeCheckpointerAdaptor(getAddress(AddrKey.LINK))
         ));
 
         Ownable(address(adaptor)).transferOwnership(timelock);
