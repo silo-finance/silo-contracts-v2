@@ -219,7 +219,7 @@ contract Silo is Initializable, SiloERC4626 {
         virtual
         returns (uint256 shares)
     {
-        (, shares) = _withdraw(_assets, 0 /* shares */, _receiver, _owner, msg.sender, AssetType.Collateral);
+        (, shares) = _withdraw(WithdrawParams(_assets, 0 /* shares */, _receiver, _owner, msg.sender, AssetType.Collateral));
     }
 
     /// @inheritdoc IERC4626
@@ -241,7 +241,7 @@ contract Silo is Initializable, SiloERC4626 {
         // avoid magic number 0
         uint256 zeroAssets = 0;
 
-        (assets,) = _withdraw(zeroAssets, _shares, _receiver, _owner, msg.sender, AssetType.Collateral);
+        (assets,) = _withdraw(WithdrawParams(zeroAssets, _shares, _receiver, _owner, msg.sender, AssetType.Collateral));
     }
 
     /// @inheritdoc ISilo
@@ -337,7 +337,7 @@ contract Silo is Initializable, SiloERC4626 {
         virtual
         returns (uint256 shares)
     {
-        (, shares) = _withdraw(_assets, 0 /* shares */, _receiver, _owner, msg.sender, _assetType);
+        (, shares) = _withdraw(WithdrawParams(_assets, 0 /* shares */, _receiver, _owner, msg.sender, _assetType));
     }
 
     /// @inheritdoc ISilo
@@ -358,7 +358,7 @@ contract Silo is Initializable, SiloERC4626 {
         virtual
         returns (uint256 assets)
     {
-        (assets,) = _withdraw(0 /* assets */, _shares, _receiver, _owner, msg.sender, _assetType);
+        (assets,) = _withdraw(WithdrawParams(0 /* assets */, _shares, _receiver, _owner, msg.sender, _assetType));
     }
 
     /// @inheritdoc ISilo
@@ -823,19 +823,12 @@ contract Silo is Initializable, SiloERC4626 {
     }
 
     // solhint-disable-next-line function-max-lines, code-complexity
-    function _withdraw(
-        uint256 _assets,
-        uint256 _shares,
-        address _receiver,
-        address _owner,
-        address _spender,
-        ISilo.AssetType _assetType
-    )
+    function _withdraw(WithdrawParams memory _params)
         internal
         virtual
         returns (uint256 assets, uint256 shares)
     {
-        if (_assetType == AssetType.Debt) revert ISilo.WrongAssetType();
+        if (_params.assetType == AssetType.Debt) revert ISilo.WrongAssetType();
 
         ISiloConfig siloConfigCached = config;
 
@@ -846,9 +839,9 @@ contract Silo is Initializable, SiloERC4626 {
             IHookReceiver hookReceiverAfter
         ) = siloConfigCached.startAction(
             address(this),
-            _owner,
+            _params.owner,
             Hook.WITHDRAW | Hook.BEFORE,
-            abi.encodePacked(_assets, _shares, _receiver, _owner, _spender, _assetType)
+            abi.encode(_params)
         );
 
         _callAccrueInterestForAsset(
@@ -859,16 +852,16 @@ contract Silo is Initializable, SiloERC4626 {
         );
 
         // this if helped with Stack too deep
-        if (_assetType == AssetType.Collateral) {
+        if (_params.assetType == AssetType.Collateral) {
             (assets, shares) = _callWithdraw(
                 collateralConfig.token,
                 collateralConfig.collateralShareToken,
-                _assets,
-                _shares,
-                _receiver,
-                _owner,
-                _spender,
-                _assetType,
+                _params.assets,
+                _params.shares,
+                _params.receiver,
+                _params.owner,
+                _params.spender,
+                _params.assetType,
                 _getRawLiquidity(),
                 total[AssetType.Collateral]
             );
@@ -876,21 +869,21 @@ contract Silo is Initializable, SiloERC4626 {
             (assets, shares) = _callWithdraw(
                 collateralConfig.token,
                 collateralConfig.protectedShareToken,
-                _assets,
-                _shares,
-                _receiver,
-                _owner,
-                _spender,
-                _assetType,
+                _params.assets,
+                _params.shares,
+                _params.receiver,
+                _params.owner,
+                _params.spender,
+                _params.assetType,
                 total[AssetType.Protected].assets,
                 total[AssetType.Protected]
             );
         }
 
-        if (_assetType == AssetType.Collateral) {
-            emit Withdraw(msg.sender, _receiver, _owner, assets, shares);
+        if (_params.assetType == AssetType.Collateral) {
+            emit Withdraw(msg.sender, _params.receiver, _params.owner, assets, shares);
         } else {
-            emit WithdrawProtected(msg.sender, _receiver, _owner, assets, shares);
+            emit WithdrawProtected(msg.sender, _params.receiver, _params.owner, assets, shares);
         }
 
         if (SiloSolvencyLib.depositWithoutDebt(debtInfo)) {
@@ -899,7 +892,7 @@ contract Silo is Initializable, SiloERC4626 {
             if (address(hookReceiverAfter) != address(0)) {
                 hookReceiverAfter.afterAction(
                     Hook.WITHDRAW | Hook.AFTER,
-                    abi.encodePacked(_assets, _shares, _receiver, _owner, _spender, _assetType, assets, shares)
+                    abi.encode(_params, assets, shares)
                 );
             }
 
@@ -916,7 +909,7 @@ contract Silo is Initializable, SiloERC4626 {
 
         // `_params.owner` must be solvent
         if (!SiloSolvencyLib.isSolvent(
-            collateralConfig, debtConfig, debtInfo, _owner, AccrueInterestInMemory.No
+            collateralConfig, debtConfig, debtInfo, _params.owner, AccrueInterestInMemory.No
         )) {
             revert NotSolvent();
         }
@@ -926,7 +919,7 @@ contract Silo is Initializable, SiloERC4626 {
         if (address(hookReceiverAfter) != address(0)) {
             hookReceiverAfter.afterAction(
                 Hook.WITHDRAW | Hook.AFTER,
-                abi.encodePacked(_assets, _shares, _receiver, _owner, _spender, _assetType, assets, shares)
+                abi.encodePacked(_params.assets, _params.shares, _params.receiver, _params.owner, _params.spender, _params.assetType, assets, shares)
             );
         }
     }

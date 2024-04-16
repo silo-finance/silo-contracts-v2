@@ -78,6 +78,15 @@ interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
         bool leverage;
     }
 
+    struct WithdrawParams {
+        uint256 assets;
+        uint256 shares;
+        address receiver;
+        address owner;
+        address spender;
+        ISilo.AssetType assetType;
+    }
+
     /// @notice Emitted on protected deposit
     /// @param sender wallet address that deposited asset
     /// @param owner wallet address that received shares in Silo
