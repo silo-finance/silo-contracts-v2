@@ -1,13 +1,13 @@
-{"tests":[
+[
   {
     "id": 0,
     "input": {
-      "lastTransactionTime": 43874436,
-      "currentTime": 43875123,
-      "lastSlope": 7466637594,
+      "lastTransactionTime": 35165951,
+      "currentTime": 35167446,
+      "lastSlope": 6241828552,
       "lastUtilization": 100000000000000000,
-      "totalBorrowAmount": 1172139380467898326712320,
-      "totalDeposits": 11721393804678983267123200
+      "totalBorrowAmount": 16105184974190713279348736,
+      "totalDeposits": 161051849741907137088454656
     },
     "constants": {
       "ulow": 200000000000000000,
@@ -25,7 +25,8 @@
       "c2": 0
     },
     "expected": {
-      "currentAnnualInterest": 1000000000000000,
+      "compoundInterest": 47406140139,
+      "newSlope": 6058934498,
       "didOverflow": 0,
       "didCap": 0
     }
@@ -33,12 +34,12 @@
   {
     "id": 1,
     "input": {
-      "lastTransactionTime": 18687260,
-      "currentTime": 18688142,
-      "lastSlope": 5292723513,
+      "lastTransactionTime": 91719366,
+      "currentTime": 91719881,
+      "lastSlope": 7410126946,
       "lastUtilization": 200000000000000000,
-      "totalBorrowAmount": 54118500906843228084371456,
-      "totalDeposits": 270592504534216123241988096
+      "totalBorrowAmount": 37412250116325559861510144,
+      "totalDeposits": 187061250581627786422648832
     },
     "constants": {
       "ulow": 200000000000000000,
@@ -56,7 +57,8 @@
       "c2": 0
     },
     "expected": {
-      "currentAnnualInterest": 1000000000000000,
+      "compoundInterest": 16330543004,
+      "newSlope": 7356123828,
       "didOverflow": 0,
       "didCap": 0
     }
@@ -64,12 +66,12 @@
   {
     "id": 2,
     "input": {
-      "lastTransactionTime": 70936483,
-      "currentTime": 70937841,
-      "lastSlope": 4140563236,
+      "lastTransactionTime": 38044585,
+      "currentTime": 38045607,
+      "lastSlope": 2780411658,
       "lastUtilization": 300000000000000000,
-      "totalBorrowAmount": 65978676255737271837261824,
-      "totalDeposits": 219928920852457578517495808
+      "totalBorrowAmount": 76944216065478468806115328,
+      "totalDeposits": 256480720218261574140297216
     },
     "constants": {
       "ulow": 200000000000000000,
@@ -87,7 +89,8 @@
       "c2": 0
     },
     "expected": {
-      "currentAnnualInterest": 13683451826336380,
+      "compoundInterest": 312001984440,
+      "newSlope": 2691105530,
       "didOverflow": 0,
       "didCap": 0
     }
@@ -95,12 +98,12 @@
   {
     "id": 3,
     "input": {
-      "lastTransactionTime": 65509800,
-      "currentTime": 65510093,
-      "lastSlope": 3073569083,
+      "lastTransactionTime": 53079755,
+      "currentTime": 53081158,
+      "lastSlope": 8611546107,
       "lastUtilization": 400000000000000000,
-      "totalBorrowAmount": 92516334272906486974775296,
-      "totalDeposits": 231290835682266251796676608
+      "totalBorrowAmount": 7343309630215434560077824,
+      "totalDeposits": 18358274075538586400194560
     },
     "constants": {
       "ulow": 200000000000000000,
@@ -118,7 +121,8 @@
       "c2": 0
     },
     "expected": {
-      "currentAnnualInterest": 20256426211408384,
+      "compoundInterest": 2447131123443,
+      "newSlope": 8513466658,
       "didOverflow": 0,
       "didCap": 0
     }
@@ -126,12 +130,12 @@
   {
     "id": 4,
     "input": {
-      "lastTransactionTime": 95974396,
-      "currentTime": 95975009,
-      "lastSlope": 6241853421,
+      "lastTransactionTime": 56882366,
+      "currentTime": 56883211,
+      "lastSlope": 2345859173,
       "lastUtilization": 500000000000000000,
-      "totalBorrowAmount": 84792249598396613202542592,
-      "totalDeposits": 169584499196793226405085184
+      "totalBorrowAmount": 22102396048582881325350912,
+      "totalDeposits": 44204792097165762650701824
     },
     "constants": {
       "ulow": 200000000000000000,
@@ -149,7 +153,8 @@
       "c2": 0
     },
     "expected": {
-      "currentAnnualInterest": 59748859388382518,
+      "compoundInterest": 615854792050,
+      "newSlope": 2301555644,
       "didOverflow": 0,
       "didCap": 0
     }
@@ -157,12 +162,12 @@
   {
     "id": 5,
     "input": {
-      "lastTransactionTime": 75126706,
-      "currentTime": 75127165,
-      "lastSlope": 5702940754,
+      "lastTransactionTime": 16218231,
+      "currentTime": 16219661,
+      "lastSlope": 4379677480,
       "lastUtilization": 600000000000000000,
-      "totalBorrowAmount": 45695553909125969826807808,
-      "totalDeposits": 76159256515209955437969408
+      "totalBorrowAmount": 68830134827218354084773888,
+      "totalDeposits": 114716891378697265397891072
     },
     "constants": {
       "ulow": 200000000000000000,
@@ -180,7 +185,8 @@
       "c2": 0
     },
     "expected": {
-      "currentAnnualInterest": 72736794904631259,
+      "compoundInterest": 2536228465360,
+      "newSlope": 4329694011,
       "didOverflow": 0,
       "didCap": 0
     }
@@ -188,12 +194,12 @@
   {
     "id": 6,
     "input": {
-      "lastTransactionTime": 89090325,
-      "currentTime": 89092052,
-      "lastSlope": 5983290275,
+      "lastTransactionTime": 16564873,
+      "currentTime": 16565957,
+      "lastSlope": 4051863298,
       "lastUtilization": 700000000000000000,
-      "totalBorrowAmount": 166518437291464677191057408,
-      "totalDeposits": 237883481844949558478503936
+      "totalBorrowAmount": 125895354442339410237194240,
+      "totalDeposits": 179850506346199182024376320
     },
     "constants": {
       "ulow": 200000000000000000,
@@ -211,7 +217,8 @@
       "c2": 0
     },
     "expected": {
-      "currentAnnualInterest": 94868606164552103,
+      "compoundInterest": 2225351762012,
+      "newSlope": 4032918515,
       "didOverflow": 0,
       "didCap": 0
     }
@@ -219,12 +226,12 @@
   {
     "id": 7,
     "input": {
-      "lastTransactionTime": 14929401,
-      "currentTime": 14929865,
-      "lastSlope": 7977621421,
+      "lastTransactionTime": 68921450,
+      "currentTime": 68922797,
+      "lastSlope": 5326395220,
       "lastUtilization": 800000000000000000,
-      "totalBorrowAmount": 37737162815071400864251904,
-      "totalDeposits": 47171453518839250006573056
+      "totalBorrowAmount": 178057267026554442343251968,
+      "totalDeposits": 222571583783193044339130368
     },
     "constants": {
       "ulow": 200000000000000000,
@@ -242,7 +249,8 @@
       "c2": 0
     },
     "expected": {
-      "currentAnnualInterest": 152409678943931232,
+      "compoundInterest": 4347515157565,
+      "newSlope": 5326395220,
       "didOverflow": 0,
       "didCap": 0
     }
@@ -250,12 +258,12 @@
   {
     "id": 8,
     "input": {
-      "lastTransactionTime": 81428483,
-      "currentTime": 81428921,
-      "lastSlope": 8579290039,
+      "lastTransactionTime": 22897697,
+      "currentTime": 22899341,
+      "lastSlope": 3300386988,
       "lastUtilization": 900000000000000000,
-      "totalBorrowAmount": 77874967553621641910026240,
-      "totalDeposits": 86527741726246272606666752
+      "totalBorrowAmount": 25670643213033797482184704,
+      "totalDeposits": 28522936903370884182441984
     },
     "constants": {
       "ulow": 200000000000000000,
@@ -273,7 +281,8 @@
       "c2": 0
     },
     "expected": {
-      "currentAnnualInterest": 190896487922528631,
+      "compoundInterest": 3899820605648,
+      "newSlope": 3386582256,
       "didOverflow": 0,
       "didCap": 0
     }
@@ -281,12 +290,12 @@
   {
     "id": 9,
     "input": {
-      "lastTransactionTime": 19659525,
-      "currentTime": 19659977,
-      "lastSlope": 6450981255,
+      "lastTransactionTime": 53834244,
+      "currentTime": 53836037,
+      "lastSlope": 2796184374,
       "lastUtilization": 1000000000000000000,
-      "totalBorrowAmount": 119093304273214541307838464,
-      "totalDeposits": 119093304273214541307838464
+      "totalBorrowAmount": 281010955743638566721290240,
+      "totalDeposits": 281010955743638566721290240
     },
     "constants": {
       "ulow": 200000000000000000,
@@ -304,9 +313,10 @@
       "c2": 0
     },
     "expected": {
-      "currentAnnualInterest": 1736576744780320553,
+      "compoundInterest": 43389404572648,
+      "newSlope": 2890191744,
       "didOverflow": 0,
       "didCap": 0
     }
   }
-]}
+]
