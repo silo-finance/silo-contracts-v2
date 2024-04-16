@@ -196,7 +196,7 @@ library SiloLendingLib {
         ISilo.Assets storage _totalDebt,
         uint256 _totalCollateralAssets
     )
-        internal
+        external
         returns (uint256 borrowedAssets, uint256 borrowedShares)
     {
         if (_assets == 0 && _shares == 0) revert ISilo.ZeroAssets();
@@ -250,7 +250,7 @@ library SiloLendingLib {
         uint256 _totalDebtShares,
         ISiloConfig _siloConfig
     )
-        internal
+        external
         view
         returns (uint256 assets, uint256 shares)
     {
