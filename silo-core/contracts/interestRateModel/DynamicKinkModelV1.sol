@@ -57,6 +57,57 @@ contract DynamicKinkModelV1 is IDynamicKinkModelV1 {
         uint256 _interestRateTimestamp
     ) external returns (uint256 rcomp) {}
 
+    function currentInterestRate(Setup memory _setup, int256 _t0, int256 _t1, int256 _u)
+        public
+        pure
+        returns (int256 rcur, int256 k)
+    {
+        // uint T = t1 - t0; // length of time period (in seconds )
+        if (_t1 <= _t0) revert InvalidTimestamp();
+        int256 T = _t1 - _t0;
+
+        // todo 
+        k = _setup.k;
+
+        // if (u < u1) {
+        if (_u < _setup.config.u1) {
+            // k = max (_k - (c1 + cminus * (u1 - u) / _DP) * T, kmin );
+            k = k - (_setup.config.c1 + _setup.config.cminus) * (_setup.config.u1 - _u) * T / _DP;
+            k = k > _setup.config.kmin ? k : _setup.config.kmin;
+        //else if (u > u2) {
+        } else if (_u < _setup.config.u2) {
+            // k = min (_k + min(c2 + cplus * (u - u2) / _DP , dmax ) * T, kmax );
+            int256 dkdt = (_setup.config.c2 + _setup.config.cplus) * (_u - _setup.config.u2) / _DP;
+            dkdt = dkdt > _setup.config.dmax ? _setup.config.dmax : dkdt;
+            k = k * T;
+            k = k > _setup.config.kmax ? _setup.config.kmax : k;
+        } else {
+            // todo
+            k = k;
+        }
+
+        //uint r = 0; // additional interest rate
+        int256 r = 0;
+        // if (u >= ulow ) {
+        if (_u >= _setup.config.ulow) {
+            //r = u - ulow ;
+            r = _u - _setup.config.ulow;
+
+            // if (u >= ucrit ) {
+            if (_u >= _setup.config.ucrit) {
+                //r = r + alpha * (u - ucrit ) / _DP;
+                r = r + _setup.config.alpha * (_u - _setup.config.ucrit ) / _DP;
+            }
+
+            // r = r * k / _DP;
+            r = r * k / _DP;
+        }
+
+        // rcur = (r + rmin ) * 365 * 24 * 3600;
+        // todo move multiplier
+        rcur = (r + _setup.config.rmin) * 365 * 24 * 3600;
+    }
+
     /// @dev get compound interest rate
     /// @param _t0 timestamp of last calculation
     /// @param _t1 current timestamp
@@ -80,11 +131,11 @@ contract DynamicKinkModelV1 is IDynamicKinkModelV1 {
 
         // if (u < u1) {
         if (_u < _setup.config.u1) {
-            // roc = - c1 - cminus * (u1 - u) / DP;
+            // roc = - c1 - cminus * (u1 - u) / _DP;
             roc = - _setup.config.c1 - _setup.config.cminus * (_setup.config.u1 - _u) / _DP;
         // } else if (u > u2) {       
         } else if (_u > _setup.config.u2) {
-            // roc = min (c2 + cplus * (u - u2) / DP , dmax );
+            // roc = min (c2 + cplus * (u - u2) / _DP , dmax );
             roc = _setup.config.c2 + _setup.config.cplus * (_u - _setup.config.u2) / _DP;
             roc = roc > _setup.config.dmax ? _setup.config.dmax : roc;
         } else {
@@ -122,13 +173,13 @@ contract DynamicKinkModelV1 is IDynamicKinkModelV1 {
             f = _u - _setup.config.ulow;
             // if (u >= ucrit ) {
             if (_u >= _setup.config.ucrit) {
-                // f = f + alpha * (u - ucrit ) / DP;
+                // f = f + alpha * (u - ucrit ) / _DP;
                 f = f + _setup.config.alpha * (_u - _setup.config.ucrit) / _DP;
             }
         }
 
         // todo negative factor
-        // x = rmin * T + f * x / DP;
+        // x = rmin * T + f * x / _DP;
         x = _setup.config.rmin * T + f * x / _DP;
 
         // rcomp = exp (x) - DP;

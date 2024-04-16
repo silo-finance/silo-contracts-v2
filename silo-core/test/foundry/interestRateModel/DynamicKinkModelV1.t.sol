@@ -20,6 +20,23 @@ contract DynamicKinkModelV1Test is RcompTestDynamicKink, RcurTestDynamicKink {
 
     function test_rcur() public {
         RcurData[] memory data = _readDataFromJsonRcur();
+
+        for (uint i; i < data.length; i++) {
+            (IDynamicKinkModelV1.Setup memory setup, DebugRcur memory debug) = _toSetupRcur(data[i]);
+
+            (int256 rcur, int256 k) = INTEREST_RATE_MODEL.currentInterestRate(
+                setup,
+                data[i].input.lastTransactionTime,
+                data[i].input.currentTime,
+                data[i].input.lastUtilization
+            );
+
+            emit log_string("******\n\n\n\n");
+            emit log_named_int("return: rcur", rcur);
+            emit log_named_int("return: k", k);
+            emit log_named_int("expected: rcur", data[i].expected.currentAnnualInterest);
+            emit log_named_int("relative error for rcur in 10^18 bp new/expected", rcur * DP / data[i].expected.currentAnnualInterest);
+        }
     }
 
     function test_rcomp() public {
