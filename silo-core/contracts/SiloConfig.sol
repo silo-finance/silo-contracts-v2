@@ -226,12 +226,17 @@ contract SiloConfig is ISiloConfig {
         _crossReentrantStatus = CrossEntrancy.NOT_ENTERED;
     }
 
-    function finishAction(address _h, uint256 _hook, bytes calldata _data) external virtual {
-        _onlySiloTokenOrLiquidation();
+    function finishAction(IHookReceiver _hookReceiver, uint256 _hooks, bytes calldata _data) external virtual {
+        // this is helper for make Silo size smaller, only silo can call it because eg we using msg.sender
+        _onlySilo();
 
         // By storing the original value once again, a refund is triggered (see
         // https://eips.ethereum.org/EIPS/eip-2200)
         _crossReentrantStatus = CrossEntrancy.NOT_ENTERED;
+
+        if (address(_hookReceiver) != address(0)) {
+            _hookReceiver.afterAction(msg.sender, _hooks, _data);
+        }
     }
 
     /**

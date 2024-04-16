@@ -433,7 +433,7 @@ contract Silo is Initializable, SiloERC4626 {
         }
 
         siloConfigCached.finishAction(
-            address(hookReceiverAfter),
+            hookReceiverAfter,
             Hook.AFTER | Hook.TRANSITION_COLLATERAL,
             abi.encodePacked(_shares, _owner, _withdrawType, assets)
         );
@@ -482,7 +482,7 @@ contract Silo is Initializable, SiloERC4626 {
         }
 
         siloConfigCached.finishAction(
-            address(hookReceiverAfter),
+            hookReceiverAfter,
             Hook.AFTER | Hook.SWITCH_COLLATERAL | (_sameAsset ? Hook.SAME_ASSET : Hook.TWO_ASSETS),
             bytes("")
         );
@@ -568,7 +568,7 @@ contract Silo is Initializable, SiloERC4626 {
         );
 
         siloConfigCached.finishAction(
-            address(hookReceiverAfter),
+            hookReceiverAfter,
             Hook.BORROW | Hook.LEVERAGE | Hook.AFTER | Hook.SAME_ASSET,
             abi.encodePacked(_depositAssets, _borrowAssets, _borrower, _assetType, depositedShares, borrowedShares)
         );
@@ -804,7 +804,7 @@ contract Silo is Initializable, SiloERC4626 {
         }
 
         siloConfigCached.finishAction(
-            address(hookReceiverAfter),
+            hookReceiverAfter,
             Hook.DEPOSIT | Hook.AFTER,
             abi.encodePacked(_assets, _shares, _receiver, _assetType, assets, shares)
         );
@@ -876,7 +876,7 @@ contract Silo is Initializable, SiloERC4626 {
 
         if (SiloSolvencyLib.depositWithoutDebt(debtInfo)) {
             siloConfigCached.finishAction(
-                address(hookReceiverAfter),
+                hookReceiverAfter,
                 Hook.WITHDRAW | Hook.AFTER,
                 abi.encode(_params, assets, shares)
             );
@@ -900,7 +900,7 @@ contract Silo is Initializable, SiloERC4626 {
         }
 
         siloConfigCached.finishAction(
-            address(hookReceiverAfter),
+            hookReceiverAfter,
             Hook.WITHDRAW | Hook.AFTER,
             abi.encode(_params, assets, shares)
         );
@@ -983,7 +983,7 @@ contract Silo is Initializable, SiloERC4626 {
         }
 
         siloConfigCached.finishAction(
-            address(hookReceiverAfter),
+            hookReceiverAfter,
             Hook.BORROW | Hook.AFTER,
             abi.encode(_params, assets, shares)
         );
@@ -1017,7 +1017,7 @@ contract Silo is Initializable, SiloERC4626 {
 
         if (!_liquidation) {
             siloConfigCached.finishAction(
-                address(hookReceiverAfter),
+                hookReceiverAfter,
                 Hook.REPAY | Hook.AFTER | (_liquidation ? Hook.LIQUIDATION : 0),
                 abi.encodePacked(_assets, _shares, _borrower, _repayer, assets, shares)
             );
