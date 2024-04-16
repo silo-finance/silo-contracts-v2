@@ -504,21 +504,29 @@ contract Silo is Initializable, SiloERC4626 {
         if (_depositAssets == 0 || _borrowAssets == 0) revert ISilo.ZeroAssets();
 
         ISiloConfig siloConfigCached = config;
+        IHookReceiver hookReceiverAfter;
 
-        (
-            ISiloConfig.ConfigData memory collateralConfig,
-            ISiloConfig.ConfigData memory debtConfig,
-            ISiloConfig.DebtInfo memory debtInfo,
-            IHookReceiver hookReceiverAfter
-        ) = siloConfigCached.startAction(
-            address(this),
-            _borrower,
-            Hook.BORROW | Hook.LEVERAGE | Hook.BEFORE | Hook.SAME_ASSET,
-            abi.encodePacked(_depositAssets, _borrowAssets, _borrower, _assetType)
-        );
+        ISiloConfig.ConfigData memory collateralConfig;
+        ISiloConfig.ConfigData memory debtConfig;
 
-        if (!SiloLendingLib.borrowPossible(debtInfo)) revert ISilo.BorrowNotPossible();
-        if (debtInfo.debtPresent && !debtInfo.sameAsset) revert ISilo.TwoAssetsDebt();
+        { // too deep
+            ISiloConfig.DebtInfo memory debtInfo;
+
+            (
+                collateralConfig,
+                debtConfig,
+                debtInfo,
+                hookReceiverAfter
+            ) = siloConfigCached.startAction(
+                address(this),
+                _borrower,
+                Hook.BORROW | Hook.LEVERAGE | Hook.BEFORE | Hook.SAME_ASSET,
+                abi.encodePacked(_depositAssets, _borrowAssets, _borrower, _assetType)
+            );
+
+            if (!SiloLendingLib.borrowPossible(debtInfo)) revert ISilo.BorrowNotPossible();
+            if (debtInfo.debtPresent && !debtInfo.sameAsset) revert ISilo.TwoAssetsDebt();
+        }
 
         _callAccrueInterestForAsset(
             collateralConfig.interestRateModel,
