@@ -22,8 +22,10 @@ contract DynamicKinkModelV1Test is RcompTestDynamicKink {
         assertEq(INTEREST_RATE_MODEL.DECIMALS(), 18);
 
         for (uint i; i < data.length; i++) {
+            (IDynamicKinkModelV1.Setup memory setup, Debug memory debug) = _toSetup(data[i]);
+
             (int256 rcomp, int256 k) = INTEREST_RATE_MODEL.compoundInterestRate(
-                _toSetup(data[i]),
+                setup,
                 data[i].input.lastTransactionTime,
                 data[i].input.currentTime,
                 data[i].input.lastUtilization

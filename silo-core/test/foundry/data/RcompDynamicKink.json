@@ -2,321 +2,421 @@
   {
     "id": 0,
     "input": {
-      "lastTransactionTime": 35165951,
-      "currentTime": 35167446,
-      "lastSlope": 6241828552,
+      "lastTransactionTime": 37860938,
+      "currentTime": 37862399,
+      "lastSlope": 5885511266,
       "lastUtilization": 100000000000000000,
-      "totalBorrowAmount": 16105184974190713279348736,
-      "totalDeposits": 161051849741907137088454656
+      "totalBorrowAmount": 21925009839238278239223808,
+      "totalDeposits": 219250098392382773802303488
     },
     "constants": {
       "ulow": 200000000000000000,
-      "u1": 800000000000000000,
-      "u2": 600000000000000000,
+      "u1": 600000000000000000,
+      "u2": 800000000000000000,
       "ucrit": 900000000000000000,
       "rmin": 31709791,
       "kmin": 2264985141,
       "kmax": 9059940566,
       "dmax": 52430,
       "alpha": 77000000000000004565,
-      "cminus": 174767,
-      "cplus": 349534,
+      "cminus": 262151,
+      "cplus": 1048604,
       "c1": 0,
       "c2": 0
     },
     "expected": {
-      "compoundInterest": 47406140139,
-      "newSlope": 6058934498,
+      "compoundInterest": 46328007161,
+      "newSlope": 5694009919,
       "didOverflow": 0,
       "didCap": 0
+    },
+    "debug": {
+      "u0": 99999999999999999,
+      "T": 1461,
+      "roc": -131076,
+      "k1": 5694009919,
+      "x_prelim": 8458840226343,
+      "f": 0,
+      "x": 46328006088,
+      "x_checked": 46328006088
     }
   },
   {
     "id": 1,
     "input": {
-      "lastTransactionTime": 91719366,
-      "currentTime": 91719881,
-      "lastSlope": 7410126946,
+      "lastTransactionTime": 93900156,
+      "currentTime": 93901733,
+      "lastSlope": 6003272968,
       "lastUtilization": 200000000000000000,
-      "totalBorrowAmount": 37412250116325559861510144,
-      "totalDeposits": 187061250581627786422648832
+      "totalBorrowAmount": 23869249789693397435416576,
+      "totalDeposits": 119346248948466995767017472
     },
     "constants": {
       "ulow": 200000000000000000,
-      "u1": 800000000000000000,
-      "u2": 600000000000000000,
+      "u1": 600000000000000000,
+      "u2": 800000000000000000,
       "ucrit": 900000000000000000,
       "rmin": 31709791,
       "kmin": 2264985141,
       "kmax": 9059940566,
       "dmax": 52430,
       "alpha": 77000000000000004565,
-      "cminus": 174767,
-      "cplus": 349534,
+      "cminus": 262151,
+      "cplus": 1048604,
       "c1": 0,
       "c2": 0
     },
     "expected": {
-      "compoundInterest": 16330543004,
-      "newSlope": 7356123828,
+      "compoundInterest": 50006343208,
+      "newSlope": 5837908081,
       "didOverflow": 0,
       "didCap": 0
+    },
+    "debug": {
+      "u0": 199999999999999999,
+      "T": 1577,
+      "roc": -104861,
+      "k1": 5837908081,
+      "x_prelim": 9336771257625,
+      "f": 0,
+      "x": 50006341958,
+      "x_checked": 50006341958
     }
   },
   {
     "id": 2,
     "input": {
-      "lastTransactionTime": 38044585,
-      "currentTime": 38045607,
-      "lastSlope": 2780411658,
+      "lastTransactionTime": 58704470,
+      "currentTime": 58704844,
+      "lastSlope": 4311940527,
       "lastUtilization": 300000000000000000,
-      "totalBorrowAmount": 76944216065478468806115328,
-      "totalDeposits": 256480720218261574140297216
+      "totalBorrowAmount": 63545188684143723540381696,
+      "totalDeposits": 211817295613812411801272320
     },
     "constants": {
       "ulow": 200000000000000000,
-      "u1": 800000000000000000,
-      "u2": 600000000000000000,
+      "u1": 600000000000000000,
+      "u2": 800000000000000000,
       "ucrit": 900000000000000000,
       "rmin": 31709791,
       "kmin": 2264985141,
       "kmax": 9059940566,
       "dmax": 52430,
       "alpha": 77000000000000004565,
-      "cminus": 174767,
-      "cplus": 349534,
+      "cminus": 262151,
+      "cplus": 1048604,
       "c1": 0,
       "c2": 0
     },
     "expected": {
-      "compoundInterest": 312001984440,
-      "newSlope": 2691105530,
+      "compoundInterest": 172576023216,
+      "newSlope": 4282527179,
       "didOverflow": 0,
       "didCap": 0
+    },
+    "debug": {
+      "u0": 299999999999999999,
+      "T": 374,
+      "roc": -78646,
+      "k1": 4282527179,
+      "x_prelim": 1607165461232,
+      "f": 99999999999999999,
+      "x": 172576008325,
+      "x_checked": 172576008325
     }
   },
   {
     "id": 3,
     "input": {
-      "lastTransactionTime": 53079755,
-      "currentTime": 53081158,
-      "lastSlope": 8611546107,
+      "lastTransactionTime": 23048816,
+      "currentTime": 23050336,
+      "lastSlope": 3588399807,
       "lastUtilization": 400000000000000000,
-      "totalBorrowAmount": 7343309630215434560077824,
-      "totalDeposits": 18358274075538586400194560
+      "totalBorrowAmount": 64098764668759904308166656,
+      "totalDeposits": 160246911671899765065383936
     },
     "constants": {
       "ulow": 200000000000000000,
-      "u1": 800000000000000000,
-      "u2": 600000000000000000,
+      "u1": 600000000000000000,
+      "u2": 800000000000000000,
       "ucrit": 900000000000000000,
       "rmin": 31709791,
       "kmin": 2264985141,
       "kmax": 9059940566,
       "dmax": 52430,
       "alpha": 77000000000000004565,
-      "cminus": 174767,
-      "cplus": 349534,
+      "cminus": 262151,
+      "cplus": 1048604,
       "c1": 0,
       "c2": 0
     },
     "expected": {
-      "compoundInterest": 2447131123443,
-      "newSlope": 8513466658,
+      "compoundInterest": 1126959584285,
+      "newSlope": 3508705886,
       "didOverflow": 0,
       "didCap": 0
+    },
+    "debug": {
+      "u0": 399999999999999999,
+      "T": 1520,
+      "roc": -52431,
+      "k1": 3508705886,
+      "x_prelim": 5393800327256,
+      "f": 199999999999999999,
+      "x": 1126958949266,
+      "x_checked": 1126958949266
     }
   },
   {
     "id": 4,
     "input": {
-      "lastTransactionTime": 56882366,
-      "currentTime": 56883211,
-      "lastSlope": 2345859173,
+      "lastTransactionTime": 17070805,
+      "currentTime": 17071215,
+      "lastSlope": 5225538278,
       "lastUtilization": 500000000000000000,
-      "totalBorrowAmount": 22102396048582881325350912,
-      "totalDeposits": 44204792097165762650701824
+      "totalBorrowAmount": 38438599184140849603674112,
+      "totalDeposits": 76877198368281699207348224
     },
     "constants": {
       "ulow": 200000000000000000,
-      "u1": 800000000000000000,
-      "u2": 600000000000000000,
+      "u1": 600000000000000000,
+      "u2": 800000000000000000,
       "ucrit": 900000000000000000,
       "rmin": 31709791,
       "kmin": 2264985141,
       "kmax": 9059940566,
       "dmax": 52430,
       "alpha": 77000000000000004565,
-      "cminus": 174767,
-      "cplus": 349534,
+      "cminus": 262151,
+      "cplus": 1048604,
       "c1": 0,
       "c2": 0
     },
     "expected": {
-      "compoundInterest": 615854792050,
-      "newSlope": 2301555644,
+      "compoundInterest": 655081423697,
+      "newSlope": 5214790085,
       "didOverflow": 0,
       "didCap": 0
+    },
+    "debug": {
+      "u0": 499999999999999999,
+      "T": 410,
+      "roc": -26216,
+      "k1": 5214790085,
+      "x_prelim": 2140267314728,
+      "f": 299999999999999998,
+      "x": 655081209131,
+      "x_checked": 655081209131
     }
   },
   {
     "id": 5,
     "input": {
-      "lastTransactionTime": 16218231,
-      "currentTime": 16219661,
-      "lastSlope": 4379677480,
+      "lastTransactionTime": 92337964,
+      "currentTime": 92338738,
+      "lastSlope": 3520803798,
       "lastUtilization": 600000000000000000,
-      "totalBorrowAmount": 68830134827218354084773888,
-      "totalDeposits": 114716891378697265397891072
+      "totalBorrowAmount": 63517573473551253319450624,
+      "totalDeposits": 105862622455918752669106176
     },
     "constants": {
       "ulow": 200000000000000000,
-      "u1": 800000000000000000,
-      "u2": 600000000000000000,
+      "u1": 600000000000000000,
+      "u2": 800000000000000000,
       "ucrit": 900000000000000000,
       "rmin": 31709791,
       "kmin": 2264985141,
       "kmax": 9059940566,
       "dmax": 52430,
       "alpha": 77000000000000004565,
-      "cminus": 174767,
-      "cplus": 349534,
+      "cminus": 262151,
+      "cplus": 1048604,
       "c1": 0,
       "c2": 0
     },
     "expected": {
-      "compoundInterest": 2536228465360,
-      "newSlope": 4329694011,
+      "compoundInterest": 1114584856244,
+      "newSlope": 3520803798,
       "didOverflow": 0,
       "didCap": 0
+    },
+    "debug": {
+      "u0": 600000000000000000,
+      "T": 774,
+      "roc": 0,
+      "k1": 3520803798,
+      "x_prelim": 2725102140248,
+      "f": 399999999999999999,
+      "x": 1114584235094,
+      "x_checked": 1114584235094
     }
   },
   {
     "id": 6,
     "input": {
-      "lastTransactionTime": 16564873,
-      "currentTime": 16565957,
-      "lastSlope": 4051863298,
+      "lastTransactionTime": 97974838,
+      "currentTime": 97975628,
+      "lastSlope": 3020035311,
       "lastUtilization": 700000000000000000,
-      "totalBorrowAmount": 125895354442339410237194240,
-      "totalDeposits": 179850506346199182024376320
+      "totalBorrowAmount": 215540526462873857834352640,
+      "totalDeposits": 307915037804105521009000448
     },
     "constants": {
       "ulow": 200000000000000000,
-      "u1": 800000000000000000,
-      "u2": 600000000000000000,
+      "u1": 600000000000000000,
+      "u2": 800000000000000000,
       "ucrit": 900000000000000000,
       "rmin": 31709791,
       "kmin": 2264985141,
       "kmax": 9059940566,
       "dmax": 52430,
       "alpha": 77000000000000004565,
-      "cminus": 174767,
-      "cplus": 349534,
+      "cminus": 262151,
+      "cplus": 1048604,
       "c1": 0,
       "c2": 0
     },
     "expected": {
-      "compoundInterest": 2225351762012,
-      "newSlope": 4032918515,
+      "compoundInterest": 1217965425566,
+      "newSlope": 3020035311,
       "didOverflow": 0,
       "didCap": 0
+    },
+    "debug": {
+      "u0": 699999999999999999,
+      "T": 790,
+      "roc": 0,
+      "k1": 3020035311,
+      "x_prelim": 2385827896359,
+      "f": 499999999999999999,
+      "x": 1217964683846,
+      "x_checked": 1217964683846
     }
   },
   {
     "id": 7,
     "input": {
-      "lastTransactionTime": 68921450,
-      "currentTime": 68922797,
-      "lastSlope": 5326395220,
+      "lastTransactionTime": 40871985,
+      "currentTime": 40873056,
+      "lastSlope": 4046702279,
       "lastUtilization": 800000000000000000,
-      "totalBorrowAmount": 178057267026554442343251968,
-      "totalDeposits": 222571583783193044339130368
+      "totalBorrowAmount": 70251892434952297767763968,
+      "totalDeposits": 87814865543690374357188608
     },
     "constants": {
       "ulow": 200000000000000000,
-      "u1": 800000000000000000,
-      "u2": 600000000000000000,
+      "u1": 600000000000000000,
+      "u2": 800000000000000000,
       "ucrit": 900000000000000000,
       "rmin": 31709791,
       "kmin": 2264985141,
       "kmax": 9059940566,
       "dmax": 52430,
       "alpha": 77000000000000004565,
-      "cminus": 174767,
-      "cplus": 349534,
+      "cminus": 262151,
+      "cplus": 1048604,
       "c1": 0,
       "c2": 0
     },
     "expected": {
-      "compoundInterest": 4347515157565,
-      "newSlope": 5326395220,
+      "compoundInterest": 2634375542177,
+      "newSlope": 4046702279,
       "didOverflow": 0,
       "didCap": 0
+    },
+    "debug": {
+      "u0": 799999999999999999,
+      "T": 1071,
+      "roc": 0,
+      "k1": 4046702279,
+      "x_prelim": 4334018141669,
+      "f": 599999999999999998,
+      "x": 2634372072216,
+      "x_checked": 2634372072216
     }
   },
   {
     "id": 8,
     "input": {
-      "lastTransactionTime": 22897697,
-      "currentTime": 22899341,
-      "lastSlope": 3300386988,
+      "lastTransactionTime": 71121578,
+      "currentTime": 71121977,
+      "lastSlope": 3062832845,
       "lastUtilization": 900000000000000000,
-      "totalBorrowAmount": 25670643213033797482184704,
-      "totalDeposits": 28522936903370884182441984
+      "totalBorrowAmount": 184623186003179460706172928,
+      "totalDeposits": 205136873336866044544811008
     },
     "constants": {
       "ulow": 200000000000000000,
-      "u1": 800000000000000000,
-      "u2": 600000000000000000,
+      "u1": 600000000000000000,
+      "u2": 800000000000000000,
       "ucrit": 900000000000000000,
       "rmin": 31709791,
       "kmin": 2264985141,
       "kmax": 9059940566,
       "dmax": 52430,
       "alpha": 77000000000000004565,
-      "cminus": 174767,
-      "cplus": 349534,
+      "cminus": 262151,
+      "cplus": 1048604,
       "c1": 0,
       "c2": 0
     },
     "expected": {
-      "compoundInterest": 3899820605648,
-      "newSlope": 3386582256,
+      "compoundInterest": 871023229798,
+      "newSlope": 3083752499,
       "didOverflow": 0,
       "didCap": 0
+    },
+    "debug": {
+      "u0": 899999999999999999,
+      "T": 399,
+      "roc": 52430,
+      "k1": 3083752499,
+      "x_prelim": 1226243776366,
+      "f": 699999999999999999,
+      "x": 871022850458,
+      "x_checked": 871022850458
     }
   },
   {
     "id": 9,
     "input": {
-      "lastTransactionTime": 53834244,
-      "currentTime": 53836037,
-      "lastSlope": 2796184374,
+      "lastTransactionTime": 31877830,
+      "currentTime": 31878594,
+      "lastSlope": 5715859548,
       "lastUtilization": 1000000000000000000,
-      "totalBorrowAmount": 281010955743638566721290240,
-      "totalDeposits": 281010955743638566721290240
+      "totalBorrowAmount": 100953568347068524516081664,
+      "totalDeposits": 100953568347068524516081664
     },
     "constants": {
       "ulow": 200000000000000000,
-      "u1": 800000000000000000,
-      "u2": 600000000000000000,
+      "u1": 600000000000000000,
+      "u2": 800000000000000000,
       "ucrit": 900000000000000000,
       "rmin": 31709791,
       "kmin": 2264985141,
       "kmax": 9059940566,
       "dmax": 52430,
       "alpha": 77000000000000004565,
-      "cminus": 174767,
-      "cplus": 349534,
+      "cminus": 262151,
+      "cplus": 1048604,
       "c1": 0,
       "c2": 0
     },
     "expected": {
-      "compoundInterest": 43389404572648,
-      "newSlope": 2890191744,
+      "compoundInterest": 37273776882656,
+      "newSlope": 5755916229,
       "didOverflow": 0,
       "didCap": 0
+    },
+    "debug": {
+      "u0": 1000000000000000000,
+      "T": 764,
+      "roc": 52430,
+      "k1": 5755916229,
+      "x_prelim": 4382218347249,
+      "f": 8500000000000000456,
+      "x": 37273082232695,
+      "x_checked": 37273082232695
     }
   }
 ]
