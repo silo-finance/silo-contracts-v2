@@ -5,9 +5,10 @@ import "forge-std/Test.sol";
 
 import {DynamicKinkModelV1} from "../../../contracts/interestRateModel/DynamicKinkModelV1.sol";
 import "../data-readers/RcompTestDynamicKink.sol";
+import "../data-readers/RcurTestDynamicKink.sol";
 
 // FOUNDRY_PROFILE=core forge test -vv --mc DynamicKinkModelV1Test
-contract DynamicKinkModelV1Test is RcompTestDynamicKink {
+contract DynamicKinkModelV1Test is RcompTestDynamicKink, RcurTestDynamicKink {
     uint256 constant TODAY = 1682885514;
     DynamicKinkModelV1 immutable INTEREST_RATE_MODEL;
 
@@ -17,14 +18,17 @@ contract DynamicKinkModelV1Test is RcompTestDynamicKink {
         INTEREST_RATE_MODEL = new DynamicKinkModelV1();
     }
 
-    function test_12345() public {
-        RcompData[] memory data = _readDataFromJson();
-        assertEq(INTEREST_RATE_MODEL.DECIMALS(), 18);
+    function test_rcur() public {
+        RcurData[] memory data = _readDataFromJsonRcur();
+    }
+
+    function test_rcomp() public {
+        RcompData[] memory data = _readDataFromJsonRcomp();
 
         for (uint i; i < data.length; i++) {
-            (IDynamicKinkModelV1.Setup memory setup, Debug memory debug) = _toSetup(data[i]);
+            (IDynamicKinkModelV1.Setup memory setup, DebugRcomp memory debug) = _toSetupRcomp(data[i]);
 
-            (int256 rcomp, int256 k) = INTEREST_RATE_MODEL.compoundInterestRate(
+            (int256 rcomp, int256 k, int256 x) = INTEREST_RATE_MODEL.compoundInterestRate(
                 setup,
                 data[i].input.lastTransactionTime,
                 data[i].input.currentTime,
@@ -34,10 +38,15 @@ contract DynamicKinkModelV1Test is RcompTestDynamicKink {
             emit log_string("******\n\n\n\n");
             emit log_named_int("return: rcomp", rcomp);
             emit log_named_int("return: k", k);
+            emit log_named_int("return: x", x);
             emit log_named_int("expected: rcomp", data[i].expected.compoundInterest);
             emit log_named_int("expected: k", data[i].expected.newSlope);
+            emit log_named_int("expected (debug): x", data[i].debug.x);
             emit log_named_int("relative error for rcomp in 10^18 bp new/expected", rcomp * DP / data[i].expected.compoundInterest);
             emit log_named_int("relative error for k in 10^18 bp new/expected", k * DP / data[i].expected.newSlope);
+            emit log_named_int("relative error for x in 10^18 bp new/expected", x * DP / data[i].debug.x);
         }
+
+        assertEq(INTEREST_RATE_MODEL.DECIMALS(), 18);
     }
 }
