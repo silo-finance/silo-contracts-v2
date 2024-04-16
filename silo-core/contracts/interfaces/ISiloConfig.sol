@@ -249,6 +249,8 @@ interface ISiloConfig {
         returns (address protectedShareToken, address collateralShareToken, address debtShareToken);
 
     /// @dev it will execute necessary actions at the end eg. disable reentrancy flag
+    function finishAction() external;
+
     function finishAction(address _h, uint256 _hook, bytes calldata _data) external;
 
 }
