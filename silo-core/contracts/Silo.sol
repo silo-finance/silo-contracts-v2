@@ -395,13 +395,14 @@ contract Silo is Initializable, SiloERC4626 {
                 ? (configData.collateralShareToken, _getRawLiquidity())
                 : (configData.protectedShareToken, total[AssetType.Protected].assets);
 
-            (assets, _shares) = _callTransitionCollateralWithdraw(
+            (assets, _shares) = SiloERC4626Lib.transitionCollateralWithdraw(
                 shareTokenFrom,
                 _shares,
                 _owner,
                 msg.sender,
                 _withdrawType,
-                liquidity
+                liquidity,
+                total[_withdrawType]
             );
         }
 
@@ -995,7 +996,6 @@ contract Silo is Initializable, SiloERC4626 {
         returns (uint256 assets, uint256 shares)
     {
         ISiloConfig siloConfigCached = config;
-
         (,ISiloConfig.ConfigData memory debtConfig,, IHookReceiver hookReceiverAfter) = siloConfigCached.startAction(
             address(this),
             _borrower,
@@ -1208,25 +1208,6 @@ contract Silo is Initializable, SiloERC4626 {
             _spender,
             total[AssetType.Debt],
             total[AssetType.Collateral].assets
-        );
-    }
-
-    function _callTransitionCollateralWithdraw(
-        address _shareToken,
-        uint256 _shares,
-        address _owner,
-        address _spender,
-        ISilo.AssetType _assetType,
-        uint256 _liquidity
-    ) internal returns (uint256 assets, uint256 shares) {
-        (assets, _shares) = SiloERC4626Lib.transitionCollateralWithdraw(
-            _shareToken,
-            _shares,
-            _owner,
-            _spender,
-            _assetType,
-            _liquidity,
-            total[_assetType]
         );
     }
 }
