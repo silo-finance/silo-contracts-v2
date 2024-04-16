@@ -591,7 +591,10 @@ contract Silo is Initializable, SiloERC4626 {
     {
         (
             , shares
-        ) = _borrow(_assets, 0 /* shares */, _receiver, _borrower, _sameAsset, false /* _leverage */, "" /* data */);
+        ) = _borrow(
+            BorrowParams(_assets, 0 /* shares */, _receiver, _borrower, _sameAsset, false /* _leverage */),
+            "" /* data */
+        );
     }
 
     /// @inheritdoc ISilo
@@ -616,7 +619,10 @@ contract Silo is Initializable, SiloERC4626 {
     {
         (
             assets,
-        ) = _borrow(0 /* assets */, _shares, _receiver, _borrower, _sameAsset, false /* _leverage */, "" /* data */);
+        ) = _borrow(
+            BorrowParams(0 /* assets */, _shares, _receiver, _borrower, _sameAsset, false /* _leverage */),
+            "" /* data */
+        );
     }
 
     /// @inheritdoc ISilo
@@ -715,7 +721,9 @@ contract Silo is Initializable, SiloERC4626 {
         virtual
         returns (uint256 shares)
     {
-        (, shares) = _borrow(_assets, 0 /* _shares */, address(_receiver), _borrower, _sameAsset, true, _data);
+        (
+            , shares
+        ) = _borrow(BorrowParams(_assets, 0 /* _shares */, address(_receiver), _borrower, _sameAsset, true), _data);
     }
 
     /// @inheritdoc ISilo
@@ -924,35 +932,34 @@ contract Silo is Initializable, SiloERC4626 {
     }
 
     function _borrow( // solhint-disable-line function-max-lines, code-complexity
-        uint256 _assets,
-        uint256 _shares,
-        address _receiver,
-        address _borrower,
-        bool _sameAsset,
-        bool _leverage,
+        BorrowParams memory _params,
         bytes memory _data
     )
         internal
         virtual
         returns (uint256 assets, uint256 shares)
     {
-        if (_assets == 0 && _shares == 0) revert ISilo.ZeroAssets();
+        if (_params.assets == 0 && _params.shares == 0) revert ISilo.ZeroAssets();
 
         ISiloConfig siloConfigCached = config;
+        ISiloConfig.ConfigData memory collateralConfig;
+        ISiloConfig.ConfigData memory debtConfig;
+        IHookReceiver hookReceiverAfter;
 
-        (
-            ISiloConfig.ConfigData memory collateralConfig,
-            ISiloConfig.ConfigData memory debtConfig,
-            ISiloConfig.DebtInfo memory debtInfo,
-            IHookReceiver hookReceiverAfter
-        ) = siloConfigCached.startAction(
-            address(this),
-            _borrower,
-            Hook.BORROW | Hook.BEFORE | (_sameAsset ? Hook.SAME_ASSET : Hook.TWO_ASSETS),
-            abi.encodePacked(_assets, _shares, _receiver, _borrower, _sameAsset, _leverage)
-        );
+        { // too deep
+            ISiloConfig.DebtInfo memory debtInfo;
 
-        if (!SiloLendingLib.borrowPossible(debtInfo)) revert ISilo.BorrowNotPossible();
+            (
+                collateralConfig, debtConfig, debtInfo, hookReceiverAfter
+            ) = siloConfigCached.startAction(
+                address(this),
+                _params.borrower,
+                Hook.BORROW | Hook.BEFORE | (_params.sameAsset ? Hook.SAME_ASSET : Hook.TWO_ASSETS),
+                abi.encode(_params)
+            );
+
+            if (!SiloLendingLib.borrowPossible(debtInfo)) revert ISilo.BorrowNotPossible();
+        }
 
         // TODO optimisation, use collateralConfig.silo instead of debtConfig.otherSilo
         _callAccrueInterestForAsset(
@@ -962,24 +969,24 @@ contract Silo is Initializable, SiloERC4626 {
         (assets, shares) = _callBorrow(
             debtConfig.debtShareToken,
             debtConfig.token,
-            _assets,
-            _shares,
-            _receiver,
-            _borrower,
+            _params.assets,
+            _params.shares,
+            _params.receiver,
+            _params.borrower,
             msg.sender
         );
 
         // balanceOf shares
-        emit Borrow(msg.sender, _receiver, _borrower, assets, shares);
+        emit Borrow(msg.sender, _params.receiver, _params.borrower, assets, shares);
 
-        if (_leverage) {
+        if (_params.leverage) {
             // change reentrant flag to leverage, to allow for deposit
             siloConfigCached.crossLeverageGuard(CrossEntrancy.ENTERED_FROM_LEVERAGE);
 
             emit Leverage();
 
-            bytes32 result = ILeverageBorrower(_receiver)
-                .onLeverage(msg.sender, _borrower, debtConfig.token, assets, _data);
+            bytes32 result = ILeverageBorrower(_params.receiver)
+                .onLeverage(msg.sender, _params.borrower, debtConfig.token, assets, _data);
 
             // allow for deposit reentry only to provide collateral
             if (result != _LEVERAGE_CALLBACK) revert LeverageFailed();
@@ -996,7 +1003,7 @@ contract Silo is Initializable, SiloERC4626 {
             ISiloOracle(debtConfig.maxLtvOracle).beforeQuote(debtConfig.token);
         }
 
-        if (!SiloSolvencyLib.isBelowMaxLtv(collateralConfig, debtConfig, _borrower, AccrueInterestInMemory.No)) {
+        if (!SiloSolvencyLib.isBelowMaxLtv(collateralConfig, debtConfig, _params.borrower, AccrueInterestInMemory.No)) {
             revert AboveMaxLtv();
         }
 
@@ -1005,7 +1012,7 @@ contract Silo is Initializable, SiloERC4626 {
         if (address(hookReceiverAfter) != address(0)) {
             hookReceiverAfter.afterAction(
                 Hook.BORROW | Hook.AFTER,
-                abi.encodePacked(_assets, _shares, _receiver, _borrower, _sameAsset, _leverage, assets, shares)
+                abi.encode(_params, assets, shares)
             );
         }
     }

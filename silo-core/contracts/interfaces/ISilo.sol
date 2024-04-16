@@ -69,6 +69,15 @@ interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
         uint64 interestRateTimestamp;
     }
 
+    struct BorrowParams {
+        uint256 assets;
+        uint256 shares;
+        address receiver;
+        address borrower;
+        bool sameAsset;
+        bool leverage;
+    }
+
     /// @notice Emitted on protected deposit
     /// @param sender wallet address that deposited asset
     /// @param owner wallet address that received shares in Silo
