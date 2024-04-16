@@ -251,6 +251,6 @@ interface ISiloConfig {
     /// @dev it will execute necessary actions at the end eg. disable reentrancy flag
     function finishAction() external;
 
-    function finishAction(address _h, uint256 _hook, bytes calldata _data) external;
+    function finishAction(IHookReceiver _hookReceiver, uint256 _hooks, bytes calldata _data) external;
 
 }

@@ -87,11 +87,12 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
         returns (bool result)
     {
         ISiloConfig siloConfigCached = siloConfig;
+        address siloCached = address(silo);
 
         (
             ,,, IHookReceiver hookReceiverAfter
         ) = siloConfigCached.startAction(
-            address(silo),
+            siloCached,
             _from,
             Hook.SHARE_TRANSFER | Hook.BEFORE,
             abi.encodePacked(_from, _to, _amount)
@@ -103,6 +104,7 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
 
         if (address(hookReceiverAfter) != address(0)) {
             hookReceiverAfter.afterAction(
+                siloCached,
                 Hook.SHARE_TRANSFER | Hook.AFTER,
                 abi.encodePacked(_from, _to, _amount, result)
             );
@@ -116,12 +118,14 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
         override(ERC20Upgradeable, IERC20Upgradeable)
         returns (bool result)
     {
+        address siloCached = address(silo);
+
         ISiloConfig siloConfigCached = siloConfig;
 
         (
             ,,, IHookReceiver hookReceiverAfter
         ) = siloConfigCached.startAction(
-            address(silo),
+            siloCached,
             msg.sender,
             Hook.SHARE_TRANSFER | Hook.BEFORE,
             abi.encodePacked(msg.sender, _to, _amount)
@@ -133,6 +137,7 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
 
         if (address(hookReceiverAfter) != address(0)) {
             hookReceiverAfter.afterAction(
+                siloCached,
                 Hook.SHARE_TRANSFER | Hook.AFTER,
                 abi.encodePacked(msg.sender, _to, _amount, result)
             );
