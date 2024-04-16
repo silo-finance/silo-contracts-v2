@@ -69,7 +69,10 @@ contract GaugeHookReceiver is IGaugeHookReceiver, Ownable2StepUpgradeable {
         );
     }
 
-    function beforeAction(uint256 _action, bytes calldata _input) external returns (uint256 hookReturnCode) {
+    function beforeAction(address _silo, uint256 _action, bytes calldata _input)
+        external
+        returns (uint256 hookReturnCode)
+    {
         // TODO
     }
 

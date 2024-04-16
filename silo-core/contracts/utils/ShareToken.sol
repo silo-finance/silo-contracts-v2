@@ -273,16 +273,4 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
         // on transfer. ERC20 has them, so we good.
         return _sender != address(0) && _recipient != address(0);
     }
-
-    function _hookCallNeeded(uint24 _hooksBitmap, uint256 _hook) internal pure returns (bool) {
-        return (_hooksBitmap & _hook != 0);
-    }
-
-    function _fetchHookData(ISiloConfig _siloConfig) internal view returns (address hookReceiver, uint24 hooks) {
-        hookReceiver = _siloConfig.getConfig(address(silo)).hookReceiver;
-
-        if (hookReceiver != address(0)) {
-            (,,hooks) = silo.siloData();
-        }
-    }
 }

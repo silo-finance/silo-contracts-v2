@@ -376,10 +376,10 @@ contract Silo is Initializable, SiloERC4626 {
         ISiloConfig siloConfigCached = config;
         
         (
-            ISiloConfig.ConfigData memory configData,, IHookReceiver hookReceiverAfter
+            ISiloConfig.ConfigData memory configData,,, IHookReceiver hookReceiverAfter
         ) = siloConfigCached.startAction(
+            address(this),
             address(0) /* no borrower */,
-            false /* same asset */,
             Hook.BEFORE | Hook.TRANSITION_COLLATERAL,
             abi.encodePacked(_shares, _owner, _withdrawType)
         );
@@ -464,7 +464,7 @@ contract Silo is Initializable, SiloERC4626 {
             address(this),
             msg.sender,
             Hook.BEFORE | Hook.SWITCH_COLLATERAL | (_sameAsset ? Hook.SAME_ASSET : Hook.TWO_ASSETS),
-            bytes(0)
+            bytes("")
         );
 
         emit CollateralTypeChanged(msg.sender, _sameAsset);
@@ -485,7 +485,7 @@ contract Silo is Initializable, SiloERC4626 {
         if (address(hookReceiverAfter) != address(0)) {
             hookReceiverAfter.afterAction(
                 Hook.AFTER | Hook.SWITCH_COLLATERAL | (_sameAsset ? Hook.SAME_ASSET : Hook.TWO_ASSETS),
-                bytes(0)
+                bytes("")
             );
         }
     }
@@ -759,7 +759,7 @@ contract Silo is Initializable, SiloERC4626 {
         ISiloConfig siloConfigCached = config;
 
         (
-            ISiloConfig.ConfigData memory collateralConfig,,
+            ISiloConfig.ConfigData memory collateralConfig,,,
             IHookReceiver hookReceiverAfter
         ) = siloConfigCached.startAction(
             address(this),
@@ -936,7 +936,6 @@ contract Silo is Initializable, SiloERC4626 {
         ) = siloConfigCached.startAction(
             address(this),
             _borrower,
-            _sameAsset,
             Hook.BORROW | Hook.BEFORE | (_sameAsset ? Hook.SAME_ASSET : Hook.TWO_ASSETS),
             abi.encodePacked(_assets, _shares, _receiver, _borrower, _sameAsset, _leverage)
         );

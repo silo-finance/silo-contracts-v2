@@ -143,6 +143,20 @@ interface ISiloConfig {
 
     event HooksUpdated(address silo, uint256 hooksBefore, uint256 hooksAfter);
 
+    /// @notice Method for HookReceiver only to update hooks
+    /// If there are two different hookReceivers then each can update only his silo settings.
+    /// Other parameters will be ignored.
+    /// @param _silo0HooksBefore bitmap for Silo0 hooks before, see Hook.sol
+    /// @param _silo0HooksAfter bitmap for Silo0 hooks after, see Hook.sol
+    /// @param _silo1HooksBefore bitmap for Silo1 hooks before, see Hook.sol
+    /// @param _silo1HooksAfter bitmap for Silo1 hooks after, see Hook.sol
+    function updateHooks(
+        uint64 _silo0HooksBefore,
+        uint64 _silo0HooksAfter,
+        uint64 _silo1HooksBefore,
+        uint64 _silo1HooksAfter
+    ) external;
+
     /// @dev Can be called only by silo, share token or liquidation module
     /// It will call hook if needed, raise reentrancy guard and return necessary configuration to perform action
     /// @param _silo silo address for which action is called
@@ -169,14 +183,6 @@ interface ISiloConfig {
     /// @dev must be called when `_borrower` repay all debt, there is no restriction from which silo call will be done
     /// @param _borrower borrower address
     function closeDebt(address _borrower) external;
-
-    /// @notice it will change collateral for existing debt, only silo can call it
-    /// @return collateralConfig The configuration data for collateral silo.
-    /// @return debtConfig The configuration data for debt silo.
-    /// @return debtInfo details about `borrower` debt
-    function changeCollateralType(address _borrower, bool _sameAsset)
-        external
-        returns (ConfigData memory collateralConfig, ConfigData memory debtConfig, DebtInfo memory debtInfo);
 
     /// @notice method for manipulating reentrancy flag for leverage
     /// @param _entranceFrom see CrossEntrancy lib for possible values

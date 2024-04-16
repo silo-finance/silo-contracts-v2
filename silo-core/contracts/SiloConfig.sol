@@ -156,7 +156,7 @@ contract SiloConfig is ISiloConfig {
         uint64 _silo0HooksAfter,
         uint64 _silo1HooksBefore,
         uint64 _silo1HooksAfter
-    ) external {
+    ) external virtual {
         if (msg.sender != _HOOK_RECEIVER0 && msg.sender != _HOOK_RECEIVER1) revert OnlyHookReceiver();
 
         if (msg.sender == _HOOK_RECEIVER0) {
@@ -273,7 +273,6 @@ contract SiloConfig is ISiloConfig {
         bytes calldata _input
     )
         external
-        view
         virtual
         returns ( // TODO maybe bytes config for both? and decode to one/two?
             ConfigData memory collateralConfig,
@@ -536,6 +535,8 @@ contract SiloConfig is ISiloConfig {
         revert CrossReentrantCall();
     }
 
+    /// @notice it will change collateral for existing debt, only silo can call it
+    /// @return debtInfo details about `borrower` debt after the change
     function _changeCollateralType(address _borrower, bool _sameAsset)
         internal
         virtual
