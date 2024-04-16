@@ -11,7 +11,7 @@ contract DynamicKinkModelV1Test is RcompTestDynamicKink {
     uint256 constant TODAY = 1682885514;
     DynamicKinkModelV1 immutable INTEREST_RATE_MODEL;
 
-    uint256 constant DP = 10 ** 18;
+    int256 constant DP = 10 ** 18;
 
     constructor() {
         INTEREST_RATE_MODEL = new DynamicKinkModelV1();
@@ -34,6 +34,8 @@ contract DynamicKinkModelV1Test is RcompTestDynamicKink {
             emit log_named_int("return: k", k);
             emit log_named_int("expected: rcomp", data[i].expected.compoundInterest);
             emit log_named_int("expected: k", data[i].expected.newSlope);
+            emit log_named_int("relative error for rcomp in 10^18 bp new/expected", rcomp * DP / data[i].expected.compoundInterest);
+            emit log_named_int("relative error for k in 10^18 bp new/expected", k * DP / data[i].expected.newSlope);
         }
     }
 }
