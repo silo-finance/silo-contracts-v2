@@ -374,9 +374,11 @@ contract Silo is Initializable, SiloERC4626 {
         if (_withdrawType == AssetType.Debt) revert ISilo.WrongAssetType();
 
         ISiloConfig siloConfigCached = config;
-        
+        IHookReceiver hookReceiverAfter;
+        ISiloConfig.ConfigData memory configData;
+
         (
-            ISiloConfig.ConfigData memory configData,,, IHookReceiver hookReceiverAfter
+            configData,,, hookReceiverAfter
         ) = siloConfigCached.startAction(
             address(this),
             address(0) /* no borrower */,
@@ -387,8 +389,6 @@ contract Silo is Initializable, SiloERC4626 {
         _callAccrueInterestForAsset(
             configData.interestRateModel, configData.daoFee, configData.deployerFee, address(0)
         );
-        
-        uint256 toShares;
 
         { // Stack too deep
             (address shareTokenFrom, uint256 liquidity) = _withdrawType == AssetType.Collateral
@@ -406,26 +406,30 @@ contract Silo is Initializable, SiloERC4626 {
             );
         }
 
-        (AssetType depositType, address shareTokenTo) = _withdrawType == AssetType.Collateral
-            ? (AssetType.Protected, configData.protectedShareToken)
-            : (AssetType.Collateral, configData.collateralShareToken);
+        { // too deep
+            uint256 toShares;
 
-        (assets, toShares) = SiloERC4626Lib.deposit(
-            address(0), // empty token because we don't want to transfer
-            _owner,
-            assets,
-            0, // shares
-            _owner,
-            IShareToken(shareTokenTo),
-            total[depositType]
-        );
+            (AssetType depositType, address shareTokenTo) = _withdrawType == AssetType.Collateral
+                ? (AssetType.Protected, configData.protectedShareToken)
+                : (AssetType.Collateral, configData.collateralShareToken);
 
-        if (_withdrawType == AssetType.Collateral) {
-            emit Withdraw(msg.sender, _owner, _owner, assets, _shares);
-            emit DepositProtected(msg.sender, _owner, assets, toShares);
-        } else {
-            emit WithdrawProtected(msg.sender, _owner, _owner, assets, _shares);
-            emit Deposit(msg.sender, _owner, assets, toShares);
+            (assets, toShares) = SiloERC4626Lib.deposit(
+                address(0), // empty token because we don't want to transfer
+                _owner,
+                assets,
+                0, // shares
+                _owner,
+                IShareToken(shareTokenTo),
+                total[depositType]
+            );
+
+            if (_withdrawType == AssetType.Collateral) {
+                emit Withdraw(msg.sender, _owner, _owner, assets, _shares);
+                emit DepositProtected(msg.sender, _owner, assets, toShares);
+            } else {
+                emit WithdrawProtected(msg.sender, _owner, _owner, assets, _shares);
+                emit Deposit(msg.sender, _owner, assets, toShares);
+            }
         }
 
         siloConfigCached.finishAction();
