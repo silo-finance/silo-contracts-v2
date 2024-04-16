@@ -39,8 +39,20 @@ contract RcompTestDynamicKink is Test {
         int256 newSlope;
     }
 
+    struct Debug {
+        int256 T;
+        int256 f;
+        int256 k1;
+        int256 roc;
+        int256 u0;
+        int256 x;
+        int256 x_checked;
+        int256 x_prelim;
+    }
+
     struct RcompData {
         Constants constants;
+        Debug debug;
         Expected expected;
         uint256 id;
         Input input;
@@ -95,10 +107,9 @@ contract RcompTestDynamicKink is Test {
     function _toSetup(RcompData memory _data)
         internal
         pure
-        returns (IDynamicKinkModelV1.Setup memory setup)
+        returns (IDynamicKinkModelV1.Setup memory setup, Debug memory debug)
     {
 
-        // todo u1->u2
         setup.config.alpha = _data.constants.alpha;
         setup.config.c1 = _data.constants.c1;
         setup.config.c2 = _data.constants.c2;
@@ -108,10 +119,8 @@ contract RcompTestDynamicKink is Test {
         setup.config.kmax = _data.constants.kmax;
         setup.config.kmin = _data.constants.kmin;
         setup.config.rmin = _data.constants.rmin;
-        // todo
-        setup.config.u1 = _data.constants.u2;
-        setup.config.u2 = _data.constants.u1;
-        //
+        setup.config.u1 = _data.constants.u1;
+        setup.config.u2 = _data.constants.u2;
         setup.config.ucrit = _data.constants.ucrit;
         setup.config.ulow = _data.constants.ulow;
 
@@ -123,6 +132,7 @@ contract RcompTestDynamicKink is Test {
         pure
         returns (IDynamicKinkModelV1.Config memory cfg)
     {
-        cfg = _toSetup(_data).config;
+        (IDynamicKinkModelV1.Setup memory setup,) = _toSetup(_data);
+        cfg = setup.config;
     }
 }
