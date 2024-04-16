@@ -66,7 +66,7 @@ contract DynamicKinkModelV1 is IDynamicKinkModelV1 {
     function compoundInterestRate(Setup memory _setup, int256 _t0, int256 _t1, int256 _u)
         public
         pure
-        returns (int256 rcomp, int256 k)
+        returns (int256 rcomp, int256 k, int256 x)
     {
         // uint T = t1 - t0;
         if (_t1 <= _t0) revert InvalidTimestamp();
@@ -94,7 +94,7 @@ contract DynamicKinkModelV1 is IDynamicKinkModelV1 {
 
         int256 k1 = k + roc * T; // slope of the kink at t1 ignoring lower and upper bounds
 
-        int256 x; // an integral of k
+        // int256 x; // an integral of k
 
         // if (k1 > kmax ) {
         if (k1 > _setup.config.kmax) {
