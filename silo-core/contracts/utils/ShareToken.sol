@@ -91,7 +91,7 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
 
         (
             ,,, IHookReceiver hookReceiverAfter
-        ) = siloConfigCached.startAction(
+        ) = siloConfigCached.startActionFor(
             siloCached,
             _from,
             Hook.SHARE_TRANSFER | Hook.BEFORE,
@@ -124,7 +124,7 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
 
         (
             ,,, IHookReceiver hookReceiverAfter
-        ) = siloConfigCached.startAction(
+        ) = siloConfigCached.startActionFor(
             siloCached,
             msg.sender,
             Hook.SHARE_TRANSFER | Hook.BEFORE,

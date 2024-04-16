@@ -34,7 +34,7 @@ contract PartialLiquidation is IPartialLiquidation {
 
             (
                 collateralConfig, debtConfig, debtInfo, hookReceiverAfter
-            ) = siloConfigCached.startAction(
+            ) = siloConfigCached.startActionFor(
                 _params.siloWithDebt,
                 _params.borrower,
                 Hook.LIQUIDATION | Hook.BEFORE,

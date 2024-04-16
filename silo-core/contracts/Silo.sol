@@ -380,7 +380,6 @@ contract Silo is Initializable, SiloERC4626 {
         (
             configData,,, hookReceiverAfter
         ) = siloConfigCached.startAction(
-            address(this),
             address(0) /* no borrower */,
             Hook.BEFORE | Hook.TRANSITION_COLLATERAL,
             abi.encodePacked(_shares, _owner, _withdrawType)
@@ -462,7 +461,6 @@ contract Silo is Initializable, SiloERC4626 {
             ISiloConfig.DebtInfo memory debtInfo,
             IHookReceiver hookReceiverAfter
         ) = siloConfigCached.startAction(
-            address(this),
             msg.sender,
             Hook.BEFORE | Hook.SWITCH_COLLATERAL | (_sameAsset ? Hook.SAME_ASSET : Hook.TWO_ASSETS),
             bytes("")
@@ -512,7 +510,6 @@ contract Silo is Initializable, SiloERC4626 {
                 debtInfo,
                 hookReceiverAfter
             ) = siloConfigCached.startAction(
-                address(this),
                 _borrower,
                 Hook.BORROW | Hook.LEVERAGE | Hook.BEFORE | Hook.SAME_ASSET,
                 abi.encodePacked(_depositAssets, _borrowAssets, _borrower, _assetType)
@@ -773,7 +770,6 @@ contract Silo is Initializable, SiloERC4626 {
             ISiloConfig.ConfigData memory collateralConfig,,,
             IHookReceiver hookReceiverAfter
         ) = siloConfigCached.startAction(
-            address(this),
             address(0),
             Hook.DEPOSIT | Hook.BEFORE,
             abi.encodePacked(_assets, _shares, _receiver, _assetType)
@@ -826,7 +822,6 @@ contract Silo is Initializable, SiloERC4626 {
             ISiloConfig.DebtInfo memory debtInfo,
             IHookReceiver hookReceiverAfter
         ) = siloConfigCached.startAction(
-            address(this),
             _params.owner,
             Hook.WITHDRAW | Hook.BEFORE,
             abi.encode(_params)
@@ -927,7 +922,6 @@ contract Silo is Initializable, SiloERC4626 {
             (
                 collateralConfig, debtConfig, debtInfo, hookReceiverAfter
             ) = siloConfigCached.startAction(
-                address(this),
                 _params.borrower,
                 Hook.BORROW | Hook.BEFORE | (_params.sameAsset ? Hook.SAME_ASSET : Hook.TWO_ASSETS),
                 abi.encode(_params)
@@ -997,7 +991,6 @@ contract Silo is Initializable, SiloERC4626 {
     {
         ISiloConfig siloConfigCached = config;
         (,ISiloConfig.ConfigData memory debtConfig,, IHookReceiver hookReceiverAfter) = siloConfigCached.startAction(
-            address(this),
             _borrower,
             Hook.REPAY | Hook.BEFORE | (_liquidation ? Hook.LIQUIDATION : 0),
             abi.encodePacked(_assets, _shares, _borrower, _repayer)

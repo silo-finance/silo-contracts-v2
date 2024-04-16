@@ -166,7 +166,16 @@ interface ISiloConfig {
     /// @return collateralConfig The configuration data for collateral silo.
     /// @return debtConfig The configuration data for debt silo.
     /// @return debtInfo details about `borrower` debt
-    function startAction(address _silo, address _borrower, uint256 _hook, bytes calldata _input)
+    function startActionFor(address _silo, address _borrower, uint256 _hook, bytes calldata _input)
+        external
+        returns (
+            ConfigData memory collateralConfig,
+            ConfigData memory debtConfig,
+            DebtInfo memory debtInfo,
+            IHookReceiver hookReceiverAfter
+        );
+
+    function startAction(address _borrower, uint256 _hook, bytes calldata _input)
         external
         returns (
             ConfigData memory collateralConfig,

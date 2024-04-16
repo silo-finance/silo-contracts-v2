@@ -279,13 +279,29 @@ contract SiloConfig is ISiloConfig {
     }
 
     /// @inheritdoc ISiloConfig
-    function startAction(
+    function startAction(address _borrower, uint256 _hook, bytes calldata _input)
+        external
+        virtual
+        returns ( // TODO maybe bytes config for both? and decode to one/two?
+            ConfigData memory collateralConfig,
+            ConfigData memory debtConfig,
+            DebtInfo memory debtInfo,
+            IHookReceiver hookReceiverAfter
+        )
+    {
+        _onlySilo();
+
+        return startActionFor(msg.sender, _borrower, _hook, _input);
+    }
+
+    /// @inheritdoc ISiloConfig
+    function startActionFor(
         address _silo,
         address _borrower,
         uint256 _hook, // this will also determine method
         bytes calldata _input
     )
-        external
+        public
         virtual
         returns ( // TODO maybe bytes config for both? and decode to one/two?
             ConfigData memory collateralConfig,
