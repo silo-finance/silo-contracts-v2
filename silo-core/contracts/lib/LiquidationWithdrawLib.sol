@@ -19,7 +19,7 @@ library LiquidationWithdrawLib {
         bool _receiveSToken,
         uint256 _liquidity,
         mapping(ISilo.AssetType => ISilo.Assets) storage _total
-    ) internal {
+    ) external {
         ISiloConfig.ConfigData memory collateralConfig = _config.getConfig(address(this));
         if (msg.sender != collateralConfig.liquidationModule) revert ISilo.OnlyLiquidationModule();
 
@@ -56,7 +56,7 @@ library LiquidationWithdrawLib {
         address _liquidator,
         uint256 _liquidity,
         mapping(ISilo.AssetType => ISilo.Assets) storage _total
-    ) internal {
+    ) private {
         if (_withdrawAssetsFromProtected != 0) {
             SiloERC4626Lib.withdraw(
                 _collateralConfig.token,
@@ -128,7 +128,7 @@ library LiquidationWithdrawLib {
         uint256 _amountToLiquidate,
         uint256 _totalAssets,
         IShareToken _shareToken
-    ) internal {
+    ) private {
         // we already accrued interest, so we can work directly on assets
         uint256 shares = SiloMathLib.convertToShares(
             _amountToLiquidate,
