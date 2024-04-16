@@ -16,19 +16,14 @@ import {PartialLiquidationExecLib} from "./lib/PartialLiquidationExecLib.sol";
 
 /// @title PartialLiquidation module for executing liquidations
 contract PartialLiquidation is IPartialLiquidation {
+    // solhint-disable-line function-max-lines, code-complexity
     /// @inheritdoc IPartialLiquidation
-    function liquidationCall( // solhint-disable-line function-max-lines, code-complexity
-        address _siloWithDebt, // TODO bug, we need to verify input
-        address _collateralAsset,
-        address _borrower,
-        uint256 _debtToCover,
-        bool _receiveSToken
-    )
+    function liquidationCall(LiquidationCallParams memory _params) // TODO bug, we need to verify input silo
         external
         virtual
         returns (uint256 withdrawCollateral, uint256 repayDebtAssets)
     {
-        ISiloConfig siloConfigCached = ISilo(_siloWithDebt).config();
+        ISiloConfig siloConfigCached = ISilo(_params.siloWithDebt).config();
 
         ISiloConfig.ConfigData memory collateralConfig;
         ISiloConfig.ConfigData memory debtConfig;
@@ -40,19 +35,19 @@ contract PartialLiquidation is IPartialLiquidation {
             (
                 collateralConfig, debtConfig, debtInfo, hookReceiverAfter
             ) = siloConfigCached.startAction(
-                _siloWithDebt,
-                _borrower,
+                _params.siloWithDebt,
+                _params.borrower,
                 Hook.LIQUIDATION | Hook.BEFORE,
-                abi.encodePacked(_collateralAsset, _borrower, _debtToCover, _receiveSToken)
+                abi.encode(_params)
             );
 
             if (!debtInfo.debtPresent) revert UserIsSolvent();
             if (!debtInfo.debtInThisSilo) revert ISilo.ThereIsDebtInOtherSilo();
         }
 
-        if (_collateralAsset != collateralConfig.token) revert UnexpectedCollateralToken();
+        if (_params.collateralAsset != collateralConfig.token) revert UnexpectedCollateralToken();
 
-        ISilo(_siloWithDebt).accrueInterest();
+        ISilo(_params.siloWithDebt).accrueInterest();
         ISilo(debtConfig.otherSilo).accrueInterest(); // TODO optimise if same silo
 
         if (collateralConfig.callBeforeQuote) {
@@ -67,15 +62,15 @@ contract PartialLiquidation is IPartialLiquidation {
         uint256 withdrawAssetsFromProtected;
 
         { // too deep
-            bool selfLiquidation = _borrower == msg.sender;
+            bool selfLiquidation = _params.borrower == msg.sender;
 
             (
                 withdrawAssetsFromCollateral, withdrawAssetsFromProtected, repayDebtAssets
             ) = PartialLiquidationExecLib.getExactLiquidationAmounts(
                 collateralConfig,
                 debtConfig,
-                _borrower,
-                _debtToCover,
+                _params.borrower,
+                _params.debtToCover,
                 selfLiquidation ? 0 : collateralConfig.liquidationFee,
                 selfLiquidation
             );
@@ -85,26 +80,20 @@ contract PartialLiquidation is IPartialLiquidation {
         // this two value were split from total collateral to withdraw, so we will not overflow
         unchecked { withdrawCollateral = withdrawAssetsFromCollateral + withdrawAssetsFromProtected; }
 
-        emit LiquidationCall(msg.sender, _receiveSToken);
-        ILiquidationProcess(_siloWithDebt).liquidationRepay(repayDebtAssets, _borrower, msg.sender);
+        emit LiquidationCall(msg.sender, _params.receiveSToken);
+        ILiquidationProcess(_params.siloWithDebt).liquidationRepay(repayDebtAssets, _params.borrower, msg.sender);
 
         ILiquidationProcess(collateralConfig.silo).withdrawCollateralsToLiquidator(
-            withdrawAssetsFromCollateral, withdrawAssetsFromProtected, _borrower, msg.sender, _receiveSToken
+            withdrawAssetsFromCollateral, withdrawAssetsFromProtected, _params.borrower, msg.sender, _params.receiveSToken
         );
 
         siloConfigCached.finishAction();
 
         if (address(hookReceiverAfter) != address(0)) {
             hookReceiverAfter.afterAction(
+                _params.siloWithDebt,
                 Hook.LIQUIDATION | Hook.AFTER,
-                abi.encodePacked(
-                    collateralConfig.token,
-                    debtConfig.token,
-                    _borrower,
-                    _debtToCover,
-                    _receiveSToken,
-                    withdrawCollateral, repayDebtAssets
-                )
+                abi.encode(_params, withdrawCollateral, repayDebtAssets)
             );
         }
     }
