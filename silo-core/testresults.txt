@@ -1,0 +1,40 @@
+  relative error for rcomp in 10^18 bp new/expected: 999999968960460677
+  relative error for k in 10^18 bp new/expected: 1000000135581077480
+  relative error for rcomp in 10^18 bp new/expected: 999999968983934827
+  relative error for k in 10^18 bp new/expected: 1000000114253254889
+  relative error for rcomp in 10^18 bp new/expected: 1000000010528693187
+  relative error for k in 10^18 bp new/expected: 1000000027553823961
+  relative error for rcomp in 10^18 bp new/expected: 1000000041865742709
+  relative error for k in 10^18 bp new/expected: 1000000091486722007
+  relative error for rcomp in 10^18 bp new/expected: 1000000003277455171
+  relative error for k in 10^18 bp new/expected: 1000000008245777739
+  relative error for rcomp in 10^18 bp new/expected: 999999999101010574
+  relative error for k in 10^18 bp new/expected: 1000000000000000000
+  relative error for rcomp in 10^18 bp new/expected: 999999999087001998
+  relative error for k in 10^18 bp new/expected: 1000000000000000000
+  relative error for rcomp in 10^18 bp new/expected: 999999999403653740
+  relative error for k in 10^18 bp new/expected: 1000000000000000000
+  relative error for rcomp in 10^18 bp new/expected: 999999985890158173
+  relative error for k in 10^18 bp new/expected: 999999972760459852
+  relative error for rcomp in 10^18 bp new/expected: 999999985854934914
+  relative error for k in 10^18 bp new/expected: 999999972028779851
+    ├─ emit [36mlog_named_int[0m(key: "relative error for rcomp in 10^18 bp new/expected", val: 999999968960460677 [2;49;39m[9.999e17][0m)
+    ├─ emit [36mlog_named_int[0m(key: "relative error for k in 10^18 bp new/expected", val: 1000000135581077480 [2;49;39m[1e18][0m)
+    ├─ emit [36mlog_named_int[0m(key: "relative error for rcomp in 10^18 bp new/expected", val: 999999968983934827 [2;49;39m[9.999e17][0m)
+    ├─ emit [36mlog_named_int[0m(key: "relative error for k in 10^18 bp new/expected", val: 1000000114253254889 [2;49;39m[1e18][0m)
+    ├─ emit [36mlog_named_int[0m(key: "relative error for rcomp in 10^18 bp new/expected", val: 1000000010528693187 [2;49;39m[1e18][0m)
+    ├─ emit [36mlog_named_int[0m(key: "relative error for k in 10^18 bp new/expected", val: 1000000027553823961 [2;49;39m[1e18][0m)
+    ├─ emit [36mlog_named_int[0m(key: "relative error for rcomp in 10^18 bp new/expected", val: 1000000041865742709 [2;49;39m[1e18][0m)
+    ├─ emit [36mlog_named_int[0m(key: "relative error for k in 10^18 bp new/expected", val: 1000000091486722007 [2;49;39m[1e18][0m)
+    ├─ emit [36mlog_named_int[0m(key: "relative error for rcomp in 10^18 bp new/expected", val: 1000000003277455171 [2;49;39m[1e18][0m)
+    ├─ emit [36mlog_named_int[0m(key: "relative error for k in 10^18 bp new/expected", val: 1000000008245777739 [2;49;39m[1e18][0m)
+    ├─ emit [36mlog_named_int[0m(key: "relative error for rcomp in 10^18 bp new/expected", val: 999999999101010574 [2;49;39m[9.999e17][0m)
+    ├─ emit [36mlog_named_int[0m(key: "relative error for k in 10^18 bp new/expected", val: 1000000000000000000 [2;49;39m[1e18][0m)
+    ├─ emit [36mlog_named_int[0m(key: "relative error for rcomp in 10^18 bp new/expected", val: 999999999087001998 [2;49;39m[9.999e17][0m)
+    ├─ emit [36mlog_named_int[0m(key: "relative error for k in 10^18 bp new/expected", val: 1000000000000000000 [2;49;39m[1e18][0m)
+    ├─ emit [36mlog_named_int[0m(key: "relative error for rcomp in 10^18 bp new/expected", val: 999999999403653740 [2;49;39m[9.999e17][0m)
+    ├─ emit [36mlog_named_int[0m(key: "relative error for k in 10^18 bp new/expected", val: 1000000000000000000 [2;49;39m[1e18][0m)
+    ├─ emit [36mlog_named_int[0m(key: "relative error for rcomp in 10^18 bp new/expected", val: 999999985890158173 [2;49;39m[9.999e17][0m)
+    ├─ emit [36mlog_named_int[0m(key: "relative error for k in 10^18 bp new/expected", val: 999999972760459852 [2;49;39m[9.999e17][0m)
+    ├─ emit [36mlog_named_int[0m(key: "relative error for rcomp in 10^18 bp new/expected", val: 999999985854934914 [2;49;39m[9.999e17][0m)
+    ├─ emit [36mlog_named_int[0m(key: "relative error for k in 10^18 bp new/expected", val: 999999972028779851 [2;49;39m[9.999e17][0m)
