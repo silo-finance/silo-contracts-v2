@@ -226,6 +226,14 @@ contract SiloConfig is ISiloConfig {
         _crossReentrantStatus = CrossEntrancy.NOT_ENTERED;
     }
 
+    function finishAction(address _h, uint256 _hook, bytes calldata _data) external virtual {
+        _onlySiloTokenOrLiquidation();
+
+        // By storing the original value once again, a refund is triggered (see
+        // https://eips.ethereum.org/EIPS/eip-2200)
+        _crossReentrantStatus = CrossEntrancy.NOT_ENTERED;
+    }
+
     /**
      * @dev Returns true if the reentrancy guard is currently set to "entered", which indicates there is a
      * `nonReentrant` function in the call stack.

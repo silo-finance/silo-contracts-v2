@@ -432,14 +432,11 @@ contract Silo is Initializable, SiloERC4626 {
             }
         }
 
-        siloConfigCached.finishAction();
-
-        if (address(hookReceiverAfter) != address(0)) {
-            hookReceiverAfter.afterAction(
-                Hook.AFTER | Hook.TRANSITION_COLLATERAL,
-                abi.encodePacked(_shares, _owner, _withdrawType, assets)
-            );
-        }
+        siloConfigCached.finishAction(
+            address(hookReceiverAfter),
+            Hook.AFTER | Hook.TRANSITION_COLLATERAL,
+            abi.encodePacked(_shares, _owner, _withdrawType, assets)
+        );
     }
 
     /// @inheritdoc ISilo
@@ -484,14 +481,11 @@ contract Silo is Initializable, SiloERC4626 {
             revert NotSolvent();
         }
 
-        siloConfigCached.finishAction();
-
-        if (address(hookReceiverAfter) != address(0)) {
-            hookReceiverAfter.afterAction(
-                Hook.AFTER | Hook.SWITCH_COLLATERAL | (_sameAsset ? Hook.SAME_ASSET : Hook.TWO_ASSETS),
-                bytes("")
-            );
-        }
+        siloConfigCached.finishAction(
+            address(hookReceiverAfter),
+            Hook.AFTER | Hook.SWITCH_COLLATERAL | (_sameAsset ? Hook.SAME_ASSET : Hook.TWO_ASSETS),
+            bytes("")
+        );
     }
 
     /// @inheritdoc ISilo
@@ -573,14 +567,11 @@ contract Silo is Initializable, SiloERC4626 {
             total[_assetType]
         );
 
-        siloConfigCached.finishAction();
-
-        if (address(hookReceiverAfter) != address(0)) {
-            hookReceiverAfter.afterAction(
-                Hook.BORROW | Hook.LEVERAGE | Hook.AFTER | Hook.SAME_ASSET,
-                abi.encodePacked(_depositAssets, _borrowAssets, _borrower, _assetType, depositedShares, borrowedShares)
-            );
-        }
+        siloConfigCached.finishAction(
+            address(hookReceiverAfter),
+            Hook.BORROW | Hook.LEVERAGE | Hook.AFTER | Hook.SAME_ASSET,
+            abi.encodePacked(_depositAssets, _borrowAssets, _borrower, _assetType, depositedShares, borrowedShares)
+        );
     }
 
     /// @inheritdoc ISilo
@@ -812,14 +803,11 @@ contract Silo is Initializable, SiloERC4626 {
             emit DepositProtected(msg.sender, _receiver, assets, shares);
         }
 
-        siloConfigCached.finishAction();
-
-        if (address(hookReceiverAfter) != address(0)) {
-            hookReceiverAfter.afterAction(
-                Hook.DEPOSIT | Hook.AFTER,
-                abi.encodePacked(_assets, _shares, _receiver, _assetType, assets, shares)
-            );
-        }
+        siloConfigCached.finishAction(
+            address(hookReceiverAfter),
+            Hook.DEPOSIT | Hook.AFTER,
+            abi.encodePacked(_assets, _shares, _receiver, _assetType, assets, shares)
+        );
     }
 
     // solhint-disable-next-line function-max-lines, code-complexity
@@ -887,14 +875,11 @@ contract Silo is Initializable, SiloERC4626 {
         }
 
         if (SiloSolvencyLib.depositWithoutDebt(debtInfo)) {
-            siloConfigCached.finishAction();
-
-            if (address(hookReceiverAfter) != address(0)) {
-                hookReceiverAfter.afterAction(
-                    Hook.WITHDRAW | Hook.AFTER,
-                    abi.encode(_params, assets, shares)
-                );
-            }
+            siloConfigCached.finishAction(
+                address(hookReceiverAfter),
+                Hook.WITHDRAW | Hook.AFTER,
+                abi.encode(_params, assets, shares)
+            );
 
             return (assets, shares);
         }
@@ -914,14 +899,11 @@ contract Silo is Initializable, SiloERC4626 {
             revert NotSolvent();
         }
 
-        siloConfigCached.finishAction();
-
-        if (address(hookReceiverAfter) != address(0)) {
-            hookReceiverAfter.afterAction(
-                Hook.WITHDRAW | Hook.AFTER,
-                abi.encodePacked(_params.assets, _params.shares, _params.receiver, _params.owner, _params.spender, _params.assetType, assets, shares)
-            );
-        }
+        siloConfigCached.finishAction(
+            address(hookReceiverAfter),
+            Hook.WITHDRAW | Hook.AFTER,
+            abi.encode(_params, assets, shares)
+        );
     }
 
     function _borrow( // solhint-disable-line function-max-lines, code-complexity
@@ -1000,14 +982,11 @@ contract Silo is Initializable, SiloERC4626 {
             revert AboveMaxLtv();
         }
 
-        siloConfigCached.finishAction();
-
-        if (address(hookReceiverAfter) != address(0)) {
-            hookReceiverAfter.afterAction(
-                Hook.BORROW | Hook.AFTER,
-                abi.encode(_params, assets, shares)
-            );
-        }
+        siloConfigCached.finishAction(
+            address(hookReceiverAfter),
+            Hook.BORROW | Hook.AFTER,
+            abi.encode(_params, assets, shares)
+        );
     }
 
     /// @param _liquidation TRUE when call is from liquidator module
@@ -1037,14 +1016,11 @@ contract Silo is Initializable, SiloERC4626 {
         emit Repay(_repayer, _borrower, assets, shares);
 
         if (!_liquidation) {
-            siloConfigCached.finishAction();
-
-            if (address(hookReceiverAfter) != address(0)) {
-                hookReceiverAfter.afterAction(
-                    Hook.REPAY | Hook.AFTER | (_liquidation ? Hook.LIQUIDATION : 0),
-                    abi.encodePacked(_assets, _shares, _borrower, _repayer, assets, shares)
-                );
-            }
+            siloConfigCached.finishAction(
+                address(hookReceiverAfter),
+                Hook.REPAY | Hook.AFTER | (_liquidation ? Hook.LIQUIDATION : 0),
+                abi.encodePacked(_assets, _shares, _borrower, _repayer, assets, shares)
+            );
         }
     }
 
