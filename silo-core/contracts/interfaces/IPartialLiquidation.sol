@@ -12,7 +12,6 @@ interface IPartialLiquidation {
     );
 
     error UnexpectedCollateralToken();
-    error UnexpectedDebtToken();
     error LiquidityFeeToHi();
     error NoDebtToCover();
 
@@ -27,7 +26,6 @@ interface IPartialLiquidation {
     /// @dev user can use this method to do self liquidation, it that case, check for LT requirements will be ignored
     /// @param _siloWithDebt The address of the silo where the debt it
     /// @param _collateralAsset The address of the underlying asset used as collateral, to receive as result
-    /// @param _debtAsset The address of the underlying borrowed asset to be repaid with the liquidation
     /// @param _user The address of the borrower getting liquidated
     /// @param _debtToCover The debt amount of borrowed `asset` the liquidator wants to cover,
     /// in case this amount is too big, it will be reduced to maximum allowed liquidation amount
@@ -38,7 +36,6 @@ interface IPartialLiquidation {
     function liquidationCall(
         address _siloWithDebt,
         address _collateralAsset,
-        address _debtAsset,
         address _user,
         uint256 _debtToCover,
         bool _receiveSToken

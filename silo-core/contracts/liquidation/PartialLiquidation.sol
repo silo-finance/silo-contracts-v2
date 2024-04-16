@@ -20,7 +20,6 @@ contract PartialLiquidation is IPartialLiquidation {
     function liquidationCall( // solhint-disable-line function-max-lines, code-complexity
         address _siloWithDebt, // TODO bug, we need to verify input
         address _collateralAsset,
-        address _debtAsset,
         address _borrower,
         uint256 _debtToCover,
         bool _receiveSToken
@@ -31,23 +30,27 @@ contract PartialLiquidation is IPartialLiquidation {
     {
         ISiloConfig siloConfigCached = ISilo(_siloWithDebt).config();
 
-        (
-            ISiloConfig.ConfigData memory collateralConfig,
-            ISiloConfig.ConfigData memory debtConfig,
-            ISiloConfig.DebtInfo memory debtInfo,
-            IHookReceiver hookReceiverAfter
-        ) = siloConfigCached.startAction(
-            _siloWithDebt,
-            _borrower,
-            Hook.LIQUIDATION | Hook.BEFORE,
-            abi.encodePacked(_collateralAsset, _debtAsset, _borrower, _debtToCover, _receiveSToken)
-        );
+        ISiloConfig.ConfigData memory collateralConfig;
+        ISiloConfig.ConfigData memory debtConfig;
+        IHookReceiver hookReceiverAfter;
 
-        if (!debtInfo.debtPresent) revert UserIsSolvent();
-        if (!debtInfo.debtInThisSilo) revert ISilo.ThereIsDebtInOtherSilo();
+        { // too deep
+            ISiloConfig.DebtInfo memory debtInfo;
+
+            (
+                collateralConfig, debtConfig, debtInfo, hookReceiverAfter
+            ) = siloConfigCached.startAction(
+                _siloWithDebt,
+                _borrower,
+                Hook.LIQUIDATION | Hook.BEFORE,
+                abi.encodePacked(_collateralAsset, _borrower, _debtToCover, _receiveSToken)
+            );
+
+            if (!debtInfo.debtPresent) revert UserIsSolvent();
+            if (!debtInfo.debtInThisSilo) revert ISilo.ThereIsDebtInOtherSilo();
+        }
 
         if (_collateralAsset != collateralConfig.token) revert UnexpectedCollateralToken();
-        if (_debtAsset != debtConfig.token) revert UnexpectedDebtToken();
 
         ISilo(_siloWithDebt).accrueInterest();
         ISilo(debtConfig.otherSilo).accrueInterest(); // TODO optimise if same silo
@@ -60,20 +63,23 @@ contract PartialLiquidation is IPartialLiquidation {
             ISiloOracle(debtConfig.solvencyOracle).beforeQuote(debtConfig.token);
         }
 
-        bool selfLiquidation = _borrower == msg.sender;
         uint256 withdrawAssetsFromCollateral;
         uint256 withdrawAssetsFromProtected;
 
-        (
-            withdrawAssetsFromCollateral, withdrawAssetsFromProtected, repayDebtAssets
-        ) = PartialLiquidationExecLib.getExactLiquidationAmounts(
-            collateralConfig,
-            debtConfig,
-            _borrower,
-            _debtToCover,
-            selfLiquidation ? 0 : collateralConfig.liquidationFee,
-            selfLiquidation
-        );
+        { // too deep
+            bool selfLiquidation = _borrower == msg.sender;
+
+            (
+                withdrawAssetsFromCollateral, withdrawAssetsFromProtected, repayDebtAssets
+            ) = PartialLiquidationExecLib.getExactLiquidationAmounts(
+                collateralConfig,
+                debtConfig,
+                _borrower,
+                _debtToCover,
+                selfLiquidation ? 0 : collateralConfig.liquidationFee,
+                selfLiquidation
+            );
+        }
 
         if (repayDebtAssets == 0) revert NoDebtToCover();
         // this two value were split from total collateral to withdraw, so we will not overflow
@@ -92,8 +98,8 @@ contract PartialLiquidation is IPartialLiquidation {
             hookReceiverAfter.afterAction(
                 Hook.LIQUIDATION | Hook.AFTER,
                 abi.encodePacked(
-                    _collateralAsset,
-                    _debtAsset,
+                    collateralConfig.token,
+                    debtConfig.token,
                     _borrower,
                     _debtToCover,
                     _receiveSToken,
