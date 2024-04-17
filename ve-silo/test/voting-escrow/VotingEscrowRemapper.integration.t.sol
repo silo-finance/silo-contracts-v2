@@ -30,6 +30,7 @@ contract VotingEscrowRemapperTest is IntegrationTest {
     address internal _remoteUser = makeAddr("remoteUser");
     address internal _childChainReceiver = makeAddr("Child chain receiver");
     address internal _smartValletChecker = makeAddr("Smart wallet checker");
+    address internal _timelock = makeAddr("Timelock");
     address internal _deployer;
     address internal _link;
 
@@ -73,6 +74,8 @@ contract VotingEscrowRemapperTest is IntegrationTest {
         votingEscrow = IVeSilo(getAddress(VeSiloContracts.VOTING_ESCROW));
 
         _link = getAddress(AddrKey.LINK);
+
+        setAddress(VeSiloContracts.TIMELOCK_CONTROLLER, _timelock);
 
         VeSiloDelegatorViaCCIPDeploy delegatorDeploy = new VeSiloDelegatorViaCCIPDeploy();
         veSiloDelegator = delegatorDeploy.run();
@@ -257,7 +260,7 @@ contract VotingEscrowRemapperTest is IntegrationTest {
         vm.expectEmit(false, false, true, true);
         emit ChildChainReceiverUpdated(_DS_CHAIN_SELECTOR, _childChainReceiver);
 
-        vm.prank(_deployer);
+        vm.prank(_timelock);
         veSiloDelegator.setChildChainReceiver(_DS_CHAIN_SELECTOR, _childChainReceiver);
     }
 

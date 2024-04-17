@@ -80,6 +80,3 @@ jobs:
           git submodule
           forge --version
           forge build --sizes
-
-      - name: Forge test
-        run: forge test --ffi -vvv

@@ -37,3 +37,6 @@
 	path = gitmodules/openzeppelin-contracts-5
 	url = https://github.com/OpenZeppelin/openzeppelin-contracts
 	branch = v5.0.2
+[submodule "openzeppelin-contracts-upgradeable-5"]
+	path = gitmodules/openzeppelin-contracts-upgradeable-5
+	url = https://github.com/OpenZeppelin/openzeppelin-contracts-upgradeable

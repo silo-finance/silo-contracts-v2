@@ -2,6 +2,7 @@
 pragma solidity 0.8.21;
 
 import {Ownable} from "openzeppelin-contracts/access/Ownable.sol";
+import {TransparentUpgradeableProxy} from "openzeppelin5/proxy/transparent/TransparentUpgradeableProxy.sol";
 
 import {CommonDeploy} from "./_CommonDeploy.sol";
 import {VeSiloContracts, VeSiloDeployments} from "ve-silo/common/VeSiloContracts.sol";
@@ -30,18 +31,23 @@ contract VeSiloDelegatorViaCCIPDeploy is CommonDeploy {
         address link = getAddress(AddrKey.LINK);
         address timelock = VeSiloDeployments.get(VeSiloContracts.TIMELOCK_CONTROLLER, getChainAlias());
 
+        bytes memory data = abi.encodeWithSelector(
+            VeSiloDelegatorViaCCIP.initialize.selector,
+            timelock
+        );
+
         vm.startBroadcast(deployerPrivateKey);
 
-        delegator = IVeSiloDelegatorViaCCIP(address(
+        address implementation = address(
             new VeSiloDelegatorViaCCIP(
                 IVeSilo(veSilo),
                 IVotingEscrowCCIPRemapper(remapper),
                 chainlinkCCIPRouter,
                 link
             )
-        ));
+        );
 
-        Ownable(address(delegator)).transferOwnership(timelock);
+        delegator = IVeSiloDelegatorViaCCIP(address(new TransparentUpgradeableProxy(implementation, timelock, data)));
 
         vm.stopBroadcast();
 
