@@ -36,11 +36,19 @@ contract DynamicKinkModelV1Test is RcompTestDynamicKink, RcurTestDynamicKink {
             emit log_named_int("return: rcur", rcur);
             emit log_named_int("return: k", k);
             emit log_named_int("expected: rcur", data[i].expected.currentAnnualInterest);
-            emit log_named_int("relative error for rcur in 10^18 bp new/expected", rcur * DP / data[i].expected.currentAnnualInterest);
+            emit log_named_int("relative error for rcur in 10^18 bp new/expected", relativeCheck(rcur, data[i].expected.currentAnnualInterest));
             emit log_string("******\n\n\n\n");
         }
 
         assertEq(INTEREST_RATE_MODEL.DECIMALS(), 18);
+    }
+
+    function relativeCheck(int256 a, int256 b) internal returns (int256) {
+        if (b != 0) {
+            return a * DP / b;
+        } else {
+            return a == b ? DP : int256(0);
+        }
     }
 
     function test_rcomp() public {
