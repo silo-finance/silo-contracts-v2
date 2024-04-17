@@ -23,6 +23,7 @@ contract DynamicKinkModelV1Test is RcompTestDynamicKink, RcurTestDynamicKink {
 
         for (uint i; i < data.length; i++) {
             (IDynamicKinkModelV1.Setup memory setup, DebugRcur memory debug) = _toSetupRcur(data[i]);
+            emit log_named_uint("id:", data[i].id);
 
             (int256 rcur, int256 k) = INTEREST_RATE_MODEL.currentInterestRate(
                 setup,
@@ -44,6 +45,7 @@ contract DynamicKinkModelV1Test is RcompTestDynamicKink, RcurTestDynamicKink {
 
         for (uint i; i < data.length; i++) {
             (IDynamicKinkModelV1.Setup memory setup, DebugRcomp memory debug) = _toSetupRcomp(data[i]);
+            emit log_named_uint("id:", data[i].id);
 
             (int256 rcomp, int256 k, int256 x) = INTEREST_RATE_MODEL.compoundInterestRate(
                 setup,
