@@ -176,6 +176,29 @@ invariant cannotHaveAssestWithZeroInterestRateTimestamp() silo0.getSiloDataInter
 
     }
 
+invariant siloSolvency() 
+    silo0.total[ISilo.AssetType.Protected].assets + 
+    silo0.total[ISilo.AssetType.Collateral].assets - 
+    silo0.total[ISilo.AssetType.Debt].assets <= to_mathint(token0.balanceOf(silo0)) {
+
+        preserved with(env e) {
+            completeSiloSetupEnv(e);
+            requireToken0TotalAndBalancesIntegrity();
+        }
+
+         preserved withdrawCollateralsToLiquidator(
+                    uint256 _withdrawAssetsFromCollateral,
+                    uint256 _withdrawAssetsFromProtected,
+                    address _borrower,
+                    address _liquidator,
+                    bool _receiveSToken) with (env e) {
+                        completeSiloSetupEnv(e);
+                        requireToken0TotalAndBalancesIntegrity();
+                        requireProtectedToken0TotalAndBalancesIntegrity();
+                    }
+
+    }
+
 /**
 certoraRun certora/config/silo/silo0.conf \
     --parametric_contracts Silo0 \
@@ -194,6 +217,7 @@ rule VC_Silo_total_collateral_decrease(
 ) filtered { f -> !f.isView } {
     completeSiloSetupEnv(e);
     requireInvariant cannotHaveAssestWithZeroInterestRateTimestamp();
+    requireProtectedToken0TotalAndBalancesIntegrity();
 
     mathint totalDepositsBefore = silo0.getCollateralAssets(e);
     mathint protectedAssetsBefore = silo0.total[ISilo.AssetType.Protected].assets;
@@ -221,12 +245,12 @@ rule VC_Silo_total_collateral_decrease(
     mathint totalDepositsDecrease = totalDepositsBefore - totalDepositsAfter;
     mathint protectedAssetsIncrease = protectedAssetsAfter - protectedAssetsBefore;
 
-    assert (totalSupplyDecreased && totalDepositsDecrease == protectedAssetsIncrease) => siloBalanceDecrease == 0, 
+    assert (totalSupplyDecreased && protectedAssetsIncrease > 0) => siloBalanceDecrease == 0,
     "The balance of the silo in the underlying asset should not change when making collateral protected";
            
-    assert (totalSupplyDecreased && protectedAssetsIncrease == 0) => 
-            ((receiver == silo0 && siloBalanceDecrease == 0) || 
-                (receiver != silo0 && totalDepositsDecrease == siloBalanceDecrease)), 
+    assert (totalSupplyDecreased && protectedAssetsIncrease <= 0) =>
+            ((receiver == silo0 && siloBalanceDecrease == 0) ||
+                (receiver != silo0 && (totalDepositsDecrease - protectedAssetsIncrease) == siloBalanceDecrease)),
                 "The balance of the silo in the underlying asset should decrease for the 
                     same amount unless the reciever is the silo itself";
    }
