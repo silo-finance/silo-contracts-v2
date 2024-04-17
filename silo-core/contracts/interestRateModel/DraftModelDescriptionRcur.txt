@@ -1,0 +1,45 @@
+1 function CurrentInterestRate (
+    2 uint t0 , // time of last transaction already written in the
+    3 // blockchain (in seconds )
+    4 uint t1 , // current time (in seconds )
+    5 uint _k , // state of the slope k at time t0
+    6 uint u, // utilization at time t0
+7 ) returns (
+    8 uint rcur // current annual interest rate shown to the user
+    9 ) {
+    10 uint T = t1 - t0; // length of time period (in seconds )
+        !!!! revert t1 - t0 < 0
+    11
+    12 uint k; // slope of the central segment of the kink
+    13 if (u < u1) {
+    14 k = max (_k - (c1 + cminus * (u1 - u) / DP) * T, kmin );
+        !!! c1 + cminus * (u1 - u): limit cminus, unchecked. c1, cminus < X!!! in constructor
+        !!! _k - XXX * T: unchecked, kmin is threshold at -∞
+        !!! range: kmin <-> _k
+
+    15 } else if (u > u2) {
+    16 k = min (_k + min(c2 + cplus * (u - u2) / DP , dmax ) * T, kmax );
+        !!!c2 + cplus * (u1 - u): limit cminus, unchecked. c1, cminus < X!!! in constructor
+        !!! _k + XXX * T: unchecked, kmin is threshold at +∞
+    17 } else {
+    18 k = _k;
+    19 }
+    20
+    21 uint r = 0; // additional interest rate
+    22 if (u >= ulow ) {
+    23 r = u - ulow ;
+    24 if (u >= ucrit ) {
+    25 r = r + alpha * (u - ucrit ) / DP;
+        !!! limit alpha in constructor
+    26 }
+    27 r = r * k / DP;
+        !!! threshold here?
+    28 }
+    29
+    30 rcur = (r + rmin ) * 365 * 24 * 3600;
+31 }
+
+
+
+
+

@@ -1,0 +1,47 @@
+    11 uint T = t1 - t0; // length of time period (in seconds )
+    // !!! revert
+    12
+    13 int roc ; // rate of change for k
+    14 if (u < u1) {
+    15 roc = - c1 - cminus * (u1 - u) / DP;
+
+    /// limits for c1 and cminus in constructor
+
+    16 } else if (u > u2) {
+    17 roc = min (c2 + cplus * (u - u2) / DP , dmax );
+    /// ok to uncheck, overflow cap is dmax. Check for + product to be more than c2
+    18 } else {
+    19 roc = 0;
+    20 }
+    21
+    22 int k1 = _k + roc * T; // slope of the kink at t1 ignoring
+        // ???
+
+    24
+    25 uint x; // an integral of k
+    26 if (k1 > kmax ) {
+    27 x = kmax * T - ( kmax - _k)**2 / (2 * roc );
+    28 k = kmax ;
+        // ( kmax - _k) ever negative number?
+    29 } else if (k1 < kmin ) {
+    30 x = kmin * T - (_k - kmin ) **2 / (2 * roc );
+         // ( _k - kmin) ever negative number?
+    31 k = kmin ;
+    32 } else {
+    33 x = (_k + k1) * T / 2;
+        // overflow? cap for k1
+    34 k = k1;
+    35 }
+    36
+    37 uint f = 0; // factor for the slope in kink
+    38 if (u >= ulow ) {
+    39 f = u - ulow ;
+        // negative numer?
+    40 if (u >= ucrit ) {
+    41 f = f + alpha * (u - ucrit ) / DP;
+        // overflow? Cap for alpha? Limit for f?
+    42 }
+    43 }
+    44
+    45 x = rmin * T + f * x / DP;
+    46 rcomp = exp (x) - DP;
