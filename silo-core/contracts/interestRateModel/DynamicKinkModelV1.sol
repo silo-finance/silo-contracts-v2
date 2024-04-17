@@ -21,6 +21,7 @@ contract DynamicKinkModelV1 is IDynamicKinkModelV1 {
 
     error InvalidTimestamp();
 
+    // todo
     // returns decimal points used by model
     uint256 public constant DECIMALS = 18;
     /// @dev DP is 18 decimal points used for integer calculations
@@ -79,7 +80,7 @@ contract DynamicKinkModelV1 is IDynamicKinkModelV1 {
             // k = min (_k + min(c2 + cplus * (u - u2) / _DP , dmax ) * T, kmax );
             int256 dkdt = (_setup.config.c2 + _setup.config.cplus) * (_u - _setup.config.u2) / _DP;
             dkdt = dkdt > _setup.config.dmax ? _setup.config.dmax : dkdt;
-            k = k * T;
+            k = (k + dkdt) * T;
             k = k > _setup.config.kmax ? _setup.config.kmax : k;
         } else {
             // todo
