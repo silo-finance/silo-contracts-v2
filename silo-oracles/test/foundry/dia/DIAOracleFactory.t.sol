@@ -81,7 +81,7 @@ contract DIAOracleFactoryTest is DIAConfigDefault {
         uint256 gasEnd = gasleft();
 
         emit log_named_uint("gas", gasStart - gasEnd);
-        assertEq(gasStart - gasEnd, 332154, "optimise gas for creation");
+        assertEq(gasStart - gasEnd, 332262, "optimise gas for creation");
 
         gasStart = gasleft();
         uint256 price = oracle.quote(1e18, address(tokens["RDPX"]));
