@@ -66,8 +66,6 @@ contract L2Test is IntegrationTest {
     bool internal _executeDeploy = true;
 
     function setUp() public virtual {
-        setAddress(AddrKey.L2_MULTISIG, _l2Multisig);
-
         if (_executeDeploy) {
             uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
             _deployer = vm.addr(deployerPrivateKey);
@@ -78,12 +76,16 @@ contract L2Test is IntegrationTest {
                 _FORKING_BLOCK_NUMBER
             );
 
+            setAddress(AddrKey.L2_MULTISIG, _l2Multisig);
+
             _dummySiloToken();
 
             L2Deploy deploy = new L2Deploy();
             deploy.disableDeploymentsSync();
 
             deploy.run();
+        } else {
+            setAddress(AddrKey.L2_MULTISIG, _l2Multisig);
         }
 
         _factory = IChildChainGaugeFactory(getAddress(VeSiloContracts.CHILD_CHAIN_GAUGE_FACTORY));
@@ -157,7 +159,7 @@ contract L2Test is IntegrationTest {
     }
 
     function _transferVotingPower() internal {
-        vm.prank(_deployer);
+        vm.prank(_l2Multisig);
         _votingEscrowChild.setSourceChainSender(_sender);
 
         bytes memory data = _votingEscrowChildTest.balanceTransferData();
@@ -257,7 +259,6 @@ contract L2Test is IntegrationTest {
         uint256 rewardsAmount = 100e18;
 
         address distributor = makeAddr("distributor");
-        address timelock = getAddress(VeSiloContracts.TIMELOCK_CONTROLLER);
 
         ERC20 rewardToken = new ERC20("Test reward token", "TRT");
         rewardToken.mint(distributor, rewardsAmount);
@@ -265,7 +266,7 @@ contract L2Test is IntegrationTest {
         vm.prank(distributor);
         rewardToken.approve(address(_gauge), rewardsAmount);
 
-        vm.prank(timelock);
+        vm.prank(_l2Multisig);
         _gauge.add_reward(address(rewardToken), distributor);
 
         vm.prank(distributor);

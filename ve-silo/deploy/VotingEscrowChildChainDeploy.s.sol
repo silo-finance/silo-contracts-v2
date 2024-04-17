@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.21;
 
-import {CommonDeploy, VeSiloContracts} from "./_CommonDeploy.sol";
+import {TransparentUpgradeableProxy} from "openzeppelin5/proxy/transparent/TransparentUpgradeableProxy.sol";
+
+import {CommonDeploy} from "./_CommonDeploy.sol";
+import {VeSiloContracts, VeSiloDeployments} from "ve-silo/common/VeSiloContracts.sol";
 
 import {AddrKey} from "common/addresses/AddrKey.sol";
 import {IVotingEscrowChildChain} from "ve-silo/contracts/voting-escrow/interfaces/IVotingEscrowChildChain.sol";
@@ -19,15 +22,23 @@ contract VotingEscrowChildChainDeploy is CommonDeploy {
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
 
         address chainlinkCcipRouter = getAddress(AddrKey.CHAINLINK_CCIP_ROUTER);
+        address owner = getAddress(AddrKey.L2_MULTISIG);
+
+        bytes memory data = abi.encodeWithSelector(
+            VotingEscrowChildChain.initialize.selector,
+            owner
+        );
 
         vm.startBroadcast(deployerPrivateKey);
 
-        votingEscrow = IVotingEscrowChildChain(address(
+        address implementation = address(
             new VotingEscrowChildChain(
                 chainlinkCcipRouter,
                 _sourceChainSelector()
             )
-        ));
+        );
+
+        votingEscrow = IVotingEscrowChildChain(address(new TransparentUpgradeableProxy(implementation, owner, data)));
 
         vm.stopBroadcast();
 

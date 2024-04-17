@@ -11,6 +11,7 @@ import {L2Test, ERC20} from "ve-silo/test/L2.integration.t.sol";
 import {L2WithMocksDeploy} from "./deployments/L2WithMocksDeploy.s.sol";
 import {VeSiloMocksContracts} from "./deployments/VeSiloMocksContracts.sol";
 import {CCIPRouterReceiverLike} from "./ccip/CCIPRouterReceiverLike.sol";
+import {AddrKey} from "common/addresses/AddrKey.sol";
 
 interface IVeChaildChainGetter {
     function userPoints(address _user) external view returns (IVeSilo.Point memory);
@@ -25,6 +26,8 @@ contract L2WithMocksIntegrationTest is L2Test {
             getChainRpcUrl(OPTIMISM_ALIAS),
             OPTIMISM_FORKING_BLOCK
         );
+
+        setAddress(AddrKey.L2_MULTISIG, _l2Multisig);
 
         // deploy with mocks
         L2WithMocksDeploy deploy = new L2WithMocksDeploy();
@@ -55,7 +58,7 @@ contract L2WithMocksIntegrationTest is L2Test {
             VeSiloDeployments.get(VeSiloContracts.VOTING_ESCROW_CHILD_CHAIN, chainAlias)
         );
 
-        vm.prank(_deployer);
+        vm.prank(_l2Multisig);
         veSiloChildChain.setSourceChainSender(someUserL2);
 
         uint256 balanceBefore = veSiloChildChain.balanceOf(someUserL2);
