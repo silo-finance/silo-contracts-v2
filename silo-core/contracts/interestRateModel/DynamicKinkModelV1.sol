@@ -118,7 +118,7 @@ contract DynamicKinkModelV1 is IDynamicKinkModelV1 {
     function compoundInterestRate(Setup memory _setup, int256 _t0, int256 _t1, int256 _u)
         public
         pure
-        returns (int256 rcomp, int256 k, int256 x)
+        returns (int256 rcomp, int256 k, int256 x, bool didOverflow)
     {
         // uint T = t1 - t0;
         if (_t1 <= _t0) revert InvalidTimestamp();
@@ -151,12 +151,20 @@ contract DynamicKinkModelV1 is IDynamicKinkModelV1 {
         // if (k1 > kmax ) {
         if (k1 > _setup.config.kmax) {
             // x = kmax * T - ( kmax - _k)**2 / (2 * roc );
+            // todo
+            if (roc == 0) {
+                return (0, 0, 0, true);
+            }
             x = _setup.config.kmax * T - (_setup.config.kmax - k) ** 2 / (2 * roc);
             // k = kmax ;
             k = _setup.config.kmax;
         // } else if (k1 < kmin ) {
         } else if (k1 < _setup.config.kmin) {
             // x = kmin * T - (_k - kmin ) **2 / (2 * roc );
+            // todo
+            if (roc == 0) {
+                return (0, 0, 0, true);
+            }
             x = _setup.config.kmin * T - (k - _setup.config.kmin)**2 / (2 * roc);
             // k = kmin ;
             k = _setup.config.kmin;
