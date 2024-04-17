@@ -50,7 +50,7 @@ contract Silo is Initializable, SiloERC4626 {
     /// struct instead of uint256 to pass storage reference to functions.
     /// `total` can have outdated value (without interest), if you doing view call (of off-chain call) please use
     /// getters eg `getCollateralAssets()` to fetch value that includes interest.
-    mapping(uint256 => Assets) public override total;
+    mapping(AssetType => Assets) public override total;
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor(ISiloFactory _siloFactory) {
@@ -245,7 +245,7 @@ contract Silo is Initializable, SiloERC4626 {
     }
 
     /// @inheritdoc ISilo
-    function convertToShares(uint256 _assets, uint256 _assetType) external view virtual returns (uint256 shares) {
+    function convertToShares(uint256 _assets, AssetType _assetType) external view virtual returns (uint256 shares) {
         (uint256 totalSiloAssets, uint256 totalShares) = _getTotalAssetsAndTotalSharesWithInterest(_assetType);
 
         return SiloMathLib.convertToShares(
@@ -254,7 +254,7 @@ contract Silo is Initializable, SiloERC4626 {
     }
 
     /// @inheritdoc ISilo
-    function convertToAssets(uint256 _shares, uint256 _assetType) external view virtual returns (uint256 assets) {
+    function convertToAssets(uint256 _shares, AssetType _assetType) external view virtual returns (uint256 assets) {
         (uint256 totalSiloAssets, uint256 totalShares) = _getTotalAssetsAndTotalSharesWithInterest(_assetType);
 
         return SiloMathLib.convertToAssets(
@@ -267,13 +267,13 @@ contract Silo is Initializable, SiloERC4626 {
     }
 
     /// @inheritdoc ISilo
-    function maxDeposit(address /* _receiver */, bool _protected)
+    function maxDeposit(address /* _receiver */, AssetType _assetType)
         external
         view
         virtual
         returns (uint256 maxAssets)
     {
-        return _callMaxDepositOrMint(total[_protected ? AssetType.Protected : AssetType.Collateral].assets);
+        return _callMaxDepositOrMint(total[_assetType].assets);
     }
 
     /// @inheritdoc ISilo
