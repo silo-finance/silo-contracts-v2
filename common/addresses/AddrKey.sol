@@ -12,6 +12,6 @@ library AddrKey {
     string constant public SNX = "SNX";
     string constant public LINK = "LINK";
     string constant public CHAINLINK_CCIP_ROUTER = "CHAINLINK_CCIP_ROUTER";
-    string constant public SILO_TOKEN = "SILO_TOKEN";
+    string constant public SILO_TOKEN = "SILO";
     string constant public L2_MULTISIG = "L2_MULTISIG";
 }

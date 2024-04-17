@@ -54,9 +54,9 @@ contract MainnetWithMocksIntegrationTest is MainnetTest {
             getAddress(VeSiloContracts.VE_SILO_DELEGATOR_VIA_CCIP)
         );
 
-        uint64 dstChainSelector = 1; 
+        uint64 dstChainSelector = 1;
 
-        vm.prank(_deployer);
+        vm.prank(address(_timelock));
         veSiloDelegator.setChildChainReceiver(dstChainSelector, _deployer);
 
         uint256 fee = veSiloDelegator.estimateSendUserBalance(
