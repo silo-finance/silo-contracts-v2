@@ -114,3 +114,70 @@ rule HLP_integrityOfBorrowShares(env e, address receiver)
     assert shareDebtTokenAfter == shareDebtTokenBefore + shares;
     satisfy shareDebtTokenAfter == shareDebtTokenBefore + shares;
 }
+
+//holds
+// https://prover.certora.com/output/6893/fec3898fc8b44cd3afc8785b15983974/?anonymousKey=80943c985d74b40e96bada86662e9bf0fdaa539e
+rule HLP_integrityOfRepayShares(env e, address receiver)
+{
+    completeSiloSetupEnv(e);
+    totalSupplyMoreThanBalance(receiver);
+    require receiver == e.msg.sender;
+
+    uint256 shares;
+    mathint balanceTokenBefore = token0.balanceOf(receiver);  
+    mathint shareDebtTokenBefore = shareDebtToken0.balanceOf(receiver);  
+       
+    mathint assets = repayShares(e, shares, receiver);
+    mathint balanceTokenAfter = token0.balanceOf(receiver);  
+    mathint shareDebtTokenAfter = shareDebtToken0.balanceOf(receiver);  
+   
+    assert balanceTokenAfter == balanceTokenBefore - assets;
+    satisfy balanceTokenAfter == balanceTokenBefore - assets;
+
+    assert shareDebtTokenAfter == shareDebtTokenBefore - shares;
+    satisfy shareDebtTokenAfter == shareDebtTokenBefore - shares;
+}
+
+// https://prover.certora.com/output/6893/fec3898fc8b44cd3afc8785b15983974/?anonymousKey=80943c985d74b40e96bada86662e9bf0fdaa539e
+rule HLP_integrityOfBorrow(env e, address receiver)
+{
+    completeSiloSetupEnv(e);
+    totalSupplyMoreThanBalance(receiver);
+    
+    uint256 assets;
+    mathint balanceTokenBefore = token0.balanceOf(receiver);  
+    mathint shareDebtTokenBefore = shareDebtToken0.balanceOf(receiver);  
+       
+    mathint shares = borrow(e, assets, receiver, receiver);
+    mathint balanceTokenAfter = token0.balanceOf(receiver);  
+    mathint shareDebtTokenAfter = shareDebtToken0.balanceOf(receiver);  
+   
+    assert balanceTokenAfter == balanceTokenBefore + assets;
+    satisfy balanceTokenAfter == balanceTokenBefore + assets;
+
+    assert shareDebtTokenAfter == shareDebtTokenBefore + shares;
+    satisfy shareDebtTokenAfter == shareDebtTokenBefore + shares;
+}
+
+// https://prover.certora.com/output/6893/fec3898fc8b44cd3afc8785b15983974/?anonymousKey=80943c985d74b40e96bada86662e9bf0fdaa539e
+rule HLP_integrityOfRepay(env e, address receiver)
+{
+    completeSiloSetupEnv(e);
+    totalSupplyMoreThanBalance(receiver);
+    require receiver == e.msg.sender;
+    
+    uint256 assets;
+    mathint balanceTokenBefore = token0.balanceOf(receiver);  
+    mathint shareDebtTokenBefore = shareDebtToken0.balanceOf(receiver);  
+       
+    mathint shares = repay(e, assets, receiver);
+    mathint balanceTokenAfter = token0.balanceOf(receiver);  
+    mathint shareDebtTokenAfter = shareDebtToken0.balanceOf(receiver);  
+   
+    assert balanceTokenAfter == balanceTokenBefore - assets;
+    satisfy balanceTokenAfter == balanceTokenBefore - assets;
+
+    assert shareDebtTokenAfter == shareDebtTokenBefore - shares;
+    satisfy shareDebtTokenAfter == shareDebtTokenBefore - shares;
+}
+

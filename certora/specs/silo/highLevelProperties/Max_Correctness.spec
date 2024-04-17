@@ -7,6 +7,8 @@ import "../../_simplifications/Oracle_quote_one.spec";
 import "../../_simplifications/Silo_isSolvent_ghost.spec";
 import "../../_simplifications/SimplifiedGetCompoundInterestRateAndUpdate.spec";
 
+// these rules are wrong. The ERC4626 doesn't require that max{method} is as close as possible to the real bound.
+
 rule HLP_MaxMintCorrectness(env e, address receiver)
 {
     completeSiloSetupEnv(e);

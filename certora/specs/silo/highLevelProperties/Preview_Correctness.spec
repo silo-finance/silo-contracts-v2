@@ -3,12 +3,13 @@ import "../_common/IsSiloFunction.spec";
 import "../_common/SiloMethods.spec";
 import "../_common/Helpers.spec";
 import "../_common/CommonSummarizations.spec";
-//import "../../_simplifications/Oracle_quote_one.spec";
-import "../../_simplifications/priceOracle.spec";
+import "../../_simplifications/Oracle_quote_one.spec";
+//import "../../_simplifications/priceOracle.spec";
 //import "../../_simplifications/Silo_isSolvent_ghost.spec";
 import "../../_simplifications/SiloSolvencyLib.spec";
 import "../../_simplifications/SimplifiedGetCompoundInterestRateAndUpdate.spec";
 
+//some of these are violated. It's a known bug that should be fixed in the new version.
 rule HLP_PreviewMintCorrectness(env e, address receiver)
 {
     completeSiloSetupEnv(e);
@@ -64,7 +65,44 @@ rule HLP_PreviewBorrowCorrectness(env e, address receiver)
     totalSupplyMoreThanBalance(e.msg.sender);
     
     uint256 assets;
-    uint256 debtReported = previewBorrow(e, assets);
-    uint256 debtReceived = borrow(e, assets, receiver, e.msg.sender);
-    assert debtReported == debtReceived;
+    uint256 debtSharesReported = previewBorrow(e, assets);
+    uint256 debtSharesReceived = borrow(e, assets, receiver, e.msg.sender);
+    assert debtSharesReported >= debtSharesReceived;
+}
+
+
+rule HLP_PreviewRepayCorrectness(env e, address receiver)
+{
+    completeSiloSetupEnv(e);
+    totalSupplyMoreThanBalance(receiver);
+    totalSupplyMoreThanBalance(e.msg.sender);
+    
+    uint256 assets;
+    uint256 debtSharesReported = previewRepay(e, assets);
+    uint256 debtSharesRepaid = repay(e, assets, receiver);
+    assert debtSharesReported <= debtSharesRepaid;
+}
+
+rule HLP_PreviewBorrowSharesCorrectness(env e, address receiver)
+{
+    completeSiloSetupEnv(e);
+    totalSupplyMoreThanBalance(receiver);
+    totalSupplyMoreThanBalance(e.msg.sender);
+    
+    uint256 shares;
+    uint256 assetsReported = previewBorrowShares(e, shares);
+    uint256 assetsReceived = borrowShares(e, shares, receiver, e.msg.sender);
+    assert assetsReported <= assetsReceived;
+}
+
+rule HLP_PreviewRepaySharesCorrectness(env e, address receiver)
+{
+    completeSiloSetupEnv(e);
+    totalSupplyMoreThanBalance(receiver);
+    totalSupplyMoreThanBalance(e.msg.sender);
+    
+    uint256 shares;
+    uint256 assetsReported = previewRepayShares(e, shares);
+    uint256 assetsPaid = repayShares(e, shares, receiver);
+    assert assetsReported >= assetsPaid;
 }

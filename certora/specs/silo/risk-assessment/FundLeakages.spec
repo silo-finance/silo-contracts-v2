@@ -9,6 +9,8 @@ import "../../_simplifications/priceOracle.spec";
 import "../../_simplifications/SiloSolvencyLib.spec";
 import "../../_simplifications/SimplifiedGetCompoundInterestRateAndUpdate.spec";
 
+//checks that sequences of method calls don't free funds to the user (e.g. due to rounding)
+// most of these rules timeout, except for the "simplified" calculations (see below)
 
 rule HLP_Mint2RedeemNotProfitable(env e, address receiver)
 {
@@ -17,7 +19,7 @@ rule HLP_Mint2RedeemNotProfitable(env e, address receiver)
     totalSupplyMoreThanBalance(e.msg.sender);
     sharesToAssetsFixedRatio(e);
     //sharesToAssetsNotTooHigh(e, 2);
-    sharesAndAssetsNotTooHigh(e, 10^6);
+    //sharesAndAssetsNotTooHigh(e, 10^6);
 
 
     mathint balanceCollateralBefore = shareCollateralToken0.balanceOf(receiver);
@@ -168,6 +170,11 @@ rule HLP_AssetsPerShareNondecreasing(env e, method f)
     //assert totalSumColateralB * totalSumSharesA <= totalSumColateralA * totalSumSharesB;
 }
 
+// we know that value per share can decrease. 
+// These rules show that others cannot decrease value of my shares such that
+// it diminishes return of some method
+// Currently all these timeout
+
 rule HLP_OthersCantDecreaseMyRedeem(env e, env eOther, method f)
     filtered { f -> !f.isView }
 {
@@ -239,7 +246,8 @@ rule HLP_OthersCantDecreaseMyRedeem_viaWithdraw(env e, env eOther)
     assert assetsReceived2 >= assetsReceived;
 }
 
-// vv SIMPLIFIED CALCULATIONS - UNDERAPPROXIMATIONS vv
+// vv SIMPLIFIED CALCULATIONS - UNDERAPPROXIMATIONS
+// these methods only perform the core math. They ignore allowances, token balances, etc.
 
 function simpleDeposit(mathint assets, mathint totalAssets, 
     mathint totalShares) returns mathint

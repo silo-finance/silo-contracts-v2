@@ -12,10 +12,10 @@ import "../../_simplifications/SimplifiedGetCompoundInterestRateAndUpdate.spec";
 use rule assetsToSharesAndBackAxiom;
 use rule mulDiv_axioms_test;
 
-// A user cannot withdraw anything after withdrawing whole balance.
+// A user cannot redeem anything after redeeming whole balance.
 // holds
 // https://prover.certora.com/output/6893/6ebdfe9df3f04b4b887bdb1c5372637c/?anonymousKey=af1886c64a28e05f1ee50a3c98745a75596a38ad
-rule RA_Silo_no_withdraw_after_withdrawing_all(env e, address user)
+rule RA_Silo_no_redeem_after_redeeming_all(env e, address user)
 {
     completeSiloSetupEnv(e);
     totalSupplyMoreThanBalance(user);
@@ -38,6 +38,7 @@ rule RA_Silo_no_withdraw_after_withdrawing_all(env e, address user)
 
 }
 
+// In development..
 // A user should not be able to fully repay a loan with less amount than he borrowed.
 rule RA_Silo_no_negative_interest_for_loan(env e, address user)
 {
@@ -53,6 +54,7 @@ rule RA_Silo_no_negative_interest_for_loan(env e, address user)
     assert assetsBorrowed > assetsRepayed => debt > debtPaid;
 }
 
+// In development..
 // A user should not be able to fully repay a loan with less amount than he borrowed.
 // Even if there's a method called in between.
 rule RA_Silo_no_negative_interest_for_loan_Param(env e, address user, method f)
@@ -73,7 +75,7 @@ rule RA_Silo_no_negative_interest_for_loan_Param(env e, address user, method f)
 
 // A user should not be able to deposit an asset that he borrowed in the Silo.
 // violated
-// No longer applicable in current version
+// No longer applicable in the new version
 rule RA_Silo_borrowed_asset_not_depositable(env e, address user)
 {
     completeSiloSetupEnv(e);
