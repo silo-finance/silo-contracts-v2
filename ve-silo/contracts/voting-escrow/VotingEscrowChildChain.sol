@@ -2,7 +2,7 @@
 pragma solidity 0.8.21;
 
 import {IERC20} from "openzeppelin-contracts/token/ERC20/IERC20.sol";
-import {Ownable2Step} from "openzeppelin-contracts/access/Ownable2Step.sol";
+import {Ownable2StepUpgradeable} from "openzeppelin5-upgradeable/access/Ownable2StepUpgradeable.sol";
 import {CCIPReceiver} from "chainlink-ccip/v0.8/ccip/applications/CCIPReceiver.sol";
 import {Client} from "chainlink-ccip/v0.8/ccip/libraries/Client.sol";
 
@@ -12,7 +12,7 @@ import {IVeSiloDelegatorViaCCIP} from "./interfaces/IVeSiloDelegatorViaCCIP.sol"
 
 /// @notice Child chain voting escrow.
 /// Accept VeSilo from the main chain.
-contract VotingEscrowChildChain is CCIPReceiver, Ownable2Step, IVotingEscrowChildChain {
+contract VotingEscrowChildChain is CCIPReceiver, Ownable2StepUpgradeable, IVotingEscrowChildChain {
     // solhint-disable-next-line var-name-mixedcase
     uint64 public immutable SOURCE_CHAIN_SELECTOR;
 
@@ -27,6 +27,9 @@ contract VotingEscrowChildChain is CCIPReceiver, Ownable2Step, IVotingEscrowChil
     /// @param _sourceChainSelector Source chain selector
     constructor(address _router, uint64 _sourceChainSelector) CCIPReceiver(_router) {
         SOURCE_CHAIN_SELECTOR = _sourceChainSelector;
+
+        // Locks an implementation, preventing any future reinitialization
+        _disableInitializers();
     }
 
     /// @inheritdoc IVotingEscrowChildChain
@@ -63,6 +66,10 @@ contract VotingEscrowChildChain is CCIPReceiver, Ownable2Step, IVotingEscrowChil
     /// @inheritdoc IVotingEscrowChildChain
     function totalSupply() external view returns (uint256 result) {
         return getPointValue(totalSupplyPoint);
+    }
+
+    function initialize(address _timelock) public initializer {
+        __Ownable_init_unchained(_timelock);
     }
 
     /// @notice Calculates a `IVeSilo.Point` value
