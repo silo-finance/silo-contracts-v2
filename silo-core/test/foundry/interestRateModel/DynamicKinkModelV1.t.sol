@@ -23,7 +23,8 @@ contract DynamicKinkModelV1Test is RcompTestDynamicKink, RcurTestDynamicKink {
 
         for (uint i; i < data.length; i++) {
             (IDynamicKinkModelV1.Setup memory setup, DebugRcur memory debug) = _toSetupRcur(data[i]);
-            emit log_named_uint("id:", data[i].id);
+            emit log_string("******");
+            _printRcur(data[i]);
 
             (int256 rcur, int256 k) = INTEREST_RATE_MODEL.currentInterestRate(
                 setup,
@@ -32,11 +33,11 @@ contract DynamicKinkModelV1Test is RcompTestDynamicKink, RcurTestDynamicKink {
                 data[i].input.lastUtilization
             );
 
-            emit log_string("******\n\n\n\n");
             emit log_named_int("return: rcur", rcur);
             emit log_named_int("return: k", k);
             emit log_named_int("expected: rcur", data[i].expected.currentAnnualInterest);
             emit log_named_int("relative error for rcur in 10^18 bp new/expected", rcur * DP / data[i].expected.currentAnnualInterest);
+            emit log_string("******\n\n\n\n");
         }
     }
 
@@ -45,7 +46,8 @@ contract DynamicKinkModelV1Test is RcompTestDynamicKink, RcurTestDynamicKink {
 
         for (uint i; i < data.length; i++) {
             (IDynamicKinkModelV1.Setup memory setup, DebugRcomp memory debug) = _toSetupRcomp(data[i]);
-            emit log_named_uint("id:", data[i].id);
+            emit log_string("******");
+            _printRcomp(data[i]);
 
             (int256 rcomp, int256 k, int256 x) = INTEREST_RATE_MODEL.compoundInterestRate(
                 setup,
@@ -54,7 +56,6 @@ contract DynamicKinkModelV1Test is RcompTestDynamicKink, RcurTestDynamicKink {
                 data[i].input.lastUtilization
             );
 
-            emit log_string("******\n\n\n\n");
             emit log_named_int("return: rcomp", rcomp);
             emit log_named_int("return: k", k);
             emit log_named_int("return: x", x);
@@ -64,6 +65,7 @@ contract DynamicKinkModelV1Test is RcompTestDynamicKink, RcurTestDynamicKink {
             emit log_named_int("relative error for rcomp in 10^18 bp new/expected", rcomp * DP / data[i].expected.compoundInterest);
             emit log_named_int("relative error for k in 10^18 bp new/expected", k * DP / data[i].expected.newSlope);
             emit log_named_int("relative error for x in 10^18 bp new/expected", x * DP / data[i].debug.x);
+            emit log_string("******\n\n\n\n");
         }
 
         assertEq(INTEREST_RATE_MODEL.DECIMALS(), 18);

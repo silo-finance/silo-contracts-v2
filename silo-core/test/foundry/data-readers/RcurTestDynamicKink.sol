@@ -56,14 +56,10 @@ contract RcurTestDynamicKink is Test {
 
     function _readDataFromJsonRcur() internal returns (RcurData[] memory data) {
         string memory root = vm.projectRoot();
-        string memory path = string.concat(root, "/silo-core/test/foundry/data/RcurDynamicKinkv2.json");
+        string memory path = string.concat(root, "/silo-core/test/foundry/data/RcurDynamicKinkv3.json");
         string memory json = vm.readFile(path);
 
         data = abi.decode(vm.parseJson(json, string(abi.encodePacked("."))), (RcurData[]));
-
-        for (uint i; i < data.length; i++) {
-            _printRcur(data[i]);
-        }
     }
 
     function _printRcur(RcurData memory _data) internal {
