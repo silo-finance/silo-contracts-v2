@@ -53,6 +53,9 @@ interface ISiloConfig {
         /// @notice Flashloan fee sets the cost of taking a flashloan in 18 decimals points
         uint256 flashloanFee0;
 
+        /// @notice Address of the hook receiver called on every before/after action on Silo0 (with token0)
+        address hookReceiver0;
+
         /// @notice Indicates if a beforeQuote on oracle contract should be called before quoting price
         bool callBeforeQuote0;
 
@@ -88,6 +91,9 @@ interface ISiloConfig {
         /// @notice Flashloan fee sets the cost of taking a flashloan in 18 decimals points
         uint256 flashloanFee1;
 
+        /// @notice Address of the hook receiver called on every before/after action on Silo1 (with token1)
+        address hookReceiver1;
+
         /// @notice Indicates if a beforeQuote on oracle contract should be called before quoting price
         bool callBeforeQuote1;
     }
@@ -109,6 +115,7 @@ interface ISiloConfig {
         uint256 liquidationFee;
         uint256 flashloanFee;
         address liquidationModule;
+        address hookReceiver;
         bool callBeforeQuote;
     }
 

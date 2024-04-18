@@ -40,6 +40,8 @@ contract SiloConfig is ISiloConfig {
     uint256 private immutable _LIQUIDATION_FEE0;
     uint256 private immutable _FLASHLOAN_FEE0;
 
+    address private immutable _HOOK_RECEIVER0;
+
     bool private immutable _CALL_BEFORE_QUOTE0;
 
     // TOKEN #1
@@ -64,6 +66,8 @@ contract SiloConfig is ISiloConfig {
     uint256 private immutable _LT1;
     uint256 private immutable _LIQUIDATION_FEE1;
     uint256 private immutable _FLASHLOAN_FEE1;
+
+    address private immutable _HOOK_RECEIVER1;
 
     bool private immutable _CALL_BEFORE_QUOTE1;
 
@@ -114,6 +118,8 @@ contract SiloConfig is ISiloConfig {
         _LIQUIDATION_FEE0 = _configData0.liquidationFee;
         _FLASHLOAN_FEE0 = _configData0.flashloanFee;
 
+        _HOOK_RECEIVER0 = _configData0.hookReceiver;
+
         _CALL_BEFORE_QUOTE0 = _configData0.callBeforeQuote;
 
         // TOKEN #1
@@ -134,6 +140,8 @@ contract SiloConfig is ISiloConfig {
         _LT1 = _configData1.lt;
         _LIQUIDATION_FEE1 = _configData1.liquidationFee;
         _FLASHLOAN_FEE1 = _configData1.flashloanFee;
+
+        _HOOK_RECEIVER1 = _configData1.hookReceiver;
 
         _CALL_BEFORE_QUOTE1 = _configData1.callBeforeQuote;
     }
@@ -308,6 +316,7 @@ contract SiloConfig is ISiloConfig {
                 liquidationFee: _LIQUIDATION_FEE0,
                 flashloanFee: _FLASHLOAN_FEE0,
                 liquidationModule: _LIQUIDATION_MODULE,
+                hookReceiver: _HOOK_RECEIVER0,
                 callBeforeQuote: _CALL_BEFORE_QUOTE0
             });
         } else if (_silo == _SILO1) {
@@ -328,6 +337,7 @@ contract SiloConfig is ISiloConfig {
                 liquidationFee: _LIQUIDATION_FEE1,
                 flashloanFee: _FLASHLOAN_FEE1,
                 liquidationModule: _LIQUIDATION_MODULE,
+                hookReceiver: _HOOK_RECEIVER1,
                 callBeforeQuote: _CALL_BEFORE_QUOTE1
             });
         } else {
@@ -383,6 +393,7 @@ contract SiloConfig is ISiloConfig {
             liquidationFee: _LIQUIDATION_FEE0,
             flashloanFee: _FLASHLOAN_FEE0,
             liquidationModule: _LIQUIDATION_MODULE,
+            hookReceiver: _HOOK_RECEIVER0,
             callBeforeQuote: _CALL_BEFORE_QUOTE0
         });
 
@@ -403,6 +414,7 @@ contract SiloConfig is ISiloConfig {
             liquidationFee: _LIQUIDATION_FEE1,
             flashloanFee: _FLASHLOAN_FEE1,
             liquidationModule: _LIQUIDATION_MODULE,
+            hookReceiver: _HOOK_RECEIVER1,
             callBeforeQuote: _CALL_BEFORE_QUOTE1
         });
 
