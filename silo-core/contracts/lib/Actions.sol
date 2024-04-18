@@ -47,7 +47,7 @@ library Actions {
             );
         }
 
-        _siloConfig.crossNonReentrantBefore(CrossEntrancy.ENTERED_FROM_DEPOSIT);
+        _siloConfig.start(CrossEntrancy.ENTERED_FROM_DEPOSIT);
 
         (
             ISiloConfig.ConfigData memory configData,,
