@@ -29,7 +29,7 @@ interface IHookReceiver {
     /// In order to have some communication from hook -> silo, we can use return codes
     function beforeAction(uint256 _action, bytes calldata _input) external returns (uint256 hookReturnCode);
 
-    function afterAction(uint256 _action, bytes calldata _input, bytes calldata _output)
+    function afterAction(uint256 _action, bytes calldata _inputAndOutput)
         external
         returns (uint256 hookReturnCode);
 }

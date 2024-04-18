@@ -634,15 +634,7 @@ contract Silo is Initializable, SiloERC4626 {
     {
         // we need to call it here, to update _total
         (, ISiloConfig siloConfigCached) = _accrueInterest();
-
-        (ISiloConfig.ConfigData memory currentConfig,,) = config.getConfig(address(this));
-
-        if (_hookCallNeeded(currentConfig.hookReceiver, Hook.BEFORE_DEPOSIT)) {
-            IHookReceiver(currentConfig.hookReceiver).beforeAction(
-                Hook.BEFORE_DEPOSIT, abi.encodePacked(_assets, _shares, _receiver, _assetType)
-            );
-        }
-
+        
         (
             assets, shares
         ) = Actions.deposit(siloConfigCached, _assets, _shares, _receiver, _assetType, total[_assetType]);
@@ -651,14 +643,6 @@ contract Silo is Initializable, SiloERC4626 {
             emit Deposit(msg.sender, _receiver, assets, shares);
         } else {
             emit DepositProtected(msg.sender, _receiver, assets, shares);
-        }
-
-        siloConfigCached.crossNonReentrantAfter();
-
-        if (_hookCallNeeded(currentConfig.hookReceiver, Hook.AFTER_DEPOSIT)) {
-            IHookReceiver(currentConfig.hookReceiver).afterAction(
-                Hook.AFTER_DEPOSIT, abi.encodePacked(_assets, _shares, _receiver, _assetType, assets, shares)
-            );
         }
     }
 
@@ -858,9 +842,5 @@ contract Silo is Initializable, SiloERC4626 {
             total[AssetType.Collateral],
             total[AssetType.Debt]
         );
-    }
-
-    function _hookCallNeeded(address _hookReceiver, uint256 _hook) internal returns (bool) {
-        return _hookReceiver != address(0) && (siloData.hooks & _hook != 0);
     }
 }
