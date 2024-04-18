@@ -843,4 +843,8 @@ contract Silo is Initializable, SiloERC4626 {
             total[AssetType.Debt]
         );
     }
+
+    function _beforeAction(bytes mem) internal {
+
+    }
 }
