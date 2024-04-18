@@ -846,8 +846,4 @@ contract Silo is SiloERC4626 {
             total[AssetType.Debt]
         );
     }
-
-    function _beforeAction(bytes mem) internal {
-
-    }
 }
