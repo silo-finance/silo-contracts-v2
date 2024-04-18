@@ -398,28 +398,11 @@ contract Silo is Initializable, SiloERC4626 {
     }
 
     function switchCollateralTo(bool _sameAsset) external virtual {
-        ISiloConfig siloConfigCached = _crossNonReentrantBefore(CrossEntrancy.ENTERED);
+        (, ISiloConfig siloConfigCached) = _accrueInterest();
 
-        (
-            ISiloConfig.ConfigData memory collateral,
-            ISiloConfig.ConfigData memory debt,
-            ISiloConfig.DebtInfo memory debtInfo
-        ) = siloConfigCached.changeCollateralType(msg.sender, _sameAsset);
+        Actions.switchCollateralTo(siloConfigCached, _sameAsset);
 
         emit CollateralTypeChanged(msg.sender, _sameAsset);
-
-        _callAccrueInterestForAsset(
-            collateral.interestRateModel,
-            collateral.daoFee,
-            collateral.deployerFee,
-            collateral.otherSilo
-        );
-
-        if (!SiloSolvencyLib.isSolvent(collateral, debt, debtInfo, msg.sender, AccrueInterestInMemory.No)) {
-            revert NotSolvent();
-        }
-
-        siloConfigCached.crossNonReentrantAfter();
     }
 
     /// @inheritdoc ISilo
@@ -806,11 +789,6 @@ contract Silo is Initializable, SiloERC4626 {
         return SiloMathLib.convertToShares(
             _assets, totalSiloAssets, totalShares, Rounding.WITHDRAW_TO_SHARES, _assetType
         );
-    }
-
-    function _crossNonReentrantBefore(uint256 _enteredFrom) internal virtual returns (ISiloConfig siloConfigCached) {
-        siloConfigCached = config;
-        siloConfigCached.crossNonReentrantBefore(_enteredFrom);
     }
 
     function _callMaxDepositOrMint(uint256 _totalCollateralAssets)

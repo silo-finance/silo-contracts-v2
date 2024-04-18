@@ -342,6 +342,24 @@ library Actions {
         _siloConfig.crossNonReentrantAfter();
     }
 
+    function switchCollateralTo(ISiloConfig _siloConfig, bool _sameAsset) external {
+        _siloConfig.crossNonReentrantBefore(CrossEntrancy.ENTERED);
+
+        (
+            ISiloConfig.ConfigData memory collateral,
+            ISiloConfig.ConfigData memory debt,
+            ISiloConfig.DebtInfo memory debtInfo
+        ) = _siloConfig.changeCollateralType(msg.sender, _sameAsset);
+
+        ISilo(collateral.otherSilo).accrueInterest();
+
+        if (!SiloSolvencyLib.isSolvent(collateral, debt, debtInfo, msg.sender, ISilo.AccrueInterestInMemory.No)) {
+            revert NotSolvent();
+        }
+
+        _siloConfig.crossNonReentrantAfter();
+    }
+
     /// @notice Executes a flash loan, sending the requested amount to the receiver and expecting it back with a fee
     /// @param _config Configuration data relevant to the silo asset borrowed
     /// @param _siloData Storage containing data related to fees
