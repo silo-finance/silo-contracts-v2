@@ -236,4 +236,6 @@ interface ISiloConfig {
         external
         view
         returns (address protectedShareToken, address collateralShareToken, address debtShareToken);
+
+    function getOtherSiloProtected(address _currentSilo) external view returns (address otherSilo);
 }

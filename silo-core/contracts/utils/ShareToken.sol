@@ -11,6 +11,7 @@ import {StringsUpgradeable} from "openzeppelin-contracts-upgradeable/utils/Strin
 import {IHookReceiver} from "silo-core/contracts/utils/hook-receivers/interfaces/IHookReceiver.sol";
 import {ISiloFactory} from "../interfaces/ISiloFactory.sol";
 import {IShareToken, ISilo} from "../interfaces/IShareToken.sol";
+import {ISiloReentrancyGuard} from "../interfaces/ISiloReentrancyGuard.sol";
 import {ISiloConfig} from "../SiloConfig.sol";
 import {TokenHelper} from "../lib/TokenHelper.sol";
 import {CrossEntrancy} from "../lib/CrossEntrancy.sol";
@@ -93,7 +94,12 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
         ISiloConfig siloConfigCached = siloConfig;
         siloConfigCached.crossNonReentrantBefore(CrossEntrancy.ENTERED);
 
+        (address silo0,) = siloConfigCached.getSilos();
+        ISiloReentrancyGuard(silo0).nonReentrantBefore();
+
         result = super.transferFrom(_from, _to, _amount);
+
+        ISiloReentrancyGuard(silo0).nonReentrantAfter();
 
         siloConfigCached.crossNonReentrantAfter();
     }

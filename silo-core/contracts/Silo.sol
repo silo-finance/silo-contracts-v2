@@ -27,6 +27,7 @@ import {LiquidationWithdrawLib} from "./lib/LiquidationWithdrawLib.sol";
 import {Rounding} from "./lib/Rounding.sol";
 import {Methods} from "./lib/Methods.sol";
 import {CrossEntrancy} from "./lib/CrossEntrancy.sol";
+import {SiloReentrancyGuard} from "./SiloReentrancyGuard.sol";
 
 // Keep ERC4626 ordering
 // solhint-disable ordering
@@ -35,7 +36,7 @@ import {CrossEntrancy} from "./lib/CrossEntrancy.sol";
 /// @notice Silo is a ERC4626-compatible vault that allows users to deposit collateral and borrow debt. This contract
 /// is deployed twice for each asset for two-asset lending markets.
 /// Version: 2.0.0
-contract Silo is Initializable, SiloERC4626 {
+contract Silo is Initializable, SiloERC4626, SiloReentrancyGuard {
     using SafeERC20Upgradeable for IERC20Upgradeable;
 
     ISiloFactory public immutable factory;
@@ -183,7 +184,9 @@ contract Silo is Initializable, SiloERC4626 {
         virtual
         returns (uint256 shares)
     {
+        nonReentrantBefore();
         (, shares) = _deposit(_assets, 0 /* shares */, _receiver, AssetType.Collateral);
+        nonReentrantAfter();
     }
 
     /// @inheritdoc IERC4626
@@ -854,5 +857,9 @@ contract Silo is Initializable, SiloERC4626 {
             total[AssetType.Collateral],
             total[AssetType.Debt]
         );
+    }
+
+    function _getSiloConfigAddr() internal view override returns (ISiloConfig) {
+        return config;
     }
 }

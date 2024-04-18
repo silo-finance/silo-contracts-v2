@@ -204,7 +204,7 @@ contract SiloConfig is ISiloConfig {
 
     /// @inheritdoc ISiloConfig
     function crossNonReentrantBefore(uint256 _entranceFrom) external virtual {
-        _onlySiloTokenOrLiquidation();
+        _onlySiloTokenOrLiquidation(msg.sender);
 
         // On the first call to nonReentrant, _status will be CrossEntrancy.NOT_ENTERED
         if (_crossReentrantStatus == CrossEntrancy.NOT_ENTERED) {
@@ -232,7 +232,7 @@ contract SiloConfig is ISiloConfig {
 
     /// @inheritdoc ISiloConfig
     function crossNonReentrantAfter() external virtual {
-        _onlySiloTokenOrLiquidation();
+        _onlySiloTokenOrLiquidation(msg.sender);
 
         // By storing the original value once again, a refund is triggered (see
         // https://eips.ethereum.org/EIPS/eip-2200)
@@ -466,16 +466,28 @@ contract SiloConfig is ISiloConfig {
         revert DebtExistInOtherSilo();
     }
 
-    function _onlySiloTokenOrLiquidation() internal view virtual {
-        if (msg.sender == _SILO0 ||
-            msg.sender == _SILO1 ||
-            msg.sender == _LIQUIDATION_MODULE ||
-            msg.sender == _COLLATERAL_SHARE_TOKEN0 ||
-            msg.sender == _COLLATERAL_SHARE_TOKEN1 ||
-            msg.sender == _PROTECTED_COLLATERAL_SHARE_TOKEN0 ||
-            msg.sender == _PROTECTED_COLLATERAL_SHARE_TOKEN1 ||
-            msg.sender == _DEBT_SHARE_TOKEN0 ||
-            msg.sender == _DEBT_SHARE_TOKEN1
+    function getOtherSiloProtected(address _currentSilo) external view returns (address otherSilo) {
+        _onlySiloTokenOrLiquidation(msg.sender);
+
+        if (_currentSilo == _SILO0) {
+            otherSilo = _SILO1;
+        } else if (_currentSilo == _SILO1) {
+            otherSilo = _SILO0;
+        } else {
+            revert WrongSilo();
+        }
+    }
+
+    function _onlySiloTokenOrLiquidation(address _sender) internal view virtual {
+        if (_sender == _SILO0 ||
+            _sender == _SILO1 ||
+            _sender == _LIQUIDATION_MODULE ||
+            _sender == _COLLATERAL_SHARE_TOKEN0 ||
+            _sender == _COLLATERAL_SHARE_TOKEN1 ||
+            _sender == _PROTECTED_COLLATERAL_SHARE_TOKEN0 ||
+            _sender == _PROTECTED_COLLATERAL_SHARE_TOKEN1 ||
+            _sender == _DEBT_SHARE_TOKEN0 ||
+            _sender == _DEBT_SHARE_TOKEN1
         ) {
             return;
         } else revert OnlySiloOrLiquidationModule();
