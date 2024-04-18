@@ -14,6 +14,7 @@ import {ILeverageBorrower} from "./interfaces/ILeverageBorrower.sol";
 import {ISiloConfig} from "./interfaces/ISiloConfig.sol";
 import {ISiloFactory} from "./interfaces/ISiloFactory.sol";
 import {IInterestRateModel} from "./interfaces/IInterestRateModel.sol";
+import {IHookReceiver} from "./utils/hook-receivers/interfaces/IHookReceiver.sol";
 
 import {SiloERC4626} from "./utils/SiloERC4626.sol";
 
@@ -636,7 +637,7 @@ contract Silo is Initializable, SiloERC4626 {
 
         (ISiloConfig.ConfigData memory currentConfig,,) = config.getConfig(address(this));
 
-        if (_triggerHook(currentConfig.hookReceiver, Hook.BEFORE_DEPOSIT)) {
+        if (_hookCallNeeded(currentConfig.hookReceiver, Hook.BEFORE_DEPOSIT)) {
             IHookReceiver(currentConfig.hookReceiver).beforeAction(
                 Hook.BEFORE_DEPOSIT, abi.encodePacked(_assets, _shares, _receiver, _assetType)
             );
@@ -654,7 +655,7 @@ contract Silo is Initializable, SiloERC4626 {
 
         siloConfigCached.crossNonReentrantAfter();
 
-        if (_triggerHook(currentConfig.hookReceiver, Hook.AFTER_DEPOSIT)) {
+        if (_hookCallNeeded(currentConfig.hookReceiver, Hook.AFTER_DEPOSIT)) {
             IHookReceiver(currentConfig.hookReceiver).afterAction(
                 Hook.AFTER_DEPOSIT, abi.encodePacked(_assets, _shares, _receiver, _assetType, assets, shares)
             );
@@ -861,9 +862,5 @@ contract Silo is Initializable, SiloERC4626 {
 
     function _hookCallNeeded(address _hookReceiver, uint256 _hook) internal returns (bool) {
         return _hookReceiver != address(0) && (siloData.hooks & _hook != 0);
-    }
-
-    function _beforeHook(IHookReceiver _hookReceiver, bytes memory _options) internal {
-
     }
 }
