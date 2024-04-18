@@ -42,8 +42,8 @@ contract PartialLiquidation is IPartialLiquidation {
         if (_collateralAsset != collateralConfig.token) revert UnexpectedCollateralToken();
         if (_debtAsset != debtConfig.token) revert UnexpectedDebtToken();
 
-        ISilo(_siloWithDebt).accrueInterest();
-        ISilo(debtConfig.otherSilo).accrueInterest(); // TODO optimise if same silo
+        ISilo(debtConfig.silo).accrueInterest();
+        if (!debtInfo.sameAsset) ISilo(debtConfig.otherSilo).accrueInterest();
 
         if (collateralConfig.callBeforeQuote) {
             ISiloOracle(collateralConfig.solvencyOracle).beforeQuote(collateralConfig.token);

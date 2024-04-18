@@ -39,6 +39,31 @@ interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
         // if you add new, make sure you adjust all places with revert WrongAssetType()
     }
 
+    struct WithdrawArgs {
+        uint256 assets;
+        uint256 shares;
+        address receiver;
+        address owner;
+        address spender;
+        ISilo.AssetType assetType;
+    }
+
+    /// @param assets Number of assets the borrower intends to borrow. Use 0 if shares are provided.
+    /// @param shares Number of shares corresponding to the assets that the borrower intends to borrow. Use 0 if
+    /// assets are provided.
+    /// @param receiver Address that will receive the borrowed assets
+    /// @param borrower The user who is borrowing the assets
+    /// @param totalCollateralAssets Total collateralized assets currently in the system, not protected
+    struct BorrowArgs {
+        uint256 assets;
+        uint256 shares;
+        address receiver;
+        address borrower;
+        bool sameAsset;
+        bool leverage;
+        uint256 totalCollateralAssets;
+    }
+
     /// @dev this struct is used for all types of assets: collateral, protected and debt
     /// @param assets based on type:
     /// - PROTECTED COLLATERAL: Amount of asset token that has been deposited to Silo that can be ONLY used
@@ -154,6 +179,8 @@ interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
     /// @notice Fetches the real (available to borrow) liquidity in the silo, it does include interest
     /// @return liquidity The amount of liquidity
     function getLiquidity() external view returns (uint256 liquidity);
+
+    function getRawLiquidity() external view returns (uint256 liquidity);
 
     /// @notice Determines if a borrower is solvent
     /// @param _borrower Address of the borrower to check for solvency
