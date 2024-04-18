@@ -24,13 +24,17 @@ contract SiloLendingLibImpl {
         (borrowedAssets, borrowedShares) = SiloLendingLib.borrow(
             _debtShareToken,
             _token,
-            _assets,
-            _shares,
-            _receiver,
-            _borrower,
             _spender,
-            totalDebt,
-            _totalCollateralAssets
+            ISilo.BorrowArgs({
+                assets: _assets,
+                shares: _shares,
+                receiver: _receiver,
+                borrower: _borrower,
+                sameAsset: false,
+                leverage: false,
+                totalCollateralAssets: _totalCollateralAssets
+            }),
+            totalDebt
         );
 
         _totalDebt.assets = totalDebt.assets;

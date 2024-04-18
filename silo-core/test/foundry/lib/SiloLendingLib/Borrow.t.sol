@@ -59,13 +59,17 @@ contract BorrowTest is Test {
         SiloLendingLib.borrow(
             configData.debtShareToken,
             configData.token,
-            assets,
-            shares,
-            receiver,
-            borrower,
             spender,
-            totalDebt,
-            totalCollateralAssets
+            ISilo.BorrowArgs({
+                assets: assets,
+                shares: shares,
+                receiver: receiver,
+                borrower: borrower,
+                sameAsset: false,
+                leverage: false,
+                totalCollateralAssets: totalCollateralAssets
+            }),
+            totalDebt
         );
     }
 

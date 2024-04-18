@@ -78,6 +78,11 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
         _disableInitializers();
     }
 
+    /// @inheritdoc IShareToken
+    function forwardTransfer(address _owner, address _recipient, uint256 _amount) external virtual onlySilo {
+        _transfer(_owner, _recipient, _amount);
+    }
+
     /// @inheritdoc ERC20Upgradeable
     function transferFrom(address _from, address _to, uint256 _amount)
         public
@@ -101,16 +106,11 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
         returns (bool result)
     {
         ISiloConfig siloConfigCached = siloConfig;
-        siloConfig.crossNonReentrantBefore(CrossEntrancy.ENTERED);
+        siloConfigCached.crossNonReentrantBefore(CrossEntrancy.ENTERED);
 
         result = super.transfer(_to, _amount);
 
         siloConfigCached.crossNonReentrantAfter();
-    }
-
-    /// @inheritdoc IShareToken
-    function forwardTransfer(address _owner, address _recipient, uint256 _amount) external virtual onlySilo {
-        _transfer(_owner, _recipient, _amount);
     }
 
     /// @inheritdoc IShareToken
@@ -130,7 +130,6 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
 
     /// @dev decimals of share token
     function decimals() public view virtual override(ERC20Upgradeable, IERC20MetadataUpgradeable) returns (uint8) {
-        ISiloConfig siloConfig = silo.config();
         ISiloConfig.ConfigData memory configData = siloConfig.getConfig(address(silo));
 
         return uint8(TokenHelper.assertAndGetDecimals(configData.token));
@@ -150,7 +149,6 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
         override(ERC20Upgradeable, IERC20MetadataUpgradeable)
         returns (string memory)
     {
-        ISiloConfig siloConfig = silo.config();
         ISiloConfig.ConfigData memory configData = siloConfig.getConfig(address(silo));
         string memory siloIdAscii = StringsUpgradeable.toString(siloConfig.SILO_ID());
 
