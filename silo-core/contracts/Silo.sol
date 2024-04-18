@@ -27,6 +27,7 @@ import {LiquidationWithdrawLib} from "./lib/LiquidationWithdrawLib.sol";
 import {Rounding} from "./lib/Rounding.sol";
 import {Methods} from "./lib/Methods.sol";
 import {CrossEntrancy} from "./lib/CrossEntrancy.sol";
+import {Hook} from "./lib/Hook.sol";
 
 // Keep ERC4626 ordering
 // solhint-disable ordering
@@ -62,6 +63,13 @@ contract Silo is Initializable, SiloERC4626 {
 
         address interestRateModel = _siloConfig.getConfig(address(this)).interestRateModel;
         IInterestRateModel(interestRateModel).connect(_modelConfigAddress);
+    }
+
+    function updateHooks(uint24 _hooksBitmap) external {
+        if (msg.sender != config.getConfig(address(this)).hookReceiver) revert OnlyHookReceiver();
+
+        siloData.hooks = _hooksBitmap;
+        emit HooksUpdated(_hooksBitmap);
     }
 
     /// @inheritdoc ISilo
@@ -626,6 +634,12 @@ contract Silo is Initializable, SiloERC4626 {
         // we need to call it here, to update _total
         (, ISiloConfig siloConfigCached) = _accrueInterest();
 
+        (ISiloConfig.ConfigData memory currentConfig,,) = config.getConfig(address(this));
+        
+        IHookReceiver(currentConfig.hookReceiver).beforeAction(
+            Hook.BEFORE_DEPOSIT, abi.encodePacked(_assets, _shares, _receiver, _assetType)
+        );
+
         (
             assets, shares
         ) = Actions.deposit(siloConfigCached, _assets, _shares, _receiver, _assetType, total[_assetType]);
@@ -634,6 +648,12 @@ contract Silo is Initializable, SiloERC4626 {
             emit Deposit(msg.sender, _receiver, assets, shares);
         } else {
             emit DepositProtected(msg.sender, _receiver, assets, shares);
+        }
+
+        siloConfigCached.crossNonReentrantAfter();
+
+        if (_triggerHook(configData.hookReceiver, Hook.AFTER_DEPOSIT)) {
+            // TODO exec hook
         }
     }
 
@@ -832,5 +852,13 @@ contract Silo is Initializable, SiloERC4626 {
             total[AssetType.Collateral],
             total[AssetType.Debt]
         );
+    }
+
+    function _hookCallNeeded(address _hookReceiver, uint256 _hook) internal returns (bool) {
+        return _hookReceiver != address(0) && (siloData.hooks & _hook != 0);
+    }
+
+    function _beforeHook(IHookReceiver _hookReceiver, bytes memory _options) internal {
+
     }
 }

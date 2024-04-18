@@ -6,6 +6,7 @@ library Hook {
     uint256 internal constant RETURN_CODE_SUCCESS = 0;
     uint256 internal constant RETURN_CODE_REQUEST_TO_REVERT_TX = 1;
 
+    uint256 internal constant NONE = 0;
     uint256 internal constant BEFORE_DEPOSIT = 2 ** 1;
     uint256 internal constant AFTER_DEPOSIT = 2 ** 2;
     uint256 internal constant BEFORE_BORROW = 2 ** 3;
@@ -21,4 +22,8 @@ library Hook {
     uint256 internal constant AFTER_COLLATERAL_TRANSFER = 2 ** 12;
     uint256 internal constant BEFORE_DEBT_TRANSFER = 2 ** 13;
     uint256 internal constant AFTER_DEBT_TRANSFER = 2 ** 14;
+
+    function triggerHook(address _hookReceiver, uint24 _hooksBitmap, uint256 _hook) internal pure returns (bool) {
+        return _hookReceiver != address(0) && (_hooksBitmap & _hook != 0);
+    }
 }

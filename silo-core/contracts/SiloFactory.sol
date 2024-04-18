@@ -253,33 +253,33 @@ contract SiloFactory is ISiloFactory, ERC721Upgradeable, Ownable2StepUpgradeable
         // initialize configData0
         IShareToken(configData0.protectedShareToken).initialize(
             ISilo(configData0.silo),
-            _initData.protectedHookReceiver0
+            _initData.hookReceiver0
         );
 
         IShareToken(configData0.collateralShareToken).initialize(
             ISilo(configData0.silo),
-            _initData.collateralHookReceiver0
+            _initData.hookReceiver0
         );
 
         IShareToken(configData0.debtShareToken).initialize(
             ISilo(configData0.silo),
-            _initData.debtHookReceiver0
+            _initData.hookReceiver0
         );
 
         // initialize configData1
         IShareToken(configData1.protectedShareToken).initialize(
             ISilo(configData1.silo),
-            _initData.protectedHookReceiver1
+            _initData.hookReceiver1
         );
 
         IShareToken(configData1.collateralShareToken).initialize(
             ISilo(configData1.silo),
-            _initData.collateralHookReceiver1
+            _initData.hookReceiver1
         );
 
         IShareToken(configData1.debtShareToken).initialize(
             ISilo(configData1.silo),
-            _initData.debtHookReceiver1
+            _initData.hookReceiver1
         );
     }
 
