@@ -10,6 +10,7 @@ import {ISiloOracle} from "../interfaces/ISiloOracle.sol";
 import {IShareToken} from "../interfaces/IShareToken.sol";
 import {ILeverageBorrower} from "../interfaces/ILeverageBorrower.sol";
 import {IERC3156FlashBorrower} from "../interfaces/IERC3156FlashBorrower.sol";
+import {IHookReceiver} from "../utils/hook-receivers/interfaces/IHookReceiver.sol";
 
 import {SiloERC4626Lib} from "./SiloERC4626Lib.sol";
 import {SiloSolvencyLib} from "./SiloSolvencyLib.sol";
@@ -17,6 +18,7 @@ import {SiloLendingLib} from "./SiloLendingLib.sol";
 import {SiloStdLib} from "./SiloStdLib.sol";
 import {CrossEntrancy} from "./CrossEntrancy.sol";
 import {Methods} from "./Methods.sol";
+import {Hook} from "./Hook.sol";
 
 library Actions {
     using SafeERC20Upgradeable for IERC20Upgradeable;
@@ -39,6 +41,12 @@ library Actions {
     {
         if (_assetType == ISilo.AssetType.Debt) revert ISilo.WrongAssetType();
 
+        if (_hookCallNeeded(currentConfig.hookReceiver, Hook.BEFORE_DEPOSIT)) {
+            IHookReceiver(currentConfig.hookReceiver).beforeAction(
+                Hook.BEFORE_DEPOSIT, abi.encodePacked(_assets, _shares, _receiver, _assetType)
+            );
+        }
+
         _siloConfig.crossNonReentrantBefore(CrossEntrancy.ENTERED_FROM_DEPOSIT);
 
         (
@@ -60,6 +68,13 @@ library Actions {
         );
 
         _siloConfig.crossNonReentrantAfter();
+
+        if (_hookCallNeeded(currentConfig.hookReceiver, Hook.AFTER_DEPOSIT)) {
+            IHookReceiver(currentConfig.hookReceiver).afterAction(
+                Hook.AFTER_DEPOSIT,
+                abi.encodePacked(_assets, _shares, _receiver, _assetType, assets, shares)
+            );
+        }
     }
 
     // solhint-disable-next-line function-max-lines, code-complexity
@@ -68,6 +83,13 @@ library Actions {
         returns (uint256 assets, uint256 shares)
     {
         if (_args.assetType == ISilo.AssetType.Debt) revert ISilo.WrongAssetType();
+
+        if (_hookCallNeeded(currentConfig.hookReceiver, Hook.BEFORE_WITHDRAW)) {
+            IHookReceiver(currentConfig.hookReceiver).afterAction(
+                Hook.BEFORE_WITHDRAW,
+                abi.encodePacked(_assets, _shares, _receiver, _owner, _spender, _assetType)
+            );
+        }
 
         _siloConfig.crossNonReentrantBefore(CrossEntrancy.ENTERED);
 
@@ -127,6 +149,13 @@ library Actions {
         )) revert ISilo.NotSolvent();
 
         _siloConfig.crossNonReentrantAfter();
+
+        if (_hookCallNeeded(currentConfig.hookReceiver, Hook.AFTER_WITHDRAW)) {
+            IHookReceiver(currentConfig.hookReceiver).afterAction(
+                Hook.AFTER_WITHDRAW,
+                abi.encodePacked(_assets, _shares, _receiver, _owner, _spender, _assetType, assets, shares)
+            );
+        }
     }
 
     // solhint-disable-next-line function-max-lines, code-complexity
@@ -204,7 +233,15 @@ library Actions {
         external
         returns (uint256 assets, uint256 shares)
     {
-        if (!_liquidation) _siloConfig.crossNonReentrantBefore(CrossEntrancy.ENTERED);
+        if (!_liquidation) {
+            if (_hookCallNeeded(currentConfig.hookReceiver, Hook.BEFORE_REPAY)) {
+                IHookReceiver(currentConfig.hookReceiver).beforeAction(
+                    Hook.BEFORE_REPAY, abi.encodePacked(_assets, _shares, _borrower, _repayer)
+                );
+            }
+
+            _siloConfig.crossNonReentrantBefore(CrossEntrancy.ENTERED);
+        }
 
         ISiloConfig.ConfigData memory configData = _siloConfig.getConfig(address(this));
 
@@ -214,7 +251,15 @@ library Actions {
             assets, shares
         ) = SiloLendingLib.repay(configData, _assets, _shares, _borrower, _repayer, _totalDebt);
 
-        if (!_liquidation) _siloConfig.crossNonReentrantAfter();
+        if (!_liquidation) {
+            _siloConfig.crossNonReentrantAfter();
+
+            if (_hookCallNeeded(configData.hookReceiver, Hook.AFTER_REPAY)) {
+                IHookReceiver(configData.hookReceiver).beforeAction(
+                    Hook.AFTER_REPAY, abi.encodePacked(_assets, _shares, _borrower, _repayer, assets, shares)
+                );
+            }
+        }
     }
 
     // solhint-disable-next-line function-max-lines
@@ -447,4 +492,7 @@ library Actions {
         }
     }
 
+    function _hookCallNeeded(address _hookReceiver, uint256 _hook) private returns (bool) {
+        return _hookReceiver != address(0) && (siloData.hooks & _hook != 0);
+    }
 }
