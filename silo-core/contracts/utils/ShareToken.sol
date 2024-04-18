@@ -92,11 +92,27 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
         returns (bool result)
     {
         ISiloConfig siloConfigCached = siloConfig;
+        (address hookReceiver, uint24 hooks) = _fetchHookData(siloConfigCached);
+
+        if (hooks != 0) {
+            if (_hookCallNeeded(hooks, Hook.BEFORE_SHARE_TRANSFER)) {
+                IHookReceiver(hookReceiver).beforeAction(
+                    Hook.BEFORE_SHARE_TRANSFER, abi.encodePacked(_from, _to, _amount)
+                );
+            }
+        }
+
         siloConfigCached.crossNonReentrantBefore(CrossEntrancy.ENTERED);
 
         result = super.transferFrom(_from, _to, _amount);
 
         siloConfigCached.crossNonReentrantAfter();
+
+        if (_hookCallNeeded(hooks, Hook.AFTER_SHARE_TRANSFER)) {
+            IHookReceiver(hookReceiver).beforeAction(
+                Hook.AFTER_SHARE_TRANSFER, abi.encodePacked(_from, _to, _amount, result)
+            );
+        }
     }
 
     /// @inheritdoc ERC20Upgradeable
@@ -109,9 +125,27 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
         ISiloConfig siloConfigCached = siloConfig;
         siloConfigCached.crossNonReentrantBefore(CrossEntrancy.ENTERED);
 
+        (address hookReceiver, uint24 hooks) = _fetchHookData(siloConfigCached);
+
+        if (hooks != 0) {
+            if (_hookCallNeeded(hooks, Hook.BEFORE_SHARE_TRANSFER)) {
+                IHookReceiver(hookReceiver).beforeAction(
+                    Hook.BEFORE_SHARE_TRANSFER, abi.encodePacked(msg.sender, _to, _amount)
+                );
+            }
+        }
+
+        siloConfig.crossNonReentrantBefore(CrossEntrancy.ENTERED);
+
         result = super.transfer(_to, _amount);
 
         siloConfigCached.crossNonReentrantAfter();
+
+        if (_hookCallNeeded(hooks, Hook.AFTER_SHARE_TRANSFER)) {
+            IHookReceiver(hookReceiver).beforeAction(
+                Hook.AFTER_SHARE_TRANSFER, abi.encodePacked(msg.sender, _to, _amount, result)
+            );
+        }
     }
 
     /// @inheritdoc IShareToken
@@ -240,5 +274,17 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
         // require(recipient != address(0), "ERC20: transfer to the zero address");
         // on transfer. ERC20 has them, so we good.
         return _sender != address(0) && _recipient != address(0);
+    }
+
+    function _hookCallNeeded(uint24 _hooksBitmap, uint256 _hook) internal pure returns (bool) {
+        return (_hooksBitmap & _hook != 0);
+    }
+
+    function _fetchHookData(ISiloConfig _siloConfig) internal view returns (address hookReceiver, uint24 hooks) {
+        hookReceiver = _siloConfig.getConfig(silo).hookReceiver;
+
+        if (hookReceiver != address(0)) {
+            hooks = silo.siloData().hooks;
+        }
     }
 }

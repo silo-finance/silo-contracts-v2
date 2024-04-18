@@ -25,11 +25,11 @@ interface IHookReceiver {
         uint256 _amount
     ) external returns (uint256 hookReturnCode);
 
-//    /// @return hookReturnCode calls to hooks are done using low level call and internal reverts are ignored.
-//    /// In order to have some communication from hook -> silo, we can use return codes
-//    function beforeAction(uint256 _action, bytes calldata _input) external returns (uint256 hookReturnCode);
-//
-//    function afterAction(uint256 _action, bytes calldata _input, bytes calldata _output)
-//        external
-//        returns (uint256 hookReturnCode);
+    /// @return hookReturnCode calls to hooks are done using low level call and internal reverts are ignored.
+    /// In order to have some communication from hook -> silo, we can use return codes
+    function beforeAction(uint256 _action, bytes calldata _input) external returns (uint256 hookReturnCode);
+
+    function afterAction(uint256 _action, bytes calldata _input, bytes calldata _output)
+        external
+        returns (uint256 hookReturnCode);
 }
