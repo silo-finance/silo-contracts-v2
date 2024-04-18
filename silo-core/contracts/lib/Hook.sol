@@ -18,10 +18,8 @@ library Hook {
     uint256 internal constant BEFORE_LIQUIDATION = 2 ** 9;
     uint256 internal constant AFTER_LIQUIDATION = 2 ** 10;
 
-    uint256 internal constant BEFORE_COLLATERAL_TRANSFER = 2 ** 11;
-    uint256 internal constant AFTER_COLLATERAL_TRANSFER = 2 ** 12;
-    uint256 internal constant BEFORE_DEBT_TRANSFER = 2 ** 13;
-    uint256 internal constant AFTER_DEBT_TRANSFER = 2 ** 14;
+    uint256 internal constant BEFORE_SHARE_TRANSFER = 2 ** 11;
+    uint256 internal constant AFTER_SHARE_TRANSFER = 2 ** 12;
 
     function triggerHook(address _hookReceiver, uint24 _hooksBitmap, uint256 _hook) internal pure returns (bool) {
         return _hookReceiver != address(0) && (_hooksBitmap & _hook != 0);
