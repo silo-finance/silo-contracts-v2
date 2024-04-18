@@ -83,7 +83,7 @@ contract EchidnaIRMv2 is PropertiesAsserts {
     function setUtilizationData(uint256 _totalCollateral, uint256 _totalDebt) public {
         totalCollateral = _totalCollateral;
         totalDebt = _totalDebt;
-        interestRateTimestamp = uint64(block.timestamp);
+        interestRateTimestamp = uint40(block.timestamp);
     }
 
     function utilizationData() external view virtual returns (UtilizationData memory) {
