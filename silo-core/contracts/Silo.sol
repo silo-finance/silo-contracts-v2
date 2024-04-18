@@ -322,7 +322,7 @@ contract Silo is Initializable, SiloERC4626 {
         virtual
         returns (uint256 assets)
     {
-        (assets,) = _deposit(0 /* asstes */, _shares, _receiver, _assetType);
+        (assets,) = _deposit(0 /* assets */, _shares, _receiver, _assetType);
     }
 
     /// @inheritdoc ISilo
@@ -635,10 +635,12 @@ contract Silo is Initializable, SiloERC4626 {
         (, ISiloConfig siloConfigCached) = _accrueInterest();
 
         (ISiloConfig.ConfigData memory currentConfig,,) = config.getConfig(address(this));
-        
-        IHookReceiver(currentConfig.hookReceiver).beforeAction(
-            Hook.BEFORE_DEPOSIT, abi.encodePacked(_assets, _shares, _receiver, _assetType)
-        );
+
+        if (_triggerHook(currentConfig.hookReceiver, Hook.BEFORE_DEPOSIT)) {
+            IHookReceiver(currentConfig.hookReceiver).beforeAction(
+                Hook.BEFORE_DEPOSIT, abi.encodePacked(_assets, _shares, _receiver, _assetType)
+            );
+        }
 
         (
             assets, shares
@@ -652,8 +654,10 @@ contract Silo is Initializable, SiloERC4626 {
 
         siloConfigCached.crossNonReentrantAfter();
 
-        if (_triggerHook(configData.hookReceiver, Hook.AFTER_DEPOSIT)) {
-            // TODO exec hook
+        if (_triggerHook(currentConfig.hookReceiver, Hook.AFTER_DEPOSIT)) {
+            IHookReceiver(currentConfig.hookReceiver).afterAction(
+                Hook.AFTER_DEPOSIT, abi.encodePacked(_assets, _shares, _receiver, _assetType, assets, shares)
+            );
         }
     }
 
@@ -681,7 +685,8 @@ contract Silo is Initializable, SiloERC4626 {
                 owner: _owner,
                 spender: _spender,
                 assetType: _assetType
-            }), total[_assetType]
+            }),
+            total[_assetType]
         );
 
         if (_assetType == AssetType.Collateral) {
