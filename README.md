@@ -69,14 +69,13 @@ example:
 
 ```shell
 # Remove the submodule entry from .git/config
-git submodule deinit -f gitmodules/openzeppelin5
+git submodule deinit -f gitmodules/silo-foundry-utils
 
 # Remove the submodule directory from the superproject's .git/modules directory
-rm -rf .git/modules/openzeppelin-contracts-5
-
+rm -rf .git/modules/gitmodules/silo-foundry-utils
 
 # Remove the entry in .gitmodules and remove the submodule directory located at path/to/submodule
-rm -rf gitmodules/openzeppelin-contracts-5
+rm -rf .git/modules/gitmodules/silo-foundry-utils
 ```
 
 ### Update submodule
