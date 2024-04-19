@@ -30,7 +30,8 @@ library Actions {
     error FeeOverflow();
 
     function deposit(
-        ISiloConfig.ConfigData memory _collateralConfig,
+        ISiloConfig _config,
+//        ISiloConfig.ConfigData memory _collateralConfig,
         ISilo.SharedStorage storage _shareStorage,
         uint256 _assets,
         uint256 _shares,
@@ -41,6 +42,7 @@ library Actions {
         external
         returns (uint256 assets, uint256 shares)
     {
+        ISiloConfig.ConfigData memory _collateralConfig = _config.getConfig(address(this));
         _hookCallBefore(_shareStorage, Hook.DEPOSIT, abi.encodePacked(_assets, _shares, _receiver, _assetType));
         _crossNonReentrantBefore(_shareStorage, _collateralConfig.otherSilo, Hook.DEPOSIT);
 

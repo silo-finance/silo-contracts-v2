@@ -616,12 +616,28 @@ contract Silo is SiloERC4626 {
         );
     }
 
+    // note: fetching configs directly from lib takes much less gas (~6K less) than fetching in Silo and pass them
+    // to lib via external call
     function _accrueInterest()
         internal
         virtual
         returns (uint256 accruedInterest, ISiloConfig.ConfigData memory cfg0, ISiloConfig.ConfigData memory cfg1)
     {
         (cfg0, cfg1) = config.getConfigs(address(this));
+
+        accruedInterest = _callAccrueInterestForAsset(
+            cfg0.interestRateModel, cfg0.daoFee, cfg0.deployerFee, address(0)
+        );
+    }
+
+    function _accrueInterest(bool)
+        internal
+        virtual
+        returns (uint256 accruedInterest, ISiloConfig siloConfigCached)
+    {
+        siloConfigCached = config;
+//        (cfg0, cfg1) = config.getConfigs(address(this));
+        ISiloConfig.ConfigData memory cfg0 = siloConfigCached.getConfig(address(this));
 
         accruedInterest = _callAccrueInterestForAsset(
             cfg0.interestRateModel, cfg0.daoFee, cfg0.deployerFee, address(0)
@@ -639,8 +655,10 @@ contract Silo is SiloERC4626 {
         returns (uint256 assets, uint256 shares)
     {
         // we need to call it here, to update _total
-        (, ISiloConfig.ConfigData memory cfg0,) = _accrueInterest();
-        
+//        (, ISiloConfig.ConfigData memory cfg0,) = _accrueInterest();
+        (, ISiloConfig cfg0) = _accrueInterest(true);
+
+
         (
             assets, shares
         ) = Actions.deposit(cfg0, sharedStorage, _assets, _shares, _receiver, _assetType, total[_assetType]);
