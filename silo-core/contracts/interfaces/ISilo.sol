@@ -9,6 +9,8 @@ import {ISiloFactory} from "./ISiloFactory.sol";
 import {ILeverageBorrower} from "./ILeverageBorrower.sol";
 import {ILiquidationProcess} from "./ILiquidationProcess.sol";
 
+import {IHookReceiver} from "../utils/hook-receivers/interfaces/IHookReceiver.sol";
+
 // solhint-disable ordering
 interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
     /// @dev Interest accrual happens on each deposit/withdraw/borrow/repay. View methods work on storage that might be
@@ -62,6 +64,15 @@ interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
         bool sameAsset;
         bool leverage;
         uint256 totalCollateralAssets;
+    }
+
+    struct SharedStorage {
+        IHookReceiver hookReceiver; // TODO will this help? we need to read re-entracy flag anyway
+        uint24 silo0HooksBefore;
+        uint24 silo0HooksAfter;
+        uint24 silo1HooksBefore;
+        uint24 silo1HooksAfter;
+        uint24 crossReentrantStatus;
     }
 
     /// @dev this struct is used for all types of assets: collateral, protected and debt
@@ -136,6 +147,13 @@ interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
     /// @notice emitted only when collateral has been switched to other one
     event CollateralTypeChanged(address indexed borrower, bool sameAseet);
 
+    event HooksUpdated(
+        uint24 _silo0HooksBefore,
+        uint24 _silo0HooksAfter,
+        uint24 _silo1HooksBefore,
+        uint24 _silo1HooksAfter
+    );
+
     error Unsupported();
     error NothingToWithdraw();
     error NotEnoughLiquidity();
@@ -164,6 +182,20 @@ interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
     /// @param _siloConfig address of ISiloConfig with full config for this Silo
     /// @param _modelConfigAddress address of a config contract used by IRM
     function initialize(ISiloConfig _siloConfig, address _modelConfigAddress) external;
+
+    /// @notice Method for HookReceiver only to update hooks
+    /// If there are two different hookReceivers then each can update only his silo settings.
+    /// Other parameters will be ignored.
+    /// @param _silo0HooksBefore bitmap for Silo0 hooks before, see Hook.sol
+    /// @param _silo0HooksAfter bitmap for Silo0 hooks after, see Hook.sol
+    /// @param _silo1HooksBefore bitmap for Silo1 hooks before, see Hook.sol
+    /// @param _silo1HooksAfter bitmap for Silo1 hooks after, see Hook.sol
+    function updateHooks(
+        uint24 _silo0HooksBefore,
+        uint24 _silo0HooksAfter,
+        uint24 _silo1HooksBefore,
+        uint24 _silo1HooksAfter
+    ) external;
 
     /// @notice Fetches the silo configuration contract
     /// @return siloConfig Address of the configuration contract associated with the silo
