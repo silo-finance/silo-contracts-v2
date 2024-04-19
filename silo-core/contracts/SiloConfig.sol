@@ -197,7 +197,7 @@ contract SiloConfig is ISiloConfig {
 
     /// @inheritdoc ISiloConfig
     function onDebtTransfer(address _sender, address _recipient) external virtual {
-        if (msg.sender != _DEBT_SHARE_TOKEN0 && msg.sender != _DEBT_SHARE_TOKEN1) revert OnlyDebtShareToken();
+        if (_senderIsNotDebtShareToken0() && _senderIsNotDebtShareToken1()) revert OnlyDebtShareToken();
 
         DebtInfo storage recipientDebtInfo = _debtsInfo[_recipient];
 
@@ -213,8 +213,8 @@ contract SiloConfig is ISiloConfig {
 
     /// @inheritdoc ISiloConfig
     function closeDebt(address _borrower) external virtual {
-        if (msg.sender != _SILO0 && msg.sender != _SILO1 &&
-        msg.sender != _DEBT_SHARE_TOKEN0 && msg.sender != _DEBT_SHARE_TOKEN1
+        if (_senderIsNotSilo0() && _senderIsNotSilo1() &&
+        _senderIsNotDebtShareToken0() && _senderIsNotDebtShareToken1()
         ) revert OnlySiloOrDebtShareToken();
 
         delete _debtsInfo[_borrower];
@@ -576,22 +576,38 @@ contract SiloConfig is ISiloConfig {
     }
 
     function _onlySiloOrTokenOrLiquidation() internal view virtual {
-        if (msg.sender != _SILO0 &&
-            msg.sender != _SILO1 &&
+        if (_senderIsNotSilo0() &&
+            _senderIsNotSilo1() &&
             msg.sender != _LIQUIDATION_MODULE &&
             msg.sender != _COLLATERAL_SHARE_TOKEN0 &&
             msg.sender != _COLLATERAL_SHARE_TOKEN1 &&
             msg.sender != _PROTECTED_COLLATERAL_SHARE_TOKEN0 &&
             msg.sender != _PROTECTED_COLLATERAL_SHARE_TOKEN1 &&
-            msg.sender != _DEBT_SHARE_TOKEN0 &&
-            msg.sender != _DEBT_SHARE_TOKEN1
+            _senderIsNotDebtShareToken0() &&
+            _senderIsNotDebtShareToken1()
         ) {
             revert OnlySiloOrLiquidationModule();
         }
     }
 
     function _onlySilo() internal view virtual {
-        if (msg.sender != _SILO0 && msg.sender != _SILO1) revert OnlySilo();
+        if (_senderIsNotSilo0() && _senderIsNotSilo1()) revert OnlySilo();
+    }
+
+    function _senderIsNotSilo0() internal view returns (bool) {
+        return msg.sender != _SILO0;
+    }
+
+    function _senderIsNotSilo1() internal view returns (bool) {
+        return msg.sender != _SILO1;
+    }
+
+    function _senderIsNotDebtShareToken0() internal view returns (bool) {
+        return msg.sender != _DEBT_SHARE_TOKEN0;
+    }
+
+    function _senderIsNotDebtShareToken1() internal view returns (bool) {
+        return msg.sender != _DEBT_SHARE_TOKEN1;
     }
 
     function _crossNonReentrantBefore(uint256 _crossReentrantStatusCached, uint256 _hookAction) internal pure virtual {
