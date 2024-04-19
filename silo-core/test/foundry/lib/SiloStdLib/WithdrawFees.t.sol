@@ -3,15 +3,15 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
 
-import {SiloStdLib} from "silo-core/contracts/lib/SiloStdLib.sol";
+import {Actions} from "silo-core/contracts/lib/Actions.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISiloFactory} from "silo-core/contracts/interfaces/ISiloFactory.sol";
 
 import {SiloConfigMock} from "../../_mocks/SiloConfigMock.sol";
 import {SiloFactoryMock} from "../../_mocks/SiloFactoryMock.sol";
-import "../TokenHelper.t.sol";
-import "../../_mocks/TokenMock.sol";
+import {TokenHelper} from "../TokenHelper.t.sol";
+import {TokenMock} from "../../_mocks/TokenMock.sol";
 
 // forge test -vv --ffi --mc WithdrawFeesTest
 contract WithdrawFeesTest is Test {
@@ -202,7 +202,7 @@ contract WithdrawFeesTest is Test {
     }
 
     function _withdrawFees(ISilo _silo, ISilo.SiloData storage _siloData) internal {
-        SiloStdLib.withdrawFees(_silo, _siloData);
+        Actions.withdrawFees(_silo, _siloData);
     }
 
     function _reset() internal {

@@ -67,7 +67,7 @@ library SiloERC4626Lib {
         address _owner,
         ISilo.AssetType _assetType,
         uint256 _totalAssets
-    ) external view returns (uint256 assets, uint256 shares) {
+    ) internal view returns (uint256 assets, uint256 shares) {
         if (_assetType == ISilo.AssetType.Debt) revert ISilo.WrongAssetType();
 
         (

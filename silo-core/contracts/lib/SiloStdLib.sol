@@ -18,62 +18,12 @@ library SiloStdLib {
 
     error ZeroAmount();
 
-    /// @notice Withdraws accumulated fees and distributes them proportionally to the DAO and deployer
-    /// @dev This function takes into account scenarios where either the DAO or deployer may not be set, distributing
-    /// accordingly
-    /// @param _silo Silo address
-    /// @param _siloData Storage reference containing silo-related data, including accumulated fees
-    function withdrawFees(ISilo _silo, ISilo.SiloData storage _siloData) external {
-        (
-            address daoFeeReceiver,
-            address deployerFeeReceiver,
-            uint256 daoFee,
-            uint256 deployerFee,
-            address asset
-        ) = getFeesAndFeeReceiversWithAsset(_silo);
-
-        uint256 earnedFees = _siloData.daoAndDeployerFees;
-        uint256 balanceOf = IERC20Upgradeable(asset).balanceOf(address(this));
-        if (balanceOf == 0) revert ISilo.BalanceZero();
-
-        if (earnedFees > balanceOf) earnedFees = balanceOf;
-        if (earnedFees == 0) revert ISilo.EarnedZero();
-
-        // we will never underflow because earnedFees max value is `_siloData.daoAndDeployerFees`
-        unchecked { _siloData.daoAndDeployerFees -= uint192(earnedFees); }
-
-        if (daoFeeReceiver == address(0) && deployerFeeReceiver == address(0)) {
-            // just in case, should never happen...
-            revert ISilo.NothingToPay();
-        } else if (deployerFeeReceiver == address(0)) {
-            // deployer was never setup or deployer NFT has been burned
-            IERC20Upgradeable(asset).safeTransfer(daoFeeReceiver, earnedFees);
-        } else if (daoFeeReceiver == address(0)) {
-            // should never happen... but we assume DAO does not want to make money so all is going to deployer
-            IERC20Upgradeable(asset).safeTransfer(deployerFeeReceiver, earnedFees);
-        } else {
-            // split fees proportionally
-            uint256 daoFees = earnedFees * daoFee;
-            uint256 deployerFees;
-
-            unchecked {
-                // fees are % in decimal point so safe to uncheck
-                daoFees = daoFees / (daoFee + deployerFee);
-                // `daoFees` is chunk of earnedFees, so safe to uncheck
-                deployerFees = earnedFees - daoFees;
-            }
-
-            IERC20Upgradeable(asset).safeTransfer(daoFeeReceiver, daoFees);
-            IERC20Upgradeable(asset).safeTransfer(deployerFeeReceiver, deployerFees);
-        }
-    }
-
     /// @notice Returns flash fee amount
     /// @param _config address of config contract for Silo
     /// @param _token for which fee is calculated
     /// @param _amount for which fee is calculated
     /// @return fee flash fee amount
-    function flashFee(ISiloConfig _config, address _token, uint256 _amount) external view returns (uint256 fee) {
+    function flashFee(ISiloConfig _config, address _token, uint256 _amount) internal view returns (uint256 fee) {
         if (_amount == 0) revert ZeroAmount();
 
         // all user set fees are in 18 decimals points
