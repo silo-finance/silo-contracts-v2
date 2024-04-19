@@ -572,7 +572,7 @@ contract Silo is Initializable, SiloERC4626 {
 
     /// @inheritdoc ISilo
     function withdrawFees() external virtual {
-        SiloStdLib.withdrawFees(this, siloData);
+        Actions.withdrawFees(this, siloData);
     }
 
     // TODO can we optimise this? maybe add as args to methods
