@@ -594,7 +594,7 @@ contract SiloConfig is ISiloConfig {
         if (msg.sender != _SILO0 && msg.sender != _SILO1) revert OnlySilo();
     }
 
-    function _crossNonReentrantBefore(uint256 _crossReentrantStatusCached, uint256 _hookAction) internal pure virtual {
+    function _crossNonReentrantBefore(uint256 _crossReentrantStatusCached, uint256 _hookAction) internal virtual {
         // On the first call to nonReentrant, _status will be CrossEntrancy.NOT_ENTERED
         if (_crossReentrantStatusCached == CrossEntrancy.NOT_ENTERED) {
             // Any calls to nonReentrant after this point will fail
