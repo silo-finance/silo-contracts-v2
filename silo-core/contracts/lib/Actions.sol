@@ -565,8 +565,4 @@ library Actions {
             IERC20Upgradeable(asset).safeTransfer(deployerFeeReceiver, deployerFees);
         }
     }
-
-    function _hookCallNeeded(address _hookReceiver, uint256 _hook) private returns (bool) {
-        return _hookReceiver != address(0) && (siloData.hooks & _hook != 0);
-    }
 }
