@@ -31,9 +31,7 @@ library Actions {
 
     function deposit(
         ISiloConfig _siloConfig,
-ISilo.Assets storage _totalCollateral
-
-uint256 _assets,
+        uint256 _assets,
         uint256 _shares,
         address _receiver,
         ISilo.AssetType _assetType,
@@ -571,40 +569,24 @@ uint256 _assets,
     function updateHooks(
         ISiloConfig _siloConfig,
         ISilo.SharedStorage storage _sharedStorage,
-        uint24 _silo0HooksBefore,
-        uint24 _silo0HooksAfter,
-        uint24 _silo1HooksBefore,
-        uint24 _silo1HooksAfter
+        uint24 _hooksBefore,
+        uint24 _hooksAfter
     ) external {
-        (
-            ISiloConfig.ConfigData memory cfg0, ISiloConfig.ConfigData memory cfg1,
-        ) = _siloConfig.getConfigs(address(this), address(0) /* no borrower */, 0);
+        ISiloConfig.ConfigData memory cfg = _siloConfig.getConfig(address(this));
 
-        if (msg.sender != cfg0.hookReceiver) revert ISilo.OnlyHookReceiver();
+        if (msg.sender != cfg.hookReceiver) revert ISilo.OnlyHookReceiver();
 
-        _sharedStorage.silo0HooksBefore = _silo0HooksBefore;
-        _sharedStorage.silo0HooksAfter = _silo0HooksAfter;
-        _sharedStorage.silo1HooksBefore = _silo1HooksBefore;
-        _sharedStorage.silo1HooksAfter = _silo1HooksAfter;
+        _sharedStorage.hooksBefore = _hooksBefore;
+        _sharedStorage.hooksAfter = _hooksAfter;
 
-        IShareToken(cfg0.collateralShareToken).synchronizeHooks(
-            cfg0.hookReceiver, _silo0HooksBefore, _silo0HooksAfter, Hook.COLLATERAL_TOKEN
+        IShareToken(cfg.collateralShareToken).synchronizeHooks(
+            cfg.hookReceiver, _hooksBefore, _hooksAfter, Hook.COLLATERAL_TOKEN
         );
-        IShareToken(cfg0.protectedShareToken).synchronizeHooks(
-            cfg0.hookReceiver, _silo0HooksBefore, _silo0HooksAfter, Hook.PROTECTED_TOKEN
+        IShareToken(cfg.protectedShareToken).synchronizeHooks(
+            cfg.hookReceiver, _hooksBefore, _hooksAfter, Hook.PROTECTED_TOKEN
         );
-        IShareToken(cfg0.debtShareToken).synchronizeHooks(
-            cfg0.hookReceiver, _silo0HooksBefore, _silo0HooksAfter, Hook.DEBT_TOKEN
-        );
-
-        IShareToken(cfg0.collateralShareToken).synchronizeHooks(
-            cfg1.hookReceiver, _silo1HooksBefore, _silo1HooksAfter, Hook.COLLATERAL_TOKEN
-        );
-        IShareToken(cfg1.protectedShareToken).synchronizeHooks(
-            cfg1.hookReceiver, _silo1HooksBefore, _silo1HooksAfter, Hook.PROTECTED_TOKEN
-        );
-        IShareToken(cfg1.debtShareToken).synchronizeHooks(
-            cfg1.hookReceiver, _silo1HooksBefore, _silo1HooksAfter, Hook.DEBT_TOKEN
+        IShareToken(cfg.debtShareToken).synchronizeHooks(
+            cfg.hookReceiver, _hooksBefore, _hooksAfter, Hook.DEBT_TOKEN
         );
     }
 }

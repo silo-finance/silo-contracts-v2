@@ -47,6 +47,8 @@ contract Silo is SiloERC4626 {
 
     SharedStorage public sharedStorage;
 
+    mapping (address borrower => DebtInfo debtInfo) internal _debtsInfo;
+
     /// @dev silo is just for one asset, but this one asset can be of three types, so we store `assets` by type. We use
     /// struct instead of uint256 to pass storage reference to functions.
     /// `total` can have outdated value (without interest), if you doing view call (of off-chain call) please use
@@ -71,17 +73,9 @@ contract Silo is SiloERC4626 {
         IInterestRateModel(interestRateModel).connect(_modelConfigAddress);
     }
 
-    function updateHooks(
-        uint24 _silo0HooksBefore,
-        uint24 _silo0HooksAfter,
-        uint24 _silo1HooksBefore,
-        uint24 _silo1HooksAfter
-    ) external {
-        Actions.updateHooks(
-            config, sharedStorage, _silo0HooksBefore, _silo0HooksAfter, _silo1HooksBefore, _silo1HooksAfter
-        );
-
-        emit HooksUpdated(_silo0HooksBefore, _silo0HooksAfter, _silo1HooksBefore, _silo1HooksAfter);
+    function updateHooks(uint24 _hooksBefore, uint24 _hooksAfter) external {
+        Actions.updateHooks(config, sharedStorage, _hooksBefore, _hooksAfter);
+        emit HooksUpdated(_hooksBefore, _hooksAfter);
     }
 
     /// @inheritdoc ISilo

@@ -68,10 +68,8 @@ interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
 
     struct SharedStorage {
         IHookReceiver hookReceiver; // TODO will this help? we need to read re-entracy flag anyway
-        uint24 silo0HooksBefore;
-        uint24 silo0HooksAfter;
-        uint24 silo1HooksBefore;
-        uint24 silo1HooksAfter;
+        uint24 hooksBefore;
+        uint24 hooksAfter;
         uint24 crossReentrantStatus;
     }
 
@@ -132,8 +130,6 @@ interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
         address indexed sender, address indexed receiver, address indexed owner, uint256 assets, uint256 shares
     );
 
-    event HooksUpdated(uint256 hooksBitmap);
-
     /// @notice Emitted on repayment
     /// @param sender wallet address that repaid asset
     /// @param owner wallet address that owed asset
@@ -147,12 +143,7 @@ interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
     /// @notice emitted only when collateral has been switched to other one
     event CollateralTypeChanged(address indexed borrower, bool sameAseet);
 
-    event HooksUpdated(
-        uint24 _silo0HooksBefore,
-        uint24 _silo0HooksAfter,
-        uint24 _silo1HooksBefore,
-        uint24 _silo1HooksAfter
-    );
+    event HooksUpdated(uint24 hooksBefore, uint24 hooksAfter);
 
     error Unsupported();
     error NothingToWithdraw();
@@ -186,16 +177,9 @@ interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
     /// @notice Method for HookReceiver only to update hooks
     /// If there are two different hookReceivers then each can update only his silo settings.
     /// Other parameters will be ignored.
-    /// @param _silo0HooksBefore bitmap for Silo0 hooks before, see Hook.sol
-    /// @param _silo0HooksAfter bitmap for Silo0 hooks after, see Hook.sol
-    /// @param _silo1HooksBefore bitmap for Silo1 hooks before, see Hook.sol
-    /// @param _silo1HooksAfter bitmap for Silo1 hooks after, see Hook.sol
-    function updateHooks(
-        uint24 _silo0HooksBefore,
-        uint24 _silo0HooksAfter,
-        uint24 _silo1HooksBefore,
-        uint24 _silo1HooksAfter
-    ) external;
+    /// @param _hooksBefore bitmap for Silo hooks before, see Hook.sol
+    /// @param _hooksAfter bitmap for Silo hooks after, see Hook.sol
+    function updateHooks(uint24 _hooksBefore, uint24 _hooksAfter) external;
 
     /// @notice Fetches the silo configuration contract
     /// @return siloConfig Address of the configuration contract associated with the silo
