@@ -59,12 +59,12 @@ contract Silo is SiloERC4626 {
 
     /// @inheritdoc ISilo
     function initialize(ISiloConfig _siloConfig, address _modelConfigAddress) external virtual {
-        if (address(config) == address(0)) {
-            config = _siloConfig;
+        if (address(config) != address(0)) revert SiloInitialized();
 
-            address interestRateModel = _siloConfig.getConfig(address(this)).interestRateModel;
-            IInterestRateModel(interestRateModel).connect(_modelConfigAddress);
-        }
+        config = _siloConfig;
+
+        address interestRateModel = _siloConfig.getConfig(address(this)).interestRateModel;
+        IInterestRateModel(interestRateModel).connect(_modelConfigAddress);
     }
 
     /// @inheritdoc ISilo
