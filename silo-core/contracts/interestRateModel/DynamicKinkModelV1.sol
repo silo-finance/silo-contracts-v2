@@ -61,7 +61,7 @@ contract DynamicKinkModelV1 is IDynamicKinkModelV1 {
     function currentInterestRate(Setup memory _setup, int256 _t0, int256 _t1, int256 _u)
         public
         pure
-        returns (int256 rcur, int256 k)
+        returns (int256 rcur, int256 k, int256 r)
     {
         // uint T = t1 - t0; // length of time period (in seconds )
         if (_t1 <= _t0) revert InvalidTimestamp();
@@ -73,12 +73,12 @@ contract DynamicKinkModelV1 is IDynamicKinkModelV1 {
         // if (u < u1) {
         if (_u < _setup.config.u1) {
             // k = max (_k - (c1 + cminus * (u1 - u) / _DP) * T, kmin );
-            k = k - (_setup.config.c1 + _setup.config.cminus) * (_setup.config.u1 - _u) * T / _DP;
+            k = k - (_setup.config.c1 + _setup.config.cminus * (_setup.config.u1 - _u) / _DP) * T;
             k = k > _setup.config.kmin ? k : _setup.config.kmin;
         //else if (u > u2) {
-        } else if (_u < _setup.config.u2) {
+        } else if (_u > _setup.config.u2) {
             // k = min (_k + min(c2 + cplus * (u - u2) / _DP , dmax ) * T, kmax );
-            int256 dkdt = (_setup.config.c2 + _setup.config.cplus) * (_u - _setup.config.u2) / _DP;
+            int256 dkdt = (_setup.config.c2 + _setup.config.cplus * (_u - _setup.config.u2) / _DP);
             dkdt = dkdt > _setup.config.dmax ? _setup.config.dmax : dkdt;
             k = (k + dkdt) * T;
             k = k > _setup.config.kmax ? _setup.config.kmax : k;
