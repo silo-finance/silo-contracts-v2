@@ -354,47 +354,9 @@ contract SiloConfig is ISiloConfig {
     /// @inheritdoc ISiloConfig
     function getConfig(address _silo) external view virtual returns (ConfigData memory) {
         if (_silo == _SILO0) {
-            return ConfigData({
-                daoFee: _DAO_FEE,
-                deployerFee: _DEPLOYER_FEE,
-                silo: _SILO0,
-                otherSilo: _SILO1,
-                token: _TOKEN0,
-                protectedShareToken: _PROTECTED_COLLATERAL_SHARE_TOKEN0,
-                collateralShareToken: _COLLATERAL_SHARE_TOKEN0,
-                debtShareToken: _DEBT_SHARE_TOKEN0,
-                solvencyOracle: _SOLVENCY_ORACLE0,
-                maxLtvOracle: _MAX_LTV_ORACLE0,
-                interestRateModel: _INTEREST_RATE_MODEL0,
-                maxLtv: _MAX_LTV0,
-                lt: _LT0,
-                liquidationFee: _LIQUIDATION_FEE0,
-                flashloanFee: _FLASHLOAN_FEE0,
-                liquidationModule: _LIQUIDATION_MODULE,
-                hookReceiver: _HOOK_RECEIVER0,
-                callBeforeQuote: _CALL_BEFORE_QUOTE0
-            });
+            return _silo0ConfigData();
         } else if (_silo == _SILO1) {
-            return ConfigData({
-                daoFee: _DAO_FEE,
-                deployerFee: _DEPLOYER_FEE,
-                silo: _SILO1,
-                otherSilo: _SILO0,
-                token: _TOKEN1,
-                protectedShareToken: _PROTECTED_COLLATERAL_SHARE_TOKEN1,
-                collateralShareToken: _COLLATERAL_SHARE_TOKEN1,
-                debtShareToken: _DEBT_SHARE_TOKEN1,
-                solvencyOracle: _SOLVENCY_ORACLE1,
-                maxLtvOracle: _MAX_LTV_ORACLE1,
-                interestRateModel: _INTEREST_RATE_MODEL1,
-                maxLtv: _MAX_LTV1,
-                lt: _LT1,
-                liquidationFee: _LIQUIDATION_FEE1,
-                flashloanFee: _FLASHLOAN_FEE1,
-                liquidationModule: _LIQUIDATION_MODULE,
-                hookReceiver: _HOOK_RECEIVER1,
-                callBeforeQuote: _CALL_BEFORE_QUOTE1
-            });
+            return _silo1ConfigData();
         } else {
             revert WrongSilo();
         }
@@ -431,47 +393,8 @@ contract SiloConfig is ISiloConfig {
         bool callForSilo0 = _silo == _SILO0;
         if (!callForSilo0 && _silo != _SILO1) revert WrongSilo();
 
-        collateral = ConfigData({
-            daoFee: _DAO_FEE,
-            deployerFee: _DEPLOYER_FEE,
-            silo: _SILO0,
-            otherSilo: _SILO1,
-            token: _TOKEN0,
-            protectedShareToken: _PROTECTED_COLLATERAL_SHARE_TOKEN0,
-            collateralShareToken: _COLLATERAL_SHARE_TOKEN0,
-            debtShareToken: _DEBT_SHARE_TOKEN0,
-            solvencyOracle: _SOLVENCY_ORACLE0,
-            maxLtvOracle: _MAX_LTV_ORACLE0,
-            interestRateModel: _INTEREST_RATE_MODEL0,
-            maxLtv: _MAX_LTV0,
-            lt: _LT0,
-            liquidationFee: _LIQUIDATION_FEE0,
-            flashloanFee: _FLASHLOAN_FEE0,
-            liquidationModule: _LIQUIDATION_MODULE,
-            hookReceiver: _HOOK_RECEIVER0,
-            callBeforeQuote: _CALL_BEFORE_QUOTE0
-        });
-
-        debt = ConfigData({
-            daoFee: _DAO_FEE,
-            deployerFee: _DEPLOYER_FEE,
-            silo: _SILO1,
-            otherSilo: _SILO0,
-            token: _TOKEN1,
-            protectedShareToken: _PROTECTED_COLLATERAL_SHARE_TOKEN1,
-            collateralShareToken: _COLLATERAL_SHARE_TOKEN1,
-            debtShareToken: _DEBT_SHARE_TOKEN1,
-            solvencyOracle: _SOLVENCY_ORACLE1,
-            maxLtvOracle: _MAX_LTV_ORACLE1,
-            interestRateModel: _INTEREST_RATE_MODEL1,
-            maxLtv: _MAX_LTV1,
-            lt: _LT1,
-            liquidationFee: _LIQUIDATION_FEE1,
-            flashloanFee: _FLASHLOAN_FEE1,
-            liquidationModule: _LIQUIDATION_MODULE,
-            hookReceiver: _HOOK_RECEIVER1,
-            callBeforeQuote: _CALL_BEFORE_QUOTE1
-        });
+        collateral = _silo0ConfigData();
+        debt = _silo1ConfigData();
 
         if (!_debtInfo.debtPresent) {
             if (_hook & Hook.BORROW & Hook.SAME_ASSET != 0) {
@@ -524,6 +447,52 @@ contract SiloConfig is ISiloConfig {
         }
 
         return (collateral, debt);
+    }
+
+    function _silo0ConfigData() internal view returns (ConfigData memory config) {
+        config = ConfigData({
+            daoFee: _DAO_FEE,
+            deployerFee: _DEPLOYER_FEE,
+            silo: _SILO0,
+            otherSilo: _SILO1,
+            token: _TOKEN0,
+            protectedShareToken: _PROTECTED_COLLATERAL_SHARE_TOKEN0,
+            collateralShareToken: _COLLATERAL_SHARE_TOKEN0,
+            debtShareToken: _DEBT_SHARE_TOKEN0,
+            solvencyOracle: _SOLVENCY_ORACLE0,
+            maxLtvOracle: _MAX_LTV_ORACLE0,
+            interestRateModel: _INTEREST_RATE_MODEL0,
+            maxLtv: _MAX_LTV0,
+            lt: _LT0,
+            liquidationFee: _LIQUIDATION_FEE0,
+            flashloanFee: _FLASHLOAN_FEE0,
+            liquidationModule: _LIQUIDATION_MODULE,
+            hookReceiver: _HOOK_RECEIVER0,
+            callBeforeQuote: _CALL_BEFORE_QUOTE0
+        });
+    }
+
+    function _silo1ConfigData() internal view returns (ConfigData memory config) {
+        config = ConfigData({
+            daoFee: _DAO_FEE,
+            deployerFee: _DEPLOYER_FEE,
+            silo: _SILO1,
+            otherSilo: _SILO0,
+            token: _TOKEN1,
+            protectedShareToken: _PROTECTED_COLLATERAL_SHARE_TOKEN1,
+            collateralShareToken: _COLLATERAL_SHARE_TOKEN1,
+            debtShareToken: _DEBT_SHARE_TOKEN1,
+            solvencyOracle: _SOLVENCY_ORACLE1,
+            maxLtvOracle: _MAX_LTV_ORACLE1,
+            interestRateModel: _INTEREST_RATE_MODEL1,
+            maxLtv: _MAX_LTV1,
+            lt: _LT1,
+            liquidationFee: _LIQUIDATION_FEE1,
+            flashloanFee: _FLASHLOAN_FEE1,
+            liquidationModule: _LIQUIDATION_MODULE,
+            hookReceiver: _HOOK_RECEIVER1,
+            callBeforeQuote: _CALL_BEFORE_QUOTE1
+        });
     }
 
     function _forbidDebtInTwoSilos(bool _debtInSilo0) internal view virtual {
