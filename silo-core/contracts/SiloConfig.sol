@@ -598,13 +598,13 @@ contract SiloConfig is ISiloConfig {
         // On the first call to nonReentrant, _status will be CrossEntrancy.NOT_ENTERED
         if (_crossReentrantStatusCached == CrossEntrancy.NOT_ENTERED) {
             // Any calls to nonReentrant after this point will fail
-            _crossReentrantStatusCached = CrossEntrancy.ENTERED;
+            _crossReentrantStatus = CrossEntrancy.ENTERED;
             return;
         }
 
         if (_crossReentrantStatusCached == CrossEntrancy.ENTERED_FROM_LEVERAGE && _hookAction == Hook.DEPOSIT) {
             // on leverage, entrance from deposit is allowed, but allowance is removed when we back to Silo
-            _crossReentrantStatusCached = CrossEntrancy.ENTERED;
+            _crossReentrantStatus = CrossEntrancy.ENTERED;
             return;
         }
 
