@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.21;
 
-import {Initializable} from "openzeppelin-contracts-upgradeable/proxy/utils/Initializable.sol";
 import {SafeERC20Upgradeable} from "openzeppelin-contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
 import {IERC20Upgradeable} from "openzeppelin-contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 
@@ -35,7 +34,7 @@ import {CrossEntrancy} from "./lib/CrossEntrancy.sol";
 /// @notice Silo is a ERC4626-compatible vault that allows users to deposit collateral and borrow debt. This contract
 /// is deployed twice for each asset for two-asset lending markets.
 /// Version: 2.0.0
-contract Silo is Initializable, SiloERC4626 {
+contract Silo is SiloERC4626 {
     using SafeERC20Upgradeable for IERC20Upgradeable;
 
     ISiloFactory public immutable factory;
@@ -52,16 +51,18 @@ contract Silo is Initializable, SiloERC4626 {
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor(ISiloFactory _siloFactory) {
-        _disableInitializers();
         factory = _siloFactory;
+        config = ISiloConfig(address(this));
     }
 
     /// @inheritdoc ISilo
-    function initialize(ISiloConfig _siloConfig, address _modelConfigAddress) external virtual initializer {
-        config = _siloConfig;
+    function initialize(ISiloConfig _siloConfig, address _modelConfigAddress) external virtual {
+        if (address(config) == address(0)) {
+            config = _siloConfig;
 
-        address interestRateModel = _siloConfig.getConfig(address(this)).interestRateModel;
-        IInterestRateModel(interestRateModel).connect(_modelConfigAddress);
+            address interestRateModel = _siloConfig.getConfig(address(this)).interestRateModel;
+            IInterestRateModel(interestRateModel).connect(_modelConfigAddress);
+        }
     }
 
     /// @inheritdoc ISilo
