@@ -2,9 +2,9 @@
 pragma solidity 0.8.21;
 
 import {
-    ERC20Upgradeable,
-    IERC20MetadataUpgradeable,
-    IERC20Upgradeable
+ERC20Upgradeable,
+IERC20MetadataUpgradeable,
+IERC20Upgradeable
 } from "openzeppelin-contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 import {StringsUpgradeable} from "openzeppelin-contracts-upgradeable/utils/StringsUpgradeable.sol";
 
@@ -65,11 +65,17 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
     /// @dev cached silo config address
     ISiloConfig public siloConfig;
 
-    /// @notice Address of hook contract called on each token transfer, mint and burn
-    address public hookReceiver;
+    /// @notice Copy of hooks setup from SiloConfig for optimisation purposes
+    HookSetup private _hookSetup;
 
     modifier onlySilo() {
         if (msg.sender != address(silo)) revert OnlySilo();
+
+        _;
+    }
+
+    modifier onlySiloConfig() {
+        if (msg.sender != address(siloConfig)) revert OnlySiloConfig();
 
         _;
     }
@@ -79,9 +85,18 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
         _disableInitializers();
     }
 
-    /// @inheritdoc IShareToken
-    function forwardTransfer(address _owner, address _recipient, uint256 _amount) external virtual onlySilo {
-        _transfer(_owner, _recipient, _amount);
+    function hookSetup() external view virtual returns (HookSetup memory) {
+        return _hookSetup;
+    }
+
+    function synchronizeHooks(address _hookReceiver, uint256 _hooksBefore, uint256 _hooksAfter, uint256 _tokenType)
+        external
+        onlySiloConfig
+    {
+        _hookSetup.hookReceiver = _hookReceiver;
+        _hookSetup.hooksBefore = uint24(_hooksBefore);
+        _hookSetup.hooksAfter = uint24(_hooksAfter);
+        _hookSetup.tokenType = uint24(_tokenType);
     }
 
     /// @inheritdoc ERC20Upgradeable
@@ -91,28 +106,11 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
         override(ERC20Upgradeable, IERC20Upgradeable)
         returns (bool result)
     {
-        ISiloConfig siloConfigCached = siloConfig;
-        (address hookReceiver, uint24 hooks) = _fetchHookData(siloConfigCached);
+        (address siloCached, ISiloConfig siloConfigCached) = _beforeExternalTransferAction(_from, _to, _amount);
 
-        if (hooks != 0) {
-            if (_hookCallNeeded(hooks, Hook.BEFORE_SHARE_TRANSFER)) {
-                IHookReceiver(hookReceiver).beforeAction(
-                    Hook.BEFORE_SHARE_TRANSFER, abi.encodePacked(_from, _to, _amount)
-                );
-            }
-        }
+        result = ERC20Upgradeable.transferFrom(_from, _to, _amount);
 
-        siloConfigCached.crossNonReentrantBefore(CrossEntrancy.ENTERED);
-
-        result = super.transferFrom(_from, _to, _amount);
-
-        siloConfigCached.crossNonReentrantAfter();
-
-        if (_hookCallNeeded(hooks, Hook.AFTER_SHARE_TRANSFER)) {
-            IHookReceiver(hookReceiver).beforeAction(
-                Hook.AFTER_SHARE_TRANSFER, abi.encodePacked(_from, _to, _amount, result)
-            );
-        }
+        _afterExternalTransferAction(siloCached, siloConfigCached, _from, _to, _amount, result);
     }
 
     /// @inheritdoc ERC20Upgradeable
@@ -122,30 +120,16 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
         override(ERC20Upgradeable, IERC20Upgradeable)
         returns (bool result)
     {
-        ISiloConfig siloConfigCached = siloConfig;
-        siloConfigCached.crossNonReentrantBefore(CrossEntrancy.ENTERED);
+        (address siloCached, ISiloConfig siloConfigCached) = _beforeExternalTransferAction(msg.sender, _to, _amount);
 
-        (address hookReceiver, uint24 hooks) = _fetchHookData(siloConfigCached);
+        result = ERC20Upgradeable.transfer(_to, _amount);
 
-        if (hooks != 0) {
-            if (_hookCallNeeded(hooks, Hook.BEFORE_SHARE_TRANSFER)) {
-                IHookReceiver(hookReceiver).beforeAction(
-                    Hook.BEFORE_SHARE_TRANSFER, abi.encodePacked(msg.sender, _to, _amount)
-                );
-            }
-        }
+        _afterExternalTransferAction(siloCached, siloConfigCached, msg.sender, _to, _amount, result);
+    }
 
-        siloConfig.crossNonReentrantBefore(CrossEntrancy.ENTERED);
-
-        result = super.transfer(_to, _amount);
-
-        siloConfigCached.crossNonReentrantAfter();
-
-        if (_hookCallNeeded(hooks, Hook.AFTER_SHARE_TRANSFER)) {
-            IHookReceiver(hookReceiver).beforeAction(
-                Hook.AFTER_SHARE_TRANSFER, abi.encodePacked(msg.sender, _to, _amount, result)
-            );
-        }
+    /// @inheritdoc IShareToken
+    function forwardTransfer(address _owner, address _recipient, uint256 _amount) external virtual onlySilo {
+        _transfer(_owner, _recipient, _amount);
     }
 
     /// @inheritdoc IShareToken
@@ -166,7 +150,6 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
     /// @dev decimals of share token
     function decimals() public view virtual override(ERC20Upgradeable, IERC20MetadataUpgradeable) returns (uint8) {
         ISiloConfig.ConfigData memory configData = siloConfig.getConfig(address(silo));
-
         return uint8(TokenHelper.assertAndGetDecimals(configData.token));
     }
 
@@ -239,28 +222,64 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
 
     /// @param _silo Silo address for which tokens was deployed
     // solhint-disable-next-line func-name-mixedcase
-    function __ShareToken_init(ISilo _silo, address _hookReceiver) internal virtual onlyInitializing {
+    function __ShareToken_init(ISilo _silo) internal virtual onlyInitializing {
         silo = _silo;
-        hookReceiver = _hookReceiver;
         siloConfig = _silo.config();
+    }
+
+    function _beforeTokenTransfer(address _sender, address _recipient, uint256 _amount) internal virtual override {
+        HookSetup memory setup = _hookSetup;
+
+        // report mint, burn or transfer
+        _callHook(
+            setup.hookReceiver,
+            IHookReceiver.beforeAction.selector,
+            setup.hooksBefore,
+            setup.tokenType,
+            abi.encodePacked(_sender, _recipient, _amount)
+        );
     }
 
     /// @dev Call an afterTokenTransfer hook if registered and check minimum share requirement on mint/burn
     function _afterTokenTransfer(address _sender, address _recipient, uint256 _amount) internal virtual override {
-        if (hookReceiver == address(0)) return;
+        HookSetup memory setup = _hookSetup;
 
         // report mint, burn or transfer
-        (bool callSuccessful, bytes memory code) = hookReceiver.call( // solhint-disable-line avoid-low-level-calls
-            abi.encodeCall(
-                IHookReceiver.afterTokenTransfer,
-                (_sender, balanceOf(_sender), _recipient, balanceOf(_recipient), totalSupply(), _amount)
-            )
+        _callHook(
+            setup.hookReceiver,
+            IHookReceiver.afterAction.selector,
+            setup.hooksAfter,
+            setup.tokenType,
+            abi.encodePacked(_sender, _recipient, _amount)
+        );
+    }
+
+    function _callHook(
+        address _hookReceiver,
+        bytes4 _selector,
+        uint256 _hooksBitmap,
+        uint256 _hookAction,
+        bytes memory _data
+    )
+        internal
+        virtual
+    {
+        if (_hookReceiver == address(0)) return;
+        if (_hooksBitmap & _hookAction == 0) return;
+
+        address siloCached = address(silo);
+
+        // for external transfer we already have call for hook, so we only doing this call if transfer is internal
+        if (msg.sender != siloCached) return;
+
+        (bool callSuccessful, bytes memory code) = _hookReceiver.call( // solhint-disable-line avoid-low-level-calls
+            abi.encodeWithSelector(_selector, siloCached, _hookAction, _data)
         );
 
         if (!callSuccessful || code.length == 0) return;
 
         if (abi.decode(code, (uint256)) == Hook.RETURN_CODE_REQUEST_TO_REVERT_TX) {
-            revert RevertRequestFromHook();
+            revert IHookReceiver.RevertRequestFromHook();
         }
     }
 
@@ -276,15 +295,39 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
         return _sender != address(0) && _recipient != address(0);
     }
 
-    function _hookCallNeeded(uint24 _hooksBitmap, uint256 _hook) internal pure returns (bool) {
-        return (_hooksBitmap & _hook != 0);
+    function _beforeExternalTransferAction(address _from, address _to, uint256 _amount)
+        internal
+        virtual
+        returns (address siloCached, ISiloConfig siloConfigCached)
+    {
+        siloConfigCached = siloConfig;
+        siloCached = address(silo);
+
+        siloConfigCached.startAction(
+            siloCached,
+            address(0) /* no borrower */,
+            Hook.SHARE_TOKEN_TRANSFER | _hookSetup.tokenType,
+            abi.encodePacked(_from, _to, _amount)
+        );
     }
 
-    function _fetchHookData(ISiloConfig _siloConfig) internal view returns (address hookReceiver, uint24 hooks) {
-        hookReceiver = _siloConfig.getConfig(address(silo)).hookReceiver;
+    function _afterExternalTransferAction(
+        address _silo,
+        ISiloConfig _siloConfig,
+        address _from,
+        address _to,
+        uint256 _amount,
+        bool _result
+    ) internal virtual {
+        uint256 hookAction = Hook.SHARE_TOKEN_TRANSFER | _hookSetup.tokenType;
+        IHookReceiver hookAfter = _siloConfig.finishAction(_silo, hookAction);
 
-        if (hookReceiver != address(0)) {
-            (,,hooks) = silo.siloData();
+        if (address(hookAfter) != address(0)) {
+            hookAfter.afterAction(
+                _silo,
+                hookAction,
+                abi.encodePacked(_from, _to, _amount, _result)
+            );
         }
     }
 }

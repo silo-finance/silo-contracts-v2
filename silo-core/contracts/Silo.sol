@@ -69,13 +69,6 @@ contract Silo is SiloERC4626 {
         IInterestRateModel(interestRateModel).connect(_modelConfigAddress);
     }
 
-    function updateHooks(uint24 _hooksBitmap) external {
-        if (msg.sender != config.getConfig(address(this)).hookReceiver) revert OnlyHookReceiver();
-
-        siloData.hooks = _hooksBitmap;
-        emit HooksUpdated(_hooksBitmap);
-    }
-
     /// @inheritdoc ISilo
     function utilizationData() external view virtual returns (UtilizationData memory) {
         return UtilizationData({
@@ -559,7 +552,7 @@ contract Silo is SiloERC4626 {
         virtual
         returns (bool success)
     {
-        success = Actions.flashLoan(config, siloData, _receiver, _token, _amount, _data);
+        success = Actions.flashLoan(config, _receiver, _token, _amount, siloData, _data);
     }
 
     /// @inheritdoc ISilo

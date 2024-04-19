@@ -81,8 +81,7 @@ interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
     /// @param assets map of assets
     struct SiloData {
         uint192 daoAndDeployerFees;
-        uint40 interestRateTimestamp;
-        uint24 hooks;
+        uint64 interestRateTimestamp;
     }
 
     struct UtilizationData {
@@ -166,8 +165,6 @@ interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
     /// @param _modelConfigAddress address of a config contract used by IRM
     function initialize(ISiloConfig _siloConfig, address _modelConfigAddress) external;
 
-    function updateHooks(uint24 _hooksBitmap) external;
-
     /// @notice Fetches the silo configuration contract
     /// @return siloConfig Address of the configuration contract associated with the silo
     function config() external view returns (ISiloConfig siloConfig);
@@ -178,8 +175,7 @@ interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
     /// @notice Fetches the data related to the silo
     /// @return daoAndDeployerFees Current amount of fees accrued by DAO and Deployer
     /// @return interestRateTimestamp Timestamp of the last interest accrual
-    /// @return hooks hooks bitmap
-    function siloData() external view returns (uint192 daoAndDeployerFees, uint40 interestRateTimestamp, uint24 hooks);
+    function siloData() external view returns (uint192 daoAndDeployerFees, uint64 interestRateTimestamp);
 
     /// @notice Fetches the utilization data of the silo used by IRM
     function utilizationData() external view returns (UtilizationData memory utilizationData);
