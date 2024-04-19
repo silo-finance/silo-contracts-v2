@@ -8,7 +8,6 @@ import {ISiloFactory} from "silo-core/contracts/SiloFactory.sol";
 
 contract SiloInternal is Silo, CryticIERC4626Internal {
     constructor(ISiloFactory _siloFactory) Silo(_siloFactory) {
-        _disableInitializers();
         factory = _siloFactory;
     }
 

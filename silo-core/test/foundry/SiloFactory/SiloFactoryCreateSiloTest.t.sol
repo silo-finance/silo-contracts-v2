@@ -100,11 +100,13 @@ contract SiloFactoryCreateSiloTest is SiloLittleHelper, IntegrationTest {
         assertEq(configData1.flashloanFee, initData.flashloanFee1, "configData1.flashloanFee");
         assertEq(configData1.callBeforeQuote, initData.callBeforeQuote1, "configData1.callBeforeQuote");
 
-        vm.expectRevert("Initializable: contract is already initialized");
-        ISilo(configData0.silo).initialize(siloConfig, initData.interestRateModelConfig0);
+        ISiloConfig fakeConfig = ISiloConfig(address(1));
 
-        vm.expectRevert("Initializable: contract is already initialized");
-        ISilo(configData1.silo).initialize(siloConfig, initData.interestRateModelConfig1);
+        ISilo(configData0.silo).initialize(fakeConfig, initData.interestRateModelConfig0);
+        assertEq(address(ISilo(configData0.silo).config()), address(siloConfig), "Reinitialized silo");
+
+        ISilo(configData1.silo).initialize(fakeConfig, initData.interestRateModelConfig1);
+        assertEq(address(ISilo(configData1.silo).config()), address(siloConfig), "Reinitialized silo");
 
         (,, IInterestRateModelV2Config modelConfigAddr0) =
             InterestRateModelV2(configData0.interestRateModel).getSetup(configData0.silo);

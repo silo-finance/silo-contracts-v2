@@ -52,6 +52,8 @@ contract Silo is SiloERC4626 {
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor(ISiloFactory _siloFactory) {
         factory = _siloFactory;
+
+        // Set the config to a non-zero value in order to prevent the implementation contract from being initialized
         config = ISiloConfig(address(this));
     }
 
