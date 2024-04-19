@@ -54,6 +54,12 @@ library Hook {
         _callHook(address(_hookReceiver), IHookReceiver.beforeAction.selector, _silo, _hookAction, _data);
     }
 
+    function beforeActionCall(IHookReceiver _hookReceiver, uint256 _hookAction, bytes memory _data)
+        internal
+    {
+        _callHook(address(_hookReceiver), IHookReceiver.beforeAction.selector, address(this), _hookAction, _data);
+    }
+
     function afterActionCall(IHookReceiver _hookReceiver, address _silo, uint256 _hookAction, bytes memory _data) internal {
         _callHook(address(_hookReceiver), IHookReceiver.afterAction.selector, _silo, _hookAction, _data);
     }
