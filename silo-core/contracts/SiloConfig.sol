@@ -2,6 +2,7 @@
 pragma solidity 0.8.21;
 
 import {ISiloConfig} from "./interfaces/ISiloConfig.sol";
+import {IShareToken} from "./interfaces/IShareToken.sol";
 import {IHookReceiver} from "./utils/hook-receivers/interfaces/IHookReceiver.sol";
 import {Methods} from "./lib/Methods.sol";
 import {CrossEntrancy} from "./lib/CrossEntrancy.sol";
@@ -13,6 +14,8 @@ import {Hook} from "./lib/Hook.sol";
 /// @dev Immutable contract is more expensive to deploy than minimal proxy however it provides nearly 10x cheapper
 /// data access using immutable variables.
 contract SiloConfig is ISiloConfig {
+    using Hook for IHookReceiver;
+
     uint256 public immutable SILO_ID;
 
     uint256 private immutable _DAO_FEE;
@@ -152,10 +155,10 @@ contract SiloConfig is ISiloConfig {
 
     /// @inheritdoc ISiloConfig
     function updateHooks(
-        uint64 _silo0HooksBefore,
-        uint64 _silo0HooksAfter,
-        uint64 _silo1HooksBefore,
-        uint64 _silo1HooksAfter
+        uint24 _silo0HooksBefore,
+        uint24 _silo0HooksAfter,
+        uint24 _silo1HooksBefore,
+        uint24 _silo1HooksAfter
     ) external virtual {
         if (msg.sender != _HOOK_RECEIVER0 && msg.sender != _HOOK_RECEIVER1) revert OnlyHookReceiver();
 
@@ -163,12 +166,32 @@ contract SiloConfig is ISiloConfig {
             hooksSetup.silo0HooksBefore = _silo0HooksBefore;
             hooksSetup.silo0HooksAfter = _silo0HooksAfter;
             emit HooksUpdated(_SILO0, _silo0HooksBefore, _silo0HooksAfter);
+
+            IShareToken(_COLLATERAL_SHARE_TOKEN0).synchronizeHooks(
+                _HOOK_RECEIVER0, _silo0HooksBefore, _silo0HooksAfter, Hook.COLLATERAL_TOKEN
+            );
+            IShareToken(_PROTECTED_COLLATERAL_SHARE_TOKEN0).synchronizeHooks(
+                _HOOK_RECEIVER0, _silo0HooksBefore, _silo0HooksAfter, Hook.PROTECTED_TOKEN
+            );
+            IShareToken(_DEBT_SHARE_TOKEN0).synchronizeHooks(
+                _HOOK_RECEIVER0, _silo0HooksBefore, _silo0HooksAfter, Hook.DEBT_TOKEN
+            );
         }
 
         if (msg.sender == _HOOK_RECEIVER1) {
             hooksSetup.silo1HooksBefore = _silo1HooksBefore;
             hooksSetup.silo1HooksAfter = _silo1HooksAfter;
             emit HooksUpdated(_SILO1, _silo1HooksBefore, _silo1HooksAfter);
+
+            IShareToken(_COLLATERAL_SHARE_TOKEN1).synchronizeHooks(
+                _HOOK_RECEIVER1, _silo1HooksBefore, _silo1HooksAfter, Hook.COLLATERAL_TOKEN
+            );
+            IShareToken(_PROTECTED_COLLATERAL_SHARE_TOKEN1).synchronizeHooks(
+                _HOOK_RECEIVER1, _silo1HooksBefore, _silo1HooksAfter, Hook.PROTECTED_TOKEN
+            );
+            IShareToken(_DEBT_SHARE_TOKEN1).synchronizeHooks(
+                _HOOK_RECEIVER1, _silo1HooksBefore, _silo1HooksAfter, Hook.DEBT_TOKEN
+            );
         }
     }
 
@@ -198,6 +221,25 @@ contract SiloConfig is ISiloConfig {
     }
 
     /// @inheritdoc ISiloConfig
+    function finishAction(address _silo, uint256 _hookAction) external virtual returns (IHookReceiver hookReceiverAfter) {
+        _onlySiloOrTokenOrLiquidation();
+
+        // By storing the original value once again, a refund is triggered (see
+        // https://eips.ethereum.org/EIPS/eip-2200)
+        _crossReentrantStatus = CrossEntrancy.NOT_ENTERED;
+
+        hookReceiverAfter = _getHookAfterAddress(_silo == _SILO0, _hookAction);
+    }
+
+    /**
+     * @dev Returns true if the reentrancy guard is currently set to "entered", which indicates there is a
+     * `nonReentrant` function in the call stack.
+     */
+    function crossReentrancyGuardEntered() external view virtual returns (bool) {
+        return _crossReentrantStatus != CrossEntrancy.NOT_ENTERED;
+    }
+
+    /// @inheritdoc ISiloConfig
     function crossLeverageGuard(uint256 _entranceFrom) external virtual {
         _onlySilo();
 
@@ -215,25 +257,6 @@ contract SiloConfig is ISiloConfig {
         }
 
         revert CrossReentrantCall();
-    }
-
-    /// @inheritdoc ISiloConfig
-    function finishAction(address _silo, uint256 _hookAction) external virtual returns (IHookReceiver hookReceiverAfter) {
-        _onlySiloOrTokenOrLiquidation();
-
-        // By storing the original value once again, a refund is triggered (see
-        // https://eips.ethereum.org/EIPS/eip-2200)
-        _crossReentrantStatus = CrossEntrancy.NOT_ENTERED;
-
-        hookReceiverAfter = _getHookAfterAddress(_silo, _hookAction);
-    }
-
-    /**
-     * @dev Returns true if the reentrancy guard is currently set to "entered", which indicates there is a
-     * `nonReentrant` function in the call stack.
-     */
-    function crossReentrancyGuardEntered() external view virtual returns (bool) {
-        return _crossReentrantStatus != CrossEntrancy.NOT_ENTERED;
     }
 
     /// @inheritdoc ISiloConfig
@@ -279,11 +302,11 @@ contract SiloConfig is ISiloConfig {
     {
         _onlySilo();
 
-        return startActionFor(msg.sender, _borrower, _hook, _input);
+        return startAction(msg.sender, _borrower, _hook, _input);
     }
 
     /// @inheritdoc ISiloConfig
-    function startActionFor(
+    function startAction(
         address _silo,
         address _borrower,
         uint256 _hookAction, // this will also determine method
@@ -297,15 +320,18 @@ contract SiloConfig is ISiloConfig {
             DebtInfo memory debtInfo
         )
     {
-        _onlySiloTokenOrLiquidation();
+        _onlySiloOrTokenOrLiquidation();
         
-        _crossNonReentrantBefore(_beforeActionHookCall(_silo, _hookAction), _hookAction);
+        _crossNonReentrantBefore(_beforeActionHookCall(_silo, _hookAction, _input), _hookAction);
 
-        if (_hookAction & Hook.SHARE_TRANSFER != 0) {
-            // share token does not need configs
+        if (_hookAction & Hook.SHARE_TOKEN_TRANSFER != 0) {
+            // share token transfer does not need configs
+            return (collateralConfig, debtConfig, debtInfo);
+        } else if (_hookAction & Hook.FLASH_LOAN != 0) {
+            // flash loan does not need configs
             return (collateralConfig, debtConfig, debtInfo);
         } else if (_hookAction & Hook.BORROW != 0) {
-            debtInfo = _openDebt(_borrower, _hook);
+            debtInfo = _openDebt(_borrower, _hookAction);
         } else if (_hookAction & Hook.SWITCH_COLLATERAL != 0) {
             debtInfo = _changeCollateralType(_borrower, _hookAction & Hook.SAME_ASSET != 0);
         } else {
@@ -448,9 +474,9 @@ contract SiloConfig is ISiloConfig {
         });
 
         if (!_debtInfo.debtPresent) {
-            if (_hook & Hook.BORROW_SAME_ASSET != 0) {
+            if (_hook & Hook.BORROW & Hook.SAME_ASSET != 0) {
                 return callForSilo0 ? (collateral, collateral) : (debt, debt);
-            } else if (_hook & Hook.BORROW_TWO_ASSETS != 0) {
+            } else if (_hook & Hook.BORROW & Hook.TWO_ASSETS != 0) {
                 return callForSilo0 ? (debt, collateral) : (collateral, debt);
             } else {
                 return callForSilo0 ? (collateral, debt) : (debt, collateral);
@@ -507,36 +533,17 @@ contract SiloConfig is ISiloConfig {
         revert DebtExistInOtherSilo();
     }
 
-    function _isHookCallNeeded(bool _callFromSilo0, uint256 _hook)
-        internal
-        view
-        virtual
-        returns (IHookReceiver hookReceiverBefore, IHookReceiver hookReceiverAfter)
-    {
-        address hookReceiver = _callFromSilo0 ? _HOOK_RECEIVER0 : _HOOK_RECEIVER1;
-
-        if (hookReceiver != address(0)) {
-            HooksSetup memory setup = hooksSetup;
-
-            uint256 hooksToTrigger = _callFromSilo0 ? setup.silo0HooksBefore : setup.silo1HooksBefore;
-            hookReceiverBefore = IHookReceiver(hooksToTrigger & _hook == 0 ? address(0) : hookReceiver);
-
-            hooksToTrigger = _callFromSilo0 ? setup.silo0HooksAfter : setup.silo1HooksAfter;
-            hookReceiverAfter = IHookReceiver(hooksToTrigger & _hook == 0 ? address(0) : hookReceiver);
-        }
-    }
-
     function _getHookBeforeAddress(bool _callFromSilo0, uint256 _hookAction)
         internal
         view
         virtual
-        returns (IHookReceiver hookReceiverBefore)
+        returns (IHookReceiver hookReceiver)
     {
-        hookReceiverBefore = IHookReceiver(_callFromSilo0 ? _HOOK_RECEIVER0 : _HOOK_RECEIVER1);
+        hookReceiver = IHookReceiver(_callFromSilo0 ? _HOOK_RECEIVER0 : _HOOK_RECEIVER1);
 
-        if (hookReceiver != address(0)) {
+        if (address(hookReceiver) != address(0)) {
             uint256 hookTriggers = _callFromSilo0 ? hooksSetup.silo0HooksBefore : hooksSetup.silo1HooksBefore;
-            hookReceiverBefore = hookTriggers & _hookAction == 0 ? IHookReceiver(address(0)) : hookReceiverBefore;
+            return hookTriggers & (_hookAction | Hook.BEFORE) == 0 ? IHookReceiver(address(0)) : hookReceiver;
         }
     }
     
@@ -544,13 +551,13 @@ contract SiloConfig is ISiloConfig {
         internal
         view
         virtual
-        returns (IHookReceiver hookReceiverAfter)
+        returns (IHookReceiver hookReceiver)
     {
-        hookReceiverAfter = IHookReceiver(_callFromSilo0 ? _HOOK_RECEIVER0 : _HOOK_RECEIVER1);
+        hookReceiver = IHookReceiver(_callFromSilo0 ? _HOOK_RECEIVER0 : _HOOK_RECEIVER1);
 
-        if (hookReceiver != address(0)) {
+        if (address(hookReceiver) != address(0)) {
             uint256 hookTriggers = _callFromSilo0 ? hooksSetup.silo0HooksAfter : hooksSetup.silo1HooksAfter;
-            hookReceiverAfter = hookTriggers & _hookAction == 0 ? IHookReceiver(address(0)) : hookReceiverAfter;
+            return hookTriggers & (_hookAction | Hook.AFTER) == 0 ? IHookReceiver(address(0)) : hookReceiver;
         }
     }
 
@@ -563,7 +570,7 @@ contract SiloConfig is ISiloConfig {
 
         // there should be no hook calls, if you inside action eg inside leverage, liquidation etc
         if (address(hookReceiverBefore) != address(0) && crossReentrantStatus == CrossEntrancy.NOT_ENTERED) {
-            hookReceiverBefore.beforeAction(_silo, _hook, _input);
+            hookReceiverBefore.beforeActionCall(_silo, _hookAction, _input);
         }
     }
 
@@ -599,20 +606,17 @@ contract SiloConfig is ISiloConfig {
         }
     }
 
-    function _onlyShareToken() internal view virtual {
-        if (msg.sender != _COLLATERAL_SHARE_TOKEN0 &&
+    function _onlySiloOrTokenOrLiquidation() internal view virtual {
+        if (msg.sender != _SILO0 &&
+            msg.sender != _SILO1 &&
+            msg.sender != _LIQUIDATION_MODULE &&
+            msg.sender != _COLLATERAL_SHARE_TOKEN0 &&
             msg.sender != _COLLATERAL_SHARE_TOKEN1 &&
             msg.sender != _PROTECTED_COLLATERAL_SHARE_TOKEN0 &&
             msg.sender != _PROTECTED_COLLATERAL_SHARE_TOKEN1 &&
             msg.sender != _DEBT_SHARE_TOKEN0 &&
             msg.sender != _DEBT_SHARE_TOKEN1
         ) {
-            revert OnlyShareToken();
-        }
-    }
-
-    function _onlySiloOrTokenOrLiquidation() internal view virtual {
-        if (!_onlySilo() && msg.sender != _LIQUIDATION_MODULE && !_onlyShareToken()) {
             revert OnlySiloOrLiquidationModule();
         }
     }
@@ -621,7 +625,7 @@ contract SiloConfig is ISiloConfig {
         if (msg.sender != _SILO0 && msg.sender != _SILO1) revert OnlySilo();
     }
 
-    function _crossNonReentrantBefore(uint256 _crossReentrantStatusCached, uint256 _state) internal pure virtual {
+    function _crossNonReentrantBefore(uint256 _crossReentrantStatusCached, uint256 _hookAction) internal pure virtual {
         // On the first call to nonReentrant, _status will be CrossEntrancy.NOT_ENTERED
         if (_crossReentrantStatusCached == CrossEntrancy.NOT_ENTERED) {
             // Any calls to nonReentrant after this point will fail
@@ -629,7 +633,7 @@ contract SiloConfig is ISiloConfig {
             return;
         }
 
-        if (_crossReentrantStatusCached == CrossEntrancy.ENTERED_FROM_LEVERAGE && _state == Hook.BEFORE_DEPOSIT) {
+        if (_crossReentrantStatusCached == CrossEntrancy.ENTERED_FROM_LEVERAGE && _hookAction == Hook.DEPOSIT) {
             // on leverage, entrance from deposit is allowed, but allowance is removed when we back to Silo
             _crossReentrantStatusCached = CrossEntrancy.ENTERED;
             return;

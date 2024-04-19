@@ -28,7 +28,7 @@ contract GaugeHookReceiver is IGaugeHookReceiver, Ownable2StepUpgradeable {
     /// it can be resolved from the silo, which can be resolved from the share token.
     function initialize(address _owner, IShareToken _token) external virtual initializer {
         if (_owner == address(0)) revert OwnerIsZeroAddress();
-        if (_token.hookReceiver() != address(this)) revert InvalidShareToken();
+        if (_token.hookSetup().hookReceiver != address(this)) revert InvalidShareToken();
 
         _transferOwnership(_owner);
 
@@ -45,8 +45,7 @@ contract GaugeHookReceiver is IGaugeHookReceiver, Ownable2StepUpgradeable {
         emit GaugeConfigured(address(gauge));
     }
 
-    /// @inheritdoc IHookReceiver
-    function afterTokenTransfer(
+    function afterTokenTransfer( // TODO this hook dos not exist, move it to  afterAction
         address _sender,
         uint256 _senderBalance,
         address _recipient,
@@ -69,11 +68,17 @@ contract GaugeHookReceiver is IGaugeHookReceiver, Ownable2StepUpgradeable {
         );
     }
 
-    function beforeAction(uint256 _action, bytes calldata _input) external returns (uint256 hookReturnCode) {
+    function beforeAction(address _silo, uint256 _action, bytes calldata _input)
+        external
+        returns (uint256 hookReturnCode)
+    {
         // TODO
     }
 
-    function afterAction(uint256 _action, bytes calldata _inputAndOutput) external returns (uint256 hookReturnCode) {
+    function afterAction(address _silo, uint256 _action, bytes calldata _inputAndOutput)
+        external
+        returns (uint256 hookReturnCode)
+    {
         // TODO
     }
 }
