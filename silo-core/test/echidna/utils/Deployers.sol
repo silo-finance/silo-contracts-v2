@@ -82,7 +82,7 @@ contract Deployers is VyperDeployer, Data {
             liquidationFee0: 0.0500e18,
             flashloanFee0: 0.0100e18,
             callBeforeQuote0: true,
-            hookReceiver0: hookReceivers["GaugeHookReceiver"],
+            hookReceiver: hookReceivers["GaugeHookReceiver"],
             token1: _tokens["USDC"],
             solvencyOracle1: oracles["UniV3-ETH-USDC-0.3"],
             maxLtvOracle1: oracles[""],
@@ -92,8 +92,7 @@ contract Deployers is VyperDeployer, Data {
             lt1: 0.9500e18,
             liquidationFee1: 0.0250e18,
             flashloanFee1: 0.0100e18,
-            callBeforeQuote1: true,
-            hookReceiver1: hookReceivers["GaugeHookReceiver"]
+            callBeforeQuote1: true
         });
 
         // We set up the mock data, without oracles and receivers
@@ -105,8 +104,7 @@ contract Deployers is VyperDeployer, Data {
         mocks.maxLtvOracle0 = address(0);
         mocks.callBeforeQuote0 = false;
         mocks.callBeforeQuote1 = false;
-        mocks.hookReceiver0 = address(0);
-        mocks.hookReceiver1 = address(0);
+        mocks.hookReceiver = address(0);
 
         siloData["MOCK"] = mocks;
     }
