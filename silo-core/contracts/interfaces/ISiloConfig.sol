@@ -18,6 +18,9 @@ interface ISiloConfig {
         /// @notice The address of contract that will be responsible for executing liquidations
         address liquidationModule;
 
+        /// @notice Address of the hook receiver called on every before/after action on Silo
+        address hookReceiver;
+
         /// @notice Deployer's fee in 18 decimals points. Deployer will earn this fee based on the interest earned by
         /// the Silo.
         uint256 deployerFee;
@@ -55,9 +58,6 @@ interface ISiloConfig {
         /// @notice Flashloan fee sets the cost of taking a flashloan in 18 decimals points
         uint256 flashloanFee0;
 
-        /// @notice Address of the hook receiver called on every before/after action on Silo0 (with token0)
-        address hookReceiver0;
-
         /// @notice Indicates if a beforeQuote on oracle contract should be called before quoting price
         bool callBeforeQuote0;
 
@@ -92,9 +92,6 @@ interface ISiloConfig {
 
         /// @notice Flashloan fee sets the cost of taking a flashloan in 18 decimals points
         uint256 flashloanFee1;
-
-        /// @notice Address of the hook receiver called on every before/after action on Silo1 (with token1)
-        address hookReceiver1;
 
         /// @notice Indicates if a beforeQuote on oracle contract should be called before quoting price
         bool callBeforeQuote1;
@@ -139,23 +136,23 @@ interface ISiloConfig {
     error CollateralTypeDidNotChanged();
 
     error CrossReentrantCall();
-    error OnlyHookReceiver();
+//    error OnlyHookReceiver();
+//
+//    event HooksUpdated(address silo, uint256 hooksBefore, uint256 hooksAfter);
 
-    event HooksUpdated(address silo, uint256 hooksBefore, uint256 hooksAfter);
-
-    /// @notice Method for HookReceiver only to update hooks
-    /// If there are two different hookReceivers then each can update only his silo settings.
-    /// Other parameters will be ignored.
-    /// @param _silo0HooksBefore bitmap for Silo0 hooks before, see Hook.sol
-    /// @param _silo0HooksAfter bitmap for Silo0 hooks after, see Hook.sol
-    /// @param _silo1HooksBefore bitmap for Silo1 hooks before, see Hook.sol
-    /// @param _silo1HooksAfter bitmap for Silo1 hooks after, see Hook.sol
-    function updateHooks(
-        uint24 _silo0HooksBefore,
-        uint24 _silo0HooksAfter,
-        uint24 _silo1HooksBefore,
-        uint24 _silo1HooksAfter
-    ) external;
+//    /// @notice Method for HookReceiver only to update hooks
+//    /// If there are two different hookReceivers then each can update only his silo settings.
+//    /// Other parameters will be ignored.
+//    /// @param _silo0HooksBefore bitmap for Silo0 hooks before, see Hook.sol
+//    /// @param _silo0HooksAfter bitmap for Silo0 hooks after, see Hook.sol
+//    /// @param _silo1HooksBefore bitmap for Silo1 hooks before, see Hook.sol
+//    /// @param _silo1HooksAfter bitmap for Silo1 hooks after, see Hook.sol
+//    function updateHooks(
+//        uint24 _silo0HooksBefore,
+//        uint24 _silo0HooksAfter,
+//        uint24 _silo1HooksBefore,
+//        uint24 _silo1HooksAfter
+//    ) external;
 
     /// @dev Can be called only by silo, share token or liquidation module
     /// It will call hook if needed, raise reentrancy guard and return necessary configuration to perform action
@@ -229,6 +226,11 @@ interface ISiloConfig {
         external
         view
         returns (ConfigData memory collateralConfig, ConfigData memory debtConfig, DebtInfo memory debtInfo);
+
+    function getConfigs(address _silo)
+        external
+        view
+        returns (ConfigData memory collateralConfig, ConfigData memory debtConfig);
 
     /// @notice Retrieves configuration data for a specific silo
     /// @dev This function reverts for incorrect silo address input.

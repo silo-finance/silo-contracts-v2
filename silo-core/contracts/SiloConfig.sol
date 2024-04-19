@@ -79,27 +79,13 @@ contract SiloConfig is ISiloConfig {
     // TODO do we need events for this? this is internal state only
     mapping (address borrower => DebtInfo debtInfo) internal _debtsInfo;
 
-    // Booleans are more expensive than uint256 or any type that takes up a full
-    // word because each write operation emits an extra SLOAD to first read the
-    // slot's contents, replace the bits taken up by the boolean, and then write
-    // back. This is the compiler's defense against contract upgrades and
-    // pointer aliasing, and it cannot be disabled.
-
-    // The values being non-zero value makes deployment a bit more expensive,
-    // but in exchange the refund on every call to nonReentrant will be lower in
-    // amount. Since refunds are capped to a percentage of the total
-    // transaction's gas, it is best to keep them low in cases like this one, to
-    // increase the likelihood of the full refund coming into effect.
-    uint256 private _crossReentrantStatus;
-
     HooksSetup public hooksSetup;
+    uint256 _crossReentrantStatus;
 
     /// @param _siloId ID of this pool assigned by factory
     /// @param _configData0 silo configuration data for token0
     /// @param _configData1 silo configuration data for token1
     constructor(uint256 _siloId, ConfigData memory _configData0, ConfigData memory _configData1) {
-        _crossReentrantStatus = CrossEntrancy.NOT_ENTERED;
-
         SILO_ID = _siloId;
 
         _DAO_FEE = _configData0.daoFee;
@@ -151,48 +137,6 @@ contract SiloConfig is ISiloConfig {
         _HOOK_RECEIVER1 = _configData1.hookReceiver;
 
         _CALL_BEFORE_QUOTE1 = _configData1.callBeforeQuote;
-    }
-
-    /// @inheritdoc ISiloConfig
-    function updateHooks(
-        uint24 _silo0HooksBefore,
-        uint24 _silo0HooksAfter,
-        uint24 _silo1HooksBefore,
-        uint24 _silo1HooksAfter
-    ) external virtual {
-        if (msg.sender != _HOOK_RECEIVER0 && msg.sender != _HOOK_RECEIVER1) revert OnlyHookReceiver();
-
-        if (msg.sender == _HOOK_RECEIVER0) {
-            hooksSetup.silo0HooksBefore = _silo0HooksBefore;
-            hooksSetup.silo0HooksAfter = _silo0HooksAfter;
-            emit HooksUpdated(_SILO0, _silo0HooksBefore, _silo0HooksAfter);
-
-            IShareToken(_COLLATERAL_SHARE_TOKEN0).synchronizeHooks(
-                _HOOK_RECEIVER0, _silo0HooksBefore, _silo0HooksAfter, Hook.COLLATERAL_TOKEN
-            );
-            IShareToken(_PROTECTED_COLLATERAL_SHARE_TOKEN0).synchronizeHooks(
-                _HOOK_RECEIVER0, _silo0HooksBefore, _silo0HooksAfter, Hook.PROTECTED_TOKEN
-            );
-            IShareToken(_DEBT_SHARE_TOKEN0).synchronizeHooks(
-                _HOOK_RECEIVER0, _silo0HooksBefore, _silo0HooksAfter, Hook.DEBT_TOKEN
-            );
-        }
-
-        if (msg.sender == _HOOK_RECEIVER1) {
-            hooksSetup.silo1HooksBefore = _silo1HooksBefore;
-            hooksSetup.silo1HooksAfter = _silo1HooksAfter;
-            emit HooksUpdated(_SILO1, _silo1HooksBefore, _silo1HooksAfter);
-
-            IShareToken(_COLLATERAL_SHARE_TOKEN1).synchronizeHooks(
-                _HOOK_RECEIVER1, _silo1HooksBefore, _silo1HooksAfter, Hook.COLLATERAL_TOKEN
-            );
-            IShareToken(_PROTECTED_COLLATERAL_SHARE_TOKEN1).synchronizeHooks(
-                _HOOK_RECEIVER1, _silo1HooksBefore, _silo1HooksAfter, Hook.PROTECTED_TOKEN
-            );
-            IShareToken(_DEBT_SHARE_TOKEN1).synchronizeHooks(
-                _HOOK_RECEIVER1, _silo1HooksBefore, _silo1HooksAfter, Hook.DEBT_TOKEN
-            );
-        }
     }
 
     /// @inheritdoc ISiloConfig
@@ -339,6 +283,15 @@ contract SiloConfig is ISiloConfig {
         }
 
         (collateralConfig, debtConfig) = _getConfigs(_silo, _hookAction, debtInfo);
+    }
+
+    function getConfigs(address _silo)
+        external
+        view
+        virtual
+        returns (ConfigData memory collateralConfig, ConfigData memory debtConfig)
+    {
+        (collateralConfig, debtConfig) = _getConfigs(_silo, 0, _debtsInfo[address(0)]); // TODO
     }
 
     function getConfigs(address _silo, address _borrower, uint256 _hook)

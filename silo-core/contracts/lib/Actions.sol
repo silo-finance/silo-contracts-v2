@@ -30,7 +30,8 @@ library Actions {
     error FeeOverflow();
 
     function deposit(
-        ISiloConfig _siloConfig,
+        ISiloConfig.ConfigData memory _collateralConfig,
+        ISilo.SharedStorage storage _shareStorage,
         uint256 _assets,
         uint256 _shares,
         address _receiver,
@@ -40,20 +41,17 @@ library Actions {
         external
         returns (uint256 assets, uint256 shares)
     {
+        _hookCallBefore(_shareStorage, Hook.DEPOSIT, abi.encodePacked(_assets, _shares, _receiver, _assetType));
+        _crossNonReentrantBefore(_shareStorage, _collateralConfig.otherSilo, Hook.DEPOSIT);
+
         if (_assetType == ISilo.AssetType.Debt) revert ISilo.WrongAssetType();
 
-        (
-            ISiloConfig.ConfigData memory collateralConfig,,
-        ) = _siloConfig.startAction(
-            address(0) /* no borrower */, Hook.DEPOSIT, abi.encodePacked(_assets, _shares, _receiver, _assetType)
-        );
-
         address collateralShareToken = _assetType == ISilo.AssetType.Collateral
-            ? collateralConfig.collateralShareToken
-            : collateralConfig.protectedShareToken;
+            ? _collateralConfig.collateralShareToken
+            : _collateralConfig.protectedShareToken;
 
         (assets, shares) = SiloERC4626Lib.deposit(
-            collateralConfig.token,
+            _collateralConfig.token,
             msg.sender,
             _assets,
             _shares,
@@ -62,14 +60,8 @@ library Actions {
             _totalCollateral
         );
 
-        IHookReceiver hookAfter = _siloConfig.finishAction(address(this), Hook.DEPOSIT);
-
-        if (address(hookAfter) != address(0)) {
-            hookAfter.afterActionCall(
-                Hook.DEPOSIT,
-                abi.encodePacked(_assets, _shares, _receiver, _assetType, assets, shares)
-            );
-        }
+        _crossNonReentrantAfter(_shareStorage);
+        _hookCallAfter(_shareStorage, Hook.DEPOSIT, abi.encodePacked(_assets, _shares, _receiver, _assetType, assets, shares));
     }
 
     // solhint-disable-next-line function-max-lines, code-complexity
@@ -588,5 +580,59 @@ library Actions {
         IShareToken(cfg.debtShareToken).synchronizeHooks(
             cfg.hookReceiver, _hooksBefore, _hooksAfter, Hook.DEBT_TOKEN
         );
+    }
+
+    function _hookCallBefore(ISilo.SharedStorage storage _shareStorage, uint256 _hookAction, bytes memory _data) private {
+        IHookReceiver hookReceiver = _shareStorage.hookReceiver;
+
+        if (address(hookReceiver) == address(0)) return;
+        if (_shareStorage.hooksBefore & _hookAction == 0) return;
+
+        // there should be no hook calls, if you inside action eg inside leverage, liquidation etc
+        // TODO make sure we good inside leverage
+        hookReceiver.beforeActionCall(_hookAction, _data);
+    }
+
+    function _hookCallAfter(ISilo.SharedStorage storage _shareStorage, uint256 _hookAction, bytes memory _data) private {
+        IHookReceiver hookReceiver = _shareStorage.hookReceiver;
+
+        if (address(hookReceiver) == address(0)) return;
+        if (_shareStorage.hooksAfter & _hookAction == 0) return;
+
+        hookReceiver.afterActionCall(_hookAction, _data);
+    }
+
+    function _crossNonReentrantBefore(
+        ISilo.SharedStorage storage _shareStorage,
+        address _otherSilo,
+        uint256 _hookAction
+    ) private {
+        uint256 crossReentrantStatusCached = _shareStorage.crossReentrantStatus;
+
+        // On the first call to nonReentrant, _status will be CrossEntrancy.NOT_ENTERED
+        if (crossReentrantStatusCached == CrossEntrancy.NOT_ENTERED) {
+            // make sure other silo is also down
+            (,,, uint24 otherCrossReentrantStatus) = ISilo(_otherSilo).sharedStorage();
+
+            if (otherCrossReentrantStatus != CrossEntrancy.NOT_ENTERED) revert ISilo.CrossReentrantCall();
+
+            // Any calls to nonReentrant after this point will fail
+            _shareStorage.crossReentrantStatus = CrossEntrancy.ENTERED;
+            return;
+        }
+
+        if (crossReentrantStatusCached == CrossEntrancy.ENTERED_FROM_LEVERAGE && _hookAction == Hook.DEPOSIT) {
+            // on leverage, entrance from deposit is allowed, but allowance is removed when we back to Silo
+            _shareStorage.crossReentrantStatus = CrossEntrancy.ENTERED;
+            return;
+        }
+
+        revert ISilo.CrossReentrantCall();
+    }
+
+    function _crossNonReentrantAfter(ISilo.SharedStorage storage _shareStorage) private {
+        // By storing the original value once again, a refund is triggered (see
+        // https://eips.ethereum.org/EIPS/eip-2200)
+        _shareStorage.crossReentrantStatus = CrossEntrancy.NOT_ENTERED;
     }
 }
