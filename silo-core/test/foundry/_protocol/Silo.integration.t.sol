@@ -128,7 +128,7 @@ contract SiloIntegrationTest is VeSiloFeatures {
         vm.label(silo1, "silo1");
 
         (, address collateralShareToken,) = _siloConfig.getShareTokens(silo1);
-        hookReceiver = IShareToken(collateralShareToken).hookReceiver();
+//        hookReceiver = IShareToken(collateralShareToken).hookReceiver(); tODO
     }
 
     function _printContracts() internal {

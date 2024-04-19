@@ -68,6 +68,8 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
     /// @notice Copy of hooks setup from SiloConfig for optimisation purposes
     HookSetup private _hookSetup;
 
+    address public hookReceiver; // TODO remove!
+
     modifier onlySilo() {
         if (msg.sender != address(silo)) revert OnlySilo();
 

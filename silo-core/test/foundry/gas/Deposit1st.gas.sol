@@ -15,6 +15,7 @@ contract Deposit1stGasTest is Gas, Test {
         _gasTestsInit();
     }
 
+    // forge test -vvv --ffi --mt test_gas_firstDeposit
     function test_gas_firstDeposit() public {
         _action(
             BORROWER,
