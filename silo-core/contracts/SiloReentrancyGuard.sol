@@ -3,48 +3,67 @@ pragma solidity 0.8.21;
 
 import {ISiloReentrancyGuard} from "./interfaces/ISiloReentrancyGuard.sol";
 import {ISiloConfig} from "./interfaces/ISiloConfig.sol";
+import {CrossEntrancy} from "./lib/CrossEntrancy.sol";
 
 abstract contract SiloReentrancyGuard {
-    uint256 private constant _NOT_ENTERED = 1;
-    uint256 private constant _ENTERED = 2;
-
-    uint256 private _status;
+    uint256 private _state;
 
     error OtherSiloRequired();
     error ReentrancyGuardReentrantCall();
 
     constructor() {
-        _status = _NOT_ENTERED;
+        _state = CrossEntrancy.NOT_ENTERED;
     }
 
-    function nonReentrantBefore() public {
-        ISiloConfig siloConfig = _getSiloConfigAddr();
+    function nonReentrantBefore(uint256 _entranceFrom) public {
+        ISiloConfig siloConfig = _getSiloConfig();
 
-        address _otherSilo = siloConfig.getOtherSiloProtected(address(this));
+        uint256 currentSiloState = _state;
 
-        // On the first call to nonReentrant, _status will be _NOT_ENTERED
-        if (_status == _ENTERED || ISiloReentrancyGuard(_otherSilo).reentrancyGuardEntered()) {
-            revert ReentrancyGuardReentrantCall();
+        address otherSilo = siloConfig.getOtherSiloProtected(address(this));
+        uint256 otherSiloState = ISiloReentrancyGuard(otherSilo).reentrancyGuardState();
+
+        bool siloIsNotEntered =
+            currentSiloState == CrossEntrancy.NOT_ENTERED && otherSiloState == CrossEntrancy.NOT_ENTERED;
+
+        // On the first call to nonReentrant, _status will be CrossEntrancy.NOT_ENTERED
+        if (siloIsNotEntered) {
+            _state = _entranceFrom;
+            return;
         }
 
-        // Any calls to nonReentrant after this point will fail
-        _status = _ENTERED;
+        if (_entranceFrom == CrossEntrancy.ENTERED_FROM_LEVERAGE) {
+            // before leverage callback, we mark status
+            _state = CrossEntrancy.ENTERED_FROM_LEVERAGE;
+            return;
+        }
+
+        bool enteredFromLaverage =
+            currentSiloState == CrossEntrancy.ENTERED_FROM_LEVERAGE || otherSiloState == CrossEntrancy.ENTERED_FROM_LEVERAGE;
+        
+        bool notEnteredDeposit =
+            currentSiloState != CrossEntrancy.ENTERED_FROM_DEPOSIT && otherSiloState != CrossEntrancy.ENTERED_FROM_DEPOSIT;
+
+        if (enteredFromLaverage && notEnteredDeposit && _entranceFrom == CrossEntrancy.ENTERED_FROM_DEPOSIT) {
+            // on leverage, entrance from deposit is allowed, but allowance is removed
+            _state = CrossEntrancy.ENTERED_FROM_DEPOSIT;
+            return;
+        }
+
+        revert ReentrancyGuardReentrantCall();
     }
 
     function nonReentrantAfter() public {
-        ISiloConfig siloConfig = _getSiloConfigAddr();
+        ISiloConfig siloConfig = _getSiloConfig();
 
-        // check permissins
         siloConfig.getOtherSiloProtected(address(this));
 
-        // By storing the original value once again, a refund is triggered (see
-        // https://eips.ethereum.org/EIPS/eip-2200)
-        _status = _NOT_ENTERED;
+        _state = CrossEntrancy.NOT_ENTERED;
     }
 
-    function reentrancyGuardEntered() public view returns (bool) {
-        return _status == _ENTERED;
+    function reentrancyGuardState() public view returns (uint256) {
+        return _state;
     }
 
-    function _getSiloConfigAddr() internal view virtual returns (ISiloConfig);
+    function _getSiloConfig() internal view virtual returns (ISiloConfig);
 }

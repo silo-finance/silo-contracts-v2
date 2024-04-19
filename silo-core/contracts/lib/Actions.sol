@@ -27,39 +27,33 @@ library Actions {
     error FeeOverflow();
 
     function deposit(
-        ISiloConfig _siloConfig,
         uint256 _assets,
         uint256 _shares,
         address _receiver,
-        ISilo.AssetType _assetType,
-        ISilo.Assets storage _totalCollateral
+        ISilo.AssetType _assetType
     )
         external
         returns (uint256 assets, uint256 shares)
     {
         if (_assetType == ISilo.AssetType.Debt) revert ISilo.WrongAssetType();
 
-        _siloConfig.crossNonReentrantBefore(CrossEntrancy.ENTERED_FROM_DEPOSIT);
-
-        (
-            ISiloConfig.ConfigData memory configData,,
-        ) = _siloConfig.getConfigs(address(this), address(0) /* no borrower */, Methods.DEPOSIT);
+        nonReentrantBefore(CrossEntrancy.ENTERED_FROM_DEPOSIT);
 
         address collateralShareToken = _assetType == ISilo.AssetType.Collateral
-            ? configData.collateralShareToken
-            : configData.protectedShareToken;
+            ? _COLLATERAL_SHARE_TOKEN
+            : _PROTECTED_COLLATERAL_SHARE_TOKEN;
 
         (assets, shares) = SiloERC4626Lib.deposit(
-            configData.token,
+            _TOKEN,
             msg.sender,
             _assets,
             _shares,
             _receiver,
             IShareToken(collateralShareToken),
-            _totalCollateral
+            totalAssets[_assetType]
         );
 
-        _siloConfig.crossNonReentrantAfter();
+        nonReentrantAfter();
     }
 
     // solhint-disable-next-line function-max-lines, code-complexity

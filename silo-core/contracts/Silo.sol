@@ -184,7 +184,7 @@ contract Silo is Initializable, SiloERC4626, SiloReentrancyGuard {
         virtual
         returns (uint256 shares)
     {
-        nonReentrantBefore();
+        nonReentrantBefore(CrossEntrancy.ENTERED);
         (, shares) = _deposit(_assets, 0 /* shares */, _receiver, AssetType.Collateral);
         nonReentrantAfter();
     }
@@ -859,7 +859,7 @@ contract Silo is Initializable, SiloERC4626, SiloReentrancyGuard {
         );
     }
 
-    function _getSiloConfigAddr() internal view override returns (ISiloConfig) {
+    function _getSiloConfig() internal view override returns (ISiloConfig) {
         return config;
     }
 }

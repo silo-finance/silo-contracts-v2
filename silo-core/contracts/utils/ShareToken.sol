@@ -95,7 +95,7 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
         siloConfigCached.crossNonReentrantBefore(CrossEntrancy.ENTERED);
 
         (address silo0,) = siloConfigCached.getSilos();
-        ISiloReentrancyGuard(silo0).nonReentrantBefore();
+        ISiloReentrancyGuard(silo0).nonReentrantBefore(CrossEntrancy.ENTERED);
 
         result = super.transferFrom(_from, _to, _amount);
 

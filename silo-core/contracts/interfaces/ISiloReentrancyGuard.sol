@@ -2,7 +2,7 @@
 pragma solidity >=0.5.0;
 
 interface ISiloReentrancyGuard {
-    function nonReentrantBefore() external;
+    function nonReentrantBefore(uint256 _callee) external;
     function nonReentrantAfter() external;
-    function reentrancyGuardEntered() external view returns (bool);
+    function reentrancyGuardState() external view returns (uint256);
 }
