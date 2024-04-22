@@ -40,10 +40,10 @@ contract SiloConfig is ISiloConfig {
 
     address private immutable _INTEREST_RATE_MODEL0;
 
-    uint64 private immutable _MAX_LTV0;
-    uint64 private immutable _LT0;
-    uint64 private immutable _LIQUIDATION_FEE0;
-    uint64 private immutable _FLASHLOAN_FEE0;
+    uint256 private immutable _MAX_LTV0;
+    uint256 private immutable _LT0;
+    uint256 private immutable _LIQUIDATION_FEE0;
+    uint256 private immutable _FLASHLOAN_FEE0;
 
     address private immutable _HOOK_RECEIVER0;
 
@@ -67,10 +67,10 @@ contract SiloConfig is ISiloConfig {
 
     address private immutable _INTEREST_RATE_MODEL1;
 
-    uint64 private immutable _MAX_LTV1;
-    uint64 private immutable _LT1;
-    uint64 private immutable _LIQUIDATION_FEE1;
-    uint64 private immutable _FLASHLOAN_FEE1;
+    uint256 private immutable _MAX_LTV1;
+    uint256 private immutable _LT1;
+    uint256 private immutable _LIQUIDATION_FEE1;
+    uint256 private immutable _FLASHLOAN_FEE1;
 
     address private immutable _HOOK_RECEIVER1;
 
@@ -88,8 +88,8 @@ contract SiloConfig is ISiloConfig {
     constructor(uint256 _siloId, ConfigData memory _configData0, ConfigData memory _configData1) {
         SILO_ID = _siloId;
 
-        _DAO_FEE = uint64(_configData0.daoFee);
-        _DEPLOYER_FEE = uint64(_configData0.deployerFee);
+        _DAO_FEE = _configData0.daoFee;
+        _DEPLOYER_FEE = _configData0.deployerFee;
         _LIQUIDATION_MODULE = _configData0.liquidationModule;
 
         // TOKEN #0
@@ -106,10 +106,10 @@ contract SiloConfig is ISiloConfig {
 
         _INTEREST_RATE_MODEL0 = _configData0.interestRateModel;
 
-        _MAX_LTV0 = uint64(_configData0.maxLtv);
-        _LT0 = uint64(_configData0.lt);
-        _LIQUIDATION_FEE0 = uint64(_configData0.liquidationFee);
-        _FLASHLOAN_FEE0 = uint64(_configData0.flashloanFee);
+        _MAX_LTV0 = _configData0.maxLtv;
+        _LT0 = _configData0.lt;
+        _LIQUIDATION_FEE0 = _configData0.liquidationFee;
+        _FLASHLOAN_FEE0 = _configData0.flashloanFee;
 
         _HOOK_RECEIVER0 = _configData0.hookReceiver;
 
@@ -129,10 +129,10 @@ contract SiloConfig is ISiloConfig {
 
         _INTEREST_RATE_MODEL1 = _configData1.interestRateModel;
 
-        _MAX_LTV1 = uint64(_configData1.maxLtv);
-        _LT1 = uint64(_configData1.lt);
-        _LIQUIDATION_FEE1 = uint64(_configData1.liquidationFee);
-        _FLASHLOAN_FEE1 = uint64(_configData1.flashloanFee);
+        _MAX_LTV1 = _configData1.maxLtv;
+        _LT1 = _configData1.lt;
+        _LIQUIDATION_FEE1 = _configData1.liquidationFee;
+        _FLASHLOAN_FEE1 = _configData1.flashloanFee;
 
         _HOOK_RECEIVER1 = _configData1.hookReceiver;
 
@@ -315,16 +315,6 @@ contract SiloConfig is ISiloConfig {
         }
     }
 
-
-    function getConfig2(address _silo) external view virtual returns (bytes memory) {
-        if (_silo == _SILO0) {
-            return _silo0ConfigData2();
-        } else if (_silo == _SILO1) {
-            return _silo1ConfigData2();
-        } else {
-            revert WrongSilo();
-        }
-    }
     /// @inheritdoc ISiloConfig
     function getFeesWithAsset(address _silo)
         external
@@ -435,29 +425,6 @@ contract SiloConfig is ISiloConfig {
         });
     }
 
-    function _silo0ConfigData2() internal view returns (bytes memory config) {
-        config = abi.encodePacked(
-            _SILO0,
-            _SILO1,
-            _TOKEN0,
-            _PROTECTED_COLLATERAL_SHARE_TOKEN0,
-            _COLLATERAL_SHARE_TOKEN0,
-            _DEBT_SHARE_TOKEN0,
-            _SOLVENCY_ORACLE0,
-            _MAX_LTV_ORACLE0,
-            _INTEREST_RATE_MODEL0,
-            _LIQUIDATION_MODULE,
-            _HOOK_RECEIVER0,
-            _DAO_FEE,
-            _DEPLOYER_FEE,
-            _MAX_LTV0,
-            _LT0,
-            _LIQUIDATION_FEE0,
-            _FLASHLOAN_FEE0,
-            _CALL_BEFORE_QUOTE0
-        );
-    }
-
     function _silo1ConfigData() internal view returns (ConfigData memory config) {
         config = ConfigData({
             daoFee: _DAO_FEE,
@@ -479,29 +446,6 @@ contract SiloConfig is ISiloConfig {
             hookReceiver: _HOOK_RECEIVER1,
             callBeforeQuote: _CALL_BEFORE_QUOTE1
         });
-    }
-
-    function _silo1ConfigData2() internal view returns (bytes memory config) {
-        config = abi.encodePacked(
-            _DAO_FEE,
-            _DEPLOYER_FEE,
-            _SILO1,
-            _SILO0,
-            _TOKEN1,
-            _PROTECTED_COLLATERAL_SHARE_TOKEN1,
-            _COLLATERAL_SHARE_TOKEN1,
-            _DEBT_SHARE_TOKEN1,
-            _SOLVENCY_ORACLE1,
-            _MAX_LTV_ORACLE1,
-            _INTEREST_RATE_MODEL1,
-            _MAX_LTV1,
-            _LT1,
-            _LIQUIDATION_FEE1,
-            _FLASHLOAN_FEE1,
-            _LIQUIDATION_MODULE,
-            _HOOK_RECEIVER1,
-            _CALL_BEFORE_QUOTE1
-        );
     }
 
     function _forbidDebtInTwoSilos(bool _debtInSilo0) internal view virtual {
