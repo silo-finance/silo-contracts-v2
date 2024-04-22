@@ -70,7 +70,91 @@ library Actions {
         _hookCallAfter(_shareStorage, Hook.DEPOSIT, abi.encodePacked(_assets, _shares, _receiver, _assetType, assets, shares));
     }
 
+    function depositArgs(
+//        ISiloConfig _config, // this is more gass efficient!!
+        ISiloConfig.ConfigData memory _collateralConfig,
+        ISilo.SharedStorage storage _shareStorage,
+        uint256 _assets,
+        uint256 _shares,
+        address _receiver,
+        ISilo.AssetType _assetType,
+        ISilo.Assets storage _totalCollateral
+    )
+        external
+        returns (uint256 assets, uint256 shares)
+    {
+//        ISiloConfig.ConfigData memory _collateralConfig = _config.getConfig(address(this));
+        _hookCallBefore(_shareStorage, Hook.DEPOSIT, abi.encodePacked(_assets, _shares, _receiver, _assetType));
+        _crossNonReentrantBefore(_shareStorage, _collateralConfig.otherSilo, Hook.DEPOSIT);
+
+        if (_assetType == ISilo.AssetType.Debt) revert ISilo.WrongAssetType();
+
+        address collateralShareToken = _assetType == ISilo.AssetType.Collateral
+            ? _collateralConfig.collateralShareToken
+            : _collateralConfig.protectedShareToken;
+
+        (assets, shares) = SiloERC4626Lib.deposit(
+            _collateralConfig.token,
+            msg.sender,
+            _assets,
+            _shares,
+            _receiver,
+            IShareToken(collateralShareToken),
+            _totalCollateral
+        );
+
+        _crossNonReentrantAfter(_shareStorage);
+        _hookCallAfter(_shareStorage, Hook.DEPOSIT, abi.encodePacked(_assets, _shares, _receiver, _assetType, assets, shares));
+    }
+
+    function depositStartAction( // gas: 198932
+        ISiloConfig _siloConfig,
+        uint256 _assets,
+        uint256 _shares,
+        address _receiver,
+        ISilo.AssetType _assetType,
+        ISilo.Assets storage _totalCollateral
+    )
+        external
+        returns (uint256 assets, uint256 shares)
+    {
+        if (_assetType == ISilo.AssetType.Debt) revert ISilo.WrongAssetType();
+
+        ISiloConfig.ConfigData memory _collateralConfig = _siloConfig.getConfig(address(this));
+
+        (
+            ISiloConfig.ConfigData memory collateralConfig,,
+        ) = _siloConfig.startAction(
+            address(0) /* no borrower */, Hook.DEPOSIT, abi.encodePacked(_assets, _shares, _receiver, _assetType)
+        );
+
+        address collateralShareToken = _assetType == ISilo.AssetType.Collateral
+            ? _collateralConfig.collateralShareToken
+            : _collateralConfig.protectedShareToken;
+
+        (assets, shares) = SiloERC4626Lib.deposit(
+            _collateralConfig.token,
+            msg.sender,
+            _assets,
+            _shares,
+            _receiver,
+            IShareToken(collateralShareToken),
+            _totalCollateral
+        );
+
+        IHookReceiver hookAfter = _siloConfig.finishAction(address(this), Hook.DEPOSIT);
+
+        if (address(hookAfter) != address(0)) {
+            hookAfter.afterActionCall(
+                Hook.DEPOSIT,
+                abi.encodePacked(_assets, _shares, _receiver, _assetType, assets, shares)
+            );
+        }
+    }
+
+
     // solhint-disable-next-line function-max-lines, code-complexity
+    // function withdraw(ISiloConfig _siloConfig, ISilo.WithdrawArgs calldata _args, ISilo.Assets storage _totalAssets) // gas:
     function withdraw(ISiloConfig _siloConfig, ISilo.WithdrawArgs calldata _args, ISilo.Assets storage _totalAssets)
         external
         returns (uint256 assets, uint256 shares)
