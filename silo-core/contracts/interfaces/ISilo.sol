@@ -155,6 +155,7 @@ interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
     error NoDebt();
     error TwoAssetsDebt();
     error LeverageTooHigh();
+    error SiloInitialized();
 
     /// @notice Initialize Silo
     /// @param _siloConfig address of ISiloConfig with full config for this Silo
