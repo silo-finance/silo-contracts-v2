@@ -702,10 +702,11 @@ contract Silo is SiloERC4626 {
         virtual
         returns (uint256 assets, uint256 shares)
     {
-        _accrueInterest();
+        // _accrueInterest(); wil be called from config
 
         (assets, shares) = Actions.withdraw(
             config,
+            sharedStorage,
             WithdrawArgs({
                 assets: _assets,
                 shares: _shares,

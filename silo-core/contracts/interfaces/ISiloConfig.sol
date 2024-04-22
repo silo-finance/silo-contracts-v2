@@ -232,9 +232,9 @@ interface ISiloConfig {
         view
         returns (ConfigData memory collateralConfig, ConfigData memory debtConfig);
 
-    function getConfigsAndAccrue(address _silo)
+    function getConfigsAndAccrue(address _silo, uint256 _hookAction, address _borrower)
         external
-        returns (ConfigData memory collateralConfig, ConfigData memory debtConfig);
+        returns (ConfigData memory collateralConfig, ConfigData memory debtConfig, DebtInfo memory debtInfo);
 
     /// @notice Retrieves configuration data for a specific silo
     /// @dev This function reverts for incorrect silo address input.

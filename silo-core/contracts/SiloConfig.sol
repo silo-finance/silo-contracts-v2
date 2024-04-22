@@ -296,14 +296,15 @@ contract SiloConfig is ISiloConfig {
         (collateralConfig, debtConfig) = _getConfigs(_silo, 0, _debtsInfo[address(0)]); // TODO
     }
 
-    function getConfigsAndAccrue(address _silo)
+    function getConfigsAndAccrue(address _silo, uint256 _hookAction, address _borrower)
         external
         virtual
-        returns (ConfigData memory collateralConfig, ConfigData memory debtConfig)
+        returns (ConfigData memory collateralConfig, ConfigData memory debtConfig, DebtInfo memory debtInfo)
     {
-        (collateralConfig, debtConfig) = _getConfigs(_silo, 0, _debtsInfo[address(0)]); // TODO
-
         _callAccrueInterest(_silo);
+        debtInfo = _debtsInfo[_borrower];
+
+        (collateralConfig, debtConfig) = _getConfigs(_silo, _hookAction, debtInfo);
     }
 
     function _callAccrueInterest(address _silo) internal {

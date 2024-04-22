@@ -155,7 +155,15 @@ library Actions {
 
     // solhint-disable-next-line function-max-lines, code-complexity
     // function withdraw(ISiloConfig _siloConfig, ISilo.WithdrawArgs calldata _args, ISilo.Assets storage _totalAssets) // gas:
-    function withdraw(ISiloConfig _siloConfig, ISilo.WithdrawArgs calldata _args, ISilo.Assets storage _totalAssets)
+
+    // startAction: expected 176906 got 199694 it is more by 22788
+    // getConfigsAndAccrue: expected 176906 got 192410 it is more by 15504
+    function withdraw(
+        ISiloConfig _siloConfig,
+        ISilo.SharedStorage storage _shareStorage,
+        ISilo.WithdrawArgs calldata _args,
+        ISilo.Assets storage _totalAssets
+    )
         external
         returns (uint256 assets, uint256 shares)
     {
@@ -165,11 +173,21 @@ library Actions {
             ISiloConfig.ConfigData memory collateralConfig,
             ISiloConfig.ConfigData memory debtConfig,
             ISiloConfig.DebtInfo memory debtInfo
-        ) = _siloConfig.startAction(
-            _args.owner,
-            Hook.WITHDRAW,
-            abi.encodePacked(_args.assets, _args.shares, _args.receiver, _args.owner, _args.spender, _args.assetType)
-        );
+        ) = _siloConfig.getConfigsAndAccrue(address(this), Hook.WITHDRAW, _args.owner);
+
+        // (_args.assetType == ISilo.AssetType.Collateral ? Hook.COLLATERAL_TOKEN : Hook.PROTECTED_TOKEN)
+        _hookCallBefore(_shareStorage, Hook.WITHDRAW, abi.encodePacked(_args.assets, _args.shares, _args.receiver, _args.owner, _args.spender, _args.assetType));
+        _crossNonReentrantBefore(_shareStorage, collateralConfig.otherSilo, Hook.WITHDRAW);
+
+//        (
+//            ISiloConfig.ConfigData memory collateralConfig,
+//            ISiloConfig.ConfigData memory debtConfig,
+//            ISiloConfig.DebtInfo memory debtInfo
+//        ) = _siloConfig.startAction(
+//            _args.owner,
+//            Hook.WITHDRAW,
+//            abi.encodePacked(_args.assets, _args.shares, _args.receiver, _args.owner, _args.spender, _args.assetType)
+//        );
 
         if (collateralConfig.silo != debtConfig.silo) ISilo(debtConfig.silo).accrueInterest();
 
@@ -237,25 +255,19 @@ library Actions {
             collateralConfig, debtConfig, debtInfo, _args.owner, ISilo.AccrueInterestInMemory.No
         )) revert ISilo.NotSolvent();
 
-        {
-            IHookReceiver hookAfter = _siloConfig.finishAction(address(this), Hook.WITHDRAW);
 
-            if (address(hookAfter) != address(0)) {
-                hookAfter.afterActionCall(
-                    Hook.WITHDRAW |
-                        (_args.assetType == ISilo.AssetType.Collateral ? Hook.COLLATERAL_TOKEN : Hook.PROTECTED_TOKEN),
-                    abi.encodePacked(
-                        _args.assets,
-                        _args.shares,
-                        _args.receiver,
-                        _args.owner,
-                        _args.spender,
-                        assets,
-                        shares
-                    )
-                );
-            }
-        }
+        _crossNonReentrantAfter(_shareStorage);
+        //                        (_args.assetType == ISilo.AssetType.Collateral ? Hook.COLLATERAL_TOKEN : Hook.PROTECTED_TOKEN),
+        _hookCallAfter(_shareStorage, Hook.WITHDRAW,
+            abi.encodePacked( _args.assets,
+                _args.shares,
+                _args.receiver,
+                _args.owner,
+                _args.spender,
+                assets,
+                shares
+            )
+        );
     }
 
     // solhint-disable-next-line function-max-lines, code-complexity
