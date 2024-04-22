@@ -587,6 +587,13 @@ contract Silo is SiloERC4626 {
     }
 
     /// @inheritdoc ISilo
+    function accrueInterestForConfig(address _interestRateModel, uint256 _daoFee, uint256 _deployerFee) external virtual {
+        if (msg.sender != address(config)) revert();
+
+        _callAccrueInterestForAsset(_interestRateModel, _daoFee, _deployerFee, address(0) /* no other silo */);
+    }
+
+    /// @inheritdoc ISilo
     function withdrawFees() external virtual {
         Actions.withdrawFees(this, siloData);
     }
@@ -630,17 +637,28 @@ contract Silo is SiloERC4626 {
         );
     }
 
-    function _accrueInterest(bool)
+    function _accrueInterestGetSiloConfig()
         internal
         virtual
         returns (uint256 accruedInterest, ISiloConfig siloConfigCached)
     {
         siloConfigCached = config;
-//        (cfg0, cfg1) = config.getConfigs(address(this));
-        ISiloConfig.ConfigData memory cfg0 = siloConfigCached.getConfig(address(this));
+        ISiloConfig.ConfigData memory configData = siloConfigCached.getConfig(address(this));
 
         accruedInterest = _callAccrueInterestForAsset(
-            cfg0.interestRateModel, cfg0.daoFee, cfg0.deployerFee, address(0)
+            configData.interestRateModel, configData.daoFee, configData.deployerFee, address(0)
+        );
+    }
+
+    function _accrueInterestGetConfigData()
+        internal
+        virtual
+        returns (uint256 accruedInterest, ISiloConfig.ConfigData memory configData)
+    {
+        configData = config.getConfig(address(this));
+
+        accruedInterest = _callAccrueInterestForAsset(
+            configData.interestRateModel, configData.daoFee, configData.deployerFee, address(0)
         );
     }
 
@@ -656,12 +674,13 @@ contract Silo is SiloERC4626 {
     {
         // we need to call it here, to update _total
 //        (, ISiloConfig.ConfigData memory cfg0,) = _accrueInterest();
-        (, ISiloConfig cfg0) = _accrueInterest(true);
-
+//        (, ISiloConfig cfg0) = _accrueInterest(true);
+//        (, ISiloConfig.ConfigData memory cfg0) = _accrueInterestGetConfigData();
 
         (
             assets, shares
-        ) = Actions.deposit(cfg0, sharedStorage, _assets, _shares, _receiver, _assetType, total[_assetType]);
+        ) = Actions.deposit(config, sharedStorage, _assets, _shares, _receiver, _assetType, total[_assetType]);
+//        ) = Actions.depositStartAction(cfg0, _assets, _shares, _receiver, _assetType, total[_assetType]);
 
         if (_assetType == AssetType.Collateral) {
             emit Deposit(msg.sender, _receiver, assets, shares);

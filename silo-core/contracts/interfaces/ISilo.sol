@@ -442,6 +442,13 @@ interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
     /// @return accruedInterest The total interest accrued during this operation
     function accrueInterest() external returns (uint256 accruedInterest);
 
+    /// @notice only for SiloConfig
+    function accrueInterestForConfig(
+        address _interestRateModel,
+        uint256 _daoFee,
+        uint256 _deployerFee
+    ) external;
+
     /// @notice Withdraws earned fees and distributes them to the DAO and deployer fee receivers
     function withdrawFees() external;
 }

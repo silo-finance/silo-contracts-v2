@@ -29,8 +29,12 @@ library Actions {
 
     error FeeOverflow();
 
+    // when using .startAction: expected 188000 got 198932 it is more by 10932
+    // when using _config in param: expected 188000 got 188200 it is more by 200
+    // when using one config and pass as args: expected 188000 got 186093 it is less by 1907
+    // when accrue interest from config contract and pass config address: expected 188000 got 184314 it is less by 3686
     function deposit(
-        ISiloConfig _config,
+        ISiloConfig _config, // this is more gas efficient!!
 //        ISiloConfig.ConfigData memory _collateralConfig,
         ISilo.SharedStorage storage _shareStorage,
         uint256 _assets,
@@ -42,7 +46,7 @@ library Actions {
         external
         returns (uint256 assets, uint256 shares)
     {
-        ISiloConfig.ConfigData memory _collateralConfig = _config.getConfig(address(this));
+        ISiloConfig.ConfigData memory _collateralConfig = _config.getConfigAndAccrue(address(this));
         _hookCallBefore(_shareStorage, Hook.DEPOSIT, abi.encodePacked(_assets, _shares, _receiver, _assetType));
         _crossNonReentrantBefore(_shareStorage, _collateralConfig.otherSilo, Hook.DEPOSIT);
 

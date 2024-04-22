@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.21;
 
+import {ISilo} from "./interfaces/ISilo.sol";
 import {ISiloConfig} from "./interfaces/ISiloConfig.sol";
 import {IShareToken} from "./interfaces/IShareToken.sol";
 import {IHookReceiver} from "./utils/hook-receivers/interfaces/IHookReceiver.sol";
@@ -86,6 +87,7 @@ contract SiloConfig is ISiloConfig {
     /// @param _configData0 silo configuration data for token0
     /// @param _configData1 silo configuration data for token1
     constructor(uint256 _siloId, ConfigData memory _configData0, ConfigData memory _configData1) {
+        _crossReentrantStatus = CrossEntrancy.NOT_ENTERED;
         SILO_ID = _siloId;
 
         _DAO_FEE = _configData0.daoFee;
@@ -294,6 +296,24 @@ contract SiloConfig is ISiloConfig {
         (collateralConfig, debtConfig) = _getConfigs(_silo, 0, _debtsInfo[address(0)]); // TODO
     }
 
+    function getConfigsAndAccrue(address _silo)
+        external
+        virtual
+        returns (ConfigData memory collateralConfig, ConfigData memory debtConfig)
+    {
+        (collateralConfig, debtConfig) = _getConfigs(_silo, 0, _debtsInfo[address(0)]); // TODO
+
+        _callAccrueInterest(_silo);
+    }
+
+    function _callAccrueInterest(address _silo) internal {
+        ISilo(_silo).accrueInterestForConfig(
+            _silo == _SILO0 ? _INTEREST_RATE_MODEL0 : _INTEREST_RATE_MODEL1,
+            _DAO_FEE,
+            _DEPLOYER_FEE
+        );
+    }
+
     function getConfigs(address _silo, address _borrower, uint256 _hook)
         external
         view
@@ -306,6 +326,18 @@ contract SiloConfig is ISiloConfig {
 
     /// @inheritdoc ISiloConfig
     function getConfig(address _silo) external view virtual returns (ConfigData memory) {
+        if (_silo == _SILO0) {
+            return _silo0ConfigData();
+        } else if (_silo == _SILO1) {
+            return _silo1ConfigData();
+        } else {
+            revert WrongSilo();
+        }
+    }
+
+    function getConfigAndAccrue(address _silo) external virtual returns (ConfigData memory) {
+        _callAccrueInterest(_silo);
+
         if (_silo == _SILO0) {
             return _silo0ConfigData();
         } else if (_silo == _SILO1) {
