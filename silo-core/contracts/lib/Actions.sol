@@ -241,7 +241,7 @@ library Actions {
             if (result != _LEVERAGE_CALLBACK) revert ISilo.LeverageFailed();
 
             // after deposit, guard is down, for max security we need to enable it again
-            _siloConfig.crossLeverageGuard(CrossEntrancy.ENTERED);
+            _siloConfig.crossNonReentrantBefore(CrossEntrancy.ENTERED);
         }
 
         if (collateralConfig.callBeforeQuote) {

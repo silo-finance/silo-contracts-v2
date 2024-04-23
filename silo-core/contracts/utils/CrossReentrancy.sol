@@ -43,13 +43,6 @@ abstract contract CrossReentrancy {
     }
 
     function _crossLeverageGuard(uint256 _entranceFrom) internal virtual {
-        // this case is for been able to set guard after deposit, when we still inside leverege
-        if (_crossReentrantStatus == CrossEntrancy.NOT_ENTERED && _entranceFrom == CrossEntrancy.ENTERED) {
-            // Any calls to nonReentrant after this point will fail
-            _crossReentrantStatus = CrossEntrancy.ENTERED;
-            return;
-        }
-
         if (_crossReentrantStatus == CrossEntrancy.ENTERED && _entranceFrom == CrossEntrancy.ENTERED_FROM_LEVERAGE) {
             // we need to be inside leverage and before callback, we mark our status
             _crossReentrantStatus = CrossEntrancy.ENTERED_FROM_LEVERAGE;
