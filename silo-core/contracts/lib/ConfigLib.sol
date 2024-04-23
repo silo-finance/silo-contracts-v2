@@ -8,7 +8,13 @@ import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
 
 import {Hook} from "./Hook.sol";
 
-
+// TODO problem with this lib is that it take 4K gas to order them
+// solutions:
+// - keep it in SiloConfig so we do not create copies of ConfigData
+// - operate on uint instead of ConfigData, and then pull final config in right order
+// - operate on methods as return data
+// - if we can move debtInfo to Silo0 (or keep it simply in Silo),
+//   then this is enough to pre-order and then we just need to pull config
 library ConfigLib {
     /// @dev result of this method is ordered configs
     /// @param _silo0Conf ConfigData for SILO0
