@@ -28,13 +28,10 @@ library ConfigLib {
     {
         if (!_debtInfo.debtPresent) {
             if (_hook & (Hook.BORROW | Hook.SAME_ASSET) != 0) {
-                console.log("[no debt] BORROW SAME_ASSET");
                 return _callForSilo0 ? SILO0_SILO0 : SILO1_SILO1;
             } else if (_hook & (Hook.BORROW | Hook.TWO_ASSETS) != 0) {
-                console.log("[no debt] BORROW TWO_ASSETS");
                 return _callForSilo0 ? SILO1_SILO0 : SILO0_SILO1;
             } else {
-                console.log("[no debt]");
                 return _callForSilo0 ? SILO0_SILO1 : SILO1_SILO0;
             }
         } else if (_hook & Hook.WITHDRAW != 0) {
@@ -55,14 +52,10 @@ library ConfigLib {
             }
         }
 
-        console.log("debt is present");
-
         if (_debtInfo.debtInSilo0) {
-            console.log("[debt present] debtInSilo0 - yes");
             _debtInfo.debtInThisSilo = _callForSilo0;
             return _debtInfo.sameAsset ? SILO0_SILO0 : SILO1_SILO0;
         } else {
-            console.log("[debt present] debtInSilo0 - no");
             _debtInfo.debtInThisSilo = !_callForSilo0;
             return _debtInfo.sameAsset ? SILO1_SILO1 : SILO0_SILO1;
         }

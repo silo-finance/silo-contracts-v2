@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.21;
 
-import {console} from "forge-std/console.sol";
-
 import {
 ERC20Upgradeable,
 IERC20MetadataUpgradeable,
@@ -73,9 +71,6 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
     address public hookReceiver; // TODO remove!
 
     modifier onlySilo() {
-        console.log("[ShareToken] me", address(this));
-        console.log("[ShareToken] my silo", address(silo));
-        console.log("[ShareToken] msg.sender", msg.sender);
         if (msg.sender != address(silo)) revert OnlySilo();
 
         _;
