@@ -216,15 +216,6 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
         }
     }
 
-    function getConfigs(address _silo)
-        external
-        view
-        virtual
-        returns (ConfigData memory collateralConfig, ConfigData memory debtConfig)
-    {
-        (collateralConfig, debtConfig) = _getConfigs(_silo, 0, _debtsInfo[address(0)]); // TODO
-    }
-
     function getConfigsAndAccrue(address _silo, uint256 _hookAction, address _borrower)
         external
         virtual

@@ -182,11 +182,6 @@ interface ISiloConfig {
         view
         returns (ConfigData memory collateralConfig, ConfigData memory debtConfig, DebtInfo memory debtInfo);
 
-    function getConfigs(address _silo)
-        external
-        view
-        returns (ConfigData memory collateralConfig, ConfigData memory debtConfig);
-
     function getConfigsAndAccrue(address _silo, uint256 _hookAction, address _borrower)
         external
         returns (ConfigData memory collateralConfig, ConfigData memory debtConfig, DebtInfo memory debtInfo);

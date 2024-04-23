@@ -575,7 +575,8 @@ contract Silo is SiloERC4626 {
 
     /// @inheritdoc ISilo
     function accrueInterest() external virtual returns (uint256 accruedInterest) {
-        (accruedInterest,,) = _accrueInterest();
+        ISiloConfig.ConfigData memory cfg = config.getConfig(address(this));
+        accruedInterest = _callAccrueInterestForAsset(cfg.interestRateModel, cfg.daoFee, cfg.deployerFee, address(0));
     }
 
     /// @inheritdoc ISilo
@@ -612,20 +613,6 @@ contract Silo is SiloERC4626 {
             _receiveSToken,
             getRawLiquidity(),
             total
-        );
-    }
-
-    // note: fetching configs directly from lib takes much less gas (~6K less) than fetching in Silo and pass them
-    // to lib via external call
-    function _accrueInterest()
-        internal
-        virtual
-        returns (uint256 accruedInterest, ISiloConfig.ConfigData memory cfg0, ISiloConfig.ConfigData memory cfg1)
-    {
-        (cfg0, cfg1) = config.getConfigs(address(this));
-
-        accruedInterest = _callAccrueInterestForAsset(
-            cfg0.interestRateModel, cfg0.daoFee, cfg0.deployerFee, address(0)
         );
     }
 
