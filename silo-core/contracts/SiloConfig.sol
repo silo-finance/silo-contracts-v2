@@ -22,6 +22,7 @@ contract SiloConfig is ISiloConfig {
     uint256 private immutable _DAO_FEE;
     uint256 private immutable _DEPLOYER_FEE;
     address private immutable _LIQUIDATION_MODULE;
+    address private immutable _HOOK_RECEIVER;
 
     // TOKEN #0
 
@@ -45,8 +46,6 @@ contract SiloConfig is ISiloConfig {
     uint256 private immutable _LT0;
     uint256 private immutable _LIQUIDATION_FEE0;
     uint256 private immutable _FLASHLOAN_FEE0;
-
-    address private immutable _HOOK_RECEIVER0;
 
     bool private immutable _CALL_BEFORE_QUOTE0;
 
@@ -73,8 +72,6 @@ contract SiloConfig is ISiloConfig {
     uint256 private immutable _LIQUIDATION_FEE1;
     uint256 private immutable _FLASHLOAN_FEE1;
 
-    address private immutable _HOOK_RECEIVER1;
-
     bool private immutable _CALL_BEFORE_QUOTE1;
 
     // TODO do we need events for this? this is internal state only
@@ -93,6 +90,7 @@ contract SiloConfig is ISiloConfig {
         _DAO_FEE = _configData0.daoFee;
         _DEPLOYER_FEE = _configData0.deployerFee;
         _LIQUIDATION_MODULE = _configData0.liquidationModule;
+        _HOOK_RECEIVER = _configData0.hookReceiver;
 
         // TOKEN #0
 
@@ -112,8 +110,6 @@ contract SiloConfig is ISiloConfig {
         _LT0 = _configData0.lt;
         _LIQUIDATION_FEE0 = _configData0.liquidationFee;
         _FLASHLOAN_FEE0 = _configData0.flashloanFee;
-
-        _HOOK_RECEIVER0 = _configData0.hookReceiver;
 
         _CALL_BEFORE_QUOTE0 = _configData0.callBeforeQuote;
 
@@ -135,8 +131,6 @@ contract SiloConfig is ISiloConfig {
         _LT1 = _configData1.lt;
         _LIQUIDATION_FEE1 = _configData1.liquidationFee;
         _FLASHLOAN_FEE1 = _configData1.flashloanFee;
-
-        _HOOK_RECEIVER1 = _configData1.hookReceiver;
 
         _CALL_BEFORE_QUOTE1 = _configData1.callBeforeQuote;
     }
@@ -456,11 +450,12 @@ contract SiloConfig is ISiloConfig {
             liquidationFee: _LIQUIDATION_FEE0,
             flashloanFee: _FLASHLOAN_FEE0,
             liquidationModule: _LIQUIDATION_MODULE,
-            hookReceiver: _HOOK_RECEIVER0,
+            hookReceiver: _HOOK_RECEIVER,
             callBeforeQuote: _CALL_BEFORE_QUOTE0
         });
     }
 
+    // TODO make sure, this getters for configs does not increase gas
     function _silo1ConfigData() internal view returns (ConfigData memory config) {
         config = ConfigData({
             daoFee: _DAO_FEE,
@@ -479,7 +474,7 @@ contract SiloConfig is ISiloConfig {
             liquidationFee: _LIQUIDATION_FEE1,
             flashloanFee: _FLASHLOAN_FEE1,
             liquidationModule: _LIQUIDATION_MODULE,
-            hookReceiver: _HOOK_RECEIVER1,
+            hookReceiver: _HOOK_RECEIVER,
             callBeforeQuote: _CALL_BEFORE_QUOTE1
         });
     }
@@ -497,11 +492,9 @@ contract SiloConfig is ISiloConfig {
         virtual
         returns (IHookReceiver hookReceiver)
     {
-        hookReceiver = IHookReceiver(_callFromSilo0 ? _HOOK_RECEIVER0 : _HOOK_RECEIVER1);
-
-        if (address(hookReceiver) != address(0)) {
+        if (_HOOK_RECEIVER != address(0)) {
             uint256 hookTriggers = _callFromSilo0 ? hooksSetup.silo0HooksBefore : hooksSetup.silo1HooksBefore;
-            return hookTriggers & (_hookAction | Hook.BEFORE) == 0 ? IHookReceiver(address(0)) : hookReceiver;
+            return hookTriggers & (_hookAction | Hook.BEFORE) == 0 ? IHookReceiver(address(0)) : IHookReceiver(_HOOK_RECEIVER);
         }
     }
     
@@ -511,11 +504,9 @@ contract SiloConfig is ISiloConfig {
         virtual
         returns (IHookReceiver hookReceiver)
     {
-        hookReceiver = IHookReceiver(_callFromSilo0 ? _HOOK_RECEIVER0 : _HOOK_RECEIVER1);
-
-        if (address(hookReceiver) != address(0)) {
+        if (_HOOK_RECEIVER != address(0)) {
             uint256 hookTriggers = _callFromSilo0 ? hooksSetup.silo0HooksAfter : hooksSetup.silo1HooksAfter;
-            return hookTriggers & (_hookAction | Hook.AFTER) == 0 ? IHookReceiver(address(0)) : hookReceiver;
+            return hookTriggers & (_hookAction | Hook.AFTER) == 0 ? IHookReceiver(address(0)) : IHookReceiver(_HOOK_RECEIVER);
         }
     }
 

@@ -96,6 +96,7 @@ contract SiloConfigData is Test, CommonDeploy {
         });
     }
 
+    // TODO remove?
     function _resolveHookReceiverImpl(string memory _requiredHookReceiver) internal returns (address hookReceiver) {
         if (keccak256(bytes(_requiredHookReceiver)) != NO_HOOK_RECEIVER_KEY) {
             hookReceiver = getDeployedAddress(_requiredHookReceiver);
