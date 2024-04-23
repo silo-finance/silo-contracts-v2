@@ -72,26 +72,6 @@ contract PartialLiquidation is IPartialLiquidation {
             withdrawCollateral,
             repayDebtAssets
         );
-//        {
-//        IHookReceiver hookAfter = siloConfigCached.finishAction(address(this), Hook.LIQUIDATION);
-//
-//        if (address(hookAfter) != address(0)) {
-//            hookAfter.afterActionCall(
-//                debtConfig.silo,
-//                Hook.LIQUIDATION,
-//                abi.encodePacked(
-//                    debtConfig.silo,
-//                    collateralConfig.token,
-//                    debtConfig.token,
-//                    _borrower,
-//                    _debtToCover,
-//                    _receiveSToken,
-//                    withdrawCollateral,
-//                    repayDebtAssets
-//                )
-//            );
-//        }
-//        }
     }
 
     /// @inheritdoc IPartialLiquidation
@@ -119,6 +99,8 @@ contract PartialLiquidation is IPartialLiquidation {
             ISiloConfig.ConfigData memory debtConfig
         )
     {
+        // TODO hook before, we probably need to sync hook settings or pull from silo
+
         siloConfigCached = ISilo(_siloWithDebt).config();
 
         ISiloConfig.DebtInfo memory debtInfo;
@@ -139,13 +121,6 @@ contract PartialLiquidation is IPartialLiquidation {
         ISilo(debtConfig.silo).accrueInterest();
         if (!debtInfo.sameAsset) ISilo(debtConfig.otherSilo).accrueInterest();
 
-        if (collateralConfig.hookReceiver != address(0)) {
-            // TODO
-            // _hookCallBefore(_shareStorage, Hook.SWITCH_COLLATERAL, abi.encodePacked(_sameAsset));
-        }
-
-        // TODO _crossNonReentrantBefore
-
         if (collateralConfig.callBeforeQuote) {
             ISiloOracle(collateralConfig.solvencyOracle).beforeQuote(collateralConfig.token);
         }
@@ -165,10 +140,10 @@ contract PartialLiquidation is IPartialLiquidation {
         uint256 _withdrawCollateral,
         uint256 _repayDebtAssets
     ) internal {
-        // _crossNonReentrantAfter TODO
+        _siloConfig.crossNonReentrantAfter();
 
-        if (collateralConfig.hookReceiver != address(0)) {
-            // TODO
+        // TODO hook after
+//        if (collateralConfig.hookReceiver != address(0)) {
 //            hookAfter.afterActionCall(
 //                debtConfig.silo,
 //                Hook.LIQUIDATION,
@@ -184,6 +159,6 @@ contract PartialLiquidation is IPartialLiquidation {
 //                    _repayDebtAssets
 //                )
 //            );
-        }
+//        }
     }
 }

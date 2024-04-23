@@ -23,7 +23,7 @@ library ConfigLib {
         uint256 _hook
     )
         internal
-        view
+        pure
         returns (uint256 order)
     {
         if (!_debtInfo.debtPresent) {
