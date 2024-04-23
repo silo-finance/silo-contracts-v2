@@ -34,9 +34,9 @@ library ConfigLib {
         returns (uint256 order)
     {
         if (!_debtInfo.debtPresent) {
-            if (_hook & Hook.BORROW & Hook.SAME_ASSET != 0) {
+            if (_hook & (Hook.BORROW | Hook.SAME_ASSET) != 0) {
                 return _callForSilo0 ? SILO0_SILO0 : SILO1_SILO1;
-            } else if (_hook & Hook.BORROW & Hook.TWO_ASSETS != 0) {
+            } else if (_hook & (Hook.BORROW | Hook.TWO_ASSETS) != 0) {
                 return _callForSilo0 ? SILO1_SILO0 : SILO0_SILO1;
             } else {
                return _callForSilo0 ? SILO0_SILO1 : SILO1_SILO0;

@@ -128,6 +128,7 @@ interface ISiloConfig {
     error NoDebt();
     error CollateralTypeDidNotChanged();
     error CrossReentrantCall();
+    error InvalidConfigOrder();
 
     /// @dev should be called on debt transfer, it opens debt if `_to` address don't have one
     /// @param _sender sender address
