@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.21;
 
+import {console} from "forge-std/console.sol";
+
 import {ISilo} from "./interfaces/ISilo.sol";
 import {ISiloConfig} from "./interfaces/ISiloConfig.sol";
 import {IShareToken} from "./interfaces/IShareToken.sol";
@@ -229,21 +231,26 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
         returns (ConfigData memory collateralConfig, ConfigData memory debtConfig, DebtInfo memory debtInfo)
     {
         _crossNonReentrantBefore(_hookAction);
+            console.log("[_openDebt]");
         _callAccrueInterest(_silo);
         debtInfo = _debtsInfo[_borrower];
 
         uint256 order = ConfigLib.orderConfigs(debtInfo, _silo == _SILO0, _hookAction);
 
         if (order == ConfigLib.SILO0_SILO0) {
+            console.log("[SILO0_SILO0]");
             collateralConfig = _silo0ConfigData();
             debtConfig = collateralConfig;
         } else if (order == ConfigLib.SILO1_SILO0) {
+            console.log("[SILO1_SILO0]");
             collateralConfig = _silo1ConfigData();
             debtConfig = _silo0ConfigData();
         } else if (order == ConfigLib.SILO0_SILO1) {
+            console.log("[SILO0_SILO1]");
             collateralConfig = _silo0ConfigData();
             debtConfig = _silo1ConfigData();
         } else if (order == ConfigLib.SILO1_SILO1) {
+            console.log("[SILO1_SILO1]");
             collateralConfig = _silo1ConfigData();
             debtConfig = collateralConfig;
         } else revert InvalidConfigOrder();
