@@ -16,7 +16,7 @@ import {SiloSolvencyLib} from "./SiloSolvencyLib.sol";
 import {SiloStdLib} from "./SiloStdLib.sol";
 import {SiloMathLib} from "./SiloMathLib.sol";
 import {Rounding} from "./Rounding.sol";
-import {Methods} from "./Methods.sol";
+import {Hook} from "./Hook.sol";
 
 library SiloLendingLib {
     using SafeERC20Upgradeable for IERC20Upgradeable;
@@ -267,7 +267,7 @@ library SiloLendingLib {
         ) = _siloConfig.getConfigs(
             address(this),
             _borrower,
-            _sameAsset ? Methods.BORROW_SAME_ASSET : Methods.BORROW_TWO_ASSETS
+            Hook.BORROW | (_sameAsset ? Hook.SAME_ASSET : Hook.TWO_ASSETS)
         );
 
         if (!SiloLendingLib.borrowPossible(debtInfo)) return (0, 0);

@@ -25,7 +25,6 @@ import {SiloERC4626Lib} from "./lib/SiloERC4626Lib.sol";
 import {SiloMathLib} from "./lib/SiloMathLib.sol";
 import {LiquidationWithdrawLib} from "./lib/LiquidationWithdrawLib.sol";
 import {Rounding} from "./lib/Rounding.sol";
-import {Methods} from "./lib/Methods.sol";
 import {Hook} from "./lib/Hook.sol";
 
 // Keep ERC4626 ordering
@@ -96,7 +95,7 @@ contract Silo is SiloERC4626 {
             ISiloConfig.ConfigData memory collateral,
             ISiloConfig.ConfigData memory debt,
             ISiloConfig.DebtInfo memory debtInfo
-        ) = config.getConfigs(address(this), _borrower, Methods.IS_SOLVENT);
+        ) = config.getConfigs(address(this), _borrower, Hook.NONE);
 
         return SiloSolvencyLib.isSolvent(collateral, debt, debtInfo, _borrower, AccrueInterestInMemory.Yes);
     }

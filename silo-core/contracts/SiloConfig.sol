@@ -5,7 +5,6 @@ import {ISilo} from "./interfaces/ISilo.sol";
 import {ISiloConfig} from "./interfaces/ISiloConfig.sol";
 import {IShareToken} from "./interfaces/IShareToken.sol";
 import {CrossReentrancy} from "./utils/CrossReentrancy.sol";
-import {Methods} from "./lib/Methods.sol";
 import {CrossEntrancy} from "./lib/CrossEntrancy.sol";
 import {Hook} from "./lib/Hook.sol";
 import {ConfigLib} from "./lib/ConfigLib.sol";
@@ -228,7 +227,6 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
             // flash loan does not need configs
             return (collateralConfig, debtConfig, debtInfo);
         } else if (_hookAction & Hook.BORROW != 0) {
-            console.log("[_openDebt]");
             debtInfo = _openDebt(_borrower, _hookAction);
         } else if (_hookAction & Hook.SWITCH_COLLATERAL != 0) {
             debtInfo = _changeCollateralType(_borrower, _hookAction & Hook.SAME_ASSET != 0);

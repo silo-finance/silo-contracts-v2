@@ -19,7 +19,6 @@ import {SiloSolvencyLib} from "./SiloSolvencyLib.sol";
 import {SiloLendingLib} from "./SiloLendingLib.sol";
 import {SiloStdLib} from "./SiloStdLib.sol";
 import {CrossEntrancy} from "./CrossEntrancy.sol";
-import {Methods} from "./Methods.sol";
 import {Hook} from "./Hook.sol";
 import {ConfigLib} from "./ConfigLib.sol";
 
