@@ -239,7 +239,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
             debtConfig = collateralConfig;
         } else if (order == ConfigLib.SILO1_SILO0) {
             collateralConfig = _silo1ConfigData();
-            debtConfig = _silo1ConfigData();
+            debtConfig = _silo0ConfigData();
         } else if (order == ConfigLib.SILO0_SILO1) {
             collateralConfig = _silo0ConfigData();
             debtConfig = _silo1ConfigData();
