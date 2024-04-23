@@ -141,8 +141,13 @@ interface ISiloConfig {
     /// @param _entranceFrom see CrossEntrancy lib for possible values
     function crossLeverageGuard(uint256 _entranceFrom) external;
 
-    /// @notice vew method for checking cross Silo git pushreentrancy flag
+    /// @notice view method for checking cross Silo reentrancy flag
+    /// @dev Returns true if the reentrancy guard is currently set to "entered", which indicates there is a
+    /// `nonReentrant` function in the call stack.
     function crossReentrancyGuardEntered() external view returns (bool);
+
+    /// @notice only silo method for cross Silo reentrancy
+    function crossNonReentrantAfter() external;
 
     // solhint-disable-next-line func-name-mixedcase
     function SILO_ID() external view returns (uint256);

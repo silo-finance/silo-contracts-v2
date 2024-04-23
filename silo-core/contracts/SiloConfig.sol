@@ -4,6 +4,7 @@ pragma solidity 0.8.21;
 import {ISilo} from "./interfaces/ISilo.sol";
 import {ISiloConfig} from "./interfaces/ISiloConfig.sol";
 import {IShareToken} from "./interfaces/IShareToken.sol";
+import {CrossReentrancy} from "./utils/CrossReentrancy.sol";
 import {Methods} from "./lib/Methods.sol";
 import {CrossEntrancy} from "./lib/CrossEntrancy.sol";
 import {Hook} from "./lib/Hook.sol";
@@ -14,7 +15,7 @@ import {ConfigLib} from "./lib/ConfigLib.sol";
 /// @notice SiloConfig stores full configuration of Silo in immutable manner
 /// @dev Immutable contract is more expensive to deploy than minimal proxy however it provides nearly 10x cheapper
 /// data access using immutable variables.
-contract SiloConfig is ISiloConfig {
+contract SiloConfig is ISiloConfig, CrossReentrancy {
     uint256 public immutable SILO_ID;
 
     uint256 private immutable _DAO_FEE;
@@ -74,13 +75,11 @@ contract SiloConfig is ISiloConfig {
 
     // TODO do we need events for this? this is internal state only
     mapping (address borrower => DebtInfo debtInfo) internal _debtsInfo;
-    uint256 _crossReentrantStatus;
-
+    
     /// @param _siloId ID of this pool assigned by factory
     /// @param _configData0 silo configuration data for token0
     /// @param _configData1 silo configuration data for token1
-    constructor(uint256 _siloId, ConfigData memory _configData0, ConfigData memory _configData1) {
-        _crossReentrantStatus = CrossEntrancy.NOT_ENTERED;
+    constructor(uint256 _siloId, ConfigData memory _configData0, ConfigData memory _configData1) CrossReentrancy() {
         SILO_ID = _siloId;
 
         _DAO_FEE = _configData0.daoFee;
@@ -131,6 +130,28 @@ contract SiloConfig is ISiloConfig {
         _CALL_BEFORE_QUOTE1 = _configData1.callBeforeQuote;
     }
 
+    function crossReentrancyGuardEntered() external view virtual returns (bool) {
+        return _crossReentrantStatus != CrossEntrancy.NOT_ENTERED;
+    }
+
+//    /// @inheritdoc ISiloConfig
+//    function crossNonReentrantBefore(uint256 _hookAction) external virtual {
+//        _onlySiloOrTokenOrLiquidation();
+//        _crossNonReentrantBefore(_hookAction);
+//    }
+
+    /// @inheritdoc ISiloConfig
+    function crossNonReentrantAfter() external virtual {
+        _onlySiloOrTokenOrLiquidation();
+        _crossNonReentrantAfter();
+    }
+
+    /// @inheritdoc ISiloConfig
+    function crossLeverageGuard(uint256 _entranceFrom) external virtual {
+        _onlySilo();
+        _crossLeverageGuard(_entranceFrom);
+    }
+
     /// @inheritdoc ISiloConfig
     function onDebtTransfer(address _sender, address _recipient) external virtual {
         if (msg.sender != _DEBT_SHARE_TOKEN0 && msg.sender != _DEBT_SHARE_TOKEN1) revert OnlyDebtShareToken();
@@ -154,34 +175,6 @@ contract SiloConfig is ISiloConfig {
         ) revert OnlySiloOrDebtShareToken();
 
         delete _debtsInfo[_borrower];
-    }
-
-    /**
-     * @dev Returns true if the reentrancy guard is currently set to "entered", which indicates there is a
-     * `nonReentrant` function in the call stack.
-     */
-    function crossReentrancyGuardEntered() external view virtual returns (bool) {
-        return _crossReentrantStatus != CrossEntrancy.NOT_ENTERED;
-    }
-
-    /// @inheritdoc ISiloConfig
-    function crossLeverageGuard(uint256 _entranceFrom) external virtual {
-        _onlySilo();
-
-        // this case is for been able to set guard after deposit, when we still inside leverege
-        if (_crossReentrantStatus == CrossEntrancy.NOT_ENTERED && _entranceFrom == CrossEntrancy.ENTERED) {
-            // Any calls to nonReentrant after this point will fail
-            _crossReentrantStatus = CrossEntrancy.ENTERED;
-            return;
-        }
-
-        if (_crossReentrantStatus == CrossEntrancy.ENTERED && _entranceFrom == CrossEntrancy.ENTERED_FROM_LEVERAGE) {
-            // we need to be inside leverage and before callback, we mark our status
-            _crossReentrantStatus = CrossEntrancy.ENTERED_FROM_LEVERAGE;
-            return;
-        }
-
-        revert CrossReentrantCall();
     }
 
     /// @inheritdoc ISiloConfig
@@ -485,22 +478,5 @@ contract SiloConfig is ISiloConfig {
 
     function _onlySilo() internal view virtual {
         if (msg.sender != _SILO0 && msg.sender != _SILO1) revert OnlySilo();
-    }
-
-    function _crossNonReentrantBefore(uint256 _crossReentrantStatusCached, uint256 _hookAction) internal virtual {
-        // On the first call to nonReentrant, _status will be CrossEntrancy.NOT_ENTERED
-        if (_crossReentrantStatusCached == CrossEntrancy.NOT_ENTERED) {
-            // Any calls to nonReentrant after this point will fail
-            _crossReentrantStatus = CrossEntrancy.ENTERED;
-            return;
-        }
-
-        if (_crossReentrantStatusCached == CrossEntrancy.ENTERED_FROM_LEVERAGE && _hookAction == Hook.DEPOSIT) {
-            // on leverage, entrance from deposit is allowed, but allowance is removed when we back to Silo
-            _crossReentrantStatus = CrossEntrancy.ENTERED;
-            return;
-        }
-
-        revert CrossReentrantCall();
     }
 }
