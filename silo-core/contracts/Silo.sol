@@ -45,8 +45,6 @@ contract Silo is SiloERC4626 {
 
     SharedStorage public sharedStorage;
 
-    mapping (address borrower => DebtInfo debtInfo) internal _debtsInfo;
-
     /// @dev silo is just for one asset, but this one asset can be of three types, so we store `assets` by type. We use
     /// struct instead of uint256 to pass storage reference to functions.
     /// `total` can have outdated value (without interest), if you doing view call (of off-chain call) please use
