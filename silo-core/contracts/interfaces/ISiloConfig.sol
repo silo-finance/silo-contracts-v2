@@ -149,6 +149,9 @@ interface ISiloConfig {
     function crossReentrancyGuardEntered() external view returns (bool);
 
     /// @notice only silo method for cross Silo reentrancy
+    function crossNonReentrantBefore(uint256 _hookAction) external;
+
+    /// @notice only silo method for cross Silo reentrancy
     function crossNonReentrantAfter() external;
 
     // solhint-disable-next-line func-name-mixedcase

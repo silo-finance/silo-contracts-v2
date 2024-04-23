@@ -27,8 +27,6 @@ contract WithdrawPartAccrueInterestGasTest is Gas, Test {
 
     // forge test -vv --ffi --mt test_gas_withdrawPartWithInterest
     function test_gas_withdrawPartWithInterest() public {
-        emit log_named_address("withdrawing from silo", address(silo1));
-
         _action(
             DEPOSITOR,
             address(silo1),

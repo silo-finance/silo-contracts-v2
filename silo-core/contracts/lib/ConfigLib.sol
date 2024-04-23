@@ -34,8 +34,8 @@ library ConfigLib {
                 console.log("[no debt] BORROW TWO_ASSETS");
                 return _callForSilo0 ? SILO1_SILO0 : SILO0_SILO1;
             } else {
-               return _callForSilo0 ? SILO0_SILO1 : SILO1_SILO0;
                 console.log("[no debt]");
+                return _callForSilo0 ? SILO0_SILO1 : SILO1_SILO0;
             }
         } else if (_hook & Hook.WITHDRAW != 0) {
             _debtInfo.debtInThisSilo = _callForSilo0 == _debtInfo.debtInSilo0;

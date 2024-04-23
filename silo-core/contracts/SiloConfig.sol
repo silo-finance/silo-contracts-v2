@@ -142,11 +142,11 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
         return _crossReentrantStatus != CrossEntrancy.NOT_ENTERED;
     }
 
-//    /// @inheritdoc ISiloConfig
-//    function crossNonReentrantBefore(uint256 _hookAction) external virtual {
-//        _onlySiloOrTokenOrLiquidation();
-//        _crossNonReentrantBefore(_hookAction);
-//    }
+    /// @inheritdoc ISiloConfig
+    function crossNonReentrantBefore(uint256 _hookAction) external virtual {
+        _onlySiloOrTokenOrLiquidation();
+        _crossNonReentrantBefore(_hookAction);
+    }
 
     /// @inheritdoc ISiloConfig
     function crossNonReentrantAfter() external virtual {
@@ -231,9 +231,24 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
         returns (ConfigData memory collateralConfig, ConfigData memory debtConfig, DebtInfo memory debtInfo)
     {
         _crossNonReentrantBefore(_hookAction);
+
+        if (_hookAction & Hook.SHARE_TOKEN_TRANSFER != 0) {
+            // share token transfer does not need configs
+            return (collateralConfig, debtConfig, debtInfo);
+        } else if (_hookAction & Hook.FLASH_LOAN != 0) {
+            // flash loan does not need configs
+            return (collateralConfig, debtConfig, debtInfo);
+        } else if (_hookAction & Hook.BORROW != 0) {
             console.log("[_openDebt]");
+            debtInfo = _openDebt(_borrower, _hookAction);
+        } else if (_hookAction & Hook.SWITCH_COLLATERAL != 0) {
+            debtInfo = _changeCollateralType(_borrower, _hookAction & Hook.SAME_ASSET != 0);
+        } else {
+            debtInfo = _debtsInfo[_borrower];
+        }
+
+        // TODO note then before hook call will work on not up to date data because we AccrueInterest after hook call
         _callAccrueInterest(_silo);
-        debtInfo = _debtsInfo[_borrower];
 
         uint256 order = ConfigLib.orderConfigs(debtInfo, _silo == _SILO0, _hookAction);
 

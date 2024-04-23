@@ -25,7 +25,7 @@ library SiloLendingLib {
     uint256 internal constant _PRECISION_DECIMALS = 1e18;
 
     /// @notice Allows repaying borrowed assets either partially or in full
-    /// @param _configData Configuration data relevant to the silo asset
+    /// @param _debtConfig Configuration data for silo with debt
     /// @param _assets The amount of assets to repay. Use 0 if shares are used.
     /// @param _shares The number of corresponding shares associated with the debt. Use 0 if assets are used.
     /// @param _borrower The account that has the debt
@@ -34,7 +34,7 @@ library SiloLendingLib {
     /// @return assets The amount of assets that was repaid
     /// @return shares The corresponding number of debt shares that were repaid
     function repay(
-        ISiloConfig.ConfigData memory _configData,
+        ISiloConfig.ConfigData memory _debtConfig,
         uint256 _assets,
         uint256 _shares,
         address _borrower,
@@ -43,7 +43,7 @@ library SiloLendingLib {
     ) internal returns (uint256 assets, uint256 shares) {
         if (_assets == 0 && _shares == 0) revert ISilo.ZeroAssets();
 
-        IShareToken debtShareToken = IShareToken(_configData.debtShareToken);
+        IShareToken debtShareToken = IShareToken(_debtConfig.debtShareToken);
         uint256 totalDebtAssets = _totalDebt.assets;
 
         (assets, shares) = SiloMathLib.convertToAssetsAndToShares(
@@ -68,7 +68,7 @@ library SiloLendingLib {
         // Reentrancy is possible only for view methods (read-only reentrancy),
         // so no harm can be done as the state is already updated.
         // We do not expect the silo to work with any malicious token that will not send tokens back.
-        IERC20Upgradeable(_configData.token).safeTransferFrom(_repayer, address(this), assets);
+        IERC20Upgradeable(_debtConfig.token).safeTransferFrom(_repayer, address(this), assets);
     }
 
     /// @notice Accrues interest on assets, updating the collateral and debt balances

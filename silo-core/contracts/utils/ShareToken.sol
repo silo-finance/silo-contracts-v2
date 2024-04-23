@@ -113,11 +113,11 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
         override(ERC20Upgradeable, IERC20Upgradeable)
         returns (bool result)
     {
-        (address siloCached, ISiloConfig siloConfigCached) = _beforeExternalTransferAction(_from, _to, _amount);
+        ISiloConfig siloConfigCached = _beforeExternalTransferAction(_from, _to, _amount);
 
         result = ERC20Upgradeable.transferFrom(_from, _to, _amount);
 
-        _afterExternalTransferAction(siloCached, siloConfigCached, _from, _to, _amount, result);
+        siloConfigCached.crossNonReentrantAfter();
     }
 
     /// @inheritdoc ERC20Upgradeable
@@ -127,11 +127,11 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
         override(ERC20Upgradeable, IERC20Upgradeable)
         returns (bool result)
     {
-        (address siloCached, ISiloConfig siloConfigCached) = _beforeExternalTransferAction(msg.sender, _to, _amount);
+        ISiloConfig siloConfigCached = _beforeExternalTransferAction(msg.sender, _to, _amount);
 
         result = ERC20Upgradeable.transfer(_to, _amount);
 
-        _afterExternalTransferAction(siloCached, siloConfigCached, msg.sender, _to, _amount, result);
+        siloConfigCached.crossNonReentrantAfter();
     }
 
     /// @inheritdoc IShareToken
@@ -257,7 +257,7 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
             IHookReceiver.afterAction.selector,
             setup.hooksAfter,
             setup.tokenType,
-            abi.encodePacked(_sender, _recipient, _amount)
+            abi.encodePacked(_sender, _recipient, _amount) // tODO total supply?
         );
     }
 
@@ -305,39 +305,9 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
     function _beforeExternalTransferAction(address _from, address _to, uint256 _amount)
         internal
         virtual
-        returns (address siloCached, ISiloConfig siloConfigCached)
+        returns (ISiloConfig siloConfigCached)
     {
-        // TODO
-//        siloConfigCached = siloConfig;
-//        siloCached = address(silo);
-//
-//        // TODO what would be cheaper: cache hook address or call for config?
-//        siloConfigCached.getConfig(
-//            siloCached,
-//            address(0) /* no borrower */,
-//            Hook.SHARE_TOKEN_TRANSFER | _hookSetup.tokenType,
-//            abi.encodePacked(_from, _to, _amount)
-//        );
-    }
-
-    function _afterExternalTransferAction(
-        address _silo,
-        ISiloConfig _siloConfig,
-        address _from,
-        address _to,
-        uint256 _amount,
-        bool _result
-    ) internal virtual {
-        //TODO
-//        uint256 hookAction = Hook.SHARE_TOKEN_TRANSFER | _hookSetup.tokenType;
-//        IHookReceiver hookAfter = _siloConfig.finishAction(_silo, hookAction);
-//
-//        if (address(hookAfter) != address(0)) {
-//            hookAfter.afterAction(
-//                _silo,
-//                hookAction,
-//                abi.encodePacked(_from, _to, _amount, _result)
-//            );
-//        }
+        siloConfigCached = siloConfig;
+        siloConfigCached.crossNonReentrantBefore(Hook.SHARE_TOKEN_TRANSFER | _hookSetup.tokenType);
     }
 }

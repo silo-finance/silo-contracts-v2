@@ -295,25 +295,25 @@ library Actions {
         }
 
         (
-            ISiloConfig.ConfigData memory collateralConfig,,
+            ,ISiloConfig.ConfigData memory debtConfig,
         ) = _siloConfig.getConfigsAndAccrue(
             address(this),
-            Hook.LIQUIDATION | Hook.REPAY, // TODO make exception for this
+            Hook.LIQUIDATION | Hook.REPAY, // TODO make exception for LIQUIDATION on re-entrancy
             _borrower
         );
 
         if (_liquidation) {
-            if (collateralConfig.liquidationModule != msg.sender) revert ISilo.OnlyLiquidationModule();
+            if (debtConfig.liquidationModule != msg.sender) revert ISilo.OnlyLiquidationModule();
         }
 
         (
             assets, shares
-        ) = SiloLendingLib.repay(collateralConfig, _assets, _shares, _borrower, _repayer, _totalDebt);
+        ) = SiloLendingLib.repay(debtConfig, _assets, _shares, _borrower, _repayer, _totalDebt);
 
         if (!_liquidation) {
             _siloConfig.crossNonReentrantAfter();
 
-            if (collateralConfig.hookReceiver != address(0)) {
+            if (debtConfig.hookReceiver != address(0)) {
                 _hookCallAfter(
                     _shareStorage,
                     Hook.REPAY,

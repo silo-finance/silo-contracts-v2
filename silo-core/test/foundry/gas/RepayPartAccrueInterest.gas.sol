@@ -25,6 +25,7 @@ contract RepayPartAccrueInterestGasTest is Gas, Test {
         vm.warp(block.timestamp + 1 days);
     }
 
+    // forge test -vv --ffi --mt test_gas_repayPartWithInterest
     function test_gas_repayPartWithInterest() public {
         _action(
             BORROWER,
