@@ -163,6 +163,7 @@ library Actions {
     // getConfigsAndAccrue: expected 176906 got 192410 it is more by 15504
     // getConfigsAndAccrue + HOOK address check: expected 176906 got 191271 it is more by 14365
     // getConfigsAndAccrue + HOOK address check + lib for ordering: expected 176906 got 195179 it is more by 18273
+    // getConfigsAndAccrue + HOOK address check + lib for ordering using UINT: expected 176906 got 148652 it is less by 28254
     function withdraw(
         ISiloConfig _siloConfig,
         ISilo.SharedStorage storage _shareStorage,
@@ -180,10 +181,10 @@ library Actions {
             ISiloConfig.DebtInfo memory debtInfo
         ) = _siloConfig.getConfigsAndAccrue(address(this), Hook.WITHDRAW, _args.owner);
 
-        // TODO _callForSilo0 is always true? maybe now is should be `_callForThisSilo`?
-        console.log("silo before", collateralConfig.silo);
-        (collateralConfig, debtConfig) = ConfigLib.orderConfigs(collateralConfig, debtConfig, debtInfo, collateralConfig.silo == address(this), Hook.WITHDRAW);
-        console.log("silo after", collateralConfig.silo);
+//        // TODO _callForSilo0 is always true? maybe now is should be `_callForThisSilo`?
+//        console.log("silo before", collateralConfig.silo);
+//        (collateralConfig, debtConfig) = ConfigLib.orderConfigs(collateralConfig, debtConfig, debtInfo, collateralConfig.silo == address(this), Hook.WITHDRAW);
+//        console.log("silo after", collateralConfig.silo);
 
         // (_args.assetType == ISilo.AssetType.Collateral ? Hook.COLLATERAL_TOKEN : Hook.PROTECTED_TOKEN)
         if (collateralConfig.hookReceiver != address(0)) {

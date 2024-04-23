@@ -8,6 +8,7 @@ import {IHookReceiver} from "./utils/hook-receivers/interfaces/IHookReceiver.sol
 import {Methods} from "./lib/Methods.sol";
 import {CrossEntrancy} from "./lib/CrossEntrancy.sol";
 import {Hook} from "./lib/Hook.sol";
+import {ConfigLib} from "./lib/ConfigLib.sol";
 
 // solhint-disable var-name-mixedcase
 
@@ -298,9 +299,25 @@ contract SiloConfig is ISiloConfig {
         _callAccrueInterest(_silo);
         debtInfo = _debtsInfo[_borrower];
 
+        uint256 order = ConfigLib.orderConfigs(debtInfo, _silo == _SILO0, _hookAction);
+
+        if (order == ConfigLib.SILO0_SILO0) {
+            collateralConfig = _silo0ConfigData();
+            debtConfig = collateralConfig;
+        } else if (order == ConfigLib.SILO1_SILO0) {
+            collateralConfig = _silo1ConfigData();
+            debtConfig = _silo1ConfigData();
+        } else if (order == ConfigLib.SILO0_SILO1) {
+            collateralConfig = _silo0ConfigData();
+            debtConfig = _silo1ConfigData();
+        } else if (order == ConfigLib.SILO1_SILO1) {
+            collateralConfig = _silo1ConfigData();
+            debtConfig = collateralConfig;
+        }
+
 //        (collateralConfig, debtConfig) = _getConfigs(_silo, _hookAction, debtInfo);
-        collateralConfig = _silo0ConfigData();
-        debtConfig = _silo1ConfigData();
+//        collateralConfig = _silo0ConfigData();
+//        debtConfig = _silo1ConfigData();
         //= _getConfigs(_silo, _hookAction, debtInfo);
     }
 

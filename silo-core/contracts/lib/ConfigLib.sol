@@ -16,70 +16,55 @@ import {Hook} from "./Hook.sol";
 // - if we can move debtInfo to Silo0 (or keep it simply in Silo),
 //   then this is enough to pre-order and then we just need to pull config
 library ConfigLib {
+    uint256 internal constant SILO0_SILO0 = 0;
+    uint256 internal constant SILO1_SILO0 = 1;
+    uint256 internal constant SILO0_SILO1 = 2;
+    uint256 internal constant SILO1_SILO1 = 3;
+
     /// @dev result of this method is ordered configs
-    /// @param _silo0Conf ConfigData for SILO0
-    /// @param _silo1Conf ConfigData for SILO1
     /// @param _debtInfo borrower _silo1Conf info
     /// @param _hook this is action for which we pulling configs
     function orderConfigs(
-        ISiloConfig.ConfigData memory _silo0Conf, // by default silo0
-        ISiloConfig.ConfigData memory _silo1Conf, // by default silo1
         ISiloConfig.DebtInfo memory _debtInfo,
         bool _callForSilo0,
         uint256 _hook
     )
         internal
         view
-        returns (ISiloConfig.ConfigData memory collateral, ISiloConfig.ConfigData memory debt)
+        returns (uint256 order)
     {
         if (!_debtInfo.debtPresent) {
             if (_hook & Hook.BORROW & Hook.SAME_ASSET != 0) {
-                return _callForSilo0 ? (_silo0Conf, _silo0Conf) : (_silo1Conf, _silo1Conf);
+                return _callForSilo0 ? SILO0_SILO0 : SILO1_SILO1;
             } else if (_hook & Hook.BORROW & Hook.TWO_ASSETS != 0) {
-                return _callForSilo0 ? (_silo1Conf, _silo0Conf) : (_silo0Conf, _silo1Conf);
+                return _callForSilo0 ? SILO1_SILO0 : SILO0_SILO1;
             } else {
-               return _callForSilo0 ? (_silo0Conf, _silo1Conf) : (_silo1Conf, _silo0Conf);
+               return _callForSilo0 ? SILO0_SILO1 : SILO1_SILO0;
             }
         } else if (_hook & Hook.WITHDRAW != 0) {
             _debtInfo.debtInThisSilo = _callForSilo0 == _debtInfo.debtInSilo0;
 
             if (_debtInfo.sameAsset) {
                 if (_debtInfo.debtInSilo0) {
-                    return _callForSilo0
-                        ? (_silo0Conf, _silo0Conf)
-                        : (_silo1Conf, _silo0Conf); // only deposit
+                    return _callForSilo0 ? SILO0_SILO0 : SILO1_SILO0 /* only deposit */;
                 } else {
-                    return _callForSilo0
-                        ? (_silo0Conf, _silo1Conf) // only deposit
-                        : (_silo1Conf, _silo1Conf);
+                    return _callForSilo0 ? SILO0_SILO1 /* only deposit */ : SILO1_SILO1;
                 }
             } else {
                 if (_debtInfo.debtInSilo0) {
-                    return _callForSilo0
-                        ? (_silo0Conf, _silo1Conf)
-                        : (_silo1Conf, _silo0Conf); // only deposit
+                    return _callForSilo0 ? SILO0_SILO1 : SILO1_SILO0 /* only deposit */;
                 } else {
-                    return _callForSilo0
-                        ? (_silo0Conf, _silo1Conf) // only deposit
-                        : (_silo1Conf, _silo0Conf);
+                    return _callForSilo0 ? SILO0_SILO1 /* only deposit */ : SILO1_SILO0;
                 }
             }
         }
 
         if (_debtInfo.debtInSilo0) {
             _debtInfo.debtInThisSilo = _callForSilo0;
-
-            if (_debtInfo.sameAsset) {
-                debt = _silo0Conf;
-            } else {
-                return (_silo1Conf, _silo0Conf);
-            }
+            return _debtInfo.sameAsset ? SILO0_SILO0 : SILO1_SILO0;
         } else {
             _debtInfo.debtInThisSilo = !_callForSilo0;
-
-            if (_debtInfo.sameAsset) {
-                collateral = _silo1Conf;
-            }
+            return _debtInfo.sameAsset ? SILO1_SILO1 : SILO0_SILO1;
         }
     }
 }
