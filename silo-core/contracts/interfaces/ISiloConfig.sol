@@ -118,13 +118,6 @@ interface ISiloConfig {
         bool callBeforeQuote;
     }
 
-    struct HooksSetup {
-        uint64 silo0HooksBefore;
-        uint64 silo0HooksAfter;
-        uint64 silo1HooksBefore;
-        uint64 silo1HooksAfter;
-    }
-
     error OnlySilo();
     error OnlySiloOrLiquidationModule();
     error OnlyShareToken();
@@ -134,25 +127,6 @@ interface ISiloConfig {
     error DebtExistInOtherSilo();
     error NoDebt();
     error CollateralTypeDidNotChanged();
-
-    error CrossReentrantCall();
-//    error OnlyHookReceiver();
-//
-//    event HooksUpdated(address silo, uint256 hooksBefore, uint256 hooksAfter);
-
-//    /// @notice Method for HookReceiver only to update hooks
-//    /// If there are two different hookReceivers then each can update only his silo settings.
-//    /// Other parameters will be ignored.
-//    /// @param _silo0HooksBefore bitmap for Silo0 hooks before, see Hook.sol
-//    /// @param _silo0HooksAfter bitmap for Silo0 hooks after, see Hook.sol
-//    /// @param _silo1HooksBefore bitmap for Silo1 hooks before, see Hook.sol
-//    /// @param _silo1HooksAfter bitmap for Silo1 hooks after, see Hook.sol
-//    function updateHooks(
-//        uint24 _silo0HooksBefore,
-//        uint24 _silo0HooksAfter,
-//        uint24 _silo1HooksBefore,
-//        uint24 _silo1HooksAfter
-//    ) external;
 
     /// @dev should be called on debt transfer, it opens debt if `_to` address don't have one
     /// @param _sender sender address

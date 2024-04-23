@@ -4,7 +4,6 @@ pragma solidity 0.8.21;
 import {ISilo} from "./interfaces/ISilo.sol";
 import {ISiloConfig} from "./interfaces/ISiloConfig.sol";
 import {IShareToken} from "./interfaces/IShareToken.sol";
-import {IHookReceiver} from "./utils/hook-receivers/interfaces/IHookReceiver.sol";
 import {Methods} from "./lib/Methods.sol";
 import {CrossEntrancy} from "./lib/CrossEntrancy.sol";
 import {Hook} from "./lib/Hook.sol";
@@ -16,8 +15,6 @@ import {ConfigLib} from "./lib/ConfigLib.sol";
 /// @dev Immutable contract is more expensive to deploy than minimal proxy however it provides nearly 10x cheapper
 /// data access using immutable variables.
 contract SiloConfig is ISiloConfig {
-    using Hook for IHookReceiver;
-
     uint256 public immutable SILO_ID;
 
     uint256 private immutable _DAO_FEE;
@@ -77,8 +74,6 @@ contract SiloConfig is ISiloConfig {
 
     // TODO do we need events for this? this is internal state only
     mapping (address borrower => DebtInfo debtInfo) internal _debtsInfo;
-
-    HooksSetup public hooksSetup;
     uint256 _crossReentrantStatus;
 
     /// @param _siloId ID of this pool assigned by factory
@@ -439,43 +434,6 @@ contract SiloConfig is ISiloConfig {
         if (msg.sender == _DEBT_SHARE_TOKEN1 && !_debtInSilo0) return;
 
         revert DebtExistInOtherSilo();
-    }
-
-    function _getHookBeforeAddress(bool _callFromSilo0, uint256 _hookAction)
-        internal
-        view
-        virtual
-        returns (IHookReceiver hookReceiver)
-    {
-        if (_HOOK_RECEIVER != address(0)) {
-            uint256 hookTriggers = _callFromSilo0 ? hooksSetup.silo0HooksBefore : hooksSetup.silo1HooksBefore;
-            return hookTriggers & (_hookAction | Hook.BEFORE) == 0 ? IHookReceiver(address(0)) : IHookReceiver(_HOOK_RECEIVER);
-        }
-    }
-    
-    function _getHookAfterAddress(bool _callFromSilo0, uint256 _hookAction)
-        internal
-        view
-        virtual
-        returns (IHookReceiver hookReceiver)
-    {
-        if (_HOOK_RECEIVER != address(0)) {
-            uint256 hookTriggers = _callFromSilo0 ? hooksSetup.silo0HooksAfter : hooksSetup.silo1HooksAfter;
-            return hookTriggers & (_hookAction | Hook.AFTER) == 0 ? IHookReceiver(address(0)) : IHookReceiver(_HOOK_RECEIVER);
-        }
-    }
-
-    function _beforeActionHookCall(address _silo, uint256 _hookAction, bytes memory _input)
-        internal
-        returns (uint256 crossReentrantStatus)
-    {
-        IHookReceiver hookReceiverBefore = _getHookBeforeAddress(_silo == _SILO0, _hookAction);
-        crossReentrantStatus = _crossReentrantStatus;
-
-        // there should be no hook calls, if you inside action eg inside leverage, liquidation etc
-        if (address(hookReceiverBefore) != address(0) && crossReentrantStatus == CrossEntrancy.NOT_ENTERED) {
-            hookReceiverBefore.beforeActionCall(_silo, _hookAction, _input);
-        }
     }
 
     /// @notice it will change collateral for existing debt, only silo can call it
