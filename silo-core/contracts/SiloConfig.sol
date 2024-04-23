@@ -12,6 +12,12 @@ import {ConfigLib} from "./lib/ConfigLib.sol";
 
 // solhint-disable var-name-mixedcase
 
+/*
+- debt Info still in config idk if I can move it.
+    - if I move debtInfo to any other place, this place have to know silos addresses and share debt address
+
+*/
+
 /// @notice SiloConfig stores full configuration of Silo in immutable manner
 /// @dev Immutable contract is more expensive to deploy than minimal proxy however it provides nearly 10x cheapper
 /// data access using immutable variables.
@@ -222,6 +228,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
         virtual
         returns (ConfigData memory collateralConfig, ConfigData memory debtConfig, DebtInfo memory debtInfo)
     {
+        _crossNonReentrantBefore(_hookAction);
         _callAccrueInterest(_silo);
         debtInfo = _debtsInfo[_borrower];
 
@@ -277,6 +284,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
     }
 
     function getConfigAndAccrue(address _silo) external virtual returns (ConfigData memory) {
+        _crossNonReentrantBefore(Hook.NONE);
         _callAccrueInterest(_silo);
 
         if (_silo == _SILO0) {

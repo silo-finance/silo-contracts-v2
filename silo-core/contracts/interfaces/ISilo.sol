@@ -77,19 +77,6 @@ interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
         IHookReceiver hookReceiver; // TODO will this help? we need to read re-entracy flag anyway
         uint24 hooksBefore;
         uint24 hooksAfter;
-
-        // Booleans are more expensive than uint256 or any type that takes up a full
-        // word because each write operation emits an extra SLOAD to first read the
-        // slot's contents, replace the bits taken up by the boolean, and then write
-        // back. This is the compiler's defense against contract upgrades and
-        // pointer aliasing, and it cannot be disabled.
-
-        // The values being non-zero value makes deployment a bit more expensive,
-        // but in exchange the refund on every call to nonReentrant will be lower in
-        // amount. Since refunds are capped to a percentage of the total
-        // transaction's gas, it is best to keep them low in cases like this one, to
-        // increase the likelihood of the full refund coming into effect.
-        uint24 crossReentrantStatus;
     }
 
     /// @dev this struct is used for all types of assets: collateral, protected and debt
@@ -187,7 +174,6 @@ interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
     error LeverageTooHigh();
     error SiloInitialized();
     error OnlyHookReceiver();
-    error CrossReentrantCall();
 
     /// @notice Initialize Silo
     /// @param _siloConfig address of ISiloConfig with full config for this Silo
@@ -207,8 +193,7 @@ interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
         returns (
             IHookReceiver hookReceiver,
             uint24 hooksBefore,
-            uint24 hooksAfter,
-            uint24 crossReentrantStatus
+            uint24 hooksAfter
         );
 
     /// @notice Fetches the silo configuration contract

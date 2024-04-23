@@ -26,7 +26,6 @@ import {SiloMathLib} from "./lib/SiloMathLib.sol";
 import {LiquidationWithdrawLib} from "./lib/LiquidationWithdrawLib.sol";
 import {Rounding} from "./lib/Rounding.sol";
 import {Methods} from "./lib/Methods.sol";
-import {CrossEntrancy} from "./lib/CrossEntrancy.sol";
 import {Hook} from "./lib/Hook.sol";
 
 // Keep ERC4626 ordering
@@ -71,8 +70,6 @@ contract Silo is SiloERC4626 {
 
         address interestRateModel = _siloConfig.getConfig(address(this)).interestRateModel;
         IInterestRateModel(interestRateModel).connect(_modelConfigAddress);
-
-        sharedStorage.crossReentrantStatus = CrossEntrancy.NOT_ENTERED;
     }
 
     function updateHooks(uint24 _hooksBefore, uint24 _hooksAfter) external {

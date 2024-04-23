@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.21;
 
+import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
 import {CrossEntrancy} from "../lib/CrossEntrancy.sol";
 import {Hook} from "../lib/Hook.sol";
 
 abstract contract CrossReentrancy {
-    error CrossReentrantCall();
-
     // Booleans are more expensive than uint256 or any type that takes up a full
     // word because each write operation emits an extra SLOAD to first read the
     // slot's contents, replace the bits taken up by the boolean, and then write
@@ -40,7 +39,7 @@ abstract contract CrossReentrancy {
             return;
         }
 
-        revert CrossReentrantCall();
+        revert ISiloConfig.CrossReentrantCall();
     }
 
     function _crossLeverageGuard(uint256 _entranceFrom) internal virtual {
@@ -57,7 +56,7 @@ abstract contract CrossReentrancy {
             return;
         }
 
-        revert CrossReentrantCall();
+        revert ISiloConfig.CrossReentrantCall();
     }
 
     function _crossNonReentrantAfter() internal virtual {
