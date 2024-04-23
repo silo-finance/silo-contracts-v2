@@ -66,15 +66,10 @@ interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
         uint256 totalCollateralAssets;
     }
 
-    struct DebtInfo {
-        bool debtPresent;
-        bool sameAsset;
-        bool debtInSilo0;
-        bool debtInThisSilo; // at-hoc when getting configs
-    }
-
+    // TODO what if we store hooks bitmap with siloConfig?
+    // and check bitmap first instead of hook address when doing call
     struct SharedStorage {
-        IHookReceiver hookReceiver; // TODO will this help? we need to read re-entracy flag anyway
+        IHookReceiver hookReceiver;
         uint24 hooksBefore;
         uint24 hooksAfter;
     }
