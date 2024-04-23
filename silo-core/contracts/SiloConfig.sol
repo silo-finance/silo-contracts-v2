@@ -331,9 +331,9 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
         debt = _silo1ConfigData();
 
         if (!_debtInfo.debtPresent) {
-            if (_hookAction & Hook.BORROW & Hook.SAME_ASSET != 0) {
+            if (_hookAction & (Hook.BORROW | Hook.SAME_ASSET) != 0) {
                 return callForSilo0 ? (collateral, collateral) : (debt, debt);
-            } else if (_hookAction & Hook.BORROW & Hook.TWO_ASSETS != 0) {
+            } else if (_hookAction & (Hook.BORROW | Hook.TWO_ASSETS) != 0) {
                 return callForSilo0 ? (debt, collateral) : (collateral, debt);
             } else {
                 return callForSilo0 ? (collateral, debt) : (debt, collateral);
