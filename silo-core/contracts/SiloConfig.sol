@@ -262,14 +262,14 @@ contract SiloConfig is ISiloConfig {
         );
     }
 
-    function getConfigs(address _silo, address _borrower, uint256 _hook)
+    function getConfigs(address _silo, address _borrower, uint256 _hookAction)
         external
         view
         virtual
         returns (ConfigData memory collateralConfig, ConfigData memory debtConfig, DebtInfo memory debtInfo)
     {
         debtInfo = _debtsInfo[_borrower];
-        (collateralConfig, debtConfig) = _getConfigs(_silo, _hook, debtInfo);
+        (collateralConfig, debtConfig) = _getConfigs(_silo, _hookAction, debtInfo);
     }
 
     /// @inheritdoc ISiloConfig
@@ -317,7 +317,7 @@ contract SiloConfig is ISiloConfig {
     }
 
     // solhint-disable-next-line function-max-lines, code-complexity
-    function _getConfigs(address _silo, uint256 _hook, DebtInfo memory _debtInfo)
+    function _getConfigs(address _silo, uint256 _hookAction, DebtInfo memory _debtInfo)
         internal
         view
         virtual
@@ -330,14 +330,14 @@ contract SiloConfig is ISiloConfig {
         debt = _silo1ConfigData();
 
         if (!_debtInfo.debtPresent) {
-            if (_hook & Hook.BORROW & Hook.SAME_ASSET != 0) {
+            if (_hookAction & Hook.BORROW & Hook.SAME_ASSET != 0) {
                 return callForSilo0 ? (collateral, collateral) : (debt, debt);
-            } else if (_hook & Hook.BORROW & Hook.TWO_ASSETS != 0) {
+            } else if (_hookAction & Hook.BORROW & Hook.TWO_ASSETS != 0) {
                 return callForSilo0 ? (debt, collateral) : (collateral, debt);
             } else {
                 return callForSilo0 ? (collateral, debt) : (debt, collateral);
             }
-        } else if (_hook & Hook.WITHDRAW != 0) {
+        } else if (_hookAction & Hook.WITHDRAW != 0) {
             _debtInfo.debtInThisSilo = callForSilo0 == _debtInfo.debtInSilo0;
 
             if (_debtInfo.sameAsset) {
@@ -454,14 +454,14 @@ contract SiloConfig is ISiloConfig {
         debtInfo.sameAsset = _sameAsset;
     }
 
-    function _openDebt(address _borrower, uint256 _hook) internal virtual returns (DebtInfo memory debtInfo) {
+    function _openDebt(address _borrower, uint256 _hookAction) internal virtual returns (DebtInfo memory debtInfo) {
         _onlySilo();
 
         debtInfo = _debtsInfo[_borrower];
 
         if (!debtInfo.debtPresent) {
             debtInfo.debtPresent = true;
-            debtInfo.sameAsset = _hook & Hook.SAME_ASSET != 0;
+            debtInfo.sameAsset = _hookAction & Hook.SAME_ASSET != 0;
             debtInfo.debtInSilo0 = msg.sender == _SILO0;
 
             _debtsInfo[_borrower] = debtInfo;
