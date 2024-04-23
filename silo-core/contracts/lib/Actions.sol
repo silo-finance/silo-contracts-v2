@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.21;
 
+import {console} from "forge-std/console.sol";
+
 import {IERC20Upgradeable} from "openzeppelin-contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import {SafeERC20Upgradeable} from "openzeppelin-contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
 
@@ -19,6 +21,7 @@ import {SiloStdLib} from "./SiloStdLib.sol";
 import {CrossEntrancy} from "./CrossEntrancy.sol";
 import {Methods} from "./Methods.sol";
 import {Hook} from "./Hook.sol";
+import {ConfigLib} from "./ConfigLib.sol";
 
 library Actions {
     using SafeERC20Upgradeable for IERC20Upgradeable;
@@ -158,6 +161,8 @@ library Actions {
 
     // startAction: expected 176906 got 199694 it is more by 22788
     // getConfigsAndAccrue: expected 176906 got 192410 it is more by 15504
+    // getConfigsAndAccrue + HOOK address check: expected 176906 got 191271 it is more by 14365
+    // getConfigsAndAccrue + HOOK address check + lib for ordering: expected 176906 got 195179 it is more by 18273
     function withdraw(
         ISiloConfig _siloConfig,
         ISilo.SharedStorage storage _shareStorage,
@@ -175,8 +180,15 @@ library Actions {
             ISiloConfig.DebtInfo memory debtInfo
         ) = _siloConfig.getConfigsAndAccrue(address(this), Hook.WITHDRAW, _args.owner);
 
+        // TODO _callForSilo0 is always true? maybe now is should be `_callForThisSilo`?
+        console.log("silo before", collateralConfig.silo);
+        (collateralConfig, debtConfig) = ConfigLib.orderConfigs(collateralConfig, debtConfig, debtInfo, collateralConfig.silo == address(this), Hook.WITHDRAW);
+        console.log("silo after", collateralConfig.silo);
+
         // (_args.assetType == ISilo.AssetType.Collateral ? Hook.COLLATERAL_TOKEN : Hook.PROTECTED_TOKEN)
-        _hookCallBefore(_shareStorage, Hook.WITHDRAW, abi.encodePacked(_args.assets, _args.shares, _args.receiver, _args.owner, _args.spender, _args.assetType));
+        if (collateralConfig.hookReceiver != address(0)) {
+            _hookCallBefore(_shareStorage, Hook.WITHDRAW, abi.encodePacked(_args.assets, _args.shares, _args.receiver, _args.owner, _args.spender, _args.assetType));
+        }
         _crossNonReentrantBefore(_shareStorage, collateralConfig.otherSilo, Hook.WITHDRAW);
 
 //        (
@@ -257,17 +269,20 @@ library Actions {
 
 
         _crossNonReentrantAfter(_shareStorage);
-        //                        (_args.assetType == ISilo.AssetType.Collateral ? Hook.COLLATERAL_TOKEN : Hook.PROTECTED_TOKEN),
-        _hookCallAfter(_shareStorage, Hook.WITHDRAW,
-            abi.encodePacked( _args.assets,
-                _args.shares,
-                _args.receiver,
-                _args.owner,
-                _args.spender,
-                assets,
-                shares
-            )
-        );
+        if (collateralConfig.hookReceiver != address(0)) {
+
+            //                        (_args.assetType == ISilo.AssetType.Collateral ? Hook.COLLATERAL_TOKEN : Hook.PROTECTED_TOKEN),
+            _hookCallAfter(_shareStorage, Hook.WITHDRAW,
+                abi.encodePacked( _args.assets,
+                    _args.shares,
+                    _args.receiver,
+                    _args.owner,
+                    _args.spender,
+                    assets,
+                    shares
+                )
+            );
+        }
     }
 
     // solhint-disable-next-line function-max-lines, code-complexity
@@ -714,6 +729,8 @@ library Actions {
         // On the first call to nonReentrant, _status will be CrossEntrancy.NOT_ENTERED
         if (crossReentrantStatusCached == CrossEntrancy.NOT_ENTERED) {
             // make sure other silo is also down
+            // TODO can we optimise in a way, that we store it in one silo? so there will be one read + optional call
+            // eg we can store in silo0.
             (,,, uint24 otherCrossReentrantStatus) = ISilo(_otherSilo).sharedStorage();
 
             if (otherCrossReentrantStatus != CrossEntrancy.NOT_ENTERED) revert ISilo.CrossReentrantCall();

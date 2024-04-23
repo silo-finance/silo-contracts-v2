@@ -304,7 +304,10 @@ contract SiloConfig is ISiloConfig {
         _callAccrueInterest(_silo);
         debtInfo = _debtsInfo[_borrower];
 
-        (collateralConfig, debtConfig) = _getConfigs(_silo, _hookAction, debtInfo);
+//        (collateralConfig, debtConfig) = _getConfigs(_silo, _hookAction, debtInfo);
+        collateralConfig = _silo0ConfigData();
+        debtConfig = _silo1ConfigData();
+        //= _getConfigs(_silo, _hookAction, debtInfo);
     }
 
     function _callAccrueInterest(address _silo) internal {
