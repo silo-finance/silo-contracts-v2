@@ -154,35 +154,6 @@ interface ISiloConfig {
 //        uint24 _silo1HooksAfter
 //    ) external;
 
-    /// @dev Can be called only by silo, share token or liquidation module
-    /// It will call hook if needed, raise reentrancy guard and return necessary configuration to perform action
-    /// @param _silo silo address for which action is called
-    /// @param _borrower borrower address
-    /// @param _hookAction bitmap with action flags, see `Hook.sol`
-    /// @param _input encoded input data that will be used for hook call before action
-    /// beforeAction call will be done before re-entrancy flag will be up
-    /// @return collateralConfig The configuration data for collateral silo.
-    /// @return debtConfig The configuration data for debt silo.
-    /// @return debtInfo details about `borrower` debt
-    function startAction(address _silo, address _borrower, uint256 _hookAction, bytes calldata _input)
-        external
-        returns (
-            ConfigData memory collateralConfig,
-            ConfigData memory debtConfig,
-            DebtInfo memory debtInfo
-        );
-
-    function startAction(address _borrower, uint256 _hook, bytes calldata _input)
-        external
-        returns (
-            ConfigData memory collateralConfig,
-            ConfigData memory debtConfig,
-            DebtInfo memory debtInfo
-        );
-
-    /// @dev it will execute necessary actions at the end eg. disable reentrancy flag
-    function finishAction(address _silo, uint256 _hookAction) external returns (IHookReceiver hookReceiverAfter);
-
     /// @dev should be called on debt transfer, it opens debt if `_to` address don't have one
     /// @param _sender sender address
     /// @param _recipient recipient address

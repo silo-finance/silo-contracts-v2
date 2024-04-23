@@ -123,11 +123,11 @@ contract PartialLiquidation is IPartialLiquidation {
 
         ISiloConfig.DebtInfo memory debtInfo;
 
-        (collateralConfig, debtConfig, debtInfo) = siloConfigCached.startAction(
+        (collateralConfig, debtConfig, debtInfo) = siloConfigCached.getConfigs(
             _siloWithDebt,
             _borrower,
-            Hook.LIQUIDATION,
-            abi.encodePacked(_siloWithDebt, _collateralAsset, _debtAsset, _borrower, _debtToCover, _receiveSToken)
+            Hook.LIQUIDATION
+//            abi.encodePacked(_siloWithDebt, _collateralAsset, _debtAsset, _borrower, _debtToCover, _receiveSToken)
         );
 
         if (!debtInfo.debtPresent) revert UserIsSolvent();
@@ -138,6 +138,13 @@ contract PartialLiquidation is IPartialLiquidation {
 
         ISilo(debtConfig.silo).accrueInterest();
         if (!debtInfo.sameAsset) ISilo(debtConfig.otherSilo).accrueInterest();
+
+        if (collateralConfig.hookReceiver != address(0)) {
+            // TODO
+            // _hookCallBefore(_shareStorage, Hook.SWITCH_COLLATERAL, abi.encodePacked(_sameAsset));
+        }
+
+        // TODO _crossNonReentrantBefore
 
         if (collateralConfig.callBeforeQuote) {
             ISiloOracle(collateralConfig.solvencyOracle).beforeQuote(collateralConfig.token);
@@ -158,24 +165,25 @@ contract PartialLiquidation is IPartialLiquidation {
         uint256 _withdrawCollateral,
         uint256 _repayDebtAssets
     ) internal {
-        IHookReceiver hookAfter = _siloConfig.finishAction(address(this), Hook.LIQUIDATION);
+        // _crossNonReentrantAfter TODO
 
-        if (address(hookAfter) != address(0)) {
-            hookAfter.afterActionCall(
-                debtConfig.silo,
-                Hook.LIQUIDATION,
-                abi.encodePacked(
-                    debtConfig.silo,
-                    collateralConfig.token,
-                    debtConfig.token,
-                    _borrower,
-                    _debtToCover,
-
-                    _receiveSToken,
-                    _withdrawCollateral,
-                    _repayDebtAssets
-                )
-            );
+        if (collateralConfig.hookReceiver != address(0)) {
+            // TODO
+//            hookAfter.afterActionCall(
+//                debtConfig.silo,
+//                Hook.LIQUIDATION,
+//                abi.encodePacked(
+//                    debtConfig.silo,
+//                    collateralConfig.token,
+//                    debtConfig.token,
+//                    _borrower,
+//                    _debtToCover,
+//
+//                    _receiveSToken,
+//                    _withdrawCollateral,
+//                    _repayDebtAssets
+//                )
+//            );
         }
     }
 }

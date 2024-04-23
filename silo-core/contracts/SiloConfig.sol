@@ -161,17 +161,6 @@ contract SiloConfig is ISiloConfig {
         delete _debtsInfo[_borrower];
     }
 
-    /// @inheritdoc ISiloConfig
-    function finishAction(address _silo, uint256 _hookAction) external virtual returns (IHookReceiver hookReceiverAfter) {
-        _onlySiloOrTokenOrLiquidation();
-
-        // By storing the original value once again, a refund is triggered (see
-        // https://eips.ethereum.org/EIPS/eip-2200)
-        _crossReentrantStatus = CrossEntrancy.NOT_ENTERED;
-
-        hookReceiverAfter = _getHookAfterAddress(_silo == _SILO0, _hookAction);
-    }
-
     /**
      * @dev Returns true if the reentrancy guard is currently set to "entered", which indicates there is a
      * `nonReentrant` function in the call stack.
@@ -229,57 +218,6 @@ contract SiloConfig is ISiloConfig {
         } else {
             revert WrongSilo();
         }
-    }
-
-    /// @inheritdoc ISiloConfig
-    function startAction(address _borrower, uint256 _hook, bytes calldata _input)
-        external
-        virtual
-        returns ( // TODO maybe bytes config for both? and decode to one/two?
-            ConfigData memory collateralConfig,
-            ConfigData memory debtConfig,
-            DebtInfo memory debtInfo
-        )
-    {
-        _onlySilo();
-
-        return startAction(msg.sender, _borrower, _hook, _input);
-    }
-
-    /// @inheritdoc ISiloConfig
-    function startAction(
-        address _silo,
-        address _borrower,
-        uint256 _hookAction, // this will also determine method
-        bytes calldata _input
-    )
-        public
-        virtual
-        returns ( // TODO maybe bytes config for both? and decode to one/two?
-            ConfigData memory collateralConfig,
-            ConfigData memory debtConfig,
-            DebtInfo memory debtInfo
-        )
-    {
-        _onlySiloOrTokenOrLiquidation();
-        
-        _crossNonReentrantBefore(_beforeActionHookCall(_silo, _hookAction, _input), _hookAction);
-
-        if (_hookAction & Hook.SHARE_TOKEN_TRANSFER != 0) {
-            // share token transfer does not need configs
-            return (collateralConfig, debtConfig, debtInfo);
-        } else if (_hookAction & Hook.FLASH_LOAN != 0) {
-            // flash loan does not need configs
-            return (collateralConfig, debtConfig, debtInfo);
-        } else if (_hookAction & Hook.BORROW != 0) {
-            debtInfo = _openDebt(_borrower, _hookAction);
-        } else if (_hookAction & Hook.SWITCH_COLLATERAL != 0) {
-            debtInfo = _changeCollateralType(_borrower, _hookAction & Hook.SAME_ASSET != 0);
-        } else {
-            debtInfo = _debtsInfo[_borrower];
-        }
-
-        (collateralConfig, debtConfig) = _getConfigs(_silo, _hookAction, debtInfo);
     }
 
     function getConfigs(address _silo)

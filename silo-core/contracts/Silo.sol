@@ -385,10 +385,8 @@ contract Silo is SiloERC4626 {
         virtual
         returns (uint256 assets)
     {
-        _accrueInterest();
-
         uint256 toShares;
-        (assets, toShares) = Actions.transitionCollateral(config, _shares, _owner, _withdrawType, total);
+        (assets, toShares) = Actions.transitionCollateral(config, sharedStorage, _shares, _owner, _withdrawType, total);
 
         if (_withdrawType == AssetType.Collateral) {
             emit Withdraw(msg.sender, _owner, _owner, assets, _shares);
@@ -414,9 +412,7 @@ contract Silo is SiloERC4626 {
     }
 
     function switchCollateralTo(bool _sameAsset) external virtual {
-        _accrueInterest();
-
-        Actions.switchCollateralTo(config, _sameAsset);
+        Actions.switchCollateralTo(config, sharedStorage, _sameAsset);
 
         emit CollateralTypeChanged(msg.sender, _sameAsset);
     }
@@ -428,12 +424,11 @@ contract Silo is SiloERC4626 {
         virtual
         returns (uint256 depositedShares, uint256 borrowedShares)
     {
-        _accrueInterest();
-
         (
             depositedShares, borrowedShares
         ) = Actions.leverageSameAsset(
             config,
+            sharedStorage,
             _depositAssets,
             _borrowAssets,
             _borrower,
@@ -563,7 +558,7 @@ contract Silo is SiloERC4626 {
         virtual
         returns (bool success)
     {
-        success = Actions.flashLoan(config, _receiver, _token, _amount, siloData, _data);
+        success = Actions.flashLoan(config, sharedStorage, _receiver, _token, _amount, siloData, _data);
     }
 
     /// @inheritdoc ISilo
@@ -672,15 +667,10 @@ contract Silo is SiloERC4626 {
         virtual
         returns (uint256 assets, uint256 shares)
     {
-        // we need to call it here, to update _total
-//        (, ISiloConfig.ConfigData memory cfg0,) = _accrueInterest();
-//        (, ISiloConfig cfg0) = _accrueInterest(true);
-//        (, ISiloConfig.ConfigData memory cfg0) = _accrueInterestGetConfigData();
-
+        // TODO make sure total are updated when we call accrue interest from SiloConfig
         (
             assets, shares
         ) = Actions.deposit(config, sharedStorage, _assets, _shares, _receiver, _assetType, total[_assetType]);
-//        ) = Actions.depositStartAction(cfg0, _assets, _shares, _receiver, _assetType, total[_assetType]);
 
         if (_assetType == AssetType.Collateral) {
             emit Deposit(msg.sender, _receiver, assets, shares);
@@ -702,8 +692,6 @@ contract Silo is SiloERC4626 {
         virtual
         returns (uint256 assets, uint256 shares)
     {
-        // _accrueInterest(); wil be called from config
-
         (assets, shares) = Actions.withdraw(
             config,
             sharedStorage,
@@ -738,11 +726,9 @@ contract Silo is SiloERC4626 {
         virtual
         returns (uint256 assets, uint256 shares)
     {
-        // we need to call accrueInterest to return up to date total state
-        _accrueInterest();
-
         (assets, shares) = Actions.borrow(
             config,
+            sharedStorage,
             BorrowArgs({
                 assets: _assets,
                 shares: _shares,
@@ -769,12 +755,11 @@ contract Silo is SiloERC4626 {
         virtual
         returns (uint256 assets, uint256 shares)
     {
-        _accrueInterest();
-
         (
             assets, shares
         ) = Actions.repay(
             config,
+            sharedStorage,
             _assets,
             _shares,
             _borrower,
