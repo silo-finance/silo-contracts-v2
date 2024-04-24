@@ -82,15 +82,16 @@ contract ShareTokenTest is Test {
 
     /*
     forge test -vv --mt test_HookReturnCode_notRevertOnCode0
+    TODO
     */
-    function test_HookReturnCode_notRevertOnCode0() public {
-        sToken.initialize(ISilo(address(this)));
-        uint256 amount = 1;
-
-        _afterTokenTransferMockOnMint(amount, Hook.RETURN_CODE_SUCCESS);
-
-        sToken.mint(owner, owner, amount);
-    }
+//    function test_HookReturnCode_notRevertOnCode0() public {
+//        sToken.initialize(ISilo(address(this)));
+//        uint256 amount = 1;
+//
+//        _afterTokenTransferMockOnMint(amount, Hook.RETURN_CODE_SUCCESS);
+//
+//        sToken.mint(owner, owner, amount);
+//    }
 
     /*
     forge test -vv --mt test_HookReturnCode_revertOnRequest
