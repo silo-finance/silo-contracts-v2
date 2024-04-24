@@ -10,7 +10,7 @@ import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {IGaugeLike as IGauge} from "silo-core/contracts/utils/hook-receivers/gauge/interfaces/IGaugeLike.sol";
 
 import {GaugeHookReceiverDeploy} from "silo-core/deploy/GaugeHookReceiverDeploy.s.sol";
-import {TransferOwnership} from  "../_common/TransferOwnership.sol";
+import {TransferOwnership} from  "../../_common/TransferOwnership.sol";
 
 
 // FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc GaugeHookReceiverTest
@@ -49,7 +49,7 @@ contract GaugeHookReceiverTest is Test, TransferOwnership {
         vm.expectRevert();
         _hookReceiver.initialize(_dao, IShareToken(_shareToken));
 
-        bytes memory data = abi.encodePacked(IShareToken.hookReceiver.selector);
+        bytes memory data = abi.encodePacked(IShareToken.hookSetup.selector);
         vm.mockCall(_shareToken, data, abi.encode(address(1))); // an invalid hook receiver
         vm.expectCall(_shareToken, data);
 

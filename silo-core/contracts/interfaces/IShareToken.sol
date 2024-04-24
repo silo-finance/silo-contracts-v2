@@ -86,6 +86,4 @@ interface IShareToken is IERC20MetadataUpgradeable {
     /// @notice Returns silo address for which token was deployed
     /// @return silo address
     function silo() external view returns (ISilo silo);
-
-    function hookReceiver() external view returns (address);
 }
