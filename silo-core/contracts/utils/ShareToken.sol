@@ -59,6 +59,8 @@ import {Hook} from "../lib/Hook.sol";
 /// _Available since v4.7._
 /// @custom:security-contact security@silo.finance
 abstract contract ShareToken is ERC20Upgradeable, IShareToken {
+    using Hook for IHookReceiver;
+
     /// @notice Silo address for which tokens was deployed
     ISilo public silo;
 
@@ -89,14 +91,14 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
         return _hookSetup;
     }
 
-    function synchronizeHooks(address _hookReceiver, uint256 _hooksBefore, uint256 _hooksAfter, uint256 _tokenType)
+    function synchronizeHooks(address _hookReceiver, uint24 _hooksBefore, uint24 _hooksAfter, uint24 _tokenType)
         external
         onlySiloConfig
     {
         _hookSetup.hookReceiver = _hookReceiver;
-        _hookSetup.hooksBefore = uint24(_hooksBefore);
-        _hookSetup.hooksAfter = uint24(_hooksAfter);
-        _hookSetup.tokenType = uint24(_tokenType);
+        _hookSetup.hooksBefore = _hooksBefore;
+        _hookSetup.hooksAfter = _hooksAfter;
+        _hookSetup.tokenType = _tokenType;
     }
 
     /// @inheritdoc ERC20Upgradeable
@@ -230,13 +232,12 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
     function _beforeTokenTransfer(address _sender, address _recipient, uint256 _amount) internal virtual override {
         HookSetup memory setup = _hookSetup;
 
+        if (setup.hookReceiver == address(0)) return;
+        if (setup.hooksBefore & setup.tokenType == 0) return;
+
         // report mint, burn or transfer
-        _callHook(
-            setup.hookReceiver,
-            IHookReceiver.beforeAction.selector,
-            setup.hooksBefore,
-            setup.tokenType,
-            abi.encodePacked(_sender, _recipient, _amount)
+        IHookReceiver(setup.hookReceiver).beforeActionCall(
+            setup.tokenType, abi.encodePacked(_sender, _recipient, _amount)
         );
     }
 
@@ -244,43 +245,13 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
     function _afterTokenTransfer(address _sender, address _recipient, uint256 _amount) internal virtual override {
         HookSetup memory setup = _hookSetup;
 
+        if (setup.hookReceiver == address(0)) return;
+        if (setup.hooksAfter & setup.tokenType == 0) return;
+
         // report mint, burn or transfer
-        _callHook(
-            setup.hookReceiver,
-            IHookReceiver.afterAction.selector,
-            setup.hooksAfter,
-            setup.tokenType,
-            abi.encodePacked(_sender, _recipient, _amount) // tODO total supply?
+        IHookReceiver(setup.hookReceiver).afterActionCall(
+            setup.tokenType, abi.encodePacked(_sender, _recipient, _amount)
         );
-    }
-
-    function _callHook(
-        address _hookReceiver,
-        bytes4 _selector,
-        uint256 _hooksBitmap,
-        uint256 _hookAction,
-        bytes memory _data
-    )
-        internal
-        virtual
-    {
-        if (_hookReceiver == address(0)) return;
-        if (_hooksBitmap & _hookAction == 0) return;
-
-        address siloCached = address(silo);
-
-        // for external transfer we already have call for hook, so we only doing this call if transfer is internal
-        if (msg.sender != siloCached) return;
-
-        (bool callSuccessful, bytes memory code) = _hookReceiver.call( // solhint-disable-line avoid-low-level-calls
-            abi.encodeWithSelector(_selector, siloCached, _hookAction, _data)
-        );
-
-        if (!callSuccessful || code.length == 0) return;
-
-        if (abi.decode(code, (uint256)) == Hook.RETURN_CODE_REQUEST_TO_REVERT_TX) {
-            revert IHookReceiver.RevertRequestFromHook();
-        }
     }
 
     /// @dev checks if operation is "real" transfer

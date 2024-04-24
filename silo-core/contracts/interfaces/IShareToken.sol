@@ -36,12 +36,14 @@ interface IShareToken is IERC20MetadataUpgradeable {
     /// @param _silo Silo address for which tokens was deployed
     function initialize(ISilo _silo) external;
 
+    function hookSetup() external view returns (HookSetup memory);
+
     /// @notice method for SiloConfig to synchronize hooks
     /// @param _hookReceiver address that will get a callback on mint, burn and transfer of the token
     /// @param _hooksBefore hooks bitmap to trigger hooks BEFORE action
     /// @param _hooksAfter hooks bitmap to trigger hooks AFTER action
     /// @param _tokenType must be one of this hooks values: COLLATERAL_TOKEN, PROTECTED_TOKEN, DEBT_TOKEN
-    function synchronizeHooks(address _hookReceiver, uint256 _hooksBefore, uint256 _hooksAfter, uint256 _tokenType)
+    function synchronizeHooks(address _hookReceiver, uint24 _hooksBefore, uint24 _hooksAfter, uint24 _tokenType)
         external;
 
     /// @notice Mint method for Silo to create debt
@@ -80,8 +82,6 @@ interface IShareToken is IERC20MetadataUpgradeable {
     /// @return balance of the _account
     /// @return totalSupply total supply of the token
     function balanceOfAndTotalSupply(address _account) external view returns (uint256 balance, uint256 totalSupply);
-
-    function hookSetup() external view returns (HookSetup memory);
 
     /// @notice Returns silo address for which token was deployed
     /// @return silo address

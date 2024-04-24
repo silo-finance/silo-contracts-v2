@@ -12,6 +12,7 @@ import {ISiloOracle} from "../interfaces/ISiloOracle.sol";
 import {IShareToken} from "../interfaces/IShareToken.sol";
 import {ILeverageBorrower} from "../interfaces/ILeverageBorrower.sol";
 import {IERC3156FlashBorrower} from "../interfaces/IERC3156FlashBorrower.sol";
+import {IPartialLiquidation} from "../interfaces/IPartialLiquidation.sol";
 import {IHookReceiver} from "../utils/hook-receivers/interfaces/IHookReceiver.sol";
 
 import {SiloERC4626Lib} from "./SiloERC4626Lib.sol";
@@ -620,14 +621,18 @@ library Actions {
         _sharedStorage.hooksAfter = _hooksAfter;
 
         IShareToken(cfg.collateralShareToken).synchronizeHooks(
-            cfg.hookReceiver, _hooksBefore, _hooksAfter, Hook.COLLATERAL_TOKEN
+            cfg.hookReceiver, _hooksBefore, _hooksAfter, uint24(Hook.COLLATERAL_TOKEN)
         );
+
         IShareToken(cfg.protectedShareToken).synchronizeHooks(
-            cfg.hookReceiver, _hooksBefore, _hooksAfter, Hook.PROTECTED_TOKEN
+            cfg.hookReceiver, _hooksBefore, _hooksAfter, uint24(Hook.PROTECTED_TOKEN)
         );
+
         IShareToken(cfg.debtShareToken).synchronizeHooks(
-            cfg.hookReceiver, _hooksBefore, _hooksAfter, Hook.DEBT_TOKEN
+            cfg.hookReceiver, _hooksBefore, _hooksAfter, uint24(Hook.DEBT_TOKEN)
         );
+
+        IPartialLiquidation(cfg.liquidationModule).synchronizeHooks(cfg.hookReceiver, _hooksBefore, _hooksAfter);
     }
 
     function _hookCallBefore(ISilo.SharedStorage storage _shareStorage, uint256 _hookAction, bytes memory _data)

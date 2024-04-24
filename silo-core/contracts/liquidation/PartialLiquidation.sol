@@ -17,6 +17,20 @@ import {PartialLiquidationExecLib} from "./lib/PartialLiquidationExecLib.sol";
 contract PartialLiquidation is IPartialLiquidation {
     using Hook for IHookReceiver;
 
+    mapping(address silo => HookSetup) private _hooksSetup;
+
+    function hookSetup(address _silo) external view virtual returns (HookSetup memory) {
+        return _hooksSetup[_silo];
+    }
+
+    function synchronizeHooks(address _hookReceiver, uint24 _hooksBefore, uint24 _hooksAfter) external {
+        HookSetup storage hookSetup = _hooksSetup[msg.sender];
+
+        hookSetup.hookReceiver = _hookReceiver;
+        hookSetup.hooksBefore = _hooksBefore;
+        hookSetup.hooksAfter = _hooksAfter;
+    }
+
     /// @inheritdoc IPartialLiquidation
     function liquidationCall( // solhint-disable-line function-max-lines, code-complexity
         address _siloWithDebt, // TODO bug - we need to verify if _siloWithDebt is real silo
@@ -30,42 +44,59 @@ contract PartialLiquidation is IPartialLiquidation {
         virtual
         returns (uint256 withdrawCollateral, uint256 repayDebtAssets)
     {
+        HookSetup memory hookSetup = _hooksSetup[_siloWithDebt];
+
+        _beforeLiquidationHook(
+            hookSetup,
+            _siloWithDebt,
+            _collateralAsset,
+            _debtAsset,
+            _borrower,
+            _debtToCover,
+            _receiveSToken
+        );
+
         (
             ISiloConfig siloConfigCached,
             ISiloConfig.ConfigData memory collateralConfig,
             ISiloConfig.ConfigData memory debtConfig
         ) = _fetchConfigs(_siloWithDebt, _collateralAsset, _debtAsset, _borrower, _debtToCover, _receiveSToken);
 
-        bool selfLiquidation = _borrower == msg.sender;
-        uint256 withdrawAssetsFromCollateral;
-        uint256 withdrawAssetsFromProtected;
+        { // too deep
+            bool selfLiquidation = _borrower == msg.sender;
+            uint256 withdrawAssetsFromCollateral;
+            uint256 withdrawAssetsFromProtected;
 
-        (
-            withdrawAssetsFromCollateral, withdrawAssetsFromProtected, repayDebtAssets
-        ) = PartialLiquidationExecLib.getExactLiquidationAmounts(
-            collateralConfig,
-            debtConfig,
-            _borrower,
-            _debtToCover,
-            selfLiquidation ? 0 : collateralConfig.liquidationFee,
-            selfLiquidation
-        );
+            (
+                withdrawAssetsFromCollateral, withdrawAssetsFromProtected, repayDebtAssets
+            ) = PartialLiquidationExecLib.getExactLiquidationAmounts(
+                collateralConfig,
+                debtConfig,
+                _borrower,
+                _debtToCover,
+                selfLiquidation ? 0 : collateralConfig.liquidationFee,
+                selfLiquidation
+            );
 
-        if (repayDebtAssets == 0) revert NoDebtToCover();
-        // this two value were split from total collateral to withdraw, so we will not overflow
-        unchecked { withdrawCollateral = withdrawAssetsFromCollateral + withdrawAssetsFromProtected; }
+            if (repayDebtAssets == 0) revert NoDebtToCover();
+            // this two value were split from total collateral to withdraw, so we will not overflow
+            unchecked { withdrawCollateral = withdrawAssetsFromCollateral + withdrawAssetsFromProtected; }
 
-        emit LiquidationCall(msg.sender, _receiveSToken);
-        ILiquidationProcess(debtConfig.silo).liquidationRepay(repayDebtAssets, _borrower, msg.sender);
+            emit LiquidationCall(msg.sender, _receiveSToken);
+            ILiquidationProcess(debtConfig.silo).liquidationRepay(repayDebtAssets, _borrower, msg.sender);
 
-        ILiquidationProcess(collateralConfig.silo).withdrawCollateralsToLiquidator(
-            withdrawAssetsFromCollateral, withdrawAssetsFromProtected, _borrower, msg.sender, _receiveSToken
-        );
+            ILiquidationProcess(collateralConfig.silo).withdrawCollateralsToLiquidator(
+                withdrawAssetsFromCollateral, withdrawAssetsFromProtected, _borrower, msg.sender, _receiveSToken
+            );
+        }
+
+        siloConfigCached.crossNonReentrantAfter();
 
         _afterLiquidationHook(
-            siloConfigCached,
-            collateralConfig,
-            debtConfig,
+            hookSetup,
+            _siloWithDebt,
+            _collateralAsset,
+            _debtAsset,
             _borrower,
             _debtToCover,
             _receiveSToken,
@@ -99,8 +130,6 @@ contract PartialLiquidation is IPartialLiquidation {
             ISiloConfig.ConfigData memory debtConfig
         )
     {
-        // TODO hook before, we probably need to sync hook settings or pull from silo
-
         siloConfigCached = ISilo(_siloWithDebt).config();
 
         ISiloConfig.DebtInfo memory debtInfo;
@@ -130,35 +159,59 @@ contract PartialLiquidation is IPartialLiquidation {
         }
     }
 
+    function _beforeLiquidationHook(
+        HookSetup memory _hookSetup,
+        address _siloWithDebt,
+        address _collateralAsset,
+        address _debtAsset,
+        address _borrower,
+        uint256 _debtToCover,
+        bool _receiveSToken
+    ) internal virtual {
+        uint256 hookAction = Hook.BEFORE | Hook.LIQUIDATION;
+
+        if (_hookSetup.hookReceiver == address(0)) return;
+        if (_hookSetup.hooksBefore & hookAction == 0) return;
+
+        IHookReceiver(_hookSetup.hookReceiver).beforeActionCall(
+            hookAction,
+            abi.encodePacked(
+                _siloWithDebt,
+                _collateralAsset,
+                _debtAsset,
+                _borrower,
+                _debtToCover,
+                _receiveSToken
+            )
+        );
+    }
+
     function _afterLiquidationHook(
-        ISiloConfig _siloConfig,
-        ISiloConfig.ConfigData memory collateralConfig,
-        ISiloConfig.ConfigData memory debtConfig,
+        HookSetup memory _hookSetup,
+        address _siloWithDebt,
+        address _collateralAsset,
+        address _debtAsset,
         address _borrower,
         uint256 _debtToCover,
         bool _receiveSToken,
         uint256 _withdrawCollateral,
         uint256 _repayDebtAssets
     ) internal {
-        _siloConfig.crossNonReentrantAfter();
+        uint256 hookAction = Hook.AFTER | Hook.LIQUIDATION;
 
-        // TODO hook after
-//        if (collateralConfig.hookReceiver != address(0)) {
-//            hookAfter.afterActionCall(
-//                debtConfig.silo,
-//                Hook.LIQUIDATION,
-//                abi.encodePacked(
-//                    debtConfig.silo,
-//                    collateralConfig.token,
-//                    debtConfig.token,
-//                    _borrower,
-//                    _debtToCover,
-//
-//                    _receiveSToken,
-//                    _withdrawCollateral,
-//                    _repayDebtAssets
-//                )
-//            );
-//        }
+        if (_hookSetup.hookReceiver == address(0)) return;
+        if (_hookSetup.hooksAfter & hookAction == 0) return;
+
+        IHookReceiver(_hookSetup.hookReceiver).afterActionCall(
+            hookAction,
+            abi.encodePacked(
+                _siloWithDebt,
+                _collateralAsset,
+                _debtAsset,
+                _borrower,
+                _debtToCover,
+                _receiveSToken
+            )
+        );
     }
 }
