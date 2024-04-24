@@ -630,7 +630,9 @@ library Actions {
         );
     }
 
-    function _hookCallBefore(ISilo.SharedStorage storage _shareStorage, uint256 _hookAction, bytes memory _data) private {
+    function _hookCallBefore(ISilo.SharedStorage storage _shareStorage, uint256 _hookAction, bytes memory _data)
+        private
+    {
         IHookReceiver hookReceiver = _shareStorage.hookReceiver;
 
         if (address(hookReceiver) == address(0)) return;
@@ -641,7 +643,9 @@ library Actions {
         hookReceiver.beforeActionCall(_hookAction, _data);
     }
 
-    function _hookCallAfter(ISilo.SharedStorage storage _shareStorage, uint256 _hookAction, bytes memory _data) private {
+    function _hookCallAfter(ISilo.SharedStorage storage _shareStorage, uint256 _hookAction, bytes memory _data)
+        private
+    {
         IHookReceiver hookReceiver = _shareStorage.hookReceiver;
 
         if (address(hookReceiver) == address(0)) return;
