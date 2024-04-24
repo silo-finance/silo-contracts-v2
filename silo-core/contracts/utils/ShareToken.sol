@@ -2,9 +2,9 @@
 pragma solidity 0.8.21;
 
 import {
-ERC20Upgradeable,
-IERC20MetadataUpgradeable,
-IERC20Upgradeable
+    ERC20Upgradeable,
+    IERC20MetadataUpgradeable,
+    IERC20Upgradeable
 } from "openzeppelin-contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 import {StringsUpgradeable} from "openzeppelin-contracts-upgradeable/utils/StringsUpgradeable.sol";
 

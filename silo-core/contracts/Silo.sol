@@ -616,18 +616,6 @@ contract Silo is SiloERC4626 {
         );
     }
 
-    function _accrueInterestGetConfigData()
-        internal
-        virtual
-        returns (uint256 accruedInterest, ISiloConfig.ConfigData memory configData)
-    {
-        configData = config.getConfig(address(this));
-
-        accruedInterest = _callAccrueInterestForAsset(
-            configData.interestRateModel, configData.daoFee, configData.deployerFee, address(0)
-        );
-    }
-
     function _deposit(
         uint256 _assets,
         uint256 _shares,

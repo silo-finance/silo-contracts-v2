@@ -19,13 +19,9 @@ contract GaugeHookReceiver is IGaugeHookReceiver, Ownable2StepUpgradeable {
         _disableInitializers();
     }
 
-    // TODO why there is no .initialize() call in any place for this gauge?
     /// @notice Initialize a hook receiver
     /// @param _owner Owner of the hook receiver (DAO)
     /// @param _token Silo share token for which hook receiver should be initialized.
-    /// It should be a silo collateral token, protected share token, or debt share token.
-    /// If any additional data is needed for the hook receiver initialization,
-    /// it can be resolved from the silo, which can be resolved from the share token.
     function initialize(address _owner, IShareToken _token) external virtual initializer {
         if (_owner == address(0)) revert OwnerIsZeroAddress();
         if (_token.hookSetup().hookReceiver != address(this)) revert InvalidShareToken();

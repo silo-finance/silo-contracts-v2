@@ -297,7 +297,7 @@ library Actions {
             ,ISiloConfig.ConfigData memory debtConfig,
         ) = _siloConfig.getConfigsAndAccrue(
             address(this),
-            Hook.LIQUIDATION | Hook.REPAY, // TODO make exception for LIQUIDATION on re-entrancy
+            (_liquidation ? Hook.LIQUIDATION : Hook.NONE) | Hook.REPAY,
             _borrower
         );
 

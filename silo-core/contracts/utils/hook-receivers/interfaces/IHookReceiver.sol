@@ -16,7 +16,7 @@ interface IHookReceiver {
 
     /// @notice Any time the share token balance updates, the hook receiver receives a notification
     /// @return hookReturnCode code returned by hook receiver to silo, silo can take actions based on this code
-    function afterTokenTransfer(
+    function afterTokenTransfer( // TODO deprecated, remove it
         address _sender,
         uint256 _senderBalance,
         address _recipient,

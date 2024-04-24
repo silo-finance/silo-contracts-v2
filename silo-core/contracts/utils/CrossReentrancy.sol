@@ -23,8 +23,14 @@ abstract contract CrossReentrancy {
         _crossReentrantStatus = CrossEntrancy.NOT_ENTERED;
     }
 
+    /// @dev please notice, this internal method is open
     function _crossNonReentrantBefore(uint256 _hookAction) internal virtual {
         uint256 crossReentrantStatusCached = _crossReentrantStatus;
+
+        if (crossReentrantStatusCached == CrossEntrancy.ENTERED && _hookAction == (Hook.LIQUIDATION | Hook.REPAY)) {
+            // if we in a middle of liquidation, we allow to execute repay
+            return;
+        }
 
         // On the first call to nonReentrant, _status will be CrossEntrancy.NOT_ENTERED
         if (crossReentrantStatusCached == CrossEntrancy.NOT_ENTERED) {

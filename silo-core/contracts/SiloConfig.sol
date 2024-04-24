@@ -11,11 +11,6 @@ import {ConfigLib} from "./lib/ConfigLib.sol";
 
 // solhint-disable var-name-mixedcase
 
-/*
-- debt Info still in config idk if I can move it.
-    - if I move debtInfo to any other place, this place have to know silos addresses and share debt address
-
-*/
 
 /// @notice SiloConfig stores full configuration of Silo in immutable manner
 /// @dev Immutable contract is more expensive to deploy than minimal proxy however it provides nearly 10x cheapper
@@ -137,7 +132,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
 
     /// @inheritdoc ISiloConfig
     function crossNonReentrantBefore(uint256 _hookAction) external virtual {
-        if (_hookAction & CrossEntrancy.ENTERED_FROM_LEVERAGE != 0) {
+        if (_hookAction & CrossEntrancy.ENTERED_FROM_LEVERAGE == CrossEntrancy.ENTERED_FROM_LEVERAGE) {
             _onlySilo();
         } else {
             _onlySiloOrTokenOrLiquidation();
@@ -171,7 +166,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
     /// @inheritdoc ISiloConfig
     function closeDebt(address _borrower) external virtual {
         if (msg.sender != _SILO0 && msg.sender != _SILO1 &&
-        msg.sender != _DEBT_SHARE_TOKEN0 && msg.sender != _DEBT_SHARE_TOKEN1
+            msg.sender != _DEBT_SHARE_TOKEN0 && msg.sender != _DEBT_SHARE_TOKEN1
         ) revert OnlySiloOrDebtShareToken();
 
         delete _debtsInfo[_borrower];
