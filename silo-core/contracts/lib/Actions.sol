@@ -49,7 +49,7 @@ library Actions {
     {
         _hookCallBefore(_shareStorage, Hook.DEPOSIT, abi.encodePacked(_assets, _shares, _receiver, _assetType));
 
-        ISiloConfig.ConfigData memory _collateralConfig = _siloConfig.getConfigAndAccrue(address(this));
+        ISiloConfig.ConfigData memory _collateralConfig = _siloConfig.getConfigAndAccrue(address(this), Hook.DEPOSIT);
 
         if (_assetType == ISilo.AssetType.Debt) revert ISilo.WrongAssetType();
 
@@ -170,10 +170,9 @@ library Actions {
         _siloConfig.crossNonReentrantAfter();
 
         if (collateralConfig.hookReceiver != address(0)) {
-            //   TODO add type to packed or use flag                     (_args.assetType == ISilo.AssetType.Collateral ? Hook.COLLATERAL_TOKEN : Hook.PROTECTED_TOKEN),
             _hookCallAfter(
                 _shareStorage,
-                Hook.WITHDRAW,
+                Hook.WITHDRAW | (_args.assetType == ISilo.AssetType.Collateral ? Hook.COLLATERAL_TOKEN : Hook.PROTECTED_TOKEN),
                 abi.encodePacked( _args.assets,
                     _args.shares,
                     _args.receiver,
@@ -232,7 +231,7 @@ library Actions {
 
         if (_args.leverage) {
             // change reentrant flag to leverage, to allow for deposit
-            _siloConfig.crossLeverageGuard(CrossEntrancy.ENTERED_FROM_LEVERAGE);
+            _siloConfig.crossNonReentrantBefore(CrossEntrancy.ENTERED_FROM_LEVERAGE);
 
             bytes32 result = ILeverageBorrower(_args.receiver)
                 .onLeverage(msg.sender, _args.borrower, debtConfig.token, assets, _data);
@@ -434,7 +433,9 @@ library Actions {
             _shareStorage, Hook.TRANSITION_COLLATERAL, abi.encodePacked(_shares, _owner, _withdrawType, assets)
         );
 
-        ISiloConfig.ConfigData memory collateralConfig = _siloConfig.getConfigAndAccrue(address(this));
+        ISiloConfig.ConfigData memory collateralConfig = _siloConfig.getConfigAndAccrue(
+            address(this), Hook.TRANSITION_COLLATERAL
+        );
 
         (address shareTokenFrom, uint256 liquidity) = _withdrawType == ISilo.AssetType.Collateral
             ? (collateralConfig.collateralShareToken, ISilo(address(this)).getRawLiquidity())

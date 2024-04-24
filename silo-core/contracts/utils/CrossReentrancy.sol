@@ -39,11 +39,7 @@ abstract contract CrossReentrancy {
             return;
         }
 
-        revert ISiloConfig.CrossReentrantCall();
-    }
-
-    function _crossLeverageGuard(uint256 _entranceFrom) internal virtual {
-        if (_crossReentrantStatus == CrossEntrancy.ENTERED && _entranceFrom == CrossEntrancy.ENTERED_FROM_LEVERAGE) {
+        if (_crossReentrantStatus == CrossEntrancy.ENTERED && _hookAction == CrossEntrancy.ENTERED_FROM_LEVERAGE) {
             // we need to be inside leverage and before callback, we mark our status
             _crossReentrantStatus = CrossEntrancy.ENTERED_FROM_LEVERAGE;
             return;

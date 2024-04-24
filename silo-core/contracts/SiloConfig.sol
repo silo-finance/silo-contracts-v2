@@ -141,7 +141,12 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
 
     /// @inheritdoc ISiloConfig
     function crossNonReentrantBefore(uint256 _hookAction) external virtual {
-        _onlySiloOrTokenOrLiquidation();
+        if (_hookAction & CrossEntrancy.ENTERED_FROM_LEVERAGE != 0) {
+            _onlySilo();
+        } else {
+            _onlySiloOrTokenOrLiquidation();
+        }
+
         _crossNonReentrantBefore(_hookAction);
     }
 
@@ -149,12 +154,6 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
     function crossNonReentrantAfter() external virtual {
         _onlySiloOrTokenOrLiquidation();
         _crossNonReentrantAfter();
-    }
-
-    /// @inheritdoc ISiloConfig
-    function crossLeverageGuard(uint256 _entranceFrom) external virtual {
-        _onlySilo();
-        _crossLeverageGuard(_entranceFrom);
     }
 
     /// @inheritdoc ISiloConfig
@@ -213,6 +212,16 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
         }
     }
 
+    function getConfigs(address _silo, address _borrower, uint256 _hookAction)
+        external
+        view
+        virtual
+        returns (ConfigData memory collateralConfig, ConfigData memory debtConfig, DebtInfo memory debtInfo)
+    {
+        debtInfo = _debtsInfo[_borrower];
+        (collateralConfig, debtConfig) = _getConfigs(_silo, _hookAction, debtInfo);
+    }
+
     function getConfigsAndAccrue(address _silo, uint256 _hookAction, address _borrower)
         external
         virtual
@@ -259,24 +268,6 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
         //= _getConfigs(_silo, _hookAction, debtInfo);
     }
 
-    function _callAccrueInterest(address _silo) internal {
-        ISilo(_silo).accrueInterestForConfig(
-            _silo == _SILO0 ? _INTEREST_RATE_MODEL0 : _INTEREST_RATE_MODEL1,
-            _DAO_FEE,
-            _DEPLOYER_FEE
-        );
-    }
-
-    function getConfigs(address _silo, address _borrower, uint256 _hookAction)
-        external
-        view
-        virtual
-        returns (ConfigData memory collateralConfig, ConfigData memory debtConfig, DebtInfo memory debtInfo)
-    {
-        debtInfo = _debtsInfo[_borrower];
-        (collateralConfig, debtConfig) = _getConfigs(_silo, _hookAction, debtInfo);
-    }
-
     /// @inheritdoc ISiloConfig
     function getConfig(address _silo) external view virtual returns (ConfigData memory) {
         if (_silo == _SILO0) {
@@ -288,8 +279,8 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
         }
     }
 
-    function getConfigAndAccrue(address _silo) external virtual returns (ConfigData memory) {
-        _crossNonReentrantBefore(Hook.NONE);
+    function getConfigAndAccrue(address _silo, uint256 _hookAction) external virtual returns (ConfigData memory) {
+        _crossNonReentrantBefore(_hookAction);
         _callAccrueInterest(_silo);
 
         if (_silo == _SILO0) {
@@ -320,6 +311,14 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
         } else {
             revert WrongSilo();
         }
+    }
+
+    function _callAccrueInterest(address _silo) internal {
+        ISilo(_silo).accrueInterestForConfig(
+            _silo == _SILO0 ? _INTEREST_RATE_MODEL0 : _INTEREST_RATE_MODEL1,
+            _DAO_FEE,
+            _DEPLOYER_FEE
+        );
     }
 
     // solhint-disable-next-line function-max-lines, code-complexity
