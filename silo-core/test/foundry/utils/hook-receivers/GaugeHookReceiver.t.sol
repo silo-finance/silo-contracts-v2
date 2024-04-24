@@ -49,8 +49,11 @@ contract GaugeHookReceiverTest is Test, TransferOwnership {
         vm.expectRevert();
         _hookReceiver.initialize(_dao, IShareToken(_shareToken));
 
+        IShareToken.HookSetup memory hookSetup;
+        hookSetup.hookReceiver = address(1);
+
         bytes memory data = abi.encodePacked(IShareToken.hookSetup.selector);
-        vm.mockCall(_shareToken, data, abi.encode(address(1))); // an invalid hook receiver
+        vm.mockCall(_shareToken, data, abi.encode(hookSetup)); // an invalid hook receiver
         vm.expectCall(_shareToken, data);
 
         vm.expectRevert(IGaugeHookReceiver.InvalidShareToken.selector);
@@ -244,9 +247,11 @@ contract GaugeHookReceiverTest is Test, TransferOwnership {
 
     function _initializeHookReceiver() internal {
         // IShareToken.hookReceiver.selector: 0x8fea8062
-        bytes memory data = abi.encodePacked(IShareToken.hookReceiver.selector);
+        bytes memory data = abi.encodePacked(IShareToken.hookSetup.selector);
+        IShareToken.HookSetup memory hookSetup;
+        hookSetup.hookReceiver = address(_hookReceiver);
 
-        vm.mockCall(_shareToken, data, abi.encode(address(_hookReceiver))); // valid hook receiver
+        vm.mockCall(_shareToken, data, abi.encode(hookSetup)); // valid hook receiver
         vm.expectCall(_shareToken, data);
 
         _hookReceiver.initialize(_dao, IShareToken(_shareToken));
