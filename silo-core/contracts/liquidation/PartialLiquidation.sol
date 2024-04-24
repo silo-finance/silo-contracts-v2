@@ -40,10 +40,10 @@ contract PartialLiquidation is IPartialLiquidation {
         virtual
         returns (uint256 withdrawCollateral, uint256 repayDebtAssets)
     {
-        HookSetup memory hookSetup = _hooksSetup[_siloWithDebt];
+        HookSetup memory hookSetupForSilo = _hooksSetup[_siloWithDebt];
 
         _beforeLiquidationHook(
-            hookSetup,
+            hookSetupForSilo,
             _siloWithDebt,
             _collateralAsset,
             _debtAsset,
@@ -89,7 +89,7 @@ contract PartialLiquidation is IPartialLiquidation {
         siloConfigCached.crossNonReentrantAfter();
 
         _afterLiquidationHook(
-            hookSetup,
+            hookSetupForSilo,
             _siloWithDebt,
             _collateralAsset,
             _debtAsset,

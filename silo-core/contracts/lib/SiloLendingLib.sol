@@ -277,7 +277,7 @@ library SiloLendingLib {
         }
 
         (uint256 totalDebtAssets, uint256 totalDebtShares) =
-                            SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(debtConfig, ISilo.AssetType.Debt);
+            SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(debtConfig, ISilo.AssetType.Debt);
 
         return calculateMaxBorrow(
             collateralConfig,

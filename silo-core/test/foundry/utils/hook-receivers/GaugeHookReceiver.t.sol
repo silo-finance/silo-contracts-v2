@@ -35,7 +35,7 @@ contract GaugeHookReceiverTest is Test, TransferOwnership {
         GaugeHookReceiverDeploy deploy = new GaugeHookReceiverDeploy();
         deploy.disableDeploymentsSync();
 
-        IGaugeHookReceiver gaugeHookReceiver = deploy.run();
+        IGaugeHookReceiver gaugeHookReceiver = deploy.run(); // TODO we dont need it now?
 
         _hookReceiver = IGaugeHookReceiver(makeAddr("collateralHookReceiver0"));
     }
