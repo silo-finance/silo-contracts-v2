@@ -341,7 +341,7 @@ library Actions {
 
         _hookCallBefore(
             _shareStorage,
-            Hook.LEVERAGE | Hook.SAME_ASSET,
+            Hook.BORROW | Hook.LEVERAGE | Hook.SAME_ASSET,
             abi.encodePacked(_depositAssets, _borrowAssets, _borrower, _assetType)
         );
 
@@ -354,7 +354,7 @@ library Actions {
                 collateralConfig, debtConfig, debtInfo
             ) = _siloConfig.getConfigsAndAccrue(
                 address(this),
-                Hook.LEVERAGE | Hook.SAME_ASSET,
+                Hook.BORROW | Hook.LEVERAGE | Hook.SAME_ASSET,
                 _borrower
             );
 
