@@ -197,16 +197,16 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
     {
         _crossNonReentrantBefore(_hookAction);
 
-        if (_hookAction & Hook.SHARE_TOKEN_TRANSFER != 0) {
+        if (_hookAction & Hook.SHARE_TOKEN_TRANSFER == Hook.SHARE_TOKEN_TRANSFER) {
             // share token transfer does not need configs
             return (collateralConfig, debtConfig, debtInfo);
-        } else if (_hookAction & Hook.FLASH_LOAN != 0) {
+        } else if (_hookAction & Hook.FLASH_LOAN == Hook.FLASH_LOAN) {
             // flash loan does not need configs
             return (collateralConfig, debtConfig, debtInfo);
-        } else if (_hookAction & Hook.BORROW != 0) {
+        } else if (_hookAction & Hook.BORROW == Hook.BORROW) {
             debtInfo = _openDebt(_borrower, _hookAction);
-        } else if (_hookAction & Hook.SWITCH_COLLATERAL != 0) {
-            debtInfo = _changeCollateralType(_borrower, _hookAction & Hook.SAME_ASSET != 0);
+        } else if (_hookAction & Hook.SWITCH_COLLATERAL == Hook.SWITCH_COLLATERAL) {
+            debtInfo = _changeCollateralType(_borrower, _hookAction & Hook.SAME_ASSET == Hook.SAME_ASSET);
         } else {
             debtInfo = _debtsInfo[_borrower];
         }
@@ -328,7 +328,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
 
         if (!debtInfo.debtPresent) {
             debtInfo.debtPresent = true;
-            debtInfo.sameAsset = _hookAction & Hook.SAME_ASSET != 0;
+            debtInfo.sameAsset = _hookAction & Hook.SAME_ASSET == Hook.SAME_ASSET;
             debtInfo.debtInSilo0 = msg.sender == _SILO0;
 
             _debtsInfo[_borrower] = debtInfo;
