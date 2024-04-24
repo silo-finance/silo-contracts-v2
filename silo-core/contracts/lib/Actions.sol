@@ -201,7 +201,9 @@ library Actions {
 
         _hookCallBefore(
             _shareStorage,
-            (_args.leverage ? Hook.LEVERAGE : Hook.BORROW) | (_args.sameAsset ? Hook.SAME_ASSET : Hook.TWO_ASSETS),
+            Hook.BORROW |
+                (_args.leverage ? Hook.LEVERAGE : Hook.NONE) |
+                (_args.sameAsset ? Hook.SAME_ASSET : Hook.TWO_ASSETS),
             abi.encodePacked(_args.assets, _args.shares, _args.receiver, _args.borrower)
         );
 
@@ -213,7 +215,9 @@ library Actions {
 
             (collateralConfig, debtConfig, debtInfo) = _siloConfig.getConfigsAndAccrue(
                 address(this),
-                (_args.leverage ? Hook.LEVERAGE : Hook.BORROW) | (_args.sameAsset ? Hook.SAME_ASSET : Hook.TWO_ASSETS),
+                Hook.BORROW |
+                    (_args.leverage ? Hook.LEVERAGE : Hook.NONE) |
+                    (_args.sameAsset ? Hook.SAME_ASSET : Hook.TWO_ASSETS),
                 _args.borrower
             );
 
@@ -263,7 +267,9 @@ library Actions {
         if (collateralConfig.hookReceiver != address(0)) {
             _hookCallAfter(
                 _shareStorage,
-                (_args.leverage ? Hook.LEVERAGE : Hook.BORROW) | (_args.sameAsset ? Hook.SAME_ASSET : Hook.TWO_ASSETS),
+                Hook.BORROW |
+                    (_args.leverage ? Hook.LEVERAGE : Hook.NONE) |
+                    (_args.sameAsset ? Hook.SAME_ASSET : Hook.TWO_ASSETS),
                 abi.encodePacked(
                     _args.assets,
                     _args.shares,
@@ -488,7 +494,9 @@ library Actions {
             ISiloConfig.ConfigData memory collateralConfig,
             ISiloConfig.ConfigData memory debtConfig,
             ISiloConfig.DebtInfo memory debtInfo
-        ) = _siloConfig.getConfigsAndAccrue(address(this), Hook.SWITCH_COLLATERAL, msg.sender);
+        ) = _siloConfig.getConfigsAndAccrue(
+            address(this), Hook.SWITCH_COLLATERAL | (_sameAsset ? Hook.SAME_ASSET : Hook.TWO_ASSETS), msg.sender
+        );
 
         if (collateralConfig.otherSilo != address(this)) {
             ISilo(collateralConfig.otherSilo).accrueInterest();
