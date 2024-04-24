@@ -102,7 +102,7 @@ contract SiloFactory is ISiloFactory, ERC721Upgradeable, Ownable2StepUpgradeable
         ISilo(configData0.silo).initialize(siloConfig, _initData.interestRateModelConfig0);
         ISilo(configData1.silo).initialize(siloConfig, _initData.interestRateModelConfig1);
 
-        _initializeShareTokens(configData0, configData1, _initData);
+        _initializeShareTokens(configData0, configData1);
 
         siloToId[configData0.silo] = nextSiloId;
         siloToId[configData1.silo] = nextSiloId;
@@ -247,8 +247,7 @@ contract SiloFactory is ISiloFactory, ERC721Upgradeable, Ownable2StepUpgradeable
 
     function _initializeShareTokens(
         ISiloConfig.ConfigData memory configData0,
-        ISiloConfig.ConfigData memory configData1,
-        ISiloConfig.InitData memory _initData
+        ISiloConfig.ConfigData memory configData1
     ) internal virtual {
         // initialize configData0
         IShareToken(configData0.protectedShareToken).initialize(ISilo(configData0.silo));

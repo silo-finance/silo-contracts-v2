@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.21;
 
-import {console} from "forge-std/console.sol";
-
 import {IERC20Upgradeable} from "openzeppelin-contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import {SafeERC20Upgradeable} from "openzeppelin-contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
 
@@ -73,7 +71,6 @@ library Actions {
     }
 
     // solhint-disable-next-line function-max-lines, code-complexity
-    // function withdraw(ISiloConfig _siloConfig, ISilo.WithdrawArgs calldata _args, ISilo.Assets storage _totalAssets) // gas:
 
     // startAction: expected 176906 got 199694 it is more by 22788
     // getConfigsAndAccrue: expected 176906 got 192410 it is more by 15504
@@ -93,7 +90,8 @@ library Actions {
 
         _hookCallBefore(
             _shareStorage,
-            Hook.WITHDRAW | (_args.assetType == ISilo.AssetType.Collateral ? Hook.COLLATERAL_TOKEN : Hook.PROTECTED_TOKEN),
+            Hook.WITHDRAW |
+                (_args.assetType == ISilo.AssetType.Collateral ? Hook.COLLATERAL_TOKEN : Hook.PROTECTED_TOKEN),
             abi.encodePacked(_args.assets, _args.shares, _args.receiver, _args.owner, _args.spender, _args.assetType)
         );
 
@@ -140,7 +138,8 @@ library Actions {
             if (collateralConfig.hookReceiver != address(0)) {
                 _hookCallAfter(
                     _shareStorage,
-                    Hook.WITHDRAW | (_args.assetType == ISilo.AssetType.Collateral ? Hook.COLLATERAL_TOKEN : Hook.PROTECTED_TOKEN),
+                    Hook.WITHDRAW |
+                        (_args.assetType == ISilo.AssetType.Collateral ? Hook.COLLATERAL_TOKEN : Hook.PROTECTED_TOKEN),
                     abi.encodePacked( _args.assets,
                         _args.shares,
                         _args.receiver,
@@ -173,7 +172,8 @@ library Actions {
         if (collateralConfig.hookReceiver != address(0)) {
             _hookCallAfter(
                 _shareStorage,
-                Hook.WITHDRAW | (_args.assetType == ISilo.AssetType.Collateral ? Hook.COLLATERAL_TOKEN : Hook.PROTECTED_TOKEN),
+                Hook.WITHDRAW |
+                    (_args.assetType == ISilo.AssetType.Collateral ? Hook.COLLATERAL_TOKEN : Hook.PROTECTED_TOKEN),
                 abi.encodePacked( _args.assets,
                     _args.shares,
                     _args.receiver,
@@ -494,7 +494,9 @@ library Actions {
             ISilo(collateralConfig.otherSilo).accrueInterest();
         }
 
-        if (!SiloSolvencyLib.isSolvent(collateralConfig, debtConfig, debtInfo, msg.sender, ISilo.AccrueInterestInMemory.No)) {
+        if (!SiloSolvencyLib.isSolvent(
+            collateralConfig, debtConfig, debtInfo, msg.sender, ISilo.AccrueInterestInMemory.No)
+        ) {
             revert ISilo.NotSolvent();
         }
 

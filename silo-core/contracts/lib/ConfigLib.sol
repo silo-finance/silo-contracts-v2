@@ -1,13 +1,12 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import {console} from "forge-std/console.sol";
-
 import {IHookReceiver} from "../utils/hook-receivers/interfaces/IHookReceiver.sol";
 import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
 
 import {Hook} from "./Hook.sol";
 
+// solhint-disable private-vars-leading-underscore
 library ConfigLib {
     uint256 internal constant SILO0_SILO0 = 0;
     uint256 internal constant SILO1_SILO0 = 1;

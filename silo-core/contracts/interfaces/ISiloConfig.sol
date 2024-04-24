@@ -139,16 +139,23 @@ interface ISiloConfig {
     /// @param _borrower borrower address
     function closeDebt(address _borrower) external;
 
-    /// @notice view method for checking cross Silo reentrancy flag
-    /// @dev Returns true if the reentrancy guard is currently set to "entered", which indicates there is a
-    /// `nonReentrant` function in the call stack.
-    function crossReentrancyGuardEntered() external view returns (bool);
-
     /// @notice only silo method for cross Silo reentrancy
     function crossNonReentrantBefore(uint256 _hookAction) external;
 
     /// @notice only silo method for cross Silo reentrancy
     function crossNonReentrantAfter() external;
+
+    function getConfigAndAccrue(address _silo, uint256 _hookAction) external returns (ConfigData memory);
+
+    function getConfigsAndAccrue(address _silo, uint256 _hookAction, address _borrower)
+        external
+        returns (ConfigData memory collateralConfig, ConfigData memory debtConfig, DebtInfo memory debtInfo);
+
+
+    /// @notice view method for checking cross Silo reentrancy flag
+    /// @dev Returns true if the reentrancy guard is currently set to "entered", which indicates there is a
+    /// `nonReentrant` function in the call stack.
+    function crossReentrancyGuardEntered() external view returns (bool);
 
     // solhint-disable-next-line func-name-mixedcase
     function SILO_ID() external view returns (uint256);
@@ -178,17 +185,11 @@ interface ISiloConfig {
         view
         returns (ConfigData memory collateralConfig, ConfigData memory debtConfig, DebtInfo memory debtInfo);
 
-    function getConfigsAndAccrue(address _silo, uint256 _hookAction, address _borrower)
-        external
-        returns (ConfigData memory collateralConfig, ConfigData memory debtConfig, DebtInfo memory debtInfo);
-
     /// @notice Retrieves configuration data for a specific silo
     /// @dev This function reverts for incorrect silo address input.
     /// @param _silo The address of the silo for which configuration data is being retrieved
     /// @return configData The configuration data for the specified silo
     function getConfig(address _silo) external view returns (ConfigData memory);
-
-    function getConfigAndAccrue(address _silo, uint256 _hookAction) external returns (ConfigData memory);
 
     /// @notice Retrieves fee-related information for a specific silo
     /// @dev This function reverts for incorrect silo address input

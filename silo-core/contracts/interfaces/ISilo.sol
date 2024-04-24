@@ -169,6 +169,7 @@ interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
     error LeverageTooHigh();
     error SiloInitialized();
     error OnlyHookReceiver();
+    error OnlySiloConfig();
 
     /// @notice Initialize Silo
     /// @param _siloConfig address of ISiloConfig with full config for this Silo

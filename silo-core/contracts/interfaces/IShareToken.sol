@@ -36,8 +36,6 @@ interface IShareToken is IERC20MetadataUpgradeable {
     /// @param _silo Silo address for which tokens was deployed
     function initialize(ISilo _silo) external;
 
-    function hookSetup() external view returns (HookSetup memory);
-
     /// @notice method for SiloConfig to synchronize hooks
     /// @param _hookReceiver address that will get a callback on mint, burn and transfer of the token
     /// @param _hooksBefore hooks bitmap to trigger hooks BEFORE action
@@ -86,4 +84,6 @@ interface IShareToken is IERC20MetadataUpgradeable {
     /// @notice Returns silo address for which token was deployed
     /// @return silo address
     function silo() external view returns (ISilo silo);
+
+    function hookSetup() external view returns (HookSetup memory);
 }

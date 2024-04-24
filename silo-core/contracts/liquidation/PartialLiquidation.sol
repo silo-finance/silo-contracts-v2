@@ -19,10 +19,6 @@ contract PartialLiquidation is IPartialLiquidation {
 
     mapping(address silo => HookSetup) private _hooksSetup;
 
-    function hookSetup(address _silo) external view virtual returns (HookSetup memory) {
-        return _hooksSetup[_silo];
-    }
-
     function synchronizeHooks(address _hookReceiver, uint24 _hooksBefore, uint24 _hooksAfter) external {
         HookSetup storage hookSetup = _hooksSetup[msg.sender];
 
@@ -60,7 +56,7 @@ contract PartialLiquidation is IPartialLiquidation {
             ISiloConfig siloConfigCached,
             ISiloConfig.ConfigData memory collateralConfig,
             ISiloConfig.ConfigData memory debtConfig
-        ) = _fetchConfigs(_siloWithDebt, _collateralAsset, _debtAsset, _borrower, _debtToCover, _receiveSToken);
+        ) = _fetchConfigs(_siloWithDebt, _collateralAsset, _debtAsset, _borrower);
 
         { // too deep
             bool selfLiquidation = _borrower == msg.sender;
@@ -105,6 +101,10 @@ contract PartialLiquidation is IPartialLiquidation {
         );
     }
 
+    function hookSetup(address _silo) external view virtual returns (HookSetup memory) {
+        return _hooksSetup[_silo];
+    }
+
     /// @inheritdoc IPartialLiquidation
     function maxLiquidation(address _siloWithDebt, address _borrower)
         external
@@ -119,9 +119,7 @@ contract PartialLiquidation is IPartialLiquidation {
         address _siloWithDebt,
         address _collateralAsset,
         address _debtAsset,
-        address _borrower,
-        uint256 _debtToCover,
-        bool _receiveSToken
+        address _borrower
     )
         internal
         returns (
@@ -138,7 +136,6 @@ contract PartialLiquidation is IPartialLiquidation {
             _siloWithDebt,
             _borrower,
             Hook.LIQUIDATION
-//            abi.encodePacked(_siloWithDebt, _collateralAsset, _debtAsset, _borrower, _debtToCover, _receiveSToken)
         );
 
         if (!debtInfo.debtPresent) revert UserIsSolvent();
@@ -210,7 +207,9 @@ contract PartialLiquidation is IPartialLiquidation {
                 _debtAsset,
                 _borrower,
                 _debtToCover,
-                _receiveSToken
+                _receiveSToken,
+                _withdrawCollateral,
+                _repayDebtAssets
             )
         );
     }

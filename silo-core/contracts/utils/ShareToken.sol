@@ -87,10 +87,6 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
         _disableInitializers();
     }
 
-    function hookSetup() external view virtual returns (HookSetup memory) {
-        return _hookSetup;
-    }
-
     function synchronizeHooks(address _hookReceiver, uint24 _hooksBefore, uint24 _hooksAfter, uint24 _tokenType)
         external
         onlySiloConfig
@@ -101,6 +97,30 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
         _hookSetup.tokenType = _tokenType;
     }
 
+    /// @inheritdoc IShareToken
+    function forwardTransfer(address _owner, address _recipient, uint256 _amount) external virtual onlySilo {
+        _transfer(_owner, _recipient, _amount);
+    }
+
+    /// @inheritdoc IShareToken
+    function forwardTransferFrom(address _spender, address _from, address _to, uint256 _amount)
+        external
+        virtual
+        onlySilo
+    {
+        _spendAllowance(_from, _spender, _amount);
+        _transfer(_from, _to, _amount);
+    }
+
+    /// @inheritdoc IShareToken
+    function forwardApprove(address _owner, address _spender, uint256 _amount) external virtual onlySilo {
+        _approve(_owner, _spender, _amount);
+    }
+
+    function hookSetup() external view virtual returns (HookSetup memory) {
+        return _hookSetup;
+    }
+
     /// @inheritdoc ERC20Upgradeable
     function transferFrom(address _from, address _to, uint256 _amount)
         public
@@ -108,7 +128,7 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
         override(ERC20Upgradeable, IERC20Upgradeable)
         returns (bool result)
     {
-        ISiloConfig siloConfigCached = _beforeExternalTransferAction(_from, _to, _amount);
+        ISiloConfig siloConfigCached = _crossNonReentrantBefore();
 
         result = ERC20Upgradeable.transferFrom(_from, _to, _amount);
 
@@ -122,31 +142,11 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
         override(ERC20Upgradeable, IERC20Upgradeable)
         returns (bool result)
     {
-        ISiloConfig siloConfigCached = _beforeExternalTransferAction(msg.sender, _to, _amount);
+        ISiloConfig siloConfigCached = _crossNonReentrantBefore();
 
         result = ERC20Upgradeable.transfer(_to, _amount);
 
         siloConfigCached.crossNonReentrantAfter();
-    }
-
-    /// @inheritdoc IShareToken
-    function forwardTransfer(address _owner, address _recipient, uint256 _amount) external virtual onlySilo {
-        _transfer(_owner, _recipient, _amount);
-    }
-
-    /// @inheritdoc IShareToken
-    function forwardTransferFrom(address _spender, address _from, address _to, uint256 _amount)
-        public
-        virtual
-        onlySilo
-    {
-        _spendAllowance(_from, _spender, _amount);
-        _transfer(_from, _to, _amount);
-    }
-
-    /// @inheritdoc IShareToken
-    function forwardApprove(address _owner, address _spender, uint256 _amount) public virtual onlySilo {
-        _approve(_owner, _spender, _amount);
     }
 
     /// @dev decimals of share token
@@ -254,6 +254,15 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
         );
     }
 
+    function _crossNonReentrantBefore()
+        internal
+        virtual
+        returns (ISiloConfig siloConfigCached)
+    {
+        siloConfigCached = siloConfig;
+        siloConfigCached.crossNonReentrantBefore(Hook.SHARE_TOKEN_TRANSFER | _hookSetup.tokenType);
+    }
+
     /// @dev checks if operation is "real" transfer
     /// @param _sender sender address
     /// @param _recipient recipient address
@@ -264,14 +273,5 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
         // require(recipient != address(0), "ERC20: transfer to the zero address");
         // on transfer. ERC20 has them, so we good.
         return _sender != address(0) && _recipient != address(0);
-    }
-
-    function _beforeExternalTransferAction(address _from, address _to, uint256 _amount)
-        internal
-        virtual
-        returns (ISiloConfig siloConfigCached)
-    {
-        siloConfigCached = siloConfig;
-        siloConfigCached.crossNonReentrantBefore(Hook.SHARE_TOKEN_TRANSFER | _hookSetup.tokenType);
     }
 }

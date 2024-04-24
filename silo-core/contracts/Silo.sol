@@ -577,8 +577,11 @@ contract Silo is SiloERC4626 {
     }
 
     /// @inheritdoc ISilo
-    function accrueInterestForConfig(address _interestRateModel, uint256 _daoFee, uint256 _deployerFee) external virtual {
-        if (msg.sender != address(config)) revert();
+    function accrueInterestForConfig(address _interestRateModel, uint256 _daoFee, uint256 _deployerFee)
+        external
+        virtual
+    {
+        if (msg.sender != address(config)) revert OnlySiloConfig();
 
         _callAccrueInterestForAsset(_interestRateModel, _daoFee, _deployerFee, address(0) /* no other silo */);
     }
