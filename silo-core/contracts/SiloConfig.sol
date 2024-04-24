@@ -300,7 +300,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
 
     /// @notice it will change collateral for existing debt, only silo can call it
     /// @return debtInfo details about `borrower` debt after the change
-    function _changeCollateralType(address _borrower, bool _sameAsset)
+    function _changeCollateralType(address _borrower, bool _switchToSameAsset)
         internal
         virtual
         returns (DebtInfo memory debtInfo)
@@ -310,10 +310,10 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
         debtInfo = _debtsInfo[_borrower];
 
         if (!debtInfo.debtPresent) revert NoDebt();
-        if (debtInfo.sameAsset == _sameAsset) revert CollateralTypeDidNotChanged();
+        if (debtInfo.sameAsset == _switchToSameAsset) revert CollateralTypeDidNotChanged();
 
-        _debtsInfo[_borrower].sameAsset = _sameAsset;
-        debtInfo.sameAsset = _sameAsset;
+        _debtsInfo[_borrower].sameAsset = _switchToSameAsset;
+        debtInfo.sameAsset = _switchToSameAsset;
     }
 
     function _openDebt(address _borrower, uint256 _hookAction) internal virtual returns (DebtInfo memory debtInfo) {
