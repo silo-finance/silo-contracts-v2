@@ -41,29 +41,6 @@ contract GaugeHookReceiver is IGaugeHookReceiver, Ownable2StepUpgradeable {
         emit GaugeConfigured(address(gauge));
     }
 
-    function afterTokenTransfer( // TODO this hook dos not exist, move it to  afterAction
-        address _sender,
-        uint256 _senderBalance,
-        address _recipient,
-        uint256 _recipientBalance,
-        uint256 _totalSupply,
-        uint256 /* _amount */
-    ) external virtual returns (uint256 hookReturnCode) {
-        if (msg.sender != address(shareToken)) revert Unauthorized();
-
-        IGauge theGauge = gauge;
-
-        if (address(theGauge) == address(0) || theGauge.is_killed()) return Hook.RETURN_CODE_SUCCESS;
-
-        theGauge.afterTokenTransfer(
-            _sender,
-            _senderBalance,
-            _recipient,
-            _recipientBalance,
-            _totalSupply
-        );
-    }
-
     function beforeAction(address _silo, uint256 _action, bytes calldata _input)
         external
         returns (uint256 hookReturnCode)
@@ -75,6 +52,29 @@ contract GaugeHookReceiver is IGaugeHookReceiver, Ownable2StepUpgradeable {
         external
         returns (uint256 hookReturnCode)
     {
-        // TODO
+        if (_action & Hook.SHARE_TOKEN_TRANSFER == Hook.SHARE_TOKEN_TRANSFER) return Hook.RETURN_CODE_SUCCESS;
+
+        (
+            address sender,
+            address recipient,
+            uint256 amount,
+            uint256 senderBalance,
+            uint256 recipientBalance,
+            uint256 totalSupply
+        ) = abi.decode(_inputAndOutput, (address, address, uint256, uint256, uint256, uint256));
+
+        if (msg.sender != address(shareToken)) revert Unauthorized();
+
+        IGauge theGauge = gauge;
+
+        if (address(theGauge) == address(0) || theGauge.is_killed()) return Hook.RETURN_CODE_SUCCESS;
+
+        theGauge.afterTokenTransfer(
+            sender,
+            senderBalance,
+            recipient,
+            recipientBalance,
+            totalSupply
+        );
     }
 }

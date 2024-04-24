@@ -237,7 +237,8 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
 
         // report mint, burn or transfer
         IHookReceiver(setup.hookReceiver).beforeActionCall(
-            setup.tokenType, abi.encodePacked(_sender, _recipient, _amount)
+            setup.tokenType | Hook.SHARE_TOKEN_TRANSFER,
+            abi.encodePacked(_sender, _recipient, _amount, balanceOf(_sender), balanceOf(_recipient), totalSupply())
         );
     }
 
@@ -250,7 +251,8 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
 
         // report mint, burn or transfer
         IHookReceiver(setup.hookReceiver).afterActionCall(
-            setup.tokenType, abi.encodePacked(_sender, _recipient, _amount)
+            setup.tokenType | Hook.SHARE_TOKEN_TRANSFER,
+            abi.encodePacked(_sender, _recipient, _amount, balanceOf(_sender), balanceOf(_recipient), totalSupply())
         );
     }
 

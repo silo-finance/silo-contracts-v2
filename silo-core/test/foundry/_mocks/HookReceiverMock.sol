@@ -11,26 +11,27 @@ contract HookReceiverMock is CommonBase {
         ADDRESS = _hook == address(0) ? address(0x191919191919191919191) : _hook;
     }
 
-    function afterTokenTransferMock(
-        address _sender,
-        uint256 _senderBalance,
-        address _recipient,
-        uint256 _recipientBalance,
-        uint256 _totalSupply,
-        uint256 _amount,
-        uint256 _hookReturnCode
-    ) public {
-        bytes memory data = abi.encodeWithSelector(
-            IHookReceiver.afterTokenTransfer.selector,
-            _sender,
-            _senderBalance,
-            _recipient,
-            _recipientBalance,
-            _totalSupply,
-            _amount
-        );
-
-        vm.mockCall(ADDRESS, data, abi.encode(_hookReturnCode));
-        vm.expectCall(ADDRESS, data);
-    }
+    // TODO
+//    function afterTokenTransferMock(
+//        address _sender,
+//        uint256 _senderBalance,
+//        address _recipient,
+//        uint256 _recipientBalance,
+//        uint256 _totalSupply,
+//        uint256 _amount,
+//        uint256 _hookReturnCode
+//    ) public {
+//        bytes memory data = abi.encodeWithSelector(
+//            IHookReceiver.afterTokenTransfer.selector,
+//            _sender,
+//            _senderBalance,
+//            _recipient,
+//            _recipientBalance,
+//            _totalSupply,
+//            _amount
+//        );
+//
+//        vm.mockCall(ADDRESS, data, abi.encode(_hookReturnCode));
+//        vm.expectCall(ADDRESS, data);
+//    }
 }
