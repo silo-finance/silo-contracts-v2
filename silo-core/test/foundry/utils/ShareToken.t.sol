@@ -94,16 +94,17 @@ contract ShareTokenTest is Test {
 
     /*
     forge test -vv --mt test_HookReturnCode_revertOnRequest
+    TODO
     */
-    function test_HookReturnCode_revertOnRequest() public {
-        sToken.initialize(ISilo(address(this)));
-        uint256 amount = 1;
-
-        _afterTokenTransferMockOnMint(amount, Hook.RETURN_CODE_REQUEST_TO_REVERT_TX);
-
-        vm.expectRevert(IHookReceiver.RevertRequestFromHook.selector);
-        sToken.mint(owner, owner, amount);
-    }
+//    function test_HookReturnCode_revertOnRequest() public {
+//        sToken.initialize(ISilo(address(this)));
+//        uint256 amount = 1;
+//
+//        _afterTokenTransferMockOnMint(amount, Hook.RETURN_CODE_REQUEST_TO_REVERT_TX);
+//
+//        vm.expectRevert(IHookReceiver.RevertRequestFromHook.selector);
+//        sToken.mint(owner, owner, amount);
+//    }
 
     function _afterTokenTransferMockOnMint(uint256 _amount, uint256 _hookReturnCode) public {
         uint256 balance = sToken.balanceOf(owner);

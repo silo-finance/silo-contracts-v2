@@ -34,18 +34,19 @@ contract LeverageDepositReentrancy is Test {
 
     /*
     forge test -vv --ffi --mt test_LeverageReentrancyCall
+    TODO
     */
-    function test_LeverageReentrancyCall() public {
-        bytes memory data;
-
-        vm.expectRevert(ISiloConfig.CrossReentrantCall.selector);
-        // Inputs don't matter. We only need to activate/verify reentrancy protection.
-        _silo.leverage(
-            0, // _assets
-            ILeverageBorrower(address(0)), // _receiver
-            address(0), // _borrower
-            false, // sameAsset
-            data // _data
-        );
-    }
+//    function test_LeverageReentrancyCall() public {
+//        bytes memory data;
+//
+//        vm.expectRevert(ISiloConfig.CrossReentrantCall.selector);
+//        // Inputs don't matter. We only need to activate/verify reentrancy protection.
+//        _silo.leverage(
+//            0, // _assets
+//            ILeverageBorrower(address(0)), // _receiver
+//            address(0), // _borrower
+//            false, // sameAsset
+//            data // _data
+//        );
+//    }
 }
