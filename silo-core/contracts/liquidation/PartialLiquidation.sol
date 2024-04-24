@@ -20,11 +20,9 @@ contract PartialLiquidation is IPartialLiquidation {
     mapping(address silo => HookSetup) private _hooksSetup;
 
     function synchronizeHooks(address _hookReceiver, uint24 _hooksBefore, uint24 _hooksAfter) external {
-        HookSetup storage hookSetup = _hooksSetup[msg.sender];
-
-        hookSetup.hookReceiver = _hookReceiver;
-        hookSetup.hooksBefore = _hooksBefore;
-        hookSetup.hooksAfter = _hooksAfter;
+        _hooksSetup[msg.sender].hookReceiver = _hookReceiver;
+        _hooksSetup[msg.sender].hooksBefore = _hooksBefore;
+        _hooksSetup[msg.sender].hooksAfter = _hooksAfter;
     }
 
     /// @inheritdoc IPartialLiquidation

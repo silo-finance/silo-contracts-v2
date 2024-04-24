@@ -214,21 +214,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
         // TODO note then before hook call will work on not up to date data because we AccrueInterest after hook call
         _callAccrueInterest(_silo);
 
-        uint256 order = ConfigLib.orderConfigs(debtInfo, _silo == _SILO0, _hookAction);
-
-        if (order == ConfigLib.SILO0_SILO0) {
-            collateralConfig = _silo0ConfigData();
-            debtConfig = collateralConfig;
-        } else if (order == ConfigLib.SILO1_SILO0) {
-            collateralConfig = _silo1ConfigData();
-            debtConfig = _silo0ConfigData();
-        } else if (order == ConfigLib.SILO0_SILO1) {
-            collateralConfig = _silo0ConfigData();
-            debtConfig = _silo1ConfigData();
-        } else if (order == ConfigLib.SILO1_SILO1) {
-            collateralConfig = _silo1ConfigData();
-            debtConfig = collateralConfig;
-        } else revert InvalidConfigOrder();
+        (collateralConfig, debtConfig) = _getOrderedConfigs(_silo, debtInfo, _hookAction);
     }
 
     function crossReentrancyGuardEntered() external view virtual returns (bool) {
@@ -273,7 +259,8 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
         returns (ConfigData memory collateralConfig, ConfigData memory debtConfig, DebtInfo memory debtInfo)
     {
         debtInfo = _debtsInfo[_borrower];
-        (collateralConfig, debtConfig) = _getConfigs(_silo, _hookAction, debtInfo);
+
+        (collateralConfig, debtConfig) = _getOrderedConfigs(_silo, debtInfo, _hookAction);
     }
 
     /// @inheritdoc ISiloConfig
@@ -348,70 +335,29 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
         }
     }
 
-    // solhint-disable-next-line function-max-lines, code-complexity
-    function _getConfigs(address _silo, uint256 _hookAction, DebtInfo memory _debtInfo)
+    function _getOrderedConfigs(address _silo, DebtInfo memory _debtInfo, uint256 _hookAction)
         internal
         view
-        virtual
-        returns (ConfigData memory collateral, ConfigData memory debt)
+        returns (ConfigData memory collateralConfig, ConfigData memory debtConfig)
     {
         bool callForSilo0 = _silo == _SILO0;
         if (!callForSilo0 && _silo != _SILO1) revert WrongSilo();
 
-        collateral = _silo0ConfigData();
-        debt = _silo1ConfigData();
+        uint256 order = ConfigLib.orderConfigs(_debtInfo, callForSilo0, _hookAction);
 
-        if (!_debtInfo.debtPresent) {
-            if (_hookAction & (Hook.BORROW | Hook.SAME_ASSET) != 0) {
-                return callForSilo0 ? (collateral, collateral) : (debt, debt);
-            } else if (_hookAction & (Hook.BORROW | Hook.TWO_ASSETS) != 0) {
-                return callForSilo0 ? (debt, collateral) : (collateral, debt);
-            } else {
-                return callForSilo0 ? (collateral, debt) : (debt, collateral);
-            }
-        } else if (_hookAction & Hook.WITHDRAW != 0) {
-            _debtInfo.debtInThisSilo = callForSilo0 == _debtInfo.debtInSilo0;
-
-            if (_debtInfo.sameAsset) {
-                if (_debtInfo.debtInSilo0) {
-                    return callForSilo0
-                        ? (collateral, collateral)
-                        : (debt, collateral); // only deposit
-                } else {
-                    return callForSilo0
-                        ? (collateral, debt) // only deposit
-                        : (debt, debt);
-                }
-            } else {
-                if (_debtInfo.debtInSilo0) {
-                    return callForSilo0
-                        ? (collateral, debt)
-                        : (debt, collateral); // only deposit
-                } else {
-                    return callForSilo0
-                        ? (collateral, debt) // only deposit
-                        : (debt, collateral);
-                }
-            }
-        }
-
-        if (_debtInfo.debtInSilo0) {
-            _debtInfo.debtInThisSilo = callForSilo0;
-
-            if (_debtInfo.sameAsset) {
-                debt = collateral;
-            } else {
-                (collateral, debt) = (debt, collateral);
-            }
-        } else {
-            _debtInfo.debtInThisSilo = !callForSilo0;
-
-            if (_debtInfo.sameAsset) {
-                collateral = debt;
-            }
-        }
-
-        return (collateral, debt);
+        if (order == ConfigLib.SILO0_SILO0) {
+            collateralConfig = _silo0ConfigData();
+            debtConfig = collateralConfig;
+        } else if (order == ConfigLib.SILO1_SILO0) {
+            collateralConfig = _silo1ConfigData();
+            debtConfig = _silo0ConfigData();
+        } else if (order == ConfigLib.SILO0_SILO1) {
+            collateralConfig = _silo0ConfigData();
+            debtConfig = _silo1ConfigData();
+        } else if (order == ConfigLib.SILO1_SILO1) {
+            collateralConfig = _silo1ConfigData();
+            debtConfig = collateralConfig;
+        } else revert InvalidConfigOrder();
     }
 
     function _silo0ConfigData() internal view returns (ConfigData memory config) {
