@@ -96,7 +96,7 @@ library Actions {
 
         if (collateralConfig.silo != debtConfig.silo) ISilo(debtConfig.silo).accrueInterest();
 
-        // this if helped with Stack too deep
+        // this `if` helped with Stack too deep
         if (_args.assetType == ISilo.AssetType.Collateral) {
             (assets, shares) = SiloERC4626Lib.withdraw(
                 collateralConfig.token,
@@ -148,12 +148,14 @@ library Actions {
             return (assets, shares);
         }
 
-        if (collateralConfig.callBeforeQuote) {
-            ISiloOracle(collateralConfig.solvencyOracle).beforeQuote(collateralConfig.token);
-        }
+        if (!debtInfo.sameAsset) {
+            if (collateralConfig.callBeforeQuote) {
+                ISiloOracle(collateralConfig.solvencyOracle).beforeQuote(collateralConfig.token);
+            }
 
-        if (debtConfig.callBeforeQuote) {
-            ISiloOracle(debtConfig.solvencyOracle).beforeQuote(debtConfig.token);
+            if (debtConfig.callBeforeQuote) {
+                ISiloOracle(debtConfig.solvencyOracle).beforeQuote(debtConfig.token);
+            }
         }
 
         // `_args.owner` must be solvent
@@ -242,12 +244,14 @@ library Actions {
             _shareStorage.siloConfig.crossNonReentrantBefore(CrossEntrancy.ENTERED);
         }
 
-        if (collateralConfig.callBeforeQuote) {
-            ISiloOracle(collateralConfig.maxLtvOracle).beforeQuote(collateralConfig.token);
-        }
+        if (!debtInfo.sameAsset) {
+            if (collateralConfig.callBeforeQuote) {
+                ISiloOracle(collateralConfig.maxLtvOracle).beforeQuote(collateralConfig.token);
+            }
 
-        if (debtConfig.callBeforeQuote) {
-            ISiloOracle(debtConfig.maxLtvOracle).beforeQuote(debtConfig.token);
+            if (debtConfig.callBeforeQuote) {
+                ISiloOracle(debtConfig.maxLtvOracle).beforeQuote(debtConfig.token);
+            }
         }
 
         if (!SiloSolvencyLib.isBelowMaxLtv(
