@@ -130,21 +130,25 @@ contract SiloConfigTest is Test {
     /*
     forge test -vv --mt test_getConfig_fuzz
     */
+    /// forge-config: core-test.fuzz.runs = 3
     function test_getConfig_fuzz(
         uint256 _siloId,
         ISiloConfig.ConfigData memory _configData0,
         ISiloConfig.ConfigData memory _configData1
     ) public {
+        // we always using #0 setup for hookReceiver
+        _configData1.hookReceiver = _configData0.hookReceiver;
+
         SiloConfig siloConfig = siloConfigDeploy(_siloId, _configData0, _configData1);
 
         vm.expectRevert(ISiloConfig.WrongSilo.selector);
         siloConfig.getConfig(wrongSilo);
 
         ISiloConfig.ConfigData memory c0 = siloConfig.getConfig(_configData0.silo);
-        assertEq(keccak256(abi.encode(c0)), keccak256(abi.encode(_configData0)));
+        assertEq(keccak256(abi.encode(c0)), keccak256(abi.encode(_configData0)), "expect config for silo0");
 
         ISiloConfig.ConfigData memory c1 = siloConfig.getConfig(_configData1.silo);
-        assertEq(keccak256(abi.encode(c1)), keccak256(abi.encode(_configData1)));
+        assertEq(keccak256(abi.encode(c1)), keccak256(abi.encode(_configData1)), "expect config for silo1");
     }
 
     /*
