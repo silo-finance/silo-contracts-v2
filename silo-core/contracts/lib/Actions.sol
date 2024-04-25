@@ -19,7 +19,6 @@ import {SiloLendingLib} from "./SiloLendingLib.sol";
 import {SiloStdLib} from "./SiloStdLib.sol";
 import {CrossEntrancy} from "./CrossEntrancy.sol";
 import {Hook} from "./Hook.sol";
-import {ConfigLib} from "./ConfigLib.sol";
 
 library Actions {
     using SafeERC20Upgradeable for IERC20Upgradeable;
@@ -31,10 +30,6 @@ library Actions {
 
     error FeeOverflow();
 
-    // when using .startAction: expected 188000 got 198932 it is more by 10932
-    // when using _config in param: expected 188000 got 188200 it is more by 200
-    // when using one config and pass as args: expected 188000 got 186093 it is less by 1907
-    // when accrue interest from config contract and pass config address: expected 188000 got 184314 it is less by 3686
     function deposit(
         ISilo.SharedStorage storage _shareStorage,
         uint256 _assets,
