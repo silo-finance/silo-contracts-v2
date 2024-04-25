@@ -43,18 +43,12 @@ contract GaugeHookReceiver is IGaugeHookReceiver, Ownable2StepUpgradeable {
         emit GaugeConfigured(address(gauge));
     }
 
-    function beforeAction(address _silo, uint256 _action, bytes calldata _input)
-        external
-        returns (uint256 hookReturnCode)
-    {
+    function beforeAction(address _silo, uint256 _action, bytes calldata _input) external {
         // TODO
     }
 
-    function afterAction(address _silo, uint256 _action, bytes calldata _inputAndOutput)
-        external
-        returns (uint256 hookReturnCode)
-    {
-        if (_action.matchAction(Hook.SHARE_TOKEN_TRANSFER)) return Hook.RETURN_CODE_SUCCESS;
+    function afterAction(address _silo, uint256 _action, bytes calldata _inputAndOutput) external {
+        if (_action.matchAction(Hook.SHARE_TOKEN_TRANSFER)) return;
 
         (
             address sender,
@@ -69,7 +63,7 @@ contract GaugeHookReceiver is IGaugeHookReceiver, Ownable2StepUpgradeable {
 
         IGauge theGauge = gauge;
 
-        if (address(theGauge) == address(0) || theGauge.is_killed()) return Hook.RETURN_CODE_SUCCESS;
+        if (address(theGauge) == address(0) || theGauge.is_killed()) return;
 
         theGauge.afterTokenTransfer(
             sender,

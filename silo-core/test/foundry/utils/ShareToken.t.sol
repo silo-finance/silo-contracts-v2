@@ -88,7 +88,7 @@
 //        sToken.initialize(ISilo(address(this)));
 //        uint256 amount = 1;
 //
-//        _afterTokenTransferMockOnMint(amount, Hook.RETURN_CODE_SUCCESS);
+//        _afterTokenTransferMockOnMint(amount);
 //
 //        sToken.mint(owner, owner, amount);
 //    }

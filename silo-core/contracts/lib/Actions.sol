@@ -23,7 +23,6 @@ import {ConfigLib} from "./ConfigLib.sol";
 
 library Actions {
     using SafeERC20Upgradeable for IERC20Upgradeable;
-    using Hook for IHookReceiver;
     using Hook for uint256;
     using Hook for uint24;
 
@@ -654,7 +653,7 @@ library Actions {
 
         // there should be no hook calls, if you inside action eg inside leverage, liquidation etc
         // TODO make sure we good inside leverage
-        hookReceiver.beforeActionCall(_hookAction, _data);
+        hookReceiver.beforeAction(address(this), _hookAction, _data);
     }
 
     function _hookCallAfter(ISilo.SharedStorage storage _shareStorage, uint256 _hookAction, bytes memory _data)
@@ -666,6 +665,6 @@ library Actions {
         IHookReceiver hookReceiver = _shareStorage.hookReceiver;
         if (address(hookReceiver) == address(0)) return;
 
-        hookReceiver.afterActionCall(_hookAction, _data);
+        hookReceiver.afterAction(address(this), _hookAction, _data);
     }
 }

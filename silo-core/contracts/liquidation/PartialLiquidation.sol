@@ -15,7 +15,6 @@ import {PartialLiquidationExecLib} from "./lib/PartialLiquidationExecLib.sol";
 
 /// @title PartialLiquidation module for executing liquidations
 contract PartialLiquidation is IPartialLiquidation {
-    using Hook for IHookReceiver;
     using Hook for uint24;
 
     mapping(address silo => HookSetup) private _hooksSetup;
@@ -164,12 +163,13 @@ contract PartialLiquidation is IPartialLiquidation {
         uint256 _debtToCover,
         bool _receiveSToken
     ) internal virtual {
-        uint256 hookAction = Hook.BEFORE | Hook.LIQUIDATION;
-
         if (_hookSetup.hookReceiver == address(0)) return;
+
+        uint256 hookAction = Hook.BEFORE | Hook.LIQUIDATION;
         if (!_hookSetup.hooksBefore.matchAction(hookAction)) return;
 
-        IHookReceiver(_hookSetup.hookReceiver).beforeActionCall(
+        IHookReceiver(_hookSetup.hookReceiver).beforeAction(
+            _siloWithDebt,
             hookAction,
             abi.encodePacked(
                 _siloWithDebt,
@@ -193,12 +193,13 @@ contract PartialLiquidation is IPartialLiquidation {
         uint256 _withdrawCollateral,
         uint256 _repayDebtAssets
     ) internal {
-        uint256 hookAction = Hook.AFTER | Hook.LIQUIDATION;
-
         if (_hookSetup.hookReceiver == address(0)) return;
+
+        uint256 hookAction = Hook.AFTER | Hook.LIQUIDATION;
         if (!_hookSetup.hooksAfter.matchAction(hookAction)) return;
 
-        IHookReceiver(_hookSetup.hookReceiver).afterActionCall(
+        IHookReceiver(_hookSetup.hookReceiver).afterAction(
+            _siloWithDebt,
             hookAction,
             abi.encodePacked(
                 _siloWithDebt,
