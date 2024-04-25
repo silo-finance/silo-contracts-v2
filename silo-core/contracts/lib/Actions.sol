@@ -144,7 +144,8 @@ library Actions {
                     _shareStorage,
                     Hook.WITHDRAW |
                         (_args.assetType == ISilo.AssetType.Collateral ? Hook.COLLATERAL_TOKEN : Hook.PROTECTED_TOKEN),
-                    abi.encodePacked( _args.assets,
+                    abi.encodePacked(
+                        _args.assets,
                         _args.shares,
                         _args.receiver,
                         _args.owner,
@@ -178,7 +179,8 @@ library Actions {
                 _shareStorage,
                 Hook.WITHDRAW |
                     (_args.assetType == ISilo.AssetType.Collateral ? Hook.COLLATERAL_TOKEN : Hook.PROTECTED_TOKEN),
-                abi.encodePacked( _args.assets,
+                abi.encodePacked(
+                    _args.assets,
                     _args.shares,
                     _args.receiver,
                     _args.owner,
