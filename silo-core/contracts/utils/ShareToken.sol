@@ -77,12 +77,6 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
         _;
     }
 
-    modifier onlySiloConfig() {
-        if (msg.sender != address(siloConfig)) revert OnlySiloConfig();
-
-        _;
-    }
-
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
         _disableInitializers();
@@ -90,7 +84,7 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
 
     function synchronizeHooks(address _hookReceiver, uint24 _hooksBefore, uint24 _hooksAfter, uint24 _tokenType)
         external
-        onlySiloConfig
+        onlySilo
     {
         _hookSetup.hookReceiver = _hookReceiver;
         _hookSetup.hooksBefore = _hooksBefore;
