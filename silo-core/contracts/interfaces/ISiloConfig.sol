@@ -140,14 +140,14 @@ interface ISiloConfig {
     function closeDebt(address _borrower) external;
 
     /// @notice only silo method for cross Silo reentrancy
-    function crossNonReentrantBefore(uint256 _hookAction) external;
+    function crossNonReentrantBefore(uint256 _action) external;
 
     /// @notice only silo method for cross Silo reentrancy
     function crossNonReentrantAfter() external;
 
-    function getConfigAndAccrue(address _silo, uint256 _hookAction) external returns (ConfigData memory);
+    function getConfigAndAccrue(address _silo, uint256 _action) external returns (ConfigData memory);
 
-    function getConfigsAndAccrue(address _silo, uint256 _hookAction, address _borrower)
+    function getConfigsAndAccrue(address _silo, uint256 _action, address _borrower)
         external
         returns (ConfigData memory collateralConfig, ConfigData memory debtConfig, DebtInfo memory debtInfo);
 
@@ -176,11 +176,11 @@ interface ISiloConfig {
     /// @param _silo The address of the silo for which configuration data is being retrieved. Config for this silo will
     /// be at index 0.
     /// @param borrower borrower address for which `debtInfo` will be returned
-    /// @param _hookAction hook flag that will determine action
+    /// @param _action hook flag that will determine action
     /// @return collateralConfig The configuration data for collateral silo.
     /// @return debtConfig The configuration data for debt silo.
     /// @return debtInfo details about `borrower` debt
-    function getConfigs(address _silo, address borrower, uint256 _hookAction)
+    function getConfigs(address _silo, address borrower, uint256 _action)
         external
         view
         returns (ConfigData memory collateralConfig, ConfigData memory debtConfig, DebtInfo memory debtInfo);

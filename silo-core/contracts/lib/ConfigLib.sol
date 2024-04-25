@@ -17,25 +17,25 @@ library ConfigLib {
 
     /// @dev result of this method is ordered configs
     /// @param _debtInfo borrower _silo1Conf info
-    /// @param _hook this is action for which we pulling configs
+    /// @param _action this is action for which we pulling configs
     function orderConfigs(
         ISiloConfig.DebtInfo memory _debtInfo,
         bool _callForSilo0,
-        uint256 _hook
+        uint256 _action
     )
         internal
         pure
         returns (uint256 order)
     {
         if (!_debtInfo.debtPresent) {
-            if (_hook & (Hook.BORROW | Hook.SAME_ASSET) == Hook.BORROW | Hook.SAME_ASSET) {
+            if (_action & (Hook.BORROW | Hook.SAME_ASSET) == Hook.BORROW | Hook.SAME_ASSET) {
                 return _callForSilo0 ? SILO0_SILO0 : SILO1_SILO1;
-            } else if (_hook & (Hook.BORROW | Hook.TWO_ASSETS) == Hook.BORROW | Hook.TWO_ASSETS) {
+            } else if (_action & (Hook.BORROW | Hook.TWO_ASSETS) == Hook.BORROW | Hook.TWO_ASSETS) {
                 return _callForSilo0 ? SILO1_SILO0 : SILO0_SILO1;
             } else {
                 return _callForSilo0 ? SILO0_SILO1 : SILO1_SILO0;
             }
-        } else if (_hook.matchAction(Hook.WITHDRAW)) {
+        } else if (_action.matchAction(Hook.WITHDRAW)) {
             _debtInfo.debtInThisSilo = _callForSilo0 == _debtInfo.debtInSilo0;
 
             if (_debtInfo.sameAsset) {

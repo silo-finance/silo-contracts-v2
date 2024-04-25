@@ -24,10 +24,10 @@ abstract contract CrossReentrancy {
     }
 
     /// @dev please notice, this internal method is open
-    function _crossNonReentrantBefore(uint256 _hookAction) internal virtual {
+    function _crossNonReentrantBefore(uint256 _action) internal virtual {
         uint256 crossReentrantStatusCached = _crossReentrantStatus;
 
-        if (crossReentrantStatusCached == CrossEntrancy.ENTERED && _hookAction == (Hook.LIQUIDATION | Hook.REPAY)) {
+        if (crossReentrantStatusCached == CrossEntrancy.ENTERED && _action == (Hook.LIQUIDATION | Hook.REPAY)) {
             // if we in a middle of liquidation, we allow to execute repay
             return;
         }
@@ -39,13 +39,13 @@ abstract contract CrossReentrancy {
             return;
         }
 
-        if (crossReentrantStatusCached == CrossEntrancy.ENTERED_FROM_LEVERAGE && _hookAction == Hook.DEPOSIT) {
+        if (crossReentrantStatusCached == CrossEntrancy.ENTERED_FROM_LEVERAGE && _action == Hook.DEPOSIT) {
             // on leverage, entrance from deposit is allowed, but allowance is removed when we back to Silo
             _crossReentrantStatus = CrossEntrancy.ENTERED;
             return;
         }
 
-        if (_crossReentrantStatus == CrossEntrancy.ENTERED && _hookAction == CrossEntrancy.ENTERED_FROM_LEVERAGE) {
+        if (_crossReentrantStatus == CrossEntrancy.ENTERED && _action == CrossEntrancy.ENTERED_FROM_LEVERAGE) {
             // we need to be inside leverage and before callback, we mark our status
             _crossReentrantStatus = CrossEntrancy.ENTERED_FROM_LEVERAGE;
             return;

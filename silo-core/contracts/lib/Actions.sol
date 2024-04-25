@@ -642,29 +642,29 @@ library Actions {
         IPartialLiquidation(cfg.liquidationModule).synchronizeHooks(cfg.hookReceiver, _hooksBefore, _hooksAfter);
     }
 
-    function _hookCallBefore(ISilo.SharedStorage storage _shareStorage, uint256 _hookAction, bytes memory _data)
+    function _hookCallBefore(ISilo.SharedStorage storage _shareStorage, uint256 _action, bytes memory _data)
         private
     {
         // check hooks first, because it is the same slot as siloConfig, and siloConfig was used already
-        if (!_shareStorage.hooksBefore.matchAction(_hookAction)) return;
+        if (!_shareStorage.hooksBefore.matchAction(_action)) return;
 
         IHookReceiver hookReceiver = _shareStorage.hookReceiver;
         if (address(hookReceiver) == address(0)) return;
 
         // there should be no hook calls, if you inside action eg inside leverage, liquidation etc
         // TODO make sure we good inside leverage
-        hookReceiver.beforeAction(address(this), _hookAction, _data);
+        hookReceiver.beforeAction(address(this), _action, _data);
     }
 
-    function _hookCallAfter(ISilo.SharedStorage storage _shareStorage, uint256 _hookAction, bytes memory _data)
+    function _hookCallAfter(ISilo.SharedStorage storage _shareStorage, uint256 _action, bytes memory _data)
         private
     {
         // check hooks first, because it is the same slot as siloConfig, and siloConfig was used already
-        if (!_shareStorage.hooksAfter.matchAction(_hookAction)) return;
+        if (!_shareStorage.hooksAfter.matchAction(_action)) return;
 
         IHookReceiver hookReceiver = _shareStorage.hookReceiver;
         if (address(hookReceiver) == address(0)) return;
 
-        hookReceiver.afterAction(address(this), _hookAction, _data);
+        hookReceiver.afterAction(address(this), _action, _data);
     }
 }

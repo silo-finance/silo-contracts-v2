@@ -25,7 +25,7 @@ library Hook {
     // note: currently we can support hook value up to 2 ** 23,
     // because for optimisation purposes, we storing hooks as uint24
 
-    function matchAction(uint256 _hookAction, uint256 _expectedHook) internal pure returns (bool) {
-        return _hookAction & _expectedHook == _expectedHook;
+    function matchAction(uint256 _action, uint256 _expectedHook) internal pure returns (bool) {
+        return _action & _expectedHook == _expectedHook;
     }
 }

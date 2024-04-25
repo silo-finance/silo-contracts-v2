@@ -133,14 +133,14 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
     }
 
     /// @inheritdoc ISiloConfig
-    function crossNonReentrantBefore(uint256 _hookAction) external virtual {
-        if (_hookAction.matchAction(CrossEntrancy.ENTERED_FROM_LEVERAGE)) {
+    function crossNonReentrantBefore(uint256 _action) external virtual {
+        if (_action.matchAction(CrossEntrancy.ENTERED_FROM_LEVERAGE)) {
             _onlySilo();
         } else {
             _onlySiloOrTokenOrLiquidation();
         }
 
-        _crossNonReentrantBefore(_hookAction);
+        _crossNonReentrantBefore(_action);
     }
 
     /// @inheritdoc ISiloConfig
@@ -174,8 +174,8 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
         delete _debtsInfo[_borrower];
     }
 
-    function getConfigAndAccrue(address _silo, uint256 _hookAction) external virtual returns (ConfigData memory) {
-        _crossNonReentrantBefore(_hookAction);
+    function getConfigAndAccrue(address _silo, uint256 _action) external virtual returns (ConfigData memory) {
+        _crossNonReentrantBefore(_action);
         _callAccrueInterest(_silo);
 
         if (_silo == _SILO0) {
@@ -187,23 +187,23 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
         }
     }
 
-    function getConfigsAndAccrue(address _silo, uint256 _hookAction, address _borrower)
+    function getConfigsAndAccrue(address _silo, uint256 _action, address _borrower)
         external
         virtual
         returns (ConfigData memory collateralConfig, ConfigData memory debtConfig, DebtInfo memory debtInfo)
     {
-        _crossNonReentrantBefore(_hookAction);
+        _crossNonReentrantBefore(_action);
 
-        if (_hookAction.matchAction(Hook.SHARE_TOKEN_TRANSFER)) {
+        if (_action.matchAction(Hook.SHARE_TOKEN_TRANSFER)) {
             // share token transfer does not need configs
             return (collateralConfig, debtConfig, debtInfo);
-        } else if (_hookAction.matchAction(Hook.FLASH_LOAN)) {
+        } else if (_action.matchAction(Hook.FLASH_LOAN)) {
             // flash loan does not need configs
             return (collateralConfig, debtConfig, debtInfo);
-        } else if (_hookAction.matchAction(Hook.BORROW)) {
-            debtInfo = _openDebt(_borrower, _hookAction);
-        } else if (_hookAction.matchAction(Hook.SWITCH_COLLATERAL)) {
-            debtInfo = _changeCollateralType(_borrower, _hookAction.matchAction(Hook.SAME_ASSET));
+        } else if (_action.matchAction(Hook.BORROW)) {
+            debtInfo = _openDebt(_borrower, _action);
+        } else if (_action.matchAction(Hook.SWITCH_COLLATERAL)) {
+            debtInfo = _changeCollateralType(_borrower, _action.matchAction(Hook.SAME_ASSET));
         } else {
             debtInfo = _debtsInfo[_borrower];
         }
@@ -211,7 +211,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
         // TODO note: before hook call will work on not up to date data because we AccrueInterest after hook call
         _callAccrueInterest(_silo);
 
-        (collateralConfig, debtConfig) = _getOrderedConfigs(_silo, debtInfo, _hookAction);
+        (collateralConfig, debtConfig) = _getOrderedConfigs(_silo, debtInfo, _action);
     }
 
     function crossReentrancyGuardEntered() external view virtual returns (bool) {
@@ -249,7 +249,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
         }
     }
 
-    function getConfigs(address _silo, address _borrower, uint256 _hookAction)
+    function getConfigs(address _silo, address _borrower, uint256 _action)
         external
         view
         virtual
@@ -257,7 +257,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
     {
         debtInfo = _debtsInfo[_borrower];
 
-        (collateralConfig, debtConfig) = _getOrderedConfigs(_silo, debtInfo, _hookAction);
+        (collateralConfig, debtConfig) = _getOrderedConfigs(_silo, debtInfo, _action);
     }
 
     /// @inheritdoc ISiloConfig
@@ -318,21 +318,21 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
         debtInfo.sameAsset = _switchToSameAsset;
     }
 
-    function _openDebt(address _borrower, uint256 _hookAction) internal virtual returns (DebtInfo memory debtInfo) {
+    function _openDebt(address _borrower, uint256 _action) internal virtual returns (DebtInfo memory debtInfo) {
         _onlySilo();
 
         debtInfo = _debtsInfo[_borrower];
 
         if (!debtInfo.debtPresent) {
             debtInfo.debtPresent = true;
-            debtInfo.sameAsset = _hookAction.matchAction(Hook.SAME_ASSET);
+            debtInfo.sameAsset = _action.matchAction(Hook.SAME_ASSET);
             debtInfo.debtInSilo0 = msg.sender == _SILO0;
 
             _debtsInfo[_borrower] = debtInfo;
         }
     }
 
-    function _getOrderedConfigs(address _silo, DebtInfo memory _debtInfo, uint256 _hookAction)
+    function _getOrderedConfigs(address _silo, DebtInfo memory _debtInfo, uint256 _action)
         internal
         view
         returns (ConfigData memory collateralConfig, ConfigData memory debtConfig)
@@ -340,7 +340,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
         bool callForSilo0 = _silo == _SILO0;
         if (!callForSilo0 && _silo != _SILO1) revert WrongSilo();
 
-        uint256 order = ConfigLib.orderConfigs(_debtInfo, callForSilo0, _hookAction);
+        uint256 order = ConfigLib.orderConfigs(_debtInfo, callForSilo0, _action);
 
         if (order == ConfigLib.SILO0_SILO0) {
             collateralConfig = _silo0ConfigData();
