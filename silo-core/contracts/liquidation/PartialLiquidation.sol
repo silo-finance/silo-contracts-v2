@@ -16,6 +16,7 @@ import {PartialLiquidationExecLib} from "./lib/PartialLiquidationExecLib.sol";
 /// @title PartialLiquidation module for executing liquidations
 contract PartialLiquidation is IPartialLiquidation {
     using Hook for IHookReceiver;
+    using Hook for uint24;
 
     mapping(address silo => HookSetup) private _hooksSetup;
 
@@ -166,7 +167,7 @@ contract PartialLiquidation is IPartialLiquidation {
         uint256 hookAction = Hook.BEFORE | Hook.LIQUIDATION;
 
         if (_hookSetup.hookReceiver == address(0)) return;
-        if (_hookSetup.hooksBefore & hookAction == 0) return;
+        if (!_hookSetup.hooksBefore.matchAction(hookAction)) return;
 
         IHookReceiver(_hookSetup.hookReceiver).beforeActionCall(
             hookAction,
@@ -195,7 +196,7 @@ contract PartialLiquidation is IPartialLiquidation {
         uint256 hookAction = Hook.AFTER | Hook.LIQUIDATION;
 
         if (_hookSetup.hookReceiver == address(0)) return;
-        if (_hookSetup.hooksAfter & hookAction == 0) return;
+        if (!_hookSetup.hooksAfter.matchAction(hookAction)) return;
 
         IHookReceiver(_hookSetup.hookReceiver).afterActionCall(
             hookAction,

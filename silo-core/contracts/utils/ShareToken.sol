@@ -60,6 +60,7 @@ import {Hook} from "../lib/Hook.sol";
 /// @custom:security-contact security@silo.finance
 abstract contract ShareToken is ERC20Upgradeable, IShareToken {
     using Hook for IHookReceiver;
+    using Hook for uint24;
 
     /// @notice Silo address for which tokens was deployed
     ISilo public silo;
@@ -233,7 +234,7 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
         HookSetup memory setup = _hookSetup;
 
         if (setup.hookReceiver == address(0)) return;
-        if (setup.hooksBefore & setup.tokenType == 0) return;
+        if (!setup.hooksBefore.matchAction(setup.tokenType)) return;
 
         // report mint, burn or transfer
         IHookReceiver(setup.hookReceiver).beforeActionCall(
@@ -247,7 +248,7 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
         HookSetup memory setup = _hookSetup;
 
         if (setup.hookReceiver == address(0)) return;
-        if (setup.hooksAfter & setup.tokenType == 0) return;
+        if (!setup.hooksAfter.matchAction(setup.tokenType)) return;
 
         // report mint, burn or transfer
         IHookReceiver(setup.hookReceiver).afterActionCall(

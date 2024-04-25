@@ -24,6 +24,8 @@ import {ConfigLib} from "./ConfigLib.sol";
 library Actions {
     using SafeERC20Upgradeable for IERC20Upgradeable;
     using Hook for IHookReceiver;
+    using Hook for uint256;
+    using Hook for uint24;
 
     bytes32 internal constant _LEVERAGE_CALLBACK = keccak256("ILeverageBorrower.onLeverage");
     bytes32 internal constant _FLASHLOAN_CALLBACK = keccak256("ERC3156FlashBorrower.onFlashLoan");
@@ -651,7 +653,7 @@ library Actions {
         IHookReceiver hookReceiver = _shareStorage.hookReceiver;
 
         if (address(hookReceiver) == address(0)) return;
-        if (_shareStorage.hooksBefore & _hookAction == 0) return;
+        if (!_shareStorage.hooksBefore.matchAction(_hookAction)) return;
 
         // there should be no hook calls, if you inside action eg inside leverage, liquidation etc
         // TODO make sure we good inside leverage
@@ -664,7 +666,7 @@ library Actions {
         IHookReceiver hookReceiver = _shareStorage.hookReceiver;
 
         if (address(hookReceiver) == address(0)) return;
-        if (_shareStorage.hooksAfter & _hookAction == 0) return;
+        if (!_shareStorage.hooksAfter.matchAction(_hookAction)) return;
 
         hookReceiver.afterActionCall(_hookAction, _data);
     }

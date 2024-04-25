@@ -16,6 +16,8 @@ import {ConfigLib} from "./lib/ConfigLib.sol";
 /// @dev Immutable contract is more expensive to deploy than minimal proxy however it provides nearly 10x cheapper
 /// data access using immutable variables.
 contract SiloConfig is ISiloConfig, CrossReentrancy {
+    using Hook for uint256;
+    
     uint256 public immutable SILO_ID;
 
     uint256 private immutable _DAO_FEE;
@@ -132,7 +134,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
 
     /// @inheritdoc ISiloConfig
     function crossNonReentrantBefore(uint256 _hookAction) external virtual {
-        if (_hookAction & CrossEntrancy.ENTERED_FROM_LEVERAGE == CrossEntrancy.ENTERED_FROM_LEVERAGE) {
+        if (_hookAction.matchAction(CrossEntrancy.ENTERED_FROM_LEVERAGE)) {
             _onlySilo();
         } else {
             _onlySiloOrTokenOrLiquidation();
@@ -192,16 +194,16 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
     {
         _crossNonReentrantBefore(_hookAction);
 
-        if (_hookAction & Hook.SHARE_TOKEN_TRANSFER == Hook.SHARE_TOKEN_TRANSFER) {
+        if (_hookAction.matchAction(Hook.SHARE_TOKEN_TRANSFER)) {
             // share token transfer does not need configs
             return (collateralConfig, debtConfig, debtInfo);
-        } else if (_hookAction & Hook.FLASH_LOAN == Hook.FLASH_LOAN) {
+        } else if (_hookAction.matchAction(Hook.FLASH_LOAN)) {
             // flash loan does not need configs
             return (collateralConfig, debtConfig, debtInfo);
-        } else if (_hookAction & Hook.BORROW == Hook.BORROW) {
+        } else if (_hookAction.matchAction(Hook.BORROW)) {
             debtInfo = _openDebt(_borrower, _hookAction);
-        } else if (_hookAction & Hook.SWITCH_COLLATERAL == Hook.SWITCH_COLLATERAL) {
-            debtInfo = _changeCollateralType(_borrower, _hookAction & Hook.SAME_ASSET == Hook.SAME_ASSET);
+        } else if (_hookAction.matchAction(Hook.SWITCH_COLLATERAL)) {
+            debtInfo = _changeCollateralType(_borrower, _hookAction.matchAction(Hook.SAME_ASSET));
         } else {
             debtInfo = _debtsInfo[_borrower];
         }
@@ -323,7 +325,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
 
         if (!debtInfo.debtPresent) {
             debtInfo.debtPresent = true;
-            debtInfo.sameAsset = _hookAction & Hook.SAME_ASSET == Hook.SAME_ASSET;
+            debtInfo.sameAsset = _hookAction.matchAction(Hook.SAME_ASSET);
             debtInfo.debtInSilo0 = msg.sender == _SILO0;
 
             _debtsInfo[_borrower] = debtInfo;

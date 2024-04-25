@@ -8,6 +8,8 @@ import {Hook} from "./Hook.sol";
 
 // solhint-disable private-vars-leading-underscore
 library ConfigLib {
+    using Hook for uint256;
+
     uint256 internal constant SILO0_SILO0 = 0;
     uint256 internal constant SILO1_SILO0 = 1;
     uint256 internal constant SILO0_SILO1 = 2;
@@ -33,7 +35,7 @@ library ConfigLib {
             } else {
                 return _callForSilo0 ? SILO0_SILO1 : SILO1_SILO0;
             }
-        } else if (_hook & Hook.WITHDRAW == Hook.WITHDRAW) {
+        } else if (_hook.matchAction(Hook.WITHDRAW)) {
             _debtInfo.debtInThisSilo = _callForSilo0 == _debtInfo.debtInSilo0;
 
             if (_debtInfo.sameAsset) {

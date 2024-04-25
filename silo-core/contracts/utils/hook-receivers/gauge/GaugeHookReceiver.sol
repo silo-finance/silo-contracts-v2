@@ -12,6 +12,8 @@ import {Hook} from "../../../lib/Hook.sol";
 /// @notice Silo share token hook receiver for the gauge.
 /// It notifies the gauge (if configured) about any balance update in the Silo share token.
 contract GaugeHookReceiver is IGaugeHookReceiver, Ownable2StepUpgradeable {
+    using Hook for uint256;
+
     IGauge public gauge;
     IShareToken public shareToken;
 
@@ -52,7 +54,7 @@ contract GaugeHookReceiver is IGaugeHookReceiver, Ownable2StepUpgradeable {
         external
         returns (uint256 hookReturnCode)
     {
-        if (_action & Hook.SHARE_TOKEN_TRANSFER == Hook.SHARE_TOKEN_TRANSFER) return Hook.RETURN_CODE_SUCCESS;
+        if (_action.matchAction(Hook.SHARE_TOKEN_TRANSFER)) return Hook.RETURN_CODE_SUCCESS;
 
         (
             address sender,

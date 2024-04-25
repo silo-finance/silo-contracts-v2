@@ -27,26 +27,8 @@ library Hook {
     uint256 internal constant PROTECTED_TOKEN = 2 ** 16;
     uint256 internal constant DEBT_TOKEN = 2 ** 17;
 
-
-//    uint256 internal constant BEFORE_DEPOSIT = 2 ** 3 | 2 ** 5;
-//    uint256 internal constant AFTER_DEPOSIT = 2 ** 4 | 2 ** 5;
-//    uint256 internal constant BORROW_SAME_ASSET = 2 ** 6 | 2 ** 1;
-//    uint256 internal constant BORROW_TWO_ASSETS = 2 ** 6 | 2 ** 2;
-//    uint256 internal constant BEFORE_REPAY = 2 ** 3 | 2 ** 7;
-//    uint256 internal constant AFTER_REPAY = 2 ** 4 | 2 ** 7;
-//    uint256 internal constant BEFORE_WITHDRAW = 2 ** 3 | 2 ** 8;
-//    uint256 internal constant AFTER_WITHDRAW = 2 ** 4 | 2 ** 8;
-//    uint256 internal constant BEFORE_LIQUIDATION = 2 ** 3 | 2 ** 9;
-//    uint256 internal constant AFTER_LIQUIDATION = 2 ** 4 | 2 ** 9;
-//
-//    uint256 internal constant BEFORE_SHARE_TRANSFER = 2 ** 3 | 2 ** 10;
-//    uint256 internal constant AFTER_SHARE_TRANSFER = 2 ** 4 | 2 ** 10;
-//
-//    uint256 internal constant BEFORE_TRANSITION_COLLATERAL = 2 ** 3 | 2 ** 11;
-//    uint256 internal constant AFTER_TRANSITION_COLLATERAL = 2 ** 4 | 2 ** 11;
-//
-//    uint256 internal constant BEFORE_SWITCH_COLLATERAL = 2 ** 3 | 2 ** 12;
-//    uint256 internal constant AFTER_SWITCH_COLLATERAL = 2 ** 4 | 2 ** 12;
+    // note: currently we can support hook value up to 2 ** 23,
+    // because for optimisation purposes, we storing hooks as uint24
 
     function beforeActionCall(IHookReceiver _hookReceiver, address _silo, uint256 _hookAction, bytes memory _data)
         internal
@@ -68,6 +50,10 @@ library Hook {
 
     function afterActionCall(IHookReceiver _hookReceiver, uint256 _hookAction, bytes memory _data) internal {
         _callHook(address(_hookReceiver), IHookReceiver.afterAction.selector, address(this), _hookAction, _data);
+    }
+
+    function matchAction(uint256 _hookAction, uint256 _expectedHook) internal pure returns (bool) {
+        return _hookAction & _expectedHook == _expectedHook;
     }
 
     function _callHook(
