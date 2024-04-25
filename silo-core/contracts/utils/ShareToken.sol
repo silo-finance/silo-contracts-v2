@@ -61,13 +61,17 @@ import {Hook} from "../lib/Hook.sol";
 abstract contract ShareToken is ERC20Upgradeable, IShareToken {
     using Hook for uint24;
 
+    /// @notice Silo address for which tokens was deployed
+    ISilo public silo;
+
     /// @dev cached silo config address
     ISiloConfig public siloConfig;
 
-    TokenSharedStorage internal _sharedStorage;
+    /// @notice Copy of hooks setup from SiloConfig for optimisation purposes
+    HookSetup private _hookSetup;
 
     modifier onlySilo() {
-        if (msg.sender != address(_sharedStorage.silo)) revert OnlySilo();
+        if (msg.sender != address(silo)) revert OnlySilo();
 
         _;
     }
@@ -81,10 +85,10 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
         external
         onlySilo
     {
-        _sharedStorage.hookReceiver = _hookReceiver;
-        _sharedStorage.hooksBefore = _hooksBefore;
-        _sharedStorage.hooksAfter = _hooksAfter;
-        _sharedStorage.tokenType = _tokenType;
+        _hookSetup.hookReceiver = _hookReceiver;
+        _hookSetup.hooksBefore = _hooksBefore;
+        _hookSetup.hooksAfter = _hooksAfter;
+        _hookSetup.tokenType = _tokenType;
     }
 
     /// @inheritdoc IShareToken
@@ -107,8 +111,8 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
         _approve(_owner, _spender, _amount);
     }
 
-    function tokenSharedStorage() external view virtual returns (TokenSharedStorage memory) {
-        return _sharedStorage;
+    function hookSetup() external view virtual returns (HookSetup memory) {
+        return _hookSetup;
     }
 
     /// @inheritdoc ERC20Upgradeable
@@ -141,7 +145,7 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
 
     /// @dev decimals of share token
     function decimals() public view virtual override(ERC20Upgradeable, IERC20MetadataUpgradeable) returns (uint8) {
-        ISiloConfig.ConfigData memory configData = siloConfig.getConfig(address(_sharedStorage.silo));
+        ISiloConfig.ConfigData memory configData = siloConfig.getConfig(address(silo));
         return uint8(TokenHelper.assertAndGetDecimals(configData.token));
     }
 
@@ -159,7 +163,7 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
         override(ERC20Upgradeable, IERC20MetadataUpgradeable)
         returns (string memory)
     {
-        ISiloConfig.ConfigData memory configData = siloConfig.getConfig(address(_sharedStorage.silo));
+        ISiloConfig.ConfigData memory configData = siloConfig.getConfig(address(silo));
         string memory siloIdAscii = StringsUpgradeable.toString(siloConfig.SILO_ID());
 
         string memory pre = "";
@@ -191,7 +195,7 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
         override(ERC20Upgradeable, IERC20MetadataUpgradeable)
         returns (string memory)
     {
-        ISiloConfig.ConfigData memory configData = siloConfig.getConfig(address(_sharedStorage.silo));
+        ISiloConfig.ConfigData memory configData = siloConfig.getConfig(address(silo));
         string memory siloIdAscii = StringsUpgradeable.toString(siloConfig.SILO_ID());
 
         string memory pre;
@@ -215,41 +219,35 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
     /// @param _silo Silo address for which tokens was deployed
     // solhint-disable-next-line func-name-mixedcase
     function __ShareToken_init(ISilo _silo) internal virtual onlyInitializing {
-        _sharedStorage.silo = _silo;
+        silo = _silo;
         siloConfig = _silo.config();
     }
 
     function _beforeTokenTransfer(address _sender, address _recipient, uint256 _amount) internal virtual override {
-        TokenSharedStorage storage setup = _sharedStorage;
+        HookSetup memory setup = _hookSetup;
 
-        uint256 tokenType = setup.tokenType;
-        if (!setup.hooksBefore.matchAction(tokenType)) return;
-
-        IHookReceiver hookReceiver = IHookReceiver(setup.hookReceiver);
-        if (address(hookReceiver) == address(0)) return;
+        if (setup.hookReceiver == address(0)) return;
+        if (!setup.hooksBefore.matchAction(setup.tokenType)) return;
 
         // report mint, burn or transfer
-        hookReceiver.beforeAction(
-            address(setup.silo),
-            tokenType | Hook.SHARE_TOKEN_TRANSFER,
+        IHookReceiver(setup.hookReceiver).beforeAction(
+            address(silo),
+            setup.tokenType | Hook.SHARE_TOKEN_TRANSFER,
             abi.encodePacked(_sender, _recipient, _amount, balanceOf(_sender), balanceOf(_recipient), totalSupply())
         );
     }
 
     /// @dev Call an afterTokenTransfer hook if registered
     function _afterTokenTransfer(address _sender, address _recipient, uint256 _amount) internal virtual override {
-        TokenSharedStorage storage setup = _sharedStorage;
+        HookSetup memory setup = _hookSetup;
 
-        uint256 tokenType = setup.tokenType;
-        if (!setup.hooksAfter.matchAction(tokenType)) return;
-
-        IHookReceiver hookReceiver = IHookReceiver(setup.hookReceiver);
-        if (address(hookReceiver) == address(0)) return;
+        if (setup.hookReceiver == address(0)) return;
+        if (!setup.hooksAfter.matchAction(setup.tokenType)) return;
 
         // report mint, burn or transfer
-        hookReceiver.afterAction(
-            address(setup.silo),
-            tokenType | Hook.SHARE_TOKEN_TRANSFER,
+        IHookReceiver(setup.hookReceiver).afterAction(
+            address(silo),
+            setup.tokenType | Hook.SHARE_TOKEN_TRANSFER,
             abi.encodePacked(_sender, _recipient, _amount, balanceOf(_sender), balanceOf(_recipient), totalSupply())
         );
     }
@@ -260,7 +258,7 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
         returns (ISiloConfig siloConfigCached)
     {
         siloConfigCached = siloConfig;
-        siloConfigCached.crossNonReentrantBefore(Hook.SHARE_TOKEN_TRANSFER | _sharedStorage.tokenType);
+        siloConfigCached.crossNonReentrantBefore(Hook.SHARE_TOKEN_TRANSFER | _hookSetup.tokenType);
     }
 
     /// @dev checks if operation is "real" transfer

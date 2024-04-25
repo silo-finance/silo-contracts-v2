@@ -101,7 +101,7 @@ contract ShareDebtToken is IERC20R, ShareToken {
         // if we are NOT minting and not burning, it means we are transferring
         // make sure that _recipient is solvent after transfer
         if (_isTransfer(_sender, _recipient)) {
-            if (!_sharedStorage.silo.isSolvent(_recipient)) revert RecipientNotSolventAfterTransfer();
+            if (!silo.isSolvent(_recipient)) revert RecipientNotSolventAfterTransfer();
         }
 
         // we need to close debt on transfer and burn

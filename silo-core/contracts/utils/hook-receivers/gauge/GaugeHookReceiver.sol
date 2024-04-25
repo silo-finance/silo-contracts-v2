@@ -26,7 +26,7 @@ contract GaugeHookReceiver is IGaugeHookReceiver, Ownable2StepUpgradeable {
     /// @param _token Silo share token for which hook receiver should be initialized.
     function initialize(address _owner, IShareToken _token) external virtual initializer {
         if (_owner == address(0)) revert OwnerIsZeroAddress();
-        if (_token.tokenSharedStorage().hookReceiver != address(this)) revert InvalidShareToken();
+        if (_token.hookSetup().hookReceiver != address(this)) revert InvalidShareToken();
 
         _transferOwnership(_owner);
 

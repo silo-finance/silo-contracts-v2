@@ -155,7 +155,7 @@ contract PartialLiquidation is IPartialLiquidation {
     }
 
     function _beforeLiquidationHook(
-        HookSetup memory _sharedStorage,
+        HookSetup memory _hookSetup,
         address _siloWithDebt,
         address _collateralAsset,
         address _debtAsset,
@@ -163,12 +163,12 @@ contract PartialLiquidation is IPartialLiquidation {
         uint256 _debtToCover,
         bool _receiveSToken
     ) internal virtual {
-        if (_sharedStorage.hookReceiver == address(0)) return;
+        if (_hookSetup.hookReceiver == address(0)) return;
 
         uint256 hookAction = Hook.BEFORE | Hook.LIQUIDATION;
-        if (!_sharedStorage.hooksBefore.matchAction(hookAction)) return;
+        if (!_hookSetup.hooksBefore.matchAction(hookAction)) return;
 
-        IHookReceiver(_sharedStorage.hookReceiver).beforeAction(
+        IHookReceiver(_hookSetup.hookReceiver).beforeAction(
             _siloWithDebt,
             hookAction,
             abi.encodePacked(
@@ -183,7 +183,7 @@ contract PartialLiquidation is IPartialLiquidation {
     }
 
     function _afterLiquidationHook(
-        HookSetup memory _sharedStorage,
+        HookSetup memory _hookSetup,
         address _siloWithDebt,
         address _collateralAsset,
         address _debtAsset,
@@ -193,12 +193,12 @@ contract PartialLiquidation is IPartialLiquidation {
         uint256 _withdrawCollateral,
         uint256 _repayDebtAssets
     ) internal {
-        if (_sharedStorage.hookReceiver == address(0)) return;
+        if (_hookSetup.hookReceiver == address(0)) return;
 
         uint256 hookAction = Hook.AFTER | Hook.LIQUIDATION;
-        if (!_sharedStorage.hooksAfter.matchAction(hookAction)) return;
+        if (!_hookSetup.hooksAfter.matchAction(hookAction)) return;
 
-        IHookReceiver(_sharedStorage.hookReceiver).afterAction(
+        IHookReceiver(_hookSetup.hookReceiver).afterAction(
             _siloWithDebt,
             hookAction,
             abi.encodePacked(

@@ -7,19 +7,15 @@ import {
 import {ISilo} from "../interfaces/ISilo.sol";
 
 interface IShareToken is IERC20MetadataUpgradeable {
-    /// @dev optimised storage for gas efficiency, common scenario is to read silo and hooks
-    /// It has copy of hooks setup from SiloConfig also for optimisation purposes
-    struct TokenSharedStorage {
-        /// @param Silo address for which tokens was deployed
-        ISilo silo;
+    struct HookSetup {
+        /// @param this is the same as in siloConfig
+        address hookReceiver;
         /// @param hooks bitmap
         uint24 hooksBefore;
         /// @param hooks bitmap
         uint24 hooksAfter;
         /// @param tokenType must be one of this hooks values: COLLATERAL_TOKEN, PROTECTED_TOKEN, DEBT_TOKEN
         uint24 tokenType;
-        /// @param this is the same as in siloConfig
-        address hookReceiver;
     }
 
     /// @notice Emitted every time receiver is notified about token transfer
@@ -85,5 +81,9 @@ interface IShareToken is IERC20MetadataUpgradeable {
     /// @return totalSupply total supply of the token
     function balanceOfAndTotalSupply(address _account) external view returns (uint256 balance, uint256 totalSupply);
 
-    function tokenSharedStorage() external view returns (TokenSharedStorage memory);
+    /// @notice Returns silo address for which token was deployed
+    /// @return silo address
+    function silo() external view returns (ISilo silo);
+
+    function hookSetup() external view returns (HookSetup memory);
 }
