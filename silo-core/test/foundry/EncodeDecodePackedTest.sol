@@ -5,13 +5,15 @@ import "forge-std/Test.sol";
 
 
 contract EncodeDecodePackedTest is Test {
-    uint256 constant ADDRESS_LENGTH = 0x14;
-    uint256 constant UINT24_LENGTH = 0x3;
+    uint256 constant PACKED_ADDRESS_LENGTH = 20;
+    uint256 constant PACKED_UINT24_LENGTH = 3;
+    uint256 constant PACKED_BOOL_LENGTH = 1;
+    uint256 constant PACKED_FULL_LENGTH = 32;
 
     /*
     forge test -vv --mt test_encodePacked_decodePacked
     */
-    function test_encodePacked_decodePacked() public pure {
+    function test_encodePacked_decodePacked() public {
         address a = address(0xa);
         address b = address(0xb);
         uint256 c = 0xc;
@@ -44,17 +46,17 @@ contract EncodeDecodePackedTest is Test {
         returns (address a, address b, uint256 c, uint24 d, bool e, address f)
     {
         assembly {
-            let pointer := ADDRESS_LENGTH
+            let pointer := PACKED_ADDRESS_LENGTH
             a := mload(add(packed, pointer))
-            pointer := add(pointer, ADDRESS_LENGTH)
+            pointer := add(pointer, PACKED_ADDRESS_LENGTH)
             b := mload(add(packed, pointer))
-            pointer := add(pointer, 32)
+            pointer := add(pointer, PACKED_FULL_LENGTH)
             c := mload(add(packed, pointer))
-            pointer := add(pointer, UINT24_LENGTH)
+            pointer := add(pointer, PACKED_UINT24_LENGTH)
             d := mload(add(packed, pointer))
-            pointer := add(pointer, 1)
+            pointer := add(pointer, PACKED_BOOL_LENGTH)
             e := mload(add(packed, pointer))
-            pointer := add(pointer, ADDRESS_LENGTH)
+            pointer := add(pointer, PACKED_ADDRESS_LENGTH)
             f := mload(add(packed, pointer))
         }
     }
