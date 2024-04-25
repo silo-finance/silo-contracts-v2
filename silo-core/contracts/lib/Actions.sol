@@ -37,7 +37,6 @@ library Actions {
     // when using one config and pass as args: expected 188000 got 186093 it is less by 1907
     // when accrue interest from config contract and pass config address: expected 188000 got 184314 it is less by 3686
     function deposit(
-        ISiloConfig _siloConfig,
         ISilo.SharedStorage storage _shareStorage,
         uint256 _assets,
         uint256 _shares,
@@ -50,7 +49,9 @@ library Actions {
     {
         _hookCallBefore(_shareStorage, Hook.DEPOSIT, abi.encodePacked(_assets, _shares, _receiver, _assetType));
 
-        ISiloConfig.ConfigData memory _collateralConfig = _siloConfig.getConfigAndAccrue(address(this), Hook.DEPOSIT);
+        ISiloConfig.ConfigData memory _collateralConfig = _shareStorage.siloConfig.getConfigAndAccrue(
+            address(this), Hook.DEPOSIT
+        );
 
         if (_assetType == ISilo.AssetType.Debt) revert ISilo.WrongAssetType();
 
@@ -68,8 +69,11 @@ library Actions {
             _totalCollateral
         );
 
-        _siloConfig.crossNonReentrantAfter();
-        _hookCallAfter(_shareStorage, Hook.DEPOSIT, abi.encodePacked(_assets, _shares, _receiver, _assetType, assets, shares));
+        _shareStorage.siloConfig.crossNonReentrantAfter();
+
+        _hookCallAfter(
+            _shareStorage, Hook.DEPOSIT, abi.encodePacked(_assets, _shares, _receiver, _assetType, assets, shares)
+        );
     }
 
     // solhint-disable-next-line function-max-lines, code-complexity
@@ -80,7 +84,6 @@ library Actions {
     // getConfigsAndAccrue + HOOK address check + lib for ordering: expected 176906 got 195179 it is more by 18273
     // getConfigsAndAccrue + HOOK address check + lib for ordering using UINT: expected 176906 got 148652 it is less by 28254
     function withdraw(
-        ISiloConfig _siloConfig,
         ISilo.SharedStorage storage _shareStorage,
         ISilo.WithdrawArgs calldata _args,
         ISilo.Assets storage _totalAssets
@@ -101,7 +104,7 @@ library Actions {
             ISiloConfig.ConfigData memory collateralConfig,
             ISiloConfig.ConfigData memory debtConfig,
             ISiloConfig.DebtInfo memory debtInfo
-        ) = _siloConfig.getConfigsAndAccrue(address(this), Hook.WITHDRAW, _args.owner);
+        ) = _shareStorage.siloConfig.getConfigsAndAccrue(address(this), Hook.WITHDRAW, _args.owner);
 
         if (collateralConfig.silo != debtConfig.silo) ISilo(debtConfig.silo).accrueInterest();
 
@@ -135,7 +138,7 @@ library Actions {
         }
 
         if (SiloSolvencyLib.depositWithoutDebt(debtInfo)) {
-            _siloConfig.crossNonReentrantAfter();
+            _shareStorage.siloConfig.crossNonReentrantAfter();
 
             if (collateralConfig.hookReceiver != address(0)) {
                 _hookCallAfter(
@@ -169,7 +172,7 @@ library Actions {
             collateralConfig, debtConfig, debtInfo, _args.owner, ISilo.AccrueInterestInMemory.No
         )) revert ISilo.NotSolvent();
 
-        _siloConfig.crossNonReentrantAfter();
+        _shareStorage.siloConfig.crossNonReentrantAfter();
 
         if (collateralConfig.hookReceiver != address(0)) {
             _hookCallAfter(
@@ -190,7 +193,6 @@ library Actions {
 
     // solhint-disable-next-line function-max-lines, code-complexity
     function borrow(
-        ISiloConfig _siloConfig,
         ISilo.SharedStorage storage _shareStorage,
         ISilo.BorrowArgs memory _args,
         ISilo.Assets storage _totalDebt,
@@ -215,7 +217,7 @@ library Actions {
         { // too deep
             ISiloConfig.DebtInfo memory debtInfo;
 
-            (collateralConfig, debtConfig, debtInfo) = _siloConfig.getConfigsAndAccrue(
+            (collateralConfig, debtConfig, debtInfo) = _shareStorage.siloConfig.getConfigsAndAccrue(
                 address(this),
                 Hook.BORROW |
                     (_args.leverage ? Hook.LEVERAGE : Hook.NONE) |
@@ -238,7 +240,7 @@ library Actions {
 
         if (_args.leverage) {
             // change reentrant flag to leverage, to allow for deposit
-            _siloConfig.crossNonReentrantBefore(CrossEntrancy.ENTERED_FROM_LEVERAGE);
+            _shareStorage.siloConfig.crossNonReentrantBefore(CrossEntrancy.ENTERED_FROM_LEVERAGE);
 
             bytes32 result = ILeverageBorrower(_args.receiver)
                 .onLeverage(msg.sender, _args.borrower, debtConfig.token, assets, _data);
@@ -247,7 +249,7 @@ library Actions {
             if (result != _LEVERAGE_CALLBACK) revert ISilo.LeverageFailed();
 
             // after deposit, guard is down, for max security we need to enable it again
-            _siloConfig.crossNonReentrantBefore(CrossEntrancy.ENTERED);
+            _shareStorage.siloConfig.crossNonReentrantBefore(CrossEntrancy.ENTERED);
         }
 
         if (collateralConfig.callBeforeQuote) {
@@ -264,7 +266,7 @@ library Actions {
             revert ISilo.AboveMaxLtv();
         }
 
-        _siloConfig.crossNonReentrantAfter();
+        _shareStorage.siloConfig.crossNonReentrantAfter();
 
         if (collateralConfig.hookReceiver != address(0)) {
             _hookCallAfter(
@@ -285,7 +287,6 @@ library Actions {
     }
 
     function repay(
-        ISiloConfig _siloConfig,
         ISilo.SharedStorage storage _shareStorage,
         uint256 _assets,
         uint256 _shares,
@@ -303,7 +304,7 @@ library Actions {
 
         (
             ,ISiloConfig.ConfigData memory debtConfig,
-        ) = _siloConfig.getConfigsAndAccrue(
+        ) = _shareStorage.siloConfig.getConfigsAndAccrue(
             address(this),
             (_liquidation ? Hook.LIQUIDATION : Hook.NONE) | Hook.REPAY,
             _borrower
@@ -318,7 +319,7 @@ library Actions {
         ) = SiloLendingLib.repay(debtConfig, _assets, _shares, _borrower, _repayer, _totalDebt);
 
         if (!_liquidation) {
-            _siloConfig.crossNonReentrantAfter();
+            _shareStorage.siloConfig.crossNonReentrantAfter();
 
             if (debtConfig.hookReceiver != address(0)) {
                 _hookCallAfter(
@@ -332,7 +333,6 @@ library Actions {
 
     // solhint-disable-next-line function-max-lines
     function leverageSameAsset(
-        ISiloConfig _siloConfig,
         ISilo.SharedStorage storage _shareStorage,
         uint256 _depositAssets,
         uint256 _borrowAssets,
@@ -360,7 +360,7 @@ library Actions {
             ISiloConfig.DebtInfo memory debtInfo;
             (
                 collateralConfig, debtConfig, debtInfo
-            ) = _siloConfig.getConfigsAndAccrue(
+            ) = _shareStorage.siloConfig.getConfigsAndAccrue(
                 address(this),
                 Hook.BORROW | Hook.LEVERAGE | Hook.SAME_ASSET,
                 _borrower
@@ -414,7 +414,7 @@ library Actions {
             _totalAssetsForDeposit
         );
 
-        _siloConfig.crossNonReentrantAfter();
+        _shareStorage.siloConfig.crossNonReentrantAfter();
 
         if (collateralConfig.hookReceiver != address(0)) {
             _hookCallAfter(
@@ -426,7 +426,6 @@ library Actions {
     }
 
     function transitionCollateral(
-        ISiloConfig _siloConfig,
         ISilo.SharedStorage storage _shareStorage,
         uint256 _shares,
         address _owner,
@@ -442,7 +441,7 @@ library Actions {
             _shareStorage, Hook.TRANSITION_COLLATERAL, abi.encodePacked(_shares, _owner, _withdrawType, assets)
         );
 
-        ISiloConfig.ConfigData memory collateralConfig = _siloConfig.getConfigAndAccrue(
+        ISiloConfig.ConfigData memory collateralConfig = _shareStorage.siloConfig.getConfigAndAccrue(
             address(this), Hook.TRANSITION_COLLATERAL
         );
 
@@ -474,7 +473,7 @@ library Actions {
             _total[depositType]
         );
 
-        _siloConfig.crossNonReentrantAfter();
+        _shareStorage.siloConfig.crossNonReentrantAfter();
 
         if (collateralConfig.hookReceiver != address(0)) {
             _hookCallAfter(
@@ -486,7 +485,6 @@ library Actions {
     }
 
     function switchCollateralTo(
-        ISiloConfig _siloConfig,
         ISilo.SharedStorage storage _shareStorage,
         bool _sameAsset
     ) external {
@@ -496,7 +494,7 @@ library Actions {
             ISiloConfig.ConfigData memory collateralConfig,
             ISiloConfig.ConfigData memory debtConfig,
             ISiloConfig.DebtInfo memory debtInfo
-        ) = _siloConfig.getConfigsAndAccrue(
+        ) = _shareStorage.siloConfig.getConfigsAndAccrue(
             address(this), Hook.SWITCH_COLLATERAL | (_sameAsset ? Hook.SAME_ASSET : Hook.TWO_ASSETS), msg.sender
         );
 
@@ -510,7 +508,7 @@ library Actions {
             revert ISilo.NotSolvent();
         }
 
-        _siloConfig.crossNonReentrantAfter();
+        _shareStorage.siloConfig.crossNonReentrantAfter();
 
         if (collateralConfig.hookReceiver != address(0)) {
             _hookCallAfter(_shareStorage, Hook.SWITCH_COLLATERAL, abi.encodePacked(_sameAsset));
@@ -518,7 +516,6 @@ library Actions {
     }
 
     /// @notice Executes a flash loan, sending the requested amount to the receiver and expecting it back with a fee
-    /// @param _siloConfig Configuration data relevant to the silo asset borrowed
     /// @param _receiver The entity that will receive the flash loan and is expected to return it with a fee
     /// @param _token The token that is being borrowed in the flash loan
     /// @param _amount The amount of tokens to be borrowed
@@ -526,7 +523,6 @@ library Actions {
     /// @param _data Additional data to be passed to the flash loan receiver
     /// @return success A boolean indicating if the flash loan was successful
     function flashLoan(
-        ISiloConfig _siloConfig,
         ISilo.SharedStorage storage _shareStorage,
         IERC3156FlashBorrower _receiver,
         address _token,
@@ -539,10 +535,10 @@ library Actions {
     {
         _hookCallBefore(_shareStorage, Hook.FLASH_LOAN, abi.encodePacked(_receiver, _token, _amount));
 
-        ISiloConfig.ConfigData memory config = _siloConfig.getConfig(address(this));
+        ISiloConfig.ConfigData memory config = _shareStorage.siloConfig.getConfig(address(this));
 
         // flashFee will revert for wrong token
-        uint256 fee = SiloStdLib.flashFee(_siloConfig, _token, _amount);
+        uint256 fee = SiloStdLib.flashFee(_shareStorage.siloConfig, _token, _amount);
         if (fee > type(uint192).max) revert FeeOverflow();
 
         IERC20Upgradeable(_token).safeTransfer(address(_receiver), _amount);
@@ -558,7 +554,7 @@ library Actions {
 
         success = true;
 
-        _siloConfig.crossNonReentrantAfter();
+        _shareStorage.siloConfig.crossNonReentrantAfter();
 
         if (config.hookReceiver != address(0)) {
             _hookCallAfter(
@@ -620,17 +616,17 @@ library Actions {
     }
 
     function updateHooks(
-        ISiloConfig _siloConfig,
         ISilo.SharedStorage storage _sharedStorage,
         uint24 _hooksBefore,
         uint24 _hooksAfter
     ) external {
-        ISiloConfig.ConfigData memory cfg = _siloConfig.getConfig(address(this));
+        ISiloConfig.ConfigData memory cfg = _sharedStorage.siloConfig.getConfig(address(this));
 
         if (msg.sender != cfg.hookReceiver) revert ISilo.OnlyHookReceiver();
 
         _sharedStorage.hooksBefore = _hooksBefore;
         _sharedStorage.hooksAfter = _hooksAfter;
+        _sharedStorage.hookReceiver = IHookReceiver(msg.sender);
 
         IShareToken(cfg.collateralShareToken).synchronizeHooks(
             cfg.hookReceiver, _hooksBefore, _hooksAfter, uint24(Hook.COLLATERAL_TOKEN)
@@ -650,10 +646,11 @@ library Actions {
     function _hookCallBefore(ISilo.SharedStorage storage _shareStorage, uint256 _hookAction, bytes memory _data)
         private
     {
-        IHookReceiver hookReceiver = _shareStorage.hookReceiver;
-
-        if (address(hookReceiver) == address(0)) return;
+        // check hooks first, because it is the same slot as siloConfig, and siloConfig was used already
         if (!_shareStorage.hooksBefore.matchAction(_hookAction)) return;
+
+        IHookReceiver hookReceiver = _shareStorage.hookReceiver;
+        if (address(hookReceiver) == address(0)) return;
 
         // there should be no hook calls, if you inside action eg inside leverage, liquidation etc
         // TODO make sure we good inside leverage
@@ -663,10 +660,11 @@ library Actions {
     function _hookCallAfter(ISilo.SharedStorage storage _shareStorage, uint256 _hookAction, bytes memory _data)
         private
     {
-        IHookReceiver hookReceiver = _shareStorage.hookReceiver;
-
-        if (address(hookReceiver) == address(0)) return;
+        // check hooks first, because it is the same slot as siloConfig, and siloConfig was used already
         if (!_shareStorage.hooksAfter.matchAction(_hookAction)) return;
+
+        IHookReceiver hookReceiver = _shareStorage.hookReceiver;
+        if (address(hookReceiver) == address(0)) return;
 
         hookReceiver.afterActionCall(_hookAction, _data);
     }

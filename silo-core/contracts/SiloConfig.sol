@@ -208,7 +208,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
             debtInfo = _debtsInfo[_borrower];
         }
 
-        // TODO note then before hook call will work on not up to date data because we AccrueInterest after hook call
+        // TODO note: before hook call will work on not up to date data because we AccrueInterest after hook call
         _callAccrueInterest(_silo);
 
         (collateralConfig, debtConfig) = _getOrderedConfigs(_silo, debtInfo, _hookAction);

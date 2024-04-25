@@ -23,6 +23,6 @@ contract SiloLeverageNonReentrant is Silo {
     }
 
     function forceConfigSetup(ISiloConfig _siloConfig) external {
-        config = _siloConfig;
+        sharedStorage.siloConfig = _siloConfig;
     }
 }

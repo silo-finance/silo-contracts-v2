@@ -66,12 +66,11 @@ interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
         uint256 totalCollateralAssets;
     }
 
-    // TODO what if we store hooks bitmap with siloConfig?
-    // and check bitmap first instead of hook address when doing call
     struct SharedStorage {
-        IHookReceiver hookReceiver;
+        ISiloConfig siloConfig;
         uint24 hooksBefore;
         uint24 hooksAfter;
+        IHookReceiver hookReceiver;
     }
 
     /// @dev this struct is used for all types of assets: collateral, protected and debt
@@ -187,9 +186,10 @@ interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
         external
         view
         returns (
-            IHookReceiver hookReceiver,
+            ISiloConfig siloConfig,
             uint24 hooksBefore,
-            uint24 hooksAfter
+            uint24 hooksAfter,
+            IHookReceiver hookReceiver
         );
 
     /// @notice Fetches the silo configuration contract
