@@ -174,7 +174,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
         delete _debtsInfo[_borrower];
     }
 
-    function getConfigAndAccrue(address _silo, uint256 _action) external virtual returns (ConfigData memory) {
+    function accrueInterestAndGetConfig(address _silo, uint256 _action) external virtual returns (ConfigData memory) {
         _crossNonReentrantBefore(_action);
         _callAccrueInterest(_silo);
 
@@ -187,7 +187,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
         }
     }
 
-    function getConfigsAndAccrue(address _silo, uint256 _action, address _borrower)
+    function accrueInterestAndGetConfigs(address _silo, uint256 _action, address _borrower)
         external
         virtual
         returns (ConfigData memory collateralConfig, ConfigData memory debtConfig, DebtInfo memory debtInfo)

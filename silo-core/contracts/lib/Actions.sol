@@ -48,7 +48,7 @@ library Actions {
     {
         _hookCallBefore(_shareStorage, Hook.DEPOSIT, abi.encodePacked(_assets, _shares, _receiver, _assetType));
 
-        ISiloConfig.ConfigData memory _collateralConfig = _shareStorage.siloConfig.getConfigAndAccrue(
+        ISiloConfig.ConfigData memory _collateralConfig = _shareStorage.siloConfig.accrueInterestAndGetConfig(
             address(this), Hook.DEPOSIT
         );
 
@@ -76,12 +76,6 @@ library Actions {
     }
 
     // solhint-disable-next-line function-max-lines, code-complexity
-
-    // startAction: expected 176906 got 199694 it is more by 22788
-    // getConfigsAndAccrue: expected 176906 got 192410 it is more by 15504
-    // getConfigsAndAccrue + HOOK address check: expected 176906 got 191271 it is more by 14365
-    // getConfigsAndAccrue + HOOK address check + lib for ordering: expected 176906 got 195179 it is more by 18273
-    // getConfigsAndAccrue + HOOK address check + lib for ordering using UINT: expected 176906 got 148652 it is less by 28254
     function withdraw(
         ISilo.SharedStorage storage _shareStorage,
         ISilo.WithdrawArgs calldata _args,
@@ -103,7 +97,7 @@ library Actions {
             ISiloConfig.ConfigData memory collateralConfig,
             ISiloConfig.ConfigData memory debtConfig,
             ISiloConfig.DebtInfo memory debtInfo
-        ) = _shareStorage.siloConfig.getConfigsAndAccrue(address(this), Hook.WITHDRAW, _args.owner);
+        ) = _shareStorage.siloConfig.accrueInterestAndGetConfigs(address(this), Hook.WITHDRAW, _args.owner);
 
         if (collateralConfig.silo != debtConfig.silo) ISilo(debtConfig.silo).accrueInterest();
 
@@ -218,7 +212,7 @@ library Actions {
         { // too deep
             ISiloConfig.DebtInfo memory debtInfo;
 
-            (collateralConfig, debtConfig, debtInfo) = _shareStorage.siloConfig.getConfigsAndAccrue(
+            (collateralConfig, debtConfig, debtInfo) = _shareStorage.siloConfig.accrueInterestAndGetConfigs(
                 address(this),
                 Hook.BORROW |
                     (_args.leverage ? Hook.LEVERAGE : Hook.NONE) |
@@ -305,7 +299,7 @@ library Actions {
 
         (
             ,ISiloConfig.ConfigData memory debtConfig,
-        ) = _shareStorage.siloConfig.getConfigsAndAccrue(
+        ) = _shareStorage.siloConfig.accrueInterestAndGetConfigs(
             address(this),
             (_liquidation ? Hook.LIQUIDATION : Hook.NONE) | Hook.REPAY,
             _borrower
@@ -361,7 +355,7 @@ library Actions {
             ISiloConfig.DebtInfo memory debtInfo;
             (
                 collateralConfig, debtConfig, debtInfo
-            ) = _shareStorage.siloConfig.getConfigsAndAccrue(
+            ) = _shareStorage.siloConfig.accrueInterestAndGetConfigs(
                 address(this),
                 Hook.BORROW | Hook.LEVERAGE | Hook.SAME_ASSET,
                 _borrower
@@ -442,7 +436,7 @@ library Actions {
             _shareStorage, Hook.TRANSITION_COLLATERAL, abi.encodePacked(_shares, _owner, _withdrawType, assets)
         );
 
-        ISiloConfig.ConfigData memory collateralConfig = _shareStorage.siloConfig.getConfigAndAccrue(
+        ISiloConfig.ConfigData memory collateralConfig = _shareStorage.siloConfig.accrueInterestAndGetConfig(
             address(this), Hook.TRANSITION_COLLATERAL
         );
 
@@ -495,7 +489,7 @@ library Actions {
             ISiloConfig.ConfigData memory collateralConfig,
             ISiloConfig.ConfigData memory debtConfig,
             ISiloConfig.DebtInfo memory debtInfo
-        ) = _shareStorage.siloConfig.getConfigsAndAccrue(
+        ) = _shareStorage.siloConfig.accrueInterestAndGetConfigs(
             address(this), Hook.SWITCH_COLLATERAL | (_sameAsset ? Hook.SAME_ASSET : Hook.TWO_ASSETS), msg.sender
         );
 
