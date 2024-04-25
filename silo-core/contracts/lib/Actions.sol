@@ -112,7 +112,7 @@ library Actions {
             return (assets, shares);
         }
 
-        _callBeforeQuote(collateralConfig, debtConfig);
+        _callBeforeQuoteOnWithdraw(collateralConfig, debtConfig);
 
         // `_args.owner` must be solvent
         if (!SiloSolvencyLib.isSolvent(
@@ -665,7 +665,7 @@ library Actions {
         );
     }
 
-    function _callBeforeQuote(
+    function _callBeforeQuoteOnWithdraw(
         ISiloConfig.ConfigData memory collateralConfig,
         ISiloConfig.ConfigData memory debtConfig
     ) private {
