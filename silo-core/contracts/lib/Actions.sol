@@ -203,24 +203,21 @@ library Actions {
             abi.encodePacked(_args.assets, _args.shares, _args.receiver, _args.borrower)
         );
 
-        ISiloConfig.ConfigData memory collateralConfig;
-        ISiloConfig.ConfigData memory debtConfig;
+        (
+            ISiloConfig.ConfigData memory collateralConfig,
+            ISiloConfig.ConfigData memory debtConfig,
+            ISiloConfig.DebtInfo memory debtInfo
+        ) = _shareStorage.siloConfig.accrueInterestAndGetConfigs(
+            address(this),
+            Hook.BORROW |
+                (_args.leverage ? Hook.LEVERAGE : Hook.NONE) |
+                (_args.sameAsset ? Hook.SAME_ASSET : Hook.TWO_ASSETS),
+            _args.borrower
+        );
 
-        { // too deep
-            ISiloConfig.DebtInfo memory debtInfo;
+        if (!SiloLendingLib.borrowPossible(debtInfo)) revert ISilo.BorrowNotPossible();
 
-            (collateralConfig, debtConfig, debtInfo) = _shareStorage.siloConfig.accrueInterestAndGetConfigs(
-                address(this),
-                Hook.BORROW |
-                    (_args.leverage ? Hook.LEVERAGE : Hook.NONE) |
-                    (_args.sameAsset ? Hook.SAME_ASSET : Hook.TWO_ASSETS),
-                _args.borrower
-            );
-
-            if (!SiloLendingLib.borrowPossible(debtInfo)) revert ISilo.BorrowNotPossible();
-
-            if (!_args.sameAsset) ISilo(collateralConfig.silo).accrueInterest();
-        }
+        if (!_args.sameAsset) ISilo(collateralConfig.silo).accrueInterest();
 
         (assets, shares) = SiloLendingLib.borrow(
             debtConfig.debtShareToken,
