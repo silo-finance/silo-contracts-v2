@@ -644,8 +644,8 @@ library Actions {
         ISilo.Assets storage _totalAssets
     ) private returns (uint256 assets, uint256 shares) {
         address shareToken = _args.assetType == ISilo.AssetType.Collateral
-                ? collateralConfig.collateralShareToken
-                : collateralConfig.protectedShareToken;
+            ? collateralConfig.collateralShareToken
+            : collateralConfig.protectedShareToken;
 
         uint256 liquidity = _args.assetType == ISilo.AssetType.Collateral
             ? ISilo(address(this)).getRawLiquidity()
