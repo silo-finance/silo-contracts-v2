@@ -2,6 +2,7 @@
 pragma solidity >=0.5.0;
 
 import {IHookReceiver} from "../utils/hook-receivers/interfaces/IHookReceiver.sol";
+import {ISilo} from "./ISilo.sol";
 
 interface ISiloConfig {
     struct DebtInfo {
@@ -147,9 +148,15 @@ interface ISiloConfig {
 
     function accrueInterestAndGetConfig(address _silo, uint256 _action) external returns (ConfigData memory);
 
-    function accrueInterestAndGetConfigs(address _silo, address _borrower, uint256 _action)
+    function accrueInterestAndGetConfigs(address _silo, uint256 _action, address _borrower)
         external
         returns (ConfigData memory collateralConfig, ConfigData memory debtConfig, DebtInfo memory debtInfo);
+
+    function accrueInterestDeposit(
+        address _silo,
+        uint256 _action,
+        ISilo.AssetType _assetType
+    ) external returns (address shareToken, address asset);
 
 
     /// @notice view method for checking cross Silo reentrancy flag
