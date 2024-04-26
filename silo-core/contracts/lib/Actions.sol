@@ -94,7 +94,7 @@ library Actions {
             ISiloConfig.ConfigData memory collateralConfig,
             ISiloConfig.ConfigData memory debtConfig,
             ISiloConfig.DebtInfo memory debtInfo
-        ) = _shareStorage.siloConfig.accrueInterestAndGetConfigs(address(this), Hook.WITHDRAW, _args.owner);
+        ) = _shareStorage.siloConfig.accrueInterestAndGetConfigs(address(this), _args.owner, Hook.WITHDRAW);
 
         if (collateralConfig.silo != debtConfig.silo) ISilo(debtConfig.silo).accrueInterest();
 
@@ -211,10 +211,10 @@ library Actions {
             ISiloConfig.DebtInfo memory debtInfo
         ) = _shareStorage.siloConfig.accrueInterestAndGetConfigs(
             address(this),
+            _args.borrower,
             Hook.BORROW |
                 (_args.leverage ? Hook.LEVERAGE : Hook.NONE) |
-                (_args.sameAsset ? Hook.SAME_ASSET : Hook.TWO_ASSETS),
-            _args.borrower
+                (_args.sameAsset ? Hook.SAME_ASSET : Hook.TWO_ASSETS)
         );
 
         if (!SiloLendingLib.borrowPossible(debtInfo)) revert ISilo.BorrowNotPossible();
@@ -299,8 +299,8 @@ library Actions {
             ,ISiloConfig.ConfigData memory debtConfig,
         ) = _shareStorage.siloConfig.accrueInterestAndGetConfigs(
             address(this),
-            (_liquidation ? Hook.LIQUIDATION : Hook.NONE) | Hook.REPAY,
-            _borrower
+            _borrower,
+            (_liquidation ? Hook.LIQUIDATION : Hook.NONE) | Hook.REPAY
         );
 
         if (_liquidation) {
@@ -355,8 +355,8 @@ library Actions {
                 collateralConfig, debtConfig, debtInfo
             ) = _shareStorage.siloConfig.accrueInterestAndGetConfigs(
                 address(this),
-                Hook.BORROW | Hook.LEVERAGE | Hook.SAME_ASSET,
-                _borrower
+                _borrower,
+                Hook.BORROW | Hook.LEVERAGE | Hook.SAME_ASSET
             );
 
             if (!SiloLendingLib.borrowPossible(debtInfo)) revert ISilo.BorrowNotPossible();
@@ -488,7 +488,7 @@ library Actions {
             ISiloConfig.ConfigData memory debtConfig,
             ISiloConfig.DebtInfo memory debtInfo
         ) = _shareStorage.siloConfig.accrueInterestAndGetConfigs(
-            address(this), Hook.SWITCH_COLLATERAL | (_sameAsset ? Hook.SAME_ASSET : Hook.TWO_ASSETS), msg.sender
+            address(this), msg.sender, Hook.SWITCH_COLLATERAL | (_sameAsset ? Hook.SAME_ASSET : Hook.TWO_ASSETS)
         );
 
         if (collateralConfig.otherSilo != address(this)) {
