@@ -147,7 +147,7 @@ interface ISiloConfig {
 
     function accrueInterestAndGetConfig(address _silo, uint256 _action) external returns (ConfigData memory);
 
-    function accrueInterestAndGetConfigs(address _silo, uint256 _action, address _borrower)
+    function accrueInterestAndGetConfigs(address _silo, address _borrower, uint256 _action)
         external
         returns (ConfigData memory collateralConfig, ConfigData memory debtConfig, DebtInfo memory debtInfo);
 

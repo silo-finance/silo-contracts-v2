@@ -187,7 +187,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
         }
     }
 
-    function accrueInterestAndGetConfigs(address _silo, uint256 _action, address _borrower)
+    function accrueInterestAndGetConfigs(address _silo, address _borrower, uint256 _action)
         external
         virtual
         returns (ConfigData memory collateralConfig, ConfigData memory debtConfig, DebtInfo memory debtInfo)
