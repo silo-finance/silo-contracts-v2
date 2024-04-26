@@ -10,6 +10,7 @@ import {IERC20R} from "silo-core/contracts/interfaces/IERC20R.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {SiloERC4626Lib} from "silo-core/contracts/lib/SiloERC4626Lib.sol";
+import {ConfigLib} from "silo-core/contracts/lib/ConfigLib.sol";
 
 import {MintableToken} from "../_common/MintableToken.sol";
 import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
@@ -18,6 +19,8 @@ import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
     forge test -vv --ffi --mc SwitchCollateralToTest
 */
 contract SwitchCollateralToTest is SiloLittleHelper, Test {
+    using ConfigLib for ISiloConfig;
+
     ISiloConfig siloConfig;
 
     function setUp() public {
@@ -46,12 +49,12 @@ contract SwitchCollateralToTest is SiloLittleHelper, Test {
 
         _borrow(assets / 2, borrower, _sameAsset);
 
-        (,, ISiloConfig.DebtInfo memory debtInfo) = siloConfig.getConfigs(address(silo0), borrower, 0);
+        (,, ISiloConfig.DebtInfo memory debtInfo) = siloConfig.pullConfigs(address(silo0), borrower, 0);
         assertEq(debtInfo.sameAsset, _sameAsset, "original position type");
 
         vm.prank(borrower);
         silo0.switchCollateralTo(!_sameAsset);
-        (,, debtInfo) = siloConfig.getConfigs(address(silo0), borrower, 0);
+        (,, debtInfo) = siloConfig.pullConfigs(address(silo0), borrower, 0);
 
         assertEq(debtInfo.sameAsset, !_sameAsset, "position type after change");
 

@@ -18,12 +18,14 @@ import {SiloSolvencyLib} from "./SiloSolvencyLib.sol";
 import {SiloLendingLib} from "./SiloLendingLib.sol";
 import {SiloStdLib} from "./SiloStdLib.sol";
 import {CrossEntrancy} from "./CrossEntrancy.sol";
+import {ConfigLib} from "./ConfigLib.sol";
 import {Hook} from "./Hook.sol";
 
 library Actions {
     using SafeERC20Upgradeable for IERC20Upgradeable;
     using Hook for uint256;
     using Hook for uint24;
+    using ConfigLib for ISiloConfig;
 
     bytes32 internal constant _LEVERAGE_CALLBACK = keccak256("ILeverageBorrower.onLeverage");
     bytes32 internal constant _FLASHLOAN_CALLBACK = keccak256("ERC3156FlashBorrower.onFlashLoan");
@@ -94,7 +96,7 @@ library Actions {
             ISiloConfig.ConfigData memory collateralConfig,
             ISiloConfig.ConfigData memory debtConfig,
             ISiloConfig.DebtInfo memory debtInfo
-        ) = _shareStorage.siloConfig.accrueInterestAndGetConfigs(address(this), _args.owner, Hook.WITHDRAW);
+        ) = _shareStorage.siloConfig.accrueInterestAndPullConfigs(_args.owner, Hook.WITHDRAW);
 
         if (collateralConfig.silo != debtConfig.silo) ISilo(debtConfig.silo).accrueInterest();
 
@@ -209,8 +211,7 @@ library Actions {
             ISiloConfig.ConfigData memory collateralConfig,
             ISiloConfig.ConfigData memory debtConfig,
             ISiloConfig.DebtInfo memory debtInfo
-        ) = _shareStorage.siloConfig.accrueInterestAndGetConfigs(
-            address(this),
+        ) = _shareStorage.siloConfig.accrueInterestAndPullConfigs(
             _args.borrower,
             Hook.BORROW |
                 (_args.leverage ? Hook.LEVERAGE : Hook.NONE) |
@@ -297,8 +298,7 @@ library Actions {
 
         (
             ,ISiloConfig.ConfigData memory debtConfig,
-        ) = _shareStorage.siloConfig.accrueInterestAndGetConfigs(
-            address(this),
+        ) = _shareStorage.siloConfig.accrueInterestAndPullConfigs(
             _borrower,
             (_liquidation ? Hook.LIQUIDATION : Hook.NONE) | Hook.REPAY
         );
@@ -353,8 +353,7 @@ library Actions {
             ISiloConfig.DebtInfo memory debtInfo;
             (
                 collateralConfig, debtConfig, debtInfo
-            ) = _shareStorage.siloConfig.accrueInterestAndGetConfigs(
-                address(this),
+            ) = _shareStorage.siloConfig.accrueInterestAndPullConfigs(
                 _borrower,
                 Hook.BORROW | Hook.LEVERAGE | Hook.SAME_ASSET
             );
@@ -487,8 +486,8 @@ library Actions {
             ISiloConfig.ConfigData memory collateralConfig,
             ISiloConfig.ConfigData memory debtConfig,
             ISiloConfig.DebtInfo memory debtInfo
-        ) = _shareStorage.siloConfig.accrueInterestAndGetConfigs(
-            address(this), msg.sender, Hook.SWITCH_COLLATERAL | (_sameAsset ? Hook.SAME_ASSET : Hook.TWO_ASSETS)
+        ) = _shareStorage.siloConfig.accrueInterestAndPullConfigs(
+            msg.sender, Hook.SWITCH_COLLATERAL | (_sameAsset ? Hook.SAME_ASSET : Hook.TWO_ASSETS)
         );
 
         if (collateralConfig.otherSilo != address(this)) {

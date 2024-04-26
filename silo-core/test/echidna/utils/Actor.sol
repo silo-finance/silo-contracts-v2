@@ -3,6 +3,8 @@ pragma solidity ^0.8.0;
 import {Silo, ISilo} from "silo-core/contracts/Silo.sol";
 import {PartialLiquidation} from "silo-core/contracts/liquidation/PartialLiquidation.sol";
 import {ISiloConfig} from "silo-core/contracts/SiloConfig.sol";
+import {ConfigLib} from "silo-core/contracts/lib/ConfigLib.sol";
+
 import {TestERC20Token} from "properties/ERC4626/util/TestERC20Token.sol";
 import {PropertiesAsserts} from "properties/util/PropertiesHelper.sol";
 
@@ -12,6 +14,8 @@ import {PropertiesAsserts} from "properties/util/PropertiesHelper.sol";
 /// @dev It's important that other property tests never send tokens/shares to the Actor contract address, or else the accounting will break. This restriction is enforced in restrictAddressToThirdParties()
 ///      If support is added for "harvesting" a vault during property tests, the accounting logic here needs to be updated to reflect cases where an actor can withdraw more than they deposited.
 contract Actor is PropertiesAsserts {
+    using ConfigLib for ISiloConfig;
+
     TestERC20Token token0;
     TestERC20Token token1;
     Silo vault0;
@@ -206,7 +210,7 @@ contract Actor is PropertiesAsserts {
         Silo vault = prepareForDeposit(_vaultZeroWithDebt, debtToCover);
 
         (ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig,) =
-            config.getConfigs(address(vault), borrower, 0 /* always 0 for external calls */);
+            config.pullConfigs(address(vault), borrower, 0 /* always 0 for external calls */);
 
         liquidationModule.liquidationCall(
             address(vault), collateralConfig.token, debtConfig.token, borrower, debtToCover, receiveSToken

@@ -11,6 +11,7 @@ import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {IInterestRateModelV2} from "silo-core/contracts/interfaces/IInterestRateModelV2.sol";
 import {IInterestRateModelV2Config} from "silo-core/contracts/interfaces/IInterestRateModelV2Config.sol";
 import {InterestRateModelV2} from "silo-core/contracts/interestRateModel/InterestRateModelV2.sol";
+import {ConfigLib} from "silo-core/contracts/lib/ConfigLib.sol";
 
 import {ISiloFactory} from "silo-core/contracts/SiloFactory.sol";
 import {MainnetDeploy} from "silo-core/deploy/MainnetDeploy.s.sol";
@@ -27,6 +28,8 @@ import {SiloLittleHelper} from "silo-core/test/foundry/_common/SiloLittleHelper.
 forge test -vv --ffi --mc SiloFactoryCreateSiloTest
 */
 contract SiloFactoryCreateSiloTest is SiloLittleHelper, IntegrationTest {
+    using ConfigLib for ISiloConfig;
+
     string public constant SILO_TO_DEPLOY = SiloConfigsNames.ETH_USDC_UNI_V3_SILO;
 
     ISiloFactory siloFactory;
@@ -62,7 +65,7 @@ contract SiloFactoryCreateSiloTest is SiloLittleHelper, IntegrationTest {
         (
             ISiloConfig.ConfigData memory configData0,
             ISiloConfig.ConfigData memory configData1,
-        ) = siloConfig.getConfigs(address(silo0), address(0), 0 /* always 0 for external calls */);
+        ) = siloConfig.pullConfigs(address(silo0), address(0), 0 /* always 0 for external calls */);
 
         assertEq(configData0.daoFee, siloFactory.daoFee(), "configData0.daoFee");
         assertEq(configData0.deployerFee, initData.deployerFee, "configData0.deployerFee");

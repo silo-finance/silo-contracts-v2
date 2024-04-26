@@ -7,6 +7,8 @@ import {ISilo} from "../../interfaces/ISilo.sol";
 import {ISiloConfig} from "../../interfaces/ISiloConfig.sol";
 import {SiloSolvencyLib} from "../../lib/SiloSolvencyLib.sol";
 import {SiloLendingLib} from "../../lib/SiloLendingLib.sol";
+import {ConfigLib} from "../../lib/ConfigLib.sol";
+import {Hook} from "../../lib/Hook.sol";
 import {PartialLiquidationLib} from "./PartialLiquidationLib.sol";
 
 library PartialLiquidationExecLib {
@@ -69,7 +71,7 @@ library PartialLiquidationExecLib {
             ISiloConfig.ConfigData memory collateralConfig,
             ISiloConfig.ConfigData memory debtConfig,
             ISiloConfig.DebtInfo memory debtInfo
-        ) = _siloWithDebt.config().getConfigs(address(_siloWithDebt), _borrower, 0 /* method matters only on borrow */);
+        ) = ConfigLib.pullConfigs(_siloWithDebt.config(), address(_siloWithDebt), _borrower, Hook.LIQUIDATION);
 
         if (!debtInfo.debtPresent || !debtInfo.debtInThisSilo) {
             return (0, 0);

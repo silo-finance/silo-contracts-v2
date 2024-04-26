@@ -61,4 +61,49 @@ library ConfigLib {
             return _debtInfo.sameAsset ? SILO1_SILO1 : SILO0_SILO1;
         }
     }
+
+    function pullConfigs(ISiloConfig _siloConfig, address _silo, address _borrower, uint256 _action)
+        internal
+        view
+        returns (
+            ISiloConfig.ConfigData memory collateralConfig,
+            ISiloConfig.ConfigData memory debtConfig,
+            ISiloConfig.DebtInfo memory debtInfo
+        )
+    {
+        bytes memory cfg;
+        (cfg, debtInfo) = _siloConfig.getConfigs(_silo, _borrower, _action);
+
+        (collateralConfig, debtConfig) = _decodeConfigs(cfg, debtInfo);
+    }
+
+    function accrueInterestAndPullConfigs(ISiloConfig _siloConfig, address _borrower, uint256 _action)
+        internal
+        returns (
+            ISiloConfig.ConfigData memory collateralConfig,
+            ISiloConfig.ConfigData memory debtConfig,
+            ISiloConfig.DebtInfo memory debtInfo
+        )
+    {
+        bytes memory cfg;
+        (cfg, debtInfo) = _siloConfig.accrueInterestAndGetConfigs(address(this), _borrower, _action);
+
+        (collateralConfig, debtConfig) = _decodeConfigs(cfg, debtInfo);
+    }
+
+    function _decodeConfigs(bytes memory cfg, ISiloConfig.DebtInfo memory debtInfo)
+        private
+        pure
+        returns (
+            ISiloConfig.ConfigData memory collateralConfig,
+            ISiloConfig.ConfigData memory debtConfig
+        )
+    {
+        if (debtInfo.sameAsset) {
+            (collateralConfig) = abi.decode(cfg, (ISiloConfig.ConfigData));
+            debtConfig = collateralConfig;
+        } else {
+            (collateralConfig, debtConfig) = abi.decode(cfg, (ISiloConfig.ConfigData, ISiloConfig.ConfigData));
+        }
+    }
 }

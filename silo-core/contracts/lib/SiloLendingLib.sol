@@ -16,11 +16,13 @@ import {SiloSolvencyLib} from "./SiloSolvencyLib.sol";
 import {SiloStdLib} from "./SiloStdLib.sol";
 import {SiloMathLib} from "./SiloMathLib.sol";
 import {Rounding} from "./Rounding.sol";
+import {ConfigLib} from "./ConfigLib.sol";
 import {Hook} from "./Hook.sol";
 
 library SiloLendingLib {
     using SafeERC20Upgradeable for IERC20Upgradeable;
     using MathUpgradeable for uint256;
+    using ConfigLib for ISiloConfig;
 
     uint256 internal constant _PRECISION_DECIMALS = 1e18;
 
@@ -264,7 +266,7 @@ library SiloLendingLib {
             ISiloConfig.ConfigData memory collateralConfig,
             ISiloConfig.ConfigData memory debtConfig,
             ISiloConfig.DebtInfo memory debtInfo
-        ) = _siloConfig.getConfigs(
+        ) = _siloConfig.pullConfigs(
             address(this),
             _borrower,
             Hook.BORROW | (_sameAsset ? Hook.SAME_ASSET : Hook.TWO_ASSETS)

@@ -7,6 +7,7 @@ import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {SiloERC4626Lib} from "silo-core/contracts/lib/SiloERC4626Lib.sol";
+import {ConfigLib} from "silo-core/contracts/lib/ConfigLib.sol";
 
 import {MintableToken} from "../../_common/MintableToken.sol";
 import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
@@ -15,6 +16,8 @@ import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
     forge test -vv --ffi --mc DepositTest
 */
 contract DepositTest is SiloLittleHelper, Test {
+    using ConfigLib for ISiloConfig;
+
     ISiloConfig siloConfig;
 
     MintableToken weth;
@@ -72,7 +75,7 @@ contract DepositTest is SiloLittleHelper, Test {
         (
             ISiloConfig.ConfigData memory collateral,
             ISiloConfig.ConfigData memory debt,
-        ) = siloConfig.getConfigs(address(silo0), address(0), 0 /* always 0 for external calls */);
+        ) = siloConfig.pullConfigs(address(silo0), address(0), 0 /* always 0 for external calls */);
 
         assertEq(token0.balanceOf(address(silo0)), assets * 2);
         assertEq(silo0.getCollateralAssets(), assets);

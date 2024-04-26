@@ -9,6 +9,7 @@ import {IHookReceiver} from "../utils/hook-receivers/interfaces/IHookReceiver.so
 
 import {SiloLendingLib} from "../lib/SiloLendingLib.sol";
 import {Hook} from "../lib/Hook.sol";
+import {ConfigLib} from "../lib/ConfigLib.sol";
 
 import {PartialLiquidationExecLib} from "./lib/PartialLiquidationExecLib.sol";
 
@@ -130,7 +131,8 @@ contract PartialLiquidation is IPartialLiquidation {
 
         ISiloConfig.DebtInfo memory debtInfo;
 
-        (collateralConfig, debtConfig, debtInfo) = siloConfigCached.getConfigs(
+        (collateralConfig, debtConfig, debtInfo) = ConfigLib.pullConfigs(
+            siloConfigCached,
             _siloWithDebt,
             _borrower,
             Hook.LIQUIDATION

@@ -13,6 +13,7 @@ import {SiloMathLib} from "./SiloMathLib.sol";
 import {SiloStdLib} from "./SiloStdLib.sol";
 import {SiloLendingLib} from "./SiloLendingLib.sol";
 import {Rounding} from "./Rounding.sol";
+import {ConfigLib} from "./ConfigLib.sol";
 import {Hook} from "./Hook.sol";
 
 // solhint-disable function-max-lines
@@ -20,6 +21,7 @@ import {Hook} from "./Hook.sol";
 library SiloERC4626Lib {
     using SafeERC20Upgradeable for IERC20Upgradeable;
     using MathUpgradeable for uint256;
+    using ConfigLib for ISiloConfig;
 
     uint256 internal constant _PRECISION_DECIMALS = 1e18;
 
@@ -74,7 +76,7 @@ library SiloERC4626Lib {
             ISiloConfig.ConfigData memory collateralConfig,
             ISiloConfig.ConfigData memory debtConfig,
             ISiloConfig.DebtInfo memory debtInfo
-        ) = _config.getConfigs(address(this), _owner, Hook.WITHDRAW);
+        ) = _config.pullConfigs(address(this), _owner, Hook.WITHDRAW);
 
         uint256 shareTokenTotalSupply;
         uint256 liquidity;

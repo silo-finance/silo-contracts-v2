@@ -7,6 +7,7 @@ import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
+import {ConfigLib} from "silo-core/contracts/lib/ConfigLib.sol";
 
 import {SiloFixture} from "../../_common/fixtures/SiloFixture.sol";
 import {MintableToken} from "../../_common/MintableToken.sol";
@@ -17,6 +18,8 @@ import {LeverageBorrower, ILeverageBorrower} from "../../_common/LeverageBorrowe
     forge test -vv --ffi --mc LeverageNotPossibleTest
 */
 contract LeverageNotPossibleTest is SiloLittleHelper, Test {
+    using ConfigLib for ISiloConfig;
+
     address borrower;
     bool sameAsset;
 
@@ -27,7 +30,7 @@ contract LeverageNotPossibleTest is SiloLittleHelper, Test {
 
         (
             ISiloConfig.ConfigData memory cfg0, ISiloConfig.ConfigData memory cfg1,
-        ) = silo0.config().getConfigs(address(silo0), borrower, 0 /* always 0 for external calls */);
+        ) = silo0.config().pullConfigs(address(silo0), borrower, 0 /* always 0 for external calls */);
 
         assertEq(cfg0.maxLtv, 0, "borrow OFF");
         assertGt(cfg1.maxLtv, 0, "borrow ON");

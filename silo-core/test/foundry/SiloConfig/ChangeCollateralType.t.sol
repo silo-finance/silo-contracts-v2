@@ -37,7 +37,7 @@
 //        (
 //            ISiloConfig.ConfigData memory collateral,
 //            ISiloConfig.ConfigData memory debt,
-//        ) = siloConfig.getConfigs(address(silo0), address(0), 0);
+//        ) = siloConfig.pullConfigs(address(silo0), address(0), 0);
 //
 //        _changeCollateralType_reverts_OnlySilo_From(collateral.collateralShareToken, _sameAsset);
 //        _changeCollateralType_reverts_OnlySilo_From(collateral.protectedShareToken, _sameAsset);

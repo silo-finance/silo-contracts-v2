@@ -4,11 +4,14 @@ pragma solidity ^0.8.0;
 import "forge-std/Test.sol";
 
 import {ISiloConfig, SiloConfig} from "silo-core/contracts/SiloConfig.sol";
+import {ConfigLib} from "silo-core/contracts/lib/ConfigLib.sol";
 
 /*
 forge test -vv --mc SiloConfigTest
 */
 contract SiloConfigTest is Test {
+    using ConfigLib for SiloConfig;
+
     bool constant SAME_ASSET = true;
     bool constant TWO_ASSETS = false;
 
@@ -116,12 +119,12 @@ contract SiloConfigTest is Test {
 //        SiloConfig siloConfig = siloConfigDeploy(_siloId, _configData0, _configData1);
 //
 //        vm.expectRevert(ISiloConfig.WrongSilo.selector);
-//        siloConfig.getConfigs(wrongSilo, address(0), 0 /* always 0 for external calls */);
+//        siloConfig.pullConfigs(wrongSilo, address(0), 0 /* always 0 for external calls */);
 //
 //        (
 //            ISiloConfig.ConfigData memory c0,
 //            ISiloConfig.ConfigData memory c1,
-//        ) = siloConfig.getConfigs(_configData0.silo, address(0), 0 /* always 0 for external calls */);
+//        ) = siloConfig.pullConfigs(_configData0.silo, address(0), 0 /* always 0 for external calls */);
 //
 //        assertEq(keccak256(abi.encode(c0)), keccak256(abi.encode(_configData0)));
 //        assertEq(keccak256(abi.encode(c1)), keccak256(abi.encode(_configData1)));
@@ -210,7 +213,7 @@ contract SiloConfigTest is Test {
             ISiloConfig.ConfigData memory siloConfig,
             ISiloConfig.ConfigData memory otherSiloConfig,
             ISiloConfig.DebtInfo memory debtInfo
-        ) = _siloConfig.getConfigs(silo, address(0), 0 /* always 0 for external calls */);
+        ) = _siloConfig.pullConfigs(silo, address(0), 0 /* always 0 for external calls */);
 
         ISiloConfig.DebtInfo memory emptyDebtInfo;
 
@@ -269,14 +272,14 @@ contract SiloConfigTest is Test {
 //
 //        (
 //            ,, ISiloConfig.DebtInfo memory debtInfo
-//        ) = _siloConfig.getConfigs(silo, borrower, 0 /* always 0 for external calls */);
+//        ) = _siloConfig.pullConfigs(silo, borrower, 0 /* always 0 for external calls */);
 //
 //        assertTrue(debtInfo.debtPresent);
 //        assertTrue(debtInfo.sameAsset == sameAsset);
 //        assertTrue(!debtInfo.debtInSilo0);
 //        assertTrue(!debtInfo.debtInThisSilo);
 //
-//        (,, debtInfo) = _siloConfig.getConfigs(silo, address(1), 0 /* always 0 for external calls */);
+//        (,, debtInfo) = _siloConfig.pullConfigs(silo, address(1), 0 /* always 0 for external calls */);
 //        ISiloConfig.DebtInfo memory emptyDebtInfo;
 //
 //        assertEq(abi.encode(emptyDebtInfo), abi.encode(debtInfo), "debtInfo should be empty");
@@ -300,7 +303,7 @@ contract SiloConfigTest is Test {
 //
 //        (
 //            ,, ISiloConfig.DebtInfo memory debtInfoTo
-//        ) = _siloConfig.getConfigs(silo, to, 0 /* always 0 for external calls */);
+//        ) = _siloConfig.pullConfigs(silo, to, 0 /* always 0 for external calls */);
 //
 //        assertEq(abi.encode(debtInfoFrom), abi.encode(debtInfoTo), "debt should be same if called for same silo");
 //    }
@@ -375,7 +378,7 @@ contract SiloConfigTest is Test {
 //
 //        (
 //            ,, ISiloConfig.DebtInfo memory debtInfoTo
-//        ) = _siloConfig.getConfigs(makeAddr("silo1"), to, 0 /* always 0 for external calls */);
+//        ) = _siloConfig.pullConfigs(makeAddr("silo1"), to, 0 /* always 0 for external calls */);
 //
 //        assertTrue(debtInfoTo.debtPresent, "debtPresent");
 //        assertTrue(!debtInfoTo.sameAsset, "sameAsset is not cloned when debt already open");
@@ -410,7 +413,7 @@ contract SiloConfigTest is Test {
 //        ISiloConfig.DebtInfo memory emptyDebtInfo;
 //        (
 //            ,, ISiloConfig.DebtInfo memory debt
-//        ) = _siloConfig.getConfigs(silo, borrower, 0 /* always 0 for external calls */);
+//        ) = _siloConfig.pullConfigs(silo, borrower, 0 /* always 0 for external calls */);
 //        assertEq(abi.encode(emptyDebtInfo), abi.encode(debt), "debt should be deleted");
 //    }
 }

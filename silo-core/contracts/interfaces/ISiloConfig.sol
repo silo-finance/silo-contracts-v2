@@ -149,7 +149,7 @@ interface ISiloConfig {
 
     function accrueInterestAndGetConfigs(address _silo, address _borrower, uint256 _action)
         external
-        returns (ConfigData memory collateralConfig, ConfigData memory debtConfig, DebtInfo memory debtInfo);
+        returns (bytes memory cfg, DebtInfo memory debtInfo);
 
 
     /// @notice view method for checking cross Silo reentrancy flag
@@ -175,15 +175,14 @@ interface ISiloConfig {
     /// @dev This function reverts for incorrect silo address input.
     /// @param _silo The address of the silo for which configuration data is being retrieved. Config for this silo will
     /// be at index 0.
-    /// @param borrower borrower address for which `debtInfo` will be returned
+    /// @param _borrower borrower address for which `debtInfo` will be returned
     /// @param _action hook flag that will determine action
-    /// @return collateralConfig The configuration data for collateral silo.
-    /// @return debtConfig The configuration data for debt silo.
+    /// @return cfg decoded one or two ConfigData structs for collateral and debt (in this order)
     /// @return debtInfo details about `borrower` debt
-    function getConfigs(address _silo, address borrower, uint256 _action)
+    function getConfigs(address _silo, address _borrower, uint256 _action)
         external
         view
-        returns (ConfigData memory collateralConfig, ConfigData memory debtConfig, DebtInfo memory debtInfo);
+        returns (bytes memory cfg, DebtInfo memory debtInfo);
 
     /// @notice Retrieves configuration data for a specific silo
     /// @dev This function reverts for incorrect silo address input.

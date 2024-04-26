@@ -13,6 +13,7 @@ import {VeSiloContracts} from "ve-silo/common/VeSiloContracts.sol";
 import {MainnetDeploy} from "silo-core/deploy/MainnetDeploy.s.sol";
 import {SiloDeploy} from "silo-core/deploy/silo/SiloDeploy.s.sol";
 import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
+import {ConfigLib} from "silo-core/contracts/lib/ConfigLib.sol";
 
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
@@ -44,6 +45,8 @@ contract SiloDeploy_Local is SiloDeploy {
 }
 
 contract SiloFixture is StdCheats, CommonBase {
+    using ConfigLib for ISiloConfig;
+
     uint256 internal constant _FORKING_BLOCK_NUMBER = 17336000;
 
     function deploy_ETH_USDC()
@@ -106,7 +109,7 @@ contract SiloFixture is StdCheats, CommonBase {
         (
             ISiloConfig.ConfigData memory siloConfig0,
             ISiloConfig.ConfigData memory siloConfig1,
-        ) = siloConfig.getConfigs(silo, address(0), 0 /* always 0 for external calls */);
+        ) = siloConfig.pullConfigs(silo, address(0), 0 /* always 0 for external calls */);
 
         silo0 = ISilo(siloConfig0.silo);
         silo1 = ISilo(siloConfig1.silo);

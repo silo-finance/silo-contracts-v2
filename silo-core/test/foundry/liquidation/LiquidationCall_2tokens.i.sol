@@ -11,6 +11,7 @@ import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquid
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {IInterestRateModel} from "silo-core/contracts/interfaces/IInterestRateModel.sol";
 import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
+import {ConfigLib} from "silo-core/contracts/lib/ConfigLib.sol";
 
 import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
 import {MintableToken} from "../_common/MintableToken.sol";
@@ -21,6 +22,7 @@ import {MintableToken} from "../_common/MintableToken.sol";
 */
 contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
     using SiloLensLib for ISilo;
+    using ConfigLib for ISiloConfig;
 
     address constant BORROWER = address(0x123);
     uint256 constant COLLATERAL = 10e18;
@@ -118,7 +120,7 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
 
         (
             ,, ISiloConfig.DebtInfo memory debtInfo
-        ) = siloConfig.getConfigs(address(silo1), userWithoutDebt, 0 /* always 0 for external calls */);
+        ) = siloConfig.pullConfigs(address(silo1), userWithoutDebt, 0 /* always 0 for external calls */);
 
         assertTrue(!debtInfo.debtPresent, "we need user without debt for this test");
 
@@ -138,7 +140,7 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
 
         (
             ,, ISiloConfig.DebtInfo memory debtInfo
-        ) = siloConfig.getConfigs(address(silo1), BORROWER, 0 /* always 0 for external calls */);
+        ) = siloConfig.pullConfigs(address(silo1), BORROWER, 0 /* always 0 for external calls */);
 
         assertTrue(debtInfo.debtPresent, "we need user with debt for this test");
         assertTrue(!debtInfo.debtInSilo0, "we need debt in silo1");
@@ -180,7 +182,7 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
         (
             ISiloConfig.ConfigData memory collateralConfig,
             ISiloConfig.ConfigData memory debtConfig,
-        ) = siloConfig.getConfigs(address(silo1), address(0), 0 /* always 0 for external calls */);
+        ) = siloConfig.pullConfigs(address(silo1), address(0), 0 /* always 0 for external calls */);
 
         (, uint64 interestRateTimestamp0) = silo0.siloData();
         (, uint64 interestRateTimestamp1) = silo1.siloData();
@@ -298,7 +300,7 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
         (
             ISiloConfig.ConfigData memory collateralConfig,
             ISiloConfig.ConfigData memory debtConfig,
-        ) = siloConfig.getConfigs(address(silo1), address(0), 0 /* always 0 for external calls */);
+        ) = siloConfig.pullConfigs(address(silo1), address(0), 0 /* always 0 for external calls */);
 
         (, uint64 interestRateTimestamp0) = silo0.siloData();
         (, uint64 interestRateTimestamp1) = silo1.siloData();
@@ -408,7 +410,7 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
 
         (
             ISiloConfig.ConfigData memory collateralConfig,,
-        ) = siloConfig.getConfigs(address(silo1), BORROWER, 0 /* always 0 for external calls */);
+        ) = siloConfig.pullConfigs(address(silo1), BORROWER, 0 /* always 0 for external calls */);
 
         vm.expectCall(
             collateralConfig.collateralShareToken,

@@ -190,16 +190,16 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
     function accrueInterestAndGetConfigs(address _silo, address _borrower, uint256 _action)
         external
         virtual
-        returns (ConfigData memory collateralConfig, ConfigData memory debtConfig, DebtInfo memory debtInfo)
+        returns (bytes memory cfg, DebtInfo memory debtInfo)
     {
         _crossNonReentrantBefore(_action);
 
         if (_action.matchAction(Hook.SHARE_TOKEN_TRANSFER)) {
             // share token transfer does not need configs
-            return (collateralConfig, debtConfig, debtInfo);
+            return (bytes(""), debtInfo);
         } else if (_action.matchAction(Hook.FLASH_LOAN)) {
             // flash loan does not need configs
-            return (collateralConfig, debtConfig, debtInfo);
+            return (bytes(""), debtInfo);
         } else if (_action.matchAction(Hook.BORROW)) {
             debtInfo = _openDebt(_borrower, _action);
         } else if (_action.matchAction(Hook.SWITCH_COLLATERAL)) {
@@ -210,7 +210,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
 
         _callAccrueInterest(_silo);
 
-        (collateralConfig, debtConfig) = _getOrderedConfigs(_silo, debtInfo, _action);
+        cfg = _getOrderedConfigs(_silo, debtInfo, _action);
     }
 
     function crossReentrancyGuardEntered() external view virtual returns (bool) {
@@ -252,11 +252,11 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
         external
         view
         virtual
-        returns (ConfigData memory collateralConfig, ConfigData memory debtConfig, DebtInfo memory debtInfo)
+        returns (bytes memory cfg, DebtInfo memory debtInfo)
     {
         debtInfo = _debtsInfo[_borrower];
 
-        (collateralConfig, debtConfig) = _getOrderedConfigs(_silo, debtInfo, _action);
+        cfg = _getOrderedConfigs(_silo, debtInfo, _action);
     }
 
     /// @inheritdoc ISiloConfig
@@ -334,7 +334,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
     function _getOrderedConfigs(address _silo, DebtInfo memory _debtInfo, uint256 _action)
         internal
         view
-        returns (ConfigData memory collateralConfig, ConfigData memory debtConfig)
+        returns (bytes memory cfg)
     {
         bool callForSilo0 = _silo == _SILO0;
         if (!callForSilo0 && _silo != _SILO1) revert WrongSilo();
@@ -342,17 +342,13 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
         uint256 order = ConfigLib.orderConfigs(_debtInfo, callForSilo0, _action);
 
         if (order == ConfigLib.SILO0_SILO0) {
-            collateralConfig = _silo0ConfigData();
-            debtConfig = collateralConfig;
+            cfg = abi.encode(_silo0ConfigData());
         } else if (order == ConfigLib.SILO1_SILO0) {
-            collateralConfig = _silo1ConfigData();
-            debtConfig = _silo0ConfigData();
+            cfg = abi.encode(_silo1ConfigData(), _silo0ConfigData());
         } else if (order == ConfigLib.SILO0_SILO1) {
-            collateralConfig = _silo0ConfigData();
-            debtConfig = _silo1ConfigData();
+            cfg = abi.encode(_silo0ConfigData(), _silo1ConfigData());
         } else if (order == ConfigLib.SILO1_SILO1) {
-            collateralConfig = _silo1ConfigData();
-            debtConfig = collateralConfig;
+            cfg = abi.encode(_silo1ConfigData());
         } else revert InvalidConfigOrder();
     }
 

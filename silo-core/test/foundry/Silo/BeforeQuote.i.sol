@@ -8,6 +8,7 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
+import {ConfigLib} from "silo-core/contracts/lib/ConfigLib.sol";
 
 import {SiloFixture, SiloConfigOverride} from "../_common/fixtures/SiloFixture.sol";
 import {MintableToken} from "../_common/MintableToken.sol";
@@ -18,6 +19,8 @@ import "../_common/DummyOracle.sol";
     forge test -vv --ffi --mc BeforeQuoteTest
 */
 contract BeforeQuoteTest is SiloLittleHelper, Test {
+    using ConfigLib for ISiloConfig;
+
     uint256 depositAssets = 1e18;
     uint256 borrowAmount = 0.3e18;
     uint256 withdrawAmount = 0.1e18;
@@ -51,7 +54,7 @@ contract BeforeQuoteTest is SiloLittleHelper, Test {
         SiloFixture siloFixture = new SiloFixture();
         (, silo0, silo1,,, partialLiquidation) = siloFixture.deploy_local(overrides);
 
-        (cfg0, cfg1,) = silo0.config().getConfigs(address(silo0), address(0), 0 /* always 0 for external calls */);
+        (cfg0, cfg1,) = silo0.config().pullConfigs(address(silo0), address(0), 0 /* always 0 for external calls */);
 
         assertTrue(cfg0.callBeforeQuote, "beforeQuote0 is required");
         assertFalse(cfg1.callBeforeQuote, "beforeQuote1 is NOT required");
