@@ -63,7 +63,7 @@ contract SiloFactoryCreateSiloTest is SiloLittleHelper, IntegrationTest {
             ISiloConfig.ConfigData memory configData0,
             ISiloConfig.ConfigData memory configData1,
         ) = siloConfig.getConfigs(address(silo0), address(0), 0 /* always 0 for external calls */);
-        
+
         assertEq(configData0.daoFee, siloFactory.daoFee(), "configData0.daoFee");
         assertEq(configData0.deployerFee, initData.deployerFee, "configData0.deployerFee");
         assertEq(configData0.silo, configData1.otherSilo, "configData0.silo");
@@ -125,25 +125,23 @@ contract SiloFactoryCreateSiloTest is SiloLittleHelper, IntegrationTest {
 
         assertEq(abi.encode(irmConfigUsed1), abi.encode(irmConfigExpected1));
 
-        // TODO: check IHookReceiver initialize when it's supported in deploy scripts
+        vm.expectRevert("Initializable: contract is already initialized");
+        IShareToken(configData0.protectedShareToken).initialize(ISilo(configData0.silo));
 
         vm.expectRevert("Initializable: contract is already initialized");
-        IShareToken(configData0.protectedShareToken).initialize(ISilo(configData0.silo), address(0));
+        IShareToken(configData0.collateralShareToken).initialize(ISilo(configData0.silo));
 
         vm.expectRevert("Initializable: contract is already initialized");
-        IShareToken(configData0.collateralShareToken).initialize(ISilo(configData0.silo), address(0));
+        IShareToken(configData0.debtShareToken).initialize(ISilo(configData0.silo));
 
         vm.expectRevert("Initializable: contract is already initialized");
-        IShareToken(configData0.debtShareToken).initialize(ISilo(configData0.silo), address(0));
+        IShareToken(configData1.protectedShareToken).initialize(ISilo(configData1.silo));
 
         vm.expectRevert("Initializable: contract is already initialized");
-        IShareToken(configData1.protectedShareToken).initialize(ISilo(configData1.silo), address(0));
+        IShareToken(configData1.collateralShareToken).initialize(ISilo(configData1.silo));
 
         vm.expectRevert("Initializable: contract is already initialized");
-        IShareToken(configData1.collateralShareToken).initialize(ISilo(configData1.silo), address(0));
-
-        vm.expectRevert("Initializable: contract is already initialized");
-        IShareToken(configData1.debtShareToken).initialize(ISilo(configData1.silo), address(0));
+        IShareToken(configData1.debtShareToken).initialize(ISilo(configData1.silo));
 
         assertEq(siloFactory.ownerOf(1), initData.deployer);
     }

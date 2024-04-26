@@ -13,7 +13,7 @@ import {SiloMathLib} from "./SiloMathLib.sol";
 import {SiloStdLib} from "./SiloStdLib.sol";
 import {SiloLendingLib} from "./SiloLendingLib.sol";
 import {Rounding} from "./Rounding.sol";
-import {Methods} from "./Methods.sol";
+import {Hook} from "./Hook.sol";
 
 // solhint-disable function-max-lines
 
@@ -74,7 +74,7 @@ library SiloERC4626Lib {
             ISiloConfig.ConfigData memory collateralConfig,
             ISiloConfig.ConfigData memory debtConfig,
             ISiloConfig.DebtInfo memory debtInfo
-        ) = _config.getConfigs(address(this), _owner, Methods.WITHDRAW);
+        ) = _config.getConfigs(address(this), _owner, Hook.WITHDRAW);
 
         uint256 shareTokenTotalSupply;
         uint256 liquidity;

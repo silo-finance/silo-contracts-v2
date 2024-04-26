@@ -21,8 +21,8 @@ contract ShareDebtToken is IERC20R, ShareToken {
     mapping(address owner => mapping(address recipient => uint256 allowance)) private _receiveAllowances;
 
     /// @param _silo Silo address for which tokens was deployed
-    function initialize(ISilo _silo, address _hookReceiver) external virtual initializer {
-        __ShareToken_init(_silo, _hookReceiver);
+    function initialize(ISilo _silo) external virtual initializer {
+        __ShareToken_init(_silo);
     }
 
     /// @inheritdoc IShareToken
@@ -88,12 +88,12 @@ contract ShareDebtToken is IERC20R, ShareToken {
                 _setReceiveApproval(_sender, _recipient, currentAllowance - _amount);
             }
         }
+
+        ShareToken._beforeTokenTransfer(_sender, _recipient, _amount);
     }
 
     /// @dev Check if recipient is solvent after debt transfer
     function _afterTokenTransfer(address _sender, address _recipient, uint256 _amount) internal virtual override {
-        ShareToken._afterTokenTransfer(_sender, _recipient, _amount);
-
         // debt transfer is such a rare use case and extra gas is worth additional security,
         // so we do not return even when _amount == 0
 
@@ -105,6 +105,13 @@ contract ShareDebtToken is IERC20R, ShareToken {
         }
 
         // we need to close debt on transfer and burn
-        if (_sender != address(0) && balanceOf(_sender) == 0) siloConfig.closeDebt(_sender);
+        if (_sender != address(0) && balanceOf(_sender) == 0) {
+            // we can have debt in one silo only, so when you transfer all your debt we can close position
+            // we can close only when _amount > 0, otherwise you can transfer 0 and close debt in other silo
+            // TODO write test case for this, it was a bug
+            if (_amount != 0) siloConfig.closeDebt(_sender);
+        }
+
+        ShareToken._afterTokenTransfer(_sender, _recipient, _amount);
     }
 }

@@ -25,13 +25,14 @@ contract WithdrawPartAccrueInterestGasTest is Gas, Test {
         vm.warp(block.timestamp + 1 days);
     }
 
+    // forge test -vv --ffi --mt test_gas_withdrawPartWithInterest
     function test_gas_withdrawPartWithInterest() public {
         _action(
             DEPOSITOR,
             address(silo1),
             abi.encodeCall(ISilo.withdraw, (ASSETS / 10, DEPOSITOR, DEPOSITOR, ISilo.AssetType.Collateral)),
             "Withdraw partial with accrue interest",
-            176906
+            177195
         );
     }
 }

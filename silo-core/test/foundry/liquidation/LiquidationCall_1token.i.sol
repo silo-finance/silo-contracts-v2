@@ -11,7 +11,7 @@ import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquid
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {IInterestRateModel} from "silo-core/contracts/interfaces/IInterestRateModel.sol";
 import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
-import {Methods} from "silo-core/contracts/lib/Methods.sol";
+import {Hook} from "silo-core/contracts/lib/Hook.sol";
 
 import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
 import {MintableToken} from "../_common/MintableToken.sol";
@@ -177,7 +177,7 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
 
         (
             , ISiloConfig.ConfigData memory debtConfig,
-        ) = siloConfig.getConfigs(address(silo0), address(0), Methods.EXTERNAL);
+        ) = siloConfig.getConfigs(address(silo0), address(0), Hook.NONE);
 
         (, uint64 interestRateTimestamp0) = silo0.siloData();
         (, uint64 interestRateTimestamp1) = silo1.siloData();

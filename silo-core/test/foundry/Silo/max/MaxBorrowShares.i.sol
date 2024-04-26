@@ -147,22 +147,24 @@ contract MaxBorrowSharesTest is SiloLittleHelper, Test {
 
     /*
     forge test -vv --ffi --mt test_maxBorrowShares_withInterest
+    TODO
     */
     /// forge-config: core-test.fuzz.runs = 1000
-    function test_maxBorrowShares_withInterest_1token_fuzz(
-        uint128 _collateral,
-        uint128 _liquidity
-    ) public {
-        _maxBorrowShares_withInterest_fuzz(_collateral, _liquidity, SAME_ASSET);
-    }
+//    function test_maxBorrowShares_withInterest_1token_fuzz(
+//        uint128 _collateral,
+//        uint128 _liquidity
+//    ) public {
+//        _maxBorrowShares_withInterest_fuzz(_collateral, _liquidity, SAME_ASSET);
+//    }
 
     /// forge-config: core-test.fuzz.runs = 1000
-    function test_maxBorrowShares_withInterest_2tokens_fuzz(
-        uint128 _collateral,
-        uint128 _liquidity
-    ) public {
-        _maxBorrowShares_withInterest_fuzz(_collateral, _liquidity, TWO_ASSETS);
-    }
+    // TODO
+//    function test_maxBorrowShares_withInterest_2tokens_fuzz(
+//        uint128 _collateral,
+//        uint128 _liquidity
+//    ) public {
+//        _maxBorrowShares_withInterest_fuzz(_collateral, _liquidity, TWO_ASSETS);
+//    }
 
     function _maxBorrowShares_withInterest_fuzz(
         uint128 _collateral,

@@ -17,26 +17,29 @@ contract SiloHarness is Silo {
     }
 
     function getFlashloanFee0() external view returns (uint256) {
-        (,, uint256 flashloanFee, ) = config.getFeesWithAsset(address(this));
+        (,, uint256 flashloanFee, ) = sharedStorage.siloConfig.getFeesWithAsset(address(this));
         return flashloanFee;
     }
 
     function getFlashloanFee1() external view returns (uint256) {
-        (, ISiloConfig.ConfigData memory otherConfig, ) = config.getConfigs(address(this), address(0), 0);
+        (
+            , ISiloConfig.ConfigData memory otherConfig,
+        ) = sharedStorage.siloConfig.getConfigs(address(this), address(0), 0);
+
         return otherConfig.flashloanFee;
     }
 
     function reentrancyGuardEntered() external view returns (bool) {
-        return config.crossReentrancyGuardEntered();
+        return sharedStorage.siloConfig.crossReentrancyGuardEntered();
     }
 
     function getDaoFee() external view returns (uint256) {
-        (uint256 daoFee,,, ) = config.getFeesWithAsset(address(this));
+        (uint256 daoFee,,, ) = sharedStorage.siloConfig.getFeesWithAsset(address(this));
         return daoFee;
     }
 
     function getDeployerFee() external view returns (uint256) {
-        (, uint256 deployerFee,, ) = config.getFeesWithAsset(address(this));
+        (, uint256 deployerFee,, ) = sharedStorage.siloConfig.getFeesWithAsset(address(this));
         return deployerFee;
     }
 }

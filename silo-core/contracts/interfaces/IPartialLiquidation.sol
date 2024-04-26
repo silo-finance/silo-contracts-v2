@@ -2,6 +2,15 @@
 pragma solidity >=0.5.0;
 
 interface IPartialLiquidation {
+    struct HookSetup {
+        /// @param this is the same as in siloConfig
+        address hookReceiver;
+        /// @param hooks bitmap
+        uint24 hooksBefore;
+        /// @param hooks bitmap
+        uint24 hooksAfter;
+    }
+
     /// @dev Emitted when a borrower is liquidated.
     /// @param liquidator The address of the liquidator
     /// @param receiveSToken True if the liquidators wants to receive the collateral sTokens, `false` if he wants
@@ -45,6 +54,10 @@ interface IPartialLiquidation {
     )
         external
         returns (uint256 withdrawCollateral, uint256 repayDebtAssets);
+
+    function synchronizeHooks(address _hookReceiver, uint24 _hooksBefore, uint24 _hooksAfter) external;
+
+    function hookSetup(address _silo) external view returns (HookSetup memory);
 
     /// @dev debt is keep growing over time, so when dApp use this view to calculate max, tx should never revert
     /// because actual max can be only higher

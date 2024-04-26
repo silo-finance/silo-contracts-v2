@@ -102,7 +102,7 @@ contract SiloFactory is ISiloFactory, ERC721Upgradeable, Ownable2StepUpgradeable
         ISilo(configData0.silo).initialize(siloConfig, _initData.interestRateModelConfig0);
         ISilo(configData1.silo).initialize(siloConfig, _initData.interestRateModelConfig1);
 
-        _initializeShareTokens(configData0, configData1, _initData);
+        _initializeShareTokens(configData0, configData1);
 
         siloToId[configData0.silo] = nextSiloId;
         siloToId[configData1.silo] = nextSiloId;
@@ -247,40 +247,17 @@ contract SiloFactory is ISiloFactory, ERC721Upgradeable, Ownable2StepUpgradeable
 
     function _initializeShareTokens(
         ISiloConfig.ConfigData memory configData0,
-        ISiloConfig.ConfigData memory configData1,
-        ISiloConfig.InitData memory _initData
+        ISiloConfig.ConfigData memory configData1
     ) internal virtual {
         // initialize configData0
-        IShareToken(configData0.protectedShareToken).initialize(
-            ISilo(configData0.silo),
-            _initData.protectedHookReceiver0
-        );
-
-        IShareToken(configData0.collateralShareToken).initialize(
-            ISilo(configData0.silo),
-            _initData.collateralHookReceiver0
-        );
-
-        IShareToken(configData0.debtShareToken).initialize(
-            ISilo(configData0.silo),
-            _initData.debtHookReceiver0
-        );
+        IShareToken(configData0.protectedShareToken).initialize(ISilo(configData0.silo));
+        IShareToken(configData0.collateralShareToken).initialize(ISilo(configData0.silo));
+        IShareToken(configData0.debtShareToken).initialize(ISilo(configData0.silo));
 
         // initialize configData1
-        IShareToken(configData1.protectedShareToken).initialize(
-            ISilo(configData1.silo),
-            _initData.protectedHookReceiver1
-        );
-
-        IShareToken(configData1.collateralShareToken).initialize(
-            ISilo(configData1.silo),
-            _initData.collateralHookReceiver1
-        );
-
-        IShareToken(configData1.debtShareToken).initialize(
-            ISilo(configData1.silo),
-            _initData.debtHookReceiver1
-        );
+        IShareToken(configData1.protectedShareToken).initialize(ISilo(configData1.silo));
+        IShareToken(configData1.collateralShareToken).initialize(ISilo(configData1.silo));
+        IShareToken(configData1.debtShareToken).initialize(ISilo(configData1.silo));
     }
 
     function _baseURI() internal view virtual override returns (string memory) {
