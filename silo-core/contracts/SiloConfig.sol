@@ -187,6 +187,32 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
         }
     }
 
+    function accrueInterestAndGetConfigurations(
+        address _silo,
+        uint256 _action,
+        ISilo.AssetType _assetType
+    ) external virtual returns (address shareToken, address asset, address hookReceiver, address liquidation) {
+        _crossNonReentrantBefore(_action);
+        _callAccrueInterest(_silo);
+
+        hookReceiver = _HOOK_RECEIVER;
+        liquidation = _LIQUIDATION_MODULE;
+
+        if (_silo == _SILO0) {
+            asset = _TOKEN0;
+            shareToken = _assetType == ISilo.AssetType.Collateral
+                ? _COLLATERAL_SHARE_TOKEN0
+                : _PROTECTED_COLLATERAL_SHARE_TOKEN0;
+        } else if (_silo == _SILO1) {
+            asset = _TOKEN1;
+            shareToken = _assetType == ISilo.AssetType.Collateral
+                ? _COLLATERAL_SHARE_TOKEN1
+                : _PROTECTED_COLLATERAL_SHARE_TOKEN1;
+        } else {
+            revert WrongSilo();
+        }
+    }
+
     function accrueInterestAndGetConfigs(address _silo, address _borrower, uint256 _action)
         external
         virtual
