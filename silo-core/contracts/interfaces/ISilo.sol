@@ -180,6 +180,8 @@ interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
     function updateHooks() external;
 
     /// @notice Method for HookReceiver only to call on behalf of Silo
+    /// @dev Silo.updateHooks must be called before. It will cache hooks details for this Silo.
+    /// Otherwise it will revert with `OnlyHookReceiver` error.
     /// @param _target address of the contract to call
     /// @param _input calldata for the call
     function callOnBehalfOfSilo(address _target, bytes calldata _input)
