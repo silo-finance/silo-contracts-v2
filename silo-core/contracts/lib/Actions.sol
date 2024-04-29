@@ -43,9 +43,11 @@ library Actions {
     {
         _hookCallBefore(_shareStorage, Hook.DEPOSIT, abi.encodePacked(_assets, _shares, _receiver, _assetType));
 
-        (address shareToken, address asset) = _shareStorage.siloConfig.accrueInterestDeposit(
-            address(this), Hook.DEPOSIT, _assetType
-        );
+        (
+            address shareToken,
+            address asset,
+            address hookReceiver,
+        ) = _shareStorage.siloConfig.accrueInterestAndGetConfigurations(address(this), Hook.DEPOSIT, _assetType);
 
         if (_assetType == ISilo.AssetType.Debt) revert ISilo.WrongAssetType();
 
@@ -61,7 +63,7 @@ library Actions {
 
         _shareStorage.siloConfig.crossNonReentrantAfter();
 
-        if (collateralConfig.hookReceiver != address(0)) {
+        if (hookReceiver != address(0)) {
             _hookCallAfter(
                 _shareStorage, Hook.DEPOSIT, abi.encodePacked(_assets, _shares, _receiver, _assetType, assets, shares)
             );
