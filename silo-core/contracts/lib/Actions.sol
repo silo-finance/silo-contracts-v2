@@ -43,29 +43,27 @@ library Actions {
     {
         _hookCallBefore(_shareStorage, Hook.DEPOSIT, abi.encodePacked(_assets, _shares, _receiver, _assetType));
 
-        ISiloConfig.ConfigData memory collateralConfig = _shareStorage.siloConfig.accrueInterestAndGetConfig(
-            address(this), Hook.DEPOSIT
-        );
+        (
+            address shareToken,
+            address asset,
+            address hookReceiver
+        ) = _shareStorage.siloConfig.accrueInterestOnDeposit(address(this), Hook.DEPOSIT, _assetType);
 
         if (_assetType == ISilo.AssetType.Debt) revert ISilo.WrongAssetType();
 
-        address collateralShareToken = _assetType == ISilo.AssetType.Collateral
-            ? collateralConfig.collateralShareToken
-            : collateralConfig.protectedShareToken;
-
         (assets, shares) = SiloERC4626Lib.deposit(
-            collateralConfig.token,
+            asset,
             msg.sender,
             _assets,
             _shares,
             _receiver,
-            IShareToken(collateralShareToken),
+            IShareToken(shareToken),
             _totalCollateral
         );
 
         _shareStorage.siloConfig.crossNonReentrantAfter();
 
-        if (collateralConfig.hookReceiver != address(0)) {
+        if (hookReceiver != address(0)) {
             _hookCallAfter(
                 _shareStorage, Hook.DEPOSIT, abi.encodePacked(_assets, _shares, _receiver, _assetType, assets, shares)
             );
