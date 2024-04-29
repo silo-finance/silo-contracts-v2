@@ -172,15 +172,17 @@ contract DynamicKinkModelV1 is IDynamicKinkModelV1 {
             if (_l.roc == 0) {
                 return (0, 0, 0, true, 0);
             }
-            x = _setup.config.kmin * _l.T - (_setup.k - _setup.config.kmin)**2 / (2 * _l.roc);
+            x = _setup.config.kmin * _l.T - ((_setup.k - _setup.config.kmin)**2) / (2 * _l.roc);
             // k = kmin ;
             k = _setup.config.kmin;
         } else {
             // x = (_k + k1) * T / 2;
-            x = (k + _l.k1) * _l.T / 2;
+            x = (_setup.k + _l.k1) * _l.T / 2;
             // k = k1;
             k = _l.k1;
         }
+
+        xxx = x;
 
         // if (u >= ulow ) {
         if (_u >= _setup.config.ulow) {
@@ -196,7 +198,6 @@ contract DynamicKinkModelV1 is IDynamicKinkModelV1 {
         // todo negative factor
         // x = rmin * T + f * x / _DP;
         x = _setup.config.rmin * _l.T + _l.f * x / _DP;
-        xxx = x;
 
 
         // rcomp = exp (x) - DP;

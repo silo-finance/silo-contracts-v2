@@ -58,7 +58,7 @@ contract DynamicKinkModelV1Test is RcompTestDynamicKink, RcurTestDynamicKink {
         RcompData[] memory data = _readDataFromJsonRcomp();
 
         for (uint i; i < data.length; i++) {
-            if (i != 5) {
+            if (i != 32) {
                 continue;
             }
             (IDynamicKinkModelV1.Setup memory setup, DebugRcomp memory debug) = _toSetupRcomp(data[i]);
