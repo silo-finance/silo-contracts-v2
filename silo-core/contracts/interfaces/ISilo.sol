@@ -179,6 +179,13 @@ interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
     /// @dev This function must be called after the hooks configuration is changed in the hook receiver
     function updateHooks() external;
 
+    /// @notice Method for HookReceiver only to call on behalf of Silo
+    /// @param _target address of the contract to call
+    /// @param _input calldata for the call
+    function callOnBehalfOfSilo(address _target, bytes calldata _input)
+        external
+        returns (bool success, bytes memory result);
+
     function sharedStorage()
         external
         view
