@@ -201,13 +201,13 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
         if (_silo == _SILO0) {
             asset = _TOKEN0;
             shareToken = _assetType == ISilo.AssetType.Collateral
-            ? _COLLATERAL_SHARE_TOKEN0
-            : _PROTECTED_COLLATERAL_SHARE_TOKEN0;
+                ? _COLLATERAL_SHARE_TOKEN0
+                : _PROTECTED_COLLATERAL_SHARE_TOKEN0;
         } else if (_silo == _SILO1) {
             asset = _TOKEN1;
             shareToken = _assetType == ISilo.AssetType.Collateral
-            ? _COLLATERAL_SHARE_TOKEN1
-            : _PROTECTED_COLLATERAL_SHARE_TOKEN1;
+                ? _COLLATERAL_SHARE_TOKEN1
+                : _PROTECTED_COLLATERAL_SHARE_TOKEN1;
         } else {
             revert WrongSilo();
         }
