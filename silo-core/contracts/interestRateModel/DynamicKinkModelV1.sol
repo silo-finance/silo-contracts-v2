@@ -20,12 +20,15 @@ contract DynamicKinkModelV1 is IDynamicKinkModelV1 {
     // todo safecast
 
     error InvalidTimestamp();
+    error HundredYearsExceeded();
 
     // todo
     // returns decimal points used by model
     uint256 public constant DECIMALS = 18;
     /// @dev DP is 18 decimal points used for integer calculations
     int256 internal constant _DP = int256(10 ** DECIMALS);
+
+    int256 public constant HUNDRED_YEARS = 100 * 365 * 24 * 60 * 60;
 
     /// @dev maximum value of X. If x > X_MAX => exp(x) > (2**16) * 1e18. X_MAX = ln((2**16) * 1e18 + 1)
     int256 public constant X_MAX = 88722839111672999628;
@@ -87,8 +90,6 @@ contract DynamicKinkModelV1 is IDynamicKinkModelV1 {
             k = k;
         }
 
-        //uint r = 0; // additional interest rate
-        int256 r = 0;
         // if (u >= ulow ) {
         if (_u >= _setup.config.ulow) {
             //r = u - ulow ;
@@ -115,87 +116,106 @@ contract DynamicKinkModelV1 is IDynamicKinkModelV1 {
     /// @param _u utilization at time t0
     /// @return rcomp compounded interest rate
     /// @return k updated state of the slope k at time t1
-    function compoundInterestRate(Setup memory _setup, int256 _t0, int256 _t1, int256 _u)
+
+    struct LocalVarsRCOMP {
+        int256 T;
+        int256 k1;
+        int256 f;
+        int256 roc;
+    }
+    function compoundInterestRate(Setup memory _setup, int256 _t0, int256 _t1, int256 _u, int256 _totalDeposits, int256 _totalBorrowAmount)
         public
         pure
-        returns (int256 rcomp, int256 k, int256 x, bool didOverflow)
+        returns (int256 rcomp, int256 k, int256 x, bool didOverflow , int256 xxx)
     {
+        LocalVarsRCOMP memory _l = LocalVarsRCOMP(0, 0, 0, 0);
         // uint T = t1 - t0;
         if (_t1 <= _t0) revert InvalidTimestamp();
-        int256 T = _t1 - _t0;
-
-        //todo 
-        k = _setup.k;
-
-        // int roc ; // rate of change for k
-        int roc;
+        _l.T = _t1 - _t0;
+        
+        if (_l.T > HUNDRED_YEARS) {
+            revert HundredYearsExceeded();
+        }
 
         // if (u < u1) {
         if (_u < _setup.config.u1) {
             // roc = - c1 - cminus * (u1 - u) / _DP;
-            roc = - _setup.config.c1 - _setup.config.cminus * (_setup.config.u1 - _u) / _DP;
+            _l.roc = - _setup.config.c1 - _setup.config.cminus * (_setup.config.u1 - _u) / _DP;
         // } else if (u > u2) {       
         } else if (_u > _setup.config.u2) {
             // roc = min (c2 + cplus * (u - u2) / _DP , dmax );
-            roc = _setup.config.c2 + _setup.config.cplus * (_u - _setup.config.u2) / _DP;
-            roc = roc > _setup.config.dmax ? _setup.config.dmax : roc;
+            _l.roc = _setup.config.c2 + _setup.config.cplus * (_u - _setup.config.u2) / _DP;
+            _l.roc = _l.roc > _setup.config.dmax ? _setup.config.dmax : _l.roc;
         } else {
             // todo remove pointless
-            roc = 0;
+            _l.roc = 0;
         }
-
-        int256 k1 = k + roc * T; // slope of the kink at t1 ignoring lower and upper bounds
+        
+        _l.k1 = _setup.k + _l.roc * _l.T; // slope of the kink at t1 ignoring lower and upper bounds
 
         // int256 x; // an integral of k
 
         // if (k1 > kmax ) {
-        if (k1 > _setup.config.kmax) {
+        if (_l.k1 > _setup.config.kmax) {
             // x = kmax * T - ( kmax - _k)**2 / (2 * roc );
             // todo
-            if (roc == 0) {
-                return (0, 0, 0, true);
+            if (_l.roc == 0) {
+                return (0, 0, 0, true, 0);
             }
-            x = _setup.config.kmax * T - (_setup.config.kmax - k) ** 2 / (2 * roc);
+            x = _setup.config.kmax * _l.T - (_setup.config.kmax - _setup.k) ** 2 / (2 * _l.roc);
             // k = kmax ;
             k = _setup.config.kmax;
         // } else if (k1 < kmin ) {
-        } else if (k1 < _setup.config.kmin) {
+        } else if (_l.k1 < _setup.config.kmin) {
             // x = kmin * T - (_k - kmin ) **2 / (2 * roc );
             // todo
-            if (roc == 0) {
-                return (0, 0, 0, true);
+            if (_l.roc == 0) {
+                return (0, 0, 0, true, 0);
             }
-            x = _setup.config.kmin * T - (k - _setup.config.kmin)**2 / (2 * roc);
+            x = _setup.config.kmin * _l.T - (_setup.k - _setup.config.kmin)**2 / (2 * _l.roc);
             // k = kmin ;
             k = _setup.config.kmin;
         } else {
             // x = (_k + k1) * T / 2;
-            x = (k + k1) * T / 2;
+            x = (k + _l.k1) * _l.T / 2;
             // k = k1;
-            k = k1;
+            k = _l.k1;
         }
 
-        int256 f; // factor for the slope in kink
         // if (u >= ulow ) {
         if (_u >= _setup.config.ulow) {
             // f = u - ulow ;
-            f = _u - _setup.config.ulow;
+            _l.f = _u - _setup.config.ulow;
             // if (u >= ucrit ) {
             if (_u >= _setup.config.ucrit) {
                 // f = f + alpha * (u - ucrit ) / _DP;
-                f = f + _setup.config.alpha * (_u - _setup.config.ucrit) / _DP;
+                _l.f = _l.f + _setup.config.alpha * (_u - _setup.config.ucrit) / _DP;
             }
         }
 
         // todo negative factor
         // x = rmin * T + f * x / _DP;
-        x = _setup.config.rmin * T + f * x / _DP;
+        x = _setup.config.rmin * _l.T + _l.f * x / _DP;
+        xxx = x;
+
 
         // rcomp = exp (x) - DP;
         if (x > X_MAX) {
-            rcomp = R_COMPOUND_MAX_PER_SECOND * T;
+            rcomp = R_COMPOUND_MAX_PER_SECOND * _l.T;
+            didOverflow = true;
         } else {
             rcomp = x.exp() - _DP;
+        }
+
+        if (rcomp > R_COMPOUND_MAX_PER_SECOND * _l.T) {
+            didOverflow = true;
+            rcomp = R_COMPOUND_MAX_PER_SECOND * _l.T;
+        }
+
+        //todo
+        if (type(int256).max - _totalBorrowAmount * rcomp / _DP < _totalBorrowAmount) {
+            didOverflow = true;
+            rcomp = 0;
         }
     }
 
