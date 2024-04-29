@@ -606,18 +606,20 @@ library Actions {
         }
     }
 
-    function updateHooks(
-        ISilo.SharedStorage storage _sharedStorage,
-        uint24 _hooksBefore,
-        uint24 _hooksAfter
-    ) external {
-        ISiloConfig.ConfigData memory cfg = _sharedStorage.siloConfig.getConfig(address(this));
+    function updateHooks(ISilo.SharedStorage storage _sharedStorage) external returns (uint24 hooksBefore, uint24 hooksAfter) {
+        ISilo.SharedStorage memory shareStorage = _sharedStorage;
 
-        if (msg.sender != cfg.hookReceiver) revert ISilo.OnlyHookReceiver();
+        ISiloConfig.ConfigData memory cfg = shareStorage.siloConfig.getConfig(address(this));
 
-        _sharedStorage.hooksBefore = _hooksBefore;
-        _sharedStorage.hooksAfter = _hooksAfter;
-        _sharedStorage.hookReceiver = IHookReceiver(msg.sender);
+        if (cfg.hookReceiver == address(0)) return;
+
+        (hooksBefore, hooksAfter) = IHookReceiver(cfg.hookReceiver).hookReceiverConfig();
+
+        shareStorage.hooksBefore = hooksBefore;
+        shareStorage.hooksAfter = hooksAfter;
+        shareStorage.hookReceiver = cfg.hookReceiver;
+
+        _sharedStorage = shareStorage;
 
         IShareToken(cfg.collateralShareToken).synchronizeHooks(
             cfg.hookReceiver, _hooksBefore, _hooksAfter, uint24(Hook.COLLATERAL_TOKEN)

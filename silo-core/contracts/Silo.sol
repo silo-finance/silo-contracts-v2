@@ -65,11 +65,13 @@ contract Silo is SiloERC4626 {
 
         address interestRateModel = _siloConfig.getConfig(address(this)).interestRateModel;
         IInterestRateModel(interestRateModel).connect(_modelConfigAddress);
+
+        _updateHooks();
     }
 
-    function updateHooks(uint24 _hooksBefore, uint24 _hooksAfter) external {
-        Actions.updateHooks(sharedStorage, _hooksBefore, _hooksAfter);
-        emit HooksUpdated(_hooksBefore, _hooksAfter);
+    /// @inheritdoc ISilo
+    function updateHooks() external {
+        _updateHooks();
     }
 
     /// @inheritdoc ISilo
@@ -828,5 +830,10 @@ contract Silo is SiloERC4626 {
             total[AssetType.Collateral],
             total[AssetType.Debt]
         );
+    }
+
+    function _updateHooks() internal virtual {
+        (uint24 hooksBefore, uint24 hooksAfter) = Actions.updateHooks(sharedStorage);
+        emit HooksUpdated(hooksBefore, hooksAfter);
     }
 }
