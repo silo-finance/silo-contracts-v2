@@ -66,7 +66,7 @@ contract RcompTestDynamicKink is Test {
         data = abi.decode(vm.parseJson(json, string(abi.encodePacked("."))), (RcompData[]));
 
         for (uint i; i < data.length; i++) {
-            _printRcomp(data[i]);
+            //_printRcomp(data[i]);
         }
     }
 
