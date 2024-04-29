@@ -188,25 +188,35 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
     }
 
     function accrueInterestOnDeposit(
-        address _silo,
         uint256 _action,
         ISilo.AssetType _assetType
-    ) external virtual returns (address shareToken, address asset, address hookReceiver) {
+    ) external virtual returns (address shareToken, address asset, address hookReceiver, address liquidationModule) {
         _crossNonReentrantBefore(_action);
-        _callAccrueInterest(_silo);
+        _callAccrueInterest(msg.sender);
 
         hookReceiver = _HOOK_RECEIVER;
+        liquidationModule = _LIQUIDATION_MODULE;
 
-        if (_silo == _SILO0) {
+        if (msg.sender == _SILO0) {
             asset = _TOKEN0;
-            shareToken = _assetType == ISilo.AssetType.Collateral
-                ? _COLLATERAL_SHARE_TOKEN0
-                : _PROTECTED_COLLATERAL_SHARE_TOKEN0;
-        } else if (_silo == _SILO1) {
+
+            if (_action.matchAction(Hook.REPAY)) {
+                shareToken = _DEBT_SHARE_TOKEN0;
+            } else {
+                shareToken = _assetType == ISilo.AssetType.Collateral
+                    ? _COLLATERAL_SHARE_TOKEN0
+                    : _PROTECTED_COLLATERAL_SHARE_TOKEN0;
+            }
+        } else if (msg.sender == _SILO1) {
             asset = _TOKEN1;
-            shareToken = _assetType == ISilo.AssetType.Collateral
-                ? _COLLATERAL_SHARE_TOKEN1
-                : _PROTECTED_COLLATERAL_SHARE_TOKEN1;
+
+            if (_action.matchAction(Hook.REPAY)) {
+                shareToken = _DEBT_SHARE_TOKEN1;
+            } else {
+                shareToken = _assetType == ISilo.AssetType.Collateral
+                    ? _COLLATERAL_SHARE_TOKEN1
+                    : _PROTECTED_COLLATERAL_SHARE_TOKEN1;
+            }
         } else {
             revert WrongSilo();
         }

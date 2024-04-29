@@ -46,8 +46,8 @@ library Actions {
         (
             address shareToken,
             address asset,
-            address hookReceiver
-        ) = _shareStorage.siloConfig.accrueInterestOnDeposit(address(this), Hook.DEPOSIT, _assetType);
+            address hookReceiver,
+        ) = _shareStorage.siloConfig.accrueInterestOnDeposit(Hook.DEPOSIT, _assetType);
 
         if (_assetType == ISilo.AssetType.Debt) revert ISilo.WrongAssetType();
 
@@ -65,7 +65,10 @@ library Actions {
 
         if (hookReceiver != address(0)) {
             _hookCallAfter(
-                _shareStorage, Hook.DEPOSIT, abi.encodePacked(_assets, _shares, _receiver, _assetType, assets, shares)
+                _shareStorage,
+                hookReceiver,
+                Hook.DEPOSIT,
+                abi.encodePacked(_assets, _shares, _receiver, _assetType, assets, shares)
             );
         }
     }
@@ -131,6 +134,7 @@ library Actions {
             if (collateralConfig.hookReceiver != address(0)) {
                 _hookCallAfter(
                     _shareStorage,
+                    collateralConfig.hookReceiver,
                     Hook.WITHDRAW |
                         (_args.assetType == ISilo.AssetType.Collateral ? Hook.COLLATERAL_TOKEN : Hook.PROTECTED_TOKEN),
                     abi.encodePacked(
@@ -168,6 +172,7 @@ library Actions {
         if (collateralConfig.hookReceiver != address(0)) {
             _hookCallAfter(
                 _shareStorage,
+                collateralConfig.hookReceiver,
                 Hook.WITHDRAW |
                     (_args.assetType == ISilo.AssetType.Collateral ? Hook.COLLATERAL_TOKEN : Hook.PROTECTED_TOKEN),
                 abi.encodePacked(
@@ -262,6 +267,7 @@ library Actions {
         if (collateralConfig.hookReceiver != address(0)) {
             _hookCallAfter(
                 _shareStorage,
+                collateralConfig.hookReceiver,
                 Hook.BORROW |
                     (_args.leverage ? Hook.LEVERAGE : Hook.NONE) |
                     (_args.sameAsset ? Hook.SAME_ASSET : Hook.TWO_ASSETS),
@@ -294,27 +300,31 @@ library Actions {
         }
 
         (
-            ,ISiloConfig.ConfigData memory debtConfig,
-        ) = _shareStorage.siloConfig.accrueInterestAndGetConfigs(
-            address(this),
-            _borrower,
-            (_liquidation ? Hook.LIQUIDATION : Hook.NONE) | Hook.REPAY
+            address debtShareToken,
+            address debtAsset,
+            address hookReceiver,
+            address liquidationModule
+        ) = _shareStorage.siloConfig.accrueInterestOnDeposit(
+            (_liquidation ? Hook.LIQUIDATION : Hook.NONE) | Hook.REPAY, ISilo.AssetType.Debt // TODO type not necessary
         );
 
         if (_liquidation) {
-            if (debtConfig.liquidationModule != msg.sender) revert ISilo.OnlyLiquidationModule();
+            if (liquidationModule != msg.sender) revert ISilo.OnlyLiquidationModule();
         }
 
         (
             assets, shares
-        ) = SiloLendingLib.repay(debtConfig, _assets, _shares, _borrower, _repayer, _totalDebt);
+        ) = SiloLendingLib.repay(
+            IShareToken(debtShareToken), debtAsset, _assets, _shares, _borrower, _repayer, _totalDebt
+        );
 
         if (!_liquidation) {
             _shareStorage.siloConfig.crossNonReentrantAfter();
 
-            if (debtConfig.hookReceiver != address(0)) {
+            if (hookReceiver != address(0)) {
                 _hookCallAfter(
                     _shareStorage,
+                    hookReceiver,
                     Hook.REPAY,
                     abi.encodePacked(_assets, _shares, _borrower, _repayer, assets, shares)
                 );
@@ -410,6 +420,7 @@ library Actions {
         if (collateralConfig.hookReceiver != address(0)) {
             _hookCallAfter(
                 _shareStorage,
+                collateralConfig.hookReceiver,
                 Hook.LEVERAGE | Hook.SAME_ASSET,
                 abi.encodePacked(_depositAssets, _borrowAssets, _borrower, _assetType, depositedShares, borrowedShares)
             );
@@ -469,6 +480,7 @@ library Actions {
         if (collateralConfig.hookReceiver != address(0)) {
             _hookCallAfter(
                 _shareStorage,
+                collateralConfig.hookReceiver,
                 Hook.TRANSITION_COLLATERAL,
                 abi.encodePacked(_shares, _owner, _withdrawType, assets)
             );
@@ -502,7 +514,9 @@ library Actions {
         _shareStorage.siloConfig.crossNonReentrantAfter();
 
         if (collateralConfig.hookReceiver != address(0)) {
-            _hookCallAfter(_shareStorage, Hook.SWITCH_COLLATERAL, abi.encodePacked(_sameAsset));
+            _hookCallAfter(
+                _shareStorage, collateralConfig.hookReceiver, Hook.SWITCH_COLLATERAL, abi.encodePacked(_sameAsset)
+            );
         }
     }
 
@@ -550,6 +564,7 @@ library Actions {
         if (config.hookReceiver != address(0)) {
             _hookCallAfter(
                 _shareStorage,
+                config.hookReceiver,
                 Hook.FLASH_LOAN,
                 abi.encodePacked(_receiver, _token, _amount, success)
             );
@@ -648,15 +663,14 @@ library Actions {
         hookReceiver.beforeAction(address(this), _action, _data);
     }
 
-    function _hookCallAfter(ISilo.SharedStorage storage _shareStorage, uint256 _action, bytes memory _data)
-        private
-    {
-        // check hooks first, because it is the same slot as siloConfig, and siloConfig was used already
+    function _hookCallAfter(
+        ISilo.SharedStorage storage _shareStorage,
+        address hookReceiverCached,
+        uint256 _action,
+        bytes memory _data
+    ) private {
         if (!_shareStorage.hooksAfter.matchAction(_action)) return;
 
-        IHookReceiver hookReceiver = _shareStorage.hookReceiver;
-        if (address(hookReceiver) == address(0)) return;
-
-        hookReceiver.afterAction(address(this), _action, _data);
+        IHookReceiver(hookReceiverCached).afterAction(address(this), _action, _data);
     }
 }
