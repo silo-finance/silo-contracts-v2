@@ -46,8 +46,8 @@ library Actions {
         (
             address shareToken,
             address asset,
-            address hookReceiver,
-        ) = _shareStorage.siloConfig.accrueInterestAndGetConfigurations(address(this), Hook.DEPOSIT, _assetType);
+            address hookReceiver
+        ) = _shareStorage.siloConfig.accrueInterestOnDeposit(address(this), Hook.DEPOSIT, _assetType);
 
         if (_assetType == ISilo.AssetType.Debt) revert ISilo.WrongAssetType();
 

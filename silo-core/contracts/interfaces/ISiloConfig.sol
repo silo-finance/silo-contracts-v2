@@ -152,11 +152,11 @@ interface ISiloConfig {
         external
         returns (ConfigData memory collateralConfig, ConfigData memory debtConfig, DebtInfo memory debtInfo);
 
-    function accrueInterestAndGetConfigurations(
+    function accrueInterestOnDeposit(
         address _silo,
         uint256 _action,
         ISilo.AssetType _assetType
-    ) external returns (address shareToken, address asset, address hookReceiver, address liquidation);
+    ) external returns (address shareToken, address asset, address hookReceiver);
 
 
     /// @notice view method for checking cross Silo reentrancy flag
