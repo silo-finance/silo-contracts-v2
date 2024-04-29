@@ -611,29 +611,27 @@ library Actions {
 
         ISiloConfig.ConfigData memory cfg = shareStorage.siloConfig.getConfig(address(this));
 
-        if (cfg.hookReceiver == address(0)) return;
+        if (cfg.hookReceiver == address(0)) return (hooksBefore, hooksAfter);
 
         (hooksBefore, hooksAfter) = IHookReceiver(cfg.hookReceiver).hookReceiverConfig();
 
-        shareStorage.hooksBefore = hooksBefore;
-        shareStorage.hooksAfter = hooksAfter;
-        shareStorage.hookReceiver = cfg.hookReceiver;
-
-        _sharedStorage = shareStorage;
+        _sharedStorage.hooksBefore = hooksBefore;
+        _sharedStorage.hooksAfter = hooksAfter;
+        _sharedStorage.hookReceiver = IHookReceiver(cfg.hookReceiver);
 
         IShareToken(cfg.collateralShareToken).synchronizeHooks(
-            cfg.hookReceiver, _hooksBefore, _hooksAfter, uint24(Hook.COLLATERAL_TOKEN)
+            cfg.hookReceiver, hooksBefore, hooksAfter, uint24(Hook.COLLATERAL_TOKEN)
         );
 
         IShareToken(cfg.protectedShareToken).synchronizeHooks(
-            cfg.hookReceiver, _hooksBefore, _hooksAfter, uint24(Hook.PROTECTED_TOKEN)
+            cfg.hookReceiver, hooksBefore, hooksAfter, uint24(Hook.PROTECTED_TOKEN)
         );
 
         IShareToken(cfg.debtShareToken).synchronizeHooks(
-            cfg.hookReceiver, _hooksBefore, _hooksAfter, uint24(Hook.DEBT_TOKEN)
+            cfg.hookReceiver, hooksBefore, hooksAfter, uint24(Hook.DEBT_TOKEN)
         );
 
-        IPartialLiquidation(cfg.liquidationModule).synchronizeHooks(cfg.hookReceiver, _hooksBefore, _hooksAfter);
+        IPartialLiquidation(cfg.liquidationModule).synchronizeHooks(cfg.hookReceiver, hooksBefore, hooksAfter);
     }
 
     function _hookCallBefore(ISilo.SharedStorage storage _shareStorage, uint256 _action, bytes memory _data)
