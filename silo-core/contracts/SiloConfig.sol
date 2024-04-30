@@ -187,7 +187,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
         }
     }
 
-    function accrueInterestOnDeposit(
+    function accrueInterestAndGetConfigOptimised(
         uint256 _action,
         ISilo.AssetType _assetType
     ) external virtual returns (address shareToken, address asset, address hookReceiver, address liquidationModule) {

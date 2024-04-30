@@ -47,7 +47,7 @@ library Actions {
             address shareToken,
             address asset,
             address hookReceiver,
-        ) = _shareStorage.siloConfig.accrueInterestOnDeposit(Hook.DEPOSIT, _assetType);
+        ) = _shareStorage.siloConfig.accrueInterestAndGetConfigOptimised(Hook.DEPOSIT, _assetType);
 
         if (_assetType == ISilo.AssetType.Debt) revert ISilo.WrongAssetType();
 
@@ -304,7 +304,7 @@ library Actions {
             address debtAsset,
             address hookReceiver,
             address liquidationModule
-        ) = _shareStorage.siloConfig.accrueInterestOnDeposit(
+        ) = _shareStorage.siloConfig.accrueInterestAndGetConfigOptimised(
             (_liquidation ? Hook.LIQUIDATION : Hook.NONE) | Hook.REPAY, ISilo.AssetType.Debt // TODO type not necessary
         );
 
