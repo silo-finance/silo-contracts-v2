@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 import {InterestRateModelV2} from "silo-core/contracts/interestRateModel/InterestRateModelV2.sol";
 import {InterestRateModelV2Config, IInterestRateModelV2} from "silo-core/contracts/interestRateModel/InterestRateModelV2Config.sol";
 import {PropertiesAsserts} from "properties/util/PropertiesHelper.sol";
-import {SafeCast} from "openzeppelin-contracts/utils/math/SafeCast.sol";
+import {SafeCast} from "openzeppelin5/utils/math/SafeCast.sol";
 import {SiloMathLib} from "silo-core/contracts/lib/SiloMathLib.sol";
 
 /*

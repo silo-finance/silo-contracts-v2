@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.21;
 
-import {IERC20Upgradeable} from "openzeppelin-contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
-import {SafeERC20Upgradeable} from "openzeppelin-contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
+import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
+import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 
 import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
 import {ISilo} from "../interfaces/ISilo.sol";
@@ -21,7 +21,7 @@ import {CrossEntrancy} from "./CrossEntrancy.sol";
 import {Hook} from "./Hook.sol";
 
 library Actions {
-    using SafeERC20Upgradeable for IERC20Upgradeable;
+    using SafeERC20 for IERC20;
     using Hook for uint256;
     using Hook for uint24;
 
@@ -400,7 +400,7 @@ library Actions {
                 transferDiff = _depositAssets - _borrowAssets;
             }
 
-            IERC20Upgradeable(collateralConfig.token).safeTransferFrom(msg.sender, address(this), transferDiff);
+            IERC20(collateralConfig.token).safeTransferFrom(msg.sender, address(this), transferDiff);
         }
 
         (, depositedShares) = SiloERC4626Lib.deposit(
@@ -546,13 +546,13 @@ library Actions {
         uint256 fee = SiloStdLib.flashFee(_shareStorage.siloConfig, _token, _amount);
         if (fee > type(uint192).max) revert FeeOverflow();
 
-        IERC20Upgradeable(_token).safeTransfer(address(_receiver), _amount);
+        IERC20(_token).safeTransfer(address(_receiver), _amount);
 
         if (_receiver.onFlashLoan(msg.sender, _token, _amount, fee, _data) != _FLASHLOAN_CALLBACK) {
             revert ISilo.FlashloanFailed();
         }
 
-        IERC20Upgradeable(_token).safeTransferFrom(address(_receiver), address(this), _amount + fee);
+        IERC20(_token).safeTransferFrom(address(_receiver), address(this), _amount + fee);
 
         // cast safe, because we checked `fee > type(uint192).max`
         _siloData.daoAndDeployerFees += uint192(fee);
@@ -586,7 +586,7 @@ library Actions {
         ) = SiloStdLib.getFeesAndFeeReceiversWithAsset(_silo);
 
         uint256 earnedFees = _siloData.daoAndDeployerFees;
-        uint256 balanceOf = IERC20Upgradeable(asset).balanceOf(address(this));
+        uint256 balanceOf = IERC20(asset).balanceOf(address(this));
         if (balanceOf == 0) revert ISilo.BalanceZero();
 
         if (earnedFees > balanceOf) earnedFees = balanceOf;
@@ -600,10 +600,10 @@ library Actions {
             revert ISilo.NothingToPay();
         } else if (deployerFeeReceiver == address(0)) {
             // deployer was never setup or deployer NFT has been burned
-            IERC20Upgradeable(asset).safeTransfer(daoFeeReceiver, earnedFees);
+            IERC20(asset).safeTransfer(daoFeeReceiver, earnedFees);
         } else if (daoFeeReceiver == address(0)) {
             // should never happen... but we assume DAO does not want to make money so all is going to deployer
-            IERC20Upgradeable(asset).safeTransfer(deployerFeeReceiver, earnedFees);
+            IERC20(asset).safeTransfer(deployerFeeReceiver, earnedFees);
         } else {
             // split fees proportionally
             uint256 daoFees = earnedFees * daoFee;
@@ -616,8 +616,8 @@ library Actions {
                 deployerFees = earnedFees - daoFees;
             }
 
-            IERC20Upgradeable(asset).safeTransfer(daoFeeReceiver, daoFees);
-            IERC20Upgradeable(asset).safeTransfer(deployerFeeReceiver, deployerFees);
+            IERC20(asset).safeTransfer(daoFeeReceiver, daoFees);
+            IERC20(asset).safeTransfer(deployerFeeReceiver, deployerFees);
         }
     }
 

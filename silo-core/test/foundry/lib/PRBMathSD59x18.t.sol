@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import "openzeppelin-contracts/utils/Strings.sol";
+import "openzeppelin5/utils/Strings.sol";
 import "silo-core/contracts/lib/PRBMathSD59x18.sol";
 
 import "../_common/Assertions.sol";

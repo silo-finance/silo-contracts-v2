@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.21;
 
-import {SafeERC20Upgradeable} from "openzeppelin-contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
-import {IERC20Upgradeable} from "openzeppelin-contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
+import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
+import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 
 import {ISilo, IERC4626, IERC3156FlashLender, ILiquidationProcess} from "./interfaces/ISilo.sol";
 import {ISiloOracle} from "./interfaces/ISiloOracle.sol";
@@ -35,7 +35,7 @@ import {Hook} from "./lib/Hook.sol";
 /// is deployed twice for each asset for two-asset lending markets.
 /// Version: 2.0.0
 contract Silo is SiloERC4626 {
-    using SafeERC20Upgradeable for IERC20Upgradeable;
+    using SafeERC20 for IERC20;
 
     ISiloFactory public immutable factory;
     
@@ -540,7 +540,7 @@ contract Silo is SiloERC4626 {
     /// @inheritdoc IERC3156FlashLender
     function maxFlashLoan(address _token) external view virtual returns (uint256 maxLoan) {
         maxLoan = _token == sharedStorage.siloConfig.getAssetForSilo(address(this))
-            ? IERC20Upgradeable(_token).balanceOf(address(this))
+            ? IERC20(_token).balanceOf(address(this))
             : 0;
     }
 

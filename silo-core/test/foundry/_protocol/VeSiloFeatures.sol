@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.0;
 
-import {Ownable2Step, Ownable} from "openzeppelin-contracts/access/Ownable2Step.sol";
-import {IERC20} from "openzeppelin-contracts/token/ERC20/ERC20.sol";
+import {Ownable2Step, Ownable} from "openzeppelin5/access/Ownable2Step.sol";
+import {IERC20} from "openzeppelin5/token/ERC20/ERC20.sol";
 import {StdStorage, stdStorage} from "forge-std/StdStorage.sol";
 
 import {IGaugeAdder} from "ve-silo/contracts/gauges/interfaces/IGaugeAdder.sol";

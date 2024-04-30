@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
 
-import {StringsUpgradeable as Strings} from "openzeppelin-contracts-upgradeable/utils/StringsUpgradeable.sol";
+import {Strings as Strings} from "openzeppelin5/utils/Strings.sol";
 
 import {SiloFactory} from "silo-core/contracts/SiloFactory.sol";
 import {SiloSolvencyLib} from "silo-core/contracts/lib/SiloSolvencyLib.sol";

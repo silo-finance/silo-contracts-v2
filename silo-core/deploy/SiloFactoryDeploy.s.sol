@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.21;
 
-import {OwnableUpgradeable} from "openzeppelin-contracts-upgradeable/access/OwnableUpgradeable.sol";
+import {Ownable} from "openzeppelin5/access/Ownable.sol";
 import {VeSiloContracts, VeSiloDeployments} from "ve-silo/common/VeSiloContracts.sol";
 import {CommonDeploy, SiloCoreContracts} from "./_CommonDeploy.sol";
 
@@ -40,7 +40,7 @@ contract SiloFactoryDeploy is CommonDeploy {
         vm.startBroadcast(deployerPrivateKey);
 
         siloFactory.initialize(siloImpl, shareCollateralTokenImpl, shareDebtTokenImpl, daoFee, daoFeeReceiver);
-        OwnableUpgradeable(address(siloFactory)).transferOwnership(timelock);
+        Ownable(address(siloFactory)).transferOwnership(timelock);
 
         vm.stopBroadcast();
 

@@ -5,8 +5,8 @@ import {VyperDeployer} from "./VyperDeployer.sol";
 import {Data} from "../data/Data.sol";
 
 // External dependencies
-import {OwnableUpgradeable} from "openzeppelin-contracts-upgradeable/access/OwnableUpgradeable.sol";
-import {TimelockController} from "openzeppelin-contracts/governance/TimelockController.sol";
+import {Ownable} from "openzeppelin5/access/Ownable.sol";
+import {TimelockController} from "openzeppelin5/governance/TimelockController.sol";
 import {IVotingEscrow} from "balancer-labs/v2-interfaces/liquidity-mining/IVotingEscrow.sol";
 
 // ve-silo dependencies
@@ -212,10 +212,8 @@ contract Deployers is VyperDeployer, Data {
         );
 
         address timelock = address(timelockController);
-        OwnableUpgradeable(address(siloFactory)).transferOwnership(timelock);
-        OwnableUpgradeable(address(siloFactoryInternal)).transferOwnership(
-            timelock
-        );
+        Ownable(address(siloFactory)).transferOwnership(timelock);
+        Ownable(address(siloFactoryInternal)).transferOwnership(timelock);
     }
 
     function core_deployInterestRateConfigFactory() internal {

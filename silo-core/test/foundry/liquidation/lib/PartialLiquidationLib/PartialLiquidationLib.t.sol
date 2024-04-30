@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
 
-import {Strings} from "openzeppelin-contracts/utils/Strings.sol";
+import {Strings} from "openzeppelin5/utils/Strings.sol";
 
 import {PartialLiquidationLib} from "silo-core/contracts/liquidation/lib/PartialLiquidationLib.sol";
 

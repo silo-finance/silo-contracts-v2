@@ -3,6 +3,8 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
 
+import {Ownable} from "openzeppelin5/access/Ownable.sol";
+
 import {ISiloFactory, SiloFactory} from "silo-core/contracts/SiloFactory.sol";
 
 /*
@@ -17,7 +19,7 @@ contract SiloFactorySettersTest is Test {
     uint256 daoFee = 0.20e18;
     address daoFeeReceiver = address(100004);
 
-    address hacker = address(1000099);
+    address hacker = address(0x1000099);
 
     function setUp() public {
         siloFactory = new SiloFactory();
@@ -36,7 +38,7 @@ contract SiloFactorySettersTest is Test {
         siloFactory.setDaoFee(maxFee + 1);
 
         vm.prank(hacker);
-        vm.expectRevert("Ownable: caller is not the owner");
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, hacker));
         siloFactory.setDaoFee(_newDaoFee);
 
         siloFactory.setDaoFee(_newDaoFee);
@@ -56,7 +58,7 @@ contract SiloFactorySettersTest is Test {
         siloFactory.setMaxDeployerFee(maxFee + 1);
 
         vm.prank(hacker);
-        vm.expectRevert("Ownable: caller is not the owner");
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, hacker));
         siloFactory.setMaxDeployerFee(_newMaxDeployerFee);
 
         siloFactory.setMaxDeployerFee(_newMaxDeployerFee);
@@ -76,7 +78,7 @@ contract SiloFactorySettersTest is Test {
         siloFactory.setMaxFlashloanFee(maxFee + 1);
 
         vm.prank(hacker);
-        vm.expectRevert("Ownable: caller is not the owner");
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, hacker));
         siloFactory.setMaxFlashloanFee(_newMaxFlashloanFee);
 
         siloFactory.setMaxFlashloanFee(_newMaxFlashloanFee);
@@ -96,7 +98,7 @@ contract SiloFactorySettersTest is Test {
         siloFactory.setMaxLiquidationFee(maxFee + 1);
 
         vm.prank(hacker);
-        vm.expectRevert("Ownable: caller is not the owner");
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, hacker));
         siloFactory.setMaxLiquidationFee(_newMaxLiquidationFee);
 
         siloFactory.setMaxLiquidationFee(_newMaxLiquidationFee);
@@ -114,7 +116,7 @@ contract SiloFactorySettersTest is Test {
         siloFactory.setDaoFeeReceiver(address(0));
 
         vm.prank(hacker);
-        vm.expectRevert("Ownable: caller is not the owner");
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, hacker));
         siloFactory.setDaoFeeReceiver(_newDaoFeeReceiver);
 
         siloFactory.setDaoFeeReceiver(_newDaoFeeReceiver);

@@ -11,6 +11,8 @@ interface IGaugeHookReceiver is IHookReceiver {
     /// @param gauge Gauge for which hook receiver will send notification about the share token balance updates.
     event GaugeConfigured(address gauge);
 
+    error AlreadyInitialized();
+
     /// @dev Revert if other than `shareToken` address call `afterTokenTransfer` fn
     error Unauthorized();
     /// @dev Revert on an attempt to inialize with a zero `_owner` address

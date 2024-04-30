@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.21;
 
-import {SafeERC20Upgradeable} from "openzeppelin-contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
-import {IERC20Upgradeable} from "openzeppelin-contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
-import {IERC20MetadataUpgradeable} from "openzeppelin-contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
-
-import {MathUpgradeable} from "openzeppelin-contracts-upgradeable/utils/math/MathUpgradeable.sol";
+import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
+import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
+import {IERC20Metadata} from "openzeppelin5/token/ERC20/extensions/IERC20Metadata.sol";
+import {Math} from "openzeppelin5/utils/math/Math.sol";
 
 import {ISiloOracle} from "../interfaces/ISiloOracle.sol";
 import {ISilo} from "../interfaces/ISilo.sol";
@@ -19,8 +18,8 @@ import {Rounding} from "./Rounding.sol";
 import {Hook} from "./Hook.sol";
 
 library SiloLendingLib {
-    using SafeERC20Upgradeable for IERC20Upgradeable;
-    using MathUpgradeable for uint256;
+    using SafeERC20 for IERC20;
+    using Math for uint256;
 
     uint256 internal constant _PRECISION_DECIMALS = 1e18;
 
@@ -69,7 +68,7 @@ library SiloLendingLib {
         // Reentrancy is possible only for view methods (read-only reentrancy),
         // so no harm can be done as the state is already updated.
         // We do not expect the silo to work with any malicious token that will not send tokens back.
-        IERC20Upgradeable(_debtAsset).safeTransferFrom(_repayer, address(this), assets);
+        IERC20(_debtAsset).safeTransferFrom(_repayer, address(this), assets);
     }
 
     /// @notice Accrues interest on assets, updating the collateral and debt balances
@@ -180,7 +179,7 @@ library SiloLendingLib {
 
         if (_token != address(0)) {
             // fee-on-transfer is ignored. If token reenters, state is already finalized, no harm done.
-            IERC20Upgradeable(_token).safeTransfer(_args.receiver, borrowedAssets);
+            IERC20(_token).safeTransfer(_args.receiver, borrowedAssets);
         }
     }
 
@@ -345,7 +344,7 @@ library SiloLendingLib {
         }
 
         if (_borrowerDebtValue == 0) {
-            uint256 oneDebtToken = 10 ** IERC20MetadataUpgradeable(_debtToken).decimals();
+            uint256 oneDebtToken = 10 ** IERC20Metadata(_debtToken).decimals();
 
             uint256 oneDebtTokenValue = address(_debtOracle) == address(0)
                 ? oneDebtToken

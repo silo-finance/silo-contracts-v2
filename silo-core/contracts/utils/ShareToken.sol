@@ -1,12 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.21;
 
-import {
-    ERC20Upgradeable,
-    IERC20MetadataUpgradeable,
-    IERC20Upgradeable
-} from "openzeppelin-contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
-import {StringsUpgradeable} from "openzeppelin-contracts-upgradeable/utils/StringsUpgradeable.sol";
+import {ERC20, IERC20Metadata, IERC20} from "openzeppelin5/token/ERC20/ERC20.sol";
+import {Strings} from "openzeppelin5/utils/Strings.sol";
 
 import {IHookReceiver} from "silo-core/contracts/utils/hook-receivers/interfaces/IHookReceiver.sol";
 import {ISiloFactory} from "../interfaces/ISiloFactory.sol";
@@ -58,7 +54,7 @@ import {Hook} from "../lib/Hook.sol";
 ///
 /// _Available since v4.7._
 /// @custom:security-contact security@silo.finance
-abstract contract ShareToken is ERC20Upgradeable, IShareToken {
+abstract contract ShareToken is ERC20, IShareToken {
     using Hook for uint24;
 
     /// @notice Silo address for which tokens was deployed
@@ -70,6 +66,12 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
     /// @notice Copy of hooks setup from SiloConfig for optimisation purposes
     HookSetup private _hookSetup;
 
+    modifier initializer() {
+        if (address(silo) != address(0)) revert AlreadyInitialized();
+
+        _;
+    }
+
     modifier onlySilo() {
         if (msg.sender != address(silo)) revert OnlySilo();
 
@@ -77,8 +79,8 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
     }
 
     /// @custom:oz-upgrades-unsafe-allow constructor
-    constructor() {
-        _disableInitializers();
+    constructor() ERC20("SiloShareToken", "SiloShareToken") {
+        silo = ISilo(address(this)); // disable initializer
     }
 
     function synchronizeHooks(address _hookReceiver, uint24 _hooksBefore, uint24 _hooksAfter, uint24 _tokenType)
@@ -115,36 +117,36 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
         return _hookSetup;
     }
 
-    /// @inheritdoc ERC20Upgradeable
+    /// @inheritdoc ERC20
     function transferFrom(address _from, address _to, uint256 _amount)
         public
         virtual
-        override(ERC20Upgradeable, IERC20Upgradeable)
+        override(ERC20, IERC20)
         returns (bool result)
     {
         ISiloConfig siloConfigCached = _crossNonReentrantBefore();
 
-        result = ERC20Upgradeable.transferFrom(_from, _to, _amount);
+        result = ERC20.transferFrom(_from, _to, _amount);
 
         siloConfigCached.crossNonReentrantAfter();
     }
 
-    /// @inheritdoc ERC20Upgradeable
+    /// @inheritdoc ERC20
     function transfer(address _to, uint256 _amount)
         public
         virtual
-        override(ERC20Upgradeable, IERC20Upgradeable)
+        override(ERC20, IERC20)
         returns (bool result)
     {
         ISiloConfig siloConfigCached = _crossNonReentrantBefore();
 
-        result = ERC20Upgradeable.transfer(_to, _amount);
+        result = ERC20.transfer(_to, _amount);
 
         siloConfigCached.crossNonReentrantAfter();
     }
 
     /// @dev decimals of share token
-    function decimals() public view virtual override(ERC20Upgradeable, IERC20MetadataUpgradeable) returns (uint8) {
+    function decimals() public view virtual override(ERC20, IERC20Metadata) returns (uint8) {
         ISiloConfig.ConfigData memory configData = siloConfig.getConfig(address(silo));
         return uint8(TokenHelper.assertAndGetDecimals(configData.token));
     }
@@ -160,11 +162,11 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
         public
         view
         virtual
-        override(ERC20Upgradeable, IERC20MetadataUpgradeable)
+        override(ERC20, IERC20Metadata)
         returns (string memory)
     {
         ISiloConfig.ConfigData memory configData = siloConfig.getConfig(address(silo));
-        string memory siloIdAscii = StringsUpgradeable.toString(siloConfig.SILO_ID());
+        string memory siloIdAscii = Strings.toString(siloConfig.SILO_ID());
 
         string memory pre = "";
         string memory post = " Deposit";
@@ -192,11 +194,11 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
         public
         view
         virtual
-        override(ERC20Upgradeable, IERC20MetadataUpgradeable)
+        override(ERC20, IERC20Metadata)
         returns (string memory)
     {
         ISiloConfig.ConfigData memory configData = siloConfig.getConfig(address(silo));
-        string memory siloIdAscii = StringsUpgradeable.toString(siloConfig.SILO_ID());
+        string memory siloIdAscii = Strings.toString(siloConfig.SILO_ID());
 
         string memory pre;
 
@@ -218,12 +220,22 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
 
     /// @param _silo Silo address for which tokens was deployed
     // solhint-disable-next-line func-name-mixedcase
-    function __ShareToken_init(ISilo _silo) internal virtual onlyInitializing {
+    function __ShareToken_init(ISilo _silo) internal virtual {
         silo = _silo;
         siloConfig = _silo.config();
     }
 
-    function _beforeTokenTransfer(address _sender, address _recipient, uint256 _amount) internal virtual override {
+    // TODO: in openzeppelin v5, we do not have before/after hooks, test this change well
+    // including code review in scope of doin external call in this specific place in code, what is token state? etc
+    function _update(address from, address to, uint256 value) internal virtual override {
+        _beforeTokenTransfer(from, to, value);
+
+        ERC20._update(from, to, value);
+
+        _afterTokenTransfer(from, to, value);
+    }
+
+    function _beforeTokenTransfer(address _sender, address _recipient, uint256 _amount) internal virtual {
         HookSetup memory setup = _hookSetup;
 
         if (setup.hookReceiver == address(0)) return;
@@ -238,7 +250,7 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
     }
 
     /// @dev Call an afterTokenTransfer hook if registered
-    function _afterTokenTransfer(address _sender, address _recipient, uint256 _amount) internal virtual override {
+    function _afterTokenTransfer(address _sender, address _recipient, uint256 _amount) internal virtual {
         HookSetup memory setup = _hookSetup;
 
         if (setup.hookReceiver == address(0)) return;

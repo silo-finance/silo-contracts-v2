@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.0;
 
+import {IERC20Errors} from "openzeppelin5/interfaces/draft-IERC6093.sol";
+
 import {IntegrationTest} from "silo-foundry-utils/networks/IntegrationTest.sol";
 import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 
@@ -85,7 +87,7 @@ contract WithdrawWhenNoDepositTest is IntegrationTest {
         vm.expectRevert(ISilo.NothingToWithdraw.selector);
         silo0.withdraw(0, address(this), address(this), ISilo.AssetType.Protected);
 
-        vm.expectRevert("ERC20: burn amount exceeds balance");
+        vm.expectRevert(abi.encodeWithSelector(IERC20Errors.ERC20InsufficientBalance.selector, address(this), 0, 1));
         silo0.withdraw(1, address(this), address(this), ISilo.AssetType.Collateral);
 
         vm.expectRevert(ISilo.NothingToWithdraw.selector);
@@ -94,7 +96,7 @@ contract WithdrawWhenNoDepositTest is IntegrationTest {
         // any deposit so we have liquidity
         _anyDeposit(ISilo.AssetType.Protected);
 
-        vm.expectRevert("ERC20: burn amount exceeds balance");
+        vm.expectRevert(abi.encodeWithSelector(IERC20Errors.ERC20InsufficientBalance.selector, address(this), 0, 1));
         silo0.withdraw(1, address(this), address(this), ISilo.AssetType.Protected);
     }
 

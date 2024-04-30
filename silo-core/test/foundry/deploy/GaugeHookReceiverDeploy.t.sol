@@ -18,7 +18,7 @@ contract GaugeHookReceiverDeployTest is Test {
         IGaugeHookReceiver hookReceiver = deploy.run();
         assertTrue(address(hookReceiver) != address(0), "expect deployed address");
 
-        vm.expectRevert("Initializable: contract is already initialized");
+        vm.expectRevert(IGaugeHookReceiver.AlreadyInitialized.selector);
         hookReceiver.initialize(makeAddr("owner"), IShareToken(makeAddr("IShareToken")));
     }
 }

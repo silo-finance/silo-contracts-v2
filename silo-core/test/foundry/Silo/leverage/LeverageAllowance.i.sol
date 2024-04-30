@@ -6,6 +6,7 @@ import "forge-std/Test.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
+import {IERC20Errors} from "openzeppelin5/interfaces/draft-IERC6093.sol";
 
 import {TokenMock} from "silo-core/test/foundry/_mocks/TokenMock.sol";
 import {SiloFixture} from "../../_common/fixtures/SiloFixture.sol";
@@ -50,7 +51,9 @@ contract LeverageAllowanceTest is SiloLittleHelper, Test {
         
         token1.mint(address(leverageBorrower), ASSETS);
 
-        vm.expectRevert("ERC20: insufficient allowance");
+        vm.expectRevert(
+            abi.encodeWithSelector(IERC20Errors.ERC20InsufficientAllowance.selector, address(this), 0, ASSETS)
+        );
         silo0.leverage(ASSETS, leverageBorrower, BORROWER, sameAsset, data);
     }
 

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.0;
 
-import {Strings} from "openzeppelin-contracts/utils/Strings.sol";
+import {Strings} from "openzeppelin5/utils/Strings.sol";
 
 import "silo-core/contracts/interestRateModel/InterestRateModelV2.sol";
 import "silo-core/contracts/interestRateModel/InterestRateModelV2ConfigFactory.sol";

@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.21;
 
-import {SafeERC20Upgradeable} from "openzeppelin-contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
-import {IERC20Upgradeable} from "openzeppelin-contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
+import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
+import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 
 import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
 import {ISiloFactory} from "../interfaces/ISiloFactory.sol";
@@ -12,7 +12,7 @@ import {IShareToken} from "../interfaces/IShareToken.sol";
 import {SiloMathLib} from "./SiloMathLib.sol";
 
 library SiloStdLib {
-    using SafeERC20Upgradeable for IERC20Upgradeable;
+    using SafeERC20 for IERC20;
 
     uint256 internal constant _PRECISION_DECIMALS = 1e18;
 
