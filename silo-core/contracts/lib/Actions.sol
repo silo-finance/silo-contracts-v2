@@ -606,7 +606,10 @@ library Actions {
         }
     }
 
-    function updateHooks(ISilo.SharedStorage storage _sharedStorage) external returns (uint24 hooksBefore, uint24 hooksAfter) {
+    function updateHooks(ISilo.SharedStorage storage _sharedStorage)
+        external
+        returns (uint24 hooksBefore, uint24 hooksAfter)
+    {
         ISilo.SharedStorage memory shareStorage = _sharedStorage;
 
         ISiloConfig.ConfigData memory cfg = shareStorage.siloConfig.getConfig(address(this));
