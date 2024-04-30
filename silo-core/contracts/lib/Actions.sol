@@ -620,7 +620,6 @@ library Actions {
 
         _sharedStorage.hooksBefore = hooksBefore;
         _sharedStorage.hooksAfter = hooksAfter;
-        _sharedStorage.hookReceiver = IHookReceiver(cfg.hookReceiver);
 
         IShareToken(cfg.collateralShareToken).synchronizeHooks(
             cfg.hookReceiver, hooksBefore, hooksAfter, uint24(Hook.COLLATERAL_TOKEN)
