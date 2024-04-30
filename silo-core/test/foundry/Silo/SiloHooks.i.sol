@@ -26,7 +26,7 @@ contract SiloHooksTest is SiloLittleHelper, Test {
 
         _overrides.token0 = makeAddr("token0");
         _overrides.token1 = makeAddr("token1");
-        _overrides.hookReceiver = address(_hookReceiver);
+        _overrides.hookReceiver = _hookReceiver.ADDRESS();
         _overrides.configName = SiloConfigsNames.LOCAL_DEPLOYER;
 
         _siloFixture = new SiloFixture();
