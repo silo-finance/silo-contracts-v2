@@ -2,7 +2,7 @@
 pragma solidity 0.8.21;
 
 import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";
-import {Ownable2Step} from "openzeppelin-contracts/access/Ownable2Step.sol";
+import {Ownable2Step} from "openzeppelin5/access/Ownable2Step.sol";
 
 import {Proposer} from "../../Proposer.sol";
 import {VeSiloContracts, VeSiloDeployments} from "ve-silo/common/VeSiloContracts.sol";
