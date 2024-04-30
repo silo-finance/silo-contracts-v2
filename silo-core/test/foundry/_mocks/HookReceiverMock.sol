@@ -13,16 +13,16 @@ contract HookReceiverMock is CommonBase, StdCheats {
         ADDRESS = _hook == address(0) ? makeAddr("HookReceiverMock") : _hook;
     }
 
-    function hookReceiverConfigMock(uint24 hooksBefore, uint24 hooksAfter) public {
+    function hookReceiverConfigMock(uint24 _hooksBefore, uint24 _hooksAfter) public {
         bytes memory data = abi.encodeWithSelector(IHookReceiver.hookReceiverConfig.selector);
 
         vm.mockCall(
             ADDRESS,
             data,
-            abi.encode(hooksBefore, hooksAfter)
+            abi.encode(_hooksBefore, _hooksAfter)
         );
 
-        // vm.expectCall(ADDRESS, data);
+        vm.expectCall(ADDRESS, data);
     }
 
     // TODO

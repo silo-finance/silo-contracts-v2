@@ -6,6 +6,7 @@ import "forge-std/Test.sol";
 import {HookReceiverMock} from "silo-core/test/foundry/_mocks/HookReceiverMock.sol";
 import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
 
+import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {SiloFixture, SiloConfigOverride} from "../_common/fixtures/SiloFixture.sol";
 import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
@@ -16,25 +17,25 @@ contract SiloHooksTest is SiloLittleHelper, Test {
     uint24 constant HOOKS_AFTER = 2;
  
     HookReceiverMock internal _hookReceiver;
-    SiloFixture internal _siloFixture;
+    ISiloConfig siloConfig;
 
-    SiloConfigOverride internal _overrides;
 
     function setUp() public {
+        SiloFixture siloFixture = new SiloFixture();
+        SiloConfigOverride memory configOverride;
+
         _hookReceiver = new HookReceiverMock(address(0));
         _hookReceiver.hookReceiverConfigMock(HOOKS_BEFORE, HOOKS_AFTER);
 
-        _overrides.token0 = makeAddr("token0");
-        _overrides.token1 = makeAddr("token1");
-        _overrides.hookReceiver = _hookReceiver.ADDRESS();
-        _overrides.configName = SiloConfigsNames.LOCAL_DEPLOYER;
+        configOverride.token0 = makeAddr("token0");
+        configOverride.token1 = makeAddr("token1");
+        configOverride.hookReceiver = _hookReceiver.ADDRESS();
+        configOverride.configName = SiloConfigsNames.LOCAL_DEPLOYER;
 
-        _siloFixture = new SiloFixture();
+        (siloConfig, silo0, silo1,,,) = siloFixture.deploy_local(configOverride);
     }
 
     function testHooksInitializationAfterDeployment() public {
-        (,ISilo silo0, ISilo silo1,,,) = _siloFixture.deploy_local(_overrides);
-
         (,uint24 silo0HookesBefore, uint24 silo0HookesAfter,) = silo0.sharedStorage();
 
         assertEq(silo0HookesBefore, HOOKS_BEFORE, "hooksBefore is not initailized");
@@ -46,9 +47,8 @@ contract SiloHooksTest is SiloLittleHelper, Test {
         assertEq(silo1HookesAfter, HOOKS_AFTER, "hooksAfter is not initailized");
     }
 
+    /// FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testHooksUpdate
     function testHooksUpdate() public {
-        (,ISilo silo0, ISilo silo1,,,) = _siloFixture.deploy_local(_overrides);
-
         uint24 newHooksBefore = 3;
         uint24 newHooksAfter = 4;
 
