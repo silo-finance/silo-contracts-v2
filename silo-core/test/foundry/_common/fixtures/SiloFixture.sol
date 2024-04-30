@@ -20,9 +20,12 @@ import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquid
 
 import {TokenMock} from "../../_mocks/TokenMock.sol";
 
+import {console} from "forge-std/console.sol";
+
 struct SiloConfigOverride {
     address token0;
     address token1;
+    address hookReceiver;
     address solvencyOracle0;
     address maxLtvOracle0;
     string configName;
@@ -38,6 +41,7 @@ contract SiloDeploy_Local is SiloDeploy {
     function beforeCreateSilo(ISiloConfig.InitData memory _config) internal view override {
         _config.token0 = siloConfigOverride.token0;
         _config.token1 = siloConfigOverride.token1;
+        _config.hookReceiver = siloConfigOverride.hookReceiver;
         _config.solvencyOracle0 = siloConfigOverride.solvencyOracle0;
         _config.maxLtvOracle0 = siloConfigOverride.maxLtvOracle0;
     }
