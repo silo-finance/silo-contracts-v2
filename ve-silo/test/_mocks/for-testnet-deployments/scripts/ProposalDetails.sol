@@ -5,8 +5,8 @@ import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";
 import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 import {VmLib} from "silo-foundry-utils/lib/VmLib.sol";
 import {Script} from "forge-std/Script.sol";
-import {GovernorCountingSimple} from "openzeppelin-contracts/governance/extensions/GovernorCountingSimple.sol";
-import {TimelockController} from "openzeppelin-contracts/governance/TimelockController.sol";
+import {GovernorCountingSimple} from "openzeppelin5/governance/extensions/GovernorCountingSimple.sol";
+import {TimelockController} from "openzeppelin5/governance/TimelockController.sol";
 
 import {VeSiloDeployments, VeSiloContracts} from "ve-silo/common/VeSiloContracts.sol";
 import {ISiloGovernor, IGovernor} from "ve-silo/contracts/governance/interfaces/ISiloGovernor.sol";
