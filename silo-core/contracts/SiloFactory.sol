@@ -270,6 +270,7 @@ contract SiloFactory is ISiloFactory, ERC721Upgradeable, Ownable2StepUpgradeable
         virtual
         returns (ISiloConfig.ConfigData memory configData0, ISiloConfig.ConfigData memory configData1)
     {
+        configData0.hookReceiver = _initData.hookReceiver;
         configData0.liquidationModule = _initData.liquidationModule;
         configData0.token = _initData.token0;
         configData0.solvencyOracle = _initData.solvencyOracle0;
@@ -285,6 +286,7 @@ contract SiloFactory is ISiloFactory, ERC721Upgradeable, Ownable2StepUpgradeable
         configData0.flashloanFee = _initData.flashloanFee0;
         configData0.callBeforeQuote = _initData.callBeforeQuote0 && configData0.maxLtvOracle != address(0);
 
+        configData1.hookReceiver = _initData.hookReceiver;
         configData1.liquidationModule = _initData.liquidationModule;
         configData1.token = _initData.token1;
         configData1.solvencyOracle = _initData.solvencyOracle1;
