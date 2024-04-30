@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.21;
 
-import {SafeCast} from "openzeppelin-contracts/utils/math/SafeCast.sol";
-import {Math} from "openzeppelin-contracts/utils/math/Math.sol";
+import {SafeCast} from "openzeppelin5/utils/math/SafeCast.sol";
+import {Math} from "openzeppelin5/utils/math/Math.sol";
 
 import {PRBMathSD59x18} from "../lib/PRBMathSD59x18.sol";
 import {SiloMathLib} from "../lib/SiloMathLib.sol";

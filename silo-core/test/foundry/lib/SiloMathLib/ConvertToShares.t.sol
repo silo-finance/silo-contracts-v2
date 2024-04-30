@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
-import {StringsUpgradeable as Strings} from "openzeppelin-contracts-upgradeable/utils/StringsUpgradeable.sol";
+import {Strings} from "openzeppelin5/utils/Strings.sol";
 import "silo-core/contracts/lib/SiloMathLib.sol";
 
 // forge test -vv --mc ConvertToSharesTest
@@ -11,7 +11,7 @@ contract ConvertToSharesTest is Test {
         uint256 assets;
         uint256 totalAssets;
         uint256 totalShares;
-        MathUpgradeable.Rounding rounding;
+        Math.Rounding rounding;
         ISilo.AssetType assetType;
         uint256 result;
     }

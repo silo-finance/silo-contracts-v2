@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.5.0;
 
-import {
-    IERC20MetadataUpgradeable
-} from "openzeppelin-contracts-upgradeable/token/ERC20/extensions/IERC20MetadataUpgradeable.sol";
+import {IERC20Metadata} from "openzeppelin5/token/ERC20/extensions/IERC20Metadata.sol";
+
 import {ISilo} from "../interfaces/ISilo.sol";
 
-interface IShareToken is IERC20MetadataUpgradeable {
+interface IShareToken is IERC20Metadata {
     struct HookSetup {
         /// @param this is the same as in siloConfig
         address hookReceiver;

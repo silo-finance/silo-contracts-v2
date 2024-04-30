@@ -4,7 +4,7 @@
 //
 //import "forge-std/Test.sol";
 //
-//import {ClonesUpgradeable} from "openzeppelin-contracts-upgradeable/proxy/ClonesUpgradeable.sol";
+//import {Clones} from "openzeppelin5/proxy/Clones.sol";
 //
 //import {SiloERC4626Lib, SiloMathLib} from "silo-core/contracts/lib/SiloERC4626Lib.sol";
 //import {Hook} from "silo-core/contracts/lib/Hook.sol";
@@ -36,7 +36,7 @@
 //    address owner;
 //
 //    function setUp() public {
-//        sToken = ShareDebtToken(ClonesUpgradeable.clone(address(new ShareDebtToken())));
+//        sToken = ShareDebtToken(Clones.clone(address(new ShareDebtToken())));
 //        silo = new SiloMock(address(0));
 //        siloConfig = new SiloConfigMock(address(0));
 //        hookReceiver = new HookReceiverMock(makeAddr("HookReceiver"));

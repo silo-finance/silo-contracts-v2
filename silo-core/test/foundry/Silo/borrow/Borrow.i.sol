@@ -3,7 +3,8 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
 
-import {IERC20} from "openzeppelin-contracts/token/ERC20/IERC20.sol";
+import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
+import {IERC20Errors} from "openzeppelin5/interfaces/draft-IERC6093.sol";
 
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
@@ -107,9 +108,13 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
         _deposit(assets, makeAddr("depositor"));
         _depositCollateral(assets, borrower, _sameAsset, ISilo.AssetType.Protected);
 
-        vm.expectRevert("ERC20: insufficient allowance"); // because we want to mint for receiver
+        uint256 borrowForReceiver = 1;
+
+        vm.expectRevert(
+            abi.encodeWithSelector(IERC20Errors.ERC20InsufficientAllowance.selector, borrower, 0, borrowForReceiver)
+        ); // because we want to mint for receiver
         vm.prank(borrower);
-        silo0.borrow(1, borrower, makeAddr("receiver"), _sameAsset);
+        silo0.borrow(borrowForReceiver, borrower, makeAddr("receiver"), _sameAsset);
     }
 
     /*
@@ -154,9 +159,13 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
         _depositForBorrow(assets, makeAddr("depositor"));
         _depositCollateral(assets, receiver, _sameAsset, ISilo.AssetType.Protected);
 
-        vm.expectRevert("ERC20: insufficient allowance"); // because we want to mint for receiver
+        uint256 borrowForReceiver = 1;
+
+        vm.expectRevert(
+            abi.encodeWithSelector(IERC20Errors.ERC20InsufficientAllowance.selector, borrower, 0, borrowForReceiver)
+        ); // because we want to mint for receiver
         vm.prank(borrower);
-        silo1.borrow(1, borrower, receiver, _sameAsset);
+        silo1.borrow(borrowForReceiver, borrower, receiver, _sameAsset);
     }
 
     /*

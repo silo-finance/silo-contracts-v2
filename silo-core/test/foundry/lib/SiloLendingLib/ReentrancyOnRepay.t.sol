@@ -2,7 +2,7 @@
 pragma solidity 0.8.21;
 
 import {Test} from "forge-std/Test.sol";
-import {IERC20} from "openzeppelin-contracts/token/ERC20/IERC20.sol";
+import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
@@ -45,7 +45,7 @@ contract ReentrancyOnRepayTest is Test {
 
         // This event is emitted from the reentrancy call.
         // And is triggered by this call:
-        // IERC20Upgradeable(_configData.token).safeTransferFrom(_repayer, address(this), assets);
+        // IERC20(_configData.token).safeTransferFrom(_repayer, address(this), assets);
         //
         // As we are testing the vulnerable version of the library,
         // we expect to have the same state as we had before the reentrancy call.
@@ -69,7 +69,7 @@ contract ReentrancyOnRepayTest is Test {
 
         // This event is emitted from the reentrancy call.
         // And is triggered by this call:
-        // IERC20Upgradeable(_configData.token).safeTransferFrom(_repayer, address(this), assets);
+        // IERC20(_configData.token).safeTransferFrom(_repayer, address(this), assets);
         //
         // As we are testing the non-vulnerable version of the library,
         // we expect to have an updated state during the reentrancy call.

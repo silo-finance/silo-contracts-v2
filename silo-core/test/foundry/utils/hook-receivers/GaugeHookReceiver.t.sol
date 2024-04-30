@@ -3,7 +3,7 @@
 // TODO
 //
 //import {Test} from "forge-std/Test.sol";
-//import {Ownable2StepUpgradeable} from "openzeppelin-contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
+//import {Ownable2Step} from "openzeppelin5-upgradeable/access/Ownable2Step.sol";
 //
 //import {GaugeHookReceiver} from "silo-core/contracts/utils/hook-receivers/gauge/GaugeHookReceiver.sol";
 //import {IGaugeHookReceiver} from "silo-core/contracts/utils/hook-receivers/gauge/interfaces/IGaugeHookReceiver.sol";
@@ -67,7 +67,7 @@
 //
 //        assertEq(
 //            _dao,
-//            Ownable2StepUpgradeable(address(_hookReceiver)).owner(),
+//            Ownable2Step(address(_hookReceiver)).owner(),
 //            "Invalid owner after initialization"
 //        );
 //
@@ -98,7 +98,7 @@
 //    function testSetGaugePermissions() public {
 //        _initializeHookReceiver();
 //
-//        vm.expectRevert("Ownable: caller is not the owner");
+//        vm.expectRevert(Ownable.OwnableUnauthorizedAccount.selector);
 //        _hookReceiver.setGauge(IGauge(_gauge));
 //
 //        bytes memory data = abi.encodePacked(IGauge.share_token.selector);
