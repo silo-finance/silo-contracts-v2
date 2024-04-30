@@ -5,7 +5,7 @@ import "../../../constants/Ethereum.sol";
 
 import {AggregatorV3Interface} from "chainlink/v0.8/interfaces/AggregatorV3Interface.sol";
 
-import "openzeppelin-contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import "openzeppelin5/token/ERC20/extensions/IERC20Metadata.sol";
 import {TokensGenerator} from "./TokensGenerator.sol";
 import {IChainlinkV3Oracle} from "../../../contracts/interfaces/IChainlinkV3Oracle.sol";
 
