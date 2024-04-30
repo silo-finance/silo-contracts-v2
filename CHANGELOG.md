@@ -13,9 +13,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Changed
 - standard reentrancy guard was replaced by cross Silo reentrancy check
+- update openzeppelin to v5
 
 ### Fixed
 - fix issue with wrong configs in `isSolvent` after debt share transfer
+
+### Removed
+- remove upgradeable version of openzeppelin contracts
 
 ## [0.5.0] - 2024-03-12
 ### Added

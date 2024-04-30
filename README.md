@@ -76,6 +76,9 @@ rm -rf .git/modules/gitmodules/silo-foundry-utils
 
 # Remove the entry in .gitmodules and remove the submodule directory located at path/to/submodule
 rm -rf .git/modules/gitmodules/silo-foundry-utils
+
+# sometimes we need to clear cache
+git rm --cached gitmodules/openzeppelin-contracts-upgradeable@v3.4.2
 ```
 
 ### Update submodule
