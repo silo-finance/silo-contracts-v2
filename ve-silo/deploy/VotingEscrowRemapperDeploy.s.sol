@@ -4,7 +4,7 @@ pragma solidity 0.8.21;
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 import {IVotingEscrow} from "balancer-labs/v2-interfaces/liquidity-mining/IVotingEscrow.sol";
 import {IVotingEscrowRemapper} from "balancer-labs/v2-interfaces/liquidity-mining/IVotingEscrowRemapper.sol";
-import {Ownable} from "openzeppelin-contracts/access/Ownable.sol";
+import {Ownable} from "openzeppelin5/access/Ownable.sol";
 
 import {CommonDeploy} from "./_CommonDeploy.sol";
 import {VeSiloContracts, VeSiloDeployments} from "ve-silo/common/VeSiloContracts.sol";

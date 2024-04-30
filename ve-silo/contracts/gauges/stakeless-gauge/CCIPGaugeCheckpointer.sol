@@ -23,10 +23,10 @@ import {IGaugeController} from "../interfaces/IGaugeController.sol";
 import {ICCIPGauge} from "../interfaces/ICCIPGauge.sol";
 import {ICCIPGaugeCheckpointer} from "../interfaces/ICCIPGaugeCheckpointer.sol";
 
-import {Ownable2Step} from "openzeppelin-contracts/access/Ownable2Step.sol";
 import {Address} from "openzeppelin5/utils/Address.sol";
 import {EnumerableSet} from "openzeppelin5/utils/structs/EnumerableSet.sol";
 import {ReentrancyGuard} from "openzeppelin5/utils/ReentrancyGuard.sol";
+import {Ownable2Step, Ownable} from "openzeppelin5/access/Ownable2Step.sol";
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 
 import {GaugeAdder} from "../gauge-adder/GaugeAdder.sol";
@@ -61,7 +61,7 @@ contract CCIPGaugeCheckpointer is ICCIPGaugeCheckpointer, ReentrancyGuard, Ownab
         IGaugeAdder _gaugeAdder,
         IStakelessGaugeCheckpointerAdaptor _checkpointerAdaptor,
         address _linkToken
-    ) {
+    ) Ownable(msg.sender) {
         GAUGE_ADDER = _gaugeAdder;
         CHECKPOINTER_ADAPTOR = _checkpointerAdaptor;
         GAUGE_CONTROLLER = _gaugeAdder.getGaugeController();

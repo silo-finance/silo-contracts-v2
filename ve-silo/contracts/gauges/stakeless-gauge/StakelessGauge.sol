@@ -21,9 +21,9 @@ import {IMainnetBalancerMinter} from "ve-silo/contracts/silo-tokens-minter/inter
 import {IBalancerMinter} from "ve-silo/contracts/silo-tokens-minter/interfaces/IBalancerMinter.sol";
 import {IStakelessGauge} from "../interfaces/IStakelessGauge.sol";
 
-import {Ownable2Step} from "openzeppelin-contracts/access/Ownable2Step.sol";
 import {Math} from "openzeppelin5/utils/math/Math.sol";
 import {ReentrancyGuard} from "openzeppelin5/utils/ReentrancyGuard.sol";
+import {Ownable2Step, Ownable} from "openzeppelin5/access/Ownable2Step.sol";
 
 abstract contract StakelessGauge is IStakelessGauge, ReentrancyGuard, Ownable2Step {
     // solhint-disable ordering
@@ -54,7 +54,7 @@ abstract contract StakelessGauge is IStakelessGauge, ReentrancyGuard, Ownable2St
 
     address private _checkpointer;
 
-    constructor(IMainnetBalancerMinter minter) {
+    constructor(IMainnetBalancerMinter minter) Ownable(address(minter)) {
         IBalancerTokenAdmin tokenAdmin = IBalancerTokenAdmin(minter.getBalancerTokenAdmin());
         IERC20 balToken = IERC20(address(tokenAdmin.getBalancerToken()));
         IGaugeController gaugeController = minter.getGaugeController();

@@ -14,7 +14,7 @@
 
 pragma solidity 0.8.21;
 
-import {Ownable2Step} from "openzeppelin-contracts/access/Ownable2Step.sol";
+import {Ownable2Step, Ownable} from "openzeppelin5/access/Ownable2Step.sol";
 
 import {IFeesManager} from "./interfaces/IFeesManager.sol";
 
@@ -24,6 +24,8 @@ abstract contract FeesManager is IFeesManager, Ownable2Step {
 
     uint128 public daoFee;
     uint128 public deployerFee;
+
+    constructor() Ownable(msg.sender) {}
 
     /// @inheritdoc IFeesManager
     function setFees(
