@@ -170,6 +170,14 @@ interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
     error OnlyHookReceiver();
     error OnlySiloConfig();
 
+    /// @notice Method for HookReceiver only to call on behalf of Silo
+    /// @param _target address of the contract to call
+    /// @param _input calldata for the call
+    function callOnBehalfOfSilo(address _target, bytes calldata _input)
+        external
+        payable
+        returns (bool success, bytes memory result);
+
     /// @notice Initialize Silo
     /// @param _siloConfig address of ISiloConfig with full config for this Silo
     /// @param _modelConfigAddress address of a config contract used by IRM
@@ -178,16 +186,6 @@ interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
     /// @notice Update hooks configuration for Silo
     /// @dev This function must be called after the hooks configuration is changed in the hook receiver
     function updateHooks() external;
-
-    /// @notice Method for HookReceiver only to call on behalf of Silo
-    /// @dev Silo.updateHooks must be called once to cache hooks details for this Silo.
-    /// So, permission verification such as `OnlyHookReceiver` can be done.
-    /// Otherwise it will revert with `OnlyHookReceiver` error.
-    /// @param _target address of the contract to call
-    /// @param _input calldata for the call
-    function callOnBehalfOfSilo(address _target, bytes calldata _input)
-        external
-        returns (bool success, bytes memory result);
 
     function sharedStorage()
         external

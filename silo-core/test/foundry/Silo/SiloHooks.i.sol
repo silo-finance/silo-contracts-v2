@@ -12,6 +12,7 @@ import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {SiloFixture, SiloConfigOverride} from "../_common/fixtures/SiloFixture.sol";
 import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
+import {ContractThatAcceptsETH} from "silo-core/test/foundry/_mocks/ContractThatAcceptsETH.sol";
 
 /// FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mc SiloHooksTest
 contract SiloHooksTest is SiloLittleHelper, Test {
@@ -88,5 +89,21 @@ contract SiloHooksTest is SiloLittleHelper, Test {
         silo0.callOnBehalfOfSilo(protectedShareToken, data);
 
         assertEq(IERC20(protectedShareToken).balanceOf(thridParty), tokensToMint);
+    }
+
+    /// FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testCallOnBehalfOfSiloWithETH
+    function testCallOnBehalfOfSiloWithETH() public {
+        address target = address(new ContractThatAcceptsETH());
+        bytes memory data = abi.encodeWithSelector(ContractThatAcceptsETH.anyFunction.selector);
+
+        assertEq(target.balance, 0, "Expect to have no balance");
+
+        uint256 amoutToSend = 1 ether;
+
+        vm.deal(_hookReceiver.ADDRESS(), amoutToSend);
+        vm.prank(_hookReceiver.ADDRESS());
+        silo0.callOnBehalfOfSilo{value: amoutToSend}(target, data);
+
+        assertEq(target.balance, amoutToSend, "Expect to have non zero balance");
     }
 }

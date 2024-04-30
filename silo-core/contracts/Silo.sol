@@ -58,6 +58,17 @@ contract Silo is SiloERC4626 {
     }
 
     /// @inheritdoc ISilo
+    function callOnBehalfOfSilo(address _target, bytes calldata _input)
+        external
+        payable
+        returns (bool success, bytes memory result)
+    {
+        if (msg.sender != address(sharedStorage.hookReceiver)) revert OnlyHookReceiver();
+
+        (success, result) = _target.call{value: msg.value}(_input);
+    }
+
+    /// @inheritdoc ISilo
     function initialize(ISiloConfig _siloConfig, address _modelConfigAddress) external virtual {
         if (address(sharedStorage.siloConfig) != address(0)) revert SiloInitialized();
 
@@ -73,16 +84,6 @@ contract Silo is SiloERC4626 {
     function updateHooks() external {
         (uint24 hooksBefore, uint24 hooksAfter) = Actions.updateHooks(sharedStorage);
         emit HooksUpdated(hooksBefore, hooksAfter);
-    }
-
-    /// @inheritdoc ISilo
-    function callOnBehalfOfSilo(address _target, bytes calldata _input)
-        external
-        returns (bool success, bytes memory result)
-    {
-        if (msg.sender != address(sharedStorage.hookReceiver)) revert OnlyHookReceiver();
-
-        (success, result) = _target.call(_input);
     }
 
     /// @inheritdoc ISilo
