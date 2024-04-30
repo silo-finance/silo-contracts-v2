@@ -9,16 +9,25 @@ import {IHookReceiver} from "silo-core/contracts/utils/hook-receivers/interfaces
 contract HookReceiverMock is CommonBase, StdCheats {
     address public immutable ADDRESS;
 
+    uint24 public hooksBefore;
+    uint24 public hooksAfter;
+
     constructor(address _hook) {
         ADDRESS = _hook == address(0) ? makeAddr("HookReceiverMock") : _hook;
     }
 
-    function hookReceiverConfigMock(uint24 hooksBefore, uint24 hooksAfter) public {
-        vm.mockCall(
-            ADDRESS,
-            abi.encodeWithSelector(IHookReceiver.hookReceiverConfig.selector),
-            abi.encode(hooksBefore, hooksAfter)
-        );
+    function hookReceiverConfigMock(uint24 _hooksBefore, uint24 _hooksAfter) public {
+        hooksBefore = _hooksBefore;
+        hooksAfter = _hooksAfter;
+        // vm.mockCall(
+        //     ADDRESS,
+        //     abi.encodeWithSelector(IHookReceiver.hookReceiverConfig.selector),
+        //     abi.encode(hooksBefore, hooksAfter)
+        // );
+    }
+
+    function hookReceiverConfig() public view returns (uint24, uint24) {
+        return (hooksBefore, hooksAfter);
     }
 
     // TODO

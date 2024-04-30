@@ -45,4 +45,27 @@ contract SiloHooksTest is SiloLittleHelper, Test {
         assertEq(silo1HookesBefore, HOOKS_BEFORE, "hooksBefore is not initailized");
         assertEq(silo1HookesAfter, HOOKS_AFTER, "hooksAfter is not initailized");
     }
+
+    function testHooksUpdate() public {
+        (,ISilo silo0, ISilo silo1,,,) = _siloFixture.deploy_local(_overrides);
+
+        uint24 newHooksBefore = 3;
+        uint24 newHooksAfter = 4;
+
+        _hookReceiver.hookReceiverConfigMock(newHooksBefore, newHooksAfter);
+
+        silo0.updateHooks();
+
+        (,uint24 silo0HookesBefore, uint24 silo0HookesAfter,) = silo0.sharedStorage();
+
+        assertEq(silo0HookesBefore, newHooksBefore, "hooksBefore is not updated");
+        assertEq(silo0HookesAfter, newHooksAfter, "hooksAfter is not updated");
+
+        silo1.updateHooks();
+
+        (,uint24 silo1HookesBefore, uint24 silo1HookesAfter,) = silo1.sharedStorage();
+
+        assertEq(silo1HookesBefore, newHooksBefore, "hooksBefore is not updated");
+        assertEq(silo1HookesAfter, newHooksAfter, "hooksAfter is not updated");
+    }
 }
