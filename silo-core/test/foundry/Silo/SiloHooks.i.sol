@@ -1,12 +1,14 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.0;
 
-import "forge-std/Test.sol";
+import {Test} from "forge-std/Test.sol";
+import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 
 import {HookReceiverMock} from "silo-core/test/foundry/_mocks/HookReceiverMock.sol";
 import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
 
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
+import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {SiloFixture, SiloConfigOverride} from "../_common/fixtures/SiloFixture.sol";
 import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
@@ -17,8 +19,9 @@ contract SiloHooksTest is SiloLittleHelper, Test {
     uint24 constant HOOKS_AFTER = 2;
  
     HookReceiverMock internal _hookReceiver;
-    ISiloConfig siloConfig;
+    ISiloConfig internal _siloConfig;
 
+    address thridParty = makeAddr("ThirdParty");
 
     function setUp() public {
         SiloFixture siloFixture = new SiloFixture();
@@ -32,7 +35,7 @@ contract SiloHooksTest is SiloLittleHelper, Test {
         configOverride.hookReceiver = _hookReceiver.ADDRESS();
         configOverride.configName = SiloConfigsNames.LOCAL_DEPLOYER;
 
-        (siloConfig, silo0, silo1,,,) = siloFixture.deploy_local(configOverride);
+        (_siloConfig, silo0, silo1,,,) = siloFixture.deploy_local(configOverride);
     }
 
     function testHooksInitializationAfterDeployment() public {
@@ -67,5 +70,23 @@ contract SiloHooksTest is SiloLittleHelper, Test {
 
         assertEq(silo1HookesBefore, newHooksBefore, "hooksBefore is not updated");
         assertEq(silo1HookesAfter, newHooksAfter, "hooksAfter is not updated");
+    }
+
+    /// FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testCallOnBehalfOfSilo
+    function testCallOnBehalfOfSilo() public {
+        (address protectedShareToken,,) = _siloConfig.getShareTokens(address(silo0));
+
+        uint256 tokensToMint = 100;
+        bytes memory data = abi.encodeWithSelector(IShareToken.mint.selector, thridParty, thridParty, tokensToMint);
+
+        vm.expectRevert(ISilo.OnlyHookReceiver.selector);
+        silo0.callOnBehalfOfSilo(protectedShareToken, data);
+
+        assertEq(IERC20(protectedShareToken).balanceOf(thridParty), 0);
+
+        vm.prank(_hookReceiver.ADDRESS());
+        silo0.callOnBehalfOfSilo(protectedShareToken, data);
+
+        assertEq(IERC20(protectedShareToken).balanceOf(thridParty), tokensToMint);
     }
 }
