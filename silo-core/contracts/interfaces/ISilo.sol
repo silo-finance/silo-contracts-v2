@@ -175,12 +175,9 @@ interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
     /// @param _modelConfigAddress address of a config contract used by IRM
     function initialize(ISiloConfig _siloConfig, address _modelConfigAddress) external;
 
-    /// @notice Method for HookReceiver only to update hooks
-    /// If there are two different hookReceivers then each can update only his silo settings.
-    /// Other parameters will be ignored.
-    /// @param _hooksBefore bitmap for Silo hooks before, see Hook.sol
-    /// @param _hooksAfter bitmap for Silo hooks after, see Hook.sol
-    function updateHooks(uint24 _hooksBefore, uint24 _hooksAfter) external;
+    /// @notice Update hooks configuration for Silo
+    /// @dev This function must be called after the hooks configuration is changed in the hook receiver
+    function updateHooks() external;
 
     function sharedStorage()
         external

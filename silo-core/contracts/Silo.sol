@@ -61,15 +61,18 @@ contract Silo is SiloERC4626 {
     function initialize(ISiloConfig _siloConfig, address _modelConfigAddress) external virtual {
         if (address(sharedStorage.siloConfig) != address(0)) revert SiloInitialized();
 
-        sharedStorage.siloConfig = _siloConfig;
+        ISiloConfig.ConfigData memory config = _siloConfig.getConfig(address(this));
 
-        address interestRateModel = _siloConfig.getConfig(address(this)).interestRateModel;
-        IInterestRateModel(interestRateModel).connect(_modelConfigAddress);
+        sharedStorage.siloConfig = _siloConfig;
+        sharedStorage.hookReceiver = IHookReceiver(config.hookReceiver);
+
+        IInterestRateModel(config.interestRateModel).connect(_modelConfigAddress);
     }
 
-    function updateHooks(uint24 _hooksBefore, uint24 _hooksAfter) external {
-        Actions.updateHooks(sharedStorage, _hooksBefore, _hooksAfter);
-        emit HooksUpdated(_hooksBefore, _hooksAfter);
+    /// @inheritdoc ISilo
+    function updateHooks() external {
+        (uint24 hooksBefore, uint24 hooksAfter) = Actions.updateHooks(sharedStorage);
+        emit HooksUpdated(hooksBefore, hooksAfter);
     }
 
     /// @inheritdoc ISilo

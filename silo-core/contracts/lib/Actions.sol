@@ -621,32 +621,34 @@ library Actions {
         }
     }
 
-    function updateHooks(
-        ISilo.SharedStorage storage _sharedStorage,
-        uint24 _hooksBefore,
-        uint24 _hooksAfter
-    ) external {
-        ISiloConfig.ConfigData memory cfg = _sharedStorage.siloConfig.getConfig(address(this));
+    function updateHooks(ISilo.SharedStorage storage _sharedStorage)
+        external
+        returns (uint24 hooksBefore, uint24 hooksAfter)
+    {
+        ISilo.SharedStorage memory shareStorage = _sharedStorage;
 
-        if (msg.sender != cfg.hookReceiver) revert ISilo.OnlyHookReceiver();
+        ISiloConfig.ConfigData memory cfg = shareStorage.siloConfig.getConfig(address(this));
 
-        _sharedStorage.hooksBefore = _hooksBefore;
-        _sharedStorage.hooksAfter = _hooksAfter;
-        _sharedStorage.hookReceiver = IHookReceiver(msg.sender);
+        if (cfg.hookReceiver == address(0)) return (hooksBefore, hooksAfter);
+
+        (hooksBefore, hooksAfter) = IHookReceiver(cfg.hookReceiver).hookReceiverConfig();
+
+        _sharedStorage.hooksBefore = hooksBefore;
+        _sharedStorage.hooksAfter = hooksAfter;
 
         IShareToken(cfg.collateralShareToken).synchronizeHooks(
-            cfg.hookReceiver, _hooksBefore, _hooksAfter, uint24(Hook.COLLATERAL_TOKEN)
+            cfg.hookReceiver, hooksBefore, hooksAfter, uint24(Hook.COLLATERAL_TOKEN)
         );
 
         IShareToken(cfg.protectedShareToken).synchronizeHooks(
-            cfg.hookReceiver, _hooksBefore, _hooksAfter, uint24(Hook.PROTECTED_TOKEN)
+            cfg.hookReceiver, hooksBefore, hooksAfter, uint24(Hook.PROTECTED_TOKEN)
         );
 
         IShareToken(cfg.debtShareToken).synchronizeHooks(
-            cfg.hookReceiver, _hooksBefore, _hooksAfter, uint24(Hook.DEBT_TOKEN)
+            cfg.hookReceiver, hooksBefore, hooksAfter, uint24(Hook.DEBT_TOKEN)
         );
 
-        IPartialLiquidation(cfg.liquidationModule).synchronizeHooks(cfg.hookReceiver, _hooksBefore, _hooksAfter);
+        IPartialLiquidation(cfg.liquidationModule).synchronizeHooks(cfg.hookReceiver, hooksBefore, hooksAfter);
     }
 
     function _hookCallBefore(ISilo.SharedStorage storage _shareStorage, uint256 _action, bytes memory _data)

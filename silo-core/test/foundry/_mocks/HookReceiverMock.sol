@@ -1,14 +1,28 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import {IHookReceiver} from "silo-core/contracts/utils/hook-receivers/interfaces/IHookReceiver.sol";
 import {CommonBase} from "forge-std/Base.sol";
+import {StdCheats} from "forge-std/StdCheats.sol";
 
-contract HookReceiverMock is CommonBase {
+import {IHookReceiver} from "silo-core/contracts/utils/hook-receivers/interfaces/IHookReceiver.sol";
+
+contract HookReceiverMock is CommonBase, StdCheats {
     address public immutable ADDRESS;
 
     constructor(address _hook) {
-        ADDRESS = _hook == address(0) ? address(0x191919191919191919191) : _hook;
+        ADDRESS = _hook == address(0) ? makeAddr("HookReceiverMock") : _hook;
+    }
+
+    function hookReceiverConfigMock(uint24 _hooksBefore, uint24 _hooksAfter) public {
+        bytes memory data = abi.encodeWithSelector(IHookReceiver.hookReceiverConfig.selector);
+
+        vm.mockCall(
+            ADDRESS,
+            data,
+            abi.encode(_hooksBefore, _hooksAfter)
+        );
+
+        vm.expectCall(ADDRESS, data);
     }
 
     // TODO
