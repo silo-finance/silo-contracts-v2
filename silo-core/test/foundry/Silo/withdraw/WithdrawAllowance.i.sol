@@ -6,6 +6,7 @@ import "forge-std/Test.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
+import {IERC20Errors} from "openzeppelin5/interfaces/draft-IERC6093.sol";
 
 import {TokenMock} from "silo-core/test/foundry/_mocks/TokenMock.sol";
 import {SiloFixture} from "../../_common/fixtures/SiloFixture.sol";
@@ -39,7 +40,9 @@ contract WithdrawAllowanceTest is SiloLittleHelper, Test {
     function test_withdraw_collateralWithoutAllowance() public {
         _deposit(ASSETS, DEPOSITOR);
 
-        vm.expectRevert("ERC20: insufficient allowance");
+        vm.expectRevert(
+            abi.encodeWithSelector(IERC20Errors.ERC20InsufficientAllowance.selector, address(this), 0, ASSETS)
+        );
         silo0.withdraw(ASSETS, RECEIVER, DEPOSITOR);
     }
 
@@ -70,7 +73,9 @@ contract WithdrawAllowanceTest is SiloLittleHelper, Test {
         assertEq(token0.balanceOf(RECEIVER), ASSETS / 2, "receiver got tokens");
         assertEq(IShareToken(shareToken).allowance(DEPOSITOR, address(this)), 0, "allowance used");
 
-        vm.expectRevert("ERC20: insufficient allowance");
+        vm.expectRevert(
+            abi.encodeWithSelector(IERC20Errors.ERC20InsufficientAllowance.selector, address(this), 0, 1)
+        );
         silo0.withdraw(1, RECEIVER, DEPOSITOR, _type);
 
         _withdraw(ASSETS / 2, DEPOSITOR, _type);

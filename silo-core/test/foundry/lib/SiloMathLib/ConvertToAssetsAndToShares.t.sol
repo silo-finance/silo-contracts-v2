@@ -13,8 +13,8 @@ contract ConvertToAssetsAndToSharesTest is Test {
         uint256 _assetsOrShares = 10000;
         uint256 _totalAssets = 250000;
         uint256 _totalShares = 250000;
-        MathUpgradeable.Rounding roundingToAssets = Rounding.UP;
-        MathUpgradeable.Rounding roundingToShares = Rounding.DOWN;
+        Math.Rounding roundingToAssets = Rounding.UP;
+        Math.Rounding roundingToShares = Rounding.DOWN;
 
         uint256 assets;
         uint256 shares;

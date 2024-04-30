@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
 
-import {IERC20} from "openzeppelin-contracts/token/ERC20/IERC20.sol";
+import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
@@ -460,7 +460,7 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
         }
 
         token1.mint(liquidator, maxRepay);
-        token1.increaseAllowance(address(silo1), maxRepay);
+        token1.approve(address(silo1), maxRepay);
 
         emit log_named_decimal_uint("[test] maxRepay", maxRepay, 18);
 

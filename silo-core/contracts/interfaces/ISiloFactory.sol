@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.5.0;
 
-import {IERC721Upgradeable} from "openzeppelin-contracts-upgradeable/interfaces/IERC721Upgradeable.sol";
+import {IERC721} from "openzeppelin5/interfaces/IERC721.sol";
 import {ISiloConfig} from "./ISiloConfig.sol";
 
-interface ISiloFactory is IERC721Upgradeable {
+interface ISiloFactory is IERC721 {
     event NewSilo(address indexed token0, address indexed token1, address silo0, address silo1, address siloConfig);
     event DaoFeeChanged(uint256 daoFee);
     event MaxDeployerFeeChanged(uint256 maxDeployerFee);
@@ -12,6 +12,7 @@ interface ISiloFactory is IERC721Upgradeable {
     event MaxLiquidationFeeChanged(uint256 maxLiquidationFee);
     event DaoFeeReceiverChanged(address daoFeeReceiver);
 
+    error InvalidInitialization();
     error MissingLiquidationModule();
     error ZeroAddress();
     error MaxFee();

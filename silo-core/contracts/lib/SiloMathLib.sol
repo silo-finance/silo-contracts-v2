@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.21;
 
-import {MathUpgradeable} from "openzeppelin-contracts-upgradeable/utils/math/MathUpgradeable.sol";
+import {Math} from "openzeppelin5/utils/math/Math.sol";
 import {Rounding} from "../lib/Rounding.sol";
 import {ISilo} from "../interfaces/ISilo.sol";
 
 library SiloMathLib {
-    using MathUpgradeable for uint256;
+    using Math for uint256;
 
     uint256 internal constant _PRECISION_DECIMALS = 1e18;
 
-    /// @dev this is constant version of openzeppelin-contracts/contracts/token/ERC20/extensions/ERC4626._decimalsOffset
+    /// @dev this is constant version of openzeppelin5/contracts/token/ERC20/extensions/ERC4626._decimalsOffset
     uint256 internal constant _DECIMALS_OFFSET_POW = 10 ** 0;
 
     /// @notice Returns available liquidity to be borrowed
@@ -115,8 +115,8 @@ library SiloMathLib {
         uint256 _shares,
         uint256 _totalAssets,
         uint256 _totalShares,
-        MathUpgradeable.Rounding _roundingToAssets,
-        MathUpgradeable.Rounding _roundingToShares,
+        Math.Rounding _roundingToAssets,
+        Math.Rounding _roundingToShares,
         ISilo.AssetType _assetType
     ) internal pure returns (uint256 assets, uint256 shares) {
         if (_assets == 0) {
@@ -129,12 +129,12 @@ library SiloMathLib {
     }
 
     /// @dev Math for collateral is exact copy of
-    ///      openzeppelin-contracts/contracts/token/ERC20/extensions/ERC4626._convertToShares
+    ///      openzeppelin5/contracts/token/ERC20/extensions/ERC4626._convertToShares
     function convertToShares(
         uint256 _assets,
         uint256 _totalAssets,
         uint256 _totalShares,
-        MathUpgradeable.Rounding _rounding,
+        Math.Rounding _rounding,
         ISilo.AssetType _assetType
     ) internal pure returns (uint256) {
         // Debt calculations should not lower the result. Debt is a liability so protocol should not take any for
@@ -155,12 +155,12 @@ library SiloMathLib {
     }
 
     /// @dev Math for collateral is exact copy of
-    ///      openzeppelin-contracts/contracts/token/ERC20/extensions/ERC4626._convertToAssets
+    ///      openzeppelin5/contracts/token/ERC20/extensions/ERC4626._convertToAssets
     function convertToAssets(
         uint256 _shares,
         uint256 _totalAssets,
         uint256 _totalShares,
-        MathUpgradeable.Rounding _rounding,
+        Math.Rounding _rounding,
         ISilo.AssetType _assetType
     ) internal pure returns (uint256 assets) {
         // Debt calculations should not lower the result. Debt is a liability so protocol should not take any for
@@ -190,7 +190,7 @@ library SiloMathLib {
             return 0;
         }
 
-        uint256 maxDebtValue = _sumOfBorrowerCollateralValue * _configMaxLtv / _PRECISION_DECIMALS; // Rounding.Down
+        uint256 maxDebtValue = _sumOfBorrowerCollateralValue * _configMaxLtv / _PRECISION_DECIMALS; // Rounding.Floor
 
         unchecked {
             // we will not underflow because we checking `maxDebtValue > _borrowerDebtValue`

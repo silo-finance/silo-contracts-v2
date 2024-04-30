@@ -125,22 +125,22 @@ contract SiloFactoryCreateSiloTest is SiloLittleHelper, IntegrationTest {
 
         assertEq(abi.encode(irmConfigUsed1), abi.encode(irmConfigExpected1));
 
-        vm.expectRevert("Initializable: contract is already initialized");
+        vm.expectRevert(ISiloFactory.InvalidInitialization.selector);
         IShareToken(configData0.protectedShareToken).initialize(ISilo(configData0.silo));
 
-        vm.expectRevert("Initializable: contract is already initialized");
+        vm.expectRevert(ISiloFactory.InvalidInitialization.selector);
         IShareToken(configData0.collateralShareToken).initialize(ISilo(configData0.silo));
 
-        vm.expectRevert("Initializable: contract is already initialized");
+        vm.expectRevert(ISiloFactory.InvalidInitialization.selector);
         IShareToken(configData0.debtShareToken).initialize(ISilo(configData0.silo));
 
-        vm.expectRevert("Initializable: contract is already initialized");
+        vm.expectRevert(ISiloFactory.InvalidInitialization.selector);
         IShareToken(configData1.protectedShareToken).initialize(ISilo(configData1.silo));
 
-        vm.expectRevert("Initializable: contract is already initialized");
+        vm.expectRevert(ISiloFactory.InvalidInitialization.selector);
         IShareToken(configData1.collateralShareToken).initialize(ISilo(configData1.silo));
 
-        vm.expectRevert("Initializable: contract is already initialized");
+        vm.expectRevert(ISiloFactory.InvalidInitialization.selector);
         IShareToken(configData1.debtShareToken).initialize(ISilo(configData1.silo));
 
         assertEq(siloFactory.ownerOf(1), initData.deployer);

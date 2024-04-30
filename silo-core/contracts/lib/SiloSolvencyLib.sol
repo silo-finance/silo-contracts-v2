@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.21;
 
-import {MathUpgradeable} from "openzeppelin-contracts-upgradeable/utils/math/MathUpgradeable.sol";
+import {Math} from "openzeppelin5/utils/math/Math.sol";
 
 import {ISiloOracle} from "../interfaces/ISiloOracle.sol";
 import {SiloStdLib, ISiloConfig, IShareToken, ISilo} from "./SiloStdLib.sol";
@@ -10,7 +10,7 @@ import {SiloMathLib} from "./SiloMathLib.sol";
 import {Rounding} from "./Rounding.sol";
 
 library SiloSolvencyLib {
-    using MathUpgradeable for uint256;
+    using Math for uint256;
 
     struct LtvData {
         ISiloOracle collateralOracle;
@@ -197,7 +197,7 @@ library SiloSolvencyLib {
             ltvInDp = _INFINITY;
         } else {
             ltvInDp = totalBorrowerDebtValue.mulDiv(
-                _PRECISION_DECIMALS, sumOfBorrowerCollateralValue, MathUpgradeable.Rounding(Rounding.LTV)
+                _PRECISION_DECIMALS, sumOfBorrowerCollateralValue, Math.Rounding(Rounding.LTV)
             );
         }
     }

@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.21;
 
-import {SafeERC20Upgradeable} from "openzeppelin-contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
-import {IERC20Upgradeable} from "openzeppelin-contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
-import {MathUpgradeable} from "openzeppelin-contracts-upgradeable/utils/math/MathUpgradeable.sol";
+import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
+import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
+import {Math} from "openzeppelin5/utils/math/Math.sol";
 
 import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
 import {ISilo} from "../interfaces/ISilo.sol";
@@ -18,8 +18,8 @@ import {Hook} from "./Hook.sol";
 // solhint-disable function-max-lines
 
 library SiloERC4626Lib {
-    using SafeERC20Upgradeable for IERC20Upgradeable;
-    using MathUpgradeable for uint256;
+    using SafeERC20 for IERC20;
+    using Math for uint256;
 
     uint256 internal constant _PRECISION_DECIMALS = 1e18;
 
@@ -108,9 +108,9 @@ library SiloERC4626Lib {
                 assets,
                 _totalAssets,
                 shareTokenTotalSupply,
-                // when we doing withdraw, we using Rounding.Up, because we want to burn as many shares
+                // when we doing withdraw, we using Rounding.Ceil, because we want to burn as many shares
                 // however here, we will be using shares as input to withdraw, if we round up, we can overflow
-                // because we will want to withdraw too much, so we have to use Rounding.Down
+                // because we will want to withdraw too much, so we have to use Rounding.Floor
                 Rounding.MAX_WITHDRAW_TO_SHARES,
                 ISilo.AssetType.Collateral
             );
@@ -236,7 +236,7 @@ library SiloERC4626Lib {
             // Reentrancy is possible only for view methods (read-only reentrancy),
             // so no harm can be done as the state is already updated.
             // We do not expect the silo to work with any malicious token that will not send tokens to silo.
-            IERC20Upgradeable(_token).safeTransferFrom(_depositor, address(this), assets);
+            IERC20(_token).safeTransferFrom(_depositor, address(this), assets);
         }
     }
 
@@ -299,7 +299,7 @@ library SiloERC4626Lib {
 
         if (_asset != address(0)) {
             // fee-on-transfer is ignored
-            IERC20Upgradeable(_asset).safeTransfer(_receiver, assets);
+            IERC20(_asset).safeTransfer(_receiver, assets);
         }
     }
 }
