@@ -16,8 +16,7 @@ pragma solidity 0.8.21;
 
 import {ISiloChildChainGauge} from "ve-silo/contracts/gauges/interfaces/ISiloChildChainGauge.sol";
 import {ILiquidityGaugeFactory} from "ve-silo/contracts/gauges/interfaces/ILiquidityGaugeFactory.sol";
-import {SafeERC20} from "openzeppelin-contracts/token/ERC20/utils/SafeERC20.sol";
-import {SafeMath} from "openzeppelin-contracts/utils/math/SafeMath.sol";
+import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 
 import {BalancerMinter, IERC20} from "./BalancerMinter.sol";
 
@@ -41,7 +40,6 @@ contract L2BalancerPseudoMinter is BalancerMinter {
     event GaugeFactoryAdded(ILiquidityGaugeFactory indexed factory);
     event GaugeFactoryRemoved(ILiquidityGaugeFactory indexed factory);
 
-    using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
     mapping(ILiquidityGaugeFactory => bool) private _validFactories;
@@ -91,7 +89,7 @@ contract L2BalancerPseudoMinter is BalancerMinter {
     function _mintForMany(address[] calldata gauges, address user) internal override returns (uint256 tokensToMint) {
         uint256 length = gauges.length;
         for (uint256 i = 0; i < length; ++i) {
-            tokensToMint = tokensToMint.add(_updateGauge(gauges[i], user));
+            tokensToMint = tokensToMint + _updateGauge(gauges[i], user);
         }
         _pseudoMint(user, tokensToMint);
     }
@@ -116,7 +114,7 @@ contract L2BalancerPseudoMinter is BalancerMinter {
 
         ccGauge.user_checkpoint(user);
         uint256 totalMint = ccGauge.integrate_fraction(user);
-        tokensToMint = totalMint.sub(minted(user, gauge));
+        tokensToMint = totalMint - minted(user, gauge);
 
         if (tokensToMint > 0) {
             tokensToMint = _collectFees(gauge, tokensToMint);

@@ -16,16 +16,12 @@ pragma solidity 0.8.21;
 
 import {ILiquidityGauge} from "balancer-labs/v2-interfaces/liquidity-mining/ILiquidityGauge.sol";
 
-import {SafeMath} from "openzeppelin-contracts/utils/math/SafeMath.sol";
-
 import {IBalancerMinter} from "./interfaces/IBalancerMinter.sol";
 import {IBalancerTokenAdmin} from "./interfaces/IBalancerTokenAdmin.sol";
 import {ILMGetters, IGaugeController} from "./interfaces/ILMGetters.sol";
 import {BalancerMinter} from "./BalancerMinter.sol";
 
 contract MainnetBalancerMinter is IBalancerMinter, ILMGetters, BalancerMinter {
-    using SafeMath for uint256;
-
     IBalancerTokenAdmin private immutable _tokenAdmin;
     IGaugeController private immutable _gaugeController;
 
@@ -56,7 +52,7 @@ contract MainnetBalancerMinter is IBalancerMinter, ILMGetters, BalancerMinter {
     function _mintForMany(address[] calldata gauges, address user) internal override returns (uint256 tokensToMint) {
         uint256 length = gauges.length;
         for (uint256 i = 0; i < length; ++i) {
-            tokensToMint = tokensToMint.add(_updateGauge(gauges[i], user));
+            tokensToMint = tokensToMint + _updateGauge(gauges[i], user);
         }
 
         _mint(user, tokensToMint);
@@ -67,7 +63,7 @@ contract MainnetBalancerMinter is IBalancerMinter, ILMGetters, BalancerMinter {
 
         ILiquidityGauge(gauge).user_checkpoint(user);
         uint256 totalMint = ILiquidityGauge(gauge).integrate_fraction(user);
-        tokensToMint = totalMint.sub(minted(user, gauge));
+        tokensToMint = totalMint - minted(user, gauge);
 
         if (tokensToMint > 0) {
             _setMinted(user, gauge, totalMint);

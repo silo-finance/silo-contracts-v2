@@ -17,7 +17,6 @@ pragma solidity 0.8.21;
 import {IBalancerTokenAdmin, IBalancerToken} from "./interfaces/IBalancerTokenAdmin.sol";
 
 import {ExtendedOwnable, Ownable} from "../access/ExtendedOwnable.sol";
-import {SafeMath} from "openzeppelin-contracts/utils/math/SafeMath.sol";
 import {ReentrancyGuard} from "openzeppelin5/utils/ReentrancyGuard.sol";
 
 // solhint-disable not-rely-on-time
@@ -35,8 +34,6 @@ import {ReentrancyGuard} from "openzeppelin5/utils/ReentrancyGuard.sol";
  * it is defined here, we must then wrap the token's minting functionality in order for this to be meaningful.
  */
 contract BalancerTokenAdmin is IBalancerTokenAdmin, ExtendedOwnable, ReentrancyGuard {
-    using SafeMath for uint256;
-
     // Initial inflation rate of 145k BAL per week.
     uint256 public constant override INITIAL_RATE = (145000 * 1e18) / uint256(1 weeks); // BAL has 18 decimals
     uint256 public constant override RATE_REDUCTION_TIME = 365 days;
@@ -93,12 +90,12 @@ contract BalancerTokenAdmin is IBalancerTokenAdmin, ExtendedOwnable, ReentrancyG
      */
     function mint(address to, uint256 amount) external override onlyManager {
         // Check if we've passed into a new epoch such that we should calculate available supply with a smaller rate.
-        if (block.timestamp >= _startEpochTime.add(RATE_REDUCTION_TIME)) {
+        if (block.timestamp >= _startEpochTime + RATE_REDUCTION_TIME) {
             _updateMiningParameters();
         }
 
         require(
-            _balancerToken.totalSupply().add(amount) <= _availableSupply(),
+            _balancerToken.totalSupply() + amount <= _availableSupply(),
             "Mint amount exceeds remaining available supply"
         );
         _balancerToken.mint(to, amount);
@@ -122,7 +119,7 @@ contract BalancerTokenAdmin is IBalancerTokenAdmin, ExtendedOwnable, ReentrancyG
      * @notice Returns the start timestamp of the next epoch.
      */
     function getFutureEpochTime() external view returns (uint256) {
-        return _startEpochTime.add(RATE_REDUCTION_TIME);
+        return _startEpochTime + RATE_REDUCTION_TIME;
     }
 
     /**
@@ -159,7 +156,7 @@ contract BalancerTokenAdmin is IBalancerTokenAdmin, ExtendedOwnable, ReentrancyG
      * @return Timestamp of the next epoch
      */
     function futureEpochTimeWrite() external returns (uint256) {
-        return _startEpochTimeWrite().add(RATE_REDUCTION_TIME);
+        return _startEpochTimeWrite()  + RATE_REDUCTION_TIME;
     }
 
     /**
@@ -168,7 +165,7 @@ contract BalancerTokenAdmin is IBalancerTokenAdmin, ExtendedOwnable, ReentrancyG
      * Total supply becomes slightly larger if this function is called late
      */
     function updateMiningParameters() external {
-        require(block.timestamp >= _startEpochTime.add(RATE_REDUCTION_TIME), "Epoch has not finished yet");
+        require(block.timestamp >= _startEpochTime + RATE_REDUCTION_TIME, "Epoch has not finished yet");
         _updateMiningParameters();
     }
 
@@ -202,8 +199,8 @@ contract BalancerTokenAdmin is IBalancerTokenAdmin, ExtendedOwnable, ReentrancyG
      * @notice Maximum allowable number of tokens in existence (claimed or unclaimed)
      */
     function _availableSupply() internal view returns (uint256) {
-        uint256 newSupplyFromCurrentEpoch = (block.timestamp.sub(_startEpochTime)).mul(_rate);
-        return _startEpochSupply.add(newSupplyFromCurrentEpoch);
+        uint256 newSupplyFromCurrentEpoch = (block.timestamp - _startEpochTime) * _rate;
+        return _startEpochSupply + newSupplyFromCurrentEpoch;
     }
 
     /**
@@ -212,7 +209,7 @@ contract BalancerTokenAdmin is IBalancerTokenAdmin, ExtendedOwnable, ReentrancyG
      */
     function _startEpochTimeWrite() internal returns (uint256) {
         uint256 startEpochTime = _startEpochTime;
-        if (block.timestamp >= startEpochTime.add(RATE_REDUCTION_TIME)) {
+        if (block.timestamp >= startEpochTime + RATE_REDUCTION_TIME) {
             _updateMiningParameters();
             return _startEpochTime;
         }
@@ -221,11 +218,11 @@ contract BalancerTokenAdmin is IBalancerTokenAdmin, ExtendedOwnable, ReentrancyG
 
     function _updateMiningParameters() internal {
         uint256 inflationRate = _rate;
-        uint256 startEpochSupply = _startEpochSupply.add(inflationRate.mul(RATE_REDUCTION_TIME));
-        inflationRate = inflationRate.mul(RATE_DENOMINATOR).div(RATE_REDUCTION_COEFFICIENT);
+        uint256 startEpochSupply = _startEpochSupply + (inflationRate * RATE_REDUCTION_TIME);
+        inflationRate = inflationRate * RATE_DENOMINATOR / RATE_REDUCTION_COEFFICIENT;
 
-        _miningEpoch = _miningEpoch.add(1);
-        _startEpochTime = _startEpochTime.add(RATE_REDUCTION_TIME);
+        _miningEpoch = _miningEpoch + 1;
+        _startEpochTime = _startEpochTime + RATE_REDUCTION_TIME;
         _rate = inflationRate;
         _startEpochSupply = startEpochSupply;
 
@@ -248,39 +245,39 @@ contract BalancerTokenAdmin is IBalancerTokenAdmin, ExtendedOwnable, ReentrancyG
         // It shouldn't be possible to over/underflow in here but we add checked maths to be safe
 
         // Special case if end is in future (not yet minted) epoch
-        if (end > currentEpochTime.add(RATE_REDUCTION_TIME)) {
-            currentEpochTime = currentEpochTime.add(RATE_REDUCTION_TIME);
-            currentRate = currentRate.mul(RATE_DENOMINATOR).div(RATE_REDUCTION_COEFFICIENT);
+        if (end > currentEpochTime + RATE_REDUCTION_TIME) {
+            currentEpochTime = currentEpochTime + RATE_REDUCTION_TIME;
+            currentRate = currentRate * RATE_DENOMINATOR / RATE_REDUCTION_COEFFICIENT;
         }
 
-        require(end <= currentEpochTime.add(RATE_REDUCTION_TIME), "too far in future");
+        require(end <= currentEpochTime + RATE_REDUCTION_TIME, "too far in future");
 
         uint256 toMint = 0;
         for (uint256 epoch = 0; epoch < 999; ++epoch) {
             if (end >= currentEpochTime) {
                 uint256 currentEnd = end;
-                if (currentEnd > currentEpochTime.add(RATE_REDUCTION_TIME)) {
-                    currentEnd = currentEpochTime.add(RATE_REDUCTION_TIME);
+                if (currentEnd > currentEpochTime + RATE_REDUCTION_TIME) {
+                    currentEnd = currentEpochTime + RATE_REDUCTION_TIME;
                 }
 
                 uint256 currentStart = start;
-                if (currentStart >= currentEpochTime.add(RATE_REDUCTION_TIME)) {
+                if (currentStart >= currentEpochTime + RATE_REDUCTION_TIME) {
                     // We should never get here but what if...
                     break;
                 } else if (currentStart < currentEpochTime) {
                     currentStart = currentEpochTime;
                 }
 
-                toMint = toMint.add(currentRate.mul(currentEnd.sub(currentStart)));
+                toMint = toMint + (currentRate * (currentEnd - currentStart));
 
                 if (start >= currentEpochTime) {
                     break;
                 }
             }
 
-            currentEpochTime = currentEpochTime.sub(RATE_REDUCTION_TIME);
+            currentEpochTime = currentEpochTime - RATE_REDUCTION_TIME;
             // double-division with rounding made rate a bit less => good
-            currentRate = currentRate.mul(RATE_REDUCTION_COEFFICIENT).div(RATE_DENOMINATOR);
+            currentRate = currentRate * RATE_REDUCTION_COEFFICIENT / RATE_DENOMINATOR;
             assert(currentRate <= INITIAL_RATE);
         }
 
@@ -312,7 +309,7 @@ contract BalancerTokenAdmin is IBalancerTokenAdmin, ExtendedOwnable, ReentrancyG
      * @return Timestamp of the next epoch
      */
     function future_epoch_time_write() external returns (uint256) {
-        return _startEpochTimeWrite().add(RATE_REDUCTION_TIME);
+        return _startEpochTimeWrite() + RATE_REDUCTION_TIME;
     }
 
     /**
@@ -321,7 +318,7 @@ contract BalancerTokenAdmin is IBalancerTokenAdmin, ExtendedOwnable, ReentrancyG
      * Total supply becomes slightly larger if this function is called late
      */
     function update_mining_parameters() external {
-        require(block.timestamp >= _startEpochTime.add(RATE_REDUCTION_TIME), "Epoch has not finished yet");
+        require(block.timestamp >= _startEpochTime + RATE_REDUCTION_TIME, "Epoch has not finished yet");
         _updateMiningParameters();
     }
 
