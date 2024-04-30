@@ -17,7 +17,7 @@ pragma solidity 0.8.21;
 import {IGaugeAdder, ILiquidityGaugeFactory, IGaugeController} from "../interfaces/IGaugeAdder.sol";
 
 import {Ownable2Step} from "openzeppelin-contracts/access/Ownable2Step.sol";
-import {ReentrancyGuard} from "openzeppelin-contracts/security/ReentrancyGuard.sol";
+import {ReentrancyGuard} from "openzeppelin5/utils/ReentrancyGuard.sol";
 
 // solhint-disable ordering
 

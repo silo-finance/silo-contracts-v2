@@ -14,9 +14,9 @@
 
 pragma solidity 0.8.21;
 
-import {Address} from "openzeppelin-contracts/utils/Address.sol";
 import {Ownable2Step} from "openzeppelin-contracts/access/Ownable2Step.sol";
-import {IERC20} from "openzeppelin-contracts/token/ERC20/IERC20.sol";
+import {Address} from "openzeppelin5/utils/Address.sol";
+import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 
 import {IStakelessGauge} from "../interfaces/IStakelessGauge.sol";
 import {IStakelessGaugeCheckpointerAdaptor} from "../interfaces/IStakelessGaugeCheckpointerAdaptor.sol";

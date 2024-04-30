@@ -2,7 +2,7 @@
 pragma solidity 0.8.21;
 
 import {IntegrationTest} from "silo-foundry-utils/networks/IntegrationTest.sol";
-import {ERC20 as ERC20WithoutMint, IERC20} from "openzeppelin-contracts/token/ERC20/ERC20.sol";
+import {ERC20 as ERC20WithoutMint, IERC20} from "openzeppelin5/token/ERC20/ERC20.sol";
 import {Client} from "chainlink-ccip/v0.8/ccip/interfaces/IAny2EVMMessageReceiver.sol";
 
 import {IFeesManager} from "ve-silo/contracts/silo-tokens-minter/interfaces/IFeesManager.sol";

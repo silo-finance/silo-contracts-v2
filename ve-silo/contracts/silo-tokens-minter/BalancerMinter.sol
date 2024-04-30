@@ -17,16 +17,13 @@ pragma solidity 0.8.21;
 import {IBalancerMinter, IERC20} from "./interfaces/IBalancerMinter.sol";
 import {ISiloLiquidityGauge} from "ve-silo/contracts/gauges/interfaces/ISiloLiquidityGauge.sol";
 
-import {ReentrancyGuard} from "openzeppelin-contracts/security/ReentrancyGuard.sol";
-import {SafeMath} from "openzeppelin-contracts/utils/math/SafeMath.sol";
-import {EIP712} from "openzeppelin-contracts/utils/cryptography/EIP712.sol";
+import {ReentrancyGuard} from "openzeppelin5/utils/ReentrancyGuard.sol";
+import {EIP712} from "openzeppelin5/utils/cryptography/EIP712.sol";
 import {EOASignaturesValidator, Errors, _require} from "./helpers/EOASignaturesValidator.sol";
 
 import {FeesManager} from "./FeesManager.sol";
 
 abstract contract BalancerMinter is IBalancerMinter, ReentrancyGuard, EOASignaturesValidator, FeesManager {
-    using SafeMath for uint256;
-
     IERC20 private immutable _token;
 
     // user -> gauge -> value

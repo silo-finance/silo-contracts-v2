@@ -2,7 +2,7 @@
 pragma solidity 0.8.21;
 
 import {IntegrationTest} from "silo-foundry-utils/networks/IntegrationTest.sol";
-import {IERC20} from "openzeppelin-contracts/token/ERC20/IERC20.sol";
+import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 
 import {VeSiloContracts} from "ve-silo/deploy/_CommonDeploy.sol";
 import {AddrKey} from "common/addresses/AddrKey.sol";

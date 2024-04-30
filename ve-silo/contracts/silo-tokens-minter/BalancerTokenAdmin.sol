@@ -17,8 +17,8 @@ pragma solidity 0.8.21;
 import {IBalancerTokenAdmin, IBalancerToken} from "./interfaces/IBalancerTokenAdmin.sol";
 
 import {ExtendedOwnable, Ownable} from "../access/ExtendedOwnable.sol";
-import {ReentrancyGuard} from "openzeppelin-contracts/security/ReentrancyGuard.sol";
 import {SafeMath} from "openzeppelin-contracts/utils/math/SafeMath.sol";
+import {ReentrancyGuard} from "openzeppelin5/utils/ReentrancyGuard.sol";
 
 // solhint-disable not-rely-on-time
 // solhint-disable ordering

@@ -23,11 +23,11 @@ import {IGaugeController} from "../interfaces/IGaugeController.sol";
 import {ICCIPGauge} from "../interfaces/ICCIPGauge.sol";
 import {ICCIPGaugeCheckpointer} from "../interfaces/ICCIPGaugeCheckpointer.sol";
 
-import {Address} from "openzeppelin-contracts/utils/Address.sol";
-import {EnumerableSet} from "openzeppelin-contracts/utils/structs/EnumerableSet.sol";
-import {ReentrancyGuard} from "openzeppelin-contracts/security/ReentrancyGuard.sol";
 import {Ownable2Step} from "openzeppelin-contracts/access/Ownable2Step.sol";
-import {IERC20} from "openzeppelin-contracts/token/ERC20/IERC20.sol";
+import {Address} from "openzeppelin5/utils/Address.sol";
+import {EnumerableSet} from "openzeppelin5/utils/structs/EnumerableSet.sol";
+import {ReentrancyGuard} from "openzeppelin5/utils/ReentrancyGuard.sol";
+import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 
 import {GaugeAdder} from "../gauge-adder/GaugeAdder.sol";
 

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import {IERC20} from "openzeppelin-contracts/token/ERC20/IERC20.sol";
+import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 import {IRouterClient} from "chainlink-ccip/v0.8/ccip/interfaces/IRouterClient.sol";
 import {Client} from "chainlink-ccip/v0.8/ccip/libraries/Client.sol";
 

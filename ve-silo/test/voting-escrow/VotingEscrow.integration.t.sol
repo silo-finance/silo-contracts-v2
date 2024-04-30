@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.21;
 
-import {ERC20} from "openzeppelin-contracts/token/ERC20/ERC20.sol";
-
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
 import {Test} from "forge-std/Test.sol";
 
@@ -15,6 +13,9 @@ import {VotingEscrowDeploy} from "ve-silo/deploy/VotingEscrowDeploy.s.sol";
 import {VeBoostDeploy} from "ve-silo/deploy/VeBoostDeploy.s.sol";
 import {VeSiloContracts} from "ve-silo/deploy/_CommonDeploy.sol";
 import {VotingEscrowChildChainDeploy} from "ve-silo/deploy/VotingEscrowChildChainDeploy.s.sol";
+
+import {MintableToken} from "../_common/MintableToken.sol";
+
 
 // FOUNDRY_PROFILE=ve-silo-test forge test --mc VotingEscrowTest --ffi -vvv
 contract VotingEscrowTest is IntegrationTest {
@@ -170,7 +171,7 @@ contract VotingEscrowTest is IntegrationTest {
 
     function _dummySiloToken() internal {
         if (isChain(ANVIL_ALIAS) || isChain(SEPOLIA_ALIAS)) {
-            ERC20 siloToken = new ERC20("Silo test token", "SILO");
+            MintableToken siloToken = new MintableToken("Silo test token", "SILO");
 
             setAddress(getChainId(), SILO_TOKEN, address(siloToken));
         }

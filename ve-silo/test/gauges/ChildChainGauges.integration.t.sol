@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.21;
 
-import {ERC20, IERC20} from "openzeppelin-contracts/token/ERC20/ERC20.sol";
+import {ERC20, IERC20} from "openzeppelin5/token/ERC20/ERC20.sol";
 
 import {IntegrationTest} from "silo-foundry-utils/networks/IntegrationTest.sol";
 
@@ -15,6 +15,8 @@ import {IShareTokenLike as IShareToken} from "ve-silo/contracts/gauges/interface
 import {ISiloMock as ISilo} from "ve-silo/test/_mocks/ISiloMock.sol";
 import {FeesManagerTest} from "ve-silo/test/silo-tokens-minter/FeesManager.unit.t.sol";
 import {IFeesManager} from "ve-silo/contracts/silo-tokens-minter/interfaces/IFeesManager.sol";
+
+import {MintableToken} from "../_common/MintableToken.sol";
 
 // interfaces for tests
 interface IMinter {
@@ -47,7 +49,7 @@ contract ChildChainGaugesTest is IntegrationTest {
     address internal _deployer;
 
     IChildChainGaugeFactory internal _factory;
-    ERC20 internal _siloToken;
+    MintableToken internal _siloToken;
     FeesManagerTest internal _feesTest;
 
     function setUp() public {
@@ -176,7 +178,7 @@ contract ChildChainGaugesTest is IntegrationTest {
     }
 
     function _mockCalls() internal {
-        _siloToken = new ERC20("Silo test token", "SILO");
+        _siloToken = new MintableToken("Silo test token", "SILO");
 
         vm.mockCall(
             _l2BalancerPseudoMinter,

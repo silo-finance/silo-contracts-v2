@@ -14,7 +14,7 @@
 
 pragma solidity 0.8.21;
 
-import {Address} from "openzeppelin-contracts/utils/Address.sol";
+import {Address} from "openzeppelin5/utils/Address.sol";
 
 contract CheckpointerAdaptorMock {
     receive() external payable {}

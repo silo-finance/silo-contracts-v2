@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 import {IVeDelegation} from "@balancer-labs/v2-interfaces/contracts/liquidity-mining/IVeDelegation.sol";
-import {IERC20} from "openzeppelin-contracts/token/ERC20/ERC20.sol";
+import {IERC20} from "openzeppelin5/token/ERC20/ERC20.sol";
 
 interface IVotingEscrowDelegationProxy {
     function setDelegation(IVeDelegation delegation) external;

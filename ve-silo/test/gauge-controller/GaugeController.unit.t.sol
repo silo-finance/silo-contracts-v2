@@ -1,13 +1,15 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.21;
 
-import {ERC20} from "openzeppelin-contracts/token/ERC20/ERC20.sol";
+import {ERC20} from "openzeppelin5/token/ERC20/ERC20.sol";
 import {IntegrationTest} from "silo-foundry-utils/networks/IntegrationTest.sol";
 
 import {IGaugeController} from "ve-silo/contracts/gauges/interfaces/IGaugeController.sol";
 import {SiloGovernorDeploy} from "ve-silo/deploy/SiloGovernorDeploy.s.sol";
 import {GaugeControllerDeploy} from "ve-silo/deploy/GaugeControllerDeploy.s.sol";
 import {VeSiloContracts} from "ve-silo/deploy/_CommonDeploy.sol";
+
+import {MintableToken} from "../_common/MintableToken.sol";
 
 // FOUNDRY_PROFILE=ve-silo-test forge test --mc GaugeControllerTest --ffi -vvv
 contract GaugeControllerTest is IntegrationTest {
@@ -88,7 +90,7 @@ contract GaugeControllerTest is IntegrationTest {
 
     function _dummySiloToken() internal {
         if (isChain(ANVIL_ALIAS)) {
-            ERC20 siloToken = new ERC20("Silo test token", "SILO");
+            MintableToken siloToken = new MintableToken("Silo test token", "SILO");
 
             setAddress(getChainId(), SILO_TOKEN, address(siloToken));
         }

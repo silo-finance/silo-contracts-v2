@@ -21,9 +21,9 @@ import {IMainnetBalancerMinter} from "ve-silo/contracts/silo-tokens-minter/inter
 import {IBalancerMinter} from "ve-silo/contracts/silo-tokens-minter/interfaces/IBalancerMinter.sol";
 import {IStakelessGauge} from "../interfaces/IStakelessGauge.sol";
 
-import {Math} from "openzeppelin-contracts/utils/math/Math.sol";
-import {ReentrancyGuard} from "openzeppelin-contracts/security/ReentrancyGuard.sol";
 import {Ownable2Step} from "openzeppelin-contracts/access/Ownable2Step.sol";
+import {Math} from "openzeppelin5/utils/math/Math.sol";
+import {ReentrancyGuard} from "openzeppelin5/utils/ReentrancyGuard.sol";
 
 abstract contract StakelessGauge is IStakelessGauge, ReentrancyGuard, Ownable2Step {
     // solhint-disable ordering

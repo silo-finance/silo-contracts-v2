@@ -19,9 +19,9 @@ import {IVotingEscrow} from "balancer-labs/v2-interfaces/liquidity-mining/IVotin
 import {ISmartWalletChecker} from "balancer-labs/v2-interfaces/liquidity-mining/ISmartWalletChecker.sol";
 import {Errors, _require} from "balancer-labs/v2-interfaces/solidity-utils/helpers/BalancerErrors.sol";
 
-import {Address} from "openzeppelin-contracts/utils/Address.sol";
-import {ReentrancyGuard} from "openzeppelin-contracts/security/ReentrancyGuard.sol";
-import {IERC20} from "openzeppelin-contracts/token/ERC20/IERC20.sol";
+import {Address} from "openzeppelin5/utils/Address.sol";
+import {ReentrancyGuard} from "openzeppelin5/utils/ReentrancyGuard.sol";
+import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 
 import {Ownable2Step} from "openzeppelin-contracts/access/Ownable2Step.sol";
 

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.21;
 
-import {Address} from "openzeppelin-contracts/utils/Address.sol";
+import {Address} from "openzeppelin5/utils/Address.sol";
 import {Ownable2StepUpgradeable} from "openzeppelin5-upgradeable/access/Ownable2StepUpgradeable.sol";
 import {Client} from "chainlink-ccip/v0.8/ccip/libraries/Client.sol";
 

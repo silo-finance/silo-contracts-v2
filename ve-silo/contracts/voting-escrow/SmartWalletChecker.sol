@@ -17,7 +17,7 @@ pragma solidity 0.8.21;
 import {ISmartWalletChecker} from "balancer-labs/v2-interfaces/liquidity-mining/ISmartWalletChecker.sol";
 
 import {Ownable2Step} from "openzeppelin-contracts/access/Ownable2Step.sol";
-import {EnumerableSet} from "openzeppelin-contracts/utils/structs/EnumerableSet.sol";
+import {EnumerableSet} from "openzeppelin5/utils/structs/EnumerableSet.sol";
 
 // solhint-disable ordering
 

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.21;
 
-import {ERC20PresetMinterPauser, IERC20} from "openzeppelin-contracts/token/ERC20/presets/ERC20PresetMinterPauser.sol";
+import {ERC20, IERC20} from "openzeppelin5/token/ERC20/ERC20.sol";
 import {IntegrationTest} from "silo-foundry-utils/networks/IntegrationTest.sol";
 
 import {ILiquidityGaugeFactory} from "ve-silo/contracts/gauges/interfaces/ILiquidityGaugeFactory.sol";
@@ -19,6 +19,8 @@ import {
     IL2BalancerPseudoMinter
 } from "ve-silo/deploy/L2BalancerPseudoMinterDeploy.s.sol";
 
+import {MintableToken} from "../_common/MintableToken.sol";
+
 // FOUNDRY_PROFILE=ve-silo-test forge test --mc L2BalancerPseudoMinterTest --ffi -vvv
 contract L2BalancerPseudoMinterTest is IntegrationTest {
     uint256 internal constant _BOB_BALANCE = 1e18;
@@ -26,7 +28,7 @@ contract L2BalancerPseudoMinterTest is IntegrationTest {
     uint256 internal constant _DEPLOYER_FEE = 2e3; // 20%
 
     FeesManagerTest internal _feesTest;
-    ERC20PresetMinterPauser internal _siloToken;
+    MintableToken internal _siloToken;
     IL2BalancerPseudoMinter internal _minter;
     ILiquidityGaugeFactory internal _liquidityGaugeFactory =
         ILiquidityGaugeFactory(makeAddr("Liquidity gauge factory"));
@@ -48,7 +50,7 @@ contract L2BalancerPseudoMinterTest is IntegrationTest {
         L2BalancerPseudoMinterDeploy deploy = new L2BalancerPseudoMinterDeploy();
         deploy.disableDeploymentsSync();
 
-        _siloToken = new ERC20PresetMinterPauser("Test", "T");
+        _siloToken = new MintableToken("Test", "T");
 
         setAddress(SILO_TOKEN, address(_siloToken));
 

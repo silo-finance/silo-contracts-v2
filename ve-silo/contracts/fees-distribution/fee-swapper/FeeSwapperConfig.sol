@@ -14,7 +14,7 @@
 
 pragma solidity 0.8.21;
 
-import {IERC20} from "openzeppelin-contracts/token/ERC20/utils/SafeERC20.sol";
+import {IERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 
 import {IFeeSwap} from "../interfaces/IFeeSwap.sol";
 import {IFeeSwapper} from "../interfaces/IFeeSwapper.sol";
