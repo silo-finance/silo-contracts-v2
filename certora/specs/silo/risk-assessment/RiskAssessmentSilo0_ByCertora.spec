@@ -28,10 +28,28 @@ function SafeAssumptions(env e) {
     require silo1.total(ISilo.AssetType.Protected) + silo1.total(ISilo.AssetType.Collateral) <= max_uint256;
 }
 
-// A user cannot withdraw anything after withdrawing whole balance.
+function SafeAssumptions(env e) {
+    completeSiloSetupEnv(e);
+    totalSupplyMoreThanBalance(e.msg.sender);
+    requireProtectedToken0TotalAndBalancesIntegrity();
+    requireCollateralToken0TotalAndBalancesIntegrity();
+    requireDebtToken0TotalAndBalancesIntegrity();
+    requireProtectedToken1TotalAndBalancesIntegrity();
+    requireCollateralToken1TotalAndBalancesIntegrity();
+    requireDebtToken1TotalAndBalancesIntegrity();
+    requireInvariant RA_more_assets_than_shares();
+    require silo0.getSiloDataInterestRateTimestamp() > 0;
+    require silo0.getSiloDataInterestRateTimestamp() <= e.block.timestamp;
+    require silo1.getSiloDataInterestRateTimestamp() > 0;
+    require silo1.getSiloDataInterestRateTimestamp() <= e.block.timestamp;
+    require silo0.total(ISilo.AssetType.Protected) + silo0.total(ISilo.AssetType.Collateral) <= max_uint256;
+    require silo1.total(ISilo.AssetType.Protected) + silo1.total(ISilo.AssetType.Collateral) <= max_uint256;
+}
+
+// A user cannot redeem anything after redeeming whole balance.
 // holds
 // https://prover.certora.com/output/6893/6ebdfe9df3f04b4b887bdb1c5372637c/?anonymousKey=af1886c64a28e05f1ee50a3c98745a75596a38ad
-rule RA_Silo_no_withdraw_after_withdrawing_all(env e, address user, ISilo.AssetType type)
+rule RA_Silo_no_redeem_after_redeeming_all(env e, address user, ISilo.AssetType type)
 {
     completeSiloSetupEnv(e);
     totalSupplyMoreThanBalance(user);
@@ -56,8 +74,26 @@ rule RA_Silo_no_withdraw_after_withdrawing_all(env e, address user, ISilo.AssetT
 
 }
 
-// A user should not be able to fully repay a loan with less amount than he borrowed, if there's a method called in between.
-rule RA_Silo_no_negative_interest_for_loan(env e, address user, method f)
+// In development..
+// A user should not be able to fully repay a loan with less amount than he borrowed.
+rule RA_Silo_no_negative_interest_for_loan(env e, address user)
+{
+    completeSiloSetupEnv(e);
+    totalSupplyMoreThanBalance(user);
+    totalSupplyMoreThanBalance(e.msg.sender);
+    
+    uint256 assetsBorrowed;
+    mathint debt = borrow(e, assetsBorrowed, user, e.msg.sender);
+    uint256 assetsRepayed;
+    mathint debtPaid = repay(e, assetsRepayed, e.msg.sender);
+    
+    assert assetsBorrowed > assetsRepayed => debt > debtPaid;
+}
+
+// In development..
+// A user should not be able to fully repay a loan with less amount than he borrowed.
+// Even if there's a method called in between.
+rule RA_Silo_no_negative_interest_for_loan_Param(env e, address user, method f)
 {
     completeSiloSetupEnv(e);
     totalSupplyMoreThanBalance(user);

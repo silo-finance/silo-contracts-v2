@@ -91,6 +91,16 @@ persistent ghost sharesMulDiv(uint256,uint256,uint256,bool) returns uint256 {
             sharesMulDiv(w,z,y,false) <= x && 
             sharesMulDiv(w,z,y,false) + sharesMulDiv(z,1,y,true) >= to_mathint(x));
     */
+    // adding same value Q to both assets and totalAssets cannot decrease the number of shares
+    axiom forall uint256 x. forall uint256 y1. forall uint256 y2. forall uint256 z. forall uint256 xQ. forall uint256 zQ.
+        (x >= 1 && y1 >= 1 && y2 >= y1 && z >= 1 && xQ > x && xQ - x == zQ - z) => (
+            sharesMulDiv(xQ,y2,zQ,false) >= sharesMulDiv(x,y1,z,false) &&
+            sharesMulDiv(xQ,y2,zQ,true) >= sharesMulDiv(x,y1,z,true));
+
+    // cannot give zero when it shouldn't
+    axiom forall uint256 x. forall uint256 y. forall uint256 z.
+        (z >= 1 && sharesMulDiv(x,y,z,false) == 0) => x * y < z * 1 &&
+        ((x >= 1 && y >= 1 && z >= 1) => sharesMulDiv(x,y,z,true) >= 1);
 }
 
 /// interestRatio(_debtAssets,_rcomp) = _debtAssets * _rcomp / _PRECISION_DECIMALS;
@@ -149,7 +159,7 @@ function assetsToSharesApprox(
     //Replace for exact mulDiv
     //return mulDiv_mathLib(_assets,totalShares,totalAssets,_rounding == MathUpgradeable.Rounding.Up);  //exact
     return sharesMulDiv(_assets,totalShares,totalAssets,_rounding == MathUpgradeable.Rounding.Up);  //summ
-    //return discreteRatioMulDiv(_shares, totalAssets, totalShares); // under-approx (rarely used)
+    //return discreteRatioMulDiv(_assets, totalAssets, totalShares); // under-approx (rarely used)
 }
 
 /// A copy of the Solidity implementation, 
