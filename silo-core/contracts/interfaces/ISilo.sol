@@ -137,13 +137,14 @@ interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
     /// @param shares amount of shares that was burn
     event Repay(address indexed sender, address indexed owner, uint256 assets, uint256 shares);
 
-    /// @notice Emitted on leverage
-    event Leverage();
-
     /// @notice emitted only when collateral has been switched to other one
     event CollateralTypeChanged(address indexed borrower, bool sameAseet);
 
     event HooksUpdated(uint24 hooksBefore, uint24 hooksAfter);
+
+    event AccruedInterest(uint256 hooksBefore);
+
+    event FlashLoan(uint256 amount);
 
     error Unsupported();
     error NothingToWithdraw();
