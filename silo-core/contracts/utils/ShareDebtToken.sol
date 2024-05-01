@@ -71,27 +71,6 @@ contract ShareDebtToken is IERC20R, ShareToken {
         emit ReceiveApproval(_owner, _recipient, _amount);
     }
 
-    /// @dev Check receive allowance and if recipient is allowed to accept debt from silo
-    function _beforeTokenTransfer(address _sender, address _recipient, uint256 _amount) internal virtual override {
-        // If we are minting or burning, Silo is responsible to check all necessary conditions
-        if (_isTransfer(_sender, _recipient)) {
-            // Silo forbids having two debts and this condition will be checked inside `onDebtTransfer`
-            siloConfig.onDebtTransfer(_sender, _recipient);
-
-            // _recipient must approve debt transfer, _sender does not have to
-            uint256 currentAllowance = receiveAllowance(_sender, _recipient);
-            if (currentAllowance < _amount) revert AmountExceedsAllowance();
-
-            // There can't be an underflow in the subtraction because of the previous check
-            unchecked {
-                // update debt allowance
-                _setReceiveApproval(_sender, _recipient, currentAllowance - _amount);
-            }
-        }
-
-        ShareToken._beforeTokenTransfer(_sender, _recipient, _amount);
-    }
-
     /// @dev Check if recipient is solvent after debt transfer
     function _afterTokenTransfer(address _sender, address _recipient, uint256 _amount) internal virtual override {
         // debt transfer is such a rare use case and extra gas is worth additional security,
