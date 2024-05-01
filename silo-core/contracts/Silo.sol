@@ -57,27 +57,22 @@ contract Silo is SiloERC4626 {
         sharedStorage.siloConfig = ISiloConfig(address(this));
     }
 
-    /// @dev Silo is not designed to receive and work with ether, but it can act as a middleware
-    /// between any third-party contract and hook receiver.
+    /// @dev Silo is not designed to work with ether, but it can act as a middleware
+    /// between any third-party contract and hook receiver. So, this is the responsibility
+    /// of the hook receiver developer to handle it if needed.
     receive() external payable {}
 
     /// @inheritdoc ISilo
-    function callOnBehalfOfSilo(address _target, bytes calldata _input)
+    function callOnBehalfOfSilo(address _target, uint256 _value, bytes calldata _input)
         external
         payable
         returns (bool success, bytes memory result)
     {
         if (msg.sender != address(sharedStorage.hookReceiver)) revert OnlyHookReceiver();
 
-        (success, result) = _target.call{value: msg.value}(_input);
-
-        uint256 balance = address(this).balance;
-
-        if (balance != 0) {
-            (bool etherTransferSuccess,) = msg.sender.call{value: balance}("");
-
-            if (!etherTransferSuccess) revert FailedToSendEthToHookReceiver();
-        }
+        (success, result) = _target.call{value: _value}(_input);
+        // Silo will not send back any ether leftovers after the call.
+        // The hook receiver should request the ether if needed in a separate call.
     }
 
     /// @inheritdoc ISilo

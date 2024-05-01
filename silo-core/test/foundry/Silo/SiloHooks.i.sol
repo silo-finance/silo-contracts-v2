@@ -83,13 +83,15 @@ contract SiloHooksTest is SiloLittleHelper, Test {
         uint256 tokensToMint = 100;
         bytes memory data = abi.encodeWithSelector(IShareToken.mint.selector, _thridParty, _thridParty, tokensToMint);
 
+        uint256 amountOfEth = 0;
+
         vm.expectRevert(ISilo.OnlyHookReceiver.selector);
-        silo0.callOnBehalfOfSilo(protectedShareToken, data);
+        silo0.callOnBehalfOfSilo(protectedShareToken, amountOfEth, data);
 
         assertEq(IERC20(protectedShareToken).balanceOf(_thridParty), 0);
 
         vm.prank(_hookReceiverAddr);
-        silo0.callOnBehalfOfSilo(protectedShareToken, data);
+        silo0.callOnBehalfOfSilo(protectedShareToken, amountOfEth, data);
 
         assertEq(IERC20(protectedShareToken).balanceOf(_thridParty), tokensToMint);
     }
@@ -105,7 +107,7 @@ contract SiloHooksTest is SiloLittleHelper, Test {
 
         vm.deal(_hookReceiverAddr, amoutToSend);
         vm.prank(_hookReceiverAddr);
-        silo0.callOnBehalfOfSilo{value: amoutToSend}(target, data);
+        silo0.callOnBehalfOfSilo{value: amoutToSend}(target, amoutToSend, data);
 
         assertEq(target.balance, amoutToSend, "Expect to have non zero balance");
     }
@@ -121,8 +123,18 @@ contract SiloHooksTest is SiloLittleHelper, Test {
 
         vm.deal(_hookReceiverAddr, amoutToSend);
         vm.prank(_hookReceiverAddr);
-        silo0.callOnBehalfOfSilo{value: amoutToSend}(target, data);
+        silo0.callOnBehalfOfSilo{value: amoutToSend}(target, amoutToSend, data);
 
-        assertEq(_hookReceiverAddr.balance, amoutToSend, "Expect to have non zero balance");
+        assertEq(address(silo0).balance, amoutToSend, "Expect to have non zero balance");
+
+        // transfer ether leftover in a separate transaction
+        assertEq(_hookReceiverAddr.balance, 0, "Expect to have no balance on a hook receiver");
+
+        bytes memory emptyPayload;
+
+        vm.prank(_hookReceiverAddr);
+        silo0.callOnBehalfOfSilo{value: 0}(_hookReceiverAddr, amoutToSend, emptyPayload);
+
+        assertEq(_hookReceiverAddr.balance, amoutToSend, "Expect to have non zero balance on a hook receiver");
     }
 }

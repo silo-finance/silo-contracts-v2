@@ -169,12 +169,12 @@ interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
     error SiloInitialized();
     error OnlyHookReceiver();
     error OnlySiloConfig();
-    error FailedToSendEthToHookReceiver();
 
     /// @notice Method for HookReceiver only to call on behalf of Silo
     /// @param _target address of the contract to call
+    /// @param _value amount of ETH to send
     /// @param _input calldata for the call
-    function callOnBehalfOfSilo(address _target, bytes calldata _input)
+    function callOnBehalfOfSilo(address _target, uint256 _value, bytes calldata _input)
         external
         payable
         returns (bool success, bytes memory result);
