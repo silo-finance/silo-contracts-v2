@@ -169,6 +169,7 @@ interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
     error SiloInitialized();
     error OnlyHookReceiver();
     error OnlySiloConfig();
+    error FailedToSendEthToHookReceiver();
 
     /// @notice Method for HookReceiver only to call on behalf of Silo
     /// @param _target address of the contract to call

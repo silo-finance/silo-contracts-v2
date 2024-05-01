@@ -19,21 +19,24 @@ contract SiloHooksTest is SiloLittleHelper, Test {
     uint24 constant HOOKS_BEFORE = 1;
     uint24 constant HOOKS_AFTER = 2;
  
-    HookReceiverMock internal _hookReceiver;
+    HookReceiverMock internal _hookReceiverMock;
     ISiloConfig internal _siloConfig;
 
     address thridParty = makeAddr("ThirdParty");
+    address hookReceiverAddr;
 
     function setUp() public {
         SiloFixture siloFixture = new SiloFixture();
         SiloConfigOverride memory configOverride;
 
-        _hookReceiver = new HookReceiverMock(address(0));
-        _hookReceiver.hookReceiverConfigMock(HOOKS_BEFORE, HOOKS_AFTER);
+        _hookReceiverMock = new HookReceiverMock(address(0));
+        _hookReceiverMock.hookReceiverConfigMock(HOOKS_BEFORE, HOOKS_AFTER);
+
+        hookReceiverAddr = _hookReceiver.ADDRESS();
 
         configOverride.token0 = makeAddr("token0");
         configOverride.token1 = makeAddr("token1");
-        configOverride.hookReceiver = _hookReceiver.ADDRESS();
+        configOverride.hookReceiver = hookReceiverAddr;
         configOverride.configName = SiloConfigsNames.LOCAL_DEPLOYER;
 
         (_siloConfig, silo0, silo1,,,) = siloFixture.deploy_local(configOverride);
@@ -85,7 +88,7 @@ contract SiloHooksTest is SiloLittleHelper, Test {
 
         assertEq(IERC20(protectedShareToken).balanceOf(thridParty), 0);
 
-        vm.prank(_hookReceiver.ADDRESS());
+        vm.prank(hookReceiverAddr);
         silo0.callOnBehalfOfSilo(protectedShareToken, data);
 
         assertEq(IERC20(protectedShareToken).balanceOf(thridParty), tokensToMint);
@@ -100,10 +103,26 @@ contract SiloHooksTest is SiloLittleHelper, Test {
 
         uint256 amoutToSend = 1 ether;
 
-        vm.deal(_hookReceiver.ADDRESS(), amoutToSend);
-        vm.prank(_hookReceiver.ADDRESS());
+        vm.deal(hookReceiverAddr, amoutToSend);
+        vm.prank(hookReceiverAddr);
         silo0.callOnBehalfOfSilo{value: amoutToSend}(target, data);
 
         assertEq(target.balance, amoutToSend, "Expect to have non zero balance");
+    }
+
+    /// FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testCallOnBehalfOfSiloWithETHleftover
+    function testCallOnBehalfOfSiloWithETHleftover() public {
+        address target = address(new ContractThatAcceptsETH());
+        bytes memory data = abi.encodeWithSelector(ContractThatAcceptsETH.anyFunctionThatSendEthBack.selector);
+
+        assertEq(target.balance, 0, "Expect to have no balance");
+
+        uint256 amoutToSend = 1 ether;
+
+        vm.deal(hookReceiverAddr, amoutToSend);
+        vm.prank(hookReceiverAddr);
+        silo0.callOnBehalfOfSilo{value: amoutToSend}(target, data);
+
+        assertEq(hookReceiverAddr.balance, amoutToSend, "Expect to have non zero balance");
     }
 }
