@@ -220,28 +220,10 @@ abstract contract ShareToken is Initializable, ERC20, IShareToken {
         siloConfig = _silo.config();
     }
 
-    // TODO: in openzeppelin v5, we do not have before/after hooks, test this change well
-    // including code review in scope of doin external call in this specific place in code, what is token state? etc
+    /// @inheritdoc ERC20
     function _update(address from, address to, uint256 value) internal virtual override {
-        _beforeTokenTransfer(from, to, value);
-
         ERC20._update(from, to, value);
-
         _afterTokenTransfer(from, to, value);
-    }
-
-    function _beforeTokenTransfer(address _sender, address _recipient, uint256 _amount) internal virtual {
-        HookSetup memory setup = _hookSetup;
-
-        if (setup.hookReceiver == address(0)) return;
-        if (!setup.hooksBefore.matchAction(setup.tokenType)) return;
-
-        // report mint, burn or transfer
-        IHookReceiver(setup.hookReceiver).beforeAction(
-            address(silo),
-            setup.tokenType | Hook.SHARE_TOKEN_TRANSFER,
-            abi.encodePacked(_sender, _recipient, _amount, balanceOf(_sender), balanceOf(_recipient), totalSupply())
-        );
     }
 
     /// @dev Call an afterTokenTransfer hook if registered
