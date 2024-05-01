@@ -74,9 +74,9 @@ contract Silo is SiloERC4626 {
         uint256 balance = address(this).balance;
 
         if (balance != 0) {
-            (bool success,) = msg.sender.call{value: balance}("");
+            (bool etherTransferSuccess,) = msg.sender.call{value: balance}("");
 
-            if (!success) revert FailedToSendEthToHookReceiver();
+            if (!etherTransferSuccess) revert FailedToSendEthToHookReceiver();
         }
     }
 

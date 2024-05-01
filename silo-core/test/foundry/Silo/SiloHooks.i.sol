@@ -22,8 +22,8 @@ contract SiloHooksTest is SiloLittleHelper, Test {
     HookReceiverMock internal _hookReceiverMock;
     ISiloConfig internal _siloConfig;
 
-    address thridParty = makeAddr("ThirdParty");
-    address hookReceiverAddr;
+    address internal _thridParty = makeAddr("ThirdParty");
+    address internal _hookReceiverAddr;
 
     function setUp() public {
         SiloFixture siloFixture = new SiloFixture();
@@ -32,11 +32,11 @@ contract SiloHooksTest is SiloLittleHelper, Test {
         _hookReceiverMock = new HookReceiverMock(address(0));
         _hookReceiverMock.hookReceiverConfigMock(HOOKS_BEFORE, HOOKS_AFTER);
 
-        hookReceiverAddr = _hookReceiver.ADDRESS();
+        _hookReceiverAddr = _hookReceiverMock.ADDRESS();
 
         configOverride.token0 = makeAddr("token0");
         configOverride.token1 = makeAddr("token1");
-        configOverride.hookReceiver = hookReceiverAddr;
+        configOverride.hookReceiver = _hookReceiverAddr;
         configOverride.configName = SiloConfigsNames.LOCAL_DEPLOYER;
 
         (_siloConfig, silo0, silo1,,,) = siloFixture.deploy_local(configOverride);
@@ -59,7 +59,7 @@ contract SiloHooksTest is SiloLittleHelper, Test {
         uint24 newHooksBefore = 3;
         uint24 newHooksAfter = 4;
 
-        _hookReceiver.hookReceiverConfigMock(newHooksBefore, newHooksAfter);
+        _hookReceiverMock.hookReceiverConfigMock(newHooksBefore, newHooksAfter);
 
         silo0.updateHooks();
 
@@ -81,17 +81,17 @@ contract SiloHooksTest is SiloLittleHelper, Test {
         (address protectedShareToken,,) = _siloConfig.getShareTokens(address(silo0));
 
         uint256 tokensToMint = 100;
-        bytes memory data = abi.encodeWithSelector(IShareToken.mint.selector, thridParty, thridParty, tokensToMint);
+        bytes memory data = abi.encodeWithSelector(IShareToken.mint.selector, _thridParty, _thridParty, tokensToMint);
 
         vm.expectRevert(ISilo.OnlyHookReceiver.selector);
         silo0.callOnBehalfOfSilo(protectedShareToken, data);
 
-        assertEq(IERC20(protectedShareToken).balanceOf(thridParty), 0);
+        assertEq(IERC20(protectedShareToken).balanceOf(_thridParty), 0);
 
-        vm.prank(hookReceiverAddr);
+        vm.prank(_hookReceiverAddr);
         silo0.callOnBehalfOfSilo(protectedShareToken, data);
 
-        assertEq(IERC20(protectedShareToken).balanceOf(thridParty), tokensToMint);
+        assertEq(IERC20(protectedShareToken).balanceOf(_thridParty), tokensToMint);
     }
 
     /// FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testCallOnBehalfOfSiloWithETH
@@ -103,8 +103,8 @@ contract SiloHooksTest is SiloLittleHelper, Test {
 
         uint256 amoutToSend = 1 ether;
 
-        vm.deal(hookReceiverAddr, amoutToSend);
-        vm.prank(hookReceiverAddr);
+        vm.deal(_hookReceiverAddr, amoutToSend);
+        vm.prank(_hookReceiverAddr);
         silo0.callOnBehalfOfSilo{value: amoutToSend}(target, data);
 
         assertEq(target.balance, amoutToSend, "Expect to have non zero balance");
@@ -119,10 +119,10 @@ contract SiloHooksTest is SiloLittleHelper, Test {
 
         uint256 amoutToSend = 1 ether;
 
-        vm.deal(hookReceiverAddr, amoutToSend);
-        vm.prank(hookReceiverAddr);
+        vm.deal(_hookReceiverAddr, amoutToSend);
+        vm.prank(_hookReceiverAddr);
         silo0.callOnBehalfOfSilo{value: amoutToSend}(target, data);
 
-        assertEq(hookReceiverAddr.balance, amoutToSend, "Expect to have non zero balance");
+        assertEq(_hookReceiverAddr.balance, amoutToSend, "Expect to have non zero balance");
     }
 }
