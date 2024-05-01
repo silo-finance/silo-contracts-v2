@@ -88,8 +88,6 @@ contract ShareDebtToken is IERC20R, ShareToken {
                 _setReceiveApproval(_sender, _recipient, currentAllowance - _amount);
             }
         }
-
-        ShareToken._beforeTokenTransfer(_sender, _recipient, _amount);
     }
 
     /// @dev Check if recipient is solvent after debt transfer
