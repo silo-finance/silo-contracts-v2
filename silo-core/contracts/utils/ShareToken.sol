@@ -222,9 +222,16 @@ abstract contract ShareToken is Initializable, ERC20, IShareToken {
 
     /// @inheritdoc ERC20
     function _update(address from, address to, uint256 value) internal virtual override {
+        _beforeTokenTransfer(from, to, value);
+
         ERC20._update(from, to, value);
+
         _afterTokenTransfer(from, to, value);
     }
+
+    /// @dev By default, we do not have any hooks before token transfer. However,
+    /// derived contracts can override this function if they need to execute any logic before token transfer.
+    function _beforeTokenTransfer(address _sender, address _recipient, uint256 _amount) internal virtual {}
 
     /// @dev Call an afterTokenTransfer hook if registered
     function _afterTokenTransfer(address _sender, address _recipient, uint256 _amount) internal virtual {

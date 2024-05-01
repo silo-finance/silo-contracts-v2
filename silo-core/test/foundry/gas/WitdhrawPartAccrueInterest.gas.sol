@@ -32,7 +32,7 @@ contract WithdrawPartAccrueInterestGasTest is Gas, Test {
             address(silo1),
             abi.encodeCall(ISilo.withdraw, (ASSETS / 10, DEPOSITOR, DEPOSITOR, ISilo.AssetType.Collateral)),
             "Withdraw partial with accrue interest",
-            178711
+            178362
         );
     }
 }
