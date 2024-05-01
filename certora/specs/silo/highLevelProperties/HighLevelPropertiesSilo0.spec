@@ -383,7 +383,8 @@ rule HLP_repayShares_breakingUpNotBeneficial(env e, address receiver)
     satisfy balanceSharesAfter1_2 <= balanceSharesAfterSum;
 }
 
-
+/// @title Transition of collateral preserves the solvency status of a user.
+/// Violated : rounding errors - both deposit and withdraw could lower the user's value by a small amount.
 rule HLP_transition_collateral_preserves_solvent(env e, address user) 
 {
     completeSiloSetupEnv(e);
@@ -409,3 +410,49 @@ rule HLP_transition_collateral_preserves_solvent(env e, address user)
         transitionCollateral(e, shares, owner, type);
     assert isSolvent(e, user);
 }
+
+/// @title When the liquidation value is smaller than the value to get to 
+/// the liquidation threshold, a self-liquidation should be equivalent to third-party liquidation.
+/// IN-PROGRESS
+/*
+rule HLP_self_liquidation_is_equivalent_to_external(env e1, env e2) {
+    require e1.block.timestamp == e2.block.timestamp;
+    require e1.msg.value == e2.msg.value;
+    address borrower = e1.msg.sender;
+    address liquidator = e2.msg.sender;
+    /// Silos don't borrow.
+    require borrower != silo0 && borrower != silo1;
+    /// Silos don't liquidate.
+    require liquidator != silo0 && liquidator != silo1
+
+    completeSiloSetupEnv(e1);
+    require silo0.getSiloDataInterestRateTimestamp() > 0;
+    require silo1.getSiloDataInterestRateTimestamp() > 0;
+    totalSupplyMoreThanBalance(liquidator);
+    totalSupplyMoreThanBalance(borrower);
+    requireProtectedToken0TotalAndBalancesIntegrity();
+    requireCollateralToken0TotalAndBalancesIntegrity();
+    requireDebtToken0TotalAndBalancesIntegrity();
+    requireProtectedToken1TotalAndBalancesIntegrity();
+    requireCollateralToken1TotalAndBalancesIntegrity();
+    requireDebtToken1TotalAndBalancesIntegrity();
+
+    address collateralAsset;
+    address debtAsset;
+    uint256 debtToCover;
+    storage initState = lastStorage;
+
+    /// Self-liquidation
+    uint256 borrower_balance_before_1 = token0.balanceOf(e1, borrower);
+        silo0.liquidationCall(e1, collateralAsset, debtAsset, borrower, debtToCover, false) at initState;
+    uint256 borrower_balance_after_1 = token0.balanceOf(e1, borrower);
+
+    /// Third-party liquidation
+    uint256 liquidator_balance_before_2 = token0.balanceOf(e2, liquidator);
+        silo0.liquidationCall(e2, collateralAsset, debtAsset, borrower, debtToCover, false) at initState;
+    uint256 liquidator_balance_after_2 = token0.balanceOf(e2, liquidator);
+
+    assert borrower_balance_after_1 - borrower_balance_before_1 ==
+        liquidator_balance_after_2 - liquidator_balance_before_2;
+}
+*/
