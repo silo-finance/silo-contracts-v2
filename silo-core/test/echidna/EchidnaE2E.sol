@@ -67,13 +67,13 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         // deploy silo
         siloConfig = siloFactory.createSilo(siloData["MOCK"]);
         (_vault0, _vault1) = siloConfig.getSilos();
-        vault0 = Silo(_vault0);
-        vault1 = Silo(_vault1);
+        vault0 = Silo(payable(_vault0));
+        vault1 = Silo(payable(_vault1));
         liquidationModule = PartialLiquidation(vault0.config().getConfig(_vault0).liquidationModule);
 
         // Set up actors
         for(uint256 i; i < 3; i++) {
-            actors.push(new Actor(Silo(_vault0), Silo(_vault1)));
+            actors.push(new Actor(Silo(payable(_vault0)), Silo(payable(_vault1))));
         }
     }
     /* ================================================================

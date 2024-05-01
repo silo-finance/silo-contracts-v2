@@ -171,6 +171,15 @@ interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
     error OnlyHookReceiver();
     error OnlySiloConfig();
 
+    /// @notice Method for HookReceiver only to call on behalf of Silo
+    /// @param _target address of the contract to call
+    /// @param _value amount of ETH to send
+    /// @param _input calldata for the call
+    function callOnBehalfOfSilo(address _target, uint256 _value, bytes calldata _input)
+        external
+        payable
+        returns (bool success, bytes memory result);
+
     /// @notice Initialize Silo
     /// @param _siloConfig address of ISiloConfig with full config for this Silo
     /// @param _modelConfigAddress address of a config contract used by IRM

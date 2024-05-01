@@ -39,25 +39,25 @@ contract Hack1 {
         option = option % 10;
 
         if (option == 0) {
-            Silo(msg.sender).withdraw(assets, receiver, _initiator);
+            Silo(payable(msg.sender)).withdraw(assets, receiver, _initiator);
         } else if (option == 1) {
-            Silo(msg.sender).redeem(shares, receiver, _initiator);
+            Silo(payable(msg.sender)).redeem(shares, receiver, _initiator);
         } else if (option == 2) {
-            Silo(msg.sender).withdraw(assets, receiver, _initiator, ISilo.AssetType.Collateral);
+            Silo(payable(msg.sender)).withdraw(assets, receiver, _initiator, ISilo.AssetType.Collateral);
         } else if (option == 3) {
-            Silo(msg.sender).redeem(shares, receiver, _initiator, ISilo.AssetType.Collateral);
+            Silo(payable(msg.sender)).redeem(shares, receiver, _initiator, ISilo.AssetType.Collateral);
         } else if (option == 4) {
-            Silo(msg.sender).transitionCollateral(shares, _initiator, ISilo.AssetType.Collateral);
+            Silo(payable(msg.sender)).transitionCollateral(shares, _initiator, ISilo.AssetType.Collateral);
         } else if (option == 5) {
-            Silo(msg.sender).borrow(assets, receiver, _initiator, sameAsset);
+            Silo(payable(msg.sender)).borrow(assets, receiver, _initiator, sameAsset);
         } else if (option == 6) {
-            Silo(msg.sender).borrowShares(shares, receiver, _initiator, sameAsset);
+            Silo(payable(msg.sender)).borrowShares(shares, receiver, _initiator, sameAsset);
         } else if (option == 7) {
-            Silo(msg.sender).repay(assets, _initiator);
+            Silo(payable(msg.sender)).repay(assets, _initiator);
         } else if (option == 8) {
-            Silo(msg.sender).repayShares(shares, _initiator);
+            Silo(payable(msg.sender)).repayShares(shares, _initiator);
         } else {
-            Silo(msg.sender).leverage(assets, ILeverageBorrower(receiver), _initiator, sameAsset, bytes(""));
+            Silo(payable(msg.sender)).leverage(assets, ILeverageBorrower(receiver), _initiator, sameAsset, bytes(""));
         }
 
         return FLASHLOAN_CALLBACK;
