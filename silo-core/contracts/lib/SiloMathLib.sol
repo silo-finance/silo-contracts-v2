@@ -256,7 +256,7 @@ library SiloMathLib {
         uint256 _maxAssets,
         uint256 _borrowerCollateralAssets,
         uint256 _borrowerProtectedAssets,
-        ISilo.AssetType _assetType,
+        ISilo.CollateralType _assetType,
         uint256 _totalAssets,
         uint256 _assetTypeShareTokenTotalSupply,
         uint256 _liquidity
@@ -264,7 +264,7 @@ library SiloMathLib {
         if (_maxAssets == 0) return (0, 0);
         if (_assetTypeShareTokenTotalSupply == 0) return (0, 0);
 
-        if (_assetType == ISilo.AssetType.Collateral) {
+        if (_assetType == ISilo.CollateralType.Collateral) {
             assets = _maxAssets > _borrowerCollateralAssets ? _borrowerCollateralAssets : _maxAssets;
 
             if (assets > _liquidity) {

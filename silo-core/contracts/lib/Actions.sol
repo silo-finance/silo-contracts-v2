@@ -35,7 +35,7 @@ library Actions {
         uint256 _assets,
         uint256 _shares,
         address _receiver,
-        ISilo.AssetType _assetType,
+        ISilo.CollateralType _assetType,
         ISilo.Assets storage _totalCollateral
     )
         external
@@ -48,8 +48,6 @@ library Actions {
             address asset,
             address hookReceiver,
         ) = _shareStorage.siloConfig.accrueInterestAndGetConfigOptimised(Hook.DEPOSIT, _assetType);
-
-        if (_assetType == ISilo.AssetType.Debt) revert ISilo.WrongAssetType();
 
         (assets, shares) = SiloERC4626Lib.deposit(
             asset,
@@ -82,12 +80,10 @@ library Actions {
         external
         returns (uint256 assets, uint256 shares)
     {
-        if (_args.assetType == ISilo.AssetType.Debt) revert ISilo.WrongAssetType();
-
         _hookCallBefore(
             _shareStorage,
             Hook.WITHDRAW |
-                (_args.assetType == ISilo.AssetType.Collateral ? Hook.COLLATERAL_TOKEN : Hook.PROTECTED_TOKEN),
+                (_args.assetType == ISilo.CollateralType.Collateral ? Hook.COLLATERAL_TOKEN : Hook.PROTECTED_TOKEN),
             abi.encodePacked(_args.assets, _args.shares, _args.receiver, _args.owner, _args.spender, _args.assetType)
         );
 
@@ -100,7 +96,7 @@ library Actions {
         if (collateralConfig.silo != debtConfig.silo) ISilo(debtConfig.silo).accrueInterest();
 
         // this `if` helped with Stack too deep
-        if (_args.assetType == ISilo.AssetType.Collateral) {
+        if (_args.assetType == ISilo.CollateralType.Collateral) {
             (assets, shares) = SiloERC4626Lib.withdraw(
                 collateralConfig.token,
                 collateralConfig.collateralShareToken,
@@ -136,7 +132,9 @@ library Actions {
                     _shareStorage,
                     collateralConfig.hookReceiver,
                     Hook.WITHDRAW |
-                        (_args.assetType == ISilo.AssetType.Collateral ? Hook.COLLATERAL_TOKEN : Hook.PROTECTED_TOKEN),
+                        (_args.assetType == ISilo.CollateralType.Collateral
+                            ? Hook.COLLATERAL_TOKEN
+                            : Hook.PROTECTED_TOKEN),
                     abi.encodePacked(
                         _args.assets,
                         _args.shares,
@@ -174,7 +172,7 @@ library Actions {
                 _shareStorage,
                 collateralConfig.hookReceiver,
                 Hook.WITHDRAW |
-                    (_args.assetType == ISilo.AssetType.Collateral ? Hook.COLLATERAL_TOKEN : Hook.PROTECTED_TOKEN),
+                    (_args.assetType == ISilo.CollateralType.Collateral ? Hook.COLLATERAL_TOKEN : Hook.PROTECTED_TOKEN),
                 abi.encodePacked(
                     _args.assets,
                     _args.shares,
@@ -305,7 +303,7 @@ library Actions {
             address hookReceiver,
             address liquidationModule
         ) = _shareStorage.siloConfig.accrueInterestAndGetConfigOptimised(
-            (_liquidation ? Hook.LIQUIDATION : Hook.NONE) | Hook.REPAY, ISilo.AssetType.Debt // TODO type not necessary
+            (_liquidation ? Hook.LIQUIDATION : Hook.NONE) | Hook.REPAY, ISilo.CollateralType(0) // type not necessary
         );
 
         if (_liquidation) {
@@ -338,7 +336,7 @@ library Actions {
         uint256 _depositAssets,
         uint256 _borrowAssets,
         address _borrower,
-        ISilo.AssetType _assetType,
+        ISilo.CollateralType _assetType,
         uint256 _totalCollateralAssets,
         ISilo.Assets storage _totalDebt,
         ISilo.Assets storage _totalAssetsForDeposit
@@ -409,7 +407,7 @@ library Actions {
             _depositAssets,
             0 /* _shares */,
             _borrower,
-            _assetType == ISilo.AssetType.Collateral
+            _assetType == ISilo.CollateralType.Collateral
                 ? IShareToken(collateralConfig.collateralShareToken)
                 : IShareToken(collateralConfig.protectedShareToken),
             _totalAssetsForDeposit
@@ -431,14 +429,12 @@ library Actions {
         ISilo.SharedStorage storage _shareStorage,
         uint256 _shares,
         address _owner,
-        ISilo.AssetType _withdrawType,
+        ISilo.CollateralType _withdrawType,
         mapping(ISilo.AssetType => ISilo.Assets) storage _total
     )
         external
         returns (uint256 assets, uint256 toShares)
     {
-        if (_withdrawType == ISilo.AssetType.Debt) revert ISilo.WrongAssetType();
-
         _hookCallBefore(
             _shareStorage, Hook.TRANSITION_COLLATERAL, abi.encodePacked(_shares, _owner, _withdrawType, assets)
         );
@@ -447,7 +443,7 @@ library Actions {
             address(this), Hook.TRANSITION_COLLATERAL
         );
 
-        (address shareTokenFrom, uint256 liquidity) = _withdrawType == ISilo.AssetType.Collateral
+        (address shareTokenFrom, uint256 liquidity) = _withdrawType == ISilo.CollateralType.Collateral
             ? (collateralConfig.collateralShareToken, ISilo(address(this)).getRawLiquidity())
             : (collateralConfig.protectedShareToken, _total[ISilo.AssetType.Protected].assets);
 
@@ -461,7 +457,7 @@ library Actions {
             _total[_withdrawType]
         );
 
-        (ISilo.AssetType depositType, address shareTokenTo) = _withdrawType == ISilo.AssetType.Collateral
+        (ISilo.AssetType depositType, address shareTokenTo) = _withdrawType == ISilo.CollateralType.Collateral
             ? (ISilo.AssetType.Protected, collateralConfig.protectedShareToken)
             : (ISilo.AssetType.Collateral, collateralConfig.collateralShareToken);
 

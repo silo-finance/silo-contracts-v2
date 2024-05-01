@@ -65,11 +65,9 @@ library SiloERC4626Lib {
     function maxWithdraw(
         ISiloConfig _config,
         address _owner,
-        ISilo.AssetType _assetType,
+        ISilo.CollateralType _assetType,
         uint256 _totalAssets
     ) internal view returns (uint256 assets, uint256 shares) {
-        if (_assetType == ISilo.AssetType.Debt) revert ISilo.WrongAssetType();
-
         (
             ISiloConfig.ConfigData memory collateralConfig,
             ISiloConfig.ConfigData memory debtConfig,
@@ -79,7 +77,7 @@ library SiloERC4626Lib {
         uint256 shareTokenTotalSupply;
         uint256 liquidity;
 
-        if (_assetType == ISilo.AssetType.Collateral) {
+        if (_assetType == ISilo.CollateralType.Collateral) {
             shareTokenTotalSupply = IShareToken(collateralConfig.collateralShareToken).totalSupply();
             (liquidity, _totalAssets, ) = SiloLendingLib.getLiquidityAndAssetsWithInterest(collateralConfig);
         } else {
@@ -88,7 +86,7 @@ library SiloERC4626Lib {
         }
 
         if (SiloSolvencyLib.depositWithoutDebt(debtInfo)) {
-            shares = _assetType == ISilo.AssetType.Protected
+            shares = _assetType == ISilo.CollateralType.Protected
                 ? IShareToken(collateralConfig.protectedShareToken).balanceOf(_owner)
                 : IShareToken(collateralConfig.collateralShareToken).balanceOf(_owner);
 
@@ -100,7 +98,7 @@ library SiloERC4626Lib {
                 _assetType
             );
 
-            if (_assetType == ISilo.AssetType.Protected || assets <= liquidity) return (assets, shares);
+            if (_assetType == ISilo.CollateralType.Protected || assets <= liquidity) return (assets, shares);
 
             assets = liquidity;
 
@@ -129,7 +127,7 @@ library SiloERC4626Lib {
         address _owner,
         uint256 _liquidity,
         uint256 _shareTokenTotalSupply,
-        ISilo.AssetType _assetType,
+        ISilo.CollateralType _assetType,
         uint256 _totalAssets
     ) internal view returns (uint256 assets, uint256 shares) {
         SiloSolvencyLib.LtvData memory ltvData = SiloSolvencyLib.getAssetsDataForLtvCalculations(
@@ -176,7 +174,7 @@ library SiloERC4626Lib {
         uint256 _shares,
         address _owner,
         address _spender,
-        ISilo.AssetType _assetType,
+        ISilo.CollateralType _assetType,
         uint256 _liquidity,
         ISilo.Assets storage _totalCollateral
     ) internal returns (uint256 assets, uint256 shares) {
@@ -263,7 +261,7 @@ library SiloERC4626Lib {
         address _receiver,
         address _owner,
         address _spender,
-        ISilo.AssetType _assetType,
+        ISilo.CollateralType _assetType,
         uint256 _liquidity,
         ISilo.Assets storage _totalCollateral
     ) internal returns (uint256 assets, uint256 shares) {

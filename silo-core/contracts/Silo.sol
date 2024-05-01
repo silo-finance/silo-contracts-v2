@@ -47,7 +47,7 @@ contract Silo is SiloERC4626 {
     /// struct instead of uint256 to pass storage reference to functions.
     /// `total` can have outdated value (without interest), if you doing view call (of off-chain call) please use
     /// getters eg `getCollateralAssets()` to fetch value that includes interest.
-    mapping(AssetType => Assets) public override total;
+    mapping(uint256 => Assets) public override total;
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor(ISiloFactory _siloFactory) {
@@ -299,7 +299,7 @@ contract Silo is SiloERC4626 {
     }
 
     /// @inheritdoc ISilo
-    function maxDeposit(address /* _receiver */, AssetType _assetType)
+    function maxDeposit(address /* _receiver */, CollateralType _assetType)
         external
         view
         virtual
@@ -309,12 +309,12 @@ contract Silo is SiloERC4626 {
     }
 
     /// @inheritdoc ISilo
-    function previewDeposit(uint256 _assets, AssetType _assetType) external view virtual returns (uint256 shares) {
+    function previewDeposit(uint256 _assets, CollateralType _assetType) external view virtual returns (uint256 shares) {
         return _previewDeposit(_assets, _assetType);
     }
 
     /// @inheritdoc ISilo
-    function deposit(uint256 _assets, address _receiver, AssetType _assetType)
+    function deposit(uint256 _assets, address _receiver, CollateralType _assetType)
         external
         virtual
         returns (uint256 shares)
@@ -323,27 +323,25 @@ contract Silo is SiloERC4626 {
     }
 
     /// @inheritdoc ISilo
-    function maxMint(address /* _receiver */, AssetType _assetType)
+    function maxMint(address /* _receiver */, CollateralType _assetType)
         external
         view
         virtual
         returns (uint256 maxShares)
     {
-        if (_assetType == AssetType.Debt) revert ISilo.WrongAssetType();
-
         (address protectedToken, address collateralToken, ) = sharedStorage.siloConfig.getShareTokens(address(this));
-        address shareToken = _assetType == AssetType.Collateral ? collateralToken : protectedToken;
+        address shareToken = _assetType == CollateralType.Collateral ? collateralToken : protectedToken;
 
         return _callMaxDepositOrMint(IShareToken(shareToken).totalSupply());
     }
 
     /// @inheritdoc ISilo
-    function previewMint(uint256 _shares, AssetType _assetType) external view virtual returns (uint256 assets) {
+    function previewMint(uint256 _shares, CollateralType _assetType) external view virtual returns (uint256 assets) {
         return _previewMint(_shares, _assetType);
     }
 
     /// @inheritdoc ISilo
-    function mint(uint256 _shares, address _receiver, AssetType _assetType)
+    function mint(uint256 _shares, address _receiver, CollateralType _assetType)
         external
         virtual
         returns (uint256 assets)
@@ -352,19 +350,22 @@ contract Silo is SiloERC4626 {
     }
 
     /// @inheritdoc ISilo
-    function maxWithdraw(address _owner, AssetType _assetType) external view virtual returns (uint256 maxAssets) {
-        if (_assetType == AssetType.Debt) revert ISilo.WrongAssetType();
-
+    function maxWithdraw(address _owner, CollateralType _assetType) external view virtual returns (uint256 maxAssets) {
         (maxAssets,) = _callMaxWithdraw(sharedStorage.siloConfig, _owner, _assetType);
     }
 
     /// @inheritdoc ISilo
-    function previewWithdraw(uint256 _assets, AssetType _assetType) external view virtual returns (uint256 shares) {
+    function previewWithdraw(uint256 _assets, CollateralType _assetType)
+        external
+        view
+        virtual
+        returns (uint256 shares)
+    {
         return _previewWithdraw(_assets, _assetType);
     }
 
     /// @inheritdoc ISilo
-    function withdraw(uint256 _assets, address _receiver, address _owner, AssetType _assetType)
+    function withdraw(uint256 _assets, address _receiver, address _owner, CollateralType _assetType)
         external
         virtual
         returns (uint256 shares)
@@ -373,19 +374,17 @@ contract Silo is SiloERC4626 {
     }
 
     /// @inheritdoc ISilo
-    function maxRedeem(address _owner, AssetType _assetType) external view virtual returns (uint256 maxShares) {
-        if (_assetType == AssetType.Debt) revert ISilo.WrongAssetType();
-
+    function maxRedeem(address _owner, CollateralType _assetType) external view virtual returns (uint256 maxShares) {
         (, maxShares) = _callMaxWithdraw(sharedStorage.siloConfig, _owner, _assetType);
     }
 
     /// @inheritdoc ISilo
-    function previewRedeem(uint256 _shares, AssetType _assetType) external view virtual returns (uint256 assets) {
+    function previewRedeem(uint256 _shares, CollateralType _assetType) external view virtual returns (uint256 assets) {
         return _previewRedeem(_shares, _assetType);
     }
 
     /// @inheritdoc ISilo
-    function redeem(uint256 _shares, address _receiver, address _owner, AssetType _assetType)
+    function redeem(uint256 _shares, address _receiver, address _owner, CollateralType _assetType)
         external
         virtual
         returns (uint256 assets)
@@ -397,7 +396,7 @@ contract Silo is SiloERC4626 {
     function transitionCollateral( // solhint-disable-line function-max-lines
         uint256 _shares,
         address _owner,
-        AssetType _withdrawType
+        CollateralType _withdrawType
     )
         external
         virtual
@@ -407,7 +406,7 @@ contract Silo is SiloERC4626 {
 
         (assets, toShares) = Actions.transitionCollateral(sharedStorage, _shares, _owner, _withdrawType, total);
 
-        if (_withdrawType == AssetType.Collateral) {
+        if (_withdrawType == CollateralType.Collateral) {
             emit Withdraw(msg.sender, _owner, _owner, assets, _shares);
             emit DepositProtected(msg.sender, _owner, assets, toShares);
         } else {
@@ -437,7 +436,12 @@ contract Silo is SiloERC4626 {
 
     /// @inheritdoc ISilo
     // solhint-disable-next-line code-complexity, function-max-lines
-    function leverageSameAsset(uint256 _depositAssets, uint256 _borrowAssets, address _borrower, AssetType _assetType)
+    function leverageSameAsset(
+        uint256 _depositAssets,
+        uint256 _borrowAssets,
+        address _borrower,
+        CollateralType _assetType
+    )
         external
         virtual
         returns (uint256 depositedShares, uint256 borrowedShares)
