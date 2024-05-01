@@ -3,4 +3,4 @@ pragma solidity 0.8.21;
 
 import { SiloMock } from "./SiloMock.sol";
 
-contract SiloMock0 is SiloMock {}
+contract Silo0 is SiloMock {}

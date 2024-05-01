@@ -3,8 +3,8 @@ import "../_common/IsSiloFunction.spec";
 import "../_common/SiloMethods.spec";
 import "../_common/Helpers.spec";
 import "../_common/CommonSummarizations.spec";
-import "../../_simplifications/Oracle_quote_one.spec";
-import "../../_simplifications/Silo_isSolvent_ghost.spec";
+import "../../_simplifications/priceOracle.spec";
+import "../../_simplifications/SiloMathLib.spec";
 import "../../_simplifications/SimplifiedGetCompoundInterestRateAndUpdate.spec";
 
 /**
@@ -31,7 +31,7 @@ rule VC_Silo_total_collateral_increase(
 
     bool withInterest = isWithInterest(e);
 
-    siloFnSelector(e, f, assetsOrShares, receiver);
+    siloFnSelector_assets_receiver(e, f, assetsOrShares, receiver);
 
     mathint totalDepositsAfter = silo0.total(ISilo.AssetType.Collateral);
     mathint shareTokenTotalSupplyAfter = shareCollateralToken0.totalSupply();
@@ -133,47 +133,18 @@ invariant collateralAssetsBoundShareTokenTotalSupply()
 /**
 Silo contract cannot have assets of any type when the interest rate timestamp is 0.
 */
-invariant cannotHaveAssestWithZeroInterestRateTimestamp() silo0.getSiloDataInterestRateTimestamp() == 0 => 
-        (silo0.total[ISilo.AssetType.Collateral].assets + 
-            silo0.total[ISilo.AssetType.Protected].assets + 
-             silo0.total[ISilo.AssetType.Debt].assets == 0) {
-
-                preserved with (env e) {
-                    completeSiloSetupEnv(e);
-                }
-
-                // These functions could change the assets, but they can only be called
-                // with block.timestamp > 0
-                preserved deposit(uint256 _assets, address _receiver) with (env e) {
-                    completeSiloSetupEnv(e);
-                    require e.block.timestamp > 0;
-                }
-
-                preserved deposit(uint256 _assets, address _receiver, ISilo.AssetType _assetType) with (env e) {
-                    completeSiloSetupEnv(e);
-                    require e.block.timestamp > 0;
-                }
-
-                preserved mint(uint256 _shares, address _receiver) with (env e) {
-                    completeSiloSetupEnv(e);
-                    require e.block.timestamp > 0;
-                }
-
-                preserved mint(uint256 _assets, address _receiver, ISilo.AssetType _assetType) with (env e) {
-                    completeSiloSetupEnv(e);
-                    require e.block.timestamp > 0;
-                }
-
-                preserved withdrawCollateralsToLiquidator(
-                    uint256 _withdrawAssetsFromCollateral,
-                    uint256 _withdrawAssetsFromProtected,
-                    address _borrower,
-                    address _liquidator,
-                    bool _receiveSToken) with (env e) {
-                        completeSiloSetupEnv(e);
-                        requireProtectedToken0TotalAndBalancesIntegrity();
-                    }
-
+invariant cannotHaveAssestWithZeroInterestRateTimestamp() 
+    silo0.getSiloDataInterestRateTimestamp() == 0 => (
+        silo0.total[ISilo.AssetType.Collateral].assets == 0 &&
+        silo0.total[ISilo.AssetType.Protected].assets ==0 && 
+        silo0.total[ISilo.AssetType.Debt].assets == 0
+    )
+    {
+        preserved with (env e) {
+            completeSiloSetupEnv(e);
+            requireProtectedToken0TotalAndBalancesIntegrity();
+            require e.block.timestamp > 0;
+        }
     }
 
 invariant siloSolvency() 
@@ -225,7 +196,7 @@ rule VC_Silo_total_collateral_decrease(
     mathint balanceSharesBefore = shareCollateralToken0.balanceOf(receiver);
     mathint siloBalanceBefore = token0.balanceOf(silo0);
 
-    siloFnSelector(e, f, assetsOrShares, receiver);
+    siloFnSelector_assets_receiver(e, f, assetsOrShares, receiver);
 
     mathint totalDepositsAfter = silo0.getCollateralAssets(e);
     mathint protectedAssetsAfter = silo0.total[ISilo.AssetType.Protected].assets;
@@ -278,7 +249,7 @@ rule VC_Silo_total_protected_increase(
     mathint balanceSharesBefore = shareProtectedCollateralToken0.balanceOf(receiver);
     mathint siloBalanceBefore = token0.balanceOf(silo0);
 
-    siloFnSelector(e, f, assetsOrShares, receiver);
+    siloFnSelector_assets_receiver(e, f, assetsOrShares, receiver);
 
     mathint protectedAssetsAfter = silo0.total(ISilo.AssetType.Protected);
     mathint shareTokenTotalSupplyAfter = shareProtectedCollateralToken0.totalSupply();
@@ -324,7 +295,7 @@ rule VC_Silo_total_protected_decrease(
     mathint balanceSharesBefore = shareProtectedCollateralToken0.balanceOf(receiver);
     mathint siloBalanceBefore = token0.balanceOf(silo0);
 
-    siloFnSelector(e, f, assetsOrShares, receiver);
+    siloFnSelector_assets_receiver(e, f, assetsOrShares, receiver);
 
     mathint protectedAssetsAfter = silo0.total(ISilo.AssetType.Protected);
     mathint shareTokenTotalSupplyAfter = shareProtectedCollateralToken0.totalSupply();
@@ -372,7 +343,7 @@ rule VC_Silo_total_debt_increase(
 
     bool withInterest = isWithInterest(e);
 
-    siloFnSelector(e, f, assetsOrShares, receiver);
+    siloFnSelector_assets_receiver(e, f, assetsOrShares, receiver);
 
     mathint debtAssetsAfter = silo0.total(ISilo.AssetType.Debt);
     mathint shareTokenTotalSupplyAfter = shareDebtToken0.totalSupply();
@@ -457,7 +428,7 @@ rule VC_Silo_debt_share_balance(
 
     bool withInterest = isWithInterest(e);
 
-    siloFnSelector(e, f, assetsOrShares, receiver);
+    siloFnSelector_assets_receiver(e, f, assetsOrShares, receiver);
 
     mathint debtAssetsAfter = silo0.total(ISilo.AssetType.Debt);
     mathint balanceSharesAfter = shareDebtToken0.balanceOf(receiver);
@@ -488,7 +459,7 @@ rule VC_Silo_protected_share_balance(
     mathint protectedtAssetsBefore = silo0.total(ISilo.AssetType.Protected);
     mathint balanceSharesBefore = shareProtectedCollateralToken0.balanceOf(receiver);
 
-    siloFnSelector(e, f, assetsOrShares, receiver);
+    siloFnSelector_assets_receiver(e, f, assetsOrShares, receiver);
 
     mathint protectedAssetsAfter = silo0.total(ISilo.AssetType.Protected);
     mathint balanceSharesAfter = shareProtectedCollateralToken0.balanceOf(receiver);
@@ -522,7 +493,7 @@ rule VC_Silo_collateral_share_balance(
     // Turning off an interest as otherwise `decrease` can't be verified.
     require !isWithInterest(e);
 
-    siloFnSelector(e, f, assetsOrShares, receiver);
+    siloFnSelector_assets_receiver(e, f, assetsOrShares, receiver);
 
     mathint collateralAssetsAfter = silo0.total(ISilo.AssetType.Collateral);
     mathint balanceSharesAfter = shareCollateralToken0.balanceOf(receiver);
@@ -553,7 +524,7 @@ rule VC_Silo_siloData_management(env e, method f) filtered { f -> !f.isView } {
     uint256 flashloanAmount;
     address receiver;
 
-    siloFnSelector(e, f, flashloanAmount, receiver);
+    siloFnSelector_assets_receiver(e, f, flashloanAmount, receiver);
 
     uint256 accrueInterestAfter = currentContract.getSiloDataDaoAndDeployerFees();
 
@@ -655,3 +626,98 @@ rule protectedSharesBalance(env e, method f, address receiver)
         "The balance of share tokens should decrease only if protected assets decreased";
 }
 
+// save the run that violates the customers spec
+// document what methods actually change it..
+// the same for others
+rule whoCanChangeShareTokenTotalSupply(env e, method f) filtered { f -> !f.isView } 
+{
+    address receiver;
+    completeSiloSetupEnv(e);
+    totalSupplyMoreThanBalance(e.msg.sender);
+    totalSupplyMoreThanBalance(receiver);
+
+    mathint collateralTotalSupplyBefore = shareCollateralToken0.totalSupply();
+    mathint totalColateralBefore;
+    totalColateralBefore, _ = getCollateralAndProtectedAssets();
+    
+    calldataarg args;
+    f(e, args);
+    mathint collateralTotalSupplyAfter = shareCollateralToken0.totalSupply();
+    mathint totalColateralAfter;
+    totalColateralAfter, _ = getCollateralAndProtectedAssets();
+    
+    assert collateralTotalSupplyAfter > collateralTotalSupplyBefore <=> 
+        totalColateralAfter > totalColateralBefore;
+
+    assert totalColateralAfter > totalColateralBefore => canIncreaseTotalCollateral(f);
+    assert totalColateralAfter < totalColateralBefore => canDecreaseTotalCollateral(f);
+}
+
+// debtShareToken.totalSupply and Silo._total[ISilo.AssetType.Debt].assets should decrease only on repay, repayShares, liquidationCall. accrueInterest 
+// increase only Silo._total[ISilo.AssetType.Debt].assets.
+rule whoCanChangeDebtShareTokenTotalSupply(env e, method f) filtered { f -> !f.isView } 
+{
+    address receiver;
+    completeSiloSetupEnv(e);
+    totalSupplyMoreThanBalance(e.msg.sender);
+    totalSupplyMoreThanBalance(receiver);
+
+    mathint debtTotalSupplyBefore = shareDebtToken0.totalSupply();
+    mathint totalDebtBefore;
+    _, totalDebtBefore = getCollateralAndDebtAssets();
+    
+    calldataarg args;
+    f(e, args);
+    mathint debtTotalSupplyAfter = shareDebtToken0.totalSupply();
+    mathint totalDebtAfter;
+    _, totalDebtAfter = getCollateralAndDebtAssets();
+    
+    assert debtTotalSupplyAfter > debtTotalSupplyBefore <=> 
+        totalDebtAfter > totalDebtBefore;
+
+    assert debtTotalSupplyAfter > debtTotalSupplyBefore => canIncreaseTotalCollateral(f);
+    assert debtTotalSupplyAfter < debtTotalSupplyBefore => canDecreaseTotalCollateral(f);
+}
+
+rule whoCanChangeProtectedShareTokenTotalSupply(env e, method f) filtered { f -> !f.isView } 
+{
+    address receiver;
+    completeSiloSetupEnv(e);
+    totalSupplyMoreThanBalance(e.msg.sender);
+    totalSupplyMoreThanBalance(receiver);
+
+    mathint protectedCollateralTotalSupplyBefore = shareProtectedCollateralToken0.totalSupply();
+    mathint totalProtectedColateralBefore;
+    _, totalProtectedColateralBefore = getCollateralAndProtectedAssets();
+    
+    calldataarg args;
+    f(e, args);
+    mathint protectedCollateralTotalSupplyAfter = shareProtectedCollateralToken0.totalSupply();
+    mathint totalProtectedColateralAfter;
+    _, totalProtectedColateralAfter = getCollateralAndProtectedAssets();
+    
+    assert protectedCollateralTotalSupplyAfter > protectedCollateralTotalSupplyBefore <=> 
+        totalProtectedColateralAfter > totalProtectedColateralBefore;
+
+    assert totalProtectedColateralAfter > totalProtectedColateralBefore => canIncreaseTotalProtectedCollateral(f);
+    assert totalProtectedColateralAfter < totalProtectedColateralBefore => canDecreaseTotalProtectedCollateral(f);
+}
+
+rule siloTotalsEqualBalance(env e, method f) filtered { f -> !f.isView } 
+{
+    completeSiloSetupEnv(e);
+    totalSupplyMoreThanBalance(e.msg.sender);
+
+    mathint tokensBefore = token0.balanceOf(currentContract);
+    mathint totalProtectedColateralBefore; mathint totalColateralBefore;
+    totalColateralBefore, totalProtectedColateralBefore = getCollateralAndProtectedAssets();
+    
+    calldataarg args;
+    f(e, args);
+    mathint tokensAfter = token0.balanceOf(currentContract);
+    mathint totalProtectedColateralAfter; mathint totalColateralAfter;
+    totalColateralAfter, totalProtectedColateralAfter = getCollateralAndProtectedAssets();
+    
+    assert tokensBefore >= totalColateralBefore + totalProtectedColateralBefore =>
+        tokensAfter >= totalColateralAfter + totalProtectedColateralAfter;
+}

@@ -143,7 +143,7 @@ rule VS_Silo_debtShareToken_balance_notZero(env e, method f, address receiver) f
     mathint debtBalanceBefore = shareDebtToken0.balanceOf(receiver);
     require debtBalanceBefore == 0;
 
-    siloFnSelectorWithReceiver(e, f, receiver);
+    siloFnSelectorWithReceiver(e, f, receiver, owner, anyType);
 
     mathint debtBalanceAfter = shareDebtToken0.balanceOf(receiver);
     mathint collateralBalanceAfter = shareCollateralToken0.balanceOf(receiver);

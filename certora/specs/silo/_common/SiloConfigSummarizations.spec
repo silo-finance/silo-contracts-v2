@@ -35,6 +35,12 @@ ghost uint256 deployerFee {
 
 ghost uint256 flashloanFee0;
 ghost uint256 flashloanFee1;
+ghost address solvencyOracle0;
+ghost address maxLtvOracle0;
+ghost address solvencyOracle1;
+ghost address maxLtvOracle1;
+ghost uint256 lt0;
+ghost uint256 lt1;
 
 function getShareTokensSumm(address _silo) returns (address, address, address) {
 	if(_silo == silo0) {
@@ -53,7 +59,8 @@ function getConfigSumm(address _silo) returns ISiloConfig.ConfigData {
     ISiloConfig.ConfigData data;
     require data.daoFee == daoFee;
     require data.deployerFee == deployerFee;
-    require data.maxLtv <= MAX_LTV_PERCENT() && data.maxLtv > 0;
+    require data.lt <= MAX_LTV_PERCENT() && data.maxLtv > 0;
+    require data.maxLtv <= data.lt;
     if(_silo == silo0) {
         require data.silo == silo0;
         require data.otherSilo == silo1;
@@ -62,6 +69,9 @@ function getConfigSumm(address _silo) returns ISiloConfig.ConfigData {
         require data.debtShareToken == shareDebtToken0;
         require data.token == token0;
         require data.flashloanFee == flashloanFee0;
+        require data.solvencyOracle == solvencyOracle0;
+        require data.maxLtvOracle == maxLtvOracle0;
+        require data.lt == lt0;
     }
     else if(_silo == silo1) { 
         require data.silo == silo1;
@@ -71,6 +81,9 @@ function getConfigSumm(address _silo) returns ISiloConfig.ConfigData {
         require data.debtShareToken == shareDebtToken1;
         require data.token == token1;
         require data.flashloanFee == flashloanFee1;
+        require data.solvencyOracle == solvencyOracle1;
+        require data.maxLtvOracle == maxLtvOracle1;
+        require data.lt == lt1;
     }
     else {
         assert false, "Did not expect a silo instance different from Silo0 and Silo1";
