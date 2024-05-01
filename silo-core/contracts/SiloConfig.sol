@@ -75,7 +75,6 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
 
     bool private immutable _CALL_BEFORE_QUOTE1;
 
-    // TODO do we need events for this? this is internal state only
     mapping (address borrower => DebtInfo debtInfo) internal _debtsInfo;
     
     /// @param _siloId ID of this pool assigned by factory

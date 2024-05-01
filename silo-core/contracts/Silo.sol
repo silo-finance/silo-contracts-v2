@@ -437,7 +437,8 @@ contract Silo is SiloERC4626 {
             total[_assetType]
         );
 
-        // TODO event
+        emit Borrow(msg.sender, _borrower, _borrower, _borrowAssets, borrowedShares);
+        emit Deposit(msg.sender, _borrower, _depositAssets, depositedShares);
     }
 
     /// @inheritdoc ISilo
@@ -559,6 +560,7 @@ contract Silo is SiloERC4626 {
         returns (bool success)
     {
         success = Actions.flashLoan( sharedStorage, _receiver, _token, _amount, siloData, _data);
+        if (success) emit FlashLoan(_amount);
     }
 
     /// @inheritdoc ISilo
@@ -704,10 +706,6 @@ contract Silo is SiloERC4626 {
         );
 
         emit Borrow(msg.sender, _receiver, _borrower, assets, shares);
-
-        if (_leverage) {
-            emit Leverage();
-        }
     }
 
     /// @param _liquidation TRUE when call is from liquidator module
@@ -823,7 +821,7 @@ contract Silo is SiloERC4626 {
             ISilo(_otherSilo).accrueInterest();
         }
 
-        return SiloLendingLib.accrueInterestForAsset(
+        accruedInterest = SiloLendingLib.accrueInterestForAsset(
             _interestRateModel,
             _daoFee,
             _deployerFee,
@@ -831,5 +829,7 @@ contract Silo is SiloERC4626 {
             total[AssetType.Collateral],
             total[AssetType.Debt]
         );
+
+        if (accruedInterest != 0) emit AccruedInterest(accruedInterest);
     }
 }
