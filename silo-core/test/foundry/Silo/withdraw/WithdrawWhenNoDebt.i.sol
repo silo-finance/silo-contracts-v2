@@ -67,7 +67,7 @@ contract WithdrawWhenNoDebtTest is SiloLittleHelper, Test {
         assertEq(IShareToken(collateralShareToken).balanceOf(address(this)), 2e18, "collateral burned");
         assertEq(gotShares, sharesBefore, "withdraw all shares");
 
-        assertEq(silo0.total(ISilo.AssetType.Protected), 0, "protected Assets should be withdrawn");
+        assertEq(silo0.total(uint8(ISilo.AssetType.Protected)), 0, "protected Assets should be withdrawn");
     }
 
     /*
@@ -100,7 +100,7 @@ contract WithdrawWhenNoDebtTest is SiloLittleHelper, Test {
 
         _userWithdrawing();
 
-        assertEq(silo0.total(ISilo.AssetType.Protected), 11e18 + 1, "protected Assets should be withdrawn");
+        assertEq(silo0.total(uint8(ISilo.AssetType.Protected)), 11e18 + 1, "protected Assets should be withdrawn");
         assertEq(silo0.getCollateralAssets(), 22e18 + 1, "protected Assets should be withdrawn");
     }
 
@@ -133,7 +133,7 @@ contract WithdrawWhenNoDebtTest is SiloLittleHelper, Test {
         _withdraw(address(1), _deposit1 - _deposit1 / 2, ISilo.CollateralType.Protected);
         _withdraw(address(1), _deposit1 - _deposit1 / 2, ISilo.CollateralType.Collateral);
 
-        assertEq(silo0.total(ISilo.AssetType.Protected), 0, "protected Assets should be withdrawn");
+        assertEq(silo0.total(uint8(ISilo.AssetType.Protected)), 0, "protected Assets should be withdrawn");
         assertEq(silo0.getCollateralAssets(), 0, "protected Assets should be withdrawn");
     }
 
