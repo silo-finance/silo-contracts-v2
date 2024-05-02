@@ -655,6 +655,7 @@ contract Silo is SiloERC4626 {
 
     /// @dev that method allow to finish liquidation process by giving up collateral to liquidator
     function withdrawCollateralsToLiquidator(
+        address _siloWithDebt,
         uint256 _withdrawAssetsFromCollateral,
         uint256 _withdrawAssetsFromProtected,
         address _borrower,
@@ -662,6 +663,7 @@ contract Silo is SiloERC4626 {
         bool _receiveSToken
     ) external virtual {
         LiquidationWithdrawLib.withdrawCollateralsToLiquidator(
+            _siloWithDebt,
             sharedStorage.siloConfig,
             _withdrawAssetsFromCollateral,
             _withdrawAssetsFromProtected,

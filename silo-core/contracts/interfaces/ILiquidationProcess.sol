@@ -10,9 +10,13 @@ interface ILiquidationProcess {
     /// @param _borrower Address of the borrower whose debt is being repaid
     /// @param _repayer Address of the wallet which will repay debt
     /// @return shares The equivalent number of shares for the provided asset amount
-    function liquidationRepay(uint256 _assets, address _borrower, address _repayer) external returns (uint256 shares);
+    function liquidationRepay(uint256 _assets, address _borrower, address _repayer)
+        external
+        returns (uint256 shares);
 
+    /// @param _siloWithDebt silo address where liquidation module did repay
     function withdrawCollateralsToLiquidator(
+        address _siloWithDebt,
         uint256 _withdrawAssetsFromCollateral,
         uint256 _withdrawAssetsFromProtected,
         address _borrower,

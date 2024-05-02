@@ -27,7 +27,7 @@ contract PartialLiquidation is IPartialLiquidation {
 
     /// @inheritdoc IPartialLiquidation
     function liquidationCall( // solhint-disable-line function-max-lines, code-complexity
-        address _siloWithDebt, // TODO bug - we need to verify if _siloWithDebt is real silo
+        address _siloWithDebt,
         address _collateralAsset,
         address _debtAsset,
         address _borrower,
@@ -57,30 +57,38 @@ contract PartialLiquidation is IPartialLiquidation {
         ) = _fetchConfigs(_siloWithDebt, _collateralAsset, _debtAsset, _borrower);
 
         { // too deep
-            bool selfLiquidation = _borrower == msg.sender;
             uint256 withdrawAssetsFromCollateral;
             uint256 withdrawAssetsFromProtected;
 
-            (
-                withdrawAssetsFromCollateral, withdrawAssetsFromProtected, repayDebtAssets
-            ) = PartialLiquidationExecLib.getExactLiquidationAmounts(
-                collateralConfig,
-                debtConfig,
-                _borrower,
-                _debtToCover,
-                selfLiquidation ? 0 : collateralConfig.liquidationFee,
-                selfLiquidation
-            );
+            { // too deep
+                bool selfLiquidation = _borrower == msg.sender;
+
+                (
+                    withdrawAssetsFromCollateral, withdrawAssetsFromProtected, repayDebtAssets
+                ) = PartialLiquidationExecLib.getExactLiquidationAmounts(
+                    collateralConfig,
+                    debtConfig,
+                    _borrower,
+                    _debtToCover,
+                    selfLiquidation ? 0 : collateralConfig.liquidationFee,
+                    selfLiquidation
+                );
+            }
 
             if (repayDebtAssets == 0) revert NoDebtToCover();
             // this two value were split from total collateral to withdraw, so we will not overflow
             unchecked { withdrawCollateral = withdrawAssetsFromCollateral + withdrawAssetsFromProtected; }
 
             emit LiquidationCall(msg.sender, _receiveSToken);
-            ILiquidationProcess(debtConfig.silo).liquidationRepay(repayDebtAssets, _borrower, msg.sender);
+            ILiquidationProcess(_siloWithDebt).liquidationRepay(repayDebtAssets, _borrower, msg.sender);
 
             ILiquidationProcess(collateralConfig.silo).withdrawCollateralsToLiquidator(
-                withdrawAssetsFromCollateral, withdrawAssetsFromProtected, _borrower, msg.sender, _receiveSToken
+                _siloWithDebt,
+                withdrawAssetsFromCollateral,
+                withdrawAssetsFromProtected,
+                _borrower,
+                msg.sender,
+                _receiveSToken
             );
         }
 
