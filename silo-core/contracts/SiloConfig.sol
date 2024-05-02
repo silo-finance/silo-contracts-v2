@@ -188,7 +188,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
 
     function accrueInterestAndGetConfigOptimised(
         uint256 _action,
-        ISilo.AssetType _assetType
+        ISilo.CollateralType _collateralType
     ) external virtual returns (address shareToken, address asset, address hookReceiver, address liquidationModule) {
         _crossNonReentrantBefore(_action);
         _callAccrueInterest(msg.sender);
@@ -202,7 +202,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
             if (_action.matchAction(Hook.REPAY)) {
                 shareToken = _DEBT_SHARE_TOKEN0;
             } else {
-                shareToken = _assetType == ISilo.AssetType.Collateral
+                shareToken = _collateralType == ISilo.CollateralType.Collateral
                     ? _COLLATERAL_SHARE_TOKEN0
                     : _PROTECTED_COLLATERAL_SHARE_TOKEN0;
             }
@@ -212,7 +212,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
             if (_action.matchAction(Hook.REPAY)) {
                 shareToken = _DEBT_SHARE_TOKEN1;
             } else {
-                shareToken = _assetType == ISilo.AssetType.Collateral
+                shareToken = _collateralType == ISilo.CollateralType.Collateral
                     ? _COLLATERAL_SHARE_TOKEN1
                     : _PROTECTED_COLLATERAL_SHARE_TOKEN1;
             }

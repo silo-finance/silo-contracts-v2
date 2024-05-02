@@ -57,7 +57,7 @@ library SiloERC4626Lib {
     /// Debt withdrawals are not allowed, resulting in a revert if such an attempt is made.
     /// @param _config Configuration of the silo
     /// @param _owner Address of the user for which the maximum withdrawal amount is calculated
-    /// @param _assetType The type of asset being considered for withdrawal
+    /// @param _collateralType The type of asset being considered for withdrawal
     /// @param _totalAssets The total PROTECTED assets in the silo. In case of collateral use `0`, total
     /// collateral will be calculated internally with interest
     /// @return assets The maximum assets that the user can withdraw
@@ -65,11 +65,9 @@ library SiloERC4626Lib {
     function maxWithdraw(
         ISiloConfig _config,
         address _owner,
-        ISilo.AssetType _assetType,
+        ISilo.CollateralType _collateralType,
         uint256 _totalAssets
     ) internal view returns (uint256 assets, uint256 shares) {
-        if (_assetType == ISilo.AssetType.Debt) revert ISilo.WrongAssetType();
-
         (
             ISiloConfig.ConfigData memory collateralConfig,
             ISiloConfig.ConfigData memory debtConfig,
@@ -79,7 +77,7 @@ library SiloERC4626Lib {
         uint256 shareTokenTotalSupply;
         uint256 liquidity;
 
-        if (_assetType == ISilo.AssetType.Collateral) {
+        if (_collateralType == ISilo.CollateralType.Collateral) {
             shareTokenTotalSupply = IShareToken(collateralConfig.collateralShareToken).totalSupply();
             (liquidity, _totalAssets, ) = SiloLendingLib.getLiquidityAndAssetsWithInterest(collateralConfig);
         } else {
@@ -88,7 +86,7 @@ library SiloERC4626Lib {
         }
 
         if (SiloSolvencyLib.depositWithoutDebt(debtInfo)) {
-            shares = _assetType == ISilo.AssetType.Protected
+            shares = _collateralType == ISilo.CollateralType.Protected
                 ? IShareToken(collateralConfig.protectedShareToken).balanceOf(_owner)
                 : IShareToken(collateralConfig.collateralShareToken).balanceOf(_owner);
 
@@ -97,10 +95,10 @@ library SiloERC4626Lib {
                 _totalAssets,
                 shareTokenTotalSupply,
                 Rounding.MAX_WITHDRAW_TO_ASSETS,
-                _assetType
+                ISilo.AssetType(uint256(_collateralType))
             );
 
-            if (_assetType == ISilo.AssetType.Protected || assets <= liquidity) return (assets, shares);
+            if (_collateralType == ISilo.CollateralType.Protected || assets <= liquidity) return (assets, shares);
 
             assets = liquidity;
 
@@ -118,7 +116,7 @@ library SiloERC4626Lib {
             return (assets, shares);
         } else {
             return maxWithdrawWhenDebt(
-                collateralConfig, debtConfig, _owner, liquidity, shareTokenTotalSupply, _assetType, _totalAssets
+                collateralConfig, debtConfig, _owner, liquidity, shareTokenTotalSupply, _collateralType, _totalAssets
             );
         }
     }
@@ -129,7 +127,7 @@ library SiloERC4626Lib {
         address _owner,
         uint256 _liquidity,
         uint256 _shareTokenTotalSupply,
-        ISilo.AssetType _assetType,
+        ISilo.CollateralType _collateralType,
         uint256 _totalAssets
     ) internal view returns (uint256 assets, uint256 shares) {
         SiloSolvencyLib.LtvData memory ltvData = SiloSolvencyLib.getAssetsDataForLtvCalculations(
@@ -158,7 +156,7 @@ library SiloERC4626Lib {
             assets,
             ltvData.borrowerCollateralAssets,
             ltvData.borrowerProtectedAssets,
-            _assetType,
+            _collateralType,
             _totalAssets,
             _shareTokenTotalSupply,
             _liquidity
@@ -176,12 +174,12 @@ library SiloERC4626Lib {
         uint256 _shares,
         address _owner,
         address _spender,
-        ISilo.AssetType _assetType,
+        ISilo.CollateralType _collateralType,
         uint256 _liquidity,
         ISilo.Assets storage _totalCollateral
     ) internal returns (uint256 assets, uint256 shares) {
         return withdraw(
-            address(0), _shareToken, 0, _shares, _owner, _owner, _spender, _assetType, _liquidity, _totalCollateral
+            address(0), _shareToken, 0, _shares, _owner, _owner, _spender, _collateralType, _liquidity, _totalCollateral
         );
     }
 
@@ -250,7 +248,7 @@ library SiloERC4626Lib {
     /// @param _receiver Address receiving the withdrawn assets
     /// @param _owner Address of the owner of the shares being burned
     /// @param _spender Address executing the withdrawal; may be different than `_owner` if an allowance was set
-    /// @param _assetType Type of the asset being withdrawn (Collateral or Protected)
+    /// @param _collateralType Type of the asset being withdrawn (Collateral or Protected)
     /// @param _liquidity Available liquidity for the withdrawal
     /// @param _totalCollateral Reference to the total collateral assets in the silo
     /// @return assets The exact amount of assets withdrawn
@@ -263,7 +261,7 @@ library SiloERC4626Lib {
         address _receiver,
         address _owner,
         address _spender,
-        ISilo.AssetType _assetType,
+        ISilo.CollateralType _collateralType,
         uint256 _liquidity,
         ISilo.Assets storage _totalCollateral
     ) internal returns (uint256 assets, uint256 shares) {
@@ -280,7 +278,7 @@ library SiloERC4626Lib {
                 shareTotalSupply,
                 Rounding.WITHDRAW_TO_ASSETS,
                 Rounding.WITHDRAW_TO_SHARES,
-                _assetType
+                ISilo.AssetType(uint256(_collateralType))
             );
 
             if (assets == 0 || shares == 0) revert ISilo.NothingToWithdraw();

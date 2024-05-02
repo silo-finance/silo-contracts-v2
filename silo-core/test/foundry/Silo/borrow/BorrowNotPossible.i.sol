@@ -37,7 +37,7 @@ contract BorrowNotPossibleTest is SiloLittleHelper, Test {
         address borrower = makeAddr("Borrower");
         address depositor = makeAddr("Depositor");
 
-        _deposit(depositAssets, depositor, ISilo.AssetType.Collateral);
+        _deposit(depositAssets, depositor, ISilo.CollateralType.Collateral);
         _depositForBorrow(depositAssets, borrower);
 
         vm.prank(borrower);
@@ -52,7 +52,7 @@ contract BorrowNotPossibleTest is SiloLittleHelper, Test {
         address borrower = makeAddr("Borrower");
         address depositor = makeAddr("Depositor");
 
-        _deposit(depositAssets, borrower, ISilo.AssetType.Collateral);
+        _deposit(depositAssets, borrower, ISilo.CollateralType.Collateral);
         _depositForBorrow(depositAssets, depositor);
 
         vm.prank(borrower);

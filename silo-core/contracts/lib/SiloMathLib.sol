@@ -246,7 +246,7 @@ library SiloMathLib {
     /// threshold
     /// @param _borrowerCollateralAssets Amount of collateral assets currently held by the borrower
     /// @param _borrowerProtectedAssets Amount of protected assets currently held by the borrower
-    /// @param _assetType Specifies whether the asset is of type Collateral or Protected
+    /// @param _collateralType Specifies whether the asset is of type Collateral or Protected
     /// @param _totalAssets The entire quantity of assets available in the system for withdrawal
     /// @param _assetTypeShareTokenTotalSupply Total supply of share tokens for the specified asset type
     /// @param _liquidity Current liquidity in the system for the asset type
@@ -256,7 +256,7 @@ library SiloMathLib {
         uint256 _maxAssets,
         uint256 _borrowerCollateralAssets,
         uint256 _borrowerProtectedAssets,
-        ISilo.AssetType _assetType,
+        ISilo.CollateralType _collateralType,
         uint256 _totalAssets,
         uint256 _assetTypeShareTokenTotalSupply,
         uint256 _liquidity
@@ -264,13 +264,13 @@ library SiloMathLib {
         if (_maxAssets == 0) return (0, 0);
         if (_assetTypeShareTokenTotalSupply == 0) return (0, 0);
 
-        if (_assetType == ISilo.AssetType.Collateral) {
+        if (_collateralType == ISilo.CollateralType.Collateral) {
             assets = _maxAssets > _borrowerCollateralAssets ? _borrowerCollateralAssets : _maxAssets;
 
             if (assets > _liquidity) {
                 assets = _liquidity;
             }
-        } else if (_assetType == ISilo.AssetType.Protected) {
+        } else {
             assets = _maxAssets > _borrowerProtectedAssets ? _borrowerProtectedAssets : _maxAssets;
         }
 
@@ -279,7 +279,7 @@ library SiloMathLib {
             _totalAssets,
             _assetTypeShareTokenTotalSupply,
             Rounding.MAX_WITHDRAW_TO_SHARES,
-            _assetType
+            ISilo.AssetType(uint256(_collateralType))
         );
     }
 }

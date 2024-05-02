@@ -78,7 +78,7 @@ contract SiloIntegrationTest is VeSiloFeatures {
 
         vm.startPrank(_bob);
         _usdcToken.approve(silo1, amountToDeposit);
-        ISilo(silo1).deposit(amountToDeposit, _bob, ISilo.AssetType.Collateral);
+        ISilo(silo1).deposit(amountToDeposit, _bob, ISilo.CollateralType.Collateral);
         vm.stopPrank();
 
         assertEq(IERC20(collateralShareToken).balanceOf(_bob), amountToDeposit, "Invalid number of shares tokens");
@@ -99,7 +99,7 @@ contract SiloIntegrationTest is VeSiloFeatures {
 
         vm.startPrank(_alice);
         _wethToken.approve(silo0, amountToDeposit);
-        ISilo(silo0).deposit(amountToDeposit, _alice, ISilo.AssetType.Collateral);
+        ISilo(silo0).deposit(amountToDeposit, _alice, ISilo.CollateralType.Collateral);
         vm.stopPrank();
 
         uint256 borrowAmount = 10_000e6;

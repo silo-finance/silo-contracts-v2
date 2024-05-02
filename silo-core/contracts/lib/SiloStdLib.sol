@@ -10,6 +10,7 @@ import {ISilo} from "../interfaces/ISilo.sol";
 import {IInterestRateModel} from "../interfaces/IInterestRateModel.sol";
 import {IShareToken} from "../interfaces/IShareToken.sol";
 import {SiloMathLib} from "./SiloMathLib.sol";
+import {AssetTypes} from "./AssetTypes.sol";
 
 library SiloStdLib {
     using SafeERC20 for IERC20;
@@ -54,7 +55,7 @@ library SiloStdLib {
         returns (uint256 totalAssets, uint256 totalShares)
     {
         if (_assetType == ISilo.AssetType.Protected) {
-            totalAssets = ISilo(_configData.silo).total(ISilo.AssetType.Protected);
+            totalAssets = ISilo(_configData.silo).total(AssetTypes.PROTECTED);
             totalShares = IShareToken(_configData.protectedShareToken).totalSupply();
         } else if (_assetType == ISilo.AssetType.Collateral) {
             totalAssets = getTotalCollateralAssetsWithInterest(
@@ -65,11 +66,9 @@ library SiloStdLib {
             );
 
             totalShares = IShareToken(_configData.collateralShareToken).totalSupply();
-        } else if (_assetType == ISilo.AssetType.Debt) {
+        } else { // ISilo.AssetType.Debt
             totalAssets = getTotalDebtAssetsWithInterest(_configData.silo, _configData.interestRateModel);
             totalShares = IShareToken(_configData.debtShareToken).totalSupply();
-        } else {
-            revert ISilo.WrongAssetType();
         }
     }
 
@@ -141,6 +140,6 @@ library SiloStdLib {
 
         (
             totalDebtAssetsWithInterest,
-        ) = SiloMathLib.getDebtAmountsWithInterest(ISilo(_silo).total(ISilo.AssetType.Debt), rcomp);
+        ) = SiloMathLib.getDebtAmountsWithInterest(ISilo(_silo).total(AssetTypes.DEBT), rcomp);
     }
 }

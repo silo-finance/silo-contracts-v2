@@ -33,7 +33,6 @@ contract EchidnaIRMv2 is PropertiesAsserts {
         Protected, // default
         Collateral,
         Debt
-        // if you add new, make sure you adjust all places with revert WrongAssetType()
     }
 
     struct Assets {

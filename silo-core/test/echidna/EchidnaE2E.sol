@@ -126,7 +126,7 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         emit LogString(string.concat("Deposited", amount.toString(), "assets into vault", vaultZero ? "Zero" : "One", "and minted", shares.toString(), "shares"));
     }
 
-    function depositAssetType(uint8 actorIndex, bool vaultZero, uint256 amount, ISilo.AssetType assetType) public returns (uint256 shares) {
+    function depositAssetType(uint8 actorIndex, bool vaultZero, uint256 amount, ISilo.CollateralType assetType) public returns (uint256 shares) {
         Actor actor = _selectActor(actorIndex);
 
         shares = actor.depositAssetType(vaultZero, amount, assetType);
@@ -134,7 +134,7 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         emit LogString(string.concat(
             "Deposited",
             amount.toString(),
-            assetType == ISilo.AssetType.Collateral ? " collateral" : " protected",
+            assetType == ISilo.CollateralType.Collateral ? " collateral" : " protected",
             " assets into vault",
             vaultZero ? "Zero" : "One",
             "and minted",
@@ -150,11 +150,11 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         emit LogString(string.concat("Minted", shares.toString()," shares from vault", vaultZero ? "Zero" : "One", "and deposited", assets.toString(), "assets"));
     }
 
-    function mintAssetType(uint8 actorIndex, bool vaultZero, uint256 shares, ISilo.AssetType assetType) public returns (uint256 assets) {
+    function mintAssetType(uint8 actorIndex, bool vaultZero, uint256 shares, ISilo.CollateralType assetType) public returns (uint256 assets) {
         Actor actor = _selectActor(actorIndex);
 
         assets = actor.mintAssetType(vaultZero, shares, assetType);
-        emit LogString(string.concat("Minted", shares.toString()," shares from vault", vaultZero ? "Zero" : "One", "and deposited", assets.toString(), assetType == ISilo.AssetType.Collateral ? " collateral" : " protected", " assets"));
+        emit LogString(string.concat("Minted", shares.toString()," shares from vault", vaultZero ? "Zero" : "One", "and deposited", assets.toString(), assetType == ISilo.CollateralType.Collateral ? " collateral" : " protected", " assets"));
     }
 
     function withdraw(uint8 actorIndex, bool vaultZero, uint256 assets) public {
@@ -162,7 +162,7 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         actor.withdraw(vaultZero, assets);
     }
 
-    function withdrawAssetType(uint8 actorIndex, bool vaultZero, uint256 assets, ISilo.AssetType assetType) public {
+    function withdrawAssetType(uint8 actorIndex, bool vaultZero, uint256 assets, ISilo.CollateralType assetType) public {
         Actor actor = _selectActor(actorIndex);
         actor.withdrawAssetType(vaultZero, assets, assetType);
     }
@@ -172,7 +172,7 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         actor.redeem(vaultZero, shares);
     }
 
-    function redeemAssetType(uint8 actorIndex, bool vaultZero, uint256 shares, ISilo.AssetType assetType) public {
+    function redeemAssetType(uint8 actorIndex, bool vaultZero, uint256 shares, ISilo.CollateralType assetType) public {
         Actor actor = _selectActor(actorIndex);
         actor.redeemAssetType(vaultZero, shares, assetType);
     }
@@ -207,7 +207,7 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         vault.withdrawFees();
     }
 
-    function transitionCollateral(uint8 actorIndex, bool vaultZero, uint256 shares, ISilo.AssetType withdrawType) public returns (uint256 assets) {
+    function transitionCollateral(uint8 actorIndex, bool vaultZero, uint256 shares, ISilo.CollateralType withdrawType) public returns (uint256 assets) {
         Actor actor = _selectActor(actorIndex);
         assets = actor.transitionCollateral(vaultZero, shares, withdrawType);
     }
@@ -610,7 +610,7 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         uint8 actorIndex,
         bool vaultZero,
         uint256 shares,
-        ISilo.AssetType assetType
+        ISilo.CollateralType assetType
     ) public {
         Actor actor = _selectActor(actorIndex);
         Silo vault = vaultZero ? vault0 : vault1;
@@ -623,8 +623,8 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         { // too deep
             uint256 protBalanceBefore = IShareToken(protected).balanceOf(address(actor));
             uint256 collBalanceBefore = IShareToken(collateral).balanceOf(address(actor));
-            uint256 previewCollateralBefore = vault.previewRedeem(collBalanceBefore, ISilo.AssetType.Collateral);
-            uint256 previewProtectedBefore = vault.previewRedeem(protBalanceBefore, ISilo.AssetType.Protected);
+            uint256 previewCollateralBefore = vault.previewRedeem(collBalanceBefore, ISilo.CollateralType.Collateral);
+            uint256 previewProtectedBefore = vault.previewRedeem(protBalanceBefore, ISilo.CollateralType.Protected);
 
             shareSumBefore = protBalanceBefore + collBalanceBefore;
             previewAssetsSumBefore = previewCollateralBefore + previewProtectedBefore;
@@ -648,8 +648,8 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
             assertEq(shareSumBefore, shareSumAfter, "Gained shares after transitionCollateral (no interest)");
         }
 
-        uint256 previewCollateralAfter = vault.previewRedeem(collBalanceAfter, ISilo.AssetType.Collateral);
-        uint256 previewProtectedAfter = vault.previewRedeem(protBalanceAfter, ISilo.AssetType.Protected);
+        uint256 previewCollateralAfter = vault.previewRedeem(collBalanceAfter, ISilo.CollateralType.Collateral);
+        uint256 previewProtectedAfter = vault.previewRedeem(protBalanceAfter, ISilo.CollateralType.Protected);
 
         assertEq(
             previewAssetsSumBefore, previewCollateralAfter + previewProtectedAfter,

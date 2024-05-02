@@ -50,19 +50,19 @@ contract WithdrawAllowanceTest is SiloLittleHelper, Test {
     forge test --ffi -vv --mt test_withdraw_collateralWithAllowance
     */
     function test_withdraw_collateralWithAllowance() public {
-        _withdraw_WithAllowance(ISilo.AssetType.Collateral);
+        _withdraw_WithAllowance(ISilo.CollateralType.Collateral);
     }
 
     function test_withdraw_protectedWithAllowance() public {
-        _withdraw_WithAllowance(ISilo.AssetType.Protected);
+        _withdraw_WithAllowance(ISilo.CollateralType.Protected);
     }
 
-    function _withdraw_WithAllowance(ISilo.AssetType _type) internal {
+    function _withdraw_WithAllowance(ISilo.CollateralType _type) internal {
         _deposit(ASSETS, DEPOSITOR, _type);
 
         (address protectedShareToken, address collateralShareToken,) = siloConfig.getShareTokens(address(silo0));
 
-        address shareToken = _type == ISilo.AssetType.Collateral ? collateralShareToken : protectedShareToken;
+        address shareToken = _type == ISilo.CollateralType.Collateral ? collateralShareToken : protectedShareToken;
         vm.prank(DEPOSITOR);
         IShareToken(shareToken).approve(address(this), ASSETS / 2);
 

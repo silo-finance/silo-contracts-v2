@@ -63,8 +63,8 @@ contract SiloRouter is ReentrancyGuard {
         ILeverageBorrower receiver;
         // optional data for leverage
         bytes data;
-        // are you using Protected, Collateral or Debt?
-        ISilo.AssetType assetType;
+        // are you using Protected, Collateral
+        ISilo.CollateralType assetType;
         // optional Permit2
         PermitData permit;
     }

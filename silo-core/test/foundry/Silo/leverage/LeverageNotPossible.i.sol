@@ -42,7 +42,7 @@ contract LeverageNotPossibleTest is SiloLittleHelper, Test {
         ILeverageBorrower leverageBorrower = ILeverageBorrower(new LeverageBorrower());
         address depositor = makeAddr("depositor");
 
-        _deposit(depositAssets, depositor, ISilo.AssetType.Collateral);
+        _deposit(depositAssets, depositor, ISilo.CollateralType.Collateral);
 
         token1.mint(address(leverageBorrower), depositAssets);
         bytes memory data = abi.encode(address(silo1), address(token1), depositAssets);

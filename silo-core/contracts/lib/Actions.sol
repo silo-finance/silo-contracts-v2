@@ -19,6 +19,7 @@ import {SiloLendingLib} from "./SiloLendingLib.sol";
 import {SiloStdLib} from "./SiloStdLib.sol";
 import {CrossEntrancy} from "./CrossEntrancy.sol";
 import {Hook} from "./Hook.sol";
+import {AssetTypes} from "./AssetTypes.sol";
 
 library Actions {
     using SafeERC20 for IERC20;
@@ -35,21 +36,19 @@ library Actions {
         uint256 _assets,
         uint256 _shares,
         address _receiver,
-        ISilo.AssetType _assetType,
+        ISilo.CollateralType _collateralType,
         ISilo.Assets storage _totalCollateral
     )
         external
         returns (uint256 assets, uint256 shares)
     {
-        _hookCallBefore(_shareStorage, Hook.DEPOSIT, abi.encodePacked(_assets, _shares, _receiver, _assetType));
+        _hookCallBefore(_shareStorage, Hook.DEPOSIT, abi.encodePacked(_assets, _shares, _receiver, _collateralType));
 
         (
             address shareToken,
             address asset,
             address hookReceiver,
-        ) = _shareStorage.siloConfig.accrueInterestAndGetConfigOptimised(Hook.DEPOSIT, _assetType);
-
-        if (_assetType == ISilo.AssetType.Debt) revert ISilo.WrongAssetType();
+        ) = _shareStorage.siloConfig.accrueInterestAndGetConfigOptimised(Hook.DEPOSIT, _collateralType);
 
         (assets, shares) = SiloERC4626Lib.deposit(
             asset,
@@ -68,7 +67,7 @@ library Actions {
                 _shareStorage,
                 hookReceiver,
                 Hook.DEPOSIT,
-                abi.encodePacked(_assets, _shares, _receiver, _assetType, assets, shares)
+                abi.encodePacked(_assets, _shares, _receiver, _collateralType, assets, shares)
             );
         }
     }
@@ -82,12 +81,10 @@ library Actions {
         external
         returns (uint256 assets, uint256 shares)
     {
-        if (_args.assetType == ISilo.AssetType.Debt) revert ISilo.WrongAssetType();
-
         _hookCallBefore(
             _shareStorage,
             Hook.WITHDRAW |
-                (_args.assetType == ISilo.AssetType.Collateral ? Hook.COLLATERAL_TOKEN : Hook.PROTECTED_TOKEN),
+                (_args.assetType == ISilo.CollateralType.Collateral ? Hook.COLLATERAL_TOKEN : Hook.PROTECTED_TOKEN),
             abi.encodePacked(_args.assets, _args.shares, _args.receiver, _args.owner, _args.spender, _args.assetType)
         );
 
@@ -100,7 +97,7 @@ library Actions {
         if (collateralConfig.silo != debtConfig.silo) ISilo(debtConfig.silo).accrueInterest();
 
         // this `if` helped with Stack too deep
-        if (_args.assetType == ISilo.AssetType.Collateral) {
+        if (_args.assetType == ISilo.CollateralType.Collateral) {
             (assets, shares) = SiloERC4626Lib.withdraw(
                 collateralConfig.token,
                 collateralConfig.collateralShareToken,
@@ -136,7 +133,9 @@ library Actions {
                     _shareStorage,
                     collateralConfig.hookReceiver,
                     Hook.WITHDRAW |
-                        (_args.assetType == ISilo.AssetType.Collateral ? Hook.COLLATERAL_TOKEN : Hook.PROTECTED_TOKEN),
+                        (_args.assetType == ISilo.CollateralType.Collateral
+                            ? Hook.COLLATERAL_TOKEN
+                            : Hook.PROTECTED_TOKEN),
                     abi.encodePacked(
                         _args.assets,
                         _args.shares,
@@ -174,7 +173,7 @@ library Actions {
                 _shareStorage,
                 collateralConfig.hookReceiver,
                 Hook.WITHDRAW |
-                    (_args.assetType == ISilo.AssetType.Collateral ? Hook.COLLATERAL_TOKEN : Hook.PROTECTED_TOKEN),
+                    (_args.assetType == ISilo.CollateralType.Collateral ? Hook.COLLATERAL_TOKEN : Hook.PROTECTED_TOKEN),
                 abi.encodePacked(
                     _args.assets,
                     _args.shares,
@@ -305,7 +304,7 @@ library Actions {
             address hookReceiver,
             address liquidationModule
         ) = _shareStorage.siloConfig.accrueInterestAndGetConfigOptimised(
-            (_liquidation ? Hook.LIQUIDATION : Hook.NONE) | Hook.REPAY, ISilo.AssetType.Debt // TODO type not necessary
+            (_liquidation ? Hook.LIQUIDATION : Hook.NONE) | Hook.REPAY, ISilo.CollateralType(0) // type not necessary
         );
 
         if (_liquidation) {
@@ -338,7 +337,7 @@ library Actions {
         uint256 _depositAssets,
         uint256 _borrowAssets,
         address _borrower,
-        ISilo.AssetType _assetType,
+        ISilo.CollateralType _collateralType,
         uint256 _totalCollateralAssets,
         ISilo.Assets storage _totalDebt,
         ISilo.Assets storage _totalAssetsForDeposit
@@ -351,7 +350,7 @@ library Actions {
         _hookCallBefore(
             _shareStorage,
             Hook.BORROW | Hook.LEVERAGE | Hook.SAME_ASSET,
-            abi.encodePacked(_depositAssets, _borrowAssets, _borrower, _assetType)
+            abi.encodePacked(_depositAssets, _borrowAssets, _borrower, _collateralType)
         );
 
         ISiloConfig.ConfigData memory collateralConfig;
@@ -409,7 +408,7 @@ library Actions {
             _depositAssets,
             0 /* _shares */,
             _borrower,
-            _assetType == ISilo.AssetType.Collateral
+            _collateralType == ISilo.CollateralType.Collateral
                 ? IShareToken(collateralConfig.collateralShareToken)
                 : IShareToken(collateralConfig.protectedShareToken),
             _totalAssetsForDeposit
@@ -422,7 +421,9 @@ library Actions {
                 _shareStorage,
                 collateralConfig.hookReceiver,
                 Hook.LEVERAGE | Hook.SAME_ASSET,
-                abi.encodePacked(_depositAssets, _borrowAssets, _borrower, _assetType, depositedShares, borrowedShares)
+                abi.encodePacked(
+                    _depositAssets, _borrowAssets, _borrower, _collateralType, depositedShares, borrowedShares
+                )
             );
         }
     }
@@ -431,14 +432,12 @@ library Actions {
         ISilo.SharedStorage storage _shareStorage,
         uint256 _shares,
         address _owner,
-        ISilo.AssetType _withdrawType,
-        mapping(ISilo.AssetType => ISilo.Assets) storage _total
+        ISilo.CollateralType _withdrawType,
+        mapping(uint256 assetType => ISilo.Assets) storage _total
     )
         external
         returns (uint256 assets, uint256 toShares)
     {
-        if (_withdrawType == ISilo.AssetType.Debt) revert ISilo.WrongAssetType();
-
         _hookCallBefore(
             _shareStorage, Hook.TRANSITION_COLLATERAL, abi.encodePacked(_shares, _owner, _withdrawType, assets)
         );
@@ -447,9 +446,9 @@ library Actions {
             address(this), Hook.TRANSITION_COLLATERAL
         );
 
-        (address shareTokenFrom, uint256 liquidity) = _withdrawType == ISilo.AssetType.Collateral
+        (address shareTokenFrom, uint256 liquidity) = _withdrawType == ISilo.CollateralType.Collateral
             ? (collateralConfig.collateralShareToken, ISilo(address(this)).getRawLiquidity())
-            : (collateralConfig.protectedShareToken, _total[ISilo.AssetType.Protected].assets);
+            : (collateralConfig.protectedShareToken, _total[AssetTypes.PROTECTED].assets);
 
         (assets, _shares) = SiloERC4626Lib.transitionCollateralWithdraw(
             shareTokenFrom,
@@ -458,10 +457,10 @@ library Actions {
             msg.sender,
             _withdrawType,
             liquidity,
-            _total[_withdrawType]
+            _total[uint256(_withdrawType)]
         );
 
-        (ISilo.AssetType depositType, address shareTokenTo) = _withdrawType == ISilo.AssetType.Collateral
+        (ISilo.AssetType depositType, address shareTokenTo) = _withdrawType == ISilo.CollateralType.Collateral
             ? (ISilo.AssetType.Protected, collateralConfig.protectedShareToken)
             : (ISilo.AssetType.Collateral, collateralConfig.collateralShareToken);
 
@@ -472,7 +471,7 @@ library Actions {
             0, // shares
             _owner,
             IShareToken(shareTokenTo),
-            _total[depositType]
+            _total[uint256(depositType)]
         );
 
         _shareStorage.siloConfig.crossNonReentrantAfter();

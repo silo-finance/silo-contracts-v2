@@ -43,11 +43,11 @@ contract Hack1 {
         } else if (option == 1) {
             Silo(payable(msg.sender)).redeem(shares, receiver, _initiator);
         } else if (option == 2) {
-            Silo(payable(msg.sender)).withdraw(assets, receiver, _initiator, ISilo.AssetType.Collateral);
+            Silo(payable(msg.sender)).withdraw(assets, receiver, _initiator, ISilo.CollateralType.Collateral);
         } else if (option == 3) {
-            Silo(payable(msg.sender)).redeem(shares, receiver, _initiator, ISilo.AssetType.Collateral);
+            Silo(payable(msg.sender)).redeem(shares, receiver, _initiator, ISilo.CollateralType.Collateral);
         } else if (option == 4) {
-            Silo(payable(msg.sender)).transitionCollateral(shares, _initiator, ISilo.AssetType.Collateral);
+            Silo(payable(msg.sender)).transitionCollateral(shares, _initiator, ISilo.CollateralType.Collateral);
         } else if (option == 5) {
             Silo(payable(msg.sender)).borrow(assets, receiver, _initiator, sameAsset);
         } else if (option == 6) {

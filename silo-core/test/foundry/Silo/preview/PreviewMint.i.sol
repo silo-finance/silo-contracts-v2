@@ -114,7 +114,7 @@ contract PreviewMintTest is SiloLittleHelper, Test {
 
         uint256 previewMint = _defaultType
             ? silo0.previewMint(_shares)
-            : silo0.previewMint(_shares, ISilo.AssetType(_type));
+            : silo0.previewMint(_shares, ISilo.CollateralType(_type));
 
         token0.mint(depositor, previewMint);
 
@@ -123,7 +123,7 @@ contract PreviewMintTest is SiloLittleHelper, Test {
 
         uint256 depositedAssets = _defaultType
             ? silo0.mint(_shares, depositor)
-            : silo0.mint(_shares, depositor, ISilo.AssetType(_type));
+            : silo0.mint(_shares, depositor, ISilo.CollateralType(_type));
 
         assertEq(previewMint, depositedAssets, "previewMint == depositedAssets, NOT fewer");
     }

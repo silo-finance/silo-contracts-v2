@@ -11,6 +11,7 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
 import {SiloERC4626Lib} from "silo-core/contracts/lib/SiloERC4626Lib.sol";
+import {AssetTypes} from "silo-core/contracts/lib/AssetTypes.sol";
 
 import {MintableToken} from "../../_common/MintableToken.sol";
 import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
@@ -106,7 +107,7 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
         address borrower = makeAddr("borrower");
 
         _deposit(assets, makeAddr("depositor"));
-        _depositCollateral(assets, borrower, _sameAsset, ISilo.AssetType.Protected);
+        _depositCollateral(assets, borrower, _sameAsset, ISilo.CollateralType.Protected);
 
         uint256 borrowForReceiver = 1;
 
@@ -133,7 +134,7 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
         address borrower = makeAddr("borrower");
         address receiver = makeAddr("receiver");
 
-        _depositCollateral(assets, receiver, _sameAsset, ISilo.AssetType.Protected);
+        _depositCollateral(assets, receiver, _sameAsset, ISilo.CollateralType.Protected);
 
         vm.expectRevert(ISilo.NotEnoughLiquidity.selector);
         vm.prank(borrower);
@@ -157,7 +158,7 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
         address receiver = makeAddr("receiver");
 
         _depositForBorrow(assets, makeAddr("depositor"));
-        _depositCollateral(assets, receiver, _sameAsset, ISilo.AssetType.Protected);
+        _depositCollateral(assets, receiver, _sameAsset, ISilo.CollateralType.Protected);
 
         uint256 borrowForReceiver = 1;
 
@@ -184,7 +185,7 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
         address borrower = makeAddr("borrower");
 
         _depositCollateral(assets, makeAddr("depositor"), !_sameAsset);
-        _depositCollateral(assets, borrower, _sameAsset, ISilo.AssetType.Collateral);
+        _depositCollateral(assets, borrower, _sameAsset, ISilo.CollateralType.Collateral);
 
         vm.expectCall(address(token0), abi.encodeWithSelector(IERC20.transfer.selector, borrower, assets));
 
@@ -208,7 +209,7 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
         uint256 assets = 1e18;
         address borrower = address(this);
 
-        _depositCollateral(assets, borrower, _sameAsset, ISilo.AssetType.Protected);
+        _depositCollateral(assets, borrower, _sameAsset, ISilo.CollateralType.Protected);
 
         vm.expectRevert(ISilo.NotEnoughLiquidity.selector);
         silo0.borrow(assets, borrower, borrower, _sameAsset);
@@ -229,7 +230,7 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
         uint256 assets = 1e18;
         address borrower = address(this);
 
-        _depositCollateral(assets * 2, borrower, _sameAsset, ISilo.AssetType.Protected);
+        _depositCollateral(assets * 2, borrower, _sameAsset, ISilo.CollateralType.Protected);
         _depositCollateral(assets, borrower, _sameAsset);
 
         vm.expectRevert(_sameAsset ? ISilo.NotEnoughLiquidity.selector : ISilo.AboveMaxLtv.selector);
@@ -252,7 +253,7 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
         address borrower = address(this);
 
         _depositForBorrow(assets, makeAddr("depositor"));
-        _depositCollateral(assets, borrower, _sameAsset, ISilo.AssetType.Protected);
+        _depositCollateral(assets, borrower, _sameAsset, ISilo.CollateralType.Protected);
         _borrow(1, borrower, _sameAsset);
 
         vm.expectRevert(ISilo.BorrowNotPossible.selector);
@@ -275,7 +276,7 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
         address borrower = address(this);
 
         _depositForBorrow(assets, makeAddr("depositor"));
-        _depositCollateral(assets, borrower, _sameAsset, ISilo.AssetType.Protected);
+        _depositCollateral(assets, borrower, _sameAsset, ISilo.CollateralType.Protected);
 
         vm.prank(makeAddr("frontrunner"));
         _depositCollateral(1, borrower, !_sameAsset);
@@ -300,14 +301,14 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
         address frontrunner = makeAddr("frontrunner");
 
         _depositForBorrow(assets, makeAddr("depositor"));
-        _depositCollateral(assets, borrower, _sameAsset, ISilo.AssetType.Protected);
+        _depositCollateral(assets, borrower, _sameAsset, ISilo.CollateralType.Protected);
 
         (
             address protectedShareToken, address collateralShareToken,
         ) = siloConfig.getShareTokens(address(_sameAsset ? silo0 : silo1));
 
         _depositCollateral(5, frontrunner, !_sameAsset);
-        _depositCollateral(3, frontrunner, !_sameAsset, ISilo.AssetType.Protected);
+        _depositCollateral(3, frontrunner, !_sameAsset, ISilo.CollateralType.Protected);
 
         vm.prank(frontrunner);
         IShareToken(collateralShareToken).transfer(borrower, 5);
@@ -336,7 +337,7 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
 
         uint256 notCollateral = 123;
         _depositCollateral(notCollateral, borrower, !_sameAsset);
-        _depositCollateral(assets, borrower, _sameAsset, ISilo.AssetType.Protected);
+        _depositCollateral(assets, borrower, _sameAsset, ISilo.CollateralType.Protected);
 
         _borrow(12345, borrower, _sameAsset);
     }
@@ -495,7 +496,7 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
         address depositor = address(0x9876123);
         uint256 expectedLtv = _sameAsset ? 0.85e18 : 0.75e18;
 
-        _depositCollateral(depositAssets, borrower, _sameAsset, ISilo.AssetType.Collateral);
+        _depositCollateral(depositAssets, borrower, _sameAsset, ISilo.CollateralType.Collateral);
 
         // deposit, so we can borrow
         _depositForBorrow(100e18, depositor);
@@ -547,19 +548,19 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
 
         assertEq(
             SiloERC4626Lib._VIRTUAL_DEPOSIT_LIMIT - silo1TotalCollateral,
-            SiloERC4626Lib._VIRTUAL_DEPOSIT_LIMIT - silo1.total(ISilo.AssetType.Collateral),
+            SiloERC4626Lib._VIRTUAL_DEPOSIT_LIMIT - silo1.total(AssetTypes.COLLATERAL),
             "limit for deposit"
         );
 
         assertEq(
             silo1.maxDeposit(borrower),
-            SiloERC4626Lib._VIRTUAL_DEPOSIT_LIMIT - silo1.total(ISilo.AssetType.Collateral),
+            SiloERC4626Lib._VIRTUAL_DEPOSIT_LIMIT - silo1.total(AssetTypes.COLLATERAL),
             "can deposit when already borrowed"
         );
 
         assertEq(
             silo1.maxMint(borrower),
-            SiloERC4626Lib._VIRTUAL_DEPOSIT_LIMIT - silo1.total(ISilo.AssetType.Collateral),
+            SiloERC4626Lib._VIRTUAL_DEPOSIT_LIMIT - silo1.total(AssetTypes.COLLATERAL),
             "can mint when already borrowed (maxMint)"
         );
     }
