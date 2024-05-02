@@ -548,19 +548,19 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
 
         assertEq(
             SiloERC4626Lib._VIRTUAL_DEPOSIT_LIMIT - silo1TotalCollateral,
-            SiloERC4626Lib._VIRTUAL_DEPOSIT_LIMIT - silo1.total(AssetTypes.Collateral),
+            SiloERC4626Lib._VIRTUAL_DEPOSIT_LIMIT - silo1.total(AssetTypes.COLLATERAL),
             "limit for deposit"
         );
 
         assertEq(
             silo1.maxDeposit(borrower),
-            SiloERC4626Lib._VIRTUAL_DEPOSIT_LIMIT - silo1.total(AssetTypes.Collateral),
+            SiloERC4626Lib._VIRTUAL_DEPOSIT_LIMIT - silo1.total(AssetTypes.COLLATERAL),
             "can deposit when already borrowed"
         );
 
         assertEq(
             silo1.maxMint(borrower),
-            SiloERC4626Lib._VIRTUAL_DEPOSIT_LIMIT - silo1.total(AssetTypes.Collateral),
+            SiloERC4626Lib._VIRTUAL_DEPOSIT_LIMIT - silo1.total(AssetTypes.COLLATERAL),
             "can mint when already borrowed (maxMint)"
         );
     }

@@ -446,7 +446,7 @@ library Actions {
 
         (address shareTokenFrom, uint256 liquidity) = _withdrawType == ISilo.CollateralType.Collateral
             ? (collateralConfig.collateralShareToken, ISilo(address(this)).getRawLiquidity())
-            : (collateralConfig.protectedShareToken, _total[AssetTypes.Protected].assets);
+            : (collateralConfig.protectedShareToken, _total[AssetTypes.PROTECTED].assets);
 
         (assets, _shares) = SiloERC4626Lib.transitionCollateralWithdraw(
             shareTokenFrom,

@@ -32,8 +32,8 @@ library LiquidationWithdrawLib {
                 _withdrawAssetsFromProtected,
                 _borrower,
                 _liquidator,
-                _total[AssetTypes.Collateral].assets,
-                _total[AssetTypes.Protected].assets
+                _total[AssetTypes.COLLATERAL].assets,
+                _total[AssetTypes.PROTECTED].assets
             );
         } else {
             withdrawCollateralToLiquidator(
@@ -69,7 +69,7 @@ library LiquidationWithdrawLib {
                 _borrower,
                 ISilo.CollateralType.Protected,
                 type(uint256).max,
-                _total[AssetTypes.Protected]
+                _total[AssetTypes.PROTECTED]
             );
         }
 
@@ -84,7 +84,7 @@ library LiquidationWithdrawLib {
                 _borrower,
                 ISilo.CollateralType.Collateral,
                 _liquidity,
-                _total[AssetTypes.Collateral]
+                _total[AssetTypes.COLLATERAL]
             );
         }
     }

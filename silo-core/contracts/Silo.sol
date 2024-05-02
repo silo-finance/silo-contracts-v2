@@ -103,8 +103,8 @@ contract Silo is SiloERC4626 {
     /// @inheritdoc ISilo
     function utilizationData() external view virtual returns (UtilizationData memory) {
         return UtilizationData({
-            collateralAssets: total[AssetTypes.Collateral].assets,
-            debtAssets: total[AssetTypes.Debt].assets,
+            collateralAssets: total[AssetTypes.COLLATERAL].assets,
+            debtAssets: total[AssetTypes.DEBT].assets,
             interestRateTimestamp: siloData.interestRateTimestamp
         });
     }
@@ -152,8 +152,8 @@ contract Silo is SiloERC4626 {
         virtual
         returns (uint256 totalCollateralAssets, uint256 totalProtectedAssets)
     {
-        totalCollateralAssets = total[AssetTypes.Collateral].assets;
-        totalProtectedAssets = total[AssetTypes.Protected].assets;
+        totalCollateralAssets = total[AssetTypes.COLLATERAL].assets;
+        totalProtectedAssets = total[AssetTypes.PROTECTED].assets;
     }
 
     /// @inheritdoc ISilo
@@ -163,8 +163,8 @@ contract Silo is SiloERC4626 {
         virtual
         returns (uint256 totalCollateralAssets, uint256 totalDebtAssets)
     {
-        totalCollateralAssets = total[AssetTypes.Collateral].assets;
-        totalDebtAssets = total[AssetTypes.Debt].assets;
+        totalCollateralAssets = total[AssetTypes.COLLATERAL].assets;
+        totalDebtAssets = total[AssetTypes.DEBT].assets;
     }
 
     // ERC4626
@@ -205,7 +205,7 @@ contract Silo is SiloERC4626 {
 
     /// @inheritdoc IERC4626
     function maxDeposit(address /* _receiver */) external view virtual returns (uint256 maxAssets) {
-        return _callMaxDepositOrMint(total[AssetTypes.Collateral].assets);
+        return _callMaxDepositOrMint(total[AssetTypes.COLLATERAL].assets);
     }
 
     /// @inheritdoc IERC4626
@@ -456,8 +456,8 @@ contract Silo is SiloERC4626 {
             _borrowAssets,
             _borrower,
             _assetType,
-            total[AssetTypes.Collateral].assets,
-            total[AssetTypes.Debt],
+            total[AssetTypes.COLLATERAL].assets,
+            total[AssetTypes.DEBT],
             total[uint256(_assetType)]
         );
 
@@ -625,7 +625,7 @@ contract Silo is SiloERC4626 {
 
     // TODO can we optimise this? maybe add as args to methods
     function getRawLiquidity() public view virtual returns (uint256 liquidity) {
-        liquidity = SiloMathLib.liquidity(total[AssetTypes.Collateral].assets, total[AssetTypes.Debt].assets);
+        liquidity = SiloMathLib.liquidity(total[AssetTypes.COLLATERAL].assets, total[AssetTypes.DEBT].assets);
     }
 
     /// @dev that method allow to finish liquidation process by giving up collateral to liquidator
@@ -723,9 +723,9 @@ contract Silo is SiloERC4626 {
                 borrower: _borrower,
                 sameAsset: _sameAsset,
                 leverage: _leverage,
-                totalCollateralAssets: total[AssetTypes.Collateral].assets
+                totalCollateralAssets: total[AssetTypes.COLLATERAL].assets
             }),
-            total[AssetTypes.Debt],
+            total[AssetTypes.DEBT],
             _data
         );
 
@@ -747,7 +747,7 @@ contract Silo is SiloERC4626 {
             _borrower,
             _repayer,
             _liquidation,
-            total[AssetTypes.Debt]
+            total[AssetTypes.DEBT]
         );
 
         emit Repay(_repayer, _borrower, assets, shares);
@@ -834,7 +834,7 @@ contract Silo is SiloERC4626 {
             _owner,
             _assetType,
             // 0 for CollateralType.Collateral because it will be calculated internally
-            _assetType == CollateralType.Protected ? total[uint256(CollateralType.Protected)].assets : 0
+            _assetType == CollateralType.Protected ? total[AssetTypes.PROTECTED].assets : 0
         );
     }
 
@@ -853,8 +853,8 @@ contract Silo is SiloERC4626 {
             _daoFee,
             _deployerFee,
             siloData,
-            total[AssetTypes.Collateral],
-            total[AssetTypes.Debt]
+            total[AssetTypes.COLLATERAL],
+            total[AssetTypes.DEBT]
         );
 
         if (accruedInterest != 0) emit AccruedInterest(accruedInterest);

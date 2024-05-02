@@ -15,12 +15,12 @@ contract SiloInternal is Silo, CryticIERC4626Internal {
     function recognizeProfit(uint256 profit) public {
         address _asset = sharedStorage.siloConfig.getAssetForSilo(address(this));
         TestERC20Token(address(_asset)).mint(address(this), profit);
-        total[AssetTypes.Collateral].assets += profit;
+        total[AssetTypes.COLLATERAL].assets += profit;
     }
 
     function recognizeLoss(uint256 loss) public {
         address _asset = sharedStorage.siloConfig.getAssetForSilo(address(this));
         TestERC20Token(address(_asset)).burn(address(this), loss);
-        total[AssetTypes.Collateral].assets -= loss;
+        total[AssetTypes.COLLATERAL].assets -= loss;
     }
 }

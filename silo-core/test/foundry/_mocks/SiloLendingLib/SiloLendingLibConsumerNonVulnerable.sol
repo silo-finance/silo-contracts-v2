@@ -13,7 +13,7 @@ contract SiloLendingLibConsumerNonVulnerable {
     mapping(uint256 assetType => ISilo.Assets) internal _total;
 
     constructor() {
-        _total[AssetTypes.Debt].assets = INITIAL_TOTAL;
+        _total[AssetTypes.DEBT].assets = INITIAL_TOTAL;
     }
 
     function repay(
@@ -30,11 +30,11 @@ contract SiloLendingLibConsumerNonVulnerable {
             _shares,
             _borrower,
             _repayer,
-            _total[AssetTypes.Debt]
+            _total[AssetTypes.DEBT]
         );
     }
 
     function getTotalDebt() public view returns (uint256) {
-        return _total[AssetTypes.Debt].assets;
+        return _total[AssetTypes.DEBT].assets;
     }
 }
