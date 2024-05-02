@@ -138,7 +138,7 @@ contract DynamicKinkModelV1 is IDynamicKinkModelV1 {
         }
 
         // if (u < u1) {
-        if (_u <= _setup.config.u1) {
+        if (_u < _setup.config.u1) {
             // roc = - c1 - cminus * (u1 - u) / _DP;
             _l.roc = - _setup.config.c1 - _setup.config.cminus * (_setup.config.u1 - _u) / _DP;
         // } else if (u > u2) {       
