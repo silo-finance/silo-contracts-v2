@@ -1,14 +1,15 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.21;
 
+import {ISilo} from "../interfaces/ISilo.sol";
+
 // solhint-disable private-vars-leading-underscore
 library AssetTypes {
-    /// @dev must match value of AssetType.Protected
-    uint256 internal constant PROTECTED = 0;
+    uint256 internal constant PROTECTED = uint256(ISilo.AssetType.Protected);
 
     /// @dev must match value of AssetType.Collateral
-    uint256 internal constant COLLATERAL = 1;
+    uint256 internal constant COLLATERAL = uint256(ISilo.AssetType.Collateral);
 
     /// @dev must match value of AssetType.Debt
-    uint256 internal constant DEBT = 2;
+    uint256 internal constant DEBT = uint256(ISilo.AssetType.Debt);
 }
