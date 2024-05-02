@@ -159,6 +159,6 @@ contract SiloHooksTest is SiloLittleHelper, Test {
         configOverride.configName = SiloConfigsNames.LOCAL_DEPLOYER;
 
         vm.expectRevert(ISiloDeployer.HookReceiverMissconfigured.selector);
-        (_siloConfig, silo0, silo1,,,) = _siloFixture.deploy_local(configOverride);
+        _siloFixture.deploy_local(configOverride);
     }
 }
