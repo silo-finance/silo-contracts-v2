@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.21;
 
+import {Clones} from "openzeppelin5/proxy/Clones.sol";
+
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISiloFactory} from "silo-core/contracts/interfaces/ISiloFactory.sol";
 import {IInterestRateModelV2} from "silo-core/contracts/interfaces/IInterestRateModelV2.sol";
@@ -33,7 +35,8 @@ contract SiloDeployer is ISiloDeployer {
         Oracles calldata _oracles,
         IInterestRateModelV2.Config calldata _irmConfigData0,
         IInterestRateModelV2.Config calldata _irmConfigData1,
-        ISiloConfig.InitData memory _siloInitData
+        ISiloConfig.InitData memory _siloInitData,
+        bool _cloneHookReceiver
     )
         external
         returns (ISiloConfig siloConfig)
@@ -42,8 +45,19 @@ contract SiloDeployer is ISiloDeployer {
         _setUpIRMs(_irmConfigData0, _irmConfigData1, _siloInitData);
         // create oracles and update `_siloInitData`
         _createOracles(_siloInitData, _oracles);
+
+        // clone hook receiver if needed
+        if (_cloneHookReceiver) {
+            _siloInitData.hookReceiver = Clones.clone(_siloInitData.hookReceiver);
+        }
+
         // create Silo
         siloConfig = SILO_FACTORY.createSilo(_siloInitData);
+
+        // initialize hook receiver only if it was cloned
+        if (_cloneHookReceiver) {
+            IHookReceiver(_siloInitData.hookReceiver).initialize(TIMELOCK_CONTROLLER, siloConfig);
+        }
 
         emit SiloCreated(siloConfig);
     }

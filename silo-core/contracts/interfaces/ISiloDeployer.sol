@@ -38,11 +38,13 @@ interface ISiloDeployer {
     /// @param _irmConfigData0 IRM config data for a silo `_TOKEN0`
     /// @param _irmConfigData1 IRM config data for a silo `_TOKEN1`
     /// @param _siloInitData Silo configuration for the silo creation
+    /// @param _cloneHookReceiver If `true` the hook receiver will be cloned as a minimal proxy
     function deploy(
         Oracles calldata _oracles,
         IInterestRateModelV2.Config calldata _irmConfigData0,
         IInterestRateModelV2.Config calldata _irmConfigData1,
-        ISiloConfig.InitData memory _siloInitData
+        ISiloConfig.InitData memory _siloInitData,
+        bool _cloneHookReceiver
     )
         external
         returns (ISiloConfig siloConfig);

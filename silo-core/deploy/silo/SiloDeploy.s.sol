@@ -92,7 +92,8 @@ contract SiloDeploy is CommonDeploy {
             oracles,
             irmConfigData0,
             irmConfigData1,
-            siloInitData
+            siloInitData,
+            config.cloneHookReceiver
         );
 
         vm.stopBroadcast();

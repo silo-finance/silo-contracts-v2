@@ -24,11 +24,12 @@ contract SiloConfigData is Test, CommonDeploy {
     struct ConfigData {
         bool callBeforeQuote0;
         bool callBeforeQuote1;
+        bool cloneHookReceiver;
         address deployer;
         uint256 deployerFee;
         uint64 flashloanFee0;
         uint64 flashloanFee1;
-        address hookReceiver;
+        string hookReceiver;
         address interestRateModel0;
         address interestRateModel1;
         string interestRateModelConfig0;
@@ -71,7 +72,7 @@ contract SiloConfigData is Test, CommonDeploy {
         initData = ISiloConfig.InitData({
             deployer: config.deployer,
             liquidationModule: config.liquidationModule,
-            hookReceiver: config.hookReceiver,
+            hookReceiver: _resolveHookReceiverImpl(config.hookReceiver),
             deployerFee: config.deployerFee * BP2DP_NORMALIZATION,
             token0: getAddress(config.token0),
             solvencyOracle0: address(0),
@@ -96,7 +97,6 @@ contract SiloConfigData is Test, CommonDeploy {
         });
     }
 
-    // TODO remove?
     function _resolveHookReceiverImpl(string memory _requiredHookReceiver) internal returns (address hookReceiver) {
         if (keccak256(bytes(_requiredHookReceiver)) != NO_HOOK_RECEIVER_KEY) {
             hookReceiver = getDeployedAddress(_requiredHookReceiver);
