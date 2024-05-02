@@ -54,7 +54,7 @@ library SiloStdLib {
         returns (uint256 totalAssets, uint256 totalShares)
     {
         if (_assetType == ISilo.AssetType.Protected) {
-            totalAssets = ISilo(_configData.silo).total(uint8(ISilo.AssetType.Protected));
+            totalAssets = ISilo(_configData.silo).total(uint256(ISilo.AssetType.Protected));
             totalShares = IShareToken(_configData.protectedShareToken).totalSupply();
         } else if (_assetType == ISilo.AssetType.Collateral) {
             totalAssets = getTotalCollateralAssetsWithInterest(
@@ -141,6 +141,6 @@ library SiloStdLib {
 
         (
             totalDebtAssetsWithInterest,
-        ) = SiloMathLib.getDebtAmountsWithInterest(ISilo(_silo).total(uint8(ISilo.AssetType.Debt)), rcomp);
+        ) = SiloMathLib.getDebtAmountsWithInterest(ISilo(_silo).total(uint256(ISilo.AssetType.Debt)), rcomp);
     }
 }
