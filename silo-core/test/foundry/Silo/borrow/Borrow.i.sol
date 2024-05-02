@@ -11,6 +11,7 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
 import {SiloERC4626Lib} from "silo-core/contracts/lib/SiloERC4626Lib.sol";
+import {AssetTypes} from "silo-core/contracts/lib/AssetTypes.sol";
 
 import {MintableToken} from "../../_common/MintableToken.sol";
 import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
@@ -547,19 +548,19 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
 
         assertEq(
             SiloERC4626Lib._VIRTUAL_DEPOSIT_LIMIT - silo1TotalCollateral,
-            SiloERC4626Lib._VIRTUAL_DEPOSIT_LIMIT - silo1.total(uint256(ISilo.AssetType.Collateral)),
+            SiloERC4626Lib._VIRTUAL_DEPOSIT_LIMIT - silo1.total(AssetTypes.Collateral),
             "limit for deposit"
         );
 
         assertEq(
             silo1.maxDeposit(borrower),
-            SiloERC4626Lib._VIRTUAL_DEPOSIT_LIMIT - silo1.total(uint256(ISilo.AssetType.Collateral)),
+            SiloERC4626Lib._VIRTUAL_DEPOSIT_LIMIT - silo1.total(AssetTypes.Collateral),
             "can deposit when already borrowed"
         );
 
         assertEq(
             silo1.maxMint(borrower),
-            SiloERC4626Lib._VIRTUAL_DEPOSIT_LIMIT - silo1.total(uint256(ISilo.AssetType.Collateral)),
+            SiloERC4626Lib._VIRTUAL_DEPOSIT_LIMIT - silo1.total(AssetTypes.Collateral),
             "can mint when already borrowed (maxMint)"
         );
     }

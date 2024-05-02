@@ -3,6 +3,7 @@ pragma solidity 0.8.21;
 
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
+import {AssetTypes} from "silo-core/contracts/lib/AssetTypes.sol";
 import {SiloERC4626LibWithReentrancyIssue} from "./SiloERC4626LibWithReentrancyIssue.sol";
 
 contract SiloERC4626LibConsumerVulnerable {
@@ -11,7 +12,7 @@ contract SiloERC4626LibConsumerVulnerable {
     mapping(uint256 assetType => ISilo.Assets) internal _total;
 
     constructor() {
-        _total[uint256(ISilo.AssetType.Collateral)].assets = INITIAL_TOTAL;
+        _total[AssetTypes.Collateral].assets = INITIAL_TOTAL;
     }
 
     function deposit(
@@ -29,11 +30,11 @@ contract SiloERC4626LibConsumerVulnerable {
             _shares,
             _receiver,
             _collateralShareToken,
-            _total[uint256(ISilo.AssetType.Collateral)]
+            _total[AssetTypes.Collateral]
         );
     }
 
     function getTotalCollateral() public view returns (uint256) {
-        return _total[uint256(ISilo.AssetType.Collateral)].assets;
+        return _total[AssetTypes.Collateral].assets;
     }
 }

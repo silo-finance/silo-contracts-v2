@@ -19,6 +19,7 @@ import {SiloLendingLib} from "./SiloLendingLib.sol";
 import {SiloStdLib} from "./SiloStdLib.sol";
 import {CrossEntrancy} from "./CrossEntrancy.sol";
 import {Hook} from "./Hook.sol";
+import {AssetTypes} from "./AssetTypes.sol";
 
 library Actions {
     using SafeERC20 for IERC20;
@@ -445,7 +446,7 @@ library Actions {
 
         (address shareTokenFrom, uint256 liquidity) = _withdrawType == ISilo.CollateralType.Collateral
             ? (collateralConfig.collateralShareToken, ISilo(address(this)).getRawLiquidity())
-            : (collateralConfig.protectedShareToken, _total[uint256(ISilo.AssetType.Protected)].assets);
+            : (collateralConfig.protectedShareToken, _total[AssetTypes.Protected].assets);
 
         (assets, _shares) = SiloERC4626Lib.transitionCollateralWithdraw(
             shareTokenFrom,

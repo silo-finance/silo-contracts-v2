@@ -7,6 +7,7 @@ import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
 import {SiloMathLib} from "./SiloMathLib.sol";
 import {SiloERC4626Lib} from "./SiloERC4626Lib.sol";
 import {Rounding} from "./Rounding.sol";
+import {AssetTypes} from "./AssetTypes.sol";
 
 library LiquidationWithdrawLib {
     /// @dev that method allow to finish liquidation process by giving up collateral to liquidator
@@ -31,8 +32,8 @@ library LiquidationWithdrawLib {
                 _withdrawAssetsFromProtected,
                 _borrower,
                 _liquidator,
-                _total[uint256(ISilo.AssetType.Collateral)].assets,
-                _total[uint256(ISilo.AssetType.Protected)].assets
+                _total[AssetTypes.Collateral].assets,
+                _total[AssetTypes.Protected].assets
             );
         } else {
             withdrawCollateralToLiquidator(
@@ -68,7 +69,7 @@ library LiquidationWithdrawLib {
                 _borrower,
                 ISilo.CollateralType.Protected,
                 type(uint256).max,
-                _total[uint256(ISilo.AssetType.Protected)]
+                _total[AssetTypes.Protected]
             );
         }
 
@@ -83,7 +84,7 @@ library LiquidationWithdrawLib {
                 _borrower,
                 ISilo.CollateralType.Collateral,
                 _liquidity,
-                _total[uint256(ISilo.AssetType.Collateral)]
+                _total[AssetTypes.Collateral]
             );
         }
     }

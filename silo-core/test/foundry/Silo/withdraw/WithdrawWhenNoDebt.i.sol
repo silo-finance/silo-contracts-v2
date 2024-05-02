@@ -6,6 +6,7 @@ import "forge-std/Test.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
+import {AssetTypes} from "silo-core/contracts/lib/AssetTypes.sol";
 
 import {TokenMock} from "silo-core/test/foundry/_mocks/TokenMock.sol";
 import {SiloFixture, SiloConfigOverride} from "../../_common/fixtures/SiloFixture.sol";
@@ -67,7 +68,7 @@ contract WithdrawWhenNoDebtTest is SiloLittleHelper, Test {
         assertEq(IShareToken(collateralShareToken).balanceOf(address(this)), 2e18, "collateral burned");
         assertEq(gotShares, sharesBefore, "withdraw all shares");
 
-        assertEq(silo0.total(uint256(ISilo.AssetType.Protected)), 0, "protected Assets should be withdrawn");
+        assertEq(silo0.total(AssetTypes.Protected), 0, "protected Assets should be withdrawn");
     }
 
     /*
@@ -100,7 +101,7 @@ contract WithdrawWhenNoDebtTest is SiloLittleHelper, Test {
 
         _userWithdrawing();
 
-        assertEq(silo0.total(uint256(ISilo.AssetType.Protected)), 11e18 + 1, "protected Assets should be withdrawn");
+        assertEq(silo0.total(AssetTypes.Protected), 11e18 + 1, "protected Assets should be withdrawn");
         assertEq(silo0.getCollateralAssets(), 22e18 + 1, "protected Assets should be withdrawn");
     }
 
@@ -133,7 +134,7 @@ contract WithdrawWhenNoDebtTest is SiloLittleHelper, Test {
         _withdraw(address(1), _deposit1 - _deposit1 / 2, ISilo.CollateralType.Protected);
         _withdraw(address(1), _deposit1 - _deposit1 / 2, ISilo.CollateralType.Collateral);
 
-        assertEq(silo0.total(uint256(ISilo.AssetType.Protected)), 0, "protected Assets should be withdrawn");
+        assertEq(silo0.total(AssetTypes.Protected), 0, "protected Assets should be withdrawn");
         assertEq(silo0.getCollateralAssets(), 0, "protected Assets should be withdrawn");
     }
 

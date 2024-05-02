@@ -7,6 +7,7 @@ import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {SiloERC4626Lib} from "silo-core/contracts/lib/SiloERC4626Lib.sol";
+import {AssetTypes} from "silo-core/contracts/lib/AssetTypes.sol";
 import {IERC20Errors} from "openzeppelin5/interfaces/draft-IERC6093.sol";
 
 import {MintableToken} from "../../_common/MintableToken.sol";
@@ -76,7 +77,7 @@ contract DepositTest is SiloLittleHelper, Test {
 
         assertEq(token0.balanceOf(address(silo0)), assets * 2);
         assertEq(silo0.getCollateralAssets(), assets);
-        assertEq(silo0.total(uint256(ISilo.AssetType.Protected)), assets);
+        assertEq(silo0.total(AssetTypes.Protected), assets);
         assertEq(silo0.getDebtAssets(), 0);
 
         assertEq(IShareToken(collateral.collateralShareToken).balanceOf(depositor), assets, "collateral shares");
@@ -84,7 +85,7 @@ contract DepositTest is SiloLittleHelper, Test {
 
         assertEq(token1.balanceOf(address(silo1)), assets * 2);
         assertEq(silo1.getCollateralAssets(), assets);
-        assertEq(silo1.total(uint256(ISilo.AssetType.Protected)), assets);
+        assertEq(silo1.total(AssetTypes.Protected), assets);
         assertEq(silo1.getDebtAssets(), 0);
 
         assertEq(IShareToken(debt.collateralShareToken).balanceOf(depositor), assets, "collateral shares (on other silo)");

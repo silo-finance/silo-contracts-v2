@@ -26,6 +26,7 @@ import {SiloMathLib} from "./lib/SiloMathLib.sol";
 import {LiquidationWithdrawLib} from "./lib/LiquidationWithdrawLib.sol";
 import {Rounding} from "./lib/Rounding.sol";
 import {Hook} from "./lib/Hook.sol";
+import {AssetTypes} from "./lib/AssetTypes.sol";
 
 // Keep ERC4626 ordering
 // solhint-disable ordering
@@ -38,7 +39,7 @@ contract Silo is SiloERC4626 {
     using SafeERC20 for IERC20;
 
     ISiloFactory public immutable factory;
-    
+
     SiloData public siloData;
 
     SharedStorage public sharedStorage;
@@ -102,8 +103,8 @@ contract Silo is SiloERC4626 {
     /// @inheritdoc ISilo
     function utilizationData() external view virtual returns (UtilizationData memory) {
         return UtilizationData({
-            collateralAssets: total[uint256(AssetType.Collateral)].assets,
-            debtAssets: total[uint256(AssetType.Debt)].assets,
+            collateralAssets: total[AssetTypes.Collateral].assets,
+            debtAssets: total[AssetTypes.Debt].assets,
             interestRateTimestamp: siloData.interestRateTimestamp
         });
     }
@@ -151,8 +152,8 @@ contract Silo is SiloERC4626 {
         virtual
         returns (uint256 totalCollateralAssets, uint256 totalProtectedAssets)
     {
-        totalCollateralAssets = total[uint256(AssetType.Collateral)].assets;
-        totalProtectedAssets = total[uint256(AssetType.Protected)].assets;
+        totalCollateralAssets = total[AssetTypes.Collateral].assets;
+        totalProtectedAssets = total[AssetTypes.Protected].assets;
     }
 
     /// @inheritdoc ISilo
@@ -162,8 +163,8 @@ contract Silo is SiloERC4626 {
         virtual
         returns (uint256 totalCollateralAssets, uint256 totalDebtAssets)
     {
-        totalCollateralAssets = total[uint256(AssetType.Collateral)].assets;
-        totalDebtAssets = total[uint256(AssetType.Debt)].assets;
+        totalCollateralAssets = total[AssetTypes.Collateral].assets;
+        totalDebtAssets = total[AssetTypes.Debt].assets;
     }
 
     // ERC4626
@@ -204,7 +205,7 @@ contract Silo is SiloERC4626 {
 
     /// @inheritdoc IERC4626
     function maxDeposit(address /* _receiver */) external view virtual returns (uint256 maxAssets) {
-        return _callMaxDepositOrMint(total[uint256(AssetType.Collateral)].assets);
+        return _callMaxDepositOrMint(total[AssetTypes.Collateral].assets);
     }
 
     /// @inheritdoc IERC4626
@@ -455,8 +456,8 @@ contract Silo is SiloERC4626 {
             _borrowAssets,
             _borrower,
             _assetType,
-            total[uint256(AssetType.Collateral)].assets,
-            total[uint256(AssetType.Debt)],
+            total[AssetTypes.Collateral].assets,
+            total[AssetTypes.Debt],
             total[uint256(_assetType)]
         );
 
@@ -624,7 +625,7 @@ contract Silo is SiloERC4626 {
 
     // TODO can we optimise this? maybe add as args to methods
     function getRawLiquidity() public view virtual returns (uint256 liquidity) {
-        liquidity = SiloMathLib.liquidity(total[uint256(AssetType.Collateral)].assets, total[uint256(AssetType.Debt)].assets);
+        liquidity = SiloMathLib.liquidity(total[AssetTypes.Collateral].assets, total[AssetTypes.Debt].assets);
     }
 
     /// @dev that method allow to finish liquidation process by giving up collateral to liquidator
@@ -722,9 +723,9 @@ contract Silo is SiloERC4626 {
                 borrower: _borrower,
                 sameAsset: _sameAsset,
                 leverage: _leverage,
-                totalCollateralAssets: total[uint256(AssetType.Collateral)].assets
+                totalCollateralAssets: total[AssetTypes.Collateral].assets
             }),
-            total[uint256(AssetType.Debt)],
+            total[AssetTypes.Debt],
             _data
         );
 
@@ -746,7 +747,7 @@ contract Silo is SiloERC4626 {
             _borrower,
             _repayer,
             _liquidation,
-            total[uint256(AssetType.Debt)]
+            total[AssetTypes.Debt]
         );
 
         emit Repay(_repayer, _borrower, assets, shares);
@@ -852,8 +853,8 @@ contract Silo is SiloERC4626 {
             _daoFee,
             _deployerFee,
             siloData,
-            total[uint256(AssetType.Collateral)],
-            total[uint256(AssetType.Debt)]
+            total[AssetTypes.Collateral],
+            total[AssetTypes.Debt]
         );
 
         if (accruedInterest != 0) emit AccruedInterest(accruedInterest);
