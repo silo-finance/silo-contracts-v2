@@ -120,7 +120,13 @@ library PartialLiquidationExecLib {
         unchecked  { sumOfCollateralAssets = _ltvData.borrowerCollateralAssets + _ltvData.borrowerProtectedAssets; }
 
         if (_ltvData.borrowerDebtAssets == 0 || _params.debtToCover == 0) return (0, 0);
-        if (sumOfCollateralAssets == 0) return (0, _params.debtToCover); // TODO cap
+
+        if (sumOfCollateralAssets == 0) {
+            return (
+                0,
+                _params.debtToCover > _ltvData.borrowerDebtAssets ? _ltvData.borrowerDebtAssets : _params.debtToCover
+            );
+        }
 
         (
             uint256 sumOfBorrowerCollateralValue, uint256 totalBorrowerDebtValue, uint256 ltvBefore
