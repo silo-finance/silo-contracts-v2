@@ -266,54 +266,56 @@ interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
     function convertToAssets(uint256 _shares, AssetType _assetType) external view returns (uint256 assets);
 
     /// @notice Implements IERC4626.maxDeposit for protected (non-borrowable) collateral and collateral
-    /// @dev _assetType is ignored because maxDeposit is the same for both asset types
-    function maxDeposit(address _receiver, CollateralType _assetType) external view returns (uint256 maxAssets);
+    /// @dev _collateralType is ignored because maxDeposit is the same for both asset types
+    function maxDeposit(address _receiver, CollateralType _collateralType) external view returns (uint256 maxAssets);
 
     /// @notice Implements IERC4626.previewDeposit for protected (non-borrowable) collateral and collateral
     /// @dev Reverts for debt asset type
-    function previewDeposit(uint256 _assets, CollateralType _assetType) external view returns (uint256 shares);
+    function previewDeposit(uint256 _assets, CollateralType _collateralType) external view returns (uint256 shares);
 
     /// @notice Implements IERC4626.deposit for protected (non-borrowable) collateral and collateral
     /// @dev Reverts for debt asset type
-    function deposit(uint256 _assets, address _receiver, CollateralType _assetType) external returns (uint256 shares);
+    function deposit(uint256 _assets, address _receiver, CollateralType _collateralType)
+        external
+        returns (uint256 shares);
 
     /// @notice Implements IERC4626.maxMint for protected (non-borrowable) collateral and collateral
-    /// @dev _assetType is ignored because maxDeposit is the same for both asset types
-    function maxMint(address _receiver, CollateralType _assetType) external view returns (uint256 maxShares);
+    /// @dev _collateralType is ignored because maxDeposit is the same for both asset types
+    function maxMint(address _receiver, CollateralType _collateralType) external view returns (uint256 maxShares);
 
     /// @notice Implements IERC4626.previewMint for protected (non-borrowable) collateral and collateral
     /// @dev Reverts for debt asset type
-    function previewMint(uint256 _shares, CollateralType _assetType) external view returns (uint256 assets);
+    function previewMint(uint256 _shares, CollateralType _collateralType) external view returns (uint256 assets);
 
     /// @notice Implements IERC4626.mint for protected (non-borrowable) collateral and collateral
     /// @dev Reverts for debt asset type
-    function mint(uint256 _shares, address _receiver, CollateralType _assetType) external returns (uint256 assets);
+    function mint(uint256 _shares, address _receiver, CollateralType _collateralType) external returns (uint256 assets);
 
     /// @notice Implements IERC4626.maxWithdraw for protected (non-borrowable) collateral and collateral
     /// @dev Reverts for debt asset type
-    function maxWithdraw(address _owner, CollateralType _assetType) external view returns (uint256 maxAssets);
+    function maxWithdraw(address _owner, CollateralType _collateralType) external view returns (uint256 maxAssets);
 
     /// @notice Implements IERC4626.previewWithdraw for protected (non-borrowable) collateral and collateral
     /// @dev Reverts for debt asset type
-    function previewWithdraw(uint256 _assets, CollateralType _assetType) external view returns (uint256 shares);
+    function previewWithdraw(uint256 _assets, CollateralType _collateralType) external view returns (uint256 shares);
 
     /// @notice Implements IERC4626.withdraw for protected (non-borrowable) collateral and collateral
     /// @dev Reverts for debt asset type
-    function withdraw(uint256 _assets, address _receiver, address _owner, CollateralType _assetType)
+    function withdraw(uint256 _assets, address _receiver, address _owner, CollateralType _collateralType)
         external
         returns (uint256 shares);
 
     /// @notice Implements IERC4626.maxRedeem for protected (non-borrowable) collateral and collateral
     /// @dev Reverts for debt asset type
-    function maxRedeem(address _owner, CollateralType _assetType) external view returns (uint256 maxShares);
+    function maxRedeem(address _owner, CollateralType _collateralType) external view returns (uint256 maxShares);
 
     /// @notice Implements IERC4626.previewRedeem for protected (non-borrowable) collateral and collateral
     /// @dev Reverts for debt asset type
-    function previewRedeem(uint256 _shares, CollateralType _assetType) external view returns (uint256 assets);
+    function previewRedeem(uint256 _shares, CollateralType _collateralType) external view returns (uint256 assets);
 
     /// @notice Implements IERC4626.redeem for protected (non-borrowable) collateral and collateral
     /// @dev Reverts for debt asset type
-    function redeem(uint256 _shares, address _receiver, address _owner, CollateralType _assetType)
+    function redeem(uint256 _shares, address _receiver, address _owner, CollateralType _collateralType)
         external
         returns (uint256 assets);
 
@@ -348,10 +350,10 @@ interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
     /// @param _deposit Amount of deposit to leverage
     /// @param _borrow Amount of assets to borrow
     /// @param _borrower Address responsible for the borrowed assets
-    /// @param _assetType asset type for collateral
+    /// @param _collateralType asset type for collateral
     /// @return depositShares Amount of shares equivalent to the collateral assets
     /// @return borrowShares Amount of shares equivalent to the borrowed assets
-    function leverageSameAsset(uint256 _deposit, uint256 _borrow, address _borrower, CollateralType _assetType)
+    function leverageSameAsset(uint256 _deposit, uint256 _borrow, address _borrower, CollateralType _collateralType)
         external
         returns (uint256 depositShares, uint256 borrowShares);
 

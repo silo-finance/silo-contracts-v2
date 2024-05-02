@@ -83,14 +83,14 @@ abstract contract SiloLittleHelper is CommonBase {
         uint256 _assets,
         address _depositor,
         bool _forSameToken,
-        ISilo.CollateralType _assetType
+        ISilo.CollateralType _collateralType
     )
         internal
         returns (uint256 shares)
     {
         return _forSameToken
-            ? _makeDeposit(silo1, token1, _assets, _depositor, _assetType)
-            : _makeDeposit(silo0, token0, _assets, _depositor, _assetType);
+            ? _makeDeposit(silo1, token1, _assets, _depositor, _collateralType)
+            : _makeDeposit(silo0, token0, _assets, _depositor, _collateralType);
     }
 
     function _mint(uint256 _approve, uint256 _shares, address _depositor) internal returns (uint256 assets) {

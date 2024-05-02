@@ -207,16 +207,16 @@ contract EchidnaMiddleman is EchidnaSetup {
         _siloWithCollateral.redeem(maxShares, actor, actor); // expect not to fail!
     }
 
-    function __mintAssetType(uint8 _actorIndex, bool _vaultZero, uint256 _shares, uint8 _assetType)
+    function __mintAssetType(uint8 _actorIndex, bool _vaultZero, uint256 _shares, uint8 _collateralType)
         public returns (uint256 assets)
     {
         address actor = _chooseActor(_actorIndex);
         ISilo silo = __chooseSilo(_vaultZero);
 
         vm.prank(actor);
-        assets = silo.mint(_shares, actor, ISilo.CollateralType(_assetType));
+        assets = silo.mint(_shares, actor, ISilo.CollateralType(_collateralType));
 
-        assertLe(_assetType, 3, "we have only 3 types");
+        assertLe(_collateralType, 3, "we have only 3 types");
     }
 
     function __withdraw(uint8 _actorIndex, bool _vaultZero, uint256 _assets) public {
@@ -252,7 +252,7 @@ contract EchidnaMiddleman is EchidnaSetup {
         uint8 _actorIndex,
         bool _vaultZero,
         uint256 _amount,
-        uint8 _assetType
+        uint8 _collateralType
     )
         public returns (uint256 shares)
     {
@@ -260,9 +260,9 @@ contract EchidnaMiddleman is EchidnaSetup {
         ISilo silo = __chooseSilo(_vaultZero);
 
         vm.prank(actor);
-        shares = silo.deposit(_amount, actor, ISilo.CollateralType(_assetType));
+        shares = silo.deposit(_amount, actor, ISilo.CollateralType(_collateralType));
 
-        assertLe(_assetType, 3, "we have only 3 types");
+        assertLe(_collateralType, 3, "we have only 3 types");
     }
 
     function __cannotLiquidateASolventUser(uint8 _actorIndex, bool _receiveShares) public {

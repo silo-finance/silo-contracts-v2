@@ -154,7 +154,7 @@ interface ISiloConfig {
 
     function accrueInterestAndGetConfigOptimised(
         uint256 _action,
-        ISilo.CollateralType _assetType
+        ISilo.CollateralType _collateralType
     ) external returns (address shareToken, address asset, address hookReceiver, address liquidationModule);
 
 

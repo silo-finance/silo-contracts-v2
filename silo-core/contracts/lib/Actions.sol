@@ -36,19 +36,19 @@ library Actions {
         uint256 _assets,
         uint256 _shares,
         address _receiver,
-        ISilo.CollateralType _assetType,
+        ISilo.CollateralType _collateralType,
         ISilo.Assets storage _totalCollateral
     )
         external
         returns (uint256 assets, uint256 shares)
     {
-        _hookCallBefore(_shareStorage, Hook.DEPOSIT, abi.encodePacked(_assets, _shares, _receiver, _assetType));
+        _hookCallBefore(_shareStorage, Hook.DEPOSIT, abi.encodePacked(_assets, _shares, _receiver, _collateralType));
 
         (
             address shareToken,
             address asset,
             address hookReceiver,
-        ) = _shareStorage.siloConfig.accrueInterestAndGetConfigOptimised(Hook.DEPOSIT, _assetType);
+        ) = _shareStorage.siloConfig.accrueInterestAndGetConfigOptimised(Hook.DEPOSIT, _collateralType);
 
         (assets, shares) = SiloERC4626Lib.deposit(
             asset,
@@ -67,7 +67,7 @@ library Actions {
                 _shareStorage,
                 hookReceiver,
                 Hook.DEPOSIT,
-                abi.encodePacked(_assets, _shares, _receiver, _assetType, assets, shares)
+                abi.encodePacked(_assets, _shares, _receiver, _collateralType, assets, shares)
             );
         }
     }
@@ -337,7 +337,7 @@ library Actions {
         uint256 _depositAssets,
         uint256 _borrowAssets,
         address _borrower,
-        ISilo.CollateralType _assetType,
+        ISilo.CollateralType _collateralType,
         uint256 _totalCollateralAssets,
         ISilo.Assets storage _totalDebt,
         ISilo.Assets storage _totalAssetsForDeposit
@@ -350,7 +350,7 @@ library Actions {
         _hookCallBefore(
             _shareStorage,
             Hook.BORROW | Hook.LEVERAGE | Hook.SAME_ASSET,
-            abi.encodePacked(_depositAssets, _borrowAssets, _borrower, _assetType)
+            abi.encodePacked(_depositAssets, _borrowAssets, _borrower, _collateralType)
         );
 
         ISiloConfig.ConfigData memory collateralConfig;
@@ -408,7 +408,7 @@ library Actions {
             _depositAssets,
             0 /* _shares */,
             _borrower,
-            _assetType == ISilo.CollateralType.Collateral
+            _collateralType == ISilo.CollateralType.Collateral
                 ? IShareToken(collateralConfig.collateralShareToken)
                 : IShareToken(collateralConfig.protectedShareToken),
             _totalAssetsForDeposit
@@ -421,7 +421,7 @@ library Actions {
                 _shareStorage,
                 collateralConfig.hookReceiver,
                 Hook.LEVERAGE | Hook.SAME_ASSET,
-                abi.encodePacked(_depositAssets, _borrowAssets, _borrower, _assetType, depositedShares, borrowedShares)
+                abi.encodePacked(_depositAssets, _borrowAssets, _borrower, _collateralType, depositedShares, borrowedShares)
             );
         }
     }
