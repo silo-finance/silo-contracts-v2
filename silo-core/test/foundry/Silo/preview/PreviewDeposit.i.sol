@@ -37,11 +37,11 @@ contract PreviewDepositTest is SiloLittleHelper, Test {
 
         uint256 previewShares = _defaultType
             ? silo0.previewDeposit(_assets)
-            : silo0.previewDeposit(_assets, ISilo.AssetType(_type));
+            : silo0.previewDeposit(_assets, ISilo.CollateralType(_type));
 
         uint256 shares = _defaultType
             ? _deposit(_assets, depositor)
-            : _deposit(_assets, depositor, ISilo.AssetType(_type));
+            : _deposit(_assets, depositor, ISilo.CollateralType(_type));
 
         assertEq(previewShares, shares, "previewDeposit must return as close but NOT more");
     }
@@ -56,18 +56,18 @@ contract PreviewDepositTest is SiloLittleHelper, Test {
 
         uint256 sharesBefore = _defaultType
             ? _deposit(_assets, depositor)
-            : _deposit(_assets, depositor, ISilo.AssetType(_type));
+            : _deposit(_assets, depositor, ISilo.CollateralType(_type));
 
         vm.warp(block.timestamp + 365 days);
         silo0.accrueInterest();
 
         uint256 previewShares = _defaultType
             ? silo0.previewDeposit(_assets)
-            : silo0.previewDeposit(_assets, ISilo.AssetType(_type));
+            : silo0.previewDeposit(_assets, ISilo.CollateralType(_type));
 
         uint256 gotShares = _defaultType
             ? _deposit(_assets, depositor)
-            : _deposit(_assets, depositor, ISilo.AssetType(_type));
+            : _deposit(_assets, depositor, ISilo.CollateralType(_type));
 
         assertEq(previewShares, gotShares, "previewDeposit must return as close but NOT more");
         assertEq(previewShares, sharesBefore, "without interest shares must be the same");
@@ -90,13 +90,13 @@ contract PreviewDepositTest is SiloLittleHelper, Test {
         vm.assume(_assets < type(uint128).max);
         vm.assume(_assets > 0);
 
-        ISilo.AssetType assetType = _protected ? ISilo.AssetType.Protected : ISilo.AssetType.Collateral;
+        ISilo.CollateralType assetType = _protected ? ISilo.CollateralType.Protected : ISilo.CollateralType.Collateral;
 
         uint256 sharesBefore = _deposit(_assets, depositor, assetType);
         _depositForBorrow(_assets, depositor);
 
         if (_protected) {
-            _makeDeposit(silo1, token1, _assets, depositor, ISilo.AssetType.Protected);
+            _makeDeposit(silo1, token1, _assets, depositor, ISilo.CollateralType.Protected);
         }
 
         _depositCollateral(_assets / 10 == 0 ? 2 : _assets, borrower, _sameAsset);

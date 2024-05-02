@@ -36,10 +36,10 @@ contract Actor is PropertiesAsserts {
     function accountForOpenedPosition(ISilo.AssetType assetType, bool vaultZero, uint256 _tokensDeposited, uint256 _sharesMinted) internal {
         address vault = vaultZero ? address(vault0) : address(vault1);
 
-        if (assetType == ISilo.AssetType.Collateral) {
+        if (assetType == ISilo.CollateralType.Collateral) {
             tokensDepositedCollateral[vault] += _tokensDeposited;
             collateralMinted[vault] += _sharesMinted;
-        } else if (assetType == ISilo.AssetType.Protected) {
+        } else if (assetType == ISilo.CollateralType.Protected) {
             tokensDepositedProtected[vault] += _tokensDeposited;
             protectedMinted[vault] += _sharesMinted;
         } else {
@@ -59,12 +59,12 @@ contract Actor is PropertiesAsserts {
         // note: The below code can lead to false positives since it does not account for interest.
         // In order to properly check these properties it needs to be modified so the accounting is correct.
 
-/*         if (assetType == ISilo.AssetType.Collateral) {
+/*         if (assetType == ISilo.CollateralType.Collateral) {
             assertLte(_sharesBurned, collateralMinted[vault],  "Actor has burned more shares than they ever minted. Implies a rounding or accounting error");
             assertLte(_tokensReceived, tokensDepositedCollateral[vault],  "Actor has withdrawn more tokens than they ever deposited. Implies a rounding or accounting error");
             tokensDepositedCollateral[vault] -= _tokensReceived;
             collateralMinted[vault] -= _sharesBurned;
-        } else if (assetType == ISilo.AssetType.Protected) {
+        } else if (assetType == ISilo.CollateralType.Protected) {
             assertLte(_sharesBurned, protectedMinted[vault],  "Actor has burned more shares than they ever minted. Implies a rounding or accounting error");
             assertLte(_tokensReceived, tokensDepositedProtected[vault],  "Actor has withdrawn more tokens than they ever deposited. Implies a rounding or accounting error");
             tokensDepositedProtected[vault] -= _tokensReceived;
@@ -95,7 +95,7 @@ contract Actor is PropertiesAsserts {
         approveFunds(vaultZero, amount, address(vault));
     }
 
-    function prepareForDepositShares(bool vaultZero, uint256 shares, ISilo.AssetType assetType) internal returns (Silo vault, uint256 amount) {
+    function prepareForDepositShares(bool vaultZero, uint256 shares, ISilo.CollateralType assetType) internal returns (Silo vault, uint256 amount) {
         vault = vaultZero ? vault0 : vault1;
         amount = vault.previewMint(shares, assetType);
 
@@ -113,10 +113,10 @@ contract Actor is PropertiesAsserts {
         Silo vault = prepareForDeposit(vaultZero, assets);
 
         shares = vault.deposit(assets, address(this));
-        accountForOpenedPosition(ISilo.AssetType.Collateral, vaultZero, assets, shares);
+        accountForOpenedPosition(ISilo.CollateralType.Collateral, vaultZero, assets, shares);
     }
 
-    function depositAssetType(bool vaultZero, uint256 assets, ISilo.AssetType assetType) public returns (uint256 shares) {
+    function depositAssetType(bool vaultZero, uint256 assets, ISilo.CollateralType assetType) public returns (uint256 shares) {
         Silo vault = prepareForDeposit(vaultZero, assets);
 
         shares = vault.deposit(assets, address(this), assetType);
@@ -124,13 +124,13 @@ contract Actor is PropertiesAsserts {
     }
 
     function mint(bool vaultZero, uint256 shares) public returns (uint256 assets) {
-        (Silo vault,) = prepareForDepositShares(vaultZero, shares, ISilo.AssetType.Collateral);
+        (Silo vault,) = prepareForDepositShares(vaultZero, shares, ISilo.CollateralType.Collateral);
 
         assets = vault.mint(shares, address(this));
-        accountForOpenedPosition(ISilo.AssetType.Collateral, vaultZero, assets, shares);
+        accountForOpenedPosition(ISilo.CollateralType.Collateral, vaultZero, assets, shares);
     }
 
-    function mintAssetType(bool vaultZero, uint256 shares, ISilo.AssetType assetType) public returns (uint256 assets) {
+    function mintAssetType(bool vaultZero, uint256 shares, ISilo.CollateralType assetType) public returns (uint256 assets) {
         (Silo vault,) = prepareForDepositShares(vaultZero, shares, assetType);
 
         assets = vault.mint(shares, address(this), assetType);
@@ -140,10 +140,10 @@ contract Actor is PropertiesAsserts {
     function withdraw(bool vaultZero, uint256 assets) public returns (uint256 shares) {
         Silo vault = vaultZero ? vault0 : vault1;
         shares = vault.withdraw(assets, address(this), address(this));
-        accountForClosedPosition(ISilo.AssetType.Collateral, vaultZero, assets, shares);
+        accountForClosedPosition(ISilo.CollateralType.Collateral, vaultZero, assets, shares);
     }
 
-    function withdrawAssetType(bool vaultZero, uint256 assets, ISilo.AssetType assetType) public returns (uint256 shares) {
+    function withdrawAssetType(bool vaultZero, uint256 assets, ISilo.CollateralType assetType) public returns (uint256 shares) {
         Silo vault = vaultZero ? vault0 : vault1;
         shares = vault.withdraw(assets, address(this), address(this), assetType);
         accountForClosedPosition(assetType, vaultZero, assets, shares);
@@ -152,10 +152,10 @@ contract Actor is PropertiesAsserts {
     function redeem(bool vaultZero, uint256 shares) public returns (uint256 assets) {
         Silo vault = vaultZero ? vault0 : vault1;
         assets = vault.redeem(shares, address(this), address(this));
-        accountForClosedPosition(ISilo.AssetType.Collateral, vaultZero, assets, shares);
+        accountForClosedPosition(ISilo.CollateralType.Collateral, vaultZero, assets, shares);
     }
 
-    function redeemAssetType(bool vaultZero, uint256 shares, ISilo.AssetType assetType)
+    function redeemAssetType(bool vaultZero, uint256 shares, ISilo.CollateralType assetType)
         public
         returns (uint256 assets)
     {
@@ -189,7 +189,7 @@ contract Actor is PropertiesAsserts {
         accountForClosedPosition(ISilo.AssetType.Debt, vaultZero, assets, shares);
     }
 
-    function transitionCollateral(bool vaultZero, uint256 shares, ISilo.AssetType withdrawType) public returns (uint256 assets) {
+    function transitionCollateral(bool vaultZero, uint256 shares, ISilo.CollateralType withdrawType) public returns (uint256 assets) {
         Silo vault = vaultZero ? vault0 : vault1;
         assets = vault.transitionCollateral(shares, address(this), withdrawType);
         accountForClosedPosition(withdrawType, vaultZero, assets, shares);

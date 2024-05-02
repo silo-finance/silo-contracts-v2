@@ -36,7 +36,7 @@ contract DepositTest is SiloLittleHelper, Test {
     */
     function test_deposit_revertsZeroAssets() public {
         uint256 _assets;
-        ISilo.AssetType _type;
+        ISilo.CollateralType _type;
         address depositor = makeAddr("Depositor");
 
         vm.expectRevert(ISilo.ZeroAssets.selector);
@@ -51,11 +51,10 @@ contract DepositTest is SiloLittleHelper, Test {
     */
     function test_deposit_reverts_WrongAssetType() public {
         uint256 _assets = 1;
-        ISilo.AssetType _type = ISilo.AssetType.Debt;
         address depositor = makeAddr("Depositor");
 
         vm.expectRevert(ISilo.WrongAssetType.selector);
-        silo0.deposit(_assets, depositor, _type);
+        silo0.deposit(_assets, depositor, ISilo.CollateralType(2));
     }
 
     /*
@@ -65,10 +64,10 @@ contract DepositTest is SiloLittleHelper, Test {
         uint256 assets = 1;
         address depositor = makeAddr("Depositor");
 
-        _makeDeposit(silo0, token0, assets, depositor, ISilo.AssetType.Collateral);
-        _makeDeposit(silo0, token0, assets, depositor, ISilo.AssetType.Protected);
-        _makeDeposit(silo1, token1, assets, depositor, ISilo.AssetType.Collateral);
-        _makeDeposit(silo1, token1, assets, depositor, ISilo.AssetType.Protected);
+        _makeDeposit(silo0, token0, assets, depositor, ISilo.CollateralType.Collateral);
+        _makeDeposit(silo0, token0, assets, depositor, ISilo.CollateralType.Protected);
+        _makeDeposit(silo1, token1, assets, depositor, ISilo.CollateralType.Collateral);
+        _makeDeposit(silo1, token1, assets, depositor, ISilo.CollateralType.Protected);
 
         (
             ISiloConfig.ConfigData memory collateral,
@@ -77,7 +76,7 @@ contract DepositTest is SiloLittleHelper, Test {
 
         assertEq(token0.balanceOf(address(silo0)), assets * 2);
         assertEq(silo0.getCollateralAssets(), assets);
-        assertEq(silo0.total(ISilo.AssetType.Protected), assets);
+        assertEq(silo0.total(ISilo.CollateralType.Protected), assets);
         assertEq(silo0.getDebtAssets(), 0);
 
         assertEq(IShareToken(collateral.collateralShareToken).balanceOf(depositor), assets, "collateral shares");
@@ -110,18 +109,18 @@ contract DepositTest is SiloLittleHelper, Test {
         uint256 assets = 1e18;
         address depositor = makeAddr("Depositor");
 
-        _makeDeposit(silo0, token0, assets, depositor, ISilo.AssetType.Collateral);
-        _makeDeposit(silo0, token0, assets, depositor, ISilo.AssetType.Protected);
-        _makeDeposit(silo1, token1, assets, depositor, ISilo.AssetType.Collateral);
-        _makeDeposit(silo1, token1, assets, depositor, ISilo.AssetType.Protected);
+        _makeDeposit(silo0, token0, assets, depositor, ISilo.CollateralType.Collateral);
+        _makeDeposit(silo0, token0, assets, depositor, ISilo.CollateralType.Protected);
+        _makeDeposit(silo1, token1, assets, depositor, ISilo.CollateralType.Collateral);
+        _makeDeposit(silo1, token1, assets, depositor, ISilo.CollateralType.Protected);
 
         uint256 maxBorrow = silo1.maxBorrow(depositor, _sameAsset);
         _borrow(maxBorrow, depositor, _sameAsset);
 
-        _makeDeposit(silo0, token0, assets, depositor, ISilo.AssetType.Collateral);
-        _makeDeposit(silo0, token0, assets, depositor, ISilo.AssetType.Protected);
-        _makeDeposit(silo1, token1, assets, depositor, ISilo.AssetType.Collateral);
-        _makeDeposit(silo1, token1, assets, depositor, ISilo.AssetType.Protected);
+        _makeDeposit(silo0, token0, assets, depositor, ISilo.CollateralType.Collateral);
+        _makeDeposit(silo0, token0, assets, depositor, ISilo.CollateralType.Protected);
+        _makeDeposit(silo1, token1, assets, depositor, ISilo.CollateralType.Collateral);
+        _makeDeposit(silo1, token1, assets, depositor, ISilo.CollateralType.Protected);
     }
 
     /*
@@ -138,7 +137,7 @@ contract DepositTest is SiloLittleHelper, Test {
             abi.encodeWithSelector(IERC20Errors.ERC20InsufficientAllowance.selector, silo0, 0, assets)
         );
         vm.prank(depositor);
-        silo0.deposit(assets, depositor, ISilo.AssetType.Collateral);
+        silo0.deposit(assets, depositor, ISilo.CollateralType.Collateral);
     }
 
     /*
@@ -156,13 +155,13 @@ contract DepositTest is SiloLittleHelper, Test {
         emit Deposit(depositor, depositor, assets, assets);
 
         vm.prank(depositor);
-        silo0.deposit(assets, depositor, ISilo.AssetType.Collateral);
+        silo0.deposit(assets, depositor, ISilo.CollateralType.Collateral);
 
         vm.expectEmit(true, true, true, true);
         emit DepositProtected(depositor, depositor, assets, assets);
 
         vm.prank(depositor);
-        silo0.deposit(assets, depositor, ISilo.AssetType.Protected);
+        silo0.deposit(assets, depositor, ISilo.CollateralType.Protected);
     }
 
     /*

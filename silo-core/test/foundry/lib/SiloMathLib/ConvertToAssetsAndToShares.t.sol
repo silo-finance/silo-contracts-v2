@@ -38,14 +38,14 @@ contract ConvertToAssetsAndToSharesTest is Test {
             _totalShares,
             roundingToAssets,
             roundingToShares,
-            ISilo.AssetType.Collateral
+            ISilo.CollateralType.Collateral
         );
 
         assertEq(assets, _assetsOrShares);
         assertEq(
             shares,
             SiloMathLib.convertToShares(
-                _assetsOrShares, _totalAssets, _totalShares, roundingToAssets, ISilo.AssetType.Collateral
+                _assetsOrShares, _totalAssets, _totalShares, roundingToAssets, ISilo.CollateralType.Collateral
             )
         );
     }

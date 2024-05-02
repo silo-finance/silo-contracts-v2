@@ -43,7 +43,7 @@ contract PreviewWithdrawTest is SiloLittleHelper, Test {
         uint128 amountToUse = _partial ? uint128(uint256(_assetsOrShares) * 37 / 100) : _assetsOrShares;
         vm.assume(amountToUse > 0);
 
-        ISilo.AssetType assetType = _protected ? ISilo.AssetType.Protected : ISilo.AssetType.Collateral;
+        ISilo.CollateralType assetType = _protected ? ISilo.CollateralType.Protected : ISilo.CollateralType.Collateral;
 
         // preview before deposit creation
         uint256 preview = _doRedeem
@@ -71,7 +71,7 @@ contract PreviewWithdrawTest is SiloLittleHelper, Test {
         uint128 amountToUse = _partial ? uint128(uint256(_assetsOrShares) * 37 / 100) : _assetsOrShares;
         vm.assume(amountToUse > 0);
 
-        ISilo.AssetType assetType = _protected ? ISilo.AssetType.Protected : ISilo.AssetType.Collateral;
+        ISilo.CollateralType assetType = _protected ? ISilo.CollateralType.Protected : ISilo.CollateralType.Collateral;
 
         _deposit(uint256(_assetsOrShares) * 2 - (_assetsOrShares % 2), depositor, assetType);
 
@@ -98,7 +98,7 @@ contract PreviewWithdrawTest is SiloLittleHelper, Test {
         uint128 amountToUse = _partial ? uint128(uint256(_assetsOrShares) * 37 / 100) : _assetsOrShares;
         vm.assume(amountToUse > 0);
 
-        ISilo.AssetType assetType = _protected ? ISilo.AssetType.Protected : ISilo.AssetType.Collateral;
+        ISilo.CollateralType assetType = _protected ? ISilo.CollateralType.Protected : ISilo.CollateralType.Collateral;
 
         // we need interest on silo0, where we doing deposit
         _depositForBorrow(uint256(_assetsOrShares) * 2, borrower); // deposit collateral for silo1
@@ -124,7 +124,7 @@ contract PreviewWithdrawTest is SiloLittleHelper, Test {
         _assertPreviewWithdraw(preview, amountToUse, _doRedeem, assetType);
     }
 
-    function _assertPreviewWithdraw(uint256 _preview, uint128 _assetsOrShares, bool _useRedeem, ISilo.AssetType _type) internal {
+    function _assertPreviewWithdraw(uint256 _preview, uint128 _assetsOrShares, bool _useRedeem, ISilo.CollateralType _type) internal {
         vm.assume(_preview > 0);
         vm.prank(depositor);
 

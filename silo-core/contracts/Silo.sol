@@ -764,7 +764,7 @@ contract Silo is SiloERC4626 {
         (, collateralShareToken,) = sharedStorage.siloConfig.getShareTokens(address(this));
     }
 
-    function _previewMint(uint256 _shares, AssetType _assetType) internal view virtual returns (uint256 assets) {
+    function _previewMint(uint256 _shares, CollateralType _assetType) internal view virtual returns (uint256 assets) {
         if (_assetType == AssetType.Debt) revert ISilo.WrongAssetType();
 
         (uint256 totalSiloAssets, uint256 totalShares) = _getTotalAssetsAndTotalSharesWithInterest(_assetType);

@@ -53,7 +53,7 @@ contract WithdrawWhenNoDepositTest is IntegrationTest {
     */
     function test_withdraw_WrongAssetType() public {
         vm.expectRevert(ISilo.WrongAssetType.selector);
-        silo0.withdraw(0, address(1), address(1), ISilo.AssetType.Debt);
+        silo0.withdraw(0, address(1), address(1), ISilo.CollateralType(ISilo.AssetType.Debt));
     }
 
     /*
@@ -61,16 +61,16 @@ contract WithdrawWhenNoDepositTest is IntegrationTest {
     */
     function test_withdraw_NothingToWithdraw() public {
         vm.expectRevert(ISilo.NothingToWithdraw.selector);
-        silo0.withdraw(0, address(this), address(this), ISilo.AssetType.Collateral);
+        silo0.withdraw(0, address(this), address(this), ISilo.CollateralType.Collateral);
 
         vm.expectRevert(ISilo.NothingToWithdraw.selector);
-        silo0.withdraw(0, address(this), address(this), ISilo.AssetType.Protected);
+        silo0.withdraw(0, address(this), address(this), ISilo.CollateralType.Protected);
 
         vm.expectRevert(ISilo.NothingToWithdraw.selector);
-        silo0.withdraw(1, address(this), address(this), ISilo.AssetType.Collateral);
+        silo0.withdraw(1, address(this), address(this), ISilo.CollateralType.Collateral);
 
         vm.expectRevert(ISilo.NothingToWithdraw.selector);
-        silo0.withdraw(1, address(this), address(this), ISilo.AssetType.Protected);
+        silo0.withdraw(1, address(this), address(this), ISilo.CollateralType.Protected);
     }
 
     /*
@@ -78,29 +78,29 @@ contract WithdrawWhenNoDepositTest is IntegrationTest {
     */
     function test_withdraw_when_liquidity_but_NothingToWithdraw() public {
         // any deposit so we have liquidity
-        _anyDeposit(ISilo.AssetType.Collateral);
+        _anyDeposit(ISilo.CollateralType.Collateral);
 
         // test
         vm.expectRevert(ISilo.NothingToWithdraw.selector);
-        silo0.withdraw(0, address(this), address(this), ISilo.AssetType.Collateral);
+        silo0.withdraw(0, address(this), address(this), ISilo.CollateralType.Collateral);
 
         vm.expectRevert(ISilo.NothingToWithdraw.selector);
-        silo0.withdraw(0, address(this), address(this), ISilo.AssetType.Protected);
+        silo0.withdraw(0, address(this), address(this), ISilo.CollateralType.Protected);
 
         vm.expectRevert(abi.encodeWithSelector(IERC20Errors.ERC20InsufficientBalance.selector, address(this), 0, 1));
-        silo0.withdraw(1, address(this), address(this), ISilo.AssetType.Collateral);
+        silo0.withdraw(1, address(this), address(this), ISilo.CollateralType.Collateral);
 
         vm.expectRevert(ISilo.NothingToWithdraw.selector);
-        silo0.withdraw(1, address(this), address(this), ISilo.AssetType.Protected);
+        silo0.withdraw(1, address(this), address(this), ISilo.CollateralType.Protected);
 
         // any deposit so we have liquidity
-        _anyDeposit(ISilo.AssetType.Protected);
+        _anyDeposit(ISilo.CollateralType.Protected);
 
         vm.expectRevert(abi.encodeWithSelector(IERC20Errors.ERC20InsufficientBalance.selector, address(this), 0, 1));
-        silo0.withdraw(1, address(this), address(this), ISilo.AssetType.Protected);
+        silo0.withdraw(1, address(this), address(this), ISilo.CollateralType.Protected);
     }
 
-    function _anyDeposit(ISilo.AssetType _type) public {
+    function _anyDeposit(ISilo.CollateralType _type) public {
         address otherDepositor = address(1);
         uint256 depositAmount = 1e18;
 

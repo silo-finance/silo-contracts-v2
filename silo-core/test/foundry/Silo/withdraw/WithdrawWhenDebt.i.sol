@@ -26,8 +26,8 @@ contract WithdrawWhenDebtTest is SiloLittleHelper, Test {
         // we need to have something to borrow
         _depositForBorrow(0.5e18, address(1));
 
-        _depositCollateral(2e18, address(this), _sameAsset, ISilo.AssetType.Collateral);
-        _depositCollateral(1e18, address(this), _sameAsset, ISilo.AssetType.Protected);
+        _depositCollateral(2e18, address(this), _sameAsset, ISilo.CollateralType.Collateral);
+        _depositCollateral(1e18, address(this), _sameAsset, ISilo.CollateralType.Protected);
 
         _borrow(0.1e18, address(this), _sameAsset);
     }
@@ -60,7 +60,7 @@ contract WithdrawWhenDebtTest is SiloLittleHelper, Test {
         assertEq(maxWithdraw, 2e18 - 1, "maxWithdraw, because we have protected (-1 for underestimation)");
 
         uint256 previewWithdraw = collateralSilo.previewWithdraw(maxWithdraw);
-        uint256 gotShares = collateralSilo.withdraw(maxWithdraw, borrower, borrower, ISilo.AssetType.Collateral);
+        uint256 gotShares = collateralSilo.withdraw(maxWithdraw, borrower, borrower, ISilo.CollateralType.Collateral);
 
         assertEq(collateralSilo.maxWithdraw(address(this)), 0, "no collateral left");
 
@@ -72,7 +72,7 @@ contract WithdrawWhenDebtTest is SiloLittleHelper, Test {
         assertTrue(collateralSilo.isSolvent(address(this)), "must stay solvent");
 
         assertEq(
-            collateralSilo.maxWithdraw(address(this), ISilo.AssetType.Protected),
+            collateralSilo.maxWithdraw(address(this), ISilo.CollateralType.Protected),
             expectedProtectedWithdraw,
             "protected maxWithdraw"
         );
@@ -90,14 +90,14 @@ contract WithdrawWhenDebtTest is SiloLittleHelper, Test {
 
         // protected
 
-        maxWithdraw = collateralSilo.maxWithdraw(address(this), ISilo.AssetType.Protected);
+        maxWithdraw = collateralSilo.maxWithdraw(address(this), ISilo.CollateralType.Protected);
         assertEq(maxWithdraw, expectedProtectedWithdraw, "maxWithdraw, protected");
 
-        previewWithdraw = collateralSilo.previewWithdraw(maxWithdraw, ISilo.AssetType.Protected);
-        gotShares = collateralSilo.withdraw(maxWithdraw, borrower, borrower, ISilo.AssetType.Protected);
+        previewWithdraw = collateralSilo.previewWithdraw(maxWithdraw, ISilo.CollateralType.Protected);
+        gotShares = collateralSilo.withdraw(maxWithdraw, borrower, borrower, ISilo.CollateralType.Protected);
 
         assertEq(
-            collateralSilo.maxWithdraw(address(this), ISilo.AssetType.Protected),
+            collateralSilo.maxWithdraw(address(this), ISilo.CollateralType.Protected),
             0,
             "no protected withdrawn left"
         );

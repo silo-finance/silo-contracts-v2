@@ -72,7 +72,7 @@ contract LeverageTest is SiloLittleHelper, Test {
         LeverageBorrowerMock leverageBorrowerMocked = new LeverageBorrowerMock(address(0));
         address borrower = makeAddr("borrower");
 
-        _deposit(assets, borrower, ISilo.AssetType.Collateral);
+        _deposit(assets, borrower, ISilo.CollateralType.Collateral);
 
         ILeverageBorrower leverageBorrower = ILeverageBorrower(leverageBorrowerMocked.ADDRESS());
 
@@ -95,7 +95,7 @@ contract LeverageTest is SiloLittleHelper, Test {
         LeverageBorrower leverageBorrower = new LeverageBorrower();
         address borrower = makeAddr("borrower");
 
-        _deposit(assets, borrower, ISilo.AssetType.Collateral);
+        _deposit(assets, borrower, ISilo.CollateralType.Collateral);
 
         // it will transfer it's own deposit, but because leverage is not for same token, we will fail eventually
         vm.expectCall(
@@ -120,7 +120,7 @@ contract LeverageTest is SiloLittleHelper, Test {
         LeverageBorrowerMock leverageBorrowerMocked = new LeverageBorrowerMock(address(0));
         address borrower = makeAddr("borrower");
 
-        _deposit(assets, borrower, ISilo.AssetType.Protected);
+        _deposit(assets, borrower, ISilo.CollateralType.Protected);
 
         ILeverageBorrower leverageBorrower = ILeverageBorrower(leverageBorrowerMocked.ADDRESS());
 
@@ -138,7 +138,7 @@ contract LeverageTest is SiloLittleHelper, Test {
         address borrower = makeAddr("borrower");
         address depositor = makeAddr("depositor");
 
-        _deposit(borrowAssets * 10, depositor, ISilo.AssetType.Collateral);
+        _deposit(borrowAssets * 10, depositor, ISilo.CollateralType.Collateral);
         token1.mint(address(leverageBorrower), depositAssets);
 
         bytes memory data = abi.encode(address(silo1), address(token1), depositAssets);
@@ -180,7 +180,7 @@ contract LeverageTest is SiloLittleHelper, Test {
         address borrower = makeAddr("borrower");
         address depositor = makeAddr("depositor");
 
-        _deposit(borrowAssets, depositor, ISilo.AssetType.Collateral);
+        _deposit(borrowAssets, depositor, ISilo.CollateralType.Collateral);
         token1.mint(address(leverageBorrower), depositAssets);
 
         uint256 maxBorrow = silo0.maxBorrow(borrower, sameAsset);
@@ -208,7 +208,7 @@ contract LeverageTest is SiloLittleHelper, Test {
         vm.prank(borrower);
         silo0.leverage(borrowAssets, leverageBorrower, borrower, sameAsset, data);
 
-        _deposit(borrowAssets, depositor, ISilo.AssetType.Collateral);
+        _deposit(borrowAssets, depositor, ISilo.CollateralType.Collateral);
 
         vm.prank(borrower);
         silo0.leverage(borrowAssets, leverageBorrower, borrower, sameAsset, data);

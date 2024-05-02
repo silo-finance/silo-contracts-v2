@@ -122,8 +122,8 @@ contract EchidnaMiddleman is EchidnaSetup {
         { // too deep
             uint256 protBalanceBefore = IShareToken(protected).balanceOf(address(actor));
             uint256 collBalanceBefore = IShareToken(collateral).balanceOf(address(actor));
-            uint256 previewCollateralBefore = vault.previewRedeem(collBalanceBefore, ISilo.AssetType.Collateral);
-            uint256 previewProtectedBefore = vault.previewRedeem(protBalanceBefore, ISilo.AssetType.Protected);
+            uint256 previewCollateralBefore = vault.previewRedeem(collBalanceBefore, ISilo.CollateralType.Collateral);
+            uint256 previewProtectedBefore = vault.previewRedeem(protBalanceBefore, ISilo.CollateralType.Protected);
 
             shareSumBefore = protBalanceBefore + collBalanceBefore;
             previewAssetsSumBefore = previewCollateralBefore + previewProtectedBefore;
@@ -132,7 +132,7 @@ contract EchidnaMiddleman is EchidnaSetup {
         bool noInterest = _checkForInterest(vault);
 
         vm.prank(actor);
-        transitionedAssets = vault.transitionCollateral(_amount, actor, ISilo.AssetType(_type));
+        transitionedAssets = vault.transitionCollateral(_amount, actor, ISilo.CollateralType(_type));
 
         uint256 protBalanceAfter = IShareToken(protected).balanceOf(address(actor));
         uint256 collBalanceAfter = IShareToken(collateral).balanceOf(address(actor));
@@ -148,8 +148,8 @@ contract EchidnaMiddleman is EchidnaSetup {
             assertEq(shareSumBefore, shareSumAfter, "Gained shares after transitionCollateral (no interest)");
         }
 
-        uint256 previewCollateralAfter = vault.previewRedeem(collBalanceAfter, ISilo.AssetType.Collateral);
-        uint256 previewProtectedAfter = vault.previewRedeem(protBalanceAfter, ISilo.AssetType.Protected);
+        uint256 previewCollateralAfter = vault.previewRedeem(collBalanceAfter, ISilo.CollateralType.Collateral);
+        uint256 previewProtectedAfter = vault.previewRedeem(protBalanceAfter, ISilo.CollateralType.Protected);
 
         assertEq(
             previewAssetsSumBefore, previewCollateralAfter + previewProtectedAfter,
@@ -214,7 +214,7 @@ contract EchidnaMiddleman is EchidnaSetup {
         ISilo silo = __chooseSilo(_vaultZero);
 
         vm.prank(actor);
-        assets = silo.mint(_shares, actor, ISilo.AssetType(_assetType));
+        assets = silo.mint(_shares, actor, ISilo.CollateralType(_assetType));
 
         assertLe(_assetType, 3, "we have only 3 types");
     }
@@ -260,7 +260,7 @@ contract EchidnaMiddleman is EchidnaSetup {
         ISilo silo = __chooseSilo(_vaultZero);
 
         vm.prank(actor);
-        shares = silo.deposit(_amount, actor, ISilo.AssetType(_assetType));
+        shares = silo.deposit(_amount, actor, ISilo.CollateralType(_assetType));
 
         assertLe(_assetType, 3, "we have only 3 types");
     }

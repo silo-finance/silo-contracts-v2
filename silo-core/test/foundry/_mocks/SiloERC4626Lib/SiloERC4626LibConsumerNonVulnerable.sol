@@ -11,7 +11,7 @@ contract SiloERC4626LibConsumerNonVulnerable {
     mapping(ISilo.AssetType => ISilo.Assets) internal _total;
 
     constructor() {
-        _total[ISilo.AssetType.Collateral].assets = INITIAL_TOTAL;
+        _total[ISilo.CollateralType.Collateral].assets = INITIAL_TOTAL;
     }
 
     function deposit(
@@ -29,11 +29,11 @@ contract SiloERC4626LibConsumerNonVulnerable {
             _shares,
             _receiver,
             _collateralShareToken,
-            _total[ISilo.AssetType.Collateral]
+            _total[ISilo.CollateralType.Collateral]
         );
     }
 
     function getTotalCollateral() public view returns (uint256) {
-        return _total[ISilo.AssetType.Collateral].assets;
+        return _total[ISilo.CollateralType.Collateral].assets;
     }
 }
