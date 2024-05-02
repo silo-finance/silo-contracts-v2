@@ -9,6 +9,13 @@ import {SiloMock} from "../../_mocks/SiloMock.sol";
 import {InterestRateModelMock} from "../../_mocks/InterestRateModelMock.sol";
 import {TokenMock} from "../../_mocks/TokenMock.sol";
 
+contract SiloStdLibImpl {
+    function getTotalAssetsAndTotalSharesWithInterest(ISilo.AssetType _assetType) external view {
+        ISiloConfig.ConfigData memory configData;
+        SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(configData, _assetType);
+    }
+}
+
 /*
 forge test -vv --mc GetTotalAssetsAndTotalSharesWithInterestTest
 */
@@ -54,8 +61,13 @@ contract GetTotalAssetsAndTotalSharesWithInterestTest is Test {
     forge test -vv --mt test_getTotalAssetsAndTotalSharesWithInterest_WrongType
     */
     function test_getTotalAssetsAndTotalSharesWithInterest_WrongType() public {
-        vm.expectRevert();
-        SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(_config(), ISilo.AssetType(uint8(5)));
+        SiloStdLibImpl impl = new SiloStdLibImpl();
+
+        (bool success,) = address(impl).call(
+            abi.encodeWithSelector(SiloStdLibImpl.getTotalAssetsAndTotalSharesWithInterest.selector, uint8(5))
+        );
+
+        assertTrue(!success, "call should fail for invalid asset type");
     }
 
     /*
