@@ -421,7 +421,9 @@ library Actions {
                 _shareStorage,
                 collateralConfig.hookReceiver,
                 Hook.LEVERAGE | Hook.SAME_ASSET,
-                abi.encodePacked(_depositAssets, _borrowAssets, _borrower, _collateralType, depositedShares, borrowedShares)
+                abi.encodePacked(
+                    _depositAssets, _borrowAssets, _borrower, _collateralType, depositedShares, borrowedShares
+                )
             );
         }
     }

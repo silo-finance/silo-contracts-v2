@@ -311,7 +311,12 @@ contract Silo is SiloERC4626 {
     }
 
     /// @inheritdoc ISilo
-    function previewDeposit(uint256 _assets, CollateralType _collateralType) external view virtual returns (uint256 shares) {
+    function previewDeposit(uint256 _assets, CollateralType _collateralType)
+        external
+        view
+        virtual
+        returns (uint256 shares)
+    {
         return _previewDeposit(_assets, _collateralType);
     }
 
@@ -338,7 +343,12 @@ contract Silo is SiloERC4626 {
     }
 
     /// @inheritdoc ISilo
-    function previewMint(uint256 _shares, CollateralType _collateralType) external view virtual returns (uint256 assets) {
+    function previewMint(uint256 _shares, CollateralType _collateralType)
+        external
+        view
+        virtual
+        returns (uint256 assets)
+    {
         return _previewMint(_shares, _collateralType);
     }
 
@@ -352,7 +362,12 @@ contract Silo is SiloERC4626 {
     }
 
     /// @inheritdoc ISilo
-    function maxWithdraw(address _owner, CollateralType _collateralType) external view virtual returns (uint256 maxAssets) {
+    function maxWithdraw(address _owner, CollateralType _collateralType)
+        external
+        view
+        virtual
+        returns (uint256 maxAssets)
+    {
         (maxAssets,) = _callMaxWithdraw(sharedStorage.siloConfig, _owner, _collateralType);
     }
 
@@ -376,12 +391,22 @@ contract Silo is SiloERC4626 {
     }
 
     /// @inheritdoc ISilo
-    function maxRedeem(address _owner, CollateralType _collateralType) external view virtual returns (uint256 maxShares) {
+    function maxRedeem(address _owner, CollateralType _collateralType)
+        external
+        view
+        virtual
+        returns (uint256 maxShares)
+    {
         (, maxShares) = _callMaxWithdraw(sharedStorage.siloConfig, _owner, _collateralType);
     }
 
     /// @inheritdoc ISilo
-    function previewRedeem(uint256 _shares, CollateralType _collateralType) external view virtual returns (uint256 assets) {
+    function previewRedeem(uint256 _shares, CollateralType _collateralType)
+        external
+        view
+        virtual
+        returns (uint256 assets)
+    {
         return _previewRedeem(_shares, _collateralType);
     }
 
@@ -770,7 +795,12 @@ contract Silo is SiloERC4626 {
         (, collateralShareToken,) = sharedStorage.siloConfig.getShareTokens(address(this));
     }
 
-    function _previewMint(uint256 _shares, CollateralType _collateralType) internal view virtual returns (uint256 assets) {
+    function _previewMint(uint256 _shares, CollateralType _collateralType)
+        internal
+        view
+        virtual
+        returns (uint256 assets)
+    {
         ISilo.AssetType assetType = AssetType(uint256(_collateralType));
 
         (
