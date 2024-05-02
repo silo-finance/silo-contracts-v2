@@ -26,7 +26,7 @@ contract ConvertToSharesTest is Test {
             totalAssets: 0,
             totalShares: 0,
             rounding: Rounding.DOWN,
-            assetType: AssetTypes.Collateral,
+            assetType: ISilo.AssetType.Collateral,
             result: 0
         });
 
@@ -35,7 +35,7 @@ contract ConvertToSharesTest is Test {
             totalAssets: 0,
             totalShares: 0,
             rounding: Rounding.DOWN,
-            assetType: AssetTypes.Collateral,
+            assetType: ISilo.AssetType.Collateral,
             result: 200000
         });
 
@@ -44,7 +44,7 @@ contract ConvertToSharesTest is Test {
             totalAssets: 5000,
             totalShares: 1000,
             rounding: Rounding.DOWN,
-            assetType: AssetTypes.Collateral,
+            assetType: ISilo.AssetType.Collateral,
             result: 20
         });
 
@@ -53,7 +53,7 @@ contract ConvertToSharesTest is Test {
             totalAssets: 999,
             totalShares: 999,
             rounding: Rounding.DOWN,
-            assetType: AssetTypes.Collateral,
+            assetType: ISilo.AssetType.Collateral,
             result: 333
         });
 
@@ -62,7 +62,7 @@ contract ConvertToSharesTest is Test {
             totalAssets: 1000,
             totalShares: 999,
             rounding: Rounding.DOWN,
-            assetType: AssetTypes.Collateral,
+            assetType: ISilo.AssetType.Collateral,
             result: 332
         });
 
@@ -71,7 +71,7 @@ contract ConvertToSharesTest is Test {
             totalAssets: 1000,
             totalShares: 999,
             rounding: Rounding.UP,
-            assetType: AssetTypes.Collateral,
+            assetType: ISilo.AssetType.Collateral,
             result: 333
         });
 
@@ -80,7 +80,7 @@ contract ConvertToSharesTest is Test {
             totalAssets: 999,
             totalShares: 1000,
             rounding: Rounding.DOWN,
-            assetType: AssetTypes.Collateral,
+            assetType: ISilo.AssetType.Collateral,
             result: 333
         });
 
@@ -89,7 +89,7 @@ contract ConvertToSharesTest is Test {
             totalAssets: 999,
             totalShares: 1000,
             rounding: Rounding.UP,
-            assetType: AssetTypes.Collateral,
+            assetType: ISilo.AssetType.Collateral,
             result: 334
         });
 
@@ -98,7 +98,7 @@ contract ConvertToSharesTest is Test {
             totalAssets: 1000,
             totalShares: 1,
             rounding: Rounding.DOWN,
-            assetType: AssetTypes.Collateral,
+            assetType: ISilo.AssetType.Collateral,
             result: 0
         });
 
@@ -107,7 +107,7 @@ contract ConvertToSharesTest is Test {
             totalAssets: 1,
             totalShares: 1000,
             rounding: Rounding.DOWN,
-            assetType: AssetTypes.Collateral,
+            assetType: ISilo.AssetType.Collateral,
             result: 500
         });
 
@@ -116,7 +116,7 @@ contract ConvertToSharesTest is Test {
             totalAssets: 1,
             totalShares: 1000,
             rounding: Rounding.UP,
-            assetType: AssetTypes.Collateral,
+            assetType: ISilo.AssetType.Collateral,
             result: 501
         });
 
@@ -125,7 +125,7 @@ contract ConvertToSharesTest is Test {
             totalAssets: 0,
             totalShares: 0,
             rounding: Rounding.DOWN,
-            assetType: AssetTypes.Debt,
+            assetType: ISilo.AssetType.Debt,
             result: 0
         });
 
@@ -134,7 +134,7 @@ contract ConvertToSharesTest is Test {
             totalAssets: 0,
             totalShares: 0,
             rounding: Rounding.DOWN,
-            assetType: AssetTypes.Debt,
+            assetType: ISilo.AssetType.Debt,
             result: 200000
         });
 
@@ -143,7 +143,7 @@ contract ConvertToSharesTest is Test {
             totalAssets: 5000,
             totalShares: 1000,
             rounding: Rounding.DOWN,
-            assetType: AssetTypes.Debt,
+            assetType: ISilo.AssetType.Debt,
             result: 20
         });
 
@@ -152,7 +152,7 @@ contract ConvertToSharesTest is Test {
             totalAssets: 999,
             totalShares: 999,
             rounding: Rounding.DOWN,
-            assetType: AssetTypes.Debt,
+            assetType: ISilo.AssetType.Debt,
             result: 333
         });
 
@@ -161,7 +161,7 @@ contract ConvertToSharesTest is Test {
             totalAssets: 1000,
             totalShares: 999,
             rounding: Rounding.DOWN,
-            assetType: AssetTypes.Debt,
+            assetType: ISilo.AssetType.Debt,
             result: 332
         });
 
@@ -170,7 +170,7 @@ contract ConvertToSharesTest is Test {
             totalAssets: 1000,
             totalShares: 999,
             rounding: Rounding.UP,
-            assetType: AssetTypes.Debt,
+            assetType: ISilo.AssetType.Debt,
             result: 333
         });
 
@@ -179,7 +179,7 @@ contract ConvertToSharesTest is Test {
             totalAssets: 999,
             totalShares: 1000,
             rounding: Rounding.DOWN,
-            assetType: AssetTypes.Debt,
+            assetType: ISilo.AssetType.Debt,
             result: 333
         });
 
@@ -188,7 +188,7 @@ contract ConvertToSharesTest is Test {
             totalAssets: 999,
             totalShares: 1000,
             rounding: Rounding.UP,
-            assetType: AssetTypes.Debt,
+            assetType: ISilo.AssetType.Debt,
             result: 334
         });
 
@@ -197,7 +197,7 @@ contract ConvertToSharesTest is Test {
             totalAssets: 1000,
             totalShares: 1,
             rounding: Rounding.DOWN,
-            assetType: AssetTypes.Debt,
+            assetType: ISilo.AssetType.Debt,
             result: 0
         });
 
@@ -206,7 +206,7 @@ contract ConvertToSharesTest is Test {
             totalAssets: 1,
             totalShares: 1000,
             rounding: Rounding.DOWN,
-            assetType: AssetTypes.Debt,
+            assetType: ISilo.AssetType.Debt,
             result: 1000
         });
 
@@ -215,7 +215,7 @@ contract ConvertToSharesTest is Test {
             totalAssets: 1,
             totalShares: 1000,
             rounding: Rounding.UP,
-            assetType: AssetTypes.Debt,
+            assetType: ISilo.AssetType.Debt,
             result: 1000
         });
     }

@@ -110,7 +110,7 @@ library SiloERC4626Lib {
                 // however here, we will be using shares as input to withdraw, if we round up, we can overflow
                 // because we will want to withdraw too much, so we have to use Rounding.Floor
                 Rounding.MAX_WITHDRAW_TO_SHARES,
-                AssetTypes.Collateral
+                ISilo.AssetType.Collateral
             );
 
             return (assets, shares);
@@ -214,7 +214,7 @@ library SiloERC4626Lib {
             _collateralShareToken.totalSupply(),
             Rounding.DEPOSIT_TO_ASSETS,
             Rounding.DEPOSIT_TO_SHARES,
-            AssetTypes.Collateral
+            ISilo.AssetType.Collateral
         );
 
         if (assets == 0) revert ISilo.ZeroAssets();

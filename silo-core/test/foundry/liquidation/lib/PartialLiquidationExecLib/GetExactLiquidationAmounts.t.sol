@@ -75,7 +75,7 @@ contract GetExactLiquidationAmountsHelper is Test {
 
         D_SHARE_TOKEN_B.balanceOfMock(makeAddr("borrower"), _debtUserBalanceOf * sharesOffset);
         D_SHARE_TOKEN_B.totalSupplyMock(_debtUserBalanceOf * sharesOffset);
-        SILO_B.totalMock(AssetTypes.Debt, _debtUserBalanceOf);
+        SILO_B.totalMock(ISilo.AssetType.Debt, _debtUserBalanceOf);
 
         return PartialLiquidationExecLib.getExactLiquidationAmounts(
             collateralConfig,
@@ -137,7 +137,7 @@ contract GetExactLiquidationAmountsTest is GetExactLiquidationAmountsHelper {
 
         D_SHARE_TOKEN_B.balanceOfMock(user, 0);
         D_SHARE_TOKEN_B.totalSupplyMock(0);
-        SILO_B.totalMock(AssetTypes.Debt, 0);
+        SILO_B.totalMock(ISilo.AssetType.Debt, 0);
 
         (
             uint256 fromCollateral, uint256 fromProtected, uint256 repayDebtAssets
@@ -172,7 +172,7 @@ contract GetExactLiquidationAmountsTest is GetExactLiquidationAmountsHelper {
 
             D_SHARE_TOKEN_B.balanceOfMock(testData.input.user, testData.mocks.debtUserSharesBalanceOf);
             D_SHARE_TOKEN_B.totalSupplyMock(testData.mocks.debtSharesTotalSupply);
-            SILO_B.totalMock(AssetTypes.Debt, testData.mocks.siloTotalDebtAssets);
+            SILO_B.totalMock(ISilo.AssetType.Debt, testData.mocks.siloTotalDebtAssets);
 
             (
                 uint256 fromCollateral, uint256 fromProtected, uint256 repayDebtAssets

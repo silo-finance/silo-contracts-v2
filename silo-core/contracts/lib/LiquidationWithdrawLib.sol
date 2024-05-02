@@ -136,7 +136,7 @@ library LiquidationWithdrawLib {
             _totalAssets,
             _shareToken.totalSupply(),
             Rounding.LIQUIDATE_TO_SHARES,
-            AssetTypes.Collateral
+            ISilo.AssetType.Collateral
         );
 
         _shareToken.forwardTransfer(_borrower, _liquidator, shares);

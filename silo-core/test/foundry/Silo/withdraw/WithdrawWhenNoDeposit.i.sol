@@ -53,7 +53,7 @@ contract WithdrawWhenNoDepositTest is IntegrationTest {
     */
     function test_withdraw_WrongAssetType() public {
         vm.expectRevert(ISilo.WrongAssetType.selector);
-        silo0.withdraw(0, address(1), address(1), ISilo.CollateralType(uint8(AssetTypes.Debt)));
+        silo0.withdraw(0, address(1), address(1), ISilo.CollateralType(uint8(ISilo.AssetType.Debt)));
     }
 
     /*

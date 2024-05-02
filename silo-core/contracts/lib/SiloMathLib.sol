@@ -117,7 +117,7 @@ library SiloMathLib {
         uint256 _totalShares,
         Math.Rounding _roundingToAssets,
         Math.Rounding _roundingToShares,
-        uint256 _assetType
+        ISilo.AssetType _assetType
     ) internal pure returns (uint256 assets, uint256 shares) {
         if (_assets == 0) {
             shares = _shares;
@@ -170,7 +170,7 @@ library SiloMathLib {
 
         unchecked {
             // I think we can afford to uncheck +1
-            (totalShares, totalAssets) = uint256(_assetType) == AssetTypes.Debt
+            (totalShares, totalAssets) = _assetType == ISilo.AssetType.Debt
                 ? (_totalShares, _totalAssets)
                 : (_totalShares + _DECIMALS_OFFSET_POW, _totalAssets + 1);
         }

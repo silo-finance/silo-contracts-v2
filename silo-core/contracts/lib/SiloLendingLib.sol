@@ -53,7 +53,7 @@ library SiloLendingLib {
             _debtShareToken.totalSupply(),
             Rounding.REPAY_TO_ASSETS,
             Rounding.REPAY_TO_SHARES,
-            AssetTypes.Debt
+            ISilo.AssetType.Debt
         );
 
         if (shares == 0) revert ISilo.ZeroShares();
@@ -158,7 +158,7 @@ library SiloLendingLib {
             IShareToken(_debtShareToken).totalSupply(),
             Rounding.BORROW_TO_ASSETS,
             Rounding.BORROW_TO_SHARES,
-            AssetTypes.Debt
+            ISilo.AssetType.Debt
         );
 
         if (borrowedShares == 0) revert ISilo.ZeroShares();
@@ -245,7 +245,7 @@ library SiloLendingLib {
                 _totalDebtAssets,
                 _totalDebtShares,
                 Rounding.MAX_BORROW_TO_SHARES,
-                AssetTypes.Debt
+                ISilo.AssetType.Debt
             );
         }
 
@@ -277,7 +277,7 @@ library SiloLendingLib {
         }
 
         (uint256 totalDebtAssets, uint256 totalDebtShares) =
-            SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(debtConfig, AssetTypes.Debt);
+            SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(debtConfig, ISilo.AssetType.Debt);
 
         return calculateMaxBorrow(
             collateralConfig,
@@ -356,7 +356,7 @@ library SiloLendingLib {
             // when we want to calculate "max borrow", we can not round.Up, because it can create issue with max ltv,
             // because we not creating debt here, we calculating max assets/shares, so we need to round.Down here
             shares = SiloMathLib.convertToShares(
-                assets, _totalDebtAssets, _totalDebtShares, Rounding.MAX_BORROW_TO_SHARES, AssetTypes.Debt
+                assets, _totalDebtAssets, _totalDebtShares, Rounding.MAX_BORROW_TO_SHARES, ISilo.AssetType.Debt
             );
         } else {
             uint256 shareBalance = IShareToken(_debtShareToken).balanceOf(_borrower);
@@ -366,7 +366,7 @@ library SiloLendingLib {
             shares = _maxBorrowValue * shareBalance / _borrowerDebtValue; // by default rounding DOWN
 
             assets = SiloMathLib.convertToAssets(
-                shares, _totalDebtAssets, _totalDebtShares, Rounding.MAX_BORROW_TO_ASSETS, AssetTypes.Debt
+                shares, _totalDebtAssets, _totalDebtShares, Rounding.MAX_BORROW_TO_ASSETS, ISilo.AssetType.Debt
             );
         }
     }

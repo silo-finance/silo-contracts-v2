@@ -131,7 +131,7 @@ contract GetAssetsDataForLtvCalculationsTest is Test {
         );
 
         SiloMock siloMock1 = new SiloMock(silo1);
-        siloMock1.totalMock(AssetTypes.Debt, scenario.input.debtConfig.totalDebtAssets);
+        siloMock1.totalMock(ISilo.AssetType.Debt, scenario.input.debtConfig.totalDebtAssets);
 
         if (scenario.input.accrueInMemory) {
             interestRateModelMock.getCompoundInterestRateMock(
