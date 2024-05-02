@@ -52,7 +52,7 @@ contract WithdrawWhenNoDepositTest is IntegrationTest {
     forge test -vv --ffi --mt test_withdraw_WrongAssetType
     */
     function test_withdraw_WrongAssetType() public {
-        vm.expectRevert(ISilo.WrongAssetType.selector);
+        vm.expectRevert();
         silo0.withdraw(0, address(1), address(1), ISilo.CollateralType(uint8(ISilo.AssetType.Debt)));
     }
 

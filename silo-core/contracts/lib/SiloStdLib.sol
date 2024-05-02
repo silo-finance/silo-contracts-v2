@@ -66,11 +66,9 @@ library SiloStdLib {
             );
 
             totalShares = IShareToken(_configData.collateralShareToken).totalSupply();
-        } else if (_assetType == ISilo.AssetType.Debt) {
+        } else { // ISilo.AssetType.Debt
             totalAssets = getTotalDebtAssetsWithInterest(_configData.silo, _configData.interestRateModel);
             totalShares = IShareToken(_configData.debtShareToken).totalSupply();
-        } else {
-            revert ISilo.WrongAssetType();
         }
     }
 
