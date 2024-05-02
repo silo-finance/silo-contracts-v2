@@ -58,7 +58,6 @@ contract GetTotalAssetsAndTotalSharesWithInterestTest is Test {
         SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(_config(), ISilo.AssetType(uint8(5)));
     }
 
-
     /*
     forge test -vv --mt test_getTotalAssetsAndTotalSharesWithInterest_zero
     */
