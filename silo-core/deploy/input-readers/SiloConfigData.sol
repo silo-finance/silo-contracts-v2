@@ -18,7 +18,7 @@ contract SiloConfigData is Test, CommonDeploy {
     bytes32 public constant PLACEHOLDER_KEY = keccak256(bytes("PLACEHOLDER"));
     bytes32 public constant NO_HOOK_RECEIVER_KEY = keccak256(bytes("NO_HOOK_RECEIVER"));
 
-    error HookReceiverImplNoFound(string hookReceiver);
+    error HookReceiverImplNotFound(string hookReceiver);
 
     // must be in alphabetic order
     struct ConfigData {
@@ -100,7 +100,7 @@ contract SiloConfigData is Test, CommonDeploy {
     function _resolveHookReceiverImpl(string memory _requiredHookReceiver) internal returns (address hookReceiver) {
         if (keccak256(bytes(_requiredHookReceiver)) != NO_HOOK_RECEIVER_KEY) {
             hookReceiver = getDeployedAddress(_requiredHookReceiver);
-            if (hookReceiver == address(0)) revert HookReceiverImplNoFound(_requiredHookReceiver);
+            if (hookReceiver == address(0)) revert HookReceiverImplNotFound(_requiredHookReceiver);
         }
     }
 }
