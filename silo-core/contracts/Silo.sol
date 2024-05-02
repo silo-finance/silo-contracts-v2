@@ -659,7 +659,9 @@ contract Silo is SiloERC4626 {
         returns (uint256 assets, uint256 shares)
     {
         // TODO make sure total are updated when we call accrue interest from SiloConfig
-        (assets, shares) = Actions.deposit(sharedStorage, _assets, _shares, _receiver, _assetType, total[uint256(_assetType)]);
+        (
+            assets, shares
+        ) = Actions.deposit(sharedStorage, _assets, _shares, _receiver, _assetType, total[uint256(_assetType)]);
 
         if (_assetType == CollateralType.Collateral) {
             emit Deposit(msg.sender, _receiver, assets, shares);
@@ -778,7 +780,12 @@ contract Silo is SiloERC4626 {
         );
     }
 
-    function _previewDeposit(uint256 _assets, CollateralType _assetType) internal view virtual returns (uint256 shares) {
+    function _previewDeposit(uint256 _assets, CollateralType _assetType)
+        internal
+        view
+        virtual
+        returns (uint256 shares)
+    {
         ISilo.AssetType assetType = AssetType(uint256(_assetType));
 
         (uint256 totalSiloAssets, uint256 totalShares) = _getTotalAssetsAndTotalSharesWithInterest(assetType);
