@@ -408,7 +408,7 @@ library Actions {
             _depositAssets,
             0 /* _shares */,
             _borrower,
-            _collateralType == ISilo.CollateralType.Collateral
+            uint256(_collateralType) == AssetTypes.COLLATERAL
                 ? IShareToken(collateralConfig.collateralShareToken)
                 : IShareToken(collateralConfig.protectedShareToken),
             _totalAssetsForDeposit

@@ -295,7 +295,7 @@ contract Silo is SiloERC4626 {
             _shares,
             totalSiloAssets,
             totalShares,
-            _assetType == AssetType.Debt ? Rounding.DEBT_TO_ASSETS : Rounding.DEFAULT_TO_ASSETS,
+            uint256(_assetType) == AssetTypes.DEBT ? Rounding.DEBT_TO_ASSETS : Rounding.DEFAULT_TO_ASSETS,
             _assetType
         );
     }
@@ -332,7 +332,7 @@ contract Silo is SiloERC4626 {
         returns (uint256 maxShares)
     {
         (address protectedToken, address collateralToken, ) = sharedStorage.siloConfig.getShareTokens(address(this));
-        address shareToken = _collateralType == CollateralType.Collateral ? collateralToken : protectedToken;
+        address shareToken = uint256(_collateralType) == AssetTypes.COLLATERAL ? collateralToken : protectedToken;
 
         return _callMaxDepositOrMint(IShareToken(shareToken).totalSupply());
     }
@@ -665,7 +665,7 @@ contract Silo is SiloERC4626 {
             sharedStorage, _assets, _shares, _receiver, _collateralType, total[uint256(_collateralType)]
         );
 
-        if (_collateralType == CollateralType.Collateral) {
+        if (uint256(_collateralType) == AssetTypes.COLLATERAL) {
             emit Deposit(msg.sender, _receiver, assets, shares);
         } else {
             emit DepositProtected(msg.sender, _receiver, assets, shares);
@@ -698,7 +698,7 @@ contract Silo is SiloERC4626 {
             total[uint256(_collateralType)]
         );
 
-        if (_collateralType == CollateralType.Collateral) {
+        if (uint256(_collateralType) == AssetTypes.COLLATERAL) {
             emit Withdraw(msg.sender, _receiver, _owner, assets, shares);
         } else {
             emit WithdrawProtected(msg.sender, _receiver, _owner, assets, shares);
@@ -843,7 +843,7 @@ contract Silo is SiloERC4626 {
             _owner,
             _collateralType,
             // 0 for CollateralType.Collateral because it will be calculated internally
-            _collateralType == CollateralType.Protected ? total[AssetTypes.PROTECTED].assets : 0
+            uint256(_collateralType) == AssetTypes.PROTECTED ? total[AssetTypes.PROTECTED].assets : 0
         );
     }
 
