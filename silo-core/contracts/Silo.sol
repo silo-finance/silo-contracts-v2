@@ -770,7 +770,7 @@ contract Silo is SiloERC4626 {
         (uint256 totalSiloAssets, uint256 totalShares) = _getTotalAssetsAndTotalSharesWithInterest(_assetType);
 
         return SiloMathLib.convertToAssets(
-            _shares, totalSiloAssets, totalShares, Rounding.DEPOSIT_TO_ASSETS, _assetType
+            _shares, totalSiloAssets, totalShares, Rounding.DEPOSIT_TO_ASSETS, CollateralType(_assetType)
         );
     }
 
@@ -819,7 +819,7 @@ contract Silo is SiloERC4626 {
         return SiloERC4626Lib.maxDepositOrMint(_totalCollateralAssets);
     }
 
-    function _callMaxWithdraw(ISiloConfig _config, address _owner, ISilo.AssetType _assetType)
+    function _callMaxWithdraw(ISiloConfig _config, address _owner, ISilo.CollateralType _assetType)
         internal
         view
         virtual
@@ -829,7 +829,8 @@ contract Silo is SiloERC4626 {
             _config,
             _owner,
             _assetType,
-            _assetType == AssetType.Protected ? total[uint8(AssetType.Protected)].assets : 0 // will be calculated internally
+            // 0 for CollateralType.Collateral because it will be calculated internally
+            _assetType == CollateralType.Protected ? total[uint8(CollateralType.Protected)].assets : 0
         );
     }
 
