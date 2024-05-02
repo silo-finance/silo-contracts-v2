@@ -209,15 +209,24 @@ contract DynamicKinkModelV1 is IDynamicKinkModelV1 {
         }
 
         if (rcomp > R_COMPOUND_MAX_PER_SECOND * _l.T) {
+            // capped
             didOverflow = true;
             rcomp = R_COMPOUND_MAX_PER_SECOND * _l.T;
         }
 
-        //todo
-        if (type(int256).max - _totalBorrowAmount * rcomp / _DP < _totalBorrowAmount) {
-            didOverflow = true;
-            rcomp = 0;
-        }
+        // if (type(int256).max / rcomp > _totalBorrowAmount) {
+        //     // true overflow
+        //     didOverflow = true;
+        //     rcomp = R_COMPOUND_MAX_PER_SECOND * _l.T;
+        //     return (rcomp, k, x, didOverflow, xxx);
+        // }
+
+        // if (type(int256).max - _totalBorrowAmount * rcomp / _DP < _totalBorrowAmount) {
+        //     didOverflow = true;
+        //     // interest / tba
+        //     rcomp = 0;
+        //     return (rcomp, k, x, didOverflow, xxx);
+        // }
     }
 
     // function currentInterestRate(uint256 _t0, uint256 _t1, uint256 _k, uint256 _u)
