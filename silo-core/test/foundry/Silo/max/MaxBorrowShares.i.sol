@@ -271,7 +271,7 @@ contract MaxBorrowSharesTest is SiloLittleHelper, Test {
         uint256 toBorrow = _maxBorrowShares + _precision;
 
         uint256 liquidity = silo1.getLiquidity();
-        uint256 maxBorrowAssets = silo1.convertToAssets(_maxBorrowShares, ISilo.AssetType.Debt);
+        uint256 maxBorrowAssets = silo1.convertToAssets(_maxBorrowShares, AssetTypes.Debt);
 
         emit log_named_decimal_uint("[_assertWeCanNotBorrowAboveMax] maxBorrowAssets", maxBorrowAssets, 18);
         emit log_named_decimal_uint("[_assertWeCanNotBorrowAboveMax] liquidity", liquidity, 18);

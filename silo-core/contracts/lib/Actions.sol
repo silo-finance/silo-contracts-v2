@@ -459,8 +459,8 @@ library Actions {
         );
 
         (ISilo.AssetType depositType, address shareTokenTo) = _withdrawType == ISilo.CollateralType.Collateral
-            ? (ISilo.AssetType.Protected, collateralConfig.protectedShareToken)
-            : (ISilo.AssetType.Collateral, collateralConfig.collateralShareToken);
+            ? (AssetTypes.Protected, collateralConfig.protectedShareToken)
+            : (AssetTypes.Collateral, collateralConfig.collateralShareToken);
 
         (assets, toShares) = SiloERC4626Lib.deposit(
             address(0), // empty token because we don't want to transfer

@@ -760,8 +760,8 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         emit ExactAmount("maxBorrow0:", maxBorrow0);
         emit ExactAmount("maxBorrow1:", maxBorrow1);
 
-        emit ExactAmount("convertToShares(maxBorrow0):", vault0.convertToShares(maxBorrow0, ISilo.AssetType.Debt));
-        emit ExactAmount("convertToShares(maxBorrow1):", vault1.convertToShares(maxBorrow1, ISilo.AssetType.Debt));
+        emit ExactAmount("convertToShares(maxBorrow0):", vault0.convertToShares(maxBorrow0, AssetTypes.Debt));
+        emit ExactAmount("convertToShares(maxBorrow1):", vault1.convertToShares(maxBorrow1, AssetTypes.Debt));
 
         emit ExactAmount("maxBorrowShares0:", vault0.maxBorrowShares(_actor, sameAsset));
         emit ExactAmount("maxBorrowShares1:", vault1.maxBorrowShares(_actor, sameAsset));

@@ -20,13 +20,13 @@ contract ConvertToAssetsAndToSharesTest is Test {
         uint256 shares;
 
         (assets, shares) = SiloMathLib.convertToAssetsAndToShares(
-            0, _assetsOrShares, _totalAssets, _totalShares, roundingToAssets, roundingToShares, ISilo.AssetType.Debt
+            0, _assetsOrShares, _totalAssets, _totalShares, roundingToAssets, roundingToShares, AssetTypes.Debt
         );
 
         assertEq(
             assets,
             SiloMathLib.convertToAssets(
-                _assetsOrShares, _totalAssets, _totalShares, roundingToAssets, ISilo.AssetType.Debt
+                _assetsOrShares, _totalAssets, _totalShares, roundingToAssets, AssetTypes.Debt
             )
         );
         assertEq(shares, _assetsOrShares);
@@ -38,14 +38,14 @@ contract ConvertToAssetsAndToSharesTest is Test {
             _totalShares,
             roundingToAssets,
             roundingToShares,
-            ISilo.AssetType.Collateral
+            AssetTypes.Collateral
         );
 
         assertEq(assets, _assetsOrShares);
         assertEq(
             shares,
             SiloMathLib.convertToShares(
-                _assetsOrShares, _totalAssets, _totalShares, roundingToAssets, ISilo.AssetType.Collateral
+                _assetsOrShares, _totalAssets, _totalShares, roundingToAssets, AssetTypes.Collateral
             )
         );
     }

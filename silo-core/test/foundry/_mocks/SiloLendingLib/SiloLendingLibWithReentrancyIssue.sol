@@ -37,7 +37,7 @@ library SiloLendingLibWithReentrancyIssue {
             debtShareToken.totalSupply(),
             Rounding.REPAY_TO_ASSETS,
             Rounding.REPAY_TO_SHARES,
-            ISilo.AssetType.Debt
+            AssetTypes.Debt
         );
 
         if (shares == 0) revert ISilo.ZeroShares();

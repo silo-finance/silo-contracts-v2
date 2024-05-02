@@ -114,7 +114,7 @@ library SiloSolvencyLib {
         ) = ISilo(_collateralConfig.silo).getCollateralAndProtectedAssets();
 
         ltvData.borrowerProtectedAssets = SiloMathLib.convertToAssets(
-            shares, totalProtectedAssets, totalShares, Rounding.COLLATERAL_TO_ASSETS, ISilo.AssetType.Protected
+            shares, totalProtectedAssets, totalShares, Rounding.COLLATERAL_TO_ASSETS, AssetTypes.Protected
         );
 
         (shares, totalShares) = SiloStdLib.getSharesAndTotalSupply(
@@ -131,7 +131,7 @@ library SiloSolvencyLib {
             : totalCollateralAssets;
 
         ltvData.borrowerCollateralAssets = SiloMathLib.convertToAssets(
-            shares, totalCollateralAssets, totalShares, Rounding.COLLATERAL_TO_ASSETS, ISilo.AssetType.Collateral
+            shares, totalCollateralAssets, totalShares, Rounding.COLLATERAL_TO_ASSETS, AssetTypes.Collateral
         );
 
         (shares, totalShares) = SiloStdLib.getSharesAndTotalSupply(
@@ -144,7 +144,7 @@ library SiloSolvencyLib {
 
         // BORROW value -> to assets -> UP
         ltvData.borrowerDebtAssets = SiloMathLib.convertToAssets(
-            shares, totalDebtAssets, totalShares, Rounding.DEBT_TO_ASSETS, ISilo.AssetType.Debt
+            shares, totalDebtAssets, totalShares, Rounding.DEBT_TO_ASSETS, AssetTypes.Debt
         );
     }
 

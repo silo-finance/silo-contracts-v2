@@ -176,30 +176,30 @@ contract Silo is SiloERC4626 {
 
     /// @inheritdoc IERC4626
     function totalAssets() external view virtual returns (uint256 totalManagedAssets) {
-        (totalManagedAssets,) = _getTotalAssetsAndTotalSharesWithInterest(AssetType.Collateral);
+        (totalManagedAssets,) = _getTotalAssetsAndTotalSharesWithInterest(AssetTypes.Collateral);
     }
 
     /// @inheritdoc IERC4626
     /// @dev For protected (non-borrowable) collateral and debt, use:
-    /// `convertToShares(uint256 _assets, AssetType _assetType)` with `AssetType.Protected` or `AssetType.Debt`
+    /// `convertToShares(uint256 _assets, AssetType _assetType)` with `AssetTypes.Protected` or `AssetTypes.Debt`
     function convertToShares(uint256 _assets) external view virtual returns (uint256 shares) {
         (uint256 totalSiloAssets, uint256 totalShares) =
-            _getTotalAssetsAndTotalSharesWithInterest(AssetType.Collateral);
+            _getTotalAssetsAndTotalSharesWithInterest(AssetTypes.Collateral);
 
         return SiloMathLib.convertToShares(
-            _assets, totalSiloAssets, totalShares, Rounding.DEFAULT_TO_SHARES, AssetType.Collateral
+            _assets, totalSiloAssets, totalShares, Rounding.DEFAULT_TO_SHARES, AssetTypes.Collateral
         );
     }
 
     /// @inheritdoc IERC4626
     /// @dev For protected (non-borrowable) collateral and debt, use:
-    /// `convertToAssets(uint256 _shares, AssetType _assetType)` with `AssetType.Protected` or `AssetType.Debt`
+    /// `convertToAssets(uint256 _shares, AssetType _assetType)` with `AssetTypes.Protected` or `AssetTypes.Debt`
     function convertToAssets(uint256 _shares) external view virtual returns (uint256 assets) {
         (uint256 totalSiloAssets, uint256 totalShares) =
-            _getTotalAssetsAndTotalSharesWithInterest(AssetType.Collateral);
+            _getTotalAssetsAndTotalSharesWithInterest(AssetTypes.Collateral);
 
         return SiloMathLib.convertToAssets(
-            _shares, totalSiloAssets, totalShares, Rounding.DEFAULT_TO_ASSETS, AssetType.Collateral
+            _shares, totalSiloAssets, totalShares, Rounding.DEFAULT_TO_ASSETS, AssetTypes.Collateral
         );
     }
 
@@ -295,7 +295,7 @@ contract Silo is SiloERC4626 {
             _shares,
             totalSiloAssets,
             totalShares,
-            _assetType == AssetType.Debt ? Rounding.DEBT_TO_ASSETS : Rounding.DEFAULT_TO_ASSETS,
+            uint256(_assetType) == AssetTypes.Debt ? Rounding.DEBT_TO_ASSETS : Rounding.DEFAULT_TO_ASSETS,
             _assetType
         );
     }
@@ -424,10 +424,10 @@ contract Silo is SiloERC4626 {
 
     /// @inheritdoc ISilo
     function previewBorrow(uint256 _assets) external view virtual returns (uint256 shares) {
-        (uint256 totalSiloAssets, uint256 totalShares) = _getTotalAssetsAndTotalSharesWithInterest(AssetType.Debt);
+        (uint256 totalSiloAssets, uint256 totalShares) = _getTotalAssetsAndTotalSharesWithInterest(AssetTypes.Debt);
 
         return SiloMathLib.convertToShares(
-            _assets, totalSiloAssets, totalShares, Rounding.BORROW_TO_SHARES, AssetType.Debt
+            _assets, totalSiloAssets, totalShares, Rounding.BORROW_TO_SHARES, AssetTypes.Debt
         );
     }
 
@@ -483,10 +483,10 @@ contract Silo is SiloERC4626 {
 
     /// @inheritdoc ISilo
     function previewBorrowShares(uint256 _shares) external view virtual returns (uint256 assets) {
-        (uint256 totalSiloAssets, uint256 totalShares) = _getTotalAssetsAndTotalSharesWithInterest(AssetType.Debt);
+        (uint256 totalSiloAssets, uint256 totalShares) = _getTotalAssetsAndTotalSharesWithInterest(AssetTypes.Debt);
 
         return SiloMathLib.convertToAssets(
-            _shares, totalSiloAssets, totalShares, Rounding.BORROW_TO_ASSETS, AssetType.Debt
+            _shares, totalSiloAssets, totalShares, Rounding.BORROW_TO_ASSETS, AssetTypes.Debt
         );
     }
 
@@ -507,19 +507,19 @@ contract Silo is SiloERC4626 {
         uint256 shares = IShareToken(configData.debtShareToken).balanceOf(_borrower);
 
         (uint256 totalSiloAssets, uint256 totalShares) =
-            SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(configData, AssetType.Debt);
+            SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(configData, AssetTypes.Debt);
 
         return SiloMathLib.convertToAssets(
-            shares, totalSiloAssets, totalShares, Rounding.MAX_REPAY_TO_ASSETS, AssetType.Debt
+            shares, totalSiloAssets, totalShares, Rounding.MAX_REPAY_TO_ASSETS, AssetTypes.Debt
         );
     }
 
     /// @inheritdoc ISilo
     function previewRepay(uint256 _assets) external view virtual returns (uint256 shares) {
-        (uint256 totalSiloAssets, uint256 totalShares) = _getTotalAssetsAndTotalSharesWithInterest(AssetType.Debt);
+        (uint256 totalSiloAssets, uint256 totalShares) = _getTotalAssetsAndTotalSharesWithInterest(AssetTypes.Debt);
 
         return SiloMathLib.convertToShares(
-            _assets, totalSiloAssets, totalShares, Rounding.REPAY_TO_SHARES, AssetType.Debt
+            _assets, totalSiloAssets, totalShares, Rounding.REPAY_TO_SHARES, AssetTypes.Debt
         );
     }
 
@@ -549,10 +549,10 @@ contract Silo is SiloERC4626 {
 
     /// @inheritdoc ISilo
     function previewRepayShares(uint256 _shares) external view virtual returns (uint256 assets) {
-        (uint256 totalSiloAssets, uint256 totalShares) = _getTotalAssetsAndTotalSharesWithInterest(AssetType.Debt);
+        (uint256 totalSiloAssets, uint256 totalShares) = _getTotalAssetsAndTotalSharesWithInterest(AssetTypes.Debt);
 
         return SiloMathLib.convertToAssets(
-            _shares, totalSiloAssets, totalShares, Rounding.REPAY_TO_ASSETS, AssetType.Debt
+            _shares, totalSiloAssets, totalShares, Rounding.REPAY_TO_ASSETS, AssetTypes.Debt
         );
     }
 

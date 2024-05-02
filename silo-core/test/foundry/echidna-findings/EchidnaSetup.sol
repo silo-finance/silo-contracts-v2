@@ -194,8 +194,8 @@ contract EchidnaSetup is SiloLittleHelper, Test {
         emit log_named_decimal_uint("maxBorrow0:", maxBorrow0, 18);
         emit log_named_decimal_uint("maxBorrow1:", maxBorrow1, 18);
 
-        emit log_named_decimal_uint("convertToShares(maxBorrow0):", silo0.convertToShares(maxBorrow0, ISilo.AssetType.Debt), 18);
-        emit log_named_decimal_uint("convertToShares(maxBorrow1):", silo1.convertToShares(maxBorrow1, ISilo.AssetType.Debt), 18);
+        emit log_named_decimal_uint("convertToShares(maxBorrow0):", silo0.convertToShares(maxBorrow0, AssetTypes.Debt), 18);
+        emit log_named_decimal_uint("convertToShares(maxBorrow1):", silo1.convertToShares(maxBorrow1, AssetTypes.Debt), 18);
 
         emit log_named_decimal_uint("maxBorrowShares0:", silo0.maxBorrowShares(_actor, TWO_ASSETS), 18);
         emit log_named_decimal_uint("maxBorrowShares0:", silo0.maxBorrowShares(_actor, SAME_ASSET), 18);
