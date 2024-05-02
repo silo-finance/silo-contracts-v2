@@ -8,10 +8,10 @@ import {SiloERC4626Lib} from "silo-core/contracts/lib/SiloERC4626Lib.sol";
 contract SiloERC4626LibConsumerNonVulnerable {
     uint256 public constant INITIAL_TOTAL = 100;
 
-    mapping(ISilo.AssetType => ISilo.Assets) internal _total;
+    mapping(uint256 assetType => ISilo.Assets) internal _total;
 
     constructor() {
-        _total[ISilo.AssetType.Collateral].assets = INITIAL_TOTAL;
+        _total[uint256(ISilo.AssetType.Collateral)].assets = INITIAL_TOTAL;
     }
 
     function deposit(
@@ -29,11 +29,11 @@ contract SiloERC4626LibConsumerNonVulnerable {
             _shares,
             _receiver,
             _collateralShareToken,
-            _total[ISilo.AssetType.Collateral]
+            _total[uint256(ISilo.AssetType.Collateral)]
         );
     }
 
     function getTotalCollateral() public view returns (uint256) {
-        return _total[ISilo.AssetType.Collateral].assets;
+        return _total[uint256(ISilo.AssetType.Collateral)].assets;
     }
 }

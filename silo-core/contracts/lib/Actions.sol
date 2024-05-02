@@ -430,7 +430,7 @@ library Actions {
         uint256 _shares,
         address _owner,
         ISilo.CollateralType _withdrawType,
-        mapping(ISilo.AssetType => ISilo.Assets) storage _total
+        mapping(uint256 assetType => ISilo.Assets) storage _total
     )
         external
         returns (uint256 assets, uint256 toShares)
@@ -445,7 +445,7 @@ library Actions {
 
         (address shareTokenFrom, uint256 liquidity) = _withdrawType == ISilo.CollateralType.Collateral
             ? (collateralConfig.collateralShareToken, ISilo(address(this)).getRawLiquidity())
-            : (collateralConfig.protectedShareToken, _total[ISilo.AssetType.Protected].assets);
+            : (collateralConfig.protectedShareToken, _total[uint256(ISilo.AssetType.Protected)].assets);
 
         (assets, _shares) = SiloERC4626Lib.transitionCollateralWithdraw(
             shareTokenFrom,
@@ -454,7 +454,7 @@ library Actions {
             msg.sender,
             _withdrawType,
             liquidity,
-            _total[_withdrawType]
+            _total[uint256(_withdrawType)]
         );
 
         (ISilo.AssetType depositType, address shareTokenTo) = _withdrawType == ISilo.CollateralType.Collateral
@@ -468,7 +468,7 @@ library Actions {
             0, // shares
             _owner,
             IShareToken(shareTokenTo),
-            _total[depositType]
+            _total[uint256(depositType)]
         );
 
         _shareStorage.siloConfig.crossNonReentrantAfter();

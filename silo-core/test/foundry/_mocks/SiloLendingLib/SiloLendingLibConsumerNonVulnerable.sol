@@ -9,10 +9,10 @@ import {SiloLendingLib} from "silo-core/contracts/lib/SiloLendingLib.sol";
 contract SiloLendingLibConsumerNonVulnerable {
     uint256 public constant INITIAL_TOTAL = 100;
 
-    mapping(ISilo.AssetType => ISilo.Assets) internal _total;
+    mapping(uint256 assetType => ISilo.Assets) internal _total;
 
     constructor() {
-        _total[ISilo.AssetType.Debt].assets = INITIAL_TOTAL;
+        _total[uint256(ISilo.AssetType.Debt)].assets = INITIAL_TOTAL;
     }
 
     function repay(
@@ -29,11 +29,11 @@ contract SiloLendingLibConsumerNonVulnerable {
             _shares,
             _borrower,
             _repayer,
-            _total[ISilo.AssetType.Debt]
+            _total[uint256(ISilo.AssetType.Debt)]
         );
     }
 
     function getTotalDebt() public view returns (uint256) {
-        return _total[ISilo.AssetType.Debt].assets;
+        return _total[uint256(ISilo.AssetType.Debt)].assets;
     }
 }
