@@ -51,6 +51,15 @@ contract GetTotalAssetsAndTotalSharesWithInterestTest is Test {
     }
 
     /*
+    forge test -vv --mt test_getTotalAssetsAndTotalSharesWithInterest_WrongType
+    */
+    function test_getTotalAssetsAndTotalSharesWithInterest_WrongType() public {
+        vm.expectRevert();
+        SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(_config(), ISilo.AssetType(uint8(5)));
+    }
+
+
+    /*
     forge test -vv --mt test_getTotalAssetsAndTotalSharesWithInterest_zero
     */
     function test_getTotalAssetsAndTotalSharesWithInterest_zero() public {
