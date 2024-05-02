@@ -3,7 +3,6 @@ pragma solidity 0.8.21;
 
 import {Math} from "openzeppelin5/utils/math/Math.sol";
 import {Rounding} from "../lib/Rounding.sol";
-import {AssetTypes} from "../lib/AssetTypes.sol";
 import {ISilo} from "../interfaces/ISilo.sol";
 
 library SiloMathLib {
@@ -145,7 +144,7 @@ library SiloMathLib {
 
         unchecked {
             // I think we can afford to uncheck +1
-            (totalShares, totalAssets) = uint256(_assetType) == AssetTypes.DEBT
+            (totalShares, totalAssets) = _assetType == ISilo.AssetType.Debt
                 ? (_totalShares, _totalAssets)
                 : (_totalShares + _DECIMALS_OFFSET_POW, _totalAssets + 1);
         }
@@ -171,7 +170,7 @@ library SiloMathLib {
 
         unchecked {
             // I think we can afford to uncheck +1
-            (totalShares, totalAssets) = uint256(_assetType) == AssetTypes.DEBT
+            (totalShares, totalAssets) = _assetType == ISilo.AssetType.Debt
                 ? (_totalShares, _totalAssets)
                 : (_totalShares + _DECIMALS_OFFSET_POW, _totalAssets + 1);
         }
@@ -265,7 +264,7 @@ library SiloMathLib {
         if (_maxAssets == 0) return (0, 0);
         if (_assetTypeShareTokenTotalSupply == 0) return (0, 0);
 
-        if (uint256(_collateralType) == AssetTypes.COLLATERAL) {
+        if (_collateralType == ISilo.CollateralType.Collateral) {
             assets = _maxAssets > _borrowerCollateralAssets ? _borrowerCollateralAssets : _maxAssets;
 
             if (assets > _liquidity) {

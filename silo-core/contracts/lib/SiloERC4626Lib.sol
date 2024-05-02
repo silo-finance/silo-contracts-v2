@@ -14,7 +14,6 @@ import {SiloStdLib} from "./SiloStdLib.sol";
 import {SiloLendingLib} from "./SiloLendingLib.sol";
 import {Rounding} from "./Rounding.sol";
 import {Hook} from "./Hook.sol";
-import {AssetTypes} from "./AssetTypes.sol";
 
 // solhint-disable function-max-lines
 
@@ -78,7 +77,7 @@ library SiloERC4626Lib {
         uint256 shareTokenTotalSupply;
         uint256 liquidity;
 
-        if (uint256(_collateralType) == AssetTypes.COLLATERAL) {
+        if (_collateralType == ISilo.CollateralType.Collateral) {
             shareTokenTotalSupply = IShareToken(collateralConfig.collateralShareToken).totalSupply();
             (liquidity, _totalAssets, ) = SiloLendingLib.getLiquidityAndAssetsWithInterest(collateralConfig);
         } else {
@@ -87,7 +86,7 @@ library SiloERC4626Lib {
         }
 
         if (SiloSolvencyLib.depositWithoutDebt(debtInfo)) {
-            shares = uint256(_collateralType) == AssetTypes.PROTECTED
+            shares = _collateralType == ISilo.CollateralType.Protected
                 ? IShareToken(collateralConfig.protectedShareToken).balanceOf(_owner)
                 : IShareToken(collateralConfig.collateralShareToken).balanceOf(_owner);
 
@@ -99,7 +98,7 @@ library SiloERC4626Lib {
                 ISilo.AssetType(uint256(_collateralType))
             );
 
-            if (uint256(_collateralType) == AssetTypes.PROTECTED || assets <= liquidity) return (assets, shares);
+            if (_collateralType == ISilo.CollateralType.Protected || assets <= liquidity) return (assets, shares);
 
             assets = liquidity;
 

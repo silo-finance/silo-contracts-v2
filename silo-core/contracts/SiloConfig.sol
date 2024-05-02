@@ -7,7 +7,6 @@ import {IShareToken} from "./interfaces/IShareToken.sol";
 import {CrossReentrancy} from "./utils/CrossReentrancy.sol";
 import {CrossEntrancy} from "./lib/CrossEntrancy.sol";
 import {Hook} from "./lib/Hook.sol";
-import {AssetTypes} from "./lib/AssetTypes.sol";
 import {ConfigLib} from "./lib/ConfigLib.sol";
 
 // solhint-disable var-name-mixedcase
@@ -203,7 +202,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
             if (_action.matchAction(Hook.REPAY)) {
                 shareToken = _DEBT_SHARE_TOKEN0;
             } else {
-                shareToken = uint256(_collateralType) == AssetTypes.COLLATERAL
+                shareToken = _collateralType == ISilo.CollateralType.Collateral
                     ? _COLLATERAL_SHARE_TOKEN0
                     : _PROTECTED_COLLATERAL_SHARE_TOKEN0;
             }
@@ -213,7 +212,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
             if (_action.matchAction(Hook.REPAY)) {
                 shareToken = _DEBT_SHARE_TOKEN1;
             } else {
-                shareToken = uint256(_collateralType) == AssetTypes.COLLATERAL
+                shareToken = _collateralType == ISilo.CollateralType.Collateral
                     ? _COLLATERAL_SHARE_TOKEN1
                     : _PROTECTED_COLLATERAL_SHARE_TOKEN1;
             }

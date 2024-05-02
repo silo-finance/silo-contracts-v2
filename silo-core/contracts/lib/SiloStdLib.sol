@@ -54,10 +54,10 @@ library SiloStdLib {
         view
         returns (uint256 totalAssets, uint256 totalShares)
     {
-        if (uint256(_assetType) == AssetTypes.PROTECTED) {
+        if (_assetType == ISilo.AssetType.Protected) {
             totalAssets = ISilo(_configData.silo).total(AssetTypes.PROTECTED);
             totalShares = IShareToken(_configData.protectedShareToken).totalSupply();
-        } else if (uint256(_assetType) == AssetTypes.COLLATERAL) {
+        } else if (_assetType == ISilo.AssetType.Collateral) {
             totalAssets = getTotalCollateralAssetsWithInterest(
                 _configData.silo,
                 _configData.interestRateModel,
