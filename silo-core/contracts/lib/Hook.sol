@@ -28,4 +28,18 @@ library Hook {
     function matchAction(uint256 _action, uint256 _expectedHook) internal pure returns (bool) {
         return _action & _expectedHook == _expectedHook;
     }
+
+    function addAction(uint256 _action, uint256 _newAction) internal pure returns (uint256) {
+        return _action | _newAction;
+    }
+
+    /// @dev please be careful with removing actions, because other hooks might using them
+    /// eg when you have `_action = COLLATERAL_TOKEN | PROTECTED_TOKEN | SHARE_TOKEN_TRANSFER`
+    /// and you want to remove action on protected token transfer by doing
+    /// `remove(_action, PROTECTED_TOKEN | SHARE_TOKEN_TRANSFER)`, the result will be `_action=COLLATERAL_TOKEN`
+    /// and it will not trigger collateral token transfer. In this example you should do:
+    /// `remove(_action, PROTECTED_TOKEN)`
+    function removeAction(uint256 _action, uint256 _actionToRemove) internal pure returns (uint256) {
+        return _action & (~_actionToRemove);
+    }
 }
