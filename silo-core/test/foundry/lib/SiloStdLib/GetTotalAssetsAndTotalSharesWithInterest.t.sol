@@ -63,7 +63,7 @@ contract GetTotalAssetsAndTotalSharesWithInterestTest is Test {
         PROTECTED_SHARE_TOKEN.totalSupplyMock(0);
 
         (totalAssets, totalShares) =
-            SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(_config(), ISilo.CollateralType.Protected);
+            SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(_config(), ISilo.AssetType.Protected);
 
         assertEq(totalAssets, 0);
         assertEq(totalShares, 0);
@@ -72,7 +72,7 @@ contract GetTotalAssetsAndTotalSharesWithInterestTest is Test {
         COLLATERAL_SHARE_TOKEN.totalSupplyMock(0);
         INTEREST_RATE_MODEL.getCompoundInterestRateMock(silo, block.timestamp, 0);
         (totalAssets, totalShares) =
-            SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(_config(), ISilo.CollateralType.Collateral);
+            SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(_config(), ISilo.AssetType.Collateral);
 
         assertEq(totalAssets, 0);
         assertEq(totalShares, 0);
@@ -99,7 +99,7 @@ contract GetTotalAssetsAndTotalSharesWithInterestTest is Test {
         PROTECTED_SHARE_TOKEN.totalSupplyMock(_totalSupply);
 
         (totalAssets, totalShares) =
-            SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(_config(), ISilo.CollateralType.Protected);
+            SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(_config(), ISilo.AssetType.Protected);
 
         assertEq(totalAssets, 0);
         assertEq(totalShares, _totalSupply);

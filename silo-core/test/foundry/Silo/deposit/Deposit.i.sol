@@ -54,7 +54,7 @@ contract DepositTest is SiloLittleHelper, Test {
         address depositor = makeAddr("Depositor");
 
         vm.expectRevert(ISilo.WrongAssetType.selector);
-        silo0.deposit(_assets, depositor, ISilo.CollateralType(2));
+        silo0.deposit(_assets, depositor, ISilo.CollateralType(uint8(ISilo.AssetType.Debt)));
     }
 
     /*
@@ -76,7 +76,7 @@ contract DepositTest is SiloLittleHelper, Test {
 
         assertEq(token0.balanceOf(address(silo0)), assets * 2);
         assertEq(silo0.getCollateralAssets(), assets);
-        assertEq(silo0.total(ISilo.CollateralType.Protected), assets);
+        assertEq(silo0.total(ISilo.AssetType.Protected), assets);
         assertEq(silo0.getDebtAssets(), 0);
 
         assertEq(IShareToken(collateral.collateralShareToken).balanceOf(depositor), assets, "collateral shares");

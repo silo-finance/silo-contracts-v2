@@ -37,7 +37,7 @@ library SiloERC4626LibWithReentrancyIssue {
             _collateralShareToken.totalSupply(),
             Rounding.DEPOSIT_TO_ASSETS,
             Rounding.DEPOSIT_TO_SHARES,
-            ISilo.CollateralType.Collateral
+            ISilo.AssetType.Collateral
         );
 
         if (_token != address(0)) {

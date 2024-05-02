@@ -15,25 +15,25 @@ contract ConversionsTest is Test {
         uint256 _totalShares;
         Math.Rounding _rounding = Rounding.DOWN;
 
-        uint256 shares = SiloMathLib.convertToShares(_assets, _totalAssets, _totalShares, _rounding, ISilo.CollateralType.Collateral);
+        uint256 shares = SiloMathLib.convertToShares(_assets, _totalAssets, _totalShares, _rounding, ISilo.AssetType.Collateral);
         assertEq(shares, 1 * SiloMathLib._DECIMALS_OFFSET_POW);
 
         _totalAssets += _assets;
         _totalShares += shares;
 
         _assets = 1000;
-        shares = SiloMathLib.convertToShares(_assets, _totalAssets, _totalShares, _rounding, ISilo.CollateralType.Collateral);
+        shares = SiloMathLib.convertToShares(_assets, _totalAssets, _totalShares, _rounding, ISilo.AssetType.Collateral);
         assertEq(shares, 1000 * SiloMathLib._DECIMALS_OFFSET_POW);
 
         _totalAssets += _assets;
         _totalShares += shares;
 
         shares = 1 * SiloMathLib._DECIMALS_OFFSET_POW;
-        _assets = SiloMathLib.convertToAssets(shares, _totalAssets, _totalShares, _rounding, ISilo.CollateralType.Collateral);
+        _assets = SiloMathLib.convertToAssets(shares, _totalAssets, _totalShares, _rounding, ISilo.AssetType.Collateral);
         assertEq(_assets, 1);
 
         shares = 1000 * SiloMathLib._DECIMALS_OFFSET_POW;
-        _assets = SiloMathLib.convertToAssets(shares, _totalAssets, _totalShares, _rounding, ISilo.CollateralType.Collateral);
+        _assets = SiloMathLib.convertToAssets(shares, _totalAssets, _totalShares, _rounding, ISilo.AssetType.Collateral);
         assertEq(_assets, 1000);
     }
 }
