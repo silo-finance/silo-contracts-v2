@@ -36,7 +36,7 @@ contract SiloDeployer is ISiloDeployer {
         IInterestRateModelV2.Config calldata _irmConfigData0,
         IInterestRateModelV2.Config calldata _irmConfigData1,
         ISiloConfig.InitData memory _siloInitData,
-        bool _cloneHookReceiver
+        address _hookReceiverImplementation
     )
         external
         returns (ISiloConfig siloConfig)
@@ -45,19 +45,12 @@ contract SiloDeployer is ISiloDeployer {
         _setUpIRMs(_irmConfigData0, _irmConfigData1, _siloInitData);
         // create oracles and update `_siloInitData`
         _createOracles(_siloInitData, _oracles);
-
         // clone hook receiver if needed
-        if (_cloneHookReceiver) {
-            _siloInitData.hookReceiver = Clones.clone(_siloInitData.hookReceiver);
-        }
-
+        _cloneHookReceiver(_siloInitData, _hookReceiverImplementation);
         // create Silo
         siloConfig = SILO_FACTORY.createSilo(_siloInitData);
-
         // initialize hook receiver only if it was cloned
-        if (_cloneHookReceiver) {
-            IHookReceiver(_siloInitData.hookReceiver).initialize(TIMELOCK_CONTROLLER, siloConfig);
-        }
+        _initializeHookReceiver(_siloInitData, siloConfig, _hookReceiverImplementation);
 
         emit SiloCreated(siloConfig);
     }
@@ -112,5 +105,36 @@ contract SiloDeployer is ISiloDeployer {
         if (!success || data.length != 32) revert FailedToCreateAnOracle(factory);
 
         _oracle = address(uint160(uint256(bytes32(data))));
+    }
+
+    /// @notice Clone hook receiver if it is provided
+    /// @param _siloInitData Silo configuration for the silo creation
+    /// @param _hookReceiverImplementation Hook receiver implementation to clone
+    function _cloneHookReceiver(
+        ISiloConfig.InitData memory _siloInitData,
+        address _hookReceiverImplementation
+    ) internal {
+        if (_hookReceiverImplementation != address(0) && _siloInitData.hookReceiver != address(0)) {
+            revert HookReceiverMissconfigured();
+        }
+
+        if (_hookReceiverImplementation != address(0)) {
+            _siloInitData.hookReceiver = Clones.clone(_hookReceiverImplementation);
+        }
+    }
+
+    /// @notice Initialize hook receiver if it was cloned
+    /// @param _siloInitData Silo configuration for the silo creation
+    /// (where _siloInitData.hookReceiver is the cloned hook receiver)
+    /// @param _siloConfig Configuration of the created silo
+    /// @param _hookReceiverImplementation Hook receiver implementation
+    function _initializeHookReceiver(
+        ISiloConfig.InitData memory _siloInitData,
+        ISiloConfig _siloConfig,
+        address _hookReceiverImplementation
+    ) internal {
+        if (_hookReceiverImplementation != address(0)) {
+            IHookReceiver(_siloInitData.hookReceiver).initialize(TIMELOCK_CONTROLLER, _siloConfig);
+        }
     }
 }

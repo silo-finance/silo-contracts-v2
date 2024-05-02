@@ -57,8 +57,11 @@ contract SiloDeploy is CommonDeploy {
 
         console2.log("[SiloCommonDeploy] using CONFIG: ", configName);
 
-        (SiloConfigData.ConfigData memory config, ISiloConfig.InitData memory siloInitData) =
-            siloData.getConfigData(configName);
+        (
+            SiloConfigData.ConfigData memory config,
+            ISiloConfig.InitData memory siloInitData,
+            address hookReceiverImplementation
+        ) = siloData.getConfigData(configName);
 
         console2.log("[SiloCommonDeploy] Config prepared");
 
@@ -80,7 +83,7 @@ contract SiloDeploy is CommonDeploy {
 
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
 
-        beforeCreateSilo(siloInitData);
+        hookReceiverImplementation = beforeCreateSilo(siloInitData, hookReceiverImplementation);
 
         console2.log("[SiloCommonDeploy] `beforeCreateSilo` executed");
 
@@ -93,7 +96,7 @@ contract SiloDeploy is CommonDeploy {
             irmConfigData0,
             irmConfigData1,
             siloInitData,
-            config.cloneHookReceiver
+            hookReceiverImplementation
         );
 
         vm.stopBroadcast();
@@ -263,7 +266,11 @@ contract SiloDeploy is CommonDeploy {
         isDiaOracle = diaOracle != address(0);
     }
 
-    function beforeCreateSilo(ISiloConfig.InitData memory) internal virtual {
+    function beforeCreateSilo(
+        ISiloConfig.InitData memory,
+        address _hookImplementation
+    ) internal virtual returns (address) {
         // hook for any action before creating silo
+        return _hookImplementation;
     }
 }

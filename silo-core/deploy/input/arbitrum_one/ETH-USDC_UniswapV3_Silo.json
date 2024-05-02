@@ -2,7 +2,7 @@
     "deployer": "0xdEDEDEDEdEdEdEDedEDeDedEdEdeDedEdEDedEdE",
     "liquidationModule": "PartialLiquidation",
     "hookReceiver": "NO_HOOK_RECEIVER",
-    "cloneHookReceiver": false,
+    "hookReceiverImplementation": "NO_HOOK_RECEIVER",
     "deployerFee": 1000,
     "token0": "WETH",
     "solvencyOracle0": "NO_ORACLE",

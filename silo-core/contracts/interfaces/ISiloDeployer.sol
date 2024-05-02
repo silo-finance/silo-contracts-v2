@@ -33,18 +33,21 @@ interface ISiloDeployer {
     /// @dev Revert if an oracle factory fails to create an oracle
     error FailedToCreateAnOracle(address _factory);
 
+    /// @dev Revert if for the deployment provided both hook receiver and hook receiver implementation
+    error HookReceiverMissconfigured();
+
     /// @notice Deploy silo
     /// @param _oracles Oracles to be create during the silo creation
     /// @param _irmConfigData0 IRM config data for a silo `_TOKEN0`
     /// @param _irmConfigData1 IRM config data for a silo `_TOKEN1`
     /// @param _siloInitData Silo configuration for the silo creation
-    /// @param _cloneHookReceiver If `true` the hook receiver will be cloned as a minimal proxy
+    /// @param _hookReceiverImplementation Hook receiver implementation to clone
     function deploy(
         Oracles calldata _oracles,
         IInterestRateModelV2.Config calldata _irmConfigData0,
         IInterestRateModelV2.Config calldata _irmConfigData1,
         ISiloConfig.InitData memory _siloInitData,
-        bool _cloneHookReceiver
+        address _hookReceiverImplementation
     )
         external
         returns (ISiloConfig siloConfig);

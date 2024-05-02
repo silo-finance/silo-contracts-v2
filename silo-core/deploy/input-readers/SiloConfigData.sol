@@ -24,12 +24,12 @@ contract SiloConfigData is Test, CommonDeploy {
     struct ConfigData {
         bool callBeforeQuote0;
         bool callBeforeQuote1;
-        bool cloneHookReceiver;
         address deployer;
         uint256 deployerFee;
         uint64 flashloanFee0;
         uint64 flashloanFee1;
         string hookReceiver;
+        string hookReceiverImplementation;
         address interestRateModel0;
         address interestRateModel1;
         string interestRateModelConfig0;
@@ -65,9 +65,10 @@ contract SiloConfigData is Test, CommonDeploy {
 
     function getConfigData(string memory _name)
         public
-        returns (ConfigData memory config, ISiloConfig.InitData memory initData)
+        returns (ConfigData memory config, ISiloConfig.InitData memory initData, address _hookReceiverImplementation)
     {
         config = _readDataFromJson(_name);
+        _hookReceiverImplementation = _resolveHookReceiverImpl(config.hookReceiverImplementation);
 
         initData = ISiloConfig.InitData({
             deployer: config.deployer,

@@ -67,6 +67,15 @@ contract SiloDeployTest is IntegrationTest {
        _siloConfig = _siloDeploy.useConfig(SiloConfigsNames.FULL_CONFIG_TEST).run();
     }
 
+    // FOUNDRY_PROFILE=core-test forge test -vv --ffi -mt test_hooks_are_initialized
+    function test_hooks_are_initialized() public { // solhint-disable-line func-name-mixedcase
+        (address silo0, address silo1) = _siloConfig.getSilos();
+
+         _verifyHookReceiversForSilo(silo0);
+         _verifyHookReceiversForSilo(silo1);
+    }
+
+    // FOUNDRY_PROFILE=core-test forge test -vv --ffi -mt test_oracles_deploy
     function test_oracles_deploy() public { // solhint-disable-line func-name-mixedcase
         (, address silo1) = _siloConfig.getSilos();
 

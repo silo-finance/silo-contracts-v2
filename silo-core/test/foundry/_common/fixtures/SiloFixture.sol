@@ -26,6 +26,7 @@ struct SiloConfigOverride {
     address token0;
     address token1;
     string hookReceiver;
+    string hookReceiverImplementation;
     address solvencyOracle0;
     address maxLtvOracle0;
     string configName;
@@ -42,7 +43,10 @@ contract SiloDeploy_Local is SiloDeploy {
         siloConfigOverride = _override;
     }
 
-    function beforeCreateSilo(ISiloConfig.InitData memory _config) internal override {
+    function beforeCreateSilo(
+        ISiloConfig.InitData memory _config,
+        address _hookImplementation
+    ) internal override returns (address) {
         _config.token0 = siloConfigOverride.token0;
         _config.token1 = siloConfigOverride.token1;
         _config.solvencyOracle0 = siloConfigOverride.solvencyOracle0;
@@ -51,6 +55,13 @@ contract SiloDeploy_Local is SiloDeploy {
         if(bytes(siloConfigOverride.hookReceiver).length != 0) {
             _config.hookReceiver = _resolveHookReceiverOverride(siloConfigOverride.hookReceiver);
         }
+
+        if(bytes(siloConfigOverride.hookReceiverImplementation).length != 0) {
+            string memory implementation = siloConfigOverride.hookReceiverImplementation;
+            _hookImplementation = _resolveHookReceiverOverride(implementation);
+        }
+
+        return _hookImplementation;
     }
 
     function _resolveHookReceiverOverride(string memory _requiredHookReceiver) internal returns (address hookReceiver) {
