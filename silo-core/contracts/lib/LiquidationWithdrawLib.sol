@@ -66,7 +66,7 @@ library LiquidationWithdrawLib {
                 _liquidator,
                 _borrower,
                 _borrower,
-                ISilo.AssetType.Protected,
+                ISilo.CollateralType.Protected,
                 type(uint256).max,
                 _total[uint256(ISilo.AssetType.Protected)]
             );
@@ -81,7 +81,7 @@ library LiquidationWithdrawLib {
                 _liquidator,
                 _borrower,
                 _borrower,
-                ISilo.AssetType.Collateral,
+                ISilo.CollateralType.Collateral,
                 _liquidity,
                 _total[uint256(ISilo.AssetType.Collateral)]
             );

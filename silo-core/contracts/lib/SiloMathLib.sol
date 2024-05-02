@@ -270,7 +270,7 @@ library SiloMathLib {
             if (assets > _liquidity) {
                 assets = _liquidity;
             }
-        } else if (_assetType == ISilo.AssetType.Protected) {
+        } else {
             assets = _maxAssets > _borrowerProtectedAssets ? _borrowerProtectedAssets : _maxAssets;
         }
 
@@ -279,7 +279,7 @@ library SiloMathLib {
             _totalAssets,
             _assetTypeShareTokenTotalSupply,
             Rounding.MAX_WITHDRAW_TO_SHARES,
-            _assetType
+            ISilo.AssetType(uint256(_assetType))
         );
     }
 }

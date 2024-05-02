@@ -95,7 +95,7 @@ library SiloERC4626Lib {
                 _totalAssets,
                 shareTokenTotalSupply,
                 Rounding.MAX_WITHDRAW_TO_ASSETS,
-                _assetType
+                ISilo.AssetType(uint256(_assetType))
             );
 
             if (_assetType == ISilo.CollateralType.Protected || assets <= liquidity) return (assets, shares);
@@ -278,7 +278,7 @@ library SiloERC4626Lib {
                 shareTotalSupply,
                 Rounding.WITHDRAW_TO_ASSETS,
                 Rounding.WITHDRAW_TO_SHARES,
-                _assetType
+                ISilo.AssetType(uint256(_assetType))
             );
 
             if (assets == 0 || shares == 0) revert ISilo.NothingToWithdraw();
