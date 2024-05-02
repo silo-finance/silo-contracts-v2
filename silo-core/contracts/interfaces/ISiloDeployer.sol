@@ -41,7 +41,7 @@ interface ISiloDeployer {
     /// @param _irmConfigData0 IRM config data for a silo `_TOKEN0`
     /// @param _irmConfigData1 IRM config data for a silo `_TOKEN1`
     /// @param _siloInitData Silo configuration for the silo creation
-    /// @param _hookReceiverImplementation Hook receiver implementation to clone
+    /// @param _hookReceiverImplementation Hook receiver implementation to clone (ignored if address(0))
     function deploy(
         Oracles calldata _oracles,
         IInterestRateModelV2.Config calldata _irmConfigData0,
