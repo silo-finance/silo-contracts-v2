@@ -40,9 +40,9 @@ contract VeSiloFeatures is CommonSiloIntegration {
         veSilo.apply_smart_wallet_checker();
     }
 
-    function _createGauge(address _hookReceiver) internal returns (address gauge) {
+    function _createGauge(address _shareToken) internal returns (address gauge) {
         vm.prank(_deployer);
-        gauge = factory.create(_WEIGHT_CAP, _hookReceiver);
+        gauge = factory.create(_WEIGHT_CAP, _shareToken);
         vm.label(gauge, "Gauge");
     }
 
