@@ -25,14 +25,14 @@ library LiquidationWithdrawLib {
         mapping(uint256 assetType => ISilo.Assets) storage _total
     ) internal {
         (
-            ISiloConfig.ConfigData memory collateralConfig,
-            ISiloConfig.ConfigData memory debtConfig,
-            ISiloConfig.DebtInfo memory debtInfo
+            ISiloConfig.ConfigData memory collateralConfig,, ISiloConfig.DebtInfo memory debtInfo
         ) = _config.getConfigs(address(this), _borrower, Hook.WITHDRAW);
 
         if (msg.sender != collateralConfig.liquidationModule) revert ISilo.OnlyLiquidationModule();
 
-        if (_siloWithDebt != debtConfig.silo) {
+        address repaySilo = debtInfo.debtInThisSilo ? collateralConfig.silo : collateralConfig.otherSilo;
+
+        if (repaySilo != _siloWithDebt) {
             // this is cross check for user input on `liquidationCall`
             // we have to make sure repay was done on correct silo
             revert ISilo.WrongDebtSilo();
