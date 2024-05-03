@@ -5,7 +5,8 @@ library HookActionDataDecoder {
     uint256 constant PACKED_ADDRESS_LENGTH = 20;
     uint256 constant PACKED_FULL_LENGTH = 32;
 
-    function afterTokenTransferDecode(bytes memory data)
+    function afterTokenTransferDecode(bytes memory packed)
+        internal
         pure
         returns (
             address sender,

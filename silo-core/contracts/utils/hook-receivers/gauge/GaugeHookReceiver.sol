@@ -18,8 +18,9 @@ import {SiloHookReceiver} from "../_common/SiloHookReceiver.sol";
 contract GaugeHookReceiver is IGaugeHookReceiver, SiloHookReceiver, Ownable2Step, Initializable {
     using Hook for uint256;
     using Hook for uint24;
+    using HookActionDataDecoder for bytes;
 
-    uint256 internal constant HOOKS_BEFORE_NOT_CONFIGURED = 0;
+    uint24 internal constant HOOKS_BEFORE_NOT_CONFIGURED = 0;
 
     IGauge public gauge;
     IShareToken public shareToken;
@@ -43,26 +44,21 @@ contract GaugeHookReceiver is IGaugeHookReceiver, SiloHookReceiver, Ownable2Step
     }
 
     /// @inheritdoc IGaugeHookReceiver
-    function setGauge(IGauge _gauge) external virtual onlyOwner {
-        IShareToken _shareToken = IShareToken(_gauge.share_token());
-        IGauge configuredGauge = configuredGauges[_shareToken];
+    function setGauge(IGauge _gauge, IShareToken _shareToken) external virtual onlyOwner {
+        if (address(_gauge) == address(0)) revert EmptyGaugeAddress();
+        if (_gauge.share_token() != address(_shareToken)) revert WrongGaugeShareToken();
 
-        if (address(configuredGauge) == address(0) && address(_gauge) == address(0)) revert GaugeIsNotConfigured();
-        if (address(configuredGauge) != address(0) && !configuredGauge.is_killed()) revert CantUpdateActiveGauge();
+        address configuredGauge = address(configuredGauges[_shareToken]);
 
-        address silo = _shareToken.silo();
+        if (configuredGauge != address(0)) revert GaugeAlreadyConfigured();
 
-        uint24 tokenType = _getTokenType(silo, address(_shareToken));
-        uint24 hooksAfter = _getHooksAfter(silo);
+        address silo = address(_shareToken.silo());
 
-        if (configuredGauge == address(0)) {
-            // If gauge was not configured before we add action to the hooksAfter
-            uint24 action = tokenType | Hook.SHARE_TOKEN_TRANSFER;
-            hooksAfter = hooksAfter.addAction(action);
-        } else if (address(_gauge) == address(0)) {
-            // if provided gauge is zero address we remove action from the hooksAfter
-            hooksAfter = hooksAfter.removeAction(tokenType);
-        }
+        uint256 tokenType = _getTokenType(silo, address(_shareToken));
+        uint256 hooksAfter = _getHooksAfter(silo);
+
+        uint256 action = tokenType | Hook.SHARE_TOKEN_TRANSFER;
+        hooksAfter = hooksAfter.addAction(action);
 
         _setHookConfig(silo, HOOKS_BEFORE_NOT_CONFIGURED, hooksAfter);
 
@@ -71,18 +67,41 @@ contract GaugeHookReceiver is IGaugeHookReceiver, SiloHookReceiver, Ownable2Step
         emit GaugeConfigured(address(gauge), address(_shareToken));
     }
 
-    function beforeAction(address, uint256, bytes calldata) external {
+    /// @inheritdoc IGaugeHookReceiver
+    function removeGauge(IShareToken _shareToken) external virtual onlyOwner {
+        IGauge configuredGauge = configuredGauges[_shareToken];
+
+        if (address(configuredGauge) == address(0)) revert GaugeIsNotConfigured();
+        if (!configuredGauge.is_killed()) revert CantRemoveActiveGauge();
+
+        address silo = address(_shareToken.silo());
+        
+        uint256 tokenType = _getTokenType(silo, address(_shareToken));
+        uint256 hooksAfter = _getHooksAfter(silo);
+
+        hooksAfter = hooksAfter.removeAction(tokenType);
+
+        _setHookConfig(silo, HOOKS_BEFORE_NOT_CONFIGURED, hooksAfter);
+
+        delete configuredGauges[_shareToken];
+
+        emit GaugeRemoved(address(_shareToken));
+    }
+
+    /// @inheritdoc IHookReceiver
+    function beforeAction(address, uint256, bytes calldata) external pure {
         // Do not expect any actions.
         revert RequestNotSupported();
     }
 
+    /// @inheritdoc IHookReceiver
     function afterAction(address _silo, uint256 _action, bytes calldata _inputAndOutput) external {
-        IGauge theGauge = configuredGauges[msg.sender];
+        IGauge theGauge = configuredGauges[IShareToken(msg.sender)];
 
         if (theGauge == IGauge(address(0))) revert GaugeIsNotConfigured();
 
         if (theGauge.is_killed()) return; // Do not revert if gauge is killed. Ignore the action.
-        if (_getHooksAfter(silo).matchAction(_action)) return; // Should not happen, but just in case
+        if (!_getHooksAfter(_silo).matchAction(_action)) return; // Should not happen, but just in case
 
         (
             address sender,
@@ -91,7 +110,7 @@ contract GaugeHookReceiver is IGaugeHookReceiver, SiloHookReceiver, Ownable2Step
             uint256 senderBalance,
             uint256 recipientBalance,
             uint256 totalSupply
-        ) = _encodedParams.afterTokenTransferDecode();
+        ) = _inputAndOutput.afterTokenTransferDecode();
 
         theGauge.afterTokenTransfer(
             sender,
@@ -102,16 +121,21 @@ contract GaugeHookReceiver is IGaugeHookReceiver, SiloHookReceiver, Ownable2Step
         );
     }
 
-    function _getTokenType(address _silo, address _shareToken) internal view returns (uint24) {
+    /// @notice Get the token type for the share token
+    /// @param _silo Silo address for which tokens was deployed
+    /// @param _shareToken Share token address
+    /// @dev Revert if wrong silo
+    /// @dev Revert if the share token is not one of the collateral, protected or debt tokens
+    function _getTokenType(address _silo, address _shareToken) internal view returns (uint256) {
         (
             address protectedShareToken,
             address collateralShareToken,
             address debtShareToken
-        ) = siloConfig.shareTokens(_silo);
+        ) = siloConfig.getShareTokens(_silo);
 
-        if (_shareToken == collateralShareToken) return uint24(Hook.SHARE_TOKEN_COLLATERAL);
-        if (_shareToken == protectedShareToken) return uint24(Hook.SHARE_TOKEN_PROTECTED);
-        if (_shareToken == debtShareToken) return uint24(Hook.SHARE_TOKEN_DEBT);
+        if (_shareToken == collateralShareToken) return Hook.COLLATERAL_TOKEN;
+        if (_shareToken == protectedShareToken) return Hook.PROTECTED_TOKEN;
+        if (_shareToken == debtShareToken) return Hook.DEBT_TOKEN;
 
         revert InvalidShareToken();
     }
