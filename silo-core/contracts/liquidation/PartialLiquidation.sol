@@ -19,24 +19,20 @@ import {PartialLiquidationExecLib} from "./lib/PartialLiquidationExecLib.sol";
 contract PartialLiquidation is IPartialLiquidation, Initializable {
     using Hook for uint24;
 
-    ISiloConfig public siloConfig;
+    address public siloWithDebt;
 
     HookSetup public hooksSetup;
-
-    address private _silo0;
-    address private _silo1;
 
     constructor() {
         _disableInitializers();
     }
 
-    function initialise(address _siloConfig) external initializer {
-        siloConfig = ISiloConfig(_siloConfig);
-        (_silo0, _silo1) = siloConfig.getSilos();
+    function initialise(address _siloWithDebt) external initializer {
+        siloWithDebt = _siloWithDebt;
     }
 
     function synchronizeHooks(address _hookReceiver, uint24 _hooksBefore, uint24 _hooksAfter) external {
-        if (msg.sender != _silo0 && msg.sender != _silo1) revert OnlySilo();
+        if (msg.sender != siloWithDebt) revert OnlySilo();
 
         hooksSetup.hookReceiver = _hookReceiver;
         hooksSetup.hooksBefore = _hooksBefore;
@@ -55,23 +51,24 @@ contract PartialLiquidation is IPartialLiquidation, Initializable {
         virtual
         returns (uint256 withdrawCollateral, uint256 repayDebtAssets)
     {
+        address siloWithDebtCached = siloWithDebt;
         HookSetup memory hookSetupForSilo = hooksSetup;
-
-        (
-            ISiloConfig siloConfigCached,
-            ISiloConfig.ConfigData memory collateralConfig,
-            ISiloConfig.ConfigData memory debtConfig
-        ) = _fetchConfigs(_collateralAsset, _debtAsset, _borrower);
 
         _beforeLiquidationHook(
             hookSetupForSilo,
-            debtConfig.silo,
+            siloWithDebtCached,
             _collateralAsset,
             _debtAsset,
             _borrower,
             _debtToCover,
             _receiveSToken
         );
+
+        (
+            ISiloConfig siloConfigCached,
+            ISiloConfig.ConfigData memory collateralConfig,
+            ISiloConfig.ConfigData memory debtConfig
+        ) = _fetchConfigs(siloWithDebtCached, _collateralAsset, _debtAsset, _borrower);
 
         { // too deep
             uint256 withdrawAssetsFromCollateral;
@@ -134,6 +131,7 @@ contract PartialLiquidation is IPartialLiquidation, Initializable {
     }
 
     function _fetchConfigs(
+        address _siloWithDebt,
         address _collateralAsset,
         address _debtAsset,
         address _borrower
@@ -145,21 +143,18 @@ contract PartialLiquidation is IPartialLiquidation, Initializable {
             ISiloConfig.ConfigData memory debtConfig
         )
     {
-        siloConfigCached = siloConfig;
+        siloConfigCached = ISilo(_siloWithDebt).config();
 
         ISiloConfig.DebtInfo memory debtInfo;
 
         (collateralConfig, debtConfig, debtInfo) = siloConfigCached.getConfigs(
-            _silo0,
+            _siloWithDebt,
             _borrower,
             Hook.LIQUIDATION
         );
 
         if (!debtInfo.debtPresent) revert UserIsSolvent();
-
-        if (!debtInfo.debtInThisSilo) {
-            (collateralConfig, debtConfig) = (debtConfig, collateralConfig);
-        }
+        if (!debtInfo.debtInThisSilo) revert ISilo.ThereIsDebtInOtherSilo();
 
         if (_collateralAsset != collateralConfig.token) revert UnexpectedCollateralToken();
         if (_debtAsset != debtConfig.token) revert UnexpectedDebtToken();
