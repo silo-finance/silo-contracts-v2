@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.21;
 
+import {Initializable} from "openzeppelin5/proxy/utils/Initializable.sol";
+
 import {ISilo, ILiquidationProcess} from "../interfaces/ISilo.sol";
 import {IPartialLiquidation} from "../interfaces/IPartialLiquidation.sol";
 import {ISiloOracle} from "../interfaces/ISiloOracle.sol";
@@ -14,20 +16,31 @@ import {PartialLiquidationExecLib} from "./lib/PartialLiquidationExecLib.sol";
 
 
 /// @title PartialLiquidation module for executing liquidations
-contract PartialLiquidation is IPartialLiquidation {
+contract PartialLiquidation is IPartialLiquidation, Initializable {
     using Hook for uint24;
 
-    mapping(address silo => HookSetup) private _hooksSetup;
+    address public siloWithDebt;
+
+    HookSetup public hooksSetup;
+
+    constructor() {
+        _disableInitializers();
+    }
+
+    function initialise(address _siloWithDebt) external initializer {
+        siloWithDebt = _siloWithDebt;
+    }
 
     function synchronizeHooks(address _hookReceiver, uint24 _hooksBefore, uint24 _hooksAfter) external {
-        _hooksSetup[msg.sender].hookReceiver = _hookReceiver;
-        _hooksSetup[msg.sender].hooksBefore = _hooksBefore;
-        _hooksSetup[msg.sender].hooksAfter = _hooksAfter;
+        if (msg.sender != siloWithDebt) revert OnlySilo();
+
+        hooksSetup.hookReceiver = _hookReceiver;
+        hooksSetup.hooksBefore = _hooksBefore;
+        hooksSetup.hooksAfter = _hooksAfter;
     }
 
     /// @inheritdoc IPartialLiquidation
     function liquidationCall( // solhint-disable-line function-max-lines, code-complexity
-        address _siloWithDebt,
         address _collateralAsset,
         address _debtAsset,
         address _borrower,
@@ -38,11 +51,12 @@ contract PartialLiquidation is IPartialLiquidation {
         virtual
         returns (uint256 withdrawCollateral, uint256 repayDebtAssets)
     {
-        HookSetup memory hookSetupForSilo = _hooksSetup[_siloWithDebt];
+        address siloWithDebtCached = siloWithDebt;
+        HookSetup memory hookSetupForSilo = hooksSetup;
 
         _beforeLiquidationHook(
             hookSetupForSilo,
-            _siloWithDebt,
+            siloWithDebtCached,
             _collateralAsset,
             _debtAsset,
             _borrower,
@@ -54,7 +68,7 @@ contract PartialLiquidation is IPartialLiquidation {
             ISiloConfig siloConfigCached,
             ISiloConfig.ConfigData memory collateralConfig,
             ISiloConfig.ConfigData memory debtConfig
-        ) = _fetchConfigs(_siloWithDebt, _collateralAsset, _debtAsset, _borrower);
+        ) = _fetchConfigs(siloWithDebtCached, _collateralAsset, _debtAsset, _borrower);
 
         { // too deep
             uint256 withdrawAssetsFromCollateral;
@@ -80,10 +94,9 @@ contract PartialLiquidation is IPartialLiquidation {
             unchecked { withdrawCollateral = withdrawAssetsFromCollateral + withdrawAssetsFromProtected; }
 
             emit LiquidationCall(msg.sender, _receiveSToken);
-            ILiquidationProcess(_siloWithDebt).liquidationRepay(repayDebtAssets, _borrower, msg.sender);
+            ILiquidationProcess(siloConfigCached).liquidationRepay(repayDebtAssets, _borrower, msg.sender);
 
             ILiquidationProcess(collateralConfig.silo).withdrawCollateralsToLiquidator(
-                _siloWithDebt,
                 withdrawAssetsFromCollateral,
                 withdrawAssetsFromProtected,
                 _borrower,
@@ -96,7 +109,7 @@ contract PartialLiquidation is IPartialLiquidation {
 
         _afterLiquidationHook(
             hookSetupForSilo,
-            _siloWithDebt,
+            siloConfigCached,
             _collateralAsset,
             _debtAsset,
             _borrower,
@@ -105,10 +118,6 @@ contract PartialLiquidation is IPartialLiquidation {
             withdrawCollateral,
             repayDebtAssets
         );
-    }
-
-    function hookSetup(address _silo) external view virtual returns (HookSetup memory) {
-        return _hooksSetup[_silo];
     }
 
     /// @inheritdoc IPartialLiquidation
