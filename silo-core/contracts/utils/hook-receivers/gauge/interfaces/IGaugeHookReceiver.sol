@@ -28,8 +28,6 @@ interface IGaugeHookReceiver is IHookReceiver {
     error AlreadyConfigured();
     /// @dev Revert on an attempt to set a gauge with a zero address
     error EmptyGaugeAddress();
-    /// @dev Too more gauges were passed to the hook receiver
-    error TooManyGauges();
     /// @dev Revert if provided silo configuration during initialization is empty
     error EmptySiloConfig();
     /// @dev Revert if the hook received `beforeAction` notification
