@@ -212,19 +212,23 @@ contract DynamicKinkModelV1 is IDynamicKinkModelV1 {
             // capped
             didOverflow = true;
             rcomp = R_COMPOUND_MAX_PER_SECOND * _l.T;
+            k = _setup.config.kmin;
         }
 
-        if (type(int256).max / rcomp > _totalBorrowAmount) {
+        if (type(int256).max / rcomp < _totalBorrowAmount) {
             // true overflow
             didOverflow = true;
             rcomp = R_COMPOUND_MAX_PER_SECOND * _l.T;
+            k = _setup.config.kmin;
             return (rcomp, k, x, didOverflow, xxx);
         }
 
+        //todo amt max
         if (type(int256).max - _totalBorrowAmount * rcomp / _DP < _totalBorrowAmount) {
             didOverflow = true;
             // interest / tba
             rcomp = 0;
+            k = _setup.config.kmin;
             return (rcomp, k, x, didOverflow, xxx);
         }
     }
