@@ -1,7 +1,8 @@
 {
     "deployer": "0xdEDEDEDEdEdEdEDedEDeDedEdEdeDedEdEDedEdE",
     "liquidationModule": "PartialLiquidation",
-    "hookReceiver": "GaugeHookReceiver.sol",
+    "hookReceiver": "NO_HOOK_RECEIVER",
+    "hookReceiverImplementation": "GaugeHookReceiver.sol",
     "deployerFee": 1000,
     "token0": "WETH",
     "solvencyOracle0": "NO_ORACLE",

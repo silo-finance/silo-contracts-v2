@@ -6,6 +6,7 @@ import {Initializable} from "openzeppelin5/proxy/utils/Initializable.sol";
 
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
+import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {IGaugeLike as IGauge} from "./interfaces/IGaugeLike.sol";
 import {IGaugeHookReceiver, IHookReceiver} from "./interfaces/IGaugeHookReceiver.sol";
 import {SiloHookReceiver} from "../_common/SiloHookReceiver.sol";
@@ -25,14 +26,10 @@ contract GaugeHookReceiver is IGaugeHookReceiver, SiloHookReceiver, Ownable2Step
 
     /// @notice Initialize a hook receiver
     /// @param _owner Owner of the hook receiver (DAO)
-    /// @param _token Silo share token for which hook receiver should be initialized.
-    function initialize(address _owner, IShareToken _token) external virtual initializer {
+    function initialize(address _owner, ISiloConfig /* siloConfig */) external virtual initializer {
         if (_owner == address(0)) revert OwnerIsZeroAddress();
-        if (_token.hookSetup().hookReceiver != address(this)) revert InvalidShareToken();
 
         _transferOwnership(_owner);
-
-        shareToken = _token;
     }
 
     /// @inheritdoc IGaugeHookReceiver
@@ -49,7 +46,7 @@ contract GaugeHookReceiver is IGaugeHookReceiver, SiloHookReceiver, Ownable2Step
         // TODO
     }
 
-    function afterAction(address _silo, uint256 _action, bytes calldata _inputAndOutput) external {
+    function afterAction(address /* _silo */, uint256 _action, bytes calldata _inputAndOutput) external {
         if (_action.matchAction(Hook.SHARE_TOKEN_TRANSFER)) return;
 
         (

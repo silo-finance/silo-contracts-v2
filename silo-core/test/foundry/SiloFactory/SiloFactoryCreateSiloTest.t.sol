@@ -49,7 +49,7 @@ contract SiloFactoryCreateSiloTest is SiloLittleHelper, IntegrationTest {
     forge test -vv --ffi --mt test_createSilo
     */
     function test_createSilo() public {
-        (, ISiloConfig.InitData memory initData) = siloData.getConfigData(SILO_TO_DEPLOY);
+        (, ISiloConfig.InitData memory initData,) = siloData.getConfigData(SILO_TO_DEPLOY);
 
         assertEq(siloFactory.getNextSiloId(), 2);
         assertTrue(siloFactory.isSilo(address(silo0)));
@@ -110,7 +110,7 @@ contract SiloFactoryCreateSiloTest is SiloLittleHelper, IntegrationTest {
             InterestRateModelV2(configData0.interestRateModel).getSetup(configData0.silo);
         IInterestRateModelV2.Config memory irmConfigUsed0 = modelConfigAddr0.getConfig();
 
-        (SiloConfigData.ConfigData memory siloConfigData,) = siloData.getConfigData(SILO_TO_DEPLOY);
+        (SiloConfigData.ConfigData memory siloConfigData,,) = siloData.getConfigData(SILO_TO_DEPLOY);
         IInterestRateModelV2.Config memory irmConfigExpected0 =
             modelData.getConfigData(siloConfigData.interestRateModelConfig0);
 

@@ -25,25 +25,53 @@ import {console} from "forge-std/console.sol";
 struct SiloConfigOverride {
     address token0;
     address token1;
-    address hookReceiver;
+    string hookReceiver;
+    string hookReceiverImplementation;
     address solvencyOracle0;
     address maxLtvOracle0;
     string configName;
 }
 
 contract SiloDeploy_Local is SiloDeploy {
+    bytes32 public constant NO_HOOK_RECEIVER_KEY = keccak256(bytes("NO_HOOK_RECEIVER"));
+
     SiloConfigOverride internal siloConfigOverride;
+
+    error SiliFixtureHookReceiverImplNotFound(string hookReceiver);
 
     constructor(SiloConfigOverride memory _override) {
         siloConfigOverride = _override;
     }
 
-    function beforeCreateSilo(ISiloConfig.InitData memory _config) internal view override {
+    function beforeCreateSilo(
+        ISiloConfig.InitData memory _config,
+        address _hookImplementation
+    ) internal override returns (address) {
         _config.token0 = siloConfigOverride.token0;
         _config.token1 = siloConfigOverride.token1;
-        _config.hookReceiver = siloConfigOverride.hookReceiver;
         _config.solvencyOracle0 = siloConfigOverride.solvencyOracle0;
         _config.maxLtvOracle0 = siloConfigOverride.maxLtvOracle0;
+
+        if(bytes(siloConfigOverride.hookReceiver).length != 0) {
+            _config.hookReceiver = _resolveHookReceiverOverride(siloConfigOverride.hookReceiver);
+        }
+
+        if(bytes(siloConfigOverride.hookReceiverImplementation).length != 0) {
+            string memory implementation = siloConfigOverride.hookReceiverImplementation;
+            _hookImplementation = _resolveHookReceiverOverride(implementation);
+        }
+
+        return _hookImplementation;
+    }
+
+    function _resolveHookReceiverOverride(string memory _requiredHookReceiver) internal returns (address hookReceiver) {
+        if (keccak256(bytes(_requiredHookReceiver)) == NO_HOOK_RECEIVER_KEY) {
+            hookReceiver = address(0);
+        } else {
+            // Expecting to use it only for overrides in tests
+            hookReceiver = AddrLib.getAddress(_requiredHookReceiver);
+            if (hookReceiver == address(0)) revert SiliFixtureHookReceiverImplNotFound(_requiredHookReceiver);
+        }
     }
 }
 

@@ -3,11 +3,13 @@ pragma solidity ^0.8.0;
 
 import {Test} from "forge-std/Test.sol";
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
+import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 
 import {HookReceiverMock} from "silo-core/test/foundry/_mocks/HookReceiverMock.sol";
 import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
 
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
+import {ISiloDeployer} from "silo-core/contracts/interfaces/ISiloDeployer.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {SiloFixture, SiloConfigOverride} from "../_common/fixtures/SiloFixture.sol";
@@ -18,7 +20,10 @@ import {ContractThatAcceptsETH} from "silo-core/test/foundry/_mocks/ContractThat
 contract SiloHooksTest is SiloLittleHelper, Test {
     uint24 constant HOOKS_BEFORE = 1;
     uint24 constant HOOKS_AFTER = 2;
- 
+
+    string constant HOOK_NAME = "SomeHookReceiver.sol";
+
+    SiloFixture internal _siloFixture;
     HookReceiverMock internal _hookReceiverMock;
     ISiloConfig internal _siloConfig;
 
@@ -26,7 +31,7 @@ contract SiloHooksTest is SiloLittleHelper, Test {
     address internal _hookReceiverAddr;
 
     function setUp() public {
-        SiloFixture siloFixture = new SiloFixture();
+        _siloFixture = new SiloFixture();
         SiloConfigOverride memory configOverride;
 
         _hookReceiverMock = new HookReceiverMock(address(0));
@@ -34,12 +39,14 @@ contract SiloHooksTest is SiloLittleHelper, Test {
 
         _hookReceiverAddr = _hookReceiverMock.ADDRESS();
 
+        AddrLib.setAddress(HOOK_NAME, _hookReceiverAddr);
+
         configOverride.token0 = makeAddr("token0");
         configOverride.token1 = makeAddr("token1");
-        configOverride.hookReceiver = _hookReceiverAddr;
+        configOverride.hookReceiver = HOOK_NAME;
         configOverride.configName = SiloConfigsNames.LOCAL_DEPLOYER;
 
-        (_siloConfig, silo0, silo1,,,) = siloFixture.deploy_local(configOverride);
+        (_siloConfig, silo0, silo1,,,) = _siloFixture.deploy_local(configOverride);
     }
 
     function testHooksInitializationAfterDeployment() public {
@@ -136,5 +143,22 @@ contract SiloHooksTest is SiloLittleHelper, Test {
         silo0.callOnBehalfOfSilo{value: 0}(_hookReceiverAddr, amoutToSend, emptyPayload);
 
         assertEq(_hookReceiverAddr.balance, amoutToSend, "Expect to have non zero balance on a hook receiver");
+    }
+
+    /// FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testHooksMissconfiguration
+    function testHooksMissconfiguration() public {
+        string memory implmentation = "SomeHookReceiverImpl.sol";
+
+        AddrLib.setAddress(implmentation, makeAddr(implmentation));
+
+        SiloConfigOverride memory configOverride;
+        configOverride.token0 = makeAddr("token0");
+        configOverride.token1 = makeAddr("token1");
+        configOverride.hookReceiver = HOOK_NAME;
+        configOverride.hookReceiverImplementation = implmentation;
+        configOverride.configName = SiloConfigsNames.LOCAL_DEPLOYER;
+
+        vm.expectRevert(ISiloDeployer.HookReceiverMissconfigured.selector);
+        _siloFixture.deploy_local(configOverride);
     }
 }

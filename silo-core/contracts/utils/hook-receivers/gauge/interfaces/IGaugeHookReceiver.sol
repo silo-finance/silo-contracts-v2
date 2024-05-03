@@ -25,14 +25,6 @@ interface IGaugeHookReceiver is IHookReceiver {
     /// @dev Revert if the gauge hook receiver already has a configured gauge
     error AlreadyConfigured();
 
-    /// @notice Initialize a hook receiver
-    /// @param _owner Owner of the hook receiver (DAO)
-    /// @param _token Silo share token for which hook receiver should be initialized.
-    /// It should be a silo collateral token, protected share token, or debt share token.
-    /// If any additional data is needed for the hook receiver initialization,
-    /// it can be resolved from the silo, which can be resolved from the share token.
-    function initialize(address _owner, IShareToken _token) external;
-
     /// @notice Configuration of the gauge
     /// for which the hook receiver should send notifications about the share token balance updates.
     /// The `_gauge` can be updated by an owner (DAO)

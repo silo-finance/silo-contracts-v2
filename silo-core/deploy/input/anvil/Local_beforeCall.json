@@ -1,7 +1,8 @@
 {
     "deployer": "0xdEDEDEDEdEdEdEDedEDeDedEdEdeDedEdEDedEdE",
     "liquidationModule": "PartialLiquidation",
-    "hookReceiver": "0x",
+    "hookReceiver": "NO_HOOK_RECEIVER",
+    "hookReceiverImplementation": "NO_HOOK_RECEIVER",
     "deployerFee": 1000,
     "token0": "PLACEHOLDER",
     "solvencyOracle0": "PLACEHOLDER",
