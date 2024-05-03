@@ -1,4 +1,6 @@
 ### ethereum/SiloLiquidityGauge.vy
+- Initialization via share token ([6850f85](https://github.com/silo-finance/silo-contracts-v2/pull/460/commits/6850f851e8800a63736f31abc504e37a31714ca6))
+
 - SiloLiquidityGauge implementation initialization ([507b11f](https://github.com/silo-finance/silo-contracts-v2/pull/270/commits/507b11f18a78096b77fbaac4835551832c1c1f3a))
 
 - SiloLiquidityGauge with fees for reward tokens ([f4fef9d](https://github.com/silo-finance/silo-contracts-v2/pull/411/commits/f4fef9ddea5aee930bf5325d2b8eb6f6a838df5b))
@@ -41,6 +43,8 @@
 - Copy of Balancer's implementation of the BaseGaugeFactory.sol ([c2bc3d5](https://github.com/silo-finance/silo-contracts-v2/pull/34/commits/c2bc3d539244abee8e2cd9b13e70b931eb251735))
 
 ### ethereum/LiquidityGaugeFactory.sol
+- Initialization via share token ([2e3ff43](https://github.com/silo-finance/silo-contracts-v2/pull/460/commits/2e3ff435f178afdefbc8f1bac2f1f564502c67fd))
+
 - Renamed function parameters ([4c910b3](https://github.com/silo-finance/silo-contracts-v2/pull/272/commits/4c910b301049376dd8b1e71d0ce12f7f2b1f0773))
 
 - Added fee management functionality ([2527de8](https://github.com/silo-finance/silo-contracts-v2/pull/411/commits/2527de8b48e93e2d821c85347b0a2918a2f16a52))
@@ -54,6 +58,8 @@
 - Copy of Balancer's implementation of the LiquidityGaugeFactory.sol ([c2bc3d5](https://github.com/silo-finance/silo-contracts-v2/pull/34/commits/c2bc3d539244abee8e2cd9b13e70b931eb251735))
 
 ### l2-common/ChildChainGauge.vy
+- Initialization via share token ([e0da4d6](https://github.com/silo-finance/silo-contracts-v2/pull/460/commits/e0da4d60ce035724f71da672db2b33b32ee4a7ba))
+
 - ChildChainGauge implementation initialization ([507b11f](https://github.com/silo-finance/silo-contracts-v2/pull/270/commits/507b11f18a78096b77fbaac4835551832c1c1f3a))
 
 - ChildChainGauge with fees for reward tokens ([cb6bf62](https://github.com/silo-finance/silo-contracts-v2/pull/411/commits/cb6bf6217947deb88e2312cdd7ad7bad8f44ea02))
@@ -79,6 +85,8 @@
 - Copy of Balancer's implementation of the ChildChainGauge.vy ([1c535c4](https://github.com/silo-finance/silo-contracts-v2/pull/56/commits/1c535c462b0fa00b4a42531e741caa357894a7ad))
 
 ### l2-common/ChildChainGaugeFactory.sol
+- Initialization via share token ([3f796be](https://github.com/silo-finance/silo-contracts-v2/pull/460/commits/3f796bedb4ac044d55f69aac26b72a8dbf1ce1c8))
+
 - Renamed function parameters ([4c910b3](https://github.com/silo-finance/silo-contracts-v2/pull/272/commits/4c910b301049376dd8b1e71d0ce12f7f2b1f0773))
 
 - Added fee management functionality ([82375fa](https://github.com/silo-finance/silo-contracts-v2/pull/411/commits/82375fa5e000badeab6f344718f4f4d6aab97035))
