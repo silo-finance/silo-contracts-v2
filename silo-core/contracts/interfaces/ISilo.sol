@@ -169,6 +169,7 @@ interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
     error ZeroAssets();
     error ZeroShares();
     error OnlyLiquidationModule();
+    error WrongDebtSilo();
     error Insolvency();
     error ThereIsDebtInOtherSilo();
     error NoDebt();
