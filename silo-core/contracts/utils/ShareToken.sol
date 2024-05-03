@@ -112,6 +112,10 @@ abstract contract ShareToken is Initializable, ERC20, IShareToken {
         return _hookSetup;
     }
 
+    function hookReceiver() external view virtual returns (address) {
+        return _hookSetup.hookReceiver;
+    }
+
     /// @inheritdoc ERC20
     function transferFrom(address _from, address _to, uint256 _amount)
         public
