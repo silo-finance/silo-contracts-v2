@@ -2,7 +2,7 @@
 pragma solidity 0.8.21;
 
 import {Clones} from "openzeppelin5/proxy/Clones.sol";
-import {Initializable} from "openzeppelin5/proxy/utils/Initializable.sol";
+import {Initializable} from "openzeppelin5-upgradeable/proxy/utils/Initializable.sol";
 import {Ownable2Step, Ownable} from "openzeppelin5/access/Ownable2Step.sol";
 import {ERC721} from "openzeppelin5/token/ERC721/ERC721.sol";
 
