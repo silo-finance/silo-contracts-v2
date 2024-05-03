@@ -47,10 +47,22 @@ contract SiloDeploy_Local is SiloDeploy {
         ISiloConfig.InitData memory _config,
         address _hookImplementation
     ) internal override returns (address) {
-        _config.token0 = siloConfigOverride.token0;
-        _config.token1 = siloConfigOverride.token1;
-        _config.solvencyOracle0 = siloConfigOverride.solvencyOracle0;
-        _config.maxLtvOracle0 = siloConfigOverride.maxLtvOracle0;
+        // Override the default values if overrides are provided
+        if (siloConfigOverride.token0 != address(0)) {
+            _config.token0 = siloConfigOverride.token0;
+        }
+
+        if (siloConfigOverride.token1 != address(0)) {
+            _config.token1 = siloConfigOverride.token1;
+        }
+
+        if (siloConfigOverride.solvencyOracle0 != address(0)) {
+            _config.solvencyOracle0 = siloConfigOverride.solvencyOracle0;
+        }
+
+        if (siloConfigOverride.maxLtvOracle0 != address(0)) {
+            _config.maxLtvOracle0 = siloConfigOverride.maxLtvOracle0;
+        }
 
         if(bytes(siloConfigOverride.hookReceiver).length != 0) {
             _config.hookReceiver = _resolveHookReceiverOverride(siloConfigOverride.hookReceiver);
@@ -78,6 +90,9 @@ contract SiloDeploy_Local is SiloDeploy {
 contract SiloFixture is StdCheats, CommonBase {
     uint256 internal constant _FORKING_BLOCK_NUMBER = 17336000;
 
+    address public timelock = makeAddr("Timelock");
+    address public feeDistributor = makeAddr("FeeDistributor");
+
     function deploy_ETH_USDC()
         external
         returns (
@@ -104,8 +119,8 @@ contract SiloFixture is StdCheats, CommonBase {
         )
     {
         // Mock addresses that we need for the `SiloFactoryDeploy` script
-        AddrLib.setAddress(VeSiloContracts.TIMELOCK_CONTROLLER, makeAddr("Timelock"));
-        AddrLib.setAddress(VeSiloContracts.FEE_DISTRIBUTOR, makeAddr("FeeDistributor"));
+        AddrLib.setAddress(VeSiloContracts.TIMELOCK_CONTROLLER, timelock);
+        AddrLib.setAddress(VeSiloContracts.FEE_DISTRIBUTOR, feeDistributor);
         console2.log("[SiloFixture] _deploy: setAddress done.");
 
         return _deploy(

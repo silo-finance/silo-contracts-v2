@@ -85,4 +85,6 @@ interface IShareToken is IERC20Metadata {
     function silo() external view returns (ISilo silo);
 
     function hookSetup() external view returns (HookSetup memory);
+
+    function hookReceiver() external view returns (address);
 }

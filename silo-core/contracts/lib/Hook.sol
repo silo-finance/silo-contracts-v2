@@ -25,6 +25,10 @@ library Hook {
     // note: currently we can support hook value up to 2 ** 23,
     // because for optimisation purposes, we storing hooks as uint24
 
+    // For decoding packed data
+    uint256 private constant PACKED_ADDRESS_LENGTH = 20;
+    uint256 private constant PACKED_FULL_LENGTH = 32;
+
     function matchAction(uint256 _action, uint256 _expectedHook) internal pure returns (bool) {
         return _action & _expectedHook == _expectedHook;
     }
@@ -41,5 +45,41 @@ library Hook {
     /// `remove(_action, PROTECTED_TOKEN)`
     function removeAction(uint256 _action, uint256 _actionToRemove) internal pure returns (uint256) {
         return _action & (~_actionToRemove);
+    }
+
+    /// @dev Decodes packed data from the share token after the transfer hook
+    /// @param packed The packed data (via abi.encode)
+    /// @return sender The sender of the transfer (address(0) on mint)
+    /// @return recipient The recipient of the transfer (address(0) on burn)
+    /// @return amount The amount of tokens transferred/minted/burned
+    /// @return senderBalance The balance of the sender after the transfer (empty on mint)
+    /// @return recipientBalance The balance of the recipient after the transfer (empty on burn)
+    /// @return totalSupply The total supply of the share token
+    function afterTokenTransferDecode(bytes memory packed)
+        internal
+        pure
+        returns (
+            address sender,
+            address recipient,
+            uint256 amount,
+            uint256 senderBalance,
+            uint256 recipientBalance,
+            uint256 totalSupply
+        )
+    {
+        assembly {
+            let pointer := PACKED_ADDRESS_LENGTH
+            sender := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_ADDRESS_LENGTH)
+            recipient := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_FULL_LENGTH)
+            amount := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_FULL_LENGTH)
+            senderBalance := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_FULL_LENGTH)
+            recipientBalance := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_FULL_LENGTH)
+            totalSupply := mload(add(packed, pointer))
+        }
     }
 }

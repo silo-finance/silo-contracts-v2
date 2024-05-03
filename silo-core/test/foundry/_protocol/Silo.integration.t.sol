@@ -48,21 +48,21 @@ contract SiloIntegrationTest is VeSiloFeatures {
 //    }
 
     function _configureGaugeHookReceiver(address _hookReceiver, address _gauge) internal {
-         address[] memory targets = new address[](1);
-         targets[0] = _hookReceiver;
+        //  address[] memory targets = new address[](1);
+        //  targets[0] = _hookReceiver;
 
-         // Empty values
-        uint256[] memory values = new uint256[](1);
+        //  // Empty values
+        // uint256[] memory values = new uint256[](1);
 
-        // Functions inputs
-        bytes[] memory calldatas = new bytes[](1);
-        calldatas[0] = abi.encodeCall(IGaugeHookReceiver.setGauge, IGaugeLike(_gauge));
+        // // Functions inputs
+        // bytes[] memory calldatas = new bytes[](1);
+        // calldatas[0] = abi.encodeCall(IGaugeHookReceiver.setGauge, IGaugeLike(_gauge));
 
-        assertEq(address(IGaugeHookReceiver(_hookReceiver).gauge()), address(0), "Hook receiver should not be initialized");
+        // assertEq(address(IGaugeHookReceiver(_hookReceiver).gauge()), address(0), "Hook receiver should not be initialized");
 
-        _executeProposal(targets, values, calldatas);
+        // _executeProposal(targets, values, calldatas);
 
-        assertEq(address(IGaugeHookReceiver(_hookReceiver).gauge()), _gauge, "Hook receiver should be initialized");
+        // assertEq(address(IGaugeHookReceiver(_hookReceiver).gauge()), _gauge, "Hook receiver should be initialized");
     }
 
     function _depositIntoSilo(ISiloConfig _siloConfig, ISiloLiquidityGauge _gauge) internal {

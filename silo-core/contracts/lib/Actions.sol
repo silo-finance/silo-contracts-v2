@@ -630,7 +630,7 @@ library Actions {
 
         if (cfg.hookReceiver == address(0)) return (hooksBefore, hooksAfter);
 
-        (hooksBefore, hooksAfter) = IHookReceiver(cfg.hookReceiver).hookReceiverConfig();
+        (hooksBefore, hooksAfter) = IHookReceiver(cfg.hookReceiver).hookReceiverConfig(address(this));
 
         _sharedStorage.hooksBefore = hooksBefore;
         _sharedStorage.hooksAfter = hooksAfter;

@@ -9,6 +9,8 @@ interface IHookReceiver {
         uint24 hooksAfter;
     }
 
+    event HookConfigured(address silo, uint24 hooksBefore, uint24 hooksAfter);
+
     error RevertRequestFromHook();
 
     /// @notice Initialize a hook receiver
@@ -22,5 +24,5 @@ interface IHookReceiver {
     function afterAction(address _silo, uint256 _action, bytes calldata _inputAndOutput) external;
 
     /// @notice return hooksBefore and hooksAfter configuration
-    function hookReceiverConfig() external view returns (uint24 hooksBefore, uint24 hooksAfter);
+    function hookReceiverConfig(address _silo) external view returns (uint24 hooksBefore, uint24 hooksAfter);
 }
