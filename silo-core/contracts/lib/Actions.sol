@@ -76,7 +76,8 @@ library Actions {
     function withdraw(
         ISilo.SharedStorage storage _shareStorage,
         ISilo.WithdrawArgs calldata _args,
-        ISilo.Assets storage _totalAssets
+        ISilo.Assets storage _totalAssets,
+        ISilo.Assets storage _totalDebtAssets
     )
         external
         returns (uint256 assets, uint256 shares)
@@ -98,6 +99,8 @@ library Actions {
 
         // this `if` helped with Stack too deep
         if (_args.assetType == ISilo.CollateralType.Collateral) {
+            uint256 rawLiquidity = SiloMathLib.liquidity(_totalAssets.assets, _totalDebtAssets.assets);
+
             (assets, shares) = SiloERC4626Lib.withdraw(
                 collateralConfig.token,
                 collateralConfig.collateralShareToken,
@@ -107,7 +110,7 @@ library Actions {
                 _args.owner,
                 _args.spender,
                 _args.assetType,
-                ISilo(collateralConfig.silo).getRawLiquidity(),
+                rawLiquidity,
                 _totalAssets
             );
         } else {
