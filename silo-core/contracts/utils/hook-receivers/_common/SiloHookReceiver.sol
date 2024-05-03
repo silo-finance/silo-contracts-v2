@@ -14,7 +14,7 @@ abstract contract SiloHookReceiver is IHookReceiver {
         hooksAfter = hookConfig.hooksAfter;
     }
 
-    function _setHookConfig(address _silo, uint256 _hooksBefore, uint256 _hooksAfter) internal {
+    function _setHookConfig(address _silo, uint256 _hooksBefore, uint256 _hooksAfter) internal virtual {
         _hookConfig[_silo] = HookConfig(uint24(_hooksBefore), uint24(_hooksAfter));
         emit HookConfigured(_silo, uint24(_hooksBefore), uint24(_hooksAfter));
 

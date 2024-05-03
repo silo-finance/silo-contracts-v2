@@ -17,7 +17,6 @@ import {SiloHookReceiver} from "../_common/SiloHookReceiver.sol";
 /// It notifies the gauge (if configured) about any balance update in the Silo share token.
 contract GaugeHookReceiver is IGaugeHookReceiver, SiloHookReceiver, Ownable2Step, Initializable {
     using Hook for uint256;
-    using Hook for uint24;
     using HookActionDataDecoder for bytes;
 
     uint24 internal constant HOOKS_BEFORE_NOT_CONFIGURED = 0;
