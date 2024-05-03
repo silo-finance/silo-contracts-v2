@@ -8,7 +8,6 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {Hook} from "silo-core/contracts/lib/Hook.sol";
-import {HookActionDataDecoder} from "../lib/HookActionDataDecoder.sol";
 import {IGaugeLike as IGauge} from "./interfaces/IGaugeLike.sol";
 import {IGaugeHookReceiver, IHookReceiver} from "./interfaces/IGaugeHookReceiver.sol";
 import {SiloHookReceiver} from "../_common/SiloHookReceiver.sol";
@@ -17,7 +16,7 @@ import {SiloHookReceiver} from "../_common/SiloHookReceiver.sol";
 /// It notifies the gauge (if configured) about any balance update in the Silo share token.
 contract GaugeHookReceiver is IGaugeHookReceiver, SiloHookReceiver, Ownable2Step, Initializable {
     using Hook for uint256;
-    using HookActionDataDecoder for bytes;
+    using Hook for bytes;
 
     uint24 internal constant HOOKS_BEFORE_NOT_CONFIGURED = 0;
 
