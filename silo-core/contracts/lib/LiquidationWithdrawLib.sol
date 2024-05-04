@@ -12,7 +12,6 @@ import {Hook} from "./Hook.sol";
 
 library LiquidationWithdrawLib {
     /// @dev that method allow to finish liquidation process by giving up collateral to liquidator
-    /// @param _siloWithDebt we need address of silo where repay was done, to execute cross check
     function withdrawCollateralsToLiquidator(
         address _siloWithDebt,
         ISiloConfig _config,
@@ -24,17 +23,11 @@ library LiquidationWithdrawLib {
         uint256 _liquidity,
         mapping(uint256 assetType => ISilo.Assets) storage _total
     ) internal {
-        (
-            ISiloConfig.ConfigData memory collateralConfig,
-            ISiloConfig.ConfigData memory debtConfig,
-            ISiloConfig.DebtInfo memory debtInfo
-        ) = _config.getConfigs(address(this), _borrower, Hook.WITHDRAW);
-
+        ISiloConfig.ConfigData memory collateralConfig = _config.getConfig(address(this));
         if (msg.sender != collateralConfig.liquidationModule) revert ISilo.OnlyLiquidationModule();
 
-        if (_siloWithDebt != debtConfig.silo) {
+        if (_siloWithDebt != collateralConfig.silo && _siloWithDebt != collateralConfig.otherSilo) {
             // this is cross check for user input on `liquidationCall`
-            // we have to make sure repay was done on correct silo
             revert ISilo.WrongDebtSilo();
         }
 
