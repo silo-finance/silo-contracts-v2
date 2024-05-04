@@ -13,7 +13,6 @@ import {Hook} from "./Hook.sol";
 library LiquidationWithdrawLib {
     /// @dev that method allow to finish liquidation process by giving up collateral to liquidator
     function withdrawCollateralsToLiquidator(
-        address _siloWithDebt,
         ISiloConfig _config,
         uint256 _withdrawAssetsFromCollateral,
         uint256 _withdrawAssetsFromProtected,
@@ -25,11 +24,6 @@ library LiquidationWithdrawLib {
     ) internal {
         ISiloConfig.ConfigData memory collateralConfig = _config.getConfig(address(this));
         if (msg.sender != collateralConfig.liquidationModule) revert ISilo.OnlyLiquidationModule();
-
-        if (_siloWithDebt != collateralConfig.silo && _siloWithDebt != collateralConfig.otherSilo) {
-            // this is cross check for user input on `liquidationCall`
-            revert ISilo.WrongDebtSilo();
-        }
 
         if (_receiveSToken) {
             withdrawSCollateralToLiquidator(
