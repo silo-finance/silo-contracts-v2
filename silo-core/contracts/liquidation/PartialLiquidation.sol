@@ -136,6 +136,9 @@ contract PartialLiquidation is IPartialLiquidation {
             Hook.LIQUIDATION
         );
 
+        (address silo0, address silo1) = ISilo(collateralConfig.silo).config().getSilos();
+        if (_siloWithDebt != silo0 && _siloWithDebt != silo1) revert DifferentSilos();
+
         if (!debtInfo.debtPresent) revert UserIsSolvent();
         if (!debtInfo.debtInThisSilo) revert ISilo.ThereIsDebtInOtherSilo();
 
