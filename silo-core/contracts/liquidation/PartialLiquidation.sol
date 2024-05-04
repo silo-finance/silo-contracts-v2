@@ -136,15 +136,14 @@ contract PartialLiquidation is IPartialLiquidation {
             Hook.LIQUIDATION
         );
 
-        _verifyLiquidationData(
-            collateralConfig.silo,
-            _collateralAsset,
-            collateralConfig.token,
-            _siloWithDebt,
-            _debtAsset,
-            debtConfig.token,
-            debtInfo
-        );
+        (address silo0, address silo1) = ISilo(collateralConfig.silo).config().getSilos();
+        if (_siloWithDebt != silo0 && _siloWithDebt != silo1) revert WrongSilo();
+
+        if (!debtInfo.debtPresent) revert UserIsSolvent();
+        if (!debtInfo.debtInThisSilo) revert ISilo.ThereIsDebtInOtherSilo();
+
+        if (_collateralAsset != collateralConfig.token) revert UnexpectedCollateralToken();
+        if (_debtAsset != debtConfig.token) revert UnexpectedDebtToken();
 
         ISilo(debtConfig.silo).accrueInterest();
 
@@ -159,25 +158,6 @@ contract PartialLiquidation is IPartialLiquidation {
                 ISiloOracle(debtConfig.solvencyOracle).beforeQuote(debtConfig.token);
             }
         }
-    }
-
-    function _verifyLiquidationData(
-        address _collateralSilo,
-        address _collateralAsset,
-        address _collateralConfigToken,
-        address _siloWithDebt,
-        address _debtAsset,
-        address _debtConfigToken,
-        ISiloConfig.DebtInfo memory _debtInfo
-    ) internal view virtual {
-        (address silo0, address silo1) = ISilo(_collateralSilo).config().getSilos();
-        if (_siloWithDebt != silo0 && _siloWithDebt != silo1) revert WrongSilo();
-
-        if (!_debtInfo.debtPresent) revert UserIsSolvent();
-        if (!_debtInfo.debtInThisSilo) revert ISilo.ThereIsDebtInOtherSilo();
-
-        if (_collateralAsset != _collateralConfigToken) revert UnexpectedCollateralToken();
-        if (_debtAsset != _debtConfigToken) revert UnexpectedDebtToken();
     }
 
     function _beforeLiquidationHook(
