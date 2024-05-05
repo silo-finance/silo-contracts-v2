@@ -231,66 +231,7 @@ contract DynamicKinkModelV1 is IDynamicKinkModelV1 {
         if (didOverflow || didCap) {
             k = _setup.config.kmin;
         }
-
-
-        /*
-        // rcomp = exp (x) - DP;
-        if (_l.x > X_MAX) {
-            rcomp = R_COMPOUND_MAX_PER_SECOND * _l.T;
-            didOverflow = true;
-        } else {
-            rcomp = _l.x.exp() - _DP;
-        }
-
-        if (rcomp > R_COMPOUND_MAX_PER_SECOND * _l.T) {
-            // capped
-            didCap = true;
-            rcomp = R_COMPOUND_MAX_PER_SECOND * _l.T;
-            k = _setup.config.kmin;
-        }
-
-        if (type(int256).max / rcomp < _totalBorrowAmount) {
-            // true overflow
-            didOverflow = true;
-            rcomp = R_COMPOUND_MAX_PER_SECOND * _l.T;
-            k = _setup.config.kmin;
-            return (rcomp, k, didOverflow, didCap);
-        }
-
-        //todo amt max
-        if (type(int256).max - _totalBorrowAmount * rcomp / _DP < _totalBorrowAmount) {
-            didOverflow = true;
-            // interest / tba
-            rcomp = 0;
-            k = _setup.config.kmin;
-            return (rcomp, k, didOverflow, didCap);
-        }*/
     }
-    // ***
-    // function currentInterestRate(uint256 _t0, uint256 _t1, uint256 _k, uint256 _u)
-    //     public
-    //     pure
-    //     returns (uint256 rcur)
-    // {
-    //     // uint T = t1 - t0;
-    //     if (_t1 <= _t0) revert InvalidTimestamp();
-    // }
-
-    // /// @dev get compound interest rate
-    // /// @param _silo address of Silo for which interest rate should be calculated
-    // /// @param _blockTimestamp current block timestamp
-    // /// @return rcomp compounded interest rate from last update until now (1e18 == 100%)
-    // function getCompoundInterestRate(address _silo, uint256 _blockTimestamp) external view returns (uint256 rcomp) {
-
-    // }
-
-    // /// @dev get current annual interest rate
-    // /// @param _silo address of Silo for which interest rate should be calculated
-    // /// @param _blockTimestamp current block timestamp
-    // /// @return rcur current annual interest rate (1e18 == 100%)
-    // function getCurrentInterestRate(address _silo, uint256 _blockTimestamp) external view returns (uint256 rcur) {
-
-    // }
 }
 
 // solhint-enable var-name-mixedcase
