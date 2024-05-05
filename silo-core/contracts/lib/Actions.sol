@@ -86,8 +86,13 @@ library Actions {
         _hookCallBefore(
             _shareStorage,
             Hook.WITHDRAW |
-                (_args.collateralType == ISilo.CollateralType.Collateral ? Hook.COLLATERAL_TOKEN : Hook.PROTECTED_TOKEN),
-            abi.encodePacked(_args.assets, _args.shares, _args.receiver, _args.owner, _args.spender, _args.collateralType)
+                (_args.collateralType == ISilo.CollateralType.Collateral
+                    ? Hook.COLLATERAL_TOKEN
+                    : Hook.PROTECTED_TOKEN
+                ),
+            abi.encodePacked(
+                _args.assets, _args.shares, _args.receiver, _args.owner, _args.spender, _args.collateralType
+            )
         );
 
         (
@@ -167,7 +172,10 @@ library Actions {
                 _shareStorage,
                 collateralConfig.hookReceiver,
                 Hook.WITHDRAW |
-                    (_args.collateralType == ISilo.CollateralType.Collateral ? Hook.COLLATERAL_TOKEN : Hook.PROTECTED_TOKEN),
+                    (_args.collateralType == ISilo.CollateralType.Collateral
+                        ? Hook.COLLATERAL_TOKEN
+                        : Hook.PROTECTED_TOKEN
+                    ),
                 abi.encodePacked(
                     _args.assets,
                     _args.shares,
