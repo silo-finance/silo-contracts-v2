@@ -83,31 +83,34 @@ contract DynamicKinkModelV1 is IDynamicKinkModelV1 {
             return (0, _setup.config.kmin, 0, didCap, didOverflow);
         }
 
-        int256 T = _t1 - _t0;
+        //todo link to paper proving that the overflow is impossible in this block
+        unchecked {
+            int256 T = _t1 - _t0;
 
-        if (_u < _setup.config.u1) {
-            k = _setup.k - (_setup.config.c1 + _setup.config.cminus * (_setup.config.u1 - _u) / _DP) * T;
-            k = k > _setup.config.kmin ? k : _setup.config.kmin;
-        } else if (_u > _setup.config.u2) {
-            int256 dkdt = (_setup.config.c2 + _setup.config.cplus * (_u - _setup.config.u2) / _DP);
-            dkdt = dkdt > _setup.config.dmax ? _setup.config.dmax : dkdt;
-            k = _setup.k + dkdt * T;
-            k = k > _setup.config.kmax ? _setup.config.kmax : k;
-        } else {
-            k = _setup.k;
-        }
-
-        if (_u >= _setup.config.ulow) {
-            r = _u - _setup.config.ulow;
-
-            if (_u >= _setup.config.ucrit) {
-                r = r + _setup.config.alpha * (_u - _setup.config.ucrit ) / _DP;
+            if (_u < _setup.config.u1) {
+                k = _setup.k - (_setup.config.c1 + _setup.config.cminus * (_setup.config.u1 - _u) / _DP) * T;
+                k = k > _setup.config.kmin ? k : _setup.config.kmin;
+            } else if (_u > _setup.config.u2) {
+                int256 dkdt = (_setup.config.c2 + _setup.config.cplus * (_u - _setup.config.u2) / _DP);
+                dkdt = dkdt > _setup.config.dmax ? _setup.config.dmax : dkdt;
+                k = _setup.k + dkdt * T;
+                k = k > _setup.config.kmax ? _setup.config.kmax : k;
+            } else {
+                k = _setup.k;
             }
 
-            r = r * k / _DP;
-        }
+            if (_u >= _setup.config.ulow) {
+                r = _u - _setup.config.ulow;
 
-        rcur = (r + _setup.config.rmin) * SECONDS_IN_YEAR;
+                if (_u >= _setup.config.ucrit) {
+                    r = r + _setup.config.alpha * (_u - _setup.config.ucrit ) / _DP;
+                }
+
+                r = r * k / _DP;
+            }
+
+            rcur = (r + _setup.config.rmin) * SECONDS_IN_YEAR;
+        }
     }
 
     /// @dev get compound interest rate
