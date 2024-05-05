@@ -91,7 +91,7 @@ contract DynamicKinkModelV1 is IDynamicKinkModelV1 {
         } else if (_u > _setup.config.u2) {
             int256 dkdt = (_setup.config.c2 + _setup.config.cplus * (_u - _setup.config.u2) / _DP);
             dkdt = dkdt > _setup.config.dmax ? _setup.config.dmax : dkdt;
-            k = (_setup.k + dkdt) * T;
+            k = _setup.k + dkdt * T;
             k = k > _setup.config.kmax ? _setup.config.kmax : k;
         } else {
             k = _setup.k;
@@ -208,7 +208,7 @@ contract DynamicKinkModelV1 is IDynamicKinkModelV1 {
                 rcomp = 0;
                 k = _setup.config.kmin;
 
-                return (rcomp, k, didOverflow, didCap);
+                return (rcomp, k, didCap, didOverflow);
             }
 
             _l.interest = _totalBorrowAmount * rcomp / _DP;
