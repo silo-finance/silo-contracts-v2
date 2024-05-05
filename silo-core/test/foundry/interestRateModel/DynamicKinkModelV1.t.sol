@@ -22,28 +22,39 @@ contract DynamicKinkModelV1Test is RcompTestDynamicKink, RcurTestDynamicKink {
         RcurData[] memory data = _readDataFromJsonRcur();
 
         for (uint i; i < data.length; i++) {
-            // if (i != 41) {
-            //     continue;
-            // }
+            if (i != 95) {
+                continue;
+            }
 
             (IDynamicKinkModelV1.Setup memory setup, DebugRcur memory debug) = _toSetupRcur(data[i]);
             emit log_string("******");
             _printRcur(data[i]);
 
-            (int256 rcur, int256 k , int256 r) = INTEREST_RATE_MODEL.currentInterestRate(
+            (int256 rcur, int256 k , int256 r, bool didCap, bool didOverflow) = INTEREST_RATE_MODEL.currentInterestRate(
                 setup,
                 data[i].input.lastTransactionTime,
                 data[i].input.currentTime,
-                data[i].input.lastUtilization
+                data[i].input.lastUtilization,
+                data[i].input.totalDeposits,
+                data[i].input.totalBorrowAmount
             );
+
+            int256 overflow = didOverflow ? int256(1) : int256(0);
+            int256 cap = didCap ? int256(1) : int256(0);
 
             emit log_named_int("return: rcur", rcur);
             emit log_named_int("return: k", k);
+            emit log_named_int("return: r", r);
+            emit log_named_int("return: didCap", cap);
+            emit log_named_int("return: didOverflow", overflow);
+
             emit log_named_int("expected: rcur", data[i].expected.currentAnnualInterest);
             emit log_named_uint("id", data[i].id);
             relativeCheck(data[i].id, "relative error for rcur in 10^18 bp new/expected", rcur, data[i].expected.currentAnnualInterest);
             relativeCheck(data[i].id, "relative error for k in 10^18 bp new/expected", k, data[i].debug.k);
             relativeCheck(data[i].id, "relative error for r in 10^18 bp new/expected",r, data[i].debug.r);
+            relativeCheck(data[i].id, "relative error for didOverflow in 10^18 bp new/expected", overflow, data[i].expected.didOverflow);
+            relativeCheck(data[i].id, "relative error for didCap in 10^18 bp new/expected", cap, data[i].expected.didCap);
             emit log_string("******\n\n\n\n");
         }
 
@@ -72,14 +83,14 @@ contract DynamicKinkModelV1Test is RcompTestDynamicKink, RcurTestDynamicKink {
         RcompData[] memory data = _readDataFromJsonRcomp();
 
         for (uint i; i < data.length; i++) {
-            // if (i != 155) {
-            //     continue;
-            // }
+            if (i != 84) {
+                continue;
+            }
             (IDynamicKinkModelV1.Setup memory setup, DebugRcomp memory debug) = _toSetupRcomp(data[i]);
             emit log_string("******");
             _printRcomp(data[i]);
 
-            (int256 rcomp, int256 k, bool didOverflow, bool didCap) = INTEREST_RATE_MODEL.compoundInterestRate(
+            (int256 rcomp, int256 k, bool didCap, bool didOverflow) = INTEREST_RATE_MODEL.compoundInterestRate(
                 setup,
                 data[i].input.lastTransactionTime,
                 data[i].input.currentTime,
@@ -88,10 +99,14 @@ contract DynamicKinkModelV1Test is RcompTestDynamicKink, RcurTestDynamicKink {
                 data[i].input.totalBorrowAmount
             );
 
+            int256 overflow = didOverflow ? int256(1) : int256(0);
+            int256 cap = didCap ? int256(1) : int256(0);
+
             emit log_named_int("return: rcomp", rcomp);
             emit log_named_int("return: k", k);
             emit log_string(string.concat("return: didOverflow: ", (didOverflow ? "true" : "false")));
             emit log_string(string.concat("return: didCap: ", (didCap ? "true" : "false")));
+
             emit log_named_int("expected: rcomp", data[i].expected.compoundInterest);
             emit log_named_int("expected: k", data[i].expected.newSlope);
             emit log_string(string.concat("expected: didOverflow ", (data[i].expected.didOverflow == 1 ? "true" : "false")));
@@ -100,23 +115,8 @@ contract DynamicKinkModelV1Test is RcompTestDynamicKink, RcurTestDynamicKink {
 
             relativeCheck(data[i].id, "relative error for rcomp in 10^18 bp new/expected", rcomp, data[i].expected.compoundInterest);
             relativeCheck(data[i].id, "relative error for k in 10^18 bp new/expected", k, data[i].expected.newSlope);
-            // relativeCheck(data[i].id, "relative error for x in 10^18 bp new/expected", x, data[i].debug.x);
-
-            if (data[i].expected.didOverflow == 1 || didOverflow) {
-                emit log_string(
-                    didOverflow == (data[i].expected.didOverflow == 1) ?
-                    "relative error for didOverflow 0%" :
-                    "relative error for didOverflow 100% mismatch"
-                );
-            }
-
-            if (data[i].expected.didCap == 1 || didCap) {
-                emit log_string(
-                    didCap == (data[i].expected.didCap == 1) ?
-                    "relative error for didCap 0%" :
-                    "relative error for didCap 100% mismatch"
-                );
-            }
+            relativeCheck(data[i].id, "relative error for didOverflow in 10^18 bp new/expected", overflow, data[i].expected.didOverflow);
+            relativeCheck(data[i].id, "relative error for didCap in 10^18 bp new/expected", cap, data[i].expected.didCap);
             
             emit log_string("******\n\n\n\n");
         }
