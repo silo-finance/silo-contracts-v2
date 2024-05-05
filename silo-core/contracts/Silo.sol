@@ -648,7 +648,7 @@ contract Silo is SiloERC4626 {
     }
 
     // TODO can we optimise this? maybe add as args to methods
-    function getRawLiquidity() public view virtual returns (uint256 liquidity) {
+    function getRawLiquidity() external view virtual returns (uint256 liquidity) {
         liquidity = SiloMathLib.liquidity(total[AssetTypes.COLLATERAL].assets, total[AssetTypes.DEBT].assets);
     }
 
@@ -667,7 +667,7 @@ contract Silo is SiloERC4626 {
             _borrower,
             _liquidator,
             _receiveSToken,
-            getRawLiquidity(),
+            SiloMathLib.liquidity(total[AssetTypes.COLLATERAL].assets, total[AssetTypes.DEBT].assets),
             total
         );
     }
@@ -716,9 +716,10 @@ contract Silo is SiloERC4626 {
                 receiver: _receiver,
                 owner: _owner,
                 spender: _spender,
-                assetType: _collateralType
+                collateralType: _collateralType
             }),
-            total[uint256(_collateralType)]
+            total[uint256(_collateralType)],
+            total[AssetTypes.DEBT]
         );
 
         if (_collateralType == CollateralType.Collateral) {

@@ -63,12 +63,14 @@ library LiquidationWithdrawLib {
             SiloERC4626Lib.withdraw(
                 _collateralConfig.token,
                 _collateralConfig.protectedShareToken,
-                _withdrawAssetsFromProtected,
-                0, // shares
-                _liquidator,
-                _borrower,
-                _borrower,
-                ISilo.CollateralType.Protected,
+                ISilo.WithdrawArgs({
+                    assets: _withdrawAssetsFromProtected,
+                    shares: 0,
+                    receiver: _liquidator,
+                    owner: _borrower,
+                    spender: _borrower,
+                    collateralType: ISilo.CollateralType.Protected
+                }),
                 type(uint256).max,
                 _total[AssetTypes.PROTECTED]
             );
@@ -78,12 +80,14 @@ library LiquidationWithdrawLib {
             SiloERC4626Lib.withdraw(
                 _collateralConfig.token,
                 _collateralConfig.collateralShareToken,
-                _withdrawAssetsFromCollateral,
-                0, // shares
-                _liquidator,
-                _borrower,
-                _borrower,
-                ISilo.CollateralType.Collateral,
+                ISilo.WithdrawArgs({
+                    assets: _withdrawAssetsFromCollateral,
+                    shares: 0,
+                    receiver: _liquidator,
+                    owner: _borrower,
+                    spender: _borrower,
+                    collateralType: ISilo.CollateralType.Collateral
+                }),
                 _liquidity,
                 _total[AssetTypes.COLLATERAL]
             );

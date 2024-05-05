@@ -49,13 +49,19 @@ interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
         Collateral
     }
 
+    /// @param _assets Amount of assets the user wishes to withdraw. Use 0 if shares are provided.
+    /// @param _shares Shares the user wishes to burn in exchange for the withdrawal. Use 0 if assets are provided.
+    /// @param _receiver Address receiving the withdrawn assets
+    /// @param _owner Address of the owner of the shares being burned
+    /// @param _spender Address executing the withdrawal; may be different than `_owner` if an allowance was set
+    /// @param _collateralType Type of the asset being withdrawn (Collateral or Protected)
     struct WithdrawArgs {
         uint256 assets;
         uint256 shares;
         address receiver;
         address owner;
         address spender;
-        ISilo.CollateralType assetType;
+        ISilo.CollateralType collateralType;
     }
 
     /// @param assets Number of assets the borrower intends to borrow. Use 0 if shares are provided.
