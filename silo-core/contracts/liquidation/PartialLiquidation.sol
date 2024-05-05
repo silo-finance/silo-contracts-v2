@@ -27,7 +27,7 @@ contract PartialLiquidation is IPartialLiquidation {
 
     /// @inheritdoc IPartialLiquidation
     function liquidationCall( // solhint-disable-line function-max-lines, code-complexity
-        address _siloWithDebt, // TODO bug - we need to verify if _siloWithDebt is real silo
+        address _siloWithDebt,
         address _collateralAsset,
         address _debtAsset,
         address _borrower,
