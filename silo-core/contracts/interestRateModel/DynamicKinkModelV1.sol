@@ -9,7 +9,6 @@ import {IInterestRateModel} from "../interfaces/IInterestRateModel.sol";
 import {IDynamicKinkModelV1} from "../interfaces/IDynamicKinkModelV1.sol";
 
 // solhint-disable var-name-mixedcase
-// solhint-disable func-name-mixedcase
 
 /// @title DynamicKinkModelV1
 /// @custom:security-contact security@silo.finance
@@ -24,7 +23,8 @@ contract DynamicKinkModelV1 is IDynamicKinkModelV1 {
     /// @dev DP is 18 decimal points used for integer calculations
     int256 internal constant _DP = int256(10 ** DECIMALS);
 
-    int256 public constant HUNDRED_YEARS = 100 * 365 * 24 * 60 * 60;
+    int256 public constant SECONDS_IN_YEAR = 365 * 24 * 60 * 60;
+    int256 public constant HUNDRED_YEARS = 100 * SECONDS_IN_YEAR;
 
     int256 public constant X_MAX = 11 * _DP;
 
@@ -57,53 +57,57 @@ contract DynamicKinkModelV1 is IDynamicKinkModelV1 {
         uint256 _interestRateTimestamp
     ) external returns (uint256 rcomp) {}
 
-    function currentInterestRate(Setup memory _setup, int256 _t0, int256 _t1, int256 _u)
+    function currentInterestRate(
+        Setup memory _setup, 
+        int256 _t0, 
+        int256 _t1, 
+        int256 _u,
+        int256 _totalDeposits,
+        int256 _totalBorrowAmount
+    )
         public
         pure
-        returns (int256 rcur, int256 k, int256 r)
+        returns (int256 rcur, int256 k, int256 r, bool didCap, bool didOverflow)
     {
-        // uint T = t1 - t0; // length of time period (in seconds )
-        if (_t1 <= _t0) revert InvalidTimestamp();
-        int256 T = _t1 - _t0;
+        // _t0 < _t1 and config checks are included inside this function, may revert 
+        (,, didCap, didOverflow) = compoundInterestRate(
+            _setup,
+            _t0,
+            _t1,
+            _u,
+            _totalDeposits,
+            _totalBorrowAmount
+        );
 
-        // todo 
-        k = _setup.k;
-
-        // if (u < u1) {
-        if (_u < _setup.config.u1) {
-            // k = max (_k - (c1 + cminus * (u1 - u) / _DP) * T, kmin );
-            k = k - (_setup.config.c1 + _setup.config.cminus * (_setup.config.u1 - _u) / _DP) * T;
-            k = k > _setup.config.kmin ? k : _setup.config.kmin;
-        //else if (u > u2) {
-        } else if (_u > _setup.config.u2) {
-            // k = min (_k + min(c2 + cplus * (u - u2) / _DP , dmax ) * T, kmax );
-            int256 dkdt = (_setup.config.c2 + _setup.config.cplus * (_u - _setup.config.u2) / _DP);
-            dkdt = dkdt > _setup.config.dmax ? _setup.config.dmax : dkdt;
-            k = (k + dkdt) * T;
-            k = k > _setup.config.kmax ? _setup.config.kmax : k;
-        } else {
-            // todo
-            k = k;
+        if (didOverflow) {
+            return (0, _setup.config.kmin, 0, didCap, didOverflow);
         }
 
-        // if (u >= ulow ) {
+        int256 T = _t1 - _t0;
+
+        if (_u < _setup.config.u1) {
+            k = _setup.k - (_setup.config.c1 + _setup.config.cminus * (_setup.config.u1 - _u) / _DP) * T;
+            k = k > _setup.config.kmin ? k : _setup.config.kmin;
+        } else if (_u > _setup.config.u2) {
+            int256 dkdt = (_setup.config.c2 + _setup.config.cplus * (_u - _setup.config.u2) / _DP);
+            dkdt = dkdt > _setup.config.dmax ? _setup.config.dmax : dkdt;
+            k = (_setup.k + dkdt) * T;
+            k = k > _setup.config.kmax ? _setup.config.kmax : k;
+        } else {
+            k = _setup.k;
+        }
+
         if (_u >= _setup.config.ulow) {
-            //r = u - ulow ;
             r = _u - _setup.config.ulow;
 
-            // if (u >= ucrit ) {
             if (_u >= _setup.config.ucrit) {
-                //r = r + alpha * (u - ucrit ) / _DP;
                 r = r + _setup.config.alpha * (_u - _setup.config.ucrit ) / _DP;
             }
 
-            // r = r * k / _DP;
             r = r * k / _DP;
         }
 
-        // rcur = (r + rmin ) * 365 * 24 * 3600;
-        // todo move multiplier
-        rcur = (r + _setup.config.rmin) * 365 * 24 * 3600;
+        rcur = (r + _setup.config.rmin) * SECONDS_IN_YEAR;
     }
 
     /// @dev get compound interest rate
@@ -122,10 +126,17 @@ contract DynamicKinkModelV1 is IDynamicKinkModelV1 {
         int256 assetsAmount;
         int256 interest;
     }
-    function compoundInterestRate(Setup memory _setup, int256 _t0, int256 _t1, int256 _u, int256 _totalDeposits, int256 _totalBorrowAmount)
+    function compoundInterestRate(
+        Setup memory _setup, 
+        int256 _t0,
+        int256 _t1, 
+        int256 _u,
+        int256 _totalDeposits,
+        int256 _totalBorrowAmount
+    )
         public
         pure
-        returns (int256 rcomp, int256 k, bool didOverflow , bool didCap)
+        returns (int256 rcomp, int256 k, bool didCap, bool didOverflow)
     {
         LocalVarsRCOMP memory _l = LocalVarsRCOMP(0, 0, 0, 0, 0, 0, 0);
 
