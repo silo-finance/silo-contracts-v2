@@ -30,11 +30,11 @@ contract DynamicKinkModelV1 is IDynamicKinkModelV1 {
 
     int256 public constant HUNDRED_YEARS = 100 * 365 * 24 * 60 * 60;
 
-    /// @dev maximum value of X. If x > X_MAX => exp(x) > (2**16) * 1e18. X_MAX = ln((2**16) * 1e18 + 1)
-    int256 public constant X_MAX = 88722839111672999628;
+    int256 public constant X_MAX = 11 * _DP;
 
     /// @dev maximum value of current interest rate the model will return. This is 10,000% APR in the 18-decimals format
-    int256 public constant R_CURRENT_MAX = 1e20;
+    int256 public constant R_CURRENT_MAX = 100 * _DP;
+    int256 public constant AMT_MAX = (type(int256).max - 1) / (2 ** 16 * _DP);
 
     /// @dev maximum value of compound interest per second the model will return. This is per-second rate.
     int256 public constant R_COMPOUND_MAX_PER_SECOND = R_CURRENT_MAX / (365 * 24 * 3600);
@@ -122,13 +122,16 @@ contract DynamicKinkModelV1 is IDynamicKinkModelV1 {
         int256 k1;
         int256 f;
         int256 roc;
+        int256 x;
+        int256 assetsAmount;
+        int256 interest;
     }
     function compoundInterestRate(Setup memory _setup, int256 _t0, int256 _t1, int256 _u, int256 _totalDeposits, int256 _totalBorrowAmount)
         public
         pure
-        returns (int256 rcomp, int256 k, int256 x, bool didOverflow , int256 xxx)
+        returns (int256 rcomp, int256 k, bool didOverflow , bool didCap)
     {
-        LocalVarsRCOMP memory _l = LocalVarsRCOMP(0, 0, 0, 0);
+        LocalVarsRCOMP memory _l = LocalVarsRCOMP(0, 0, 0, 0, 0, 0, 0);
         // uint T = t1 - t0;
         if (_t1 <= _t0) revert InvalidTimestamp();
         _l.T = _t1 - _t0;
@@ -158,31 +161,21 @@ contract DynamicKinkModelV1 is IDynamicKinkModelV1 {
         // if (k1 > kmax ) {
         if (_l.k1 > _setup.config.kmax) {
             // x = kmax * T - ( kmax - _k)**2 / (2 * roc );
-            // todo
-            if (_l.roc == 0) {
-                return (0, 0, 0, true, 0);
-            }
-            x = _setup.config.kmax * _l.T - (_setup.config.kmax - _setup.k) ** 2 / (2 * _l.roc);
+            _l.x = _setup.config.kmax * _l.T - (_setup.config.kmax - _setup.k) ** 2 / (2 * _l.roc);
             // k = kmax ;
             k = _setup.config.kmax;
         // } else if (k1 < kmin ) {
         } else if (_l.k1 < _setup.config.kmin) {
             // x = kmin * T - (_k - kmin ) **2 / (2 * roc );
-            // todo
-            if (_l.roc == 0) {
-                return (0, 0, 0, true, 0);
-            }
-            x = _setup.config.kmin * _l.T - ((_setup.k - _setup.config.kmin)**2) / (2 * _l.roc);
+            _l.x = _setup.config.kmin * _l.T - ((_setup.k - _setup.config.kmin)**2) / (2 * _l.roc);
             // k = kmin ;
             k = _setup.config.kmin;
         } else {
             // x = (_k + k1) * T / 2;
-            x = (_setup.k + _l.k1) * _l.T / 2;
+            _l.x = (_setup.k + _l.k1) * _l.T / 2;
             // k = k1;
             k = _l.k1;
         }
-
-        xxx = _l.k1;
 
         // if (u >= ulow ) {
         if (_u >= _setup.config.ulow) {
@@ -197,20 +190,61 @@ contract DynamicKinkModelV1 is IDynamicKinkModelV1 {
 
         // todo negative factor
         // x = rmin * T + f * x / _DP;
-        x = _setup.config.rmin * _l.T + _l.f * x / _DP;
+        _l.x = _setup.config.rmin * _l.T + _l.f * _l.x / _DP;
+
+        if (_l.x > X_MAX) {
+            didOverflow = true;
+            _l.x = X_MAX;
+        }
+
+        rcomp = _l.x.exp() - _DP;
+
+        if (rcomp > R_COMPOUND_MAX_PER_SECOND * _l.T) {
+            didCap = true;
+            rcomp = R_COMPOUND_MAX_PER_SECOND * _l.T;
+        }
+
+        _l.assetsAmount = _totalDeposits > _totalBorrowAmount ? _totalDeposits : _totalBorrowAmount;
+        
+        if (_l.assetsAmount > AMT_MAX) {
+            didOverflow = true;
+            rcomp = 0;
+            k = _setup.config.kmin;
+
+            return (rcomp, k, didOverflow, didCap);
+        }
+
+        // log2(((365 * 24 * 3600) * 100) * ((2^255 - 1) / (2 ^16 * 10^18)) * 100 * 10 ^ 18 /  (365 * 24 * 3600)) < 253
+        _l.interest = _totalBorrowAmount * rcomp / _DP;
+
+        if (_l.assetsAmount + _l.interest > AMT_MAX) {
+            didOverflow = true;
+            _l.interest = AMT_MAX - _l.assetsAmount;
+
+            if (_totalBorrowAmount == 0) {
+                rcomp = 0;
+            } else {
+                rcomp = _l.interest * _DP / _totalBorrowAmount;
+            }
+        }
+
+        if (didOverflow || didCap) {
+            k = _setup.config.kmin;
+        }
 
 
+        /*
         // rcomp = exp (x) - DP;
-        if (x > X_MAX) {
+        if (_l.x > X_MAX) {
             rcomp = R_COMPOUND_MAX_PER_SECOND * _l.T;
             didOverflow = true;
         } else {
-            rcomp = x.exp() - _DP;
+            rcomp = _l.x.exp() - _DP;
         }
 
         if (rcomp > R_COMPOUND_MAX_PER_SECOND * _l.T) {
             // capped
-            didOverflow = true;
+            didCap = true;
             rcomp = R_COMPOUND_MAX_PER_SECOND * _l.T;
             k = _setup.config.kmin;
         }
@@ -220,7 +254,7 @@ contract DynamicKinkModelV1 is IDynamicKinkModelV1 {
             didOverflow = true;
             rcomp = R_COMPOUND_MAX_PER_SECOND * _l.T;
             k = _setup.config.kmin;
-            return (rcomp, k, x, didOverflow, xxx);
+            return (rcomp, k, didOverflow, didCap);
         }
 
         //todo amt max
@@ -229,10 +263,10 @@ contract DynamicKinkModelV1 is IDynamicKinkModelV1 {
             // interest / tba
             rcomp = 0;
             k = _setup.config.kmin;
-            return (rcomp, k, x, didOverflow, xxx);
-        }
+            return (rcomp, k, didOverflow, didCap);
+        }*/
     }
-
+    // ***
     // function currentInterestRate(uint256 _t0, uint256 _t1, uint256 _k, uint256 _u)
     //     public
     //     pure
