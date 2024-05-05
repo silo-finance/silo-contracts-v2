@@ -15,14 +15,10 @@ import {IDynamicKinkModelV1} from "../interfaces/IDynamicKinkModelV1.sol";
 /// @custom:security-contact security@silo.finance
 contract DynamicKinkModelV1 is IDynamicKinkModelV1 {
     using PRBMathSD59x18 for int256;
-    using SafeCast for int256;
-    using SafeCast for uint256;
-    // todo safecast
 
     error InvalidTimestamp();
     error HundredYearsExceeded();
 
-    // todo
     // returns decimal points used by model
     uint256 public constant DECIMALS = 18;
     /// @dev DP is 18 decimal points used for integer calculations
@@ -132,104 +128,96 @@ contract DynamicKinkModelV1 is IDynamicKinkModelV1 {
         returns (int256 rcomp, int256 k, bool didOverflow , bool didCap)
     {
         LocalVarsRCOMP memory _l = LocalVarsRCOMP(0, 0, 0, 0, 0, 0, 0);
-        // uint T = t1 - t0;
-        if (_t1 <= _t0) revert InvalidTimestamp();
-        _l.T = _t1 - _t0;
-        
-        if (_l.T > HUNDRED_YEARS) {
-            revert HundredYearsExceeded();
-        }
 
-        // if (u < u1) {
-        if (_u < _setup.config.u1) {
-            // roc = - c1 - cminus * (u1 - u) / _DP;
-            _l.roc = - _setup.config.c1 - _setup.config.cminus * (_setup.config.u1 - _u) / _DP;
-        // } else if (u > u2) {       
-        } else if (_u > _setup.config.u2) {
-            // roc = min (c2 + cplus * (u - u2) / _DP , dmax );
-            _l.roc = _setup.config.c2 + _setup.config.cplus * (_u - _setup.config.u2) / _DP;
-            _l.roc = _l.roc > _setup.config.dmax ? _setup.config.dmax : _l.roc;
-        } else {
-            // todo remove pointless
-            _l.roc = 0;
-        }
-        
-        _l.k1 = _setup.k + _l.roc * _l.T; // slope of the kink at t1 ignoring lower and upper bounds
+        //todo link to paper proving that the overflow is impossible in this block
+        unchecked {
+            if (_t1 < _t0) revert InvalidTimestamp();
+            
+            _l.T = _t1 - _t0;
+            
+            if (_l.T > HUNDRED_YEARS) revert HundredYearsExceeded();
 
-        // int256 x; // an integral of k
-
-        // if (k1 > kmax ) {
-        if (_l.k1 > _setup.config.kmax) {
-            // x = kmax * T - ( kmax - _k)**2 / (2 * roc );
-            _l.x = _setup.config.kmax * _l.T - (_setup.config.kmax - _setup.k) ** 2 / (2 * _l.roc);
-            // k = kmax ;
-            k = _setup.config.kmax;
-        // } else if (k1 < kmin ) {
-        } else if (_l.k1 < _setup.config.kmin) {
-            // x = kmin * T - (_k - kmin ) **2 / (2 * roc );
-            _l.x = _setup.config.kmin * _l.T - ((_setup.k - _setup.config.kmin)**2) / (2 * _l.roc);
-            // k = kmin ;
-            k = _setup.config.kmin;
-        } else {
-            // x = (_k + k1) * T / 2;
-            _l.x = (_setup.k + _l.k1) * _l.T / 2;
-            // k = k1;
-            k = _l.k1;
-        }
-
-        // if (u >= ulow ) {
-        if (_u >= _setup.config.ulow) {
-            // f = u - ulow ;
-            _l.f = _u - _setup.config.ulow;
-            // if (u >= ucrit ) {
-            if (_u >= _setup.config.ucrit) {
-                // f = f + alpha * (u - ucrit ) / _DP;
-                _l.f = _l.f + _setup.config.alpha * (_u - _setup.config.ucrit) / _DP;
+            // roc calculations
+            if (_u < _setup.config.u1) {
+                _l.roc = - _setup.config.c1 - _setup.config.cminus * (_setup.config.u1 - _u) / _DP;
+            } else if (_u > _setup.config.u2) {
+                _l.roc = _setup.config.c2 + _setup.config.cplus * (_u - _setup.config.u2) / _DP;
+                _l.roc = _l.roc > _setup.config.dmax ? _setup.config.dmax : _l.roc;
             }
-        }
+            
+            // k1 based on roc
+            _l.k1 = _setup.k + _l.roc * _l.T;
 
-        // todo negative factor
-        // x = rmin * T + f * x / _DP;
-        _l.x = _setup.config.rmin * _l.T + _l.f * _l.x / _DP;
-
-        if (_l.x > X_MAX) {
-            didOverflow = true;
-            _l.x = X_MAX;
-        }
-
-        rcomp = _l.x.exp() - _DP;
-
-        if (rcomp > R_COMPOUND_MAX_PER_SECOND * _l.T) {
-            didCap = true;
-            rcomp = R_COMPOUND_MAX_PER_SECOND * _l.T;
-        }
-
-        _l.assetsAmount = _totalDeposits > _totalBorrowAmount ? _totalDeposits : _totalBorrowAmount;
-        
-        if (_l.assetsAmount > AMT_MAX) {
-            didOverflow = true;
-            rcomp = 0;
-            k = _setup.config.kmin;
-
-            return (rcomp, k, didOverflow, didCap);
-        }
-
-        // log2(((365 * 24 * 3600) * 100) * ((2^255 - 1) / (2 ^16 * 10^18)) * 100 * 10 ^ 18 /  (365 * 24 * 3600)) < 253
-        _l.interest = _totalBorrowAmount * rcomp / _DP;
-
-        if (_l.assetsAmount + _l.interest > AMT_MAX) {
-            didOverflow = true;
-            _l.interest = AMT_MAX - _l.assetsAmount;
-
-            if (_totalBorrowAmount == 0) {
-                rcomp = 0;
+            // calculate the resulting slope state
+            if (_l.k1 > _setup.config.kmax) {
+                _l.x = _setup.config.kmax * _l.T - (_setup.config.kmax - _setup.k) ** 2 / (2 * _l.roc);
+                k = _setup.config.kmax;
+            } else if (_l.k1 < _setup.config.kmin) {
+                _l.x = _setup.config.kmin * _l.T - ((_setup.k - _setup.config.kmin) ** 2) / (2 * _l.roc);
+                k = _setup.config.kmin;
             } else {
-                rcomp = _l.interest * _DP / _totalBorrowAmount;
+                _l.x = (_setup.k + _l.k1) * _l.T / 2;
+                k = _l.k1;
             }
-        }
 
-        if (didOverflow || didCap) {
-            k = _setup.config.kmin;
+            if (_u >= _setup.config.ulow) {
+                _l.f = _u - _setup.config.ulow;
+                if (_u >= _setup.config.ucrit) {
+                    _l.f = _l.f + _setup.config.alpha * (_u - _setup.config.ucrit) / _DP;
+                }
+            }
+
+            // apply the limit for x, because the f*x operation can overflow
+            if (_l.x > X_MAX) {
+                didOverflow = true;
+                _l.x = X_MAX;
+            }
+
+            _l.x = _setup.config.rmin * _l.T + _l.f * _l.x / _DP;
+
+            // limit x, so the exp() function will not overflow
+            if (_l.x > X_MAX) {
+                didOverflow = true;
+                _l.x = X_MAX;
+            }
+
+            rcomp = _l.x.exp() - _DP;
+
+            // limit rcomp
+            if (rcomp > R_COMPOUND_MAX_PER_SECOND * _l.T) {
+                didCap = true;
+                rcomp = R_COMPOUND_MAX_PER_SECOND * _l.T;
+            }
+
+            _l.assetsAmount = _totalDeposits > _totalBorrowAmount ? _totalDeposits : _totalBorrowAmount;
+
+            // stop compounding interest for critical assets amounts
+            if (_l.assetsAmount > AMT_MAX) {
+                didOverflow = true;
+                rcomp = 0;
+                k = _setup.config.kmin;
+
+                return (rcomp, k, didOverflow, didCap);
+            }
+
+            _l.interest = _totalBorrowAmount * rcomp / _DP;
+
+            // limit accrued interest if it results in critical assets amount
+            if (_l.assetsAmount + _l.interest > AMT_MAX) {
+                didOverflow = true;
+                _l.interest = AMT_MAX - _l.assetsAmount;
+
+                if (_totalBorrowAmount == 0) {
+                    rcomp = 0;
+                } else {
+                    rcomp = _l.interest * _DP / _totalBorrowAmount;
+                }
+            }
+
+            // reset the k to the min value in overflow and cap cases
+            if (didOverflow || didCap) {
+                k = _setup.config.kmin;
+            }
         }
     }
 }
