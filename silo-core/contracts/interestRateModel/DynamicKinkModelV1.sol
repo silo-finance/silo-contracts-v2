@@ -26,6 +26,12 @@ contract DynamicKinkModelV1 is IDynamicKinkModelV1 {
     int256 public constant SECONDS_IN_YEAR = 365 * 24 * 60 * 60;
     int256 public constant HUNDRED_YEARS = 100 * SECONDS_IN_YEAR;
 
+    // limit for some variables, including kmin and kmax
+    int256 public constant CONFIG_CONSTANTS_FIRST_LIMIT = 10**16 * _DP;
+    // limit for some variables, including dmax
+    int256 public constant CONFIG_CONSTANTS_SECOND_LIMIT = 10**22 * _DP;
+
+
     int256 public constant X_MAX = 11 * _DP;
 
     /// @dev maximum value of current interest rate the model will return. This is 10,000% APR in the 18-decimals format
@@ -69,7 +75,7 @@ contract DynamicKinkModelV1 is IDynamicKinkModelV1 {
         pure
         returns (int256 rcur, int256 k, int256 r, bool didCap, bool didOverflow)
     {
-        // _t0 < _t1 and config checks are included inside this function, may revert 
+        // _t0 < _t1 checks are included inside this function, may revert 
         (,, didCap, didOverflow) = compoundInterestRate(
             _setup,
             _t0,
@@ -128,6 +134,24 @@ contract DynamicKinkModelV1 is IDynamicKinkModelV1 {
         int256 x;
         int256 assetsAmount;
         int256 interest;
+    }
+
+    // true if valid, false invalid
+    // todo link to paper
+    function validateConfig(Config memory _config) public pure returns (bool) {
+        return (_config.ulow >= 0 && _config.ulow < _DP) &&
+            (_config.u1 >= 0 && _config.u1 < _DP) && 
+            (_config.u2 >= _config.u1 && _config.u2 < _DP) &&
+            (_config.ucrit >= _config.ulow && _config.ucrit < _DP) &&
+            (_config.rmin >= 0 && _config.rmin < _DP) &&
+            (_config.kmin >= 0 && _config.kmin < CONFIG_CONSTANTS_FIRST_LIMIT) &&
+            (_config.kmax >= _config.kmin && _config.kmin < CONFIG_CONSTANTS_FIRST_LIMIT) &&
+            (_config.dmax >= 0 && _config.dmax < CONFIG_CONSTANTS_SECOND_LIMIT) &&
+            (_config.alpha >= 0 && _config.alpha < CONFIG_CONSTANTS_FIRST_LIMIT) &&
+            (_config.cminus >= 0 && _config.cminus < CONFIG_CONSTANTS_SECOND_LIMIT) &&
+            (_config.cplus >= 0 && _config.cplus < CONFIG_CONSTANTS_SECOND_LIMIT) &&
+            (_config.c1 >= 0 && _config.c1 < CONFIG_CONSTANTS_SECOND_LIMIT) &&
+            (_config.c2 >= 0 && _config.c2 < CONFIG_CONSTANTS_SECOND_LIMIT);
     }
     function compoundInterestRate(
         Setup memory _setup, 
