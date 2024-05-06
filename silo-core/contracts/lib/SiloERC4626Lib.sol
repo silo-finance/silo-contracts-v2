@@ -179,7 +179,18 @@ library SiloERC4626Lib {
         ISilo.Assets storage _totalCollateral
     ) internal returns (uint256 assets, uint256 shares) {
         return withdraw(
-            address(0), _shareToken, 0, _shares, _owner, _owner, _spender, _collateralType, _liquidity, _totalCollateral
+            address(0),
+            _shareToken,
+            ISilo.WithdrawArgs({
+                assets: 0,
+                shares: _shares,
+                owner: _owner,
+                receiver: _owner,
+                spender: _spender,
+                collateralType: _collateralType
+            }),
+            _liquidity,
+            _totalCollateral
         );
     }
 
@@ -242,12 +253,7 @@ library SiloERC4626Lib {
     /// @param _asset The ERC20 token address to withdraw; 0 means tokens will not be transferred. Useful for
     /// transition of collateral.
     /// @param _shareToken Address of the share token being burned for withdrawal
-    /// @param _assets Amount of assets the user wishes to withdraw. Use 0 if shares are provided.
-    /// @param _shares Shares the user wishes to burn in exchange for the withdrawal. Use 0 if assets are provided.
-    /// @param _receiver Address receiving the withdrawn assets
-    /// @param _owner Address of the owner of the shares being burned
-    /// @param _spender Address executing the withdrawal; may be different than `_owner` if an allowance was set
-    /// @param _collateralType Type of the asset being withdrawn (Collateral or Protected)
+    /// @param _args ISilo.WithdrawArgs
     /// @param _liquidity Available liquidity for the withdrawal
     /// @param _totalCollateral Reference to the total collateral assets in the silo
     /// @return assets The exact amount of assets withdrawn
@@ -255,12 +261,7 @@ library SiloERC4626Lib {
     function withdraw(
         address _asset,
         address _shareToken,
-        uint256 _assets,
-        uint256 _shares,
-        address _receiver,
-        address _owner,
-        address _spender,
-        ISilo.CollateralType _collateralType,
+        ISilo.WithdrawArgs memory _args,
         uint256 _liquidity,
         ISilo.Assets storage _totalCollateral
     ) internal returns (uint256 assets, uint256 shares) {
@@ -271,13 +272,13 @@ library SiloERC4626Lib {
             uint256 totalAssets = _totalCollateral.assets;
 
             (assets, shares) = SiloMathLib.convertToAssetsAndToShares(
-                _assets,
-                _shares,
+                _args.assets,
+                _args.shares,
                 totalAssets,
                 shareTotalSupply,
                 Rounding.WITHDRAW_TO_ASSETS,
                 Rounding.WITHDRAW_TO_SHARES,
-                ISilo.AssetType(uint256(_collateralType))
+                ISilo.AssetType(uint256(_args.collateralType))
             );
 
             if (assets == 0 || shares == 0) revert ISilo.NothingToWithdraw();
@@ -292,11 +293,11 @@ library SiloERC4626Lib {
 
         // `burn` checks if `_spender` is allowed to withdraw `_owner` assets. `burn` calls hook receiver that
         // can potentially reenter but state changes are already completed.
-        IShareToken(_shareToken).burn(_owner, _spender, shares);
+        IShareToken(_shareToken).burn(_args.owner, _args.spender, shares);
 
         if (_asset != address(0)) {
             // fee-on-transfer is ignored
-            IERC20(_asset).safeTransfer(_receiver, assets);
+            IERC20(_asset).safeTransfer(_args.receiver, assets);
         }
     }
 }

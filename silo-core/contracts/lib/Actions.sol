@@ -17,6 +17,7 @@ import {SiloERC4626Lib} from "./SiloERC4626Lib.sol";
 import {SiloSolvencyLib} from "./SiloSolvencyLib.sol";
 import {SiloLendingLib} from "./SiloLendingLib.sol";
 import {SiloStdLib} from "./SiloStdLib.sol";
+import {SiloMathLib} from "./SiloMathLib.sol";
 import {CrossEntrancy} from "./CrossEntrancy.sol";
 import {Hook} from "./Hook.sol";
 import {AssetTypes} from "./AssetTypes.sol";
@@ -76,7 +77,8 @@ library Actions {
     function withdraw(
         ISilo.SharedStorage storage _shareStorage,
         ISilo.WithdrawArgs calldata _args,
-        ISilo.Assets storage _totalAssets
+        ISilo.Assets storage _totalAssets,
+        ISilo.Assets storage _totalDebtAssets
     )
         external
         returns (uint256 assets, uint256 shares)
@@ -84,8 +86,13 @@ library Actions {
         _hookCallBefore(
             _shareStorage,
             Hook.WITHDRAW |
-                (_args.assetType == ISilo.CollateralType.Collateral ? Hook.COLLATERAL_TOKEN : Hook.PROTECTED_TOKEN),
-            abi.encodePacked(_args.assets, _args.shares, _args.receiver, _args.owner, _args.spender, _args.assetType)
+                (_args.collateralType == ISilo.CollateralType.Collateral
+                    ? Hook.COLLATERAL_TOKEN
+                    : Hook.PROTECTED_TOKEN
+                ),
+            abi.encodePacked(
+                _args.assets, _args.shares, _args.receiver, _args.owner, _args.spender, _args.collateralType
+            )
         );
 
         (
@@ -96,33 +103,25 @@ library Actions {
 
         if (collateralConfig.silo != debtConfig.silo) ISilo(debtConfig.silo).accrueInterest();
 
+        {
         // this `if` helped with Stack too deep
-        if (_args.assetType == ISilo.CollateralType.Collateral) {
+        if (_args.collateralType == ISilo.CollateralType.Collateral) {
             (assets, shares) = SiloERC4626Lib.withdraw(
                 collateralConfig.token,
                 collateralConfig.collateralShareToken,
-                _args.assets,
-                _args.shares,
-                _args.receiver,
-                _args.owner,
-                _args.spender,
-                _args.assetType,
-                ISilo(collateralConfig.silo).getRawLiquidity(),
+                _args,
+                SiloMathLib.liquidity(_totalAssets.assets, _totalDebtAssets.assets),
                 _totalAssets
             );
         } else {
             (assets, shares) = SiloERC4626Lib.withdraw(
                 collateralConfig.token,
                 collateralConfig.protectedShareToken,
-                _args.assets,
-                _args.shares,
-                _args.receiver,
-                _args.owner,
-                _args.spender,
-                _args.assetType,
+                _args,
                 _totalAssets.assets,
                 _totalAssets
             );
+        }
         }
 
         if (SiloSolvencyLib.depositWithoutDebt(debtInfo)) {
@@ -133,7 +132,7 @@ library Actions {
                     _shareStorage,
                     collateralConfig.hookReceiver,
                     Hook.WITHDRAW |
-                        (_args.assetType == ISilo.CollateralType.Collateral
+                        (_args.collateralType == ISilo.CollateralType.Collateral
                             ? Hook.COLLATERAL_TOKEN
                             : Hook.PROTECTED_TOKEN),
                     abi.encodePacked(
@@ -173,7 +172,10 @@ library Actions {
                 _shareStorage,
                 collateralConfig.hookReceiver,
                 Hook.WITHDRAW |
-                    (_args.assetType == ISilo.CollateralType.Collateral ? Hook.COLLATERAL_TOKEN : Hook.PROTECTED_TOKEN),
+                    (_args.collateralType == ISilo.CollateralType.Collateral
+                        ? Hook.COLLATERAL_TOKEN
+                        : Hook.PROTECTED_TOKEN
+                    ),
                 abi.encodePacked(
                     _args.assets,
                     _args.shares,
@@ -446,9 +448,13 @@ library Actions {
             address(this), Hook.TRANSITION_COLLATERAL
         );
 
-        (address shareTokenFrom, uint256 liquidity) = _withdrawType == ISilo.CollateralType.Collateral
-            ? (collateralConfig.collateralShareToken, ISilo(address(this)).getRawLiquidity())
-            : (collateralConfig.protectedShareToken, _total[AssetTypes.PROTECTED].assets);
+        uint256 liquidity = _withdrawType == ISilo.CollateralType.Collateral
+            ? SiloMathLib.liquidity(_total[AssetTypes.COLLATERAL].assets, _total[AssetTypes.DEBT].assets)
+            : _total[AssetTypes.PROTECTED].assets;
+
+        address shareTokenFrom = _withdrawType == ISilo.CollateralType.Collateral
+            ? collateralConfig.collateralShareToken
+            : collateralConfig.protectedShareToken;
 
         (assets, _shares) = SiloERC4626Lib.transitionCollateralWithdraw(
             shareTokenFrom,
