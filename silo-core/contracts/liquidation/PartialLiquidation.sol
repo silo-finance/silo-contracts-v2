@@ -136,6 +136,9 @@ contract PartialLiquidation is IPartialLiquidation {
             Hook.LIQUIDATION
         );
 
+        // We validate that both Silos have the same config data which means that potential attacker has no choice
+        // but provide either two real silos or two fake silos. While providing two fake silos, neither silo has access
+        // to real balances so the attack is pointless.
         (address silo0, address silo1) = ISilo(collateralConfig.silo).config().getSilos();
         if (_siloWithDebt != silo0 && _siloWithDebt != silo1) revert WrongSilo();
 
