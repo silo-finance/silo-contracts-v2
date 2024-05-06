@@ -647,11 +647,6 @@ contract Silo is SiloERC4626 {
         Actions.withdrawFees(this, siloData);
     }
 
-    // TODO can we optimise this? maybe add as args to methods
-    function getRawLiquidity() external view virtual returns (uint256 liquidity) {
-        liquidity = SiloMathLib.liquidity(total[AssetTypes.COLLATERAL].assets, total[AssetTypes.DEBT].assets);
-    }
-
     /// @dev that method allow to finish liquidation process by giving up collateral to liquidator
     function withdrawCollateralsToLiquidator(
         uint256 _withdrawAssetsFromCollateral,
@@ -667,9 +662,13 @@ contract Silo is SiloERC4626 {
             _borrower,
             _liquidator,
             _receiveSToken,
-            SiloMathLib.liquidity(total[AssetTypes.COLLATERAL].assets, total[AssetTypes.DEBT].assets),
+            getRawLiquidity(),
             total
         );
+    }
+
+    function getRawLiquidity() public view virtual returns (uint256 liquidity) {
+        liquidity = SiloMathLib.liquidity(total[AssetTypes.COLLATERAL].assets, total[AssetTypes.DEBT].assets);
     }
 
     function _deposit(
