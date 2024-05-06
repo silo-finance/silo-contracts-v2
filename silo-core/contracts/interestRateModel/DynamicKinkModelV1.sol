@@ -203,6 +203,7 @@ contract DynamicKinkModelV1 is IDynamicKinkModelV1 {
 
             if (_u >= _setup.config.ulow) {
                 _l.f = _u - _setup.config.ulow;
+
                 if (_u >= _setup.config.ucrit) {
                     _l.f = _l.f + _setup.config.alpha * (_u - _setup.config.ucrit) / _DP;
                 }
