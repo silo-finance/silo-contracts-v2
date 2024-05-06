@@ -44,6 +44,7 @@ on:
       - yarn.lock
       - gitmodules/*
       - .gitmodules
+      - .github/workflows/intergration.yml
 
   pull_request:
     paths:
@@ -74,6 +75,7 @@ on:
       - yarn.lock
       - gitmodules/*
       - .gitmodules
+      - .github/workflows/intergration.yml
 
 jobs:
   ve-silo-foundry:
@@ -127,9 +129,9 @@ jobs:
 
       - name: Start Anvil (mainnet fork)
         run: anvil --fork-url $RPC_MAINNET --fork-block-number $ANVIL_FORK_BLOCK_NUMBER --port $ANVIL_PORT &
-# TODO
-#      - name: Deploy Silo protocol
-#        run: ./silo-core/test/scripts/mainnet-deployments.sh
-#
-#      - name: Test
-#        run: FOUNDRY_PROFILE=core-test forge test --mc SiloIntegrationTest --ffi -vvv --rpc-url $SILO_DEPLOYMENT_NODE
+
+     - name: Deploy Silo protocol
+       run: ./silo-core/test/scripts/mainnet-deployments.sh
+
+     - name: Test
+       run: FOUNDRY_PROFILE=core-test forge test --mc SiloIntegrationTest --ffi -vvv --rpc-url $SILO_DEPLOYMENT_NODE
