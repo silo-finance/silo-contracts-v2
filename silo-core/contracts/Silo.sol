@@ -420,7 +420,7 @@ contract Silo is SiloERC4626 {
     }
 
     /// @inheritdoc ISilo
-    function transitionCollateral( // solhint-disable-line function-max-lines
+    function transitionCollateral(
         uint256 _shares,
         address _owner,
         CollateralType _withdrawType
@@ -462,7 +462,6 @@ contract Silo is SiloERC4626 {
     }
 
     /// @inheritdoc ISilo
-    // solhint-disable-next-line code-complexity, function-max-lines
     function leverageSameAsset(
         uint256 _depositAssets,
         uint256 _borrowAssets,
@@ -697,7 +696,6 @@ contract Silo is SiloERC4626 {
         }
     }
 
-    // solhint-disable-next-line function-max-lines, code-complexity
     function _withdraw(
         uint256 _assets,
         uint256 _shares,
@@ -730,7 +728,7 @@ contract Silo is SiloERC4626 {
         }
     }
 
-    function _borrow( // solhint-disable-line function-max-lines, code-complexity
+    function _borrow(
         uint256 _assets,
         uint256 _shares,
         address _receiver,
