@@ -100,7 +100,7 @@ library SiloMathLib {
     {
         if (_collateralAssets == 0 || _debtAssets == 0) return 0;
 
-        utilization = _debtAssets * _dp; // TODO precise!
+        utilization = _debtAssets * _dp;
         // _collateralAssets is not 0 based on above check, so it is safe to uncheck this division
         unchecked {
             utilization /= _collateralAssets;
