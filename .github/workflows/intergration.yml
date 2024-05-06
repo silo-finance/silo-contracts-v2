@@ -79,6 +79,9 @@ on:
 
 jobs:
   ve-silo-foundry:
+    strategy:
+      fail-fast: true
+
     name: Deploy & test
     runs-on: ubuntu-latest
     steps:
@@ -128,7 +131,7 @@ jobs:
         run: anvil --fork-url $RPC_MAINNET --fork-block-number $ANVIL_FORK_BLOCK_NUMBER --port $ANVIL_PORT &
 
      - name: Deploy Silo protocol
-       run: ./silo-core/test/scripts/mainnet-deployments.sh
+        run: ./silo-core/test/scripts/mainnet-deployments.sh
 
      - name: Test
-       run: FOUNDRY_PROFILE=core-test forge test --mc SiloIntegrationTest --ffi -vvv --rpc-url $SILO_DEPLOYMENT_NODE
+        run: FOUNDRY_PROFILE=core-test forge test --mc SiloIntegrationTest --ffi -vvv --rpc-url $SILO_DEPLOYMENT_NODE
