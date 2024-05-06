@@ -184,7 +184,6 @@ library SiloERC4626Lib {
     }
 
     /// @notice Deposit assets into the silo
-    /// @dev Deposits are not allowed if the receiver already has some debt
     /// @param _token The ERC20 token address being deposited; 0 means tokens will not be transferred. Useful for
     /// transition of collateral.
     /// @param _depositor Address of the user depositing the assets

@@ -48,7 +48,7 @@ library Hook {
     }
 
     /// @dev Decodes packed data from the share token after the transfer hook
-    /// @param packed The packed data (via abi.encode)
+    /// @param packed The packed data (via abi.encodePacked)
     /// @return sender The sender of the transfer (address(0) on mint)
     /// @return recipient The recipient of the transfer (address(0) on burn)
     /// @return amount The amount of tokens transferred/minted/burned
