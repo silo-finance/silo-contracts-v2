@@ -19,19 +19,20 @@ contract RepayPartAccrueInterestGasTest is Gas, Test {
 
         vm.startPrank(BORROWER);
         silo0.deposit(ASSETS * 10, BORROWER);
-        silo1.borrow(ASSETS, BORROWER, BORROWER);
+        silo1.borrow(ASSETS, BORROWER, BORROWER, false /* sameAsset */);
         vm.stopPrank();
 
         vm.warp(block.timestamp + 1 days);
     }
 
+    // forge test -vv --ffi --mt test_gas_repayPartWithInterest
     function test_gas_repayPartWithInterest() public {
         _action(
             BORROWER,
             address(silo1),
-            abi.encodeCall(ISilo.repay, (ASSETS / 2, BORROWER)),
+            abi.encodeWithSignature("repay(uint256,address)", ASSETS / 2, BORROWER),
             "RepayPartAccrueInterest partial with accrue interest",
-            130631
+            134117
         );
     }
 }

@@ -4,7 +4,6 @@ pragma solidity 0.8.21;
 import {AddrKey} from "common/addresses/AddrKey.sol";
 import {CommonDeploy, VeSiloContracts} from "ve-silo/deploy/_CommonDeploy.sol";
 import {L2Deploy} from "ve-silo/deploy/L2Deploy.s.sol";
-import {BPTTokenLike} from "ve-silo/test/_mocks/for-testnet-deployments/tokens/BPTTokenLike.sol";
 import {LINKTokenLike} from "ve-silo/test/_mocks/for-testnet-deployments/tokens/LINKTokenLike.sol";
 import {SILOTokenLike} from "ve-silo/test/_mocks/for-testnet-deployments/tokens/SILOTokenLike.sol";
 import {CCIPRouterReceiverLike} from "ve-silo/test/_mocks/for-testnet-deployments/ccip/CCIPRouterReceiverLike.sol";

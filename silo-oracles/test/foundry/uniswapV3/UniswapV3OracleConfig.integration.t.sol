@@ -33,6 +33,7 @@ contract UniswapV3OracleConfigIntegrationTest is UniswapPools {
     function test_UniswapV3OracleConfig_integration_constructor_pass() public {
         IUniswapV3Oracle.UniswapV3DeploymentConfig memory config = IUniswapV3Oracle.UniswapV3DeploymentConfig(
             pools["USDC_WETH"],
+            address(tokens["WETH"]),
             address(tokens["USDC"]),
             PERIOD_FOR_AVG_PRICE,
             BLOCK_TIME
@@ -47,6 +48,7 @@ contract UniswapV3OracleConfigIntegrationTest is UniswapPools {
     function test_UniswapV3OracleConfig_integration_verifyPool_InvalidPoolForQuoteToken() public {
         IUniswapV3Oracle.UniswapV3DeploymentConfig memory config = IUniswapV3Oracle.UniswapV3DeploymentConfig(
             pools["UKY_WETH"],
+            address(tokens["WETH"]),
             address(tokens["USDC"]),
             PERIOD_FOR_AVG_PRICE,
             BLOCK_TIME
@@ -62,6 +64,7 @@ contract UniswapV3OracleConfigIntegrationTest is UniswapPools {
     function test_UniswapV3OracleConfig_integration_verifyPool_EmptyPool0() public {
         IUniswapV3Oracle.UniswapV3DeploymentConfig memory config = IUniswapV3Oracle.UniswapV3DeploymentConfig(
             pools["UKY_WETH"],
+            address(tokens["WETH"]),
             address(tokens["UKY"]),
             PERIOD_FOR_AVG_PRICE,
             BLOCK_TIME

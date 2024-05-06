@@ -6,6 +6,7 @@ import "forge-std/Test.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
+import {IERC20Errors} from "openzeppelin5/interfaces/draft-IERC6093.sol";
 
 import {TokenMock} from "silo-core/test/foundry/_mocks/TokenMock.sol";
 import {SiloFixture} from "../../_common/fixtures/SiloFixture.sol";
@@ -24,6 +25,7 @@ contract BorrowAllowanceTest is SiloLittleHelper, Test {
     address immutable BORROWER;
 
     ISiloConfig siloConfig;
+    bool sameAsset = false;
 
     constructor() {
         DEPOSITOR = makeAddr("Depositor");
@@ -39,11 +41,23 @@ contract BorrowAllowanceTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test --ffi -vv --mt test_borrow_WithoutAllowance
+    forge test --ffi -vv --mt test_borrow_WithoutAllowance_1
     */
-    function test_borrow_WithoutAllowance() public {
-        vm.expectRevert("ERC20: insufficient allowance");
-        silo1.borrow(ASSETS, RECEIVER, BORROWER);
+    function test_borrow_WithoutAllowance_1() public {
+        vm.expectRevert(
+            abi.encodeWithSelector(IERC20Errors.ERC20InsufficientAllowance.selector, address(this), 0, ASSETS)
+        );
+        silo1.borrow(ASSETS, RECEIVER, BORROWER, SAME_ASSET);
+    }
+
+    /*
+    forge test --ffi -vv --mt test_borrow_WithoutAllowance_2
+    */
+    function test_borrow_WithoutAllowance_2() public {
+        vm.expectRevert(
+            abi.encodeWithSelector(IERC20Errors.ERC20InsufficientAllowance.selector, address(this), 0, ASSETS)
+        );
+        silo1.borrow(ASSETS, RECEIVER, BORROWER, !SAME_ASSET);
     }
 
     /*
@@ -61,7 +75,7 @@ contract BorrowAllowanceTest is SiloLittleHelper, Test {
 
         assertEq(token1.balanceOf(RECEIVER), 0, "RECEIVER no tokens before");
 
-        silo1.borrow(ASSETS / 2, RECEIVER, BORROWER);
+        silo1.borrow(ASSETS / 2, RECEIVER, BORROWER, sameAsset);
 
         assertEq(IShareToken(debtShareToken).balanceOf(BORROWER), ASSETS / 2, "BORROWER has debt after");
         assertEq(IShareToken(debtShareToken).balanceOf(DEPOSITOR), 0, "DEPOSITOR no debt after");

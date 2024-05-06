@@ -19,19 +19,22 @@ contract DepositAccrueInterestGasTest is Gas, Test {
 
         vm.startPrank(BORROWER);
         silo0.deposit(ASSETS * 10, BORROWER);
-        silo1.borrow(ASSETS, BORROWER, BORROWER);
+        silo1.borrow(ASSETS, BORROWER, BORROWER, false /* sameAsset */);
         vm.stopPrank();
 
         vm.warp(block.timestamp + 1 days);
     }
 
+    /*
+    forge test -vvv --ffi --mt test_gas_depositAccrueInterest
+    */
     function test_gas_depositAccrueInterest() public {
         _action(
             DEPOSITOR,
             address(silo1),
-            abi.encodeCall(ISilo.deposit, (ASSETS, DEPOSITOR, ISilo.AssetType.Collateral)),
+            abi.encodeCall(ISilo.deposit, (ASSETS, DEPOSITOR, ISilo.CollateralType.Collateral)),
             "DepositAccrueInterest",
-            139094
+            133843
         );
     }
 }

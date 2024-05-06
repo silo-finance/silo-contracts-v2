@@ -2,7 +2,7 @@
 pragma solidity 0.8.21;
 
 import {Address} from "openzeppelin-contracts/utils/Address.sol";
-import {Ownable2Step} from "openzeppelin-contracts/access/Ownable2Step.sol";
+import {Ownable2StepUpgradeable} from "openzeppelin5-upgradeable/access/Ownable2StepUpgradeable.sol";
 import {Client} from "chainlink-ccip/v0.8/ccip/libraries/Client.sol";
 
 import {IVeSilo} from "ve-silo/contracts/voting-escrow/interfaces/IVeSilo.sol";
@@ -12,7 +12,7 @@ import {IVeSiloDelegatorViaCCIP} from "ve-silo/contracts/voting-escrow/interface
 import {CCIPMessageSender, ICCIPMessageSender} from "ve-silo/contracts/utils/CCIPMessageSender.sol";
 
 /// @title VeSilo delegator via CCIP
-contract VeSiloDelegatorViaCCIP is CCIPMessageSender, Ownable2Step, IVeSiloDelegatorViaCCIP {
+contract VeSiloDelegatorViaCCIP is CCIPMessageSender, Ownable2StepUpgradeable, IVeSiloDelegatorViaCCIP {
     // solhint-disable var-name-mixedcase
     IVeSilo public immutable VOTING_ESCROW;
     IVotingEscrowCCIPRemapper public immutable REMAPPER;
@@ -32,6 +32,9 @@ contract VeSiloDelegatorViaCCIP is CCIPMessageSender, Ownable2Step, IVeSiloDeleg
     ) CCIPMessageSender(router, link) {
         VOTING_ESCROW = votingEscrow;
         REMAPPER = remapper;
+
+        // Locks an implementation, preventing any future reinitialization
+        _disableInitializers();
     }
 
     /// @inheritdoc IVeSiloDelegatorViaCCIP
@@ -151,6 +154,10 @@ contract VeSiloDelegatorViaCCIP is CCIPMessageSender, Ownable2Step, IVeSiloDeleg
         bytes memory data = _getTotalSupplyData(totalSupplyEpoch);
         Client.EVM2AnyMessage memory ccipMessage = getCCIPMessage(childChainReceiver, data, _payFeesIn);
         fee = _calculateFee(_dstChainSelector, ccipMessage);
+    }
+
+    function initialize(address _timelock) public initializer {
+        __Ownable_init_unchained(_timelock);
     }
 
     /// @notice Send back any ETH leftover to the `msg.sender`

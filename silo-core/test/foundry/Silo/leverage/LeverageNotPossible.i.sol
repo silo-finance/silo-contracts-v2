@@ -17,12 +17,17 @@ import {LeverageBorrower, ILeverageBorrower} from "../../_common/LeverageBorrowe
     forge test -vv --ffi --mc LeverageNotPossibleTest
 */
 contract LeverageNotPossibleTest is SiloLittleHelper, Test {
+    address borrower;
+    bool sameAsset;
+
     function setUp() public {
+        borrower = makeAddr("borrower");
+
         _setUpLocalFixture(SiloConfigsNames.LOCAL_NOT_BORROWABLE);
 
         (
-            ISiloConfig.ConfigData memory cfg0, ISiloConfig.ConfigData memory cfg1
-        ) = silo0.config().getConfigs(address(silo0));
+            ISiloConfig.ConfigData memory cfg0, ISiloConfig.ConfigData memory cfg1,
+        ) = silo0.config().getConfigs(address(silo0), borrower, 0 /* always 0 for external calls */);
 
         assertEq(cfg0.maxLtv, 0, "borrow OFF");
         assertGt(cfg1.maxLtv, 0, "borrow ON");
@@ -35,16 +40,15 @@ contract LeverageNotPossibleTest is SiloLittleHelper, Test {
         uint256 depositAssets = 10e18;
         uint256 borrowAssets = 1e18;
         ILeverageBorrower leverageBorrower = ILeverageBorrower(new LeverageBorrower());
-        address borrower = makeAddr("borrower");
         address depositor = makeAddr("depositor");
 
-        _deposit(depositAssets, depositor, ISilo.AssetType.Collateral);
+        _deposit(depositAssets, depositor, ISilo.CollateralType.Collateral);
 
         token1.mint(address(leverageBorrower), depositAssets);
         bytes memory data = abi.encode(address(silo1), address(token1), depositAssets);
         
         vm.prank(borrower);
-        silo0.leverage(borrowAssets, leverageBorrower, borrower, data);
+        silo0.leverage(borrowAssets, leverageBorrower, borrower, sameAsset, data);
     }
 
     /*
@@ -54,7 +58,6 @@ contract LeverageNotPossibleTest is SiloLittleHelper, Test {
         uint256 depositAssets = 10e18;
         uint256 borrowAssets = 1e18;
         ILeverageBorrower leverageBorrower = ILeverageBorrower(new LeverageBorrower());
-        address borrower = makeAddr("borrower");
         address depositor = makeAddr("depositor");
 
         _depositForBorrow(depositAssets, depositor);
@@ -65,6 +68,6 @@ contract LeverageNotPossibleTest is SiloLittleHelper, Test {
 
         vm.prank(borrower);
         vm.expectRevert(ISilo.AboveMaxLtv.selector);
-        silo1.leverage(borrowAssets, leverageBorrower, borrower, data);
+        silo1.leverage(borrowAssets, leverageBorrower, borrower, sameAsset, data);
     }
 }

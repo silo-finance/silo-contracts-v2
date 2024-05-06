@@ -4,12 +4,6 @@ pragma solidity >=0.5.0;
 import {ISilo} from "./ISilo.sol";
 
 interface ISiloLens {
-    /// @notice Checks if a deposit is possible for a given depositor
-    /// @param _silo Address of the silo
-    /// @param _depositor Address of the depositor to check for deposit possibility
-    /// @return True if deposit is possible for the depositor, otherwise false
-    function depositPossible(ISilo _silo, address _depositor) external view returns (bool);
-
     /// @notice Checks if borrowing is possible for a given borrower
     /// @param _silo Address of the silo
     /// @param _borrower Address of the borrower to check for borrowing possibility

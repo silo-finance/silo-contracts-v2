@@ -39,6 +39,9 @@ git submodule add --name gitmodules/chainlink https://github.com/smartcontractki
 git submodule add --name lz_gauges https://github.com/LayerZero-Labs/lz_gauges gitmodules/lz_gauges
 git submodule add --name layer-zero-examples https://github.com/LayerZero-Labs/solidity-examples gitmodules/layer-zero-examples
 git submodule add --name chainlink-ccip https://github.com/smartcontractkit/ccip gitmodules/chainlink-ccip
+git submodule add --name openzeppelin5 https://github.com/OpenZeppelin/openzeppelin-contracts@5.0.2 gitmodules/openzeppelin-contracts-5
+git submodule add --name openzeppelin-contracts-upgradeable-5 https://github.com/OpenZeppelin/openzeppelin-contracts-upgradeable gitmodules/openzeppelin-contracts-upgradeable-5
+
 git submodule update --init --recursive
 git submodule
 ```
@@ -72,7 +75,7 @@ git submodule deinit -f gitmodules/silo-foundry-utils
 rm -rf .git/modules/gitmodules/silo-foundry-utils
 
 # Remove the entry in .gitmodules and remove the submodule directory located at path/to/submodule
-rm -rf gitmodules/silo-foundry-utils
+rm -rf .git/modules/gitmodules/silo-foundry-utils
 ```
 
 ### Update submodule
@@ -135,9 +138,13 @@ genhtml -o coverage/silo-oracles/ lcov.info
 - to assets: Up
 - to shares: Down
 
-### Borrow (including preview and max)
+### Borrow (including preview)
 - to assets: Down
 - to shares: Up
+
+### MaxBorrow
+- to assets: Down
+- to shares: Down
 
 ### Withdraw
 - to shares: Up
@@ -161,4 +168,15 @@ git submodule add --name crytic-properties https://github.com/crytic/properties 
 ./silo-core/scripts/echidnaBefore.sh
 # after you done run this to revert changes:
 ./silo-core/scripts/echidnaAfter.sh
+```
+
+## Gas
+
+```shell
+# generate snapshot file
+FOUNDRY_PROFILE=core-test forge snapshot --desc --no-match-test "_skip_" --no-match-contract "SiloIntegrationTest" --ffi
+# check gas difference
+FOUNDRY_PROFILE=core-test forge snapshot --desc --check --no-match-test "_skip_" --no-match-contract "SiloIntegrationTest" --ffi
+# better view, with % change
+FOUNDRY_PROFILE=core-test forge snapshot --diff --desc --no-match-test "_skip_" --no-match-contract "SiloIntegrationTest" --ffi
 ```

@@ -16,12 +16,14 @@ import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
     forge test -vv --ffi --mc BorrowNotPossibleTest
 */
 contract BorrowNotPossibleTest is SiloLittleHelper, Test {
+    bool sameAsset;
+
     function setUp() public {
         _setUpLocalFixture(SiloConfigsNames.LOCAL_NOT_BORROWABLE);
 
         (
-            ISiloConfig.ConfigData memory cfg0, ISiloConfig.ConfigData memory cfg1
-        ) = silo0.config().getConfigs(address(silo0));
+            ISiloConfig.ConfigData memory cfg0, ISiloConfig.ConfigData memory cfg1,
+        ) = silo0.config().getConfigs(address(silo0), address(0), 0 /* always 0 for external calls */);
 
         assertEq(cfg0.maxLtv, 0, "borrow OFF");
         assertGt(cfg1.maxLtv, 0, "borrow ON");
@@ -35,11 +37,11 @@ contract BorrowNotPossibleTest is SiloLittleHelper, Test {
         address borrower = makeAddr("Borrower");
         address depositor = makeAddr("Depositor");
 
-        _deposit(depositAssets, depositor, ISilo.AssetType.Collateral);
+        _deposit(depositAssets, depositor, ISilo.CollateralType.Collateral);
         _depositForBorrow(depositAssets, borrower);
 
         vm.prank(borrower);
-        silo0.borrow(1, borrower, borrower);
+        silo0.borrow(1, borrower, borrower, sameAsset);
     }
 
     /*
@@ -50,11 +52,27 @@ contract BorrowNotPossibleTest is SiloLittleHelper, Test {
         address borrower = makeAddr("Borrower");
         address depositor = makeAddr("Depositor");
 
-        _deposit(depositAssets, borrower, ISilo.AssetType.Collateral);
+        _deposit(depositAssets, borrower, ISilo.CollateralType.Collateral);
         _depositForBorrow(depositAssets, depositor);
 
         vm.prank(borrower);
         vm.expectRevert(ISilo.AboveMaxLtv.selector);
-        silo1.borrow(1, borrower, borrower);
+        silo1.borrow(1, borrower, borrower, sameAsset);
+    }
+
+    /*
+    FOUNDRY_PROFILE=core-test forge test -vv --ffi --mt test_borrow_without_collateral
+    */
+    /// forge-config: core-test.fuzz.runs = 1000
+    function test_borrow_without_collateral(uint256 _depositAmount, uint256 _borrowAmount) public {
+        vm.assume(_borrowAmount > 0);
+        vm.assume(_depositAmount > _borrowAmount);
+
+        address depositor = makeAddr("Depositor");
+
+        _depositForBorrow(_depositAmount, depositor);
+
+        vm.expectRevert(ISilo.AboveMaxLtv.selector);
+        _borrow(_borrowAmount, address(this), sameAsset);
     }
 }

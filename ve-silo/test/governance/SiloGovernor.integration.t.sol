@@ -112,12 +112,12 @@ contract SiloGovernorTest is IntegrationTest {
     }
 
     function _getVeSiloTokens(address _userAddr, uint256 _amount, uint256 _unlockTime) internal {
-        IERC20 silo80Weth20Token = IERC20(getAddress(SILO80_WETH20_TOKEN));
+        IERC20 siloToken = IERC20(getAddress(SILO_TOKEN));
 
-        deal(address(silo80Weth20Token), _userAddr, _amount);
+        deal(address(siloToken), _userAddr, _amount);
 
         vm.prank(_userAddr);
-        silo80Weth20Token.approve(address(_votingEscrow), _amount);
+        siloToken.approve(address(_votingEscrow), _amount);
 
         uint256 lockedTo = block.timestamp + _unlockTime;
 

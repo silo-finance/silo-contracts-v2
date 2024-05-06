@@ -2,9 +2,10 @@
 pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
-import {StringsUpgradeable as Strings} from "openzeppelin-contracts-upgradeable/utils/StringsUpgradeable.sol";
+import {Strings} from "openzeppelin5/utils/Strings.sol";
 
-import {SiloMathLib, ISilo, MathUpgradeable} from "silo-core/contracts/lib/SiloMathLib.sol";
+import {SiloMathLib, ISilo, Math} from "silo-core/contracts/lib/SiloMathLib.sol";
+import {Rounding} from "silo-core/contracts/lib/Rounding.sol";
 
 // forge test -vv --mc ConvertToAssetsTest
 contract ConvertToAssetsTest is Test {
@@ -12,7 +13,7 @@ contract ConvertToAssetsTest is Test {
         uint256 shares;
         uint256 totalAssets;
         uint256 totalShares;
-        MathUpgradeable.Rounding rounding;
+        Math.Rounding rounding;
         ISilo.AssetType assetType;
         uint256 result;
     }
@@ -26,7 +27,7 @@ contract ConvertToAssetsTest is Test {
             shares: 0,
             totalAssets: 0,
             totalShares: 0,
-            rounding: MathUpgradeable.Rounding.Down,
+            rounding: Rounding.DOWN,
             assetType: ISilo.AssetType.Collateral,
             result: 0
         });
@@ -35,7 +36,7 @@ contract ConvertToAssetsTest is Test {
             shares: 10,
             totalAssets: 0,
             totalShares: 0,
-            rounding: MathUpgradeable.Rounding.Down,
+            rounding: Rounding.DOWN,
             assetType: ISilo.AssetType.Collateral,
             result: 10
         });
@@ -44,7 +45,7 @@ contract ConvertToAssetsTest is Test {
             shares: 333,
             totalAssets: 1000,
             totalShares: 999,
-            rounding: MathUpgradeable.Rounding.Down,
+            rounding: Rounding.DOWN,
             assetType: ISilo.AssetType.Collateral,
             result: 333
         });
@@ -53,7 +54,7 @@ contract ConvertToAssetsTest is Test {
             shares: 333,
             totalAssets: 1000,
             totalShares: 999,
-            rounding: MathUpgradeable.Rounding.Up,
+            rounding: Rounding.UP,
             assetType: ISilo.AssetType.Collateral,
             result: 334
         });
@@ -62,7 +63,7 @@ contract ConvertToAssetsTest is Test {
             shares: 333,
             totalAssets: 1000,
             totalShares: 1000,
-            rounding: MathUpgradeable.Rounding.Down,
+            rounding: Rounding.DOWN,
             assetType: ISilo.AssetType.Collateral,
             result: 333
         });
@@ -71,7 +72,7 @@ contract ConvertToAssetsTest is Test {
             shares: 333,
             totalAssets: 1000,
             totalShares: 1000,
-            rounding: MathUpgradeable.Rounding.Down,
+            rounding: Rounding.DOWN,
             assetType: ISilo.AssetType.Collateral,
             result: 333
         });
@@ -80,7 +81,7 @@ contract ConvertToAssetsTest is Test {
             shares: 1,
             totalAssets: 1000,
             totalShares: 1,
-            rounding: MathUpgradeable.Rounding.Down,
+            rounding: Rounding.DOWN,
             assetType: ISilo.AssetType.Collateral,
             result: 500
         });
@@ -89,7 +90,7 @@ contract ConvertToAssetsTest is Test {
             shares: 1,
             totalAssets: 1000,
             totalShares: 1,
-            rounding: MathUpgradeable.Rounding.Up,
+            rounding: Rounding.UP,
             assetType: ISilo.AssetType.Collateral,
             result: 501
         });
@@ -98,7 +99,7 @@ contract ConvertToAssetsTest is Test {
             shares: 1,
             totalAssets: 1000,
             totalShares: 10,
-            rounding: MathUpgradeable.Rounding.Down,
+            rounding: Rounding.DOWN,
             assetType: ISilo.AssetType.Collateral,
             result: 91
         });
@@ -107,7 +108,7 @@ contract ConvertToAssetsTest is Test {
             shares: 0,
             totalAssets: 0,
             totalShares: 0,
-            rounding: MathUpgradeable.Rounding.Down,
+            rounding: Rounding.DOWN,
             assetType: ISilo.AssetType.Debt,
             result: 0
         });
@@ -116,7 +117,7 @@ contract ConvertToAssetsTest is Test {
             shares: 10,
             totalAssets: 0,
             totalShares: 0,
-            rounding: MathUpgradeable.Rounding.Down,
+            rounding: Rounding.DOWN,
             assetType: ISilo.AssetType.Debt,
             result: 10
         });
@@ -125,7 +126,7 @@ contract ConvertToAssetsTest is Test {
             shares: 333,
             totalAssets: 1000,
             totalShares: 999,
-            rounding: MathUpgradeable.Rounding.Down,
+            rounding: Rounding.DOWN,
             assetType: ISilo.AssetType.Debt,
             result: 333
         });
@@ -134,7 +135,7 @@ contract ConvertToAssetsTest is Test {
             shares: 333,
             totalAssets: 1000,
             totalShares: 999,
-            rounding: MathUpgradeable.Rounding.Up,
+            rounding: Rounding.UP,
             assetType: ISilo.AssetType.Debt,
             result: 334
         });
@@ -143,7 +144,7 @@ contract ConvertToAssetsTest is Test {
             shares: 333,
             totalAssets: 1000,
             totalShares: 1000,
-            rounding: MathUpgradeable.Rounding.Down,
+            rounding: Rounding.DOWN,
             assetType: ISilo.AssetType.Debt,
             result: 333
         });
@@ -152,7 +153,7 @@ contract ConvertToAssetsTest is Test {
             shares: 333,
             totalAssets: 1000,
             totalShares: 1000,
-            rounding: MathUpgradeable.Rounding.Down,
+            rounding: Rounding.DOWN,
             assetType: ISilo.AssetType.Debt,
             result: 333
         });
@@ -161,7 +162,7 @@ contract ConvertToAssetsTest is Test {
             shares: 1,
             totalAssets: 1000,
             totalShares: 1,
-            rounding: MathUpgradeable.Rounding.Down,
+            rounding: Rounding.DOWN,
             assetType: ISilo.AssetType.Debt,
             result: 1000
         });
@@ -170,7 +171,7 @@ contract ConvertToAssetsTest is Test {
             shares: 1,
             totalAssets: 1000,
             totalShares: 1,
-            rounding: MathUpgradeable.Rounding.Up,
+            rounding: Rounding.UP,
             assetType: ISilo.AssetType.Debt,
             result: 1000
         });
@@ -179,7 +180,7 @@ contract ConvertToAssetsTest is Test {
             shares: 1,
             totalAssets: 1000,
             totalShares: 10,
-            rounding: MathUpgradeable.Rounding.Down,
+            rounding: Rounding.DOWN,
             assetType: ISilo.AssetType.Debt,
             result: 100
         });
@@ -188,7 +189,7 @@ contract ConvertToAssetsTest is Test {
             shares: 1,
             totalAssets: 1000,
             totalShares: 10,
-            rounding: MathUpgradeable.Rounding.Up,
+            rounding: Rounding.UP,
             assetType: ISilo.AssetType.Debt,
             result: 100
         });

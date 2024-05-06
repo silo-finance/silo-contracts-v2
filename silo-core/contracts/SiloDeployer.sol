@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.21;
 
+import {Clones} from "openzeppelin5/proxy/Clones.sol";
+
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISiloFactory} from "silo-core/contracts/interfaces/ISiloFactory.sol";
 import {IInterestRateModelV2} from "silo-core/contracts/interfaces/IInterestRateModelV2.sol";
 import {IInterestRateModelV2ConfigFactory} from "silo-core/contracts/interfaces/IInterestRateModelV2ConfigFactory.sol";
-import {IHookReceiversFactory} from "silo-core/contracts/utils/hook-receivers/interfaces/IHookReceiversFactory.sol";
 import {IInterestRateModelV2Config} from "silo-core/contracts/interfaces/IInterestRateModelV2Config.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {IHookReceiver} from "silo-core/contracts/utils/hook-receivers/interfaces/IHookReceiver.sol";
@@ -16,19 +17,16 @@ contract SiloDeployer is ISiloDeployer {
     // solhint-disable var-name-mixedcase
     IInterestRateModelV2ConfigFactory public immutable IRM_CONFIG_FACTORY;
     ISiloFactory public immutable SILO_FACTORY;
-    IHookReceiversFactory public immutable HOOK_RECEIVERS_FACTORY;
     address public immutable TIMELOCK_CONTROLLER;
     // solhint-enable var-name-mixedcase
 
     constructor(
         IInterestRateModelV2ConfigFactory _irmConfigFactory,
         ISiloFactory _siloFactory,
-        IHookReceiversFactory _hookReceiversFactory,
         address _timelockController
     ) {
         IRM_CONFIG_FACTORY = _irmConfigFactory;
         SILO_FACTORY = _siloFactory;
-        HOOK_RECEIVERS_FACTORY = _hookReceiversFactory;
         TIMELOCK_CONTROLLER = _timelockController;
     }
 
@@ -37,21 +35,22 @@ contract SiloDeployer is ISiloDeployer {
         Oracles calldata _oracles,
         IInterestRateModelV2.Config calldata _irmConfigData0,
         IInterestRateModelV2.Config calldata _irmConfigData1,
-        ISiloConfig.InitData memory _siloInitData
+        ISiloConfig.InitData memory _siloInitData,
+        address _hookReceiverImplementation
     )
         external
         returns (ISiloConfig siloConfig)
     {
         // setUp IRMs (create configs) and update `_siloInitData`
         _setUpIRMs(_irmConfigData0, _irmConfigData1, _siloInitData);
-        // create (clone) hook receivers and update `_siloInitData`
-        _createHookReceivers(_siloInitData);
         // create oracles and update `_siloInitData`
         _createOracles(_siloInitData, _oracles);
+        // clone hook receiver if needed
+        _cloneHookReceiver(_siloInitData, _hookReceiverImplementation);
         // create Silo
         siloConfig = SILO_FACTORY.createSilo(_siloInitData);
-        // initialize hook receivers
-        _initializeHookReceivers(siloConfig, _siloInitData);
+        // initialize hook receiver only if it was cloned
+        _initializeHookReceiver(_siloInitData, siloConfig, _hookReceiverImplementation);
 
         emit SiloCreated(siloConfig);
     }
@@ -70,82 +69,6 @@ contract SiloDeployer is ISiloDeployer {
 
         _siloInitData.interestRateModelConfig0 = address(interestRateModelConfig0);
         _siloInitData.interestRateModelConfig1 = address(interestRateModelConfig1);
-    }
-
-    /// @notice Create silo hooks receivers and update `_siloInitData`
-    /// @param _siloInitData Silo configuration for the silo creation
-    function _createHookReceivers(ISiloConfig.InitData memory _siloInitData) internal {
-        IHookReceiversFactory.HookReceivers memory implementations = IHookReceiversFactory.HookReceivers({
-            protectedHookReceiver0: _siloInitData.protectedHookReceiver0,
-            collateralHookReceiver0: _siloInitData.collateralHookReceiver0,
-            debtHookReceiver0: _siloInitData.debtHookReceiver0,
-            protectedHookReceiver1: _siloInitData.protectedHookReceiver1,
-            collateralHookReceiver1: _siloInitData.collateralHookReceiver1,
-            debtHookReceiver1: _siloInitData.debtHookReceiver1
-        });
-
-        IHookReceiversFactory.HookReceivers memory clones = HOOK_RECEIVERS_FACTORY.create(implementations);
-
-        _siloInitData.protectedHookReceiver0 = clones.protectedHookReceiver0;
-        _siloInitData.collateralHookReceiver0 = clones.collateralHookReceiver0;
-        _siloInitData.debtHookReceiver0 = clones.debtHookReceiver0;
-        _siloInitData.protectedHookReceiver1 = clones.protectedHookReceiver1;
-        _siloInitData.collateralHookReceiver1 = clones.collateralHookReceiver1;
-        _siloInitData.debtHookReceiver1 = clones.debtHookReceiver1;
-    }
-
-    /// @notice Initialize silos hooks receivers
-    /// @param _siloConfig Already created silo config
-    /// @param _siloInitData Silo configuration for the silo creation
-    function _initializeHookReceivers(ISiloConfig _siloConfig, ISiloConfig.InitData memory _siloInitData) internal {
-        (address silo, address otherSilo) = _siloConfig.getSilos();
-
-        // `silo` hook receivers initialization
-        HookReceivers memory hookReceivers = HookReceivers({
-            protectedHookReceiver: _siloInitData.protectedHookReceiver0,
-            collateralHookReceiver: _siloInitData.collateralHookReceiver0,
-            debtHookReceiver: _siloInitData.debtHookReceiver0
-        });
-
-        _initializeHookReceiversForSilo(_siloConfig, hookReceivers, silo);
-
-        // `otherSilo` hook receivers initialization
-        hookReceivers = HookReceivers({
-            protectedHookReceiver: _siloInitData.protectedHookReceiver1,
-            collateralHookReceiver: _siloInitData.collateralHookReceiver1,
-            debtHookReceiver: _siloInitData.debtHookReceiver1
-        });
-
-        _initializeHookReceiversForSilo(_siloConfig, hookReceivers, otherSilo);
-    }
-
-    /// @notice Initialize silo hook receivers
-    /// @param _siloConfig Already created silo config
-    /// @param _hookReceivers Silo hook receivers
-    /// @param _silo Silo
-    function _initializeHookReceiversForSilo(
-        ISiloConfig _siloConfig,
-        HookReceivers memory _hookReceivers,
-        address _silo
-    ) internal {
-        address protectedShareToken;
-        address collateralShareToken;
-        address debtShareToken;
-
-        (protectedShareToken, collateralShareToken, debtShareToken) = _siloConfig.getShareTokens(_silo);
-
-        _initializeHookReceiverForToken(protectedShareToken, _hookReceivers.protectedHookReceiver);
-        _initializeHookReceiverForToken(collateralShareToken, _hookReceivers.collateralHookReceiver);
-        _initializeHookReceiverForToken(debtShareToken, _hookReceivers.debtHookReceiver);
-    }
-
-    /// @notice Initialize hook receiver for a silo share token
-    /// @param _token Silo share token address
-    /// @param _hookReceiver Hook receiver to be initialized
-    function _initializeHookReceiverForToken(address _token, address _hookReceiver) internal {
-        if (_hookReceiver != address(0)) {
-            IHookReceiver(_hookReceiver).initialize(TIMELOCK_CONTROLLER, IShareToken(_token));
-        }
     }
 
     /// @notice Create an oracle if it is not specified in the `_siloInitData` and has tx details for the creation
@@ -182,5 +105,36 @@ contract SiloDeployer is ISiloDeployer {
         if (!success || data.length != 32) revert FailedToCreateAnOracle(factory);
 
         _oracle = address(uint160(uint256(bytes32(data))));
+    }
+
+    /// @notice Clone hook receiver if it is provided
+    /// @param _siloInitData Silo configuration for the silo creation
+    /// @param _hookReceiverImplementation Hook receiver implementation to clone
+    function _cloneHookReceiver(
+        ISiloConfig.InitData memory _siloInitData,
+        address _hookReceiverImplementation
+    ) internal {
+        if (_hookReceiverImplementation != address(0) && _siloInitData.hookReceiver != address(0)) {
+            revert HookReceiverMissconfigured();
+        }
+
+        if (_hookReceiverImplementation != address(0)) {
+            _siloInitData.hookReceiver = Clones.clone(_hookReceiverImplementation);
+        }
+    }
+
+    /// @notice Initialize hook receiver if it was cloned
+    /// @param _siloInitData Silo configuration for the silo creation
+    /// (where _siloInitData.hookReceiver is the cloned hook receiver)
+    /// @param _siloConfig Configuration of the created silo
+    /// @param _hookReceiverImplementation Hook receiver implementation
+    function _initializeHookReceiver(
+        ISiloConfig.InitData memory _siloInitData,
+        ISiloConfig _siloConfig,
+        address _hookReceiverImplementation
+    ) internal {
+        if (_hookReceiverImplementation != address(0)) {
+            IHookReceiver(_siloInitData.hookReceiver).initialize(TIMELOCK_CONTROLLER, _siloConfig);
+        }
     }
 }

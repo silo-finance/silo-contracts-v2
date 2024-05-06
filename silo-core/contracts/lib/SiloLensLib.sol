@@ -10,19 +10,15 @@ import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
 import {SiloSolvencyLib} from "./SiloSolvencyLib.sol";
 import {SiloLendingLib} from "./SiloLendingLib.sol";
 import {SiloERC4626Lib} from "./SiloERC4626Lib.sol";
+import {Hook} from "./Hook.sol";
 
 library SiloLensLib {
-    function depositPossible(ISilo _silo, address _depositor) internal view returns (bool) {
-        address debtShareToken = _silo.config().getConfig(address(_silo)).debtShareToken;
-        return SiloERC4626Lib.depositPossible(debtShareToken, _depositor);
-    }
+    function borrowPossible(ISilo _silo, address _borrower) internal view returns (bool possible) {
+        (
+            ,, ISiloConfig.DebtInfo memory debtInfo
+        ) = _silo.config().getConfigs(address(_silo), _borrower, Hook.BORROW);
 
-    function borrowPossible(ISilo _silo, address _borrower) internal view returns (bool) {
-        ISiloConfig.ConfigData memory configData = _silo.config().getConfig(address(_silo));
-
-        return SiloLendingLib.borrowPossible(
-            configData.protectedShareToken, configData.collateralShareToken, _borrower
-        );
+        possible = SiloLendingLib.borrowPossible(debtInfo);
     }
 
     function getMaxLtv(ISilo _silo) internal view returns (uint256 maxLtv) {
@@ -35,8 +31,9 @@ library SiloLensLib {
 
     function getLtv(ISilo _silo, address _borrower) internal view returns (uint256 ltv) {
         (
-            ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig
-        ) = SiloSolvencyLib.getOrderedConfigs(_silo, _silo.config(), _borrower);
+            ISiloConfig.ConfigData memory collateralConfig,
+            ISiloConfig.ConfigData memory debtConfig,
+        ) = _silo.config().getConfigs(address(_silo), _borrower, Hook.NONE);
 
         ltv = SiloSolvencyLib.getLtv(
             collateralConfig,

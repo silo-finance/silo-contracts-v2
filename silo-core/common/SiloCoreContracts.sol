@@ -9,9 +9,9 @@ library SiloCoreContracts {
     string public constant INTEREST_RATE_MODEL_V2_CONFIG_FACTORY = "InterestRateModelV2ConfigFactory.sol";
     string public constant INTEREST_RATE_MODEL_V2 = "InterestRateModelV2.sol";
     string public constant GAUGE_HOOK_RECEIVER = "GaugeHookReceiver.sol";
-    string public constant HOOK_RECEIVERS_FACTORY = "HookReceiversFactory.sol";
     string public constant SILO_DEPLOYER = "SiloDeployer.sol";
     string public constant SILO = "Silo.sol";
+    string public constant PARTIAL_LIQUIDATION = "PartialLiquidation.sol";
     string public constant SHARE_COLLATERAL_TOKEN = "ShareCollateralToken.sol";
     string public constant SHARE_DEBT_TOKEN = "ShareDebtToken.sol";
     string public constant SILO_LENS = "SiloLens.sol";

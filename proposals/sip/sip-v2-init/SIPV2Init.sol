@@ -34,9 +34,9 @@ contract SIPV2Init is Proposal {
         smartWalletChecker.acceptOwnership();
         stakelessGaugeCheckpointerAdaptor.acceptOwnership();
         uniswapSwapper.acceptOwnership();
-        veSiloDelegatorViaCCIP.acceptOwnership();
         votingEscrowCCIPRemapper.acceptOwnership();
         votingEscrowDelegationProxy.acceptOwnership();
+        liquidityGaugeFactory.acceptOwnership();
 
         // gauge related configuration
         gaugeController.add_type(Constants._GAUGE_TYPE_ETHEREUM);

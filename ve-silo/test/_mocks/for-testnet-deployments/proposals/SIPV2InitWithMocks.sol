@@ -45,7 +45,6 @@ contract SIPV2InitWithMocks is Proposal {
         siloFactory.acceptOwnership();
         smartWalletChecker.acceptOwnership();
         stakelessGaugeCheckpointerAdaptor.acceptOwnership();
-        veSiloDelegatorViaCCIP.acceptOwnership();
         votingEscrowCCIPRemapper.acceptOwnership();
         votingEscrowDelegationProxy.acceptOwnership();
         balancerTokenAdmin.acceptOwnership();

@@ -1,13 +1,10 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.21;
 
-import {Initializable} from "openzeppelin-contracts-upgradeable/proxy/utils/Initializable.sol";
-import {ReentrancyGuardUpgradeable} from "openzeppelin-contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
-import {MathUpgradeable} from "openzeppelin-contracts-upgradeable/utils/math/MathUpgradeable.sol";
-import {SafeERC20Upgradeable} from "openzeppelin-contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
-import {IERC20Upgradeable} from "openzeppelin-contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
+import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
+import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 
-import {ISilo, ISiloLiquidation, IERC4626, IERC3156FlashLender} from "./interfaces/ISilo.sol";
+import {ISilo, IERC4626, IERC3156FlashLender, ILiquidationProcess} from "./interfaces/ISilo.sol";
 import {ISiloOracle} from "./interfaces/ISiloOracle.sol";
 import {IShareToken} from "./interfaces/IShareToken.sol";
 
@@ -16,14 +13,20 @@ import {ILeverageBorrower} from "./interfaces/ILeverageBorrower.sol";
 import {ISiloConfig} from "./interfaces/ISiloConfig.sol";
 import {ISiloFactory} from "./interfaces/ISiloFactory.sol";
 import {IInterestRateModel} from "./interfaces/IInterestRateModel.sol";
+import {IHookReceiver} from "./utils/hook-receivers/interfaces/IHookReceiver.sol";
 
 import {SiloERC4626} from "./utils/SiloERC4626.sol";
+
+import {Actions} from "./lib/Actions.sol";
 import {SiloStdLib} from "./lib/SiloStdLib.sol";
 import {SiloSolvencyLib} from "./lib/SiloSolvencyLib.sol";
 import {SiloLendingLib} from "./lib/SiloLendingLib.sol";
 import {SiloERC4626Lib} from "./lib/SiloERC4626Lib.sol";
 import {SiloMathLib} from "./lib/SiloMathLib.sol";
-import {SiloLiquidationExecLib} from "./lib/SiloLiquidationExecLib.sol";
+import {LiquidationWithdrawLib} from "./lib/LiquidationWithdrawLib.sol";
+import {Rounding} from "./lib/Rounding.sol";
+import {Hook} from "./lib/Hook.sol";
+import {AssetTypes} from "./lib/AssetTypes.sol";
 
 // Keep ERC4626 ordering
 // solhint-disable ordering
@@ -32,68 +35,98 @@ import {SiloLiquidationExecLib} from "./lib/SiloLiquidationExecLib.sol";
 /// @notice Silo is a ERC4626-compatible vault that allows users to deposit collateral and borrow debt. This contract
 /// is deployed twice for each asset for two-asset lending markets.
 /// Version: 2.0.0
-contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
-    using SafeERC20Upgradeable for IERC20Upgradeable;
-
-    bytes32 internal constant _LEVERAGE_CALLBACK = keccak256("ILeverageBorrower.onLeverage");
+contract Silo is SiloERC4626 {
+    using SafeERC20 for IERC20;
 
     ISiloFactory public immutable factory;
 
-    ISiloConfig public config;
-
     SiloData public siloData;
 
-    /// @dev silo is just for one asset, but this one asset can be of three types, so we store `assets` by type. We use
-    /// struct instead of uint256 to pass storage reference to functions.
+    SharedStorage public sharedStorage;
+
+    /// @dev silo is just for one asset, but this one asset can be of three types: mapping key is uint256(AssetType),
+    /// so we store `assets` by type.
+    /// We are useing struct `Assets` instead of direct uint256 to pass storage reference to functions.
     /// `total` can have outdated value (without interest), if you doing view call (of off-chain call) please use
     /// getters eg `getCollateralAssets()` to fetch value that includes interest.
-    mapping(AssetType => Assets) public override total;
+    mapping(uint256 assetType => Assets) public override total;
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor(ISiloFactory _siloFactory) {
-        _disableInitializers();
         factory = _siloFactory;
+
+        // Set the config to a non-zero value in order to prevent the implementation contract from being initialized
+        sharedStorage.siloConfig = ISiloConfig(address(this));
+    }
+
+    /// @dev Silo is not designed to work with ether, but it can act as a middleware
+    /// between any third-party contract and hook receiver. So, this is the responsibility
+    /// of the hook receiver developer to handle it if needed.
+    receive() external payable {}
+
+    /// @inheritdoc ISilo
+    function callOnBehalfOfSilo(address _target, uint256 _value, bytes calldata _input)
+        external
+        payable
+        returns (bool success, bytes memory result)
+    {
+        if (msg.sender != address(sharedStorage.hookReceiver)) revert OnlyHookReceiver();
+
+        (success, result) = _target.call{value: _value}(_input);
+        // Silo will not send back any ether leftovers after the call.
+        // The hook receiver should request the ether if needed in a separate call.
     }
 
     /// @inheritdoc ISilo
-    function initialize(ISiloConfig _siloConfig, address _modelConfigAddress) external virtual initializer {
-        __ReentrancyGuard_init();
+    function initialize(ISiloConfig _siloConfig, address _modelConfigAddress) external virtual {
+        if (address(sharedStorage.siloConfig) != address(0)) revert SiloInitialized();
 
-        config = _siloConfig;
+        ISiloConfig.ConfigData memory configData = _siloConfig.getConfig(address(this));
 
-        address interestRateModel = _siloConfig.getConfig(address(this)).interestRateModel;
-        IInterestRateModel(interestRateModel).connect(_modelConfigAddress);
+        sharedStorage.siloConfig = _siloConfig;
+        sharedStorage.hookReceiver = IHookReceiver(configData.hookReceiver);
+
+        IInterestRateModel(configData.interestRateModel).connect(_modelConfigAddress);
+    }
+
+    /// @inheritdoc ISilo
+    function updateHooks() external {
+        (uint24 hooksBefore, uint24 hooksAfter) = Actions.updateHooks(sharedStorage);
+        emit HooksUpdated(hooksBefore, hooksAfter);
+    }
+
+    /// @inheritdoc ISilo
+    function config() external view virtual returns (ISiloConfig siloConfig) {
+        siloConfig = sharedStorage.siloConfig;
     }
 
     /// @inheritdoc ISilo
     function utilizationData() external view virtual returns (UtilizationData memory) {
         return UtilizationData({
-            collateralAssets: total[AssetType.Collateral].assets,
-            debtAssets: total[AssetType.Debt].assets,
+            collateralAssets: total[AssetTypes.COLLATERAL].assets,
+            debtAssets: total[AssetTypes.DEBT].assets,
             interestRateTimestamp: siloData.interestRateTimestamp
         });
     }
 
     function getLiquidity() external view virtual returns (uint256 liquidity) {
-        return _callGetLiquidity(config);
+        return SiloLendingLib.getLiquidity(sharedStorage.siloConfig);
     }
 
     /// @inheritdoc ISilo
     function isSolvent(address _borrower) external view virtual returns (bool) {
         (
-            ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig
-        ) = SiloSolvencyLib.getOrderedConfigs(this, config, _borrower);
+            ISiloConfig.ConfigData memory collateral,
+            ISiloConfig.ConfigData memory debt,
+            ISiloConfig.DebtInfo memory debtInfo
+        ) = sharedStorage.siloConfig.getConfigs(address(this), _borrower, Hook.NONE);
 
-        uint256 debtShareBalance = IShareToken(debtConfig.debtShareToken).balanceOf(_borrower);
-
-        return SiloSolvencyLib.isSolvent(
-            collateralConfig, debtConfig, _borrower, AccrueInterestInMemory.Yes, debtShareBalance
-        );
+        return SiloSolvencyLib.isSolvent(collateral, debt, debtInfo, _borrower, AccrueInterestInMemory.Yes);
     }
 
     /// @inheritdoc ISilo
     function getCollateralAssets() external view virtual returns (uint256 totalCollateralAssets) {
-        ISiloConfig.ConfigData memory thisSiloConfig = config.getConfig(address(this));
+        ISiloConfig.ConfigData memory thisSiloConfig = sharedStorage.siloConfig.getConfig(address(this));
 
         totalCollateralAssets = SiloStdLib.getTotalCollateralAssetsWithInterest(
             thisSiloConfig.silo,
@@ -105,7 +138,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
 
     /// @inheritdoc ISilo
     function getDebtAssets() external view virtual returns (uint256 totalDebtAssets) {
-        ISiloConfig.ConfigData memory thisSiloConfig = config.getConfig(address(this));
+        ISiloConfig.ConfigData memory thisSiloConfig = sharedStorage.siloConfig.getConfig(address(this));
 
         totalDebtAssets = SiloStdLib.getTotalDebtAssetsWithInterest(
             thisSiloConfig.silo, thisSiloConfig.interestRateModel
@@ -119,8 +152,8 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
         virtual
         returns (uint256 totalCollateralAssets, uint256 totalProtectedAssets)
     {
-        totalCollateralAssets = total[AssetType.Collateral].assets;
-        totalProtectedAssets = total[AssetType.Protected].assets;
+        totalCollateralAssets = total[AssetTypes.COLLATERAL].assets;
+        totalProtectedAssets = total[AssetTypes.PROTECTED].assets;
     }
 
     /// @inheritdoc ISilo
@@ -130,15 +163,15 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
         virtual
         returns (uint256 totalCollateralAssets, uint256 totalDebtAssets)
     {
-        totalCollateralAssets = total[AssetType.Collateral].assets;
-        totalDebtAssets = total[AssetType.Debt].assets;
+        totalCollateralAssets = total[AssetTypes.COLLATERAL].assets;
+        totalDebtAssets = total[AssetTypes.DEBT].assets;
     }
 
     // ERC4626
 
     /// @inheritdoc IERC4626
     function asset() external view virtual returns (address assetTokenAddress) {
-        return config.getAssetForSilo(address(this));
+        return sharedStorage.siloConfig.getAssetForSilo(address(this));
     }
 
     /// @inheritdoc IERC4626
@@ -154,7 +187,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
             _getTotalAssetsAndTotalSharesWithInterest(AssetType.Collateral);
 
         return SiloMathLib.convertToShares(
-            _assets, totalSiloAssets, totalShares, MathUpgradeable.Rounding.Down, AssetType.Collateral
+            _assets, totalSiloAssets, totalShares, Rounding.DEFAULT_TO_SHARES, AssetType.Collateral
         );
     }
 
@@ -166,108 +199,83 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
             _getTotalAssetsAndTotalSharesWithInterest(AssetType.Collateral);
 
         return SiloMathLib.convertToAssets(
-            _shares, totalSiloAssets, totalShares, MathUpgradeable.Rounding.Down, AssetType.Collateral
+            _shares, totalSiloAssets, totalShares, Rounding.DEFAULT_TO_ASSETS, AssetType.Collateral
         );
     }
 
     /// @inheritdoc IERC4626
-    function maxDeposit(address _receiver) external view virtual returns (uint256 maxAssets) {
-        return _callMaxDepositOrMint(_receiver, total[AssetType.Collateral].assets);
+    function maxDeposit(address /* _receiver */) external view virtual returns (uint256 maxAssets) {
+        return _callMaxDepositOrMint(total[AssetTypes.COLLATERAL].assets);
     }
 
     /// @inheritdoc IERC4626
     function previewDeposit(uint256 _assets) external view virtual returns (uint256 shares) {
-        return _previewDeposit(_assets, AssetType.Collateral);
+        return _previewDeposit(_assets, CollateralType.Collateral);
     }
 
     /// @inheritdoc IERC4626
     function deposit(uint256 _assets, address _receiver)
         external
         virtual
-        nonReentrant
         returns (uint256 shares)
     {
-        if (_assets == 0) revert ISilo.ZeroAssets();
-
-        (, ISiloConfig.ConfigData memory configData) = _accrueInterest();
-
-        (, shares) = _deposit(
-            configData.token,
-            _assets,
-            0, // shares
-            _receiver,
-            AssetType.Collateral,
-            IShareToken(configData.collateralShareToken),
-            IShareToken(configData.debtShareToken)
-        );
+        (, shares) = _deposit(_assets, 0 /* shares */, _receiver, CollateralType.Collateral);
     }
 
     /// @inheritdoc IERC4626
-    function maxMint(address _receiver) external view virtual returns (uint256 maxShares) {
-        return _callMaxDepositOrMint(_receiver, IShareToken(_getShareToken()).totalSupply());
+    function maxMint(address /* _receiver */) external view virtual returns (uint256 maxShares) {
+        return _callMaxDepositOrMint(IShareToken(_getShareToken()).totalSupply());
     }
 
     /// @inheritdoc IERC4626
     function previewMint(uint256 _shares) external view virtual returns (uint256 assets) {
-        return _previewMint(_shares, AssetType.Collateral);
+        return _previewMint(_shares, CollateralType.Collateral);
     }
 
     /// @inheritdoc IERC4626
-    function mint(uint256 _shares, address _receiver) external virtual nonReentrant returns (uint256 assets) {
-        (, ISiloConfig.ConfigData memory configData) = _accrueInterest();
-
-        (assets,) = _deposit(
-            configData.token,
-            0, // assets
-            _shares,
-            _receiver,
-            AssetType.Collateral,
-            IShareToken(configData.collateralShareToken),
-            IShareToken(configData.debtShareToken)
-        );
+    function mint(uint256 _shares, address _receiver) external virtual returns (uint256 assets) {
+        (assets,) = _deposit(0 /* assets */, _shares, _receiver, CollateralType.Collateral);
     }
 
     /// @inheritdoc IERC4626
     function maxWithdraw(address _owner) external view virtual returns (uint256 maxAssets) {
-        (maxAssets,) = _callMaxWithdraw(config, _owner, AssetType.Collateral);
+        (maxAssets,) = _callMaxWithdraw(sharedStorage.siloConfig, _owner, CollateralType.Collateral);
     }
 
     /// @inheritdoc IERC4626
     function previewWithdraw(uint256 _assets) external view virtual returns (uint256 shares) {
-        return _previewWithdraw(_assets, AssetType.Collateral);
+        return _previewWithdraw(_assets, CollateralType.Collateral);
     }
 
     /// @inheritdoc IERC4626
     function withdraw(uint256 _assets, address _receiver, address _owner)
         external
         virtual
-        nonReentrant
         returns (uint256 shares)
     {
-        (, shares) = _withdraw(_assets, 0 /* shares */, _receiver, _owner, msg.sender, AssetType.Collateral);
+        (, shares) = _withdraw(_assets, 0 /* shares */, _receiver, _owner, msg.sender, CollateralType.Collateral);
     }
 
     /// @inheritdoc IERC4626
     function maxRedeem(address _owner) external view virtual returns (uint256 maxShares) {
-        (, maxShares) = _callMaxWithdraw(config, _owner, AssetType.Collateral);
+        (, maxShares) = _callMaxWithdraw(sharedStorage.siloConfig, _owner, CollateralType.Collateral);
     }
 
     /// @inheritdoc IERC4626
     function previewRedeem(uint256 _shares) external view virtual returns (uint256 assets) {
-        return _previewRedeem(_shares, AssetType.Collateral);
+        return _previewRedeem(_shares, CollateralType.Collateral);
     }
 
     /// @inheritdoc IERC4626
     function redeem(uint256 _shares, address _receiver, address _owner)
         external
         virtual
-        nonReentrant
         returns (uint256 assets)
     {
         // avoid magic number 0
         uint256 zeroAssets = 0;
 
-        (assets,) = _withdraw(zeroAssets, _shares, _receiver, _owner, msg.sender, AssetType.Collateral);
+        (assets,) = _withdraw(zeroAssets, _shares, _receiver, _owner, msg.sender, CollateralType.Collateral);
     }
 
     /// @inheritdoc ISilo
@@ -275,7 +283,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
         (uint256 totalSiloAssets, uint256 totalShares) = _getTotalAssetsAndTotalSharesWithInterest(_assetType);
 
         return SiloMathLib.convertToShares(
-            _assets, totalSiloAssets, totalShares, MathUpgradeable.Rounding.Down, _assetType
+            _assets, totalSiloAssets, totalShares, Rounding.DEFAULT_TO_SHARES, _assetType
         );
     }
 
@@ -287,193 +295,145 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
             _shares,
             totalSiloAssets,
             totalShares,
-            _assetType == AssetType.Debt ? MathUpgradeable.Rounding.Up : MathUpgradeable.Rounding.Down,
+            _assetType == AssetType.Debt ? Rounding.DEBT_TO_ASSETS : Rounding.DEFAULT_TO_ASSETS,
             _assetType
         );
     }
 
     /// @inheritdoc ISilo
-    function maxDeposit(address _receiver, AssetType _assetType)
+    function maxDeposit(address /* _receiver */, CollateralType _collateralType)
         external
         view
         virtual
         returns (uint256 maxAssets)
     {
-        return _callMaxDepositOrMint(_receiver, total[_assetType].assets);
+        return _callMaxDepositOrMint(total[uint256(_collateralType)].assets);
     }
 
     /// @inheritdoc ISilo
-    function previewDeposit(uint256 _assets, AssetType _assetType) external view virtual returns (uint256 shares) {
-        return _previewDeposit(_assets, _assetType);
-    }
-
-    /// @inheritdoc ISilo
-    function deposit(uint256 _assets, address _receiver, AssetType _assetType)
+    function previewDeposit(uint256 _assets, CollateralType _collateralType)
         external
+        view
         virtual
-        nonReentrant
         returns (uint256 shares)
     {
-        if (_assets == 0) revert ISilo.ZeroAssets();
-
-        (, ISiloConfig.ConfigData memory configData) = _accrueInterest();
-
-        address collateralShareToken = _assetType == AssetType.Collateral
-            ? configData.collateralShareToken
-            : configData.protectedShareToken;
-
-        (, shares) = _deposit(
-            configData.token,
-            _assets,
-            0, // shares
-            _receiver,
-            _assetType,
-            IShareToken(collateralShareToken),
-            IShareToken(configData.debtShareToken)
-        );
+        return _previewDeposit(_assets, _collateralType);
     }
 
     /// @inheritdoc ISilo
-    function maxMint(address _receiver, AssetType _assetType)
+    function deposit(uint256 _assets, address _receiver, CollateralType _collateralType)
+        external
+        virtual
+        returns (uint256 shares)
+    {
+        (, shares) = _deposit(_assets, 0, /* shares */ _receiver, _collateralType);
+    }
+
+    /// @inheritdoc ISilo
+    function maxMint(address /* _receiver */, CollateralType _collateralType)
         external
         view
         virtual
         returns (uint256 maxShares)
     {
-        if (_assetType == AssetType.Debt) revert ISilo.WrongAssetType();
+        (address protectedToken, address collateralToken, ) = sharedStorage.siloConfig.getShareTokens(address(this));
+        address shareToken = _collateralType == CollateralType.Collateral ? collateralToken : protectedToken;
 
-        (address protectedToken, address collateralToken, ) = config.getShareTokens(address(this));
-        address shareToken = _assetType == AssetType.Collateral ? collateralToken : protectedToken;
-
-        return _callMaxDepositOrMint(_receiver, IShareToken(shareToken).totalSupply());
+        return _callMaxDepositOrMint(IShareToken(shareToken).totalSupply());
     }
 
     /// @inheritdoc ISilo
-    function previewMint(uint256 _shares, AssetType _assetType) external view virtual returns (uint256 assets) {
-        return _previewMint(_shares, _assetType);
-    }
-
-    /// @inheritdoc ISilo
-    function mint(uint256 _shares, address _receiver, AssetType _assetType)
+    function previewMint(uint256 _shares, CollateralType _collateralType)
         external
+        view
         virtual
-        nonReentrant
         returns (uint256 assets)
     {
-        if (_shares == 0) revert ISilo.ZeroShares();
-
-        (, ISiloConfig.ConfigData memory configData) = _accrueInterest();
-
-        address collateralShareToken = _assetType == AssetType.Collateral
-            ? configData.collateralShareToken
-            : configData.protectedShareToken;
-
-        (assets,) = _deposit(
-            configData.token,
-            0, // asstes
-            _shares,
-            _receiver,
-            _assetType,
-            IShareToken(collateralShareToken),
-            IShareToken(configData.debtShareToken)
-        );
+        return _previewMint(_shares, _collateralType);
     }
 
     /// @inheritdoc ISilo
-    function maxWithdraw(address _owner, AssetType _assetType) external view virtual returns (uint256 maxAssets) {
-        if (_assetType == AssetType.Debt) revert ISilo.WrongAssetType();
-
-        (maxAssets,) = _callMaxWithdraw(config, _owner, _assetType);
-    }
-
-    /// @inheritdoc ISilo
-    function previewWithdraw(uint256 _assets, AssetType _assetType) external view virtual returns (uint256 shares) {
-        return _previewWithdraw(_assets, _assetType);
-    }
-
-    /// @inheritdoc ISilo
-    function withdraw(uint256 _assets, address _receiver, address _owner, AssetType _assetType)
+    function mint(uint256 _shares, address _receiver, CollateralType _collateralType)
         external
         virtual
-        nonReentrant
+        returns (uint256 assets)
+    {
+        (assets,) = _deposit(0 /* assets */, _shares, _receiver, _collateralType);
+    }
+
+    /// @inheritdoc ISilo
+    function maxWithdraw(address _owner, CollateralType _collateralType)
+        external
+        view
+        virtual
+        returns (uint256 maxAssets)
+    {
+        (maxAssets,) = _callMaxWithdraw(sharedStorage.siloConfig, _owner, _collateralType);
+    }
+
+    /// @inheritdoc ISilo
+    function previewWithdraw(uint256 _assets, CollateralType _collateralType)
+        external
+        view
+        virtual
         returns (uint256 shares)
     {
-        (, shares) = _withdraw(_assets, 0 /* shares */, _receiver, _owner, msg.sender, _assetType);
+        return _previewWithdraw(_assets, _collateralType);
     }
 
     /// @inheritdoc ISilo
-    function maxRedeem(address _owner, AssetType _assetType) external view virtual returns (uint256 maxShares) {
-        if (_assetType == AssetType.Debt) revert ISilo.WrongAssetType();
-
-        (, maxShares) = _callMaxWithdraw(config, _owner, _assetType);
-    }
-
-    /// @inheritdoc ISilo
-    function previewRedeem(uint256 _shares, AssetType _assetType) external view virtual returns (uint256 assets) {
-        return _previewRedeem(_shares, _assetType);
-    }
-
-    /// @inheritdoc ISilo
-    function redeem(uint256 _shares, address _receiver, address _owner, AssetType _assetType)
+    function withdraw(uint256 _assets, address _receiver, address _owner, CollateralType _collateralType)
         external
         virtual
-        nonReentrant
-        returns (uint256 assets)
+        returns (uint256 shares)
     {
-        (assets,) = _withdraw(0 /* assets */, _shares, _receiver, _owner, msg.sender, _assetType);
+        (, shares) = _withdraw(_assets, 0 /* shares */, _receiver, _owner, msg.sender, _collateralType);
     }
 
     /// @inheritdoc ISilo
-    function transitionCollateral( // solhint-disable-line function-max-lines
+    function maxRedeem(address _owner, CollateralType _collateralType)
+        external
+        view
+        virtual
+        returns (uint256 maxShares)
+    {
+        (, maxShares) = _callMaxWithdraw(sharedStorage.siloConfig, _owner, _collateralType);
+    }
+
+    /// @inheritdoc ISilo
+    function previewRedeem(uint256 _shares, CollateralType _collateralType)
+        external
+        view
+        virtual
+        returns (uint256 assets)
+    {
+        return _previewRedeem(_shares, _collateralType);
+    }
+
+    /// @inheritdoc ISilo
+    function redeem(uint256 _shares, address _receiver, address _owner, CollateralType _collateralType)
+        external
+        virtual
+        returns (uint256 assets)
+    {
+        (assets,) = _withdraw(0 /* assets */, _shares, _receiver, _owner, msg.sender, _collateralType);
+    }
+
+    /// @inheritdoc ISilo
+    function transitionCollateral(
         uint256 _shares,
         address _owner,
-        AssetType _withdrawType
+        CollateralType _withdrawType
     )
         external
         virtual
-        nonReentrant
         returns (uint256 assets)
     {
-        if (_withdrawType == AssetType.Debt) revert ISilo.WrongAssetType();
-
-        (, ISiloConfig.ConfigData memory configData) = _accrueInterest();
-
         uint256 toShares;
 
-        { // Stack too deep
-            (address shareTokenFrom, uint256 liquidity) = _withdrawType == AssetType.Collateral
-                ? (configData.collateralShareToken, _getRawLiquidity())
-                : (configData.protectedShareToken, total[AssetType.Protected].assets);
+        (assets, toShares) = Actions.transitionCollateral(sharedStorage, _shares, _owner, _withdrawType, total);
 
-            (assets, _shares) = SiloERC4626Lib.transitionCollateralWithdraw(
-                shareTokenFrom,
-                _shares,
-                _owner,
-                msg.sender,
-                _withdrawType,
-                liquidity,
-                total[_withdrawType]
-            );
-        }
-
-        { // Stack too deep
-            (AssetType depositType, address shareTokenTo) = _withdrawType == AssetType.Collateral
-                ? (AssetType.Protected, configData.protectedShareToken)
-                : (AssetType.Collateral, configData.collateralShareToken);
-
-            (assets, toShares) = SiloERC4626Lib.deposit(
-                address(0), // empty token because we don't want to transfer
-                _owner,
-                assets,
-                0, // shares
-                _owner,
-                IShareToken(shareTokenTo),
-                IShareToken(configData.debtShareToken),
-                total[depositType]
-            );
-        }
-
-        if (_withdrawType == AssetType.Collateral) {
+        if (_withdrawType == CollateralType.Collateral) {
             emit Withdraw(msg.sender, _owner, _owner, assets, _shares);
             emit DepositProtected(msg.sender, _owner, assets, toShares);
         } else {
@@ -483,24 +443,8 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
     }
 
     /// @inheritdoc ISilo
-    function maxBorrow(address _borrower) external view virtual returns (uint256 maxAssets) {
-        ISiloConfig cachedConfig = config;
-
-        (
-            ISiloConfig.ConfigData memory debtConfig, ISiloConfig.ConfigData memory collateralConfig
-        ) = cachedConfig.getConfigs(address(this));
-
-        (uint256 totalDebtAssets, uint256 totalDebtShares) =
-            SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(debtConfig, AssetType.Debt);
-
-        (maxAssets,) = _callMaxBorrow(
-            collateralConfig,
-            debtConfig,
-            _borrower,
-            totalDebtAssets,
-            totalDebtShares,
-            cachedConfig
-        );
+    function maxBorrow(address _borrower, bool _sameAsset) external view virtual returns (uint256 maxAssets) {
+        (maxAssets,) = SiloLendingLib.maxBorrow(sharedStorage.siloConfig, _borrower, _sameAsset);
     }
 
     /// @inheritdoc ISilo
@@ -508,37 +452,57 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
         (uint256 totalSiloAssets, uint256 totalShares) = _getTotalAssetsAndTotalSharesWithInterest(AssetType.Debt);
 
         return SiloMathLib.convertToShares(
-            _assets, totalSiloAssets, totalShares, MathUpgradeable.Rounding.Up, AssetType.Debt
+            _assets, totalSiloAssets, totalShares, Rounding.BORROW_TO_SHARES, AssetType.Debt
         );
     }
 
-    /// @inheritdoc ISilo
-    function borrow(uint256 _assets, address _receiver, address _borrower)
-        external
-        virtual
-        nonReentrant
-        returns (uint256 shares)
-    {
-        // avoid magic number 0
-        uint256 borrowSharesZero = 0;
-
-        (, shares) = _borrow(_assets, borrowSharesZero, _receiver, _borrower);
+    function switchCollateralTo(bool _sameAsset) external virtual {
+        Actions.switchCollateralTo(sharedStorage, _sameAsset);
+        emit CollateralTypeChanged(msg.sender, _sameAsset);
     }
 
     /// @inheritdoc ISilo
-    function maxBorrowShares(address _borrower) external view virtual returns (uint256 maxShares) {
-        ISiloConfig cachedConfig = config;
-
+    function leverageSameAsset(
+        uint256 _depositAssets,
+        uint256 _borrowAssets,
+        address _borrower,
+        CollateralType _collateralType
+    )
+        external
+        virtual
+        returns (uint256 depositedShares, uint256 borrowedShares)
+    {
         (
-            ISiloConfig.ConfigData memory debtConfig, ISiloConfig.ConfigData memory collateralConfig
-        ) = cachedConfig.getConfigs(address(this));
+            depositedShares, borrowedShares
+        ) = Actions.leverageSameAsset(
+            sharedStorage,
+            _depositAssets,
+            _borrowAssets,
+            _borrower,
+            _collateralType,
+            total[AssetTypes.COLLATERAL].assets,
+            total[AssetTypes.DEBT],
+            total[uint256(_collateralType)]
+        );
 
-        (uint256 totalDebtAssets, uint256 totalDebtShares) =
-            SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(debtConfig, AssetType.Debt);
+        emit Borrow(msg.sender, _borrower, _borrower, _borrowAssets, borrowedShares);
+        emit Deposit(msg.sender, _borrower, _depositAssets, depositedShares);
+    }
 
+    /// @inheritdoc ISilo
+    function borrow(uint256 _assets, address _receiver, address _borrower, bool _sameAsset)
+        external
+        virtual
+        returns (uint256 shares)
+    {
         (
-            ,maxShares
-        ) = _callMaxBorrow(collateralConfig, debtConfig, _borrower, totalDebtAssets, totalDebtShares, cachedConfig);
+            , shares
+        ) = _borrow(_assets, 0 /* shares */, _receiver, _borrower, _sameAsset, false /* _leverage */, "" /* data */);
+    }
+
+    /// @inheritdoc ISilo
+    function maxBorrowShares(address _borrower, bool _sameAsset) external view virtual returns (uint256 maxShares) {
+        (,maxShares) = SiloLendingLib.maxBorrow(sharedStorage.siloConfig, _borrower, _sameAsset);
     }
 
     /// @inheritdoc ISilo
@@ -546,33 +510,31 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
         (uint256 totalSiloAssets, uint256 totalShares) = _getTotalAssetsAndTotalSharesWithInterest(AssetType.Debt);
 
         return SiloMathLib.convertToAssets(
-            _shares, totalSiloAssets, totalShares, MathUpgradeable.Rounding.Down, AssetType.Debt
+            _shares, totalSiloAssets, totalShares, Rounding.BORROW_TO_ASSETS, AssetType.Debt
         );
     }
 
     /// @inheritdoc ISilo
-    function borrowShares(uint256 _shares, address _receiver, address _borrower)
+    function borrowShares(uint256 _shares, address _receiver, address _borrower, bool _sameAsset)
         external
         virtual
-        nonReentrant
         returns (uint256 assets)
     {
-        // avoid magic number 0
-        uint256 zeroAssets = 0;
-
-        (assets,) = _borrow(zeroAssets, _shares, _receiver, _borrower);
+        (
+            assets,
+        ) = _borrow(0 /* assets */, _shares, _receiver, _borrower, _sameAsset, false /* _leverage */, "" /* data */);
     }
 
     /// @inheritdoc ISilo
     function maxRepay(address _borrower) external view virtual returns (uint256 assets) {
-        ISiloConfig.ConfigData memory configData = config.getConfig(address(this));
+        ISiloConfig.ConfigData memory configData = sharedStorage.siloConfig.getConfig(address(this));
         uint256 shares = IShareToken(configData.debtShareToken).balanceOf(_borrower);
 
         (uint256 totalSiloAssets, uint256 totalShares) =
             SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(configData, AssetType.Debt);
 
         return SiloMathLib.convertToAssets(
-            shares, totalSiloAssets, totalShares, MathUpgradeable.Rounding.Up, AssetType.Debt
+            shares, totalSiloAssets, totalShares, Rounding.MAX_REPAY_TO_ASSETS, AssetType.Debt
         );
     }
 
@@ -581,7 +543,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
         (uint256 totalSiloAssets, uint256 totalShares) = _getTotalAssetsAndTotalSharesWithInterest(AssetType.Debt);
 
         return SiloMathLib.convertToShares(
-            _assets, totalSiloAssets, totalShares, MathUpgradeable.Rounding.Down, AssetType.Debt
+            _assets, totalSiloAssets, totalShares, Rounding.REPAY_TO_SHARES, AssetType.Debt
         );
     }
 
@@ -589,18 +551,23 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
     function repay(uint256 _assets, address _borrower)
         external
         virtual
-        nonReentrant
         returns (uint256 shares)
     {
-        // avoid magic number 0
-        uint256 repaySharesZero = 0;
+        (, shares) = _repay(_assets, 0 /* repaySharesZero */, _borrower, msg.sender, false /* _liquidation */);
+    }
 
-        (, shares) = _repay(_assets, repaySharesZero, _borrower);
+    /// @inheritdoc ILiquidationProcess
+    function liquidationRepay(uint256 _assets, address _borrower, address _repayer)
+        external
+        virtual
+        returns (uint256 shares)
+    {
+        (, shares) = _repay(_assets, 0 /* repaySharesZero */, _borrower, _repayer, true /* _liquidation */);
     }
 
     /// @inheritdoc ISilo
     function maxRepayShares(address _borrower) external view virtual returns (uint256 shares) {
-        ISiloConfig.ConfigData memory configData = config.getConfig(address(this));
+        ISiloConfig.ConfigData memory configData = sharedStorage.siloConfig.getConfig(address(this));
         shares = IShareToken(configData.debtShareToken).balanceOf(_borrower);
     }
 
@@ -609,7 +576,7 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
         (uint256 totalSiloAssets, uint256 totalShares) = _getTotalAssetsAndTotalSharesWithInterest(AssetType.Debt);
 
         return SiloMathLib.convertToAssets(
-            _shares, totalSiloAssets, totalShares, MathUpgradeable.Rounding.Up, AssetType.Debt
+            _shares, totalSiloAssets, totalShares, Rounding.REPAY_TO_ASSETS, AssetType.Debt
         );
     }
 
@@ -617,24 +584,21 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
     function repayShares(uint256 _shares, address _borrower)
         external
         virtual
-        nonReentrant
         returns (uint256 assets)
     {
-        // avoid magic number 0
-        uint256 zeroAssets = 0;
-
-        (assets,) = _repay(zeroAssets, _shares, _borrower);
+        (assets,) = _repay(0 /* zeroAssets */, _shares, _borrower, msg.sender, false /* _liquidation */);
     }
 
     /// @inheritdoc IERC3156FlashLender
     function maxFlashLoan(address _token) external view virtual returns (uint256 maxLoan) {
-        maxLoan =
-            _token == config.getAssetForSilo(address(this)) ? IERC20Upgradeable(_token).balanceOf(address(this)) : 0;
+        maxLoan = _token == sharedStorage.siloConfig.getAssetForSilo(address(this))
+            ? IERC20(_token).balanceOf(address(this))
+            : 0;
     }
 
     /// @inheritdoc IERC3156FlashLender
     function flashFee(address _token, uint256 _amount) external view virtual returns (uint256 fee) {
-        fee = SiloStdLib.flashFee(config, _token, _amount);
+        fee = SiloStdLib.flashFee(sharedStorage.siloConfig, _token, _amount);
     }
 
     /// @inheritdoc IERC3156FlashLender
@@ -643,114 +607,44 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
         virtual
         returns (bool success)
     {
-        return SiloLendingLib.flashLoan(config, siloData, _receiver, _token, _amount, _data);
+        success = Actions.flashLoan( sharedStorage, _receiver, _token, _amount, siloData, _data);
+        if (success) emit FlashLoan(_amount);
     }
 
     /// @inheritdoc ISilo
-    function leverage(uint256 _assets, ILeverageBorrower _receiver, address _borrower, bytes calldata _data)
+    function leverage(
+        uint256 _assets,
+        ILeverageBorrower _receiver,
+        address _borrower,
+        bool _sameAsset,
+        bytes calldata _data
+    )
         external
         virtual
-        nonReentrant
         returns (uint256 shares)
     {
-        // config for this Silo is always at index 0
-        (ISiloConfig.ConfigData memory debtConfig, ISiloConfig.ConfigData memory collateralConfig) =
-            config.getConfigs(address(this));
-
-        _callAccrueInterestForAsset(
-            debtConfig.interestRateModel, debtConfig.daoFee, debtConfig.deployerFee, debtConfig.otherSilo
-        );
-
-        uint256 assets;
-
-        // avoid magic number 0
-        uint256 borrowSharesZero = 0;
-
-        (
-            assets, shares
-        ) = _callBorrow(debtConfig, _assets, borrowSharesZero, address(_receiver), _borrower, msg.sender);
-
-        emit Borrow(msg.sender, address(_receiver), _borrower, assets, shares);
-        emit Leverage();
-
-        // allow for deposit reentry only to provide collateral
-        if (_receiver.onLeverage(msg.sender, _borrower, debtConfig.token, assets, _data) != _LEVERAGE_CALLBACK) {
-            revert LeverageFailed();
-        }
-
-        if (collateralConfig.callBeforeQuote) {
-            ISiloOracle(collateralConfig.maxLtvOracle).beforeQuote(collateralConfig.token);
-        }
-
-        if (debtConfig.callBeforeQuote) {
-            ISiloOracle(debtConfig.maxLtvOracle).beforeQuote(debtConfig.token);
-        }
-
-        if (!SiloSolvencyLib.isBelowMaxLtv(collateralConfig, debtConfig, _borrower, AccrueInterestInMemory.No)) {
-            revert AboveMaxLtv();
-        }
+        (, shares) = _borrow(_assets, 0 /* _shares */, address(_receiver), _borrower, _sameAsset, true, _data);
     }
 
     /// @inheritdoc ISilo
     function accrueInterest() external virtual returns (uint256 accruedInterest) {
-        (accruedInterest,) = _accrueInterest();
+        ISiloConfig.ConfigData memory cfg = sharedStorage.siloConfig.getConfig(address(this));
+        accruedInterest = _callAccrueInterestForAsset(cfg.interestRateModel, cfg.daoFee, cfg.deployerFee, address(0));
+    }
+
+    /// @inheritdoc ISilo
+    function accrueInterestForConfig(address _interestRateModel, uint256 _daoFee, uint256 _deployerFee)
+        external
+        virtual
+    {
+        if (msg.sender != address(sharedStorage.siloConfig)) revert OnlySiloConfig();
+
+        _callAccrueInterestForAsset(_interestRateModel, _daoFee, _deployerFee, address(0) /* no other silo */);
     }
 
     /// @inheritdoc ISilo
     function withdrawFees() external virtual {
-        SiloStdLib.withdrawFees(this, siloData);
-    }
-
-    /// @dev it can be called on "debt silo" only
-    /// @notice user can use this method to do self liquidation, it that case check for LT requirements will be ignored
-    function liquidationCall(
-        address _collateralAsset,
-        address _debtAsset,
-        address _borrower,
-        uint256 _debtToCover,
-        bool _receiveSToken
-    ) external virtual nonReentrant {
-        (ISiloConfig.ConfigData memory debtConfig, ISiloConfig.ConfigData memory collateralConfig) =
-            config.getConfigs(address(this));
-
-        if (_collateralAsset != collateralConfig.token) revert UnexpectedCollateralToken();
-        if (_debtAsset != debtConfig.token) revert UnexpectedDebtToken();
-
-        _callAccrueInterestForAsset(
-            debtConfig.interestRateModel, debtConfig.daoFee, debtConfig.deployerFee, debtConfig.otherSilo
-        );
-
-        if (collateralConfig.callBeforeQuote) {
-            ISiloOracle(collateralConfig.solvencyOracle).beforeQuote(collateralConfig.token);
-        }
-
-        if (debtConfig.callBeforeQuote) {
-            ISiloOracle(debtConfig.solvencyOracle).beforeQuote(debtConfig.token);
-        }
-
-        bool selfLiquidation = _borrower == msg.sender;
-
-        (
-            uint256 withdrawAssetsFromCollateral, uint256 withdrawAssetsFromProtected, uint256 repayDebtAssets
-        ) = SiloLiquidationExecLib.getExactLiquidationAmounts(
-            collateralConfig,
-            debtConfig,
-            _borrower,
-            _debtToCover,
-            selfLiquidation ? 0 : collateralConfig.liquidationFee,
-            selfLiquidation
-        );
-
-        if (repayDebtAssets == 0) revert NoDebtToCover();
-
-        // always ZERO, we can receive shares, but we can not repay with shares
-        uint256 zeroShares;
-        emit LiquidationCall(msg.sender, _receiveSToken);
-        _callRepay(debtConfig, repayDebtAssets, zeroShares, _borrower, msg.sender);
-
-        ISiloLiquidation(debtConfig.otherSilo).withdrawCollateralsToLiquidator(
-            withdrawAssetsFromCollateral, withdrawAssetsFromProtected, _borrower, msg.sender, _receiveSToken
-        );
+        Actions.withdrawFees(this, siloData);
     }
 
     /// @dev that method allow to finish liquidation process by giving up collateral to liquidator
@@ -761,198 +655,129 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
         address _liquidator,
         bool _receiveSToken
     ) external virtual {
-        SiloLiquidationExecLib.withdrawCollateralsToLiquidator(
-            config,
+        LiquidationWithdrawLib.withdrawCollateralsToLiquidator(
+            sharedStorage.siloConfig,
             _withdrawAssetsFromCollateral,
             _withdrawAssetsFromProtected,
             _borrower,
             _liquidator,
             _receiveSToken,
-            _getRawLiquidity(),
+            getRawLiquidity(),
             total
         );
     }
 
-    /// @inheritdoc ISiloLiquidation
-    function maxLiquidation(address _borrower)
-        external
-        view
-        virtual
-        returns (uint256 collateralToLiquidate, uint256 debtToRepay)
-    {
-        return SiloLiquidationExecLib.maxLiquidation(this, _borrower);
-    }
-
-    function _accrueInterest()
-        internal
-        virtual
-        returns (uint256 accruedInterest, ISiloConfig.ConfigData memory configData)
-    {
-        configData = config.getConfig(address(this));
-
-        accruedInterest = _callAccrueInterestForAsset(
-            configData.interestRateModel, configData.daoFee, configData.deployerFee, address(0)
-        );
-    }
-
-    function _getRawLiquidity() internal view virtual returns (uint256 liquidity) {
-        liquidity = SiloMathLib.liquidity(total[AssetType.Collateral].assets, total[AssetType.Debt].assets);
+    function getRawLiquidity() public view virtual returns (uint256 liquidity) {
+        liquidity = SiloMathLib.liquidity(total[AssetTypes.COLLATERAL].assets, total[AssetTypes.DEBT].assets);
     }
 
     function _deposit(
-        address _token,
         uint256 _assets,
         uint256 _shares,
         address _receiver,
-        ISilo.AssetType _assetType,
-        IShareToken _collateralShareToken,
-        IShareToken _debtShareToken
+        ISilo.CollateralType _collateralType
     )
         internal
         virtual
         returns (uint256 assets, uint256 shares)
     {
-        if (_assetType == AssetType.Debt) revert ISilo.WrongAssetType();
-
-        (assets, shares) = SiloERC4626Lib.deposit(
-            _token,
-            msg.sender,
-            _assets,
-            _shares,
-            _receiver,
-            _collateralShareToken,
-            _debtShareToken,
-            total[_assetType]
+        // TODO make sure total are updated when we call accrue interest from SiloConfig
+        (
+            assets, shares
+        ) = Actions.deposit(
+            sharedStorage, _assets, _shares, _receiver, _collateralType, total[uint256(_collateralType)]
         );
 
-        if (_assetType == AssetType.Collateral) {
+        if (_collateralType == CollateralType.Collateral) {
             emit Deposit(msg.sender, _receiver, assets, shares);
         } else {
             emit DepositProtected(msg.sender, _receiver, assets, shares);
         }
     }
 
-    // solhint-disable-next-line function-max-lines, code-complexity
     function _withdraw(
         uint256 _assets,
         uint256 _shares,
         address _receiver,
         address _owner,
         address _spender,
-        ISilo.AssetType _assetType
+        ISilo.CollateralType _collateralType
     )
         internal
         virtual
         returns (uint256 assets, uint256 shares)
     {
-        if (_assetType == AssetType.Debt) revert ISilo.WrongAssetType();
-
-        (ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig) =
-            config.getConfigs(address(this));
-
-        _callAccrueInterestForAsset(
-            collateralConfig.interestRateModel,
-            collateralConfig.daoFee,
-            collateralConfig.deployerFee,
-            collateralConfig.otherSilo
+        (assets, shares) = Actions.withdraw(
+            sharedStorage,
+            WithdrawArgs({
+                assets: _assets,
+                shares: _shares,
+                receiver: _receiver,
+                owner: _owner,
+                spender: _spender,
+                collateralType: _collateralType
+            }),
+            total[uint256(_collateralType)],
+            total[AssetTypes.DEBT]
         );
 
-        // this if helped with Stack too deep
-        if (_assetType == AssetType.Collateral) {
-            (assets, shares) = _callWithdraw(
-                collateralConfig.token,
-                collateralConfig.collateralShareToken,
-                _assets,
-                _shares,
-                _receiver,
-                _owner,
-                _spender,
-                _assetType,
-                _getRawLiquidity(),
-                total[AssetType.Collateral]
-            );
-        } else {
-            (assets, shares) = _callWithdraw(
-                collateralConfig.token,
-                collateralConfig.protectedShareToken,
-                _assets,
-                _shares,
-                _receiver,
-                _owner,
-                _spender,
-                _assetType,
-                total[AssetType.Protected].assets,
-                total[AssetType.Protected]
-            );
-        }
-
-        if (_assetType == AssetType.Collateral) {
+        if (_collateralType == CollateralType.Collateral) {
             emit Withdraw(msg.sender, _receiver, _owner, assets, shares);
         } else {
             emit WithdrawProtected(msg.sender, _receiver, _owner, assets, shares);
         }
-
-        uint256 debtShareBalance = IShareToken(debtConfig.debtShareToken).balanceOf(_owner);
-
-        if (debtShareBalance == 0) {
-            return (assets, shares);
-        }
-
-        if (collateralConfig.callBeforeQuote) {
-            ISiloOracle(collateralConfig.solvencyOracle).beforeQuote(collateralConfig.token);
-        }
-
-        if (debtConfig.callBeforeQuote) {
-            ISiloOracle(debtConfig.solvencyOracle).beforeQuote(debtConfig.token);
-        }
-
-        // `_params.owner` must be solvent
-        if (!SiloSolvencyLib.isSolvent(
-            collateralConfig, debtConfig, _owner, AccrueInterestInMemory.No, debtShareBalance
-        )) {
-            revert NotSolvent();
-        }
     }
 
-    function _borrow(uint256 _assets, uint256 _shares, address _receiver, address _borrower)
+    function _borrow(
+        uint256 _assets,
+        uint256 _shares,
+        address _receiver,
+        address _borrower,
+        bool _sameAsset,
+        bool _leverage,
+        bytes memory _data
+    )
         internal
         virtual
         returns (uint256 assets, uint256 shares)
     {
-        (ISiloConfig.ConfigData memory debtConfig, ISiloConfig.ConfigData memory collateralConfig) =
-            config.getConfigs(address(this));
-
-        _callAccrueInterestForAsset(
-            debtConfig.interestRateModel, debtConfig.daoFee, debtConfig.deployerFee, debtConfig.otherSilo
+        (assets, shares) = Actions.borrow(
+            sharedStorage,
+            BorrowArgs({
+                assets: _assets,
+                shares: _shares,
+                receiver: _receiver,
+                borrower: _borrower,
+                sameAsset: _sameAsset,
+                leverage: _leverage,
+                totalCollateralAssets: total[AssetTypes.COLLATERAL].assets
+            }),
+            total[AssetTypes.DEBT],
+            _data
         );
 
-        (assets, shares) = _callBorrow(debtConfig, _assets, _shares, _receiver, _borrower, msg.sender);
-
         emit Borrow(msg.sender, _receiver, _borrower, assets, shares);
-
-        if (collateralConfig.callBeforeQuote) {
-            ISiloOracle(collateralConfig.maxLtvOracle).beforeQuote(collateralConfig.token);
-        }
-
-        if (debtConfig.callBeforeQuote) {
-            ISiloOracle(debtConfig.maxLtvOracle).beforeQuote(debtConfig.token);
-        }
-
-        if (!SiloSolvencyLib.isBelowMaxLtv(collateralConfig, debtConfig, _borrower, AccrueInterestInMemory.No)) {
-            revert AboveMaxLtv();
-        }
     }
 
-    function _repay(uint256 _assets, uint256 _shares, address _borrower)
+    /// @param _liquidation TRUE when call is from liquidator module
+    function _repay(uint256 _assets, uint256 _shares, address _borrower, address _repayer, bool _liquidation)
         internal
         virtual
         returns (uint256 assets, uint256 shares)
     {
-        (, ISiloConfig.ConfigData memory configData) = _accrueInterest();
+        (
+            assets, shares
+        ) = Actions.repay(
+            sharedStorage,
+            _assets,
+            _shares,
+            _borrower,
+            _repayer,
+            _liquidation,
+            total[AssetTypes.DEBT]
+        );
 
-        (assets, shares) = _callRepay(configData, _assets, _shares, _borrower, msg.sender);
-
-        emit Repay(msg.sender, _borrower, assets, shares);
+        emit Repay(_repayer, _borrower, assets, shares);
     }
 
     function _getTotalAssetsAndTotalSharesWithInterest(AssetType _assetType)
@@ -960,92 +785,82 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
         view
         returns (uint256 assets, uint256 shares)
     {
-        ISiloConfig.ConfigData memory configData = config.getConfig(address(this));
+        ISiloConfig.ConfigData memory configData = sharedStorage.siloConfig.getConfig(address(this));
         (assets, shares) = SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(configData, _assetType);
     }
 
     function _getShareToken() internal view virtual override returns (address collateralShareToken) {
-        (, collateralShareToken,) = config.getShareTokens(address(this));
+        (, collateralShareToken,) = sharedStorage.siloConfig.getShareTokens(address(this));
     }
 
-    function _previewMint(uint256 _shares, AssetType _assetType) internal view virtual returns (uint256 assets) {
-        if (_assetType == AssetType.Debt) revert ISilo.WrongAssetType();
+    function _previewMint(uint256 _shares, CollateralType _collateralType)
+        internal
+        view
+        virtual
+        returns (uint256 assets)
+    {
+        ISilo.AssetType assetType = AssetType(uint256(_collateralType));
 
-        (uint256 totalSiloAssets, uint256 totalShares) = _getTotalAssetsAndTotalSharesWithInterest(_assetType);
+        (
+            uint256 totalSiloAssets, uint256 totalShares
+        ) = _getTotalAssetsAndTotalSharesWithInterest(assetType);
 
         return SiloMathLib.convertToAssets(
-            _shares, totalSiloAssets, totalShares, MathUpgradeable.Rounding.Up, _assetType
+            _shares, totalSiloAssets, totalShares, Rounding.DEPOSIT_TO_ASSETS, assetType
         );
     }
 
-    function _previewDeposit(uint256 _assets, AssetType _assetType) internal view virtual returns (uint256 shares) {
-        if (_assetType == AssetType.Debt) revert ISilo.WrongAssetType();
+    function _previewDeposit(uint256 _assets, CollateralType _collateralType)
+        internal
+        view
+        virtual
+        returns (uint256 shares)
+    {
+        ISilo.AssetType assetType = AssetType(uint256(_collateralType));
 
-        (uint256 totalSiloAssets, uint256 totalShares) = _getTotalAssetsAndTotalSharesWithInterest(_assetType);
+        (uint256 totalSiloAssets, uint256 totalShares) = _getTotalAssetsAndTotalSharesWithInterest(assetType);
 
         return SiloMathLib.convertToShares(
-            _assets, totalSiloAssets, totalShares, MathUpgradeable.Rounding.Down, _assetType
+            _assets, totalSiloAssets, totalShares, Rounding.DEPOSIT_TO_SHARES, assetType
         );
     }
 
     function _previewRedeem(
         uint256 _shares,
-        ISilo.AssetType _assetType
+        CollateralType _collateralType
     ) internal view virtual returns (uint256 assets) {
-        if (_assetType == ISilo.AssetType.Debt) revert ISilo.WrongAssetType();
+        ISilo.AssetType assetType = AssetType(uint256(_collateralType));
 
-        (uint256 totalSiloAssets, uint256 totalShares) = _getTotalAssetsAndTotalSharesWithInterest(_assetType);
+        (uint256 totalSiloAssets, uint256 totalShares) = _getTotalAssetsAndTotalSharesWithInterest(assetType);
 
         return SiloMathLib.convertToAssets(
-            _shares, totalSiloAssets, totalShares, MathUpgradeable.Rounding.Down, _assetType
+            _shares, totalSiloAssets, totalShares, Rounding.WITHDRAW_TO_ASSETS, assetType
         );
     }
 
     function _previewWithdraw(
         uint256 _assets,
-        ISilo.AssetType _assetType
+        ISilo.CollateralType _collateralType
     ) internal view virtual returns (uint256 shares) {
-        if (_assetType == ISilo.AssetType.Debt) revert ISilo.WrongAssetType();
+        ISilo.AssetType assetType = AssetType(uint256(_collateralType));
 
-        (uint256 totalSiloAssets, uint256 totalShares) = _getTotalAssetsAndTotalSharesWithInterest(_assetType);
+        (uint256 totalSiloAssets, uint256 totalShares) = _getTotalAssetsAndTotalSharesWithInterest(assetType);
 
         return SiloMathLib.convertToShares(
-            _assets, totalSiloAssets, totalShares, MathUpgradeable.Rounding.Up, _assetType
+            _assets, totalSiloAssets, totalShares, Rounding.WITHDRAW_TO_SHARES, assetType
         );
     }
 
-    function _callMaxBorrow(
-        ISiloConfig.ConfigData memory collateralConfig,
-        ISiloConfig.ConfigData memory debtConfig,
-        address _borrower,
-        uint256 _totalDebtAssets,
-        uint256 _totalDebtShares,
-        ISiloConfig cachedConfig
-    ) internal view virtual returns (uint256 maxAssets, uint256 maxShares) {
-        return SiloLendingLib.maxBorrow(
-            collateralConfig,
-            debtConfig,
-            _borrower,
-            _totalDebtAssets,
-            _totalDebtShares,
-            cachedConfig
-        );
-    }
-
-    function _callGetLiquidity(ISiloConfig _config) internal view virtual returns (uint256 liquidity) {
-        return SiloLendingLib.getLiquidity(_config);
-    }
-
-    function _callMaxDepositOrMint(address _receiver, uint256 _totalCollateralAssets)
+    function _callMaxDepositOrMint(uint256 _totalCollateralAssets)
         internal
         view
         virtual
         returns (uint256 maxAssetsOrShares)
     {
-        return SiloERC4626Lib.maxDepositOrMint(config, _receiver, _totalCollateralAssets);
+        return SiloERC4626Lib.maxDepositOrMint(_totalCollateralAssets);
     }
 
-    function _callMaxWithdraw(ISiloConfig _config, address _owner, ISilo.AssetType _assetType)
+    function _callMaxWithdraw(ISiloConfig _config, address _owner, ISilo.CollateralType _collateralType)
         internal
         view
         virtual
@@ -1054,28 +869,9 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
         return SiloERC4626Lib.maxWithdraw(
             _config,
             _owner,
-            _assetType,
-            _assetType == AssetType.Protected ? total[AssetType.Protected].assets : 0 // will be calculated internally
-        );
-    }
-
-    function _callBorrow(
-        ISiloConfig.ConfigData memory _configData,
-        uint256 _assets,
-        uint256 _shares,
-        address _receiver,
-        address _borrower,
-        address _spender
-    ) internal virtual returns (uint256 borrowedAssets, uint256 borrowedShares) {
-        return SiloLendingLib.borrow(
-            _configData,
-            _assets,
-            _shares,
-            _receiver,
-            _borrower,
-            _spender,
-            total[AssetType.Debt],
-            total[AssetType.Collateral].assets
+            _collateralType,
+            // 0 for CollateralType.Collateral because it will be calculated internally
+            _collateralType == CollateralType.Protected ? total[AssetTypes.PROTECTED].assets : 0
         );
     }
 
@@ -1085,53 +881,19 @@ contract Silo is Initializable, SiloERC4626, ReentrancyGuardUpgradeable {
         uint256 _deployerFee,
         address _otherSilo
     ) internal virtual returns (uint256 accruedInterest) {
-        if (_otherSilo != address(0)) {
+        if (_otherSilo != address(0) && _otherSilo != address(this)) {
             ISilo(_otherSilo).accrueInterest();
         }
 
-        return SiloLendingLib.accrueInterestForAsset(
+        accruedInterest = SiloLendingLib.accrueInterestForAsset(
             _interestRateModel,
             _daoFee,
             _deployerFee,
             siloData,
-            total[AssetType.Collateral],
-            total[AssetType.Debt]
+            total[AssetTypes.COLLATERAL],
+            total[AssetTypes.DEBT]
         );
-    }
 
-    function _callWithdraw(
-        address _asset,
-        address _shareToken,
-        uint256 _assets,
-        uint256 _shares,
-        address _receiver,
-        address _owner,
-        address _spender,
-        ISilo.AssetType _assetType,
-        uint256 _liquidity,
-        ISilo.Assets storage _totalCollateral
-    ) internal virtual returns (uint256 assets, uint256 shares) {
-        return SiloERC4626Lib.withdraw(
-            _asset,
-            _shareToken,
-            _assets,
-            _shares,
-            _receiver,
-            _owner,
-            _spender,
-            _assetType,
-            _liquidity,
-            _totalCollateral
-        );
-    }
-
-    function _callRepay(
-        ISiloConfig.ConfigData memory _configData,
-        uint256 _assets,
-        uint256 _shares,
-        address _borrower,
-        address _repayer
-    ) internal virtual returns (uint256 assets, uint256 shares) {
-        return SiloLendingLib.repay(_configData, _assets, _shares, _borrower, _repayer, total[AssetType.Debt]);
+        if (accruedInterest != 0) emit AccruedInterest(accruedInterest);
     }
 }

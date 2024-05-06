@@ -129,6 +129,18 @@ interface ICCIPGaugeCheckpointer {
     function removeGauges(string calldata gaugeType, ICCIPGauge[] calldata gauges) external;
 
     /**
+     * @notice Returns the LINK/Native cost to checkpoint all gauges for a given minimum relative weight.
+     * @dev A lower minimum relative weight might return higher costs, since more gauges could potentially be included
+     * in the checkpoint.
+     * This function should be manually changed to "view" in the ABI.
+     */
+    function getTotalBridgeCost(
+        uint256 minRelativeWeight,
+        string calldata gaugeType,
+        ICCIPGauge.PayFeesIn payFeesIn
+    ) external returns (uint256);
+
+    /**
      * @notice Returns true if the given gauge was added for the given type; false otherwise.
      * @param gaugeType Type of the gauge.
      * @param gauge Gauge to check.
@@ -160,22 +172,13 @@ interface ICCIPGaugeCheckpointer {
      * @param gaugeType Type of the gauge.
      * @param gauge Address of the gauge to check the bridge costs.
      * @param payFeesIn Pay fees in LINK or Native
+     * @param incentivesAmount Amount of incentives to be transferred via bridge. 
      */
     function getSingleBridgeCost(
         string calldata gaugeType,
         ICCIPGauge gauge,
-        ICCIPGauge.PayFeesIn payFeesIn
-    ) external view returns (uint256);
-
-    /**
-     * @notice Returns the LINK/Native cost to checkpoint all gauges for a given minimum relative weight.
-     * @dev A lower minimum relative weight might return higher costs, since more gauges could potentially be included
-     * in the checkpoint.
-     */
-    function getTotalBridgeCost(
-        uint256 minRelativeWeight,
-        string calldata gaugeType,
-        ICCIPGauge.PayFeesIn payFeesIn
+        ICCIPGauge.PayFeesIn payFeesIn,
+        uint256 incentivesAmount
     ) external view returns (uint256);
 
     /**

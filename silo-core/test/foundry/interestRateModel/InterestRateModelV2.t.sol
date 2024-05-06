@@ -9,7 +9,7 @@ import {InterestRateModelV2ConfigFactory} from "silo-core/contracts/interestRate
 
 import {InterestRateModelConfigs} from "../_common/InterestRateModelConfigs.sol";
 import {InterestRateModelV2Impl} from "./InterestRateModelV2Impl.sol";
-import {InterestRateModelV2Checked} from "../_checkedMath/InterestRateModelV2Checked.sol";
+import {InterestRateModelV2Checked} from "./InterestRateModelV2Checked.sol";
 
 // forge test -vv --mc InterestRateModelV2Test
 contract InterestRateModelV2Test is Test, InterestRateModelConfigs {
@@ -107,7 +107,7 @@ contract InterestRateModelV2Test is Test, InterestRateModelConfigs {
     }
 
     // forge test -vv --mt test_IRM_calculateRComp
-    /// forge-config: core.fuzz.runs = 10000
+    /// forge-config: core-test.fuzz.runs = 10000
     function test_IRM_calculateRComp(uint256 _totalDeposits, uint256 _totalBorrowAmount, int256 _x) public {
         InterestRateModelV2Impl impl = new InterestRateModelV2Impl();
         InterestRateModelV2Checked implChecked = new InterestRateModelV2Checked();

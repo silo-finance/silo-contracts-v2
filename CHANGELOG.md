@@ -6,6 +6,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [0.6.0] - 2024-05-06
+### Added
+- deposit to any silo without restrictions
+- borrow same token
+  - liquidation for same token can be done with sToken without reverting
+  - case observed on full liquidation: when we empty out silo, there is dust left (no shares)
+
+### Changed
+- standard reentrancy guard was replaced by cross Silo reentrancy check
+
+### Fixed
+- fix issue with wrong configs in `isSolvent` after debt share transfer
+
 ## [0.5.0] - 2024-03-12
 ### Added
 - SiloLens deploy

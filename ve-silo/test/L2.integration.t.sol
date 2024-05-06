@@ -16,7 +16,6 @@ import {IChildChainGaugeRegistry} from "ve-silo/contracts/gauges/interfaces/IChi
 import {ISiloChildChainGauge} from "ve-silo/contracts/gauges/interfaces/ISiloChildChainGauge.sol";
 import {IL2BalancerPseudoMinter} from "ve-silo/contracts/silo-tokens-minter/interfaces/IL2BalancerPseudoMinter.sol";
 import {ILiquidityGaugeFactory} from "ve-silo/contracts/gauges/interfaces/ILiquidityGaugeFactory.sol";
-import {IHookReceiverMock as IHookReceiver} from "./_mocks/IHookReceiverMock.sol";
 import {ISiloMock as ISilo} from "ve-silo/test/_mocks/ISiloMock.sol";
 import {IVotingEscrowChildChain} from "ve-silo/contracts/voting-escrow/interfaces/IVotingEscrowChildChain.sol";
 import {VotingEscrowChildChainTest} from "ve-silo/test/voting-escrow/VotingEscrowChildChain.unit.t.sol";
@@ -66,8 +65,6 @@ contract L2Test is IntegrationTest {
     bool internal _executeDeploy = true;
 
     function setUp() public virtual {
-        setAddress(AddrKey.L2_MULTISIG, _l2Multisig);
-
         if (_executeDeploy) {
             uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
             _deployer = vm.addr(deployerPrivateKey);
@@ -78,12 +75,16 @@ contract L2Test is IntegrationTest {
                 _FORKING_BLOCK_NUMBER
             );
 
+            setAddress(AddrKey.L2_MULTISIG, _l2Multisig);
+
             _dummySiloToken();
 
             L2Deploy deploy = new L2Deploy();
             deploy.disableDeploymentsSync();
 
             deploy.run();
+        } else {
+            setAddress(AddrKey.L2_MULTISIG, _l2Multisig);
         }
 
         _factory = IChildChainGaugeFactory(getAddress(VeSiloContracts.CHILD_CHAIN_GAUGE_FACTORY));
@@ -129,6 +130,8 @@ contract L2Test is IntegrationTest {
         assertEq(userBalance, _EXPECTED_USER_BAL, "Expect user to receive incentives");
 
         _verifyMintedStats(gauge);
+
+        _rewardwsFees(gauge);
     }
 
     function _verifyMintedStats(ISiloChildChainGauge _gauge) internal {
@@ -150,12 +153,12 @@ contract L2Test is IntegrationTest {
     }
 
     function _createGauge() internal returns (ISiloChildChainGauge gauge) {
-        gauge = ISiloChildChainGauge(_factory.create(_hookReceiver));
+        gauge = ISiloChildChainGauge(_factory.create(_shareToken));
         vm.label(address(gauge), "gauge");
     }
 
     function _transferVotingPower() internal {
-        vm.prank(_deployer);
+        vm.prank(_l2Multisig);
         _votingEscrowChild.setSourceChainSender(_sender);
 
         bytes memory data = _votingEscrowChildTest.balanceTransferData();
@@ -225,9 +228,9 @@ contract L2Test is IntegrationTest {
         );
 
         vm.mockCall(
-            _hookReceiver,
-            abi.encodeWithSelector(IHookReceiver.shareToken.selector),
-            abi.encode(_shareToken)
+            _shareToken,
+            abi.encodeWithSelector(IShareToken.hookReceiver.selector),
+            abi.encode(_hookReceiver)
         );
 
         vm.mockCall(
@@ -246,5 +249,34 @@ contract L2Test is IntegrationTest {
     function _dummySiloToken() internal {
         _siloToken = new ERC20("Silo test token", "SILO");
         setAddress(getChainId(), SILO_TOKEN, address(_siloToken));
+    }
+
+    function _rewardwsFees(ISiloChildChainGauge _gauge) internal {
+        vm.prank(_deployer);
+        IFeesManager(address(_factory)).setFees(_DAO_FEE, _DEPLOYER_FEE);
+
+        uint256 rewardsAmount = 100e18;
+
+        address distributor = makeAddr("distributor");
+
+        ERC20 rewardToken = new ERC20("Test reward token", "TRT");
+        rewardToken.mint(distributor, rewardsAmount);
+
+        vm.prank(distributor);
+        rewardToken.approve(address(_gauge), rewardsAmount);
+
+        vm.prank(_l2Multisig);
+        _gauge.add_reward(address(rewardToken), distributor);
+
+        vm.prank(distributor);
+        _gauge.deposit_reward_token(address(rewardToken), rewardsAmount);
+
+        uint256 gaugeBalance = rewardToken.balanceOf(address(_gauge));
+        uint256 daoFeeReceiverBalance = rewardToken.balanceOf(_daoFeeReceiver);
+        uint256 deployerFeeReceiverBalance = rewardToken.balanceOf(_deployerFeeReceiver);
+
+        assertEq(gaugeBalance, 70e18);
+        assertEq(daoFeeReceiverBalance, 10e18);
+        assertEq(deployerFeeReceiverBalance, 20e18);
     }
 }

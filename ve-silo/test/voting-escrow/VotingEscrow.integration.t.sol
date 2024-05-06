@@ -66,19 +66,19 @@ contract VotingEscrowTest is IntegrationTest {
     function getVeSiloTokens(address _userAddr, uint256 _amount, uint256 _unlockTime) public {
         whiteListUser(_userAddr);
 
-        IERC20 silo80Weth20Token = IERC20(getAddress(SILO80_WETH20_TOKEN));
+        IERC20 siloToken = IERC20(getAddress(SILO_TOKEN));
 
-        deal(address(silo80Weth20Token), _userAddr, _amount);
+        deal(address(siloToken), _userAddr, _amount);
 
         vm.prank(_userAddr);
-        silo80Weth20Token.approve(address(_votingEscrow), _amount);
+        siloToken.approve(address(_votingEscrow), _amount);
 
         vm.prank(_userAddr);
         _votingEscrow.create_lock(_amount, _unlockTime);
     }
 
     function testEnsureDeployedWithCorrectData() public {
-        address siloToken = getAddress(SILO80_WETH20_TOKEN);
+        address siloToken = getAddress(SILO_TOKEN);
 
         assertEq(_votingEscrow.token(), siloToken, "Invalid voting escrow token");
         assertEq(_votingEscrow.name(), _veDeploymentScript.votingEscrowName(), "Wrong name");
@@ -94,6 +94,52 @@ contract VotingEscrowTest is IntegrationTest {
         assertEq(_veBoost.VE(), address(_votingEscrow), "An invalid VotingEscrow address");
     }
 
+    // FOUNDRY_PROFILE=ve-silo-test forge test --mt testLockPeriodsForCreateLock --ffi -vvv
+    function testLockPeriodsForCreateLock() public {
+        uint256 tokensAmount = 11 ether;
+
+        uint256 timestamp = 1;
+        uint256 maxTime = 365 * 86400 * 3;
+
+        vm.warp(timestamp);
+
+        vm.prank(_user);
+        vm.expectRevert("Voting lock can be 3 years max");
+        _votingEscrow.create_lock(tokensAmount, maxTime + 2 weeks);
+
+        vm.prank(_user);
+        vm.expectRevert("Voting lock can be 2 weeks min");
+        _votingEscrow.create_lock(tokensAmount, timestamp + 1 weeks);
+    }
+
+    // FOUNDRY_PROFILE=ve-silo-test forge test --mt testLockPeriodsIncreaseUnlockTime --ffi -vvv
+    function testLockPeriodsIncreaseUnlockTime() public {
+        uint256 tokensAmount = 11 ether;
+
+        uint256 timestamp = 1;
+        uint256 year = 365 * 24 * 3600;
+        uint256 maxTime = 365 * 86400 * 3;
+
+        vm.warp(timestamp);
+
+        getVeSiloTokens(_user, tokensAmount, year);
+        uint256 votingPower = _votingEscrow.balanceOf(_user);
+        assertEq(votingPower, 3656620888271703527);
+
+        vm.warp(year - 1 weeks);
+
+        votingPower = _votingEscrow.balanceOf(_user);
+        assertEq(votingPower, 60273972602323200);
+
+        vm.prank(_user);
+        vm.expectRevert("Voting lock can be 3 years max");
+        _votingEscrow.increase_unlock_time(block.timestamp + maxTime + 2 weeks);
+
+        vm.prank(_user);
+        vm.expectRevert("Voting lock can be 2 weeks min");
+        _votingEscrow.increase_unlock_time(block.timestamp + 2 weeks);
+    }
+
     function testGetVeSiloTokens() public {
         uint256 tokensAmount = 11 ether;
 
@@ -106,7 +152,7 @@ contract VotingEscrowTest is IntegrationTest {
 
         uint256 votingPower = _votingEscrow.balanceOf(_user);
 
-        assertEq(votingPower, 10969862664878009779);
+        assertEq(votingPower, 3656620888271703527);
     }
 
     function whiteListUser(address _userToWhitelist) public {
@@ -125,10 +171,8 @@ contract VotingEscrowTest is IntegrationTest {
     function _dummySiloToken() internal {
         if (isChain(ANVIL_ALIAS) || isChain(SEPOLIA_ALIAS)) {
             ERC20 siloToken = new ERC20("Silo test token", "SILO");
-            ERC20 silo8020Token = new ERC20("Silo 80/20", "SILO-80-20");
 
             setAddress(getChainId(), SILO_TOKEN, address(siloToken));
-            setAddress(getChainId(), SILO80_WETH20_TOKEN, address(silo8020Token));
         }
     }
 }

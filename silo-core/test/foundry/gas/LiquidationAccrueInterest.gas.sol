@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
 
-import {ISiloLiquidation} from "silo-core/contracts/interfaces/ISiloLiquidation.sol";
+import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquidation.sol";
 
 import {Gas} from "./Gas.sol";
 
@@ -19,7 +19,7 @@ contract LiquidationAccrueInterestGasTest is Gas, Test {
 
         vm.startPrank(BORROWER);
         silo0.deposit(ASSETS * 5, BORROWER);
-        silo1.borrow(ASSETS, BORROWER, BORROWER);
+        silo1.borrow(ASSETS, BORROWER, BORROWER, false /* _sameAsset */);
         vm.stopPrank();
 
         vm.warp(block.timestamp + 13 days);
@@ -31,10 +31,13 @@ contract LiquidationAccrueInterestGasTest is Gas, Test {
     function test_gas_liquidationCallWithInterest() public {
         _action(
             DEPOSITOR,
-            address(silo1),
-            abi.encodeCall(ISiloLiquidation.liquidationCall, (address(token0), address(token1), BORROWER, ASSETS / 2, false)),
+            address(partialLiquidation),
+            abi.encodeCall(
+                IPartialLiquidation.liquidationCall,
+                (address(silo1), address(token0), address(token1), BORROWER, ASSETS / 2, false)
+            ),
             "LiquidationCall with accrue interest",
-            292053
+            314575
         );
     }
 }

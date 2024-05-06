@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
 
-import {StringsUpgradeable as Strings} from "openzeppelin-contracts-upgradeable/utils/StringsUpgradeable.sol";
+import {Strings} from "openzeppelin5/utils/Strings.sol";
 
 import {SiloFactory} from "silo-core/contracts/SiloFactory.sol";
 import {SiloSolvencyLib} from "silo-core/contracts/lib/SiloSolvencyLib.sol";
@@ -75,9 +75,11 @@ contract GetAssetsDataForLtvCalculationsTest is Test {
         collateralConfig.collateralShareToken = collateralShareToken;
         collateralConfig.daoFee = scenario.input.collateralConfig.daoFee;
         collateralConfig.silo = silo0;
+        collateralConfig.token = makeAddr("collateral.token");
 
         debtConfig.debtShareToken = debtShareToken;
         debtConfig.silo = silo1;
+        debtConfig.token = makeAddr("debt.token");
 
         accrueInMemory = scenario.input.accrueInMemory
             ? ISilo.AccrueInterestInMemory.Yes

@@ -5,14 +5,15 @@ import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {SiloLendingLib} from "silo-core/contracts/lib/SiloLendingLib.sol";
+import {AssetTypes} from "silo-core/contracts/lib/AssetTypes.sol";
 
 contract SiloLendingLibConsumerNonVulnerable {
     uint256 public constant INITIAL_TOTAL = 100;
 
-    mapping(ISilo.AssetType => ISilo.Assets) internal _total;
+    mapping(uint256 assetType => ISilo.Assets) internal _total;
 
     constructor() {
-        _total[ISilo.AssetType.Debt].assets = INITIAL_TOTAL;
+        _total[AssetTypes.DEBT].assets = INITIAL_TOTAL;
     }
 
     function repay(
@@ -23,16 +24,17 @@ contract SiloLendingLibConsumerNonVulnerable {
         address _repayer
     ) external {
         SiloLendingLib.repay(
-            _configData,
+            IShareToken(_configData.debtShareToken),
+            _configData.token,
             _assets,
             _shares,
             _borrower,
             _repayer,
-            _total[ISilo.AssetType.Debt]
+            _total[AssetTypes.DEBT]
         );
     }
 
     function getTotalDebt() public view returns (uint256) {
-        return _total[ISilo.AssetType.Debt].assets;
+        return _total[AssetTypes.DEBT].assets;
     }
 }

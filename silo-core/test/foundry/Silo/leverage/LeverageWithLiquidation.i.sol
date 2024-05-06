@@ -3,6 +3,7 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
 
+import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
@@ -10,12 +11,16 @@ import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
 
 import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
 import {LeverageBorrower, ILeverageBorrower} from "../../_common/LeverageBorrower.sol";
+import {MintableToken} from "../../_common/MintableToken.sol";
 
 /*
     forge test -vv --ffi --mc LeverageWithLiquidationTest
 */
 contract LeverageWithLiquidationTest is SiloLittleHelper, Test, ILeverageBorrower {
     using SiloLensLib for ISilo;
+    using SafeERC20 for MintableToken;
+
+    bool sameAsset;
 
     bytes32 public constant LEVERAGE_CALLBACK = keccak256("ILeverageBorrower.onLeverage");
 
@@ -39,8 +44,8 @@ contract LeverageWithLiquidationTest is SiloLittleHelper, Test, ILeverageBorrowe
         bytes memory data;
         vm.prank(borrower);
         // before reentrancy protection, if debt or collateral is 0, then liquidation will fail with NoDebtToCover
-        vm.expectRevert("ReentrancyGuard: reentrant call");
-        silo1.leverage(borrowAssets, leverageBorrower, borrower, data);
+        vm.expectRevert(ISiloConfig.CrossReentrantCall.selector);
+        silo1.leverage(borrowAssets, leverageBorrower, borrower, sameAsset, data);
     }
 
     /*
@@ -60,8 +65,8 @@ contract LeverageWithLiquidationTest is SiloLittleHelper, Test, ILeverageBorrowe
         vm.prank(borrower);
         // this will revert, because we can not enter liquidation when we do leverage
         // without reentrancy it is possible
-        vm.expectRevert("ReentrancyGuard: reentrant call");
-        silo1.leverage(borrowAssets, leverageBorrower, borrower, data);
+        vm.expectRevert(ISiloConfig.CrossReentrantCall.selector);
+        silo1.leverage(borrowAssets, leverageBorrower, borrower, sameAsset, data);
     }
 
     function onLeverage(
@@ -80,8 +85,11 @@ contract LeverageWithLiquidationTest is SiloLittleHelper, Test, ILeverageBorrowe
         address collateralAsset = address(token0);
         address debtAsset = _asset;
 
-        token1.approve(msg.sender, 1e18);
-        ISilo(msg.sender).liquidationCall(collateralAsset, debtAsset, _borrower, type(uint256).max, false);
+        token1.safeIncreaseAllowance(msg.sender, 1e18);
+
+        partialLiquidation.liquidationCall(
+            msg.sender, collateralAsset, debtAsset, _borrower, type(uint256).max, TWO_ASSETS
+        );
 
         return LEVERAGE_CALLBACK;
     }

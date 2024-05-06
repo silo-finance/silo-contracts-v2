@@ -7,7 +7,6 @@ import {VeSiloContracts, VeSiloDeployments} from "ve-silo/common/VeSiloContracts
 import {SiloDeployer} from "silo-core/contracts/SiloDeployer.sol";
 import {IInterestRateModelV2ConfigFactory} from "silo-core/contracts/interfaces/IInterestRateModelV2ConfigFactory.sol";
 import {ISiloFactory} from "silo-core/contracts/interfaces/ISiloFactory.sol";
-import {IHookReceiversFactory} from "silo-core/contracts/utils/hook-receivers/interfaces/IHookReceiversFactory.sol";
 import {ISiloDeployer} from "silo-core/contracts/interfaces/ISiloDeployer.sol";
 
 import {console} from "forge-std/console.sol";
@@ -24,8 +23,7 @@ contract SiloDeployerDeploy is CommonDeploy {
 
         address timelock = VeSiloDeployments.get(VeSiloContracts.TIMELOCK_CONTROLLER, chainAlias);
         address siloFactory = SiloCoreDeployments.get(SiloCoreContracts.SILO_FACTORY, chainAlias);
-        address hookReceiversFactory = SiloCoreDeployments.get(SiloCoreContracts.HOOK_RECEIVERS_FACTORY, chainAlias);
-        
+
         address irmConfigFactory = SiloCoreDeployments.get(
             SiloCoreContracts.INTEREST_RATE_MODEL_V2_CONFIG_FACTORY,
             chainAlias
@@ -36,7 +34,6 @@ contract SiloDeployerDeploy is CommonDeploy {
         siloDeployer = ISiloDeployer(address(new SiloDeployer(
             IInterestRateModelV2ConfigFactory(irmConfigFactory),
             ISiloFactory(siloFactory),
-            IHookReceiversFactory(hookReceiversFactory),
             timelock
         )));
 

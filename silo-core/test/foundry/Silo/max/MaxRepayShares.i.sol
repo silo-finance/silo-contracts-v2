@@ -43,12 +43,21 @@ contract MaxRepaySharesTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --ffi --mt test_maxRepayShares_withDebt_fuzz
+    forge test -vv --ffi --mt test_maxRepayShares_withDebt_
     */
-    /// forge-config: core.fuzz.runs = 1000
-    function test_maxRepayShares_withDebt_fuzz(uint128 _collateral) public {
+    /// forge-config: core-test.fuzz.runs = 1000
+    function test_maxRepayShares_withDebt_1token_fuzz(uint128 _collateral) public {
+        _maxRepayShares_withDebt(_collateral, SAME_ASSET);
+    }
+
+    /// forge-config: core-test.fuzz.runs = 1000
+    function test_maxRepayShares_withDebt_2tokens_fuzz(uint128 _collateral) public {
+        _maxRepayShares_withDebt(_collateral, TWO_ASSETS);
+    }
+
+    function _maxRepayShares_withDebt(uint128 _collateral, bool _sameAsset) private {
         uint256 toBorrow = _collateral / 3;
-        _createDebt(_collateral, toBorrow);
+        _createDebt(_collateral, toBorrow, _sameAsset);
 
         uint256 maxRepayShares = silo1.maxRepayShares(borrower);
         assertEq(maxRepayShares, toBorrow, "max repay is what was borrower if no interest");
@@ -58,12 +67,21 @@ contract MaxRepaySharesTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --ffi --mt test_maxRepayShares_withInterest_fuzz
+    forge test -vv --ffi --mt test_maxRepayShares_withInterest_
     */
-    /// forge-config: core.fuzz.runs = 1000
-    function test_maxRepayShares_withInterest_fuzz(uint128 _collateral) public {
+    /// forge-config: core-test.fuzz.runs = 1000
+    function test_maxRepayShares_withInterest_1token_fuzz(uint128 _collateral) public {
+        _maxRepayShares_withInterest(_collateral, SAME_ASSET);
+    }
+
+    /// forge-config: core-test.fuzz.runs = 1000
+    function test_maxRepayShares_withInterest_2tokens_fuzz(uint128 _collateral) public {
+        _maxRepayShares_withInterest(_collateral, TWO_ASSETS);
+    }
+
+    function _maxRepayShares_withInterest(uint128 _collateral, bool _sameAsset) private {
         uint256 toBorrow = _collateral / 3;
-        uint256 shares = _createDebt(_collateral, toBorrow);
+        uint256 shares = _createDebt(_collateral, toBorrow, _sameAsset);
 
         vm.warp(block.timestamp + 356 days);
 
@@ -75,14 +93,14 @@ contract MaxRepaySharesTest is SiloLittleHelper, Test {
         _assertBorrowerHasNoDebt();
     }
 
-    function _createDebt(uint256 _collateral, uint256 _toBorrow) internal returns (uint256 shares) {
+    function _createDebt(uint256 _collateral, uint256 _toBorrow, bool _sameAsset) internal returns (uint256 shares) {
         vm.assume(_collateral > 0);
         vm.assume(_toBorrow > 0);
 
         _depositForBorrow(_collateral, depositor);
-        _deposit(_collateral, borrower);
+        _depositCollateral(_collateral, borrower, _sameAsset);
 
-        shares = _borrow(_toBorrow, borrower);
+        shares = _borrow(_toBorrow, borrower, _sameAsset);
 
         _ensureBorrowerHasDebt();
     }

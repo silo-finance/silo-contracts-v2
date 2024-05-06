@@ -54,9 +54,9 @@ contract MainnetWithMocksIntegrationTest is MainnetTest {
             getAddress(VeSiloContracts.VE_SILO_DELEGATOR_VIA_CCIP)
         );
 
-        uint64 dstChainSelector = 1; 
+        uint64 dstChainSelector = 1;
 
-        vm.prank(_deployer);
+        vm.prank(address(_timelock));
         veSiloDelegator.setChildChainReceiver(dstChainSelector, _deployer);
 
         uint256 fee = veSiloDelegator.estimateSendUserBalance(
@@ -121,7 +121,11 @@ contract MainnetWithMocksIntegrationTest is MainnetTest {
             chainAlias
         );
 
-        gauge = CCIPGaugeFactory(gaugeFactoryAnyChainAddr).create(gaugeAdder, 1e18 /** weight cap */);
+        gauge = CCIPGaugeFactory(gaugeFactoryAnyChainAddr).create(
+            gaugeAdder,
+            1e18 /** weight cap */,
+            1 /** destination chain */
+        );
 
         vm.label(gauge, "CCIP_Gauge");
     }

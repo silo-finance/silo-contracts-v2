@@ -16,17 +16,24 @@ pragma solidity 0.8.21;
 
 import {Address} from "openzeppelin-contracts/utils/Address.sol";
 import {Ownable2Step} from "openzeppelin-contracts/access/Ownable2Step.sol";
+import {IERC20} from "openzeppelin-contracts/token/ERC20/IERC20.sol";
 
 import {IStakelessGauge} from "../interfaces/IStakelessGauge.sol";
 import {IStakelessGaugeCheckpointerAdaptor} from "../interfaces/IStakelessGaugeCheckpointerAdaptor.sol";
 
 contract StakelessGaugeCheckpointerAdaptor is Ownable2Step, IStakelessGaugeCheckpointerAdaptor {
+    // solhint-disable-next-line var-name-mixedcase
+    address public immutable LINK;
     address public checkpointer;
 
     event CheckpointerUpdated(address checkpointer);
 
     error TheSameCheckpointer();
     error OnlyCheckpointer();
+
+    constructor(address _link) {
+        LINK = _link;
+    }
 
     /// @notice Receive fn to be able to receive ether leftover from the gauge after checkpoint.
     receive() external payable {}
@@ -37,11 +44,7 @@ contract StakelessGaugeCheckpointerAdaptor is Ownable2Step, IStakelessGaugeCheck
 
         result = IStakelessGauge(gauge).checkpoint{ value: msg.value }();
 
-        // Send back any leftover ETH to the caller if there is an existing balance in the contract.
-        uint256 remainingBalance = address(this).balance;
-        if (remainingBalance > 0) {
-            Address.sendValue(payable(msg.sender), remainingBalance);
-        }
+        _returnLeftoverIfAny();
     }
 
     /// @inheritdoc IStakelessGaugeCheckpointerAdaptor
@@ -51,5 +54,20 @@ contract StakelessGaugeCheckpointerAdaptor is Ownable2Step, IStakelessGaugeCheck
         checkpointer = newCheckpointer;
 
         emit CheckpointerUpdated(checkpointer);
+    }
+
+    /// @dev Ensure that the contract returns any leftover ether or LINK to the sender
+    function _returnLeftoverIfAny() internal {
+        uint256 remainingBalance = address(this).balance;
+
+        if (remainingBalance > 0) {
+            Address.sendValue(payable(msg.sender), remainingBalance);
+        }
+
+        uint256 remainingLINKBalance = IERC20(LINK).balanceOf(address(this));
+
+        if (remainingLINKBalance > 0) {
+            IERC20(LINK).transfer(msg.sender, remainingLINKBalance);
+        }
     }
 }

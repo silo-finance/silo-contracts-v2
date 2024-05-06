@@ -4,6 +4,7 @@
 [submodule "silo-foundry-utils"]
 	path = gitmodules/silo-foundry-utils
 	url = https://github.com/silo-finance/silo-foundry-utils
+	branch = v0.0.15
 [submodule "gitmodules/openzeppelin-contracts"]
 	path = gitmodules/openzeppelin-contracts
 	url = https://github.com/OpenZeppelin/openzeppelin-contracts
@@ -33,3 +34,10 @@
 [submodule "crytic-properties"]
 	path = gitmodules/crytic/properties
 	url = https://github.com/crytic/properties
+[submodule "openzeppelin5"]
+	path = gitmodules/openzeppelin-contracts-5
+	url = https://github.com/OpenZeppelin/openzeppelin-contracts
+	branch = v5.0.2
+[submodule "openzeppelin-contracts-upgradeable-5"]
+	path = gitmodules/openzeppelin-contracts-upgradeable-5
+	url = https://github.com/OpenZeppelin/openzeppelin-contracts-upgradeable

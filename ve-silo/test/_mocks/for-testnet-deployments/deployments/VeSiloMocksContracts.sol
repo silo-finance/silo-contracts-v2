@@ -10,5 +10,4 @@ library VeSiloMocksContracts {
     string public constant CCIP_ROUTER_RECEIVER_LIKE = "CCIPRouterReceiverLike.sol";
     string public constant LINK_TOKEN_LIKE = "LINKTokenLike.sol";
     string public constant SILO_TOKEN_LIKE = "SILOTokenLike.sol";
-    string public constant BPT_TOKEN_LIKE = "BPTTokenLike.sol";
 }

@@ -7,7 +7,7 @@ library VeSiloContracts {
     // smart contracts list
     string public constant VOTING_ESCROW = "VotingEscrow.vy";
     string public constant VE_BOOST = "VeBoostV2.vy";
-    string public constant TIMELOCK_CONTROLLER = "TimelockController.sol";
+    string public constant TIMELOCK_CONTROLLER = "ISiloTimelockController.sol";
     string public constant SILO_GOVERNOR = "SiloGovernor.sol";
     string public constant GAUGE_CONTROLLER = "GaugeController.vy";
     string public constant SILO_LIQUIDITY_GAUGE = "SiloLiquidityGauge.vy";
@@ -24,6 +24,9 @@ library VeSiloContracts {
     string public constant FEE_SWAPPER = "FeeSwapper.sol";
     string public constant GAUGE_ADDER = "GaugeAdder.sol";
     string public constant CCIP_GAUGE_CHECKPOINTER = "CCIPGaugeCheckpointer.sol";
+    string public constant CCIP_GAUGE_ARBITRUM = "CCIPGaugeArbitrum.sol";
+    string public constant CCIP_GAUGE_UPGRADABLE_BEACON = "CCIPGaugeArbitrumUpgradeableBeacon.sol";
+    string public constant CCIP_GAUGE_FACTORY_ARBITRUM = "CCIPGaugeFactoryArbitrum.sol";
     string public constant STAKELESS_GAUGE_CHECKPOINTER_ADAPTOR = "StakelessGaugeCheckpointerAdaptor.sol";
     string public constant UNISWAP_SWAPPER = "UniswapSwapper.sol";
     string public constant VE_SILO_DELEGATOR_VIA_CCIP = "VeSiloDelegatorViaCCIP.sol";

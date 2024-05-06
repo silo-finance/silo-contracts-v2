@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 import {InterestRateModelV2} from "silo-core/contracts/interestRateModel/InterestRateModelV2.sol";
 import {InterestRateModelV2Config, IInterestRateModelV2} from "silo-core/contracts/interestRateModel/InterestRateModelV2Config.sol";
 import {PropertiesAsserts} from "properties/util/PropertiesHelper.sol";
-import {SafeCast} from "openzeppelin-contracts/utils/math/SafeCast.sol";
+import {SafeCast} from "openzeppelin5/utils/math/SafeCast.sol";
 import {SiloMathLib} from "silo-core/contracts/lib/SiloMathLib.sol";
 
 /*
@@ -33,7 +33,6 @@ contract EchidnaIRMv2 is PropertiesAsserts {
         Protected, // default
         Collateral,
         Debt
-        // if you add new, make sure you adjust all places with revert WrongAssetType()
     }
 
     struct Assets {
@@ -83,7 +82,7 @@ contract EchidnaIRMv2 is PropertiesAsserts {
     function setUtilizationData(uint256 _totalCollateral, uint256 _totalDebt) public {
         totalCollateral = _totalCollateral;
         totalDebt = _totalDebt;
-        interestRateTimestamp = uint64(block.timestamp);
+        interestRateTimestamp = uint40(block.timestamp);
     }
 
     function utilizationData() external view virtual returns (UtilizationData memory) {

@@ -1,5 +1,8 @@
 {
-    "deployer": "0x",
+    "deployer": "0xdEDEDEDEdEdEdEDedEDeDedEdEdeDedEdEDedEdE",
+    "liquidationModule": "PartialLiquidation",
+    "hookReceiver": "NO_HOOK_RECEIVER",
+    "hookReceiverImplementation": "GaugeHookReceiver.sol",
     "deployerFee": 1000,
     "token0": "WETH",
     "solvencyOracle0": "NO_ORACLE",
@@ -11,9 +14,6 @@
     "liquidationFee0": 500,
     "flashloanFee0": 100,
     "callBeforeQuote0": false,
-    "protectedHookReceiver0": "NO_HOOK_RECEIVER",
-    "collateralHookReceiver0": "GaugeHookReceiver.sol",
-    "debtHookReceiver0": "NO_HOOK_RECEIVER",
     "token1": "USDC",
     "solvencyOracle1": "NO_ORACLE",
     "maxLtvOracle1": "NO_ORACLE",
@@ -23,8 +23,5 @@
     "lt1": 9500,
     "liquidationFee1": 250,
     "flashloanFee1": 100,
-    "callBeforeQuote1": false,
-    "protectedHookReceiver1": "NO_HOOK_RECEIVER",
-    "collateralHookReceiver1": "NO_HOOK_RECEIVER",
-    "debtHookReceiver1": "NO_HOOK_RECEIVER"
+    "callBeforeQuote1": false
 }

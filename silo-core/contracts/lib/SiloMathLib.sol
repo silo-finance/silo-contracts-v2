@@ -1,15 +1,16 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.21;
 
-import {MathUpgradeable} from "openzeppelin-contracts-upgradeable/utils/math/MathUpgradeable.sol";
+import {Math} from "openzeppelin5/utils/math/Math.sol";
+import {Rounding} from "../lib/Rounding.sol";
 import {ISilo} from "../interfaces/ISilo.sol";
 
 library SiloMathLib {
-    using MathUpgradeable for uint256;
+    using Math for uint256;
 
     uint256 internal constant _PRECISION_DECIMALS = 1e18;
 
-    /// @dev this is constant version of openzeppelin-contracts/contracts/token/ERC20/extensions/ERC4626._decimalsOffset
+    /// @dev this is constant version of openzeppelin5/contracts/token/ERC20/extensions/ERC4626._decimalsOffset
     uint256 internal constant _DECIMALS_OFFSET_POW = 10 ** 0;
 
     /// @notice Returns available liquidity to be borrowed
@@ -99,7 +100,7 @@ library SiloMathLib {
     {
         if (_collateralAssets == 0 || _debtAssets == 0) return 0;
 
-        utilization = _debtAssets * _dp; // TODO precise!
+        utilization = _debtAssets * _dp;
         // _collateralAssets is not 0 based on above check, so it is safe to uncheck this division
         unchecked {
             utilization /= _collateralAssets;
@@ -114,8 +115,8 @@ library SiloMathLib {
         uint256 _shares,
         uint256 _totalAssets,
         uint256 _totalShares,
-        MathUpgradeable.Rounding _roundingToAssets,
-        MathUpgradeable.Rounding _roundingToShares,
+        Math.Rounding _roundingToAssets,
+        Math.Rounding _roundingToShares,
         ISilo.AssetType _assetType
     ) internal pure returns (uint256 assets, uint256 shares) {
         if (_assets == 0) {
@@ -128,12 +129,12 @@ library SiloMathLib {
     }
 
     /// @dev Math for collateral is exact copy of
-    ///      openzeppelin-contracts/contracts/token/ERC20/extensions/ERC4626._convertToShares
+    ///      openzeppelin5/contracts/token/ERC20/extensions/ERC4626._convertToShares
     function convertToShares(
         uint256 _assets,
         uint256 _totalAssets,
         uint256 _totalShares,
-        MathUpgradeable.Rounding _rounding,
+        Math.Rounding _rounding,
         ISilo.AssetType _assetType
     ) internal pure returns (uint256) {
         // Debt calculations should not lower the result. Debt is a liability so protocol should not take any for
@@ -154,12 +155,12 @@ library SiloMathLib {
     }
 
     /// @dev Math for collateral is exact copy of
-    ///      openzeppelin-contracts/contracts/token/ERC20/extensions/ERC4626._convertToAssets
+    ///      openzeppelin5/contracts/token/ERC20/extensions/ERC4626._convertToAssets
     function convertToAssets(
         uint256 _shares,
         uint256 _totalAssets,
         uint256 _totalShares,
-        MathUpgradeable.Rounding _rounding,
+        Math.Rounding _rounding,
         ISilo.AssetType _assetType
     ) internal pure returns (uint256 assets) {
         // Debt calculations should not lower the result. Debt is a liability so protocol should not take any for
@@ -189,7 +190,7 @@ library SiloMathLib {
             return 0;
         }
 
-        uint256 maxDebtValue = _sumOfBorrowerCollateralValue * _configMaxLtv / _PRECISION_DECIMALS; // Rounding.Down
+        uint256 maxDebtValue = _sumOfBorrowerCollateralValue * _configMaxLtv / _PRECISION_DECIMALS; // Rounding.Floor
 
         unchecked {
             // we will not underflow because we checking `maxDebtValue > _borrowerDebtValue`
@@ -245,7 +246,7 @@ library SiloMathLib {
     /// threshold
     /// @param _borrowerCollateralAssets Amount of collateral assets currently held by the borrower
     /// @param _borrowerProtectedAssets Amount of protected assets currently held by the borrower
-    /// @param _assetType Specifies whether the asset is of type Collateral or Protected
+    /// @param _collateralType Specifies whether the asset is of type Collateral or Protected
     /// @param _totalAssets The entire quantity of assets available in the system for withdrawal
     /// @param _assetTypeShareTokenTotalSupply Total supply of share tokens for the specified asset type
     /// @param _liquidity Current liquidity in the system for the asset type
@@ -255,7 +256,7 @@ library SiloMathLib {
         uint256 _maxAssets,
         uint256 _borrowerCollateralAssets,
         uint256 _borrowerProtectedAssets,
-        ISilo.AssetType _assetType,
+        ISilo.CollateralType _collateralType,
         uint256 _totalAssets,
         uint256 _assetTypeShareTokenTotalSupply,
         uint256 _liquidity
@@ -263,13 +264,13 @@ library SiloMathLib {
         if (_maxAssets == 0) return (0, 0);
         if (_assetTypeShareTokenTotalSupply == 0) return (0, 0);
 
-        if (_assetType == ISilo.AssetType.Collateral) {
+        if (_collateralType == ISilo.CollateralType.Collateral) {
             assets = _maxAssets > _borrowerCollateralAssets ? _borrowerCollateralAssets : _maxAssets;
 
             if (assets > _liquidity) {
                 assets = _liquidity;
             }
-        } else if (_assetType == ISilo.AssetType.Protected) {
+        } else {
             assets = _maxAssets > _borrowerProtectedAssets ? _borrowerProtectedAssets : _maxAssets;
         }
 
@@ -277,8 +278,8 @@ library SiloMathLib {
             assets,
             _totalAssets,
             _assetTypeShareTokenTotalSupply,
-            MathUpgradeable.Rounding.Down,
-            _assetType
+            Rounding.MAX_WITHDRAW_TO_SHARES,
+            ISilo.AssetType(uint256(_collateralType))
         );
     }
 }

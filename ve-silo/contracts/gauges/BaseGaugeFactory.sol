@@ -34,7 +34,7 @@ abstract contract BaseGaugeFactory is ILiquidityGaugeFactory {
     /**
      * @notice Returns the address of the implementation used for gauge deployments.
      */
-    function getGaugeImplementation() public view returns (address) {
+    function getGaugeImplementation() public virtual view returns (address) {
         return _gaugeImplementation;
     }
 
@@ -51,11 +51,19 @@ abstract contract BaseGaugeFactory is ILiquidityGaugeFactory {
      * @return The address of the deployed gauge
      */
     function _create() internal returns (address) {
-        address gauge = Clones.clone(_gaugeImplementation);
+        address gauge = _createGauge();
 
         _isGaugeFromFactory[gauge] = true;
         emit GaugeCreated(gauge);
 
         return gauge;
+    }
+
+    /**
+     * @dev Clone the gauge implementation.
+     * Can be overridden to provide custom logic for the gauge deployment.
+     */
+    function _createGauge() internal virtual returns (address) {
+        return Clones.clone(_gaugeImplementation);
     }
 }

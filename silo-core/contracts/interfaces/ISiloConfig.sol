@@ -1,10 +1,26 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.5.0;
 
+import {IHookReceiver} from "../utils/hook-receivers/interfaces/IHookReceiver.sol";
+import {ISilo} from "./ISilo.sol";
+
 interface ISiloConfig {
+    struct DebtInfo {
+        bool debtPresent;
+        bool sameAsset;
+        bool debtInSilo0;
+        bool debtInThisSilo; // at-hoc when getting configs
+    }
+
     struct InitData {
         /// @notice The address of the deployer of the Silo
         address deployer;
+
+        /// @notice The address of contract that will be responsible for executing liquidations
+        address liquidationModule;
+
+        /// @notice Address of the hook receiver called on every before/after action on Silo
+        address hookReceiver;
 
         /// @notice Deployer's fee in 18 decimals points. Deployer will earn this fee based on the interest earned by
         /// the Silo.
@@ -46,16 +62,6 @@ interface ISiloConfig {
         /// @notice Indicates if a beforeQuote on oracle contract should be called before quoting price
         bool callBeforeQuote0;
 
-        /// @notice Address of the hook receiver called on every share token transfer for protected (non-borrowable)
-        /// collateral
-        address protectedHookReceiver0;
-
-        /// @notice Address of the hook receiver called on every share token transfer for collateral
-        address collateralHookReceiver0;
-
-        /// @notice Address of the hook receiver called on every share token transfer for debt
-        address debtHookReceiver0;
-
         /// @notice Address of the second token
         address token1;
 
@@ -90,16 +96,6 @@ interface ISiloConfig {
 
         /// @notice Indicates if a beforeQuote on oracle contract should be called before quoting price
         bool callBeforeQuote1;
-
-        /// @notice Address of the hook receiver called on every share token transfer for protected (non-borrowable)
-        /// collateral
-        address protectedHookReceiver1;
-
-        /// @notice Address of the hook receiver called on every share token transfer for collateral
-        address collateralHookReceiver1;
-
-        /// @notice Address of the hook receiver called on every share token transfer for debt
-        address debtHookReceiver1;
     }
 
     struct ConfigData {
@@ -118,10 +114,54 @@ interface ISiloConfig {
         uint256 lt;
         uint256 liquidationFee;
         uint256 flashloanFee;
+        address liquidationModule;
+        address hookReceiver;
         bool callBeforeQuote;
     }
 
+    error OnlySilo();
+    error OnlySiloOrLiquidationModule();
+    error OnlyShareToken();
+    error OnlySiloOrDebtShareToken();
     error WrongSilo();
+    error OnlyDebtShareToken();
+    error DebtExistInOtherSilo();
+    error NoDebt();
+    error CollateralTypeDidNotChanged();
+    error CrossReentrantCall();
+    error InvalidConfigOrder();
+
+    /// @dev should be called on debt transfer, it opens debt if `_to` address don't have one
+    /// @param _sender sender address
+    /// @param _recipient recipient address
+    function onDebtTransfer(address _sender, address _recipient) external;
+
+    /// @dev must be called when `_borrower` repay all debt, there is no restriction from which silo call will be done
+    /// @param _borrower borrower address
+    function closeDebt(address _borrower) external;
+
+    /// @notice only silo method for cross Silo reentrancy
+    function crossNonReentrantBefore(uint256 _action) external;
+
+    /// @notice only silo method for cross Silo reentrancy
+    function crossNonReentrantAfter() external;
+
+    function accrueInterestAndGetConfig(address _silo, uint256 _action) external returns (ConfigData memory);
+
+    function accrueInterestAndGetConfigs(address _silo, address _borrower, uint256 _action)
+        external
+        returns (ConfigData memory collateralConfig, ConfigData memory debtConfig, DebtInfo memory debtInfo);
+
+    function accrueInterestAndGetConfigOptimised(
+        uint256 _action,
+        ISilo.CollateralType _collateralType
+    ) external returns (address shareToken, address asset, address hookReceiver, address liquidationModule);
+
+
+    /// @notice view method for checking cross Silo reentrancy flag
+    /// @dev Returns true if the reentrancy guard is currently set to "entered", which indicates there is a
+    /// `nonReentrant` function in the call stack.
+    function crossReentrancyGuardEntered() external view returns (bool);
 
     // solhint-disable-next-line func-name-mixedcase
     function SILO_ID() external view returns (uint256);
@@ -138,15 +178,21 @@ interface ISiloConfig {
     function getAssetForSilo(address _silo) external view returns (address asset);
 
     /// @notice Retrieves configuration data for both silos. First config is for the silo that is asking for configs.
-    /// @dev This function reverts for incorrect silo address input
+    /// @dev This function reverts for incorrect silo address input.
     /// @param _silo The address of the silo for which configuration data is being retrieved. Config for this silo will
     /// be at index 0.
-    /// @return configData0 The configuration data for the specified silo.
-    /// @return configData1 The configuration data for the other silo.
-    function getConfigs(address _silo) external view returns (ConfigData memory, ConfigData memory);
+    /// @param borrower borrower address for which `debtInfo` will be returned
+    /// @param _action hook flag that will determine action
+    /// @return collateralConfig The configuration data for collateral silo.
+    /// @return debtConfig The configuration data for debt silo.
+    /// @return debtInfo details about `borrower` debt
+    function getConfigs(address _silo, address borrower, uint256 _action)
+        external
+        view
+        returns (ConfigData memory collateralConfig, ConfigData memory debtConfig, DebtInfo memory debtInfo);
 
     /// @notice Retrieves configuration data for a specific silo
-    /// @dev This function reverts for incorrect silo address input
+    /// @dev This function reverts for incorrect silo address input.
     /// @param _silo The address of the silo for which configuration data is being retrieved
     /// @return configData The configuration data for the specified silo
     function getConfig(address _silo) external view returns (ConfigData memory);

@@ -57,24 +57,20 @@ contract SiloDeploy is CommonDeploy {
 
         console2.log("[SiloCommonDeploy] using CONFIG: ", configName);
 
-        (SiloConfigData.ConfigData memory config, ISiloConfig.InitData memory siloInitData) =
-            siloData.getConfigData(configName);
+        (
+            SiloConfigData.ConfigData memory config,
+            ISiloConfig.InitData memory siloInitData,
+            address hookReceiverImplementation
+        ) = siloData.getConfigData(configName);
 
         console2.log("[SiloCommonDeploy] Config prepared");
 
-        address interestRateModel = getDeployedAddress(SiloCoreContracts.INTEREST_RATE_MODEL_V2);
-
-        console2.log(
-            string.concat(
-                "[SiloCommonDeploy] SILO_DEPLOYER and ",
-                SiloCoreContracts.INTEREST_RATE_MODEL_V2,
-                " @ %s resolved "
-            ),
-            interestRateModel
-        );
+        address interestRateModel = _resolveDeployedContract(SiloCoreContracts.INTEREST_RATE_MODEL_V2);
 
         siloInitData.interestRateModel0 = interestRateModel;
         siloInitData.interestRateModel1 = interestRateModel;
+
+        siloInitData.liquidationModule = _resolveDeployedContract(SiloCoreContracts.PARTIAL_LIQUIDATION);
 
         InterestRateModelConfigData modelData = new InterestRateModelConfigData();
 
@@ -87,19 +83,20 @@ contract SiloDeploy is CommonDeploy {
 
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
 
-        beforeCreateSilo(siloInitData);
+        hookReceiverImplementation = beforeCreateSilo(siloInitData, hookReceiverImplementation);
 
         console2.log("[SiloCommonDeploy] `beforeCreateSilo` executed");
 
-        ISiloDeployer deployer = ISiloDeployer(getDeployedAddress(SiloCoreContracts.SILO_DEPLOYER));
+        ISiloDeployer siloDeployer = ISiloDeployer(_resolveDeployedContract(SiloCoreContracts.SILO_DEPLOYER));
 
         vm.startBroadcast(deployerPrivateKey);
 
-        siloConfig = deployer.deploy(
+        siloConfig = siloDeployer.deploy(
             oracles,
             irmConfigData0,
             irmConfigData1,
-            siloInitData
+            siloInitData,
+            hookReceiverImplementation
         );
 
         vm.stopBroadcast();
@@ -234,6 +231,11 @@ contract SiloDeploy is CommonDeploy {
         txData.txInput = abi.encodeCall(IDIAOracleFactory.create, config);
     }
 
+    function _resolveDeployedContract(string memory _name) internal returns (address contractAddress) {
+        contractAddress = getDeployedAddress(_name);
+        console2.log(string.concat("[SiloCommonDeploy] ", _name, " @ %s resolved "), contractAddress);
+    }
+
     function _isUniswapOracle(string memory _oracleConfigName) internal returns (bool isUniswapOracle) {
         address pool = KV.getAddress(
             UniswapV3OraclesConfigsParser.configFile(),
@@ -264,7 +266,11 @@ contract SiloDeploy is CommonDeploy {
         isDiaOracle = diaOracle != address(0);
     }
 
-    function beforeCreateSilo(ISiloConfig.InitData memory) internal virtual {
+    function beforeCreateSilo(
+        ISiloConfig.InitData memory,
+        address _hookImplementation
+    ) internal virtual returns (address) {
         // hook for any action before creating silo
+        return _hookImplementation;
     }
 }

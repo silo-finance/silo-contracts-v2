@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.18;
+pragma solidity 0.8.21;
 
-import {IERC20Metadata} from "openzeppelin-contracts/token/ERC20/extensions/IERC20Metadata.sol";
-import {Initializable} from  "openzeppelin-contracts-upgradeable/proxy/utils/Initializable.sol";
+import {IERC20Metadata} from "openzeppelin5/token/ERC20/extensions/IERC20Metadata.sol";
+import {Initializable} from  "openzeppelin5-upgradeable/proxy/utils/Initializable.sol";
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 
 import {OracleNormalization} from "../lib/OracleNormalization.sol";

@@ -4,14 +4,15 @@ import {Deployers} from "./utils/Deployers.sol";
 import {Actor} from "./utils/Actor.sol";
 import {ISiloConfig} from "silo-core/contracts/SiloConfig.sol";
 import {Silo, ISilo} from "silo-core/contracts/Silo.sol";
+import {PartialLiquidation} from "silo-core/contracts/liquidation/PartialLiquidation.sol";
 import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
 import {IInterestRateModel} from "silo-core/contracts/interfaces/IInterestRateModel.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {PropertiesAsserts} from "properties/util/PropertiesHelper.sol";
 
 import {TestERC20Token} from "properties/ERC4626/util/TestERC20Token.sol";
-import {IERC20} from "openzeppelin-contracts/token/ERC20/ERC20.sol";
-import {Strings} from "openzeppelin-contracts/utils/Strings.sol";
+import {IERC20} from "openzeppelin5/token/ERC20/ERC20.sol";
+import {Strings} from "openzeppelin5/utils/Strings.sol";
 
 // Note: In order to run this campaign all library functions marked as `public` or `external`
 // Need to be changed to be `internal`. This includes all library contracts in contracts/lib/
@@ -38,10 +39,13 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
     address public _vault1;
     Silo public vault0;
     Silo public vault1;
+
     TestERC20Token _asset0;
     TestERC20Token _asset1;
 
     Actor[] public actors;
+
+    bool sameAsset;
 
     event ExactAmount(string msg, uint256 amount);
 
@@ -63,24 +67,27 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         // deploy silo
         siloConfig = siloFactory.createSilo(siloData["MOCK"]);
         (_vault0, _vault1) = siloConfig.getSilos();
-        vault0 = Silo(_vault0);
-        vault1 = Silo(_vault1);
+        vault0 = Silo(payable(_vault0));
+        vault1 = Silo(payable(_vault1));
+        liquidationModule = PartialLiquidation(vault0.config().getConfig(_vault0).liquidationModule);
 
         // Set up actors
         for(uint256 i; i < 3; i++) {
-            actors.push(new Actor(Silo(_vault0), Silo(_vault1)));
+            actors.push(new Actor(Silo(payable(_vault0)), Silo(payable(_vault1))));
         }
     }
     /* ================================================================
                             Echodna invariants
        ================================================================ */
 
-    function echidna_isSolventIsTheSameEverywhere() public view returns (bool) {
+    function echidna_isSolventIsTheSameEverywhere() public view returns (bool success) {
         for(uint256 i; i < actors.length; i++) {
             address actor = address(actors[i]);
             assert(vault0.isSolvent(actor) == vault1.isSolvent(actor));
             assert(vault0.getLtv(actor) == vault1.getLtv(actor));
         }
+
+        success = true;
     }
 
     /* ================================================================
@@ -119,7 +126,7 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         emit LogString(string.concat("Deposited", amount.toString(), "assets into vault", vaultZero ? "Zero" : "One", "and minted", shares.toString(), "shares"));
     }
 
-    function depositAssetType(uint8 actorIndex, bool vaultZero, uint256 amount, ISilo.AssetType assetType) public returns (uint256 shares) {
+    function depositAssetType(uint8 actorIndex, bool vaultZero, uint256 amount, ISilo.CollateralType assetType) public returns (uint256 shares) {
         Actor actor = _selectActor(actorIndex);
 
         shares = actor.depositAssetType(vaultZero, amount, assetType);
@@ -127,7 +134,7 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         emit LogString(string.concat(
             "Deposited",
             amount.toString(),
-            assetType == ISilo.AssetType.Collateral ? " collateral" : " protected",
+            assetType == ISilo.CollateralType.Collateral ? " collateral" : " protected",
             " assets into vault",
             vaultZero ? "Zero" : "One",
             "and minted",
@@ -143,11 +150,11 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         emit LogString(string.concat("Minted", shares.toString()," shares from vault", vaultZero ? "Zero" : "One", "and deposited", assets.toString(), "assets"));
     }
 
-    function mintAssetType(uint8 actorIndex, bool vaultZero, uint256 shares, ISilo.AssetType assetType) public returns (uint256 assets) {
+    function mintAssetType(uint8 actorIndex, bool vaultZero, uint256 shares, ISilo.CollateralType assetType) public returns (uint256 assets) {
         Actor actor = _selectActor(actorIndex);
 
         assets = actor.mintAssetType(vaultZero, shares, assetType);
-        emit LogString(string.concat("Minted", shares.toString()," shares from vault", vaultZero ? "Zero" : "One", "and deposited", assets.toString(), assetType == ISilo.AssetType.Collateral ? " collateral" : " protected", " assets"));
+        emit LogString(string.concat("Minted", shares.toString()," shares from vault", vaultZero ? "Zero" : "One", "and deposited", assets.toString(), assetType == ISilo.CollateralType.Collateral ? " collateral" : " protected", " assets"));
     }
 
     function withdraw(uint8 actorIndex, bool vaultZero, uint256 assets) public {
@@ -155,7 +162,7 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         actor.withdraw(vaultZero, assets);
     }
 
-    function withdrawAssetType(uint8 actorIndex, bool vaultZero, uint256 assets, ISilo.AssetType assetType) public {
+    function withdrawAssetType(uint8 actorIndex, bool vaultZero, uint256 assets, ISilo.CollateralType assetType) public {
         Actor actor = _selectActor(actorIndex);
         actor.withdrawAssetType(vaultZero, assets, assetType);
     }
@@ -165,7 +172,7 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         actor.redeem(vaultZero, shares);
     }
 
-    function redeemAssetType(uint8 actorIndex, bool vaultZero, uint256 shares, ISilo.AssetType assetType) public {
+    function redeemAssetType(uint8 actorIndex, bool vaultZero, uint256 shares, ISilo.CollateralType assetType) public {
         Actor actor = _selectActor(actorIndex);
         actor.redeemAssetType(vaultZero, shares, assetType);
     }
@@ -200,7 +207,7 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         vault.withdrawFees();
     }
 
-    function transitionCollateral(uint8 actorIndex, bool vaultZero, uint256 shares, ISilo.AssetType withdrawType) public returns (uint256 assets) {
+    function transitionCollateral(uint8 actorIndex, bool vaultZero, uint256 shares, ISilo.CollateralType withdrawType) public returns (uint256 assets) {
         Actor actor = _selectActor(actorIndex);
         assets = actor.transitionCollateral(vaultZero, shares, withdrawType);
     }
@@ -313,7 +320,7 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
 
     function maxBorrow_correctReturnValue(uint8 actorIndex) public {
         Actor actor = _selectActor(actorIndex);
-        uint256 maxAssets = vault0.maxBorrow(address(actor));
+        uint256 maxAssets = vault0.maxBorrow(address(actor), sameAsset);
         require(maxAssets != 0, "Zero assets to borrow");
 
         emit LogString(string.concat("Max Assets to borrow:", maxAssets.toString()));
@@ -335,7 +342,7 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
 
     function maxBorrowShares_correctReturnValue(uint8 actorIndex) public {
         Actor actor = _selectActor(actorIndex);
-        uint256 maxShares = vault0.maxBorrowShares(address(actor));
+        uint256 maxShares = vault0.maxBorrowShares(address(actor), sameAsset);
         require(maxShares != 0, "Zero assets to borrow");
 
         emit LogString(string.concat("Max Shares to borrow:", maxShares.toString()));
@@ -397,7 +404,10 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
 
         Silo siloWithDebt = _vaultZeroWithDebt ? vault0 : vault1;
 
-        (uint256 collateralToLiquidate, uint256 debtToRepay) = siloWithDebt.maxLiquidation(address(actor));
+        (
+            uint256 collateralToLiquidate, uint256 debtToRepay
+        ) = liquidationModule.maxLiquidation(address(siloWithDebt), address(actor));
+
         require(collateralToLiquidate != 0 && debtToRepay != 0, "Nothing to liquidate");
 
         emit LogString(string.concat("debtToRepay:", debtToRepay.toString()));
@@ -477,7 +487,7 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         assert(debt1 >= debtShareBalance1);
     }
 
-    // Property: A user who's position is above the liquidation threshold cannot be liquidated by another user
+    // Property: A user who's debt is above the liquidation threshold cannot be liquidated by another user
     function cannotLiquidateUserUnderLt(uint8 actorIndex, bool receiveShares) public {
         Actor actor = _selectActor(actorIndex);
         Actor liquidator = _selectActor(actorIndex + 1);
@@ -491,7 +501,8 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         uint256 lt = vault.getLt();
         uint256 ltv = vault.getLtv(address(actor));
 
-        (, uint256 debtToRepay) = vault.maxLiquidation(address(actor));
+        (, uint256 debtToRepay) = liquidationModule.maxLiquidation(address(vault), address(actor));
+
         try liquidator.liquidationCall(_vaultZeroWithDebt, address(actor), debtToRepay, receiveShares, siloConfig) {
             emit LogString(string.concat("User LTV:", ltv.toString(), " Liq Threshold:", lt.toString()));
             emit LogString("User liquidated!");
@@ -501,7 +512,7 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         }
     }
 
-    // Property: A user who's position is above the liquidation threshold cannot be liquidated by another user
+    // Property: A user who's debt is above the liquidation threshold cannot be liquidated by another user
     function cannotLiquidateASolventUser(uint8 actorIndex, bool receiveShares) public {
         Actor actor = _selectActor(actorIndex);
         Actor liquidator = _selectActor(actorIndex + 1);
@@ -511,7 +522,7 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         Silo vault = _vaultZeroWithDebt ? vault0 : vault1;
         require(isSolvent, "user not solvent");
 
-        (, uint256 debtToRepay) = vault.maxLiquidation(address(actor));
+        (, uint256 debtToRepay) = liquidationModule.maxLiquidation(address(vault), address(actor));
 
         try liquidator.liquidationCall(_vaultZeroWithDebt, address(actor), debtToRepay, receiveShares, siloConfig) {
             emit LogString("Solvent user liquidated!");
@@ -521,7 +532,7 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         }
     }
 
-    // Property: An insolvent user cannot prevent others from liquidating his position
+    // Property: An insolvent user cannot prevent others from liquidating his debt
     function cannotPreventInsolventUserFromBeingLiquidated(uint8 actorIndex, bool receiveShares) public {
         Actor actor = _selectActor(actorIndex);
         Actor liquidator = _selectActor(actorIndex + 1);
@@ -530,7 +541,7 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         require(!isSolvent, "user not solvent");
 
         Silo siloWithDebt = _vaultZeroWithDebt ? vault0 : vault1;
-        (, uint256 debtToRepay) = siloWithDebt.maxLiquidation(address(actor));
+        (, uint256 debtToRepay) = liquidationModule.maxLiquidation(address(siloWithDebt), address(actor));
 
         try liquidator.liquidationCall(_vaultZeroWithDebt, address(actor), debtToRepay, receiveShares, siloConfig) {
         } catch {
@@ -552,7 +563,7 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         uint256 lt = siloWithCollateral.getLt();
         uint256 ltv = vault.getLtv(address(actor));
 
-        (, uint256 debtToRepay) = vault.maxLiquidation(address(actor));
+        (, uint256 debtToRepay) = liquidationModule.maxLiquidation(address(vault), address(actor));
         require(!isSolvent, "Not insolvent");
 
         emit LogString(string.concat("User LTV:", ltv.toString(), " Liq Threshold:", lt.toString()));
@@ -599,7 +610,7 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         uint8 actorIndex,
         bool vaultZero,
         uint256 shares,
-        ISilo.AssetType assetType
+        ISilo.CollateralType assetType
     ) public {
         Actor actor = _selectActor(actorIndex);
         Silo vault = vaultZero ? vault0 : vault1;
@@ -612,8 +623,8 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         { // too deep
             uint256 protBalanceBefore = IShareToken(protected).balanceOf(address(actor));
             uint256 collBalanceBefore = IShareToken(collateral).balanceOf(address(actor));
-            uint256 previewCollateralBefore = vault.previewRedeem(collBalanceBefore, ISilo.AssetType.Collateral);
-            uint256 previewProtectedBefore = vault.previewRedeem(protBalanceBefore, ISilo.AssetType.Protected);
+            uint256 previewCollateralBefore = vault.previewRedeem(collBalanceBefore, ISilo.CollateralType.Collateral);
+            uint256 previewProtectedBefore = vault.previewRedeem(protBalanceBefore, ISilo.CollateralType.Protected);
 
             shareSumBefore = protBalanceBefore + collBalanceBefore;
             previewAssetsSumBefore = previewCollateralBefore + previewProtectedBefore;
@@ -637,8 +648,8 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
             assertEq(shareSumBefore, shareSumAfter, "Gained shares after transitionCollateral (no interest)");
         }
 
-        uint256 previewCollateralAfter = vault.previewRedeem(collBalanceAfter, ISilo.AssetType.Collateral);
-        uint256 previewProtectedAfter = vault.previewRedeem(protBalanceAfter, ISilo.AssetType.Protected);
+        uint256 previewCollateralAfter = vault.previewRedeem(collBalanceAfter, ISilo.CollateralType.Collateral);
+        uint256 previewProtectedAfter = vault.previewRedeem(protBalanceAfter, ISilo.CollateralType.Protected);
 
         assertEq(
             previewAssetsSumBefore, previewCollateralAfter + previewProtectedAfter,
@@ -744,15 +755,15 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         emit ExactAmount("maxWithdraw0:", vault0.maxWithdraw(_actor));
         emit ExactAmount("maxWithdraw1:", vault1.maxWithdraw(_actor));
 
-        uint256 maxBorrow0 = vault0.maxBorrow(_actor);
-        uint256 maxBorrow1 = vault1.maxBorrow(_actor);
+        uint256 maxBorrow0 = vault0.maxBorrow(_actor, sameAsset);
+        uint256 maxBorrow1 = vault1.maxBorrow(_actor, sameAsset);
         emit ExactAmount("maxBorrow0:", maxBorrow0);
         emit ExactAmount("maxBorrow1:", maxBorrow1);
 
         emit ExactAmount("convertToShares(maxBorrow0):", vault0.convertToShares(maxBorrow0, ISilo.AssetType.Debt));
         emit ExactAmount("convertToShares(maxBorrow1):", vault1.convertToShares(maxBorrow1, ISilo.AssetType.Debt));
 
-        emit ExactAmount("maxBorrowShares0:", vault0.maxBorrowShares(_actor));
-        emit ExactAmount("maxBorrowShares1:", vault1.maxBorrowShares(_actor));
+        emit ExactAmount("maxBorrowShares0:", vault0.maxBorrowShares(_actor, sameAsset));
+        emit ExactAmount("maxBorrowShares1:", vault1.maxBorrowShares(_actor, sameAsset));
     }
 }

@@ -5,17 +5,14 @@ import {SiloLensLib} from "../lib/SiloLensLib.sol";
 import {IShareToken, ShareToken, ISiloFactory, ISilo} from "./ShareToken.sol";
 
 /// @title ShareCollateralToken
-/// @notice ERC20 compatible token representing collateral position in Silo
+/// @notice ERC20 compatible token representing collateral in Silo
 /// @custom:security-contact security@silo.finance
 contract ShareCollateralToken is ShareToken {
     using SiloLensLib for ISilo;
 
-    error SenderNotSolventAfterTransfer();
-    error ShareTransferNotAllowed();
-
     /// @param _silo Silo address for which tokens was deployed
-    function initialize(ISilo _silo, address _hookReceiver) external virtual initializer {
-        __ShareToken_init(_silo, _hookReceiver);
+    function initialize(ISilo _silo) external virtual initializer {
+        __ShareToken_init(_silo);
     }
 
     /// @inheritdoc IShareToken
@@ -29,21 +26,12 @@ contract ShareCollateralToken is ShareToken {
         _burn(_owner, _amount);
     }
 
-    function _beforeTokenTransfer(address _sender, address _recipient, uint256) internal view virtual override {
-        // if we minting or burning, Silo is responsible to check all necessary conditions
-        if (_isTransfer(_sender, _recipient)) {
-            // Silo forbids having debt and collateral position of the same asset in given Silo
-            if (!silo.depositPossible(_recipient)) revert ShareTransferNotAllowed();
-        }
-    }
-
     /// @dev Check if sender is solvent after the transfer
     function _afterTokenTransfer(address _sender, address _recipient, uint256 _amount) internal virtual override {
-        // solhint-disable-previous-line ordering
-        ShareToken._afterTokenTransfer(_sender, _recipient, _amount);
-
         // for minting or burning, Silo is responsible to check all necessary conditions
         // for transfer make sure that _sender is solvent after transfer
         if (_isTransfer(_sender, _recipient) && !silo.isSolvent(_sender)) revert SenderNotSolventAfterTransfer();
+
+        ShareToken._afterTokenTransfer(_sender, _recipient, _amount);
     }
 }

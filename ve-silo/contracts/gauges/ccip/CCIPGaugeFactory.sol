@@ -2,17 +2,22 @@
 pragma solidity 0.8.21;
 
 import {Ownable2Step} from "openzeppelin-contracts/access/Ownable2Step.sol";
+import {IBeacon} from "openzeppelin5/proxy/beacon/IBeacon.sol";
+import {BeaconProxy} from "openzeppelin5/proxy/beacon/BeaconProxy.sol";
 
 import {BaseGaugeFactory} from "../BaseGaugeFactory.sol";
 import {CCIPGauge} from "./CCIPGauge.sol";
 
 abstract contract CCIPGaugeFactory is BaseGaugeFactory, Ownable2Step {
+    // solhint-disable-next-line var-name-mixedcase
+    IBeacon public immutable BEACON;
     address public checkpointer;
 
-    constructor(address _checkpointer, address _gaugeImplementation)
-        BaseGaugeFactory(_gaugeImplementation)
+    constructor(address _beacon, address _checkpointer)
+        BaseGaugeFactory(address(0))
     {
         checkpointer = _checkpointer;
+        BEACON = IBeacon(_beacon);
     }
 
     /**
@@ -21,13 +26,28 @@ abstract contract CCIPGaugeFactory is BaseGaugeFactory, Ownable2Step {
      * suitable before they are added to the GaugeController.
      * @param recipient The address to receive BAL minted from the gauge
      * @param relativeWeightCap The relative weight cap for the created gauge
+     * @param destinationChain The destination chain for the gauge
      * @return The address of the deployed gauge
      */
-    function create(address recipient, uint256 relativeWeightCap) external returns (address) {
+    function create(address recipient, uint256 relativeWeightCap, uint64 destinationChain) external returns (address) {
         address gauge = _create();
 
-        CCIPGauge(gauge).initialize(recipient, relativeWeightCap, checkpointer);
+        CCIPGauge(gauge).initialize(recipient, relativeWeightCap, checkpointer, destinationChain);
 
         return gauge;
+    }
+
+    /**
+     * @return The address of the gauge implementation.
+     */
+    function getGaugeImplementation() public override view returns (address) {
+        return BEACON.implementation();
+    }
+
+    /**
+     * @dev Deploy a proxy.
+     */
+    function _createGauge() internal override returns (address) {
+        return address(new BeaconProxy(address(BEACON), ""));
     }
 }

@@ -6,6 +6,7 @@ import "forge-std/Test.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
+import {IERC20Errors} from "openzeppelin5/interfaces/draft-IERC6093.sol";
 
 import {TokenMock} from "silo-core/test/foundry/_mocks/TokenMock.sol";
 import {SiloFixture} from "../../_common/fixtures/SiloFixture.sol";
@@ -25,6 +26,7 @@ contract LeverageAllowanceTest is SiloLittleHelper, Test {
     address immutable BORROWER;
 
     ISiloConfig siloConfig;
+    bool sameAsset;
 
     ILeverageBorrower leverageBorrower = ILeverageBorrower(new LeverageBorrower());
 
@@ -49,8 +51,10 @@ contract LeverageAllowanceTest is SiloLittleHelper, Test {
         
         token1.mint(address(leverageBorrower), ASSETS);
 
-        vm.expectRevert("ERC20: insufficient allowance");
-        silo0.leverage(ASSETS, leverageBorrower, BORROWER, data);
+        vm.expectRevert(
+            abi.encodeWithSelector(IERC20Errors.ERC20InsufficientAllowance.selector, address(this), 0, ASSETS)
+        );
+        silo0.leverage(ASSETS, leverageBorrower, BORROWER, sameAsset, data);
     }
 
     /*
@@ -71,7 +75,7 @@ contract LeverageAllowanceTest is SiloLittleHelper, Test {
         token1.mint(address(leverageBorrower), ASSETS);
         bytes memory data = abi.encode(address(silo1), address(token1), ASSETS);
 
-        silo0.leverage(ASSETS / 2, leverageBorrower, BORROWER, data);
+        silo0.leverage(ASSETS / 2, leverageBorrower, BORROWER, sameAsset, data);
 
         assertEq(IShareToken(debtShareToken).balanceOf(BORROWER), ASSETS / 2, "BORROWER has debt after");
         assertEq(IShareToken(debtShareToken).balanceOf(DEPOSITOR), 0, "DEPOSITOR no debt after");

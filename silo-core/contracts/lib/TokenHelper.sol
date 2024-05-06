@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.21;
+pragma solidity ^0.8.0;
 
-import {AddressUpgradeable} from "openzeppelin-contracts-upgradeable/utils/AddressUpgradeable.sol";
-import {IERC20MetadataUpgradeable} from
-    "openzeppelin-contracts-upgradeable/token/ERC20/extensions/IERC20MetadataUpgradeable.sol";
+import {Address} from "openzeppelin5/utils/Address.sol";
+import {IERC20Metadata} from "openzeppelin5/token/ERC20/extensions/IERC20Metadata.sol";
+
+import {IsContract} from "./IsContract.sol";
 
 library TokenHelper {
     uint256 private constant _BYTES32_SIZE = 32;
@@ -12,7 +13,7 @@ library TokenHelper {
 
     function assertAndGetDecimals(address _token) internal view returns (uint256) {
         (bool hasMetadata, bytes memory data) =
-            _tokenMetadataCall(_token, abi.encodeCall(IERC20MetadataUpgradeable.decimals, ()));
+            _tokenMetadataCall(_token, abi.encodeCall(IERC20Metadata.decimals, ()));
 
         // decimals() is optional in the ERC20 standard, so if metadata is not accessible
         // we assume there are no decimals and use 0.
@@ -29,7 +30,7 @@ library TokenHelper {
     /// @return assetSymbol the token symbol
     function symbol(address _token) internal view returns (string memory assetSymbol) {
         (bool hasMetadata, bytes memory data) =
-            _tokenMetadataCall(_token, abi.encodeCall(IERC20MetadataUpgradeable.symbol, ()));
+            _tokenMetadataCall(_token, abi.encodeCall(IERC20Metadata.symbol, ()));
 
         if (!hasMetadata || data.length == 0) {
             return "?";
@@ -58,7 +59,7 @@ library TokenHelper {
     /// @dev Performs a staticcall to the token to get its metadata (symbol, decimals, name)
     function _tokenMetadataCall(address _token, bytes memory _data) private view returns (bool, bytes memory) {
         // We need to do this before the call, otherwise the call will succeed even for EOAs
-        if (!AddressUpgradeable.isContract(_token)) revert TokenIsNotAContract();
+        if (!IsContract.isContract(_token)) revert TokenIsNotAContract();
 
         (bool success, bytes memory result) = _token.staticcall(_data);
 
