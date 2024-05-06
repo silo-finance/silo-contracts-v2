@@ -73,7 +73,7 @@ contract DynamicKinkModelV1 is IDynamicKinkModelV1 {
     )
         public
         pure
-        returns (int256 rcur, int256 k, int256 r, bool didCap, bool didOverflow)
+        returns (int256 rcur, bool didCap, bool didOverflow)
     {
         // _t0 < _t1 checks are included inside this function, may revert 
         (,, didCap, didOverflow) = compoundInterestRate(
@@ -86,12 +86,13 @@ contract DynamicKinkModelV1 is IDynamicKinkModelV1 {
         );
 
         if (didOverflow) {
-            return (0, _setup.config.kmin, 0, didCap, didOverflow);
+            return (0, didCap, didOverflow);
         }
 
         //todo link to paper proving that the overflow is impossible in this block
         unchecked {
             int256 T = _t1 - _t0;
+            int256 k;
 
             if (_u < _setup.config.u1) {
                 k = _setup.k - (_setup.config.c1 + _setup.config.cminus * (_setup.config.u1 - _u) / _DP) * T;
@@ -104,6 +105,8 @@ contract DynamicKinkModelV1 is IDynamicKinkModelV1 {
             } else {
                 k = _setup.k;
             }
+
+            int256 r;
 
             if (_u >= _setup.config.ulow) {
                 r = _u - _setup.config.ulow;
