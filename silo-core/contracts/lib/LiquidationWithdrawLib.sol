@@ -8,6 +8,7 @@ import {SiloMathLib} from "./SiloMathLib.sol";
 import {SiloERC4626Lib} from "./SiloERC4626Lib.sol";
 import {Rounding} from "./Rounding.sol";
 import {AssetTypes} from "./AssetTypes.sol";
+import {Hook} from "./Hook.sol";
 
 library LiquidationWithdrawLib {
     /// @dev that method allow to finish liquidation process by giving up collateral to liquidator

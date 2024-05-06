@@ -27,7 +27,7 @@ contract PartialLiquidation is IPartialLiquidation {
 
     /// @inheritdoc IPartialLiquidation
     function liquidationCall( // solhint-disable-line function-max-lines, code-complexity
-        address _siloWithDebt, // TODO bug - we need to verify if _siloWithDebt is real silo
+        address _siloWithDebt,
         address _collateralAsset,
         address _debtAsset,
         address _borrower,
@@ -135,6 +135,12 @@ contract PartialLiquidation is IPartialLiquidation {
             _borrower,
             Hook.LIQUIDATION
         );
+
+        // We validate that both Silos have the same config data which means that potential attacker has no choice
+        // but provide either two real silos or two fake silos. While providing two fake silos, neither silo has access
+        // to real balances so the attack is pointless.
+        (address silo0, address silo1) = ISilo(collateralConfig.silo).config().getSilos();
+        if (_siloWithDebt != silo0 && _siloWithDebt != silo1) revert WrongSilo();
 
         if (!debtInfo.debtPresent) revert UserIsSolvent();
         if (!debtInfo.debtInThisSilo) revert ISilo.ThereIsDebtInOtherSilo();

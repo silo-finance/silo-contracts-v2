@@ -29,6 +29,7 @@ interface IPartialLiquidation {
     error UserIsSolvent();
     error InsufficientLiquidation();
     error LiquidationTooBig();
+    error WrongSilo();
 
     /// @notice Function to liquidate a non-healthy debt collateral-wise
     /// - The caller (liquidator) covers `debtToCover` amount of debt of the user getting liquidated, and receives
