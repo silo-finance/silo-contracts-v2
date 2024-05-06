@@ -44,6 +44,7 @@ on:
       - yarn.lock
       - gitmodules/*
       - .gitmodules
+      - .github/workflows/intergration.yml
 
   pull_request:
     paths:
@@ -74,12 +75,10 @@ on:
       - yarn.lock
       - gitmodules/*
       - .gitmodules
+      - .github/workflows/intergration.yml
 
 jobs:
   ve-silo-foundry:
-    strategy:
-      fail-fast: true
-
     name: Deploy & test
     runs-on: ubuntu-latest
     steps:
