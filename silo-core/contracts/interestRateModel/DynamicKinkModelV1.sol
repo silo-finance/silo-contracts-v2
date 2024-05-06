@@ -106,19 +106,17 @@ contract DynamicKinkModelV1 is IDynamicKinkModelV1 {
                 k = _setup.k;
             }
 
-            int256 r;
-
             if (_u >= _setup.config.ulow) {
-                r = _u - _setup.config.ulow;
+                rcur = _u - _setup.config.ulow;
 
                 if (_u >= _setup.config.ucrit) {
-                    r = r + _setup.config.alpha * (_u - _setup.config.ucrit ) / _DP;
+                    rcur = rcur + _setup.config.alpha * (_u - _setup.config.ucrit ) / _DP;
                 }
 
-                r = r * k / _DP;
+                rcur = rcur * k / _DP;
             }
 
-            rcur = (r + _setup.config.rmin) * SECONDS_IN_YEAR;
+            rcur = (rcur + _setup.config.rmin) * SECONDS_IN_YEAR;
         }
     }
 
