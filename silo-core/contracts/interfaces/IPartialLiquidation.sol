@@ -30,6 +30,7 @@ interface IPartialLiquidation {
     error InsufficientLiquidation();
     error LiquidationTooBig();
     error WrongSilo();
+    error UnknownRatio();
 
     /// @notice Function to liquidate a non-healthy debt collateral-wise
     /// - The caller (liquidator) covers `debtToCover` amount of debt of the user getting liquidated, and receives

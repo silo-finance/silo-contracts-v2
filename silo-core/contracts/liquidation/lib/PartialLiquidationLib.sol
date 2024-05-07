@@ -2,6 +2,7 @@
 pragma solidity 0.8.21;
 
 import {ISiloConfig} from "../../interfaces/ISiloConfig.sol";
+import {IPartialLiquidation} from "../../interfaces/IPartialLiquidation.sol";
 
 library PartialLiquidationLib {
     struct LiquidationPreviewParams {
@@ -150,6 +151,8 @@ library PartialLiquidationLib {
         pure
         returns (uint256 assets)
     {
+        if (_totalValue == 0) revert IPartialLiquidation.UnknownRatio();
+
         assets = _value * _totalAssets;
         unchecked { assets /= _totalValue; }
     }
