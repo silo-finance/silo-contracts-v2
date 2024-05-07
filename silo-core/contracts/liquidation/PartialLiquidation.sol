@@ -130,7 +130,7 @@ contract PartialLiquidation is IPartialLiquidation {
 
         ISiloConfig.DebtInfo memory debtInfo;
 
-        (collateralConfig, debtConfig, debtInfo) = siloConfigCached.getConfigs(
+        (collateralConfig, debtConfig, debtInfo) = siloConfigCached.accrueInterestAndGetConfigs(
             _siloWithDebt,
             _borrower,
             Hook.LIQUIDATION
@@ -147,8 +147,6 @@ contract PartialLiquidation is IPartialLiquidation {
 
         if (_collateralAsset != collateralConfig.token) revert UnexpectedCollateralToken();
         if (_debtAsset != debtConfig.token) revert UnexpectedDebtToken();
-
-        ISilo(debtConfig.silo).accrueInterest();
 
         if (!debtInfo.sameAsset) {
             ISilo(debtConfig.otherSilo).accrueInterest();
