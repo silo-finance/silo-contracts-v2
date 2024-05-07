@@ -424,7 +424,7 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
 
             silo0.withdrawFees();
 
-            assertEq(token0.balanceOf(address(silo0)), dust, "no balance after withdraw fees");
+            assertEq(token0.balanceOf(address(silo0)), dust, "no balance after withdraw fees (except dust!)");
             assertEq(IShareToken(debtConfig.debtShareToken).totalSupply(), 0, "expected debtShareToken burned");
             assertEq(IShareToken(debtConfig.collateralShareToken).totalSupply(), 0, "expected collateralShareToken burned");
             assertEq(silo0.total(AssetTypes.COLLATERAL), dust, "storage AssetType.Collateral");
