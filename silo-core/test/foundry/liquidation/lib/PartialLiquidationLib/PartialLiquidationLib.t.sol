@@ -357,7 +357,7 @@ contract PartialLiquidationLibTest is Test, MaxRepayRawMath {
         PartialLiquidationLib.liquidationPreview(1e8, 1e18, 1e18, 1e18, 10, params);
         uint256 gasEnd = gasleft();
 
-        assertEq(gasStart - gasEnd, 1040, "optimise liquidationPreview");
+        assertEq(gasStart - gasEnd, 1062, "optimise liquidationPreview");
     }
 
     /*

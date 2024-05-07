@@ -10,6 +10,7 @@ library SiloConfigsNames {
     string public constant LOCAL_NOT_BORROWABLE = "Local_notBorrowable";
     string public constant LOCAL_BEFORE_CALL = "Local_beforeCall";
     string public constant LOCAL_DEPLOYER = "Local_deployer";
+    string public constant LOCAL_HOOKS_MISSCONFIGURATION = "Local_HookMissconfiguration";
     string public constant LOCAL_GAUGE_HOOK_RECEIVER = "Local_gauge_hook_receiver";
 
     string public constant FULL_CONFIG_TEST = "FULL_CONFIG_TEST";

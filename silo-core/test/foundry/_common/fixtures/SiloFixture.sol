@@ -8,7 +8,6 @@ import {CommonBase} from "forge-std/Base.sol";
 import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 
 import {OracleConfig} from "silo-oracles/deploy/OraclesDeployments.sol";
-import {VeSiloContracts} from "ve-silo/common/VeSiloContracts.sol";
 
 import {MainnetDeploy} from "silo-core/deploy/MainnetDeploy.s.sol";
 import {SiloDeploy} from "silo-core/deploy/silo/SiloDeploy.s.sol";
@@ -18,6 +17,9 @@ import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquidation.sol";
 
+// TODO remove this once timelock init will be fixed
+import {VeSiloContracts} from "ve-silo/common/VeSiloContracts.sol";
+
 import {TokenMock} from "../../_mocks/TokenMock.sol";
 
 import {console} from "forge-std/console.sol";
@@ -25,8 +27,7 @@ import {console} from "forge-std/console.sol";
 struct SiloConfigOverride {
     address token0;
     address token1;
-    string hookReceiver;
-    string hookReceiverImplementation;
+    address hookReceiver;
     address solvencyOracle0;
     address maxLtvOracle0;
     string configName;
@@ -44,9 +45,8 @@ contract SiloDeploy_Local is SiloDeploy {
     }
 
     function beforeCreateSilo(
-        ISiloConfig.InitData memory _config,
-        address _hookImplementation
-    ) internal override returns (address) {
+        ISiloConfig.InitData memory _config
+    ) internal view override {
         // Override the default values if overrides are provided
         if (siloConfigOverride.token0 != address(0)) {
             _config.token0 = siloConfigOverride.token0;
@@ -64,34 +64,14 @@ contract SiloDeploy_Local is SiloDeploy {
             _config.maxLtvOracle0 = siloConfigOverride.maxLtvOracle0;
         }
 
-        if(bytes(siloConfigOverride.hookReceiver).length != 0) {
-            _config.hookReceiver = _resolveHookReceiverOverride(siloConfigOverride.hookReceiver);
-        }
-
-        if(bytes(siloConfigOverride.hookReceiverImplementation).length != 0) {
-            string memory implementation = siloConfigOverride.hookReceiverImplementation;
-            _hookImplementation = _resolveHookReceiverOverride(implementation);
-        }
-
-        return _hookImplementation;
-    }
-
-    function _resolveHookReceiverOverride(string memory _requiredHookReceiver) internal returns (address hookReceiver) {
-        if (keccak256(bytes(_requiredHookReceiver)) == NO_HOOK_RECEIVER_KEY) {
-            hookReceiver = address(0);
-        } else {
-            // Expecting to use it only for overrides in tests
-            hookReceiver = AddrLib.getAddress(_requiredHookReceiver);
-            if (hookReceiver == address(0)) revert SiliFixtureHookReceiverImplNotFound(_requiredHookReceiver);
+        if(siloConfigOverride.hookReceiver != address(0)) {
+            _config.hookReceiver = siloConfigOverride.hookReceiver;
         }
     }
 }
 
 contract SiloFixture is StdCheats, CommonBase {
     uint256 internal constant _FORKING_BLOCK_NUMBER = 17336000;
-
-    address public timelock = makeAddr("Timelock");
-    address public feeDistributor = makeAddr("FeeDistributor");
 
     function deploy_ETH_USDC()
         external
@@ -107,22 +87,32 @@ contract SiloFixture is StdCheats, CommonBase {
         return _deploy(new SiloDeploy(), SiloConfigsNames.ETH_USDC_UNI_V3_SILO);
     }
 
+    function deploy_local(string memory _configName)
+        external
+        returns (
+            ISiloConfig siloConfig,
+            ISilo silo0,
+            ISilo silo1,
+            address token0,
+            address token1,
+            IPartialLiquidation liquidationModule
+        )
+    {
+        SiloConfigOverride memory overrideArgs;
+        return _deploy(new SiloDeploy_Local(overrideArgs), _configName);
+    }
+
     function deploy_local(SiloConfigOverride memory _override)
         external
         returns (
             ISiloConfig siloConfig,
             ISilo silo0,
             ISilo silo1,
-            address weth,
-            address usdc,
+            address token0,
+            address token1,
             IPartialLiquidation liquidationModule
         )
     {
-        // Mock addresses that we need for the `SiloFactoryDeploy` script
-        AddrLib.setAddress(VeSiloContracts.TIMELOCK_CONTROLLER, timelock);
-        AddrLib.setAddress(VeSiloContracts.FEE_DISTRIBUTOR, feeDistributor);
-        console2.log("[SiloFixture] _deploy: setAddress done.");
-
         return _deploy(
             new SiloDeploy_Local(_override),
             bytes(_override.configName).length == 0 ? SiloConfigsNames.LOCAL_NO_ORACLE_SILO : _override.configName
@@ -140,6 +130,10 @@ contract SiloFixture is StdCheats, CommonBase {
             IPartialLiquidation liquidationModule
         )
     {
+        // TODO remove this once we fix issue with timelock being setup on init
+        AddrLib.setAddress(VeSiloContracts.TIMELOCK_CONTROLLER, makeAddr("Timelock"));
+        AddrLib.setAddress(VeSiloContracts.FEE_DISTRIBUTOR, makeAddr("FeeDistributor"));
+
         MainnetDeploy mainnetDeploy = new MainnetDeploy();
         mainnetDeploy.disableDeploymentsSync();
         mainnetDeploy.run();

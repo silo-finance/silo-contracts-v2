@@ -83,7 +83,7 @@ contract SiloDeploy is CommonDeploy {
 
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
 
-        hookReceiverImplementation = beforeCreateSilo(siloInitData, hookReceiverImplementation);
+        beforeCreateSilo(siloInitData);
 
         console2.log("[SiloCommonDeploy] `beforeCreateSilo` executed");
 
@@ -267,10 +267,8 @@ contract SiloDeploy is CommonDeploy {
     }
 
     function beforeCreateSilo(
-        ISiloConfig.InitData memory,
-        address _hookImplementation
-    ) internal virtual returns (address) {
-        // hook for any action before creating silo
-        return _hookImplementation;
+        ISiloConfig.InitData memory
+    ) internal virtual {
+        
     }
 }
