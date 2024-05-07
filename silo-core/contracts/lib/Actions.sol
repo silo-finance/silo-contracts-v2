@@ -581,7 +581,8 @@ library Actions {
     /// accordingly
     /// @param _silo Silo address
     /// @param _siloData Storage reference containing silo-related data, including accumulated fees
-    function withdrawFees(ISilo _silo, ISilo.SiloData storage _siloData) external {
+    /// @param _protectedAssets Protected assets in the silo. We can not withdraw it.
+    function withdrawFees(ISilo _silo, ISilo.SiloData storage _siloData, uint256 _protectedAssets) external {
         (
             address daoFeeReceiver,
             address deployerFeeReceiver,
@@ -590,11 +591,17 @@ library Actions {
             address asset
         ) = SiloStdLib.getFeesAndFeeReceiversWithAsset(_silo);
 
-        uint256 earnedFees = _siloData.daoAndDeployerFees;
-        uint256 balanceOf = IERC20(asset).balanceOf(address(this));
-        if (balanceOf == 0) revert ISilo.BalanceZero();
+        uint256 availableLiquidity;
+        uint256 siloBalance = IERC20(asset).balanceOf(address(this));
 
-        if (earnedFees > balanceOf) earnedFees = balanceOf;
+        // we will never underflow because `_protectedAssets` is always less/equal `siloBalance`
+        unchecked { availableLiquidity = _protectedAssets > siloBalance ? 0 : siloBalance - _protectedAssets; }
+
+        if (availableLiquidity == 0) revert ISilo.NoLiquidity();
+
+        uint256 earnedFees = _siloData.daoAndDeployerFees;
+
+        if (earnedFees > availableLiquidity) earnedFees = availableLiquidity;
         if (earnedFees == 0) revert ISilo.EarnedZero();
 
         // we will never underflow because earnedFees max value is `_siloData.daoAndDeployerFees`
@@ -615,9 +622,9 @@ library Actions {
             uint256 deployerFees;
 
             unchecked {
-            // fees are % in decimal point so safe to uncheck
+                // fees are % in decimal point so safe to uncheck
                 daoFees = daoFees / (daoFee + deployerFee);
-            // `daoFees` is chunk of earnedFees, so safe to uncheck
+                // `daoFees` is chunk of earnedFees, so safe to uncheck
                 deployerFees = earnedFees - daoFees;
             }
 

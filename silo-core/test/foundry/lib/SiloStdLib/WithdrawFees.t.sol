@@ -15,6 +15,8 @@ import {TokenMock} from "../../_mocks/TokenMock.sol";
 
 // forge test -vv --ffi --mc WithdrawFeesTest
 contract WithdrawFeesTest is Test {
+    uint256 constant public NO_PROTECTED_ASSETS = 0;
+
     ISilo.SiloData public siloData;
     ISiloConfig public config;
     ISiloFactory public factory;
@@ -41,7 +43,7 @@ contract WithdrawFeesTest is Test {
         _reset();
 
         vm.expectRevert();
-        _withdrawFees(ISilo(address(this)), siloData);
+        _withdrawFees(ISilo(address(this)), siloData, NO_PROTECTED_ASSETS);
     }
 
     /*
@@ -60,8 +62,8 @@ contract WithdrawFeesTest is Test {
         siloFactory.getFeeReceiversMock(address(this), dao, deployer);
         token.balanceOfMock(address(this), 0);
 
-        vm.expectRevert(ISilo.BalanceZero.selector);
-        _withdrawFees(ISilo(address(this)), siloData);
+        vm.expectRevert(ISilo.NoLiquidity.selector);
+        _withdrawFees(ISilo(address(this)), siloData, NO_PROTECTED_ASSETS);
     }
 
     /*
@@ -81,7 +83,7 @@ contract WithdrawFeesTest is Test {
         token.balanceOfMock(address(this), 1);
 
         vm.expectRevert(ISilo.EarnedZero.selector);
-        _withdrawFees(ISilo(address(this)), siloData);
+        _withdrawFees(ISilo(address(this)), siloData, NO_PROTECTED_ASSETS);
     }
 
     /*
@@ -103,7 +105,7 @@ contract WithdrawFeesTest is Test {
         siloData.daoAndDeployerFees = 2;
 
         vm.expectRevert(ISilo.NothingToPay.selector);
-        _withdrawFees(ISilo(address(this)), siloData);
+        _withdrawFees(ISilo(address(this)), siloData, NO_PROTECTED_ASSETS);
     }
 
     /*
@@ -126,7 +128,7 @@ contract WithdrawFeesTest is Test {
 
         token.transferMock(dao, 9);
 
-        _withdrawFees(ISilo(address(this)), siloData);
+        _withdrawFees(ISilo(address(this)), siloData, NO_PROTECTED_ASSETS);
     }
 
     /*
@@ -149,7 +151,7 @@ contract WithdrawFeesTest is Test {
 
         token.transferMock(deployer, 2);
 
-        _withdrawFees(ISilo(address(this)), siloData);
+        _withdrawFees(ISilo(address(this)), siloData, NO_PROTECTED_ASSETS);
     }
 
     /*
@@ -172,6 +174,32 @@ contract WithdrawFeesTest is Test {
         deployerFee = 0.01e18;
         daoFees = daoAndDeployerFees * 20/21;
         _withdrawFees_pass(daoFee, deployerFee, daoFees, daoAndDeployerFees - daoFees);
+    }
+
+    /*
+    forge test -vv --mt test_cant_withdraw_more_than_available
+    */
+    function test_cant_withdraw_more_than_available() external {
+        uint256 daoFee;
+        uint256 deployerFee;
+        uint256 flashloanFeeInBp;
+        address asset = token.ADDRESS();
+        uint256 siloBalance = 1e18;
+
+        address dao = makeAddr("DAO");
+        address deployer;
+
+        siloConfig.getFeesWithAssetMock(address(this), daoFee, deployerFee, flashloanFeeInBp, asset);
+        siloFactory.getFeeReceiversMock(address(this), dao, deployer);
+        token.balanceOfMock(address(this), siloBalance);
+
+        siloData.daoAndDeployerFees = uint192(siloBalance); // fees are the same as balance
+
+        uint256 protectedAssets = siloBalance / 3; // the third part of the balance is protected
+
+        token.transferMock(dao, siloBalance - protectedAssets); // dao gets all the liquidity except protected assets
+
+        _withdrawFees(ISilo(address(this)), siloData, protectedAssets);
     }
 
     function _withdrawFees_pass(
@@ -197,12 +225,12 @@ contract WithdrawFeesTest is Test {
         if (_transferDao != 0) token.transferMock(dao, _transferDao);
         if (_transferDeployer != 0) token.transferMock(deployer, _transferDeployer);
 
-        _withdrawFees(ISilo(address(this)), siloData);
+        _withdrawFees(ISilo(address(this)), siloData, NO_PROTECTED_ASSETS);
         assertEq(siloData.daoAndDeployerFees, 0, "fees cleared");
     }
 
-    function _withdrawFees(ISilo _silo, ISilo.SiloData storage _siloData) internal {
-        Actions.withdrawFees(_silo, _siloData);
+    function _withdrawFees(ISilo _silo, ISilo.SiloData storage _siloData, uint256 _protectedAssets) internal {
+        Actions.withdrawFees(_silo, _siloData, _protectedAssets);
     }
 
     function _reset() internal {

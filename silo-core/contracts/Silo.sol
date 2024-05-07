@@ -644,7 +644,7 @@ contract Silo is SiloERC4626 {
 
     /// @inheritdoc ISilo
     function withdrawFees() external virtual {
-        Actions.withdrawFees(this, siloData);
+        Actions.withdrawFees(this, siloData, total[AssetTypes.PROTECTED].assets);
     }
 
     /// @dev that method allow to finish liquidation process by giving up collateral to liquidator

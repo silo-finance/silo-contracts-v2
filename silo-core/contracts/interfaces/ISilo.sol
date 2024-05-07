@@ -166,7 +166,6 @@ interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
     error NotSolvent();
     error BorrowNotPossible();
     error WrongToken();
-    error BalanceZero();
     error EarnedZero();
     error NothingToPay();
     error FlashloanFailed();
@@ -183,6 +182,7 @@ interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
     error SiloInitialized();
     error OnlyHookReceiver();
     error OnlySiloConfig();
+    error NoLiquidity();
 
     /// @notice Method for HookReceiver only to call on behalf of Silo
     /// @param _target address of the contract to call
