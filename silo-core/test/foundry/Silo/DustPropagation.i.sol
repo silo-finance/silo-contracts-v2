@@ -30,7 +30,6 @@ contract DustPropagationTest is SiloLittleHelper, Test {
     bool constant SAME_TOKEN = true;
     uint256 constant DUST_LEFT = 4;
 
-
     ISiloConfig siloConfig;
 
     function setUp() public {
@@ -63,15 +62,15 @@ contract DustPropagationTest is SiloLittleHelper, Test {
 
         silo0.withdrawFees();
 
-        (
-            , ISiloConfig.ConfigData memory debtConfig,
-        ) = siloConfig.getConfigs(address(silo0), address(0), 0 /* always 0 for external calls */);
+        ISiloConfig.ConfigData memory configData = siloConfig.getConfig(address(silo0));
+
+        assertEq(IShareToken(configData.debtShareToken).totalSupply(), 0, "expected debtShareToken burned");
+        assertEq(IShareToken(configData.collateralShareToken).totalSupply(), 0, "expected collateralShareToken burned");
+        assertEq(IShareToken(configData.protectedShareToken).totalSupply(), 0, "expected protectedShareToken 0");
+        assertEq(silo0.getDebtAssets(), 0, "total debt == 0");
 
         assertEq(token0.balanceOf(address(silo0)), DUST_LEFT, "no balance after withdraw fees (except dust!)");
-        assertEq(IShareToken(debtConfig.debtShareToken).totalSupply(), 0, "expected debtShareToken burned");
-        assertEq(IShareToken(debtConfig.collateralShareToken).totalSupply(), 0, "expected collateralShareToken burned");
         assertEq(silo0.total(AssetTypes.COLLATERAL), DUST_LEFT, "storage AssetType.Collateral");
-        assertEq(silo0.getDebtAssets(), 0, "total debt == 0");
         assertEq(silo0.getCollateralAssets(), DUST_LEFT, "total collateral == 4, dust!");
         assertEq(silo0.getLiquidity(), DUST_LEFT, "getLiquidity == 4, dust!");
 
@@ -84,7 +83,25 @@ contract DustPropagationTest is SiloLittleHelper, Test {
     */
     function test_dustPropagation_oneUser() public {
         address user1 = makeAddr("user1");
-        // user must deposit at least dust + 1, because otherwise math revert with zeroShares
+        /*
+            user must deposit at least dust + 1, because otherwise math revert with zeroShares
+            situation is like this: we have 0 shares, and 4 assets, to get 1 share, min of 5 assets is required
+            so we have situation where assets > shares from begin, not only after interest
+            and looks like this dust will be locked forever in Silo because in our SiloMathLib we have:
+
+            unchecked {
+                // I think we can afford to uncheck +1
+                (totalShares, totalAssets) = _assetType == ISilo.AssetType.Debt
+                    ? (_totalShares, _totalAssets)
+                    : (_totalShares + _DECIMALS_OFFSET_POW, _totalAssets + 1);
+            }
+
+            if (totalShares == 0 || totalAssets == 0) return _assets;
+
+            ^ we never enter into this `if` for non debt assets, because we always adding +1 for both variables
+            and this is why this dust will be forever locked in silo.
+            Atm the only downside I noticed: it creates "minimal deposit" situation.
+        */
         uint256 shares1 = _deposit(DUST_LEFT + 1, user1);
         emit log_named_uint("[user1] shares1", shares1);
 
