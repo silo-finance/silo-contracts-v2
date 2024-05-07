@@ -202,7 +202,7 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
         emit log_named_decimal_uint("[test] max debtToRepay", debtToRepay, 18);
         emit log_named_decimal_uint("[test] debtToCover", debtToCover, 18);
 
-        vm.expectCall(address(silo0), abi.encodeWithSelector(ISilo.accrueInterest.selector));
+        vm.expectCall(address(silo0), abi.encodeWithSelector(ISilo.accrueInterestForConfig.selector));
         vm.expectCall(
             address(debtConfig.interestRateModel),
             abi.encodeWithSelector(IInterestRateModel.getCompoundInterestRateAndUpdate.selector)
@@ -350,7 +350,7 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
         uint256 interest = 48_313643495964160590;
         assertEq(debtToRepay - DEBT, interest, "interests on debt");
 
-        vm.expectCall(address(silo0), abi.encodeWithSelector(ISilo.accrueInterest.selector));
+        vm.expectCall(address(silo0), abi.encodeWithSelector(ISilo.accrueInterestForConfig.selector));
         vm.expectCall(
             address(debtConfig.interestRateModel),
             abi.encodeWithSelector(IInterestRateModel.getCompoundInterestRateAndUpdate.selector)
@@ -459,7 +459,7 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
         uint256 interest = 65_880809371475889105;
         assertEq(debtToRepay - DEBT, interest, "interests on debt");
 
-        vm.expectCall(address(silo0), abi.encodeWithSelector(ISilo.accrueInterest.selector));
+        vm.expectCall(address(silo0), abi.encodeWithSelector(ISilo.accrueInterestForConfig.selector));
         vm.expectCall(
             address(debtConfig.interestRateModel),
             abi.encodeWithSelector(IInterestRateModel.getCompoundInterestRateAndUpdate.selector)

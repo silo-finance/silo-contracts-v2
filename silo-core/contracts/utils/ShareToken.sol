@@ -247,6 +247,9 @@ abstract contract ShareToken is Initializable, ERC20, IShareToken {
         if (!setup.hooksAfter.matchAction(action)) return;
 
         // report mint, burn or transfer
+        // even if it is possible to leave silo in a middle of mint/burn, where we can have invalid state
+        // you can not enter any function because of cross reentrancy check
+        // invalid mid-state can be eg: in a middle of transitionCollateral, after burn but before mint
         IHookReceiver(setup.hookReceiver).afterAction(
             address(silo),
             action,
