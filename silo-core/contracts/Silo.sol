@@ -628,8 +628,7 @@ contract Silo is SiloERC4626 {
 
     /// @inheritdoc ISilo
     function accrueInterest() external virtual returns (uint256 accruedInterest) {
-        ISiloConfig.ConfigData memory cfg = sharedStorage.siloConfig.getConfig(address(this));
-        accruedInterest = _callAccrueInterestForAsset(cfg.interestRateModel, cfg.daoFee, cfg.deployerFee, address(0));
+        accruedInterest = _accrueInterest();
     }
 
     /// @inheritdoc ISilo
@@ -644,6 +643,7 @@ contract Silo is SiloERC4626 {
 
     /// @inheritdoc ISilo
     function withdrawFees() external virtual {
+        _accrueInterest();
         Actions.withdrawFees(this, siloData, total[AssetTypes.PROTECTED].assets);
     }
 
@@ -873,6 +873,11 @@ contract Silo is SiloERC4626 {
             // 0 for CollateralType.Collateral because it will be calculated internally
             _collateralType == CollateralType.Protected ? total[AssetTypes.PROTECTED].assets : 0
         );
+    }
+
+    function _accrueInterest() internal virtual returns (uint256 accruedInterest) {
+        ISiloConfig.ConfigData memory cfg = sharedStorage.siloConfig.getConfig(address(this));
+        accruedInterest = _callAccrueInterestForAsset(cfg.interestRateModel, cfg.daoFee, cfg.deployerFee, address(0));
     }
 
     function _callAccrueInterestForAsset(
