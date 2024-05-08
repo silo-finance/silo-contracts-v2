@@ -34,6 +34,7 @@ contract DustPropagationTest is SiloLittleHelper, Test {
 
     /*
     this test is based on: test_liquidationCall_badDebt_partial_1token_noDepositors
+    TODO create version of test where we modify storage and set some 1e5 value, to see how numbers behave
     */
     function setUp() public {
         siloConfig = _setUpLocalFixture();
@@ -140,10 +141,16 @@ contract DustPropagationTest is SiloLittleHelper, Test {
         assertEq(silo0.getLiquidity(), DUST_LEFT, "getLiquidity == 4, dust!");
     }
 
-    function test_dustPropagation_twoUsers_fuzz(
-//        uint128 deposit1, uint128 deposit2
+    /*
+    forge test -vv --ffi --mt test_dustPropagation_noInterest_twoUsers_fuzz
+
+    theory: DIFF in loos can not be higher than dust
+    */
+    /// forge-config: core-test.fuzz.runs = 1000
+    function test_dustPropagation_noInterest_twoUsers_fuzz(
+        uint128 deposit1, uint128 deposit2
     ) public {
-        (uint128 deposit1, uint128 deposit2) = (25550723675487705537526, 42);
+//        (uint128 deposit1, uint128 deposit2) = (25550723675487705537526, 42);
         vm.assume(deposit1 > DUST_LEFT);
         vm.assume(deposit2 > DUST_LEFT);
 
@@ -159,27 +166,52 @@ contract DustPropagationTest is SiloLittleHelper, Test {
         uint256 maxWithdraw1 = silo0.maxWithdraw(user1);
         uint256 maxWithdraw2 = silo0.maxWithdraw(user2);
 
+        bool user1GetsMore = maxWithdraw1 > deposit1;
+        bool user2GetsMore = maxWithdraw2 > deposit2;
+
+        emit log_named_string("user1 will get", user1GetsMore ? "MORE" : "LESS");
+        emit log_named_uint("    deposit1", deposit1);
         emit log_named_uint("maxWithdraw1", maxWithdraw1);
+        emit log_named_string("user2 will get", user2GetsMore ? "MORE" : "LESS");
+        emit log_named_uint("    deposit2", deposit2);
         emit log_named_uint("maxWithdraw2", maxWithdraw2);
 
-        assertLe(deposit1 - maxWithdraw1, 1, "[user1] maxWithdraw can be off by 1");
-        assertLe(deposit2 - maxWithdraw2, 1, "[user2] maxWithdraw can be off by 1");
+        if (!user1GetsMore) {
+            assertLe(deposit1 - maxWithdraw1, DUST_LEFT, "[user1] maxWithdraw can be less by DUST_LEFT");
+        }
 
-        uint256 redeem2 = _redeem(shares2, user2);
-        emit log_named_uint("redeem2", redeem2);
+        if (!user2GetsMore) {
+            assertLe(deposit2 - maxWithdraw2, DUST_LEFT, "[user2] maxWithdraw can be less by DUST_LEFT");
+        }
 
-        uint256 redeem1 = _redeem(shares1, user1);
-        emit log_named_uint("redeem1", redeem1);
+        uint256 withdrawn1 = _redeem(shares1, user1);
+        emit log_named_uint("withdrawn1", withdrawn1);
+        assertEq(withdrawn1, maxWithdraw1, "[user1] max should match real withdrawn");
 
-        uint256 diff1 = deposit1 - redeem1;
-        uint256 diff2 = deposit2 - redeem2;
+        uint256 withdrawn2 = _redeem(shares2, user2);
+        emit log_named_uint("withdrawn2", withdrawn2);
+        assertEq(withdrawn2, maxWithdraw2, "[user2] max should match real withdrawn");
+
+        bool user1GotMore = withdrawn1 > deposit1;
+        bool user2GotMore = withdrawn2 > deposit2;
+
+        uint256 diff1 = user1GotMore ? withdrawn1 - deposit1 : deposit1 - withdrawn1;
+        uint256 diff2 = user2GotMore ? withdrawn2 - deposit2 : deposit2 - withdrawn2;
 
         emit log_named_uint("diff1", diff1);
         emit log_named_uint("diff2", diff2);
 
-        assertLe(diff1, 1, "[user1] withdrawn assets can be off by 1");
-        assertLe(diff2, 1, "[user2] withdrawn assets can be off by 1");
+        if (!user1GotMore) {
+            assertLe(diff1, DUST_LEFT, "[user1] withdrawn assets can be off by DUST_LEFT max");
+        }
 
-        assertEq(silo0.getLiquidity(), DUST_LEFT + diff1 + diff2, "dust");
+        if (!user2GotMore) {
+            assertLe(diff2, DUST_LEFT, "[user2] withdrawn assets can be off by DUST_LEFT max");
+        }
+
+        emit log_named_uint("dust was", DUST_LEFT);
+        emit log_named_uint("silo0.getLiquidity() is now", silo0.getLiquidity());
+
+        assertLe(silo0.getLiquidity() - DUST_LEFT, 2, "without interest dust should not go up more than 2?");
     }
 }
