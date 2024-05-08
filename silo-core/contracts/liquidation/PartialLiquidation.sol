@@ -9,6 +9,7 @@ import {IHookReceiver} from "../utils/hook-receivers/interfaces/IHookReceiver.so
 
 import {SiloLendingLib} from "../lib/SiloLendingLib.sol";
 import {Hook} from "../lib/Hook.sol";
+import {CallBeforeQuoteLib} from "../lib/CallBeforeQuoteLib.sol";
 
 import {PartialLiquidationExecLib} from "./lib/PartialLiquidationExecLib.sol";
 
@@ -16,6 +17,7 @@ import {PartialLiquidationExecLib} from "./lib/PartialLiquidationExecLib.sol";
 /// @title PartialLiquidation module for executing liquidations
 contract PartialLiquidation is IPartialLiquidation {
     using Hook for uint24;
+    using CallBeforeQuoteLib for ISiloConfig.ConfigData;
 
     mapping(address silo => HookSetup) private _hooksSetup;
 
@@ -152,14 +154,8 @@ contract PartialLiquidation is IPartialLiquidation {
 
         if (!debtInfo.sameAsset) {
             ISilo(debtConfig.otherSilo).accrueInterest();
-
-            if (collateralConfig.callBeforeQuote) {
-                ISiloOracle(collateralConfig.solvencyOracle).beforeQuote(collateralConfig.token);
-            }
-
-            if (debtConfig.callBeforeQuote) {
-                ISiloOracle(debtConfig.solvencyOracle).beforeQuote(debtConfig.token);
-            }
+            collateralConfig.callSolvencyOracleBeforeQuote();
+            debtConfig.callSolvencyOracleBeforeQuote();
         }
     }
 

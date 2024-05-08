@@ -6,7 +6,6 @@ import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 
 import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
 import {ISilo} from "../interfaces/ISilo.sol";
-import {ISiloOracle} from "../interfaces/ISiloOracle.sol";
 import {IShareToken} from "../interfaces/IShareToken.sol";
 import {ILeverageBorrower} from "../interfaces/ILeverageBorrower.sol";
 import {IERC3156FlashBorrower} from "../interfaces/IERC3156FlashBorrower.sol";
@@ -21,11 +20,13 @@ import {SiloMathLib} from "./SiloMathLib.sol";
 import {CrossEntrancy} from "./CrossEntrancy.sol";
 import {Hook} from "./Hook.sol";
 import {AssetTypes} from "./AssetTypes.sol";
+import {CallBeforeQuoteLib} from "./CallBeforeQuoteLib.sol";
 
 library Actions {
     using SafeERC20 for IERC20;
     using Hook for uint256;
     using Hook for uint24;
+    using CallBeforeQuoteLib for ISiloConfig.ConfigData;
 
     bytes32 internal constant _LEVERAGE_CALLBACK = keccak256("ILeverageBorrower.onLeverage");
     bytes32 internal constant _FLASHLOAN_CALLBACK = keccak256("ERC3156FlashBorrower.onFlashLoan");
@@ -151,13 +152,8 @@ library Actions {
         }
 
         if (!debtInfo.sameAsset) {
-            if (collateralConfig.callBeforeQuote) {
-                ISiloOracle(collateralConfig.solvencyOracle).beforeQuote(collateralConfig.token);
-            }
-
-            if (debtConfig.callBeforeQuote) {
-                ISiloOracle(debtConfig.solvencyOracle).beforeQuote(debtConfig.token);
-            }
+            collateralConfig.callSolvencyOracleBeforeQuote();
+            debtConfig.callSolvencyOracleBeforeQuote();
         }
 
         // `_args.owner` must be solvent
@@ -248,13 +244,8 @@ library Actions {
         }
 
         if (!debtInfo.sameAsset) {
-            if (collateralConfig.callBeforeQuote) {
-                ISiloOracle(collateralConfig.maxLtvOracle).beforeQuote(collateralConfig.token);
-            }
-
-            if (debtConfig.callBeforeQuote) {
-                ISiloOracle(debtConfig.maxLtvOracle).beforeQuote(debtConfig.token);
-            }
+            collateralConfig.callMaxLtvOracleBeforeQuote();
+            debtConfig.callMaxLtvOracleBeforeQuote();
         }
 
         if (!SiloSolvencyLib.isBelowMaxLtv(
@@ -510,11 +501,14 @@ library Actions {
             ISilo(collateralConfig.otherSilo).accrueInterest();
         }
 
-        if (!SiloSolvencyLib.isSolvent(
-            collateralConfig, debtConfig, debtInfo, msg.sender, ISilo.AccrueInterestInMemory.No)
-        ) {
-            revert ISilo.NotSolvent();
-        }
+        collateralConfig.callSolvencyOracleBeforeQuote();
+        debtConfig.callSolvencyOracleBeforeQuote();
+
+        bool msgSenderIsNotSolvent = !SiloSolvencyLib.isSolvent(
+            collateralConfig, debtConfig, debtInfo, msg.sender, ISilo.AccrueInterestInMemory.No
+        );
+
+        if (msgSenderIsNotSolvent) revert ISilo.NotSolvent();
 
         _shareStorage.siloConfig.crossNonReentrantAfter();
 

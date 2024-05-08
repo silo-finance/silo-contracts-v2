@@ -5,7 +5,6 @@ import {Math} from "openzeppelin5/utils/math/Math.sol";
 
 import {ISiloOracle} from "../interfaces/ISiloOracle.sol";
 import {SiloStdLib, ISiloConfig, IShareToken, ISilo} from "./SiloStdLib.sol";
-import {SiloERC4626Lib} from "./SiloERC4626Lib.sol";
 import {SiloMathLib} from "./SiloMathLib.sol";
 import {Rounding} from "./Rounding.sol";
 import {AssetTypes} from "./AssetTypes.sol";

@@ -2,7 +2,7 @@
 pragma solidity 0.8.21;
 
 import {SiloLensLib} from "../lib/SiloLensLib.sol";
-import {IShareToken, ShareToken, ISiloFactory, ISilo} from "./ShareToken.sol";
+import {IShareToken, ShareToken, ISilo} from "./ShareToken.sol";
 
 /// @title ShareCollateralToken
 /// @notice ERC20 compatible token representing collateral in Silo
@@ -30,7 +30,10 @@ contract ShareCollateralToken is ShareToken {
     function _afterTokenTransfer(address _sender, address _recipient, uint256 _amount) internal virtual override {
         // for minting or burning, Silo is responsible to check all necessary conditions
         // for transfer make sure that _sender is solvent after transfer
-        if (_isTransfer(_sender, _recipient) && !silo.isSolvent(_sender)) revert SenderNotSolventAfterTransfer();
+        if (_isTransfer(_sender, _recipient)) {
+            _callOracleBeforeQuote(_sender);
+            if (!silo.isSolvent(_sender)) revert SenderNotSolventAfterTransfer();
+        }
 
         ShareToken._afterTokenTransfer(_sender, _recipient, _amount);
     }
