@@ -32,6 +32,9 @@ contract DustPropagationTest is SiloLittleHelper, Test {
 
     ISiloConfig siloConfig;
 
+    /*
+    this test is based on: test_liquidationCall_badDebt_partial_1token_noDepositors
+    */
     function setUp() public {
         siloConfig = _setUpLocalFixture();
 
@@ -78,11 +81,11 @@ contract DustPropagationTest is SiloLittleHelper, Test {
     }
 
     /*
-    this test is based on: test_liquidationCall_badDebt_partial_1token_noDepositors
     forge test -vv --ffi --mt test_dustPropagation
     */
     function test_dustPropagation_oneUser() public {
         address user1 = makeAddr("user1");
+
         /*
             user must deposit at least dust + 1, because otherwise math revert with zeroShares
             situation is like this: we have 0 shares, and 4 assets, to get 1 share, min of 5 assets is required
@@ -110,5 +113,73 @@ contract DustPropagationTest is SiloLittleHelper, Test {
         assertEq(_redeem(shares1, user1), DUST_LEFT + 1, "[user1] withdrawn assets");
 
         assertEq(silo0.getLiquidity(), DUST_LEFT, "getLiquidity == 4, dust!");
+    }
+
+    /*
+    forge test -vv --ffi --mt test_dustPropagation_twoUsers
+    */
+    function test_dustPropagation_twoUsers() public {
+        address user1 = makeAddr("user1");
+        address user2 = makeAddr("user2");
+
+        uint256 shares1 = _deposit(DUST_LEFT + 1, user1);
+        emit log_named_uint("[user1] shares1", shares1);
+
+        uint256 shares2 = _deposit(DUST_LEFT + 1, user2);
+        emit log_named_uint("[user2] shares2", shares2);
+
+        uint256 maxWithdraw1 = silo0.maxWithdraw(user1);
+        uint256 maxWithdraw2 = silo0.maxWithdraw(user2);
+
+        assertEq(maxWithdraw1, DUST_LEFT + 1, "[user1] maxWithdraw");
+        assertEq(maxWithdraw2, DUST_LEFT + 1, "[user2] maxWithdraw");
+
+        assertEq(_redeem(shares1, user1), DUST_LEFT + 1, "[user1] withdrawn assets");
+        assertEq(_redeem(shares2, user2), DUST_LEFT + 1, "[user2] withdrawn assets");
+
+        assertEq(silo0.getLiquidity(), DUST_LEFT, "getLiquidity == 4, dust!");
+    }
+
+    function test_dustPropagation_twoUsers_fuzz(
+//        uint128 deposit1, uint128 deposit2
+    ) public {
+        (uint128 deposit1, uint128 deposit2) = (25550723675487705537526, 42);
+        vm.assume(deposit1 > DUST_LEFT);
+        vm.assume(deposit2 > DUST_LEFT);
+
+        address user1 = makeAddr("user1");
+        address user2 = makeAddr("user2");
+
+        uint256 shares1 = _deposit(deposit1, user1);
+        uint256 shares2 = _deposit(deposit2, user2);
+
+        emit log_named_uint("shares1", shares1);
+        emit log_named_uint("shares2", shares2);
+
+        uint256 maxWithdraw1 = silo0.maxWithdraw(user1);
+        uint256 maxWithdraw2 = silo0.maxWithdraw(user2);
+
+        emit log_named_uint("maxWithdraw1", maxWithdraw1);
+        emit log_named_uint("maxWithdraw2", maxWithdraw2);
+
+        assertLe(deposit1 - maxWithdraw1, 1, "[user1] maxWithdraw can be off by 1");
+        assertLe(deposit2 - maxWithdraw2, 1, "[user2] maxWithdraw can be off by 1");
+
+        uint256 redeem2 = _redeem(shares2, user2);
+        emit log_named_uint("redeem2", redeem2);
+
+        uint256 redeem1 = _redeem(shares1, user1);
+        emit log_named_uint("redeem1", redeem1);
+
+        uint256 diff1 = deposit1 - redeem1;
+        uint256 diff2 = deposit2 - redeem2;
+
+        emit log_named_uint("diff1", diff1);
+        emit log_named_uint("diff2", diff2);
+
+        assertLe(diff1, 1, "[user1] withdrawn assets can be off by 1");
+        assertLe(diff2, 1, "[user2] withdrawn assets can be off by 1");
+
+        assertEq(silo0.getLiquidity(), DUST_LEFT + diff1 + diff2, "dust");
     }
 }
