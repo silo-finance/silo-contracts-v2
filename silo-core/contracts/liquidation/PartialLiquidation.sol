@@ -75,6 +75,8 @@ contract PartialLiquidation is IPartialLiquidation {
             );
 
             if (repayDebtAssets == 0) revert NoDebtToCover();
+            if (repayDebtAssets > _debtToCover) revert DebtToCoverTooSmall();
+
             // this two value were split from total collateral to withdraw, so we will not overflow
             unchecked { withdrawCollateral = withdrawAssetsFromCollateral + withdrawAssetsFromProtected; }
 

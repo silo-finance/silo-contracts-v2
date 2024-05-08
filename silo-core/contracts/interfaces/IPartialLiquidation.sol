@@ -24,6 +24,7 @@ interface IPartialLiquidation {
     error UnexpectedDebtToken();
     error LiquidityFeeToHi();
     error NoDebtToCover();
+    error DebtToCoverTooSmall();
 
     error InvalidSiloForCollateral();
     error UserIsSolvent();
