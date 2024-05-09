@@ -312,6 +312,34 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
     }
 
     /*
+    forge test -vv --ffi --mt test_liquidationCall_DebtToCoverTooSmall_1token
+    */
+    function test_liquidationCall_DebtToCoverTooSmall_1token() public {
+        // move forward with time so we can have interests
+        uint256 timeForward = 75 days;
+        vm.warp(block.timestamp + timeForward);
+        assertLt(silo0.getLtv(BORROWER), 1e18, "expect insolvency, but not bad debt");
+        assertGt(silo0.getLtv(BORROWER), 0.98e18, "expect hi LTV so we force full liquidation");
+
+        (
+            uint256 collateralToLiquidate, uint256 debtToRepay
+        ) = partialLiquidation.maxLiquidation(address(silo0), BORROWER);
+
+        assertEq(silo0.getLiquidity(), collateralToLiquidate - debtToRepay, "without bad debt there is some liquidity");
+        emit log_named_decimal_uint("collateralToLiquidate", collateralToLiquidate, 18);
+        emit log_named_decimal_uint("debtToRepay", debtToRepay, 18);
+        assertEq(debtToRepay, silo0.getDebtAssets(), "debtToRepay is max debt when we forcing full liquidation");
+
+        uint256 debtToCover = debtToRepay - 1; // -1 to check if tx reverts with DebtToCoverTooSmall
+        bool receiveSToken;
+
+        vm.expectRevert(IPartialLiquidation.DebtToCoverTooSmall.selector);
+        partialLiquidation.liquidationCall(
+            address(silo0), address(token0), address(token0), BORROWER, debtToCover, receiveSToken
+        );
+    }
+
+    /*
     forge test -vv --ffi --mt test_liquidationCall_badDebt_partial_1token_noDepositors
     */
     function test_liquidationCall_badDebt_partial_1token_noDepositors() public {
