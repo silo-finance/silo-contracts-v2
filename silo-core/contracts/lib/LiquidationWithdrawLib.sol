@@ -71,7 +71,7 @@ library LiquidationWithdrawLib {
                     spender: _borrower,
                     collateralType: ISilo.CollateralType.Protected
                 }),
-                type(uint256).max,
+                _total[AssetTypes.PROTECTED].assets,
                 _total[AssetTypes.PROTECTED]
             );
         }
