@@ -12,7 +12,7 @@ import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 
 import {HookReceiverMock} from "../_mocks/HookReceiverMock.sol";
 import {SiloMock} from "../_mocks/SiloMock.sol";
-import {TokenDecimalsOnlyMock as Token} from "../_mocks/TokenDecimalsOnlyMock.sol";
+import {MintableToken as Token} from "../_common/MintableToken.sol";
 import {SiloConfigMock} from "../_mocks/SiloConfigMock.sol";
 
 // solhint-disable func-name-mixedcase
