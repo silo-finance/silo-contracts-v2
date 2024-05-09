@@ -22,8 +22,19 @@ import {SiloFixture, SiloConfigOverride} from "../../_common/fixtures/SiloFixtur
     forge test -vv --ffi --mc BorrowImmediateBadDebtTest
 
     conclusions:
-    - the biggest the decimals, the more precise LTV and user faster will became insolvent
-    - the smallest amount eg 1 wei, the longer user stay solvent
+    - the biggest the decimals, the more precise LTV and user will became insolvent faster
+    - the smallest the borrow amount eg 1 wei, the longer user stay solvent
+    - in order to create insolvency after 1 sec, with max utilization, we need to borrow:
+      - 0.75 (8 decimals) - for less decimals we need to use 1 token or above
+      - or 0.000075 (18 decimals)
+
+    any "fixes" for it?
+    - any check for future LTV will not work
+    - minimal borrow? eg one token? this will definately increase cost of spamming and minimise cost of "cleanup liquidations"
+      but at the same time it will add more complexity to eg withdraw, repay.
+      
+    I think we need to deal with it. Also this case can be created by almost full repay,
+    when user repay eg based on amount not based on shares, and it will leave some dust as debt.
 */
 contract BorrowImmediateBadDebtTest is SiloLittleHelper, Test {
     using SiloLensLib for ISilo;
@@ -32,44 +43,47 @@ contract BorrowImmediateBadDebtTest is SiloLittleHelper, Test {
     ISiloConfig siloConfig;
 
     /*
-        forge test -vv --ffi --mt test_borrow_1wei_
+        forge test -vv --ffi --mt test_immediateBadDebt_1wei_
     */
-    function test_borrow_1wei_18_18_1token() public {
-        _borrow_1wei(SAME_ASSET, 18, 18);
+    function test_immediateBadDebt_1wei_18_18_1token() public {
+        _immediateBadDebt_1wei(SAME_ASSET, 18, 18);
     }
 
-    function test_borrow_1wei_6_6_1token() public {
-        _borrow_1wei(SAME_ASSET, 6, 6);
+    function test_immediateBadDebt_1wei_6_6_1token() public {
+        _immediateBadDebt_1wei(SAME_ASSET, 6, 6);
     }
 
-    function test_borrow_1wei_18_18_2tokens() public {
-        _borrow_1wei(!SAME_ASSET, 18, 18);
+    function test_immediateBadDebt_1wei_18_18_2tokens() public {
+        _immediateBadDebt_1wei(!SAME_ASSET, 18, 18);
     }
 
-    function test_borrow_1wei_6_6_2tokens() public {
-        _borrow_1wei(!SAME_ASSET, 6, 6);
+    function test_immediateBadDebt_1wei_6_6_2tokens() public {
+        _immediateBadDebt_1wei(!SAME_ASSET, 6, 6);
     }
 
     /*
-        forge test -vv --ffi --mt test_borrow_80wei_
+        forge test -vv --ffi --mt test_immediateBadDebt_80wei_
     */
-    function test_borrow_80wei_6_6_2tokens() public {
-        _borrow_80wei(!SAME_ASSET, 6, 6);
+    function test_immediateBadDebt_80wei_6_6_2tokens() public {
+        _immediateBadDebt_80wei(!SAME_ASSET, 6, 6);
     }
 
     /*
-        forge test -vv --ffi --mt test_borrow_one
+        forge test -vv --ffi --mt test_immediateBadDebt_one
     */
-    function test_borrow_oneSecond_18_2tokens() public {
-        _borrow_oneSecond(!SAME_ASSET, 18);
+    function test_immediateBadDebt_oneSecond_18_2tokens() public {
+        uint8 decimals = 18;
+        uint256 one = 10 ** decimals;
+        _immediateBadDebt_oneSecond(!SAME_ASSET, decimals, one / 1e4);
     }
 
-    function test_borrow_oneSecond_6_2tokens() public {
-        // for 6 decimals we need higher number to became insol
-        _borrow_oneSecond(!SAME_ASSET, 6);
+    function test_immediateBadDebt_oneSecond_8_2tokens() public {
+        uint8 decimals = 8;
+        uint256 one = 10 ** decimals;
+        _immediateBadDebt_oneSecond(!SAME_ASSET, decimals, one);
     }
 
-    function _borrow_1wei(bool _sameAsset, uint8 _decimals0, uint8 _decimals1) private {
+    function _immediateBadDebt_1wei(bool _sameAsset, uint8 _decimals0, uint8 _decimals1) private {
         _setUp(_decimals0, _decimals1);
 
         uint256 assets = 1;
@@ -140,7 +154,7 @@ contract BorrowImmediateBadDebtTest is SiloLittleHelper, Test {
         }
     }
 
-    function _borrow_80wei(bool _sameAsset, uint8 _decimals0, uint8 _decimals1) private {
+    function _immediateBadDebt_80wei(bool _sameAsset, uint8 _decimals0, uint8 _decimals1) private {
         _setUp(_decimals0, _decimals1);
 
         uint256 assets = 75;
@@ -215,7 +229,7 @@ contract BorrowImmediateBadDebtTest is SiloLittleHelper, Test {
         }
     }
 
-    function _borrow_oneSecond(bool _sameAsset, uint8 _decimals) private {
+    function _immediateBadDebt_oneSecond(bool _sameAsset, uint8 _decimals, uint256 _collateral) private {
         _setUp(_decimals, _decimals);
 
         uint256 one = 10 ** _decimals;
@@ -224,10 +238,10 @@ contract BorrowImmediateBadDebtTest is SiloLittleHelper, Test {
 
         if (!_sameAsset) _depositForBorrow(assets, makeAddr("depositor"));
 
-        uint256 collateral = one / 1e4;
-        uint256 toBorrow = collateral * 75 / 100;
+        uint256 toBorrow = _collateral * 75 / 100;
+        emit log_named_decimal_uint("toBorrow for 1 sec", toBorrow, _decimals);
 
-        _depositCollateral(collateral, borrower, _sameAsset);
+        _depositCollateral(_collateral, borrower, _sameAsset);
         _borrow(toBorrow, borrower, _sameAsset);
 
         ISilo collateralSilo = _sameAsset ? silo1 : silo0;
@@ -235,7 +249,7 @@ contract BorrowImmediateBadDebtTest is SiloLittleHelper, Test {
 
         vm.prank(borrower);
         // d / c = 0.85 => c = d / 0.85
-        uint256 toWithdraw = collateral - toBorrow * one / ((one * 85) / 100) - 1;
+        uint256 toWithdraw = _collateral - toBorrow * one / ((one * 85) / 100) - 1;
         emit log_named_decimal_uint("toWithdraw", toWithdraw, _decimals);
         collateralSilo.withdraw(toWithdraw, borrower, borrower); // bring LTV just below LT
 
