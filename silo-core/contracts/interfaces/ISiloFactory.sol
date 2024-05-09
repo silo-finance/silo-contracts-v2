@@ -13,6 +13,7 @@ interface ISiloFactory is IERC721 {
     event DaoFeeReceiverChanged(address daoFeeReceiver);
 
     error InvalidInitialization();
+    error Uninitialized();
     error MissingLiquidationModule();
     error ZeroAddress();
     error MaxFee();

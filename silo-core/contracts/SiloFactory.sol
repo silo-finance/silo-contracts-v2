@@ -88,6 +88,8 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step, Creator {
         // safe to uncheck, because we will not create 2 ** 256 of silos in a lifetime
         unchecked { _siloId++; }
 
+        if (nextSiloId == 0) revert Uninitialized();
+
         configData0.daoFee = daoFee;
         configData1.daoFee = daoFee;
 
