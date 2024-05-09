@@ -325,7 +325,8 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
             uint256 collateralToLiquidate, uint256 debtToRepay
         ) = partialLiquidation.maxLiquidation(address(silo0), BORROWER);
 
-        assertEq(silo0.getLiquidity(), collateralToLiquidate - debtToRepay, "without bad debt there is some liquidity");
+        // -1 for rounding policy
+        assertEq(silo0.getLiquidity() - 1, collateralToLiquidate - debtToRepay, "without bad debt there is some liquidity");
         emit log_named_decimal_uint("collateralToLiquidate", collateralToLiquidate, 18);
         emit log_named_decimal_uint("debtToRepay", debtToRepay, 18);
         assertEq(debtToRepay, silo0.getDebtAssets(), "debtToRepay is max debt when we forcing full liquidation");
