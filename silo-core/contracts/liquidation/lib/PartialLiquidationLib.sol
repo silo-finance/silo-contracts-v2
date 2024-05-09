@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.21;
 
+import {Math} from "openzeppelin5/utils/math/Math.sol";
+
 import {ISiloConfig} from "../../interfaces/ISiloConfig.sol";
 import {IPartialLiquidation} from "../../interfaces/IPartialLiquidation.sol";
 
@@ -116,31 +118,9 @@ library PartialLiquidationLib {
             _sumOfCollateralValue
         );
 
-        ltvAfter = calculateLtvAfter(
+        ltvAfter = _calculateLtvAfter(
             _sumOfCollateralValue, _borrowerDebtValue, collateralValueToLiquidate, debtValueToRepay
         );
-    }
-
-    function calculateLtvAfter(
-        uint256 _sumOfCollateralValue,
-        uint256 _totalDebtValue,
-        uint256 _collateralValueToLiquidate,
-        uint256 _debtValueToCover
-    )
-        internal
-        pure
-        returns (uint256 ltvAfterLiquidation)
-    {
-        if (_sumOfCollateralValue == _collateralValueToLiquidate || _totalDebtValue == _debtValueToCover) {
-            return 0;
-        }
-
-        unchecked { // all subs are safe because this values are chunks of total, so we will not underflow
-            ltvAfterLiquidation = _ltvAfter(
-                _sumOfCollateralValue - _collateralValueToLiquidate,
-                _totalDebtValue - _debtValueToCover
-            );
-        }
     }
 
     /// @notice reverts on `_totalValue` == 0
@@ -309,11 +289,34 @@ library PartialLiquidationLib {
         }
     }
 
+    /// @notice must stay private because this is not for general LTV, only for ltv after internally
+    function _calculateLtvAfter(
+        uint256 _sumOfCollateralValue,
+        uint256 _totalDebtValue,
+        uint256 _collateralValueToLiquidate,
+        uint256 _debtValueToCover
+    )
+        private
+        pure
+        returns (uint256 ltvAfterLiquidation)
+    {
+        if (_sumOfCollateralValue == _collateralValueToLiquidate || _totalDebtValue == _debtValueToCover) {
+            return 0;
+        }
+
+        unchecked { // all subs are safe because this values are chunks of total, so we will not underflow
+            ltvAfterLiquidation = _ltvAfter(
+                _sumOfCollateralValue - _collateralValueToLiquidate,
+                _totalDebtValue - _debtValueToCover
+            );
+        }
+    }
+
     /// @notice must stay private because this is not for general LTV, only for ltv after
     function _ltvAfter(uint256 _collateral, uint256 _debt) private pure returns (uint256 ltv) {
         // there might be cases, where ltv will go up slighty, so we can not unchecked mul based on
         // previous calculation of LTV
         ltv = _debt * _PRECISION_DECIMALS;
-        unchecked { ltv /= _collateral; }
+        ltv = Math.ceilDiv(ltv, _collateral); // Rounding.LTV is up/ceil
     }
 }
