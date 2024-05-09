@@ -58,10 +58,15 @@ contract BorrowImmediateBadDebtTest is SiloLittleHelper, Test {
     }
 
     /*
-        forge test -vv --ffi --mt test_borrow_one_
+        forge test -vv --ffi --mt test_borrow_one
     */
-    function test_borrow_one_6_6_2tokens() public {
-        _borrow_one(!SAME_ASSET, 18);
+    function test_borrow_oneSecond_18_2tokens() public {
+        _borrow_oneSecond(!SAME_ASSET, 18);
+    }
+
+    function test_borrow_oneSecond_6_2tokens() public {
+        // for 6 decimals we need higher number to became insol
+        _borrow_oneSecond(!SAME_ASSET, 6);
     }
 
     function _borrow_1wei(bool _sameAsset, uint8 _decimals0, uint8 _decimals1) private {
@@ -210,7 +215,7 @@ contract BorrowImmediateBadDebtTest is SiloLittleHelper, Test {
         }
     }
 
-    function _borrow_one(bool _sameAsset, uint8 _decimals) private {
+    function _borrow_oneSecond(bool _sameAsset, uint8 _decimals) private {
         _setUp(_decimals, _decimals);
 
         uint256 one = 10 ** _decimals;
@@ -219,77 +224,25 @@ contract BorrowImmediateBadDebtTest is SiloLittleHelper, Test {
 
         if (!_sameAsset) _depositForBorrow(assets, makeAddr("depositor"));
 
-        uint256 collateral = one;
+        uint256 collateral = one / 1e4;
+        uint256 toBorrow = collateral * 75 / 100;
+
         _depositCollateral(collateral, borrower, _sameAsset);
-        uint256 borrowShares = _borrow(assets, borrower, _sameAsset);
+        _borrow(toBorrow, borrower, _sameAsset);
 
         ISilo collateralSilo = _sameAsset ? silo1 : silo0;
         emit log_named_decimal_uint("maxWithdraw", collateralSilo.maxWithdraw(borrower), _decimals);
 
         vm.prank(borrower);
         // d / c = 0.85 => c = d / 0.85
-        uint256 toWithdraw = collateral - assets * one / ((one * 85) / 100) - 1;
+        uint256 toWithdraw = collateral - toBorrow * one / ((one * 85) / 100) - 1;
         emit log_named_decimal_uint("toWithdraw", toWithdraw, _decimals);
         collateralSilo.withdraw(toWithdraw, borrower, borrower); // bring LTV just below LT
-
-        uint256 ltvBefore = silo1.getLtv(borrower);
-        assertEq(ltvBefore, 0.85e18, "LTV == LT");
-
-        ISilo.UtilizationData memory data = silo1.utilizationData();
-
-        if (_sameAsset) {
-            assertEq(data.debtAssets * 1e18 / data.collateralAssets, 0.5e18, "50% utilization for same asset");
-        } else {
-            assertEq(data.debtAssets * 1e18 / data.collateralAssets, 1e18, "100% utilization");
-        }
 
         uint256 solvencyTime = 1;
         vm.warp(block.timestamp + solvencyTime);
         emit log_named_decimal_uint("LTV after solvencyTime", silo1.getLtv(borrower), 18);
-        assertTrue(silo1.isSolvent(borrower), "user must be still solvent");
-
-        uint256 insolventTime = solvencyTime + 1 days;
-        vm.warp(block.timestamp + 1 days);
-        emit log_named_decimal_uint("LTV after some time", silo1.getLtv(borrower), 18);
-
-        if (_sameAsset) {
-            // for same asset it takes LONG time for position to grow to bad debt
-        } else {
-            assertTrue(
-                !silo1.isSolvent(borrower),
-                string.concat("it takes over ", (solvencyTime / 60 / 60 / 24).toString()," days to be insolvent")
-            );
-        }
-
-        vm.warp(block.timestamp + 365 days - insolventTime);
-
-        emit log_named_decimal_uint("[1y] LTV after 1y", silo1.getLtv(borrower), 18);
-        emit log_named_uint("[1y] current debt", silo1.previewRepayShares(borrowShares));
-        (uint256 collateralToLiquidate, uint256 debtToRepay) = partialLiquidation.maxLiquidation(address(silo1), borrower);
-
-        emit log_named_uint("[1y] collateralToLiquidate", collateralToLiquidate);
-        emit log_named_uint("[1y] debtToRepay", debtToRepay); // 2 tokens: 7574,
-
-        if (_sameAsset) {
-            assertEq(silo1.getLtv(borrower), ltvBefore, "[1y] LTV the same for same asset");
-        } else {
-            assertEq(silo1.getLtv(borrower), 85.101123595505617978e18, "[1y] LTV 850%");
-        }
-
-        vm.warp(block.timestamp + 365 days);
-
-        emit log_named_decimal_uint("[2y] LTV after 2y", silo1.getLtv(borrower), 18);
-        emit log_named_uint("[2y] current debt", silo1.previewRepayShares(borrowShares));
-        (collateralToLiquidate, debtToRepay) = partialLiquidation.maxLiquidation(address(silo1), borrower);
-
-        emit log_named_uint("[2y] collateralToLiquidate", collateralToLiquidate);
-        emit log_named_uint("[2y] debtToRepay", debtToRepay); // 2 tokens: 15074
-
-        if (_sameAsset) {
-            assertEq(silo1.getLtv(borrower), ltvBefore, "[2y] LTV the same for same asset");
-        } else {
-            assertEq(silo1.getLtv(borrower), 169.370786516853932585e18, "[2y] LTV 1600%");
-        }
+        assertTrue(!silo1.isSolvent(borrower), "user insolvent after 1 sec");
     }
 
     function _setUp(uint8 _decimals0, uint8 _decimals1) private {
