@@ -504,11 +504,11 @@ library Actions {
         collateralConfig.callSolvencyOracleBeforeQuote();
         debtConfig.callSolvencyOracleBeforeQuote();
 
-        bool msgSenderIsNotSolvent = !SiloSolvencyLib.isSolvent(
+        bool msgSenderIsSolvent = SiloSolvencyLib.isSolvent(
             collateralConfig, debtConfig, debtInfo, msg.sender, ISilo.AccrueInterestInMemory.No
         );
 
-        if (msgSenderIsNotSolvent) revert ISilo.NotSolvent();
+        if (!msgSenderIsSolvent) revert ISilo.NotSolvent();
 
         _shareStorage.siloConfig.crossNonReentrantAfter();
 
