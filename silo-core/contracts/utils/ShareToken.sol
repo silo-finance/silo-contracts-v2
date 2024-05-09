@@ -6,12 +6,11 @@ import {Initializable} from "openzeppelin5/proxy/utils/Initializable.sol";
 import {Strings} from "openzeppelin5/utils/Strings.sol";
 
 import {IHookReceiver} from "silo-core/contracts/utils/hook-receivers/interfaces/IHookReceiver.sol";
-import {ISiloFactory} from "../interfaces/ISiloFactory.sol";
 import {IShareToken, ISilo} from "../interfaces/IShareToken.sol";
 import {ISiloConfig} from "../SiloConfig.sol";
 import {TokenHelper} from "../lib/TokenHelper.sol";
-import {CrossEntrancy} from "../lib/CrossEntrancy.sol";
 import {Hook} from "../lib/Hook.sol";
+import {CallBeforeQuoteLib} from "../lib/CallBeforeQuoteLib.sol";
 
 /// @title ShareToken
 /// @notice Implements common interface for Silo tokens representing debt or collateral.
@@ -57,6 +56,7 @@ import {Hook} from "../lib/Hook.sol";
 /// @custom:security-contact security@silo.finance
 abstract contract ShareToken is Initializable, ERC20, IShareToken {
     using Hook for uint24;
+    using CallBeforeQuoteLib for ISiloConfig.ConfigData;
 
     /// @notice Silo address for which tokens was deployed
     ISilo public silo;
@@ -263,12 +263,24 @@ abstract contract ShareToken is Initializable, ERC20, IShareToken {
         siloConfigCached.crossNonReentrantBefore(Hook.SHARE_TOKEN_TRANSFER | _hookSetup.tokenType);
     }
 
+    /// @notice Call beforeQuote on solvency oracles
+    /// @param _user user address for which the solvent check is performed
+    function _callOracleBeforeQuote(address _user) internal virtual {
+        (
+            ISiloConfig.ConfigData memory collateralConfig,
+            ISiloConfig.ConfigData memory debtConfig,
+        ) = siloConfig.getConfigs(address(silo), _user, Hook.NONE);
+
+        collateralConfig.callSolvencyOracleBeforeQuote();
+        debtConfig.callSolvencyOracleBeforeQuote();
+    }
+
     /// @dev checks if operation is "real" transfer
     /// @param _sender sender address
     /// @param _recipient recipient address
     /// @return bool true if operation is real transfer, false if it is mint or burn
     function _isTransfer(address _sender, address _recipient) internal pure virtual returns (bool) {
-        // in order this check to be true, is is required to have:
+        // in order this check to be true, it is required to have:
         // require(sender != address(0), "ERC20: transfer from the zero address");
         // require(recipient != address(0), "ERC20: transfer to the zero address");
         // on transfer. ERC20 has them, so we good.

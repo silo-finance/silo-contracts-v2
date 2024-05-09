@@ -4,7 +4,7 @@ pragma solidity 0.8.21;
 import {IERC20R} from "../interfaces/IERC20R.sol";
 import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
 import {SiloLensLib} from "../lib/SiloLensLib.sol";
-import {IShareToken, ShareToken, ISiloFactory, ISilo} from "./ShareToken.sol";
+import {IShareToken, ShareToken, ISilo} from "./ShareToken.sol";
 
 /// @title ShareDebtToken
 /// @notice ERC20 compatible token representing debt in Silo
@@ -99,6 +99,7 @@ contract ShareDebtToken is IERC20R, ShareToken {
         // if we are NOT minting and not burning, it means we are transferring
         // make sure that _recipient is solvent after transfer
         if (_isTransfer(_sender, _recipient)) {
+            _callOracleBeforeQuote(_recipient);
             if (!silo.isSolvent(_recipient)) revert RecipientNotSolventAfterTransfer();
         }
 
