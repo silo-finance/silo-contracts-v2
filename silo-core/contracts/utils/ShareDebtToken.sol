@@ -44,7 +44,10 @@ contract ShareDebtToken is IERC20R, ShareToken {
     /// @inheritdoc IERC20R
     function decreaseReceiveAllowance(address _owner, uint256 _subtractedValue) public virtual override {
         uint256 currentAllowance = _receiveAllowances[_owner][_msgSender()];
-        _setReceiveApproval(_owner, _msgSender(), currentAllowance - _subtractedValue);
+
+        uint256 newAllowance = currentAllowance < _subtractedValue ? 0 : currentAllowance - _subtractedValue;
+
+        _setReceiveApproval(_owner, _msgSender(), newAllowance);
     }
 
     /// @inheritdoc IERC20R

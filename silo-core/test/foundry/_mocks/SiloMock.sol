@@ -9,7 +9,7 @@ contract SiloMock is Test {
     address public immutable ADDRESS;
 
     constructor(address _silo) {
-        ADDRESS = _silo == address(0) ? makeAddr("SiloMock") : _silo;
+        ADDRESS = _silo == address(0) ? makeAddr("SiloMockAddr") : _silo;
     }
 
     function getCollateralAndDebtAssetsMock(uint256 _totalCollateralAssets, uint256 _totalDebtAssets) external {
