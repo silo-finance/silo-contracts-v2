@@ -32,7 +32,7 @@ import {SiloFixture, SiloConfigOverride} from "../../_common/fixtures/SiloFixtur
     - any check for future LTV will not work
     - minimal borrow? eg one token? this will definately increase cost of spamming and minimise cost of "cleanup liquidations"
       but at the same time it will add more complexity to eg withdraw, repay.
-      
+
     I think we need to deal with it. Also this case can be created by almost full repay,
     when user repay eg based on amount not based on shares, and it will leave some dust as debt.
 */
