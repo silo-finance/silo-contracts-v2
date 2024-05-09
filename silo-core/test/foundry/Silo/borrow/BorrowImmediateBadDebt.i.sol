@@ -16,6 +16,7 @@ import {AssetTypes} from "silo-core/contracts/lib/AssetTypes.sol";
 
 import {MintableToken} from "../../_common/MintableToken.sol";
 import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
+import {SiloFixture, SiloConfigOverride} from "../../_common/fixtures/SiloFixture.sol";
 
 /*
     forge test -vv --ffi --mc BorrowIntegrationTest
@@ -27,9 +28,19 @@ contract BorrowImmediateBadDebtTest is SiloLittleHelper, Test {
     ISiloConfig siloConfig;
 
     function setUp() public {
-        siloConfig = _setUpLocalFixture();
+//        siloConfig = _setUpLocalFixture();
+//
+//        assertTrue(siloConfig.getConfig(address(silo0)).maxLtv != 0, "we need borrow to be allowed");
+        token0 = new MintableToken(6);
+        token1 = new MintableToken(6);
 
-        assertTrue(siloConfig.getConfig(address(silo0)).maxLtv != 0, "we need borrow to be allowed");
+        SiloFixture siloFixture = new SiloFixture();
+        SiloConfigOverride memory overrides;
+        overrides.token0 = address(token0);
+        overrides.token1 = address(token1);
+        (, silo0, silo1,,, partialLiquidation) = siloFixture.deploy_local(overrides);
+
+//        __init(token0, token1, silo0, silo1);
     }
 
     /*
