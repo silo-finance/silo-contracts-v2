@@ -16,6 +16,7 @@ contract InterestRateModelV2Test is Test, InterestRateModelConfigs {
     uint256 constant TODAY = 1682885514;
     InterestRateModelV2 immutable INTEREST_RATE_MODEL;
 
+    uint256 constant DECIMALS = 18;
     uint256 constant DP = 10 ** 18;
 
     constructor() {
@@ -23,7 +24,7 @@ contract InterestRateModelV2Test is Test, InterestRateModelConfigs {
     }
 
     function test_IRM_decimals() public {
-        assertEq(INTEREST_RATE_MODEL.decimals(), DP);
+        assertEq(INTEREST_RATE_MODEL.decimals(), DECIMALS);
     }
 
     function test_IRM_RCOMP_MAX() public {
