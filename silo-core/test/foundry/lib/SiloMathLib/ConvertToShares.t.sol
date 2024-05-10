@@ -218,12 +218,21 @@ contract ConvertToSharesTest is Test {
             assetType: ISilo.AssetType.Debt,
             result: 1000
         });
+
+        cases[22] = TestCase({
+            assets: 1,
+            totalAssets: 4, // dust
+            totalShares: 0,
+            rounding: Rounding.DOWN,
+            assetType: ISilo.AssetType.Collateral,
+            result: 1
+        });
     }
 
     /*
     forge test -vv --mt test_convertToShares
     */
-    function test_convertToShares() public {
+    function test_convertToShares_singleCase() public {
         for (uint256 index = 0; index < numberOfTestCases; index++) {
             assertEq(
                 SiloMathLib.convertToShares(
@@ -237,5 +246,65 @@ contract ConvertToSharesTest is Test {
                 string.concat("TestCase: ", Strings.toString(index))
             );
         }
+    }
+
+    /*
+    forge test -vv --mt test_convertToShares_withDust_from1
+    */
+    function test_convertToShares_withDust_from1() public {
+        ISilo.AssetType assetType = ISilo.AssetType.Collateral;
+
+        uint256 totalAssets = 4; // dust
+        uint256 totalShares;
+        uint256 toDeposit = 1;
+
+        uint256 shares1 = SiloMathLib.convertToShares({
+            _assets: toDeposit,
+            _totalAssets: totalAssets,
+            _totalShares: totalShares,
+            _assetType: assetType,
+            _rounding: Rounding.DEPOSIT_TO_SHARES
+        });
+
+        totalAssets += toDeposit;
+        totalShares += shares1;
+
+        assertEq(shares1, 1, "#1 got shares");
+        assertEq(totalAssets, 4 + 1, "#2 totalAssets = dust + deposit");
+
+        toDeposit = 100;
+
+        uint256 shares2 = SiloMathLib.convertToShares({
+            _assets: toDeposit,
+            _totalAssets: totalAssets,
+            _totalShares: totalShares,
+            _assetType: assetType,
+            _rounding: Rounding.DEPOSIT_TO_SHARES
+        });
+
+        totalAssets +=toDeposit;
+        totalShares += shares2;
+
+        assertEq(shares2, 33, "#2 got shares"); // 100 * (1 + 1) / (5 + 1) = 33.33 => down => 33
+        assertEq(totalAssets, 4 + 1 + 100, "#2 totalAssets");
+        assertEq(totalShares, 34, "#2 totalShares");
+
+        assertEq(SiloMathLib.convertToAssets({
+            _shares: shares1,
+            _totalAssets: totalAssets,
+            _totalShares: totalShares,
+            _assetType: assetType,
+            _rounding: Rounding.DEPOSIT_TO_ASSETS
+        }), 4, "user deposit 1 but with dust got 4");
+
+        assertEq(SiloMathLib.convertToAssets({
+            _shares: shares2,
+            _totalAssets: totalAssets,
+            _totalShares: totalShares,
+            _assetType: assetType,
+            _rounding: Rounding.DEPOSIT_TO_ASSETS
+        }), 100, "user deposit 100 but with dust got 101");
+
+        // there will be 1 dust left after withdrawals
     }
 }

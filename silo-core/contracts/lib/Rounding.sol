@@ -10,6 +10,7 @@ library Rounding {
     Math.Rounding internal constant DEFAULT_TO_ASSETS = (Math.Rounding.Floor);
     Math.Rounding internal constant DEFAULT_TO_SHARES = (Math.Rounding.Floor);
     Math.Rounding internal constant DEBT_TO_ASSETS = (Math.Rounding.Ceil);
+    // TODO why COLLATERAL_TO_ASSETS=Floor if DEPOSIT_TO_ASSETS is Ceil?
     Math.Rounding internal constant COLLATERAL_TO_ASSETS = (Math.Rounding.Floor);
     Math.Rounding internal constant DEPOSIT_TO_ASSETS = (Math.Rounding.Ceil);
     Math.Rounding internal constant DEPOSIT_TO_SHARES = (Math.Rounding.Floor);
