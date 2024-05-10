@@ -115,14 +115,15 @@ contract DustPropagationTest is SiloLittleHelper, Test {
             and this is why this dust will be forever locked in silo.
             Atm the only downside I noticed: it creates "minimal deposit" situation.
         */
-        uint256 shares1 = _deposit(DUST_LEFT + 1, user1);
+        uint256 assets = DUST_LEFT + 1;
+        uint256 shares1 = _deposit(assets, user1);
         emit log_named_uint("[user1] shares1", shares1);
 
         uint256 maxWithdraw1 = silo0.maxWithdraw(user1);
-        assertEq(maxWithdraw1, DUST_LEFT + 1, "[user1] maxWithdraw");
-        assertEq(_redeem(shares1, user1), DUST_LEFT + 1, "[user1] withdrawn assets");
+        assertEq(maxWithdraw1, DUST_LEFT + assets - 1, "[user1] maxWithdraw with dust, -1 for rounding down");
+        assertEq(_redeem(shares1, user1), DUST_LEFT + assets - 1, "[user1] withdrawn assets, -1 for rounding down");
 
-        assertEq(silo0.getLiquidity(), DUST_LEFT, "getLiquidity == 4, dust!");
+        assertEq(silo0.getLiquidity(), 1, "getLiquidity == 1, dust left");
     }
 
     /*
@@ -132,22 +133,23 @@ contract DustPropagationTest is SiloLittleHelper, Test {
         address user1 = makeAddr("user1");
         address user2 = makeAddr("user2");
 
-        uint256 shares1 = _deposit(DUST_LEFT + 1, user1);
+        uint256 assets = DUST_LEFT + 1;
+        uint256 shares1 = _deposit(assets, user1);
         emit log_named_uint("[user1] shares1", shares1);
 
-        uint256 shares2 = _deposit(DUST_LEFT + 1, user2);
+        uint256 shares2 = _deposit(assets, user2);
         emit log_named_uint("[user2] shares2", shares2);
 
         uint256 maxWithdraw1 = silo0.maxWithdraw(user1);
         uint256 maxWithdraw2 = silo0.maxWithdraw(user2);
 
-        assertEq(maxWithdraw1, DUST_LEFT + 1, "[user1] maxWithdraw");
-        assertEq(maxWithdraw2, DUST_LEFT + 1, "[user2] maxWithdraw");
+        assertEq(maxWithdraw1, DUST_LEFT + assets - 1, "[user1] maxWithdraw with dust, because he was first");
+        assertEq(maxWithdraw2, assets, "[user2] maxWithdraw");
 
-        assertEq(_redeem(shares1, user1), DUST_LEFT + 1, "[user1] withdrawn assets");
-        assertEq(_redeem(shares2, user2), DUST_LEFT + 1, "[user2] withdrawn assets");
+        assertEq(_redeem(shares1, user1), DUST_LEFT + assets - 1, "[user1] withdrawn assets");
+        assertEq(_redeem(shares2, user2), assets, "[user2] withdrawn assets");
 
-        assertEq(silo0.getLiquidity(), DUST_LEFT, "getLiquidity == 4, dust!");
+        assertEq(silo0.getLiquidity(), 1, "getLiquidity == 1, dust!");
     }
 
     /*
