@@ -39,15 +39,21 @@ contract DustPropagationTest is SiloLittleHelper, Test {
     function setUp() public {
         siloConfig = _setUpLocalFixture();
 
-        // we cresting debt on silo1, because lt there is 85 and in silo0 95, so it is easier to test because of dust
+        _printState("initial state");
+
+        // we cresting debt on silo0, because lt there is 85 and in silo0 95, so it is easier to test because of dust
         _depositCollateral(COLLATERAL, BORROWER, !SAME_TOKEN);
+        _printState("after deposit collateral");
+
         vm.prank(BORROWER);
         silo0.borrow(DEBT, BORROWER, BORROWER, SAME_TOKEN);
+        _printState("after borrow");
 
         uint256 timeForward = 120 days;
         vm.warp(block.timestamp + timeForward);
         assertGt(silo0.getLtv(BORROWER), 1e18, "expect bad debt");
         assertEq(silo0.getLiquidity(), 0, "with bad debt and no depositors, no liquidity");
+        _printState("after time forward");
 
         (
             , uint256 debtToRepay
@@ -61,6 +67,8 @@ contract DustPropagationTest is SiloLittleHelper, Test {
         partialLiquidation.liquidationCall(
             address(silo0), address(token0), address(token0), BORROWER, debtToRepay, receiveSToken
         );
+        _printState("after liquidation");
+
 
         assertTrue(silo0.isSolvent(BORROWER), "user is solvent after liquidation");
 
@@ -82,7 +90,7 @@ contract DustPropagationTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --ffi --mt test_dustPropagation
+    forge test -vv --ffi --mt test_dustPropagation_oneUser
     */
     function test_dustPropagation_oneUser() public {
         address user1 = makeAddr("user1");
@@ -213,5 +221,34 @@ contract DustPropagationTest is SiloLittleHelper, Test {
         emit log_named_uint("silo0.getLiquidity() is now", silo0.getLiquidity());
 
         assertLe(silo0.getLiquidity() - DUST_LEFT, 2, "without interest dust should not go up more than 2?");
+    }
+
+    function _printState(string memory _title) private {
+        (
+            ISiloConfig.ConfigData memory collateralConfig,,
+        ) = siloConfig.getConfigs(address(silo0), BORROWER, 0 /* always 0 for external calls */);
+
+        emit log_named_string("================ ", _title);
+
+        emit log_named_decimal_uint("borrower LTV ", silo0.getLtv(BORROWER), 16);
+        emit log_named_decimal_uint("borrower collateral shares ", IShareToken(collateralConfig.collateralShareToken).balanceOf(BORROWER), 18);
+        emit log_named_decimal_uint("borrower debt (max repay)", silo0.maxRepay(BORROWER), 18);
+        emit log_named_decimal_uint("silo collateral assets RAW", silo0.total(AssetTypes.COLLATERAL), 18);
+        emit log_named_decimal_uint("silo collateral assets with interests", silo0.getCollateralAssets(), 18);
+        emit log_named_decimal_uint("silo liquidity", silo0.getLiquidity(), 18);
+        emit log_named_decimal_uint("balanceOf(silo)", token0.balanceOf(address(silo0)), 18);
+
+        (
+            uint256 collateralToWithdraw, uint256 debtToRepay
+        ) = partialLiquidation.maxLiquidation(address(silo0), BORROWER);
+
+        if (debtToRepay != 0) {
+            emit log_named_decimal_uint("liquidation possible, collateralToWithdraw", collateralToWithdraw, 18);
+            emit log_named_decimal_uint("liquidation possible, debtToRepay", debtToRepay, 18);
+        }
+
+        emit log("_____");
+
+
     }
 }
