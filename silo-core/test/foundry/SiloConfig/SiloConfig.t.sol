@@ -58,7 +58,7 @@ contract SiloConfigTest is Test {
         ISiloConfig.ConfigData memory _configData1;
 
         _configData0.daoFee = 1e18;
-        _configData0.deployerFee = 1e18;
+        _configData0.deployerFee = 0;
 
         vm.expectRevert(ISiloConfig.FeeTooHigh.selector);
         new SiloConfig(1, _configData0, _configData1);
