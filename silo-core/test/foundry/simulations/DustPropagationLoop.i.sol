@@ -3,24 +3,23 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
 
-import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
-
-import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
 
 import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
 
 /*
-    forge test -vv --ffi --mc LiquidationCall1TokenTest
+    forge test -vv --ffi --mc DustPropagationLoopTest
+
+    conclusions:
+    - multiple deposits does not geenrate dust
+    - multiple borrowers does not generate dust if no interest
 */
 contract DustPropagationLoopTest is SiloLittleHelper, Test {
     using SiloLensLib for ISilo;
 
-    ISiloConfig siloConfig;
-
     function setUp() public {
-        siloConfig = _setUpLocalFixture();
+        _setUpLocalFixture();
         token0.setOnDemand(true);
     }
 
@@ -49,35 +48,80 @@ contract DustPropagationLoopTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --ffi --mt test_dustPropagation_deposit_borrow_noInterest
+    forge test -vv --ffi --mt test_dustPropagation_deposit_borrow_noInterest_oneBorrower_fuzz
     */
-    function test_dustPropagation_deposit_borrow_noInterest(
-//        uint128 _assets
+    function test_dustPropagation_deposit_borrow_noInterest_oneBorrower_fuzz(
+        uint128 _assets
     ) public {
-        uint128 _assets = 11000;
+        _dustPropagation_deposit_borrow(_assets, 1, 0);
+    }
 
+    /*
+    forge test -vv --ffi --mt test_dustPropagation_deposit_borrow_withInterest_borrowers_fuzz
+    */
+    function test_dustPropagation_deposit_borrow_withInterest_borrowers_fuzz(
+        uint128 _assets
+    ) public {
+        _dustPropagation_deposit_borrow(_assets, 3, 60);
+    }
+
+    /*
+    forge test -vv --ffi --mt test_dustPropagation_deposit_borrow_noInterest_borrowers_fuzz
+    */
+    function test_dustPropagation_deposit_borrow_noInterest_borrowers_fuzz(
+        uint128 _assets
+    ) public {
+        _dustPropagation_deposit_borrow(_assets, 3, 0);
+    }
+
+    function _dustPropagation_deposit_borrow(
+        uint128 _assets,
+        uint8 _borrowers,
+        uint8 _moveForwardSec
+    ) private {
         uint256 loop = 1000;
         bool sameAsset = true;
         vm.assume(_assets / loop > 10);
 
         address user1 = makeAddr("user1");
-        address user2 = makeAddr("user2");
 
         for (uint256 i = 1; i < loop; i++) {
             _deposit(_assets / i, user1);
-            _deposit(_assets * i, user2);
 
-            vm.prank(user2);
-            silo0.borrow(_assets / 2, user2, user2, sameAsset);
+            for (uint256 b; b < _borrowers; b++) {
+                address borrower = makeAddr(string.concat("borrower", string(abi.encodePacked(b))));
+
+                _deposit(_assets * i, borrower);
+
+                vm.prank(borrower);
+                silo0.borrow(_assets / 2, borrower, borrower, sameAsset);
+            }
+
+            if (_moveForwardSec > 0) {
+                vm.warp(block.timestamp + _moveForwardSec);
+            }
         }
 
-        uint256 debt = silo0.maxRepay(user2);
-        vm.prank(user2);
-        silo1.repay(debt, user2);
+        for (uint256 b; b < _borrowers; b++) {
+            address borrower = makeAddr(string.concat("borrower", string(abi.encodePacked(b))));
+
+            uint256 debt = silo0.maxRepay(borrower);
+            vm.prank(borrower);
+            silo0.repay(debt, borrower);
+
+            _redeem(silo0.maxRedeem(borrower, ISilo.CollateralType.Collateral), borrower);
+        }
 
         _redeem(silo0.maxRedeem(user1, ISilo.CollateralType.Collateral), user1);
-        _redeem(silo0.maxRedeem(user2, ISilo.CollateralType.Collateral), user2);
 
-        assertEq(silo0.getLiquidity(), 0, "generated dust");
+        silo0.withdrawFees();
+
+        if (_moveForwardSec == 0) {
+            assertEq(silo0.getLiquidity(), 0, "generated dust");
+            assertEq(silo0.getCollateralAssets(), 0, "getCollateralAssets");
+        } else {
+            assertEq(silo0.getLiquidity(), 0, "generated dust");
+            assertEq(silo0.getCollateralAssets(), 0, "getCollateralAssets");
+        }
     }
 }
