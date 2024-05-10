@@ -303,7 +303,7 @@ contract ConvertToSharesTest is Test {
             _totalShares: totalShares,
             _assetType: assetType,
             _rounding: Rounding.DEPOSIT_TO_ASSETS
-        }), 100, "user deposit 100 but with dust got 101");
+        }), 100, "user deposit 100 and got 100 back");
 
         // there will be 1 dust left after withdrawals
     }
