@@ -49,6 +49,20 @@ contract SiloConfigTest is Test {
     }
 
     /*
+    forge test -vv --mt test_daoAndDeployerFeeCap
+    */
+    function test_daoAndDeployerFeeCap() public {
+        ISiloConfig.ConfigData memory _configData0;
+        ISiloConfig.ConfigData memory _configData1;
+
+        _configData0.daoFee = 1e18;
+        _configData0.deployerFee = 1e18;
+
+        vm.expectRevert(ISiloConfig.FeeTooHigh.selector);
+        new SiloConfig(1, _configData0, _configData1);
+    }
+
+    /*
     forge test -vv --mt test_getSilos_fuzz
     */
     function test_getSilos_fuzz(

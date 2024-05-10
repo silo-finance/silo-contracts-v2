@@ -83,6 +83,9 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
     constructor(uint256 _siloId, ConfigData memory _configData0, ConfigData memory _configData1) CrossReentrancy() {
         SILO_ID = _siloId;
 
+        // To make further computations in the Silo secure require DAO and deployer fees to be less than 100%
+        if (_configData0.daoFee + _configData0.deployerFee >= 1e18) revert FeeTooHigh();
+
         _DAO_FEE = _configData0.daoFee;
         _DEPLOYER_FEE = _configData0.deployerFee;
         _LIQUIDATION_MODULE = _configData0.liquidationModule;
