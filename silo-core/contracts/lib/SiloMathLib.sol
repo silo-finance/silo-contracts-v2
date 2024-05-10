@@ -142,6 +142,13 @@ library SiloMathLib {
         uint256 totalShares;
         uint256 totalAssets;
 
+        if (_totalShares == 0) {
+            // silo is empty and we have dust to redistribute: this can only happen when everyone exits silo
+            // this case can happen only for collateral, because for collateral we rounding in favorite of protocol
+            // by resetting totalAssets, the dust that we have will go to first depositor and we starts from clean state
+            _totalAssets = 0;
+        }
+
         unchecked {
             // I think we can afford to uncheck +1
             (totalShares, totalAssets) = _assetType == ISilo.AssetType.Debt
@@ -149,7 +156,9 @@ library SiloMathLib {
                 : (_totalShares + _DECIMALS_OFFSET_POW, _totalAssets + 1);
         }
 
-        if (totalShares == 0 || totalAssets == 0) return _assets;
+        // initially, in case of debt, if silo is empty we return shares==assets
+        // for collateral, this will never be the case, because of `+1` in line above
+        if (totalShares == 0) return _assets;
 
         return _assets.mulDiv(totalShares, totalAssets, _rounding);
     }
