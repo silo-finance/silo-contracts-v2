@@ -144,14 +144,14 @@ contract SiloRouter is ReentrancyGuard {
             AnyAction memory data = abi.decode(_action.options, (AnyAction));
 
             _pullAssetIfNeeded(_action.asset, data.amount, data.permit);
-            _approveIfNeeded(_action.asset, address(_action.silo), data.amount);
+            _approve(_action.asset, address(_action.silo), data.amount);
 
             _action.silo.deposit(data.amount, msg.sender, data.assetType);
         } else if (_action.actionType == ActionType.Mint) {
             AnyAction memory data = abi.decode(_action.options, (AnyAction));
 
             _pullAssetIfNeeded(_action.asset, data.amount, data.permit);
-            _approveIfNeeded(_action.asset, address(_action.silo), data.amount);
+            _approve(_action.asset, address(_action.silo), data.amount);
 
             _action.silo.mint(data.amount, msg.sender, data.assetType);
         } else if (_action.actionType == ActionType.Withdraw) {
@@ -169,13 +169,13 @@ contract SiloRouter is ReentrancyGuard {
         } else if (_action.actionType == ActionType.Repay) {
             AnyAction memory data = abi.decode(_action.options, (AnyAction));
             _pullAssetIfNeeded(_action.asset, data.amount, data.permit);
-            _approveIfNeeded(_action.asset, address(_action.silo), data.amount);
+            _approve(_action.asset, address(_action.silo), data.amount);
 
             _action.silo.repay(data.amount, msg.sender);
         } else if (_action.actionType == ActionType.RepayShares) {
             AnyAction memory data = abi.decode(_action.options, (AnyAction));
             _pullAssetIfNeeded(_action.asset, data.amount, data.permit);
-            _approveIfNeeded(_action.asset, address(_action.silo), data.amount);
+            _approve(_action.asset, address(_action.silo), data.amount);
 
             _action.silo.repayShares(data.amount, msg.sender);
         } else if (_action.actionType == ActionType.Transition) {
@@ -189,21 +189,19 @@ contract SiloRouter is ReentrancyGuard {
         }
     }
 
-    /// @dev Approve Silo to transfer token if current allowance is not enough
+    /// @dev Approve Silo to transfer token
     /// @param _asset token to be approved
     /// @param _spender Silo address that spends the token
     /// @param _amount amount of token to be spent
-    function _approveIfNeeded(IERC20 _asset, address _spender, uint256 _amount) internal {
-        if (_asset.allowance(address(this), _spender) < _amount) {
-            // solhint-disable-next-line avoid-low-level-calls
-            (bool success, bytes memory data) = address(_asset).call(
-                abi.encodeCall(IERC20.approve, (_spender, type(uint256).max))
-            );
+    function _approve(IERC20 _asset, address _spender, uint256 _amount) internal {
+        // solhint-disable-next-line avoid-low-level-calls
+        (bool success, bytes memory data) = address(_asset).call(
+            abi.encodeCall(IERC20.approve, (_spender, _amount))
+        );
 
-            // Support non-standard tokens that don't return bool
-            if (!success || !(data.length == 0 || abi.decode(data, (bool)))) {
-                revert ApprovalFailed();
-            }
+        // Support non-standard tokens that don't return bool
+        if (!success || !(data.length == 0 || abi.decode(data, (bool)))) {
+            revert ApprovalFailed();
         }
     }
 
