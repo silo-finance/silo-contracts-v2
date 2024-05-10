@@ -85,6 +85,9 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step, Creator {
         (ISiloConfig.ConfigData memory configData0, ISiloConfig.ConfigData memory configData1) = _copyConfig(_initData);
 
         uint256 nextSiloId = _siloId;
+
+        if (nextSiloId == 0) revert Uninitialized();
+
         // safe to uncheck, because we will not create 2 ** 256 of silos in a lifetime
         unchecked { _siloId++; }
 
