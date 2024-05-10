@@ -282,7 +282,7 @@ contract ConvertToSharesTest is Test {
             _rounding: Rounding.DEPOSIT_TO_SHARES
         });
 
-        totalAssets +=toDeposit;
+        totalAssets += toDeposit;
         totalShares += shares2;
 
         assertEq(shares2, 33, "#2 got shares"); // 100 * (1 + 1) / (5 + 1) = 33.33 => down => 33
