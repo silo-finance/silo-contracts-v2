@@ -124,7 +124,7 @@ contract InterestRateModelV2 is IInterestRateModel, IInterestRateModelV2 {
 
     /// @inheritdoc IInterestRateModel
     function decimals() external view virtual returns (uint256) {
-        return _DP;
+        return 18;
     }
 
     /// @inheritdoc IInterestRateModel
