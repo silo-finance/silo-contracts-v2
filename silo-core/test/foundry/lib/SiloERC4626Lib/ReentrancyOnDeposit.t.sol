@@ -61,7 +61,7 @@ contract ReentrancyOnDepositTest is Test {
         _vulnerable.deposit(
             _token,
             _depositor,
-            0,
+            0 /* assets */,
             _SHARES,
             _receiver,
             _shareCollateralToken
@@ -90,7 +90,7 @@ contract ReentrancyOnDepositTest is Test {
             _token,
             _depositor,
             _ASSETS,
-            0,
+            0 /* shares */,
             _receiver,
             _shareCollateralToken
         );

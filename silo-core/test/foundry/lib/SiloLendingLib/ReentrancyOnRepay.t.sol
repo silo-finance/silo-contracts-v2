@@ -56,7 +56,7 @@ contract ReentrancyOnRepayTest is Test {
 
         _vulnerable.repay(
             _getConfigData(),
-            0,
+            0 /* assets */,
             _SHARES,
             _borrower,
             _repayer
@@ -84,7 +84,7 @@ contract ReentrancyOnRepayTest is Test {
         _nonVulnerable.repay(
             _getConfigData(),
             _ASSETS,
-            0,
+            0 /* shares */,
             _borrower,
             _repayer
         );
