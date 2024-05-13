@@ -13,11 +13,44 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 forge test -vv --mc SiloConfigTest
 */
 contract SiloConfigTest is Test {
-    address internal _wrongSilo = address(10000000001);
+    address internal _wrongSilo = makeAddr("wrongSilo");
     address internal _silo0Default = makeAddr("silo0");
     address internal _silo1Default = makeAddr("silo1");
 
+    ISiloConfig.ConfigData internal _configData0;
+    ISiloConfig.ConfigData internal _configData1;
+
     SiloConfig internal _siloConfig;
+
+    function setUp() public {
+        _configData0.silo = _silo0Default;
+        _configData0.token = makeAddr("token0");
+        _configData0.debtShareToken = makeAddr("debtShareToken0");
+
+        _configData1.silo = _silo1Default;
+        _configData1.token = makeAddr("token1");
+        _configData1.debtShareToken = makeAddr("debtShareToken1");
+
+        _siloConfig = siloConfigDeploy(1, _configData0, _configData1);
+
+        vm.mockCall(
+            _silo0Default,
+            abi.encodeCall(
+                ISilo.accrueInterestForConfig,
+                (_configData0.interestRateModel, _configData0.daoFee, _configData0.deployerFee)
+            ),
+            abi.encode(true)
+        );
+
+        vm.mockCall(
+            _silo1Default,
+            abi.encodeCall(
+                ISilo.accrueInterestForConfig,
+                (_configData1.interestRateModel, _configData1.daoFee, _configData1.deployerFee)
+            ),
+            abi.encode(true)
+        );
+    }
 
     function siloConfigDeploy(
         uint256 _siloId,
@@ -190,7 +223,6 @@ contract SiloConfigTest is Test {
     forge test -vv --mt test_openDebt_revertOnOnlySilo
     */
     function test_openDebt_revertOnOnlySilo() public {
-        _internalSetUp();
         vm.expectRevert(ISiloConfig.OnlySilo.selector);
         _siloConfig.accrueInterestAndGetConfigs(makeAddr("SomeSilo"), makeAddr("Borrower"), Hook.BORROW);
     }
@@ -199,8 +231,6 @@ contract SiloConfigTest is Test {
     forge test -vv --mt test_openDebt_pass
     */
     function test_openDebt_pass() public {
-        _internalSetUp();
-
         vm.prank(_silo0Default);
         _siloConfig.accrueInterestAndGetConfigs(_silo0Default, makeAddr("Borrower 1"), Hook.BORROW);
 
@@ -218,8 +248,6 @@ contract SiloConfigTest is Test {
     forge test -vv --mt test_getConfigs_zero
     */
     function test_getConfigs_zero() public {
-        _internalSetUp();
-
         address silo = _silo0Default;
 
         (
@@ -238,9 +266,7 @@ contract SiloConfigTest is Test {
     /*
     forge test -vv --mt test_openDebt_skipsIfAlreadyOpen
     */
-    function test_openDebt_skipsIfAlreadyOpen() public {
-        _internalSetUp();
-    
+    function test_openDebt_skipsIfAlreadyOpen() public {    
         address borrower = makeAddr("borrower");
 
         vm.prank(_silo0Default);
@@ -267,8 +293,6 @@ contract SiloConfigTest is Test {
     forge test -vv --mt test_openDebt_debtInThisSilo
     */
     function test_openDebt_debtInThisSilo() public {
-        _internalSetUp();
-
         address borrower = makeAddr("borrower");
 
         vm.prank(_silo0Default);
@@ -288,8 +312,6 @@ contract SiloConfigTest is Test {
     forge test -vv --mt test_openDebt_debtInOtherSilo
     */
     function test_openDebt_debtInOtherSilo() public {
-        _internalSetUp();
-
         address borrower = makeAddr("borrower");
 
         vm.prank(_silo1Default);
@@ -316,11 +338,6 @@ contract SiloConfigTest is Test {
     */
     /// forge-config: core-test.fuzz.runs = 10
     function test_onDebtTransfer_clone(bool _silo0, bool sameAsset) public {
-        (
-            ISiloConfig.ConfigData memory _configData0,
-            ISiloConfig.ConfigData memory _configData1
-        ) = _internalSetUp();
-
         address silo = _silo0 ? _silo0Default : _silo1Default;
         uint256 action = sameAsset ? Hook.BORROW | Hook.SAME_ASSET : Hook.BORROW;
 
@@ -348,8 +365,6 @@ contract SiloConfigTest is Test {
     forge test -vv --mt test_onDebtTransfer_revertIfNotDebtToken
     */
     function test_onDebtTransfer_revertIfNotDebtToken() public {
-        _internalSetUp();
-
         address silo = makeAddr("siloX");
         address from = makeAddr("from");
         address to = makeAddr("to");
@@ -363,11 +378,6 @@ contract SiloConfigTest is Test {
     forge test -vv --mt test_onDebtTransfer_DebtExistInOtherSilo
     */
     function test_onDebtTransfer_DebtExistInOtherSilo() public {
-        (
-            ISiloConfig.ConfigData memory _configData0,
-            ISiloConfig.ConfigData memory _configData1
-        ) = _internalSetUp();
-
         address from = makeAddr("from");
         address to = makeAddr("to");
 
@@ -412,8 +422,6 @@ contract SiloConfigTest is Test {
     forge test -vv --mt test_onDebtTransfer_pass
     */
     function test_onDebtTransfer_pass() public {
-        (ISiloConfig.ConfigData memory _configData0,) = _internalSetUp();
-
         address from = makeAddr("from");
         address to = makeAddr("to");
 
@@ -454,7 +462,6 @@ contract SiloConfigTest is Test {
     forge test -vv --mt test_closeDebt_revert
     */
     function test_closeDebt_OnlySiloOrDebtShareToken() public {
-        _internalSetUp();
         vm.expectRevert(ISiloConfig.OnlySiloOrDebtShareToken.selector);
         _siloConfig.closeDebt(address(0));
     }
@@ -463,8 +470,6 @@ contract SiloConfigTest is Test {
     FOUNDRY_PROFILE=core-test forge test -vv --mt test_closeDebt_pass
     */
     function test_closeDebt_pass() public {
-        _internalSetUp();
-
         address borrower = makeAddr("borrower");
 
         vm.prank(_silo1Default);
@@ -486,41 +491,5 @@ contract SiloConfigTest is Test {
         ) = _siloConfig.getConfigs(_silo1Default, borrower, 0 /* always 0 for external calls */);
 
         assertEq(abi.encode(emptyDebtInfo), abi.encode(debt), "debt should be deleted");
-    }
-
-    function _internalSetUp()
-        internal
-        returns (
-            ISiloConfig.ConfigData memory _configData0,
-            ISiloConfig.ConfigData memory _configData1
-        )
-    {
-        _configData0.silo = _silo0Default;
-        _configData0.token = makeAddr("token0");
-        _configData0.debtShareToken = makeAddr("debtShareToken0");
-
-        _configData1.silo = _silo1Default;
-        _configData1.token = makeAddr("token1");
-        _configData1.debtShareToken = makeAddr("debtShareToken1");
-
-        _siloConfig = siloConfigDeploy(1, _configData0, _configData1);
-
-        vm.mockCall(
-            _silo0Default,
-            abi.encodeCall(
-                ISilo.accrueInterestForConfig,
-                (_configData0.interestRateModel, _configData0.daoFee, _configData0.deployerFee)
-            ),
-            abi.encode(true)
-        );
-
-        vm.mockCall(
-            _silo1Default,
-            abi.encodeCall(
-                ISilo.accrueInterestForConfig,
-                (_configData1.interestRateModel, _configData1.daoFee, _configData1.deployerFee)
-            ),
-            abi.encode(true)
-        );
     }
 }
