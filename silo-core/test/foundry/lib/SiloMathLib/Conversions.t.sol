@@ -42,11 +42,10 @@ contract ConversionsTest is Test {
     /*
     forge test -vv --mt test_SiloMathLib_conversions
     */
+    /// forge-config: core-test.fuzz.runs = 5000
     function test_SiloMathLib_conversions_fuzz(
-        uint256 _totalAssets, uint256 _totalShares, uint256 _assets
+        uint256 _totalAssets, uint256 _totalShares, uint256 _assetsIn
     ) public {
-//        (uint256 _totalAssets, uint256 _totalShares, uint256 _assets) = (1,0,1);
-
         vm.assume(_totalAssets >= _totalShares); // we allow for dust and/or interest
 
         if (_totalShares > 0) {
@@ -54,30 +53,30 @@ contract ConversionsTest is Test {
         }
 
         vm.assume(_totalAssets < 2 ** 128);
-        vm.assume(_assets < 2 ** 64);
+        vm.assume(_assetsIn < 2 ** 64);
 
         bool withDust = _totalShares == 0 && _totalAssets > 0;
 
-        uint256 shares = SiloMathLib.convertToShares(_assets, _totalAssets, _totalShares, Rounding.DEPOSIT_TO_SHARES, ISilo.AssetType.Collateral);
+        uint256 shares = SiloMathLib.convertToShares(
+            _assetsIn, _totalAssets, _totalShares, Rounding.DEPOSIT_TO_SHARES, ISilo.AssetType.Collateral
+        );
+
         vm.assume(shares > 0);
 
         _totalShares += shares;
-        _totalAssets += _assets;
+        _totalAssets += _assetsIn;
 
-        uint256 assets = SiloMathLib.convertToAssets(shares, _totalAssets, _totalShares, Rounding.DEPOSIT_TO_ASSETS, ISilo.AssetType.Collateral);
-        vm.assume(assets > 0);
+        uint256 assetsOut = SiloMathLib.convertToAssets(
+            shares, _totalAssets, _totalShares, Rounding.DEPOSIT_TO_ASSETS, ISilo.AssetType.Collateral
+        );
 
-        emit log_named_uint("_totalShares", _totalShares);
-        emit log_named_uint("_totalAssets", _totalAssets);
-        emit log_named_uint("shares", shares);
-        emit log_named_uint("assets", assets);
-        emit log_named_uint("_assets", _assets);
+        vm.assume(assetsOut > 0);
 
         if (withDust) {
             // this is where silo is empty and we have dust
-            assertLe(assets - _assets, 1 + _totalAssets, "dust: allow for 1 wei diff (rounding) + dust distribution");
+            assertLe(assetsOut - _assetsIn, 1 + _totalAssets, "dust: allow for 1 rounding err + dust distribution");
         } else {
-            assertLe(_assets - assets, 10, "assets: allow for 1 wei diff for rounding"); // TODO
+            assertLe(_assetsIn - assetsOut, 9, "assets: this diff is caused by rounding and it will be locked in silo");
         }
     }
 }
