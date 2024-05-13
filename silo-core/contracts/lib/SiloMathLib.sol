@@ -275,7 +275,7 @@ library SiloMathLib {
         uint256 _totalAssets,
         uint256 _totalShares,
         ISilo.AssetType _assetType
-    ) private returns(uint256 totalShares, uint256 totalAssets) {
+    ) private pure returns (uint256 totalShares, uint256 totalAssets) {
         if (_totalShares == 0) {
             // silo is empty and we have dust to redistribute: this can only happen when everyone exits silo
             // this case can happen only for collateral, because for collateral we rounding in favorite of protocol
