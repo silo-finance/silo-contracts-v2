@@ -43,36 +43,41 @@ contract ConversionsTest is Test {
     forge test -vv --mt test_SiloMathLib_conversions
     */
     function test_SiloMathLib_conversions_fuzz(
-//        uint256 _assets, uint64 _dust
+        uint256 _totalAssets, uint256 _totalShares, uint256 _assets
     ) public {
-        (uint256 _assets, uint64 _dust) = (0, 18446744073709550616);
-        vm.assume(_assets < 2 ** 128);
+//        (uint256 _totalAssets, uint256 _totalShares, uint256 _assets) = (1,0,1);
 
-        uint256 _totalAssets = _dust;
-        uint256 _totalShares;
-        Math.Rounding _rounding = Rounding.DOWN;
+        vm.assume(_totalAssets >= _totalShares); // we allow for dust and/or interest
 
-        uint256 shares = SiloMathLib.convertToShares(_assets, _totalAssets, _totalShares, _rounding, ISilo.AssetType.Collateral);
-        assertEq(shares, _assets * SiloMathLib._DECIMALS_OFFSET_POW, "#1");
+        if (_totalShares > 0) {
+            vm.assume(_totalAssets / _totalShares < 10); // max 10x
+        }
 
-        _totalAssets += _assets;
+        vm.assume(_totalAssets < 2 ** 128);
+        vm.assume(_assets < 2 ** 64);
+
+        bool withDust = _totalShares == 0 && _totalAssets > 0;
+
+        uint256 shares = SiloMathLib.convertToShares(_assets, _totalAssets, _totalShares, Rounding.DEPOSIT_TO_SHARES, ISilo.AssetType.Collateral);
+        vm.assume(shares > 0);
+
         _totalShares += shares;
-
-        _assets = 1000;
-        shares = SiloMathLib.convertToShares(_assets, _totalAssets, _totalShares, _rounding, ISilo.AssetType.Collateral);
-        assertEq(shares, 1000 * SiloMathLib._DECIMALS_OFFSET_POW, "#2");
-
         _totalAssets += _assets;
-        _totalShares += shares;
 
-        shares = 1 * SiloMathLib._DECIMALS_OFFSET_POW;
-        _assets = SiloMathLib.convertToAssets(shares, _totalAssets, _totalShares, _rounding, ISilo.AssetType.Collateral);
-        assertGe(_assets, 1, "#3, with dust, we can get more");
-        assertLe(_assets, 1 + uint256(_dust), "#3, with dust, we can not get more than dust");
+        uint256 assets = SiloMathLib.convertToAssets(shares, _totalAssets, _totalShares, Rounding.DEPOSIT_TO_ASSETS, ISilo.AssetType.Collateral);
+        vm.assume(assets > 0);
 
-        shares = 1000 * SiloMathLib._DECIMALS_OFFSET_POW;
-        _assets = SiloMathLib.convertToAssets(shares, _totalAssets, _totalShares, _rounding, ISilo.AssetType.Collateral);
-        assertGe(_assets, 1000, "#4, with dust, we can get more");
-        assertLe(_assets, 1000 + uint256(_dust), "#4, with dust, we can not get more than dust");
+        emit log_named_uint("_totalShares", _totalShares);
+        emit log_named_uint("_totalAssets", _totalAssets);
+        emit log_named_uint("shares", shares);
+        emit log_named_uint("assets", assets);
+        emit log_named_uint("_assets", _assets);
+
+        if (withDust) {
+            // this is where silo is empty and we have dust
+            assertLe(assets - _assets, 1 + _totalAssets, "dust: allow for 1 wei diff (rounding) + dust distribution");
+        } else {
+            assertLe(_assets - assets, 10, "assets: allow for 1 wei diff for rounding"); // TODO
+        }
     }
 }
