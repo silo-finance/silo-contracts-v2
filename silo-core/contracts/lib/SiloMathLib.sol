@@ -7,6 +7,8 @@ import {ISilo} from "../interfaces/ISilo.sol";
 
 library SiloMathLib {
     using Math for uint256;
+    
+    error InputCanBeAssetsOrShares();
 
     uint256 internal constant _PRECISION_DECIMALS = 1e18;
 
@@ -122,10 +124,10 @@ library SiloMathLib {
         if (_assets == 0) {
             shares = _shares;
             assets = convertToAssets(_shares, _totalAssets, _totalShares, _roundingToAssets, _assetType);
-        } else {
+        } else if (_shares == 0) {
             shares = convertToShares(_assets, _totalAssets, _totalShares, _roundingToShares, _assetType);
             assets = _assets;
-        }
+        } else revert InputCanBeAssetsOrShares();
     }
 
     /// @dev Math for collateral is exact copy of

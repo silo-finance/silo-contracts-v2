@@ -41,6 +41,9 @@ contract ReentrancyOnDepositTest is Test {
     }
 
     // solhint-disable-next-line func-name-mixedcase
+    /*
+    FOUNDRY_PROFILE=core-test forge test -vv --mt test_SiloERC4626Lib_deposit_vulnerable --ffi
+    */
     function test_SiloERC4626Lib_deposit_vulnerable() public {
         uint256 totalCollateral = _vulnerable.getTotalCollateral();
 
@@ -58,7 +61,7 @@ contract ReentrancyOnDepositTest is Test {
         _vulnerable.deposit(
             _token,
             _depositor,
-            _ASSETS,
+            0 /* assets */,
             _SHARES,
             _receiver,
             _shareCollateralToken
@@ -66,6 +69,9 @@ contract ReentrancyOnDepositTest is Test {
     }
 
     // solhint-disable-next-line func-name-mixedcase
+    /*
+    FOUNDRY_PROFILE=core-test forge test -vv --mt test_SiloERC4626Lib_deposit_non_vulnerable --ffi
+    */
     function test_SiloERC4626Lib_deposit_non_vulnerable() public {
         uint256 totalCollateral = _nonVulnerable.getTotalCollateral();
 
@@ -84,7 +90,7 @@ contract ReentrancyOnDepositTest is Test {
             _token,
             _depositor,
             _ASSETS,
-            _SHARES,
+            0 /* shares */,
             _receiver,
             _shareCollateralToken
         );

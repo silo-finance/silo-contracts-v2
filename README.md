@@ -134,25 +134,7 @@ genhtml -o coverage/silo-oracles/ lcov.info
 
 ## Rounding policy
 
-### Deposit (including preview, max and mint)
-- to assets: Up
-- to shares: Down
-
-### Borrow (including preview)
-- to assets: Down
-- to shares: Up
-
-### MaxBorrow
-- to assets: Down
-- to shares: Down
-
-### Withdraw
-- to shares: Up
-- to assets: Down
-
-### Repay
-- to assets: Up
-- to shares: Down
+Check `Rounding.sol` for rounding policy.
 
 ## Setup Echidna
 
