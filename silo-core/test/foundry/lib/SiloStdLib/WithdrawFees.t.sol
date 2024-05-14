@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import "forge-std/Test.sol";
+import {Test} from "forge-std/Test.sol";
 
 import {Actions} from "silo-core/contracts/lib/Actions.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
@@ -47,9 +47,11 @@ contract WithdrawFeesTest is Test {
     }
 
     /*
-    forge test -vv --mt test_withdrawFees_revert_zeros
+    forge test -vv --mt test_withdrawFees_revert_NoLiquidity
     */
-    function test_withdrawFees_revert_zeros() external {
+    function test_withdrawFees_revert_NoLiquidity() external {
+        siloData.daoAndDeployerFees = 1;
+
         uint256 daoFee;
         uint256 deployerFee;
         uint256 flashloanFeeInBp;
@@ -57,7 +59,7 @@ contract WithdrawFeesTest is Test {
 
         address dao;
         address deployer;
-        
+
         siloConfig.getFeesWithAssetMock(address(this), daoFee, deployerFee, flashloanFeeInBp, asset);
         siloFactory.getFeeReceiversMock(address(this), dao, deployer);
         token.balanceOfMock(address(this), 0);
@@ -70,18 +72,6 @@ contract WithdrawFeesTest is Test {
     forge test -vv --mt test_withdrawFees_EarnedZero
     */
     function test_withdrawFees_EarnedZero() external {
-        uint256 daoFee;
-        uint256 deployerFee;
-        uint256 flashloanFeeInBp;
-        address asset = token.ADDRESS();
-
-        address dao;
-        address deployer;
-        
-        siloConfig.getFeesWithAssetMock(address(this), daoFee, deployerFee, flashloanFeeInBp, asset);
-        siloFactory.getFeeReceiversMock(address(this), dao, deployer);
-        token.balanceOfMock(address(this), 1);
-
         vm.expectRevert(ISilo.EarnedZero.selector);
         _withdrawFees(ISilo(address(this)), siloData, NO_PROTECTED_ASSETS);
     }
