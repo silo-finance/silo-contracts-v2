@@ -6,7 +6,7 @@ import {PropertiesAsserts} from "properties/util/PropertiesHelper.sol";
 
 /*
 ./silo-core/scripts/echidnaBefore.sh
-SOLC_VERSION=0.8.21 echidna silo-core/test/echidna/EchidnaPRBMath.sol --contract EchidnaPRBMath --config silo-core/test/echidna/irm.yaml --workers 10
+SOLC_VERSION=0.8.22 echidna silo-core/test/echidna/EchidnaPRBMath.sol --contract EchidnaPRBMath --config silo-core/test/echidna/irm.yaml --workers 10
 */
 contract EchidnaPRBMath is PropertiesAsserts {
     using PRBMathSD59x18 for int256;

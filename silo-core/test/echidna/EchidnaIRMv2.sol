@@ -8,7 +8,7 @@ import {SiloMathLib} from "silo-core/contracts/lib/SiloMathLib.sol";
 
 /*
 ./silo-core/scripts/echidnaBefore.sh
-SOLC_VERSION=0.8.21 echidna silo-core/test/echidna/EchidnaIRMv2.sol --contract EchidnaIRMv2 --config silo-core/test/echidna/irm.yaml --workers 10
+SOLC_VERSION=0.8.22 echidna silo-core/test/echidna/EchidnaIRMv2.sol --contract EchidnaIRMv2 --config silo-core/test/echidna/irm.yaml --workers 10
 */
 contract EchidnaIRMv2 is PropertiesAsserts {
     using SafeCast for int256;

@@ -9,7 +9,7 @@ import {TestERC20Token} from "properties/ERC4626/util/TestERC20Token.sol";
 
 /*
 ./silo-core/scripts/echidnaBefore.sh
-SOLC_VERSION=0.8.21 echidna silo-core/test/echidna/EchidnaSiloERC4626.sol --contract EchidnaSiloERC4626 --config silo-core/test/echidna/erc4626.yaml --workers 10
+SOLC_VERSION=0.8.22 echidna silo-core/test/echidna/EchidnaSiloERC4626.sol --contract EchidnaSiloERC4626 --config silo-core/test/echidna/erc4626.yaml --workers 10
 */
 contract EchidnaSiloERC4626 is CryticERC4626PropertyTests, Deployers {
     ISiloConfig siloConfig;
