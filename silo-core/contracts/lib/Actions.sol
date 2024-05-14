@@ -41,7 +41,7 @@ library Actions {
         ISilo.CollateralType _collateralType,
         ISilo.Assets storage _totalCollateral
     )
-        external
+        internal /*ori_ext*/
         returns (uint256 assets, uint256 shares)
     {
         _hookCallBefore(_shareStorage, Hook.DEPOSIT, abi.encodePacked(_assets, _shares, _receiver, _collateralType));
@@ -77,11 +77,11 @@ library Actions {
     // solhint-disable-next-line function-max-lines, code-complexity
     function withdraw(
         ISilo.SharedStorage storage _shareStorage,
-        ISilo.WithdrawArgs calldata _args,
+        ISilo.WithdrawArgs memory _args,
         ISilo.Assets storage _totalAssets,
         ISilo.Assets storage _totalDebtAssets
     )
-        external
+        internal /*ori_ext*/
         returns (uint256 assets, uint256 shares)
     {
         _hookCallBefore(
@@ -191,7 +191,7 @@ library Actions {
         ISilo.Assets storage _totalDebt,
         bytes memory _data
     )
-        external
+        internal /*ori_ext*/
         returns (uint256 assets, uint256 shares)
     {
         if (_args.assets == 0 && _args.shares == 0) revert ISilo.ZeroAssets();
@@ -284,7 +284,7 @@ library Actions {
         bool _liquidation,
         ISilo.Assets storage _totalDebt
     )
-        external
+        internal /*ori_ext*/
         returns (uint256 assets, uint256 shares)
     {
         if (!_liquidation) {
@@ -335,7 +335,7 @@ library Actions {
         ISilo.Assets storage _totalDebt,
         ISilo.Assets storage _totalAssetsForDeposit
     )
-        external
+        internal /*ori_ext*/
         returns (uint256 depositedShares, uint256 borrowedShares)
     {
         if (_depositAssets == 0 || _borrowAssets == 0) revert ISilo.ZeroAssets();
@@ -428,7 +428,7 @@ library Actions {
         ISilo.CollateralType _withdrawType,
         mapping(uint256 assetType => ISilo.Assets) storage _total
     )
-        external
+        internal /*ori_ext*/
         returns (uint256 assets, uint256 toShares)
     {
         _hookCallBefore(
@@ -486,7 +486,7 @@ library Actions {
     function switchCollateralTo(
         ISilo.SharedStorage storage _shareStorage,
         bool _toSameAsset
-    ) external {
+    ) internal /*ori_ext*/ {
         _hookCallBefore(_shareStorage, Hook.SWITCH_COLLATERAL, abi.encodePacked(_toSameAsset));
 
         (
@@ -532,9 +532,9 @@ library Actions {
         address _token,
         uint256 _amount,
         ISilo.SiloData storage _siloData,
-        bytes calldata _data
+        bytes memory _data
     )
-        external
+        internal /*ori_ext*/
         returns (bool success)
     {
         _hookCallBefore(_shareStorage, Hook.FLASH_LOAN, abi.encodePacked(_receiver, _token, _amount));
@@ -576,7 +576,7 @@ library Actions {
     /// @param _silo Silo address
     /// @param _siloData Storage reference containing silo-related data, including accumulated fees
     /// @param _protectedAssets Protected assets in the silo. We can not withdraw it.
-    function withdrawFees(ISilo _silo, ISilo.SiloData storage _siloData, uint256 _protectedAssets) external {
+    function withdrawFees(ISilo _silo, ISilo.SiloData storage _siloData, uint256 _protectedAssets) internal /*ori_ext*/ {
         uint256 earnedFees = _siloData.daoAndDeployerFees;
         if (earnedFees == 0) revert ISilo.EarnedZero();
 
@@ -629,7 +629,7 @@ library Actions {
     }
 
     function updateHooks(ISilo.SharedStorage storage _sharedStorage)
-        external
+        internal /*ori_ext*/
         returns (uint24 hooksBefore, uint24 hooksAfter)
     {
         ISilo.SharedStorage memory shareStorage = _sharedStorage;
