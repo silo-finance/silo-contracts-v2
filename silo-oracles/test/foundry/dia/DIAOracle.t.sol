@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Unlicense
-pragma solidity 0.8.22;
+pragma solidity 0.8.24;
 
 import "../../../constants/Arbitrum.sol";
 

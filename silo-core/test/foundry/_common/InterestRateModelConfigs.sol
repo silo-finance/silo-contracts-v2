@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
 import {IInterestRateModelV2} from "../../../contracts/interfaces/IInterestRateModelV2.sol";
 

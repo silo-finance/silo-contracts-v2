@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.22;
+pragma solidity 0.8.24;
 
 import {Utils} from "silo-foundry-utils/lib/Utils.sol";
 import {VmLib} from "silo-foundry-utils/lib/VmLib.sol";

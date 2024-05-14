@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.22;
+pragma solidity 0.8.24;
 
 import {Clones} from "openzeppelin5/proxy/Clones.sol";
 import {Initializable} from "openzeppelin5-upgradeable/proxy/utils/Initializable.sol";

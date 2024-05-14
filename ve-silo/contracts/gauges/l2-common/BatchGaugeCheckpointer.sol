@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.22;
+pragma solidity 0.8.24;
 
 import {ISiloChildChainGauge} from "../interfaces/ISiloChildChainGauge.sol";
 import {IBatchGaugeCheckpointer} from "../interfaces/IBatchGaugeCheckpointer.sol";

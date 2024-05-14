@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.22;
+pragma solidity 0.8.24;
 
 import {ERC20PresetMinterPauser, IERC20} from "openzeppelin-contracts/token/ERC20/presets/ERC20PresetMinterPauser.sol";
 import {IntegrationTest} from "silo-foundry-utils/networks/IntegrationTest.sol";

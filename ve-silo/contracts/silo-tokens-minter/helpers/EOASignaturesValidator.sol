@@ -12,7 +12,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-pragma solidity 0.8.22;
+pragma solidity 0.8.24;
 
 import {Errors, _require} from "balancer-labs/v2-interfaces/solidity-utils/helpers/BalancerErrors.sol";
 import {ISignaturesValidator} from "balancer-labs/v2-interfaces/solidity-utils/helpers/ISignaturesValidator.sol";

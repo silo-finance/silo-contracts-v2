@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.22;
+pragma solidity 0.8.24;
 
 /// @notice Interface of the proposal engine
 /// @dev Proposal engine is a contract that allows to propose a proposal.
