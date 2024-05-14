@@ -183,6 +183,7 @@ interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
     error OnlyHookReceiver();
     error OnlySiloConfig();
     error NoLiquidity();
+    error InputCanBeAssetsOrShares();
 
     /// @notice Method for HookReceiver only to call on behalf of Silo
     /// @param _target address of the contract to call
