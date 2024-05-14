@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.21;
+pragma solidity ^0.8.20;
 
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 
 import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
 import {ISilo} from "../interfaces/ISilo.sol";
-import {ISiloOracle} from "../interfaces/ISiloOracle.sol";
 import {IShareToken} from "../interfaces/IShareToken.sol";
 import {ILeverageBorrower} from "../interfaces/ILeverageBorrower.sol";
 import {IERC3156FlashBorrower} from "../interfaces/IERC3156FlashBorrower.sol";
@@ -21,11 +20,13 @@ import {SiloMathLib} from "./SiloMathLib.sol";
 import {CrossEntrancy} from "./CrossEntrancy.sol";
 import {Hook} from "./Hook.sol";
 import {AssetTypes} from "./AssetTypes.sol";
+import {CallBeforeQuoteLib} from "./CallBeforeQuoteLib.sol";
 
 library Actions {
     using SafeERC20 for IERC20;
     using Hook for uint256;
     using Hook for uint24;
+    using CallBeforeQuoteLib for ISiloConfig.ConfigData;
 
     bytes32 internal constant _LEVERAGE_CALLBACK = keccak256("ILeverageBorrower.onLeverage");
     bytes32 internal constant _FLASHLOAN_CALLBACK = keccak256("ERC3156FlashBorrower.onFlashLoan");
@@ -151,13 +152,8 @@ library Actions {
         }
 
         if (!debtInfo.sameAsset) {
-            if (collateralConfig.callBeforeQuote) {
-                ISiloOracle(collateralConfig.solvencyOracle).beforeQuote(collateralConfig.token);
-            }
-
-            if (debtConfig.callBeforeQuote) {
-                ISiloOracle(debtConfig.solvencyOracle).beforeQuote(debtConfig.token);
-            }
+            collateralConfig.callSolvencyOracleBeforeQuote();
+            debtConfig.callSolvencyOracleBeforeQuote();
         }
 
         // `_args.owner` must be solvent
@@ -248,13 +244,8 @@ library Actions {
         }
 
         if (!debtInfo.sameAsset) {
-            if (collateralConfig.callBeforeQuote) {
-                ISiloOracle(collateralConfig.maxLtvOracle).beforeQuote(collateralConfig.token);
-            }
-
-            if (debtConfig.callBeforeQuote) {
-                ISiloOracle(debtConfig.maxLtvOracle).beforeQuote(debtConfig.token);
-            }
+            collateralConfig.callMaxLtvOracleBeforeQuote();
+            debtConfig.callMaxLtvOracleBeforeQuote();
         }
 
         if (!SiloSolvencyLib.isBelowMaxLtv(
@@ -510,11 +501,14 @@ library Actions {
             ISilo(collateralConfig.otherSilo).accrueInterest();
         }
 
-        if (!SiloSolvencyLib.isSolvent(
-            collateralConfig, debtConfig, debtInfo, msg.sender, ISilo.AccrueInterestInMemory.No)
-        ) {
-            revert ISilo.NotSolvent();
-        }
+        collateralConfig.callSolvencyOracleBeforeQuote();
+        debtConfig.callSolvencyOracleBeforeQuote();
+
+        bool msgSenderIsSolvent = SiloSolvencyLib.isSolvent(
+            collateralConfig, debtConfig, debtInfo, msg.sender, ISilo.AccrueInterestInMemory.No
+        );
+
+        if (!msgSenderIsSolvent) revert ISilo.NotSolvent();
 
         _shareStorage.siloConfig.crossNonReentrantAfter();
 
@@ -581,7 +575,11 @@ library Actions {
     /// accordingly
     /// @param _silo Silo address
     /// @param _siloData Storage reference containing silo-related data, including accumulated fees
-    function withdrawFees(ISilo _silo, ISilo.SiloData storage _siloData) external {
+    /// @param _protectedAssets Protected assets in the silo. We can not withdraw it.
+    function withdrawFees(ISilo _silo, ISilo.SiloData storage _siloData, uint256 _protectedAssets) external {
+        uint256 earnedFees = _siloData.daoAndDeployerFees;
+        if (earnedFees == 0) revert ISilo.EarnedZero();
+
         (
             address daoFeeReceiver,
             address deployerFeeReceiver,
@@ -590,12 +588,16 @@ library Actions {
             address asset
         ) = SiloStdLib.getFeesAndFeeReceiversWithAsset(_silo);
 
-        uint256 earnedFees = _siloData.daoAndDeployerFees;
-        uint256 balanceOf = IERC20(asset).balanceOf(address(this));
-        if (balanceOf == 0) revert ISilo.BalanceZero();
+        uint256 availableLiquidity;
+        uint256 siloBalance = IERC20(asset).balanceOf(address(this));
 
-        if (earnedFees > balanceOf) earnedFees = balanceOf;
-        if (earnedFees == 0) revert ISilo.EarnedZero();
+        // we will never underflow because `_protectedAssets` is always less/equal `siloBalance`
+        unchecked { availableLiquidity = _protectedAssets > siloBalance ? 0 : siloBalance - _protectedAssets; }
+
+        if (availableLiquidity == 0) revert ISilo.NoLiquidity();
+
+
+        if (earnedFees > availableLiquidity) earnedFees = availableLiquidity;
 
         // we will never underflow because earnedFees max value is `_siloData.daoAndDeployerFees`
         unchecked { _siloData.daoAndDeployerFees -= uint192(earnedFees); }
@@ -615,9 +617,9 @@ library Actions {
             uint256 deployerFees;
 
             unchecked {
-            // fees are % in decimal point so safe to uncheck
+                // fees are % in decimal point so safe to uncheck
                 daoFees = daoFees / (daoFee + deployerFee);
-            // `daoFees` is chunk of earnedFees, so safe to uncheck
+                // `daoFees` is chunk of earnedFees, so safe to uncheck
                 deployerFees = earnedFees - daoFees;
             }
 

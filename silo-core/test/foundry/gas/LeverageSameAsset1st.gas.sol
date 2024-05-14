@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
 import "forge-std/Test.sol";
 
@@ -31,7 +31,7 @@ contract LeverageSameAsset1stGasTest is Gas, Test {
             address(silo1),
             abi.encodeCall(ISilo.leverageSameAsset, (depositAssets, ASSETS, BORROWER, ISilo.CollateralType.Collateral)),
             "LeverageSameAsset 1st (no interest)",
-            278558
+            278690
         );
     }
 }

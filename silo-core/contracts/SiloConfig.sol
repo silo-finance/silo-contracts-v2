@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.21;
+pragma solidity 0.8.24;
 
 import {ISilo} from "./interfaces/ISilo.sol";
 import {ISiloConfig} from "./interfaces/ISiloConfig.sol";
@@ -82,6 +82,9 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
     /// @param _configData1 silo configuration data for token1
     constructor(uint256 _siloId, ConfigData memory _configData0, ConfigData memory _configData1) CrossReentrancy() {
         SILO_ID = _siloId;
+
+        // To make further computations in the Silo secure require DAO and deployer fees to be less than 100%
+        if (_configData0.daoFee + _configData0.deployerFee >= 1e18) revert FeeTooHigh();
 
         _DAO_FEE = _configData0.daoFee;
         _DEPLOYER_FEE = _configData0.deployerFee;

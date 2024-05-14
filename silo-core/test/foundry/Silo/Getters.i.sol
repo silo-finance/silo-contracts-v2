@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
 import "forge-std/Test.sol";
 
@@ -12,7 +12,7 @@ import {MintableToken} from "../_common/MintableToken.sol";
 import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
 
 /*
-    forge test -vv --ffi --mc DepositTest
+    forge test -vv --ffi --mc GettersTest
 */
 contract GettersTest is SiloLittleHelper, Test {
     using SiloLensLib for ISilo;

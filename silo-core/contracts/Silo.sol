@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.21;
+pragma solidity 0.8.24;
 
 import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
@@ -628,8 +628,7 @@ contract Silo is SiloERC4626 {
 
     /// @inheritdoc ISilo
     function accrueInterest() external virtual returns (uint256 accruedInterest) {
-        ISiloConfig.ConfigData memory cfg = sharedStorage.siloConfig.getConfig(address(this));
-        accruedInterest = _callAccrueInterestForAsset(cfg.interestRateModel, cfg.daoFee, cfg.deployerFee, address(0));
+        accruedInterest = _accrueInterest();
     }
 
     /// @inheritdoc ISilo
@@ -644,7 +643,8 @@ contract Silo is SiloERC4626 {
 
     /// @inheritdoc ISilo
     function withdrawFees() external virtual {
-        Actions.withdrawFees(this, siloData);
+        _accrueInterest();
+        Actions.withdrawFees(this, siloData, total[AssetTypes.PROTECTED].assets);
     }
 
     /// @dev that method allow to finish liquidation process by giving up collateral to liquidator
@@ -873,6 +873,11 @@ contract Silo is SiloERC4626 {
             // 0 for CollateralType.Collateral because it will be calculated internally
             _collateralType == CollateralType.Protected ? total[AssetTypes.PROTECTED].assets : 0
         );
+    }
+
+    function _accrueInterest() internal virtual returns (uint256 accruedInterest) {
+        ISiloConfig.ConfigData memory cfg = sharedStorage.siloConfig.getConfig(address(this));
+        accruedInterest = _callAccrueInterestForAsset(cfg.interestRateModel, cfg.daoFee, cfg.deployerFee, address(0));
     }
 
     function _callAccrueInterestForAsset(

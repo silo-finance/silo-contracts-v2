@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
 import "forge-std/Test.sol";
 
@@ -202,7 +202,7 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
         emit log_named_decimal_uint("[test] max debtToRepay", debtToRepay, 18);
         emit log_named_decimal_uint("[test] debtToCover", debtToCover, 18);
 
-        vm.expectCall(address(silo0), abi.encodeWithSelector(ISilo.accrueInterest.selector));
+        vm.expectCall(address(silo0), abi.encodeWithSelector(ISilo.accrueInterestForConfig.selector));
         vm.expectCall(
             address(debtConfig.interestRateModel),
             abi.encodeWithSelector(IInterestRateModel.getCompoundInterestRateAndUpdate.selector)
@@ -312,6 +312,35 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
     }
 
     /*
+    forge test -vv --ffi --mt test_liquidationCall_DebtToCoverTooSmall_1token
+    */
+    function test_liquidationCall_DebtToCoverTooSmall_1token() public {
+        // move forward with time so we can have interests
+        uint256 timeForward = 75 days;
+        vm.warp(block.timestamp + timeForward);
+        assertLt(silo0.getLtv(BORROWER), 1e18, "expect insolvency, but not bad debt");
+        assertGt(silo0.getLtv(BORROWER), 0.98e18, "expect hi LTV so we force full liquidation");
+
+        (
+            uint256 collateralToLiquidate, uint256 debtToRepay
+        ) = partialLiquidation.maxLiquidation(address(silo0), BORROWER);
+
+        // -1 for rounding policy
+        assertEq(silo0.getLiquidity() - 1, collateralToLiquidate - debtToRepay, "without bad debt there is some liquidity");
+        emit log_named_decimal_uint("collateralToLiquidate", collateralToLiquidate, 18);
+        emit log_named_decimal_uint("debtToRepay", debtToRepay, 18);
+        assertEq(debtToRepay, silo0.getDebtAssets(), "debtToRepay is max debt when we forcing full liquidation");
+
+        uint256 debtToCover = debtToRepay - 1; // -1 to check if tx reverts with DebtToCoverTooSmall
+        bool receiveSToken;
+
+        vm.expectRevert(IPartialLiquidation.DebtToCoverTooSmall.selector);
+        partialLiquidation.liquidationCall(
+            address(silo0), address(token0), address(token0), BORROWER, debtToCover, receiveSToken
+        );
+    }
+
+    /*
     forge test -vv --ffi --mt test_liquidationCall_badDebt_partial_1token_noDepositors
     */
     function test_liquidationCall_badDebt_partial_1token_noDepositors() public {
@@ -350,7 +379,7 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
         uint256 interest = 48_313643495964160590;
         assertEq(debtToRepay - DEBT, interest, "interests on debt");
 
-        vm.expectCall(address(silo0), abi.encodeWithSelector(ISilo.accrueInterest.selector));
+        vm.expectCall(address(silo0), abi.encodeWithSelector(ISilo.accrueInterestForConfig.selector));
         vm.expectCall(
             address(debtConfig.interestRateModel),
             abi.encodeWithSelector(IInterestRateModel.getCompoundInterestRateAndUpdate.selector)
@@ -459,7 +488,7 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
         uint256 interest = 65_880809371475889105;
         assertEq(debtToRepay - DEBT, interest, "interests on debt");
 
-        vm.expectCall(address(silo0), abi.encodeWithSelector(ISilo.accrueInterest.selector));
+        vm.expectCall(address(silo0), abi.encodeWithSelector(ISilo.accrueInterestForConfig.selector));
         vm.expectCall(
             address(debtConfig.interestRateModel),
             abi.encodeWithSelector(IInterestRateModel.getCompoundInterestRateAndUpdate.selector)

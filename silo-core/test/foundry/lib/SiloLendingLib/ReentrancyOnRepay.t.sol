@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.21;
+pragma solidity 0.8.24;
 
 import {Test} from "forge-std/Test.sol";
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
@@ -56,7 +56,7 @@ contract ReentrancyOnRepayTest is Test {
 
         _vulnerable.repay(
             _getConfigData(),
-            _ASSETS,
+            0 /* assets */,
             _SHARES,
             _borrower,
             _repayer
@@ -64,6 +64,9 @@ contract ReentrancyOnRepayTest is Test {
     }
 
     // solhint-disable-next-line func-name-mixedcase
+    /*
+    FOUNDRY_PROFILE=core-test forge test -vv --mt test_SiloLendingLib_non_vulnerable --ffi
+    */
     function test_SiloLendingLib_non_vulnerable() public {
         uint256 totalDebtBefore = _nonVulnerable.getTotalDebt();
 
@@ -81,7 +84,7 @@ contract ReentrancyOnRepayTest is Test {
         _nonVulnerable.repay(
             _getConfigData(),
             _ASSETS,
-            _SHARES,
+            0 /* shares */,
             _borrower,
             _repayer
         );

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.21;
+pragma solidity ^0.8.20;
 
 import {Math} from "openzeppelin5/utils/math/Math.sol";
 import {Rounding} from "../lib/Rounding.sol";
@@ -122,10 +122,10 @@ library SiloMathLib {
         if (_assets == 0) {
             shares = _shares;
             assets = convertToAssets(_shares, _totalAssets, _totalShares, _roundingToAssets, _assetType);
-        } else {
+        } else if (_shares == 0) {
             shares = convertToShares(_assets, _totalAssets, _totalShares, _roundingToShares, _assetType);
             assets = _assets;
-        }
+        } else revert ISilo.InputCanBeAssetsOrShares();
     }
 
     /// @dev Math for collateral is exact copy of
@@ -137,19 +137,11 @@ library SiloMathLib {
         Math.Rounding _rounding,
         ISilo.AssetType _assetType
     ) internal pure returns (uint256) {
-        // Debt calculations should not lower the result. Debt is a liability so protocol should not take any for
-        // itself. It should return actual result and round it up.
-        uint256 totalShares;
-        uint256 totalAssets;
+        (uint256 totalShares, uint256 totalAssets) = _commonConvertTo(_totalAssets, _totalShares, _assetType);
 
-        unchecked {
-            // I think we can afford to uncheck +1
-            (totalShares, totalAssets) = _assetType == ISilo.AssetType.Debt
-                ? (_totalShares, _totalAssets)
-                : (_totalShares + _DECIMALS_OFFSET_POW, _totalAssets + 1);
-        }
-
-        if (totalShares == 0 || totalAssets == 0) return _assets;
+        // initially, in case of debt, if silo is empty we return shares==assets
+        // for collateral, this will never be the case, because of `+1` in line above
+        if (totalShares == 0) return _assets;
 
         return _assets.mulDiv(totalShares, totalAssets, _rounding);
     }
@@ -163,19 +155,11 @@ library SiloMathLib {
         Math.Rounding _rounding,
         ISilo.AssetType _assetType
     ) internal pure returns (uint256 assets) {
-        // Debt calculations should not lower the result. Debt is a liability so protocol should not take any for
-        // itself. It should return actual result and round it up.
-        uint256 totalShares;
-        uint256 totalAssets;
+        (uint256 totalShares, uint256 totalAssets) = _commonConvertTo(_totalAssets, _totalShares, _assetType);
 
-        unchecked {
-            // I think we can afford to uncheck +1
-            (totalShares, totalAssets) = _assetType == ISilo.AssetType.Debt
-                ? (_totalShares, _totalAssets)
-                : (_totalShares + _DECIMALS_OFFSET_POW, _totalAssets + 1);
-        }
-
-        if (totalShares == 0 || totalAssets == 0) return _shares;
+        // initially, in case of debt, if silo is empty we return shares==assets
+        // for collateral, this will never be the case, because of `+1` in line above
+        if (totalShares == 0) return _shares;
 
         assets = _shares.mulDiv(totalAssets, totalShares, _rounding);
     }
@@ -281,5 +265,27 @@ library SiloMathLib {
             Rounding.MAX_WITHDRAW_TO_SHARES,
             ISilo.AssetType(uint256(_collateralType))
         );
+    }
+
+    /// @dev Debt calculations should not lower the result. Debt is a liability so protocol should not take any for
+    /// itself. It should return actual result and round it up.
+    function _commonConvertTo(
+        uint256 _totalAssets,
+        uint256 _totalShares,
+        ISilo.AssetType _assetType
+    ) private pure returns (uint256 totalShares, uint256 totalAssets) {
+        if (_totalShares == 0) {
+            // silo is empty and we have dust to redistribute: this can only happen when everyone exits silo
+            // this case can happen only for collateral, because for collateral we rounding in favorite of protocol
+            // by resetting totalAssets, the dust that we have will go to first depositor and we starts from clean state
+            _totalAssets = 0;
+        }
+
+        unchecked {
+            // I think we can afford to uncheck +1
+            (totalShares, totalAssets) = _assetType == ISilo.AssetType.Debt
+                ? (_totalShares, _totalAssets)
+                : (_totalShares + _DECIMALS_OFFSET_POW, _totalAssets + 1);
+        }
     }
 }

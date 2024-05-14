@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.21;
+pragma solidity 0.8.24;
 
 import {Test} from "forge-std/Test.sol";
+
 import {Ownable2Step, Ownable} from "openzeppelin5/access/Ownable2Step.sol";
 import {Initializable} from "openzeppelin5/proxy/utils/Initializable.sol";
 import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
@@ -20,56 +21,60 @@ import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {IGaugeLike as IGauge} from "silo-core/contracts/utils/hook-receivers/gauge/interfaces/IGaugeLike.sol";
 
 import {GaugeHookReceiverDeploy} from "silo-core/deploy/GaugeHookReceiverDeploy.s.sol";
+
+import {VeSiloContracts} from "ve-silo/common/VeSiloContracts.sol";
+
+import {SiloLittleHelper} from  "../../_common/SiloLittleHelper.sol";
 import {TransferOwnership} from  "../../_common/TransferOwnership.sol";
 
 // FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc GaugeHookReceiverTest
-contract GaugeHookReceiverTest is Test, TransferOwnership {
-   IGaugeHookReceiver internal _hookReceiver;
-   ISiloConfig internal _siloConfig;
+contract GaugeHookReceiverTest is SiloLittleHelper, Test, TransferOwnership {
+    IGaugeHookReceiver internal _hookReceiver;
+    ISiloConfig internal _siloConfig;
 
-   uint256 internal constant _SENDER_BAL = 1;
-   uint256 internal constant _RECEPIENT_BAL = 1;
-   uint256 internal constant _TS = 1;
-   uint256 internal constant _AMOUNT = 0;
+    uint256 internal constant _SENDER_BAL = 1;
+    uint256 internal constant _RECEPIENT_BAL = 1;
+    uint256 internal constant _TS = 1;
+    uint256 internal constant _AMOUNT = 0;
 
-   address internal _sender = makeAddr("Sender");
-   address internal _recipient = makeAddr("Recepient");
-   address internal _dao;
-   address internal _gauge = makeAddr("Gauge");
-   address internal _gauge2 = makeAddr("Gauge2");
+    address internal _sender = makeAddr("Sender");
+    address internal _recipient = makeAddr("Recipient");
+    address internal _dao;
+    address internal _gauge = makeAddr("Gauge");
+    address internal _gauge2 = makeAddr("Gauge2");
 
-   event GaugeConfigured(address gauge, address shareToken);
+    address internal timelock = makeAddr("Timelock");
+    address internal feeDistributor = makeAddr("FeeDistributor");
 
-   function setUp() public {
-        SiloFixture siloFixture = new SiloFixture();
-        SiloConfigOverride memory configOverride;
+    event GaugeConfigured(address gauge, address shareToken);
 
-        configOverride.token0 = makeAddr("token0");
-        configOverride.token1 = makeAddr("token1");
-        configOverride.configName = SiloConfigsNames.LOCAL_GAUGE_HOOK_RECEIVER;
+    function setUp() public {
+        // Mock addresses that we need for the `SiloFactoryDeploy` script
+        AddrLib.setAddress(VeSiloContracts.TIMELOCK_CONTROLLER, timelock);
+        AddrLib.setAddress(VeSiloContracts.FEE_DISTRIBUTOR, feeDistributor);
 
-        (ISiloConfig config, ISilo silo0,,,,) = siloFixture.deploy_local(configOverride);
-
-        _siloConfig = config;
+        _siloConfig = _setUpLocalFixture(SiloConfigsNames.LOCAL_GAUGE_HOOK_RECEIVER);
 
         (,,, IHookReceiver hook) = silo0.sharedStorage();
 
         _hookReceiver = IGaugeHookReceiver(address(hook));
 
-        _dao = siloFixture.timelock();
-   }
+        _dao = timelock;
+    }
 
     // FOUNDRY_PROFILE=core-test forge test --ffi -vvv --mt testReinitialization
     function testReinitialization() public {
         address hookReceiverImpl = AddrLib.getAddress(SiloCoreContracts.GAUGE_HOOK_RECEIVER);
 
+        bytes memory data = abi.encode(_dao);
+
         // Implementation is not initializable
         vm.expectRevert(Initializable.InvalidInitialization.selector);
-        IHookReceiver(hookReceiverImpl).initialize(address(0), ISiloConfig(address(0)));
+        IHookReceiver(hookReceiverImpl).initialize(ISiloConfig(address(0)), data);
 
         // Gauge hook receiver can't be re-initialized
         vm.expectRevert(Initializable.InvalidInitialization.selector);
-        _hookReceiver.initialize(address(0), ISiloConfig(address(0)));
+        _hookReceiver.initialize(ISiloConfig(address(0)), data);
     }
 
     // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testHookReceiverInitlaization

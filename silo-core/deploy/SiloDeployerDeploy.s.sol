@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.21;
+pragma solidity 0.8.24;
 
 import {CommonDeploy} from "./_CommonDeploy.sol";
 import {SiloCoreContracts, SiloCoreDeployments} from "silo-core/common/SiloCoreContracts.sol";
@@ -8,8 +8,6 @@ import {SiloDeployer} from "silo-core/contracts/SiloDeployer.sol";
 import {IInterestRateModelV2ConfigFactory} from "silo-core/contracts/interfaces/IInterestRateModelV2ConfigFactory.sol";
 import {ISiloFactory} from "silo-core/contracts/interfaces/ISiloFactory.sol";
 import {ISiloDeployer} from "silo-core/contracts/interfaces/ISiloDeployer.sol";
-
-import {console} from "forge-std/console.sol";
 
 /**
     FOUNDRY_PROFILE=core \
@@ -21,7 +19,6 @@ contract SiloDeployerDeploy is CommonDeploy {
         string memory chainAlias = getChainAlias();
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
 
-        address timelock = VeSiloDeployments.get(VeSiloContracts.TIMELOCK_CONTROLLER, chainAlias);
         address siloFactory = SiloCoreDeployments.get(SiloCoreContracts.SILO_FACTORY, chainAlias);
 
         address irmConfigFactory = SiloCoreDeployments.get(
@@ -33,8 +30,7 @@ contract SiloDeployerDeploy is CommonDeploy {
 
         siloDeployer = ISiloDeployer(address(new SiloDeployer(
             IInterestRateModelV2ConfigFactory(irmConfigFactory),
-            ISiloFactory(siloFactory),
-            timelock
+            ISiloFactory(siloFactory)
         )));
 
         vm.stopBroadcast();

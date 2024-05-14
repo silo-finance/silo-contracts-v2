@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.21;
+pragma solidity 0.8.24;
 
 import {Clones} from "openzeppelin5/proxy/Clones.sol";
 import {Initializable} from "openzeppelin5-upgradeable/proxy/utils/Initializable.sol";
@@ -85,6 +85,9 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step, Creator {
         (ISiloConfig.ConfigData memory configData0, ISiloConfig.ConfigData memory configData1) = _copyConfig(_initData);
 
         uint256 nextSiloId = _siloId;
+
+        if (nextSiloId == 0) revert Uninitialized();
+
         // safe to uncheck, because we will not create 2 ** 256 of silos in a lifetime
         unchecked { _siloId++; }
 

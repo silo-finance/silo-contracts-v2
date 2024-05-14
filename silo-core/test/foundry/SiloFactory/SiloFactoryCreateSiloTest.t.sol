@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
 import "forge-std/Test.sol";
 
@@ -12,7 +12,7 @@ import {IInterestRateModelV2} from "silo-core/contracts/interfaces/IInterestRate
 import {IInterestRateModelV2Config} from "silo-core/contracts/interfaces/IInterestRateModelV2Config.sol";
 import {InterestRateModelV2} from "silo-core/contracts/interestRateModel/InterestRateModelV2.sol";
 
-import {ISiloFactory} from "silo-core/contracts/SiloFactory.sol";
+import {SiloFactory, ISiloFactory} from "silo-core/contracts/SiloFactory.sol";
 import {MainnetDeploy} from "silo-core/deploy/MainnetDeploy.s.sol";
 import {MintableToken} from "silo-core/test/foundry/_common/MintableToken.sol";
 import {SiloCoreContracts} from "silo-core/common/SiloCoreContracts.sol";
@@ -43,6 +43,33 @@ contract SiloFactoryCreateSiloTest is SiloLittleHelper, IntegrationTest {
         siloFactory = ISiloFactory(getAddress(SiloCoreContracts.SILO_FACTORY));
 
         assertTrue(siloConfig.getConfig(address(silo0)).maxLtv != 0, "we need borrow to be allowed");
+    }
+
+    /*
+    forge test -vv --ffi --mt test_failToCreateSiloWhenUninitialized
+    */
+    function test_failToCreateSiloWhenUninitialized() public {
+        SiloFactory siloFactoryTest = new SiloFactory();
+
+        // ensure that the factory is uninitialized
+        assertEq(siloFactoryTest.getNextSiloId(), 0);
+
+        (, ISiloConfig.InitData memory initData,) = siloData.getConfigData(SILO_TO_DEPLOY);
+
+        initData.token0 = makeAddr("token0");
+        initData.token1 = makeAddr("token1");
+        initData.deployerFee = 0;
+        initData.flashloanFee0 = 0;
+        initData.flashloanFee1 = 0;
+        initData.liquidationFee0 = 0;
+        initData.liquidationFee1 = 0;
+        initData.interestRateModelConfig0 = makeAddr("irmConfig0");
+        initData.interestRateModelConfig1 = makeAddr("irmConfig1");
+        initData.interestRateModel0 = makeAddr("irm0");
+        initData.interestRateModel1 = makeAddr("irm1");
+
+        vm.expectRevert(ISiloFactory.Uninitialized.selector);
+        siloFactoryTest.createSilo(initData);
     }
 
     /*

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
 import {console2} from "forge-std/console2.sol";
 import {KeyValueStorage as KV} from "silo-foundry-utils/key-value/KeyValueStorage.sol";
@@ -83,7 +83,7 @@ contract SiloDeploy is CommonDeploy {
 
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
 
-        hookReceiverImplementation = beforeCreateSilo(siloInitData, hookReceiverImplementation);
+        beforeCreateSilo(siloInitData);
 
         console2.log("[SiloCommonDeploy] `beforeCreateSilo` executed");
 
@@ -95,8 +95,8 @@ contract SiloDeploy is CommonDeploy {
             oracles,
             irmConfigData0,
             irmConfigData1,
-            siloInitData,
-            hookReceiverImplementation
+            _getClonableHookReceiverConfig(hookReceiverImplementation),
+            siloInitData
         );
 
         vm.stopBroadcast();
@@ -267,10 +267,13 @@ contract SiloDeploy is CommonDeploy {
     }
 
     function beforeCreateSilo(
-        ISiloConfig.InitData memory,
-        address _hookImplementation
-    ) internal virtual returns (address) {
-        // hook for any action before creating silo
-        return _hookImplementation;
+        ISiloConfig.InitData memory
+    ) internal virtual {
+    }
+
+    function _getClonableHookReceiverConfig(address _implementation)
+        internal
+        virtual
+        returns (ISiloDeployer.ClonableHookReceiver memory hookReceiver) {
     }
 }

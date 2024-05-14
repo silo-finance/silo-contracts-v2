@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.21;
+pragma solidity ^0.8.20;
 
 import {ISilo} from "../interfaces/ISilo.sol";
 import {IShareToken} from "../interfaces/IShareToken.sol";
@@ -71,7 +71,7 @@ library LiquidationWithdrawLib {
                     spender: _borrower,
                     collateralType: ISilo.CollateralType.Protected
                 }),
-                type(uint256).max,
+                _total[AssetTypes.PROTECTED].assets,
                 _total[AssetTypes.PROTECTED]
             );
         }
@@ -111,7 +111,8 @@ library LiquidationWithdrawLib {
                 _liquidator,
                 _withdrawAssetsFromProtected,
                 _totalProtectedAssets,
-                IShareToken(_collateralProtectedShareToken)
+                IShareToken(_collateralProtectedShareToken),
+                ISilo.AssetType.Protected
             );
         }
 
@@ -121,7 +122,8 @@ library LiquidationWithdrawLib {
                 _liquidator,
                 _withdrawAssetsFromCollateral,
                 _totalCollateralAssets,
-                IShareToken(_collateralShareToken)
+                IShareToken(_collateralShareToken),
+                ISilo.AssetType.Collateral
             );
         }
     }
@@ -133,7 +135,8 @@ library LiquidationWithdrawLib {
         address _liquidator,
         uint256 _amountToLiquidate,
         uint256 _totalAssets,
-        IShareToken _shareToken
+        IShareToken _shareToken,
+        ISilo.AssetType _assetType
     ) internal {
         // we already accrued interest, so we can work directly on assets
         uint256 shares = SiloMathLib.convertToShares(
@@ -141,7 +144,7 @@ library LiquidationWithdrawLib {
             _totalAssets,
             _shareToken.totalSupply(),
             Rounding.LIQUIDATE_TO_SHARES,
-            ISilo.AssetType.Collateral
+            _assetType
         );
 
         _shareToken.forwardTransfer(_borrower, _liquidator, shares);

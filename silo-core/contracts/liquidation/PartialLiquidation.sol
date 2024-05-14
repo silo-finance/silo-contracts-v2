@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.21;
+pragma solidity 0.8.24;
 
 import {ISilo, ILiquidationProcess} from "../interfaces/ISilo.sol";
 import {IPartialLiquidation} from "../interfaces/IPartialLiquidation.sol";
@@ -9,6 +9,7 @@ import {IHookReceiver} from "../utils/hook-receivers/interfaces/IHookReceiver.so
 
 import {SiloLendingLib} from "../lib/SiloLendingLib.sol";
 import {Hook} from "../lib/Hook.sol";
+import {CallBeforeQuoteLib} from "../lib/CallBeforeQuoteLib.sol";
 
 import {PartialLiquidationExecLib} from "./lib/PartialLiquidationExecLib.sol";
 
@@ -16,6 +17,7 @@ import {PartialLiquidationExecLib} from "./lib/PartialLiquidationExecLib.sol";
 /// @title PartialLiquidation module for executing liquidations
 contract PartialLiquidation is IPartialLiquidation {
     using Hook for uint24;
+    using CallBeforeQuoteLib for ISiloConfig.ConfigData;
 
     mapping(address silo => HookSetup) private _hooksSetup;
 
@@ -73,6 +75,8 @@ contract PartialLiquidation is IPartialLiquidation {
             );
 
             if (repayDebtAssets == 0) revert NoDebtToCover();
+            if (repayDebtAssets > _debtToCover) revert DebtToCoverTooSmall();
+
             // this two value were split from total collateral to withdraw, so we will not overflow
             unchecked { withdrawCollateral = withdrawAssetsFromCollateral + withdrawAssetsFromProtected; }
 
@@ -130,7 +134,7 @@ contract PartialLiquidation is IPartialLiquidation {
 
         ISiloConfig.DebtInfo memory debtInfo;
 
-        (collateralConfig, debtConfig, debtInfo) = siloConfigCached.getConfigs(
+        (collateralConfig, debtConfig, debtInfo) = siloConfigCached.accrueInterestAndGetConfigs(
             _siloWithDebt,
             _borrower,
             Hook.LIQUIDATION
@@ -148,18 +152,10 @@ contract PartialLiquidation is IPartialLiquidation {
         if (_collateralAsset != collateralConfig.token) revert UnexpectedCollateralToken();
         if (_debtAsset != debtConfig.token) revert UnexpectedDebtToken();
 
-        ISilo(debtConfig.silo).accrueInterest();
-
         if (!debtInfo.sameAsset) {
             ISilo(debtConfig.otherSilo).accrueInterest();
-
-            if (collateralConfig.callBeforeQuote) {
-                ISiloOracle(collateralConfig.solvencyOracle).beforeQuote(collateralConfig.token);
-            }
-
-            if (debtConfig.callBeforeQuote) {
-                ISiloOracle(debtConfig.solvencyOracle).beforeQuote(debtConfig.token);
-            }
+            collateralConfig.callSolvencyOracleBeforeQuote();
+            debtConfig.callSolvencyOracleBeforeQuote();
         }
     }
 
