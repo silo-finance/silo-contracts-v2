@@ -3,7 +3,6 @@ pragma solidity ^0.8.0;
 
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
-import {SiloMathLib} from "silo-core/contracts/lib/SiloMathLib.sol";
 
 contract SiloLendingLibBorrowTestData {
     struct Input {
@@ -101,7 +100,7 @@ contract SiloLendingLibBorrowTestData {
         _init(data[i], "#6 input can be assets or shares");
         data[i].input.assets = 2;
         data[i].input.shares = 444444;
-        data[i].output.reverts = SiloMathLib.InputCanBeAssetsOrShares.selector;
+        data[i].output.reverts = ISilo.InputCanBeAssetsOrShares.selector;
 
         i++;
         _init(data[i], "#7 1st borrow: 100");
