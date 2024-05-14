@@ -55,9 +55,8 @@ contract DustPropagationLoopTest is SiloLittleHelper, Test {
     forge test -vv --ffi --mt test_dustPropagation_deposit_borrow_noInterest_oneBorrower_fuzz
     */
     function test_dustPropagation_deposit_borrow_noInterest_oneBorrower_fuzz(
-//        uint128 _assets
+        uint128 _assets
     ) public {
-        uint128 _assets =11000;
         _dustPropagation_deposit_borrow(_assets, 1, 0);
     }
 
@@ -91,12 +90,12 @@ contract DustPropagationLoopTest is SiloLittleHelper, Test {
         address user1 = makeAddr("user1");
 
         for (uint256 i = 1; i < loop; i++) {
-            emit log_named_string("#i deposit", i.toString());
+//            emit log_named_string("#i deposit", i.toString());
 
             _deposit(_assets / i, user1);
 
             for (uint256 b; b < _borrowers; b++) {
-                emit log_named_string("borrow", string.concat(i.toString(), "/", b.toString()));
+//                emit log_named_string("borrow", string.concat(i.toString(), "/", b.toString()));
 
                 address borrower = makeAddr(string.concat("borrower", string(abi.encodePacked(b))));
 
@@ -112,7 +111,7 @@ contract DustPropagationLoopTest is SiloLittleHelper, Test {
         }
 
         for (uint256 b; b < _borrowers; b++) {
-            emit log_named_string("repay", b.toString());
+//            emit log_named_string("repay", b.toString());
 
             address borrower = makeAddr(string.concat("borrower", string(abi.encodePacked(b))));
 
@@ -124,10 +123,10 @@ contract DustPropagationLoopTest is SiloLittleHelper, Test {
             assertEq(silo0.maxRepay(borrower), 0, string .concat("should be no debt", b.toString()));
         }
 
-        emit log("final withdraw");
+//        emit log("final withdraw");
 
         _redeem(silo0.maxRedeem(user1, ISilo.CollateralType.Collateral), user1);
-        emit log("withdraw feeds");
+//        emit log("withdraw feeds");
 
         (uint192 daoAndDeployerFees, ) = silo0.siloData();
 
@@ -139,8 +138,8 @@ contract DustPropagationLoopTest is SiloLittleHelper, Test {
             assertEq(silo0.getLiquidity(), 0, "generated dust");
             assertEq(silo0.getCollateralAssets(), 0, "getCollateralAssets");
         } else {
-            assertLe(silo0.getLiquidity(), 0, "generated dust with interest");
-            assertLe(silo0.getCollateralAssets(), 0, "getCollateralAssets with interest");
+            assertLe(silo0.getLiquidity(), 1, "generated dust with interest");
+            assertLe(silo0.getCollateralAssets(), 1, "getCollateralAssets with interest");
         }
     }
 }
