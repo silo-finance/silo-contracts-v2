@@ -129,7 +129,11 @@ contract DustPropagationLoopTest is SiloLittleHelper, Test {
         _redeem(silo0.maxRedeem(user1, ISilo.CollateralType.Collateral), user1);
         emit log("withdraw feeds");
 
-        silo0.withdrawFees(); // NoLiquidity ???
+        (uint192 daoAndDeployerFees, ) = silo0.siloData();
+
+        if (daoAndDeployerFees != 0) {
+            silo0.withdrawFees();
+        }
 
         if (_moveForwardSec == 0) {
             assertEq(silo0.getLiquidity(), 0, "generated dust");
