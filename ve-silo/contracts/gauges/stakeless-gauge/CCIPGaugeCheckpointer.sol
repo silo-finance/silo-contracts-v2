@@ -12,7 +12,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-pragma solidity 0.8.21;
+pragma solidity 0.8.22;
 
 import {Client} from "chainlink-ccip/v0.8/ccip/libraries/Client.sol";
 

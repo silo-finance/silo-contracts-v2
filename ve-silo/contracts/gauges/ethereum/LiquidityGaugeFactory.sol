@@ -12,7 +12,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-pragma solidity 0.8.21;
+pragma solidity 0.8.22;
 
 import {ISiloLiquidityGauge} from "../interfaces/ISiloLiquidityGauge.sol";
 import {FeesManager} from "../../silo-tokens-minter/FeesManager.sol";
