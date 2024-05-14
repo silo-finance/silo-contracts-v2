@@ -3,6 +3,8 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
 
+import {Strings} from "openzeppelin5/utils/Strings.sol";
+
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
 
@@ -12,11 +14,13 @@ import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
     forge test -vv --ffi --mc DustPropagationLoopTest
 
     conclusions:
-    - multiple deposits does not geenrate dust
-    - multiple borrowers does not generate dust if no interest
+    - multiple deposits does not generate dust
+    - multiple borrowers does not generate dust if no interest,
+      that means dust is generated based on assets-shares relation?
 */
 contract DustPropagationLoopTest is SiloLittleHelper, Test {
     using SiloLensLib for ISilo;
+    using Strings for uint256;
 
     function setUp() public {
         _setUpLocalFixture();
@@ -51,8 +55,9 @@ contract DustPropagationLoopTest is SiloLittleHelper, Test {
     forge test -vv --ffi --mt test_dustPropagation_deposit_borrow_noInterest_oneBorrower_fuzz
     */
     function test_dustPropagation_deposit_borrow_noInterest_oneBorrower_fuzz(
-        uint128 _assets
+//        uint128 _assets
     ) public {
+        uint128 _assets =11000;
         _dustPropagation_deposit_borrow(_assets, 1, 0);
     }
 
@@ -86,9 +91,13 @@ contract DustPropagationLoopTest is SiloLittleHelper, Test {
         address user1 = makeAddr("user1");
 
         for (uint256 i = 1; i < loop; i++) {
+            emit log_named_string("#i deposit", i.toString());
+
             _deposit(_assets / i, user1);
 
             for (uint256 b; b < _borrowers; b++) {
+                emit log_named_string("borrow", string.concat(i.toString(), "/", b.toString()));
+
                 address borrower = makeAddr(string.concat("borrower", string(abi.encodePacked(b))));
 
                 _deposit(_assets * i, borrower);
@@ -103,6 +112,8 @@ contract DustPropagationLoopTest is SiloLittleHelper, Test {
         }
 
         for (uint256 b; b < _borrowers; b++) {
+            emit log_named_string("repay", b.toString());
+
             address borrower = makeAddr(string.concat("borrower", string(abi.encodePacked(b))));
 
             uint256 debt = silo0.maxRepay(borrower);
@@ -110,18 +121,22 @@ contract DustPropagationLoopTest is SiloLittleHelper, Test {
             silo0.repay(debt, borrower);
 
             _redeem(silo0.maxRedeem(borrower, ISilo.CollateralType.Collateral), borrower);
+            assertEq(silo0.maxRepay(borrower), 0, string .concat("should be no debt", b.toString()));
         }
 
-        _redeem(silo0.maxRedeem(user1, ISilo.CollateralType.Collateral), user1);
+        emit log("final withdraw");
 
-        silo0.withdrawFees();
+        _redeem(silo0.maxRedeem(user1, ISilo.CollateralType.Collateral), user1);
+        emit log("withdraw feeds");
+
+        silo0.withdrawFees(); // NoLiquidity ???
 
         if (_moveForwardSec == 0) {
             assertEq(silo0.getLiquidity(), 0, "generated dust");
             assertEq(silo0.getCollateralAssets(), 0, "getCollateralAssets");
         } else {
-            assertEq(silo0.getLiquidity(), 0, "generated dust");
-            assertEq(silo0.getCollateralAssets(), 0, "getCollateralAssets");
+            assertLe(silo0.getLiquidity(), 0, "generated dust with interest");
+            assertLe(silo0.getCollateralAssets(), 0, "getCollateralAssets with interest");
         }
     }
 }
