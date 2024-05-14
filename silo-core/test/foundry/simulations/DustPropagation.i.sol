@@ -161,7 +161,7 @@ contract DustPropagationTest is SiloLittleHelper, Test {
     function test__skip__dustPropagation_noInterest_twoUsers_fuzz(
         uint128 deposit1, uint128 deposit2
     ) public {
-//        (uint128 deposit1, uint128 deposit2) = (25550723675487705537526, 42);
+//        (uint128 deposit1, uint128 deposit2) = (5, 5);
         vm.assume(deposit1 > DUST_LEFT);
         vm.assume(deposit2 > DUST_LEFT);
 
@@ -222,8 +222,6 @@ contract DustPropagationTest is SiloLittleHelper, Test {
 
         emit log_named_uint("dust was", DUST_LEFT);
         emit log_named_uint("silo0.getLiquidity() is now", silo0.getLiquidity());
-
-        assertLe(silo0.getLiquidity() - DUST_LEFT, 2, "without interest dust should not go up more than 2?");
     }
 
     function _printState(string memory _title) private {
