@@ -54,7 +54,7 @@ contract SiloLendingLibBorrowTestData {
     }
 
     function getData() external view returns (SLLBData[] memory data) {
-        data = new SLLBData[](11);
+        data = new SLLBData[](12);
         uint256 i;
 
         _init(data[i], "#0 all zeros");
@@ -95,6 +95,12 @@ contract SiloLendingLibBorrowTestData {
         data[i].mocks.debtSharesTotalSupply = 100;
         data[i].output.borrowedAssets = 4;
         data[i].output.borrowedShare = 400;
+
+        i++;
+        _init(data[i], "#6 input can be assets or shares");
+        data[i].input.assets = 2;
+        data[i].input.shares = 444444;
+        data[i].output.reverts = ISilo.InputCanBeAssetsOrShares.selector;
 
         i++;
         _init(data[i], "#7 1st borrow: 100");
