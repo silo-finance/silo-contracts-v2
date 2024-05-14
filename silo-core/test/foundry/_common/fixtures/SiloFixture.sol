@@ -129,6 +129,7 @@ contract SiloFixture is StdCheats, CommonBase {
             IPartialLiquidation liquidationModule
         )
     {
+        // TODO: remove dependency on VeSiloContracts
         AddrLib.setAddress(VeSiloContracts.FEE_DISTRIBUTOR, makeAddr("FeeDistributor"));
 
         MainnetDeploy mainnetDeploy = new MainnetDeploy();
