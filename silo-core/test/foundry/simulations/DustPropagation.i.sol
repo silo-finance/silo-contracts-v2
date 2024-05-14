@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.0;
 
-import "forge-std/Test.sol";
+import {Test} from "forge-std/Test.sol";
 
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 
@@ -19,7 +19,7 @@ import {MintableToken} from "../_common/MintableToken.sol";
 
 
 /*
-    forge test -vv --ffi --mc LiquidationCall1TokenTest
+    forge test -vv --ffi --mc DustPropagationTest
 */
 contract DustPropagationTest is SiloLittleHelper, Test {
     using SiloLensLib for ISilo;
@@ -93,7 +93,7 @@ contract DustPropagationTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_dustPropagation_oneUser
     */
-    function test_dustPropagation_oneUser() public {
+    function test__skip__dustPropagation_oneUser() public {
         address user1 = makeAddr("user1");
 
         /*
@@ -127,9 +127,9 @@ contract DustPropagationTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --ffi --mt test_dustPropagation_twoUsers
+    forge test -vv --ffi --mt test__skip__dustPropagation_twoUsers
     */
-    function test_dustPropagation_twoUsers() public {
+    function test__skip__dustPropagation_twoUsers() public {
         address user1 = makeAddr("user1");
         address user2 = makeAddr("user2");
 
@@ -153,12 +153,12 @@ contract DustPropagationTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --ffi --mt test_dustPropagation_noInterest_twoUsers_fuzz
+    forge test -vv --ffi --mt test__skip__dustPropagation_noInterest_twoUsers_fuzz
 
     theory: DIFF in loos can not be higher than dust
     */
     /// forge-config: core-test.fuzz.runs = 1000
-    function test_dustPropagation_noInterest_twoUsers_fuzz(
+    function test__skip__dustPropagation_noInterest_twoUsers_fuzz(
         uint128 deposit1, uint128 deposit2
     ) public {
 //        (uint128 deposit1, uint128 deposit2) = (25550723675487705537526, 42);

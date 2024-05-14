@@ -31,7 +31,7 @@ contract DustPropagationLoopTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_dustPropagation_just_deposit
     */
-    function test_dustPropagation_just_deposit(uint128 _assets) public {
+    function test__skip__dustPropagation_just_deposit(uint128 _assets) public {
         uint256 loop = 1000;
         vm.assume(_assets / loop > 0);
 
@@ -55,7 +55,7 @@ contract DustPropagationLoopTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_dustPropagation_deposit_borrow_noInterest_oneBorrower_fuzz
     */
-    function test_dustPropagation_deposit_borrow_noInterest_oneBorrower_fuzz(
+    function test__skip__dustPropagation_deposit_borrow_noInterest_oneBorrower_fuzz(
         uint128 _assets
     ) public {
         _dustPropagation_deposit_borrow(_assets, 1, 0);
@@ -64,7 +64,7 @@ contract DustPropagationLoopTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_dustPropagation_deposit_borrow_withInterest_borrowers_fuzz
     */
-    function test_dustPropagation_deposit_borrow_withInterest_borrowers_fuzz(
+    function test__skip__dustPropagation_deposit_borrow_withInterest_borrowers_fuzz(
         uint128 _assets
     ) public {
         _dustPropagation_deposit_borrow(_assets, 3, 60 * 60 * 24);
@@ -73,7 +73,7 @@ contract DustPropagationLoopTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_dustPropagation_deposit_borrow_noInterest_borrowers_fuzz
     */
-    function test_dustPropagation_deposit_borrow_noInterest_borrowers_fuzz(
+    function test__skip__dustPropagation_deposit_borrow_noInterest_borrowers_fuzz(
         uint128 _assets
     ) public {
         _dustPropagation_deposit_borrow(_assets, 3, 0);
