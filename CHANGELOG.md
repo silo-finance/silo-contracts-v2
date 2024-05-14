@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [0.6.1] - 2024-05-14
+### Fixed
+- apply fixes for certora report
+
 ## [0.6.0] - 2024-05-06
 ### Added
 - deposit to any silo without restrictions
