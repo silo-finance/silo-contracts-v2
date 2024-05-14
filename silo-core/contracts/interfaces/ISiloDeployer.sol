@@ -6,16 +6,16 @@ import {ISiloConfig} from "./ISiloConfig.sol";
 
 /// @notice Silo Deployer
 interface ISiloDeployer {
-    struct HookReceivers {
-        address protectedHookReceiver;
-        address collateralHookReceiver;
-        address debtHookReceiver;
-    }
-
     /// @dev Details of the oracle creation transaction
     struct OracleCreationTxData {
         address factory; // oracle factory (chainlinkV3, uniswapV3, etc)
         bytes txInput; // fn input `abi.encodeCall(fn, params...)`
+    }
+
+    /// @dev Hook receiver to be cloned and initialized during the Silo creation
+    struct ClonableHookReceiver {
+        address implementation;
+        bytes initializationData;
     }
 
     /// @dev Oracles to be create during the Silo creation.
@@ -40,14 +40,14 @@ interface ISiloDeployer {
     /// @param _oracles Oracles to be create during the silo creation
     /// @param _irmConfigData0 IRM config data for a silo `_TOKEN0`
     /// @param _irmConfigData1 IRM config data for a silo `_TOKEN1`
+    /// @param _clonableHookReceiver Hook receiver implementation to clone (ignored if implementation has address(0))
     /// @param _siloInitData Silo configuration for the silo creation
-    /// @param _hookReceiverImplementation Hook receiver implementation to clone (ignored if address(0))
     function deploy(
         Oracles calldata _oracles,
         IInterestRateModelV2.Config calldata _irmConfigData0,
         IInterestRateModelV2.Config calldata _irmConfigData1,
-        ISiloConfig.InitData memory _siloInitData,
-        address _hookReceiverImplementation
+        ClonableHookReceiver calldata _clonableHookReceiver,
+        ISiloConfig.InitData memory _siloInitData
     )
         external
         returns (ISiloConfig siloConfig);

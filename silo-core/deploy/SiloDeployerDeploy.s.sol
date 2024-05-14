@@ -9,8 +9,6 @@ import {IInterestRateModelV2ConfigFactory} from "silo-core/contracts/interfaces/
 import {ISiloFactory} from "silo-core/contracts/interfaces/ISiloFactory.sol";
 import {ISiloDeployer} from "silo-core/contracts/interfaces/ISiloDeployer.sol";
 
-import {console} from "forge-std/console.sol";
-
 /**
     FOUNDRY_PROFILE=core \
         forge script silo-core/deploy/SiloDeployerDeploy.s.sol \
@@ -21,7 +19,6 @@ contract SiloDeployerDeploy is CommonDeploy {
         string memory chainAlias = getChainAlias();
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
 
-        address timelock = VeSiloDeployments.get(VeSiloContracts.TIMELOCK_CONTROLLER, chainAlias);
         address siloFactory = SiloCoreDeployments.get(SiloCoreContracts.SILO_FACTORY, chainAlias);
 
         address irmConfigFactory = SiloCoreDeployments.get(
@@ -33,8 +30,7 @@ contract SiloDeployerDeploy is CommonDeploy {
 
         siloDeployer = ISiloDeployer(address(new SiloDeployer(
             IInterestRateModelV2ConfigFactory(irmConfigFactory),
-            ISiloFactory(siloFactory),
-            timelock
+            ISiloFactory(siloFactory)
         )));
 
         vm.stopBroadcast();

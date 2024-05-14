@@ -8,7 +8,7 @@ import {Deployments} from "silo-foundry-utils/lib/Deployments.sol";
 import {VeSiloContracts} from "ve-silo/common/VeSiloContracts.sol";
 
 import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
-import {SiloDeploy} from "silo-core/deploy/silo/SiloDeploy.s.sol";
+import {SiloDeployWithGaugeHookReceiver} from "silo-core/deploy/silo/SiloDeployWithGaugeHookReceiver.s.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISiloDeployer} from "silo-core/contracts/interfaces/ISiloDeployer.sol";
 import {IHookReceiver} from "silo-core/contracts/utils/hook-receivers/interfaces/IHookReceiver.sol";
@@ -33,7 +33,7 @@ contract SiloDeployTest is IntegrationTest {
 
    ISiloConfig internal _siloConfig;
    ISiloDeployer internal _siloDeployer;
-   SiloDeploy internal _siloDeploy;
+   SiloDeployWithGaugeHookReceiver internal _siloDeploy;
 
    UniswapV3OracleFactoryMock internal _uniV3OracleFactoryMock;
    ChainlinkV3OracleFactoryMock internal _chainlinkV3OracleFactoryMock;
@@ -57,7 +57,7 @@ contract SiloDeployTest is IntegrationTest {
        MainnetDeploy mainnetDeploy = new MainnetDeploy();
        mainnetDeploy.run();
 
-       _siloDeploy = new SiloDeploy();
+       _siloDeploy = new SiloDeployWithGaugeHookReceiver();
 
        // Mock addresses for oracles configurations
        AddrLib.setAddress("CHAINLINK_PRIMARY_AGGREGATOR", makeAddr("Chainlink primary aggregator"));

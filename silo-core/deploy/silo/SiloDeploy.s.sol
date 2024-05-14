@@ -95,8 +95,8 @@ contract SiloDeploy is CommonDeploy {
             oracles,
             irmConfigData0,
             irmConfigData1,
-            siloInitData,
-            hookReceiverImplementation
+            _getClonableHookReceiverConfig(hookReceiverImplementation),
+            siloInitData
         );
 
         vm.stopBroadcast();
@@ -269,6 +269,11 @@ contract SiloDeploy is CommonDeploy {
     function beforeCreateSilo(
         ISiloConfig.InitData memory
     ) internal virtual {
-        
+    }
+
+    function _getClonableHookReceiverConfig(address _implementation)
+        internal
+        virtual
+        returns (ISiloDeployer.ClonableHookReceiver memory hookReceiver) {
     }
 }

@@ -8,6 +8,7 @@ import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
+import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
 
 import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
 import {LeverageBorrower, ILeverageBorrower} from "../../_common/LeverageBorrower.sol";
@@ -25,7 +26,7 @@ contract LeverageWithLiquidationTest is SiloLittleHelper, Test, ILeverageBorrowe
     bytes32 public constant LEVERAGE_CALLBACK = keccak256("ILeverageBorrower.onLeverage");
 
     function setUp() public {
-        ISiloConfig siloConfig = _setUpLocalFixture("ETH-USDC_UniswapV3_Silo");
+        ISiloConfig siloConfig = _setUpLocalFixture(SiloConfigsNames.ETH_USDC_UNI_V3_SILO_NO_HOOK);
         assertTrue(siloConfig.getConfig(address(silo0)).maxLtv != 0, "we need borrow to be allowed");
     }
 

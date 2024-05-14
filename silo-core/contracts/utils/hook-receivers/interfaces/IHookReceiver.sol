@@ -14,9 +14,9 @@ interface IHookReceiver {
     error RevertRequestFromHook();
 
     /// @notice Initialize a hook receiver
-    /// @param _timelock Timelock controller (DAO)
     /// @param _siloConfig Silo configuration with all the details about the silo
-    function initialize(address _timelock, ISiloConfig _siloConfig) external;
+    /// @param _data Data to initialize the hook receiver (if needed)
+    function initialize(ISiloConfig _siloConfig, bytes calldata _data) external;
 
     /// @notice state of Silo before action, can be also without interest, if you need them, call silo.accrueInterest()
     function beforeAction(address _silo, uint256 _action, bytes calldata _input) external;

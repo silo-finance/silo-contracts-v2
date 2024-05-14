@@ -10,14 +10,13 @@ import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 import {OracleConfig} from "silo-oracles/deploy/OraclesDeployments.sol";
 
 import {MainnetDeploy} from "silo-core/deploy/MainnetDeploy.s.sol";
-import {SiloDeploy} from "silo-core/deploy/silo/SiloDeploy.s.sol";
+import {SiloDeployWithGaugeHookReceiver} from "silo-core/deploy/silo/SiloDeployWithGaugeHookReceiver.s.sol";
 import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
 
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquidation.sol";
 
-// TODO remove this once timelock init will be fixed
 import {VeSiloContracts} from "ve-silo/common/VeSiloContracts.sol";
 
 import {TokenMock} from "../../_mocks/TokenMock.sol";
@@ -33,7 +32,7 @@ struct SiloConfigOverride {
     string configName;
 }
 
-contract SiloDeploy_Local is SiloDeploy {
+contract SiloDeploy_Local is SiloDeployWithGaugeHookReceiver {
     bytes32 public constant NO_HOOK_RECEIVER_KEY = keccak256(bytes("NO_HOOK_RECEIVER"));
 
     SiloConfigOverride internal siloConfigOverride;
@@ -84,7 +83,7 @@ contract SiloFixture is StdCheats, CommonBase {
             IPartialLiquidation liquidationModule
         )
     {
-        return _deploy(new SiloDeploy(), SiloConfigsNames.ETH_USDC_UNI_V3_SILO);
+        return _deploy(new SiloDeployWithGaugeHookReceiver(), SiloConfigsNames.ETH_USDC_UNI_V3_SILO);
     }
 
     function deploy_local(string memory _configName)
@@ -119,7 +118,7 @@ contract SiloFixture is StdCheats, CommonBase {
         );
     }
 
-    function _deploy(SiloDeploy _siloDeploy, string memory _configName)
+    function _deploy(SiloDeployWithGaugeHookReceiver _siloDeploy, string memory _configName)
         internal
         returns (
             ISiloConfig siloConfig,
@@ -130,8 +129,6 @@ contract SiloFixture is StdCheats, CommonBase {
             IPartialLiquidation liquidationModule
         )
     {
-        // TODO remove this once we fix issue with timelock being setup on init
-        AddrLib.setAddress(VeSiloContracts.TIMELOCK_CONTROLLER, makeAddr("Timelock"));
         AddrLib.setAddress(VeSiloContracts.FEE_DISTRIBUTOR, makeAddr("FeeDistributor"));
 
         MainnetDeploy mainnetDeploy = new MainnetDeploy();
