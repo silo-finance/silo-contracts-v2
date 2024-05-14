@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Unlicense
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
 contract MaxBorrowValueToAssetsAndSharesTestData {
     uint256 constant SHARE_TOKEN_OFFSET = 10 ** 0;

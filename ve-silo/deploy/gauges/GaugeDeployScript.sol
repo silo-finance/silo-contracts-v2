@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
 import {Script} from "forge-std/Script.sol";
 import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";

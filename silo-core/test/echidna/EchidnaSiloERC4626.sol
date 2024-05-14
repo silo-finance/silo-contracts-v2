@@ -1,4 +1,4 @@
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
 import {Deployers} from "./utils/Deployers.sol";
 import {ISilo, Silo} from "silo-core/contracts/Silo.sol";
@@ -9,7 +9,7 @@ import {TestERC20Token} from "properties/ERC4626/util/TestERC20Token.sol";
 
 /*
 ./silo-core/scripts/echidnaBefore.sh
-SOLC_VERSION=0.8.21 echidna silo-core/test/echidna/EchidnaSiloERC4626.sol --contract EchidnaSiloERC4626 --config silo-core/test/echidna/erc4626.yaml --workers 10
+SOLC_VERSION=0.8.24 echidna silo-core/test/echidna/EchidnaSiloERC4626.sol --contract EchidnaSiloERC4626 --config silo-core/test/echidna/erc4626.yaml --workers 10
 */
 contract EchidnaSiloERC4626 is CryticERC4626PropertyTests, Deployers {
     ISiloConfig siloConfig;

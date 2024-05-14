@@ -1,4 +1,4 @@
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
 import {Deployers} from "./utils/Deployers.sol";
 import {Actor} from "./utils/Actor.sol";
@@ -20,7 +20,7 @@ import {Strings} from "openzeppelin5/utils/Strings.sol";
 /*
 Command to run:
 ./silo-core/scripts/echidnaBefore.sh
-SOLC_VERSION=0.8.21 echidna silo-core/test/echidna/EchidnaE2E.sol \
+SOLC_VERSION=0.8.24 echidna silo-core/test/echidna/EchidnaE2E.sol \
     --contract EchidnaE2E \
     --config silo-core/test/echidna/e2e-internal.yaml \
     --workers 10
