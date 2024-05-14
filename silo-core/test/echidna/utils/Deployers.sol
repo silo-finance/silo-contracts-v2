@@ -241,14 +241,6 @@ contract Deployers is VyperDeployer, Data {
     }
 
     function core_deploySiloDeployer() internal {
-        siloDeployer = ISiloDeployer(
-            address(
-                new SiloDeployer(
-                    interestRateModelV2ConfigFactory,
-                    siloFactory,
-                    address(timelockController)
-                )
-            )
-        );
+        siloDeployer = ISiloDeployer(address(new SiloDeployer(interestRateModelV2ConfigFactory, siloFactory)));
     }
 }

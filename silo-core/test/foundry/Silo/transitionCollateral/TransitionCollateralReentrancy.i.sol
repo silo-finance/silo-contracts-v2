@@ -48,7 +48,7 @@ contract TransitionCollateralReentrancyTest is SiloLittleHelper, Test, IHookRece
         hooksAfter = _silo == address(silo0) ? uint24(Hook.COLLATERAL_TOKEN | Hook.SHARE_TOKEN_TRANSFER) : 0;
     }
 
-    function initialize(address, ISiloConfig) external pure {
+    function initialize(ISiloConfig, bytes calldata) external pure {
         // nothing to do here
     }
 

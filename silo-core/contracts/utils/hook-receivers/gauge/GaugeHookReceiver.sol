@@ -31,14 +31,15 @@ contract GaugeHookReceiver is IGaugeHookReceiver, SiloHookReceiver, Ownable2Step
         _transferOwnership(address(0));
     }
 
-    /// @notice Initialize a hook receiver
-    /// @param _owner Owner of the hook receiver (DAO)
-    function initialize(address _owner, ISiloConfig _siloConfig) external virtual initializer {
-        if (_owner == address(0)) revert OwnerIsZeroAddress();
+    /// @inheritdoc IHookReceiver
+    function initialize(ISiloConfig _siloConfig, bytes calldata _data) external virtual initializer {
+        (address owner) = abi.decode(_data, (address));
+
+        if (owner == address(0)) revert OwnerIsZeroAddress();
         if (address(_siloConfig) == address(0)) revert EmptySiloConfig();
 
         siloConfig = _siloConfig;
-        _transferOwnership(_owner);
+        _transferOwnership(owner);
     }
 
     /// @inheritdoc IGaugeHookReceiver

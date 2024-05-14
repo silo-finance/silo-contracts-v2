@@ -17,17 +17,14 @@ contract SiloDeployer is ISiloDeployer {
     // solhint-disable var-name-mixedcase
     IInterestRateModelV2ConfigFactory public immutable IRM_CONFIG_FACTORY;
     ISiloFactory public immutable SILO_FACTORY;
-    address public immutable TIMELOCK_CONTROLLER;
     // solhint-enable var-name-mixedcase
 
     constructor(
         IInterestRateModelV2ConfigFactory _irmConfigFactory,
-        ISiloFactory _siloFactory,
-        address _timelockController
+        ISiloFactory _siloFactory
     ) {
         IRM_CONFIG_FACTORY = _irmConfigFactory;
         SILO_FACTORY = _siloFactory;
-        TIMELOCK_CONTROLLER = _timelockController;
     }
 
     /// @inheritdoc ISiloDeployer
@@ -35,8 +32,8 @@ contract SiloDeployer is ISiloDeployer {
         Oracles calldata _oracles,
         IInterestRateModelV2.Config calldata _irmConfigData0,
         IInterestRateModelV2.Config calldata _irmConfigData1,
-        ISiloConfig.InitData memory _siloInitData,
-        address _hookReceiverImplementation
+        ClonableHookReceiver calldata _clonableHookReceiver,
+        ISiloConfig.InitData memory _siloInitData
     )
         external
         returns (ISiloConfig siloConfig)
@@ -46,11 +43,11 @@ contract SiloDeployer is ISiloDeployer {
         // create oracles and update `_siloInitData`
         _createOracles(_siloInitData, _oracles);
         // clone hook receiver if needed
-        _cloneHookReceiver(_siloInitData, _hookReceiverImplementation);
+        _cloneHookReceiver(_siloInitData, _clonableHookReceiver.implementation);
         // create Silo
         siloConfig = SILO_FACTORY.createSilo(_siloInitData);
         // initialize hook receiver only if it was cloned
-        _initializeHookReceiver(_siloInitData, siloConfig, _hookReceiverImplementation);
+        _initializeHookReceiver(_siloInitData, siloConfig, _clonableHookReceiver);
 
         emit SiloCreated(siloConfig);
     }
@@ -127,14 +124,17 @@ contract SiloDeployer is ISiloDeployer {
     /// @param _siloInitData Silo configuration for the silo creation
     /// (where _siloInitData.hookReceiver is the cloned hook receiver)
     /// @param _siloConfig Configuration of the created silo
-    /// @param _hookReceiverImplementation Hook receiver implementation
+    /// @param _clonableHookReceiver Hook receiver implementation and initialization data
     function _initializeHookReceiver(
         ISiloConfig.InitData memory _siloInitData,
         ISiloConfig _siloConfig,
-        address _hookReceiverImplementation
+        ClonableHookReceiver calldata _clonableHookReceiver
     ) internal {
-        if (_hookReceiverImplementation != address(0)) {
-            IHookReceiver(_siloInitData.hookReceiver).initialize(TIMELOCK_CONTROLLER, _siloConfig);
+        if (_clonableHookReceiver.implementation != address(0)) {
+            IHookReceiver(_siloInitData.hookReceiver).initialize(
+                _siloConfig,
+                _clonableHookReceiver.initializationData
+            );
         }
     }
 }

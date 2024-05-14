@@ -66,13 +66,15 @@ contract GaugeHookReceiverTest is SiloLittleHelper, Test, TransferOwnership {
     function testReinitialization() public {
         address hookReceiverImpl = AddrLib.getAddress(SiloCoreContracts.GAUGE_HOOK_RECEIVER);
 
+        bytes memory data = abi.encode(_dao);
+
         // Implementation is not initializable
         vm.expectRevert(Initializable.InvalidInitialization.selector);
-        IHookReceiver(hookReceiverImpl).initialize(address(0), ISiloConfig(address(0)));
+        IHookReceiver(hookReceiverImpl).initialize(ISiloConfig(address(0)), data);
 
         // Gauge hook receiver can't be re-initialized
         vm.expectRevert(Initializable.InvalidInitialization.selector);
-        _hookReceiver.initialize(address(0), ISiloConfig(address(0)));
+        _hookReceiver.initialize(ISiloConfig(address(0)), data);
     }
 
     // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testHookReceiverInitlaization
