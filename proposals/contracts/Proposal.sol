@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.21;
+pragma solidity 0.8.22;
 
 import {IProposal} from "proposals/contracts/interfaces/IProposal.sol";
 import {IProposalEngine} from "proposals/contracts/interfaces/IProposalEngine.sol";
