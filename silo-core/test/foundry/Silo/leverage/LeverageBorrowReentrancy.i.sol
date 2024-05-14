@@ -9,8 +9,10 @@ import {ILeverageBorrower} from "silo-core/contracts/interfaces/ILeverageBorrowe
 
 import {SiloLeverageNonReentrant} from "../../_mocks/SiloLeverageNonReentrant.sol";
 
-// FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc LeverageDepositReentrancy
-contract LeverageDepositReentrancy is Test {
+/**
+FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc LeverageBorrowReentrancy
+ */
+contract LeverageBorrowReentrancy is Test {
     SiloLeverageNonReentrant internal _silo;
     SiloConfig internal _siloConfig;
 
@@ -33,20 +35,19 @@ contract LeverageDepositReentrancy is Test {
     }
 
     /*
-    forge test -vv --ffi --mt test_LeverageReentrancyCall
-    TODO
+    FOUNDRY_PROFILE=core-test forge test -vv --ffi --mt test_LeverageReentrancyCall
     */
-//    function test_LeverageReentrancyCall() public {
-//        bytes memory data;
-//
-//        vm.expectRevert(ISiloConfig.CrossReentrantCall.selector);
-//        // Inputs don't matter. We only need to activate/verify reentrancy protection.
-//        _silo.leverage(
-//            0, // _assets
-//            ILeverageBorrower(address(0)), // _receiver
-//            address(0), // _borrower
-//            false, // sameAsset
-//            data // _data
-//        );
-//    }
+    function test_LeverageReentrancyCall() public {
+        bytes memory data;
+
+        vm.expectRevert(ISiloConfig.CrossReentrantCall.selector);
+        // Inputs don't matter. We only need to activate/verify reentrancy protection.
+        _silo.leverage(
+            0, // _assets
+            ILeverageBorrower(address(0)), // _receiver
+            address(0), // _borrower
+            false, // sameAsset
+            data // _data
+        );
+    }
 }
