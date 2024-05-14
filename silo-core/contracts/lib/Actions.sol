@@ -577,6 +577,9 @@ library Actions {
     /// @param _siloData Storage reference containing silo-related data, including accumulated fees
     /// @param _protectedAssets Protected assets in the silo. We can not withdraw it.
     function withdrawFees(ISilo _silo, ISilo.SiloData storage _siloData, uint256 _protectedAssets) external {
+        uint256 earnedFees = _siloData.daoAndDeployerFees;
+        if (earnedFees == 0) revert ISilo.EarnedZero();
+
         (
             address daoFeeReceiver,
             address deployerFeeReceiver,
@@ -593,10 +596,8 @@ library Actions {
 
         if (availableLiquidity == 0) revert ISilo.NoLiquidity();
 
-        uint256 earnedFees = _siloData.daoAndDeployerFees;
 
         if (earnedFees > availableLiquidity) earnedFees = availableLiquidity;
-        if (earnedFees == 0) revert ISilo.EarnedZero();
 
         // we will never underflow because earnedFees max value is `_siloData.daoAndDeployerFees`
         unchecked { _siloData.daoAndDeployerFees -= uint192(earnedFees); }
