@@ -17,7 +17,7 @@ import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
     - multiple deposits does not generate dust
     - multiple borrowers does not generate dust if no interest
     - looks like dust is generated based on assets-shares relation
-    - the highest dust in this simulation was 1 wei
+    - the highest dust in this simulation was 1 wei for 1000 users and 1 day gap between borrows
 */
 contract DustPropagationLoopTest is SiloLittleHelper, Test {
     using SiloLensLib for ISilo;
@@ -31,7 +31,8 @@ contract DustPropagationLoopTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_dustPropagation_just_deposit
     */
-    function test__skip__dustPropagation_just_deposit(uint128 _assets) public {
+    /// forge-config: core-test.fuzz.runs = 1000
+    function test__skip__dustPropagation_just_deposit_fuzz(uint128 _assets) public {
         uint256 loop = 1000;
         vm.assume(_assets / loop > 0);
 
@@ -55,6 +56,7 @@ contract DustPropagationLoopTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_dustPropagation_deposit_borrow_noInterest_oneBorrower_fuzz
     */
+    /// forge-config: core-test.fuzz.runs = 1000
     function test__skip__dustPropagation_deposit_borrow_noInterest_oneBorrower_fuzz(
         uint128 _assets
     ) public {
@@ -64,6 +66,7 @@ contract DustPropagationLoopTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_dustPropagation_deposit_borrow_withInterest_borrowers_fuzz
     */
+    /// forge-config: core-test.fuzz.runs = 1000
     function test__skip__dustPropagation_deposit_borrow_withInterest_borrowers_fuzz(
         uint128 _assets
     ) public {

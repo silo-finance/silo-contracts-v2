@@ -13,6 +13,8 @@ import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
 
 /*
     forge test -vv --ffi --mc DustPropagationTest
+
+    conclusions: when assets:shares are 1:1 there is no dust
 */
 contract DustPropagationTest is SiloLittleHelper, Test {
     using SiloLensLib for ISilo;
@@ -167,6 +169,8 @@ contract DustPropagationTest is SiloLittleHelper, Test {
 
         emit log_named_uint("dust was", DUST_LEFT);
         emit log_named_uint("silo0.getLiquidity() is now", silo0.getLiquidity());
+
+        assertEq(silo0.getLiquidity(), 0, "no interest, so expecting no dust on deposit-withdraw");
     }
 
     function _withdrawFromSilo(address _user, uint256 _deposited, uint256 _shares) internal {
