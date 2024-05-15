@@ -416,7 +416,6 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
         });
     }
 
-    // TODO make sure, this getters for configs does not increase gas
     function _silo1ConfigData() internal view returns (ConfigData memory config) {
         config = ConfigData({
             daoFee: _DAO_FEE,
