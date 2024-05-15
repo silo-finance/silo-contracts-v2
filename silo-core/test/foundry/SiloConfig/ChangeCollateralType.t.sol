@@ -24,40 +24,40 @@ contract ChangeCollateralTypeTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --ffi --mt test__changeCollateralType_reverts_OnlySilo
+    forge test -vv --ffi --mt test_changeCollateralType_reverts_OnlySilo
     */
-    function test__changeCollateralType_reverts_OnlySilo_1token() public {
-        __changeCollateralType_reverts_OnlySilo(SAME_ASSET);
+    function test_changeCollateralType_reverts_OnlySilo_1token() public {
+        _changeCollateralType_reverts_OnlySilo(SAME_ASSET);
     }
 
-    function test__changeCollateralType_reverts_OnlySilo_2tokens() public {
-        __changeCollateralType_reverts_OnlySilo(TWO_ASSETS);
+    function test_changeCollateralType_reverts_OnlySilo_2tokens() public {
+        _changeCollateralType_reverts_OnlySilo(TWO_ASSETS);
     }
 
-    function __changeCollateralType_reverts_OnlySilo(bool _sameAsset) private {
+    function _changeCollateralType_reverts_OnlySilo(bool _toSameAsset) private {
         (
             ISiloConfig.ConfigData memory collateral,
             ISiloConfig.ConfigData memory debt,
         ) = siloConfig.getConfigs(address(silo0), address(0), 0);
 
-        _changeCollateralType_reverts_OnlySilo_From(collateral.collateralShareToken, _sameAsset);
-        _changeCollateralType_reverts_OnlySilo_From(collateral.protectedShareToken, _sameAsset);
-        _changeCollateralType_reverts_OnlySilo_From(collateral.debtShareToken, _sameAsset);
+        _changeCollateralType_reverts_OnlySilo_From(collateral.collateralShareToken, _toSameAsset);
+        _changeCollateralType_reverts_OnlySilo_From(collateral.protectedShareToken, _toSameAsset);
+        _changeCollateralType_reverts_OnlySilo_From(collateral.debtShareToken, _toSameAsset);
 
-        _changeCollateralType_reverts_OnlySilo_From(debt.collateralShareToken, _sameAsset);
-        _changeCollateralType_reverts_OnlySilo_From(debt.protectedShareToken, _sameAsset);
-        _changeCollateralType_reverts_OnlySilo_From(debt.debtShareToken, _sameAsset);
+        _changeCollateralType_reverts_OnlySilo_From(debt.collateralShareToken, _toSameAsset);
+        _changeCollateralType_reverts_OnlySilo_From(debt.protectedShareToken, _toSameAsset);
+        _changeCollateralType_reverts_OnlySilo_From(debt.debtShareToken, _toSameAsset);
 
-        _changeCollateralType_reverts_OnlySilo_From(address(0), _sameAsset);
+        _changeCollateralType_reverts_OnlySilo_From(address(0), _toSameAsset);
     }
 
-    function _changeCollateralType_reverts_OnlySilo_From(address _from, bool _sameAsset) private {
-        _doDeposit(_sameAsset);
+    function _changeCollateralType_reverts_OnlySilo_From(address _from, bool _toSameAsset) private {
+        _doDeposit(!_toSameAsset);
 
         vm.expectRevert(ISiloConfig.OnlySilo.selector);
         vm.prank(_from);
         siloConfig.accrueInterestAndGetConfigs(
-            address(silo0), borrower, Hook.SWITCH_COLLATERAL | (_sameAsset ? Hook.SAME_ASSET : Hook.TWO_ASSETS)
+            address(silo0), borrower, Hook.SWITCH_COLLATERAL | (_toSameAsset ? Hook.SAME_ASSET : Hook.TWO_ASSETS)
         );
     }
 
@@ -72,21 +72,27 @@ contract ChangeCollateralTypeTest is SiloLittleHelper, Test {
         _changeCollateralType_pass(TWO_ASSETS);
     }
 
-    function _changeCollateralType_pass(bool _sameAsset) private {
-        _doDeposit(_sameAsset);
+    function _changeCollateralType_pass(bool _toSameAsset) private {
+        ISiloConfig.DebtInfo memory debtInfo = _doDeposit(!_toSameAsset);
+
+        assertEq(debtInfo.sameAsset, !_toSameAsset);
 
         vm.prank(address(silo0));
-        (,, ISiloConfig.DebtInfo memory debtInfo) = siloConfig.accrueInterestAndGetConfigs(
-            address(silo0), borrower, Hook.SWITCH_COLLATERAL | (_sameAsset ? Hook.SAME_ASSET : Hook.TWO_ASSETS)
+        (,, debtInfo) = siloConfig.accrueInterestAndGetConfigs(
+            address(silo0), borrower, Hook.SWITCH_COLLATERAL | (_toSameAsset ? Hook.SAME_ASSET : Hook.TWO_ASSETS)
         );
 
-        assertEq(debtInfo.sameAsset, !_sameAsset);
+        assertEq(debtInfo.sameAsset, _toSameAsset);
+
+        vm.prank(address(silo0));
+        siloConfig.crossNonReentrantAfter();
 
         vm.prank(address(silo1));
         (,, debtInfo) = siloConfig.accrueInterestAndGetConfigs(
-            address(silo0), borrower, Hook.SWITCH_COLLATERAL | (!_sameAsset ? Hook.SAME_ASSET : Hook.TWO_ASSETS)
+            address(silo0), borrower, Hook.SWITCH_COLLATERAL | (!_toSameAsset ? Hook.SAME_ASSET : Hook.TWO_ASSETS)
         );
-        assertEq(debtInfo.sameAsset, _sameAsset);
+
+        assertEq(debtInfo.sameAsset, !_toSameAsset);
     }
 
     /*
@@ -100,13 +106,14 @@ contract ChangeCollateralTypeTest is SiloLittleHelper, Test {
         _changeCollateralType_CollateralTypeDidNotChanged(TWO_ASSETS);
     }
 
-    function _changeCollateralType_CollateralTypeDidNotChanged(bool _sameAsset) private {
-        _doDeposit(_sameAsset);
+    function _changeCollateralType_CollateralTypeDidNotChanged(bool _toSameAsset) private {
+        _doDeposit(_toSameAsset);
 
         vm.prank(address(silo0));
         vm.expectRevert(ISiloConfig.CollateralTypeDidNotChanged.selector);
+
         siloConfig.accrueInterestAndGetConfigs(
-            address(silo0), borrower, Hook.SWITCH_COLLATERAL | (_sameAsset ? Hook.SAME_ASSET : Hook.TWO_ASSETS)
+            address(silo0), borrower, Hook.SWITCH_COLLATERAL | (_toSameAsset ? Hook.SAME_ASSET : Hook.TWO_ASSETS)
         );
     }
 
@@ -118,19 +125,22 @@ contract ChangeCollateralTypeTest is SiloLittleHelper, Test {
 
         vm.prank(address(silo0));
         vm.expectRevert(ISiloConfig.NoDebt.selector);
+
         siloConfig.accrueInterestAndGetConfigs(
             address(silo0), borrower, Hook.SWITCH_COLLATERAL | (SAME_ASSET ? Hook.SAME_ASSET : Hook.TWO_ASSETS)
         );
     }
 
-    function _doDeposit(bool _sameAsset) private {
-        _doDeposit(_sameAsset, true);
+    function _doDeposit(bool _sameAsset) private returns (ISiloConfig.DebtInfo memory debtInfo) {
+        return _doDeposit(_sameAsset, true);
     }
 
-    function _doDeposit(bool _sameAsset, bool _andBorrow) private {
+    function _doDeposit(bool _sameAsset, bool _andBorrow) private returns (ISiloConfig.DebtInfo memory debtInfo) {
         _depositCollateral(100, borrower, _sameAsset);
         _depositCollateral(2, borrower, !_sameAsset);
 
         if (_andBorrow) _borrow(1, borrower, _sameAsset);
+
+        (,, debtInfo) = siloConfig.getConfigs(address(silo0), borrower, 0);
     }
 }
