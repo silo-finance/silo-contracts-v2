@@ -17,27 +17,27 @@ contract SiloConfigTest is Test {
     address internal _silo0Default = makeAddr("silo0");
     address internal _silo1Default = makeAddr("silo1");
 
-    ISiloConfig.ConfigData internal _configData0;
-    ISiloConfig.ConfigData internal _configData1;
+    ISiloConfig.ConfigData internal _configDataDefault0;
+    ISiloConfig.ConfigData internal _configDataDefault1;
 
     SiloConfig internal _siloConfig;
 
     function setUp() public {
-        _configData0.silo = _silo0Default;
-        _configData0.token = makeAddr("token0");
-        _configData0.debtShareToken = makeAddr("debtShareToken0");
+        _configDataDefault0.silo = _silo0Default;
+        _configDataDefault0.token = makeAddr("token0");
+        _configDataDefault0.debtShareToken = makeAddr("debtShareToken0");
 
-        _configData1.silo = _silo1Default;
-        _configData1.token = makeAddr("token1");
-        _configData1.debtShareToken = makeAddr("debtShareToken1");
+        _configDataDefault1.silo = _silo1Default;
+        _configDataDefault1.token = makeAddr("token1");
+        _configDataDefault1.debtShareToken = makeAddr("debtShareToken1");
 
-        _siloConfig = siloConfigDeploy(1, _configData0, _configData1);
+        _siloConfig = siloConfigDeploy(1, _configDataDefault0, _configDataDefault1);
 
         vm.mockCall(
             _silo0Default,
             abi.encodeCall(
                 ISilo.accrueInterestForConfig,
-                (_configData0.interestRateModel, _configData0.daoFee, _configData0.deployerFee)
+                (_configDataDefault0.interestRateModel, _configDataDefault0.daoFee, _configDataDefault0.deployerFee)
             ),
             abi.encode(true)
         );
@@ -46,7 +46,7 @@ contract SiloConfigTest is Test {
             _silo1Default,
             abi.encodeCall(
                 ISilo.accrueInterestForConfig,
-                (_configData1.interestRateModel, _configData1.daoFee, _configData1.deployerFee)
+                (_configDataDefault1.interestRateModel, _configDataDefault1.daoFee, _configDataDefault1.deployerFee)
             ),
             abi.encode(true)
         );
@@ -351,7 +351,7 @@ contract SiloConfigTest is Test {
             action
         );
 
-        vm.prank(_silo0 ? _configData0.debtShareToken : _configData1.debtShareToken);
+        vm.prank(_silo0 ? _configDataDefault0.debtShareToken : _configDataDefault1.debtShareToken);
         _siloConfig.onDebtTransfer(from, to);
 
         (
@@ -401,19 +401,19 @@ contract SiloConfigTest is Test {
         vm.prank(_silo1Default);
         _siloConfig.crossNonReentrantAfter();
 
-        vm.prank(_configData0.debtShareToken);
+        vm.prank(_configDataDefault0.debtShareToken);
         vm.expectRevert(ISiloConfig.DebtExistInOtherSilo.selector);
         _siloConfig.onDebtTransfer(from, to);
 
-        vm.prank(_configData0.debtShareToken);
+        vm.prank(_configDataDefault0.debtShareToken);
         // this will pass, because `from` has debt in 0
         _siloConfig.onDebtTransfer(to, from);
 
-        vm.prank(_configData1.debtShareToken);
+        vm.prank(_configDataDefault1.debtShareToken);
         // this will pass, because `to` has debt in 1
         _siloConfig.onDebtTransfer(from, to);
 
-        vm.prank(_configData1.debtShareToken);
+        vm.prank(_configDataDefault1.debtShareToken);
         vm.expectRevert(ISiloConfig.DebtExistInOtherSilo.selector);
         _siloConfig.onDebtTransfer(to, from);
     }
@@ -445,7 +445,7 @@ contract SiloConfigTest is Test {
         vm.prank(_silo0Default);
         _siloConfig.crossNonReentrantAfter();
 
-        vm.prank(_configData0.debtShareToken);
+        vm.prank(_configDataDefault0.debtShareToken);
         _siloConfig.onDebtTransfer(from, to);
 
         (

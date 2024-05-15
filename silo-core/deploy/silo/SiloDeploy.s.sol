@@ -70,8 +70,6 @@ contract SiloDeploy is CommonDeploy {
         siloInitData.interestRateModel0 = interestRateModel;
         siloInitData.interestRateModel1 = interestRateModel;
 
-        siloInitData.liquidationModule = _resolveDeployedContract(SiloCoreContracts.PARTIAL_LIQUIDATION);
-
         InterestRateModelConfigData modelData = new InterestRateModelConfigData();
 
         IInterestRateModelV2.Config memory irmConfigData0 = modelData.getConfigData(config.interestRateModelConfig0);
