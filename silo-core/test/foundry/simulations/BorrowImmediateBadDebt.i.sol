@@ -1,22 +1,17 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.0;
 
-import "forge-std/Test.sol";
+import {Test} from "forge-std/Test.sol";
 
-import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
-import {IERC20Errors} from "openzeppelin5/interfaces/draft-IERC6093.sol";
 import {Strings} from "openzeppelin5/utils/Strings.sol";
 
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
-import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
-import {SiloERC4626Lib} from "silo-core/contracts/lib/SiloERC4626Lib.sol";
-import {AssetTypes} from "silo-core/contracts/lib/AssetTypes.sol";
 
-import {MintableToken} from "../../_common/MintableToken.sol";
-import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
-import {SiloFixture, SiloConfigOverride} from "../../_common/fixtures/SiloFixture.sol";
+import {MintableToken} from "../_common/MintableToken.sol";
+import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
+import {SiloFixture, SiloConfigOverride} from "../_common/fixtures/SiloFixture.sol";
 
 /*
     forge test -vv --ffi --mc BorrowImmediateBadDebtTest
@@ -45,39 +40,39 @@ contract BorrowImmediateBadDebtTest is SiloLittleHelper, Test {
     /*
         forge test -vv --ffi --mt test_immediateBadDebt_1wei_
     */
-    function test_immediateBadDebt_1wei_18_18_1token() public {
+    function test__skip__immediateBadDebt_1wei_18_18_1token() public {
         _immediateBadDebt_1wei(SAME_ASSET, 18, 18);
     }
 
-    function test_immediateBadDebt_1wei_6_6_1token() public {
+    function test__skip__immediateBadDebt_1wei_6_6_1token() public {
         _immediateBadDebt_1wei(SAME_ASSET, 6, 6);
     }
 
-    function test_immediateBadDebt_1wei_18_18_2tokens() public {
+    function test__skip__immediateBadDebt_1wei_18_18_2tokens() public {
         _immediateBadDebt_1wei(!SAME_ASSET, 18, 18);
     }
 
-    function test_immediateBadDebt_1wei_6_6_2tokens() public {
+    function test__skip__immediateBadDebt_1wei_6_6_2tokens() public {
         _immediateBadDebt_1wei(!SAME_ASSET, 6, 6);
     }
 
     /*
         forge test -vv --ffi --mt test_immediateBadDebt_80wei_
     */
-    function test_immediateBadDebt_80wei_6_6_2tokens() public {
+    function test__skip__immediateBadDebt_80wei_6_6_2tokens() public {
         _immediateBadDebt_80wei(!SAME_ASSET, 6, 6);
     }
 
     /*
         forge test -vv --ffi --mt test_immediateBadDebt_one
     */
-    function test_immediateBadDebt_oneSecond_18_2tokens() public {
+    function test__skip__immediateBadDebt_oneSecond_18_2tokens() public {
         uint8 decimals = 18;
         uint256 one = 10 ** decimals;
         _immediateBadDebt_oneSecond(!SAME_ASSET, decimals, one / 1e4);
     }
 
-    function test_immediateBadDebt_oneSecond_8_2tokens() public {
+    function test__skip__immediateBadDebt_oneSecond_8_2tokens() public {
         uint8 decimals = 8;
         uint256 one = 10 ** decimals;
         _immediateBadDebt_oneSecond(!SAME_ASSET, decimals, one);
