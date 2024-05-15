@@ -34,8 +34,8 @@ contract SiloFactoryDeploy is CommonDeploy {
         vm.stopBroadcast();
 
         uint256 daoFee = 0.15e18;
-        address daoFeeReceiver = VeSiloDeployments.get(VeSiloContracts.FEE_DISTRIBUTOR, getChainAlias());
-        address timelock = VeSiloDeployments.get(VeSiloContracts.TIMELOCK_CONTROLLER, getChainAlias());
+        address daoFeeReceiver = 0x6d228Fa4daD2163056A48Fc2186d716f5c65E89A;//VeSiloDeployments.get(VeSiloContracts.FEE_DISTRIBUTOR, getChainAlias());
+        address timelock = 0x6d228Fa4daD2163056A48Fc2186d716f5c65E89A;//VeSiloDeployments.get(VeSiloContracts.TIMELOCK_CONTROLLER, getChainAlias());
 
         vm.startBroadcast(deployerPrivateKey);
 

@@ -15,11 +15,15 @@ FOUNDRY_PROFILE=ve-silo-test \
 contract TestTokensMainnetLikeDeploy is CommonDeploy {
     function run() public returns (LINKTokenLike linkToken, SILOTokenLike siloToken) {
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
+        uint256 proposerPrivateKey = uint256(vm.envBytes32("PROPOSER_PRIVATE_KEY"));
+        address proposer = vm.addr(proposerPrivateKey);
 
         vm.startBroadcast(deployerPrivateKey);
 
         linkToken = new LINKTokenLike();
         siloToken = new SILOTokenLike();
+
+        siloToken.mint(proposer, 1_000_000_000e18);
 
         vm.stopBroadcast();
 

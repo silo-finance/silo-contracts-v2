@@ -22,7 +22,6 @@ FOUNDRY_PROFILE=ve-silo-test \
 contract VotingEscrowDelegationProxyDeploy is CommonDeploy {
         function run() public returns (IVotingEscrowDelegationProxy proxy) {
             uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
-            address timelock = VeSiloDeployments.get(VeSiloContracts.TIMELOCK_CONTROLLER, getChainAlias());
             address veBoost = VeSiloDeployments.get(VeSiloContracts.VE_BOOST, getChainAlias());
 
             vm.startBroadcast(deployerPrivateKey);
@@ -35,8 +34,6 @@ contract VotingEscrowDelegationProxyDeploy is CommonDeploy {
                     IVeDelegation(veBoost)
                 )
             ));
-
-            Ownable(address(proxy)).transferOwnership(timelock);
 
             vm.stopBroadcast();
 
