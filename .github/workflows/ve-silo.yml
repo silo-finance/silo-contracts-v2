@@ -10,6 +10,7 @@ env:
   RPC_OPTIMISM: ${{ vars.RPC_OPTIMISM }}
   RPC_ANVIL: ${{ vars.RPC_ANVIL }}
   PRIVATE_KEY: ${{ vars.ANVIL_PRIVATE_KEY }}
+  PROPOSER_PRIVATE_KEY: ${{ vars.PROPOSER_PRIVATE_KEY }}
 
 on:
   push:

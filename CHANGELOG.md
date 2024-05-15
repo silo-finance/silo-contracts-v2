@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [0.7.0] - 2024-05-15
+### Added
+ - deployment with mocked CCIP and tokens for Arbitrum and Optimism
+ - deployment fix for the liquidation module
+ - rounding errors and instant bad debt simulations
+
 ## [0.6.1] - 2024-05-14
 ### Fixed
 - apply fixes for certora report
