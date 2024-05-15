@@ -57,10 +57,9 @@ contract DustPropagationLoopTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --ffi --mt test__skip__dustPropagation_deposit_borrow_noInterest_oneBorrower
+    forge test -vv --ffi --mt test__skip__dustPropagation_deposit_borrow_noInterest_oneBorrowers
     */
-    /// forge-config: core-test.fuzz.runs = 1000
-    function test__skip__dustPropagation_deposit_borrow_noInterest_oneBorrower() public {
+    function test__skip__dustPropagation_deposit_borrow_noInterest_oneBorrowers() public {
         _dustPropagation_deposit_borrow(INIT_ASSETS, 1, 0, true);
     }
 
@@ -74,7 +73,6 @@ contract DustPropagationLoopTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test__skip__dustPropagation_deposit_borrow_withInterest_borrowers
     */
-    /// forge-config: core-test.fuzz.runs = 1000
     function test__skip__dustPropagation_deposit_borrow_withInterest_borrowers_1token() public {
         _dustPropagation_deposit_borrow(INIT_ASSETS, 3, 60 * 60 * 24, true);
     }
@@ -82,7 +80,6 @@ contract DustPropagationLoopTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test__skip__dustPropagation_deposit_borrow_withInterest_borrowers
     */
-    /// forge-config: core-test.fuzz.runs = 1000
     function test__skip__dustPropagation_deposit_borrow_withInterest_borrowers_2tokens() public {
         _dustPropagation_deposit_borrow(INIT_ASSETS, 3, 60 * 60 * 24, false);
     }
@@ -99,20 +96,20 @@ contract DustPropagationLoopTest is SiloLittleHelper, Test {
         address user1 = makeAddr("user1");
 
         for (uint256 i = 1; i < loop; i++) {
-            _deposit(_assets / i, user1);
+            _depositForBorrow(_assets / i, user1);
 
             for (uint256 b; b < _borrowers; b++) {
                 address borrower = makeAddr(string.concat("borrower", string(abi.encodePacked(b))));
+                address depositor = makeAddr(string.concat("depositor", string(abi.encodePacked(b))));
 
                 if (_sameAsset) {
-                    _deposit(_assets * i, borrower);
+                    _depositCollateral(_assets * i, borrower, _sameAsset);
                 } else {
-                    _deposit(_assets * i, user1);
-                    _depositForBorrow(_assets * i, borrower); // deposit collateral to other silo
+                    _depositForBorrow(_assets * i, depositor);
+                    _depositCollateral(_assets * i, borrower, _sameAsset); // deposit collateral to other silo
                 }
 
-                vm.prank(borrower);
-                silo0.borrow(_assets / 2, borrower, borrower, _sameAsset);
+                _borrow(_assets * i / 2, borrower, _sameAsset);
             }
 
             if (_moveForwardSec > 0) {
@@ -122,17 +119,27 @@ contract DustPropagationLoopTest is SiloLittleHelper, Test {
 
         for (uint256 b; b < _borrowers; b++) {
             address borrower = makeAddr(string.concat("borrower", string(abi.encodePacked(b))));
+            address depositor = makeAddr(string.concat("depositor", string(abi.encodePacked(b))));
 
-            uint256 debt = silo0.maxRepay(borrower);
+            uint256 debt = silo1.maxRepay(borrower);
+            _repay(debt, borrower);
+
+            ISilo collateralSilo = _sameAsset ? silo1 : silo0;
+            uint256 maxShares = collateralSilo.maxRedeem(borrower);
+
             vm.prank(borrower);
-            silo0.repay(debt, borrower);
+            collateralSilo.redeem(maxShares, borrower, borrower);
 
-            ISilo collateralSilo = _sameAsset ? silo0 : silo1;
-            _redeem(collateralSilo.maxRedeem(borrower, ISilo.CollateralType.Collateral), borrower);
             assertEq(collateralSilo.maxRepay(borrower), 0, string .concat("should be no debt", b.toString()));
+
+            uint256 shares = silo1.maxRedeem(depositor);
+            vm.prank(depositor);
+            silo1.redeem(shares, depositor, depositor);
         }
 
-        _redeem(silo0.maxRedeem(user1, ISilo.CollateralType.Collateral), user1);
+        uint256 shares1 = silo1.maxRedeem(user1);
+        vm.prank(user1);
+        silo1.redeem(shares1, user1, user1);
 
         (uint192 daoAndDeployerFees, ) = silo0.siloData();
 
