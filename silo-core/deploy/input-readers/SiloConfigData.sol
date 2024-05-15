@@ -18,7 +18,7 @@ contract SiloConfigData is Test, CommonDeploy {
     bytes32 public constant PLACEHOLDER_KEY = keccak256(bytes("PLACEHOLDER"));
     bytes32 public constant NO_HOOK_RECEIVER_KEY = keccak256(bytes("NO_HOOK_RECEIVER"));
 
-    error HookReceiverImplNotFound(string hookReceiver);
+    error DeployedContractNotFound(string contractName);
 
     // must be in alphabetic order
     struct ConfigData {
@@ -36,7 +36,7 @@ contract SiloConfigData is Test, CommonDeploy {
         string interestRateModelConfig1;
         uint64 liquidationFee0;
         uint64 liquidationFee1;
-        address liquidationModule;
+        string liquidationModule;
         uint64 lt0;
         uint64 lt1;
         uint64 maxLtv0;
@@ -72,7 +72,7 @@ contract SiloConfigData is Test, CommonDeploy {
 
         initData = ISiloConfig.InitData({
             deployer: config.deployer,
-            liquidationModule: config.liquidationModule,
+            liquidationModule: _resolveDeployedContract(config.liquidationModule),
             hookReceiver: _resolveHookReceiverImpl(config.hookReceiver),
             deployerFee: config.deployerFee * BP2DP_NORMALIZATION,
             token0: getAddress(config.token0),
@@ -101,7 +101,12 @@ contract SiloConfigData is Test, CommonDeploy {
     function _resolveHookReceiverImpl(string memory _requiredHookReceiver) internal returns (address hookReceiver) {
         if (keccak256(bytes(_requiredHookReceiver)) != NO_HOOK_RECEIVER_KEY) {
             hookReceiver = getDeployedAddress(_requiredHookReceiver);
-            if (hookReceiver == address(0)) revert HookReceiverImplNotFound(_requiredHookReceiver);
+            if (hookReceiver == address(0)) revert DeployedContractNotFound(_requiredHookReceiver);
         }
+    }
+
+    function _resolveDeployedContract(string memory _name) internal returns (address contractAddress) {
+        contractAddress = getDeployedAddress(_name);
+        if (contractAddress == address(0)) revert DeployedContractNotFound(_name);
     }
 }
