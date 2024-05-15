@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.20;
 
-import {console} from "forge-std/console.sol";
-
 import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 import {IERC20Metadata} from "openzeppelin5/token/ERC20/extensions/IERC20Metadata.sol";
@@ -171,9 +169,6 @@ library SiloLendingLib {
         if (_token != address(0) &&
             borrowedAssets > SiloMathLib.liquidity(_totalCollateralAssets, totalDebtAssets)
         ) {
-            console.log("_args.assets", _args.assets);
-            console.log("_args.shares", _args.shares);
-            console.log("liquidity", SiloMathLib.liquidity(_totalCollateralAssets, totalDebtAssets));
             revert ISilo.NotEnoughLiquidity();
         }
 
