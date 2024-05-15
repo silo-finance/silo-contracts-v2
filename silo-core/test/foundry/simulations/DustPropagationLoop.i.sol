@@ -79,7 +79,7 @@ contract DustPropagationLoopTest is SiloLittleHelper, Test {
     }
 
     function _dustPropagation_deposit_borrow(
-        uint128 _assets,
+        uint256 _assets,
         uint8 _borrowers,
         uint24 _moveForwardSec
     ) private {
