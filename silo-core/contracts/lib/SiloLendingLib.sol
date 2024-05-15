@@ -135,7 +135,8 @@ library SiloLendingLib {
     /// values
     /// @param _debtShareToken address of debt share token
     /// @param _token address of underlying debt token
-     /// @param _spender Address which initiates the borrowing action on behalf of the borrower
+    /// @param _spender Address which initiates the borrowing action on behalf of the borrower
+    /// @param _totalCollateralAssets Current (with interest) total collateral assets
     /// @param _totalDebt Current total outstanding debt in the system
     /// @return borrowedAssets Actual number of assets that the user has borrowed
     /// @return borrowedShares Number of debt share tokens corresponding to the borrowed assets
@@ -144,6 +145,7 @@ library SiloLendingLib {
         address _token,
         address _spender,
         ISilo.BorrowArgs memory _args,
+        uint256 _totalCollateralAssets,
         ISilo.Assets storage _totalDebt
     )
         internal
@@ -167,11 +169,11 @@ library SiloLendingLib {
         if (borrowedAssets == 0) revert ISilo.ZeroAssets();
 
         if (_token != address(0) &&
-            borrowedAssets > SiloMathLib.liquidity(_args.totalCollateralAssets, totalDebtAssets)
+            borrowedAssets > SiloMathLib.liquidity(_totalCollateralAssets, totalDebtAssets)
         ) {
             console.log("_args.assets", _args.assets);
             console.log("_args.shares", _args.shares);
-            console.log("liquidity", SiloMathLib.liquidity(_args.totalCollateralAssets, totalDebtAssets));
+            console.log("liquidity", SiloMathLib.liquidity(_totalCollateralAssets, totalDebtAssets));
             revert ISilo.NotEnoughLiquidity();
         }
 

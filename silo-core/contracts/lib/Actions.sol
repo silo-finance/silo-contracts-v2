@@ -216,9 +216,6 @@ library Actions {
                 (_args.sameAsset ? Hook.SAME_ASSET : Hook.TWO_ASSETS)
         );
 
-        // after accrueInterest we can set current value
-        _args.totalCollateralAssets = _totalCollateral.assets;
-
         if (!SiloLendingLib.borrowPossible(debtInfo)) revert ISilo.BorrowNotPossible();
 
         if (!_args.sameAsset) ISilo(collateralConfig.silo).accrueInterest();
@@ -228,6 +225,7 @@ library Actions {
             debtConfig.token,
             msg.sender,
             _args,
+            _totalCollateral.assets,
             _totalDebt
         );
 
@@ -333,7 +331,7 @@ library Actions {
         uint256 _borrowAssets,
         address _borrower,
         ISilo.CollateralType _collateralType,
-        uint256 _totalCollateralAssets,
+        ISilo.Assets storage _totalCollateral,
         ISilo.Assets storage _totalDebt,
         ISilo.Assets storage _totalAssetsForDeposit
     )
@@ -376,9 +374,9 @@ library Actions {
                     receiver: _borrower,
                     borrower: _borrower,
                     sameAsset: true,
-                    leverage: true,
-                    totalCollateralAssets: _totalCollateralAssets
+                    leverage: true
                 }),
+                _totalCollateral.assets,
                 _totalDebt
             );
 
