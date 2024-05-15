@@ -23,13 +23,15 @@ contract DustPropagationLoopTest is SiloLittleHelper, Test {
     using SiloLensLib for ISilo;
     using Strings for uint256;
 
+    uint256 constant INIT_ASSETS = 100_000e18;
+
     function setUp() public {
         _setUpLocalFixture();
         token0.setOnDemand(true);
     }
 
     /*
-    forge test -vv --ffi --mt test_dustPropagation_just_deposit
+    forge test -vv --ffi --mt test__skip__dustPropagation_just_deposit_fuzz
     */
     /// forge-config: core-test.fuzz.runs = 1000
     function test__skip__dustPropagation_just_deposit_fuzz(uint128 _assets) public {
@@ -54,32 +56,26 @@ contract DustPropagationLoopTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --ffi --mt test_dustPropagation_deposit_borrow_noInterest_oneBorrower_fuzz
+    forge test -vv --ffi --mt test__skip__dustPropagation_deposit_borrow_noInterest_oneBorrower
     */
     /// forge-config: core-test.fuzz.runs = 1000
-    function test__skip__dustPropagation_deposit_borrow_noInterest_oneBorrower_fuzz(
-        uint128 _assets
-    ) public {
-        _dustPropagation_deposit_borrow(_assets, 1, 0);
+    function test__skip__dustPropagation_deposit_borrow_noInterest_oneBorrower() public {
+        _dustPropagation_deposit_borrow(INIT_ASSETS, 1, 0);
     }
 
     /*
-    forge test -vv --ffi --mt test_dustPropagation_deposit_borrow_withInterest_borrowers_fuzz
+    forge test -vv --ffi --mt test__skip__dustPropagation_deposit_borrow_withInterest_borrowers
     */
     /// forge-config: core-test.fuzz.runs = 1000
-    function test__skip__dustPropagation_deposit_borrow_withInterest_borrowers_fuzz(
-        uint128 _assets
-    ) public {
-        _dustPropagation_deposit_borrow(_assets, 3, 60 * 60 * 24);
+    function test__skip__dustPropagation_deposit_borrow_withInterest_borrowers() public {
+        _dustPropagation_deposit_borrow(INIT_ASSETS, 3, 60 * 60 * 24);
     }
 
     /*
-    forge test -vv --ffi --mt test_dustPropagation_deposit_borrow_noInterest_borrowers_fuzz
+    forge test -vv --ffi --mt test__skip__dustPropagation_deposit_borrow_noInterest_borrowers
     */
-    function test__skip__dustPropagation_deposit_borrow_noInterest_borrowers_fuzz(
-        uint128 _assets
-    ) public {
-        _dustPropagation_deposit_borrow(_assets, 3, 0);
+    function test__skip__dustPropagation_deposit_borrow_noInterest_borrowers() public {
+        _dustPropagation_deposit_borrow(INIT_ASSETS, 3, 0);
     }
 
     function _dustPropagation_deposit_borrow(
