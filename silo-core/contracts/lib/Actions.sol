@@ -187,6 +187,7 @@ library Actions {
     function borrow(
         ISilo.SharedStorage storage _shareStorage,
         ISilo.BorrowArgs memory _args,
+        ISilo.Assets storage _totalCollateral,
         ISilo.Assets storage _totalDebt,
         bytes memory _data
     )
@@ -214,6 +215,9 @@ library Actions {
                 (_args.leverage ? Hook.LEVERAGE : Hook.NONE) |
                 (_args.sameAsset ? Hook.SAME_ASSET : Hook.TWO_ASSETS)
         );
+
+        // after accrueInterest we can set current value
+        _args.totalCollateralAssets = _totalCollateral.assets;
 
         if (!SiloLendingLib.borrowPossible(debtInfo)) revert ISilo.BorrowNotPossible();
 
