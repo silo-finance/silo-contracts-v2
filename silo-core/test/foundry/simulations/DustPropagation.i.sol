@@ -3,20 +3,13 @@ pragma solidity ^0.8.0;
 
 import {Test} from "forge-std/Test.sol";
 
-import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
-
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
-import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquidation.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
-import {IInterestRateModel} from "silo-core/contracts/interfaces/IInterestRateModel.sol";
 import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
-import {Hook} from "silo-core/contracts/lib/Hook.sol";
 import {AssetTypes} from "silo-core/contracts/lib/AssetTypes.sol";
 
 import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
-import {MintableToken} from "../_common/MintableToken.sol";
-
 
 /*
     forge test -vv --ffi --mc DustPropagationTest
@@ -34,7 +27,6 @@ contract DustPropagationTest is SiloLittleHelper, Test {
 
     /*
     this test is based on: test_liquidationCall_badDebt_partial_1token_noDepositors
-    TODO create version of test where we modify storage and set some 1e5 value, to see how numbers behave
     */
     function setUp() public {
         siloConfig = _setUpLocalFixture();
@@ -63,12 +55,10 @@ contract DustPropagationTest is SiloLittleHelper, Test {
         token0.approve(address(silo0), debtToRepay);
         bool receiveSToken;
 
-
         partialLiquidation.liquidationCall(
             address(silo0), address(token0), address(token0), BORROWER, debtToRepay, receiveSToken
         );
         _printState("after liquidation");
-
 
         assertTrue(silo0.isSolvent(BORROWER), "user is solvent after liquidation");
 
@@ -149,19 +139,17 @@ contract DustPropagationTest is SiloLittleHelper, Test {
         assertEq(_redeem(shares1, user1), DUST_LEFT + assets - 1, "[user1] withdrawn assets");
         assertEq(_redeem(shares2, user2), assets, "[user2] withdrawn assets");
 
-        assertEq(silo0.getLiquidity(), 1, "getLiquidity == 1, dust!");
+        assertEq(silo0.getLiquidity(), 1, "getLiquidity == 1, dust");
     }
 
     /*
     forge test -vv --ffi --mt test__skip__dustPropagation_noInterest_twoUsers_fuzz
-
-    theory: DIFF in loos can not be higher than dust
     */
     /// forge-config: core-test.fuzz.runs = 1000
     function test__skip__dustPropagation_noInterest_twoUsers_fuzz(
         uint128 deposit1, uint128 deposit2
     ) public {
-//        (uint128 deposit1, uint128 deposit2) = (5, 5);
+//        (uint128 deposit1, uint128 deposit2) = (13181, 49673014963301);
         vm.assume(deposit1 > DUST_LEFT);
         vm.assume(deposit2 > DUST_LEFT);
 
@@ -174,54 +162,39 @@ contract DustPropagationTest is SiloLittleHelper, Test {
         emit log_named_uint("shares1", shares1);
         emit log_named_uint("shares2", shares2);
 
-        uint256 maxWithdraw1 = silo0.maxWithdraw(user1);
-        uint256 maxWithdraw2 = silo0.maxWithdraw(user2);
-
-        bool user1GetsMore = maxWithdraw1 > deposit1;
-        bool user2GetsMore = maxWithdraw2 > deposit2;
-
-        emit log_named_string("user1 will get", user1GetsMore ? "MORE" : "LESS");
-        emit log_named_uint("    deposit1", deposit1);
-        emit log_named_uint("maxWithdraw1", maxWithdraw1);
-        emit log_named_string("user2 will get", user2GetsMore ? "MORE" : "LESS");
-        emit log_named_uint("    deposit2", deposit2);
-        emit log_named_uint("maxWithdraw2", maxWithdraw2);
-
-        if (!user1GetsMore) {
-            assertLe(deposit1 - maxWithdraw1, DUST_LEFT, "[user1] maxWithdraw can be less by DUST_LEFT");
-        }
-
-        if (!user2GetsMore) {
-            assertLe(deposit2 - maxWithdraw2, DUST_LEFT, "[user2] maxWithdraw can be less by DUST_LEFT");
-        }
-
-        uint256 withdrawn1 = _redeem(shares1, user1);
-        emit log_named_uint("withdrawn1", withdrawn1);
-        assertEq(withdrawn1, maxWithdraw1, "[user1] max should match real withdrawn");
-
-        uint256 withdrawn2 = _redeem(shares2, user2);
-        emit log_named_uint("withdrawn2", withdrawn2);
-        assertEq(withdrawn2, maxWithdraw2, "[user2] max should match real withdrawn");
-
-        bool user1GotMore = withdrawn1 > deposit1;
-        bool user2GotMore = withdrawn2 > deposit2;
-
-        uint256 diff1 = user1GotMore ? withdrawn1 - deposit1 : deposit1 - withdrawn1;
-        uint256 diff2 = user2GotMore ? withdrawn2 - deposit2 : deposit2 - withdrawn2;
-
-        emit log_named_uint("diff1", diff1);
-        emit log_named_uint("diff2", diff2);
-
-        if (!user1GotMore) {
-            assertLe(diff1, DUST_LEFT, "[user1] withdrawn assets can be off by DUST_LEFT max");
-        }
-
-        if (!user2GotMore) {
-            assertLe(diff2, DUST_LEFT, "[user2] withdrawn assets can be off by DUST_LEFT max");
-        }
+        _withdrawFromSilo(user1, deposit1, shares1);
+        _withdrawFromSilo(user2, deposit2, shares2);
 
         emit log_named_uint("dust was", DUST_LEFT);
         emit log_named_uint("silo0.getLiquidity() is now", silo0.getLiquidity());
+    }
+
+    function _withdrawFromSilo(address _user, uint256 _deposited, uint256 _shares) internal {
+        uint256 maxWithdraw = silo0.maxWithdraw(_user);
+
+        bool userGetsMore = maxWithdraw > _deposited;
+
+        emit log_named_string("user1 will get", userGetsMore ? "MORE" : "LESS");
+        emit log_named_uint("    deposit1", _deposited);
+        emit log_named_uint("maxWithdraw1", maxWithdraw);
+
+        if (!userGetsMore) {
+            assertLe(_deposited - maxWithdraw, DUST_LEFT, "[user1] maxWithdraw can be less by DUST_LEFT");
+        }
+
+        uint256 withdrawn = _redeem(_shares, _user);
+        emit log_named_uint("withdrawn1", withdrawn);
+        assertEq(withdrawn, maxWithdraw, "[user1] max should match real withdrawn");
+
+        bool userGotMore = withdrawn > _deposited;
+
+        uint256 diff = userGotMore ? withdrawn - _deposited: _deposited - withdrawn;
+
+        emit log_named_uint("diff", diff);
+
+        if (!userGotMore) {
+            assertLe(diff, DUST_LEFT, "withdrawn assets can be off by DUST_LEFT max");
+        }
     }
 
     function _printState(string memory _title) private {
