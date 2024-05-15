@@ -133,13 +133,13 @@ contract MaxBorrowTest is SiloLittleHelper, Test {
     */
     /// forge-config: core-test.fuzz.runs = 1000
     function test_maxBorrow_withInterest_fuzz(
-//        uint128 _collateral,
-//        uint128 _liquidity,
-//        bool _sameAsset
+        uint128 _collateral,
+        uint128 _liquidity,
+        bool _sameAsset
     ) public {
-         (
-             uint128 _collateral, uint128 _liquidity, bool _sameAsset
-         ) = (340282366920938463463374607431768211453, 88042, true);
+//         (
+//             uint128 _collateral, uint128 _liquidity, bool _sameAsset
+//         ) = (340282366920938463463374607431768211453, 88042, true);
 
         vm.assume(_collateral > 0);
         vm.assume(_liquidity > 0);
@@ -162,7 +162,7 @@ contract MaxBorrowTest is SiloLittleHelper, Test {
 
         _assertWeCanNotBorrowAboveMax(maxBorrow, 4, _sameAsset);
 
-        _assertMaxBorrowIsZeroAtTheEnd(400, _sameAsset);
+        _assertMaxBorrowIsZeroAtTheEnd(1, _sameAsset);
     }
 
     /*
@@ -305,11 +305,13 @@ contract MaxBorrowTest is SiloLittleHelper, Test {
         } catch (bytes memory data) {
             bytes4 errorType = bytes4(data);
 
-            // bytes4 error1 = bytes4(keccak256(abi.encodePacked("NotEnoughLiquidity()")));
+            bytes4 error1 = bytes4(keccak256(abi.encodePacked("NotEnoughLiquidity()")));
             bytes4 error2 = bytes4(keccak256(abi.encodePacked("AboveMaxLtv()")));
 
-            if (errorType != error2) {
-                revert("we need to revert with AboveMaxLtv");
+            if (errorType != error1 && errorType != error2) {
+                revert("we need to revert with AboveMaxLtv or NotEnoughLiquidity");
+                // AboveMaxLtv means we at the limit and max borrow returned valid estimation for our LTV
+                // NotEnoughLiquidity means max borrow was cap by liquidity
             }
         }
 
@@ -326,7 +328,6 @@ contract MaxBorrowTest is SiloLittleHelper, Test {
 
             if (_maxBorrow > liquidity) revert("max borrow returns higher number than available liquidity");
 
-            // _depositForBorrow(_maxBorrow, address(1));
             _borrow(_maxBorrow, borrower, _sameAsset);
         }
     }
