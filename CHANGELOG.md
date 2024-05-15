@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [0.6.2] - 2024-05-15
+### Added
+ - deployment with mocked CCIP and tokens for Arbitrum and Optimism
+
 ## [0.6.1] - 2024-05-14
 ### Fixed
 - apply fixes for certora report
