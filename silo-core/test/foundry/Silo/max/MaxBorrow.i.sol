@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.20;
 
-import "forge-std/Test.sol";
+import {Test} from "forge-std/Test.sol";
+
+import {Strings} from "openzeppelin5/utils/Strings.sol";
 
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
@@ -15,6 +17,8 @@ import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
     forge test -vv --ffi --mc MaxBorrowTest
 */
 contract MaxBorrowTest is SiloLittleHelper, Test {
+    using Strings for uint256;
+
     ISiloConfig siloConfig;
     address immutable depositor;
     address immutable borrower;
@@ -126,39 +130,40 @@ contract MaxBorrowTest is SiloLittleHelper, Test {
 
     /*
     forge test -vv --ffi --mt test_maxBorrow_withInterest
-    TODO
     */
     /// forge-config: core-test.fuzz.runs = 1000
-//    function test_maxBorrow_withInterest_fuzz(
+    function test_maxBorrow_withInterest_fuzz(
 //        uint128 _collateral,
 //        uint128 _liquidity,
 //        bool _sameAsset
-//    ) public {
-//        // (uint128 _collateral, uint128 _liquidity, bool _sameAsset) = (1735704415, 1, true);
-//
-//        vm.assume(_collateral > 0);
-//        vm.assume(_liquidity > 0);
-//
-//        _depositCollateral(_collateral, borrower, _sameAsset);
-//        _depositForBorrow(_liquidity, depositor);
-//
-//        uint256 maxBorrow = silo1.maxBorrow(borrower, _sameAsset);
-//
-//        uint256 firstBorrow = maxBorrow / 3;
-//        emit log_named_uint("firstBorrow", firstBorrow);
-//        vm.assume(firstBorrow > 0);
-//        _borrow(firstBorrow, borrower, _sameAsset);
-//
-//        // now we have debt
-//        vm.warp(block.timestamp + 100 days);
-//
-//        maxBorrow = silo1.maxBorrow(borrower, _sameAsset);
-//        emit log_named_uint("maxBorrow", maxBorrow);
-//
-//        _assertWeCanNotBorrowAboveMax(maxBorrow, 4, _sameAsset);
-//
-//        _assertMaxBorrowIsZeroAtTheEnd(1, _sameAsset);
-//    }
+    ) public {
+         (
+             uint128 _collateral, uint128 _liquidity, bool _sameAsset
+         ) = (340282366920938463463374607431768211453, 88042, true);
+
+        vm.assume(_collateral > 0);
+        vm.assume(_liquidity > 0);
+
+        _depositCollateral(_collateral, borrower, _sameAsset);
+        _depositForBorrow(_liquidity, depositor);
+
+        uint256 maxBorrow = silo1.maxBorrow(borrower, _sameAsset);
+
+        uint256 firstBorrow = maxBorrow / 3;
+        emit log_named_uint("firstBorrow", firstBorrow);
+        vm.assume(firstBorrow > 0);
+        _borrow(firstBorrow, borrower, _sameAsset);
+
+        // now we have interest
+        vm.warp(block.timestamp + 100 days);
+
+        maxBorrow = silo1.maxBorrow(borrower, _sameAsset);
+        emit log_named_uint("maxBorrow", maxBorrow);
+
+        _assertWeCanNotBorrowAboveMax(maxBorrow, 4, _sameAsset);
+
+        _assertMaxBorrowIsZeroAtTheEnd(400, _sameAsset);
+    }
 
     /*
     forge test -vv --ffi --mt test_maxBorrow_repayWithInterest_
@@ -300,18 +305,29 @@ contract MaxBorrowTest is SiloLittleHelper, Test {
         } catch (bytes memory data) {
             bytes4 errorType = bytes4(data);
 
-            bytes4 error1 = bytes4(keccak256(abi.encodePacked("NotEnoughLiquidity()")));
+            // bytes4 error1 = bytes4(keccak256(abi.encodePacked("NotEnoughLiquidity()")));
             bytes4 error2 = bytes4(keccak256(abi.encodePacked("AboveMaxLtv()")));
 
-            if (errorType != error1 && errorType != error2) {
-                revert("we need to revert with NotEnoughLiquidity or AboveMaxLtv");
+            if (errorType != error2) {
+                revert("we need to revert with AboveMaxLtv");
             }
         }
 
         if (_maxBorrow > 0) {
-            emit log_named_decimal_uint("[_assertWeCanNotBorrowAboveMax] _maxBorrow > 0 YES, borrowing max", _maxBorrow, 18);
-            vm.prank(borrower);
-            silo1.borrow(_maxBorrow, borrower, borrower, _sameAsset);
+            emit log_named_decimal_uint(
+                "[_assertWeCanNotBorrowAboveMax] _maxBorrow > 0? YES, borrowing max", _maxBorrow, 18
+            );
+
+            liquidity = silo1.getLiquidity();
+
+            emit log_named_decimal_uint(
+                "[_assertWeCanNotBorrowAboveMax]                          liquidity", liquidity, 18
+            );
+
+            if (_maxBorrow > liquidity) revert("max borrow returns higher number than available liquidity");
+
+            // _depositForBorrow(_maxBorrow, address(1));
+            _borrow(_maxBorrow, borrower, _sameAsset);
         }
     }
 
@@ -327,7 +343,7 @@ contract MaxBorrowTest is SiloLittleHelper, Test {
         assertLe(
             maxBorrow,
             _underestimatedBy,
-            string.concat("at this point max should return 0 +/-", string(abi.encodePacked(_underestimatedBy)))
+            string.concat("at this point max should return 0 +/-", _underestimatedBy.toString())
         );
     }
 }

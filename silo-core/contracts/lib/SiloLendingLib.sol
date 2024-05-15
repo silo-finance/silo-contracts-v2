@@ -234,6 +234,7 @@ library SiloLendingLib {
             _totalDebtShares
         );
 
+//        uint256 liquidityWithInterest = getLiquidity(_siloConfig); TODO is this getLiquidity valid method??
         uint256 liquidityWithInterest = getLiquidity(_siloConfig);
 
         if (assets > liquidityWithInterest) {
