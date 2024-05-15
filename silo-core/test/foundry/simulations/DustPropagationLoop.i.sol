@@ -81,18 +81,19 @@ contract DustPropagationLoopTest is SiloLittleHelper, Test {
     forge test -vv --ffi --mt test__skip__dustPropagation_deposit_borrow_withInterest_borrowers
     */
     function test__skip__dustPropagation_deposit_borrow_withInterest_borrowers_2tokens() public {
-        _dustPropagation_deposit_borrow(INIT_ASSETS, 30, 60 * 60 * 24, false);
+        _dustPropagation_deposit_borrow(INIT_ASSETS, 3000, 60 * 60 * 24, false);
     }
 
+    /// @dev for delay of 1 day, this test can handle up to 3K borrowers, because each borrow make +1 day
+    /// and we adding interest and then liquidity might be not enough to cover debt + interest and we can not
+    /// borrow anymore
+    /// @param _moveForwardSec do not use mre than a day, because interest will be too high and we can not borrow
     function _dustPropagation_deposit_borrow(
         uint256 _assets,
         uint16 _borrowers,
         uint24 _moveForwardSec,
         bool _sameAsset
     ) private {
-        uint256 loop = 1000;
-        vm.assume(_assets / loop > 10);
-
         for (uint256 b = 1; b <= _borrowers; b++) {
             address borrower = makeAddr(string.concat("borrower", b.toString()));
             address depositor = makeAddr(string.concat("depositor", b.toString()));
@@ -100,7 +101,7 @@ contract DustPropagationLoopTest is SiloLittleHelper, Test {
             _depositCollateral(_assets / b, borrower, _sameAsset);
 
             if (!_sameAsset) {
-                _depositForBorrow(_assets / b, depositor);
+                _depositForBorrow(_assets, depositor);
             }
 
             _borrow(_assets / b / 2, borrower, _sameAsset);
@@ -130,10 +131,8 @@ contract DustPropagationLoopTest is SiloLittleHelper, Test {
             silo1.redeem(shares, depositor, depositor);
         }
 
-        (uint192 daoAndDeployerFees, ) = silo0.siloData();
-
-        if (daoAndDeployerFees != 0) {
-            silo0.withdrawFees();
+        if (_moveForwardSec != 0) {
+            silo1.withdrawFees();
         }
 
         if (_moveForwardSec == 0) {
