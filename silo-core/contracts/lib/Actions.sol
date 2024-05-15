@@ -104,7 +104,6 @@ library Actions {
 
         if (collateralConfig.silo != debtConfig.silo) ISilo(debtConfig.silo).accrueInterest();
 
-        {
         // this `if` helped with Stack too deep
         if (_args.collateralType == ISilo.CollateralType.Collateral) {
             (assets, shares) = SiloERC4626Lib.withdraw(
@@ -122,7 +121,6 @@ library Actions {
                 _totalAssets.assets,
                 _totalAssets
             );
-        }
         }
 
         if (SiloSolvencyLib.depositWithoutDebt(debtInfo)) {
