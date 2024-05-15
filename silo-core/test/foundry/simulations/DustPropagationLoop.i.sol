@@ -81,45 +81,38 @@ contract DustPropagationLoopTest is SiloLittleHelper, Test {
     forge test -vv --ffi --mt test__skip__dustPropagation_deposit_borrow_withInterest_borrowers
     */
     function test__skip__dustPropagation_deposit_borrow_withInterest_borrowers_2tokens() public {
-        _dustPropagation_deposit_borrow(INIT_ASSETS, 3, 60 * 60 * 24, false);
+        _dustPropagation_deposit_borrow(INIT_ASSETS, 30, 60 * 60 * 24, false);
     }
 
     function _dustPropagation_deposit_borrow(
         uint256 _assets,
-        uint8 _borrowers,
+        uint16 _borrowers,
         uint24 _moveForwardSec,
         bool _sameAsset
     ) private {
         uint256 loop = 1000;
         vm.assume(_assets / loop > 10);
 
-        address user1 = makeAddr("user1");
+        for (uint256 b = 1; b <= _borrowers; b++) {
+            address borrower = makeAddr(string.concat("borrower", b.toString()));
+            address depositor = makeAddr(string.concat("depositor", b.toString()));
 
-        for (uint256 i = 1; i < loop; i++) {
-            _depositForBorrow(_assets / i, user1);
+            _depositCollateral(_assets / b, borrower, _sameAsset);
 
-            for (uint256 b; b < _borrowers; b++) {
-                address borrower = makeAddr(string.concat("borrower", string(abi.encodePacked(b))));
-                address depositor = makeAddr(string.concat("depositor", string(abi.encodePacked(b))));
-
-                if (_sameAsset) {
-                    _depositCollateral(_assets * i, borrower, _sameAsset);
-                } else {
-                    _depositForBorrow(_assets * i, depositor);
-                    _depositCollateral(_assets * i, borrower, _sameAsset); // deposit collateral to other silo
-                }
-
-                _borrow(_assets * i / 2, borrower, _sameAsset);
+            if (!_sameAsset) {
+                _depositForBorrow(_assets / b, depositor);
             }
+
+            _borrow(_assets / b / 2, borrower, _sameAsset);
 
             if (_moveForwardSec > 0) {
                 vm.warp(block.timestamp + _moveForwardSec);
             }
         }
 
-        for (uint256 b; b < _borrowers; b++) {
-            address borrower = makeAddr(string.concat("borrower", string(abi.encodePacked(b))));
-            address depositor = makeAddr(string.concat("depositor", string(abi.encodePacked(b))));
+        for (uint256 b = 1; b <= _borrowers; b++) {
+            address borrower = makeAddr(string.concat("borrower", b.toString()));
+            address depositor = makeAddr(string.concat("depositor", b.toString()));
 
             uint256 debt = silo1.maxRepay(borrower);
             _repay(debt, borrower);
@@ -130,16 +123,12 @@ contract DustPropagationLoopTest is SiloLittleHelper, Test {
             vm.prank(borrower);
             collateralSilo.redeem(maxShares, borrower, borrower);
 
-            assertEq(collateralSilo.maxRepay(borrower), 0, string .concat("should be no debt", b.toString()));
+            assertEq(collateralSilo.maxRepay(borrower), 0, string.concat("should be no debt", b.toString()));
 
             uint256 shares = silo1.maxRedeem(depositor);
             vm.prank(depositor);
             silo1.redeem(shares, depositor, depositor);
         }
-
-        uint256 shares1 = silo1.maxRedeem(user1);
-        vm.prank(user1);
-        silo1.redeem(shares1, user1, user1);
 
         (uint192 daoAndDeployerFees, ) = silo0.siloData();
 
@@ -148,14 +137,14 @@ contract DustPropagationLoopTest is SiloLittleHelper, Test {
         }
 
         if (_moveForwardSec == 0) {
-            assertEq(silo0.getLiquidity(), 0, "[silo0] generated dust");
-            assertEq(silo0.getCollateralAssets(), 0, "[silo0] getCollateralAssets");
+            assertEq(silo1.getLiquidity(), 0, "[silo1] generated dust");
+            assertEq(silo1.getCollateralAssets(), 0, "[silo1] getCollateralAssets");
         } else {
-            assertLe(silo0.getLiquidity(), 1, "[silo0] generated dust with interest");
-            assertLe(silo0.getCollateralAssets(), 1, "[silo0] getCollateralAssets with interest");
+            assertLe(silo1.getLiquidity(), 1, "[silo1] generated dust with interest");
+            assertLe(silo1.getCollateralAssets(), 1, "[silo1] getCollateralAssets with interest");
         }
 
-        assertLe(silo1.getLiquidity(), 0, "[silo1] silo1 was only for collateral, so no dust is expected");
-        assertLe(silo1.getCollateralAssets(), 0, "[silo1] silo1 was only for collateral, so no dust is expected");
+        assertLe(silo0.getLiquidity(), 0, "silo0 was only for collateral, so no dust is expected");
+        assertLe(silo0.getCollateralAssets(), 0, "silo0 was only for collateral, so no dust is expected");
     }
 }
