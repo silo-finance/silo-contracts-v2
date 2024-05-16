@@ -14,7 +14,8 @@ import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IHookReceiver} from "silo-core/contracts/utils/hook-receivers/interfaces/IHookReceiver.sol";
 
-import {SiloFixture, SiloConfigOverride} from "../../_common/fixtures/SiloFixture.sol";
+import {SiloConfigOverride} from "../../_common/fixtures/SiloFixture.sol";
+import {SiloFixtureWithFeeDistributor as SiloFixture} from "../../_common/fixtures/SiloFixtureWithFeeDistributor.sol";
 import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
 import {MintableToken} from "../../_common/MintableToken.sol";
 import {HookReceiverMock} from "../../_mocks/HookReceiverMock.sol";

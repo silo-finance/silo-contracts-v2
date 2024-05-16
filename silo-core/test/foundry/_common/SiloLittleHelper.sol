@@ -10,6 +10,7 @@ import {SiloLens} from "silo-core/contracts/SiloLens.sol";
 
 import {MintableToken} from "./MintableToken.sol";
 import {SiloFixture, SiloConfigOverride} from "./fixtures/SiloFixture.sol";
+import {SiloFixtureWithFeeDistributor} from "./fixtures/SiloFixtureWithFeeDistributor.sol";
 
 abstract contract SiloLittleHelper is CommonBase {
     bool constant SAME_ASSET = true;
@@ -36,11 +37,23 @@ abstract contract SiloLittleHelper is CommonBase {
     }
 
     function _setUpLocalFixture() internal returns (ISiloConfig siloConfig) {
-        return _localFixture("");
+        SiloFixtureWithFeeDistributor siloFixture = new SiloFixtureWithFeeDistributor();
+        return _localFixture("", SiloFixture(address(siloFixture)));
     }
 
     function _setUpLocalFixture(string memory _configName) internal returns (ISiloConfig siloConfig) {
-        return _localFixture(_configName);
+        SiloFixtureWithFeeDistributor siloFixture = new SiloFixtureWithFeeDistributor();
+        return _localFixture(_configName, SiloFixture(address(siloFixture)));
+    }
+
+    function _setUpLocalFixtureNoMocks() internal returns (ISiloConfig siloConfig) {
+        SiloFixture siloFixture = new SiloFixture();
+        return _localFixture("", siloFixture);
+    }
+
+    function _setUpLocalFixtureNoMocks(string memory _configName) internal returns (ISiloConfig siloConfig) {
+        SiloFixture siloFixture = new SiloFixture();
+        return _localFixture(_configName, siloFixture);
     }
 
     function _depositForBorrowRevert(uint256 _assets, address _depositor, bytes4 _error) internal {
@@ -222,7 +235,7 @@ abstract contract SiloLittleHelper is CommonBase {
         debtShares = _borrow(_amount, _borrower, _sameAsset);
     }
 
-    function _localFixture(string memory _configName)
+    function _localFixture(string memory _configName, SiloFixture _siloFixture)
         private
         returns (ISiloConfig siloConfig)
     {
@@ -234,7 +247,6 @@ abstract contract SiloLittleHelper is CommonBase {
         overrides.token1 = address(token1);
         overrides.configName = _configName;
 
-        SiloFixture siloFixture = new SiloFixture();
-        (siloConfig, silo0, silo1,,, partialLiquidation) = siloFixture.deploy_local(overrides);
+        (siloConfig, silo0, silo1,,, partialLiquidation) = _siloFixture.deploy_local(overrides);
     }
 }

@@ -4,16 +4,13 @@ pragma solidity ^0.8.20;
 import {IERC20Errors} from "openzeppelin5/interfaces/draft-IERC6093.sol";
 
 import {IntegrationTest} from "silo-foundry-utils/networks/IntegrationTest.sol";
-import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
-
-import {OracleConfig} from "silo-oracles/deploy/OraclesDeployments.sol";
-import {VeSiloContracts} from "ve-silo/common/VeSiloContracts.sol";
 
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 
 import {TokenMock} from "silo-core/test/foundry/_mocks/TokenMock.sol";
-import {SiloFixture, SiloConfigOverride} from "../../_common/fixtures/SiloFixture.sol";
+import {SiloConfigOverride} from "../../_common/fixtures/SiloFixture.sol";
+import {SiloFixtureWithFeeDistributor as SiloFixture} from "../../_common/fixtures/SiloFixtureWithFeeDistributor.sol";
 
 /*
     forge test -vv --ffi --mc WithdrawWhenNoDepositTest
