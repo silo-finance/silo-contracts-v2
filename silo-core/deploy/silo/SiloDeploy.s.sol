@@ -65,11 +65,6 @@ contract SiloDeploy is CommonDeploy {
 
         console2.log("[SiloCommonDeploy] Config prepared");
 
-        address interestRateModel = _resolveDeployedContract(SiloCoreContracts.INTEREST_RATE_MODEL_V2);
-
-        siloInitData.interestRateModel0 = interestRateModel;
-        siloInitData.interestRateModel1 = interestRateModel;
-
         InterestRateModelConfigData modelData = new InterestRateModelConfigData();
 
         IInterestRateModelV2.Config memory irmConfigData0 = modelData.getConfigData(config.interestRateModelConfig0);
