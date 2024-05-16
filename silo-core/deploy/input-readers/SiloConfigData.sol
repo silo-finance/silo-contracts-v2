@@ -30,8 +30,8 @@ contract SiloConfigData is Test, CommonDeploy {
         uint64 flashloanFee1;
         string hookReceiver;
         string hookReceiverImplementation;
-        address interestRateModel0;
-        address interestRateModel1;
+        string interestRateModel0;
+        string interestRateModel1;
         string interestRateModelConfig0;
         string interestRateModelConfig1;
         uint64 liquidationFee0;
@@ -78,7 +78,7 @@ contract SiloConfigData is Test, CommonDeploy {
             token0: getAddress(config.token0),
             solvencyOracle0: address(0),
             maxLtvOracle0: address(0),
-            interestRateModel0: address(0),
+            interestRateModel0: _resolveDeployedContract(config.interestRateModel0),
             interestRateModelConfig0: address(0),
             maxLtv0: config.maxLtv0 * BP2DP_NORMALIZATION,
             lt0: config.lt0 * BP2DP_NORMALIZATION,
@@ -88,7 +88,7 @@ contract SiloConfigData is Test, CommonDeploy {
             token1: getAddress(config.token1),
             solvencyOracle1: address(0),
             maxLtvOracle1: address(0),
-            interestRateModel1: address(0),
+            interestRateModel1: _resolveDeployedContract(config.interestRateModel1),
             interestRateModelConfig1: address(0),
             maxLtv1: config.maxLtv1 * BP2DP_NORMALIZATION,
             lt1: config.lt1 * BP2DP_NORMALIZATION,

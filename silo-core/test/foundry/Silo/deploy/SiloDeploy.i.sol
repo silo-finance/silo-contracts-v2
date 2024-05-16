@@ -16,6 +16,7 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {MainnetDeploy} from "silo-core/deploy/MainnetDeploy.s.sol";
 import {SiloOraclesFactoriesContracts} from "silo-oracles/deploy/SiloOraclesFactoriesContracts.sol";
+import {SiloConfigData} from "silo-core/deploy/input-readers/SiloConfigData.sol";
 
 import {
    UniswapV3OracleFactoryMock
@@ -40,31 +41,31 @@ contract SiloDeployTest is IntegrationTest {
    DIAOracleFactoryMock internal _diaOracleFactoryMock;
 
    function setUp() public {
-       vm.createSelectFork(getChainRpcUrl(MAINNET_ALIAS), _FORKING_BLOCK_NUMBER);
+        vm.createSelectFork(getChainRpcUrl(MAINNET_ALIAS), _FORKING_BLOCK_NUMBER);
 
         // Mock addresses that we need for the `SiloFactoryDeploy` script
-       AddrLib.setAddress(VeSiloContracts.TIMELOCK_CONTROLLER, makeAddr("Timelock"));
-       AddrLib.setAddress(VeSiloContracts.FEE_DISTRIBUTOR, makeAddr("FeeDistributor"));
+        AddrLib.setAddress(VeSiloContracts.TIMELOCK_CONTROLLER, makeAddr("Timelock"));
+        AddrLib.setAddress(VeSiloContracts.FEE_DISTRIBUTOR, makeAddr("FeeDistributor"));
 
-       _uniV3OracleFactoryMock = new UniswapV3OracleFactoryMock();
-       _chainlinkV3OracleFactoryMock = new ChainlinkV3OracleFactoryMock();
-       _diaOracleFactoryMock = new DIAOracleFactoryMock();
+        _uniV3OracleFactoryMock = new UniswapV3OracleFactoryMock();
+        _chainlinkV3OracleFactoryMock = new ChainlinkV3OracleFactoryMock();
+        _diaOracleFactoryMock = new DIAOracleFactoryMock();
 
-       _mockOraclesFactories();
+        _mockOraclesFactories();
 
-       Deployments.disableDeploymentsSync();
+        Deployments.disableDeploymentsSync();
 
-       MainnetDeploy mainnetDeploy = new MainnetDeploy();
-       mainnetDeploy.run();
+        MainnetDeploy mainnetDeploy = new MainnetDeploy();
+        mainnetDeploy.run();
 
-       _siloDeploy = new SiloDeployWithGaugeHookReceiver();
+        _siloDeploy = new SiloDeployWithGaugeHookReceiver();
 
-       // Mock addresses for oracles configurations
-       AddrLib.setAddress("CHAINLINK_PRIMARY_AGGREGATOR", makeAddr("Chainlink primary aggregator"));
-       AddrLib.setAddress("CHAINLINK_SECONDARY_AGGREGATOR", makeAddr("Chainlink secondary aggregator"));
-       AddrLib.setAddress("DIA_ORACLE_EXAMPLE", makeAddr("DIA oracle example"));
+        // Mock addresses for oracles configurations
+        AddrLib.setAddress("CHAINLINK_PRIMARY_AGGREGATOR", makeAddr("Chainlink primary aggregator"));
+        AddrLib.setAddress("CHAINLINK_SECONDARY_AGGREGATOR", makeAddr("Chainlink secondary aggregator"));
+        AddrLib.setAddress("DIA_ORACLE_EXAMPLE", makeAddr("DIA oracle example"));
 
-       _siloConfig = _siloDeploy.useConfig(SiloConfigsNames.FULL_CONFIG_TEST).run();
+        _siloConfig = _siloDeploy.useConfig(SiloConfigsNames.FULL_CONFIG_TEST).run();
     }
 
     // FOUNDRY_PROFILE=core-test forge test -vv --ffi -mt test_hooks_are_initialized
