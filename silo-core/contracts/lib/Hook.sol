@@ -21,6 +21,8 @@ library Hook {
     uint256 internal constant COLLATERAL_TOKEN = 2 ** 15;
     uint256 internal constant PROTECTED_TOKEN = 2 ** 16;
     uint256 internal constant DEBT_TOKEN = 2 ** 17;
+    uint256 internal constant SHARE_TOKEN_MINT = 2 ** 18;
+    uint256 internal constant SHARE_TOKEN_BURN = 2 ** 19;
 
     // note: currently we can support hook value up to 2 ** 23,
     // because for optimisation purposes, we storing hooks as uint24
