@@ -43,7 +43,7 @@ contract SiloDeployTest is IntegrationTest {
    function setUp() public {
         vm.createSelectFork(getChainRpcUrl(MAINNET_ALIAS), _FORKING_BLOCK_NUMBER);
 
-            // Mock addresses that we need for the `SiloFactoryDeploy` script
+        // Mock addresses that we need for the `SiloFactoryDeploy` script
         AddrLib.setAddress(VeSiloContracts.TIMELOCK_CONTROLLER, makeAddr("Timelock"));
         AddrLib.setAddress(VeSiloContracts.FEE_DISTRIBUTOR, makeAddr("FeeDistributor"));
 
