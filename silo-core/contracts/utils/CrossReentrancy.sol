@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.24;
 
+import {console} from "forge-std/console.sol";
+
+
 import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
 import {CrossEntrancy} from "../lib/CrossEntrancy.sol";
 import {Hook} from "../lib/Hook.sol";
@@ -55,8 +58,10 @@ abstract contract CrossReentrancy {
     }
 
     function _crossNonReentrantAfter() internal virtual {
+        console.log("[_crossNonReentrantAfter] #1", _crossReentrantStatus);
         // By storing the original value once again, a refund is triggered (see
         // https://eips.ethereum.org/EIPS/eip-2200)
         _crossReentrantStatus = CrossEntrancy.NOT_ENTERED;
+        console.log("[_crossNonReentrantAfter] #2", _crossReentrantStatus);
     }
 }

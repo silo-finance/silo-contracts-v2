@@ -20,6 +20,8 @@ contract HookCallsTest is IHookReceiver, SiloLittleHelper, Test {
     using Hook for uint256;
 
     ISiloConfig internal _siloConfig;
+    uint256 hookAfterFired;
+    uint256 hookBeforeFired;
 
     function setUp() public {
         token0 = new MintableToken(6);
@@ -47,20 +49,20 @@ contract HookCallsTest is IHookReceiver, SiloLittleHelper, Test {
         bool sameAsset = false;
 
         // execute all possible actions
-        _depositForBorrow(200, depositor);
+        _depositForBorrow(200e18, depositor);
 
         vm.startPrank(borrower);
 
-        _depositCollateral(200, borrower, sameAsset);
-        _borrow(50, borrower, sameAsset);
-        _repay(1, borrower);
-        _withdraw(10, borrower);
-//
-//        vm.warp(block.timestamp + 10);
-//        silo0.accrueInterest();
-//        silo1.accrueInterest();
-//
-//        silo0.transitionCollateral(100, borrower, ISilo.CollateralType.Protected);
+        _depositCollateral(200e18, borrower, sameAsset);
+        _borrow(50e18, borrower, sameAsset);
+        _repay(1e18, borrower);
+        _withdraw(10e18, borrower);
+
+        vm.warp(block.timestamp + 100);
+        silo0.accrueInterest();
+        silo1.accrueInterest();
+
+//        silo0.transitionCollateral(100e18, borrower, ISilo.CollateralType.Protected);
 //        silo0.switchCollateralTo(!sameAsset);
 
         // leverageSameAsset(uint256 _deposit, uint256 _borrow, address _borrower, CollateralType _collateralType);
@@ -74,8 +76,8 @@ contract HookCallsTest is IHookReceiver, SiloLittleHelper, Test {
 //        );
 
 
-//        silo1.withdrawFees();
-//        vm.startPrank();
+        silo1.withdrawFees();
+        vm.stopPrank();
     }
 
     function initialize(ISiloConfig _config, bytes calldata _data) external {
@@ -84,6 +86,8 @@ contract HookCallsTest is IHookReceiver, SiloLittleHelper, Test {
 
     /// @notice state of Silo before action, can be also without interest, if you need them, call silo.accrueInterest()
     function beforeAction(address _silo, uint256 _action, bytes calldata _input) external {
+        hookBeforeFired = _action;
+
         emit log_named_uint("[before] action", _action);
         (bool entered, uint256 status) = _siloConfig.crossReentrantStatus();
 
@@ -91,13 +95,28 @@ contract HookCallsTest is IHookReceiver, SiloLittleHelper, Test {
     }
 
     function afterAction(address _silo, uint256 _action, bytes calldata _inputAndOutput) external {
+        hookAfterFired = _action;
+
         emit log_named_uint("[after] action", _action);
         _printAction(_action);
         (bool entered, uint256 status) = _siloConfig.crossReentrantStatus();
 
         if (_action.matchAction(Hook.SHARE_TOKEN_TRANSFER)) {
-            // decode args to see if mint/burn
-            assertTrue(entered, "only when minting/burning we can be inside action");
+            // decode args to see if we mint/burn
+            (
+                address sender,
+                address recipient,
+                uint256 amount,
+                uint256 senderBalance,
+                uint256 recipientBalance,
+                uint256 totalSupply
+            ) = Hook.afterTokenTransferDecode(_inputAndOutput);
+
+            if (sender == address(0) || recipient == address(0)) {
+                assertTrue(entered, "only when minting/burning we can be inside action");
+            } else {
+                assertFalse(entered, "hook after must be called after any action");
+            }
         } else {
             assertFalse(entered, "hook after must be called after any action");
         }
