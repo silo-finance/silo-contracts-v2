@@ -483,16 +483,16 @@ library Actions {
 
     function switchCollateralTo(
         ISilo.SharedStorage storage _shareStorage,
-        bool _sameAsset
+        bool _toSameAsset
     ) external {
-        _hookCallBefore(_shareStorage, Hook.SWITCH_COLLATERAL, abi.encodePacked(_sameAsset));
+        _hookCallBefore(_shareStorage, Hook.SWITCH_COLLATERAL, abi.encodePacked(_toSameAsset));
 
         (
             ISiloConfig.ConfigData memory collateralConfig,
             ISiloConfig.ConfigData memory debtConfig,
             ISiloConfig.DebtInfo memory debtInfo
         ) = _shareStorage.siloConfig.accrueInterestAndGetConfigs(
-            address(this), msg.sender, Hook.SWITCH_COLLATERAL | (_sameAsset ? Hook.SAME_ASSET : Hook.TWO_ASSETS)
+            address(this), msg.sender, Hook.SWITCH_COLLATERAL | (_toSameAsset ? Hook.SAME_ASSET : Hook.TWO_ASSETS)
         );
 
         if (collateralConfig.otherSilo != address(this)) {
@@ -512,7 +512,7 @@ library Actions {
 
         if (collateralConfig.hookReceiver != address(0)) {
             _hookCallAfter(
-                _shareStorage, collateralConfig.hookReceiver, Hook.SWITCH_COLLATERAL, abi.encodePacked(_sameAsset)
+                _shareStorage, collateralConfig.hookReceiver, Hook.SWITCH_COLLATERAL, abi.encodePacked(_toSameAsset)
             );
         }
     }
