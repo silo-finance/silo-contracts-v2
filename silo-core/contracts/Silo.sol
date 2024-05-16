@@ -480,7 +480,7 @@ contract Silo is SiloERC4626 {
             _borrowAssets,
             _borrower,
             _collateralType,
-            total[AssetTypes.COLLATERAL].assets,
+            total[AssetTypes.COLLATERAL],
             total[AssetTypes.DEBT],
             total[uint256(_collateralType)]
         );
@@ -749,9 +749,9 @@ contract Silo is SiloERC4626 {
                 receiver: _receiver,
                 borrower: _borrower,
                 sameAsset: _sameAsset,
-                leverage: _leverage,
-                totalCollateralAssets: total[AssetTypes.COLLATERAL].assets
+                leverage: _leverage
             }),
+            total[AssetTypes.COLLATERAL],
             total[AssetTypes.DEBT],
             _data
         );

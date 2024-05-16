@@ -69,7 +69,6 @@ interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
     /// assets are provided.
     /// @param receiver Address that will receive the borrowed assets
     /// @param borrower The user who is borrowing the assets
-    /// @param totalCollateralAssets Total collateralized assets currently in the system, not protected
     struct BorrowArgs {
         uint256 assets;
         uint256 shares;
@@ -77,7 +76,6 @@ interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
         address borrower;
         bool sameAsset;
         bool leverage;
-        uint256 totalCollateralAssets;
     }
 
     struct SharedStorage {

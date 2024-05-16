@@ -70,9 +70,9 @@ contract BorrowTest is Test {
                 receiver: receiver,
                 borrower: borrower,
                 sameAsset: false,
-                leverage: false,
-                totalCollateralAssets: totalCollateralAssets
+                leverage: false
             }),
+            totalCollateralAssets,
             totalDebt
         );
     }
