@@ -250,8 +250,9 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
         (collateralConfig, debtConfig) = _getOrderedConfigs(_silo, debtInfo, _action);
     }
 
-    function crossReentrancyGuardEntered() external view virtual returns (bool) {
-        return _crossReentrantStatus != CrossEntrancy.NOT_ENTERED;
+    function crossReentrantStatus() external view virtual returns (bool entered, uint256 status) {
+        status = _crossReentrantStatus;
+        entered = status != CrossEntrancy.NOT_ENTERED;
     }
 
     /// @inheritdoc ISiloConfig

@@ -244,6 +244,9 @@ abstract contract ShareToken is Initializable, ERC20, IShareToken {
         if (setup.hookReceiver == address(0)) return;
         uint256 action = setup.tokenType | Hook.SHARE_TOKEN_TRANSFER;
 
+        if (_sender == address(0)) action |= Hook.SHARE_TOKEN_MINT;
+        else if (_recipient == address(0)) action |= Hook.SHARE_TOKEN_BURN;
+
         if (!setup.hooksAfter.matchAction(action)) return;
 
         // report mint, burn or transfer
