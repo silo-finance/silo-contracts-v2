@@ -39,31 +39,38 @@ contract HookCallsTest is IHookReceiver, SiloLittleHelper, Test {
         silo1.updateHooks();
     }
 
-    // FOUNDRY_PROFILE=core-test forge test --ffi -vvv --mt testReinitialization
+    /*
+    FOUNDRY_PROFILE=core-test forge test --ffi -vv --mt test_ifHooksAreNotCalledInsideAction
+    */
     function test_ifHooksAreNotCalledInsideAction() public {
         (bool entered, uint256 status) = _siloConfig.crossReentrantStatus();
         assertFalse(entered, "dummy check");
 
         address depositor = makeAddr("depositor");
         address borrower = makeAddr("borrower");
-        bool sameAsset = false;
+        bool sameAsset = true;
 
         // execute all possible actions
+
         _depositForBorrow(200e18, depositor);
 
-        vm.startPrank(borrower);
-
-        _depositCollateral(200e18, borrower, sameAsset);
-        _borrow(50e18, borrower, sameAsset);
+        _depositCollateral(200e18, borrower, !sameAsset);
+        _borrow(50e18, borrower, !sameAsset);
         _repay(1e18, borrower);
         _withdraw(10e18, borrower);
 
-        vm.warp(block.timestamp + 100);
+        vm.warp(block.timestamp + 10);
+
         silo0.accrueInterest();
         silo1.accrueInterest();
 
-//        silo0.transitionCollateral(100e18, borrower, ISilo.CollateralType.Protected);
-//        silo0.switchCollateralTo(!sameAsset);
+        emit log_named_address("borrower", borrower);
+
+        vm.startPrank(borrower);
+        silo0.transitionCollateral(100e18, borrower, ISilo.CollateralType.Collateral);
+
+        _depositCollateral(100e18, borrower, sameAsset);
+        silo0.switchCollateralTo(sameAsset); // NoDebt ????
 
         // leverageSameAsset(uint256 _deposit, uint256 _borrow, address _borrower, CollateralType _collateralType);
 
@@ -76,7 +83,7 @@ contract HookCallsTest is IHookReceiver, SiloLittleHelper, Test {
 //        );
 
 
-        silo1.withdrawFees();
+//        silo1.withdrawFees();
         vm.stopPrank();
     }
 

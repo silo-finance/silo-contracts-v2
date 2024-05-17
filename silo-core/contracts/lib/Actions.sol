@@ -494,6 +494,9 @@ library Actions {
     ) external {
         _hookCallBefore(_shareStorage, Hook.SWITCH_COLLATERAL, abi.encodePacked(_toSameAsset));
 
+        console.log("address(this)", address(this));
+        console.log("msg.sender", msg.sender);
+
         (
             ISiloConfig.ConfigData memory collateralConfig,
             ISiloConfig.ConfigData memory debtConfig,
