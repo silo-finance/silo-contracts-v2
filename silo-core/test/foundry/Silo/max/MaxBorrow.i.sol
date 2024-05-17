@@ -59,7 +59,14 @@ contract MaxBorrowTest is SiloLittleHelper, Test {
     ) public {
         // uint128 _collateral = 401;
         // uint128 _liquidity = 1;
-        _maxBorrow_withCollateral_fuzz(_collateral, _liquidity, SAME_ASSET);
+        _maxBorrow_withCollateral_fuzz(_collateral, _liquidity, ISilo.CollateralType.Collateral, SAME_ASSET);
+    }
+
+    /// forge-config: core-test.fuzz.runs = 1000
+    function test_maxBorrow_withCollateral_protected_1token_fuzz(
+        uint128 _collateral, uint128 _liquidity
+    ) public {
+        _maxBorrow_withCollateral_fuzz(_collateral, _liquidity, ISilo.CollateralType.Protected, SAME_ASSET);
     }
 
     /// forge-config: core-test.fuzz.runs = 1000
@@ -68,12 +75,20 @@ contract MaxBorrowTest is SiloLittleHelper, Test {
     ) public {
         // uint128 _collateral = 401;
         // uint128 _liquidity = 1;
-        _maxBorrow_withCollateral_fuzz(_collateral, _liquidity, TWO_ASSETS);
+        _maxBorrow_withCollateral_fuzz(_collateral, _liquidity, ISilo.CollateralType.Collateral, TWO_ASSETS);
+    }
+
+    /// forge-config: core-test.fuzz.runs = 1000
+    function test_maxBorrow_withCollateral_protected_2tokens_fuzz(
+        uint128 _collateral, uint128 _liquidity
+    ) public {
+        _maxBorrow_withCollateral_fuzz(_collateral, _liquidity, ISilo.CollateralType.Protected, TWO_ASSETS);
     }
 
     function _maxBorrow_withCollateral_fuzz(
         uint128 _collateral,
         uint128 _liquidity,
+        ISilo.CollateralType _collateralType,
         bool _sameAsset
     ) internal returns (uint256 maxBorrow) {
         vm.assume(_liquidity > 0);
@@ -82,7 +97,7 @@ contract MaxBorrowTest is SiloLittleHelper, Test {
         emit log_named_string("_sameAsset", _sameAsset ? "yes" : "no");
 
         _depositForBorrow(_liquidity, depositor);
-        _depositCollateral(_collateral, borrower, _sameAsset);
+        _depositCollateral(_collateral, borrower, _sameAsset, _collateralType);
 
         maxBorrow = silo1.maxBorrow(borrower, _sameAsset);
         emit log_named_decimal_uint("maxBorrow", maxBorrow, 18);
