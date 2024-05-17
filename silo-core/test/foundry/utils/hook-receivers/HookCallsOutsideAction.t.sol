@@ -32,7 +32,7 @@ contract HookCallsOutsideActionTest is IHookReceiver, ILeverageBorrower, SiloLit
     uint256 hookAfterFired;
     uint256 hookBeforeFired;
 
-    function setUp() public {
+    function _setUp() public {
         token0 = new MintableToken(6);
         token1 = new MintableToken(18);
 
@@ -55,6 +55,8 @@ contract HookCallsOutsideActionTest is IHookReceiver, ILeverageBorrower, SiloLit
     FOUNDRY_PROFILE=core-test forge test --ffi -vv --mt test_ifHooksAreNotCalledInsideAction
     */
     function test_ifHooksAreNotCalledInsideAction() public {
+        _setUp();
+
         (bool entered, uint256 status) = _siloConfig.crossReentrantStatus();
         assertFalse(entered, "initial state for entered");
         assertEq(status, CrossEntrancy.NOT_ENTERED, "initial state for status");
@@ -126,6 +128,10 @@ contract HookCallsOutsideActionTest is IHookReceiver, ILeverageBorrower, SiloLit
         );
 
         emit log_named_decimal_uint("borrower LTV", silo0.getLtv(borrower), 16);
+
+        // flashLoan
+
+        // hook custom call
 
         silo1.withdrawFees();
     }
