@@ -6,7 +6,8 @@ import {Test} from "forge-std/Test.sol";
 import {IERC20} from "openzeppelin5/token/ERC20/ERC20.sol";
 
 import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
-import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
+import {ISilo, IERC3156FlashLender} from "silo-core/contracts/interfaces/ISilo.sol";
+import {IERC3156FlashBorrower} from "silo-core/contracts/interfaces/IERC3156FlashBorrower.sol";
 import {IERC20R} from "silo-core/contracts/interfaces/IERC20R.sol";
 import {ILeverageBorrower} from "silo-core/contracts/interfaces/ILeverageBorrower.sol";
 import {IHookReceiver} from "silo-core/contracts/utils/hook-receivers/interfaces/IHookReceiver.sol";
@@ -23,11 +24,12 @@ import {SiloFixtureWithFeeDistributor as SiloFixture} from "../../_common/fixtur
 /*
 FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc HookCallsOutsideActionTest
 */
-contract HookCallsOutsideActionTest is IHookReceiver, ILeverageBorrower, SiloLittleHelper, Test {
+contract HookCallsOutsideActionTest is IHookReceiver, ILeverageBorrower, IERC3156FlashBorrower, SiloLittleHelper, Test {
     using Hook for uint256;
     using SiloLensLib for ISilo;
 
     bytes32 internal constant _LEVERAGE_CALLBACK = keccak256("ILeverageBorrower.onLeverage");
+    bytes32 constant FLASHLOAN_CALLBACK = keccak256("ERC3156FlashBorrower.onFlashLoan");
 
     ISiloConfig internal _siloConfig;
     uint256 hookAfterFired;
@@ -110,6 +112,13 @@ contract HookCallsOutsideActionTest is IHookReceiver, ILeverageBorrower, SiloLit
         vm.prank(borrower);
         silo1.withdraw(48e18, borrower, borrower);
 
+        // TODO flashLoan
+        silo0.flashLoan(this, address(token0), token0.balanceOf(address(silo0)), "");
+
+
+        // TODO hook custom call
+
+
         // liquidation
 
         emit log_named_decimal_uint("borrower LTV", silo0.getLtv(borrower), 16);
@@ -127,10 +136,6 @@ contract HookCallsOutsideActionTest is IHookReceiver, ILeverageBorrower, SiloLit
         );
 
         emit log_named_decimal_uint("borrower LTV", silo0.getLtv(borrower), 16);
-
-        // TODO flashLoan
-
-        // TODO hook custom call
 
         silo1.withdrawFees();
     }
@@ -176,6 +181,14 @@ contract HookCallsOutsideActionTest is IHookReceiver, ILeverageBorrower, SiloLit
         emit log_named_uint("[after] action", _action);
         _printAction(_action);
         emit log("[after] action --------------------- ");
+    }
+
+    function onFlashLoan(address _initiator, address _token, uint256 _amount, uint256 _fee, bytes calldata _data)
+        external
+        returns (bytes32)
+    {
+        IERC20(_token).transfer(address(msg.sender), _amount);
+        return FLASHLOAN_CALLBACK;
     }
 
     function hookReceiverConfig(address) external pure returns (uint24 hooksBefore, uint24 hooksAfter) {
