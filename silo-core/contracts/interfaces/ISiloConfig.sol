@@ -158,11 +158,11 @@ interface ISiloConfig {
         ISilo.CollateralType _collateralType
     ) external returns (address shareToken, address asset, address hookReceiver, address liquidationModule);
 
-
     /// @notice view method for checking cross Silo reentrancy flag
-    /// @dev Returns true if the reentrancy guard is currently set to "entered", which indicates there is a
+    /// @return entered true if the reentrancy guard is currently set to "entered", which indicates there is a
     /// `nonReentrant` function in the call stack.
-    function crossReentrancyGuardEntered() external view returns (bool);
+    /// @return status precise status of reentrancy, see CrossEntrancy.sol for possible values
+    function crossReentrantStatus() external view returns (bool entered, uint256 status);
 
     // solhint-disable-next-line func-name-mixedcase
     function SILO_ID() external view returns (uint256);
