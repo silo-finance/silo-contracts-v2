@@ -15,8 +15,9 @@ import {ISiloDeployer} from "silo-core/contracts/interfaces/ISiloDeployer.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ContractThatAcceptsETH} from "silo-core/test/foundry/_mocks/ContractThatAcceptsETH.sol";
+import {SiloFixtureWithFeeDistributor as SiloFixture} from "../_common/fixtures/SiloFixtureWithFeeDistributor.sol";
+import {SiloConfigOverride} from "../_common/fixtures/SiloFixture.sol";
 
-import {SiloFixture, SiloConfigOverride} from "../_common/fixtures/SiloFixture.sol";
 import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
 
 /// FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mc SiloHooksTest

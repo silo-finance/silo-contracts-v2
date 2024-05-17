@@ -5,7 +5,6 @@ import {console2} from "forge-std/console2.sol";
 
 import {StdCheats} from "forge-std/StdCheats.sol";
 import {CommonBase} from "forge-std/Base.sol";
-import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 
 import {OracleConfig} from "silo-oracles/deploy/OraclesDeployments.sol";
 
@@ -16,8 +15,6 @@ import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquidation.sol";
-
-import {VeSiloContracts} from "ve-silo/common/VeSiloContracts.sol";
 
 import {TokenMock} from "../../_mocks/TokenMock.sol";
 
@@ -129,9 +126,6 @@ contract SiloFixture is StdCheats, CommonBase {
             IPartialLiquidation liquidationModule
         )
     {
-        // TODO: remove dependency on VeSiloContracts
-        AddrLib.setAddress(VeSiloContracts.FEE_DISTRIBUTOR, makeAddr("FeeDistributor"));
-
         MainnetDeploy mainnetDeploy = new MainnetDeploy();
         mainnetDeploy.disableDeploymentsSync();
         mainnetDeploy.run();
