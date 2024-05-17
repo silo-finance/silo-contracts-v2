@@ -56,7 +56,8 @@ contract HookCallsOutsideActionTest is IHookReceiver, ILeverageBorrower, SiloLit
     */
     function test_ifHooksAreNotCalledInsideAction() public {
         (bool entered, uint256 status) = _siloConfig.crossReentrantStatus();
-        assertFalse(entered, "dummy check");
+        assertFalse(entered, "initial state for entered");
+        assertEq(status, CrossEntrancy.NOT_ENTERED, "initial state for status");
 
         address depositor = makeAddr("depositor");
         address borrower = makeAddr("borrower");
@@ -129,12 +130,11 @@ contract HookCallsOutsideActionTest is IHookReceiver, ILeverageBorrower, SiloLit
         silo1.withdrawFees();
     }
 
-    function initialize(ISiloConfig _config, bytes calldata _data) external {
+    function initialize(ISiloConfig _config, bytes calldata) external {
         assertEq(address(_siloConfig), address(_config), "SiloConfig addresses should match");
     }
 
-    /// @notice state of Silo before action, can be also without interest, if you need them, call silo.accrueInterest()
-    function beforeAction(address _silo, uint256 _action, bytes calldata _input) external {
+    function beforeAction(address, uint256 _action, bytes calldata) external {
         hookBeforeFired = _action;
 
         (bool entered, uint256 status) = _siloConfig.crossReentrantStatus();
@@ -151,10 +151,10 @@ contract HookCallsOutsideActionTest is IHookReceiver, ILeverageBorrower, SiloLit
 
     }
 
-    function afterAction(address _silo, uint256 _action, bytes calldata _inputAndOutput) external {
+    function afterAction(address, uint256 _action, bytes calldata _inputAndOutput) external {
         hookAfterFired = _action;
 
-        (bool entered, uint256 status) = _siloConfig.crossReentrantStatus();
+        (bool entered,) = _siloConfig.crossReentrantStatus();
 
         if (_action.matchAction(Hook.SHARE_TOKEN_TRANSFER)) {
             (address sender, address recipient,,,,) = Hook.afterTokenTransferDecode(_inputAndOutput);
@@ -173,8 +173,7 @@ contract HookCallsOutsideActionTest is IHookReceiver, ILeverageBorrower, SiloLit
         emit log("[after] action --------------------- ");
     }
 
-    /// @notice return hooksBefore and hooksAfter configuration
-    function hookReceiverConfig(address _silo) external view returns (uint24 hooksBefore, uint24 hooksAfter) {
+    function hookReceiverConfig(address) external pure returns (uint24 hooksBefore, uint24 hooksAfter) {
         // we want all possible combinations to be ON
         hooksBefore = type(uint24).max;
         hooksAfter = type(uint24).max;
