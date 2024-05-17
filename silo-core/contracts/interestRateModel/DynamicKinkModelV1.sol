@@ -1,11 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.21;
 
-import {SafeCast} from "openzeppelin-contracts/utils/math/SafeCast.sol";
-import {Math} from "openzeppelin-contracts/utils/math/Math.sol";
-
 import {PRBMathSD59x18} from "../lib/PRBMathSD59x18.sol";
-import {IInterestRateModel} from "../interfaces/IInterestRateModel.sol";
 import {IDynamicKinkModelV1} from "../interfaces/IDynamicKinkModelV1.sol";
 
 // solhint-disable var-name-mixedcase
@@ -16,7 +12,6 @@ contract DynamicKinkModelV1 is IDynamicKinkModelV1 {
     using PRBMathSD59x18 for int256;
 
     error InvalidTimestamp();
-    error HundredYearsExceeded();
 
     // returns decimal points used by model
     uint256 public constant DECIMALS = 18;
@@ -26,17 +21,15 @@ contract DynamicKinkModelV1 is IDynamicKinkModelV1 {
     int256 public constant SECONDS_IN_YEAR = 365 * 24 * 60 * 60;
     int256 public constant HUNDRED_YEARS = 100 * SECONDS_IN_YEAR;
 
-    // limit for some variables, including kmin and kmax
-    int256 public constant CONFIG_CONSTANTS_FIRST_LIMIT = 10**16 * _DP;
-    // limit for some variables, including dmax
-    int256 public constant CONFIG_CONSTANTS_SECOND_LIMIT = 10**22 * _DP;
+    // limit for some variables
+    int256 public constant UNIVERSAL_LIMIT = 10**9 * _DP;
 
 
     int256 public constant X_MAX = 11 * _DP;
 
     /// @dev maximum value of current interest rate the model will return. This is 10,000% APR in the 18-decimals format
     int256 public constant R_CURRENT_MAX = 100 * _DP;
-    int256 public constant AMT_MAX = (type(int256).max - 1) / (2 ** 16 * _DP);
+    int256 public constant AMT_MAX = 2 ** 161;
 
     /// @dev maximum value of compound interest per second the model will return. This is per-second rate.
     int256 public constant R_COMPOUND_MAX_PER_SECOND = R_CURRENT_MAX / (365 * 24 * 3600);
@@ -145,14 +138,14 @@ contract DynamicKinkModelV1 is IDynamicKinkModelV1 {
             (_config.u2 >= _config.u1 && _config.u2 < _DP) &&
             (_config.ucrit >= _config.ulow && _config.ucrit < _DP) &&
             (_config.rmin >= 0 && _config.rmin < _DP) &&
-            (_config.kmin >= 0 && _config.kmin < CONFIG_CONSTANTS_FIRST_LIMIT) &&
-            (_config.kmax >= _config.kmin && _config.kmin < CONFIG_CONSTANTS_FIRST_LIMIT) &&
-            (_config.dmax >= 0 && _config.dmax < CONFIG_CONSTANTS_SECOND_LIMIT) &&
-            (_config.alpha >= 0 && _config.alpha < CONFIG_CONSTANTS_FIRST_LIMIT) &&
-            (_config.cminus >= 0 && _config.cminus < CONFIG_CONSTANTS_SECOND_LIMIT) &&
-            (_config.cplus >= 0 && _config.cplus < CONFIG_CONSTANTS_SECOND_LIMIT) &&
-            (_config.c1 >= 0 && _config.c1 < CONFIG_CONSTANTS_SECOND_LIMIT) &&
-            (_config.c2 >= 0 && _config.c2 < CONFIG_CONSTANTS_SECOND_LIMIT);
+            (_config.kmin >= 0 && _config.kmin < UNIVERSAL_LIMIT) &&
+            (_config.kmax >= _config.kmin && _config.kmin < UNIVERSAL_LIMIT) &&
+            (_config.dmax >= 0 && _config.dmax < UNIVERSAL_LIMIT) &&
+            (_config.alpha >= 0 && _config.alpha < UNIVERSAL_LIMIT) &&
+            (_config.cminus >= 0 && _config.cminus < UNIVERSAL_LIMIT) &&
+            (_config.cplus >= 0 && _config.cplus < UNIVERSAL_LIMIT) &&
+            (_config.c1 >= 0 && _config.c1 < UNIVERSAL_LIMIT) &&
+            (_config.c2 >= 0 && _config.c2 < UNIVERSAL_LIMIT);
     }
     function compoundInterestRate(
         Setup memory _setup, 
@@ -174,7 +167,9 @@ contract DynamicKinkModelV1 is IDynamicKinkModelV1 {
             
             _l.T = _t1 - _t0;
             
-            if (_l.T > HUNDRED_YEARS) revert HundredYearsExceeded();
+            if (_l.T > HUNDRED_YEARS) {
+                _l.T = HUNDRED_YEARS;
+            }
 
             // roc calculations
             if (_u < _setup.config.u1) {
@@ -205,12 +200,6 @@ contract DynamicKinkModelV1 is IDynamicKinkModelV1 {
                 if (_u >= _setup.config.ucrit) {
                     _l.f = _l.f + _setup.config.alpha * (_u - _setup.config.ucrit) / _DP;
                 }
-            }
-
-            // apply the limit for x, because the f*x operation can overflow
-            if (_l.x > X_MAX) {
-                didOverflow = true;
-                _l.x = X_MAX;
             }
 
             _l.x = _setup.config.rmin * _l.T + _l.f * _l.x / _DP;
