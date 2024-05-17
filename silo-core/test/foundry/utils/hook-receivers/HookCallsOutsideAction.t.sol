@@ -112,13 +112,8 @@ contract HookCallsOutsideActionTest is IHookReceiver, ILeverageBorrower, IERC315
         vm.prank(borrower);
         silo1.withdraw(48e18, borrower, borrower);
 
-        // TODO flashLoan
         silo0.flashLoan(this, address(token0), token0.balanceOf(address(silo0)), "");
-
-
-        // TODO hook custom call
-
-
+        
         // liquidation
 
         emit log_named_decimal_uint("borrower LTV", silo0.getLtv(borrower), 16);
