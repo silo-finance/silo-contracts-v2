@@ -6,6 +6,7 @@ import {Test} from "forge-std/Test.sol";
 import {SiloFixture, SiloConfigOverride} from "../../_common/fixtures/SiloFixture.sol";
 import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
+import {ILeverageBorrower} from "silo-core/contracts/interfaces/ILeverageBorrower.sol";
 import {IHookReceiver} from "silo-core/contracts/utils/hook-receivers/interfaces/IHookReceiver.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {Hook} from "silo-core/contracts/lib/Hook.sol";
@@ -14,10 +15,12 @@ import {SiloLittleHelper} from  "../../_common/SiloLittleHelper.sol";
 import {MintableToken} from "../../_common/MintableToken.sol";
 
 /*
-FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc HookCallsTest
+FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc HookCallsOutsideActionTest
 */
-contract HookCallsTest is IHookReceiver, SiloLittleHelper, Test {
+contract HookCallsOutsideActionTest is IHookReceiver, ILeverageBorrower, SiloLittleHelper, Test {
     using Hook for uint256;
+
+    bytes32 internal constant _LEVERAGE_CALLBACK = keccak256("ILeverageBorrower.onLeverage");
 
     ISiloConfig internal _siloConfig;
     uint256 hookAfterFired;
@@ -26,6 +29,9 @@ contract HookCallsTest is IHookReceiver, SiloLittleHelper, Test {
     function setUp() public {
         token0 = new MintableToken(6);
         token1 = new MintableToken(18);
+
+        token0.setOnDemand(true);
+        token1.setOnDemand(true);
 
         SiloConfigOverride memory overrides;
         overrides.token0 = address(token0);
@@ -74,23 +80,12 @@ contract HookCallsTest is IHookReceiver, SiloLittleHelper, Test {
         vm.prank(borrower);
         silo0.switchCollateralTo(sameAsset);
 
-        token1.mint(borrower, 9);
-        vm.prank(borrower);
-        token1.approve(address(silo1), 9);
         vm.prank(borrower);
         silo1.leverageSameAsset(10, 1, borrower, ISilo.CollateralType.Protected);
 
-//        function leverage(
-//        uint256 _assets,
-//        ILeverageBorrower _receiver,
-//        address _borrower,
-//        bool _sameAsset,
-//        bytes calldata _data
-//        );
+        silo0.leverage(1e18, this, address(this), !sameAsset, abi.encode(address(silo1)));
 
-
-//        silo1.withdrawFees();
-        vm.stopPrank();
+        silo1.withdrawFees();
     }
 
     function initialize(ISiloConfig _config, bytes calldata _data) external {
@@ -101,17 +96,17 @@ contract HookCallsTest is IHookReceiver, SiloLittleHelper, Test {
     function beforeAction(address _silo, uint256 _action, bytes calldata _input) external {
         hookBeforeFired = _action;
 
-        emit log_named_uint("[before] action", _action);
         (bool entered, uint256 status) = _siloConfig.crossReentrantStatus();
 
         assertFalse(entered, "hook before must be called before any action");
+
+        emit log_named_uint("[before] action", _action);
+        _printAction(_action);
     }
 
     function afterAction(address _silo, uint256 _action, bytes calldata _inputAndOutput) external {
         hookAfterFired = _action;
 
-        emit log_named_uint("[after] action", _action);
-        _printAction(_action);
         (bool entered, uint256 status) = _siloConfig.crossReentrantStatus();
 
         if (_action.matchAction(Hook.SHARE_TOKEN_TRANSFER)) {
@@ -133,6 +128,9 @@ contract HookCallsTest is IHookReceiver, SiloLittleHelper, Test {
         } else {
             assertFalse(entered, "hook after must be called after any action");
         }
+
+        emit log_named_uint("[after] action", _action);
+        _printAction(_action);
     }
 
     /// @notice return hooksBefore and hooksAfter configuration
@@ -140,6 +138,16 @@ contract HookCallsTest is IHookReceiver, SiloLittleHelper, Test {
         // we want all possible combinations to be ON
         hooksBefore = type(uint24).max;
         hooksAfter = type(uint24).max;
+    }
+
+    function onLeverage(address, address _borrower, address, uint256 _assets, bytes calldata _data)
+        external
+        returns (bytes32)
+    {
+        (address silo) = abi.decode(_data, (address));
+        ISilo(silo).deposit(_assets * 2, _borrower, ISilo.CollateralType.Protected);
+
+        return _LEVERAGE_CALLBACK;
     }
 
     function _printAction(uint256 _action) internal {
