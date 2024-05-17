@@ -66,13 +66,19 @@ contract HookCallsTest is IHookReceiver, SiloLittleHelper, Test {
 
         emit log_named_address("borrower", borrower);
 
-        vm.startPrank(borrower);
+        vm.prank(borrower);
         silo0.transitionCollateral(100e18, borrower, ISilo.CollateralType.Collateral);
 
         _depositCollateral(100e18, borrower, sameAsset);
-        silo0.switchCollateralTo(sameAsset); // NoDebt ????
 
-        // leverageSameAsset(uint256 _deposit, uint256 _borrow, address _borrower, CollateralType _collateralType);
+        vm.prank(borrower);
+        silo0.switchCollateralTo(sameAsset);
+
+        token1.mint(borrower, 9);
+        vm.prank(borrower);
+        token1.approve(address(silo1), 9);
+        vm.prank(borrower);
+        silo1.leverageSameAsset(10, 1, borrower, ISilo.CollateralType.Protected);
 
 //        function leverage(
 //        uint256 _assets,
@@ -154,7 +160,5 @@ contract HookCallsTest is IHookReceiver, SiloLittleHelper, Test {
         if (_action.matchAction(Hook.COLLATERAL_TOKEN)) emit log("COLLATERAL_TOKEN");
         if (_action.matchAction(Hook.PROTECTED_TOKEN)) emit log("PROTECTED_TOKEN");
         if (_action.matchAction(Hook.DEBT_TOKEN)) emit log("DEBT_TOKEN");
-//        if (_action.matchAction(Hook.SHARE_TOKEN_MINT)) emit log("SHARE_TOKEN_MINT");
-//        if (_action.matchAction(Hook.SHARE_TOKEN_BURN)) emit log("SHARE_TOKEN_BURN");
     }
 }
