@@ -17,7 +17,8 @@ import {CrossEntrancy} from "silo-core/contracts/lib/CrossEntrancy.sol";
 
 import {SiloLittleHelper} from  "../../_common/SiloLittleHelper.sol";
 import {MintableToken} from "../../_common/MintableToken.sol";
-import {SiloFixture, SiloConfigOverride} from "../../_common/fixtures/SiloFixture.sol";
+import {SiloConfigOverride} from "../../_common/fixtures/SiloFixture.sol";
+import {SiloFixtureWithFeeDistributor as SiloFixture} from "../../_common/fixtures/SiloFixtureWithFeeDistributor.sol";
 
 /*
 FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc HookCallsOutsideActionTest
@@ -32,7 +33,7 @@ contract HookCallsOutsideActionTest is IHookReceiver, ILeverageBorrower, SiloLit
     uint256 hookAfterFired;
     uint256 hookBeforeFired;
 
-    function _setUp() public {
+    function setUp() public {
         token0 = new MintableToken(6);
         token1 = new MintableToken(18);
 
@@ -55,8 +56,6 @@ contract HookCallsOutsideActionTest is IHookReceiver, ILeverageBorrower, SiloLit
     FOUNDRY_PROFILE=core-test forge test --ffi -vv --mt test_ifHooksAreNotCalledInsideAction
     */
     function test_ifHooksAreNotCalledInsideAction() public {
-        _setUp();
-
         (bool entered, uint256 status) = _siloConfig.crossReentrantStatus();
         assertFalse(entered, "initial state for entered");
         assertEq(status, CrossEntrancy.NOT_ENTERED, "initial state for status");
@@ -129,9 +128,9 @@ contract HookCallsOutsideActionTest is IHookReceiver, ILeverageBorrower, SiloLit
 
         emit log_named_decimal_uint("borrower LTV", silo0.getLtv(borrower), 16);
 
-        // flashLoan
+        // TODO flashLoan
 
-        // hook custom call
+        // TODO hook custom call
 
         silo1.withdrawFees();
     }
