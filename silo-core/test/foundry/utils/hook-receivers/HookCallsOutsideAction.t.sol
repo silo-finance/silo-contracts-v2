@@ -3,9 +3,11 @@ pragma solidity 0.8.24;
 
 import {Test} from "forge-std/Test.sol";
 
-import {SiloFixture, SiloConfigOverride} from "../../_common/fixtures/SiloFixture.sol";
+import {IERC20} from "openzeppelin5/token/ERC20/ERC20.sol";
+
 import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
+import {IERC20R} from "silo-core/contracts/interfaces/IERC20R.sol";
 import {ILeverageBorrower} from "silo-core/contracts/interfaces/ILeverageBorrower.sol";
 import {IHookReceiver} from "silo-core/contracts/utils/hook-receivers/interfaces/IHookReceiver.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
@@ -15,6 +17,7 @@ import {CrossEntrancy} from "silo-core/contracts/lib/CrossEntrancy.sol";
 
 import {SiloLittleHelper} from  "../../_common/SiloLittleHelper.sol";
 import {MintableToken} from "../../_common/MintableToken.sol";
+import {SiloFixture, SiloConfigOverride} from "../../_common/fixtures/SiloFixture.sol";
 
 /*
 FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc HookCallsOutsideActionTest
@@ -86,16 +89,30 @@ contract HookCallsOutsideActionTest is IHookReceiver, ILeverageBorrower, SiloLit
 
         silo0.leverage(1e18, this, address(this), !sameAsset, abi.encode(address(silo1)));
 
-        // tokenss transfer
-        (address protectedShareToken, address collateralShareToken, address debtShareToken) = _siloConfig.getShareTokens(address(silo0));
+        (
+            address protectedShareToken, address collateralShareToken, address debtShareToken
+        ) = _siloConfig.getShareTokens(address(silo1));
+
+        vm.prank(borrower);
+        IERC20(protectedShareToken).transfer(depositor, 1);
+
+        vm.prank(borrower);
+        IERC20(collateralShareToken).transfer(depositor, 1);
+
+        vm.prank(depositor);
+        IERC20R(debtShareToken).setReceiveApproval(borrower, 1);
+
+        vm.prank(borrower);
+        IERC20(debtShareToken).transfer(depositor, 1);
 
         vm.prank(borrower);
         silo1.withdraw(48e18, borrower, borrower);
 
         // liquidation
+
         emit log_named_decimal_uint("borrower LTV", silo0.getLtv(borrower), 16);
 
-        vm.warp(block.timestamp + 1000 days);
+        vm.warp(block.timestamp + 200 days);
         emit log_named_decimal_uint("borrower LTV", silo0.getLtv(borrower), 16);
 
         partialLiquidation.liquidationCall(
@@ -106,6 +123,8 @@ contract HookCallsOutsideActionTest is IHookReceiver, ILeverageBorrower, SiloLit
             type(uint256).max,
             false // _receiveSToken
         );
+
+        emit log_named_decimal_uint("borrower LTV", silo0.getLtv(borrower), 16);
 
         silo1.withdrawFees();
     }
@@ -138,20 +157,12 @@ contract HookCallsOutsideActionTest is IHookReceiver, ILeverageBorrower, SiloLit
         (bool entered, uint256 status) = _siloConfig.crossReentrantStatus();
 
         if (_action.matchAction(Hook.SHARE_TOKEN_TRANSFER)) {
-            // decode args to see if we mint/burn
-            (
-                address sender,
-                address recipient,
-                uint256 amount,
-                uint256 senderBalance,
-                uint256 recipientBalance,
-                uint256 totalSupply
-            ) = Hook.afterTokenTransferDecode(_inputAndOutput);
+            (address sender, address recipient,,,,) = Hook.afterTokenTransferDecode(_inputAndOutput);
 
             if (sender == address(0) || recipient == address(0)) {
                 assertTrue(entered, "only when minting/burning we can be inside action");
             } else {
-                assertFalse(entered, "hook after must be called after any action");
+                assertTrue(entered, "on regular transfer we are also inside action, silo is locked");
             }
         } else {
             assertFalse(entered, "hook after must be called after any action");
