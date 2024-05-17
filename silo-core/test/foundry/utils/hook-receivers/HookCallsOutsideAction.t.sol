@@ -10,6 +10,7 @@ import {ILeverageBorrower} from "silo-core/contracts/interfaces/ILeverageBorrowe
 import {IHookReceiver} from "silo-core/contracts/utils/hook-receivers/interfaces/IHookReceiver.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {Hook} from "silo-core/contracts/lib/Hook.sol";
+import {CrossEntrancy} from "silo-core/contracts/lib/CrossEntrancy.sol";
 
 import {SiloLittleHelper} from  "../../_common/SiloLittleHelper.sol";
 import {MintableToken} from "../../_common/MintableToken.sol";
@@ -86,6 +87,8 @@ contract HookCallsOutsideActionTest is IHookReceiver, ILeverageBorrower, SiloLit
         silo0.leverage(1e18, this, address(this), !sameAsset, abi.encode(address(silo1)));
 
         silo1.withdrawFees();
+
+        // liquidation
     }
 
     function initialize(ISiloConfig _config, bytes calldata _data) external {
@@ -98,10 +101,16 @@ contract HookCallsOutsideActionTest is IHookReceiver, ILeverageBorrower, SiloLit
 
         (bool entered, uint256 status) = _siloConfig.crossReentrantStatus();
 
-        assertFalse(entered, "hook before must be called before any action");
+        if (entered && status == CrossEntrancy.ENTERED_FROM_LEVERAGE && _action.matchAction(Hook.DEPOSIT)) {
+            // we inside leverage
+        } else {
+            assertFalse(entered, "hook before must be called before any action");
+        }
 
         emit log_named_uint("[before] action", _action);
         _printAction(_action);
+        emit log("[before] action --------------------- ");
+
     }
 
     function afterAction(address _silo, uint256 _action, bytes calldata _inputAndOutput) external {
@@ -131,6 +140,7 @@ contract HookCallsOutsideActionTest is IHookReceiver, ILeverageBorrower, SiloLit
 
         emit log_named_uint("[after] action", _action);
         _printAction(_action);
+        emit log("[after] action --------------------- ");
     }
 
     /// @notice return hooksBefore and hooksAfter configuration
