@@ -9,6 +9,7 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ILeverageBorrower} from "silo-core/contracts/interfaces/ILeverageBorrower.sol";
 import {IHookReceiver} from "silo-core/contracts/utils/hook-receivers/interfaces/IHookReceiver.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
+import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
 import {Hook} from "silo-core/contracts/lib/Hook.sol";
 import {CrossEntrancy} from "silo-core/contracts/lib/CrossEntrancy.sol";
 
@@ -20,6 +21,7 @@ FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc HookCallsOutsideActionTest
 */
 contract HookCallsOutsideActionTest is IHookReceiver, ILeverageBorrower, SiloLittleHelper, Test {
     using Hook for uint256;
+    using SiloLensLib for ISilo;
 
     bytes32 internal constant _LEVERAGE_CALLBACK = keccak256("ILeverageBorrower.onLeverage");
 
@@ -71,8 +73,6 @@ contract HookCallsOutsideActionTest is IHookReceiver, ILeverageBorrower, SiloLit
         silo0.accrueInterest();
         silo1.accrueInterest();
 
-        emit log_named_address("borrower", borrower);
-
         vm.prank(borrower);
         silo0.transitionCollateral(100e18, borrower, ISilo.CollateralType.Collateral);
 
@@ -86,9 +86,28 @@ contract HookCallsOutsideActionTest is IHookReceiver, ILeverageBorrower, SiloLit
 
         silo0.leverage(1e18, this, address(this), !sameAsset, abi.encode(address(silo1)));
 
-        silo1.withdrawFees();
+        // tokenss transfer
+        (address protectedShareToken, address collateralShareToken, address debtShareToken) = _siloConfig.getShareTokens(address(silo0));
+
+        vm.prank(borrower);
+        silo1.withdraw(48e18, borrower, borrower);
 
         // liquidation
+        emit log_named_decimal_uint("borrower LTV", silo0.getLtv(borrower), 16);
+
+        vm.warp(block.timestamp + 1000 days);
+        emit log_named_decimal_uint("borrower LTV", silo0.getLtv(borrower), 16);
+
+        partialLiquidation.liquidationCall(
+            address(silo1),
+            address(token1),
+            address(token1),
+            borrower,
+            type(uint256).max,
+            false // _receiveSToken
+        );
+
+        silo1.withdrawFees();
     }
 
     function initialize(ISiloConfig _config, bytes calldata _data) external {
