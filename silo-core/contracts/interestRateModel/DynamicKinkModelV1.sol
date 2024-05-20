@@ -2,7 +2,6 @@
 pragma solidity 0.8.21;
 
 import {PRBMathSD59x18} from "../lib/PRBMathSD59x18.sol";
-import {IDynamicKinkModelV1} from "../interfaces/IInterestRateModel.sol";
 import {IDynamicKinkModelV1} from "../interfaces/IDynamicKinkModelV1.sol";
 
 // solhint-disable var-name-mixedcase
@@ -10,7 +9,7 @@ import {IDynamicKinkModelV1} from "../interfaces/IDynamicKinkModelV1.sol";
 /// @title DynamicKinkModelV1
 /// @notice Refer to Silo DynamicKinkModelV1 paper for more details.
 /// @custom:security-contact security@silo.finance
-contract DynamicKinkModelV1 is IInterestRateModel, IDynamicKinkModelV1 {
+contract DynamicKinkModelV1 is IDynamicKinkModelV1 {
     using PRBMathSD59x18 for int256;
 
     error InvalidTimestamp();
@@ -49,39 +48,10 @@ contract DynamicKinkModelV1 is IInterestRateModel, IDynamicKinkModelV1 {
     /// @dev each Silo setup is stored separately in mapping, that's why we do not need to clone IRM
     /// at the same time this is safety feature because we will write to this mapping based on msg.sender
     /// silo => setup
+    // todo InterestRateModel Config setup flow
     mapping (address => Setup) public getSetup;
 
-    /// @inheritdoc IInterestRateModel
-    function connect(address _configAddress) external {
-
-    }
-
-    /// @inheritdoc IInterestRateModel
-    function getCompoundInterestRateAndUpdate(
-        uint256 _collateralAssets,
-        uint256 _debtAssets,
-        uint256 _interestRateTimestamp
-    )
-        external
-        returns (uint256 rcomp);
-
-    /// @inheritdoc IInterestRateModel
-    function getCompoundInterestRate(address _silo, uint256 _blockTimestamp)
-        external
-        view
-        returns (uint256 rcomp);
-
-    /// @inheritdoc IInterestRateModel
-    function getCurrentInterestRate(address _silo, uint256 _blockTimestamp)
-        external
-        view
-        returns (uint256 rcur);
-
-    /// @inheritdoc IInterestRateModel
-    function decimals() external view returns (uint256) {
-        return DECIMALS;
-    }
-
+    /// @inheritdoc IDynamicKinkModelV1
     function currentInterestRate(
         Setup memory _setup, 
         int256 _t0, 
@@ -140,6 +110,10 @@ contract DynamicKinkModelV1 is IInterestRateModel, IDynamicKinkModelV1 {
             }
 
             rcur = (rcur + _setup.config.rmin) * SECONDS_IN_YEAR;
+
+            if (rcur > R_CURRENT_MAX) {
+                rcur = R_CURRENT_MAX;
+            }
         }
     }
 
@@ -159,6 +133,8 @@ contract DynamicKinkModelV1 is IInterestRateModel, IDynamicKinkModelV1 {
             (_config.c1 >= 0 && _config.c1 < UNIVERSAL_LIMIT) &&
             (_config.c2 >= 0 && _config.c2 < UNIVERSAL_LIMIT);
     }
+
+    /// @inheritdoc IDynamicKinkModelV1
     function compoundInterestRate(
         Setup memory _setup, 
         int256 _t0,

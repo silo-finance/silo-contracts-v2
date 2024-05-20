@@ -55,9 +55,54 @@ interface IDynamicKinkModelV1 {
         Config config;
         int256 k;
     }
-    /* solhint-enable */
 
-    error AddressZero();
-    error DeployConfigFirst();
-    error AlreadyConnected();    
+    /// @notice Check if variables in config match the limits from model whitepaper.
+    /// @param _config DynamicKinkModelV1 config struct, does not include the state of the model.
+    /// @return true if the config is valid, false if the config is invalid.
+    function validateConfig(Config memory _config) external pure returns (bool);
+
+    /// @notice Calculate compound interest rate, refer model whitepaper for more details.
+    /// @param _setup DynamicKinkModelV1 config struct with model state.
+    /// @param _t0 timestamp of the last interest rate update.
+    /// @param _t1 timestamp of the compounded interest rate calculations (current time).
+    /// @param _u utilization ratio of silo and asset at _t1.
+    /// @param _totalDeposits total deposits at _t1.
+    /// @param _totalBorrowAmount total borrow amount at _t1.
+    /// @return rcomp compounded interest in decimal points.
+    /// @return k new state of the model.
+    /// @return didCap compounded interest rate was above the treshold and was capped.
+    /// @return didOverflow compounded interest rate was limited to prevent overflow.
+    function compoundInterestRate(
+        Setup memory _setup, 
+        int256 _t0,
+        int256 _t1, 
+        int256 _u,
+        int256 _totalDeposits,
+        int256 _totalBorrowAmount
+    )
+        external
+        pure
+        returns (int256 rcomp, int256 k, bool didCap, bool didOverflow);
+
+    /// @notice Calculate current interest rate, refer model whitepaper for more details.
+    /// @param _setup DynamicKinkModelV1 config struct with model state.
+    /// @param _t0 timestamp of the last interest rate update.
+    /// @param _t1 timestamp of the current interest rate calculations (current time).
+    /// @param _u utilization ratio of silo and asset at _t1.
+    /// @param _totalDeposits total deposits at _t1.
+    /// @param _totalBorrowAmount total borrow amount at _t1.
+    /// @return rcur current interest in decimal points.
+    /// @return didCap current interest rate was above the treshold and was capped.
+    /// @return didOverflow current interest rate was limited to prevent overflow.
+    function currentInterestRate(
+        Setup memory _setup, 
+        int256 _t0, 
+        int256 _t1, 
+        int256 _u,
+        int256 _totalDeposits,
+        int256 _totalBorrowAmount
+    )
+        external
+        pure
+        returns (int256 rcur, bool didCap, bool didOverflow);
 }
