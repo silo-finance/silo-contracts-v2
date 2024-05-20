@@ -27,7 +27,7 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
     uint256 constant COLLATERAL = 10e18;
     uint256 constant COLLATERAL_FOR_BORROW = 8e18;
     uint256 constant DEBT = 7.5e18;
-    bool constant SAME_TOKEN = false;
+    bool constant SAME_TOKEN = true;
 
     ISiloConfig siloConfig;
 
@@ -39,8 +39,8 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
 
         _depositForBorrow(COLLATERAL_FOR_BORROW, DEPOSITOR);
 
-        _depositCollateral(COLLATERAL, BORROWER, SAME_TOKEN);
-        _borrow(DEBT, BORROWER, SAME_TOKEN);
+        _depositCollateral(COLLATERAL, BORROWER, !SAME_TOKEN);
+        _borrow(DEBT, BORROWER, !SAME_TOKEN);
 
         assertEq(token0.balanceOf(address(this)), 0, "liquidation should have no collateral");
         assertEq(token0.balanceOf(address(silo0)), COLLATERAL, "silo0 has borrower collateral");
@@ -294,15 +294,19 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
     forge test -vv --ffi --mt test_liquidationCall_DebtToCoverTooSmall_2tokens
     */
     function test_liquidationCall_DebtToCoverTooSmall_2tokens() public {
+        assertEq(token1.balanceOf(address(silo1)), silo1.getLiquidity(), "without interest liquidity match balanceOf");
+
         // move forward with time so we can have interests
-        uint256 timeForward = 9 days;
-        vm.warp(block.timestamp + timeForward);
+
+        _timeForward(1 days);
+        _timeForward(2 days);
+        _timeForward(3 days);
+        _timeForward(3 days); // 9 days in total
+
         assertLt(silo1.getLtv(BORROWER), 1e18, "expect insolvency, but not bad debt");
         assertGt(silo1.getLtv(BORROWER), 0.98e18, "expect hi LTV so we force full liquidation");
 
-        (
-            uint256 collateralToLiquidate, uint256 debtToRepay
-        ) = partialLiquidation.maxLiquidation(address(silo1), BORROWER);
+        (, uint256 debtToRepay) = partialLiquidation.maxLiquidation(address(silo1), BORROWER);
 
         assertGt(debtToRepay, COLLATERAL_FOR_BORROW, "check for 0 liquidity");
         assertEq(silo1.getLiquidity(), 0, "no liquidity because what was available is less than debt with interest");
@@ -313,9 +317,6 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
         // silo1.withdraw(1, DEPOSITOR, DEPOSITOR); // reverts with NotEnoughLiquidity, but balance is 0.5
         // it is not bad, because it is just safer for users to not create more debt, but let's discuss
 
-        emit log_named_decimal_uint("balance of silo1", token1.balanceOf(address(silo1)), 18);
-        emit log_named_decimal_uint("collateralToLiquidate", collateralToLiquidate, 18);
-        emit log_named_decimal_uint("debtToRepay", debtToRepay, 18);
         assertEq(debtToRepay, silo1.getDebtAssets(), "debtToRepay is max debt when we forcing full liquidation");
 
         uint256 debtToCover = debtToRepay - 1; // -1 to check if tx reverts with DebtToCoverTooSmall
@@ -532,5 +533,34 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
         if (!_receiveSToken) {
             assertEq(token0.balanceOf(address(this)), collateralToLiquidate, "expect to have liquidated collateral");
         }
+    }
+
+    function _timeForward(uint256 _time) internal {
+        emit log_named_uint("...move forward days", _time /60/60/24);
+
+        vm.warp(block.timestamp + _time);
+
+        silo1.accrueInterest();
+        silo0.accrueInterest();
+
+        (
+            uint256 collateralToLiquidate, uint256 debtToRepay
+        ) = partialLiquidation.maxLiquidation(address(silo1), BORROWER);
+
+        (uint192 daoAndDeployerFees,) = silo1.siloData();
+
+        emit log_named_decimal_uint("balance of silo1", token1.balanceOf(address(silo1)), 18);
+        emit log_named_decimal_uint("silo1.getLiquidity()", silo1.getLiquidity(), 18);
+        emit log_named_decimal_uint("daoAndDeployerFees", daoAndDeployerFees, 18);
+        emit log_named_decimal_uint("fee + liquidity", daoAndDeployerFees + silo1.getLiquidity(), 18);
+
+        uint256 collateralBalanceOfUnderlying = siloLens.collateralBalanceOfUnderlying(
+            silo0, address(token0), BORROWER
+        );
+
+        emit log_named_decimal_uint("borrower collateral", collateralBalanceOfUnderlying, 18);
+        emit log_named_decimal_uint("borrower debt", silo1.maxRepay(BORROWER), 18);
+        emit log_named_decimal_uint("collateralToLiquidate", collateralToLiquidate, 18);
+        emit log_named_decimal_uint("debtToRepay", debtToRepay, 18);
     }
 }
