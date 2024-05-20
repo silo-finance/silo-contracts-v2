@@ -313,13 +313,6 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
 
         assertGt(debtToRepay, COLLATERAL_FOR_BORROW, "check for 0 liquidity");
         assertEq(silo1.getLiquidity(), 0, "no liquidity because what was available is less than debt with interest");
-
-        // TODO is our liquidity calculation correct? here we have 8 tokens deposited and 7,5 borrowed
-        // in theory 0.5 is available, but because debt with interest is more than 8, liquidity is 0.
-        // vm.prank(DEPOSITOR);
-        // silo1.withdraw(1, DEPOSITOR, DEPOSITOR); // reverts with NotEnoughLiquidity, but balance is 0.5
-        // it is not bad, because it is just safer for users to not create more debt, but let's discuss
-
         assertEq(debtToRepay, silo1.getDebtAssets(), "debtToRepay is max debt when we forcing full liquidation");
 
         uint256 debtToCover = debtToRepay - 1; // -1 to check if tx reverts with DebtToCoverTooSmall
@@ -562,10 +555,13 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
         emit log_named_decimal_uint("interest", interest, 18);
         emit log_named_decimal_uint("fee + interest", daoAndDeployerFees + interest, 18);
 
-        emit log_named_decimal_int(
-            "(COLLATERAL_FOR_BORROW - DEBT) - fee == liquidity",
-            (COLLATERAL_FOR_BORROW - DEBT).toInt256() - uint256(daoAndDeployerFees).toInt256(),
-            18
+        int256 calculatedLiquidity = (COLLATERAL_FOR_BORROW - DEBT).toInt256() - uint256(daoAndDeployerFees).toInt256();
+
+        emit log_named_decimal_int("(COLLATERAL_FOR_BORROW - DEBT) - fee == liquidity", calculatedLiquidity, 18);
+
+        emit log_named_string(
+            "calculatedLiquidity == liquidity",
+            calculatedLiquidity == liquidity.toInt256() ? "YES" : "NO"
         );
 
         emit log_named_decimal_int(
