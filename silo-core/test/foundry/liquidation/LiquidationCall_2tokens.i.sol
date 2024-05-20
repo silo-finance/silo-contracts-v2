@@ -302,7 +302,7 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
 
         // move forward with time so we can have interests
 
-        for (uint256 i; i < 7; i++) { // 9 days in total
+        for (uint256 i; i < 7; i++) {
             _timeForwardAndDebug(1 days);
         }
 
