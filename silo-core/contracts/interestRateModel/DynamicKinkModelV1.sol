@@ -15,8 +15,6 @@ contract DynamicKinkModelV1 is IDynamicKinkModelV1 {
 
     // returns decimal points used by model
     uint256 public constant DECIMALS = 18;
-    /// @dev DP is 18 decimal points used for integer calculations
-    int256 internal constant _DP = int256(10 ** DECIMALS);
 
     int256 public constant SECONDS_IN_YEAR = 365 * 24 * 60 * 60;
     int256 public constant HUNDRED_YEARS = 100 * SECONDS_IN_YEAR;
@@ -29,10 +27,13 @@ contract DynamicKinkModelV1 is IDynamicKinkModelV1 {
 
     /// @dev maximum value of current interest rate the model will return. This is 10,000% APR in the 18-decimals format
     int256 public constant R_CURRENT_MAX = 100 * _DP;
-    int256 public constant AMT_MAX = 2 ** 161;
+    int256 public constant AMT_MAX = (2**255 - 1) / (2**16 * _DP);
 
     /// @dev maximum value of compound interest per second the model will return. This is per-second rate.
     int256 public constant R_COMPOUND_MAX_PER_SECOND = R_CURRENT_MAX / (365 * 24 * 3600);
+
+    /// @dev DP is 18 decimal points used for integer calculations
+    int256 internal constant _DP = int256(10 ** DECIMALS);
 
     /// @dev each Silo setup is stored separately in mapping, that's why we do not need to clone IRM
     /// at the same time this is safety feature because we will write to this mapping based on msg.sender
@@ -82,7 +83,6 @@ contract DynamicKinkModelV1 is IDynamicKinkModelV1 {
             return (0, didCap, didOverflow);
         }
 
-        //todo link to paper proving that the overflow is impossible in this block
         unchecked {
             int256 T = _t1 - _t0;
             int256 k;
@@ -131,7 +131,6 @@ contract DynamicKinkModelV1 is IDynamicKinkModelV1 {
     }
 
     // true if valid, false invalid
-    // todo link to paper
     function validateConfig(Config memory _config) public pure returns (bool) {
         return (_config.ulow >= 0 && _config.ulow < _DP) &&
             (_config.u1 >= 0 && _config.u1 < _DP) && 
@@ -161,7 +160,6 @@ contract DynamicKinkModelV1 is IDynamicKinkModelV1 {
     {
         LocalVarsRCOMP memory _l = LocalVarsRCOMP(0, 0, 0, 0, 0, 0, 0);
 
-        //todo link to paper proving that the overflow is impossible in this block
         unchecked {
             if (_t1 < _t0) revert InvalidTimestamp();
             
