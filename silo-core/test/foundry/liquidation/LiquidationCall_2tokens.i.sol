@@ -32,6 +32,7 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
     bool constant SAME_TOKEN = true;
 
     ISiloConfig siloConfig;
+    uint256 debtStart;
 
     event LiquidationCall(address indexed liquidator, bool receiveSToken);
     error SenderNotSolventAfterTransfer();
@@ -45,6 +46,7 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
         _depositCollateral(COLLATERAL, BORROWER, !SAME_TOKEN);
         _borrow(DEBT, BORROWER, !SAME_TOKEN);
         emit log_named_decimal_uint("DEBT", DEBT, 18);
+        debtStart = block.timestamp;
 
         assertEq(token0.balanceOf(address(this)), 0, "liquidation should have no collateral");
         assertEq(token0.balanceOf(address(silo0)), COLLATERAL, "silo0 has borrower collateral");
@@ -579,6 +581,10 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
         emit log_named_decimal_uint("borrower collateral", collateralBalanceOfUnderlying, 18);
         emit log_named_decimal_uint("collateralToLiquidate", collateralToLiquidate, 18);
         emit log_named_decimal_uint("debtToRepay", debtToRepay, 18);
+        uint256 daysInDebt = (block.timestamp - debtStart) /60/60/24;
+        emit log_named_uint("days in debt", daysInDebt);
+        emit log_named_decimal_uint("borrow APY %", (maxRepay - DEBT) * 1e18 / DEBT * 365 / daysInDebt, 16);
+        emit log_named_decimal_uint("CAP %", 1e20, 16);
 
         emit log("-----");
     }
