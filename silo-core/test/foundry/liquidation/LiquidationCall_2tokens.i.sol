@@ -40,9 +40,11 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
         siloConfig = _setUpLocalFixture();
 
         _depositForBorrow(COLLATERAL_FOR_BORROW, DEPOSITOR);
+        emit log_named_decimal_uint("COLLATERAL_FOR_BORROW", COLLATERAL_FOR_BORROW, 18);
 
         _depositCollateral(COLLATERAL, BORROWER, !SAME_TOKEN);
         _borrow(DEBT, BORROWER, !SAME_TOKEN);
+        emit log_named_decimal_uint("DEBT", DEBT, 18);
 
         assertEq(token0.balanceOf(address(this)), 0, "liquidation should have no collateral");
         assertEq(token0.balanceOf(address(silo0)), COLLATERAL, "silo0 has borrower collateral");
@@ -300,12 +302,9 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
 
         // move forward with time so we can have interests
 
-        _timeForward(1 days);
-        _timeForward(2 days);
-        _timeForward(2 days);
-        _timeForward(1 days);
-        _timeForward(2 days);
-        _timeForward(1 days); // 9 days in total
+        for (uint256 i; i < 7; i++) { // 9 days in total
+            _timeForwardAndDebug(1 days);
+        }
 
         assertLt(silo1.getLtv(BORROWER), 1e18, "expect insolvency, but not bad debt");
         assertGt(silo1.getLtv(BORROWER), 0.98e18, "expect hi LTV so we force full liquidation");
@@ -539,8 +538,8 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
         }
     }
 
-    function _timeForward(uint256 _time) internal {
-        emit log_named_uint("...move forward days", _time /60/60/24);
+    function _timeForwardAndDebug(uint256 _time) internal {
+        emit log_named_uint("............................move forward days by", _time /60/60/24);
 
         vm.warp(block.timestamp + _time);
 
@@ -561,19 +560,21 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
 
         emit log_named_decimal_uint("daoAndDeployerFees", daoAndDeployerFees, 18);
         emit log_named_decimal_uint("interest", interest, 18);
+        emit log_named_decimal_uint("fee + interest", daoAndDeployerFees + interest, 18);
 
-        emit log("(8 - debt) + fee == liquidity == deposited + interest");
-
-        emit log_named_decimal_uint(
-            "(8 - debt) + fee",
-            COLLATERAL_FOR_BORROW - DEBT + daoAndDeployerFees,
+        emit log_named_decimal_int(
+            "(COLLATERAL_FOR_BORROW - DEBT) - fee == liquidity",
+            (COLLATERAL_FOR_BORROW - DEBT).toInt256() - uint256(daoAndDeployerFees).toInt256(),
             18
         );
 
-        emit log_named_decimal_uint("deposited + interest", COLLATERAL_FOR_BORROW + interest, 18);
+        emit log_named_decimal_int(
+            "liquidity without CAP == deposited + interest - DEBT - fee",
+            (COLLATERAL_FOR_BORROW + interest).toInt256() - DEBT.toInt256() - uint256(daoAndDeployerFees).toInt256(),
+            18
+        );
 
         emit log_named_decimal_uint("borrower debt", maxRepay, 18);
-        emit log_named_decimal_uint("debt + liquidity", maxRepay + silo1.getLiquidity(), 18);
 
         uint256 collateralBalanceOfUnderlying = siloLens.collateralBalanceOfUnderlying(
             silo0, address(token0), BORROWER
@@ -582,5 +583,7 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
         emit log_named_decimal_uint("borrower collateral", collateralBalanceOfUnderlying, 18);
         emit log_named_decimal_uint("collateralToLiquidate", collateralToLiquidate, 18);
         emit log_named_decimal_uint("debtToRepay", debtToRepay, 18);
+
+        emit log("-----");
     }
 }
