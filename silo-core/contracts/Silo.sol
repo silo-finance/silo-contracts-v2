@@ -65,16 +65,22 @@ contract Silo is SiloERC4626 {
     receive() external payable {}
 
     /// @inheritdoc ISilo
-    function callOnBehalfOfSilo(address _target, uint256 _value, bytes calldata _input)
+    function callOnBehalfOfSilo(address _target, uint256 _value, CallType _callType, bytes calldata _input)
         external
         payable
         returns (bool success, bytes memory result)
     {
         if (msg.sender != address(sharedStorage.hookReceiver)) revert OnlyHookReceiver();
 
-        (success, result) = _target.call{value: _value}(_input);
         // Silo will not send back any ether leftovers after the call.
         // The hook receiver should request the ether if needed in a separate call.
+        if (_callType == CallType.Call) {
+            (success, result) = _target.call{value: _value}(_input);
+        } else if (_callType == CallType.Delegatecall) {
+            (success, result) = _target.delegatecall(_input);
+        } else {
+            revert InvalidCallType();
+        }
     }
 
     /// @inheritdoc ISilo
