@@ -178,7 +178,7 @@ contract HookCallsOutsideActionTest is IHookReceiver, ILeverageBorrower, IERC315
         emit log("[after] action --------------------- ");
     }
 
-    function onFlashLoan(address _initiator, address _token, uint256 _amount, uint256 _fee, bytes calldata _data)
+    function onFlashLoan(address, address _token, uint256 _amount, uint256, bytes calldata)
         external
         returns (bytes32)
     {
