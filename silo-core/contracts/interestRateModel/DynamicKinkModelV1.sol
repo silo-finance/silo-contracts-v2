@@ -2,60 +2,85 @@
 pragma solidity 0.8.21;
 
 import {PRBMathSD59x18} from "../lib/PRBMathSD59x18.sol";
+import {IDynamicKinkModelV1} from "../interfaces/IInterestRateModel.sol";
 import {IDynamicKinkModelV1} from "../interfaces/IDynamicKinkModelV1.sol";
 
 // solhint-disable var-name-mixedcase
 
 /// @title DynamicKinkModelV1
+/// @notice Refer to Silo DynamicKinkModelV1 paper for more details.
 /// @custom:security-contact security@silo.finance
-contract DynamicKinkModelV1 is IDynamicKinkModelV1 {
+contract DynamicKinkModelV1 is IInterestRateModel, IDynamicKinkModelV1 {
     using PRBMathSD59x18 for int256;
 
     error InvalidTimestamp();
 
-    // returns decimal points used by model
+    /// @dev DP is 18 decimal points used for integer calculations
+    int256 internal constant _DP = int256(10 ** DECIMALS);
+
+    /// @dev decimal points used by the model.
     uint256 public constant DECIMALS = 18;
 
-    int256 public constant SECONDS_IN_YEAR = 365 * 24 * 60 * 60;
-    int256 public constant HUNDRED_YEARS = 100 * SECONDS_IN_YEAR;
-
-    // limit for some variables
+    /// @dev universal limit for several DynamicKinkModelV1 config parameters. Follow the model whitepaper for more
+    ///     information. Units of measure are vary per variable type. Any config within these limits is considered
+    ///     valid.
     int256 public constant UNIVERSAL_LIMIT = 10**9 * _DP;
-
-
-    int256 public constant X_MAX = 11 * _DP;
-
-    /// @dev maximum value of current interest rate the model will return. This is 10,000% APR in the 18-decimals format
-    int256 public constant R_CURRENT_MAX = 100 * _DP;
-    int256 public constant AMT_MAX = (2**255 - 1) / (2**16 * _DP);
 
     /// @dev maximum value of compound interest per second the model will return. This is per-second rate.
     int256 public constant R_COMPOUND_MAX_PER_SECOND = R_CURRENT_MAX / (365 * 24 * 3600);
 
-    /// @dev DP is 18 decimal points used for integer calculations
-    int256 internal constant _DP = int256(10 ** DECIMALS);
+    /// @dev maximum value of current interest rate the model will return. This is 10,000% APR in 18-decimals.
+    int256 public constant R_CURRENT_MAX = 100 * _DP;
+
+    /// @dev seconds per year used in interest calculations.
+    int256 public constant SECONDS_IN_YEAR = 365 * 24 * 60 * 60;
+
+    /// @dev the time limit for compounding interest. If the 100 years is exceeded, time since last transaction
+    ///     is capped to this limit.
+    int256 public constant HUNDRED_YEARS = 100 * SECONDS_IN_YEAR;
+
+    /// @dev maximum exp() input to prevent an overflow.
+    int256 public constant X_MAX = 11 * _DP;
+
+    /// @dev maximum value for total borrow amount, total deposits amount and compounded interest. If these
+    ///     values are above the threshold, compounded interest is reduced to prevent an overflow.
+    int256 public constant AMT_MAX = (2**255 - 1) / (2**16 * _DP);
 
     /// @dev each Silo setup is stored separately in mapping, that's why we do not need to clone IRM
     /// at the same time this is safety feature because we will write to this mapping based on msg.sender
     /// silo => setup
     mapping (address => Setup) public getSetup;
 
-    /// @dev optional method that can connect silo to it's model state on silo initialization
-    /// can be empty by must implement interface.
+    /// @inheritdoc IInterestRateModel
     function connect(address _configAddress) external {
 
     }
 
-    /// @dev get compound interest rate and update model storage for current block.timestamp
-    /// @param _collateralAssets total silo collateral assets
-    /// @param _debtAssets total silo debt assets
-    /// @param _interestRateTimestamp last IRM timestamp
-    /// @return rcomp compounded interest rate from last update until now (1e18 == 100%)
+    /// @inheritdoc IInterestRateModel
     function getCompoundInterestRateAndUpdate(
         uint256 _collateralAssets,
         uint256 _debtAssets,
         uint256 _interestRateTimestamp
-    ) external returns (uint256 rcomp) {}
+    )
+        external
+        returns (uint256 rcomp);
+
+    /// @inheritdoc IInterestRateModel
+    function getCompoundInterestRate(address _silo, uint256 _blockTimestamp)
+        external
+        view
+        returns (uint256 rcomp);
+
+    /// @inheritdoc IInterestRateModel
+    function getCurrentInterestRate(address _silo, uint256 _blockTimestamp)
+        external
+        view
+        returns (uint256 rcur);
+
+    /// @inheritdoc IInterestRateModel
+    function decimals() external view returns (uint256) {
+        return DECIMALS;
+    }
 
     function currentInterestRate(
         Setup memory _setup, 
@@ -118,24 +143,7 @@ contract DynamicKinkModelV1 is IDynamicKinkModelV1 {
         }
     }
 
-    /// @dev get compound interest rate
-    /// @param _t0 timestamp of last calculation
-    /// @param _t1 current timestamp
-    /// @param _u utilization at time t0
-    /// @return rcomp compounded interest rate
-    /// @return k updated state of the slope k at time t1
-
-    struct LocalVarsRCOMP {
-        int256 T;
-        int256 k1;
-        int256 f;
-        int256 roc;
-        int256 x;
-        int256 assetsAmount;
-        int256 interest;
-    }
-
-    // true if valid, false invalid
+    /// @inheritdoc IDynamicKinkModelV1
     function validateConfig(Config memory _config) public pure returns (bool) {
         return (_config.ulow >= 0 && _config.ulow < _DP) &&
             (_config.u1 >= 0 && _config.u1 < _DP) && 
