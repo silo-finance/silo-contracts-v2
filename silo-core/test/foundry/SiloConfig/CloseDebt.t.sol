@@ -60,6 +60,7 @@ contract CloseDebtTest is SiloLittleHelper, Test {
 
     function test_closeDebt_sendingSomeOfDebtDoesNotClosePosition() public {
         address receiver = makeAddr("receiver");
+        _deposit(10, receiver);
 
         vm.prank(receiver);
         IERC20R(debtShareToken).setReceiveApproval(borrower, 2);
