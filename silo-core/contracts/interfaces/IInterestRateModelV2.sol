@@ -25,6 +25,7 @@ interface IInterestRateModelV2 {
         int256 beta;
     }
 
+    // todo setup and config with state are the same, remove
     struct ConfigWithState {
         // uopt ∈ (0, 1) – optimal utilization;
         int256 uopt;
