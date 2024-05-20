@@ -71,7 +71,6 @@ contract InterestRateModelV2 is IInterestRateModel, IInterestRateModelV2 {
     /// @dev each Silo setup is stored separately in mapping, that's why we do not need to clone IRM
     /// at the same time this is safety feature because we will write to this mapping based on msg.sender
     /// silo => setup
-    // todo silo-asset config, not for silo address only
     mapping (address => Setup) public getSetup;
 
     /// @notice Emitted on config init
