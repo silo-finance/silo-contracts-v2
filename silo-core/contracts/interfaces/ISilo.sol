@@ -49,7 +49,7 @@ interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
         Collateral
     }
 
-    /// @dev Types of calls that can be made on behalf of Silo via `callOnBehalfOfSilo` fn
+    /// @dev Types of calls that can be made by the hook receiver on behalf of Silo via `callOnBehalfOfSilo` fn
     enum CallType {
         Call, // default
         Delegatecall
