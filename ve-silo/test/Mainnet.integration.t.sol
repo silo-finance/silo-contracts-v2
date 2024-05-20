@@ -2,13 +2,14 @@
 pragma solidity 0.8.21;
 
 import {StdStorage, stdStorage} from "forge-std/StdStorage.sol";
-import {IERC20} from "openzeppelin-contracts/token/ERC20/ERC20.sol";
+import {ERC20, IERC20} from "openzeppelin-contracts/token/ERC20/ERC20.sol";
 import {Ownable2Step} from "openzeppelin-contracts/access/Ownable2Step.sol";
 import {IntegrationTest} from "silo-foundry-utils/networks/IntegrationTest.sol";
+import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 
 import {MainnetDeploy} from "ve-silo/deploy/MainnetDeploy.s.sol";
 import {VeSiloContracts} from "ve-silo/deploy/_CommonDeploy.sol";
-
+import {SiloCoreContracts} from "silo-core/common/SiloCoreContracts.sol";
 import {ISiloGovernor} from "ve-silo/contracts/governance/interfaces/ISiloGovernor.sol";
 import {IVeBoost} from "ve-silo/contracts/voting-escrow/interfaces/IVeBoost.sol";
 import {IVeSilo} from "ve-silo/contracts/voting-escrow/interfaces/IVeSilo.sol";
@@ -25,14 +26,24 @@ import {IHookReceiverMock as IHookReceiver} from "./_mocks/IHookReceiverMock.sol
 import {IShareTokenLike as IShareToken} from "ve-silo/contracts/gauges/interfaces/IShareTokenLike.sol";
 import {ISiloMock as ISilo} from "ve-silo/test/_mocks/ISiloMock.sol";
 import {IFeesManager} from "ve-silo/contracts/silo-tokens-minter/interfaces/IFeesManager.sol";
+import {VETSIP01} from "ve-silo/test/proposals/VETSIP01.sol";
+import {ProposalEngineLib} from "proposals/contracts/ProposalEngineLib.sol";
+import {Proposal} from "proposals/contracts/Proposal.sol";
 
 import {
     ISiloFactoryWithFeeDetails as ISiloFactory
 } from "ve-silo/contracts/silo-tokens-minter/interfaces/ISiloFactoryWithFeeDetails.sol";
 
+contract ERC20Mint is ERC20 {
+    constructor(string memory name, string memory symbol) ERC20(name, symbol) {}
+    function mint(address _account, uint256 _amount) external {
+        _mint(_account, _amount);
+    }
+}
+
 // solhint-disable max-states-count
 
-// FOUNDRY_PROFILE=ve-silo forge test --mc MainnetTest --ffi -vvv
+// FOUNDRY_PROFILE=ve-silo-test forge test --mc MainnetTest --ffi -vvv
 contract MainnetTest is IntegrationTest {
     using stdStorage for StdStorage;
 
@@ -66,22 +77,30 @@ contract MainnetTest is IntegrationTest {
     address internal _bob = makeAddr("_bob");
     address internal _alice = makeAddr("_alice");
     address internal _john = makeAddr("_john");
-    address internal _daoVoter = makeAddr("_daoVoter");
     address internal _smartValletChecker = makeAddr("_smartValletChecker");
     address internal _deployer;
+    address internal _daoVoter;
 
-    function setUp() public {
-        vm.createSelectFork(
-            getChainRpcUrl(MAINNET_ALIAS),
-            _FORKING_BLOCK_NUMBER
-        );
+    uint256 internal _daoVoterPK;
+
+    bool internal _executeMainnetDeploy = true;
+
+    function setUp() public virtual {
+        (_daoVoter, _daoVoterPK) = makeAddrAndKey("_daoVoter");
 
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
         _deployer = vm.addr(deployerPrivateKey);
 
-        MainnetDeploy deploy = new MainnetDeploy();
-        deploy.disableDeploymentsSync();
-        deploy.run();
+        if (_executeMainnetDeploy) {
+            vm.createSelectFork(
+                getChainRpcUrl(MAINNET_ALIAS),
+                _FORKING_BLOCK_NUMBER
+            );
+
+            MainnetDeploy deploy = new MainnetDeploy();
+            deploy.disableDeploymentsSync();
+            deploy.run();
+        }
 
         _veSilo = IVeSilo(getAddress(VeSiloContracts.VOTING_ESCROW));
         _timelock = ISiloTimelockController(getAddress(VeSiloContracts.TIMELOCK_CONTROLLER));
@@ -92,26 +111,10 @@ contract MainnetTest is IntegrationTest {
         _minter = IBalancerMinter(getAddress(VeSiloContracts.MAINNET_BALANCER_MINTER));
         _gaugeAdder = IGaugeAdder(getAddress(VeSiloContracts.GAUGE_ADDER));
 
-        vm.mockCall(
-            _hookReceiver,
-            abi.encodeWithSelector(IHookReceiver.shareToken.selector),
-            abi.encode(_shareToken)
-        );
-
-        vm.mockCall(
-            _shareToken,
-            abi.encodeWithSelector(IShareToken.silo.selector),
-            abi.encode(_silo)
-        );
-
-        vm.mockCall(
-            _silo,
-            abi.encodeWithSelector(ISilo.factory.selector),
-            abi.encode(_siloFactory)
-        );
+        _mockSiloCore(); // silo core is not deployed
     }
 
-    function testIt() public {
+    function testMainnet() public {
         _configureFakeSmartWalletChecker();
         _giveVeSiloTokensToUsers();
         _activeteBlancerTokenAdmin();
@@ -122,6 +125,7 @@ contract MainnetTest is IntegrationTest {
         _checkpointUsers(ISiloLiquidityGauge(gauge));
         _verifyClaimable(ISiloLiquidityGauge(gauge));
         _getIncentives(gauge);
+        _rewardwsFees(ISiloLiquidityGauge(gauge));
         _stopMiningProgram();
     }
 
@@ -264,30 +268,16 @@ contract MainnetTest is IntegrationTest {
     }
 
     function _addGauge(address _gauge) internal {
-        address[] memory targets = new address[](6);
-        targets[0] = address(_gaugeController);
-        targets[1] = address(_gaugeController);
-        targets[2] = address(_gaugeAdder);
-        targets[3] = address(_gaugeAdder);
-        targets[4] = address(_gaugeAdder);
-        targets[5] = address(_gaugeAdder);
+        // pushing time a little bit forward
+        vm.warp(block.timestamp + 3_600);
 
-        // Empty values
-        uint256[] memory values = new uint256[](6);
+        VETSIP01 addGaugeProposal = new VETSIP01();
 
-        // Functions inputs
-        bytes[] memory calldatas = new bytes[](6);
-        
-        string memory gaugeTypeName = new string(64);
-        gaugeTypeName = "Mainnet gauge";
-        calldatas[0] = abi.encodeWithSignature("add_type(string,uint256)", gaugeTypeName, 1e18);
-        calldatas[1] = abi.encodeWithSignature("set_gauge_adder(address)", address(_gaugeAdder));
-        calldatas[2] = abi.encodeWithSignature("acceptOwnership()");
-        calldatas[3] = abi.encodeWithSignature("addGaugeType(string)", gaugeTypeName);
-        calldatas[4] = abi.encodeWithSignature("setGaugeFactory(address,string)", address(_factory), gaugeTypeName);
-        calldatas[5] = abi.encodeWithSignature("addGauge(address,string)", address(_gauge), gaugeTypeName);
+        AddrLib.setAddress(addGaugeProposal.GAUGE_KEY(), _gauge);
 
-        _executeProposal(targets, values, calldatas);
+        addGaugeProposal.setProposerPK(_daoVoterPK).run();
+
+        _executeProposal(Proposal(address(addGaugeProposal)));
 
         assertEq(_gaugeController.n_gauge_types(), 1, "An invalid number of the gauge types");
         assertEq(_gaugeController.n_gauges(), 1, "Should be 1 gauge in the gaugeController");
@@ -328,12 +318,12 @@ contract MainnetTest is IntegrationTest {
     }
 
     function _getVeSiloTokens(address _userAddr, uint256 _amount, uint256 _unlockTime) internal {
-        IERC20 silo80Weth20Token = IERC20(getAddress(SILO80_WETH20_TOKEN));
+        IERC20 siloToken = IERC20(getAddress(SILO_TOKEN));
 
-        deal(address(silo80Weth20Token), _userAddr, _amount);
+        deal(address(siloToken), _userAddr, _amount);
 
         vm.prank(_userAddr);
-        silo80Weth20Token.approve(address(_veSilo), _amount);
+        siloToken.approve(address(_veSilo), _amount);
 
         vm.prank(_userAddr);
         _veSilo.create_lock(_amount, _unlockTime);
@@ -395,26 +385,8 @@ contract MainnetTest is IntegrationTest {
     }
 
     // solhint-disable-next-line function-max-lines
-    function _executeProposal(
-        address[] memory targets,
-        uint256[] memory values,
-        bytes[] memory calldatas
-    )
-        internal
-    {
-        string memory description = "Test proposal";
-
-        // pushing time a little bit forward
-        vm.warp(block.timestamp + 3_600);
-
-        vm.prank(_daoVoter);
-
-        uint256 proposalId = _siloGovernor.propose(
-            targets,
-            values,
-            calldatas,
-            description
-        );
+    function _executeProposal(Proposal _proposal) internal {
+        uint256 proposalId = _proposal.getProposalId();
 
         uint256 snapshot = _siloGovernor.proposalSnapshot(proposalId);
         // pushing time to change a proposal to an active status
@@ -425,11 +397,18 @@ contract MainnetTest is IntegrationTest {
 
         vm.warp(snapshot + 1 weeks + 1 seconds);
 
+        address[] memory targets = _proposal.getTargets();
+        uint256[] memory values = _proposal.getValues();
+        bytes[] memory calldatas = _proposal.getCalldatas();
+        string memory description = _proposal.getDescription();
+
+        bytes32 descriptionHash = keccak256(bytes(description));
+
         _siloGovernor.queue(
             targets,
             values,
             calldatas,
-            keccak256(bytes(description))
+            descriptionHash
         );
 
         vm.warp(block.timestamp + 3_600);
@@ -438,7 +417,7 @@ contract MainnetTest is IntegrationTest {
             targets,
             values,
             calldatas,
-            keccak256(bytes(description))
+            descriptionHash
         );
     }
 
@@ -457,5 +436,59 @@ contract MainnetTest is IntegrationTest {
         siloTokenOwner = siloToken.owner();
 
         assertEq(owner, siloTokenOwner, "Expect an ownership to be transferred");
+    }
+
+    function _mockSiloCore() internal {
+        address siloFactory = makeAddr("SiloFactoryMock");
+        AddrLib.setAddress(SiloCoreContracts.SILO_FACTORY, siloFactory);
+        vm.mockCall(siloFactory, abi.encodeWithSelector(Ownable2Step.acceptOwnership.selector), abi.encode(true));
+
+        vm.mockCall(
+            _hookReceiver,
+            abi.encodeWithSelector(IHookReceiver.shareToken.selector),
+            abi.encode(_shareToken)
+        );
+
+        vm.mockCall(
+            _shareToken,
+            abi.encodeWithSelector(IShareToken.silo.selector),
+            abi.encode(_silo)
+        );
+
+        vm.mockCall(
+            _silo,
+            abi.encodeWithSelector(ISilo.factory.selector),
+            abi.encode(_siloFactory)
+        );
+    }
+
+    function _rewardwsFees(ISiloLiquidityGauge _gauge) internal {
+        vm.prank(_deployer);
+        IFeesManager(address(_factory)).setFees(_DAO_FEE, _DEPLOYER_FEE);
+
+        uint256 rewardsAmount = 100e18;
+
+        address distributor = makeAddr("distributor");
+        address timelock = getAddress(VeSiloContracts.TIMELOCK_CONTROLLER);
+
+        ERC20Mint rewardToken = new ERC20Mint("Test reward token", "TRT");
+        rewardToken.mint(distributor, rewardsAmount);
+
+        vm.prank(distributor);
+        rewardToken.approve(address(_gauge), rewardsAmount);
+
+        vm.prank(timelock);
+        _gauge.add_reward(address(rewardToken), distributor);
+
+        vm.prank(distributor);
+        _gauge.deposit_reward_token(address(rewardToken), rewardsAmount);
+
+        uint256 gaugeBalance = rewardToken.balanceOf(address(_gauge));
+        uint256 daoFeeReceiverBalance = rewardToken.balanceOf(_daoFeeReceiver);
+        uint256 deployerFeeReceiverBalance = rewardToken.balanceOf(_deployerFeeReceiver);
+
+        assertEq(gaugeBalance, 70e18);
+        assertEq(daoFeeReceiverBalance, 10e18);
+        assertEq(deployerFeeReceiverBalance, 20e18);
     }
 }

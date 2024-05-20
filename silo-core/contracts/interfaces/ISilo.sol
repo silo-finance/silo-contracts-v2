@@ -7,10 +7,10 @@ import {IERC3156FlashLender} from "./IERC3156FlashLender.sol";
 import {ISiloConfig} from "./ISiloConfig.sol";
 import {ISiloFactory} from "./ISiloFactory.sol";
 import {ILeverageBorrower} from "./ILeverageBorrower.sol";
-import {ISiloLiquidation} from "./ISiloLiquidation.sol";
+import {ILiquidationProcess} from "./ILiquidationProcess.sol";
 
 // solhint-disable ordering
-interface ISilo is IERC4626, IERC3156FlashLender, ISiloLiquidation {
+interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
     /// @dev Interest accrual happens on each deposit/withdraw/borrow/repay. View methods work on storage that might be
     ///      outdate. Some calculations require accrued interest to return current state of Silo. This struct is used
     ///      to make a decision inside functions if interest should be accrued in memory to work on updated values.
@@ -37,6 +37,31 @@ interface ISilo is IERC4626, IERC3156FlashLender, ISiloLiquidation {
         Collateral,
         Debt
         // if you add new, make sure you adjust all places with revert WrongAssetType()
+    }
+
+    struct WithdrawArgs {
+        uint256 assets;
+        uint256 shares;
+        address receiver;
+        address owner;
+        address spender;
+        ISilo.AssetType assetType;
+    }
+
+    /// @param assets Number of assets the borrower intends to borrow. Use 0 if shares are provided.
+    /// @param shares Number of shares corresponding to the assets that the borrower intends to borrow. Use 0 if
+    /// assets are provided.
+    /// @param receiver Address that will receive the borrowed assets
+    /// @param borrower The user who is borrowing the assets
+    /// @param totalCollateralAssets Total collateralized assets currently in the system, not protected
+    struct BorrowArgs {
+        uint256 assets;
+        uint256 shares;
+        address receiver;
+        address borrower;
+        bool sameAsset;
+        bool leverage;
+        uint256 totalCollateralAssets;
     }
 
     /// @dev this struct is used for all types of assets: collateral, protected and debt
@@ -106,8 +131,10 @@ interface ISilo is IERC4626, IERC3156FlashLender, ISiloLiquidation {
     /// @notice Emitted on leverage
     event Leverage();
 
+    /// @notice emitted only when collateral has been switched to other one
+    event CollateralTypeChanged(address indexed borrower, bool sameAseet);
+
     error Unsupported();
-    error DepositNotPossible();
     error NothingToWithdraw();
     error NotEnoughLiquidity();
     error NotSolvent();
@@ -122,6 +149,12 @@ interface ISilo is IERC4626, IERC3156FlashLender, ISiloLiquidation {
     error WrongAssetType();
     error ZeroAssets();
     error ZeroShares();
+    error OnlyLiquidationModule();
+    error Insolvency();
+    error ThereIsDebtInOtherSilo();
+    error NoDebt();
+    error TwoAssetsDebt();
+    error LeverageTooHigh();
 
     /// @notice Initialize Silo
     /// @param _siloConfig address of ISiloConfig with full config for this Silo
@@ -143,47 +176,25 @@ interface ISilo is IERC4626, IERC3156FlashLender, ISiloLiquidation {
     /// @notice Fetches the utilization data of the silo used by IRM
     function utilizationData() external view returns (UtilizationData memory utilizationData);
 
-    /// @notice Fetches the available liquidity in the silo
-    /// @return liquidity The amount of available liquidity
+    /// @notice Fetches the real (available to borrow) liquidity in the silo, it does include interest
+    /// @return liquidity The amount of liquidity
     function getLiquidity() external view returns (uint256 liquidity);
+
+    function getRawLiquidity() external view returns (uint256 liquidity);
 
     /// @notice Determines if a borrower is solvent
     /// @param _borrower Address of the borrower to check for solvency
     /// @return True if the borrower is solvent, otherwise false
     function isSolvent(address _borrower) external view returns (bool);
 
-    /// @notice Checks if a deposit is possible for a given depositor
-    /// @param _depositor Address of the depositor to check for deposit possibility
-    /// @return True if deposit is possible for the depositor, otherwise false
-    function depositPossible(address _depositor) external view returns (bool);
+    /// @notice Retrieves the raw total amount of assets based on provided type (direct storage access)
+    function total(AssetType _assetType) external view returns (uint256);
 
-    /// @notice Checks if borrowing is possible for a given borrower
-    /// @param _borrower Address of the borrower to check for borrowing possibility
-    /// @return True if borrowing is possible for the borrower, otherwise false
-    function borrowPossible(address _borrower) external view returns (bool);
-
-    /// @notice Retrieves the maximum loan-to-value (LTV) ratio
-    /// @return maxLtv The maximum LTV ratio configured for the silo in 18 decimals points
-    function getMaxLtv() external view returns (uint256 maxLtv);
-
-    /// @notice Retrieves the LT value
-    /// @return lt The LT value in 18 decimals points
-    function getLt() external view returns (uint256 lt);
-
-    /// @notice Retrieves the loan-to-value (LTV) for a specific borrower
-    /// @param _borrower Address of the borrower
-    /// @return ltv The LTV for the borrower in 18 decimals points
-    function getLtv(address _borrower) external view returns (uint256 ltv);
-
-    /// @notice Retrieves the total amount of protected (non-borrowable) collateral assets
-    /// @return totalProtectedAssets The total amount of assets of type 'Protected'
-    function getProtectedAssets() external view returns (uint256 totalProtectedAssets);
-
-    /// @notice Retrieves the total amount of collateral (borrowable) assets
+    /// @notice Retrieves the total amount of collateral (borrowable) assets with interest
     /// @return totalCollateralAssets The total amount of assets of type 'Collateral'
     function getCollateralAssets() external view returns (uint256 totalCollateralAssets);
 
-    /// @notice Retrieves the total amount of debt assets
+    /// @notice Retrieves the total amount of debt assets with interest
     /// @return totalDebtAssets The total amount of assets of type 'Debt'
     function getDebtAssets() external view returns (uint256 totalDebtAssets);
 
@@ -195,15 +206,13 @@ interface ISilo is IERC4626, IERC3156FlashLender, ISiloLiquidation {
         view
         returns (uint256 totalCollateralAssets, uint256 totalProtectedAssets);
 
-    /// @notice Retrieves the fee details in 18 decimals points and the addresses of the DAO and deployer fee receivers
-    /// @return daoFeeReceiver The address of the DAO fee receiver
-    /// @return deployerFeeReceiver The address of the deployer fee receiver
-    /// @return daoFee The total fee for the DAO in 18 decimals points
-    /// @return deployerFee The total fee for the deployer in 18 decimals points
-    function getFeesAndFeeReceivers()
+    /// @notice Retrieves the total amounts of collateral and debt assets
+    /// @return totalCollateralAssets The total amount of assets of type 'Collateral'
+    /// @return totalDebtAssets The total amount of debt assets of type 'Debt'
+    function getCollateralAndDebtAssets()
         external
         view
-        returns (address daoFeeReceiver, address deployerFeeReceiver, uint256 daoFee, uint256 deployerFee);
+        returns (uint256 totalCollateralAssets, uint256 totalDebtAssets);
 
     /// @notice Implements IERC4626.convertToShares for each asset type
     function convertToShares(uint256 _assets, AssetType _assetType) external view returns (uint256 shares);
@@ -274,27 +283,46 @@ interface ISilo is IERC4626, IERC3156FlashLender, ISiloLiquidation {
         external
         returns (uint256 assets);
 
+    function switchCollateralTo(bool _sameToken) external;
+
     /// @notice Calculates the maximum amount of assets that can be borrowed by the given address
     /// @param _borrower Address of the potential borrower
-    /// @return maxAssets Maximum amount of assets that the borrower can borrow
-    function maxBorrow(address _borrower) external view returns (uint256 maxAssets);
+    /// @return maxAssets Maximum amount of assets that the borrower can borrow, this value is underestimated
+    /// That means, in some cases when you borrow maxAssets, you will be able to borrow again eg. up to 2wei
+    /// Reason for underestimation is to return value that will not cause borrow revert
+    function maxBorrow(address _borrower, bool _sameAsset) external view returns (uint256 maxAssets);
 
     /// @notice Previews the amount of shares equivalent to the given asset amount for borrowing
     /// @param _assets Amount of assets to preview the equivalent shares for
     /// @return shares Amount of shares equivalent to the provided asset amount
     function previewBorrow(uint256 _assets) external view returns (uint256 shares);
 
+    /// @notice Allows an address to borrow a specified amount of same assets in efficient way
+    /// @dev In opposite to regular borrow, Silo will transfer necessary collateral (difference between collateral
+    /// and debt amount) FROM `_borrower`. Existing collateral is not taken into consideration.
+    /// @param _deposit Amount of deposit to leverage
+    /// @param _borrow Amount of assets to borrow
+    /// @param _borrower Address responsible for the borrowed assets
+    /// @param _assetType asset type for collateral
+    /// @return depositShares Amount of shares equivalent to the collateral assets
+    /// @return borrowShares Amount of shares equivalent to the borrowed assets
+    function leverageSameAsset(uint256 _deposit, uint256 _borrow, address _borrower, AssetType _assetType)
+        external
+        returns (uint256 depositShares, uint256 borrowShares);
+
     /// @notice Allows an address to borrow a specified amount of assets
     /// @param _assets Amount of assets to borrow
     /// @param _receiver Address receiving the borrowed assets
     /// @param _borrower Address responsible for the borrowed assets
+    /// @param _sameAsset TRUE if user wants to borrow and collateralize the same asset. FALSE otherwise.
     /// @return shares Amount of shares equivalent to the borrowed assets
-    function borrow(uint256 _assets, address _receiver, address _borrower) external returns (uint256 shares);
+    function borrow(uint256 _assets, address _receiver, address _borrower, bool _sameAsset)
+        external returns (uint256 shares);
 
     /// @notice Calculates the maximum amount of shares that can be borrowed by the given address
     /// @param _borrower Address of the potential borrower
     /// @return maxShares Maximum number of shares that the borrower can borrow
-    function maxBorrowShares(address _borrower) external view returns (uint256 maxShares);
+    function maxBorrowShares(address _borrower, bool _sameAsset) external view returns (uint256 maxShares);
 
     /// @notice Previews the amount of assets equivalent to the given share amount for borrowing
     /// @param _shares Amount of shares to preview the equivalent assets for
@@ -306,7 +334,9 @@ interface ISilo is IERC4626, IERC3156FlashLender, ISiloLiquidation {
     /// @param _receiver Address to receive the borrowed assets
     /// @param _borrower Address responsible for the borrowed assets
     /// @return assets Amount of assets borrowed
-    function borrowShares(uint256 _shares, address _receiver, address _borrower) external returns (uint256 assets);
+    function borrowShares(uint256 _shares, address _receiver, address _borrower, bool _sameAsset)
+        external
+        returns (uint256 assets);
 
     /// @notice Calculates the maximum amount an address can repay based on their debt shares
     /// @param _borrower Address of the borrower
@@ -348,7 +378,13 @@ interface ISilo is IERC4626, IERC3156FlashLender, ISiloLiquidation {
     /// @param _borrower The address of the borrower leveraging the assets
     /// @param _data Arbitrary bytes data that might be needed for additional logic in the `_receiver` callback
     /// @return shares The number of shares representing the leveraged borrowed amount
-    function leverage(uint256 _assets, ILeverageBorrower _receiver, address _borrower, bytes calldata _data)
+    function leverage(
+        uint256 _assets,
+        ILeverageBorrower _receiver,
+        address _borrower,
+        bool _sameAsset,
+        bytes calldata _data
+    )
         external
         returns (uint256 shares);
 

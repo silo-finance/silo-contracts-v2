@@ -2,10 +2,12 @@
 pragma solidity 0.8.21;
 
 import {IERC20R} from "../interfaces/IERC20R.sol";
+import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
+import {SiloLensLib} from "../lib/SiloLensLib.sol";
 import {IShareToken, ShareToken, ISiloFactory, ISilo} from "./ShareToken.sol";
 
 /// @title ShareDebtToken
-/// @notice ERC20 compatible token representing debt position in Silo
+/// @notice ERC20 compatible token representing debt in Silo
 /// @dev It implements reversed approvals and checks solvency of recipient on transfer.
 ///
 /// It is assumed that there is no attack vector on taking someone else's debt because we don't see
@@ -14,14 +16,9 @@ import {IShareToken, ShareToken, ISiloFactory, ISilo} from "./ShareToken.sol";
 /// take someone else's debt without asking.
 /// @custom:security-contact security@silo.finance
 contract ShareDebtToken is IERC20R, ShareToken {
-    /// @dev maps _owner => _recipient => amount
-    mapping(address => mapping(address => uint256)) private _receiveAllowances;
+    using SiloLensLib for ISilo;
 
-    error OwnerIsZero();
-    error RecipientIsZero();
-    error ShareTransferNotAllowed();
-    error AmountExceedsAllowance();
-    error RecipientNotSolventAfterTransfer();
+    mapping(address owner => mapping(address recipient => uint256 allowance)) private _receiveAllowances;
 
     /// @param _silo Silo address for which tokens was deployed
     function initialize(ISilo _silo, address _hookReceiver) external virtual initializer {
@@ -78,8 +75,8 @@ contract ShareDebtToken is IERC20R, ShareToken {
     function _beforeTokenTransfer(address _sender, address _recipient, uint256 _amount) internal virtual override {
         // If we are minting or burning, Silo is responsible to check all necessary conditions
         if (_isTransfer(_sender, _recipient)) {
-            // Silo forbids having debt and collateral position of the same asset in given Silo
-            if (!silo.borrowPossible(_recipient)) revert ShareTransferNotAllowed();
+            // Silo forbids having two debts and this condition will be checked inside `onDebtTransfer`
+            siloConfig.onDebtTransfer(_sender, _recipient);
 
             // _recipient must approve debt transfer, _sender does not have to
             uint256 currentAllowance = receiveAllowance(_sender, _recipient);
@@ -97,11 +94,17 @@ contract ShareDebtToken is IERC20R, ShareToken {
     function _afterTokenTransfer(address _sender, address _recipient, uint256 _amount) internal virtual override {
         ShareToken._afterTokenTransfer(_sender, _recipient, _amount);
 
+        // debt transfer is such a rare use case and extra gas is worth additional security,
+        // so we do not return even when _amount == 0
+
         // if we are minting or burning, Silo is responsible to check all necessary conditions
         // if we are NOT minting and not burning, it means we are transferring
         // make sure that _recipient is solvent after transfer
-        if (_isTransfer(_sender, _recipient) && !silo.isSolvent(_recipient)) {
-            revert RecipientNotSolventAfterTransfer();
+        if (_isTransfer(_sender, _recipient)) {
+            if (!silo.isSolvent(_recipient)) revert RecipientNotSolventAfterTransfer();
         }
+
+        // we need to close debt on transfer and burn
+        if (_sender != address(0) && balanceOf(_sender) == 0) siloConfig.closeDebt(_sender);
     }
 }

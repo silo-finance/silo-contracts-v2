@@ -20,7 +20,7 @@ interface IRMGetters {
     function getSetup(address _silo) external view returns (Setup memory setup);
 }
 
-// FOUNDRY_PROFILE=core forge test --mc SiloDebugTest --ffi -vvv
+// FOUNDRY_PROFILE=core-test forge test --mc SiloDebugTest --ffi -vvv
 contract SiloDebugTest is IntegrationTest {
     address constant internal _SILO_ADDR = 0x7abd3124E1e2F5f8aBF8b862d086647A5141bf4c;
     address constant internal _IRM_ADDR = 0x9d33d45AA7E1B45c65EA4b36b0c586B58a4796cE;
@@ -38,7 +38,7 @@ contract SiloDebugTest is IntegrationTest {
         vm.label(_SILO_ADDR, "silo");
     }
 
-    function testIt() public {
+    function testIt() public view {
         // IInterestRateModelV2.ConfigWithState memory config = _IRM.getConfig(_SILO_ADDR);
 
         IRMGetters.Setup memory setup = _IRM_GETTERS.getSetup(_SILO_ADDR);

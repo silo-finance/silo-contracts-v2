@@ -15,22 +15,9 @@ import {VeSiloDelegatorViaCCIPDeploy} from "ve-silo/deploy/VeSiloDelegatorViaCCI
 import {IVeSiloDelegatorViaCCIP} from "ve-silo/contracts/voting-escrow/interfaces/IVeSiloDelegatorViaCCIP.sol";
 import {ICCIPMessageSender} from "ve-silo/contracts/utils/CCIPMessageSender.sol";
 
-// FOUNDRY_PROFILE=ve-silo forge test --mc VotingEscrowRemapperTest --ffi -vvv
+// FOUNDRY_PROFILE=ve-silo-test forge test --mc VotingEscrowRemapperTest --ffi -vvv
 contract VotingEscrowRemapperTest is IntegrationTest {
     uint64 internal constant _DS_CHAIN_SELECTOR = 12532609583862916517; // Polygon Mumbai
-
-    bytes32 internal constant _MESSAGE_ID_REMAP_ETH =
-        0x8783dbc0975bc995aaf015ea1639cda6672c1f400392b2bb145df341646b581d;
-    bytes32 internal constant _MESSAGE_ID_REMAP_LINK =
-        0x6d53a764c4a7fcfa04c9f26652d931fe4ce65f8362b3dbfae392d69efab66c2e;
-    bytes32 internal constant _MESSAGE_ID_CLEAR1_ETH =
-        0x01a29a32fb4bd33b255c9d9f3882486e409e33f658a6a772b274a71f4fd8af80;
-    bytes32 internal constant _MESSAGE_ID_CLEAR2_ETH =
-        0x118182c54287e04b644e526cc5dcb8ffb35857992cbc7ce0e44a8416b5b4be8d;
-    bytes32 internal constant _MESSAGE_ID_CLEAR1_LINK =
-        0x88586931608dcb855afe3101a68a0585b1934513aa5532d5fc4b939ee645b26b;
-    bytes32 internal constant _MESSAGE_ID_CLEAR2_LINK =
-        0x30d1568d44769ef648c0b324e870d5a5f53b667170340fa3c4887603e7e2c8b7;
 
     IVeSiloDelegatorViaCCIP public veSiloDelegator;
     IVotingEscrowCCIPRemapper public remapper;
@@ -43,6 +30,7 @@ contract VotingEscrowRemapperTest is IntegrationTest {
     address internal _remoteUser = makeAddr("remoteUser");
     address internal _childChainReceiver = makeAddr("Child chain receiver");
     address internal _smartValletChecker = makeAddr("Smart wallet checker");
+    address internal _timelock = makeAddr("Timelock");
     address internal _deployer;
     address internal _link;
 
@@ -87,6 +75,8 @@ contract VotingEscrowRemapperTest is IntegrationTest {
 
         _link = getAddress(AddrKey.LINK);
 
+        setAddress(VeSiloContracts.TIMELOCK_CONTROLLER, _timelock);
+
         VeSiloDelegatorViaCCIPDeploy delegatorDeploy = new VeSiloDelegatorViaCCIPDeploy();
         veSiloDelegator = delegatorDeploy.run();
     }
@@ -126,11 +116,7 @@ contract VotingEscrowRemapperTest is IntegrationTest {
 
         vm.deal(_localUser, fee);
 
-        bytes32[2] memory messagesIds;
-        messagesIds[0] = _MESSAGE_ID_CLEAR1_ETH;
-        messagesIds[1] = _MESSAGE_ID_CLEAR2_ETH;
-
-        _clearNetworkRemapping(ICCIPMessageSender.PayFeesIn.Native, fee, messagesIds);
+        _clearNetworkRemapping(ICCIPMessageSender.PayFeesIn.Native, fee);
     }
 
     function testClearNetworkRemappingLINK() public {
@@ -152,11 +138,7 @@ contract VotingEscrowRemapperTest is IntegrationTest {
         vm.prank(_localUser);
         IERC20(_link).approve(address(remapper), fee);
 
-        bytes32[2] memory messagesIds;
-        messagesIds[0] = _MESSAGE_ID_CLEAR1_LINK;
-        messagesIds[1] = _MESSAGE_ID_CLEAR2_LINK;
-
-        _clearNetworkRemapping(ICCIPMessageSender.PayFeesIn.LINK, fee, messagesIds);
+        _clearNetworkRemapping(ICCIPMessageSender.PayFeesIn.LINK, fee);
     }
 
     function _setNetworkRemappingNative() internal {
@@ -168,7 +150,7 @@ contract VotingEscrowRemapperTest is IntegrationTest {
 
         vm.deal(_localUser, fee);
 
-        _setNetworkRemapping(ICCIPMessageSender.PayFeesIn.Native, fee, _MESSAGE_ID_REMAP_ETH);
+        _setNetworkRemapping(ICCIPMessageSender.PayFeesIn.Native, fee);
     }
 
     function _setNetworkRemappingLINK() internal {
@@ -183,14 +165,13 @@ contract VotingEscrowRemapperTest is IntegrationTest {
         vm.prank(_localUser);
         IERC20(_link).approve(address(remapper), fee);
 
-        _setNetworkRemapping(ICCIPMessageSender.PayFeesIn.LINK, fee, _MESSAGE_ID_REMAP_LINK);
+        _setNetworkRemapping(ICCIPMessageSender.PayFeesIn.LINK, fee);
     }
 
     // solhint-disable-next-line function-max-lines
     function _clearNetworkRemapping(
         ICCIPMessageSender.PayFeesIn _payFeesIn,
-        uint256 _fee,
-        bytes32[2] memory _messagesIds
+        uint256 _fee
     ) internal {
         uint userEpoch = votingEscrow.user_point_epoch(_localUser);
         IVeSilo.Point memory userPoint = votingEscrow.user_point_history(_localUser, userEpoch);
@@ -198,9 +179,6 @@ contract VotingEscrowRemapperTest is IntegrationTest {
         // always send total supply along with a user update
         uint totalSupplyEpoch = votingEscrow.epoch();
         IVeSilo.Point memory totalSupplyPoint = votingEscrow.point_history(totalSupplyEpoch);
-
-        vm.expectEmit(false, false, false, true);
-        emit MessageSentVaiCCIP(_messagesIds[0]);
 
         IVeSilo.Point memory emptyUserPoint;
 
@@ -212,9 +190,6 @@ contract VotingEscrowRemapperTest is IntegrationTest {
             emptyUserPoint,
             totalSupplyPoint
         );
-
-        vm.expectEmit(false, false, false, true);
-        emit MessageSentVaiCCIP(_messagesIds[1]);
 
         vm.expectEmit(false, false, false, true);
         emit SentUserBalance(
@@ -244,8 +219,7 @@ contract VotingEscrowRemapperTest is IntegrationTest {
 
     function _setNetworkRemapping(
         ICCIPMessageSender.PayFeesIn _payFeesIn,
-        uint256 _fee,
-        bytes32 _messageId
+        uint256 _fee
     ) internal {
         uint userEpoch = votingEscrow.user_point_epoch(_localUser);
         IVeSilo.Point memory userPoint = votingEscrow.user_point_history(_localUser, userEpoch);
@@ -253,9 +227,6 @@ contract VotingEscrowRemapperTest is IntegrationTest {
         // always send total supply along with a user update
         uint totalSupplyEpoch = votingEscrow.epoch();
         IVeSilo.Point memory totalSupplyPoint = votingEscrow.point_history(totalSupplyEpoch);
-
-        vm.expectEmit(false, false, false, true);
-        emit MessageSentVaiCCIP(_messageId);
 
         vm.expectEmit(false, false, false, true);
         emit SentUserBalance(
@@ -289,7 +260,7 @@ contract VotingEscrowRemapperTest is IntegrationTest {
         vm.expectEmit(false, false, true, true);
         emit ChildChainReceiverUpdated(_DS_CHAIN_SELECTOR, _childChainReceiver);
 
-        vm.prank(_deployer);
+        vm.prank(_timelock);
         veSiloDelegator.setChildChainReceiver(_DS_CHAIN_SELECTOR, _childChainReceiver);
     }
 

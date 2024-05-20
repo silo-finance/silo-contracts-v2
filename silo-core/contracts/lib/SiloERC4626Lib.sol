@@ -10,6 +10,10 @@ import {ISilo} from "../interfaces/ISilo.sol";
 import {IShareToken} from "../interfaces/IShareToken.sol";
 import {SiloSolvencyLib} from "./SiloSolvencyLib.sol";
 import {SiloMathLib} from "./SiloMathLib.sol";
+import {SiloStdLib} from "./SiloStdLib.sol";
+import {SiloLendingLib} from "./SiloLendingLib.sol";
+import {Rounding} from "./Rounding.sol";
+import {Methods} from "./Methods.sol";
 
 // solhint-disable function-max-lines
 
@@ -20,24 +24,30 @@ library SiloERC4626Lib {
     uint256 internal constant _PRECISION_DECIMALS = 1e18;
 
     /// @dev ERC4626: MUST return 2 ** 256 - 1 if there is no limit on the maximum amount of assets that may be
-    ///      deposited.
-    uint256 internal constant _NO_DEPOSIT_LIMIT = type(uint256).max;
+    ///      deposited. In our case, we want to limit this value in a way, that after max deposit we can do borrow.
+    ///      That's why we decided to go with type(uint128).max - which is anyway high enough to consume any totalSupply
+    uint256 internal constant _VIRTUAL_DEPOSIT_LIMIT = type(uint128).max;
 
-    /// @notice Determines the maximum amount a user can deposit or mint
-    /// @dev The function checks if deposit is possible for the given user, and if so, returns a constant
+    /// @notice Determines the maximum amount of collateral a user can deposit
+    /// This function is estimation to reduce gas usage. In theory, if silo total assets will be close to virtual limit
+    /// and returned max assets will be eg 1, then it might be not possible to actually deposit 1wei because
+    /// tx will revert with ZeroShares error. This is unreal case in real world scenario so we ignoring it.
+    /// @dev The function checks, if deposit is possible for the given user, and if so, returns a constant
     /// representing no deposit limit
-    /// @param _config Configuration of the silo
-    /// @param _receiver The address of the user
-    /// @return maxAssetsOrShares Maximum assets or shares a user can deposit or mint
-    function maxDepositOrMint(ISiloConfig _config, address _receiver)
-        external
-        view
+    /// @param _totalCollateralAssets total deposited collateral
+    /// @return maxAssetsOrShares Maximum assets/shares a user can deposit
+    function maxDepositOrMint(uint256 _totalCollateralAssets)
+        internal
+        pure
         returns (uint256 maxAssetsOrShares)
     {
-        ISiloConfig.ConfigData memory configData = _config.getConfig(address(this));
-
-        if (depositPossible(configData.debtShareToken, _receiver)) {
-            maxAssetsOrShares = _NO_DEPOSIT_LIMIT;
+        // safe to unchecked because we checking manually to prevent revert
+        unchecked {
+            maxAssetsOrShares = _totalCollateralAssets == 0
+                ? _VIRTUAL_DEPOSIT_LIMIT
+                : (_totalCollateralAssets >= _VIRTUAL_DEPOSIT_LIMIT)
+                        ? 0
+                        : _VIRTUAL_DEPOSIT_LIMIT - _totalCollateralAssets;
         }
     }
 
@@ -48,72 +58,130 @@ library SiloERC4626Lib {
     /// @param _config Configuration of the silo
     /// @param _owner Address of the user for which the maximum withdrawal amount is calculated
     /// @param _assetType The type of asset being considered for withdrawal
-    /// @param _totalAssets The total assets in the silo. Can be collateral or protected depending on `_assetType`.
-    /// @param _liquidity The available liquidity in the silo
+    /// @param _totalAssets The total PROTECTED assets in the silo. In case of collateral use `0`, total
+    /// collateral will be calculated internally with interest
     /// @return assets The maximum assets that the user can withdraw
     /// @return shares The maximum shares that the user can withdraw
     function maxWithdraw(
         ISiloConfig _config,
         address _owner,
         ISilo.AssetType _assetType,
-        uint256 _totalAssets,
-        uint256 _liquidity
+        uint256 _totalAssets
     ) external view returns (uint256 assets, uint256 shares) {
         if (_assetType == ISilo.AssetType.Debt) revert ISilo.WrongAssetType();
 
         (
-            ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig
-        ) = _config.getConfigs(address(this));
+            ISiloConfig.ConfigData memory collateralConfig,
+            ISiloConfig.ConfigData memory debtConfig,
+            ISiloConfig.DebtInfo memory debtInfo
+        ) = _config.getConfigs(address(this), _owner, Methods.WITHDRAW);
 
-        uint256 shareTokenTotalSupply = _assetType == ISilo.AssetType.Collateral
-            ? IShareToken(collateralConfig.collateralShareToken).totalSupply()
-            : IShareToken(collateralConfig.protectedShareToken).totalSupply();
+        uint256 shareTokenTotalSupply;
+        uint256 liquidity;
 
-        SiloSolvencyLib.LtvData memory ltvData;
+        if (_assetType == ISilo.AssetType.Collateral) {
+            shareTokenTotalSupply = IShareToken(collateralConfig.collateralShareToken).totalSupply();
+            (liquidity, _totalAssets, ) = SiloLendingLib.getLiquidityAndAssetsWithInterest(collateralConfig);
+        } else {
+            shareTokenTotalSupply = IShareToken(collateralConfig.protectedShareToken).totalSupply();
+            liquidity = _totalAssets;
+        }
 
-        { // stack too deep
-            uint256 debt = IShareToken(debtConfig.debtShareToken).balanceOf(_owner);
+        if (SiloSolvencyLib.depositWithoutDebt(debtInfo)) {
+            shares = _assetType == ISilo.AssetType.Protected
+                ? IShareToken(collateralConfig.protectedShareToken).balanceOf(_owner)
+                : IShareToken(collateralConfig.collateralShareToken).balanceOf(_owner);
 
-            if (debt == 0) {
-                shares = _assetType == ISilo.AssetType.Collateral
-                    ? IShareToken(collateralConfig.collateralShareToken).balanceOf(_owner)
-                    : IShareToken(collateralConfig.protectedShareToken).balanceOf(_owner);
+            assets = SiloMathLib.convertToAssets(
+                shares,
+                _totalAssets,
+                shareTokenTotalSupply,
+                Rounding.MAX_WITHDRAW_TO_ASSETS,
+                _assetType
+            );
 
-                assets = SiloMathLib.convertToAssets(
-                    shares,
-                    _totalAssets,
-                    shareTokenTotalSupply,
-                    MathUpgradeable.Rounding.Down,
-                    _assetType
-                );
+            if (_assetType == ISilo.AssetType.Protected || assets <= liquidity) return (assets, shares);
 
-                return (assets, shares);
-            }
+            assets = liquidity;
 
-            ltvData = SiloSolvencyLib.getAssetsDataForLtvCalculations(
-                collateralConfig, debtConfig, _owner, ISilo.OracleType.Solvency, ISilo.AccrueInterestInMemory.Yes, debt
+            shares = SiloMathLib.convertToShares(
+                assets,
+                _totalAssets,
+                shareTokenTotalSupply,
+                // when we doing withdraw, we using Rounding.Up, because we want to burn as many shares
+                // however here, we will be using shares as input to withdraw, if we round up, we can overflow
+                // because we will want to withdraw too much, so we have to use Rounding.Down
+                Rounding.MAX_WITHDRAW_TO_SHARES,
+                ISilo.AssetType.Collateral
+            );
+
+            return (assets, shares);
+        } else {
+            return maxWithdrawWhenDebt(
+                collateralConfig, debtConfig, _owner, liquidity, shareTokenTotalSupply, _assetType, _totalAssets
+            );
+        }
+    }
+
+    function maxWithdrawWhenDebt(
+        ISiloConfig.ConfigData memory _collateralConfig,
+        ISiloConfig.ConfigData memory _debtConfig,
+        address _owner,
+        uint256 _liquidity,
+        uint256 _shareTokenTotalSupply,
+        ISilo.AssetType _assetType,
+        uint256 _totalAssets
+    ) internal view returns (uint256 assets, uint256 shares) {
+        SiloSolvencyLib.LtvData memory ltvData = SiloSolvencyLib.getAssetsDataForLtvCalculations(
+            _collateralConfig,
+            _debtConfig,
+            _owner,
+            ISilo.OracleType.Solvency,
+            ISilo.AccrueInterestInMemory.Yes,
+            IShareToken(_debtConfig.debtShareToken).balanceOf(_owner)
+        );
+
+        {
+            (uint256 collateralValue, uint256 debtValue) =
+                SiloSolvencyLib.getPositionValues(ltvData, _collateralConfig.token, _debtConfig.token);
+
+            assets = SiloMathLib.calculateMaxAssetsToWithdraw(
+                collateralValue,
+                debtValue,
+                _collateralConfig.lt,
+                ltvData.borrowerProtectedAssets,
+                ltvData.borrowerCollateralAssets
             );
         }
 
-        (uint256 collateralValue, uint256 debtValue) =
-            SiloSolvencyLib.getPositionValues(ltvData, collateralConfig.token, debtConfig.token);
-
-        assets = SiloMathLib.calculateMaxAssetsToWithdraw(
-            collateralValue,
-            debtValue,
-            collateralConfig.lt,
-            ltvData.borrowerProtectedAssets,
-            ltvData.borrowerCollateralAssets
-        );
-
-        return SiloMathLib.maxWithdrawToAssetsAndShares(
+        (assets, shares) = SiloMathLib.maxWithdrawToAssetsAndShares(
             assets,
             ltvData.borrowerCollateralAssets,
             ltvData.borrowerProtectedAssets,
             _assetType,
             _totalAssets,
-            shareTokenTotalSupply,
+            _shareTokenTotalSupply,
             _liquidity
+        );
+
+        if (assets != 0) {
+            // even if we using rounding Down, we still need underestimation with 1wei
+            unchecked { assets--; }
+        }
+    }
+
+    /// this helped with stack too deep
+    function transitionCollateralWithdraw(
+        address _shareToken,
+        uint256 _shares,
+        address _owner,
+        address _spender,
+        ISilo.AssetType _assetType,
+        uint256 _liquidity,
+        ISilo.Assets storage _totalCollateral
+    ) internal returns (uint256 assets, uint256 shares) {
+        return withdraw(
+            address(0), _shareToken, 0, _shares, _owner, _owner, _spender, _assetType, _liquidity, _totalCollateral
         );
     }
 
@@ -127,7 +195,6 @@ library SiloERC4626Lib {
     /// provided.
     /// @param _receiver The address that will receive the collateral shares
     /// @param _collateralShareToken The collateral share token
-    /// @param _debtShareToken The debt share token
     /// @param _totalCollateral Reference to the total collateral assets in the silo
     /// @return assets The exact amount of assets being deposited
     /// @return shares The exact number of collateral shares being minted in exchange for the deposited assets
@@ -138,13 +205,8 @@ library SiloERC4626Lib {
         uint256 _shares,
         address _receiver,
         IShareToken _collateralShareToken,
-        IShareToken _debtShareToken,
         ISilo.Assets storage _totalCollateral
-    ) public returns (uint256 assets, uint256 shares) {
-        if (!depositPossible(address(_debtShareToken), _receiver)) {
-            revert ISilo.DepositNotPossible();
-        }
-
+    ) internal returns (uint256 assets, uint256 shares) {
         uint256 totalAssets = _totalCollateral.assets;
 
         (assets, shares) = SiloMathLib.convertToAssetsAndToShares(
@@ -152,38 +214,30 @@ library SiloERC4626Lib {
             _shares,
             totalAssets,
             _collateralShareToken.totalSupply(),
-            MathUpgradeable.Rounding.Up,
-            MathUpgradeable.Rounding.Down,
+            Rounding.DEPOSIT_TO_ASSETS,
+            Rounding.DEPOSIT_TO_SHARES,
             ISilo.AssetType.Collateral
         );
 
-        if (_token != address(0)) {
-            // Transfer tokens before minting. No state changes have been made so reentrancy does nothing
-            IERC20Upgradeable(_token).safeTransferFrom(_depositor, address(this), assets);
-        }
+        if (assets == 0) revert ISilo.ZeroAssets();
+        if (shares == 0) revert ISilo.ZeroShares();
 
         // `assets` and `totalAssets` can never be more than uint256 because totalSupply cannot be either
-        unchecked {
-            _totalCollateral.assets = totalAssets + assets;
-        }
+        // however, there is (probably unreal but also untested) possibility, where you might borrow from silo
+        // and deposit (like double spend) and with that we could overflow. Better safe than sorry - unchecked removed
+        // unchecked {
+        _totalCollateral.assets = totalAssets + assets;
+        // }
 
         // Hook receiver is called after `mint` and can reentry but state changes are completed already
         _collateralShareToken.mint(_receiver, _depositor, shares);
-    }
 
-    /// this helped with stack too deep
-    function transitionCollateralWithdraw(
-        address _shareToken,
-        uint256 _shares,
-        address _owner,
-        address _spender,
-        ISilo.AssetType _assetType,
-        uint256 _liquidity,
-        ISilo.Assets storage _totalCollateral
-    ) public returns (uint256 assets, uint256 shares) {
-        return withdraw(
-            address(0), _shareToken, 0, _shares, _owner, _owner, _spender, _assetType, _liquidity, _totalCollateral
-        );
+        if (_token != address(0)) {
+            // Reentrancy is possible only for view methods (read-only reentrancy),
+            // so no harm can be done as the state is already updated.
+            // We do not expect the silo to work with any malicious token that will not send tokens to silo.
+            IERC20Upgradeable(_token).safeTransferFrom(_depositor, address(this), assets);
+        }
     }
 
     /// @notice Withdraw assets from the silo
@@ -212,7 +266,7 @@ library SiloERC4626Lib {
         ISilo.AssetType _assetType,
         uint256 _liquidity,
         ISilo.Assets storage _totalCollateral
-    ) public returns (uint256 assets, uint256 shares) {
+    ) internal returns (uint256 assets, uint256 shares) {
         uint256 shareTotalSupply = IShareToken(_shareToken).totalSupply();
         if (shareTotalSupply == 0) revert ISilo.NothingToWithdraw();
 
@@ -224,8 +278,8 @@ library SiloERC4626Lib {
                 _shares,
                 totalAssets,
                 shareTotalSupply,
-                MathUpgradeable.Rounding.Down,
-                MathUpgradeable.Rounding.Up,
+                Rounding.WITHDRAW_TO_ASSETS,
+                Rounding.WITHDRAW_TO_SHARES,
                 _assetType
             );
 
@@ -247,13 +301,5 @@ library SiloERC4626Lib {
             // fee-on-transfer is ignored
             IERC20Upgradeable(_asset).safeTransfer(_receiver, assets);
         }
-    }
-
-    /// @notice Checks if a depositor can make a deposit
-    /// @param _debtShareToken Address of the debt share token
-    /// @param _depositor Address of the user attempting to deposit
-    /// @return Returns `true` if the depositor can deposit, otherwise `false`
-    function depositPossible(address _debtShareToken, address _depositor) public view returns (bool) {
-        return IShareToken(_debtShareToken).balanceOf(_depositor) == 0;
     }
 }

@@ -4,6 +4,8 @@ pragma solidity 0.8.21;
 import {IntegrationTest} from "silo-foundry-utils/networks/IntegrationTest.sol";
 import {IERC20} from "openzeppelin-contracts/token/ERC20/IERC20.sol";
 import {Client} from "chainlink-ccip/v0.8/ccip/interfaces/IAny2EVMMessageReceiver.sol";
+import {OwnableUpgradeable} from "openzeppelin5-upgradeable/access/OwnableUpgradeable.sol";
+import {Initializable} from "openzeppelin5-upgradeable/proxy/utils/Initializable.sol";
 
 import {IVeSilo} from "ve-silo/contracts/voting-escrow/interfaces/IVeSilo.sol";
 import {AddrKey} from "common/addresses/AddrKey.sol";
@@ -12,8 +14,9 @@ import {ICCIPMessageSender} from "ve-silo/contracts/utils/CCIPMessageSender.sol"
 import {VotingEscrowChildChainDeploy} from "ve-silo/deploy/VotingEscrowChildChainDeploy.s.sol";
 import {IVotingEscrowChildChain} from "ve-silo/contracts/voting-escrow/interfaces/IVotingEscrowChildChain.sol";
 import {IAny2EVMMessageReceiver} from "ve-silo/contracts/voting-escrow/interfaces/IVotingEscrowChildChain.sol";
+import {VotingEscrowChildChain} from "ve-silo/contracts/voting-escrow/VotingEscrowChildChain.sol";
 
-// FOUNDRY_PROFILE=ve-silo forge test --mc VotingEscrowChildChainTest --ffi -vvv
+// FOUNDRY_PROFILE=ve-silo-test forge test --mc VotingEscrowChildChainTest --ffi -vvv
 contract VotingEscrowChildChainTest is IntegrationTest {
     bytes32 internal constant _TEST_MESSAGE_ID = keccak256(abi.encodePacked(bytes("test message id")));
     uint256 internal constant _LOCKED_END_TEST = 1726099200;
@@ -38,6 +41,7 @@ contract VotingEscrowChildChainTest is IntegrationTest {
     address internal _router = makeAddr("CCIP Router");
     address internal _localUser = makeAddr("localUser");
     address internal _sender = makeAddr("Source chain sender");
+    address internal _multisig = makeAddr("Multisig");
     address internal _deployer;
 
     event MessageReceived(bytes32 indexed messageId);
@@ -50,6 +54,7 @@ contract VotingEscrowChildChainTest is IntegrationTest {
         deploy.disableDeploymentsSync();
 
         setAddress(AddrKey.CHAINLINK_CCIP_ROUTER, _router);
+        setAddress(AddrKey.L2_MULTISIG, _multisig);
 
         _votingEscrowChild = deploy.run();
 
@@ -58,10 +63,39 @@ contract VotingEscrowChildChainTest is IntegrationTest {
     }
 
     function testSetSourceChainSenderPermissions() public {
-        vm.expectRevert("Ownable: caller is not the owner");
+        vm.expectRevert(abi.encodeWithSelector(
+            OwnableUpgradeable.OwnableUnauthorizedAccount.selector,
+            address(this)
+        ));
+
         _votingEscrowChild.setSourceChainSender(_sender);
 
         _setSourceChainSender();
+    }
+
+    function testShouldFailToReinitialize() public {
+        address newOwner = makeAddr("newOwner");
+
+        VotingEscrowChildChain proxy = VotingEscrowChildChain(address(_votingEscrowChild));
+
+        vm.expectRevert(Initializable.InvalidInitialization.selector);
+        proxy.initialize(newOwner);
+
+        vm.expectRevert(Initializable.InvalidInitialization.selector);
+        vm.prank(_multisig);
+        proxy.initialize(newOwner);
+
+        VotingEscrowChildChain implementation = new VotingEscrowChildChain(
+            address(1), // router
+            1 // dst chain selector
+        );
+
+        vm.expectRevert(Initializable.InvalidInitialization.selector);
+        implementation.initialize(newOwner);
+
+        vm.expectRevert(Initializable.InvalidInitialization.selector);
+        vm.prank(_multisig);
+        implementation.initialize(newOwner);
     }
 
     function testReceiveBalanceAndTotalSupply() public {
@@ -190,7 +224,7 @@ contract VotingEscrowChildChainTest is IntegrationTest {
         vm.expectEmit(false, false, false, true);
         emit MainChainSenderConfiguered(_sender);
 
-        vm.prank(_deployer);
+        vm.prank(_multisig);
         _votingEscrowChild.setSourceChainSender(_sender);
     }
 }

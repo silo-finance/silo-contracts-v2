@@ -75,9 +75,11 @@ contract GetAssetsDataForLtvCalculationsTest is Test {
         collateralConfig.collateralShareToken = collateralShareToken;
         collateralConfig.daoFee = scenario.input.collateralConfig.daoFee;
         collateralConfig.silo = silo0;
+        collateralConfig.token = makeAddr("collateral.token");
 
         debtConfig.debtShareToken = debtShareToken;
         debtConfig.silo = silo1;
+        debtConfig.token = makeAddr("debt.token");
 
         accrueInMemory = scenario.input.accrueInMemory
             ? ISilo.AccrueInterestInMemory.Yes
@@ -117,8 +119,10 @@ contract GetAssetsDataForLtvCalculationsTest is Test {
         SiloMock siloMock0 = new SiloMock(silo0);
 
         if (scenario.input.accrueInMemory) {
-            siloMock0.getCollateralAssetsMock(scenario.input.collateralConfig.totalCollateralAssets);
-            siloMock0.getDebtAssetsMock(scenario.input.collateralConfig.totalDebtAssets);
+            siloMock0.getCollateralAndDebtAssetsMock(
+                scenario.input.collateralConfig.totalCollateralAssets,
+                scenario.input.collateralConfig.totalDebtAssets
+            );
         }
 
         siloMock0.getCollateralAndProtectedAssetsMock(
@@ -127,7 +131,7 @@ contract GetAssetsDataForLtvCalculationsTest is Test {
         );
 
         SiloMock siloMock1 = new SiloMock(silo1);
-        siloMock1.getDebtAssetsMock(scenario.input.debtConfig.totalDebtAssets);
+        siloMock1.totalMock(ISilo.AssetType.Debt, scenario.input.debtConfig.totalDebtAssets);
 
         if (scenario.input.accrueInMemory) {
             interestRateModelMock.getCompoundInterestRateMock(

@@ -34,7 +34,7 @@ contract ERC20 is ERC20WithoutMint {
     }
 }
 
-// FOUNDRY_PROFILE=ve-silo forge test --mc L2Test --ffi -vvv
+// FOUNDRY_PROFILE=ve-silo-test forge test --mc L2Test --ffi -vvv
 contract L2Test is IntegrationTest {
     uint256 internal constant _FORKING_BLOCK_NUMBER = 4413530;
     uint256 internal constant _INCENTIVES_AMOUNT = 2_000_000e18;
@@ -63,25 +63,30 @@ contract L2Test is IntegrationTest {
 
     ERC20 internal _siloToken;
 
-    function setUp() public {
-        // only to make deployment scripts work
-        vm.createSelectFork(
-            getChainRpcUrl(SEPOLIA_ALIAS),
-            _FORKING_BLOCK_NUMBER
-        );
+    bool internal _executeDeploy = true;
 
-        uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
-        _deployer = vm.addr(deployerPrivateKey);
+    function setUp() public virtual {
+        if (_executeDeploy) {
+            uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
+            _deployer = vm.addr(deployerPrivateKey);
 
-        _dummySiloToken();
+            // only to make deployment scripts work
+            vm.createSelectFork(
+                getChainRpcUrl(SEPOLIA_ALIAS),
+                _FORKING_BLOCK_NUMBER
+            );
 
-        L2Deploy deploy = new L2Deploy();
-        deploy.disableDeploymentsSync();
+            setAddress(AddrKey.L2_MULTISIG, _l2Multisig);
 
-        setAddress(AddrKey.L2_MULTISIG, _l2Multisig);
-        // setAddress(AddrKey.CHAINLINK_CCIP_ROUTER, address(1));
+            _dummySiloToken();
 
-        deploy.run();
+            L2Deploy deploy = new L2Deploy();
+            deploy.disableDeploymentsSync();
+
+            deploy.run();
+        } else {
+            setAddress(AddrKey.L2_MULTISIG, _l2Multisig);
+        }
 
         _factory = IChildChainGaugeFactory(getAddress(VeSiloContracts.CHILD_CHAIN_GAUGE_FACTORY));
         _l2PseudoMinter = IL2BalancerPseudoMinter(getAddress(VeSiloContracts.L2_BALANCER_PSEUDO_MINTER));
@@ -126,6 +131,8 @@ contract L2Test is IntegrationTest {
         assertEq(userBalance, _EXPECTED_USER_BAL, "Expect user to receive incentives");
 
         _verifyMintedStats(gauge);
+
+        _rewardwsFees(gauge);
     }
 
     function _verifyMintedStats(ISiloChildChainGauge _gauge) internal {
@@ -152,7 +159,7 @@ contract L2Test is IntegrationTest {
     }
 
     function _transferVotingPower() internal {
-        vm.prank(_deployer);
+        vm.prank(_l2Multisig);
         _votingEscrowChild.setSourceChainSender(_sender);
 
         bytes memory data = _votingEscrowChildTest.balanceTransferData();
@@ -243,5 +250,34 @@ contract L2Test is IntegrationTest {
     function _dummySiloToken() internal {
         _siloToken = new ERC20("Silo test token", "SILO");
         setAddress(getChainId(), SILO_TOKEN, address(_siloToken));
+    }
+
+    function _rewardwsFees(ISiloChildChainGauge _gauge) internal {
+        vm.prank(_deployer);
+        IFeesManager(address(_factory)).setFees(_DAO_FEE, _DEPLOYER_FEE);
+
+        uint256 rewardsAmount = 100e18;
+
+        address distributor = makeAddr("distributor");
+
+        ERC20 rewardToken = new ERC20("Test reward token", "TRT");
+        rewardToken.mint(distributor, rewardsAmount);
+
+        vm.prank(distributor);
+        rewardToken.approve(address(_gauge), rewardsAmount);
+
+        vm.prank(_l2Multisig);
+        _gauge.add_reward(address(rewardToken), distributor);
+
+        vm.prank(distributor);
+        _gauge.deposit_reward_token(address(rewardToken), rewardsAmount);
+
+        uint256 gaugeBalance = rewardToken.balanceOf(address(_gauge));
+        uint256 daoFeeReceiverBalance = rewardToken.balanceOf(_daoFeeReceiver);
+        uint256 deployerFeeReceiverBalance = rewardToken.balanceOf(_deployerFeeReceiver);
+
+        assertEq(gaugeBalance, 70e18);
+        assertEq(daoFeeReceiverBalance, 10e18);
+        assertEq(deployerFeeReceiverBalance, 20e18);
     }
 }

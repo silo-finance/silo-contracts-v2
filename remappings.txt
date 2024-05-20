@@ -1,5 +1,6 @@
 forge-std/=gitmodules/forge-std/src/
 silo-foundry-utils/=gitmodules/silo-foundry-utils/contracts/
+properties/=gitmodules/crytic/properties/contracts/
 
 silo-core/=silo-core/
 silo-oracles/=silo-oracles/
@@ -10,6 +11,8 @@ ve-silo/=ve-silo/
 openzeppelin-contracts-upgradeable/=gitmodules/openzeppelin-contracts-upgradeable/contracts
 openzeppelin-contracts-upgradeable@v3.4.2/=gitmodules/openzeppelin-contracts-upgradeable@v3.4.2/contracts
 openzeppelin-contracts/=gitmodules/openzeppelin-contracts/contracts
+openzeppelin5/=gitmodules/openzeppelin-contracts-5/contracts
+openzeppelin5-upgradeable/=gitmodules/openzeppelin-contracts-upgradeable-5/contracts
 chainlink/=gitmodules/chainlink/contracts/src
 chainlink-ccip/=gitmodules/chainlink-ccip/contracts/src
 uniswap/=gitmodules/uniswap/

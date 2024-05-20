@@ -9,7 +9,7 @@ import "../../../contracts/uniswapV3/UniswapV3OracleFactory.sol";
 import "../_common/UniswapPools.sol";
 
 /*
-    FOUNDRY_PROFILE=silo-oracles forge test -vv --match-contract UniswapV3OracleTest
+    FOUNDRY_PROFILE=oracles forge test -vv --match-contract UniswapV3OracleTest
 */
 contract UniswapV3OracleTest is UniswapPools {
     UniswapV3OracleFactory public immutable ORACLE_FACTORY;
@@ -25,6 +25,7 @@ contract UniswapV3OracleTest is UniswapPools {
 
         config = IUniswapV3Oracle.UniswapV3DeploymentConfig(
             pools["USDC_WETH"],
+            address(tokens["WETH"]),
             address(tokens["USDC"]),
             1800,
             120
@@ -34,7 +35,7 @@ contract UniswapV3OracleTest is UniswapPools {
     }
 
     /*
-        FOUNDRY_PROFILE=silo-oracles forge test -vvv --mt test_UniswapV3Oracle_price_Overflow
+        FOUNDRY_PROFILE=oracles forge test -vvv --mt test_UniswapV3Oracle_price_Overflow
     */
     function test_UniswapV3Oracle_price_Overflow() public {
         vm.expectRevert("Overflow");
@@ -42,7 +43,7 @@ contract UniswapV3OracleTest is UniswapPools {
     }
 
     /*
-        FOUNDRY_PROFILE=silo-oracles forge test -vvv --mt test_UniswapV3Oracle_revert_whenPriceZero
+        FOUNDRY_PROFILE=oracles forge test -vvv --mt test_UniswapV3Oracle_revert_whenPriceZero
     */
     function test_UniswapV3Oracle_revert_whenPriceZero() public {
         vm.expectRevert(bytes("ZeroQuote"));
@@ -50,7 +51,7 @@ contract UniswapV3OracleTest is UniswapPools {
     }
 
     /*
-        FOUNDRY_PROFILE=silo-oracles forge test -vvv --mt test_UniswapV3Oracle_revert_onQuoteQuote
+        FOUNDRY_PROFILE=oracles forge test -vvv --mt test_UniswapV3Oracle_revert_onQuoteQuote
     */
     function test_UniswapV3Oracle_revert_onQuoteQuote() public {
         vm.expectRevert("UseBaseAmount");
@@ -58,7 +59,7 @@ contract UniswapV3OracleTest is UniswapPools {
     }
 
     /*
-        FOUNDRY_PROFILE=silo-oracles forge test -vvv --mt test_UniswapV3Oracle_invalidBaseToken
+        FOUNDRY_PROFILE=oracles forge test -vvv --mt test_UniswapV3Oracle_invalidBaseToken
     */
     function test_UniswapV3Oracle_invalidBaseToken() public {
         vm.expectRevert(bytes("ZeroQuote"));
@@ -66,7 +67,7 @@ contract UniswapV3OracleTest is UniswapPools {
     }
 
     /*
-        FOUNDRY_PROFILE=silo-oracles forge test -vvv --mt test_UniswapV3Oracle_supportOLDError
+        FOUNDRY_PROFILE=oracles forge test -vvv --mt test_UniswapV3Oracle_supportOLDError
     */
     function test_UniswapV3Oracle_supportOLDError() public {
         // at block 17977506:
@@ -77,6 +78,7 @@ contract UniswapV3OracleTest is UniswapPools {
 
         UniswapV3Oracle oracle = ORACLE_FACTORY.create(IUniswapV3Oracle.UniswapV3DeploymentConfig(
             pools["SP500_WETH"],
+            address(tokens["WETH"]),
             address(tokens["WETH"]),
             15,
             120
@@ -93,7 +95,7 @@ contract UniswapV3OracleTest is UniswapPools {
     }
 
     /*
-        FOUNDRY_PROFILE=silo-oracles forge test -vvv --mt test_UniswapV3Oracle_oldestTimestamp
+        FOUNDRY_PROFILE=oracles forge test -vvv --mt test_UniswapV3Oracle_oldestTimestamp
     */
     function test_UniswapV3Oracle_oldestTimestamp() public {
         // last one is 1692794747
@@ -102,14 +104,14 @@ contract UniswapV3OracleTest is UniswapPools {
     }
 
     /*
-        FOUNDRY_PROFILE=silo-oracles forge test -vvv --mt test_UniswapV3Oracle_price_gas
+        FOUNDRY_PROFILE=oracles forge test -vvv --mt test_UniswapV3Oracle_price_gas
     */
     function test_UniswapV3Oracle_price_gas() public {
         uint256 gasStart = gasleft();
         uint256 priceView = PRICE_PROVIDER.quote(1e18, address(tokens["WETH"]));
         uint256 gasSpend = gasStart - gasleft();
         emit log_named_uint("gasSpend", gasSpend);
-        assertEq(gasSpend, 80825, "expect optimised gas #1");
+        assertEq(gasSpend, 80954, "expect optimised gas #1");
 
         assertEq(priceView, 1641_609559, "expect ETH price in USDC");
 
@@ -120,6 +122,7 @@ contract UniswapV3OracleTest is UniswapPools {
 
         config = IUniswapV3Oracle.UniswapV3DeploymentConfig(
             pools["USDC_WETH"],
+            address(tokens["WETH"]),
             address(tokens["USDC"]),
             1800,
             120
@@ -132,7 +135,7 @@ contract UniswapV3OracleTest is UniswapPools {
         gasSpend = gasStart - gasleft();
         emit log_named_uint("at block", otherBlock);
         emit log_named_uint("gasSpend", gasSpend);
-        assertEq(gasSpend, 50307, "expect optimised gas #1");
+        assertEq(gasSpend, 50436, "expect optimised gas #1");
 
         assertEq(priceView, 1657_278376, "expect ETH price in USDC");
     }

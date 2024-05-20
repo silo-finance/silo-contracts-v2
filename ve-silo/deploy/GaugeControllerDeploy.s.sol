@@ -5,7 +5,7 @@ import {IGaugeController} from "ve-silo/contracts/gauges/interfaces/IGaugeContro
 import {CommonDeploy, VeSiloContracts} from "./_CommonDeploy.sol";
 
 /**
-FOUNDRY_PROFILE=ve-silo \
+FOUNDRY_PROFILE=ve-silo-test \
     forge script ve-silo/deploy/GaugeControllerDeploy.s.sol \
     --ffi --broadcast --rpc-url http://127.0.0.1:8545
  */
@@ -15,19 +15,19 @@ contract GaugeControllerDeploy is CommonDeploy {
     function run() public returns (IGaugeController gaugeController) {
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
 
+        address votingEscrow = getDeployedAddress(VeSiloContracts.VOTING_ESCROW);
+        address timelock = getDeployedAddress(VeSiloContracts.TIMELOCK_CONTROLLER);
+
         vm.startBroadcast(deployerPrivateKey);
 
          address gaugeControllerAddr = _deploy(
             VeSiloContracts.GAUGE_CONTROLLER,
-            abi.encode(
-                getDeployedAddress(VeSiloContracts.VOTING_ESCROW),
-                getDeployedAddress(VeSiloContracts.TIMELOCK_CONTROLLER)
-            )
+            abi.encode(votingEscrow, timelock)
          );
 
-        gaugeController = IGaugeController(gaugeControllerAddr);
-
         vm.stopBroadcast();
+
+        gaugeController = IGaugeController(gaugeControllerAddr);
 
         _syncDeployments();
     }

@@ -15,6 +15,8 @@ import {IVeBoost} from "ve-silo/contracts/voting-escrow/interfaces/IVeBoost.sol"
 import {IHookReceiverMock as IHookReceiver} from "../_mocks/IHookReceiverMock.sol";
 import {IShareTokenLike as IShareToken} from "ve-silo/contracts/gauges/interfaces/IShareTokenLike.sol";
 import {ISiloMock as ISilo} from "ve-silo/test/_mocks/ISiloMock.sol";
+import {FeesManagerTest} from "ve-silo/test/silo-tokens-minter/FeesManager.unit.t.sol";
+import {IFeesManager} from "ve-silo/contracts/silo-tokens-minter/interfaces/IFeesManager.sol";
 
 // interfaces for tests
 
@@ -29,14 +31,17 @@ interface ITokenAdminLike {
     function rate() external view returns (uint256);
 }
 
-// FOUNDRY_PROFILE=ve-silo forge test --mc LiquidityGaugesTest --ffi -vvv
+// FOUNDRY_PROFILE=ve-silo-test forge test --mc LiquidityGaugesTest --ffi -vvv
 contract LiquidityGaugesTest is IntegrationTest {
     uint256 internal constant _WEIGHT_CAP = 987;
     uint256 internal constant _BOB_BAL = 20e18;
     uint256 internal constant _ALICE_BAL = 20e18;
     uint256 internal constant _TOTAL_SUPPLY = 100e18;
+    uint256 internal constant _DAO_FEE = 1e3; // 10%
+    uint256 internal constant _DEPLOYER_FEE = 2e3; // 20%
 
     ILiquidityGaugeFactory internal _factory;
+    FeesManagerTest internal _feesTest;
 
     address internal _hookReceiver = makeAddr("Hook receiver");
     address internal _shareToken = makeAddr("Share token");
@@ -46,8 +51,12 @@ contract LiquidityGaugesTest is IntegrationTest {
     address internal _tokenAdmin = makeAddr("Silo token admin");
     address internal _bob = makeAddr("Bob");
     address internal _alice = makeAddr("Alice");
+    address internal _deployer;
 
     function setUp() public {
+        uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
+        _deployer = vm.addr(deployerPrivateKey);
+
         SiloGovernorDeploy _governanceDeploymentScript = new SiloGovernorDeploy();
         _governanceDeploymentScript.disableDeploymentsSync();
 
@@ -64,6 +73,8 @@ contract LiquidityGaugesTest is IntegrationTest {
         setAddress(VeSiloContracts.MAINNET_BALANCER_MINTER, _minter);
 
         _factory = _factoryDeploy.run();
+
+        _feesTest = new FeesManagerTest();
     }
 
     /// @notice Ensure that a LiquidityGaugesFactory is deployed with the correct gauge implementation.
@@ -72,6 +83,26 @@ contract LiquidityGaugesTest is IntegrationTest {
             _factory.getGaugeImplementation(),
             getAddress(VeSiloContracts.SILO_LIQUIDITY_GAUGE),
             "Invalid gauge implementation"
+        );
+    }
+
+    /// @notice Should set fees
+    function testOnlyOwnerCanSetFees() public {
+        _feesTest.onlyOwnerCanSetFees(
+            IFeesManager(address(_factory)),
+            _DAO_FEE,
+            _DEPLOYER_FEE,
+            _deployer
+        );
+    }
+
+    /// @notice Should revert if fees are invalid
+    function testMaxFees() public {
+        _feesTest.onlyOwnerCanSetFees(
+            IFeesManager(address(_factory)),
+            _DAO_FEE,
+            _DEPLOYER_FEE + 1,
+            _deployer
         );
     }
 
@@ -151,10 +182,8 @@ contract LiquidityGaugesTest is IntegrationTest {
     function _dummySiloToken() internal {
         if (isChain(ANVIL_ALIAS)) {
             ERC20 siloToken = new ERC20("Silo test token", "SILO");
-            ERC20 silo8020Token = new ERC20("Silo 80/20", "SILO-80-20");
 
             setAddress(getChainId(), SILO_TOKEN, address(siloToken));
-            setAddress(getChainId(), SILO80_WETH20_TOKEN, address(silo8020Token));
         }
     }
 

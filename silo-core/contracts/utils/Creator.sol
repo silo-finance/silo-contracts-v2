@@ -6,12 +6,12 @@ contract Creator {
 
     error OnlyCreator();
 
-    constructor() {
-        _creator = msg.sender;
-    }
-
     modifier onlyCreator() {
         if (msg.sender != _creator) revert OnlyCreator();
         _;
+    }
+
+    constructor() {
+        _creator = msg.sender;
     }
 }

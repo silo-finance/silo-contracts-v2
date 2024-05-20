@@ -10,7 +10,7 @@ import {IFeeSwap} from "ve-silo/contracts/fees-distribution/interfaces/IFeeSwap.
 import {UniswapSwapper} from "ve-silo/contracts/fees-distribution/fee-swapper/swappers/UniswapSwapper.sol";
 
 /**
-FOUNDRY_PROFILE=ve-silo \
+FOUNDRY_PROFILE=ve-silo-test \
     forge script ve-silo/deploy/UniswapSwapperDeploy.s.sol \
     --ffi --broadcast --rpc-url http://127.0.0.1:8545
  */
@@ -18,16 +18,14 @@ contract UniswapSwapperDeploy is CommonDeploy {
     function run() public returns (IFeeSwap uniswapSwapper) {
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
 
+        address uniswapRouter = getAddress(AddrKey.UNISWAP_ROUTER);
+
         vm.startBroadcast(deployerPrivateKey);
 
-        uniswapSwapper = IFeeSwap(address(
-            new UniswapSwapper(getAddress(AddrKey.UNISWAP_ROUTER))
-        ));
+        uniswapSwapper = IFeeSwap(address(new UniswapSwapper(uniswapRouter)));
 
         vm.stopBroadcast();
 
         _registerDeployment(address(uniswapSwapper), VeSiloContracts.UNISWAP_SWAPPER);
-
-        _syncDeployments();
     }
 }

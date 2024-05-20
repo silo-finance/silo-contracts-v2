@@ -39,6 +39,7 @@ contract SiloConfigData is Test, CommonDeploy {
         string interestRateModelConfig1;
         uint64 liquidationFee0;
         uint64 liquidationFee1;
+        address liquidationModule;
         uint64 lt0;
         uint64 lt1;
         uint64 maxLtv0;
@@ -75,6 +76,7 @@ contract SiloConfigData is Test, CommonDeploy {
 
         initData = ISiloConfig.InitData({
             deployer: config.deployer,
+            liquidationModule: config.liquidationModule,
             deployerFee: config.deployerFee * BP2DP_NORMALIZATION,
             token0: getAddress(config.token0),
             solvencyOracle0: address(0),

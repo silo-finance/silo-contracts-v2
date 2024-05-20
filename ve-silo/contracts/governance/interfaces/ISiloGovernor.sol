@@ -6,6 +6,5 @@ import {IGovernorTimelock} from "openzeppelin-contracts/governance/extensions/IG
 import {IVeSilo} from "ve-silo/contracts/voting-escrow/interfaces/IVeSilo.sol";
 
 abstract contract ISiloGovernor is IGovernor, IGovernorTimelock {
-    function oneTimeInit(IVeSilo _token) external virtual;
     function veSiloToken() external view virtual returns (IVeSilo);
 }

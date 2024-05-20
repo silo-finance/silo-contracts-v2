@@ -31,6 +31,9 @@ interface VotingEscrowDelegationProxy:
     def totalSupply() -> uint256: view
     def adjustedBalanceOf(_account: address) -> uint256: view
 
+interface FeesManager:
+    def getFees() -> (uint256, uint256): view
+
 
 event Deposit:
     _user: indexed(address)
@@ -330,6 +333,59 @@ def _dao_and_deployer_fee(_amount: uint256) -> (uint256, uint256):
 
 
 @internal
+def _get_dao_and_deployer_fee_from_rewards(_amount: uint256, _token: address) -> uint256:
+    """
+    @notice Calculates DAO and a Silo Deployer fees
+    @param _amount Amount from which fee should be deducted
+    """
+    dao_fee: uint256 = 0
+    deployer_fee: uint256 = 0
+    fee_to_dao: uint256 = 0
+    fee_to_deployer: uint256 = 0
+
+    (dao_fee, deployer_fee) = FeesManager(self.factory).getFees()
+
+    if _amount == 0:
+        return _amount
+
+    dao_fee_receiver: address = empty(address)
+    deployer_fee_receiver: address = empty(address)
+
+    (
+        dao_fee_receiver,
+        deployer_fee_receiver
+    ) = SiloFactory(self.silo_factory).getFeeReceivers(self.silo)
+
+    if dao_fee_receiver != empty(address) and dao_fee != 0:
+        fee_to_dao = self._calculate_fee(_amount, dao_fee)
+        if fee_to_dao != 0:
+            self._transfer_token(dao_fee_receiver, _token, fee_to_dao)
+
+    if deployer_fee_receiver != empty(address) and deployer_fee != 0:
+        fee_to_deployer = self._calculate_fee(_amount, deployer_fee)
+        if fee_to_deployer != 0:
+            self._transfer_token(deployer_fee_receiver, _token, fee_to_deployer)
+
+    return _amount - (fee_to_dao + fee_to_deployer)
+
+
+@internal
+def _transfer_token(_receiver: address, _reward_token: address, _amount: uint256):
+    """
+    @notice Transfer token to the `_receiver`
+    """
+    response: Bytes[32] = raw_call(
+        _reward_token,
+        _abi_encode(
+            _receiver, _amount, method_id=method_id("transfer(address,uint256)")
+        ),
+        max_outsize=32,
+    )
+    if len(response) != 0:
+        assert convert(response, bool)
+
+
+@internal
 @pure
 def _calculate_fee(_amount: uint256, _bps: uint256) -> uint256:
     if _amount == 0 or _bps == 0:
@@ -532,13 +588,15 @@ def deposit_reward_token(_reward_token: address, _amount: uint256):
     if len(response) != 0:
         assert convert(response, bool), "TRANSFER_FROM_FAILURE"
 
+    _amountWithoutFee: uint256 = self._get_dao_and_deployer_fee_from_rewards(_amount, _reward_token)
+
     period_finish: uint256 = self.reward_data[_reward_token].period_finish
     if block.timestamp >= period_finish:
-        self.reward_data[_reward_token].rate = _amount / WEEK
+        self.reward_data[_reward_token].rate = _amountWithoutFee / WEEK
     else:
         remaining: uint256 = period_finish - block.timestamp
         leftover: uint256 = remaining * self.reward_data[_reward_token].rate
-        self.reward_data[_reward_token].rate = (_amount + leftover) / WEEK
+        self.reward_data[_reward_token].rate = (_amountWithoutFee + leftover) / WEEK
 
     self.reward_data[_reward_token].last_update = block.timestamp
     self.reward_data[_reward_token].period_finish = block.timestamp + WEEK

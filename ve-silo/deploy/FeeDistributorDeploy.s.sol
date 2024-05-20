@@ -8,7 +8,7 @@ import {IVotingEscrow} from "balancer-labs/v2-interfaces/liquidity-mining/IVotin
 import {FeeDistributor, IFeeDistributor} from "ve-silo/contracts/fees-distribution/FeeDistributor.sol";
 
 /**
-FOUNDRY_PROFILE=ve-silo \
+FOUNDRY_PROFILE=ve-silo-test \
     forge script ve-silo/deploy/FeeDistributorDeploy.s.sol \
     --ffi --broadcast --rpc-url http://127.0.0.1:8545
  */
@@ -18,9 +18,9 @@ contract FeeDistributorDeploy is CommonDeploy {
     function run() public returns (IFeeDistributor feeDistributor) {
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
 
-        vm.startBroadcast(deployerPrivateKey);
-
         address votingEscrow = getDeployedAddress(VeSiloContracts.VOTING_ESCROW);
+
+        vm.startBroadcast(deployerPrivateKey);
 
         feeDistributor = IFeeDistributor(address(
             new FeeDistributor(IVotingEscrow(votingEscrow), startTime)
@@ -29,7 +29,5 @@ contract FeeDistributorDeploy is CommonDeploy {
         vm.stopBroadcast();
 
         _registerDeployment(address(feeDistributor), VeSiloContracts.FEE_DISTRIBUTOR);
-
-        _syncDeployments();
     }
 }

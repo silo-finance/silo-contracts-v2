@@ -72,6 +72,13 @@ interface IStakelessGauge {
     function setCheckpointer(address newCheckpointer) external;
 
     /**
+     * @notice This function should be manually changed to "view" in the ABI.
+     * @dev Checkpoints gauge in the gauge controller if called as non-view fn.
+     * @return unclaimed incentives for the gauge.
+     */
+    function unclaimedIncentives() external returns (uint256 unclaimed);
+
+    /**
      * @notice Gets the relative weight cap for the gauge.
      */
     function getRelativeWeightCap() external view returns (uint256);

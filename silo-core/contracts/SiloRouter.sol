@@ -8,7 +8,6 @@ import {ReentrancyGuard} from "openzeppelin-contracts/security/ReentrancyGuard.s
 import {IPermit2, ISignatureTransfer} from "./interfaces/permit2/IPermit2.sol";
 import {IWrappedNativeToken} from "./interfaces/IWrappedNativeToken.sol";
 import {ISilo} from "./interfaces/ISilo.sol";
-import {IERC3156FlashBorrower} from "./interfaces/IERC3156FlashBorrower.sol";
 import {ILeverageBorrower} from "./interfaces/ILeverageBorrower.sol";
 
 import {TokenHelper} from "./lib/TokenHelper.sol";
@@ -18,7 +17,7 @@ import {TokenHelper} from "./lib/TokenHelper.sol";
 /// of actions (Deposit, Withdraw, Borrow, Repay) and execute them in a single transaction.
 /// @dev SiloRouter requires only first action asset to be approved
 /// @custom:security-contact security@silo.finance
-contract SiloRouter is ReentrancyGuard, IERC3156FlashBorrower {
+contract SiloRouter is ReentrancyGuard {
     using SafeERC20 for IERC20;
 
     // @notice Action types that are supported
@@ -32,7 +31,6 @@ contract SiloRouter is ReentrancyGuard, IERC3156FlashBorrower {
         Repay,
         RepayShares,
         Transition,
-        Flashloan,
         Leverage
     }
 
@@ -43,10 +41,32 @@ contract SiloRouter is ReentrancyGuard, IERC3156FlashBorrower {
         bytes signature;
     }
 
-    struct Flashloan {
-        ISilo silo;
-        IERC20 asset;
+    struct BorrowOptions {
+        // how much assets or shares do you want to use?
         uint256 amount;
+        bool sameAsset;
+    }
+
+    struct LeverageOptions {
+        // how much assets or shares do you want to use?
+        uint256 amount;
+        ILeverageBorrower leverageBorrower;
+        bool sameAsset;
+        // optional data that will be send to leverageBorrower
+        bytes data;
+    }
+
+    struct AnyAction {
+        // how much assets or shares do you want to use?
+        uint256 amount;
+        // receiver of leveraged funds that will sell them on DEXes
+        ILeverageBorrower receiver;
+        // optional data for leverage
+        bytes data;
+        // are you using Protected, Collateral or Debt?
+        ISilo.AssetType assetType;
+        // optional Permit2
+        PermitData permit;
     }
 
     struct Action {
@@ -56,16 +76,8 @@ contract SiloRouter is ReentrancyGuard, IERC3156FlashBorrower {
         ISilo silo;
         // what asset do you want to use?
         IERC20 asset;
-        // how much assets or shares do you want to use?
-        uint256 amount;
-        // receiver of leveraged funds that will sell them on DEXes
-        ILeverageBorrower receiver;
-        // optional data for flashloan or leverage
-        bytes data;
-        // are you using Protected, Collateral or Debt?
-        ISilo.AssetType assetType;
-        // optional Permit2
-        PermitData permit;
+        // options specific for actions
+        bytes options;
     }
 
     // @dev native asset wrapped token. In case of Ether, it's WETH.
@@ -74,14 +86,11 @@ contract SiloRouter is ReentrancyGuard, IERC3156FlashBorrower {
     // solhint-disable-next-line var-name-mixedcase
     IPermit2 public immutable PERMIT2;
 
-    Flashloan public flashloan;
-
     error ApprovalFailed();
     error ERC20TransferFailed();
     error EthTransferFailed();
     error InvalidSilo();
     error UnsupportedAction();
-    error PendingFlashloan();
 
     constructor(address _wrappedNativeToken, address _permit2) {
         TokenHelper.assertAndGetDecimals(_wrappedNativeToken);
@@ -94,12 +103,6 @@ contract SiloRouter is ReentrancyGuard, IERC3156FlashBorrower {
     receive() external payable {
         // `execute` method calls `IWrappedNativeToken.withdraw()`
         // and we need to receive the withdrawn ETH unconditionally
-    }
-
-    function onFlashLoan(address, address, uint256 _amount, uint256 _fee, bytes calldata) external returns (bytes32) {
-        flashloan.amount = _amount + _fee;
-
-        return keccak256(bytes("ERC3156FlashBorrower.onFlashLoan"));
     }
 
     /// @notice Execute actions
@@ -115,18 +118,13 @@ contract SiloRouter is ReentrancyGuard, IERC3156FlashBorrower {
             _executeAction(_actions[i]);
         }
 
-        // repay flashloan
-        if (address(flashloan.silo) != address(0)) {
-            _approveIfNeeded(flashloan.asset, address(flashloan.silo), flashloan.amount);
-            delete flashloan;
-        }
-
         // send all assets to user
         for (uint256 i = 0; i < len; i++) {
-            uint256 remainingBalance = _actions[i].asset.balanceOf(address(this));
+            IERC20 asset = _actions[i].asset;
+            uint256 remainingBalance = asset.balanceOf(address(this));
 
             if (remainingBalance != 0) {
-                _sendAsset(_actions[i].asset, remainingBalance);
+                _sendAsset(asset, remainingBalance);
             }
         }
 
@@ -143,48 +141,49 @@ contract SiloRouter is ReentrancyGuard, IERC3156FlashBorrower {
     // solhint-disable-next-line code-complexity
     function _executeAction(Action calldata _action) internal {
         if (_action.actionType == ActionType.Deposit) {
-            _pullAssetIfNeeded(_action.asset, _action.amount, _action.permit);
-            _approveIfNeeded(_action.asset, address(_action.silo), _action.amount);
+            AnyAction memory data = abi.decode(_action.options, (AnyAction));
 
-            _action.silo.deposit(_action.amount, msg.sender, _action.assetType);
+            _pullAssetIfNeeded(_action.asset, data.amount, data.permit);
+            _approveIfNeeded(_action.asset, address(_action.silo), data.amount);
+
+            _action.silo.deposit(data.amount, msg.sender, data.assetType);
         } else if (_action.actionType == ActionType.Mint) {
-            _pullAssetIfNeeded(_action.asset, _action.amount, _action.permit);
-            _approveIfNeeded(_action.asset, address(_action.silo), _action.amount);
+            AnyAction memory data = abi.decode(_action.options, (AnyAction));
 
-            _action.silo.mint(_action.amount, msg.sender, _action.assetType);
+            _pullAssetIfNeeded(_action.asset, data.amount, data.permit);
+            _approveIfNeeded(_action.asset, address(_action.silo), data.amount);
+
+            _action.silo.mint(data.amount, msg.sender, data.assetType);
         } else if (_action.actionType == ActionType.Withdraw) {
-            _action.silo.withdraw(_action.amount, address(this), msg.sender, _action.assetType);
+            AnyAction memory data = abi.decode(_action.options, (AnyAction));
+            _action.silo.withdraw(data.amount, address(this), msg.sender, data.assetType);
         } else if (_action.actionType == ActionType.Redeem) {
-            _action.silo.redeem(_action.amount, address(this), msg.sender, _action.assetType);
+            AnyAction memory data = abi.decode(_action.options, (AnyAction));
+            _action.silo.redeem(data.amount, address(this), msg.sender, data.assetType);
         } else if (_action.actionType == ActionType.Borrow) {
-            _action.silo.borrow(_action.amount, address(this), msg.sender);
+            BorrowOptions memory data = abi.decode(_action.options, (BorrowOptions));
+            _action.silo.borrow(data.amount, address(this), msg.sender, data.sameAsset);
         } else if (_action.actionType == ActionType.BorrowShares) {
-            _action.silo.borrowShares(_action.amount, address(this), msg.sender);
+            BorrowOptions memory data = abi.decode(_action.options, (BorrowOptions));
+            _action.silo.borrowShares(data.amount, address(this), msg.sender, data.sameAsset);
         } else if (_action.actionType == ActionType.Repay) {
-            _pullAssetIfNeeded(_action.asset, _action.amount, _action.permit);
-            _approveIfNeeded(_action.asset, address(_action.silo), _action.amount);
+            AnyAction memory data = abi.decode(_action.options, (AnyAction));
+            _pullAssetIfNeeded(_action.asset, data.amount, data.permit);
+            _approveIfNeeded(_action.asset, address(_action.silo), data.amount);
 
-            _action.silo.repay(_action.amount, msg.sender);
+            _action.silo.repay(data.amount, msg.sender);
         } else if (_action.actionType == ActionType.RepayShares) {
-            _pullAssetIfNeeded(_action.asset, _action.amount, _action.permit);
-            _approveIfNeeded(_action.asset, address(_action.silo), _action.amount);
+            AnyAction memory data = abi.decode(_action.options, (AnyAction));
+            _pullAssetIfNeeded(_action.asset, data.amount, data.permit);
+            _approveIfNeeded(_action.asset, address(_action.silo), data.amount);
 
-            _action.silo.repayShares(_action.amount, msg.sender);
+            _action.silo.repayShares(data.amount, msg.sender);
         } else if (_action.actionType == ActionType.Transition) {
-            _action.silo.transitionCollateral(_action.amount, msg.sender, _action.assetType);
-        } else if (_action.actionType == ActionType.Flashloan) {
-            if (address(flashloan.silo) != address(0)) {
-                revert PendingFlashloan();
-            } else {
-                flashloan.silo = _action.silo;
-                flashloan.amount = _action.amount;
-            }
-
-            _action.silo.flashLoan(
-                IERC3156FlashBorrower(address(this)), address(_action.asset), _action.amount, _action.data
-            );
+            AnyAction memory data = abi.decode(_action.options, (AnyAction));
+            _action.silo.transitionCollateral(data.amount, msg.sender, data.assetType);
         } else if (_action.actionType == ActionType.Leverage) {
-            _action.silo.leverage(_action.amount, _action.receiver, msg.sender, _action.data);
+            LeverageOptions memory data = abi.decode(_action.options, (LeverageOptions));
+            _action.silo.leverage(data.amount, data.leverageBorrower, msg.sender, data.sameAsset, data.data);
         } else {
             revert UnsupportedAction();
         }

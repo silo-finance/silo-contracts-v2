@@ -34,7 +34,7 @@ contract ERC20 is ERC20WithoutMint {
     }
 }
 
-// FOUNDRY_PROFILE=ve-silo forge test --mc MainnetBalancerMinterTest --ffi -vvv
+// FOUNDRY_PROFILE=ve-silo-test forge test --mc MainnetBalancerMinterTest --ffi -vvv
 contract MainnetBalancerMinterTest is IntegrationTest {
     uint256 internal constant _WEIGHT_CAP = 1e18;
     uint256 internal constant _BOB_BALANCE = 1e18;
@@ -225,10 +225,8 @@ contract MainnetBalancerMinterTest is IntegrationTest {
     function _dummySiloToken() internal {
         if (isChain(ANVIL_ALIAS)) {
             ERC20 siloToken = new ERC20("Silo test token", "SILO");
-            ERC20 silo8020Token = new ERC20("Silo 80/20", "SILO-80-20");
 
             setAddress(getChainId(), SILO_TOKEN, address(siloToken));
-            setAddress(getChainId(), SILO80_WETH20_TOKEN, address(silo8020Token));
         }
     }
 

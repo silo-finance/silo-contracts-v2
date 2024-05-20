@@ -20,14 +20,14 @@ contract Gas is SiloLittleHelper {
     address constant DEPOSITOR = address(0x9988);
 
     function _gasTestsInit() internal {
-        token0 = new MintableToken();
-        token1 = new MintableToken();
+        token0 = new MintableToken(18);
+        token1 = new MintableToken(18);
 
         SiloFixture siloFixture = new SiloFixture();
         SiloConfigOverride memory overrides;
         overrides.token0 = address(token0);
         overrides.token1 = address(token1);
-        (, silo0, silo1,,) = siloFixture.deploy_local(overrides);
+        (, silo0, silo1,,, partialLiquidation) = siloFixture.deploy_local(overrides);
 
         __init(token0, token1, silo0, silo1);
 
@@ -50,14 +50,25 @@ contract Gas is SiloLittleHelper {
     function _action(
         address _sender,
         address _target,
-        bytes memory _data,
+        bytes memory _calldata,
         string memory _msg,
         uint256 _expectedGas
+    ) internal returns (uint256 gas) {
+        return _action(_sender, _target, _calldata, _msg, _expectedGas, 100);
+    }
+
+    function _action(
+        address _sender,
+        address _target,
+        bytes memory _calldata,
+        string memory _msg,
+        uint256 _expectedGas,
+        uint256 _errorThreshold
     ) internal returns (uint256 gas) {
         vm.startPrank(_sender, _sender);
 
         uint256 gasStart = gasleft();
-        (bool success,) = _target.call(_data);
+        (bool success,) = _target.call(_calldata);
         uint256 gasEnd = gasleft();
         gas = gasStart - gasEnd;
 
@@ -71,7 +82,7 @@ contract Gas is SiloLittleHelper {
             uint256 diff = _expectedGas > gas ? _expectedGas - gas : gas - _expectedGas;
             string memory diffSign = gas < _expectedGas ? "less" : "more";
 
-            if (diff < 100) {
+            if (diff < _errorThreshold) {
                 console2.log(string(abi.encodePacked("[GAS] ", _msg, ": %s (got bit ", diffSign, " by %s)")), gas, diff);
             } else {
                 revert(string(abi.encodePacked(

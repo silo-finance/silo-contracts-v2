@@ -2,9 +2,19 @@
 pragma solidity >=0.5.0;
 
 interface ISiloConfig {
+    struct DebtInfo {
+        bool debtPresent;
+        bool sameAsset;
+        bool debtInSilo0;
+        bool debtInThisSilo; // at-hoc when getting configs
+    }
+
     struct InitData {
         /// @notice The address of the deployer of the Silo
         address deployer;
+
+        /// @notice The address of contract that will be responsible for executing liquidations
+        address liquidationModule;
 
         /// @notice Deployer's fee in 18 decimals points. Deployer will earn this fee based on the interest earned by
         /// the Silo.
@@ -118,10 +128,57 @@ interface ISiloConfig {
         uint256 lt;
         uint256 liquidationFee;
         uint256 flashloanFee;
+        address liquidationModule;
         bool callBeforeQuote;
     }
 
+    error OnlySilo();
+    error OnlySiloOrLiquidationModule();
+    error OnlySiloOrDebtShareToken();
     error WrongSilo();
+    error OnlyDebtShareToken();
+    error DebtExistInOtherSilo();
+    error NoDebt();
+    error CollateralTypeDidNotChanged();
+
+    error CrossReentrantCall();
+
+    /// @dev can be called only by silo, it opens debt for `_borrower`
+    /// @param _borrower borrower address
+    /// @param _sameAsset TRUE if `_borrower` open debt in the same token
+    /// @return collateralConfig The configuration data for collateral silo.
+    /// @return debtConfig The configuration data for debt silo.
+    /// @return debtInfo details about `borrower` debt
+    function openDebt(address _borrower, bool _sameAsset)
+        external
+        returns (ConfigData memory collateralConfig, ConfigData memory debtConfig, DebtInfo memory debtInfo);
+
+    /// @dev should be called on debt transfer, it opens debt if `_to` address don't have one
+    /// @param _sender sender address
+    /// @param _recipient recipient address
+    function onDebtTransfer(address _sender, address _recipient) external;
+
+    /// @dev must be called when `_borrower` repay all debt, there is no restriction from which silo call will be done
+    /// @param _borrower borrower address
+    function closeDebt(address _borrower) external;
+
+    /// @notice it will change collateral for existing debt, only silo can call it
+    /// @return collateralConfig The configuration data for collateral silo.
+    /// @return debtConfig The configuration data for debt silo.
+    /// @return debtInfo details about `borrower` debt
+    function changeCollateralType(address _borrower, bool _sameAsset)
+        external
+        returns (ConfigData memory collateralConfig, ConfigData memory debtConfig, DebtInfo memory debtInfo);
+
+    /// @notice only silo method for cross Silo reentrancy
+    /// @param _entranceFrom see CrossEntrancy lib for possible values
+    function crossNonReentrantBefore(uint256 _entranceFrom) external;
+
+    /// @notice only silo method for cross Silo reentrancy
+    function crossNonReentrantAfter() external;
+
+    /// @notice vew method for checking cross Silo git pushreentrancy flag
+    function crossReentrancyGuardEntered() external view returns (bool);
 
     // solhint-disable-next-line func-name-mixedcase
     function SILO_ID() external view returns (uint256);
@@ -138,15 +195,21 @@ interface ISiloConfig {
     function getAssetForSilo(address _silo) external view returns (address asset);
 
     /// @notice Retrieves configuration data for both silos. First config is for the silo that is asking for configs.
-    /// @dev This function reverts for incorrect silo address input
+    /// @dev This function reverts for incorrect silo address input.
     /// @param _silo The address of the silo for which configuration data is being retrieved. Config for this silo will
     /// be at index 0.
-    /// @return configData0 The configuration data for the specified silo.
-    /// @return configData1 The configuration data for the other silo.
-    function getConfigs(address _silo) external view returns (ConfigData memory, ConfigData memory);
+    /// @param borrower borrower address for which `debtInfo` will be returned
+    /// @param _method always zero for external usage
+    /// @return collateralConfig The configuration data for collateral silo.
+    /// @return debtConfig The configuration data for debt silo.
+    /// @return debtInfo details about `borrower` debt
+    function getConfigs(address _silo, address borrower, uint256 _method)
+        external
+        view
+        returns (ConfigData memory collateralConfig, ConfigData memory debtConfig, DebtInfo memory debtInfo);
 
     /// @notice Retrieves configuration data for a specific silo
-    /// @dev This function reverts for incorrect silo address input
+    /// @dev This function reverts for incorrect silo address input.
     /// @param _silo The address of the silo for which configuration data is being retrieved
     /// @return configData The configuration data for the specified silo
     function getConfig(address _silo) external view returns (ConfigData memory);

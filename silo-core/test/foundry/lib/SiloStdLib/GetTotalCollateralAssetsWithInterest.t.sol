@@ -30,21 +30,20 @@ contract GetTotalAssetsWithInterestTest is Test {
         uint256 daoFee;
         uint256 deployerFee;
 
-        SILO.getCollateralAssetsMock(0);
-        SILO.getDebtAssetsMock(0);
+        SILO.getCollateralAndDebtAssetsMock(0, 0);
         INTEREST_RATE_MODEL.getCompoundInterestRateMock(silo, block.timestamp, 0);
         assertEq(SiloStdLib.getTotalCollateralAssetsWithInterest(silo, interestRateModel, daoFee, deployerFee), 0);
 
         INTEREST_RATE_MODEL.getCompoundInterestRateMock(silo, block.timestamp, 0.01e18);
         assertEq(SiloStdLib.getTotalCollateralAssetsWithInterest(silo, interestRateModel, daoFee, deployerFee), 0);
 
-        SILO.getCollateralAssetsMock(1000e18);
+        SILO.getCollateralAndDebtAssetsMock(1000e18, 0);
         assertEq(SiloStdLib.getTotalCollateralAssetsWithInterest(silo, interestRateModel, daoFee, deployerFee), 1000e18);
 
-        SILO.getDebtAssetsMock(500e18);
+        SILO.getCollateralAndDebtAssetsMock(1000e18, 500e18);
         assertEq(SiloStdLib.getTotalCollateralAssetsWithInterest(silo, interestRateModel, daoFee, deployerFee), 1005e18);
 
-        SILO.getDebtAssetsMock(1000e18);
+        SILO.getCollateralAndDebtAssetsMock(1000e18, 1000e18);
         daoFee = 0.01e18;
         assertEq(
             SiloStdLib.getTotalCollateralAssetsWithInterest(silo, interestRateModel, daoFee, deployerFee),

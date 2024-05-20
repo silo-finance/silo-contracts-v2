@@ -74,13 +74,9 @@ contract AccrueInterestForAssetTest is Test {
         totalDebt.assets = 0.5e18;
         siloData.interestRateTimestamp = oldTimestamp;
 
-        uint256 gasStart = gasleft();
         uint256 accruedInterest = SiloLendingLib.accrueInterestForAsset(
             irm.ADDRESS(), 0, 0, siloData, totalCollateral, totalDebt
         );
-        uint256 gasEnd = gasleft();
-
-        assertEq(gasStart - gasEnd, 6022, "optimise accrueInterestForAsset");
 
         assertEq(accruedInterest, 0.005e18, "accruedInterest");
         assertEq(totalCollateral.assets, 1.005e18, "totalCollateral");
@@ -108,13 +104,9 @@ contract AccrueInterestForAssetTest is Test {
         totalDebt.assets = 0.5e18;
         siloData.interestRateTimestamp = oldTimestamp;
 
-        uint256 gasStart = gasleft();
         uint256 accruedInterest = SiloLendingLib.accrueInterestForAsset(
             irm.ADDRESS(), daoFee, deployerFee, siloData, totalCollateral, totalDebt
         );
-        uint256 gasEnd = gasleft();
-
-        assertEq(gasStart - gasEnd, 6023, "optimise accrueInterestForAsset");
 
         assertEq(accruedInterest, 0.005e18, "accruedInterest");
         assertEq(

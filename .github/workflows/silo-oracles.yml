@@ -7,6 +7,7 @@ env:
   FOUNDRY_PROFILE: oracles
   RPC_MAINNET: ${{ vars.RPC_MAINNET }}
   RPC_ARBITRUM: ${{ vars.RPC_ARBITRUM }}
+  RPC_OPTIMISM: ${{ vars.RPC_OPTIMISM }}
   RPC_ANVIL: ${{ vars.RPC_ANVIL }}
 
 on:

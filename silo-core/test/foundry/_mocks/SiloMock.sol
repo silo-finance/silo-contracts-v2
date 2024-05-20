@@ -12,6 +12,12 @@ contract SiloMock is Test {
         ADDRESS = _silo == address(0) ? makeAddr("SiloMock") : _silo;
     }
 
+    function getCollateralAndDebtAssetsMock(uint256 _totalCollateralAssets, uint256 _totalDebtAssets) external {
+        bytes memory data = abi.encodeWithSelector(ISilo.getCollateralAndDebtAssets.selector);
+        vm.mockCall(ADDRESS, data, abi.encode(_totalCollateralAssets, _totalDebtAssets));
+        vm.expectCall(ADDRESS, data);
+    }
+
     // ISilo.getCollateralAssets.selector: 0xa1ff9bee
     function getCollateralAssetsMock(uint256 _totalCollateralAssets) external {
         bytes memory data = abi.encodeWithSelector(ISilo.getCollateralAssets.selector);
@@ -20,14 +26,14 @@ contract SiloMock is Test {
     }
 
     // ISilo.getDebtAssets.selector: 0xecd658b4
-    function getDebtAssetsMock(uint256 _totalDebtAssets) external {
-        bytes memory data = abi.encodeWithSelector(ISilo.getDebtAssets.selector);
+    function totalMock(ISilo.AssetType _assetType, uint256 _totalDebtAssets) external {
+        bytes memory data = abi.encodeWithSelector(ISilo.total.selector, _assetType);
         vm.mockCall(ADDRESS, data, abi.encode(_totalDebtAssets));
         vm.expectCall(ADDRESS, data);
     }
 
     function getProtectedAssetsMock(uint256 _totalProtectedAssets) external {
-        bytes memory data = abi.encodeWithSelector(ISilo.getProtectedAssets.selector);
+        bytes memory data = abi.encodeWithSelector(ISilo.total.selector, ISilo.AssetType.Protected);
         vm.mockCall(ADDRESS, data, abi.encode(_totalProtectedAssets));
         vm.expectCall(ADDRESS, data);
     }
@@ -46,6 +52,12 @@ contract SiloMock is Test {
     {
         bytes memory data = abi.encodeWithSelector(ISilo.utilizationData.selector);
         vm.mockCall(ADDRESS, data, abi.encode(_collateral, _debt, _timestamp));
+        vm.expectCall(ADDRESS, data);
+    }
+
+    function configMock(address _config) external {
+        bytes memory data = abi.encodeWithSelector(ISilo.config.selector);
+        vm.mockCall(ADDRESS, data, abi.encode(_config));
         vm.expectCall(ADDRESS, data);
     }
 }

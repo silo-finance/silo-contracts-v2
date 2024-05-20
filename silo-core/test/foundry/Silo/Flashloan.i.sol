@@ -6,16 +6,16 @@ import "forge-std/Test.sol";
 import {IERC20} from "openzeppelin-contracts/token/ERC20/IERC20.sol";
 
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
-import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
-import {ISiloLiquidation} from "silo-core/contracts/interfaces/ISiloLiquidation.sol";
+import {ISilo, IERC3156FlashLender} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {IInterestRateModel} from "silo-core/contracts/interfaces/IInterestRateModel.sol";
 import {IERC3156FlashBorrower} from "silo-core/contracts/interfaces/IERC3156FlashBorrower.sol";
 import {Silo, ILeverageBorrower} from "silo-core/contracts/Silo.sol";
-import {LeverageReentrancyGuard} from "silo-core/contracts/utils/LeverageReentrancyGuard.sol";
+import {SiloStdLib} from "silo-core/contracts/lib/SiloStdLib.sol";
 
 import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
 import {MintableToken} from "../_common/MintableToken.sol";
+import {Gas} from "../gas/Gas.sol";
 
 bytes32 constant FLASHLOAN_CALLBACK = keccak256("ERC3156FlashBorrower.onFlashLoan");
 
@@ -34,6 +34,7 @@ contract Hack1 {
         uint256 assets = 1e18;
         uint256 shares = 1e18;
         address receiver = address(this);
+        bool sameAsset = false;
 
         option = option % 10;
 
@@ -48,15 +49,15 @@ contract Hack1 {
         } else if (option == 4) {
             Silo(msg.sender).transitionCollateral(shares, _initiator, ISilo.AssetType.Collateral);
         } else if (option == 5) {
-            Silo(msg.sender).borrow(assets, receiver, _initiator);
+            Silo(msg.sender).borrow(assets, receiver, _initiator, sameAsset);
         } else if (option == 6) {
-            Silo(msg.sender).borrowShares(shares, receiver, _initiator);
+            Silo(msg.sender).borrowShares(shares, receiver, _initiator, sameAsset);
         } else if (option == 7) {
             Silo(msg.sender).repay(assets, _initiator);
         } else if (option == 8) {
             Silo(msg.sender).repayShares(shares, _initiator);
         } else {
-            Silo(msg.sender).leverage(assets, ILeverageBorrower(receiver), _initiator, bytes(""));
+            Silo(msg.sender).leverage(assets, ILeverageBorrower(receiver), _initiator, sameAsset, bytes(""));
         }
 
         return FLASHLOAN_CALLBACK;
@@ -66,9 +67,7 @@ contract Hack1 {
 /*
     forge test -vv --ffi --mc FlashloanTest
 */
-contract FlashloanTest is SiloLittleHelper, Test {
-    address constant BORROWER = address(0x123);
-
+contract FlashloanTest is SiloLittleHelper, Test, Gas {
     ISiloConfig siloConfig;
 
     function setUp() public {
@@ -103,16 +102,20 @@ contract FlashloanTest is SiloLittleHelper, Test {
         vm.expectRevert(ISilo.Unsupported.selector);
         silo1.flashFee(address(token0), 1e18);
 
-        assertEq(silo0.flashFee(address(token0), 0), 0);
-        assertEq(silo1.flashFee(address(token1), 0), 0);
+        vm.expectRevert(SiloStdLib.ZeroAmount.selector);
+        silo0.flashFee(address(token0), 0);
+
+        vm.expectRevert(SiloStdLib.ZeroAmount.selector);
+        silo1.flashFee(address(token1), 0);
+
         assertEq(silo0.flashFee(address(token0), 1e18), 0.01e18);
         assertEq(silo1.flashFee(address(token1), 1e18), 0.01e18);
     }
 
     /*
-    forge test -vv --ffi --mt test_flashLoan
+    forge test -vv --ffi --mt test_gas_flashLoan
     */
-    function test_flashLoan(bytes calldata _data) public {
+    function test_gas_flashLoan(bytes calldata _data) public {
         IERC3156FlashBorrower receiver = IERC3156FlashBorrower(makeAddr("IERC3156FlashBorrower"));
         uint256 amount = 1e18;
         uint256 fee = silo0.flashFee(address(token0), amount);
@@ -137,31 +140,18 @@ contract FlashloanTest is SiloLittleHelper, Test {
             abi.encodeWithSelector(IERC20.transferFrom.selector, address(receiver), address(silo0), amount + fee)
         );
 
-        silo0.flashLoan(receiver, address(token0), amount, _data);
+        _action(
+            address(this),
+            address(silo0),
+            abi.encodeCall(IERC3156FlashLender.flashLoan, (receiver, address(token0), amount, _data)),
+            "flashLoan gas",
+            31440,
+            300
+        );
+
+        // silo0.flashLoan(receiver, address(token0), amount, _data);
 
         (uint256 daoAndDeployerFeesAfter,) = silo0.siloData();
         assertEq(daoAndDeployerFeesAfter, daoAndDeployerFeesBefore + fee);
-    }
-
-    /*
-    forge test -vv --ffi --mt test_flashLoan_leverageNonReentrant
-    */
-    function test_flashLoan_leverageNonReentrant(bytes32 _data) public {
-        IERC3156FlashBorrower receiver = IERC3156FlashBorrower(address(new Hack1()));
-        uint256 amount = 1e18;
-        uint256 fee = silo0.flashFee(address(token0), amount);
-
-        token0.mint(address(receiver), fee);
-
-        vm.prank(address(receiver));
-        token0.approve(address(silo0), amount + fee);
-
-        (uint256 daoAndDeployerFeesBefore,) = silo0.siloData();
-
-        vm.expectRevert(LeverageReentrancyGuard.LeverageReentrancyCall.selector);
-        silo0.flashLoan(receiver, address(token0), amount, abi.encodePacked(_data));
-
-        (uint256 daoAndDeployerFeesAfter,) = silo0.siloData();
-        assertEq(daoAndDeployerFeesAfter, daoAndDeployerFeesBefore);
     }
 }

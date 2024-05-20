@@ -8,7 +8,7 @@ import {GaugeHookReceiverDeploy} from "silo-core/deploy/GaugeHookReceiverDeploy.
 import {IGaugeHookReceiver} from "silo-core/contracts/utils/hook-receivers/gauge/interfaces/IGaugeHookReceiver.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 
-// FOUNDRY_PROFILE=core forge test -vv --ffi --mc GaugeHookReceiverTest
+// FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc GaugeHookReceiverTest
 contract GaugeHookReceiverDeployTest is Test {
     // forge test -vv --ffi --mt test_GaugeHookReceiverDeploy_run
     function test_GaugeHookReceiverDeploy_run() public {

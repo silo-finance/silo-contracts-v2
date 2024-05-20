@@ -12,7 +12,7 @@ import "../_common/UniswapPools.sol";
 import "../../../contracts/uniswapV3/UniswapV3OracleFactory.sol";
 
 /*
-    FOUNDRY_PROFILE=oracles forge test -vv --match-contract UniswapV3OracleFactoryTest
+    FOUNDRY_PROFILE=oracles forge test -vv --mc UniswapV3OracleFactoryTest
 */
 contract UniswapV3OracleFactoryTest is UniswapPools {
     uint256 constant TEST_BLOCK = 17970874;
@@ -39,6 +39,7 @@ contract UniswapV3OracleFactoryTest is UniswapPools {
 
         creationConfig = IUniswapV3Oracle.UniswapV3DeploymentConfig(
             pools["USDC_WETH"],
+            address(tokens["WETH"]),
             address(tokens["USDC"]),
             1800,
             120
@@ -181,6 +182,7 @@ contract UniswapV3OracleFactoryTest is UniswapPools {
     function test_UniswapV3OracleFactory_create_pass() public {
         UniswapV3Oracle oracle = UNISWAPV3_ORACLE_FACTORY.create(IUniswapV3Oracle.UniswapV3DeploymentConfig(
             pools["CRV_ETH"],
+            address(tokens["CRV"]),
             address(tokens["WETH"]),
             1800,
             120
@@ -195,6 +197,7 @@ contract UniswapV3OracleFactoryTest is UniswapPools {
     function test_UniswapV3OracleFactory_create_reuseConfig() public {
         IUniswapV3Oracle.UniswapV3DeploymentConfig memory cfg = IUniswapV3Oracle.UniswapV3DeploymentConfig(
             pools["CRV_ETH"],
+            address(tokens["WETH"]),
             address(tokens["CRV"]),
             1800,
             120
@@ -205,7 +208,7 @@ contract UniswapV3OracleFactoryTest is UniswapPools {
         uint256 gasEnd = gasleft();
 
         emit log_named_uint("gas", gasStart - gasEnd);
-        assertEq(gasStart - gasEnd, 237276, "optimise gas");
+        assertEq(gasStart - gasEnd, 248602, "optimise gas");
 
         UniswapV3Oracle oracle2 =  UNISWAPV3_ORACLE_FACTORY.create(cfg);
 
@@ -217,10 +220,14 @@ contract UniswapV3OracleFactoryTest is UniswapPools {
     */
     function test_UniswapV3OracleFactory_create_whenImplementationInitialised() public {
         UniswapV3Oracle implementation = UniswapV3Oracle(UNISWAPV3_ORACLE_FACTORY.ORACLE_IMPLEMENTATION());
-        implementation.initialize(new UniswapV3OracleConfig(creationConfig, 1800 * 10 / 120));
+
+        UniswapV3OracleConfig validConfig = new UniswapV3OracleConfig(creationConfig, 1800 * 10 / 120);
+        vm.expectRevert("Initializable: contract is already initialized");
+        implementation.initialize(validConfig);
 
         UniswapV3Oracle oracle = UNISWAPV3_ORACLE_FACTORY.create(IUniswapV3Oracle.UniswapV3DeploymentConfig(
             pools["CRV_ETH"],
+            address(tokens["CRV"]),
             address(tokens["WETH"]),
             1800,
             120
@@ -283,7 +290,7 @@ contract UniswapV3OracleFactoryTest is UniswapPools {
         );
 
         return IUniswapV3Oracle.UniswapV3DeploymentConfig(
-            IUniswapV3Pool(POOL), address(2), PERIOD_FOR_AVG_PRICE, BLOCK_TIME
+            IUniswapV3Pool(POOL), address(3), address(2), PERIOD_FOR_AVG_PRICE, BLOCK_TIME
         );
     }
 }

@@ -13,6 +13,8 @@ import {AddrKey} from "common/addresses/AddrKey.sol";
 import {IHookReceiverMock as IHookReceiver} from "../_mocks/IHookReceiverMock.sol";
 import {IShareTokenLike as IShareToken} from "ve-silo/contracts/gauges/interfaces/IShareTokenLike.sol";
 import {ISiloMock as ISilo} from "ve-silo/test/_mocks/ISiloMock.sol";
+import {FeesManagerTest} from "ve-silo/test/silo-tokens-minter/FeesManager.unit.t.sol";
+import {IFeesManager} from "ve-silo/contracts/silo-tokens-minter/interfaces/IFeesManager.sol";
 
 // interfaces for tests
 interface IMinter {
@@ -25,11 +27,13 @@ interface IVotingEscrowDelegationProxy {
     function adjustedBalanceOf(address _user) external view returns (uint256);
 }
 
-// FOUNDRY_PROFILE=ve-silo forge test --mc ChildChainGaugesTest --ffi -vvv
+// FOUNDRY_PROFILE=ve-silo-test forge test --mc ChildChainGaugesTest --ffi -vvv
 contract ChildChainGaugesTest is IntegrationTest {
     uint256 internal constant _BOB_BAL = 20e18;
     uint256 internal constant _ALICE_BAL = 20e18;
     uint256 internal constant _TOTAL_SUPPLY = 100e18;
+    uint256 internal constant _DAO_FEE = 1e3; // 10%
+    uint256 internal constant _DEPLOYER_FEE = 2e3; // 20%
 
     address internal _votingEscrowDelegationProxy = makeAddr("_votingEscrowDelegationProxy");
     address internal _l2BalancerPseudoMinter = makeAddr("_l2BalancerPseudoMinter");
@@ -40,11 +44,16 @@ contract ChildChainGaugesTest is IntegrationTest {
     address internal _siloFactory = makeAddr("Silo Factory");
     address internal _bob = makeAddr("Bob");
     address internal _alice = makeAddr("Alice");
+    address internal _deployer;
 
     IChildChainGaugeFactory internal _factory;
     ERC20 internal _siloToken;
+    FeesManagerTest internal _feesTest;
 
     function setUp() public {
+        uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
+        _deployer = vm.addr(deployerPrivateKey);
+
         setAddress(VeSiloContracts.VOTING_ESCROW_DELEGATION_PROXY, _votingEscrowDelegationProxy);
         setAddress(VeSiloContracts.L2_BALANCER_PSEUDO_MINTER, _l2BalancerPseudoMinter);
         setAddress(AddrKey.L2_MULTISIG, _l2Multisig);
@@ -55,6 +64,8 @@ contract ChildChainGaugesTest is IntegrationTest {
         deploy.disableDeploymentsSync();
 
         _factory = deploy.run();
+
+        _feesTest = new FeesManagerTest();
     }
 
     /// @notice Ensure that a LiquidityGaugesFactory is deployed with the correct gauge implementation.
@@ -63,6 +74,26 @@ contract ChildChainGaugesTest is IntegrationTest {
             _factory.getGaugeImplementation(),
             getAddress(VeSiloContracts.CHILD_CHAIN_GAUGE),
             "Invalid gauge implementation"
+        );
+    }
+
+    /// @notice Should set fees
+    function testOnlyOwnerCanSetFees() public {
+        _feesTest.onlyOwnerCanSetFees(
+            IFeesManager(address(_factory)),
+            _DAO_FEE,
+            _DEPLOYER_FEE,
+            _deployer
+        );
+    }
+
+    /// @notice Should revert if fees are invalid
+    function testMaxFees() public {
+        _feesTest.onlyOwnerCanSetFees(
+            IFeesManager(address(_factory)),
+            _DAO_FEE,
+            _DEPLOYER_FEE + 1,
+            _deployer
         );
     }
 

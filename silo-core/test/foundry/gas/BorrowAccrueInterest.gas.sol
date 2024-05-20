@@ -19,7 +19,7 @@ contract BorrowAccrueInterestGasTest is Gas, Test {
 
         vm.startPrank(BORROWER);
         silo0.deposit(ASSETS * 10, BORROWER);
-        silo1.borrow(ASSETS, BORROWER, BORROWER);
+        silo1.borrow(ASSETS, BORROWER, BORROWER, false /* sameAsset */);
         vm.stopPrank();
 
         vm.warp(block.timestamp + 1 days);
@@ -29,9 +29,9 @@ contract BorrowAccrueInterestGasTest is Gas, Test {
         _action(
             BORROWER,
             address(silo1),
-            abi.encodeCall(ISilo.borrow, (ASSETS, BORROWER, BORROWER)),
+            abi.encodeCall(ISilo.borrow, (ASSETS, BORROWER, BORROWER, false /* sameAsset */)),
             "BorrowAccrueInterest",
-            189827
+            206093
         );
     }
 }

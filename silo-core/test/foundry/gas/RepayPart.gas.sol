@@ -19,7 +19,7 @@ contract RepayPartGasTest is Gas, Test {
 
         vm.startPrank(BORROWER);
         silo0.deposit(ASSETS * 10, BORROWER);
-        silo1.borrow(ASSETS, BORROWER, BORROWER);
+        silo1.borrow(ASSETS, BORROWER, BORROWER, false /* sameAsset */);
         vm.stopPrank();
     }
 
@@ -27,9 +27,9 @@ contract RepayPartGasTest is Gas, Test {
         _action(
             BORROWER,
             address(silo1),
-            abi.encodeCall(ISilo.repay, (ASSETS / 2, BORROWER)),
+            abi.encodeWithSignature("repay(uint256,address)", ASSETS / 2, BORROWER),
             "RepayPart partial (no interest)",
-            91618
+            91807
         );
     }
 }

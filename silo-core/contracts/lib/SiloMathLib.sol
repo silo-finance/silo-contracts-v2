@@ -2,7 +2,8 @@
 pragma solidity 0.8.21;
 
 import {MathUpgradeable} from "openzeppelin-contracts-upgradeable/utils/math/MathUpgradeable.sol";
-import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
+import {Rounding} from "../lib/Rounding.sol";
+import {ISilo} from "../interfaces/ISilo.sol";
 
 library SiloMathLib {
     using MathUpgradeable for uint256;
@@ -99,7 +100,7 @@ library SiloMathLib {
     {
         if (_collateralAssets == 0 || _debtAssets == 0) return 0;
 
-        utilization = _debtAssets * _dp;
+        utilization = _debtAssets * _dp; // TODO precise!
         // _collateralAssets is not 0 based on above check, so it is safe to uncheck this division
         unchecked {
             utilization /= _collateralAssets;
@@ -189,7 +190,7 @@ library SiloMathLib {
             return 0;
         }
 
-        uint256 maxDebtValue = _sumOfBorrowerCollateralValue * _configMaxLtv / _PRECISION_DECIMALS;
+        uint256 maxDebtValue = _sumOfBorrowerCollateralValue * _configMaxLtv / _PRECISION_DECIMALS; // Rounding.Down
 
         unchecked {
             // we will not underflow because we checking `maxDebtValue > _borrowerDebtValue`
@@ -277,7 +278,7 @@ library SiloMathLib {
             assets,
             _totalAssets,
             _assetTypeShareTokenTotalSupply,
-            MathUpgradeable.Rounding.Down,
+            Rounding.MAX_WITHDRAW_TO_SHARES,
             _assetType
         );
     }
