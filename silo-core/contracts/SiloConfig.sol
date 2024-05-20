@@ -1,21 +1,29 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.21;
+pragma solidity 0.8.24;
 
+import {ISilo} from "./interfaces/ISilo.sol";
 import {ISiloConfig} from "./interfaces/ISiloConfig.sol";
-import {Methods} from "./lib/Methods.sol";
+import {IShareToken} from "./interfaces/IShareToken.sol";
+import {CrossReentrancy} from "./utils/CrossReentrancy.sol";
 import {CrossEntrancy} from "./lib/CrossEntrancy.sol";
+import {Hook} from "./lib/Hook.sol";
+import {ConfigLib} from "./lib/ConfigLib.sol";
 
 // solhint-disable var-name-mixedcase
+
 
 /// @notice SiloConfig stores full configuration of Silo in immutable manner
 /// @dev Immutable contract is more expensive to deploy than minimal proxy however it provides nearly 10x cheapper
 /// data access using immutable variables.
-contract SiloConfig is ISiloConfig {
+contract SiloConfig is ISiloConfig, CrossReentrancy {
+    using Hook for uint256;
+    
     uint256 public immutable SILO_ID;
 
     uint256 private immutable _DAO_FEE;
     uint256 private immutable _DEPLOYER_FEE;
     address private immutable _LIQUIDATION_MODULE;
+    address private immutable _HOOK_RECEIVER;
 
     // TOKEN #0
 
@@ -67,33 +75,21 @@ contract SiloConfig is ISiloConfig {
 
     bool private immutable _CALL_BEFORE_QUOTE1;
 
-    // TODO do we need events for this? this is internal state only
     mapping (address borrower => DebtInfo debtInfo) internal _debtsInfo;
-
-    // Booleans are more expensive than uint256 or any type that takes up a full
-    // word because each write operation emits an extra SLOAD to first read the
-    // slot's contents, replace the bits taken up by the boolean, and then write
-    // back. This is the compiler's defense against contract upgrades and
-    // pointer aliasing, and it cannot be disabled.
-
-    // The values being non-zero value makes deployment a bit more expensive,
-    // but in exchange the refund on every call to nonReentrant will be lower in
-    // amount. Since refunds are capped to a percentage of the total
-    // transaction's gas, it is best to keep them low in cases like this one, to
-    // increase the likelihood of the full refund coming into effect.
-    uint256 private _crossReentrantStatus;
-
+    
     /// @param _siloId ID of this pool assigned by factory
     /// @param _configData0 silo configuration data for token0
     /// @param _configData1 silo configuration data for token1
-    constructor(uint256 _siloId, ConfigData memory _configData0, ConfigData memory _configData1) {
-        _crossReentrantStatus = CrossEntrancy.NOT_ENTERED;
-
+    constructor(uint256 _siloId, ConfigData memory _configData0, ConfigData memory _configData1) CrossReentrancy() {
         SILO_ID = _siloId;
+
+        // To make further computations in the Silo secure require DAO and deployer fees to be less than 100%
+        if (_configData0.daoFee + _configData0.deployerFee >= 1e18) revert FeeTooHigh();
 
         _DAO_FEE = _configData0.daoFee;
         _DEPLOYER_FEE = _configData0.deployerFee;
         _LIQUIDATION_MODULE = _configData0.liquidationModule;
+        _HOOK_RECEIVER = _configData0.hookReceiver;
 
         // TOKEN #0
 
@@ -139,24 +135,20 @@ contract SiloConfig is ISiloConfig {
     }
 
     /// @inheritdoc ISiloConfig
-    function openDebt(address _borrower, bool _sameAsset)
-        external
-        virtual
-        returns (ConfigData memory, ConfigData memory, DebtInfo memory)
-    {
-        if (msg.sender != _SILO0 && msg.sender != _SILO1) revert OnlySilo();
-
-        DebtInfo memory debtInfo = _debtsInfo[_borrower];
-
-        if (!debtInfo.debtPresent) {
-            debtInfo.debtPresent = true;
-            debtInfo.sameAsset = _sameAsset;
-            debtInfo.debtInSilo0 = msg.sender == _SILO0;
-
-            _debtsInfo[_borrower] = debtInfo;
+    function crossNonReentrantBefore(uint256 _action) external virtual {
+        if (_action.matchAction(CrossEntrancy.ENTERED_FROM_LEVERAGE)) {
+            _onlySilo();
+        } else {
+            _onlySiloOrTokenOrLiquidation();
         }
 
-        return _getConfigs(msg.sender, 0 /* method does not mather when debt open */, debtInfo);
+        _crossNonReentrantBefore(_action);
+    }
+
+    /// @inheritdoc ISiloConfig
+    function crossNonReentrantAfter() external virtual {
+        _onlySiloOrTokenOrLiquidation();
+        _crossNonReentrantAfter();
     }
 
     /// @inheritdoc ISiloConfig
@@ -184,69 +176,85 @@ contract SiloConfig is ISiloConfig {
         delete _debtsInfo[_borrower];
     }
 
-    function changeCollateralType(address _borrower, bool _sameAsset)
+    function accrueInterestAndGetConfig(address _silo, uint256 _action) external virtual returns (ConfigData memory) {
+        _crossNonReentrantBefore(_action);
+        _callAccrueInterest(_silo);
+
+        if (_silo == _SILO0) {
+            return _silo0ConfigData();
+        } else if (_silo == _SILO1) {
+            return _silo1ConfigData();
+        } else {
+            revert WrongSilo();
+        }
+    }
+
+    function accrueInterestAndGetConfigOptimised(
+        uint256 _action,
+        ISilo.CollateralType _collateralType
+    ) external virtual returns (address shareToken, address asset, address hookReceiver, address liquidationModule) {
+        _crossNonReentrantBefore(_action);
+        _callAccrueInterest(msg.sender);
+
+        hookReceiver = _HOOK_RECEIVER;
+        liquidationModule = _LIQUIDATION_MODULE;
+
+        if (msg.sender == _SILO0) {
+            asset = _TOKEN0;
+
+            if (_action.matchAction(Hook.REPAY)) {
+                shareToken = _DEBT_SHARE_TOKEN0;
+            } else {
+                shareToken = _collateralType == ISilo.CollateralType.Collateral
+                    ? _COLLATERAL_SHARE_TOKEN0
+                    : _PROTECTED_COLLATERAL_SHARE_TOKEN0;
+            }
+        } else if (msg.sender == _SILO1) {
+            asset = _TOKEN1;
+
+            if (_action.matchAction(Hook.REPAY)) {
+                shareToken = _DEBT_SHARE_TOKEN1;
+            } else {
+                shareToken = _collateralType == ISilo.CollateralType.Collateral
+                    ? _COLLATERAL_SHARE_TOKEN1
+                    : _PROTECTED_COLLATERAL_SHARE_TOKEN1;
+            }
+        } else {
+            revert WrongSilo();
+        }
+    }
+
+    function accrueInterestAndGetConfigs(address _silo, address _borrower, uint256 _action)
         external
         virtual
-        returns (ConfigData memory, ConfigData memory, DebtInfo memory debtInfo)
+        returns (ConfigData memory collateralConfig, ConfigData memory debtConfig, DebtInfo memory debtInfo)
     {
-        if (msg.sender != _SILO0 && msg.sender != _SILO1) revert OnlySilo();
+        _crossNonReentrantBefore(_action);
 
-        debtInfo = _debtsInfo[_borrower];
-
-        if (!debtInfo.debtPresent) revert NoDebt();
-        if (debtInfo.sameAsset == _sameAsset) revert CollateralTypeDidNotChanged();
-
-        _debtsInfo[_borrower].sameAsset = _sameAsset;
-        debtInfo.sameAsset = _sameAsset;
-
-        return _getConfigs(msg.sender, 0 /* method does not mather when debt open */, debtInfo);
-    }
-
-    /// @inheritdoc ISiloConfig
-    function crossNonReentrantBefore(uint256 _entranceFrom) external virtual {
-        _onlySiloTokenOrLiquidation();
-
-        // On the first call to nonReentrant, _status will be CrossEntrancy.NOT_ENTERED
-        if (_crossReentrantStatus == CrossEntrancy.NOT_ENTERED) {
-            // Any calls to nonReentrant after this point will fail
-            _crossReentrantStatus = CrossEntrancy.ENTERED;
-            return;
-        }
-        
-        if (_entranceFrom == CrossEntrancy.ENTERED_FROM_LEVERAGE) {
-            // before leverage callback, we mark status
-            _crossReentrantStatus = CrossEntrancy.ENTERED_FROM_LEVERAGE;
-            return;
+        if (_action.matchAction(Hook.SHARE_TOKEN_TRANSFER)) {
+            // share token transfer does not need configs
+            return (collateralConfig, debtConfig, debtInfo);
+        } else if (_action.matchAction(Hook.FLASH_LOAN)) {
+            // flash loan does not need configs
+            return (collateralConfig, debtConfig, debtInfo);
+        } else if (_action.matchAction(Hook.BORROW)) {
+            debtInfo = _openDebt(_borrower, _action);
+        } else if (_action.matchAction(Hook.SWITCH_COLLATERAL)) {
+            debtInfo = _changeCollateralType(_borrower, _action.matchAction(Hook.SAME_ASSET));
+        } else {
+            debtInfo = _debtsInfo[_borrower];
         }
 
-        if (_crossReentrantStatus == CrossEntrancy.ENTERED_FROM_LEVERAGE &&
-            _entranceFrom == CrossEntrancy.ENTERED_FROM_DEPOSIT
-        ) {
-            // on leverage, entrance from deposit is allowed, but allowance is removed
-            _crossReentrantStatus = CrossEntrancy.ENTERED;
-            return;
-        }
+        _callAccrueInterest(_silo);
 
-        revert CrossReentrantCall();
+        (collateralConfig, debtConfig) = _getOrderedConfigs(_silo, debtInfo, _action);
     }
 
-    /// @inheritdoc ISiloConfig
-    function crossNonReentrantAfter() external virtual {
-        _onlySiloTokenOrLiquidation();
-
-        // By storing the original value once again, a refund is triggered (see
-        // https://eips.ethereum.org/EIPS/eip-2200)
-        _crossReentrantStatus = CrossEntrancy.NOT_ENTERED;
+    function crossReentrantStatus() external view virtual returns (bool entered, uint256 status) {
+        status = _crossReentrantStatus;
+        entered = status != CrossEntrancy.NOT_ENTERED;
     }
 
-    /**
-     * @dev Returns true if the reentrancy guard is currently set to "entered", which indicates there is a
-     * `nonReentrant` function in the call stack.
-     */
-    function crossReentrancyGuardEntered() external view virtual returns (bool) {
-        return _crossReentrantStatus == CrossEntrancy.ENTERED;
-    }
-    
     /// @inheritdoc ISiloConfig
     function getSilos() external view returns (address silo0, address silo1) {
         return (_SILO0, _SILO1);
@@ -278,58 +286,23 @@ contract SiloConfig is ISiloConfig {
         }
     }
 
-    /// @inheritdoc ISiloConfig
-    function getConfigs(address _silo, address _borrower, uint256 _method) // solhint-disable-line function-max-lines
+    function getConfigs(address _silo, address _borrower, uint256 _action)
         external
         view
         virtual
         returns (ConfigData memory collateralConfig, ConfigData memory debtConfig, DebtInfo memory debtInfo)
     {
-        return _getConfigs(_silo, _method, _debtsInfo[_borrower]);
+        debtInfo = _debtsInfo[_borrower];
+
+        (collateralConfig, debtConfig) = _getOrderedConfigs(_silo, debtInfo, _action);
     }
 
     /// @inheritdoc ISiloConfig
     function getConfig(address _silo) external view virtual returns (ConfigData memory) {
         if (_silo == _SILO0) {
-            return ConfigData({
-                daoFee: _DAO_FEE,
-                deployerFee: _DEPLOYER_FEE,
-                silo: _SILO0,
-                otherSilo: _SILO1,
-                token: _TOKEN0,
-                protectedShareToken: _PROTECTED_COLLATERAL_SHARE_TOKEN0,
-                collateralShareToken: _COLLATERAL_SHARE_TOKEN0,
-                debtShareToken: _DEBT_SHARE_TOKEN0,
-                solvencyOracle: _SOLVENCY_ORACLE0,
-                maxLtvOracle: _MAX_LTV_ORACLE0,
-                interestRateModel: _INTEREST_RATE_MODEL0,
-                maxLtv: _MAX_LTV0,
-                lt: _LT0,
-                liquidationFee: _LIQUIDATION_FEE0,
-                flashloanFee: _FLASHLOAN_FEE0,
-                liquidationModule: _LIQUIDATION_MODULE,
-                callBeforeQuote: _CALL_BEFORE_QUOTE0
-            });
+            return _silo0ConfigData();
         } else if (_silo == _SILO1) {
-            return ConfigData({
-                daoFee: _DAO_FEE,
-                deployerFee: _DEPLOYER_FEE,
-                silo: _SILO1,
-                otherSilo: _SILO0,
-                token: _TOKEN1,
-                protectedShareToken: _PROTECTED_COLLATERAL_SHARE_TOKEN1,
-                collateralShareToken: _COLLATERAL_SHARE_TOKEN1,
-                debtShareToken: _DEBT_SHARE_TOKEN1,
-                solvencyOracle: _SOLVENCY_ORACLE1,
-                maxLtvOracle: _MAX_LTV_ORACLE1,
-                interestRateModel: _INTEREST_RATE_MODEL1,
-                maxLtv: _MAX_LTV1,
-                lt: _LT1,
-                liquidationFee: _LIQUIDATION_FEE1,
-                flashloanFee: _FLASHLOAN_FEE1,
-                liquidationModule: _LIQUIDATION_MODULE,
-                callBeforeQuote: _CALL_BEFORE_QUOTE1
-            });
+            return _silo1ConfigData();
         } else {
             revert WrongSilo();
         }
@@ -356,17 +329,73 @@ contract SiloConfig is ISiloConfig {
         }
     }
 
-    // solhint-disable-next-line function-max-lines, code-complexity
-    function _getConfigs(address _silo, uint256 _method, DebtInfo memory _debtInfo)
+    function _callAccrueInterest(address _silo) internal {
+        ISilo(_silo).accrueInterestForConfig(
+            _silo == _SILO0 ? _INTEREST_RATE_MODEL0 : _INTEREST_RATE_MODEL1,
+            _DAO_FEE,
+            _DEPLOYER_FEE
+        );
+    }
+
+    /// @notice it will change collateral for existing debt, only silo can call it
+    /// @return debtInfo details about `borrower` debt after the change
+    function _changeCollateralType(address _borrower, bool _switchToSameAsset)
+        internal
+        virtual
+        returns (DebtInfo memory debtInfo)
+    {
+        _onlySilo();
+
+        debtInfo = _debtsInfo[_borrower];
+
+        if (!debtInfo.debtPresent) revert NoDebt();
+        if (debtInfo.sameAsset == _switchToSameAsset) revert CollateralTypeDidNotChanged();
+
+        _debtsInfo[_borrower].sameAsset = _switchToSameAsset;
+        debtInfo.sameAsset = _switchToSameAsset;
+    }
+
+    function _openDebt(address _borrower, uint256 _action) internal virtual returns (DebtInfo memory debtInfo) {
+        _onlySilo();
+
+        debtInfo = _debtsInfo[_borrower];
+
+        if (!debtInfo.debtPresent) {
+            debtInfo.debtPresent = true;
+            debtInfo.sameAsset = _action.matchAction(Hook.SAME_ASSET);
+            debtInfo.debtInSilo0 = msg.sender == _SILO0;
+
+            _debtsInfo[_borrower] = debtInfo;
+        }
+    }
+
+    function _getOrderedConfigs(address _silo, DebtInfo memory _debtInfo, uint256 _action)
         internal
         view
-        virtual
-        returns (ConfigData memory collateral, ConfigData memory debt, DebtInfo memory)
+        returns (ConfigData memory collateralConfig, ConfigData memory debtConfig)
     {
         bool callForSilo0 = _silo == _SILO0;
         if (!callForSilo0 && _silo != _SILO1) revert WrongSilo();
 
-        collateral = ConfigData({
+        uint256 order = ConfigLib.orderConfigs(_debtInfo, callForSilo0, _action);
+
+        if (order == ConfigLib.SILO0_SILO0) {
+            collateralConfig = _silo0ConfigData();
+            debtConfig = collateralConfig;
+        } else if (order == ConfigLib.SILO1_SILO0) {
+            collateralConfig = _silo1ConfigData();
+            debtConfig = _silo0ConfigData();
+        } else if (order == ConfigLib.SILO0_SILO1) {
+            collateralConfig = _silo0ConfigData();
+            debtConfig = _silo1ConfigData();
+        } else if (order == ConfigLib.SILO1_SILO1) {
+            collateralConfig = _silo1ConfigData();
+            debtConfig = collateralConfig;
+        } else revert InvalidConfigOrder();
+    }
+
+    function _silo0ConfigData() internal view returns (ConfigData memory config) {
+        config = ConfigData({
             daoFee: _DAO_FEE,
             deployerFee: _DEPLOYER_FEE,
             silo: _SILO0,
@@ -383,10 +412,13 @@ contract SiloConfig is ISiloConfig {
             liquidationFee: _LIQUIDATION_FEE0,
             flashloanFee: _FLASHLOAN_FEE0,
             liquidationModule: _LIQUIDATION_MODULE,
+            hookReceiver: _HOOK_RECEIVER,
             callBeforeQuote: _CALL_BEFORE_QUOTE0
         });
+    }
 
-        debt = ConfigData({
+    function _silo1ConfigData() internal view returns (ConfigData memory config) {
+        config = ConfigData({
             daoFee: _DAO_FEE,
             deployerFee: _DEPLOYER_FEE,
             silo: _SILO1,
@@ -403,60 +435,9 @@ contract SiloConfig is ISiloConfig {
             liquidationFee: _LIQUIDATION_FEE1,
             flashloanFee: _FLASHLOAN_FEE1,
             liquidationModule: _LIQUIDATION_MODULE,
+            hookReceiver: _HOOK_RECEIVER,
             callBeforeQuote: _CALL_BEFORE_QUOTE1
         });
-
-        if (!_debtInfo.debtPresent) {
-            if (_method == Methods.BORROW_SAME_ASSET) {
-                return callForSilo0 ? (collateral, collateral, _debtInfo) : (debt, debt, _debtInfo);
-            } else if (_method == Methods.BORROW_TWO_ASSETS) {
-                return callForSilo0 ? (debt, collateral, _debtInfo) : (collateral, debt, _debtInfo);
-            } else {
-                return callForSilo0 ? (collateral, debt, _debtInfo) : (debt, collateral, _debtInfo);
-            }
-        } else if (_method == Methods.WITHDRAW) {
-            _debtInfo.debtInThisSilo = callForSilo0 == _debtInfo.debtInSilo0;
-
-            if (_debtInfo.sameAsset) {
-                if (_debtInfo.debtInSilo0) {
-                    return callForSilo0
-                        ? (collateral, collateral, _debtInfo)
-                        : (debt, collateral, _debtInfo); // only deposit
-                } else {
-                    return callForSilo0
-                        ? (collateral, debt, _debtInfo) // only deposit
-                        : (debt, debt, _debtInfo);
-                }
-            } else {
-                if (_debtInfo.debtInSilo0) {
-                    return callForSilo0
-                        ? (collateral, debt, _debtInfo)
-                        : (debt, collateral, _debtInfo); // only deposit
-                } else {
-                    return callForSilo0
-                        ? (collateral, debt, _debtInfo) // only deposit
-                        : (debt, collateral, _debtInfo);
-                }
-            }
-        }
-
-        if (_debtInfo.debtInSilo0) {
-            _debtInfo.debtInThisSilo = callForSilo0;
-
-            if (_debtInfo.sameAsset) {
-                debt = collateral;
-            } else {
-                (collateral, debt) = (debt, collateral);
-            }
-        } else {
-            _debtInfo.debtInThisSilo = !callForSilo0;
-
-            if (_debtInfo.sameAsset) {
-                collateral = debt;
-            }
-        }
-
-        return (collateral, debt, _debtInfo);
     }
 
     function _forbidDebtInTwoSilos(bool _debtInSilo0) internal view virtual {
@@ -466,18 +447,22 @@ contract SiloConfig is ISiloConfig {
         revert DebtExistInOtherSilo();
     }
 
-    function _onlySiloTokenOrLiquidation() internal view virtual {
-        if (msg.sender == _SILO0 ||
-            msg.sender == _SILO1 ||
-            msg.sender == _LIQUIDATION_MODULE ||
-            msg.sender == _COLLATERAL_SHARE_TOKEN0 ||
-            msg.sender == _COLLATERAL_SHARE_TOKEN1 ||
-            msg.sender == _PROTECTED_COLLATERAL_SHARE_TOKEN0 ||
-            msg.sender == _PROTECTED_COLLATERAL_SHARE_TOKEN1 ||
-            msg.sender == _DEBT_SHARE_TOKEN0 ||
-            msg.sender == _DEBT_SHARE_TOKEN1
+    function _onlySiloOrTokenOrLiquidation() internal view virtual {
+        if (msg.sender != _SILO0 &&
+            msg.sender != _SILO1 &&
+            msg.sender != _LIQUIDATION_MODULE &&
+            msg.sender != _COLLATERAL_SHARE_TOKEN0 &&
+            msg.sender != _COLLATERAL_SHARE_TOKEN1 &&
+            msg.sender != _PROTECTED_COLLATERAL_SHARE_TOKEN0 &&
+            msg.sender != _PROTECTED_COLLATERAL_SHARE_TOKEN1 &&
+            msg.sender != _DEBT_SHARE_TOKEN0 &&
+            msg.sender != _DEBT_SHARE_TOKEN1
         ) {
-            return;
-        } else revert OnlySiloOrLiquidationModule();
+            revert OnlySiloOrLiquidationModule();
+        }
+    }
+
+    function _onlySilo() internal view virtual {
+        if (msg.sender != _SILO0 && msg.sender != _SILO1) revert OnlySilo();
     }
 }

@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
-import "forge-std/Test.sol";
+import {Test} from "forge-std/Test.sol";
 
-import {IERC20} from "openzeppelin-contracts/token/ERC20/IERC20.sol";
+import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo, IERC3156FlashLender} from "silo-core/contracts/interfaces/ISilo.sol";
@@ -39,25 +39,25 @@ contract Hack1 {
         option = option % 10;
 
         if (option == 0) {
-            Silo(msg.sender).withdraw(assets, receiver, _initiator);
+            Silo(payable(msg.sender)).withdraw(assets, receiver, _initiator);
         } else if (option == 1) {
-            Silo(msg.sender).redeem(shares, receiver, _initiator);
+            Silo(payable(msg.sender)).redeem(shares, receiver, _initiator);
         } else if (option == 2) {
-            Silo(msg.sender).withdraw(assets, receiver, _initiator, ISilo.AssetType.Collateral);
+            Silo(payable(msg.sender)).withdraw(assets, receiver, _initiator, ISilo.CollateralType.Collateral);
         } else if (option == 3) {
-            Silo(msg.sender).redeem(shares, receiver, _initiator, ISilo.AssetType.Collateral);
+            Silo(payable(msg.sender)).redeem(shares, receiver, _initiator, ISilo.CollateralType.Collateral);
         } else if (option == 4) {
-            Silo(msg.sender).transitionCollateral(shares, _initiator, ISilo.AssetType.Collateral);
+            Silo(payable(msg.sender)).transitionCollateral(shares, _initiator, ISilo.CollateralType.Collateral);
         } else if (option == 5) {
-            Silo(msg.sender).borrow(assets, receiver, _initiator, sameAsset);
+            Silo(payable(msg.sender)).borrow(assets, receiver, _initiator, sameAsset);
         } else if (option == 6) {
-            Silo(msg.sender).borrowShares(shares, receiver, _initiator, sameAsset);
+            Silo(payable(msg.sender)).borrowShares(shares, receiver, _initiator, sameAsset);
         } else if (option == 7) {
-            Silo(msg.sender).repay(assets, _initiator);
+            Silo(payable(msg.sender)).repay(assets, _initiator);
         } else if (option == 8) {
-            Silo(msg.sender).repayShares(shares, _initiator);
+            Silo(payable(msg.sender)).repayShares(shares, _initiator);
         } else {
-            Silo(msg.sender).leverage(assets, ILeverageBorrower(receiver), _initiator, sameAsset, bytes(""));
+            Silo(payable(msg.sender)).leverage(assets, ILeverageBorrower(receiver), _initiator, sameAsset, bytes(""));
         }
 
         return FLASHLOAN_CALLBACK;
@@ -145,7 +145,7 @@ contract FlashloanTest is SiloLittleHelper, Test, Gas {
             address(silo0),
             abi.encodeCall(IERC3156FlashLender.flashLoan, (receiver, address(token0), amount, _data)),
             "flashLoan gas",
-            31440,
+            39299,
             300
         );
 

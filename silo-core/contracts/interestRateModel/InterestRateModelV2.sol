@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.21;
+pragma solidity 0.8.24;
 
-import {SafeCast} from "openzeppelin-contracts/utils/math/SafeCast.sol";
-import {Math} from "openzeppelin-contracts/utils/math/Math.sol";
+import {SafeCast} from "openzeppelin5/utils/math/SafeCast.sol";
+import {Math} from "openzeppelin5/utils/math/Math.sol";
 
 import {PRBMathSD59x18} from "../lib/PRBMathSD59x18.sol";
 import {SiloMathLib} from "../lib/SiloMathLib.sol";
@@ -125,8 +125,7 @@ contract InterestRateModelV2 is IInterestRateModel, IInterestRateModelV2 {
 
     /// @inheritdoc IInterestRateModel
     function decimals() external view virtual returns (uint256) {
-        // todo 18 instead 10**18
-        return _DP;
+        return 18;
     }
 
     /// @inheritdoc IInterestRateModel

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Unlicense
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
@@ -97,14 +97,10 @@ contract SiloLendingLibBorrowTestData {
         data[i].output.borrowedShare = 400;
 
         i++;
-        _init(data[i], "#6 shares are ignored if assets provided");
+        _init(data[i], "#6 input can be assets or shares");
         data[i].input.assets = 2;
         data[i].input.shares = 444444;
-        data[i].input.totalCollateralAssets = 5;
-        data[i].input.initTotalDebt = 1;
-        data[i].mocks.debtSharesTotalSupply = 100;
-        data[i].output.borrowedAssets = 2;
-        data[i].output.borrowedShare = 200;
+        data[i].output.reverts = ISilo.InputCanBeAssetsOrShares.selector;
 
         i++;
         _init(data[i], "#7 1st borrow: 100");
@@ -191,6 +187,7 @@ contract SiloLendingLibBorrowTestData {
                 liquidationFee: _src.input.configData.liquidationFee,
                 flashloanFee: _src.input.configData.flashloanFee,
                 liquidationModule: _src.input.configData.liquidationModule,
+                hookReceiver: address(0),
                 callBeforeQuote: _src.input.configData.callBeforeQuote
             }),
             assets: _src.input.assets,

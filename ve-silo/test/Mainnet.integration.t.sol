@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.21;
+pragma solidity 0.8.24;
 
 import {StdStorage, stdStorage} from "forge-std/StdStorage.sol";
 import {ERC20, IERC20} from "openzeppelin-contracts/token/ERC20/ERC20.sol";
@@ -22,7 +22,6 @@ import {IGaugeController} from "ve-silo/contracts/gauges/interfaces/IGaugeContro
 import {IBalancerTokenAdmin} from "ve-silo/contracts/silo-tokens-minter/interfaces/IBalancerTokenAdmin.sol";
 import {IBalancerMinter} from "ve-silo/contracts/silo-tokens-minter/interfaces/IBalancerMinter.sol";
 import {IGaugeAdder} from "ve-silo/contracts/gauges/interfaces/IGaugeAdder.sol";
-import {IHookReceiverMock as IHookReceiver} from "./_mocks/IHookReceiverMock.sol";
 import {IShareTokenLike as IShareToken} from "ve-silo/contracts/gauges/interfaces/IShareTokenLike.sol";
 import {ISiloMock as ISilo} from "ve-silo/test/_mocks/ISiloMock.sol";
 import {IFeesManager} from "ve-silo/contracts/silo-tokens-minter/interfaces/IFeesManager.sol";
@@ -284,7 +283,7 @@ contract MainnetTest is IntegrationTest {
     }
 
     function _createGauge() internal returns (address gauge) {
-        gauge = _factory.create(_WEIGHT_CAP, _hookReceiver);
+        gauge = _factory.create(_WEIGHT_CAP, _shareToken);
         vm.label(gauge, "Gauge");
     }
 
@@ -444,9 +443,9 @@ contract MainnetTest is IntegrationTest {
         vm.mockCall(siloFactory, abi.encodeWithSelector(Ownable2Step.acceptOwnership.selector), abi.encode(true));
 
         vm.mockCall(
-            _hookReceiver,
-            abi.encodeWithSelector(IHookReceiver.shareToken.selector),
-            abi.encode(_shareToken)
+            _shareToken,
+            abi.encodeWithSelector(IShareToken.hookReceiver.selector),
+            abi.encode(_hookReceiver)
         );
 
         vm.mockCall(

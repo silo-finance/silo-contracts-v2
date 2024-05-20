@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
 import "forge-std/Test.sol";
 
-import {Strings} from "openzeppelin-contracts/utils/Strings.sol";
+import {Strings} from "openzeppelin5/utils/Strings.sol";
 
 import {PartialLiquidationLib} from "silo-core/contracts/liquidation/lib/PartialLiquidationLib.sol";
 
@@ -357,7 +357,7 @@ contract PartialLiquidationLibTest is Test, MaxRepayRawMath {
         PartialLiquidationLib.liquidationPreview(1e8, 1e18, 1e18, 1e18, 10, params);
         uint256 gasEnd = gasleft();
 
-        assertEq(gasStart - gasEnd, 1040, "optimise liquidationPreview");
+        assertEq(gasStart - gasEnd, 1062, "optimise liquidationPreview");
     }
 
     /*
@@ -383,7 +383,7 @@ contract PartialLiquidationLibTest is Test, MaxRepayRawMath {
         );
         uint256 gasEnd = gasleft();
 
-        assertLe(gasStart - gasEnd, 553, "optimise calculateCollateralToLiquidate()");
+        assertLe(gasStart - gasEnd, 575, "optimise calculateCollateralToLiquidate()");
         assertEq(collateralAssetsToLiquidate, 1010000000000000000);
         assertEq(collateralValueToLiquidate, 2020000000000000000);
     }

@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
-import {Ownable2Step, Ownable} from "openzeppelin-contracts/access/Ownable2Step.sol";
-import {IERC20} from "openzeppelin-contracts/token/ERC20/ERC20.sol";
+import {Ownable2Step, Ownable} from "openzeppelin5/access/Ownable2Step.sol";
+import {IERC20} from "openzeppelin5/token/ERC20/ERC20.sol";
 import {StdStorage, stdStorage} from "forge-std/StdStorage.sol";
 
 import {IGaugeAdder} from "ve-silo/contracts/gauges/interfaces/IGaugeAdder.sol";
@@ -40,9 +40,9 @@ contract VeSiloFeatures is CommonSiloIntegration {
         veSilo.apply_smart_wallet_checker();
     }
 
-    function _createGauge(address _hookReceiver) internal returns (address gauge) {
+    function _createGauge(address _shareToken) internal returns (address gauge) {
         vm.prank(_deployer);
-        gauge = factory.create(_WEIGHT_CAP, _hookReceiver);
+        gauge = factory.create(_WEIGHT_CAP, _shareToken);
         vm.label(gauge, "Gauge");
     }
 

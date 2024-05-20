@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Unlicense
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 
@@ -8,7 +8,7 @@ contract MaxWithdrawToAssetsAndSharesTestData {
         uint256 maxAssets;
         uint256 borrowerCollateralAssets;
         uint256 borrowerProtectedAssets;
-        ISilo.AssetType assetType;
+        ISilo.CollateralType assetType;
         uint256 totalAssets;
         uint256 assetTypeShareTokenTotalSupply;
         uint256 liquidity;
@@ -36,16 +36,16 @@ contract MaxWithdrawToAssetsAndSharesTestData {
         allData[i].input.maxAssets = 1;
 
         i = _init("[protected] if only maxAssets is 0, we still returns 0");
-        allData[i].input.assetType = ISilo.AssetType.Protected;
+        allData[i].input.assetType = ISilo.CollateralType.Protected;
         allData[i].input.maxAssets = 1;
 
         i = _init("[protected] if total share supply 0, we should get 0");
-        allData[i].input.assetType = ISilo.AssetType.Protected;
+        allData[i].input.assetType = ISilo.CollateralType.Protected;
         allData[i].input.maxAssets = 1;
         allData[i].input.borrowerProtectedAssets = 1;
 
         i = _init("[protected] 1s");
-        allData[i].input.assetType = ISilo.AssetType.Protected;
+        allData[i].input.assetType = ISilo.CollateralType.Protected;
         allData[i].input.maxAssets = 1;
         allData[i].input.borrowerProtectedAssets = 1;
         allData[i].input.totalAssets = 1;
@@ -59,7 +59,7 @@ contract MaxWithdrawToAssetsAndSharesTestData {
         allData[i].input.maxAssets = 10;
 
         i = _init("[protected] when below borrowerProtectedAssets");
-        allData[i].input.assetType = ISilo.AssetType.Protected;
+        allData[i].input.assetType = ISilo.CollateralType.Protected;
         allData[i].input.maxAssets = 0.1e18;
         allData[i].input.borrowerProtectedAssets = 0.5e18;
         allData[i].input.totalAssets = 1e18;
@@ -69,7 +69,7 @@ contract MaxWithdrawToAssetsAndSharesTestData {
         allData[i].output.shares = 0.1e18;
 
         i = _init("[protected] when above borrowerProtectedAssets");
-        allData[i].input.assetType = ISilo.AssetType.Protected;
+        allData[i].input.assetType = ISilo.CollateralType.Protected;
         allData[i].input.maxAssets = 1e18;
         allData[i].input.borrowerProtectedAssets = 0.5e18;
         allData[i].input.totalAssets = 1e18;
@@ -81,7 +81,7 @@ contract MaxWithdrawToAssetsAndSharesTestData {
         // ==================================================
 
         i = _init("[collateral] 1s, without liquidity");
-        allData[i].input.assetType = ISilo.AssetType.Collateral;
+        allData[i].input.assetType = ISilo.CollateralType.Collateral;
         allData[i].input.maxAssets = 1;
         allData[i].input.borrowerCollateralAssets = 1;
         allData[i].input.totalAssets = 1;
@@ -89,7 +89,7 @@ contract MaxWithdrawToAssetsAndSharesTestData {
 
 
         i = _init("[collateral] 1s, with liquidity");
-        allData[i].input.assetType = ISilo.AssetType.Collateral;
+        allData[i].input.assetType = ISilo.CollateralType.Collateral;
         allData[i].input.maxAssets = 1;
         allData[i].input.borrowerCollateralAssets = 1;
         allData[i].input.totalAssets = 1;
@@ -111,7 +111,7 @@ contract MaxWithdrawToAssetsAndSharesTestData {
         allData[i].output.shares = 0;
 
         i = _init("[collateral] when below borrowerCollateralAssets");
-        allData[i].input.assetType = ISilo.AssetType.Collateral;
+        allData[i].input.assetType = ISilo.CollateralType.Collateral;
         allData[i].input.maxAssets = 0.1e18;
         allData[i].input.borrowerCollateralAssets = 0.5e18;
         allData[i].input.totalAssets = 1e18;

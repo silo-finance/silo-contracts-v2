@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.21;
+pragma solidity 0.8.24;
 
-import {CountersUpgradeable} from "openzeppelin-contracts-upgradeable/utils/CountersUpgradeable.sol";
-import {ClonesUpgradeable} from "openzeppelin-contracts-upgradeable/proxy/ClonesUpgradeable.sol";
-import {Initializable} from "openzeppelin-contracts-upgradeable/proxy/utils/Initializable.sol";
-import {Ownable2StepUpgradeable} from "openzeppelin-contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
-import {ERC721Upgradeable} from "openzeppelin-contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
+import {Clones} from "openzeppelin5/proxy/Clones.sol";
+import {Initializable} from "openzeppelin5-upgradeable/proxy/utils/Initializable.sol";
+import {Ownable2Step, Ownable} from "openzeppelin5/access/Ownable2Step.sol";
+import {ERC721} from "openzeppelin5/token/ERC721/ERC721.sol";
 
 import {IShareToken} from "./interfaces/IShareToken.sol";
 import {ISiloFactory} from "./interfaces/ISiloFactory.sol";
@@ -13,16 +12,14 @@ import {ISiloConfig, SiloConfig} from "./SiloConfig.sol";
 import {ISilo, Silo} from "./Silo.sol";
 import {Creator} from "./utils/Creator.sol";
 
-contract SiloFactory is ISiloFactory, ERC721Upgradeable, Ownable2StepUpgradeable, Creator {
-    using CountersUpgradeable for CountersUpgradeable.Counter;
-
+contract SiloFactory is ISiloFactory, ERC721, Ownable2Step, Creator {
     /// @dev max fee is 40%, 1e18 == 100%
     uint256 public constant MAX_FEE = 0.4e18;
 
     /// @dev max percent is 1e18 == 100%
     uint256 public constant MAX_PERCENT = 1e18;
 
-    CountersUpgradeable.Counter private _siloId;
+    uint256 private _siloId;
 
     /// @dev denominated in 18 decimals points. 1e18 == 100%.
     uint256 public daoFee;
@@ -42,6 +39,8 @@ contract SiloFactory is ISiloFactory, ERC721Upgradeable, Ownable2StepUpgradeable
     mapping(uint256 id => address[2] silos) private _idToSilos;
     mapping(address silo => uint256 id) public siloToId;
 
+    constructor() ERC721("Silo Finance Fee Receiver", "feeSILO") Ownable(msg.sender) {}
+
     /// @dev SiloFactory is not clonable contract. initialize() method is here only because we have
     /// circular dependency: SiloFactory needs to know Silo address and Silo needs to know factory address.
     /// Because of that, `initialize()` will be always executed on deployed factory, so there is no need for
@@ -52,12 +51,11 @@ contract SiloFactory is ISiloFactory, ERC721Upgradeable, Ownable2StepUpgradeable
         address _shareDebtTokenImpl,
         uint256 _daoFee,
         address _daoFeeReceiver
-    ) external virtual initializer onlyCreator {
-        __ERC721_init("Silo Finance Fee Receiver", "feeSILO");
-        __Ownable_init();
+    ) external virtual onlyCreator {
+        if (_siloId != 0) revert InvalidInitialization();
 
         // start IDs from 1
-        _siloId.increment();
+        _siloId = 1;
 
         if (_siloImpl == address(0) || _shareCollateralTokenImpl == address(0) || _shareDebtTokenImpl == address(0)) {
             revert ZeroAddress();
@@ -86,23 +84,30 @@ contract SiloFactory is ISiloFactory, ERC721Upgradeable, Ownable2StepUpgradeable
         validateSiloInitData(_initData);
         (ISiloConfig.ConfigData memory configData0, ISiloConfig.ConfigData memory configData1) = _copyConfig(_initData);
 
-        uint256 nextSiloId = _siloId.current();
-        _siloId.increment();
+        uint256 nextSiloId = _siloId;
+
+        if (nextSiloId == 0) revert Uninitialized();
+
+        // safe to uncheck, because we will not create 2 ** 256 of silos in a lifetime
+        unchecked { _siloId++; }
 
         configData0.daoFee = daoFee;
         configData1.daoFee = daoFee;
 
         _cloneShareTokens(configData0, configData1);
 
-        configData0.silo = ClonesUpgradeable.clone(siloImpl);
-        configData1.silo = ClonesUpgradeable.clone(siloImpl);
+        configData0.silo = Clones.clone(siloImpl);
+        configData1.silo = Clones.clone(siloImpl);
 
         siloConfig = ISiloConfig(address(new SiloConfig(nextSiloId, configData0, configData1)));
 
         ISilo(configData0.silo).initialize(siloConfig, _initData.interestRateModelConfig0);
         ISilo(configData1.silo).initialize(siloConfig, _initData.interestRateModelConfig1);
 
-        _initializeShareTokens(configData0, configData1, _initData);
+        _initializeShareTokens(configData0, configData1);
+
+        ISilo(configData0.silo).updateHooks();
+        ISilo(configData1.silo).updateHooks();
 
         siloToId[configData0.silo] = nextSiloId;
         siloToId[configData1.silo] = nextSiloId;
@@ -144,7 +149,7 @@ contract SiloFactory is ISiloFactory, ERC721Upgradeable, Ownable2StepUpgradeable
     }
 
     function getNextSiloId() external view virtual returns (uint256) {
-        return _siloId.current();
+        return _siloId;
     }
 
     function getFeeReceivers(address _silo) external view virtual returns (address dao, address deployer) {
@@ -237,50 +242,27 @@ contract SiloFactory is ISiloFactory, ERC721Upgradeable, Ownable2StepUpgradeable
         ISiloConfig.ConfigData memory configData0,
         ISiloConfig.ConfigData memory configData1
     ) internal virtual {
-        configData0.protectedShareToken = ClonesUpgradeable.clone(shareCollateralTokenImpl);
-        configData0.collateralShareToken = ClonesUpgradeable.clone(shareCollateralTokenImpl);
-        configData0.debtShareToken = ClonesUpgradeable.clone(shareDebtTokenImpl);
-        configData1.protectedShareToken = ClonesUpgradeable.clone(shareCollateralTokenImpl);
-        configData1.collateralShareToken = ClonesUpgradeable.clone(shareCollateralTokenImpl);
-        configData1.debtShareToken = ClonesUpgradeable.clone(shareDebtTokenImpl);
+        configData0.protectedShareToken = Clones.clone(shareCollateralTokenImpl);
+        configData0.collateralShareToken = Clones.clone(shareCollateralTokenImpl);
+        configData0.debtShareToken = Clones.clone(shareDebtTokenImpl);
+        configData1.protectedShareToken = Clones.clone(shareCollateralTokenImpl);
+        configData1.collateralShareToken = Clones.clone(shareCollateralTokenImpl);
+        configData1.debtShareToken = Clones.clone(shareDebtTokenImpl);
     }
 
     function _initializeShareTokens(
         ISiloConfig.ConfigData memory configData0,
-        ISiloConfig.ConfigData memory configData1,
-        ISiloConfig.InitData memory _initData
+        ISiloConfig.ConfigData memory configData1
     ) internal virtual {
         // initialize configData0
-        IShareToken(configData0.protectedShareToken).initialize(
-            ISilo(configData0.silo),
-            _initData.protectedHookReceiver0
-        );
-
-        IShareToken(configData0.collateralShareToken).initialize(
-            ISilo(configData0.silo),
-            _initData.collateralHookReceiver0
-        );
-
-        IShareToken(configData0.debtShareToken).initialize(
-            ISilo(configData0.silo),
-            _initData.debtHookReceiver0
-        );
+        IShareToken(configData0.protectedShareToken).initialize(ISilo(configData0.silo));
+        IShareToken(configData0.collateralShareToken).initialize(ISilo(configData0.silo));
+        IShareToken(configData0.debtShareToken).initialize(ISilo(configData0.silo));
 
         // initialize configData1
-        IShareToken(configData1.protectedShareToken).initialize(
-            ISilo(configData1.silo),
-            _initData.protectedHookReceiver1
-        );
-
-        IShareToken(configData1.collateralShareToken).initialize(
-            ISilo(configData1.silo),
-            _initData.collateralHookReceiver1
-        );
-
-        IShareToken(configData1.debtShareToken).initialize(
-            ISilo(configData1.silo),
-            _initData.debtHookReceiver1
-        );
+        IShareToken(configData1.protectedShareToken).initialize(ISilo(configData1.silo));
+        IShareToken(configData1.collateralShareToken).initialize(ISilo(configData1.silo));
+        IShareToken(configData1.debtShareToken).initialize(ISilo(configData1.silo));
     }
 
     function _baseURI() internal view virtual override returns (string memory) {
@@ -293,6 +275,7 @@ contract SiloFactory is ISiloFactory, ERC721Upgradeable, Ownable2StepUpgradeable
         virtual
         returns (ISiloConfig.ConfigData memory configData0, ISiloConfig.ConfigData memory configData1)
     {
+        configData0.hookReceiver = _initData.hookReceiver;
         configData0.liquidationModule = _initData.liquidationModule;
         configData0.token = _initData.token0;
         configData0.solvencyOracle = _initData.solvencyOracle0;
@@ -308,6 +291,7 @@ contract SiloFactory is ISiloFactory, ERC721Upgradeable, Ownable2StepUpgradeable
         configData0.flashloanFee = _initData.flashloanFee0;
         configData0.callBeforeQuote = _initData.callBeforeQuote0 && configData0.maxLtvOracle != address(0);
 
+        configData1.hookReceiver = _initData.hookReceiver;
         configData1.liquidationModule = _initData.liquidationModule;
         configData1.token = _initData.token1;
         configData1.solvencyOracle = _initData.solvencyOracle1;

@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.21;
+pragma solidity ^0.8.20;
 
-import {MathUpgradeable} from "openzeppelin-contracts-upgradeable/utils/math/MathUpgradeable.sol";
+import {Math} from "openzeppelin5/utils/math/Math.sol";
 
 import {ISiloOracle} from "../interfaces/ISiloOracle.sol";
 import {SiloStdLib, ISiloConfig, IShareToken, ISilo} from "./SiloStdLib.sol";
-import {SiloERC4626Lib} from "./SiloERC4626Lib.sol";
 import {SiloMathLib} from "./SiloMathLib.sol";
 import {Rounding} from "./Rounding.sol";
+import {AssetTypes} from "./AssetTypes.sol";
 
 library SiloSolvencyLib {
-    using MathUpgradeable for uint256;
+    using Math for uint256;
 
     struct LtvData {
         ISiloOracle collateralOracle;
@@ -139,7 +139,7 @@ library SiloSolvencyLib {
 
         uint256 totalDebtAssets = _accrueInMemory == ISilo.AccrueInterestInMemory.Yes
             ? SiloStdLib.getTotalDebtAssetsWithInterest(_debtConfig.silo, _debtConfig.interestRateModel)
-            : ISilo(_debtConfig.silo).total(ISilo.AssetType.Debt);
+            : ISilo(_debtConfig.silo).total(AssetTypes.DEBT);
 
         // BORROW value -> to assets -> UP
         ltvData.borrowerDebtAssets = SiloMathLib.convertToAssets(
@@ -197,7 +197,7 @@ library SiloSolvencyLib {
             ltvInDp = _INFINITY;
         } else {
             ltvInDp = totalBorrowerDebtValue.mulDiv(
-                _PRECISION_DECIMALS, sumOfBorrowerCollateralValue, MathUpgradeable.Rounding(Rounding.LTV)
+                _PRECISION_DECIMALS, sumOfBorrowerCollateralValue, Math.Rounding(Rounding.LTV)
             );
         }
     }

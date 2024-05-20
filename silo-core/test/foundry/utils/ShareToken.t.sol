@@ -1,57 +1,44 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
-import "forge-std/Test.sol";
+import {Test} from "forge-std/Test.sol";
+import {Clones} from "openzeppelin5/proxy/Clones.sol";
 
-import {ClonesUpgradeable} from "openzeppelin-contracts-upgradeable/proxy/ClonesUpgradeable.sol";
-
-import {SiloERC4626Lib, SiloMathLib} from "silo-core/contracts/lib/SiloERC4626Lib.sol";
-import {ShareDebtToken, IShareToken} from "silo-core/contracts/utils/ShareDebtToken.sol";
+import {SiloMathLib} from "silo-core/contracts/lib/SiloERC4626Lib.sol";
+import {Hook} from "silo-core/contracts/lib/Hook.sol";
+import {ShareDebtToken} from "silo-core/contracts/utils/ShareDebtToken.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
-import {IHookReceiver} from "silo-core/contracts/utils/hook-receivers/interfaces/IHookReceiver.sol";
 
 import {HookReceiverMock} from "../_mocks/HookReceiverMock.sol";
 import {SiloMock} from "../_mocks/SiloMock.sol";
+import {MintableToken as Token} from "../_common/MintableToken.sol";
 import {SiloConfigMock} from "../_mocks/SiloConfigMock.sol";
 
-contract Token {
-    uint8 public immutable decimals;
-
-    constructor(uint8 _decimals) {
-        decimals = _decimals;
-    }
-}
-
-/*
-forge test -vv --mc ShareTokenTest
-*/
+// solhint-disable func-name-mixedcase
+// FOUNDRY_PROFILE=core-test forge test -vv --mc ShareTokenTest
 contract ShareTokenTest is Test {
-    ShareDebtToken sToken;
-    SiloMock silo;
-    SiloConfigMock siloConfig;
-    HookReceiverMock hookReceiver;
-    address owner;
+    uint256 constant internal _DEBT_TOKE_BEFORE_ACTION = 0;
+    uint256 constant internal _DEBT_TOKE_AFTER_ACTION = Hook.DEBT_TOKEN | Hook.SHARE_TOKEN_TRANSFER;
+
+    ShareDebtToken public sToken;
+    SiloMock public silo;
+    SiloConfigMock public siloConfig;
+    HookReceiverMock public hookReceiverMock;
+    address public owner;
 
     function setUp() public {
-        sToken = ShareDebtToken(ClonesUpgradeable.clone(address(new ShareDebtToken())));
+        sToken = ShareDebtToken(Clones.clone(address(new ShareDebtToken())));
         silo = new SiloMock(address(0));
         siloConfig = new SiloConfigMock(address(0));
-        hookReceiver = new HookReceiverMock(makeAddr("HookReceiver"));
+        hookReceiverMock = new HookReceiverMock(address(0));
         owner = makeAddr("Owner");
     }
 
-    function config() external view returns (address) {
-        return siloConfig.ADDRESS();
-    }
-
-    /*
-    forge test -vv --mt test_ShareToken_decimals
-    */
+    // FOUNDRY_PROFILE=core-test forge test -vvv --mt test_ShareToken_decimals
     function test_ShareToken_decimals() public {
         uint8 decimals = 8;
         Token token = new Token(decimals);
-        address hook = address(0);
 
         ISiloConfig.ConfigData memory configData;
         configData.token = address(token);
@@ -59,64 +46,74 @@ contract ShareTokenTest is Test {
         silo.configMock(siloConfig.ADDRESS());
         siloConfig.getConfigMock(silo.ADDRESS(), configData);
 
-        sToken.initialize(ISilo(silo.ADDRESS()), hook);
+        sToken.initialize(ISilo(silo.ADDRESS()));
 
         assertEq(10 ** (sToken.decimals() - token.decimals()), SiloMathLib._DECIMALS_OFFSET_POW, "expect valid offset");
     }
 
-    /*
-    forge test -vv --mt test_HookReturnCode_notRevertWhenNoHook
-    */
-    function test_HookReturnCode_notRevertWhenNoHook() public {
-        address hook = address(0);
-        sToken.initialize(ISilo(address(this)), hook);
+    // FOUNDRY_PROFILE=core-test forge test -vvv --mt test_notRevertWhenNoHook
+    function test_notRevertWhenNoHook() public {
+        silo.configMock(siloConfig.ADDRESS());
+        sToken.initialize(ISilo(silo.ADDRESS()));
+
+        vm.prank(silo.ADDRESS());
         sToken.mint(owner, owner, 1);
     }
 
-    /*
-    forge test -vv --mt test_HookReturnCode_notRevertWhenHookCallFail
-    */
-    function test_HookReturnCode_notRevertWhenHookCallFail() public {
-        sToken.initialize(ISilo(address(this)), hookReceiver.ADDRESS());
-        sToken.mint(owner, owner, 1); // no mocking for hook call
-    }
+    // FOUNDRY_PROFILE=core-test forge test -vvv --mt test_hookCall
+    function test_hookCall() public {
+        address siloAddr = silo.ADDRESS();
 
-    /*
-    forge test -vv --mt test_HookReturnCode_notRevertOnCode0
-    */
-    function test_HookReturnCode_notRevertOnCode0() public {
-        sToken.initialize(ISilo(address(this)), hookReceiver.ADDRESS());
+        silo.configMock(siloConfig.ADDRESS());
+        sToken.initialize(ISilo(siloAddr));
+
+        address hookAddr = hookReceiverMock.ADDRESS(); 
+
+        vm.prank(siloAddr);
+        sToken.synchronizeHooks(
+            hookAddr,
+            uint24(_DEBT_TOKE_BEFORE_ACTION),
+            uint24(_DEBT_TOKE_AFTER_ACTION),
+            uint24(Hook.DEBT_TOKEN)
+        );
+
         uint256 amount = 1;
 
-        _afterTokenTransferMockOnMint(amount, IHookReceiver.HookReturnCode.SUCCESS);
+        _afterTokenTransferMockOnMint(amount);
 
+        vm.prank(siloAddr);
         sToken.mint(owner, owner, amount);
     }
 
-    /*
-    forge test -vv --mt test_HookReturnCode_revertOnRequest
-    */
-    function test_HookReturnCode_revertOnRequest() public {
-        sToken.initialize(ISilo(address(this)), hookReceiver.ADDRESS());
-        uint256 amount = 1;
+    // FOUNDRY_PROFILE=core-test forge test -vvv --mt test_descreaseAllowance
+    function test_descreaseAllowance() public {
+        uint256 allowance = 100e18;
+        address recipient = makeAddr("Recipient");
 
-        _afterTokenTransferMockOnMint(amount, IHookReceiver.HookReturnCode.REQUEST_TO_REVERT_TX);
+        vm.prank(recipient);
+        sToken.increaseReceiveAllowance(owner, allowance);
 
-        vm.expectRevert(IShareToken.RevertRequestFromHook.selector);
-        sToken.mint(owner, owner, amount);
+        assertEq(sToken.receiveAllowance(owner, recipient), allowance, "expect valid allowance");
+
+        // decrease in value more than allowed
+        vm.prank(recipient);
+        sToken.decreaseReceiveAllowance(owner, type(uint256).max);
+
+        assertEq(sToken.receiveAllowance(owner, recipient), 0, "expect have no allowance");
     }
 
-    function _afterTokenTransferMockOnMint(uint256 _amount, IHookReceiver.HookReturnCode _code) public {
+    function _afterTokenTransferMockOnMint(uint256 _amount) internal {
         uint256 balance = sToken.balanceOf(owner);
 
-        hookReceiver.afterTokenTransferMock(
-            address(0), // zero address for mint
-            0, // initial total supply 0
-            owner,
-            balance + _amount, // owner balance after
-            sToken.totalSupply() + _amount, // total supply after mint
-            _amount,
-            _code
+        hookReceiverMock.afterTokenTransferMock( // solhint-disable-line func-named-parameters
+                silo.ADDRESS(),
+                _DEBT_TOKE_AFTER_ACTION,
+                address(0), // zero address for mint
+                0, // initial total supply 0
+                owner,
+                balance + _amount, // owner balance after
+                sToken.totalSupply() + _amount, // total supply after mint
+                _amount
         );
     }
 }

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
 import {CommonBase} from "forge-std/Base.sol";
 
@@ -10,6 +10,7 @@ import {SiloLens} from "silo-core/contracts/SiloLens.sol";
 
 import {MintableToken} from "./MintableToken.sol";
 import {SiloFixture, SiloConfigOverride} from "./fixtures/SiloFixture.sol";
+import {SiloFixtureWithFeeDistributor} from "./fixtures/SiloFixtureWithFeeDistributor.sol";
 
 abstract contract SiloLittleHelper is CommonBase {
     bool constant SAME_ASSET = true;
@@ -36,18 +37,30 @@ abstract contract SiloLittleHelper is CommonBase {
     }
 
     function _setUpLocalFixture() internal returns (ISiloConfig siloConfig) {
-        return _localFixture("");
+        SiloFixtureWithFeeDistributor siloFixture = new SiloFixtureWithFeeDistributor();
+        return _localFixture("", SiloFixture(address(siloFixture)));
     }
 
     function _setUpLocalFixture(string memory _configName) internal returns (ISiloConfig siloConfig) {
-        return _localFixture(_configName);
+        SiloFixtureWithFeeDistributor siloFixture = new SiloFixtureWithFeeDistributor();
+        return _localFixture(_configName, SiloFixture(address(siloFixture)));
+    }
+
+    function _setUpLocalFixtureNoMocks() internal returns (ISiloConfig siloConfig) {
+        SiloFixture siloFixture = new SiloFixture();
+        return _localFixture("", siloFixture);
+    }
+
+    function _setUpLocalFixtureNoMocks(string memory _configName) internal returns (ISiloConfig siloConfig) {
+        SiloFixture siloFixture = new SiloFixture();
+        return _localFixture(_configName, siloFixture);
     }
 
     function _depositForBorrowRevert(uint256 _assets, address _depositor, bytes4 _error) internal {
         _depositForBorrowRevert(_assets, _depositor, _error);
     }
 
-    function _depositForBorrowRevert(uint256 _assets, address _depositor, ISilo.AssetType _type, bytes4 _error) internal {
+    function _depositForBorrowRevert(uint256 _assets, address _depositor, ISilo.CollateralType _type, bytes4 _error) internal {
         _mintTokens(token1, _assets, _depositor);
 
         vm.startPrank(_depositor);
@@ -59,15 +72,15 @@ abstract contract SiloLittleHelper is CommonBase {
     }
 
     function _depositForBorrow(uint256 _assets, address _depositor) internal returns (uint256 shares) {
-        return _makeDeposit(silo1, token1, _assets, _depositor, ISilo.AssetType.Collateral);
+        return _makeDeposit(silo1, token1, _assets, _depositor, ISilo.CollateralType.Collateral);
     }
 
-    function _deposit(uint256 _assets, address _depositor, ISilo.AssetType _type) internal returns (uint256 shares) {
+    function _deposit(uint256 _assets, address _depositor, ISilo.CollateralType _type) internal returns (uint256 shares) {
         return _makeDeposit(silo0, token0, _assets, _depositor, _type);
     }
 
     function _deposit(uint256 _assets, address _depositor) internal returns (uint256 shares) {
-        return _makeDeposit(silo0, token0, _assets, _depositor, ISilo.AssetType.Collateral);
+        return _makeDeposit(silo0, token0, _assets, _depositor, ISilo.CollateralType.Collateral);
     }
 
     function _depositCollateral(uint256 _assets, address _depositor, bool _forSameToken)
@@ -75,21 +88,26 @@ abstract contract SiloLittleHelper is CommonBase {
         returns (uint256 shares)
     {
         return _forSameToken
-            ? _makeDeposit(silo1, token1, _assets, _depositor, ISilo.AssetType.Collateral)
-            : _makeDeposit(silo0, token0, _assets, _depositor, ISilo.AssetType.Collateral);
+            ? _makeDeposit(silo1, token1, _assets, _depositor, ISilo.CollateralType.Collateral)
+            : _makeDeposit(silo0, token0, _assets, _depositor, ISilo.CollateralType.Collateral);
     }
 
-    function _depositCollateral(uint256 _assets, address _depositor, bool _forSameToken, ISilo.AssetType _assetType)
+    function _depositCollateral(
+        uint256 _assets,
+        address _depositor,
+        bool _forSameToken,
+        ISilo.CollateralType _collateralType
+    )
         internal
         returns (uint256 shares)
     {
         return _forSameToken
-            ? _makeDeposit(silo1, token1, _assets, _depositor, _assetType)
-            : _makeDeposit(silo0, token0, _assets, _depositor, _assetType);
+            ? _makeDeposit(silo1, token1, _assets, _depositor, _collateralType)
+            : _makeDeposit(silo0, token0, _assets, _depositor, _collateralType);
     }
 
     function _mint(uint256 _approve, uint256 _shares, address _depositor) internal returns (uint256 assets) {
-        return _makeMint(_approve, silo0, token0, _shares, _depositor, ISilo.AssetType.Collateral);
+        return _makeMint(_approve, silo0, token0, _shares, _depositor, ISilo.CollateralType.Collateral);
     }
 
     function _mintCollateral(uint256 _approve, uint256 _shares, address _depositor, bool _forSameToken)
@@ -97,12 +115,12 @@ abstract contract SiloLittleHelper is CommonBase {
         returns (uint256 assets)
     {
         return _forSameToken
-            ? _makeMint(_approve, silo1, token1, _shares, _depositor, ISilo.AssetType.Collateral)
-            : _makeMint(_approve, silo0, token0, _shares, _depositor, ISilo.AssetType.Collateral);
+            ? _makeMint(_approve, silo1, token1, _shares, _depositor, ISilo.CollateralType.Collateral)
+            : _makeMint(_approve, silo0, token0, _shares, _depositor, ISilo.CollateralType.Collateral);
     }
 
     function _mintForBorrow(uint256 _approve, uint256 _shares, address _depositor) internal returns (uint256 assets) {
-        return _makeMint(_approve, silo1, token1, _shares, _depositor, ISilo.AssetType.Collateral);
+        return _makeMint(_approve, silo1, token1, _shares, _depositor, ISilo.CollateralType.Collateral);
     }
 
     function _borrow(uint256 _amount, address _borrower, bool _sameAsset) internal returns (uint256 shares) {
@@ -153,17 +171,23 @@ abstract contract SiloLittleHelper is CommonBase {
         return silo0.redeem(_amount, _depositor, _depositor);
     }
 
-    function _withdraw(uint256 _amount, address _depositor) internal returns (uint256 assets){
+    function _withdraw(uint256 _amount, address _depositor) internal returns (uint256 shares) {
         vm.prank(_depositor);
         return silo0.withdraw(_amount, _depositor, _depositor);
     }
 
-    function _withdraw(uint256 _amount, address _depositor, ISilo.AssetType _type) internal returns (uint256 assets){
+    function _withdraw(uint256 _amount, address _depositor, ISilo.CollateralType _type) internal returns (uint256 assets){
         vm.prank(_depositor);
         return silo0.withdraw(_amount, _depositor, _depositor, _type);
     }
 
-    function _makeDeposit(ISilo _silo, MintableToken _token, uint256 _assets, address _depositor, ISilo.AssetType _type)
+    function _makeDeposit(
+        ISilo _silo,
+        MintableToken _token,
+        uint256 _assets,
+        address _depositor,
+        ISilo.CollateralType _type
+    )
         internal
         returns (uint256 shares)
     {
@@ -181,7 +205,7 @@ abstract contract SiloLittleHelper is CommonBase {
         MintableToken _token,
         uint256 _shares,
         address _depositor,
-        ISilo.AssetType _type
+        ISilo.CollateralType _type
     )
         internal
         returns (uint256 assets)
@@ -211,7 +235,7 @@ abstract contract SiloLittleHelper is CommonBase {
         debtShares = _borrow(_amount, _borrower, _sameAsset);
     }
 
-    function _localFixture(string memory _configName)
+    function _localFixture(string memory _configName, SiloFixture _siloFixture)
         private
         returns (ISiloConfig siloConfig)
     {
@@ -223,7 +247,6 @@ abstract contract SiloLittleHelper is CommonBase {
         overrides.token1 = address(token1);
         overrides.configName = _configName;
 
-        SiloFixture siloFixture = new SiloFixture();
-        (siloConfig, silo0, silo1,,, partialLiquidation) = siloFixture.deploy_local(overrides);
+        (siloConfig, silo0, silo1,,, partialLiquidation) = _siloFixture.deploy_local(overrides);
     }
 }

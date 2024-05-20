@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.21;
+pragma solidity 0.8.24;
 
 import {Test} from "forge-std/Test.sol";
-import {IERC20} from "openzeppelin-contracts/token/ERC20/IERC20.sol";
+import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 
 import {SiloERC4626Lib} from "silo-core/contracts/lib/SiloERC4626Lib.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
@@ -41,12 +41,15 @@ contract ReentrancyOnDepositTest is Test {
     }
 
     // solhint-disable-next-line func-name-mixedcase
+    /*
+    FOUNDRY_PROFILE=core-test forge test -vv --mt test_SiloERC4626Lib_deposit_vulnerable --ffi
+    */
     function test_SiloERC4626Lib_deposit_vulnerable() public {
         uint256 totalCollateral = _vulnerable.getTotalCollateral();
 
         // This event is emitted from the reentrancy call.
         // And is triggered by this call:
-        // IERC20Upgradeable(_token).safeTransferFrom(_depositor, address(this), assets);
+        // IERC20(_token).safeTransferFrom(_depositor, address(this), assets);
         //
         // As we are testing the vulnerable version of the library,
         // we expect to have the same state as we had before the reentrancy call.
@@ -58,7 +61,7 @@ contract ReentrancyOnDepositTest is Test {
         _vulnerable.deposit(
             _token,
             _depositor,
-            _ASSETS,
+            0 /* assets */,
             _SHARES,
             _receiver,
             _shareCollateralToken
@@ -66,12 +69,15 @@ contract ReentrancyOnDepositTest is Test {
     }
 
     // solhint-disable-next-line func-name-mixedcase
+    /*
+    FOUNDRY_PROFILE=core-test forge test -vv --mt test_SiloERC4626Lib_deposit_non_vulnerable --ffi
+    */
     function test_SiloERC4626Lib_deposit_non_vulnerable() public {
         uint256 totalCollateral = _nonVulnerable.getTotalCollateral();
 
         // This event is emitted from the reentrancy call.
         // And is triggered by this call:
-        // IERC20Upgradeable(_token).safeTransferFrom(_depositor, address(this), assets);
+        // IERC20(_token).safeTransferFrom(_depositor, address(this), assets);
         //
         // As we are testing the non-vulnerable version of the library,
         // we expect to have an updated state during the reentrancy call.
@@ -84,7 +90,7 @@ contract ReentrancyOnDepositTest is Test {
             _token,
             _depositor,
             _ASSETS,
-            _SHARES,
+            0 /* shares */,
             _receiver,
             _shareCollateralToken
         );

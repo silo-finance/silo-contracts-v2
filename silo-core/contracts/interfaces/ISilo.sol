@@ -1,13 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.5.0;
 
-import {IERC4626, IERC20, IERC20Metadata} from "openzeppelin-contracts/interfaces/IERC4626.sol";
+import {IERC4626, IERC20, IERC20Metadata} from "openzeppelin5/interfaces/IERC4626.sol";
 
 import {IERC3156FlashLender} from "./IERC3156FlashLender.sol";
 import {ISiloConfig} from "./ISiloConfig.sol";
 import {ISiloFactory} from "./ISiloFactory.sol";
 import {ILeverageBorrower} from "./ILeverageBorrower.sol";
 import {ILiquidationProcess} from "./ILiquidationProcess.sol";
+
+import {IHookReceiver} from "../utils/hook-receivers/interfaces/IHookReceiver.sol";
 
 // solhint-disable ordering
 interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
@@ -36,16 +38,30 @@ interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
         Protected, // default
         Collateral,
         Debt
-        // if you add new, make sure you adjust all places with revert WrongAssetType()
     }
 
+    /// @dev There are 2 types of accounting in the system: for non-borrowable collateral deposit called "protected" and
+    ///      for borrowable collateral deposit called "collateral". System does
+    ///      identical calculations for each type of accounting but it uses different data. To avoid code duplication
+    ///      this enum is used to decide which data should be read.
+    enum CollateralType {
+        Protected, // default
+        Collateral
+    }
+
+    /// @param _assets Amount of assets the user wishes to withdraw. Use 0 if shares are provided.
+    /// @param _shares Shares the user wishes to burn in exchange for the withdrawal. Use 0 if assets are provided.
+    /// @param _receiver Address receiving the withdrawn assets
+    /// @param _owner Address of the owner of the shares being burned
+    /// @param _spender Address executing the withdrawal; may be different than `_owner` if an allowance was set
+    /// @param _collateralType Type of the asset being withdrawn (Collateral or Protected)
     struct WithdrawArgs {
         uint256 assets;
         uint256 shares;
         address receiver;
         address owner;
         address spender;
-        ISilo.AssetType assetType;
+        ISilo.CollateralType collateralType;
     }
 
     /// @param assets Number of assets the borrower intends to borrow. Use 0 if shares are provided.
@@ -53,7 +69,6 @@ interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
     /// assets are provided.
     /// @param receiver Address that will receive the borrowed assets
     /// @param borrower The user who is borrowing the assets
-    /// @param totalCollateralAssets Total collateralized assets currently in the system, not protected
     struct BorrowArgs {
         uint256 assets;
         uint256 shares;
@@ -61,7 +76,13 @@ interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
         address borrower;
         bool sameAsset;
         bool leverage;
-        uint256 totalCollateralAssets;
+    }
+
+    struct SharedStorage {
+        ISiloConfig siloConfig;
+        uint24 hooksBefore;
+        uint24 hooksAfter;
+        IHookReceiver hookReceiver;
     }
 
     /// @dev this struct is used for all types of assets: collateral, protected and debt
@@ -128,11 +149,14 @@ interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
     /// @param shares amount of shares that was burn
     event Repay(address indexed sender, address indexed owner, uint256 assets, uint256 shares);
 
-    /// @notice Emitted on leverage
-    event Leverage();
-
     /// @notice emitted only when collateral has been switched to other one
     event CollateralTypeChanged(address indexed borrower, bool sameAseet);
+
+    event HooksUpdated(uint24 hooksBefore, uint24 hooksAfter);
+
+    event AccruedInterest(uint256 hooksBefore);
+
+    event FlashLoan(uint256 amount);
 
     error Unsupported();
     error NothingToWithdraw();
@@ -140,13 +164,11 @@ interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
     error NotSolvent();
     error BorrowNotPossible();
     error WrongToken();
-    error BalanceZero();
     error EarnedZero();
     error NothingToPay();
     error FlashloanFailed();
     error LeverageFailed();
     error AboveMaxLtv();
-    error WrongAssetType();
     error ZeroAssets();
     error ZeroShares();
     error OnlyLiquidationModule();
@@ -155,11 +177,39 @@ interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
     error NoDebt();
     error TwoAssetsDebt();
     error LeverageTooHigh();
+    error SiloInitialized();
+    error OnlyHookReceiver();
+    error OnlySiloConfig();
+    error NoLiquidity();
+    error InputCanBeAssetsOrShares();
+
+    /// @notice Method for HookReceiver only to call on behalf of Silo
+    /// @param _target address of the contract to call
+    /// @param _value amount of ETH to send
+    /// @param _input calldata for the call
+    function callOnBehalfOfSilo(address _target, uint256 _value, bytes calldata _input)
+        external
+        payable
+        returns (bool success, bytes memory result);
 
     /// @notice Initialize Silo
     /// @param _siloConfig address of ISiloConfig with full config for this Silo
     /// @param _modelConfigAddress address of a config contract used by IRM
     function initialize(ISiloConfig _siloConfig, address _modelConfigAddress) external;
+
+    /// @notice Update hooks configuration for Silo
+    /// @dev This function must be called after the hooks configuration is changed in the hook receiver
+    function updateHooks() external;
+
+    function sharedStorage()
+        external
+        view
+        returns (
+            ISiloConfig siloConfig,
+            uint24 hooksBefore,
+            uint24 hooksAfter,
+            IHookReceiver hookReceiver
+        );
 
     /// @notice Fetches the silo configuration contract
     /// @return siloConfig Address of the configuration contract associated with the silo
@@ -188,7 +238,7 @@ interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
     function isSolvent(address _borrower) external view returns (bool);
 
     /// @notice Retrieves the raw total amount of assets based on provided type (direct storage access)
-    function total(AssetType _assetType) external view returns (uint256);
+    function total(uint256 _assetType) external view returns (uint256);
 
     /// @notice Retrieves the total amount of collateral (borrowable) assets with interest
     /// @return totalCollateralAssets The total amount of assets of type 'Collateral'
@@ -221,54 +271,56 @@ interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
     function convertToAssets(uint256 _shares, AssetType _assetType) external view returns (uint256 assets);
 
     /// @notice Implements IERC4626.maxDeposit for protected (non-borrowable) collateral and collateral
-    /// @dev _assetType is ignored because maxDeposit is the same for both asset types
-    function maxDeposit(address _receiver, AssetType _assetType) external view returns (uint256 maxAssets);
+    /// @dev _collateralType is ignored because maxDeposit is the same for both asset types
+    function maxDeposit(address _receiver, CollateralType _collateralType) external view returns (uint256 maxAssets);
 
     /// @notice Implements IERC4626.previewDeposit for protected (non-borrowable) collateral and collateral
     /// @dev Reverts for debt asset type
-    function previewDeposit(uint256 _assets, AssetType _assetType) external view returns (uint256 shares);
+    function previewDeposit(uint256 _assets, CollateralType _collateralType) external view returns (uint256 shares);
 
     /// @notice Implements IERC4626.deposit for protected (non-borrowable) collateral and collateral
     /// @dev Reverts for debt asset type
-    function deposit(uint256 _assets, address _receiver, AssetType _assetType) external returns (uint256 shares);
+    function deposit(uint256 _assets, address _receiver, CollateralType _collateralType)
+        external
+        returns (uint256 shares);
 
     /// @notice Implements IERC4626.maxMint for protected (non-borrowable) collateral and collateral
-    /// @dev _assetType is ignored because maxDeposit is the same for both asset types
-    function maxMint(address _receiver, AssetType _assetType) external view returns (uint256 maxShares);
+    /// @dev _collateralType is ignored because maxDeposit is the same for both asset types
+    function maxMint(address _receiver, CollateralType _collateralType) external view returns (uint256 maxShares);
 
     /// @notice Implements IERC4626.previewMint for protected (non-borrowable) collateral and collateral
     /// @dev Reverts for debt asset type
-    function previewMint(uint256 _shares, AssetType _assetType) external view returns (uint256 assets);
+    function previewMint(uint256 _shares, CollateralType _collateralType) external view returns (uint256 assets);
 
     /// @notice Implements IERC4626.mint for protected (non-borrowable) collateral and collateral
     /// @dev Reverts for debt asset type
-    function mint(uint256 _shares, address _receiver, AssetType _assetType) external returns (uint256 assets);
+    function mint(uint256 _shares, address _receiver, CollateralType _collateralType) external returns (uint256 assets);
 
     /// @notice Implements IERC4626.maxWithdraw for protected (non-borrowable) collateral and collateral
     /// @dev Reverts for debt asset type
-    function maxWithdraw(address _owner, AssetType _assetType) external view returns (uint256 maxAssets);
+    function maxWithdraw(address _owner, CollateralType _collateralType) external view returns (uint256 maxAssets);
 
     /// @notice Implements IERC4626.previewWithdraw for protected (non-borrowable) collateral and collateral
     /// @dev Reverts for debt asset type
-    function previewWithdraw(uint256 _assets, AssetType _assetType) external view returns (uint256 shares);
+    function previewWithdraw(uint256 _assets, CollateralType _collateralType) external view returns (uint256 shares);
 
     /// @notice Implements IERC4626.withdraw for protected (non-borrowable) collateral and collateral
     /// @dev Reverts for debt asset type
-    function withdraw(uint256 _assets, address _receiver, address _owner, AssetType _assetType)
+    function withdraw(uint256 _assets, address _receiver, address _owner, CollateralType _collateralType)
         external
         returns (uint256 shares);
 
     /// @notice Implements IERC4626.maxRedeem for protected (non-borrowable) collateral and collateral
     /// @dev Reverts for debt asset type
-    function maxRedeem(address _owner, AssetType _assetType) external view returns (uint256 maxShares);
+    function maxRedeem(address _owner, CollateralType _collateralType) external view returns (uint256 maxShares);
 
     /// @notice Implements IERC4626.previewRedeem for protected (non-borrowable) collateral and collateral
     /// @dev Reverts for debt asset type
-    function previewRedeem(uint256 _shares, AssetType _assetType) external view returns (uint256 assets);
+    function previewRedeem(uint256 _shares, CollateralType _collateralType) external view returns (uint256 assets);
 
     /// @notice Implements IERC4626.redeem for protected (non-borrowable) collateral and collateral
     /// @dev Reverts for debt asset type
-    function redeem(uint256 _shares, address _receiver, address _owner, AssetType _assetType)
+    function redeem(uint256 _shares, address _receiver, address _owner, CollateralType _collateralType)
         external
         returns (uint256 assets);
 
@@ -279,7 +331,7 @@ interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
     /// @param _owner Owner of the assets being transitioned
     /// @param _withdrawType Specifies if the transition is from collateral or protected assets
     /// @return assets Amount of assets transitioned
-    function transitionCollateral(uint256 _shares, address _owner, AssetType _withdrawType)
+    function transitionCollateral(uint256 _shares, address _owner, CollateralType _withdrawType)
         external
         returns (uint256 assets);
 
@@ -303,10 +355,10 @@ interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
     /// @param _deposit Amount of deposit to leverage
     /// @param _borrow Amount of assets to borrow
     /// @param _borrower Address responsible for the borrowed assets
-    /// @param _assetType asset type for collateral
+    /// @param _collateralType asset type for collateral
     /// @return depositShares Amount of shares equivalent to the collateral assets
     /// @return borrowShares Amount of shares equivalent to the borrowed assets
-    function leverageSameAsset(uint256 _deposit, uint256 _borrow, address _borrower, AssetType _assetType)
+    function leverageSameAsset(uint256 _deposit, uint256 _borrow, address _borrower, CollateralType _collateralType)
         external
         returns (uint256 depositShares, uint256 borrowShares);
 
@@ -391,6 +443,13 @@ interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
     /// @notice Accrues interest for the asset and returns the accrued interest amount
     /// @return accruedInterest The total interest accrued during this operation
     function accrueInterest() external returns (uint256 accruedInterest);
+
+    /// @notice only for SiloConfig
+    function accrueInterestForConfig(
+        address _interestRateModel,
+        uint256 _daoFee,
+        uint256 _deployerFee
+    ) external;
 
     /// @notice Withdraws earned fees and distributes them to the DAO and deployer fee receivers
     function withdrawFees() external;

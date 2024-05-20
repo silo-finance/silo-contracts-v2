@@ -1,13 +1,14 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
-import {Strings} from "openzeppelin-contracts/utils/Strings.sol";
+import {Strings} from "openzeppelin5/utils/Strings.sol";
 
 import {console2} from "forge-std/console2.sol";
 
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 
-import {SiloFixture, SiloConfigOverride} from "../_common/fixtures/SiloFixture.sol";
+import {SiloConfigOverride} from "../_common/fixtures/SiloFixture.sol";
+import {SiloFixtureWithFeeDistributor as SiloFixture} from "../_common/fixtures/SiloFixtureWithFeeDistributor.sol";
 import {MintableToken} from "../_common/MintableToken.sol";
 import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
 

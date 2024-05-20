@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
 import "forge-std/Test.sol";
 
@@ -27,7 +27,7 @@ contract Borrow1stGasTest is Gas, Test {
             address(silo1),
             abi.encodeCall(ISilo.borrow, (ASSETS, BORROWER, BORROWER, false /* sameAsset */)),
             "Borrow1st (no interest)",
-            227347
+            228302
         );
     }
 }

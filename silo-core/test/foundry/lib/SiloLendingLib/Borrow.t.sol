@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
-import "forge-std/Test.sol";
+import {Test} from "forge-std/Test.sol";
 
 import {SiloLendingLib} from "silo-core/contracts/lib/SiloLendingLib.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
@@ -11,24 +11,28 @@ import {TokenMock} from "silo-core/test/foundry/_mocks/TokenMock.sol";
 import {SiloLendingLibBorrowTestData} from "../../data-readers/SiloLendingLibBorrowTestData.sol";
 import {SiloLendingLibImpl} from "../../_common/SiloLendingLibImpl.sol";
 
+// solhint-disable func-name-mixedcase
+
 /*
-    forge test -vv --mc BorrowTest
+   forge test -vv --mc BorrowTest
 */
 contract BorrowTest is Test {
-    ISilo.Assets totalDebt;
+    ISilo.Assets public totalDebt;
 
-    TokenMock immutable protectedShareToken;
-    TokenMock immutable collateralShareToken;
-    TokenMock immutable debtShareToken;
-    TokenMock immutable debtToken;
+    // solhint-disable immutable-vars-naming
+    TokenMock immutable public protectedShareToken;
+    TokenMock immutable public collateralShareToken;
+    TokenMock immutable public debtShareToken;
+    TokenMock immutable public debtToken;
 
-    SiloLendingLibBorrowTestData immutable tests;
+    SiloLendingLibBorrowTestData immutable public tests;
+    // solhint-enable immutable-vars-naming
 
     constructor() {
-        protectedShareToken = new TokenMock(address(0x66666666666666666));
-        collateralShareToken = new TokenMock(address(0x7777777777777777));
-        debtShareToken = new TokenMock(address(0x9999999999999));
-        debtToken = new TokenMock(address(0x101010101010101010));
+        protectedShareToken = new TokenMock(makeAddr("protectedShareToken"));
+        collateralShareToken = new TokenMock(makeAddr("collateralShareToken"));
+        debtShareToken = new TokenMock(makeAddr("debtShareToken"));
+        debtToken = new TokenMock(makeAddr("debtToken"));
 
         tests = new SiloLendingLibBorrowTestData(
             protectedShareToken.ADDRESS(),
@@ -66,9 +70,9 @@ contract BorrowTest is Test {
                 receiver: receiver,
                 borrower: borrower,
                 sameAsset: false,
-                leverage: false,
-                totalCollateralAssets: totalCollateralAssets
+                leverage: false
             }),
+            totalCollateralAssets,
             totalDebt
         );
     }

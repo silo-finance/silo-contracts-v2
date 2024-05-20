@@ -1,14 +1,15 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
 import "forge-std/Test.sol";
 
-import {IERC20} from "openzeppelin-contracts/token/ERC20/IERC20.sol";
+import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
+import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
 
 import {MintableToken} from "../../_common/MintableToken.sol";
 import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
@@ -27,7 +28,7 @@ contract LeverageTest is SiloLittleHelper, Test {
     bool sameAsset;
 
     function setUp() public {
-        siloConfig = _setUpLocalFixture("ETH-USDC_UniswapV3_Silo");
+        siloConfig = _setUpLocalFixture(SiloConfigsNames.ETH_USDC_UNI_V3_SILO_NO_HOOK);
 
         assertTrue(siloConfig.getConfig(address(silo0)).maxLtv != 0, "we need borrow to be allowed");
     }
@@ -72,7 +73,7 @@ contract LeverageTest is SiloLittleHelper, Test {
         LeverageBorrowerMock leverageBorrowerMocked = new LeverageBorrowerMock(address(0));
         address borrower = makeAddr("borrower");
 
-        _deposit(assets, borrower, ISilo.AssetType.Collateral);
+        _deposit(assets, borrower, ISilo.CollateralType.Collateral);
 
         ILeverageBorrower leverageBorrower = ILeverageBorrower(leverageBorrowerMocked.ADDRESS());
 
@@ -95,7 +96,7 @@ contract LeverageTest is SiloLittleHelper, Test {
         LeverageBorrower leverageBorrower = new LeverageBorrower();
         address borrower = makeAddr("borrower");
 
-        _deposit(assets, borrower, ISilo.AssetType.Collateral);
+        _deposit(assets, borrower, ISilo.CollateralType.Collateral);
 
         // it will transfer it's own deposit, but because leverage is not for same token, we will fail eventually
         vm.expectCall(
@@ -120,7 +121,7 @@ contract LeverageTest is SiloLittleHelper, Test {
         LeverageBorrowerMock leverageBorrowerMocked = new LeverageBorrowerMock(address(0));
         address borrower = makeAddr("borrower");
 
-        _deposit(assets, borrower, ISilo.AssetType.Protected);
+        _deposit(assets, borrower, ISilo.CollateralType.Protected);
 
         ILeverageBorrower leverageBorrower = ILeverageBorrower(leverageBorrowerMocked.ADDRESS());
 
@@ -138,7 +139,7 @@ contract LeverageTest is SiloLittleHelper, Test {
         address borrower = makeAddr("borrower");
         address depositor = makeAddr("depositor");
 
-        _deposit(borrowAssets * 10, depositor, ISilo.AssetType.Collateral);
+        _deposit(borrowAssets * 10, depositor, ISilo.CollateralType.Collateral);
         token1.mint(address(leverageBorrower), depositAssets);
 
         bytes memory data = abi.encode(address(silo1), address(token1), depositAssets);
@@ -180,7 +181,7 @@ contract LeverageTest is SiloLittleHelper, Test {
         address borrower = makeAddr("borrower");
         address depositor = makeAddr("depositor");
 
-        _deposit(borrowAssets, depositor, ISilo.AssetType.Collateral);
+        _deposit(borrowAssets, depositor, ISilo.CollateralType.Collateral);
         token1.mint(address(leverageBorrower), depositAssets);
 
         uint256 maxBorrow = silo0.maxBorrow(borrower, sameAsset);
@@ -208,7 +209,7 @@ contract LeverageTest is SiloLittleHelper, Test {
         vm.prank(borrower);
         silo0.leverage(borrowAssets, leverageBorrower, borrower, sameAsset, data);
 
-        _deposit(borrowAssets, depositor, ISilo.AssetType.Collateral);
+        _deposit(borrowAssets, depositor, ISilo.CollateralType.Collateral);
 
         vm.prank(borrower);
         silo0.leverage(borrowAssets, leverageBorrower, borrower, sameAsset, data);

@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
 import "forge-std/Test.sol";
 
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
+import {IERC20Errors} from "openzeppelin5/interfaces/draft-IERC6093.sol";
 
 import {TokenMock} from "silo-core/test/foundry/_mocks/TokenMock.sol";
-import {SiloFixture} from "../../_common/fixtures/SiloFixture.sol";
 
 import {MintableToken} from "../../_common/MintableToken.sol";
 import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
@@ -40,11 +40,23 @@ contract BorrowAllowanceTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test --ffi -vv --mt test_borrow_WithoutAllowance
+    forge test --ffi -vv --mt test_borrow_WithoutAllowance_1
     */
-    function test_borrow_WithoutAllowance(bool _sameAsset) public { // TODO will it do just two runs?
-        vm.expectRevert("ERC20: insufficient allowance");
-        silo1.borrow(ASSETS, RECEIVER, BORROWER, _sameAsset);
+    function test_borrow_WithoutAllowance_1() public {
+        vm.expectRevert(
+            abi.encodeWithSelector(IERC20Errors.ERC20InsufficientAllowance.selector, address(this), 0, ASSETS)
+        );
+        silo1.borrow(ASSETS, RECEIVER, BORROWER, SAME_ASSET);
+    }
+
+    /*
+    forge test --ffi -vv --mt test_borrow_WithoutAllowance_2
+    */
+    function test_borrow_WithoutAllowance_2() public {
+        vm.expectRevert(
+            abi.encodeWithSelector(IERC20Errors.ERC20InsufficientAllowance.selector, address(this), 0, ASSETS)
+        );
+        silo1.borrow(ASSETS, RECEIVER, BORROWER, !SAME_ASSET);
     }
 
     /*

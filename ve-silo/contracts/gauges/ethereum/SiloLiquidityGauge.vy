@@ -13,10 +13,8 @@ interface ShareToken:
     def balanceOf(addr: address) -> uint256: view
     def totalSupply() -> uint256: view
     def silo() -> address: view
+    def hookReceiver() -> address: view
     def balanceOfAndTotalSupply(addr: address) -> (uint256, uint256): view
-
-interface HookReceiver:
-    def shareToken() -> address: view
 
 interface Silo:
     def factory() -> address: view
@@ -754,18 +752,18 @@ def _setRelativeWeightCap(relative_weight_cap: uint256):
     log RelativeWeightCapChanged(relative_weight_cap)
 
 @external
-def initialize(relative_weight_cap: uint256, hook_receiver: address):
+def initialize(relative_weight_cap: uint256, silo_share_token: address):
     """
     @notice Contract constructor
     """
-    assert hook_receiver != empty(address) # dev: silo hook receiver required
+    assert silo_share_token != empty(address) # dev: silo share token required
     assert self.hook_receiver == empty(address) # dev: already initialized
 
-    self.hook_receiver = hook_receiver
-    self.share_token = HookReceiver(hook_receiver).shareToken()
+    self.hook_receiver = ShareToken(silo_share_token).hookReceiver()
+    self.share_token = silo_share_token
     self.factory = msg.sender
 
-    silo: address = ShareToken(self.share_token).silo()
+    silo: address = ShareToken(silo_share_token).silo()
 
     self.silo = silo
     self.silo_factory = Silo(silo).factory()

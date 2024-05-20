@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
 import "forge-std/Test.sol";
 
-import {IERC20} from "openzeppelin-contracts/token/ERC20/IERC20.sol";
+import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
@@ -22,8 +22,10 @@ import {MintableToken} from "../_common/MintableToken.sol";
 contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
     using SiloLensLib for ISilo;
 
+    address constant DEPOSITOR = address(1);
     address constant BORROWER = address(0x123);
     uint256 constant COLLATERAL = 10e18;
+    uint256 constant COLLATERAL_FOR_BORROW = 8e18;
     uint256 constant DEBT = 7.5e18;
     bool constant SAME_TOKEN = false;
 
@@ -35,7 +37,7 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
     function setUp() public {
         siloConfig = _setUpLocalFixture();
 
-        _depositForBorrow(8e18, address(1));
+        _depositForBorrow(COLLATERAL_FOR_BORROW, DEPOSITOR);
 
         _depositCollateral(COLLATERAL, BORROWER, SAME_TOKEN);
         _borrow(DEBT, BORROWER, SAME_TOKEN);
@@ -289,6 +291,43 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
     }
 
     /*
+    forge test -vv --ffi --mt test_liquidationCall_DebtToCoverTooSmall_2tokens
+    */
+    function test_liquidationCall_DebtToCoverTooSmall_2tokens() public {
+        // move forward with time so we can have interests
+        uint256 timeForward = 9 days;
+        vm.warp(block.timestamp + timeForward);
+        assertLt(silo1.getLtv(BORROWER), 1e18, "expect insolvency, but not bad debt");
+        assertGt(silo1.getLtv(BORROWER), 0.98e18, "expect hi LTV so we force full liquidation");
+
+        (
+            uint256 collateralToLiquidate, uint256 debtToRepay
+        ) = partialLiquidation.maxLiquidation(address(silo1), BORROWER);
+
+        assertGt(debtToRepay, COLLATERAL_FOR_BORROW, "check for 0 liquidity");
+        assertEq(silo1.getLiquidity(), 0, "no liquidity because what was available is less than debt with interest");
+
+        // TODO is our liquidity calculation correct? here we have 8 tokens deposited and 7,5 borrowed
+        // in theory 0.5 is available, but because debt with interest is more than 8, liquidity is 0.
+        // vm.prank(DEPOSITOR);
+        // silo1.withdraw(1, DEPOSITOR, DEPOSITOR); // reverts with NotEnoughLiquidity, but balance is 0.5
+        // it is not bad, because it is just safer for users to not create more debt, but let's discuss
+
+        emit log_named_decimal_uint("balance of silo1", token1.balanceOf(address(silo1)), 18);
+        emit log_named_decimal_uint("collateralToLiquidate", collateralToLiquidate, 18);
+        emit log_named_decimal_uint("debtToRepay", debtToRepay, 18);
+        assertEq(debtToRepay, silo1.getDebtAssets(), "debtToRepay is max debt when we forcing full liquidation");
+
+        uint256 debtToCover = debtToRepay - 1; // -1 to check if tx reverts with DebtToCoverTooSmall
+        bool receiveSToken;
+
+        vm.expectRevert(IPartialLiquidation.DebtToCoverTooSmall.selector);
+        partialLiquidation.liquidationCall(
+            address(silo1), address(token0), address(token1), BORROWER, debtToCover, receiveSToken
+        );
+    }
+
+    /*
     forge test -vv --ffi --mt test_liquidationCall_badDebt_partial
     */
     function test_liquidationCall_badDebt_partial_2tokens() public {
@@ -460,7 +499,7 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
         }
 
         token1.mint(liquidator, maxRepay);
-        token1.increaseAllowance(address(silo1), maxRepay);
+        token1.approve(address(silo1), maxRepay);
 
         emit log_named_decimal_uint("[test] maxRepay", maxRepay, 18);
 

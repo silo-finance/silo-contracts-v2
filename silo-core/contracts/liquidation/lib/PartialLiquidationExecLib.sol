@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.21;
+pragma solidity 0.8.24;
 
-import {MathUpgradeable} from "openzeppelin-contracts-upgradeable/utils/math/MathUpgradeable.sol";
+import {Math} from "openzeppelin5/utils/math/Math.sol";
 
 import {ISilo} from "../../interfaces/ISilo.sol";
 import {ISiloConfig} from "../../interfaces/ISiloConfig.sol";
@@ -94,6 +94,8 @@ library PartialLiquidationExecLib {
         // safe because we adding same token, so it is under same total supply
         unchecked { sumOfCollateralAssets = ltvData.borrowerProtectedAssets + ltvData.borrowerCollateralAssets; }
 
+        if (sumOfCollateralValue == 0) return (sumOfCollateralAssets, ltvData.borrowerDebtAssets);
+
         return PartialLiquidationLib.maxLiquidation(
             sumOfCollateralAssets,
             sumOfCollateralValue,
@@ -120,7 +122,13 @@ library PartialLiquidationExecLib {
         unchecked  { sumOfCollateralAssets = _ltvData.borrowerCollateralAssets + _ltvData.borrowerProtectedAssets; }
 
         if (_ltvData.borrowerDebtAssets == 0 || _params.debtToCover == 0) return (0, 0);
-        if (sumOfCollateralAssets == 0) return (0, _params.debtToCover); // TODO cap
+
+        if (sumOfCollateralAssets == 0) {
+            return (
+                0,
+                _params.debtToCover > _ltvData.borrowerDebtAssets ? _ltvData.borrowerDebtAssets : _params.debtToCover
+            );
+        }
 
         (
             uint256 sumOfBorrowerCollateralValue, uint256 totalBorrowerDebtValue, uint256 ltvBefore

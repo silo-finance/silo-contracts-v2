@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
 import "forge-std/Test.sol";
 
@@ -23,7 +23,8 @@ contract InterestRateModelV2Test is Test, InterestRateModelConfigs {
     }
 
     function test_IRM_decimals() public {
-        assertEq(INTEREST_RATE_MODEL.decimals(), DP);
+        uint256 decimals = INTEREST_RATE_MODEL.decimals();
+        assertEq(DP, 10 ** decimals);
     }
 
     function test_IRM_RCOMP_MAX() public {

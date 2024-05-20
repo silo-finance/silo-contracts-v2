@@ -1,12 +1,22 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.5.0;
 
-import {
-    IERC20MetadataUpgradeable
-} from "openzeppelin-contracts-upgradeable/token/ERC20/extensions/IERC20MetadataUpgradeable.sol";
+import {IERC20Metadata} from "openzeppelin5/token/ERC20/extensions/IERC20Metadata.sol";
+
 import {ISilo} from "../interfaces/ISilo.sol";
 
-interface IShareToken is IERC20MetadataUpgradeable {
+interface IShareToken is IERC20Metadata {
+    struct HookSetup {
+        /// @param this is the same as in siloConfig
+        address hookReceiver;
+        /// @param hooks bitmap
+        uint24 hooksBefore;
+        /// @param hooks bitmap
+        uint24 hooksAfter;
+        /// @param tokenType must be one of this hooks values: COLLATERAL_TOKEN, PROTECTED_TOKEN, DEBT_TOKEN
+        uint24 tokenType;
+    }
+
     /// @notice Emitted every time receiver is notified about token transfer
     /// @param notificationReceiver receiver address
     /// @param success false if TX reverted on `notificationReceiver` side, otherwise true
@@ -14,7 +24,7 @@ interface IShareToken is IERC20MetadataUpgradeable {
 
     error Forbidden();
     error OnlySilo();
-    error RevertRequestFromHook();
+    error OnlySiloConfig();
     error OwnerIsZero();
     error RecipientIsZero();
     error ShareTransferNotAllowed();
@@ -23,8 +33,15 @@ interface IShareToken is IERC20MetadataUpgradeable {
     error SenderNotSolventAfterTransfer();
 
     /// @param _silo Silo address for which tokens was deployed
+    function initialize(ISilo _silo) external;
+
+    /// @notice method for SiloConfig to synchronize hooks
     /// @param _hookReceiver address that will get a callback on mint, burn and transfer of the token
-    function initialize(ISilo _silo, address _hookReceiver) external;
+    /// @param _hooksBefore hooks bitmap to trigger hooks BEFORE action
+    /// @param _hooksAfter hooks bitmap to trigger hooks AFTER action
+    /// @param _tokenType must be one of this hooks values: COLLATERAL_TOKEN, PROTECTED_TOKEN, DEBT_TOKEN
+    function synchronizeHooks(address _hookReceiver, uint24 _hooksBefore, uint24 _hooksAfter, uint24 _tokenType)
+        external;
 
     /// @notice Mint method for Silo to create debt
     /// @param _owner wallet for which to mint token
@@ -63,11 +80,13 @@ interface IShareToken is IERC20MetadataUpgradeable {
     /// @return totalSupply total supply of the token
     function balanceOfAndTotalSupply(address _account) external view returns (uint256 balance, uint256 totalSupply);
 
-    /// @notice Returns address of the contract that is called by share token on every transfer
-    /// @return hookReceiver address
-    function hookReceiver() external view returns (address hookReceiver);
-
     /// @notice Returns silo address for which token was deployed
     /// @return silo address
     function silo() external view returns (ISilo silo);
+
+    /// @notice Returns hook setup
+    function hookSetup() external view returns (HookSetup memory);
+
+    /// @notice Returns hook receiver address
+    function hookReceiver() external view returns (address);
 }

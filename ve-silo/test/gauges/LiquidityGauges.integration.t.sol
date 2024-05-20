@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.21;
+pragma solidity 0.8.24;
 
 import {ERC20, IERC20} from "openzeppelin-contracts/token/ERC20/ERC20.sol";
 import {IntegrationTest} from "silo-foundry-utils/networks/IntegrationTest.sol";
@@ -12,7 +12,6 @@ import {GaugeControllerDeploy} from "ve-silo/deploy/GaugeControllerDeploy.s.sol"
 import {SiloGovernorDeploy} from "ve-silo/deploy/SiloGovernorDeploy.s.sol";
 import {VeSiloContracts} from "ve-silo/deploy/_CommonDeploy.sol";
 import {IVeBoost} from "ve-silo/contracts/voting-escrow/interfaces/IVeBoost.sol";
-import {IHookReceiverMock as IHookReceiver} from "../_mocks/IHookReceiverMock.sol";
 import {IShareTokenLike as IShareToken} from "ve-silo/contracts/gauges/interfaces/IShareTokenLike.sol";
 import {ISiloMock as ISilo} from "ve-silo/test/_mocks/ISiloMock.sol";
 import {FeesManagerTest} from "ve-silo/test/silo-tokens-minter/FeesManager.unit.t.sol";
@@ -176,7 +175,7 @@ contract LiquidityGaugesTest is IntegrationTest {
     }
 
     function _createGauge(uint256 _weightCap) internal returns (ISiloLiquidityGauge gauge) {
-        gauge = ISiloLiquidityGauge(_factory.create(_weightCap, _hookReceiver));
+        gauge = ISiloLiquidityGauge(_factory.create(_weightCap, _shareToken));
     }
 
     function _dummySiloToken() internal {
@@ -232,9 +231,9 @@ contract LiquidityGaugesTest is IntegrationTest {
         );
 
         vm.mockCall(
-            _hookReceiver,
-            abi.encodeWithSelector(IHookReceiver.shareToken.selector),
-            abi.encode(_shareToken)
+            _shareToken,
+            abi.encodeWithSelector(IShareToken.hookReceiver.selector),
+            abi.encode(_hookReceiver)
         );
 
         vm.mockCall(

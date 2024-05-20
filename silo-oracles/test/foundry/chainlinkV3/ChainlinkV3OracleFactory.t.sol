@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: Unlicense
-pragma solidity 0.8.18;
+pragma solidity 0.8.24;
 
 import "../../../constants/Arbitrum.sol";
 
-import {IERC20Metadata} from "openzeppelin-contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import {IERC20Metadata} from "openzeppelin5/token/ERC20/extensions/IERC20Metadata.sol";
 import {TokensGenerator} from "../_common/TokensGenerator.sol";
 import {ChainlinkV3OracleConfig} from "../../../contracts/chainlinkV3/ChainlinkV3OracleConfig.sol";
 import {ChainlinkV3OracleFactory, ChainlinkV3Oracle, IChainlinkV3Oracle} from "../../../contracts/chainlinkV3/ChainlinkV3OracleFactory.sol";
@@ -56,7 +56,7 @@ contract ChainlinkV3OracleFactoryTest is ChainlinkV3Configs {
 
         emit log_named_decimal_uint("SPELL/USD", price, 6);
         assertEq(price, 403, ", SPELL/USD price is ~$0.000403");
-        assertEq(gasStart - gasEnd, 15628, "optimise gas");
+        assertEq(gasStart - gasEnd, 15538, "[ChainlinkV3OracleFactory_quote_SPELLinUSD] optimise gas");
     }
 
     /*
@@ -68,7 +68,7 @@ contract ChainlinkV3OracleFactoryTest is ChainlinkV3Configs {
         uint256 gasEnd = gasleft();
 
         emit log_named_uint("gas", gasStart - gasEnd);
-        assertEq(gasStart - gasEnd, 317100, "optimise gas for creation");
+        assertEq(gasStart - gasEnd, 338349, "[ChainlinkV3OracleFactory_quote_SPELLinETH] optimise gas for creation");
 
         gasStart = gasleft();
         uint256 price = oracle.quote(1e18, address(tokens["SPELL"]));
@@ -77,6 +77,6 @@ contract ChainlinkV3OracleFactoryTest is ChainlinkV3Configs {
 
         emit log_named_decimal_uint("SPELL/ETH", price, 18);
         assertEq(price, 235285547785, ", SPELL/USD price is ~$0.000403 => ETH@1716 => SPELL/ETH ~ 0.000403/1716 => 0.00000023");
-        assertEq(gasStart - gasEnd, 27700, "optimise gas");
+        assertEq(gasStart - gasEnd, 27606, "[ChainlinkV3OracleFactory_quote_SPELLinETH] optimise gas");
     }
 }

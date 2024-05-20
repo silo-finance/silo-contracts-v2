@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.5.0;
 
+import {IHookReceiver} from "../utils/hook-receivers/interfaces/IHookReceiver.sol";
+import {ISilo} from "./ISilo.sol";
+
 interface ISiloConfig {
     struct DebtInfo {
         bool debtPresent;
@@ -15,6 +18,9 @@ interface ISiloConfig {
 
         /// @notice The address of contract that will be responsible for executing liquidations
         address liquidationModule;
+
+        /// @notice Address of the hook receiver called on every before/after action on Silo
+        address hookReceiver;
 
         /// @notice Deployer's fee in 18 decimals points. Deployer will earn this fee based on the interest earned by
         /// the Silo.
@@ -56,16 +62,6 @@ interface ISiloConfig {
         /// @notice Indicates if a beforeQuote on oracle contract should be called before quoting price
         bool callBeforeQuote0;
 
-        /// @notice Address of the hook receiver called on every share token transfer for protected (non-borrowable)
-        /// collateral
-        address protectedHookReceiver0;
-
-        /// @notice Address of the hook receiver called on every share token transfer for collateral
-        address collateralHookReceiver0;
-
-        /// @notice Address of the hook receiver called on every share token transfer for debt
-        address debtHookReceiver0;
-
         /// @notice Address of the second token
         address token1;
 
@@ -100,16 +96,6 @@ interface ISiloConfig {
 
         /// @notice Indicates if a beforeQuote on oracle contract should be called before quoting price
         bool callBeforeQuote1;
-
-        /// @notice Address of the hook receiver called on every share token transfer for protected (non-borrowable)
-        /// collateral
-        address protectedHookReceiver1;
-
-        /// @notice Address of the hook receiver called on every share token transfer for collateral
-        address collateralHookReceiver1;
-
-        /// @notice Address of the hook receiver called on every share token transfer for debt
-        address debtHookReceiver1;
     }
 
     struct ConfigData {
@@ -129,29 +115,22 @@ interface ISiloConfig {
         uint256 liquidationFee;
         uint256 flashloanFee;
         address liquidationModule;
+        address hookReceiver;
         bool callBeforeQuote;
     }
 
     error OnlySilo();
     error OnlySiloOrLiquidationModule();
+    error OnlyShareToken();
     error OnlySiloOrDebtShareToken();
     error WrongSilo();
     error OnlyDebtShareToken();
     error DebtExistInOtherSilo();
     error NoDebt();
     error CollateralTypeDidNotChanged();
-
     error CrossReentrantCall();
-
-    /// @dev can be called only by silo, it opens debt for `_borrower`
-    /// @param _borrower borrower address
-    /// @param _sameAsset TRUE if `_borrower` open debt in the same token
-    /// @return collateralConfig The configuration data for collateral silo.
-    /// @return debtConfig The configuration data for debt silo.
-    /// @return debtInfo details about `borrower` debt
-    function openDebt(address _borrower, bool _sameAsset)
-        external
-        returns (ConfigData memory collateralConfig, ConfigData memory debtConfig, DebtInfo memory debtInfo);
+    error InvalidConfigOrder();
+    error FeeTooHigh();
 
     /// @dev should be called on debt transfer, it opens debt if `_to` address don't have one
     /// @param _sender sender address
@@ -162,23 +141,28 @@ interface ISiloConfig {
     /// @param _borrower borrower address
     function closeDebt(address _borrower) external;
 
-    /// @notice it will change collateral for existing debt, only silo can call it
-    /// @return collateralConfig The configuration data for collateral silo.
-    /// @return debtConfig The configuration data for debt silo.
-    /// @return debtInfo details about `borrower` debt
-    function changeCollateralType(address _borrower, bool _sameAsset)
-        external
-        returns (ConfigData memory collateralConfig, ConfigData memory debtConfig, DebtInfo memory debtInfo);
-
     /// @notice only silo method for cross Silo reentrancy
-    /// @param _entranceFrom see CrossEntrancy lib for possible values
-    function crossNonReentrantBefore(uint256 _entranceFrom) external;
+    function crossNonReentrantBefore(uint256 _action) external;
 
     /// @notice only silo method for cross Silo reentrancy
     function crossNonReentrantAfter() external;
 
-    /// @notice vew method for checking cross Silo git pushreentrancy flag
-    function crossReentrancyGuardEntered() external view returns (bool);
+    function accrueInterestAndGetConfig(address _silo, uint256 _action) external returns (ConfigData memory);
+
+    function accrueInterestAndGetConfigs(address _silo, address _borrower, uint256 _action)
+        external
+        returns (ConfigData memory collateralConfig, ConfigData memory debtConfig, DebtInfo memory debtInfo);
+
+    function accrueInterestAndGetConfigOptimised(
+        uint256 _action,
+        ISilo.CollateralType _collateralType
+    ) external returns (address shareToken, address asset, address hookReceiver, address liquidationModule);
+
+    /// @notice view method for checking cross Silo reentrancy flag
+    /// @return entered true if the reentrancy guard is currently set to "entered", which indicates there is a
+    /// `nonReentrant` function in the call stack.
+    /// @return status precise status of reentrancy, see CrossEntrancy.sol for possible values
+    function crossReentrantStatus() external view returns (bool entered, uint256 status);
 
     // solhint-disable-next-line func-name-mixedcase
     function SILO_ID() external view returns (uint256);
@@ -199,11 +183,11 @@ interface ISiloConfig {
     /// @param _silo The address of the silo for which configuration data is being retrieved. Config for this silo will
     /// be at index 0.
     /// @param borrower borrower address for which `debtInfo` will be returned
-    /// @param _method always zero for external usage
+    /// @param _action hook flag that will determine action
     /// @return collateralConfig The configuration data for collateral silo.
     /// @return debtConfig The configuration data for debt silo.
     /// @return debtInfo details about `borrower` debt
-    function getConfigs(address _silo, address borrower, uint256 _method)
+    function getConfigs(address _silo, address borrower, uint256 _action)
         external
         view
         returns (ConfigData memory collateralConfig, ConfigData memory debtConfig, DebtInfo memory debtInfo);

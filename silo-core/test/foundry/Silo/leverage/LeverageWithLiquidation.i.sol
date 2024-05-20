@@ -1,28 +1,32 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
 import "forge-std/Test.sol";
 
+import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
+import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
 
 import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
 import {LeverageBorrower, ILeverageBorrower} from "../../_common/LeverageBorrower.sol";
+import {MintableToken} from "../../_common/MintableToken.sol";
 
 /*
     forge test -vv --ffi --mc LeverageWithLiquidationTest
 */
 contract LeverageWithLiquidationTest is SiloLittleHelper, Test, ILeverageBorrower {
     using SiloLensLib for ISilo;
+    using SafeERC20 for MintableToken;
 
     bool sameAsset;
 
     bytes32 public constant LEVERAGE_CALLBACK = keccak256("ILeverageBorrower.onLeverage");
 
     function setUp() public {
-        ISiloConfig siloConfig = _setUpLocalFixture("ETH-USDC_UniswapV3_Silo");
+        ISiloConfig siloConfig = _setUpLocalFixture(SiloConfigsNames.ETH_USDC_UNI_V3_SILO_NO_HOOK);
         assertTrue(siloConfig.getConfig(address(silo0)).maxLtv != 0, "we need borrow to be allowed");
     }
 
@@ -82,7 +86,7 @@ contract LeverageWithLiquidationTest is SiloLittleHelper, Test, ILeverageBorrowe
         address collateralAsset = address(token0);
         address debtAsset = _asset;
 
-        token1.approve(msg.sender, 1e18);
+        token1.safeIncreaseAllowance(msg.sender, 1e18);
 
         partialLiquidation.liquidationCall(
             msg.sender, collateralAsset, debtAsset, _borrower, type(uint256).max, TWO_ASSETS

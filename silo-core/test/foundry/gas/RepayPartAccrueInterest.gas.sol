@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
 import "forge-std/Test.sol";
 
@@ -25,13 +25,14 @@ contract RepayPartAccrueInterestGasTest is Gas, Test {
         vm.warp(block.timestamp + 1 days);
     }
 
+    // forge test -vv --ffi --mt test_gas_repayPartWithInterest
     function test_gas_repayPartWithInterest() public {
         _action(
             BORROWER,
             address(silo1),
             abi.encodeWithSignature("repay(uint256,address)", ASSETS / 2, BORROWER),
             "RepayPartAccrueInterest partial with accrue interest",
-            140568
+            134217
         );
     }
 }

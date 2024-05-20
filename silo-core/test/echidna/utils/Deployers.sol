@@ -1,12 +1,12 @@
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
 // Utilities
 import {VyperDeployer} from "./VyperDeployer.sol";
 import {Data} from "../data/Data.sol";
 
 // External dependencies
-import {OwnableUpgradeable} from "openzeppelin-contracts-upgradeable/access/OwnableUpgradeable.sol";
-import {TimelockController} from "openzeppelin-contracts/governance/TimelockController.sol";
+import {Ownable} from "openzeppelin5/access/Ownable.sol";
+import {TimelockController} from "openzeppelin5/governance/TimelockController.sol";
 import {IVotingEscrow} from "balancer-labs/v2-interfaces/liquidity-mining/IVotingEscrow.sol";
 
 // ve-silo dependencies
@@ -25,7 +25,6 @@ import {IInterestRateModelV2ConfigFactory, InterestRateModelV2ConfigFactory} fro
 import {IInterestRateModelV2, InterestRateModelV2} from "silo-core/contracts/interestRateModel/InterestRateModelV2.sol";
 import {IInterestRateModelV2Config, InterestRateModelV2Config} from "silo-core/contracts/interestRateModel/InterestRateModelV2Config.sol";
 import {IGaugeHookReceiver, GaugeHookReceiver} from "silo-core/contracts/utils/hook-receivers/gauge/GaugeHookReceiver.sol";
-import {IHookReceiversFactory, HookReceiversFactory} from "silo-core/contracts/utils/hook-receivers/HookReceiversFactory.sol";
 import {ISiloConfig, SiloConfig} from "silo-core/contracts/SiloConfig.sol";
 
 contract Deployers is VyperDeployer, Data {
@@ -41,7 +40,6 @@ contract Deployers is VyperDeployer, Data {
     IInterestRateModelV2ConfigFactory interestRateModelV2ConfigFactory;
     IInterestRateModelV2 interestRateModelV2;
     IGaugeHookReceiver hookReceiver;
-    IHookReceiversFactory hookReceiverFactory;
     ISiloDeployer siloDeployer;
     PartialLiquidation liquidationModule;
 
@@ -84,9 +82,7 @@ contract Deployers is VyperDeployer, Data {
             liquidationFee0: 0.0500e18,
             flashloanFee0: 0.0100e18,
             callBeforeQuote0: true,
-            protectedHookReceiver0: hookReceivers["GaugeHookReceiver"],
-            collateralHookReceiver0: hookReceivers["GaugeHookReceiver"],
-            debtHookReceiver0: hookReceivers[""],
+            hookReceiver: hookReceivers["GaugeHookReceiver"],
             token1: _tokens["USDC"],
             solvencyOracle1: oracles["UniV3-ETH-USDC-0.3"],
             maxLtvOracle1: oracles[""],
@@ -96,10 +92,7 @@ contract Deployers is VyperDeployer, Data {
             lt1: 0.9500e18,
             liquidationFee1: 0.0250e18,
             flashloanFee1: 0.0100e18,
-            callBeforeQuote1: true,
-            protectedHookReceiver1: hookReceivers["GaugeHookReceiver"],
-            collateralHookReceiver1: hookReceivers["GaugeHookReceiver"],
-            debtHookReceiver1: hookReceivers[""]
+            callBeforeQuote1: true
         });
 
         // We set up the mock data, without oracles and receivers
@@ -111,10 +104,7 @@ contract Deployers is VyperDeployer, Data {
         mocks.maxLtvOracle0 = address(0);
         mocks.callBeforeQuote0 = false;
         mocks.callBeforeQuote1 = false;
-        mocks.protectedHookReceiver0 = address(0);
-        mocks.protectedHookReceiver1 = address(0);
-        mocks.collateralHookReceiver0 = address(0);
-        mocks.collateralHookReceiver1 = address(0);
+        mocks.hookReceiver = address(0);
 
         siloData["MOCK"] = mocks;
     }
@@ -185,7 +175,6 @@ contract Deployers is VyperDeployer, Data {
         core_deployInterestRateConfigFactory();
         core_deployInterestRateModel();
         core_deployGaugeHookReceiver();
-        core_deployHookReceiverFactory();
         core_deploySiloDeployer();
     }
 
@@ -223,10 +212,8 @@ contract Deployers is VyperDeployer, Data {
         );
 
         address timelock = address(timelockController);
-        OwnableUpgradeable(address(siloFactory)).transferOwnership(timelock);
-        OwnableUpgradeable(address(siloFactoryInternal)).transferOwnership(
-            timelock
-        );
+        Ownable(address(siloFactory)).transferOwnership(timelock);
+        Ownable(address(siloFactoryInternal)).transferOwnership(timelock);
     }
 
     function core_deployInterestRateConfigFactory() internal {
@@ -253,22 +240,7 @@ contract Deployers is VyperDeployer, Data {
         liquidationModule = new PartialLiquidation();
     }
 
-    function core_deployHookReceiverFactory() internal {
-        hookReceiverFactory = IHookReceiversFactory(
-            address(new HookReceiversFactory())
-        );
-    }
-
     function core_deploySiloDeployer() internal {
-        siloDeployer = ISiloDeployer(
-            address(
-                new SiloDeployer(
-                    interestRateModelV2ConfigFactory,
-                    siloFactory,
-                    hookReceiverFactory,
-                    address(timelockController)
-                )
-            )
-        );
+        siloDeployer = ISiloDeployer(address(new SiloDeployer(interestRateModelV2ConfigFactory, siloFactory)));
     }
 }

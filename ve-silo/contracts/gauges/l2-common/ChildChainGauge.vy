@@ -11,10 +11,8 @@ interface ShareToken:
     def balanceOf(addr: address) -> uint256: view
     def totalSupply() -> uint256: view
     def silo() -> address: view
+    def hookReceiver() -> address: view
     def balanceOfAndTotalSupply(addr: address) -> (uint256, uint256): view
-
-interface HookReceiver:
-    def shareToken() -> address: view
 
 interface Silo:
     def factory() -> address: view
@@ -662,14 +660,14 @@ def authorizer_adaptor() -> address:
 
 
 @external
-def initialize(hook_receiver: address, _version: String[128]):
-    assert hook_receiver != empty(address) # dev: silo hook receiver required
+def initialize(silo_share_token: address, _version: String[128]):
+    assert silo_share_token != empty(address) # dev: silo share token required
     assert self.hook_receiver == empty(address) # dev: already initialized
 
     self.version = _version
     self.factory = msg.sender
-    self.hook_receiver = hook_receiver
-    self.share_token = HookReceiver(hook_receiver).shareToken()
+    self.hook_receiver = ShareToken(silo_share_token).hookReceiver()
+    self.share_token = silo_share_token
     
     silo: address = ShareToken(self.share_token).silo()
 

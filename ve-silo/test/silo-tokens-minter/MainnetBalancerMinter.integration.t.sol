@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.21;
+pragma solidity 0.8.24;
 
 import {ERC20 as ERC20WithoutMint, IERC20} from "openzeppelin-contracts/token/ERC20/ERC20.sol";
 import {Ownable} from "openzeppelin-contracts/access/Ownable.sol";
@@ -17,7 +17,6 @@ import {MainnetBalancerMinterDeploy, IBalancerTokenAdmin, IBalancerMinter}
 import {VeSiloContracts} from "ve-silo/deploy/_CommonDeploy.sol";
 import {IVeBoost} from "ve-silo/contracts/voting-escrow/interfaces/IVeBoost.sol";
 import {IExtendedOwnable} from "ve-silo/contracts/access/IExtendedOwnable.sol";
-import {IHookReceiverMock as IHookReceiver} from "../_mocks/IHookReceiverMock.sol";
 import {IShareTokenLike as IShareToken} from "ve-silo/contracts/gauges/interfaces/IShareTokenLike.sol";
 import {ISiloMock as ISilo} from "ve-silo/test/_mocks/ISiloMock.sol";
 import {IFeesManager} from "ve-silo/contracts/silo-tokens-minter/interfaces/IFeesManager.sol";
@@ -93,9 +92,9 @@ contract MainnetBalancerMinterTest is IntegrationTest {
         IExtendedOwnable(address(_balancerTokenAdmin)).changeManager(address(_minter));
 
         vm.mockCall(
-            _hookReceiver,
-            abi.encodeWithSelector(IHookReceiver.shareToken.selector),
-            abi.encode(_shareToken)
+            _shareToken,
+            abi.encodeWithSelector(IShareToken.hookReceiver.selector),
+            abi.encode(_hookReceiver)
         );
 
         vm.mockCall(
@@ -110,7 +109,7 @@ contract MainnetBalancerMinterTest is IntegrationTest {
             abi.encode(_siloFactory)
         );
 
-        _gauge = ISiloLiquidityGauge(_factory.create(_WEIGHT_CAP, _hookReceiver));
+        _gauge = ISiloLiquidityGauge(_factory.create(_WEIGHT_CAP, _shareToken));
 
         _mockCallsForTest();
 

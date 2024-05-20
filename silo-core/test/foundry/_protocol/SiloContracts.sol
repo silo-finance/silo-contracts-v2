@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
 import {Deployments} from "silo-foundry-utils/lib/Deployments.sol";
 import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";
@@ -23,7 +23,6 @@ import {IMainnetBalancerMinter} from "ve-silo/contracts/silo-tokens-minter/inter
 // silo-core
 import {SiloCoreContracts, SiloCoreDeployments} from "silo-core/common/SiloCoreContracts.sol";
 import {ISiloFactory} from "silo-core/contracts/interfaces/ISiloFactory.sol";
-import {IHookReceiversFactory} from "silo-core/contracts/utils/hook-receivers/interfaces/IHookReceiversFactory.sol";
 import {IGaugeHookReceiver} from "silo-core/contracts/utils/hook-receivers/gauge/interfaces/IGaugeHookReceiver.sol";
 import {IInterestRateModelV2} from "silo-core/contracts/interfaces/IInterestRateModelV2.sol";
 import {IInterestRateModelV2ConfigFactory} from "silo-core/contracts/interfaces/IInterestRateModelV2ConfigFactory.sol";
@@ -52,7 +51,6 @@ contract SiloContracts {
     IMainnetBalancerMinter public mainnetMinter;
     // silo-core
     IGaugeHookReceiver public gaugeHookReceiver;
-    IHookReceiversFactory public hookReceiversFactory;
     IInterestRateModelV2 public interestRateModelV2;
     IInterestRateModelV2ConfigFactory public interestRateModelV2ConfigFactory;
     ISiloFactory public siloFactory;
@@ -106,10 +104,6 @@ contract SiloContracts {
 
         interestRateModelV2 = IInterestRateModelV2(
             SiloCoreDeployments.get(SiloCoreContracts.INTEREST_RATE_MODEL_V2, chainAlias)
-        );
-
-        hookReceiversFactory = IHookReceiversFactory(
-            SiloCoreDeployments.get(SiloCoreContracts.HOOK_RECEIVERS_FACTORY, chainAlias)
         );
     }
 

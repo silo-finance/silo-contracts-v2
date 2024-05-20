@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.21;
+pragma solidity 0.8.24;
 
 import {ERC20, IERC20} from "openzeppelin-contracts/token/ERC20/ERC20.sol";
 
@@ -10,7 +10,6 @@ import {IChildChainGaugeFactory} from "ve-silo/contracts/gauges/interfaces/IChil
 import {VeSiloContracts} from "ve-silo/deploy/_CommonDeploy.sol";
 import {ChildChainGaugeFactoryDeploy} from "ve-silo/deploy/ChildChainGaugeFactoryDeploy.s.sol";
 import {AddrKey} from "common/addresses/AddrKey.sol";
-import {IHookReceiverMock as IHookReceiver} from "../_mocks/IHookReceiverMock.sol";
 import {IShareTokenLike as IShareToken} from "ve-silo/contracts/gauges/interfaces/IShareTokenLike.sol";
 import {ISiloMock as ISilo} from "ve-silo/test/_mocks/ISiloMock.sol";
 import {FeesManagerTest} from "ve-silo/test/silo-tokens-minter/FeesManager.unit.t.sol";
@@ -171,7 +170,7 @@ contract ChildChainGaugesTest is IntegrationTest {
     }
 
     function _createGauge() internal returns (ISiloChildChainGauge gauge) {
-        gauge = ISiloChildChainGauge(_factory.create(_hookReceiver));
+        gauge = ISiloChildChainGauge(_factory.create(_shareToken));
         vm.label(address(gauge), "gauge");
     }
 
@@ -203,9 +202,9 @@ contract ChildChainGaugesTest is IntegrationTest {
         );
 
         vm.mockCall(
-            _hookReceiver,
-            abi.encodeWithSelector(IHookReceiver.shareToken.selector),
-            abi.encode(_shareToken)
+            _shareToken,
+            abi.encodeWithSelector(IShareToken.hookReceiver.selector),
+            abi.encode(_hookReceiver)
         );
 
         vm.mockCall(

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
 import {console2} from "forge-std/console2.sol";
 import {KeyValueStorage as KV} from "silo-foundry-utils/key-value/KeyValueStorage.sol";
@@ -57,17 +57,13 @@ contract SiloDeploy is CommonDeploy {
 
         console2.log("[SiloCommonDeploy] using CONFIG: ", configName);
 
-        (SiloConfigData.ConfigData memory config, ISiloConfig.InitData memory siloInitData) =
-            siloData.getConfigData(configName);
+        (
+            SiloConfigData.ConfigData memory config,
+            ISiloConfig.InitData memory siloInitData,
+            address hookReceiverImplementation
+        ) = siloData.getConfigData(configName);
 
         console2.log("[SiloCommonDeploy] Config prepared");
-
-        address interestRateModel = _resolveDeployedContract(SiloCoreContracts.INTEREST_RATE_MODEL_V2);
-
-        siloInitData.interestRateModel0 = interestRateModel;
-        siloInitData.interestRateModel1 = interestRateModel;
-
-        siloInitData.liquidationModule = _resolveDeployedContract(SiloCoreContracts.PARTIAL_LIQUIDATION);
 
         InterestRateModelConfigData modelData = new InterestRateModelConfigData();
 
@@ -92,6 +88,7 @@ contract SiloDeploy is CommonDeploy {
             oracles,
             irmConfigData0,
             irmConfigData1,
+            _getClonableHookReceiverConfig(hookReceiverImplementation),
             siloInitData
         );
 
@@ -262,7 +259,14 @@ contract SiloDeploy is CommonDeploy {
         isDiaOracle = diaOracle != address(0);
     }
 
-    function beforeCreateSilo(ISiloConfig.InitData memory) internal virtual {
-        // hook for any action before creating silo
+    function beforeCreateSilo(
+        ISiloConfig.InitData memory
+    ) internal virtual {
+    }
+
+    function _getClonableHookReceiverConfig(address _implementation)
+        internal
+        virtual
+        returns (ISiloDeployer.ClonableHookReceiver memory hookReceiver) {
     }
 }

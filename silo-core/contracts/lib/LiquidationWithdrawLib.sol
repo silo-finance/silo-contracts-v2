@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.21;
+pragma solidity ^0.8.20;
 
 import {ISilo} from "../interfaces/ISilo.sol";
 import {IShareToken} from "../interfaces/IShareToken.sol";
@@ -7,6 +7,8 @@ import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
 import {SiloMathLib} from "./SiloMathLib.sol";
 import {SiloERC4626Lib} from "./SiloERC4626Lib.sol";
 import {Rounding} from "./Rounding.sol";
+import {AssetTypes} from "./AssetTypes.sol";
+import {Hook} from "./Hook.sol";
 
 library LiquidationWithdrawLib {
     /// @dev that method allow to finish liquidation process by giving up collateral to liquidator
@@ -18,7 +20,7 @@ library LiquidationWithdrawLib {
         address _liquidator,
         bool _receiveSToken,
         uint256 _liquidity,
-        mapping(ISilo.AssetType => ISilo.Assets) storage _total
+        mapping(uint256 assetType => ISilo.Assets) storage _total
     ) internal {
         ISiloConfig.ConfigData memory collateralConfig = _config.getConfig(address(this));
         if (msg.sender != collateralConfig.liquidationModule) revert ISilo.OnlyLiquidationModule();
@@ -31,8 +33,8 @@ library LiquidationWithdrawLib {
                 _withdrawAssetsFromProtected,
                 _borrower,
                 _liquidator,
-                _total[ISilo.AssetType.Collateral].assets,
-                _total[ISilo.AssetType.Protected].assets
+                _total[AssetTypes.COLLATERAL].assets,
+                _total[AssetTypes.PROTECTED].assets
             );
         } else {
             withdrawCollateralToLiquidator(
@@ -55,20 +57,22 @@ library LiquidationWithdrawLib {
         address _borrower,
         address _liquidator,
         uint256 _liquidity,
-        mapping(ISilo.AssetType => ISilo.Assets) storage _total
+        mapping(uint256 assetType => ISilo.Assets) storage _total
     ) internal {
         if (_withdrawAssetsFromProtected != 0) {
             SiloERC4626Lib.withdraw(
                 _collateralConfig.token,
                 _collateralConfig.protectedShareToken,
-                _withdrawAssetsFromProtected,
-                0, // shares
-                _liquidator,
-                _borrower,
-                _borrower,
-                ISilo.AssetType.Protected,
-                type(uint256).max,
-                _total[ISilo.AssetType.Protected]
+                ISilo.WithdrawArgs({
+                    assets: _withdrawAssetsFromProtected,
+                    shares: 0,
+                    receiver: _liquidator,
+                    owner: _borrower,
+                    spender: _borrower,
+                    collateralType: ISilo.CollateralType.Protected
+                }),
+                _total[AssetTypes.PROTECTED].assets,
+                _total[AssetTypes.PROTECTED]
             );
         }
 
@@ -76,14 +80,16 @@ library LiquidationWithdrawLib {
             SiloERC4626Lib.withdraw(
                 _collateralConfig.token,
                 _collateralConfig.collateralShareToken,
-                _withdrawAssetsFromCollateral,
-                0, // shares
-                _liquidator,
-                _borrower,
-                _borrower,
-                ISilo.AssetType.Collateral,
+                ISilo.WithdrawArgs({
+                    assets: _withdrawAssetsFromCollateral,
+                    shares: 0,
+                    receiver: _liquidator,
+                    owner: _borrower,
+                    spender: _borrower,
+                    collateralType: ISilo.CollateralType.Collateral
+                }),
                 _liquidity,
-                _total[ISilo.AssetType.Collateral]
+                _total[AssetTypes.COLLATERAL]
             );
         }
     }
@@ -105,7 +111,8 @@ library LiquidationWithdrawLib {
                 _liquidator,
                 _withdrawAssetsFromProtected,
                 _totalProtectedAssets,
-                IShareToken(_collateralProtectedShareToken)
+                IShareToken(_collateralProtectedShareToken),
+                ISilo.AssetType.Protected
             );
         }
 
@@ -115,7 +122,8 @@ library LiquidationWithdrawLib {
                 _liquidator,
                 _withdrawAssetsFromCollateral,
                 _totalCollateralAssets,
-                IShareToken(_collateralShareToken)
+                IShareToken(_collateralShareToken),
+                ISilo.AssetType.Collateral
             );
         }
     }
@@ -127,7 +135,8 @@ library LiquidationWithdrawLib {
         address _liquidator,
         uint256 _amountToLiquidate,
         uint256 _totalAssets,
-        IShareToken _shareToken
+        IShareToken _shareToken,
+        ISilo.AssetType _assetType
     ) internal {
         // we already accrued interest, so we can work directly on assets
         uint256 shares = SiloMathLib.convertToShares(
@@ -135,7 +144,7 @@ library LiquidationWithdrawLib {
             _totalAssets,
             _shareToken.totalSupply(),
             Rounding.LIQUIDATE_TO_SHARES,
-            ISilo.AssetType.Collateral
+            _assetType
         );
 
         _shareToken.forwardTransfer(_borrower, _liquidator, shares);

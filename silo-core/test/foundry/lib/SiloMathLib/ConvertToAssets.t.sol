@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
 import "forge-std/Test.sol";
-import {StringsUpgradeable as Strings} from "openzeppelin-contracts-upgradeable/utils/StringsUpgradeable.sol";
+import {Strings} from "openzeppelin5/utils/Strings.sol";
 
-import {SiloMathLib, ISilo, MathUpgradeable} from "silo-core/contracts/lib/SiloMathLib.sol";
+import {SiloMathLib, ISilo, Math} from "silo-core/contracts/lib/SiloMathLib.sol";
 import {Rounding} from "silo-core/contracts/lib/Rounding.sol";
 
 // forge test -vv --mc ConvertToAssetsTest
@@ -13,7 +13,7 @@ contract ConvertToAssetsTest is Test {
         uint256 shares;
         uint256 totalAssets;
         uint256 totalShares;
-        MathUpgradeable.Rounding rounding;
+        Math.Rounding rounding;
         ISilo.AssetType assetType;
         uint256 result;
     }

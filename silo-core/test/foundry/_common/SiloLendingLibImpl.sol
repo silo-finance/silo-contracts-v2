@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
@@ -31,9 +31,9 @@ contract SiloLendingLibImpl {
                 receiver: _receiver,
                 borrower: _borrower,
                 sameAsset: false,
-                leverage: false,
-                totalCollateralAssets: _totalCollateralAssets
+                leverage: false
             }),
+            _totalCollateralAssets,
             totalDebt
         );
 

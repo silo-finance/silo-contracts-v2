@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.21;
+pragma solidity 0.8.24;
 
 import {IERC20R} from "../interfaces/IERC20R.sol";
 import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
 import {SiloLensLib} from "../lib/SiloLensLib.sol";
-import {IShareToken, ShareToken, ISiloFactory, ISilo} from "./ShareToken.sol";
+import {IShareToken, ShareToken, ISilo} from "./ShareToken.sol";
 
 /// @title ShareDebtToken
 /// @notice ERC20 compatible token representing debt in Silo
@@ -21,8 +21,8 @@ contract ShareDebtToken is IERC20R, ShareToken {
     mapping(address owner => mapping(address recipient => uint256 allowance)) private _receiveAllowances;
 
     /// @param _silo Silo address for which tokens was deployed
-    function initialize(ISilo _silo, address _hookReceiver) external virtual initializer {
-        __ShareToken_init(_silo, _hookReceiver);
+    function initialize(ISilo _silo) external virtual initializer {
+        __ShareToken_init(_silo);
     }
 
     /// @inheritdoc IShareToken
@@ -44,7 +44,15 @@ contract ShareDebtToken is IERC20R, ShareToken {
     /// @inheritdoc IERC20R
     function decreaseReceiveAllowance(address _owner, uint256 _subtractedValue) public virtual override {
         uint256 currentAllowance = _receiveAllowances[_owner][_msgSender()];
-        _setReceiveApproval(_owner, _msgSender(), currentAllowance - _subtractedValue);
+
+        uint256 newAllowance;
+
+        unchecked {
+            // We will not underflow because of the condition `currentAllowance < _subtractedValue`
+            newAllowance = currentAllowance < _subtractedValue ? 0 : currentAllowance - _subtractedValue;
+        }
+
+        _setReceiveApproval(_owner, _msgSender(), newAllowance);
     }
 
     /// @inheritdoc IERC20R
@@ -92,8 +100,6 @@ contract ShareDebtToken is IERC20R, ShareToken {
 
     /// @dev Check if recipient is solvent after debt transfer
     function _afterTokenTransfer(address _sender, address _recipient, uint256 _amount) internal virtual override {
-        ShareToken._afterTokenTransfer(_sender, _recipient, _amount);
-
         // debt transfer is such a rare use case and extra gas is worth additional security,
         // so we do not return even when _amount == 0
 
@@ -101,10 +107,18 @@ contract ShareDebtToken is IERC20R, ShareToken {
         // if we are NOT minting and not burning, it means we are transferring
         // make sure that _recipient is solvent after transfer
         if (_isTransfer(_sender, _recipient)) {
+            _callOracleBeforeQuote(_recipient);
             if (!silo.isSolvent(_recipient)) revert RecipientNotSolventAfterTransfer();
         }
 
         // we need to close debt on transfer and burn
-        if (_sender != address(0) && balanceOf(_sender) == 0) siloConfig.closeDebt(_sender);
+        if (_sender != address(0) && balanceOf(_sender) == 0) {
+            // we can have debt in one silo only, so when you transfer all your debt we can close position
+            // we can close only when _amount > 0, otherwise you can transfer 0 and close debt in other silo
+            // TODO write test case for this, it was a bug
+            if (_amount != 0) siloConfig.closeDebt(_sender);
+        }
+
+        ShareToken._afterTokenTransfer(_sender, _recipient, _amount);
     }
 }

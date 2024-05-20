@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
-import "forge-std/Test.sol";
+import {Test} from "forge-std/Test.sol";
 
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
+import {IERC20Errors} from "openzeppelin5/interfaces/draft-IERC6093.sol";
 
-import {SiloFixture} from "../../_common/fixtures/SiloFixture.sol";
 import {MintableToken} from "../../_common/MintableToken.sol";
 import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
 
@@ -223,7 +223,16 @@ contract RepayTest is SiloLittleHelper, Test {
         // after previewRepayShares we move time, so we will not be able to repay all
         vm.warp(block.timestamp + 1 days);
 
-        _repayShares(previewRepay, shares, borrower, "ERC20: insufficient allowance");
+        uint256 currentPreview = silo1.previewRepayShares(shares);
+
+        _repayShares(
+            previewRepay, // this is our approval, it is less than `shares`
+            shares, // this is what we want to repay
+            borrower,
+            abi.encodeWithSelector(
+                IERC20Errors.ERC20InsufficientAllowance.selector, silo1, previewRepay, currentPreview
+            )
+        );
     }
 
     /*

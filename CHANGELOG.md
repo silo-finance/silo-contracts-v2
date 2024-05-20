@@ -5,6 +5,16 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+
+## [0.6.2] - 2024-05-15
+### Added
+ - deployment with mocked CCIP and tokens for Arbitrum and Optimism
+
+## [0.6.1] - 2024-05-14
+### Fixed
+- apply fixes for certora report
+
+## [0.6.0] - 2024-05-06
 ### Added
 - deposit to any silo without restrictions
 - borrow same token

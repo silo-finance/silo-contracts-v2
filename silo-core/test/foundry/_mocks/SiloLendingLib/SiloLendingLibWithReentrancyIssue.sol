@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.21;
+pragma solidity 0.8.24;
 
-import {SafeERC20Upgradeable} from "openzeppelin-contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
-import {IERC20Upgradeable} from "openzeppelin-contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
-import {MathUpgradeable} from "openzeppelin-contracts-upgradeable/utils/math/MathUpgradeable.sol";
+import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
+import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
+import {Math} from "openzeppelin5/utils/math/Math.sol";
 
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
@@ -12,7 +12,7 @@ import {SiloMathLib} from "silo-core/contracts/lib/SiloMathLib.sol";
 import {Rounding} from "silo-core/contracts/lib/Rounding.sol";
 
 library SiloLendingLibWithReentrancyIssue {
-    using SafeERC20Upgradeable for IERC20Upgradeable;
+    using SafeERC20 for IERC20;
 
     // deposit fn with reentrancy issue
     // original code can be found here:
@@ -44,7 +44,7 @@ library SiloLendingLibWithReentrancyIssue {
 
         // fee-on-transfer is ignored
         // If token reenters, no harm done because we didn't change the state yet.
-        IERC20Upgradeable(_configData.token).safeTransferFrom(_repayer, address(this), assets);
+        IERC20(_configData.token).safeTransferFrom(_repayer, address(this), assets);
         // subtract repayment from debt
         _totalDebt.assets = totalDebtAssets - assets;
         // Anyone can repay anyone's debt so no approval check is needed. If hook receiver reenters then
