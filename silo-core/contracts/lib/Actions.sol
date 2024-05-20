@@ -668,7 +668,6 @@ library Actions {
         if (address(hookReceiver) == address(0)) return;
 
         // there should be no hook calls, if you inside action eg inside leverage, liquidation etc
-        // TODO make sure we good inside leverage
         hookReceiver.beforeAction(address(this), _action, _data);
     }
 
