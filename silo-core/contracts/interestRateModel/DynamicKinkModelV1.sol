@@ -85,6 +85,11 @@ contract DynamicKinkModelV1 is IDynamicKinkModelV1 {
 
         unchecked {
             int256 T = _t1 - _t0;
+
+            if (T > HUNDRED_YEARS) {
+                T = HUNDRED_YEARS;
+            }
+
             int256 k;
 
             if (_u < _setup.config.u1) {
