@@ -4,6 +4,7 @@ pragma solidity ^0.8.20;
 import "forge-std/Test.sol";
 
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
+import {SafeCast} from "openzeppelin5/utils/math/SafeCast.sol";
 
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
@@ -21,6 +22,7 @@ import {MintableToken} from "../_common/MintableToken.sol";
 */
 contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
     using SiloLensLib for ISilo;
+    using SafeCast for uint256;
 
     address constant DEPOSITOR = address(1);
     address constant BORROWER = address(0x123);
@@ -300,8 +302,10 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
 
         _timeForward(1 days);
         _timeForward(2 days);
-        _timeForward(3 days);
-        _timeForward(3 days); // 9 days in total
+        _timeForward(2 days);
+        _timeForward(1 days);
+        _timeForward(2 days);
+        _timeForward(1 days); // 9 days in total
 
         assertLt(silo1.getLtv(BORROWER), 1e18, "expect insolvency, but not bad debt");
         assertGt(silo1.getLtv(BORROWER), 0.98e18, "expect hi LTV so we force full liquidation");
@@ -548,18 +552,34 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
         ) = partialLiquidation.maxLiquidation(address(silo1), BORROWER);
 
         (uint192 daoAndDeployerFees,) = silo1.siloData();
+        uint256 maxRepay = silo1.maxRepay(BORROWER);
+        uint256 interest = maxRepay - DEBT - daoAndDeployerFees;
+        uint256 liquidity = silo1.getLiquidity();
 
         emit log_named_decimal_uint("balance of silo1", token1.balanceOf(address(silo1)), 18);
-        emit log_named_decimal_uint("silo1.getLiquidity()", silo1.getLiquidity(), 18);
+        emit log_named_decimal_uint("silo1.getLiquidity()", liquidity, 18);
+
         emit log_named_decimal_uint("daoAndDeployerFees", daoAndDeployerFees, 18);
-        emit log_named_decimal_uint("fee + liquidity", daoAndDeployerFees + silo1.getLiquidity(), 18);
+        emit log_named_decimal_uint("interest", interest, 18);
+
+        emit log("(8 - debt) + fee == liquidity == deposited + interest");
+
+        emit log_named_decimal_uint(
+            "(8 - debt) + fee",
+            COLLATERAL_FOR_BORROW - DEBT + daoAndDeployerFees,
+            18
+        );
+
+        emit log_named_decimal_uint("deposited + interest", COLLATERAL_FOR_BORROW + interest, 18);
+
+        emit log_named_decimal_uint("borrower debt", maxRepay, 18);
+        emit log_named_decimal_uint("debt + liquidity", maxRepay + silo1.getLiquidity(), 18);
 
         uint256 collateralBalanceOfUnderlying = siloLens.collateralBalanceOfUnderlying(
             silo0, address(token0), BORROWER
         );
 
         emit log_named_decimal_uint("borrower collateral", collateralBalanceOfUnderlying, 18);
-        emit log_named_decimal_uint("borrower debt", silo1.maxRepay(BORROWER), 18);
         emit log_named_decimal_uint("collateralToLiquidate", collateralToLiquidate, 18);
         emit log_named_decimal_uint("debtToRepay", debtToRepay, 18);
     }

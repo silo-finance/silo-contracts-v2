@@ -45,7 +45,11 @@ contract SiloLens is ISiloLens {
     }
 
     /// @inheritdoc ISiloLens
-    function collateralBalanceOfUnderlying(ISilo _silo, address, address _borrower) {
+    function collateralBalanceOfUnderlying(ISilo _silo, address, address _borrower)
+        public
+        view
+        returns (uint256 borrowerCollateral)
+    {
         return collateralBalanceOfUnderlying(_silo, _borrower);
     }
 
