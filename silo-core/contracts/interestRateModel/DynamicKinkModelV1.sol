@@ -5,14 +5,14 @@ import {PRBMathSD59x18} from "../lib/PRBMathSD59x18.sol";
 import {IDynamicKinkModelV1} from "../interfaces/IDynamicKinkModelV1.sol";
 
 // solhint-disable var-name-mixedcase
+// solhint-disable-line function-max-lines
+// solhint-disable-line code-complexity
 
 /// @title DynamicKinkModelV1
 /// @notice Refer to Silo DynamicKinkModelV1 paper for more details.
 /// @custom:security-contact security@silo.finance
 contract DynamicKinkModelV1 is IDynamicKinkModelV1 {
     using PRBMathSD59x18 for int256;
-
-    error InvalidTimestamp();
 
     /// @dev DP is 18 decimal points used for integer calculations
     int256 internal constant _DP = int256(10 ** DECIMALS);
@@ -239,3 +239,5 @@ contract DynamicKinkModelV1 is IDynamicKinkModelV1 {
 }
 
 // solhint-enable var-name-mixedcase
+// solhint-enable-line function-max-lines
+// solhint-enable-line code-complexity

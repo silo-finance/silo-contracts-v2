@@ -39,6 +39,5 @@ interface IInterestRateModel {
         returns (uint256 rcur);
 
     /// @dev returns decimal points used by model
-    // todo from ERC20 Returns the number of decimals the token uses - e.g. 8, means to divide the token amount by 100000000 to get its user representation
     function decimals() external view returns (uint256);
 }

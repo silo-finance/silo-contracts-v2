@@ -3,6 +3,10 @@ pragma solidity >=0.5.0;
 
 
 interface IDynamicKinkModelV1 {
+    // solhint-disable var-name-mixedcase
+    /// @dev revert when t0 > t1. Must not calculate interest in the past before the latest interest rate update.
+    error InvalidTimestamp();
+
     /// @param ulow ∈ [0, 1) – threshold of low utilization.
     /// @param u1 ∈ [0, 1) – lower bound of optimal utilization range.
     /// @param u2 ∈ [u1, 1] – upper bound of optimal utilization range.
@@ -48,6 +52,8 @@ interface IDynamicKinkModelV1 {
         int256 assetsAmount;
         int256 interest;
     }
+
+    // solhint-enable var-name-mixedcase
 
     /// @param config model parameters for particular silo and asset.
     /// @param k state of the slope after latest interest rate accrual.
