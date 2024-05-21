@@ -115,7 +115,6 @@ contract ShareDebtToken is IERC20R, ShareToken {
         if (_sender != address(0) && balanceOf(_sender) == 0) {
             // we can have debt in one silo only, so when you transfer all your debt we can close position
             // we can close only when _amount > 0, otherwise you can transfer 0 and close debt in other silo
-            // TODO write test case for this, it was a bug
             if (_amount != 0) siloConfig.closeDebt(_sender);
         }
 

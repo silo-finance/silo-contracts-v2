@@ -53,8 +53,8 @@ contract OracleThrowsTest is SiloLittleHelper, Test {
     forge test -vv --ffi --mt test_throwing_oracle
     */
     function test_throwing_oracle_1token() public {
-        // TODO we might want to implement, but token1 is quote so oracle is not in use here
-        // _throwing_oracle(true);
+        // we can not test oracle for 1 token, because we not using it for 1 token
+        // _throwing_oracle(SAME_ASSET);
     }
 
     function test_throwing_oracle_2tokens() public {
