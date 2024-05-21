@@ -701,7 +701,6 @@ contract Silo is SiloERC4626 {
         virtual
         returns (uint256 assets, uint256 shares)
     {
-        // TODO make sure total are updated when we call accrue interest from SiloConfig
         (
             assets, shares
         ) = Actions.deposit(
