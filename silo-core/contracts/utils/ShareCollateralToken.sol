@@ -11,8 +11,8 @@ contract ShareCollateralToken is ShareToken {
     using SiloLensLib for ISilo;
 
     /// @param _silo Silo address for which tokens was deployed
-    function initialize(ISilo _silo) external virtual initializer {
-        __ShareToken_init(_silo);
+    function initialize(ISilo _silo, address _hookReceiver, uint24 _tokenType) external virtual initializer {
+        __ShareToken_init(_silo, _hookReceiver, _tokenType);
     }
 
     /// @inheritdoc IShareToken
