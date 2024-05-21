@@ -3,8 +3,9 @@ pragma solidity 0.8.24;
 
 import {ISilo, IERC20, IERC20Metadata} from "../interfaces/ISilo.sol";
 import {IShareToken} from "../interfaces/IShareToken.sol";
+import {SiloStorage} from "../SiloStorage.sol";
 
-abstract contract SiloERC4626 is ISilo {
+abstract contract SiloERC4626 is ISilo, SiloStorage {
     /// @inheritdoc IERC20
     function approve(address _spender, uint256 _amount) external returns (bool) {
         IShareToken(_getShareToken()).forwardApprove(msg.sender, _spender, _amount);

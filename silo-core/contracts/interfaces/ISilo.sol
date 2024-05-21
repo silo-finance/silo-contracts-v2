@@ -49,6 +49,12 @@ interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
         Collateral
     }
 
+    /// @dev Types of calls that can be made by the hook receiver on behalf of Silo via `callOnBehalfOfSilo` fn
+    enum CallType {
+        Call, // default
+        Delegatecall
+    }
+
     /// @param _assets Amount of assets the user wishes to withdraw. Use 0 if shares are provided.
     /// @param _shares Shares the user wishes to burn in exchange for the withdrawal. Use 0 if assets are provided.
     /// @param _receiver Address receiving the withdrawn assets
@@ -186,8 +192,9 @@ interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
     /// @notice Method for HookReceiver only to call on behalf of Silo
     /// @param _target address of the contract to call
     /// @param _value amount of ETH to send
+    /// @param _callType type of the call (Call or Delegatecall)
     /// @param _input calldata for the call
-    function callOnBehalfOfSilo(address _target, uint256 _value, bytes calldata _input)
+    function callOnBehalfOfSilo(address _target, uint256 _value, CallType _callType, bytes calldata _input)
         external
         payable
         returns (bool success, bytes memory result);
