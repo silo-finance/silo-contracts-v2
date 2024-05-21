@@ -1,20 +1,23 @@
 pragma solidity ^0.8.20;
 
-import {Deployers} from "./utils/Deployers.sol";
-import {Actor} from "./utils/Actor.sol";
+import {PropertiesAsserts} from "properties/util/PropertiesHelper.sol";
+import {TestERC20Token} from "properties/ERC4626/util/TestERC20Token.sol";
+
+import {IERC20} from "openzeppelin5/token/ERC20/ERC20.sol";
+import {Strings} from "openzeppelin5/utils/Strings.sol";
+import {Math} from "openzeppelin5/utils/math/Math.sol";
+
 import {ISiloConfig} from "silo-core/contracts/SiloConfig.sol";
 import {Silo, ISilo} from "silo-core/contracts/Silo.sol";
 import {PartialLiquidation} from "silo-core/contracts/liquidation/PartialLiquidation.sol";
+import {PartialLiquidationLib} from "silo-core/contracts/liquidation/lib/PartialLiquidationLib.sol";
 import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
 import {Rounding} from "silo-core/contracts/lib/Rounding.sol";
 import {IInterestRateModel} from "silo-core/contracts/interfaces/IInterestRateModel.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
-import {PropertiesAsserts} from "properties/util/PropertiesHelper.sol";
 
-import {TestERC20Token} from "properties/ERC4626/util/TestERC20Token.sol";
-import {IERC20} from "openzeppelin5/token/ERC20/ERC20.sol";
-import {Strings} from "openzeppelin5/utils/Strings.sol";
-import {Math} from "openzeppelin5/utils/math/Math.sol";
+import {Deployers} from "./utils/Deployers.sol";
+import {Actor} from "./utils/Actor.sol";
 
 // Note: In order to run this campaign all library functions marked as `public` or `external`
 // Need to be changed to be `internal`. This includes all library contracts in contracts/lib/
@@ -30,6 +33,7 @@ SOLC_VERSION=0.8.24 echidna silo-core/test/echidna/EchidnaE2E.sol \
 contract EchidnaE2E is Deployers, PropertiesAsserts {
     using SiloLensLib for Silo;
     using Strings for uint256;
+
     ISiloConfig siloConfig;
 
     address deployer;
@@ -558,46 +562,27 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         Actor actorTwo = _selectActor(actorIndex + 1);
 
         (bool isSolvent, bool _vaultZeroWithDebt) = _invariant_insolventHasDebt(address(actor));
-        require(!isSolvent, "we only want insolvent cases");
+        require(!isSolvent, "we only want insolvent cases here");
 
         Silo vault = _vaultZeroWithDebt ? vault0 : vault1;
 
         uint256 ltv = vault.getLtv(address(actor));
 
-        // it is hard to figure out, if this case is partial of we need to force full, lt's try to assume few simple stuff
-        bool isPartial = true;
+        // it is hard to figure out, if this case is partial of we need to force full,
+        // we forcing full when `repayValue/_totalBorrowerDebtValue` > _DEBT_DUST_LEVEL
+        // so what is max repay value under dust level? `repayValue = _totalBorrowerDebtValue * _DEBT_DUST_LEVEL`
+        // if we can repay it
         uint256 maxRepay = vault.maxRepay(address(actor));
-
-        { // too deep
-            uint256 maxWithdraw;
-
-            {
-                (
-                    address protectedShareToken, address collateralShareToken,
-                ) = siloConfig.getShareTokens(address(vault));
-
-                maxWithdraw =
-                    vault.previewRedeem(IShareToken(collateralShareToken).balanceOf(address(actor))) +
-                    vault.previewRedeem(IShareToken(protectedShareToken).balanceOf(address(actor)), ISilo.CollateralType.Protected);
-            }
-
-            uint256 estimatedRepay = maxRepay / 2;
-
-            if (estimatedRepay == 0) {
-                isPartial = false;
-            } else {
-                uint256 estimatedLtv = Math.mulDiv(maxRepay, 1e18, maxWithdraw, Rounding.LTV);
-                // I assume, if we got down, it is possible to do partial liquidation?
-                isPartial = estimatedLtv < ltv;
-            }
-        }
-
+        // we assume we do not have oracle and price is 1:1
+        uint256 maxPartialRepayValue = maxRepay * PartialLiquidationLib._DEBT_DUST_LEVEL / 1e18;
         (, uint256 debtToRepay) = liquidationModule.maxLiquidation(address(vault), address(actor));
 
+        bool isPartial = debtToRepay < maxPartialRepayValue;
+
         if (isPartial) {
-            assertLt(maxRepay, debtToRepay, "we assume, this is partial liquidation");
+            assertLt(debtToRepay, maxRepay, "we assume, this is partial liquidation");
         } else {
-            assertEq(maxRepay, debtToRepay, "we assume, this is full liquidation");
+            assertEq(debtToRepay, maxRepay, "we assume, this is full liquidation");
         }
 
         actorTwo.liquidationCall(_vaultZeroWithDebt, address(actor), debtToRepay, false, siloConfig);
