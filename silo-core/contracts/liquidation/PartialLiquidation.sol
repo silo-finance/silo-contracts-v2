@@ -5,7 +5,7 @@ import {ISilo, ILiquidationProcess} from "../interfaces/ISilo.sol";
 import {IPartialLiquidation} from "../interfaces/IPartialLiquidation.sol";
 import {ISiloOracle} from "../interfaces/ISiloOracle.sol";
 import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
-import {IHookReceiver} from "../utils/hook-receivers/interfaces/IHookReceiver.sol";
+import {IHookReceiver} from "../interfaces/IHookReceiver.sol";
 
 import {SiloLendingLib} from "../lib/SiloLendingLib.sol";
 import {Hook} from "../lib/Hook.sol";

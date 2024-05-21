@@ -13,7 +13,7 @@ import {ILeverageBorrower} from "./interfaces/ILeverageBorrower.sol";
 import {ISiloConfig} from "./interfaces/ISiloConfig.sol";
 import {ISiloFactory} from "./interfaces/ISiloFactory.sol";
 import {IInterestRateModel} from "./interfaces/IInterestRateModel.sol";
-import {IHookReceiver} from "./utils/hook-receivers/interfaces/IHookReceiver.sol";
+import {IHookReceiver} from "./interfaces/IHookReceiver.sol";
 
 import {SiloERC4626} from "./utils/SiloERC4626.sol";
 

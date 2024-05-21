@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
-pragma solidity >=0.8.0;
+pragma solidity >=0.5.0;
 
-import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
-import {IHookReceiver} from "../../interfaces/IHookReceiver.sol";
+import {IShareToken} from "./IShareToken.sol";
+import {IHookReceiver} from "./IHookReceiver.sol";
 import {IGaugeLike as IGauge} from "./IGaugeLike.sol";
 
 /// @notice Silo share token hook receiver for the gauge

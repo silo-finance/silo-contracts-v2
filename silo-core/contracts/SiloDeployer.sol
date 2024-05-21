@@ -9,7 +9,7 @@ import {IInterestRateModelV2} from "silo-core/contracts/interfaces/IInterestRate
 import {IInterestRateModelV2ConfigFactory} from "silo-core/contracts/interfaces/IInterestRateModelV2ConfigFactory.sol";
 import {IInterestRateModelV2Config} from "silo-core/contracts/interfaces/IInterestRateModelV2Config.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
-import {IHookReceiver} from "silo-core/contracts/utils/hook-receivers/interfaces/IHookReceiver.sol";
+import {IHookReceiver} from "silo-core/contracts/interfaces/IHookReceiver.sol";
 import {ISiloDeployer} from "silo-core/contracts/interfaces/ISiloDeployer.sol";
 
 /// @notice Silo Deployer

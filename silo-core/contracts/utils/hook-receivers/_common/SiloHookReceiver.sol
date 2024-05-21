@@ -2,7 +2,7 @@
 pragma solidity 0.8.24;
 
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
-import {IHookReceiver} from "../interfaces/IHookReceiver.sol";
+import {IHookReceiver} from "../../../interfaces/IHookReceiver.sol";
 
 abstract contract SiloHookReceiver is IHookReceiver {
     mapping(address silo => HookConfig) private _hookConfig;

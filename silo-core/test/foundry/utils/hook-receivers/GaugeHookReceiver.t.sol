@@ -10,15 +10,15 @@ import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 import {SiloFixture, SiloConfigOverride} from "../../_common/fixtures/SiloFixture.sol";
 import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
-import {IHookReceiver} from "silo-core/contracts/utils/hook-receivers/interfaces/IHookReceiver.sol";
+import {IHookReceiver} from "silo-core/contracts/interfaces/IHookReceiver.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {SiloCoreContracts} from "silo-core/common/SiloCoreContracts.sol";
 import {Hook} from "silo-core/contracts/lib/Hook.sol";
 
 import {GaugeHookReceiver} from "silo-core/contracts/utils/hook-receivers/gauge/GaugeHookReceiver.sol";
-import {IGaugeHookReceiver} from "silo-core/contracts/utils/hook-receivers/gauge/interfaces/IGaugeHookReceiver.sol";
+import {IGaugeHookReceiver} from "silo-core/contracts/interfaces/IGaugeHookReceiver.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
-import {IGaugeLike as IGauge} from "silo-core/contracts/utils/hook-receivers/gauge/interfaces/IGaugeLike.sol";
+import {IGaugeLike as IGauge} from "silo-core/contracts/interfaces/IGaugeLike.sol";
 
 import {GaugeHookReceiverDeploy} from "silo-core/deploy/GaugeHookReceiverDeploy.s.sol";
 

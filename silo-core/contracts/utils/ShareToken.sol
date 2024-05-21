@@ -5,7 +5,7 @@ import {ERC20, IERC20Metadata, IERC20} from "openzeppelin5/token/ERC20/ERC20.sol
 import {Initializable} from "openzeppelin5/proxy/utils/Initializable.sol";
 import {Strings} from "openzeppelin5/utils/Strings.sol";
 
-import {IHookReceiver} from "silo-core/contracts/utils/hook-receivers/interfaces/IHookReceiver.sol";
+import {IHookReceiver} from "../interfaces/IHookReceiver.sol";
 import {IShareToken, ISilo} from "../interfaces/IShareToken.sol";
 import {ISiloConfig} from "../SiloConfig.sol";
 import {TokenHelper} from "../lib/TokenHelper.sol";
