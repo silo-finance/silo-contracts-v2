@@ -33,15 +33,14 @@ interface IShareToken is IERC20Metadata {
     error SenderNotSolventAfterTransfer();
 
     /// @param _silo Silo address for which tokens was deployed
-    function initialize(ISilo _silo) external;
+    /// @param _hookReceiver address that will get a callback on mint, burn and transfer of the token
+    /// @param _tokenType must be one of this hooks values: COLLATERAL_TOKEN, PROTECTED_TOKEN, DEBT_TOKEN
+    function initialize(ISilo _silo, address _hookReceiver, uint24 _tokenType) external;
 
     /// @notice method for SiloConfig to synchronize hooks
-    /// @param _hookReceiver address that will get a callback on mint, burn and transfer of the token
     /// @param _hooksBefore hooks bitmap to trigger hooks BEFORE action
     /// @param _hooksAfter hooks bitmap to trigger hooks AFTER action
-    /// @param _tokenType must be one of this hooks values: COLLATERAL_TOKEN, PROTECTED_TOKEN, DEBT_TOKEN
-    function synchronizeHooks(address _hookReceiver, uint24 _hooksBefore, uint24 _hooksAfter, uint24 _tokenType)
-        external;
+    function synchronizeHooks(uint24 _hooksBefore, uint24 _hooksAfter) external;
 
     /// @notice Mint method for Silo to create debt
     /// @param _owner wallet for which to mint token

@@ -46,7 +46,7 @@ contract ShareTokenTest is Test {
         silo.configMock(siloConfig.ADDRESS());
         siloConfig.getConfigMock(silo.ADDRESS(), configData);
 
-        sToken.initialize(ISilo(silo.ADDRESS()));
+        sToken.initialize(ISilo(silo.ADDRESS()), address(0), uint24(Hook.DEBT_TOKEN));
 
         assertEq(10 ** (sToken.decimals() - token.decimals()), SiloMathLib._DECIMALS_OFFSET_POW, "expect valid offset");
     }
@@ -54,7 +54,7 @@ contract ShareTokenTest is Test {
     // FOUNDRY_PROFILE=core-test forge test -vvv --mt test_notRevertWhenNoHook
     function test_notRevertWhenNoHook() public {
         silo.configMock(siloConfig.ADDRESS());
-        sToken.initialize(ISilo(silo.ADDRESS()));
+        sToken.initialize(ISilo(silo.ADDRESS()), address(0), uint24(Hook.DEBT_TOKEN));
 
         vm.prank(silo.ADDRESS());
         sToken.mint(owner, owner, 1);
@@ -65,16 +65,14 @@ contract ShareTokenTest is Test {
         address siloAddr = silo.ADDRESS();
 
         silo.configMock(siloConfig.ADDRESS());
-        sToken.initialize(ISilo(siloAddr));
+        address hookAddr = hookReceiverMock.ADDRESS();
 
-        address hookAddr = hookReceiverMock.ADDRESS(); 
+        sToken.initialize(ISilo(siloAddr), hookAddr, uint24(Hook.DEBT_TOKEN));
 
         vm.prank(siloAddr);
         sToken.synchronizeHooks(
-            hookAddr,
             uint24(_DEBT_TOKE_BEFORE_ACTION),
-            uint24(_DEBT_TOKE_AFTER_ACTION),
-            uint24(Hook.DEBT_TOKEN)
+            uint24(_DEBT_TOKE_AFTER_ACTION)
         );
 
         uint256 amount = 1;

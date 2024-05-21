@@ -78,14 +78,10 @@ abstract contract ShareToken is Initializable, ERC20, IShareToken {
         silo = ISilo(address(this)); // disable initializer
     }
 
-    function synchronizeHooks(address _hookReceiver, uint24 _hooksBefore, uint24 _hooksAfter, uint24 _tokenType)
-        external
-        onlySilo
-    {
-        _hookSetup.hookReceiver = _hookReceiver;
+    /// @inheritdoc IShareToken
+    function synchronizeHooks(uint24 _hooksBefore, uint24 _hooksAfter) external onlySilo {
         _hookSetup.hooksBefore = _hooksBefore;
         _hookSetup.hooksAfter = _hooksAfter;
-        _hookSetup.tokenType = _tokenType;
     }
 
     /// @inheritdoc IShareToken
@@ -219,9 +215,12 @@ abstract contract ShareToken is Initializable, ERC20, IShareToken {
 
     /// @param _silo Silo address for which tokens was deployed
     // solhint-disable-next-line func-name-mixedcase
-    function __ShareToken_init(ISilo _silo) internal virtual {
+    function __ShareToken_init(ISilo _silo, address _hookReceiver, uint24 _tokenType) internal virtual {
         silo = _silo;
         siloConfig = _silo.config();
+
+        _hookSetup.hookReceiver = _hookReceiver;
+        _hookSetup.tokenType = _tokenType;
     }
 
     /// @inheritdoc ERC20

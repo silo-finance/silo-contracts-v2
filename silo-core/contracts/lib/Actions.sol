@@ -643,17 +643,9 @@ library Actions {
         _sharedStorage.hooksBefore = hooksBefore;
         _sharedStorage.hooksAfter = hooksAfter;
 
-        IShareToken(cfg.collateralShareToken).synchronizeHooks(
-            cfg.hookReceiver, hooksBefore, hooksAfter, uint24(Hook.COLLATERAL_TOKEN)
-        );
-
-        IShareToken(cfg.protectedShareToken).synchronizeHooks(
-            cfg.hookReceiver, hooksBefore, hooksAfter, uint24(Hook.PROTECTED_TOKEN)
-        );
-
-        IShareToken(cfg.debtShareToken).synchronizeHooks(
-            cfg.hookReceiver, hooksBefore, hooksAfter, uint24(Hook.DEBT_TOKEN)
-        );
+        IShareToken(cfg.collateralShareToken).synchronizeHooks(hooksBefore, hooksAfter);
+        IShareToken(cfg.protectedShareToken).synchronizeHooks(hooksBefore, hooksAfter);
+        IShareToken(cfg.debtShareToken).synchronizeHooks(hooksBefore, hooksAfter);
 
         IPartialLiquidation(cfg.liquidationModule).synchronizeHooks(cfg.hookReceiver, hooksBefore, hooksAfter);
     }
