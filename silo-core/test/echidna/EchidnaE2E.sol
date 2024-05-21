@@ -557,6 +557,10 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
     }
 
     // Property: A slightly insolvent user cannot be fully liquidated, if he is below "dust" treshhold
+    // it is hard to figure out, if this case is partial of we need to force full,
+    // we forcing full when `repayValue/_totalBorrowerDebtValue` > _DEBT_DUST_LEVEL
+    // so max repay value under dust level is `repayValue = _totalBorrowerDebtValue * _DEBT_DUST_LEVEL`
+    // based on this we will make decision if this is partial or full liquidation and we will run some checks
     function cannotFullyLiquidateSmallLtv(uint8 actorIndex) public {
         Actor actor = _selectActor(actorIndex);
         Actor actorTwo = _selectActor(actorIndex + 1);
@@ -566,12 +570,8 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
 
         Silo vault = _vaultZeroWithDebt ? vault0 : vault1;
 
-        uint256 ltv = vault.getLtv(address(actor));
+        uint256 ltvBefore = vault.getLtv(address(actor));
 
-        // it is hard to figure out, if this case is partial of we need to force full,
-        // we forcing full when `repayValue/_totalBorrowerDebtValue` > _DEBT_DUST_LEVEL
-        // so what is max repay value under dust level? `repayValue = _totalBorrowerDebtValue * _DEBT_DUST_LEVEL`
-        // if we can repay it
         uint256 maxRepay = vault.maxRepay(address(actor));
         // we assume we do not have oracle and price is 1:1
         uint256 maxPartialRepayValue = maxRepay * PartialLiquidationLib._DEBT_DUST_LEVEL / 1e18;
@@ -587,16 +587,19 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
 
         actorTwo.liquidationCall(_vaultZeroWithDebt, address(actor), debtToRepay, false, siloConfig);
 
-        uint256 afterLtv = vault.getLtv(address(actor));
-        emit LogString(string.concat("User afterLtv:", afterLtv.toString()));
+        uint256 ltvAfter = vault.getLtv(address(actor));
+        emit LogString(string.concat("User afterLtv:", ltvAfter.toString()));
 
         if (isPartial) {
+            assertLt(ltvAfter, ltvBefore, "we expect LTV to go down after partial liquidation");
+
             Silo siloWithCollateral = _vaultZeroWithDebt ? vault1 : vault0;
             uint256 lt = siloWithCollateral.getLt();
-            emit LogString(string.concat("User LTV:", ltv.toString(), " Liq Threshold:", lt.toString()));
-            assert(afterLtv > 0 && afterLtv < lt);
+            emit LogString(string.concat("User LTV:", ltvAfter.toString(), " Liq Threshold:", lt.toString()));
+
+            assert(ltvAfter > 0 && ltvAfter < lt);
         } else {
-            assertEq(afterLtv, 0, "when not partial, user should be completely liquidated");
+            assertEq(ltvAfter, 0, "when not partial, user should be completely liquidated");
         }
     }
 
