@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.20;
 
-import {IHookReceiver} from "../utils/hook-receivers/interfaces/IHookReceiver.sol";
+import {IHookReceiver} from "../interfaces/IHookReceiver.sol";
 import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
 
 import {Hook} from "./Hook.sol";

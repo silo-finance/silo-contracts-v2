@@ -8,8 +8,8 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {Hook} from "silo-core/contracts/lib/Hook.sol";
-import {IGaugeLike as IGauge} from "./interfaces/IGaugeLike.sol";
-import {IGaugeHookReceiver, IHookReceiver} from "./interfaces/IGaugeHookReceiver.sol";
+import {IGaugeLike as IGauge} from "../../../interfaces/IGaugeLike.sol";
+import {IGaugeHookReceiver, IHookReceiver} from "../../../interfaces/IGaugeHookReceiver.sol";
 import {SiloHookReceiver} from "../_common/SiloHookReceiver.sol";
 
 /// @notice Silo share token hook receiver for the gauge.

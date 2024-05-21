@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.5.0;
 
-import {IHookReceiver} from "../utils/hook-receivers/interfaces/IHookReceiver.sol";
+import {IHookReceiver} from "./IHookReceiver.sol";
 import {ISilo} from "./ISilo.sol";
 
 interface ISiloConfig {

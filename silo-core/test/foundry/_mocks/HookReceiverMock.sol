@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 import {CommonBase} from "forge-std/Base.sol";
 import {StdCheats} from "forge-std/StdCheats.sol";
 
-import {IHookReceiver} from "silo-core/contracts/utils/hook-receivers/interfaces/IHookReceiver.sol";
+import {IHookReceiver} from "silo-core/contracts/interfaces/IHookReceiver.sol";
 
 contract HookReceiverMock is CommonBase, StdCheats {
     address public immutable ADDRESS;

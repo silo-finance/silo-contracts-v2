@@ -3,7 +3,7 @@ pragma solidity 0.8.24;
 
 import {CommonDeploy, SiloCoreContracts} from "./_CommonDeploy.sol";
 import {GaugeHookReceiver} from "silo-core/contracts/utils/hook-receivers/gauge/GaugeHookReceiver.sol";
-import {IGaugeHookReceiver} from "silo-core/contracts/utils/hook-receivers/gauge/interfaces/IGaugeHookReceiver.sol";
+import {IGaugeHookReceiver} from "silo-core/contracts/interfaces/IGaugeHookReceiver.sol";
 
 /**
     FOUNDRY_PROFILE=core \

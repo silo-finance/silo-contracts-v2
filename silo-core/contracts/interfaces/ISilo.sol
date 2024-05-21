@@ -9,7 +9,7 @@ import {ISiloFactory} from "./ISiloFactory.sol";
 import {ILeverageBorrower} from "./ILeverageBorrower.sol";
 import {ILiquidationProcess} from "./ILiquidationProcess.sol";
 
-import {IHookReceiver} from "../utils/hook-receivers/interfaces/IHookReceiver.sol";
+import {IHookReceiver} from "./IHookReceiver.sol";
 
 // solhint-disable ordering
 interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
