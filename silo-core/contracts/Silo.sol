@@ -67,8 +67,6 @@ contract Silo is SiloERC4626 {
             (success, result) = _target.call{value: _value}(_input);
         } else if (_callType == CallType.Delegatecall) {
             (success, result) = _target.delegatecall(_input);
-        } else {
-            revert InvalidCallType();
         }
     }
 
