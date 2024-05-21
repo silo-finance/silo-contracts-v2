@@ -122,8 +122,12 @@ library SiloStdLib {
         view
         returns (uint256 shares, uint256 totalSupply)
     {
-        shares = _balanceCached == 0 ? IShareToken(_shareToken).balanceOf(_owner) : _balanceCached;
-        totalSupply = IShareToken(_shareToken).totalSupply();
+        if (_balanceCached == 0) {
+            (shares, totalSupply) = IShareToken(_shareToken).balanceOfAndTotalSupply(_owner);
+        } else {
+            shares = _balanceCached;
+            totalSupply = IShareToken(_shareToken).totalSupply();
+        }
     }
 
     /// @notice Calculates the total debt assets with accrued interest
