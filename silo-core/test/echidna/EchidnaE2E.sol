@@ -557,7 +557,7 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
     }
 
     // Property: A slightly insolvent user cannot be fully liquidated, if he is below "dust" treshhold
-    // it is hard to figure out, if this case is partial of we need to force full,
+    // it is hard to figure out, if this case is partial or we need to force full,
     // we forcing full when `repayValue/_totalBorrowerDebtValue` > _DEBT_DUST_LEVEL
     // so max repay value under dust level is `repayValue = _totalBorrowerDebtValue * _DEBT_DUST_LEVEL`
     // based on this we will make decision if this is partial or full liquidation and we will run some checks
