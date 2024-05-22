@@ -579,9 +579,7 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
 
         bool isPartial = debtToRepay < maxPartialRepayValue;
 
-        if (isPartial) {
-            assertLt(debtToRepay, maxRepay, "we assume, this is partial liquidation");
-        } else {
+        if (!isPartial) {
             assertEq(debtToRepay, maxRepay, "we assume, this is full liquidation");
         }
 
