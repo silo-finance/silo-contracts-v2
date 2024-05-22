@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.20;
 
-import "forge-std/Test.sol";
+import {Test} from "forge-std/Test.sol";
 
 import {Strings} from "openzeppelin5/utils/Strings.sol";
 
@@ -66,15 +66,21 @@ contract GetExactLiquidationAmountsHelper is Test {
         (ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig) = _configs();
         uint256 sharesOffset = 10 ** 2;
 
-        P_SHARE_TOKEN_A.balanceOfMock(makeAddr("borrower"), 0);
-        P_SHARE_TOKEN_A.totalSupplyMock(0);
+        P_SHARE_TOKEN_A.balanceOfAndTotalSupplyMock(makeAddr("borrower"), 0, 0);
         SILO_A.getCollateralAndProtectedAssetsMock(2 ** 128 - 1, 0);
 
-        C_SHARE_TOKEN_A.balanceOfMock(makeAddr("borrower"), _collateralUserBalanceOf * sharesOffset);
-        C_SHARE_TOKEN_A.totalSupplyMock((2 ** 128 - 1) * sharesOffset);
+        C_SHARE_TOKEN_A.balanceOfAndTotalSupplyMock(
+            makeAddr("borrower"),
+            _collateralUserBalanceOf * sharesOffset,
+            (2 ** 128 - 1) * sharesOffset
+        );
 
-        D_SHARE_TOKEN_B.balanceOfMock(makeAddr("borrower"), _debtUserBalanceOf * sharesOffset);
-        D_SHARE_TOKEN_B.totalSupplyMock(_debtUserBalanceOf * sharesOffset);
+        D_SHARE_TOKEN_B.balanceOfAndTotalSupplyMock(
+            makeAddr("borrower"),
+            _debtUserBalanceOf * sharesOffset,
+            _debtUserBalanceOf * sharesOffset
+        );
+
         SILO_B.totalMock(ISilo.AssetType.Debt, _debtUserBalanceOf);
 
         return PartialLiquidationExecLib.getExactLiquidationAmounts(
@@ -128,15 +134,12 @@ contract GetExactLiquidationAmountsTest is GetExactLiquidationAmountsHelper {
         uint256 liquidationFee;
         bool selfLiquidation;
 
-        P_SHARE_TOKEN_A.balanceOfMock(user, 0);
-        P_SHARE_TOKEN_A.totalSupplyMock(0);
+        P_SHARE_TOKEN_A.balanceOfAndTotalSupplyMock(user, 0, 0);
         SILO_A.getCollateralAndProtectedAssetsMock(0, 0);
 
-        C_SHARE_TOKEN_A.balanceOfMock(user, 0);
-        C_SHARE_TOKEN_A.totalSupplyMock(0);
+        C_SHARE_TOKEN_A.balanceOfAndTotalSupplyMock(user, 0, 0);
 
-        D_SHARE_TOKEN_B.balanceOfMock(user, 0);
-        D_SHARE_TOKEN_B.totalSupplyMock(0);
+        D_SHARE_TOKEN_B.balanceOfAndTotalSupplyMock(user, 0, 0);
         SILO_B.totalMock(ISilo.AssetType.Debt, 0);
 
         (
@@ -159,19 +162,29 @@ contract GetExactLiquidationAmountsTest is GetExactLiquidationAmountsHelper {
         for (uint256 i; i < testDatas.length; i++) {
             GetExactLiquidationAmountsTestData.GELAData memory testData = testDatas[i];
 
-            P_SHARE_TOKEN_A.balanceOfMock(testData.input.user, testData.mocks.protectedUserSharesBalanceOf);
-            P_SHARE_TOKEN_A.totalSupplyMock(testData.mocks.protectedSharesTotalSupply);
+            P_SHARE_TOKEN_A.balanceOfAndTotalSupplyMock(
+                testData.input.user,
+                testData.mocks.protectedUserSharesBalanceOf,
+                testData.mocks.protectedSharesTotalSupply
+            );
 
             SILO_A.getCollateralAndProtectedAssetsMock(
                 testData.mocks.siloTotalCollateralAssets,
                 testData.mocks.siloTotalProtectedAssets
             );
 
-            C_SHARE_TOKEN_A.balanceOfMock(testData.input.user, testData.mocks.collateralUserSharesBalanceOf);
-            C_SHARE_TOKEN_A.totalSupplyMock(testData.mocks.collateralSharesTotalSupply);
+            C_SHARE_TOKEN_A.balanceOfAndTotalSupplyMock(
+                testData.input.user,
+                testData.mocks.collateralUserSharesBalanceOf,
+                testData.mocks.collateralSharesTotalSupply
+            );
 
-            D_SHARE_TOKEN_B.balanceOfMock(testData.input.user, testData.mocks.debtUserSharesBalanceOf);
-            D_SHARE_TOKEN_B.totalSupplyMock(testData.mocks.debtSharesTotalSupply);
+            D_SHARE_TOKEN_B.balanceOfAndTotalSupplyMock(
+                testData.input.user,
+                testData.mocks.debtUserSharesBalanceOf,
+                testData.mocks.debtSharesTotalSupply
+            );
+
             SILO_B.totalMock(ISilo.AssetType.Debt, testData.mocks.siloTotalDebtAssets);
 
             (

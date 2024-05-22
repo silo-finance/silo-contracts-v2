@@ -661,8 +661,8 @@ contract Silo is SiloERC4626 {
     }
 
     /// @inheritdoc ISilo
-    function total(uint256 _assetType) external view returns (uint256 totalAssets) {
-        totalAssets = _total[_assetType].assets;
+    function total(uint256 _assetType) external view returns (uint256 totalAssetsByType) {
+        totalAssetsByType = _total[_assetType].assets;
     }
 
     /// @inheritdoc ISilo

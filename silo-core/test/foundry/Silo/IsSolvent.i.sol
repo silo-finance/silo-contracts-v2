@@ -60,7 +60,11 @@ contract IsSolventTest is SiloLittleHelper, Test {
         // it does not matter which silo we will call for checking borrower solvency
         vm.expectCall(address(silo1), abi.encodeWithSelector(ISilo.isSolvent.selector, recipient));
         vm.expectCall(debtShareToken, abi.encodeWithSelector(IERC20.balanceOf.selector, recipient));
-        vm.expectCall(collateralShareToken, abi.encodeWithSelector(IERC20.balanceOf.selector, recipient));
+
+        vm.expectCall(
+            collateralShareToken,
+            abi.encodeWithSelector(IShareToken.balanceOfAndTotalSupply.selector, recipient)
+        );
 
         vm.prank(borrower);
         IShareToken(debtShareToken).transfer(recipient, 1);
