@@ -121,6 +121,20 @@ contract Actor is PropertiesAsserts {
         approveFunds(vaultZero, amount, address(vault));
     }
 
+    function prepareForLiquidationRepay(bool vaultZero, uint256 debtToRepay) internal returns (Silo vault) {
+        vault = vaultZero ? vault0 : vault1;
+        TestERC20Token token = vaultZero ? token0 : token1;
+
+        uint256 balance = token.balanceOf(address(this));
+
+        if (balance < debtToRepay) {
+            require(type(uint256).max - token.totalSupply() < debtToRepay - balance, "total supply limit");
+            token.mint(address(this), debtToRepay - balance);
+        }
+
+        approveFunds(vaultZero, debtToRepay, address(vault));
+    }
+
     function deposit(bool vaultZero, uint256 assets) public returns (uint256 shares) {
         Silo vault = prepareForDeposit(vaultZero, assets);
 
@@ -215,7 +229,7 @@ contract Actor is PropertiesAsserts {
         bool receiveSToken,
         ISiloConfig config
     ) public {
-        Silo vault = prepareForDeposit(_vaultZeroWithDebt, debtToCover);
+        Silo vault = prepareForLiquidationRepay(_vaultZeroWithDebt, debtToCover);
 
         (ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig,) =
             config.getConfigs(address(vault), borrower, 0 /* always 0 for external calls */);
