@@ -80,13 +80,7 @@ contract EchidnaMiddleman is EchidnaSetup {
 
         (address collateral, address debt) = __liquidationTokens(address(siloWithDebt));
 
-        emit log_named_decimal_uint("           debtToken mint limit", type(uint256).max - IERC20(debt).totalSupply(), 18);
-        emit log_named_decimal_uint("debtToken.balanceOf(liquidator)", IERC20(debt).balanceOf(actor), 18);
-        emit log_named_decimal_uint("                    debtToRepay", debtToRepay, 18);
-
         __prepareForLiquidationRepay(siloWithDebt, actor, debtToRepay);
-
-        emit log_named_decimal_uint("debtToken.balanceOf(liquidator)", IERC20(debt).balanceOf(actor), 18);
 
         vm.prank(actor);
         partialLiquidation.liquidationCall(address(siloWithDebt), debt, collateral, actor, debtToRepay, false);
@@ -175,9 +169,6 @@ contract EchidnaMiddleman is EchidnaSetup {
 
         (, uint256 debtToRepay) = partialLiquidation.maxLiquidation(address(siloWithDebt), actor);
         (address collateral, address debt) = __liquidationTokens(address(siloWithDebt));
-
-        emit log_named_decimal_uint("debtToken.balanceOf(liquidator) debt to repay", IERC20(debt).balanceOf(actor), 18);
-        emit log_named_decimal_uint("                                  debtToRepay", debtToRepay, 18);
 
         __prepareForLiquidationRepay(siloWithDebt, actor, debtToRepay);
 
