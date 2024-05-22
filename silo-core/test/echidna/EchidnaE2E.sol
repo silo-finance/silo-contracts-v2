@@ -34,24 +34,24 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
     using SiloLensLib for Silo;
     using Strings for uint256;
 
-    ISiloConfig siloConfig;
+    ISiloConfig internal siloConfig;
 
-    address deployer;
-    uint256 startTimestamp = 1706745600;
+    address internal deployer;
+    uint256 internal startTimestamp = 1706745600;
     // The same block height also needs to be set in the e2e.yaml file
-    uint256 startBlockHeight = 17336000;
+    uint256 internal startBlockHeight = 17336000;
 
-    address public _vault0;
-    address public _vault1;
-    Silo public vault0;
-    Silo public vault1;
+    address internal _vault0;
+    address internal _vault1;
+    Silo internal vault0;
+    Silo internal vault1;
 
-    TestERC20Token _asset0;
-    TestERC20Token _asset1;
+    TestERC20Token internal _asset0;
+    TestERC20Token internal _asset1;
 
-    Actor[] public actors;
+    Actor[] internal actors;
 
-    bool sameAsset;
+    bool internal sameAsset;
 
     event ExactAmount(string msg, uint256 amount);
 

@@ -29,6 +29,8 @@ contract MintableToken is ERC20 {
         uint256 balance = balanceOf(_owner);
         if (balance >= _amount) return;
 
+        if (type(uint256).max - totalSupply() < _amount - balance) revert("mint not possible: uint256 MAX");
+
         _mint(_owner, _amount - balance);
     }
 
