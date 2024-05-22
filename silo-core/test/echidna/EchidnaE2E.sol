@@ -1,18 +1,23 @@
 pragma solidity ^0.8.20;
 
-import {Deployers} from "./utils/Deployers.sol";
-import {Actor} from "./utils/Actor.sol";
+import {PropertiesAsserts} from "properties/util/PropertiesHelper.sol";
+import {TestERC20Token} from "properties/ERC4626/util/TestERC20Token.sol";
+
+import {IERC20} from "openzeppelin5/token/ERC20/ERC20.sol";
+import {Strings} from "openzeppelin5/utils/Strings.sol";
+import {Math} from "openzeppelin5/utils/math/Math.sol";
+
 import {ISiloConfig} from "silo-core/contracts/SiloConfig.sol";
 import {Silo, ISilo} from "silo-core/contracts/Silo.sol";
 import {PartialLiquidation} from "silo-core/contracts/liquidation/PartialLiquidation.sol";
+import {PartialLiquidationLib} from "silo-core/contracts/liquidation/lib/PartialLiquidationLib.sol";
 import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
+import {Rounding} from "silo-core/contracts/lib/Rounding.sol";
 import {IInterestRateModel} from "silo-core/contracts/interfaces/IInterestRateModel.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
-import {PropertiesAsserts} from "properties/util/PropertiesHelper.sol";
 
-import {TestERC20Token} from "properties/ERC4626/util/TestERC20Token.sol";
-import {IERC20} from "openzeppelin5/token/ERC20/ERC20.sol";
-import {Strings} from "openzeppelin5/utils/Strings.sol";
+import {Deployers} from "./utils/Deployers.sol";
+import {Actor} from "./utils/Actor.sol";
 
 // Note: In order to run this campaign all library functions marked as `public` or `external`
 // Need to be changed to be `internal`. This includes all library contracts in contracts/lib/
@@ -28,6 +33,7 @@ SOLC_VERSION=0.8.24 echidna silo-core/test/echidna/EchidnaE2E.sol \
 contract EchidnaE2E is Deployers, PropertiesAsserts {
     using SiloLensLib for Silo;
     using Strings for uint256;
+
     ISiloConfig siloConfig;
 
     address deployer;
@@ -550,30 +556,49 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         }
     }
 
-    // Property: A slightly insolvent user cannot be fully liquidated
+    // Property: A slightly insolvent user cannot be fully liquidated, if he is below "dust" treshhold
+    // it is hard to figure out, if this case is partial or we need to force full,
+    // we forcing full when `repayValue/_totalBorrowerDebtValue` > _DEBT_DUST_LEVEL
+    // so max repay value under dust level is `repayValue = _totalBorrowerDebtValue * _DEBT_DUST_LEVEL`
+    // based on this we will make decision if this is partial or full liquidation and we will run some checks
     function cannotFullyLiquidateSmallLtv(uint8 actorIndex) public {
         Actor actor = _selectActor(actorIndex);
         Actor actorTwo = _selectActor(actorIndex + 1);
 
         (bool isSolvent, bool _vaultZeroWithDebt) = _invariant_insolventHasDebt(address(actor));
+        require(!isSolvent, "we only want insolvent cases here");
 
         Silo vault = _vaultZeroWithDebt ? vault0 : vault1;
-        Silo siloWithCollateral = _vaultZeroWithDebt ? vault1 : vault0;
 
-        uint256 lt = siloWithCollateral.getLt();
-        uint256 ltv = vault.getLtv(address(actor));
+        uint256 ltvBefore = vault.getLtv(address(actor));
 
+        uint256 maxRepay = vault.maxRepay(address(actor));
+        // we assume we do not have oracle and price is 1:1
+        uint256 maxPartialRepayValue = maxRepay * PartialLiquidationLib._DEBT_DUST_LEVEL / 1e18;
         (, uint256 debtToRepay) = liquidationModule.maxLiquidation(address(vault), address(actor));
-        require(!isSolvent, "Not insolvent");
 
-        emit LogString(string.concat("User LTV:", ltv.toString(), " Liq Threshold:", lt.toString()));
+        bool isPartial = debtToRepay < maxPartialRepayValue;
+
+        if (!isPartial) {
+            assertEq(debtToRepay, maxRepay, "we assume, this is full liquidation");
+        }
 
         actorTwo.liquidationCall(_vaultZeroWithDebt, address(actor), debtToRepay, false, siloConfig);
 
-        uint256 afterLtv = vault.getLtv(address(actor));
-        emit LogString(string.concat("User afterLtv:", afterLtv.toString()));
+        uint256 ltvAfter = vault.getLtv(address(actor));
+        emit LogString(string.concat("User afterLtv:", ltvAfter.toString()));
 
-        assert(afterLtv > 0 && afterLtv < lt);
+        if (isPartial) {
+            assertLt(ltvAfter, ltvBefore, "we expect LTV to go down after partial liquidation");
+
+            Silo siloWithCollateral = _vaultZeroWithDebt ? vault1 : vault0;
+            uint256 lt = siloWithCollateral.getLt();
+            emit LogString(string.concat("User LTV:", ltvAfter.toString(), " Liq Threshold:", lt.toString()));
+
+            assert(ltvAfter > 0 && ltvAfter < lt);
+        } else {
+            assertEq(ltvAfter, 0, "when not partial, user should be completely liquidated");
+        }
     }
 
     // Property: A user self-liquidating cannot gain assets or shares
