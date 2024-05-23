@@ -674,14 +674,28 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
             // transitionCollateral in one direction, and then in the opposite direction, and only check shares/assets
             // after the second transition.
 
+            (uint256 sharesTransitioned, ISilo.CollateralType withdrawType) =
+                assetType == ISilo.CollateralType.Collateral
+                    ? (protBalanceAfter - protBalanceBefore, ISilo.CollateralType.Protected)
+                    : (collBalanceAfter - collBalanceBefore, ISilo.CollateralType.Collateral);
+
             // transition back, so we can verify number of shares
-            actor.transitionCollateral(vaultZero, shares, assetType == ISilo.CollateralType.Collateral ? ISilo.CollateralType.Protected : ISilo.CollateralType.Collateral);
+            actor.transitionCollateral(vaultZero, sharesTransitioned, withdrawType);
 
             protBalanceAfter = IShareToken(protected).balanceOf(address(actor));
             collBalanceAfter = IShareToken(collateral).balanceOf(address(actor));
 
-            assertEq(protBalanceBefore, protBalanceAfter, "Gained shares after transitionCollateral (no interest)");
-            assertEq(collBalanceBefore, collBalanceAfter, "Gained shares after transitionCollateral (no interest)");
+            assertLte(
+                protBalanceBefore - protBalanceAfter,
+                1,
+                "[protected] there should be no gain in shares, accepting 1 wei loss because of rounding"
+            );
+
+            assertLte(
+                collBalanceBefore - collBalanceAfter,
+                1,
+                "[collateral] there should be no gain in shares, accepting 1 wei loss because of rounding"
+            );
         }
     }
 

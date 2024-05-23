@@ -182,14 +182,28 @@ contract EchidnaMiddleman is EchidnaSetup {
             emit log_named_uint("protected).balanceOf", IShareToken(collateral).balanceOf(address(actor)));
             emit log_named_uint("shares", _amount);
 
+            (uint256 sharesTransitioned, ISilo.CollateralType _withdrawType) =
+                _type == uint8(ISilo.CollateralType.Collateral)
+                    ? (protBalanceAfter - protBalanceBefore, ISilo.CollateralType.Protected)
+                    : (collBalanceAfter - collBalanceBefore, ISilo.CollateralType.Collateral);
+
             vm.prank(actor);
-            transitionedAssets = vault.transitionCollateral(_amount, actor, _type == uint8(ISilo.CollateralType.Collateral) ? ISilo.CollateralType.Protected : ISilo.CollateralType.Collateral);
+            transitionedAssets = vault.transitionCollateral(sharesTransitioned, actor, _withdrawType);
 
             protBalanceAfter = IShareToken(protected).balanceOf(address(actor));
             collBalanceAfter = IShareToken(collateral).balanceOf(address(actor));
 
-            assertEq(protBalanceBefore, protBalanceAfter, "Gained shares after transitionCollateral (no interest)");
-            assertEq(collBalanceBefore, collBalanceAfter, "Gained shares after transitionCollateral (no interest)");
+            assertLe(
+                protBalanceBefore - protBalanceAfter,
+                1,
+                "[protected] there should be no gain in shares, accepting 1 wei loss because of rounding"
+            );
+
+            assertLe(
+                collBalanceBefore - collBalanceAfter,
+                1,
+                "[collateral] there should be no gain in shares, accepting 1 wei loss because of rounding"
+            );
         }
     }
 
