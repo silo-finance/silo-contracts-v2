@@ -525,10 +525,10 @@ contract SiloConfigTest is Test {
     FOUNDRY_PROFILE=core-test forge test -vv --mt test_accrueInterestAndGetConfigWrongSilo
     */
     function test_accrueInterestAndGetConfigWrongSilo() public {
-        address wrongSilo = _getWrongSilo();
+        _mockWrongSiloAccrueInterest();
 
         vm.expectRevert(ISiloConfig.WrongSilo.selector);
-        _siloConfig.accrueInterestAndGetConfig(wrongSilo, 0);
+        _siloConfig.accrueInterestAndGetConfig(_wrongSilo, 0);
     }
 
     /*
@@ -553,9 +553,9 @@ contract SiloConfigTest is Test {
     */
     function test_accrueInterestAndGetConfigOptimisedWrongSilo() public {
         uint256 anyAction = 0;
-        address wrongSilo = _getWrongSilo();
+        _mockWrongSiloAccrueInterest();
 
-        vm.prank(wrongSilo);
+        vm.prank(_wrongSilo);
         vm.expectRevert(ISiloConfig.WrongSilo.selector);
         _siloConfig.accrueInterestAndGetConfigOptimised(anyAction, ISilo.CollateralType.Collateral);
     }
@@ -611,17 +611,14 @@ contract SiloConfigTest is Test {
         _siloConfig.crossNonReentrantAfter();
     }
 
-    function _getWrongSilo() internal returns (address wrongSilo) {
-        wrongSilo = makeAddr("wrongSilo");
-
-        vm.mockCall(
-            wrongSilo,
-            abi.encodeCall(
-                ISilo.accrueInterestForConfig,
-                (_configDataDefault0.interestRateModel, _configDataDefault0.daoFee, _configDataDefault0.deployerFee)
-            ),
-            abi.encode(true)
+    function _mockWrongSiloAccrueInterest() internal {
+        bytes memory data = abi.encodeCall(
+            ISilo.accrueInterestForConfig,
+            (_configDataDefault0.interestRateModel, _configDataDefault0.daoFee, _configDataDefault0.deployerFee)
         );
+
+        vm.mockCall(_wrongSilo, data, abi.encode(true));
+        vm.expectCall(_wrongSilo, data);
     }
 
     function _accrueInterestAndGetConfigOptimisedTest(
