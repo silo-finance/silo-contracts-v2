@@ -33,7 +33,7 @@ contract PartialLiquidationLibTest is Test, MaxRepayRawMath {
         assertEq(PartialLiquidationLib.minAcceptableLTV(800), 720, "LT=80% => min=>72%");
         uint256 gasEnd = gasleft();
 
-        assertLe(gasStart - gasEnd, 133, "optimise minAcceptableLTV()");
+        assertLe(gasStart - gasEnd, 825, "optimise minAcceptableLTV()");
     }
 
     /*

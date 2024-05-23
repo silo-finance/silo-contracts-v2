@@ -1,15 +1,13 @@
 // SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.20;
 
-import "forge-std/Test.sol";
-
+import {console2} from "forge-std/console2.sol";
 import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";
-
-import {CommonDeploy} from "../_CommonDeploy.sol";
+import {VmLib} from "silo-foundry-utils/lib/VmLib.sol";
 
 import {IInterestRateModelV2} from "silo-core/contracts/interfaces/IInterestRateModelV2.sol";
 
-contract InterestRateModelConfigData is Test, CommonDeploy {
+contract InterestRateModelConfigData {
     error ConfigNotFound();
 
     // must be in alphabetic order
@@ -30,15 +28,15 @@ contract InterestRateModelConfigData is Test, CommonDeploy {
     }
 
     function _readInput(string memory input) internal view returns (string memory) {
-        string memory inputDir = string.concat(vm.projectRoot(), "/silo-core/deploy/input/");
+        string memory inputDir = string.concat(VmLib.vm().projectRoot(), "/silo-core/deploy/input/");
         string memory chainDir = string.concat(ChainsLib.chainAlias(block.chainid), "/");
         string memory file = string.concat(input, ".json");
-        return vm.readFile(string.concat(inputDir, chainDir, file));
+        return VmLib.vm().readFile(string.concat(inputDir, chainDir, file));
     }
 
     function _readDataFromJson() internal view returns (ConfigData[] memory) {
         return abi.decode(
-            vm.parseJson(_readInput("InterestRateModelConfigs"), string(abi.encodePacked("."))), (ConfigData[])
+            VmLib.vm().parseJson(_readInput("InterestRateModelConfigs"), string(abi.encodePacked("."))), (ConfigData[])
         );
     }
 
@@ -64,13 +62,13 @@ contract InterestRateModelConfigData is Test, CommonDeploy {
     }
 
     function print(IInterestRateModelV2.Config memory _configData) public {
-        emit log_named_int("beta", _configData.beta);
-        emit log_named_int("kcrit", _configData.kcrit);
-        emit log_named_int("ki", _configData.ki);
-        emit log_named_int("klin", _configData.klin);
-        emit log_named_int("klow", _configData.klow);
-        emit log_named_int("ucrit", _configData.ucrit);
-        emit log_named_int("ulow", _configData.ulow);
-        emit log_named_int("uopt", _configData.uopt);
+        console2.log("beta", _configData.beta);
+        console2.log("kcrit", _configData.kcrit);
+        console2.log("ki", _configData.ki);
+        console2.log("klin", _configData.klin);
+        console2.log("klow", _configData.klow);
+        console2.log("ucrit", _configData.ucrit);
+        console2.log("ulow", _configData.ulow);
+        console2.log("uopt", _configData.uopt);
     }
 }
