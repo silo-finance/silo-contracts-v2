@@ -15,6 +15,7 @@ import {SiloStdLib} from "silo-core/contracts/lib/SiloStdLib.sol";
 
 import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
 import {MintableToken} from "../_common/MintableToken.sol";
+import {FlashLoanReceiverWithInvalidResponse} from "../_mocks/FlashLoanReceiverWithInvalidResponse.sol";
 import {Gas} from "../gas/Gas.sol";
 
 bytes32 constant FLASHLOAN_CALLBACK = keccak256("ERC3156FlashBorrower.onFlashLoan");
@@ -151,5 +152,17 @@ contract FlashloanTest is SiloLittleHelper, Test, Gas {
 
         (uint256 daoAndDeployerFeesAfter,) = silo0.siloData();
         assertEq(daoAndDeployerFeesAfter, daoAndDeployerFeesBefore + fee);
+    }
+
+    /*
+    forge test -vv --ffi --mt test_flashLoanInvalidResponce
+    */
+    function test_flashLoanInvalidResponce() public {
+        bytes memory data;
+        uint256 amount = 1e18;
+        FlashLoanReceiverWithInvalidResponse receiver = new FlashLoanReceiverWithInvalidResponse();
+
+        vm.expectRevert(ISilo.FlashloanFailed.selector);
+        silo0.flashLoan(IERC3156FlashBorrower(address(receiver)), address(token0), amount, data);
     }
 }
