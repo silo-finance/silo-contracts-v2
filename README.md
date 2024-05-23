@@ -124,8 +124,8 @@ brew install lcov
 
 rm lcov.info
 mkdir coverage
-FOUNDRY_PROFILE=core forge coverage --report summary --report lcov --ffi | grep -i 'silo-core/contracts/' > coverage/silo-core.txt
-genhtml -o coverage/silo-core/ lcov.info
+FOUNDRY_PROFILE=core-with-test forge coverage --report summary --report lcov --ffi | grep -i 'silo-core/contracts/' > coverage/silo-core.txt
+genhtml --ignore-errors inconsistent -o coverage/silo-core/ lcov.info
 
 rm lcov.info
 FOUNDRY_PROFILE=oracles forge coverage --report summary --report lcov | grep -i 'silo-oracles/contracts/' > coverage/silo-oracles.txt
