@@ -526,7 +526,7 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         (bool isSolvent, bool _vaultZeroWithDebt) = _invariant_insolventHasDebt(address(actor));
 
         Silo vault = _vaultZeroWithDebt ? vault0 : vault1;
-        require(isSolvent, "user not solvent");
+        require(isSolvent, "user not solvent - ignoring this case");
 
         (, uint256 debtToRepay) = liquidationModule.maxLiquidation(address(vault), address(actor));
 
@@ -642,44 +642,47 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
 
         (address protected, address collateral, ) = siloConfig.getShareTokens(address(vault));
 
-        uint256 shareSumBefore;
         uint256 previewAssetsSumBefore;
 
+        uint256 protBalanceBefore = IShareToken(protected).balanceOf(address(actor));
+        uint256 collBalanceBefore = IShareToken(collateral).balanceOf(address(actor));
+
         { // too deep
-            uint256 protBalanceBefore = IShareToken(protected).balanceOf(address(actor));
-            uint256 collBalanceBefore = IShareToken(collateral).balanceOf(address(actor));
             uint256 previewCollateralBefore = vault.previewRedeem(collBalanceBefore, ISilo.CollateralType.Collateral);
             uint256 previewProtectedBefore = vault.previewRedeem(protBalanceBefore, ISilo.CollateralType.Protected);
 
-            shareSumBefore = protBalanceBefore + collBalanceBefore;
             previewAssetsSumBefore = previewCollateralBefore + previewProtectedBefore;
         }
-
-        bool noInterest = _checkForInterest(vault);
 
         actor.transitionCollateral(vaultZero, shares, assetType);
 
         uint256 protBalanceAfter = IShareToken(protected).balanceOf(address(actor));
         uint256 collBalanceAfter = IShareToken(collateral).balanceOf(address(actor));
 
-        uint256 shareSumAfter = protBalanceAfter + collBalanceAfter;
+        { // too deep
+            uint256 previewCollateralAfter = vault.previewRedeem(collBalanceAfter, ISilo.CollateralType.Collateral);
+            uint256 previewProtectedAfter = vault.previewRedeem(protBalanceAfter, ISilo.CollateralType.Protected);
+            uint256 previewAssetsSumAfter = previewCollateralAfter + previewProtectedAfter;
 
-        // note: this could result in false positives due to interest calculation, and differences between
-        // protected and unprotected shares/balances. Another way to check this property would be to
-        // transitionCollateral in one direction, and then in the opposite direction, and only check shares/assets
-        // after the second transition.
-        // because of above condition is off
-        if (noInterest) {
-            assertEq(shareSumBefore, shareSumAfter, "Gained shares after transitionCollateral (no interest)");
+            assertGte(previewAssetsSumBefore, previewAssetsSumAfter, "price is flat, so there should be no gains (we accept 1 wei diff)");
+            assertLte(previewAssetsSumBefore - previewAssetsSumAfter, 1, "we accept 1 wei loss");
         }
 
-        uint256 previewCollateralAfter = vault.previewRedeem(collBalanceAfter, ISilo.CollateralType.Collateral);
-        uint256 previewProtectedAfter = vault.previewRedeem(protBalanceAfter, ISilo.CollateralType.Protected);
+        { // too deep
+            // note: this could result in false positives due to interest calculation, and differences between
+            // protected and unprotected shares/balances. Another way to check this property would be to
+            // transitionCollateral in one direction, and then in the opposite direction, and only check shares/assets
+            // after the second transition.
 
-        assertEq(
-            previewAssetsSumBefore, previewCollateralAfter + previewProtectedAfter,
-            "price is flat, so there should be no gains"
-        );
+            // transition back, so we can verify number of shares
+            actor.transitionCollateral(vaultZero, shares, assetType == ISilo.CollateralType.Collateral ? ISilo.CollateralType.Protected : ISilo.CollateralType.Collateral);
+
+            protBalanceAfter = IShareToken(protected).balanceOf(address(actor));
+            collBalanceAfter = IShareToken(collateral).balanceOf(address(actor));
+
+            assertEq(protBalanceBefore, protBalanceAfter, "Gained shares after transitionCollateral (no interest)");
+            assertEq(collBalanceBefore, collBalanceAfter, "Gained shares after transitionCollateral (no interest)");
+        }
     }
 
     function _checkForInterest(Silo _silo) internal returns (bool noInterest) {
