@@ -1,5 +1,5 @@
 | silo-core/contracts/Silo.sol                                                                      | 93.46% (143/153)   | 90.91% (200/220)   | 72.73% (16/22)    | 93.98% (78/83)   |
-| silo-core/contracts/SiloConfig.sol                                                                | 65.87% (83/126)    | 70.62% (113/160)   | 67.65% (46/68)    | 82.61% (19/23)   |
+| silo-core/contracts/SiloConfig.sol                                                                | 33.33% (42/126)    | 31.25% (50/160)    | 33.82% (23/68)    | 52.17% (12/23)   |
 | silo-core/contracts/SiloDeployer.sol                                                              | 100.00% (25/25)    | 97.50% (39/40)     | 80.00% (8/10)     | 100.00% (6/6)    |
 | silo-core/contracts/SiloFactory.sol                                                               | 99.23% (129/130)   | 96.98% (193/199)   | 96.43% (54/56)    | 95.24% (20/21)   |
 | silo-core/contracts/SiloLens.sol                                                                  | 62.50% (10/16)     | 56.00% (14/25)     | 25.00% (1/4)      | 33.33% (3/9)     |
@@ -9,7 +9,7 @@
 | silo-core/contracts/interestRateModel/InterestRateModelV2ConfigFactory.sol                        | 100.00% (18/18)    | 74.29% (26/35)     | 55.56% (10/18)    | 33.33% (1/3)     |
 | silo-core/contracts/lib/Actions.sol                                                               | 100.00% (150/150)  | 96.08% (196/204)   | 84.88% (73/86)    | 100.00% (12/12)  |
 | silo-core/contracts/lib/CallBeforeQuoteLib.sol                                                    | 0.00% (0/4)        | 0.00% (0/8)        | 0.00% (0/4)       | 0.00% (0/2)      |
-| silo-core/contracts/lib/ConfigLib.sol                                                             | 50.00% (10/20)     | 55.17% (16/29)     | 25.00% (4/16)     | 100.00% (1/1)    |
+| silo-core/contracts/lib/ConfigLib.sol                                                             | 20.00% (4/20)      | 31.03% (9/29)      | 6.25% (1/16)      | 100.00% (1/1)    |
 | silo-core/contracts/lib/Hook.sol                                                                  | 0.00% (0/14)       | 0.00% (0/18)       | 100.00% (0/0)     | 0.00% (0/4)      |
 | silo-core/contracts/lib/IsContract.sol                                                            | 0.00% (0/1)        | 0.00% (0/2)        | 100.00% (0/0)     | 0.00% (0/1)      |
 | silo-core/contracts/lib/LiquidationWithdrawLib.sol                                                | 93.33% (14/15)     | 88.24% (15/17)     | 66.67% (8/12)     | 100.00% (4/4)    |
@@ -25,7 +25,7 @@
 | silo-core/contracts/liquidation/PartialLiquidation.sol                                            | 97.62% (41/42)     | 95.16% (59/62)     | 87.50% (21/24)    | 85.71% (6/7)     |
 | silo-core/contracts/liquidation/lib/PartialLiquidationExecLib.sol                                 | 94.12% (32/34)     | 89.58% (43/48)     | 62.50% (15/24)    | 100.00% (3/3)    |
 | silo-core/contracts/liquidation/lib/PartialLiquidationLib.sol                                     | 91.23% (52/57)     | 87.67% (64/73)     | 75.00% (21/28)    | 90.91% (10/11)   |
-| silo-core/contracts/utils/CrossReentrancy.sol                                                     | 64.29% (9/14)      | 70.00% (14/20)     | 62.50% (5/8)      | 100.00% (2/2)    |
+| silo-core/contracts/utils/CrossReentrancy.sol                                                     | 57.14% (8/14)      | 65.00% (13/20)     | 62.50% (5/8)      | 50.00% (1/2)     |
 | silo-core/contracts/utils/ShareCollateralToken.sol                                                | 100.00% (8/8)      | 100.00% (10/10)    | 100.00% (6/6)     | 100.00% (4/4)    |
 | silo-core/contracts/utils/ShareDebtToken.sol                                                      | 100.00% (27/27)    | 92.50% (37/40)     | 66.67% (12/18)    | 100.00% (10/10)  |
 | silo-core/contracts/utils/ShareToken.sol                                                          | 49.15% (29/59)     | 47.67% (41/86)     | 25.00% (4/16)     | 68.42% (13/19)   |
