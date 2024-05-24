@@ -238,6 +238,9 @@ contract EchidnaMiddleman is EchidnaSetup {
             protBalanceAfter = IShareToken(protected).balanceOf(address(actor));
             collBalanceAfter = IShareToken(collateral).balanceOf(address(actor));
 
+            emit log_named_int("collateral shares diff", collBalanceBefore.toInt256() - collBalanceAfter.toInt256());
+            emit log_named_int("protected shares diff", protBalanceBefore.toInt256() - protBalanceAfter.toInt256());
+
             assertLe(
                 protBalanceBefore - protBalanceAfter,
                 25,
