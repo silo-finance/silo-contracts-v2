@@ -163,20 +163,20 @@ contract EchidnaMiddleman is EchidnaSetup {
 
         (address protected, address collateral, ) = siloConfig.getShareTokens(address(vault));
 
-        uint256 maxRedeemSumBefore;
+        uint256 maxWithdrawSumBefore;
 
         uint256 protBalanceBefore = IShareToken(protected).balanceOf(address(actor));
         uint256 collBalanceBefore = IShareToken(collateral).balanceOf(address(actor));
 
         { // too deep
-            uint256 maxCollateralBefore = vault.maxRedeem(address(actor), ISilo.CollateralType.Collateral);
-            uint256 maxProtectedBefore = vault.maxRedeem(address(actor), ISilo.CollateralType.Protected);
-            maxRedeemSumBefore = maxCollateralBefore + maxProtectedBefore;
+            uint256 maxCollateralBefore = vault.maxWithdraw(address(actor), ISilo.CollateralType.Collateral);
+            uint256 maxProtectedBefore = vault.maxWithdraw(address(actor), ISilo.CollateralType.Protected);
+            maxWithdrawSumBefore = maxCollateralBefore + maxProtectedBefore;
 
             emit log("just before transitionCollateral (max should be with interest):");
             emit log_named_uint("maxRedeem maxCollateralBefore", maxCollateralBefore);
             emit log_named_uint("maxRedeem  maxProtectedBefore", maxProtectedBefore);
-            emit log_named_uint("maxRedeem                     sum", maxRedeemSumBefore);
+            emit log_named_uint("maxRedeem                     sum", maxWithdrawSumBefore);
         }
 
         vm.prank(actor);
@@ -186,17 +186,17 @@ contract EchidnaMiddleman is EchidnaSetup {
         uint256 collBalanceAfter = IShareToken(collateral).balanceOf(address(actor));
 
         { // too deep
-            uint256 maxCollateralAfter = vault.maxRedeem(address(actor), ISilo.CollateralType.Collateral);
-            uint256 maxProtectedAfter = vault.maxRedeem(address(actor), ISilo.CollateralType.Protected);
+            uint256 maxCollateralAfter = vault.maxWithdraw(address(actor), ISilo.CollateralType.Collateral);
+            uint256 maxProtectedAfter = vault.maxWithdraw(address(actor), ISilo.CollateralType.Protected);
             uint256 maxAssetsSumAfter = maxCollateralAfter + maxProtectedAfter;
 
             emit log_named_uint("after transitionCollateral assets", transitionedAssets);
             emit log_named_uint("maxRedeem maxCollateralAfter", maxCollateralAfter);
             emit log_named_uint("maxRedeem  maxProtectedAfter", maxProtectedAfter);
             emit log_named_uint("maxRedeem                    sum", maxAssetsSumAfter);
-            emit log_named_int("diff", maxRedeemSumBefore.toInt256() - maxAssetsSumAfter.toInt256());
+            emit log_named_int("diff", maxWithdrawSumBefore.toInt256() - maxAssetsSumAfter.toInt256());
 
-            assertGe(maxRedeemSumBefore, maxAssetsSumAfter, "price is flat, so there should be no gains (we accept 1 wei diff)");
+            assertGe(maxWithdrawSumBefore, maxAssetsSumAfter, "price is flat, so there should be no gains (we accept 1 wei diff)");
             // TODO temporary disabled because underflow: assertLe(maxRedeemSumBefore - maxAssetsSumAfter, 1, "we accept 1 wei diff");
         }
 
@@ -221,16 +221,16 @@ contract EchidnaMiddleman is EchidnaSetup {
             transitionedAssets = vault.transitionCollateral(sharesTransitioned, actor, _withdrawType);
 
             {
-                uint256 previewCollateralBack = vault.maxRedeem(address(actor), ISilo.CollateralType.Collateral);
-                uint256 previewProtectedBack = vault.maxRedeem(address(actor), ISilo.CollateralType.Protected);
-                uint256 previewAssetsSumBack = previewCollateralBack + previewProtectedBack;
+                uint256 maxCollateralBack = vault.maxWithdraw(address(actor), ISilo.CollateralType.Collateral);
+                uint256 maxProtectedBack = vault.maxWithdraw(address(actor), ISilo.CollateralType.Protected);
+                uint256 maxAssetsSumBack = maxCollateralBack + maxProtectedBack;
 
                 emit log_named_uint("after back transitionCollateral", transitionedAssets);
-                emit log_named_uint("maxRedeem previewCollateralBack", previewCollateralBack);
-                emit log_named_uint("maxRedeem  previewProtectedBack", previewProtectedBack);
-                emit log_named_uint("maxRedeem  previewAssetsSumBack", previewAssetsSumBack);
+                emit log_named_uint("maxWithdraw previewCollateralBack", maxCollateralBack);
+                emit log_named_uint("maxWithdraw  previewProtectedBack", maxProtectedBack);
+                emit log_named_uint("maxWithdraw                   sum", maxAssetsSumBack);
 
-                assertGe(maxRedeemSumBefore, previewAssetsSumBack, "price is flat, so there should be no gains (we accept 1 wei diff)");
+                assertGe(maxWithdrawSumBefore, maxAssetsSumBack, "price is flat, so there should be no gains (we accept 1 wei diff)");
                 // TODO temporary disabled because underflow: assertLe(maxRedeemSumBefore - previewAssetsSumBack, 1, "we accept 1 wei diff");
             }
 
