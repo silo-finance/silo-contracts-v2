@@ -922,7 +922,7 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         uint256 balance = token.balanceOf(actor);
 
         if (balance < requiredBalance) {
-            require(type(uint256).max - token.totalSupply() < requiredBalance - balance, "total supply limit");
+            require(type(uint256).max - token.totalSupply() >= requiredBalance - balance, "total supply limit");
         }
     }
 }
