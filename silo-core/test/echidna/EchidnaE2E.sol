@@ -617,6 +617,8 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         Silo siloWithDebt = _vaultZeroWithDebt ? vault0 : vault1;
         (, uint256 debtToRepay) = liquidationModule.maxLiquidation(address(siloWithDebt), address(actor));
 
+        _requireTotalCap(_vaultZeroWithDebt, address(actor), debtToRepay);
+
         try liquidator.liquidationCall(_vaultZeroWithDebt, address(actor), debtToRepay, receiveShares, siloConfig) {
         } catch {
             emit LogString("Cannot liquidate insolvent user!");
@@ -887,5 +889,14 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
 
         emit ExactAmount("maxBorrowShares0:", vault0.maxBorrowShares(_actor, sameAsset));
         emit ExactAmount("maxBorrowShares1:", vault1.maxBorrowShares(_actor, sameAsset));
+    }
+
+    function _requireTotalCap(bool vaultZero, address actor, uint256 requiredBalance) internal view {
+        TestERC20Token token = vaultZero ? _asset0 : _asset1;
+        uint256 balance = token.balanceOf(actor);
+
+        if (balance < requiredBalance) {
+            require(type(uint256).max - token.totalSupply() < requiredBalance - balance, "total supply limit");
+        }
     }
 }
