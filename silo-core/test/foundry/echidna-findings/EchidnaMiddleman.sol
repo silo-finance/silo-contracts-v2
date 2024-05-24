@@ -93,6 +93,16 @@ contract EchidnaMiddleman is EchidnaSetup {
         shares = silo0.borrowShares(maxBorrow, actor, actor, false /* sameAsset */);
     }
 
+    function __repayNeverReturnsZeroAssets(uint8 actorIndex, bool vaultZero, uint256 shares) public {
+        emit log_named_string("    function", "__repayNeverReturnsZeroAssets");
+
+        address actor = _chooseActor(actorIndex);
+
+        vm.prank(actor);
+        uint256 assets = (vaultZero ? silo0 : silo1).repayShares(shares, actor);
+        assertGt(assets, 0, "repayShares returned zero assets");
+    }
+
     function __maxLiquidation_correctReturnValue(uint8 _actor) internal {
         emit log_named_string("    function", "__maxLiquidation_correctReturnValue");
 

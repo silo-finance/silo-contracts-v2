@@ -42,16 +42,23 @@ maxWithdraw_correctMax(uint8): failed!💥
 
 /*
 maxWithdraw_correctMax(uint8): failed!💥
-  Call sequence, shrinking 138/500:
-    EchidnaE2E.mintAssetType(1,false,3359060017434388967612921831034,0)
-    EchidnaE2E.previewDeposit_doesNotReturnMoreThanDeposit(0,9211807610115465698869134)
-    EchidnaE2E.deposit(0,false,27108001410675115161227761714775307113125366843617520552741490288855770112)
-    EchidnaE2E.borrowShares(21,false,1)
-    EchidnaE2E.maxBorrowShares_correctReturnValue(37)
-    EchidnaE2E.cannotLiquidateASolventUser(0,false) Time delay: 290841 seconds Block delay: 13624
-    EchidnaE2E.debtSharesNeverLargerThanDebt() Time delay: 491278 seconds Block delay: 18078
-    EchidnaE2E.previewDeposit_doesNotReturnMoreThanDeposit(1,466646296907029213812791060467285792567905702329250055090617127481490223987)
-    EchidnaE2E.maxWithdraw_correctMax(9)
+  Call sequence, shrinking 38/500:
+    EchidnaE2E.mintAssetType(2,false,479936290768928286288619590199269,0)
+    EchidnaE2E.previewDeposit_doesNotReturnMoreThanDeposit(0,130149798205058114997447095)
+    EchidnaE2E.debtSharesNeverLargerThanDebt()
+    *wait*
+    EchidnaE2E.depositAssetType(0,false,28114739567946133799942713426681725785291273777957521719307878693967289427,1)
+    EchidnaE2E.cannotLiquidateASolventUser(20,false)
+    EchidnaE2E.deposit(12,false,24428929480309915595709971606621732836321705326069162901568460876476539767704)
+    EchidnaE2E.repayNeverReturnsZeroAssets(2,false,4)
+    EchidnaE2E.borrowShares(120,false,1)
+    EchidnaE2E.maxBorrowShares_correctReturnValue(170)
+    *wait* Time delay: 189583 seconds Block delay: 4923
+    EchidnaE2E.maxRedeem_correctMax(7)
+    *wait*
+    EchidnaE2E.cannotLiquidateASolventUser(0,false) Time delay: 579336 seconds Block delay: 15624
+    EchidnaE2E.previewDeposit_doesNotReturnMoreThanDeposit(20,115320030872300257577436910923755727994938587050944175707897351583648779882)
+    EchidnaE2E.maxWithdraw_correctMax(135)
 
 
     forge test -vv --ffi --mt test_echidna_scenario_maxWithdraw_correctMax2
@@ -59,14 +66,23 @@ maxWithdraw_correctMax(uint8): failed!💥
     this works, but failing on echidna
     */
     function test_echidna_scenario_maxWithdraw_correctMax2() public {
-        __mintAssetType(1,false,3359060017434388967612921831034,0);
-        __previewDeposit_doesNotReturnMoreThanDeposit(0,9211807610115465698869134);
-        __deposit(0,false,27108001410675115161227761714775307113125366843617520552741490288855770112);
-        __borrowShares(21,false,1);
-        __maxBorrowShares_correctReturnValue(37);
-        __cannotLiquidateASolventUser(0,false); // Time delay: 290841 seconds Block delay: 13624
-        __debtSharesNeverLargerThanDebt(); // Time delay: 491278 seconds Block delay: 18078
-        __previewDeposit_doesNotReturnMoreThanDeposit(1,466646296907029213812791060467285792567905702329250055090617127481490223987);
-        __maxWithdraw_correctMax(9);
+        __mintAssetType(2,false,479936290768928286288619590199269,0);
+        __previewDeposit_doesNotReturnMoreThanDeposit(0,130149798205058114997447095);
+        __debtSharesNeverLargerThanDebt();
+
+        // *wait*
+        __timeDelay(1);
+        __depositAssetType(0,false,28114739567946133799942713426681725785291273777957521719307878693967289427,1);
+        __cannotLiquidateASolventUser(20,false);
+        __deposit(12,false,24428929480309915595709971606621732836321705326069162901568460876476539767704);
+        __repayNeverReturnsZeroAssets(2,false,4);
+        __borrowShares(120,false,1);
+        __maxBorrowShares_correctReturnValue(170);
+       //  *wait* Time delay: 189583 seconds Block delay: 4923
+        __maxRedeem_correctMax(7);
+        // *wait*
+        __cannotLiquidateASolventUser(0,false); // Time delay: 579336 seconds Block delay: 15624
+        __previewDeposit_doesNotReturnMoreThanDeposit(20,115320030872300257577436910923755727994938587050944175707897351583648779882);
+        __maxWithdraw_correctMax(135);
     }
 }
