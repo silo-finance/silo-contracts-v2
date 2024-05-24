@@ -332,17 +332,21 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         if (maxAssets == 0) {
             (, address collShareToken, ) = siloConfig.getShareTokens(address(vault));
             uint256 shareBalance = IERC20(collShareToken).balanceOf(address(actor));
+            uint256 liquidity = vault.getLiquidity();
+            uint256 ltv = vault.getLtv(address(actor));
+            bool isSolvent = vault.isSolvent(address(actor));
 
             // below are all cases where maxAssets can be 0
-            if (shareBalance == 0 || !vault.isSolvent(address(actor)) || vault.getLiquidity() == 0) {
+            if (shareBalance == 0 || !isSolvent || liquidity == 0) {
                 // we good
             } else {
                 emit LogString("[maxWithdraw_correctMax] maxAssets is zero for no reason");
-                emit LogString(vault.isSolvent(address(actor)) ? "actor solvent" : "actor not solvent");
+                emit LogString(isSolvent ? "actor solvent" : "actor not solvent");
                 emit LogUint256("shareBalance", shareBalance);
-                emit LogUint256("vault.getLiquidity()", vault.getLiquidity());
+                emit LogUint256("vault.getLiquidity()", liquidity);
+                emit LogUint256("ltv (is it close to LT?)", ltv);
 
-                assert(false);
+                assert(false); // why max withdraw is 0?
             }
         }
 
@@ -613,6 +617,7 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
 
         (, uint256 debtToRepay) = liquidationModule.maxLiquidation(address(vault), address(actor));
 
+        // TODO why this require not working here???
         _requireTotalCap(_vaultZeroWithDebt, address(liquidator), debtToRepay);
 
         try liquidator.liquidationCall(_vaultZeroWithDebt, address(liquidator), debtToRepay, receiveShares, siloConfig) {
@@ -674,7 +679,9 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
             assertEq(debtToRepay, maxRepay, "we assume, this is full liquidation");
         }
 
-        actorTwo.liquidationCall(_vaultZeroWithDebt, address(actor), debtToRepay, false, siloConfig);
+        _requireTotalCap(_vaultZeroWithDebt, address(actorTwo), debtToRepay);
+
+        actorTwo.liquidationCall(_vaultZeroWithDebt, address(actorTwo), debtToRepay, false, siloConfig);
 
         uint256 ltvAfter = vault.getLtv(address(actor));
         emit LogString(string.concat("User afterLtv:", ltvAfter.toString()));
