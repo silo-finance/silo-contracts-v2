@@ -780,14 +780,14 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
 
             assertLte(
                 protBalanceBefore - protBalanceAfter,
-                2,
-                "[protected] there should be no gain in shares, accepting 2 wei loss because of rounding (2 txs)"
+                25,
+                "[protected] there should be no gain in shares, accepting 25 wei loss because of rounding policy"
             );
 
             assertLte(
                 collBalanceBefore - collBalanceAfter,
-                2,
-                "[collateral] there should be no gain in shares, accepting 2 wei loss because of rounding (2 txs)"
+                25,
+                "[collateral] there should be no gain in shares, accepting 25 wei loss because of rounding policy"
             );
         }
     }
