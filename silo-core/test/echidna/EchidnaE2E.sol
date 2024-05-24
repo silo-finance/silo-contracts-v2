@@ -285,8 +285,8 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         emit LogString(string.concat("Max Assets to deposit:", maxAssets.toString()));
 
         try actor.deposit(true, maxAssets) {
-
         } catch {
+            emit LogString("[maxDeposit_correctMax] failed on deposit");
             assert(false);
         }
     }
@@ -313,6 +313,7 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         try actor.mint(vaultZero, maxShares) {
 
         } catch {
+            emit LogString("[maxMint_correctMax] failed on mint");
             assert(false);
         }
     }
@@ -327,9 +328,25 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         require(_requireHealthySilos(), "we dont want IRM to fail");
 
         uint256 maxAssets = vault.maxWithdraw(address(actor));
-        (, address collShareToken, ) = siloConfig.getShareTokens(address(vault));
-        require(IERC20(collShareToken).balanceOf(address(actor)) > 0, "No deposits");
-        require(maxAssets != 0, "Zero assets to withdraw");
+
+        if (maxAssets == 0) {
+            (, address collShareToken, ) = siloConfig.getShareTokens(address(vault));
+            uint256 shareBalance = IERC20(collShareToken).balanceOf(address(actor));
+
+            // below are all cases where maxAssets can be 0
+            if (shareBalance == 0 || !vault.isSolvent(address(actor)) || vault.getLiquidity() == 0) {
+                // we good
+            } else {
+                emit LogString("[maxWithdraw_correctMax] maxAssets is zero for no reason");
+                emit LogString(vault.isSolvent(address(actor)) ? "actor solvent" : "actor not solvent");
+                emit LogUint256("shareBalance", shareBalance);
+                emit LogUint256("vault.getLiquidity()", vault.getLiquidity());
+
+                assert(false);
+            }
+        }
+
+        if (maxAssets == 0) return;
 
         uint256 liquidity = vault.getLiquidity(); // includes interest
         emit LogString(string.concat("Max Assets to withdraw:", maxAssets.toString()));
@@ -338,7 +355,7 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         try actor.withdraw(_vaultWithCollateral, maxAssets) {
             emit LogString("Withdrawal succeeded");
         } catch {
-            emit LogString("Withdrawal failed");
+            emit LogString("Withdrawal failed but it should not!");
             assert(false);
         }
     }
@@ -596,7 +613,9 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
 
         (, uint256 debtToRepay) = liquidationModule.maxLiquidation(address(vault), address(actor));
 
-        try liquidator.liquidationCall(_vaultZeroWithDebt, address(actor), debtToRepay, receiveShares, siloConfig) {
+        _requireTotalCap(_vaultZeroWithDebt, address(liquidator), debtToRepay);
+
+        try liquidator.liquidationCall(_vaultZeroWithDebt, address(liquidator), debtToRepay, receiveShares, siloConfig) {
             emit LogString("Solvent user liquidated!");
             assert(false);
         } catch {
