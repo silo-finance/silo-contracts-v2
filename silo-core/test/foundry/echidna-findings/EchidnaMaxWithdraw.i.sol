@@ -23,8 +23,6 @@ maxWithdraw_correctMax(uint8): failed!💥
     maxWithdraw_correctMax(15)
 
     forge test -vv --ffi --mt test_echidna_scenario_maxWithdraw_correctMax1
-
-    this test case covers the bug we had in maxBorrow
     */
     function test_echidna_scenario_maxWithdraw_correctMax1() public {
         __mintAssetType(2,false,10752370530470213059098506752467820,0);

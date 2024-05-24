@@ -126,6 +126,8 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
        ================================================================ */
 
     function deposit(uint8 actorIndex, bool vaultZero, uint256 amount) public returns (uint256 shares) {
+        emit LogUint256("[deposit] block.timestamp:", block.timestamp);
+
         Actor actor = _selectActor(actorIndex);
 
         shares = actor.deposit(vaultZero, amount);
@@ -133,6 +135,8 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
     }
 
     function depositAssetType(uint8 actorIndex, bool vaultZero, uint256 amount, ISilo.CollateralType assetType) public returns (uint256 shares) {
+        emit LogUint256("[depositAssetType] block.timestamp:", block.timestamp);
+
         Actor actor = _selectActor(actorIndex);
 
         shares = actor.depositAssetType(vaultZero, amount, assetType);
@@ -150,6 +154,8 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
     }
 
     function mint(uint8 actorIndex, bool vaultZero, uint256 shares) public returns (uint256 assets) {
+        emit LogUint256("[mint] block.timestamp:", block.timestamp);
+
         Actor actor = _selectActor(actorIndex);
 
         assets = actor.mint(vaultZero, shares);
@@ -157,6 +163,8 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
     }
 
     function mintAssetType(uint8 actorIndex, bool vaultZero, uint256 shares, ISilo.CollateralType assetType) public returns (uint256 assets) {
+        emit LogUint256("[mintAssetType] block.timestamp:", block.timestamp);
+
         Actor actor = _selectActor(actorIndex);
 
         assets = actor.mintAssetType(vaultZero, shares, assetType);
@@ -164,56 +172,78 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
     }
 
     function withdraw(uint8 actorIndex, bool vaultZero, uint256 assets) public {
+        emit LogUint256("[withdraw] block.timestamp:", block.timestamp);
+
         Actor actor = _selectActor(actorIndex);
         actor.withdraw(vaultZero, assets);
     }
 
     function withdrawAssetType(uint8 actorIndex, bool vaultZero, uint256 assets, ISilo.CollateralType assetType) public {
+        emit LogUint256("[withdrawAssetType] block.timestamp:", block.timestamp);
+
         Actor actor = _selectActor(actorIndex);
         actor.withdrawAssetType(vaultZero, assets, assetType);
     }
 
     function redeem(uint8 actorIndex, bool vaultZero, uint256 shares) public {
+        emit LogUint256("[redeem] block.timestamp:", block.timestamp);
+
         Actor actor = _selectActor(actorIndex);
         actor.redeem(vaultZero, shares);
     }
 
     function redeemAssetType(uint8 actorIndex, bool vaultZero, uint256 shares, ISilo.CollateralType assetType) public {
+        emit LogUint256("[redeemAssetType] block.timestamp:", block.timestamp);
+
         Actor actor = _selectActor(actorIndex);
         actor.redeemAssetType(vaultZero, shares, assetType);
     }
 
     function borrow(uint8 actorIndex, bool vaultZero, uint256 assets) public {
+        emit LogUint256("[borrow] block.timestamp:", block.timestamp);
+
         Actor actor = _selectActor(actorIndex);
         actor.borrow(vaultZero, assets);
     }
 
     function borrowShares(uint8 actorIndex, bool vaultZero, uint256 shares) public {
+        emit LogUint256("[borrowShares] block.timestamp:", block.timestamp);
+
         Actor actor = _selectActor(actorIndex);
         actor.borrowShares(vaultZero, shares);
     }
 
     function repay(uint8 actorIndex, bool vaultZero, uint256 amount) public {
+        emit LogUint256("[repay] block.timestamp:", block.timestamp);
+
         Actor actor = _selectActor(actorIndex);
         actor.repay(vaultZero, amount);
     }
 
     function repayShares(uint8 actorIndex, bool vaultZero, uint256 shares) public returns (uint256 assets) {
+        emit LogUint256("[repayShares] block.timestamp:", block.timestamp);
+
         Actor actor = _selectActor(actorIndex);
         assets = actor.repayShares(vaultZero, shares);
     }
 
     function accrueInterest(bool vaultZero) public {
+        emit LogUint256("[accrueInterest] block.timestamp:", block.timestamp);
+
         Silo vault = vaultZero ? vault0 : vault1;
         vault.accrueInterest();
     }
 
     function withdrawFees(bool vaultZero) public {
+        emit LogUint256("[withdrawFees] block.timestamp:", block.timestamp);
+
         Silo vault = vaultZero ? vault0 : vault1;
         vault.withdrawFees();
     }
 
     function transitionCollateral(uint8 actorIndex, bool vaultZero, uint256 shares, ISilo.CollateralType withdrawType) public returns (uint256 assets) {
+        emit LogUint256("[transitionCollateral] block.timestamp:", block.timestamp);
+
         Actor actor = _selectActor(actorIndex);
         assets = actor.transitionCollateral(vaultZero, shares, withdrawType);
     }
@@ -224,6 +254,8 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         uint256 debtToCover,
         bool receiveSToken
     ) public {
+        emit LogUint256("[liquidationCall] block.timestamp:", block.timestamp);
+
         Actor borrower = _selectActor(actorIndexBorrower);
         Actor liquidator = _selectActor(actorIndexLiquidator);
 
@@ -239,6 +271,8 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
 
     // maxDeposit functions are aligned with ERC4626 standard
     function maxDeposit_correctMax(uint8 actorIndex) public {
+        emit LogUint256("[maxDeposit_correctMax] block.timestamp:", block.timestamp);
+
         Actor actor = _selectActor(actorIndex);
         uint256 maxAssets = vault0.maxDeposit(address(actor));
         require(maxAssets != 0, "max deposit is zero");
@@ -258,6 +292,8 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
     }
 
     function maxMint_correctMax(uint8 actorIndex, bool vaultZero) public {
+        emit LogUint256("[maxMint_correctMax] block.timestamp:", block.timestamp);
+
         Actor actor = _selectActor(actorIndex);
         Silo vault = vaultZero ? vault0 : vault1;
         TestERC20Token token = vaultZero ? _asset0 : _asset1;
@@ -282,6 +318,8 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
     }
 
     function maxWithdraw_correctMax(uint8 actorIndex) public {
+        emit LogUint256("[maxWithdraw_correctMax] block.timestamp:", block.timestamp);
+
         Actor actor = _selectActor(actorIndex);
 
         (, bool _vaultWithCollateral) = _invariant_onlySolventUserCanRedeem(address(actor));
@@ -306,6 +344,8 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
     }
 
     function maxRedeem_correctMax(uint8 actorIndex) public {
+        emit LogUint256("[maxRedeem_correctMax] block.timestamp:", block.timestamp);
+
         Actor actor = _selectActor(actorIndex);
 
         (, bool _vaultWithCollateral) = _invariant_onlySolventUserCanRedeem(address(actor));
@@ -325,6 +365,8 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
     }
 
     function maxBorrow_correctReturnValue(uint8 actorIndex) public {
+        emit LogUint256("[maxBorrow_correctReturnValue] block.timestamp:", block.timestamp);
+
         Actor actor = _selectActor(actorIndex);
         uint256 maxAssets = vault0.maxBorrow(address(actor), sameAsset);
         require(maxAssets != 0, "Zero assets to borrow");
@@ -347,6 +389,8 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
     }
 
     function maxBorrowShares_correctReturnValue(uint8 actorIndex) public {
+        emit LogUint256("[maxBorrowShares_correctReturnValue] block.timestamp:", block.timestamp);
+
         Actor actor = _selectActor(actorIndex);
         uint256 maxShares = vault0.maxBorrowShares(address(actor), sameAsset);
         require(maxShares != 0, "Zero assets to borrow");
@@ -362,6 +406,8 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
     }
 
     function maxRepay_correctReturnValue(uint8 actorIndex) public {
+        emit LogUint256("[maxRepay_correctReturnValue] block.timestamp:", block.timestamp);
+
         Actor actor = _selectActor(actorIndex);
         uint256 maxAssets = vault0.maxRepay(address(actor));
         require(maxAssets != 0, "Zero assets to repay");
@@ -381,6 +427,8 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
     }
 
     function maxRepayShares_correctReturnValue(uint8 actorIndex) public {
+        emit LogUint256("[maxRepayShares_correctReturnValue] block.timestamp:", block.timestamp);
+
         Actor actor = _selectActor(actorIndex);
         uint256 maxShares = vault0.maxRepayShares(address(actor));
         require(maxShares != 0, "Zero shares to repay");
@@ -402,6 +450,8 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
     }
 
     function maxLiquidation_correctReturnValue(uint8 actorIndex) public {
+        emit LogUint256("[maxLiquidation_correctReturnValue] block.timestamp:", block.timestamp);
+
         Actor actor = _selectActor(actorIndex);
         Actor secondActor = _selectActor(actorIndex + 1);
 
@@ -433,6 +483,8 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
        ================================================================ */
 
     function previewDeposit_doesNotReturnMoreThanDeposit(uint8 actorIndex, uint256 assets) public {
+        emit LogUint256("[previewDeposit_doesNotReturnMoreThanDeposit] block.timestamp:", block.timestamp);
+
         Actor actor = _selectActor(actorIndex);
         uint256 previewShares = vault0.previewDeposit(assets);
         uint256 shares = actor.deposit(true, assets);
@@ -440,6 +492,8 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
     }
 
     function previewMint_DoesNotReturnLessThanMint(uint8 actorIndex, uint256 shares) public {
+        emit LogUint256("[previewMint_DoesNotReturnLessThanMint] block.timestamp:", block.timestamp);
+
         Actor actor = _selectActor(actorIndex);
         uint256 previewAssets = vault0.previewMint(shares);
         uint256 assets = actor.mint(true, shares);
@@ -447,6 +501,8 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
     }
 
     function previewWithdraw_doesNotReturnLessThanWithdraw(uint8 actorIndex, uint256 assets) public {
+        emit LogUint256("[previewWithdraw_doesNotReturnLessThanWithdraw] block.timestamp:", block.timestamp);
+
         Actor actor = _selectActor(actorIndex);
         uint256 previewShares = vault0.previewWithdraw(assets);
         uint256 shares = actor.withdraw(true, assets);
@@ -454,6 +510,8 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
     }
 
     function previewRedeem_doesNotReturnMoreThanRedeem(uint8 actorIndex, uint256 shares) public {
+        emit LogUint256("[previewRedeem_doesNotReturnMoreThanRedeem] block.timestamp:", block.timestamp);
+
         Actor actor = _selectActor(actorIndex);
         uint256 previewAssets = vault0.previewRedeem(shares);
         uint256 assets = actor.redeem(true, shares);
@@ -465,11 +523,15 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
             Check if shares or assets can round down to zero
        ================================================================ */
     function depositNeverMintsZeroShares(uint8 actorIndex, bool vaultZero, uint256 amount) public {
+        emit LogUint256("[depositNeverMintsZeroShares] block.timestamp:", block.timestamp);
+
         uint256 shares = deposit(actorIndex, vaultZero, amount);
         assertNeq(shares, 0 , "Deposit minted zero shares");
     }
 
     function repayNeverReturnsZeroAssets(uint8 actorIndex, bool vaultZero, uint256 shares) public {
+        emit LogUint256("[repayNeverReturnsZeroAssets] block.timestamp:", block.timestamp);
+
         uint256 assets = repayShares(actorIndex, vaultZero, shares);
         assertNeq(assets, 0, "repayShares returned zero assets");
     }
@@ -495,6 +557,8 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
 
     // Property: A user who's debt is above the liquidation threshold cannot be liquidated by another user
     function cannotLiquidateUserUnderLt(uint8 actorIndex, bool receiveShares) public {
+        emit LogUint256("[cannotLiquidateUserUnderLt] block.timestamp:", block.timestamp);
+
         Actor actor = _selectActor(actorIndex);
         Actor liquidator = _selectActor(actorIndex + 1);
 
@@ -520,6 +584,8 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
 
     // Property: A user who's debt is above the liquidation threshold cannot be liquidated by another user
     function cannotLiquidateASolventUser(uint8 actorIndex, bool receiveShares) public {
+        emit LogUint256("[cannotLiquidateASolventUser] block.timestamp:", block.timestamp);
+
         Actor actor = _selectActor(actorIndex);
         Actor liquidator = _selectActor(actorIndex + 1);
 
@@ -540,6 +606,8 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
 
     // Property: An insolvent user cannot prevent others from liquidating his debt
     function cannotPreventInsolventUserFromBeingLiquidated(uint8 actorIndex, bool receiveShares) public {
+        emit LogUint256("[cannotPreventInsolventUserFromBeingLiquidated] block.timestamp:", block.timestamp);
+
         Actor actor = _selectActor(actorIndex);
         Actor liquidator = _selectActor(actorIndex + 1);
 
@@ -562,6 +630,8 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
     // so max repay value under dust level is `repayValue = _totalBorrowerDebtValue * _DEBT_DUST_LEVEL`
     // based on this we will make decision if this is partial or full liquidation and we will run some checks
     function cannotFullyLiquidateSmallLtv(uint8 actorIndex) public {
+        emit LogUint256("[cannotFullyLiquidateSmallLtv] block.timestamp:", block.timestamp);
+
         Actor actor = _selectActor(actorIndex);
         Actor actorTwo = _selectActor(actorIndex + 1);
 
@@ -605,6 +675,8 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
     function selfLiquidationDoesNotResultInMoreSharesOrAssets(uint8 actorIndex, uint256 debtToRepay, bool receiveSToken)
         public
     {
+        emit LogUint256("[selfLiquidationDoesNotResultInMoreSharesOrAssets] block.timestamp:", block.timestamp);
+
         Actor actor = _selectActor(actorIndex);
         (, bool _vaultZeroWithDebt) = _invariant_insolventHasDebt(address(actor));
 
@@ -637,21 +709,22 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         uint256 shares,
         ISilo.CollateralType assetType
     ) public {
+        emit LogUint256("[transitionCollateral_doesNotResultInMoreShares] block.timestamp:", block.timestamp);
+
         Actor actor = _selectActor(actorIndex);
         Silo vault = vaultZero ? vault0 : vault1;
 
         (address protected, address collateral, ) = siloConfig.getShareTokens(address(vault));
 
-        uint256 previewAssetsSumBefore;
+        uint256 maxWithdrawSumBefore;
 
         uint256 protBalanceBefore = IShareToken(protected).balanceOf(address(actor));
         uint256 collBalanceBefore = IShareToken(collateral).balanceOf(address(actor));
 
         { // too deep
-            uint256 previewCollateralBefore = vault.previewRedeem(collBalanceBefore, ISilo.CollateralType.Collateral);
-            uint256 previewProtectedBefore = vault.previewRedeem(protBalanceBefore, ISilo.CollateralType.Protected);
-
-            previewAssetsSumBefore = previewCollateralBefore + previewProtectedBefore;
+            uint256 maxCollateralBefore = vault.maxWithdraw(address(actor), ISilo.CollateralType.Collateral);
+            uint256 maxProtectedBefore = vault.maxWithdraw(address(actor), ISilo.CollateralType.Protected);
+            maxWithdrawSumBefore = maxCollateralBefore + maxProtectedBefore;
         }
 
         actor.transitionCollateral(vaultZero, shares, assetType);
@@ -660,12 +733,12 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         uint256 collBalanceAfter = IShareToken(collateral).balanceOf(address(actor));
 
         { // too deep
-            uint256 previewCollateralAfter = vault.previewRedeem(collBalanceAfter, ISilo.CollateralType.Collateral);
-            uint256 previewProtectedAfter = vault.previewRedeem(protBalanceAfter, ISilo.CollateralType.Protected);
-            uint256 previewAssetsSumAfter = previewCollateralAfter + previewProtectedAfter;
+            uint256 maxCollateralAfter = vault.maxWithdraw(address(actor), ISilo.CollateralType.Collateral);
+            uint256 maxProtectedAfter = vault.maxWithdraw(address(actor), ISilo.CollateralType.Protected);
+            uint256 maxAssetsSumAfter = maxCollateralAfter + maxProtectedAfter;
 
-            assertGte(previewAssetsSumBefore, previewAssetsSumAfter, "price is flat, so there should be no gains (we accept 1 wei diff)");
-            assertLte(previewAssetsSumBefore - previewAssetsSumAfter, 1, "we accept 1 wei loss");
+            assertGte(maxWithdrawSumBefore, maxAssetsSumAfter, "price is flat, so there should be no gains (we accept 1 wei diff)");
+            assertLte(maxWithdrawSumBefore - maxAssetsSumAfter, 1, "we accept 1 wei loss");
         }
 
         { // too deep
@@ -685,16 +758,23 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
             protBalanceAfter = IShareToken(protected).balanceOf(address(actor));
             collBalanceAfter = IShareToken(collateral).balanceOf(address(actor));
 
+            uint256 maxCollateralBack = vault.maxWithdraw(address(actor), ISilo.CollateralType.Collateral);
+            uint256 maxProtectedBack = vault.maxWithdraw(address(actor), ISilo.CollateralType.Protected);
+            uint256 maxAssetsSumBack = maxCollateralBack + maxProtectedBack;
+
+            assertGte(maxWithdrawSumBefore, maxAssetsSumBack, "price is flat, so there should be no gains (we accept 1 wei diff)");
+            assertLte(maxWithdrawSumBefore - maxAssetsSumBack, 1, "we accept 1 wei diff");
+
             assertLte(
                 protBalanceBefore - protBalanceAfter,
-                1,
-                "[protected] there should be no gain in shares, accepting 1 wei loss because of rounding"
+                25,
+                "[protected] there should be no gain in shares, accepting 25 wei loss because of rounding policy"
             );
 
             assertLte(
                 collBalanceBefore - collBalanceAfter,
-                1,
-                "[collateral] there should be no gain in shares, accepting 1 wei loss because of rounding"
+                25,
+                "[collateral] there should be no gain in shares, accepting 25 wei loss because of rounding policy"
             );
         }
     }

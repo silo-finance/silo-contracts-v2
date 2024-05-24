@@ -23,8 +23,6 @@ transitionCollateral_doesNotResultInMoreShares(uint8,bool,uint256,uint8): failed
 
 
     forge test -vv --ffi --mt test_echidna_scenario_transitionCollateral_1
-
-    this test case covers the bug we had in maxBorrow
     */
     function test_echidna_scenario_transitionCollateral_1() public {
         __previewDeposit_doesNotReturnMoreThanDeposit(0,1957414557617622995);
@@ -42,5 +40,52 @@ transitionCollateral_doesNotResultInMoreShares(uint8,bool,uint256,uint8): failed
         __maxRedeem_correctMax(0); // Time delay: 322320 seconds Block delay: 49849
 
         __transitionCollateral_doesNotResultInMoreShares(0,false,91151606349439528474,0);
+    }
+    
+    /*
+    transitionCollateral_doesNotResultInMoreShares(uint8,bool,uint256,uint8): failed!💥  
+  Call sequence, shrinking 6/500:
+    __depositNeverMintsZeroShares(0,false,291242197)
+    __depositNeverMintsZeroShares(161,true,22168924613129761549643809883710869859261573373213864899764932836300336298504)
+    __borrow(2,false,257715079)
+    *wait* Time delay: 1 seconds Block delay: 1
+    __deposit(0,false,171779519446128725026656172)
+    __transitionCollateral_doesNotResultInMoreShares(0,false,139242359331505196953467599,1)
+
+    forge test -vv --ffi --mt test_echidna_scenario_transitionCollateral_2
+
+    */
+    function test_echidna_scenario_transitionCollateral_2() public {
+        __depositNeverMintsZeroShares(0,false,291242197);
+        __depositNeverMintsZeroShares(161,true,22168924613129761549643809883710869859261573373213864899764932836300336298504);
+        __borrow(2,false,257715079);
+        // *wait* Time delay: 1 seconds Block delay: 1
+        __timeDelay(1);
+        __deposit(0,false,171779519446128725026656172);
+        __transitionCollateral_doesNotResultInMoreShares(0,false,139242359331505196953467599,1);
+    }
+
+/*
+transitionCollateral_doesNotResultInMoreShares(uint8,bool,uint256,uint8): failed!💥
+  Call sequence, shrinking 30/500:
+    EchidnaE2E.depositNeverMintsZeroShares(0,false,277384522)
+    EchidnaE2E.depositNeverMintsZeroShares(161,true,22168924613129761549643809883710869859261573373213864899764932836300336298504)
+    EchidnaE2E.borrow(2,false,257715079)
+    *wait* Time delay: 1 seconds Block delay: 1
+    EchidnaE2E.deposit(0,false,65708039052381260102903303)
+    EchidnaE2E.transitionCollateral_doesNotResultInMoreShares(0,false,64112744701069629553371966,1)
+
+
+    forge test -vv --ffi --mt test_echidna_scenario_transitionCollateral_3
+
+    */
+    function test_echidna_scenario_transitionCollateral_3() public {
+        __depositNeverMintsZeroShares(0,false,277384522);
+        __depositNeverMintsZeroShares(161,true,22168924613129761549643809883710869859261573373213864899764932836300336298504);
+        __borrow(2,false,257715079);
+        // *wait* Time delay: 1 seconds Block delay: 1
+        __timeDelay(1);
+        __deposit(0,false,65708039052381260102903303);
+        __transitionCollateral_doesNotResultInMoreShares(0,false,64112744701069629553371966,1);
     }
 }
