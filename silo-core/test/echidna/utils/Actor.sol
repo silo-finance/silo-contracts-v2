@@ -114,14 +114,14 @@ contract Actor is PropertiesAsserts {
         prepareForDeposit(vaultZero, amount);
     }
 
-    function prepareForRepayShares(bool vaultZero, uint256 shares) internal returns (Silo vault, uint256 amount) {
+    function _prepareForRepayShares(bool vaultZero, uint256 shares) internal returns (Silo vault, uint256 amount) {
         vault = vaultZero ? vault0 : vault1;
         amount = vault.previewRepayShares(shares);
         
         approveFunds(vaultZero, amount, address(vault));
     }
 
-    function prepareForLiquidationRepay(bool vaultZero, uint256 debtToRepay) internal returns (Silo vault) {
+    function _prepareForLiquidationRepay(bool vaultZero, uint256 debtToRepay) internal returns (Silo vault) {
         vault = vaultZero ? vault0 : vault1;
         TestERC20Token token = vaultZero ? token0 : token1;
 
@@ -210,7 +210,7 @@ contract Actor is PropertiesAsserts {
     }
 
     function repayShares(bool vaultZero, uint256 shares) public returns (uint256 assets) {
-        (Silo vault,) = prepareForRepayShares(vaultZero, shares);
+        (Silo vault,) = _prepareForRepayShares(vaultZero, shares);
         assets = vault.repayShares(shares, address(this));
         accountForClosedDebt(vaultZero, assets, shares);
     }
@@ -229,7 +229,7 @@ contract Actor is PropertiesAsserts {
         bool receiveSToken,
         ISiloConfig config
     ) public {
-        Silo vault = prepareForLiquidationRepay(_vaultZeroWithDebt, debtToCover);
+        Silo vault = _prepareForLiquidationRepay(_vaultZeroWithDebt, debtToCover);
 
         (ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig,) =
             config.getConfigs(address(vault), borrower, 0 /* always 0 for external calls */);

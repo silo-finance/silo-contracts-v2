@@ -50,6 +50,17 @@ contract EchidnaMiddleman is EchidnaSetup {
         vm.stopPrank();
     }
 
+    function __previewMint_DoesNotReturnLessThanMint(uint8 actorIndex, uint256 shares) public {
+        emit log_named_string("    function", "__previewMint_DoesNotReturnLessThanMint");
+
+        address actor = _chooseActor(actorIndex);
+        uint256 previewAssets = silo0.previewMint(shares);
+
+        vm.prank(actor);
+        uint256 assets = silo0.mint(shares, actor);
+        assertGe(previewAssets, assets, "previewMint underestimates assets!");
+    }
+
     function __maxBorrow_correctReturnValue(uint8 _actor) internal returns (uint256 maxAssets, uint256 shares) {
         emit log_named_string("    function", "__maxBorrow_correctReturnValue");
 
@@ -142,7 +153,6 @@ contract EchidnaMiddleman is EchidnaSetup {
 
         uint256 previewAssetsSumBefore;
 
-//        bool noInterest = _checkForInterest(vault);
         uint256 protBalanceBefore = IShareToken(protected).balanceOf(address(actor));
         uint256 collBalanceBefore = IShareToken(collateral).balanceOf(address(actor));
 
@@ -176,12 +186,6 @@ contract EchidnaMiddleman is EchidnaSetup {
 
             emit log("transition back");
 
-            // transition back, so we can verify number of shares
-            // when used input _amount, I'm getting: NotEnoughLiquidity()
-            emit log_named_uint("protected).balanceOf", IShareToken(protected).balanceOf(address(actor)));
-            emit log_named_uint("protected).balanceOf", IShareToken(collateral).balanceOf(address(actor)));
-            emit log_named_uint("shares", _amount);
-
             (uint256 sharesTransitioned, ISilo.CollateralType _withdrawType) =
                 _type == uint8(ISilo.CollateralType.Collateral)
                     ? (protBalanceAfter - protBalanceBefore, ISilo.CollateralType.Protected)
@@ -195,14 +199,14 @@ contract EchidnaMiddleman is EchidnaSetup {
 
             assertLe(
                 protBalanceBefore - protBalanceAfter,
-                1,
-                "[protected] there should be no gain in shares, accepting 1 wei loss because of rounding"
+                2,
+                "[protected] there should be no gain in shares, accepting 2 wei loss because of rounding (2 txs)"
             );
 
             assertLe(
                 collBalanceBefore - collBalanceAfter,
-                1,
-                "[collateral] there should be no gain in shares, accepting 1 wei loss because of rounding"
+                2,
+                "[collateral] there should be no gain in shares, accepting 2 wei loss because of rounding (2 txs)"
             );
         }
     }
@@ -342,7 +346,7 @@ contract EchidnaMiddleman is EchidnaSetup {
         address actor = _chooseActor(_actorIndex);
         (bool isSolvent, ISilo siloWithDebt, ) = _invariant_insolventHasDebt(actor);
 
-        assertFalse(isSolvent, "expect user to be solvent, not colvent should be ignored by echidna");
+        assertFalse(isSolvent, "expect user to be solvent, not solvent should be ignored by echidna");
 
         (, uint256 debtToRepay) = partialLiquidation.maxLiquidation(address(siloWithDebt), address(actor));
         (address collateral, address debt) = __liquidationTokens(address(siloWithDebt));
