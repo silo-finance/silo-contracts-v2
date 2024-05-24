@@ -194,10 +194,10 @@ contract EchidnaMiddleman is EchidnaSetup {
             emit log_named_uint("maxRedeem maxCollateralAfter", maxCollateralAfter);
             emit log_named_uint("maxRedeem  maxProtectedAfter", maxProtectedAfter);
             emit log_named_uint("maxRedeem                    sum", maxAssetsSumAfter);
-            emit log_named_int("diff", maxWithdrawSumBefore.toInt256() - maxAssetsSumAfter.toInt256());
+            emit log_named_int("assets diff", maxWithdrawSumBefore.toInt256() - maxAssetsSumAfter.toInt256());
 
             assertGe(maxWithdrawSumBefore, maxAssetsSumAfter, "price is flat, so there should be no gains (we accept 1 wei diff)");
-            // TODO temporary disabled because underflow: assertLe(maxRedeemSumBefore - maxAssetsSumAfter, 1, "we accept 1 wei diff");
+            assertLe(maxWithdrawSumBefore - maxAssetsSumAfter, 1, "we accept 1 wei diff");
         }
 
         { // too deep
@@ -229,9 +229,10 @@ contract EchidnaMiddleman is EchidnaSetup {
                 emit log_named_uint("maxWithdraw previewCollateralBack", maxCollateralBack);
                 emit log_named_uint("maxWithdraw  previewProtectedBack", maxProtectedBack);
                 emit log_named_uint("maxWithdraw                   sum", maxAssetsSumBack);
+                emit log_named_int("assets diff", maxWithdrawSumBefore.toInt256() - maxAssetsSumBack.toInt256());
 
                 assertGe(maxWithdrawSumBefore, maxAssetsSumBack, "price is flat, so there should be no gains (we accept 1 wei diff)");
-                // TODO temporary disabled because underflow: assertLe(maxRedeemSumBefore - previewAssetsSumBack, 1, "we accept 1 wei diff");
+                assertLe(maxWithdrawSumBefore - maxAssetsSumBack, 1, "we accept 1 wei diff");
             }
 
             protBalanceAfter = IShareToken(protected).balanceOf(address(actor));

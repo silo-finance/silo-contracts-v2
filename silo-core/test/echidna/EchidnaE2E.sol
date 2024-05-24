@@ -729,16 +729,15 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
 
         (address protected, address collateral, ) = siloConfig.getShareTokens(address(vault));
 
-        uint256 previewAssetsSumBefore;
+        uint256 maxWithdrawSumBefore;
 
         uint256 protBalanceBefore = IShareToken(protected).balanceOf(address(actor));
         uint256 collBalanceBefore = IShareToken(collateral).balanceOf(address(actor));
 
         { // too deep
-            uint256 previewCollateralBefore = vault.previewRedeem(collBalanceBefore, ISilo.CollateralType.Collateral);
-            uint256 previewProtectedBefore = vault.previewRedeem(protBalanceBefore, ISilo.CollateralType.Protected);
-
-            previewAssetsSumBefore = previewCollateralBefore + previewProtectedBefore;
+            uint256 maxCollateralBefore = vault.maxWithdraw(address(actor), ISilo.CollateralType.Collateral);
+            uint256 maxProtectedBefore = vault.maxWithdraw(address(actor), ISilo.CollateralType.Protected);
+            maxWithdrawSumBefore = maxCollateralBefore + maxProtectedBefore;
         }
 
         actor.transitionCollateral(vaultZero, shares, assetType);
@@ -747,12 +746,12 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         uint256 collBalanceAfter = IShareToken(collateral).balanceOf(address(actor));
 
         { // too deep
-            uint256 previewCollateralAfter = vault.previewRedeem(collBalanceAfter, ISilo.CollateralType.Collateral);
-            uint256 previewProtectedAfter = vault.previewRedeem(protBalanceAfter, ISilo.CollateralType.Protected);
-            uint256 previewAssetsSumAfter = previewCollateralAfter + previewProtectedAfter;
+            uint256 maxCollateralAfter = vault.maxWithdraw(address(actor), ISilo.CollateralType.Collateral);
+            uint256 maxProtectedAfter = vault.maxWithdraw(address(actor), ISilo.CollateralType.Protected);
+            uint256 maxAssetsSumAfter = maxCollateralAfter + maxProtectedAfter;
 
-            assertGte(previewAssetsSumBefore, previewAssetsSumAfter, "price is flat, so there should be no gains (we accept 1 wei diff)");
-            assertLte(previewAssetsSumBefore - previewAssetsSumAfter, 1, "we accept 1 wei loss");
+            assertGte(maxWithdrawSumBefore, maxAssetsSumAfter, "price is flat, so there should be no gains (we accept 1 wei diff)");
+            assertLte(maxWithdrawSumBefore - maxAssetsSumAfter, 1, "we accept 1 wei loss");
         }
 
         { // too deep
@@ -771,6 +770,13 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
 
             protBalanceAfter = IShareToken(protected).balanceOf(address(actor));
             collBalanceAfter = IShareToken(collateral).balanceOf(address(actor));
+
+            uint256 maxCollateralBack = vault.maxWithdraw(address(actor), ISilo.CollateralType.Collateral);
+            uint256 maxProtectedBack = vault.maxWithdraw(address(actor), ISilo.CollateralType.Protected);
+            uint256 maxAssetsSumBack = maxCollateralBack + maxProtectedBack;
+
+            assertGte(maxWithdrawSumBefore, maxAssetsSumBack, "price is flat, so there should be no gains (we accept 1 wei diff)");
+            assertLte(maxWithdrawSumBefore - maxAssetsSumBack, 1, "we accept 1 wei diff");
 
             assertLte(
                 protBalanceBefore - protBalanceAfter,
