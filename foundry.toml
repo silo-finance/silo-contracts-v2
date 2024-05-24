@@ -87,6 +87,9 @@ out = 'cache/foundry/out/proposals'
 test = 'proposals/test'
 broadcast = 'proposals/broadcast'
 
+[fuzz]
+max_test_rejects = 131072 # 65536 * 2 (doubled a default value)
+
 [rpc_endpoints]
 mainnet = "${RPC_MAINNET}"
 sepolia = "${RPC_SEPOLIA}"
