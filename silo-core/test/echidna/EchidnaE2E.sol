@@ -617,24 +617,11 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         Silo siloWithDebt = _vaultZeroWithDebt ? vault0 : vault1;
         (, uint256 debtToRepay) = liquidationModule.maxLiquidation(address(siloWithDebt), address(actor));
 
-        // TODO how to check if we are under total cap?
-        // requireEnoughBalance(_vaultZeroWithDebt, liquidator, debtToRepay);
-
         try liquidator.liquidationCall(_vaultZeroWithDebt, address(actor), debtToRepay, receiveShares, siloConfig) {
         } catch {
             emit LogString("Cannot liquidate insolvent user!");
             assert(false);
         }
-    }
-
-    function _requireEnoughBalance(bool vaultZeroWithDebt, address liquidator, uint256 requiredBalance) internal {
-//        TestERC20Token token = vaultZeroWithDebt ? token0 : token1;
-//
-//        uint256 balance = token.balanceOf(address(this));
-//
-//        if (balance < requiredBalance) {
-//            require(type(uint256).max - token.totalSupply() < requiredBalance - balance, "total supply limit");
-//        }
     }
 
     // Property: A slightly insolvent user cannot be fully liquidated, if he is below "dust" treshhold
