@@ -244,6 +244,7 @@ abstract contract ShareToken is Initializable, ERC20Permit, IShareToken {
         HookSetup memory setup = _hookSetup;
 
         if (setup.hookReceiver == address(0)) return;
+
         uint256 action = Hook.shareTokenTransfer(setup.tokenType);
 
         if (!setup.hooksAfter.matchAction(action)) return;
