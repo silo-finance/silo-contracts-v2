@@ -359,7 +359,7 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         try actor.withdraw(_vaultWithCollateral, maxAssets) {
             emit LogString("Withdrawal succeeded");
         } catch {
-            emit LogString("Withdrawal failed but it should not!");
+            emit LogString("Withdrawal failed, but it should not!");
             assert(false);
         }
     }
@@ -617,7 +617,6 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
 
         (, uint256 debtToRepay) = liquidationModule.maxLiquidation(address(vault), address(actor));
 
-        // TODO why this require not working here???
         _requireTotalCap(_vaultZeroWithDebt, address(liquidator), debtToRepay);
 
         try liquidator.liquidationCall(_vaultZeroWithDebt, address(liquidator), debtToRepay, receiveShares, siloConfig) {
@@ -641,9 +640,9 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         Silo siloWithDebt = _vaultZeroWithDebt ? vault0 : vault1;
         (, uint256 debtToRepay) = liquidationModule.maxLiquidation(address(siloWithDebt), address(actor));
 
-        _requireTotalCap(_vaultZeroWithDebt, address(actor), debtToRepay);
+        _requireTotalCap(_vaultZeroWithDebt, address(liquidator), debtToRepay);
 
-        try liquidator.liquidationCall(_vaultZeroWithDebt, address(actor), debtToRepay, receiveShares, siloConfig) {
+        try liquidator.liquidationCall(_vaultZeroWithDebt, address(liquidator), debtToRepay, receiveShares, siloConfig) {
         } catch {
             emit LogString("Cannot liquidate insolvent user!");
             assert(false);
@@ -765,7 +764,7 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
             uint256 maxProtectedAfter = vault.maxWithdraw(address(actor), ISilo.CollateralType.Protected);
             uint256 maxAssetsSumAfter = maxCollateralAfter + maxProtectedAfter;
 
-            assertGte(maxWithdrawSumBefore, maxAssetsSumAfter, "price is flat, so there should be no gains (we accept 1 wei diff)");
+            assertGte(maxWithdrawSumBefore, maxAssetsSumAfter, "price is flat, so there should be no gains (we accept 2 wei loss)");
             assertLte(maxWithdrawSumBefore - maxAssetsSumAfter, 1, "we accept 1 wei loss");
         }
 

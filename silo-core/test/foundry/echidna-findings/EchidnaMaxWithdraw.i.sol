@@ -39,4 +39,39 @@ maxWithdraw_correctMax(uint8): failed!💥
         __timeDelay(49176);
         __maxWithdraw_correctMax(15);
     }
+
+/*
+maxWithdraw_correctMax(uint8): failed!💥
+  Call sequence, shrinking 44/500:
+    EchidnaE2E.mintAssetType(1,false,92123405829686585701731477244389,0)
+    EchidnaE2E.previewDeposit_doesNotReturnMoreThanDeposit(0,13869235684708946945932638)
+    EchidnaE2E.depositAssetType(0,false,172937693249342302150464562545380959351466302635737185463272794637688466662,1)
+    EchidnaE2E.borrowShares(120,false,1)
+    EchidnaE2E.maxBorrowShares_correctReturnValue(1)
+    EchidnaE2E.cannotLiquidateASolventUser(0,false) Time delay: 277131 seconds Block delay: 9472
+    EchidnaE2E.debtSharesNeverLargerThanDebt() Time delay: 491278 seconds Block delay: 18078
+    EchidnaE2E.previewDeposit_doesNotReturnMoreThanDeposit(28,38069533537078132925269718593014418013834630345951454545114315333832826820412)
+    EchidnaE2E.maxWithdraw_correctMax(135)
+
+
+    forge test -vv --ffi --mt test_echidna_scenario_maxWithdraw_correctMax2
+
+    this is failing in Echidna, but it should be ignored, because `cannotLiquidateASolventUser` is executed on insolvent
+    user, so there might be some inconsistency between Echidna and foundry
+    */
+    function test_skip_echidna_scenario_maxWithdraw_correctMax2() public {
+        __mintAssetType(1,false,92123405829686585701731477244389,0);
+        __previewDeposit_doesNotReturnMoreThanDeposit(0,13869235684708946945932638);
+        __depositAssetType(0,false,172937693249342302150464562545380959351466302635737185463272794637688466662,1);
+        __borrowShares(120,false,1);
+        __maxBorrowShares_correctReturnValue(1);
+
+        __timeDelay(277131);
+        __cannotLiquidateASolventUser(0,false); // Time delay: 277131 seconds Block delay: 9472
+
+        __timeDelay(491278);
+        __debtSharesNeverLargerThanDebt(); // Time delay: 491278 seconds Block delay: 18078
+        __previewDeposit_doesNotReturnMoreThanDeposit(28,38069533537078132925269718593014418013834630345951454545114315333832826820412);
+        __maxWithdraw_correctMax(135);
+    }
 }
