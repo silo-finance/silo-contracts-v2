@@ -244,7 +244,7 @@ abstract contract ShareToken is Initializable, ERC20Permit, IShareToken {
         HookSetup memory setup = _hookSetup;
 
         if (setup.hookReceiver == address(0)) return;
-        uint256 action = setup.tokenType | Hook.SHARE_TOKEN_TRANSFER;
+        uint256 action = Hook.shareTokenTransfer(setup.tokenType);
 
         if (!setup.hooksAfter.matchAction(action)) return;
 
@@ -265,7 +265,7 @@ abstract contract ShareToken is Initializable, ERC20Permit, IShareToken {
         returns (ISiloConfig siloConfigCached)
     {
         siloConfigCached = siloConfig;
-        siloConfigCached.crossNonReentrantBefore(Hook.SHARE_TOKEN_TRANSFER | _hookSetup.tokenType);
+        siloConfigCached.crossNonReentrantBefore(Hook.shareTokenTransfer(_hookSetup.tokenType));
     }
 
     /// @notice Call beforeQuote on solvency oracles
