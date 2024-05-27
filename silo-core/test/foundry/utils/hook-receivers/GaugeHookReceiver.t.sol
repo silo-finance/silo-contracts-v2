@@ -154,7 +154,7 @@ contract GaugeHookReceiverTest is SiloLittleHelper, Test, TransferOwnership {
 
         (uint24 hooksBefore, uint24 hooksAfter) = _hookReceiver.hookReceiverConfig(silo0);
 
-        uint256 action = Hook.COLLATERAL_TOKEN | Hook.SHARE_TOKEN_TRANSFER;
+        uint256 action = Hook.shareTokenTransfer(Hook.COLLATERAL_TOKEN);
 
         assertEq(uint256(hooksBefore), 0);
         assertEq(uint256(hooksAfter), action);
@@ -223,7 +223,7 @@ contract GaugeHookReceiverTest is SiloLittleHelper, Test, TransferOwnership {
         vm.prank(_dao);
         _hookReceiver.setGauge(IGauge(_gauge), IShareToken(debtShareToken));
 
-        uint256 action = Hook.DEBT_TOKEN | Hook.SHARE_TOKEN_TRANSFER;
+        uint256 action = Hook.shareTokenTransfer(Hook.DEBT_TOKEN);
 
         (, uint24 hooksAfter) = _hookReceiver.hookReceiverConfig(silo0);
         assertEq(uint256(hooksAfter), action);
@@ -238,7 +238,7 @@ contract GaugeHookReceiverTest is SiloLittleHelper, Test, TransferOwnership {
         );
 
         // will do nothing as action didn't match
-        uint256 invalidAction = Hook.COLLATERAL_TOKEN | Hook.SHARE_TOKEN_TRANSFER;
+        uint256 invalidAction = Hook.shareTokenTransfer(Hook.COLLATERAL_TOKEN);
         _mockGaugeIsKilled(false);
         vm.prank(debtShareToken);
         _hookReceiver.afterAction(

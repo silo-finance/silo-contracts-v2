@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.20;
 
+import {ISilo} from "../interfaces/ISilo.sol";
+
 // solhint-disable private-vars-leading-underscore
 library Hook {
     uint256 internal constant NONE = 0;
@@ -25,6 +27,8 @@ library Hook {
     // note: currently we can support hook value up to 2 ** 23,
     // because for optimisation purposes, we storing hooks as uint24
 
+    uint256 internal constant LEVERAGE_SAME_ASSET = BORROW | LEVERAGE | SAME_ASSET;
+
     // For decoding packed data
     uint256 private constant PACKED_ADDRESS_LENGTH = 20;
     uint256 private constant PACKED_FULL_LENGTH = 32;
@@ -45,6 +49,43 @@ library Hook {
     /// `remove(_action, PROTECTED_TOKEN)`
     function removeAction(uint256 _action, uint256 _actionToRemove) internal pure returns (uint256) {
         return _action & (~_actionToRemove);
+    }
+
+    /// @notice Returns the action for depositing a specific collateral type
+    /// @param _type The collateral type
+    function depositAction(ISilo.CollateralType _type) internal pure returns (uint256) {
+        return DEPOSIT | (_type == ISilo.CollateralType.Collateral ? COLLATERAL_TOKEN : PROTECTED_TOKEN);
+    }
+
+    /// @notice Returns the action for withdrawing a specific collateral type
+    /// @param _type The collateral type
+    function withdrawAction(ISilo.CollateralType _type) internal pure returns (uint256) {
+        return WITHDRAW | (_type == ISilo.CollateralType.Collateral ? COLLATERAL_TOKEN : PROTECTED_TOKEN);
+    }
+
+    /// @notice Returns the action for borrowing
+    /// @param _leverage Whether the borrow is a leverage
+    /// @param _sameAsset Whether the borrow is on the same asset
+    function borrowAction(bool _leverage, bool _sameAsset) internal pure returns (uint256) {
+        return BORROW | (_leverage ? LEVERAGE : NONE) | (_sameAsset ? SAME_ASSET : TWO_ASSETS);
+    }
+
+    /// @notice Returns the action for collateral transition
+    /// @param _type The collateral type
+    function transitionCollateralAction(ISilo.CollateralType _type) internal pure returns (uint256) {
+        return TRANSITION_COLLATERAL | (_type == ISilo.CollateralType.Collateral ? COLLATERAL_TOKEN : PROTECTED_TOKEN);
+    }
+
+    /// @notice Returns the action for switching collateral
+    /// @param _toSameAsset Whether the switch is to the same asset
+    function switchCollateralAction(bool _toSameAsset) internal pure returns (uint256) {
+        return SWITCH_COLLATERAL | (_toSameAsset ? SAME_ASSET : TWO_ASSETS);
+    }
+
+    /// @notice Returns the share token transfer action
+    /// @param _tokenType The token type (COLLATERAL_TOKEN || PROTECTED_TOKEN || DEBT_TOKEN)
+    function shareTokenTransfer(uint256 _tokenType) internal pure returns (uint256) {
+        return SHARE_TOKEN_TRANSFER | _tokenType;
     }
 
     /// @dev Decodes packed data from the share token after the transfer hook
