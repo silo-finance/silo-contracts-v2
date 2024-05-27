@@ -88,4 +88,30 @@ transitionCollateral_doesNotResultInMoreShares(uint8,bool,uint256,uint8): failed
         __deposit(0,false,65708039052381260102903303);
         __transitionCollateral_doesNotResultInMoreShares(0,false,64112744701069629553371966,1);
     }
+
+/*
+transitionCollateral_doesNotResultInMoreShares(uint8,bool,uint256,uint8): failed!💥
+  Call sequence, shrinking 30/500:
+    EchidnaE2E.depositNeverMintsZeroShares(0,false,277384522)
+    EchidnaE2E.depositNeverMintsZeroShares(161,true,22168924613129761549643809883710869859261573373213864899764932836300336298504)
+    EchidnaE2E.borrow(2,false,257715079)
+    *wait* Time delay: 1 seconds Block delay: 1
+    EchidnaE2E.deposit(0,false,65708039052381260102903303)
+    EchidnaE2E.transitionCollateral_doesNotResultInMoreShares(0,false,64112744701069629553371966,1)
+
+
+    forge test -vv --ffi --mt test_echidna_scenario_transitionCollateral_4
+
+    case where we have loss of 23 wei of assets??
+
+    */
+    function test_echidna_scenario_transitionCollateral_4() public {
+        __depositNeverMintsZeroShares(0,false,277384522);
+        __depositNeverMintsZeroShares(161,true,22168924613129761549643809883710869859261573373213864899764932836300336298504);
+        __borrow(2,false,257715079);
+        // *wait* Time delay: 1 seconds Block delay: 1
+        __timeDelay(1);
+        __deposit(0,false,65708039052381260102903303);
+        __transitionCollateral_doesNotResultInMoreShares(0,false,64112744701069629553371966,1);
+    }
 }

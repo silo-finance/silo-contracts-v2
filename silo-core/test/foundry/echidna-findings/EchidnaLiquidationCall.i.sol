@@ -84,4 +84,56 @@ cannotPreventInsolventUserFromBeingLiquidated(uint8,bool): failed!💥
         __timeDelay(46);
         __cannotPreventInsolventUserFromBeingLiquidated(1,false); // Time delay: 46 seconds Block delay: 140
     }
+
+/*
+cannotPreventInsolventUserFromBeingLiquidated(uint8,bool): failed!💥
+  Call sequence, shrinking 25/500:
+    EchidnaE2E.previewMint_DoesNotReturnLessThanMint(0,505701250604590645656963514028982080456108145830671282357774219109237)
+    EchidnaE2E.mint(1,false,7719965595890521662560071)
+    EchidnaE2E.maxBorrow_correctReturnValue(1)
+    EchidnaE2E.maxWithdraw_correctMax(1)
+    EchidnaE2E.maxWithdraw_correctMax(0)
+    EchidnaE2E.cannotPreventInsolventUserFromBeingLiquidated(1,false) Time delay: 16 seconds Block delay: 11
+
+
+    forge test -vv --ffi --mt test_echidna_scenario_cannotPreventInsolventUserFromBeingLiquidated_4
+
+    this is failing in Echidna, but not for foundry
+*/
+    function test_echidna_scenario_cannotPreventInsolventUserFromBeingLiquidated_4() public {
+        __previewMint_DoesNotReturnLessThanMint(0,505701250604590645656963514028982080456108145830671282357774219109237);
+        __mint(1,false,7719965595890521662560071);
+        __maxBorrow_correctReturnValue(1);
+        __maxWithdraw_correctMax(1);
+        __maxWithdraw_correctMax(0);
+
+        __timeDelay(16);
+        __cannotPreventInsolventUserFromBeingLiquidated(1,false); // Time delay: 16 seconds Block delay: 11
+    }
+
+/*
+cannotPreventInsolventUserFromBeingLiquidated(uint8,bool): failed!💥
+  Call sequence, shrinking 2/500:
+    EchidnaE2E.previewMint_DoesNotReturnLessThanMint(0,1025040856709824150221447887556226650095471921710968145592425744329396)
+    EchidnaE2E.mint(1,false,12595645029760140261301434)
+    EchidnaE2E.maxBorrow_correctReturnValue(1)
+    EchidnaE2E.maxWithdraw_correctMax(1)
+    EchidnaE2E.maxWithdraw_correctMax(0)
+    EchidnaE2E.cannotPreventInsolventUserFromBeingLiquidated(1,false) Time delay: 16 seconds Block delay: 11
+
+
+    forge test -vv --ffi --mt test_echidna_scenario_cannotPreventInsolventUserFromBeingLiquidated_5
+
+    can not replicate echidna
+*/
+    function test_echidna_scenario_cannotPreventInsolventUserFromBeingLiquidated_5() public {
+        __previewMint_DoesNotReturnLessThanMint(0,1025040856709824150221447887556226650095471921710968145592425744329396);
+        __mint(1,false,12595645029760140261301434);
+        __maxBorrow_correctReturnValue(1);
+        __maxWithdraw_correctMax(1);
+        __maxWithdraw_correctMax(0);
+
+        __timeDelay(16); // when I not move in time, I get error that echidna throws
+        __cannotPreventInsolventUserFromBeingLiquidated(1,false); // Time delay: 16 seconds Block delay: 11
+    }
 }

@@ -285,8 +285,8 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         emit LogString(string.concat("Max Assets to deposit:", maxAssets.toString()));
 
         try actor.deposit(true, maxAssets) {
-
         } catch {
+            emit LogString("[maxDeposit_correctMax] failed on deposit");
             assert(false);
         }
     }
@@ -313,6 +313,7 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         try actor.mint(vaultZero, maxShares) {
 
         } catch {
+            emit LogString("[maxMint_correctMax] failed on mint");
             assert(false);
         }
     }
@@ -327,9 +328,29 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         require(_requireHealthySilos(), "we dont want IRM to fail");
 
         uint256 maxAssets = vault.maxWithdraw(address(actor));
-        (, address collShareToken, ) = siloConfig.getShareTokens(address(vault));
-        require(IERC20(collShareToken).balanceOf(address(actor)) > 0, "No deposits");
-        require(maxAssets != 0, "Zero assets to withdraw");
+
+        if (maxAssets == 0) {
+            (, address collShareToken, ) = siloConfig.getShareTokens(address(vault));
+            uint256 shareBalance = IERC20(collShareToken).balanceOf(address(actor));
+            uint256 liquidity = vault.getLiquidity();
+            uint256 ltv = vault.getLtv(address(actor));
+            bool isSolvent = vault.isSolvent(address(actor));
+
+            // below are all cases where maxAssets can be 0
+            if (shareBalance == 0 || !isSolvent || liquidity == 0) {
+                // we good
+            } else {
+                emit LogString("[maxWithdraw_correctMax] maxAssets is zero for no reason");
+                emit LogString(isSolvent ? "actor solvent" : "actor not solvent");
+                emit LogUint256("shareBalance", shareBalance);
+                emit LogUint256("vault.getLiquidity()", liquidity);
+                emit LogUint256("ltv (is it close to LT?)", ltv);
+
+                assert(false); // why max withdraw is 0?
+            }
+        }
+
+        if (maxAssets == 0) return;
 
         uint256 liquidity = vault.getLiquidity(); // includes interest
         emit LogString(string.concat("Max Assets to withdraw:", maxAssets.toString()));
@@ -338,7 +359,7 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         try actor.withdraw(_vaultWithCollateral, maxAssets) {
             emit LogString("Withdrawal succeeded");
         } catch {
-            emit LogString("Withdrawal failed");
+            emit LogString("Withdrawal failed, but it should not!");
             assert(false);
         }
     }
@@ -596,7 +617,9 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
 
         (, uint256 debtToRepay) = liquidationModule.maxLiquidation(address(vault), address(actor));
 
-        try liquidator.liquidationCall(_vaultZeroWithDebt, address(actor), debtToRepay, receiveShares, siloConfig) {
+        _requireTotalCap(_vaultZeroWithDebt, address(liquidator), debtToRepay);
+
+        try liquidator.liquidationCall(_vaultZeroWithDebt, address(liquidator), debtToRepay, receiveShares, siloConfig) {
             emit LogString("Solvent user liquidated!");
             assert(false);
         } catch {
@@ -612,12 +635,16 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         Actor liquidator = _selectActor(actorIndex + 1);
 
         (bool isSolvent, bool _vaultZeroWithDebt) = _invariant_insolventHasDebt(address(actor));
-        require(!isSolvent, "user not solvent");
+        require(!isSolvent, "[cannotPreventInsolventUserFromBeingLiquidated] user must be insolvent");
+
+        emit LogString(isSolvent ? "user is solvent" : "user is NOT solvent");
 
         Silo siloWithDebt = _vaultZeroWithDebt ? vault0 : vault1;
         (, uint256 debtToRepay) = liquidationModule.maxLiquidation(address(siloWithDebt), address(actor));
 
-        try liquidator.liquidationCall(_vaultZeroWithDebt, address(actor), debtToRepay, receiveShares, siloConfig) {
+        _requireTotalCap(_vaultZeroWithDebt, address(liquidator), debtToRepay);
+
+        try liquidator.liquidationCall(_vaultZeroWithDebt, address(liquidator), debtToRepay, receiveShares, siloConfig) {
         } catch {
             emit LogString("Cannot liquidate insolvent user!");
             assert(false);
@@ -653,7 +680,9 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
             assertEq(debtToRepay, maxRepay, "we assume, this is full liquidation");
         }
 
-        actorTwo.liquidationCall(_vaultZeroWithDebt, address(actor), debtToRepay, false, siloConfig);
+        _requireTotalCap(_vaultZeroWithDebt, address(actorTwo), debtToRepay);
+
+        actorTwo.liquidationCall(_vaultZeroWithDebt, address(actorTwo), debtToRepay, false, siloConfig);
 
         uint256 ltvAfter = vault.getLtv(address(actor));
         emit LogString(string.concat("User afterLtv:", ltvAfter.toString()));
@@ -737,7 +766,7 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
             uint256 maxProtectedAfter = vault.maxWithdraw(address(actor), ISilo.CollateralType.Protected);
             uint256 maxAssetsSumAfter = maxCollateralAfter + maxProtectedAfter;
 
-            assertGte(maxWithdrawSumBefore, maxAssetsSumAfter, "price is flat, so there should be no gains (we accept 1 wei diff)");
+            assertGte(maxWithdrawSumBefore, maxAssetsSumAfter, "price is flat, so there should be no gains (we accept 2 wei loss)");
             assertLte(maxWithdrawSumBefore - maxAssetsSumAfter, 1, "we accept 1 wei loss");
         }
 
@@ -887,5 +916,14 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
 
         emit ExactAmount("maxBorrowShares0:", vault0.maxBorrowShares(_actor, sameAsset));
         emit ExactAmount("maxBorrowShares1:", vault1.maxBorrowShares(_actor, sameAsset));
+    }
+
+    function _requireTotalCap(bool vaultZero, address actor, uint256 requiredBalance) internal view {
+        TestERC20Token token = vaultZero ? _asset0 : _asset1;
+        uint256 balance = token.balanceOf(actor);
+
+        if (balance < requiredBalance) {
+            require(type(uint256).max - token.totalSupply() >= requiredBalance - balance, "total supply limit");
+        }
     }
 }

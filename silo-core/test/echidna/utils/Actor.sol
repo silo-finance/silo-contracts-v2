@@ -128,7 +128,10 @@ contract Actor is PropertiesAsserts {
         uint256 balance = token.balanceOf(address(this));
 
         if (balance < debtToRepay) {
-            require(type(uint256).max - token.totalSupply() < debtToRepay - balance, "total supply limit");
+            if (type(uint256).max - token.totalSupply() < debtToRepay - balance) {
+                revert("total supply limit - require it for echidna, so it does not fail on it");
+            }
+
             token.mint(address(this), debtToRepay - balance);
         }
 
