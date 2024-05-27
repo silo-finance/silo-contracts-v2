@@ -42,36 +42,41 @@ maxWithdraw_correctMax(uint8): failed!💥
 
 /*
 maxWithdraw_correctMax(uint8): failed!💥
-  Call sequence, shrinking 44/500:
-    EchidnaE2E.mintAssetType(1,false,92123405829686585701731477244389,0)
-    EchidnaE2E.previewDeposit_doesNotReturnMoreThanDeposit(0,13869235684708946945932638)
-    EchidnaE2E.depositAssetType(0,false,172937693249342302150464562545380959351466302635737185463272794637688466662,1)
-    EchidnaE2E.borrowShares(120,false,1)
-    EchidnaE2E.maxBorrowShares_correctReturnValue(1)
-    EchidnaE2E.cannotLiquidateASolventUser(0,false) Time delay: 277131 seconds Block delay: 9472
+  Call sequence, shrinking 16/500:
+    EchidnaE2E.mintAssetType(2,false,1735307726803407988754159223487,0)
+    EchidnaE2E.previewDeposit_doesNotReturnMoreThanDeposit(0,66388211008287927515433611)
+    EchidnaE2E.depositAssetType(0,false,40985832250508332903885335837505434310360998126818377392697693682806386770,1)
+    EchidnaE2E.borrowShares(120,false,3)
+    EchidnaE2E.maxBorrowShares_correctReturnValue(170)
+    EchidnaE2E.cannotLiquidateASolventUser(0,false) Time delay: 579336 seconds Block delay: 15624
     EchidnaE2E.debtSharesNeverLargerThanDebt() Time delay: 491278 seconds Block delay: 18078
-    EchidnaE2E.previewDeposit_doesNotReturnMoreThanDeposit(28,38069533537078132925269718593014418013834630345951454545114315333832826820412)
+    EchidnaE2E.previewDeposit_doesNotReturnMoreThanDeposit(2,71994004506247621724349925153728615743520108634673265697683206836729824850)
     EchidnaE2E.maxWithdraw_correctMax(135)
 
 
     forge test -vv --ffi --mt test_echidna_scenario_maxWithdraw_correctMax2
 
-    this is failing in Echidna, but it should be ignored, because `cannotLiquidateASolventUser` is executed on insolvent
-    user, so there might be some inconsistency between Echidna and foundry
+    bug replicated
     */
-    function test_skip_echidna_scenario_maxWithdraw_correctMax2() public {
-        __mintAssetType(1,false,92123405829686585701731477244389,0);
-        __previewDeposit_doesNotReturnMoreThanDeposit(0,13869235684708946945932638);
-        __depositAssetType(0,false,172937693249342302150464562545380959351466302635737185463272794637688466662,1);
-        __borrowShares(120,false,1);
-        __maxBorrowShares_correctReturnValue(1);
+    function test_echidna_scenario_maxWithdraw_correctMax2() public {
+        __mintAssetType(2,false,1735307726803407988754159223487,0);
+        __previewDeposit_doesNotReturnMoreThanDeposit(0,66388211008287927515433611);
+        __depositAssetType(0,false,40985832250508332903885335837505434310360998126818377392697693682806386770,1);
+        __borrowShares(120,false,3);
+        __maxBorrowShares_correctReturnValue(170);
 
-        __timeDelay(277131);
-        __cannotLiquidateASolventUser(0,false); // Time delay: 277131 seconds Block delay: 9472
+//        __cannotLiquidateASolventUser(0,false); // Time delay: 579336 seconds Block delay: 15624
+        __timeDelay(579336);
 
-        __timeDelay(491278);
         __debtSharesNeverLargerThanDebt(); // Time delay: 491278 seconds Block delay: 18078
-        __previewDeposit_doesNotReturnMoreThanDeposit(28,38069533537078132925269718593014418013834630345951454545114315333832826820412);
+        __timeDelay(491278);
+
+        __previewDeposit_doesNotReturnMoreThanDeposit(2,71994004506247621724349925153728615743520108634673265697683206836729824850);
+
+
+        // Actor::withdraw(bool,uint256)(true, 207282918430713322852178022)
+        // Actor::withdraw(bool,uint256)(true, 207282918430713322852178022)
         __maxWithdraw_correctMax(135);
+
     }
 }

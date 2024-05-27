@@ -135,7 +135,7 @@ contract EchidnaMiddleman is EchidnaSetup {
         emit log_named_decimal_uint("maxWithdraw", maxWithdraw, 18);
 
         vm.prank(actor);
-        _siloWithCollateral.withdraw(maxWithdraw, actor, actor);
+        _siloWithCollateral.withdraw(maxWithdraw - 1, actor, actor);
     }
 
     function __deposit(uint8 _actor, bool _siloZero, uint256 _amount) internal {
