@@ -635,7 +635,9 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         Actor liquidator = _selectActor(actorIndex + 1);
 
         (bool isSolvent, bool _vaultZeroWithDebt) = _invariant_insolventHasDebt(address(actor));
-        require(!isSolvent, "user not solvent");
+        require(!isSolvent, "[cannotPreventInsolventUserFromBeingLiquidated] user must be insolvent");
+
+        emit LogString(isSolvent ? "user is solvent" : "user is NOT solvent");
 
         Silo siloWithDebt = _vaultZeroWithDebt ? vault0 : vault1;
         (, uint256 debtToRepay) = liquidationModule.maxLiquidation(address(siloWithDebt), address(actor));
