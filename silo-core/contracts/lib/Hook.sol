@@ -27,7 +27,7 @@ library Hook {
     // note: currently we can support hook value up to 2 ** 23,
     // because for optimisation purposes, we storing hooks as uint24
 
-    uint256 internal constant LEVARAGE_SAME_ASSET = BORROW | LEVERAGE | SAME_ASSET;
+    uint256 internal constant LEVERAGE_SAME_ASSET = BORROW | LEVERAGE | SAME_ASSET;
 
     // For decoding packed data
     uint256 private constant PACKED_ADDRESS_LENGTH = 20;

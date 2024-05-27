@@ -324,7 +324,7 @@ library Actions {
 
         _hookCallBefore(
             _shareStorage,
-            Hook.LEVARAGE_SAME_ASSET,
+            Hook.LEVERAGE_SAME_ASSET,
             abi.encodePacked(_depositAssets, _borrowAssets, _borrower, _collateralType)
         );
 
@@ -338,7 +338,7 @@ library Actions {
             ) = _shareStorage.siloConfig.accrueInterestAndGetConfigs(
                 address(this),
                 _borrower,
-                Hook.LEVARAGE_SAME_ASSET
+                Hook.LEVERAGE_SAME_ASSET
             );
 
             if (!SiloLendingLib.borrowPossible(debtInfo)) revert ISilo.BorrowNotPossible();
@@ -395,7 +395,7 @@ library Actions {
             _hookCallAfter(
                 _shareStorage,
                 collateralConfig.hookReceiver,
-                Hook.LEVARAGE_SAME_ASSET,
+                Hook.LEVERAGE_SAME_ASSET,
                 abi.encodePacked(
                     _depositAssets, _borrowAssets, _borrower, _collateralType, depositedShares, borrowedShares
                 )
