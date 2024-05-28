@@ -56,7 +56,7 @@ maxWithdraw_correctMax(uint8): failed!💥
 
     forge test -vv --ffi --mt test_echidna_scenario_maxWithdraw_correctMax2
 
-    bug replicated
+    bug replicated, this test covers bug tha twas found by echidna
     */
     function test_echidna_scenario_maxWithdraw_correctMax2() public {
         __mintAssetType(2,false,1735307726803407988754159223487,0);
@@ -73,12 +73,6 @@ maxWithdraw_correctMax(uint8): failed!💥
 
         __previewDeposit_doesNotReturnMoreThanDeposit(2,71994004506247621724349925153728615743520108634673265697683206836729824850);
 
-
-        // this is a case when user has debt
-        // we calculated max withdraw to be 207282918430713322852178022
-        // but we can withdraw amount that is less by 1
-        // Actor::withdraw(bool,uint256)(true, 207282918430713322852178022)
         __maxWithdraw_correctMax(135);
-
     }
 }
