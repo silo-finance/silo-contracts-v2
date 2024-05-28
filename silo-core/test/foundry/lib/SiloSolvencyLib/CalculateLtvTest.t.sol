@@ -18,7 +18,7 @@ contract CalculateLtvTest is Test, OraclesHelper {
     /*
     forge test -vv --mt test_SiloSolvencyLib_calculateLtv_noOracle_zero
     */
-    function test_SiloSolvencyLib_calculateLtv_noOracle_zero() public {
+    function test_SiloSolvencyLib_calculateLtv_noOracle_zero() public view {
         uint128 zero;
 
         ISiloOracle noOracle;
@@ -37,7 +37,7 @@ contract CalculateLtvTest is Test, OraclesHelper {
     /*
     forge test -vv --mt test_SiloSolvencyLib_calculateLtv_noOracle_infinity
     */
-    function test_SiloSolvencyLib_calculateLtv_noOracle_infinity() public {
+    function test_SiloSolvencyLib_calculateLtv_noOracle_infinity() public view {
         uint128 zero;
         uint128 debtAssets = 1;
 
@@ -61,7 +61,7 @@ contract CalculateLtvTest is Test, OraclesHelper {
         uint128 _collateralAssets,
         uint128 _protectedAssets,
         uint128 _debtAssets
-    ) public {
+    ) public view {
         ISiloOracle noOracle;
         uint256 sumOfCollateralAssets = uint256(_collateralAssets) + _protectedAssets;
         // because this is the same token, we assume the sum can not be higher than uint128

@@ -21,7 +21,7 @@ contract LiquidationPreviewTest is Test, OraclesHelper {
     /*
     forge test -vv --mt test_liquidationPreview_noOracle_zero
     */
-    function test_liquidationPreview_noOracle_zero() public {
+    function test_liquidationPreview_noOracle_zero() public view {
         SiloSolvencyLib.LtvData memory ltvData;
         PartialLiquidationLib.LiquidationPreviewParams memory params;
 
@@ -160,7 +160,7 @@ contract LiquidationPreviewTest is Test, OraclesHelper {
     /*
     forge test -vv --mt test_liquidationPreview_whenNotSolvent
     */
-    function test_liquidationPreview_whenNotSolvent() public {
+    function test_liquidationPreview_whenNotSolvent() public view {
         SiloSolvencyLib.LtvData memory ltvData;
         ltvData.borrowerCollateralAssets = 1e18;
         ltvData.borrowerDebtAssets = 2e18; // 200% LTV

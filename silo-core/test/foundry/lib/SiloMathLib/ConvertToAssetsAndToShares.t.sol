@@ -9,7 +9,7 @@ contract ConvertToAssetsAndToSharesTest is Test {
     /*
     forge test -vv --mt test_convertToAssetsAndToShares
     */
-    function test_convertToAssetsAndToShares() public {
+    function test_convertToAssetsAndToShares() public pure {
         uint256 _assetsOrShares = 10000;
         uint256 _totalAssets = 250000;
         uint256 _totalShares = 250000;

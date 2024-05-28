@@ -78,7 +78,7 @@ contract GaugeHookReceiverTest is SiloLittleHelper, Test, TransferOwnership {
     }
 
     // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testHookReceiverInitlaization
-    function testHookReceiverInitlaization() public {
+    function testHookReceiverInitlaization() public view {
         (address silo0, address silo1) = _siloConfig.getSilos();
 
         _testHookReceiverInitlaizationForSilo(silo0);
@@ -306,7 +306,7 @@ contract GaugeHookReceiverTest is SiloLittleHelper, Test, TransferOwnership {
         vm.expectCall(_gaugeToMock, data);
     }
 
-    function _testHookReceiverInitlaizationForSilo(address _silo) internal {
+    function _testHookReceiverInitlaizationForSilo(address _silo) internal view {
         (,,,IHookReceiver hookReceiver) = ISilo(_silo).sharedStorage();
 
         assertEq(address(hookReceiver), address(_hookReceiver));
@@ -322,7 +322,7 @@ contract GaugeHookReceiverTest is SiloLittleHelper, Test, TransferOwnership {
         _testHookReceiverForShareToken(debt);
     }
 
-    function _testHookReceiverForShareToken(address _siloShareToken) internal {
+    function _testHookReceiverForShareToken(address _siloShareToken) internal view {
         IShareToken.HookSetup memory hookSetup = IShareToken(_siloShareToken).hookSetup();
         assertEq(hookSetup.hookReceiver, address(_hookReceiver));
     }

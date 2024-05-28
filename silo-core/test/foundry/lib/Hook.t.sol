@@ -11,7 +11,7 @@ forge test -vv --mc HookTest
 contract HookTest is Test {
     using Hook for uint256;
 
-    function test_hook_addAction() public {
+    function test_hook_addAction() public pure {
         assertEq(Hook.SAME_ASSET, Hook.NONE.addAction(Hook.SAME_ASSET));
         assertEq(Hook.SAME_ASSET, Hook.SAME_ASSET.addAction(Hook.SAME_ASSET), "nothing was changed");
 
@@ -19,7 +19,7 @@ contract HookTest is Test {
         assertEq(Hook.AFTER | Hook.WITHDRAW | Hook.LEVERAGE, bitmap.addAction(Hook.LEVERAGE), "add LEVERAGE");
     }
 
-    function test_hook_removeAction() public {
+    function test_hook_removeAction() public pure {
         assertEq(Hook.SAME_ASSET, Hook.SAME_ASSET.removeAction(Hook.NONE), "nothing was removed");
 
         uint256 bitmap = Hook.AFTER | Hook.WITHDRAW | Hook.LEVERAGE;

@@ -135,7 +135,7 @@ contract HookCallsOutsideActionTest is IHookReceiver, ILeverageBorrower, IERC315
         silo1.withdrawFees();
     }
 
-    function initialize(ISiloConfig _config, bytes calldata) external {
+    function initialize(ISiloConfig _config, bytes calldata) external view {
         assertEq(address(_siloConfig), address(_config), "SiloConfig addresses should match");
     }
 

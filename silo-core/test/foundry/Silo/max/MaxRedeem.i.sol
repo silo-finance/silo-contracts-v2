@@ -22,7 +22,7 @@ contract MaxRedeemTest is MaxWithdrawCommon {
     /*
     forge test -vv --ffi --mt test_maxRedeem_zero
     */
-    function test_maxRedeem_zero() public {
+    function test_maxRedeem_zero() public view {
         uint256 maxRedeem = silo1.maxRedeem(borrower);
         assertEq(maxRedeem, 0, "nothing to redeem");
     }
@@ -155,7 +155,7 @@ contract MaxRedeemTest is MaxWithdrawCommon {
         _assertBorrowerCanNotRedeemMore(maxRedeem, 3, _sameAsset);
     }
 
-    function _assertBorrowerHasNothingToRedeem() internal {
+    function _assertBorrowerHasNothingToRedeem() internal view {
         (, address collateralShareToken, ) = silo0.config().getShareTokens(address(silo0));
 
         assertEq(silo0.maxRedeem(borrower), 0, "expect maxRedeem to be 0");

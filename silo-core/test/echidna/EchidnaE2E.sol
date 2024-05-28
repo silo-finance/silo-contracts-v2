@@ -332,18 +332,18 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         if (maxAssets == 0) {
             (, address collShareToken, ) = siloConfig.getShareTokens(address(vault));
             uint256 shareBalance = IERC20(collShareToken).balanceOf(address(actor));
-            uint256 liquidity = vault.getLiquidity();
+            uint256 vaultLiquidity = vault.getLiquidity();
             uint256 ltv = vault.getLtv(address(actor));
             bool isSolvent = vault.isSolvent(address(actor));
 
             // below are all cases where maxAssets can be 0
-            if (shareBalance == 0 || !isSolvent || liquidity == 0) {
+            if (shareBalance == 0 || !isSolvent || vaultLiquidity == 0) {
                 // we good
             } else {
                 emit LogString("[maxWithdraw_correctMax] maxAssets is zero for no reason");
                 emit LogString(isSolvent ? "actor solvent" : "actor not solvent");
                 emit LogUint256("shareBalance", shareBalance);
-                emit LogUint256("vault.getLiquidity()", liquidity);
+                emit LogUint256("vault.getLiquidity()", vaultLiquidity);
                 emit LogUint256("ltv (is it close to LT?)", ltv);
 
                 assert(false); // why max withdraw is 0?

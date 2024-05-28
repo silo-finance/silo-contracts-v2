@@ -32,7 +32,7 @@ contract GetLiquidityAccrueInterestTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_liquidity_zero
     */
-    function test_liquidity_zero() public {
+    function test_liquidity_zero() public view {
         assertEq(silo0.getLiquidity(), 0, "no liquidity after deploy 0");
         assertEq(silo0.getLiquidity(), 0, "no liquidity 0");
         assertEq(silo1.getLiquidity(), 0, "no liquidity after deploy 1");

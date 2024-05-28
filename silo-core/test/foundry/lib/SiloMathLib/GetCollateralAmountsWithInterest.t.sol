@@ -9,7 +9,7 @@ contract GetCollateralAmountsWithInterestTest is Test {
     /*
     forge test -vv --mt test_getCollateralAmountsWithInterest
     */
-    function test_getCollateralAmountsWithInterest() public {
+    function test_getCollateralAmountsWithInterest() public pure {
         uint256 collateralAssets;
         uint256 debtAssets;
         uint256 rcomp;

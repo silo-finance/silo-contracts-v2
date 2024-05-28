@@ -247,7 +247,7 @@ contract SiloConfigTest is Test {
     /*
     forge test -vv --mt test_getConfigs_zero
     */
-    function test_getConfigs_zero() public {
+    function test_getConfigs_zero() public view {
         address silo = _silo0Default;
 
         (

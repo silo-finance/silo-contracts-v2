@@ -59,7 +59,7 @@ contract SiloHooksTest is SiloLittleHelper, Test {
     /*
     FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testHooksInitializationAfterDeployment
     */
-    function testHooksInitializationAfterDeployment() public {
+    function testHooksInitializationAfterDeployment() public view {
         (,uint24 silo0HookesBefore, uint24 silo0HookesAfter,) = silo0.sharedStorage();
 
         assertEq(silo0HookesBefore, HOOKS_BEFORE, "hooksBefore is not initialized");

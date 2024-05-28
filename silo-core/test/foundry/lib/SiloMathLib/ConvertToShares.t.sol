@@ -232,7 +232,7 @@ contract ConvertToSharesTest is Test {
     /*
     forge test -vv --mt test_convertToShares
     */
-    function test_convertToShares_singleCase() public {
+    function test_convertToShares_singleCase() public view {
         for (uint256 index = 0; index < numberOfTestCases; index++) {
             assertEq(
                 SiloMathLib.convertToShares(
@@ -251,7 +251,7 @@ contract ConvertToSharesTest is Test {
     /*
     forge test -vv --mt test_convertToShares_withDust_from1
     */
-    function test_convertToShares_withDust_from1() public {
+    function test_convertToShares_withDust_from1() public pure {
         ISilo.AssetType assetType = ISilo.AssetType.Collateral;
 
         uint256 totalAssets = 4; // dust

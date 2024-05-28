@@ -86,7 +86,7 @@ contract FlashloanTest is SiloLittleHelper, Test, Gas {
     /*
     forge test -vv --ffi --mt test_maxFlashLoan
     */
-    function test_maxFlashLoan() public {
+    function test_maxFlashLoan() public view {
         assertEq(silo0.maxFlashLoan(address(token1)), 0);
         assertEq(silo1.maxFlashLoan(address(token0)), 0);
         assertEq(silo0.maxFlashLoan(address(token0)), 10e18);

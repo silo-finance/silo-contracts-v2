@@ -72,6 +72,7 @@ contract EchidnaSetup is SiloLittleHelper, Test {
 
     function _invariant_insolventHasDebt(address _user)
         internal
+        view
         returns (bool isSolvent, ISilo _siloWithDebt, ISilo _siloWithCollateral)
     {
         // _dumpState(_user);
@@ -127,7 +128,7 @@ contract EchidnaSetup is SiloLittleHelper, Test {
         _requireHealthySilo(silo1);
     }
 
-    function _requireHealthySilo(ISilo _silo) internal {
+    function _requireHealthySilo(ISilo _silo) internal view {
         ISiloConfig.ConfigData memory cfg = siloConfig.getConfig(address(_silo));
 
         try IInterestRateModel(cfg.interestRateModel).getCompoundInterestRate(address(_silo), block.timestamp) {

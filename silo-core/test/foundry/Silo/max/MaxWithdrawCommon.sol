@@ -75,7 +75,7 @@ contract MaxWithdrawCommon is SiloLittleHelper, Test {
         _ensureBorrowerHasDebt(silo0, otherBorrower);
     }
 
-    function _ensureBorrowerHasDebt(ISilo _silo, address _borrower) internal {
+    function _ensureBorrowerHasDebt(ISilo _silo, address _borrower) internal view {
         (,, address debtShareToken) = _silo.config().getShareTokens(address(_silo));
 
         assertGt(_silo.maxRepayShares(_borrower), 0, "expect debt");
