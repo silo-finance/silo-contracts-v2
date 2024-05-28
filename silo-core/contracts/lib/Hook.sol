@@ -123,4 +123,60 @@ library Hook {
             totalSupply := mload(add(packed, pointer))
         }
     }
+
+    /// @dev Decodes packed data from the deposit hook
+    /// @param packed The packed data (via abi.encodePacked)
+    /// @return assets The amount of assets deposited
+    /// @return shares The amount of shares deposited
+    /// @return receiver The receiver of the deposit
+    function beforeDepositDecode(bytes memory packed)
+        internal
+        pure
+        returns (
+            uint256 assets,
+            uint256 shares,
+            address receiver
+        )
+    {
+        assembly {
+            let pointer := PACKED_FULL_LENGTH
+            assets := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_FULL_LENGTH)
+            shares := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_ADDRESS_LENGTH)
+            receiver := mload(add(packed, pointer))
+        }
+    }
+
+    /// @dev Decodes packed data from the deposit hook
+    /// @param packed The packed data (via abi.encodePacked)
+    /// @return assets The amount of assets deposited
+    /// @return shares The amount of shares deposited
+    /// @return receiver The receiver of the deposit
+    /// @return receivedAssets The exact amount of assets being deposited
+    /// @return mintedShares The exact amount of shares being minted
+    function afterDepositDecode(bytes memory packed)
+        internal
+        pure
+        returns (
+            uint256 assets,
+            uint256 shares,
+            address receiver,
+            uint256 receivedAssets,
+            uint256 mintedShares
+        )
+    {
+        assembly {
+            let pointer := PACKED_FULL_LENGTH
+            assets := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_FULL_LENGTH)
+            shares := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_ADDRESS_LENGTH)
+            receiver := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_FULL_LENGTH)
+            receivedAssets := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_FULL_LENGTH)
+            mintedShares := mload(add(packed, pointer))
+        }
+    }
 }
