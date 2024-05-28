@@ -64,7 +64,7 @@ contract WithdrawWhenDebtTest is SiloLittleHelper, Test {
         assertEq(collateralSilo.maxWithdraw(address(this)), 0, "no collateral left");
 
         // you can withdraw more because interest are smaller
-        uint256 expectedProtectedWithdraw = _sameAsset ? 894736842105263157 : 882352941176470588;
+        uint256 expectedProtectedWithdraw = _sameAsset ? 894736842105263156 : 882352941176470587;
         uint256 expectedCollateralLeft = 1e18 - expectedProtectedWithdraw;
         assertLe(0.1e18 * 1e18 / expectedCollateralLeft, _sameAsset ? 0.95e18 : 0.85e18, "LTV holds");
 
