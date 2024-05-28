@@ -6,8 +6,9 @@ import {IERC3156FlashBorrower} from "silo-core/contracts/interfaces/IERC3156Flas
 contract FlashLoanReceiverWithInvalidResponse is IERC3156FlashBorrower {
     function onFlashLoan(address, address, uint256, uint256, bytes calldata)
         external
+        pure
         returns (bytes32)
     {
-        return bytes32(0);// invalid flashloan callback response
+        return bytes32(0); // invalid flashloan callback response
     }
 }

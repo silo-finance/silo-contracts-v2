@@ -34,7 +34,7 @@ contract PreviewTest is SiloLittleHelper, Test {
     forge test -vv --ffi --mt test_previewBorrow_zero_fuzz
     */
     /// forge-config: core-test.fuzz.runs = 10000
-    function test_previewBorrow_zero_fuzz(uint256 _assets, bool _useShares) public {
+    function test_previewBorrow_zero_fuzz(uint256 _assets, bool _useShares) public view {
         assertEq(_useShares ? silo0.previewBorrowShares(_assets) : silo0.previewBorrow(_assets), _assets);
     }
 

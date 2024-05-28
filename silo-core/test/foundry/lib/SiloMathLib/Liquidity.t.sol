@@ -9,7 +9,7 @@ contract LiquidityTest is Test {
     /*
     forge test -vv --mt test_liquidity
     */
-    function test_liquidity() public {
+    function test_liquidity() public pure {
         assertEq(SiloMathLib.liquidity(0, 0), 0);
         assertEq(SiloMathLib.liquidity(100, 10), 90);
         assertEq(SiloMathLib.liquidity(1e18, 1), 999999999999999999);

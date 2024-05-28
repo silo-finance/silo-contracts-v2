@@ -418,7 +418,7 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
 
         assertEq(IShareToken(collateralShareToken).balanceOf(borrower), depositAssets, "expect borrower to have collateral");
 
-        _borrowTwoAssetsAssertions(borrower, debtShareToken, collateralShareToken, depositAssets, _sameAsset);
+        _borrowTwoAssetsAssertions(borrower, debtShareToken, collateralShareToken, _sameAsset);
 
         _borrow(0.0001e18, borrower, _sameAsset, ISilo.AboveMaxLtv.selector);
     }
@@ -550,7 +550,6 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
         address _borrower,
         address _debtShareToken,
         address _collateralToken,
-        uint256 _depositAssets,
         bool _sameAsset
     ) private {
         uint256 maxLtv = _sameAsset ? 0.85e18 : 0.75e18;

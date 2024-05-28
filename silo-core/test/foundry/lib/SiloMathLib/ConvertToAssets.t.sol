@@ -198,7 +198,7 @@ contract ConvertToAssetsTest is Test {
     /*
     forge test -vv --mt test_convertToAssets
     */
-    function test_convertToAssets() public {
+    function test_convertToAssets() public view {
         for (uint256 index = 0; index < numberOfTestCases; index++) {
             assertEq(
                 SiloMathLib.convertToAssets(

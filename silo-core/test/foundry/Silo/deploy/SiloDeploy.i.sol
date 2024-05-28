@@ -69,7 +69,7 @@ contract SiloDeployTest is IntegrationTest {
     }
 
     // FOUNDRY_PROFILE=core-test forge test -vv --ffi -mt test_hooks_are_initialized
-    function test_hooks_are_initialized() public { // solhint-disable-line func-name-mixedcase
+    function test_hooks_are_initialized() public view {
         (address silo0, address silo1) = _siloConfig.getSilos();
 
          _verifyHookReceiversForSilo(silo0);
@@ -77,7 +77,7 @@ contract SiloDeployTest is IntegrationTest {
     }
 
     // FOUNDRY_PROFILE=core-test forge test -vv --ffi -mt test_oracles_deploy
-    function test_oracles_deploy() public { // solhint-disable-line func-name-mixedcase
+    function test_oracles_deploy() public view { // solhint-disable-line func-name-mixedcase
         (, address silo1) = _siloConfig.getSilos();
 
         ISiloConfig.ConfigData memory siloConfig1 = _siloConfig.getConfig(silo1);
@@ -92,7 +92,7 @@ contract SiloDeployTest is IntegrationTest {
         );
     }
 
-    function _verifyHookReceiversForSilo(address _silo) internal {
+    function _verifyHookReceiversForSilo(address _silo) internal view {
         (,,, IHookReceiver hookReceiver) = ISilo(_silo).sharedStorage();
 
         assertNotEq(address(hookReceiver), address(0), "Hook receiver not initialized");
@@ -108,7 +108,7 @@ contract SiloDeployTest is IntegrationTest {
         _verifyHookReceiverForToken(debtShareToken);
     }
 
-    function _verifyHookReceiverForToken(address _token) internal {
+    function _verifyHookReceiverForToken(address _token) internal view {
         IShareToken.HookSetup memory hookSetup = IShareToken(_token).hookSetup();
 
         assertNotEq(hookSetup.hookReceiver, address(0), "Hook receiver not initialized");

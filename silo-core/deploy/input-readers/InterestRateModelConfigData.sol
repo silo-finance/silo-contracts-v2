@@ -61,7 +61,7 @@ contract InterestRateModelConfigData {
         revert ConfigNotFound();
     }
 
-    function print(IInterestRateModelV2.Config memory _configData) public {
+    function print(IInterestRateModelV2.Config memory _configData) public pure {
         console2.log("beta", _configData.beta);
         console2.log("kcrit", _configData.kcrit);
         console2.log("ki", _configData.ki);

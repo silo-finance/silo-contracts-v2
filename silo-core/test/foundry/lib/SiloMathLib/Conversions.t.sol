@@ -11,7 +11,7 @@ contract ConversionsTest is Test {
     /*
     forge test -vv --mt test_SiloMathLib_conversions
     */
-    function test_SiloMathLib_conversions() public {
+    function test_SiloMathLib_conversions() public pure {
         uint256 _assets = 1;
         uint256 _totalAssets;
         uint256 _totalShares;
@@ -45,7 +45,7 @@ contract ConversionsTest is Test {
     /// forge-config: core-test.fuzz.runs = 5000
     function test_SiloMathLib_conversions_fuzz(
         uint256 _totalAssets, uint256 _totalShares, uint256 _assetsIn
-    ) public {
+    ) public pure {
         vm.assume(_totalAssets >= _totalShares); // we allow for dust and/or interest
 
         if (_totalShares > 0) {
