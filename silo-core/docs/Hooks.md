@@ -5,12 +5,23 @@ Silo provides a comprehensive hooks system allowing flexibility to extend it.
 ```Hook.depositAction(collateralType)``` (beforeAction and afterAction) \
 Where `collateralType` is `ISilo.CollateralType`
 - action ```Hook.DEPOSIT | Hook.COLLATERAL_TOKEN``` or ```Hook.DEPOSIT | Hook.PROTECTED_TOKEN``` \
-data: abi.encodePacked(assets, shares, receiver) \
- `uint256 assets` - deposited assets \
- `uitn256 shares` - deposited shares \
- `address receiver` - deposit receiver
+before deposit data: abi.encodePacked(assets, shares, receiver)
 ```
-
+    (
+        uint256 depositedAssets,
+        uint256 depositedShares,
+        address receiver
+    ) = Hook.beforeDepositDecode(_inputAndOutput);
+```
+after deposit data: abi.encodePacked(assets, shares, receiver, receivedAssets, mintedShares)
+```
+    (
+        uint256 depositedAssets,
+        uint256 depositedShares,
+        address receiver,
+        uint256 receivedAssets,
+        uint256 mintedShares
+    ) = Hook.afterDepositDecode(_inputAndOutput);
 ```
 
 ```Hook.shareTokenTransfer(tokenType)``` (afterAction) \
@@ -27,7 +38,6 @@ data: abi.encodePacked(sender, recipient, amount, balanceOfSender, balanceOfRece
     uint256 totalSupply
 ) = Hook.afterTokenTransferDecode(inputAndOutput);
 ```
-
 
 ### withdraw
 - ```Hook.WITHDRAW | Hook.COLLATERAL_TOKEN``` (beforeAction) or
