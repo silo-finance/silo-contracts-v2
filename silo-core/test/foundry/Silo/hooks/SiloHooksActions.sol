@@ -66,8 +66,8 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock {
         // Ensure there are no other hook calls.
         _siloHookReceiver.revertAnyAction();
         // Following deposits should not trigger any hook. If it will trigger the hook will revert
-        _siloDepositNoEvent(silo0, token0, _depositor, _depositor, amount, protected);
-        _siloDepositNoEvent(silo1, token1, _depositor, _depositor, amount, collateral);
+        _siloDepositWithoutHook(silo0, token0, _depositor, _depositor, amount, protected);
+        _siloDepositWithoutHook(silo1, token1, _depositor, _depositor, amount, collateral);
     }
 
     /// FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testDepositFnBothHookActions
@@ -91,8 +91,8 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock {
         // Ensure there are no other hook calls.
         _siloHookReceiver.revertAnyAction();
         // Following deposits should not trigger any hook. If it will trigger the hook will revert
-        _siloDepositNoEvent(silo1, token1, _depositor, _depositor, amount, collateral);
-        _siloDepositNoEvent(silo1, token1, _depositor, _depositor, amount, protected);
+        _siloDepositWithoutHook(silo1, token1, _depositor, _depositor, amount, collateral);
+        _siloDepositWithoutHook(silo1, token1, _depositor, _depositor, amount, protected);
     }
 
     /// FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testDepositFnAllHookActions
@@ -118,8 +118,53 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock {
         // Ensure there are no other hook calls.
         _siloHookReceiver.revertAnyAction();
         // Following deposits should not trigger any hook. If it will trigger the hook will revert
-        _siloDepositNoEvent(silo1, token1, _depositor, _depositor, amount, collateral);
-        _siloDepositNoEvent(silo1, token1, _depositor, _depositor, amount, protected);
+        _siloDepositWithoutHook(silo1, token1, _depositor, _depositor, amount, collateral);
+        _siloDepositWithoutHook(silo1, token1, _depositor, _depositor, amount, protected);
+    }
+
+    /// FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testWithdrawFnBeforeAfterHookActions
+    function testWithdrawFnBeforeAfterHookActions() public {
+        ISilo.CollateralType collateral = ISilo.CollateralType.Collateral;
+        ISilo.CollateralType protected = ISilo.CollateralType.Protected;
+
+        uint256 beforeActions = Hook.withdrawAction(collateral);
+        uint256 afterActions = Hook.withdrawAction(protected);
+
+        HookMock hookReceiverMock = new HookMock(beforeActions, NO_ACTIONS, NO_ACTIONS, afterActions);
+        deploySiloWithHook(address(hookReceiverMock));
+
+        uint256 amount = 1e18;
+
+        _siloDepositWithoutHook(silo0, token0, _depositor, _depositor, amount, collateral);
+        _siloDepositWithoutHook(silo1, token1, _depositor, _depositor, amount, protected);
+
+        _siloWithdrawWithEvent(
+            silo0,
+            _depositor,
+            _depositor,
+            _depositor,
+            amount,
+            collateral,
+            EXPECT_BEFORE
+        );
+
+        _siloWithdrawWithEvent(
+            silo1,
+            _depositor,
+            _depositor,
+            _depositor,
+            amount,
+            protected,
+            EXPECT_AFTER
+        );
+
+        // Ensure there are no other hook calls.
+        _siloHookReceiver.revertAnyAction();
+        // Following deposits should not trigger any hook. If it will trigger the hook will revert
+        _siloDepositWithoutHook(silo0, token0, _depositor, _depositor, amount, protected);
+        _siloDepositWithoutHook(silo1, token1, _depositor, _depositor, amount, collateral);
+        _siloWithdrawWithoutHook(silo0, _depositor, _depositor, _depositor, amount, protected);
+        _siloWithdrawWithoutHook(silo1, _depositor, _depositor, _depositor, amount, collateral);
     }
 
     function _siloDepositWithEvent(
@@ -208,7 +253,7 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock {
         _silo.deposit(_amount, _receiver, _collateralType);
     }
 
-    function _siloDepositNoEvent(
+    function _siloDepositWithoutHook(
         ISilo _silo,
         MintableToken _token,
         address _receiver,
@@ -223,6 +268,49 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock {
 
         vm.prank(_depositorAddr);
         _silo.deposit(_amount, _receiver, _collateralType);
+    }
+
+    function _siloWithdrawWithEvent(
+        ISilo _silo,
+        address _receiver,
+        address _owner,
+        address _spender,
+        uint256 _amount,
+        ISilo.CollateralType _collateralType,
+        bool _expectBefore
+    ) internal {
+        vm.expectEmit(true, true, true, true);
+
+        if (_expectBefore) {
+            emit WithdrawBeforeHA(address(_silo), _amount, SHARES_0, _receiver, _owner, _spender, _collateralType);
+        } else {
+            emit WithdrawAfterHA(
+                address(_silo),
+                _amount,
+                SHARES_0,
+                _receiver,
+                _owner,
+                _spender,
+                _amount,
+                _amount,
+                _collateralType
+            );
+        }
+
+        vm.prank(_spender);
+        _silo.withdraw(_amount, _receiver, _owner, _collateralType);
+    }
+
+    function _siloWithdrawWithoutHook(
+        ISilo _silo,
+        address _receiver,
+        address _owner,
+        address _spender,
+        uint256 _amount,
+        ISilo.CollateralType _collateralType
+    ) internal {
+        vm.prank(_spender);
+        _silo.withdraw(_amount, _receiver, _owner, _collateralType);
     }
 
     function deploySiloWithHook(address _hookReceiver) internal {

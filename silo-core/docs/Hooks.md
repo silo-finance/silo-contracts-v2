@@ -29,26 +29,42 @@ Where `tokenType` is `Hook.COLLATERAL_TOKEN` or `Hook.PROTECTED_TOKEN`
 - action: ```Hook.SHARE_TOKEN_TRANSFER | Hook.COLLATERAL_TOKEN``` or ```Hook.SHARE_TOKEN_TRANSFER | Hook.PROTECTED_TOKEN``` \
 data: abi.encodePacked(sender, recipient, amount, balanceOfSender, balanceOfRecepient, totalSupply)
 ```
-(
-    address sender,
-    address recipient,
-    uint256 amount,
-    uint256 senderBalance,
-    uint256 recipientBalance,
-    uint256 totalSupply
-) = Hook.afterTokenTransferDecode(inputAndOutput);
+    (
+        address sender,
+        address recipient,
+        uint256 amount,
+        uint256 senderBalance,
+        uint256 recipientBalance,
+        uint256 totalSupply
+    ) = Hook.afterTokenTransferDecode(inputAndOutput);
 ```
 
-### withdraw
-- ```Hook.WITHDRAW | Hook.COLLATERAL_TOKEN``` (beforeAction) or
-- ```Hook.WITHDRAW | Hook.PROTECTED_TOKEN``` (beforeAction) \
-data: abi.encodePacked(_args.assets, _args.shares, _args.receiver, _args.owner, _args.spender, _args.collateralType)
-- ```Hook.COLLATERAL_TOKEN | Hook.SHARE_TOKEN_TRANSFER``` (afterAction) or
-- ```Hook.PROTECTED_TOKEN | Hook.SHARE_TOKEN_TRANSFER``` (afterAction) \
-data: abi.encodePacked(_sender, _recipient, _amount, balanceOf(_sender), balanceOf(_recipient), totalSupply())
-- ```Hook.WITHDRAW | Hook.COLLATERAL_TOKEN``` (afterAction) or
-- ```Hook.WITHDRAW | Hook.PROTECTED_TOKEN``` (afterAction) \
-data: abi.encodePacked(_args.assets, _args.shares, _args.receiver, _args.owner, _args.spender, assets, shares)
+### withdraw fn hook actions
+```Hook.withdrawAction(collateralType)``` (beforeAction and afterAction) \
+Where `collateralType` is `ISilo.CollateralType`
+- action ```Hook.WITHDRAW | Hook.COLLATERAL_TOKEN``` or ```Hook.WITHDRAW | Hook.PROTECTED_TOKEN``` \
+before withdraw data: abi.encodePacked(assets, shares, receiver, owner, spender)
+```
+    Hook.BeforeWithdrawInput memory input = Hook.beforeWithdrawDecode(_inputAndOutput);
+```
+after withdraw data: abi.encodePacked(assets, shares, receiver, owner, spender, withdrawnAssets, withdrawnShares)
+```
+    Hook.AfterWithdrawInput memory input = Hook.afterWithdrawDecode(_inputAndOutput);
+```
+```Hook.shareTokenTransfer(tokenType)``` (afterAction) \
+Where `tokenType` is `Hook.COLLATERAL_TOKEN` or `Hook.PROTECTED_TOKEN`
+- action: ```Hook.SHARE_TOKEN_TRANSFER | Hook.COLLATERAL_TOKEN``` or ```Hook.SHARE_TOKEN_TRANSFER | Hook.PROTECTED_TOKEN``` \
+data: abi.encodePacked(sender, recipient, amount, balanceOfSender, balanceOfRecepient, totalSupply)
+```
+    (
+        address sender,
+        address recipient,
+        uint256 amount,
+        uint256 senderBalance,
+        uint256 recipientBalance,
+        uint256 totalSupply
+    ) = Hook.afterTokenTransferDecode(inputAndOutput);
+```
 
 ### borrow
 - ```Hook.BORROW | Hook.LEVERAGE | Hook.SAME_ASSET``` (beforeAction) or

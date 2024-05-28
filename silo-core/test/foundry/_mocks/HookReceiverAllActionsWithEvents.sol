@@ -6,6 +6,8 @@ import {SiloHookReceiver, IHookReceiver} from "silo-core/contracts/utils/hook-re
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 
+/// @dev Hook receiver for all actions with events to see decoded inputs
+/// This contract is designed to be deployed for each test case
 contract HookReceiverAllActionsWithEvents is SiloHookReceiver {
     using Hook for uint256;
 
@@ -49,6 +51,28 @@ contract HookReceiverAllActionsWithEvents is SiloHookReceiver {
         uint256 senderBalance,
         uint256 recipientBalance,
         uint256 totalSupply,
+        ISilo.CollateralType collateralType
+    );
+
+    event WithdrawBeforeHA(
+        address silo,
+        uint256 assets,
+        uint256 shares,
+        address receiver,
+        address owner,
+        address spender,
+        ISilo.CollateralType collateralType
+    );
+
+    event WithdrawAfterHA(
+        address silo,
+        uint256 assets,
+        uint256 shares,
+        address receiver,
+        address owner,
+        address spender,
+        uint256 withdrawnAssets,
+        uint256 withdrawnShares,
         ISilo.CollateralType collateralType
     );
 
@@ -100,6 +124,8 @@ contract HookReceiverAllActionsWithEvents is SiloHookReceiver {
             _processDeposit(_silo, _action, _inputAndOutput, _isBefore);
         } else if (_action.matchAction(Hook.SHARE_TOKEN_TRANSFER)) {
             _processShareTokenTransfer(_silo, _action, _inputAndOutput, _isBefore);
+        } else if (_action.matchAction(Hook.WITHDRAW)) {
+            _processWithdraw(_silo, _action, _inputAndOutput, _isBefore);
         }
     }
 
@@ -172,6 +198,42 @@ contract HookReceiverAllActionsWithEvents is SiloHookReceiver {
                 recipientBalance,
                 totalSupply,
                 ISilo.CollateralType.Protected
+            );
+        }
+    }
+
+    function _processWithdraw(address _silo, uint256 _action, bytes calldata _inputAndOutput, bool _isBefore) internal {
+        bool isCollateral = _action.matchAction(Hook.withdrawAction(ISilo.CollateralType.Collateral));
+
+        ISilo.CollateralType collateralType = isCollateral
+                ? ISilo.CollateralType.Collateral
+                : ISilo.CollateralType.Protected;
+
+        if (_isBefore) {
+            Hook.BeforeWithdrawInput memory input = Hook.beforeWithdrawDecode(_inputAndOutput);
+
+            emit WithdrawBeforeHA(
+                _silo,
+                input.assets,
+                input.shares,
+                input.receiver,
+                input.owner,
+                input.spender,
+                collateralType
+            );
+        } else {
+            Hook.AfterWithdrawInput memory input = Hook.afterWithdrawDecode(_inputAndOutput);
+
+            emit WithdrawAfterHA(
+                _silo,
+                input.assets,
+                input.shares,
+                input.receiver,
+                input.owner,
+                input.spender,
+                input.withdrawnAssets,
+                input.withdrawnShares,
+                collateralType
             );
         }
     }

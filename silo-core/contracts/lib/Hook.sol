@@ -5,6 +5,24 @@ import {ISilo} from "../interfaces/ISilo.sol";
 
 // solhint-disable private-vars-leading-underscore
 library Hook {
+    struct BeforeWithdrawInput {
+        uint256 assets;
+        uint256 shares;
+        address receiver;
+        address owner;
+        address spender;
+    }
+
+    struct AfterWithdrawInput {
+        uint256 assets;
+        uint256 shares;
+        address receiver;
+        address owner;
+        address spender;
+        uint256 withdrawnAssets;
+        uint256 withdrawnShares;
+    }
+
     uint256 internal constant NONE = 0;
     uint256 internal constant SAME_ASSET = 2 ** 1;
     uint256 internal constant TWO_ASSETS = 2 ** 2;
@@ -178,5 +196,71 @@ library Hook {
             pointer := add(pointer, PACKED_FULL_LENGTH)
             mintedShares := mload(add(packed, pointer))
         }
+    }
+
+    /// @dev Decodes packed data from the withdraw hook
+    /// @param packed The packed data (via abi.encodePacked)
+    /// @return input decoded
+    function beforeWithdrawDecode(bytes memory packed)
+        internal
+        pure
+        returns (BeforeWithdrawInput memory input)
+    {
+        uint256 assets;
+        uint256 shares;
+        address receiver;
+        address owner;
+        address spender;
+
+        assembly {
+            let pointer := PACKED_FULL_LENGTH
+            assets := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_FULL_LENGTH)
+            shares := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_ADDRESS_LENGTH)
+            receiver := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_ADDRESS_LENGTH)
+            owner := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_ADDRESS_LENGTH)
+            spender := mload(add(packed, pointer))
+        }
+
+        input = BeforeWithdrawInput(assets, shares, receiver, owner, spender);
+    }
+
+    /// @dev Decodes packed data from the withdraw hook
+    /// @param packed The packed data (via abi.encodePacked)
+    /// @return input decoded
+    function afterWithdrawDecode(bytes memory packed)
+        internal
+        pure
+        returns (AfterWithdrawInput memory input)
+    {
+        uint256 assets;
+        uint256 shares;
+        address receiver;
+        address owner;
+        address spender;
+        uint256 withdrawnAssets;
+        uint256 withdrawnShares;
+
+        assembly {
+            let pointer := PACKED_FULL_LENGTH
+            assets := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_FULL_LENGTH)
+            shares := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_ADDRESS_LENGTH)
+            receiver := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_ADDRESS_LENGTH)
+            owner := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_ADDRESS_LENGTH)
+            spender := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_FULL_LENGTH)
+            withdrawnAssets := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_FULL_LENGTH)
+            withdrawnShares := mload(add(packed, pointer))
+        }
+
+        input = AfterWithdrawInput(assets, shares, receiver, owner, spender, withdrawnAssets, withdrawnShares);
     }
 }
