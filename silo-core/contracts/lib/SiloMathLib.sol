@@ -200,11 +200,8 @@ library SiloMathLib {
         if (_debtValue == 0) return _sumOfCollateralsValue;
         if (_lt == 0) return 0;
 
-        uint256 minimumCollateralValue = _debtValue * _PRECISION_DECIMALS;
-        // +1 is solution for precision error that math can produce and when that happen,
-        // `maxAssets` can cause insolvency, so it can not be withdraw
-        // +1 will not overflow because it is after division
-        unchecked { minimumCollateralValue = minimumCollateralValue / _lt + 1; }
+        // using Rounding.LT (up) to have highest collateralValue that we have to leave for user to stay solvent
+        uint256 minimumCollateralValue = _debtValue.mulDiv(_PRECISION_DECIMALS, _lt, Rounding.LTV);
 
         // if we over LT, we can not withdraw
         if (_sumOfCollateralsValue <= minimumCollateralValue) {
@@ -221,7 +218,13 @@ library SiloMathLib {
             // - can potentially overflow, but it is unlikely, we would overflow in LTV calculations first
             // worse what can happen we return lower number than real MAX on overflow
             maxAssets = (_borrowerProtectedAssets + _borrowerCollateralAssets) * spareCollateralValue
-                / _sumOfCollateralsValue;
+                / _sumOfCollateralsValue; // rounding down by default
+
+            // -1 is solution for precision error that math can produce and when that happen,
+            // `maxAssets` can cause insolvency, so it can not be withdraw
+            // this -1 is a dust that we generating by rounding always in favor of protocol
+            // -1 will not underflow because we checking if `maxAssets` is not zero
+            if (maxAssets != 0) maxAssets--;
         }
     }
 
