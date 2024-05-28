@@ -74,7 +74,9 @@ maxWithdraw_correctMax(uint8): failed!💥
         __previewDeposit_doesNotReturnMoreThanDeposit(2,71994004506247621724349925153728615743520108634673265697683206836729824850);
 
 
-        // Actor::withdraw(bool,uint256)(true, 207282918430713322852178022)
+        // this is a case when user has debt
+        // we calculated max withdraw to be 207282918430713322852178022
+        // but we can withdraw amount that is less by 1
         // Actor::withdraw(bool,uint256)(true, 207282918430713322852178022)
         __maxWithdraw_correctMax(135);
 
