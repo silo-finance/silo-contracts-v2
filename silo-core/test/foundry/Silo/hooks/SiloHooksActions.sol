@@ -140,9 +140,9 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock {
         vm.expectEmit(true, true, true, true);
 
         if (_expectBefore) {
-            emit DepositBeforeHA(address(_silo), _amount, SHARES_0, _depositorAddr, _collateralType);
+            emit DepositBeforeHA(address(_silo), _amount, SHARES_0, _receiver, _collateralType);
         } else {
-            emit DepositAfterHA(address(_silo), _amount, SHARES_0, _amount, _amount, _depositorAddr, _collateralType);
+            emit DepositAfterHA(address(_silo), _amount, SHARES_0, _amount, _amount, _receiver, _collateralType);
         }
 
         _silo.deposit(_amount, _depositor, _collateralType);
@@ -164,9 +164,9 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock {
         vm.prank(_depositorAddr);
 
         vm.expectEmit(true, true, true, true);
-        emit DepositBeforeHA(address(_silo), _amount, SHARES_0, _depositorAddr, _collateralType);
+        emit DepositBeforeHA(address(_silo), _amount, SHARES_0, _receiver, _collateralType);
         vm.expectEmit(true, true, true, true);
-        emit DepositAfterHA(address(_silo), _amount, SHARES_0, _amount, _amount, _depositorAddr, _collateralType);
+        emit DepositAfterHA(address(_silo), _amount, SHARES_0, _amount, _amount, _receiver, _collateralType);
 
         _silo.deposit(_amount, _depositorAddr, _collateralType);
     }
@@ -187,14 +187,14 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock {
         vm.prank(_depositorAddr);
 
         vm.expectEmit(true, true, true, true);
-        emit DepositBeforeHA(address(_silo), _amount, SHARES_0, _depositorAddr, _collateralType);
+        emit DepositBeforeHA(address(_silo), _amount, SHARES_0, _receiver, _collateralType);
 
         vm.expectEmit(true, true, true, true);
 
         emit ShareTokenAfterHA(
             address(_silo),
             address(0), // because we mint tokens on deposit
-            _depositorAddr,
+            _receiver,
             _amount,
             0, // not balance for the sender
             _amount, // balance
@@ -203,9 +203,9 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock {
         );
 
         vm.expectEmit(true, true, true, true);
-        emit DepositAfterHA(address(_silo), _amount, SHARES_0, _amount, _amount, _depositorAddr, _collateralType);
+        emit DepositAfterHA(address(_silo), _amount, SHARES_0, _amount, _amount, _receiver, _collateralType);
 
-        _silo.deposit(_amount, _depositorAddr, _collateralType);
+        _silo.deposit(_amount, _receiver, _collateralType);
     }
 
     function _siloDepositNoEvent(
@@ -222,7 +222,7 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock {
         _token.approve(address(_silo), _amount);
 
         vm.prank(_depositorAddr);
-        _silo.deposit(_amount, _depositorAddr, _collateralType);
+        _silo.deposit(_amount, _receiver, _collateralType);
     }
 
     function deploySiloWithHook(address _hookReceiver) internal {
