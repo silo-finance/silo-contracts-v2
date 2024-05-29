@@ -59,8 +59,8 @@ Hook.AfterBorrowInput memory input = Hook.afterBorrowDecode(_inputAndOutput);
 ```
 
 ```Hook.shareTokenTransfer(tokenType)``` (afterAction) \
-Where `tokenType` is `Hook.COLLATERAL_TOKEN` and `Hook.DEBT_TOKEN` (we have two actions here)
-- action: ```Hook.SHARE_TOKEN_TRANSFER | Hook.COLLATERAL_TOKEN``` and ```Hook.SHARE_TOKEN_TRANSFER | Hook.DEBT_TOKEN``` \
+Where `tokenType` is `Hook.DEBT_TOKEN`
+- action: ```Hook.SHARE_TOKEN_TRANSFER | Hook.DEBT_TOKEN``` \
 data: abi.encodePacked(sender, recipient, amount, balanceOfSender, balanceOfRecepient, totalSupply)
 ```
 Hook.AfterTokenTransfer memory input = Hook.afterTokenTransferDecode(_inputAndOutput);

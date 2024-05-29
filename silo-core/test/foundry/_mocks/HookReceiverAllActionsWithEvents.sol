@@ -58,6 +58,16 @@ contract HookReceiverAllActionsWithEvents is SiloHookReceiver {
         ISilo.CollateralType collateralType
     );
 
+    event DebtShareTokenAfterHA(
+        address silo,
+        address sender,
+        address recipient,
+        uint256 amount,
+        uint256 senderBalance,
+        uint256 recipientBalance,
+        uint256 totalSupply
+    );
+
     event WithdrawBeforeHA(
         address silo,
         uint256 assets,
@@ -106,6 +116,7 @@ contract HookReceiverAllActionsWithEvents is SiloHookReceiver {
     error ShareTokenBeforeForbidden();
     error UnknownAction();
     error UnknownBorrowAction();
+    error UnknownShareTokenAction();
 
     // designed to be deployed for each test case
     constructor(
@@ -218,6 +229,18 @@ contract HookReceiverAllActionsWithEvents is SiloHookReceiver {
                 input.totalSupply,
                 ISilo.CollateralType.Protected
             );
+        } else if (_action.matchAction(Hook.shareTokenTransfer(Hook.DEBT_TOKEN))) {
+            emit DebtShareTokenAfterHA(
+                _silo,
+                input.sender,
+                input.recipient,
+                input.amount,
+                input.senderBalance,
+                input.recipientBalance,
+                input.totalSupply
+            );
+        } else {
+            revert UnknownShareTokenAction();
         }
     }
 

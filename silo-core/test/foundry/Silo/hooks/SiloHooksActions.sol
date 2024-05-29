@@ -204,14 +204,27 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock {
         HookMock hookReceiverMock = new HookMock(beforeActions, afterActions, NO_ACTIONS, NO_ACTIONS);
         deploySiloWithHook(address(hookReceiverMock));
 
-        uint256 depositAmount = 100e18;
-        uint256 collateralAmount = 100e18;
+        _depositForBorrowNotSameAsset();
+
         uint256 borrowAmount = 1e18;
 
-        _siloDepositWithoutHook(silo0, token0, _depositor, _depositor, depositAmount, COLLATERAL);
-        _siloDepositWithoutHook(silo1, token1, _borrower, _borrower, collateralAmount, PROTECTED);
-
         _siloBorrowBothHooks(silo0, _borrower, _borrower, borrowAmount, _NOT_SAME_ASSET);
+    }
+
+    /// FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testBorrowNotLeverageNotSameAssetAllHooks
+    function testBorrowNotLeverageNotSameAssetAllHooks() public {
+        uint256 beforeActions = Hook.borrowAction(_NOT_LEVERAGE, _NOT_SAME_ASSET);
+
+        uint256 afterActions = beforeActions.addAction(Hook.shareTokenTransfer(Hook.DEBT_TOKEN));
+
+        HookMock hookReceiverMock = new HookMock(beforeActions, afterActions, NO_ACTIONS, NO_ACTIONS);
+        deploySiloWithHook(address(hookReceiverMock));
+
+        _depositForBorrowNotSameAsset();
+
+        uint256 borrowAmount = 1e18;
+
+        _siloBorrowAllHooks(silo0, _borrower, _borrower, borrowAmount, _NOT_SAME_ASSET);
     }
 
     function _siloDepositWithHook(
@@ -457,6 +470,54 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock {
 
         vm.prank(_borrowerAddr);
         _silo.borrow(_amount, _borrowerAddr, _receiver, _isSameAsset);
+    }
+
+    function _siloBorrowAllHooks(
+        ISilo _silo,
+        address _borrowerAddr,
+        address _receiver,
+        uint256 _amount,
+        bool _isSameAsset
+    ) internal {
+        vm.expectEmit(true, true, true, true);
+        emit BorrowBeforeHA(address(_silo), _amount, SHARES_0, _borrowerAddr, _receiver, _NOT_LEVERAGE, _isSameAsset);
+
+        vm.expectEmit(true, true, true, true);
+
+        emit DebtShareTokenAfterHA(
+            address(_silo),
+            address(0), // because we mint bedt share tokens
+            _receiver,
+            _amount,
+            0, // no balance for the sender
+            _amount, // balance
+            _amount // total supply
+        );
+
+        vm.expectEmit(true, true, true, true);
+
+        emit BorrowAfterHA(
+            address(_silo),
+            _amount,
+            SHARES_0,
+            _borrowerAddr,
+            _receiver,
+            _amount,
+            _amount,
+            _NOT_LEVERAGE,
+            _isSameAsset
+        );
+
+        vm.prank(_borrowerAddr);
+        _silo.borrow(_amount, _borrowerAddr, _receiver, _isSameAsset);
+    }
+
+    function _depositForBorrowNotSameAsset() internal {
+        uint256 depositAmount = 100e18;
+        uint256 collateralAmount = 100e18;
+
+        _siloDepositWithoutHook(silo0, token0, _depositor, _depositor, depositAmount, COLLATERAL);
+        _siloDepositWithoutHook(silo1, token1, _borrower, _borrower, collateralAmount, PROTECTED);
     }
 
     function deploySiloWithHook(address _hookReceiver) internal {
