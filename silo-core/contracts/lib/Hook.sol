@@ -77,6 +77,34 @@ library Hook {
         uint256 totalSupply;
     }
 
+    /// @notice The data structure for the before borrow hook
+    /// @param assets The amount of assets to borrow
+    /// @param shares The amount of shares to borrow
+    /// @param receiver The receiver of the borrow
+    /// @param borrower The borrower of the assets
+    struct BeforeBorrowInput {
+        uint256 assets;
+        uint256 shares;
+        address receiver;
+        address borrower;
+    }
+
+    /// @notice The data structure for the after borrow hook
+    /// @param assets The amount of assets borrowed
+    /// @param shares The amount of shares borrowed
+    /// @param receiver The receiver of the borrow
+    /// @param borrower The borrower of the assets
+    /// @param borrowedAssets The exact amount of assets being borrowed
+    /// @param borrowedShares The exact amount of shares being borrowed
+    struct AfterBorrowInput {
+        uint256 assets;
+        uint256 shares;
+        address receiver;
+        address borrower;
+        uint256 borrowedAssets;
+        uint256 borrowedShares;
+    }
+
     uint256 internal constant NONE = 0;
     uint256 internal constant SAME_ASSET = 2 ** 1;
     uint256 internal constant TWO_ASSETS = 2 ** 2;
@@ -311,5 +339,65 @@ library Hook {
         }
 
         input = AfterWithdrawInput(assets, shares, receiver, owner, spender, withdrawnAssets, withdrawnShares);
+    }
+
+    /// @dev Decodes packed data from the before borrow hook
+    /// @param packed The packed data (via abi.encodePacked)
+    /// @return input decoded
+    function beforeBorrowDecode(bytes memory packed)
+        internal
+        pure
+        returns (BeforeBorrowInput memory input)
+    {
+        uint256 assets;
+        uint256 shares;
+        address receiver;
+        address borrower;
+
+        assembly {
+            let pointer := PACKED_FULL_LENGTH
+            assets := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_FULL_LENGTH)
+            shares := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_ADDRESS_LENGTH)
+            receiver := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_ADDRESS_LENGTH)
+            borrower := mload(add(packed, pointer))
+        }
+
+        input = BeforeBorrowInput(assets, shares, receiver, borrower);
+    }
+
+    /// @dev Decodes packed data from the after borrow hook
+    /// @param packed The packed data (via abi.encodePacked)
+    /// @return input decoded
+    function afterBorrowDecode(bytes memory packed)
+        internal
+        pure
+        returns (AfterBorrowInput memory input)
+    {
+        uint256 assets;
+        uint256 shares;
+        address receiver;
+        address borrower;
+        uint256 borrowedAssets;
+        uint256 borrowedShares;
+
+        assembly {
+            let pointer := PACKED_FULL_LENGTH
+            assets := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_FULL_LENGTH)
+            shares := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_ADDRESS_LENGTH)
+            receiver := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_ADDRESS_LENGTH)
+            borrower := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_FULL_LENGTH)
+            borrowedAssets := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_FULL_LENGTH)
+            borrowedShares := mload(add(packed, pointer))
+        }
+
+        input = AfterBorrowInput(assets, shares, receiver, borrower, borrowedAssets, borrowedShares);
     }
 }

@@ -11,8 +11,12 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 contract HookReceiverAllActionsWithEvents is SiloHookReceiver {
     using Hook for uint256;
 
-    bool constant IS_BEFORE = true;
-    bool constant IS_AFTER = false;
+    bool internal constant _IS_BEFORE = true;
+    bool internal constant _IS_AFTER = false;
+    bool internal constant _SAME_ASSET = true;
+    bool internal constant _NOT_SAME_ASSET = false;
+    bool internal constant _LEVERAGE = true;
+    bool internal constant _NOT_LEVERAGE = false;
 
     uint24 internal immutable _SILO0_ACTIONS_BEFORE;
     uint24 internal immutable _SILO0_ACTIONS_AFTER;
@@ -76,8 +80,32 @@ contract HookReceiverAllActionsWithEvents is SiloHookReceiver {
         ISilo.CollateralType collateralType
     );
 
+    event BorrowBeforeHA(
+        address silo,
+        uint256 borrowedAssets,
+        uint256 borrowedShares,
+        address borrower,
+        address receiver,
+        bool isLeverage,
+        bool isSameAsset
+    );
+
+    event BorrowAfterHA(
+        address silo,
+        uint256 borrowedAssets,
+        uint256 borrowedShares,
+        address borrower,
+        address receiver,
+        uint256 returnedAssets,
+        uint256 returnedShares,
+        bool isLeverage,
+        bool isSameAsset
+    );
+
     error ActionsStopped();
     error ShareTokenBeforeForbidden();
+    error UnknownAction();
+    error UnknownBorrowAction();
 
     // designed to be deployed for each test case
     constructor(
@@ -110,13 +138,13 @@ contract HookReceiverAllActionsWithEvents is SiloHookReceiver {
     /// @inheritdoc IHookReceiver
     function beforeAction(address _silo, uint256 _action, bytes calldata _inputAndOutput) external {
         if (revertAllActions) revert ActionsStopped();
-        _processActions(_silo, _action, _inputAndOutput, IS_BEFORE);
+        _processActions(_silo, _action, _inputAndOutput, _IS_BEFORE);
     }
 
     /// @inheritdoc IHookReceiver
     function afterAction(address _silo, uint256 _action, bytes calldata _inputAndOutput) external {
         if (revertAllActions) revert ActionsStopped();
-        _processActions(_silo, _action, _inputAndOutput, IS_AFTER);
+        _processActions(_silo, _action, _inputAndOutput, _IS_AFTER);
     }
 
     function _processActions(address _silo, uint256 _action, bytes calldata _inputAndOutput, bool _isBefore) internal {
@@ -126,6 +154,10 @@ contract HookReceiverAllActionsWithEvents is SiloHookReceiver {
             _processShareTokenTransfer(_silo, _action, _inputAndOutput, _isBefore);
         } else if (_action.matchAction(Hook.WITHDRAW)) {
             _processWithdraw(_silo, _action, _inputAndOutput, _isBefore);
+        } else if (_action.matchAction(Hook.BORROW)) {
+            _processBorrow(_silo, _action, _inputAndOutput, _isBefore);
+        } else {
+            revert UnknownAction();
         }
     }
 
@@ -221,6 +253,56 @@ contract HookReceiverAllActionsWithEvents is SiloHookReceiver {
                 input.withdrawnAssets,
                 input.withdrawnShares,
                 collateralType
+            );
+        }
+    }
+
+    function _processBorrow(address _silo, uint256 _action, bytes calldata _inputAndOutput, bool _isBefore) internal {
+        if (_action.matchAction(Hook.borrowAction(_NOT_LEVERAGE, _NOT_SAME_ASSET))) {
+            _processBorrowAction(_silo, _inputAndOutput, _isBefore, _NOT_LEVERAGE, _NOT_SAME_ASSET);
+        } else if (_action.matchAction(Hook.borrowAction(_LEVERAGE, _NOT_SAME_ASSET))) {
+            _processBorrowAction(_silo, _inputAndOutput, _isBefore, _LEVERAGE, _NOT_SAME_ASSET);
+        } else if (_action.matchAction(Hook.borrowAction(_NOT_LEVERAGE, _SAME_ASSET))) {
+            _processBorrowAction(_silo, _inputAndOutput, _isBefore, _NOT_LEVERAGE, _SAME_ASSET);
+        } else if (_action.matchAction(Hook.borrowAction(_LEVERAGE, _SAME_ASSET))) {
+            _processBorrowAction(_silo, _inputAndOutput, _isBefore, _LEVERAGE, _SAME_ASSET);
+        } else {
+            revert UnknownBorrowAction();
+        }
+    }
+
+    function _processBorrowAction(
+        address _silo,
+        bytes calldata _inputAndOutput,
+        bool _isBefore,
+        bool _isLeverage,
+        bool _isSameAsset
+    ) internal {
+        if (_isBefore) {
+            Hook.BeforeBorrowInput memory input = Hook.beforeBorrowDecode(_inputAndOutput);
+
+            emit BorrowBeforeHA(
+                _silo,
+                input.assets,
+                input.shares,
+                input.borrower,
+                input.receiver,
+                _isLeverage,
+                _isSameAsset
+            );
+        } else {
+            Hook.AfterBorrowInput memory input = Hook.afterBorrowDecode(_inputAndOutput);
+
+            emit BorrowAfterHA(
+                _silo,
+                input.assets,
+                input.shares,
+                input.borrower,
+                input.receiver,
+                input.borrowedAssets,
+                input.borrowedShares,
+                _isLeverage,
+                _isSameAsset
             );
         }
     }

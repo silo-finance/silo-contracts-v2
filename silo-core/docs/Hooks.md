@@ -42,20 +42,29 @@ data: abi.encodePacked(sender, recipient, amount, balanceOfSender, balanceOfRece
 Hook.AfterTokenTransfer memory input = Hook.afterTokenTransferDecode(_inputAndOutput);
 ```
 
-### borrow
-- ```Hook.BORROW | Hook.LEVERAGE | Hook.SAME_ASSET``` (beforeAction) or
-- ```Hook.BORROW | Hook.LEVERAGE | Hook.TWO_ASSETS``` (beforeAction) or
-- ```Hook.BORROW | Hook.NONE | Hook.SAME_ASSET``` (beforeAction) or
-- ```Hook.BORROW | Hook.NONE | Hook.TWO_ASSETS``` (beforeAction) \
-data: abi.encodePacked(_args.assets, _args.shares, _args.receiver, _args.borrower)
-- ```Hook.COLLATERAL_TOKEN | Hook.SHARE_TOKEN_TRANSFER``` (afterAction) and
-- ```Hook.DEBT_TOKEN | Hook.SHARE_TOKEN_TRANSFER``` (afterAction) \
-data: abi.encodePacked(_sender, _recipient, _amount, balanceOf(_sender), balanceOf(_recipient), totalSupply())
-- ```Hook.BORROW | Hook.LEVERAGE | Hook.SAME_ASSET``` (afterAction) or
-- ```Hook.BORROW | Hook.LEVERAGE | Hook.TWO_ASSETS``` (afterAction) or
-- ```Hook.BORROW | Hook.NONE | Hook.SAME_ASSET``` (afterAction) or
-- ```Hook.BORROW | Hook.NONE | Hook.TWO_ASSETS``` (afterAction) \
-data: abi.encodePacked(_args.assets, _args.shares, _args.receiver, _args.borrower, assets, shares)
+### borrow fn hook actions
+```Hook.borrowAction(leverage, sameAsset)``` (beforeAction and afterAction) \
+- action ```Hook.BORROW | Hook.LEVERAGE | Hook.SAME_ASSET``` or \
+```Hook.BORROW | Hook.LEVERAGE | Hook.TWO_ASSETS``` or \
+```Hook.BORROW | Hook.NONE | Hook.SAME_ASSET``` or \
+```Hook.BORROW | Hook.NONE | Hook.TWO_ASSETS```
+
+before borrow data: abi.encodePacked(assets, shares, receiver, borrower)
+```
+Hook.BeforeBorrowInput memory input = Hook.beforeBorrowDecode(_inputAndOutput);
+```
+after borrow data: abi.encodePacked(assets, shares, receiver, borrower, borrowedAssets, borrowedShares)
+```
+Hook.AfterBorrowInput memory input = Hook.afterBorrowDecode(_inputAndOutput);
+```
+
+```Hook.shareTokenTransfer(tokenType)``` (afterAction) \
+Where `tokenType` is `Hook.COLLATERAL_TOKEN` and `Hook.DEBT_TOKEN` (we have two actions here)
+- action: ```Hook.SHARE_TOKEN_TRANSFER | Hook.COLLATERAL_TOKEN``` and ```Hook.SHARE_TOKEN_TRANSFER | Hook.DEBT_TOKEN``` \
+data: abi.encodePacked(sender, recipient, amount, balanceOfSender, balanceOfRecepient, totalSupply)
+```
+Hook.AfterTokenTransfer memory input = Hook.afterTokenTransferDecode(_inputAndOutput);
+```
 
 ### repay
 - ```Hook.REPAY``` (beforeAction) \
