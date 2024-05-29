@@ -46,8 +46,8 @@ library SiloERC4626Lib {
             maxAssetsOrShares = _totalCollateralAssets == 0
                 ? _VIRTUAL_DEPOSIT_LIMIT
                 : (_totalCollateralAssets >= _VIRTUAL_DEPOSIT_LIMIT)
-                        ? 0
-                        : _VIRTUAL_DEPOSIT_LIMIT - _totalCollateralAssets;
+                    ? 0
+                    : _VIRTUAL_DEPOSIT_LIMIT - _totalCollateralAssets;
         }
     }
 

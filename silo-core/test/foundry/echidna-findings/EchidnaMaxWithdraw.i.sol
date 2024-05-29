@@ -75,4 +75,23 @@ maxWithdraw_correctMax(uint8): failed!💥
 
         __maxWithdraw_correctMax(135);
     }
+
+/*
+maxWithdraw_correctMax(uint8): failed!💥
+  Call sequence, shrinking 118/500:
+    EchidnaE2E.deposit(18,true,15730697965110132263352181121800766241111447121938374876327531636260638549690)
+    EchidnaE2E.mint(0,false,904127108273066355882966843549996221862901171346683441708933306473336365875)
+    EchidnaE2E.borrow(78,false,375130136131904234904189363778)
+    EchidnaE2E.maxWithdraw_correctMax(39)
+
+    forge test -vv --ffi --mt test_echidna_scenario_maxWithdraw_correctMax3
+
+    this scenario caught overflow on max withdraw, it was caught by conditions checking "why max is 0?"
+    */
+    function test_echidna_scenario_maxWithdraw_correctMax3() public {
+        __deposit(18,true,15730697965110132263352181121800766241111447121938374876327531636260638549690);
+        __mint(0,false,904127108273066355882966843549996221862901171346683441708933306473336365875);
+        __borrow(78,false,375130136131904234904189363778);
+        __maxWithdraw_correctMax(39);
+    }
 }

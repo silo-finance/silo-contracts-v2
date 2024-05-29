@@ -223,10 +223,8 @@ library SiloMathLib {
         unchecked {
             // these are total assets (protected + collateral) that _owner can withdraw
             // - is safe because we adding same asset (under same total supply)
-            // - can potentially overflow, but it is unlikely, we would overflow in LTV calculations first
-            // worse what can happen we return lower number than real MAX on overflow
-            maxAssets = (_borrowerProtectedAssets + _borrowerCollateralAssets) * spareCollateralValue
-                / _sumOfCollateralsValue; // rounding down by default
+            maxAssets = (_borrowerProtectedAssets + _borrowerCollateralAssets)
+                .mulDiv(spareCollateralValue, _sumOfCollateralsValue, Rounding.MAX_WITHDRAW_TO_ASSETS);
         }
     }
 
