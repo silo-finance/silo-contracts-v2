@@ -5,12 +5,22 @@ import {ISilo} from "../interfaces/ISilo.sol";
 
 // solhint-disable private-vars-leading-underscore
 library Hook {
+    /// @notice The data structure for the deposit hook
+    /// @param assets The amount of assets deposited
+    /// @param shares The amount of shares deposited
+    /// @param receiver The receiver of the deposit
     struct BeforeDepositInput {
         uint256 assets;
         uint256 shares;
         address receiver;
     }
 
+    /// @notice The data structure for the deposit hook
+    /// @param assets The amount of assets deposited
+    /// @param shares The amount of shares deposited
+    /// @param receiver The receiver of the deposit
+    /// @param receivedAssets The exact amount of assets being deposited
+    /// @param mintedShares The exact amount of shares being minted
     struct AfterDepositInput {
         uint256 assets;
         uint256 shares;
@@ -19,6 +29,12 @@ library Hook {
         uint256 mintedShares;
     }
 
+    /// @notice The data structure for the withdraw hook
+    /// @param assets The amount of assets withdrawn
+    /// @param shares The amount of shares withdrawn
+    /// @param receiver The receiver of the withdrawal
+    /// @param owner The owner of the shares
+    /// @param spender The spender of the shares
     struct BeforeWithdrawInput {
         uint256 assets;
         uint256 shares;
@@ -27,6 +43,14 @@ library Hook {
         address spender;
     }
 
+    /// @notice The data structure for the withdraw hook
+    /// @param assets The amount of assets withdrawn
+    /// @param shares The amount of shares withdrawn
+    /// @param receiver The receiver of the withdrawal
+    /// @param owner The owner of the shares
+    /// @param spender The spender of the shares
+    /// @param withdrawnAssets The exact amount of assets being withdrawn
+    /// @param withdrawnShares The exact amount of shares being withdrawn
     struct AfterWithdrawInput {
         uint256 assets;
         uint256 shares;
