@@ -60,8 +60,8 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock {
 
         uint256 amount = 1e18;
 
-        _siloDepositWithEvent(silo0, token0, _depositor, _depositor, amount, collateral, EXPECT_BEFORE);
-        _siloDepositWithEvent(silo1, token1, _depositor, _depositor, amount, protected, EXPECT_AFTER);
+        _siloDepositWithHook(silo0, token0, _depositor, _depositor, amount, collateral, EXPECT_BEFORE);
+        _siloDepositWithHook(silo1, token1, _depositor, _depositor, amount, protected, EXPECT_AFTER);
 
         // Ensure there are no other hook calls.
         _siloHookReceiver.revertAnyAction();
@@ -70,7 +70,7 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock {
         _siloDepositWithoutHook(silo1, token1, _depositor, _depositor, amount, collateral);
     }
 
-    /// FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testDepositFnBothHookActions
+    /// FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testDepositFnBeforeAndAfterHookActions
     function testDepositFnBeforeAndAfterHookActions() public {
         ISilo.CollateralType collateral = ISilo.CollateralType.Collateral;
         ISilo.CollateralType protected = ISilo.CollateralType.Protected;
@@ -85,8 +85,8 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock {
 
         uint256 amount = 1e18;
 
-        _siloDepositBothEvents(silo0, token0, _depositor, _depositor, amount, collateral);
-        _siloDepositBothEvents(silo0, token0, _depositor, _depositor, amount, protected);
+        _siloDepositBothHooks(silo0, token0, _depositor, _depositor, amount, collateral);
+        _siloDepositBothHooks(silo0, token0, _depositor, _depositor, amount, protected);
 
         // Ensure there are no other hook calls.
         _siloHookReceiver.revertAnyAction();
@@ -112,8 +112,8 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock {
 
         uint256 amount = 1e18;
 
-        _siloDepositAllEvents(silo0, token0, _depositor, _depositor, amount, collateral);
-        _siloDepositAllEvents(silo0, token0, _depositor, _depositor, amount, protected);
+        _siloDepositAllHooks(silo0, token0, _depositor, _depositor, amount, collateral);
+        _siloDepositAllHooks(silo0, token0, _depositor, _depositor, amount, protected);
 
         // Ensure there are no other hook calls.
         _siloHookReceiver.revertAnyAction();
@@ -138,25 +138,8 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock {
         _siloDepositWithoutHook(silo0, token0, _depositor, _depositor, amount, collateral);
         _siloDepositWithoutHook(silo1, token1, _depositor, _depositor, amount, protected);
 
-        _siloWithdrawWithEvent(
-            silo0,
-            _depositor,
-            _depositor,
-            _depositor,
-            amount,
-            collateral,
-            EXPECT_BEFORE
-        );
-
-        _siloWithdrawWithEvent(
-            silo1,
-            _depositor,
-            _depositor,
-            _depositor,
-            amount,
-            protected,
-            EXPECT_AFTER
-        );
+        _siloWithdrawWithHook(silo0, _depositor, _depositor, _depositor, amount, collateral, EXPECT_BEFORE);
+        _siloWithdrawWithHook(silo1, _depositor, _depositor, _depositor, amount, protected, EXPECT_AFTER);
 
         // Ensure there are no other hook calls.
         _siloHookReceiver.revertAnyAction();
@@ -167,7 +150,7 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock {
         _siloWithdrawWithoutHook(silo1, _depositor, _depositor, _depositor, amount, collateral);
     }
 
-    function _siloDepositWithEvent(
+    function _siloDepositWithHook(
         ISilo _silo,
         MintableToken _token,
         address _receiver,
@@ -193,7 +176,7 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock {
         _silo.deposit(_amount, _depositor, _collateralType);
     }
 
-    function _siloDepositBothEvents(
+    function _siloDepositBothHooks(
         ISilo _silo,
         MintableToken _token,
         address _receiver,
@@ -216,7 +199,7 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock {
         _silo.deposit(_amount, _depositorAddr, _collateralType);
     }
 
-    function _siloDepositAllEvents(
+    function _siloDepositAllHooks(
         ISilo _silo,
         MintableToken _token,
         address _receiver,
@@ -270,7 +253,7 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock {
         _silo.deposit(_amount, _receiver, _collateralType);
     }
 
-    function _siloWithdrawWithEvent(
+    function _siloWithdrawWithHook(
         ISilo _silo,
         address _receiver,
         address _owner,
