@@ -37,6 +37,22 @@ library Hook {
         uint256 withdrawnShares;
     }
 
+    /// @notice The data structure for the share token transfer hook
+    /// @param sender The sender of the transfer (address(0) on mint)
+    /// @param recipient The recipient of the transfer (address(0) on burn)
+    /// @param amount The amount of tokens transferred/minted/burned
+    /// @param senderBalance The balance of the sender after the transfer (empty on mint)
+    /// @param recipientBalance The balance of the recipient after the transfer (empty on burn)
+    /// @param totalSupply The total supply of the share token
+    struct AfterTokenTransfer {
+        address sender;
+        address recipient;
+        uint256 amount;
+        uint256 senderBalance;
+        uint256 recipientBalance;
+        uint256 totalSupply;
+    }
+
     uint256 internal constant NONE = 0;
     uint256 internal constant SAME_ASSET = 2 ** 1;
     uint256 internal constant TWO_ASSETS = 2 ** 2;
@@ -122,24 +138,19 @@ library Hook {
 
     /// @dev Decodes packed data from the share token after the transfer hook
     /// @param packed The packed data (via abi.encodePacked)
-    /// @return sender The sender of the transfer (address(0) on mint)
-    /// @return recipient The recipient of the transfer (address(0) on burn)
-    /// @return amount The amount of tokens transferred/minted/burned
-    /// @return senderBalance The balance of the sender after the transfer (empty on mint)
-    /// @return recipientBalance The balance of the recipient after the transfer (empty on burn)
-    /// @return totalSupply The total supply of the share token
+    /// @return input decoded
     function afterTokenTransferDecode(bytes memory packed)
         internal
         pure
-        returns (
-            address sender,
-            address recipient,
-            uint256 amount,
-            uint256 senderBalance,
-            uint256 recipientBalance,
-            uint256 totalSupply
-        )
+        returns (AfterTokenTransfer memory input)
     {
+        address sender;
+        address recipient;
+        uint256 amount;
+        uint256 senderBalance;
+        uint256 recipientBalance;
+        uint256 totalSupply;
+
         assembly {
             let pointer := PACKED_ADDRESS_LENGTH
             sender := mload(add(packed, pointer))
@@ -154,6 +165,8 @@ library Hook {
             pointer := add(pointer, PACKED_FULL_LENGTH)
             totalSupply := mload(add(packed, pointer))
         }
+
+        input = AfterTokenTransfer(sender, recipient, amount, senderBalance, recipientBalance, totalSupply);
     }
 
     /// @dev Decodes packed data from the deposit hook

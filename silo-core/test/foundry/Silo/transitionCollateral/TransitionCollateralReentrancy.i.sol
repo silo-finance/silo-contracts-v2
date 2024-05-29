@@ -61,7 +61,8 @@ contract TransitionCollateralReentrancyTest is SiloLittleHelper, Test, IHookRece
         assertEq(_silo, address(silo0), "hook setup is only for silo0");
         assertTrue(_action.matchAction(Hook.COLLATERAL_TOKEN | Hook.SHARE_TOKEN_TRANSFER), "hook setup is only for share transfer");
 
-        (address borrower,,,,,) = Hook.afterTokenTransferDecode(_input);
+        Hook.AfterTokenTransfer memory input = Hook.afterTokenTransferDecode(_input);
+        address borrower = input.sender;
 
         if (silo0.isSolvent(borrower)) return;
 

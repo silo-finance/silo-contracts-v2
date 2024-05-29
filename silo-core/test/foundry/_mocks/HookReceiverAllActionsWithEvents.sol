@@ -162,35 +162,28 @@ contract HookReceiverAllActionsWithEvents is SiloHookReceiver {
     ) internal {
         if (_isBefore) revert ShareTokenBeforeForbidden();
 
-        (
-            address sender,
-            address recipient,
-            uint256 amount,
-            uint256 senderBalance,
-            uint256 recipientBalance,
-            uint256 totalSupply
-        ) = Hook.afterTokenTransferDecode(_inputAndOutput);
+        Hook.AfterTokenTransfer memory input = Hook.afterTokenTransferDecode(_inputAndOutput);
 
         if (_action.matchAction(Hook.shareTokenTransfer(Hook.COLLATERAL_TOKEN))) {
             emit ShareTokenAfterHA(
                 _silo,
-                sender,
-                recipient,
-                amount,
-                senderBalance,
-                recipientBalance,
-                totalSupply,
+                input.sender,
+                input.recipient,
+                input.amount,
+                input.senderBalance,
+                input.recipientBalance,
+                input.totalSupply,
                 ISilo.CollateralType.Collateral
             );
         } else if (_action.matchAction(Hook.shareTokenTransfer(Hook.PROTECTED_TOKEN))) {
             emit ShareTokenAfterHA(
                 _silo,
-                sender,
-                recipient,
-                amount,
-                senderBalance,
-                recipientBalance,
-                totalSupply,
+                input.sender,
+                input.recipient,
+                input.amount,
+                input.senderBalance,
+                input.recipientBalance,
+                input.totalSupply,
                 ISilo.CollateralType.Protected
             );
         }

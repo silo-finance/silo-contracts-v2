@@ -19,14 +19,7 @@ Where `tokenType` is `Hook.COLLATERAL_TOKEN` or `Hook.PROTECTED_TOKEN`
 - action: ```Hook.SHARE_TOKEN_TRANSFER | Hook.COLLATERAL_TOKEN``` or ```Hook.SHARE_TOKEN_TRANSFER | Hook.PROTECTED_TOKEN``` \
 data: abi.encodePacked(sender, recipient, amount, balanceOfSender, balanceOfRecepient, totalSupply)
 ```
-    (
-        address sender,
-        address recipient,
-        uint256 amount,
-        uint256 senderBalance,
-        uint256 recipientBalance,
-        uint256 totalSupply
-    ) = Hook.afterTokenTransferDecode(inputAndOutput);
+Hook.AfterTokenTransfer memory input = Hook.afterTokenTransferDecode(_inputAndOutput);
 ```
 
 ### withdraw fn hook actions
@@ -46,14 +39,7 @@ Where `tokenType` is `Hook.COLLATERAL_TOKEN` or `Hook.PROTECTED_TOKEN`
 - action: ```Hook.SHARE_TOKEN_TRANSFER | Hook.COLLATERAL_TOKEN``` or ```Hook.SHARE_TOKEN_TRANSFER | Hook.PROTECTED_TOKEN``` \
 data: abi.encodePacked(sender, recipient, amount, balanceOfSender, balanceOfRecepient, totalSupply)
 ```
-    (
-        address sender,
-        address recipient,
-        uint256 amount,
-        uint256 senderBalance,
-        uint256 recipientBalance,
-        uint256 totalSupply
-    ) = Hook.afterTokenTransferDecode(inputAndOutput);
+Hook.AfterTokenTransfer memory input = Hook.afterTokenTransferDecode(_inputAndOutput);
 ```
 
 ### borrow
