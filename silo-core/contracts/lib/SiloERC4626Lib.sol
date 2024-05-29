@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.20;
 
+import {console} from "forge-std/console.sol";
+
 import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 import {Math} from "openzeppelin5/utils/math/Math.sol";
@@ -74,6 +76,9 @@ library SiloERC4626Lib {
             ISiloConfig.DebtInfo memory debtInfo
         ) = _config.getConfigs(address(this), _owner, Hook.WITHDRAW);
 
+        console.log("debtInfo.debtPresent", debtInfo.debtPresent ? "YES" : "NO");
+        console.log("debtInfo.debtInThisSilo", debtInfo.debtInThisSilo ? "YES" : "NO");
+
         uint256 shareTokenTotalSupply;
         uint256 liquidity;
 
@@ -115,6 +120,7 @@ library SiloERC4626Lib {
 
             return (assets, shares);
         } else {
+            console.log("maxWithdrawWhenDebt...");
             return maxWithdrawWhenDebt(
                 collateralConfig, debtConfig, _owner, liquidity, shareTokenTotalSupply, _collateralType, _totalAssets
             );
@@ -150,6 +156,8 @@ library SiloERC4626Lib {
                 ltvData.borrowerProtectedAssets,
                 ltvData.borrowerCollateralAssets
             );
+
+            console.log("calculateMaxAssetsToWithdraw", assets);
         }
 
         (assets, shares) = SiloMathLib.maxWithdrawToAssetsAndShares(
@@ -161,6 +169,8 @@ library SiloERC4626Lib {
             _shareTokenTotalSupply,
             _liquidity
         );
+
+        console.log("assets, shares %s %s", assets, shares);
 
         if (assets != 0) {
             // even if we using rounding Down, we still need underestimation with 1wei

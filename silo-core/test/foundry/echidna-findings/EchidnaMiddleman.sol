@@ -5,8 +5,10 @@ import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 import {SafeCast} from "openzeppelin5/utils/math/SafeCast.sol";
 
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
+import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
+import {Hook} from "silo-core/contracts/lib/Hook.sol";
 import {PartialLiquidationLib} from "silo-core/contracts/liquidation/lib/PartialLiquidationLib.sol";
 
 import {EchidnaSetup} from "./EchidnaSetup.sol";
@@ -133,6 +135,23 @@ contract EchidnaMiddleman is EchidnaSetup {
 
         uint256 maxWithdraw = _siloWithCollateral.maxWithdraw(actor);
         emit log_named_decimal_uint("maxWithdraw", maxWithdraw, 18);
+
+        (
+            ISiloConfig.ConfigData memory collateralConfig,
+            ISiloConfig.ConfigData memory debtConfig,
+            ISiloConfig.DebtInfo memory debtInfo
+        ) = siloConfig.getConfigs(address(_siloWithCollateral), actor, Hook.WITHDRAW);
+
+        uint256 shareBalance = IERC20(collateralConfig.collateralShareToken).balanceOf(address(actor));
+        uint256 debtShareBalance = IERC20(debtConfig.debtShareToken).balanceOf(address(actor));
+        uint256 vaultLiquidity = _siloWithCollateral.getLiquidity();
+        uint256 ltv = _siloWithCollateral.getLtv(address(actor));
+        bool isSolvent = _siloWithCollateral.isSolvent(address(actor));
+
+        emit log_named_uint("shareBalance", shareBalance);
+        emit log_named_uint("debtShareBalance", debtShareBalance);
+        emit log_named_uint("ltv", ltv);
+        emit log_named_uint("vaultLiquidity", vaultLiquidity);
 
         vm.prank(actor);
         _siloWithCollateral.withdraw(maxWithdraw, actor, actor);

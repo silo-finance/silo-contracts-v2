@@ -11,6 +11,7 @@ import {ISiloConfig} from "silo-core/contracts/SiloConfig.sol";
 import {Silo, ISilo} from "silo-core/contracts/Silo.sol";
 import {PartialLiquidation} from "silo-core/contracts/liquidation/PartialLiquidation.sol";
 import {PartialLiquidationLib} from "silo-core/contracts/liquidation/lib/PartialLiquidationLib.sol";
+import {Hook} from "silo-core/contracts/lib/Hook.sol";
 import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
 import {Rounding} from "silo-core/contracts/lib/Rounding.sol";
 import {IInterestRateModel} from "silo-core/contracts/interfaces/IInterestRateModel.sol";
@@ -330,8 +331,14 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         uint256 maxAssets = vault.maxWithdraw(address(actor));
 
         if (maxAssets == 0) {
-            (, address collShareToken, ) = siloConfig.getShareTokens(address(vault));
-            uint256 shareBalance = IERC20(collShareToken).balanceOf(address(actor));
+            (
+                ISiloConfig.ConfigData memory collateralConfig,
+                ISiloConfig.ConfigData memory debtConfig,
+                ISiloConfig.DebtInfo memory debtInfo
+            ) = siloConfig.getConfigs(address(vault), address(actor), Hook.WITHDRAW);
+
+            uint256 shareBalance = IERC20(collateralConfig.collateralShareToken).balanceOf(address(actor));
+            uint256 debtShareBalance = IERC20(debtConfig.debtShareToken).balanceOf(address(actor));
             uint256 vaultLiquidity = vault.getLiquidity();
             uint256 ltv = vault.getLtv(address(actor));
             bool isSolvent = vault.isSolvent(address(actor));
@@ -343,6 +350,7 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
                 emit LogString("[maxWithdraw_correctMax] maxAssets is zero for no reason");
                 emit LogString(isSolvent ? "actor solvent" : "actor not solvent");
                 emit LogUint256("shareBalance", shareBalance);
+                emit LogUint256("debtShareBalance", debtShareBalance);
                 emit LogUint256("vault.getLiquidity()", vaultLiquidity);
                 emit LogUint256("ltv (is it close to LT?)", ltv);
 
@@ -619,7 +627,7 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
 
         _requireTotalCap(_vaultZeroWithDebt, address(liquidator), debtToRepay);
 
-        try liquidator.liquidationCall(_vaultZeroWithDebt, address(liquidator), debtToRepay, receiveShares, siloConfig) {
+        try liquidator.liquidationCall(_vaultZeroWithDebt, address(actor), debtToRepay, receiveShares, siloConfig) {
             emit LogString("Solvent user liquidated!");
             assert(false);
         } catch {
@@ -644,7 +652,7 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
 
         _requireTotalCap(_vaultZeroWithDebt, address(liquidator), debtToRepay);
 
-        try liquidator.liquidationCall(_vaultZeroWithDebt, address(liquidator), debtToRepay, receiveShares, siloConfig) {
+        try liquidator.liquidationCall(_vaultZeroWithDebt, address(actor), debtToRepay, receiveShares, siloConfig) {
         } catch {
             emit LogString("Cannot liquidate insolvent user!");
             assert(false);
@@ -682,7 +690,7 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
 
         _requireTotalCap(_vaultZeroWithDebt, address(actorTwo), debtToRepay);
 
-        actorTwo.liquidationCall(_vaultZeroWithDebt, address(actorTwo), debtToRepay, false, siloConfig);
+        actorTwo.liquidationCall(_vaultZeroWithDebt, address(actor), debtToRepay, false, siloConfig);
 
         uint256 ltvAfter = vault.getLtv(address(actor));
         emit LogString(string.concat("User afterLtv:", ltvAfter.toString()));
