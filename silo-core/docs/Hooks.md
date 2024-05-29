@@ -7,21 +7,11 @@ Where `collateralType` is `ISilo.CollateralType`
 - action ```Hook.DEPOSIT | Hook.COLLATERAL_TOKEN``` or ```Hook.DEPOSIT | Hook.PROTECTED_TOKEN``` \
 before deposit data: abi.encodePacked(assets, shares, receiver)
 ```
-    (
-        uint256 depositedAssets,
-        uint256 depositedShares,
-        address receiver
-    ) = Hook.beforeDepositDecode(_inputAndOutput);
+Hook.BeforeDepositInput memory input = Hook.beforeDepositDecode(_inputAndOutput);
 ```
 after deposit data: abi.encodePacked(assets, shares, receiver, receivedAssets, mintedShares)
 ```
-    (
-        uint256 depositedAssets,
-        uint256 depositedShares,
-        address receiver,
-        uint256 receivedAssets,
-        uint256 mintedShares
-    ) = Hook.afterDepositDecode(_inputAndOutput);
+Hook.AfterDepositInput memory input = Hook.afterDepositDecode(_inputAndOutput);
 ```
 
 ```Hook.shareTokenTransfer(tokenType)``` (afterAction) \

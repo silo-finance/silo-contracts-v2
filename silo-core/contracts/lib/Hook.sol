@@ -5,6 +5,20 @@ import {ISilo} from "../interfaces/ISilo.sol";
 
 // solhint-disable private-vars-leading-underscore
 library Hook {
+    struct BeforeDepositInput {
+        uint256 assets;
+        uint256 shares;
+        address receiver;
+    }
+
+    struct AfterDepositInput {
+        uint256 assets;
+        uint256 shares;
+        address receiver;
+        uint256 receivedAssets;
+        uint256 mintedShares;
+    }
+
     struct BeforeWithdrawInput {
         uint256 assets;
         uint256 shares;
@@ -144,18 +158,16 @@ library Hook {
 
     /// @dev Decodes packed data from the deposit hook
     /// @param packed The packed data (via abi.encodePacked)
-    /// @return assets The amount of assets deposited
-    /// @return shares The amount of shares deposited
-    /// @return receiver The receiver of the deposit
+    /// @return input decoded
     function beforeDepositDecode(bytes memory packed)
         internal
         pure
-        returns (
-            uint256 assets,
-            uint256 shares,
-            address receiver
-        )
+        returns (BeforeDepositInput memory input)
     {
+        uint256 assets;
+        uint256 shares;
+        address receiver;
+
         assembly {
             let pointer := PACKED_FULL_LENGTH
             assets := mload(add(packed, pointer))
@@ -164,26 +176,24 @@ library Hook {
             pointer := add(pointer, PACKED_ADDRESS_LENGTH)
             receiver := mload(add(packed, pointer))
         }
+
+        input = BeforeDepositInput(assets, shares, receiver);
     }
 
     /// @dev Decodes packed data from the deposit hook
     /// @param packed The packed data (via abi.encodePacked)
-    /// @return assets The amount of assets deposited
-    /// @return shares The amount of shares deposited
-    /// @return receiver The receiver of the deposit
-    /// @return receivedAssets The exact amount of assets being deposited
-    /// @return mintedShares The exact amount of shares being minted
+    /// @return input decoded
     function afterDepositDecode(bytes memory packed)
         internal
         pure
-        returns (
-            uint256 assets,
-            uint256 shares,
-            address receiver,
-            uint256 receivedAssets,
-            uint256 mintedShares
-        )
+        returns (AfterDepositInput memory input)
     {
+        uint256 assets;
+        uint256 shares;
+        address receiver;
+        uint256 receivedAssets;
+        uint256 mintedShares;
+
         assembly {
             let pointer := PACKED_FULL_LENGTH
             assets := mload(add(packed, pointer))
@@ -196,6 +206,8 @@ library Hook {
             pointer := add(pointer, PACKED_FULL_LENGTH)
             mintedShares := mload(add(packed, pointer))
         }
+
+        input = AfterDepositInput(assets, shares, receiver, receivedAssets, mintedShares);
     }
 
     /// @dev Decodes packed data from the withdraw hook

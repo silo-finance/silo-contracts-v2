@@ -137,24 +137,18 @@ contract HookReceiverAllActionsWithEvents is SiloHookReceiver {
                 : ISilo.CollateralType.Protected;
 
         if (_isBefore) {
-            (uint256 assets, uint256 shares, address receiver) = Hook.beforeDepositDecode(_inputAndOutput);
-            emit DepositBeforeHA(_silo, assets, shares, receiver, collateralType);
+            Hook.BeforeDepositInput memory input = Hook.beforeDepositDecode(_inputAndOutput);
+            emit DepositBeforeHA(_silo, input.assets, input.shares, input.receiver, collateralType);
         } else {
-            (
-                uint256 depositedAssets,
-                uint256 depositedShares,
-                address receiver,
-                uint256 receivedAssets,
-                uint256 mintedShares
-            ) = Hook.afterDepositDecode(_inputAndOutput);
+            Hook.AfterDepositInput memory input = Hook.afterDepositDecode(_inputAndOutput);
 
             emit DepositAfterHA(
                 _silo,
-                depositedAssets,
-                depositedShares,
-                receivedAssets,
-                mintedShares,
-                receiver,
+                input.assets,
+                input.shares,
+                input.receivedAssets,
+                input.mintedShares,
+                input.receiver,
                 collateralType
             );
         }
