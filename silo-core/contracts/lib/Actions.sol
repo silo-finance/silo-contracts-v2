@@ -520,10 +520,12 @@ library Actions {
     {
         _hookCallBefore(_shareStorage, Hook.FLASH_LOAN, abi.encodePacked(_receiver, _token, _amount));
 
-        ISiloConfig.ConfigData memory config = _shareStorage.siloConfig.getConfig(address(this));
+        ISiloConfig siloConfig = _shareStorage.siloConfig;
+        ISiloConfig.ConfigData memory config = siloConfig.getConfig(address(this));
 
         // flashFee will revert for wrong token
-        uint256 fee = SiloStdLib.flashFee(_shareStorage.siloConfig, _token, _amount);
+        uint256 fee = SiloStdLib.flashFee(siloConfig, _token, _amount);
+
         if (fee > type(uint192).max) revert FeeOverflow();
 
         IERC20(_token).safeTransfer(address(_receiver), _amount);
@@ -537,18 +539,16 @@ library Actions {
         // cast safe, because we checked `fee > type(uint192).max`
         _siloData.daoAndDeployerFees += uint192(fee);
 
-        success = true;
-
-        _shareStorage.siloConfig.crossNonReentrantAfter();
-
         if (config.hookReceiver != address(0)) {
             _hookCallAfter(
                 _shareStorage,
                 config.hookReceiver,
                 Hook.FLASH_LOAN,
-                abi.encodePacked(_receiver, _token, _amount, success)
+                abi.encodePacked(_receiver, _token, _amount, fee)
             );
         }
+
+        success = true;
     }
 
     /// @notice Withdraws accumulated fees and distributes them proportionally to the DAO and deployer
