@@ -150,6 +150,66 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock {
         _siloWithdrawWithoutHook(silo1, _depositor, _depositor, _depositor, amount, collateral);
     }
 
+    /// FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testWithdrawFnBeforeAndAfterHookActions
+    function testWithdrawFnBeforeAndAfterHookActions() public {
+        ISilo.CollateralType collateral = ISilo.CollateralType.Collateral;
+        ISilo.CollateralType protected = ISilo.CollateralType.Protected;
+
+        uint256 beforeActions = Hook.withdrawAction(collateral).addAction(Hook.withdrawAction(protected));
+        
+        uint256 afterActions = beforeActions;
+
+        HookMock hookReceiverMock = new HookMock(beforeActions, afterActions, NO_ACTIONS, NO_ACTIONS);
+        deploySiloWithHook(address(hookReceiverMock));
+
+        uint256 amount = 1e18;
+
+        _siloDepositWithoutHook(silo0, token0, _depositor, _depositor, amount, collateral);
+        _siloDepositWithoutHook(silo0, token0, _depositor, _depositor, amount, protected);
+
+        _siloWithdrawBothHooks(silo0, _depositor, _depositor, _depositor, amount, collateral);
+        _siloWithdrawBothHooks(silo0, _depositor, _depositor, _depositor, amount, protected);
+
+        // Ensure there are no other hook calls.
+        _siloHookReceiver.revertAnyAction();
+        // Following deposits should not trigger any hook. If it will trigger the hook will revert
+        _siloDepositWithoutHook(silo1, token1, _depositor, _depositor, amount, protected);
+        _siloDepositWithoutHook(silo1, token1, _depositor, _depositor, amount, collateral);
+        _siloWithdrawWithoutHook(silo1, _depositor, _depositor, _depositor, amount, protected);
+        _siloWithdrawWithoutHook(silo1, _depositor, _depositor, _depositor, amount, collateral);
+    }
+
+    /// FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testWithdrawFnAllHookActions
+    function testWithdrawFnAllHookActions() public {
+        ISilo.CollateralType collateral = ISilo.CollateralType.Collateral;
+        ISilo.CollateralType protected = ISilo.CollateralType.Protected;
+
+        uint256 beforeActions = Hook.withdrawAction(collateral).addAction(Hook.withdrawAction(protected));
+        
+        uint256 afterActions = beforeActions
+            .addAction(Hook.shareTokenTransfer(Hook.COLLATERAL_TOKEN))
+            .addAction(Hook.shareTokenTransfer(Hook.PROTECTED_TOKEN));
+
+        HookMock hookReceiverMock = new HookMock(beforeActions, afterActions, NO_ACTIONS, NO_ACTIONS);
+        deploySiloWithHook(address(hookReceiverMock));
+
+        uint256 amount = 1e18;
+
+        _siloDepositWithoutHook(silo0, token0, _depositor, _depositor, amount, collateral);
+        _siloDepositWithoutHook(silo0, token0, _depositor, _depositor, amount, protected);
+
+        _siloWithdrawAllHooks(silo0, _depositor, _depositor, _depositor, amount, collateral);
+        _siloWithdrawAllHooks(silo0, _depositor, _depositor, _depositor, amount, protected);
+
+        // Ensure there are no other hook calls.
+        _siloHookReceiver.revertAnyAction();
+        // Following deposits should not trigger any hook. If it will trigger the hook will revert
+        _siloDepositWithoutHook(silo1, token1, _depositor, _depositor, amount, protected);
+        _siloDepositWithoutHook(silo1, token1, _depositor, _depositor, amount, collateral);
+        _siloWithdrawWithoutHook(silo1, _depositor, _depositor, _depositor, amount, protected);
+        _siloWithdrawWithoutHook(silo1, _depositor, _depositor, _depositor, amount, collateral);
+    }
+
     function _siloDepositWithHook(
         ISilo _silo,
         MintableToken _token,
@@ -224,7 +284,7 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock {
             address(0), // because we mint tokens on deposit
             _receiver,
             _amount,
-            0, // not balance for the sender
+            0, // no balance for the sender
             _amount, // balance
             _amount, // total supply
             _collateralType
@@ -279,6 +339,77 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock {
                 _collateralType
             );
         }
+
+        vm.prank(_spender);
+        _silo.withdraw(_amount, _receiver, _owner, _collateralType);
+    }
+
+    function _siloWithdrawBothHooks(
+        ISilo _silo,
+        address _receiver,
+        address _owner,
+        address _spender,
+        uint256 _amount,
+        ISilo.CollateralType _collateralType
+    ) internal {
+        vm.expectEmit(true, true, true, true);
+        emit WithdrawBeforeHA(address(_silo), _amount, SHARES_0, _receiver, _owner, _spender, _collateralType);
+
+        vm.expectEmit(true, true, true, true);
+
+        emit WithdrawAfterHA(
+            address(_silo),
+            _amount,
+            SHARES_0,
+            _receiver,
+            _owner,
+            _spender,
+            _amount,
+            _amount,
+            _collateralType
+        );
+
+        vm.prank(_spender);
+        _silo.withdraw(_amount, _receiver, _owner, _collateralType);
+    }
+
+    function _siloWithdrawAllHooks(
+        ISilo _silo,
+        address _receiver,
+        address _owner,
+        address _spender,
+        uint256 _amount,
+        ISilo.CollateralType _collateralType
+    ) internal {
+        vm.expectEmit(true, true, true, true);
+        emit WithdrawBeforeHA(address(_silo), _amount, SHARES_0, _receiver, _owner, _spender, _collateralType);
+
+        vm.expectEmit(true, true, true, true);
+
+        emit ShareTokenAfterHA(
+            address(_silo),
+            _receiver,
+            address(0), // because we burn tokens on withdrawal
+            _amount,
+            0, // no balance for the sender
+            0, // no balance
+            0, // mo total supply
+            _collateralType
+        );
+
+        vm.expectEmit(true, true, true, true);
+
+        emit WithdrawAfterHA(
+            address(_silo),
+            _amount,
+            SHARES_0,
+            _receiver,
+            _owner,
+            _spender,
+            _amount,
+            _amount,
+            _collateralType
+        );
 
         vm.prank(_spender);
         _silo.withdraw(_amount, _receiver, _owner, _collateralType);
