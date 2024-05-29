@@ -131,6 +131,8 @@ cannotPreventInsolventUserFromBeingLiquidated(uint8,bool): failed!💥
         __maxBorrow_correctReturnValue(1);
         __maxWithdraw_correctMax(1);
         __maxWithdraw_correctMax(0);
+
+        __timeDelay(16);
         __cannotPreventInsolventUserFromBeingLiquidated(1,false); // Time delay: 16 seconds Block delay: 11
     }
 }
