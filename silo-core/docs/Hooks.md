@@ -4,7 +4,10 @@ Silo provides a comprehensive hooks system allowing flexibility to extend it.
 ### deposit fn hook actions
 ```Hook.depositAction(collateralType)``` (beforeAction and afterAction) \
 Where `collateralType` is `ISilo.CollateralType`
-- action ```Hook.DEPOSIT | Hook.COLLATERAL_TOKEN``` or ```Hook.DEPOSIT | Hook.PROTECTED_TOKEN``` \
+- actions: \
+```Hook.DEPOSIT | Hook.COLLATERAL_TOKEN``` or \
+```Hook.DEPOSIT | Hook.PROTECTED_TOKEN```
+
 before deposit data: abi.encodePacked(assets, shares, receiver)
 ```
 Hook.BeforeDepositInput memory input = Hook.beforeDepositDecode(_inputAndOutput);
@@ -16,7 +19,10 @@ Hook.AfterDepositInput memory input = Hook.afterDepositDecode(_inputAndOutput);
 
 ```Hook.shareTokenTransfer(tokenType)``` (afterAction) \
 Where `tokenType` is `Hook.COLLATERAL_TOKEN` or `Hook.PROTECTED_TOKEN`
-- action: ```Hook.SHARE_TOKEN_TRANSFER | Hook.COLLATERAL_TOKEN``` or ```Hook.SHARE_TOKEN_TRANSFER | Hook.PROTECTED_TOKEN``` \
+- actions: \
+```Hook.SHARE_TOKEN_TRANSFER | Hook.COLLATERAL_TOKEN``` or \
+```Hook.SHARE_TOKEN_TRANSFER | Hook.PROTECTED_TOKEN```
+
 data: abi.encodePacked(sender, recipient, amount, balanceOfSender, balanceOfRecepient, totalSupply)
 ```
 Hook.AfterTokenTransfer memory input = Hook.afterTokenTransferDecode(_inputAndOutput);
@@ -25,7 +31,10 @@ Hook.AfterTokenTransfer memory input = Hook.afterTokenTransferDecode(_inputAndOu
 ### withdraw fn hook actions
 ```Hook.withdrawAction(collateralType)``` (beforeAction and afterAction) \
 Where `collateralType` is `ISilo.CollateralType`
-- action ```Hook.WITHDRAW | Hook.COLLATERAL_TOKEN``` or ```Hook.WITHDRAW | Hook.PROTECTED_TOKEN``` \
+- actions: \
+```Hook.WITHDRAW | Hook.COLLATERAL_TOKEN``` or \
+```Hook.WITHDRAW | Hook.PROTECTED_TOKEN```
+
 before withdraw data: abi.encodePacked(assets, shares, receiver, owner, spender)
 ```
     Hook.BeforeWithdrawInput memory input = Hook.beforeWithdrawDecode(_inputAndOutput);
@@ -36,7 +45,10 @@ after withdraw data: abi.encodePacked(assets, shares, receiver, owner, spender, 
 ```
 ```Hook.shareTokenTransfer(tokenType)``` (afterAction) \
 Where `tokenType` is `Hook.COLLATERAL_TOKEN` or `Hook.PROTECTED_TOKEN`
-- action: ```Hook.SHARE_TOKEN_TRANSFER | Hook.COLLATERAL_TOKEN``` or ```Hook.SHARE_TOKEN_TRANSFER | Hook.PROTECTED_TOKEN``` \
+- actions: \
+```Hook.SHARE_TOKEN_TRANSFER | Hook.COLLATERAL_TOKEN``` or \
+```Hook.SHARE_TOKEN_TRANSFER | Hook.PROTECTED_TOKEN```
+
 data: abi.encodePacked(sender, recipient, amount, balanceOfSender, balanceOfRecepient, totalSupply)
 ```
 Hook.AfterTokenTransfer memory input = Hook.afterTokenTransferDecode(_inputAndOutput);
@@ -44,7 +56,8 @@ Hook.AfterTokenTransfer memory input = Hook.afterTokenTransferDecode(_inputAndOu
 
 ### borrow fn hook actions
 ```Hook.borrowAction(leverage, sameAsset)``` (beforeAction and afterAction) \
-- action ```Hook.BORROW | Hook.LEVERAGE | Hook.SAME_ASSET``` or \
+- actions: \
+```Hook.BORROW | Hook.LEVERAGE | Hook.SAME_ASSET``` or \
 ```Hook.BORROW | Hook.LEVERAGE | Hook.TWO_ASSETS``` or \
 ```Hook.BORROW | Hook.NONE | Hook.SAME_ASSET``` or \
 ```Hook.BORROW | Hook.NONE | Hook.TWO_ASSETS```
@@ -60,7 +73,8 @@ Hook.AfterBorrowInput memory input = Hook.afterBorrowDecode(_inputAndOutput);
 
 ```Hook.shareTokenTransfer(tokenType)``` (afterAction) \
 Where `tokenType` is `Hook.DEBT_TOKEN`
-- action: ```Hook.SHARE_TOKEN_TRANSFER | Hook.DEBT_TOKEN``` \
+- action: ```Hook.SHARE_TOKEN_TRANSFER | Hook.DEBT_TOKEN```
+
 data: abi.encodePacked(sender, recipient, amount, balanceOfSender, balanceOfRecepient, totalSupply)
 ```
 Hook.AfterTokenTransfer memory input = Hook.afterTokenTransferDecode(_inputAndOutput);
