@@ -1,7 +1,7 @@
 # Silo hooks
 Silo provides a comprehensive hooks system allowing flexibility to extend it.
 
-### deposit fn hook actions
+## deposit fn hook actions
 ```Hook.depositAction(collateralType)``` (beforeAction and afterAction) \
 Where `collateralType` is `ISilo.CollateralType`
 - actions: \
@@ -28,7 +28,7 @@ data: abi.encodePacked(sender, recipient, amount, balanceOfSender, balanceOfRece
 Hook.AfterTokenTransfer memory input = Hook.afterTokenTransferDecode(_inputAndOutput);
 ```
 
-### withdraw fn hook actions
+## withdraw fn hook actions
 ```Hook.withdrawAction(collateralType)``` (beforeAction and afterAction) \
 Where `collateralType` is `ISilo.CollateralType`
 - actions: \
@@ -54,7 +54,7 @@ data: abi.encodePacked(sender, recipient, amount, balanceOfSender, balanceOfRece
 Hook.AfterTokenTransfer memory input = Hook.afterTokenTransferDecode(_inputAndOutput);
 ```
 
-### borrow fn hook actions
+## borrow fn hook actions
 ```Hook.borrowAction(leverage, sameAsset)``` (beforeAction and afterAction) \
 - actions: \
 ```Hook.BORROW | Hook.LEVERAGE | Hook.SAME_ASSET``` or \
@@ -80,7 +80,7 @@ data: abi.encodePacked(sender, recipient, amount, balanceOfSender, balanceOfRece
 Hook.AfterTokenTransfer memory input = Hook.afterTokenTransferDecode(_inputAndOutput);
 ```
 
-### repay fn hook actions
+## repay fn hook actions
 - ```Hook.REPAY``` (beforeAction and afterAction) \
 before repay data: abi.encodePacked(assets, shares, borrower, repayer)
 ```
@@ -100,7 +100,7 @@ data: abi.encodePacked(sender, recipient, amount, balanceOfSender, balanceOfRece
 Hook.AfterTokenTransfer memory input = Hook.afterTokenTransferDecode(_inputAndOutput);
 ```
 
-### leverageSameAsset
+## leverageSameAsset
 - ```Hook.BORROW | Hook.LEVERAGE | Hook.SAME_ASSE``` (beforeAction) \
 abi.encodePacked(_depositAssets, _borrowAssets, _borrower, _collateralType)
 - ```Hook.DEBT_TOKEN | Hook.SHARE_TOKEN_TRANSFER``` (afterAction) \
@@ -111,7 +111,7 @@ data: abi.encodePacked(_sender, _recipient, _amount, balanceOf(_sender), balance
 - ```Hook.BORROW | Hook.LEVERAGE | Hook.SAME_ASSE``` (afterAction) \
 data: abi.encodePacked(_depositAssets, _borrowAssets, _borrower, _collateralType, depositedShares, borrowedShares)
 
-### transitionCollateral
+## transitionCollateral
 - ```Hook.TRANSITION_COLLATERAL``` (beforeAction) \
 data: abi.encodePacked(_shares, _owner, _withdrawType, assets)
 - ```Hook.COLLATERAL_TOKEN | Hook.SHARE_TOKEN_TRANSFER``` (afterAction) and
@@ -120,13 +120,13 @@ data: abi.encodePacked(_sender, _recipient, _amount, balanceOf(_sender), balance
 - ```Hook.TRANSITION_COLLATERAL``` (afterAction) \
 data: abi.encodePacked(_shares, _owner, _withdrawType, assets)
 
-### switchCollateralTo
+## switchCollateralTo
 - ```Hook.SWITCH_COLLATERAL``` (beforeAction) \
 data: abi.encodePacked(_toSameAsset)
 - ```Hook.SWITCH_COLLATERAL``` (afterAction) \
 data: abi.encodePacked(_toSameAsset)
 
-### flashLoan
+## flashLoan
 - ```Hook.FLASH_LOAN``` (beforeAction) \
 data: abi.encodePacked(_receiver, _token, _amount)
 - ```Hook.FLASH_LOAN``` (afterAction) \
