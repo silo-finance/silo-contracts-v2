@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.20;
 
-import {console} from "forge-std/console.sol";
-
 import {Math} from "openzeppelin5/utils/math/Math.sol";
 import {Rounding} from "../lib/Rounding.sol";
 import {ISilo} from "../interfaces/ISilo.sol";
@@ -197,18 +195,13 @@ library SiloMathLib {
         uint256 _lt,
         uint256 _borrowerCollateralAssets,
         uint256 _borrowerProtectedAssets
-    ) internal view returns (uint256 maxAssets) {
-        console.log("_sumOfCollateralsValue", _sumOfCollateralsValue);
-        console.log("_debtValue", _debtValue);
-        console.log("_lt", _lt);
-
+    ) internal pure returns (uint256 maxAssets) {
         if (_sumOfCollateralsValue == 0) return 0;
         if (_debtValue == 0) return _sumOfCollateralsValue;
         if (_lt == 0) return 0;
 
         // using Rounding.LT (up) to have highest collateralValue that we have to leave for user to stay solvent
         uint256 minimumCollateralValue = _debtValue.mulDiv(_PRECISION_DECIMALS, _lt, Rounding.LTV);
-        console.log("minimumCollateralValue", minimumCollateralValue);
 
         // +1 is solution for precision error that math can produce and when that happen,
         // `maxAssets` can cause insolvency, so it can not be withdraw
@@ -226,12 +219,6 @@ library SiloMathLib {
         uint256 spareCollateralValue;
         // safe because we checked `if (_sumOfCollateralsValue <= minimumCollateralValue)`
         unchecked { spareCollateralValue = _sumOfCollateralsValue - minimumCollateralValue; }
-        console.log("spareCollateralValue", spareCollateralValue);
-
-        console.log("_borrowerProtectedAssets", _borrowerProtectedAssets);
-        console.log("_borrowerCollateralAssets", _borrowerCollateralAssets);
-        console.log("(%s + %s) * %s / ..", _borrowerProtectedAssets, _borrowerCollateralAssets, spareCollateralValue);
-        console.log("_sumOfCollateralsValue", _sumOfCollateralsValue);
 
         unchecked {
             // these are total assets (protected + collateral) that _owner can withdraw
