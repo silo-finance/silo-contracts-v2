@@ -86,6 +86,7 @@ maxWithdraw_correctMax(uint8): failed!💥
 
     forge test -vv --ffi --mt test_echidna_scenario_maxWithdraw_correctMax3
 
+    this scenario caught overflow on max withdraw, it was caught by conditions checking "why max is 0?"
     */
     function test_echidna_scenario_maxWithdraw_correctMax3() public {
         __deposit(18,true,15730697965110132263352181121800766241111447121938374876327531636260638549690);
