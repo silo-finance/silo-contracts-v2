@@ -112,6 +112,24 @@ contract HookReceiverAllActionsWithEvents is SiloHookReceiver {
         bool isSameAsset
     );
 
+    event RepayBeforeHA(
+        address silo,
+        uint256 repaidAssets,
+        uint256 repaidShares,
+        address borrower,
+        address repayer
+    );
+
+    event RepayAfterHA(
+        address silo,
+        uint256 repaidAssets,
+        uint256 repaidShares,
+        address borrower,
+        address repayer,
+        uint256 returnedAssets,
+        uint256 returnedShares
+    );
+
     error ActionsStopped();
     error ShareTokenBeforeForbidden();
     error UnknownAction();
@@ -167,6 +185,8 @@ contract HookReceiverAllActionsWithEvents is SiloHookReceiver {
             _processWithdraw(_silo, _action, _inputAndOutput, _isBefore);
         } else if (_action.matchAction(Hook.BORROW)) {
             _processBorrow(_silo, _action, _inputAndOutput, _isBefore);
+        } else if (_action.matchAction(Hook.REPAY)) {
+            _processRepay(_silo, _inputAndOutput, _isBefore);
         } else {
             revert UnknownAction();
         }
@@ -326,6 +346,25 @@ contract HookReceiverAllActionsWithEvents is SiloHookReceiver {
                 input.borrowedShares,
                 _isLeverage,
                 _isSameAsset
+            );
+        }
+    }
+
+    function _processRepay(address _silo, bytes calldata _inputAndOutput, bool _isBefore) internal {
+        if (_isBefore) {
+            Hook.BeforeRepayInput memory input = Hook.beforeRepayDecode(_inputAndOutput);
+            emit RepayBeforeHA(_silo, input.assets, input.shares, input.borrower, input.repayer);
+        } else {
+            Hook.AfterRepayInput memory input = Hook.afterRepayDecode(_inputAndOutput);
+            
+            emit RepayAfterHA(
+                _silo,
+                input.assets,
+                input.shares,
+                input.borrower,
+                input.repayer,
+                input.repaidAssets,
+                input.repaidShares
             );
         }
     }

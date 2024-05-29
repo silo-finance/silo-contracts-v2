@@ -227,6 +227,63 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock {
         _siloBorrowAllHooks(silo0, _borrower, _borrower, borrowAmount, _NOT_SAME_ASSET);
     }
 
+    /// FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testRepayBeforeHooks
+    function testRepayBeforeHooks() public {
+        uint256 beforeActions = Hook.REPAY;
+
+        HookMock hookReceiverMock = new HookMock(beforeActions, NO_ACTIONS, NO_ACTIONS, NO_ACTIONS);
+        deploySiloWithHook(address(hookReceiverMock));
+
+        uint256 depositAmount = 100e18;
+        uint256 collateralAmount = 100e18;
+
+        _siloDepositWithoutHook(silo0, token0, _depositor, _depositor, depositAmount, COLLATERAL);
+        _siloDepositWithoutHook(silo1, token1, _borrower, _borrower, collateralAmount, PROTECTED);
+
+        uint256 borrowAmount = 1e18;
+
+        vm.prank(_borrower);
+        silo0.borrow(borrowAmount, _borrower, _borrower, _NOT_SAME_ASSET);
+
+        _siloRepayBeforeHook(silo0, token0, _borrower, _borrower, borrowAmount);
+
+        // Ensure there are no other hook calls.
+        _siloHookReceiver.revertAnyAction();
+        // Following operations should not trigger any hook. If it will trigger the hook will revert
+        _siloWithdrawWithoutHook(silo0, _depositor, _depositor, _depositor, depositAmount, COLLATERAL);
+        _siloWithdrawWithoutHook(silo1, _depositor, _borrower, _borrower, collateralAmount, PROTECTED);
+
+        _siloDepositWithoutHook(silo0, token0, _borrower, _borrower, depositAmount, PROTECTED);
+        _siloDepositWithoutHook(silo1, token1, _depositor, _depositor, collateralAmount, COLLATERAL);
+
+        vm.prank(_borrower);
+        silo1.borrow(borrowAmount, _borrower, _borrower, _NOT_SAME_ASSET);
+
+        _siloRepayNoHooks(silo1, token1, _borrower, _borrower, borrowAmount);
+    }
+
+    /// FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testRepayAllHooks
+    function testRepayAllHooks() public {
+        uint256 beforeActions = Hook.REPAY;
+        uint256 afterAction = beforeActions.addAction(Hook.shareTokenTransfer(Hook.DEBT_TOKEN));
+
+        HookMock hookReceiverMock = new HookMock(NO_ACTIONS, NO_ACTIONS, beforeActions, afterAction);
+        deploySiloWithHook(address(hookReceiverMock));
+
+        uint256 depositAmount = 100e18;
+        uint256 collateralAmount = 100e18;
+
+        _siloDepositWithoutHook(silo0, token0, _borrower, _borrower, depositAmount, PROTECTED);
+        _siloDepositWithoutHook(silo1, token1, _depositor, _depositor, collateralAmount, COLLATERAL);
+
+        uint256 borrowAmount = 1e18;
+
+        vm.prank(_borrower);
+        silo1.borrow(borrowAmount, _borrower, _borrower, _NOT_SAME_ASSET);
+
+        _siloRepayAllHooks(silo1, token1, _borrower, _borrower, borrowAmount);
+    }
+
     function _siloDepositWithHook(
         ISilo _silo,
         MintableToken _token,
@@ -486,7 +543,7 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock {
 
         emit DebtShareTokenAfterHA(
             address(_silo),
-            address(0), // because we mint bedt share tokens
+            address(0), // because we mint debt share tokens
             _receiver,
             _amount,
             0, // no balance for the sender
@@ -510,6 +567,66 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock {
 
         vm.prank(_borrowerAddr);
         _silo.borrow(_amount, _borrowerAddr, _receiver, _isSameAsset);
+    }
+
+    function _siloRepayBeforeHook(
+        ISilo _silo,
+        MintableToken _token,
+        address _repayer,
+        address _borrowerAddr,
+        uint256 _amount
+    ) internal {
+        vm.prank(_repayer);
+        _token.approve(address(_silo), _amount);
+
+        vm.expectEmit(true, true, true, true);
+        emit RepayBeforeHA(address(_silo), _amount, SHARES_0, _borrowerAddr, _repayer);
+
+        vm.prank(_repayer);
+        _silo.repay(_amount, _borrowerAddr);
+    }
+
+    function _siloRepayAllHooks(
+        ISilo _silo,
+        MintableToken _token,
+        address _repayer,
+        address _borrowerAddr,
+        uint256 _amount
+    ) internal {
+        vm.prank(_repayer);
+        _token.approve(address(_silo), _amount);
+
+        vm.expectEmit(true, true, true, true);
+        emit RepayBeforeHA(address(_silo), _amount, SHARES_0, _borrowerAddr, _repayer);
+
+        vm.expectEmit(true, true, true, true);
+
+        emit DebtShareTokenAfterHA(
+            address(_silo),
+            _borrowerAddr,
+            address(0), // because we burn debt share tokens
+            _amount,
+            0, // no balance for the sender
+            0, // no balance
+            0 // no total supply
+        );
+
+        vm.prank(_repayer);
+        _silo.repay(_amount, _borrowerAddr);
+    }
+
+    function _siloRepayNoHooks(
+        ISilo _silo,
+        MintableToken _token,
+        address _repayer,
+        address _borrowerAddr,
+        uint256 _amount
+    ) internal {
+        vm.prank(_repayer);
+        _token.approve(address(_silo), _amount);
+
+        vm.prank(_repayer);
+        _silo.repay(_amount, _borrowerAddr);
     }
 
     function _depositForBorrowNotSameAsset() internal {

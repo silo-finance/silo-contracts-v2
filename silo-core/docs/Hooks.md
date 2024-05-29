@@ -80,14 +80,25 @@ data: abi.encodePacked(sender, recipient, amount, balanceOfSender, balanceOfRece
 Hook.AfterTokenTransfer memory input = Hook.afterTokenTransferDecode(_inputAndOutput);
 ```
 
-### repay
-- ```Hook.REPAY``` (beforeAction) \
-data: abi.encodePacked(_assets, _shares, _borrower, _repayer)
-- ```Hook.COLLATERAL_TOKEN | Hook.SHARE_TOKEN_TRANSFER``` (afterAction) and
-- ```Hook.DEBT_TOKEN | Hook.SHARE_TOKEN_TRANSFER``` (afterAction) \
-data: abi.encodePacked(_sender, _recipient, _amount, balanceOf(_sender), balanceOf(_recipient), totalSupply())
-- ```Hook.REPAY``` (afterAction) \
-data: abi.encodePacked(_assets, _shares, _borrower, _repayer, assets, shares)
+### repay fn hook actions
+- ```Hook.REPAY``` (beforeAction and afterAction) \
+before repay data: abi.encodePacked(assets, shares, borrower, repayer)
+```
+Hook.BeforeRepayInput memory input = Hook.beforeRepayDecode(_inputAndOutput);
+```
+after repay data: abi.encodePacked(assets, shares, borrower, repayer, repayedAssets, repayedShares)
+```
+Hook.AfterRepayInput memory input = Hook.afterRepayDecode(_inputAndOutput);
+```
+
+```Hook.shareTokenTransfer(tokenType)``` (afterAction) \
+Where `tokenType` is `Hook.DEBT_TOKEN`
+- action: ```Hook.SHARE_TOKEN_TRANSFER | Hook.DEBT_TOKEN```
+
+data: abi.encodePacked(sender, recipient, amount, balanceOfSender, balanceOfRecepient, totalSupply)
+```
+Hook.AfterTokenTransfer memory input = Hook.afterTokenTransferDecode(_inputAndOutput);
+```
 
 ### leverageSameAsset
 - ```Hook.BORROW | Hook.LEVERAGE | Hook.SAME_ASSE``` (beforeAction) \

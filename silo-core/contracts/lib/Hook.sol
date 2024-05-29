@@ -105,6 +105,34 @@ library Hook {
         uint256 borrowedShares;
     }
 
+    /// @notice The data structure for the before repay hook
+    /// @param assets The amount of assets to repay
+    /// @param shares The amount of shares to repay
+    /// @param borrower The borrower of the assets
+    /// @param repayer The repayer of the assets
+    struct BeforeRepayInput {
+        uint256 assets;
+        uint256 shares;
+        address borrower;
+        address repayer;
+    }
+
+    /// @notice The data structure for the after repay hook
+    /// @param assets The amount of assets to repay
+    /// @param shares The amount of shares to repay
+    /// @param borrower The borrower of the assets
+    /// @param repayer The repayer of the assets
+    /// @param repaidAssets The exact amount of assets being repaid
+    /// @param repaidShares The exact amount of shares being repaid
+    struct AfterRepayInput {
+        uint256 assets;
+        uint256 shares;
+        address borrower;
+        address repayer;
+        uint256 repaidAssets;
+        uint256 repaidShares;
+    }
+
     uint256 internal constant NONE = 0;
     uint256 internal constant SAME_ASSET = 2 ** 1;
     uint256 internal constant TWO_ASSETS = 2 ** 2;
@@ -399,5 +427,65 @@ library Hook {
         }
 
         input = AfterBorrowInput(assets, shares, receiver, borrower, borrowedAssets, borrowedShares);
+    }
+
+    /// @dev Decodes packed data from the before repay hook
+    /// @param packed The packed data (via abi.encodePacked)
+    /// @return input decoded
+    function beforeRepayDecode(bytes memory packed)
+        internal
+        pure
+        returns (BeforeRepayInput memory input)
+    {
+        uint256 assets;
+        uint256 shares;
+        address borrower;
+        address repayer;
+
+        assembly {
+            let pointer := PACKED_FULL_LENGTH
+            assets := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_FULL_LENGTH)
+            shares := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_ADDRESS_LENGTH)
+            borrower := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_ADDRESS_LENGTH)
+            repayer := mload(add(packed, pointer))
+        }
+
+        input = BeforeRepayInput(assets, shares, borrower, repayer);
+    }
+
+    /// @dev Decodes packed data from the after repay hook
+    /// @param packed The packed data (via abi.encodePacked)
+    /// @return input decoded
+    function afterRepayDecode(bytes memory packed)
+        internal
+        pure
+        returns (AfterRepayInput memory input)
+    {
+        uint256 assets;
+        uint256 shares;
+        address borrower;
+        address repayer;
+        uint256 repaidAssets;
+        uint256 repaidShares;
+
+        assembly {
+            let pointer := PACKED_FULL_LENGTH
+            assets := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_FULL_LENGTH)
+            shares := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_ADDRESS_LENGTH)
+            borrower := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_ADDRESS_LENGTH)
+            repayer := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_FULL_LENGTH)
+            repaidAssets := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_FULL_LENGTH)
+            repaidShares := mload(add(packed, pointer))
+        }
+
+        input = AfterRepayInput(assets, shares, borrower, repayer, repaidAssets, repaidShares);
     }
 }
