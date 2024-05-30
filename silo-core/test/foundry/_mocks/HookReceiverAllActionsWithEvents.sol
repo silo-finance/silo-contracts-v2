@@ -130,6 +130,9 @@ contract HookReceiverAllActionsWithEvents is SiloHookReceiver {
         uint256 returnedShares
     );
 
+    event SwitchCollateralBeforeHA(bool sameAsset);
+    event SwitchCollateralAfterHA(bool sameAsset);
+
     event FlashLoanBeforeHA(address silo, address receiver, address token, uint256 amount);
 
     event FlashLoanAfterHA(address silo, address receiver, address token, uint256 amount, uint256 fee);
@@ -139,6 +142,7 @@ contract HookReceiverAllActionsWithEvents is SiloHookReceiver {
     error UnknownAction();
     error UnknownBorrowAction();
     error UnknownShareTokenAction();
+    error UnknownSwitchCollateralAction();
 
     // designed to be deployed for each test case
     constructor(
@@ -193,6 +197,8 @@ contract HookReceiverAllActionsWithEvents is SiloHookReceiver {
             _processRepay(_silo, _inputAndOutput, _isBefore);
         } else if (_action.matchAction(Hook.FLASH_LOAN)) {
             _processFlashLoan(_silo, _inputAndOutput, _isBefore);
+        } else if (_action.matchAction(Hook.SWITCH_COLLATERAL)) {
+            _processSwitchCollateral(_silo, _action, _inputAndOutput, _isBefore);
         } else {
             revert UnknownAction();
         }
@@ -382,6 +388,29 @@ contract HookReceiverAllActionsWithEvents is SiloHookReceiver {
         } else {
             Hook.AfterFlashLoanInput memory input = Hook.afterFlashLoanDecode(_inputAndOutput);
             emit FlashLoanAfterHA(_silo, input.receiver, input.token, input.amount, input.fee);
+        }
+    }
+
+    function _processSwitchCollateral(
+        address _silo,
+        uint256 _action,
+        bytes calldata _inputAndOutput,
+        bool _isBefore
+    ) internal {
+        if (_action.matchAction(Hook.switchCollateralAction(_SAME_ASSET))) {
+            if (_isBefore) {
+                emit SwitchCollateralBeforeHA(_SAME_ASSET);
+            } else {
+                emit SwitchCollateralAfterHA(_SAME_ASSET);
+            }
+        } else if (_action.matchAction(Hook.switchCollateralAction(_NOT_SAME_ASSET))) {
+            if (_isBefore) {
+                emit SwitchCollateralBeforeHA(_NOT_SAME_ASSET);
+            } else {
+                emit SwitchCollateralAfterHA(_NOT_SAME_ASSET);
+            }
+        } else {
+            revert UnknownSwitchCollateralAction();
         }
     }
 }

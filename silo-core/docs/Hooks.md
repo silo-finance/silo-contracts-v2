@@ -120,11 +120,14 @@ data: abi.encodePacked(_sender, _recipient, _amount, balanceOf(_sender), balance
 - ```Hook.TRANSITION_COLLATERAL``` (afterAction) \
 data: abi.encodePacked(_shares, _owner, _withdrawType, assets)
 
-## switchCollateralTo
-- ```Hook.SWITCH_COLLATERAL``` (beforeAction) \
-data: abi.encodePacked(_toSameAsset)
-- ```Hook.SWITCH_COLLATERAL``` (afterAction) \
-data: abi.encodePacked(_toSameAsset)
+## switchCollateralTo fn hook actions
+```Hook.switchCollateralAction(toSameAsset)``` (beforeAction and afterAction) \
+Where `toSameAsset` is `true` or `false` which converts to `Hook.SAME_ASSET` or `Hook.TWO_ASSETS`
+- actions: \
+ ```Hook.SWITCH_COLLATERAL | Hook.SAME_ASSET``` or \
+ ```Hook.SWITCH_COLLATERAL | Hook.TWO_ASSETS```
+
+data is empty
 
 ## flashLoan fn hook actions
 - ```Hook.FLASH_LOAN``` (beforeAction and afterAction)

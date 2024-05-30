@@ -324,6 +324,66 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock {
         silo1.flashLoan(IERC3156FlashBorrower(address(this)), address(token1), flashLoanAmount, data);
     }
 
+    /// FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testSwitchCollateralSameAssetHooks
+    function testSwitchCollateralSameAssetHooks() public {
+        uint256 beforeActions = Hook.switchCollateralAction(_SAME_ASSET);
+        uint256 afterAction = beforeActions;
+
+        HookMock hookReceiverMock = new HookMock(beforeActions, afterAction, NO_ACTIONS, NO_ACTIONS);
+        deploySiloWithHook(address(hookReceiverMock));
+
+        uint256 depositAmount = 100e18;
+        uint256 collateralAmount = 100e18;
+
+        _siloDepositWithoutHook(silo0, token0, _depositor, _depositor, depositAmount, COLLATERAL);
+        _siloDepositWithoutHook(silo0, token0, _borrower, _borrower, collateralAmount, PROTECTED);
+        _siloDepositWithoutHook(silo1, token1, _borrower, _borrower, collateralAmount, PROTECTED);
+
+        uint256 borrowAmount = 1e18;
+
+        vm.prank(_borrower);
+        silo0.borrow(borrowAmount, _borrower, _borrower, _NOT_SAME_ASSET);
+
+        vm.expectEmit(true, true, true, true);
+        emit SwitchCollateralBeforeHA(_SAME_ASSET);
+
+        vm.expectEmit(true, true, true, true);
+        emit SwitchCollateralAfterHA(_SAME_ASSET);
+
+        vm.prank(_borrower);
+        silo0.switchCollateralTo(_SAME_ASSET);
+    }
+
+    /// FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testSwitchCollateralTwoAssetsHooks
+    function testSwitchCollateralTwoAssetsHooks() public {
+        uint256 beforeActions = Hook.switchCollateralAction(_NOT_SAME_ASSET);
+        uint256 afterAction = beforeActions;
+
+        HookMock hookReceiverMock = new HookMock(beforeActions, afterAction, NO_ACTIONS, NO_ACTIONS);
+        deploySiloWithHook(address(hookReceiverMock));
+
+        uint256 depositAmount = 100e18;
+        uint256 collateralAmount = 100e18;
+
+        _siloDepositWithoutHook(silo0, token0, _depositor, _depositor, depositAmount, COLLATERAL);
+        _siloDepositWithoutHook(silo0, token0, _borrower, _borrower, collateralAmount, PROTECTED);
+        _siloDepositWithoutHook(silo1, token1, _borrower, _borrower, collateralAmount, PROTECTED);
+
+        uint256 borrowAmount = 1e18;
+
+        vm.prank(_borrower);
+        silo0.borrow(borrowAmount, _borrower, _borrower, _SAME_ASSET);
+
+        vm.expectEmit(true, true, true, true);
+        emit SwitchCollateralBeforeHA(_NOT_SAME_ASSET);
+
+        vm.expectEmit(true, true, true, true);
+        emit SwitchCollateralAfterHA(_NOT_SAME_ASSET);
+
+        vm.prank(_borrower);
+        silo0.switchCollateralTo(_NOT_SAME_ASSET);
+    }
+
     function _siloDepositWithHook(
         ISilo _silo,
         MintableToken _token,
