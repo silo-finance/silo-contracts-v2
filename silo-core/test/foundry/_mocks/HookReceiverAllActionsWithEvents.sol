@@ -156,9 +156,9 @@ contract HookReceiverAllActionsWithEvents is SiloHookReceiver {
         uint256 borrowedShares
     );
 
-    event SwitchCollateralBeforeHA(bool sameAsset);
+    event SwitchCollateralBeforeHA(bool sameAsset, address user);
 
-    event SwitchCollateralAfterHA(bool sameAsset);
+    event SwitchCollateralAfterHA(bool sameAsset, address user);
 
     event FlashLoanBeforeHA(address silo, address receiver, address token, uint256 amount);
 
@@ -424,20 +424,22 @@ contract HookReceiverAllActionsWithEvents is SiloHookReceiver {
 
     function _processSwitchCollateral(
         uint256 _action,
-        bytes calldata,
+        bytes calldata _inputAndOutput,
         bool _isBefore
     ) internal {
+        Hook.SwitchCollateralInput memory input = Hook.switchCollateralDecode(_inputAndOutput);
+
         if (_action.matchAction(Hook.switchCollateralAction(_SAME_ASSET))) {
             if (_isBefore) {
-                emit SwitchCollateralBeforeHA(_SAME_ASSET);
+                emit SwitchCollateralBeforeHA(_SAME_ASSET, input.user);
             } else {
-                emit SwitchCollateralAfterHA(_SAME_ASSET);
+                emit SwitchCollateralAfterHA(_SAME_ASSET, input.user);
             }
         } else if (_action.matchAction(Hook.switchCollateralAction(_NOT_SAME_ASSET))) {
             if (_isBefore) {
-                emit SwitchCollateralBeforeHA(_NOT_SAME_ASSET);
+                emit SwitchCollateralBeforeHA(_NOT_SAME_ASSET, input.user);
             } else {
-                emit SwitchCollateralAfterHA(_NOT_SAME_ASSET);
+                emit SwitchCollateralAfterHA(_NOT_SAME_ASSET, input.user);
             }
         } else {
             revert UnknownSwitchCollateralAction();
@@ -450,8 +452,13 @@ contract HookReceiverAllActionsWithEvents is SiloHookReceiver {
         bytes calldata _inputAndOutput,
         bool _isBefore
     ) internal {
-        Hook.TransitionCollateralInput memory input = Hook.transitionCollateralDecode(_inputAndOutput);
-        emit TransitionCollateralHA(_silo, input.shares, input.owner, input.assets, _isBefore);
+        if (_isBefore) {
+            Hook.BeforeTransitionCollateralInput memory input = Hook.beforeTransitionCollateralDecode(_inputAndOutput);
+            emit TransitionCollateralHA(_silo, input.shares, input.owner, 0, _isBefore);
+        } else {
+            Hook.AfterTransitionCollateralInput memory input = Hook.afterTransitionCollateralDecode(_inputAndOutput);
+            emit TransitionCollateralHA(_silo, input.shares, input.owner, input.assets, _isBefore);
+        }
     }
 
     function _processLeverageSameAsset(address _silo, bytes calldata _inputAndOutput, bool _isBefore) internal {

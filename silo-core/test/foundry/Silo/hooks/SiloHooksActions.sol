@@ -345,10 +345,10 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock {
         silo0.borrow(borrowAmount, _borrower, _borrower, _NOT_SAME_ASSET);
 
         vm.expectEmit(true, true, true, true);
-        emit SwitchCollateralBeforeHA(_SAME_ASSET);
+        emit SwitchCollateralBeforeHA(_SAME_ASSET, _borrower);
 
         vm.expectEmit(true, true, true, true);
-        emit SwitchCollateralAfterHA(_SAME_ASSET);
+        emit SwitchCollateralAfterHA(_SAME_ASSET, _borrower);
 
         vm.prank(_borrower);
         silo0.switchCollateralTo(_SAME_ASSET);
@@ -375,10 +375,10 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock {
         silo0.borrow(borrowAmount, _borrower, _borrower, _SAME_ASSET);
 
         vm.expectEmit(true, true, true, true);
-        emit SwitchCollateralBeforeHA(_NOT_SAME_ASSET);
+        emit SwitchCollateralBeforeHA(_NOT_SAME_ASSET, _borrower);
 
         vm.expectEmit(true, true, true, true);
-        emit SwitchCollateralAfterHA(_NOT_SAME_ASSET);
+        emit SwitchCollateralAfterHA(_NOT_SAME_ASSET, _borrower);
 
         vm.prank(_borrower);
         silo0.switchCollateralTo(_NOT_SAME_ASSET);

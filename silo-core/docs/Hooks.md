@@ -137,9 +137,13 @@ Where `withdrawType` is `Hook.COLLATERAL_TOKEN` or `Hook.PROTECTED_TOKEN`
 ```Hook.TRANSITION_COLLATERAL | Hook.COLLATERAL_TOKEN``` or \
 ```Hook.TRANSITION_COLLATERAL | Hook.PROTECTED_TOKEN```
 
-data before/after transition collateral: abi.encodePacked(shares, owner, assets)
+data before transition collateral: abi.encodePacked(shares, owner, assets)
 ```
-Hook.TransitionCollateralInput memory input = Hook.transitionCollateralDecode(_inputAndOutput);
+Hook.BeforeTransitionCollateralInput memory input = Hook.beforeTransitionCollateralDecode(_inputAndOutput);
+```
+data after transition collateral: abi.encodePacked(shares, owner, assets)
+```
+Hook.AfterTransitionCollateralInput memory input = Hook.afterTransitionCollateralDecode(_inputAndOutput);
 ```
 
 ```Hook.shareTokenTransfer(tokenType)``` (afterAction) \
@@ -156,7 +160,10 @@ Where `toSameAsset` is `true` or `false` which converts to `Hook.SAME_ASSET` or 
  ```Hook.SWITCH_COLLATERAL | Hook.SAME_ASSET``` or \
  ```Hook.SWITCH_COLLATERAL | Hook.TWO_ASSETS```
 
-data is empty
+data: abi.encodePacked(msg.sender)
+```
+
+```
 
 ## flashLoan fn hook actions
 - ```Hook.FLASH_LOAN``` (beforeAction and afterAction)

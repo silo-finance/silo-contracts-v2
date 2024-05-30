@@ -155,9 +155,16 @@ library Hook {
         uint256 fee;
     }
 
-    /// @notice The data structure for the transition collateral hook (before and after)
+    /// @notice The data structure for the before transition collateral hook
     /// @param shares The amount of shares to transition
-    struct TransitionCollateralInput {
+    struct BeforeTransitionCollateralInput {
+        uint256 shares;
+        address owner;
+    }
+
+    /// @notice The data structure for the after transition collateral hook
+    /// @param shares The amount of shares to transition
+    struct AfterTransitionCollateralInput {
         uint256 shares;
         address owner;
         uint256 assets;
@@ -189,6 +196,12 @@ library Hook {
         ISilo.CollateralType collateralType;
         uint256 depositedShares;
         uint256 borrowedShares;
+    }
+
+    /// @notice The data structure for the switch collateral hook
+    /// @param user The user switching collateral
+    struct SwitchCollateralInput {
+        address user;
     }
 
     uint256 internal constant NONE = 0;
@@ -602,10 +615,31 @@ library Hook {
     /// @dev Decodes packed data from the transition collateral hook
     /// @param packed The packed data (via abi.encodePacked)
     /// @return input decoded
-    function transitionCollateralDecode(bytes memory packed)
+    function beforeTransitionCollateralDecode(bytes memory packed)
         internal
         pure
-        returns (TransitionCollateralInput memory input)
+        returns (BeforeTransitionCollateralInput memory input)
+    {
+        uint256 shares;
+        address owner;
+
+        assembly { // solhint-disable-line no-inline-assembly
+            let pointer := PACKED_FULL_LENGTH
+            shares := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_ADDRESS_LENGTH)
+            owner := mload(add(packed, pointer))
+        }
+
+        input = BeforeTransitionCollateralInput(shares, owner);
+    }
+
+    /// @dev Decodes packed data from the transition collateral hook
+    /// @param packed The packed data (via abi.encodePacked)
+    /// @return input decoded
+    function afterTransitionCollateralDecode(bytes memory packed)
+        internal
+        pure
+        returns (AfterTransitionCollateralInput memory input)
     {
         uint256 shares;
         address owner;
@@ -620,7 +654,25 @@ library Hook {
             assets := mload(add(packed, pointer))
         }
 
-        input = TransitionCollateralInput(shares, owner, assets);
+        input = AfterTransitionCollateralInput(shares, owner, assets);
+    }
+
+    /// @dev Decodes packed data from the switch collateral hook
+    /// @param packed The packed data (via abi.encodePacked)
+    /// @return input decoded
+    function switchCollateralDecode(bytes memory packed)
+        internal
+        pure
+        returns (SwitchCollateralInput memory input)
+    {
+        address user;
+
+        assembly { // solhint-disable-line no-inline-assembly
+            let pointer := PACKED_ADDRESS_LENGTH
+            user := mload(add(packed, pointer))
+        }
+
+        input = SwitchCollateralInput(user);
     }
 
     /// @dev Decodes packed data from the before leverage same asset hook
