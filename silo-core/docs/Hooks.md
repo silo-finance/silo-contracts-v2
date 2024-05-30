@@ -162,7 +162,7 @@ Where `toSameAsset` is `true` or `false` which converts to `Hook.SAME_ASSET` or 
 
 data: abi.encodePacked(msg.sender)
 ```
-
+Hook.SwitchCollateralInput memory input = Hook.switchCollateralDecode(_inputAndOutput);
 ```
 
 ## flashLoan fn hook actions
