@@ -414,7 +414,7 @@ library Actions {
         returns (uint256 assets, uint256 toShares)
     {
         _hookCallBefore(
-            _shareStorage, Hook.transitionCollateralAction(_withdrawType), abi.encodePacked(_shares, _owner, assets)
+            _shareStorage, Hook.transitionCollateralAction(_withdrawType), abi.encodePacked(_shares, _owner)
         );
 
         ISiloConfig.ConfigData memory collateralConfig = _shareStorage.siloConfig.accrueInterestAndGetConfig(
@@ -470,7 +470,7 @@ library Actions {
         bool _toSameAsset
     ) external {
         uint256 action = Hook.switchCollateralAction(_toSameAsset);
-        bytes memory data;
+        bytes memory data = abi.encodePacked(msg.sender);
 
         _hookCallBefore(_shareStorage, action, data);
 
