@@ -130,6 +130,10 @@ contract HookReceiverAllActionsWithEvents is SiloHookReceiver {
         uint256 returnedShares
     );
 
+    event FlashLoanBeforeHA(address silo, address receiver, address token, uint256 amount);
+
+    event FlashLoanAfterHA(address silo, address receiver, address token, uint256 amount, uint256 fee);
+
     error ActionsStopped();
     error ShareTokenBeforeForbidden();
     error UnknownAction();
@@ -187,6 +191,8 @@ contract HookReceiverAllActionsWithEvents is SiloHookReceiver {
             _processBorrow(_silo, _action, _inputAndOutput, _isBefore);
         } else if (_action.matchAction(Hook.REPAY)) {
             _processRepay(_silo, _inputAndOutput, _isBefore);
+        } else if (_action.matchAction(Hook.FLASH_LOAN)) {
+            _processFlashLoan(_silo, _inputAndOutput, _isBefore);
         } else {
             revert UnknownAction();
         }
@@ -366,6 +372,16 @@ contract HookReceiverAllActionsWithEvents is SiloHookReceiver {
                 input.repaidAssets,
                 input.repaidShares
             );
+        }
+    }
+
+    function _processFlashLoan(address _silo, bytes calldata _inputAndOutput, bool _isBefore) internal {
+        if (_isBefore) {
+            Hook.BeforeFlashLoanInput memory input = Hook.beforeFlashLoanDecode(_inputAndOutput);
+            emit FlashLoanBeforeHA(_silo, input.receiver, input.token, input.amount);
+        } else {
+            Hook.AfterFlashLoanInput memory input = Hook.afterFlashLoanDecode(_inputAndOutput);
+            emit FlashLoanAfterHA(_silo, input.receiver, input.token, input.amount, input.fee);
         }
     }
 }

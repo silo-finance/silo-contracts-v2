@@ -133,6 +133,28 @@ library Hook {
         uint256 repaidShares;
     }
 
+    /// @notice The data structure for the before flash loan hook
+    /// @param receiver The flash loan receiver
+    /// @param token The flash loan token
+    /// @param amount Requested amount of tokens
+    struct BeforeFlashLoanInput {
+        address receiver;
+        address token;
+        uint256 amount;
+    }
+
+    /// @notice The data structure for the after flash loan hook
+    /// @param receiver The flash loan receiver
+    /// @param token The flash loan token
+    /// @param amount Received amount of tokens
+    /// @param fee The flash loan fee
+    struct AfterFlashLoanInput {
+        address receiver;
+        address token;
+        uint256 amount;
+        uint256 fee;
+    }
+
     uint256 internal constant NONE = 0;
     uint256 internal constant SAME_ASSET = 2 ** 1;
     uint256 internal constant TWO_ASSETS = 2 ** 2;
@@ -487,5 +509,56 @@ library Hook {
         }
 
         input = AfterRepayInput(assets, shares, borrower, repayer, repaidAssets, repaidShares);
+    }
+
+    /// @dev Decodes packed data from the before flash loan hook
+    /// @param packed The packed data (via abi.encodePacked)
+    /// @return input decoded
+    function beforeFlashLoanDecode(bytes memory packed)
+        internal
+        pure
+        returns (BeforeFlashLoanInput memory input)
+    {
+        address receiver;
+        address token;
+        uint256 amount;
+
+        assembly {
+            let pointer := PACKED_ADDRESS_LENGTH
+            receiver := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_ADDRESS_LENGTH)
+            token := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_FULL_LENGTH)
+            amount := mload(add(packed, pointer))
+        }
+
+        input = BeforeFlashLoanInput(receiver, token, amount);
+    }
+
+    /// @dev Decodes packed data from the before flash loan hook
+    /// @param packed The packed data (via abi.encodePacked)
+    /// @return input decoded
+    function afterFlashLoanDecode(bytes memory packed)
+        internal
+        pure
+        returns (AfterFlashLoanInput memory input)
+    {
+        address receiver;
+        address token;
+        uint256 amount;
+        uint256 fee;
+
+        assembly {
+            let pointer := PACKED_ADDRESS_LENGTH
+            receiver := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_ADDRESS_LENGTH)
+            token := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_FULL_LENGTH)
+            amount := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_FULL_LENGTH)
+            fee := mload(add(packed, pointer))
+        }
+
+        input = AfterFlashLoanInput(receiver, token, amount, fee);
     }
 }

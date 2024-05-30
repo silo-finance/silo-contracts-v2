@@ -126,8 +126,14 @@ data: abi.encodePacked(_toSameAsset)
 - ```Hook.SWITCH_COLLATERAL``` (afterAction) \
 data: abi.encodePacked(_toSameAsset)
 
-## flashLoan
-- ```Hook.FLASH_LOAN``` (beforeAction) \
-data: abi.encodePacked(_receiver, _token, _amount)
-- ```Hook.FLASH_LOAN``` (afterAction) \
-data: abi.encodePacked(_receiver, _token, _amount, success)
+## flashLoan fn hook actions
+- ```Hook.FLASH_LOAN``` (beforeAction and afterAction)
+
+before flash loan data: abi.encodePacked(receiver, token, amount)
+```
+Hook.BeforeFlashLoanInput memory input = Hook.beforeFlashLoanDecode(_inputAndOutput);
+```
+after flash loan data: abi.encodePacked(receiver, token, amount, fee)
+```
+Hook.AfterFlashLoanInput memory input = Hook.afterFlashLoanDecode(_inputAndOutput);
+```

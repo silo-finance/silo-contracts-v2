@@ -10,6 +10,7 @@ import {VeSiloContracts} from "ve-silo/common/VeSiloContracts.sol";
 import {HookReceiverMock} from "silo-core/test/foundry/_mocks/HookReceiverMock.sol";
 import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
 
+import {IERC3156FlashBorrower} from "silo-core/contracts/interfaces/IERC3156FlashBorrower.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISiloDeployer} from "silo-core/contracts/interfaces/ISiloDeployer.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
@@ -30,6 +31,7 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock {
     uint256 constant public ASSETS_0 = 0;
     bool constant public EXPECT_BEFORE = true;
     bool constant public EXPECT_AFTER = false;
+    bytes32 constant public FLASHLOAN_CALLBACK = keccak256("ERC3156FlashBorrower.onFlashLoan");
 
     ISilo.CollateralType constant public COLLATERAL = ISilo.CollateralType.Collateral;
     ISilo.CollateralType constant public PROTECTED = ISilo.CollateralType.Protected;
@@ -49,6 +51,15 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock {
         // Mock addresses that we need for the `SiloFactoryDeploy` script
         AddrLib.setAddress(VeSiloContracts.TIMELOCK_CONTROLLER, makeAddr("Timelock"));
         AddrLib.setAddress(VeSiloContracts.FEE_DISTRIBUTOR, makeAddr("FeeDistributor"));
+    }
+
+    // For the flash loan tests
+    function onFlashLoan(address _initiator, address _token, uint256 _amount, uint256 _fee, bytes calldata _data)
+        external
+        returns (bytes32)
+    {
+        IERC20(_token).approve(msg.sender, _amount + _fee);
+        return FLASHLOAN_CALLBACK;
     }
 
     /// FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testDepositFnBeforeAfterHookActions
@@ -282,6 +293,35 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock {
         silo1.borrow(borrowAmount, _borrower, _borrower, _NOT_SAME_ASSET);
 
         _siloRepayAllHooks(silo1, token1, _borrower, _borrower, borrowAmount);
+    }
+
+    /// FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testFlashLoanAllHooks
+    function testFlashLoanAllHooks() public {
+        uint256 beforeActions = Hook.FLASH_LOAN;
+        uint256 afterAction = beforeActions;
+
+        HookMock hookReceiverMock = new HookMock(NO_ACTIONS, NO_ACTIONS, beforeActions, afterAction);
+        deploySiloWithHook(address(hookReceiverMock));
+
+        uint256 depositAmount = 100e18;
+
+        _siloDepositWithoutHook(silo1, token1, _depositor, _depositor, depositAmount, COLLATERAL);
+
+        uint256 flashLoanAmount = 1e18;
+
+        // mint to pay a flash loan fee
+        token1.mint(address(this), 1e18);
+
+        bytes memory data;
+        uint256 flashFee = silo1.flashFee(address(token1), flashLoanAmount);
+
+        vm.expectEmit(true, true, true, true);
+        emit FlashLoanBeforeHA(address(silo1), address(this), address(token1), flashLoanAmount);
+
+        vm.expectEmit(true, true, true, true);
+        emit FlashLoanAfterHA(address(silo1), address(this), address(token1), flashLoanAmount, flashFee);
+
+        silo1.flashLoan(IERC3156FlashBorrower(address(this)), address(token1), flashLoanAmount, data);
     }
 
     function _siloDepositWithHook(
