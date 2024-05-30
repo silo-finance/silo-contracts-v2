@@ -906,7 +906,7 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock {
             borrowerDepositAmount,
             0, // no balance for the sender
             borrowerDepositAmount, // balance
-            borrowerDepositAmount, // total supply
+            _collateral == COLLATERAL ? borrowerDepositAmount + depositAmount: borrowerDepositAmount, // total supply
             _collateral
         );
 
