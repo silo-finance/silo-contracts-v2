@@ -155,6 +155,14 @@ library Hook {
         uint256 fee;
     }
 
+    /// @notice The data structure for the transition collateral hook (before and after)
+    /// @param shares The amount of shares to transition
+    struct TransitionCollateralInput {
+        uint256 shares;
+        address owner;
+        uint256 assets;
+    }
+
     uint256 internal constant NONE = 0;
     uint256 internal constant SAME_ASSET = 2 ** 1;
     uint256 internal constant TWO_ASSETS = 2 ** 2;
@@ -560,5 +568,29 @@ library Hook {
         }
 
         input = AfterFlashLoanInput(receiver, token, amount, fee);
+    }
+
+    /// @dev Decodes packed data from the transition collateral hook
+    /// @param packed The packed data (via abi.encodePacked)
+    /// @return input decoded
+    function transitionCollateralDecode(bytes memory packed)
+        internal
+        pure
+        returns (TransitionCollateralInput memory input)
+    {
+        uint256 shares;
+        address owner;
+        uint256 assets;
+
+        assembly {
+            let pointer := PACKED_FULL_LENGTH
+            shares := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_ADDRESS_LENGTH)
+            owner := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_FULL_LENGTH)
+            assets := mload(add(packed, pointer))
+        }
+
+        input = TransitionCollateralInput(shares, owner, assets);
     }
 }

@@ -384,6 +384,42 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock {
         silo0.switchCollateralTo(_NOT_SAME_ASSET);
     }
 
+    /// FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testTransitionCollateralToProtectedAllHooks
+    function testTransitionCollateralToProtectedAllHooks() public {
+        uint256 beforeActions = Hook.transitionCollateralAction(COLLATERAL);
+
+        uint256 afterAction = beforeActions
+            .addAction(Hook.shareTokenTransfer(Hook.COLLATERAL_TOKEN))
+            .addAction(Hook.shareTokenTransfer(Hook.PROTECTED_TOKEN));
+
+        HookMock hookReceiverMock = new HookMock(beforeActions, afterAction, NO_ACTIONS, NO_ACTIONS);
+        deploySiloWithHook(address(hookReceiverMock));
+
+        uint256 depositAmount = 100e18;
+
+        _siloDepositWithoutHook(silo0, token0, _depositor, _depositor, depositAmount, COLLATERAL);
+
+        _transitionCollateralAllHooks(silo0, _depositor, depositAmount, COLLATERAL);
+    }
+
+    /// FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testTransitionProtectedToCollateralAllHooks
+    function testTransitionProtectedToCollateralAllHooks() public {
+        uint256 beforeActions = Hook.transitionCollateralAction(PROTECTED);
+
+        uint256 afterAction = beforeActions
+            .addAction(Hook.shareTokenTransfer(Hook.COLLATERAL_TOKEN))
+            .addAction(Hook.shareTokenTransfer(Hook.PROTECTED_TOKEN));
+
+        HookMock hookReceiverMock = new HookMock(beforeActions, afterAction, NO_ACTIONS, NO_ACTIONS);
+        deploySiloWithHook(address(hookReceiverMock));
+
+        uint256 depositAmount = 100e18;
+
+        _siloDepositWithoutHook(silo0, token0, _depositor, _depositor, depositAmount, PROTECTED);
+
+        _transitionCollateralAllHooks(silo0, _depositor, depositAmount, PROTECTED);
+    }
+
     function _siloDepositWithHook(
         ISilo _silo,
         MintableToken _token,
@@ -727,6 +763,75 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock {
 
         vm.prank(_repayer);
         _silo.repay(_amount, _borrowerAddr);
+    }
+
+    function _transitionCollateralAllHooks(
+        ISilo _silo,
+        address _depositorAddr,
+        uint256 _amount,
+        ISilo.CollateralType _withdrawType
+    ) internal {
+        uint256 beforeActions = Hook.transitionCollateralAction(_withdrawType);
+
+        uint256 afterAction = beforeActions
+            .addAction(Hook.shareTokenTransfer(Hook.COLLATERAL_TOKEN))
+            .addAction(Hook.shareTokenTransfer(Hook.PROTECTED_TOKEN));
+
+        HookMock hookReceiverMock = new HookMock(beforeActions, afterAction, NO_ACTIONS, NO_ACTIONS);
+        deploySiloWithHook(address(hookReceiverMock));
+
+        uint256 depositAmount = 100e18;
+
+        _siloDepositWithoutHook(silo0, token0, _depositor, _depositor, depositAmount, _withdrawType);
+
+        vm.expectEmit(true, true, true, true);
+
+        emit TransitionCollateralHA(
+            address(_silo),
+            _amount,
+            _depositorAddr,
+            0,
+            _IS_BEFORE
+        );
+
+        vm.expectEmit(true, true, true, true);
+
+        emit ShareTokenAfterHA(
+            address(_silo),
+            _depositorAddr,
+            address(0), // because we burn tokens
+            _amount,
+            0, // no balance for the sender
+            0, // no balance
+            0, // mo total supply
+            _withdrawType == COLLATERAL ? COLLATERAL : PROTECTED
+        );
+
+        vm.expectEmit(true, true, true, true);
+
+        emit ShareTokenAfterHA(
+            address(_silo),
+            address(0), // because we mint tokens
+            _depositorAddr,
+            _amount,
+            0, // no balance for the sender
+            _amount, // balance
+            _amount, // total supply
+            _withdrawType == COLLATERAL ? PROTECTED : COLLATERAL
+        );
+
+        vm.expectEmit(true, true, true, true);
+
+        emit TransitionCollateralHA(
+            address(_silo),
+            _amount,
+            _depositorAddr,
+            _amount,
+            _IS_AFTER
+        );
+
+        vm.prank(_depositorAddr);
+        _silo.transitionCollateral(_amount, _depositorAddr, _withdrawType);
     }
 
     function _depositForBorrowNotSameAsset() internal {

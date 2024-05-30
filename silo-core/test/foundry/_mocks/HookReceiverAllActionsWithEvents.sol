@@ -130,7 +130,16 @@ contract HookReceiverAllActionsWithEvents is SiloHookReceiver {
         uint256 returnedShares
     );
 
+    event TransitionCollateralHA(
+        address silo,
+        uint256 shares,
+        address owner,
+        uint256 assets,
+        bool isBefore
+    );
+
     event SwitchCollateralBeforeHA(bool sameAsset);
+
     event SwitchCollateralAfterHA(bool sameAsset);
 
     event FlashLoanBeforeHA(address silo, address receiver, address token, uint256 amount);
@@ -199,6 +208,8 @@ contract HookReceiverAllActionsWithEvents is SiloHookReceiver {
             _processFlashLoan(_silo, _inputAndOutput, _isBefore);
         } else if (_action.matchAction(Hook.SWITCH_COLLATERAL)) {
             _processSwitchCollateral(_silo, _action, _inputAndOutput, _isBefore);
+        } else if (_action.matchAction(Hook.TRANSITION_COLLATERAL)) {
+            _processTransitionCollateral(_silo, _action, _inputAndOutput, _isBefore);
         } else {
             revert UnknownAction();
         }
@@ -412,5 +423,15 @@ contract HookReceiverAllActionsWithEvents is SiloHookReceiver {
         } else {
             revert UnknownSwitchCollateralAction();
         }
+    }
+
+    function _processTransitionCollateral(
+        address _silo,
+        uint256 _action,
+        bytes calldata _inputAndOutput,
+        bool _isBefore
+    ) internal {
+        Hook.TransitionCollateralInput memory input = Hook.transitionCollateralDecode(_inputAndOutput);
+        emit TransitionCollateralHA(_silo, input.shares, input.owner, input.assets, _isBefore);
     }
 }
