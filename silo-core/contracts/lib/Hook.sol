@@ -290,7 +290,7 @@ library Hook {
         uint256 recipientBalance;
         uint256 totalSupply;
 
-        assembly {
+        assembly { // solhint-disable-line no-inline-assembly
             let pointer := PACKED_ADDRESS_LENGTH
             sender := mload(add(packed, pointer))
             pointer := add(pointer, PACKED_ADDRESS_LENGTH)
@@ -320,7 +320,7 @@ library Hook {
         uint256 shares;
         address receiver;
 
-        assembly {
+        assembly { // solhint-disable-line no-inline-assembly
             let pointer := PACKED_FULL_LENGTH
             assets := mload(add(packed, pointer))
             pointer := add(pointer, PACKED_FULL_LENGTH)
@@ -346,7 +346,7 @@ library Hook {
         uint256 receivedAssets;
         uint256 mintedShares;
 
-        assembly {
+        assembly { // solhint-disable-line no-inline-assembly
             let pointer := PACKED_FULL_LENGTH
             assets := mload(add(packed, pointer))
             pointer := add(pointer, PACKED_FULL_LENGTH)
@@ -376,7 +376,7 @@ library Hook {
         address owner;
         address spender;
 
-        assembly {
+        assembly { // solhint-disable-line no-inline-assembly
             let pointer := PACKED_FULL_LENGTH
             assets := mload(add(packed, pointer))
             pointer := add(pointer, PACKED_FULL_LENGTH)
@@ -408,7 +408,7 @@ library Hook {
         uint256 withdrawnAssets;
         uint256 withdrawnShares;
 
-        assembly {
+        assembly { // solhint-disable-line no-inline-assembly
             let pointer := PACKED_FULL_LENGTH
             assets := mload(add(packed, pointer))
             pointer := add(pointer, PACKED_FULL_LENGTH)
@@ -441,7 +441,7 @@ library Hook {
         address receiver;
         address borrower;
 
-        assembly {
+        assembly { // solhint-disable-line no-inline-assembly
             let pointer := PACKED_FULL_LENGTH
             assets := mload(add(packed, pointer))
             pointer := add(pointer, PACKED_FULL_LENGTH)
@@ -470,7 +470,7 @@ library Hook {
         uint256 borrowedAssets;
         uint256 borrowedShares;
 
-        assembly {
+        assembly { // solhint-disable-line no-inline-assembly
             let pointer := PACKED_FULL_LENGTH
             assets := mload(add(packed, pointer))
             pointer := add(pointer, PACKED_FULL_LENGTH)
@@ -501,7 +501,7 @@ library Hook {
         address borrower;
         address repayer;
 
-        assembly {
+        assembly { // solhint-disable-line no-inline-assembly
             let pointer := PACKED_FULL_LENGTH
             assets := mload(add(packed, pointer))
             pointer := add(pointer, PACKED_FULL_LENGTH)
@@ -530,7 +530,7 @@ library Hook {
         uint256 repaidAssets;
         uint256 repaidShares;
 
-        assembly {
+        assembly { // solhint-disable-line no-inline-assembly
             let pointer := PACKED_FULL_LENGTH
             assets := mload(add(packed, pointer))
             pointer := add(pointer, PACKED_FULL_LENGTH)
@@ -560,7 +560,7 @@ library Hook {
         address token;
         uint256 amount;
 
-        assembly {
+        assembly { // solhint-disable-line no-inline-assembly
             let pointer := PACKED_ADDRESS_LENGTH
             receiver := mload(add(packed, pointer))
             pointer := add(pointer, PACKED_ADDRESS_LENGTH)
@@ -585,7 +585,7 @@ library Hook {
         uint256 amount;
         uint256 fee;
 
-        assembly {
+        assembly { // solhint-disable-line no-inline-assembly
             let pointer := PACKED_ADDRESS_LENGTH
             receiver := mload(add(packed, pointer))
             pointer := add(pointer, PACKED_ADDRESS_LENGTH)
@@ -611,7 +611,7 @@ library Hook {
         address owner;
         uint256 assets;
 
-        assembly {
+        assembly { // solhint-disable-line no-inline-assembly
             let pointer := PACKED_FULL_LENGTH
             shares := mload(add(packed, pointer))
             pointer := add(pointer, PACKED_ADDRESS_LENGTH)
@@ -636,7 +636,7 @@ library Hook {
         address borrower;
         uint8 collateralType;
 
-        assembly {
+        assembly { // solhint-disable-line no-inline-assembly
             let pointer := PACKED_FULL_LENGTH
             depositAssets := mload(add(packed, pointer))
             pointer := add(pointer, PACKED_FULL_LENGTH)
@@ -655,7 +655,6 @@ library Hook {
         );
     }
 
-    // // after leverage data: abi.encodePacked(depositAssets, borrowAssets, borrower, collateralType, depositedShares, borrowedShares)
     /// @dev Decodes packed data from the after leverage same asset hook
     /// @param packed The packed data (via abi.encodePacked)
     /// @return input decoded
@@ -671,7 +670,7 @@ library Hook {
         uint256 depositedShares;
         uint256 borrowedShares;
 
-        assembly {
+        assembly { // solhint-disable-line no-inline-assembly
             let pointer := PACKED_FULL_LENGTH
             depositAssets := mload(add(packed, pointer))
             pointer := add(pointer, PACKED_FULL_LENGTH)
