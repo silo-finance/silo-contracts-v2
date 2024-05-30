@@ -100,16 +100,35 @@ data: abi.encodePacked(sender, recipient, amount, balanceOfSender, balanceOfRece
 Hook.AfterTokenTransfer memory input = Hook.afterTokenTransferDecode(_inputAndOutput);
 ```
 
-## leverageSameAsset
-- ```Hook.BORROW | Hook.LEVERAGE | Hook.SAME_ASSE``` (beforeAction) \
-abi.encodePacked(_depositAssets, _borrowAssets, _borrower, _collateralType)
-- ```Hook.DEBT_TOKEN | Hook.SHARE_TOKEN_TRANSFER``` (afterAction) \
-data: abi.encodePacked(_sender, _recipient, _amount, balanceOf(_sender), balanceOf(_recipient), totalSupply())
-- ```Hook.COLLATERAL_TOKEN | Hook.SHARE_TOKEN_TRANSFER``` (afterAction) or
-- ```Hook.PROTECTED_TOKEN | Hook.SHARE_TOKEN_TRANSFER``` (afterAction) \
-data: abi.encodePacked(_sender, _recipient, _amount, balanceOf(_sender), balanceOf(_recipient), totalSupply())
-- ```Hook.BORROW | Hook.LEVERAGE | Hook.SAME_ASSE``` (afterAction) \
-data: abi.encodePacked(_depositAssets, _borrowAssets, _borrower, _collateralType, depositedShares, borrowedShares)
+## leverageSameAsset fn hook actions
+```Hook.LEVERAGE_SAME_ASSET``` (beforeAction and afterAction) \
+- action: ```Hook.BORROW | Hook.LEVERAGE | Hook.SAME_ASSET``` \
+before leverage data: abi.encodePacked(depositAssets, borrowAssets, borrower, collateralType)
+```
+Hook.BeforeLeverageSameAssetInput memory input = Hook.beforeLeverageSameAssetDecode(_inputAndOutput);
+```
+after leverage data: abi.encodePacked(depositAssets, borrowAssets, borrower, collateralType, depositedShares, borrowedShares)
+```
+Hook.BeforeLeverageSameAssetInput memory input = Hook.beforeLeverageSameAssetDecode(_inputAndOutput);
+```
+```Hook.shareTokenTransfer(tokenType)``` (afterAction) \
+Where `tokenType` is `Hook.DEBT_TOKEN`
+- action: ```Hook.SHARE_TOKEN_TRANSFER | Hook.DEBT_TOKEN```
+
+data: abi.encodePacked(sender, recipient, amount, balanceOfSender, balanceOfRecepient, totalSupply)
+```
+Hook.AfterTokenTransfer memory input = Hook.afterTokenTransferDecode(_inputAndOutput);
+```
+```Hook.shareTokenTransfer(tokenType)``` (afterAction) \
+Where `tokenType` is `Hook.COLLATERAL_TOKEN` or `Hook.PROTECTED_TOKEN`
+- actions: \
+```Hook.SHARE_TOKEN_TRANSFER | Hook.COLLATERAL_TOKEN``` or \
+```Hook.SHARE_TOKEN_TRANSFER | Hook.PROTECTED_TOKEN```
+
+data: abi.encodePacked(sender, recipient, amount, balanceOfSender, balanceOfRecepient, totalSupply)
+```
+Hook.AfterTokenTransfer memory input = Hook.afterTokenTransferDecode(_inputAndOutput);
+```
 
 ## transitionCollateral fn hook actions
 ```Hook.transitionCollateralAction(withdrawType)``` (beforeAction and afterAction) \

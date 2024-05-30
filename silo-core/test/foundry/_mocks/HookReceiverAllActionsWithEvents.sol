@@ -138,6 +138,24 @@ contract HookReceiverAllActionsWithEvents is SiloHookReceiver {
         bool isBefore
     );
 
+    event BeforeLeverageSameAssetHA(
+        address silo,
+        uint256 depositAssets,
+        uint256 borrowAssets,
+        address borrower,
+        ISilo.CollateralType collateralType
+    );
+
+    event AfterLeverageSameAssetHA(
+        address silo,
+        uint256 depositAssets,
+        uint256 borrowAssets,
+        address borrower,
+        ISilo.CollateralType collateralType,
+        uint256 depositedShares,
+        uint256 borrowedShares
+    );
+
     event SwitchCollateralBeforeHA(bool sameAsset);
 
     event SwitchCollateralAfterHA(bool sameAsset);
@@ -200,6 +218,8 @@ contract HookReceiverAllActionsWithEvents is SiloHookReceiver {
             _processShareTokenTransfer(_silo, _action, _inputAndOutput, _isBefore);
         } else if (_action.matchAction(Hook.WITHDRAW)) {
             _processWithdraw(_silo, _action, _inputAndOutput, _isBefore);
+        } else if (_action.matchAction(Hook.LEVERAGE_SAME_ASSET)) {
+            _processLeverageSameAsset(_silo, _inputAndOutput, _isBefore);
         } else if (_action.matchAction(Hook.BORROW)) {
             _processBorrow(_silo, _action, _inputAndOutput, _isBefore);
         } else if (_action.matchAction(Hook.REPAY)) {
@@ -207,7 +227,7 @@ contract HookReceiverAllActionsWithEvents is SiloHookReceiver {
         } else if (_action.matchAction(Hook.FLASH_LOAN)) {
             _processFlashLoan(_silo, _inputAndOutput, _isBefore);
         } else if (_action.matchAction(Hook.SWITCH_COLLATERAL)) {
-            _processSwitchCollateral(_silo, _action, _inputAndOutput, _isBefore);
+            _processSwitchCollateral(_action, _inputAndOutput, _isBefore);
         } else if (_action.matchAction(Hook.TRANSITION_COLLATERAL)) {
             _processTransitionCollateral(_silo, _action, _inputAndOutput, _isBefore);
         } else {
@@ -403,9 +423,8 @@ contract HookReceiverAllActionsWithEvents is SiloHookReceiver {
     }
 
     function _processSwitchCollateral(
-        address _silo,
         uint256 _action,
-        bytes calldata _inputAndOutput,
+        bytes calldata,
         bool _isBefore
     ) internal {
         if (_action.matchAction(Hook.switchCollateralAction(_SAME_ASSET))) {
@@ -433,5 +452,31 @@ contract HookReceiverAllActionsWithEvents is SiloHookReceiver {
     ) internal {
         Hook.TransitionCollateralInput memory input = Hook.transitionCollateralDecode(_inputAndOutput);
         emit TransitionCollateralHA(_silo, input.shares, input.owner, input.assets, _isBefore);
+    }
+
+    function _processLeverageSameAsset(address _silo, bytes calldata _inputAndOutput, bool _isBefore) internal {
+        if (_isBefore) {
+            Hook.BeforeLeverageSameAssetInput memory input = Hook.beforeLeverageSameAssetDecode(_inputAndOutput);
+
+            emit BeforeLeverageSameAssetHA(
+                _silo,
+                input.depositAssets,
+                input.borrowAssets,
+                input.borrower,
+                input.collateralType
+            );
+        } else {
+            Hook.AfterLeverageSameAssetInput memory input = Hook.afterLeverageSameAssetDecode(_inputAndOutput);
+
+            emit AfterLeverageSameAssetHA(
+                _silo,
+                input.depositAssets,
+                input.borrowAssets,
+                input.borrower,
+                input.collateralType,
+                input.depositedShares,
+                input.borrowedShares
+            );
+        }
     }
 }

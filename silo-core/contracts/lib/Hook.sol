@@ -163,6 +163,34 @@ library Hook {
         uint256 assets;
     }
 
+    /// @notice The data structure for the before leverage same asset hook
+    /// @param depositAssets The amount of assets to deposit
+    /// @param borrowAssets The amount of assets to borrow
+    /// @param borrower The borrower of the assets
+    /// @param collateralType The collateral type
+    struct BeforeLeverageSameAssetInput {
+        uint256 depositAssets;
+        uint256 borrowAssets;
+        address borrower;
+        ISilo.CollateralType collateralType;
+    }
+
+    /// @notice The data structure for the after leverage same asset hook
+    /// @param depositAssets The amount of assets to deposit
+    /// @param borrowAssets The amount of assets to borrow
+    /// @param borrower The borrower of the assets
+    /// @param collateralType The collateral type
+    /// @param depositedShares The exact amount of assets being deposited
+    /// @param borrowedShares The exact amount of assets being borrowed
+    struct AfterLeverageSameAssetInput {
+        uint256 depositAssets;
+        uint256 borrowAssets;
+        address borrower;
+        ISilo.CollateralType collateralType;
+        uint256 depositedShares;
+        uint256 borrowedShares;
+    }
+
     uint256 internal constant NONE = 0;
     uint256 internal constant SAME_ASSET = 2 ** 1;
     uint256 internal constant TWO_ASSETS = 2 ** 2;
@@ -190,6 +218,7 @@ library Hook {
     // For decoding packed data
     uint256 private constant PACKED_ADDRESS_LENGTH = 20;
     uint256 private constant PACKED_FULL_LENGTH = 32;
+    uint256 private constant PACKED_ENUM_LENGTH = 1;
 
     function matchAction(uint256 _action, uint256 _expectedHook) internal pure returns (bool) {
         return _action & _expectedHook == _expectedHook;
@@ -592,5 +621,78 @@ library Hook {
         }
 
         input = TransitionCollateralInput(shares, owner, assets);
+    }
+
+    /// @dev Decodes packed data from the before leverage same asset hook
+    /// @param packed The packed data (via abi.encodePacked)
+    /// @return input decoded
+    function beforeLeverageSameAssetDecode(bytes memory packed)
+        internal
+        pure
+        returns (BeforeLeverageSameAssetInput memory input)
+    {
+        uint256 depositAssets;
+        uint256 borrowAssets;
+        address borrower;
+        uint8 collateralType;
+
+        assembly {
+            let pointer := PACKED_FULL_LENGTH
+            depositAssets := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_FULL_LENGTH)
+            borrowAssets := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_ADDRESS_LENGTH)
+            borrower := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_ENUM_LENGTH)
+            collateralType := mload(add(packed, pointer))
+        }
+
+        input = BeforeLeverageSameAssetInput(
+            depositAssets,
+            borrowAssets,
+            borrower,
+            ISilo.CollateralType(collateralType)
+        );
+    }
+
+    // // after leverage data: abi.encodePacked(depositAssets, borrowAssets, borrower, collateralType, depositedShares, borrowedShares)
+    /// @dev Decodes packed data from the after leverage same asset hook
+    /// @param packed The packed data (via abi.encodePacked)
+    /// @return input decoded
+    function afterLeverageSameAssetDecode(bytes memory packed)
+        internal
+        pure
+        returns (AfterLeverageSameAssetInput memory input)
+    {
+        uint256 depositAssets;
+        uint256 borrowAssets;
+        address borrower;
+        uint8 collateralType;
+        uint256 depositedShares;
+        uint256 borrowedShares;
+
+        assembly {
+            let pointer := PACKED_FULL_LENGTH
+            depositAssets := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_FULL_LENGTH)
+            borrowAssets := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_ADDRESS_LENGTH)
+            borrower := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_ENUM_LENGTH)
+            collateralType := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_FULL_LENGTH)
+            depositedShares := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_FULL_LENGTH)
+            borrowedShares := mload(add(packed, pointer))
+        }
+
+        input = AfterLeverageSameAssetInput(
+            depositAssets,
+            borrowAssets,
+            borrower,
+            ISilo.CollateralType(collateralType),
+            depositedShares,
+            borrowedShares
+        );
     }
 }
