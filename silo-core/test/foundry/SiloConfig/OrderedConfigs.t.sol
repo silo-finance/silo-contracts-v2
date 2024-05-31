@@ -11,6 +11,8 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 // - `withdraw`             no debt
 // - `withdraw`             debt silo0  | debt not the same asset
 // - `withdraw`             debt silo0  | debt same asset
+// - `withdraw`             debt silo1  | debt not the same asset
+// - `withdraw`             debt silo1  | debt same asset
 // - `borrow`               no debt     | debt the same asset
 // - `borrow`               no debt     | debt the same asset
 // - `borrow`               debt silo0  | debt not the same asset
@@ -152,6 +154,36 @@ contract OrderedConfigsTest is Test {
         assertEq(debtConfig.silo, _silo0);
     }
 
+    // FOUNDRY_PROFILE=core-test forge test -vvv --mt testOrderedConfigsWithdrawDebtSilo1NotSameAsset
+    function testOrderedConfigsWithdrawDebtSilo1NotSameAsset() public {
+        bool leverage;
+        bool sameAsset;
+
+        vm.prank(_silo1);
+        _siloConfig.accrueInterestAndGetConfigs(_silo1, _siloUser, Hook.borrowAction(leverage, sameAsset));
+
+        ISiloConfig.ConfigData memory collateralConfig;
+        ISiloConfig.ConfigData memory debtConfig;
+        
+        (collateralConfig, debtConfig,) = _siloConfig.getConfigs(
+            _silo0,
+            _siloUser,
+            Hook.withdrawAction(ISilo.CollateralType.Collateral)
+        );
+
+        assertEq(collateralConfig.silo, _silo0);
+        assertEq(debtConfig.silo, _silo1);
+
+        (collateralConfig, debtConfig,) = _siloConfig.getConfigs(
+            _silo1,
+            _siloUser,
+            Hook.withdrawAction(ISilo.CollateralType.Collateral)
+        );
+
+        assertEq(collateralConfig.silo, _silo1);
+        assertEq(debtConfig.silo, _silo0);
+    }
+
     // FOUNDRY_PROFILE=core-test forge test -vvv --mt testOrderedConfigsWithdrawWithDebtSilo0SameAsset
     function testOrderedConfigsWithdrawWithDebtSilo0SameAsset() public {
         bool leverage;
@@ -180,6 +212,36 @@ contract OrderedConfigsTest is Test {
 
         assertEq(collateralConfig.silo, _silo1);
         assertEq(debtConfig.silo, _silo0);
+    }
+
+    // FOUNDRY_PROFILE=core-test forge test -vvv --mt testOrderedConfigsWithdrawWithDebtSilo1SameAsset
+    function testOrderedConfigsWithdrawWithDebtSilo1SameAsset() public {
+        bool leverage;
+        bool sameAsset = true;
+
+        vm.prank(_silo1);
+        _siloConfig.accrueInterestAndGetConfigs(_silo1, _siloUser, Hook.borrowAction(leverage, sameAsset));
+
+        ISiloConfig.ConfigData memory collateralConfig;
+        ISiloConfig.ConfigData memory debtConfig;
+        
+        (collateralConfig, debtConfig,) = _siloConfig.getConfigs(
+            _silo0,
+            _siloUser,
+            Hook.withdrawAction(ISilo.CollateralType.Collateral)
+        );
+
+        assertEq(collateralConfig.silo, _silo0);
+        assertEq(debtConfig.silo, _silo1);
+
+        (collateralConfig, debtConfig,) = _siloConfig.getConfigs(
+            _silo1,
+            _siloUser,
+            Hook.withdrawAction(ISilo.CollateralType.Collateral)
+        );
+
+        assertEq(collateralConfig.silo, _silo1);
+        assertEq(debtConfig.silo, _silo1);
     }
 
     // FOUNDRY_PROFILE=core-test forge test -vvv --mt testOrderedConfigsBorrowNoDebtNotSameAsset
