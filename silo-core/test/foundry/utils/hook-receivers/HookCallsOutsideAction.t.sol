@@ -162,9 +162,9 @@ contract HookCallsOutsideActionTest is IHookReceiver, ILeverageBorrower, IERC315
         (bool entered,) = _siloConfig.crossReentrantStatus();
 
         if (_action.matchAction(Hook.SHARE_TOKEN_TRANSFER)) {
-            (address sender, address recipient,,,,) = Hook.afterTokenTransferDecode(_inputAndOutput);
+            Hook.AfterTokenTransfer memory input = Hook.afterTokenTransferDecode(_inputAndOutput);
 
-            if (sender == address(0) || recipient == address(0)) {
+            if (input.sender == address(0) || input.recipient == address(0)) {
                 assertTrue(entered, "only when minting/burning we can be inside action");
             } else {
                 assertTrue(entered, "on regular transfer we are also inside action, silo is locked");

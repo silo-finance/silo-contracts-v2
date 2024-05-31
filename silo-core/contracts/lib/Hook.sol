@@ -5,6 +5,205 @@ import {ISilo} from "../interfaces/ISilo.sol";
 
 // solhint-disable private-vars-leading-underscore
 library Hook {
+    /// @notice The data structure for the deposit hook
+    /// @param assets The amount of assets deposited
+    /// @param shares The amount of shares deposited
+    /// @param receiver The receiver of the deposit
+    struct BeforeDepositInput {
+        uint256 assets;
+        uint256 shares;
+        address receiver;
+    }
+
+    /// @notice The data structure for the deposit hook
+    /// @param assets The amount of assets deposited
+    /// @param shares The amount of shares deposited
+    /// @param receiver The receiver of the deposit
+    /// @param receivedAssets The exact amount of assets being deposited
+    /// @param mintedShares The exact amount of shares being minted
+    struct AfterDepositInput {
+        uint256 assets;
+        uint256 shares;
+        address receiver;
+        uint256 receivedAssets;
+        uint256 mintedShares;
+    }
+
+    /// @notice The data structure for the withdraw hook
+    /// @param assets The amount of assets withdrawn
+    /// @param shares The amount of shares withdrawn
+    /// @param receiver The receiver of the withdrawal
+    /// @param owner The owner of the shares
+    /// @param spender The spender of the shares
+    struct BeforeWithdrawInput {
+        uint256 assets;
+        uint256 shares;
+        address receiver;
+        address owner;
+        address spender;
+    }
+
+    /// @notice The data structure for the withdraw hook
+    /// @param assets The amount of assets withdrawn
+    /// @param shares The amount of shares withdrawn
+    /// @param receiver The receiver of the withdrawal
+    /// @param owner The owner of the shares
+    /// @param spender The spender of the shares
+    /// @param withdrawnAssets The exact amount of assets being withdrawn
+    /// @param withdrawnShares The exact amount of shares being withdrawn
+    struct AfterWithdrawInput {
+        uint256 assets;
+        uint256 shares;
+        address receiver;
+        address owner;
+        address spender;
+        uint256 withdrawnAssets;
+        uint256 withdrawnShares;
+    }
+
+    /// @notice The data structure for the share token transfer hook
+    /// @param sender The sender of the transfer (address(0) on mint)
+    /// @param recipient The recipient of the transfer (address(0) on burn)
+    /// @param amount The amount of tokens transferred/minted/burned
+    /// @param senderBalance The balance of the sender after the transfer (empty on mint)
+    /// @param recipientBalance The balance of the recipient after the transfer (empty on burn)
+    /// @param totalSupply The total supply of the share token
+    struct AfterTokenTransfer {
+        address sender;
+        address recipient;
+        uint256 amount;
+        uint256 senderBalance;
+        uint256 recipientBalance;
+        uint256 totalSupply;
+    }
+
+    /// @notice The data structure for the before borrow hook
+    /// @param assets The amount of assets to borrow
+    /// @param shares The amount of shares to borrow
+    /// @param receiver The receiver of the borrow
+    /// @param borrower The borrower of the assets
+    struct BeforeBorrowInput {
+        uint256 assets;
+        uint256 shares;
+        address receiver;
+        address borrower;
+    }
+
+    /// @notice The data structure for the after borrow hook
+    /// @param assets The amount of assets borrowed
+    /// @param shares The amount of shares borrowed
+    /// @param receiver The receiver of the borrow
+    /// @param borrower The borrower of the assets
+    /// @param borrowedAssets The exact amount of assets being borrowed
+    /// @param borrowedShares The exact amount of shares being borrowed
+    struct AfterBorrowInput {
+        uint256 assets;
+        uint256 shares;
+        address receiver;
+        address borrower;
+        uint256 borrowedAssets;
+        uint256 borrowedShares;
+    }
+
+    /// @notice The data structure for the before repay hook
+    /// @param assets The amount of assets to repay
+    /// @param shares The amount of shares to repay
+    /// @param borrower The borrower of the assets
+    /// @param repayer The repayer of the assets
+    struct BeforeRepayInput {
+        uint256 assets;
+        uint256 shares;
+        address borrower;
+        address repayer;
+    }
+
+    /// @notice The data structure for the after repay hook
+    /// @param assets The amount of assets to repay
+    /// @param shares The amount of shares to repay
+    /// @param borrower The borrower of the assets
+    /// @param repayer The repayer of the assets
+    /// @param repaidAssets The exact amount of assets being repaid
+    /// @param repaidShares The exact amount of shares being repaid
+    struct AfterRepayInput {
+        uint256 assets;
+        uint256 shares;
+        address borrower;
+        address repayer;
+        uint256 repaidAssets;
+        uint256 repaidShares;
+    }
+
+    /// @notice The data structure for the before flash loan hook
+    /// @param receiver The flash loan receiver
+    /// @param token The flash loan token
+    /// @param amount Requested amount of tokens
+    struct BeforeFlashLoanInput {
+        address receiver;
+        address token;
+        uint256 amount;
+    }
+
+    /// @notice The data structure for the after flash loan hook
+    /// @param receiver The flash loan receiver
+    /// @param token The flash loan token
+    /// @param amount Received amount of tokens
+    /// @param fee The flash loan fee
+    struct AfterFlashLoanInput {
+        address receiver;
+        address token;
+        uint256 amount;
+        uint256 fee;
+    }
+
+    /// @notice The data structure for the before transition collateral hook
+    /// @param shares The amount of shares to transition
+    struct BeforeTransitionCollateralInput {
+        uint256 shares;
+        address owner;
+    }
+
+    /// @notice The data structure for the after transition collateral hook
+    /// @param shares The amount of shares to transition
+    struct AfterTransitionCollateralInput {
+        uint256 shares;
+        address owner;
+        uint256 assets;
+    }
+
+    /// @notice The data structure for the before leverage same asset hook
+    /// @param depositAssets The amount of assets to deposit
+    /// @param borrowAssets The amount of assets to borrow
+    /// @param borrower The borrower of the assets
+    /// @param collateralType The collateral type
+    struct BeforeLeverageSameAssetInput {
+        uint256 depositAssets;
+        uint256 borrowAssets;
+        address borrower;
+        ISilo.CollateralType collateralType;
+    }
+
+    /// @notice The data structure for the after leverage same asset hook
+    /// @param depositAssets The amount of assets to deposit
+    /// @param borrowAssets The amount of assets to borrow
+    /// @param borrower The borrower of the assets
+    /// @param collateralType The collateral type
+    /// @param depositedShares The exact amount of assets being deposited
+    /// @param borrowedShares The exact amount of assets being borrowed
+    struct AfterLeverageSameAssetInput {
+        uint256 depositAssets;
+        uint256 borrowAssets;
+        address borrower;
+        ISilo.CollateralType collateralType;
+        uint256 depositedShares;
+        uint256 borrowedShares;
+    }
+
+    /// @notice The data structure for the switch collateral hook
+    /// @param user The user switching collateral
+    struct SwitchCollateralInput {
+        address user;
+    }
+
     uint256 internal constant NONE = 0;
     uint256 internal constant SAME_ASSET = 2 ** 1;
     uint256 internal constant TWO_ASSETS = 2 ** 2;
@@ -32,6 +231,7 @@ library Hook {
     // For decoding packed data
     uint256 private constant PACKED_ADDRESS_LENGTH = 20;
     uint256 private constant PACKED_FULL_LENGTH = 32;
+    uint256 private constant PACKED_ENUM_LENGTH = 1;
 
     function matchAction(uint256 _action, uint256 _expectedHook) internal pure returns (bool) {
         return _action & _expectedHook == _expectedHook;
@@ -90,25 +290,20 @@ library Hook {
 
     /// @dev Decodes packed data from the share token after the transfer hook
     /// @param packed The packed data (via abi.encodePacked)
-    /// @return sender The sender of the transfer (address(0) on mint)
-    /// @return recipient The recipient of the transfer (address(0) on burn)
-    /// @return amount The amount of tokens transferred/minted/burned
-    /// @return senderBalance The balance of the sender after the transfer (empty on mint)
-    /// @return recipientBalance The balance of the recipient after the transfer (empty on burn)
-    /// @return totalSupply The total supply of the share token
+    /// @return input decoded
     function afterTokenTransferDecode(bytes memory packed)
         internal
         pure
-        returns (
-            address sender,
-            address recipient,
-            uint256 amount,
-            uint256 senderBalance,
-            uint256 recipientBalance,
-            uint256 totalSupply
-        )
+        returns (AfterTokenTransfer memory input)
     {
-        assembly {
+        address sender;
+        address recipient;
+        uint256 amount;
+        uint256 senderBalance;
+        uint256 recipientBalance;
+        uint256 totalSupply;
+
+        assembly { // solhint-disable-line no-inline-assembly
             let pointer := PACKED_ADDRESS_LENGTH
             sender := mload(add(packed, pointer))
             pointer := add(pointer, PACKED_ADDRESS_LENGTH)
@@ -122,5 +317,433 @@ library Hook {
             pointer := add(pointer, PACKED_FULL_LENGTH)
             totalSupply := mload(add(packed, pointer))
         }
+
+        input = AfterTokenTransfer(sender, recipient, amount, senderBalance, recipientBalance, totalSupply);
+    }
+
+    /// @dev Decodes packed data from the deposit hook
+    /// @param packed The packed data (via abi.encodePacked)
+    /// @return input decoded
+    function beforeDepositDecode(bytes memory packed)
+        internal
+        pure
+        returns (BeforeDepositInput memory input)
+    {
+        uint256 assets;
+        uint256 shares;
+        address receiver;
+
+        assembly { // solhint-disable-line no-inline-assembly
+            let pointer := PACKED_FULL_LENGTH
+            assets := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_FULL_LENGTH)
+            shares := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_ADDRESS_LENGTH)
+            receiver := mload(add(packed, pointer))
+        }
+
+        input = BeforeDepositInput(assets, shares, receiver);
+    }
+
+    /// @dev Decodes packed data from the deposit hook
+    /// @param packed The packed data (via abi.encodePacked)
+    /// @return input decoded
+    function afterDepositDecode(bytes memory packed)
+        internal
+        pure
+        returns (AfterDepositInput memory input)
+    {
+        uint256 assets;
+        uint256 shares;
+        address receiver;
+        uint256 receivedAssets;
+        uint256 mintedShares;
+
+        assembly { // solhint-disable-line no-inline-assembly
+            let pointer := PACKED_FULL_LENGTH
+            assets := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_FULL_LENGTH)
+            shares := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_ADDRESS_LENGTH)
+            receiver := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_FULL_LENGTH)
+            receivedAssets := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_FULL_LENGTH)
+            mintedShares := mload(add(packed, pointer))
+        }
+
+        input = AfterDepositInput(assets, shares, receiver, receivedAssets, mintedShares);
+    }
+
+    /// @dev Decodes packed data from the withdraw hook
+    /// @param packed The packed data (via abi.encodePacked)
+    /// @return input decoded
+    function beforeWithdrawDecode(bytes memory packed)
+        internal
+        pure
+        returns (BeforeWithdrawInput memory input)
+    {
+        uint256 assets;
+        uint256 shares;
+        address receiver;
+        address owner;
+        address spender;
+
+        assembly { // solhint-disable-line no-inline-assembly
+            let pointer := PACKED_FULL_LENGTH
+            assets := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_FULL_LENGTH)
+            shares := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_ADDRESS_LENGTH)
+            receiver := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_ADDRESS_LENGTH)
+            owner := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_ADDRESS_LENGTH)
+            spender := mload(add(packed, pointer))
+        }
+
+        input = BeforeWithdrawInput(assets, shares, receiver, owner, spender);
+    }
+
+    /// @dev Decodes packed data from the withdraw hook
+    /// @param packed The packed data (via abi.encodePacked)
+    /// @return input decoded
+    function afterWithdrawDecode(bytes memory packed)
+        internal
+        pure
+        returns (AfterWithdrawInput memory input)
+    {
+        uint256 assets;
+        uint256 shares;
+        address receiver;
+        address owner;
+        address spender;
+        uint256 withdrawnAssets;
+        uint256 withdrawnShares;
+
+        assembly { // solhint-disable-line no-inline-assembly
+            let pointer := PACKED_FULL_LENGTH
+            assets := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_FULL_LENGTH)
+            shares := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_ADDRESS_LENGTH)
+            receiver := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_ADDRESS_LENGTH)
+            owner := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_ADDRESS_LENGTH)
+            spender := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_FULL_LENGTH)
+            withdrawnAssets := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_FULL_LENGTH)
+            withdrawnShares := mload(add(packed, pointer))
+        }
+
+        input = AfterWithdrawInput(assets, shares, receiver, owner, spender, withdrawnAssets, withdrawnShares);
+    }
+
+    /// @dev Decodes packed data from the before borrow hook
+    /// @param packed The packed data (via abi.encodePacked)
+    /// @return input decoded
+    function beforeBorrowDecode(bytes memory packed)
+        internal
+        pure
+        returns (BeforeBorrowInput memory input)
+    {
+        uint256 assets;
+        uint256 shares;
+        address receiver;
+        address borrower;
+
+        assembly { // solhint-disable-line no-inline-assembly
+            let pointer := PACKED_FULL_LENGTH
+            assets := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_FULL_LENGTH)
+            shares := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_ADDRESS_LENGTH)
+            receiver := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_ADDRESS_LENGTH)
+            borrower := mload(add(packed, pointer))
+        }
+
+        input = BeforeBorrowInput(assets, shares, receiver, borrower);
+    }
+
+    /// @dev Decodes packed data from the after borrow hook
+    /// @param packed The packed data (via abi.encodePacked)
+    /// @return input decoded
+    function afterBorrowDecode(bytes memory packed)
+        internal
+        pure
+        returns (AfterBorrowInput memory input)
+    {
+        uint256 assets;
+        uint256 shares;
+        address receiver;
+        address borrower;
+        uint256 borrowedAssets;
+        uint256 borrowedShares;
+
+        assembly { // solhint-disable-line no-inline-assembly
+            let pointer := PACKED_FULL_LENGTH
+            assets := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_FULL_LENGTH)
+            shares := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_ADDRESS_LENGTH)
+            receiver := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_ADDRESS_LENGTH)
+            borrower := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_FULL_LENGTH)
+            borrowedAssets := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_FULL_LENGTH)
+            borrowedShares := mload(add(packed, pointer))
+        }
+
+        input = AfterBorrowInput(assets, shares, receiver, borrower, borrowedAssets, borrowedShares);
+    }
+
+    /// @dev Decodes packed data from the before repay hook
+    /// @param packed The packed data (via abi.encodePacked)
+    /// @return input decoded
+    function beforeRepayDecode(bytes memory packed)
+        internal
+        pure
+        returns (BeforeRepayInput memory input)
+    {
+        uint256 assets;
+        uint256 shares;
+        address borrower;
+        address repayer;
+
+        assembly { // solhint-disable-line no-inline-assembly
+            let pointer := PACKED_FULL_LENGTH
+            assets := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_FULL_LENGTH)
+            shares := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_ADDRESS_LENGTH)
+            borrower := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_ADDRESS_LENGTH)
+            repayer := mload(add(packed, pointer))
+        }
+
+        input = BeforeRepayInput(assets, shares, borrower, repayer);
+    }
+
+    /// @dev Decodes packed data from the after repay hook
+    /// @param packed The packed data (via abi.encodePacked)
+    /// @return input decoded
+    function afterRepayDecode(bytes memory packed)
+        internal
+        pure
+        returns (AfterRepayInput memory input)
+    {
+        uint256 assets;
+        uint256 shares;
+        address borrower;
+        address repayer;
+        uint256 repaidAssets;
+        uint256 repaidShares;
+
+        assembly { // solhint-disable-line no-inline-assembly
+            let pointer := PACKED_FULL_LENGTH
+            assets := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_FULL_LENGTH)
+            shares := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_ADDRESS_LENGTH)
+            borrower := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_ADDRESS_LENGTH)
+            repayer := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_FULL_LENGTH)
+            repaidAssets := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_FULL_LENGTH)
+            repaidShares := mload(add(packed, pointer))
+        }
+
+        input = AfterRepayInput(assets, shares, borrower, repayer, repaidAssets, repaidShares);
+    }
+
+    /// @dev Decodes packed data from the before flash loan hook
+    /// @param packed The packed data (via abi.encodePacked)
+    /// @return input decoded
+    function beforeFlashLoanDecode(bytes memory packed)
+        internal
+        pure
+        returns (BeforeFlashLoanInput memory input)
+    {
+        address receiver;
+        address token;
+        uint256 amount;
+
+        assembly { // solhint-disable-line no-inline-assembly
+            let pointer := PACKED_ADDRESS_LENGTH
+            receiver := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_ADDRESS_LENGTH)
+            token := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_FULL_LENGTH)
+            amount := mload(add(packed, pointer))
+        }
+
+        input = BeforeFlashLoanInput(receiver, token, amount);
+    }
+
+    /// @dev Decodes packed data from the before flash loan hook
+    /// @param packed The packed data (via abi.encodePacked)
+    /// @return input decoded
+    function afterFlashLoanDecode(bytes memory packed)
+        internal
+        pure
+        returns (AfterFlashLoanInput memory input)
+    {
+        address receiver;
+        address token;
+        uint256 amount;
+        uint256 fee;
+
+        assembly { // solhint-disable-line no-inline-assembly
+            let pointer := PACKED_ADDRESS_LENGTH
+            receiver := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_ADDRESS_LENGTH)
+            token := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_FULL_LENGTH)
+            amount := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_FULL_LENGTH)
+            fee := mload(add(packed, pointer))
+        }
+
+        input = AfterFlashLoanInput(receiver, token, amount, fee);
+    }
+
+    /// @dev Decodes packed data from the transition collateral hook
+    /// @param packed The packed data (via abi.encodePacked)
+    /// @return input decoded
+    function beforeTransitionCollateralDecode(bytes memory packed)
+        internal
+        pure
+        returns (BeforeTransitionCollateralInput memory input)
+    {
+        uint256 shares;
+        address owner;
+
+        assembly { // solhint-disable-line no-inline-assembly
+            let pointer := PACKED_FULL_LENGTH
+            shares := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_ADDRESS_LENGTH)
+            owner := mload(add(packed, pointer))
+        }
+
+        input = BeforeTransitionCollateralInput(shares, owner);
+    }
+
+    /// @dev Decodes packed data from the transition collateral hook
+    /// @param packed The packed data (via abi.encodePacked)
+    /// @return input decoded
+    function afterTransitionCollateralDecode(bytes memory packed)
+        internal
+        pure
+        returns (AfterTransitionCollateralInput memory input)
+    {
+        uint256 shares;
+        address owner;
+        uint256 assets;
+
+        assembly { // solhint-disable-line no-inline-assembly
+            let pointer := PACKED_FULL_LENGTH
+            shares := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_ADDRESS_LENGTH)
+            owner := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_FULL_LENGTH)
+            assets := mload(add(packed, pointer))
+        }
+
+        input = AfterTransitionCollateralInput(shares, owner, assets);
+    }
+
+    /// @dev Decodes packed data from the switch collateral hook
+    /// @param packed The packed data (via abi.encodePacked)
+    /// @return input decoded
+    function switchCollateralDecode(bytes memory packed)
+        internal
+        pure
+        returns (SwitchCollateralInput memory input)
+    {
+        address user;
+
+        assembly { // solhint-disable-line no-inline-assembly
+            let pointer := PACKED_ADDRESS_LENGTH
+            user := mload(add(packed, pointer))
+        }
+
+        input = SwitchCollateralInput(user);
+    }
+
+    /// @dev Decodes packed data from the before leverage same asset hook
+    /// @param packed The packed data (via abi.encodePacked)
+    /// @return input decoded
+    function beforeLeverageSameAssetDecode(bytes memory packed)
+        internal
+        pure
+        returns (BeforeLeverageSameAssetInput memory input)
+    {
+        uint256 depositAssets;
+        uint256 borrowAssets;
+        address borrower;
+        uint8 collateralType;
+
+        assembly { // solhint-disable-line no-inline-assembly
+            let pointer := PACKED_FULL_LENGTH
+            depositAssets := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_FULL_LENGTH)
+            borrowAssets := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_ADDRESS_LENGTH)
+            borrower := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_ENUM_LENGTH)
+            collateralType := mload(add(packed, pointer))
+        }
+
+        input = BeforeLeverageSameAssetInput(
+            depositAssets,
+            borrowAssets,
+            borrower,
+            ISilo.CollateralType(collateralType)
+        );
+    }
+
+    /// @dev Decodes packed data from the after leverage same asset hook
+    /// @param packed The packed data (via abi.encodePacked)
+    /// @return input decoded
+    function afterLeverageSameAssetDecode(bytes memory packed)
+        internal
+        pure
+        returns (AfterLeverageSameAssetInput memory input)
+    {
+        uint256 depositAssets;
+        uint256 borrowAssets;
+        address borrower;
+        uint8 collateralType;
+        uint256 depositedShares;
+        uint256 borrowedShares;
+
+        assembly { // solhint-disable-line no-inline-assembly
+            let pointer := PACKED_FULL_LENGTH
+            depositAssets := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_FULL_LENGTH)
+            borrowAssets := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_ADDRESS_LENGTH)
+            borrower := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_ENUM_LENGTH)
+            collateralType := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_FULL_LENGTH)
+            depositedShares := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_FULL_LENGTH)
+            borrowedShares := mload(add(packed, pointer))
+        }
+
+        input = AfterLeverageSameAssetInput(
+            depositAssets,
+            borrowAssets,
+            borrower,
+            ISilo.CollateralType(collateralType),
+            depositedShares,
+            borrowedShares
+        );
     }
 }
