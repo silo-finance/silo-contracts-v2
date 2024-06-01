@@ -47,11 +47,13 @@ library Actions {
         uint256 action = Hook.depositAction(_collateralType);
         _hookCallBefore(_shareStorage, action, abi.encodePacked(_assets, _shares, _receiver));
 
+        ISiloConfig siloConfig = _shareStorage.siloConfig;
+
         (
             address shareToken,
             address asset,
             address hookReceiver,
-        ) = _shareStorage.siloConfig.accrueInterestAndGetConfigOptimised(Hook.DEPOSIT, _collateralType);
+        ) = siloConfig.accrueInterestAndGetConfigOptimised(Hook.DEPOSIT, _collateralType);
 
         (assets, shares) = SiloERC4626Lib.deposit(
             asset,
@@ -63,7 +65,7 @@ library Actions {
             _totalCollateral
         );
 
-        _shareStorage.siloConfig.crossNonReentrantAfter();
+        siloConfig.crossNonReentrantAfter();
 
         if (hookReceiver != address(0)) {
             _hookCallAfter(
@@ -474,11 +476,13 @@ library Actions {
 
         _hookCallBefore(_shareStorage, action, data);
 
+        ISiloConfig siloConfig = _shareStorage.siloConfig;
+
         (
             ISiloConfig.ConfigData memory collateralConfig,
             ISiloConfig.ConfigData memory debtConfig,
             ISiloConfig.DebtInfo memory debtInfo
-        ) = _shareStorage.siloConfig.accrueInterestAndGetConfigs(address(this), msg.sender, action);
+        ) = siloConfig.accrueInterestAndGetConfigs(address(this), msg.sender, action);
 
         if (collateralConfig.otherSilo != address(this)) {
             ISilo(collateralConfig.otherSilo).accrueInterest();
@@ -493,7 +497,7 @@ library Actions {
 
         if (!msgSenderIsSolvent) revert ISilo.NotSolvent();
 
-        _shareStorage.siloConfig.crossNonReentrantAfter();
+        siloConfig.crossNonReentrantAfter();
 
         if (collateralConfig.hookReceiver != address(0)) {
             _hookCallAfter(_shareStorage, collateralConfig.hookReceiver, action, data);
