@@ -176,3 +176,32 @@ after flash loan data: abi.encodePacked(receiver, token, amount, fee)
 ```
 Hook.AfterFlashLoanInput memory input = Hook.afterFlashLoanDecode(_inputAndOutput);
 ```
+
+## liquidationCall fn hook actions
+- ```Hook.LIQUIDATION``` (beforeAction and afterAction)
+
+before liquidation call data: abi.encodePacked(siloWithDebt, collateralAsset, debtAsset, borrower, debtToCover, receiveSToken)
+```
+Hook.BeforeLiquidationInput memory input = Hook.beforeLiquidationDecode(_inputAndOutput);
+```
+after liquidation call data: abi.encodePacked(siloWithDebt, collateralAsset, debtAsset, borrower, debtToCover,receiveSToken, withdrawCollateral, repayDebtAssets)
+```
+Hook.AfterLiquidationInput memory input = Hook.afterLiquidationDecode(_inputAndOutput);
+```
+```Hook.shareTokenTransfer(tokenType)``` (afterAction) \
+Where `tokenType` is `Hook.DEBT_TOKEN`
+- action: ```Hook.SHARE_TOKEN_TRANSFER | Hook.DEBT_TOKEN```
+
+data: abi.encodePacked(sender, recipient, amount, balanceOfSender, balanceOfRecepient, totalSupply)
+```
+Hook.AfterTokenTransfer memory input = Hook.afterTokenTransferDecode(_inputAndOutput);
+```
+```Hook.shareTokenTransfer(tokenType)``` (afterAction) \
+Where `tokenType` is `Hook.COLLATERAL_TOKEN` or `Hook.PROTECTED_TOKEN`
+- actions: \
+```Hook.SHARE_TOKEN_TRANSFER | Hook.COLLATERAL_TOKEN``` and \
+```Hook.SHARE_TOKEN_TRANSFER | Hook.PROTECTED_TOKEN```
+data: abi.encodePacked(sender, recipient, amount, balanceOfSender, balanceOfRecepient, totalSupply)
+```
+Hook.AfterTokenTransfer memory input = Hook.afterTokenTransferDecode(_inputAndOutput);
+```

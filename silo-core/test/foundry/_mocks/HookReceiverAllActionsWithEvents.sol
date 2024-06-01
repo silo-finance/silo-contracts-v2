@@ -156,6 +156,28 @@ contract HookReceiverAllActionsWithEvents is SiloHookReceiver {
         uint256 borrowedShares
     );
 
+    event LiquidationBeforeHA(
+        address silo,
+        address siloWithDebt,
+        address collateralAsset,
+        address debtAsset,
+        address borrower,
+        uint256 debtToCover,
+        bool receiveSToken
+    );
+
+    event LiquidationAfterHA(
+        address silo,
+        address siloWithDebt,
+        address collateralAsset,
+        address debtAsset,
+        address borrower,
+        uint256 debtToCover,
+        bool receiveSToken,
+        uint256 withdrawCollateral,
+        uint256 repayDebtAssets
+    );
+
     event SwitchCollateralBeforeHA(bool sameAsset, address user);
 
     event SwitchCollateralAfterHA(bool sameAsset, address user);
@@ -229,7 +251,9 @@ contract HookReceiverAllActionsWithEvents is SiloHookReceiver {
         } else if (_action.matchAction(Hook.SWITCH_COLLATERAL)) {
             _processSwitchCollateral(_action, _inputAndOutput, _isBefore);
         } else if (_action.matchAction(Hook.TRANSITION_COLLATERAL)) {
-            _processTransitionCollateral(_silo, _action, _inputAndOutput, _isBefore);
+            _processTransitionCollateral(_silo, _inputAndOutput, _isBefore);
+        } else if (_action.matchAction(Hook.LIQUIDATION)) {
+            _processLiquidation(_silo, _inputAndOutput, _isBefore);
         } else {
             revert UnknownAction();
         }
@@ -448,7 +472,6 @@ contract HookReceiverAllActionsWithEvents is SiloHookReceiver {
 
     function _processTransitionCollateral(
         address _silo,
-        uint256 _action,
         bytes calldata _inputAndOutput,
         bool _isBefore
     ) internal {
@@ -483,6 +506,36 @@ contract HookReceiverAllActionsWithEvents is SiloHookReceiver {
                 input.collateralType,
                 input.depositedShares,
                 input.borrowedShares
+            );
+        }
+    }
+
+    function _processLiquidation(address _silo, bytes calldata _inputAndOutput, bool _isBefore) internal {
+        if (_isBefore) {
+            Hook.BeforeLiquidationInput memory input = Hook.beforeLiquidationDecode(_inputAndOutput);
+
+            emit LiquidationBeforeHA(
+                _silo,
+                input.siloWithDebt,
+                input.collateralAsset,
+                input.debtAsset,
+                input.borrower,
+                input.debtToCover,
+                input.receiveSToken
+            );
+        } else {
+            Hook.AfterLiquidationInput memory input = Hook.afterLiquidationDecode(_inputAndOutput);
+
+            emit LiquidationAfterHA(
+                _silo,
+                input.siloWithDebt,
+                input.collateralAsset,
+                input.debtAsset,
+                input.borrower,
+                input.debtToCover,
+                input.receiveSToken,
+                input.withdrawCollateral,
+                input.repayDebtAssets
             );
         }
     }
