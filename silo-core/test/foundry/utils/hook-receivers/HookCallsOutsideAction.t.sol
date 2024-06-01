@@ -205,8 +205,6 @@ contract HookCallsOutsideActionTest is IHookReceiver, ILeverageBorrower, IERC315
     function _printAction(uint256 _action) internal {
         if (_action.matchAction(Hook.SAME_ASSET)) emit log("SAME_ASSET");
         if (_action.matchAction(Hook.TWO_ASSETS)) emit log("TWO_ASSETS");
-        if (_action.matchAction(Hook.BEFORE)) emit log("BEFORE");
-        if (_action.matchAction(Hook.AFTER)) emit log("AFTER");
         if (_action.matchAction(Hook.DEPOSIT)) emit log("DEPOSIT");
         if (_action.matchAction(Hook.BORROW)) emit log("BORROW");
         if (_action.matchAction(Hook.REPAY)) emit log("REPAY");

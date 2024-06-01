@@ -204,24 +204,24 @@ library Hook {
         address user;
     }
 
+    /// @notice Supported hooks
+    /// @dev The hooks are stored as a bitmap and can be combined with bitwise OR
     uint256 internal constant NONE = 0;
     uint256 internal constant SAME_ASSET = 2 ** 1;
     uint256 internal constant TWO_ASSETS = 2 ** 2;
-    uint256 internal constant BEFORE = 2 ** 3;
-    uint256 internal constant AFTER = 2 ** 4;
-    uint256 internal constant DEPOSIT = 2 ** 5;
-    uint256 internal constant BORROW = 2 ** 6;
-    uint256 internal constant REPAY = 2 ** 7;
-    uint256 internal constant WITHDRAW = 2 ** 8;
-    uint256 internal constant LEVERAGE = 2 ** 9;
-    uint256 internal constant FLASH_LOAN = 2 ** 10;
-    uint256 internal constant TRANSITION_COLLATERAL = 2 ** 11;
-    uint256 internal constant SWITCH_COLLATERAL = 2 ** 12;
-    uint256 internal constant LIQUIDATION = 2 ** 13;
-    uint256 internal constant SHARE_TOKEN_TRANSFER = 2 ** 14;
-    uint256 internal constant COLLATERAL_TOKEN = 2 ** 15;
-    uint256 internal constant PROTECTED_TOKEN = 2 ** 16;
-    uint256 internal constant DEBT_TOKEN = 2 ** 17;
+    uint256 internal constant DEPOSIT = 2 ** 3;
+    uint256 internal constant BORROW = 2 ** 4;
+    uint256 internal constant REPAY = 2 ** 5;
+    uint256 internal constant WITHDRAW = 2 ** 6;
+    uint256 internal constant LEVERAGE = 2 ** 7;
+    uint256 internal constant FLASH_LOAN = 2 ** 8;
+    uint256 internal constant TRANSITION_COLLATERAL = 2 ** 9;
+    uint256 internal constant SWITCH_COLLATERAL = 2 ** 10;
+    uint256 internal constant LIQUIDATION = 2 ** 11;
+    uint256 internal constant SHARE_TOKEN_TRANSFER = 2 ** 12;
+    uint256 internal constant COLLATERAL_TOKEN = 2 ** 13;
+    uint256 internal constant PROTECTED_TOKEN = 2 ** 14;
+    uint256 internal constant DEBT_TOKEN = 2 ** 15;
 
     // note: currently we can support hook value up to 2 ** 23,
     // because for optimisation purposes, we storing hooks as uint24
@@ -233,10 +233,21 @@ library Hook {
     uint256 private constant PACKED_FULL_LENGTH = 32;
     uint256 private constant PACKED_ENUM_LENGTH = 1;
 
+    /// @notice Checks if the action has a specific hook
+    /// @param _action The action
+    /// @param _expectedHook The expected hook
+    /// @dev The function returns true if the action has the expected hook.
+    /// As hooks actions can be combined with bitwise OR, the following examples are valid:
+    /// `matchAction(WITHDRAW | COLLATERAL_TOKEN, WITHDRAW) == true`
+    /// `matchAction(WITHDRAW | COLLATERAL_TOKEN, COLLATERAL_TOKEN) == true`
+    /// `matchAction(WITHDRAW | COLLATERAL_TOKEN, WITHDRAW | COLLATERAL_TOKEN) == true`
     function matchAction(uint256 _action, uint256 _expectedHook) internal pure returns (bool) {
         return _action & _expectedHook == _expectedHook;
     }
 
+    /// @notice Adds a hook to an action
+    /// @param _action The action
+    /// @param _newAction The new hook to be added
     function addAction(uint256 _action, uint256 _newAction) internal pure returns (uint256) {
         return _action | _newAction;
     }
