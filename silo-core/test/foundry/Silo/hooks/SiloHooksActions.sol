@@ -450,74 +450,14 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock {
 
     /// FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testLiqudationReceiveSTokenFalseAllHooks
     function testLiqudationReceiveSTokenFalseAllHooks() public {
-        uint256 beforeActions = Hook.LIQUIDATION;
-
-        uint256 afterAction = beforeActions
-            .addAction(Hook.shareTokenTransfer(Hook.PROTECTED_TOKEN)) // as we have protected deposit
-            .addAction(Hook.shareTokenTransfer(Hook.DEBT_TOKEN));
-
-        HookMock hookReceiverMock = new HookMock(beforeActions, afterAction, beforeActions, afterAction);
-        deploySiloWithHook(address(hookReceiverMock));
-
-        _depositForBorrowNotSameAsset();
-
-        uint256 borrowAmount = 70e18;
-
-        vm.prank(_borrower);
-        silo0.borrow(borrowAmount, _borrower, _borrower, _NOT_SAME_ASSET);
-
-        // liquidation
-        vm.warp(block.timestamp + 70 days);
-
-        uint256 collateralToLiquidate;
-        uint256 debtToRepay;
-
-        (collateralToLiquidate, debtToRepay) = partialLiquidation.maxLiquidation(address(silo0), _borrower);
-
-        assertGt(collateralToLiquidate, 0, "expect collateralToLiquidate");
-
-        token0.mint(address(this), debtToRepay);
-        token0.approve(address(silo0), debtToRepay);
-
         bool receiveSToken = false;
-
-        _liquidationAllHooks(_borrower, debtToRepay, borrowAmount, receiveSToken);
+        _liquidationTest(receiveSToken);
     }
 
     /// FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testLiqudationReceiveSTokenTrueAllHooks
     function testLiqudationReceiveSTokenTrueAllHooks() public {
-        uint256 beforeActions = Hook.LIQUIDATION;
-
-        uint256 afterAction = beforeActions
-            .addAction(Hook.shareTokenTransfer(Hook.PROTECTED_TOKEN)) // as we have protected deposit
-            .addAction(Hook.shareTokenTransfer(Hook.DEBT_TOKEN));
-
-        HookMock hookReceiverMock = new HookMock(beforeActions, afterAction, beforeActions, afterAction);
-        deploySiloWithHook(address(hookReceiverMock));
-
-        _depositForBorrowNotSameAsset();
-
-        uint256 borrowAmount = 70e18;
-
-        vm.prank(_borrower);
-        silo0.borrow(borrowAmount, _borrower, _borrower, _NOT_SAME_ASSET);
-
-        // liquidation
-        vm.warp(block.timestamp + 70 days);
-
-        uint256 collateralToLiquidate;
-        uint256 debtToRepay;
-
-        (collateralToLiquidate, debtToRepay) = partialLiquidation.maxLiquidation(address(silo0), _borrower);
-
-        assertGt(collateralToLiquidate, 0, "expect collateralToLiquidate");
-
-        token0.mint(address(this), debtToRepay);
-        token0.approve(address(silo0), debtToRepay);
-
         bool receiveSToken = true;
-
-        _liquidationAllHooks(_borrower, debtToRepay, borrowAmount, receiveSToken);
+        _liquidationTest(receiveSToken);
     }
 
     function _siloDepositWithHook(
@@ -1001,6 +941,39 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock {
             _borrower,
             _collateral
         );
+    }
+
+    function _liquidationTest(bool _receiveSToken) internal {
+        uint256 beforeActions = Hook.LIQUIDATION;
+
+        uint256 afterAction = beforeActions
+            .addAction(Hook.shareTokenTransfer(Hook.PROTECTED_TOKEN)) // as we have protected deposit
+            .addAction(Hook.shareTokenTransfer(Hook.DEBT_TOKEN));
+
+        HookMock hookReceiverMock = new HookMock(beforeActions, afterAction, beforeActions, afterAction);
+        deploySiloWithHook(address(hookReceiverMock));
+
+        _depositForBorrowNotSameAsset();
+
+        uint256 borrowAmount = 70e18;
+
+        vm.prank(_borrower);
+        silo0.borrow(borrowAmount, _borrower, _borrower, _NOT_SAME_ASSET);
+
+        // liquidation
+        vm.warp(block.timestamp + 70 days);
+
+        uint256 collateralToLiquidate;
+        uint256 debtToRepay;
+
+        (collateralToLiquidate, debtToRepay) = partialLiquidation.maxLiquidation(address(silo0), _borrower);
+
+        assertGt(collateralToLiquidate, 0, "expect collateralToLiquidate");
+
+        token0.mint(address(this), debtToRepay);
+        token0.approve(address(silo0), debtToRepay);
+
+        _liquidationAllHooks(_borrower, debtToRepay, borrowAmount, _receiveSToken);
     }
 
     function _liquidationAllHooks(
