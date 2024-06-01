@@ -231,13 +231,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
     {
         _crossNonReentrantBefore(_action);
 
-        if (_action.matchAction(Hook.SHARE_TOKEN_TRANSFER)) {
-            // share token transfer does not need configs
-            return (collateralConfig, debtConfig, debtInfo);
-        } else if (_action.matchAction(Hook.FLASH_LOAN)) {
-            // flash loan does not need configs
-            return (collateralConfig, debtConfig, debtInfo);
-        } else if (_action.matchAction(Hook.BORROW)) {
+        if (_action.matchAction(Hook.BORROW)) {
             debtInfo = _openDebt(_borrower, _action);
         } else if (_action.matchAction(Hook.SWITCH_COLLATERAL)) {
             debtInfo = _changeCollateralType(_borrower, _action.matchAction(Hook.SAME_ASSET));
