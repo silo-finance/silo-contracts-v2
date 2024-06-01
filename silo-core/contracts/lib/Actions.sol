@@ -47,7 +47,7 @@ library Actions {
         uint256 action = Hook.depositAction(_collateralType);
         _hookCallBefore(_shareStorage, action, abi.encodePacked(_assets, _shares, _receiver));
 
-        ISiloConfig = _shareStorage.siloConfig;
+        ISiloConfig siloConfig = _shareStorage.siloConfig;
 
         (
             address shareToken,
