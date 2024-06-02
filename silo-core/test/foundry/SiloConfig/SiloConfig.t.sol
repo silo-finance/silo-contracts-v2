@@ -379,6 +379,45 @@ contract SiloConfigTest is Test {
         vm.prank(silo);
         vm.expectRevert(ISiloConfig.OnlyDebtShareToken.selector);
         _siloConfig.onDebtTransfer(from, to);
+
+        // verify that it will not work for collateral or protected share tokens
+        vm.prank(_configDataDefault0.collateralShareToken);
+        vm.expectRevert(ISiloConfig.OnlyDebtShareToken.selector);
+        _siloConfig.onDebtTransfer(from, to);
+
+        vm.prank(_configDataDefault0.protectedShareToken);
+        vm.expectRevert(ISiloConfig.OnlyDebtShareToken.selector);
+        _siloConfig.onDebtTransfer(from, to);
+
+        vm.prank(_configDataDefault1.collateralShareToken);
+        vm.expectRevert(ISiloConfig.OnlyDebtShareToken.selector);
+        _siloConfig.onDebtTransfer(from, to);
+
+        vm.prank(_configDataDefault1.protectedShareToken);
+        vm.expectRevert(ISiloConfig.OnlyDebtShareToken.selector);
+        _siloConfig.onDebtTransfer(from, to);
+    }
+
+    /*
+    forge test -vv --mt test_onDebtTransfer_allowedForDebtShareToken0
+    */
+    function test_onDebtTransfer_allowedForDebtShareToken0() public {
+        address from = makeAddr("from");
+        address to = makeAddr("to");
+
+        vm.prank(_configDataDefault0.debtShareToken);
+        _siloConfig.onDebtTransfer(from, to);
+    }
+
+    /*
+    forge test -vv --mt test_onDebtTransfer_allowedForDebtShareToken1
+    */
+    function test_onDebtTransfer_allowedForDebtShareToken1() public {
+        address from = makeAddr("from");
+        address to = makeAddr("to");
+
+        vm.prank(_configDataDefault1.debtShareToken);
+        _siloConfig.onDebtTransfer(from, to);
     }
 
     /*
@@ -466,11 +505,48 @@ contract SiloConfigTest is Test {
     }
 
     /*
-    forge test -vv --mt test_closeDebt_revert
+    forge test -vv --mt test_closeDebt_OnlySiloOrDebtShareToken
     */
     function test_closeDebt_OnlySiloOrDebtShareToken() public {
         vm.expectRevert(ISiloConfig.OnlySiloOrDebtShareToken.selector);
         _siloConfig.closeDebt(address(0));
+
+        vm.prank(_configDataDefault0.collateralShareToken);
+        vm.expectRevert(ISiloConfig.OnlySiloOrDebtShareToken.selector);
+        _siloConfig.closeDebt(_configDataDefault0.collateralShareToken);
+
+        vm.prank(_configDataDefault0.protectedShareToken);
+        vm.expectRevert(ISiloConfig.OnlySiloOrDebtShareToken.selector);
+        _siloConfig.closeDebt(_configDataDefault0.protectedShareToken);
+
+        vm.prank(_configDataDefault1.collateralShareToken);
+        vm.expectRevert(ISiloConfig.OnlySiloOrDebtShareToken.selector);
+        _siloConfig.closeDebt(_configDataDefault1.collateralShareToken);
+
+        vm.prank(_configDataDefault1.protectedShareToken);
+        vm.expectRevert(ISiloConfig.OnlySiloOrDebtShareToken.selector);
+        _siloConfig.closeDebt(_configDataDefault1.protectedShareToken);
+    }
+
+    /*
+    forge test -vv --mt test_closeDebtPermissions
+    */
+    function test_closeDebtPermissions() public {
+        address borrower = makeAddr("borrower");
+
+        // can only be called by silos or debt share tokens
+
+        vm.prank(_silo0Default);
+        _siloConfig.closeDebt(borrower);
+
+        vm.prank(_silo1Default);
+        _siloConfig.closeDebt(borrower);
+
+        vm.prank(_configDataDefault0.debtShareToken);
+        _siloConfig.closeDebt(borrower);
+
+        vm.prank(_configDataDefault1.debtShareToken);
+        _siloConfig.closeDebt(borrower);
     }
 
     /*
@@ -519,6 +595,27 @@ contract SiloConfigTest is Test {
         _callNonReentrantBeforeAndAfter(_configDataDefault1.collateralShareToken);
         _callNonReentrantBeforeAndAfter(_configDataDefault1.protectedShareToken);
         _callNonReentrantBeforeAndAfter(_configDataDefault1.debtShareToken);
+    }
+
+    /*
+    FOUNDRY_PROFILE=core-test forge test -vv --mt test_crossNonReentrantAfterPermissions
+    */
+    function test_crossNonReentrantAfterPermissions() public {
+        // Permissions check error
+        vm.expectRevert(ISiloConfig.OnlySiloOrLiquidationModule.selector);
+        _siloConfig.crossNonReentrantAfter();
+
+        // _onlySiloOrTokenOrLiquidation permissions check for the crossNonReentrantAfter fn
+        // (calls should not revert)
+        _callNonReentrantBeforeAndAfterPermissions(_silo0Default);
+        _callNonReentrantBeforeAndAfterPermissions(_silo1Default);
+        _callNonReentrantBeforeAndAfterPermissions(_liquidationModuleDefault);
+        _callNonReentrantBeforeAndAfterPermissions(_configDataDefault0.collateralShareToken);
+        _callNonReentrantBeforeAndAfterPermissions(_configDataDefault0.protectedShareToken);
+        _callNonReentrantBeforeAndAfterPermissions(_configDataDefault0.debtShareToken);
+        _callNonReentrantBeforeAndAfterPermissions(_configDataDefault1.collateralShareToken);
+        _callNonReentrantBeforeAndAfterPermissions(_configDataDefault1.protectedShareToken);
+        _callNonReentrantBeforeAndAfterPermissions(_configDataDefault1.debtShareToken);
     }
 
     /*
@@ -606,6 +703,15 @@ contract SiloConfigTest is Test {
         uint256 anyAction = 0;
 
         vm.prank(_callee);
+        _siloConfig.crossNonReentrantBefore(anyAction);
+        vm.prank(_callee);
+        _siloConfig.crossNonReentrantAfter();
+    }
+
+    function _callNonReentrantBeforeAndAfterPermissions(address _callee) internal {
+        uint256 anyAction = 0;
+
+        vm.prank(_silo0Default);
         _siloConfig.crossNonReentrantBefore(anyAction);
         vm.prank(_callee);
         _siloConfig.crossNonReentrantAfter();
