@@ -577,6 +577,27 @@ contract SiloConfigTest is Test {
     }
 
     /*
+    FOUNDRY_PROFILE=core-test forge test -vv --mt test_crossNonReentrantBefore_error_fuzz
+    */
+    /// forge-config: core-test.fuzz.runs = 1000
+    function test_crossNonReentrantBefore_error_fuzz(address _callee) public {
+        vm.assume(_callee != _silo0Default);
+        vm.assume(_callee != _silo1Default);
+        vm.assume(_callee != _liquidationModuleDefault);
+        vm.assume(_callee != _configDataDefault0.collateralShareToken);
+        vm.assume(_callee != _configDataDefault0.protectedShareToken);
+        vm.assume(_callee != _configDataDefault0.debtShareToken);
+        vm.assume(_callee != _configDataDefault1.collateralShareToken);
+        vm.assume(_callee != _configDataDefault1.protectedShareToken);
+        vm.assume(_callee != _configDataDefault1.debtShareToken);
+
+        uint256 anyAction = 0;
+        // Permissions check error
+        vm.expectRevert(ISiloConfig.OnlySiloOrLiquidationModule.selector);
+        _siloConfig.crossNonReentrantBefore(anyAction);
+    }
+
+    /*
     FOUNDRY_PROFILE=core-test forge test -vv --mt test_crossNonReentrantBeforePermissions
     */
     function test_crossNonReentrantBeforePermissions() public {
@@ -598,13 +619,30 @@ contract SiloConfigTest is Test {
     }
 
     /*
+    FOUNDRY_PROFILE=core-test forge test -vv --mt test_crossNonReentrantAfter_error_fuzz
+    */
+    /// forge-config: core-test.fuzz.runs = 1000
+    function test_crossNonReentrantAfter_error_fuzz(address _callee) public {
+        vm.assume(_callee != _silo0Default);
+        vm.assume(_callee != _silo1Default);
+        vm.assume(_callee != _liquidationModuleDefault);
+        vm.assume(_callee != _configDataDefault0.collateralShareToken);
+        vm.assume(_callee != _configDataDefault0.protectedShareToken);
+        vm.assume(_callee != _configDataDefault0.debtShareToken);
+        vm.assume(_callee != _configDataDefault1.collateralShareToken);
+        vm.assume(_callee != _configDataDefault1.protectedShareToken);
+        vm.assume(_callee != _configDataDefault1.debtShareToken);
+
+        // Permissions check error
+        vm.prank(_callee);
+        vm.expectRevert(ISiloConfig.OnlySiloOrLiquidationModule.selector);
+        _siloConfig.crossNonReentrantAfter();
+    }
+
+    /*
     FOUNDRY_PROFILE=core-test forge test -vv --mt test_crossNonReentrantAfterPermissions
     */
     function test_crossNonReentrantAfterPermissions() public {
-        // Permissions check error
-        vm.expectRevert(ISiloConfig.OnlySiloOrLiquidationModule.selector);
-        _siloConfig.crossNonReentrantAfter();
-
         // _onlySiloOrTokenOrLiquidation permissions check for the crossNonReentrantAfter fn
         // (calls should not revert)
         _callNonReentrantBeforeAndAfterPermissions(_silo0Default);
