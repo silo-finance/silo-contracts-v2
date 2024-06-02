@@ -479,7 +479,12 @@ contract Silo is SiloERC4626 {
         );
 
         emit Borrow(msg.sender, _borrower, _borrower, _borrowAssets, borrowedShares);
-        emit Deposit(msg.sender, _borrower, _depositAssets, depositedShares);
+
+        if (_collateralType == CollateralType.Collateral) {
+            emit Deposit(msg.sender, _borrower, _depositAssets, depositedShares);
+        } else {
+            emit DepositProtected(msg.sender, _borrower, _depositAssets, depositedShares);
+        }
     }
 
     /// @inheritdoc ISilo
