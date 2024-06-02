@@ -13,6 +13,8 @@ import {IERC20Errors} from "openzeppelin5/interfaces/draft-IERC6093.sol";
 import {MintableToken} from "../../_common/MintableToken.sol";
 import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
 
+import {console} from "forge-std/console.sol";
+
 /*
     forge test -vv --ffi --mc DepositTest
 */
@@ -163,6 +165,53 @@ contract DepositTest is SiloLittleHelper, Test {
 
         vm.prank(depositor);
         silo0.deposit(assets, depositor, ISilo.CollateralType.Protected);
+    }
+
+    /*
+    forge test -vv --ffi --mt test_deposit_withWrongAssetType
+    */
+    function test_deposit_withWrongAssetType() public {
+        uint256 assets = 1e18;
+        address depositor = makeAddr("Depositor");
+
+        token0.mint(depositor, assets * 2);
+        vm.prank(depositor);
+        token0.approve(address(silo0), assets * 2);
+
+        uint8 invalidCollateralType = 3;
+
+        vm.prank(depositor);
+
+        (bool success,) = address(silo0).call(
+            abi.encodeWithSelector(
+                ISilo.deposit.selector,
+                assets,
+                depositor,
+                invalidCollateralType
+            )
+        );
+
+        assertFalse(success, "Expect deposit to fail");
+
+        // deposit with correct type
+
+        uint8 collateralType = 1;
+
+        vm.expectEmit(true, true, true, true);
+        emit Deposit(depositor, depositor, assets, assets);
+
+        vm.prank(depositor);
+        
+        (success,) = address(silo0).call(
+            abi.encodeWithSelector(
+                ISilo.deposit.selector,
+                assets,
+                depositor,
+                collateralType
+            )
+        );
+
+        assertTrue(success, "Expect deposit to succeed");
     }
 
     /*
