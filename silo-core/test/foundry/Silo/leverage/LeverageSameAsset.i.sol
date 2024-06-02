@@ -103,9 +103,9 @@ contract LeverageSameAssetTest is SiloLittleHelper, Test {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_leverageSameAsset_maxWithEventsCollateral
+    FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_leverageSameAsset_maxIn1TxWithEventsCollateral
     */
-    function test_leverageSameAsset_maxWithEventsCollateral() public {
+    function test_leverageSameAsset_maxIn1TxWithEventsCollateral() public {
         uint256 depositAssets = 100e18;
 
         _mintAndApprove(address(silo0), token0, borrower, depositAssets);
@@ -125,9 +125,9 @@ contract LeverageSameAssetTest is SiloLittleHelper, Test {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_leverageSameAsset_maxWithEventsProtected
+    FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_leverageSameAsset_maxIn1TxWithEventsProtected
     */
-    function test_leverageSameAsset_maxWithEventsProtected() public {
+    function test_leverageSameAsset_maxIn1TxWithEventsProtected() public {
         uint256 depositAssets = 100e18;
 
         _mintAndApprove(address(silo0), token0, borrower, depositAssets);
