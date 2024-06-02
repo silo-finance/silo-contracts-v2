@@ -29,6 +29,7 @@ contract LeverageSameAssetTest is SiloLittleHelper, Test {
     );
 
     event Deposit(address indexed sender, address indexed depositor, uint256 assets, uint256 shares);
+    event DepositProtected(address indexed sender, address indexed depositor, uint256 assets, uint256 shares);
 
     function setUp() public {
         siloConfig = _setUpLocalFixture(SiloConfigsNames.ETH_USDC_UNI_V3_SILO_NO_HOOK);
@@ -102,9 +103,9 @@ contract LeverageSameAssetTest is SiloLittleHelper, Test {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_leverageSameAsset_maxWithEvents
+    FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_leverageSameAsset_maxWithEventsCollateral
     */
-    function test_leverageSameAsset_maxWithEvents() public {
+    function test_leverageSameAsset_maxWithEventsCollateral() public {
         uint256 depositAssets = 100e18;
 
         _mintAndApprove(address(silo0), token0, borrower, depositAssets);
@@ -124,70 +125,53 @@ contract LeverageSameAssetTest is SiloLittleHelper, Test {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_leverageSameAsset_collateral
+    FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_leverageSameAsset_maxWithEventsProtected
     */
-    function test_leverageSameAsset_collateral() public {
+    function test_leverageSameAsset_maxWithEventsProtected() public {
         uint256 depositAssets = 100e18;
-        uint256 borrowAssets = 50e18;
 
         _mintAndApprove(address(silo0), token0, borrower, depositAssets);
 
-        uint256 liquidity = silo0.getRawLiquidity();
+        uint256 maxLtv = siloConfig.getConfig(address(silo0)).maxLtv;
 
-        assertEq(liquidity, 0, "no liquidity before leverageSameAsset");
+        uint256 maxBorrowAssets = maxLtv * depositAssets / 1e18;
 
-        (
-            address protectedShareToken,
-            address collateralShareToken,
-            address debtShareToken
-        ) = siloConfig.getShareTokens(address(silo0));
+        vm.expectEmit(true, true, true, true);
+        emit Borrow(borrower, borrower, borrower, maxBorrowAssets, maxBorrowAssets);
 
-        uint256 protectedShareTokenBalance = IERC20(protectedShareToken).balanceOf(borrower);
-        uint256 collateralShareTokenBalance = IERC20(collateralShareToken).balanceOf(borrower);
-        uint256 debtShareTokenBalance = IERC20(debtShareToken).balanceOf(borrower);
-
-        assertEq(protectedShareTokenBalance, 0, "no protectedShareTokenBalance before leverageSameAsset");
-        assertEq(collateralShareTokenBalance, 0, "no collateralShareTokenBalance before leverageSameAsset");
-        assertEq(debtShareTokenBalance, 0, "no debtShareTokenBalance before leverageSameAsset");
+        vm.expectEmit(true, true, true, true);
+        emit DepositProtected(borrower, borrower, depositAssets, depositAssets);
 
         vm.prank(borrower);
-        silo0.leverageSameAsset(depositAssets, borrowAssets, borrower, COLLATERAL);
+        silo0.leverageSameAsset(depositAssets, maxBorrowAssets, borrower, PROTECTED);
+    }
 
-        liquidity = silo0.getRawLiquidity();
-
-        assertEq(liquidity, depositAssets - borrowAssets, "unexpected liquidity after leverageSameAsset");
-
-        protectedShareTokenBalance = IERC20(protectedShareToken).balanceOf(borrower);
-        collateralShareTokenBalance = IERC20(collateralShareToken).balanceOf(borrower);
-        debtShareTokenBalance = IERC20(debtShareToken).balanceOf(borrower);
-
-        assertEq(protectedShareTokenBalance, 0, "no protectedShareTokenBalance after leverageSameAsset");
-        
-        assertEq(
-            collateralShareTokenBalance,
-            depositAssets,
-            "unexpected collateralShareTokenBalance after leverageSameAsset"
-        );
-
-        assertEq(
-            debtShareTokenBalance,
-            depositAssets - borrowAssets,
-            "unexpected debtShareTokenBalance after leverageSameAsset"
-        );
+    /*
+    FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_leverageSameAsset_collateral
+    */
+    function test_leverageSameAsset_collateral() public {
+        bool isCollateral = true;
+        _leverage(isCollateral);
     }
 
     /*
     FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_leverageSameAsset_protected
     */
     function test_leverageSameAsset_protected() public {
-        uint256 depositAssets = 100e18;
-        uint256 borrowAssets = 50e18;
+        bool isCollateral = false; // protected
+        _leverage(isCollateral);
+    }
 
-        _mintAndApprove(address(silo0), token0, borrower, depositAssets);
+    function _leverage(bool _isCollateral) internal {
+        uint256 availableLiquidity = 1000e18;
+        uint256 depositAssetsRound1 = 100e18; // total user assets before leverage
+        uint256 borrowAssetsRound1 = 75e18;
 
-        uint256 liquidity = silo0.getRawLiquidity();
+        _mintAndApprove(address(silo0), token0, borrower, depositAssetsRound1);
 
-        assertEq(liquidity, 0, "no liquidity before leverageSameAsset");
+        _addLiquidity(availableLiquidity);
+
+        _expectLiquidity(availableLiquidity);
 
         (
             address protectedShareToken,
@@ -195,42 +179,64 @@ contract LeverageSameAssetTest is SiloLittleHelper, Test {
             address debtShareToken
         ) = siloConfig.getShareTokens(address(silo0));
 
-        uint256 protectedShareTokenBalance = IERC20(protectedShareToken).balanceOf(borrower);
-        uint256 collateralShareTokenBalance = IERC20(collateralShareToken).balanceOf(borrower);
-        uint256 debtShareTokenBalance = IERC20(debtShareToken).balanceOf(borrower);
+        address zeroSharesToken = _isCollateral ? protectedShareToken : collateralShareToken;
+        address withSharesToken = _isCollateral ? collateralShareToken : protectedShareToken;
+        ISilo.CollateralType collateralType = _isCollateral ? COLLATERAL : PROTECTED;
 
-        assertEq(protectedShareTokenBalance, 0, "no protectedShareTokenBalance before leverageSameAsset");
-        assertEq(collateralShareTokenBalance, 0, "no collateralShareTokenBalance before leverageSameAsset");
-        assertEq(debtShareTokenBalance, 0, "no debtShareTokenBalance before leverageSameAsset");
+        _expectShares(zeroSharesToken, 0);
+        _expectShares(withSharesToken, 0);
+        _expectShares(debtShareToken, 0);
 
         vm.prank(borrower);
-        silo0.leverageSameAsset(depositAssets, borrowAssets, borrower, PROTECTED);
+        silo0.leverageSameAsset(depositAssetsRound1, borrowAssetsRound1, borrower, collateralType);
 
-        liquidity = silo0.getRawLiquidity();
-
-        assertEq(liquidity, 0, "unexpected liquidity after leverageSameAsset");
-
-        protectedShareTokenBalance = IERC20(protectedShareToken).balanceOf(borrower);
-        collateralShareTokenBalance = IERC20(collateralShareToken).balanceOf(borrower);
-        debtShareTokenBalance = IERC20(debtShareToken).balanceOf(borrower);
-
-        assertEq(
-            protectedShareTokenBalance,
-            depositAssets,
-            "unexpected protectedShareTokenBalance after leverageSameAsset"
-        );
+        uint256 expectedLiquidity; 
         
-        assertEq(
-            collateralShareTokenBalance,
-            0,
-            "no collateralShareTokenBalance after leverageSameAsset"
-        );
+        if (_isCollateral) {
+            expectedLiquidity = availableLiquidity + depositAssetsRound1 - borrowAssetsRound1;
+        } else { // protected
+            expectedLiquidity = availableLiquidity - borrowAssetsRound1;
+        }
 
-        assertEq(
-            debtShareTokenBalance,
-            depositAssets - borrowAssets,
-            "unexpected debtShareTokenBalance after leverageSameAsset"
-        );
+        _expectLiquidity(expectedLiquidity);
+
+        _expectShares(zeroSharesToken, 0);
+        _expectShares(withSharesToken, depositAssetsRound1);
+        _expectShares(debtShareToken, borrowAssetsRound1);
+
+        uint256 depositAssetsRound2 = borrowAssetsRound1;
+        uint256 borrowAssetsRound2 = 50e18;
+
+        vm.prank(borrower);
+        silo0.leverageSameAsset(depositAssetsRound2, borrowAssetsRound2, borrower, collateralType);
+
+        if (_isCollateral) {
+            expectedLiquidity = expectedLiquidity + depositAssetsRound2 - borrowAssetsRound2;
+        } else { // protected
+            expectedLiquidity = expectedLiquidity - borrowAssetsRound2;
+        }
+
+        _expectLiquidity(expectedLiquidity);
+
+        uint256 receivedShares = depositAssetsRound1 + depositAssetsRound2;
+
+        _expectShares(zeroSharesToken, 0);
+        _expectShares(withSharesToken, receivedShares);
+        _expectShares(debtShareToken, borrowAssetsRound1 + borrowAssetsRound2);
+
+        uint256 sharesToAssets = silo0.convertToAssets(receivedShares);
+
+        assertGt(sharesToAssets, depositAssetsRound1, "User should receive more assets than he had");
+    }
+
+    function _expectShares(address _token, uint256 _expected) internal {
+        uint256 balance = IERC20(_token).balanceOf(borrower);
+        assertEq(balance, _expected);
+    }
+
+    function _expectLiquidity(uint256 _expected) internal {
+        uint256 liquidity = silo0.getRawLiquidity();
+        assertEq(liquidity, _expected);
     }
 
     function _mintAndApprove(address _silo, MintableToken _token, address _to, uint256 _amount) internal {
@@ -238,5 +244,14 @@ contract LeverageSameAssetTest is SiloLittleHelper, Test {
 
         vm.prank(_to);
         IERC20(address(_token)).approve(_silo, _amount);
+    }
+
+    function _addLiquidity(uint256 _amount) internal {
+        address liquidityProvider = makeAddr("liquidityProvider");
+
+        _mintAndApprove(address(silo0), token0, liquidityProvider, _amount);
+
+        vm.prank(liquidityProvider);
+        silo0.deposit(_amount, liquidityProvider);
     }
 }
