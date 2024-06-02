@@ -32,11 +32,11 @@ contract HookCallsOutsideActionTest is IHookReceiver, ILeverageBorrower, IERC315
     bytes32 constant FLASHLOAN_CALLBACK = keccak256("ERC3156FlashBorrower.onFlashLoan");
 
     ISiloConfig internal _siloConfig;
-    uint256 hookAfterFired;
-    uint256 hookBeforeFired;
+    uint256 public hookAfterFired;
+    uint256 public hookBeforeFired;
 
-    uint24 configuredHooksBefore;
-    uint24 configuredHooksAfter;
+    uint24 public configuredHooksBefore;
+    uint24 public configuredHooksAfter;
 
     function setUp() public {
         token0 = new MintableToken(6);
