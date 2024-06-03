@@ -15,9 +15,10 @@ import {ISiloDeployer} from "silo-core/contracts/interfaces/ISiloDeployer.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ContractThatAcceptsETH} from "silo-core/test/foundry/_mocks/ContractThatAcceptsETH.sol";
-
-import {SiloFixture, SiloConfigOverride} from "../_common/fixtures/SiloFixture.sol";
-import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
+import {SiloTestExtension} from "silo-core/test/foundry/_mocks/SiloTestExtension.sol";
+import {SiloFixtureWithFeeDistributor as SiloFixture} from "../../_common/fixtures/SiloFixtureWithFeeDistributor.sol";
+import {SiloConfigOverride} from "../../_common/fixtures/SiloFixture.sol";
+import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
 
 /// FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mc SiloHooksTest
 contract SiloHooksTest is SiloLittleHelper, Test {
@@ -58,7 +59,7 @@ contract SiloHooksTest is SiloLittleHelper, Test {
     /*
     FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testHooksInitializationAfterDeployment
     */
-    function testHooksInitializationAfterDeployment() public {
+    function testHooksInitializationAfterDeployment() public view {
         (,uint24 silo0HookesBefore, uint24 silo0HookesAfter,) = silo0.sharedStorage();
 
         assertEq(silo0HookesBefore, HOOKS_BEFORE, "hooksBefore is not initialized");
@@ -102,12 +103,12 @@ contract SiloHooksTest is SiloLittleHelper, Test {
         uint256 amountOfEth = 0;
 
         vm.expectRevert(ISilo.OnlyHookReceiver.selector);
-        silo0.callOnBehalfOfSilo(protectedShareToken, amountOfEth, data);
+        silo0.callOnBehalfOfSilo(protectedShareToken, amountOfEth, ISilo.CallType.Call, data);
 
         assertEq(IERC20(protectedShareToken).balanceOf(_thridParty), 0);
 
         vm.prank(_hookReceiverAddr);
-        silo0.callOnBehalfOfSilo(protectedShareToken, amountOfEth, data);
+        silo0.callOnBehalfOfSilo(protectedShareToken, amountOfEth, ISilo.CallType.Call, data);
 
         assertEq(IERC20(protectedShareToken).balanceOf(_thridParty), tokensToMint);
     }
@@ -123,9 +124,33 @@ contract SiloHooksTest is SiloLittleHelper, Test {
 
         vm.deal(_hookReceiverAddr, amoutToSend);
         vm.prank(_hookReceiverAddr);
-        silo0.callOnBehalfOfSilo{value: amoutToSend}(target, amoutToSend, data);
+        silo0.callOnBehalfOfSilo{value: amoutToSend}(target, amoutToSend, ISilo.CallType.Call, data);
 
         assertEq(target.balance, amoutToSend, "Expect to have non zero balance");
+    }
+
+    /// FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testSiloStorageMutationWithSiloExtension
+    function testSiloStorageMutationWithSiloExtension() public {
+        uint256 amoutToSend = 0;
+        uint256 assetType = uint256(ISilo.AssetType.Collateral);
+        uint256 expectedTotalCollateralAssets = 1_9999_9999e18;
+
+        address target = address(new SiloTestExtension());
+
+        bytes memory data = abi.encodeWithSelector(
+            SiloTestExtension.testSiloStorageMutation.selector,
+            assetType,
+            expectedTotalCollateralAssets
+        );
+
+        uint256 totalCollateralBeforeCall = silo0.total(assetType);
+        assertEq(totalCollateralBeforeCall, 0, "Expect to have no collateral assets");
+
+        vm.prank(_hookReceiverAddr);
+        silo0.callOnBehalfOfSilo(target, amoutToSend, ISilo.CallType.Delegatecall, data);
+
+        uint256 totalCollateralAfterCall = silo0.total(assetType);
+        assertEq(totalCollateralAfterCall, expectedTotalCollateralAssets, "Expect to have collateral assets");
     }
 
     /// FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testCallOnBehalfOfSiloWithETHleftover
@@ -139,7 +164,7 @@ contract SiloHooksTest is SiloLittleHelper, Test {
 
         vm.deal(_hookReceiverAddr, amoutToSend);
         vm.prank(_hookReceiverAddr);
-        silo0.callOnBehalfOfSilo{value: amoutToSend}(target, amoutToSend, data);
+        silo0.callOnBehalfOfSilo{value: amoutToSend}(target, amoutToSend, ISilo.CallType.Call, data);
 
         assertEq(address(silo0).balance, amoutToSend, "Expect to have non zero balance");
 
@@ -149,7 +174,7 @@ contract SiloHooksTest is SiloLittleHelper, Test {
         bytes memory emptyPayload;
 
         vm.prank(_hookReceiverAddr);
-        silo0.callOnBehalfOfSilo{value: 0}(_hookReceiverAddr, amoutToSend, emptyPayload);
+        silo0.callOnBehalfOfSilo{value: 0}(_hookReceiverAddr, amoutToSend, ISilo.CallType.Call, emptyPayload);
 
         assertEq(_hookReceiverAddr.balance, amoutToSend, "Expect to have non zero balance on a hook receiver");
     }

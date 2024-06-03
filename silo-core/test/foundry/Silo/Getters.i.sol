@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.20;
 
-import "forge-std/Test.sol";
+import {Test} from "forge-std/Test.sol";
 
 import {ISilo, ISiloConfig} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
@@ -26,7 +26,7 @@ contract GettersTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_silo_getLiquidity
     */
-    function test_silo_getLiquidity() public {
+    function test_silo_getLiquidity() public view {
         assertEq(silo0.getLiquidity(), 0, "no liquidity after deploy 0");
         assertEq(silo1.getLiquidity(), 0, "no liquidity after deploy 1");
     }
@@ -34,7 +34,7 @@ contract GettersTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_silo_getMaxLtv
     */
-    function test_silo_getMaxLtv() public {
+    function test_silo_getMaxLtv() public view {
         assertEq(silo0.getMaxLtv(), 0.75e18, "getMaxLtv 0");
         assertEq(silo1.getMaxLtv(), 0.85e18, "getMaxLtv 1");
     }
@@ -42,7 +42,7 @@ contract GettersTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_silo_getLt
     */
-    function test_silo_getLt() public {
+    function test_silo_getLt() public view {
         assertEq(silo0.getLt(), 0.85e18, "LT 0");
         assertEq(silo1.getLt(), 0.95e18, "LT 1");
     }
@@ -50,7 +50,7 @@ contract GettersTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_silo_asset
     */
-    function test_silo_asset() public {
+    function test_silo_asset() public view {
         assertEq(silo0.asset(), address(address(token0)), "asset 0");
         assertEq(silo1.asset(), address(address(token1)), "asset 1");
     }
@@ -58,7 +58,7 @@ contract GettersTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_silo_getFeesAndFeeReceivers
     */
-    function test_silo_getFeesAndFeeReceivers() public {
+    function test_silo_getFeesAndFeeReceivers() public view {
         (
             address daoFeeReceiver, address deployerFeeReceiver, uint256 daoFee, uint256 deployerFee
         ) = siloLens.getFeesAndFeeReceivers(silo0);

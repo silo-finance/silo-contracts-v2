@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.20;
 
-import "forge-std/Test.sol";
+import {Test} from "forge-std/Test.sol";
 
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
@@ -34,7 +34,7 @@ contract PreviewTest is SiloLittleHelper, Test {
     forge test -vv --ffi --mt test_previewBorrow_zero_fuzz
     */
     /// forge-config: core-test.fuzz.runs = 10000
-    function test_previewBorrow_zero_fuzz(uint256 _assets, bool _useShares) public {
+    function test_previewBorrow_zero_fuzz(uint256 _assets, bool _useShares) public view {
         assertEq(_useShares ? silo0.previewBorrowShares(_assets) : silo0.previewBorrow(_assets), _assets);
     }
 

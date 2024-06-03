@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.20;
 
-import "forge-std/Test.sol";
+import {Test} from "forge-std/Test.sol";
 
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
@@ -10,7 +10,8 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 
 import {MintableToken} from "../_common/MintableToken.sol";
 import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
-import {SiloFixture, SiloConfigOverride} from "../_common/fixtures/SiloFixture.sol";
+import {SiloConfigOverride} from "../_common/fixtures/SiloFixture.sol";
+import {SiloFixtureWithFeeDistributor as SiloFixture} from "../_common/fixtures/SiloFixtureWithFeeDistributor.sol";
 import {DummyOracle} from "../_common/DummyOracle.sol";
 
 /*
@@ -52,8 +53,8 @@ contract OracleThrowsTest is SiloLittleHelper, Test {
     forge test -vv --ffi --mt test_throwing_oracle
     */
     function test_throwing_oracle_1token() public {
-        // TODO we might want to implement, but token1 is quote so oracle is not in use here
-        // _throwing_oracle(true);
+        // we can not test oracle for 1 token, because we not using it for 1 token
+        // _throwing_oracle(SAME_ASSET);
     }
 
     function test_throwing_oracle_2tokens() public {

@@ -12,7 +12,7 @@ contract SiloLeverageNonReentrant is Silo {
         override
         returns (uint256 shares)
     {
-        sharedStorage.siloConfig.crossNonReentrantBefore(CrossEntrancy.ENTERED_FROM_LEVERAGE);
+        _sharedStorage.siloConfig.crossNonReentrantBefore(CrossEntrancy.ENTERED_FROM_LEVERAGE);
         shares = 0;
 
         // Inputs don't matter. We only need to verify reentrancy protection.
@@ -21,6 +21,6 @@ contract SiloLeverageNonReentrant is Silo {
     }
 
     function forceConfigSetup(ISiloConfig _siloConfig) external {
-        sharedStorage.siloConfig = _siloConfig;
+        _sharedStorage.siloConfig = _siloConfig;
     }
 }

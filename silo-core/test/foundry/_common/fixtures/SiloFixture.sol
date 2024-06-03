@@ -5,7 +5,6 @@ import {console2} from "forge-std/console2.sol";
 
 import {StdCheats} from "forge-std/StdCheats.sol";
 import {CommonBase} from "forge-std/Base.sol";
-import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 
 import {OracleConfig} from "silo-oracles/deploy/OraclesDeployments.sol";
 
@@ -17,16 +16,13 @@ import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquidation.sol";
 
-import {VeSiloContracts} from "ve-silo/common/VeSiloContracts.sol";
-
 import {TokenMock} from "../../_mocks/TokenMock.sol";
-
-import {console} from "forge-std/console.sol";
 
 struct SiloConfigOverride {
     address token0;
     address token1;
     address hookReceiver;
+    address hookReceiverImplementation;
     address solvencyOracle0;
     address maxLtvOracle0;
     string configName;
@@ -45,7 +41,7 @@ contract SiloDeploy_Local is SiloDeployWithGaugeHookReceiver {
 
     function beforeCreateSilo(
         ISiloConfig.InitData memory _config
-    ) internal view override {
+    ) internal view override returns (address hookImplementation) {
         // Override the default values if overrides are provided
         if (siloConfigOverride.token0 != address(0)) {
             _config.token0 = siloConfigOverride.token0;
@@ -65,6 +61,10 @@ contract SiloDeploy_Local is SiloDeployWithGaugeHookReceiver {
 
         if(siloConfigOverride.hookReceiver != address(0)) {
             _config.hookReceiver = siloConfigOverride.hookReceiver;
+        }
+
+        if(siloConfigOverride.hookReceiverImplementation != address(0)) {
+            hookImplementation = siloConfigOverride.hookReceiverImplementation;
         }
     }
 }
@@ -129,9 +129,6 @@ contract SiloFixture is StdCheats, CommonBase {
             IPartialLiquidation liquidationModule
         )
     {
-        // TODO: remove dependency on VeSiloContracts
-        AddrLib.setAddress(VeSiloContracts.FEE_DISTRIBUTOR, makeAddr("FeeDistributor"));
-
         MainnetDeploy mainnetDeploy = new MainnetDeploy();
         mainnetDeploy.disableDeploymentsSync();
         mainnetDeploy.run();

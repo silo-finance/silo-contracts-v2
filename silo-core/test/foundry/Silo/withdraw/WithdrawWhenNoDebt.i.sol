@@ -1,19 +1,22 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.20;
 
-import "forge-std/Test.sol";
+import {Test} from "forge-std/Test.sol";
+import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 
+import {VeSiloContracts} from "ve-silo/common/VeSiloContracts.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {AssetTypes} from "silo-core/contracts/lib/AssetTypes.sol";
 
+import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
 import {TokenMock} from "silo-core/test/foundry/_mocks/TokenMock.sol";
+import {HookReceiverMock} from "silo-core/test/foundry/_mocks/HookReceiverMock.sol";
+import {MintableToken} from "../../_common/MintableToken.sol";
 import {SiloFixture, SiloConfigOverride} from "../../_common/fixtures/SiloFixture.sol";
 
-import {Vm} from "forge-std/Vm.sol";
-import "../../_common/MintableToken.sol";
-import "../../_common/SiloLittleHelper.sol";
+import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
 
 /*
     forge test -vv --ffi --mc WithdrawWhenNoDebtTest
@@ -22,7 +25,29 @@ contract WithdrawWhenNoDebtTest is SiloLittleHelper, Test {
     ISiloConfig siloConfig;
 
     function setUp() public {
-        siloConfig = _setUpLocalFixture();
+        // Mock addresses that we need for the `SiloFactoryDeploy` script
+        AddrLib.setAddress(VeSiloContracts.TIMELOCK_CONTROLLER, makeAddr("Timelock"));
+        AddrLib.setAddress(VeSiloContracts.FEE_DISTRIBUTOR, makeAddr("FeeDistributor"));
+
+        token0 = new MintableToken(18);
+        token1 = new MintableToken(18);
+
+        // Setting the hook receiver mock to force Actions lib _hookCallAfter fn execution
+        HookReceiverMock hookReceiverMock = new HookReceiverMock(address(0));
+        // Hook receiver config doesn't matter for this test
+        hookReceiverMock.hookReceiverConfigMock(0, 0);
+
+        address hookReceiverAddr = hookReceiverMock.ADDRESS();
+
+        SiloConfigOverride memory overrides;
+        overrides.token0 = address(token0);
+        overrides.token1 = address(token1);
+        overrides.hookReceiver = hookReceiverAddr;
+        overrides.configName = SiloConfigsNames.LOCAL_DEPLOYER;
+
+        SiloFixture siloFixture = new SiloFixture();
+
+        (siloConfig, silo0, silo1,,, partialLiquidation) = siloFixture.deploy_local(overrides);
     }
 
     /*

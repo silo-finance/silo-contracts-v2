@@ -5,7 +5,7 @@ import {ISilo, ILiquidationProcess} from "../interfaces/ISilo.sol";
 import {IPartialLiquidation} from "../interfaces/IPartialLiquidation.sol";
 import {ISiloOracle} from "../interfaces/ISiloOracle.sol";
 import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
-import {IHookReceiver} from "../utils/hook-receivers/interfaces/IHookReceiver.sol";
+import {IHookReceiver} from "../interfaces/IHookReceiver.sol";
 
 import {SiloLendingLib} from "../lib/SiloLendingLib.sol";
 import {Hook} from "../lib/Hook.sol";
@@ -170,7 +170,7 @@ contract PartialLiquidation is IPartialLiquidation {
     ) internal virtual {
         if (_hookSetup.hookReceiver == address(0)) return;
 
-        uint256 hookAction = Hook.BEFORE | Hook.LIQUIDATION;
+        uint256 hookAction = Hook.LIQUIDATION;
         if (!_hookSetup.hooksBefore.matchAction(hookAction)) return;
 
         IHookReceiver(_hookSetup.hookReceiver).beforeAction(
@@ -200,7 +200,7 @@ contract PartialLiquidation is IPartialLiquidation {
     ) internal {
         if (_hookSetup.hookReceiver == address(0)) return;
 
-        uint256 hookAction = Hook.AFTER | Hook.LIQUIDATION;
+        uint256 hookAction = Hook.LIQUIDATION;
         if (!_hookSetup.hooksAfter.matchAction(hookAction)) return;
 
         IHookReceiver(_hookSetup.hookReceiver).afterAction(

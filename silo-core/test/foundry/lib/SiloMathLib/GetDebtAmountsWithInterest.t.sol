@@ -9,7 +9,7 @@ contract GetDebtAmountsWithInterestTest is Test {
     /*
     forge test -vv --mt test_getDebtAmountsWithInterest
     */
-    function test_getDebtAmountsWithInterest() public {
+    function test_getDebtAmountsWithInterest() public pure {
         uint256 debtAssets;
         uint256 rcompInDp;
 

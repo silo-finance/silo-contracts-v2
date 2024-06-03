@@ -1,14 +1,13 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.20;
 
-import "forge-std/Test.sol";
+import {Test} from "forge-std/Test.sol";
 
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
 
-import {SiloFixture} from "../../_common/fixtures/SiloFixture.sol";
 import {MintableToken} from "../../_common/MintableToken.sol";
 import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
 
@@ -65,7 +64,7 @@ contract WithdrawWhenDebtTest is SiloLittleHelper, Test {
         assertEq(collateralSilo.maxWithdraw(address(this)), 0, "no collateral left");
 
         // you can withdraw more because interest are smaller
-        uint256 expectedProtectedWithdraw = _sameAsset ? 894736842105263157 : 882352941176470588;
+        uint256 expectedProtectedWithdraw = _sameAsset ? 894736842105263156 : 882352941176470587;
         uint256 expectedCollateralLeft = 1e18 - expectedProtectedWithdraw;
         assertLe(0.1e18 * 1e18 / expectedCollateralLeft, _sameAsset ? 0.95e18 : 0.85e18, "LTV holds");
 

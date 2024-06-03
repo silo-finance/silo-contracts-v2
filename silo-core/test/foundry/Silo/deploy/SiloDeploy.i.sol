@@ -11,11 +11,12 @@ import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
 import {SiloDeployWithGaugeHookReceiver} from "silo-core/deploy/silo/SiloDeployWithGaugeHookReceiver.s.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISiloDeployer} from "silo-core/contracts/interfaces/ISiloDeployer.sol";
-import {IHookReceiver} from "silo-core/contracts/utils/hook-receivers/interfaces/IHookReceiver.sol";
+import {IHookReceiver} from "silo-core/contracts/interfaces/IHookReceiver.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {MainnetDeploy} from "silo-core/deploy/MainnetDeploy.s.sol";
 import {SiloOraclesFactoriesContracts} from "silo-oracles/deploy/SiloOraclesFactoriesContracts.sol";
+import {SiloConfigData} from "silo-core/deploy/input-readers/SiloConfigData.sol";
 
 import {
    UniswapV3OracleFactoryMock
@@ -40,35 +41,35 @@ contract SiloDeployTest is IntegrationTest {
    DIAOracleFactoryMock internal _diaOracleFactoryMock;
 
    function setUp() public {
-       vm.createSelectFork(getChainRpcUrl(MAINNET_ALIAS), _FORKING_BLOCK_NUMBER);
+        vm.createSelectFork(getChainRpcUrl(MAINNET_ALIAS), _FORKING_BLOCK_NUMBER);
 
         // Mock addresses that we need for the `SiloFactoryDeploy` script
-       AddrLib.setAddress(VeSiloContracts.TIMELOCK_CONTROLLER, makeAddr("Timelock"));
-       AddrLib.setAddress(VeSiloContracts.FEE_DISTRIBUTOR, makeAddr("FeeDistributor"));
+        AddrLib.setAddress(VeSiloContracts.TIMELOCK_CONTROLLER, makeAddr("Timelock"));
+        AddrLib.setAddress(VeSiloContracts.FEE_DISTRIBUTOR, makeAddr("FeeDistributor"));
 
-       _uniV3OracleFactoryMock = new UniswapV3OracleFactoryMock();
-       _chainlinkV3OracleFactoryMock = new ChainlinkV3OracleFactoryMock();
-       _diaOracleFactoryMock = new DIAOracleFactoryMock();
+        _uniV3OracleFactoryMock = new UniswapV3OracleFactoryMock();
+        _chainlinkV3OracleFactoryMock = new ChainlinkV3OracleFactoryMock();
+        _diaOracleFactoryMock = new DIAOracleFactoryMock();
 
-       _mockOraclesFactories();
+        _mockOraclesFactories();
 
-       Deployments.disableDeploymentsSync();
+        Deployments.disableDeploymentsSync();
 
-       MainnetDeploy mainnetDeploy = new MainnetDeploy();
-       mainnetDeploy.run();
+        MainnetDeploy mainnetDeploy = new MainnetDeploy();
+        mainnetDeploy.run();
 
-       _siloDeploy = new SiloDeployWithGaugeHookReceiver();
+        _siloDeploy = new SiloDeployWithGaugeHookReceiver();
 
-       // Mock addresses for oracles configurations
-       AddrLib.setAddress("CHAINLINK_PRIMARY_AGGREGATOR", makeAddr("Chainlink primary aggregator"));
-       AddrLib.setAddress("CHAINLINK_SECONDARY_AGGREGATOR", makeAddr("Chainlink secondary aggregator"));
-       AddrLib.setAddress("DIA_ORACLE_EXAMPLE", makeAddr("DIA oracle example"));
+        // Mock addresses for oracles configurations
+        AddrLib.setAddress("CHAINLINK_PRIMARY_AGGREGATOR", makeAddr("Chainlink primary aggregator"));
+        AddrLib.setAddress("CHAINLINK_SECONDARY_AGGREGATOR", makeAddr("Chainlink secondary aggregator"));
+        AddrLib.setAddress("DIA_ORACLE_EXAMPLE", makeAddr("DIA oracle example"));
 
-       _siloConfig = _siloDeploy.useConfig(SiloConfigsNames.FULL_CONFIG_TEST).run();
+        _siloConfig = _siloDeploy.useConfig(SiloConfigsNames.FULL_CONFIG_TEST).run();
     }
 
     // FOUNDRY_PROFILE=core-test forge test -vv --ffi -mt test_hooks_are_initialized
-    function test_hooks_are_initialized() public { // solhint-disable-line func-name-mixedcase
+    function test_hooks_are_initialized() public view {
         (address silo0, address silo1) = _siloConfig.getSilos();
 
          _verifyHookReceiversForSilo(silo0);
@@ -76,7 +77,7 @@ contract SiloDeployTest is IntegrationTest {
     }
 
     // FOUNDRY_PROFILE=core-test forge test -vv --ffi -mt test_oracles_deploy
-    function test_oracles_deploy() public { // solhint-disable-line func-name-mixedcase
+    function test_oracles_deploy() public view { // solhint-disable-line func-name-mixedcase
         (, address silo1) = _siloConfig.getSilos();
 
         ISiloConfig.ConfigData memory siloConfig1 = _siloConfig.getConfig(silo1);
@@ -91,7 +92,7 @@ contract SiloDeployTest is IntegrationTest {
         );
     }
 
-    function _verifyHookReceiversForSilo(address _silo) internal {
+    function _verifyHookReceiversForSilo(address _silo) internal view {
         (,,, IHookReceiver hookReceiver) = ISilo(_silo).sharedStorage();
 
         assertNotEq(address(hookReceiver), address(0), "Hook receiver not initialized");
@@ -107,7 +108,7 @@ contract SiloDeployTest is IntegrationTest {
         _verifyHookReceiverForToken(debtShareToken);
     }
 
-    function _verifyHookReceiverForToken(address _token) internal {
+    function _verifyHookReceiverForToken(address _token) internal view {
         IShareToken.HookSetup memory hookSetup = IShareToken(_token).hookSetup();
 
         assertNotEq(hookSetup.hookReceiver, address(0), "Hook receiver not initialized");

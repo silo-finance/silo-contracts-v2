@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.20;
 
-import "forge-std/Test.sol";
+import {Test} from "forge-std/Test.sol";
 
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 
@@ -15,6 +15,7 @@ import {SiloStdLib} from "silo-core/contracts/lib/SiloStdLib.sol";
 
 import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
 import {MintableToken} from "../_common/MintableToken.sol";
+import {FlashLoanReceiverWithInvalidResponse} from "../_mocks/FlashLoanReceiverWithInvalidResponse.sol";
 import {Gas} from "../gas/Gas.sol";
 
 bytes32 constant FLASHLOAN_CALLBACK = keccak256("ERC3156FlashBorrower.onFlashLoan");
@@ -85,7 +86,7 @@ contract FlashloanTest is SiloLittleHelper, Test, Gas {
     /*
     forge test -vv --ffi --mt test_maxFlashLoan
     */
-    function test_maxFlashLoan() public {
+    function test_maxFlashLoan() public view {
         assertEq(silo0.maxFlashLoan(address(token1)), 0);
         assertEq(silo1.maxFlashLoan(address(token0)), 0);
         assertEq(silo0.maxFlashLoan(address(token0)), 10e18);
@@ -145,13 +146,23 @@ contract FlashloanTest is SiloLittleHelper, Test, Gas {
             address(silo0),
             abi.encodeCall(IERC3156FlashLender.flashLoan, (receiver, address(token0), amount, _data)),
             "flashLoan gas",
-            38973,
-            300
+            35700,
+            500
         );
-
-        // silo0.flashLoan(receiver, address(token0), amount, _data);
 
         (uint256 daoAndDeployerFeesAfter,) = silo0.siloData();
         assertEq(daoAndDeployerFeesAfter, daoAndDeployerFeesBefore + fee);
+    }
+
+    /*
+    forge test -vv --ffi --mt test_flashLoanInvalidResponce
+    */
+    function test_flashLoanInvalidResponce() public {
+        bytes memory data;
+        uint256 amount = 1e18;
+        FlashLoanReceiverWithInvalidResponse receiver = new FlashLoanReceiverWithInvalidResponse();
+
+        vm.expectRevert(ISilo.FlashloanFailed.selector);
+        silo0.flashLoan(IERC3156FlashBorrower(address(receiver)), address(token0), amount, data);
     }
 }

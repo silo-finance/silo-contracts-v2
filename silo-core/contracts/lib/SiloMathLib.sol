@@ -200,11 +200,16 @@ library SiloMathLib {
         if (_debtValue == 0) return _sumOfCollateralsValue;
         if (_lt == 0) return 0;
 
-        uint256 minimumCollateralValue = _debtValue * _PRECISION_DECIMALS;
+        // using Rounding.LT (up) to have highest collateralValue that we have to leave for user to stay solvent
+        uint256 minimumCollateralValue = _debtValue.mulDiv(_PRECISION_DECIMALS, _lt, Rounding.LTV);
+
         // +1 is solution for precision error that math can produce and when that happen,
         // `maxAssets` can cause insolvency, so it can not be withdraw
-        // +1 will not overflow because it is after division
-        unchecked { minimumCollateralValue = minimumCollateralValue / _lt + 1; }
+        // this 1 is a dust that we generating by rounding always in favor of protocol
+        // potentially we could also do `maxAssets--` at the end, but adjusting value is "stronger", it will produce
+        // lower assets, so it should be safer when we calculate solvency back from assets via it's value.
+        // +1 will not overflow because we just divided a number by `_lt`
+        unchecked { minimumCollateralValue++; }
 
         // if we over LT, we can not withdraw
         if (_sumOfCollateralsValue <= minimumCollateralValue) {
@@ -218,10 +223,8 @@ library SiloMathLib {
         unchecked {
             // these are total assets (protected + collateral) that _owner can withdraw
             // - is safe because we adding same asset (under same total supply)
-            // - can potentially overflow, but it is unlikely, we would overflow in LTV calculations first
-            // worse what can happen we return lower number than real MAX on overflow
-            maxAssets = (_borrowerProtectedAssets + _borrowerCollateralAssets) * spareCollateralValue
-                / _sumOfCollateralsValue;
+            maxAssets = (_borrowerProtectedAssets + _borrowerCollateralAssets)
+                .mulDiv(spareCollateralValue, _sumOfCollateralsValue, Rounding.MAX_WITHDRAW_TO_ASSETS);
         }
     }
 

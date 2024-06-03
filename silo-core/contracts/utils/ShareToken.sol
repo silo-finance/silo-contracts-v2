@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.24;
 
+import {ERC20Permit} from "openzeppelin5/token/ERC20/extensions/ERC20Permit.sol";
 import {ERC20, IERC20Metadata, IERC20} from "openzeppelin5/token/ERC20/ERC20.sol";
 import {Initializable} from "openzeppelin5/proxy/utils/Initializable.sol";
 import {Strings} from "openzeppelin5/utils/Strings.sol";
 
-import {IHookReceiver} from "silo-core/contracts/utils/hook-receivers/interfaces/IHookReceiver.sol";
+import {IHookReceiver} from "../interfaces/IHookReceiver.sol";
 import {IShareToken, ISilo} from "../interfaces/IShareToken.sol";
 import {ISiloConfig} from "../SiloConfig.sol";
 import {TokenHelper} from "../lib/TokenHelper.sol";
@@ -54,9 +55,11 @@ import {CallBeforeQuoteLib} from "../lib/CallBeforeQuoteLib.sol";
 ///
 /// _Available since v4.7._
 /// @custom:security-contact security@silo.finance
-abstract contract ShareToken is Initializable, ERC20, IShareToken {
+abstract contract ShareToken is Initializable, ERC20Permit, IShareToken {
     using Hook for uint24;
     using CallBeforeQuoteLib for ISiloConfig.ConfigData;
+
+    string private constant _NAME = "SiloShareToken";
 
     /// @notice Silo address for which tokens was deployed
     ISilo public silo;
@@ -74,18 +77,14 @@ abstract contract ShareToken is Initializable, ERC20, IShareToken {
     }
 
     /// @custom:oz-upgrades-unsafe-allow constructor
-    constructor() ERC20("SiloShareToken", "SiloShareToken") {
+    constructor() ERC20(_NAME, _NAME) ERC20Permit(_NAME) {
         silo = ISilo(address(this)); // disable initializer
     }
 
-    function synchronizeHooks(address _hookReceiver, uint24 _hooksBefore, uint24 _hooksAfter, uint24 _tokenType)
-        external
-        onlySilo
-    {
-        _hookSetup.hookReceiver = _hookReceiver;
+    /// @inheritdoc IShareToken
+    function synchronizeHooks(uint24 _hooksBefore, uint24 _hooksAfter) external onlySilo {
         _hookSetup.hooksBefore = _hooksBefore;
         _hookSetup.hooksAfter = _hooksAfter;
-        _hookSetup.tokenType = _tokenType;
     }
 
     /// @inheritdoc IShareToken
@@ -219,9 +218,12 @@ abstract contract ShareToken is Initializable, ERC20, IShareToken {
 
     /// @param _silo Silo address for which tokens was deployed
     // solhint-disable-next-line func-name-mixedcase
-    function __ShareToken_init(ISilo _silo) internal virtual {
+    function __ShareToken_init(ISilo _silo, address _hookReceiver, uint24 _tokenType) internal virtual {
         silo = _silo;
         siloConfig = _silo.config();
+
+        _hookSetup.hookReceiver = _hookReceiver;
+        _hookSetup.tokenType = _tokenType;
     }
 
     /// @inheritdoc ERC20
@@ -242,7 +244,8 @@ abstract contract ShareToken is Initializable, ERC20, IShareToken {
         HookSetup memory setup = _hookSetup;
 
         if (setup.hookReceiver == address(0)) return;
-        uint256 action = setup.tokenType | Hook.SHARE_TOKEN_TRANSFER;
+
+        uint256 action = Hook.shareTokenTransfer(setup.tokenType);
 
         if (!setup.hooksAfter.matchAction(action)) return;
 
@@ -263,7 +266,7 @@ abstract contract ShareToken is Initializable, ERC20, IShareToken {
         returns (ISiloConfig siloConfigCached)
     {
         siloConfigCached = siloConfig;
-        siloConfigCached.crossNonReentrantBefore(Hook.SHARE_TOKEN_TRANSFER | _hookSetup.tokenType);
+        siloConfigCached.crossNonReentrantBefore(Hook.shareTokenTransfer(_hookSetup.tokenType));
     }
 
     /// @notice Call beforeQuote on solvency oracles

@@ -55,6 +55,16 @@ abstract contract CrossReentrancy {
     }
 
     function _crossNonReentrantAfter() internal virtual {
+        uint256 currentStatus = _crossReentrantStatus;
+
+        // Leaving it unprotected may lead to a bug in the reentrancy protection system,
+        // as it can be used in the function without activating the protection before deactivating it.
+        // Later on, these functions may be called to turn off the reentrancy protection.
+        // To avoid this, we check if the protection is active before deactivating it.
+        if (currentStatus != CrossEntrancy.ENTERED && currentStatus != CrossEntrancy.ENTERED_FROM_LEVERAGE) {
+            revert ISiloConfig.CrossReentrancyNotActive();
+        }
+
         // By storing the original value once again, a refund is triggered (see
         // https://eips.ethereum.org/EIPS/eip-2200)
         _crossReentrantStatus = CrossEntrancy.NOT_ENTERED;

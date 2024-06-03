@@ -10,15 +10,15 @@ import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 import {SiloFixture, SiloConfigOverride} from "../../_common/fixtures/SiloFixture.sol";
 import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
-import {IHookReceiver} from "silo-core/contracts/utils/hook-receivers/interfaces/IHookReceiver.sol";
+import {IHookReceiver} from "silo-core/contracts/interfaces/IHookReceiver.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {SiloCoreContracts} from "silo-core/common/SiloCoreContracts.sol";
 import {Hook} from "silo-core/contracts/lib/Hook.sol";
 
 import {GaugeHookReceiver} from "silo-core/contracts/utils/hook-receivers/gauge/GaugeHookReceiver.sol";
-import {IGaugeHookReceiver} from "silo-core/contracts/utils/hook-receivers/gauge/interfaces/IGaugeHookReceiver.sol";
+import {IGaugeHookReceiver} from "silo-core/contracts/interfaces/IGaugeHookReceiver.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
-import {IGaugeLike as IGauge} from "silo-core/contracts/utils/hook-receivers/gauge/interfaces/IGaugeLike.sol";
+import {IGaugeLike as IGauge} from "silo-core/contracts/interfaces/IGaugeLike.sol";
 
 import {GaugeHookReceiverDeploy} from "silo-core/deploy/GaugeHookReceiverDeploy.s.sol";
 
@@ -78,7 +78,7 @@ contract GaugeHookReceiverTest is SiloLittleHelper, Test, TransferOwnership {
     }
 
     // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testHookReceiverInitlaization
-    function testHookReceiverInitlaization() public {
+    function testHookReceiverInitlaization() public view {
         (address silo0, address silo1) = _siloConfig.getSilos();
 
         _testHookReceiverInitlaizationForSilo(silo0);
@@ -154,7 +154,7 @@ contract GaugeHookReceiverTest is SiloLittleHelper, Test, TransferOwnership {
 
         (uint24 hooksBefore, uint24 hooksAfter) = _hookReceiver.hookReceiverConfig(silo0);
 
-        uint256 action = Hook.COLLATERAL_TOKEN | Hook.SHARE_TOKEN_TRANSFER;
+        uint256 action = Hook.shareTokenTransfer(Hook.COLLATERAL_TOKEN);
 
         assertEq(uint256(hooksBefore), 0);
         assertEq(uint256(hooksAfter), action);
@@ -223,7 +223,7 @@ contract GaugeHookReceiverTest is SiloLittleHelper, Test, TransferOwnership {
         vm.prank(_dao);
         _hookReceiver.setGauge(IGauge(_gauge), IShareToken(debtShareToken));
 
-        uint256 action = Hook.DEBT_TOKEN | Hook.SHARE_TOKEN_TRANSFER;
+        uint256 action = Hook.shareTokenTransfer(Hook.DEBT_TOKEN);
 
         (, uint24 hooksAfter) = _hookReceiver.hookReceiverConfig(silo0);
         assertEq(uint256(hooksAfter), action);
@@ -238,7 +238,7 @@ contract GaugeHookReceiverTest is SiloLittleHelper, Test, TransferOwnership {
         );
 
         // will do nothing as action didn't match
-        uint256 invalidAction = Hook.COLLATERAL_TOKEN | Hook.SHARE_TOKEN_TRANSFER;
+        uint256 invalidAction = Hook.shareTokenTransfer(Hook.COLLATERAL_TOKEN);
         _mockGaugeIsKilled(false);
         vm.prank(debtShareToken);
         _hookReceiver.afterAction(
@@ -306,7 +306,7 @@ contract GaugeHookReceiverTest is SiloLittleHelper, Test, TransferOwnership {
         vm.expectCall(_gaugeToMock, data);
     }
 
-    function _testHookReceiverInitlaizationForSilo(address _silo) internal {
+    function _testHookReceiverInitlaizationForSilo(address _silo) internal view {
         (,,,IHookReceiver hookReceiver) = ISilo(_silo).sharedStorage();
 
         assertEq(address(hookReceiver), address(_hookReceiver));
@@ -322,7 +322,7 @@ contract GaugeHookReceiverTest is SiloLittleHelper, Test, TransferOwnership {
         _testHookReceiverForShareToken(debt);
     }
 
-    function _testHookReceiverForShareToken(address _siloShareToken) internal {
+    function _testHookReceiverForShareToken(address _siloShareToken) internal view {
         IShareToken.HookSetup memory hookSetup = IShareToken(_siloShareToken).hookSetup();
         assertEq(hookSetup.hookReceiver, address(_hookReceiver));
     }

@@ -114,11 +114,28 @@ contract Actor is PropertiesAsserts {
         prepareForDeposit(vaultZero, amount);
     }
 
-    function prepareForRepayShares(bool vaultZero, uint256 shares) internal returns (Silo vault, uint256 amount) {
+    function _prepareForRepayShares(bool vaultZero, uint256 shares) internal returns (Silo vault, uint256 amount) {
         vault = vaultZero ? vault0 : vault1;
         amount = vault.previewRepayShares(shares);
         
         approveFunds(vaultZero, amount, address(vault));
+    }
+
+    function _prepareForLiquidationRepay(bool vaultZero, uint256 debtToRepay) internal returns (Silo vault) {
+        vault = vaultZero ? vault0 : vault1;
+        TestERC20Token token = vaultZero ? token0 : token1;
+
+        uint256 balance = token.balanceOf(address(this));
+
+        if (balance < debtToRepay) {
+            if (type(uint256).max - token.totalSupply() < debtToRepay - balance) {
+                revert("total supply limit - require it for echidna, so it does not fail on it");
+            }
+
+            token.mint(address(this), debtToRepay - balance);
+        }
+
+        approveFunds(vaultZero, debtToRepay, address(vault));
     }
 
     function deposit(bool vaultZero, uint256 assets) public returns (uint256 shares) {
@@ -196,7 +213,7 @@ contract Actor is PropertiesAsserts {
     }
 
     function repayShares(bool vaultZero, uint256 shares) public returns (uint256 assets) {
-        (Silo vault,) = prepareForRepayShares(vaultZero, shares);
+        (Silo vault,) = _prepareForRepayShares(vaultZero, shares);
         assets = vault.repayShares(shares, address(this));
         accountForClosedDebt(vaultZero, assets, shares);
     }
@@ -215,7 +232,7 @@ contract Actor is PropertiesAsserts {
         bool receiveSToken,
         ISiloConfig config
     ) public {
-        Silo vault = prepareForDeposit(_vaultZeroWithDebt, debtToCover);
+        Silo vault = _prepareForLiquidationRepay(_vaultZeroWithDebt, debtToCover);
 
         (ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig,) =
             config.getConfigs(address(vault), borrower, 0 /* always 0 for external calls */);

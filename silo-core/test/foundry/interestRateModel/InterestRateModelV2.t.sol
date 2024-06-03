@@ -22,21 +22,21 @@ contract InterestRateModelV2Test is Test, InterestRateModelConfigs {
         INTEREST_RATE_MODEL = new InterestRateModelV2();
     }
 
-    function test_IRM_decimals() public {
+    function test_IRM_decimals() public view {
         uint256 decimals = INTEREST_RATE_MODEL.decimals();
         assertEq(DP, 10 ** decimals);
     }
 
-    function test_IRM_RCOMP_MAX() public {
+    function test_IRM_RCOMP_MAX() public view {
         assertEq(INTEREST_RATE_MODEL.RCOMP_MAX(), 2 ** 16 * DP);
     }
 
-    function test_IRM_X_MAX() public {
+    function test_IRM_X_MAX() public view {
         assertEq(INTEREST_RATE_MODEL.X_MAX(), 11090370147631773313);
     }
 
     // forge test -vvv --mt test_IRM_ASSET_DATA_OVERFLOW_LIMIT
-    function test_IRM_ASSET_DATA_OVERFLOW_LIMIT() public {
+    function test_IRM_ASSET_DATA_OVERFLOW_LIMIT() public view {
         assertEq(INTEREST_RATE_MODEL.ASSET_DATA_OVERFLOW_LIMIT(), uint256(type(uint256).max / (2 ** 16 * DP)));
     }
 
@@ -53,7 +53,7 @@ contract InterestRateModelV2Test is Test, InterestRateModelConfigs {
     }
     
     // forge test -vv --mt test_IRM_calculateCurrentInterestRate_CAP
-    function test_IRM_calculateCurrentInterestRate_CAP() public {
+    function test_IRM_calculateCurrentInterestRate_CAP() public view {
         uint256 rcur = INTEREST_RATE_MODEL.calculateCurrentInterestRate(
             _configWithState(),
             100e18, // _totalDeposits,
@@ -77,7 +77,7 @@ contract InterestRateModelV2Test is Test, InterestRateModelConfigs {
     }
 
     // forge test -vv --mt test_IRM_calculateCompoundInterestRateWithOverflowDetection_CAP_fuzz
-    function test_IRM_calculateCompoundInterestRateWithOverflowDetection_CAP_fuzz(uint256 _t) public {
+    function test_IRM_calculateCompoundInterestRateWithOverflowDetection_CAP_fuzz(uint256 _t) public view {
         vm.assume(_t < 5 * 365 days);
 
         uint256 cap = 3170979198376 * (1 + _t);
@@ -95,7 +95,7 @@ contract InterestRateModelV2Test is Test, InterestRateModelConfigs {
     }
 
     // forge test -vv --mt test_IRM_calculateCompoundInterestRateWithOverflowDetection_ZERO
-    function test_IRM_calculateCompoundInterestRateWithOverflowDetection_ZERO() public {
+    function test_IRM_calculateCompoundInterestRateWithOverflowDetection_ZERO() public view {
         (uint256 rcur,,,) = INTEREST_RATE_MODEL.calculateCompoundInterestRateWithOverflowDetection(
             _configWithState(),
             100e18, // _totalDeposits,

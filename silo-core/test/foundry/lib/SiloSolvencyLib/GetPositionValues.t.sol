@@ -15,14 +15,14 @@ contract GetPositionValuesTest is Test, OraclesHelper {
     /*
     forge test -vv --mt test_SiloSolvencyLib_PRECISION_DECIMALS
     */
-    function test_SiloSolvencyLib_PRECISION_DECIMALS() public {
+    function test_SiloSolvencyLib_PRECISION_DECIMALS() public pure {
         assertEq(_PRECISION_DECIMALS, SiloSolvencyLib._PRECISION_DECIMALS, "_PRECISION_DECIMALS");
     }
 
     /*
     forge test -vv --mt test_SiloSolvencyLib_getPositionValues_noOracle
     */
-    function test_SiloSolvencyLib_getPositionValues_noOracle() public {
+    function test_SiloSolvencyLib_getPositionValues_noOracle() public view {
         ISiloOracle noOracle;
         uint256 collateralAssets = 20;
         uint256 protectedAssets = 10;

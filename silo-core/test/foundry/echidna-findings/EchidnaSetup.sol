@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.20;
 
-import "forge-std/Test.sol";
+import {Test} from "forge-std/Test.sol";
 import {Strings} from "openzeppelin5/utils/Strings.sol";
 
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
@@ -72,6 +72,7 @@ contract EchidnaSetup is SiloLittleHelper, Test {
 
     function _invariant_insolventHasDebt(address _user)
         internal
+        view
         returns (bool isSolvent, ISilo _siloWithDebt, ISilo _siloWithCollateral)
     {
         // _dumpState(_user);
@@ -127,7 +128,7 @@ contract EchidnaSetup is SiloLittleHelper, Test {
         _requireHealthySilo(silo1);
     }
 
-    function _requireHealthySilo(ISilo _silo) internal {
+    function _requireHealthySilo(ISilo _silo) internal view {
         ISiloConfig.ConfigData memory cfg = siloConfig.getConfig(address(_silo));
 
         try IInterestRateModel(cfg.interestRateModel).getCompoundInterestRate(address(_silo), block.timestamp) {

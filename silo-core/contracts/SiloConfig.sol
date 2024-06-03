@@ -231,13 +231,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
     {
         _crossNonReentrantBefore(_action);
 
-        if (_action.matchAction(Hook.SHARE_TOKEN_TRANSFER)) {
-            // share token transfer does not need configs
-            return (collateralConfig, debtConfig, debtInfo);
-        } else if (_action.matchAction(Hook.FLASH_LOAN)) {
-            // flash loan does not need configs
-            return (collateralConfig, debtConfig, debtInfo);
-        } else if (_action.matchAction(Hook.BORROW)) {
+        if (_action.matchAction(Hook.BORROW)) {
             debtInfo = _openDebt(_borrower, _action);
         } else if (_action.matchAction(Hook.SWITCH_COLLATERAL)) {
             debtInfo = _changeCollateralType(_borrower, _action.matchAction(Hook.SAME_ASSET));
@@ -250,8 +244,9 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
         (collateralConfig, debtConfig) = _getOrderedConfigs(_silo, debtInfo, _action);
     }
 
-    function crossReentrancyGuardEntered() external view virtual returns (bool) {
-        return _crossReentrantStatus != CrossEntrancy.NOT_ENTERED;
+    function crossReentrantStatus() external view virtual returns (bool entered, uint256 status) {
+        status = _crossReentrantStatus;
+        entered = status != CrossEntrancy.NOT_ENTERED;
     }
 
     /// @inheritdoc ISiloConfig
@@ -416,7 +411,6 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
         });
     }
 
-    // TODO make sure, this getters for configs does not increase gas
     function _silo1ConfigData() internal view returns (ConfigData memory config) {
         config = ConfigData({
             daoFee: _DAO_FEE,

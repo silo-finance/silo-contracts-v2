@@ -607,7 +607,7 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
         vm.expectCall(
             collateralConfig.collateralShareToken,
             abi.encodeWithSelector(
-                IShareToken.forwardTransfer.selector, BORROWER, liquidator, COLLATERAL - 1 // TODO why -1?
+                IShareToken.forwardTransfer.selector, BORROWER, liquidator, COLLATERAL - 1
             )
         );
 
@@ -615,13 +615,13 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
 
         assertEq(
             IShareToken(collateralConfig.collateralShareToken).balanceOf(liquidator),
-            COLLATERAL - 1, // TODO check why
+            COLLATERAL - 1,
             "liquidator should have s-collateral, because of sToken"
         );
 
         assertEq(
             IShareToken(collateralConfig.collateralShareToken).balanceOf(BORROWER),
-            1, // TODO check why
+            1,
             "BORROWER should have NO s-collateral"
         );
     }

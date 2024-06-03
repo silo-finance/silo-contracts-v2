@@ -9,7 +9,7 @@ import {CommonDeploy, SiloCoreContracts} from "../_CommonDeploy.sol";
 import {ISiloFactory} from "silo-core/contracts/interfaces/ISiloFactory.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
-import {IHookReceiver} from "silo-core/contracts/utils/hook-receivers/interfaces/IHookReceiver.sol";
+import {IHookReceiver} from "silo-core/contracts/interfaces/IHookReceiver.sol";
 import {IInterestRateModelV2} from "silo-core/contracts/interfaces/IInterestRateModelV2.sol";
 import {IInterestRateModelV2ConfigFactory} from "silo-core/contracts/interfaces/IInterestRateModelV2ConfigFactory.sol";
 import {IInterestRateModelV2Config} from "silo-core/contracts/interfaces/IInterestRateModelV2Config.sol";
@@ -65,11 +65,6 @@ contract SiloDeploy is CommonDeploy {
 
         console2.log("[SiloCommonDeploy] Config prepared");
 
-        address interestRateModel = _resolveDeployedContract(SiloCoreContracts.INTEREST_RATE_MODEL_V2);
-
-        siloInitData.interestRateModel0 = interestRateModel;
-        siloInitData.interestRateModel1 = interestRateModel;
-
         InterestRateModelConfigData modelData = new InterestRateModelConfigData();
 
         IInterestRateModelV2.Config memory irmConfigData0 = modelData.getConfigData(config.interestRateModelConfig0);
@@ -81,7 +76,11 @@ contract SiloDeploy is CommonDeploy {
 
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
 
-        beforeCreateSilo(siloInitData);
+        address hookImpl = beforeCreateSilo(siloInitData);
+
+        if (hookImpl != address(0) && hookReceiverImplementation != hookImpl) {
+            hookReceiverImplementation = hookImpl;
+        }
 
         console2.log("[SiloCommonDeploy] `beforeCreateSilo` executed");
 
@@ -266,7 +265,7 @@ contract SiloDeploy is CommonDeploy {
 
     function beforeCreateSilo(
         ISiloConfig.InitData memory
-    ) internal virtual {
+    ) internal virtual returns (address _hookImplementation) {
     }
 
     function _getClonableHookReceiverConfig(address _implementation)

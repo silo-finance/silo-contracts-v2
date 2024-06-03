@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.5.0;
 
-import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
+import {ISiloConfig} from "./ISiloConfig.sol";
 
 interface IHookReceiver {
     struct HookConfig {

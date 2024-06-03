@@ -21,8 +21,8 @@ contract ShareDebtToken is IERC20R, ShareToken {
     mapping(address owner => mapping(address recipient => uint256 allowance)) private _receiveAllowances;
 
     /// @param _silo Silo address for which tokens was deployed
-    function initialize(ISilo _silo) external virtual initializer {
-        __ShareToken_init(_silo);
+    function initialize(ISilo _silo, address _hookReceiver, uint24 _tokenType) external virtual initializer {
+        __ShareToken_init(_silo, _hookReceiver, _tokenType);
     }
 
     /// @inheritdoc IShareToken
@@ -115,7 +115,6 @@ contract ShareDebtToken is IERC20R, ShareToken {
         if (_sender != address(0) && balanceOf(_sender) == 0) {
             // we can have debt in one silo only, so when you transfer all your debt we can close position
             // we can close only when _amount > 0, otherwise you can transfer 0 and close debt in other silo
-            // TODO write test case for this, it was a bug
             if (_amount != 0) siloConfig.closeDebt(_sender);
         }
 

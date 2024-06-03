@@ -8,8 +8,8 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {Hook} from "silo-core/contracts/lib/Hook.sol";
-import {IGaugeLike as IGauge} from "./interfaces/IGaugeLike.sol";
-import {IGaugeHookReceiver, IHookReceiver} from "./interfaces/IGaugeHookReceiver.sol";
+import {IGaugeLike as IGauge} from "../../../interfaces/IGaugeLike.sol";
+import {IGaugeHookReceiver, IHookReceiver} from "../../../interfaces/IGaugeHookReceiver.sol";
 import {SiloHookReceiver} from "../_common/SiloHookReceiver.sol";
 
 /// @notice Silo share token hook receiver for the gauge.
@@ -102,21 +102,14 @@ contract GaugeHookReceiver is IGaugeHookReceiver, SiloHookReceiver, Ownable2Step
         if (theGauge.is_killed()) return; // Do not revert if gauge is killed. Ignore the action.
         if (!_getHooksAfter(_silo).matchAction(_action)) return; // Should not happen, but just in case
 
-        (
-            address sender,
-            address recipient,
-            /* uint256 amount */,
-            uint256 senderBalance,
-            uint256 recipientBalance,
-            uint256 totalSupply
-        ) = _inputAndOutput.afterTokenTransferDecode();
+        Hook.AfterTokenTransfer memory input = _inputAndOutput.afterTokenTransferDecode();
 
         theGauge.afterTokenTransfer(
-            sender,
-            senderBalance,
-            recipient,
-            recipientBalance,
-            totalSupply
+            input.sender,
+            input.senderBalance,
+            input.recipient,
+            input.recipientBalance,
+            input.totalSupply
         );
     }
 

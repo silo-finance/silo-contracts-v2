@@ -21,7 +21,7 @@ contract MaxWithdrawTest is MaxWithdrawCommon {
     /*
     forge test -vv --ffi --mt test_maxWithdraw_zero
     */
-    function test_maxWithdraw_zero() public {
+    function test_maxWithdraw_zero() public view {
         uint256 maxWithdraw = silo1.maxWithdraw(borrower);
         assertEq(maxWithdraw, 0, "nothing to withdraw");
     }
@@ -209,7 +209,7 @@ contract MaxWithdrawTest is MaxWithdrawCommon {
         _assertMaxWithdrawIsZeroAtTheEnd(1, _sameAsset);
     }
 
-    function _assertBorrowerHasNothingToWithdraw() internal {
+    function _assertBorrowerHasNothingToWithdraw() internal view {
         (, address collateralShareToken, ) = silo0.config().getShareTokens(address(silo0));
 
         assertEq(silo0.maxWithdraw(borrower), 0, "expect maxWithdraw to be 0");

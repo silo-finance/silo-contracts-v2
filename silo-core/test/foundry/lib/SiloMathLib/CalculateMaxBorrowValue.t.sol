@@ -9,7 +9,7 @@ contract CalculateMaxBorrowValueTest is Test {
     /*
     forge test -vv --mt test_calculateMaxBorrow
     */
-    function test_calculateMaxBorrowValue() public {
+    function test_calculateMaxBorrowValue() public pure {
         uint256 configMaxLtv;
         uint256 sumOfBorrowerCollateralValue;
         uint256 borrowerDebtValue;

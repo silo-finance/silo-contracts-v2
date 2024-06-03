@@ -105,14 +105,14 @@ contract MaxRepaySharesTest is SiloLittleHelper, Test {
         _ensureBorrowerHasDebt();
     }
 
-    function _ensureBorrowerHasDebt() internal {
+    function _ensureBorrowerHasDebt() internal view {
         (,, address debtShareToken) = silo1.config().getShareTokens(address(silo1));
 
         assertGt(silo1.maxRepayShares(borrower), 0, "expect debt");
         assertGt(IShareToken(debtShareToken).balanceOf(borrower), 0, "expect debtShareToken balance > 0");
     }
 
-    function _assertBorrowerHasNoDebt() internal {
+    function _assertBorrowerHasNoDebt() internal view {
         (,, address debtShareToken) = silo1.config().getShareTokens(address(silo1));
 
         assertEq(silo1.maxRepayShares(borrower), 0, "expect maxRepayShares to be 0");

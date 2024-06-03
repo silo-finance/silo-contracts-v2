@@ -1,18 +1,24 @@
 pragma solidity ^0.8.20;
 
-import {Deployers} from "./utils/Deployers.sol";
-import {Actor} from "./utils/Actor.sol";
+import {PropertiesAsserts} from "properties/util/PropertiesHelper.sol";
+import {TestERC20Token} from "properties/ERC4626/util/TestERC20Token.sol";
+
+import {IERC20} from "openzeppelin5/token/ERC20/ERC20.sol";
+import {Strings} from "openzeppelin5/utils/Strings.sol";
+import {Math} from "openzeppelin5/utils/math/Math.sol";
+
 import {ISiloConfig} from "silo-core/contracts/SiloConfig.sol";
 import {Silo, ISilo} from "silo-core/contracts/Silo.sol";
 import {PartialLiquidation} from "silo-core/contracts/liquidation/PartialLiquidation.sol";
+import {PartialLiquidationLib} from "silo-core/contracts/liquidation/lib/PartialLiquidationLib.sol";
+import {Hook} from "silo-core/contracts/lib/Hook.sol";
 import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
+import {Rounding} from "silo-core/contracts/lib/Rounding.sol";
 import {IInterestRateModel} from "silo-core/contracts/interfaces/IInterestRateModel.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
-import {PropertiesAsserts} from "properties/util/PropertiesHelper.sol";
 
-import {TestERC20Token} from "properties/ERC4626/util/TestERC20Token.sol";
-import {IERC20} from "openzeppelin5/token/ERC20/ERC20.sol";
-import {Strings} from "openzeppelin5/utils/Strings.sol";
+import {Deployers} from "./utils/Deployers.sol";
+import {Actor} from "./utils/Actor.sol";
 
 // Note: In order to run this campaign all library functions marked as `public` or `external`
 // Need to be changed to be `internal`. This includes all library contracts in contracts/lib/
@@ -28,24 +34,25 @@ SOLC_VERSION=0.8.24 echidna silo-core/test/echidna/EchidnaE2E.sol \
 contract EchidnaE2E is Deployers, PropertiesAsserts {
     using SiloLensLib for Silo;
     using Strings for uint256;
-    ISiloConfig siloConfig;
 
-    address deployer;
-    uint256 startTimestamp = 1706745600;
+    ISiloConfig internal siloConfig;
+
+    address internal deployer;
+    uint256 internal startTimestamp = 1706745600;
     // The same block height also needs to be set in the e2e.yaml file
-    uint256 startBlockHeight = 17336000;
+    uint256 internal startBlockHeight = 17336000;
 
-    address public _vault0;
-    address public _vault1;
-    Silo public vault0;
-    Silo public vault1;
+    address internal _vault0;
+    address internal _vault1;
+    Silo internal vault0;
+    Silo internal vault1;
 
-    TestERC20Token _asset0;
-    TestERC20Token _asset1;
+    TestERC20Token internal _asset0;
+    TestERC20Token internal _asset1;
 
-    Actor[] public actors;
+    Actor[] internal actors;
 
-    bool sameAsset;
+    bool internal sameAsset;
 
     event ExactAmount(string msg, uint256 amount);
 
@@ -120,6 +127,8 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
        ================================================================ */
 
     function deposit(uint8 actorIndex, bool vaultZero, uint256 amount) public returns (uint256 shares) {
+        emit LogUint256("[deposit] block.timestamp:", block.timestamp);
+
         Actor actor = _selectActor(actorIndex);
 
         shares = actor.deposit(vaultZero, amount);
@@ -127,6 +136,8 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
     }
 
     function depositAssetType(uint8 actorIndex, bool vaultZero, uint256 amount, ISilo.CollateralType assetType) public returns (uint256 shares) {
+        emit LogUint256("[depositAssetType] block.timestamp:", block.timestamp);
+
         Actor actor = _selectActor(actorIndex);
 
         shares = actor.depositAssetType(vaultZero, amount, assetType);
@@ -144,6 +155,8 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
     }
 
     function mint(uint8 actorIndex, bool vaultZero, uint256 shares) public returns (uint256 assets) {
+        emit LogUint256("[mint] block.timestamp:", block.timestamp);
+
         Actor actor = _selectActor(actorIndex);
 
         assets = actor.mint(vaultZero, shares);
@@ -151,6 +164,8 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
     }
 
     function mintAssetType(uint8 actorIndex, bool vaultZero, uint256 shares, ISilo.CollateralType assetType) public returns (uint256 assets) {
+        emit LogUint256("[mintAssetType] block.timestamp:", block.timestamp);
+
         Actor actor = _selectActor(actorIndex);
 
         assets = actor.mintAssetType(vaultZero, shares, assetType);
@@ -158,56 +173,78 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
     }
 
     function withdraw(uint8 actorIndex, bool vaultZero, uint256 assets) public {
+        emit LogUint256("[withdraw] block.timestamp:", block.timestamp);
+
         Actor actor = _selectActor(actorIndex);
         actor.withdraw(vaultZero, assets);
     }
 
     function withdrawAssetType(uint8 actorIndex, bool vaultZero, uint256 assets, ISilo.CollateralType assetType) public {
+        emit LogUint256("[withdrawAssetType] block.timestamp:", block.timestamp);
+
         Actor actor = _selectActor(actorIndex);
         actor.withdrawAssetType(vaultZero, assets, assetType);
     }
 
     function redeem(uint8 actorIndex, bool vaultZero, uint256 shares) public {
+        emit LogUint256("[redeem] block.timestamp:", block.timestamp);
+
         Actor actor = _selectActor(actorIndex);
         actor.redeem(vaultZero, shares);
     }
 
     function redeemAssetType(uint8 actorIndex, bool vaultZero, uint256 shares, ISilo.CollateralType assetType) public {
+        emit LogUint256("[redeemAssetType] block.timestamp:", block.timestamp);
+
         Actor actor = _selectActor(actorIndex);
         actor.redeemAssetType(vaultZero, shares, assetType);
     }
 
     function borrow(uint8 actorIndex, bool vaultZero, uint256 assets) public {
+        emit LogUint256("[borrow] block.timestamp:", block.timestamp);
+
         Actor actor = _selectActor(actorIndex);
         actor.borrow(vaultZero, assets);
     }
 
     function borrowShares(uint8 actorIndex, bool vaultZero, uint256 shares) public {
+        emit LogUint256("[borrowShares] block.timestamp:", block.timestamp);
+
         Actor actor = _selectActor(actorIndex);
         actor.borrowShares(vaultZero, shares);
     }
 
     function repay(uint8 actorIndex, bool vaultZero, uint256 amount) public {
+        emit LogUint256("[repay] block.timestamp:", block.timestamp);
+
         Actor actor = _selectActor(actorIndex);
         actor.repay(vaultZero, amount);
     }
 
     function repayShares(uint8 actorIndex, bool vaultZero, uint256 shares) public returns (uint256 assets) {
+        emit LogUint256("[repayShares] block.timestamp:", block.timestamp);
+
         Actor actor = _selectActor(actorIndex);
         assets = actor.repayShares(vaultZero, shares);
     }
 
     function accrueInterest(bool vaultZero) public {
+        emit LogUint256("[accrueInterest] block.timestamp:", block.timestamp);
+
         Silo vault = vaultZero ? vault0 : vault1;
         vault.accrueInterest();
     }
 
     function withdrawFees(bool vaultZero) public {
+        emit LogUint256("[withdrawFees] block.timestamp:", block.timestamp);
+
         Silo vault = vaultZero ? vault0 : vault1;
         vault.withdrawFees();
     }
 
     function transitionCollateral(uint8 actorIndex, bool vaultZero, uint256 shares, ISilo.CollateralType withdrawType) public returns (uint256 assets) {
+        emit LogUint256("[transitionCollateral] block.timestamp:", block.timestamp);
+
         Actor actor = _selectActor(actorIndex);
         assets = actor.transitionCollateral(vaultZero, shares, withdrawType);
     }
@@ -218,6 +255,8 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         uint256 debtToCover,
         bool receiveSToken
     ) public {
+        emit LogUint256("[liquidationCall] block.timestamp:", block.timestamp);
+
         Actor borrower = _selectActor(actorIndexBorrower);
         Actor liquidator = _selectActor(actorIndexLiquidator);
 
@@ -233,6 +272,8 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
 
     // maxDeposit functions are aligned with ERC4626 standard
     function maxDeposit_correctMax(uint8 actorIndex) public {
+        emit LogUint256("[maxDeposit_correctMax] block.timestamp:", block.timestamp);
+
         Actor actor = _selectActor(actorIndex);
         uint256 maxAssets = vault0.maxDeposit(address(actor));
         require(maxAssets != 0, "max deposit is zero");
@@ -245,13 +286,15 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         emit LogString(string.concat("Max Assets to deposit:", maxAssets.toString()));
 
         try actor.deposit(true, maxAssets) {
-
         } catch {
+            emit LogString("[maxDeposit_correctMax] failed on deposit");
             assert(false);
         }
     }
 
     function maxMint_correctMax(uint8 actorIndex, bool vaultZero) public {
+        emit LogUint256("[maxMint_correctMax] block.timestamp:", block.timestamp);
+
         Actor actor = _selectActor(actorIndex);
         Silo vault = vaultZero ? vault0 : vault1;
         TestERC20Token token = vaultZero ? _asset0 : _asset1;
@@ -271,11 +314,14 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         try actor.mint(vaultZero, maxShares) {
 
         } catch {
+            emit LogString("[maxMint_correctMax] failed on mint");
             assert(false);
         }
     }
 
     function maxWithdraw_correctMax(uint8 actorIndex) public {
+        emit LogUint256("[maxWithdraw_correctMax] block.timestamp:", block.timestamp);
+
         Actor actor = _selectActor(actorIndex);
 
         (, bool _vaultWithCollateral) = _invariant_onlySolventUserCanRedeem(address(actor));
@@ -283,9 +329,36 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         require(_requireHealthySilos(), "we dont want IRM to fail");
 
         uint256 maxAssets = vault.maxWithdraw(address(actor));
-        (, address collShareToken, ) = siloConfig.getShareTokens(address(vault));
-        require(IERC20(collShareToken).balanceOf(address(actor)) > 0, "No deposits");
-        require(maxAssets != 0, "Zero assets to withdraw");
+
+        if (maxAssets == 0) {
+            (
+                ISiloConfig.ConfigData memory collateralConfig,
+                ISiloConfig.ConfigData memory debtConfig,
+                ISiloConfig.DebtInfo memory debtInfo
+            ) = siloConfig.getConfigs(address(vault), address(actor), Hook.WITHDRAW);
+
+            uint256 shareBalance = IERC20(collateralConfig.collateralShareToken).balanceOf(address(actor));
+            uint256 debtShareBalance = IERC20(debtConfig.debtShareToken).balanceOf(address(actor));
+            uint256 vaultLiquidity = vault.getLiquidity();
+            uint256 ltv = vault.getLtv(address(actor));
+            bool isSolvent = vault.isSolvent(address(actor));
+
+            // below are all cases where maxAssets can be 0
+            if (shareBalance == 0 || !isSolvent || vaultLiquidity == 0) {
+                // we good
+            } else {
+                emit LogString("[maxWithdraw_correctMax] maxAssets is zero for no reason");
+                emit LogString(isSolvent ? "actor solvent" : "actor not solvent");
+                emit LogUint256("shareBalance", shareBalance);
+                emit LogUint256("debtShareBalance", debtShareBalance);
+                emit LogUint256("vault.getLiquidity()", vaultLiquidity);
+                emit LogUint256("ltv (is it close to LT?)", ltv);
+
+                assert(false); // why max withdraw is 0?
+            }
+        }
+
+        if (maxAssets == 0) return;
 
         uint256 liquidity = vault.getLiquidity(); // includes interest
         emit LogString(string.concat("Max Assets to withdraw:", maxAssets.toString()));
@@ -294,12 +367,14 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         try actor.withdraw(_vaultWithCollateral, maxAssets) {
             emit LogString("Withdrawal succeeded");
         } catch {
-            emit LogString("Withdrawal failed");
+            emit LogString("Withdrawal failed, but it should not!");
             assert(false);
         }
     }
 
     function maxRedeem_correctMax(uint8 actorIndex) public {
+        emit LogUint256("[maxRedeem_correctMax] block.timestamp:", block.timestamp);
+
         Actor actor = _selectActor(actorIndex);
 
         (, bool _vaultWithCollateral) = _invariant_onlySolventUserCanRedeem(address(actor));
@@ -319,6 +394,8 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
     }
 
     function maxBorrow_correctReturnValue(uint8 actorIndex) public {
+        emit LogUint256("[maxBorrow_correctReturnValue] block.timestamp:", block.timestamp);
+
         Actor actor = _selectActor(actorIndex);
         uint256 maxAssets = vault0.maxBorrow(address(actor), sameAsset);
         require(maxAssets != 0, "Zero assets to borrow");
@@ -341,6 +418,8 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
     }
 
     function maxBorrowShares_correctReturnValue(uint8 actorIndex) public {
+        emit LogUint256("[maxBorrowShares_correctReturnValue] block.timestamp:", block.timestamp);
+
         Actor actor = _selectActor(actorIndex);
         uint256 maxShares = vault0.maxBorrowShares(address(actor), sameAsset);
         require(maxShares != 0, "Zero assets to borrow");
@@ -356,6 +435,8 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
     }
 
     function maxRepay_correctReturnValue(uint8 actorIndex) public {
+        emit LogUint256("[maxRepay_correctReturnValue] block.timestamp:", block.timestamp);
+
         Actor actor = _selectActor(actorIndex);
         uint256 maxAssets = vault0.maxRepay(address(actor));
         require(maxAssets != 0, "Zero assets to repay");
@@ -375,6 +456,8 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
     }
 
     function maxRepayShares_correctReturnValue(uint8 actorIndex) public {
+        emit LogUint256("[maxRepayShares_correctReturnValue] block.timestamp:", block.timestamp);
+
         Actor actor = _selectActor(actorIndex);
         uint256 maxShares = vault0.maxRepayShares(address(actor));
         require(maxShares != 0, "Zero shares to repay");
@@ -396,6 +479,8 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
     }
 
     function maxLiquidation_correctReturnValue(uint8 actorIndex) public {
+        emit LogUint256("[maxLiquidation_correctReturnValue] block.timestamp:", block.timestamp);
+
         Actor actor = _selectActor(actorIndex);
         Actor secondActor = _selectActor(actorIndex + 1);
 
@@ -427,6 +512,8 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
        ================================================================ */
 
     function previewDeposit_doesNotReturnMoreThanDeposit(uint8 actorIndex, uint256 assets) public {
+        emit LogUint256("[previewDeposit_doesNotReturnMoreThanDeposit] block.timestamp:", block.timestamp);
+
         Actor actor = _selectActor(actorIndex);
         uint256 previewShares = vault0.previewDeposit(assets);
         uint256 shares = actor.deposit(true, assets);
@@ -434,6 +521,8 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
     }
 
     function previewMint_DoesNotReturnLessThanMint(uint8 actorIndex, uint256 shares) public {
+        emit LogUint256("[previewMint_DoesNotReturnLessThanMint] block.timestamp:", block.timestamp);
+
         Actor actor = _selectActor(actorIndex);
         uint256 previewAssets = vault0.previewMint(shares);
         uint256 assets = actor.mint(true, shares);
@@ -441,6 +530,8 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
     }
 
     function previewWithdraw_doesNotReturnLessThanWithdraw(uint8 actorIndex, uint256 assets) public {
+        emit LogUint256("[previewWithdraw_doesNotReturnLessThanWithdraw] block.timestamp:", block.timestamp);
+
         Actor actor = _selectActor(actorIndex);
         uint256 previewShares = vault0.previewWithdraw(assets);
         uint256 shares = actor.withdraw(true, assets);
@@ -448,6 +539,8 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
     }
 
     function previewRedeem_doesNotReturnMoreThanRedeem(uint8 actorIndex, uint256 shares) public {
+        emit LogUint256("[previewRedeem_doesNotReturnMoreThanRedeem] block.timestamp:", block.timestamp);
+
         Actor actor = _selectActor(actorIndex);
         uint256 previewAssets = vault0.previewRedeem(shares);
         uint256 assets = actor.redeem(true, shares);
@@ -459,11 +552,15 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
             Check if shares or assets can round down to zero
        ================================================================ */
     function depositNeverMintsZeroShares(uint8 actorIndex, bool vaultZero, uint256 amount) public {
+        emit LogUint256("[depositNeverMintsZeroShares] block.timestamp:", block.timestamp);
+
         uint256 shares = deposit(actorIndex, vaultZero, amount);
         assertNeq(shares, 0 , "Deposit minted zero shares");
     }
 
     function repayNeverReturnsZeroAssets(uint8 actorIndex, bool vaultZero, uint256 shares) public {
+        emit LogUint256("[repayNeverReturnsZeroAssets] block.timestamp:", block.timestamp);
+
         uint256 assets = repayShares(actorIndex, vaultZero, shares);
         assertNeq(assets, 0, "repayShares returned zero assets");
     }
@@ -489,6 +586,8 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
 
     // Property: A user who's debt is above the liquidation threshold cannot be liquidated by another user
     function cannotLiquidateUserUnderLt(uint8 actorIndex, bool receiveShares) public {
+        emit LogUint256("[cannotLiquidateUserUnderLt] block.timestamp:", block.timestamp);
+
         Actor actor = _selectActor(actorIndex);
         Actor liquidator = _selectActor(actorIndex + 1);
 
@@ -514,15 +613,19 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
 
     // Property: A user who's debt is above the liquidation threshold cannot be liquidated by another user
     function cannotLiquidateASolventUser(uint8 actorIndex, bool receiveShares) public {
+        emit LogUint256("[cannotLiquidateASolventUser] block.timestamp:", block.timestamp);
+
         Actor actor = _selectActor(actorIndex);
         Actor liquidator = _selectActor(actorIndex + 1);
 
         (bool isSolvent, bool _vaultZeroWithDebt) = _invariant_insolventHasDebt(address(actor));
 
         Silo vault = _vaultZeroWithDebt ? vault0 : vault1;
-        require(isSolvent, "user not solvent");
+        require(isSolvent, "user not solvent - ignoring this case");
 
         (, uint256 debtToRepay) = liquidationModule.maxLiquidation(address(vault), address(actor));
+
+        _requireTotalCap(_vaultZeroWithDebt, address(liquidator), debtToRepay);
 
         try liquidator.liquidationCall(_vaultZeroWithDebt, address(actor), debtToRepay, receiveShares, siloConfig) {
             emit LogString("Solvent user liquidated!");
@@ -534,14 +637,20 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
 
     // Property: An insolvent user cannot prevent others from liquidating his debt
     function cannotPreventInsolventUserFromBeingLiquidated(uint8 actorIndex, bool receiveShares) public {
+        emit LogUint256("[cannotPreventInsolventUserFromBeingLiquidated] block.timestamp:", block.timestamp);
+
         Actor actor = _selectActor(actorIndex);
         Actor liquidator = _selectActor(actorIndex + 1);
 
         (bool isSolvent, bool _vaultZeroWithDebt) = _invariant_insolventHasDebt(address(actor));
-        require(!isSolvent, "user not solvent");
+        require(!isSolvent, "[cannotPreventInsolventUserFromBeingLiquidated] user must be insolvent");
+
+        emit LogString(isSolvent ? "user is solvent" : "user is NOT solvent");
 
         Silo siloWithDebt = _vaultZeroWithDebt ? vault0 : vault1;
         (, uint256 debtToRepay) = liquidationModule.maxLiquidation(address(siloWithDebt), address(actor));
+
+        _requireTotalCap(_vaultZeroWithDebt, address(liquidator), debtToRepay);
 
         try liquidator.liquidationCall(_vaultZeroWithDebt, address(actor), debtToRepay, receiveShares, siloConfig) {
         } catch {
@@ -550,36 +659,61 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         }
     }
 
-    // Property: A slightly insolvent user cannot be fully liquidated
+    // Property: A slightly insolvent user cannot be fully liquidated, if he is below "dust" treshhold
+    // it is hard to figure out, if this case is partial or we need to force full,
+    // we forcing full when `repayValue/_totalBorrowerDebtValue` > _DEBT_DUST_LEVEL
+    // so max repay value under dust level is `repayValue = _totalBorrowerDebtValue * _DEBT_DUST_LEVEL`
+    // based on this we will make decision if this is partial or full liquidation and we will run some checks
     function cannotFullyLiquidateSmallLtv(uint8 actorIndex) public {
+        emit LogUint256("[cannotFullyLiquidateSmallLtv] block.timestamp:", block.timestamp);
+
         Actor actor = _selectActor(actorIndex);
         Actor actorTwo = _selectActor(actorIndex + 1);
 
         (bool isSolvent, bool _vaultZeroWithDebt) = _invariant_insolventHasDebt(address(actor));
+        require(!isSolvent, "we only want insolvent cases here");
 
         Silo vault = _vaultZeroWithDebt ? vault0 : vault1;
-        Silo siloWithCollateral = _vaultZeroWithDebt ? vault1 : vault0;
 
-        uint256 lt = siloWithCollateral.getLt();
-        uint256 ltv = vault.getLtv(address(actor));
+        uint256 ltvBefore = vault.getLtv(address(actor));
 
+        uint256 maxRepay = vault.maxRepay(address(actor));
+        // we assume we do not have oracle and price is 1:1
+        uint256 maxPartialRepayValue = maxRepay * PartialLiquidationLib._DEBT_DUST_LEVEL / 1e18;
         (, uint256 debtToRepay) = liquidationModule.maxLiquidation(address(vault), address(actor));
-        require(!isSolvent, "Not insolvent");
 
-        emit LogString(string.concat("User LTV:", ltv.toString(), " Liq Threshold:", lt.toString()));
+        bool isPartial = debtToRepay < maxPartialRepayValue;
+
+        if (!isPartial) {
+            assertEq(debtToRepay, maxRepay, "we assume, this is full liquidation");
+        }
+
+        _requireTotalCap(_vaultZeroWithDebt, address(actorTwo), debtToRepay);
 
         actorTwo.liquidationCall(_vaultZeroWithDebt, address(actor), debtToRepay, false, siloConfig);
 
-        uint256 afterLtv = vault.getLtv(address(actor));
-        emit LogString(string.concat("User afterLtv:", afterLtv.toString()));
+        uint256 ltvAfter = vault.getLtv(address(actor));
+        emit LogString(string.concat("User afterLtv:", ltvAfter.toString()));
 
-        assert(afterLtv > 0 && afterLtv < lt);
+        if (isPartial) {
+            assertLt(ltvAfter, ltvBefore, "we expect LTV to go down after partial liquidation");
+
+            Silo siloWithCollateral = _vaultZeroWithDebt ? vault1 : vault0;
+            uint256 lt = siloWithCollateral.getLt();
+            emit LogString(string.concat("User LTV:", ltvAfter.toString(), " Liq Threshold:", lt.toString()));
+
+            assert(ltvAfter > 0 && ltvAfter < lt);
+        } else {
+            assertEq(ltvAfter, 0, "when not partial, user should be completely liquidated");
+        }
     }
 
     // Property: A user self-liquidating cannot gain assets or shares
     function selfLiquidationDoesNotResultInMoreSharesOrAssets(uint8 actorIndex, uint256 debtToRepay, bool receiveSToken)
         public
     {
+        emit LogUint256("[selfLiquidationDoesNotResultInMoreSharesOrAssets] block.timestamp:", block.timestamp);
+
         Actor actor = _selectActor(actorIndex);
         (, bool _vaultZeroWithDebt) = _invariant_insolventHasDebt(address(actor));
 
@@ -612,49 +746,74 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         uint256 shares,
         ISilo.CollateralType assetType
     ) public {
+        emit LogUint256("[transitionCollateral_doesNotResultInMoreShares] block.timestamp:", block.timestamp);
+
         Actor actor = _selectActor(actorIndex);
         Silo vault = vaultZero ? vault0 : vault1;
 
         (address protected, address collateral, ) = siloConfig.getShareTokens(address(vault));
 
-        uint256 shareSumBefore;
-        uint256 previewAssetsSumBefore;
+        uint256 maxWithdrawSumBefore;
+
+        uint256 protBalanceBefore = IShareToken(protected).balanceOf(address(actor));
+        uint256 collBalanceBefore = IShareToken(collateral).balanceOf(address(actor));
 
         { // too deep
-            uint256 protBalanceBefore = IShareToken(protected).balanceOf(address(actor));
-            uint256 collBalanceBefore = IShareToken(collateral).balanceOf(address(actor));
-            uint256 previewCollateralBefore = vault.previewRedeem(collBalanceBefore, ISilo.CollateralType.Collateral);
-            uint256 previewProtectedBefore = vault.previewRedeem(protBalanceBefore, ISilo.CollateralType.Protected);
-
-            shareSumBefore = protBalanceBefore + collBalanceBefore;
-            previewAssetsSumBefore = previewCollateralBefore + previewProtectedBefore;
+            uint256 maxCollateralBefore = vault.maxWithdraw(address(actor), ISilo.CollateralType.Collateral);
+            uint256 maxProtectedBefore = vault.maxWithdraw(address(actor), ISilo.CollateralType.Protected);
+            maxWithdrawSumBefore = maxCollateralBefore + maxProtectedBefore;
         }
-
-        bool noInterest = _checkForInterest(vault);
 
         actor.transitionCollateral(vaultZero, shares, assetType);
 
         uint256 protBalanceAfter = IShareToken(protected).balanceOf(address(actor));
         uint256 collBalanceAfter = IShareToken(collateral).balanceOf(address(actor));
 
-        uint256 shareSumAfter = protBalanceAfter + collBalanceAfter;
+        { // too deep
+            uint256 maxCollateralAfter = vault.maxWithdraw(address(actor), ISilo.CollateralType.Collateral);
+            uint256 maxProtectedAfter = vault.maxWithdraw(address(actor), ISilo.CollateralType.Protected);
+            uint256 maxAssetsSumAfter = maxCollateralAfter + maxProtectedAfter;
 
-        // note: this could result in false positives due to interest calculation, and differences between
-        // protected and unprotected shares/balances. Another way to check this property would be to
-        // transitionCollateral in one direction, and then in the opposite direction, and only check shares/assets
-        // after the second transition.
-        // because of above condition is off
-        if (noInterest) {
-            assertEq(shareSumBefore, shareSumAfter, "Gained shares after transitionCollateral (no interest)");
+            assertGte(maxWithdrawSumBefore, maxAssetsSumAfter, "price is flat, so there should be no gains (we accept 2 wei loss)");
+            assertLte(maxWithdrawSumBefore - maxAssetsSumAfter, 1, "we accept 1 wei loss");
         }
 
-        uint256 previewCollateralAfter = vault.previewRedeem(collBalanceAfter, ISilo.CollateralType.Collateral);
-        uint256 previewProtectedAfter = vault.previewRedeem(protBalanceAfter, ISilo.CollateralType.Protected);
+        { // too deep
+            // note: this could result in false positives due to interest calculation, and differences between
+            // protected and unprotected shares/balances. Another way to check this property would be to
+            // transitionCollateral in one direction, and then in the opposite direction, and only check shares/assets
+            // after the second transition.
 
-        assertEq(
-            previewAssetsSumBefore, previewCollateralAfter + previewProtectedAfter,
-            "price is flat, so there should be no gains"
-        );
+            (uint256 sharesTransitioned, ISilo.CollateralType withdrawType) =
+                assetType == ISilo.CollateralType.Collateral
+                    ? (protBalanceAfter - protBalanceBefore, ISilo.CollateralType.Protected)
+                    : (collBalanceAfter - collBalanceBefore, ISilo.CollateralType.Collateral);
+
+            // transition back, so we can verify number of shares
+            actor.transitionCollateral(vaultZero, sharesTransitioned, withdrawType);
+
+            protBalanceAfter = IShareToken(protected).balanceOf(address(actor));
+            collBalanceAfter = IShareToken(collateral).balanceOf(address(actor));
+
+            uint256 maxCollateralBack = vault.maxWithdraw(address(actor), ISilo.CollateralType.Collateral);
+            uint256 maxProtectedBack = vault.maxWithdraw(address(actor), ISilo.CollateralType.Protected);
+            uint256 maxAssetsSumBack = maxCollateralBack + maxProtectedBack;
+
+            assertGte(maxWithdrawSumBefore, maxAssetsSumBack, "price is flat, so there should be no gains (we accept 1 wei diff)");
+            assertLte(maxWithdrawSumBefore - maxAssetsSumBack, 1, "we accept 1 wei diff");
+
+            assertLte(
+                protBalanceBefore - protBalanceAfter,
+                25,
+                "[protected] there should be no gain in shares, accepting 25 wei loss because of rounding policy"
+            );
+
+            assertLte(
+                collBalanceBefore - collBalanceAfter,
+                25,
+                "[collateral] there should be no gain in shares, accepting 25 wei loss because of rounding policy"
+            );
+        }
     }
 
     function _checkForInterest(Silo _silo) internal returns (bool noInterest) {
@@ -765,5 +924,14 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
 
         emit ExactAmount("maxBorrowShares0:", vault0.maxBorrowShares(_actor, sameAsset));
         emit ExactAmount("maxBorrowShares1:", vault1.maxBorrowShares(_actor, sameAsset));
+    }
+
+    function _requireTotalCap(bool vaultZero, address actor, uint256 requiredBalance) internal view {
+        TestERC20Token token = vaultZero ? _asset0 : _asset1;
+        uint256 balance = token.balanceOf(actor);
+
+        if (balance < requiredBalance) {
+            require(type(uint256).max - token.totalSupply() >= requiredBalance - balance, "total supply limit");
+        }
     }
 }

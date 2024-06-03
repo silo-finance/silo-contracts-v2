@@ -10,8 +10,12 @@ library Rounding {
     Math.Rounding internal constant DEFAULT_TO_ASSETS = (Math.Rounding.Floor);
     Math.Rounding internal constant DEFAULT_TO_SHARES = (Math.Rounding.Floor);
     Math.Rounding internal constant DEBT_TO_ASSETS = (Math.Rounding.Ceil);
-    // TODO why COLLATERAL_TO_ASSETS=Floor if DEPOSIT_TO_ASSETS is Ceil?
+    // COLLATERAL_TO_ASSETS is used to calculate borrower collateral (so we want to round down)
     Math.Rounding internal constant COLLATERAL_TO_ASSETS = (Math.Rounding.Floor);
+    // why DEPOSIT_TO_ASSETS is Up if COLLATERAL_TO_ASSETS is Down?
+    // DEPOSIT_TO_ASSETS is used for preview deposit and deposit, based on provided shares we want to pull "more" tokens
+    // so we rounding up, "token flow" is in different direction than for COLLATERAL_TO_ASSETS, that's why
+    // different rounding policy
     Math.Rounding internal constant DEPOSIT_TO_ASSETS = (Math.Rounding.Ceil);
     Math.Rounding internal constant DEPOSIT_TO_SHARES = (Math.Rounding.Floor);
     Math.Rounding internal constant BORROW_TO_ASSETS = (Math.Rounding.Floor);
