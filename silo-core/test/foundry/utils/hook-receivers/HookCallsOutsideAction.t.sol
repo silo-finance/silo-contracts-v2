@@ -32,8 +32,11 @@ contract HookCallsOutsideActionTest is IHookReceiver, ILeverageBorrower, IERC315
     bytes32 constant FLASHLOAN_CALLBACK = keccak256("ERC3156FlashBorrower.onFlashLoan");
 
     ISiloConfig internal _siloConfig;
-    uint256 hookAfterFired;
-    uint256 hookBeforeFired;
+    uint256 public hookAfterFired;
+    uint256 public hookBeforeFired;
+
+    uint24 public configuredHooksBefore;
+    uint24 public configuredHooksAfter;
 
     function setUp() public {
         token0 = new MintableToken(6);
@@ -49,6 +52,8 @@ contract HookCallsOutsideActionTest is IHookReceiver, ILeverageBorrower, IERC315
 
         SiloFixture siloFixture = new SiloFixture();
         (_siloConfig, silo0, silo1,,, partialLiquidation) = siloFixture.deploy_local(overrides);
+
+        _setAllHooks();
 
         silo0.updateHooks();
         silo1.updateHooks();
@@ -153,7 +158,6 @@ contract HookCallsOutsideActionTest is IHookReceiver, ILeverageBorrower, IERC315
         emit log_named_uint("[before] action", _action);
         _printAction(_action);
         emit log("[before] action --------------------- ");
-
     }
 
     function afterAction(address, uint256 _action, bytes calldata _inputAndOutput) external {
@@ -166,8 +170,10 @@ contract HookCallsOutsideActionTest is IHookReceiver, ILeverageBorrower, IERC315
 
             if (input.sender == address(0) || input.recipient == address(0)) {
                 assertTrue(entered, "only when minting/burning we can be inside action");
+                _tryReenter();
             } else {
                 assertTrue(entered, "on regular transfer we are also inside action, silo is locked");
+                _tryReenter();
             }
         } else {
             assertFalse(entered, "hook after must be called after any action");
@@ -186,10 +192,20 @@ contract HookCallsOutsideActionTest is IHookReceiver, ILeverageBorrower, IERC315
         return FLASHLOAN_CALLBACK;
     }
 
-    function hookReceiverConfig(address) external pure returns (uint24 hooksBefore, uint24 hooksAfter) {
+    function hookReceiverConfig(address) external view returns (uint24 hooksBefore, uint24 hooksAfter) {
+        hooksBefore = configuredHooksBefore;
+        hooksAfter = configuredHooksAfter;
+    }
+
+    function _setAllHooks() internal {
         // we want all possible combinations to be ON
-        hooksBefore = type(uint24).max;
-        hooksAfter = type(uint24).max;
+        configuredHooksBefore = type(uint24).max;
+        configuredHooksAfter = type(uint24).max;
+    }
+
+    function _setNoHooks() internal {
+        configuredHooksBefore = 0;
+        configuredHooksAfter = 0;
     }
 
     function onLeverage(address, address _borrower, address, uint256 _assets, bytes calldata _data)
@@ -219,4 +235,6 @@ contract HookCallsOutsideActionTest is IHookReceiver, ILeverageBorrower, IERC315
         if (_action.matchAction(Hook.PROTECTED_TOKEN)) emit log("PROTECTED_TOKEN");
         if (_action.matchAction(Hook.DEBT_TOKEN)) emit log("DEBT_TOKEN");
     }
+
+    function _tryReenter() internal virtual {}
 }
