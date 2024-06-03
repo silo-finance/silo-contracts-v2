@@ -6,6 +6,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [0.7.0] - 2024-06-03
+### Added
+ - Refactoring of the hooks' actions and hooks inputs
+ - Reentrancy bug fix in flashLoan fn
+ - Rounding error bug fix in maxWithdraw fn
+ - Overflow bug fix on maxWithdraw fn
+ - ERC20Permit for share token
+ - Added delegate call into the callOnBehalfOfSilo fn
+ - Other minor fixes and improvements
+
 ## [0.6.2] - 2024-05-15
 ### Added
  - deployment with mocked CCIP and tokens for Arbitrum and Optimism
