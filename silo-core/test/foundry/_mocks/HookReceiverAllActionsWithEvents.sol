@@ -6,6 +6,8 @@ import {SiloHookReceiver, IHookReceiver} from "silo-core/contracts/utils/hook-re
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 
+import {console} from "forge-std/console.sol";
+
 /// @dev Hook receiver for all actions with events to see decoded inputs
 /// This contract is designed to be deployed for each test case
 contract HookReceiverAllActionsWithEvents is SiloHookReceiver {
@@ -368,14 +370,14 @@ contract HookReceiverAllActionsWithEvents is SiloHookReceiver {
     }
 
     function _processBorrow(address _silo, uint256 _action, bytes calldata _inputAndOutput, bool _isBefore) internal {
-        if (_action.matchAction(Hook.borrowAction(_NOT_LEVERAGE, _NOT_SAME_ASSET))) {
-            _processBorrowAction(_silo, _inputAndOutput, _isBefore, _NOT_LEVERAGE, _NOT_SAME_ASSET);
-        } else if (_action.matchAction(Hook.borrowAction(_LEVERAGE, _NOT_SAME_ASSET))) {
+        if (_action.matchAction(Hook.borrowAction(_LEVERAGE, _NOT_SAME_ASSET))) {
             _processBorrowAction(_silo, _inputAndOutput, _isBefore, _LEVERAGE, _NOT_SAME_ASSET);
         } else if (_action.matchAction(Hook.borrowAction(_NOT_LEVERAGE, _SAME_ASSET))) {
             _processBorrowAction(_silo, _inputAndOutput, _isBefore, _NOT_LEVERAGE, _SAME_ASSET);
         } else if (_action.matchAction(Hook.borrowAction(_LEVERAGE, _SAME_ASSET))) {
             _processBorrowAction(_silo, _inputAndOutput, _isBefore, _LEVERAGE, _SAME_ASSET);
+        } else if (_action.matchAction(Hook.borrowAction(_NOT_LEVERAGE, _NOT_SAME_ASSET))) {
+            _processBorrowAction(_silo, _inputAndOutput, _isBefore, _NOT_LEVERAGE, _NOT_SAME_ASSET);
         } else {
             revert UnknownBorrowAction();
         }

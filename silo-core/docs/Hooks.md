@@ -57,8 +57,6 @@ Hook.AfterTokenTransfer memory input = Hook.afterTokenTransferDecode(_inputAndOu
 ## borrow fn hook actions
 ```Hook.borrowAction(leverage, sameAsset)``` (beforeAction and afterAction) \
 - actions: \
-```Hook.BORROW | Hook.LEVERAGE | Hook.SAME_ASSET``` or \
-```Hook.BORROW | Hook.LEVERAGE | Hook.TWO_ASSETS``` or \
 ```Hook.BORROW | Hook.NONE | Hook.SAME_ASSET``` or \
 ```Hook.BORROW | Hook.NONE | Hook.TWO_ASSETS```
 
@@ -94,6 +92,41 @@ Hook.AfterRepayInput memory input = Hook.afterRepayDecode(_inputAndOutput);
 ```Hook.shareTokenTransfer(tokenType)``` (afterAction) \
 Where `tokenType` is `Hook.DEBT_TOKEN`
 - action: ```Hook.SHARE_TOKEN_TRANSFER | Hook.DEBT_TOKEN```
+
+data: abi.encodePacked(sender, recipient, amount, balanceOfSender, balanceOfRecepient, totalSupply)
+```
+Hook.AfterTokenTransfer memory input = Hook.afterTokenTransferDecode(_inputAndOutput);
+```
+
+## leverage fn hook actions
+```Hook.borrowAction(leverage, sameAsset)``` (beforeAction and afterAction) \
+- actions: \
+```Hook.BORROW | Hook.LEVERAGE | Hook.SAME_ASSET``` or \
+```Hook.BORROW | Hook.LEVERAGE | Hook.TWO_ASSETS``` or
+
+before borrow data: abi.encodePacked(assets, shares, receiver, borrower)
+```
+Hook.BeforeBorrowInput memory input = Hook.beforeBorrowDecode(_inputAndOutput);
+```
+after borrow data: abi.encodePacked(assets, shares, receiver, borrower, borrowedAssets, borrowedShares)
+```
+Hook.AfterBorrowInput memory input = Hook.afterBorrowDecode(_inputAndOutput);
+```
+
+```Hook.shareTokenTransfer(tokenType)``` (afterAction) \
+Where `tokenType` is `Hook.DEBT_TOKEN`
+- action: ```Hook.SHARE_TOKEN_TRANSFER | Hook.DEBT_TOKEN```
+
+data: abi.encodePacked(sender, recipient, amount, balanceOfSender, balanceOfRecepient, totalSupply)
+```
+Hook.AfterTokenTransfer memory input = Hook.afterTokenTransferDecode(_inputAndOutput);
+```
+
+```Hook.shareTokenTransfer(tokenType)``` (afterAction) \
+Where `tokenType` is `Hook.COLLATERAL_TOKEN` or `Hook.PROTECTED_TOKEN`
+- actions: \
+```Hook.SHARE_TOKEN_TRANSFER | Hook.COLLATERAL_TOKEN``` or \
+```Hook.SHARE_TOKEN_TRANSFER | Hook.PROTECTED_TOKEN```
 
 data: abi.encodePacked(sender, recipient, amount, balanceOfSender, balanceOfRecepient, totalSupply)
 ```
