@@ -129,6 +129,7 @@ interface ISiloConfig {
     error NoDebt();
     error CollateralTypeDidNotChanged();
     error CrossReentrantCall();
+    error CrossReentrancyNotActive();
     error InvalidConfigOrder();
     error FeeTooHigh();
 
