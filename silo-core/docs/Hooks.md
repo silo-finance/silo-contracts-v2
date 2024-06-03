@@ -102,7 +102,7 @@ Hook.AfterTokenTransfer memory input = Hook.afterTokenTransferDecode(_inputAndOu
 ```Hook.borrowAction(leverage, sameAsset)``` (beforeAction and afterAction) \
 - actions: \
 ```Hook.BORROW | Hook.LEVERAGE | Hook.SAME_ASSET``` or \
-```Hook.BORROW | Hook.LEVERAGE | Hook.TWO_ASSETS``` or
+```Hook.BORROW | Hook.LEVERAGE | Hook.TWO_ASSETS```
 
 before borrow data: abi.encodePacked(assets, shares, receiver, borrower)
 ```
@@ -120,6 +120,21 @@ Where `tokenType` is `Hook.DEBT_TOKEN`
 data: abi.encodePacked(sender, recipient, amount, balanceOfSender, balanceOfRecepient, totalSupply)
 ```
 Hook.AfterTokenTransfer memory input = Hook.afterTokenTransferDecode(_inputAndOutput);
+```
+
+```Hook.depositAction(collateralType)``` (beforeAction and afterAction) \
+Where `collateralType` is `ISilo.CollateralType`
+- actions: \
+```Hook.DEPOSIT | Hook.COLLATERAL_TOKEN``` or \
+```Hook.DEPOSIT | Hook.PROTECTED_TOKEN```
+
+before deposit data: abi.encodePacked(assets, shares, receiver)
+```
+Hook.BeforeDepositInput memory input = Hook.beforeDepositDecode(_inputAndOutput);
+```
+after deposit data: abi.encodePacked(assets, shares, receiver, receivedAssets, mintedShares)
+```
+Hook.AfterDepositInput memory input = Hook.afterDepositDecode(_inputAndOutput);
 ```
 
 ```Hook.shareTokenTransfer(tokenType)``` (afterAction) \

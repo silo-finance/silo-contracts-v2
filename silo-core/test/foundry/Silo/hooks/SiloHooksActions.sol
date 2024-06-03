@@ -476,7 +476,8 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock, ILeverageBorr
 
     // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testLeverageAllHooks
     function testLeverageAllHooks() public {
-        uint256 beforeActions = Hook.borrowAction(_LEVERAGE, _NOT_SAME_ASSET);
+        uint256 beforeActions = Hook.borrowAction(_LEVERAGE, _NOT_SAME_ASSET)
+            .addAction(Hook.depositAction(COLLATERAL));
 
         uint256 afterAction = beforeActions
             .addAction(Hook.shareTokenTransfer(Hook.COLLATERAL_TOKEN))
@@ -1121,6 +1122,9 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock, ILeverageBorr
         );
 
         vm.expectEmit(true, true, true, true);
+        emit DepositBeforeHA(address(_silo), _amount, SHARES_0, _receiver, COLLATERAL);
+
+        vm.expectEmit(true, true, true, true);
 
         emit ShareTokenAfterHA( // deposit onLeverage
             address(_silo),
@@ -1132,6 +1136,9 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock, ILeverageBorr
             100e18 + _amount, // total supply
             COLLATERAL
         );
+
+        vm.expectEmit(true, true, true, true);
+        emit DepositAfterHA(address(_silo), _amount, SHARES_0, _amount, _amount, _receiver, COLLATERAL);
 
         vm.expectEmit(true, true, true, true);
 
