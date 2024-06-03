@@ -13,6 +13,8 @@ import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
 import {MintableToken} from "../../_common/MintableToken.sol";
 import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
 
+import {console} from "forge-std/console.sol";
+
 /*
 FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc LeverageSameAssetTest
 */
@@ -164,10 +166,11 @@ contract LeverageSameAssetTest is SiloLittleHelper, Test {
 
     function _leverage(bool _isCollateral) internal {
         uint256 availableLiquidity = 1000e18;
-        uint256 depositAssetsRound1 = 100e18; // total user assets before leverage
-        uint256 borrowAssetsRound1 = 75e18;
+        uint256 userAssets = 100e18;
+        uint256 depositAssets = 400e18;
+        uint256 borrowAssets = 300e18;
 
-        _mintAndApprove(address(silo0), token0, borrower, depositAssetsRound1);
+        _mintAndApprove(address(silo0), token0, borrower, userAssets);
 
         _addLiquidity(availableLiquidity);
 
@@ -188,45 +191,26 @@ contract LeverageSameAssetTest is SiloLittleHelper, Test {
         _expectShares(debtShareToken, 0);
 
         vm.prank(borrower);
-        silo0.leverageSameAsset(depositAssetsRound1, borrowAssetsRound1, borrower, collateralType);
+        silo0.leverageSameAsset(depositAssets, borrowAssets, borrower, collateralType);
 
         uint256 expectedLiquidity; 
         
         if (_isCollateral) {
-            expectedLiquidity = availableLiquidity + depositAssetsRound1 - borrowAssetsRound1;
+            expectedLiquidity = availableLiquidity + depositAssets - borrowAssets;
         } else { // protected
-            expectedLiquidity = availableLiquidity - borrowAssetsRound1;
+            expectedLiquidity = availableLiquidity - borrowAssets;
         }
 
         _expectLiquidity(expectedLiquidity);
 
         _expectShares(zeroSharesToken, 0);
-        _expectShares(withSharesToken, depositAssetsRound1);
-        _expectShares(debtShareToken, borrowAssetsRound1);
+        _expectShares(withSharesToken, depositAssets);
+        _expectShares(debtShareToken, borrowAssets);
 
-        uint256 depositAssetsRound2 = borrowAssetsRound1;
-        uint256 borrowAssetsRound2 = 50e18;
-
-        vm.prank(borrower);
-        silo0.leverageSameAsset(depositAssetsRound2, borrowAssetsRound2, borrower, collateralType);
-
-        if (_isCollateral) {
-            expectedLiquidity = expectedLiquidity + depositAssetsRound2 - borrowAssetsRound2;
-        } else { // protected
-            expectedLiquidity = expectedLiquidity - borrowAssetsRound2;
-        }
-
-        _expectLiquidity(expectedLiquidity);
-
-        uint256 receivedShares = depositAssetsRound1 + depositAssetsRound2;
-
-        _expectShares(zeroSharesToken, 0);
-        _expectShares(withSharesToken, receivedShares);
-        _expectShares(debtShareToken, borrowAssetsRound1 + borrowAssetsRound2);
-
+        uint256 receivedShares = IERC20(withSharesToken).balanceOf(borrower);
         uint256 sharesToAssets = silo0.convertToAssets(receivedShares);
 
-        assertGt(sharesToAssets, depositAssetsRound1, "User should receive more assets than he had");
+        assertEq(sharesToAssets, depositAssets, "User should receive more assets deposited than he had");
     }
 
     function _expectShares(address _token, uint256 _expected) internal {
