@@ -226,7 +226,12 @@ contract EchidnaMiddleman is EchidnaSetup {
             emit log_named_uint("maxRedeem                    sum", maxAssetsSumAfter);
             emit log_named_int("assets diff", maxWithdrawSumBefore.toInt256() - maxAssetsSumAfter.toInt256());
 
-            assertGe(maxWithdrawSumBefore, maxAssetsSumAfter, "price is flat, so there should be no gains (we accept 1 wei diff)");
+            assertGe(
+                maxWithdrawSumBefore,
+                maxAssetsSumAfter,
+                "price is flat, so there should be no gains (we accept 1 wei diff)"
+            );
+
             assertLe(maxWithdrawSumBefore - maxAssetsSumAfter, 1, "we accept 1 wei diff");
         }
 
@@ -261,7 +266,12 @@ contract EchidnaMiddleman is EchidnaSetup {
                 emit log_named_uint("maxWithdraw                   sum", maxAssetsSumBack);
                 emit log_named_int("assets diff", maxWithdrawSumBefore.toInt256() - maxAssetsSumBack.toInt256());
 
-                assertGe(maxWithdrawSumBefore, maxAssetsSumBack, "price is flat, so there should be no gains (we accept 1 wei diff)");
+                assertGe(
+                    maxWithdrawSumBefore,
+                    maxAssetsSumBack,
+                    "price is flat, so there should be no gains (we accept 1 wei diff)"
+                );
+
                 assertLe(maxWithdrawSumBefore - maxAssetsSumBack, 1, "we accept 1 wei diff");
             }
 
