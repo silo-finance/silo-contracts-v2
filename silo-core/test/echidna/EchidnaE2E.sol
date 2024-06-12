@@ -52,8 +52,6 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
 
     Actor[] internal actors;
 
-    bool internal sameAsset;
-
     event ExactAmount(string msg, uint256 amount);
 
     constructor() payable {
@@ -200,18 +198,18 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         actor.redeemAssetType(_vaultZero, shares, assetType);
     }
 
-    function borrow(uint8 _actorIndex, bool _vaultZero, uint256 assets) public {
+    function borrow(uint8 _actorIndex, bool _vaultZero, uint256 assets, bool _sameAsset) public {
         emit LogUint256("[borrow] block.timestamp:", block.timestamp);
 
         Actor actor = _selectActor(_actorIndex);
-        actor.borrow(_vaultZero, assets);
+        actor.borrow(_vaultZero, assets, _sameAsset);
     }
 
-    function borrowShares(uint8 _actorIndex, bool _vaultZero, uint256 shares) public {
+    function borrowShares(uint8 _actorIndex, bool _vaultZero, uint256 shares, bool _sameAsset) public {
         emit LogUint256("[borrowShares] block.timestamp:", block.timestamp);
 
         Actor actor = _selectActor(_actorIndex);
-        actor.borrowShares(_vaultZero, shares);
+        actor.borrowShares(_vaultZero, shares, _sameAsset);
     }
 
     function repay(uint8 _actorIndex, bool _vaultZero, uint256 _amount) public {
@@ -252,30 +250,64 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         assets = actor.transitionCollateral(_vaultZero, shares, withdrawType);
     }
 
-    function switchCollateralTo(uint8 _actorIndex, bool _vaultZero, bool sameAsset) public {
+    function switchCollateralTo(uint8 _actorIndex, bool _vaultZero, bool _sameAsset) public {
         emit LogUint256("[switchCollateralTo] block.timestamp:", block.timestamp);
 
         Actor actor = _selectActor(_actorIndex);
-        actor.switchCollateralTo(_vaultZero, sameAsset);
+        actor.switchCollateralTo(_vaultZero, _sameAsset);
     }
 
-    function leverageSameAsset(uint8 _actorIndex, bool _vaultZero, bool sameAsset) public returns (uint256 assets) {
-        // TODO
-//        emit LogUint256("[leverageSameAsset] block.timestamp:", block.timestamp);
-//
-//        Actor actor = _selectActor(_actorIndex);
-//        assets = actor.leverageSameAsset(_vaultZero, sameAsset);
+    function leverageSameAsset(
+        uint8 _actorIndex,
+        bool _vaultZero,
+        uint256 _depositAssets,
+        uint256 _borrowAssets,
+        // address _borrower TODO, support this
+        ISilo.CollateralType _collateralType
+    ) public {
+        emit LogUint256("[leverageSameAsset] block.timestamp:", block.timestamp);
+
+        Actor actor = _selectActor(_actorIndex);
+
+        (
+            uint256 depositedShares, uint256 borrowedShares
+        ) = actor.leverageSameAsset(_vaultZero, _depositAssets, _borrowAssets, address(actor), _collateralType);
     }
 
-    // TODO leverage
+    function leverage(
+        uint8 _actorIndex,
+        bool _vaultZero,
+        uint256 _assets,
+        address _borrower, // TODO support custom borrower
+        bool _sameAsset
+    ) public returns (uint256 depositedShares, uint256 borrowedShares) {
+        emit LogUint256("[leverage] block.timestamp:", block.timestamp);
+        Actor actor = _selectActor(_actorIndex);
+
+        actor.leverage(_vaultZero, _assets, address(this), _sameAsset);
+    }
 
     // TODO transfers s tokens
 
     // TODO setReceiveApproval
 
-    // todo flashLoan
+    function flashLoan(uint8 _actorIndex, bool _vaultZero, uint256 _amount) public {
+        emit LogUint256("[flashLoan] block.timestamp:", block.timestamp);
 
-    // todo withdrawFees
+        require(_amount != 0);
+        require(_amount < _balanceOfSilo(_vaultZero), "we only want possible flashloans");
+        require(_amount < type(uint192).max, "we dont want to revert with FeeOverflow");
+
+        Actor actor = _selectActor(_actorIndex);
+
+        try actor.flashLoan(_vaultZero, _amount) returns (bool success) {
+            emit LogString("[flashLoan] we expect success");
+            assert(success);
+        } catch {
+            emit LogString("[flashLoan] we should never fail if we repay with fee");
+            assert(false);
+        }
+    }
 
     function liquidationCall(
         uint8 actorIndexBorrower,
@@ -423,11 +455,11 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         }
     }
 
-    function maxBorrow_correctReturnValue(uint8 _actorIndex) public {
+    function maxBorrow_correctReturnValue(uint8 _actorIndex, bool _sameAsset) public {
         emit LogUint256("[maxBorrow_correctReturnValue] block.timestamp:", block.timestamp);
 
         Actor actor = _selectActor(_actorIndex);
-        uint256 maxAssets = vault0.maxBorrow(address(actor), sameAsset);
+        uint256 maxAssets = vault0.maxBorrow(address(actor), _sameAsset);
         require(maxAssets != 0, "Zero assets to borrow");
 
         emit LogString(string.concat("Max Assets to borrow:", maxAssets.toString()));
@@ -440,24 +472,24 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         emit ExactAmount("collateral share decimals:", TestERC20Token(collShareToken).decimals());
         emit ExactAmount("collateral decimals:", _asset1.decimals());
 
-        try actor.borrow(true, maxAssets) {
+        try actor.borrow(true, maxAssets, _sameAsset) {
 
         } catch {
             assert(false);
         }
     }
 
-    function maxBorrowShares_correctReturnValue(uint8 _actorIndex) public {
+    function maxBorrowShares_correctReturnValue(uint8 _actorIndex, bool _sameAsset) public {
         emit LogUint256("[maxBorrowShares_correctReturnValue] block.timestamp:", block.timestamp);
 
         Actor actor = _selectActor(_actorIndex);
-        uint256 maxShares = vault0.maxBorrowShares(address(actor), sameAsset);
+        uint256 maxShares = vault0.maxBorrowShares(address(actor), _sameAsset);
         require(maxShares != 0, "Zero assets to borrow");
 
         emit LogString(string.concat("Max Shares to borrow:", maxShares.toString()));
-        _dumpState(address(actor));
+        _dumpState(address(actor), _sameAsset);
 
-        try actor.borrowShares(true, maxShares) {
+        try actor.borrowShares(true, maxShares, _sameAsset) {
 
         } catch {
             assert(false);
@@ -932,7 +964,7 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         }
     }
 
-    function _dumpState(address _actor) internal {
+    function _dumpState(address _actor, bool _sameAsset) internal {
         emit ExactAmount("block.number:", block.number);
         emit ExactAmount("block.timestamp:", block.timestamp);
 
@@ -966,16 +998,18 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         emit ExactAmount("maxWithdraw0:", vault0.maxWithdraw(_actor));
         emit ExactAmount("maxWithdraw1:", vault1.maxWithdraw(_actor));
 
-        uint256 maxBorrow0 = vault0.maxBorrow(_actor, sameAsset);
-        uint256 maxBorrow1 = vault1.maxBorrow(_actor, sameAsset);
-        emit ExactAmount("maxBorrow0:", maxBorrow0);
-        emit ExactAmount("maxBorrow1:", maxBorrow1);
+        { // too deep
+            uint256 maxBorrow0 = vault0.maxBorrow(_actor, _sameAsset);
+            uint256 maxBorrow1 = vault1.maxBorrow(_actor, _sameAsset);
+            emit ExactAmount("maxBorrow0:", maxBorrow0);
+            emit ExactAmount("maxBorrow1:", maxBorrow1);
 
-        emit ExactAmount("convertToShares(maxBorrow0):", vault0.convertToShares(maxBorrow0, ISilo.AssetType.Debt));
-        emit ExactAmount("convertToShares(maxBorrow1):", vault1.convertToShares(maxBorrow1, ISilo.AssetType.Debt));
+            emit ExactAmount("convertToShares(maxBorrow0):", vault0.convertToShares(maxBorrow0, ISilo.AssetType.Debt));
+            emit ExactAmount("convertToShares(maxBorrow1):", vault1.convertToShares(maxBorrow1, ISilo.AssetType.Debt));
+        }
 
-        emit ExactAmount("maxBorrowShares0:", vault0.maxBorrowShares(_actor, sameAsset));
-        emit ExactAmount("maxBorrowShares1:", vault1.maxBorrowShares(_actor, sameAsset));
+        emit ExactAmount("maxBorrowShares0:", vault0.maxBorrowShares(_actor, _sameAsset));
+        emit ExactAmount("maxBorrowShares1:", vault1.maxBorrowShares(_actor, _sameAsset));
     }
 
     function _requireTotalCap(bool _vaultZero, address actor, uint256 requiredBalance) internal view {
@@ -986,7 +1020,6 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
             require(type(uint256).max - token.totalSupply() >= requiredBalance - balance, "total supply limit");
         }
     }
-
 
     /* ================================================================
                             Utility functions

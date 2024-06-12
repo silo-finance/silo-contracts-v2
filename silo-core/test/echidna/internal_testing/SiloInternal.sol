@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.20;
 
 import {CryticIERC4626Internal} from "properties/ERC4626/util/IERC4626Internal.sol";
