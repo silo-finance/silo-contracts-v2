@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.24;
 
-import {Ownable} from "openzeppelin-contracts/access/Ownable.sol";
+import {Ownable} from "openzeppelin5/access/Ownable.sol";
 
 import {CommonDeploy} from "./_CommonDeploy.sol";
 import {VeSiloContracts, VeSiloDeployments} from "ve-silo/common/VeSiloContracts.sol";

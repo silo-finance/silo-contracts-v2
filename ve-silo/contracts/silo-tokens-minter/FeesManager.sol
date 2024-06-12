@@ -14,7 +14,7 @@
 
 pragma solidity 0.8.24;
 
-import {Ownable2Step} from "openzeppelin-contracts/access/Ownable2Step.sol";
+import {Ownable2Step} from "openzeppelin5/access/Ownable2Step.sol";
 
 import {IFeesManager} from "./interfaces/IFeesManager.sol";
 

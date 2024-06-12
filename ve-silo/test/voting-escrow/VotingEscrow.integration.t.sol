@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.24;
 
-import {ERC20} from "openzeppelin-contracts/token/ERC20/ERC20.sol";
-
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
 import {Test} from "forge-std/Test.sol";
 
@@ -15,6 +13,7 @@ import {VotingEscrowDeploy} from "ve-silo/deploy/VotingEscrowDeploy.s.sol";
 import {VeBoostDeploy} from "ve-silo/deploy/VeBoostDeploy.s.sol";
 import {VeSiloContracts} from "ve-silo/deploy/_CommonDeploy.sol";
 import {VotingEscrowChildChainDeploy} from "ve-silo/deploy/VotingEscrowChildChainDeploy.s.sol";
+import {ERC20Mint as ERC20} from "ve-silo/test/_mocks/ERC20Mint.sol";
 
 // FOUNDRY_PROFILE=ve-silo-test forge test --mc VotingEscrowTest --ffi -vvv
 contract VotingEscrowTest is IntegrationTest {

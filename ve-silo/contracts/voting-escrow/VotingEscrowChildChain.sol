@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.24;
 
-import {IERC20} from "openzeppelin-contracts/token/ERC20/IERC20.sol";
-import {Ownable2StepUpgradeable} from "openzeppelin5-upgradeable/access/Ownable2StepUpgradeable.sol";
+import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
+import {Ownable2Step, Ownable} from "openzeppelin5/access/Ownable2Step.sol";
+import {Initializable} from "openzeppelin5/proxy/utils/Initializable.sol";
 import {CCIPReceiver} from "chainlink-ccip/v0.8/ccip/applications/CCIPReceiver.sol";
 import {Client} from "chainlink-ccip/v0.8/ccip/libraries/Client.sol";
 
@@ -12,7 +13,7 @@ import {IVeSiloDelegatorViaCCIP} from "./interfaces/IVeSiloDelegatorViaCCIP.sol"
 
 /// @notice Child chain voting escrow.
 /// Accept VeSilo from the main chain.
-contract VotingEscrowChildChain is CCIPReceiver, Ownable2StepUpgradeable, IVotingEscrowChildChain {
+contract VotingEscrowChildChain is CCIPReceiver, Ownable2Step, Initializable, IVotingEscrowChildChain {
     // solhint-disable-next-line var-name-mixedcase
     uint64 public immutable SOURCE_CHAIN_SELECTOR;
 
@@ -25,11 +26,12 @@ contract VotingEscrowChildChain is CCIPReceiver, Ownable2StepUpgradeable, IVotin
     
     /// @param _router CCIP router
     /// @param _sourceChainSelector Source chain selector
-    constructor(address _router, uint64 _sourceChainSelector) CCIPReceiver(_router) {
+    constructor(address _router, uint64 _sourceChainSelector) CCIPReceiver(_router) Ownable(msg.sender) {
         SOURCE_CHAIN_SELECTOR = _sourceChainSelector;
 
         // Locks an implementation, preventing any future reinitialization
         _disableInitializers();
+        _transferOwnership(address(0));
     }
 
     /// @inheritdoc IVotingEscrowChildChain
@@ -69,7 +71,7 @@ contract VotingEscrowChildChain is CCIPReceiver, Ownable2StepUpgradeable, IVotin
     }
 
     function initialize(address _timelock) public initializer {
-        __Ownable_init_unchained(_timelock);
+        _transferOwnership(_timelock);
     }
 
     /// @notice Calculates a `IVeSilo.Point` value

@@ -71,8 +71,8 @@ contract SiloGovernorDeploy is CommonDeploy {
         _timelock.grantRole(_timelock.CANCELLER_ROLE(), governorAddr);
 
         // Update TimelockController admin role
-        _timelock.grantRole(_timelock.TIMELOCK_ADMIN_ROLE(), governorAddr);
-        _timelock.revokeRole(_timelock.TIMELOCK_ADMIN_ROLE(), deployer);
+        _timelock.grantRole(_timelock.DEFAULT_ADMIN_ROLE(), governorAddr);
+        _timelock.revokeRole(_timelock.DEFAULT_ADMIN_ROLE(), deployer);
 
         vm.stopBroadcast();
     }

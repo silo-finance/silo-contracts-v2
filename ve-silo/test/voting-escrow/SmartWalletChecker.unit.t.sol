@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.24;
 
+import {Ownable} from "openzeppelin5/access/Ownable.sol";
 import {IntegrationTest} from "silo-foundry-utils/networks/IntegrationTest.sol";
 
 import {SmartWalletChecker} from "ve-silo/contracts/voting-escrow/SmartWalletChecker.sol";
@@ -27,7 +28,7 @@ contract SmartWalletCheckerTest is IntegrationTest {
     }
 
     function testAllowlistAddressPermissions() public {
-        vm.expectRevert("Ownable: caller is not the owner");
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, address(this)));
         _smartWalletChecker.allowlistAddress(_testAddr);
 
         _allowlistAddress();
@@ -36,7 +37,7 @@ contract SmartWalletCheckerTest is IntegrationTest {
     function testDenylistAddressPermissions() public {
         _allowlistAddress();
 
-        vm.expectRevert("Ownable: caller is not the owner");
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, address(this)));
         _smartWalletChecker.denylistAddress(_testAddr);
 
         _denylistAddress();

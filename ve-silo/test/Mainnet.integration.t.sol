@@ -2,8 +2,8 @@
 pragma solidity 0.8.24;
 
 import {StdStorage, stdStorage} from "forge-std/StdStorage.sol";
-import {ERC20, IERC20} from "openzeppelin-contracts/token/ERC20/ERC20.sol";
-import {Ownable2Step} from "openzeppelin-contracts/access/Ownable2Step.sol";
+import {IERC20} from "openzeppelin5/token/ERC20/ERC20.sol";
+import {Ownable2Step} from "openzeppelin5/access/Ownable2Step.sol";
 import {IntegrationTest} from "silo-foundry-utils/networks/IntegrationTest.sol";
 import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 
@@ -28,17 +28,11 @@ import {IFeesManager} from "ve-silo/contracts/silo-tokens-minter/interfaces/IFee
 import {VETSIP01} from "ve-silo/test/proposals/VETSIP01.sol";
 import {ProposalEngineLib} from "proposals/contracts/ProposalEngineLib.sol";
 import {Proposal} from "proposals/contracts/Proposal.sol";
+import {ERC20Mint} from "ve-silo/test/_mocks/ERC20Mint.sol";
 
 import {
     ISiloFactoryWithFeeDetails as ISiloFactory
 } from "ve-silo/contracts/silo-tokens-minter/interfaces/ISiloFactoryWithFeeDetails.sol";
-
-contract ERC20Mint is ERC20 {
-    constructor(string memory name, string memory symbol) ERC20(name, symbol) {}
-    function mint(address _account, uint256 _amount) external {
-        _mint(_account, _amount);
-    }
-}
 
 // solhint-disable max-states-count
 

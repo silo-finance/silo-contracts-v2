@@ -2,7 +2,7 @@
 pragma solidity 0.8.24;
 
 import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";
-import {Ownable} from "openzeppelin-contracts/access/Ownable.sol";
+import {Ownable} from "openzeppelin5/access/Ownable.sol";
 
 import {VeSiloContracts, VeSiloDeployments} from "ve-silo/common/VeSiloContracts.sol";
 import {IVeSilo} from "ve-silo/contracts/voting-escrow/interfaces/IVeSilo.sol";

@@ -2,7 +2,7 @@
 pragma solidity 0.8.24;
 
 import {CommonDeploy, VeSiloContracts} from "./_CommonDeploy.sol";
-import {TimelockController} from "openzeppelin-contracts/governance/TimelockController.sol";
+import {TimelockController} from "openzeppelin5/governance/TimelockController.sol";
 import {ISiloTimelockController} from "ve-silo/contracts/governance/interfaces/ISiloTimelockController.sol";
 
 /**

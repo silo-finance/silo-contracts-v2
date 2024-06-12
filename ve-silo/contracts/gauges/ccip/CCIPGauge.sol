@@ -3,8 +3,8 @@ pragma solidity 0.8.24;
 
 import {IRouterClient} from "chainlink-ccip/v0.8/ccip/interfaces/IRouterClient.sol";
 import {Client} from "chainlink-ccip/v0.8/ccip/libraries/Client.sol";
-import {IERC20} from "openzeppelin-contracts/token/ERC20/IERC20.sol";
-import {Address} from "openzeppelin-contracts/utils/Address.sol";
+import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
+import {Address} from "openzeppelin5/utils/Address.sol";
 
 import {ICCIPGauge, IStakelessGauge} from "ve-silo/contracts/gauges/interfaces/ICCIPGauge.sol";
 import {StakelessGauge, Ownable2Step, IMainnetBalancerMinter} from "../stakeless-gauge/StakelessGauge.sol";

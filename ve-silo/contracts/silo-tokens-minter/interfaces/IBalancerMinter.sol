@@ -14,7 +14,7 @@
 
 pragma solidity ^0.8.20;
 
-import {IERC20} from "openzeppelin-contracts/token/ERC20/IERC20.sol";
+import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 
 /**
  * @dev Base minter interface, applicable to Mainnet minter or L2 pseudo minters.
