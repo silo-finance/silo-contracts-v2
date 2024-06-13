@@ -1,6 +1,9 @@
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.20;
 
 import {Silo, ISilo} from "silo-core/contracts/Silo.sol";
+import {ILeverageBorrower} from "silo-core/contracts/interfaces/ILeverageBorrower.sol";
+import {IERC3156FlashBorrower} from "silo-core/contracts/interfaces/IERC3156FlashBorrower.sol";
 import {PartialLiquidation} from "silo-core/contracts/liquidation/PartialLiquidation.sol";
 import {ISiloConfig} from "silo-core/contracts/SiloConfig.sol";
 import {TestERC20Token} from "properties/ERC4626/util/TestERC20Token.sol";
@@ -11,13 +14,15 @@ import {PropertiesAsserts} from "properties/util/PropertiesHelper.sol";
 ///  2. Keep track of how much the account has deposited/withdrawn & raise an error if the account can withdraw/redeem more than it deposited/minted.
 /// @dev It's important that other property tests never send tokens/shares to the Actor contract address, or else the accounting will break. This restriction is enforced in restrictAddressToThirdParties()
 ///      If support is added for "harvesting" a vault during property tests, the accounting logic here needs to be updated to reflect cases where an actor can withdraw more than they deposited.
-contract Actor is PropertiesAsserts {
-    TestERC20Token token0;
-    TestERC20Token token1;
-    Silo vault0;
-    Silo vault1;
-    PartialLiquidation liquidationModule;
-    bool sameAsset; // TODO use it as input param
+contract Actor is PropertiesAsserts, ILeverageBorrower, IERC3156FlashBorrower {
+    bytes32 internal constant _LEVERAGE_CALLBACK = keccak256("ILeverageBorrower.onLeverage");
+    bytes32 internal constant _FLASHLOAN_CALLBACK = keccak256("ERC3156FlashBorrower.onFlashLoan");
+
+    TestERC20Token immutable token0;
+    TestERC20Token immutable token1;
+    Silo immutable vault0;
+    Silo immutable vault1;
+    PartialLiquidation immutable liquidationModule;
 
     mapping(address => uint256) public tokensDepositedCollateral;
     mapping(address => uint256) public tokensDepositedProtected;
@@ -34,7 +39,7 @@ contract Actor is PropertiesAsserts {
         liquidationModule = PartialLiquidation(_vault0.config().getConfig(address(_vault0)).liquidationModule);
     }
 
-    function deposit(bool _vaultZero, uint256 _assets) external returns (uint256 shares) {
+    function deposit(bool _vaultZero, uint256 _assets) public returns (uint256 shares) {
         Silo vault = _prepareForDeposit(_vaultZero, _assets);
 
         shares = vault.deposit(_assets, address(this));
@@ -98,15 +103,15 @@ contract Actor is PropertiesAsserts {
         _accountForClosedPosition(_assetType, _vaultZero, assets, _shares);
     }
 
-    function borrow(bool _vaultZero, uint256 _assets) external returns (uint256 shares) {
+    function borrow(bool _vaultZero, uint256 _assets, bool _sameAsset) external returns (uint256 shares) {
         Silo vault = _vaultZero ? vault0 : vault1;
-        shares = vault.borrow(_assets, address(this), address(this), sameAsset);
+        shares = vault.borrow(_assets, address(this), address(this), _sameAsset);
         _accountForOpenedDebt(_vaultZero, _assets, shares);
     }
 
-    function borrowShares(bool _vaultZero, uint256 _shares) external returns (uint256 assets) {
+    function borrowShares(bool _vaultZero, uint256 _shares, bool _sameAsset) external returns (uint256 assets) {
         Silo vault = _vaultZero ? vault0 : vault1;
-        assets = vault.borrowShares(_shares, address(this), address(this), sameAsset);
+        assets = vault.borrowShares(_shares, address(this), address(this), _sameAsset);
         _accountForOpenedDebt(_vaultZero, assets, _shares);
     }
 
@@ -133,9 +138,39 @@ contract Actor is PropertiesAsserts {
         _accountForOpenedPosition(withdrawType, _vaultZero, assets, _shares);
     }
 
-    function switchCollateralTo(bool _vaultZero, bool sameAsset) external {
+    function switchCollateralTo(bool _vaultZero, bool _sameAsset) external {
         Silo vault = _vaultZero ? vault0 : vault1;
-        vault.switchCollateralTo(sameAsset);
+        vault.switchCollateralTo(_sameAsset);
+    }
+
+    function leverageSameAsset(
+        bool _vaultZero,
+        uint256 _depositAssets,
+        uint256 _borrowAssets,
+        address _borrower,
+        ISilo.CollateralType _collateralType
+    ) external returns (uint256 depositedShares, uint256 borrowedShares) {
+        Silo vault = _vaultZero ? vault0 : vault1;
+        vault.leverageSameAsset(_depositAssets, _borrowAssets, _borrower, _collateralType);
+    }
+
+    function leverage(
+        bool _vaultZero,
+        uint256 _assets,
+        address _borrower,
+        bool _sameAsset
+    ) public returns (uint256 shares) {
+        Silo vault = _vaultZero ? vault0 : vault1;
+        bytes memory _data = abi.encode(_vaultZero, _sameAsset, _borrower);
+        return vault.leverage(_assets, this, _borrower, _sameAsset, _data);
+    }
+
+    function flashLoan(bool _vaultZero, uint256 _amount)
+        public
+        returns (bool success)
+    {
+        Silo vault = _vaultZero ? vault0 : vault1;
+        return vault.flashLoan(this, address(_vaultZero ? token0 : token1), _amount, "");
     }
 
     function liquidationCall(
@@ -153,6 +188,32 @@ contract Actor is PropertiesAsserts {
         liquidationModule.liquidationCall(
             address(vault), collateralConfig.token, debtConfig.token, borrower, debtToCover, receiveSToken
         );
+    }
+
+    function onLeverage(address _initiator, address _borrower, address _asset, uint256 _assets, bytes calldata _data)
+        external
+        returns (bytes32)
+    {
+        (bool vaultZero, bool sameAsset, address borrower) = abi.decode(_data, (bool, bool, address));
+
+        assert(borrower == address(this)); // TODO support external borrower
+        // we deposit for 50% LTV
+        deposit(sameAsset ? vaultZero : !vaultZero, _assets > type(uint128).max ? type(uint256).max : _assets * 2);
+
+        return _LEVERAGE_CALLBACK;
+    }
+
+    function onFlashLoan(address _initiator, address _token, uint256 _amount, uint256 _fee, bytes calldata _data)
+        external
+        returns (bytes32)
+    {
+        _requireTotalCap(_token == address(token0), _amount + _fee);
+
+        assert(_initiator == address(this));
+
+        _fund(_token == address(token0), _amount + _fee);
+        TestERC20Token(_token).approve(msg.sender, _amount + _fee);
+        return _FLASHLOAN_CALLBACK;
     }
 
     function _accountForOpenedPosition(
@@ -256,13 +317,26 @@ contract Actor is PropertiesAsserts {
         _approveFunds(_vaultZero, debtToRepay, address(vault));
     }
 
-    function _fund(bool _vaultZero, uint256 amount) internal {
+    function _fund(bool _vaultZero, uint256 _amount) internal {
         TestERC20Token token = _vaultZero ? token0 : token1;
-        token.mint(address(this), amount);
+        uint256 balance = token.balanceOf(address(this));
+
+        if (balance < _amount) {
+            token.mint(address(this), _amount - balance);
+        }
     }
 
     function _approveFunds(bool _vaultZero, uint256 amount, address vault) internal {
         TestERC20Token token = _vaultZero ? token0 : token1;
         token.approve(vault, amount);
+    }
+
+    function _requireTotalCap(bool _vaultZero, uint256 requiredBalance) internal view {
+        TestERC20Token token = _vaultZero ? token0 : token1;
+        uint256 balance = token.balanceOf(address(this));
+
+        if (balance < requiredBalance) {
+            require(type(uint256).max - token.totalSupply() >= requiredBalance - balance, "total supply limit");
+        }
     }
 }
