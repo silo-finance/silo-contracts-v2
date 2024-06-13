@@ -5,7 +5,7 @@ import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";
 import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 import {VmLib} from "silo-foundry-utils/lib/VmLib.sol";
 import {Script} from "forge-std/Script.sol";
-import {IERC20} from "openzeppelin-contracts/token/ERC20/IERC20.sol";
+import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 
 import {VeSiloDeployments, VeSiloContracts} from "ve-silo/common/VeSiloContracts.sol";
 import {ISiloGovernor, IGovernor} from "ve-silo/contracts/governance/interfaces/ISiloGovernor.sol";

@@ -16,7 +16,7 @@ pragma solidity 0.8.24;
 
 import {ILiquidityGauge} from "balancer-labs/v2-interfaces/liquidity-mining/ILiquidityGauge.sol";
 
-import {SafeMath} from "openzeppelin-contracts/utils/math/SafeMath.sol";
+import {SafeMath} from "ve-silo/contracts/utils/SafeMath.sol";
 
 import {IBalancerMinter} from "./interfaces/IBalancerMinter.sol";
 import {IBalancerTokenAdmin} from "./interfaces/IBalancerTokenAdmin.sol";

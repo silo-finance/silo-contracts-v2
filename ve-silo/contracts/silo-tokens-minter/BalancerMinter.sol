@@ -17,9 +17,10 @@ pragma solidity 0.8.24;
 import {IBalancerMinter, IERC20} from "./interfaces/IBalancerMinter.sol";
 import {ISiloLiquidityGauge} from "ve-silo/contracts/gauges/interfaces/ISiloLiquidityGauge.sol";
 
-import {ReentrancyGuard} from "openzeppelin-contracts/security/ReentrancyGuard.sol";
-import {SafeMath} from "openzeppelin-contracts/utils/math/SafeMath.sol";
-import {EIP712} from "openzeppelin-contracts/utils/cryptography/EIP712.sol";
+import {Ownable} from "openzeppelin5/access/Ownable2Step.sol";
+import {ReentrancyGuard} from "openzeppelin5/utils/ReentrancyGuard.sol";
+import {EIP712} from "openzeppelin5/utils/cryptography/EIP712.sol";
+import {SafeMath} from "ve-silo/contracts/utils/SafeMath.sol";
 import {EOASignaturesValidator, Errors, _require} from "./helpers/EOASignaturesValidator.sol";
 
 import {FeesManager} from "./FeesManager.sol";
@@ -54,7 +55,7 @@ abstract contract BalancerMinter is IBalancerMinter, ReentrancyGuard, EOASignatu
         IERC20 token,
         string memory name,
         string memory version
-    ) EIP712(name, version) {
+    ) EIP712(name, version) Ownable(msg.sender) {
         _token = token;
     }
 

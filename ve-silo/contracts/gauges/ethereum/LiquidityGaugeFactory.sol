@@ -14,12 +14,13 @@
 
 pragma solidity 0.8.24;
 
+import {Ownable} from "openzeppelin5/access/Ownable2Step.sol";
 import {ISiloLiquidityGauge} from "../interfaces/ISiloLiquidityGauge.sol";
 import {FeesManager} from "../../silo-tokens-minter/FeesManager.sol";
 import {BaseGaugeFactory} from "../BaseGaugeFactory.sol";
 
 contract LiquidityGaugeFactory is BaseGaugeFactory, FeesManager {
-    constructor(ISiloLiquidityGauge gauge) BaseGaugeFactory(address(gauge)) {
+    constructor(ISiloLiquidityGauge gauge) BaseGaugeFactory(address(gauge)) Ownable(msg.sender) {
         // solhint-disable-previous-line no-empty-blocks
     }
 

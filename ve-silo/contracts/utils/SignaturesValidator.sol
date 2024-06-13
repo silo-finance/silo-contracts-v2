@@ -17,13 +17,13 @@ pragma solidity 0.8.24;
 import {IERC1271} from "balancer-labs/v2-interfaces/solidity-utils/openzeppelin/IERC1271.sol";
 
 import {EOASignaturesValidator} from "./EOASignaturesValidator.sol";
-import {Address} from "openzeppelin-contracts/utils/Address.sol";
+import {IsContract} from "silo-core/contracts/lib/IsContract.sol";
 
 /**
  * @dev Utility for signing Solidity function calls.
  */
 abstract contract SignaturesValidator is EOASignaturesValidator {
-    using Address for address;
+    using IsContract for address;
 
     function _isValidSignature(
         address account,

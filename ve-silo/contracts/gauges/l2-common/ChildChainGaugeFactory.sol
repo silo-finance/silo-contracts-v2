@@ -14,6 +14,8 @@
 
 pragma solidity 0.8.24;
 
+import {Ownable} from "openzeppelin5/access/Ownable2Step.sol";
+
 import {IChildChainGauge} from "balancer-labs/v2-interfaces/liquidity-mining/IChildChainGauge.sol";
 import {Version} from "../_common/Version.sol";
 import {FeesManager} from "../../silo-tokens-minter/FeesManager.sol";
@@ -26,7 +28,7 @@ contract ChildChainGaugeFactory is Version, BaseGaugeFactory, FeesManager {
         IChildChainGauge gaugeImplementation,
         string memory factoryVersion,
         string memory productVersion
-    ) Version(factoryVersion) BaseGaugeFactory(address(gaugeImplementation)) {
+    ) Version(factoryVersion) BaseGaugeFactory(address(gaugeImplementation)) Ownable(msg.sender) {
         require(
             keccak256(abi.encodePacked(gaugeImplementation.version())) == keccak256(abi.encodePacked(productVersion)),
             "VERSION_MISMATCH"

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.24;
 
-import {Ownable2Step} from "openzeppelin-contracts/access/Ownable2Step.sol";
+import {Ownable2Step, Ownable} from "openzeppelin5/access/Ownable2Step.sol";
 import {IBeacon} from "openzeppelin5/proxy/beacon/IBeacon.sol";
 import {BeaconProxy} from "openzeppelin5/proxy/beacon/BeaconProxy.sol";
 
@@ -14,6 +14,7 @@ abstract contract CCIPGaugeFactory is BaseGaugeFactory, Ownable2Step {
     address public checkpointer;
 
     constructor(address _beacon, address _checkpointer)
+        Ownable(msg.sender)
         BaseGaugeFactory(address(0))
     {
         checkpointer = _checkpointer;

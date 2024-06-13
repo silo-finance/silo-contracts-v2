@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.24;
 
-import {Address} from "openzeppelin-contracts/utils/Address.sol";
-import {Ownable2StepUpgradeable} from "openzeppelin5-upgradeable/access/Ownable2StepUpgradeable.sol";
+import {Address} from "openzeppelin5/utils/Address.sol";
+import {Ownable2Step, Ownable} from "openzeppelin5/access/Ownable2Step.sol";
+import {Initializable} from "openzeppelin5/proxy/utils/Initializable.sol";
 import {Client} from "chainlink-ccip/v0.8/ccip/libraries/Client.sol";
 
 import {IVeSilo} from "ve-silo/contracts/voting-escrow/interfaces/IVeSilo.sol";
@@ -12,7 +13,7 @@ import {IVeSiloDelegatorViaCCIP} from "ve-silo/contracts/voting-escrow/interface
 import {CCIPMessageSender, ICCIPMessageSender} from "ve-silo/contracts/utils/CCIPMessageSender.sol";
 
 /// @title VeSilo delegator via CCIP
-contract VeSiloDelegatorViaCCIP is CCIPMessageSender, Ownable2StepUpgradeable, IVeSiloDelegatorViaCCIP {
+contract VeSiloDelegatorViaCCIP is CCIPMessageSender, Ownable2Step, Initializable, IVeSiloDelegatorViaCCIP {
     // solhint-disable var-name-mixedcase
     IVeSilo public immutable VOTING_ESCROW;
     IVotingEscrowCCIPRemapper public immutable REMAPPER;
@@ -29,12 +30,13 @@ contract VeSiloDelegatorViaCCIP is CCIPMessageSender, Ownable2StepUpgradeable, I
         IVotingEscrowCCIPRemapper remapper,
         address router,
         address link
-    ) CCIPMessageSender(router, link) {
+    ) CCIPMessageSender(router, link) Ownable(msg.sender) {
         VOTING_ESCROW = votingEscrow;
         REMAPPER = remapper;
 
         // Locks an implementation, preventing any future reinitialization
         _disableInitializers();
+        _transferOwnership(address(0));
     }
 
     /// @inheritdoc IVeSiloDelegatorViaCCIP
@@ -157,7 +159,7 @@ contract VeSiloDelegatorViaCCIP is CCIPMessageSender, Ownable2StepUpgradeable, I
     }
 
     function initialize(address _timelock) public initializer {
-        __Ownable_init_unchained(_timelock);
+        _transferOwnership(_timelock);
     }
 
     /// @notice Send back any ETH leftover to the `msg.sender`
