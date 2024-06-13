@@ -6,7 +6,6 @@ import {IProposalEngine} from "proposals/contracts/interfaces/IProposalEngine.so
 import {ProposalEngineLib} from "./ProposalEngineLib.sol";
 import {GaugeAdderProposer} from "./proposers/ve-silo/GaugeAdderProposer.sol";
 import {GaugeControllerProposer} from "./proposers/ve-silo/GaugeControllerProposer.sol";
-import {UniswapSwapperProposer} from "./proposers/ve-silo/UniswapSwapperProposer.sol";
 import {CCIPGaugeCheckpointerProposer} from "./proposers/ve-silo/CCIPGaugeCheckpointerProposer.sol";
 import {FeeDistributorProposer} from "./proposers/ve-silo/FeeDistributorProposer.sol";
 import {SmartWalletCheckerProposer} from "./proposers/ve-silo/SmartWalletCheckerProposer.sol";
@@ -30,7 +29,6 @@ abstract contract Proposal is IProposal {
 
     GaugeAdderProposer public gaugeAdder;
     GaugeControllerProposer public gaugeController;
-    UniswapSwapperProposer public uniswapSwapper;
     CCIPGaugeCheckpointerProposer public ccipGaugeCheckpointer;
     StakelessGaugeCheckpointerAdaptorProposer public stakelessGaugeCheckpointerAdaptor;
     FeeDistributorProposer public feeDistributor;
@@ -98,7 +96,6 @@ abstract contract Proposal is IProposal {
     function _initializeProposers() internal virtual {
         initGaugeAdder();
         initGaugeController();
-        initUniswapSwapper();
         initCCIPGaugeCheckpointer();
         initStakelessGaugeCheckpointerAdaptor();
         initFeeDistributor();
@@ -123,11 +120,6 @@ abstract contract Proposal is IProposal {
 
     function initGaugeController() public returns (Proposal proposal) {
         gaugeController = new GaugeControllerProposer({_proposal: address(this)});
-        proposal = this;
-    }
-
-    function initUniswapSwapper() public returns (Proposal proposal) {
-        uniswapSwapper = new UniswapSwapperProposer({_proposal: address(this)});
         proposal = this;
     }
 
