@@ -10,7 +10,7 @@ import {SiloLens} from "silo-core/contracts/SiloLens.sol";
 
 import {MintableToken} from "./MintableToken.sol";
 import {SiloFixture, SiloConfigOverride} from "./fixtures/SiloFixture.sol";
-import {SiloFixtureWithFeeDistributor} from "./fixtures/SiloFixtureWithFeeDistributor.sol";
+import {SiloFixtureWithVeSilo} from "./fixtures/SiloFixtureWithVeSilo.sol";
 
 abstract contract SiloLittleHelper is CommonBase {
     bool constant SAME_ASSET = true;
@@ -37,12 +37,12 @@ abstract contract SiloLittleHelper is CommonBase {
     }
 
     function _setUpLocalFixture() internal returns (ISiloConfig siloConfig) {
-        SiloFixtureWithFeeDistributor siloFixture = new SiloFixtureWithFeeDistributor();
+        SiloFixtureWithVeSilo siloFixture = new SiloFixtureWithVeSilo();
         return _localFixture("", SiloFixture(address(siloFixture)));
     }
 
     function _setUpLocalFixture(string memory _configName) internal returns (ISiloConfig siloConfig) {
-        SiloFixtureWithFeeDistributor siloFixture = new SiloFixtureWithFeeDistributor();
+        SiloFixtureWithVeSilo siloFixture = new SiloFixtureWithVeSilo();
         return _localFixture(_configName, SiloFixture(address(siloFixture)));
     }
 

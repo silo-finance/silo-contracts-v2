@@ -8,7 +8,7 @@ import {console2} from "forge-std/console2.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 
 import {SiloConfigOverride} from "../_common/fixtures/SiloFixture.sol";
-import {SiloFixtureWithFeeDistributor as SiloFixture} from "../_common/fixtures/SiloFixtureWithFeeDistributor.sol";
+import {SiloFixtureWithVeSilo as SiloFixture} from "../_common/fixtures/SiloFixtureWithVeSilo.sol";
 import {MintableToken} from "../_common/MintableToken.sol";
 import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
 
