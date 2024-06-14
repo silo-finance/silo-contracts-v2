@@ -44,6 +44,16 @@ contract BalancerTokenAdminTest is IntegrationTest {
         _activate();
     }
 
+    // FOUNDRY_PROFILE=ve-silo-test forge test --mt testBalanceTokenAdmintFailToActivateTwice --ffi -vvv
+    function testBalanceTokenAdmintFailToActivateTwice() public {
+        _activate();
+
+        vm.expectRevert("Already activated");
+
+         vm.prank(_deployer);
+        _tokenAdmin.activate();
+    }
+
     // FOUNDRY_PROFILE=ve-silo-test forge test --mt testBalanceTokenAdmintInitialParams --ffi -vvv
     function testBalanceTokenAdmintInitialParams() public {
         _activate();
