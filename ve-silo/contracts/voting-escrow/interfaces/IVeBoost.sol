@@ -13,5 +13,9 @@ interface IVeBoost {
     function received_balance(address _user) external view returns (uint256);
     function VE() external view returns (address);
     function BOOST_V1() external view returns (address);
+    function name() external view returns (string memory);
+    function symbol() external view returns (string memory);
+    function version() external view returns (string memory);
+    function nonces(address _user) external view returns (uint256);
     // solhint-enable func-name-mixedcase
 }
