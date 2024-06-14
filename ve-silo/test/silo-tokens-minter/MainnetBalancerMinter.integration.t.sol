@@ -25,7 +25,6 @@ import {ISiloMock as ISilo} from "ve-silo/test/_mocks/ISiloMock.sol";
 import {IFeesManager} from "ve-silo/contracts/silo-tokens-minter/interfaces/IFeesManager.sol";
 import {FeesManagerTest} from "./FeesManager.unit.t.sol";
 import {ERC20Mint as ERC20} from "ve-silo/test/_mocks/ERC20Mint.sol";
-import {EventsLib} from "ve-silo/test/_helpers/EventsLib.sol";
 import {EOASignaturesValidator} from "ve-silo/contracts/silo-tokens-minter/helpers/EOASignaturesValidator.sol";
 
 import {
