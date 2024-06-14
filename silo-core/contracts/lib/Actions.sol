@@ -77,7 +77,6 @@ library Actions {
         }
     }
 
-    // solhint-disable-next-line function-max-lines, code-complexity
     function withdraw(
         ISilo.SharedStorage storage _shareStorage,
         ISilo.WithdrawArgs calldata _args,
@@ -87,90 +86,47 @@ library Actions {
         external
         returns (uint256 assets, uint256 shares)
     {
-        _hookCallBefore(
-            _shareStorage,
-            Hook.withdrawAction(_args.collateralType),
-            abi.encodePacked(_args.assets, _args.shares, _args.receiver, _args.owner, _args.spender)
-        );
+        _hookCallBeforeWithdraw(_shareStorage, _args);
+
+        ISiloConfig siloConfig = _shareStorage.siloConfig;
 
         (
             ISiloConfig.ConfigData memory collateralConfig,
             ISiloConfig.ConfigData memory debtConfig,
             ISiloConfig.DebtInfo memory debtInfo
-        ) = _shareStorage.siloConfig.accrueInterestAndGetConfigs(address(this), _args.owner, Hook.WITHDRAW);
+        ) = siloConfig.accrueInterestAndGetConfigs(address(this), _args.owner, Hook.WITHDRAW);
 
         if (collateralConfig.silo != debtConfig.silo) ISilo(debtConfig.silo).accrueInterest();
 
-        // this `if` helped with Stack too deep
-        if (_args.collateralType == ISilo.CollateralType.Collateral) {
-            (assets, shares) = SiloERC4626Lib.withdraw(
-                collateralConfig.token,
-                collateralConfig.collateralShareToken,
-                _args,
-                SiloMathLib.liquidity(_totalAssets.assets, _totalDebtAssets.assets),
-                _totalAssets
-            );
-        } else {
-            (assets, shares) = SiloERC4626Lib.withdraw(
-                collateralConfig.token,
-                collateralConfig.protectedShareToken,
-                _args,
-                _totalAssets.assets,
-                _totalAssets
-            );
-        }
+        (assets, shares) = SiloERC4626Lib.withdraw(
+            collateralConfig.token,
+            _args.collateralType == ISilo.CollateralType.Collateral
+                ? collateralConfig.collateralShareToken
+                : collateralConfig.protectedShareToken,
+            _args,
+            _args.collateralType == ISilo.CollateralType.Collateral
+                ? SiloMathLib.liquidity(_totalAssets.assets, _totalDebtAssets.assets)
+                : _totalAssets.assets,
+            _totalAssets
+        );
 
-        if (SiloSolvencyLib.depositWithoutDebt(debtInfo)) {
-            _shareStorage.siloConfig.crossNonReentrantAfter();
-
-            if (collateralConfig.hookReceiver != address(0)) {
-                _hookCallAfter(
-                    _shareStorage,
-                    collateralConfig.hookReceiver,
-                    Hook.withdrawAction(_args.collateralType),
-                    abi.encodePacked(
-                        _args.assets,
-                        _args.shares,
-                        _args.receiver,
-                        _args.owner,
-                        _args.spender,
-                        assets,
-                        shares
-                    )
-                );
+        if (!SiloSolvencyLib.depositWithoutDebt(debtInfo)) {
+            if (!debtInfo.sameAsset) {
+                collateralConfig.callSolvencyOracleBeforeQuote();
+                debtConfig.callSolvencyOracleBeforeQuote();
             }
 
-            return (assets, shares);
-        }
-
-        if (!debtInfo.sameAsset) {
-            collateralConfig.callSolvencyOracleBeforeQuote();
-            debtConfig.callSolvencyOracleBeforeQuote();
-        }
-
-        // `_args.owner` must be solvent
-        if (!SiloSolvencyLib.isSolvent(
-            collateralConfig, debtConfig, debtInfo, _args.owner, ISilo.AccrueInterestInMemory.No
-        )) revert ISilo.NotSolvent();
-
-        _shareStorage.siloConfig.crossNonReentrantAfter();
-
-        if (collateralConfig.hookReceiver != address(0)) {
-            _hookCallAfter(
-                _shareStorage,
-                collateralConfig.hookReceiver,
-                Hook.withdrawAction(_args.collateralType),
-                abi.encodePacked(
-                    _args.assets,
-                    _args.shares,
-                    _args.receiver,
-                    _args.owner,
-                    _args.spender,
-                    assets,
-                    shares
-                )
+            bool ownerIsSolvent = SiloSolvencyLib.isSolvent(
+                collateralConfig, debtConfig, debtInfo, _args.owner, ISilo.AccrueInterestInMemory.No
             );
+
+            // `_args.owner` must be solvent
+            if (!ownerIsSolvent) revert ISilo.NotSolvent();
         }
+
+        siloConfig.crossNonReentrantAfter();
+
+        _hookCallAfterWithdraw(_shareStorage, _args, assets, shares);
     }
 
     // solhint-disable-next-line function-max-lines, code-complexity
@@ -657,5 +613,43 @@ library Actions {
         if (!_shareStorage.hooksAfter.matchAction(_action)) return;
 
         IHookReceiver(hookReceiverCached).afterAction(address(this), _action, _data);
+    }
+
+    function _hookCallBeforeWithdraw(
+        ISilo.SharedStorage storage _shareStorage,
+        ISilo.WithdrawArgs calldata _args
+    ) private {
+        uint256 action = Hook.withdrawAction(_args.collateralType);
+
+        if (!_shareStorage.hooksBefore.matchAction(action)) return;
+
+        bytes memory data =
+            abi.encodePacked(_args.assets, _args.shares, _args.receiver, _args.owner, _args.spender);
+
+        _hookReceiverBeforeAction(_shareStorage.hookReceiver, action, data);
+    }
+
+    function _hookCallAfterWithdraw(
+        ISilo.SharedStorage storage _shareStorage,
+        ISilo.WithdrawArgs calldata _args,
+        uint256 assets,
+        uint256 shares
+    ) private {
+        uint256 action = Hook.withdrawAction(_args.collateralType);
+
+        if (!_shareStorage.hooksAfter.matchAction(action)) return;
+
+        bytes memory data =
+            abi.encodePacked(_args.assets, _args.shares, _args.receiver, _args.owner, _args.spender, assets, shares);
+
+        _hookReceiverAfterAction(_shareStorage.hookReceiver, action, data);
+    }
+
+    function _hookReceiverBeforeAction(IHookReceiver _hookReceiver, uint256 _action, bytes memory _data) private {
+        _hookReceiver.beforeAction(address(this), _action, _data);
+    }
+
+    function _hookReceiverAfterAction(IHookReceiver _hookReceiver, uint256 _action, bytes memory _data) private {
+        _hookReceiver.afterAction(address(this), _action, _data);
     }
 }
