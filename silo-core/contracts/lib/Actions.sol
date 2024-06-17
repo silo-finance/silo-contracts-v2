@@ -44,8 +44,7 @@ library Actions {
         external
         returns (uint256 assets, uint256 shares)
     {
-        uint256 action = Hook.depositAction(_collateralType);
-        _hookCallBefore(_shareStorage, action, abi.encodePacked(_assets, _shares, _receiver));
+        _hookCallBeforeDeposit(_shareStorage, _collateralType, _assets, _shares, _receiver);
 
         ISiloConfig siloConfig = _shareStorage.siloConfig;
 
@@ -67,14 +66,7 @@ library Actions {
 
         siloConfig.crossNonReentrantAfter();
 
-        if (hookReceiver != address(0)) {
-            _hookCallAfter(
-                _shareStorage,
-                hookReceiver,
-                action,
-                abi.encodePacked(_assets, _shares, _receiver, assets, shares)
-            );
-        }
+        _hookCallAfterDeposit(_shareStorage, _collateralType, _assets, _shares, _receiver, assets, shares);
     }
 
     function withdraw(
@@ -686,6 +678,40 @@ library Actions {
         if (!_shareStorage.hooksAfter.matchAction(action)) return;
 
         bytes memory data = abi.encodePacked(_shares, _owner, _assets);
+
+        _shareStorage.hookReceiver.afterAction(address(this), action, data);
+    }
+
+    function _hookCallBeforeDeposit(
+        ISilo.SharedStorage storage _shareStorage,
+        ISilo.CollateralType _collateralType,
+        uint256 _assets,
+        uint256 _shares,
+        address _receiver
+    ) private {
+        uint256 action = Hook.depositAction(_collateralType);
+
+        if (!_shareStorage.hooksBefore.matchAction(action)) return;
+
+        bytes memory data = abi.encodePacked(_assets, _shares, _receiver);
+
+        _shareStorage.hookReceiver.beforeAction(address(this), action, data);
+    }
+
+    function _hookCallAfterDeposit(
+        ISilo.SharedStorage storage _shareStorage,
+        ISilo.CollateralType _collateralType,
+        uint256 _assets,
+        uint256 _shares,
+        address _receiver,
+        uint256 _exactAssets,
+        uint256 _exactShare
+    ) internal {
+        uint256 action = Hook.depositAction(_collateralType);
+
+        if (!_shareStorage.hooksAfter.matchAction(action)) return;
+
+        bytes memory data = abi.encodePacked(_assets, _shares, _receiver, _exactAssets, _exactShare);
 
         _shareStorage.hookReceiver.afterAction(address(this), action, data);
     }
