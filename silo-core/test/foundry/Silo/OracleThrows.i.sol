@@ -7,6 +7,7 @@ import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
+import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquidation.sol";
 
 import {MintableToken} from "../_common/MintableToken.sol";
 import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
@@ -46,7 +47,10 @@ contract OracleThrowsTest is SiloLittleHelper, Test {
         overrides.configName = SiloConfigsNames.LOCAL_BEFORE_CALL;
 
         SiloFixture siloFixture = new SiloFixture();
-        (, silo0, silo1,,, partialLiquidation) = siloFixture.deploy_local(overrides);
+
+        address hook;
+        (, silo0, silo1,,, hook) = siloFixture.deploy_local(overrides);
+        partialLiquidation = IPartialLiquidation(hook);
     }
 
     /*

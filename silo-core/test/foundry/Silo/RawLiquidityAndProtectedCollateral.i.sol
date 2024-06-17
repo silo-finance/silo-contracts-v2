@@ -8,12 +8,16 @@ import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 import {VeSiloContracts} from "ve-silo/common/VeSiloContracts.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
+import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquidation.sol";
+import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
 import {MintableToken} from "../_common/MintableToken.sol";
 import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
 import {SiloConfigOverride} from "../_common/fixtures/SiloFixture.sol";
 import {SiloFixtureWithVeSilo as SiloFixture} from "../_common/fixtures/SiloFixtureWithVeSilo.sol";
 
 contract RawLiquidityAndProtectedCollateralTest is SiloLittleHelper, Test {
+    using SiloLensLib for ISilo;
+
     ISiloConfig internal _siloConfig;
 
     function setUp() public {
@@ -26,7 +30,9 @@ contract RawLiquidityAndProtectedCollateralTest is SiloLittleHelper, Test {
         configOverride.token0 = address(token0);
         configOverride.token1 = address(token1);
 
-        (_siloConfig, silo0, silo1,,, partialLiquidation) = siloFixture.deploy_local(configOverride);
+        address hook;
+        (_siloConfig, silo0, silo1,,, hook) = siloFixture.deploy_local(configOverride);
+        partialLiquidation = IPartialLiquidation(hook);
     }
 
     // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testLiquidityAndProtectedAssets
@@ -34,6 +40,12 @@ contract RawLiquidityAndProtectedCollateralTest is SiloLittleHelper, Test {
         address user0 = makeAddr("user0");
         address user1 = makeAddr("user1");
         address depositorProtected = makeAddr("depositProtected");
+
+        emit log_named_address("user0", user0);
+        emit log_named_address("user1", user1);
+        emit log_named_address("silo0", address(silo0));
+        emit log_named_address("silo1", address(silo1));
+        emit log_named_address("hook", address(partialLiquidation));
 
         uint256 depositAmount = 1000;
 

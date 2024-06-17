@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
-import {PartialLiquidationLib} from "silo-core/contracts/liquidation/lib/PartialLiquidationLib.sol";
+import {PartialLiquidationLib} from "silo-core/contracts/utils/hook-receivers/liquidation/lib/PartialLiquidationLib.sol";
 
 /// @dev exact copy of PartialLiquidationLib but without `/* unchecked */`
 library PartialLiquidationLibChecked {

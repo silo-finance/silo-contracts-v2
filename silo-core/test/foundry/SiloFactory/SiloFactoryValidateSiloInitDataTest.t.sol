@@ -36,11 +36,9 @@ contract SiloFactoryValidateSiloInitDataTest is Test {
     function test_validateSiloInitData() public {
         ISiloConfig.InitData memory initData;
 
-        vm.expectRevert(ISiloFactory.MissingLiquidationModule.selector);
+        vm.expectRevert(ISiloFactory.MissingHookReceiver.selector);
         siloFactory.validateSiloInitData(initData);
-
-        initData.liquidationModule = address(11);
-
+        // TODO nothing changed and different error?
         vm.expectRevert(ISiloFactory.SameAsset.selector);
         siloFactory.validateSiloInitData(initData);
 

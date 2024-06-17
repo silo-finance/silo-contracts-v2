@@ -12,6 +12,7 @@ import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISiloDeployer} from "silo-core/contracts/interfaces/ISiloDeployer.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
+import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquidation.sol";
 import {IHookReceiver} from "silo-core/contracts/interfaces/IHookReceiver.sol";
 
 import {SiloConfigOverride} from "../../_common/fixtures/SiloFixture.sol";
@@ -39,7 +40,9 @@ contract TransitionCollateralReentrancyTest is SiloLittleHelper, Test, IHookRece
         configOverride.hookReceiver = address(this);
         configOverride.configName = SiloConfigsNames.LOCAL_DEPLOYER;
 
-        (, silo0, silo1,,, partialLiquidation) = siloFixture.deploy_local(configOverride);
+        address hook;
+        (, silo0, silo1,,, hook) = siloFixture.deploy_local(configOverride);
+        partialLiquidation = IPartialLiquidation(hook);
 
         silo0.updateHooks();
     }

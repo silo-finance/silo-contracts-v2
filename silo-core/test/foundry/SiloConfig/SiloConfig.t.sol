@@ -16,7 +16,7 @@ contract SiloConfigTest is Test {
     address internal _wrongSilo = makeAddr("wrongSilo");
     address internal _silo0Default = makeAddr("silo0");
     address internal _silo1Default = makeAddr("silo1");
-    address internal _liquidationModuleDefault = makeAddr("liquidationModule");
+    address internal _hookReceiverModuleDefault = makeAddr("hookReceiver");
 
     ISiloConfig.ConfigData internal _configDataDefault0;
     ISiloConfig.ConfigData internal _configDataDefault1;
@@ -29,14 +29,14 @@ contract SiloConfigTest is Test {
         _configDataDefault0.collateralShareToken = makeAddr("collateralShareToken0");
         _configDataDefault0.protectedShareToken = makeAddr("protectedShareToken0");
         _configDataDefault0.debtShareToken = makeAddr("debtShareToken0");
-        _configDataDefault0.liquidationModule = _liquidationModuleDefault;
+        _configDataDefault0.hookReceiver = _hookReceiverModuleDefault;
 
         _configDataDefault1.silo = _silo1Default;
         _configDataDefault1.token = makeAddr("token1");
         _configDataDefault1.collateralShareToken = makeAddr("collateralShareToken1");
         _configDataDefault1.protectedShareToken = makeAddr("protectedShareToken1");
         _configDataDefault1.debtShareToken = makeAddr("debtShareToken1");
-        _configDataDefault1.liquidationModule = _liquidationModuleDefault;
+        _configDataDefault1.hookReceiver = _hookReceiverModuleDefault;
 
         _siloConfig = siloConfigDeploy(1, _configDataDefault0, _configDataDefault1);
 
@@ -71,7 +71,6 @@ contract SiloConfigTest is Test {
         vm.assume(_configData0.deployerFee < 0.5e18);
 
         // when using assume, it reject too many inputs
-        _configData0.liquidationModule = _configData1.liquidationModule; 
         _configData0.hookReceiver = _configData1.hookReceiver;
 
         _configData0.otherSilo = _configData1.silo;
@@ -583,7 +582,7 @@ contract SiloConfigTest is Test {
     function test_crossNonReentrantBefore_error_fuzz(address _callee) public {
         vm.assume(_callee != _silo0Default);
         vm.assume(_callee != _silo1Default);
-        vm.assume(_callee != _liquidationModuleDefault);
+        vm.assume(_callee != _hookReceiverModuleDefault);
         vm.assume(_callee != _configDataDefault0.collateralShareToken);
         vm.assume(_callee != _configDataDefault0.protectedShareToken);
         vm.assume(_callee != _configDataDefault0.debtShareToken);
@@ -593,7 +592,7 @@ contract SiloConfigTest is Test {
 
         uint256 anyAction = 0;
         // Permissions check error
-        vm.expectRevert(ISiloConfig.OnlySiloOrLiquidationModule.selector);
+        vm.expectRevert(ISiloConfig.OnlySiloOrHookReceiver.selector);
         _siloConfig.crossNonReentrantBefore(anyAction);
     }
 
@@ -603,13 +602,13 @@ contract SiloConfigTest is Test {
     function test_crossNonReentrantBeforePermissions() public {
         uint256 anyAction = 0;
         // Permissions check error
-        vm.expectRevert(ISiloConfig.OnlySiloOrLiquidationModule.selector);
+        vm.expectRevert(ISiloConfig.OnlySiloOrHookReceiver.selector);
         _siloConfig.crossNonReentrantBefore(anyAction);
 
         // _onlySiloOrTokenOrLiquidation permissions check (calls should not revert)
         _callNonReentrantBeforeAndAfter(_silo0Default);
         _callNonReentrantBeforeAndAfter(_silo1Default);
-        _callNonReentrantBeforeAndAfter(_liquidationModuleDefault);
+        _callNonReentrantBeforeAndAfter(_hookReceiverModuleDefault);
         _callNonReentrantBeforeAndAfter(_configDataDefault0.collateralShareToken);
         _callNonReentrantBeforeAndAfter(_configDataDefault0.protectedShareToken);
         _callNonReentrantBeforeAndAfter(_configDataDefault0.debtShareToken);
@@ -625,7 +624,7 @@ contract SiloConfigTest is Test {
     function test_crossNonReentrantAfter_error_fuzz(address _callee) public {
         vm.assume(_callee != _silo0Default);
         vm.assume(_callee != _silo1Default);
-        vm.assume(_callee != _liquidationModuleDefault);
+        vm.assume(_callee != _hookReceiverModuleDefault);
         vm.assume(_callee != _configDataDefault0.collateralShareToken);
         vm.assume(_callee != _configDataDefault0.protectedShareToken);
         vm.assume(_callee != _configDataDefault0.debtShareToken);
@@ -635,7 +634,7 @@ contract SiloConfigTest is Test {
 
         // Permissions check error
         vm.prank(_callee);
-        vm.expectRevert(ISiloConfig.OnlySiloOrLiquidationModule.selector);
+        vm.expectRevert(ISiloConfig.OnlySiloOrHookReceiver.selector);
         _siloConfig.crossNonReentrantAfter();
     }
 
@@ -647,7 +646,7 @@ contract SiloConfigTest is Test {
         // (calls should not revert)
         _callNonReentrantBeforeAndAfterPermissions(_silo0Default);
         _callNonReentrantBeforeAndAfterPermissions(_silo1Default);
-        _callNonReentrantBeforeAndAfterPermissions(_liquidationModuleDefault);
+        _callNonReentrantBeforeAndAfterPermissions(_hookReceiverModuleDefault);
         _callNonReentrantBeforeAndAfterPermissions(_configDataDefault0.collateralShareToken);
         _callNonReentrantBeforeAndAfterPermissions(_configDataDefault0.protectedShareToken);
         _callNonReentrantBeforeAndAfterPermissions(_configDataDefault0.debtShareToken);
@@ -774,11 +773,10 @@ contract SiloConfigTest is Test {
         address shareToken;
         address asset;
         address hookReceiver;
-        address liquidationModule;
 
         vm.prank(_silo0Default);
 
-        (shareToken, asset, hookReceiver, liquidationModule) =
+        (shareToken, asset, hookReceiver) =
             _siloConfig.accrueInterestAndGetConfigOptimised(_action, _collateralType);
 
         vm.prank(_silo0Default);
@@ -787,17 +785,15 @@ contract SiloConfigTest is Test {
         assertEq(shareToken, _expectedShareToken0);
         assertEq(asset, _configDataDefault0.token);
         assertEq(hookReceiver, _configDataDefault0.hookReceiver);
-        assertEq(liquidationModule, _liquidationModuleDefault);
 
         vm.prank(_silo1Default);
 
-        (shareToken, asset, hookReceiver, liquidationModule) =
+        (shareToken, asset, hookReceiver) =
             _siloConfig.accrueInterestAndGetConfigOptimised(_action, _collateralType);
 
         assertEq(shareToken, _expectedShareToken1);
         assertEq(asset, _configDataDefault1.token);
         assertEq(hookReceiver, _configDataDefault1.hookReceiver);
-        assertEq(liquidationModule, _liquidationModuleDefault);
 
         vm.prank(_silo1Default);
         _siloConfig.crossNonReentrantAfter();

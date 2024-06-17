@@ -15,6 +15,7 @@ import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISiloDeployer} from "silo-core/contracts/interfaces/ISiloDeployer.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
+import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquidation.sol";
 import {ILeverageBorrower} from "silo-core/contracts/interfaces/ILeverageBorrower.sol";
 import {Hook} from "silo-core/contracts/lib/Hook.sol";
 import {SiloFixtureWithVeSilo as SiloFixture} from "../../_common/fixtures/SiloFixtureWithVeSilo.sol";
@@ -1169,7 +1170,9 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock, ILeverageBorr
         configOverride.hookReceiverImplementation = _hookReceiver;
         configOverride.configName = SiloConfigsNames.LOCAL_DEPLOYER;
 
-        (_siloConfig, silo0, silo1,,, partialLiquidation) = _siloFixture.deploy_local(configOverride);
+        address hook;
+        (_siloConfig, silo0, silo1,,, hook) = _siloFixture.deploy_local(configOverride);
+        partialLiquidation = IPartialLiquidation(hook);
 
         __init(MintableToken(configOverride.token0), MintableToken(configOverride.token1), silo0, silo1);
 

@@ -219,6 +219,10 @@ contract HookReceiverAllActionsWithEvents is SiloHookReceiver {
         _setHookConfig(silo1, _SILO1_ACTIONS_BEFORE, _SILO1_ACTIONS_AFTER);
     }
 
+    function hookReceiverConfig(address _silo) external view virtual returns (uint24 hooksBefore, uint24 hooksAfter) {
+        return _hookReceiverConfig(_silo);
+    }
+
     function revertAnyAction() external {
         revertAllActions = true;
     }

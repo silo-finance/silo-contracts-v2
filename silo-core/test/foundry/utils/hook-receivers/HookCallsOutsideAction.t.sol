@@ -12,6 +12,7 @@ import {IERC20R} from "silo-core/contracts/interfaces/IERC20R.sol";
 import {ILeverageBorrower} from "silo-core/contracts/interfaces/ILeverageBorrower.sol";
 import {IHookReceiver} from "silo-core/contracts/interfaces/IHookReceiver.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
+import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquidation.sol";
 import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
 import {Hook} from "silo-core/contracts/lib/Hook.sol";
 import {CrossEntrancy} from "silo-core/contracts/lib/CrossEntrancy.sol";
@@ -51,7 +52,9 @@ contract HookCallsOutsideActionTest is IHookReceiver, ILeverageBorrower, IERC315
         overrides.hookReceiver = address(this);
 
         SiloFixture siloFixture = new SiloFixture();
-        (_siloConfig, silo0, silo1,,, partialLiquidation) = siloFixture.deploy_local(overrides);
+        address hook;
+        (_siloConfig, silo0, silo1,,, hook) = siloFixture.deploy_local(overrides);
+        partialLiquidation = IPartialLiquidation(hook);
 
         _setAllHooks();
 

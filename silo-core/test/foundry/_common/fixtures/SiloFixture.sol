@@ -80,7 +80,7 @@ contract SiloFixture is StdCheats, CommonBase {
             ISilo silo1,
             address weth,
             address usdc,
-            IPartialLiquidation liquidationModule
+            address hookReceiver
         )
     {
         return _deploy(new SiloDeployWithGaugeHookReceiver(), SiloConfigsNames.ETH_USDC_UNI_V3_SILO);
@@ -94,7 +94,7 @@ contract SiloFixture is StdCheats, CommonBase {
             ISilo silo1,
             address token0,
             address token1,
-            IPartialLiquidation liquidationModule
+            address hookReceiver
         )
     {
         SiloConfigOverride memory overrideArgs;
@@ -109,7 +109,7 @@ contract SiloFixture is StdCheats, CommonBase {
             ISilo silo1,
             address token0,
             address token1,
-            IPartialLiquidation liquidationModule
+            address hookReceiver
         )
     {
         return _deploy(
@@ -126,7 +126,7 @@ contract SiloFixture is StdCheats, CommonBase {
             ISilo silo1,
             address token0,
             address token1,
-            IPartialLiquidation liquidationModule
+            address hookReceiver
         )
     {
         MainnetDeploy mainnetDeploy = new MainnetDeploy();
@@ -150,7 +150,7 @@ contract SiloFixture is StdCheats, CommonBase {
         token0 = siloConfig0.token;
         token1 = siloConfig1.token;
 
-        liquidationModule = IPartialLiquidation(siloConfig0.liquidationModule);
-        if (address(liquidationModule) == address(0)) revert("liquidationModule is empty");
+        hookReceiver = siloConfig0.hookReceiver;
+        if (hookReceiver == address(0)) revert("hookReceiver address is empty");
     }
 }
