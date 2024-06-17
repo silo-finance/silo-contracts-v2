@@ -17,7 +17,7 @@ import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ILeverageBorrower} from "silo-core/contracts/interfaces/ILeverageBorrower.sol";
 import {Hook} from "silo-core/contracts/lib/Hook.sol";
-import {SiloFixtureWithFeeDistributor as SiloFixture} from "../../_common/fixtures/SiloFixtureWithFeeDistributor.sol";
+import {SiloFixtureWithVeSilo as SiloFixture} from "../../_common/fixtures/SiloFixtureWithVeSilo.sol";
 import {SiloConfigOverride} from "../../_common/fixtures/SiloFixture.sol";
 import {MintableToken} from "../../_common/MintableToken.sol";
 import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
@@ -48,12 +48,6 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock, ILeverageBorr
     // `HookReceiverAllActionsWithEvents` has a lot events
     // to avoid copying them all `SiloHooksActionsTest` derives from it so we can use them in the test
     constructor() HookMock(0, 0, 0, 0) {}
-
-    function setUp() public {
-        // Mock addresses that we need for the `SiloFactoryDeploy` script
-        AddrLib.setAddress(VeSiloContracts.TIMELOCK_CONTROLLER, makeAddr("Timelock"));
-        AddrLib.setAddress(VeSiloContracts.FEE_DISTRIBUTOR, makeAddr("FeeDistributor"));
-    }
 
     // For the flash loan tests
     function onFlashLoan(address, address _token, uint256 _amount, uint256 _fee, bytes calldata)

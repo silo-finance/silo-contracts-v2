@@ -19,7 +19,7 @@ import {CrossEntrancy} from "silo-core/contracts/lib/CrossEntrancy.sol";
 import {SiloLittleHelper} from  "../../_common/SiloLittleHelper.sol";
 import {MintableToken} from "../../_common/MintableToken.sol";
 import {SiloConfigOverride} from "../../_common/fixtures/SiloFixture.sol";
-import {SiloFixtureWithFeeDistributor as SiloFixture} from "../../_common/fixtures/SiloFixtureWithFeeDistributor.sol";
+import {SiloFixtureWithVeSilo as SiloFixture} from "../../_common/fixtures/SiloFixtureWithVeSilo.sol";
 
 /*
 FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc HookCallsOutsideActionTest

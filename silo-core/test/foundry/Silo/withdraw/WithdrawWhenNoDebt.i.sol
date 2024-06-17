@@ -14,7 +14,8 @@ import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
 import {TokenMock} from "silo-core/test/foundry/_mocks/TokenMock.sol";
 import {HookReceiverMock} from "silo-core/test/foundry/_mocks/HookReceiverMock.sol";
 import {MintableToken} from "../../_common/MintableToken.sol";
-import {SiloFixture, SiloConfigOverride} from "../../_common/fixtures/SiloFixture.sol";
+import {SiloConfigOverride} from "../../_common/fixtures/SiloFixture.sol";
+import {SiloFixtureWithVeSilo} from "../../_common/fixtures/SiloFixtureWithVeSilo.sol";
 
 import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
 
@@ -25,10 +26,6 @@ contract WithdrawWhenNoDebtTest is SiloLittleHelper, Test {
     ISiloConfig siloConfig;
 
     function setUp() public {
-        // Mock addresses that we need for the `SiloFactoryDeploy` script
-        AddrLib.setAddress(VeSiloContracts.TIMELOCK_CONTROLLER, makeAddr("Timelock"));
-        AddrLib.setAddress(VeSiloContracts.FEE_DISTRIBUTOR, makeAddr("FeeDistributor"));
-
         token0 = new MintableToken(18);
         token1 = new MintableToken(18);
 
@@ -45,7 +42,7 @@ contract WithdrawWhenNoDebtTest is SiloLittleHelper, Test {
         overrides.hookReceiver = hookReceiverAddr;
         overrides.configName = SiloConfigsNames.LOCAL_DEPLOYER;
 
-        SiloFixture siloFixture = new SiloFixture();
+        SiloFixtureWithVeSilo siloFixture = new SiloFixtureWithVeSilo();
 
         (siloConfig, silo0, silo1,,, partialLiquidation) = siloFixture.deploy_local(overrides);
     }
