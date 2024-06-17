@@ -79,6 +79,7 @@ contract SiloDeploy is CommonDeploy {
         address hookImpl = beforeCreateSilo(siloInitData);
 
         if (hookImpl != address(0) && hookReceiverImplementation != hookImpl) {
+            console2.log("[SiloCommonDeploy] `hookReceiverImplementation` set to", hookImpl);
             hookReceiverImplementation = hookImpl;
         }
 
