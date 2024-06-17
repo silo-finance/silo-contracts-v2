@@ -15,17 +15,8 @@ import {ISiloMock as ISilo} from "ve-silo/test/_mocks/ISiloMock.sol";
 import {FeesManagerTest} from "ve-silo/test/silo-tokens-minter/FeesManager.unit.t.sol";
 import {IFeesManager} from "ve-silo/contracts/silo-tokens-minter/interfaces/IFeesManager.sol";
 import {ERC20Mint as ERC20} from "ve-silo/test/_mocks/ERC20Mint.sol";
-
-// interfaces for tests
-interface IMinter {
-    function minted(address _user,address _gauge) external view returns (uint256);
-    function getBalancerToken() external view returns (uint256);
-}
-
-interface IVotingEscrowDelegationProxy {
-    function totalSupply() external view returns (uint256);
-    function adjustedBalanceOf(address _user) external view returns (uint256);
-}
+import {IMinterLike as IMinter} from "ve-silo/test/gauges/interfaces/IMinterLike.sol";
+import {IVotingEscrowDelegationProxyLike} from "ve-silo/test/gauges/interfaces/IVotingEscrowDelegationProxyLike.sol";
 
 // FOUNDRY_PROFILE=ve-silo-test forge test --mc ChildChainGaugesTest --ffi -vvv
 contract ChildChainGaugesTest is IntegrationTest {
@@ -97,13 +88,15 @@ contract ChildChainGaugesTest is IntegrationTest {
         );
     }
 
-    function testShouldCreateGauge() public {
+    function testCreateChildChainGaugeAndVerifyGetters() public {
         ISiloChildChainGauge gauge = _createGauge();
 
         assertEq(gauge.hook_receiver(), _hookReceiver, "Deployed with wrong hook receiver");
         assertEq(gauge.share_token(), _shareToken, "Deployed with wrong share token");
         assertEq(gauge.silo(), _silo, "Deployed with wrong silo");
         assertEq(gauge.silo_factory(), _siloFactory, "Deployed with wrong silo factory");
+        assertEq(gauge.bal_pseudo_minter(), _l2BalancerPseudoMinter, "Deployed with wrong minter");
+        assertEq(gauge.voting_escrow_delegation_proxy(), _votingEscrowDelegationProxy, "Deployed with wrong proxy");
         assertEq(gauge.version(), _factory.getProductVersion(), "Deployed with wrong version");
         assertEq(address(gauge.factory()), address(_factory), "Deployed with wrong factory");
 
@@ -114,11 +107,11 @@ contract ChildChainGaugesTest is IntegrationTest {
         );
     }
 
-    /// @notice Should revert if msg.sender is not ERC-20 Balances handler
-    function testUpdateUsersRevert() public {
+    /// @notice Should revert if msg.sender is not hook receiver
+    function testUpdateUsersPemissions() public {
         ISiloChildChainGauge gauge = _createGauge();
 
-        vm.expectRevert(); // dev: only balancer handler
+        vm.expectRevert(); // dev: only hook receiver
         
         gauge.afterTokenTransfer(
             _bob,
@@ -129,7 +122,61 @@ contract ChildChainGaugesTest is IntegrationTest {
         );
     }
 
+    // FOUNDRY_PROFILE=ve-silo-test forge test --mt testTransferTokensToTheMinter --ffi -vvv
+    function testTransferTokensToTheMinter() public {
+        ISiloChildChainGauge gauge = _createGauge();
+
+        assertEq(_siloToken.balanceOf(address(gauge)), 0, "Before. An invalid balance of the gauge");
+
+        assertEq(
+            _siloToken.balanceOf(address(_l2BalancerPseudoMinter)),
+            0,
+            "Before. An invalid balance of the minter"
+        );
+
+        uint256 tokensAmount = 100e18;
+
+        // Mint tokens to the gauge. This is the same as we bridge tokens from the main chain to the child chain
+        _siloToken.mint(address(gauge), tokensAmount);
+
+        assertEq(_siloToken.balanceOf(address(gauge)), tokensAmount);
+
+        _mockBalanceAndTotalSupply(_bob, 0,0);
+
+        gauge.user_checkpoint(_bob);
+
+        assertEq(_siloToken.balanceOf(address(gauge)), 0);
+        assertEq(_siloToken.balanceOf(address(_l2BalancerPseudoMinter)), tokensAmount);
+
+        // second checkpoit has no effect
+        gauge.user_checkpoint(_bob);
+
+        assertEq(_siloToken.balanceOf(address(gauge)), 0);
+        assertEq(_siloToken.balanceOf(address(_l2BalancerPseudoMinter)), tokensAmount);
+    }
+
+    // FOUNDRY_PROFILE=ve-silo-test forge test --mt testAnyOneCanCheckpoint --ffi -vvv
+    function testAnyOneCanCheckpoint() public {
+        address someUser1 = makeAddr("Some user 1");
+        address someUser2 = makeAddr("Some user 2");
+
+        ISiloChildChainGauge gauge = _createGauge();
+
+        _mockBalanceAndTotalSupply(_bob, _BOB_BAL, _TOTAL_SUPPLY);
+
+        // calls hould not revert
+
+        vm.prank(someUser1);
+        gauge.user_checkpoint(_bob);
+
+        _mockBalanceAndTotalSupply(_bob, _BOB_BAL + 1e18, _TOTAL_SUPPLY + 1e18);
+
+        vm.prank(someUser2);
+        gauge.user_checkpoint(_bob);
+    }
+
     /// @notice Should update stats for two users
+    // FOUNDRY_PROFILE=ve-silo-test forge test --mt testUpdateUsers --ffi -vvv
     function testUpdateUsers() public {
         ISiloChildChainGauge gauge = _createGauge();
 
@@ -186,19 +233,19 @@ contract ChildChainGaugesTest is IntegrationTest {
 
         vm.mockCall(
             _votingEscrowDelegationProxy,
-            abi.encodeWithSelector(IVotingEscrowDelegationProxy.totalSupply.selector),
+            abi.encodeWithSelector(IVotingEscrowDelegationProxyLike.totalSupply.selector),
             abi.encode(_TOTAL_SUPPLY)
         );
 
         vm.mockCall(
             _votingEscrowDelegationProxy,
-            abi.encodeWithSelector(IVotingEscrowDelegationProxy.adjustedBalanceOf.selector, _bob),
+            abi.encodeWithSelector(IVotingEscrowDelegationProxyLike.adjustedBalanceOf.selector, _bob),
             abi.encode(_BOB_BAL)
         );
 
         vm.mockCall(
             _votingEscrowDelegationProxy,
-            abi.encodeWithSelector(IVotingEscrowDelegationProxy.adjustedBalanceOf.selector, _alice),
+            abi.encodeWithSelector(IVotingEscrowDelegationProxyLike.adjustedBalanceOf.selector, _alice),
             abi.encode(_ALICE_BAL)
         );
 
@@ -218,6 +265,24 @@ contract ChildChainGaugesTest is IntegrationTest {
             _silo,
             abi.encodeWithSelector(ISilo.factory.selector),
             abi.encode(_siloFactory)
+        );
+    }
+
+    function _mockBalanceAndTotalSupply(address _user, uint256 _balance, uint256 _total) internal {
+        if (_balance > _total) revert();
+
+        vm.mockCall(
+            _shareToken,
+            abi.encodeWithSelector(IShareToken.balanceOfAndTotalSupply.selector, _user),
+            abi.encode(_balance, _total)
+        );
+    }
+
+    function _mockMinted(address _user, address _gauge, uint256 _amount) internal {
+        vm.mockCall(
+            _l2BalancerPseudoMinter,
+            abi.encodeWithSelector(IMinter.minted.selector, _user, _gauge),
+            abi.encode(_amount)
         );
     }
 }
