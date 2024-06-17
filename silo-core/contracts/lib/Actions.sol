@@ -626,7 +626,7 @@ library Actions {
         bytes memory data =
             abi.encodePacked(_args.assets, _args.shares, _args.receiver, _args.owner, _args.spender);
 
-        _hookReceiverBeforeAction(_shareStorage.hookReceiver, action, data);
+        _shareStorage.hookReceiver.beforeAction(address(this), action, data);
     }
 
     function _hookCallAfterWithdraw(
@@ -642,14 +642,6 @@ library Actions {
         bytes memory data =
             abi.encodePacked(_args.assets, _args.shares, _args.receiver, _args.owner, _args.spender, assets, shares);
 
-        _hookReceiverAfterAction(_shareStorage.hookReceiver, action, data);
-    }
-
-    function _hookReceiverBeforeAction(IHookReceiver _hookReceiver, uint256 _action, bytes memory _data) private {
-        _hookReceiver.beforeAction(address(this), _action, _data);
-    }
-
-    function _hookReceiverAfterAction(IHookReceiver _hookReceiver, uint256 _action, bytes memory _data) private {
-        _hookReceiver.afterAction(address(this), _action, _data);
+        _shareStorage.hookReceiver.afterAction(address(this), _action, _data);
     }
 }
