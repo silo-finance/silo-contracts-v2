@@ -140,7 +140,9 @@ library Actions {
         external
         returns (uint256 assets, uint256 shares)
     {
-        _hookCallBeforeBorrow(_shareStorage, _args);
+        uint256 borrowAction = Hook.borrowAction(_args.leverage, _args.sameAsset);
+
+        _hookCallBeforeBorrow(_shareStorage, _args, borrowAction);
 
         ISiloConfig siloConfig = _shareStorage.siloConfig;
 
@@ -148,11 +150,7 @@ library Actions {
             ISiloConfig.ConfigData memory collateralConfig,
             ISiloConfig.ConfigData memory debtConfig,
             ISiloConfig.DebtInfo memory debtInfo
-        ) = siloConfig.accrueInterestAndGetConfigs(
-            address(this),
-            _args.borrower,
-            Hook.borrowAction(_args.leverage, _args.sameAsset)
-        );
+        ) = siloConfig.accrueInterestAndGetConfigs(address(this), _args.borrower, borrowAction);
 
         if (!SiloLendingLib.borrowPossible(debtInfo)) revert ISilo.BorrowNotPossible();
 
@@ -184,7 +182,7 @@ library Actions {
 
         siloConfig.crossNonReentrantAfter();
 
-        _hookCallAfterBorrow(_shareStorage, _args, assets, shares);
+        _hookCallAfterBorrow(_shareStorage, _args, borrowAction, assets, shares);
     }
 
     function repay(
@@ -639,10 +637,9 @@ library Actions {
 
     function _hookCallBeforeBorrow(
         ISilo.SharedStorage storage _shareStorage,
-        ISilo.BorrowArgs memory _args
+        ISilo.BorrowArgs memory _args,
+        uint256 action
     ) private {
-        uint256 action = Hook.borrowAction(_args.leverage, _args.sameAsset);
-
         if (!_shareStorage.hooksBefore.matchAction(action)) return;
 
         bytes memory data = abi.encodePacked(_args.assets, _args.shares, _args.receiver, _args.borrower);
@@ -653,11 +650,10 @@ library Actions {
     function _hookCallAfterBorrow(
         ISilo.SharedStorage storage _shareStorage,
         ISilo.BorrowArgs memory _args,
+        uint256 action,
         uint256 assets,
         uint256 shares
     ) private {
-        uint256 action = Hook.borrowAction(_args.leverage, _args.sameAsset);
-
         if (!_shareStorage.hooksAfter.matchAction(action)) return;
 
         bytes memory data = abi.encodePacked(
