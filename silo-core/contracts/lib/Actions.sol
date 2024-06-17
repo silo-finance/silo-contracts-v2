@@ -642,6 +642,6 @@ library Actions {
         bytes memory data =
             abi.encodePacked(_args.assets, _args.shares, _args.receiver, _args.owner, _args.spender, assets, shares);
 
-        _shareStorage.hookReceiver.afterAction(address(this), _action, _data);
+        _shareStorage.hookReceiver.afterAction(address(this), action, data);
     }
 }
