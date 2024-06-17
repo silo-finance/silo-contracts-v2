@@ -22,7 +22,6 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
 
     uint256 private immutable _DAO_FEE;
     uint256 private immutable _DEPLOYER_FEE;
-    address private immutable _LIQUIDATION_MODULE;
     address private immutable _HOOK_RECEIVER;
 
     // TOKEN #0
@@ -88,7 +87,6 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
 
         _DAO_FEE = _configData0.daoFee;
         _DEPLOYER_FEE = _configData0.deployerFee;
-        _LIQUIDATION_MODULE = _configData0.liquidationModule;
         _HOOK_RECEIVER = _configData0.hookReceiver;
 
         // TOKEN #0
@@ -139,7 +137,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
         if (_action.matchAction(CrossEntrancy.ENTERED_FROM_LEVERAGE)) {
             _onlySilo();
         } else {
-            _onlySiloOrTokenOrLiquidation();
+            _onlySiloOrTokenOrHookReceiver();
         }
 
         _crossNonReentrantBefore(_action);
@@ -147,7 +145,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
 
     /// @inheritdoc ISiloConfig
     function crossNonReentrantAfter() external virtual {
-        _onlySiloOrTokenOrLiquidation();
+        _onlySiloOrTokenOrHookReceiver();
         _crossNonReentrantAfter();
     }
 
@@ -192,12 +190,11 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
     function accrueInterestAndGetConfigOptimised(
         uint256 _action,
         ISilo.CollateralType _collateralType
-    ) external virtual returns (address shareToken, address asset, address hookReceiver, address liquidationModule) {
+    ) external virtual returns (address shareToken, address asset, address hookReceiver) {
         _crossNonReentrantBefore(_action);
         _callAccrueInterest(msg.sender);
 
         hookReceiver = _HOOK_RECEIVER;
-        liquidationModule = _LIQUIDATION_MODULE;
 
         if (msg.sender == _SILO0) {
             asset = _TOKEN0;
@@ -236,6 +233,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
         } else if (_action.matchAction(Hook.SWITCH_COLLATERAL)) {
             debtInfo = _changeCollateralType(_borrower, _action.matchAction(Hook.SAME_ASSET));
         } else {
+            // TODO looks like anyone can raise flag if there is no action taken?
             debtInfo = _debtsInfo[_borrower];
         }
 
@@ -405,7 +403,6 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
             lt: _LT0,
             liquidationFee: _LIQUIDATION_FEE0,
             flashloanFee: _FLASHLOAN_FEE0,
-            liquidationModule: _LIQUIDATION_MODULE,
             hookReceiver: _HOOK_RECEIVER,
             callBeforeQuote: _CALL_BEFORE_QUOTE0
         });
@@ -428,7 +425,6 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
             lt: _LT1,
             liquidationFee: _LIQUIDATION_FEE1,
             flashloanFee: _FLASHLOAN_FEE1,
-            liquidationModule: _LIQUIDATION_MODULE,
             hookReceiver: _HOOK_RECEIVER,
             callBeforeQuote: _CALL_BEFORE_QUOTE1
         });
@@ -441,10 +437,10 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
         revert DebtExistInOtherSilo();
     }
 
-    function _onlySiloOrTokenOrLiquidation() internal view virtual {
+    function _onlySiloOrTokenOrHookReceiver() internal view virtual {
         if (msg.sender != _SILO0 &&
             msg.sender != _SILO1 &&
-            msg.sender != _LIQUIDATION_MODULE &&
+            msg.sender != _HOOK_RECEIVER &&
             msg.sender != _COLLATERAL_SHARE_TOKEN0 &&
             msg.sender != _COLLATERAL_SHARE_TOKEN1 &&
             msg.sender != _PROTECTED_COLLATERAL_SHARE_TOKEN0 &&
@@ -452,7 +448,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
             msg.sender != _DEBT_SHARE_TOKEN0 &&
             msg.sender != _DEBT_SHARE_TOKEN1
         ) {
-            revert OnlySiloOrLiquidationModule();
+            revert OnlySiloOrHookReceiver();
         }
     }
 

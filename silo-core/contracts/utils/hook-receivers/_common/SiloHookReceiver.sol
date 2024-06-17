@@ -7,7 +7,7 @@ import {IHookReceiver} from "../../../interfaces/IHookReceiver.sol";
 abstract contract SiloHookReceiver is IHookReceiver {
     mapping(address silo => HookConfig) private _hookConfig;
 
-    function hookReceiverConfig(address _silo) external view returns (uint24 hooksBefore, uint24 hooksAfter) {
+    function _hookReceiverConfig(address _silo) internal view virtual returns (uint24 hooksBefore, uint24 hooksAfter) {
         HookConfig memory hookConfig = _hookConfig[_silo];
 
         hooksBefore = hookConfig.hooksBefore;
@@ -21,11 +21,11 @@ abstract contract SiloHookReceiver is IHookReceiver {
         ISilo(_silo).updateHooks();
     }
 
-    function _getHooksBefore(address _silo) internal view returns (uint256 hooksBefore) {
+    function _getHooksBefore(address _silo) internal view virtual returns (uint256 hooksBefore) {
         hooksBefore = _hookConfig[_silo].hooksBefore;
     }
 
-    function _getHooksAfter(address _silo) internal view returns (uint256 hooksAfter) {
+    function _getHooksAfter(address _silo) internal view virtual returns (uint256 hooksAfter) {
         hooksAfter = _hookConfig[_silo].hooksAfter;
     }
 }

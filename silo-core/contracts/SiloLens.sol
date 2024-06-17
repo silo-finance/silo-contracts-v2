@@ -14,6 +14,10 @@ import {SiloSolvencyLib} from "./lib/SiloSolvencyLib.sol";
 contract SiloLens is ISiloLens {
     using SiloLensLib for ISilo;
 
+    function getRawLiquidity(ISilo _silo) external view virtual returns (uint256 liquidity) {
+        return _silo.getRawLiquidity();
+    }
+
     /// @inheritdoc ISiloLens
     function borrowPossible(ISilo _silo, address _borrower) external view virtual returns (bool possible) {
         return _silo.borrowPossible(_borrower);

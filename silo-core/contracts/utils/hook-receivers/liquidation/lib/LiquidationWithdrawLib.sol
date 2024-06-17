@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.20;
 
-import {ISilo} from "../interfaces/ISilo.sol";
-import {IShareToken} from "../interfaces/IShareToken.sol";
-import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
-import {SiloMathLib} from "./SiloMathLib.sol";
-import {SiloERC4626Lib} from "./SiloERC4626Lib.sol";
-import {Rounding} from "./Rounding.sol";
-import {AssetTypes} from "./AssetTypes.sol";
-import {Hook} from "./Hook.sol";
+import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
+import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
+import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
+import {SiloMathLib} from "silo-core/contracts/lib/SiloMathLib.sol";
+import {SiloERC4626Lib} from "silo-core/contracts/lib/SiloERC4626Lib.sol";
+import {Rounding} from "silo-core/contracts/lib/Rounding.sol";
+import {AssetTypes} from "silo-core/contracts/lib/AssetTypes.sol";
+import {Hook} from "silo-core/contracts/lib/Hook.sol";
 
 library LiquidationWithdrawLib {
     /// @dev that method allow to finish liquidation process by giving up collateral to liquidator
@@ -23,7 +23,7 @@ library LiquidationWithdrawLib {
         mapping(uint256 assetType => ISilo.Assets) storage _total
     ) internal {
         ISiloConfig.ConfigData memory collateralConfig = _config.getConfig(address(this));
-        if (msg.sender != collateralConfig.liquidationModule) revert ISilo.OnlyLiquidationModule();
+        if (msg.sender != collateralConfig.hookReceiver) revert ISilo.OnlyHookReceiver();
 
         if (_receiveSToken) {
             withdrawSCollateralToLiquidator(

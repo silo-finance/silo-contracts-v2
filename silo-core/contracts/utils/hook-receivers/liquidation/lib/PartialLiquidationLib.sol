@@ -3,8 +3,8 @@ pragma solidity 0.8.24;
 
 import {Math} from "openzeppelin5/utils/math/Math.sol";
 
-import {ISiloConfig} from "../../interfaces/ISiloConfig.sol";
-import {IPartialLiquidation} from "../../interfaces/IPartialLiquidation.sol";
+import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
+import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquidation.sol";
 
 library PartialLiquidationLib {
     struct LiquidationPreviewParams {

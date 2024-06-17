@@ -41,7 +41,7 @@ library Actions {
         ISilo.CollateralType _collateralType,
         ISilo.Assets storage _totalCollateral
     )
-        external
+        internal
         returns (uint256 assets, uint256 shares)
     {
         _hookCallBeforeDeposit(_shareStorage, _collateralType, _assets, _shares, _receiver);
@@ -51,7 +51,7 @@ library Actions {
         (
             address shareToken,
             address asset,
-            address hookReceiver,
+            address hookReceiver
         ) = siloConfig.accrueInterestAndGetConfigOptimised(Hook.DEPOSIT, _collateralType);
 
         (assets, shares) = SiloERC4626Lib.deposit(
@@ -183,28 +183,20 @@ library Actions {
         uint256 _shares,
         address _borrower,
         address _repayer,
-        bool _liquidation,
         ISilo.Assets storage _totalDebt
     )
         external
         returns (uint256 assets, uint256 shares)
     {
-        if (!_liquidation) {
-            _hookCallBefore(_shareStorage, Hook.REPAY, abi.encodePacked(_assets, _shares, _borrower, _repayer));
-        }
+        _hookCallBefore(_shareStorage, Hook.REPAY, abi.encodePacked(_assets, _shares, _borrower, _repayer));
 
         (
             address debtShareToken,
             address debtAsset,
-            address hookReceiver,
-            address liquidationModule
+            address hookReceiver
         ) = _shareStorage.siloConfig.accrueInterestAndGetConfigOptimised(
-            (_liquidation ? Hook.LIQUIDATION : Hook.NONE) | Hook.REPAY, ISilo.CollateralType(0) // type not necessary
+            Hook.REPAY, ISilo.CollateralType(0) // type not necessary
         );
-
-        if (_liquidation) {
-            if (liquidationModule != msg.sender) revert ISilo.OnlyLiquidationModule();
-        }
 
         (
             assets, shares
@@ -212,17 +204,15 @@ library Actions {
             IShareToken(debtShareToken), debtAsset, _assets, _shares, _borrower, _repayer, _totalDebt
         );
 
-        if (!_liquidation) {
-            _shareStorage.siloConfig.crossNonReentrantAfter();
+        _shareStorage.siloConfig.crossNonReentrantAfter();
 
-            if (hookReceiver != address(0)) {
-                _hookCallAfter(
-                    _shareStorage,
-                    hookReceiver,
-                    Hook.REPAY,
-                    abi.encodePacked(_assets, _shares, _borrower, _repayer, assets, shares)
-                );
-            }
+        if (hookReceiver != address(0)) {
+            _hookCallAfter(
+                _shareStorage,
+                hookReceiver,
+                Hook.REPAY,
+                abi.encodePacked(_assets, _shares, _borrower, _repayer, assets, shares)
+            );
         }
     }
 
@@ -540,8 +530,6 @@ library Actions {
         IShareToken(cfg.collateralShareToken).synchronizeHooks(hooksBefore, hooksAfter);
         IShareToken(cfg.protectedShareToken).synchronizeHooks(hooksBefore, hooksAfter);
         IShareToken(cfg.debtShareToken).synchronizeHooks(hooksBefore, hooksAfter);
-
-        IPartialLiquidation(cfg.liquidationModule).synchronizeHooks(cfg.hookReceiver, hooksBefore, hooksAfter);
     }
 
     function _executeOnLeverageCallBack(

@@ -10,9 +10,15 @@ import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
 import {SiloSolvencyLib} from "./SiloSolvencyLib.sol";
 import {SiloLendingLib} from "./SiloLendingLib.sol";
 import {SiloERC4626Lib} from "./SiloERC4626Lib.sol";
+import {SiloMathLib} from "./SiloMathLib.sol";
+import {AssetTypes} from "./AssetTypes.sol";
 import {Hook} from "./Hook.sol";
 
 library SiloLensLib {
+    function getRawLiquidity(ISilo _silo) internal view returns (uint256 liquidity) {
+        return SiloMathLib.liquidity(_silo.total(AssetTypes.COLLATERAL), _silo.total(AssetTypes.DEBT));
+    }
+
     function borrowPossible(ISilo _silo, address _borrower) internal view returns (bool possible) {
         (
             ,, ISiloConfig.DebtInfo memory debtInfo
