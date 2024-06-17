@@ -129,7 +129,7 @@ library Actions {
         _hookCallAfterWithdraw(_shareStorage, _args, assets, shares);
     }
 
-    // solhint-disable-next-line function-max-lines, code-complexity
+    // solhint-disable-next-line function-max-lines
     function borrow(
         ISilo.SharedStorage storage _shareStorage,
         ISilo.BorrowArgs memory _args,
@@ -140,19 +140,15 @@ library Actions {
         external
         returns (uint256 assets, uint256 shares)
     {
-        if (_args.assets == 0 && _args.shares == 0) revert ISilo.ZeroAssets();
+        _hookCallBeforeBorrow(_shareStorage, _args);
 
-        _hookCallBefore(
-            _shareStorage,
-            Hook.borrowAction(_args.leverage, _args.sameAsset),
-            abi.encodePacked(_args.assets, _args.shares, _args.receiver, _args.borrower)
-        );
+        ISiloConfig siloConfig = _shareStorage.siloConfig;
 
         (
             ISiloConfig.ConfigData memory collateralConfig,
             ISiloConfig.ConfigData memory debtConfig,
             ISiloConfig.DebtInfo memory debtInfo
-        ) = _shareStorage.siloConfig.accrueInterestAndGetConfigs(
+        ) = siloConfig.accrueInterestAndGetConfigs(
             address(this),
             _args.borrower,
             Hook.borrowAction(_args.leverage, _args.sameAsset)
@@ -172,17 +168,7 @@ library Actions {
         );
 
         if (_args.leverage) {
-            // change reentrant flag to leverage, to allow for deposit
-            _shareStorage.siloConfig.crossNonReentrantBefore(CrossEntrancy.ENTERED_FROM_LEVERAGE);
-
-            bytes32 result = ILeverageBorrower(_args.receiver)
-                .onLeverage(msg.sender, _args.borrower, debtConfig.token, assets, _data);
-
-            // allow for deposit reentry only to provide collateral
-            if (result != _LEVERAGE_CALLBACK) revert ISilo.LeverageFailed();
-
-            // after deposit, guard is down, for max security we need to enable it again
-            _shareStorage.siloConfig.crossNonReentrantBefore(CrossEntrancy.ENTERED);
+            _executeOnLeverageCallBack(_args, siloConfig, debtConfig.token, assets, _data);
         }
 
         if (!debtInfo.sameAsset) {
@@ -190,29 +176,15 @@ library Actions {
             debtConfig.callMaxLtvOracleBeforeQuote();
         }
 
-        if (!SiloSolvencyLib.isBelowMaxLtv(
-            collateralConfig, debtConfig, _args.borrower, ISilo.AccrueInterestInMemory.No)
-        ) {
-            revert ISilo.AboveMaxLtv();
-        }
+        bool borrowerIsBelowMaxLtv = SiloSolvencyLib.isBelowMaxLtv(
+            collateralConfig, debtConfig, _args.borrower, ISilo.AccrueInterestInMemory.No
+        );
 
-        _shareStorage.siloConfig.crossNonReentrantAfter();
+        if (!borrowerIsBelowMaxLtv) revert ISilo.AboveMaxLtv();
 
-        if (collateralConfig.hookReceiver != address(0)) {
-            _hookCallAfter(
-                _shareStorage,
-                collateralConfig.hookReceiver,
-                Hook.borrowAction(_args.leverage, _args.sameAsset),
-                abi.encodePacked(
-                    _args.assets,
-                    _args.shares,
-                    _args.receiver,
-                    _args.borrower,
-                    assets,
-                    shares
-                )
-            );
-        }
+        siloConfig.crossNonReentrantAfter();
+
+        _hookCallAfterBorrow(_shareStorage, _args, assets, shares);
     }
 
     function repay(
@@ -591,6 +563,26 @@ library Actions {
         IPartialLiquidation(cfg.liquidationModule).synchronizeHooks(cfg.hookReceiver, hooksBefore, hooksAfter);
     }
 
+    function _executeOnLeverageCallBack(
+        ISilo.BorrowArgs memory _args,
+        ISiloConfig _siloConfig,
+        address _debtConfigToken,
+        uint256 _assets,
+        bytes memory _data
+    ) private {
+        // change reentrant flag to leverage, to allow for deposit
+        _siloConfig.crossNonReentrantBefore(CrossEntrancy.ENTERED_FROM_LEVERAGE);
+
+        bytes32 result = ILeverageBorrower(_args.receiver)
+            .onLeverage(msg.sender, _args.borrower, _debtConfigToken, _assets, _data);
+
+        // allow for deposit reentry only to provide collateral
+        if (result != _LEVERAGE_CALLBACK) revert ISilo.LeverageFailed();
+
+        // after deposit, guard is down, for max security we need to enable it again
+        _siloConfig.crossNonReentrantBefore(CrossEntrancy.ENTERED);
+    }
+
     function _hookCallBefore(ISilo.SharedStorage storage _shareStorage, uint256 _action, bytes memory _data)
         private
     {
@@ -641,6 +633,41 @@ library Actions {
 
         bytes memory data =
             abi.encodePacked(_args.assets, _args.shares, _args.receiver, _args.owner, _args.spender, assets, shares);
+
+        _shareStorage.hookReceiver.afterAction(address(this), action, data);
+    }
+
+    function _hookCallBeforeBorrow(
+        ISilo.SharedStorage storage _shareStorage,
+        ISilo.BorrowArgs memory _args
+    ) private {
+        uint256 action = Hook.borrowAction(_args.leverage, _args.sameAsset);
+
+        if (!_shareStorage.hooksBefore.matchAction(action)) return;
+
+        bytes memory data = abi.encodePacked(_args.assets, _args.shares, _args.receiver, _args.borrower);
+
+        _shareStorage.hookReceiver.beforeAction(address(this), action, data);
+    }
+
+    function _hookCallAfterBorrow(
+        ISilo.SharedStorage storage _shareStorage,
+        ISilo.BorrowArgs memory _args,
+        uint256 assets,
+        uint256 shares
+    ) private {
+        uint256 action = Hook.borrowAction(_args.leverage, _args.sameAsset);
+
+        if (!_shareStorage.hooksAfter.matchAction(action)) return;
+
+        bytes memory data = abi.encodePacked(
+            _args.assets,
+            _args.shares,
+            _args.receiver,
+            _args.borrower,
+            assets,
+            shares
+        );
 
         _shareStorage.hookReceiver.afterAction(address(this), action, data);
     }
