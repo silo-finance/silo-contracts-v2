@@ -75,13 +75,8 @@ contract SiloDeploy is CommonDeploy {
         ISiloDeployer.Oracles memory oracles = _getOracles(config, siloData);
 
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
-
-        address hookImplOverride = beforeCreateSilo(siloInitData);
-
-        if (hookImplOverride != address(0) && hookReceiverImplementation != hookImplOverride) {
-            console2.log("[SiloCommonDeploy] `hookReceiverImplementation` set to", hookImplOverride);
-            hookReceiverImplementation = hookImplOverride;
-        }
+        
+        hookReceiverImplementation = beforeCreateSilo(siloInitData, hookReceiverImplementation);
 
         console2.log("[SiloCommonDeploy] `beforeCreateSilo` executed");
 
@@ -265,8 +260,10 @@ contract SiloDeploy is CommonDeploy {
     }
 
     function beforeCreateSilo(
-        ISiloConfig.InitData memory
-    ) internal virtual returns (address _hookImplementation) {
+        ISiloConfig.InitData memory,
+        address _hookReceiverImplementation
+    ) internal virtual returns (address hookImplementation) {
+        hookImplementation = _hookReceiverImplementation;
     }
 
     function _getClonableHookReceiverConfig(address _implementation)

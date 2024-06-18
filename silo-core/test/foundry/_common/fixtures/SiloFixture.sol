@@ -40,7 +40,8 @@ contract SiloDeploy_Local is SiloDeployWithGaugeHookReceiver {
     }
 
     function beforeCreateSilo(
-        ISiloConfig.InitData memory _config
+        ISiloConfig.InitData memory _config,
+        address _hookReceiverImplementation
     ) internal view override returns (address hookImplementation) {
         // Override the default values if overrides are provided
         if (siloConfigOverride.token0 != address(0)) {
@@ -75,6 +76,8 @@ contract SiloDeploy_Local is SiloDeployWithGaugeHookReceiver {
 
             _config.hookReceiver = siloConfigOverride.hookReceiver;
             hookImplementation = siloConfigOverride.hookReceiverImplementation;
+        } else {
+            hookImplementation = _hookReceiverImplementation;
         }
     }
 }
