@@ -49,7 +49,6 @@ contract HookCallsOutsideActionTest is IHookReceiver, ILeverageBorrower, IERC315
         SiloConfigOverride memory overrides;
         overrides.token0 = address(token0);
         overrides.token1 = address(token1);
-        overrides.hookReceiverImplementation = address(0);
         overrides.hookReceiver = address(this);
 
         SiloFixture siloFixture = new SiloFixture();

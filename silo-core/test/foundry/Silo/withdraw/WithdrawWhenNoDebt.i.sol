@@ -38,7 +38,6 @@ contract WithdrawWhenNoDebtTest is SiloLittleHelper, Test {
         SiloConfigOverride memory overrides;
         overrides.token0 = address(token0);
         overrides.token1 = address(token1);
-        overrides.hookReceiverImplementation = address(0);
         overrides.hookReceiver = hookReceiverMock.ADDRESS();
         overrides.configName = SiloConfigsNames.LOCAL_DEPLOYER;
 
