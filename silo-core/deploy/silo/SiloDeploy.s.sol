@@ -76,7 +76,12 @@ contract SiloDeploy is CommonDeploy {
 
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
 
-        hookReceiverImplementation = beforeCreateSilo(siloInitData);
+        address hookImplOverride = beforeCreateSilo(siloInitData);
+
+        if (hookImplOverride != address(0) && hookReceiverImplementation != hookImplOverride) {
+            console2.log("[SiloCommonDeploy] `hookReceiverImplementation` set to", hookImplOverride);
+            hookReceiverImplementation = hookImplOverride;
+        }
 
         console2.log("[SiloCommonDeploy] `beforeCreateSilo` executed");
 
