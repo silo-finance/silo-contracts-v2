@@ -140,6 +140,8 @@ library Actions {
         external
         returns (uint256 assets, uint256 shares)
     {
+        if (_args.assets == 0 && _args.shares == 0) revert ISilo.ZeroAssets();
+
         uint256 borrowAction = Hook.borrowAction(_args.leverage, _args.sameAsset);
 
         _hookCallBeforeBorrow(_shareStorage, _args, borrowAction);
@@ -165,9 +167,7 @@ library Actions {
             _totalDebt
         );
 
-        if (_args.leverage) {
-            _executeOnLeverageCallBack(_args, siloConfig, debtConfig.token, assets, _data);
-        }
+        if (_args.leverage) _executeOnLeverageCallBack(_args, siloConfig, debtConfig.token, assets, _data);
 
         if (!debtInfo.sameAsset) {
             collateralConfig.callMaxLtvOracleBeforeQuote();
