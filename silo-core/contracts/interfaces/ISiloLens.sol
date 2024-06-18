@@ -5,7 +5,7 @@ import {ISilo} from "./ISilo.sol";
 
 interface ISiloLens {
     /// @return liquidity based on contract state (without interest, fees)
-    function getRawLiquidity(ISilo _silo) external view virtual returns (uint256 liquidity);
+    function getRawLiquidity(ISilo _silo) external view returns (uint256 liquidity);
 
     /// @notice Checks if borrowing is possible for a given borrower
     /// @param _silo Address of the silo

@@ -50,6 +50,7 @@ contract SiloHooksTest is SiloLittleHelper, Test {
 
         configOverride.token0 = makeAddr("token0");
         configOverride.token1 = makeAddr("token1");
+        configOverride.hookReceiverImplementation = address(0);
         configOverride.hookReceiver = _hookReceiverAddr;
         configOverride.configName = SiloConfigsNames.LOCAL_DEPLOYER;
 
