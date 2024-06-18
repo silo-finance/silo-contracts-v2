@@ -37,6 +37,7 @@ contract TransitionCollateralReentrancyTest is SiloLittleHelper, Test, IHookRece
         token1 = new MintableToken(7);
         configOverride.token0 = address(token0);
         configOverride.token1 = address(token1);
+        configOverride.hookReceiverImplementation = address(0);
         configOverride.hookReceiver = address(this);
         configOverride.configName = SiloConfigsNames.LOCAL_DEPLOYER;
 
