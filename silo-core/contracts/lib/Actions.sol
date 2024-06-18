@@ -188,15 +188,25 @@ library Actions {
         external
         returns (uint256 assets, uint256 shares)
     {
+        bool callFromHook = msg.sender == address(_shareStorage.hookReceiver);
+
         _hookCallBefore(_shareStorage, Hook.REPAY, abi.encodePacked(_assets, _shares, _borrower, _repayer));
 
-        (
-            address debtShareToken,
-            address debtAsset,
-            address hookReceiver
-        ) = _shareStorage.siloConfig.accrueInterestAndGetConfigOptimised(
-            Hook.REPAY, ISilo.CollateralType(0) // type not necessary
-        );
+        address debtShareToken;
+        address debtAsset;
+        address hookReceiver;
+
+        if (callFromHook) {
+            // it is ok to use getter, because hook should accrue interest and raise up re-entrancy guard
+            ISiloConfig.ConfigData memory cfg = _shareStorage.siloConfig.getConfig(address(this));
+            debtShareToken = cfg.debtShareToken;
+            debtAsset = cfg.token;
+            hookReceiver = cfg.hookReceiver;
+        } else {
+            (
+                debtShareToken, debtAsset, hookReceiver
+            ) = _shareStorage.siloConfig.accrueInterestAndGetConfigOptimised(Hook.REPAY, ISilo.CollateralType(0));
+        }
 
         (
             assets, shares
@@ -204,16 +214,16 @@ library Actions {
             IShareToken(debtShareToken), debtAsset, _assets, _shares, _borrower, _repayer, _totalDebt
         );
 
-        _shareStorage.siloConfig.crossNonReentrantAfter();
-
-        if (hookReceiver != address(0)) {
-            _hookCallAfter(
-                _shareStorage,
-                hookReceiver,
-                Hook.REPAY,
-                abi.encodePacked(_assets, _shares, _borrower, _repayer, assets, shares)
-            );
+        if (!callFromHook) {
+            _shareStorage.siloConfig.crossNonReentrantAfter();
         }
+
+        _hookCallAfter(
+            _shareStorage,
+            hookReceiver,
+            Hook.REPAY,
+            abi.encodePacked(_assets, _shares, _borrower, _repayer, assets, shares)
+        );
     }
 
     // solhint-disable-next-line function-max-lines
