@@ -56,6 +56,7 @@ contract SiloFactoryCreateSiloTest is SiloLittleHelper, IntegrationTest {
 
         (, ISiloConfig.InitData memory initData,) = siloData.getConfigData(SILO_TO_DEPLOY);
 
+        initData.hookReceiver = makeAddr("hookReceiver");
         initData.token0 = makeAddr("token0");
         initData.token1 = makeAddr("token1");
         initData.deployerFee = 0;

@@ -38,8 +38,9 @@ contract SiloFactoryValidateSiloInitDataTest is Test {
 
         vm.expectRevert(ISiloFactory.MissingHookReceiver.selector);
         siloFactory.validateSiloInitData(initData);
-        // TODO nothing changed and different error?
-        vm.expectRevert(ISiloFactory.SameAsset.selector);
+        initData.hookReceiver = address(2);
+
+        vm.expectRevert(ISiloFactory.SameAsset.selector); // even when zeros
         siloFactory.validateSiloInitData(initData);
 
         initData.token0 = address(1);
