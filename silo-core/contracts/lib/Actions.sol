@@ -341,9 +341,7 @@ library Actions {
         external
         returns (uint256 assets, uint256 toShares)
     {
-        _hookCallBefore(
-            _shareStorage, Hook.transitionCollateralAction(_withdrawType), abi.encodePacked(_shares, _owner)
-        );
+        _hookCallBeforeTransitionCollateral(_shareStorage, _withdrawType, _shares, _owner);
 
         ISiloConfig.ConfigData memory collateralConfig = _shareStorage.siloConfig.accrueInterestAndGetConfig(
             address(this), Hook.TRANSITION_COLLATERAL
@@ -383,14 +381,7 @@ library Actions {
 
         _shareStorage.siloConfig.crossNonReentrantAfter();
 
-        if (collateralConfig.hookReceiver != address(0)) {
-            _hookCallAfter(
-                _shareStorage,
-                collateralConfig.hookReceiver,
-                Hook.transitionCollateralAction(_withdrawType),
-                abi.encodePacked(_shares, _owner, assets)
-            );
-        }
+        _hookCallAfterTransitionCollateral(_shareStorage, _withdrawType, _shares, _owner, assets);
     }
 
     function switchCollateralTo(
@@ -664,6 +655,37 @@ library Actions {
             assets,
             shares
         );
+
+        _shareStorage.hookReceiver.afterAction(address(this), action, data);
+    }
+
+    function _hookCallBeforeTransitionCollateral(
+        ISilo.SharedStorage storage _shareStorage,
+        ISilo.CollateralType _withdrawType,
+        uint256 _shares,
+        address _owner
+    ) private {
+        uint256 action = Hook.transitionCollateralAction(_withdrawType);
+
+        if (!_shareStorage.hooksBefore.matchAction(action)) return;
+
+        bytes memory data = abi.encodePacked(_shares, _owner);
+
+        _shareStorage.hookReceiver.beforeAction(address(this), action, data);
+    }
+
+    function _hookCallAfterTransitionCollateral(
+        ISilo.SharedStorage storage _shareStorage,
+        ISilo.CollateralType _withdrawType,
+        uint256 _shares,
+        address _owner,
+        uint256 _assets
+    ) private {
+        uint256 action = Hook.transitionCollateralAction(_withdrawType);
+
+        if (!_shareStorage.hooksAfter.matchAction(action)) return;
+
+        bytes memory data = abi.encodePacked(_shares, _owner, _assets);
 
         _shareStorage.hookReceiver.afterAction(address(this), action, data);
     }
