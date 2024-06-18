@@ -84,6 +84,17 @@ interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
         bool leverage;
     }
 
+    /// @param depositAssets Amount of assets the user wishes to deposit.
+    /// @param borrowAssets Amount of assets the user wishes to borrow.
+    /// @param borrower Address of the borrower
+    /// @param collateralType Type of the asset being deposited (Collateral or Protected)
+    struct LeverageSameAssetArgs {
+        uint256 depositAssets;
+        uint256 borrowAssets;
+        address borrower;
+        ISilo.CollateralType collateralType;
+    }
+
     struct SharedStorage {
         ISiloConfig siloConfig;
         uint24 hooksBefore;
