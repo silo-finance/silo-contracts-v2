@@ -43,7 +43,7 @@ contract PartialLiquidation is SiloStorage, IPartialLiquidation, IHookReceiver {
     }
 
     function initialize(ISiloConfig, bytes calldata) external virtual {
-        // nothing to do
+        // nothing to do, we have one hook for all silos
     }
 
     function beforeAction(address, uint256, bytes calldata) external virtual {
@@ -259,7 +259,6 @@ contract PartialLiquidation is SiloStorage, IPartialLiquidation, IHookReceiver {
             Rounding.LIQUIDATE_TO_SHARES,
             ISilo.AssetType(_assetType)
         );
-        
 
         if (shares == 0) return;
 
