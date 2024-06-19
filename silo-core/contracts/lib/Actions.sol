@@ -80,15 +80,21 @@ library Actions {
     {
         _hookCallBeforeWithdraw(_shareStorage, _args);
 
+        // TODO we reading _shareStorage.hookReceiver twice (on repay as well) can we optimise?
+        bool callFromHook = msg.sender == address(_shareStorage.hookReceiver);
+
         ISiloConfig siloConfig = _shareStorage.siloConfig;
 
         (
             ISiloConfig.ConfigData memory collateralConfig,
             ISiloConfig.ConfigData memory debtConfig,
             ISiloConfig.DebtInfo memory debtInfo
-        ) = siloConfig.accrueInterestAndGetConfigs(address(this), _args.owner, Hook.WITHDRAW);
+        ) = callFromHook
+            // on call from hook we expect interest are accrued already
+            ? siloConfig.getConfigs(address(this), _args.owner, Hook.WITHDRAW)
+            : siloConfig.accrueInterestAndGetConfigs(address(this), _args.owner, Hook.WITHDRAW);
 
-        if (collateralConfig.silo != debtConfig.silo) ISilo(debtConfig.silo).accrueInterest();
+        if (!callFromHook && collateralConfig.silo != debtConfig.silo) ISilo(debtConfig.silo).accrueInterest();
 
         (assets, shares) = SiloERC4626Lib.withdraw(
             collateralConfig.token,
@@ -102,7 +108,7 @@ library Actions {
             _totalAssets
         );
 
-        if (!SiloSolvencyLib.depositWithoutDebt(debtInfo)) {
+        if (!callFromHook && !SiloSolvencyLib.depositWithoutDebt(debtInfo)) {
             if (!debtInfo.sameAsset) {
                 collateralConfig.callSolvencyOracleBeforeQuote();
                 debtConfig.callSolvencyOracleBeforeQuote();
@@ -116,7 +122,9 @@ library Actions {
             if (!ownerIsSolvent) revert ISilo.NotSolvent();
         }
 
-        siloConfig.crossNonReentrantAfter();
+        if (!callFromHook) {
+            siloConfig.crossNonReentrantAfter();
+        }
 
         _hookCallAfterWithdraw(_shareStorage, _args, assets, shares);
     }

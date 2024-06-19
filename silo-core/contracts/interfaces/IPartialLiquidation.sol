@@ -66,6 +66,17 @@ interface IPartialLiquidation {
     /// @return shares The equivalent number of shares for the provided asset amount
     function liquidationRepay(uint256 _assets, address _borrower, address _repayer) external returns (uint256 shares);
 
+    function liquidationWithdraw(
+        uint256 _assets,
+        uint256 _shares,
+        address _receiver,
+        address _owner,
+        address _spender,
+        ISilo.CollateralType _collateralType
+    )
+        external
+        returns (uint256 assets, uint256 shares);
+
     /// @dev that method allow to finish liquidation process by giving up collateral to liquidator
     /// @notice this withdraw is only for liquidation, because it must be called as delegate call from Silo
     function withdrawCollateralsToLiquidator(
