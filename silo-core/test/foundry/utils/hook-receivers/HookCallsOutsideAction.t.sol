@@ -12,7 +12,7 @@ import {IERC20R} from "silo-core/contracts/interfaces/IERC20R.sol";
 import {ILeverageBorrower} from "silo-core/contracts/interfaces/ILeverageBorrower.sol";
 import {IHookReceiver} from "silo-core/contracts/interfaces/IHookReceiver.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
-import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquidation.sol";
+import {PartialLiquidation} from "silo-core/contracts/utils/hook-receivers/liquidation/PartialLiquidation.sol";
 import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
 import {Hook} from "silo-core/contracts/lib/Hook.sol";
 import {CrossEntrancy} from "silo-core/contracts/lib/CrossEntrancy.sol";
@@ -25,7 +25,7 @@ import {SiloFixtureWithVeSilo as SiloFixture} from "../../_common/fixtures/SiloF
 /*
 FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc HookCallsOutsideActionTest
 */
-contract HookCallsOutsideActionTest is IHookReceiver, ILeverageBorrower, IERC3156FlashBorrower, SiloLittleHelper, Test {
+contract HookCallsOutsideActionTest is PartialLiquidation, ILeverageBorrower, IERC3156FlashBorrower, SiloLittleHelper, Test {
     using Hook for uint256;
     using SiloLensLib for ISilo;
 
@@ -52,9 +52,8 @@ contract HookCallsOutsideActionTest is IHookReceiver, ILeverageBorrower, IERC315
         overrides.hookReceiver = address(this);
 
         SiloFixture siloFixture = new SiloFixture();
-        address hook;
-        (_siloConfig, silo0, silo1,,, hook) = siloFixture.deploy_local(overrides);
-        partialLiquidation = IPartialLiquidation(hook);
+        (_siloConfig, silo0, silo1,,,) = siloFixture.deploy_local(overrides);
+        partialLiquidation = this;
 
         _setAllHooks();
 
@@ -143,11 +142,11 @@ contract HookCallsOutsideActionTest is IHookReceiver, ILeverageBorrower, IERC315
         silo1.withdrawFees();
     }
 
-    function initialize(ISiloConfig _config, bytes calldata) external view {
+    function initialize(ISiloConfig _config, bytes calldata) external view override {
         assertEq(address(_siloConfig), address(_config), "SiloConfig addresses should match");
     }
 
-    function beforeAction(address, uint256 _action, bytes calldata) external {
+    function beforeAction(address, uint256 _action, bytes calldata) external override {
         hookBeforeFired = _action;
 
         (bool entered, uint256 status) = _siloConfig.crossReentrantStatus();
@@ -163,7 +162,7 @@ contract HookCallsOutsideActionTest is IHookReceiver, ILeverageBorrower, IERC315
         emit log("[before] action --------------------- ");
     }
 
-    function afterAction(address, uint256 _action, bytes calldata _inputAndOutput) external {
+    function afterAction(address, uint256 _action, bytes calldata _inputAndOutput) external override {
         hookAfterFired = _action;
 
         (bool entered,) = _siloConfig.crossReentrantStatus();
@@ -195,7 +194,7 @@ contract HookCallsOutsideActionTest is IHookReceiver, ILeverageBorrower, IERC315
         return FLASHLOAN_CALLBACK;
     }
 
-    function hookReceiverConfig(address) external view returns (uint24 hooksBefore, uint24 hooksAfter) {
+    function hookReceiverConfig(address) external view override returns (uint24 hooksBefore, uint24 hooksAfter) {
         hooksBefore = configuredHooksBefore;
         hooksAfter = configuredHooksAfter;
     }
