@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity >=0.5.0;
 
+import {ISilo} from "./ISilo.sol";
+
 interface IPartialLiquidation {
     struct HookSetup {
         /// @param this is the same as in siloConfig
@@ -66,12 +68,13 @@ interface IPartialLiquidation {
     /// @return shares The equivalent number of shares for the provided asset amount
     function liquidationRepay(uint256 _assets, address _borrower, address _repayer) external returns (uint256 shares);
 
+    /// @dev this is only for liquidation, should be called as delegate call
+    /// copy of `_withdraw` from Silo
     function liquidationWithdraw(
         uint256 _assets,
         uint256 _shares,
         address _receiver,
-        address _owner,
-        address _spender,
+        address _borrower,
         ISilo.CollateralType _collateralType
     )
         external

@@ -3,6 +3,8 @@ pragma solidity 0.8.24;
 
 import {console} from "forge-std/console.sol";
 
+import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
+
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquidation.sol";
@@ -16,6 +18,7 @@ import {SiloMathLib} from "silo-core/contracts/lib/SiloMathLib.sol";
 import {SiloLendingLib} from "silo-core/contracts/lib/SiloLendingLib.sol";
 import {Actions} from "silo-core/contracts/lib/Actions.sol";
 import {Hook} from "silo-core/contracts/lib/Hook.sol";
+import {Rounding} from "silo-core/contracts/lib/Rounding.sol";
 import {RevertBytes} from "silo-core/contracts/lib/RevertBytes.sol";
 import {AssetTypes} from "silo-core/contracts/lib/AssetTypes.sol";
 import {CallBeforeQuoteLib} from "silo-core/contracts/lib/CallBeforeQuoteLib.sol";
@@ -32,12 +35,9 @@ contract PartialLiquidation is SiloStorage, IPartialLiquidation, IHookReceiver {
     mapping(address silo => HookSetup) private _hooksSetup;
 
     modifier onlyDelegateCall {
-        console.log("msg.sender", msg.sender);
-        console.log("address(this)", address(this));
-
-        // TODO msg.sender  is HOOK!
-        // TODO address(this) is SILO!
-        // if (msg.sender != _hook) revert OnlyDelegateCall();
+        // TODO msg.sender is HOOK
+        // TODO address(this) is SILO
+        // if (msg.sender != _hook) revert OnlyDelegateCall(); this will not work
 
         _;
     }
@@ -109,7 +109,7 @@ contract PartialLiquidation is SiloStorage, IPartialLiquidation, IHookReceiver {
                 _borrower,
                 msg.sender,
                 withdrawAssetsFromCollateral,
-                IShareToken(collateralConfig.shareCollateralToken),
+                collateralConfig.collateralShareToken,
                 AssetTypes.COLLATERAL
             );
 
@@ -118,7 +118,7 @@ contract PartialLiquidation is SiloStorage, IPartialLiquidation, IHookReceiver {
                 _borrower,
                 msg.sender,
                 withdrawAssetsFromProtected,
-                IShareToken(collateralConfig.protectedShareToken),
+                collateralConfig.protectedShareToken,
                 AssetTypes.PROTECTED
             );
         } else {
@@ -154,15 +154,12 @@ contract PartialLiquidation is SiloStorage, IPartialLiquidation, IHookReceiver {
         emit ISilo.Repay(_repayer, _borrower, _assets, shares);
     }
 
-
-    /// @dev this is only for liquidation, should be called as delegate call
-    /// copy of `_withdraw` from Silo
+    /// @inheritdoc IPartialLiquidation
     function liquidationWithdraw(
         uint256 _assets,
         uint256 _shares,
         address _receiver,
-        address _owner,
-        address _spender,
+        address _borrower,
         ISilo.CollateralType _collateralType
     )
         external
@@ -171,22 +168,22 @@ contract PartialLiquidation is SiloStorage, IPartialLiquidation, IHookReceiver {
     {
         (assets, shares) = Actions.withdraw(
             _sharedStorage,
-            WithdrawArgs({
+            ISilo.WithdrawArgs({
                 assets: _assets,
                 shares: _shares,
                 receiver: _receiver,
-                owner: _owner,
-                spender: _spender,
+                owner: _borrower,
+                spender: _borrower,
                 collateralType: _collateralType
             }),
             _total[uint256(_collateralType)],
             _total[AssetTypes.DEBT]
         );
 
-        if (_collateralType == CollateralType.Collateral) {
-            emit Withdraw(msg.sender, _receiver, _owner, assets, shares);
+        if (_collateralType == ISilo.CollateralType.Collateral) {
+            emit IERC4626.Withdraw(msg.sender, _receiver, _borrower, assets, shares);
         } else {
-            emit WithdrawProtected(msg.sender, _receiver, _owner, assets, shares);
+            emit ISilo.WithdrawProtected(msg.sender, _receiver, _borrower, assets, shares);
         }
     }
 
@@ -251,7 +248,7 @@ contract PartialLiquidation is SiloStorage, IPartialLiquidation, IHookReceiver {
         address _borrower,
         address _liquidator,
         uint256 _withdrawAssets,
-        IShareToken _shareToken,
+        address _shareToken,
         uint256 _assetType
     ) internal {
         if (_withdrawAssets == 0) return;
