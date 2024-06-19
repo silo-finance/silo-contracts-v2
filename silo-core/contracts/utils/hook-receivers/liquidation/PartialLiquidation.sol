@@ -157,7 +157,6 @@ contract PartialLiquidation is SiloStorage, IPartialLiquidation, IHookReceiver {
     /// @inheritdoc IPartialLiquidation
     function liquidationWithdraw(
         uint256 _assets,
-        uint256 _shares,
         address _receiver,
         address _borrower,
         ISilo.CollateralType _collateralType
@@ -170,7 +169,7 @@ contract PartialLiquidation is SiloStorage, IPartialLiquidation, IHookReceiver {
             _sharedStorage,
             ISilo.WithdrawArgs({
                 assets: _assets,
-                shares: _shares,
+                shares: 0,
                 receiver: _receiver,
                 owner: _borrower,
                 spender: _borrower,
@@ -289,7 +288,6 @@ contract PartialLiquidation is SiloStorage, IPartialLiquidation, IHookReceiver {
                 IPartialLiquidation.liquidationWithdraw.selector,
                 _withdrawAssets,
                 msg.sender,
-                _borrower,
                 _borrower,
                 _collateralType
             )

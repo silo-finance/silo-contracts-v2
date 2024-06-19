@@ -72,7 +72,6 @@ interface IPartialLiquidation {
     /// @notice this withdraw is only for liquidation, because it must be called as delegate call from Silo
     function liquidationWithdraw(
         uint256 _assets,
-        uint256 _shares,
         address _receiver,
         address _borrower,
         ISilo.CollateralType _collateralType
