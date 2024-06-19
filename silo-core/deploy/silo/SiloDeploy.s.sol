@@ -75,7 +75,7 @@ contract SiloDeploy is CommonDeploy {
         ISiloDeployer.Oracles memory oracles = _getOracles(config, siloData);
 
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
-        
+
         hookReceiverImplementation = beforeCreateSilo(siloInitData, hookReceiverImplementation);
 
         console2.log("[SiloCommonDeploy] `beforeCreateSilo` executed");
