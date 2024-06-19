@@ -122,6 +122,7 @@ contract PartialLiquidation is SiloStorage, IPartialLiquidation, IHookReceiver {
     }
 
     /// @inheritdoc IPartialLiquidation
+    // TODO if we want hooks, we need to ad them to withdraw as well, so maybe it is better to call regular withdraw?
     function withdrawCollateralsToLiquidator(
         uint256 _withdrawAssetsFromCollateral,
         uint256 _withdrawAssetsFromProtected,
