@@ -64,7 +64,7 @@ contract Silo is SiloERC4626 {
         // The hook receiver should request the ether if needed in a separate call.
         if (_callType == CallType.Call) {
             (success, result) = _target.call{value: _value}(_input);
-        } else if (_callType == CallType.Delegatecall) {
+        } else {
             (success, result) = _target.delegatecall(_input);
         }
     }
