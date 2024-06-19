@@ -13,6 +13,7 @@ import {SiloMathLib} from "silo-core/contracts/lib/SiloMathLib.sol";
 import {SiloLendingLib} from "silo-core/contracts/lib/SiloLendingLib.sol";
 import {Actions} from "silo-core/contracts/lib/Actions.sol";
 import {Hook} from "silo-core/contracts/lib/Hook.sol";
+import {RevertBytes} from "silo-core/contracts/lib/RevertBytes.sol";
 import {AssetTypes} from "silo-core/contracts/lib/AssetTypes.sol";
 import {CallBeforeQuoteLib} from "silo-core/contracts/lib/CallBeforeQuoteLib.sol";
 
@@ -203,7 +204,7 @@ contract PartialLiquidation is SiloStorage, IPartialLiquidation, IHookReceiver {
         address _borrower,
         bool _receiveSToken
     ) internal {
-        ISilo(_silo).callOnBehalfOfSilo(
+        (bool success, bytes memory result) = ISilo(_silo).callOnBehalfOfSilo(
             address(this),
             0 /* eth value */,
             ISilo.CallType.Delegatecall,
@@ -216,6 +217,8 @@ contract PartialLiquidation is SiloStorage, IPartialLiquidation, IHookReceiver {
                 _receiveSToken
             )
         );
+
+        if (!success) RevertBytes.revertBytes(result, "");
     }
 
     function _delegateRepayLiquidator(
@@ -224,11 +227,13 @@ contract PartialLiquidation is SiloStorage, IPartialLiquidation, IHookReceiver {
         address _borrower,
         address _repayer
     ) internal {
-        ISilo(_silo).callOnBehalfOfSilo(
+        (bool success, bytes memory result) = ISilo(_silo).callOnBehalfOfSilo(
             address(this),
             0 /* eth value */,
             ISilo.CallType.Delegatecall,
             abi.encodeWithSelector(IPartialLiquidation.liquidationRepay.selector, _assets, _borrower, _repayer)
         );
+
+        if (!success) RevertBytes.revertBytes(result, "");
     }
 }
