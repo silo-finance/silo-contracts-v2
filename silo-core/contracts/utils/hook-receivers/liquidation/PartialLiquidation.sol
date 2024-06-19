@@ -104,7 +104,7 @@ contract PartialLiquidation is SiloStorage, IPartialLiquidation, IHookReceiver {
         _delegateLiquidationRepay(debtConfig.silo, repayDebtAssets, _borrower, msg.sender);
 
         if (_receiveSToken) {
-            _delegateShareTokenForwardTransfer(
+            _callShareTokenForwardTransfer(
                 collateralConfig.silo,
                 _borrower,
                 msg.sender,
@@ -113,7 +113,7 @@ contract PartialLiquidation is SiloStorage, IPartialLiquidation, IHookReceiver {
                 AssetTypes.COLLATERAL
             );
 
-            _delegateShareTokenForwardTransfer(
+            _callShareTokenForwardTransfer(
                 collateralConfig.silo,
                 _borrower,
                 msg.sender,
@@ -242,7 +242,7 @@ contract PartialLiquidation is SiloStorage, IPartialLiquidation, IHookReceiver {
         }
     }
 
-    function _delegateShareTokenForwardTransfer(
+    function _callShareTokenForwardTransfer(
         address _silo,
         address _borrower,
         address _liquidator,
@@ -265,7 +265,7 @@ contract PartialLiquidation is SiloStorage, IPartialLiquidation, IHookReceiver {
         (bool success, bytes memory result) = ISilo(_silo).callOnBehalfOfSilo(
             _shareToken,
             0 /* eth value */,
-            ISilo.CallType.Delegatecall,
+            ISilo.CallType.Call,
             abi.encodeWithSelector(IShareToken.forwardTransfer.selector, _borrower, _liquidator, shares)
         );
 
