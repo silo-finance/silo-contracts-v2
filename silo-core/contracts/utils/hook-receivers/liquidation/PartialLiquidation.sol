@@ -252,19 +252,14 @@ contract PartialLiquidation is SiloStorage, IPartialLiquidation, IHookReceiver {
     ) internal {
         if (_withdrawAssets == 0) return;
 
-        console.log("borrower balance", IShareToken(_shareToken).balanceOf(_borrower));
-
         uint256 shares = SiloMathLib.convertToShares(
             _withdrawAssets,
-            _total[_assetType].assets,
+            ISilo(_silo).total(_assetType),
             IShareToken(_shareToken).totalSupply(),
             Rounding.LIQUIDATE_TO_SHARES,
             ISilo.AssetType(_assetType)
         );
-
-        console.log("_withdrawAssets", _withdrawAssets);
-        console.log("shares", shares);
-
+        
 
         if (shares == 0) return;
 
