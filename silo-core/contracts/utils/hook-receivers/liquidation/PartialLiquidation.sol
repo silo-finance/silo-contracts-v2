@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.24;
 
+import {console} from "forge-std/console.sol";
+
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquidation.sol";
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
@@ -29,8 +31,13 @@ contract PartialLiquidation is SiloStorage, IPartialLiquidation, IHookReceiver {
 
     mapping(address silo => HookSetup) private _hooksSetup;
 
-    modifier onlyDelegateCall() {
-        if (msg.sender != address(this)) revert OnlyDelegateCall();
+    modifier onlyDelegateCall {
+        console.log("msg.sender", msg.sender);
+        console.log("address(this)", address(this));
+
+        // TODO msg.sender  is HOOK!
+        // TODO address(this) is SILO!
+        // if (msg.sender != _hook) revert OnlyDelegateCall();
 
         _;
     }

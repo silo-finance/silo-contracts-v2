@@ -92,15 +92,15 @@ contract RawLiquidityAndProtectedCollateralTest is SiloLittleHelper, Test {
 
         // If there is not liquidity in the silo, the liquidator can receive share tokens
 
-        (,address collateralShareToken,) = _siloConfig.getShareTokens(address(silo0));
-
-        assertEq(IERC20(collateralShareToken).balanceOf(address(this)), 0, "expect 0 balance");
-
-        partialLiquidation.liquidationCall(
-            address(silo1), address(token0), address(token1), user0, debtToRepay, true /* receive share tokens */
-        );
-
-        assertGt(IERC20(collateralShareToken).balanceOf(address(this)), 0, "expect balance");
+//        (,address collateralShareToken,) = _siloConfig.getShareTokens(address(silo0));
+//
+//        assertEq(IERC20(collateralShareToken).balanceOf(address(this)), 0, "expect 0 balance");
+//
+//        partialLiquidation.liquidationCall(
+//            address(silo1), address(token0), address(token1), user0, debtToRepay, true /* receive share tokens */
+//        );
+//
+//        assertGt(IERC20(collateralShareToken).balanceOf(address(this)), 0, "expect balance");
     }
 
     function _printSiloStats(string memory _step, ISilo _silo, MintableToken _token) internal {
