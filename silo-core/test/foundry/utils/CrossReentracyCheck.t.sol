@@ -30,6 +30,8 @@ contract CrossReentracyCheckTest is HookCallsOutsideActionTest {
         _reentrancyCheck_Leverage();
         _reentrancyCheck_ShareTokens(address(silo0));
         _reentrancyCheck_ShareTokens(address(silo1));
+        _reentrancyCheck_ERC4626Transfer(silo0);
+        _reentrancyCheck_ERC4626Transfer(silo1);
 
         _enableHooks();
     }
@@ -110,6 +112,14 @@ contract CrossReentracyCheckTest is HookCallsOutsideActionTest {
 
         vm.expectRevert(ISiloConfig.CrossReentrantCall.selector);
         silo0.leverage(1000, ILeverageBorrower(address(0)), address(0), true, "");
+    }
+
+    function _reentrancyCheck_ERC4626Transfer(ISilo _silo) internal {
+        vm.expectRevert(ISiloConfig.CrossReentrantCall.selector);
+        _silo.transfer(address(0), 1000);
+
+        vm.expectRevert(ISiloConfig.CrossReentrantCall.selector);
+        _silo.transferFrom(address(0), address(0), 1000);
     }
 
     function _reentrancyCheck_ShareTokens(address _silo) internal {

@@ -89,7 +89,11 @@ abstract contract ShareToken is Initializable, ERC20Permit, IShareToken {
 
     /// @inheritdoc IShareToken
     function forwardTransfer(address _owner, address _recipient, uint256 _amount) external virtual onlySilo {
+        ISiloConfig siloConfigCached = _crossNonReentrantBefore();
+
         _transfer(_owner, _recipient, _amount);
+
+        siloConfigCached.crossNonReentrantAfter();
     }
 
     /// @inheritdoc IShareToken
@@ -98,8 +102,12 @@ abstract contract ShareToken is Initializable, ERC20Permit, IShareToken {
         virtual
         onlySilo
     {
+        ISiloConfig siloConfigCached = _crossNonReentrantBefore();
+
         _spendAllowance(_from, _spender, _amount);
         _transfer(_from, _to, _amount);
+
+        siloConfigCached.crossNonReentrantAfter();
     }
 
     /// @inheritdoc IShareToken
