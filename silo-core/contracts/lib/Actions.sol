@@ -706,7 +706,7 @@ library Actions {
         address _receiver,
         uint256 _exactAssets,
         uint256 _exactShare
-    ) internal {
+    ) private {
         uint256 action = Hook.depositAction(_collateralType);
 
         if (!_shareStorage.hooksAfter.matchAction(action)) return;
