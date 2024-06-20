@@ -147,6 +147,7 @@ contract PartialLiquidation is SiloStorage, IPartialLiquidation, IHookReceiver {
         virtual
         returns (uint256 shares)
     {
+        // body of this method is a copy of `Silo._repay`
         (
             , shares
         ) = Actions.repay(_sharedStorage, _assets, 0 /* shares */, _borrower, _repayer, _total[AssetTypes.DEBT]);
@@ -165,6 +166,7 @@ contract PartialLiquidation is SiloStorage, IPartialLiquidation, IHookReceiver {
         virtual
         returns (uint256 assets, uint256 shares)
     {
+        // body of this method is a copy of `Silo._withdraw`
         (assets, shares) = Actions.withdraw(
             _sharedStorage,
             ISilo.WithdrawArgs({

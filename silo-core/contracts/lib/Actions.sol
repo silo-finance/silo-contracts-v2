@@ -108,6 +108,10 @@ library Actions {
             _totalAssets
         );
 
+        // TODO
+        // - if hook is liquidator, then we dont have to check solvency
+        // - but if hook is doing something else, then we have to check, so this is impossible to code
+        // so I will assume, hook can do necessary checks if needed
         if (!callFromHook && !SiloSolvencyLib.depositWithoutDebt(debtInfo)) {
             if (!debtInfo.sameAsset) {
                 collateralConfig.callSolvencyOracleBeforeQuote();
