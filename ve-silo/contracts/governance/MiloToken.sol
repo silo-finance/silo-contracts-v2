@@ -15,8 +15,4 @@ contract MiloToken is ERC20Permit, Ownable {
     function burn(uint256 _amount) external onlyOwner {
         _burn(_msgSender(), _amount);
     }
-
-    function decimals() public pure override returns (uint8) {
-        return 18;
-    }
 }
