@@ -772,28 +772,23 @@ contract SiloConfigTest is Test {
     ) internal {
         address shareToken;
         address asset;
-        address hookReceiver;
 
         vm.prank(_silo0Default);
 
-        (shareToken, asset, hookReceiver) =
-            _siloConfig.accrueInterestAndGetConfigOptimised(_action, _collateralType);
+        (shareToken, asset) = _siloConfig.accrueInterestAndGetConfigOptimised(_action, _collateralType);
 
         vm.prank(_silo0Default);
         _siloConfig.crossNonReentrantAfter();
 
         assertEq(shareToken, _expectedShareToken0);
         assertEq(asset, _configDataDefault0.token);
-        assertEq(hookReceiver, _configDataDefault0.hookReceiver);
 
         vm.prank(_silo1Default);
 
-        (shareToken, asset, hookReceiver) =
-            _siloConfig.accrueInterestAndGetConfigOptimised(_action, _collateralType);
+        (shareToken, asset) = _siloConfig.accrueInterestAndGetConfigOptimised(_action, _collateralType);
 
         assertEq(shareToken, _expectedShareToken1);
         assertEq(asset, _configDataDefault1.token);
-        assertEq(hookReceiver, _configDataDefault1.hookReceiver);
 
         vm.prank(_silo1Default);
         _siloConfig.crossNonReentrantAfter();

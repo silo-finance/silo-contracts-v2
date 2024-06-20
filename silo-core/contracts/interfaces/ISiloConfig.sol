@@ -153,7 +153,7 @@ interface ISiloConfig {
     function accrueInterestAndGetConfigOptimised(
         uint256 _action,
         ISilo.CollateralType _collateralType
-    ) external returns (address shareToken, address asset, address hookReceiver);
+    ) external returns (address shareToken, address asset);
 
     /// @notice view method for checking cross Silo reentrancy flag
     /// @return entered true if the reentrancy guard is currently set to "entered", which indicates there is a

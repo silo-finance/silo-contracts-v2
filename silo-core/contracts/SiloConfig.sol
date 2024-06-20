@@ -190,11 +190,9 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
     function accrueInterestAndGetConfigOptimised(
         uint256 _action,
         ISilo.CollateralType _collateralType
-    ) external virtual returns (address shareToken, address asset, address hookReceiver) {
+    ) external virtual returns (address shareToken, address asset) {
         _crossNonReentrantBefore(_action);
         _callAccrueInterest(msg.sender);
-
-        hookReceiver = _HOOK_RECEIVER;
 
         if (msg.sender == _SILO0) {
             asset = _TOKEN0;

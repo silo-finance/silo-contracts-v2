@@ -49,8 +49,7 @@ library Actions {
         ISiloConfig siloConfig = _shareStorage.siloConfig;
 
         (
-            address shareToken,
-            address asset,
+            address shareToken, address asset
         ) = siloConfig.accrueInterestAndGetConfigOptimised(Hook.DEPOSIT, _collateralType);
 
         (assets, shares) = SiloERC4626Lib.deposit(
@@ -77,7 +76,7 @@ library Actions {
         external
         returns (uint256 assets, uint256 shares)
     {
-        address hookReceiver = _shareStorage.hookReceiver;
+        IHookReceiver hookReceiver = _shareStorage.hookReceiver;
         _hookCallBeforeWithdraw(_shareStorage.hooksBefore, hookReceiver, _args);
 
         bool callFromHook = msg.sender == address(hookReceiver);
@@ -195,15 +194,15 @@ library Actions {
         external
         returns (uint256 assets, uint256 shares)
     {
-        bool callFromHook = msg.sender == address(_shareStorage.hookReceiver);
+        IHookReceiver hookReceiver = _shareStorage.hookReceiver;
+        bool callFromHook = msg.sender == address(hookReceiver);
 
-        // TODO optimise _shareStorage.hookReceiver)
-        _hookCallBefore(_shareStorage, Hook.REPAY, abi.encodePacked(_assets, _shares, _borrower, _repayer));
+        _hookCallBeforeRepay(_shareStorage.hooksBefore, hookReceiver, _assets, _shares, _borrower, _repayer);
 
-        // for hook call, we coud use getter but if we want strong cross-reentrancy protection we would have to raise
+        // for hook call we could use getter, but if we want strong cross-reentrancy protection we would have to raise
         // flag manually, so it is the same as not using getter
         (
-            address debtShareToken, address debtAsset, address hookReceiver
+            address debtShareToken, address debtAsset
         ) = _shareStorage.siloConfig.accrueInterestAndGetConfigOptimised(Hook.REPAY, ISilo.CollateralType(0));
 
         (
@@ -216,11 +215,8 @@ library Actions {
             _shareStorage.siloConfig.crossNonReentrantAfter();
         }
 
-        _hookCallAfter(
-            _shareStorage,
-            hookReceiver,
-            Hook.REPAY,
-            abi.encodePacked(_assets, _shares, _borrower, _repayer, assets, shares)
+        _hookCallAfterRepay(
+            _shareStorage.hooksAfter, hookReceiver, _assets, _shares, _borrower, _repayer, assets, shares
         );
     }
 
@@ -584,9 +580,38 @@ library Actions {
         IHookReceiver(hookReceiverCached).afterAction(address(this), _action, _data);
     }
 
+    function _hookCallBeforeRepay(
+        uint256 _hooksBefore,
+        IHookReceiver _hookReceiver,
+        uint256 _assets,
+        uint256 _shares,
+        address _borrower,
+        address _repayer
+    ) private {
+        if (!_hooksBefore.matchAction(Hook.REPAY)) return;
+
+        _hookReceiver.beforeAction(address(this), Hook.REPAY, abi.encodePacked(_assets, _shares, _borrower, _repayer));
+    }
+
+    function _hookCallAfterRepay(
+        uint256 _hooksAfter,
+        IHookReceiver _hookReceiver,
+        uint256 _assets,
+        uint256 _shares,
+        address _borrower,
+        address _repayer,
+        uint256 _returnAssets,
+        uint256 _returnShares
+    ) private {
+        if (!_hooksAfter.matchAction(Hook.REPAY)) return;
+
+        bytes memory data = abi.encodePacked(_assets, _shares, _borrower, _repayer, _returnAssets, _returnShares);
+        _hookReceiver.afterAction(address(this), Hook.REPAY, data);
+    }
+
     function _hookCallBeforeWithdraw(
         uint256 _hooksBefore,
-        address _hookReceiver,
+        IHookReceiver _hookReceiver,
         ISilo.WithdrawArgs calldata _args
     ) private {
         uint256 action = Hook.withdrawAction(_args.collateralType);
@@ -601,7 +626,7 @@ library Actions {
 
     function _hookCallAfterWithdraw(
         uint256 _hooksAfter,
-        address _hookReceiver,
+        IHookReceiver _hookReceiver,
         ISilo.WithdrawArgs calldata _args,
         uint256 assets,
         uint256 shares
