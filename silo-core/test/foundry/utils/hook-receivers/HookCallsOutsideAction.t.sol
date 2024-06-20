@@ -33,8 +33,6 @@ contract HookCallsOutsideActionTest is PartialLiquidation, ILeverageBorrower, IE
     bytes32 constant FLASHLOAN_CALLBACK = keccak256("ERC3156FlashBorrower.onFlashLoan");
 
     ISiloConfig internal _siloConfig;
-    uint256 public hookAfterFired;
-    uint256 public hookBeforeFired;
 
     uint24 public configuredHooksBefore;
     uint24 public configuredHooksAfter;
@@ -122,6 +120,7 @@ contract HookCallsOutsideActionTest is PartialLiquidation, ILeverageBorrower, IE
         silo0.flashLoan(this, address(token0), token0.balanceOf(address(silo0)), "");
         
         // liquidation
+        emit log("-- liquidation process --");
 
         emit log_named_decimal_uint("borrower LTV", silo0.getLtv(borrower), 16);
 
@@ -147,25 +146,38 @@ contract HookCallsOutsideActionTest is PartialLiquidation, ILeverageBorrower, IE
     }
 
     function beforeAction(address, uint256 _action, bytes calldata) external override {
-        hookBeforeFired = _action;
-
-        (bool entered, uint256 status) = _siloConfig.crossReentrantStatus();
-
-        if (entered && status == CrossEntrancy.ENTERED_FROM_LEVERAGE && _action.matchAction(Hook.DEPOSIT)) {
-            // we inside leverage
-        } else {
-            assertFalse(entered, "hook before must be called before any action");
-        }
-
         emit log_named_uint("[before] action", _action);
         _printAction(_action);
+
+        (bool entered, uint256 status) = _siloConfig.crossReentrantStatus();
+        emit log_named_uint("status", status);
+
+        if (entered) {
+            if (status == CrossEntrancy.ENTERED_FROM_LEVERAGE && _action.matchAction(Hook.DEPOSIT)) {
+                // we inside leverage
+            } else if (_action.matchAction(Hook.REPAY)) {
+                // we allow for repay hook inside liquidation
+                if (status == CrossEntrancy.ENTERED_FOR_LIQUIDATION) {} // ok
+                else if (status == CrossEntrancy.ENTERED_FOR_LIQUIDATION_REPAY) {} // ok
+                else assertFalse(entered, "hook `before REPAY` was executed inside some other action");
+            } else if (_action.matchAction(Hook.WITHDRAW)) {
+                if (status == CrossEntrancy.ENTERED_FOR_LIQUIDATION_REPAY) {
+                    // first withdraw after repay, acceptable
+                } else if (status == CrossEntrancy.ENTERED_FOR_LIQUIDATION_WITHDRAW) {} // ok
+                else assertFalse(entered, "hook `before WITHDRAW` was executed inside some other action");
+            } else {
+                assertFalse(entered, "hook `before` must be called before (outside) any action");
+            }
+        }
+
         emit log("[before] action --------------------- ");
     }
 
     function afterAction(address, uint256 _action, bytes calldata _inputAndOutput) external override {
-        hookAfterFired = _action;
+        emit log_named_uint("[after] action", _action);
+        _printAction(_action);
 
-        (bool entered,) = _siloConfig.crossReentrantStatus();
+        (bool entered, uint256 status) = _siloConfig.crossReentrantStatus();
 
         if (_action.matchAction(Hook.SHARE_TOKEN_TRANSFER)) {
             Hook.AfterTokenTransfer memory input = Hook.afterTokenTransferDecode(_inputAndOutput);
@@ -177,12 +189,14 @@ contract HookCallsOutsideActionTest is PartialLiquidation, ILeverageBorrower, IE
                 assertTrue(entered, "on regular transfer we are also inside action, silo is locked");
                 _tryReenter();
             }
+        } else if (entered && status == CrossEntrancy.ENTERED_FOR_LIQUIDATION && _action.matchAction(Hook.REPAY)) {
+            // we allow for repay hook inside liquidation
+        } else if (entered && status == CrossEntrancy.ENTERED_FOR_LIQUIDATION_WITHDRAW && _action.matchAction(Hook.WITHDRAW)) {
+            // we allow for withdraw hook inside liquidation
         } else {
-            assertFalse(entered, "hook after must be called after any action");
+            assertFalse(entered, "hook `after` must be called after (outside) any action");
         }
 
-        emit log_named_uint("[after] action", _action);
-        _printAction(_action);
         emit log("[after] action --------------------- ");
     }
 
