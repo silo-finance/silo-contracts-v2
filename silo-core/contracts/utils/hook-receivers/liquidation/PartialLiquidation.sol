@@ -308,8 +308,4 @@ contract PartialLiquidation is SiloStorage, IPartialLiquidation, IHookReceiver {
 
         if (!success) RevertBytes.revertBytes(result, "");
     }
-
-    function _getRawLiquidity() internal view virtual returns (uint256 liquidity) {
-        return SiloMathLib.liquidity(_total[AssetTypes.COLLATERAL].assets, _total[AssetTypes.DEBT].assets);
-    }
 }
