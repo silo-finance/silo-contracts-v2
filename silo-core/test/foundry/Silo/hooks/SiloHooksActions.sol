@@ -456,14 +456,14 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock, ILeverageBorr
         _siloLeverageSameAssetAllHooks(PROTECTED);
     }
 
-    /// FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testLiqudationReceiveSTokenFalseAllHooks
-    function testLiqudationReceiveSTokenFalseAllHooks() public {
+    /// FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testLiquidationReceiveSTokenFalseAllHooks
+    function testLiquidationReceiveSTokenFalseAllHooks() public {
         bool receiveSToken = false;
         _liquidationTest(receiveSToken);
     }
 
-    /// FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testLiqudationReceiveSTokenTrueAllHooks
-    function testLiqudationReceiveSTokenTrueAllHooks() public {
+    /// FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testLiquidationReceiveSTokenTrueAllHooks
+    function testLiquidationReceiveSTokenTrueAllHooks() public {
         bool receiveSToken = true;
         _liquidationTest(receiveSToken);
     }
