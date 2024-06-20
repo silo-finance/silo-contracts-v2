@@ -93,7 +93,7 @@ contract SiloLens is ISiloLens {
 
         if (collateralShareBalance != 0) {
             unchecked {
-            // if silo not reverting during calculation of sum of collateral, we will not either
+                // if silo not reverting during calculation of sum of collateral, we will not either
                 borrowerCollateral += _silo.previewRedeem(collateralShareBalance, ISilo.CollateralType.Collateral);
             }
         }
