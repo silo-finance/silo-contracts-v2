@@ -89,10 +89,7 @@ library Actions {
             ISiloConfig.ConfigData memory collateralConfig,
             ISiloConfig.ConfigData memory debtConfig,
             ISiloConfig.DebtInfo memory debtInfo
-        ) = callFromHook
-            // on call from hook we expect interest are accrued already
-            ? siloConfig.getConfigs(address(this), _args.owner, Hook.WITHDRAW)
-            : siloConfig.accrueInterestAndGetConfigs(address(this), _args.owner, Hook.WITHDRAW);
+        ) = siloConfig.accrueInterestAndGetConfigs(address(this), _args.owner, Hook.WITHDRAW);
 
         if (!callFromHook && collateralConfig.silo != debtConfig.silo) ISilo(debtConfig.silo).accrueInterest();
 
@@ -204,23 +201,11 @@ library Actions {
 
         _hookCallBefore(_shareStorage, Hook.REPAY, abi.encodePacked(_assets, _shares, _borrower, _repayer));
 
-        address debtShareToken;
-        address debtAsset;
-        address hookReceiver;
-
-        if (callFromHook && false) {
-            ISiloConfig siloConfig = _shareStorage.siloConfig;
-            siloConfig.crossNonReentrantBefore(Hook.REPAY); // is this worth it?
-            // it is ok to use getter, because hook should accrue interest and raise up re-entrancy guard
-            ISiloConfig.ConfigData memory cfg = siloConfig.getConfig(address(this));
-            debtShareToken = cfg.debtShareToken;
-            debtAsset = cfg.token;
-            hookReceiver = cfg.hookReceiver;
-        } else {
-            (
-                debtShareToken, debtAsset, hookReceiver
-            ) = _shareStorage.siloConfig.accrueInterestAndGetConfigOptimised(Hook.REPAY, ISilo.CollateralType(0));
-        }
+        // for hook call, we coud use getter but if we want strong cross-reentrancy protection we would have to raise
+        // flag manually, so it is the same as not using getter
+        (
+            address debtShareToken, address debtAsset, address hookReceiver
+        ) = _shareStorage.siloConfig.accrueInterestAndGetConfigOptimised(Hook.REPAY, ISilo.CollateralType(0));
 
         (
             assets, shares

@@ -150,7 +150,7 @@ contract HookCallsOutsideActionTest is PartialLiquidation, ILeverageBorrower, IE
         _printAction(_action);
 
         (bool entered, uint256 status) = _siloConfig.crossReentrantStatus();
-        emit log_named_uint("status", status);
+        emit log_named_uint("[before] status", status);
 
         if (entered) {
             if (status == CrossEntrancy.ENTERED_FROM_LEVERAGE && _action.matchAction(Hook.DEPOSIT)) {
@@ -178,23 +178,35 @@ contract HookCallsOutsideActionTest is PartialLiquidation, ILeverageBorrower, IE
         _printAction(_action);
 
         (bool entered, uint256 status) = _siloConfig.crossReentrantStatus();
+        emit log_named_uint("[after] status", status);
 
-        if (_action.matchAction(Hook.SHARE_TOKEN_TRANSFER)) {
-            Hook.AfterTokenTransfer memory input = Hook.afterTokenTransferDecode(_inputAndOutput);
-
-            if (input.sender == address(0) || input.recipient == address(0)) {
-                assertTrue(entered, "only when minting/burning we can be inside action");
-                _tryReenter();
+        if (entered) {
+            if (_action.matchAction(Hook.REPAY)) {
+                if (status == CrossEntrancy.ENTERED_FOR_LIQUIDATION) {} // ok
+                else if (status == CrossEntrancy.ENTERED_FOR_LIQUIDATION_REPAY) {} // ok
+                else assertFalse(entered, "hook `after REPAY` was executed inside some other action");
+            } else if (_action.matchAction(Hook.WITHDRAW)) {
+                if (status == CrossEntrancy.ENTERED_FOR_LIQUIDATION_REPAY) {
+                    // first withdraw after repay, acceptable
+                } else if (status == CrossEntrancy.ENTERED_FOR_LIQUIDATION_WITHDRAW) {} // ok
+                else assertFalse(entered, "hook `after WITHDRAW` was executed inside some other action");
             } else {
-                assertTrue(entered, "on regular transfer we are also inside action, silo is locked");
-                _tryReenter();
+                assertFalse(entered, "entered: hook `after` must be called before (outside) any action");
             }
-        } else if (entered && status == CrossEntrancy.ENTERED_FOR_LIQUIDATION && _action.matchAction(Hook.REPAY)) {
-            // we allow for repay hook inside liquidation
-        } else if (entered && status == CrossEntrancy.ENTERED_FOR_LIQUIDATION_WITHDRAW && _action.matchAction(Hook.WITHDRAW)) {
-            // we allow for withdraw hook inside liquidation
         } else {
-            assertFalse(entered, "hook `after` must be called after (outside) any action");
+            if (_action.matchAction(Hook.SHARE_TOKEN_TRANSFER)) {
+                Hook.AfterTokenTransfer memory input = Hook.afterTokenTransferDecode(_inputAndOutput);
+
+                if (input.sender == address(0) || input.recipient == address(0)) {
+                    assertTrue(entered, "only when minting/burning we can be inside action");
+                    _tryReenter();
+                } else {
+                    assertTrue(entered, "on regular transfer we are also inside action, silo is locked");
+                    _tryReenter();
+                }
+            } else {
+                assertFalse(entered, "hook `after` must be called after (outside) any action");
+            }
         }
 
         emit log("[after] action --------------------- ");
