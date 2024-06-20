@@ -208,9 +208,11 @@ library Actions {
         address debtAsset;
         address hookReceiver;
 
-        if (callFromHook) {
+        if (callFromHook && false) {
+            ISiloConfig siloConfig = _shareStorage.siloConfig;
+            siloConfig.crossNonReentrantBefore(Hook.REPAY); // is this worth it?
             // it is ok to use getter, because hook should accrue interest and raise up re-entrancy guard
-            ISiloConfig.ConfigData memory cfg = _shareStorage.siloConfig.getConfig(address(this));
+            ISiloConfig.ConfigData memory cfg = siloConfig.getConfig(address(this));
             debtShareToken = cfg.debtShareToken;
             debtAsset = cfg.token;
             hookReceiver = cfg.hookReceiver;
