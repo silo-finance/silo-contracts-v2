@@ -6,6 +6,7 @@ import {ERC20} from "openzeppelin5/token/ERC20/ERC20.sol";
 
 import {MethodsRegistry} from "./MethodsRegistry.sol";
 import {IMethodReentrancyTest} from "./interfaces/IMethodReentrancyTest.sol";
+import {TestStateLib} from "./TestState.sol";
 
 contract MaliciousToken is ERC20, Test {
     MethodsRegistry internal _registry;
@@ -41,6 +42,8 @@ contract MaliciousToken is ERC20, Test {
     }
 
     function _tryToReenter() internal {
+        if (!TestStateLib.reenter()) return;
+
         // reenter before transfer
         emit log_string("\tTrying to reenter:");
 

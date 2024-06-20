@@ -21,6 +21,8 @@ contract DepositReentrancyTest is Test, IMethodReentrancyTest {
         vm.prank(depositor);
         token.approve(address(silo), amount);
 
+        TestStateLib.enableReentrancy();
+
         vm.prank(depositor);
         silo.deposit(amount, depositor);
     }

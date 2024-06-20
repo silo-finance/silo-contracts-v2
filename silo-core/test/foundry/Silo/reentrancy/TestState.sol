@@ -12,6 +12,7 @@ contract ReentracyTestState {
     address public silo1;
     address public token0;
     address public token1;
+    bool public reenter;
 
     function set(
         address _siloConfig,
@@ -26,6 +27,10 @@ contract ReentracyTestState {
         token0 = _token0;
         token1 = _token1;
     }
+
+    function setReenter(bool _status) external {
+        reenter = _status;
+    } 
 }
 
 library TestStateLib {
@@ -69,5 +74,17 @@ library TestStateLib {
 
     function siloConfig() internal view returns (ISiloConfig) {
         return ISiloConfig(ReentracyTestState(_ADDRESS).siloConfig());
+    }
+
+    function reenter() internal view returns (bool) {
+        return ReentracyTestState(_ADDRESS).reenter();
+    }
+
+    function disableReentrancy() internal {
+        ReentracyTestState(_ADDRESS).setReenter(false);
+    }
+
+    function enableReentrancy() internal {
+        ReentracyTestState(_ADDRESS).setReenter(true);
     }
 }

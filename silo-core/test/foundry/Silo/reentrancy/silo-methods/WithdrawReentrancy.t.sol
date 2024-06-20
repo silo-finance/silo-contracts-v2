@@ -9,7 +9,7 @@ import {IMethodReentrancyTest} from "../interfaces/IMethodReentrancyTest.sol";
 import {TestStateLib} from "../TestState.sol";
 import {MaliciousToken} from "../MaliciousToken.sol";
 
-contract DepositWithTypeReentrancyTest is Test, IMethodReentrancyTest {
+contract WithdrawReentrancyTest is Test, IMethodReentrancyTest {
     function callMethod() external {
         MaliciousToken token = MaliciousToken(TestStateLib.token0());
         ISilo silo = TestStateLib.silo0();
@@ -21,29 +21,32 @@ contract DepositWithTypeReentrancyTest is Test, IMethodReentrancyTest {
         vm.prank(depositor);
         token.approve(address(silo), amount);
 
+        vm.prank(depositor);
+        silo.deposit(amount, depositor, ISilo.CollateralType.Collateral);
+
         TestStateLib.enableReentrancy();
 
         vm.prank(depositor);
-        silo.deposit(amount, depositor, ISilo.CollateralType.Collateral);
+        silo.withdraw(amount, depositor, depositor);
     }
 
     function verifyReentrancy() external {
         ISilo silo0 = TestStateLib.silo0();
 
         vm.expectRevert(ISiloConfig.CrossReentrantCall.selector);
-        silo0.deposit(1000, address(0), ISilo.CollateralType.Collateral);
+        silo0.withdraw(1000, address(0), address(0));
 
         ISilo silo1 = TestStateLib.silo1();
 
         vm.expectRevert(ISiloConfig.CrossReentrantCall.selector);
-        silo1.deposit(1000, address(0), ISilo.CollateralType.Collateral);
+        silo1.withdraw(1000, address(0), address(0));
     }
 
     function methodDescription() external pure returns (string memory description) {
-        description = "deposit(uint256,address,uint8)";
+        description = "withdraw(uint256,address,address)";
     }
 
     function methodSignature() external pure returns (bytes4 sig) {
-        sig = 0xb7ec8d4b;
+        sig = 0xb460af94;
     }
 }
