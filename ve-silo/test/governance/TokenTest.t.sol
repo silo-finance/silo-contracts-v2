@@ -11,7 +11,6 @@ import {ISiloToken} from "ve-silo/contracts/governance/interfaces/ISiloToken.sol
 import {MiloTokenDeploy} from "ve-silo/deploy/MiloTokenDeploy.s.sol";
 import {BalancerTokenAdmin} from "ve-silo/contracts/silo-tokens-minter/BalancerTokenAdmin.sol";
 import {IBalancerToken} from "ve-silo/contracts/silo-tokens-minter/BalancerTokenAdmin.sol";
-import {IBalancerTokenAdmin} from "ve-silo/contracts/silo-tokens-minter/MainnetBalancerMinter.sol";
 
 abstract contract TokenTest is IntegrationTest {
     bytes32 constant internal _PERMIT_TYPEHASH =
@@ -85,15 +84,9 @@ abstract contract TokenTest is IntegrationTest {
         assertEq(allowanceAfter, value, "expect valid allowance");
     }
 
-    function testCanInitializeTokenAdmin() public {
+    function testCanInitializeAndStopTokenAdmin() public {
         vm.prank(_deployer);
-        IBalancerTokenAdmin balancerTokenAdmin = IBalancerTokenAdmin(
-            address(
-                new BalancerTokenAdmin(
-                    IBalancerToken(address(_token))
-                )
-            )
-        );
+        BalancerTokenAdmin balancerTokenAdmin = new BalancerTokenAdmin(IBalancerToken(address(_token)));
 
         address owner = _token.owner();
 
@@ -102,6 +95,17 @@ abstract contract TokenTest is IntegrationTest {
 
         vm.prank(_deployer);
         balancerTokenAdmin.activate();
+
+        assertTrue(balancerTokenAdmin.isActive(), "Failed to activate a token admin");
+
+        vm.prank(_deployer);
+        balancerTokenAdmin.stopMining();
+
+        assertFalse(balancerTokenAdmin.isActive(), "Expect to be not active");
+
+        address newTokenOwner = _token.owner();
+
+        assertEq(newTokenOwner, _deployer, "Failed to transfer ownership");
     }
 
     function _deployToken() internal virtual {}
