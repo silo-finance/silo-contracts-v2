@@ -73,54 +73,75 @@ contract HookCallsOutsideActionTest is PartialLiquidation, ILeverageBorrower, IE
 
         // execute all possible actions
 
+        emit log("-- _depositForBorrow --");
         _depositForBorrow(200e18, depositor);
 
+        emit log("-- _depositCollateral --");
         _depositCollateral(200e18, borrower, !sameAsset);
+
+        emit log("-- _borrow --");
         _borrow(50e18, borrower, !sameAsset);
+
+        emit log("-- _repay --");
         _repay(1e18, borrower);
+
+        emit log("-- _withdraw --");
         _withdraw(10e18, borrower);
 
         vm.warp(block.timestamp + 10);
 
+        emit log("-- accrueInterest0 --");
         silo0.accrueInterest();
+        emit log("-- accrueInterest1 --");
         silo1.accrueInterest();
 
+        emit log("-- transitionCollateral --");
         vm.prank(borrower);
         silo0.transitionCollateral(100e18, borrower, ISilo.CollateralType.Collateral);
 
+        emit log("-- _depositCollateral --");
         _depositCollateral(100e18, borrower, sameAsset);
 
+        emit log("-- switchCollateralTo --");
         vm.prank(borrower);
         silo0.switchCollateralTo(sameAsset);
 
+        emit log("-- leverageSameAsset --");
         vm.prank(borrower);
         silo1.leverageSameAsset(10, 1, borrower, ISilo.CollateralType.Protected);
 
+        emit log("-- leverage --");
         silo0.leverage(1e18, this, address(this), !sameAsset, abi.encode(address(silo1)));
 
         (
             address protectedShareToken, address collateralShareToken, address debtShareToken
         ) = _siloConfig.getShareTokens(address(silo1));
 
+        emit log("-- protectedShareToken.transfer --");
         vm.prank(borrower);
         IERC20(protectedShareToken).transfer(depositor, 1);
 
+        emit log("-- collateralShareToken.transfer --");
         vm.prank(borrower);
         IERC20(collateralShareToken).transfer(depositor, 1);
 
+        emit log("-- setReceiveApproval --");
         vm.prank(depositor);
         IERC20R(debtShareToken).setReceiveApproval(borrower, 1);
 
+        emit log("-- debtShareToken.transfer --");
         vm.prank(borrower);
         IERC20(debtShareToken).transfer(depositor, 1);
 
+        emit log("-- withdraw --");
         vm.prank(borrower);
         silo1.withdraw(48e18, borrower, borrower);
 
+        emit log("-- flashLoan --");
         silo0.flashLoan(this, address(token0), token0.balanceOf(address(silo0)), "");
         
         // liquidation
-        emit log("-- liquidation process --");
+        emit log("-- liquidationCall --");
 
         emit log_named_decimal_uint("borrower LTV", silo0.getLtv(borrower), 16);
 
@@ -190,11 +211,7 @@ contract HookCallsOutsideActionTest is PartialLiquidation, ILeverageBorrower, IE
                     // first withdraw after repay, acceptable
                 } else if (status == CrossEntrancy.ENTERED_FOR_LIQUIDATION_WITHDRAW) {} // ok
                 else assertFalse(entered, "hook `after WITHDRAW` was executed inside some other action");
-            } else {
-                assertFalse(entered, "entered: hook `after` must be called before (outside) any action");
-            }
-        } else {
-            if (_action.matchAction(Hook.SHARE_TOKEN_TRANSFER)) {
+            } else if (_action.matchAction(Hook.SHARE_TOKEN_TRANSFER)) {
                 Hook.AfterTokenTransfer memory input = Hook.afterTokenTransferDecode(_inputAndOutput);
 
                 if (input.sender == address(0) || input.recipient == address(0)) {
@@ -205,8 +222,10 @@ contract HookCallsOutsideActionTest is PartialLiquidation, ILeverageBorrower, IE
                     _tryReenter();
                 }
             } else {
-                assertFalse(entered, "hook `after` must be called after (outside) any action");
+                assertFalse(entered, "entered: hook `after` must be called after (outside) any action");
             }
+        } else {
+            // we not in eneter state, ok
         }
 
         emit log("[after] action --------------------- ");
