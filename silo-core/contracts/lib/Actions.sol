@@ -77,10 +77,10 @@ library Actions {
         external
         returns (uint256 assets, uint256 shares)
     {
-        _hookCallBeforeWithdraw(_shareStorage, _args);
+        address hookReceiver = _shareStorage.hookReceiver;
+        _hookCallBeforeWithdraw(_shareStorage.hooksBefore, hookReceiver, _args);
 
-        // TODO we reading _shareStorage.hookReceiver twice (on repay as well) can we optimise?
-        bool callFromHook = msg.sender == address(_shareStorage.hookReceiver);
+        bool callFromHook = msg.sender == address(hookReceiver);
 
         ISiloConfig siloConfig = _shareStorage.siloConfig;
 
@@ -104,10 +104,9 @@ library Actions {
             _totalAssets
         );
 
-        // TODO
-        // - if hook is liquidator, then we dont have to check solvency
+        // - if hook is liquidator, then we don't have to check solvency
         // - but if hook is doing something else, then we have to check, so this is impossible to code
-        // so I will assume, hook can do necessary checks if needed
+        // we will assume, hook can do necessary checks, if needed
         if (!callFromHook && !SiloSolvencyLib.depositWithoutDebt(debtInfo)) {
             if (!debtInfo.sameAsset) {
                 collateralConfig.callSolvencyOracleBeforeQuote();
@@ -126,7 +125,7 @@ library Actions {
             siloConfig.crossNonReentrantAfter();
         }
 
-        _hookCallAfterWithdraw(_shareStorage, _args, assets, shares);
+        _hookCallAfterWithdraw(_shareStorage.hooksAfter, hookReceiver, _args, assets, shares);
     }
 
     // solhint-disable-next-line function-max-lines
@@ -198,6 +197,7 @@ library Actions {
     {
         bool callFromHook = msg.sender == address(_shareStorage.hookReceiver);
 
+        // TODO optimise _shareStorage.hookReceiver)
         _hookCallBefore(_shareStorage, Hook.REPAY, abi.encodePacked(_assets, _shares, _borrower, _repayer));
 
         // for hook call, we coud use getter but if we want strong cross-reentrancy protection we would have to raise
@@ -585,33 +585,35 @@ library Actions {
     }
 
     function _hookCallBeforeWithdraw(
-        ISilo.SharedStorage storage _shareStorage,
+        uint256 _hooksBefore,
+        address _hookReceiver,
         ISilo.WithdrawArgs calldata _args
     ) private {
         uint256 action = Hook.withdrawAction(_args.collateralType);
 
-        if (!_shareStorage.hooksBefore.matchAction(action)) return;
+        if (!_hooksBefore.matchAction(action)) return;
 
         bytes memory data =
             abi.encodePacked(_args.assets, _args.shares, _args.receiver, _args.owner, _args.spender);
 
-        _shareStorage.hookReceiver.beforeAction(address(this), action, data);
+        _hookReceiver.beforeAction(address(this), action, data);
     }
 
     function _hookCallAfterWithdraw(
-        ISilo.SharedStorage storage _shareStorage,
+        uint256 _hooksAfter,
+        address _hookReceiver,
         ISilo.WithdrawArgs calldata _args,
         uint256 assets,
         uint256 shares
     ) private {
         uint256 action = Hook.withdrawAction(_args.collateralType);
 
-        if (!_shareStorage.hooksAfter.matchAction(action)) return;
+        if (!_hooksAfter.matchAction(action)) return;
 
         bytes memory data =
             abi.encodePacked(_args.assets, _args.shares, _args.receiver, _args.owner, _args.spender, assets, shares);
 
-        _shareStorage.hookReceiver.afterAction(address(this), action, data);
+        _hookReceiver.afterAction(address(this), action, data);
     }
 
     function _hookCallBeforeBorrow(

@@ -41,12 +41,6 @@ contract RawLiquidityAndProtectedCollateralTest is SiloLittleHelper, Test {
         address user1 = makeAddr("user1");
         address depositorProtected = makeAddr("depositProtected");
 
-        emit log_named_address("user0", user0);
-        emit log_named_address("user1", user1);
-        emit log_named_address("silo0", address(silo0));
-        emit log_named_address("silo1", address(silo1));
-        emit log_named_address("hook", address(partialLiquidation));
-
         uint256 depositAmount = 1000;
 
         _deposit(silo0, token0, user0, depositAmount, ISilo.CollateralType.Collateral);
@@ -92,15 +86,15 @@ contract RawLiquidityAndProtectedCollateralTest is SiloLittleHelper, Test {
 
         // If there is not liquidity in the silo, the liquidator can receive share tokens
 
-//        (,address collateralShareToken,) = _siloConfig.getShareTokens(address(silo0));
-//
-//        assertEq(IERC20(collateralShareToken).balanceOf(address(this)), 0, "expect 0 balance");
-//
-//        partialLiquidation.liquidationCall(
-//            address(silo1), address(token0), address(token1), user0, debtToRepay, true /* receive share tokens */
-//        );
-//
-//        assertGt(IERC20(collateralShareToken).balanceOf(address(this)), 0, "expect balance");
+        (,address collateralShareToken,) = _siloConfig.getShareTokens(address(silo0));
+
+        assertEq(IERC20(collateralShareToken).balanceOf(address(this)), 0, "expect 0 balance");
+
+        partialLiquidation.liquidationCall(
+            address(silo1), address(token0), address(token1), user0, debtToRepay, true /* receive share tokens */
+        );
+
+        assertGt(IERC20(collateralShareToken).balanceOf(address(this)), 0, "expect balance");
     }
 
     function _printSiloStats(string memory _step, ISilo _silo, MintableToken _token) internal {

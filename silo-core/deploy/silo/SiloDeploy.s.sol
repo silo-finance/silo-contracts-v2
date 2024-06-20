@@ -269,13 +269,6 @@ contract SiloDeploy is CommonDeploy {
     function _getClonableHookReceiverConfig(address _implementation)
         internal
         virtual
-        returns (ISiloDeployer.ClonableHookReceiver memory hookReceiver)
-    {
-//        console2.log("[_getClonableHookReceiverConfig] _implementation", _implementation);
-//
-//        hookReceiver = ISiloDeployer.ClonableHookReceiver({
-//            implementation: _implementation,
-//            initializationData: ""
-//        });
+        returns (ISiloDeployer.ClonableHookReceiver memory hookReceiver) {
     }
 }

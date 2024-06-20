@@ -217,7 +217,7 @@ library Hook {
     uint256 internal constant FLASH_LOAN = 2 ** 8;
     uint256 internal constant TRANSITION_COLLATERAL = 2 ** 9;
     uint256 internal constant SWITCH_COLLATERAL = 2 ** 10;
-    uint256 internal constant LIQUIDATION = 2 ** 11; // TODO check usage of this
+    uint256 internal constant LIQUIDATION = 2 ** 11;
     uint256 internal constant SHARE_TOKEN_TRANSFER = 2 ** 12;
     uint256 internal constant COLLATERAL_TOKEN = 2 ** 13;
     uint256 internal constant PROTECTED_TOKEN = 2 ** 14;
