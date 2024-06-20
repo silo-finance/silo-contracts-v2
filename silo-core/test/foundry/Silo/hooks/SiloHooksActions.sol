@@ -1016,20 +1016,8 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock, ILeverageBorr
         uint256 expectedRepayDebtAssets = 25600000000000000000000;
 
         vm.expectEmit(true, true, true, true);
-        
-        emit LiquidationBeforeHA(
-            address(silo0),
-            address(silo0),
-            address(token1),
-            address(token0),
-            _borrowerAddr,
-            _debtToRepay,
-            _receiveSToken
-        );
 
-        vm.expectEmit(true, true, true, true); // TODO why commented out?
-
-        emit DebtShareTokenAfterHA(
+        emit DebtShareTokenAfterHA( // ok
             address(silo0),
             _borrowerAddr,
             address(0), // because we burn debt share tokens
@@ -1039,7 +1027,7 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock, ILeverageBorr
             0 // total supply
         );
 
-        vm.expectEmit(true, true, true, true);
+        vm.expectEmit(true, true, true, true); // ok
 
         if (_receiveSToken) {
             emit ShareTokenAfterHA(
@@ -1064,20 +1052,6 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock, ILeverageBorr
                 PROTECTED
             );
         }
-
-        vm.expectEmit(true, true, true, true);
-
-        emit LiquidationAfterHA(
-            address(silo0),
-            address(silo0),
-            address(token1),
-            address(token0),
-            _borrowerAddr,
-            _debtToRepay,
-            _receiveSToken,
-            expectedWithdrawCollateral,
-            expectedRepayDebtAssets
-        );
 
         partialLiquidation.liquidationCall(
             address(silo0), address(token1), address(token0), _borrower, _debtToRepay, _receiveSToken

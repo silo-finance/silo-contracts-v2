@@ -160,28 +160,6 @@ contract HookReceiverAllActionsWithEvents is PartialLiquidation, SiloHookReceive
         uint256 borrowedShares
     );
 
-    event LiquidationBeforeHA(
-        address silo,
-        address siloWithDebt,
-        address collateralAsset,
-        address debtAsset,
-        address borrower,
-        uint256 debtToCover,
-        bool receiveSToken
-    );
-
-    event LiquidationAfterHA(
-        address silo,
-        address siloWithDebt,
-        address collateralAsset,
-        address debtAsset,
-        address borrower,
-        uint256 debtToCover,
-        bool receiveSToken,
-        uint256 withdrawCollateral,
-        uint256 repayDebtAssets
-    );
-
     event SwitchCollateralBeforeHA(bool sameAsset, address user);
 
     event SwitchCollateralAfterHA(bool sameAsset, address user);
