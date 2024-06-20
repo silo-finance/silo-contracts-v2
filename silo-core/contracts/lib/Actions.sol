@@ -41,7 +41,7 @@ library Actions {
         ISilo.CollateralType _collateralType,
         ISilo.Assets storage _totalCollateral
     )
-        internal
+        external
         returns (uint256 assets, uint256 shares)
     {
         _hookCallBeforeDeposit(_shareStorage, _collateralType, _assets, _shares, _receiver);
@@ -51,7 +51,6 @@ library Actions {
         (
             address shareToken,
             address asset,
-            address hookReceiver
         ) = siloConfig.accrueInterestAndGetConfigOptimised(Hook.DEPOSIT, _collateralType);
 
         (assets, shares) = SiloERC4626Lib.deposit(
@@ -69,7 +68,7 @@ library Actions {
         _hookCallAfterDeposit(_shareStorage, _collateralType, _assets, _shares, _receiver, assets, shares);
     }
 
-    function withdraw(
+    function withdraw( // solhint-disable-line function-max-lines
         ISilo.SharedStorage storage _shareStorage,
         ISilo.WithdrawArgs calldata _args,
         ISilo.Assets storage _totalAssets,

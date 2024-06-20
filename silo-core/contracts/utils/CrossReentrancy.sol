@@ -24,6 +24,7 @@ abstract contract CrossReentrancy {
     }
 
     /// @dev please notice, this internal method is open TODO bug
+    // solhint-disable-next-line function-max-lines, code-complexity
     function _crossNonReentrantBefore(uint256 _action) internal virtual {
         uint256 crossReentrantStatusCached = _crossReentrantStatus;
 

@@ -50,16 +50,33 @@ contract SiloLens is ISiloLens {
 
     /// @inheritdoc ISiloLens
     function collateralBalanceOfUnderlying(ISilo _silo, address, address _borrower)
-        public
+        external
         view
         returns (uint256 borrowerCollateral)
     {
-        return collateralBalanceOfUnderlying(_silo, _borrower);
+        return _collateralBalanceOfUnderlying(_silo, _borrower);
     }
 
     /// @inheritdoc ISiloLens
     function collateralBalanceOfUnderlying(ISilo _silo, address _borrower)
-        public
+        external
+        view
+        returns (uint256 borrowerCollateral)
+    {
+        return _collateralBalanceOfUnderlying(_silo, _borrower);
+    }
+
+    /// @inheritdoc ISiloLens
+    function debtBalanceOfUnderlying(ISilo _silo, address, address _borrower) external view returns (uint256) {
+        return _silo.maxRepay(_borrower);
+    }
+
+    function debtBalanceOfUnderlying(ISilo _silo, address _borrower) public view returns (uint256 borrowerDebt) {
+        return _silo.maxRepay(_borrower);
+    }
+
+    function _collateralBalanceOfUnderlying(ISilo _silo, address _borrower)
+        internal
         view
         returns (uint256 borrowerCollateral)
     {
@@ -76,18 +93,9 @@ contract SiloLens is ISiloLens {
 
         if (collateralShareBalance != 0) {
             unchecked {
-                // if silo not reverting during calculation of sum of collateral, we will not either
+            // if silo not reverting during calculation of sum of collateral, we will not either
                 borrowerCollateral += _silo.previewRedeem(collateralShareBalance, ISilo.CollateralType.Collateral);
             }
         }
-    }
-
-    /// @inheritdoc ISiloLens
-    function debtBalanceOfUnderlying(ISilo _silo, address, address _borrower) external view returns (uint256) {
-        return _silo.maxRepay(_borrower);
-    }
-
-    function debtBalanceOfUnderlying(ISilo _silo, address _borrower) public view returns (uint256 borrowerDebt) {
-        return _silo.maxRepay(_borrower);
     }
 }

@@ -19,7 +19,7 @@ contract GaugeHookReceiver is PartialLiquidation, IGaugeHookReceiver, SiloHookRe
     using Hook for uint256;
     using Hook for bytes;
 
-    uint24 internal constant HOOKS_BEFORE_NOT_CONFIGURED = 0;
+    uint24 internal constant _HOOKS_BEFORE_NOT_CONFIGURED = 0;
 
     IGauge public gauge;
     IShareToken public shareToken;
@@ -47,16 +47,6 @@ contract GaugeHookReceiver is PartialLiquidation, IGaugeHookReceiver, SiloHookRe
         _transferOwnership(owner);
     }
 
-    function hookReceiverConfig(address _silo)
-        external
-        view
-        virtual
-        override(PartialLiquidation, IHookReceiver)
-        returns (uint24 hooksBefore, uint24 hooksAfter)
-    {
-        return _hookReceiverConfig(_silo);
-    }
-
     /// @inheritdoc IGaugeHookReceiver
     function setGauge(IGauge _gauge, IShareToken _shareToken) external virtual onlyOwner {
         if (address(_gauge) == address(0)) revert EmptyGaugeAddress();
@@ -74,7 +64,7 @@ contract GaugeHookReceiver is PartialLiquidation, IGaugeHookReceiver, SiloHookRe
         uint256 action = tokenType | Hook.SHARE_TOKEN_TRANSFER;
         hooksAfter = hooksAfter.addAction(action);
 
-        _setHookConfig(silo, HOOKS_BEFORE_NOT_CONFIGURED, hooksAfter);
+        _setHookConfig(silo, _HOOKS_BEFORE_NOT_CONFIGURED, hooksAfter);
 
         configuredGauges[_shareToken] = _gauge;
 
@@ -95,7 +85,7 @@ contract GaugeHookReceiver is PartialLiquidation, IGaugeHookReceiver, SiloHookRe
 
         hooksAfter = hooksAfter.removeAction(tokenType);
 
-        _setHookConfig(silo, HOOKS_BEFORE_NOT_CONFIGURED, hooksAfter);
+        _setHookConfig(silo, _HOOKS_BEFORE_NOT_CONFIGURED, hooksAfter);
 
         delete configuredGauges[_shareToken];
 
@@ -134,6 +124,16 @@ contract GaugeHookReceiver is PartialLiquidation, IGaugeHookReceiver, SiloHookRe
             input.recipientBalance,
             input.totalSupply
         );
+    }
+
+    function hookReceiverConfig(address _silo)
+        external
+        view
+        virtual
+        override(PartialLiquidation, IHookReceiver)
+        returns (uint24 hooksBefore, uint24 hooksAfter)
+    {
+        return _hookReceiverConfig(_silo);
     }
 
     /// @notice Get the token type for the share token

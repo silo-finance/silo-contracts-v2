@@ -18,7 +18,7 @@ library ConfigLib {
     /// @dev result of this method is ordered configs
     /// @param _debtInfo borrower _silo1Conf info
     /// @param _action this is action for which we pulling configs
-    function orderConfigs(
+    function orderConfigs( // solhint-disable-line code-complexity
         ISiloConfig.DebtInfo memory _debtInfo,
         bool _callForSilo0,
         uint256 _action

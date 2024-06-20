@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.24;
 
-import {console} from "forge-std/console.sol";
-
 import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
 
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
@@ -54,12 +52,8 @@ contract PartialLiquidation is SiloStorage, IPartialLiquidation, IHookReceiver {
         // not in use
     }
 
-    function hookReceiverConfig(address) external virtual view returns (uint24 hooksBefore, uint24 hooksAfter) {
-        return (0, 0);
-    }
-
     /// @inheritdoc IPartialLiquidation
-    function liquidationCall(
+    function liquidationCall( // solhint-disable-line function-max-lines
         address _siloWithDebt,
         address _collateralAsset,
         address _debtAsset,
@@ -142,9 +136,9 @@ contract PartialLiquidation is SiloStorage, IPartialLiquidation, IHookReceiver {
 
     /// @inheritdoc IPartialLiquidation
     function liquidationRepay(uint256 _assets, address _borrower, address _repayer)
-        onlyDelegateCall
         external
         virtual
+        onlyDelegateCall
         returns (uint256 shares)
     {
         // body of this method is a copy of `Silo._repay`
@@ -188,6 +182,10 @@ contract PartialLiquidation is SiloStorage, IPartialLiquidation, IHookReceiver {
         }
     }
 
+    function hookReceiverConfig(address) external virtual view returns (uint24 hooksBefore, uint24 hooksAfter) {
+        return (0, 0);
+    }
+
     /// @inheritdoc IPartialLiquidation
     function maxLiquidation(address _siloWithDebt, address _borrower)
         external
@@ -198,10 +196,6 @@ contract PartialLiquidation is SiloStorage, IPartialLiquidation, IHookReceiver {
         return PartialLiquidationExecLib.maxLiquidation(ISilo(_siloWithDebt), _borrower);
     }
 
-    function _getRawLiquidity() internal view virtual returns (uint256 liquidity) {
-        return SiloMathLib.liquidity(_total[AssetTypes.COLLATERAL].assets, _total[AssetTypes.DEBT].assets);
-    }
-
     function _fetchConfigs(
         address _siloWithDebt,
         address _collateralAsset,
@@ -209,6 +203,7 @@ contract PartialLiquidation is SiloStorage, IPartialLiquidation, IHookReceiver {
         address _borrower
     )
         internal
+        virtual
         returns (
             ISiloConfig siloConfigCached,
             ISiloConfig.ConfigData memory collateralConfig,
@@ -251,7 +246,7 @@ contract PartialLiquidation is SiloStorage, IPartialLiquidation, IHookReceiver {
         uint256 _withdrawAssets,
         address _shareToken,
         uint256 _assetType
-    ) internal {
+    ) internal virtual {
         if (_withdrawAssets == 0) return;
 
         uint256 shares = SiloMathLib.convertToShares(
@@ -303,7 +298,7 @@ contract PartialLiquidation is SiloStorage, IPartialLiquidation, IHookReceiver {
         uint256 _assets,
         address _borrower,
         address _repayer
-    ) internal {
+    ) internal virtual {
         (bool success, bytes memory result) = ISilo(_silo).callOnBehalfOfSilo(
             address(this),
             0 /* eth value */,
@@ -312,5 +307,9 @@ contract PartialLiquidation is SiloStorage, IPartialLiquidation, IHookReceiver {
         );
 
         if (!success) RevertBytes.revertBytes(result, "");
+    }
+
+    function _getRawLiquidity() internal view virtual returns (uint256 liquidity) {
+        return SiloMathLib.liquidity(_total[AssetTypes.COLLATERAL].assets, _total[AssetTypes.DEBT].assets);
     }
 }
