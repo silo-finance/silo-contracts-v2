@@ -225,7 +225,7 @@ contract HookCallsOutsideActionTest is PartialLiquidation, ILeverageBorrower, IE
                 assertFalse(entered, "entered: hook `after` must be called after (outside) any action");
             }
         } else {
-            // we not in eneter state, ok
+            // we not in enter state, ok
         }
 
         emit log("[after] action --------------------- ");

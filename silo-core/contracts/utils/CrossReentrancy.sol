@@ -107,9 +107,7 @@ abstract contract CrossReentrancy {
         // as it can be used in the function without activating the protection before deactivating it.
         // Later on, these functions may be called to turn off the reentrancy protection.
         // To avoid this, we check if the protection is active before deactivating it.
-        if (currentStatus != CrossEntrancy.ENTERED && currentStatus != CrossEntrancy.ENTERED_FROM_LEVERAGE) {
-            revert ISiloConfig.CrossReentrancyNotActive();
-        }
+        if (currentStatus == CrossEntrancy.NOT_ENTERED) revert ISiloConfig.CrossReentrancyNotActive();
 
         // By storing the original value once again, a refund is triggered (see
         // https://eips.ethereum.org/EIPS/eip-2200)
