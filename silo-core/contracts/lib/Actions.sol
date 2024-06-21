@@ -193,12 +193,9 @@ library Actions {
     {
         IHookReceiver hookReceiver = _shareStorage.hookReceiver;
         ISiloConfig siloConfigCached = _shareStorage.siloConfig;
-        bool callFromHook = msg.sender == address(hookReceiver);
 
         _hookCallBeforeRepay(_shareStorage.hooksBefore, hookReceiver, _assets, _shares, _borrower, _repayer);
 
-        // for hook call we could use getter, but if we want strong cross-reentrancy protection we would have to raise
-        // flag manually, so it is the same as not using getter
         (
             address debtShareToken, address debtAsset
         ) = siloConfigCached.accrueInterestAndGetConfigOptimised(Hook.REPAY, ISilo.CollateralType(0));
