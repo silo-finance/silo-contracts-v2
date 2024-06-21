@@ -77,9 +77,8 @@ library Actions {
         returns (uint256 assets, uint256 shares)
     {
         IHookReceiver hookReceiver = _shareStorage.hookReceiver;
-        _hookCallBeforeWithdraw(_shareStorage.hooksBefore, hookReceiver, _args);
 
-        bool callFromHook = msg.sender == address(hookReceiver);
+        _hookCallBeforeWithdraw(_shareStorage.hooksBefore, hookReceiver, _args);
 
         ISiloConfig siloConfig = _shareStorage.siloConfig;
 
@@ -89,7 +88,7 @@ library Actions {
             ISiloConfig.DebtInfo memory debtInfo
         ) = siloConfig.accrueInterestAndGetConfigs(address(this), _args.owner, Hook.WITHDRAW);
 
-        if (!callFromHook && collateralConfig.silo != debtConfig.silo) ISilo(debtConfig.silo).accrueInterest();
+        if (collateralConfig.silo != debtConfig.silo) ISilo(debtConfig.silo).accrueInterest();
 
         (assets, shares) = SiloERC4626Lib.withdraw(
             collateralConfig.token,
@@ -106,7 +105,7 @@ library Actions {
         // - if hook is liquidator, then we don't have to check solvency
         // - but if hook is doing something else, then we have to check, so this is impossible to code
         // we will assume, hook can do necessary checks, if needed
-        if (!callFromHook && !SiloSolvencyLib.depositWithoutDebt(debtInfo)) {
+        if (!SiloSolvencyLib.depositWithoutDebt(debtInfo)) {
             if (!debtInfo.sameAsset) {
                 collateralConfig.callSolvencyOracleBeforeQuote();
                 debtConfig.callSolvencyOracleBeforeQuote();

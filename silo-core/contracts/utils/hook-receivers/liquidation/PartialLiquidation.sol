@@ -219,8 +219,14 @@ contract PartialLiquidation is SiloStorage, IPartialLiquidation, IHookReceiver {
         uint256 _assetType
     ) internal virtual {
         if (_withdrawAssets == 0) return;
-
-        uint256 shares = _getSharesForForwardTransfer(_silo, _withdrawAssets, _shareToken, _assetType);
+        
+        uint256 shares = SiloMathLib.convertToShares(
+            _withdrawAssets,
+            ISilo(_silo).total(_assetType),
+            IShareToken(_shareToken).totalSupply(),
+            Rounding.LIQUIDATE_TO_SHARES,
+            ISilo.AssetType(_assetType)
+        );
 
         if (shares == 0) return;
 
