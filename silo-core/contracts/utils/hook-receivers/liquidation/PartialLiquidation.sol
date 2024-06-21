@@ -25,7 +25,6 @@ import {CallBeforeQuoteLib} from "silo-core/contracts/lib/CallBeforeQuoteLib.sol
 
 import {PartialLiquidationExecLib} from "./lib/PartialLiquidationExecLib.sol";
 
-
 /// @title PartialLiquidation module for executing liquidations
 /// @dev if we need additional hook functionality, this contract should be included as parent
 contract PartialLiquidation is SiloStorage, IPartialLiquidation, IHookReceiver {
@@ -33,18 +32,22 @@ contract PartialLiquidation is SiloStorage, IPartialLiquidation, IHookReceiver {
     using Hook for uint24;
     using CallBeforeQuoteLib for ISiloConfig.ConfigData;
 
-    mapping(address silo => HookSetup) private _hooksSetup;
+    ISiloConfig public siloConfig;
 
     modifier onlyDelegateCall {
-        // TODO msg.sender is HOOK
-        // TODO address(this) is SILO
-        // if (msg.sender != _hook) revert OnlyDelegateCall(); this will not work
+        // on delegate call msg.sender is HOOK, address(this) is SILO
+        // notice: this will not protect against malicious delegatecall (anyone can set _sharedStorage.siloConfig in
+        // custom contract and do delegation), it only checks, if method is executed with delegatecall.
+        if (address(_sharedStorage.siloConfig) == address(0)) revert OnlyDelegateCall();
 
         _;
     }
 
-    function initialize(ISiloConfig, bytes calldata) external virtual {
-        // nothing to do, we have one hook for all silos
+    function initialize(ISiloConfig _siloConfig, bytes calldata) external virtual {
+        if (address(_siloConfig) == address(0)) revert EmptySiloConfig();
+        if (address(siloConfig) != address(0)) revert AlreadyConfigured();
+
+        siloConfig = _siloConfig;
     }
 
     function beforeAction(address, uint256, bytes calldata) external virtual {
@@ -68,10 +71,13 @@ contract PartialLiquidation is SiloStorage, IPartialLiquidation, IHookReceiver {
         virtual
         returns (uint256 withdrawCollateral, uint256 repayDebtAssets)
     {
+        ISiloConfig siloConfigCached = siloConfig;
+        if (address(siloConfigCached) == address(0)) revert EmptySiloConfig();
+
         (
             ISiloConfig.ConfigData memory collateralConfig,
             ISiloConfig.ConfigData memory debtConfig
-        ) = _fetchConfigs(_siloWithDebt, _collateralAsset, _debtAsset, _borrower);
+        ) = _fetchConfigs(siloConfigCached, _siloWithDebt, _collateralAsset, _debtAsset, _borrower);
 
         uint256 withdrawAssetsFromCollateral;
         uint256 withdrawAssetsFromProtected;
@@ -153,6 +159,7 @@ contract PartialLiquidation is SiloStorage, IPartialLiquidation, IHookReceiver {
     }
 
     function _fetchConfigs(
+        ISiloConfig _siloConfigCached,
         address _siloWithDebt,
         address _collateralAsset,
         address _debtAsset,
@@ -165,28 +172,22 @@ contract PartialLiquidation is SiloStorage, IPartialLiquidation, IHookReceiver {
             ISiloConfig.ConfigData memory debtConfig
         )
     {
-        ISiloConfig siloConfigCached = ISilo(_siloWithDebt).config();
         ISiloConfig.DebtInfo memory debtInfo;
 
-        (collateralConfig, debtConfig, debtInfo) = siloConfigCached.getConfigs(
+        (collateralConfig, debtConfig, debtInfo) = _siloConfigCached.getConfigs(
             _siloWithDebt,
             _borrower,
             Hook.LIQUIDATION
         );
 
-        ISilo(debtConfig.silo).accrueInterest();
-
-        // We validate that both Silos have the same config data which means that potential attacker has no choice
-        // but provide either two real silos or two fake silos. While providing two fake silos, neither silo has access
-        // to real balances so the attack is pointless.
-        (address silo0, address silo1) = ISilo(collateralConfig.silo).config().getSilos();
-        if (_siloWithDebt != silo0 && _siloWithDebt != silo1) revert WrongSilo();
-
+        if (_siloWithDebt != debtConfig.silo) revert WrongSilo();
         if (!debtInfo.debtPresent) revert UserIsSolvent();
         if (!debtInfo.debtInThisSilo) revert ISilo.ThereIsDebtInOtherSilo();
 
         if (_collateralAsset != collateralConfig.token) revert UnexpectedCollateralToken();
         if (_debtAsset != debtConfig.token) revert UnexpectedDebtToken();
+
+        ISilo(debtConfig.silo).accrueInterest();
 
         if (!debtInfo.sameAsset) {
             ISilo(debtConfig.otherSilo).accrueInterest();

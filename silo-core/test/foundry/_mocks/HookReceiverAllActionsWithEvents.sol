@@ -27,8 +27,6 @@ contract HookReceiverAllActionsWithEvents is PartialLiquidation, SiloHookReceive
     uint24 internal immutable _SILO1_ACTIONS_BEFORE;
     uint24 internal immutable _SILO1_ACTIONS_AFTER;
 
-    ISiloConfig public siloConfig;
-
     bool public revertAllActions;
 
     // Events to be emitted by the hook receiver to see decoded inputs

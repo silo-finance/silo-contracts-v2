@@ -16,6 +16,7 @@ interface ISiloFactory is IERC721 {
     error Uninitialized();
     error MissingHookReceiver();
     error ZeroAddress();
+    error TokenZeroAddress();
     error MaxFee();
     error SameAsset();
     error InvalidIrm();
