@@ -282,6 +282,123 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
     }
 
     /*
+    forge test -vv --ffi --mt test_liquidationCall_partial_2tokens_sToken
+    */
+    function test_liquidationCall_partial_2tokens_sToken() public {
+        uint256 debtToCover = 1e5;
+
+        (
+            ISiloConfig.ConfigData memory collateralConfig,
+            ISiloConfig.ConfigData memory debtConfig,
+        ) = siloConfig.getConfigs(address(silo1), address(0), 0 /* always 0 for external calls */);
+
+        (, uint64 interestRateTimestamp0) = silo0.siloData();
+        (, uint64 interestRateTimestamp1) = silo1.siloData();
+
+        (uint256 collateralToLiquidate, uint256 debtToRepay) = partialLiquidation.maxLiquidation(address(silo1), BORROWER);
+        assertEq(collateralToLiquidate, 0, "no collateralToLiquidate yet");
+        assertEq(debtToRepay, 0, "no debtToRepay yet");
+
+        emit log_named_decimal_uint("[test] LTV", silo1.getLtv(BORROWER), 16);
+
+        // move forward with time so we can have interests
+        uint256 timeForward = 7 days;
+        vm.warp(block.timestamp + timeForward);
+
+        (collateralToLiquidate, debtToRepay) = partialLiquidation.maxLiquidation(address(silo1), BORROWER);
+        assertGt(collateralToLiquidate, 0, "expect collateralToLiquidate");
+        assertGt(debtToRepay, debtToCover, "expect debtToRepay");
+        emit log_named_decimal_uint("[test] max debtToRepay", debtToRepay, 18);
+        emit log_named_decimal_uint("[test] debtToCover", debtToCover, 18);
+
+        vm.expectCall(address(silo0), abi.encodeWithSelector(ISilo.accrueInterest.selector));
+        vm.expectCall(address(debtConfig.interestRateModel), abi.encodeWithSelector(IInterestRateModel.getCompoundInterestRateAndUpdate.selector));
+        vm.expectCall(address(collateralConfig.interestRateModel), abi.encodeWithSelector(IInterestRateModel.getCompoundInterestRateAndUpdate.selector));
+
+        emit log_named_decimal_uint("[test] LTV after interest", silo1.getLtv(BORROWER), 16);
+        assertEq(silo1.getLtv(BORROWER), 89_1188467990720448, "LTV after interest");
+        assertLt(silo1.getLtv(BORROWER), 0.90e18, "expect LTV to be below dust level");
+        assertFalse(silo1.isSolvent(BORROWER), "expect BORROWER to be insolvent");
+
+        token1.mint(address(this), 2 ** 128);
+        token1.approve(address(silo1), debtToCover);
+
+        // uint256 collateralWithFee = debtToCover + 0.05e5; // too deep
+
+        { // too deep
+            vm.expectCall(
+                address(token0),
+                abi.encodeWithSelector(IERC20.transfer.selector, address(this), debtToCover + 0.05e5)
+            );
+
+            vm.expectCall(
+                address(token1),
+                abi.encodeWithSelector(IERC20.transferFrom.selector, address(this), address(silo1), debtToCover)
+            );
+
+            (
+                uint256 withdrawAssetsFromCollateral, uint256 repayDebtAssets
+            ) = partialLiquidation.liquidationCall(
+                address(silo1), address(token0), address(token1), BORROWER, debtToCover, true /* receiveSToken */
+            );
+
+            emit log_named_decimal_uint("[test] withdrawAssetsFromCollateral", withdrawAssetsFromCollateral, 18);
+            emit log_named_decimal_uint("[test] repayDebtAssets", repayDebtAssets, 18);
+        }
+
+        { // too deep
+            emit log_named_decimal_uint("[test] LTV after small liquidation", silo1.getLtv(BORROWER), 16);
+            assertEq(silo1.getLtv(BORROWER), 89_1188467990719805, "LTV after small liquidation");
+            assertGt(silo1.getLtv(BORROWER), 0, "expect user to be still insolvent after small partial liquidation");
+            assertTrue(!silo1.isSolvent(BORROWER), "expect BORROWER to be insolvent after small partial liquidation");
+
+            assertEq(token0.balanceOf(address(this)), debtToCover + 0.05e5, "liquidator should get collateral + 5% fee");
+            assertEq(token0.balanceOf(address(silo0)), COLLATERAL - (debtToCover + 0.05e5), "silo collateral should be transfer to liquidator");
+            assertEq(token1.balanceOf(address(silo1)), 0.5e18 + debtToCover, "debt token should be repayed");
+
+            assertEq(silo0.getCollateralAssets(), COLLATERAL - (debtToCover + 0.05e5), "total collateral");
+            assertEq(silo1.getDebtAssets(), 8e18 + 911884679907104475, "debt token + interest");
+        }
+
+        { // too deep
+            (, uint64 interestRateTimestamp0After) = silo0.siloData();
+            (, uint64 interestRateTimestamp1After) = silo1.siloData();
+
+            assertEq(interestRateTimestamp0 + timeForward, interestRateTimestamp0After, "interestRateTimestamp #0");
+            assertEq(interestRateTimestamp1 + timeForward, interestRateTimestamp1After, "interestRateTimestamp #1");
+
+            (collateralToLiquidate, debtToRepay) = partialLiquidation.maxLiquidation(address(silo1), BORROWER);
+            assertGt(collateralToLiquidate, 0, "expect collateralToLiquidate after partial liquidation");
+            assertGt(debtToRepay, 0, "expect debtToRepay after partial liquidation");
+
+            token1.approve(address(silo1), debtToRepay);
+
+            vm.expectCall(
+                address(token0),
+                abi.encodeWithSelector(IERC20.transfer.selector, address(this), 6_734327389593616466)
+            );
+
+            vm.expectCall(
+                address(token1),
+                abi.encodeWithSelector(IERC20.transferFrom.selector, address(this), address(silo1), 6_413645132946301397)
+            );
+
+            (
+                uint256 withdrawAssetsFromCollateral, uint256 repayDebtAssets
+            ) = partialLiquidation.liquidationCall(
+                address(silo1), address(token0), address(token1), BORROWER, 2 ** 128, false /* receiveSToken */
+            );
+
+            emit log_named_decimal_uint("[test] withdrawAssetsFromCollateral2", withdrawAssetsFromCollateral, 18);
+            emit log_named_decimal_uint("[test] repayDebtAssets2", repayDebtAssets, 18);
+
+            emit log_named_decimal_uint("[test] LTV after max liquidation", silo1.getLtv(BORROWER), 16);
+            assertGt(silo1.getLtv(BORROWER), 0, "expect some LTV after partial liquidation");
+            assertTrue(silo1.isSolvent(BORROWER), "expect BORROWER to be solvent");
+        }
+    }
+
+    /*
     forge test -vv --ffi --mt test_liquidationCall_DebtToCoverTooSmall_2tokens
     */
     function test_liquidationCall_DebtToCoverTooSmall_2tokens() public {
