@@ -6,7 +6,7 @@ import {ERC20Permit, ERC20} from "openzeppelin5/token/ERC20/extensions/ERC20Perm
 import {Context} from "openzeppelin5/utils/Context.sol";
 
 contract MiloTokenChildChain is ERC20Permit, AccessControl {
-    /// @dev Dedicate a role for the bridge contract to mint and burn tokens
+    /// @dev Dedicate a role for the bridge contract to mint tokens
     bytes32 public constant BRIDGE_ROLE = keccak256("BRIDGE_ROLE");
 
     constructor() ERC20("Milo", "MILO") ERC20Permit("Milo") {
