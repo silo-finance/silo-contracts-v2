@@ -67,6 +67,8 @@ interface IShareToken is IERC20Metadata {
     /// @param _amount amount of token to transfer
     function forwardTransferFrom(address _spender, address _owner, address _recipient, uint256 _amount) external;
 
+    function forwardTransferFromNoChecks(address _from, address _to, uint256 _amount) external;
+
     /// @notice Approve method for Silo, it is requried for ERC4626 standard
     /// @param _owner wallet which approves spender
     /// @param _spender wallet will spend the token

@@ -48,8 +48,6 @@ contract CrossReentracyCheckTest is HookCallsOutsideActionTest {
     function _reentrancyCheck_Withdraw() internal {
         emit log("[CrossReentracyCheckTest] _reentrancyCheck_Withdraw");
 
-        if (_isWithdrawReEntrancyException()) return;
-
         vm.expectRevert(ISiloConfig.CrossReentrantCall.selector);
         silo0.withdraw(1000, address(0), address(0));
 
@@ -59,8 +57,6 @@ contract CrossReentracyCheckTest is HookCallsOutsideActionTest {
 
     function _reentrancyCheck_Redeem() internal {
         emit log("[CrossReentracyCheckTest] _reentrancyCheck_Redeem");
-
-        if (_isWithdrawReEntrancyException()) return;
 
         vm.expectRevert(ISiloConfig.CrossReentrantCall.selector);
         silo0.redeem(1000, address(0), address(0));
@@ -120,16 +116,12 @@ contract CrossReentracyCheckTest is HookCallsOutsideActionTest {
     function _reentrancyCheck_Repay() internal {
         emit log("[CrossReentracyCheckTest] _reentrancyCheck_Repay");
 
-        if (_isRepayReEntrancyException()) return;
-
         vm.expectRevert(ISiloConfig.CrossReentrantCall.selector);
         silo0.repay(1000, address(0));
     }
 
     function _reentrancyCheck_RepayShares() internal {
         emit log("[CrossReentracyCheckTest] _reentrancyCheck_RepayShares");
-
-        if (_isRepayReEntrancyException()) return;
 
         vm.expectRevert(ISiloConfig.CrossReentrantCall.selector);
         silo0.repayShares(1000, address(0));
@@ -174,23 +166,5 @@ contract CrossReentracyCheckTest is HookCallsOutsideActionTest {
         _setAllHooks();
         silo0.updateHooks();
         silo1.updateHooks();
-    }
-
-    function _isRepayReEntrancyException() private view returns (bool exception) {
-        (bool entered, uint256 status) = _siloConfig.crossReentrantStatus();
-
-        if (entered && status == CrossEntrancy.ENTERED_FOR_LIQUIDATION) return true;
-        if (entered && status == CrossEntrancy.ENTERED_FOR_LIQUIDATION_REPAY) return true;
-
-        exception = false;
-    }
-
-    function _isWithdrawReEntrancyException() private view returns (bool exception) {
-        (bool entered, uint256 status) = _siloConfig.crossReentrantStatus();
-
-        if (entered && status == CrossEntrancy.ENTERED_FOR_LIQUIDATION_WITHDRAW) return true;
-        if (entered && status == CrossEntrancy.ENTERED_FOR_LIQUIDATION_REPAY) return true;
-
-        exception = false;
     }
 }

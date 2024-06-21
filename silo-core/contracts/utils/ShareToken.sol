@@ -70,6 +70,8 @@ abstract contract ShareToken is Initializable, ERC20Permit, IShareToken {
     /// @notice Copy of hooks setup from SiloConfig for optimisation purposes
     HookSetup private _hookSetup;
 
+    bool public transferWithChecks = true;
+
     modifier onlySilo() {
         if (msg.sender != address(silo)) revert OnlySilo();
 
@@ -100,6 +102,17 @@ abstract contract ShareToken is Initializable, ERC20Permit, IShareToken {
     {
         _spendAllowance(_from, _spender, _amount);
         _transfer(_from, _to, _amount);
+    }
+
+    /// @inheritdoc IShareToken
+    function forwardTransferFromNoChecks(address _from, address _to, uint256 _amount)
+        external
+        virtual
+        onlySilo
+    {
+        transferWithChecks = false;
+        _transfer(_from, _to, _amount);
+        transferWithChecks = true;
     }
 
     /// @inheritdoc IShareToken
@@ -224,6 +237,7 @@ abstract contract ShareToken is Initializable, ERC20Permit, IShareToken {
 
         _hookSetup.hookReceiver = _hookReceiver;
         _hookSetup.tokenType = _tokenType;
+        transferWithChecks = true;
     }
 
     /// @inheritdoc ERC20
@@ -242,8 +256,6 @@ abstract contract ShareToken is Initializable, ERC20Permit, IShareToken {
     /// @dev Call an afterTokenTransfer hook if registered
     function _afterTokenTransfer(address _sender, address _recipient, uint256 _amount) internal virtual {
         HookSetup memory setup = _hookSetup;
-
-        if (setup.hookReceiver == address(0)) return;
 
         uint256 action = Hook.shareTokenTransfer(setup.tokenType);
 
