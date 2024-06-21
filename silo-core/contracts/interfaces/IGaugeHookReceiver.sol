@@ -24,12 +24,8 @@ interface IGaugeHookReceiver is IHookReceiver {
     error WrongGaugeShareToken();
     /// @dev Revert on an attempt to remove a `gauge` that still can mint SILO tokens
     error CantRemoveActiveGauge();
-    /// @dev Revert if the gauge hook receiver already has a configured gauge
-    error AlreadyConfigured();
     /// @dev Revert on an attempt to set a gauge with a zero address
     error EmptyGaugeAddress();
-    /// @dev Revert if provided silo configuration during initialization is empty
-    error EmptySiloConfig();
     /// @dev Revert if the hook received `beforeAction` notification
     error RequestNotSupported();
     /// @dev Revert on an attempt to remove not configured gauge
