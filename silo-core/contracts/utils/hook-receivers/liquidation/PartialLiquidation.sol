@@ -166,7 +166,6 @@ contract PartialLiquidation is SiloStorage, IPartialLiquidation, IHookReceiver {
         )
     {
         ISiloConfig siloConfigCached = ISilo(_siloWithDebt).config();
-
         ISiloConfig.DebtInfo memory debtInfo;
 
         (collateralConfig, debtConfig, debtInfo) = siloConfigCached.getConfigs(

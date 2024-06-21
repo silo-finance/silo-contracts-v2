@@ -70,7 +70,7 @@ abstract contract ShareToken is Initializable, ERC20Permit, IShareToken {
     /// @notice Copy of hooks setup from SiloConfig for optimisation purposes
     HookSetup private _hookSetup;
 
-    bool public transferWithChecks;
+    bool public transferWithChecks = true;
 
     modifier onlySilo() {
         if (msg.sender != address(silo)) revert OnlySilo();
@@ -237,6 +237,7 @@ abstract contract ShareToken is Initializable, ERC20Permit, IShareToken {
 
         _hookSetup.hookReceiver = _hookReceiver;
         _hookSetup.tokenType = _tokenType;
+        transferWithChecks = true;
     }
 
     /// @inheritdoc ERC20
