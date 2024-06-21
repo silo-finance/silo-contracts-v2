@@ -34,15 +34,6 @@ contract PartialLiquidation is SiloStorage, IPartialLiquidation, IHookReceiver {
 
     ISiloConfig public siloConfig;
 
-    modifier onlyDelegateCall {
-        // on delegate call msg.sender is HOOK, address(this) is SILO
-        // notice: this will not protect against malicious delegatecall (anyone can set _sharedStorage.siloConfig in
-        // custom contract and do delegation), it only checks, if method is executed with delegatecall.
-        if (address(_sharedStorage.siloConfig) == address(0)) revert OnlyDelegateCall();
-
-        _;
-    }
-
     function initialize(ISiloConfig _siloConfig, bytes calldata) external virtual {
         if (address(_siloConfig) == address(0)) revert EmptySiloConfig();
         if (address(siloConfig) != address(0)) revert AlreadyConfigured();
