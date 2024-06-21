@@ -51,14 +51,6 @@ abstract contract ChildChainTokenTest is IntegrationTest {
         ));
 
         _token.mint(address(this), 1000);
-
-        vm.expectRevert(abi.encodeWithSelector(
-            IAccessControl.AccessControlUnauthorizedAccount.selector,
-            address(this),
-            _token.BRIDGE_ROLE()
-        ));
-
-        _token.burn(1000);
     }
 
     function testDeployerIsAdmintAndCanGrantRole() public {
@@ -89,22 +81,9 @@ abstract contract ChildChainTokenTest is IntegrationTest {
         _token.mint(_deployer, tokensAmount);
         assertEq(_token.balanceOf(_deployer), tokensAmount, "An invalid balance after minting");
 
-        // admin can't burn tokens
-        vm.expectRevert(abi.encodeWithSelector(
-            IAccessControl.AccessControlUnauthorizedAccount.selector,
-            _deployer,
-            _token.BRIDGE_ROLE()
-        ));
-
+        // anyone can burn tokens
         vm.prank(_deployer);
         _token.burn(tokensAmount);
-
-        vm.prank(_deployer);
-        _token.transfer(ccipTokenPool, tokensAmount);
-
-        vm.prank(ccipTokenPool);
-        _token.burn(tokensAmount);
-        assertEq(_token.balanceOf(_deployer), 0, "An invalid balance after burning");
     }
 
     function testTokenPermit() public {

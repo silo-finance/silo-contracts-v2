@@ -17,7 +17,7 @@ contract MiloTokenChildChain is ERC20Permit, AccessControl {
         _mint(_to, _amount);
     }
 
-    function burn(uint256 _amount) external onlyRole(BRIDGE_ROLE) {
+    function burn(uint256 _amount) external {
         _burn(_msgSender(), _amount);
     }
 }
