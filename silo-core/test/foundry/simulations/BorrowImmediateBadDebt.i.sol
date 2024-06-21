@@ -7,6 +7,7 @@ import {Strings} from "openzeppelin5/utils/Strings.sol";
 
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
+import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquidation.sol";
 import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
 
 import {MintableToken} from "../_common/MintableToken.sol";
@@ -262,6 +263,9 @@ contract BorrowImmediateBadDebtTest is SiloLittleHelper, Test {
         SiloConfigOverride memory overrides;
         overrides.token0 = address(token0);
         overrides.token1 = address(token1);
-        (, silo0, silo1,,, partialLiquidation) = siloFixture.deploy_local(overrides);
+
+        address hook;
+        (, silo0, silo1,,, hook) = siloFixture.deploy_local(overrides);
+        partialLiquidation = IPartialLiquidation(hook);
     }
 }

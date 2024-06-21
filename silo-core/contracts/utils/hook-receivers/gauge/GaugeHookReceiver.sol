@@ -8,17 +8,18 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {Hook} from "silo-core/contracts/lib/Hook.sol";
+import {PartialLiquidation} from "../liquidation/PartialLiquidation.sol";
 import {IGaugeLike as IGauge} from "../../../interfaces/IGaugeLike.sol";
 import {IGaugeHookReceiver, IHookReceiver} from "../../../interfaces/IGaugeHookReceiver.sol";
 import {SiloHookReceiver} from "../_common/SiloHookReceiver.sol";
 
 /// @notice Silo share token hook receiver for the gauge.
 /// It notifies the gauge (if configured) about any balance update in the Silo share token.
-contract GaugeHookReceiver is IGaugeHookReceiver, SiloHookReceiver, Ownable2Step, Initializable {
+contract GaugeHookReceiver is PartialLiquidation, IGaugeHookReceiver, SiloHookReceiver, Ownable2Step, Initializable {
     using Hook for uint256;
     using Hook for bytes;
 
-    uint24 internal constant HOOKS_BEFORE_NOT_CONFIGURED = 0;
+    uint24 internal constant _HOOKS_BEFORE_NOT_CONFIGURED = 0;
 
     IGauge public gauge;
     IShareToken public shareToken;
@@ -32,7 +33,11 @@ contract GaugeHookReceiver is IGaugeHookReceiver, SiloHookReceiver, Ownable2Step
     }
 
     /// @inheritdoc IHookReceiver
-    function initialize(ISiloConfig _siloConfig, bytes calldata _data) external virtual initializer {
+    function initialize(ISiloConfig _siloConfig, bytes calldata _data)
+        external
+        virtual
+        initializer override(IHookReceiver, PartialLiquidation)
+    {
         (address owner) = abi.decode(_data, (address));
 
         if (owner == address(0)) revert OwnerIsZeroAddress();
@@ -59,7 +64,7 @@ contract GaugeHookReceiver is IGaugeHookReceiver, SiloHookReceiver, Ownable2Step
         uint256 action = tokenType | Hook.SHARE_TOKEN_TRANSFER;
         hooksAfter = hooksAfter.addAction(action);
 
-        _setHookConfig(silo, HOOKS_BEFORE_NOT_CONFIGURED, hooksAfter);
+        _setHookConfig(silo, _HOOKS_BEFORE_NOT_CONFIGURED, hooksAfter);
 
         configuredGauges[_shareToken] = _gauge;
 
@@ -80,7 +85,7 @@ contract GaugeHookReceiver is IGaugeHookReceiver, SiloHookReceiver, Ownable2Step
 
         hooksAfter = hooksAfter.removeAction(tokenType);
 
-        _setHookConfig(silo, HOOKS_BEFORE_NOT_CONFIGURED, hooksAfter);
+        _setHookConfig(silo, _HOOKS_BEFORE_NOT_CONFIGURED, hooksAfter);
 
         delete configuredGauges[_shareToken];
 
@@ -88,13 +93,21 @@ contract GaugeHookReceiver is IGaugeHookReceiver, SiloHookReceiver, Ownable2Step
     }
 
     /// @inheritdoc IHookReceiver
-    function beforeAction(address, uint256, bytes calldata) external pure {
+    function beforeAction(address, uint256, bytes calldata)
+        external
+        virtual
+        override(IHookReceiver, PartialLiquidation)
+    {
         // Do not expect any actions.
         revert RequestNotSupported();
     }
 
     /// @inheritdoc IHookReceiver
-    function afterAction(address _silo, uint256 _action, bytes calldata _inputAndOutput) external {
+    function afterAction(address _silo, uint256 _action, bytes calldata _inputAndOutput)
+        external
+        virtual
+        override(IHookReceiver, PartialLiquidation)
+    {
         IGauge theGauge = configuredGauges[IShareToken(msg.sender)];
 
         if (theGauge == IGauge(address(0))) revert GaugeIsNotConfigured();
@@ -113,12 +126,22 @@ contract GaugeHookReceiver is IGaugeHookReceiver, SiloHookReceiver, Ownable2Step
         );
     }
 
+    function hookReceiverConfig(address _silo)
+        external
+        view
+        virtual
+        override(PartialLiquidation, IHookReceiver)
+        returns (uint24 hooksBefore, uint24 hooksAfter)
+    {
+        return _hookReceiverConfig(_silo);
+    }
+
     /// @notice Get the token type for the share token
     /// @param _silo Silo address for which tokens was deployed
     /// @param _shareToken Share token address
     /// @dev Revert if wrong silo
     /// @dev Revert if the share token is not one of the collateral, protected or debt tokens
-    function _getTokenType(address _silo, address _shareToken) internal view returns (uint256) {
+    function _getTokenType(address _silo, address _shareToken) internal view virtual returns (uint256) {
         (
             address protectedShareToken,
             address collateralShareToken,

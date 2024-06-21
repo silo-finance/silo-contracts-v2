@@ -12,7 +12,7 @@ import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISiloDeployer} from "silo-core/contracts/interfaces/ISiloDeployer.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
-import {IHookReceiver} from "silo-core/contracts/interfaces/IHookReceiver.sol";
+import {PartialLiquidation} from "silo-core/contracts/utils/hook-receivers/liquidation/PartialLiquidation.sol";
 
 import {SiloConfigOverride} from "../../_common/fixtures/SiloFixture.sol";
 import {SiloFixtureWithVeSilo as SiloFixture} from "../../_common/fixtures/SiloFixtureWithVeSilo.sol";
@@ -23,7 +23,7 @@ import {HookReceiverMock} from "../../_mocks/HookReceiverMock.sol";
 /*
 FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mc TransitionCollateralReentrancyTest
 */
-contract TransitionCollateralReentrancyTest is SiloLittleHelper, Test, IHookReceiver {
+contract TransitionCollateralReentrancyTest is SiloLittleHelper, Test, PartialLiquidation {
     using Hook for uint256;
 
     bool afterActionExecuted;
@@ -39,25 +39,22 @@ contract TransitionCollateralReentrancyTest is SiloLittleHelper, Test, IHookRece
         configOverride.hookReceiver = address(this);
         configOverride.configName = SiloConfigsNames.LOCAL_DEPLOYER;
 
-        (, silo0, silo1,,, partialLiquidation) = siloFixture.deploy_local(configOverride);
+        (, silo0, silo1,,,) = siloFixture.deploy_local(configOverride);
+        partialLiquidation = this;
 
         silo0.updateHooks();
     }
 
-    function hookReceiverConfig(address _silo) external view returns (uint24 hooksBefore, uint24 hooksAfter) {
+    function hookReceiverConfig(address _silo) external view override returns (uint24 hooksBefore, uint24 hooksAfter) {
         hooksBefore = 0;
         hooksAfter = _silo == address(silo0) ? uint24(Hook.COLLATERAL_TOKEN | Hook.SHARE_TOKEN_TRANSFER) : 0;
     }
 
-    function initialize(ISiloConfig, bytes calldata) external pure {
-        // nothing to do here
-    }
-
-    function beforeAction(address, uint256, bytes calldata) external pure {
+    function beforeAction(address, uint256, bytes calldata) external override pure {
         revert("not in use");
     }
 
-    function afterAction(address _silo, uint256 _action, bytes calldata _input) external {
+    function afterAction(address _silo, uint256 _action, bytes calldata _input) external override {
         assertEq(_silo, address(silo0), "hook setup is only for silo0");
         assertTrue(_action.matchAction(Hook.COLLATERAL_TOKEN | Hook.SHARE_TOKEN_TRANSFER), "hook setup is only for share transfer");
 
@@ -87,6 +84,9 @@ contract TransitionCollateralReentrancyTest is SiloLittleHelper, Test, IHookRece
         );
     }
 
+    /*
+    FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_transitionCollateral2protected_liquidationReverts
+    */
     function test_transitionCollateral2protected_liquidationReverts() public {
         address borrower = makeAddr("borrower");
         bool sameAsset;

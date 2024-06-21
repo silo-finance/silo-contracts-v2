@@ -437,7 +437,7 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --ffi --mt test_liquidationCall_badDebt_full_withSToken
+    forge test -vv --ffi --mt test_liquidationCall_badDebt_full_withSToken_2tokens
     */
     function test_liquidationCall_badDebt_full_withSToken_2tokens() public {
         bool receiveSToken = true;

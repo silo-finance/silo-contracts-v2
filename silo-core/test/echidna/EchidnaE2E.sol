@@ -9,8 +9,8 @@ import {Math} from "openzeppelin5/utils/math/Math.sol";
 
 import {ISiloConfig} from "silo-core/contracts/SiloConfig.sol";
 import {Silo, ISilo} from "silo-core/contracts/Silo.sol";
-import {PartialLiquidation} from "silo-core/contracts/liquidation/PartialLiquidation.sol";
-import {PartialLiquidationLib} from "silo-core/contracts/liquidation/lib/PartialLiquidationLib.sol";
+import {PartialLiquidation} from "silo-core/contracts/utils/hook-receivers/liquidation/PartialLiquidation.sol";
+import {PartialLiquidationLib} from "silo-core/contracts/utils/hook-receivers/liquidation/lib/PartialLiquidationLib.sol";
 import {Hook} from "silo-core/contracts/lib/Hook.sol";
 import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
 import {Rounding} from "silo-core/contracts/lib/Rounding.sol";
@@ -74,7 +74,7 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         (_vault0, _vault1) = siloConfig.getSilos();
         vault0 = Silo(payable(_vault0));
         vault1 = Silo(payable(_vault1));
-        liquidationModule = PartialLiquidation(vault0.config().getConfig(_vault0).liquidationModule);
+        liquidationModule = PartialLiquidation(vault0.config().getConfig(_vault0).hookReceiver);
 
         // Set up actors
         for(uint256 i; i < 3; i++) {

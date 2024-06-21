@@ -7,6 +7,7 @@ import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 import {VeSiloContracts} from "ve-silo/common/VeSiloContracts.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
+import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquidation.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {AssetTypes} from "silo-core/contracts/lib/AssetTypes.sol";
 
@@ -34,17 +35,17 @@ contract WithdrawWhenNoDebtTest is SiloLittleHelper, Test {
         // Hook receiver config doesn't matter for this test
         hookReceiverMock.hookReceiverConfigMock(0, 0);
 
-        address hookReceiverAddr = hookReceiverMock.ADDRESS();
-
         SiloConfigOverride memory overrides;
         overrides.token0 = address(token0);
         overrides.token1 = address(token1);
-        overrides.hookReceiver = hookReceiverAddr;
+        overrides.hookReceiver = hookReceiverMock.ADDRESS();
         overrides.configName = SiloConfigsNames.LOCAL_DEPLOYER;
 
         SiloFixtureWithVeSilo siloFixture = new SiloFixtureWithVeSilo();
 
-        (siloConfig, silo0, silo1,,, partialLiquidation) = siloFixture.deploy_local(overrides);
+        address hook;
+        (siloConfig, silo0, silo1,,, hook) = siloFixture.deploy_local(overrides);
+        partialLiquidation = IPartialLiquidation(hook);
     }
 
     /*

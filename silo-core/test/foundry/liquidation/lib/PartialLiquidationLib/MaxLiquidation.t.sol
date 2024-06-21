@@ -4,8 +4,8 @@ pragma solidity ^0.8.20;
 import "forge-std/Test.sol";
 
 import {SiloSolvencyLib} from "silo-core/contracts/lib/SiloSolvencyLib.sol";
-import {PartialLiquidationExecLib} from "silo-core/contracts/liquidation/lib/PartialLiquidationExecLib.sol";
-import {PartialLiquidationLib} from "silo-core/contracts/liquidation/lib/PartialLiquidationLib.sol";
+import {PartialLiquidationExecLib} from "silo-core/contracts/utils/hook-receivers/liquidation/lib/PartialLiquidationExecLib.sol";
+import {PartialLiquidationLib} from "silo-core/contracts/utils/hook-receivers/liquidation/lib/PartialLiquidationLib.sol";
 
 import {OraclesHelper} from "../../../_common/OraclesHelper.sol";
 import {OracleMock} from "../../../_mocks/OracleMock.sol";

@@ -6,6 +6,7 @@ import {Strings} from "openzeppelin5/utils/Strings.sol";
 import {console2} from "forge-std/console2.sol";
 
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
+import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquidation.sol";
 
 import {SiloConfigOverride} from "../_common/fixtures/SiloFixture.sol";
 import {SiloFixtureWithVeSilo as SiloFixture} from "../_common/fixtures/SiloFixtureWithVeSilo.sol";
@@ -28,7 +29,10 @@ contract Gas is SiloLittleHelper {
         SiloConfigOverride memory overrides;
         overrides.token0 = address(token0);
         overrides.token1 = address(token1);
-        (, silo0, silo1,,, partialLiquidation) = siloFixture.deploy_local(overrides);
+
+        address hook;
+        (, silo0, silo1,,, hook) = siloFixture.deploy_local(overrides);
+        partialLiquidation = IPartialLiquidation(hook);
 
         __init(token0, token1, silo0, silo1);
 

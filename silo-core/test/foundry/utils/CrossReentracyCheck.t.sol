@@ -7,6 +7,7 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ILeverageBorrower} from "silo-core/contracts/interfaces/ILeverageBorrower.sol";
 import {Silo} from "silo-core/contracts/Silo.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
+import {CrossEntrancy} from "silo-core/contracts/lib/CrossEntrancy.sol";
 import {HookCallsOutsideActionTest} from "./hook-receivers/HookCallsOutsideAction.t.sol";
 
 /*
@@ -14,7 +15,7 @@ FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc CrossReentracyCheckTest
 */
 contract CrossReentracyCheckTest is HookCallsOutsideActionTest {
     function _tryReenter() internal override {
-        _disableHooks(); // otherwise we will enter the hooks agian
+        _disableHooks(); // otherwise we will enter the hooks again
 
         _reentrancyCheck_Deposit();
         _reentrancyCheck_Withdraw();
@@ -35,6 +36,8 @@ contract CrossReentracyCheckTest is HookCallsOutsideActionTest {
     }
 
     function _reentrancyCheck_Deposit() internal {
+        emit log("[CrossReentracyCheckTest] _reentrancyCheck_Deposit");
+
         vm.expectRevert(ISiloConfig.CrossReentrantCall.selector);
         silo0.deposit(1000, address(0));
 
@@ -43,6 +46,10 @@ contract CrossReentracyCheckTest is HookCallsOutsideActionTest {
     }
 
     function _reentrancyCheck_Withdraw() internal {
+        emit log("[CrossReentracyCheckTest] _reentrancyCheck_Withdraw");
+
+        if (_isWithdrawReEntrancyException()) return;
+
         vm.expectRevert(ISiloConfig.CrossReentrantCall.selector);
         silo0.withdraw(1000, address(0), address(0));
 
@@ -51,6 +58,10 @@ contract CrossReentracyCheckTest is HookCallsOutsideActionTest {
     }
 
     function _reentrancyCheck_Redeem() internal {
+        emit log("[CrossReentracyCheckTest] _reentrancyCheck_Redeem");
+
+        if (_isWithdrawReEntrancyException()) return;
+
         vm.expectRevert(ISiloConfig.CrossReentrantCall.selector);
         silo0.redeem(1000, address(0), address(0));
 
@@ -59,21 +70,29 @@ contract CrossReentracyCheckTest is HookCallsOutsideActionTest {
     }
 
     function _reentrancyCheck_Mint() internal {
+        emit log("[CrossReentracyCheckTest] _reentrancyCheck_Mint");
+
         vm.expectRevert(ISiloConfig.CrossReentrantCall.selector);
         silo0.mint(1000, address(0), ISilo.CollateralType.Protected);
     }
 
     function _reentrancyCheck_SwithCollateralTo() internal {
+        emit log("[CrossReentracyCheckTest] _reentrancyCheck_SwithCollateralTo");
+
         vm.expectRevert(ISiloConfig.CrossReentrantCall.selector);
         silo0.switchCollateralTo(false);
     }
 
     function _reentrancyCheck_LeverageSameAsset() internal {
+        emit log("[CrossReentracyCheckTest] _reentrancyCheck_LeverageSameAsset");
+
         vm.expectRevert(ISiloConfig.CrossReentrantCall.selector);
         silo0.leverageSameAsset(1000, 1000, address(0), ISilo.CollateralType.Protected);
     }
 
     function _reentrancyCheck_Borrow() internal {
+        emit log("[CrossReentracyCheckTest] _reentrancyCheck_Borrow");
+
         vm.expectRevert(ISiloConfig.CrossReentrantCall.selector);
         silo0.borrow(1000, address(0), address(0), false);
 
@@ -82,6 +101,8 @@ contract CrossReentracyCheckTest is HookCallsOutsideActionTest {
     }
 
     function _reentrancyCheck_BorrowShare() internal {
+        emit log("[CrossReentracyCheckTest] _reentrancyCheck_BorrowShare");
+
         vm.expectRevert(ISiloConfig.CrossReentrantCall.selector);
         silo0.borrowShares(1000, address(0), address(0), false);
 
@@ -90,21 +111,33 @@ contract CrossReentracyCheckTest is HookCallsOutsideActionTest {
     }
 
     function _reentrancyCheck_TransitionCollateral() internal {
+        emit log("[CrossReentracyCheckTest] _reentrancyCheck_TransitionCollateral");
+
         vm.expectRevert(ISiloConfig.CrossReentrantCall.selector);
         silo0.transitionCollateral(1000, address(0), ISilo.CollateralType.Protected);
     }
 
     function _reentrancyCheck_Repay() internal {
+        emit log("[CrossReentracyCheckTest] _reentrancyCheck_Repay");
+
+        if (_isRepayReEntrancyException()) return;
+
         vm.expectRevert(ISiloConfig.CrossReentrantCall.selector);
         silo0.repay(1000, address(0));
     }
 
     function _reentrancyCheck_RepayShares() internal {
+        emit log("[CrossReentracyCheckTest] _reentrancyCheck_RepayShares");
+
+        if (_isRepayReEntrancyException()) return;
+
         vm.expectRevert(ISiloConfig.CrossReentrantCall.selector);
         silo0.repayShares(1000, address(0));
     }
 
     function _reentrancyCheck_Leverage() internal {
+        emit log("[CrossReentracyCheckTest] _reentrancyCheck_Leverage");
+
         vm.expectRevert(ISiloConfig.CrossReentrantCall.selector);
         silo0.leverage(1000, ILeverageBorrower(address(0)), address(0), false, "");
 
@@ -113,6 +146,8 @@ contract CrossReentracyCheckTest is HookCallsOutsideActionTest {
     }
 
     function _reentrancyCheck_ShareTokens(address _silo) internal {
+        emit log("[CrossReentracyCheckTest] _reentrancyCheck_ShareTokens");
+
         address protectedShareToken;
         address collateralShareToken;
         address debtShareToken;
@@ -139,5 +174,23 @@ contract CrossReentracyCheckTest is HookCallsOutsideActionTest {
         _setAllHooks();
         silo0.updateHooks();
         silo1.updateHooks();
+    }
+
+    function _isRepayReEntrancyException() private view returns (bool exception) {
+        (bool entered, uint256 status) = _siloConfig.crossReentrantStatus();
+
+        if (entered && status == CrossEntrancy.ENTERED_FOR_LIQUIDATION) return true;
+        if (entered && status == CrossEntrancy.ENTERED_FOR_LIQUIDATION_REPAY) return true;
+
+        exception = false;
+    }
+
+    function _isWithdrawReEntrancyException() private view returns (bool exception) {
+        (bool entered, uint256 status) = _siloConfig.crossReentrantStatus();
+
+        if (entered && status == CrossEntrancy.ENTERED_FOR_LIQUIDATION_WITHDRAW) return true;
+        if (entered && status == CrossEntrancy.ENTERED_FOR_LIQUIDATION_REPAY) return true;
+
+        exception = false;
     }
 }

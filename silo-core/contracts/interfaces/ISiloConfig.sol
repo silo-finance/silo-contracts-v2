@@ -16,9 +16,6 @@ interface ISiloConfig {
         /// @notice The address of the deployer of the Silo
         address deployer;
 
-        /// @notice The address of contract that will be responsible for executing liquidations
-        address liquidationModule;
-
         /// @notice Address of the hook receiver called on every before/after action on Silo
         address hookReceiver;
 
@@ -114,13 +111,12 @@ interface ISiloConfig {
         uint256 lt;
         uint256 liquidationFee;
         uint256 flashloanFee;
-        address liquidationModule;
         address hookReceiver;
         bool callBeforeQuote;
     }
 
     error OnlySilo();
-    error OnlySiloOrLiquidationModule();
+    error OnlySiloOrHookReceiver();
     error OnlyShareToken();
     error OnlySiloOrDebtShareToken();
     error WrongSilo();
@@ -157,7 +153,7 @@ interface ISiloConfig {
     function accrueInterestAndGetConfigOptimised(
         uint256 _action,
         ISilo.CollateralType _collateralType
-    ) external returns (address shareToken, address asset, address hookReceiver, address liquidationModule);
+    ) external returns (address shareToken, address asset);
 
     /// @notice view method for checking cross Silo reentrancy flag
     /// @return entered true if the reentrancy guard is currently set to "entered", which indicates there is a

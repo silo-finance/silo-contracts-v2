@@ -14,6 +14,10 @@ import {SiloSolvencyLib} from "./lib/SiloSolvencyLib.sol";
 contract SiloLens is ISiloLens {
     using SiloLensLib for ISilo;
 
+    function getRawLiquidity(ISilo _silo) external view virtual returns (uint256 liquidity) {
+        return _silo.getRawLiquidity();
+    }
+
     /// @inheritdoc ISiloLens
     function borrowPossible(ISilo _silo, address _borrower) external view virtual returns (bool possible) {
         return _silo.borrowPossible(_borrower);
@@ -46,16 +50,33 @@ contract SiloLens is ISiloLens {
 
     /// @inheritdoc ISiloLens
     function collateralBalanceOfUnderlying(ISilo _silo, address, address _borrower)
-        public
+        external
         view
         returns (uint256 borrowerCollateral)
     {
-        return collateralBalanceOfUnderlying(_silo, _borrower);
+        return _collateralBalanceOfUnderlying(_silo, _borrower);
     }
 
     /// @inheritdoc ISiloLens
     function collateralBalanceOfUnderlying(ISilo _silo, address _borrower)
-        public
+        external
+        view
+        returns (uint256 borrowerCollateral)
+    {
+        return _collateralBalanceOfUnderlying(_silo, _borrower);
+    }
+
+    /// @inheritdoc ISiloLens
+    function debtBalanceOfUnderlying(ISilo _silo, address, address _borrower) external view returns (uint256) {
+        return _silo.maxRepay(_borrower);
+    }
+
+    function debtBalanceOfUnderlying(ISilo _silo, address _borrower) public view returns (uint256 borrowerDebt) {
+        return _silo.maxRepay(_borrower);
+    }
+
+    function _collateralBalanceOfUnderlying(ISilo _silo, address _borrower)
+        internal
         view
         returns (uint256 borrowerCollateral)
     {
@@ -76,14 +97,5 @@ contract SiloLens is ISiloLens {
                 borrowerCollateral += _silo.previewRedeem(collateralShareBalance, ISilo.CollateralType.Collateral);
             }
         }
-    }
-
-    /// @inheritdoc ISiloLens
-    function debtBalanceOfUnderlying(ISilo _silo, address, address _borrower) external view returns (uint256) {
-        return _silo.maxRepay(_borrower);
-    }
-
-    function debtBalanceOfUnderlying(ISilo _silo, address _borrower) public view returns (uint256 borrowerDebt) {
-        return _silo.maxRepay(_borrower);
     }
 }
