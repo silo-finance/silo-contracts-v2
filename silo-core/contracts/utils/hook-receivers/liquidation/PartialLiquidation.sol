@@ -175,11 +175,7 @@ contract PartialLiquidation is SiloStorage, IPartialLiquidation, IHookReceiver {
             Hook.LIQUIDATION
         );
 
-        ISilo(debtConfig.silo).accrueInterestForConfig(
-            debtConfig.interestRateModel,
-            debtConfig.daoFee,
-            debtConfig.deployerFee
-        );
+        ISilo(debtConfig.silo).accrueInterest();
 
         // We validate that both Silos have the same config data which means that potential attacker has no choice
         // but provide either two real silos or two fake silos. While providing two fake silos, neither silo has access
