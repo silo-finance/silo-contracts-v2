@@ -100,14 +100,14 @@ contract PartialLiquidation is SiloStorage, IPartialLiquidation, IHookReceiver {
 
         IERC20(debtConfig.token).safeTransferFrom(msg.sender, address(this), repayDebtAssets);
         IERC20(debtConfig.token).safeIncreaseAllowance(debtConfig.silo, repayDebtAssets);
-        ISilo(collateralConfig.silo).repay(repayDebtAssets, _borrower);
+        ISilo(debtConfig.silo).repay(repayDebtAssets, _borrower);
         
         address shareTokenReceiver = _receiveSToken ? msg.sender : address(this);
 
         _callShareTokenForwardTransferNoChecks(
             collateralConfig.silo,
             _borrower,
-            msg.sender,
+            shareTokenReceiver,
             withdrawAssetsFromCollateral,
             collateralConfig.collateralShareToken,
             AssetTypes.COLLATERAL
@@ -116,13 +116,13 @@ contract PartialLiquidation is SiloStorage, IPartialLiquidation, IHookReceiver {
         _callShareTokenForwardTransferNoChecks(
             collateralConfig.silo,
             _borrower,
-            msg.sender,
+            shareTokenReceiver,
             withdrawAssetsFromProtected,
             collateralConfig.protectedShareToken,
             AssetTypes.PROTECTED
         );
 
-        if (shareTokenReceiver == address(this)) {
+        if (!_receiveSToken) {
             ISilo(collateralConfig.silo).withdraw(
                 withdrawAssetsFromCollateral,
                 msg.sender,
@@ -162,12 +162,11 @@ contract PartialLiquidation is SiloStorage, IPartialLiquidation, IHookReceiver {
         internal
         virtual
         returns (
-            ISiloConfig siloConfigCached,
             ISiloConfig.ConfigData memory collateralConfig,
             ISiloConfig.ConfigData memory debtConfig
         )
     {
-        siloConfigCached = ISilo(_siloWithDebt).config();
+        ISiloConfig siloConfigCached = ISilo(_siloWithDebt).config();
 
         ISiloConfig.DebtInfo memory debtInfo;
 
@@ -175,12 +174,6 @@ contract PartialLiquidation is SiloStorage, IPartialLiquidation, IHookReceiver {
             _siloWithDebt,
             _borrower,
             Hook.LIQUIDATION
-        );
-
-        ISilo(collateralConfig.silo).accrueInterestForConfig(
-            collateralConfig.interestRateModel,
-            collateralConfig.daoFee,
-            collateralConfig.deployerFee
         );
 
         ISilo(debtConfig.silo).accrueInterestForConfig(
@@ -202,6 +195,7 @@ contract PartialLiquidation is SiloStorage, IPartialLiquidation, IHookReceiver {
         if (_debtAsset != debtConfig.token) revert UnexpectedDebtToken();
 
         if (!debtInfo.sameAsset) {
+            ISilo(debtConfig.otherSilo).accrueInterest();
             collateralConfig.callSolvencyOracleBeforeQuote();
             debtConfig.callSolvencyOracleBeforeQuote();
         }
