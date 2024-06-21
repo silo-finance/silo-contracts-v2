@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity >=0.5.0;
 
+import {ISilo} from "./ISilo.sol";
+
 interface IPartialLiquidation {
     struct HookSetup {
         /// @param this is the same as in siloConfig
@@ -25,7 +27,7 @@ interface IPartialLiquidation {
     error LiquidityFeeToHi();
     error NoDebtToCover();
     error DebtToCoverTooSmall();
-
+    error OnlyDelegateCall();
     error InvalidSiloForCollateral();
     error UserIsSolvent();
     error InsufficientLiquidation();
@@ -58,9 +60,24 @@ interface IPartialLiquidation {
         external
         returns (uint256 withdrawCollateral, uint256 repayDebtAssets);
 
-    function synchronizeHooks(address _hookReceiver, uint24 _hooksBefore, uint24 _hooksAfter) external;
+    /// @dev Repays a given asset amount and returns the equivalent number of shares
+    /// @notice this repay is only for liquidation, because it must be called as delegate call from Silo
+    /// @param _assets Amount of assets to be repaid
+    /// @param _borrower Address of the borrower whose debt is being repaid
+    /// @param _repayer Address of the wallet which will repay debt
+    /// @return shares The equivalent number of shares for the provided asset amount
+    function liquidationRepay(uint256 _assets, address _borrower, address _repayer) external returns (uint256 shares);
 
-    function hookSetup(address _silo) external view returns (HookSetup memory);
+    /// @dev that method allow to finish liquidation process by giving up collateral to liquidator
+    /// @notice this withdraw is only for liquidation, because it must be called as delegate call from Silo
+    function liquidationWithdraw(
+        uint256 _assets,
+        address _receiver,
+        address _borrower,
+        ISilo.CollateralType _collateralType
+    )
+        external
+        returns (uint256 assets, uint256 shares);
 
     /// @dev debt is keep growing over time, so when dApp use this view to calculate max, tx should never revert
     /// because actual max can be only higher

@@ -40,31 +40,44 @@ contract SiloDeploy_Local is SiloDeployWithGaugeHookReceiver {
     }
 
     function beforeCreateSilo(
-        ISiloConfig.InitData memory _config
+        ISiloConfig.InitData memory _config,
+        address _hookReceiverImplementation
     ) internal view override returns (address hookImplementation) {
         // Override the default values if overrides are provided
         if (siloConfigOverride.token0 != address(0)) {
+            console2.log("[override] token0 %s -> %s", _config.token0, siloConfigOverride.token0);
             _config.token0 = siloConfigOverride.token0;
         }
 
         if (siloConfigOverride.token1 != address(0)) {
+            console2.log("[override] token1 %s -> %s", _config.token1, siloConfigOverride.token1);
             _config.token1 = siloConfigOverride.token1;
         }
 
         if (siloConfigOverride.solvencyOracle0 != address(0)) {
+            console2.log(
+                "[override] solvencyOracle0 %s -> %s", _config.solvencyOracle0, siloConfigOverride.solvencyOracle0
+            );
+
             _config.solvencyOracle0 = siloConfigOverride.solvencyOracle0;
         }
 
         if (siloConfigOverride.maxLtvOracle0 != address(0)) {
+            console2.log("[override] maxLtvOracle0 %s -> %s", _config.maxLtvOracle0, siloConfigOverride.maxLtvOracle0);
+
             _config.maxLtvOracle0 = siloConfigOverride.maxLtvOracle0;
         }
 
-        if(siloConfigOverride.hookReceiver != address(0)) {
-            _config.hookReceiver = siloConfigOverride.hookReceiver;
-        }
+        if(siloConfigOverride.hookReceiver != address(0) ||
+            siloConfigOverride.hookReceiverImplementation != address(0)
+        ) {
+            console2.log("[override] hookReceiver %s -> %s", _config.hookReceiver, siloConfigOverride.hookReceiver);
+            console2.log("[override] hookImplementation -> %s", siloConfigOverride.hookReceiverImplementation);
 
-        if(siloConfigOverride.hookReceiverImplementation != address(0)) {
+            _config.hookReceiver = siloConfigOverride.hookReceiver;
             hookImplementation = siloConfigOverride.hookReceiverImplementation;
+        } else {
+            hookImplementation = _hookReceiverImplementation;
         }
     }
 }
@@ -80,7 +93,7 @@ contract SiloFixture is StdCheats, CommonBase {
             ISilo silo1,
             address weth,
             address usdc,
-            IPartialLiquidation liquidationModule
+            address hookReceiver
         )
     {
         return _deploy(new SiloDeployWithGaugeHookReceiver(), SiloConfigsNames.ETH_USDC_UNI_V3_SILO);
@@ -94,7 +107,7 @@ contract SiloFixture is StdCheats, CommonBase {
             ISilo silo1,
             address token0,
             address token1,
-            IPartialLiquidation liquidationModule
+            address hookReceiver
         )
     {
         SiloConfigOverride memory overrideArgs;
@@ -109,7 +122,7 @@ contract SiloFixture is StdCheats, CommonBase {
             ISilo silo1,
             address token0,
             address token1,
-            IPartialLiquidation liquidationModule
+            address hookReceiver
         )
     {
         return _deploy(
@@ -126,7 +139,7 @@ contract SiloFixture is StdCheats, CommonBase {
             ISilo silo1,
             address token0,
             address token1,
-            IPartialLiquidation liquidationModule
+            address hookReceiver
         )
     {
         MainnetDeploy mainnetDeploy = new MainnetDeploy();
@@ -150,7 +163,7 @@ contract SiloFixture is StdCheats, CommonBase {
         token0 = siloConfig0.token;
         token1 = siloConfig1.token;
 
-        liquidationModule = IPartialLiquidation(siloConfig0.liquidationModule);
-        if (address(liquidationModule) == address(0)) revert("liquidationModule is empty");
+        hookReceiver = siloConfig0.hookReceiver;
+        if (hookReceiver == address(0)) revert("hookReceiver address is empty");
     }
 }

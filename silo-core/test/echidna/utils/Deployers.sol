@@ -18,7 +18,7 @@ import {ISiloFactory} from "silo-core/contracts/interfaces/ISiloFactory.sol";
 import {SiloFactory} from "silo-core/contracts/SiloFactory.sol";
 import {ISiloDeployer, SiloDeployer} from "silo-core/contracts/SiloDeployer.sol";
 import {Silo} from "silo-core/contracts/Silo.sol";
-import {PartialLiquidation} from "silo-core/contracts/liquidation/PartialLiquidation.sol";
+import {PartialLiquidation} from "silo-core/contracts/utils/hook-receivers/liquidation/PartialLiquidation.sol";
 import {SiloInternal} from "../internal_testing/SiloInternal.sol";
 import {ShareCollateralToken} from "silo-core/contracts/utils/ShareCollateralToken.sol";
 import {ShareDebtToken} from "silo-core/contracts/utils/ShareDebtToken.sol";
@@ -71,7 +71,6 @@ contract Deployers is VyperDeployer, Data {
         // The FULL data relies on addresses set in _setupBasicData()
         siloData["FULL"] = ISiloConfig.InitData({
             deployer: timelockAdmin,
-            liquidationModule: address(liquidationModule),
             deployerFee: 0.1000e18,
             token0: _tokens["WETH"],
             solvencyOracle0: oracles["DIA"],
@@ -83,7 +82,7 @@ contract Deployers is VyperDeployer, Data {
             liquidationFee0: 0.0500e18,
             flashloanFee0: 0.0100e18,
             callBeforeQuote0: true,
-            hookReceiver: hookReceivers["GaugeHookReceiver"],
+            hookReceiver: address(liquidationModule),
             token1: _tokens["USDC"],
             solvencyOracle1: oracles["UniV3-ETH-USDC-0.3"],
             maxLtvOracle1: oracles[""],

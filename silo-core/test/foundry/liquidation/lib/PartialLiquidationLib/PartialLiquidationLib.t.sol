@@ -5,7 +5,7 @@ import "forge-std/Test.sol";
 
 import {Strings} from "openzeppelin5/utils/Strings.sol";
 
-import {PartialLiquidationLib} from "silo-core/contracts/liquidation/lib/PartialLiquidationLib.sol";
+import {PartialLiquidationLib} from "silo-core/contracts/utils/hook-receivers/liquidation/lib/PartialLiquidationLib.sol";
 
 import {PartialLiquidationLibChecked} from "./PartialLiquidationLibChecked.sol";
 import "../../../data-readers/CalculateCollateralToLiquidateTestData.sol";

@@ -1,7 +1,6 @@
 {
     "deployer": "0xdEDEDEDEdEdEdEDedEDeDedEdEdeDedEdEDedEdE",
-    "liquidationModule": "PartialLiquidation.sol",
-    "hookReceiver": "NO_HOOK_RECEIVER",
+    "hookReceiver": "PartialLiquidation.sol",
     "hookReceiverImplementation": "NO_HOOK_RECEIVER",
     "deployerFee": 1000,
     "token0": "PLACEHOLDER",

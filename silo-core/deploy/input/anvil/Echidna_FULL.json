@@ -1,6 +1,5 @@
 {
     "deployer": "0xdEDEDEDEdEdEdEDedEDeDedEdEdeDedEdEDedEdE",
-    "liquidationModule": "PartialLiquidation.sol",
     "hookReceiver": "GaugeHookReceiver.sol",
     "hookReceiverImplementation": "NO_HOOK_RECEIVER",
     "deployerFee": 1000,

@@ -4,7 +4,7 @@ pragma solidity 0.8.24;
 import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 
-import {ISilo, IERC4626, IERC3156FlashLender, ILiquidationProcess} from "./interfaces/ISilo.sol";
+import {ISilo, IERC4626, IERC3156FlashLender} from "./interfaces/ISilo.sol";
 import {ISiloOracle} from "./interfaces/ISiloOracle.sol";
 import {IShareToken} from "./interfaces/IShareToken.sol";
 
@@ -23,7 +23,6 @@ import {SiloSolvencyLib} from "./lib/SiloSolvencyLib.sol";
 import {SiloLendingLib} from "./lib/SiloLendingLib.sol";
 import {SiloERC4626Lib} from "./lib/SiloERC4626Lib.sol";
 import {SiloMathLib} from "./lib/SiloMathLib.sol";
-import {LiquidationWithdrawLib} from "./lib/LiquidationWithdrawLib.sol";
 import {Rounding} from "./lib/Rounding.sol";
 import {Hook} from "./lib/Hook.sol";
 import {AssetTypes} from "./lib/AssetTypes.sol";
@@ -64,9 +63,9 @@ contract Silo is SiloERC4626 {
         // Silo will not send back any ether leftovers after the call.
         // The hook receiver should request the ether if needed in a separate call.
         if (_callType == CallType.Call) {
-            (success, result) = _target.call{value: _value}(_input);
-        } else if (_callType == CallType.Delegatecall) {
-            (success, result) = _target.delegatecall(_input);
+            (success, result) = _target.call{value: _value}(_input); // solhint-disable-line avoid-low-level-calls
+        } else {
+            (success, result) = _target.delegatecall(_input); // solhint-disable-line avoid-low-level-calls
         }
     }
 
@@ -553,16 +552,7 @@ contract Silo is SiloERC4626 {
         virtual
         returns (uint256 shares)
     {
-        (, shares) = _repay(_assets, 0 /* repaySharesZero */, _borrower, msg.sender, false /* _liquidation */);
-    }
-
-    /// @inheritdoc ILiquidationProcess
-    function liquidationRepay(uint256 _assets, address _borrower, address _repayer)
-        external
-        virtual
-        returns (uint256 shares)
-    {
-        (, shares) = _repay(_assets, 0 /* repaySharesZero */, _borrower, _repayer, true /* _liquidation */);
+        (, shares) = _repay(_assets, 0 /* repaySharesZero */, _borrower, msg.sender);
     }
 
     /// @inheritdoc ISilo
@@ -586,7 +576,7 @@ contract Silo is SiloERC4626 {
         virtual
         returns (uint256 assets)
     {
-        (assets,) = _repay(0 /* zeroAssets */, _shares, _borrower, msg.sender, false /* _liquidation */);
+        (assets,) = _repay(0 /* zeroAssets */, _shares, _borrower, msg.sender);
     }
 
     /// @inheritdoc IERC3156FlashLender
@@ -647,26 +637,6 @@ contract Silo is SiloERC4626 {
         Actions.withdrawFees(this, _siloData, _total[AssetTypes.PROTECTED].assets);
     }
 
-    /// @dev that method allow to finish liquidation process by giving up collateral to liquidator
-    function withdrawCollateralsToLiquidator(
-        uint256 _withdrawAssetsFromCollateral,
-        uint256 _withdrawAssetsFromProtected,
-        address _borrower,
-        address _liquidator,
-        bool _receiveSToken
-    ) external virtual {
-        LiquidationWithdrawLib.withdrawCollateralsToLiquidator(
-            _sharedStorage.siloConfig,
-            _withdrawAssetsFromCollateral,
-            _withdrawAssetsFromProtected,
-            _borrower,
-            _liquidator,
-            _receiveSToken,
-            getRawLiquidity(),
-            _total
-        );
-    }
-
     /// @inheritdoc ISilo
     function total(uint256 _assetType) external view returns (uint256 totalAssetsByType) {
         totalAssetsByType = _total[_assetType].assets;
@@ -692,10 +662,6 @@ contract Silo is SiloERC4626 {
         hooksBefore = _sharedStorage.hooksBefore;
         hooksAfter = _sharedStorage.hooksAfter;
         hookReceiver = _sharedStorage.hookReceiver;
-    }
-
-    function getRawLiquidity() public view virtual returns (uint256 liquidity) {
-        liquidity = SiloMathLib.liquidity(_total[AssetTypes.COLLATERAL].assets, _total[AssetTypes.DEBT].assets);
     }
 
     function _deposit(
@@ -785,8 +751,7 @@ contract Silo is SiloERC4626 {
         emit Borrow(msg.sender, _receiver, _borrower, assets, shares);
     }
 
-    /// @param _liquidation TRUE when call is from liquidator module
-    function _repay(uint256 _assets, uint256 _shares, address _borrower, address _repayer, bool _liquidation)
+    function _repay(uint256 _assets, uint256 _shares, address _borrower, address _repayer)
         internal
         virtual
         returns (uint256 assets, uint256 shares)
@@ -799,7 +764,6 @@ contract Silo is SiloERC4626 {
             _shares,
             _borrower,
             _repayer,
-            _liquidation,
             _total[AssetTypes.DEBT]
         );
 

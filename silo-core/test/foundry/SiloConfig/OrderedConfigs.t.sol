@@ -50,7 +50,7 @@ contract OrderedConfigsTest is Test {
     address internal _wrongSilo = makeAddr("wrongSilo");
     address internal _silo0 = makeAddr("silo0");
     address internal _silo1 = makeAddr("silo1");
-    address internal _liquidationModule = makeAddr("liquidationModule");
+    address internal _hookReceiver = makeAddr("hookReceiver");
 
     ISiloConfig.ConfigData internal _configData0;
     ISiloConfig.ConfigData internal _configData1;
@@ -63,14 +63,14 @@ contract OrderedConfigsTest is Test {
         _configData0.collateralShareToken = makeAddr("collateralShareToken0");
         _configData0.protectedShareToken = makeAddr("protectedShareToken0");
         _configData0.debtShareToken = makeAddr("debtShareToken0");
-        _configData0.liquidationModule = _liquidationModule;
+        _configData0.hookReceiver = _hookReceiver;
 
         _configData1.silo = _silo1;
         _configData1.token = makeAddr("token1");
         _configData1.collateralShareToken = makeAddr("collateralShareToken1");
         _configData1.protectedShareToken = makeAddr("protectedShareToken1");
         _configData1.debtShareToken = makeAddr("debtShareToken1");
-        _configData1.liquidationModule = _liquidationModule;
+        _configData1.hookReceiver = _hookReceiver;
 
         _siloConfig = siloConfigDeploy(1, _configData0, _configData1);
 
@@ -89,7 +89,7 @@ contract OrderedConfigsTest is Test {
         vm.assume(_configDataInput0.deployerFee < 0.5e18);
 
         // when using assume, it reject too many inputs
-        _configDataInput0.liquidationModule = _configDataInput1.liquidationModule; 
+        _configDataInput0.hookReceiver = _configDataInput1.hookReceiver; 
         _configDataInput0.hookReceiver = _configDataInput1.hookReceiver;
 
         _configDataInput0.otherSilo = _configDataInput1.silo;

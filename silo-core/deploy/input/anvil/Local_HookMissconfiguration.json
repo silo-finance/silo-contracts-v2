@@ -1,7 +1,6 @@
 {
     "deployer": "0x0000000000000000000000000000000000de0101",
-    "liquidationModule": "PartialLiquidation.sol",
-    "hookReceiver": "GaugeHookReceiver.sol",
+    "hookReceiver": "PartialLiquidation.sol",
     "hookReceiverImplementation": "GaugeHookReceiver.sol",
     "deployerFee": 1000,
     "token0": "PLACEHOLDER",
