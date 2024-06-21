@@ -34,6 +34,7 @@ library VeSiloContracts {
     string public constant SMART_WALLET_CHECKER = "SmartWalletChecker.sol";
     string public constant BATCH_GAUGE_CHECKPOINTER = "BatchGaugeCheckpointer.sol";
     string public constant MILO_TOKEN = "MiloToken.sol";
+    string public constant MILO_TOKEN_CHILD_CHAIN = "MiloTokenChildChain.sol";
 }
 
 library VeSiloDeployments {

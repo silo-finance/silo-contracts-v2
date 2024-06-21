@@ -4,7 +4,7 @@ pragma solidity 0.8.24;
 import {CommonDeploy, VeSiloContracts} from "./_CommonDeploy.sol";
 
 import {ISiloToken} from "ve-silo/contracts/governance/interfaces/ISiloToken.sol";
-import {MiloToken} from "ve-silo/contracts/governance/MiloToken.sol";
+import {MiloToken} from "ve-silo/contracts/governance/milo-token/MiloToken.sol";
 
 /**
 FOUNDRY_PROFILE=ve-silo-test \
