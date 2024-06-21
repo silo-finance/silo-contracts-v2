@@ -193,6 +193,7 @@ library Actions {
         returns (uint256 assets, uint256 shares)
     {
         IHookReceiver hookReceiver = _shareStorage.hookReceiver;
+        ISiloConfig siloConfigCached = _shareStorage.siloConfig;
         bool callFromHook = msg.sender == address(hookReceiver);
 
         _hookCallBeforeRepay(_shareStorage.hooksBefore, hookReceiver, _assets, _shares, _borrower, _repayer);
@@ -201,13 +202,15 @@ library Actions {
         // flag manually, so it is the same as not using getter
         (
             address debtShareToken, address debtAsset
-        ) = _shareStorage.siloConfig.accrueInterestAndGetConfigOptimised(Hook.REPAY, ISilo.CollateralType(0));
+        ) = siloConfigCached.accrueInterestAndGetConfigOptimised(Hook.REPAY, ISilo.CollateralType(0));
 
         (
             assets, shares
         ) = SiloLendingLib.repay(
             IShareToken(debtShareToken), debtAsset, _assets, _shares, _borrower, _repayer, _totalDebt
         );
+
+        siloConfigCached.crossNonReentrantAfter();
 
         _hookCallAfterRepay(
             _shareStorage.hooksAfter, hookReceiver, _assets, _shares, _borrower, _repayer, assets, shares

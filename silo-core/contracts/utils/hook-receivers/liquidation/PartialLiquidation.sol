@@ -69,7 +69,6 @@ contract PartialLiquidation is SiloStorage, IPartialLiquidation, IHookReceiver {
         returns (uint256 withdrawCollateral, uint256 repayDebtAssets)
     {
         (
-            ,
             ISiloConfig.ConfigData memory collateralConfig,
             ISiloConfig.ConfigData memory debtConfig
         ) = _fetchConfigs(_siloWithDebt, _collateralAsset, _debtAsset, _borrower);
