@@ -28,34 +28,8 @@ abstract contract CrossReentrancy {
     function _crossNonReentrantBefore(uint256 _action) internal virtual {
         uint256 crossReentrantStatusCached = _crossReentrantStatus;
 
-        if (crossReentrantStatusCached == CrossEntrancy.NOT_ENTERED && _action == Hook.LIQUIDATION) {
+        if (crossReentrantStatusCached == CrossEntrancy.NOT_ENTERED) {
             _crossReentrantStatus = CrossEntrancy.ENTERED_FOR_LIQUIDATION;
-            return;
-        }
-
-        // TODO make similar steps for leverage?
-        if (crossReentrantStatusCached == CrossEntrancy.ENTERED_FOR_LIQUIDATION && _action == Hook.REPAY) {
-            // if we in a middle of liquidation, we allow to execute repay
-            _crossReentrantStatus = CrossEntrancy.ENTERED_FOR_LIQUIDATION_REPAY;
-            return;
-        }
-
-        if (crossReentrantStatusCached == CrossEntrancy.ENTERED_FOR_LIQUIDATION_REPAY && _action == Hook.REPAY) {
-            // if we in a middle of liquidation, we allow to execute repay many times
-            return;
-        }
-
-        if (crossReentrantStatusCached == CrossEntrancy.ENTERED_FOR_LIQUIDATION_REPAY && _action == Hook.WITHDRAW) {
-            // if we in a middle of liquidation, we allow to execute withdraw many times
-            // eq if we have to withdraw protected and collateral
-            // but we can not go back to repay, so we need to mark this new state
-            _crossReentrantStatus = CrossEntrancy.ENTERED_FOR_LIQUIDATION_WITHDRAW;
-            return;
-        }
-
-        if (crossReentrantStatusCached == CrossEntrancy.ENTERED_FOR_LIQUIDATION_WITHDRAW && _action == Hook.WITHDRAW) {
-            // if we in a middle of liquidation, we allow to execute withdraw many times
-            // TODO we probably need to allow for sToken transfer
             return;
         }
 

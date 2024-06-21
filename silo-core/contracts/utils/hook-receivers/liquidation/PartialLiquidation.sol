@@ -2,6 +2,8 @@
 pragma solidity 0.8.24;
 
 import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
+import {IERC20} from "openzeppelin5/interfaces/IERC20.sol";
+import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
@@ -27,6 +29,7 @@ import {PartialLiquidationExecLib} from "./lib/PartialLiquidationExecLib.sol";
 /// @title PartialLiquidation module for executing liquidations
 /// @dev if we need additional hook functionality, this contract should be included as parent
 contract PartialLiquidation is SiloStorage, IPartialLiquidation, IHookReceiver {
+    using SafeERC20 for IERC20;
     using Hook for uint24;
     using CallBeforeQuoteLib for ISiloConfig.ConfigData;
 
@@ -66,7 +69,7 @@ contract PartialLiquidation is SiloStorage, IPartialLiquidation, IHookReceiver {
         returns (uint256 withdrawCollateral, uint256 repayDebtAssets)
     {
         (
-            ISiloConfig siloConfigCached,
+            ,
             ISiloConfig.ConfigData memory collateralConfig,
             ISiloConfig.ConfigData memory debtConfig
         ) = _fetchConfigs(_siloWithDebt, _collateralAsset, _debtAsset, _borrower);
@@ -95,90 +98,44 @@ contract PartialLiquidation is SiloStorage, IPartialLiquidation, IHookReceiver {
 
         emit LiquidationCall(msg.sender, _receiveSToken);
 
-        _delegateLiquidationRepay(debtConfig.silo, repayDebtAssets, _borrower, msg.sender);
+        IERC20(debtConfig.token).safeTransferFrom(msg.sender, address(this), repayDebtAssets);
+        IERC20(debtConfig.token).safeIncreaseAllowance(debtConfig.silo, repayDebtAssets);
+        ISilo(collateralConfig.silo).repay(repayDebtAssets, _borrower);
+        
+        address shareTokenReceiver = _receiveSToken ? msg.sender : address(this);
 
-        if (_receiveSToken) {
-            _callShareTokenForwardTransfer(
-                collateralConfig.silo,
-                _borrower,
-                msg.sender,
-                withdrawAssetsFromCollateral,
-                collateralConfig.collateralShareToken,
-                AssetTypes.COLLATERAL
-            );
+        _callShareTokenForwardTransferNoChecks(
+            collateralConfig.silo,
+            _borrower,
+            msg.sender,
+            withdrawAssetsFromCollateral,
+            collateralConfig.collateralShareToken,
+            AssetTypes.COLLATERAL
+        );
 
-            _callShareTokenForwardTransfer(
-                collateralConfig.silo,
-                _borrower,
-                msg.sender,
-                withdrawAssetsFromProtected,
-                collateralConfig.protectedShareToken,
-                AssetTypes.PROTECTED
-            );
-        } else {
-            _delegateLiquidationWithdraw(
-                collateralConfig.silo,
+        _callShareTokenForwardTransferNoChecks(
+            collateralConfig.silo,
+            _borrower,
+            msg.sender,
+            withdrawAssetsFromProtected,
+            collateralConfig.protectedShareToken,
+            AssetTypes.PROTECTED
+        );
+
+        if (shareTokenReceiver == address(this)) {
+            ISilo(collateralConfig.silo).withdraw(
                 withdrawAssetsFromCollateral,
+                msg.sender,
                 _borrower,
                 ISilo.CollateralType.Collateral
             );
 
-            _delegateLiquidationWithdraw(
-                collateralConfig.silo,
+            ISilo(collateralConfig.silo).withdraw(
                 withdrawAssetsFromProtected,
+                msg.sender,
                 _borrower,
                 ISilo.CollateralType.Protected
             );
-        }
-
-        siloConfigCached.crossNonReentrantAfter();
-    }
-
-    /// @inheritdoc IPartialLiquidation
-    function liquidationRepay(uint256 _assets, address _borrower, address _repayer)
-        external
-        virtual
-        onlyDelegateCall
-        returns (uint256 shares)
-    {
-        // body of this method is a copy of `Silo._repay`
-        (
-            , shares
-        ) = Actions.repay(_sharedStorage, _assets, 0 /* shares */, _borrower, _repayer, _total[AssetTypes.DEBT]);
-
-        emit ISilo.Repay(_repayer, _borrower, _assets, shares);
-    }
-
-    /// @inheritdoc IPartialLiquidation
-    function liquidationWithdraw(
-        uint256 _assets,
-        address _receiver,
-        address _borrower,
-        ISilo.CollateralType _collateralType
-    )
-        external
-        virtual
-        returns (uint256 assets, uint256 shares)
-    {
-        // body of this method is a copy of `Silo._withdraw`
-        (assets, shares) = Actions.withdraw(
-            _sharedStorage,
-            ISilo.WithdrawArgs({
-                assets: _assets,
-                shares: 0,
-                receiver: _receiver,
-                owner: _borrower,
-                spender: _borrower,
-                collateralType: _collateralType
-            }),
-            _total[uint256(_collateralType)],
-            _total[AssetTypes.DEBT]
-        );
-
-        if (_collateralType == ISilo.CollateralType.Collateral) {
-            emit IERC4626.Withdraw(msg.sender, _receiver, _borrower, assets, shares);
-        } else {
-            emit ISilo.WithdrawProtected(msg.sender, _receiver, _borrower, assets, shares);
         }
     }
 
@@ -214,10 +171,22 @@ contract PartialLiquidation is SiloStorage, IPartialLiquidation, IHookReceiver {
 
         ISiloConfig.DebtInfo memory debtInfo;
 
-        (collateralConfig, debtConfig, debtInfo) = siloConfigCached.accrueInterestAndGetConfigs(
+        (collateralConfig, debtConfig, debtInfo) = siloConfigCached.getConfigs(
             _siloWithDebt,
             _borrower,
             Hook.LIQUIDATION
+        );
+
+        ISilo(collateralConfig.silo).accrueInterestForConfig(
+            collateralConfig.interestRateModel,
+            collateralConfig.daoFee,
+            collateralConfig.deployerFee
+        );
+
+        ISilo(debtConfig.silo).accrueInterestForConfig(
+            debtConfig.interestRateModel,
+            debtConfig.daoFee,
+            debtConfig.deployerFee
         );
 
         // We validate that both Silos have the same config data which means that potential attacker has no choice
@@ -233,29 +202,37 @@ contract PartialLiquidation is SiloStorage, IPartialLiquidation, IHookReceiver {
         if (_debtAsset != debtConfig.token) revert UnexpectedDebtToken();
 
         if (!debtInfo.sameAsset) {
-            ISilo(debtConfig.otherSilo).accrueInterest();
             collateralConfig.callSolvencyOracleBeforeQuote();
             debtConfig.callSolvencyOracleBeforeQuote();
         }
     }
 
-    function _callShareTokenForwardTransfer(
+    function _getSharesForForwardTransfer(
         address _silo,
-        address _borrower,
-        address _liquidator,
         uint256 _withdrawAssets,
         address _shareToken,
         uint256 _assetType
-    ) internal virtual {
-        if (_withdrawAssets == 0) return;
-
-        uint256 shares = SiloMathLib.convertToShares(
+    ) internal view returns (uint256 shares) {
+        shares = SiloMathLib.convertToShares(
             _withdrawAssets,
             ISilo(_silo).total(_assetType),
             IShareToken(_shareToken).totalSupply(),
             Rounding.LIQUIDATE_TO_SHARES,
             ISilo.AssetType(_assetType)
         );
+    }
+
+    function _callShareTokenForwardTransferNoChecks(
+        address _silo,
+        address _borrower,
+        address _receiver,
+        uint256 _withdrawAssets,
+        address _shareToken,
+        uint256 _assetType
+    ) internal virtual {
+        if (_withdrawAssets == 0) return;
+
+        uint256 shares = _getSharesForForwardTransfer(_silo, _withdrawAssets, _shareToken, _assetType);
 
         if (shares == 0) return;
 
@@ -263,47 +240,7 @@ contract PartialLiquidation is SiloStorage, IPartialLiquidation, IHookReceiver {
             _shareToken,
             0 /* eth value */,
             ISilo.CallType.Call,
-            abi.encodeWithSelector(IShareToken.forwardTransfer.selector, _borrower, _liquidator, shares)
-        );
-
-        if (!success) RevertBytes.revertBytes(result, "");
-    }
-
-    function _delegateLiquidationWithdraw(
-        address _silo,
-        uint256 _withdrawAssets,
-        address _borrower,
-        ISilo.CollateralType _collateralType
-    ) internal virtual {
-        if (_withdrawAssets == 0) return;
-
-        (bool success, bytes memory result) = ISilo(_silo).callOnBehalfOfSilo(
-            address(this),
-            0 /* eth value */,
-            ISilo.CallType.Delegatecall,
-            abi.encodeWithSelector(
-                IPartialLiquidation.liquidationWithdraw.selector,
-                _withdrawAssets,
-                msg.sender,
-                _borrower,
-                _collateralType
-            )
-        );
-
-        if (!success) RevertBytes.revertBytes(result, "");
-    }
-
-    function _delegateLiquidationRepay(
-        address _silo,
-        uint256 _assets,
-        address _borrower,
-        address _repayer
-    ) internal virtual {
-        (bool success, bytes memory result) = ISilo(_silo).callOnBehalfOfSilo(
-            address(this),
-            0 /* eth value */,
-            ISilo.CallType.Delegatecall,
-            abi.encodeWithSelector(IPartialLiquidation.liquidationRepay.selector, _assets, _borrower, _repayer)
+            abi.encodeWithSelector(IShareToken.forwardTransferFromNoChecks.selector, _borrower, _receiver, shares)
         );
 
         if (!success) RevertBytes.revertBytes(result, "");

@@ -70,6 +70,8 @@ abstract contract ShareToken is Initializable, ERC20Permit, IShareToken {
     /// @notice Copy of hooks setup from SiloConfig for optimisation purposes
     HookSetup private _hookSetup;
 
+    bool public transferNoChecks;
+
     modifier onlySilo() {
         if (msg.sender != address(silo)) revert OnlySilo();
 
@@ -100,6 +102,17 @@ abstract contract ShareToken is Initializable, ERC20Permit, IShareToken {
     {
         _spendAllowance(_from, _spender, _amount);
         _transfer(_from, _to, _amount);
+    }
+
+    /// @inheritdoc IShareToken
+    function forwardTransferFromNoChecks(address _from, address _to, uint256 _amount)
+        external
+        virtual
+        onlySilo
+    {
+        transferNoChecks = true;
+        _transfer(_from, _to, _amount);
+        transferNoChecks = false;
     }
 
     /// @inheritdoc IShareToken
@@ -228,11 +241,11 @@ abstract contract ShareToken is Initializable, ERC20Permit, IShareToken {
 
     /// @inheritdoc ERC20
     function _update(address from, address to, uint256 value) internal virtual override {
-        _beforeTokenTransfer(from, to, value);
+        if (!transferNoChecks) _beforeTokenTransfer(from, to, value);
 
         ERC20._update(from, to, value);
 
-        _afterTokenTransfer(from, to, value);
+        if (!transferNoChecks) _afterTokenTransfer(from, to, value);
     }
 
     /// @dev By default, we do not have any hooks before token transfer. However,
