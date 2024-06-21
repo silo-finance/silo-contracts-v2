@@ -77,9 +77,8 @@ library Actions {
         returns (uint256 assets, uint256 shares)
     {
         IHookReceiver hookReceiver = _shareStorage.hookReceiver;
-        _hookCallBeforeWithdraw(_shareStorage.hooksBefore, hookReceiver, _args);
 
-        bool callFromHook = msg.sender == address(hookReceiver);
+        _hookCallBeforeWithdraw(_shareStorage.hooksBefore, hookReceiver, _args);
 
         ISiloConfig siloConfig = _shareStorage.siloConfig;
 
@@ -89,7 +88,7 @@ library Actions {
             ISiloConfig.DebtInfo memory debtInfo
         ) = siloConfig.accrueInterestAndGetConfigs(address(this), _args.owner, Hook.WITHDRAW);
 
-        if (!callFromHook && collateralConfig.silo != debtConfig.silo) ISilo(debtConfig.silo).accrueInterest();
+        if (collateralConfig.silo != debtConfig.silo) ISilo(debtConfig.silo).accrueInterest();
 
         (assets, shares) = SiloERC4626Lib.withdraw(
             collateralConfig.token,
@@ -106,7 +105,7 @@ library Actions {
         // - if hook is liquidator, then we don't have to check solvency
         // - but if hook is doing something else, then we have to check, so this is impossible to code
         // we will assume, hook can do necessary checks, if needed
-        if (!callFromHook && !SiloSolvencyLib.depositWithoutDebt(debtInfo)) {
+        if (!SiloSolvencyLib.depositWithoutDebt(debtInfo)) {
             if (!debtInfo.sameAsset) {
                 collateralConfig.callSolvencyOracleBeforeQuote();
                 debtConfig.callSolvencyOracleBeforeQuote();
@@ -120,9 +119,7 @@ library Actions {
             if (!ownerIsSolvent) revert ISilo.NotSolvent();
         }
 
-        if (!callFromHook) {
-            siloConfig.crossNonReentrantAfter();
-        }
+        siloConfig.crossNonReentrantAfter();
 
         _hookCallAfterWithdraw(_shareStorage.hooksAfter, hookReceiver, _args, assets, shares);
     }
@@ -195,15 +192,13 @@ library Actions {
         returns (uint256 assets, uint256 shares)
     {
         IHookReceiver hookReceiver = _shareStorage.hookReceiver;
-        bool callFromHook = msg.sender == address(hookReceiver);
+        ISiloConfig siloConfigCached = _shareStorage.siloConfig;
 
         _hookCallBeforeRepay(_shareStorage.hooksBefore, hookReceiver, _assets, _shares, _borrower, _repayer);
 
-        // for hook call we could use getter, but if we want strong cross-reentrancy protection we would have to raise
-        // flag manually, so it is the same as not using getter
         (
             address debtShareToken, address debtAsset
-        ) = _shareStorage.siloConfig.accrueInterestAndGetConfigOptimised(Hook.REPAY, ISilo.CollateralType(0));
+        ) = siloConfigCached.accrueInterestAndGetConfigOptimised(Hook.REPAY, ISilo.CollateralType(0));
 
         (
             assets, shares
@@ -211,9 +206,7 @@ library Actions {
             IShareToken(debtShareToken), debtAsset, _assets, _shares, _borrower, _repayer, _totalDebt
         );
 
-        if (!callFromHook) {
-            _shareStorage.siloConfig.crossNonReentrantAfter();
-        }
+        siloConfigCached.crossNonReentrantAfter();
 
         _hookCallAfterRepay(
             _shareStorage.hooksAfter, hookReceiver, _assets, _shares, _borrower, _repayer, assets, shares
