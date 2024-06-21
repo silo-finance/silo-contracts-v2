@@ -76,6 +76,10 @@ contract SiloDeploy is CommonDeploy {
 
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
 
+
+        console2.log("[SiloCommonDeploy] siloInitData.token0 before", siloInitData.token0);
+        console2.log("[SiloCommonDeploy] siloInitData.token1 before", siloInitData.token1);
+
         hookReceiverImplementation = beforeCreateSilo(siloInitData, hookReceiverImplementation);
 
         console2.log("[SiloCommonDeploy] `beforeCreateSilo` executed");
@@ -83,6 +87,10 @@ contract SiloDeploy is CommonDeploy {
         ISiloDeployer siloDeployer = ISiloDeployer(_resolveDeployedContract(SiloCoreContracts.SILO_DEPLOYER));
 
         vm.startBroadcast(deployerPrivateKey);
+
+        console2.log("[SiloCommonDeploy] siloInitData.token0", siloInitData.token0);
+        console2.log("[SiloCommonDeploy] siloInitData.token1", siloInitData.token1);
+        console2.log("[SiloCommonDeploy] hookReceiverImplementation", hookReceiverImplementation);
 
         siloConfig = siloDeployer.deploy(
             oracles,

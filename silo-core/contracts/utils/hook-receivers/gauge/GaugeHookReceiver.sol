@@ -23,7 +23,6 @@ contract GaugeHookReceiver is PartialLiquidation, IGaugeHookReceiver, SiloHookRe
 
     IGauge public gauge;
     IShareToken public shareToken;
-    ISiloConfig public siloConfig;
 
     mapping(IShareToken => IGauge) public configuredGauges;
 
@@ -41,9 +40,7 @@ contract GaugeHookReceiver is PartialLiquidation, IGaugeHookReceiver, SiloHookRe
         (address owner) = abi.decode(_data, (address));
 
         if (owner == address(0)) revert OwnerIsZeroAddress();
-        if (address(_siloConfig) == address(0)) revert EmptySiloConfig();
 
-        siloConfig = _siloConfig;
         _transferOwnership(owner);
     }
 
