@@ -7,7 +7,4 @@ library CrossEntrancy {
     uint24 internal constant ENTERED = 2; // default for any method that not have dedicated flag
     uint24 internal constant ENTERED_FROM_LEVERAGE = 3;
     uint24 internal constant ENTERED_FROM_DEPOSIT = 4;
-    uint24 internal constant ENTERED_FOR_LIQUIDATION = 5;
-    uint24 internal constant ENTERED_FOR_LIQUIDATION_REPAY = 6;
-    uint24 internal constant ENTERED_FOR_LIQUIDATION_WITHDRAW = 7;
 }

@@ -28,11 +28,6 @@ abstract contract CrossReentrancy {
     function _crossNonReentrantBefore(uint256 _action) internal virtual {
         uint256 crossReentrantStatusCached = _crossReentrantStatus;
 
-        if (crossReentrantStatusCached == CrossEntrancy.NOT_ENTERED) {
-            _crossReentrantStatus = CrossEntrancy.ENTERED_FOR_LIQUIDATION;
-            return;
-        }
-
         // On the first call to nonReentrant, _status will be CrossEntrancy.NOT_ENTERED
         if (crossReentrantStatusCached == CrossEntrancy.NOT_ENTERED) {
             // Any calls to nonReentrant after this point will fail

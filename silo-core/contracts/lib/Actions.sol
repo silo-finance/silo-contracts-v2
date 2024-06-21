@@ -120,9 +120,7 @@ library Actions {
             if (!ownerIsSolvent) revert ISilo.NotSolvent();
         }
 
-        if (!callFromHook) {
-            siloConfig.crossNonReentrantAfter();
-        }
+        siloConfig.crossNonReentrantAfter();
 
         _hookCallAfterWithdraw(_shareStorage.hooksAfter, hookReceiver, _args, assets, shares);
     }
@@ -210,10 +208,6 @@ library Actions {
         ) = SiloLendingLib.repay(
             IShareToken(debtShareToken), debtAsset, _assets, _shares, _borrower, _repayer, _totalDebt
         );
-
-        if (!callFromHook) {
-            _shareStorage.siloConfig.crossNonReentrantAfter();
-        }
 
         _hookCallAfterRepay(
             _shareStorage.hooksAfter, hookReceiver, _assets, _shares, _borrower, _repayer, assets, shares
