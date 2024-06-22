@@ -469,13 +469,15 @@ contract Silo is SiloERC4626 {
             depositedShares, borrowedShares
         ) = Actions.leverageSameAsset(
             _sharedStorage,
-            _depositAssets,
-            _borrowAssets,
-            _borrower,
-            _collateralType,
             _total[AssetTypes.COLLATERAL],
             _total[AssetTypes.DEBT],
-            _total[uint256(_collateralType)]
+            _total[uint256(_collateralType)],
+            ISilo.LeverageSameAssetArgs({
+                depositAssets: _depositAssets,
+                borrowAssets: _borrowAssets,
+                borrower: _borrower,
+                collateralType: _collateralType
+            })
         );
 
         emit Borrow(msg.sender, _borrower, _borrower, _borrowAssets, borrowedShares);

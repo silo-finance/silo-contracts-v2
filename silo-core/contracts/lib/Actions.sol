@@ -229,81 +229,56 @@ library Actions {
     // solhint-disable-next-line function-max-lines
     function leverageSameAsset(
         ISilo.SharedStorage storage _shareStorage,
-        uint256 _depositAssets,
-        uint256 _borrowAssets,
-        address _borrower,
-        ISilo.CollateralType _collateralType,
         ISilo.Assets storage _totalCollateral,
         ISilo.Assets storage _totalDebt,
-        ISilo.Assets storage _totalAssetsForDeposit
+        ISilo.Assets storage _totalAssetsForDeposit,
+        ISilo.LeverageSameAssetArgs memory _args
     )
         external
         returns (uint256 depositedShares, uint256 borrowedShares)
     {
-        if (_depositAssets == 0 || _borrowAssets == 0) revert ISilo.ZeroAssets();
+        if (_args.depositAssets == 0 || _args.borrowAssets == 0) revert ISilo.ZeroAssets();
 
-        _hookCallBefore(
-            _shareStorage,
-            Hook.LEVERAGE_SAME_ASSET,
-            abi.encodePacked(_depositAssets, _borrowAssets, _borrower, _collateralType)
+        _hookCallBeforeLeverageSameAsset(_shareStorage, _args);
+
+        (
+            ISiloConfig.ConfigData memory collateralConfig,
+            ISiloConfig.ConfigData memory debtConfig,
+            ISiloConfig.DebtInfo memory debtInfo
+        ) = _shareStorage.siloConfig.accrueInterestAndGetConfigs(
+            address(this), _args.borrower, Hook.LEVERAGE_SAME_ASSET
+        );
+        
+        if (!SiloLendingLib.borrowPossible(debtInfo)) revert ISilo.BorrowNotPossible();
+        if (debtInfo.debtPresent && !debtInfo.sameAsset) revert ISilo.TwoAssetsDebt();
+        
+        uint256 borrowedAssets;
+
+        (borrowedAssets, borrowedShares) = SiloLendingLib.borrow(
+            debtConfig.debtShareToken,
+            address(0), // we do not transferring debt
+            msg.sender,
+            ISilo.BorrowArgs({
+                assets: _args.borrowAssets,
+                shares: 0,
+                receiver: _args.borrower,
+                borrower: _args.borrower,
+                sameAsset: true,
+                leverage: true
+            }),
+            _totalCollateral.assets,
+            _totalDebt
         );
 
-        ISiloConfig.ConfigData memory collateralConfig;
-        ISiloConfig.ConfigData memory debtConfig;
-
-        { // too deep
-            ISiloConfig.DebtInfo memory debtInfo;
-            (
-                collateralConfig, debtConfig, debtInfo
-            ) = _shareStorage.siloConfig.accrueInterestAndGetConfigs(
-                address(this),
-                _borrower,
-                Hook.LEVERAGE_SAME_ASSET
-            );
-
-            if (!SiloLendingLib.borrowPossible(debtInfo)) revert ISilo.BorrowNotPossible();
-            if (debtInfo.debtPresent && !debtInfo.sameAsset) revert ISilo.TwoAssetsDebt();
-        }
-
-        { // too deep
-            (_borrowAssets, borrowedShares) = SiloLendingLib.borrow(
-                debtConfig.debtShareToken,
-                address(0), // we do not transferring debt
-                msg.sender,
-                ISilo.BorrowArgs({
-                    assets: _borrowAssets,
-                    shares: 0,
-                    receiver: _borrower,
-                    borrower: _borrower,
-                    sameAsset: true,
-                    leverage: true
-                }),
-                _totalCollateral.assets,
-                _totalDebt
-            );
-
-            uint256 requiredCollateral = _borrowAssets * SiloLendingLib._PRECISION_DECIMALS;
-            uint256 transferDiff;
-
-            unchecked { requiredCollateral = requiredCollateral / collateralConfig.maxLtv; }
-            if (_depositAssets < requiredCollateral) revert ISilo.LeverageTooHigh();
-
-            unchecked {
-            // safe because `requiredCollateral` > `_depositAssets`
-            // and `_borrowAssets` is chunk of `requiredCollateral`
-                transferDiff = _depositAssets - _borrowAssets;
-            }
-
-            IERC20(collateralConfig.token).safeTransferFrom(msg.sender, address(this), transferDiff);
-        }
+        _receiveCollateralOnLeverageSameAsset(collateralConfig, _args.depositAssets, borrowedAssets);
 
         (, depositedShares) = SiloERC4626Lib.deposit(
             address(0), // we do not transferring token
             msg.sender,
-            _depositAssets,
+            _args.depositAssets,
             0 /* _shares */,
-            _borrower,
-            _collateralType == ISilo.CollateralType.Collateral
+            _args.borrower,
+            _args.collateralType == ISilo.CollateralType.Collateral
                 ? IShareToken(collateralConfig.collateralShareToken)
                 : IShareToken(collateralConfig.protectedShareToken),
             _totalAssetsForDeposit
@@ -311,16 +286,7 @@ library Actions {
 
         _shareStorage.siloConfig.crossNonReentrantAfter();
 
-        if (collateralConfig.hookReceiver != address(0)) {
-            _hookCallAfter(
-                _shareStorage,
-                collateralConfig.hookReceiver,
-                Hook.LEVERAGE_SAME_ASSET,
-                abi.encodePacked(
-                    _depositAssets, _borrowAssets, _borrower, _collateralType, depositedShares, borrowedShares
-                )
-            );
-        }
+        _hookCallAfterLeverageSameAsset(_shareStorage, _args, borrowedAssets, depositedShares, borrowedShares);
     }
 
     function transitionCollateral(
@@ -564,6 +530,27 @@ library Actions {
         _siloConfig.crossNonReentrantBefore(CrossEntrancy.ENTERED);
     }
 
+    function _receiveCollateralOnLeverageSameAsset(
+        ISiloConfig.ConfigData memory collateralConfig,
+        uint256 _depositAssets,
+        uint256 _borrowedAssets
+    ) private {
+        uint256 requiredCollateral = _borrowedAssets * SiloLendingLib._PRECISION_DECIMALS;
+        uint256 transferDiff;
+
+        unchecked { requiredCollateral = requiredCollateral / collateralConfig.maxLtv; }
+
+        if (_depositAssets < requiredCollateral) revert ISilo.LeverageTooHigh();
+
+        unchecked {
+            // safe because `requiredCollateral` > `_depositAssets`
+            // and `_borrowedAssets` is chunk of `requiredCollateral`
+            transferDiff = _depositAssets - _borrowedAssets;
+        }
+
+        IERC20(collateralConfig.token).safeTransferFrom(msg.sender, address(this), transferDiff);
+    }
+
     function _hookCallBefore(ISilo.SharedStorage storage _shareStorage, uint256 _action, bytes memory _data)
         private
     {
@@ -714,5 +701,39 @@ library Actions {
         bytes memory data = abi.encodePacked(_assets, _shares, _receiver, _exactAssets, _exactShare);
 
         _shareStorage.hookReceiver.afterAction(address(this), action, data);
+    }
+
+    function _hookCallBeforeLeverageSameAsset(
+        ISilo.SharedStorage storage _shareStorage,
+        ISilo.LeverageSameAssetArgs memory _args
+    ) private {
+        if (!_shareStorage.hooksBefore.matchAction(Hook.LEVERAGE_SAME_ASSET)) return;
+
+        bytes memory data = abi.encodePacked(
+            _args.depositAssets, _args.borrowAssets, _args.borrower, _args.collateralType
+        );
+
+        _shareStorage.hookReceiver.beforeAction(address(this), Hook.LEVERAGE_SAME_ASSET, data);
+    }
+
+    function _hookCallAfterLeverageSameAsset(
+        ISilo.SharedStorage storage _shareStorage,
+        ISilo.LeverageSameAssetArgs memory _args,
+        uint256 _borrowedAssets,
+        uint256 _depositedShares,
+        uint256 _borrowedShares
+    ) private {
+        if (!_shareStorage.hooksAfter.matchAction(Hook.LEVERAGE_SAME_ASSET)) return;
+
+        bytes memory data = abi.encodePacked(
+            _args.depositAssets,
+            _borrowedAssets,
+            _args.borrower,
+            _args.collateralType,
+            _depositedShares,
+            _borrowedShares
+        );
+
+        _shareStorage.hookReceiver.afterAction(address(this), Hook.LEVERAGE_SAME_ASSET, data);
     }
 }
