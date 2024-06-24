@@ -21,6 +21,14 @@ import {DepositReentrancyTest} from "./silo-methods/DepositReentrancyTest.sol";
 import {DepositWithTypeReentrancyTest} from "./silo-methods/DepositWithTypeReentrancyTest.sol";
 import {FactoryReentrancyTest} from "./silo-methods/FactoryReentrancyTest.sol";
 import {FlashFeeReentrancyTest} from "./silo-methods/FlashFeeReentrancyTest.sol";
+import {FlashLoanReentrancyTest} from "./silo-methods/FlashLoanReentrancyTest.sol";
+import {GetCollateralAndDebtAssetsReentrancyTest} from "./silo-methods/GetCollateralAndDebtAssetsReentrancyTest.sol";
+import {GetCollateralAndProtectedAssetsReentrancyTest}
+    from "./silo-methods/GetCollateralAndProtectedAssetsReentrancyTest.sol";
+import {GetCollateralAssetsReentrancyTest} from "./silo-methods/GetCollateralAssetsReentrancyTest.sol";
+import {GetDebtAssetsReentrancyTest} from "./silo-methods/GetDebtAssetsReentrancyTest.sol";
+import {GetLiquidityReentrancyTest} from "./silo-methods/GetLiquidityReentrancyTest.sol";
+import {InitializeReentrancyTest} from "./silo-methods/InitializeReentrancyTest.sol";
 import {WithdrawReentrancyTest} from "./silo-methods/WithdrawReentrancyTest.sol";
 import {WithdrawWithTypeReentrancyTest} from "./silo-methods/WithdrawWithTypeReentrancyTest.sol";
 
@@ -48,6 +56,13 @@ contract MethodsRegistry {
         _registerMethod(new DepositWithTypeReentrancyTest());
         _registerMethod(new FactoryReentrancyTest());
         _registerMethod(new FlashFeeReentrancyTest());
+        _registerMethod(new FlashLoanReentrancyTest());
+        _registerMethod(new GetCollateralAndDebtAssetsReentrancyTest());
+        _registerMethod(new GetCollateralAndProtectedAssetsReentrancyTest());
+        _registerMethod(new GetCollateralAssetsReentrancyTest());
+        _registerMethod(new GetDebtAssetsReentrancyTest());
+        _registerMethod(new GetLiquidityReentrancyTest());
+        _registerMethod(new InitializeReentrancyTest());
         _registerMethod(new WithdrawReentrancyTest());
         _registerMethod(new WithdrawWithTypeReentrancyTest());
     }
