@@ -40,10 +40,15 @@ contract SiloFactoryValidateSiloInitDataTest is Test {
         siloFactory.validateSiloInitData(initData);
         initData.hookReceiver = address(2);
 
-        vm.expectRevert(ISiloFactory.SameAsset.selector); // even when zeros
+        vm.expectRevert(ISiloFactory.TokenZeroAddress.selector); // even when zeros
         siloFactory.validateSiloInitData(initData);
 
         initData.token0 = address(1);
+        initData.token1 = address(1);
+
+        vm.expectRevert(ISiloFactory.SameAsset.selector); // even when zeros
+        siloFactory.validateSiloInitData(initData);
+
         initData.token1 = address(2);
 
         vm.expectRevert(ISiloFactory.InvalidMaxLtv.selector);
