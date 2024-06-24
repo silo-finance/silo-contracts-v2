@@ -593,21 +593,31 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
     */
     function test_liquidationCall_badDebt_full_withSToken_1token() public {
         bool receiveSToken = true;
-        address liquidator = address(this);
+        address liquidator = makeAddr("liquidator");
 
         ISiloConfig.ConfigData memory collateralConfig = siloConfig.getConfig(address(silo0));
 
+        // IERC20(debtConfig.token).safeTransferFrom(msg.sender, address(this), repayDebtAssets);
         vm.expectCall(
             address(token0),
             abi.encodeWithSelector(
-                IERC20.transferFrom.selector, liquidator, address(silo0), 30372197335919815515
+                IERC20.transferFrom.selector, liquidator, address(partialLiquidation), 30372197335919815515
             )
         );
 
+        // ISilo(debtConfig.silo).repay(repayDebtAssets, _borrower);
+        vm.expectCall(
+            address(token0),
+            abi.encodeWithSelector(
+                IERC20.transferFrom.selector, address(partialLiquidation), address(silo0), 30372197335919815515
+            )
+        );
+
+        // shares -> liquidator (because of receive sToken)
         vm.expectCall(
             collateralConfig.collateralShareToken,
             abi.encodeWithSelector(
-                IShareToken.forwardTransfer.selector, BORROWER, liquidator, COLLATERAL - 1
+                IShareToken.forwardTransferFromNoChecks.selector, BORROWER, liquidator, COLLATERAL - 1
             )
         );
 
@@ -628,7 +638,7 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
 
     function _liquidationCall_badDebt_full(bool _receiveSToken) internal {
         uint256 debtToCover = 100e18;
-        address liquidator = address(this);
+        address liquidator = makeAddr("liquidator");
 
         // move forward with time so we can have interests
 
@@ -654,6 +664,7 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
         assertEq(debtToRepay, silo0.getDebtAssets(), "debtToRepay == all debt");
 
         token0.mint(liquidator, debtToCover);
+        vm.prank(liquidator);
         token0.approve(address(partialLiquidation), debtToCover);
 
         emit log_named_decimal_uint("[test] debtToCover", debtToCover, 18);
@@ -665,6 +676,7 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
             // vm.expectRevert(SenderNotSolventAfterTransfer.selector);
         }
 
+        vm.prank(liquidator);
         partialLiquidation.liquidationCall(
             address(silo0), address(token0), address(token0), BORROWER, debtToCover, _receiveSToken
         );
