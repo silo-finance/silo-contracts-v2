@@ -160,7 +160,10 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step, Creator {
     function validateSiloInitData(ISiloConfig.InitData memory _initData) public view virtual returns (bool) {
         // solhint-disable-previous-line code-complexity
         if (_initData.hookReceiver == address(0)) revert MissingHookReceiver();
-        if (_initData.token0 == address(0)) revert TokenZeroAddress();
+
+        if (_initData.token0 == address(0)) revert EmptyToken0();
+        if (_initData.token1 == address(0)) revert EmptyToken1();
+
         if (_initData.token0 == _initData.token1) revert SameAsset();
         if (_initData.maxLtv0 == 0 && _initData.maxLtv1 == 0) revert InvalidMaxLtv();
         if (_initData.maxLtv0 > _initData.lt0) revert InvalidMaxLtv();
@@ -191,10 +194,6 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step, Creator {
 
         if (_initData.interestRateModel0 == address(0) || _initData.interestRateModel1 == address(0)) {
             revert InvalidIrm();
-        }
-
-        if (_initData.token0 == address(0) || _initData.token1 == address(0)) {
-            revert EmptySiloAsset(_initData.token0, _initData.token1);
         }
 
         return true;
