@@ -86,7 +86,7 @@ contract LeverageWithLiquidationTest is SiloLittleHelper, Test, ILeverageBorrowe
         address collateralAsset = address(token0);
         address debtAsset = _asset;
 
-        token1.safeIncreaseAllowance(msg.sender, 1e18);
+        token1.safeIncreaseAllowance(address(partialLiquidation), 1e18);
 
         partialLiquidation.liquidationCall(
             msg.sender, collateralAsset, debtAsset, _borrower, type(uint256).max, TWO_ASSETS
