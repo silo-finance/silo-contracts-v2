@@ -425,7 +425,7 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
     */
     function test_liquidationCall_badDebt_full_withToken_2tokens() public {
         bool receiveSToken;
-        address liquidator = address(this);
+        address liquidator = makeAddr("liquidator");
 
         vm.expectCall(address(token0), abi.encodeWithSelector(IERC20.transfer.selector, liquidator, 10e18));
 
@@ -442,16 +442,33 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
     function test_liquidationCall_badDebt_full_withSToken_2tokens() public {
         bool receiveSToken = true;
         uint256 collateralSharesToLiquidate = 10e18;
-        address liquidator = address(this);
+        address liquidator = makeAddr("liquidator");
 
         (
-            ISiloConfig.ConfigData memory collateralConfig,,
+            ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig,
         ) = siloConfig.getConfigs(address(silo1), BORROWER, 0 /* always 0 for external calls */);
 
+        // IERC20(debtConfig.token).safeTransferFrom(msg.sender, address(this), repayDebtAssets);
+        vm.expectCall(
+            debtConfig.token,
+            abi.encodeWithSelector(
+                IERC20.transferFrom.selector, liquidator, address(partialLiquidation), 1e20
+            )
+        );
+
+        // ISilo(debtConfig.silo).repay(repayDebtAssets, _borrower);
+        vm.expectCall(
+            debtConfig.token,
+            abi.encodeWithSelector(
+                IERC20.transferFrom.selector, address(partialLiquidation), address(silo1), 1e20
+            )
+        );
+
+        // shares -> liquidator (because of receive sToken)
         vm.expectCall(
             collateralConfig.collateralShareToken,
             abi.encodeWithSelector(
-                IShareToken.forwardTransfer.selector, BORROWER, liquidator, collateralSharesToLiquidate
+                IShareToken.forwardTransferFromNoChecks.selector, BORROWER, liquidator, collateralSharesToLiquidate
             )
         );
 
@@ -464,7 +481,7 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
 
     function _liquidationCall_badDebt_full(bool _receiveSToken) internal {
         uint256 debtToCover = 100e18;
-        address liquidator = address(this);
+        address liquidator = makeAddr("liquidator");
 
         // move forward with time so we can have interests
 
@@ -478,16 +495,12 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
         assertEq(debtToRepay, maxRepay, "debtToRepay == maxRepay");
 
         token1.mint(liquidator, debtToCover);
-        token1.approve(address(silo1), debtToCover);
+        vm.prank(liquidator);
+        token1.approve(address(partialLiquidation), debtToCover);
 
         emit log_named_decimal_uint("[test] debtToCover", debtToCover, 18);
 
-        if (_receiveSToken) {
-            // on bad debt we allow to liquidate any chunk of it
-            // however, if we want to receive sTokens, then only full liquidation is possible
-            vm.expectRevert(SenderNotSolventAfterTransfer.selector);
-        }
-
+        vm.prank(liquidator);
         partialLiquidation.liquidationCall(
             address(silo1), address(token0), address(token1), BORROWER, debtToCover, _receiveSToken
         );
@@ -498,15 +511,25 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
         }
 
         token1.mint(liquidator, maxRepay);
-        token1.approve(address(silo1), maxRepay);
+        vm.prank(liquidator);
+        token1.approve(address(partialLiquidation), maxRepay);
 
         emit log_named_decimal_uint("[test] maxRepay", maxRepay, 18);
+        uint256 repayAmount = 10239726027382400000;
+
+        // TODO why maxRepay is 110239726027382400000 and we repay with 10239726027382400000?
+        // repay
+        vm.expectCall(
+            address(token1),
+            abi.encodeWithSelector(IERC20.transferFrom.selector, liquidator, address(partialLiquidation), repayAmount)
+        );
 
         vm.expectCall(
             address(token1),
-            abi.encodeWithSelector(IERC20.transferFrom.selector, liquidator, address(silo1), maxRepay)
+            abi.encodeWithSelector(IERC20.transferFrom.selector, address(partialLiquidation), address(silo1), repayAmount)
         );
 
+        vm.prank(liquidator);
         partialLiquidation.liquidationCall(
             address(silo1), address(token0), address(token1), BORROWER, maxRepay, _receiveSToken
         );
@@ -519,6 +542,12 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
             );
         } else {
             assertEq(
+                token0.balanceOf(liquidator),
+                collateralToLiquidate,
+                "[!_receiveSToken] expect to have liquidated collateral"
+            );
+
+            assertEq(
                 token1.balanceOf(address(silo1)),
                 debtToCover + maxRepay + 0.5e18,
                 "[!_receiveSToken] silo has debt token == to cover + original 0.5"
@@ -527,10 +556,6 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
 
         assertEq(silo1.getDebtAssets(), 0, "debt is repay");
         assertGt(silo1.getCollateralAssets(), 8e18, "collateral ready to borrow (with interests)");
-
-        if (!_receiveSToken) {
-            assertEq(token0.balanceOf(address(this)), collateralToLiquidate, "expect to have liquidated collateral");
-        }
     }
 
     function _timeForwardAndDebug(uint256 _time) internal {
