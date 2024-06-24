@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.20;
 
+import {console} from "forge-std/console.sol";
+
 import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 import {Math} from "openzeppelin5/utils/math/Math.sol";
@@ -294,10 +296,14 @@ library SiloERC4626Lib {
         // `burn` checks if `_spender` is allowed to withdraw `_owner` assets. `burn` calls hook receiver that
         // can potentially reenter but state changes are already completed.
         IShareToken(_shareToken).burn(_args.owner, _args.spender, shares);
+        console.log("burn: %s (_args.owner) -> %s", _args.owner, shares);
 
         if (_asset != address(0)) {
             // fee-on-transfer is ignored
             IERC20(_asset).safeTransfer(_args.receiver, assets);
+
+            console.log("withdraw: %s (_args.receiver) -> %s", _args.receiver, assets);
+
         }
     }
 }
