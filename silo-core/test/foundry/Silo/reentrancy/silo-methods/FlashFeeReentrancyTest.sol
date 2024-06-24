@@ -7,7 +7,7 @@ import {Silo} from "silo-core/contracts/Silo.sol";
 import {IMethodReentrancyTest} from "../interfaces/IMethodReentrancyTest.sol";
 import {TestStateLib} from "../TestState.sol";
 
-contract AssetReentrancyTest is Test, IMethodReentrancyTest {
+contract FlashFeeReentrancyTest is Test, IMethodReentrancyTest {
     function callMethod() external {
         emit log_string("\tEnsure it will not revert");
         _ensureItWillNotRevert();
@@ -18,18 +18,18 @@ contract AssetReentrancyTest is Test, IMethodReentrancyTest {
     }
 
     function methodDescription() external pure returns (string memory description) {
-        description = "asset()";
+        description = "flashFee(address,uint256)";
     }
 
     function methodSignature() external pure returns (bytes4 sig) {
-        sig = Silo.asset.selector;
+        sig = Silo.flashFee.selector;
     }
 
     function _ensureItWillNotRevert() internal view {
-        Silo silo0 = Silo(payable(address(TestStateLib.silo0())));
-        Silo silo1 = Silo(payable(address(TestStateLib.silo1())));
+        address token0 = TestStateLib.token0();
+        address token1 = TestStateLib.token1();
 
-        silo0.asset();
-        silo1.asset();
+        Silo(payable(address(TestStateLib.silo0()))).flashFee(token0, 100e18);
+        Silo(payable(address(TestStateLib.silo1()))).flashFee(token1, 100e18);
     }
 }

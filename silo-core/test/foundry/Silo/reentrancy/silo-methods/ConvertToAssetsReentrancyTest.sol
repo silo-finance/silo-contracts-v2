@@ -7,7 +7,7 @@ import {Silo} from "silo-core/contracts/Silo.sol";
 import {IMethodReentrancyTest} from "../interfaces/IMethodReentrancyTest.sol";
 import {TestStateLib} from "../TestState.sol";
 
-contract AssetReentrancyTest is Test, IMethodReentrancyTest {
+contract ConvertToAssetsReentrancyTest is Test, IMethodReentrancyTest {
     function callMethod() external {
         emit log_string("\tEnsure it will not revert");
         _ensureItWillNotRevert();
@@ -18,18 +18,15 @@ contract AssetReentrancyTest is Test, IMethodReentrancyTest {
     }
 
     function methodDescription() external pure returns (string memory description) {
-        description = "asset()";
+        description = "convertToAssets(uint256)";
     }
 
     function methodSignature() external pure returns (bytes4 sig) {
-        sig = Silo.asset.selector;
+        sig = 0x07a2d13a;
     }
 
     function _ensureItWillNotRevert() internal view {
-        Silo silo0 = Silo(payable(address(TestStateLib.silo0())));
-        Silo silo1 = Silo(payable(address(TestStateLib.silo1())));
-
-        silo0.asset();
-        silo1.asset();
+        Silo(payable(address(TestStateLib.silo0()))).convertToAssets(100e18);
+        Silo(payable(address(TestStateLib.silo1()))).convertToAssets(100e18);
     }
 }

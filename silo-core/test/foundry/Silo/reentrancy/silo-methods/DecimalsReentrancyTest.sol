@@ -3,11 +3,11 @@ pragma solidity ^0.8.20;
 
 import {Test} from "forge-std/Test.sol";
 
-import {Silo} from "silo-core/contracts/Silo.sol";
+import {SiloERC4626} from "silo-core/contracts/utils/SiloERC4626.sol";
 import {IMethodReentrancyTest} from "../interfaces/IMethodReentrancyTest.sol";
 import {TestStateLib} from "../TestState.sol";
 
-contract AssetReentrancyTest is Test, IMethodReentrancyTest {
+contract DecimalsReentrancyTest is Test, IMethodReentrancyTest {
     function callMethod() external {
         emit log_string("\tEnsure it will not revert");
         _ensureItWillNotRevert();
@@ -18,18 +18,15 @@ contract AssetReentrancyTest is Test, IMethodReentrancyTest {
     }
 
     function methodDescription() external pure returns (string memory description) {
-        description = "asset()";
+        description = "decimals()";
     }
 
     function methodSignature() external pure returns (bytes4 sig) {
-        sig = Silo.asset.selector;
+        sig = SiloERC4626.decimals.selector;
     }
 
     function _ensureItWillNotRevert() internal view {
-        Silo silo0 = Silo(payable(address(TestStateLib.silo0())));
-        Silo silo1 = Silo(payable(address(TestStateLib.silo1())));
-
-        silo0.asset();
-        silo1.asset();
+        SiloERC4626(address(TestStateLib.silo0())).config();
+        SiloERC4626(address(TestStateLib.silo1())).config();
     }
 }
