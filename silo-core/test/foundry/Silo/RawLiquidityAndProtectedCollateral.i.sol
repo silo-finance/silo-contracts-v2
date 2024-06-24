@@ -77,7 +77,7 @@ contract RawLiquidityAndProtectedCollateralTest is SiloLittleHelper, Test {
         assertGt(collateralToLiquidate, 0, "expect collateralToLiquidate");
 
         token1.mint(address(this), debtToRepay); // address(this) is liquidator
-        token1.approve(address(silo1), debtToRepay);
+        token1.approve(address(partialLiquidation), debtToRepay);
 
         vm.expectRevert(ISilo.NotEnoughLiquidity.selector);
         partialLiquidation.liquidationCall(
