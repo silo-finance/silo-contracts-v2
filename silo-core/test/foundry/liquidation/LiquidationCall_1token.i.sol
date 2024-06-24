@@ -158,7 +158,7 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
 
         token0.mint(BORROWER, debtToCover);
         vm.prank(BORROWER);
-        token0.approve(address(silo0), debtToCover);
+        token0.approve(address(partialLiquidation), debtToCover);
 
         vm.expectEmit(true, true, true, true);
         emit LiquidationCall(BORROWER, receiveSToken);
@@ -214,7 +214,7 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
         assertFalse(silo0.isSolvent(BORROWER), "expect BORROWER to be insolvent");
 
         token0.mint(address(this), debtToCover);
-        token0.approve(address(silo0), debtToCover);
+        token0.approve(address(partialLiquidation), debtToCover);
 
         // uint256 collateralWithFee = debtToCover + 0.05e5; // too deep
 
@@ -284,7 +284,7 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
             );
 
             token0.mint(address(this), debtToRepay);
-            token0.approve(address(silo0), debtToRepay);
+            token0.approve(address(partialLiquidation), debtToRepay);
 
             vm.expectCall(
                 address(token0),
@@ -394,7 +394,7 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
         assertEq(token0.balanceOf(address(this)), 0, "liquidator has no tokens");
 
         token0.mint(address(this), debtToCover);
-        token0.approve(address(silo0), debtToCover);
+        token0.approve(address(partialLiquidation), debtToCover);
 
         partialLiquidation.liquidationCall(
             address(silo0), address(token0), address(token0), BORROWER, debtToCover, receiveSToken
@@ -503,7 +503,7 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
         assertEq(token0.balanceOf(address(this)), 0, "liquidator has no tokens");
 
         token0.mint(address(this), debtToCover);
-        token0.approve(address(silo0), debtToCover);
+        token0.approve(address(partialLiquidation), debtToCover);
 
         partialLiquidation.liquidationCall(
             address(silo0), address(token0), address(token0), BORROWER, debtToCover, receiveSToken
@@ -654,7 +654,7 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
         assertEq(debtToRepay, silo0.getDebtAssets(), "debtToRepay == all debt");
 
         token0.mint(liquidator, debtToCover);
-        token0.approve(address(silo0), debtToCover);
+        token0.approve(address(partialLiquidation), debtToCover);
 
         emit log_named_decimal_uint("[test] debtToCover", debtToCover, 18);
 
