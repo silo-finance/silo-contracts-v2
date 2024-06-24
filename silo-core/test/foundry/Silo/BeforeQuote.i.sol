@@ -124,7 +124,7 @@ contract BeforeQuoteTest is SiloLittleHelper, Test {
         vm.startPrank(depositor);
         vm.warp(block.timestamp + 100000 days);
         token0.mint(depositor, borrowAmount / 2);
-        token0.approve(address(silo0), borrowAmount / 2);
+        token0.approve(address(partialLiquidation), borrowAmount / 2);
 
         emit log_named_address("maxLtvOracle0", address(maxLtvOracle0));
         emit log_named_address("solvencyOracle0", address(solvencyOracle0));
