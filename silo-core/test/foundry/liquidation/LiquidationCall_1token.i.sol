@@ -561,7 +561,7 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
     */
     function test_liquidationCall_badDebt_full_withToken_1token() public {
         bool receiveSToken;
-        address liquidator = address(this);
+        address liquidator = makeAddr("liquidator");
         uint256 dust = 2;
 
         vm.expectCall(
