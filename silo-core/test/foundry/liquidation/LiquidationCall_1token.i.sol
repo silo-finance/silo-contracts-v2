@@ -245,17 +245,19 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
             assertGt(silo0.getLtv(BORROWER), 0, "expect user to be still insolvent after small partial liquidation");
             assertTrue(!silo0.isSolvent(BORROWER), "expect BORROWER to be insolvent after small partial liquidation");
 
-            assertEq(token0.balanceOf(address(this)), debtToCover + 0.05e5, "liquidator should get collateral + 5% fee");
+            uint256 roundingError = 1; // because of liquidation toShares conversion
+
+            assertEq(token0.balanceOf(address(this)), debtToCover + 0.05e5 - roundingError, "liquidator should get collateral + 5% fee");
 
             assertEq(
                 token0.balanceOf(address(silo0)),
-                COLLATERAL - DEBT - (debtToCover + 0.05e5) + debtToCover,
+                COLLATERAL - DEBT - (debtToCover + 0.05e5) + debtToCover + roundingError,
                 "collateral should be transfer to liquidator AND debt token should be repayed"
             );
 
             assertEq(
                 silo0.getCollateralAssets(),
-                COLLATERAL - 0.05e5 + 3_298470185392175403,
+                COLLATERAL - 0.05e5 + 3_298470185392175403 + roundingError,
                 "total collateral - liquidation fee + interest"
             );
 
@@ -271,7 +273,7 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
             (, uint64 interestRateTimestamp1After) = silo1.siloData();
 
             assertEq(interestRateTimestamp0 + timeForward, interestRateTimestamp0After, "interestRateTimestamp #0");
-            assertEq(interestRateTimestamp1After, 0, "interestRateTimestamp #1 - no action there");
+            assertGt(interestRateTimestamp1After, 0, "interestRateTimestamp #1 (because of withdraw)");
 
             (collateralToLiquidate, debtToRepay) = partialLiquidation.maxLiquidation(address(silo0), BORROWER);
             assertGt(collateralToLiquidate, 0, "expect collateralToLiquidate after partial liquidation");
@@ -396,6 +398,8 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
         token0.mint(address(this), debtToCover);
         token0.approve(address(partialLiquidation), debtToCover);
 
+        assertEq(silo0.convertToAssets(1), 4, "rounding error atm");
+
         partialLiquidation.liquidationCall(
             address(silo0), address(token0), address(token0), BORROWER, debtToCover, receiveSToken
         );
@@ -407,30 +411,36 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
         assertEq(debtConfig.deployerFee, 0.10e18, "just checking on deployerFee");
 
         { // too deep
-            uint256 daoAndDeployerFees = interest * (0.15e18 + 0.10e18) / 1e18; // dao fee + deployer fee
             uint256 dust = 4;
+            // newest liquidation process is based on sToken transfer and recalculating shares from assets,
+            // this leads to less assets in result, rounding error for this test is 5
+            uint256 roundingError = 5;
+
+            { // too deep
+                uint256 daoAndDeployerFees = interest * (0.15e18 + 0.10e18) / 1e18; // dao fee + deployer fee
+
+                assertEq(
+                    token0.balanceOf(address(silo0)),
+                    daoAndDeployerFees + dust + roundingError,
+                    "all silo collateral should be transfer to liquidator, fees left"
+                );
+            }
 
             assertEq(
                 token0.balanceOf(address(this)),
-                debtToCover - debtToRepay + collateralToLiquidate,
+                debtToCover - debtToRepay + collateralToLiquidate - roundingError,
                 "liquidator should get all borrower collateral, no fee because of bad debt"
-            );
-
-            assertEq(
-                token0.balanceOf(address(silo0)),
-                daoAndDeployerFees + dust,
-                "all silo collateral should be transfer to liquidator, fees left"
             );
 
             silo0.withdrawFees();
 
-            assertEq(token0.balanceOf(address(silo0)), dust, "no balance after withdraw fees (except dust!)");
+            assertEq(token0.balanceOf(address(silo0)), dust + roundingError, "no balance after withdraw fees (except dust!)");
             assertEq(IShareToken(debtConfig.debtShareToken).totalSupply(), 0, "expected debtShareToken burned");
             assertEq(IShareToken(debtConfig.collateralShareToken).totalSupply(), 0, "expected collateralShareToken burned");
-            assertEq(silo0.total(AssetTypes.COLLATERAL), dust, "storage AssetType.Collateral");
+            assertEq(silo0.total(AssetTypes.COLLATERAL), dust + roundingError, "storage AssetType.Collateral");
             assertEq(silo0.getDebtAssets(), 0, "total debt == 0");
-            assertEq(silo0.getCollateralAssets(), dust, "total collateral == 4, dust!");
-            assertEq(silo0.getLiquidity(), dust, "getLiquidity == 4, dust!");
+            assertEq(silo0.getCollateralAssets(), dust + roundingError, "total collateral == 4+5, dust!");
+            assertEq(silo0.getLiquidity(), dust + roundingError, "getLiquidity == 4+5, dust!");
         }
 
         { // too deep
@@ -438,7 +448,12 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
             (, uint64 interestRateTimestamp1After) = silo1.siloData();
 
             assertEq(interestRateTimestamp0 + timeForward, interestRateTimestamp0After, "interestRateTimestamp #0");
-            assertEq(interestRateTimestamp1, interestRateTimestamp1After, "interestRateTimestamp #1 (no action here)");
+
+            // we executing accrue on other silo?
+            // on new liquidation, sToken is transfer to liquidation module and module has no debt
+            // so on withdraw, when we getting configs, we not getting configs for borrower but for module
+            // so debt and collateral configs are by default different and we call accrue
+            assertLt(interestRateTimestamp1, interestRateTimestamp1After, "interestRateTimestamp #1");
         }
     }
 
@@ -518,25 +533,28 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
         { // too deep
             uint256 daoAndDeployerFees = interest * (0.15e18 + 0.10e18) / 1e18; // dao fee + deployer fee
             uint256 deposit = 1e18 + 4_491873366236992444;
+            // newest liquidation process is based on sToken transfer and recalculating shares from assets,
+            // this leads to less assets in result, rounding error for this test is 5
+            // uint256 roundingError = 5; too deep
 
             assertEq(
                 token0.balanceOf(address(this)),
-                debtToCover - debtToRepay + collateralToLiquidate,
+                debtToCover - debtToRepay + collateralToLiquidate - 5 /* roundingError */,
                 "liquidator should get all borrower collateral, no fee because of bad debt"
             );
 
             assertEq(
                 token0.balanceOf(address(silo0)),
-                daoAndDeployerFees + deposit,
+                daoAndDeployerFees + deposit + 5 /* roundingError */,
                 "all silo collateral should be transfer to liquidator, fees left and deposit"
             );
 
             silo0.withdrawFees();
 
-            assertEq(token0.balanceOf(address(silo0)), deposit, "no balance after withdraw fees");
+            assertEq(token0.balanceOf(address(silo0)), deposit + 5 /* roundingError */, "no additional balance after withdraw fees");
             assertEq(silo0.getDebtAssets(), 0, "total debt == 0");
-            assertEq(silo0.getCollateralAssets(), deposit, "total collateral == 4, dust!");
-            assertEq(silo0.getLiquidity(), deposit, "getLiquidity == 4, dust!");
+            assertEq(silo0.getCollateralAssets(), deposit + 5 /* roundingError */, "total collateral == additional deposit");
+            assertEq(silo0.getLiquidity(), deposit + 5 /* roundingError */, "getLiquidity == deposit");
         }
 
         { // too deep
@@ -544,15 +562,15 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
             (, uint64 interestRateTimestamp1After) = silo1.siloData();
 
             assertEq(interestRateTimestamp0 + timeForward, interestRateTimestamp0After, "interestRateTimestamp #0");
-            assertEq(interestRateTimestamp1, interestRateTimestamp1After, "interestRateTimestamp #1 (no action here)");
+            assertLt(interestRateTimestamp1, interestRateTimestamp1After, "interestRateTimestamp #1");
         }
 
         { // to deep
             address depositor = makeAddr("depositor");
             vm.prank(depositor);
             silo0.redeem(1e18, depositor, depositor);
-            assertEq(token0.balanceOf(depositor), 1e18 + 4_491873366236992444 - 5, "depositor can withdraw, left dust");
-            assertEq(token0.balanceOf(address(silo0)), 5, "silo should be empty (just dust left)");
+            assertEq(token0.balanceOf(depositor), 1e18 + 4_491873366236992444 - 5, "depositor can withdraw, left deposit");
+            assertEq(token0.balanceOf(address(silo0)), 5 + 5 /* roundingError */, "silo should be empty (just dust left)");
         }
     }
 

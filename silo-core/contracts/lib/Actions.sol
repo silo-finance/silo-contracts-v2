@@ -90,6 +90,11 @@ library Actions {
             ISiloConfig.DebtInfo memory debtInfo
         ) = siloConfig.accrueInterestAndGetConfigs(address(this), _args.owner, Hook.WITHDRAW);
 
+        // TODO why on this test test_liquidationCall_badDebt_partial_1token_noDepositors
+        // we executing accrue on other silo??
+        // on new liquidation, sToken is transfered to liquidation module, and it has no debt
+        // so withdraw will check nothing, `debtInfo` is for module not for borrower
+
         if (collateralConfig.silo != debtConfig.silo) ISilo(debtConfig.silo).accrueInterest();
 
         (assets, shares) = SiloERC4626Lib.withdraw(
