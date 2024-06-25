@@ -4,17 +4,20 @@ pragma solidity ^0.8.24;
 import {Test} from "forge-std/Test.sol";
 import {ERC20} from "openzeppelin5/token/ERC20/ERC20.sol";
 
+import {Registries} from "./registries/Registries.sol";
+import {IMethodsRegistry} from "./interfaces/IMethodsRegistry.sol";
 import {SiloMethodsRegistry} from "./registries/SiloMethodsRegistry.sol";
 import {IMethodReentrancyTest} from "./interfaces/IMethodReentrancyTest.sol";
 import {TestStateLib} from "./TestState.sol";
 
 contract MaliciousToken is ERC20, Test {
-    SiloMethodsRegistry internal _registry;
+    IMethodsRegistry[] internal _methodRegistries;
 
     string internal _prefix = "\t";
 
     constructor() ERC20("MaliciousToken", "MLST") {
-        _registry = new SiloMethodsRegistry();
+        Registries registries = new Registries();
+        _methodRegistries = registries.list();
     }
 
     function mint(address _to, uint256 _amount) external {
@@ -47,15 +50,17 @@ contract MaliciousToken is ERC20, Test {
         // reenter before transfer
         emit log_string("\tTrying to reenter:");
 
-        uint256 totalMethods = _registry.supportedMethodsLength();
+        for (uint j = 0; j < _methodRegistries.length; j++) {
+            uint256 totalMethods = _methodRegistries[j].supportedMethodsLength();
 
-        for (uint256 i = 0; i < totalMethods; i++) {
-            bytes4 methodSig = _registry.supportedMethods(i);
-            IMethodReentrancyTest method = _registry.methods(methodSig);
+            for (uint256 i = 0; i < totalMethods; i++) {
+                bytes4 methodSig = _methodRegistries[j].supportedMethods(i);
+                IMethodReentrancyTest method = _methodRegistries[j].methods(methodSig);
 
-            emit log_string(string.concat("\t  ", method.methodDescription()));
+                emit log_string(string.concat("\t  ", method.methodDescription()));
 
-            method.verifyReentrancy();
+                method.verifyReentrancy();
+            }
         }
     }
 }

@@ -2,6 +2,8 @@
 pragma solidity ^0.8.20;
 
 import {IMethodReentrancyTest} from "../interfaces/IMethodReentrancyTest.sol";
+import {IMethodsRegistry} from "../interfaces/IMethodsRegistry.sol";
+
 import {AccrueInterestReentrancyTest} from "../silo-methods/AccrueInterestReentrancyTest.sol";
 import {AccrueInterestForConfigReentrancyTest} from "../silo-methods/AccrueInterestForConfigReentrancyTest.sol";
 import {AllowanceReentrancyTest} from "../silo-methods/AllowanceReentrancyTest.sol";
@@ -78,7 +80,7 @@ import {WithdrawReentrancyTest} from "../silo-methods/WithdrawReentrancyTest.sol
 import {WithdrawWithTypeReentrancyTest} from "../silo-methods/WithdrawWithTypeReentrancyTest.sol";
 import {WithdrawFeesReentrancyTest} from "../silo-methods/WithdrawFeesReentrancyTest.sol";
 
-contract SiloMethodsRegistry {
+contract SiloMethodsRegistry is IMethodsRegistry {
     mapping(bytes4 methodSig => IMethodReentrancyTest) public methods;
     bytes4[] public supportedMethods;
 
@@ -161,6 +163,10 @@ contract SiloMethodsRegistry {
 
     function supportedMethodsLength() external view returns (uint256) {
         return supportedMethods.length;
+    }
+
+    function abiFile() external pure returns (string memory) {
+        return "cache/foundry/out/silo-core/Silo.sol/Silo.json";
     }
 
     function _registerMethod(IMethodReentrancyTest method) internal {
