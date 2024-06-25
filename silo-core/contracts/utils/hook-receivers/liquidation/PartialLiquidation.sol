@@ -38,10 +38,7 @@ contract PartialLiquidation is SiloStorage, IPartialLiquidation, IHookReceiver {
     ISiloConfig public siloConfig;
 
     function initialize(ISiloConfig _siloConfig, bytes calldata) external virtual {
-        if (address(_siloConfig) == address(0)) revert EmptySiloConfig();
-        if (address(siloConfig) != address(0)) revert AlreadyConfigured();
-
-        siloConfig = _siloConfig;
+        _initialize(_siloConfig);
     }
 
     function beforeAction(address, uint256, bytes calldata) external virtual {
@@ -243,5 +240,12 @@ contract PartialLiquidation is SiloStorage, IPartialLiquidation, IHookReceiver {
         );
 
         if (!success) RevertBytes.revertBytes(result, "");
+    }
+
+    function _initialize(ISiloConfig _siloConfig) internal virtual {
+        if (address(_siloConfig) == address(0)) revert EmptySiloConfig();
+        if (address(siloConfig) != address(0)) revert AlreadyConfigured();
+
+        siloConfig = _siloConfig;
     }
 }

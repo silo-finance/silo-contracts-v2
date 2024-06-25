@@ -41,6 +41,7 @@ contract GaugeHookReceiver is PartialLiquidation, IGaugeHookReceiver, SiloHookRe
 
         if (owner == address(0)) revert OwnerIsZeroAddress();
 
+        _initialize(_siloConfig);
         _transferOwnership(owner);
     }
 
