@@ -43,6 +43,8 @@ import {MaxRepayReentrancyTest} from "./silo-methods/MaxRepayReentrancyTest.sol"
 import {MaxRepaySharesReentrancyTest} from "./silo-methods/MaxRepaySharesReentrancyTest.sol";
 import {MaxWithdrawReentrancyTest} from "./silo-methods/MaxWithdrawReentrancyTest.sol";
 import {MaxWithdrawWithTypeReentrancyTest} from "./silo-methods/MaxWithdrawWithTypeReentrancyTest.sol";
+import {MintReentrancyTest} from "./silo-methods/MintReentrancyTest.sol";
+import {MintWithTypeReentrancyTest} from "./silo-methods/MintWithTypeReentrancyTest.sol";
 import {NameReentrancyTest} from "./silo-methods/NameReentrancyTest.sol";
 import {PreviewBorrowReentrancyTest} from "./silo-methods/PreviewBorrowReentrancyTest.sol";
 import {PreviewBorrowSharesReentrancyTest} from "./silo-methods/PreviewBorrowSharesReentrancyTest.sol";
@@ -56,6 +58,17 @@ import {PreviewRepayReentrancyTest} from "./silo-methods/PreviewRepayReentrancyT
 import {PreviewRepaySharesReentrancyTest} from "./silo-methods/PreviewRepaySharesReentrancyTest.sol";
 import {PreviewWithdrawReentrancyTest} from "./silo-methods/PreviewWithdrawReentrancyTest.sol";
 import {PreviewWithdrawWithTypeReentrancyTest} from "./silo-methods/PreviewWithdrawWithTypeReentrancyTest.sol";
+import {RedeemReentrancyTest} from "./silo-methods/RedeemReentrancyTest.sol";
+import {RedeemWithTypeReentrancyTest} from "./silo-methods/RedeemWithTypeReentrancyTest.sol";
+import {RepayReentrancyTest} from "./silo-methods/RepayReentrancyTest.sol";
+import {RepaySharesReentrancyTest} from "./silo-methods/RepaySharesReentrancyTest.sol";
+import {SharedStorageReentrancyTest} from "./silo-methods/SharedStorageReentrancyTest.sol";
+import {SiloDataStorageReentrancyTest} from "./silo-methods/SiloDataStorageReentrancyTest.sol";
+import {SwitchCollateralToReentrancyTest} from "./silo-methods/SwitchCollateralToReentrancyTest.sol";
+import {SymbolReentrancyTest} from "./silo-methods/SymbolReentrancyTest.sol";
+import {TotalReentrancyTest} from "./silo-methods/TotalReentrancyTest.sol";
+import {TotalAssetsReentrancyTest} from "./silo-methods/TotalAssetsReentrancyTest.sol";
+import {TotalSupplyReentrancyTest} from "./silo-methods/TotalSupplyReentrancyTest.sol";
 import {WithdrawReentrancyTest} from "./silo-methods/WithdrawReentrancyTest.sol";
 import {WithdrawWithTypeReentrancyTest} from "./silo-methods/WithdrawWithTypeReentrancyTest.sol";
 
@@ -104,6 +117,8 @@ contract MethodsRegistry {
         _registerMethod(new MaxRepaySharesReentrancyTest());
         _registerMethod(new MaxWithdrawReentrancyTest());
         _registerMethod(new MaxWithdrawWithTypeReentrancyTest());
+        _registerMethod(new MintReentrancyTest());
+        _registerMethod(new MintWithTypeReentrancyTest());
         _registerMethod(new NameReentrancyTest());
         _registerMethod(new PreviewBorrowReentrancyTest());
         _registerMethod(new PreviewBorrowSharesReentrancyTest());
@@ -117,6 +132,17 @@ contract MethodsRegistry {
         _registerMethod(new PreviewRepaySharesReentrancyTest());
         _registerMethod(new PreviewWithdrawReentrancyTest());
         _registerMethod(new PreviewWithdrawWithTypeReentrancyTest());
+        _registerMethod(new RedeemReentrancyTest());
+        _registerMethod(new RedeemWithTypeReentrancyTest());
+        _registerMethod(new RepayReentrancyTest());
+        _registerMethod(new RepaySharesReentrancyTest());
+        _registerMethod(new SharedStorageReentrancyTest());
+        _registerMethod(new SiloDataStorageReentrancyTest());
+        _registerMethod(new SwitchCollateralToReentrancyTest());
+        _registerMethod(new SymbolReentrancyTest());
+        _registerMethod(new TotalReentrancyTest());
+        _registerMethod(new TotalAssetsReentrancyTest());
+        _registerMethod(new TotalSupplyReentrancyTest());
         _registerMethod(new WithdrawReentrancyTest());
         _registerMethod(new WithdrawWithTypeReentrancyTest());
     }
