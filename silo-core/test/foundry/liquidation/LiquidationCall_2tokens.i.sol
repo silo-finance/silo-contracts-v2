@@ -360,7 +360,7 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
         vm.expectCall(address(collateralConfig.interestRateModel), abi.encodeWithSelector(IInterestRateModel.getCompoundInterestRateAndUpdate.selector));
 
         token1.mint(address(this), debtToCover);
-        token1.approve(address(silo1), debtToCover);
+        token1.approve(address(partialLiquidation), debtToCover);
 
         partialLiquidation.liquidationCall(
             address(silo1), address(token0), address(token1), BORROWER, debtToCover, receiveSToken
