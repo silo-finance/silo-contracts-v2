@@ -30,7 +30,7 @@ contract ShareCollateralToken is ShareToken {
     function _afterTokenTransfer(address _sender, address _recipient, uint256 _amount) internal virtual override {
         // for minting or burning, Silo is responsible to check all necessary conditions
         // for transfer make sure that _sender is solvent after transfer
-        if (_isTransfer(_sender, _recipient)) {
+        if (transferWithChecks && _isTransfer(_sender, _recipient)) {
             _callOracleBeforeQuote(_sender);
             if (!silo.isSolvent(_sender)) revert SenderNotSolventAfterTransfer();
         }

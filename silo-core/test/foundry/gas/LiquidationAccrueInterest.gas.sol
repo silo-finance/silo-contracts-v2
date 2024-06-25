@@ -29,6 +29,9 @@ contract LiquidationAccrueInterestGasTest is Gas, Test {
     forge test -vvv --ffi --mt test_gas_liquidationCallWithInterest
     */
     function test_gas_liquidationCallWithInterest() public {
+        vm.prank(DEPOSITOR);
+        token0.approve(address(partialLiquidation), type(uint256).max);
+
         _action(
             DEPOSITOR,
             address(partialLiquidation),

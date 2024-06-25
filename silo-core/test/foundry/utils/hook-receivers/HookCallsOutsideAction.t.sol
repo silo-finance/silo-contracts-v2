@@ -176,16 +176,6 @@ contract HookCallsOutsideActionTest is PartialLiquidation, ILeverageBorrower, IE
         if (entered) {
             if (status == CrossEntrancy.ENTERED_FROM_LEVERAGE && _action.matchAction(Hook.DEPOSIT)) {
                 // we inside leverage
-            } else if (_action.matchAction(Hook.REPAY)) {
-                // we allow for repay hook inside liquidation
-                if (status == CrossEntrancy.ENTERED_FOR_LIQUIDATION) {} // ok
-                else if (status == CrossEntrancy.ENTERED_FOR_LIQUIDATION_REPAY) {} // ok
-                else assertFalse(entered, "hook `before REPAY` was executed inside some other action");
-            } else if (_action.matchAction(Hook.WITHDRAW)) {
-                if (status == CrossEntrancy.ENTERED_FOR_LIQUIDATION_REPAY) {
-                    // first withdraw after repay, acceptable
-                } else if (status == CrossEntrancy.ENTERED_FOR_LIQUIDATION_WITHDRAW) {} // ok
-                else assertFalse(entered, "hook `before WITHDRAW` was executed inside some other action");
             } else {
                 assertFalse(entered, "hook `before` must be called before (outside) any action");
             }
@@ -202,16 +192,7 @@ contract HookCallsOutsideActionTest is PartialLiquidation, ILeverageBorrower, IE
         emit log_named_uint("[after] status", status);
 
         if (entered) {
-            if (_action.matchAction(Hook.REPAY)) {
-                if (status == CrossEntrancy.ENTERED_FOR_LIQUIDATION) {} // ok
-                else if (status == CrossEntrancy.ENTERED_FOR_LIQUIDATION_REPAY) {} // ok
-                else assertFalse(entered, "hook `after REPAY` was executed inside some other action");
-            } else if (_action.matchAction(Hook.WITHDRAW)) {
-                if (status == CrossEntrancy.ENTERED_FOR_LIQUIDATION_REPAY) {
-                    // first withdraw after repay, acceptable
-                } else if (status == CrossEntrancy.ENTERED_FOR_LIQUIDATION_WITHDRAW) {} // ok
-                else assertFalse(entered, "hook `after WITHDRAW` was executed inside some other action");
-            } else if (_action.matchAction(Hook.SHARE_TOKEN_TRANSFER)) {
+            if (_action.matchAction(Hook.SHARE_TOKEN_TRANSFER)) {
                 Hook.AfterTokenTransfer memory input = Hook.afterTokenTransferDecode(_inputAndOutput);
 
                 if (input.sender == address(0) || input.recipient == address(0)) {

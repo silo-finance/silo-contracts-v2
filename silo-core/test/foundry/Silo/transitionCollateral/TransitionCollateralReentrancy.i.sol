@@ -3,6 +3,7 @@ pragma solidity ^0.8.20;
 
 import {Test} from "forge-std/Test.sol";
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
+import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 
 import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
@@ -25,6 +26,7 @@ FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mc TransitionCollateralReentra
 */
 contract TransitionCollateralReentrancyTest is SiloLittleHelper, Test, PartialLiquidation {
     using Hook for uint256;
+    using SafeERC20 for IERC20;
 
     bool afterActionExecuted;
 
@@ -39,7 +41,7 @@ contract TransitionCollateralReentrancyTest is SiloLittleHelper, Test, PartialLi
         configOverride.hookReceiver = address(this);
         configOverride.configName = SiloConfigsNames.LOCAL_DEPLOYER;
 
-        (, silo0, silo1,,,) = siloFixture.deploy_local(configOverride);
+        (siloConfig, silo0, silo1,,,) = siloFixture.deploy_local(configOverride);
         partialLiquidation = this;
 
         silo0.updateHooks();
@@ -61,7 +63,10 @@ contract TransitionCollateralReentrancyTest is SiloLittleHelper, Test, PartialLi
         Hook.AfterTokenTransfer memory input = Hook.afterTokenTransferDecode(_input);
         address borrower = input.sender;
 
-        if (silo0.isSolvent(borrower)) return;
+        if (silo0.isSolvent(borrower)) return; // we want insolvent case
+
+        token1.mint(address(this), 5);
+        IERC20(token1).safeIncreaseAllowance(address(partialLiquidation), 5);
 
         afterActionExecuted = true;
         address siloWithDebt = address(silo1);
@@ -100,5 +105,14 @@ contract TransitionCollateralReentrancyTest is SiloLittleHelper, Test, PartialLi
 
         assertTrue(afterActionExecuted, "afterActionExecuted");
         assertTrue(silo0.isSolvent(borrower), "borrower is solvent after transition of collateral");
+
+        (
+            ISiloConfig.ConfigData memory collateralConfig,
+            ISiloConfig.ConfigData memory debtConfig,
+            ISiloConfig.DebtInfo memory debtInfo
+        ) = siloConfig.getConfigs(address(silo0), borrower, 0);
+
+        assertTrue(silo0.isSolvent(borrower), "borrower is solvent after transition of collateral");
+        assertTrue(debtInfo.debtPresent, "borrower has debt");
     }
 }

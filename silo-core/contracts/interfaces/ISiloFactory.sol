@@ -16,6 +16,8 @@ interface ISiloFactory is IERC721 {
     error Uninitialized();
     error MissingHookReceiver();
     error ZeroAddress();
+    error EmptyToken0();
+    error EmptyToken1();
     error MaxFee();
     error SameAsset();
     error InvalidIrm();
@@ -30,7 +32,6 @@ interface ISiloFactory is IERC721 {
     error InvalidFee();
     error BeforeCall();
     error OracleMisconfiguration();
-    error EmptySiloAsset(address asset0, address asset1);
 
     function initialize(
         address _siloImpl,
