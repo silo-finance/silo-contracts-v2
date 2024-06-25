@@ -1,9 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.20;
 
-import {console} from "forge-std/console.sol";
-
-
 import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 import {IERC20Metadata} from "openzeppelin5/token/ERC20/extensions/IERC20Metadata.sol";
@@ -72,7 +69,6 @@ library SiloLendingLib {
         // so no harm can be done as the state is already updated.
         // We do not expect the silo to work with any malicious token that will not send tokens back.
         IERC20(_debtAsset).safeTransferFrom(_repayer, address(this), assets);
-        console.log("repay: %s (_repayer) -> %s", _repayer, assets);
     }
 
     /// @notice Accrues interest on assets, updating the collateral and debt balances
