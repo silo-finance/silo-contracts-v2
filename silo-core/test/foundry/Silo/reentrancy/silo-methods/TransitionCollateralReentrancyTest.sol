@@ -16,6 +16,8 @@ contract TransitionCollateralReentrancyTest is Test, IMethodReentrancyTest {
         address depositor = makeAddr("Depositor");
         uint256 depositAmount = 100e18;
 
+        TestStateLib.disableReentrancy();
+
         token0.mint(depositor, depositAmount);
 
         vm.prank(depositor);

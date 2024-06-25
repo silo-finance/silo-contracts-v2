@@ -21,6 +21,8 @@ contract TransferFromReentrancyTest is Test, IMethodReentrancyTest {
         address spender = makeAddr("Spender");
         uint256 amount = 100e18;
 
+        TestStateLib.disableReentrancy();
+
         token.mint(depositor, amount);
 
         vm.prank(depositor);

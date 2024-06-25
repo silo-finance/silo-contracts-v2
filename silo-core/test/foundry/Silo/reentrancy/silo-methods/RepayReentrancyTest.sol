@@ -21,6 +21,8 @@ contract RepayReentrancyTest is Test, IMethodReentrancyTest {
         uint256 collateralAmount = 100e18;
         uint256 borrowAmount = 50e18;
 
+        TestStateLib.disableReentrancy();
+
         token0.mint(depositor, depositAmount);
         token1.mint(borrower, collateralAmount);
 

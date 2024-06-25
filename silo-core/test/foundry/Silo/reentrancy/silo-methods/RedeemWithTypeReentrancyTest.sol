@@ -16,6 +16,8 @@ contract RedeemWithTypeReentrancyTest is Test, IMethodReentrancyTest {
         address depositor = makeAddr("Depositor");
         uint256 amount = 100e18;
 
+        TestStateLib.disableReentrancy();
+
         token.mint(depositor, amount);
 
         vm.prank(depositor);

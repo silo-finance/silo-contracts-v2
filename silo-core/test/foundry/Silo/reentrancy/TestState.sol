@@ -12,7 +12,7 @@ contract ReentracyTestState {
     address public silo1;
     address public token0;
     address public token1;
-    bool public reenter;
+    bool public reenter = true;
 
     function set(
         address _siloConfig,

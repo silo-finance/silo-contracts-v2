@@ -4,17 +4,17 @@ pragma solidity ^0.8.24;
 import {Test} from "forge-std/Test.sol";
 import {ERC20} from "openzeppelin5/token/ERC20/ERC20.sol";
 
-import {MethodsRegistry} from "./MethodsRegistry.sol";
+import {SiloMethodsRegistry} from "./registries/SiloMethodsRegistry.sol";
 import {IMethodReentrancyTest} from "./interfaces/IMethodReentrancyTest.sol";
 import {TestStateLib} from "./TestState.sol";
 
 contract MaliciousToken is ERC20, Test {
-    MethodsRegistry internal _registry;
+    SiloMethodsRegistry internal _registry;
 
     string internal _prefix = "\t";
 
     constructor() ERC20("MaliciousToken", "MLST") {
-        _registry = new MethodsRegistry();
+        _registry = new SiloMethodsRegistry();
     }
 
     function mint(address _to, uint256 _amount) external {

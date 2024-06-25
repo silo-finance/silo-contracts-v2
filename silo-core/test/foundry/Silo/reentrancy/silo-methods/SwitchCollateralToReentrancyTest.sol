@@ -21,6 +21,8 @@ contract SwitchCollateralToReentrancyTest is Test, IMethodReentrancyTest {
         uint256 collateralAmount = 100e18;
         uint256 borrowAmount = 50e18;
 
+        TestStateLib.disableReentrancy();
+
         token0.mint(depositor, depositAmount);
         token0.mint(borrower, collateralAmount);
         token1.mint(borrower, collateralAmount);

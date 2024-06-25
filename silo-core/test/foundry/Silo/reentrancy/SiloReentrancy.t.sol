@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 import {Test} from "forge-std/Test.sol";
 
-import {MethodsRegistry} from "./MethodsRegistry.sol";
+import {SiloMethodsRegistry} from "./registries/SiloMethodsRegistry.sol";
 import {MaliciousToken} from "./MaliciousToken.sol";
 import {TestStateLib} from "./TestState.sol";
 import {IMethodReentrancyTest} from "./interfaces/IMethodReentrancyTest.sol"; 
@@ -19,7 +19,7 @@ contract SiloReentrancyTest is Test {
     // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_reentrancy
     function test_reentrancy() public {
         _deploySiloWithOverrides();
-        MethodsRegistry registry = new MethodsRegistry();
+        SiloMethodsRegistry registry = new SiloMethodsRegistry();
 
         emit log_string("\n\nRunning reentrancy test");
 
