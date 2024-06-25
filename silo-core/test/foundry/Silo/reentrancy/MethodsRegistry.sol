@@ -69,6 +69,11 @@ import {SymbolReentrancyTest} from "./silo-methods/SymbolReentrancyTest.sol";
 import {TotalReentrancyTest} from "./silo-methods/TotalReentrancyTest.sol";
 import {TotalAssetsReentrancyTest} from "./silo-methods/TotalAssetsReentrancyTest.sol";
 import {TotalSupplyReentrancyTest} from "./silo-methods/TotalSupplyReentrancyTest.sol";
+import {TransferReentrancyTest} from "./silo-methods/TransferReentrancyTest.sol";
+import {TransferFromReentrancyTest} from "./silo-methods/TransferFromReentrancyTest.sol";
+import {TransitionCollateralReentrancyTest} from "./silo-methods/TransitionCollateralReentrancyTest.sol";
+import {UpdateHooksReentrancyTest} from "./silo-methods/UpdateHooksReentrancyTest.sol";
+import {UtilaztionDataReentrancyTest} from "./silo-methods/UtilaztionDataReentrancyTest.sol";
 import {WithdrawReentrancyTest} from "./silo-methods/WithdrawReentrancyTest.sol";
 import {WithdrawWithTypeReentrancyTest} from "./silo-methods/WithdrawWithTypeReentrancyTest.sol";
 
@@ -143,6 +148,11 @@ contract MethodsRegistry {
         _registerMethod(new TotalReentrancyTest());
         _registerMethod(new TotalAssetsReentrancyTest());
         _registerMethod(new TotalSupplyReentrancyTest());
+        // _registerMethod(new TransferReentrancyTest()); // TODO: reentrancy bug
+        // _registerMethod(new TransferFromReentrancyTest()); // TODO: reentrancy bug
+        _registerMethod(new TransitionCollateralReentrancyTest());
+        _registerMethod(new UpdateHooksReentrancyTest());
+        _registerMethod(new UtilaztionDataReentrancyTest());
         _registerMethod(new WithdrawReentrancyTest());
         _registerMethod(new WithdrawWithTypeReentrancyTest());
     }
