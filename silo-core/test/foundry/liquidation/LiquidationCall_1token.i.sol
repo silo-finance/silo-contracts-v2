@@ -596,16 +596,18 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
     function test_liquidationCall_badDebt_full_withToken_1token() public {
         bool receiveSToken;
         address liquidator = makeAddr("liquidator");
-        uint256 dust = 2;
+        uint256 dust = 2 + 3; // +3 rounding error
 
+        // repay
         vm.expectCall(
             address(token0),
-            abi.encodeWithSelector(IERC20.transferFrom.selector, liquidator, address(silo0), 30_372197335919815515)
+            abi.encodeWithSelector(IERC20.transferFrom.selector, address(partialLiquidation), address(silo0), 30_372197335919815515)
         );
 
+        // redeem collateral
         vm.expectCall(
             address(token0),
-            abi.encodeWithSelector(IERC20.transfer.selector, liquidator, 27_154148001939861635)
+            abi.encodeWithSelector(IERC20.transfer.selector, liquidator, 27_154148001939861632)
         );
 
         _liquidationCall_badDebt_full(receiveSToken);
@@ -703,13 +705,6 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
 
         emit log_named_decimal_uint("[test] debtToCover", debtToCover, 18);
 
-        if (_receiveSToken) {
-            // on bad debt we allow to liquidate any chunk of it
-            // however, if we want to receive sTokens, then only full liquidation is possible
-            // because we do change check for solvency
-            // vm.expectRevert(SenderNotSolventAfterTransfer.selector);
-        }
-
         vm.prank(liquidator);
         partialLiquidation.liquidationCall(
             address(silo0), address(token0), address(token0), BORROWER, debtToCover, _receiveSToken
@@ -726,12 +721,12 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
             );
         } else {
             assertEq(
-                token0.balanceOf(address(silo0)) - 2, // dust
+                token0.balanceOf(address(silo0)) - 5, // dust(2) + rounding error(3)
                 daoAndDeployerFees,
                 "[!_receiveSToken] silo has just fees"
             );
 
-            assertEq(silo0.getCollateralAssets(), 2, "only dust left from collateral");
+            assertEq(silo0.getCollateralAssets(), 5, "only dust (2) + rounding error (3) left from collateral");
         }
 
         assertEq(silo0.getDebtAssets(), 0, "debt is repay");
@@ -739,7 +734,7 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
         if (!_receiveSToken) {
             assertEq(
                 token0.balanceOf(liquidator),
-                100e18 - debtToRepay + collateralToLiquidate,
+                100e18 - debtToRepay + collateralToLiquidate - 3, // -3 for rounding error
                 "liquidator should get all collateral because of full liquidation"
             );
         }
