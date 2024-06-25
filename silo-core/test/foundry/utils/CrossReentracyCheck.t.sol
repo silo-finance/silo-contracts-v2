@@ -144,7 +144,7 @@ contract CrossReentracyCheckTest is HookCallsOutsideActionTest {
         address collateralShareToken;
         address debtShareToken;
 
-        (protectedShareToken, collateralShareToken, debtShareToken) = _siloConfig.getShareTokens(_silo);
+        (protectedShareToken, collateralShareToken, debtShareToken) = siloConfig.getShareTokens(_silo);
 
         vm.expectRevert(ISiloConfig.CrossReentrantCall.selector);
         IERC20(protectedShareToken).transfer(address(0), 1);

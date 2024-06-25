@@ -32,8 +32,6 @@ contract HookCallsOutsideActionTest is PartialLiquidation, ILeverageBorrower, IE
     bytes32 internal constant _LEVERAGE_CALLBACK = keccak256("ILeverageBorrower.onLeverage");
     bytes32 constant FLASHLOAN_CALLBACK = keccak256("ERC3156FlashBorrower.onFlashLoan");
 
-    ISiloConfig internal _siloConfig;
-
     uint24 public configuredHooksBefore;
     uint24 public configuredHooksAfter;
 
@@ -50,7 +48,7 @@ contract HookCallsOutsideActionTest is PartialLiquidation, ILeverageBorrower, IE
         overrides.hookReceiver = address(this);
 
         SiloFixture siloFixture = new SiloFixture();
-        (_siloConfig, silo0, silo1,,,) = siloFixture.deploy_local(overrides);
+        (siloConfig, silo0, silo1,,,) = siloFixture.deploy_local(overrides);
         partialLiquidation = this;
 
         _setAllHooks();
@@ -63,7 +61,7 @@ contract HookCallsOutsideActionTest is PartialLiquidation, ILeverageBorrower, IE
     FOUNDRY_PROFILE=core-test forge test --ffi -vv --mt test_ifHooksAreNotCalledInsideAction
     */
     function test_ifHooksAreNotCalledInsideAction() public {
-        (bool entered, uint256 status) = _siloConfig.crossReentrantStatus();
+        (bool entered, uint256 status) = siloConfig.crossReentrantStatus();
         assertFalse(entered, "initial state for entered");
         assertEq(status, CrossEntrancy.NOT_ENTERED, "initial state for status");
 
@@ -115,7 +113,7 @@ contract HookCallsOutsideActionTest is PartialLiquidation, ILeverageBorrower, IE
 
         (
             address protectedShareToken, address collateralShareToken, address debtShareToken
-        ) = _siloConfig.getShareTokens(address(silo1));
+        ) = siloConfig.getShareTokens(address(silo1));
 
         emit log("-- protectedShareToken.transfer --");
         vm.prank(borrower);
@@ -163,14 +161,14 @@ contract HookCallsOutsideActionTest is PartialLiquidation, ILeverageBorrower, IE
     }
 
     function initialize(ISiloConfig _config, bytes calldata) external view override {
-        assertEq(address(_siloConfig), address(_config), "SiloConfig addresses should match");
+        assertEq(address(siloConfig), address(_config), "SiloConfig addresses should match");
     }
 
     function beforeAction(address, uint256 _action, bytes calldata) external override {
         emit log_named_uint("[before] action", _action);
         _printAction(_action);
 
-        (bool entered, uint256 status) = _siloConfig.crossReentrantStatus();
+        (bool entered, uint256 status) = siloConfig.crossReentrantStatus();
         emit log_named_uint("[before] status", status);
 
         if (entered) {
@@ -188,7 +186,7 @@ contract HookCallsOutsideActionTest is PartialLiquidation, ILeverageBorrower, IE
         emit log_named_uint("[after] action", _action);
         _printAction(_action);
 
-        (bool entered, uint256 status) = _siloConfig.crossReentrantStatus();
+        (bool entered, uint256 status) = siloConfig.crossReentrantStatus();
         emit log_named_uint("[after] status", status);
 
         if (entered) {
