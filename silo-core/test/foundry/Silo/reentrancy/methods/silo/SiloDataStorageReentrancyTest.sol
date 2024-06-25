@@ -22,7 +22,7 @@ contract SiloDataStorageReentrancyTest is Test, IMethodReentrancyTest {
     }
 
     function methodSignature() external pure returns (bytes4 sig) {
-        sig = ISilo.sharedStorage.selector;
+        sig = ISilo.siloData.selector;
     }
 
     function _ensureItWillNotRevert() internal view {

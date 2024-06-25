@@ -20,6 +20,6 @@ contract FlashLoanReentrancyTest is Test, IMethodReentrancyTest {
     }
 
     function methodSignature() external pure returns (bytes4 sig) {
-        sig = Silo.flashFee.selector;
+        sig = Silo.flashLoan.selector;
     }
 }

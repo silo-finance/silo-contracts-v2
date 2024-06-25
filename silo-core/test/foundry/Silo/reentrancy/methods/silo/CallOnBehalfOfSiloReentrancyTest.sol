@@ -21,11 +21,11 @@ contract CallOnBehalfOfSiloReentrancyTest is Test, IMethodReentrancyTest {
     }
 
     function methodDescription() external pure returns (string memory description) {
-        description = "borrowShares(uint256,address,address,bool)";
+        description = "callOnBehalfOfSilo(address,uint256,uint8,bytes)";
     }
 
     function methodSignature() external pure returns (bytes4 sig) {
-        sig = ISilo.borrowShares.selector;
+        sig = ISilo.callOnBehalfOfSilo.selector;
     }
 
     function _ensureItWillNotRevert() internal {

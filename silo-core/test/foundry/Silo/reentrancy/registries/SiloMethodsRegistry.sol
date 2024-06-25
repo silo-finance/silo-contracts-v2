@@ -166,7 +166,7 @@ contract SiloMethodsRegistry is IMethodsRegistry {
     }
 
     function abiFile() external pure returns (string memory) {
-        return "cache/foundry/out/silo-core/Silo.sol/Silo.json";
+        return "/cache/foundry/out/silo-core/Silo.sol/Silo.json";
     }
 
     function _registerMethod(IMethodReentrancyTest method) internal {

@@ -22,7 +22,7 @@ contract PreviewMintWithTypeReentrancyTest is Test, IMethodReentrancyTest {
     }
 
     function methodSignature() external pure returns (bytes4 sig) {
-        sig = 0x5d0868f6;
+        sig = 0x11b5e682;
     }
 
     function _ensureItWillNotRevert() internal view {

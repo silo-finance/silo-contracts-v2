@@ -17,6 +17,36 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 
 // FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc SiloReentrancyTest
 contract SiloReentrancyTest is Test {
+    // FOUNDRY_PROFILE=core-test forge test -vv --ffi --mt test_reentrancy_coverage
+    function test_reentrancy_coverage() public {
+        Registries registries = new Registries();
+        IMethodsRegistry[] memory methodRegistries = registries.list();
+
+        bool allCovered = true;
+        string memory root = vm.projectRoot();
+
+        for (uint j = 0; j < methodRegistries.length; j++) {
+            string memory abiPath = string.concat(root, methodRegistries[j].abiFile());
+            string memory json = vm.readFile(abiPath);
+
+            string[] memory keys = vm.parseJsonKeys(json, ".methodIdentifiers");
+
+            for (uint i = 0; i < keys.length; i++) {
+                bytes4 sig = bytes4(keccak256(bytes(keys[i])));
+                address method = address(methodRegistries[j].methods(sig));
+
+                if (method == address(0)) {
+                    allCovered = false;
+
+                    emit log_string(string.concat("\nABI: ", methodRegistries[j].abiFile()));
+                    emit log_string(string.concat("Method not found: ", keys[i]));
+                }
+            }
+        }
+
+        assertTrue(allCovered, "All methods should be covered");
+    }
+
     // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_reentrancy
     function test_reentrancy() public {
         _deploySiloWithOverrides();

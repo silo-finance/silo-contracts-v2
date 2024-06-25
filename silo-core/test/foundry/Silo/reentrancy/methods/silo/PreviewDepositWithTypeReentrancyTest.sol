@@ -22,7 +22,7 @@ contract PreviewDepositWithTypeReentrancyTest is Test, IMethodReentrancyTest {
     }
 
     function methodSignature() external pure returns (bytes4 sig) {
-        sig = 0x5d0868f6;
+        sig = 0x6e1f8f7e;
     }
 
     function _ensureItWillNotRevert() internal view {

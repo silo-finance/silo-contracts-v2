@@ -22,7 +22,7 @@ contract ConvertToSharesWithTypeReentrancyTest is Test, IMethodReentrancyTest {
     }
 
     function methodSignature() external pure returns (bytes4 sig) {
-        sig = 0x7ff00077;
+        sig = 0x5d4086af;
     }
 
     function _ensureItWillNotRevert() internal view {
