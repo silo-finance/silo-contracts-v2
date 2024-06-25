@@ -141,8 +141,9 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
 
         assertTrue(debtInfo.debtPresent, "we need user with debt for this test");
         assertTrue(debtInfo.debtInSilo0, "we need debt in silo0");
+        assertTrue(debtInfo.debtInThisSilo, "we need debt in this(silo0)");
 
-        vm.expectRevert(ISilo.ThereIsDebtInOtherSilo.selector);
+        vm.expectRevert(IPartialLiquidation.WrongSilo.selector);
 
         partialLiquidation.liquidationCall(
             address(silo1), address(token0), address(token0), BORROWER, debtToCover, receiveSToken
