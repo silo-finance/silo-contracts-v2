@@ -76,6 +76,7 @@ import {UpdateHooksReentrancyTest} from "./silo-methods/UpdateHooksReentrancyTes
 import {UtilaztionDataReentrancyTest} from "./silo-methods/UtilaztionDataReentrancyTest.sol";
 import {WithdrawReentrancyTest} from "./silo-methods/WithdrawReentrancyTest.sol";
 import {WithdrawWithTypeReentrancyTest} from "./silo-methods/WithdrawWithTypeReentrancyTest.sol";
+import {WithdrawFeesReentrancyTest} from "./silo-methods/WithdrawFeesReentrancyTest.sol";
 
 contract MethodsRegistry {
     mapping(bytes4 methodSig => IMethodReentrancyTest) public methods;
@@ -155,6 +156,7 @@ contract MethodsRegistry {
         _registerMethod(new UtilaztionDataReentrancyTest());
         _registerMethod(new WithdrawReentrancyTest());
         _registerMethod(new WithdrawWithTypeReentrancyTest());
+        _registerMethod(new WithdrawFeesReentrancyTest());
     }
 
     function supportedMethodsLength() external view returns (uint256) {

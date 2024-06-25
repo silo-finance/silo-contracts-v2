@@ -11,10 +11,8 @@ import {MaliciousToken} from "../MaliciousToken.sol";
 
 contract TransitionCollateralReentrancyTest is Test, IMethodReentrancyTest {
     function callMethod() external {
-         MaliciousToken token0 = MaliciousToken(TestStateLib.token0());
-        MaliciousToken token1 = MaliciousToken(TestStateLib.token1());
+        MaliciousToken token0 = MaliciousToken(TestStateLib.token0());
         ISilo silo0 = TestStateLib.silo0();
-        ISilo silo1 = TestStateLib.silo1();
         address depositor = makeAddr("Depositor");
         uint256 depositAmount = 100e18;
 
