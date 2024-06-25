@@ -161,6 +161,7 @@ contract SiloFixture is StdCheats, CommonBase {
         silo1 = ISilo(siloConfig1.silo);
         console2.log("[SiloFixture] silo0", address(silo0));
         console2.log("[SiloFixture] silo1", address(silo1));
+        console2.log("[SiloFixture] siloConfig", address(siloConfig));
 
         token0 = siloConfig0.token;
         token1 = siloConfig1.token;
