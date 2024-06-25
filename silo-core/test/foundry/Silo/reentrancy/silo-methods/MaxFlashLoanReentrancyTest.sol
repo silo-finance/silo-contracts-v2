@@ -7,7 +7,7 @@ import {IERC3156FlashLender} from "silo-core/contracts/interfaces/IERC3156FlashL
 import {IMethodReentrancyTest} from "../interfaces/IMethodReentrancyTest.sol";
 import {TestStateLib} from "../TestState.sol";
 
-contract FlashFeeReentrancyTest is Test, IMethodReentrancyTest {
+contract MaxFlashLoanReentrancyTest is Test, IMethodReentrancyTest {
     function callMethod() external {
         emit log_string("\tEnsure it will not revert");
         _ensureItWillNotRevert();
@@ -18,18 +18,21 @@ contract FlashFeeReentrancyTest is Test, IMethodReentrancyTest {
     }
 
     function methodDescription() external pure returns (string memory description) {
-        description = "flashFee(address,uint256)";
+        description = "maxFlashLoan(address)";
     }
 
     function methodSignature() external pure returns (bytes4 sig) {
-        sig = IERC3156FlashLender.flashFee.selector;
+        sig = IERC3156FlashLender.maxFlashLoan.selector;
     }
 
-    function _ensureItWillNotRevert() internal view {
+    function _ensureItWillNotRevert() view internal {
         address token0 = TestStateLib.token0();
         address token1 = TestStateLib.token1();
 
-        IERC3156FlashLender(address(TestStateLib.silo0())).flashFee(token0, 100e18);
-        IERC3156FlashLender(address(TestStateLib.silo1())).flashFee(token1, 100e18);
+        IERC3156FlashLender(address(TestStateLib.silo0())).maxFlashLoan(token0);
+        IERC3156FlashLender(address(TestStateLib.silo1())).maxFlashLoan(token0);
+
+        IERC3156FlashLender(address(TestStateLib.silo0())).maxFlashLoan(token1);
+        IERC3156FlashLender(address(TestStateLib.silo1())).maxFlashLoan(token1);
     }
 }
