@@ -219,19 +219,27 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
         assertFalse(silo1.isSolvent(BORROWER), "expect BORROWER to be insolvent");
 
         token1.mint(address(this), 2 ** 128);
-        token1.approve(address(silo1), debtToCover);
+        token1.approve(address(partialLiquidation), debtToCover);
 
         // uint256 collateralWithFee = debtToCover + 0.05e5; // too deep
 
         { // too deep
+            // repay debt liquidator -> hook
+            vm.expectCall(
+                address(token1),
+                abi.encodeWithSelector(IERC20.transferFrom.selector, address(this), address(partialLiquidation), debtToCover)
+            );
+
+            // repay debt hook -> silo
+            vm.expectCall(
+                address(token1),
+                abi.encodeWithSelector(IERC20.transferFrom.selector, address(partialLiquidation), address(silo1), debtToCover)
+            );
+
+            // collateral with fee from silo to liquidator
             vm.expectCall(
                 address(token0),
                 abi.encodeWithSelector(IERC20.transfer.selector, address(this), debtToCover + 0.05e5)
-            );
-
-            vm.expectCall(
-                address(token1),
-                abi.encodeWithSelector(IERC20.transferFrom.selector, address(this), address(silo1), debtToCover)
             );
 
             (
@@ -269,16 +277,24 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
             assertGt(collateralToLiquidate, 0, "expect collateralToLiquidate after partial liquidation");
             assertGt(debtToRepay, 0, "expect debtToRepay after partial liquidation");
 
-            token1.approve(address(silo1), debtToRepay);
+            token1.approve(address(partialLiquidation), debtToRepay);
 
+            // repay debt liquidator -> hook
+            vm.expectCall(
+                address(token1),
+                abi.encodeWithSelector(IERC20.transferFrom.selector, address(this), address(partialLiquidation), 6_413645132946301397)
+            );
+
+            // repay debt hook -> silo
+            vm.expectCall(
+                address(token1),
+                abi.encodeWithSelector(IERC20.transferFrom.selector, address(partialLiquidation), address(silo1), 6_413645132946301397)
+            );
+
+            // collateral with fee from silo to liquidator
             vm.expectCall(
                 address(token0),
                 abi.encodeWithSelector(IERC20.transfer.selector, address(this), 6_734327389593616466)
-            );
-
-            vm.expectCall(
-                address(token1),
-                abi.encodeWithSelector(IERC20.transferFrom.selector, address(this), address(silo1), 6_413645132946301397)
             );
 
             (
