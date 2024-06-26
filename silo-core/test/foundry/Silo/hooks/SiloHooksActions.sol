@@ -1017,7 +1017,7 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock, ILeverageBorr
 
         vm.expectEmit(true, true, true, true);
 
-        emit DebtShareTokenAfterHA( // ok
+        emit DebtShareTokenAfterHA(
             address(silo0),
             _borrowerAddr,
             address(0), // because we burn debt share tokens
@@ -1027,7 +1027,7 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock, ILeverageBorr
             0 // total supply
         );
 
-        vm.expectEmit(true, true, true, true); // failing
+        vm.expectEmit(true, true, true, true);
 
         if (_receiveSToken) {
             emit ShareTokenAfterHA(

@@ -31,7 +31,7 @@ contract LeverageSameAsset1stGasTest is Gas, Test {
             address(silo1),
             abi.encodeCall(ISilo.leverageSameAsset, (depositAssets, ASSETS, BORROWER, ISilo.CollateralType.Collateral)),
             "LeverageSameAsset 1st (no interest)",
-            278258
+            279974
         );
     }
 }

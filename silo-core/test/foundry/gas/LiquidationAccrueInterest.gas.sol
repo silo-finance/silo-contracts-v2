@@ -30,7 +30,7 @@ contract LiquidationAccrueInterestGasTest is Gas, Test {
     */
     function test_gas_liquidationCallWithInterest() public {
         vm.prank(DEPOSITOR);
-        token0.approve(address(partialLiquidation), type(uint256).max);
+        token1.approve(address(partialLiquidation), type(uint256).max);
 
         _action(
             DEPOSITOR,
@@ -40,7 +40,7 @@ contract LiquidationAccrueInterestGasTest is Gas, Test {
                 (address(silo1), address(token0), address(token1), BORROWER, ASSETS / 2, false)
             ),
             "LiquidationCall with accrue interest",
-            308415
+            427771
         );
     }
 }
