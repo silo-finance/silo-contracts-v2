@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.20;
 
+import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {ShareToken} from "silo-core/contracts/utils/ShareToken.sol";
 import {ShareTokenMethodReentrancyTest} from "./_ShareTokenMethodReentrancyTest.sol";
 
-contract DomainSeparatorReentrancyTest is ShareTokenMethodReentrancyTest {
+contract ForwardApproveReentrancyTest is ShareTokenMethodReentrancyTest {
     function callMethod() external {
-        emit log_string("\tEnsure it will not revert (all share tokens)");
+        emit log_string("\tEnsure it will revert as expected (all share tokens)");
         _executeForAllShareTokens(_ensureItWillNotRevert);
     }
 
@@ -15,10 +16,11 @@ contract DomainSeparatorReentrancyTest is ShareTokenMethodReentrancyTest {
     }
 
     function methodDescription() external pure returns (string memory description) {
-        description = "DOMAIN_SEPARATOR()";
+        description = "forwardApprove(address,address,uint256)";
     }
 
-    function _ensureItWillNotRevert(address _token) internal view {
-        ShareToken(_token).DOMAIN_SEPARATOR();
+    function _ensureItWillNotRevert(address _token) internal {
+        vm.expectRevert(IShareToken.OnlySilo.selector);
+        ShareToken(_token).forwardApprove(address(this), address(this), 100);
     }
 }

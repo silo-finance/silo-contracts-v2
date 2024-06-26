@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 import {ShareToken} from "silo-core/contracts/utils/ShareToken.sol";
 import {ShareTokenMethodReentrancyTest} from "./_ShareTokenMethodReentrancyTest.sol";
 
-contract DomainSeparatorReentrancyTest is ShareTokenMethodReentrancyTest {
+contract PermitReentrancyTest is ShareTokenMethodReentrancyTest {
     function callMethod() external {
         emit log_string("\tEnsure it will not revert (all share tokens)");
         _executeForAllShareTokens(_ensureItWillNotRevert);
@@ -15,10 +15,11 @@ contract DomainSeparatorReentrancyTest is ShareTokenMethodReentrancyTest {
     }
 
     function methodDescription() external pure returns (string memory description) {
-        description = "DOMAIN_SEPARATOR()";
+        description = "permit(address,address,uint256,uint256,uint8,bytes32,bytes32)";
     }
 
     function _ensureItWillNotRevert(address _token) internal view {
-        ShareToken(_token).DOMAIN_SEPARATOR();
+        
+        ShareToken(_token).permit(address(this));
     }
 }
