@@ -1,15 +1,13 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.20;
 
-import {Test} from "forge-std/Test.sol";
-
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
-import {IMethodReentrancyTest} from "../../interfaces/IMethodReentrancyTest.sol";
+import {MethodReentrancyTest} from "../MethodReentrancyTest.sol";
 import {TestStateLib} from "../../TestState.sol";
 import {MaliciousToken} from "../../MaliciousToken.sol";
 
-contract RedeemReentrancyTest is Test, IMethodReentrancyTest {
+contract RedeemReentrancyTest is MethodReentrancyTest {
     function callMethod() external {
         MaliciousToken token = MaliciousToken(TestStateLib.token0());
         ISilo silo = TestStateLib.silo0();
@@ -46,9 +44,5 @@ contract RedeemReentrancyTest is Test, IMethodReentrancyTest {
 
     function methodDescription() external pure returns (string memory description) {
         description = "redeem(uint256,address,address)";
-    }
-
-    function methodSignature() external pure returns (bytes4 sig) {
-        sig = 0xba087652;
     }
 }

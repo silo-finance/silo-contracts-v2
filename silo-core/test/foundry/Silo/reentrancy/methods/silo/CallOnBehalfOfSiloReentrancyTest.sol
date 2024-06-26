@@ -1,16 +1,13 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.20;
 
-import {Test} from "forge-std/Test.sol";
-
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
-import {IMethodReentrancyTest} from "../../interfaces/IMethodReentrancyTest.sol";
+import {MethodReentrancyTest} from "../MethodReentrancyTest.sol";
 import {TestStateLib} from "../../TestState.sol";
-import {MaliciousToken} from "../../MaliciousToken.sol";
 
-contract CallOnBehalfOfSiloReentrancyTest is Test, IMethodReentrancyTest {
+contract CallOnBehalfOfSiloReentrancyTest is MethodReentrancyTest {
     function callMethod() external {
         emit log_string("\tEnsure it will not revert");
         _ensureItWillNotRevert();
@@ -22,10 +19,6 @@ contract CallOnBehalfOfSiloReentrancyTest is Test, IMethodReentrancyTest {
 
     function methodDescription() external pure returns (string memory description) {
         description = "callOnBehalfOfSilo(address,uint256,uint8,bytes)";
-    }
-
-    function methodSignature() external pure returns (bytes4 sig) {
-        sig = ISilo.callOnBehalfOfSilo.selector;
     }
 
     function _ensureItWillNotRevert() internal {

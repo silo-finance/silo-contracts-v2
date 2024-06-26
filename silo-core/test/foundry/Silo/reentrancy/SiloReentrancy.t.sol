@@ -17,8 +17,8 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 
 // FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc SiloReentrancyTest
 contract SiloReentrancyTest is Test {
-    // FOUNDRY_PROFILE=core-test forge test -vv --ffi --mt test_reentrancy_coverage
-    function test_reentrancy_coverage() public {
+    // FOUNDRY_PROFILE=core-test forge test -vv --ffi --mt test_coverage_for_reentrancy
+    function test_coverage_for_reentrancy() public {
         Registries registries = new Registries();
         IMethodsRegistry[] memory methodRegistries = registries.list();
 

@@ -1,13 +1,11 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.20;
 
-import {Test} from "forge-std/Test.sol";
-
 import {IERC3156FlashLender} from "silo-core/contracts/interfaces/IERC3156FlashLender.sol";
-import {IMethodReentrancyTest} from "../../interfaces/IMethodReentrancyTest.sol";
+import {MethodReentrancyTest} from "../MethodReentrancyTest.sol";
 import {TestStateLib} from "../../TestState.sol";
 
-contract FlashFeeReentrancyTest is Test, IMethodReentrancyTest {
+contract FlashFeeReentrancyTest is MethodReentrancyTest {
     function callMethod() external {
         emit log_string("\tEnsure it will not revert");
         _ensureItWillNotRevert();
@@ -19,10 +17,6 @@ contract FlashFeeReentrancyTest is Test, IMethodReentrancyTest {
 
     function methodDescription() external pure returns (string memory description) {
         description = "flashFee(address,uint256)";
-    }
-
-    function methodSignature() external pure returns (bytes4 sig) {
-        sig = IERC3156FlashLender.flashFee.selector;
     }
 
     function _ensureItWillNotRevert() internal view {

@@ -7,6 +7,6 @@ interface IMethodReentrancyTest {
     
     // For these details, see cache/foundry/out/silo-core/<abi_file>.json 
     // abi.methodIdentifiers
+    function methodSignature() external view returns (bytes4 sig);
     function methodDescription() external pure returns (string memory description);
-    function methodSignature() external pure returns (bytes4 sig);
 }
