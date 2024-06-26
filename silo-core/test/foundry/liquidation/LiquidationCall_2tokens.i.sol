@@ -167,7 +167,7 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
 
         token1.mint(BORROWER, debtToCover);
         vm.prank(BORROWER);
-        token1.approve(address(silo1), debtToCover);
+        token1.approve(address(partialLiquidation), debtToCover);
 
         vm.expectEmit(true, true, true, true);
         emit LiquidationCall(BORROWER, receiveSToken);

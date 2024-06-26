@@ -974,7 +974,7 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock, ILeverageBorr
     }
 
     function _liquidationTest(bool _receiveSToken) internal {
-        uint256 beforeActions = Hook.LIQUIDATION;
+        uint256 beforeActions;
 
         uint256 afterAction = beforeActions
             .addAction(Hook.shareTokenTransfer(Hook.PROTECTED_TOKEN)) // as we have protected deposit
@@ -1001,7 +1001,7 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock, ILeverageBorr
         assertGt(collateralToLiquidate, 0, "expect collateralToLiquidate");
 
         token0.mint(address(this), debtToRepay);
-        token0.approve(address(silo0), debtToRepay);
+        token0.approve(address(partialLiquidation), debtToRepay);
 
         _liquidationAllHooks(_borrower, debtToRepay, borrowAmount, _receiveSToken);
     }
@@ -1027,7 +1027,7 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock, ILeverageBorr
             0 // total supply
         );
 
-        vm.expectEmit(true, true, true, true); // ok
+        vm.expectEmit(true, true, true, true); // failing
 
         if (_receiveSToken) {
             emit ShareTokenAfterHA(
@@ -1043,12 +1043,12 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock, ILeverageBorr
         } else {
             emit ShareTokenAfterHA(
                 address(silo1),
-                _borrowerAddr,
-                address(0), // because we burn tokens
+                address(partialLiquidation),
+                address(0), // recipient: because at the end we burn
                 expectedWithdrawCollateral,
-                0, // no balance for the sender
-                0, // no balance
-                0, // no total supply
+                0, // senderBalance: no balance for the sender
+                0, // recipientBalance: no balance
+                0, // totalSupply: no total supply
                 PROTECTED
             );
         }
