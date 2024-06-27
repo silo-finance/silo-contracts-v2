@@ -21,6 +21,12 @@ import {InitializeReentrancyTest} from "../methods/share-token/InitializeReentra
 import {MintReentrancyTest} from "../methods/share-token/MintReentrancyTest.sol";
 import {NameReentrancyTest} from "../methods/share-token/NameReentrancyTest.sol";
 import {NoncesReentrancyTest} from "../methods/share-token/NoncesReentrancyTest.sol";
+import {PermitReentrancyTest} from "../methods/share-token/PermitReentrancyTest.sol";
+import {SiloReentrancyTest} from "../methods/share-token/SiloReentrancyTest.sol";
+import {SiloConfigReentrancyTest} from "../methods/share-token/SiloConfigReentrancyTest.sol";
+import {SymbolReentrancyTest} from "../methods/share-token/SymbolReentrancyTest.sol";
+import {SynchronizeHooksReentrancyTest} from "../methods/share-token/SynchronizeHooksReentrancyTest.sol";
+import {TotalSupplyReentrancyTest} from "../methods/share-token/TotalSupplyReentrancyTest.sol";
 
 abstract contract ShareTokenMethodsRegistry is IMethodsRegistry {
     mapping(bytes4 methodSig => IMethodReentrancyTest) public methods;
@@ -44,6 +50,12 @@ abstract contract ShareTokenMethodsRegistry is IMethodsRegistry {
         _registerMethod(new MintReentrancyTest());
         _registerMethod(new NameReentrancyTest());
         _registerMethod(new NoncesReentrancyTest());
+        _registerMethod(new PermitReentrancyTest());
+        _registerMethod(new SiloReentrancyTest());
+        _registerMethod(new SiloConfigReentrancyTest());
+        _registerMethod(new SymbolReentrancyTest());
+        _registerMethod(new SynchronizeHooksReentrancyTest());
+        _registerMethod(new TotalSupplyReentrancyTest());
     }
 
     function supportedMethodsLength() external view returns (uint256) {
