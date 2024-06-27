@@ -14,8 +14,6 @@ import {TestStateLib} from "./TestState.sol";
 contract MaliciousToken is ERC20, Test {
     IMethodsRegistry[] internal _methodRegistries;
 
-    string internal _prefix = "\t";
-
     constructor() ERC20("MaliciousToken", "MLST") {
         Registries registries = new Registries();
         _methodRegistries = registries.list();
@@ -39,10 +37,6 @@ contract MaliciousToken is ERC20, Test {
         super.transferFrom(sender, recipient, amount);
 
         return true;
-    }
-
-    function decimals() public pure override returns (uint8) {
-        return 18;
     }
 
     function _tryToReenter() internal {
