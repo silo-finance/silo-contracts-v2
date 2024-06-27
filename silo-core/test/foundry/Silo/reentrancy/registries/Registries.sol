@@ -10,8 +10,8 @@ contract Registries {
     IMethodsRegistry[] public registry;
 
     constructor() {
-        // registry.push(IMethodsRegistry(address(new SiloMethodsRegistry())));
-        // registry.push(IMethodsRegistry(address(new SiloConfigMethodsRegistry())));
+        registry.push(IMethodsRegistry(address(new SiloMethodsRegistry())));
+        registry.push(IMethodsRegistry(address(new SiloConfigMethodsRegistry())));
         registry.push(IMethodsRegistry(address(new CollateralShareTokenMethodsRegistry())));
     }
 
