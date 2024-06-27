@@ -16,7 +16,7 @@ contract AllowanceReentrancyTest is MethodReentrancyTest {
     }
 
     function methodDescription() external pure returns (string memory description) {
-        description = "allowane(address,address)";
+        description = "allowance(address,address)";
     }
 
     function _ensureItWillNotRevert() internal {

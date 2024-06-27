@@ -61,6 +61,6 @@ contract RepayReentrancyTest is MethodReentrancyTest {
     }
 
     function methodDescription() external pure returns (string memory description) {
-        description = "repay(uint256,address";
+        description = "repay(uint256,address)";
     }
 }

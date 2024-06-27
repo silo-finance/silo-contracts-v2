@@ -35,6 +35,7 @@ contract SiloConfigMethodsRegistry is IMethodsRegistry {
         _registerMethod(new CloseDebtReentrancyTest());
         _registerMethod(new CrossNonReentrantAfterReentrancyTest());
         _registerMethod(new CrossNonReentrantBeforeReentrancyTest());
+        _registerMethod(new CrossReentrantStatusReentrancyTest());
         _registerMethod(new GetAssetForSiloReentrancyTest());
         _registerMethod(new GetConfigReentrancyTest());
         _registerMethod(new GetConfigsReentrancyTest());

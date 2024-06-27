@@ -16,7 +16,7 @@ contract TotalReentrancyTest is MethodReentrancyTest {
     }
 
     function methodDescription() external pure returns (string memory description) {
-        description = "total()";
+        description = "total(uint256)";
     }
 
     function _ensureItWillNotRevert() internal view {

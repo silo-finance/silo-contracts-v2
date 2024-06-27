@@ -16,7 +16,7 @@ contract PreviewMintWithTypeReentrancyTest is MethodReentrancyTest {
     }
 
     function methodDescription() external pure returns (string memory description) {
-        description = "previewMint(address,uint8)";
+        description = "previewMint(uint256,uint8)";
     }
 
     function _ensureItWillNotRevert() internal view {

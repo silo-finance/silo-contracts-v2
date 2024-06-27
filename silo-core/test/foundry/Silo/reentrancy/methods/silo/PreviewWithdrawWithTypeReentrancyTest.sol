@@ -16,7 +16,7 @@ contract PreviewWithdrawWithTypeReentrancyTest is MethodReentrancyTest {
     }
 
     function methodDescription() external pure returns (string memory description) {
-        description = "previewWithdraw(address,uint8)";
+        description = "previewWithdraw(uint256,uint8)";
     }
 
     function _ensureItWillNotRevert() internal view {
