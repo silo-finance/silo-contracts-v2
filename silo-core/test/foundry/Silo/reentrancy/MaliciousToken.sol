@@ -4,6 +4,7 @@ pragma solidity ^0.8.24;
 import {Test} from "forge-std/Test.sol";
 import {ERC20} from "openzeppelin5/token/ERC20/ERC20.sol";
 
+import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {Registries} from "./registries/Registries.sol";
 import {IMethodsRegistry} from "./interfaces/IMethodsRegistry.sol";
 import {SiloMethodsRegistry} from "./registries/SiloMethodsRegistry.sol";
@@ -49,6 +50,11 @@ contract MaliciousToken is ERC20, Test {
 
         // reenter before transfer
         emit log_string("\tTrying to reenter:");
+
+        ISiloConfig config = TestStateLib.siloConfig();
+
+        (bool entered,) = config.crossReentrantStatus();
+        assertTrue(entered, "Reentrancy is not enabled on a token transfer");
 
         for (uint j = 0; j < _methodRegistries.length; j++) {
             uint256 totalMethods = _methodRegistries[j].supportedMethodsLength();

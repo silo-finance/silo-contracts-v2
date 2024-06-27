@@ -17,6 +17,8 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 
 // FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc SiloReentrancyTest
 contract SiloReentrancyTest is Test {
+    ISiloConfig public siloConfig;
+
     // FOUNDRY_PROFILE=core-test forge test -vv --ffi --mt test_coverage_for_reentrancy
     function test_coverage_for_reentrancy() public {
         Registries registries = new Registries();
@@ -66,7 +68,13 @@ contract SiloReentrancyTest is Test {
 
                 emit log_string(string.concat("\nExecute ", method.methodDescription()));
 
+                (bool entered,) = siloConfig.crossReentrantStatus();
+                assertTrue(!entered, "Reentrancy should be disabled before calling the method");
+
                 method.callMethod();
+
+                (entered,) = siloConfig.crossReentrantStatus();
+                assertTrue(!entered, "Reentrancy should be disabled after calling the method");
 
                 vm.revertTo(snapshotId);
             }
@@ -81,8 +89,10 @@ contract SiloReentrancyTest is Test {
         configOverride.token0 = address(new MaliciousToken());
         configOverride.token1 = address(new MaliciousToken());
         configOverride.configName = SiloConfigsNames.LOCAL_DEPLOYER;
+        ISilo silo0;
+        ISilo silo1;
 
-        (ISiloConfig siloConfig, ISilo silo0, ISilo silo1,,,) = siloFixture.deploy_local(configOverride);
+        (siloConfig, silo0, silo1,,,) = siloFixture.deploy_local(configOverride);
 
         TestStateLib.init(
             address(siloConfig),
