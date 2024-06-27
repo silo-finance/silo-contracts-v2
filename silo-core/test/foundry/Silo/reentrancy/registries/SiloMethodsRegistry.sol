@@ -151,8 +151,8 @@ contract SiloMethodsRegistry is IMethodsRegistry {
         _registerMethod(new TotalReentrancyTest());
         _registerMethod(new TotalAssetsReentrancyTest());
         _registerMethod(new TotalSupplyReentrancyTest());
-        // _registerMethod(new TransferReentrancyTest()); // TODO: reentrancy bug
-        // _registerMethod(new TransferFromReentrancyTest()); // TODO: reentrancy bug
+        _registerMethod(new TransferReentrancyTest());
+        _registerMethod(new TransferFromReentrancyTest());
         _registerMethod(new TransitionCollateralReentrancyTest());
         _registerMethod(new UpdateHooksReentrancyTest());
         _registerMethod(new UtilaztionDataReentrancyTest());
