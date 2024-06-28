@@ -105,7 +105,7 @@ contract PartialLiquidation is SiloStorage, IPartialLiquidation, IHookReceiver {
             collateralShares = _callShareTokenForwardTransferNoChecks(
                 collateralConfig.silo,
                 _borrower,
-                _receiveSToken ? msg.sender : address(this),
+                shareTokenReceiver,
                 withdrawAssetsFromCollateral,
                 collateralConfig.collateralShareToken,
                 AssetTypes.COLLATERAL
