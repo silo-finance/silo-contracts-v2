@@ -5,20 +5,29 @@ import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {MethodReentrancyTest} from "../MethodReentrancyTest.sol";
 import {TestStateLib} from "../../TestState.sol";
 
+contract FakeSilo {
+    function accrueInterestForConfig(address,uint256,uint256) external {}
+}
+
 contract AccrueInterestAndGetConfigReentrancyTest is MethodReentrancyTest {
     function callMethod() external {
         emit log_string("\tEnsure it will revert (permissions test)");
         ISiloConfig config = TestStateLib.siloConfig();
-        address silo0 = address(TestStateLib.silo0());
 
-        vm.expectRevert(ISiloConfig.OnlySiloOrDebtShareToken.selector);
-        config.accrueInterestAndGetConfig(silo0, 0);
+        vm.expectRevert(); // failed to accrued interest for the msg.sender
+        config.accrueInterestAndGetConfig(makeAddr("Any address"), 0);
+
+        // trying with malicous silo
+        FakeSilo fakeSilo = new FakeSilo();
+
+         vm.expectRevert(ISiloConfig.WrongSilo.selector);
+         config.accrueInterestAndGetConfig(address(fakeSilo), 0);
     }
 
     function verifyReentrancy() external {
         ISiloConfig config = TestStateLib.siloConfig();
 
-        vm.expectRevert(ISiloConfig.CrossReentrantCall.selector); // TODO: update error after permissions bug fix
+        vm.expectRevert(ISiloConfig.CrossReentrantCall.selector);
         config.accrueInterestAndGetConfig(address(0), 0);
     }
 

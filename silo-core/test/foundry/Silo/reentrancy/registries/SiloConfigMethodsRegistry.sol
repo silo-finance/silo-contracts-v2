@@ -29,7 +29,7 @@ contract SiloConfigMethodsRegistry is IMethodsRegistry {
 
     constructor() {
         _registerMethod(new SiloIDReentrancyTest());
-        // _registerMethod(new AccrueInterestAndGetConfigReentrancyTest()); // TODO: bug with permissions
+        _registerMethod(new AccrueInterestAndGetConfigReentrancyTest());
         _registerMethod(new AccrueInterestAndGetConfigOptimisedReentrancyTest());
         // _registerMethod(new AccrueInterestAndGetConfigsReentrancyTest()); // TODO: bug with permissions
         _registerMethod(new CloseDebtReentrancyTest());
