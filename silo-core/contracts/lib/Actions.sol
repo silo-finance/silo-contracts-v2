@@ -77,10 +77,9 @@ library Actions {
         returns (uint256 assets, uint256 shares)
     {
         IHookReceiver hookReceiver = _shareStorage.hookReceiver;
+        ISiloConfig siloConfig = _shareStorage.siloConfig;
 
         _hookCallBeforeWithdraw(_shareStorage.hooksBefore, hookReceiver, _args);
-
-        ISiloConfig siloConfig = _shareStorage.siloConfig;
 
         (
             ISiloConfig.ConfigData memory collateralConfig,
