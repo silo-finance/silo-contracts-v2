@@ -101,9 +101,8 @@ library Actions {
             _totalAssets
         );
 
-        // - if hook is liquidator, then we don't have to check solvency
-        // - but if hook is doing something else, then we have to check, so this is impossible to code
-        // we will assume, hook can do necessary checks, if needed
+        // in case of liquidation, if hook transfer sTokens to itself, then withdraw, it has no debt
+        // so solvency will not be checked
         if (!SiloSolvencyLib.depositWithoutDebt(debtInfo)) {
             if (!debtInfo.sameAsset) {
                 collateralConfig.callSolvencyOracleBeforeQuote();

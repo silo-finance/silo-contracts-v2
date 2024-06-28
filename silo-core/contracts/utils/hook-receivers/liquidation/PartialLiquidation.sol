@@ -193,7 +193,7 @@ contract PartialLiquidation is SiloStorage, IPartialLiquidation, IHookReceiver {
             debtConfig.callSolvencyOracleBeforeQuote();
         }
     }
-    
+
     function _callShareTokenForwardTransferNoChecks(
         address _silo,
         address _borrower,
