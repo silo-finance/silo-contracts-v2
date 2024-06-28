@@ -11,6 +11,7 @@ import {IShareToken, ISilo} from "../interfaces/IShareToken.sol";
 import {ISiloConfig} from "../SiloConfig.sol";
 import {TokenHelper} from "../lib/TokenHelper.sol";
 import {Hook} from "../lib/Hook.sol";
+import {Boolean} from "../lib/Boolean.sol";
 import {CallBeforeQuoteLib} from "../lib/CallBeforeQuoteLib.sol";
 
 /// @title ShareToken
@@ -70,7 +71,7 @@ abstract contract ShareToken is Initializable, ERC20Permit, IShareToken {
     /// @notice Copy of hooks setup from SiloConfig for optimisation purposes
     HookSetup private _hookSetup;
 
-    bool public transferWithChecks = true;
+    uint256 public transferWithChecks = Boolean.TRUE;
 
     modifier onlySilo() {
         if (msg.sender != address(silo)) revert OnlySilo();
@@ -110,9 +111,9 @@ abstract contract ShareToken is Initializable, ERC20Permit, IShareToken {
         virtual
         onlySilo
     {
-        transferWithChecks = false;
+        transferWithChecks = Boolean.FALSE;
         _transfer(_from, _to, _amount);
-        transferWithChecks = true;
+        transferWithChecks = Boolean.TRUE;
     }
 
     /// @inheritdoc IShareToken
@@ -237,7 +238,7 @@ abstract contract ShareToken is Initializable, ERC20Permit, IShareToken {
 
         _hookSetup.hookReceiver = _hookReceiver;
         _hookSetup.tokenType = _tokenType;
-        transferWithChecks = true;
+        transferWithChecks = Boolean.TRUE;
     }
 
     /// @inheritdoc ERC20

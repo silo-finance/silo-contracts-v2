@@ -2,6 +2,7 @@
 pragma solidity 0.8.24;
 
 import {SiloLensLib} from "../lib/SiloLensLib.sol";
+import {Boolean} from "../lib/Boolean.sol";
 import {IShareToken, ShareToken, ISilo} from "./ShareToken.sol";
 
 /// @title ShareCollateralToken
@@ -30,7 +31,7 @@ contract ShareCollateralToken is ShareToken {
     function _afterTokenTransfer(address _sender, address _recipient, uint256 _amount) internal virtual override {
         // for minting or burning, Silo is responsible to check all necessary conditions
         // for transfer make sure that _sender is solvent after transfer
-        if (_isTransfer(_sender, _recipient) && transferWithChecks) {
+        if (_isTransfer(_sender, _recipient) && transferWithChecks == Boolean.TRUE) {
             _callOracleBeforeQuote(_sender);
             if (!silo.isSolvent(_sender)) revert SenderNotSolventAfterTransfer();
         }
