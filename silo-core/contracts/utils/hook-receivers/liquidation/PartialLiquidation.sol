@@ -193,22 +193,7 @@ contract PartialLiquidation is SiloStorage, IPartialLiquidation, IHookReceiver {
             debtConfig.callSolvencyOracleBeforeQuote();
         }
     }
-
-    function _getSharesForForwardTransfer(
-        address _silo,
-        uint256 _withdrawAssets,
-        address _shareToken,
-        uint256 _assetType
-    ) internal view returns (uint256 shares) {
-        shares = SiloMathLib.convertToShares(
-            _withdrawAssets,
-            ISilo(_silo).total(_assetType),
-            IShareToken(_shareToken).totalSupply(),
-            Rounding.LIQUIDATE_TO_SHARES,
-            ISilo.AssetType(_assetType)
-        );
-    }
-
+    
     function _callShareTokenForwardTransferNoChecks(
         address _silo,
         address _borrower,
