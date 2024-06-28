@@ -18,7 +18,7 @@ contract AccrueInterestAndGetConfigOptimisedReentrancyTest is MethodReentrancyTe
         vm.expectRevert(); // failed to accrued interest for the msg.sender
         config.accrueInterestAndGetConfigOptimised(0, ISilo.CollateralType.Collateral);
 
-        // trying with mailicous silo
+        // trying with malicous silo
         FakeSilo fakeSilo = new FakeSilo();
 
          vm.expectRevert(ISiloConfig.WrongSilo.selector);
