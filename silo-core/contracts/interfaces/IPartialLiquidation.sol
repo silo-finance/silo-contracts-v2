@@ -24,7 +24,7 @@ interface IPartialLiquidation {
 
     /// @dev Revert if provided silo configuration during initialization is empty
     error EmptySiloConfig();
-    /// @dev Revert if the gauge hook receiver already has a configured gauge
+    /// @dev Revert if the hook receiver is already configured/initialized
     error AlreadyConfigured();
     error UnexpectedCollateralToken();
     error UnexpectedDebtToken();

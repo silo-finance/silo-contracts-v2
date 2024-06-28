@@ -67,7 +67,7 @@ library Actions {
         _hookCallAfterDeposit(_shareStorage, _collateralType, _assets, _shares, _receiver, assets, shares);
     }
 
-    function withdraw( // solhint-disable-line function-max-lines
+    function withdraw(
         ISilo.SharedStorage storage _shareStorage,
         ISilo.WithdrawArgs calldata _args,
         ISilo.Assets storage _totalAssets,
