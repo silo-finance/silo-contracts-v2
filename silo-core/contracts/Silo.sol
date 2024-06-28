@@ -62,10 +62,10 @@ contract Silo is SiloERC4626 {
 
         // Silo will not send back any ether leftovers after the call.
         // The hook receiver should request the ether if needed in a separate call.
-        if (_callType == CallType.Call) {
-            (success, result) = _target.call{value: _value}(_input); // solhint-disable-line avoid-low-level-calls
-        } else {
+        if (_callType == CallType.Delegatecall) {
             (success, result) = _target.delegatecall(_input); // solhint-disable-line avoid-low-level-calls
+        } else {
+            (success, result) = _target.call{value: _value}(_input); // solhint-disable-line avoid-low-level-calls
         }
     }
 
