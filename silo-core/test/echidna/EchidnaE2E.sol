@@ -264,27 +264,25 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         uint256 _borrowAssets,
         // address _borrower TODO, support this
         ISilo.CollateralType _collateralType
-    ) public {
+    ) public returns (uint256 depositedShares, uint256 borrowedShares) {
         emit LogUint256("[leverageSameAsset] block.timestamp:", block.timestamp);
 
         Actor actor = _selectActor(_actorIndex);
 
-        (
-            uint256 depositedShares, uint256 borrowedShares
-        ) = actor.leverageSameAsset(_vaultZero, _depositAssets, _borrowAssets, address(actor), _collateralType);
+        return actor.leverageSameAsset(_vaultZero, _depositAssets, _borrowAssets, address(actor), _collateralType);
     }
 
     function leverage(
         uint8 _actorIndex,
         bool _vaultZero,
         uint256 _assets,
-        address _borrower, // TODO support custom borrower
+        address, // _borrower, // TODO support custom borrower
         bool _sameAsset
-    ) public returns (uint256 depositedShares, uint256 borrowedShares) {
+    ) public returns (uint256 shares) {
         emit LogUint256("[leverage] block.timestamp:", block.timestamp);
         Actor actor = _selectActor(_actorIndex);
 
-        actor.leverage(_vaultZero, _assets, address(this), _sameAsset);
+        return actor.leverage(_vaultZero, _assets, address(this), _sameAsset);
     }
 
     // TODO transfers s tokens
@@ -394,7 +392,7 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
             (
                 ISiloConfig.ConfigData memory collateralConfig,
                 ISiloConfig.ConfigData memory debtConfig,
-                ISiloConfig.DebtInfo memory debtInfo
+                // ISiloConfig.DebtInfo memory debtInfo
             ) = siloConfig.getConfigs(address(vault), address(actor), Hook.WITHDRAW);
 
             uint256 shareBalance = IERC20(collateralConfig.collateralShareToken).balanceOf(address(actor));

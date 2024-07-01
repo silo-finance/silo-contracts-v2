@@ -54,7 +54,7 @@ contract DustPropagationTest is SiloLittleHelper, Test {
         ) = partialLiquidation.maxLiquidation(address(silo0), BORROWER);
 
         token0.mint(address(this), debtToRepay);
-        token0.approve(address(silo0), debtToRepay);
+        token0.approve(address(partialLiquidation), debtToRepay);
         bool receiveSToken;
 
         partialLiquidation.liquidationCall(

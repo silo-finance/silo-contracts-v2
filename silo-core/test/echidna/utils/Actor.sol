@@ -151,7 +151,7 @@ contract Actor is PropertiesAsserts, ILeverageBorrower, IERC3156FlashBorrower {
         ISilo.CollateralType _collateralType
     ) external returns (uint256 depositedShares, uint256 borrowedShares) {
         Silo vault = _vaultZero ? vault0 : vault1;
-        vault.leverageSameAsset(_depositAssets, _borrowAssets, _borrower, _collateralType);
+        return vault.leverageSameAsset(_depositAssets, _borrowAssets, _borrower, _collateralType);
     }
 
     function leverage(
@@ -190,7 +190,13 @@ contract Actor is PropertiesAsserts, ILeverageBorrower, IERC3156FlashBorrower {
         );
     }
 
-    function onLeverage(address _initiator, address _borrower, address _asset, uint256 _assets, bytes calldata _data)
+    function onLeverage(
+        address,  // _initiator
+        address, // _borrower,
+        address, // _asset,
+        uint256 _assets,
+        bytes calldata _data
+    )
         external
         returns (bytes32)
     {
@@ -203,7 +209,13 @@ contract Actor is PropertiesAsserts, ILeverageBorrower, IERC3156FlashBorrower {
         return _LEVERAGE_CALLBACK;
     }
 
-    function onFlashLoan(address _initiator, address _token, uint256 _amount, uint256 _fee, bytes calldata _data)
+    function onFlashLoan(
+        address _initiator,
+        address _token,
+        uint256 _amount,
+        uint256 _fee,
+        bytes calldata // _data
+    )
         external
         returns (bytes32)
     {
