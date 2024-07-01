@@ -122,6 +122,9 @@ contract PartialLiquidation is SiloStorage, IPartialLiquidation, IHookReceiver {
         }
 
         if (!_receiveSToken) {
+            // in case of liquidation redeem, hook transfers sTokens to itself and it has no debt
+            // so solvency will not be checked in silo on redeem action
+
             if (collateralShares != 0) {
                 ISilo(collateralConfig.silo).redeem(
                     collateralShares,

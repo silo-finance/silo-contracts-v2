@@ -35,7 +35,8 @@ contract GaugeHookReceiver is PartialLiquidation, IGaugeHookReceiver, SiloHookRe
     function initialize(ISiloConfig _siloConfig, bytes calldata _data)
         external
         virtual
-        initializer override(IHookReceiver, PartialLiquidation)
+        initializer
+        override(IHookReceiver, PartialLiquidation)
     {
         (address owner) = abi.decode(_data, (address));
 

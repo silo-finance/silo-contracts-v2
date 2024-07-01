@@ -101,8 +101,6 @@ library Actions {
             _totalAssets
         );
 
-        // in case of liquidation, if hook transfer sTokens to itself, then withdraw, it has no debt
-        // so solvency will not be checked
         if (!SiloSolvencyLib.depositWithoutDebt(debtInfo)) {
             if (!debtInfo.sameAsset) {
                 collateralConfig.callSolvencyOracleBeforeQuote();
@@ -189,26 +187,28 @@ library Actions {
         external
         returns (uint256 assets, uint256 shares)
     {
-        IHookReceiver hookReceiver = _shareStorage.hookReceiver;
-        ISiloConfig siloConfigCached = _shareStorage.siloConfig;
+        if (_shareStorage.hooksBefore.matchAction(Hook.REPAY)) {
+            _shareStorage.hookReceiver.beforeAction(
+                address(this), Hook.REPAY, abi.encodePacked(_assets, _shares, _borrower, _repayer)
+            );
+        }
 
-        _hookCallBeforeRepay(_shareStorage.hooksBefore, hookReceiver, _assets, _shares, _borrower, _repayer);
+        ISiloConfig siloConfigCached = _shareStorage.siloConfig;
 
         (
             address debtShareToken, address debtAsset
         ) = siloConfigCached.accrueInterestAndGetConfigOptimised(Hook.REPAY, ISilo.CollateralType(0));
 
-        (
-            assets, shares
-        ) = SiloLendingLib.repay(
+        (assets, shares) = SiloLendingLib.repay(
             IShareToken(debtShareToken), debtAsset, _assets, _shares, _borrower, _repayer, _totalDebt
         );
 
         siloConfigCached.crossNonReentrantAfter();
 
-        _hookCallAfterRepay(
-            _shareStorage.hooksAfter, hookReceiver, _assets, _shares, _borrower, _repayer, assets, shares
-        );
+        if (_shareStorage.hooksAfter.matchAction(Hook.REPAY)) {
+            bytes memory data = abi.encodePacked(_assets, _shares, _borrower, _repayer, _returnAssets, _returnShares);
+            _shareStorage.hookReceiver.afterAction(address(this), Hook.REPAY, data);
+        }
     }
 
     // solhint-disable-next-line function-max-lines
@@ -557,36 +557,7 @@ library Actions {
 
         IHookReceiver(hookReceiverCached).afterAction(address(this), _action, _data);
     }
-
-    function _hookCallBeforeRepay(
-        uint256 _hooksBefore,
-        IHookReceiver _hookReceiver,
-        uint256 _assets,
-        uint256 _shares,
-        address _borrower,
-        address _repayer
-    ) private {
-        if (!_hooksBefore.matchAction(Hook.REPAY)) return;
-
-        _hookReceiver.beforeAction(address(this), Hook.REPAY, abi.encodePacked(_assets, _shares, _borrower, _repayer));
-    }
-
-    function _hookCallAfterRepay(
-        uint256 _hooksAfter,
-        IHookReceiver _hookReceiver,
-        uint256 _assets,
-        uint256 _shares,
-        address _borrower,
-        address _repayer,
-        uint256 _returnAssets,
-        uint256 _returnShares
-    ) private {
-        if (!_hooksAfter.matchAction(Hook.REPAY)) return;
-
-        bytes memory data = abi.encodePacked(_assets, _shares, _borrower, _repayer, _returnAssets, _returnShares);
-        _hookReceiver.afterAction(address(this), Hook.REPAY, data);
-    }
-
+    
     function _hookCallBeforeWithdraw(
         uint256 _hooksBefore,
         IHookReceiver _hookReceiver,
