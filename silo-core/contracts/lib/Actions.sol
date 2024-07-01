@@ -206,7 +206,7 @@ library Actions {
         siloConfigCached.crossNonReentrantAfter();
 
         if (_shareStorage.hooksAfter.matchAction(Hook.REPAY)) {
-            bytes memory data = abi.encodePacked(_assets, _shares, _borrower, _repayer, _returnAssets, _returnShares);
+            bytes memory data = abi.encodePacked(_assets, _shares, _borrower, _repayer, assets, shares);
             _shareStorage.hookReceiver.afterAction(address(this), Hook.REPAY, data);
         }
     }
@@ -557,7 +557,7 @@ library Actions {
 
         IHookReceiver(hookReceiverCached).afterAction(address(this), _action, _data);
     }
-    
+
     function _hookCallBeforeWithdraw(
         uint256 _hooksBefore,
         IHookReceiver _hookReceiver,
