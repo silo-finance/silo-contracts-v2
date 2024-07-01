@@ -1013,7 +1013,7 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock, ILeverageBorr
         bool _receiveSToken
     ) internal {
         uint256 expectedWithdrawCollateral = 100000000000000000000;
-        uint256 expectedRepayDebtAssets = 25600000000000000000000;
+        // uint256 expectedRepayDebtAssets = 25600000000000000000000; not in use
 
         vm.expectEmit(true, true, true, true);
 

@@ -216,12 +216,12 @@ contract LeverageSameAssetTest is SiloLittleHelper, Test {
         assertEq(sharesToAssets, depositAssets, "User should receive more assets deposited than he had");
     }
 
-    function _expectShares(address _token, uint256 _expected) internal {
+    function _expectShares(address _token, uint256 _expected) internal view {
         uint256 balance = IERC20(_token).balanceOf(borrower);
         assertEq(balance, _expected);
     }
 
-    function _expectLiquidity(uint256 _expected) internal {
+    function _expectLiquidity(uint256 _expected) internal view {
         uint256 liquidity = silo0.getRawLiquidity();
         assertEq(liquidity, _expected);
     }
