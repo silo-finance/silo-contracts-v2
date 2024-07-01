@@ -22,7 +22,7 @@ contract PartialLiquidationLibTest is Test, MaxRepayRawMath {
     /*
     forge test -vv --mt test_PartialLiquidationLib_minAcceptableLTV
     */
-    function test_PartialLiquidationLib_minAcceptableLTV() public {
+    function test_PartialLiquidationLib_minAcceptableLTV() public view {
         assertEq(PartialLiquidationLib.minAcceptableLTV(0), 0);
         assertEq(PartialLiquidationLib.minAcceptableLTV(1), 0);
         assertEq(PartialLiquidationLib.minAcceptableLTV(10), 9);
@@ -39,7 +39,7 @@ contract PartialLiquidationLibTest is Test, MaxRepayRawMath {
     /*
     forge test -vv --mt test_PartialLiquidationLib_collateralToLiquidate
     */
-    function test_PartialLiquidationLib_collateralToLiquidate() public {
+    function test_PartialLiquidationLib_collateralToLiquidate() public pure {
         // uint256 _debtToCover, uint256 _totalCollateral, uint256 _liquidityFee
         assertEq(PartialLiquidationLib.calculateCollateralToLiquidate(0, 0, 0), 0);
         assertEq(PartialLiquidationLib.calculateCollateralToLiquidate(1, 1, 0), 1);
@@ -150,7 +150,7 @@ contract PartialLiquidationLibTest is Test, MaxRepayRawMath {
     /*
     forge test -vv --mt test_PartialLiquidationLib_estimateMaxRepayValue_raw
     */
-    function test_PartialLiquidationLib_estimateMaxRepayValue_raw() public {
+    function test_PartialLiquidationLib_estimateMaxRepayValue_raw() public pure {
         // debtValue, CollateralValue, ltv, fee
         assertEq(
             PartialLiquidationLib.estimateMaxRepayValue(1e18, 1e18, 0.0080e18, 0.0010e18),
@@ -266,7 +266,7 @@ contract PartialLiquidationLibTest is Test, MaxRepayRawMath {
         uint128 _totalBorrowerCollateralAssets,
         uint256 _liquidationFee,
         uint16 _quote
-    ) public {
+    ) public pure {
         vm.assume(_liquidationFee <= 0.1e18);
         vm.assume(_debtToCover <= _totalBorrowerDebtAssets);
         vm.assume(_totalBorrowerDebtAssets > 0);
@@ -350,7 +350,7 @@ contract PartialLiquidationLibTest is Test, MaxRepayRawMath {
     /*
     forge test -vv --mt test_gas_PartialLiquidationLib_liquidationPreview
     */
-    function test_gas_PartialLiquidationLib_liquidationPreview() public {
+    function test_gas_PartialLiquidationLib_liquidationPreview() public view {
         PartialLiquidationLib.LiquidationPreviewParams memory params;
 
         uint256 gasStart = gasleft();
@@ -363,7 +363,7 @@ contract PartialLiquidationLibTest is Test, MaxRepayRawMath {
     /*
     forge test -vv --mt test_PartialLiquidationLib_calculateCollateralToLiquidate_not_reverts
     */
-    function test_PartialLiquidationLib_calculateCollateralToLiquidate_not_reverts() public {
+    function test_PartialLiquidationLib_calculateCollateralToLiquidate_not_reverts() public view {
         uint256 debtValueToCover = 2e18;
         uint256 totalBorrowerCollateralValue = 20e18; // price is 2 per asset
         uint256 totalBorrowerCollateralAssets = 10e18;
@@ -391,7 +391,7 @@ contract PartialLiquidationLibTest is Test, MaxRepayRawMath {
     /*
     forge test -vv --mt test_PartialLiquidationLib_splitReceiveCollateralToLiquidate
     */
-    function test_PartialLiquidationLib_splitReceiveCollateralToLiquidate() public {
+    function test_PartialLiquidationLib_splitReceiveCollateralToLiquidate() public view {
         (uint256 fromCollateral, uint256 fromProtected) = PartialLiquidationLib.splitReceiveCollateralToLiquidate(0, 0);
         assertEq(fromCollateral, 0, "fromCollateral (0,0) => 0");
         assertEq(fromProtected, 0, "fromProtected (0,0) => 0");
@@ -455,7 +455,7 @@ contract PartialLiquidationLibTest is Test, MaxRepayRawMath {
     /*
     forge test -vv --mt test_valueToAssetsByRatio
     */
-    function test_valueToAssetsByRatio() public {
+    function test_valueToAssetsByRatio() public pure {
         uint256 value;
         uint256 totalAssets;
         uint256 totalValue = 1; // can not be 0
