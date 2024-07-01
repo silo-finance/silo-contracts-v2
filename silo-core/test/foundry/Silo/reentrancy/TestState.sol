@@ -54,6 +54,7 @@ library TestStateLib {
         VmLib.vm().etch(_ADDRESS, deployedCode);
 
         ReentracyTestState(_ADDRESS).set(_siloConfig, _silo0, _silo1, _token0, _token1);
+        ReentracyTestState(_ADDRESS).setReenter(true);
     }
 
     function silo0() internal view returns (ISilo) {
