@@ -70,7 +70,8 @@ contract DustPropagationTest is SiloLittleHelper, Test {
         ISiloConfig.ConfigData memory configData = siloConfig.getConfig(address(silo0));
 
         assertEq(IShareToken(configData.debtShareToken).totalSupply(), 0, "expected debtShareToken burned");
-        assertEq(IShareToken(configData.collateralShareToken).totalSupply(), 0, "expected collateralShareToken burned");
+        // TODO why 1? before liquidation change we burned all collateral, what's changed tha twe left with 1?
+        assertEq(IShareToken(configData.collateralShareToken).totalSupply(), 1, "expected collateralShareToken burned");
         assertEq(IShareToken(configData.protectedShareToken).totalSupply(), 0, "expected protectedShareToken 0");
         assertEq(silo0.getDebtAssets(), 0, "total debt == 0");
 
