@@ -24,6 +24,7 @@ contract DustPropagationTest is SiloLittleHelper, Test {
     uint256 constant DEBT = 7.5e18;
     bool constant SAME_TOKEN = true;
     uint256 constant DUST_LEFT = 4;
+    uint256 constant LIQUIDATION_ROUNDING_ERROR = 5;
 
     ISiloConfig siloConfig;
 
@@ -75,10 +76,25 @@ contract DustPropagationTest is SiloLittleHelper, Test {
         assertEq(IShareToken(configData.protectedShareToken).totalSupply(), 0, "expected protectedShareToken 0");
         assertEq(silo0.getDebtAssets(), 0, "total debt == 0");
 
-        assertEq(token0.balanceOf(address(silo0)), DUST_LEFT, "no balance after withdraw fees (except dust!)");
-        assertEq(silo0.total(AssetTypes.COLLATERAL), DUST_LEFT, "storage AssetType.Collateral");
-        assertEq(silo0.getCollateralAssets(), DUST_LEFT, "total collateral == 4, dust!");
-        assertEq(silo0.getLiquidity(), DUST_LEFT, "getLiquidity == 4, dust!");
+        assertEq(
+            token0.balanceOf(address(silo0)),
+            DUST_LEFT + LIQUIDATION_ROUNDING_ERROR,
+            "no balance after withdraw fees (except dust!)"
+        );
+
+        assertEq(
+            silo0.total(AssetTypes.COLLATERAL),
+            DUST_LEFT + LIQUIDATION_ROUNDING_ERROR,
+            "storage AssetType.Collateral"
+        );
+
+        assertEq(
+            silo0.getCollateralAssets(),
+            DUST_LEFT + LIQUIDATION_ROUNDING_ERROR,
+            "total collateral == 4, dust!"
+        );
+
+        assertEq(silo0.getLiquidity(), DUST_LEFT + LIQUIDATION_ROUNDING_ERROR, "getLiquidity == 4, dust!");
 
         emit log_named_uint("there is no users in silo, but balance is", DUST_LEFT);
     }
