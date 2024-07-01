@@ -130,8 +130,8 @@ contract GaugeHookReceiverTest is SiloLittleHelper, Test, TransferOwnership {
         _hookReceiver.setGauge(IGauge(_gauge), IShareToken(invalidShareToken));
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testSetGauge
-    function testSetGauge() public {
+    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testSetGaugePass
+    function testSetGaugePass() public {
         (address silo0, address silo1) = _siloConfig.getSilos();
         (,address shareCollateralToken,) = _siloConfig.getShareTokens(silo0);
 

@@ -23,9 +23,10 @@ contract LiquidationWrongSiloTest is SiloLittleHelper, Test {
         siloConfig = _setUpLocalFixture();
     }
 
+    /*
+    forge test -vv --ffi --mt testWrongSiloLiquidation
+    */
     function testWrongSiloLiquidation() public {
-        _createMaliciousSilo();
-
         vm.expectRevert(IPartialLiquidation.WrongSilo.selector);
 
         partialLiquidation.liquidationCall(
@@ -36,35 +37,5 @@ contract LiquidationWrongSiloTest is SiloLittleHelper, Test {
             0,
             false
         );
-    }
-
-    function _createMaliciousSilo() internal {
-        bytes memory configData;
-        vm.mockCall(maliciousSilo, configData, abi.encode(maliciousSiloConfig));
-        vm.expectCall(maliciousSilo, configData);
-
-        _maliciousAccrueInterestAndGetConfigs();
-    }
-
-    function _maliciousAccrueInterestAndGetConfigs() internal {
-        bytes memory payload = abi.encodeWithSelector(
-            ISiloConfig.accrueInterestAndGetConfigs.selector,
-            maliciousSilo,
-            borrower,
-            Hook.LIQUIDATION
-        );
-
-        ISiloConfig.ConfigData memory collateralConfig;
-        collateralConfig.silo = address(silo0);
-
-        ISiloConfig.ConfigData memory debtConfig;
-        debtConfig.silo = maliciousSilo;
-
-        ISiloConfig.DebtInfo memory debtInfo;
-
-        bytes memory returnData = abi.encode(collateralConfig, debtConfig, debtInfo);
-
-        vm.mockCall(maliciousSiloConfig, payload, returnData);
-        vm.expectCall(maliciousSiloConfig, payload);
     }
 }

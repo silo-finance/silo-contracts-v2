@@ -7,6 +7,7 @@ import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
+import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquidation.sol";
 import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
 
 import {SiloConfigOverride} from "../_common/fixtures/SiloFixture.sol";
@@ -50,7 +51,10 @@ contract BeforeQuoteTest is SiloLittleHelper, Test {
         overrides.configName = SiloConfigsNames.LOCAL_BEFORE_CALL;
 
         SiloFixture siloFixture = new SiloFixture();
-        (, silo0, silo1,,, partialLiquidation) = siloFixture.deploy_local(overrides);
+
+        address hook;
+        (, silo0, silo1,,, hook) = siloFixture.deploy_local(overrides);
+        partialLiquidation = IPartialLiquidation(hook);
 
         (cfg0, cfg1,) = silo0.config().getConfigs(address(silo0), address(0), 0 /* always 0 for external calls */);
 
@@ -120,7 +124,7 @@ contract BeforeQuoteTest is SiloLittleHelper, Test {
         vm.startPrank(depositor);
         vm.warp(block.timestamp + 100000 days);
         token0.mint(depositor, borrowAmount / 2);
-        token0.approve(address(silo0), borrowAmount / 2);
+        token0.approve(address(partialLiquidation), borrowAmount / 2);
 
         emit log_named_address("maxLtvOracle0", address(maxLtvOracle0));
         emit log_named_address("solvencyOracle0", address(solvencyOracle0));

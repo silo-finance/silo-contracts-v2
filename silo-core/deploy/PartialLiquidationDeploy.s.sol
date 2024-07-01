@@ -3,7 +3,7 @@ pragma solidity 0.8.24;
 
 import {CommonDeploy, SiloCoreContracts} from "./_CommonDeploy.sol";
 
-import {PartialLiquidation, IPartialLiquidation} from "silo-core/contracts/liquidation/PartialLiquidation.sol";
+import {PartialLiquidation, IPartialLiquidation} from "silo-core/contracts/utils/hook-receivers/liquidation/PartialLiquidation.sol";
 
 /**
     FOUNDRY_PROFILE=core \

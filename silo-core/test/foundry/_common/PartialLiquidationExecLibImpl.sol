@@ -2,8 +2,8 @@
 pragma solidity ^0.8.20;
 
 import {SiloSolvencyLib} from "silo-core/contracts/lib/SiloSolvencyLib.sol";
-import {PartialLiquidationLib} from "silo-core/contracts/liquidation/lib/PartialLiquidationLib.sol";
-import {PartialLiquidationExecLib} from "silo-core/contracts/liquidation/lib/PartialLiquidationExecLib.sol";
+import {PartialLiquidationLib} from "silo-core/contracts/utils/hook-receivers/liquidation/lib/PartialLiquidationLib.sol";
+import {PartialLiquidationExecLib} from "silo-core/contracts/utils/hook-receivers/liquidation/lib/PartialLiquidationExecLib.sol";
 
 contract PartialLiquidationExecLibImpl {
     function liquidationPreview(

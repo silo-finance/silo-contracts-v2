@@ -29,6 +29,9 @@ contract LiquidationAccrueInterestGasTest is Gas, Test {
     forge test -vvv --ffi --mt test_gas_liquidationCallWithInterest
     */
     function test_gas_liquidationCallWithInterest() public {
+        vm.prank(DEPOSITOR);
+        token1.approve(address(partialLiquidation), type(uint256).max);
+
         _action(
             DEPOSITOR,
             address(partialLiquidation),
@@ -37,7 +40,7 @@ contract LiquidationAccrueInterestGasTest is Gas, Test {
                 (address(silo1), address(token0), address(token1), BORROWER, ASSETS / 2, false)
             ),
             "LiquidationCall with accrue interest",
-            308415
+            425683
         );
     }
 }

@@ -32,7 +32,7 @@ contract PRBMathSD59x18Test is Assertions, PRBMathSD59x18_exp2_data, PRBMathSD59
         }
     }
 
-    function test_PRBMathCommon_exp2_withIntegers() public {
+    function test_PRBMathCommon_exp2_withIntegers() public pure {
         (int256[] memory inputs, int256[] memory expected) = exp2IntegersData();
 
         unchecked {

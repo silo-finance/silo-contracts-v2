@@ -13,7 +13,7 @@ contract EncodeDecodePackedTest is Test {
     /*
     forge test -vv --mt test_encodePacked_decodePacked
     */
-    function test_encodePacked_decodePacked() public {
+    function test_encodePacked_decodePacked() public pure {
         address a = address(0xa);
         address b = address(0xb);
         uint256 c = 0xc;

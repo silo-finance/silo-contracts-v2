@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity >=0.5.0;
 
+import {ISilo} from "./ISilo.sol";
+
 interface IPartialLiquidation {
     struct HookSetup {
         /// @param this is the same as in siloConfig
@@ -20,12 +22,16 @@ interface IPartialLiquidation {
         bool receiveSToken
     );
 
+    /// @dev Revert if provided silo configuration during initialization is empty
+    error EmptySiloConfig();
+    /// @dev Revert if the hook receiver is already configured/initialized
+    error AlreadyConfigured();
     error UnexpectedCollateralToken();
     error UnexpectedDebtToken();
     error LiquidityFeeToHi();
     error NoDebtToCover();
     error DebtToCoverTooSmall();
-
+    error OnlyDelegateCall();
     error InvalidSiloForCollateral();
     error UserIsSolvent();
     error InsufficientLiquidation();
@@ -57,10 +63,6 @@ interface IPartialLiquidation {
     )
         external
         returns (uint256 withdrawCollateral, uint256 repayDebtAssets);
-
-    function synchronizeHooks(address _hookReceiver, uint24 _hooksBefore, uint24 _hooksAfter) external;
-
-    function hookSetup(address _silo) external view returns (HookSetup memory);
 
     /// @dev debt is keep growing over time, so when dApp use this view to calculate max, tx should never revert
     /// because actual max can be only higher

@@ -36,7 +36,6 @@ contract SiloConfigData {
         string interestRateModelConfig1;
         uint64 liquidationFee0;
         uint64 liquidationFee1;
-        string liquidationModule;
         uint64 lt0;
         uint64 lt1;
         uint64 maxLtv0;
@@ -72,7 +71,6 @@ contract SiloConfigData {
 
         initData = ISiloConfig.InitData({
             deployer: config.deployer,
-            liquidationModule: _resolveDeployedContract(config.liquidationModule),
             hookReceiver: _resolveHookReceiverImpl(config.hookReceiver),
             deployerFee: config.deployerFee * BP2DP_NORMALIZATION,
             token0: AddrLib.getAddress(config.token0),

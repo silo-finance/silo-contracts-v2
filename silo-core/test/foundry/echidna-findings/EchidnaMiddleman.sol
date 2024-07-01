@@ -9,7 +9,7 @@ import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
 import {Hook} from "silo-core/contracts/lib/Hook.sol";
-import {PartialLiquidationLib} from "silo-core/contracts/liquidation/lib/PartialLiquidationLib.sol";
+import {PartialLiquidationLib} from "silo-core/contracts/utils/hook-receivers/liquidation/lib/PartialLiquidationLib.sol";
 
 import {EchidnaSetup} from "./EchidnaSetup.sol";
 import {MintableToken} from "../_common/MintableToken.sol";
@@ -140,7 +140,6 @@ contract EchidnaMiddleman is EchidnaSetup {
             (
                 ISiloConfig.ConfigData memory collateralConfig,
                 ISiloConfig.ConfigData memory debtConfig,
-                ISiloConfig.DebtInfo memory debtInfo
             ) = siloConfig.getConfigs(address(_siloWithCollateral), actor, Hook.WITHDRAW);
 
             uint256 shareBalance = IERC20(collateralConfig.collateralShareToken).balanceOf(address(actor));

@@ -8,6 +8,7 @@ import {IERC20Errors} from "openzeppelin5/interfaces/draft-IERC6093.sol";
 
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
+import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
 import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
 
 import {MintableToken} from "../../_common/MintableToken.sol";
@@ -19,6 +20,8 @@ import {console} from "forge-std/console.sol";
 FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc LeverageSameAssetTest
 */
 contract LeverageSameAssetTest is SiloLittleHelper, Test {
+    using SiloLensLib for ISilo;
+
     ISilo.CollateralType constant public COLLATERAL = ISilo.CollateralType.Collateral;
     ISilo.CollateralType constant public PROTECTED = ISilo.CollateralType.Protected;
 
@@ -213,12 +216,12 @@ contract LeverageSameAssetTest is SiloLittleHelper, Test {
         assertEq(sharesToAssets, depositAssets, "User should receive more assets deposited than he had");
     }
 
-    function _expectShares(address _token, uint256 _expected) internal {
+    function _expectShares(address _token, uint256 _expected) internal view {
         uint256 balance = IERC20(_token).balanceOf(borrower);
         assertEq(balance, _expected);
     }
 
-    function _expectLiquidity(uint256 _expected) internal {
+    function _expectLiquidity(uint256 _expected) internal view {
         uint256 liquidity = silo0.getRawLiquidity();
         assertEq(liquidity, _expected);
     }

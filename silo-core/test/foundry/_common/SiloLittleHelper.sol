@@ -247,6 +247,9 @@ abstract contract SiloLittleHelper is CommonBase {
         overrides.token1 = address(token1);
         overrides.configName = _configName;
 
-        (siloConfig, silo0, silo1,,, partialLiquidation) = _siloFixture.deploy_local(overrides);
+        address hook;
+        (siloConfig, silo0, silo1,,, hook) = _siloFixture.deploy_local(overrides);
+
+        partialLiquidation = IPartialLiquidation(hook);
     }
 }

@@ -23,14 +23,10 @@ abstract contract CrossReentrancy {
         _crossReentrantStatus = CrossEntrancy.NOT_ENTERED;
     }
 
-    /// @dev please notice, this internal method is open
+    /// @dev please notice, this internal method is open TODO bug
+    // solhint-disable-next-line function-max-lines, code-complexity
     function _crossNonReentrantBefore(uint256 _action) internal virtual {
         uint256 crossReentrantStatusCached = _crossReentrantStatus;
-
-        if (crossReentrantStatusCached == CrossEntrancy.ENTERED && _action == (Hook.LIQUIDATION | Hook.REPAY)) {
-            // if we in a middle of liquidation, we allow to execute repay
-            return;
-        }
 
         // On the first call to nonReentrant, _status will be CrossEntrancy.NOT_ENTERED
         if (crossReentrantStatusCached == CrossEntrancy.NOT_ENTERED) {
@@ -61,9 +57,7 @@ abstract contract CrossReentrancy {
         // as it can be used in the function without activating the protection before deactivating it.
         // Later on, these functions may be called to turn off the reentrancy protection.
         // To avoid this, we check if the protection is active before deactivating it.
-        if (currentStatus != CrossEntrancy.ENTERED && currentStatus != CrossEntrancy.ENTERED_FROM_LEVERAGE) {
-            revert ISiloConfig.CrossReentrancyNotActive();
-        }
+        if (currentStatus == CrossEntrancy.NOT_ENTERED) revert ISiloConfig.CrossReentrancyNotActive();
 
         // By storing the original value once again, a refund is triggered (see
         // https://eips.ethereum.org/EIPS/eip-2200)

@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 import {Silo, ISilo} from "silo-core/contracts/Silo.sol";
 import {ILeverageBorrower} from "silo-core/contracts/interfaces/ILeverageBorrower.sol";
 import {IERC3156FlashBorrower} from "silo-core/contracts/interfaces/IERC3156FlashBorrower.sol";
-import {PartialLiquidation} from "silo-core/contracts/liquidation/PartialLiquidation.sol";
+import {PartialLiquidation} from "silo-core/contracts/utils/hook-receivers/liquidation/PartialLiquidation.sol";
 import {ISiloConfig} from "silo-core/contracts/SiloConfig.sol";
 import {TestERC20Token} from "properties/ERC4626/util/TestERC20Token.sol";
 import {PropertiesAsserts} from "properties/util/PropertiesHelper.sol";
@@ -36,7 +36,7 @@ contract Actor is PropertiesAsserts, ILeverageBorrower, IERC3156FlashBorrower {
         vault1 = _vault1;
         token0 = TestERC20Token(address(_vault0.asset()));
         token1 = TestERC20Token(address(_vault1.asset()));
-        liquidationModule = PartialLiquidation(_vault0.config().getConfig(address(_vault0)).liquidationModule);
+        liquidationModule = PartialLiquidation(_vault0.config().getConfig(address(_vault0)).hookReceiver);
     }
 
     function deposit(bool _vaultZero, uint256 _assets) public returns (uint256 shares) {
@@ -151,7 +151,7 @@ contract Actor is PropertiesAsserts, ILeverageBorrower, IERC3156FlashBorrower {
         ISilo.CollateralType _collateralType
     ) external returns (uint256 depositedShares, uint256 borrowedShares) {
         Silo vault = _vaultZero ? vault0 : vault1;
-        vault.leverageSameAsset(_depositAssets, _borrowAssets, _borrower, _collateralType);
+        return vault.leverageSameAsset(_depositAssets, _borrowAssets, _borrower, _collateralType);
     }
 
     function leverage(
@@ -190,7 +190,13 @@ contract Actor is PropertiesAsserts, ILeverageBorrower, IERC3156FlashBorrower {
         );
     }
 
-    function onLeverage(address _initiator, address _borrower, address _asset, uint256 _assets, bytes calldata _data)
+    function onLeverage(
+        address,  // _initiator
+        address, // _borrower,
+        address, // _asset,
+        uint256 _assets,
+        bytes calldata _data
+    )
         external
         returns (bytes32)
     {
@@ -203,7 +209,13 @@ contract Actor is PropertiesAsserts, ILeverageBorrower, IERC3156FlashBorrower {
         return _LEVERAGE_CALLBACK;
     }
 
-    function onFlashLoan(address _initiator, address _token, uint256 _amount, uint256 _fee, bytes calldata _data)
+    function onFlashLoan(
+        address _initiator,
+        address _token,
+        uint256 _amount,
+        uint256 _fee,
+        bytes calldata // _data
+    )
         external
         returns (bytes32)
     {

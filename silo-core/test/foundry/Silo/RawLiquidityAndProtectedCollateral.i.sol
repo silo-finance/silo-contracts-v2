@@ -8,12 +8,16 @@ import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 import {VeSiloContracts} from "ve-silo/common/VeSiloContracts.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
+import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquidation.sol";
+import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
 import {MintableToken} from "../_common/MintableToken.sol";
 import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
 import {SiloConfigOverride} from "../_common/fixtures/SiloFixture.sol";
 import {SiloFixtureWithVeSilo as SiloFixture} from "../_common/fixtures/SiloFixtureWithVeSilo.sol";
 
 contract RawLiquidityAndProtectedCollateralTest is SiloLittleHelper, Test {
+    using SiloLensLib for ISilo;
+
     ISiloConfig internal _siloConfig;
 
     function setUp() public {
@@ -26,7 +30,9 @@ contract RawLiquidityAndProtectedCollateralTest is SiloLittleHelper, Test {
         configOverride.token0 = address(token0);
         configOverride.token1 = address(token1);
 
-        (_siloConfig, silo0, silo1,,, partialLiquidation) = siloFixture.deploy_local(configOverride);
+        address hook;
+        (_siloConfig, silo0, silo1,,, hook) = siloFixture.deploy_local(configOverride);
+        partialLiquidation = IPartialLiquidation(hook);
     }
 
     // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testLiquidityAndProtectedAssets
@@ -71,7 +77,7 @@ contract RawLiquidityAndProtectedCollateralTest is SiloLittleHelper, Test {
         assertGt(collateralToLiquidate, 0, "expect collateralToLiquidate");
 
         token1.mint(address(this), debtToRepay); // address(this) is liquidator
-        token1.approve(address(silo1), debtToRepay);
+        token1.approve(address(partialLiquidation), debtToRepay);
 
         vm.expectRevert(ISilo.NotEnoughLiquidity.selector);
         partialLiquidation.liquidationCall(

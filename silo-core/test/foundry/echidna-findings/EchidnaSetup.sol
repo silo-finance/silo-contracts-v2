@@ -123,7 +123,7 @@ contract EchidnaSetup is SiloLittleHelper, Test {
         siloWithCollateral = protectedBalance0 + collateralBalance0 == 0 ? silo1 : silo0;
     }
 
-    function _requireHealthySilos() internal {
+    function _requireHealthySilos() internal view {
         _requireHealthySilo(silo0);
         _requireHealthySilo(silo1);
     }

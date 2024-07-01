@@ -204,42 +204,6 @@ library Hook {
         address user;
     }
 
-    /// @notice The data structure for the before liquidation hook
-    /// @param siloWithDebt The silo with debt
-    /// @param collateralAsset The collateral asset
-    /// @param debtAsset The debt asset
-    /// @param borrower The borrower
-    /// @param debtToCover The debt to cover
-    /// @param receiveSToken Whether to receive sToken
-    struct BeforeLiquidationInput {
-        address siloWithDebt;
-        address collateralAsset;
-        address debtAsset;
-        address borrower;
-        uint256 debtToCover;
-        bool receiveSToken;
-    }
-
-    /// @notice The data structure for the after liquidation hook
-    /// @param siloWithDebt The silo with debt
-    /// @param collateralAsset The collateral asset
-    /// @param debtAsset The debt asset
-    /// @param borrower The borrower
-    /// @param debtToCover The debt to cover
-    /// @param receiveSToken Whether to receive sToken
-    /// @param withdrawCollateral The amount of collateral withdrawn
-    /// @param repayDebtAssets The amount of debt repaid
-    struct AfterLiquidationInput {
-        address siloWithDebt;
-        address collateralAsset;
-        address debtAsset;
-        address borrower;
-        uint256 debtToCover;
-        bool receiveSToken;
-        uint256 withdrawCollateral;
-        uint256 repayDebtAssets;
-    }
-
     /// @notice Supported hooks
     /// @dev The hooks are stored as a bitmap and can be combined with bitwise OR
     uint256 internal constant NONE = 0;
@@ -794,94 +758,6 @@ library Hook {
             ISilo.CollateralType(collateralType),
             depositedShares,
             borrowedShares
-        );
-    }
-
-    /// @dev Decodes packed data from the before liquidation hook
-    /// @param packed The packed data (via abi.encodePacked)
-    /// @return input decoded
-    function beforeLiquidationDecode(bytes memory packed)
-        internal
-        pure
-        returns (BeforeLiquidationInput memory input)
-    {
-        address siloWithDebt;
-        address collateralAsset;
-        address debtAsset;
-        address borrower;
-        uint256 debtToCover;
-        uint8 receiveSToken;
-
-        assembly { // solhint-disable-line no-inline-assembly
-            let pointer := PACKED_ADDRESS_LENGTH
-            siloWithDebt := mload(add(packed, pointer))
-            pointer := add(pointer, PACKED_ADDRESS_LENGTH)
-            collateralAsset := mload(add(packed, pointer))
-            pointer := add(pointer, PACKED_ADDRESS_LENGTH)
-            debtAsset := mload(add(packed, pointer))
-            pointer := add(pointer, PACKED_ADDRESS_LENGTH)
-            borrower := mload(add(packed, pointer))
-            pointer := add(pointer, PACKED_FULL_LENGTH)
-            debtToCover := mload(add(packed, pointer))
-            pointer := add(pointer, PACKED_BOOL_LENGTH)
-            receiveSToken := mload(add(packed, pointer))
-        }
-
-        input = BeforeLiquidationInput(
-            siloWithDebt,
-            collateralAsset,
-            debtAsset,
-            borrower,
-            debtToCover,
-            _toBoolean(receiveSToken)
-        );
-    }
-
-    /// @dev Decodes packed data from the after liquidation hook
-    /// @param packed The packed data (via abi.encodePacked)
-    /// @return input decoded
-    function afterLiquidationDecode(bytes memory packed)
-        internal
-        pure
-        returns (AfterLiquidationInput memory input)
-    {
-        address siloWithDebt;
-        address collateralAsset;
-        address debtAsset;
-        address borrower;
-        uint256 debtToCover;
-        uint8 receiveSToken;
-        uint256 withdrawCollateral;
-        uint256 repayDebtAssets;
-
-        assembly { // solhint-disable-line no-inline-assembly
-            let pointer := PACKED_ADDRESS_LENGTH
-            siloWithDebt := mload(add(packed, pointer))
-            pointer := add(pointer, PACKED_ADDRESS_LENGTH)
-            collateralAsset := mload(add(packed, pointer))
-            pointer := add(pointer, PACKED_ADDRESS_LENGTH)
-            debtAsset := mload(add(packed, pointer))
-            pointer := add(pointer, PACKED_ADDRESS_LENGTH)
-            borrower := mload(add(packed, pointer))
-            pointer := add(pointer, PACKED_FULL_LENGTH)
-            debtToCover := mload(add(packed, pointer))
-            pointer := add(pointer, PACKED_ENUM_LENGTH)
-            receiveSToken := mload(add(packed, pointer))
-            pointer := add(pointer, PACKED_FULL_LENGTH)
-            withdrawCollateral := mload(add(packed, pointer))
-            pointer := add(pointer, PACKED_BOOL_LENGTH)
-            repayDebtAssets := mload(add(packed, pointer))
-        }
-
-        input = AfterLiquidationInput(
-            siloWithDebt,
-            collateralAsset,
-            debtAsset,
-            borrower,
-            debtToCover,
-            _toBoolean(receiveSToken),
-            withdrawCollateral,
-            repayDebtAssets
         );
     }
 

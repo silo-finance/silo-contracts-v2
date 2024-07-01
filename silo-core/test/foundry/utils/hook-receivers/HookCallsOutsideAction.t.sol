@@ -12,6 +12,7 @@ import {IERC20R} from "silo-core/contracts/interfaces/IERC20R.sol";
 import {ILeverageBorrower} from "silo-core/contracts/interfaces/ILeverageBorrower.sol";
 import {IHookReceiver} from "silo-core/contracts/interfaces/IHookReceiver.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
+import {PartialLiquidation} from "silo-core/contracts/utils/hook-receivers/liquidation/PartialLiquidation.sol";
 import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
 import {Hook} from "silo-core/contracts/lib/Hook.sol";
 import {CrossEntrancy} from "silo-core/contracts/lib/CrossEntrancy.sol";
@@ -24,16 +25,12 @@ import {SiloFixtureWithVeSilo as SiloFixture} from "../../_common/fixtures/SiloF
 /*
 FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc HookCallsOutsideActionTest
 */
-contract HookCallsOutsideActionTest is IHookReceiver, ILeverageBorrower, IERC3156FlashBorrower, SiloLittleHelper, Test {
+contract HookCallsOutsideActionTest is PartialLiquidation, ILeverageBorrower, IERC3156FlashBorrower, SiloLittleHelper, Test {
     using Hook for uint256;
     using SiloLensLib for ISilo;
 
     bytes32 internal constant _LEVERAGE_CALLBACK = keccak256("ILeverageBorrower.onLeverage");
     bytes32 constant FLASHLOAN_CALLBACK = keccak256("ERC3156FlashBorrower.onFlashLoan");
-
-    ISiloConfig internal _siloConfig;
-    uint256 public hookAfterFired;
-    uint256 public hookBeforeFired;
 
     uint24 public configuredHooksBefore;
     uint24 public configuredHooksAfter;
@@ -51,7 +48,8 @@ contract HookCallsOutsideActionTest is IHookReceiver, ILeverageBorrower, IERC315
         overrides.hookReceiver = address(this);
 
         SiloFixture siloFixture = new SiloFixture();
-        (_siloConfig, silo0, silo1,,, partialLiquidation) = siloFixture.deploy_local(overrides);
+        (siloConfig, silo0, silo1,,,) = siloFixture.deploy_local(overrides);
+        partialLiquidation = this;
 
         _setAllHooks();
 
@@ -63,7 +61,7 @@ contract HookCallsOutsideActionTest is IHookReceiver, ILeverageBorrower, IERC315
     FOUNDRY_PROFILE=core-test forge test --ffi -vv --mt test_ifHooksAreNotCalledInsideAction
     */
     function test_ifHooksAreNotCalledInsideAction() public {
-        (bool entered, uint256 status) = _siloConfig.crossReentrantStatus();
+        (bool entered, uint256 status) = siloConfig.crossReentrantStatus();
         assertFalse(entered, "initial state for entered");
         assertEq(status, CrossEntrancy.NOT_ENTERED, "initial state for status");
 
@@ -73,53 +71,75 @@ contract HookCallsOutsideActionTest is IHookReceiver, ILeverageBorrower, IERC315
 
         // execute all possible actions
 
+        emit log("-- _depositForBorrow --");
         _depositForBorrow(200e18, depositor);
 
+        emit log("-- _depositCollateral --");
         _depositCollateral(200e18, borrower, !sameAsset);
+
+        emit log("-- _borrow --");
         _borrow(50e18, borrower, !sameAsset);
+
+        emit log("-- _repay --");
         _repay(1e18, borrower);
+
+        emit log("-- _withdraw --");
         _withdraw(10e18, borrower);
 
         vm.warp(block.timestamp + 10);
 
+        emit log("-- accrueInterest0 --");
         silo0.accrueInterest();
+        emit log("-- accrueInterest1 --");
         silo1.accrueInterest();
 
+        emit log("-- transitionCollateral --");
         vm.prank(borrower);
         silo0.transitionCollateral(100e18, borrower, ISilo.CollateralType.Collateral);
 
+        emit log("-- _depositCollateral --");
         _depositCollateral(100e18, borrower, sameAsset);
 
+        emit log("-- switchCollateralTo --");
         vm.prank(borrower);
         silo0.switchCollateralTo(sameAsset);
 
+        emit log("-- leverageSameAsset --");
         vm.prank(borrower);
         silo1.leverageSameAsset(10, 1, borrower, ISilo.CollateralType.Protected);
 
+        emit log("-- leverage --");
         silo0.leverage(1e18, this, address(this), !sameAsset, abi.encode(address(silo1)));
 
         (
             address protectedShareToken, address collateralShareToken, address debtShareToken
-        ) = _siloConfig.getShareTokens(address(silo1));
+        ) = siloConfig.getShareTokens(address(silo1));
 
+        emit log("-- protectedShareToken.transfer --");
         vm.prank(borrower);
         IERC20(protectedShareToken).transfer(depositor, 1);
 
+        emit log("-- collateralShareToken.transfer --");
         vm.prank(borrower);
         IERC20(collateralShareToken).transfer(depositor, 1);
 
+        emit log("-- setReceiveApproval --");
         vm.prank(depositor);
         IERC20R(debtShareToken).setReceiveApproval(borrower, 1);
 
+        emit log("-- debtShareToken.transfer --");
         vm.prank(borrower);
         IERC20(debtShareToken).transfer(depositor, 1);
 
+        emit log("-- withdraw --");
         vm.prank(borrower);
         silo1.withdraw(48e18, borrower, borrower);
 
+        emit log("-- flashLoan --");
         silo0.flashLoan(this, address(token0), token0.balanceOf(address(silo0)), "");
         
         // liquidation
+        emit log("-- liquidationCall --");
 
         emit log_named_decimal_uint("borrower LTV", silo0.getLtv(borrower), 16);
 
@@ -140,47 +160,53 @@ contract HookCallsOutsideActionTest is IHookReceiver, ILeverageBorrower, IERC315
         silo1.withdrawFees();
     }
 
-    function initialize(ISiloConfig _config, bytes calldata) external view {
-        assertEq(address(_siloConfig), address(_config), "SiloConfig addresses should match");
+    function initialize(ISiloConfig _config, bytes calldata) external view override {
+        assertEq(address(siloConfig), address(_config), "SiloConfig addresses should match");
     }
 
-    function beforeAction(address, uint256 _action, bytes calldata) external {
-        hookBeforeFired = _action;
-
-        (bool entered, uint256 status) = _siloConfig.crossReentrantStatus();
-
-        if (entered && status == CrossEntrancy.ENTERED_FROM_LEVERAGE && _action.matchAction(Hook.DEPOSIT)) {
-            // we inside leverage
-        } else {
-            assertFalse(entered, "hook before must be called before any action");
-        }
-
+    function beforeAction(address, uint256 _action, bytes calldata) external override {
         emit log_named_uint("[before] action", _action);
         _printAction(_action);
+
+        (bool entered, uint256 status) = siloConfig.crossReentrantStatus();
+        emit log_named_uint("[before] status", status);
+
+        if (entered) {
+            if (status == CrossEntrancy.ENTERED_FROM_LEVERAGE && _action.matchAction(Hook.DEPOSIT)) {
+                // we inside leverage
+            } else {
+                assertFalse(entered, "hook `before` must be called before (outside) any action");
+            }
+        }
+
         emit log("[before] action --------------------- ");
     }
 
-    function afterAction(address, uint256 _action, bytes calldata _inputAndOutput) external {
-        hookAfterFired = _action;
-
-        (bool entered,) = _siloConfig.crossReentrantStatus();
-
-        if (_action.matchAction(Hook.SHARE_TOKEN_TRANSFER)) {
-            Hook.AfterTokenTransfer memory input = Hook.afterTokenTransferDecode(_inputAndOutput);
-
-            if (input.sender == address(0) || input.recipient == address(0)) {
-                assertTrue(entered, "only when minting/burning we can be inside action");
-                _tryReenter();
-            } else {
-                assertTrue(entered, "on regular transfer we are also inside action, silo is locked");
-                _tryReenter();
-            }
-        } else {
-            assertFalse(entered, "hook after must be called after any action");
-        }
-
+    function afterAction(address, uint256 _action, bytes calldata _inputAndOutput) external override {
         emit log_named_uint("[after] action", _action);
         _printAction(_action);
+
+        (bool entered, uint256 status) = siloConfig.crossReentrantStatus();
+        emit log_named_uint("[after] status", status);
+
+        if (entered) {
+            if (_action.matchAction(Hook.SHARE_TOKEN_TRANSFER)) {
+                Hook.AfterTokenTransfer memory input = Hook.afterTokenTransferDecode(_inputAndOutput);
+
+                if (input.sender == address(0) || input.recipient == address(0)) {
+                    assertTrue(entered, "only when minting/burning we can be inside action");
+                    _tryReenter();
+                } else {
+                    assertTrue(entered, "on regular transfer we are also inside action, silo is locked");
+                    _tryReenter();
+                }
+            } else {
+                assertFalse(entered, "entered: hook `after` must be called after (outside) any action");
+            }
+        } else {
+            // we not in enter state, ok
+        }
+
         emit log("[after] action --------------------- ");
     }
 
@@ -192,7 +218,7 @@ contract HookCallsOutsideActionTest is IHookReceiver, ILeverageBorrower, IERC315
         return FLASHLOAN_CALLBACK;
     }
 
-    function hookReceiverConfig(address) external view returns (uint24 hooksBefore, uint24 hooksAfter) {
+    function hookReceiverConfig(address) external view override returns (uint24 hooksBefore, uint24 hooksAfter) {
         hooksBefore = configuredHooksBefore;
         hooksAfter = configuredHooksAfter;
     }
