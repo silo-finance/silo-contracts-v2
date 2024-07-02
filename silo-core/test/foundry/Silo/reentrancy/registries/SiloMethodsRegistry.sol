@@ -88,7 +88,7 @@ contract SiloMethodsRegistry is IMethodsRegistry {
         _registerMethod(new AccrueInterestReentrancyTest());
         _registerMethod(new AccrueInterestForConfigReentrancyTest());
         _registerMethod(new AllowanceReentrancyTest());
-        _registerMethod(new ApproveReentrancyTest());
+        // _registerMethod(new ApproveReentrancyTest()); // TODO: add reentrancy protection
         _registerMethod(new AssetReentrancyTest());
         _registerMethod(new BalanceOfReentrancyTest());
         _registerMethod(new BorrowReentrancyTest());

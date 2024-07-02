@@ -18,7 +18,8 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 // FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc SiloReentrancyTest
 contract SiloReentrancyTest is Test {
     ISiloConfig public siloConfig;
-
+    
+    // TODO: remove _skip_
     // FOUNDRY_PROFILE=core-test forge test -vv --ffi --mt test_coverage_for_reentrancy
     function test_skip_coverage_for_reentrancy() public {
         Registries registries = new Registries();

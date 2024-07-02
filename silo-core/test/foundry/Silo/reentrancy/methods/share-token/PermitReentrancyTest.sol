@@ -23,10 +23,10 @@ contract PermitReentrancyTest is ShareTokenMethodReentrancyTest {
     }
 
     function verifyReentrancy() external {
-        _executeForAllShareTokensForSilo(_ensureItWillRevertReentrancy);
+        _executeForAllShareTokens(_ensureItWillRevertReentrancy);
     }
 
-    function _ensureItWillRevertReentrancy(address _silo, address _token) internal {
+    function _ensureItWillRevertReentrancy(address _token) internal {
         VmSafe.Wallet memory signer = vm.createWallet("Proof signer");
         address spender = makeAddr("Spender");
         uint256 value = 100e18;
