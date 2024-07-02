@@ -33,7 +33,7 @@ contract SiloReentrancyTest is Test {
 
             string[] memory keys = vm.parseJsonKeys(json, ".methodIdentifiers");
 
-            for (uint i = 0; i < keys.length; i++) {
+            for (uint256 i = 0; i < keys.length; i++) {
                 bytes4 sig = bytes4(keccak256(bytes(keys[i])));
                 address method = address(methodRegistries[j].methods(sig));
 

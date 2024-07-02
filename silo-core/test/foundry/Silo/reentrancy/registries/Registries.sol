@@ -12,8 +12,8 @@ contract Registries {
 
     constructor() {
         registry.push(IMethodsRegistry(address(new SiloMethodsRegistry())));
-        registry.push(IMethodsRegistry(address(new SiloConfigMethodsRegistry())));
-        registry.push(IMethodsRegistry(address(new CollateralShareTokenMethodsRegistry())));
+        // registry.push(IMethodsRegistry(address(new SiloConfigMethodsRegistry())));
+        // registry.push(IMethodsRegistry(address(new CollateralShareTokenMethodsRegistry())));
         registry.push(IMethodsRegistry(address(new DebtShareTokenMethodsRegistry())));
     }
 

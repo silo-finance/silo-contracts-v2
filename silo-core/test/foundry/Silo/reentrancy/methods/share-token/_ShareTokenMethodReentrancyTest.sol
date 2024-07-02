@@ -24,4 +24,21 @@ abstract contract ShareTokenMethodReentrancyTest is MethodReentrancyTest {
         func(collateral1);
         func(debt1);
     }
+
+    function _executeForAllShareTokensForSilo(function(address,address) internal func) internal {
+        ISiloConfig config = TestStateLib.siloConfig();
+        address silo0 = address(TestStateLib.silo0());
+        address silo1 = address(TestStateLib.silo1());
+
+        (address protected0, address collateral0, address debt0) = config.getShareTokens(silo0);
+        (address protected1, address collateral1, address debt1) = config.getShareTokens(silo1);
+
+        func(silo0, protected0);
+        func(silo0, collateral0);
+        func(silo0, debt0);
+
+        func(silo1, protected1);
+        func(silo1, collateral1);
+        func(silo1, debt1);
+    }
 }

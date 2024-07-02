@@ -4,6 +4,7 @@ pragma solidity ^0.8.20;
 import {VmSafe} from "forge-std/Vm.sol";
 import {MessageHashUtils} from "openzeppelin5//utils/cryptography/MessageHashUtils.sol";
 
+import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ShareToken} from "silo-core/contracts/utils/ShareToken.sol";
 import {ShareTokenMethodReentrancyTest} from "./_ShareTokenMethodReentrancyTest.sol";
 
@@ -22,7 +23,21 @@ contract PermitReentrancyTest is ShareTokenMethodReentrancyTest {
     }
 
     function verifyReentrancy() external {
-        _executeForAllShareTokens(_ensureItWillNotRevert);
+        _executeForAllShareTokensForSilo(_ensureItWillRevertReentrancy);
+    }
+
+    function _ensureItWillRevertReentrancy(address _silo, address _token) internal {
+        VmSafe.Wallet memory signer = vm.createWallet("Proof signer");
+        address spender = makeAddr("Spender");
+        uint256 value = 100e18;
+        uint256 nonce = ShareToken(_token).nonces(signer.addr);
+        uint256 deadline = block.timestamp + 1000;
+
+        (uint8 v, bytes32 r, bytes32 s) =
+            _createPermit(signer, spender, value, nonce, deadline, address(_token));
+
+        vm.expectRevert(ISiloConfig.CrossReentrantCall.selector);
+        ShareToken(_token).permit(signer.addr, spender, value, deadline, v, r, s);
     }
 
     function methodDescription() external pure returns (string memory description) {
