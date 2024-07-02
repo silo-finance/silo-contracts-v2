@@ -248,12 +248,21 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
         virtual
         returns (ConfigData memory collateralConfig, ConfigData memory debtConfig, DebtInfo memory debtInfo)
     {
-        bool callForSilo0 = msg.sender == _SILO0;
-        if (!callForSilo0 && msg.sender != _SILO1) revert WrongSilo();
-
         debtInfo = _openDebt(_borrower, _action);
-        uint256 order = ConfigLib.orderConfigsForBorrow(debtInfo, callForSilo0, _action);
-        (collateralConfig, debtConfig) = _getOrderedConfigs(order);
+        (collateralConfig, debtConfig) = _getConfigsForBorrow(msg.sender, debtInfo, _action);
+    }
+
+    function _getConfigsForBorrow(address _silo, DebtInfo memory _debtInfo, uint256 _action)
+        internal
+        view
+        virtual
+        returns (ConfigData memory collateralConfig, ConfigData memory debtConfig)
+    {
+        bool callForSilo0 = _silo == _SILO0;
+        if (!callForSilo0 && _silo != _SILO1) revert WrongSilo();
+
+        uint256 order = ConfigLib.orderConfigsForBorrow(_debtInfo, callForSilo0, _action);
+        return _getOrderedConfigs(order);
     }
 
     function getConfigsForSwitchCollateral(address _borrower, uint256 _action)
@@ -314,9 +323,9 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
     {
         debtInfo = _debtsInfo[_borrower];
 
-        uint256 order = ConfigLib.orderConfigs(debtInfo, _silo == _SILO0);
-
-        (collateralConfig, debtConfig) = _getOrderedConfigs(order);
+        if (_action.matchAction(Hook.BORROW)) _getConfigsForBorrow(_silo, debtInfo, _action);
+        // else... call proper method, for non view method I created external methods but I think there is no point.
+        // wrapper with if-else is better and will save config size
     }
 
     /// @inheritdoc ISiloConfig
