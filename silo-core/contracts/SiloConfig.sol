@@ -131,9 +131,16 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
 
         _CALL_BEFORE_QUOTE1 = _configData1.callBeforeQuote;
     }
+    
+    modifier beforeGetConfigFor(uint256 _action) {
+        _crossNonReentrantBefore(_action);
+        _callAccrueInterest();
+        
+        _;
+    }
 
     /// @inheritdoc ISiloConfig
-    function crossNonReentrantBefore(uint256 _action) external virtual {
+    function crossNonReentrantBefore(uint256 _action) external virtual { 
         if (_action.matchAction(CrossEntrancy.ENTERED_FROM_LEVERAGE)) {
             _onlySilo();
         } else {
@@ -178,10 +185,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
      - we might simplify code if we replace `_silo` with `msg.sender` for non view methods that pull config,
      - we can also remove accrue from name since we will always accrue from here
     */
-    function getConfig(uint256 _action) external virtual returns (ConfigData memory) {
-        _crossNonReentrantBefore(_action);
-        _callAccrueInterest();
-
+    function accrueInterestAndGetConfig(uint256 _action) beforeGetConfigFor(_action) external virtual returns (ConfigData memory) {
         if (msg.sender == _SILO0) {
             ISilo(_SILO1).accrueInterest();
             return _silo0ConfigData();
@@ -193,57 +197,75 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
         }
     }
 
-    function getConfigOptimised(
+    function accrueInterestAndGetConfigOptimised(
         uint256 _action,
         ISilo.CollateralType _collateralType
-    ) external virtual returns (address shareToken, address asset) {
-        _crossNonReentrantBefore(_action);
-        _callAccrueInterest();
-
+    ) beforeGetConfigFor(_action) external virtual returns (address shareToken, address asset) {
         if (msg.sender == _SILO0) {
             asset = _TOKEN0;
 
             if (_action.matchAction(Hook.REPAY)) {
                 shareToken = _DEBT_SHARE_TOKEN0;
-            } else {
+            } else if (_action.matchAction(Hook.DEPOSIT)) {
                 shareToken = _collateralType == ISilo.CollateralType.Collateral
                     ? _COLLATERAL_SHARE_TOKEN0
                     : _PROTECTED_COLLATERAL_SHARE_TOKEN0;
-            }
+            } else revert("unexpected");
         } else if (msg.sender == _SILO1) {
             asset = _TOKEN1;
 
             if (_action.matchAction(Hook.REPAY)) {
                 shareToken = _DEBT_SHARE_TOKEN1;
-            } else {
+            } else if (_action.matchAction(Hook.DEPOSIT)) {
                 shareToken = _collateralType == ISilo.CollateralType.Collateral
                     ? _COLLATERAL_SHARE_TOKEN1
                     : _PROTECTED_COLLATERAL_SHARE_TOKEN1;
-            }
+            } else revert("unexpected");
         } else {
             revert WrongSilo();
         }
     }
-
-    function getConfigs(address _borrower, uint256 _action)
+    
+    function getConfigsForWithdraw(address _borrower, uint256 _action)
+        beforeGetConfigFor(_action)
         external
         virtual
         returns (ConfigData memory collateralConfig, ConfigData memory debtConfig, DebtInfo memory debtInfo)
     {
-        _crossNonReentrantBefore(_action);
+        bool callForSilo0 = msg.sender == _SILO0;
+        if (!callForSilo0 && msg.sender != _SILO1) revert WrongSilo();
 
-        if (_action.matchAction(Hook.BORROW)) {
-            debtInfo = _openDebt(_borrower, _action);
-        } else if (_action.matchAction(Hook.SWITCH_COLLATERAL)) {
-            debtInfo = _changeCollateralType(_borrower, _action.matchAction(Hook.SAME_ASSET));
-        } else {
-            // TODO looks like anyone can raise flag if there is no action taken?
-            debtInfo = _debtsInfo[_borrower];
-        }
+        debtInfo = _debtsInfo[_borrower];
+        uint256 order = ConfigLib.orderConfigsForWithdraw(debtInfo, callForSilo0);
+        (collateralConfig, debtConfig) = _orderedConfigs(order);
+    }
 
-        _callAccrueInterest();
+    function getConfigsForBorrow(address _borrower, uint256 _action)
+        beforeGetConfigFor(_action)
+        external
+        virtual
+        returns (ConfigData memory collateralConfig, ConfigData memory debtConfig, DebtInfo memory debtInfo)
+    {
+        bool callForSilo0 = msg.sender == _SILO0;
+        if (!callForSilo0 && msg.sender != _SILO1) revert WrongSilo();
 
-        (collateralConfig, debtConfig) = _getOrderedConfigs(msg.sender, debtInfo, _action);
+        debtInfo = _openDebt(_borrower, _action);
+        uint256 order = ConfigLib.orderConfigsForBorrow(debtInfo, callForSilo0, _action);
+        (collateralConfig, debtConfig) = _orderedConfigs(order);
+    }
+
+    function getConfigsForSwitchCollateral(address _borrower, uint256 _action)
+        beforeGetConfigFor(_action)
+        external
+        virtual
+        returns (ConfigData memory collateralConfig, ConfigData memory debtConfig, DebtInfo memory debtInfo)
+    {
+        bool callForSilo0 = msg.sender == _SILO0;
+        if (!callForSilo0 && msg.sender != _SILO1) revert WrongSilo();
+
+        debtInfo = _changeCollateralType(_borrower, _action.matchAction(Hook.SAME_ASSET));
+        uint256 order = ConfigLib.orderConfigs(debtInfo, callForSilo0);
+        (collateralConfig, debtConfig) = _orderedConfigs(order);
     }
 
     function crossReentrantStatus() external view virtual returns (bool entered, uint256 status) {
@@ -290,7 +312,9 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
     {
         debtInfo = _debtsInfo[_borrower];
 
-        (collateralConfig, debtConfig) = _getOrderedConfigs(_silo, debtInfo, _action);
+        uint256 order = ConfigLib.orderConfigs(debtInfo, _silo == _SILO0);
+
+        (collateralConfig, debtConfig) = _orderedConfigs(order);
     }
 
     /// @inheritdoc ISiloConfig
@@ -333,6 +357,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
     function _callAccrueInterest() internal {
         // I would call here accrue on other silo and if this will simplify code, on this silo as well
         // so we have all in one place
+        // downside: we will call accrue on both silos even for deposit nad repay
         ISilo(_SILO0).accrueInterestForConfig(
             _INTEREST_RATE_MODEL0,
             _DAO_FEE,
@@ -364,6 +389,8 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
         debtInfo.sameAsset = _switchToSameAsset;
     }
 
+    // we have to manage debt in config anyway, so simplest solution is expose all method and make them
+    // only share token? TODO
     function _openDebt(address _borrower, uint256 _action) internal virtual returns (DebtInfo memory debtInfo) {
         _onlySilo();
 
@@ -377,38 +404,22 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
             _debtsInfo[_borrower] = debtInfo;
         }
     }
-
-    /*
-    for this method we can have two approaches:
-    1. keep it in lib for all
-    2. separate per method: (we already had that and logic was not simpler)
-
-    both will have exactly same logic of course, so the only dilema is: keep it together or splitted
-
-    I would keep together because:
-     - it is same functionality.
-     - it is much easier to QA because you need to QA a lib with final scenarios
-    */
-    function _getOrderedConfigs(address _silo, DebtInfo memory _debtInfo, uint256 _action)
+    
+    function _orderedConfigs(uint256 _order)
         internal
         view
         returns (ConfigData memory collateralConfig, ConfigData memory debtConfig)
     {
-        bool callForSilo0 = _silo == _SILO0;
-        if (!callForSilo0 && _silo != _SILO1) revert WrongSilo();
-
-        uint256 order = ConfigLib.orderConfigs(_debtInfo, callForSilo0, _action);
-
-        if (order == ConfigLib.SILO0_SILO0) {
+        if (_order == ConfigLib.COLLATERAL0_DEBT0) {
             collateralConfig = _silo0ConfigData();
             debtConfig = collateralConfig;
-        } else if (order == ConfigLib.SILO1_SILO0) {
+        } else if (_order == ConfigLib.COLLATERAL1_DEBT0) {
             collateralConfig = _silo1ConfigData();
             debtConfig = _silo0ConfigData();
-        } else if (order == ConfigLib.SILO0_SILO1) {
+        } else if (_order == ConfigLib.COLLATERAL0_DEBT1) {
             collateralConfig = _silo0ConfigData();
             debtConfig = _silo1ConfigData();
-        } else if (order == ConfigLib.SILO1_SILO1) {
+        } else if (_order == ConfigLib.COLLATERAL1_DEBT1) {
             collateralConfig = _silo1ConfigData();
             debtConfig = collateralConfig;
         } else revert InvalidConfigOrder();
