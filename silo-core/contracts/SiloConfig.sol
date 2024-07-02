@@ -237,7 +237,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
 
         debtInfo = _debtsInfo[_borrower];
         uint256 order = ConfigLib.orderConfigsForWithdraw(debtInfo, callForSilo0);
-        (collateralConfig, debtConfig) = _orderedConfigs(order);
+        (collateralConfig, debtConfig) = _getOrderedConfigs(order);
     }
 
     function getConfigsForBorrow(address _borrower, uint256 _action)
@@ -251,7 +251,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
 
         debtInfo = _openDebt(_borrower, _action);
         uint256 order = ConfigLib.orderConfigsForBorrow(debtInfo, callForSilo0, _action);
-        (collateralConfig, debtConfig) = _orderedConfigs(order);
+        (collateralConfig, debtConfig) = _getOrderedConfigs(order);
     }
 
     function getConfigsForSwitchCollateral(address _borrower, uint256 _action)
@@ -265,7 +265,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
 
         debtInfo = _changeCollateralType(_borrower, _action.matchAction(Hook.SAME_ASSET));
         uint256 order = ConfigLib.orderConfigs(debtInfo, callForSilo0);
-        (collateralConfig, debtConfig) = _orderedConfigs(order);
+        (collateralConfig, debtConfig) = _getOrderedConfigs(order);
     }
 
     function crossReentrantStatus() external view virtual returns (bool entered, uint256 status) {
@@ -314,7 +314,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
 
         uint256 order = ConfigLib.orderConfigs(debtInfo, _silo == _SILO0);
 
-        (collateralConfig, debtConfig) = _orderedConfigs(order);
+        (collateralConfig, debtConfig) = _getOrderedConfigs(order);
     }
 
     /// @inheritdoc ISiloConfig
@@ -405,7 +405,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
         }
     }
     
-    function _orderedConfigs(uint256 _order)
+    function _getOrderedConfigs(uint256 _order)
         internal
         view
         returns (ConfigData memory collateralConfig, ConfigData memory debtConfig)
