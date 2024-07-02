@@ -174,25 +174,31 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
         delete _debtsInfo[_borrower];
     }
 
-    function accrueInterestAndGetConfig(address _silo, uint256 _action) external virtual returns (ConfigData memory) {
+    /*
+     - we might simplify code if we replace `_silo` with `msg.sender` for non view methods that pull config,
+     - we can also remove accrue from name since we will always accrue from here
+    */
+    function getConfig(uint256 _action) external virtual returns (ConfigData memory) {
         _crossNonReentrantBefore(_action);
-        _callAccrueInterest(_silo);
+        _callAccrueInterest();
 
-        if (_silo == _SILO0) {
+        if (msg.sender == _SILO0) {
+            ISilo(_SILO1).accrueInterest();
             return _silo0ConfigData();
-        } else if (_silo == _SILO1) {
+        } else if (msg.sender == _SILO1) {
+            ISilo(_SILO0).accrueInterest();
             return _silo1ConfigData();
         } else {
             revert WrongSilo();
         }
     }
 
-    function accrueInterestAndGetConfigOptimised(
+    function getConfigOptimised(
         uint256 _action,
         ISilo.CollateralType _collateralType
     ) external virtual returns (address shareToken, address asset) {
         _crossNonReentrantBefore(_action);
-        _callAccrueInterest(msg.sender);
+        _callAccrueInterest();
 
         if (msg.sender == _SILO0) {
             asset = _TOKEN0;
@@ -219,7 +225,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
         }
     }
 
-    function accrueInterestAndGetConfigs(address _silo, address _borrower, uint256 _action)
+    function getConfigs(address _borrower, uint256 _action)
         external
         virtual
         returns (ConfigData memory collateralConfig, ConfigData memory debtConfig, DebtInfo memory debtInfo)
@@ -235,9 +241,9 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
             debtInfo = _debtsInfo[_borrower];
         }
 
-        _callAccrueInterest(_silo);
+        _callAccrueInterest();
 
-        (collateralConfig, debtConfig) = _getOrderedConfigs(_silo, debtInfo, _action);
+        (collateralConfig, debtConfig) = _getOrderedConfigs(msg.sender, debtInfo, _action);
     }
 
     function crossReentrantStatus() external view virtual returns (bool entered, uint256 status) {
@@ -319,9 +325,22 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
         }
     }
 
-    function _callAccrueInterest(address _silo) internal {
-        ISilo(_silo).accrueInterestForConfig(
-            _silo == _SILO0 ? _INTEREST_RATE_MODEL0 : _INTEREST_RATE_MODEL1,
+    /*
+     config is needed always, for any action so let's use this fact for:
+     - x-reentrancy as is, this is best way to turn it ON always since we can not use modifier (because of hooks)
+     - accrue (probably remove it from silo and actions completely) and we will be sure we call it always for both silos
+    */
+    function _callAccrueInterest() internal {
+        // I would call here accrue on other silo and if this will simplify code, on this silo as well
+        // so we have all in one place
+        ISilo(_SILO0).accrueInterestForConfig(
+            _INTEREST_RATE_MODEL0,
+            _DAO_FEE,
+            _DEPLOYER_FEE
+        );
+
+        ISilo(_SILO1).accrueInterestForConfig(
+            _INTEREST_RATE_MODEL1,
             _DAO_FEE,
             _DEPLOYER_FEE
         );
@@ -359,6 +378,17 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
         }
     }
 
+    /*
+    for this method we can have two approaches:
+    1. keep it in lib for all
+    2. separate per method: (we already had that and logic was not simpler)
+
+    both will have exactly same logic of course, so the only dilema is: keep it together or splitted
+
+    I would keep together because:
+     - it is same functionality.
+     - it is much easier to QA because you need to QA a lib with final scenarios
+    */
     function _getOrderedConfigs(address _silo, DebtInfo memory _debtInfo, uint256 _action)
         internal
         view
