@@ -387,7 +387,6 @@ library Actions {
         }
 
         ISiloConfig siloConfig = _shareStorage.siloConfig;
-        ISiloConfig.ConfigData memory config = siloConfig.getConfig(address(this));
 
         // flashFee will revert for wrong token
         uint256 fee = SiloStdLib.flashFee(siloConfig, _token, _amount);
