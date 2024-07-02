@@ -83,9 +83,6 @@ contract ShareDebtToken is IERC20R, ShareToken {
     function _beforeTokenTransfer(address _sender, address _recipient, uint256 _amount) internal virtual override {
         // If we are minting or burning, Silo is responsible to check all necessary conditions
         if (_isTransfer(_sender, _recipient)) {
-            // Silo forbids having two debts and this condition will be checked inside `onDebtTransfer`
-            siloConfig.onDebtTransfer(_sender, _recipient);
-
             // _recipient must approve debt transfer, _sender does not have to
             uint256 currentAllowance = receiveAllowance(_sender, _recipient);
             if (currentAllowance < _amount) revert AmountExceedsAllowance();
@@ -107,6 +104,7 @@ contract ShareDebtToken is IERC20R, ShareToken {
         // if we are NOT minting and not burning, it means we are transferring
         // make sure that _recipient is solvent after transfer
         if (_isTransfer(_sender, _recipient)) {
+            siloConfig.forbidDebtInTwoSilos(_recipient);
             _callOracleBeforeQuote(_recipient);
             if (!silo.isSolvent(_recipient)) revert RecipientNotSolventAfterTransfer();
         }
