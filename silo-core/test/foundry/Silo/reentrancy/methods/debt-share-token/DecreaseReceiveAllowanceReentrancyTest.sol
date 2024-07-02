@@ -10,18 +10,7 @@ import {TestStateLib} from "../../TestState.sol";
 contract DecreaseReceiveAllowanceReentrancyTest is MethodReentrancyTest {
     function callMethod() external {
         emit log_string("\tEnsure it will not revert)");
-        _ensureItWillNotRevert();
-    }
 
-    function verifyReentrancy() external {
-        _ensureItWillNotRevert();
-    }
-
-    function methodDescription() external pure returns (string memory description) {
-        description = "decreaseReceiveAllowance(address,uint256)";
-    }
-
-    function _ensureItWillNotRevert() internal {
         ISiloConfig config = TestStateLib.siloConfig();
         ISilo silo0 = TestStateLib.silo0();
         ISilo silo1 = TestStateLib.silo1();
@@ -46,5 +35,25 @@ contract DecreaseReceiveAllowanceReentrancyTest is MethodReentrancyTest {
 
         vm.prank(receiver);
         ShareDebtToken(debtToken).decreaseReceiveAllowance(borrower, allowance);
+    }
+
+    function verifyReentrancy() external {
+        ISiloConfig config = TestStateLib.siloConfig();
+        ISilo silo0 = TestStateLib.silo0();
+        ISilo silo1 = TestStateLib.silo1();
+
+        (,,address debtToken) = config.getShareTokens(address(silo0));
+
+        vm.expectRevert(ISiloConfig.CrossReentrantCall.selector);
+        ShareDebtToken(debtToken).decreaseReceiveAllowance(address(0), 0);
+
+        (,, debtToken) = config.getShareTokens(address(silo1));
+
+        vm.expectRevert(ISiloConfig.CrossReentrantCall.selector);
+        ShareDebtToken(debtToken).decreaseReceiveAllowance(address(0), 0);
+    }
+
+    function methodDescription() external pure returns (string memory description) {
+        description = "decreaseReceiveAllowance(address,uint256)";
     }
 }
