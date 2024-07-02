@@ -225,7 +225,9 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
             revert WrongSilo();
         }
     }
-    
+
+    // I would prefer wrap them under one method and called based on if(_action) ... to save config size
+    // but it works as separate methods as well
     function getConfigsForWithdraw(address _borrower, uint256 _action)
         beforeGetConfigFor(_action)
         external
