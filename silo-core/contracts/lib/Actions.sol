@@ -76,10 +76,9 @@ library Actions {
         external
         returns (uint256 assets, uint256 shares)
     {
-        IHookReceiver hookReceiver = _shareStorage.hookReceiver;
         ISiloConfig siloConfig = _shareStorage.siloConfig;
 
-        _hookCallBeforeWithdraw(_shareStorage.hooksBefore, hookReceiver, _args);
+        _hookCallBeforeWithdraw(_shareStorage, _args);
 
         (
             ISiloConfig.ConfigData memory collateralConfig,
@@ -117,7 +116,7 @@ library Actions {
 
         siloConfig.crossNonReentrantAfter();
 
-        _hookCallAfterWithdraw(_shareStorage.hooksAfter, hookReceiver, _args, assets, shares);
+        _hookCallAfterWithdraw(_shareStorage, _args, assets, shares);
     }
 
     // solhint-disable-next-line function-max-lines
@@ -188,9 +187,8 @@ library Actions {
         returns (uint256 assets, uint256 shares)
     {
         if (_shareStorage.hooksBefore.matchAction(Hook.REPAY)) {
-            _shareStorage.hookReceiver.beforeAction(
-                address(this), Hook.REPAY, abi.encodePacked(_assets, _shares, _borrower, _repayer)
-            );
+            bytes memory data = abi.encodePacked(_assets, _shares, _borrower, _repayer);
+            _shareStorage.hookReceiver.beforeAction(address(this), Hook.REPAY, data);
         }
 
         ISiloConfig siloConfigCached = _shareStorage.siloConfig;
@@ -332,9 +330,10 @@ library Actions {
         bool _toSameAsset
     ) external {
         uint256 action = Hook.switchCollateralAction(_toSameAsset);
-        bytes memory data = abi.encodePacked(msg.sender);
 
-        _hookCallBefore(_shareStorage, action, data);
+        if (_shareStorage.hooksBefore.matchAction(action)) {
+            _shareStorage.hookReceiver.beforeAction(address(this), action, abi.encodePacked(msg.sender));
+        }
 
         ISiloConfig siloConfig = _shareStorage.siloConfig;
 
@@ -359,8 +358,8 @@ library Actions {
 
         siloConfig.crossNonReentrantAfter();
 
-        if (collateralConfig.hookReceiver != address(0)) {
-            _hookCallAfter(_shareStorage, collateralConfig.hookReceiver, action, data);
+        if (_shareStorage.hooksBefore.matchAction(action)) {
+            _shareStorage.hookReceiver.afterAction(address(this), action, abi.encodePacked(msg.sender));
         }
     }
 
@@ -382,7 +381,10 @@ library Actions {
         external
         returns (bool success)
     {
-        _hookCallBefore(_shareStorage, Hook.FLASH_LOAN, abi.encodePacked(_receiver, _token, _amount));
+        if (_shareStorage.hooksBefore.matchAction(Hook.FLASH_LOAN)) {
+            bytes memory data = abi.encodePacked(_receiver, _token, _amount);
+            _shareStorage.hookReceiver.beforeAction(address(this), Hook.FLASH_LOAN, data);
+        }
 
         ISiloConfig siloConfig = _shareStorage.siloConfig;
         ISiloConfig.ConfigData memory config = siloConfig.getConfig(address(this));
@@ -403,13 +405,9 @@ library Actions {
         // cast safe, because we checked `fee > type(uint192).max`
         _siloData.daoAndDeployerFees += uint192(fee);
 
-        if (config.hookReceiver != address(0)) {
-            _hookCallAfter(
-                _shareStorage,
-                config.hookReceiver,
-                Hook.FLASH_LOAN,
-                abi.encodePacked(_receiver, _token, _amount, fee)
-            );
+        if (_shareStorage.hooksAfter.matchAction(Hook.FLASH_LOAN)) {
+            bytes memory data = abi.encodePacked(_receiver, _token, _amount, fee);
+            _shareStorage.hookReceiver.afterAction(address(this), Hook.FLASH_LOAN, data);
         }
 
         success = true;
@@ -534,60 +532,34 @@ library Actions {
         IERC20(collateralConfig.token).safeTransferFrom(msg.sender, address(this), transferDiff);
     }
 
-    function _hookCallBefore(ISilo.SharedStorage storage _shareStorage, uint256 _action, bytes memory _data)
-        private
-    {
-        // check hooks first, because it is the same slot as siloConfig, and siloConfig was used already
-        if (!_shareStorage.hooksBefore.matchAction(_action)) return;
-
-        IHookReceiver hookReceiver = _shareStorage.hookReceiver;
-        if (address(hookReceiver) == address(0)) return;
-
-        // there should be no hook calls, if you inside action eg inside leverage, liquidation etc
-        hookReceiver.beforeAction(address(this), _action, _data);
-    }
-
-    function _hookCallAfter(
-        ISilo.SharedStorage storage _shareStorage,
-        address hookReceiverCached,
-        uint256 _action,
-        bytes memory _data
-    ) private {
-        if (!_shareStorage.hooksAfter.matchAction(_action)) return;
-
-        IHookReceiver(hookReceiverCached).afterAction(address(this), _action, _data);
-    }
-
     function _hookCallBeforeWithdraw(
-        uint256 _hooksBefore,
-        IHookReceiver _hookReceiver,
+        ISilo.SharedStorage storage _shareStorage,
         ISilo.WithdrawArgs calldata _args
     ) private {
         uint256 action = Hook.withdrawAction(_args.collateralType);
 
-        if (!_hooksBefore.matchAction(action)) return;
+        if (!_shareStorage.hooksBefore.matchAction(action)) return;
 
         bytes memory data =
             abi.encodePacked(_args.assets, _args.shares, _args.receiver, _args.owner, _args.spender);
 
-        _hookReceiver.beforeAction(address(this), action, data);
+        _shareStorage.hookReceiver.beforeAction(address(this), action, data);
     }
 
     function _hookCallAfterWithdraw(
-        uint256 _hooksAfter,
-        IHookReceiver _hookReceiver,
+        ISilo.SharedStorage storage _shareStorage,
         ISilo.WithdrawArgs calldata _args,
         uint256 assets,
         uint256 shares
     ) private {
         uint256 action = Hook.withdrawAction(_args.collateralType);
 
-        if (!_hooksAfter.matchAction(action)) return;
+        if (!_shareStorage.hooksAfter.matchAction(action)) return;
 
         bytes memory data =
             abi.encodePacked(_args.assets, _args.shares, _args.receiver, _args.owner, _args.spender, assets, shares);
 
-        _hookReceiver.afterAction(address(this), action, data);
+        _shareStorage.hookReceiver.afterAction(address(this), action, data);
     }
 
     function _hookCallBeforeBorrow(
