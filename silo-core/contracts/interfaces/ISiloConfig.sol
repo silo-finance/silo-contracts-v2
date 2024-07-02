@@ -5,12 +5,16 @@ import {IHookReceiver} from "./IHookReceiver.sol";
 import {ISilo} from "./ISilo.sol";
 
 interface ISiloConfig {
-    struct DebtInfo {
-        bool debtPresent;
-        bool sameAsset;
-        bool debtInSilo0;
-        bool debtInThisSilo; // at-hoc when getting configs
-    }
+    mapping (address borrower => address collateralSilo) public borrowerCollateralSilo;
+
+    // mapping (address borrower => DebtInfo debtInfo) internal _debtsInfo;
+
+    // struct DebtInfo {
+    //     bool debtPresent;
+    //     bool sameAsset;
+    //     bool debtInSilo0;
+    //     bool debtInThisSilo; // at-hoc when getting configs
+    // }
 
     struct InitData {
         /// @notice The address of the deployer of the Silo

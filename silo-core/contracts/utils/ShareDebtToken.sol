@@ -104,16 +104,9 @@ contract ShareDebtToken is IERC20R, ShareToken {
         // if we are NOT minting and not burning, it means we are transferring
         // make sure that _recipient is solvent after transfer
         if (_isTransfer(_sender, _recipient)) {
-            siloConfig.forbidDebtInTwoSilos(_recipient);
+            siloConfig.getDebtSilo(_recipient);
             _callOracleBeforeQuote(_recipient);
             if (!silo.isSolvent(_recipient)) revert RecipientNotSolventAfterTransfer();
-        }
-
-        // we need to close debt on transfer and burn
-        if (_sender != address(0) && balanceOf(_sender) == 0) {
-            // we can have debt in one silo only, so when you transfer all your debt we can close position
-            // we can close only when _amount > 0, otherwise you can transfer 0 and close debt in other silo
-            if (_amount != 0) siloConfig.closeDebt(_sender);
         }
 
         ShareToken._afterTokenTransfer(_sender, _recipient, _amount);

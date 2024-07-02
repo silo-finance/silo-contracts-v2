@@ -15,12 +15,10 @@ interface SiloConfigV2 {
     // TODOs:
     // 1. crossNonReentrantBefore() & crossNonReentrantAfter() should be called directly by each function
     // 2. Silo.accrueInterest() should be called directly by each function
-    // 3. onDebtTransfer() and _openDebt() can be removed and `debtPresent`, `debtInSilo0` and 
+    // 3. getDebtSilo() replaces all debt management. onDebtTransfer() and _openDebt() can be removed and `debtPresent`, `debtInSilo0` and 
     // `debtInThisSilo` can be calculated on the fly removing a need for external calls.
-    // 4. _forbidDebtInTwoSilos() should be public and used for validation instead of onDebtTransfer()
-    // 5. _changeCollateralType() should be made external and called directly. `changeCollateralType()`
-    // should be called only by switchCollateralTo() or when borrowing same asset. Otherwise default
-    // state is enough. It replaces _openDebt() in part.
+    // 5. `setCollateralSilo()` should be called only by switchCollateralTo() or when borrowing
+    // same asset. Otherwise default state is enough.
     // 6. Split SiloConfig.getConfigs() & ConfigLib.orderConfigs() into multiple functions to avoid
     // complex IFs. Refactor getOrderedConfigs() into multiple functions so that `_action` is not needed.
 
@@ -58,9 +56,10 @@ interface SiloConfigV2 {
     /// - Actions.switchCollateralTo()
     /// - Actions.borrow()
     /// - Actions.leverageSameAsset()
-    function changeCollateralTypeBySilo(address _borrower, bool _switchToSameAsset)
+    // function changeCollateralType(address _borrower, bool _switchToSameAsset)
+    function setCollateralSilo(address _borrower, address _silo)
         internal
-        virtual
+        onlySilo
         returns (DebtInfo memory debtInfo);
 
     /// - ShareDebtToken._afterTokenTransfer()
@@ -70,14 +69,28 @@ interface SiloConfigV2 {
     // ########## CONFIG MANAGEMENT ##########
     // #######################################
 
-    /// Called by:
-    /// - Actions.deposit()
-    /// - Actions.repay()
-    function getShareTokensAndAsset(address _silo, ISilo.CollateralType _collateralType)
-        external
-        view
-        virtual
-        returns (address collateralShareToken, address debtShareToken, address asset);
+    // One less data point to keep in sync between Silo and DebtShareToken
+    function getDebtSilo(address _borrower) external view virtual returns (address debtSilo) {
+        uint256 debtBal0 = IERC20(_DEBT_SHARE_TOKEN0).balanceOf(_borrower);
+        uint256 debtBal1 = IERC20(_DEBT_SHARE_TOKEN1).balanceOf(_borrower);
+
+        if (debtBal0 > 0 && debtBal1 > 0) revert DebtInTwoSilos();
+        if (debtBal0 == 0 && debtBal1 == 0) return address(0);
+
+        debtSilo = debtBal0 > debtBal1 ? _SILO0 : _SILO1;
+    }
+
+    function getDebtInfo(
+        address _silo,
+        address _borrower,
+        address _collateralSilo,
+        address _debtSilo
+    ) external view virtual returns (DebtInfo memory debtInfo) {
+        debtInfo.debtPresent = _debtSilo != address(0);
+        debtInfo.sameAsset = _collateralSilo == _debtSilo;
+        debtInfo.debtInSilo0 = _debtSilo == _SILO0;
+        debtInfo.debtInThisSilo = _silo == _debtSilo;
+    }
 
     /// Called by:
     /// - Actions.withdraw()
@@ -86,16 +99,60 @@ interface SiloConfigV2 {
         ConfigData memory collateralConfig,
         ConfigData memory debtConfig,
         DebtInfo memory debtInfo
-    );
+    ) {
+        address collateralSilo = borrowerCollateralSilo[_borrower];
+        address debtSilo = getDebtSilo(_borrower);
+        
+        depositConfig = getConfig(_silo);
+        collateralConfig = getConfig(collateralSilo);
+        debtConfig = getConfig(debtSilo);
+
+        // if withdrawing collateral
+        // if (_silo == collateralSilo) {
+        // }
+        // if withdrawing unrelated deposit, no need to load collateralConfig and debtConfig
+        
+        // debtInfo = getDebtInfo(_silo, _borrower, collateralSilo, debtSilo);
+    }
 
     /// @inheritdoc ISiloConfig
     /// Called by:
     /// - Actions.borrow() - collateralConfig/debtConfig/debtInfo
     /// - Actions.switchCollateralTo() - collateralConfig/debtConfig/debtInfo
-    function getConfigsForAction(address _silo, address _borrower)
+    function getConfigsForBorrow(address _silo, address _borrower)
         external
         virtual
-        returns (ConfigData memory collateralConfig, ConfigData memory debtConfig, DebtInfo memory debtInfo);
+        returns (ConfigData memory collateralConfig, ConfigData memory debtConfig, DebtInfo memory debtInfo)
+    {
+        address collateralSilo = borrowerCollateralSilo[_borrower];
+        address debtSilo = getDebtSilo(_borrower);
+
+        if (debtSilo != address(0) && debtSilo != _silo) revert WrongDebtSilo();
+
+        collateralConfig = getConfig(collateralSilo);
+        debtConfig = getConfig(_silo);
+        // debtInfo = getDebtInfo(_silo, _borrower, collateralSilo, debtSilo);
+    }
+
+    /// Called by:
+    /// - Actions.deposit()
+    /// - Actions.repay()
+    /// replaces: accrueInterestAndGetConfigOptimised()
+    function getShareTokensAndAsset(address _silo, ISilo.CollateralType _collateralType)
+        external
+        view
+        virtual
+        returns (address collateralShareToken, address debtShareToken, address asset)
+    {
+        // another option is that Silo calls SiloConfig.getConfig(address(this)) directly
+        ConfigData memory thisSiloConfig = getConfig(_silo);
+
+        asset = thisSiloConfig.token;
+        debtShareToken = thisSiloConfig.debtShareToken;
+        collateralShareToken = _collateralType == ISilo.CollateralType.Collateral
+            ? thisSiloConfig.collateralShareToken
+            : thisSiloConfig.protectedShareToken;
+    }
 
     /// Called by:
     /// - Silo.isSolvent()
