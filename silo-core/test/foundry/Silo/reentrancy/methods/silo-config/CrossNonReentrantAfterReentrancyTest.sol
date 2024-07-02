@@ -10,14 +10,14 @@ contract CrossNonReentrantAfterReentrancyTest is MethodReentrancyTest {
         emit log_string("\tEnsure it will revert (permissions test)");
         ISiloConfig config = TestStateLib.siloConfig();
 
-        vm.expectRevert(ISiloConfig.OnlySiloOrLiquidationModule.selector);
+        vm.expectRevert(ISiloConfig.OnlySiloOrHookReceiver.selector);
         config.crossNonReentrantAfter();
     }
 
     function verifyReentrancy() external {
         ISiloConfig config = TestStateLib.siloConfig();
 
-        vm.expectRevert(ISiloConfig.OnlySiloOrLiquidationModule.selector);
+        vm.expectRevert(ISiloConfig.OnlySiloOrHookReceiver.selector);
         config.crossNonReentrantAfter();
     }
 

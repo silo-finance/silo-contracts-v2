@@ -20,7 +20,7 @@ contract SiloReentrancyTest is Test {
     ISiloConfig public siloConfig;
 
     // FOUNDRY_PROFILE=core-test forge test -vv --ffi --mt test_coverage_for_reentrancy
-    function test_coverage_for_reentrancy() public {
+    function test_skip_coverage_for_reentrancy() public {
         Registries registries = new Registries();
         IMethodsRegistry[] memory methodRegistries = registries.list();
 

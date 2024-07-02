@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 import {ShareToken} from "silo-core/contracts/utils/ShareToken.sol";
 import {ShareTokenMethodReentrancyTest} from "./_ShareTokenMethodReentrancyTest.sol";
 
-contract AllowanceSeparatorReentrancyTest is ShareTokenMethodReentrancyTest {
+contract AllowanceReentrancyTest is ShareTokenMethodReentrancyTest {
     function callMethod() external {
         emit log_string("\tEnsure it will not revert (all share tokens)");
         _executeForAllShareTokens(_ensureItWillNotRevert);

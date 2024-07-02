@@ -5,7 +5,7 @@ import {IMethodReentrancyTest} from "../interfaces/IMethodReentrancyTest.sol";
 import {IMethodsRegistry} from "../interfaces/IMethodsRegistry.sol";
 
 import {DomainSeparatorReentrancyTest} from "../methods/share-token/DomainSeparatorReentrancyTest.sol";
-import {AllowanceSeparatorReentrancyTest} from "../methods/share-token/AllowanceSeparatorReentrancyTest.sol";
+import {AllowanceReentrancyTest} from "../methods/share-token/AllowanceReentrancyTest.sol";
 import {ApproveReentrancyTest} from "../methods/share-token/ApproveReentrancyTest.sol";
 import {BalanceOfReentrancyTest} from "../methods/share-token/BalanceOfReentrancyTest.sol";
 import {BalanceOfAndTotalSupplyReentrancyTest} from "../methods/share-token/BalanceOfAndTotalSupplyReentrancyTest.sol";
@@ -34,7 +34,7 @@ abstract contract ShareTokenMethodsRegistry is IMethodsRegistry {
 
     constructor() {
         _registerMethod(new DomainSeparatorReentrancyTest());
-        _registerMethod(new AllowanceSeparatorReentrancyTest());
+        _registerMethod(new AllowanceReentrancyTest());
         _registerMethod(new ApproveReentrancyTest());
         _registerMethod(new BalanceOfReentrancyTest());
         _registerMethod(new BalanceOfAndTotalSupplyReentrancyTest());
