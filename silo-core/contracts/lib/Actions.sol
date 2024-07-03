@@ -335,8 +335,6 @@ library Actions {
 
         ISiloConfig siloConfig = _shareStorage.siloConfig;
 
-        siloConfig.setCollateralSilo(msg.sender, _toSameAsset);
-
         (
             ISiloConfig.ConfigData memory collateralConfig,
             ISiloConfig.ConfigData memory debtConfig,

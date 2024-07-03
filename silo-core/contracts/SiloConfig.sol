@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.24;
 
+import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
+
 import {ISilo} from "./interfaces/ISilo.sol";
 import {ISiloConfig} from "./interfaces/ISiloConfig.sol";
 import {IShareToken} from "./interfaces/IShareToken.sol";
@@ -76,6 +78,8 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
 
     mapping (address borrower => address collateralSilo) internal borrowerCollateralSilo;
     mapping (address borrower => DebtInfo debtInfo) internal _debtsInfo;
+
+    error DebtInTwoSilos();
     
     /// @param _siloId ID of this pool assigned by factory
     /// @param _configData0 silo configuration data for token0
@@ -147,6 +151,22 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
 
     /// @inheritdoc ISiloConfig
     function setCollateralSilo(address _borrower, bool _sameAsset) external {
+        _onlySilo();
+
+        address collateralSilo;
+
+        if (_sameAsset) {
+            // the same as msg.sender
+            collateralSilo =  msg.sender == _SILO0 ? _SILO0 : _SILO1;
+        } else {
+            // the other silo
+            collateralSilo =  msg.sender == _SILO0 ? _SILO1 : _SILO0;
+        }
+
+        borrowerCollateralSilo[_borrower] = collateralSilo;
+    }
+
+    function _setCollateralSilo(address _borrower, bool _sameAsset) internal {
         _onlySilo();
 
         address collateralSilo;
@@ -239,13 +259,39 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
     {
         _crossNonReentrantBefore();
 
+        address collateralSilo = borrowerCollateralSilo[_borrower];
+        address debtSilo = getDebtSilo(_borrower);
+
+        debtInfo = _getDebtInfo(
+            _silo,
+            _borrower,
+            collateralSilo,
+            debtSilo
+        );
+
         if (_action.matchAction(Hook.BORROW)) {
-            debtInfo = _openDebt(_borrower, _action);
+            _onlySilo();
+            // debtInfo = _openDebt(_borrower, _action);
         } else if (_action.matchAction(Hook.SWITCH_COLLATERAL)) {
-            debtInfo = _changeCollateralType(_borrower, _action.matchAction(Hook.SAME_ASSET));
+            // _changeCollateralType(_borrower, _action.matchAction(Hook.SAME_ASSET));
+            bool switchToSameAsset = _action.matchAction(Hook.SAME_ASSET);
+
+            if (!debtInfo.debtPresent) revert NoDebt();
+            if (debtInfo.sameAsset == switchToSameAsset) revert CollateralTypeDidNotChanged();
+
+            _setCollateralSilo(_borrower, switchToSameAsset);
+
+            collateralSilo = borrowerCollateralSilo[_borrower];
+
+            debtInfo = _getDebtInfo(
+                _silo,
+                _borrower,
+                collateralSilo,
+                debtSilo
+            );
         } else {
             // TODO looks like anyone can raise flag if there is no action taken?
-            debtInfo = _debtsInfo[_borrower];
+            // debtInfo = _debtsInfo[_borrower];
         }
 
         _callAccrueInterest(_silo);
@@ -295,7 +341,15 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
         virtual
         returns (ConfigData memory collateralConfig, ConfigData memory debtConfig, DebtInfo memory debtInfo)
     {
-        debtInfo = _debtsInfo[_borrower];
+        address collateralSilo = borrowerCollateralSilo[_borrower];
+        address debtSilo = getDebtSilo(_borrower);
+
+        debtInfo = _getDebtInfo(
+            _silo,
+            _borrower,
+            collateralSilo,
+            debtSilo
+        );
 
         (collateralConfig, debtConfig) = _getOrderedConfigs(_silo, debtInfo, _action);
     }
@@ -330,6 +384,28 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
         } else {
             revert WrongSilo();
         }
+    }
+
+    function _getDebtInfo(
+        address _silo,
+        address _borrower,
+        address _collateralSilo,
+        address _debtSilo
+    ) internal view virtual returns (DebtInfo memory debtInfo) {
+        debtInfo.debtPresent = _debtSilo != address(0);
+        debtInfo.sameAsset = _collateralSilo == _debtSilo;
+        debtInfo.debtInSilo0 = _debtSilo == _SILO0;
+        debtInfo.debtInThisSilo = _silo == _debtSilo;
+    }
+
+    function getDebtSilo(address _borrower) public view virtual returns (address debtSilo) {
+        uint256 debtBal0 = IERC20(_DEBT_SHARE_TOKEN0).balanceOf(_borrower);
+        uint256 debtBal1 = IERC20(_DEBT_SHARE_TOKEN1).balanceOf(_borrower);
+
+        if (debtBal0 > 0 && debtBal1 > 0) revert DebtInTwoSilos();
+        if (debtBal0 == 0 && debtBal1 == 0) return address(0);
+
+        debtSilo = debtBal0 > debtBal1 ? _SILO0 : _SILO1;
     }
 
     function _callAccrueInterest(address _silo) internal {
