@@ -200,7 +200,6 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
 
     function getDebtInfo2(
         address _silo,
-        address _borrower,
         address _collateralSilo,
         address _debtSilo
     ) public view virtual returns (DebtInfo memory debtInfo) {
@@ -226,7 +225,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
         if (collateralSilo != address(0)) collateralConfig = _getCollateralConfig(collateralSilo);
         if (debtSilo != address(0)) debtConfig = _getDebtConfig(debtSilo);
 
-        debtInfo = getDebtInfo2(_silo, _borrower, collateralSilo, debtSilo);
+        debtInfo = getDebtInfo2(_silo, collateralSilo, debtSilo);
     }
 
     /// @inheritdoc ISiloConfig
