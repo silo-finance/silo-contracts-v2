@@ -14,8 +14,8 @@ import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
 import {Hook} from "silo-core/contracts/lib/Hook.sol";
 import {AssetTypes} from "silo-core/contracts/lib/AssetTypes.sol";
 
-import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
-import {MintableToken} from "../_common/MintableToken.sol";
+import {SiloLittleHelper} from "../../../_common/SiloLittleHelper.sol";
+import {MintableToken} from "../../../_common/MintableToken.sol";
 
 
 /*
@@ -49,47 +49,15 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --ffi --mt test_liquidationCall_UnexpectedCollateralToken
-    */
-    function test_liquidationCall_UnexpectedCollateralToken_1token() public {
-        uint256 debtToCover;
-        bool receiveSToken;
-
-        vm.expectRevert(IPartialLiquidation.UnexpectedCollateralToken.selector);
-        partialLiquidation.liquidationCall(
-            address(silo0), address(token1), address(token1), BORROWER, debtToCover, receiveSToken
-        );
-
-        vm.expectRevert(IPartialLiquidation.UnexpectedCollateralToken.selector);
-        partialLiquidation.liquidationCall(
-            address(silo0), address(token1), address(token0), BORROWER, debtToCover, receiveSToken
-        );
-    }
-
-    /*
     forge test -vv --ffi --mt test_liquidationCall_UnexpectedDebtToken
     */
     function test_liquidationCall_UnexpectedDebtToken_1token() public {
-        uint256 debtToCover;
+        uint256 debtToCover = 1;
         bool receiveSToken;
 
         vm.expectRevert(IPartialLiquidation.UnexpectedDebtToken.selector);
         partialLiquidation.liquidationCall(
             address(silo0), address(token0), address(token1), BORROWER, debtToCover, receiveSToken
-        );
-    }
-
-    /*
-    forge test -vv --ffi --mt test_liquidationCall_NoDebtToCover_whenZero
-    */
-    function test_liquidationCall_NoDebtToCover_whenZero_1token() public {
-        uint256 debtToCover;
-        bool receiveSToken;
-
-        vm.expectRevert(IPartialLiquidation.NoDebtToCover.selector);
-
-        partialLiquidation.liquidationCall(
-            address(silo0), address(token0), address(token0), BORROWER, debtToCover, receiveSToken
         );
     }
 
@@ -105,6 +73,8 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
         partialLiquidation.liquidationCall(
             address(silo0), address(token0), address(token0), BORROWER, debtToCover, receiveSToken
         );
+
+        _liquidationModulDoNotHaveTokens();
     }
 
     /*
@@ -126,6 +96,8 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
         partialLiquidation.liquidationCall(
             address(silo0), address(token0), address(token0), userWithoutDebt, debtToCover, receiveSToken
         );
+
+        _liquidationModulDoNotHaveTokens();
     }
 
     /*
@@ -148,6 +120,8 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
         partialLiquidation.liquidationCall(
             address(silo1), address(token0), address(token0), BORROWER, debtToCover, receiveSToken
         );
+
+        _liquidationModulDoNotHaveTokens();
     }
 
     /*
@@ -169,6 +143,8 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
         partialLiquidation.liquidationCall(
             address(silo0), address(token0), address(token0), BORROWER, debtToCover, receiveSToken
         );
+
+        _liquidationModulDoNotHaveTokens();
     }
 
     /*
@@ -328,6 +304,8 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
             assertGt(silo0.getLtv(BORROWER), 0, "expect some LTV after partial liquidation");
             assertTrue(silo0.isSolvent(BORROWER), "expect BORROWER to be solvent");
         }
+
+        _liquidationModulDoNotHaveTokens();
     }
 
     /*
@@ -357,6 +335,8 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
         partialLiquidation.liquidationCall(
             address(silo0), address(token0), address(token0), BORROWER, debtToCover, receiveSToken
         );
+
+        _liquidationModulDoNotHaveTokens();
     }
 
     /*
@@ -472,6 +452,8 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
             // so debt and collateral configs are by default different and we call accrue
             assertLt(interestRateTimestamp1, interestRateTimestamp1After, "interestRateTimestamp #1");
         }
+
+        _liquidationModulDoNotHaveTokens();
     }
 
     /*
@@ -589,6 +571,8 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
             assertEq(token0.balanceOf(depositor), 1e18 + 4_491873366236992444 - 5, "depositor can withdraw, left deposit");
             assertEq(token0.balanceOf(address(silo0)), 5 + 5 /* roundingError */, "silo should be empty (just dust left)");
         }
+
+        _liquidationModulDoNotHaveTokens();
     }
 
     /*
@@ -623,6 +607,8 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
             daoAndDeployerFees + dust,
             "silo collateral should be transfer to liquidator, fees left"
         );
+
+        _liquidationModulDoNotHaveTokens();
     }
 
     /*
@@ -671,6 +657,8 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
             1,
             "BORROWER should have NO s-collateral"
         );
+
+        _liquidationModulDoNotHaveTokens();
     }
 
     function _liquidationCall_badDebt_full(bool _receiveSToken) internal {
@@ -739,5 +727,27 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
                 "liquidator should get all collateral because of full liquidation"
             );
         }
+
+        _liquidationModulDoNotHaveTokens();
+    }
+
+    function _liquidationModulDoNotHaveTokens() private view {
+        address module = address(partialLiquidation);
+
+        assertEq(token0.balanceOf(module), 0);
+        assertEq(token1.balanceOf(module), 0);
+
+        (
+            ISiloConfig.ConfigData memory collateralConfig,
+            ISiloConfig.ConfigData memory debtConfig,
+        ) = siloConfig.getConfigs(address(silo0), address(0), 0 /* always 0 for external calls */);
+
+        assertEq(IShareToken(collateralConfig.collateralShareToken).balanceOf(module), 0);
+        assertEq(IShareToken(collateralConfig.protectedShareToken).balanceOf(module), 0);
+        assertEq(IShareToken(collateralConfig.debtShareToken).balanceOf(module), 0);
+
+        assertEq(IShareToken(debtConfig.collateralShareToken).balanceOf(module), 0);
+        assertEq(IShareToken(debtConfig.protectedShareToken).balanceOf(module), 0);
+        assertEq(IShareToken(debtConfig.debtShareToken).balanceOf(module), 0);
     }
 }

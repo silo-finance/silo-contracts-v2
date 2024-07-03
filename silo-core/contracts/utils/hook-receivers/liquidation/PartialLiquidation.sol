@@ -62,6 +62,7 @@ contract PartialLiquidation is SiloStorage, IPartialLiquidation, IHookReceiver {
         ISiloConfig siloConfigCached = siloConfig;
 
         if (address(siloConfigCached) == address(0)) revert EmptySiloConfig();
+        if (_debtToCover == 0) revert NoDebtToCover();
 
         (
             ISiloConfig.ConfigData memory collateralConfig,

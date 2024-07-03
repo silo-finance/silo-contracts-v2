@@ -12,10 +12,10 @@ import {PartialLiquidationLib} from "silo-core/contracts/utils/hook-receivers/li
 import {PartialLiquidationExecLib} from "silo-core/contracts/utils/hook-receivers/liquidation/lib/PartialLiquidationExecLib.sol";
 import {SiloFactory} from "silo-core/contracts/SiloFactory.sol";
 
-import {SiloMock} from "../../../_mocks/SiloMock.sol";
-import {InterestRateModelMock} from "../../../_mocks/InterestRateModelMock.sol";
-import {TokenMock} from "../../../_mocks/TokenMock.sol";
-import {GetExactLiquidationAmountsTestData} from "../../../data-readers/GetExactLiquidationAmountsTestData.sol";
+import {SiloMock} from "../../../../../_mocks/SiloMock.sol";
+import {InterestRateModelMock} from "../../../../../_mocks/InterestRateModelMock.sol";
+import {TokenMock} from "../../../../../_mocks/TokenMock.sol";
+import {GetExactLiquidationAmountsTestData} from "../../../../../data-readers/GetExactLiquidationAmountsTestData.sol";
 
 // this is not test contract, just a helper
 contract GetExactLiquidationAmountsHelper is Test {

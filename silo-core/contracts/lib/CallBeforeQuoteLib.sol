@@ -9,7 +9,7 @@ library CallBeforeQuoteLib {
     /// @param _config Silo config data
     function callSolvencyOracleBeforeQuote(ISiloConfig.ConfigData memory _config) internal {
         if (_config.callBeforeQuote && _config.solvencyOracle != address(0)) {
-            ISiloOracle(_config.solvencyOracle).beforeQuote(_config.token);
+            ISiloOracle(_config.solvencyOracle).beforeQuote(_config.token); // TODO QA
         }
     }
 
@@ -17,7 +17,7 @@ library CallBeforeQuoteLib {
     /// @param _config Silo config data
     function callMaxLtvOracleBeforeQuote(ISiloConfig.ConfigData memory _config) internal {
         if (_config.callBeforeQuote && _config.maxLtvOracle != address(0)) {
-            ISiloOracle(_config.maxLtvOracle).beforeQuote(_config.token);
+            ISiloOracle(_config.maxLtvOracle).beforeQuote(_config.token); // TODO QA
         }
     }
 }
