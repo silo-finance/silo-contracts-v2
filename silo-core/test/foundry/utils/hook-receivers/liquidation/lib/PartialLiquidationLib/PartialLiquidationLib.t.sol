@@ -8,10 +8,10 @@ import {Strings} from "openzeppelin5/utils/Strings.sol";
 import {PartialLiquidationLib} from "silo-core/contracts/utils/hook-receivers/liquidation/lib/PartialLiquidationLib.sol";
 
 import {PartialLiquidationLibChecked} from "./PartialLiquidationLibChecked.sol";
-import "../../../data-readers/CalculateCollateralToLiquidateTestData.sol";
-import "../../../data-readers/LiquidationPreviewTestData.sol";
-import "../../../data-readers/MaxLiquidationPreviewTestData.sol";
-import "../../../data-readers/EstimateMaxRepayValueTestData.sol";
+import "../../../../../data-readers/CalculateCollateralToLiquidateTestData.sol";
+import "../../../../../data-readers/LiquidationPreviewTestData.sol";
+import "../../../../../data-readers/MaxLiquidationPreviewTestData.sol";
+import "../../../../../data-readers/EstimateMaxRepayValueTestData.sol";
 import "./MaxRepayRawMath.sol";
 
 

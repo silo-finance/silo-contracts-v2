@@ -7,7 +7,6 @@ import {Ownable2Step, Ownable} from "openzeppelin5/access/Ownable2Step.sol";
 import {Initializable} from "openzeppelin5/proxy/utils/Initializable.sol";
 import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 
-import {SiloFixture, SiloConfigOverride} from "../../_common/fixtures/SiloFixture.sol";
 import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IHookReceiver} from "silo-core/contracts/interfaces/IHookReceiver.sol";
@@ -24,8 +23,9 @@ import {GaugeHookReceiverDeploy} from "silo-core/deploy/GaugeHookReceiverDeploy.
 
 import {VeSiloContracts} from "ve-silo/common/VeSiloContracts.sol";
 
-import {SiloLittleHelper} from  "../../_common/SiloLittleHelper.sol";
-import {TransferOwnership} from  "../../_common/TransferOwnership.sol";
+import {SiloFixture, SiloConfigOverride} from "../../../_common/fixtures/SiloFixture.sol";
+import {SiloLittleHelper} from  "../../../_common/SiloLittleHelper.sol";
+import {TransferOwnership} from  "../../../_common/TransferOwnership.sol";
 
 // FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc GaugeHookReceiverTest
 contract GaugeHookReceiverTest is SiloLittleHelper, Test, TransferOwnership {

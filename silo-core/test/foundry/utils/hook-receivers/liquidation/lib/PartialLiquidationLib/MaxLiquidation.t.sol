@@ -7,9 +7,9 @@ import {SiloSolvencyLib} from "silo-core/contracts/lib/SiloSolvencyLib.sol";
 import {PartialLiquidationExecLib} from "silo-core/contracts/utils/hook-receivers/liquidation/lib/PartialLiquidationExecLib.sol";
 import {PartialLiquidationLib} from "silo-core/contracts/utils/hook-receivers/liquidation/lib/PartialLiquidationLib.sol";
 
-import {OraclesHelper} from "../../../_common/OraclesHelper.sol";
-import {OracleMock} from "../../../_mocks/OracleMock.sol";
-import {PartialLiquidationExecLibImpl} from "../../../_common/PartialLiquidationExecLibImpl.sol";
+import {OraclesHelper} from "../../../../../_common/OraclesHelper.sol";
+import {OracleMock} from "../../../../../_mocks/OracleMock.sol";
+import {PartialLiquidationExecLibImpl} from "../../../../../_common/PartialLiquidationExecLibImpl.sol";
 import "./MaxRepayRawMath.sol";
 
 // forge test -vv --mc MaxLiquidationTest
