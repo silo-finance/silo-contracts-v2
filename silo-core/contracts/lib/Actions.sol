@@ -221,7 +221,7 @@ library Actions {
 
         _hookCallBeforeLeverageSameAsset(_shareStorage, _args);
 
-        siloConfig.setCollateralSilo(_args.borrower, /* sameAsset */ true);
+        _shareStorage.siloConfig.setCollateralSilo(_args.borrower, /* sameAsset */ true);
 
         (
             ISiloConfig.ConfigData memory collateralConfig,
