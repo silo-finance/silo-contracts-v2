@@ -149,19 +149,19 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
     function setCollateralSilo(address _borrower, bool _sameAsset) external {
         _onlySilo();
 
-        address silo;
+        address collateralSilo;
 
         if (_sameAsset) {
             // the same as msg.sender
-            silo =  msg.sender == _SILO0 ? _SILO0 : _SILO1;
+            collateralSilo =  msg.sender == _SILO0 ? _SILO0 : _SILO1;
         } else {
             // the other silo
-            silo =  msg.sender == _SILO0 ? _SILO1 : _SILO0;
+            collateralSilo =  msg.sender == _SILO0 ? _SILO1 : _SILO0;
         }
 
         // Debt in two silos not allowed for the `_borrower`.
         // If `_borrower` has debt in other silo debt share token will revert on mint.
-        borrowerCollateralSilo[_borrower] = silo;
+        borrowerCollateralSilo[_borrower] = collateralSilo;
     }
 
     /// @inheritdoc ISiloConfig
