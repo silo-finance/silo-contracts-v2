@@ -144,6 +144,11 @@ interface ISiloConfig {
     /// @notice only silo method for cross Silo reentrancy
     function crossNonReentrantAfter() external;
 
+    /// @notice Set collateral silo
+    /// @param _borrower borrower address
+    /// @param _sameAsset true if `_borrower` operates on the same asset
+    function setCollateralSilo(address _borrower, bool _sameAsset) external;
+
     function accrueInterestAndGetConfig(address _silo) external returns (ConfigData memory);
 
     function accrueInterestAndGetConfigs(address _silo, address _borrower, uint256 _action)

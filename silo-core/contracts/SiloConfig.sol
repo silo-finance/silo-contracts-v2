@@ -74,6 +74,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
 
     bool private immutable _CALL_BEFORE_QUOTE1;
 
+    mapping (address borrower => address collateralSilo) internal borrowerCollateralSilo;
     mapping (address borrower => DebtInfo debtInfo) internal _debtsInfo;
     
     /// @param _siloId ID of this pool assigned by factory
@@ -142,6 +143,25 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
     function crossNonReentrantAfter() external virtual {
         _onlySiloOrTokenOrHookReceiver();
         _crossNonReentrantAfter();
+    }
+
+    /// @inheritdoc ISiloConfig
+    function setCollateralSilo(address _borrower, bool _sameAsset) external {
+        _onlySilo();
+
+        address silo;
+
+        if (_sameAsset) {
+            // the same as msg.sender
+            silo =  msg.sender == _SILO0 ? _SILO0 : _SILO1;
+        } else {
+            // the other silo
+            silo =  msg.sender == _SILO0 ? _SILO1 : _SILO0;
+        }
+
+        // Debt in two silos not allowed for the `_borrower`.
+        // If `_borrower` has debt in other silo debt share token will revert on mint.
+        borrowerCollateralSilo[_borrower] = silo;
     }
 
     /// @inheritdoc ISiloConfig
@@ -320,6 +340,18 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
             _DAO_FEE,
             _DEPLOYER_FEE
         );
+    }
+
+    function _getDebtInfo(
+        address _silo,
+        address _borrower,
+        address _collateralSilo,
+        address _debtSilo
+    ) internal view virtual returns (DebtInfo memory debtInfo) {
+        debtInfo.debtPresent = _debtSilo != address(0);
+        debtInfo.sameAsset = _collateralSilo == _debtSilo;
+        debtInfo.debtInSilo0 = _debtSilo == _SILO0;
+        debtInfo.debtInThisSilo = _silo == _debtSilo;
     }
 
     /// @notice it will change collateral for existing debt, only silo can call it
