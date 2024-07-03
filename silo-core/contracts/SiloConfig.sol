@@ -342,18 +342,6 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
         );
     }
 
-    function _getDebtInfo(
-        address _silo,
-        address _borrower,
-        address _collateralSilo,
-        address _debtSilo
-    ) internal view virtual returns (DebtInfo memory debtInfo) {
-        debtInfo.debtPresent = _debtSilo != address(0);
-        debtInfo.sameAsset = _collateralSilo == _debtSilo;
-        debtInfo.debtInSilo0 = _debtSilo == _SILO0;
-        debtInfo.debtInThisSilo = _silo == _debtSilo;
-    }
-
     /// @notice it will change collateral for existing debt, only silo can call it
     /// @return debtInfo details about `borrower` debt after the change
     function _changeCollateralType(address _borrower, bool _switchToSameAsset)
