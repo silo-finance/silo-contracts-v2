@@ -278,7 +278,9 @@ library Actions {
     {
         _hookCallBeforeTransitionCollateral(_shareStorage, _withdrawType, _shares, _owner);
 
-        ISiloConfig.ConfigData memory collateralConfig = _shareStorage.siloConfig.accrueInterestAndGetConfig(address(this));
+        ISiloConfig.ConfigData memory collateralConfig = _shareStorage.siloConfig.accrueInterestAndGetConfig(
+            address(this)
+        );
 
         uint256 liquidity = _withdrawType == ISilo.CollateralType.Collateral
             ? SiloMathLib.liquidity(_total[AssetTypes.COLLATERAL].assets, _total[AssetTypes.DEBT].assets)
