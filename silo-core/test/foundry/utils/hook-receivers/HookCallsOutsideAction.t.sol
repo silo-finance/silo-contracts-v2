@@ -9,7 +9,6 @@ import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
 import {ISilo, IERC3156FlashLender} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IERC3156FlashBorrower} from "silo-core/contracts/interfaces/IERC3156FlashBorrower.sol";
 import {IERC20R} from "silo-core/contracts/interfaces/IERC20R.sol";
-import {ILeverageBorrower} from "silo-core/contracts/interfaces/ILeverageBorrower.sol";
 import {IHookReceiver} from "silo-core/contracts/interfaces/IHookReceiver.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {PartialLiquidation} from "silo-core/contracts/utils/hook-receivers/liquidation/PartialLiquidation.sol";
@@ -25,11 +24,10 @@ import {SiloFixtureWithVeSilo as SiloFixture} from "../../_common/fixtures/SiloF
 /*
 FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc HookCallsOutsideActionTest
 */
-contract HookCallsOutsideActionTest is PartialLiquidation, ILeverageBorrower, IERC3156FlashBorrower, SiloLittleHelper, Test {
+contract HookCallsOutsideActionTest is PartialLiquidation, IERC3156FlashBorrower, SiloLittleHelper, Test {
     using Hook for uint256;
     using SiloLensLib for ISilo;
 
-    bytes32 internal constant _LEVERAGE_CALLBACK = keccak256("ILeverageBorrower.onLeverage");
     bytes32 constant FLASHLOAN_CALLBACK = keccak256("ERC3156FlashBorrower.onFlashLoan");
 
     uint24 public configuredHooksBefore;
@@ -108,9 +106,6 @@ contract HookCallsOutsideActionTest is PartialLiquidation, ILeverageBorrower, IE
         vm.prank(borrower);
         silo1.leverageSameAsset(10, 1, borrower, ISilo.CollateralType.Protected);
 
-        emit log("-- leverage --");
-        silo0.leverage(1e18, this, address(this), !sameAsset, abi.encode(address(silo1)));
-
         (
             address protectedShareToken, address collateralShareToken, address debtShareToken
         ) = siloConfig.getShareTokens(address(silo1));
@@ -171,14 +166,6 @@ contract HookCallsOutsideActionTest is PartialLiquidation, ILeverageBorrower, IE
         (bool entered, uint256 status) = siloConfig.crossReentrantStatus();
         emit log_named_uint("[before] status", status);
 
-        if (entered) {
-            if (status == CrossEntrancy.ENTERED_FROM_LEVERAGE && _action.matchAction(Hook.DEPOSIT)) {
-                // we inside leverage
-            } else {
-                assertFalse(entered, "hook `before` must be called before (outside) any action");
-            }
-        }
-
         emit log("[before] action --------------------- ");
     }
 
@@ -234,16 +221,6 @@ contract HookCallsOutsideActionTest is PartialLiquidation, ILeverageBorrower, IE
         configuredHooksAfter = 0;
     }
 
-    function onLeverage(address, address _borrower, address, uint256 _assets, bytes calldata _data)
-        external
-        returns (bytes32)
-    {
-        (address silo) = abi.decode(_data, (address));
-        ISilo(silo).deposit(_assets * 2, _borrower, ISilo.CollateralType.Protected);
-
-        return _LEVERAGE_CALLBACK;
-    }
-
     function _printAction(uint256 _action) internal {
         if (_action.matchAction(Hook.SAME_ASSET)) emit log("SAME_ASSET");
         if (_action.matchAction(Hook.TWO_ASSETS)) emit log("TWO_ASSETS");
@@ -251,7 +228,6 @@ contract HookCallsOutsideActionTest is PartialLiquidation, ILeverageBorrower, IE
         if (_action.matchAction(Hook.BORROW)) emit log("BORROW");
         if (_action.matchAction(Hook.REPAY)) emit log("REPAY");
         if (_action.matchAction(Hook.WITHDRAW)) emit log("WITHDRAW");
-        if (_action.matchAction(Hook.LEVERAGE)) emit log("LEVERAGE");
         if (_action.matchAction(Hook.FLASH_LOAN)) emit log("FLASH_LOAN");
         if (_action.matchAction(Hook.TRANSITION_COLLATERAL)) emit log("TRANSITION_COLLATERAL");
         if (_action.matchAction(Hook.SWITCH_COLLATERAL)) emit log("SWITCH_COLLATERAL");

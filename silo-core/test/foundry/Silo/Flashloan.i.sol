@@ -10,7 +10,7 @@ import {ISilo, IERC3156FlashLender} from "silo-core/contracts/interfaces/ISilo.s
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {IInterestRateModel} from "silo-core/contracts/interfaces/IInterestRateModel.sol";
 import {IERC3156FlashBorrower} from "silo-core/contracts/interfaces/IERC3156FlashBorrower.sol";
-import {Silo, ILeverageBorrower} from "silo-core/contracts/Silo.sol";
+import {Silo} from "silo-core/contracts/Silo.sol";
 import {SiloStdLib} from "silo-core/contracts/lib/SiloStdLib.sol";
 
 import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
@@ -57,8 +57,6 @@ contract Hack1 {
             Silo(payable(msg.sender)).repay(assets, _initiator);
         } else if (option == 8) {
             Silo(payable(msg.sender)).repayShares(shares, _initiator);
-        } else {
-            Silo(payable(msg.sender)).leverage(assets, ILeverageBorrower(receiver), _initiator, sameAsset, bytes(""));
         }
 
         return FLASHLOAN_CALLBACK;

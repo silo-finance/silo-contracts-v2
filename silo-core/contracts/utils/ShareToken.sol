@@ -278,7 +278,7 @@ abstract contract ShareToken is Initializable, ERC20Permit, IShareToken {
         returns (ISiloConfig siloConfigCached)
     {
         siloConfigCached = siloConfig;
-        siloConfigCached.crossNonReentrantBefore(Hook.shareTokenTransfer(_hookSetup.tokenType));
+        siloConfigCached.crossNonReentrantBefore();
     }
 
     /// @notice Call beforeQuote on solvency oracles

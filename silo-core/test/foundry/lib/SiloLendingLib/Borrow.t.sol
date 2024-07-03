@@ -69,8 +69,7 @@ contract BorrowTest is Test {
                 shares: shares,
                 receiver: receiver,
                 borrower: borrower,
-                sameAsset: false,
-                leverage: false
+                sameAsset: false
             }),
             totalCollateralAssets,
             totalDebt

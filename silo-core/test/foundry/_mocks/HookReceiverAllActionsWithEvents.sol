@@ -19,8 +19,6 @@ contract HookReceiverAllActionsWithEvents is PartialLiquidation, SiloHookReceive
     bool internal constant _IS_AFTER = false;
     bool internal constant _SAME_ASSET = true;
     bool internal constant _NOT_SAME_ASSET = false;
-    bool internal constant _LEVERAGE = true;
-    bool internal constant _NOT_LEVERAGE = false;
 
     uint24 internal immutable _SILO0_ACTIONS_BEFORE;
     uint24 internal immutable _SILO0_ACTIONS_AFTER;
@@ -98,7 +96,6 @@ contract HookReceiverAllActionsWithEvents is PartialLiquidation, SiloHookReceive
         uint256 borrowedShares,
         address borrower,
         address receiver,
-        bool isLeverage,
         bool isSameAsset
     );
 
@@ -110,7 +107,6 @@ contract HookReceiverAllActionsWithEvents is PartialLiquidation, SiloHookReceive
         address receiver,
         uint256 returnedAssets,
         uint256 returnedShares,
-        bool isLeverage,
         bool isSameAsset
     );
 
@@ -364,14 +360,14 @@ contract HookReceiverAllActionsWithEvents is PartialLiquidation, SiloHookReceive
     }
 
     function _processBorrow(address _silo, uint256 _action, bytes calldata _inputAndOutput, bool _isBefore) internal {
-        if (_action.matchAction(Hook.borrowAction(_LEVERAGE, _NOT_SAME_ASSET))) {
-            _processBorrowAction(_silo, _inputAndOutput, _isBefore, _LEVERAGE, _NOT_SAME_ASSET);
-        } else if (_action.matchAction(Hook.borrowAction(_NOT_LEVERAGE, _SAME_ASSET))) {
-            _processBorrowAction(_silo, _inputAndOutput, _isBefore, _NOT_LEVERAGE, _SAME_ASSET);
-        } else if (_action.matchAction(Hook.borrowAction(_LEVERAGE, _SAME_ASSET))) {
-            _processBorrowAction(_silo, _inputAndOutput, _isBefore, _LEVERAGE, _SAME_ASSET);
-        } else if (_action.matchAction(Hook.borrowAction(_NOT_LEVERAGE, _NOT_SAME_ASSET))) {
-            _processBorrowAction(_silo, _inputAndOutput, _isBefore, _NOT_LEVERAGE, _NOT_SAME_ASSET);
+        if (_action.matchAction(Hook.borrowAction(_NOT_SAME_ASSET))) {
+            _processBorrowAction(_silo, _inputAndOutput, _isBefore, _NOT_SAME_ASSET);
+        } else if (_action.matchAction(Hook.borrowAction(_SAME_ASSET))) {
+            _processBorrowAction(_silo, _inputAndOutput, _isBefore, _SAME_ASSET);
+        } else if (_action.matchAction(Hook.borrowAction(_SAME_ASSET))) {
+            _processBorrowAction(_silo, _inputAndOutput, _isBefore, _SAME_ASSET);
+        } else if (_action.matchAction(Hook.borrowAction(_NOT_SAME_ASSET))) {
+            _processBorrowAction(_silo, _inputAndOutput, _isBefore, _NOT_SAME_ASSET);
         } else {
             revert UnknownBorrowAction();
         }
@@ -381,7 +377,6 @@ contract HookReceiverAllActionsWithEvents is PartialLiquidation, SiloHookReceive
         address _silo,
         bytes calldata _inputAndOutput,
         bool _isBefore,
-        bool _isLeverage,
         bool _isSameAsset
     ) internal {
         if (_isBefore) {
@@ -393,7 +388,6 @@ contract HookReceiverAllActionsWithEvents is PartialLiquidation, SiloHookReceive
                 input.shares,
                 input.borrower,
                 input.receiver,
-                _isLeverage,
                 _isSameAsset
             );
         } else {
@@ -407,7 +401,6 @@ contract HookReceiverAllActionsWithEvents is PartialLiquidation, SiloHookReceive
                 input.receiver,
                 input.borrowedAssets,
                 input.borrowedShares,
-                _isLeverage,
                 _isSameAsset
             );
         }

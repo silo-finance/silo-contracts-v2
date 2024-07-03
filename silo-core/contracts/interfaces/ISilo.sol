@@ -6,7 +6,6 @@ import {IERC4626, IERC20, IERC20Metadata} from "openzeppelin5/interfaces/IERC462
 import {IERC3156FlashLender} from "./IERC3156FlashLender.sol";
 import {ISiloConfig} from "./ISiloConfig.sol";
 import {ISiloFactory} from "./ISiloFactory.sol";
-import {ILeverageBorrower} from "./ILeverageBorrower.sol";
 
 import {IHookReceiver} from "./IHookReceiver.sol";
 
@@ -80,7 +79,6 @@ interface ISilo is IERC4626, IERC3156FlashLender {
         address receiver;
         address borrower;
         bool sameAsset;
-        bool leverage;
     }
 
     /// @param depositAssets Amount of assets the user wishes to deposit.
@@ -435,24 +433,6 @@ interface ISilo is IERC4626, IERC3156FlashLender {
     /// @param _borrower The address of the borrower for whom to repay the loan
     /// @return assets The equivalent assets amount for the provided shares
     function repayShares(uint256 _shares, address _borrower) external returns (uint256 assets);
-
-    /// @notice Allows a user to leverage their assets to borrow more, given the collateralization ratio constraints
-    /// @dev This function's design follows the flash loan pattern and assumes that the user will deposit the proper
-    /// amount of collateral by the end of the transaction
-    /// @param _assets The number of assets the borrower wants to borrow
-    /// @param _receiver The borrower contract that will receive the borrowed assets
-    /// @param _borrower The address of the borrower leveraging the assets
-    /// @param _data Arbitrary bytes data that might be needed for additional logic in the `_receiver` callback
-    /// @return shares The number of shares representing the leveraged borrowed amount
-    function leverage(
-        uint256 _assets,
-        ILeverageBorrower _receiver,
-        address _borrower,
-        bool _sameAsset,
-        bytes calldata _data
-    )
-        external
-        returns (uint256 shares);
 
     /// @notice Accrues interest for the asset and returns the accrued interest amount
     /// @return accruedInterest The total interest accrued during this operation

@@ -30,8 +30,7 @@ contract SiloLendingLibImpl {
                 shares: _shares,
                 receiver: _receiver,
                 borrower: _borrower,
-                sameAsset: false,
-                leverage: false
+                sameAsset: false
             }),
             _totalCollateralAssets,
             totalDebt

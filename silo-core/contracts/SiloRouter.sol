@@ -6,7 +6,6 @@ import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 
 import {IWrappedNativeToken} from "./interfaces/IWrappedNativeToken.sol";
 import {ISilo} from "./interfaces/ISilo.sol";
-import {ILeverageBorrower} from "./interfaces/ILeverageBorrower.sol";
 import {TokenHelper} from "./lib/TokenHelper.sol";
 
 /// @title SiloRouter

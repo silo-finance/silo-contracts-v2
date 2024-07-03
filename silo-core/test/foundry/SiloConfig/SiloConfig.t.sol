@@ -590,20 +590,18 @@ contract SiloConfigTest is Test {
         vm.assume(_callee != _configDataDefault1.protectedShareToken);
         vm.assume(_callee != _configDataDefault1.debtShareToken);
 
-        uint256 anyAction = 0;
         // Permissions check error
         vm.expectRevert(ISiloConfig.OnlySiloOrHookReceiver.selector);
-        _siloConfig.crossNonReentrantBefore(anyAction);
+        _siloConfig.crossNonReentrantBefore();
     }
 
     /*
     FOUNDRY_PROFILE=core-test forge test -vv --mt test_crossNonReentrantBeforePermissions
     */
     function test_crossNonReentrantBeforePermissions() public {
-        uint256 anyAction = 0;
         // Permissions check error
         vm.expectRevert(ISiloConfig.OnlySiloOrHookReceiver.selector);
-        _siloConfig.crossNonReentrantBefore(anyAction);
+        _siloConfig.crossNonReentrantBefore();
 
         // _onlySiloOrTokenOrLiquidation permissions check (calls should not revert)
         _callNonReentrantBeforeAndAfter(_silo0Default);
@@ -737,19 +735,15 @@ contract SiloConfigTest is Test {
     }
 
     function _callNonReentrantBeforeAndAfter(address _callee) internal {
-        uint256 anyAction = 0;
-
         vm.prank(_callee);
-        _siloConfig.crossNonReentrantBefore(anyAction);
+        _siloConfig.crossNonReentrantBefore();
         vm.prank(_callee);
         _siloConfig.crossNonReentrantAfter();
     }
 
     function _callNonReentrantBeforeAndAfterPermissions(address _callee) internal {
-        uint256 anyAction = 0;
-
         vm.prank(_silo0Default);
-        _siloConfig.crossNonReentrantBefore(anyAction);
+        _siloConfig.crossNonReentrantBefore();
         vm.prank(_callee);
         _siloConfig.crossNonReentrantAfter();
     }

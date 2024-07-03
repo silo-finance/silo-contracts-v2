@@ -139,7 +139,7 @@ interface ISiloConfig {
     function closeDebt(address _borrower) external;
 
     /// @notice only silo method for cross Silo reentrancy
-    function crossNonReentrantBefore(uint256 _action) external;
+    function crossNonReentrantBefore() external;
 
     /// @notice only silo method for cross Silo reentrancy
     function crossNonReentrantAfter() external;

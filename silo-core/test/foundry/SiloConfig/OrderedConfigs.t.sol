@@ -129,11 +129,10 @@ contract OrderedConfigsTest is Test {
 
     // FOUNDRY_PROFILE=core-test forge test -vvv --mt testOrderedConfigsWithdrawDebtSilo0NotSameAsset
     function testOrderedConfigsWithdrawDebtSilo0NotSameAsset() public {
-        bool leverage;
         bool sameAsset;
 
         vm.prank(_silo0);
-        _siloConfig.accrueInterestAndGetConfigs(_silo0, _siloUser, Hook.borrowAction(leverage, sameAsset));
+        _siloConfig.accrueInterestAndGetConfigs(_silo0, _siloUser, Hook.borrowAction(sameAsset));
 
         ISiloConfig.ConfigData memory collateralConfig;
         ISiloConfig.ConfigData memory debtConfig;
@@ -162,11 +161,10 @@ contract OrderedConfigsTest is Test {
 
     // FOUNDRY_PROFILE=core-test forge test -vvv --mt testOrderedConfigsWithdrawDebtSilo1NotSameAsset
     function testOrderedConfigsWithdrawDebtSilo1NotSameAsset() public {
-        bool leverage;
         bool sameAsset;
 
         vm.prank(_silo1);
-        _siloConfig.accrueInterestAndGetConfigs(_silo1, _siloUser, Hook.borrowAction(leverage, sameAsset));
+        _siloConfig.accrueInterestAndGetConfigs(_silo1, _siloUser, Hook.borrowAction(sameAsset));
 
         ISiloConfig.ConfigData memory collateralConfig;
         ISiloConfig.ConfigData memory debtConfig;
@@ -195,11 +193,10 @@ contract OrderedConfigsTest is Test {
 
     // FOUNDRY_PROFILE=core-test forge test -vvv --mt testOrderedConfigsWithdrawWithDebtSilo0SameAsset
     function testOrderedConfigsWithdrawWithDebtSilo0SameAsset() public {
-        bool leverage;
         bool sameAsset = true;
 
         vm.prank(_silo0);
-        _siloConfig.accrueInterestAndGetConfigs(_silo0, _siloUser, Hook.borrowAction(leverage, sameAsset));
+        _siloConfig.accrueInterestAndGetConfigs(_silo0, _siloUser, Hook.borrowAction(sameAsset));
 
         ISiloConfig.ConfigData memory collateralConfig;
         ISiloConfig.ConfigData memory debtConfig;
@@ -228,11 +225,10 @@ contract OrderedConfigsTest is Test {
 
     // FOUNDRY_PROFILE=core-test forge test -vvv --mt testOrderedConfigsWithdrawWithDebtSilo1SameAsset
     function testOrderedConfigsWithdrawWithDebtSilo1SameAsset() public {
-        bool leverage;
         bool sameAsset = true;
 
         vm.prank(_silo1);
-        _siloConfig.accrueInterestAndGetConfigs(_silo1, _siloUser, Hook.borrowAction(leverage, sameAsset));
+        _siloConfig.accrueInterestAndGetConfigs(_silo1, _siloUser, Hook.borrowAction(sameAsset));
 
         ISiloConfig.ConfigData memory collateralConfig;
         ISiloConfig.ConfigData memory debtConfig;
@@ -259,7 +255,6 @@ contract OrderedConfigsTest is Test {
 
     // FOUNDRY_PROFILE=core-test forge test -vvv --mt testOrderedConfigsBorrowNoDebtNotSameAsset
     function testOrderedConfigsBorrowNoDebtNotSameAsset() public view {
-        bool leverage;
         bool sameAsset;
 
         ISiloConfig.ConfigData memory collateralConfig;
@@ -269,7 +264,7 @@ contract OrderedConfigsTest is Test {
         (collateralConfig, debtConfig, debtInfo) = _siloConfig.getConfigs(
             _silo0,
             _siloUser,
-            Hook.borrowAction(leverage, sameAsset)
+            Hook.borrowAction(sameAsset)
         );
 
         assertEq(collateralConfig.silo, _silo1);
@@ -279,7 +274,7 @@ contract OrderedConfigsTest is Test {
         (collateralConfig, debtConfig, debtInfo) = _siloConfig.getConfigs(
             _silo1,
             _siloUser,
-            Hook.borrowAction(leverage, sameAsset)
+            Hook.borrowAction(sameAsset)
         );
 
         assertEq(collateralConfig.silo, _silo0);
@@ -289,7 +284,6 @@ contract OrderedConfigsTest is Test {
 
     // FOUNDRY_PROFILE=core-test forge test -vvv --mt testOrderedConfigsBorrowNoDebtSameAsset
     function testOrderedConfigsBorrowNoDebtSameAsset() public view {
-        bool leverage;
         bool sameAsset = true;
 
         ISiloConfig.ConfigData memory collateralConfig;
@@ -299,7 +293,7 @@ contract OrderedConfigsTest is Test {
         (collateralConfig, debtConfig, debtInfo) = _siloConfig.getConfigs(
             _silo0,
             _siloUser,
-            Hook.borrowAction(leverage, sameAsset)
+            Hook.borrowAction(sameAsset)
         );
 
         assertEq(collateralConfig.silo, _silo0);
@@ -309,7 +303,7 @@ contract OrderedConfigsTest is Test {
         (collateralConfig, debtConfig, debtInfo) = _siloConfig.getConfigs(
             _silo1,
             _siloUser,
-            Hook.borrowAction(leverage, sameAsset)
+            Hook.borrowAction(sameAsset)
         );
 
         assertEq(collateralConfig.silo, _silo1);
@@ -319,11 +313,10 @@ contract OrderedConfigsTest is Test {
 
     // FOUNDRY_PROFILE=core-test forge test -vvv --mt testOrderedConfigsBorrowDebtSilo0NotSameAsset
     function testOrderedConfigsBorrowDebtSilo0NotSameAsset() public {
-        bool leverage;
         bool sameAsset;
 
         vm.prank(_silo0);
-        _siloConfig.accrueInterestAndGetConfigs(_silo0, _siloUser, Hook.borrowAction(leverage, sameAsset));
+        _siloConfig.accrueInterestAndGetConfigs(_silo0, _siloUser, Hook.borrowAction(sameAsset));
 
         ISiloConfig.ConfigData memory collateralConfig;
         ISiloConfig.ConfigData memory debtConfig;
@@ -332,7 +325,7 @@ contract OrderedConfigsTest is Test {
         (collateralConfig, debtConfig, debtInfo) = _siloConfig.getConfigs(
             _silo0,
             _siloUser,
-            Hook.borrowAction(leverage, sameAsset)
+            Hook.borrowAction(sameAsset)
         );
 
         assertEq(collateralConfig.silo, _silo1);
@@ -342,7 +335,7 @@ contract OrderedConfigsTest is Test {
         (collateralConfig, debtConfig, debtInfo) = _siloConfig.getConfigs(
             _silo1,
             _siloUser,
-            Hook.borrowAction(leverage, sameAsset)
+            Hook.borrowAction(sameAsset)
         );
 
         assertEq(collateralConfig.silo, _silo1);
@@ -352,11 +345,10 @@ contract OrderedConfigsTest is Test {
 
     // FOUNDRY_PROFILE=core-test forge test -vvv --mt testOrderedConfigsBorrowDebtSilo0SameAsset
     function testOrderedConfigsBorrowDebtSilo0SameAsset() public {
-        bool leverage;
         bool sameAsset = true;
 
         vm.prank(_silo0);
-        _siloConfig.accrueInterestAndGetConfigs(_silo0, _siloUser, Hook.borrowAction(leverage, sameAsset));
+        _siloConfig.accrueInterestAndGetConfigs(_silo0, _siloUser, Hook.borrowAction(sameAsset));
 
         ISiloConfig.ConfigData memory collateralConfig;
         ISiloConfig.ConfigData memory debtConfig;
@@ -365,7 +357,7 @@ contract OrderedConfigsTest is Test {
         (collateralConfig, debtConfig, debtInfo) = _siloConfig.getConfigs(
             _silo0,
             _siloUser,
-            Hook.borrowAction(leverage, sameAsset)
+            Hook.borrowAction(sameAsset)
         );
 
         assertEq(collateralConfig.silo, _silo0);
@@ -375,7 +367,7 @@ contract OrderedConfigsTest is Test {
         (collateralConfig, debtConfig, debtInfo) = _siloConfig.getConfigs(
             _silo1,
             _siloUser,
-            Hook.borrowAction(leverage, sameAsset)
+            Hook.borrowAction(sameAsset)
         );
 
         assertEq(collateralConfig.silo, _silo0);
@@ -385,11 +377,10 @@ contract OrderedConfigsTest is Test {
 
     // FOUNDRY_PROFILE=core-test forge test -vvv --mt testOrderedConfigsBorrowDebtSilo1NotSameAsset
     function testOrderedConfigsBorrowDebtSilo1NotSameAsset() public {
-        bool leverage;
         bool sameAsset;
 
         vm.prank(_silo1);
-        _siloConfig.accrueInterestAndGetConfigs(_silo1, _siloUser, Hook.borrowAction(leverage, sameAsset));
+        _siloConfig.accrueInterestAndGetConfigs(_silo1, _siloUser, Hook.borrowAction(sameAsset));
 
         ISiloConfig.ConfigData memory collateralConfig;
         ISiloConfig.ConfigData memory debtConfig;
@@ -398,7 +389,7 @@ contract OrderedConfigsTest is Test {
         (collateralConfig, debtConfig, debtInfo) = _siloConfig.getConfigs(
             _silo1,
             _siloUser,
-            Hook.borrowAction(leverage, sameAsset)
+            Hook.borrowAction(sameAsset)
         );
 
         assertEq(collateralConfig.silo, _silo0);
@@ -408,7 +399,7 @@ contract OrderedConfigsTest is Test {
         (collateralConfig, debtConfig, debtInfo) = _siloConfig.getConfigs(
             _silo0,
             _siloUser,
-            Hook.borrowAction(leverage, sameAsset)
+            Hook.borrowAction(sameAsset)
         );
 
         assertEq(collateralConfig.silo, _silo0);
@@ -418,11 +409,10 @@ contract OrderedConfigsTest is Test {
 
     // FOUNDRY_PROFILE=core-test forge test -vvv --mt testOrderedConfigsBorrowDebtSilo1SameAsset
     function testOrderedConfigsBorrowDebtSilo1SameAsset() public {
-        bool leverage;
         bool sameAsset = true;
 
         vm.prank(_silo1);
-        _siloConfig.accrueInterestAndGetConfigs(_silo1, _siloUser, Hook.borrowAction(leverage, sameAsset));
+        _siloConfig.accrueInterestAndGetConfigs(_silo1, _siloUser, Hook.borrowAction(sameAsset));
 
         ISiloConfig.ConfigData memory collateralConfig;
         ISiloConfig.ConfigData memory debtConfig;
@@ -431,7 +421,7 @@ contract OrderedConfigsTest is Test {
         (collateralConfig, debtConfig, debtInfo) = _siloConfig.getConfigs(
             _silo1,
             _siloUser,
-            Hook.borrowAction(leverage, sameAsset)
+            Hook.borrowAction(sameAsset)
         );
 
         assertEq(collateralConfig.silo, _silo1);
@@ -441,7 +431,7 @@ contract OrderedConfigsTest is Test {
         (collateralConfig, debtConfig, debtInfo) = _siloConfig.getConfigs(
             _silo0,
             _siloUser,
-            Hook.borrowAction(leverage, sameAsset)
+            Hook.borrowAction(sameAsset)
         );
 
         assertEq(collateralConfig.silo, _silo1);
@@ -478,11 +468,10 @@ contract OrderedConfigsTest is Test {
 
     // FOUNDRY_PROFILE=core-test forge test -vvv --mt testOrderedConfigsLeverageSameAssetsDebtSilo0NotSameAsset
     function testOrderedConfigsLeverageSameAssetsDebtSilo0NotSameAsset() public {
-        bool leverage;
         bool sameAsset;
 
         vm.prank(_silo0);
-        _siloConfig.accrueInterestAndGetConfigs(_silo0, _siloUser, Hook.borrowAction(leverage, sameAsset));
+        _siloConfig.accrueInterestAndGetConfigs(_silo0, _siloUser, Hook.borrowAction(sameAsset));
 
         ISiloConfig.ConfigData memory collateralConfig;
         ISiloConfig.ConfigData memory debtConfig;
@@ -511,11 +500,10 @@ contract OrderedConfigsTest is Test {
 
     // FOUNDRY_PROFILE=core-test forge test -vvv --mt testOrderedConfigsLeverageSameAssetsDebtSilo1NotSameAsset
     function testOrderedConfigsLeverageSameAssetsDebtSilo1NotSameAsset() public {
-        bool leverage;
         bool sameAsset;
 
         vm.prank(_silo1);
-        _siloConfig.accrueInterestAndGetConfigs(_silo1, _siloUser, Hook.borrowAction(leverage, sameAsset));
+        _siloConfig.accrueInterestAndGetConfigs(_silo1, _siloUser, Hook.borrowAction(sameAsset));
 
         ISiloConfig.ConfigData memory collateralConfig;
         ISiloConfig.ConfigData memory debtConfig;
@@ -544,11 +532,10 @@ contract OrderedConfigsTest is Test {
 
     // FOUNDRY_PROFILE=core-test forge test -vvv --mt testOrderedConfigsLeverageSameAssetsDebtSilo0SameAsset
     function testOrderedConfigsLeverageSameAssetsDebtSilo0SameAsset() public {
-        bool leverage;
         bool sameAsset = true;
 
         vm.prank(_silo0);
-        _siloConfig.accrueInterestAndGetConfigs(_silo0, _siloUser, Hook.borrowAction(leverage, sameAsset));
+        _siloConfig.accrueInterestAndGetConfigs(_silo0, _siloUser, Hook.borrowAction(sameAsset));
 
         ISiloConfig.ConfigData memory collateralConfig;
         ISiloConfig.ConfigData memory debtConfig;
@@ -577,11 +564,10 @@ contract OrderedConfigsTest is Test {
 
     // FOUNDRY_PROFILE=core-test forge test -vvv --mt testOrderedConfigsLeverageSameAssetsDebtSilo1SameAsset
     function testOrderedConfigsLeverageSameAssetsDebtSilo1SameAsset() public {
-        bool leverage;
         bool sameAsset = true;
 
         vm.prank(_silo1);
-        _siloConfig.accrueInterestAndGetConfigs(_silo1, _siloUser, Hook.borrowAction(leverage, sameAsset));
+        _siloConfig.accrueInterestAndGetConfigs(_silo1, _siloUser, Hook.borrowAction(sameAsset));
 
         ISiloConfig.ConfigData memory collateralConfig;
         ISiloConfig.ConfigData memory debtConfig;
@@ -637,11 +623,10 @@ contract OrderedConfigsTest is Test {
 
     // FOUNDRY_PROFILE=core-test forge test -vvv --mt testOrderedConfigsTransitionCollateralDebtSilo0NotSameAsset
     function testOrderedConfigsTransitionCollateralDebtSilo0NotSameAsset() public {
-        bool leverage;
         bool sameAsset;
 
         vm.prank(_silo0);
-        _siloConfig.accrueInterestAndGetConfigs(_silo0, _siloUser, Hook.borrowAction(leverage, sameAsset));
+        _siloConfig.accrueInterestAndGetConfigs(_silo0, _siloUser, Hook.borrowAction(sameAsset));
 
         ISiloConfig.ConfigData memory collateralConfig;
         ISiloConfig.ConfigData memory debtConfig;
@@ -670,11 +655,10 @@ contract OrderedConfigsTest is Test {
 
     // FOUNDRY_PROFILE=core-test forge test -vvv --mt testOrderedConfigsTransitionCollateralDebtSilo0SameAsset
     function testOrderedConfigsTransitionCollateralDebtSilo0SameAsset() public {
-        bool leverage;
         bool sameAsset = true;
 
         vm.prank(_silo0);
-        _siloConfig.accrueInterestAndGetConfigs(_silo0, _siloUser, Hook.borrowAction(leverage, sameAsset));
+        _siloConfig.accrueInterestAndGetConfigs(_silo0, _siloUser, Hook.borrowAction(sameAsset));
 
         ISiloConfig.ConfigData memory collateralConfig;
         ISiloConfig.ConfigData memory debtConfig;
@@ -703,11 +687,10 @@ contract OrderedConfigsTest is Test {
 
     // FOUNDRY_PROFILE=core-test forge test -vvv --mt testOrderedConfigsTransitionCollateralDebtSilo1NotSameAsset
     function testOrderedConfigsTransitionCollateralDebtSilo1NotSameAsset() public {
-        bool leverage;
         bool sameAsset;
 
         vm.prank(_silo1);
-        _siloConfig.accrueInterestAndGetConfigs(_silo1, _siloUser, Hook.borrowAction(leverage, sameAsset));
+        _siloConfig.accrueInterestAndGetConfigs(_silo1, _siloUser, Hook.borrowAction(sameAsset));
 
         ISiloConfig.ConfigData memory collateralConfig;
         ISiloConfig.ConfigData memory debtConfig;
@@ -735,11 +718,10 @@ contract OrderedConfigsTest is Test {
 
     // FOUNDRY_PROFILE=core-test forge test -vvv --mt testOrderedConfigsTransitionCollateralDebtSilo1SameAsset
     function testOrderedConfigsTransitionCollateralDebtSilo1SameAsset() public {
-        bool leverage;
         bool sameAsset = true;
 
         vm.prank(_silo1);
-        _siloConfig.accrueInterestAndGetConfigs(_silo1, _siloUser, Hook.borrowAction(leverage, sameAsset));
+        _siloConfig.accrueInterestAndGetConfigs(_silo1, _siloUser, Hook.borrowAction(sameAsset));
 
         ISiloConfig.ConfigData memory collateralConfig;
         ISiloConfig.ConfigData memory debtConfig;
@@ -827,11 +809,10 @@ contract OrderedConfigsTest is Test {
     // FOUNDRY_PROFILE=core-test forge test -vvv --mt testOrderedSwitchConfigsCollateralToNotSameDebtSilo0NotSameAsset
     function testOrderedSwitchConfigsCollateralToNotSameDebtSilo0NotSameAsset() public {
         bool switchToSameAsset;
-        bool leverage;
         bool sameAsset;
 
         vm.prank(_silo0);
-        _siloConfig.accrueInterestAndGetConfigs(_silo0, _siloUser, Hook.borrowAction(leverage, sameAsset));
+        _siloConfig.accrueInterestAndGetConfigs(_silo0, _siloUser, Hook.borrowAction(sameAsset));
 
         ISiloConfig.ConfigData memory collateralConfig;
         ISiloConfig.ConfigData memory debtConfig;
@@ -861,11 +842,10 @@ contract OrderedConfigsTest is Test {
     // FOUNDRY_PROFILE=core-test forge test -vvv --mt testOrderedSwitchConfigsCollateralToSameDebtSilo0NotSameAsset
     function testOrderedSwitchConfigsCollateralToSameDebtSilo0NotSameAsset() public {
         bool switchToSameAsset = true;
-        bool leverage;
         bool sameAsset;
 
         vm.prank(_silo0);
-        _siloConfig.accrueInterestAndGetConfigs(_silo0, _siloUser, Hook.borrowAction(leverage, sameAsset));
+        _siloConfig.accrueInterestAndGetConfigs(_silo0, _siloUser, Hook.borrowAction(sameAsset));
 
         ISiloConfig.ConfigData memory collateralConfig;
         ISiloConfig.ConfigData memory debtConfig;
@@ -895,11 +875,10 @@ contract OrderedConfigsTest is Test {
     // FOUNDRY_PROFILE=core-test forge test -vvv --mt testOrderedSwitchConfigsCollateralToNotSameDebtSilo1NotSameAsset
     function testOrderedSwitchConfigsCollateralToNotSameDebtSilo1NotSameAsset() public {
         bool switchToSameAsset;
-        bool leverage;
         bool sameAsset;
 
         vm.prank(_silo1);
-        _siloConfig.accrueInterestAndGetConfigs(_silo1, _siloUser, Hook.borrowAction(leverage, sameAsset));
+        _siloConfig.accrueInterestAndGetConfigs(_silo1, _siloUser, Hook.borrowAction(sameAsset));
 
         ISiloConfig.ConfigData memory collateralConfig;
         ISiloConfig.ConfigData memory debtConfig;
@@ -929,11 +908,10 @@ contract OrderedConfigsTest is Test {
     // FOUNDRY_PROFILE=core-test forge test -vvv --mt testOrderedSwitchConfigsCollateralToSameDebtSilo1NotSameAsset
     function testOrderedSwitchConfigsCollateralToSameDebtSilo1NotSameAsset() public {
         bool switchToSameAsset = true;
-        bool leverage;
         bool sameAsset;
 
         vm.prank(_silo1);
-        _siloConfig.accrueInterestAndGetConfigs(_silo1, _siloUser, Hook.borrowAction(leverage, sameAsset));
+        _siloConfig.accrueInterestAndGetConfigs(_silo1, _siloUser, Hook.borrowAction(sameAsset));
 
         ISiloConfig.ConfigData memory collateralConfig;
         ISiloConfig.ConfigData memory debtConfig;
@@ -963,11 +941,10 @@ contract OrderedConfigsTest is Test {
     // FOUNDRY_PROFILE=core-test forge test -vvv --mt testOrderedSwitchConfigsCollateralToNotSameDebtSilo0SameAsset
     function testOrderedSwitchConfigsCollateralToNotSameDebtSilo0SameAsset() public {
         bool switchToSameAsset;
-        bool leverage;
         bool sameAsset = true;
 
         vm.prank(_silo0);
-        _siloConfig.accrueInterestAndGetConfigs(_silo0, _siloUser, Hook.borrowAction(leverage, sameAsset));
+        _siloConfig.accrueInterestAndGetConfigs(_silo0, _siloUser, Hook.borrowAction(sameAsset));
 
         ISiloConfig.ConfigData memory collateralConfig;
         ISiloConfig.ConfigData memory debtConfig;
@@ -997,11 +974,10 @@ contract OrderedConfigsTest is Test {
     // FOUNDRY_PROFILE=core-test forge test -vvv --mt testOrderedSwitchConfigsCollateralToSameDebtSilo0SameAsset
     function testOrderedSwitchConfigsCollateralToSameDebtSilo0SameAsset() public {
         bool switchToSameAsset = true;
-        bool leverage;
         bool sameAsset = true;
 
         vm.prank(_silo0);
-        _siloConfig.accrueInterestAndGetConfigs(_silo0, _siloUser, Hook.borrowAction(leverage, sameAsset));
+        _siloConfig.accrueInterestAndGetConfigs(_silo0, _siloUser, Hook.borrowAction(sameAsset));
 
         ISiloConfig.ConfigData memory collateralConfig;
         ISiloConfig.ConfigData memory debtConfig;
@@ -1031,11 +1007,10 @@ contract OrderedConfigsTest is Test {
     // FOUNDRY_PROFILE=core-test forge test -vvv --mt testOrderedSwitchConfigsCollateralToNotSameDebtSilo1NotSameAsset
     function testOrderedSwitchConfigsCollateralToNotSameDebtSilo1SameAsset() public {
         bool switchToSameAsset;
-        bool leverage;
         bool sameAsset = true;
 
         vm.prank(_silo1);
-        _siloConfig.accrueInterestAndGetConfigs(_silo1, _siloUser, Hook.borrowAction(leverage, sameAsset));
+        _siloConfig.accrueInterestAndGetConfigs(_silo1, _siloUser, Hook.borrowAction(sameAsset));
 
         ISiloConfig.ConfigData memory collateralConfig;
         ISiloConfig.ConfigData memory debtConfig;
@@ -1065,11 +1040,10 @@ contract OrderedConfigsTest is Test {
     // FOUNDRY_PROFILE=core-test forge test -vvv --mt testOrderedSwitchConfigsCollateralToSameDebtSilo1SameAsset
     function testOrderedSwitchConfigsCollateralToSameDebtSilo1SameAsset() public {
         bool switchToSameAsset = true;
-        bool leverage;
         bool sameAsset = true;
 
         vm.prank(_silo1);
-        _siloConfig.accrueInterestAndGetConfigs(_silo1, _siloUser, Hook.borrowAction(leverage, sameAsset));
+        _siloConfig.accrueInterestAndGetConfigs(_silo1, _siloUser, Hook.borrowAction(sameAsset));
 
         ISiloConfig.ConfigData memory collateralConfig;
         ISiloConfig.ConfigData memory debtConfig;
@@ -1098,11 +1072,10 @@ contract OrderedConfigsTest is Test {
 
     // FOUNDRY_PROFILE=core-test forge test -vvv --mt testOrderedLiqudaitionDebtSilo0NotSameAsset
     function testOrderedLiqudaitionDebtSilo0NotSameAsset() public {
-        bool leverage;
         bool sameAsset;
 
         vm.prank(_silo0);
-        _siloConfig.accrueInterestAndGetConfigs(_silo0, _siloUser, Hook.borrowAction(leverage, sameAsset));
+        _siloConfig.accrueInterestAndGetConfigs(_silo0, _siloUser, Hook.borrowAction(sameAsset));
 
         ISiloConfig.ConfigData memory collateralConfig;
         ISiloConfig.ConfigData memory debtConfig;
@@ -1131,11 +1104,10 @@ contract OrderedConfigsTest is Test {
 
     // FOUNDRY_PROFILE=core-test forge test -vvv --mt testOrderedLiqudaitionDebtSilo1NotSameAsset
     function testOrderedLiqudaitionDebtSilo1NotSameAsset() public {
-        bool leverage;
         bool sameAsset;
 
         vm.prank(_silo1);
-        _siloConfig.accrueInterestAndGetConfigs(_silo1, _siloUser, Hook.borrowAction(leverage, sameAsset));
+        _siloConfig.accrueInterestAndGetConfigs(_silo1, _siloUser, Hook.borrowAction(sameAsset));
 
         ISiloConfig.ConfigData memory collateralConfig;
         ISiloConfig.ConfigData memory debtConfig;
@@ -1164,11 +1136,10 @@ contract OrderedConfigsTest is Test {
 
     // FOUNDRY_PROFILE=core-test forge test -vvv --mt testOrderedLiqudaitionDebtSilo0SameAsset
     function testOrderedLiqudaitionDebtSilo0SameAsset() public {
-        bool leverage;
         bool sameAsset = true;
 
         vm.prank(_silo0);
-        _siloConfig.accrueInterestAndGetConfigs(_silo0, _siloUser, Hook.borrowAction(leverage, sameAsset));
+        _siloConfig.accrueInterestAndGetConfigs(_silo0, _siloUser, Hook.borrowAction(sameAsset));
 
         ISiloConfig.ConfigData memory collateralConfig;
         ISiloConfig.ConfigData memory debtConfig;
@@ -1197,11 +1168,10 @@ contract OrderedConfigsTest is Test {
 
     // FOUNDRY_PROFILE=core-test forge test -vvv --mt testOrderedLiqudaitionDebtSilo1SameAsset
     function testOrderedLiqudaitionDebtSilo1SameAsset() public {
-        bool leverage;
         bool sameAsset = true;
 
         vm.prank(_silo1);
-        _siloConfig.accrueInterestAndGetConfigs(_silo1, _siloUser, Hook.borrowAction(leverage, sameAsset));
+        _siloConfig.accrueInterestAndGetConfigs(_silo1, _siloUser, Hook.borrowAction(sameAsset));
 
         ISiloConfig.ConfigData memory collateralConfig;
         ISiloConfig.ConfigData memory debtConfig;
