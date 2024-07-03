@@ -386,11 +386,8 @@ library Actions {
             _shareStorage.hookReceiver.beforeAction(address(this), Hook.FLASH_LOAN, data);
         }
 
-        ISiloConfig siloConfig = _shareStorage.siloConfig;
-        ISiloConfig.ConfigData memory config = siloConfig.getConfig(address(this));
-
         // flashFee will revert for wrong token
-        uint256 fee = SiloStdLib.flashFee(siloConfig, _token, _amount);
+        uint256 fee = SiloStdLib.flashFee(_shareStorage.siloConfig, _token, _amount);
 
         if (fee > type(uint192).max) revert FeeOverflow();
 
