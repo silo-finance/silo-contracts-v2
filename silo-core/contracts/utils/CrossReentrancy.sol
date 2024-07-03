@@ -50,6 +50,19 @@ abstract contract CrossReentrancy {
         revert ISiloConfig.CrossReentrantCall();
     }
 
+    /// @dev please notice, this internal method is open TODO bug
+    // solhint-disable-next-line function-max-lines, code-complexity
+    function _crossNonReentrantBefore2() internal virtual {
+        // On the first call to nonReentrant, _status will be CrossEntrancy.NOT_ENTERED
+        if (_crossReentrantStatus == CrossEntrancy.NOT_ENTERED) {
+            // Any calls to nonReentrant after this point will fail
+            _crossReentrantStatus = CrossEntrancy.ENTERED;
+            return;
+        }
+
+        revert ISiloConfig.CrossReentrantCall();
+    }
+
     function _crossNonReentrantAfter() internal virtual {
         uint256 currentStatus = _crossReentrantStatus;
 

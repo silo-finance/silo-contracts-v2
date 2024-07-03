@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.24;
 
+import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
+
 import {ISilo} from "./interfaces/ISilo.sol";
 import {ISiloConfig} from "./interfaces/ISiloConfig.sol";
 import {IShareToken} from "./interfaces/IShareToken.sol";
@@ -74,7 +76,10 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
 
     bool private immutable _CALL_BEFORE_QUOTE1;
 
-    mapping (address borrower => DebtInfo debtInfo) internal _debtsInfo;
+    mapping (address borrower => address collateralSilo) internal borrowerCollateralSilo;
+    mapping (address borrower => DebtInfo debtInfo) internal _debtsInfo; // TODO: deprecated
+
+    error DebtInTwoSilos();
     
     /// @param _siloId ID of this pool assigned by factory
     /// @param _configData0 silo configuration data for token0
@@ -141,6 +146,87 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
         }
 
         _crossNonReentrantBefore(_action);
+    }
+
+    function turnOnReentrancyProtection() external virtual {
+        _crossNonReentrantBefore2();
+    }
+
+    function turnOffReentrancyProtection() external virtual {
+        _onlySiloOrTokenOrHookReceiver();
+        _crossNonReentrantAfter();
+    }
+
+    function turnOnReentrancyProtectionAndAccrue() external virtual {
+        _crossNonReentrantBefore2();
+        
+        ISilo(_SILO0).accrueInterestForConfig(
+            _INTEREST_RATE_MODEL0,
+            _DAO_FEE,
+            _DEPLOYER_FEE
+        );
+
+        ISilo(_SILO1).accrueInterestForConfig(
+            _INTEREST_RATE_MODEL1,
+            _DAO_FEE,
+            _DEPLOYER_FEE
+        );
+    }
+
+    function accrueInterest() external {
+        ISilo(_SILO0).accrueInterestForConfig(
+            _INTEREST_RATE_MODEL0,
+            _DAO_FEE,
+            _DEPLOYER_FEE
+        );
+
+        ISilo(_SILO1).accrueInterestForConfig(
+            _INTEREST_RATE_MODEL1,
+            _DAO_FEE,
+            _DEPLOYER_FEE
+        );
+    }
+
+    // One less data point to keep in sync between Silo and DebtShareToken
+    function getDebtSilo2(address _borrower) public view virtual returns (address debtSilo) {
+        uint256 debtBal0 = IERC20(_DEBT_SHARE_TOKEN0).balanceOf(_borrower);
+        uint256 debtBal1 = IERC20(_DEBT_SHARE_TOKEN1).balanceOf(_borrower);
+
+        if (debtBal0 > 0 && debtBal1 > 0) revert DebtInTwoSilos();
+        if (debtBal0 == 0 && debtBal1 == 0) return address(0);
+
+        debtSilo = debtBal0 > debtBal1 ? _SILO0 : _SILO1;
+    }
+
+    function getDebtInfo2(
+        address _silo,
+        address _borrower,
+        address _collateralSilo,
+        address _debtSilo
+    ) public view virtual returns (DebtInfo memory debtInfo) {
+        debtInfo.debtPresent = _debtSilo != address(0);
+        debtInfo.sameAsset = _collateralSilo == _debtSilo;
+        debtInfo.debtInSilo0 = _debtSilo == _SILO0;
+        debtInfo.debtInThisSilo = _silo == _debtSilo;
+    }
+
+    /// Called by:
+    /// - Actions.withdraw()
+    function getConfigForWithdraw(address _silo, address _borrower) external view virtual returns (
+        DepositConfig memory depositConfig,
+        CollateralConfig memory collateralConfig,
+        DebtConfig memory debtConfig,
+        DebtInfo memory debtInfo
+    ) {
+        address collateralSilo = borrowerCollateralSilo[_borrower];
+        address debtSilo = getDebtSilo2(_borrower);
+
+        depositConfig = _getDepositConfig(_silo);
+
+        if (collateralSilo != address(0)) collateralConfig = _getCollateralConfig(collateralSilo);
+        if (debtSilo != address(0)) debtConfig = _getDebtConfig(debtSilo);
+
+        debtInfo = getDebtInfo2(_silo, _borrower, collateralSilo, debtSilo);
     }
 
     /// @inheritdoc ISiloConfig
@@ -293,6 +379,110 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
             return _silo0ConfigData();
         } else if (_silo == _SILO1) {
             return _silo1ConfigData();
+        } else {
+            revert WrongSilo();
+        }
+    }
+
+    function _getConfig2(address _silo) internal view virtual returns (ConfigData memory) {
+        if (_silo == _SILO0) {
+            return _silo0ConfigData();
+        } else if (_silo == _SILO1) {
+            return _silo1ConfigData();
+        } else {
+            revert WrongSilo();
+        }
+    }
+
+    function _getDepositConfig(address _silo) internal view virtual returns (DepositConfig memory) {
+        if (_silo == _SILO0) {
+            return DepositConfig({
+                token: _TOKEN0,
+                collateralShareToken: _COLLATERAL_SHARE_TOKEN0,
+                protectedShareToken: _PROTECTED_COLLATERAL_SHARE_TOKEN0
+            });
+        } else if (_silo == _SILO1) {
+            return DepositConfig({
+                token: _TOKEN1,
+                collateralShareToken: _COLLATERAL_SHARE_TOKEN1,
+                protectedShareToken: _PROTECTED_COLLATERAL_SHARE_TOKEN1
+            });
+        } else {
+            revert WrongSilo();
+        }
+    }
+
+    /**
+    
+    struct DebtConfig {
+        address silo;
+        address token;
+        address debtShareToken;
+        address solvencyOracle;
+        address maxLtvOracle;
+        address interestRateModel;
+        bool callBeforeQuote;
+    }
+    
+     */
+
+    function _getDebtConfig(address _silo) internal view virtual returns (DebtConfig memory) {
+        if (_silo == _SILO0) {
+            return DebtConfig({
+                silo: _SILO0,
+                token: _TOKEN0,
+                debtShareToken: _DEBT_SHARE_TOKEN0,
+                solvencyOracle: _SOLVENCY_ORACLE0,
+                maxLtvOracle: _MAX_LTV_ORACLE0,
+                interestRateModel: _INTEREST_RATE_MODEL0,
+                callBeforeQuote: _CALL_BEFORE_QUOTE0
+            });
+        } else if (_silo == _SILO1) {
+            return DebtConfig({
+                silo: _SILO1,
+                token: _TOKEN1,
+                debtShareToken: _DEBT_SHARE_TOKEN1,
+                solvencyOracle: _SOLVENCY_ORACLE1,
+                maxLtvOracle: _MAX_LTV_ORACLE1,
+                interestRateModel: _INTEREST_RATE_MODEL1,
+                callBeforeQuote: _CALL_BEFORE_QUOTE1
+            });
+        } else {
+            revert WrongSilo();
+        }
+    }
+
+    function _getCollateralConfig(address _silo) internal view virtual returns (CollateralConfig memory) {
+        if (_silo == _SILO0) {
+            return CollateralConfig({
+                daoFee: _DAO_FEE,
+                deployerFee: _DEPLOYER_FEE,
+                silo: _SILO0,
+                token: _TOKEN0,
+                protectedShareToken: _PROTECTED_COLLATERAL_SHARE_TOKEN0,
+                collateralShareToken: _COLLATERAL_SHARE_TOKEN0,
+                solvencyOracle: _SOLVENCY_ORACLE0,
+                maxLtvOracle: _MAX_LTV_ORACLE0,
+                interestRateModel: _INTEREST_RATE_MODEL0,
+                maxLtv: _MAX_LTV0,
+                lt: _LT0,
+                callBeforeQuote: _CALL_BEFORE_QUOTE0
+            });
+        } else if (_silo == _SILO1) {
+            return CollateralConfig({
+                daoFee: _DAO_FEE,
+                deployerFee: _DEPLOYER_FEE,
+                silo: _SILO1,
+                token: _TOKEN1,
+                protectedShareToken: _PROTECTED_COLLATERAL_SHARE_TOKEN1,
+                collateralShareToken: _COLLATERAL_SHARE_TOKEN1,
+                solvencyOracle: _SOLVENCY_ORACLE1,
+                maxLtvOracle: _MAX_LTV_ORACLE1,
+                interestRateModel: _INTEREST_RATE_MODEL1,
+                maxLtv: _MAX_LTV1,
+                lt: _LT1,
+                callBeforeQuote: _CALL_BEFORE_QUOTE1
+            });
         } else {
             revert WrongSilo();
         }

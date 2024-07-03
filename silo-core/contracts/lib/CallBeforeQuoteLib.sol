@@ -20,4 +20,36 @@ library CallBeforeQuoteLib {
             ISiloOracle(_config.maxLtvOracle).beforeQuote(_config.token);
         }
     }
+
+    /// @dev Call `beforeQuote` on the `solvencyOracle` oracle
+    /// @param _config Silo config data
+    function callSolvencyOracleBeforeQuote(ISiloConfig.CollateralConfig memory _config) internal {
+        if (_config.callBeforeQuote && _config.solvencyOracle != address(0)) {
+            ISiloOracle(_config.solvencyOracle).beforeQuote(_config.token);
+        }
+    }
+
+    /// @dev Call `beforeQuote` on the `maxLtvOracle` oracle
+    /// @param _config Silo config data
+    function callMaxLtvOracleBeforeQuote(ISiloConfig.CollateralConfig memory _config) internal {
+        if (_config.callBeforeQuote && _config.maxLtvOracle != address(0)) {
+            ISiloOracle(_config.maxLtvOracle).beforeQuote(_config.token);
+        }
+    }
+
+    /// @dev Call `beforeQuote` on the `solvencyOracle` oracle
+    /// @param _config Silo config data
+    function callSolvencyOracleBeforeQuote(ISiloConfig.DebtConfig memory _config) internal {
+        if (_config.callBeforeQuote && _config.solvencyOracle != address(0)) {
+            ISiloOracle(_config.solvencyOracle).beforeQuote(_config.token);
+        }
+    }
+
+    /// @dev Call `beforeQuote` on the `maxLtvOracle` oracle
+    /// @param _config Silo config data
+    function callMaxLtvOracleBeforeQuote(ISiloConfig.DebtConfig memory _config) internal {
+        if (_config.callBeforeQuote && _config.maxLtvOracle != address(0)) {
+            ISiloOracle(_config.maxLtvOracle).beforeQuote(_config.token);
+        }
+    }
 }

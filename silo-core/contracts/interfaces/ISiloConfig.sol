@@ -115,6 +115,37 @@ interface ISiloConfig {
         bool callBeforeQuote;
     }
 
+    struct DepositConfig {
+        address token;
+        address collateralShareToken;
+        address protectedShareToken;
+    }
+
+    struct CollateralConfig {
+        uint256 daoFee;
+        uint256 deployerFee;
+        address silo;
+        address token;
+        address protectedShareToken;
+        address collateralShareToken;
+        address solvencyOracle;
+        address maxLtvOracle;
+        address interestRateModel;
+        uint256 maxLtv;
+        uint256 lt;
+        bool callBeforeQuote;
+    }
+
+    struct DebtConfig {
+        address silo;
+        address token;
+        address debtShareToken;
+        address solvencyOracle;
+        address maxLtvOracle;
+        address interestRateModel;
+        bool callBeforeQuote;
+    }
+
     error OnlySilo();
     error OnlySiloOrHookReceiver();
     error OnlyShareToken();
@@ -140,6 +171,21 @@ interface ISiloConfig {
 
     /// @notice only silo method for cross Silo reentrancy
     function crossNonReentrantBefore(uint256 _action) external;
+
+    function turnOnReentrancyProtectionAndAccrue() external;
+
+    function turnOnReentrancyProtection() external;
+
+    function turnOffReentrancyProtection() external;
+
+    function accrueInterest() external;
+
+    function getConfigForWithdraw(address _silo, address _borrower) external view returns (
+        DepositConfig memory depositConfig,
+        CollateralConfig memory collateralConfig,
+        DebtConfig memory debtConfig,
+        DebtInfo memory debtInfo
+    );
 
     /// @notice only silo method for cross Silo reentrancy
     function crossNonReentrantAfter() external;

@@ -14,6 +14,7 @@ import {IHookReceiver} from "../interfaces/IHookReceiver.sol";
 
 import {SiloERC4626Lib} from "./SiloERC4626Lib.sol";
 import {SiloSolvencyLib} from "./SiloSolvencyLib.sol";
+import {SiloSolvencyLib2} from "./SiloSolvencyLib2.sol";
 import {SiloLendingLib} from "./SiloLendingLib.sol";
 import {SiloStdLib} from "./SiloStdLib.sol";
 import {SiloMathLib} from "./SiloMathLib.sol";
@@ -27,6 +28,8 @@ library Actions {
     using Hook for uint256;
     using Hook for uint24;
     using CallBeforeQuoteLib for ISiloConfig.ConfigData;
+    using CallBeforeQuoteLib for ISiloConfig.CollateralConfig;
+    using CallBeforeQuoteLib for ISiloConfig.DebtConfig;
 
     bytes32 internal constant _LEVERAGE_CALLBACK = keccak256("ILeverageBorrower.onLeverage");
     bytes32 internal constant _FLASHLOAN_CALLBACK = keccak256("ERC3156FlashBorrower.onFlashLoan");
@@ -76,23 +79,25 @@ library Actions {
         external
         returns (uint256 assets, uint256 shares)
     {
-        ISiloConfig siloConfig = _shareStorage.siloConfig;
-
         _hookCallBeforeWithdraw(_shareStorage, _args);
 
-        (
-            ISiloConfig.ConfigData memory collateralConfig,
-            ISiloConfig.ConfigData memory debtConfig,
-            ISiloConfig.DebtInfo memory debtInfo
-        ) = siloConfig.accrueInterestAndGetConfigs(address(this), _args.owner, Hook.WITHDRAW);
+        ISiloConfig siloConfig = _shareStorage.siloConfig;
 
-        if (collateralConfig.silo != debtConfig.silo) ISilo(debtConfig.silo).accrueInterest();
+        siloConfig.turnOnReentrancyProtection();
+        siloConfig.accrueInterest();
+
+        (
+            ISiloConfig.DepositConfig memory depositConfig,
+            ISiloConfig.CollateralConfig memory collateralConfig,
+            ISiloConfig.DebtConfig memory debtConfig,
+            ISiloConfig.DebtInfo memory debtInfo
+        ) = siloConfig.getConfigForWithdraw(address(this), _args.owner);
 
         (assets, shares) = SiloERC4626Lib.withdraw(
-            collateralConfig.token,
+            depositConfig.token,
             _args.collateralType == ISilo.CollateralType.Collateral
-                ? collateralConfig.collateralShareToken
-                : collateralConfig.protectedShareToken,
+                ? depositConfig.collateralShareToken
+                : depositConfig.protectedShareToken,
             _args,
             _args.collateralType == ISilo.CollateralType.Collateral
                 ? SiloMathLib.liquidity(_totalAssets.assets, _totalDebtAssets.assets)
@@ -106,7 +111,7 @@ library Actions {
                 debtConfig.callSolvencyOracleBeforeQuote();
             }
 
-            bool ownerIsSolvent = SiloSolvencyLib.isSolvent(
+            bool ownerIsSolvent = SiloSolvencyLib2.isSolvent(
                 collateralConfig, debtConfig, debtInfo, _args.owner, ISilo.AccrueInterestInMemory.No
             );
 
@@ -114,7 +119,7 @@ library Actions {
             if (!ownerIsSolvent) revert ISilo.NotSolvent();
         }
 
-        siloConfig.crossNonReentrantAfter();
+        siloConfig.turnOffReentrancyProtection();
 
         _hookCallAfterWithdraw(_shareStorage, _args, assets, shares);
     }
