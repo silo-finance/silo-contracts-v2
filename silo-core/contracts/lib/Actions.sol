@@ -234,7 +234,7 @@ library Actions {
 
         (borrowedAssets, borrowedShares) = SiloLendingLib.borrow(
             debtConfig.debtShareToken,
-            address(0), // we do not transferring debt
+            address(0), // we are not transferring debt
             msg.sender,
             ISilo.BorrowArgs({
                 assets: _args.borrowAssets,
@@ -250,7 +250,7 @@ library Actions {
         _receiveCollateralOnLeverageSameAsset(collateralConfig, _args.depositAssets, borrowedAssets);
 
         (, depositedShares) = SiloERC4626Lib.deposit(
-            address(0), // we do not transferring token
+            address(0), // we are not transferring token
             msg.sender,
             _args.depositAssets,
             0 /* _shares */,
