@@ -272,19 +272,6 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         return actor.leverageSameAsset(_vaultZero, _depositAssets, _borrowAssets, address(actor), _collateralType);
     }
 
-    function leverage(
-        uint8 _actorIndex,
-        bool _vaultZero,
-        uint256 _assets,
-        address, // _borrower, // TODO support custom borrower
-        bool _sameAsset
-    ) public returns (uint256 shares) {
-        emit LogUint256("[leverage] block.timestamp:", block.timestamp);
-        Actor actor = _selectActor(_actorIndex);
-
-        return actor.leverage(_vaultZero, _assets, address(this), _sameAsset);
-    }
-
     // TODO transfers s tokens
 
     // TODO setReceiveApproval

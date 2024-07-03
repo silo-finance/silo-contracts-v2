@@ -4,7 +4,6 @@ pragma solidity 0.8.24;
 import {IERC20} from "openzeppelin5/token/ERC20/ERC20.sol";
 
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
-import {ILeverageBorrower} from "silo-core/contracts/interfaces/ILeverageBorrower.sol";
 import {Silo} from "silo-core/contracts/Silo.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {CrossEntrancy} from "silo-core/contracts/lib/CrossEntrancy.sol";
@@ -28,7 +27,6 @@ contract CrossReentracyCheckTest is HookCallsOutsideActionTest {
         _reentrancyCheck_BorrowShare();
         _reentrancyCheck_Repay();
         _reentrancyCheck_RepayShares();
-        _reentrancyCheck_Leverage();
         _reentrancyCheck_ShareTokens(address(silo0));
         _reentrancyCheck_ShareTokens(address(silo1));
 
@@ -125,16 +123,6 @@ contract CrossReentracyCheckTest is HookCallsOutsideActionTest {
 
         vm.expectRevert(ISiloConfig.CrossReentrantCall.selector);
         silo0.repayShares(1000, address(0));
-    }
-
-    function _reentrancyCheck_Leverage() internal {
-        emit log("[CrossReentracyCheckTest] _reentrancyCheck_Leverage");
-
-        vm.expectRevert(ISiloConfig.CrossReentrantCall.selector);
-        silo0.leverage(1000, ILeverageBorrower(address(0)), address(0), false, "");
-
-        vm.expectRevert(ISiloConfig.CrossReentrantCall.selector);
-        silo0.leverage(1000, ILeverageBorrower(address(0)), address(0), true, "");
     }
 
     function _reentrancyCheck_ShareTokens(address _silo) internal {

@@ -25,29 +25,10 @@ abstract contract CrossReentrancy {
 
     /// @dev please notice, this internal method is open TODO bug
     // solhint-disable-next-line function-max-lines, code-complexity
-    function _crossNonReentrantBefore(uint256 _action) internal virtual {
-        uint256 crossReentrantStatusCached = _crossReentrantStatus;
+    function _crossNonReentrantBefore() internal virtual {
+        if (_crossReentrantStatus == CrossEntrancy.ENTERED) revert ISiloConfig.CrossReentrantCall();
 
-        // On the first call to nonReentrant, _status will be CrossEntrancy.NOT_ENTERED
-        if (crossReentrantStatusCached == CrossEntrancy.NOT_ENTERED) {
-            // Any calls to nonReentrant after this point will fail
-            _crossReentrantStatus = CrossEntrancy.ENTERED;
-            return;
-        }
-
-        if (crossReentrantStatusCached == CrossEntrancy.ENTERED_FROM_LEVERAGE && _action == Hook.DEPOSIT) {
-            // on leverage, entrance from deposit is allowed, but allowance is removed when we back to Silo
-            _crossReentrantStatus = CrossEntrancy.ENTERED;
-            return;
-        }
-
-        if (_crossReentrantStatus == CrossEntrancy.ENTERED && _action == CrossEntrancy.ENTERED_FROM_LEVERAGE) {
-            // we need to be inside leverage and before callback, we mark our status
-            _crossReentrantStatus = CrossEntrancy.ENTERED_FROM_LEVERAGE;
-            return;
-        }
-
-        revert ISiloConfig.CrossReentrantCall();
+        _crossReentrantStatus = CrossEntrancy.ENTERED;
     }
 
     function _crossNonReentrantAfter() internal virtual {

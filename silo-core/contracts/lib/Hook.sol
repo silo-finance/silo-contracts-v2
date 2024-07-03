@@ -278,10 +278,9 @@ library Hook {
     }
 
     /// @notice Returns the action for borrowing
-    /// @param _leverage Whether the borrow is a leverage
     /// @param _sameAsset Whether the borrow is on the same asset
-    function borrowAction(bool _leverage, bool _sameAsset) internal pure returns (uint256) {
-        return BORROW | (_leverage ? LEVERAGE : NONE) | (_sameAsset ? SAME_ASSET : TWO_ASSETS);
+    function borrowAction(bool _sameAsset) internal pure returns (uint256) {
+        return BORROW | (_sameAsset ? SAME_ASSET : TWO_ASSETS);
     }
 
     /// @notice Returns the action for collateral transition

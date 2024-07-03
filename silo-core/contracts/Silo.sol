@@ -9,7 +9,6 @@ import {ISiloOracle} from "./interfaces/ISiloOracle.sol";
 import {IShareToken} from "./interfaces/IShareToken.sol";
 
 import {IERC3156FlashBorrower} from "./interfaces/IERC3156FlashBorrower.sol";
-import {ILeverageBorrower} from "./interfaces/ILeverageBorrower.sol";
 import {ISiloConfig} from "./interfaces/ISiloConfig.sol";
 import {ISiloFactory} from "./interfaces/ISiloFactory.sol";
 import {IInterestRateModel} from "./interfaces/IInterestRateModel.sol";
@@ -496,7 +495,7 @@ contract Silo is SiloERC4626 {
     {
         (
             , shares
-        ) = _borrow(_assets, 0 /* shares */, _receiver, _borrower, _sameAsset, false /* _leverage */, "" /* data */);
+        ) = _borrow(_assets, 0 /* shares */, _receiver, _borrower, _sameAsset);
     }
 
     /// @inheritdoc ISilo
@@ -521,7 +520,7 @@ contract Silo is SiloERC4626 {
     {
         (
             assets,
-        ) = _borrow(0 /* assets */, _shares, _receiver, _borrower, _sameAsset, false /* _leverage */, "" /* data */);
+        ) = _borrow(0 /* assets */, _shares, _receiver, _borrower, _sameAsset);
     }
 
     /// @inheritdoc ISilo
@@ -599,21 +598,6 @@ contract Silo is SiloERC4626 {
     {
         success = Actions.flashLoan( _sharedStorage, _receiver, _token, _amount, _siloData, _data);
         if (success) emit FlashLoan(_amount);
-    }
-
-    /// @inheritdoc ISilo
-    function leverage(
-        uint256 _assets,
-        ILeverageBorrower _receiver,
-        address _borrower,
-        bool _sameAsset,
-        bytes calldata _data
-    )
-        external
-        virtual
-        returns (uint256 shares)
-    {
-        (, shares) = _borrow(_assets, 0 /* _shares */, address(_receiver), _borrower, _sameAsset, true, _data);
     }
 
     /// @inheritdoc ISilo
@@ -725,9 +709,7 @@ contract Silo is SiloERC4626 {
         uint256 _shares,
         address _receiver,
         address _borrower,
-        bool _sameAsset,
-        bool _leverage,
-        bytes memory _data
+        bool _sameAsset
     )
         internal
         virtual
@@ -740,12 +722,10 @@ contract Silo is SiloERC4626 {
                 shares: _shares,
                 receiver: _receiver,
                 borrower: _borrower,
-                sameAsset: _sameAsset,
-                leverage: _leverage
+                sameAsset: _sameAsset
             }),
             _total[AssetTypes.COLLATERAL],
-            _total[AssetTypes.DEBT],
-            _data
+            _total[AssetTypes.DEBT]
         );
 
         emit Borrow(msg.sender, _receiver, _borrower, assets, shares);

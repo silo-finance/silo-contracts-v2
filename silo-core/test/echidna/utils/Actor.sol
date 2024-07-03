@@ -2,7 +2,6 @@
 pragma solidity ^0.8.20;
 
 import {Silo, ISilo} from "silo-core/contracts/Silo.sol";
-import {ILeverageBorrower} from "silo-core/contracts/interfaces/ILeverageBorrower.sol";
 import {IERC3156FlashBorrower} from "silo-core/contracts/interfaces/IERC3156FlashBorrower.sol";
 import {PartialLiquidation} from "silo-core/contracts/utils/hook-receivers/liquidation/PartialLiquidation.sol";
 import {ISiloConfig} from "silo-core/contracts/SiloConfig.sol";
@@ -14,8 +13,7 @@ import {PropertiesAsserts} from "properties/util/PropertiesHelper.sol";
 ///  2. Keep track of how much the account has deposited/withdrawn & raise an error if the account can withdraw/redeem more than it deposited/minted.
 /// @dev It's important that other property tests never send tokens/shares to the Actor contract address, or else the accounting will break. This restriction is enforced in restrictAddressToThirdParties()
 ///      If support is added for "harvesting" a vault during property tests, the accounting logic here needs to be updated to reflect cases where an actor can withdraw more than they deposited.
-contract Actor is PropertiesAsserts, ILeverageBorrower, IERC3156FlashBorrower {
-    bytes32 internal constant _LEVERAGE_CALLBACK = keccak256("ILeverageBorrower.onLeverage");
+contract Actor is PropertiesAsserts, IERC3156FlashBorrower {
     bytes32 internal constant _FLASHLOAN_CALLBACK = keccak256("ERC3156FlashBorrower.onFlashLoan");
 
     TestERC20Token immutable token0;
@@ -154,17 +152,6 @@ contract Actor is PropertiesAsserts, ILeverageBorrower, IERC3156FlashBorrower {
         return vault.leverageSameAsset(_depositAssets, _borrowAssets, _borrower, _collateralType);
     }
 
-    function leverage(
-        bool _vaultZero,
-        uint256 _assets,
-        address _borrower,
-        bool _sameAsset
-    ) public returns (uint256 shares) {
-        Silo vault = _vaultZero ? vault0 : vault1;
-        bytes memory _data = abi.encode(_vaultZero, _sameAsset, _borrower);
-        return vault.leverage(_assets, this, _borrower, _sameAsset, _data);
-    }
-
     function flashLoan(bool _vaultZero, uint256 _amount)
         public
         returns (bool success)
@@ -188,25 +175,6 @@ contract Actor is PropertiesAsserts, ILeverageBorrower, IERC3156FlashBorrower {
         liquidationModule.liquidationCall(
             address(vault), collateralConfig.token, debtConfig.token, borrower, debtToCover, receiveSToken
         );
-    }
-
-    function onLeverage(
-        address,  // _initiator
-        address, // _borrower,
-        address, // _asset,
-        uint256 _assets,
-        bytes calldata _data
-    )
-        external
-        returns (bytes32)
-    {
-        (bool vaultZero, bool sameAsset, address borrower) = abi.decode(_data, (bool, bool, address));
-
-        assert(borrower == address(this)); // TODO support external borrower
-        // we deposit for 50% LTV
-        deposit(sameAsset ? vaultZero : !vaultZero, _assets > type(uint128).max ? type(uint256).max : _assets * 2);
-
-        return _LEVERAGE_CALLBACK;
     }
 
     function onFlashLoan(

@@ -7,7 +7,6 @@ import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
 import {ISilo} from "../interfaces/ISilo.sol";
 import {IShareToken} from "../interfaces/IShareToken.sol";
-import {ILeverageBorrower} from "../interfaces/ILeverageBorrower.sol";
 import {IERC3156FlashBorrower} from "../interfaces/IERC3156FlashBorrower.sol";
 import {IPartialLiquidation} from "../interfaces/IPartialLiquidation.sol";
 import {IHookReceiver} from "../interfaces/IHookReceiver.sol";
@@ -28,7 +27,6 @@ library Actions {
     using Hook for uint24;
     using CallBeforeQuoteLib for ISiloConfig.ConfigData;
 
-    bytes32 internal constant _LEVERAGE_CALLBACK = keccak256("ILeverageBorrower.onLeverage");
     bytes32 internal constant _FLASHLOAN_CALLBACK = keccak256("ERC3156FlashBorrower.onFlashLoan");
 
     error FeeOverflow();
@@ -124,15 +122,14 @@ library Actions {
         ISilo.SharedStorage storage _shareStorage,
         ISilo.BorrowArgs memory _args,
         ISilo.Assets storage _totalCollateral,
-        ISilo.Assets storage _totalDebt,
-        bytes memory _data
+        ISilo.Assets storage _totalDebt
     )
         external
         returns (uint256 assets, uint256 shares)
     {
         if (_args.assets == 0 && _args.shares == 0) revert ISilo.ZeroAssets();
 
-        uint256 borrowAction = Hook.borrowAction(_args.leverage, _args.sameAsset);
+        uint256 borrowAction = Hook.borrowAction(_args.sameAsset);
 
         _hookCallBeforeBorrow(_shareStorage, _args, borrowAction);
 
@@ -156,8 +153,6 @@ library Actions {
             _totalCollateral.assets,
             _totalDebt
         );
-
-        if (_args.leverage) _executeOnLeverageCallBack(_args, siloConfig, debtConfig.token, assets, _data);
 
         if (!debtInfo.sameAsset) {
             collateralConfig.callMaxLtvOracleBeforeQuote();
@@ -239,15 +234,14 @@ library Actions {
 
         (borrowedAssets, borrowedShares) = SiloLendingLib.borrow(
             debtConfig.debtShareToken,
-            address(0), // we do not transferring debt
+            address(0), // we are not transferring debt
             msg.sender,
             ISilo.BorrowArgs({
                 assets: _args.borrowAssets,
                 shares: 0,
                 receiver: _args.borrower,
                 borrower: _args.borrower,
-                sameAsset: true,
-                leverage: true
+                sameAsset: true
             }),
             _totalCollateral.assets,
             _totalDebt
@@ -256,7 +250,7 @@ library Actions {
         _receiveCollateralOnLeverageSameAsset(collateralConfig, _args.depositAssets, borrowedAssets);
 
         (, depositedShares) = SiloERC4626Lib.deposit(
-            address(0), // we do not transferring token
+            address(0), // we are not transferring token
             msg.sender,
             _args.depositAssets,
             0 /* _shares */,
@@ -285,7 +279,7 @@ library Actions {
         _hookCallBeforeTransitionCollateral(_shareStorage, _withdrawType, _shares, _owner);
 
         ISiloConfig.ConfigData memory collateralConfig = _shareStorage.siloConfig.accrueInterestAndGetConfig(
-            address(this), Hook.TRANSITION_COLLATERAL
+            address(this)
         );
 
         uint256 liquidity = _withdrawType == ISilo.CollateralType.Collateral
@@ -486,26 +480,6 @@ library Actions {
         IShareToken(cfg.collateralShareToken).synchronizeHooks(hooksBefore, hooksAfter);
         IShareToken(cfg.protectedShareToken).synchronizeHooks(hooksBefore, hooksAfter);
         IShareToken(cfg.debtShareToken).synchronizeHooks(hooksBefore, hooksAfter);
-    }
-
-    function _executeOnLeverageCallBack(
-        ISilo.BorrowArgs memory _args,
-        ISiloConfig _siloConfig,
-        address _debtConfigToken,
-        uint256 _assets,
-        bytes memory _data
-    ) private {
-        // change reentrant flag to leverage, to allow for deposit
-        _siloConfig.crossNonReentrantBefore(CrossEntrancy.ENTERED_FROM_LEVERAGE);
-
-        bytes32 result = ILeverageBorrower(_args.receiver)
-            .onLeverage(msg.sender, _args.borrower, _debtConfigToken, _assets, _data);
-
-        // allow for deposit reentry only to provide collateral
-        if (result != _LEVERAGE_CALLBACK) revert ISilo.LeverageFailed();
-
-        // after deposit, guard is down, for max security we need to enable it again
-        _siloConfig.crossNonReentrantBefore(CrossEntrancy.ENTERED);
     }
 
     function _receiveCollateralOnLeverageSameAsset(
