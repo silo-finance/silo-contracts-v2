@@ -144,7 +144,7 @@ interface ISiloConfig {
     /// @notice only silo method for cross Silo reentrancy
     function crossNonReentrantAfter() external;
 
-    function accrueInterestAndGetConfig(address _silo, uint256 _action) external returns (ConfigData memory);
+    function accrueInterestAndGetConfig(address _silo) external returns (ConfigData memory);
 
     function accrueInterestAndGetConfigs(address _silo, address _borrower, uint256 _action)
         external

@@ -660,20 +660,20 @@ contract SiloConfigTest is Test {
         _mockWrongSiloAccrueInterest();
 
         vm.expectRevert(ISiloConfig.WrongSilo.selector);
-        _siloConfig.accrueInterestAndGetConfig(_wrongSilo, 0);
+        _siloConfig.accrueInterestAndGetConfig(_wrongSilo);
     }
 
     /*
     FOUNDRY_PROFILE=core-test forge test -vv --mt test_accrueInterestAndGetConfigConfigs
     */
     function test_accrueInterestAndGetConfigConfigs() public {
-        ISiloConfig.ConfigData memory configData0 = _siloConfig.accrueInterestAndGetConfig(_silo0Default, 0);
+        ISiloConfig.ConfigData memory configData0 = _siloConfig.accrueInterestAndGetConfig(_silo0Default);
         assertEq(configData0.silo, _silo0Default);
 
         vm.prank(_silo0Default);
         _siloConfig.crossNonReentrantAfter();
 
-        ISiloConfig.ConfigData memory configData1 = _siloConfig.accrueInterestAndGetConfig(_silo1Default, 0);
+        ISiloConfig.ConfigData memory configData1 = _siloConfig.accrueInterestAndGetConfig(_silo1Default);
         assertEq(configData1.silo, _silo1Default);
 
         vm.prank(_silo1Default);
