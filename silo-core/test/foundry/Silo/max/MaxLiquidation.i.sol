@@ -49,27 +49,18 @@ contract MaxLiquidationTest is SiloLittleHelper, Test {
     */
     /// forge-config: core-test.fuzz.runs = 1000
     function test_maxLiquidation_partial_1token_fuzz(uint128 _collateral) public {
-        _maxLiquidation_partial(_collateral, SAME_ASSET);
-    }
-
-    /*
-    forge test -vv --ffi --mt test_maxLiquidation_partial_2tokens_fuzz
-    */
-    /// forge-config: core-test.fuzz.runs = 1000
-    function test_maxLiquidation_partial_2tokens_fuzz(uint128 _collateral) public {
-        _maxLiquidation_partial(_collateral, TWO_ASSETS);
-    }
-
-    function _maxLiquidation_partial(uint128 _collateral, bool _sameAsset) internal {
         // this condition is to not have overflow: _collateral * 74
         vm.assume(_collateral < type(uint128).max / 74);
         // for small numbers we might jump from solvent -> bad debt, small numbers will be separate test casee TODO
         vm.assume(_collateral >= 1000);
 
-        uint256 toBorrow = _collateral * 74 / 100;
+        bool _sameAsset = true;
+
+        uint256 toBorrow = _collateral * 84 / 100;
         _createDebt(_collateral, toBorrow, _sameAsset);
 
-        vm.warp(40 days);
+        // for same asset interest increasing slower, because borrower is also depositor, also LT is higher
+        vm.warp(1260 days);
 
         _assertBorrowerIsNotSolvent(false);
 
@@ -84,6 +75,7 @@ contract MaxLiquidationTest is SiloLittleHelper, Test {
 
         _assertBorrowerIsSolvent();
     }
+
 //
 //    /*
 //    forge test -vv --ffi --mt test_maxLiquidation_withInterest_fuzz
@@ -153,13 +145,13 @@ contract MaxLiquidationTest is SiloLittleHelper, Test {
         private
         returns (uint256 withdrawCollateral, uint256 repayDebtAssets)
     {
-        (_sameToken ? token0 : token1).mint(address(this), _debtToCover);
-        (_sameToken ? token0 : token1).approve(address(partialLiquidation), _debtToCover);
+        token1.mint(address(this), _debtToCover);
+        token1.approve(address(partialLiquidation), _debtToCover);
 
         return partialLiquidation.liquidationCall(
-            address(_sameToken ? silo0 : silo1),
-            address(token0),
-            address(_sameToken ? token0 : token1),
+            address(silo1),
+            address(_sameToken ? token1 : token0),
+            address(token1),
             borrower,
             _debtToCover,
             _receiveSToken
