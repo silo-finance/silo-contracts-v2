@@ -77,9 +77,6 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
     bool private immutable _CALL_BEFORE_QUOTE1;
 
     mapping (address borrower => address collateralSilo) internal borrowerCollateralSilo;
-    mapping (address borrower => DebtInfo debtInfo) internal _debtsInfo;
-
-    error DebtInTwoSilos();
     
     /// @param _siloId ID of this pool assigned by factory
     /// @param _configData0 silo configuration data for token0
@@ -159,35 +156,15 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
     function _setCollateralSilo(address _debtSilo, address _borrower, bool _sameAsset) internal {
         address otherSilo = _debtSilo == _SILO0 ? _SILO1 : _SILO0;
         borrowerCollateralSilo[_borrower] = _sameAsset ? _debtSilo : otherSilo;
-
-        if (_sameAsset) {
-            // the same as msg.sender
-            collateralSilo =  _silo == _SILO0 ? _SILO0 : _SILO1;
-        } else {
-            // the other silo
-            collateralSilo =  _silo == _SILO0 ? _SILO1 : _SILO0;
-        }
-
-        borrowerCollateralSilo[_borrower] = collateralSilo;
     }
 
     /// @inheritdoc ISiloConfig
     function onDebtTransfer(address _sender, address _recipient) external virtual {
-        _onlyDebtShareToken();
+        if (msg.sender != _DEBT_SHARE_TOKEN0 && msg.sender != _DEBT_SHARE_TOKEN1) revert OnlyDebtShareToken();
 
         if (borrowerCollateralSilo[_recipient] == address(0)) {
             borrowerCollateralSilo[_recipient] = borrowerCollateralSilo[_sender];
         }
-    }
-
-    function forbidDebtInTwoSilos(address _borrower) external view virtual {
-        _onlyDebtShareToken();
-
-        address otherSiloDebtToken = msg.sender == _DEBT_SHARE_TOKEN0 ? _DEBT_SHARE_TOKEN1 : _DEBT_SHARE_TOKEN0;
-
-        uint256 debtBalanceInOtherSilo = IERC20(otherSiloDebtToken).balanceOf(_borrower);
-
-        if (debtBalanceInOtherSilo != 0) revert DebtExistInOtherSilo();
     }
 
     function accrueInterestAndGetConfig(address _silo) external virtual returns (ConfigData memory) {
@@ -273,6 +250,17 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
     function crossReentrantStatus() external view virtual returns (bool entered, uint256 status) {
         status = _crossReentrantStatus;
         entered = status != CrossEntrancy.NOT_ENTERED;
+    }
+
+    function hasDebtInOtherSilo(
+        address _debtShareToken,
+        address _borrower
+    ) external view virtual returns (bool hasDebt) {
+        address otherSiloDebtToken = _debtShareToken == _DEBT_SHARE_TOKEN0 ? _DEBT_SHARE_TOKEN1 : _DEBT_SHARE_TOKEN0;
+
+        uint256 debtBalanceInOtherSilo = IERC20(otherSiloDebtToken).balanceOf(_borrower);
+
+        hasDebt = debtBalanceInOtherSilo != 0;
     }
 
     /// @inheritdoc ISiloConfig
@@ -384,24 +372,6 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
         );
     }
 
-    /// @notice it will change collateral for existing debt, only silo can call it
-    /// @return debtInfo details about `borrower` debt after the change
-    function _changeCollateralType(address _borrower, bool _switchToSameAsset)
-        internal
-        virtual
-        returns (DebtInfo memory debtInfo)
-    {
-        _onlySilo();
-
-        debtInfo = _debtsInfo[_borrower];
-
-        if (!debtInfo.debtPresent) revert NoDebt();
-        if (debtInfo.sameAsset == _switchToSameAsset) revert CollateralTypeDidNotChanged();
-
-        _debtsInfo[_borrower].sameAsset = _switchToSameAsset;
-        debtInfo.sameAsset = _switchToSameAsset;
-    }
-
     function _getOrderedConfigs(address _silo, DebtInfo memory _debtInfo, uint256 _action)
         internal
         view
@@ -471,13 +441,6 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
         });
     }
 
-    function _forbidDebtInTwoSilos(bool _debtInSilo0) internal view virtual {
-        if (msg.sender == _DEBT_SHARE_TOKEN0 && _debtInSilo0) return;
-        if (msg.sender == _DEBT_SHARE_TOKEN1 && !_debtInSilo0) return;
-
-        revert DebtExistInOtherSilo();
-    }
-
     function _onlySiloOrTokenOrHookReceiver() internal view virtual {
         if (msg.sender != _SILO0 &&
             msg.sender != _SILO1 &&
@@ -495,9 +458,5 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
 
     function _onlySilo() internal view virtual {
         if (msg.sender != _SILO0 && msg.sender != _SILO1) revert OnlySilo();
-    }
-
-    function _onlyDebtShareToken() internal view virtual {
-        if (msg.sender != _DEBT_SHARE_TOKEN0 && msg.sender != _DEBT_SHARE_TOKEN1) revert OnlyDebtShareToken();
     }
 }

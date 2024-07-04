@@ -145,10 +145,6 @@ interface ISiloConfig {
     /// @param _sameAsset true if `_borrower` operates on the same asset
     function setCollateralSilo(address _borrower, bool _sameAsset) external;
 
-    /// @notice Forbid debt in two silos for `_borrower` by reverting on debt transfer
-    /// @param _borrower borrower address
-    function forbidDebtInTwoSilos(address _borrower) external view;
-
     function accrueInterestAndGetConfig(address _silo) external returns (ConfigData memory);
 
     function accrueInterestAndGetConfigs(address _silo, address _borrower, uint256 _action)
@@ -165,6 +161,8 @@ interface ISiloConfig {
     /// `nonReentrant` function in the call stack.
     /// @return status precise status of reentrancy, see CrossEntrancy.sol for possible values
     function crossReentrantStatus() external view returns (bool entered, uint256 status);
+
+    function hasDebtInOtherSilo(address _debtShareToken, address _borrower) external view returns (bool hasDebt);
 
     // solhint-disable-next-line func-name-mixedcase
     function SILO_ID() external view returns (uint256);

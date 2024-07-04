@@ -20,6 +20,8 @@ contract ShareDebtToken is IERC20R, ShareToken {
 
     mapping(address owner => mapping(address recipient => uint256 allowance)) private _receiveAllowances;
 
+    error RecipientHasDebtInOtherSilo();
+
     /// @param _silo Silo address for which tokens was deployed
     function initialize(ISilo _silo, address _hookReceiver, uint24 _tokenType) external virtual initializer {
         __ShareToken_init(_silo, _hookReceiver, _tokenType);
@@ -81,8 +83,8 @@ contract ShareDebtToken is IERC20R, ShareToken {
 
     /// @dev Check receive allowance and if recipient is allowed to accept debt from silo
     function _beforeTokenTransfer(address _sender, address _recipient, uint256 _amount) internal virtual override {
-        // Revert if `_recipient` has debt in other silo. Debt in both silos is forbidden.
-        siloConfig.forbidDebtInTwoSilos(_recipient);
+        bool hasDebtInOtherSilo = siloConfig.hasDebtInOtherSilo(address(this), _recipient);
+        if (hasDebtInOtherSilo) revert RecipientHasDebtInOtherSilo();
 
         // If we are minting or burning, Silo is responsible to check all necessary conditions
         if (_isTransfer(_sender, _recipient)) {

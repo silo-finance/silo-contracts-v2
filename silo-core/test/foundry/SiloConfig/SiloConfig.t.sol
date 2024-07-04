@@ -500,9 +500,12 @@ contract SiloConfigTest is Test {
         vm.prank(_silo1Default);
         _siloConfig.crossNonReentrantAfter();
 
-        vm.prank(_configDataDefault0.debtShareToken);
-        vm.expectRevert(ISiloConfig.DebtExistInOtherSilo.selector);
-        _siloConfig.forbidDebtInTwoSilos(to);
+        bool hasDebtInOtherSilo = _siloConfig.hasDebtInOtherSilo(
+            _configDataDefault0.debtShareToken,
+            to
+        );
+
+        assertTrue(hasDebtInOtherSilo, "debt should exist in other silo");
 
         vm.prank(_configDataDefault0.debtShareToken);
         _siloConfig.onDebtTransfer(from, to);
@@ -544,8 +547,12 @@ contract SiloConfigTest is Test {
         vm.prank(_silo0Default);
         _siloConfig.crossNonReentrantAfter();
 
-        vm.prank(_configDataDefault0.debtShareToken);
-        _siloConfig.forbidDebtInTwoSilos(to); // should not revert
+        bool hasDebtInOtherSilo = _siloConfig.hasDebtInOtherSilo(
+            _configDataDefault0.debtShareToken,
+            to
+        );
+
+        assertFalse(hasDebtInOtherSilo, "debt should not exist in other silo");
 
         vm.prank(_configDataDefault0.debtShareToken);
         _siloConfig.onDebtTransfer(from, to);
