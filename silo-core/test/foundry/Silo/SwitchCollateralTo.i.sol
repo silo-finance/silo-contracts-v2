@@ -47,7 +47,7 @@ contract SwitchCollateralToTest is SiloLittleHelper, Test {
         assertEq(debtInfo.sameAsset, _sameAsset, "original position type");
 
         vm.prank(borrower);
-        // changed a silo only to make a test pass.
+        // TODO: changed a silo only to make a test pass.
         // setCollateralSilo fn logic needs to be reviewed
         silo1.switchCollateralTo(!_sameAsset);
         (,, debtInfo) = siloConfig.getConfigs(address(silo0), borrower, 0);

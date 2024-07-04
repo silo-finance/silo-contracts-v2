@@ -247,10 +247,10 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
             _setCollateralSilo(msg.sender, _borrower, _action.matchAction(Hook.SAME_ASSET));
         } else if (_action.matchAction(Hook.SWITCH_COLLATERAL)) {
             _onlySilo();
+            // _changeCollateralType(_borrower, _action.matchAction(Hook.SAME_ASSET));
 
             debtInfo = _getDebtInfo(_silo, _borrower);
 
-            // _changeCollateralType(_borrower, _action.matchAction(Hook.SAME_ASSET));
             bool switchToSameAsset = _action.matchAction(Hook.SAME_ASSET);
 
             if (!debtInfo.debtPresent) revert NoDebt();
