@@ -215,24 +215,11 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
         _crossNonReentrantBefore();
 
         if (_action.matchAction(Hook.BORROW)) {
-            _onlySilo();
-            // debtInfo = _openDebt(_borrower, _action);
             _setCollateralSilo(msg.sender, _borrower, _action.matchAction(Hook.SAME_ASSET));
         } else if (_action.matchAction(Hook.SWITCH_COLLATERAL)) {
-            _onlySilo();
-            // _changeCollateralType(_borrower, _action.matchAction(Hook.SAME_ASSET));
-
-            debtInfo = _getDebtInfo(_silo, _borrower);
-
-            bool switchToSameAsset = _action.matchAction(Hook.SAME_ASSET);
-
-            if (!debtInfo.debtPresent) revert NoDebt();
-            if (debtInfo.sameAsset == switchToSameAsset) revert CollateralTypeDidNotChanged();
-
-            _setCollateralSilo(msg.sender, _borrower, switchToSameAsset);
+            _changeCollateralType(_silo, _borrower, _action.matchAction(Hook.SAME_ASSET));
         } else {
             // TODO looks like anyone can raise flag if there is no action taken?
-            // debtInfo = _debtsInfo[_borrower];
         }
 
         debtInfo = _getDebtInfo(_silo, _borrower);
@@ -342,8 +329,22 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
     }
 
     function _setCollateralSilo(address _debtSilo, address _borrower, bool _sameAsset) internal {
+        _onlySilo();
+
         address otherSilo = _debtSilo == _SILO0 ? _SILO1 : _SILO0;
         _borrowerCollateralSilo[_borrower] = _sameAsset ? _debtSilo : otherSilo;
+    }
+
+    function _changeCollateralType(address _silo, address _borrower, bool _switchToSameAsset) internal {
+        _onlySilo();
+
+        DebtInfo memory debtInfo = _getDebtInfo(_silo, _borrower);
+
+        if (!debtInfo.debtPresent) revert NoDebt();
+        if (debtInfo.sameAsset == _switchToSameAsset) revert CollateralTypeDidNotChanged();
+
+        address currentSilo = _borrowerCollateralSilo[_borrower];
+        _borrowerCollateralSilo[_borrower] = currentSilo == _SILO0 ? _SILO1 : _SILO0;
     }
 
     function _getDebtInfo(address _silo, address _borrower)

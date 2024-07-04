@@ -77,11 +77,9 @@ contract ChangeCollateralTypeTest is SiloLittleHelper, Test {
 
         assertEq(debtInfo.sameAsset, !_toSameAsset);
 
-        // TODO: changed a silo only to make a test pass.
-        // setCollateralSilo fn logic needs to be reviewed
-        vm.prank(address(silo1));
+        vm.prank(address(silo0));
         (,, debtInfo) = siloConfig.accrueInterestAndGetConfigs(
-            address(silo1), borrower, Hook.SWITCH_COLLATERAL | (_toSameAsset ? Hook.SAME_ASSET : Hook.TWO_ASSETS)
+            address(silo0), borrower, Hook.SWITCH_COLLATERAL | (_toSameAsset ? Hook.SAME_ASSET : Hook.TWO_ASSETS)
         );
 
         assertEq(debtInfo.sameAsset, _toSameAsset);
@@ -89,7 +87,7 @@ contract ChangeCollateralTypeTest is SiloLittleHelper, Test {
         vm.prank(address(silo0));
         siloConfig.crossNonReentrantAfter();
 
-        vm.prank(address(silo1));
+        vm.prank(address(silo0));
         (,, debtInfo) = siloConfig.accrueInterestAndGetConfigs(
             address(silo1), borrower, Hook.SWITCH_COLLATERAL | (!_toSameAsset ? Hook.SAME_ASSET : Hook.TWO_ASSETS)
         );
