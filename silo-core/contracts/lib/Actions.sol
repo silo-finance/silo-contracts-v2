@@ -135,8 +135,6 @@ library Actions {
 
         ISiloConfig siloConfig = _shareStorage.siloConfig;
 
-        siloConfig.setCollateralSilo(_args.borrower, _args.sameAsset);
-
         (
             ISiloConfig.ConfigData memory collateralConfig,
             ISiloConfig.ConfigData memory debtConfig,
@@ -220,8 +218,6 @@ library Actions {
         if (_args.depositAssets == 0 || _args.borrowAssets == 0) revert ISilo.ZeroAssets();
 
         _hookCallBeforeLeverageSameAsset(_shareStorage, _args);
-
-        _shareStorage.siloConfig.setCollateralSilo(_args.borrower, /* sameAsset */ true);
 
         (
             ISiloConfig.ConfigData memory collateralConfig,
