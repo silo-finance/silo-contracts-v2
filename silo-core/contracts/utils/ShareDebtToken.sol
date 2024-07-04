@@ -85,6 +85,7 @@ contract ShareDebtToken is IERC20R, ShareToken {
     function _beforeTokenTransfer(address _sender, address _recipient, uint256 _amount) internal virtual override {
         // If we are minting or burning, Silo is responsible to check all necessary conditions
         if (_isTransfer(_sender, _recipient)) {
+            // Silo forbids having debt in two silos
             bool hasDebtInOtherSilo = siloConfig.hasDebtInOtherSilo(address(this), _recipient);
             if (hasDebtInOtherSilo) revert RecipientHasDebtInOtherSilo();
 
