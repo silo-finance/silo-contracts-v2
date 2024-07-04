@@ -83,11 +83,11 @@ contract ShareDebtToken is IERC20R, ShareToken {
 
     /// @dev Check receive allowance and if recipient is allowed to accept debt from silo
     function _beforeTokenTransfer(address _sender, address _recipient, uint256 _amount) internal virtual override {
-        bool hasDebtInOtherSilo = siloConfig.hasDebtInOtherSilo(address(this), _recipient);
-        if (hasDebtInOtherSilo) revert RecipientHasDebtInOtherSilo();
-
         // If we are minting or burning, Silo is responsible to check all necessary conditions
         if (_isTransfer(_sender, _recipient)) {
+            bool hasDebtInOtherSilo = siloConfig.hasDebtInOtherSilo(address(this), _recipient);
+            if (hasDebtInOtherSilo) revert RecipientHasDebtInOtherSilo();
+
             // set the same collateral silo for `_recepient` as `_sender` if `_recepient` has no silo
             siloConfig.onDebtTransfer(_sender, _recipient);
 
