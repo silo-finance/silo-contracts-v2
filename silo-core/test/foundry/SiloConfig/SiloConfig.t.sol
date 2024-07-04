@@ -162,13 +162,29 @@ contract SiloConfigTest is Test {
     ) public {
         SiloConfig siloConfig = siloConfigDeploy(_siloId, _configData0, _configData1);
 
+        (,, address debtToken) = siloConfig.getShareTokens(_configData0.silo);
+
+        vm.mockCall(
+            debtToken,
+            abi.encodeCall(IERC20.balanceOf, address(1)),
+            abi.encode(0)
+        );
+
+        (,, debtToken) = siloConfig.getShareTokens(_configData1.silo);
+
+        vm.mockCall(
+            debtToken,
+            abi.encodeCall(IERC20.balanceOf, address(1)),
+            abi.encode(0)
+        );
+
         vm.expectRevert(ISiloConfig.WrongSilo.selector);
-        siloConfig.getConfigs(_wrongSilo, address(0), 0 /* always 0 for external calls */);
+        siloConfig.getConfigs(_wrongSilo, address(1), 0 /* always 0 for external calls */);
 
         (
             ISiloConfig.ConfigData memory c0,
             ISiloConfig.ConfigData memory c1,
-        ) = siloConfig.getConfigs(_configData0.silo, address(0), 0 /* always 0 for external calls */);
+        ) = siloConfig.getConfigs(_configData0.silo, address(1), 0 /* always 0 for external calls */);
 
         assertEq(keccak256(abi.encode(c0)), keccak256(abi.encode(_configData0)));
         assertEq(keccak256(abi.encode(c1)), keccak256(abi.encode(_configData1)));
