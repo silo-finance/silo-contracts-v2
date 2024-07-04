@@ -49,8 +49,8 @@ contract MaxLiquidationTest is SiloLittleHelper, Test {
     */
     /// forge-config: core-test.fuzz.runs = 1000
     function test_maxLiquidation_partial_1token_fuzz(uint128 _collateral) public {
-        // this condition is to not have overflow: _collateral * 74
-        vm.assume(_collateral < type(uint128).max / 74);
+        // this condition is to not have overflow: _collateral * 84
+        vm.assume(_collateral < type(uint128).max / 84);
         // for small numbers we might jump from solvent -> bad debt, small numbers will be separate test casee TODO
         vm.assume(_collateral >= 1000);
 
