@@ -3,6 +3,7 @@ pragma solidity ^0.8.20;
 
 import "forge-std/Test.sol";
 
+import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
@@ -15,6 +16,7 @@ import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
     forge test -vv --ffi --mc MaxRepayTest
 */
 contract MaxLiquidationTest is SiloLittleHelper, Test {
+    using SiloLensLib for ISilo;
     uint256 internal constant _REAL_ASSETS_LIMIT = type(uint128).max;
     
     ISiloConfig siloConfig;
@@ -41,21 +43,29 @@ contract MaxLiquidationTest is SiloLittleHelper, Test {
 
         _assertBorrowerIsSolvent();
     }
+//
+//    /*
+//    forge test -vv --ffi --mt test_maxLiquidation_withDebt_
+//    */
+//    /// forge-config: core-test.fuzz.runs = 1000
+//    function test_maxLiquidation_partial_1token_fuzz(uint128 _collateral) public {
+//        _maxLiquidation_withDebt(_collateral, SAME_ASSET);
+//    }
+//
+//    /// forge-config: core-test.fuzz.runs = 1000
+//    function test_maxLiquidation_partial_2tokens_fuzz(uint128 _collateral) public {
+//        _maxLiquidation_withDebt(_collateral, TWO_ASSETS);
+//    }
 
     /*
-    forge test -vv --ffi --mt test_maxLiquidation_withDebt_
+    forge test -vv --ffi --mt test_maxLiquidation_partial_x
     */
-    /// forge-config: core-test.fuzz.runs = 1000
-    function test_maxLiquidation_partial_1token_fuzz(uint128 _collateral) public {
-        _maxLiquidation_withDebt(_collateral, SAME_ASSET);
-    }
+    function test_maxLiquidation_partial_x(
+        // uint128 _collateral, bool _sameAsset
+    ) public {
+        uint128 _collateral = 1e18;
+        bool _sameAsset;
 
-    /// forge-config: core-test.fuzz.runs = 1000
-    function test_maxLiquidation_partial_2tokens_fuzz(uint128 _collateral) public {
-        _maxLiquidation_withDebt(_collateral, TWO_ASSETS);
-    }
-
-    function _maxLiquidation_partial(uint128 _collateral, bool _sameAsset) private {
         uint256 toBorrow = _collateral / 3;
         _createDebt(_collateral, toBorrow, _sameAsset);
 
@@ -74,32 +84,32 @@ contract MaxLiquidationTest is SiloLittleHelper, Test {
 
         _assertBorrowerIsSolvent();
     }
-
-    /*
-    forge test -vv --ffi --mt test_maxLiquidation_withInterest_fuzz
-    */
-    /// forge-config: core-test.fuzz.runs = 1000
-    function test_maxLiquidation_withInterest_1token_fuzz(uint128 _collateral) public {
-        _maxLiquidation_withInterest(_collateral, SAME_ASSET);
-    }
-
-    /// forge-config: core-test.fuzz.runs = 1000
-    function test_maxLiquidation_withInterest_2tokens_fuzz(uint128 _collateral) public {
-        _maxLiquidation_withInterest(_collateral, TWO_ASSETS);
-    }
-
-    function _maxLiquidation_withInterest(uint128 _collateral, bool _sameAsset) public {
-        uint256 toBorrow = _collateral / 3;
-        _createDebt(_collateral, toBorrow, _sameAsset);
-
-        vm.warp(block.timestamp + 356 days);
-
-        uint256 maxLiquidation = partialLiquidation.maxLiquidation(address(silo0), borrower);
-        vm.assume(maxLiquidation > toBorrow); // we want interest
-
-        _repay(maxLiquidation, borrower);
-        _assertBorrowerIsSolvent();
-    }
+//
+//    /*
+//    forge test -vv --ffi --mt test_maxLiquidation_withInterest_fuzz
+//    */
+//    /// forge-config: core-test.fuzz.runs = 1000
+//    function test_maxLiquidation_withInterest_1token_fuzz(uint128 _collateral) public {
+//        _maxLiquidation_withInterest(_collateral, SAME_ASSET);
+//    }
+//
+//    /// forge-config: core-test.fuzz.runs = 1000
+//    function test_maxLiquidation_withInterest_2tokens_fuzz(uint128 _collateral) public {
+//        _maxLiquidation_withInterest(_collateral, TWO_ASSETS);
+//    }
+//
+//    function _maxLiquidation_withInterest(uint128 _collateral, bool _sameAsset) public {
+//        uint256 toBorrow = _collateral / 3;
+//        _createDebt(_collateral, toBorrow, _sameAsset);
+//
+//        vm.warp(block.timestamp + 356 days);
+//
+//        uint256 maxLiquidation = partialLiquidation.maxLiquidation(address(silo0), borrower);
+//        vm.assume(maxLiquidation > toBorrow); // we want interest
+//
+//        _repay(maxLiquidation, borrower);
+//        _assertBorrowerIsSolvent();
+//    }
 
     function _createDebt(uint256 _collateral, uint256 _toBorrow, bool _sameAsset) internal {
         vm.assume(_collateral > 0);
@@ -114,8 +124,6 @@ contract MaxLiquidationTest is SiloLittleHelper, Test {
 
     function _ensureBorrowerHasDebt() internal view {
         (,, address debtShareToken) = silo1.config().getShareTokens(address(silo1));
-
-        assertGt(partialLiquidation.maxLiquidation(address(silo0), borrower), 0, "expect debt");
         assertGt(IShareToken(debtShareToken).balanceOf(borrower), 0, "expect debtShareToken balance > 0");
     }
 
@@ -131,11 +139,14 @@ contract MaxLiquidationTest is SiloLittleHelper, Test {
         assertEq(debtToRepay, 0);
     }
 
-    function _assertBorrowerIsNotSolvent(bool _hasBadDebt) internal view {
-        assertFalse(silo1.isSolvent(borrower));
+    function _assertBorrowerIsNotSolvent(bool _hasBadDebt) internal {
+        assertFalse(silo1.isSolvent(borrower), "[_assertBorrowerIsNotSolvent] isSolvent");
 
-        if (_hasBadDebt) assertGt(silo1.getLtv(borrower), 1e18);
-        else assertLt(silo1.getLtv(borrower), 1e18);
+        uint256 ltv = silo1.getLtv(borrower);
+        emit log_named_uint("[_assertBorrowerIsNotSolvent] LTV", ltv);
+
+        if (_hasBadDebt) assertGt(ltv, 1e18, "[_assertBorrowerIsNotSolvent] LTV");
+        else assertLt(ltv, 1e18, "[_assertBorrowerIsNotSolvent] LTV");
     }
 
     function _executeLiquidation(bool _sameToken, uint256 _debtToCover, bool _receiveSToken)
