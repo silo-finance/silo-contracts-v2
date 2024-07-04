@@ -156,8 +156,9 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
         _setCollateralSilo(msg.sender, _borrower, _sameAsset);
     }
 
-    function _setCollateralSilo(address _silo, address _borrower, bool _sameAsset) internal {
-        address collateralSilo;
+    function _setCollateralSilo(address _debtSilo, address _borrower, bool _sameAsset) internal {
+        address otherSilo = _debtSilo == _SILO0 ? _SILO1 : _SILO0;
+        borrowerCollateralSilo[_borrower] = _sameAsset ? _debtSilo : otherSilo;
 
         if (_sameAsset) {
             // the same as msg.sender
