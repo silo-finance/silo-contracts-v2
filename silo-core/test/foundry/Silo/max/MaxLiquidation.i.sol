@@ -76,6 +76,36 @@ contract MaxLiquidationTest is SiloLittleHelper, Test {
         _assertBorrowerIsSolvent();
     }
 
+    /*
+    forge test -vv --ffi --mt test_maxLiquidation_partial_2tokens_fuzz
+    */
+    /// forge-config: core-test.fuzz.runs = 1000
+    function test_maxLiquidation_partial_2tokens_fuzz(uint128 _collateral) public {
+        // this condition is to not have overflow: _collateral * 74
+        vm.assume(_collateral < type(uint128).max / 74);
+        // for small numbers we might jump from solvent -> bad debt, small numbers will be separate test case TODO
+        vm.assume(_collateral >= 1000);
+
+        bool _sameAsset = false;
+
+        uint256 toBorrow = _collateral * 74 / 100;
+        _createDebt(_collateral, toBorrow, _sameAsset);
+
+        vm.warp(40 days);
+
+        _assertBorrowerIsNotSolvent(false);
+
+        (uint256 collateralToLiquidate, uint256 debtToRepay) = partialLiquidation.maxLiquidation(address(silo1), borrower);
+        assertGt(debtToRepay, toBorrow, "debtToRepay is more with interest than what was borrowed");
+        assertLt(collateralToLiquidate, _collateral, "expect part of _collateral on liquidation");
+
+        (uint256 withdrawCollateral, uint256 repayDebtAssets) = _executeLiquidation(_sameAsset, debtToRepay, false);
+
+        assertEq(debtToRepay, repayDebtAssets, "debt: max == result");
+        assertEq(collateralToLiquidate, withdrawCollateral, "collateral: max == result");
+
+        _assertBorrowerIsSolvent();
+    }
 //
 //    /*
 //    forge test -vv --ffi --mt test_maxLiquidation_withInterest_fuzz
