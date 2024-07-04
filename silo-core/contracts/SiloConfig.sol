@@ -76,7 +76,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
 
     bool private immutable _CALL_BEFORE_QUOTE1;
 
-    mapping (address borrower => address collateralSilo) internal borrowerCollateralSilo;
+    mapping (address borrower => address collateralSilo) internal _borrowerCollateralSilo;
     
     /// @param _siloId ID of this pool assigned by factory
     /// @param _configData0 silo configuration data for token0
@@ -153,17 +153,12 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
         _setCollateralSilo(msg.sender, _borrower, _sameAsset);
     }
 
-    function _setCollateralSilo(address _debtSilo, address _borrower, bool _sameAsset) internal {
-        address otherSilo = _debtSilo == _SILO0 ? _SILO1 : _SILO0;
-        borrowerCollateralSilo[_borrower] = _sameAsset ? _debtSilo : otherSilo;
-    }
-
     /// @inheritdoc ISiloConfig
     function onDebtTransfer(address _sender, address _recipient) external virtual {
         if (msg.sender != _DEBT_SHARE_TOKEN0 && msg.sender != _DEBT_SHARE_TOKEN1) revert OnlyDebtShareToken();
 
-        if (borrowerCollateralSilo[_recipient] == address(0)) {
-            borrowerCollateralSilo[_recipient] = borrowerCollateralSilo[_sender];
+        if (_borrowerCollateralSilo[_recipient] == address(0)) {
+            _borrowerCollateralSilo[_recipient] = _borrowerCollateralSilo[_sender];
         }
     }
 
@@ -336,6 +331,21 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
         }
     }
 
+    function getDebtSilo(address _borrower) public view virtual returns (address debtSilo) {
+        uint256 debtBal0 = IERC20(_DEBT_SHARE_TOKEN0).balanceOf(_borrower);
+        uint256 debtBal1 = IERC20(_DEBT_SHARE_TOKEN1).balanceOf(_borrower);
+
+        if (debtBal0 > 0 && debtBal1 > 0) revert DebtExistInOtherSilo();
+        if (debtBal0 == 0 && debtBal1 == 0) return address(0);
+
+        debtSilo = debtBal0 > debtBal1 ? _SILO0 : _SILO1;
+    }
+
+    function _setCollateralSilo(address _debtSilo, address _borrower, bool _sameAsset) internal {
+        address otherSilo = _debtSilo == _SILO0 ? _SILO1 : _SILO0;
+        _borrowerCollateralSilo[_borrower] = _sameAsset ? _debtSilo : otherSilo;
+    }
+
     function _getDebtInfo(address _silo, address _borrower)
         internal
         view
@@ -346,22 +356,12 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
 
         if (debtSilo == address(0)) return debtInfo; // no debt
 
-        address collateralSilo = borrowerCollateralSilo[_borrower];
+        address collateralSilo = _borrowerCollateralSilo[_borrower];
 
         debtInfo.debtPresent = true;
         debtInfo.sameAsset = collateralSilo == debtSilo;
         debtInfo.debtInSilo0 = debtSilo == _SILO0;
         debtInfo.debtInThisSilo = _silo == debtSilo;
-    }
-
-    function getDebtSilo(address _borrower) public view virtual returns (address debtSilo) {
-        uint256 debtBal0 = IERC20(_DEBT_SHARE_TOKEN0).balanceOf(_borrower);
-        uint256 debtBal1 = IERC20(_DEBT_SHARE_TOKEN1).balanceOf(_borrower);
-
-        if (debtBal0 > 0 && debtBal1 > 0) revert DebtExistInOtherSilo();
-        if (debtBal0 == 0 && debtBal1 == 0) return address(0);
-
-        debtSilo = debtBal0 > debtBal1 ? _SILO0 : _SILO1;
     }
 
     function _callAccrueInterest(address _silo) internal {
