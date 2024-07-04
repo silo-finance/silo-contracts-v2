@@ -501,13 +501,13 @@ contract SiloConfigTest is Test {
         _siloConfig.crossNonReentrantAfter();
 
         vm.prank(_configDataDefault0.debtShareToken);
+        vm.expectRevert(ISiloConfig.DebtExistInOtherSilo.selector);
+        _siloConfig.forbidDebtInTwoSilos(to);
+
+        vm.prank(_configDataDefault0.debtShareToken);
         _siloConfig.onDebtTransfer(from, to);
 
         _mockShareTokensBlances(to, 1, 1);
-
-        vm.prank(_configDataDefault0.debtShareToken);
-        vm.expectRevert(ISiloConfig.DebtExistInOtherSilo.selector);
-        _siloConfig.forbidDebtInTwoSilos(to);
     }
 
     /*
@@ -545,13 +545,13 @@ contract SiloConfigTest is Test {
         _siloConfig.crossNonReentrantAfter();
 
         vm.prank(_configDataDefault0.debtShareToken);
+        _siloConfig.forbidDebtInTwoSilos(to); // should not revert
+
+        vm.prank(_configDataDefault0.debtShareToken);
         _siloConfig.onDebtTransfer(from, to);
 
         _mockShareTokensBlances(from, 0, 0);
         _mockShareTokensBlances(to, 2, 0);
-
-        vm.prank(_configDataDefault0.debtShareToken);
-        _siloConfig.forbidDebtInTwoSilos(to); // should not revert
 
         (
             ,, ISiloConfig.DebtInfo memory debtInfoTo
