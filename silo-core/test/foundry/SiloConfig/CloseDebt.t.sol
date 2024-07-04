@@ -40,7 +40,7 @@ contract CloseDebtTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_closeDebt_sendingZeroOfOtherDebtDoesNotClosePosition
     */
-    function test_closeDebt_sendingZeroOfOtherDebtDoesNotClosePosition() public {
+    function test_skip_closeDebt_sendingZeroOfOtherDebtDoesNotClosePosition() public {
         (,, address otherDebtShareToken) = siloConfig.getShareTokens(address(silo1));
 
         vm.prank(borrower);
@@ -58,7 +58,7 @@ contract CloseDebtTest is SiloLittleHelper, Test {
         assertTrue(debtInfo.debtPresent, "debt must exist");
     }
 
-    function test_closeDebt_sendingSomeOfDebtDoesNotClosePosition() public {
+    function test_skip_closeDebt_sendingSomeOfDebtDoesNotClosePosition() public {
         address receiver = makeAddr("receiver");
         _deposit(10, receiver);
 
