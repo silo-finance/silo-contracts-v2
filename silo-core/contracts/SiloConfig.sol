@@ -153,30 +153,18 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
     function setCollateralSilo(address _borrower, bool _sameAsset) external {
         _onlySilo();
 
-        address collateralSilo;
-
-        if (_sameAsset) {
-            // the same as msg.sender
-            collateralSilo =  msg.sender == _SILO0 ? _SILO0 : _SILO1;
-        } else {
-            // the other silo
-            collateralSilo =  msg.sender == _SILO0 ? _SILO1 : _SILO0;
-        }
-
-        borrowerCollateralSilo[_borrower] = collateralSilo;
+        _setCollateralSilo(msg.sender, _borrower, _sameAsset);
     }
 
-    function _setCollateralSilo(address _borrower, bool _sameAsset) internal {
-        _onlySilo();
-
+    function _setCollateralSilo(address _silo, address _borrower, bool _sameAsset) internal {
         address collateralSilo;
 
         if (_sameAsset) {
             // the same as msg.sender
-            collateralSilo =  msg.sender == _SILO0 ? _SILO0 : _SILO1;
+            collateralSilo =  _silo == _SILO0 ? _SILO0 : _SILO1;
         } else {
             // the other silo
-            collateralSilo =  msg.sender == _SILO0 ? _SILO1 : _SILO0;
+            collateralSilo =  _silo == _SILO0 ? _SILO1 : _SILO0;
         }
 
         borrowerCollateralSilo[_borrower] = collateralSilo;
@@ -184,27 +172,21 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
 
     /// @inheritdoc ISiloConfig
     function onDebtTransfer(address _sender, address _recipient) external virtual {
-        if (msg.sender != _DEBT_SHARE_TOKEN0 && msg.sender != _DEBT_SHARE_TOKEN1) revert OnlyDebtShareToken();
+        _onlyDebtShareToken();
 
-        DebtInfo storage recipientDebtInfo = _debtsInfo[_recipient];
-
-        if (recipientDebtInfo.debtPresent) {
-            // transferring debt not allowed, if _recipient has debt in other silo
-            _forbidDebtInTwoSilos(recipientDebtInfo.debtInSilo0);
-        } else {
-            recipientDebtInfo.debtPresent = true;
-            recipientDebtInfo.sameAsset = _debtsInfo[_sender].sameAsset;
-            recipientDebtInfo.debtInSilo0 = msg.sender == _DEBT_SHARE_TOKEN0;
+        if (borrowerCollateralSilo[_recipient] == address(0)) {
+            borrowerCollateralSilo[_recipient] = borrowerCollateralSilo[_sender];
         }
     }
 
-    /// @inheritdoc ISiloConfig
-    function closeDebt(address _borrower) external virtual {
-        if (msg.sender != _SILO0 && msg.sender != _SILO1 &&
-            msg.sender != _DEBT_SHARE_TOKEN0 && msg.sender != _DEBT_SHARE_TOKEN1
-        ) revert OnlySiloOrDebtShareToken();
+    function forbidDebtInTwoSilos(address _borrower) external view virtual {
+        _onlyDebtShareToken();
 
-        delete _debtsInfo[_borrower];
+        address otherSiloDebtToken = msg.sender == _DEBT_SHARE_TOKEN0 ? _DEBT_SHARE_TOKEN1 : _DEBT_SHARE_TOKEN0;
+
+        uint256 debtBalanceInOtherSilo = IERC20(otherSiloDebtToken).balanceOf(_borrower);
+
+        if (debtBalanceInOtherSilo != 0) revert DebtExistInOtherSilo();
     }
 
     function accrueInterestAndGetConfig(address _silo) external virtual returns (ConfigData memory) {
@@ -259,40 +241,28 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
     {
         _crossNonReentrantBefore();
 
-        address collateralSilo = borrowerCollateralSilo[_borrower];
-        address debtSilo = getDebtSilo(_borrower);
-
-        debtInfo = _getDebtInfo(
-            _silo,
-            _borrower,
-            collateralSilo,
-            debtSilo
-        );
-
         if (_action.matchAction(Hook.BORROW)) {
             _onlySilo();
             // debtInfo = _openDebt(_borrower, _action);
+            _setCollateralSilo(msg.sender, _borrower, _action.matchAction(Hook.SAME_ASSET));
         } else if (_action.matchAction(Hook.SWITCH_COLLATERAL)) {
+            _onlySilo();
+
+            debtInfo = _getDebtInfo(_silo, _borrower);
+
             // _changeCollateralType(_borrower, _action.matchAction(Hook.SAME_ASSET));
             bool switchToSameAsset = _action.matchAction(Hook.SAME_ASSET);
 
             if (!debtInfo.debtPresent) revert NoDebt();
             if (debtInfo.sameAsset == switchToSameAsset) revert CollateralTypeDidNotChanged();
 
-            _setCollateralSilo(_borrower, switchToSameAsset);
-
-            collateralSilo = borrowerCollateralSilo[_borrower];
-
-            debtInfo = _getDebtInfo(
-                _silo,
-                _borrower,
-                collateralSilo,
-                debtSilo
-            );
+            _setCollateralSilo(msg.sender, _borrower, switchToSameAsset);
         } else {
             // TODO looks like anyone can raise flag if there is no action taken?
             // debtInfo = _debtsInfo[_borrower];
         }
+
+        debtInfo = _getDebtInfo(_silo, _borrower);
 
         _callAccrueInterest(_silo);
 
@@ -341,16 +311,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
         virtual
         returns (ConfigData memory collateralConfig, ConfigData memory debtConfig, DebtInfo memory debtInfo)
     {
-        address collateralSilo = borrowerCollateralSilo[_borrower];
-        address debtSilo = getDebtSilo(_borrower);
-
-        debtInfo = _getDebtInfo(
-            _silo,
-            _borrower,
-            collateralSilo,
-            debtSilo
-        );
-
+        debtInfo = _getDebtInfo(_silo, _borrower);
         (collateralConfig, debtConfig) = _getOrderedConfigs(_silo, debtInfo, _action);
     }
 
@@ -386,23 +347,29 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
         }
     }
 
-    function _getDebtInfo(
-        address _silo,
-        address _borrower,
-        address _collateralSilo,
-        address _debtSilo
-    ) internal view virtual returns (DebtInfo memory debtInfo) {
-        debtInfo.debtPresent = _debtSilo != address(0);
-        debtInfo.sameAsset = _collateralSilo == _debtSilo;
-        debtInfo.debtInSilo0 = _debtSilo == _SILO0;
-        debtInfo.debtInThisSilo = _silo == _debtSilo;
+    function _getDebtInfo(address _silo, address _borrower)
+        internal
+        view
+        virtual
+        returns (DebtInfo memory debtInfo)
+    {
+        address debtSilo = getDebtSilo(_borrower);
+
+        if (debtSilo == address(0)) return debtInfo; // no debt
+
+        address collateralSilo = borrowerCollateralSilo[_borrower];
+
+        debtInfo.debtPresent = true;
+        debtInfo.sameAsset = collateralSilo == debtSilo;
+        debtInfo.debtInSilo0 = debtSilo == _SILO0;
+        debtInfo.debtInThisSilo = _silo == debtSilo;
     }
 
     function getDebtSilo(address _borrower) public view virtual returns (address debtSilo) {
         uint256 debtBal0 = IERC20(_DEBT_SHARE_TOKEN0).balanceOf(_borrower);
         uint256 debtBal1 = IERC20(_DEBT_SHARE_TOKEN1).balanceOf(_borrower);
 
-        if (debtBal0 > 0 && debtBal1 > 0) revert DebtInTwoSilos();
+        if (debtBal0 > 0 && debtBal1 > 0) revert DebtExistInOtherSilo();
         if (debtBal0 == 0 && debtBal1 == 0) return address(0);
 
         debtSilo = debtBal0 > debtBal1 ? _SILO0 : _SILO1;
@@ -432,20 +399,6 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
 
         _debtsInfo[_borrower].sameAsset = _switchToSameAsset;
         debtInfo.sameAsset = _switchToSameAsset;
-    }
-
-    function _openDebt(address _borrower, uint256 _action) internal virtual returns (DebtInfo memory debtInfo) {
-        _onlySilo();
-
-        debtInfo = _debtsInfo[_borrower];
-
-        if (!debtInfo.debtPresent) {
-            debtInfo.debtPresent = true;
-            debtInfo.sameAsset = _action.matchAction(Hook.SAME_ASSET);
-            debtInfo.debtInSilo0 = msg.sender == _SILO0;
-
-            _debtsInfo[_borrower] = debtInfo;
-        }
     }
 
     function _getOrderedConfigs(address _silo, DebtInfo memory _debtInfo, uint256 _action)
@@ -541,5 +494,9 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
 
     function _onlySilo() internal view virtual {
         if (msg.sender != _SILO0 && msg.sender != _SILO1) revert OnlySilo();
+    }
+
+    function _onlyDebtShareToken() internal view virtual {
+        if (msg.sender != _DEBT_SHARE_TOKEN0 && msg.sender != _DEBT_SHARE_TOKEN1) revert OnlyDebtShareToken();
     }
 }

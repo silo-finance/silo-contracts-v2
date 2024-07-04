@@ -134,10 +134,6 @@ interface ISiloConfig {
     /// @param _recipient recipient address
     function onDebtTransfer(address _sender, address _recipient) external;
 
-    /// @dev must be called when `_borrower` repay all debt, there is no restriction from which silo call will be done
-    /// @param _borrower borrower address
-    function closeDebt(address _borrower) external;
-
     /// @notice only silo method for cross Silo reentrancy
     function crossNonReentrantBefore() external;
 
@@ -148,6 +144,10 @@ interface ISiloConfig {
     /// @param _borrower borrower address
     /// @param _sameAsset true if `_borrower` operates on the same asset
     function setCollateralSilo(address _borrower, bool _sameAsset) external;
+
+    /// @notice Forbid debt in two silos for `_borrower` by reverting on debt transfer
+    /// @param _borrower borrower address
+    function forbidDebtInTwoSilos(address _borrower) external view;
 
     function accrueInterestAndGetConfig(address _silo) external returns (ConfigData memory);
 
