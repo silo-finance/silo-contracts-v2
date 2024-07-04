@@ -305,32 +305,6 @@ contract SiloConfigTest is Test {
     }
 
     /*
-    forge test -vv --mt test_openDebt_skipsIfAlreadyOpen
-    */
-    // function test_openDebt_skipsIfAlreadyOpen() public {    
-    //     address borrower = makeAddr("borrower");
-
-    //     vm.prank(_silo0Default);
-    //     (,, ISiloConfig.DebtInfo memory debtInfo1) = _siloConfig.accrueInterestAndGetConfigs(
-    //         _silo0Default,
-    //         borrower,
-    //         Hook.BORROW
-    //     );
-
-    //     vm.prank(_silo0Default);
-    //     _siloConfig.crossNonReentrantAfter();
-
-    //     vm.prank(_silo0Default);
-    //     (,, ISiloConfig.DebtInfo memory debtInfo2) = _siloConfig.accrueInterestAndGetConfigs(
-    //         _silo0Default,
-    //         borrower,
-    //         Hook.BORROW
-    //     );
-
-    //     assertEq(abi.encode(debtInfo1), abi.encode(debtInfo2), "nothing should change");
-    // }
-
-    /*
     forge test -vv --mt test_openDebt_debtInThisSilo
     */
     function test_openDebt_debtInThisSilo() public {
