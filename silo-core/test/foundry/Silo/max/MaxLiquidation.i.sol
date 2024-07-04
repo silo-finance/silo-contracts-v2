@@ -29,7 +29,7 @@ contract MaxLiquidationTest is SiloLittleHelper, Test {
     }
 
     function setUp() public {
-        siloConfig = _setUpLocalFixture(SiloConfigsNames.LOCAL_NO_ORACLE_NO_LTV_SILO);
+        siloConfig = _setUpLocalFixture(SiloConfigsNames.LOCAL_NO_ORACLE_SILO);
     }
 
     /*
@@ -66,16 +66,16 @@ contract MaxLiquidationTest is SiloLittleHelper, Test {
         uint128 _collateral = 1e18;
         bool _sameAsset;
 
-        uint256 toBorrow = _collateral / 3;
+        uint256 toBorrow = _collateral * 74 / 100;
         _createDebt(_collateral, toBorrow, _sameAsset);
 
-        vm.warp(1000);
+        vm.warp(40 days);
 
         _assertBorrowerIsNotSolvent(false);
 
-        (uint256 collateralToLiquidate, uint256 debtToRepay) = partialLiquidation.maxLiquidation(address(silo0), borrower);
+        (uint256 collateralToLiquidate, uint256 debtToRepay) = partialLiquidation.maxLiquidation(address(silo1), borrower);
         assertGt(debtToRepay, toBorrow, "debtToRepay is more with interest than what was borrowed");
-        assertEq(collateralToLiquidate, _collateral, "_collateral is exact");
+        assertLt(collateralToLiquidate, _collateral, "_collateral is less when partial liquidation");
 
         (uint256 withdrawCollateral, uint256 repayDebtAssets) = _executeLiquidation(_sameAsset, debtToRepay, false);
 
@@ -140,10 +140,10 @@ contract MaxLiquidationTest is SiloLittleHelper, Test {
     }
 
     function _assertBorrowerIsNotSolvent(bool _hasBadDebt) internal {
-        assertFalse(silo1.isSolvent(borrower), "[_assertBorrowerIsNotSolvent] isSolvent");
-
         uint256 ltv = silo1.getLtv(borrower);
         emit log_named_uint("[_assertBorrowerIsNotSolvent] LTV", ltv);
+
+        assertFalse(silo1.isSolvent(borrower), "[_assertBorrowerIsNotSolvent] borrower is still solvent");
 
         if (_hasBadDebt) assertGt(ltv, 1e18, "[_assertBorrowerIsNotSolvent] LTV");
         else assertLt(ltv, 1e18, "[_assertBorrowerIsNotSolvent] LTV");
@@ -153,8 +153,8 @@ contract MaxLiquidationTest is SiloLittleHelper, Test {
         private
         returns (uint256 withdrawCollateral, uint256 repayDebtAssets)
     {
-        token0.mint(address(this), _debtToCover);
-        token0.approve(address(partialLiquidation), _debtToCover);
+        token1.mint(address(this), _debtToCover);
+        token1.approve(address(partialLiquidation), _debtToCover);
 
         return partialLiquidation.liquidationCall(
             address(_sameToken ? silo0 : silo1),
