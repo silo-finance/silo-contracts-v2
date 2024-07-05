@@ -128,6 +128,7 @@ interface ISiloConfig {
     error CrossReentrancyNotActive();
     error InvalidConfigOrder();
     error FeeTooHigh();
+    error InvalidDebtShareToken();
 
     /// @dev It should be called on debt transfer. It sets collateral silo if the `_to` address doesn't have one
     /// @param _sender sender address

@@ -236,11 +236,13 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
         address _debtShareToken,
         address _borrower
     ) external view virtual returns (bool hasDebt) {
-        address otherSiloDebtToken = _debtShareToken == _DEBT_SHARE_TOKEN0 ? _DEBT_SHARE_TOKEN1 : _DEBT_SHARE_TOKEN0;
-
-        uint256 debtBalanceInOtherSilo = IERC20(otherSiloDebtToken).balanceOf(_borrower);
-
-        hasDebt = debtBalanceInOtherSilo != 0;
+        if (_debtShareToken == _DEBT_SHARE_TOKEN0) {
+            return _balanceOf(_DEBT_SHARE_TOKEN1, _borrower) != 0;
+        } else if (_debtShareToken == _DEBT_SHARE_TOKEN1) {
+            return _balanceOf(_DEBT_SHARE_TOKEN0, _borrower) != 0;
+        } else {
+            revert InvalidDebtShareToken();
+        }
     }
 
     /// @inheritdoc ISiloConfig
@@ -317,8 +319,8 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
     }
 
     function getDebtSilo(address _borrower) public view virtual returns (address debtSilo) {
-        uint256 debtBal0 = IERC20(_DEBT_SHARE_TOKEN0).balanceOf(_borrower);
-        uint256 debtBal1 = IERC20(_DEBT_SHARE_TOKEN1).balanceOf(_borrower);
+        uint256 debtBal0 = _balanceOf(_DEBT_SHARE_TOKEN0, _borrower);
+        uint256 debtBal1 = _balanceOf(_DEBT_SHARE_TOKEN1, _borrower);
 
         if (debtBal0 > 0 && debtBal1 > 0) revert DebtExistInOtherSilo();
         if (debtBal0 == 0 && debtBal1 == 0) return address(0);
@@ -457,5 +459,9 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
 
     function _onlySilo() internal view virtual {
         if (msg.sender != _SILO0 && msg.sender != _SILO1) revert OnlySilo();
+    }
+
+    function _balanceOf(address _token, address _user) internal view returns (uint256 balance) {
+        balance = IERC20(_token).balanceOf(_user);
     }
 }
