@@ -148,8 +148,6 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
 
     /// @inheritdoc ISiloConfig
     function setCollateralSilo(address _borrower, bool _sameAsset) external {
-        _onlySilo();
-
         _setCollateralSilo(msg.sender, _borrower, _sameAsset);
     }
 
