@@ -325,7 +325,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
         if (debtBal0 > 0 && debtBal1 > 0) revert DebtExistInOtherSilo();
         if (debtBal0 == 0 && debtBal1 == 0) return address(0);
 
-        debtSilo = debtBal0 > debtBal1 ? _SILO0 : _SILO1;
+        debtSilo = debtBal0 != 0 ? _SILO0 : _SILO1;
     }
 
     function _setCollateralSilo(address _debtSilo, address _borrower, bool _sameAsset) internal {
