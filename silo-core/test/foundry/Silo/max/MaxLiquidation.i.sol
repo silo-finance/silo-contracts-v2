@@ -83,6 +83,34 @@ contract MaxLiquidationTest is SiloLittleHelper, Test {
     }
 
     /*
+    forge test -vv --ffi --mt test_maxLiquidation_partial_LTV100_2tokens_fuzz
+    */
+    /// forge-config: core-test.fuzz.runs = 100
+    function test_maxLiquidation_partial_LTV100_2tokens_fuzz(uint16 _collateral) public {
+        vm.assume(_collateral < 5);
+        vm.assume(_collateral > 0);
+
+        bool _sameAsset = false;
+        uint256 toBorrow = uint256(_collateral) * 75 / 100; // maxLTV is 75%
+
+        _createDebt(_collateral, toBorrow, _sameAsset);
+
+        // this case never happen because is is not possible to create debt for 1 collateral
+        if (_collateral == 1) _findLTV100();
+        else if (_collateral == 2) vm.warp(3615 days);
+        else if (_collateral == 3) vm.warp(66 days);
+        else if (_collateral == 4) vm.warp(45 days);
+        else revert("should not happen, because of vm.assume");
+
+        _assertLTV100();
+
+        _executeMaxPartialLiquidation(_sameAsset, false);
+
+        _assertBorrowerIsSolvent();
+        _ensureBorrowerHasNoDebt();
+    }
+
+    /*
     forge test -vv --ffi --mt test_maxLiquidation_partial_1token_fuzz
     */
     /// forge-config: core-test.fuzz.runs = 10000
@@ -231,6 +259,7 @@ contract MaxLiquidationTest is SiloLittleHelper, Test {
         }
     }
 
+    // TODO tests for _receiveSToken
     function _executeMaxPartialLiquidation(bool _sameToken, bool _receiveSToken) private {
         // to test max, we want to provide higher `_debtToCover` and we expect not higher results
         uint256 debtToCover = type(uint256).max;
