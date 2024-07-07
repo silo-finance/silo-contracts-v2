@@ -57,11 +57,10 @@ contract MaxLiquidationTest is SiloLittleHelper, Test {
         // TODO for 100% we should not be able to liquiodate less??
         // TODO test cases solvent -> 100%
         // TODO test cases solvent -> dust (so full liquidation)
-        vm.assume(_collateral < 7);
-        vm.assume(_collateral > 0);
+        vm.assume(_collateral < 20);
 
         bool _sameAsset = true;
-        uint256 toBorrow = uint256(_collateral) * 84 / 100;
+        uint256 toBorrow = uint256(_collateral) * 85 / 100;
 
         _createDebt(_collateral, toBorrow, _sameAsset);
 
@@ -72,7 +71,20 @@ contract MaxLiquidationTest is SiloLittleHelper, Test {
         else if (_collateral == 4) vm.warp(2001 days);
         else if (_collateral == 5) vm.warp(1455 days);
         else if (_collateral == 6) vm.warp(1141 days);
-        else revert("should not happen, vm.assume");
+        else if (_collateral == 7) vm.warp(2457 days);
+        else if (_collateral == 8) vm.warp(2001 days);
+        else if (_collateral == 9) vm.warp(1685 days);
+        else if (_collateral == 10) vm.warp(1455 days);
+        else if (_collateral == 11) vm.warp(1279 days);
+        else if (_collateral == 12) vm.warp(1141 days);
+        else if (_collateral == 13) vm.warp(1030 days);
+        else if (_collateral == 14) vm.warp(2059 days);
+        else if (_collateral == 15) vm.warp(1876 days);
+        else if (_collateral == 16) vm.warp(1722 days);
+        else if (_collateral == 17) vm.warp(1592 days);
+        else if (_collateral == 18) vm.warp(1480 days);
+        else if (_collateral == 19) vm.warp(1382 days);
+        else revert("should not happen, because of vm.assume");
 
         _assertLTV100();
 
@@ -87,8 +99,7 @@ contract MaxLiquidationTest is SiloLittleHelper, Test {
     */
     /// forge-config: core-test.fuzz.runs = 100
     function test_maxLiquidation_partial_LTV100_2tokens_fuzz(uint16 _collateral) public {
-        vm.assume(_collateral < 5);
-        vm.assume(_collateral > 0);
+        vm.assume(_collateral < 7);
 
         bool _sameAsset = false;
         uint256 toBorrow = uint256(_collateral) * 75 / 100; // maxLTV is 75%
@@ -100,6 +111,8 @@ contract MaxLiquidationTest is SiloLittleHelper, Test {
         else if (_collateral == 2) vm.warp(3615 days);
         else if (_collateral == 3) vm.warp(66 days);
         else if (_collateral == 4) vm.warp(45 days);
+        else if (_collateral == 5) vm.warp(95 days);
+        else if (_collateral == 6) vm.warp(66 days);
         else revert("should not happen, because of vm.assume");
 
         _assertLTV100();
@@ -240,25 +253,6 @@ contract MaxLiquidationTest is SiloLittleHelper, Test {
         assertEq(ltv, 1e18, "[_assertLTV100] LTV");
     }
 
-    function _findLTV100() internal {
-        uint256 initialLTV = silo1.getLtv(borrower);
-
-        for (uint256 i = 1; i < 10000; i++) {
-            vm.warp(i * 60 * 60 * 24);
-            uint256 ltv = silo1.getLtv(borrower);
-
-            emit log_named_decimal_uint("[_assertLTV100] LTV", ltv, 16);
-            emit log_named_uint("[_assertLTV100] days", i);
-
-            if (ltv == 1e18) revert("found");
-
-            if (ltv != initialLTV) {
-                emit log_named_decimal_uint("[_assertLTV100] initial LTV was", initialLTV, 16);
-                revert("we found middle step between solvent and 100%");
-            }
-        }
-    }
-
     // TODO tests for _receiveSToken
     function _executeMaxPartialLiquidation(bool _sameToken, bool _receiveSToken) private {
         // to test max, we want to provide higher `_debtToCover` and we expect not higher results
@@ -281,4 +275,37 @@ contract MaxLiquidationTest is SiloLittleHelper, Test {
         assertEq(debtToRepay, repayDebtAssets, "debt: max == result");
         assertEq(collateralToLiquidate, withdrawCollateral, "collateral: max == result");
     }
+
+    function _findLTV100() private {
+        uint256 prevLTV = silo1.getLtv(borrower);
+
+        for (uint256 i = 1; i < 10000; i++) {
+            vm.warp(i * 60 * 60 * 24);
+            uint256 ltv = silo1.getLtv(borrower);
+
+            emit log_named_decimal_uint("[_assertLTV100] LTV", ltv, 16);
+            emit log_named_uint("[_assertLTV100] days", i);
+
+            if (ltv == 1e18) revert("found");
+
+            if (ltv != prevLTV && !silo1.isSolvent(borrower)) {
+                emit log_named_decimal_uint("[_assertLTV100] prevLTV was", prevLTV, 16);
+                revert("we found middle step between solvent and 100%");
+            } else {
+                prevLTV = silo1.getLtv(borrower);
+            }
+        }
+    }
+
+    function _findWrapForSolvency() private {
+        for (uint256 i = 1; i < 10000; i++) {
+            vm.warp(i * 60 * 60 * 24);
+
+            emit log_named_decimal_uint("[_assertLTV100] LTV", silo1.getLtv(borrower), 16);
+            emit log_named_uint("[_assertLTV100] days", i);
+
+            if (!silo1.isSolvent(borrower)) revert("found");
+        }
+    }
+
 }
