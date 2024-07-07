@@ -46,44 +46,56 @@ contract MaxLiquidationTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --ffi --mt test_maxLiquidation_partial_1token_fuzz
+    forge test -vv --ffi --mt test_maxLiquidation_partial_LTV100_1token_fuzz
     */
-    /// forge-config: core-test.fuzz.runs = 1000
-    function test_maxLiquidation_partial_1token_fuzz(uint128 _collateral) public {
-        // this condition is to not have overflow: _collateral * 84
-        vm.assume(_collateral < type(uint128).max / 84);
-        // for small numbers we might jump from solvent -> bad debt, small numbers will be separate test casee TODO
-        vm.assume(_collateral >= 1000);
+    /// forge-config: core-test.fuzz.runs = 100
+    function test_maxLiquidation_partial_LTV100_1token_fuzz(uint16 _collateral) public {
+        // for small numbers we might jump from solvent -> 100% LTV, so partial liquidation not possible
+        // I used `_findLTV100` to find range of numbers for which we jump to 100% for this casesetup
+
+        // even if 100% is not bad debt, partial liquidation will be full liquidation
+        // TODO for 100% we should not be able to liquiodate less??
+        // TODO test cases solvent -> 100%
+        // TODO test cases solvent -> dust (so full liquidation)
+        vm.assume(_collateral < 7);
+        vm.assume(_collateral > 0);
 
         bool _sameAsset = true;
-        uint256 toBorrow = _collateral * 84 / 100; // maxLT is 85%
+        uint256 toBorrow = uint256(_collateral) * 84 / 100;
 
         _createDebt(_collateral, toBorrow, _sameAsset);
 
-        // for same asset interest increasing slower, because borrower is also depositor, also LT is higher
-        vm.warp(1260 days);
+        // this case never happen because is is not possible to create debt for 1 collateral
+        if (_collateral == 1) _findLTV100();
+        else if (_collateral == 2) vm.warp(7229 days);
+        else if (_collateral == 3) vm.warp(3172 days);
+        else if (_collateral == 4) vm.warp(2001 days);
+        else if (_collateral == 5) vm.warp(1455 days);
+        else if (_collateral == 6) vm.warp(1141 days);
+        else revert("should not happen, vm.assume");
 
-        _assertBorrowerIsNotSolvent({_hasBadDebt: false});
+        _assertLTV100();
 
         _executeMaxPartialLiquidation(_sameAsset, false);
 
         _assertBorrowerIsSolvent();
-        _ensureBorrowerHasDebt();
+        _ensureBorrowerHasNoDebt();
     }
 
     /*
-    forge test -vv --ffi --mt test_maxLiquidation_partial_small_1token_fuzz
+    forge test -vv --ffi --mt test_maxLiquidation_partial_1token_fuzz
     */
-    /// forge-config: core-test.fuzz.runs = 1000
-    function test_maxLiquidation_partial_small_1token_fuzz(uint128 _collateral) public {
+    /// forge-config: core-test.fuzz.runs = 10000
+    function test_maxLiquidation_partial_1token_fuzz(uint128 _collateral) public {
         // this condition is to not have overflow: _collateral * 84
         vm.assume(_collateral < type(uint128).max / 84);
         // for small numbers we might jump from solvent -> bad debt, small numbers will be separate test casee TODO
-        vm.assume(_collateral >= 1000);
+        // this value found by fuzzing tests, is high enough to have partial liquidation possible for this test setup
+        vm.assume(_collateral >= 500);
 
         bool _sameAsset = true;
+        uint256 toBorrow = _collateral * 84 / 100; // maxLT is 85%
 
-        uint256 toBorrow = _collateral * 84 / 100;
         _createDebt(_collateral, toBorrow, _sameAsset);
 
         // for same asset interest increasing slower, because borrower is also depositor, also LT is higher
@@ -161,7 +173,12 @@ contract MaxLiquidationTest is SiloLittleHelper, Test {
 
     function _ensureBorrowerHasDebt() internal view {
         (,, address debtShareToken) = silo1.config().getShareTokens(address(silo1));
-        assertGt(IShareToken(debtShareToken).balanceOf(borrower), 0, "expect debtShareToken balance > 0");
+        assertGt(IShareToken(debtShareToken).balanceOf(borrower), 0, "expect borrower with debt balance");
+    }
+
+    function _ensureBorrowerHasNoDebt() internal view {
+        (,, address debtShareToken) = silo1.config().getShareTokens(address(silo1));
+        assertEq(IShareToken(debtShareToken).balanceOf(borrower), 0, "expect borrower has NO debt balance");
     }
 
     function _assertBorrowerIsSolvent() internal view {
@@ -183,7 +200,35 @@ contract MaxLiquidationTest is SiloLittleHelper, Test {
         assertFalse(silo1.isSolvent(borrower), "[_assertBorrowerIsNotSolvent] borrower is still solvent");
 
         if (_hasBadDebt) assertGt(ltv, 1e18, "[_assertBorrowerIsNotSolvent] LTV");
-        else assertLt(ltv, 1e18, "[_assertBorrowerIsNotSolvent] LTV");
+        else assertLe(ltv, 1e18, "[_assertBorrowerIsNotSolvent] LTV");
+    }
+
+    function _assertLTV100() internal {
+        uint256 ltv = silo1.getLtv(borrower);
+        emit log_named_decimal_uint("[_assertLTV100] LTV", ltv, 16);
+
+        assertFalse(silo1.isSolvent(borrower), "[_assertLTV100] borrower is still solvent");
+
+        assertEq(ltv, 1e18, "[_assertLTV100] LTV");
+    }
+
+    function _findLTV100() internal {
+        uint256 initialLTV = silo1.getLtv(borrower);
+
+        for (uint256 i = 1; i < 10000; i++) {
+            vm.warp(i * 60 * 60 * 24);
+            uint256 ltv = silo1.getLtv(borrower);
+
+            emit log_named_decimal_uint("[_assertLTV100] LTV", ltv, 16);
+            emit log_named_uint("[_assertLTV100] days", i);
+
+            if (ltv == 1e18) revert("found");
+
+            if (ltv != initialLTV) {
+                emit log_named_decimal_uint("[_assertLTV100] initial LTV was", initialLTV, 16);
+                revert("we found middle step between solvent and 100%");
+            }
+        }
     }
 
     function _executeMaxPartialLiquidation(bool _sameToken, bool _receiveSToken) private {
