@@ -182,31 +182,31 @@ contract MaxLiquidationTest is SiloLittleHelper, Test {
         // for same asset interest increasing slower, because borrower is also depositor, also LT is higher
         // vm.warp(1260 days);
 
-        if (_collateral <= 30) vm.warp(1311 days + 100 days);
+        if (_collateral <= 30) vm.warp(1411 days);
 //        else if (_collateral < 35) _findWrapForSolvency();
-        else if (_collateral < 35) vm.warp(1094 days + 400 days);
+        else if (_collateral < 35) vm.warp(1494 days);
 //        else if (_collateral < 40) _findWrapForSolvency();
-        else if (_collateral < 40) vm.warp(1045 days + 400 days);
+        else if (_collateral < 40) vm.warp(1445 days);
 //        else if (_collateral < 45) _findWrapForSolvency();
-        else if (_collateral < 45) vm.warp(1045 days + 300 days);
+        else if (_collateral < 45) vm.warp(1345 days);
 //        else if (_collateral < 50) _findWrapForSolvency();
-        else if (_collateral < 50) vm.warp(1045 days + 300 days);
+        else if (_collateral < 50) vm.warp(1345 days);
 //         else if (_collateral < 100) _findWrapForSolvency();
-        else if (_collateral < 100) vm.warp(1007 days + 250 days);
+        else if (_collateral < 100) vm.warp(1257 days);
 //         else if (_collateral < 150) _findWrapForSolvency();
-        else if (_collateral < 150) vm.warp(1047 days + 100 days);
+        else if (_collateral < 150) vm.warp(1147 days);
 //         else if (_collateral < 200) _findWrapForSolvency();
-        else if (_collateral < 200) vm.warp(1054 days + 100 days);
+        else if (_collateral < 200) vm.warp(1154 days);
 //         else if (_collateral < 250) _findWrapForSolvency();
-        else if (_collateral < 250) vm.warp(1089 days + 100 days);
+        else if (_collateral < 250) vm.warp(1189 days);
 //         else if (_collateral < 300) _findWrapForSolvency();
-        else if (_collateral < 300) vm.warp(1041 days + 100 days);
+        else if (_collateral < 300) vm.warp(1141 days);
 //         else if (_collateral < 400) _findWrapForSolvency();
-        else if (_collateral < 400) vm.warp(1039 days + 120 days);
+        else if (_collateral < 400) vm.warp(1159 days);
 //         else if (_collateral < 500) _findWrapForSolvency();
-        else if (_collateral < 500) vm.warp(1031 days + 100 days);
+        else if (_collateral < 500) vm.warp(1131 days);
 //        else _findWrapForSolvency();
-        else vm.warp(1032 days + 110 days);
+        else vm.warp(1142 days);
 
         _assertBorrowerIsNotSolvent({_hasBadDebt: false});
 
