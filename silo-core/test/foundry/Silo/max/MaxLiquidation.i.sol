@@ -145,14 +145,14 @@ contract MaxLiquidationTest is SiloLittleHelper, Test {
         // for same asset interest increasing slower, because borrower is also depositor, also LT is higher
         // vm.warp(1260 days);
 
-        if (_collateral < 10) _findWrapForSolvency(); // vm.warp(3615 days);
+        if (_collateral < 10) _moveTimeUntilInsolvent(); // vm.warp(3615 days);
         // else if (_collateral < 100) _findWrapForSolvency();
         else if (_collateral < 100) vm.warp(1455 days);
         // else if (_collateral < 200) _findWrapForSolvency();
         else if (_collateral < 200) vm.warp(1186 days);
-        else if (_collateral < 300) _findWrapForSolvency(); // vm.warp(3615 days);
-        else if (_collateral < 400) _findWrapForSolvency(); // vm.warp(3615 days);
-        else if (_collateral < 500) _findWrapForSolvency(); // vm.warp(3615 days);
+        else if (_collateral < 300) _moveTimeUntilInsolvent(); // vm.warp(3615 days);
+        else if (_collateral < 400) _moveTimeUntilInsolvent(); // vm.warp(3615 days);
+        else if (_collateral < 500) _moveTimeUntilInsolvent(); // vm.warp(3615 days);
         else vm.warp(1260 days);
 
         _assertBorrowerIsNotSolvent({_hasBadDebt: false});
@@ -169,10 +169,10 @@ contract MaxLiquidationTest is SiloLittleHelper, Test {
     /// forge-config: core-test.fuzz.runs = 10000
     function test_maxLiquidation_partial_1token_fuzz(uint128 _collateral) public {
         // this condition is to not have overflow: _collateral * 84
-        vm.assume(_collateral < type(uint128).max / 84);
-        // for small numbers we might jump from solvent -> bad debt, small numbers will be separate test casee TODO
+        vm.assume(_collateral < type(uint128).max / 85);
+        // for small numbers we might jump from solvent -> bad debt, small numbers will be separate test case TODO
         // this value found by fuzzing tests, is high enough to have partial liquidation possible for this test setup
-        vm.assume(_collateral >= 20);
+        vm.assume(_collateral > 57); // 20..57 - dust cases
 
         bool _sameAsset = true;
         uint256 toBorrow = _collateral * 85 / 100; // maxLT is 85%
@@ -180,40 +180,15 @@ contract MaxLiquidationTest is SiloLittleHelper, Test {
         _createDebt(_collateral, toBorrow, _sameAsset);
 
         // for same asset interest increasing slower, because borrower is also depositor, also LT is higher
-        // vm.warp(1260 days);
-
-        if (_collateral <= 30) vm.warp(1411 days);
-//        else if (_collateral < 35) _findWrapForSolvency();
-        else if (_collateral < 35) vm.warp(1494 days);
-//        else if (_collateral < 40) _findWrapForSolvency();
-        else if (_collateral < 40) vm.warp(1445 days);
-//        else if (_collateral < 45) _findWrapForSolvency();
-        else if (_collateral < 45) vm.warp(1345 days);
-//        else if (_collateral < 50) _findWrapForSolvency();
-        else if (_collateral < 50) vm.warp(1345 days);
-//         else if (_collateral < 100) _findWrapForSolvency();
-        else if (_collateral < 100) vm.warp(1257 days);
-//         else if (_collateral < 150) _findWrapForSolvency();
-        else if (_collateral < 150) vm.warp(1147 days);
-//         else if (_collateral < 200) _findWrapForSolvency();
-        else if (_collateral < 200) vm.warp(1154 days);
-//         else if (_collateral < 250) _findWrapForSolvency();
-        else if (_collateral < 250) vm.warp(1189 days);
-//         else if (_collateral < 300) _findWrapForSolvency();
-        else if (_collateral < 300) vm.warp(1141 days);
-//         else if (_collateral < 400) _findWrapForSolvency();
-        else if (_collateral < 400) vm.warp(1159 days);
-//         else if (_collateral < 500) _findWrapForSolvency();
-        else if (_collateral < 500) vm.warp(1131 days);
-//        else _findWrapForSolvency();
-        else vm.warp(1142 days);
+        vm.warp(block.timestamp + 1050 days); // initial time movement to speed up _findWrapForSolvency
+        _moveTimeUntilInsolvent();
 
         _assertBorrowerIsNotSolvent({_hasBadDebt: false});
 
-//        _executeMaxPartialLiquidation(_sameAsset, false);
-//
-//        _assertBorrowerIsSolvent();
-//        _ensureBorrowerHasDebt();
+        _executeMaxPartialLiquidation(_sameAsset, false);
+
+        _assertBorrowerIsSolvent();
+        _ensureBorrowerHasDebt();
     }
 
     /*
@@ -222,16 +197,18 @@ contract MaxLiquidationTest is SiloLittleHelper, Test {
     /// forge-config: core-test.fuzz.runs = 1000
     function test_maxLiquidation_partial_2tokens_fuzz(uint128 _collateral) public {
         // this condition is to not have overflow: _collateral * 74
-        vm.assume(_collateral < type(uint128).max / 74);
+        vm.assume(_collateral < type(uint128).max / 75);
         // for small numbers we might jump from solvent -> bad debt, small numbers will be separate test case TODO
-        vm.assume(_collateral >= 1000);
+        vm.assume(_collateral >= 7);
 
         bool _sameAsset = false;
-        uint256 toBorrow = _collateral * 74 / 100; // maxLT is 75%
+        uint256 toBorrow = _collateral * 75 / 100; // maxLT is 75%
 
         _createDebt(_collateral, toBorrow, _sameAsset);
 
-        vm.warp(40 days);
+        // for same asset interest increasing slower, because borrower is also depositor, also LT is higher
+        vm.warp(block.timestamp + 20 days); // initial time movement to speed up _findWrapForSolvency
+        _moveTimeUntilInsolvent();
 
         _assertBorrowerIsNotSolvent({_hasBadDebt: false});
 
@@ -363,14 +340,19 @@ contract MaxLiquidationTest is SiloLittleHelper, Test {
         }
     }
 
-    function _findWrapForSolvency() private {
+    function _moveTimeUntilInsolvent() private {
         for (uint256 i = 1; i < 10000; i++) {
-            vm.warp(i * 60 * 60 * 24);
+             // emit log_named_decimal_uint("[_assertLTV100] LTV", silo1.getLtv(borrower), 16);
+             // emit log_named_uint("[_assertLTV100] days", i);
 
-            emit log_named_decimal_uint("[_assertLTV100] LTV", silo1.getLtv(borrower), 16);
-            emit log_named_uint("[_assertLTV100] days", i);
+            if (!silo1.isSolvent(borrower)) {
+                emit log_named_decimal_uint("[_findWrapForSolvency] LTV", silo1.getLtv(borrower), 16);
+                emit log_named_uint("[_findWrapForSolvency] days", i);
 
-            if (!silo1.isSolvent(borrower)) revert("found");
+                return;
+            }
+
+            vm.warp(block.timestamp + i * 60 * 60 * 24);
         }
     }
 
