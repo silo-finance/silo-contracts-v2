@@ -178,7 +178,23 @@ contract MaxLiquidationTest is SiloLittleHelper, Test {
         token1.mint(address(this), _debtToCover);
         token1.approve(address(partialLiquidation), _debtToCover);
 
+        _tryExecuteHigherLiquidation(_sameToken, _debtToCover + 1e28, _receiveSToken);
+
+        // to test max, we want to provide higher `_debtToCover` and we expect not higher results
+
         return partialLiquidation.liquidationCall(
+            address(silo1),
+            address(_sameToken ? token1 : token0),
+            address(token1),
+            borrower,
+            _debtToCover,
+            _receiveSToken
+        );
+    }
+
+    function _tryExecuteHigherLiquidation(bool _sameToken, uint256 _debtToCover, bool _receiveSToken) private {
+        vm.expectRevert();
+        partialLiquidation.liquidationCall(
             address(silo1),
             address(_sameToken ? token1 : token0),
             address(token1),
