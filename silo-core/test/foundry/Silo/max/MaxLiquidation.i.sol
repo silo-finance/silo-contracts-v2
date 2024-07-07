@@ -56,6 +56,32 @@ contract MaxLiquidationTest is SiloLittleHelper, Test {
         vm.assume(_collateral >= 1000);
 
         bool _sameAsset = true;
+        uint256 toBorrow = _collateral * 84 / 100; // maxLT is 85%
+
+        _createDebt(_collateral, toBorrow, _sameAsset);
+
+        // for same asset interest increasing slower, because borrower is also depositor, also LT is higher
+        vm.warp(1260 days);
+
+        _assertBorrowerIsNotSolvent({_hasBadDebt: false});
+
+        _executeMaxPartialLiquidation(_sameAsset, false);
+
+        _assertBorrowerIsSolvent();
+        _ensureBorrowerHasDebt();
+    }
+
+    /*
+    forge test -vv --ffi --mt test_maxLiquidation_partial_small_1token_fuzz
+    */
+    /// forge-config: core-test.fuzz.runs = 1000
+    function test_maxLiquidation_partial_small_1token_fuzz(uint128 _collateral) public {
+        // this condition is to not have overflow: _collateral * 84
+        vm.assume(_collateral < type(uint128).max / 84);
+        // for small numbers we might jump from solvent -> bad debt, small numbers will be separate test casee TODO
+        vm.assume(_collateral >= 1000);
+
+        bool _sameAsset = true;
 
         uint256 toBorrow = _collateral * 84 / 100;
         _createDebt(_collateral, toBorrow, _sameAsset);
@@ -65,16 +91,10 @@ contract MaxLiquidationTest is SiloLittleHelper, Test {
 
         _assertBorrowerIsNotSolvent({_hasBadDebt: false});
 
-        (uint256 collateralToLiquidate, uint256 debtToRepay) = partialLiquidation.maxLiquidation(address(silo1), borrower);
-        assertGt(debtToRepay, toBorrow, "debtToRepay is more with interest than what was borrowed");
-        assertLt(collateralToLiquidate, _collateral, "expect part of _collateral on liquidation");
-
-        (uint256 withdrawCollateral, uint256 repayDebtAssets) = _executeMaxLiquidation(_sameAsset, false);
-
-        assertEq(debtToRepay, repayDebtAssets, "debt: we expect to not be able to repay more than max");
-        assertEq(collateralToLiquidate, withdrawCollateral, "collateral: we can not get more than max");
+        _executeMaxPartialLiquidation(_sameAsset, false);
 
         _assertBorrowerIsSolvent();
+        _ensureBorrowerHasDebt();
     }
 
     /*
@@ -88,24 +108,18 @@ contract MaxLiquidationTest is SiloLittleHelper, Test {
         vm.assume(_collateral >= 1000);
 
         bool _sameAsset = false;
+        uint256 toBorrow = _collateral * 74 / 100; // maxLT is 75%
 
-        uint256 toBorrow = _collateral * 74 / 100;
         _createDebt(_collateral, toBorrow, _sameAsset);
 
         vm.warp(40 days);
 
-        _assertBorrowerIsNotSolvent(false);
+        _assertBorrowerIsNotSolvent({_hasBadDebt: false});
 
-        (uint256 collateralToLiquidate, uint256 debtToRepay) = partialLiquidation.maxLiquidation(address(silo1), borrower);
-        assertGt(debtToRepay, toBorrow, "debtToRepay is more with interest than what was borrowed");
-        assertLt(collateralToLiquidate, _collateral, "expect part of _collateral on liquidation");
-
-        (uint256 withdrawCollateral, uint256 repayDebtAssets) = _executeMaxLiquidation(_sameAsset, false);
-
-        assertEq(debtToRepay, repayDebtAssets, "debt: max == result");
-        assertEq(collateralToLiquidate, withdrawCollateral, "collateral: max == result");
+        _executeMaxPartialLiquidation(_sameAsset, false);
 
         _assertBorrowerIsSolvent();
+        _ensureBorrowerHasDebt();
     }
 //
 //    /*
@@ -172,16 +186,16 @@ contract MaxLiquidationTest is SiloLittleHelper, Test {
         else assertLt(ltv, 1e18, "[_assertBorrowerIsNotSolvent] LTV");
     }
 
-    function _executeMaxLiquidation(bool _sameToken, bool _receiveSToken)
-        private
-        returns (uint256 withdrawCollateral, uint256 repayDebtAssets)
-    {
+    function _executeMaxPartialLiquidation(bool _sameToken, bool _receiveSToken) private {
+        // to test max, we want to provide higher `_debtToCover` and we expect not higher results
         uint256 debtToCover = type(uint256).max;
         token1.approve(address(partialLiquidation), debtToCover);
 
-        // to test max, we want to provide higher `_debtToCover` and we expect not higher results
+        (
+            uint256 collateralToLiquidate, uint256 debtToRepay
+        ) = partialLiquidation.maxLiquidation(address(silo1), borrower);
 
-        return partialLiquidation.liquidationCall(
+        (uint256 withdrawCollateral, uint256 repayDebtAssets) = partialLiquidation.liquidationCall(
             address(silo1),
             address(_sameToken ? token1 : token0),
             address(token1),
@@ -189,5 +203,8 @@ contract MaxLiquidationTest is SiloLittleHelper, Test {
             debtToCover,
             _receiveSToken
         );
+
+        assertEq(debtToRepay, repayDebtAssets, "debt: max == result");
+        assertEq(collateralToLiquidate, withdrawCollateral, "collateral: max == result");
     }
 }
