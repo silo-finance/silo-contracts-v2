@@ -51,7 +51,8 @@ interface IPartialLiquidation {
     /// in case this amount is too big, it will be reduced to maximum allowed liquidation amount
     /// @param _receiveSToken True if the liquidators wants to receive the collateral sTokens, `false` if he wants
     /// to receive the underlying collateral asset directly
-    /// @return withdrawCollateral collateral that was send to `msg.sender`
+    /// @return withdrawCollateral collateral that was send to `msg.sender`, in case of `_receiveSToken` is TRUE,
+    /// `withdrawCollateral` will be estimated, on redeem one can expect this value to be rounded down
     /// @return repayDebtAssets actual debt value that was repayed by `msg.sender`
     function liquidationCall(
         address _siloWithDebt,

@@ -119,7 +119,10 @@ contract PartialLiquidation is SiloStorage, IPartialLiquidation, IHookReceiver {
             );
         }
 
-        if (!_receiveSToken) {
+        if (_receiveSToken) {
+            // this two value were split from total collateral to withdraw, so we will not overflow
+            unchecked { withdrawCollateral = withdrawAssetsFromCollateral + withdrawAssetsFromProtected; }
+        } else {
             // in case of liquidation redeem, hook transfers sTokens to itself and it has no debt
             // so solvency will not be checked in silo on redeem action
 
