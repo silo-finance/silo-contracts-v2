@@ -13,7 +13,7 @@ import {MintableToken} from "../../_common/MintableToken.sol";
 import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
 
 /*
-    forge test -vv --ffi --mc MaxRepayTest
+    forge test -vv --ffi --mc MaxLiquidationTest
 */
 contract MaxLiquidationTest is SiloLittleHelper, Test {
     using SiloLensLib for ISilo;
@@ -22,7 +22,7 @@ contract MaxLiquidationTest is SiloLittleHelper, Test {
     ISiloConfig siloConfig;
     address immutable depositor;
     address immutable borrower;
-    
+
     constructor() {
         depositor = makeAddr("Depositor");
         borrower = makeAddr("Borrower");
