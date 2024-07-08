@@ -71,63 +71,61 @@ contract PartialLiquidation is SiloStorage, IPartialLiquidation, IHookReceiver {
 
         uint256 collateralShares;
         uint256 protectedShares;
+        uint256 withdrawAssetsFromCollateral;
+        uint256 withdrawAssetsFromProtected;
 
-        { // too deep
-            uint256 withdrawAssetsFromCollateral;
-            uint256 withdrawAssetsFromProtected;
+        bool selfLiquidation = _borrower == msg.sender;
 
-            bool selfLiquidation = _borrower == msg.sender;
+        (
+            withdrawAssetsFromCollateral, withdrawAssetsFromProtected, repayDebtAssets
+        ) = PartialLiquidationExecLib.getExactLiquidationAmounts(
+            collateralConfig,
+            debtConfig,
+            _borrower,
+            _debtToCover,
+            selfLiquidation ? 0 : collateralConfig.liquidationFee,
+            selfLiquidation
+        );
 
-            (
-                withdrawAssetsFromCollateral, withdrawAssetsFromProtected, repayDebtAssets
-            ) = PartialLiquidationExecLib.getExactLiquidationAmounts(
-                collateralConfig,
-                debtConfig,
-                _borrower,
-                _debtToCover,
-                selfLiquidation ? 0 : collateralConfig.liquidationFee,
-                selfLiquidation
-            );
+        if (repayDebtAssets == 0) revert NoDebtToCover();
+        if (repayDebtAssets > _debtToCover) revert DebtToCoverTooSmall();
 
-            if (repayDebtAssets == 0) revert NoDebtToCover();
-            if (repayDebtAssets > _debtToCover) revert DebtToCoverTooSmall();
+        emit LiquidationCall(msg.sender, _receiveSToken);
 
+        IERC20(debtConfig.token).safeTransferFrom(msg.sender, address(this), repayDebtAssets);
+        IERC20(debtConfig.token).safeIncreaseAllowance(debtConfig.silo, repayDebtAssets);
+        ISilo(debtConfig.silo).repay(repayDebtAssets, _borrower);
+
+        address shareTokenReceiver = _receiveSToken ? msg.sender : address(this);
+
+        collateralShares = _callShareTokenForwardTransferNoChecks(
+            collateralConfig.silo,
+            _borrower,
+            shareTokenReceiver,
+            withdrawAssetsFromCollateral,
+            collateralConfig.collateralShareToken,
+            AssetTypes.COLLATERAL
+        );
+
+        protectedShares = _callShareTokenForwardTransferNoChecks(
+            collateralConfig.silo,
+            _borrower,
+            shareTokenReceiver,
+            withdrawAssetsFromProtected,
+            collateralConfig.protectedShareToken,
+            AssetTypes.PROTECTED
+        );
+
+
+        if (_receiveSToken) {
             // this two value were split from total collateral to withdraw, so we will not overflow
             unchecked { withdrawCollateral = withdrawAssetsFromCollateral + withdrawAssetsFromProtected; }
-
-            emit LiquidationCall(msg.sender, _receiveSToken);
-
-            IERC20(debtConfig.token).safeTransferFrom(msg.sender, address(this), repayDebtAssets);
-            IERC20(debtConfig.token).safeIncreaseAllowance(debtConfig.silo, repayDebtAssets);
-            ISilo(debtConfig.silo).repay(repayDebtAssets, _borrower);
-
-            address shareTokenReceiver = _receiveSToken ? msg.sender : address(this);
-
-            collateralShares = _callShareTokenForwardTransferNoChecks(
-                collateralConfig.silo,
-                _borrower,
-                shareTokenReceiver,
-                withdrawAssetsFromCollateral,
-                collateralConfig.collateralShareToken,
-                AssetTypes.COLLATERAL
-            );
-
-            protectedShares = _callShareTokenForwardTransferNoChecks(
-                collateralConfig.silo,
-                _borrower,
-                shareTokenReceiver,
-                withdrawAssetsFromProtected,
-                collateralConfig.protectedShareToken,
-                AssetTypes.PROTECTED
-            );
-        }
-
-        if (!_receiveSToken) {
+        } else {
             // in case of liquidation redeem, hook transfers sTokens to itself and it has no debt
             // so solvency will not be checked in silo on redeem action
 
             if (collateralShares != 0) {
-                ISilo(collateralConfig.silo).redeem(
+                withdrawCollateral = ISilo(collateralConfig.silo).redeem(
                     collateralShares,
                     msg.sender,
                     address(this),
@@ -136,12 +134,16 @@ contract PartialLiquidation is SiloStorage, IPartialLiquidation, IHookReceiver {
             }
 
             if (protectedShares != 0) {
-                ISilo(collateralConfig.silo).redeem(
-                    protectedShares,
-                    msg.sender,
-                    address(this),
-                    ISilo.CollateralType.Protected
-                );
+                unchecked {
+                    // protected and collateral values were split from total collateral to withdraw,
+                    // so we will not overflow when we sum them back, especially that on redeem, we rounding down
+                    withdrawCollateral += ISilo(collateralConfig.silo).redeem(
+                        protectedShares,
+                        msg.sender,
+                        address(this),
+                        ISilo.CollateralType.Protected
+                    );
+                }
             }
         }
     }
