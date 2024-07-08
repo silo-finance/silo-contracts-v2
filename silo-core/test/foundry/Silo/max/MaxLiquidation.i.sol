@@ -106,10 +106,22 @@ contract MaxLiquidationTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --ffi --mt test_maxLiquidation_partial_LTV100_2tokens_fuzz
+    forge test -vv --ffi --mt test_maxLiquidation_partial_LTV100_2tokens_sToken_fuzz
     */
     /// forge-config: core-test.fuzz.runs = 100
-    function test_maxLiquidation_partial_LTV100_2tokens_fuzz(uint16 _collateral) public {
+    function test_maxLiquidation_partial_LTV100_2tokens_sToken_fuzz(uint16 _collateral) public {
+        _maxLiquidation_partial_LTV100_2tokens_fuzz(_collateral, _RECEIVE_STOKENS);
+    }
+
+    /*
+    forge test -vv --ffi --mt test_maxLiquidation_partial_LTV100_2tokens_token_fuzz
+    */
+    /// forge-config: core-test.fuzz.runs = 100
+    function test_maxLiquidation_partial_LTV100_2tokens_token_fuzz(uint16 _collateral) public {
+        _maxLiquidation_partial_LTV100_2tokens_fuzz(_collateral, !_RECEIVE_STOKENS);
+    }
+
+    function _maxLiquidation_partial_LTV100_2tokens_fuzz(uint16 _collateral, bool _receiveSToken) internal {
         vm.assume(_collateral < 7);
 
         bool _sameAsset = false;
@@ -128,7 +140,7 @@ contract MaxLiquidationTest is SiloLittleHelper, Test {
 
         _assertLTV100();
 
-        _executeLiquidation(_sameAsset, false);
+        _executeLiquidation(_sameAsset, _receiveSToken);
 
         _assertBorrowerIsSolvent();
         _ensureBorrowerHasNoDebt();
@@ -175,10 +187,26 @@ contract MaxLiquidationTest is SiloLittleHelper, Test {
 //    }
 
     /*
+    forge test -vv --ffi --mt test_maxLiquidation_partial_1token_sTokens_fuzz
+    */
+    /// forge-config: core-test.fuzz.runs = 10000
+    function test_maxLiquidation_partial_1token_sTokens_fuzz(uint128 _collateral) public {
+        _maxLiquidation_partial_1token_fuzz(_collateral, _RECEIVE_STOKENS);
+    }
+
+    /*
+    forge test -vv --ffi --mt test_maxLiquidation_partial_1token_tokens_fuzz
+    */
+    /// forge-config: core-test.fuzz.runs = 10000
+    function test_maxLiquidation_partial_1token_tokens_fuzz(uint128 _collateral) public {
+        _maxLiquidation_partial_1token_fuzz(_collateral, !_RECEIVE_STOKENS);
+    }
+
+    /*
     forge test -vv --ffi --mt test_maxLiquidation_partial_1token_fuzz
     */
     /// forge-config: core-test.fuzz.runs = 10000
-    function test_maxLiquidation_partial_1token_fuzz(uint128 _collateral) public {
+    function _maxLiquidation_partial_1token_fuzz(uint128 _collateral, bool _receiveSToken) internal {
         // this condition is to not have overflow: _collateral * 84
         vm.assume(_collateral < type(uint128).max / 85);
         // for small numbers we might jump from solvent -> bad debt, small numbers will be separate test case TODO
@@ -194,19 +222,33 @@ contract MaxLiquidationTest is SiloLittleHelper, Test {
         vm.warp(block.timestamp + 1050 days); // initial time movement to speed up _findWrapForSolvency
         _moveTimeUntilInsolvent();
 
-        _assertBorrowerIsNotSolvent({_hasBadDebt: false});
+        _assertBorrowerIsNotSolvent({_hasBadDebt: false}); // TODO make tests for bad debt as well
 
-        _executeLiquidation(_sameAsset, false);
+        _executeLiquidation(_sameAsset, _receiveSToken);
 
         _assertBorrowerIsSolvent();
         _ensureBorrowerHasDebt();
     }
 
     /*
-    forge test -vv --ffi --mt test_maxLiquidation_partial_2tokens_fuzz
+    forge test -vv --ffi --mt test_maxLiquidation_partial_2tokens_sTokens_fuzz
     */
     /// forge-config: core-test.fuzz.runs = 1000
-    function test_maxLiquidation_partial_2tokens_fuzz(uint128 _collateral) public {
+    function test_maxLiquidation_partial_2tokens_sTokens_fuzz(
+    //    uint128 _collateral
+    ) public {
+        _maxLiquidation_partial_2tokens_fuzz(8, _RECEIVE_STOKENS);
+    }
+
+    /*
+    forge test -vv --ffi --mt test_maxLiquidation_partial_2tokens_tokens_fuzz
+    */
+    /// forge-config: core-test.fuzz.runs = 1000
+    function test_maxLiquidation_partial_2tokens_tokens_fuzz(uint128 _collateral) public {
+        _maxLiquidation_partial_2tokens_fuzz(_collateral, !_RECEIVE_STOKENS);
+    }
+
+    function _maxLiquidation_partial_2tokens_fuzz(uint128 _collateral, bool _receiveSToken) internal {
         // this condition is to not have overflow: _collateral * 75
         vm.assume(_collateral < type(uint128).max / 75);
         // for small numbers we might jump from solvent -> bad debt, small numbers will be separate test case TODO
@@ -223,7 +265,7 @@ contract MaxLiquidationTest is SiloLittleHelper, Test {
 
         _assertBorrowerIsNotSolvent({_hasBadDebt: false});
 
-        _executeLiquidation(_sameAsset, false);
+        _executeLiquidation(_sameAsset, _receiveSToken);
 
         _assertBorrowerIsSolvent();
         _ensureBorrowerHasDebt();
