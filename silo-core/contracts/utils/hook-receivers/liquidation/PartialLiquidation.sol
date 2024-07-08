@@ -116,7 +116,6 @@ contract PartialLiquidation is SiloStorage, IPartialLiquidation, IHookReceiver {
             AssetTypes.PROTECTED
         );
 
-
         if (_receiveSToken) {
             // this two value were split from total collateral to withdraw, so we will not overflow
             unchecked { withdrawCollateral = withdrawAssetsFromCollateral + withdrawAssetsFromProtected; }

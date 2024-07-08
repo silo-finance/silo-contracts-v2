@@ -17,8 +17,8 @@ import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
 */
 contract MaxLiquidationTest is SiloLittleHelper, Test {
     using SiloLensLib for ISilo;
-    uint256 internal constant _REAL_ASSETS_LIMIT = type(uint128).max;
-    
+    bool internal constant _RECEIVE_STOKENS = true;
+
     ISiloConfig siloConfig;
     address immutable depositor;
     address immutable borrower;
@@ -46,10 +46,22 @@ contract MaxLiquidationTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --ffi --mt test_maxLiquidation_partial_LTV100_1token_fuzz
+    forge test -vv --ffi --mt test_maxLiquidation_partial_LTV100_1token_sTokens_fuzz
     */
     /// forge-config: core-test.fuzz.runs = 100
-    function test_maxLiquidation_partial_LTV100_1token_fuzz(uint16 _collateral) public {
+    function test_maxLiquidation_partial_LTV100_1token_sTokens_fuzz(uint16 _collateral) public {
+        _maxLiquidation_partial_LTV100_1token_fuzz(_collateral, _RECEIVE_STOKENS);
+    }
+
+    /*
+    forge test -vv --ffi --mt test_maxLiquidation_partial_LTV100_1token_tokens_fuzz
+    */
+    /// forge-config: core-test.fuzz.runs = 100
+    function test_maxLiquidation_partial_LTV100_1token_tokens_fuzz(uint16 _collateral) public {
+        _maxLiquidation_partial_LTV100_1token_fuzz(_collateral, !_RECEIVE_STOKENS);
+    }
+
+    function _maxLiquidation_partial_LTV100_1token_fuzz(uint16 _collateral, bool _receiveSToken) internal {
         // for small numbers we might jump from solvent -> 100% LTV, so partial liquidation not possible
         // I used `_findLTV100` to find range of numbers for which we jump to 100% for this casesetup
 
@@ -58,13 +70,12 @@ contract MaxLiquidationTest is SiloLittleHelper, Test {
         // TODO test cases solvent -> 100%
         // TODO test cases solvent -> dust (so full liquidation)
         vm.assume(_collateral < 20);
-
         bool _sameAsset = true;
         uint256 toBorrow = uint256(_collateral) * 85 / 100;
 
         _createDebt(_collateral, toBorrow, _sameAsset);
 
-        // this case never happen because is is not possible to create debt for 1 collateral
+        // case for `1` never happen because is is not possible to create debt for 1 collateral
         if (_collateral == 1) _findLTV100();
         else if (_collateral == 2) vm.warp(7229 days);
         else if (_collateral == 3) vm.warp(3172 days);
@@ -88,7 +99,7 @@ contract MaxLiquidationTest is SiloLittleHelper, Test {
 
         _assertLTV100();
 
-        _executeLiquidation(_sameAsset, false);
+        _executeLiquidation(_sameAsset, _receiveSToken);
 
         _assertBorrowerIsSolvent();
         _ensureBorrowerHasNoDebt();
@@ -321,23 +332,45 @@ contract MaxLiquidationTest is SiloLittleHelper, Test {
                 "liquidator balance for token0 did not changed, because it is a case for same asset"
             );
 
-            assertEq(
-                siloBalanceBefore1 + repayDebtAssets - collateralToLiquidate,
-                token1.balanceOf(address(silo1)),
-                "debt was repay to silo and collateral withdrawn"
-            );
+            if (_receiveSToken) {
+                assertEq(
+                    siloBalanceBefore1 + repayDebtAssets,
+                    token1.balanceOf(address(silo1)),
+                    "debt was repay to silo but collateral NOT withdrawn"
+                );
+            } else {
+                assertEq(
+                    siloBalanceBefore1 + repayDebtAssets - collateralToLiquidate,
+                    token1.balanceOf(address(silo1)),
+                    "debt was repay to silo and collateral withdrawn"
+                );
+            }
         } else {
-            assertEq(
-                siloBalanceBefore0 - collateralToLiquidate,
-                token0.balanceOf(address(silo0)),
-                "collateral was moved from silo"
-            );
+            if (_receiveSToken) {
+                assertEq(
+                    siloBalanceBefore0,
+                    token0.balanceOf(address(silo0)),
+                    "collateral was NOT moved from silo, because we using sToken"
+                );
 
-            assertEq(
-                liquidatorBalanceBefore0 + collateralToLiquidate,
-                token0.balanceOf(address(this)),
-                "collateral was moved to liquidator"
-            );
+                assertEq(
+                    liquidatorBalanceBefore0,
+                    token0.balanceOf(address(this)),
+                    "collateral was NOT moved to liquidator, because we using sToken"
+                );
+            } else {
+                assertEq(
+                    siloBalanceBefore0 - collateralToLiquidate,
+                    token0.balanceOf(address(silo0)),
+                    "collateral was moved from silo"
+                );
+
+                assertEq(
+                    liquidatorBalanceBefore0 + collateralToLiquidate,
+                    token0.balanceOf(address(this)),
+                    "collateral was moved to liquidator"
+                );
+            }
 
             assertEq(
                 siloBalanceBefore1 + repayDebtAssets,
