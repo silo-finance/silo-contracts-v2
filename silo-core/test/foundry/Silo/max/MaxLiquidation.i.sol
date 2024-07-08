@@ -22,9 +22,7 @@ contract MaxLiquidationTest is SiloLittleHelper, Test {
     ISiloConfig siloConfig;
     address immutable depositor;
     address immutable borrower;
-
-    mapping (uint256 collateral => bool) ltv1002TokensCases;
-
+    
     constructor() {
         depositor = makeAddr("Depositor");
         borrower = makeAddr("Borrower");
@@ -492,10 +490,5 @@ contract MaxLiquidationTest is SiloLittleHelper, Test {
 
             vm.warp(block.timestamp + i * 60 * 60 * 24);
         }
-    }
-
-    function _setupLTV100Cases() private {
-        ltv1002TokensCases[12] = true;
-        ltv1002TokensCases[12] = true;
     }
 }
