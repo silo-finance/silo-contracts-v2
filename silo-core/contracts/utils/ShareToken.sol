@@ -139,7 +139,7 @@ abstract contract ShareToken is Initializable, ERC20Permit, IShareToken {
 
         result = ERC20.transferFrom(_from, _to, _amount);
 
-        siloConfigCached.crossNonReentrantAfter();
+        siloConfigCached.turnOffReentrancyProtection();
     }
 
     /// @inheritdoc ERC20
@@ -153,7 +153,7 @@ abstract contract ShareToken is Initializable, ERC20Permit, IShareToken {
 
         result = ERC20.transfer(_to, _amount);
 
-        siloConfigCached.crossNonReentrantAfter();
+        siloConfigCached.turnOffReentrancyProtection();
     }
 
     /// @dev decimals of share token
@@ -278,7 +278,7 @@ abstract contract ShareToken is Initializable, ERC20Permit, IShareToken {
         returns (ISiloConfig siloConfigCached)
     {
         siloConfigCached = siloConfig;
-        siloConfigCached.crossNonReentrantBefore();
+        siloConfigCached.turnOnReentrancyProtection();
     }
 
     /// @notice Call beforeQuote on solvency oracles

@@ -16,7 +16,6 @@ import {SiloSolvencyLib} from "./SiloSolvencyLib.sol";
 import {SiloLendingLib} from "./SiloLendingLib.sol";
 import {SiloStdLib} from "./SiloStdLib.sol";
 import {SiloMathLib} from "./SiloMathLib.sol";
-import {CrossEntrancy} from "./CrossEntrancy.sol";
 import {Hook} from "./Hook.sol";
 import {AssetTypes} from "./AssetTypes.sol";
 import {CallBeforeQuoteLib} from "./CallBeforeQuoteLib.sol";
@@ -60,7 +59,7 @@ library Actions {
             _totalCollateral
         );
 
-        siloConfig.crossNonReentrantAfter();
+        siloConfig.turnOffReentrancyProtection();
 
         _hookCallAfterDeposit(_shareStorage, _collateralType, _assets, _shares, _receiver, assets, shares);
     }
@@ -112,7 +111,7 @@ library Actions {
             if (!ownerIsSolvent) revert ISilo.NotSolvent();
         }
 
-        siloConfig.crossNonReentrantAfter();
+        siloConfig.turnOffReentrancyProtection();
 
         _hookCallAfterWithdraw(_shareStorage, _args, assets, shares);
     }
@@ -165,7 +164,7 @@ library Actions {
 
         if (!borrowerIsBelowMaxLtv) revert ISilo.AboveMaxLtv();
 
-        siloConfig.crossNonReentrantAfter();
+        siloConfig.turnOffReentrancyProtection();
 
         _hookCallAfterBorrow(_shareStorage, _args, borrowAction, assets, shares);
     }
@@ -196,7 +195,7 @@ library Actions {
             IShareToken(debtShareToken), debtAsset, _assets, _shares, _borrower, _repayer, _totalDebt
         );
 
-        siloConfigCached.crossNonReentrantAfter();
+        siloConfigCached.turnOffReentrancyProtection();
 
         if (_shareStorage.hooksAfter.matchAction(Hook.REPAY)) {
             bytes memory data = abi.encodePacked(_assets, _shares, _borrower, _repayer, assets, shares);
@@ -261,7 +260,7 @@ library Actions {
             _totalAssetsForDeposit
         );
 
-        _shareStorage.siloConfig.crossNonReentrantAfter();
+        _shareStorage.siloConfig.turnOffReentrancyProtection();
 
         _hookCallAfterLeverageSameAsset(_shareStorage, _args, borrowedAssets, depositedShares, borrowedShares);
     }
@@ -314,7 +313,7 @@ library Actions {
             _total[uint256(depositType)]
         );
 
-        _shareStorage.siloConfig.crossNonReentrantAfter();
+        _shareStorage.siloConfig.turnOffReentrancyProtection();
 
         _hookCallAfterTransitionCollateral(_shareStorage, _withdrawType, _shares, _owner, assets);
     }
@@ -350,7 +349,7 @@ library Actions {
 
         if (!msgSenderIsSolvent) revert ISilo.NotSolvent();
 
-        siloConfig.crossNonReentrantAfter();
+        siloConfig.turnOffReentrancyProtection();
 
         if (_shareStorage.hooksBefore.matchAction(action)) {
             _shareStorage.hookReceiver.afterAction(address(this), action, abi.encodePacked(msg.sender));

@@ -4,8 +4,7 @@ pragma solidity 0.8.24;
 import {ISilo} from "./interfaces/ISilo.sol";
 import {ISiloConfig} from "./interfaces/ISiloConfig.sol";
 import {IShareToken} from "./interfaces/IShareToken.sol";
-import {CrossReentrancy} from "./utils/CrossReentrancy.sol";
-import {CrossEntrancy} from "./lib/CrossEntrancy.sol";
+import {CrossReentrancyGuard} from "./utils/CrossReentrancyGuard.sol";
 import {Hook} from "./lib/Hook.sol";
 import {ConfigLib} from "./lib/ConfigLib.sol";
 
@@ -15,7 +14,7 @@ import {ConfigLib} from "./lib/ConfigLib.sol";
 /// @notice SiloConfig stores full configuration of Silo in immutable manner
 /// @dev Immutable contract is more expensive to deploy than minimal proxy however it provides nearly 10x cheapper
 /// data access using immutable variables.
-contract SiloConfig is ISiloConfig, CrossReentrancy {
+contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
     using Hook for uint256;
     
     uint256 public immutable SILO_ID;
@@ -79,7 +78,11 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
     /// @param _siloId ID of this pool assigned by factory
     /// @param _configData0 silo configuration data for token0
     /// @param _configData1 silo configuration data for token1
-    constructor(uint256 _siloId, ConfigData memory _configData0, ConfigData memory _configData1) CrossReentrancy() {
+    constructor(
+        uint256 _siloId,
+        ConfigData memory _configData0,
+        ConfigData memory _configData1
+    ) CrossReentrancyGuard() {
         SILO_ID = _siloId;
 
         // To make further computations in the Silo secure require DAO and deployer fees to be less than 100%
@@ -133,13 +136,13 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
     }
 
     /// @inheritdoc ISiloConfig
-    function crossNonReentrantBefore() external virtual {
+    function turnOnReentrancyProtection() external virtual {
         _onlySiloOrTokenOrHookReceiver();
         _crossNonReentrantBefore();
     }
 
     /// @inheritdoc ISiloConfig
-    function crossNonReentrantAfter() external virtual {
+    function turnOffReentrancyProtection() external virtual {
         _onlySiloOrTokenOrHookReceiver();
         _crossNonReentrantAfter();
     }
@@ -235,9 +238,8 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
         (collateralConfig, debtConfig) = _getOrderedConfigs(_silo, debtInfo, _action);
     }
 
-    function crossReentrantStatus() external view virtual returns (bool entered, uint256 status) {
-        status = _crossReentrantStatus;
-        entered = status != CrossEntrancy.NOT_ENTERED;
+    function reentrancyGuardEntered() external view virtual returns (bool entered) {
+        entered = _reentrancyGuardEntered();
     }
 
     /// @inheritdoc ISiloConfig

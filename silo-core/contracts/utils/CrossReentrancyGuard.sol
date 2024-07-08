@@ -2,10 +2,9 @@
 pragma solidity 0.8.24;
 
 import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
-import {CrossEntrancy} from "../lib/CrossEntrancy.sol";
 import {Hook} from "../lib/Hook.sol";
 
-abstract contract CrossReentrancy {
+abstract contract CrossReentrancyGuard {
     // Booleans are more expensive than uint256 or any type that takes up a full
     // word because each write operation emits an extra SLOAD to first read the
     // slot's contents, replace the bits taken up by the boolean, and then write
@@ -17,31 +16,38 @@ abstract contract CrossReentrancy {
     // amount. Since refunds are capped to a percentage of the total
     // transaction's gas, it is best to keep them low in cases like this one, to
     // increase the likelihood of the full refund coming into effect.
-    uint256 internal _crossReentrantStatus;
+    uint24 private constant NOT_ENTERED = 1;
+    uint24 private constant ENTERED = 2;
+
+    uint256 private _crossReentrantStatus;
 
     constructor() {
-        _crossReentrantStatus = CrossEntrancy.NOT_ENTERED;
+        _crossReentrantStatus = NOT_ENTERED;
     }
 
     /// @dev please notice, this internal method is open TODO bug
     // solhint-disable-next-line function-max-lines, code-complexity
     function _crossNonReentrantBefore() internal virtual {
-        if (_crossReentrantStatus == CrossEntrancy.ENTERED) revert ISiloConfig.CrossReentrantCall();
+        if (_crossReentrantStatus == ENTERED) revert ISiloConfig.CrossReentrantCall();
 
-        _crossReentrantStatus = CrossEntrancy.ENTERED;
+        _crossReentrantStatus = ENTERED;
     }
 
     function _crossNonReentrantAfter() internal virtual {
-        uint256 currentStatus = _crossReentrantStatus;
-
         // Leaving it unprotected may lead to a bug in the reentrancy protection system,
         // as it can be used in the function without activating the protection before deactivating it.
         // Later on, these functions may be called to turn off the reentrancy protection.
         // To avoid this, we check if the protection is active before deactivating it.
-        if (currentStatus == CrossEntrancy.NOT_ENTERED) revert ISiloConfig.CrossReentrancyNotActive();
+        if (_crossReentrantStatus == NOT_ENTERED) revert ISiloConfig.CrossReentrancyNotActive();
 
         // By storing the original value once again, a refund is triggered (see
         // https://eips.ethereum.org/EIPS/eip-2200)
-        _crossReentrantStatus = CrossEntrancy.NOT_ENTERED;
+        _crossReentrantStatus = NOT_ENTERED;
+    }
+
+    ///  @dev Returns true if the reentrancy guard is currently set to "entered", which indicates there is a
+    /// `nonReentrant` function in the call stack.
+    function _reentrancyGuardEntered() internal view returns (bool) {
+        return _crossReentrantStatus == ENTERED;
     }
 }

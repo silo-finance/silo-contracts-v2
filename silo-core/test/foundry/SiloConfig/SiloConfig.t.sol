@@ -241,13 +241,13 @@ contract SiloConfigTest is Test {
         _siloConfig.accrueInterestAndGetConfigs(_silo0Default, makeAddr("Borrower 1"), Hook.BORROW);
 
         vm.prank(_silo0Default);
-        _siloConfig.crossNonReentrantAfter();
+        _siloConfig.turnOffReentrancyProtection();
 
         vm.prank(_silo1Default);
         _siloConfig.accrueInterestAndGetConfigs(_silo1Default, makeAddr("Borrower 2"), Hook.BORROW);
 
         vm.prank(_silo1Default);
-        _siloConfig.crossNonReentrantAfter();
+        _siloConfig.turnOffReentrancyProtection();
     }
 
     /*
@@ -283,7 +283,7 @@ contract SiloConfigTest is Test {
         );
 
         vm.prank(_silo0Default);
-        _siloConfig.crossNonReentrantAfter();
+        _siloConfig.turnOffReentrancyProtection();
 
         vm.prank(_silo0Default);
         (,, ISiloConfig.DebtInfo memory debtInfo2) = _siloConfig.accrueInterestAndGetConfigs(
@@ -324,7 +324,7 @@ contract SiloConfigTest is Test {
         _siloConfig.accrueInterestAndGetConfigs(_silo1Default, borrower, Hook.BORROW);
 
         vm.prank(_silo1Default);
-        _siloConfig.crossNonReentrantAfter();
+        _siloConfig.turnOffReentrancyProtection();
 
         (,, ISiloConfig.DebtInfo memory debtInfo) = _siloConfig.getConfigs(_silo0Default, borrower, Hook.BORROW);
 
@@ -434,7 +434,7 @@ contract SiloConfigTest is Test {
         );
 
         vm.prank(_silo0Default);
-        _siloConfig.crossNonReentrantAfter();
+        _siloConfig.turnOffReentrancyProtection();
 
         vm.prank(_silo1Default);
         _siloConfig.accrueInterestAndGetConfigs(
@@ -444,7 +444,7 @@ contract SiloConfigTest is Test {
         );
 
         vm.prank(_silo1Default);
-        _siloConfig.crossNonReentrantAfter();
+        _siloConfig.turnOffReentrancyProtection();
 
         vm.prank(_configDataDefault0.debtShareToken);
         vm.expectRevert(ISiloConfig.DebtExistInOtherSilo.selector);
@@ -478,7 +478,7 @@ contract SiloConfigTest is Test {
         );
 
         vm.prank(_silo0Default);
-        _siloConfig.crossNonReentrantAfter();
+        _siloConfig.turnOffReentrancyProtection();
 
         vm.prank(_silo0Default);
         _siloConfig.accrueInterestAndGetConfigs(
@@ -488,7 +488,7 @@ contract SiloConfigTest is Test {
         );
 
         vm.prank(_silo0Default);
-        _siloConfig.crossNonReentrantAfter();
+        _siloConfig.turnOffReentrancyProtection();
 
         vm.prank(_configDataDefault0.debtShareToken);
         _siloConfig.onDebtTransfer(from, to);
@@ -562,7 +562,7 @@ contract SiloConfigTest is Test {
         );
 
         vm.prank(_silo1Default);
-        _siloConfig.crossNonReentrantAfter();
+        _siloConfig.turnOffReentrancyProtection();
 
         vm.prank(_silo0Default); // other silo can close debt
         _siloConfig.closeDebt(borrower);
@@ -592,7 +592,7 @@ contract SiloConfigTest is Test {
 
         // Permissions check error
         vm.expectRevert(ISiloConfig.OnlySiloOrHookReceiver.selector);
-        _siloConfig.crossNonReentrantBefore();
+        _siloConfig.turnOnReentrancyProtection();
     }
 
     /*
@@ -601,7 +601,7 @@ contract SiloConfigTest is Test {
     function test_crossNonReentrantBeforePermissions() public {
         // Permissions check error
         vm.expectRevert(ISiloConfig.OnlySiloOrHookReceiver.selector);
-        _siloConfig.crossNonReentrantBefore();
+        _siloConfig.turnOnReentrancyProtection();
 
         // _onlySiloOrTokenOrLiquidation permissions check (calls should not revert)
         _callNonReentrantBeforeAndAfter(_silo0Default);
@@ -633,7 +633,7 @@ contract SiloConfigTest is Test {
         // Permissions check error
         vm.prank(_callee);
         vm.expectRevert(ISiloConfig.OnlySiloOrHookReceiver.selector);
-        _siloConfig.crossNonReentrantAfter();
+        _siloConfig.turnOffReentrancyProtection();
     }
 
     /*
@@ -671,13 +671,13 @@ contract SiloConfigTest is Test {
         assertEq(configData0.silo, _silo0Default);
 
         vm.prank(_silo0Default);
-        _siloConfig.crossNonReentrantAfter();
+        _siloConfig.turnOffReentrancyProtection();
 
         ISiloConfig.ConfigData memory configData1 = _siloConfig.accrueInterestAndGetConfig(_silo1Default);
         assertEq(configData1.silo, _silo1Default);
 
         vm.prank(_silo1Default);
-        _siloConfig.crossNonReentrantAfter();
+        _siloConfig.turnOffReentrancyProtection();
     }
 
     /*
@@ -736,16 +736,16 @@ contract SiloConfigTest is Test {
 
     function _callNonReentrantBeforeAndAfter(address _callee) internal {
         vm.prank(_callee);
-        _siloConfig.crossNonReentrantBefore();
+        _siloConfig.turnOnReentrancyProtection();
         vm.prank(_callee);
-        _siloConfig.crossNonReentrantAfter();
+        _siloConfig.turnOffReentrancyProtection();
     }
 
     function _callNonReentrantBeforeAndAfterPermissions(address _callee) internal {
         vm.prank(_silo0Default);
-        _siloConfig.crossNonReentrantBefore();
+        _siloConfig.turnOnReentrancyProtection();
         vm.prank(_callee);
-        _siloConfig.crossNonReentrantAfter();
+        _siloConfig.turnOffReentrancyProtection();
     }
 
     function _mockWrongSiloAccrueInterest() internal {
@@ -772,7 +772,7 @@ contract SiloConfigTest is Test {
         (shareToken, asset) = _siloConfig.accrueInterestAndGetConfigOptimised(_action, _collateralType);
 
         vm.prank(_silo0Default);
-        _siloConfig.crossNonReentrantAfter();
+        _siloConfig.turnOffReentrancyProtection();
 
         assertEq(shareToken, _expectedShareToken0);
         assertEq(asset, _configDataDefault0.token);
@@ -785,6 +785,6 @@ contract SiloConfigTest is Test {
         assertEq(asset, _configDataDefault1.token);
 
         vm.prank(_silo1Default);
-        _siloConfig.crossNonReentrantAfter();
+        _siloConfig.turnOffReentrancyProtection();
     }
 }

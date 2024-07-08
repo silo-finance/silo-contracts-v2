@@ -139,10 +139,10 @@ interface ISiloConfig {
     function closeDebt(address _borrower) external;
 
     /// @notice only silo method for cross Silo reentrancy
-    function crossNonReentrantBefore() external;
+    function turnOnReentrancyProtection() external;
 
     /// @notice only silo method for cross Silo reentrancy
-    function crossNonReentrantAfter() external;
+    function turnOffReentrancyProtection() external;
 
     function accrueInterestAndGetConfig(address _silo) external returns (ConfigData memory);
 
@@ -158,8 +158,7 @@ interface ISiloConfig {
     /// @notice view method for checking cross Silo reentrancy flag
     /// @return entered true if the reentrancy guard is currently set to "entered", which indicates there is a
     /// `nonReentrant` function in the call stack.
-    /// @return status precise status of reentrancy, see CrossEntrancy.sol for possible values
-    function crossReentrantStatus() external view returns (bool entered, uint256 status);
+    function reentrancyGuardEntered() external view returns (bool entered);
 
     // solhint-disable-next-line func-name-mixedcase
     function SILO_ID() external view returns (uint256);
