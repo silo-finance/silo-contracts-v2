@@ -92,9 +92,6 @@ contract PartialLiquidation is SiloStorage, IPartialLiquidation, IHookReceiver {
             if (repayDebtAssets == 0) revert NoDebtToCover();
             if (repayDebtAssets > _debtToCover) revert DebtToCoverTooSmall();
 
-            // this two value were split from total collateral to withdraw, so we will not overflow
-            unchecked { withdrawCollateral = withdrawAssetsFromCollateral + withdrawAssetsFromProtected; }
-
             emit LiquidationCall(msg.sender, _receiveSToken);
 
             IERC20(debtConfig.token).safeTransferFrom(msg.sender, address(this), repayDebtAssets);
@@ -127,7 +124,7 @@ contract PartialLiquidation is SiloStorage, IPartialLiquidation, IHookReceiver {
             // so solvency will not be checked in silo on redeem action
 
             if (collateralShares != 0) {
-                ISilo(collateralConfig.silo).redeem(
+                withdrawCollateral = ISilo(collateralConfig.silo).redeem(
                     collateralShares,
                     msg.sender,
                     address(this),
@@ -136,12 +133,16 @@ contract PartialLiquidation is SiloStorage, IPartialLiquidation, IHookReceiver {
             }
 
             if (protectedShares != 0) {
-                ISilo(collateralConfig.silo).redeem(
-                    protectedShares,
-                    msg.sender,
-                    address(this),
-                    ISilo.CollateralType.Protected
-                );
+                unchecked {
+                    // protected and collateral values were split from total collateral to withdraw,
+                    // so we will not overflow when we sum them back, especially that on redeem, we rounding down
+                    withdrawCollateral += ISilo(collateralConfig.silo).redeem(
+                        protectedShares,
+                        msg.sender,
+                        address(this),
+                        ISilo.CollateralType.Protected
+                    );
+                }
             }
         }
     }
