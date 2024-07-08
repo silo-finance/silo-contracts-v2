@@ -71,53 +71,51 @@ contract PartialLiquidation is SiloStorage, IPartialLiquidation, IHookReceiver {
 
         uint256 collateralShares;
         uint256 protectedShares;
+        uint256 withdrawAssetsFromCollateral;
+        uint256 withdrawAssetsFromProtected;
 
-        { // too deep
-            uint256 withdrawAssetsFromCollateral;
-            uint256 withdrawAssetsFromProtected;
+        bool selfLiquidation = _borrower == msg.sender;
 
-            bool selfLiquidation = _borrower == msg.sender;
+        (
+            withdrawAssetsFromCollateral, withdrawAssetsFromProtected, repayDebtAssets
+        ) = PartialLiquidationExecLib.getExactLiquidationAmounts(
+            collateralConfig,
+            debtConfig,
+            _borrower,
+            _debtToCover,
+            selfLiquidation ? 0 : collateralConfig.liquidationFee,
+            selfLiquidation
+        );
 
-            (
-                withdrawAssetsFromCollateral, withdrawAssetsFromProtected, repayDebtAssets
-            ) = PartialLiquidationExecLib.getExactLiquidationAmounts(
-                collateralConfig,
-                debtConfig,
-                _borrower,
-                _debtToCover,
-                selfLiquidation ? 0 : collateralConfig.liquidationFee,
-                selfLiquidation
-            );
+        if (repayDebtAssets == 0) revert NoDebtToCover();
+        if (repayDebtAssets > _debtToCover) revert DebtToCoverTooSmall();
 
-            if (repayDebtAssets == 0) revert NoDebtToCover();
-            if (repayDebtAssets > _debtToCover) revert DebtToCoverTooSmall();
+        emit LiquidationCall(msg.sender, _receiveSToken);
 
-            emit LiquidationCall(msg.sender, _receiveSToken);
+        IERC20(debtConfig.token).safeTransferFrom(msg.sender, address(this), repayDebtAssets);
+        IERC20(debtConfig.token).safeIncreaseAllowance(debtConfig.silo, repayDebtAssets);
+        ISilo(debtConfig.silo).repay(repayDebtAssets, _borrower);
 
-            IERC20(debtConfig.token).safeTransferFrom(msg.sender, address(this), repayDebtAssets);
-            IERC20(debtConfig.token).safeIncreaseAllowance(debtConfig.silo, repayDebtAssets);
-            ISilo(debtConfig.silo).repay(repayDebtAssets, _borrower);
+        address shareTokenReceiver = _receiveSToken ? msg.sender : address(this);
 
-            address shareTokenReceiver = _receiveSToken ? msg.sender : address(this);
+        collateralShares = _callShareTokenForwardTransferNoChecks(
+            collateralConfig.silo,
+            _borrower,
+            shareTokenReceiver,
+            withdrawAssetsFromCollateral,
+            collateralConfig.collateralShareToken,
+            AssetTypes.COLLATERAL
+        );
 
-            collateralShares = _callShareTokenForwardTransferNoChecks(
-                collateralConfig.silo,
-                _borrower,
-                shareTokenReceiver,
-                withdrawAssetsFromCollateral,
-                collateralConfig.collateralShareToken,
-                AssetTypes.COLLATERAL
-            );
+        protectedShares = _callShareTokenForwardTransferNoChecks(
+            collateralConfig.silo,
+            _borrower,
+            shareTokenReceiver,
+            withdrawAssetsFromProtected,
+            collateralConfig.protectedShareToken,
+            AssetTypes.PROTECTED
+        );
 
-            protectedShares = _callShareTokenForwardTransferNoChecks(
-                collateralConfig.silo,
-                _borrower,
-                shareTokenReceiver,
-                withdrawAssetsFromProtected,
-                collateralConfig.protectedShareToken,
-                AssetTypes.PROTECTED
-            );
-        }
 
         if (_receiveSToken) {
             // this two value were split from total collateral to withdraw, so we will not overflow
