@@ -23,6 +23,8 @@ contract MaxLiquidationTest is SiloLittleHelper, Test {
     address immutable depositor;
     address immutable borrower;
 
+    mapping (uint256 collateral => bool) ltv1002TokensCases;
+
     constructor() {
         depositor = makeAddr("Depositor");
         borrower = makeAddr("Borrower");
@@ -122,7 +124,7 @@ contract MaxLiquidationTest is SiloLittleHelper, Test {
     }
 
     function _maxLiquidation_partial_LTV100_2tokens_fuzz(uint16 _collateral, bool _receiveSToken) internal {
-        vm.assume(_collateral < 7);
+        vm.assume(_collateral < 7 || _collateral == 12);
 
         bool _sameAsset = false;
         uint256 toBorrow = uint256(_collateral) * 75 / 100; // maxLTV is 75%
@@ -136,6 +138,7 @@ contract MaxLiquidationTest is SiloLittleHelper, Test {
         else if (_collateral == 4) vm.warp(45 days);
         else if (_collateral == 5) vm.warp(95 days);
         else if (_collateral == 6) vm.warp(66 days);
+        else if (_collateral == 12) _findLTV100(); // vm.warp(10 days);
         else revert("should not happen, because of vm.assume");
 
         _assertLTV100();
@@ -201,11 +204,7 @@ contract MaxLiquidationTest is SiloLittleHelper, Test {
     function test_maxLiquidation_partial_1token_tokens_fuzz(uint128 _collateral) public {
         _maxLiquidation_partial_1token_fuzz(_collateral, !_RECEIVE_STOKENS);
     }
-
-    /*
-    forge test -vv --ffi --mt test_maxLiquidation_partial_1token_fuzz
-    */
-    /// forge-config: core-test.fuzz.runs = 10000
+    
     function _maxLiquidation_partial_1token_fuzz(uint128 _collateral, bool _receiveSToken) internal {
         // this condition is to not have overflow: _collateral * 84
         vm.assume(_collateral < type(uint128).max / 85);
@@ -234,10 +233,8 @@ contract MaxLiquidationTest is SiloLittleHelper, Test {
     forge test -vv --ffi --mt test_maxLiquidation_partial_2tokens_sTokens_fuzz
     */
     /// forge-config: core-test.fuzz.runs = 1000
-    function test_maxLiquidation_partial_2tokens_sTokens_fuzz(
-    //    uint128 _collateral
-    ) public {
-        _maxLiquidation_partial_2tokens_fuzz(8, _RECEIVE_STOKENS);
+    function test_maxLiquidation_partial_2tokens_sTokens_fuzz(uint128 _collateral) public {
+        _maxLiquidation_partial_2tokens_fuzz(_collateral, _RECEIVE_STOKENS);
     }
 
     /*
@@ -249,6 +246,9 @@ contract MaxLiquidationTest is SiloLittleHelper, Test {
     }
 
     function _maxLiquidation_partial_2tokens_fuzz(uint128 _collateral, bool _receiveSToken) internal {
+        vm.assume(_collateral != 12); // 100 LTV case
+        vm.assume(_collateral != 19); // dust case
+
         // this condition is to not have overflow: _collateral * 75
         vm.assume(_collateral < type(uint128).max / 75);
         // for small numbers we might jump from solvent -> bad debt, small numbers will be separate test case TODO
@@ -260,7 +260,6 @@ contract MaxLiquidationTest is SiloLittleHelper, Test {
         _createDebt(_collateral, toBorrow, _sameAsset);
 
         // for same asset interest increasing slower, because borrower is also depositor, also LT is higher
-        vm.warp(block.timestamp + 20 days); // initial time movement to speed up _findWrapForSolvency
         _moveTimeUntilInsolvent();
 
         _assertBorrowerIsNotSolvent({_hasBadDebt: false});
@@ -311,11 +310,13 @@ contract MaxLiquidationTest is SiloLittleHelper, Test {
     function _ensureBorrowerHasDebt() internal view {
         (,, address debtShareToken) = silo1.config().getShareTokens(address(silo1));
         assertGt(IShareToken(debtShareToken).balanceOf(borrower), 0, "expect borrower with debt balance");
+        assertGt(silo0.getLtv(borrower), 0, "expect borrower has some LTV");
     }
 
     function _ensureBorrowerHasNoDebt() internal view {
         (,, address debtShareToken) = silo1.config().getShareTokens(address(silo1));
         assertEq(IShareToken(debtShareToken).balanceOf(borrower), 0, "expect borrower has NO debt balance");
+        assertEq(silo0.getLtv(borrower), 0, "expect borrower has NO LTV");
     }
 
     function _assertBorrowerIsSolvent() internal view {
@@ -434,6 +435,8 @@ contract MaxLiquidationTest is SiloLittleHelper, Test {
             uint256 collateralToLiquidate, uint256 debtToRepay
         ) = partialLiquidation.maxLiquidation(address(silo1), borrower);
 
+        emit log_named_decimal_uint("[_executeMaxPartialLiquidation] ltv before", silo0.getLtv(borrower), 16);
+
         (withdrawCollateral, repayDebtAssets) = partialLiquidation.liquidationCall(
             address(silo1),
             address(_sameToken ? token1 : token0),
@@ -442,6 +445,8 @@ contract MaxLiquidationTest is SiloLittleHelper, Test {
             debtToCover,
             _receiveSToken
         );
+
+        emit log_named_decimal_uint("[_executeMaxPartialLiquidation] ltv after", silo0.getLtv(borrower), 16);
 
         assertEq(debtToRepay, repayDebtAssets, "debt: maxLiquidation == result");
         assertEq(collateralToLiquidate, withdrawCollateral, "collateral: max == result");
@@ -470,10 +475,13 @@ contract MaxLiquidationTest is SiloLittleHelper, Test {
 
     function _moveTimeUntilInsolvent() private {
         for (uint256 i = 1; i < 10000; i++) {
-             // emit log_named_decimal_uint("[_assertLTV100] LTV", silo1.getLtv(borrower), 16);
-             // emit log_named_uint("[_assertLTV100] days", i);
+              emit log_named_decimal_uint("[_assertLTV100] LTV", silo1.getLtv(borrower), 16);
+              emit log_named_uint("[_assertLTV100] days", i);
 
-            if (!silo1.isSolvent(borrower)) {
+            bool isSolvent = silo1.isSolvent(borrower);
+
+            if (!isSolvent) {
+                emit log_named_string("[_findWrapForSolvency] user solwent?", isSolvent ? "yes" : "NO");
                 emit log_named_decimal_uint("[_findWrapForSolvency] LTV", silo1.getLtv(borrower), 16);
                 emit log_named_uint("[_findWrapForSolvency] days", i);
 
@@ -484,4 +492,8 @@ contract MaxLiquidationTest is SiloLittleHelper, Test {
         }
     }
 
+    function _setupLTV100Cases() private {
+        ltv1002TokensCases[12] = true;
+        ltv1002TokensCases[12] = true;
+    }
 }
