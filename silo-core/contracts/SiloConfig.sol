@@ -227,6 +227,31 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
         (collateralConfig, debtConfig) = _getOrderedConfigs(_silo, debtInfo, _action);
     }
 
+    /// @dev Called by:
+    /// - Actions.withdraw()
+    function prepareForWithdraw(address _depositOwner) external virtual returns (
+        DepositConfig memory depositConfig,
+        ConfigData memory collateralConfig,
+        ConfigData memory debtConfig,
+        DebtInfo memory debtInfo
+    ) {
+        _onlySilo();
+
+        _crossNonReentrantBefore();
+        _accrueInterestForBothSilos();
+
+        depositConfig = _getDepositConfig(msg.sender);
+        address debtSilo = getDebtSilo(_depositOwner);
+
+        if (debtSilo != address(0)) {
+            address collateralSilo = _borrowerCollateralSilo[_depositOwner];
+
+            collateralConfig = _getConfig(collateralSilo);
+            debtConfig = _getConfig(debtSilo);
+            debtInfo = _debtInfo(debtSilo, collateralSilo);
+        }
+    }
+
     function crossReentrantStatus() external view virtual returns (bool entered, uint256 status) {
         status = _crossReentrantStatus;
         entered = status != CrossEntrancy.NOT_ENTERED;
@@ -288,13 +313,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
 
     /// @inheritdoc ISiloConfig
     function getConfig(address _silo) external view virtual returns (ConfigData memory) {
-        if (_silo == _SILO0) {
-            return _silo0ConfigData();
-        } else if (_silo == _SILO1) {
-            return _silo1ConfigData();
-        } else {
-            revert WrongSilo();
-        }
+        return _getConfig(_silo);
     }
 
     /// @inheritdoc ISiloConfig
@@ -328,6 +347,24 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
         debtSilo = debtBal0 != 0 ? _SILO0 : _SILO1;
     }
 
+    function _getDepositConfig(address _silo) internal view virtual returns (DepositConfig memory) {
+        if (_silo == _SILO0) {
+            return DepositConfig({
+                token: _TOKEN0,
+                collateralShareToken: _COLLATERAL_SHARE_TOKEN0,
+                protectedShareToken: _PROTECTED_COLLATERAL_SHARE_TOKEN0
+            });
+        } else if (_silo == _SILO1) {
+            return DepositConfig({
+                token: _TOKEN1,
+                collateralShareToken: _COLLATERAL_SHARE_TOKEN1,
+                protectedShareToken: _PROTECTED_COLLATERAL_SHARE_TOKEN1
+            });
+        } else {
+            revert WrongSilo();
+        }
+    }
+
     function _setCollateralSilo(address _debtSilo, address _borrower, bool _sameAsset) internal {
         _onlySilo();
 
@@ -359,15 +396,48 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
 
         address collateralSilo = _borrowerCollateralSilo[_borrower];
 
+        debtInfo = _debtInfo(debtSilo, collateralSilo);
+    }
+
+    function _debtInfo(address debtSilo, address collateralSilo)
+        internal
+        view
+        virtual
+        returns (DebtInfo memory debtInfo)
+    {
         debtInfo.debtPresent = true;
         debtInfo.sameAsset = collateralSilo == debtSilo;
         debtInfo.debtInSilo0 = debtSilo == _SILO0;
-        debtInfo.debtInThisSilo = _silo == debtSilo;
+        debtInfo.debtInThisSilo = msg.sender == debtSilo;
+    }
+
+    function _getConfig(address _silo) internal view virtual returns (ConfigData memory) {
+        if (_silo == _SILO0) {
+            return _silo0ConfigData();
+        } else if (_silo == _SILO1) {
+            return _silo1ConfigData();
+        } else {
+            revert WrongSilo();
+        }
     }
 
     function _callAccrueInterest(address _silo) internal {
         ISilo(_silo).accrueInterestForConfig(
             _silo == _SILO0 ? _INTEREST_RATE_MODEL0 : _INTEREST_RATE_MODEL1,
+            _DAO_FEE,
+            _DEPLOYER_FEE
+        );
+    }
+
+    function _accrueInterestForBothSilos() internal {
+        ISilo(_SILO0).accrueInterestForConfig(
+            _INTEREST_RATE_MODEL0,
+            _DAO_FEE,
+            _DEPLOYER_FEE
+        );
+
+        ISilo(_SILO1).accrueInterestForConfig(
+            _INTEREST_RATE_MODEL1,
             _DAO_FEE,
             _DEPLOYER_FEE
         );

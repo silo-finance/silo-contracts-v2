@@ -78,19 +78,24 @@ library Actions {
 
         _hookCallBeforeWithdraw(_shareStorage, _args);
 
+        // Actions to be executed to prepare the silo for the withdrawal:
+        // - Enable the reentrancy protection (revert if already enabled)
+        // - Accrue interest for both silos
+        // - Get deposit config (this silo always)
+        // - Resolve debt info (if there is any debt)
+        // - Get collateral and debt configs for the solvency calculation after withdrawal (empty if there is no debt)
         (
+            ISiloConfig.DepositConfig memory depositConfig,
             ISiloConfig.ConfigData memory collateralConfig,
             ISiloConfig.ConfigData memory debtConfig,
             ISiloConfig.DebtInfo memory debtInfo
-        ) = siloConfig.accrueInterestAndGetConfigs(address(this), _args.owner, Hook.WITHDRAW);
-
-        if (collateralConfig.silo != debtConfig.silo) ISilo(debtConfig.silo).accrueInterest();
+        ) = siloConfig.prepareForWithdraw(_args.owner);
 
         (assets, shares) = SiloERC4626Lib.withdraw(
-            collateralConfig.token,
+            depositConfig.token,
             _args.collateralType == ISilo.CollateralType.Collateral
-                ? collateralConfig.collateralShareToken
-                : collateralConfig.protectedShareToken,
+                ? depositConfig.collateralShareToken
+                : depositConfig.protectedShareToken,
             _args,
             _args.collateralType == ISilo.CollateralType.Collateral
                 ? SiloMathLib.liquidity(_totalAssets.assets, _totalDebtAssets.assets)

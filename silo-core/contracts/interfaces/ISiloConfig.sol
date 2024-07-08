@@ -95,6 +95,12 @@ interface ISiloConfig {
         bool callBeforeQuote1;
     }
 
+    struct DepositConfig {
+        address token;
+        address collateralShareToken;
+        address protectedShareToken;
+    }
+
     struct ConfigData {
         uint256 daoFee;
         uint256 deployerFee;
@@ -145,6 +151,13 @@ interface ISiloConfig {
     /// @param _borrower borrower address
     /// @param _sameAsset true if `_borrower` operates on the same asset
     function setCollateralSilo(address _borrower, bool _sameAsset) external;
+
+    function prepareForWithdraw(address _depositOwner) external virtual returns (
+        DepositConfig memory depositConfig,
+        ConfigData memory collateralConfig,
+        ConfigData memory debtConfig,
+        DebtInfo memory debtInfo
+    );
 
     function accrueInterestAndGetConfig(address _silo) external returns (ConfigData memory);
 
