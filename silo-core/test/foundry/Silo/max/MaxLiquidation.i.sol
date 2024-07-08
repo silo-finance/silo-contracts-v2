@@ -63,16 +63,18 @@ contract MaxLiquidationTest is SiloLittleHelper, Test {
         _maxLiquidation_partial_LTV100_1token_fuzz(_collateral, !_RECEIVE_STOKENS);
     }
 
-    function _maxLiquidation_partial_LTV100_1token_fuzz(uint16 _collateral, bool _receiveSToken) internal {
-        // for small numbers we might jump from solvent -> 100% LTV, so partial liquidation not possible
-        // I used `_findLTV100` to find range of numbers for which we jump to 100% for this casesetup
+    /*
+    for small numbers we jump from solvent -> 100% LTV, so partial liquidation not possible
+    even if 100% is not bad debt, partial liquidation will be full liquidation
 
-        // even if 100% is not bad debt, partial liquidation will be full liquidation
+    I used `_findLTV100` to find range of numbers for which we jump to 100% for this case setup
+    */
+    function _maxLiquidation_partial_LTV100_1token_fuzz(uint16 _collateral, bool _receiveSToken) internal {
+        bool _sameAsset = true;
+
         // TODO for 100% we should not be able to liquiodate less??
-        // TODO test cases solvent -> 100%
         // TODO test cases solvent -> dust (so full liquidation)
         vm.assume(_collateral < 20);
-        bool _sameAsset = true;
         uint256 toBorrow = uint256(_collateral) * 85 / 100;
 
         _createDebt(_collateral, toBorrow, _sameAsset);
@@ -124,9 +126,10 @@ contract MaxLiquidationTest is SiloLittleHelper, Test {
     }
 
     function _maxLiquidation_partial_LTV100_2tokens_fuzz(uint16 _collateral, bool _receiveSToken) internal {
+        bool _sameAsset = false;
+
         vm.assume(_collateral < 7 || _collateral == 12);
 
-        bool _sameAsset = false;
         uint256 toBorrow = uint256(_collateral) * 75 / 100; // maxLTV is 75%
 
         _createDebt(_collateral, toBorrow, _sameAsset);
@@ -204,21 +207,20 @@ contract MaxLiquidationTest is SiloLittleHelper, Test {
     function test_maxLiquidation_partial_1token_tokens_fuzz(uint128 _collateral) public {
         _maxLiquidation_partial_1token_fuzz(_collateral, !_RECEIVE_STOKENS);
     }
-    
-    function _maxLiquidation_partial_1token_fuzz(uint128 _collateral, bool _receiveSToken) internal {
-        // this condition is to not have overflow: _collateral * 84
-        vm.assume(_collateral < type(uint128).max / 85);
-        // for small numbers we might jump from solvent -> bad debt, small numbers will be separate test case TODO
-        // this value found by fuzzing tests, is high enough to have partial liquidation possible for this test setup
-        vm.assume(_collateral > 57); // 20..57 - dust cases
 
+    function _maxLiquidation_partial_1token_fuzz(uint128 _collateral, bool _receiveSToken) internal {
         bool _sameAsset = true;
+
+        // this condition is to not have overflow: _collateral * 85
+        vm.assume(_collateral < type(uint128).max / 85);
+         // this value found by fuzzing tests, is high enough to have partial liquidation possible for this test setup
+        vm.assume(_collateral > 57); // 20..57 - dust cases TODO
+
         uint256 toBorrow = _collateral * 85 / 100; // maxLT is 85%
 
         _createDebt(_collateral, toBorrow, _sameAsset);
 
-        // for same asset interest increasing slower, because borrower is also depositor, also LT is higher
-        vm.warp(block.timestamp + 1050 days); // initial time movement to speed up _findWrapForSolvency
+        vm.warp(block.timestamp + 1050 days); // initial time movement to speed up _moveTimeUntilInsolvent
         _moveTimeUntilInsolvent();
 
         _assertBorrowerIsNotSolvent({_hasBadDebt: false}); // TODO make tests for bad debt as well
@@ -246,15 +248,15 @@ contract MaxLiquidationTest is SiloLittleHelper, Test {
     }
 
     function _maxLiquidation_partial_2tokens_fuzz(uint128 _collateral, bool _receiveSToken) internal {
+        bool _sameAsset = false;
+
         vm.assume(_collateral != 12); // 100 LTV case
         vm.assume(_collateral != 19); // dust case
 
         // this condition is to not have overflow: _collateral * 75
         vm.assume(_collateral < type(uint128).max / 75);
-        // for small numbers we might jump from solvent -> bad debt, small numbers will be separate test case TODO
-        vm.assume(_collateral >= 7);
+        vm.assume(_collateral >= 7); // only partial liquidation
 
-        bool _sameAsset = false;
         uint256 toBorrow = _collateral * 75 / 100; // maxLT is 75%
 
         _createDebt(_collateral, toBorrow, _sameAsset);
@@ -423,7 +425,6 @@ contract MaxLiquidationTest is SiloLittleHelper, Test {
         }
     }
 
-    // TODO tests for _receiveSToken
     function _executeMaxPartialLiquidation(bool _sameToken, bool _receiveSToken)
         private
         returns (uint256 withdrawCollateral, uint256 repayDebtAssets)
@@ -437,6 +438,7 @@ contract MaxLiquidationTest is SiloLittleHelper, Test {
 
         emit log_named_decimal_uint("[_executeMaxPartialLiquidation] ltv before", silo0.getLtv(borrower), 16);
 
+        // TODO try do liquidate less and then again the rest of debt, will that summ up?
         (withdrawCollateral, repayDebtAssets) = partialLiquidation.liquidationCall(
             address(silo1),
             address(_sameToken ? token1 : token0),
