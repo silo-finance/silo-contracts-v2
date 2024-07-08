@@ -163,12 +163,6 @@ interface ISiloConfig {
     /// @return status precise status of reentrancy, see CrossEntrancy.sol for possible values
     function crossReentrantStatus() external view returns (bool entered, uint256 status);
 
-    /// @notice Checks if the borrower has debt in other silo by checking the debt share token balance
-    /// @param _debtShareToken The address of the debt share token (we will check the opposite silo)
-    /// @param _borrower The address of the borrower
-    /// @return hasDebt true if the borrower has debt in the other silo
-    function hasDebtInOtherSilo(address _debtShareToken, address _borrower) external view returns (bool hasDebt);
-
     // solhint-disable-next-line func-name-mixedcase
     function SILO_ID() external view returns (uint256);
 

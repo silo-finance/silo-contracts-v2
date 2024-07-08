@@ -378,6 +378,8 @@ contract SiloConfigTest is Test {
             action
         );
 
+        _mockShareTokensBlances(to, 0, 0);
+
         vm.prank(_silo0 ? _configDataDefault0.debtShareToken : _configDataDefault1.debtShareToken);
         _siloConfig.onDebtTransfer(from, to);
 
@@ -428,6 +430,8 @@ contract SiloConfigTest is Test {
         address from = makeAddr("from");
         address to = makeAddr("to");
 
+        _mockShareTokensBlances(to, 0, 0);
+
         vm.prank(_configDataDefault0.debtShareToken);
         _siloConfig.onDebtTransfer(from, to);
     }
@@ -438,6 +442,8 @@ contract SiloConfigTest is Test {
     function test_onDebtTransfer_allowedForDebtShareToken1() public {
         address from = makeAddr("from");
         address to = makeAddr("to");
+
+        _mockShareTokensBlances(to, 0, 0);
 
         vm.prank(_configDataDefault1.debtShareToken);
         _siloConfig.onDebtTransfer(from, to);
@@ -474,13 +480,7 @@ contract SiloConfigTest is Test {
         vm.prank(_silo1Default);
         _siloConfig.crossNonReentrantAfter();
 
-        bool hasDebtInOtherSilo = _siloConfig.hasDebtInOtherSilo(
-            _configDataDefault0.debtShareToken,
-            to
-        );
-
-        assertTrue(hasDebtInOtherSilo, "debt should exist in other silo");
-
+        vm.expectRevert(ISiloConfig.DebtExistInOtherSilo.selector);
         vm.prank(_configDataDefault0.debtShareToken);
         _siloConfig.onDebtTransfer(from, to);
 
@@ -520,13 +520,6 @@ contract SiloConfigTest is Test {
 
         vm.prank(_silo0Default);
         _siloConfig.crossNonReentrantAfter();
-
-        bool hasDebtInOtherSilo = _siloConfig.hasDebtInOtherSilo(
-            _configDataDefault0.debtShareToken,
-            to
-        );
-
-        assertFalse(hasDebtInOtherSilo, "debt should not exist in other silo");
 
         vm.prank(_configDataDefault0.debtShareToken);
         _siloConfig.onDebtTransfer(from, to);

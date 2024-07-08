@@ -153,7 +153,18 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
 
     /// @inheritdoc ISiloConfig
     function onDebtTransfer(address _sender, address _recipient) external virtual {
-        if (msg.sender != _DEBT_SHARE_TOKEN0 && msg.sender != _DEBT_SHARE_TOKEN1) revert OnlyDebtShareToken();
+        uint256 debtInOtherSilo;
+
+        if (msg.sender == _DEBT_SHARE_TOKEN0) {
+            debtInOtherSilo = _balanceOf(_DEBT_SHARE_TOKEN1, _recipient);
+        } else if (msg.sender == _DEBT_SHARE_TOKEN1) {
+            debtInOtherSilo = _balanceOf(_DEBT_SHARE_TOKEN0, _recipient);
+        } else {
+            revert OnlyDebtShareToken();
+        }
+
+        if (debtInOtherSilo != 0) revert DebtExistInOtherSilo();
+
 
         if (_borrowerCollateralSilo[_recipient] == address(0)) {
             _borrowerCollateralSilo[_recipient] = _borrowerCollateralSilo[_sender];
@@ -230,19 +241,6 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
     function crossReentrantStatus() external view virtual returns (bool entered, uint256 status) {
         status = _crossReentrantStatus;
         entered = status != CrossEntrancy.NOT_ENTERED;
-    }
-
-    function hasDebtInOtherSilo(
-        address _debtShareToken,
-        address _borrower
-    ) external view virtual returns (bool hasDebt) {
-        if (_debtShareToken == _DEBT_SHARE_TOKEN0) {
-            return _balanceOf(_DEBT_SHARE_TOKEN1, _borrower) != 0;
-        } else if (_debtShareToken == _DEBT_SHARE_TOKEN1) {
-            return _balanceOf(_DEBT_SHARE_TOKEN0, _borrower) != 0;
-        } else {
-            revert InvalidDebtShareToken();
-        }
     }
 
     /// @inheritdoc ISiloConfig
