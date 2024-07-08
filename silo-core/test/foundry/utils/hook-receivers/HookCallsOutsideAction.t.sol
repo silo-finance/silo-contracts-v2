@@ -14,7 +14,6 @@ import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {PartialLiquidation} from "silo-core/contracts/utils/hook-receivers/liquidation/PartialLiquidation.sol";
 import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
 import {Hook} from "silo-core/contracts/lib/Hook.sol";
-import {CrossEntrancy} from "silo-core/contracts/lib/CrossEntrancy.sol";
 
 import {SiloLittleHelper} from  "../../_common/SiloLittleHelper.sol";
 import {MintableToken} from "../../_common/MintableToken.sol";
@@ -59,9 +58,8 @@ contract HookCallsOutsideActionTest is PartialLiquidation, IERC3156FlashBorrower
     FOUNDRY_PROFILE=core-test forge test --ffi -vv --mt test_ifHooksAreNotCalledInsideAction
     */
     function test_ifHooksAreNotCalledInsideAction() public {
-        (bool entered, uint256 status) = siloConfig.crossReentrantStatus();
+        (bool entered) = siloConfig.reentrancyGuardEntered();
         assertFalse(entered, "initial state for entered");
-        assertEq(status, CrossEntrancy.NOT_ENTERED, "initial state for status");
 
         address depositor = makeAddr("depositor");
         address borrower = makeAddr("borrower");
@@ -163,8 +161,8 @@ contract HookCallsOutsideActionTest is PartialLiquidation, IERC3156FlashBorrower
         emit log_named_uint("[before] action", _action);
         _printAction(_action);
 
-        (bool entered, uint256 status) = siloConfig.crossReentrantStatus();
-        emit log_named_uint("[before] status", status);
+        (bool entered) = siloConfig.reentrancyGuardEntered();
+        emit log_named_uint("[before] reentrancyGuardEntered", entered ? 1 : 0);
 
         emit log("[before] action --------------------- ");
     }
@@ -173,8 +171,8 @@ contract HookCallsOutsideActionTest is PartialLiquidation, IERC3156FlashBorrower
         emit log_named_uint("[after] action", _action);
         _printAction(_action);
 
-        (bool entered, uint256 status) = siloConfig.crossReentrantStatus();
-        emit log_named_uint("[after] status", status);
+        (bool entered) = siloConfig.reentrancyGuardEntered();
+        emit log_named_uint("[after] reentrancyGuardEntered", entered ? 1 : 0);
 
         if (entered) {
             if (_action.matchAction(Hook.SHARE_TOKEN_TRANSFER)) {
