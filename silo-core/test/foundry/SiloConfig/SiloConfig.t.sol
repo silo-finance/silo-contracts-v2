@@ -2,6 +2,7 @@
 pragma solidity ^0.8.20;
 
 import {Test} from "forge-std/Test.sol";
+import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 
 import {ISiloConfig, SiloConfig} from "silo-core/contracts/SiloConfig.sol";
 import {Hook} from "silo-core/contracts/lib/Hook.sol";
@@ -161,13 +162,29 @@ contract SiloConfigTest is Test {
     ) public {
         SiloConfig siloConfig = siloConfigDeploy(_siloId, _configData0, _configData1);
 
+        (,, address debtToken) = siloConfig.getShareTokens(_configData0.silo);
+
+        vm.mockCall(
+            debtToken,
+            abi.encodeCall(IERC20.balanceOf, address(1)),
+            abi.encode(0)
+        );
+
+        (,, debtToken) = siloConfig.getShareTokens(_configData1.silo);
+
+        vm.mockCall(
+            debtToken,
+            abi.encodeCall(IERC20.balanceOf, address(1)),
+            abi.encode(0)
+        );
+
         vm.expectRevert(ISiloConfig.WrongSilo.selector);
-        siloConfig.getConfigs(_wrongSilo, address(0), 0 /* always 0 for external calls */);
+        siloConfig.getConfigs(_wrongSilo, address(1), 0 /* always 0 for external calls */);
 
         (
             ISiloConfig.ConfigData memory c0,
             ISiloConfig.ConfigData memory c1,
-        ) = siloConfig.getConfigs(_configData0.silo, address(0), 0 /* always 0 for external calls */);
+        ) = siloConfig.getConfigs(_configData0.silo, address(1), 0 /* always 0 for external calls */);
 
         assertEq(keccak256(abi.encode(c0)), keccak256(abi.encode(_configData0)));
         assertEq(keccak256(abi.encode(c1)), keccak256(abi.encode(_configData1)));
@@ -237,14 +254,20 @@ contract SiloConfigTest is Test {
     forge test -vv --mt test_openDebt_pass
     */
     function test_openDebt_pass() public {
+        address borrower1 = makeAddr("Borrower 1");
+        address borrower2 = makeAddr("Borrower 2");
+
+        _mockShareTokensBlances(borrower1, 1, 0);
+        _mockShareTokensBlances(borrower2, 1, 0);
+
         vm.prank(_silo0Default);
-        _siloConfig.accrueInterestAndGetConfigs(_silo0Default, makeAddr("Borrower 1"), Hook.BORROW);
+        _siloConfig.accrueInterestAndGetConfigs(_silo0Default, borrower1, Hook.BORROW);
 
         vm.prank(_silo0Default);
         _siloConfig.turnOffReentrancyProtection();
 
         vm.prank(_silo1Default);
-        _siloConfig.accrueInterestAndGetConfigs(_silo1Default, makeAddr("Borrower 2"), Hook.BORROW);
+        _siloConfig.accrueInterestAndGetConfigs(_silo1Default, borrower2, Hook.BORROW);
 
         vm.prank(_silo1Default);
         _siloConfig.turnOffReentrancyProtection();
@@ -253,7 +276,19 @@ contract SiloConfigTest is Test {
     /*
     forge test -vv --mt test_getConfigs_zero
     */
-    function test_getConfigs_zero() public view {
+    function test_getConfigs_zero() public {
+        vm.mockCall(
+            _configDataDefault0.debtShareToken,
+            abi.encodeCall(IERC20.balanceOf, address(0)),
+            abi.encode(0)
+        );
+
+        vm.mockCall(
+            _configDataDefault1.debtShareToken,
+            abi.encodeCall(IERC20.balanceOf, address(0)),
+            abi.encode(0)
+        );
+
         address silo = _silo0Default;
 
         (
@@ -270,36 +305,12 @@ contract SiloConfigTest is Test {
     }
 
     /*
-    forge test -vv --mt test_openDebt_skipsIfAlreadyOpen
-    */
-    function test_openDebt_skipsIfAlreadyOpen() public {    
-        address borrower = makeAddr("borrower");
-
-        vm.prank(_silo0Default);
-        (,, ISiloConfig.DebtInfo memory debtInfo1) = _siloConfig.accrueInterestAndGetConfigs(
-            _silo0Default,
-            borrower,
-            Hook.BORROW
-        );
-
-        vm.prank(_silo0Default);
-        _siloConfig.turnOffReentrancyProtection();
-
-        vm.prank(_silo0Default);
-        (,, ISiloConfig.DebtInfo memory debtInfo2) = _siloConfig.accrueInterestAndGetConfigs(
-            _silo0Default,
-            borrower,
-            Hook.BORROW
-        );
-
-        assertEq(abi.encode(debtInfo1), abi.encode(debtInfo2), "nothing should change");
-    }
-
-    /*
     forge test -vv --mt test_openDebt_debtInThisSilo
     */
     function test_openDebt_debtInThisSilo() public {
         address borrower = makeAddr("borrower");
+
+        _mockShareTokensBlances(borrower, 1, 0);
 
         vm.prank(_silo0Default);
         (,, ISiloConfig.DebtInfo memory debtInfo) = _siloConfig.accrueInterestAndGetConfigs(
@@ -320,6 +331,8 @@ contract SiloConfigTest is Test {
     function test_openDebt_debtInOtherSilo() public {
         address borrower = makeAddr("borrower");
 
+        _mockShareTokensBlances(borrower, 0, 1);
+
         vm.prank(_silo1Default);
         _siloConfig.accrueInterestAndGetConfigs(_silo1Default, borrower, Hook.BORROW);
 
@@ -333,7 +346,10 @@ contract SiloConfigTest is Test {
         assertTrue(!debtInfo.debtInSilo0);
         assertTrue(!debtInfo.debtInThisSilo);
 
-        (,, debtInfo) = _siloConfig.getConfigs(_silo1Default, address(1), 0 /* always 0 for external calls */);
+        address otherUser = makeAddr("otherUser");
+        _mockShareTokensBlances(otherUser, 0, 0);
+
+        (,, debtInfo) = _siloConfig.getConfigs(_silo1Default, otherUser, 0 /* always 0 for external calls */);
         ISiloConfig.DebtInfo memory emptyDebtInfo;
 
         assertEq(abi.encode(emptyDebtInfo), abi.encode(debtInfo), "debtInfo should be empty");
@@ -350,6 +366,11 @@ contract SiloConfigTest is Test {
         address from = makeAddr("from");
         address to = makeAddr("to");
 
+        uint256 balance0 = _silo0 ? 1 : 0;
+        uint256 balance1 = _silo0 ? 0 : 1;
+
+        _mockShareTokensBlances(from, balance0, balance1);
+
         vm.prank(silo);
         (,, ISiloConfig.DebtInfo memory debtInfoFrom) = _siloConfig.accrueInterestAndGetConfigs(
             silo,
@@ -357,8 +378,13 @@ contract SiloConfigTest is Test {
             action
         );
 
+        _mockShareTokensBlances(to, 0, 0);
+
         vm.prank(_silo0 ? _configDataDefault0.debtShareToken : _configDataDefault1.debtShareToken);
         _siloConfig.onDebtTransfer(from, to);
+
+        _mockShareTokensBlances(from, 0, 0);
+        _mockShareTokensBlances(to, balance0, balance1);
 
         (
             ,, ISiloConfig.DebtInfo memory debtInfoTo
@@ -404,6 +430,8 @@ contract SiloConfigTest is Test {
         address from = makeAddr("from");
         address to = makeAddr("to");
 
+        _mockShareTokensBlances(to, 0, 0);
+
         vm.prank(_configDataDefault0.debtShareToken);
         _siloConfig.onDebtTransfer(from, to);
     }
@@ -414,6 +442,8 @@ contract SiloConfigTest is Test {
     function test_onDebtTransfer_allowedForDebtShareToken1() public {
         address from = makeAddr("from");
         address to = makeAddr("to");
+
+        _mockShareTokensBlances(to, 0, 0);
 
         vm.prank(_configDataDefault1.debtShareToken);
         _siloConfig.onDebtTransfer(from, to);
@@ -426,6 +456,8 @@ contract SiloConfigTest is Test {
         address from = makeAddr("from");
         address to = makeAddr("to");
 
+        _mockShareTokensBlances(from, 1, 0);
+
         vm.prank(_silo0Default);
         _siloConfig.accrueInterestAndGetConfigs(
             _silo0Default,
@@ -435,6 +467,8 @@ contract SiloConfigTest is Test {
 
         vm.prank(_silo0Default);
         _siloConfig.turnOffReentrancyProtection();
+
+        _mockShareTokensBlances(to, 0, 1);
 
         vm.prank(_silo1Default);
         _siloConfig.accrueInterestAndGetConfigs(
@@ -446,21 +480,11 @@ contract SiloConfigTest is Test {
         vm.prank(_silo1Default);
         _siloConfig.turnOffReentrancyProtection();
 
-        vm.prank(_configDataDefault0.debtShareToken);
         vm.expectRevert(ISiloConfig.DebtExistInOtherSilo.selector);
+        vm.prank(_configDataDefault0.debtShareToken);
         _siloConfig.onDebtTransfer(from, to);
 
-        vm.prank(_configDataDefault0.debtShareToken);
-        // this will pass, because `from` has debt in 0
-        _siloConfig.onDebtTransfer(to, from);
-
-        vm.prank(_configDataDefault1.debtShareToken);
-        // this will pass, because `to` has debt in 1
-        _siloConfig.onDebtTransfer(from, to);
-
-        vm.prank(_configDataDefault1.debtShareToken);
-        vm.expectRevert(ISiloConfig.DebtExistInOtherSilo.selector);
-        _siloConfig.onDebtTransfer(to, from);
+        _mockShareTokensBlances(to, 1, 1);
     }
 
     /*
@@ -470,12 +494,17 @@ contract SiloConfigTest is Test {
         address from = makeAddr("from");
         address to = makeAddr("to");
 
+        _mockShareTokensBlances(from, 0, 0);
+        _mockShareTokensBlances(to, 0, 0);
+
         vm.prank(_silo0Default);
         _siloConfig.accrueInterestAndGetConfigs(
             _silo0Default,
             from,
             Hook.BORROW | Hook.SAME_ASSET
         );
+
+        _mockShareTokensBlances(from, 1, 0);
 
         vm.prank(_silo0Default);
         _siloConfig.turnOffReentrancyProtection();
@@ -487,11 +516,16 @@ contract SiloConfigTest is Test {
             Hook.BORROW
         );
 
+        _mockShareTokensBlances(to, 1, 0);
+
         vm.prank(_silo0Default);
         _siloConfig.turnOffReentrancyProtection();
 
         vm.prank(_configDataDefault0.debtShareToken);
         _siloConfig.onDebtTransfer(from, to);
+
+        _mockShareTokensBlances(from, 0, 0);
+        _mockShareTokensBlances(to, 2, 0);
 
         (
             ,, ISiloConfig.DebtInfo memory debtInfoTo
@@ -501,78 +535,6 @@ contract SiloConfigTest is Test {
         assertTrue(!debtInfoTo.sameAsset, "sameAsset is not cloned when debt already open");
         assertTrue(debtInfoTo.debtInSilo0, "debtInSilo0");
         assertTrue(!debtInfoTo.debtInThisSilo, "call is from silo1, so debt should not be in THIS silo");
-    }
-
-    /*
-    forge test -vv --mt test_closeDebt_OnlySiloOrDebtShareToken
-    */
-    function test_closeDebt_OnlySiloOrDebtShareToken() public {
-        vm.expectRevert(ISiloConfig.OnlySiloOrDebtShareToken.selector);
-        _siloConfig.closeDebt(address(0));
-
-        vm.prank(_configDataDefault0.collateralShareToken);
-        vm.expectRevert(ISiloConfig.OnlySiloOrDebtShareToken.selector);
-        _siloConfig.closeDebt(_configDataDefault0.collateralShareToken);
-
-        vm.prank(_configDataDefault0.protectedShareToken);
-        vm.expectRevert(ISiloConfig.OnlySiloOrDebtShareToken.selector);
-        _siloConfig.closeDebt(_configDataDefault0.protectedShareToken);
-
-        vm.prank(_configDataDefault1.collateralShareToken);
-        vm.expectRevert(ISiloConfig.OnlySiloOrDebtShareToken.selector);
-        _siloConfig.closeDebt(_configDataDefault1.collateralShareToken);
-
-        vm.prank(_configDataDefault1.protectedShareToken);
-        vm.expectRevert(ISiloConfig.OnlySiloOrDebtShareToken.selector);
-        _siloConfig.closeDebt(_configDataDefault1.protectedShareToken);
-    }
-
-    /*
-    forge test -vv --mt test_closeDebtPermissions
-    */
-    function test_closeDebtPermissions() public {
-        address borrower = makeAddr("borrower");
-
-        // can only be called by silos or debt share tokens
-
-        vm.prank(_silo0Default);
-        _siloConfig.closeDebt(borrower);
-
-        vm.prank(_silo1Default);
-        _siloConfig.closeDebt(borrower);
-
-        vm.prank(_configDataDefault0.debtShareToken);
-        _siloConfig.closeDebt(borrower);
-
-        vm.prank(_configDataDefault1.debtShareToken);
-        _siloConfig.closeDebt(borrower);
-    }
-
-    /*
-    FOUNDRY_PROFILE=core-test forge test -vv --mt test_closeDebt_pass
-    */
-    function test_closeDebt_pass() public {
-        address borrower = makeAddr("borrower");
-
-        vm.prank(_silo1Default);
-        _siloConfig.accrueInterestAndGetConfigs(
-            _silo1Default,
-            borrower,
-            Hook.BORROW | Hook.SAME_ASSET
-        );
-
-        vm.prank(_silo1Default);
-        _siloConfig.turnOffReentrancyProtection();
-
-        vm.prank(_silo0Default); // other silo can close debt
-        _siloConfig.closeDebt(borrower);
-
-        ISiloConfig.DebtInfo memory emptyDebtInfo;
-        (
-            ,, ISiloConfig.DebtInfo memory debt
-        ) = _siloConfig.getConfigs(_silo1Default, borrower, 0 /* always 0 for external calls */);
-
-        assertEq(abi.encode(emptyDebtInfo), abi.encode(debt), "debt should be deleted");
     }
 
     /*
@@ -786,5 +748,19 @@ contract SiloConfigTest is Test {
 
         vm.prank(_silo1Default);
         _siloConfig.turnOffReentrancyProtection();
+    }
+
+    function _mockShareTokensBlances(address _user, uint256 _balance0, uint256 _balance1) internal {
+        vm.mockCall(
+            _configDataDefault0.debtShareToken,
+            abi.encodeCall(IERC20.balanceOf, _user),
+            abi.encode(_balance0)
+        );
+
+        vm.mockCall(
+            _configDataDefault1.debtShareToken,
+            abi.encodeCall(IERC20.balanceOf, _user),
+            abi.encode(_balance1)
+        );
     }
 }

@@ -2,6 +2,7 @@
 pragma solidity ^0.8.20;
 
 import {Test} from "forge-std/Test.sol";
+import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 
 import {ISiloConfig, SiloConfig} from "silo-core/contracts/SiloConfig.sol";
 import {Hook} from "silo-core/contracts/lib/Hook.sol";
@@ -75,6 +76,7 @@ contract OrderedConfigsTest is Test {
         _siloConfig = siloConfigDeploy(1, _configData0, _configData1);
 
         _mockAccrueInterestCalls(_configData0, _configData1);
+        _mockShareTokensBlances(_siloUser, 0, 0);
     }
 
     function siloConfigDeploy(
@@ -100,7 +102,7 @@ contract OrderedConfigsTest is Test {
         siloConfig = new SiloConfig(_siloId, _configDataInput0, _configDataInput1);
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --mt testOrderedConfigsWithdraw
+    // FOUNDRY_PROFILE=core-test forge test -vvv --mt testOrderedConfigsWithdrawNoDebt
     function testOrderedConfigsWithdrawNoDebt() public view {
         ISiloConfig.ConfigData memory collateralConfig;
         ISiloConfig.ConfigData memory debtConfig;
@@ -130,6 +132,8 @@ contract OrderedConfigsTest is Test {
     // FOUNDRY_PROFILE=core-test forge test -vvv --mt testOrderedConfigsWithdrawDebtSilo0NotSameAsset
     function testOrderedConfigsWithdrawDebtSilo0NotSameAsset() public {
         bool sameAsset;
+
+        _mockShareTokensBlances(_siloUser, 1, 0);
 
         vm.prank(_silo0);
         _siloConfig.accrueInterestAndGetConfigs(_silo0, _siloUser, Hook.borrowAction(sameAsset));
@@ -163,6 +167,8 @@ contract OrderedConfigsTest is Test {
     function testOrderedConfigsWithdrawDebtSilo1NotSameAsset() public {
         bool sameAsset;
 
+        _mockShareTokensBlances(_siloUser, 0, 1);
+
         vm.prank(_silo1);
         _siloConfig.accrueInterestAndGetConfigs(_silo1, _siloUser, Hook.borrowAction(sameAsset));
 
@@ -195,6 +201,8 @@ contract OrderedConfigsTest is Test {
     function testOrderedConfigsWithdrawWithDebtSilo0SameAsset() public {
         bool sameAsset = true;
 
+        _mockShareTokensBlances(_siloUser, 1, 0);
+
         vm.prank(_silo0);
         _siloConfig.accrueInterestAndGetConfigs(_silo0, _siloUser, Hook.borrowAction(sameAsset));
 
@@ -226,6 +234,8 @@ contract OrderedConfigsTest is Test {
     // FOUNDRY_PROFILE=core-test forge test -vvv --mt testOrderedConfigsWithdrawWithDebtSilo1SameAsset
     function testOrderedConfigsWithdrawWithDebtSilo1SameAsset() public {
         bool sameAsset = true;
+
+        _mockShareTokensBlances(_siloUser, 0, 1);
 
         vm.prank(_silo1);
         _siloConfig.accrueInterestAndGetConfigs(_silo1, _siloUser, Hook.borrowAction(sameAsset));
@@ -315,6 +325,8 @@ contract OrderedConfigsTest is Test {
     function testOrderedConfigsBorrowDebtSilo0NotSameAsset() public {
         bool sameAsset;
 
+        _mockShareTokensBlances(_siloUser, 1, 0);
+
         vm.prank(_silo0);
         _siloConfig.accrueInterestAndGetConfigs(_silo0, _siloUser, Hook.borrowAction(sameAsset));
 
@@ -346,6 +358,8 @@ contract OrderedConfigsTest is Test {
     // FOUNDRY_PROFILE=core-test forge test -vvv --mt testOrderedConfigsBorrowDebtSilo0SameAsset
     function testOrderedConfigsBorrowDebtSilo0SameAsset() public {
         bool sameAsset = true;
+
+        _mockShareTokensBlances(_siloUser, 1, 0);
 
         vm.prank(_silo0);
         _siloConfig.accrueInterestAndGetConfigs(_silo0, _siloUser, Hook.borrowAction(sameAsset));
@@ -379,6 +393,8 @@ contract OrderedConfigsTest is Test {
     function testOrderedConfigsBorrowDebtSilo1NotSameAsset() public {
         bool sameAsset;
 
+        _mockShareTokensBlances(_siloUser, 0, 1);
+
         vm.prank(_silo1);
         _siloConfig.accrueInterestAndGetConfigs(_silo1, _siloUser, Hook.borrowAction(sameAsset));
 
@@ -410,6 +426,8 @@ contract OrderedConfigsTest is Test {
     // FOUNDRY_PROFILE=core-test forge test -vvv --mt testOrderedConfigsBorrowDebtSilo1SameAsset
     function testOrderedConfigsBorrowDebtSilo1SameAsset() public {
         bool sameAsset = true;
+
+        _mockShareTokensBlances(_siloUser, 0, 1);
 
         vm.prank(_silo1);
         _siloConfig.accrueInterestAndGetConfigs(_silo1, _siloUser, Hook.borrowAction(sameAsset));
@@ -470,6 +488,8 @@ contract OrderedConfigsTest is Test {
     function testOrderedConfigsLeverageSameAssetsDebtSilo0NotSameAsset() public {
         bool sameAsset;
 
+        _mockShareTokensBlances(_siloUser, 1, 0);
+
         vm.prank(_silo0);
         _siloConfig.accrueInterestAndGetConfigs(_silo0, _siloUser, Hook.borrowAction(sameAsset));
 
@@ -501,6 +521,8 @@ contract OrderedConfigsTest is Test {
     // FOUNDRY_PROFILE=core-test forge test -vvv --mt testOrderedConfigsLeverageSameAssetsDebtSilo1NotSameAsset
     function testOrderedConfigsLeverageSameAssetsDebtSilo1NotSameAsset() public {
         bool sameAsset;
+
+        _mockShareTokensBlances(_siloUser, 0, 1);
 
         vm.prank(_silo1);
         _siloConfig.accrueInterestAndGetConfigs(_silo1, _siloUser, Hook.borrowAction(sameAsset));
@@ -534,6 +556,8 @@ contract OrderedConfigsTest is Test {
     function testOrderedConfigsLeverageSameAssetsDebtSilo0SameAsset() public {
         bool sameAsset = true;
 
+        _mockShareTokensBlances(_siloUser, 1, 0);
+
         vm.prank(_silo0);
         _siloConfig.accrueInterestAndGetConfigs(_silo0, _siloUser, Hook.borrowAction(sameAsset));
 
@@ -565,6 +589,8 @@ contract OrderedConfigsTest is Test {
     // FOUNDRY_PROFILE=core-test forge test -vvv --mt testOrderedConfigsLeverageSameAssetsDebtSilo1SameAsset
     function testOrderedConfigsLeverageSameAssetsDebtSilo1SameAsset() public {
         bool sameAsset = true;
+
+        _mockShareTokensBlances(_siloUser, 0, 1);
 
         vm.prank(_silo1);
         _siloConfig.accrueInterestAndGetConfigs(_silo1, _siloUser, Hook.borrowAction(sameAsset));
@@ -625,6 +651,8 @@ contract OrderedConfigsTest is Test {
     function testOrderedConfigsTransitionCollateralDebtSilo0NotSameAsset() public {
         bool sameAsset;
 
+        _mockShareTokensBlances(_siloUser, 1, 0);
+
         vm.prank(_silo0);
         _siloConfig.accrueInterestAndGetConfigs(_silo0, _siloUser, Hook.borrowAction(sameAsset));
 
@@ -656,6 +684,8 @@ contract OrderedConfigsTest is Test {
     // FOUNDRY_PROFILE=core-test forge test -vvv --mt testOrderedConfigsTransitionCollateralDebtSilo0SameAsset
     function testOrderedConfigsTransitionCollateralDebtSilo0SameAsset() public {
         bool sameAsset = true;
+
+        _mockShareTokensBlances(_siloUser, 1, 0);
 
         vm.prank(_silo0);
         _siloConfig.accrueInterestAndGetConfigs(_silo0, _siloUser, Hook.borrowAction(sameAsset));
@@ -689,6 +719,8 @@ contract OrderedConfigsTest is Test {
     function testOrderedConfigsTransitionCollateralDebtSilo1NotSameAsset() public {
         bool sameAsset;
 
+        _mockShareTokensBlances(_siloUser, 0, 1);
+
         vm.prank(_silo1);
         _siloConfig.accrueInterestAndGetConfigs(_silo1, _siloUser, Hook.borrowAction(sameAsset));
 
@@ -719,6 +751,8 @@ contract OrderedConfigsTest is Test {
     // FOUNDRY_PROFILE=core-test forge test -vvv --mt testOrderedConfigsTransitionCollateralDebtSilo1SameAsset
     function testOrderedConfigsTransitionCollateralDebtSilo1SameAsset() public {
         bool sameAsset = true;
+
+        _mockShareTokensBlances(_siloUser, 0, 1);
 
         vm.prank(_silo1);
         _siloConfig.accrueInterestAndGetConfigs(_silo1, _siloUser, Hook.borrowAction(sameAsset));
@@ -811,6 +845,8 @@ contract OrderedConfigsTest is Test {
         bool switchToSameAsset;
         bool sameAsset;
 
+        _mockShareTokensBlances(_siloUser, 1, 0);
+
         vm.prank(_silo0);
         _siloConfig.accrueInterestAndGetConfigs(_silo0, _siloUser, Hook.borrowAction(sameAsset));
 
@@ -843,6 +879,8 @@ contract OrderedConfigsTest is Test {
     function testOrderedSwitchConfigsCollateralToSameDebtSilo0NotSameAsset() public {
         bool switchToSameAsset = true;
         bool sameAsset;
+
+        _mockShareTokensBlances(_siloUser, 1, 0);
 
         vm.prank(_silo0);
         _siloConfig.accrueInterestAndGetConfigs(_silo0, _siloUser, Hook.borrowAction(sameAsset));
@@ -877,6 +915,8 @@ contract OrderedConfigsTest is Test {
         bool switchToSameAsset;
         bool sameAsset;
 
+        _mockShareTokensBlances(_siloUser, 0, 1);
+
         vm.prank(_silo1);
         _siloConfig.accrueInterestAndGetConfigs(_silo1, _siloUser, Hook.borrowAction(sameAsset));
 
@@ -909,6 +949,8 @@ contract OrderedConfigsTest is Test {
     function testOrderedSwitchConfigsCollateralToSameDebtSilo1NotSameAsset() public {
         bool switchToSameAsset = true;
         bool sameAsset;
+
+        _mockShareTokensBlances(_siloUser, 0, 1);
 
         vm.prank(_silo1);
         _siloConfig.accrueInterestAndGetConfigs(_silo1, _siloUser, Hook.borrowAction(sameAsset));
@@ -943,6 +985,8 @@ contract OrderedConfigsTest is Test {
         bool switchToSameAsset;
         bool sameAsset = true;
 
+        _mockShareTokensBlances(_siloUser, 1, 0);
+
         vm.prank(_silo0);
         _siloConfig.accrueInterestAndGetConfigs(_silo0, _siloUser, Hook.borrowAction(sameAsset));
 
@@ -975,6 +1019,8 @@ contract OrderedConfigsTest is Test {
     function testOrderedSwitchConfigsCollateralToSameDebtSilo0SameAsset() public {
         bool switchToSameAsset = true;
         bool sameAsset = true;
+
+        _mockShareTokensBlances(_siloUser, 1, 0);
 
         vm.prank(_silo0);
         _siloConfig.accrueInterestAndGetConfigs(_silo0, _siloUser, Hook.borrowAction(sameAsset));
@@ -1009,6 +1055,8 @@ contract OrderedConfigsTest is Test {
         bool switchToSameAsset;
         bool sameAsset = true;
 
+        _mockShareTokensBlances(_siloUser, 0, 1);
+
         vm.prank(_silo1);
         _siloConfig.accrueInterestAndGetConfigs(_silo1, _siloUser, Hook.borrowAction(sameAsset));
 
@@ -1042,6 +1090,8 @@ contract OrderedConfigsTest is Test {
         bool switchToSameAsset = true;
         bool sameAsset = true;
 
+        _mockShareTokensBlances(_siloUser, 0, 1);
+
         vm.prank(_silo1);
         _siloConfig.accrueInterestAndGetConfigs(_silo1, _siloUser, Hook.borrowAction(sameAsset));
 
@@ -1073,6 +1123,8 @@ contract OrderedConfigsTest is Test {
     // FOUNDRY_PROFILE=core-test forge test -vvv --mt testOrderedLiqudaitionDebtSilo0NotSameAsset
     function testOrderedLiqudaitionDebtSilo0NotSameAsset() public {
         bool sameAsset;
+
+        _mockShareTokensBlances(_siloUser, 1, 0);
 
         vm.prank(_silo0);
         _siloConfig.accrueInterestAndGetConfigs(_silo0, _siloUser, Hook.borrowAction(sameAsset));
@@ -1106,6 +1158,8 @@ contract OrderedConfigsTest is Test {
     function testOrderedLiqudaitionDebtSilo1NotSameAsset() public {
         bool sameAsset;
 
+        _mockShareTokensBlances(_siloUser, 0, 1);
+
         vm.prank(_silo1);
         _siloConfig.accrueInterestAndGetConfigs(_silo1, _siloUser, Hook.borrowAction(sameAsset));
 
@@ -1138,6 +1192,8 @@ contract OrderedConfigsTest is Test {
     function testOrderedLiqudaitionDebtSilo0SameAsset() public {
         bool sameAsset = true;
 
+        _mockShareTokensBlances(_siloUser, 1, 0);
+
         vm.prank(_silo0);
         _siloConfig.accrueInterestAndGetConfigs(_silo0, _siloUser, Hook.borrowAction(sameAsset));
 
@@ -1169,6 +1225,8 @@ contract OrderedConfigsTest is Test {
     // FOUNDRY_PROFILE=core-test forge test -vvv --mt testOrderedLiqudaitionDebtSilo1SameAsset
     function testOrderedLiqudaitionDebtSilo1SameAsset() public {
         bool sameAsset = true;
+
+        _mockShareTokensBlances(_siloUser, 0, 1);
 
         vm.prank(_silo1);
         _siloConfig.accrueInterestAndGetConfigs(_silo1, _siloUser, Hook.borrowAction(sameAsset));
@@ -1281,6 +1339,20 @@ contract OrderedConfigsTest is Test {
                 (_configDataInput1.interestRateModel, _configDataInput1.daoFee, _configDataInput1.deployerFee)
             ),
             abi.encode(true)
+        );
+    }
+
+    function _mockShareTokensBlances(address _user, uint256 _balance0, uint256 _balance1) internal {
+        vm.mockCall(
+            _configData0.debtShareToken,
+            abi.encodeCall(IERC20.balanceOf, _user),
+            abi.encode(_balance0)
+        );
+
+        vm.mockCall(
+            _configData1.debtShareToken,
+            abi.encodeCall(IERC20.balanceOf, _user),
+            abi.encode(_balance1)
         );
     }
 }
