@@ -128,21 +128,23 @@ interface ISiloConfig {
     error CrossReentrancyNotActive();
     error InvalidConfigOrder();
     error FeeTooHigh();
+    error InvalidDebtShareToken();
 
-    /// @dev should be called on debt transfer, it opens debt if `_to` address don't have one
+    /// @dev It should be called on debt transfer. It sets collateral silo if the `_to` address doesn't have one
     /// @param _sender sender address
     /// @param _recipient recipient address
     function onDebtTransfer(address _sender, address _recipient) external;
-
-    /// @dev must be called when `_borrower` repay all debt, there is no restriction from which silo call will be done
-    /// @param _borrower borrower address
-    function closeDebt(address _borrower) external;
 
     /// @notice only silo method for cross Silo reentrancy
     function turnOnReentrancyProtection() external;
 
     /// @notice only silo method for cross Silo reentrancy
     function turnOffReentrancyProtection() external;
+
+    /// @notice Set collateral silo
+    /// @param _borrower borrower address
+    /// @param _sameAsset true if `_borrower` operates on the same asset
+    function setCollateralSilo(address _borrower, bool _sameAsset) external;
 
     function accrueInterestAndGetConfig(address _silo) external returns (ConfigData memory);
 
