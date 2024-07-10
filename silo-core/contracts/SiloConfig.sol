@@ -329,7 +329,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
     function getCollateralShareTokenAndSiloToken(address _silo, ISilo.CollateralType _collateralType)
         external
         view
-        returns (address shareToken, address siloToken)
+        returns (address shareToken, address asset)
     {
         if (_silo == _SILO0) {
             return _collateralType == ISilo.CollateralType.Collateral
