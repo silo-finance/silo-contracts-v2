@@ -32,7 +32,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
     address private immutable _TOKEN0;
 
     /// @dev Token that represents a share in total protected deposits of Silo
-    address private immutable _PROTECTED_COLLATERAL_SHARE_TOKEN0;
+    address public immutable _PROTECTED_COLLATERAL_SHARE_TOKEN0; // Munging: private -> public
     /// @dev Token that represents a share in total deposits of Silo
     address private immutable _COLLATERAL_SHARE_TOKEN0;
     /// @dev Token that represents a share in total debt of Silo
@@ -57,11 +57,11 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
     address private immutable _TOKEN1;
 
     /// @dev Token that represents a share in total protected deposits of Silo
-    address private immutable _PROTECTED_COLLATERAL_SHARE_TOKEN1;
+    address private _PROTECTED_COLLATERAL_SHARE_TOKEN1; // Munging: removed immutable
     /// @dev Token that represents a share in total deposits of Silo
-    address private immutable _COLLATERAL_SHARE_TOKEN1;
+    address private _COLLATERAL_SHARE_TOKEN1; // Munging: removed immutable
     /// @dev Token that represents a share in total debt of Silo
-    address private immutable _DEBT_SHARE_TOKEN1;
+    address private _DEBT_SHARE_TOKEN1; // Munging: removed immutable
 
     address private immutable _SOLVENCY_ORACLE1;
     address private immutable _MAX_LTV_ORACLE1;
@@ -249,6 +249,14 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
         entered = status != CrossEntrancy.NOT_ENTERED;
     }
 
+    function wasCalled_crossNonReentrantBefore() external view returns (bool called) {
+        called = was_crossNonReentrantBeforeCalled;
+    }
+
+    function wasCalled_crossNonReentrantAfter() external view returns (bool called) {
+        called = was_crossNonReentrantAfterCalled;
+    }
+
     /// @inheritdoc ISiloConfig
     function getSilos() external view returns (address silo0, address silo1) {
         return (_SILO0, _SILO1);
@@ -323,7 +331,8 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
         }
     }
 
-    function _callAccrueInterest(address _silo) internal {
+    function _callAccrueInterest(address _silo) internal 
+    {
         ISilo(_silo).accrueInterestForConfig(
             _silo == _SILO0 ? _INTEREST_RATE_MODEL0 : _INTEREST_RATE_MODEL1,
             _DAO_FEE,
@@ -442,6 +451,20 @@ contract SiloConfig is ISiloConfig, CrossReentrancy {
     }
 
     function _onlySiloOrTokenOrLiquidation() internal view virtual {
+        if (msg.sender == _SILO0) return;
+        if (msg.sender == _SILO1) return;
+        if (msg.sender == _COLLATERAL_SHARE_TOKEN0) return;
+        if (msg.sender == _LIQUIDATION_MODULE) return;
+        if (msg.sender == _COLLATERAL_SHARE_TOKEN1) return;
+        if (msg.sender == _PROTECTED_COLLATERAL_SHARE_TOKEN0) return;
+        if (msg.sender == _PROTECTED_COLLATERAL_SHARE_TOKEN1) return;
+        if (msg.sender == _DEBT_SHARE_TOKEN0) return;
+        if (msg.sender == _DEBT_SHARE_TOKEN1) return;
+        
+        revert OnlySiloOrLiquidationModule();
+    }
+
+    function _onlySiloOrTokenOrLiquidation_orig() internal view virtual {
         if (msg.sender != _SILO0 &&
             msg.sender != _SILO1 &&
             msg.sender != _LIQUIDATION_MODULE &&

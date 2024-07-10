@@ -18,13 +18,18 @@ abstract contract CrossReentrancy {
     // transaction's gas, it is best to keep them low in cases like this one, to
     // increase the likelihood of the full refund coming into effect.
     uint256 internal _crossReentrantStatus;
+    bool was_crossNonReentrantBeforeCalled;
+    bool was_crossNonReentrantAfterCalled;
 
     constructor() {
         _crossReentrantStatus = CrossEntrancy.NOT_ENTERED;
+        was_crossNonReentrantBeforeCalled = false;
+        was_crossNonReentrantAfterCalled = false;
     }
 
     /// @dev please notice, this internal method is open
     function _crossNonReentrantBefore(uint256 _action) internal virtual {
+        was_crossNonReentrantBeforeCalled = true;
         uint256 crossReentrantStatusCached = _crossReentrantStatus;
 
         if (crossReentrantStatusCached == CrossEntrancy.ENTERED && _action == (Hook.LIQUIDATION | Hook.REPAY)) {
@@ -55,6 +60,7 @@ abstract contract CrossReentrancy {
     }
 
     function _crossNonReentrantAfter() internal virtual {
+        was_crossNonReentrantAfterCalled = true;
         uint256 currentStatus = _crossReentrantStatus;
 
         // Leaving it unprotected may lead to a bug in the reentrancy protection system,

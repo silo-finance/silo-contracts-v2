@@ -221,4 +221,8 @@ interface ISiloConfig {
         external
         view
         returns (address protectedShareToken, address collateralShareToken, address debtShareToken);
+
+    function wasCalled_crossNonReentrantBefore() external view returns (bool);
+
+    function wasCalled_crossNonReentrantAfter() external view returns (bool);
 }
