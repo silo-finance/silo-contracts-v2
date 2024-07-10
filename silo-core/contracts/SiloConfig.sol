@@ -241,6 +241,14 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
         (collateralConfig, debtConfig) = _getOrderedConfigs(_silo, debtInfo, _action);
     }
 
+    function accrueInterestForSilo(address _silo) external {
+        ISilo(_silo).accrueInterestForConfig(
+            _silo == _SILO0 ? _INTEREST_RATE_MODEL0 : _INTEREST_RATE_MODEL1,
+            _DAO_FEE,
+            _DEPLOYER_FEE
+        );
+    }
+
     function reentrancyGuardEntered() external view virtual returns (bool entered) {
         entered = _reentrancyGuardEntered();
     }
@@ -313,6 +321,24 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
         } else if (_silo == _SILO1) {
             asset = _TOKEN1;
             flashloanFee = _FLASHLOAN_FEE1;
+        } else {
+            revert WrongSilo();
+        }
+    }
+
+    function getCollateralShareTokenAndSiloToken(address _silo, ISilo.CollateralType _collateralType)
+        external
+        view
+        returns (address shareToken, address siloToken)
+    {
+        if (_silo == _SILO0) {
+            return _collateralType == ISilo.CollateralType.Collateral
+                ? (_COLLATERAL_SHARE_TOKEN0, _TOKEN0)
+                : (_PROTECTED_COLLATERAL_SHARE_TOKEN0, _TOKEN0);
+        } else if (_silo == _SILO1) {
+            return _collateralType == ISilo.CollateralType.Collateral
+                ? (_COLLATERAL_SHARE_TOKEN1, _TOKEN1)
+                : (_PROTECTED_COLLATERAL_SHARE_TOKEN1, _TOKEN1);
         } else {
             revert WrongSilo();
         }
