@@ -101,7 +101,7 @@ contract MaxLiquidationDustTest is SiloLittleHelper, Test {
 
         _assertLTV100();
 
-        _executeLiquidation(_sameAsset, _receiveSToken);
+        _executeDustLiquidation(_sameAsset, _receiveSToken);
 
         _assertBorrowerIsSolvent();
         _ensureBorrowerHasNoDebt();
@@ -146,7 +146,7 @@ contract MaxLiquidationDustTest is SiloLittleHelper, Test {
 
         _assertLTV100();
 
-        _executeLiquidation(_sameAsset, _receiveSToken);
+        _executeDustLiquidation(_sameAsset, _receiveSToken);
 
         _assertBorrowerIsSolvent();
         _ensureBorrowerHasNoDebt();
@@ -188,7 +188,7 @@ contract MaxLiquidationDustTest is SiloLittleHelper, Test {
         _assertBorrowerIsNotSolvent({_hasBadDebt: false}); // TODO make tests for bad debt as well
 
         bool _receiveSToken = true;
-        _executeLiquidation(_sameAsset, _receiveSToken);
+        _executeDustLiquidation(_sameAsset, _receiveSToken);
 
         _assertBorrowerIsSolvent();
         _ensureBorrowerHasNoDebt();
@@ -227,7 +227,7 @@ contract MaxLiquidationDustTest is SiloLittleHelper, Test {
 
         _assertBorrowerIsNotSolvent({_hasBadDebt: false}); // TODO make tests for bad debt as well
 
-        _executeLiquidation(_sameAsset, _receiveSToken);
+        _executeDustLiquidation(_sameAsset, _receiveSToken);
 
         _assertBorrowerIsSolvent();
         _ensureBorrowerHasDebt();
@@ -268,7 +268,7 @@ contract MaxLiquidationDustTest is SiloLittleHelper, Test {
 
         _assertBorrowerIsNotSolvent({_hasBadDebt: false});
 
-        _executeLiquidation(_sameAsset, _receiveSToken);
+        _executeDustLiquidation(_sameAsset, _receiveSToken);
 
         _assertBorrowerIsSolvent();
         _ensureBorrowerHasDebt();
@@ -354,7 +354,7 @@ contract MaxLiquidationDustTest is SiloLittleHelper, Test {
         assertEq(ltv, 1e18, "[_assertLTV100] LTV");
     }
 
-    function _executeLiquidation(bool _sameToken, bool _receiveSToken) private {
+    function _executeDustLiquidation(bool _sameToken, bool _receiveSToken) private {
         uint256 siloBalanceBefore0 = token0.balanceOf(address(silo0));
         uint256 siloBalanceBefore1 = token1.balanceOf(address(silo1));
 
@@ -364,7 +364,7 @@ contract MaxLiquidationDustTest is SiloLittleHelper, Test {
             uint256 collateralToLiquidate, uint256 debtToRepay
         ) = partialLiquidation.maxLiquidation(address(silo1), borrower);
 
-        (uint256 withdrawCollateral, uint256 repayDebtAssets) = _executeMaxPartialLiquidation(_sameToken, _receiveSToken);
+        (uint256 withdrawCollateral, uint256 repayDebtAssets) = _executeMaxPartialDustLiquidation(_sameToken, _receiveSToken);
 
         if (_sameToken) {
             assertEq(
@@ -427,20 +427,25 @@ contract MaxLiquidationDustTest is SiloLittleHelper, Test {
         }
     }
 
-    function _executeMaxPartialLiquidation(bool _sameToken, bool _receiveSToken)
+    function _executeMaxPartialDustLiquidation(bool _sameToken, bool _receiveSToken)
         private
         returns (uint256 withdrawCollateral, uint256 repayDebtAssets)
     {
-        // to test max, we want to provide higher `_debtToCover` and we expect not higher results
-        uint256 debtToCover = type(uint256).max;
-
         (
             uint256 collateralToLiquidate, uint256 debtToRepay
         ) = partialLiquidation.maxLiquidation(address(silo1), borrower);
 
-        emit log_named_decimal_uint("[_executeMaxPartialLiquidation] ltv before", silo0.getLtv(borrower), 16);
+        emit log_named_decimal_uint("[_executeMaxPartialDustLiquidation] ltv before", silo0.getLtv(borrower), 16);
 
-        // TODO try do liquidate less and then again the rest of debt, will that summ up?
+        // with dust there should be not possible to liquidate with any other amount than full.
+        _expectRevertWithDebtToCoverTooSmall(_sameToken, _receiveSToken, debtToRepay / 2);
+        _expectRevertWithDebtToCoverTooSmall(_sameToken, _receiveSToken, debtToRepay - 1);
+        _expectRevertWithDebtToCoverTooSmall(_sameToken, _receiveSToken, 1);
+
+        // to test max, we want to provide higher `_debtToCover` and we expect not higher results
+        // also to make sure we can execute with exact `debtToRepay` we will pick exact amount conditionally
+        uint256 debtToCover = debtToRepay % 2 == 0 ? type(uint256).max : debtToRepay;
+
         (withdrawCollateral, repayDebtAssets) = partialLiquidation.liquidationCall(
             address(silo1),
             address(_sameToken ? token1 : token0),
@@ -450,10 +455,14 @@ contract MaxLiquidationDustTest is SiloLittleHelper, Test {
             _receiveSToken
         );
 
-        emit log_named_decimal_uint("[_executeMaxPartialLiquidation] ltv after", silo0.getLtv(borrower), 16);
+        assertEq(silo0.getLtv(borrower), 0, "[_executeMaxPartialDustLiquidation] expect full liquidation with dust");
+        assertEq(debtToRepay, repayDebtAssets, "[_executeMaxPartialDustLiquidation] debt: maxLiquidation == result");
 
-        assertEq(debtToRepay, repayDebtAssets, "debt: maxLiquidation == result");
-        assertEq(collateralToLiquidate, withdrawCollateral, "collateral: max == result");
+        assertEq(
+            collateralToLiquidate,
+            withdrawCollateral,
+            "[_executeMaxPartialDustLiquidation] collateral: max == result"
+        );
     }
 
     function _findLTV100() private {
@@ -494,5 +503,18 @@ contract MaxLiquidationDustTest is SiloLittleHelper, Test {
 
             vm.warp(block.timestamp + i * 60 * 60 * 24);
         }
+    }
+
+    function _expectRevertWithDebtToCoverTooSmall(bool _sameToken, bool _receiveSToken, uint256 _debtToCover) private {
+        vm.expectRevert(IPartialLiquidation.DebtToCoverTooSmall.selector);
+
+        partialLiquidation.liquidationCall(
+            address(silo1),
+            address(_sameToken ? token1 : token0),
+            address(token1),
+            borrower,
+            _debtToCover,
+            _receiveSToken
+        );
     }
 }

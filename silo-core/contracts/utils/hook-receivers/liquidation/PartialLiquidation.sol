@@ -52,7 +52,7 @@ contract PartialLiquidation is SiloStorage, IPartialLiquidation, IHookReceiver {
         address _collateralAsset,
         address _debtAsset,
         address _borrower,
-        uint256 _debtToCover,
+        uint256 _debtToCover, // TODO check how we apply limitations
         bool _receiveSToken
     )
         external
