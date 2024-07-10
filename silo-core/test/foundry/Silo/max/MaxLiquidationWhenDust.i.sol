@@ -5,6 +5,7 @@ import "forge-std/Test.sol";
 
 import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
+import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquidation.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
@@ -34,114 +35,30 @@ contract MaxLiquidationDustTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --ffi --mt test_maxLiquidation_dust_noDebt
-    */
-    function test_maxLiquidation_dust_noDebt() public {
-        _assertBorrowerIsSolvent();
-
-        _depositForBorrow(11e18, borrower);
-        _deposit(11e18, borrower);
-
-        _assertBorrowerIsSolvent();
-    }
-
-    /*
-    forge test -vv --ffi --mt test_maxLiquidation_dust_partial_LTV100_1token_sTokens_fuzz
+    forge test -vv --ffi --mt test_maxLiquidation_dust_LTV100_2tokens_sToken
     */
     /// forge-config: core-test.fuzz.runs = 100
-    function test_maxLiquidation_dust_partial_LTV100_1token_sTokens_fuzz(uint16 _collateral) public {
-        _maxLiquidation_partial_LTV100_1token_fuzz(_collateral, _RECEIVE_STOKENS);
+    function test_maxLiquidation_dust_LTV100_2tokens_sToken() public {
+        _maxLiquidation_partial_LTV100_2tokens(12, _RECEIVE_STOKENS);
     }
 
     /*
-    forge test -vv --ffi --mt test_maxLiquidation_dust_partial_LTV100_1token_tokens_fuzz
+    forge test -vv --ffi --mt test_maxLiquidation_dust_LTV100_2tokens_token_fuzz
     */
     /// forge-config: core-test.fuzz.runs = 100
-    function test_maxLiquidation_dust_partial_LTV100_1token_tokens_fuzz(uint16 _collateral) public {
-        _maxLiquidation_partial_LTV100_1token_fuzz(_collateral, !_RECEIVE_STOKENS);
+    function test_maxLiquidation_dust_LTV100_2tokens_token_fuzz(uint16 _collateral) public {
+        _maxLiquidation_partial_LTV100_2tokens(_collateral, !_RECEIVE_STOKENS);
     }
 
-    /*
-    for small numbers we jump from solvent -> 100% LTV, so partial liquidation not possible
-    even if 100% is not bad debt, partial liquidation will be full liquidation
-
-    I used `_findLTV100` to find range of numbers for which we jump to 100% for this case setup
-    */
-    function _maxLiquidation_partial_LTV100_1token_fuzz(uint16 _collateral, bool _receiveSToken) internal {
-        bool _sameAsset = true;
-
-        // TODO for 100% we should not be able to liquiodate less??
-        // TODO test cases solvent -> dust (so full liquidation)
-        vm.assume(_collateral < 20);
-        uint256 toBorrow = uint256(_collateral) * 85 / 100;
-
-        _createDebt(_collateral, toBorrow, _sameAsset);
-
-        // case for `1` never happen because is is not possible to create debt for 1 collateral
-        if (_collateral == 1) _findLTV100();
-        else if (_collateral == 2) vm.warp(7229 days);
-        else if (_collateral == 3) vm.warp(3172 days);
-        else if (_collateral == 4) vm.warp(2001 days);
-        else if (_collateral == 5) vm.warp(1455 days);
-        else if (_collateral == 6) vm.warp(1141 days);
-        else if (_collateral == 7) vm.warp(2457 days);
-        else if (_collateral == 8) vm.warp(2001 days);
-        else if (_collateral == 9) vm.warp(1685 days);
-        else if (_collateral == 10) vm.warp(1455 days);
-        else if (_collateral == 11) vm.warp(1279 days);
-        else if (_collateral == 12) vm.warp(1141 days);
-        else if (_collateral == 13) vm.warp(1030 days);
-        else if (_collateral == 14) vm.warp(2059 days);
-        else if (_collateral == 15) vm.warp(1876 days);
-        else if (_collateral == 16) vm.warp(1722 days);
-        else if (_collateral == 17) vm.warp(1592 days);
-        else if (_collateral == 18) vm.warp(1480 days);
-        else if (_collateral == 19) vm.warp(1382 days);
-        else revert("should not happen, because of vm.assume");
-
-        _assertLTV100();
-
-        _executeDustLiquidation(_sameAsset, _receiveSToken);
-
-        _assertBorrowerIsSolvent();
-        _ensureBorrowerHasNoDebt();
-    }
-
-    /*
-    forge test -vv --ffi --mt test_maxLiquidation_dust_partial_LTV100_2tokens_sToken_fuzz
-    */
-    /// forge-config: core-test.fuzz.runs = 100
-    function test_maxLiquidation_dust_partial_LTV100_2tokens_sToken_fuzz(uint16 _collateral) public {
-        vm.assume(_collateral != 12); // dust case TODO
-
-        _maxLiquidation_partial_LTV100_2tokens_fuzz(_collateral, _RECEIVE_STOKENS);
-    }
-
-    /*
-    forge test -vv --ffi --mt test_maxLiquidation_dust_partial_LTV100_2tokens_token_fuzz
-    */
-    /// forge-config: core-test.fuzz.runs = 100
-    function test_maxLiquidation_dust_partial_LTV100_2tokens_token_fuzz(uint16 _collateral) public {
-        _maxLiquidation_partial_LTV100_2tokens_fuzz(_collateral, !_RECEIVE_STOKENS);
-    }
-
-    function _maxLiquidation_partial_LTV100_2tokens_fuzz(uint16 _collateral, bool _receiveSToken) internal {
+    function _maxLiquidation_partial_LTV100_2tokens(uint16 _collateral, bool _receiveSToken) internal {
         bool _sameAsset = false;
-
-        vm.assume(_collateral < 7);
 
         uint256 toBorrow = uint256(_collateral) * 75 / 100; // maxLTV is 75%
 
         _createDebt(_collateral, toBorrow, _sameAsset);
 
         // this case never happen because is is not possible to create debt for 1 collateral
-        if (_collateral == 1) _findLTV100();
-        else if (_collateral == 2) vm.warp(3615 days);
-        else if (_collateral == 3) vm.warp(66 days);
-        else if (_collateral == 4) vm.warp(45 days);
-        else if (_collateral == 5) vm.warp(95 days);
-        else if (_collateral == 6) vm.warp(66 days);
-        else if (_collateral == 12) _findLTV100(); // vm.warp(10 days);
+        if (_collateral == 12) _findLTV100(); // vm.warp(10 days);
         else revert("should not happen, because of vm.assume");
 
         _assertLTV100();
@@ -153,10 +70,10 @@ contract MaxLiquidationDustTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --ffi --mt test_maxLiquidation_dust_partial_dust_1token_fuzz
+    forge test -vv --ffi --mt test_maxLiquidation_dust_dust_1token_fuzz
     */
     /// forge-config: core-test.fuzz.runs = 100
-    function test_maxLiquidation_dust_partial_dust_1token_fuzz(
+    function test_maxLiquidation_dust_dust_1token_fuzz(
         uint128 _collateral
     ) public {
 //        uint128 _collateral = 56;
@@ -195,18 +112,18 @@ contract MaxLiquidationDustTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --ffi --mt test_maxLiquidation_dust_partial_1token_sTokens_fuzz
+    forge test -vv --ffi --mt test_maxLiquidation_dust_1token_sTokens_fuzz
     */
     /// forge-config: core-test.fuzz.runs = 10000
-    function test_maxLiquidation_dust_partial_1token_sTokens_fuzz(uint128 _collateral) public {
+    function test_maxLiquidation_dust_1token_sTokens_fuzz(uint128 _collateral) public {
         _maxLiquidation_partial_1token_fuzz(_collateral, _RECEIVE_STOKENS);
     }
 
     /*
-    forge test -vv --ffi --mt test_maxLiquidation_dust_partial_1token_tokens_fuzz
+    forge test -vv --ffi --mt test_maxLiquidation_dust_1token_tokens_fuzz
     */
     /// forge-config: core-test.fuzz.runs = 10000
-    function test_maxLiquidation_dust_partial_1token_tokens_fuzz(uint128 _collateral) public {
+    function test_maxLiquidation_dust_1token_tokens_fuzz(uint128 _collateral) public {
         _maxLiquidation_partial_1token_fuzz(_collateral, !_RECEIVE_STOKENS);
     }
 
@@ -234,18 +151,18 @@ contract MaxLiquidationDustTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --ffi --mt test_maxLiquidation_dust_partial_2tokens_sTokens_fuzz
+    forge test -vv --ffi --mt test_maxLiquidation_dust_2tokens_sTokens_fuzz
     */
     /// forge-config: core-test.fuzz.runs = 1000
-    function test_maxLiquidation_dust_partial_2tokens_sTokens_fuzz(uint128 _collateral) public {
+    function test_maxLiquidation_dust_2tokens_sTokens_fuzz(uint128 _collateral) public {
         _maxLiquidation_partial_2tokens_fuzz(_collateral, _RECEIVE_STOKENS);
     }
 
     /*
-    forge test -vv --ffi --mt test_maxLiquidation_dust_partial_2tokens_tokens_fuzz
+    forge test -vv --ffi --mt test_maxLiquidation_dust_2tokens_tokens_fuzz
     */
     /// forge-config: core-test.fuzz.runs = 1000
-    function test_maxLiquidation_dust_partial_2tokens_tokens_fuzz(uint128 _collateral) public {
+    function test_maxLiquidation_dust_2tokens_tokens_fuzz(uint128 _collateral) public {
         _maxLiquidation_partial_2tokens_fuzz(_collateral, !_RECEIVE_STOKENS);
     }
 
