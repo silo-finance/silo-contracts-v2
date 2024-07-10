@@ -49,7 +49,7 @@ library Actions {
         siloConfig.accrueInterestForSilo(address(this));
 
         (
-            address shareToken, address siloToken
+            address shareToken, address asset
         ) = siloConfig.getCollateralShareTokenAndSiloToken(address(this), _collateralType);
 
         (assets, shares) = SiloERC4626Lib.deposit(
