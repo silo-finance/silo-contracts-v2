@@ -75,7 +75,7 @@ contract TransitionCollateralReentrancyTest is SiloLittleHelper, Test, PartialLi
             uint256 collateralToLiquidate, uint256 debtToRepay
         ) = partialLiquidation.maxLiquidation(siloWithDebt, borrower);
 
-        assertEq(collateralToLiquidate, 5, "collateralToLiquidate");
+        assertEq(collateralToLiquidate, 3, "collateralToLiquidate (5 - 2 underestimation)");
         assertEq(debtToRepay, 5, "debtToRepay");
 
         vm.expectRevert(ISiloConfig.CrossReentrantCall.selector);

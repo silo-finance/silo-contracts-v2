@@ -363,7 +363,7 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
         assertGt(silo0.getLtv(BORROWER), 1e18, "expect bad debt");
 
         (uint256 collateralToLiquidate, uint256 debtToRepay) = partialLiquidation.maxLiquidation(address(silo1), BORROWER);
-        assertEq(collateralToLiquidate, COLLATERAL, "expect full collateralToLiquidate on bad debt");
+        assertEq(collateralToLiquidate, COLLATERAL - 2, "expect full collateralToLiquidate on bad debt (-2 underestimation)");
         assertGt(debtToRepay, DEBT, "debtToRepay must be higher that original");
 
         uint256 interest = 61_643835616429440000;
@@ -511,7 +511,7 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
         uint256 maxRepay = silo1.maxRepay(BORROWER);
 
         (uint256 collateralToLiquidate, uint256 debtToRepay) = partialLiquidation.maxLiquidation(address(silo1), BORROWER);
-        assertEq(collateralToLiquidate, COLLATERAL, "expect full collateralToLiquidate on bad debt");
+        assertEq(collateralToLiquidate, COLLATERAL - 2, "expect full collateralToLiquidate on bad debt (-2 for underestimation)");
         assertEq(debtToRepay, maxRepay, "debtToRepay == maxRepay");
 
         token1.mint(liquidator, debtToCover);
@@ -563,7 +563,8 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
         } else {
             assertEq(
                 token0.balanceOf(liquidator),
-                collateralToLiquidate,
+                // underestimation is 2, but this is bad debt, so we liquidated full collateral
+                collateralToLiquidate + 2,
                 "[!_receiveSToken] expect to have liquidated collateral"
             );
 
