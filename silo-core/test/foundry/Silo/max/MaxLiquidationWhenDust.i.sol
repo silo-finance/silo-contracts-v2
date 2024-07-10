@@ -13,9 +13,9 @@ import {MintableToken} from "../../_common/MintableToken.sol";
 import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
 
 /*
-    forge test -vv --ffi --mc MaxLiquidationTest
+    forge test -vv --ffi --mc MaxLiquidationDustTest
 */
-contract MaxLiquidationTest is SiloLittleHelper, Test {
+contract MaxLiquidationDustTest is SiloLittleHelper, Test {
     using SiloLensLib for ISilo;
     bool internal constant _RECEIVE_STOKENS = true;
 
@@ -34,9 +34,9 @@ contract MaxLiquidationTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --ffi --mt test_maxLiquidation_noDebt
+    forge test -vv --ffi --mt test_maxLiquidation_dust_noDebt
     */
-    function test_maxLiquidation_noDebt() public {
+    function test_maxLiquidation_dust_noDebt() public {
         _assertBorrowerIsSolvent();
 
         _depositForBorrow(11e18, borrower);
@@ -46,18 +46,18 @@ contract MaxLiquidationTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --ffi --mt test_maxLiquidation_partial_LTV100_1token_sTokens_fuzz
+    forge test -vv --ffi --mt test_maxLiquidation_dust_partial_LTV100_1token_sTokens_fuzz
     */
     /// forge-config: core-test.fuzz.runs = 100
-    function test_maxLiquidation_partial_LTV100_1token_sTokens_fuzz(uint16 _collateral) public {
+    function test_maxLiquidation_dust_partial_LTV100_1token_sTokens_fuzz(uint16 _collateral) public {
         _maxLiquidation_partial_LTV100_1token_fuzz(_collateral, _RECEIVE_STOKENS);
     }
 
     /*
-    forge test -vv --ffi --mt test_maxLiquidation_partial_LTV100_1token_tokens_fuzz
+    forge test -vv --ffi --mt test_maxLiquidation_dust_partial_LTV100_1token_tokens_fuzz
     */
     /// forge-config: core-test.fuzz.runs = 100
-    function test_maxLiquidation_partial_LTV100_1token_tokens_fuzz(uint16 _collateral) public {
+    function test_maxLiquidation_dust_partial_LTV100_1token_tokens_fuzz(uint16 _collateral) public {
         _maxLiquidation_partial_LTV100_1token_fuzz(_collateral, !_RECEIVE_STOKENS);
     }
 
@@ -108,20 +108,20 @@ contract MaxLiquidationTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --ffi --mt test_maxLiquidation_partial_LTV100_2tokens_sToken_fuzz
+    forge test -vv --ffi --mt test_maxLiquidation_dust_partial_LTV100_2tokens_sToken_fuzz
     */
     /// forge-config: core-test.fuzz.runs = 100
-    function test_maxLiquidation_partial_LTV100_2tokens_sToken_fuzz(uint16 _collateral) public {
+    function test_maxLiquidation_dust_partial_LTV100_2tokens_sToken_fuzz(uint16 _collateral) public {
         vm.assume(_collateral != 12); // dust case TODO
 
         _maxLiquidation_partial_LTV100_2tokens_fuzz(_collateral, _RECEIVE_STOKENS);
     }
 
     /*
-    forge test -vv --ffi --mt test_maxLiquidation_partial_LTV100_2tokens_token_fuzz
+    forge test -vv --ffi --mt test_maxLiquidation_dust_partial_LTV100_2tokens_token_fuzz
     */
     /// forge-config: core-test.fuzz.runs = 100
-    function test_maxLiquidation_partial_LTV100_2tokens_token_fuzz(uint16 _collateral) public {
+    function test_maxLiquidation_dust_partial_LTV100_2tokens_token_fuzz(uint16 _collateral) public {
         _maxLiquidation_partial_LTV100_2tokens_fuzz(_collateral, !_RECEIVE_STOKENS);
     }
 
@@ -153,10 +153,10 @@ contract MaxLiquidationTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --ffi --mt test_maxLiquidation_partial_dust_1token_fuzz
+    forge test -vv --ffi --mt test_maxLiquidation_dust_partial_dust_1token_fuzz
     */
     /// forge-config: core-test.fuzz.runs = 100
-    function test_maxLiquidation_partial_dust_1token_fuzz(
+    function test_maxLiquidation_dust_partial_dust_1token_fuzz(
         uint128 _collateral
     ) public {
 //        uint128 _collateral = 56;
@@ -195,18 +195,18 @@ contract MaxLiquidationTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --ffi --mt test_maxLiquidation_partial_1token_sTokens_fuzz
+    forge test -vv --ffi --mt test_maxLiquidation_dust_partial_1token_sTokens_fuzz
     */
     /// forge-config: core-test.fuzz.runs = 10000
-    function test_maxLiquidation_partial_1token_sTokens_fuzz(uint128 _collateral) public {
+    function test_maxLiquidation_dust_partial_1token_sTokens_fuzz(uint128 _collateral) public {
         _maxLiquidation_partial_1token_fuzz(_collateral, _RECEIVE_STOKENS);
     }
 
     /*
-    forge test -vv --ffi --mt test_maxLiquidation_partial_1token_tokens_fuzz
+    forge test -vv --ffi --mt test_maxLiquidation_dust_partial_1token_tokens_fuzz
     */
     /// forge-config: core-test.fuzz.runs = 10000
-    function test_maxLiquidation_partial_1token_tokens_fuzz(uint128 _collateral) public {
+    function test_maxLiquidation_dust_partial_1token_tokens_fuzz(uint128 _collateral) public {
         _maxLiquidation_partial_1token_fuzz(_collateral, !_RECEIVE_STOKENS);
     }
 
@@ -234,18 +234,18 @@ contract MaxLiquidationTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --ffi --mt test_maxLiquidation_partial_2tokens_sTokens_fuzz
+    forge test -vv --ffi --mt test_maxLiquidation_dust_partial_2tokens_sTokens_fuzz
     */
     /// forge-config: core-test.fuzz.runs = 1000
-    function test_maxLiquidation_partial_2tokens_sTokens_fuzz(uint128 _collateral) public {
+    function test_maxLiquidation_dust_partial_2tokens_sTokens_fuzz(uint128 _collateral) public {
         _maxLiquidation_partial_2tokens_fuzz(_collateral, _RECEIVE_STOKENS);
     }
 
     /*
-    forge test -vv --ffi --mt test_maxLiquidation_partial_2tokens_tokens_fuzz
+    forge test -vv --ffi --mt test_maxLiquidation_dust_partial_2tokens_tokens_fuzz
     */
     /// forge-config: core-test.fuzz.runs = 1000
-    function test_maxLiquidation_partial_2tokens_tokens_fuzz(uint128 _collateral) public {
+    function test_maxLiquidation_dust_partial_2tokens_tokens_fuzz(uint128 _collateral) public {
         _maxLiquidation_partial_2tokens_fuzz(_collateral, !_RECEIVE_STOKENS);
     }
 
@@ -275,15 +275,15 @@ contract MaxLiquidationTest is SiloLittleHelper, Test {
     }
 //
 //    /*
-//    forge test -vv --ffi --mt test_maxLiquidation_withInterest_fuzz
+//    forge test -vv --ffi --mt test_maxLiquidation_dust_withInterest_fuzz
 //    */
 //    /// forge-config: core-test.fuzz.runs = 1000
-//    function test_maxLiquidation_withInterest_1token_fuzz(uint128 _collateral) public {
+//    function test_maxLiquidation_dust_withInterest_1token_fuzz(uint128 _collateral) public {
 //        _maxLiquidation_withInterest(_collateral, SAME_ASSET);
 //    }
 //
 //    /// forge-config: core-test.fuzz.runs = 1000
-//    function test_maxLiquidation_withInterest_2tokens_fuzz(uint128 _collateral) public {
+//    function test_maxLiquidation_dust_withInterest_2tokens_fuzz(uint128 _collateral) public {
 //        _maxLiquidation_withInterest(_collateral, TWO_ASSETS);
 //    }
 //
