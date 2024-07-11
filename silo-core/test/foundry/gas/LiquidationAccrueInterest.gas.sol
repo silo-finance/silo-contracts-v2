@@ -40,7 +40,7 @@ contract LiquidationAccrueInterestGasTest is Gas, Test {
                 (address(silo1), address(token0), address(token1), BORROWER, ASSETS / 2, false)
             ),
             "LiquidationCall with accrue interest",
-            432247
+            433783
         );
     }
 }
