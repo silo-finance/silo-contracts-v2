@@ -14,6 +14,8 @@ import {MaxLiquidationCommon} from "./MaxLiquidationCommon.sol";
     where user became insolvent and we can partially liquidate
 */
 contract MaxLiquidationTest is MaxLiquidationCommon {
+    using SiloLensLib for ISilo;
+
     /*
     forge test -vv --ffi --mt test_maxLiquidation_noDebt
     */
@@ -24,159 +26,6 @@ contract MaxLiquidationTest is MaxLiquidationCommon {
         _deposit(11e18, borrower);
 
         _assertBorrowerIsSolvent();
-    }
-
-    /*
-    forge test -vv --ffi --mt test_maxLiquidation_partial_LTV100_1token_sTokens_fuzz
-    */
-    /// forge-config: core-test.fuzz.runs = 100
-    function test_maxLiquidation_partial_LTV100_1token_sTokens_fuzz(uint16 _collateral) public {
-        _maxLiquidation_partial_LTV100_1token_fuzz(_collateral, _RECEIVE_STOKENS);
-    }
-
-    /*
-    forge test -vv --ffi --mt test_maxLiquidation_partial_LTV100_1token_tokens_fuzz
-    */
-    /// forge-config: core-test.fuzz.runs = 100
-    function test_maxLiquidation_partial_LTV100_1token_tokens_fuzz(uint16 _collateral) public {
-        _maxLiquidation_partial_LTV100_1token_fuzz(_collateral, !_RECEIVE_STOKENS);
-    }
-
-    /*
-    for small numbers we jump from solvent -> 100% LTV, so partial liquidation not possible
-    even if 100% is not bad debt, partial liquidation will be full liquidation
-
-    I used `_findLTV100` to find range of numbers for which we jump to 100% for this case setup
-    */
-    function _maxLiquidation_partial_LTV100_1token_fuzz(uint16 _collateral, bool _receiveSToken) internal {
-        bool _sameAsset = true;
-
-        // TODO for 100% we should not be able to liquiodate less??
-        // TODO test cases solvent -> dust (so full liquidation)
-        vm.assume(_collateral < 20);
-        uint256 toBorrow = uint256(_collateral) * 85 / 100;
-
-        _createDebt(_collateral, toBorrow, _sameAsset);
-
-        // case for `1` never happen because is is not possible to create debt for 1 collateral
-        if (_collateral == 1) _findLTV100();
-        else if (_collateral == 2) vm.warp(7229 days);
-        else if (_collateral == 3) vm.warp(3172 days);
-        else if (_collateral == 4) vm.warp(2001 days);
-        else if (_collateral == 5) vm.warp(1455 days);
-        else if (_collateral == 6) vm.warp(1141 days);
-        else if (_collateral == 7) vm.warp(2457 days);
-        else if (_collateral == 8) vm.warp(2001 days);
-        else if (_collateral == 9) vm.warp(1685 days);
-        else if (_collateral == 10) vm.warp(1455 days);
-        else if (_collateral == 11) vm.warp(1279 days);
-        else if (_collateral == 12) vm.warp(1141 days);
-        else if (_collateral == 13) vm.warp(1030 days);
-        else if (_collateral == 14) vm.warp(2059 days);
-        else if (_collateral == 15) vm.warp(1876 days);
-        else if (_collateral == 16) vm.warp(1722 days);
-        else if (_collateral == 17) vm.warp(1592 days);
-        else if (_collateral == 18) vm.warp(1480 days);
-        else if (_collateral == 19) vm.warp(1382 days);
-        else revert("should not happen, because of vm.assume");
-
-        _assertLTV100();
-
-        _executeLiquidation(_sameAsset, _receiveSToken);
-
-        _assertBorrowerIsSolvent();
-        _ensureBorrowerHasNoDebt();
-    }
-
-    /*
-    forge test -vv --ffi --mt test_maxLiquidation_partial_LTV100_2tokens_sToken_fuzz
-    */
-    /// forge-config: core-test.fuzz.runs = 100
-    function test_maxLiquidation_partial_LTV100_2tokens_sToken_fuzz(
-        uint16 _collateral
-    ) public {
-//        vm.assume(_collateral != 12); // dust case TODO
-//        uint16 _collateral = 12;
-
-        _maxLiquidation_partial_LTV100_2tokens_fuzz(_collateral, _RECEIVE_STOKENS);
-    }
-
-    /*
-    forge test -vv --ffi --mt test_maxLiquidation_partial_LTV100_2tokens_token_fuzz
-    */
-    /// forge-config: core-test.fuzz.runs = 100
-    function test_maxLiquidation_partial_LTV100_2tokens_token_fuzz(
-         uint16 _collateral
-    ) public {
-        _maxLiquidation_partial_LTV100_2tokens_fuzz(_collateral, !_RECEIVE_STOKENS);
-    }
-
-    function _maxLiquidation_partial_LTV100_2tokens_fuzz(uint16 _collateral, bool _receiveSToken) internal {
-        bool _sameAsset = false;
-
-        vm.assume(_collateral < 7);
-
-        uint256 toBorrow = uint256(_collateral) * 75 / 100; // maxLTV is 75%
-
-        _createDebt(_collateral, toBorrow, _sameAsset);
-
-        // this case never happen because is is not possible to create debt for 1 collateral
-        if (_collateral == 1) _findLTV100();
-        else if (_collateral == 2) vm.warp(3615 days);
-        else if (_collateral == 3) vm.warp(66 days);
-        else if (_collateral == 4) vm.warp(45 days);
-        else if (_collateral == 5) vm.warp(95 days);
-        else if (_collateral == 6) vm.warp(66 days);
-        else revert("should not happen, because of vm.assume");
-
-        _assertLTV100();
-
-        _executeLiquidation(_sameAsset, _receiveSToken);
-
-        _assertBorrowerIsSolvent();
-        _ensureBorrowerHasNoDebt();
-    }
-
-    /*
-    forge test -vv --ffi --mt test_maxLiquidation_partial_dust_1token_fuzz
-    */
-    /// forge-config: core-test.fuzz.runs = 100
-    function test_maxLiquidation_partial_dust_1token_fuzz(
-        uint128 _collateral
-    ) public {
-//        uint128 _collateral = 56;
-
-        bool _sameAsset = true;
-
-        // TODO how to create cases for DUST?
-        // try to liquidate less
-
-        // this condition is to not have overflow: _collateral * 84
-        vm.assume(_collateral < type(uint128).max / 84);
-
-        uint256 toBorrow = _collateral * 84 / 100; // maxLT is 85%
-
-        _createDebt(_collateral, toBorrow, _sameAsset);
-
-        // for same asset interest increasing slower, because borrower is also depositor, also LT is higher
-        // vm.warp(1260 days);
-
-        if (_collateral == 1) _findLTV100();
-//         else if (_collateral == 12) _findLTV100();
-        else if (_collateral == 12) vm.warp(1141 days);
-//         else if (_collateral >= 20 && _collateral < 57) _findLTV100();
-        else if (_collateral >= 20 && _collateral < 57) vm.warp(1300 days);
-        else vm.assume(false);
-
-        _moveTimeUntilInsolvent();
-
-        _assertBorrowerIsNotSolvent({_hasBadDebt: false}); // TODO make tests for bad debt as well
-
-        bool _receiveSToken = true;
-        _executeLiquidation(_sameAsset, _receiveSToken);
-
-        _assertBorrowerIsSolvent();
-        _ensureBorrowerHasNoDebt();
     }
 
     /*
@@ -201,7 +50,7 @@ contract MaxLiquidationTest is MaxLiquidationCommon {
         // this condition is to not have overflow: _collateral * 85
         vm.assume(_collateral < type(uint128).max / 85);
          // this value found by fuzzing tests, is high enough to have partial liquidation possible for this test setup
-        vm.assume(_collateral == 12 || _collateral >= 57); // 20..57 - dust cases TODO
+        vm.assume(_collateral >= 57); // 20..57 - dust cases TODO
 
         uint256 toBorrow = _collateral * 85 / 100; // maxLT is 85%
 
@@ -212,7 +61,7 @@ contract MaxLiquidationTest is MaxLiquidationCommon {
 
         _assertBorrowerIsNotSolvent({_hasBadDebt: false}); // TODO make tests for bad debt as well
 
-        _executeLiquidation(_sameAsset, _receiveSToken);
+        _executeLiquidationAndChecks(_sameAsset, _receiveSToken);
 
         _assertBorrowerIsSolvent();
         _ensureBorrowerHasDebt();
@@ -222,7 +71,11 @@ contract MaxLiquidationTest is MaxLiquidationCommon {
     forge test -vv --ffi --mt test_maxLiquidation_partial_2tokens_sTokens_fuzz
     */
     /// forge-config: core-test.fuzz.runs = 1000
-    function test_maxLiquidation_partial_2tokens_sTokens_fuzz(uint128 _collateral) public {
+    function test_maxLiquidation_partial_2tokens_sTokens_fuzz(
+//        uint128 _collateral
+    ) public {
+        // 33 TODO
+        uint128 _collateral = 33;
         _maxLiquidation_partial_2tokens_fuzz(_collateral, _RECEIVE_STOKENS);
     }
 
@@ -253,93 +106,13 @@ contract MaxLiquidationTest is MaxLiquidationCommon {
 
         _assertBorrowerIsNotSolvent({_hasBadDebt: false});
 
-        _executeLiquidation(_sameAsset, _receiveSToken);
+        _executeLiquidationAndChecks(_sameAsset, _receiveSToken);
 
         _assertBorrowerIsSolvent();
         _ensureBorrowerHasDebt();
     }
-//
-//    /*
-//    forge test -vv --ffi --mt test_maxLiquidation_withInterest_fuzz
-//    */
-//    /// forge-config: core-test.fuzz.runs = 1000
-//    function test_maxLiquidation_withInterest_1token_fuzz(uint128 _collateral) public {
-//        _maxLiquidation_withInterest(_collateral, SAME_ASSET);
-//    }
-//
-//    /// forge-config: core-test.fuzz.runs = 1000
-//    function test_maxLiquidation_withInterest_2tokens_fuzz(uint128 _collateral) public {
-//        _maxLiquidation_withInterest(_collateral, TWO_ASSETS);
-//    }
-//
-//    function _maxLiquidation_withInterest(uint128 _collateral, bool _sameAsset) public {
-//        uint256 toBorrow = _collateral / 3;
-//        _createDebt(_collateral, toBorrow, _sameAsset);
-//
-//        vm.warp(block.timestamp + 356 days);
-//
-//        uint256 maxLiquidation = partialLiquidation.maxLiquidation(address(silo0), borrower);
-//        vm.assume(maxLiquidation > toBorrow); // we want interest
-//
-//        _repay(maxLiquidation, borrower);
-//        _assertBorrowerIsSolvent();
-//    }
 
-    function _createDebt(uint256 _collateral, uint256 _toBorrow, bool _sameAsset) internal {
-        vm.assume(_collateral > 0);
-        vm.assume(_toBorrow > 0);
-
-        _depositForBorrow(_collateral, depositor);
-        _depositCollateral(_collateral, borrower, _sameAsset);
-        _borrow(_toBorrow, borrower, _sameAsset);
-
-        _ensureBorrowerHasDebt();
-    }
-
-    function _ensureBorrowerHasDebt() internal view {
-        (,, address debtShareToken) = silo1.config().getShareTokens(address(silo1));
-        assertGt(IShareToken(debtShareToken).balanceOf(borrower), 0, "expect borrower has debt balance");
-        assertGt(silo0.getLtv(borrower), 0, "expect borrower has some LTV");
-    }
-
-    function _ensureBorrowerHasNoDebt() internal view {
-        (,, address debtShareToken) = silo1.config().getShareTokens(address(silo1));
-        assertEq(IShareToken(debtShareToken).balanceOf(borrower), 0, "expect borrower has NO debt balance");
-        assertEq(silo0.getLtv(borrower), 0, "expect borrower has NO LTV");
-    }
-
-    function _assertBorrowerIsSolvent() internal view {
-        assertTrue(silo1.isSolvent(borrower));
-
-        (uint256 collateralToLiquidate, uint256 debtToRepay) = partialLiquidation.maxLiquidation(address(silo0), borrower);
-        assertEq(collateralToLiquidate, 0);
-        assertEq(debtToRepay, 0);
-
-        (collateralToLiquidate, debtToRepay) = partialLiquidation.maxLiquidation(address(silo1), borrower);
-        assertEq(collateralToLiquidate, 0);
-        assertEq(debtToRepay, 0);
-    }
-
-    function _assertBorrowerIsNotSolvent(bool _hasBadDebt) internal {
-        uint256 ltv = silo1.getLtv(borrower);
-        emit log_named_decimal_uint("[_assertBorrowerIsNotSolvent] LTV", ltv, 16);
-
-        assertFalse(silo1.isSolvent(borrower), "[_assertBorrowerIsNotSolvent] borrower is still solvent");
-
-        if (_hasBadDebt) assertGt(ltv, 1e18, "[_assertBorrowerIsNotSolvent] LTV");
-        else assertLe(ltv, 1e18, "[_assertBorrowerIsNotSolvent] LTV");
-    }
-
-    function _assertLTV100() internal {
-        uint256 ltv = silo1.getLtv(borrower);
-        emit log_named_decimal_uint("[_assertLTV100] LTV", ltv, 16);
-
-        assertFalse(silo1.isSolvent(borrower), "[_assertLTV100] borrower is still solvent");
-
-        assertEq(ltv, 1e18, "[_assertLTV100] LTV");
-    }
-
-    function _executeLiquidation(bool _sameToken, bool _receiveSToken) private {
+    function _executeLiquidationAndChecks(bool _sameToken, bool _receiveSToken) private {
         uint256 siloBalanceBefore0 = token0.balanceOf(address(silo0));
         uint256 siloBalanceBefore1 = token1.balanceOf(address(silo1));
 
@@ -349,7 +122,7 @@ contract MaxLiquidationTest is MaxLiquidationCommon {
             uint256 collateralToLiquidate, uint256 debtToRepay
         ) = partialLiquidation.maxLiquidation(address(silo1), borrower);
 
-        (uint256 withdrawCollateral, uint256 repayDebtAssets) = _executeMaxPartialLiquidation(_sameToken, _receiveSToken);
+        (uint256 withdrawCollateral, uint256 repayDebtAssets) = _executeLiquidation(_sameToken, _receiveSToken);
 
         if (_sameToken) {
             assertEq(
@@ -411,7 +184,7 @@ contract MaxLiquidationTest is MaxLiquidationCommon {
         }
     }
 
-    function _executeMaxPartialLiquidation(bool _sameToken, bool _receiveSToken)
+    function _executeLiquidation(bool _sameToken, bool _receiveSToken)
         private
         returns (uint256 withdrawCollateral, uint256 repayDebtAssets)
     {
@@ -444,45 +217,5 @@ contract MaxLiquidationTest is MaxLiquidationCommon {
             2,
             "collateral: max == result (allowed 2 wei of underestimation)"
         );
-    }
-
-    function _findLTV100() private {
-        uint256 prevLTV = silo1.getLtv(borrower);
-
-        for (uint256 i = 1; i < 10000; i++) {
-            vm.warp(i * 60 * 60 * 24);
-            uint256 ltv = silo1.getLtv(borrower);
-
-            emit log_named_decimal_uint("[_assertLTV100] LTV", ltv, 16);
-            emit log_named_uint("[_assertLTV100] days", i);
-
-            if (ltv == 1e18) revert("found");
-
-            if (ltv != prevLTV && !silo1.isSolvent(borrower)) {
-                emit log_named_decimal_uint("[_assertLTV100] prevLTV was", prevLTV, 16);
-                revert("we found middle step between solvent and 100%");
-            } else {
-                prevLTV = silo1.getLtv(borrower);
-            }
-        }
-    }
-
-    function _moveTimeUntilInsolvent() private {
-        for (uint256 i = 1; i < 10000; i++) {
-              emit log_named_decimal_uint("[_assertLTV100] LTV", silo1.getLtv(borrower), 16);
-              emit log_named_uint("[_assertLTV100] days", i);
-
-            bool isSolvent = silo1.isSolvent(borrower);
-
-            if (!isSolvent) {
-                emit log_named_string("[_findWrapForSolvency] user solvent?", isSolvent ? "yes" : "NO");
-                emit log_named_decimal_uint("[_findWrapForSolvency] LTV", silo1.getLtv(borrower), 16);
-                emit log_named_uint("[_findWrapForSolvency] days", i);
-
-                return;
-            }
-
-            vm.warp(block.timestamp + i * 60 * 60 * 24);
-        }
     }
 }

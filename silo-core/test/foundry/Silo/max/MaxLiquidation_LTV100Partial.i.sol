@@ -16,18 +16,6 @@ contract MaxLiquidationLTV100PartialTest is MaxLiquidationCommon {
     using SiloLensLib for ISilo;
 
     /*
-    forge test -vv --ffi --mt test_maxLiquidation_noDebt
-    */
-    function test_maxLiquidation_noDebt() public {
-        _assertBorrowerIsSolvent();
-
-        _depositForBorrow(11e18, borrower);
-        _deposit(11e18, borrower);
-
-        _assertBorrowerIsSolvent();
-    }
-
-    /*
     forge test -vv --ffi --mt test_maxLiquidation_LTV100_partial_1token_sTokens_fuzz
     */
     /// forge-config: core-test.fuzz.runs = 100
