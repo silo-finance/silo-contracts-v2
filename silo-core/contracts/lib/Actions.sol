@@ -45,9 +45,12 @@ library Actions {
 
         ISiloConfig siloConfig = _shareStorage.siloConfig;
 
+        siloConfig.turnOnReentrancyProtection();
+        siloConfig.accrueInterestForSilo(address(this));
+
         (
             address shareToken, address asset
-        ) = siloConfig.accrueInterestAndGetConfigOptimised(Hook.DEPOSIT, _collateralType);
+        ) = siloConfig.getCollateralShareTokenAndSiloToken(address(this), _collateralType);
 
         (assets, shares) = SiloERC4626Lib.deposit(
             asset,
