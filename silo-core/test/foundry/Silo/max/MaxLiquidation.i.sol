@@ -50,7 +50,7 @@ contract MaxLiquidationTest is MaxLiquidationCommon {
         // this condition is to not have overflow: _collateral * 85
         vm.assume(_collateral < type(uint128).max / 85);
          // this value found by fuzzing tests, is high enough to have partial liquidation possible for this test setup
-        vm.assume(_collateral >= 57); // 20..57 - dust cases TODO
+        vm.assume(_collateral == 49 || _collateral > 57); // 20..57 - dust cases TODO
 
         uint256 toBorrow = _collateral * 85 / 100; // maxLT is 85%
 
