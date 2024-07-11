@@ -80,19 +80,20 @@ library Actions {
 
         _hookCallBeforeWithdraw(_shareStorage, _args);
 
-        (
-            ISiloConfig.ConfigData memory collateralConfig,
-            ISiloConfig.ConfigData memory debtConfig,
-            ISiloConfig.DebtInfo memory debtInfo
-        ) = siloConfig.accrueInterestAndGetConfigs(address(this), _args.owner, Hook.WITHDRAW);
+        siloConfig.turnOnReentrancyProtection();
+        siloConfig.accrueInterestForBothSilos();
 
-        if (collateralConfig.silo != debtConfig.silo) ISilo(debtConfig.silo).accrueInterest();
+        (
+            ISiloConfig.DepositConfig memory depositConfig,
+            ISiloConfig.ConfigData memory collateralConfig,
+            ISiloConfig.ConfigData memory debtConfig
+        ) = siloConfig.getConfigsForWithdraw(address(this), _args.owner);
 
         (assets, shares) = SiloERC4626Lib.withdraw(
-            collateralConfig.token,
+            depositConfig.token,
             _args.collateralType == ISilo.CollateralType.Collateral
-                ? collateralConfig.collateralShareToken
-                : collateralConfig.protectedShareToken,
+                ? depositConfig.collateralShareToken
+                : depositConfig.protectedShareToken,
             _args,
             _args.collateralType == ISilo.CollateralType.Collateral
                 ? SiloMathLib.liquidity(_totalAssets.assets, _totalDebtAssets.assets)
@@ -100,14 +101,14 @@ library Actions {
             _totalAssets
         );
 
-        if (!SiloSolvencyLib.depositWithoutDebt(debtInfo)) {
-            if (!debtInfo.sameAsset) {
+        if (depositConfig.silo == collateralConfig.silo) {
+            if (debtConfig.silo != collateralConfig.silo) {
                 collateralConfig.callSolvencyOracleBeforeQuote();
                 debtConfig.callSolvencyOracleBeforeQuote();
             }
 
             bool ownerIsSolvent = SiloSolvencyLib.isSolvent(
-                collateralConfig, debtConfig, debtInfo, _args.owner, ISilo.AccrueInterestInMemory.No
+                collateralConfig, debtConfig, _args.owner, ISilo.AccrueInterestInMemory.No
             );
 
             // `_args.owner` must be solvent

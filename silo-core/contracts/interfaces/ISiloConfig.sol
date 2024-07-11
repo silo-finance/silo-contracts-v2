@@ -115,6 +115,16 @@ interface ISiloConfig {
         bool callBeforeQuote;
     }
 
+    struct DepositConfig {
+        address silo;
+        address token;
+        address collateralShareToken;
+        address protectedShareToken;
+        uint256 daoFee;
+        uint256 deployerFee;
+        address interestRateModel;
+    }
+
     error OnlySilo();
     error OnlySiloOrHookReceiver();
     error OnlyShareToken();
@@ -159,6 +169,8 @@ interface ISiloConfig {
         ISilo.CollateralType _collateralType
     ) external returns (address shareToken, address asset);
 
+    function accrueInterestForBothSilos() external;
+
     /// @notice view method for checking cross Silo reentrancy flag
     /// @return entered true if the reentrancy guard is currently set to "entered", which indicates there is a
     /// `nonReentrant` function in the call stack.
@@ -197,6 +209,12 @@ interface ISiloConfig {
     /// @param _silo The address of the silo for which configuration data is being retrieved
     /// @return configData The configuration data for the specified silo
     function getConfig(address _silo) external view returns (ConfigData memory);
+
+    function getConfigsForWithdraw(address _silo, address _borrower) external view returns (
+        DepositConfig memory depositConfig,
+        ConfigData memory collateralConfig,
+        ConfigData memory debtConfig
+    );
 
     /// @notice Retrieves fee-related information for a specific silo
     /// @dev This function reverts for incorrect silo address input
