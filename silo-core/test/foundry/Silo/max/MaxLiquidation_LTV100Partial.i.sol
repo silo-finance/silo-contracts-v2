@@ -153,10 +153,11 @@ contract MaxLiquidationLTV100PartialTest is MaxLiquidationCommon {
                     "debt was repay to silo but collateral NOT withdrawn"
                 );
             } else {
-                uint256 siloExpectedBalance = siloBalanceBefore1 + repayDebtAssets - collateralToLiquidate;
-                uint256 diff = siloExpectedBalance - token1.balanceOf(address(silo1));
-                // 2 is maximum expected difference, because we underestimated `collateralToLiquidate` by 2
-                assertLe(diff, 2, "debt was repay to silo and collateral withdrawn");
+                _assertEqDiff(
+                    siloBalanceBefore1 + repayDebtAssets - collateralToLiquidate,
+                    token1.balanceOf(address(silo1)),
+                    "debt was repay to silo and collateral withdrawn"
+                );
             }
         } else {
             if (_receiveSToken) {
@@ -172,13 +173,17 @@ contract MaxLiquidationLTV100PartialTest is MaxLiquidationCommon {
                     "collateral was NOT moved to liquidator, because we using sToken"
                 );
             } else {
-                // 2 wei is acceptable diff because of underestimation
+                _assertEqDiff(
+                    siloBalanceBefore0 - collateralToLiquidate,
+                    token0.balanceOf(address(silo0)),
+                    "collateral was moved from silo"
+                );
 
-                uint256 siloBalanceDiff = (siloBalanceBefore0 - collateralToLiquidate) - token0.balanceOf(address(silo0));
-                assertLe(siloBalanceDiff, 2, "collateral was moved from silo");
-
-                uint256 liquidatorBalanceDiff = token0.balanceOf(address(this)) - (liquidatorBalanceBefore0 + collateralToLiquidate);
-                assertLe(liquidatorBalanceDiff, 2, "collateral was moved to liquidator");
+                _assertEqDiff(
+                    token0.balanceOf(address(this)),
+                    liquidatorBalanceBefore0 + collateralToLiquidate,
+                    "collateral was moved to liquidator"
+                );
             }
 
             assertEq(
@@ -217,10 +222,10 @@ contract MaxLiquidationLTV100PartialTest is MaxLiquidationCommon {
 
         assertEq(debtToRepay, repayDebtAssets, "debt: maxLiquidation == result");
 
-        assertLe(
-            withdrawCollateral - collateralToLiquidate,
-            2,
-            "collateral: max == result (allowed 2 wei of underestimation)"
+        _assertEqDiff(
+            withdrawCollateral,
+            collateralToLiquidate,
+            "collateral: max == result"
         );
     }
 }

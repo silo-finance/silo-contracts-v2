@@ -198,7 +198,10 @@ contract MaxLiquidationDustTest is MaxLiquidationCommon {
         assertEq(silo0.getLtv(borrower), 0, "[_executeMaxPartialDustLiquidation] expect full liquidation with dust");
         assertEq(debtToRepay, repayDebtAssets, "[_executeMaxPartialDustLiquidation] debt: maxLiquidation == result");
 
-        uint256 collateralDiff = withdrawCollateral - collateralToLiquidate;
-        assertLe(collateralDiff, 2, "[_executeMaxPartialDustLiquidation] collateral: max == result (up to 2 wei diff)");
+        _assertEqDiff(
+            withdrawCollateral,
+            collateralToLiquidate,
+            "[_executeMaxPartialDustLiquidation] collateral: max == result"
+        );
     }
 }

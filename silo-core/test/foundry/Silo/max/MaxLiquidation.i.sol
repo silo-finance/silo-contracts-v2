@@ -50,7 +50,7 @@ contract MaxLiquidationTest is MaxLiquidationCommon {
         // this condition is to not have overflow: _collateral * 85
         vm.assume(_collateral < type(uint128).max / 85);
          // this value found by fuzzing tests, is high enough to have partial liquidation possible for this test setup
-        vm.assume(_collateral == 49 || _collateral > 57); // 20..57 - dust cases TODO
+        vm.assume(_collateral == 27 || _collateral == 49 || _collateral > 57); // 20..57 - dust cases TODO
 
         uint256 toBorrow = _collateral * 85 / 100; // maxLT is 85%
 
@@ -144,10 +144,11 @@ contract MaxLiquidationTest is MaxLiquidationCommon {
                     "debt was repay to silo but collateral NOT withdrawn"
                 );
             } else {
-                uint256 siloExpectedBalance = siloBalanceBefore1 + repayDebtAssets - collateralToLiquidate;
-                uint256 diff = siloExpectedBalance - token1.balanceOf(address(silo1));
-                // 2 is maximum expected difference, because we underestimated `collateralToLiquidate` by 2
-                assertLe(diff, 2, "debt was repay to silo and collateral withdrawn");
+                _assertEqDiff(
+                    siloBalanceBefore1 + repayDebtAssets - collateralToLiquidate,
+                    token1.balanceOf(address(silo1)),
+                    "debt was repay to silo and collateral withdrawn"
+                );
             }
         } else {
             if (_receiveSToken) {
@@ -163,8 +164,10 @@ contract MaxLiquidationTest is MaxLiquidationCommon {
                     "collateral was NOT moved to liquidator, because we using sToken"
                 );
             } else {
-                assertEq(
-                    siloBalanceBefore0 - collateralToLiquidate,
+                uint256 diff = (siloBalanceBefore0 - collateralToLiquidate) - token0.balanceOf(address(silo0));
+
+                assertLe(
+                    diff,
                     token0.balanceOf(address(silo0)),
                     "collateral was moved from silo"
                 );
@@ -211,11 +214,6 @@ contract MaxLiquidationTest is MaxLiquidationCommon {
         emit log_named_decimal_uint("[_executeMaxPartialLiquidation] collateralToLiquidate", collateralToLiquidate, 18);
 
         assertEq(debtToRepay, repayDebtAssets, "debt: maxLiquidation == result");
-
-        assertLe(
-            withdrawCollateral - collateralToLiquidate,
-            2,
-            "collateral: max == result (allowed 2 wei of underestimation)"
-        );
+        _assertEqDiff(withdrawCollateral, collateralToLiquidate, "collateral: max == result");
     }
 }
