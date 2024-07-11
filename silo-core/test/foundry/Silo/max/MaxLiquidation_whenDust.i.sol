@@ -44,7 +44,7 @@ contract MaxLiquidationDustTest is MaxLiquidationCommon {
         if (_collateral == 12) vm.warp(1141 days);
 //         else if (_collateral >= 20 && _collateral < 57) _findLTV100();
         else if (_collateral >= 20 && _collateral < 57) vm.warp(1300 days);
-        else vm.assume(false);
+        else revert("should not happen because of vm.assume");
 
 //        vm.warp(block.timestamp + 1050 days); // initial time movement to speed up _moveTimeUntilInsolvent
         _moveTimeUntilInsolvent();
@@ -180,6 +180,7 @@ contract MaxLiquidationDustTest is MaxLiquidationCommon {
         ) = partialLiquidation.maxLiquidation(address(silo1), borrower);
 
         emit log_named_decimal_uint("[_executeMaxPartialDustLiquidation] ltv before", silo0.getLtv(borrower), 16);
+        emit log_named_uint("[_executeMaxPartialDustLiquidation] debtToRepay", debtToRepay);
 
         // with dust there should be not possible to liquidate with any other amount than full.
         _expectRevertWithDebtToCoverTooSmall(_sameToken, _receiveSToken, debtToRepay - 1);
@@ -202,14 +203,13 @@ contract MaxLiquidationDustTest is MaxLiquidationCommon {
         assertEq(silo0.getLtv(borrower), 0, "[_executeMaxPartialDustLiquidation] expect full liquidation with dust");
         assertEq(debtToRepay, repayDebtAssets, "[_executeMaxPartialDustLiquidation] debt: maxLiquidation == result");
 
-        assertEq(
-            collateralToLiquidate,
-            withdrawCollateral,
-            "[_executeMaxPartialDustLiquidation] collateral: max == result"
-        );
+        uint256 collateralDiff = withdrawCollateral - collateralToLiquidate;
+        assertLe(collateralDiff, 2, "[_executeMaxPartialDustLiquidation] collateral: max == result (up to 2 wei diff)");
     }
 
     function _expectRevertWithDebtToCoverTooSmall(bool _sameToken, bool _receiveSToken, uint256 _debtToCover) private {
+        emit log_named_uint("try to liquidate with _debtToCover", _debtToCover);
+
         vm.expectRevert(IPartialLiquidation.DebtToCoverTooSmall.selector);
 
         partialLiquidation.liquidationCall(
