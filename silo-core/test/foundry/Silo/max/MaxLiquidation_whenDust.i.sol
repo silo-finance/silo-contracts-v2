@@ -14,79 +14,6 @@ import {MaxLiquidationCommon} from "./MaxLiquidationCommon.sol";
 contract MaxLiquidationDustTest is MaxLiquidationCommon {
     using SiloLensLib for ISilo;
 
-    /*
-    forge test -vv --ffi --mt test_maxLiquidation_dust_LTV100_2tokens_sToken
-    */
-    /// forge-config: core-test.fuzz.runs = 100
-    function test_maxLiquidation_dust_LTV100_2tokens_sToken() public {
-        _maxLiquidation_partial_LTV100_2tokens(12, _RECEIVE_STOKENS);
-    }
-
-    /*
-    forge test -vv --ffi --mt test_maxLiquidation_dust_LTV100_2tokens_token_fuzz
-    */
-    /// forge-config: core-test.fuzz.runs = 100
-    function test_maxLiquidation_dust_LTV100_2tokens_token_fuzz(uint16 _collateral) public {
-        _maxLiquidation_partial_LTV100_2tokens(_collateral, !_RECEIVE_STOKENS);
-    }
-
-    function _maxLiquidation_partial_LTV100_2tokens(uint16 _collateral, bool _receiveSToken) internal {
-        bool _sameAsset = false;
-
-        uint256 toBorrow = uint256(_collateral) * 75 / 100; // maxLTV is 75%
-
-        _createDebt(_collateral, toBorrow, _sameAsset);
-
-        // this case never happen because is is not possible to create debt for 1 collateral
-        if (_collateral == 12) _findLTV100(); // vm.warp(10 days);
-        else revert("should not happen, because of vm.assume");
-
-        _assertLTV100();
-
-        _executeDustLiquidationWithChecks(_sameAsset, _receiveSToken);
-
-        _assertBorrowerIsSolvent();
-        _ensureBorrowerHasNoDebt();
-    }
-
-    /*
-    forge test -vv --ffi --mt test_maxLiquidation_dust_dust_1token_fuzz
-    */
-    /// forge-config: core-test.fuzz.runs = 100
-    function test_maxLiquidation_dust_dust_1token_fuzz(
-        uint128 _collateral
-    ) public {
-//        uint128 _collateral = 56;
-
-        bool _sameAsset = true;
-
-        // this condition is to not have overflow: _collateral * 84
-        vm.assume(_collateral < type(uint128).max / 84);
-
-        uint256 toBorrow = _collateral * 84 / 100; // maxLT is 85%
-
-        _createDebt(_collateral, toBorrow, _sameAsset);
-
-        // for same asset interest increasing slower, because borrower is also depositor, also LT is higher
-        // vm.warp(1260 days);
-
-        if (_collateral == 1) _findLTV100();
-//         else if (_collateral == 12) _findLTV100();
-        else if (_collateral == 12) vm.warp(1141 days);
-//         else if (_collateral >= 20 && _collateral < 57) _findLTV100();
-        else if (_collateral >= 20 && _collateral < 57) vm.warp(1300 days);
-        else vm.assume(false);
-
-        _moveTimeUntilInsolvent();
-
-        _assertBorrowerIsNotSolvent({_hasBadDebt: false}); // TODO make tests for bad debt as well
-
-        bool _receiveSToken = true;
-        _executeDustLiquidationWithChecks(_sameAsset, _receiveSToken);
-
-        _assertBorrowerIsSolvent();
-        _ensureBorrowerHasNoDebt();
-    }
 
     /*
     forge test -vv --ffi --mt test_maxLiquidation_dust_1token_sTokens_fuzz
@@ -107,16 +34,19 @@ contract MaxLiquidationDustTest is MaxLiquidationCommon {
     function _maxLiquidation_partial_1token_fuzz(uint128 _collateral, bool _receiveSToken) internal {
         bool _sameAsset = true;
 
-        // this condition is to not have overflow: _collateral * 85
-        vm.assume(_collateral < type(uint128).max / 85);
-         // this value found by fuzzing tests, is high enough to have partial liquidation possible for this test setup
-        vm.assume(_collateral >= 57); // 20..57 - dust cases TODO
+        // this value found by fuzzing tests, is high enough to have partial liquidation possible for this test setup
+        vm.assume(_collateral >= 20 && _collateral < 57 || _collateral == 12);
 
         uint256 toBorrow = _collateral * 85 / 100; // maxLT is 85%
 
         _createDebt(_collateral, toBorrow, _sameAsset);
 
-        vm.warp(block.timestamp + 1050 days); // initial time movement to speed up _moveTimeUntilInsolvent
+        if (_collateral == 12) vm.warp(1141 days);
+//         else if (_collateral >= 20 && _collateral < 57) _findLTV100();
+        else if (_collateral >= 20 && _collateral < 57) vm.warp(1300 days);
+        else vm.assume(false);
+
+//        vm.warp(block.timestamp + 1050 days); // initial time movement to speed up _moveTimeUntilInsolvent
         _moveTimeUntilInsolvent();
 
         _assertBorrowerIsNotSolvent({_hasBadDebt: false}); // TODO make tests for bad debt as well
@@ -124,7 +54,7 @@ contract MaxLiquidationDustTest is MaxLiquidationCommon {
         _executeDustLiquidationWithChecks(_sameAsset, _receiveSToken);
 
         _assertBorrowerIsSolvent();
-        _ensureBorrowerHasDebt();
+        _ensureBorrowerHasNoDebt();
     }
 
     /*
@@ -149,7 +79,7 @@ contract MaxLiquidationDustTest is MaxLiquidationCommon {
         vm.assume(_collateral != 12); // 100 LTV case
         vm.assume(_collateral != 19); // dust case
 
-        // this condition is to not have overflow: _collateral * 75
+        // this condition is to not have overflow on: _collateral * 75
         vm.assume(_collateral < type(uint128).max / 75);
         vm.assume(_collateral >= 7); // only partial liquidation
 
@@ -167,32 +97,6 @@ contract MaxLiquidationDustTest is MaxLiquidationCommon {
         _assertBorrowerIsSolvent();
         _ensureBorrowerHasDebt();
     }
-//
-//    /*
-//    forge test -vv --ffi --mt test_maxLiquidation_dust_withInterest_fuzz
-//    */
-//    /// forge-config: core-test.fuzz.runs = 1000
-//    function test_maxLiquidation_dust_withInterest_1token_fuzz(uint128 _collateral) public {
-//        _maxLiquidation_withInterest(_collateral, SAME_ASSET);
-//    }
-//
-//    /// forge-config: core-test.fuzz.runs = 1000
-//    function test_maxLiquidation_dust_withInterest_2tokens_fuzz(uint128 _collateral) public {
-//        _maxLiquidation_withInterest(_collateral, TWO_ASSETS);
-//    }
-//
-//    function _maxLiquidation_withInterest(uint128 _collateral, bool _sameAsset) public {
-//        uint256 toBorrow = _collateral / 3;
-//        _createDebt(_collateral, toBorrow, _sameAsset);
-//
-//        vm.warp(block.timestamp + 356 days);
-//
-//        uint256 maxLiquidation = partialLiquidation.maxLiquidation(address(silo0), borrower);
-//        vm.assume(maxLiquidation > toBorrow); // we want interest
-//
-//        _repay(maxLiquidation, borrower);
-//        _assertBorrowerIsSolvent();
-//    }
 
     function _executeDustLiquidationWithChecks(bool _sameToken, bool _receiveSToken) private {
         uint256 siloBalanceBefore0 = token0.balanceOf(address(silo0));
