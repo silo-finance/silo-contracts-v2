@@ -103,7 +103,7 @@ library Actions {
 
         if (depositConfig.silo == collateralConfig.silo) {
             // If deposit is collateral, then check the solvency.
-            _revertIfUserIsNotSolvent(collateralConfig, debtConfig, _args.owner);
+            _checkSolvency(collateralConfig, debtConfig, _args.owner);
         }
 
         siloConfig.turnOffReentrancyProtection();
@@ -497,7 +497,7 @@ library Actions {
         IERC20(collateralConfig.token).safeTransferFrom(msg.sender, address(this), transferDiff);
     }
 
-    function _revertIfUserIsNotSolvent(
+    function _checkSolvency(
         ISiloConfig.ConfigData memory collateralConfig,
         ISiloConfig.ConfigData memory debtConfig,
         address _user
