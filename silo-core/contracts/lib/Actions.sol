@@ -83,11 +83,11 @@ library Actions {
         siloConfig.turnOnReentrancyProtection();
         siloConfig.accrueInterestForBothSilos();
 
-        (
-            ISiloConfig.DepositConfig memory depositConfig,
-            ISiloConfig.ConfigData memory collateralConfig,
-            ISiloConfig.ConfigData memory debtConfig
-        ) = siloConfig.getConfigsForWithdraw(address(this), _args.owner);
+        ISiloConfig.DepositConfig memory depositConfig;
+        ISiloConfig.ConfigData memory collateralConfig;
+        ISiloConfig.ConfigData memory debtConfig;
+
+        (depositConfig, collateralConfig, debtConfig) = siloConfig.getConfigsForWithdraw(address(this), _args.owner);
 
         (assets, shares) = SiloERC4626Lib.withdraw(
             depositConfig.token,
@@ -102,17 +102,8 @@ library Actions {
         );
 
         if (depositConfig.silo == collateralConfig.silo) {
-            if (debtConfig.silo != collateralConfig.silo) {
-                collateralConfig.callSolvencyOracleBeforeQuote();
-                debtConfig.callSolvencyOracleBeforeQuote();
-            }
-
-            bool ownerIsSolvent = SiloSolvencyLib.isSolvent(
-                collateralConfig, debtConfig, _args.owner, ISilo.AccrueInterestInMemory.No
-            );
-
-            // `_args.owner` must be solvent
-            if (!ownerIsSolvent) revert ISilo.NotSolvent();
+            // If deposit is collateral, then check the solvency.
+            _revertIfUserIsNotSolvent(collateralConfig, debtConfig, _args.owner);
         }
 
         siloConfig.turnOffReentrancyProtection();
@@ -504,6 +495,23 @@ library Actions {
         }
 
         IERC20(collateralConfig.token).safeTransferFrom(msg.sender, address(this), transferDiff);
+    }
+
+    function _revertIfUserIsNotSolvent(
+        ISiloConfig.ConfigData memory collateralConfig,
+        ISiloConfig.ConfigData memory debtConfig,
+        address _user
+    ) private {
+        if (debtConfig.silo != collateralConfig.silo) {
+            collateralConfig.callSolvencyOracleBeforeQuote();
+            debtConfig.callSolvencyOracleBeforeQuote();
+        }
+
+        bool userIsSolvent = SiloSolvencyLib.isSolvent(
+            collateralConfig, debtConfig, _user, ISilo.AccrueInterestInMemory.No
+        );
+
+        if (!userIsSolvent) revert ISilo.NotSolvent();
     }
 
     function _hookCallBeforeWithdraw(
