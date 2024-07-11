@@ -146,6 +146,8 @@ interface ISiloConfig {
     /// @param _sameAsset true if `_borrower` operates on the same asset
     function setCollateralSilo(address _borrower, bool _sameAsset) external;
 
+    function accrueInterestForSilo(address _silo) external;
+
     function accrueInterestAndGetConfig(address _silo) external returns (ConfigData memory);
 
     function accrueInterestAndGetConfigs(address _silo, address _borrower, uint256 _action)
@@ -218,4 +220,9 @@ interface ISiloConfig {
         external
         view
         returns (address protectedShareToken, address collateralShareToken, address debtShareToken);
+
+    function getCollateralShareTokenAndSiloToken(address _silo, ISilo.CollateralType _collateralType)
+        external
+        view
+        returns (address shareToken, address asset);
 }
