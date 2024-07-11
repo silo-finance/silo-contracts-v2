@@ -1,38 +1,19 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.20;
 
-import "forge-std/Test.sol";
-
 import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
-import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
-import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
 
-import {MintableToken} from "../../_common/MintableToken.sol";
-import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
+import {MaxLiquidationCommon} from "./MaxLiquidationCommon.sol";
 
 /*
     forge test -vv --ffi --mc MaxLiquidationTest
+
+    this tests are for "normal" case,
+    where user became insolvent and we can partially liquidate
 */
-contract MaxLiquidationTest is SiloLittleHelper, Test {
-    using SiloLensLib for ISilo;
-    bool internal constant _RECEIVE_STOKENS = true;
-
-    ISiloConfig siloConfig;
-    address immutable depositor;
-    address immutable borrower;
-
-    constructor() {
-        depositor = makeAddr("Depositor");
-        borrower = makeAddr("Borrower");
-    }
-
-    function setUp() public {
-        siloConfig = _setUpLocalFixture(SiloConfigsNames.LOCAL_NO_ORACLE_SILO);
-        token1.setOnDemand(true);
-    }
-
+contract MaxLiquidationTest is MaxLiquidationCommon {
     /*
     forge test -vv --ffi --mt test_maxLiquidation_noDebt
     */
@@ -111,8 +92,11 @@ contract MaxLiquidationTest is SiloLittleHelper, Test {
     forge test -vv --ffi --mt test_maxLiquidation_partial_LTV100_2tokens_sToken_fuzz
     */
     /// forge-config: core-test.fuzz.runs = 100
-    function test_maxLiquidation_partial_LTV100_2tokens_sToken_fuzz(uint16 _collateral) public {
-        vm.assume(_collateral != 12); // dust case TODO
+    function test_maxLiquidation_partial_LTV100_2tokens_sToken_fuzz(
+        uint16 _collateral
+    ) public {
+//        vm.assume(_collateral != 12); // dust case TODO
+//        uint16 _collateral = 12;
 
         _maxLiquidation_partial_LTV100_2tokens_fuzz(_collateral, _RECEIVE_STOKENS);
     }
@@ -121,7 +105,9 @@ contract MaxLiquidationTest is SiloLittleHelper, Test {
     forge test -vv --ffi --mt test_maxLiquidation_partial_LTV100_2tokens_token_fuzz
     */
     /// forge-config: core-test.fuzz.runs = 100
-    function test_maxLiquidation_partial_LTV100_2tokens_token_fuzz(uint16 _collateral) public {
+    function test_maxLiquidation_partial_LTV100_2tokens_token_fuzz(
+         uint16 _collateral
+    ) public {
         _maxLiquidation_partial_LTV100_2tokens_fuzz(_collateral, !_RECEIVE_STOKENS);
     }
 
@@ -141,7 +127,6 @@ contract MaxLiquidationTest is SiloLittleHelper, Test {
         else if (_collateral == 4) vm.warp(45 days);
         else if (_collateral == 5) vm.warp(95 days);
         else if (_collateral == 6) vm.warp(66 days);
-        else if (_collateral == 12) _findLTV100(); // vm.warp(10 days);
         else revert("should not happen, because of vm.assume");
 
         _assertLTV100();
@@ -216,7 +201,7 @@ contract MaxLiquidationTest is SiloLittleHelper, Test {
         // this condition is to not have overflow: _collateral * 85
         vm.assume(_collateral < type(uint128).max / 85);
          // this value found by fuzzing tests, is high enough to have partial liquidation possible for this test setup
-        vm.assume(_collateral >= 57); // 20..57 - dust cases TODO
+        vm.assume(_collateral == 12 || _collateral >= 57); // 20..57 - dust cases TODO
 
         uint256 toBorrow = _collateral * 85 / 100; // maxLT is 85%
 
@@ -313,7 +298,7 @@ contract MaxLiquidationTest is SiloLittleHelper, Test {
 
     function _ensureBorrowerHasDebt() internal view {
         (,, address debtShareToken) = silo1.config().getShareTokens(address(silo1));
-        assertGt(IShareToken(debtShareToken).balanceOf(borrower), 0, "expect borrower with debt balance");
+        assertGt(IShareToken(debtShareToken).balanceOf(borrower), 0, "expect borrower has debt balance");
         assertGt(silo0.getLtv(borrower), 0, "expect borrower has some LTV");
     }
 
@@ -386,11 +371,10 @@ contract MaxLiquidationTest is SiloLittleHelper, Test {
                     "debt was repay to silo but collateral NOT withdrawn"
                 );
             } else {
-                assertEq(
-                    siloBalanceBefore1 + repayDebtAssets - collateralToLiquidate,
-                    token1.balanceOf(address(silo1)),
-                    "debt was repay to silo and collateral withdrawn"
-                );
+                uint256 siloExpectedBalance = siloBalanceBefore1 + repayDebtAssets - collateralToLiquidate;
+                uint256 diff = siloExpectedBalance - token1.balanceOf(address(silo1));
+                // 2 is maximum expected difference, because we underestimated `collateralToLiquidate` by 2
+                assertLe(diff, 2, "debt was repay to silo and collateral withdrawn");
             }
         } else {
             if (_receiveSToken) {
@@ -451,9 +435,15 @@ contract MaxLiquidationTest is SiloLittleHelper, Test {
         );
 
         emit log_named_decimal_uint("[_executeMaxPartialLiquidation] ltv after", silo0.getLtv(borrower), 16);
+        emit log_named_decimal_uint("[_executeMaxPartialLiquidation] collateralToLiquidate", collateralToLiquidate, 18);
 
         assertEq(debtToRepay, repayDebtAssets, "debt: maxLiquidation == result");
-        assertEq(collateralToLiquidate, withdrawCollateral, "collateral: max == result");
+
+        assertLe(
+            withdrawCollateral - collateralToLiquidate,
+            2,
+            "collateral: max == result (allowed 2 wei of underestimation)"
+        );
     }
 
     function _findLTV100() private {
@@ -485,7 +475,7 @@ contract MaxLiquidationTest is SiloLittleHelper, Test {
             bool isSolvent = silo1.isSolvent(borrower);
 
             if (!isSolvent) {
-                emit log_named_string("[_findWrapForSolvency] user solwent?", isSolvent ? "yes" : "NO");
+                emit log_named_string("[_findWrapForSolvency] user solvent?", isSolvent ? "yes" : "NO");
                 emit log_named_decimal_uint("[_findWrapForSolvency] LTV", silo1.getLtv(borrower), 16);
                 emit log_named_uint("[_findWrapForSolvency] days", i);
 
