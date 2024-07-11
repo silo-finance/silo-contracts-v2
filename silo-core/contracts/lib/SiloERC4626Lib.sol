@@ -69,26 +69,30 @@ library SiloERC4626Lib {
         uint256 _totalAssets
     ) internal view returns (uint256 assets, uint256 shares) {
         (
+            ISiloConfig.DepositConfig memory depositConfig,
             ISiloConfig.ConfigData memory collateralConfig,
-            ISiloConfig.ConfigData memory debtConfig,
-            ISiloConfig.DebtInfo memory debtInfo
-        ) = _config.getConfigs(address(this), _owner, Hook.WITHDRAW);
+            ISiloConfig.ConfigData memory debtConfig
+        ) = _config.getConfigsForWithdraw(address(this), _owner);
 
         uint256 shareTokenTotalSupply;
         uint256 liquidity;
 
         if (_collateralType == ISilo.CollateralType.Collateral) {
-            shareTokenTotalSupply = IShareToken(collateralConfig.collateralShareToken).totalSupply();
-            (liquidity, _totalAssets, ) = SiloLendingLib.getLiquidityAndAssetsWithInterest(collateralConfig);
+            shareTokenTotalSupply = IShareToken(depositConfig.collateralShareToken).totalSupply();
+            (liquidity, _totalAssets, ) = SiloLendingLib.getLiquidityAndAssetsWithInterest(
+                depositConfig.interestRateModel,
+                depositConfig.daoFee,
+                depositConfig.deployerFee
+            );
         } else {
-            shareTokenTotalSupply = IShareToken(collateralConfig.protectedShareToken).totalSupply();
+            shareTokenTotalSupply = IShareToken(depositConfig.protectedShareToken).totalSupply();
             liquidity = _totalAssets;
         }
 
-        if (SiloSolvencyLib.depositWithoutDebt(debtInfo)) {
+        if (depositConfig.silo != collateralConfig.silo) {
             shares = _collateralType == ISilo.CollateralType.Protected
-                ? IShareToken(collateralConfig.protectedShareToken).balanceOf(_owner)
-                : IShareToken(collateralConfig.collateralShareToken).balanceOf(_owner);
+                ? IShareToken(depositConfig.protectedShareToken).balanceOf(_owner)
+                : IShareToken(depositConfig.collateralShareToken).balanceOf(_owner);
 
             assets = SiloMathLib.convertToAssets(
                 shares,
