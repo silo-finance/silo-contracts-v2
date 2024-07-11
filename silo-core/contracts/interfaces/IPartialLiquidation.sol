@@ -67,6 +67,8 @@ interface IPartialLiquidation {
 
     /// @dev debt is keep growing over time, so when dApp use this view to calculate max, tx should never revert
     /// because actual max can be only higher
+    /// @return collateralToLiquidate underestimated (up to 2 wei) amount of collateral liquidator will get
+    /// @return debtToRepay debt amount needed to be repay to get `collateralToLiquidate`
     function maxLiquidation(address _siloWithDebt, address _borrower)
         external
         view

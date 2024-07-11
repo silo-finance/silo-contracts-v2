@@ -108,7 +108,8 @@ contract LiquidationPreviewTest is Test, OraclesHelper {
 
         // does not revert - counter example first
         (uint256 receiveCollateralAssets, uint256 repayDebtAssets) = impl.liquidationPreview(ltvData, params);
-        assertEq(receiveCollateralAssets, maxCollateralToLiquidate, "expect same collateral #1");
+        // -2 because we underestimating max value
+        assertEq(receiveCollateralAssets - 2, maxCollateralToLiquidate, "expect same collateral #1");
         assertEq(receiveCollateralAssets, maxDebtToCover, "same collateral, because price is 1:1 and no fee #1");
         assertEq(repayDebtAssets, maxDebtToCover, "repayDebtAssets match #1");
 

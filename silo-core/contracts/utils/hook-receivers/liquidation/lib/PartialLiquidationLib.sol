@@ -59,6 +59,17 @@ library PartialLiquidationLib {
             _sumOfCollateralValue
         );
 
+        if (collateralToLiquidate > 1) {
+            // -2 here is to underestimate collateral that user gets on liquidation
+            // liquidation is executed based on sTokens, additional flow is: assets -> shares -> assets
+            // this two conversions are rounding down and can create 2 wai difference
+
+            // we will not underflow on -2 because collateralToLiquidate is >= 2
+            unchecked { collateralToLiquidate -= 2; }
+        } else {
+            collateralToLiquidate = 0;
+        }
+
         debtToRepay = valueToAssetsByRatio(repayValue, _borrowerDebtAssets, _borrowerDebtValue);
     }
 

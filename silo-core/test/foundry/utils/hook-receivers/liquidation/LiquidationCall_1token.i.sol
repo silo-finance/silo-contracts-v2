@@ -323,7 +323,8 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
         ) = partialLiquidation.maxLiquidation(address(silo0), BORROWER);
 
         // -1 for rounding policy
-        assertEq(silo0.getLiquidity() - 1, collateralToLiquidate - debtToRepay, "without bad debt there is some liquidity");
+        // +2 for underestimation
+        assertEq(silo0.getLiquidity() - 1, collateralToLiquidate - debtToRepay + 2, "without bad debt there is some liquidity");
         emit log_named_decimal_uint("collateralToLiquidate", collateralToLiquidate, 18);
         emit log_named_decimal_uint("debtToRepay", debtToRepay, 18);
         assertEq(debtToRepay, silo0.getDebtAssets(), "debtToRepay is max debt when we forcing full liquidation");
@@ -425,7 +426,7 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
 
             assertEq(
                 token0.balanceOf(address(this)),
-                debtToCover - debtToRepay + collateralToLiquidate - roundingError,
+                debtToCover - debtToRepay + collateralToLiquidate - roundingError + 2, /* +2 for underestimate */
                 "liquidator should get all borrower collateral, no fee because of bad debt"
             );
 
@@ -494,7 +495,7 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
         emit log_named_decimal_uint("debtToRepay", debtToRepay, 18);
         assertEq(debtToRepay, silo0.getDebtAssets(), "debtToRepay is max debt");
         assertEq(
-            collateralToLiquidate,
+            collateralToLiquidate + 2, // +2 to compensate underestimation
             (silo0.getCollateralAssets() - (1e18 + 4_491873366236992444)),
             "we should get all collateral (except depositor deposit + fees), (precision 100)"
         );
@@ -538,7 +539,7 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
 
             assertEq(
                 token0.balanceOf(address(this)),
-                debtToCover - debtToRepay + collateralToLiquidate - 5 /* roundingError */,
+                debtToCover - debtToRepay + collateralToLiquidate - 5 + 2 /* - roundingError + underestimate */,
                 "liquidator should get all borrower collateral, no fee because of bad debt"
             );
 
@@ -680,7 +681,7 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
         emit log_named_decimal_uint("[test] getDebtAssets", silo0.getDebtAssets(), 18);
 
         assertEq(
-            collateralToLiquidate + 2, // dust
+            collateralToLiquidate + 4, // +2 dust + 2 underestimation
             silo0.getCollateralAssets(),
             "expect full collateralToLiquidate on bad debt"
         );
@@ -723,7 +724,8 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
         if (!_receiveSToken) {
             assertEq(
                 token0.balanceOf(liquidator),
-                100e18 - debtToRepay + collateralToLiquidate - 3, // -3 for rounding error
+                // -3 for rounding error, +2 to balace out underestimation
+                100e18 - debtToRepay + collateralToLiquidate - 3 + 2,
                 "liquidator should get all collateral because of full liquidation"
             );
         }
