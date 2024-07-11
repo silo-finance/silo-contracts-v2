@@ -50,6 +50,32 @@ library SiloSolvencyLib {
         return ltv <= _collateralConfig.lt;
     }
 
+    /// @notice Determines if a borrower is solvent based on the Loan-to-Value (LTV) ratio
+    /// @param _collateralConfig Configuration data for the collateral
+    /// @param _debtConfig Configuration data for the debt
+    /// @param _borrower Address of the borrower to check solvency for
+    /// @param _accrueInMemory Determines whether or not to consider un-accrued interest in calculations
+    /// @return True if the borrower is solvent, false otherwise
+    function isSolvent(
+        ISiloConfig.ConfigData memory _collateralConfig,
+        ISiloConfig.ConfigData memory _debtConfig,
+        address _borrower,
+        ISilo.AccrueInterestInMemory _accrueInMemory
+    ) internal view returns (bool) {
+        if (_debtConfig.silo == address(0)) return true; // no debt, so solvent
+
+        uint256 ltv = getLtv(
+            _collateralConfig,
+            _debtConfig,
+            _borrower,
+            ISilo.OracleType.Solvency,
+            _accrueInMemory,
+            IShareToken(_debtConfig.debtShareToken).balanceOf(_borrower)
+        );
+
+        return ltv <= _collateralConfig.lt;
+    }
+
     /// @notice Determines if a borrower's Loan-to-Value (LTV) ratio is below the maximum allowed LTV
     /// @param _collateralConfig Configuration data for the collateral
     /// @param _debtConfig Configuration data for the debt
@@ -231,12 +257,5 @@ library SiloSolvencyLib {
                 ? _ltvData.debtOracle.quote(_ltvData.borrowerDebtAssets, _debtAsset)
                 : _ltvData.borrowerDebtAssets;
         }
-    }
-
-    /// @return TRUE when current silo deposit is NOT attached to debt, FALSE otherwise
-    function depositWithoutDebt(ISiloConfig.DebtInfo memory _debtInfo) internal pure returns (bool) {
-        if (!_debtInfo.debtPresent) return true;
-
-        return _debtInfo.debtInThisSilo ? !_debtInfo.sameAsset : _debtInfo.sameAsset;
     }
 }

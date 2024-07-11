@@ -191,6 +191,18 @@ contract SiloConfigTest is Test {
     }
 
     /*
+    forge test -vv --mt test_getConfigsForWithdraw_WrongSilo
+    */
+    function test_getConfigsForWithdraw_WrongSilo() public {
+        SiloConfig siloConfig = siloConfigDeploy(1, _configDataDefault0, _configDataDefault1);
+
+        address anySilo = makeAddr("anySilo");
+
+        vm.expectRevert(ISiloConfig.WrongSilo.selector);
+        siloConfig.getConfigsForWithdraw(anySilo, address(0));
+    }
+
+    /*
     forge test -vv --mt test_getConfig_fuzz
     */
     /// forge-config: core-test.fuzz.runs = 3

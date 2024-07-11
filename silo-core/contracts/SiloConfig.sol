@@ -249,6 +249,20 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
         );
     }
 
+    function accrueInterestForBothSilos() external {
+        ISilo(_SILO0).accrueInterestForConfig(
+            _INTEREST_RATE_MODEL0,
+            _DAO_FEE,
+            _DEPLOYER_FEE
+        );
+
+        ISilo(_SILO1).accrueInterestForConfig(
+            _INTEREST_RATE_MODEL1,
+            _DAO_FEE,
+            _DEPLOYER_FEE
+        );
+    }
+
     function reentrancyGuardEntered() external view virtual returns (bool entered) {
         entered = _reentrancyGuardEntered();
     }
@@ -294,14 +308,19 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
         (collateralConfig, debtConfig) = _getOrderedConfigs(_silo, debtInfo, _action);
     }
 
-    /// @inheritdoc ISiloConfig
-    function getConfig(address _silo) external view virtual returns (ConfigData memory) {
-        if (_silo == _SILO0) {
-            return _silo0ConfigData();
-        } else if (_silo == _SILO1) {
-            return _silo1ConfigData();
-        } else {
-            revert WrongSilo();
+    function getConfigsForWithdraw(address _silo, address _depositOwner) external view virtual returns (
+        DepositConfig memory depositConfig,
+        ConfigData memory collateralConfig,
+        ConfigData memory debtConfig
+    ) {
+        depositConfig = _getDepositConfig(_silo);
+        address debtSilo = getDebtSilo(_depositOwner);
+
+        if (debtSilo != address(0)) {
+            address collateralSilo = _borrowerCollateralSilo[_depositOwner];
+
+            collateralConfig = getConfig(collateralSilo);
+            debtConfig = getConfig(debtSilo);
         }
     }
 
@@ -339,6 +358,17 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
             return _collateralType == ISilo.CollateralType.Collateral
                 ? (_COLLATERAL_SHARE_TOKEN1, _TOKEN1)
                 : (_PROTECTED_COLLATERAL_SHARE_TOKEN1, _TOKEN1);
+        } else {
+            revert WrongSilo();
+        }
+    }
+
+    /// @inheritdoc ISiloConfig
+    function getConfig(address _silo) public view virtual returns (ConfigData memory) {
+        if (_silo == _SILO0) {
+            return _silo0ConfigData();
+        } else if (_silo == _SILO1) {
+            return _silo1ConfigData();
         } else {
             revert WrongSilo();
         }
@@ -466,6 +496,32 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
             hookReceiver: _HOOK_RECEIVER,
             callBeforeQuote: _CALL_BEFORE_QUOTE1
         });
+    }
+
+    function _getDepositConfig(address _silo) internal view virtual returns (DepositConfig memory) {
+        if (_silo == _SILO0) {
+            return DepositConfig({
+                silo: _SILO0,
+                token: _TOKEN0,
+                collateralShareToken: _COLLATERAL_SHARE_TOKEN0,
+                protectedShareToken: _PROTECTED_COLLATERAL_SHARE_TOKEN0,
+                daoFee: _DAO_FEE,
+                deployerFee: _DEPLOYER_FEE,
+                interestRateModel: _INTEREST_RATE_MODEL0
+            });
+        } else if (_silo == _SILO1) {
+            return DepositConfig({
+                silo: _SILO1,
+                token: _TOKEN1,
+                collateralShareToken: _COLLATERAL_SHARE_TOKEN1,
+                protectedShareToken: _PROTECTED_COLLATERAL_SHARE_TOKEN1,
+                daoFee: _DAO_FEE,
+                deployerFee: _DEPLOYER_FEE,
+                interestRateModel: _INTEREST_RATE_MODEL1
+            });
+        } else {
+            revert WrongSilo();
+        }
     }
 
     function _onlySiloOrTokenOrHookReceiver() internal view virtual {
