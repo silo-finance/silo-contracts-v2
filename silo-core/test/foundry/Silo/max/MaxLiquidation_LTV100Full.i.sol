@@ -49,6 +49,24 @@ contract MaxLiquidationLTV100FullTest is MaxLiquidationCommon {
 
         // case for `1` never happen because is is not possible to create debt for 1 collateral
         if (_collateral == 1) _findLTV100();
+        else if (_collateral == 2) vm.warp(7229 days);
+        else if (_collateral == 3) vm.warp(3172 days);
+        else if (_collateral == 4) vm.warp(2001 days);
+        else if (_collateral == 5) vm.warp(1455 days);
+        else if (_collateral == 6) vm.warp(1141 days);
+        else if (_collateral == 7) vm.warp(2457 days);
+        else if (_collateral == 8) vm.warp(2001 days);
+        else if (_collateral == 9) vm.warp(1685 days);
+        else if (_collateral == 10) vm.warp(1455 days);
+        else if (_collateral == 11) vm.warp(1279 days);
+        else if (_collateral == 12) vm.warp(1141 days);
+        else if (_collateral == 13) vm.warp(1030 days);
+        else if (_collateral == 14) vm.warp(2059 days);
+        else if (_collateral == 15) vm.warp(1876 days);
+        else if (_collateral == 16) vm.warp(1722 days);
+        else if (_collateral == 17) vm.warp(1592 days);
+        else if (_collateral == 18) vm.warp(1480 days);
+        else if (_collateral == 19) vm.warp(1382 days);
         else revert("should not happen, because of vm.assume");
 
         _assertLTV100();
@@ -71,9 +89,7 @@ contract MaxLiquidationLTV100FullTest is MaxLiquidationCommon {
     forge test -vv --ffi --mt test_maxLiquidation_LTV100_full_2tokens_token_fuzz
     */
     /// forge-config: core-test.fuzz.runs = 100
-    function test_maxLiquidation_LTV100_full_2tokens_token_fuzz(
-         uint16 _collateral
-    ) public {
+    function test_maxLiquidation_LTV100_full_2tokens_token_fuzz(uint16 _collateral) public {
         _maxLiquidation_LTV100_full_2tokens_fuzz(_collateral, !_RECEIVE_STOKENS);
     }
 
