@@ -52,6 +52,7 @@ contract MaxLiquidationLTV100PartialTest is MaxLiquidationCommon {
     function _maxLiquidation_LTV100_partial_2tokens_fuzz(uint16 _collateral, bool _receiveSToken) internal {
         bool _sameAsset = false;
 
+        vm.assume(_collateral != 2);
         vm.assume(_collateral < 7);
 
         uint256 toBorrow = uint256(_collateral) * 75 / 100; // maxLTV is 75%
@@ -60,7 +61,6 @@ contract MaxLiquidationLTV100PartialTest is MaxLiquidationCommon {
 
         // this case never happen because is is not possible to create debt for 1 collateral
         if (_collateral == 1) _findLTV100();
-        else if (_collateral == 2) vm.warp(3615 days);
         else if (_collateral == 3) vm.warp(66 days);
         else if (_collateral == 4) vm.warp(45 days);
         else if (_collateral == 5) vm.warp(95 days);

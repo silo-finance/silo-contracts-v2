@@ -81,7 +81,10 @@ contract MaxLiquidationLTV100FullTest is MaxLiquidationCommon {
     forge test -vv --ffi --mt test_maxLiquidation_LTV100_full_2tokens_sToken_fuzz
     */
     /// forge-config: core-test.fuzz.runs = 100
-    function test_maxLiquidation_LTV100_full_2tokens_sToken_fuzz(uint16 _collateral) public {
+    function test_maxLiquidation_LTV100_full_2tokens_sToken_fuzz(
+//        uint16 _collateral
+    ) public {
+        uint16 _collateral = 2;
         _maxLiquidation_LTV100_full_2tokens_fuzz(_collateral, _RECEIVE_STOKENS);
     }
 
@@ -89,21 +92,22 @@ contract MaxLiquidationLTV100FullTest is MaxLiquidationCommon {
     forge test -vv --ffi --mt test_maxLiquidation_LTV100_full_2tokens_token_fuzz
     */
     /// forge-config: core-test.fuzz.runs = 100
-    function test_maxLiquidation_LTV100_full_2tokens_token_fuzz(uint16 _collateral) public {
+    function test_maxLiquidation_LTV100_full_2tokens_token_fuzz(
+//        uint16 _collateral
+    ) public {
+        uint16 _collateral = 2;
         _maxLiquidation_LTV100_full_2tokens_fuzz(_collateral, !_RECEIVE_STOKENS);
     }
 
     function _maxLiquidation_LTV100_full_2tokens_fuzz(uint16 _collateral, bool _receiveSToken) internal {
         bool _sameAsset = false;
 
-        vm.assume(_collateral == 12);
-
         uint256 toBorrow = uint256(_collateral) * 75 / 100; // maxLTV is 75%
 
         _createDebt(_collateral, toBorrow, _sameAsset);
 
-        // this case never happen because is is not possible to create debt for 1 collateral
-        if (_collateral == 12) _findLTV100();
+        // use _findLTV100() to found warp
+        if (_collateral == 2) vm.warp(3615 days);
         else revert("should not happen, because of vm.assume");
 
         _assertLTV100();
