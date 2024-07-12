@@ -41,8 +41,8 @@ contract MaxLiquidationDustTest is MaxLiquidationCommon {
         uint256 toBorrow = _collateral * 85 / 100; // maxLT is 85%
         _createDebt(_collateral, toBorrow, _sameAsset);
 
+        // use _findLTV100() to discover warp
         if (_collateral == 12) vm.warp(1141 days);
-//         else if (_collateral >= 20 && _collateral < 57) _findLTV100();
         else if (_collateral >= 20 && _collateral <= 57) vm.warp(1300 days);
         else revert("should not happen because of vm.assume");
 
@@ -144,15 +144,15 @@ contract MaxLiquidationDustTest is MaxLiquidationCommon {
                     "collateral was NOT moved to liquidator, because we using sToken"
                 );
             } else {
-                assertEq(
+                _assertEqDiff(
                     siloBalanceBefore0 - collateralToLiquidate,
                     token0.balanceOf(address(silo0)),
                     "collateral was moved from silo"
                 );
 
-                assertEq(
-                    liquidatorBalanceBefore0 + collateralToLiquidate,
+                _assertEqDiff(
                     token0.balanceOf(address(this)),
+                    liquidatorBalanceBefore0 + collateralToLiquidate,
                     "collateral was moved to liquidator"
                 );
             }

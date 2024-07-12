@@ -72,8 +72,6 @@ contract MaxLiquidationTest is MaxLiquidationCommon {
     */
     /// forge-config: core-test.fuzz.runs = 1000
     function test_maxLiquidation_partial_2tokens_sTokens_fuzz(uint128 _collateral) public {
-        vm.assume(_collateral != 33); // dust
-
         _maxLiquidation_partial_2tokens_fuzz(_collateral, _RECEIVE_STOKENS);
     }
 
@@ -88,12 +86,13 @@ contract MaxLiquidationTest is MaxLiquidationCommon {
     function _maxLiquidation_partial_2tokens_fuzz(uint128 _collateral, bool _receiveSToken) internal {
         bool _sameAsset = false;
 
-        vm.assume(_collateral != 12); // 100 LTV case
+        vm.assume(_collateral != 12); // dust case
         vm.assume(_collateral != 19); // dust case
+        vm.assume(_collateral != 33); // dust
 
         // this condition is to not have overflow: _collateral * 75
         vm.assume(_collateral < type(uint128).max / 75);
-        vm.assume(_collateral >= 7); // only partial liquidation
+        vm.assume(_collateral >= 7); // LTV100 cases
 
         uint256 toBorrow = _collateral * 75 / 100; // maxLT is 75%
 
@@ -162,10 +161,8 @@ contract MaxLiquidationTest is MaxLiquidationCommon {
                     "collateral was NOT moved to liquidator, because we using sToken"
                 );
             } else {
-                uint256 diff = (siloBalanceBefore0 - collateralToLiquidate) - token0.balanceOf(address(silo0));
-
-                assertLe(
-                    diff,
+                _assertEqDiff(
+                    siloBalanceBefore0 - collateralToLiquidate,
                     token0.balanceOf(address(silo0)),
                     "collateral was moved from silo"
                 );
