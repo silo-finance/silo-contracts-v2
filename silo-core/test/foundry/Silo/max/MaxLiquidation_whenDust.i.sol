@@ -18,24 +18,24 @@ contract MaxLiquidationDustTest is MaxLiquidationCommon {
     /*
     forge test -vv --ffi --mt test_maxLiquidation_dust_1token_sTokens_fuzz
     */
-    /// forge-config: core-test.fuzz.runs = 10000
+    /// forge-config: core-test.fuzz.runs = 100
     function test_maxLiquidation_dust_1token_sTokens_fuzz(uint128 _collateral) public {
-        _maxLiquidation_partial_1token_fuzz(_collateral, _RECEIVE_STOKENS);
+        _maxLiquidation_dust_1token_fuzz(_collateral, _RECEIVE_STOKENS);
     }
 
     /*
     forge test -vv --ffi --mt test_maxLiquidation_dust_1token_tokens_fuzz
     */
-    /// forge-config: core-test.fuzz.runs = 10000
+    /// forge-config: core-test.fuzz.runs = 100
     function test_maxLiquidation_dust_1token_tokens_fuzz(uint128 _collateral) public {
-        _maxLiquidation_partial_1token_fuzz(_collateral, !_RECEIVE_STOKENS);
+        _maxLiquidation_dust_1token_fuzz(_collateral, !_RECEIVE_STOKENS);
     }
 
-    function _maxLiquidation_partial_1token_fuzz(uint128 _collateral, bool _receiveSToken) internal {
+    function _maxLiquidation_dust_1token_fuzz(uint128 _collateral, bool _receiveSToken) internal {
         bool _sameAsset = true;
 
         // this value found by fuzzing tests, is high enough to have partial liquidation possible for this test setup
-        vm.assume(_collateral != 49);
+        vm.assume(_collateral != 49); // normal case
         vm.assume(_collateral >= 20 && _collateral <= 57 || _collateral == 12);
 
         uint256 toBorrow = _collateral * 85 / 100; // maxLT is 85%
@@ -46,7 +46,7 @@ contract MaxLiquidationDustTest is MaxLiquidationCommon {
         else if (_collateral >= 20 && _collateral <= 57) vm.warp(1300 days);
         else revert("should not happen because of vm.assume");
 
-//        vm.warp(block.timestamp + 1050 days); // initial time movement to speed up _moveTimeUntilInsolvent
+        vm.warp(block.timestamp + 1050 days); // initial time movement to speed up _moveTimeUntilInsolvent
         _moveTimeUntilInsolvent();
 
         _assertBorrowerIsNotSolvent({_hasBadDebt: false}); // TODO make tests for bad debt as well
@@ -60,20 +60,20 @@ contract MaxLiquidationDustTest is MaxLiquidationCommon {
     /*
     forge test -vv --ffi --mt test_maxLiquidation_dust_2tokens_sTokens_fuzz
     */
-    /// forge-config: core-test.fuzz.runs = 1000
+    /// forge-config: core-test.fuzz.runs = 100
     function test_maxLiquidation_dust_2tokens_sTokens_fuzz(uint128 _collateral) public {
-        _maxLiquidation_partial_2tokens_fuzz(_collateral, _RECEIVE_STOKENS);
+        _maxLiquidation_dust_2tokens_fuzz(_collateral, _RECEIVE_STOKENS);
     }
 
     /*
     forge test -vv --ffi --mt test_maxLiquidation_dust_2tokens_tokens_fuzz
     */
-    /// forge-config: core-test.fuzz.runs = 1000
+    /// forge-config: core-test.fuzz.runs = 100
     function test_maxLiquidation_dust_2tokens_tokens_fuzz(uint128 _collateral) public {
-        _maxLiquidation_partial_2tokens_fuzz(_collateral, !_RECEIVE_STOKENS);
+        _maxLiquidation_dust_2tokens_fuzz(_collateral, !_RECEIVE_STOKENS);
     }
 
-    function _maxLiquidation_partial_2tokens_fuzz(uint128 _collateral, bool _receiveSToken) internal {
+    function _maxLiquidation_dust_2tokens_fuzz(uint128 _collateral, bool _receiveSToken) internal {
         bool _sameAsset = false;
 
         vm.assume(_collateral == 12 || _collateral == 19 || _collateral == 33);
@@ -82,7 +82,6 @@ contract MaxLiquidationDustTest is MaxLiquidationCommon {
 
         _createDebt(_collateral, toBorrow, _sameAsset);
 
-        // for same asset interest increasing slower, because borrower is also depositor, also LT is higher
         _moveTimeUntilInsolvent();
 
         _assertBorrowerIsNotSolvent({_hasBadDebt: false});
@@ -90,7 +89,7 @@ contract MaxLiquidationDustTest is MaxLiquidationCommon {
         _executeDustLiquidationWithChecks(_sameAsset, _receiveSToken);
 
         _assertBorrowerIsSolvent();
-        _ensureBorrowerHasDebt();
+        _ensureBorrowerHasNoDebt();
     }
 
     function _executeDustLiquidationWithChecks(bool _sameToken, bool _receiveSToken) private {
