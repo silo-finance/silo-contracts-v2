@@ -125,7 +125,13 @@ abstract contract MaxLiquidationCommon is SiloLittleHelper, Test {
         }
     }
 
-    function _assertEqDiff(uint256 a, uint256 b, string memory _msg) internal pure {
+    function _assertEqDiff(uint256 a, uint256 b, string memory _msg) internal {
+        if (a < b) {
+            emit log_named_uint("left", a);
+            emit log_named_uint("right", b);
+            revert(string.concat(_msg, ": error, expected b >= a"));
+        }
+
         // a must be > b, otherwise panic, this is on purpose, we need to know which value can be higher
         // this 2 wei difference is caused by max liquidation underestimation
         assertLe(a - b, 2, string.concat(_msg, " (2wei diff allowed)"));

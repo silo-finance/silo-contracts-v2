@@ -42,7 +42,7 @@ contract MaxLiquidationDustTest is MaxLiquidationCommon {
             || (_collateral >= 52 && _collateral <= 57)
         );
 
-        uint256 toBorrow = _collateral * 85 / 100; // maxLT is 85%
+        uint256 toBorrow = uint256(_collateral) * 85 / 100; // maxLT is 85%
         _createDebt(_collateral, toBorrow, _sameAsset);
 
         vm.warp(block.timestamp + 1050 days); // initial time movement to speed up _moveTimeUntilInsolvent
@@ -77,7 +77,7 @@ contract MaxLiquidationDustTest is MaxLiquidationCommon {
 
         vm.assume(_collateral == 12 || _collateral == 19 || _collateral == 33);
 
-        uint256 toBorrow = _collateral * 75 / 100; // maxLT is 75%
+        uint256 toBorrow = uint256(_collateral) * 75 / 100; // maxLT is 75%
 
         _createDebt(_collateral, toBorrow, _sameAsset);
 
