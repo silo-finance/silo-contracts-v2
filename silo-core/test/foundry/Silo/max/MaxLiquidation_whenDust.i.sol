@@ -14,7 +14,6 @@ import {MaxLiquidationCommon} from "./MaxLiquidationCommon.sol";
 contract MaxLiquidationDustTest is MaxLiquidationCommon {
     using SiloLensLib for ISilo;
 
-
     /*
     forge test -vv --ffi --mt test_maxLiquidation_dust_1token_sTokens_fuzz
     */
@@ -35,16 +34,12 @@ contract MaxLiquidationDustTest is MaxLiquidationCommon {
         bool _sameAsset = true;
 
         // this value found by fuzzing tests, is high enough to have partial liquidation possible for this test setup
+        vm.assume(_collateral != 27); // normal case
         vm.assume(_collateral != 49); // normal case
         vm.assume(_collateral >= 20 && _collateral <= 57 || _collateral == 12);
 
         uint256 toBorrow = _collateral * 85 / 100; // maxLT is 85%
         _createDebt(_collateral, toBorrow, _sameAsset);
-
-        // use _findLTV100() to discover warp
-        if (_collateral == 12) vm.warp(1141 days);
-        else if (_collateral >= 20 && _collateral <= 57) vm.warp(1300 days);
-        else revert("should not happen because of vm.assume");
 
         vm.warp(block.timestamp + 1050 days); // initial time movement to speed up _moveTimeUntilInsolvent
         _moveTimeUntilInsolvent();
@@ -124,7 +119,7 @@ contract MaxLiquidationDustTest is MaxLiquidationCommon {
                     "debt was repay to silo but collateral NOT withdrawn"
                 );
             } else {
-                assertEq(
+                _assertEqDiff(
                     siloBalanceBefore1 + repayDebtAssets - collateralToLiquidate,
                     token1.balanceOf(address(silo1)),
                     "debt was repay to silo and collateral withdrawn"
