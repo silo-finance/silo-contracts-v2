@@ -55,6 +55,7 @@ contract MaxLiquidationTest is MaxLiquidationCommon {
             _collateral > 57
             || _collateral == 20
             || _collateral == 21
+            || _collateral == 23
             || _collateral == 26
             || _collateral == 27
             || _collateral == 28
@@ -70,7 +71,7 @@ contract MaxLiquidationTest is MaxLiquidationCommon {
 
         _createDebt(_collateral, toBorrow, _sameAsset);
 
-        vm.warp(block.timestamp + 1050 days); // initial time movement to speed up _moveTimeUntilInsolvent
+        // vm.warp(block.timestamp + 1050 days); // initial time movement to speed up _moveTimeUntilInsolvent
         _moveTimeUntilInsolvent();
 
         _assertBorrowerIsNotSolvent({_hasBadDebt: false}); // TODO make tests for bad debt as well

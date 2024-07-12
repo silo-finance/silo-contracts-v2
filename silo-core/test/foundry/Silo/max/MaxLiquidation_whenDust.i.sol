@@ -36,6 +36,7 @@ contract MaxLiquidationDustTest is MaxLiquidationCommon {
         bool _sameAsset = true;
 
         // this value found by fuzzing tests, is high enough to have partial liquidation possible for this test setup
+        vm.assume(_collateral != 23); // normal case
         vm.assume(_collateral != 26); // normal case
         vm.assume(_collateral != 27); // normal case
         vm.assume(_collateral != 28); // normal case
@@ -50,7 +51,7 @@ contract MaxLiquidationDustTest is MaxLiquidationCommon {
         uint256 toBorrow = _collateral * 85 / 100; // maxLT is 85%
         _createDebt(_collateral, toBorrow, _sameAsset);
 
-        vm.warp(block.timestamp + 1050 days); // initial time movement to speed up _moveTimeUntilInsolvent
+        // vm.warp(block.timestamp + 1050 days); // initial time movement to speed up _moveTimeUntilInsolvent
         _moveTimeUntilInsolvent();
 
         _assertBorrowerIsNotSolvent({_hasBadDebt: false}); // TODO make tests for bad debt as well
