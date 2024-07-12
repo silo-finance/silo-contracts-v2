@@ -60,6 +60,7 @@ contract MaxLiquidationTest is MaxLiquidationCommon {
             || _collateral == 27
             || _collateral == 28
             || _collateral == 41
+            || _collateral == 42
             || _collateral == 43
             || _collateral == 47
             || _collateral == 48
@@ -71,7 +72,8 @@ contract MaxLiquidationTest is MaxLiquidationCommon {
 
         _createDebt(_collateral, toBorrow, _sameAsset);
 
-        // vm.warp(block.timestamp + 1050 days); // initial time movement to speed up _moveTimeUntilInsolvent
+        vm.warp(block.timestamp + 1050 days); // initial time movement to speed up _moveTimeUntilInsolvent
+//        vm.warp(block.timestamp + 500 days); // initial time movement to speed up _moveTimeUntilInsolvent
         _moveTimeUntilInsolvent();
 
         _assertBorrowerIsNotSolvent({_hasBadDebt: false}); // TODO make tests for bad debt as well
@@ -156,8 +158,8 @@ contract MaxLiquidationTest is MaxLiquidationCommon {
                     "debt was repay to silo but collateral NOT withdrawn"
                 );
             } else {
-                _assertEqDiff(
-                    siloBalanceBefore1 + repayDebtAssets - collateralToLiquidate,
+                assertEq(
+                    siloBalanceBefore1 + repayDebtAssets - withdrawCollateral,
                     token1.balanceOf(address(silo1)),
                     "debt was repay to silo and collateral withdrawn"
                 );
@@ -176,15 +178,15 @@ contract MaxLiquidationTest is MaxLiquidationCommon {
                     "collateral was NOT moved to liquidator, because we using sToken"
                 );
             } else {
-                _assertEqDiff(
-                    siloBalanceBefore0 - collateralToLiquidate,
+                assertEq(
+                    siloBalanceBefore0 - withdrawCollateral,
                     token0.balanceOf(address(silo0)),
                     "collateral was moved from silo"
                 );
 
-                _assertEqDiff(
+                assertEq(
                     token0.balanceOf(address(this)),
-                    liquidatorBalanceBefore0 + collateralToLiquidate,
+                    liquidatorBalanceBefore0 + withdrawCollateral,
                     "collateral was moved to liquidator"
                 );
             }

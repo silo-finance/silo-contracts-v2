@@ -151,8 +151,8 @@ contract MaxLiquidationLTV100FullTest is MaxLiquidationCommon {
                     "debt was repay to silo but collateral NOT withdrawn"
                 );
             } else {
-                _assertEqDiff(
-                    siloBalanceBefore1 + repayDebtAssets - collateralToLiquidate,
+                assertEq(
+                    siloBalanceBefore1 + repayDebtAssets - withdrawCollateral,
                     token1.balanceOf(address(silo1)),
                     "debt was repay to silo and collateral withdrawn"
                 );
@@ -171,15 +171,15 @@ contract MaxLiquidationLTV100FullTest is MaxLiquidationCommon {
                     "collateral was NOT moved to liquidator, because we using sToken"
                 );
             } else {
-                _assertEqDiff(
-                    siloBalanceBefore0 - collateralToLiquidate,
+                assertEq(
+                    siloBalanceBefore0 - withdrawCollateral,
                     token0.balanceOf(address(silo0)),
                     "collateral was moved from silo"
                 );
 
-                _assertEqDiff(
+                assertEq(
                     token0.balanceOf(address(this)),
-                    liquidatorBalanceBefore0 + collateralToLiquidate,
+                    liquidatorBalanceBefore0 + withdrawCollateral,
                     "collateral was moved to liquidator"
                 );
             }

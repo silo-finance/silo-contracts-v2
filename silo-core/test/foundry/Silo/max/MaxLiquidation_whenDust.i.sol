@@ -41,6 +41,7 @@ contract MaxLiquidationDustTest is MaxLiquidationCommon {
         vm.assume(_collateral != 27); // normal case
         vm.assume(_collateral != 28); // normal case
         vm.assume(_collateral != 41); // normal case
+        vm.assume(_collateral != 42); // normal case
         vm.assume(_collateral != 43); // normal case
         vm.assume(_collateral != 47); // normal case
         vm.assume(_collateral != 48); // normal case
@@ -51,7 +52,8 @@ contract MaxLiquidationDustTest is MaxLiquidationCommon {
         uint256 toBorrow = _collateral * 85 / 100; // maxLT is 85%
         _createDebt(_collateral, toBorrow, _sameAsset);
 
-        // vm.warp(block.timestamp + 1050 days); // initial time movement to speed up _moveTimeUntilInsolvent
+         vm.warp(block.timestamp + 500 days); // initial time movement to speed up _moveTimeUntilInsolvent
+//         vm.warp(block.timestamp + 1050 days); // initial time movement to speed up _moveTimeUntilInsolvent
         _moveTimeUntilInsolvent();
 
         _assertBorrowerIsNotSolvent({_hasBadDebt: false}); // TODO make tests for bad debt as well
@@ -129,8 +131,8 @@ contract MaxLiquidationDustTest is MaxLiquidationCommon {
                     "debt was repay to silo but collateral NOT withdrawn"
                 );
             } else {
-                _assertEqDiff(
-                    siloBalanceBefore1 + repayDebtAssets - collateralToLiquidate,
+                assertEq(
+                    siloBalanceBefore1 + repayDebtAssets - withdrawCollateral,
                     token1.balanceOf(address(silo1)),
                     "debt was repay to silo and collateral withdrawn"
                 );
@@ -149,15 +151,15 @@ contract MaxLiquidationDustTest is MaxLiquidationCommon {
                     "collateral was NOT moved to liquidator, because we using sToken"
                 );
             } else {
-                _assertEqDiff(
-                    siloBalanceBefore0 - collateralToLiquidate,
+                assertEq(
+                    siloBalanceBefore0 - withdrawCollateral,
                     token0.balanceOf(address(silo0)),
                     "collateral was moved from silo"
                 );
 
-                _assertEqDiff(
+                assertEq(
                     token0.balanceOf(address(this)),
-                    liquidatorBalanceBefore0 + collateralToLiquidate,
+                    liquidatorBalanceBefore0 + withdrawCollateral,
                     "collateral was moved to liquidator"
                 );
             }
