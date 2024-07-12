@@ -50,33 +50,32 @@ contract MaxLiquidationTest is MaxLiquidationCommon {
         // this condition is to not have overflow: _collateral * 85
         vm.assume(_collateral < type(uint128).max / 85);
 
+        vm.assume(_collateral != 29); // dust
+        vm.assume(_collateral != 30); // dust
+        vm.assume(_collateral != 31); // dust
+        vm.assume(_collateral != 32); // dust
+        vm.assume(_collateral != 33); // dust
+        vm.assume(_collateral != 34); // dust
+        vm.assume(_collateral != 35); // dust
+        vm.assume(_collateral != 36); // dust
+        vm.assume(_collateral != 37); // dust
+        vm.assume(_collateral != 38); // dust
+
+        vm.assume(_collateral != 52); // dust
+        vm.assume(_collateral != 53); // dust
+        vm.assume(_collateral != 54); // dust
+        vm.assume(_collateral != 55); // dust
+        vm.assume(_collateral != 56); // dust
+        vm.assume(_collateral != 57); // dust
+
         // this value found by fuzzing tests, is high enough to have partial liquidation possible for this test setup
-        vm.assume(
-            _collateral > 57
-            || _collateral == 20
-            || _collateral == 21
-            || _collateral == 23
-            || _collateral == 24
-            || _collateral == 25
-            || _collateral == 26
-            || _collateral == 27
-            || _collateral == 28
-            || _collateral == 40
-            || _collateral == 41
-            || _collateral == 42
-            || _collateral == 43
-            || _collateral == 47
-            || _collateral == 48
-            || _collateral == 49
-            || _collateral == 51
-        ); // 20..57 - dust cases, with exceptions
+        vm.assume(_collateral >= 20);
 
         uint256 toBorrow = _collateral * 85 / 100; // maxLT is 85%
 
         _createDebt(_collateral, toBorrow, _sameAsset);
 
         vm.warp(block.timestamp + 1050 days); // initial time movement to speed up _moveTimeUntilInsolvent
-//        vm.warp(block.timestamp + 500 days); // initial time movement to speed up _moveTimeUntilInsolvent
         _moveTimeUntilInsolvent();
 
         _assertBorrowerIsNotSolvent({_hasBadDebt: false}); // TODO make tests for bad debt as well
