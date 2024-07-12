@@ -296,24 +296,16 @@ library Actions {
 
         ISiloConfig siloConfig = _shareStorage.siloConfig;
 
-        (
-            ISiloConfig.ConfigData memory collateralConfig,
-            ISiloConfig.ConfigData memory debtConfig,
-            ISiloConfig.DebtInfo memory debtInfo
-        ) = siloConfig.accrueInterestAndGetConfigs(address(this), msg.sender, action);
+        siloConfig.turnOnReentrancyProtection();
+        siloConfig.accrueInterestForBothSilos();
+        siloConfig.switchCollateralSilo(msg.sender, _toSameAsset);
 
-        if (collateralConfig.otherSilo != address(this)) {
-            ISilo(collateralConfig.otherSilo).accrueInterest();
-        }
+        ISiloConfig.ConfigData memory collateralConfig;
+        ISiloConfig.ConfigData memory debtConfig;
 
-        collateralConfig.callSolvencyOracleBeforeQuote();
-        debtConfig.callSolvencyOracleBeforeQuote();
+        (collateralConfig, debtConfig) = siloConfig.getCollateralAndDebtConfigs(msg.sender);
 
-        bool msgSenderIsSolvent = SiloSolvencyLib.isSolvent(
-            collateralConfig, debtConfig, debtInfo, msg.sender, ISilo.AccrueInterestInMemory.No
-        );
-
-        if (!msgSenderIsSolvent) revert ISilo.NotSolvent();
+        _checkSolvency(collateralConfig, debtConfig, msg.sender);
 
         siloConfig.turnOffReentrancyProtection();
 

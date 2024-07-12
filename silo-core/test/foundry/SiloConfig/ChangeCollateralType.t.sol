@@ -56,9 +56,7 @@ contract ChangeCollateralTypeTest is SiloLittleHelper, Test {
 
         vm.expectRevert(ISiloConfig.OnlySilo.selector);
         vm.prank(_from);
-        siloConfig.accrueInterestAndGetConfigs(
-            address(silo0), borrower, Hook.SWITCH_COLLATERAL | (_toSameAsset ? Hook.SAME_ASSET : Hook.TWO_ASSETS)
-        );
+        siloConfig.switchCollateralSilo(borrower, _toSameAsset);
     }
 
     /*
@@ -73,26 +71,32 @@ contract ChangeCollateralTypeTest is SiloLittleHelper, Test {
     }
 
     function _changeCollateralType_pass(bool _toSameAsset) private {
-        ISiloConfig.DebtInfo memory debtInfo = _doDeposit(!_toSameAsset);
+        ISiloConfig.ConfigData memory collateral;
+        ISiloConfig.ConfigData memory debt;
 
-        assertEq(debtInfo.sameAsset, !_toSameAsset);
+        (collateral, debt) = _doDeposit(!_toSameAsset);
 
-        vm.prank(address(silo0));
-        (,, debtInfo) = siloConfig.accrueInterestAndGetConfigs(
-            address(silo0), borrower, Hook.SWITCH_COLLATERAL | (_toSameAsset ? Hook.SAME_ASSET : Hook.TWO_ASSETS)
-        );
+        bool sameAsset = debt.silo == collateral.silo;
 
-        assertEq(debtInfo.sameAsset, _toSameAsset);
+        assertEq(sameAsset, !_toSameAsset);
 
         vm.prank(address(silo0));
-        siloConfig.turnOffReentrancyProtection();
+        siloConfig.switchCollateralSilo(borrower, _toSameAsset);
 
-        vm.prank(address(silo1));
-        (,, debtInfo) = siloConfig.accrueInterestAndGetConfigs(
-            address(silo0), borrower, Hook.SWITCH_COLLATERAL | (!_toSameAsset ? Hook.SAME_ASSET : Hook.TWO_ASSETS)
-        );
+        (collateral, debt) = siloConfig.getCollateralAndDebtConfigs(borrower);
 
-        assertEq(debtInfo.sameAsset, !_toSameAsset);
+        sameAsset = debt.silo == collateral.silo;
+
+        assertEq(sameAsset, _toSameAsset);
+
+        vm.prank(address(silo0));
+        siloConfig.switchCollateralSilo(borrower, !_toSameAsset);
+
+        (collateral, debt) = siloConfig.getCollateralAndDebtConfigs(borrower);
+
+        sameAsset = debt.silo == collateral.silo;
+
+        assertEq(sameAsset, !_toSameAsset);
     }
 
     /*
@@ -112,9 +116,7 @@ contract ChangeCollateralTypeTest is SiloLittleHelper, Test {
         vm.prank(address(silo0));
         vm.expectRevert(ISiloConfig.CollateralTypeDidNotChanged.selector);
 
-        siloConfig.accrueInterestAndGetConfigs(
-            address(silo0), borrower, Hook.SWITCH_COLLATERAL | (_toSameAsset ? Hook.SAME_ASSET : Hook.TWO_ASSETS)
-        );
+        siloConfig.switchCollateralSilo(borrower, _toSameAsset);
     }
 
     /*
@@ -126,21 +128,28 @@ contract ChangeCollateralTypeTest is SiloLittleHelper, Test {
         vm.prank(address(silo0));
         vm.expectRevert(ISiloConfig.NoDebt.selector);
 
-        siloConfig.accrueInterestAndGetConfigs(
-            address(silo0), borrower, Hook.SWITCH_COLLATERAL | (SAME_ASSET ? Hook.SAME_ASSET : Hook.TWO_ASSETS)
-        );
+        siloConfig.switchCollateralSilo(borrower, false);
     }
 
-    function _doDeposit(bool _sameAsset) private returns (ISiloConfig.DebtInfo memory debtInfo) {
+    function _doDeposit(bool _sameAsset) private returns (ISiloConfig.ConfigData memory collateral, ISiloConfig.ConfigData memory debt) {
         return _doDeposit(_sameAsset, true);
     }
 
-    function _doDeposit(bool _sameAsset, bool _andBorrow) private returns (ISiloConfig.DebtInfo memory debtInfo) {
+    function _doDeposit(
+        bool _sameAsset,
+        bool _andBorrow
+    )
+        private
+        returns (
+            ISiloConfig.ConfigData memory collateral,
+            ISiloConfig.ConfigData memory debt
+        )
+    {
         _depositCollateral(100, borrower, _sameAsset);
         _depositCollateral(2, borrower, !_sameAsset);
 
         if (_andBorrow) _borrow(1, borrower, _sameAsset);
 
-        (,, debtInfo) = siloConfig.getConfigs(address(silo0), borrower, 0);
+        (collateral, debt) = siloConfig.getCollateralAndDebtConfigs(borrower);
     }
 }

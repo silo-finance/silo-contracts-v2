@@ -156,6 +156,8 @@ interface ISiloConfig {
     /// @param _sameAsset true if `_borrower` operates on the same asset
     function setCollateralSilo(address _borrower, bool _sameAsset) external;
 
+    function switchCollateralSilo(address _borrower, bool _switchToSameAsset) external;
+
     function accrueInterestForSilo(address _silo) external;
 
     function accrueInterestAndGetConfigs(address _silo, address _borrower, uint256 _action)
@@ -220,6 +222,11 @@ interface ISiloConfig {
         external
         view
         returns (ConfigData memory collateralConfig, ConfigData memory debtConfig);
+
+    function getCollateralAndDebtConfigs(address _borrower) external view returns (
+        ConfigData memory collateralConfig,
+        ConfigData memory debtConfig
+    );
 
     /// @notice Retrieves fee-related information for a specific silo
     /// @dev This function reverts for incorrect silo address input
