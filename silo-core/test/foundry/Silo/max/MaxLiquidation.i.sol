@@ -56,6 +56,7 @@ contract MaxLiquidationTest is MaxLiquidationCommon {
             || _collateral == 20
             || _collateral == 21
             || _collateral == 23
+            || _collateral == 24
             || _collateral == 26
             || _collateral == 27
             || _collateral == 28
