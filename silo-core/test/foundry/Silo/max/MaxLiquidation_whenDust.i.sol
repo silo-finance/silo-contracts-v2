@@ -10,6 +10,8 @@ import {MaxLiquidationCommon} from "./MaxLiquidationCommon.sol";
 
 /*
     forge test -vv --ffi --mc MaxLiquidationDustTest
+
+    cases where when user become insolvent, we do full liquidation because of "dust"
 */
 contract MaxLiquidationDustTest is MaxLiquidationCommon {
     using SiloLensLib for ISilo;

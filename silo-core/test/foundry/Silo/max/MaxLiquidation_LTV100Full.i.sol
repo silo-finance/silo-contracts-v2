@@ -10,7 +10,7 @@ import {MaxLiquidationCommon} from "./MaxLiquidationCommon.sol";
 /*
     forge test -vv --ffi --mc MaxLiquidationLTV100PartialTest
 
-    cases where we go from solvent to 100% and we can do partial liquidation
+    cases where we go from solvent to 100% and we must do full liquidation
 */
 contract MaxLiquidationLTV100FullTest is MaxLiquidationCommon {
     using SiloLensLib for ISilo;
@@ -81,10 +81,7 @@ contract MaxLiquidationLTV100FullTest is MaxLiquidationCommon {
     forge test -vv --ffi --mt test_maxLiquidation_LTV100_full_2tokens_sToken_fuzz
     */
     /// forge-config: core-test.fuzz.runs = 100
-    function test_maxLiquidation_LTV100_full_2tokens_sToken_fuzz(
-//        uint16 _collateral
-    ) public {
-        uint16 _collateral = 2;
+    function test_maxLiquidation_LTV100_full_2tokens_sToken_fuzz(uint16 _collateral) public {
         _maxLiquidation_LTV100_full_2tokens_fuzz(_collateral, _RECEIVE_STOKENS);
     }
 
@@ -92,22 +89,26 @@ contract MaxLiquidationLTV100FullTest is MaxLiquidationCommon {
     forge test -vv --ffi --mt test_maxLiquidation_LTV100_full_2tokens_token_fuzz
     */
     /// forge-config: core-test.fuzz.runs = 100
-    function test_maxLiquidation_LTV100_full_2tokens_token_fuzz(
-//        uint16 _collateral
-    ) public {
-        uint16 _collateral = 2;
+    function test_maxLiquidation_LTV100_full_2tokens_token_fuzz(uint16 _collateral) public {
         _maxLiquidation_LTV100_full_2tokens_fuzz(_collateral, !_RECEIVE_STOKENS);
     }
 
     function _maxLiquidation_LTV100_full_2tokens_fuzz(uint16 _collateral, bool _receiveSToken) internal {
         bool _sameAsset = false;
 
+        vm.assume(_collateral < 7);
+
         uint256 toBorrow = uint256(_collateral) * 75 / 100; // maxLTV is 75%
 
         _createDebt(_collateral, toBorrow, _sameAsset);
 
-        // use _findLTV100() to found warp
-        if (_collateral == 2) vm.warp(3615 days);
+        // this case (1) never happen because is is not possible to create debt for 1 collateral
+        if (_collateral == 1) _findLTV100();
+        else if (_collateral == 2) vm.warp(3615 days);
+        else if (_collateral == 3) vm.warp(66 days);
+        else if (_collateral == 4) vm.warp(45 days);
+        else if (_collateral == 5) vm.warp(95 days);
+        else if (_collateral == 6) vm.warp(66 days);
         else revert("should not happen, because of vm.assume");
 
         _assertLTV100();
