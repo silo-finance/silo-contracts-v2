@@ -34,6 +34,7 @@ contract MaxLiquidationDustTest is MaxLiquidationCommon {
         bool _sameAsset = true;
 
         // this value found by fuzzing tests, is high enough to have partial liquidation possible for this test setup
+        vm.assume(_collateral != 21); // normal case
         vm.assume(_collateral != 27); // normal case
         vm.assume(_collateral != 43); // normal case
         vm.assume(_collateral != 49); // normal case

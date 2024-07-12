@@ -51,7 +51,8 @@ contract MaxLiquidationTest is MaxLiquidationCommon {
         vm.assume(_collateral < type(uint128).max / 85);
          // this value found by fuzzing tests, is high enough to have partial liquidation possible for this test setup
         vm.assume(
-            _collateral == 27
+            _collateral == 21
+            || _collateral == 27
             || _collateral == 43
             || _collateral == 49
             || _collateral > 57
