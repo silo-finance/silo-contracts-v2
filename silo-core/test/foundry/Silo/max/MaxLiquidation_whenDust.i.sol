@@ -76,12 +76,7 @@ contract MaxLiquidationDustTest is MaxLiquidationCommon {
     function _maxLiquidation_partial_2tokens_fuzz(uint128 _collateral, bool _receiveSToken) internal {
         bool _sameAsset = false;
 
-        vm.assume(_collateral != 12); // 100 LTV case
-        vm.assume(_collateral != 19); // dust case
-
-        // this condition is to not have overflow on: _collateral * 75
-        vm.assume(_collateral < type(uint128).max / 75);
-        vm.assume(_collateral >= 7); // only partial liquidation
+        vm.assume(_collateral == 12 || _collateral == 19 || _collateral == 33);
 
         uint256 toBorrow = _collateral * 75 / 100; // maxLT is 75%
 
