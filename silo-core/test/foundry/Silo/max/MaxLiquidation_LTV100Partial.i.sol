@@ -44,4 +44,9 @@ contract MaxLiquidationLTV100PartialTest is MaxLiquidationCommon {
     function test_maxLiquidation_LTV100_partial_2tokens_token() public {
         // I did not found cases for this scenario
     }
+
+    function _executeLiquidation(bool, bool) internal pure override returns (uint256, uint256) {
+        // not in use
+        return (0, 0);
+    }
 }

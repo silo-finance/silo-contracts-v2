@@ -13,7 +13,7 @@ import {MintableToken} from "../../_common/MintableToken.sol";
 import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
 
 
-contract MaxLiquidationCommon is SiloLittleHelper, Test {
+abstract contract MaxLiquidationCommon is SiloLittleHelper, Test {
     using SiloLensLib for ISilo;
     bool internal constant _RECEIVE_STOKENS = true;
 
@@ -131,4 +131,82 @@ contract MaxLiquidationCommon is SiloLittleHelper, Test {
         // this 2 wei difference is caused by max liquidation underestimation
         assertLe(a - b, 2, string.concat(msg, " (2wei diff allowed)"));
     }
+
+    function _executeLiquidationAndChecks(bool _sameToken, bool _receiveSToken) internal {
+        uint256 siloBalanceBefore0 = token0.balanceOf(address(silo0));
+        uint256 siloBalanceBefore1 = token1.balanceOf(address(silo1));
+
+        uint256 liquidatorBalanceBefore0 = token0.balanceOf(address(this));
+
+        (
+            uint256 collateralToLiquidate, uint256 debtToRepay
+        ) = partialLiquidation.maxLiquidation(address(silo1), borrower);
+
+        (uint256 withdrawCollateral, uint256 repayDebtAssets) = _executeLiquidation(_sameToken, _receiveSToken);
+
+        if (_sameToken) {
+            assertEq(
+                siloBalanceBefore0,
+                token0.balanceOf(address(silo0)),
+                "silo0 did not changed, because it is a case for same asset"
+            );
+
+            assertEq(
+                liquidatorBalanceBefore0,
+                token0.balanceOf(address(this)),
+                "liquidator balance for token0 did not changed, because it is a case for same asset"
+            );
+
+            if (_receiveSToken) {
+                assertEq(
+                    siloBalanceBefore1 + repayDebtAssets,
+                    token1.balanceOf(address(silo1)),
+                    "debt was repay to silo but collateral NOT withdrawn"
+                );
+            } else {
+                assertEq(
+                    siloBalanceBefore1 + repayDebtAssets - withdrawCollateral,
+                    token1.balanceOf(address(silo1)),
+                    "debt was repay to silo and collateral withdrawn"
+                );
+            }
+        } else {
+            if (_receiveSToken) {
+                assertEq(
+                    siloBalanceBefore0,
+                    token0.balanceOf(address(silo0)),
+                    "collateral was NOT moved from silo, because we using sToken"
+                );
+
+                assertEq(
+                    liquidatorBalanceBefore0,
+                    token0.balanceOf(address(this)),
+                    "collateral was NOT moved to liquidator, because we using sToken"
+                );
+            } else {
+                assertEq(
+                    siloBalanceBefore0 - withdrawCollateral,
+                    token0.balanceOf(address(silo0)),
+                    "collateral was moved from silo"
+                );
+
+                assertEq(
+                    token0.balanceOf(address(this)),
+                    liquidatorBalanceBefore0 + withdrawCollateral,
+                    "collateral was moved to liquidator"
+                );
+            }
+
+            assertEq(
+                siloBalanceBefore1 + repayDebtAssets,
+                token1.balanceOf(address(silo1)),
+                "debt was repay to silo"
+            );
+        }
+    }
+
+    function _executeLiquidation(bool _sameToken, bool _receiveSToken)
+        internal
+        virtual
+        returns (uint256 withdrawCollateral, uint256 repayDebtAssets);
 }
