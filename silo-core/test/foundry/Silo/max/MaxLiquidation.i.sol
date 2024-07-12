@@ -55,6 +55,7 @@ contract MaxLiquidationTest is MaxLiquidationCommon {
             || _collateral == 27
             || _collateral == 41
             || _collateral == 43
+            || _collateral == 47
             || _collateral == 49
             || _collateral > 57
         ); // 20..57 - dust cases, with exceptions

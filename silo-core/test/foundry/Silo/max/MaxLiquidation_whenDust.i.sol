@@ -38,6 +38,7 @@ contract MaxLiquidationDustTest is MaxLiquidationCommon {
         vm.assume(_collateral != 27); // normal case
         vm.assume(_collateral != 41); // normal case
         vm.assume(_collateral != 43); // normal case
+        vm.assume(_collateral != 47); // normal case
         vm.assume(_collateral != 49); // normal case
         vm.assume(_collateral >= 20 && _collateral <= 57 || _collateral == 12);
 
