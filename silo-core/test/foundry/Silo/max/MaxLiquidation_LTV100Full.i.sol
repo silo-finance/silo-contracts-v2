@@ -40,8 +40,6 @@ contract MaxLiquidationLTV100FullTest is MaxLiquidationCommon {
     function _maxLiquidation_LTV100_full_1token_fuzz(uint16 _collateral, bool _receiveSToken) internal {
         bool _sameAsset = true;
 
-        // TODO for 100% we should not be able to liquiodate less??
-        // TODO test cases solvent -> dust (so full liquidation)
         vm.assume(_collateral < 20);
         uint256 toBorrow = uint256(_collateral) * 85 / 100;
 
