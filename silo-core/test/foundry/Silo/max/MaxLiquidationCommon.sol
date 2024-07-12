@@ -125,11 +125,10 @@ abstract contract MaxLiquidationCommon is SiloLittleHelper, Test {
         }
     }
 
-    function _assertEqDiff(uint256 a, uint256 b, string memory msg) internal {
+    function _assertEqDiff(uint256 a, uint256 b, string memory _msg) internal pure {
         // a must be > b, otherwise panic, this is on purpose, we need to know which value can be higher
-        uint256 diff = a - b;
         // this 2 wei difference is caused by max liquidation underestimation
-        assertLe(a - b, 2, string.concat(msg, " (2wei diff allowed)"));
+        assertLe(a - b, 2, string.concat(_msg, " (2wei diff allowed)"));
     }
 
     function _executeLiquidationAndChecks(bool _sameToken, bool _receiveSToken) internal {
@@ -137,10 +136,6 @@ abstract contract MaxLiquidationCommon is SiloLittleHelper, Test {
         uint256 siloBalanceBefore1 = token1.balanceOf(address(silo1));
 
         uint256 liquidatorBalanceBefore0 = token0.balanceOf(address(this));
-
-        (
-            uint256 collateralToLiquidate, uint256 debtToRepay
-        ) = partialLiquidation.maxLiquidation(address(silo1), borrower);
 
         (uint256 withdrawCollateral, uint256 repayDebtAssets) = _executeLiquidation(_sameToken, _receiveSToken);
 

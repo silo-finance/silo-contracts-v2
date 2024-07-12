@@ -20,7 +20,7 @@ contract MaxLiquidationDustTest is MaxLiquidationCommon {
     forge test -vv --ffi --mt test_maxLiquidation_dust_1token_sTokens_fuzz
     */
     /// forge-config: core-test.fuzz.runs = 100
-    function test_maxLiquidation_dust_1token_sTokens_fuzz(uint128 _collateral) public {
+    function test_maxLiquidation_dust_1token_sTokens_fuzz(uint8 _collateral) public {
         _maxLiquidation_dust_1token_fuzz(_collateral, _RECEIVE_STOKENS);
     }
 
@@ -28,11 +28,11 @@ contract MaxLiquidationDustTest is MaxLiquidationCommon {
     forge test -vv --ffi --mt test_maxLiquidation_dust_1token_tokens_fuzz
     */
     /// forge-config: core-test.fuzz.runs = 100
-    function test_maxLiquidation_dust_1token_tokens_fuzz(uint128 _collateral) public {
+    function test_maxLiquidation_dust_1token_tokens_fuzz(uint8 _collateral) public {
         _maxLiquidation_dust_1token_fuzz(_collateral, !_RECEIVE_STOKENS);
     }
 
-    function _maxLiquidation_dust_1token_fuzz(uint128 _collateral, bool _receiveSToken) internal {
+    function _maxLiquidation_dust_1token_fuzz(uint8 _collateral, bool _receiveSToken) internal {
         bool _sameAsset = true;
 
         // this value found by fuzzing tests, is high enough to have partial liquidation possible for this test setup
@@ -60,7 +60,7 @@ contract MaxLiquidationDustTest is MaxLiquidationCommon {
     forge test -vv --ffi --mt test_maxLiquidation_dust_2tokens_sTokens_fuzz
     */
     /// forge-config: core-test.fuzz.runs = 100
-    function test_maxLiquidation_dust_2tokens_sTokens_fuzz(uint128 _collateral) public {
+    function test_maxLiquidation_dust_2tokens_sTokens_fuzz(uint8 _collateral) public {
         _maxLiquidation_dust_2tokens_fuzz(_collateral, _RECEIVE_STOKENS);
     }
 
@@ -68,11 +68,11 @@ contract MaxLiquidationDustTest is MaxLiquidationCommon {
     forge test -vv --ffi --mt test_maxLiquidation_dust_2tokens_tokens_fuzz
     */
     /// forge-config: core-test.fuzz.runs = 100
-    function test_maxLiquidation_dust_2tokens_tokens_fuzz(uint128 _collateral) public {
+    function test_maxLiquidation_dust_2tokens_tokens_fuzz(uint8 _collateral) public {
         _maxLiquidation_dust_2tokens_fuzz(_collateral, !_RECEIVE_STOKENS);
     }
 
-    function _maxLiquidation_dust_2tokens_fuzz(uint128 _collateral, bool _receiveSToken) internal {
+    function _maxLiquidation_dust_2tokens_fuzz(uint8 _collateral, bool _receiveSToken) internal {
         bool _sameAsset = false;
 
         vm.assume(_collateral == 12 || _collateral == 19 || _collateral == 33);

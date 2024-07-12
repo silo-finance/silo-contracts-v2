@@ -19,7 +19,7 @@ contract MaxLiquidationLTV100FullTest is MaxLiquidationCommon {
     forge test -vv --ffi --mt test_maxLiquidation_LTV100_full_1token_sTokens_fuzz
     */
     /// forge-config: core-test.fuzz.runs = 100
-    function test_maxLiquidation_LTV100_full_1token_sTokens_fuzz(uint16 _collateral) public {
+    function test_maxLiquidation_LTV100_full_1token_sTokens_fuzz(uint8 _collateral) public {
         _maxLiquidation_LTV100_full_1token_fuzz(_collateral, _RECEIVE_STOKENS);
     }
 
@@ -27,7 +27,7 @@ contract MaxLiquidationLTV100FullTest is MaxLiquidationCommon {
     forge test -vv --ffi --mt test_maxLiquidation_LTV100_full_1token_tokens_fuzz
     */
     /// forge-config: core-test.fuzz.runs = 100
-    function test_maxLiquidation_LTV100_full_1token_tokens_fuzz(uint16 _collateral) public {
+    function test_maxLiquidation_LTV100_full_1token_tokens_fuzz(uint8 _collateral) public {
         _maxLiquidation_LTV100_full_1token_fuzz(_collateral, !_RECEIVE_STOKENS);
     }
 
@@ -37,7 +37,7 @@ contract MaxLiquidationLTV100FullTest is MaxLiquidationCommon {
 
     I used `_findLTV100` to find range of numbers for which we jump to 100% for this case setup
     */
-    function _maxLiquidation_LTV100_full_1token_fuzz(uint16 _collateral, bool _receiveSToken) internal {
+    function _maxLiquidation_LTV100_full_1token_fuzz(uint8 _collateral, bool _receiveSToken) internal {
         bool _sameAsset = true;
 
         vm.assume(_collateral < 20);
@@ -79,7 +79,7 @@ contract MaxLiquidationLTV100FullTest is MaxLiquidationCommon {
     forge test -vv --ffi --mt test_maxLiquidation_LTV100_full_2tokens_sToken_fuzz
     */
     /// forge-config: core-test.fuzz.runs = 100
-    function test_maxLiquidation_LTV100_full_2tokens_sToken_fuzz(uint16 _collateral) public {
+    function test_maxLiquidation_LTV100_full_2tokens_sToken_fuzz(uint8 _collateral) public {
         _maxLiquidation_LTV100_full_2tokens_fuzz(_collateral, _RECEIVE_STOKENS);
     }
 
@@ -87,11 +87,11 @@ contract MaxLiquidationLTV100FullTest is MaxLiquidationCommon {
     forge test -vv --ffi --mt test_maxLiquidation_LTV100_full_2tokens_token_fuzz
     */
     /// forge-config: core-test.fuzz.runs = 100
-    function test_maxLiquidation_LTV100_full_2tokens_token_fuzz(uint16 _collateral) public {
+    function test_maxLiquidation_LTV100_full_2tokens_token_fuzz(uint8 _collateral) public {
         _maxLiquidation_LTV100_full_2tokens_fuzz(_collateral, !_RECEIVE_STOKENS);
     }
 
-    function _maxLiquidation_LTV100_full_2tokens_fuzz(uint16 _collateral, bool _receiveSToken) internal {
+    function _maxLiquidation_LTV100_full_2tokens_fuzz(uint8 _collateral, bool _receiveSToken) internal {
         bool _sameAsset = false;
 
         vm.assume(_collateral < 7);
