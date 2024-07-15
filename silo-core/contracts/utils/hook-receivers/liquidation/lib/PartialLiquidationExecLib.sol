@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.24;
+import {console} from "forge-std/console.sol";
 
 import {Math} from "openzeppelin5/utils/math/Math.sol";
 
@@ -47,6 +48,8 @@ library PartialLiquidationExecLib {
                 selfLiquidation: _selfLiquidation
             })
         );
+
+        console.log("liquidationPreview %s", repayDebtAssets);
 
         (
             withdrawAssetsFromCollateral, withdrawAssetsFromProtected
@@ -120,11 +123,17 @@ library PartialLiquidationExecLib {
         uint256 sumOfCollateralAssets;
         // safe because same asset can not overflow
         unchecked  { sumOfCollateralAssets = _ltvData.borrowerCollateralAssets + _ltvData.borrowerProtectedAssets; }
+        console.log("sumOfCollateralAssets %s", sumOfCollateralAssets);
+        console.log("_params.debtToCover %s", _params.debtToCover);
 
         if (_ltvData.borrowerDebtAssets == 0 || _params.debtToCover == 0) return (0, 0);
 
+        console.log("[liquidationPreview] DEBUG", 1);
+
         if (sumOfCollateralAssets == 0) {
-            return (
+        console.log("[liquidationPreview] DEBUG", 2);
+
+        return (
                 0,
                 _params.debtToCover > _ltvData.borrowerDebtAssets ? _ltvData.borrowerDebtAssets : _params.debtToCover
             );
@@ -135,11 +144,17 @@ library PartialLiquidationExecLib {
         ) = SiloSolvencyLib.calculateLtv(_ltvData, _params.collateralConfigAsset, _params.debtConfigAsset);
 
         if (_params.selfLiquidation) {
+            console.log("[liquidationPreview] DEBUG", 3);
+
             if (_params.debtToCover >= _ltvData.borrowerDebtAssets) {
                 // only because it is self liquidation, we return all collateral on repay all debt
                 return (sumOfCollateralAssets, _ltvData.borrowerDebtAssets);
             }
-        } else if (_params.collateralLt >= ltvBefore) return (0, 0); // user is solvent
+        } else if (_params.collateralLt >= ltvBefore) {
+            console.log("[liquidationPreview] DEBUG", 4);
+
+            return (0, 0); // user is solvent
+        }
 
         uint256 ltvAfter;
 
@@ -151,6 +166,9 @@ library PartialLiquidationExecLib {
             totalBorrowerDebtValue,
             _params
         );
+
+        console.log("_params.debtToCover %s -> %s", _params.debtToCover, repayDebtAssets);
+        console.log("receiveCollateralAssets", receiveCollateralAssets);
 
         if (receiveCollateralAssets == 0 || repayDebtAssets == 0) return (0, 0);
 
