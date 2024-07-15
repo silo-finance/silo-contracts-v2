@@ -111,7 +111,6 @@ library Actions {
         _hookCallAfterWithdraw(_shareStorage, _args, assets, shares);
     }
 
-    // solhint-disable-next-line function-max-lines
     function borrow(
         ISilo.SharedStorage storage _shareStorage,
         ISilo.BorrowArgs memory _args,
@@ -121,23 +120,22 @@ library Actions {
         external
         returns (uint256 assets, uint256 shares)
     {
-        if (_args.assets == 0 && _args.shares == 0) revert ISilo.ZeroAssets();
-
+        ISiloConfig siloConfig = _shareStorage.siloConfig;
         uint256 borrowAction = Hook.borrowAction(_args.sameAsset);
+
+        if (_args.assets == 0 && _args.shares == 0) revert ISilo.ZeroAssets();
+        if (siloConfig.hasDebtInOtherSilo(address(this), _args.borrower)) revert ISilo.BorrowNotPossible();
 
         _hookCallBeforeBorrow(_shareStorage, _args, borrowAction);
 
-        ISiloConfig siloConfig = _shareStorage.siloConfig;
+        siloConfig.turnOnReentrancyProtection();
+        siloConfig.accrueInterestForBothSilos();
+        siloConfig.setCollateralSilo(_args.borrower, _args.sameAsset);
 
-        (
-            ISiloConfig.ConfigData memory collateralConfig,
-            ISiloConfig.ConfigData memory debtConfig,
-            ISiloConfig.DebtInfo memory debtInfo
-        ) = siloConfig.accrueInterestAndGetConfigs(address(this), _args.borrower, borrowAction);
+        ISiloConfig.ConfigData memory collateralConfig;
+        ISiloConfig.ConfigData memory debtConfig;
 
-        if (!SiloLendingLib.borrowPossible(debtInfo)) revert ISilo.BorrowNotPossible();
-
-        if (!_args.sameAsset) ISilo(collateralConfig.silo).accrueInterest();
+        (collateralConfig, debtConfig) = siloConfig.getConfigsForBorrow(address(this), _args.sameAsset);
 
         (assets, shares) = SiloLendingLib.borrow(
             debtConfig.debtShareToken,
@@ -148,16 +146,7 @@ library Actions {
             _totalDebt
         );
 
-        if (!debtInfo.sameAsset) {
-            collateralConfig.callMaxLtvOracleBeforeQuote();
-            debtConfig.callMaxLtvOracleBeforeQuote();
-        }
-
-        bool borrowerIsBelowMaxLtv = SiloSolvencyLib.isBelowMaxLtv(
-            collateralConfig, debtConfig, _args.borrower, ISilo.AccrueInterestInMemory.No
-        );
-
-        if (!borrowerIsBelowMaxLtv) revert ISilo.AboveMaxLtv();
+        _checkLTV(collateralConfig, debtConfig, _args.borrower);
 
         siloConfig.turnOffReentrancyProtection();
 
@@ -513,6 +502,23 @@ library Actions {
         );
 
         if (!userIsSolvent) revert ISilo.NotSolvent();
+    }
+
+    function _checkLTV(
+        ISiloConfig.ConfigData memory _collateralConfig,
+        ISiloConfig.ConfigData memory _debtConfig,
+        address _borrower
+    ) private {
+        if (_collateralConfig.silo != _debtConfig.silo) {
+            _collateralConfig.callMaxLtvOracleBeforeQuote();
+            _debtConfig.callMaxLtvOracleBeforeQuote();
+        }
+
+        bool borrowerIsBelowMaxLtv = SiloSolvencyLib.isBelowMaxLtv(
+            _collateralConfig, _debtConfig, _borrower, ISilo.AccrueInterestInMemory.No
+        );
+
+        if (!borrowerIsBelowMaxLtv) revert ISilo.AboveMaxLtv();
     }
 
     function _hookCallBeforeWithdraw(
