@@ -363,6 +363,20 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
         }
     }
 
+    function getDebtShareTokenAndAsset(address _silo)
+        external
+        view
+        returns (address shareToken, address asset)
+    {
+        if (_silo == _SILO0) {
+            return (_DEBT_SHARE_TOKEN0, _TOKEN0);
+        } else if (_silo == _SILO1) {
+            return (_DEBT_SHARE_TOKEN1, _TOKEN1);
+        } else {
+            revert WrongSilo();
+        }
+    }
+
     /// @inheritdoc ISiloConfig
     function getConfig(address _silo) public view virtual returns (ConfigData memory) {
         if (_silo == _SILO0) {
