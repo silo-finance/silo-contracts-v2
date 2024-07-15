@@ -92,6 +92,12 @@ interface ISilo is IERC4626, IERC3156FlashLender {
         ISilo.CollateralType collateralType;
     }
 
+    struct TransitionCollateralArgs {
+        uint256 shares;
+        address owner;
+        ISilo.CollateralType withdrawType;
+    }
+
     struct SharedStorage {
         ISiloConfig siloConfig;
         uint24 hooksBefore;
