@@ -172,32 +172,6 @@ library SiloERC4626Lib {
         }
     }
 
-    /// this helped with stack too deep
-    function transitionCollateralWithdraw(
-        address _shareToken,
-        uint256 _shares,
-        address _owner,
-        address _spender,
-        ISilo.CollateralType _collateralType,
-        uint256 _liquidity,
-        ISilo.Assets storage _totalCollateral
-    ) internal returns (uint256 assets, uint256 shares) {
-        return withdraw(
-            address(0),
-            _shareToken,
-            ISilo.WithdrawArgs({
-                assets: 0,
-                shares: _shares,
-                owner: _owner,
-                receiver: _owner,
-                spender: _spender,
-                collateralType: _collateralType
-            }),
-            _liquidity,
-            _totalCollateral
-        );
-    }
-
     /// @notice Deposit assets into the silo
     /// @param _token The ERC20 token address being deposited; 0 means tokens will not be transferred. Useful for
     /// transition of collateral.

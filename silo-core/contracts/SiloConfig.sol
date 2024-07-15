@@ -167,19 +167,6 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
         }
     }
 
-    function accrueInterestAndGetConfig(address _silo) external virtual returns (ConfigData memory) {
-        _crossNonReentrantBefore();
-        _callAccrueInterest(_silo);
-
-        if (_silo == _SILO0) {
-            return _silo0ConfigData();
-        } else if (_silo == _SILO1) {
-            return _silo1ConfigData();
-        } else {
-            revert WrongSilo();
-        }
-    }
-
     function accrueInterestAndGetConfigOptimised(
         uint256 _action,
         ISilo.CollateralType _collateralType

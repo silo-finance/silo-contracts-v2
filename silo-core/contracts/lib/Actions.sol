@@ -252,55 +252,36 @@ library Actions {
 
     function transitionCollateral(
         ISilo.SharedStorage storage _shareStorage,
-        uint256 _shares,
-        address _owner,
-        ISilo.CollateralType _withdrawType,
-        mapping(uint256 assetType => ISilo.Assets) storage _total
+        mapping(uint256 assetType => ISilo.Assets) storage _total,
+        ISilo.TransitionCollateralArgs memory _args
     )
         external
         returns (uint256 assets, uint256 toShares)
     {
-        _hookCallBeforeTransitionCollateral(_shareStorage, _withdrawType, _shares, _owner);
+        _hookCallBeforeTransitionCollateral(_shareStorage, _args);
 
-        ISiloConfig.ConfigData memory collateralConfig = _shareStorage.siloConfig.accrueInterestAndGetConfig(
-            address(this)
-        );
+        ISiloConfig siloConfig = _shareStorage.siloConfig;
 
-        uint256 liquidity = _withdrawType == ISilo.CollateralType.Collateral
-            ? SiloMathLib.liquidity(_total[AssetTypes.COLLATERAL].assets, _total[AssetTypes.DEBT].assets)
-            : _total[AssetTypes.PROTECTED].assets;
+        siloConfig.turnOnReentrancyProtection();
+        siloConfig.accrueInterestForSilo(address(this));
 
-        address shareTokenFrom = _withdrawType == ISilo.CollateralType.Collateral
-            ? collateralConfig.collateralShareToken
-            : collateralConfig.protectedShareToken;
+        (address protectedShareToken, address collateralShareToken,) = siloConfig.getShareTokens(address(this));
 
-        (assets, _shares) = SiloERC4626Lib.transitionCollateralWithdraw(
-            shareTokenFrom,
-            _shares,
-            _owner,
-            msg.sender,
-            _withdrawType,
-            liquidity,
-            _total[uint256(_withdrawType)]
-        );
+        uint256 shares;
 
-        (ISilo.AssetType depositType, address shareTokenTo) = _withdrawType == ISilo.CollateralType.Collateral
-            ? (ISilo.AssetType.Protected, collateralConfig.protectedShareToken)
-            : (ISilo.AssetType.Collateral, collateralConfig.collateralShareToken);
+        (assets, shares) = _transitionCollateralWithdraw(_total, _args, protectedShareToken, collateralShareToken);
 
-        (assets, toShares) = SiloERC4626Lib.deposit(
-            address(0), // empty token because we don't want to transfer
-            _owner,
+        (assets, toShares) = _transitionCollateralDeposit(
+            _total,
+            _args,
             assets,
-            0, // shares
-            _owner,
-            IShareToken(shareTokenTo),
-            _total[uint256(depositType)]
+            protectedShareToken,
+            collateralShareToken
         );
 
         _shareStorage.siloConfig.turnOffReentrancyProtection();
 
-        _hookCallAfterTransitionCollateral(_shareStorage, _withdrawType, _shares, _owner, assets);
+        _hookCallAfterTransitionCollateral(_shareStorage, _args, shares, assets);
     }
 
     function switchCollateralTo(
@@ -521,6 +502,59 @@ library Actions {
         if (!borrowerIsBelowMaxLtv) revert ISilo.AboveMaxLtv();
     }
 
+    function _transitionCollateralWithdraw(
+        mapping(uint256 assetType => ISilo.Assets) storage _total,
+        ISilo.TransitionCollateralArgs memory _args,
+        address _protectedShareToken,
+        address _collateralShareToken
+    ) private returns (uint256 assets, uint256 toShares) {
+        uint256 liquidity = _args.withdrawType == ISilo.CollateralType.Collateral
+            ? SiloMathLib.liquidity(_total[AssetTypes.COLLATERAL].assets, _total[AssetTypes.DEBT].assets)
+            : _total[AssetTypes.PROTECTED].assets;
+
+        address shareTokenFrom = _args.withdrawType == ISilo.CollateralType.Collateral
+            ? _collateralShareToken
+            : _protectedShareToken;
+
+        (assets, toShares) = SiloERC4626Lib.withdraw({
+            _asset: address(0),
+            _shareToken: shareTokenFrom,
+            _args: ISilo.WithdrawArgs({
+                assets: 0,
+                shares: _args.shares,
+                owner: _args.owner,
+                receiver: _args.owner,
+                spender: msg.sender,
+                collateralType: _args.withdrawType
+            }),
+            _liquidity: liquidity,
+            _totalCollateral: _total[uint256(_args.withdrawType)]
+        });
+    }
+
+    function _transitionCollateralDeposit(
+        mapping(uint256 assetType => ISilo.Assets) storage _total,
+        ISilo.TransitionCollateralArgs memory _args,
+        uint256 _assets,
+        address _protectedShareToken,
+        address _collateralShareToken
+    ) private returns (uint256 assets, uint256 toShares) {
+        (ISilo.AssetType depositType, address shareTokenTo) = _args.withdrawType == ISilo.CollateralType.Collateral
+            ? (ISilo.AssetType.Protected, _protectedShareToken)
+            : (ISilo.AssetType.Collateral, _collateralShareToken);
+
+        (assets, toShares) = SiloERC4626Lib.deposit({
+            _token: address(0), // empty token because we don't want to transfer
+            _depositor: _args.owner,
+            _assets: _assets,
+            _shares: 0,
+            _receiver: _args.owner,
+            _collateralShareToken: IShareToken(shareTokenTo),
+            _totalCollateral: _total[uint256(depositType)]
+        
+        });
+    }
+
     function _hookCallBeforeWithdraw(
         ISilo.SharedStorage storage _shareStorage,
         ISilo.WithdrawArgs calldata _args
@@ -586,31 +620,28 @@ library Actions {
 
     function _hookCallBeforeTransitionCollateral(
         ISilo.SharedStorage storage _shareStorage,
-        ISilo.CollateralType _withdrawType,
-        uint256 _shares,
-        address _owner
+        ISilo.TransitionCollateralArgs memory _args
     ) private {
-        uint256 action = Hook.transitionCollateralAction(_withdrawType);
+        uint256 action = Hook.transitionCollateralAction(_args.withdrawType);
 
         if (!_shareStorage.hooksBefore.matchAction(action)) return;
 
-        bytes memory data = abi.encodePacked(_shares, _owner);
+        bytes memory data = abi.encodePacked(_args.shares, _args.owner);
 
         _shareStorage.hookReceiver.beforeAction(address(this), action, data);
     }
 
     function _hookCallAfterTransitionCollateral(
         ISilo.SharedStorage storage _shareStorage,
-        ISilo.CollateralType _withdrawType,
+        ISilo.TransitionCollateralArgs memory _args,
         uint256 _shares,
-        address _owner,
         uint256 _assets
     ) private {
-        uint256 action = Hook.transitionCollateralAction(_withdrawType);
+        uint256 action = Hook.transitionCollateralAction(_args.withdrawType);
 
         if (!_shareStorage.hooksAfter.matchAction(action)) return;
 
-        bytes memory data = abi.encodePacked(_shares, _owner, _assets);
+        bytes memory data = abi.encodePacked(_shares, _args.owner, _assets);
 
         _shareStorage.hookReceiver.afterAction(address(this), action, data);
     }

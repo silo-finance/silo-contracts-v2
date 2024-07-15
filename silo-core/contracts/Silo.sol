@@ -422,7 +422,15 @@ contract Silo is SiloERC4626 {
     {
         uint256 toShares;
 
-        (assets, toShares) = Actions.transitionCollateral(_sharedStorage, _shares, _owner, _withdrawType, _total);
+        (assets, toShares) = Actions.transitionCollateral(
+            _sharedStorage,
+            _total,
+            TransitionCollateralArgs({
+                shares: _shares,
+                owner: _owner,
+                withdrawType: _withdrawType
+            })
+        );
 
         if (_withdrawType == CollateralType.Collateral) {
             emit Withdraw(msg.sender, _owner, _owner, assets, _shares);
