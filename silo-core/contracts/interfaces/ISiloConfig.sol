@@ -243,4 +243,9 @@ interface ISiloConfig {
         external
         view
         returns (address shareToken, address asset);
+
+    function getDebtShareTokenAndAsset(address _silo)
+        external
+        view
+        returns (address shareToken, address asset);
 }

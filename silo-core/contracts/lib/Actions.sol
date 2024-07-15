@@ -180,17 +180,18 @@ library Actions {
             _shareStorage.hookReceiver.beforeAction(address(this), Hook.REPAY, data);
         }
 
-        ISiloConfig siloConfigCached = _shareStorage.siloConfig;
+        ISiloConfig siloConfig = _shareStorage.siloConfig;
 
-        (
-            address debtShareToken, address debtAsset
-        ) = siloConfigCached.accrueInterestAndGetConfigOptimised(Hook.REPAY, ISilo.CollateralType(0));
+        siloConfig.turnOnReentrancyProtection();
+        siloConfig.accrueInterestForSilo(address(this));
+
+        (address debtShareToken, address debtAsset) = siloConfig.getDebtShareTokenAndAsset(address(this));
 
         (assets, shares) = SiloLendingLib.repay(
             IShareToken(debtShareToken), debtAsset, _assets, _shares, _borrower, _repayer, _totalDebt
         );
 
-        siloConfigCached.turnOffReentrancyProtection();
+        siloConfig.turnOffReentrancyProtection();
 
         if (_shareStorage.hooksAfter.matchAction(Hook.REPAY)) {
             bytes memory data = abi.encodePacked(_assets, _shares, _borrower, _repayer, assets, shares);
