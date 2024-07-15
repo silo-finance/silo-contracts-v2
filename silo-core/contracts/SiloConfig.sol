@@ -208,8 +208,6 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
 
         if (_action.matchAction(Hook.BORROW)) {
             _setCollateralSilo(msg.sender, _borrower, _action.matchAction(Hook.SAME_ASSET));
-        } else if (_action.matchAction(Hook.SWITCH_COLLATERAL)) {
-            _changeCollateralType(_silo, _borrower, _action.matchAction(Hook.SAME_ASSET));
         } else {
             // TODO looks like anyone can raise flag if there is no action taken?
         }
@@ -241,6 +239,32 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
             _DAO_FEE,
             _DEPLOYER_FEE
         );
+    }
+
+    function switchCollateralSilo(address _borrower) external {
+        _onlySilo();
+
+        address debtSilo = getDebtSilo(_borrower);
+
+        if (debtSilo == address(0)) revert NoDebt();
+
+        address currentSilo = _borrowerCollateralSilo[_borrower];
+
+        _borrowerCollateralSilo[_borrower] = currentSilo == _SILO0 ? _SILO1 : _SILO0;
+    }
+
+    function getCollateralAndDebtConfigs(address _borrower) external view returns (
+        ConfigData memory collateralConfig,
+        ConfigData memory debtConfig
+    ) {
+        address debtSilo = getDebtSilo(_borrower);
+
+        if (debtSilo == address(0)) return (collateralConfig, debtConfig);
+
+        address collateralSilo = _borrowerCollateralSilo[_borrower];
+
+        collateralConfig = getConfig(collateralSilo);
+        debtConfig = getConfig(debtSilo);
     }
 
     function reentrancyGuardEntered() external view virtual returns (bool entered) {

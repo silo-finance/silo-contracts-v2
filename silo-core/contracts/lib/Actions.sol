@@ -284,11 +284,8 @@ library Actions {
         _hookCallAfterTransitionCollateral(_shareStorage, _args, shares, assets);
     }
 
-    function switchCollateralTo(
-        ISilo.SharedStorage storage _shareStorage,
-        bool _toSameAsset
-    ) external {
-        uint256 action = Hook.switchCollateralAction(_toSameAsset);
+    function switchCollateralTo(ISilo.SharedStorage storage _shareStorage) external {
+        uint256 action = Hook.SWITCH_COLLATERAL;
 
         if (_shareStorage.hooksBefore.matchAction(action)) {
             _shareStorage.hookReceiver.beforeAction(address(this), action, abi.encodePacked(msg.sender));
@@ -296,24 +293,16 @@ library Actions {
 
         ISiloConfig siloConfig = _shareStorage.siloConfig;
 
-        (
-            ISiloConfig.ConfigData memory collateralConfig,
-            ISiloConfig.ConfigData memory debtConfig,
-            ISiloConfig.DebtInfo memory debtInfo
-        ) = siloConfig.accrueInterestAndGetConfigs(address(this), msg.sender, action);
+        siloConfig.turnOnReentrancyProtection();
+        siloConfig.accrueInterestForBothSilos();
+        siloConfig.switchCollateralSilo(msg.sender);
 
-        if (collateralConfig.otherSilo != address(this)) {
-            ISilo(collateralConfig.otherSilo).accrueInterest();
-        }
+        ISiloConfig.ConfigData memory collateralConfig;
+        ISiloConfig.ConfigData memory debtConfig;
 
-        collateralConfig.callSolvencyOracleBeforeQuote();
-        debtConfig.callSolvencyOracleBeforeQuote();
+        (collateralConfig, debtConfig) = siloConfig.getCollateralAndDebtConfigs(msg.sender);
 
-        bool msgSenderIsSolvent = SiloSolvencyLib.isSolvent(
-            collateralConfig, debtConfig, debtInfo, msg.sender, ISilo.AccrueInterestInMemory.No
-        );
-
-        if (!msgSenderIsSolvent) revert ISilo.NotSolvent();
+        _checkSolvency(collateralConfig, debtConfig, msg.sender);
 
         siloConfig.turnOffReentrancyProtection();
 
