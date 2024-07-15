@@ -517,7 +517,7 @@ library Actions {
             : _protectedShareToken;
 
         (assets, toShares) = SiloERC4626Lib.withdraw({
-            _asset: address(0),
+            _asset: address(0), // empty token because we don't want to transfer
             _shareToken: shareTokenFrom,
             _args: ISilo.WithdrawArgs({
                 assets: 0,
