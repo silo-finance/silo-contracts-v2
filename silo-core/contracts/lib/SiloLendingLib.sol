@@ -262,21 +262,12 @@ library SiloLendingLib {
         view
         returns (uint256 maxAssets, uint256 maxShares)
     {
-        (
-            ISiloConfig.ConfigData memory collateralConfig,
-            ISiloConfig.ConfigData memory debtConfig,
-            ISiloConfig.DebtInfo memory debtInfo
-        ) = _siloConfig.getConfigs(
-            address(this),
-            _borrower,
-            Hook.BORROW | (_sameAsset ? Hook.SAME_ASSET : Hook.TWO_ASSETS)
-        );
+        if (_siloConfig.hasDebtInOtherSilo(address(this), _borrower)) return (0, 0);
 
-        if (!SiloLendingLib.borrowPossible(debtInfo)) return (0, 0);
+        ISiloConfig.ConfigData memory collateralConfig;
+        ISiloConfig.ConfigData memory debtConfig;
 
-        if (_sameAsset) {
-            collateralConfig = debtConfig;
-        }
+        (collateralConfig, debtConfig) = _siloConfig.getConfigsForBorrow(address(this), _sameAsset);
 
         (uint256 totalDebtAssets, uint256 totalDebtShares) =
             SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(debtConfig, ISilo.AssetType.Debt);

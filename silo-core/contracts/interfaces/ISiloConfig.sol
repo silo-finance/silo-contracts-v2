@@ -190,6 +190,8 @@ interface ISiloConfig {
     /// @return asset The address of the asset associated with the specified silo
     function getAssetForSilo(address _silo) external view returns (address asset);
 
+    function hasDebtInOtherSilo(address _silo, address _borrower) external view returns (bool hasDebt);
+
     /// @notice Retrieves configuration data for both silos. First config is for the silo that is asking for configs.
     /// @dev This function reverts for incorrect silo address input.
     /// @param _silo The address of the silo for which configuration data is being retrieved. Config for this silo will
@@ -215,6 +217,11 @@ interface ISiloConfig {
         ConfigData memory collateralConfig,
         ConfigData memory debtConfig
     );
+
+    function getConfigsForBorrow(address _silo, bool _sameAsset)
+        external
+        view
+        returns (ConfigData memory collateralConfig, ConfigData memory debtConfig);
 
     /// @notice Retrieves fee-related information for a specific silo
     /// @dev This function reverts for incorrect silo address input

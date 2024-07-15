@@ -160,8 +160,13 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
         (, uint64 interestRateTimestamp0) = silo0.siloData();
         (, uint64 interestRateTimestamp1) = silo1.siloData();
         assertEq(interestRateTimestamp0, 1, "interestRateTimestamp0 is 1 because we deposited and borrow same asset");
-        assertEq(interestRateTimestamp1, 0, "interestRateTimestamp1 is 0 because there is no action there");
         assertEq(block.timestamp, 1, "block.timestamp");
+
+        assertEq(
+            interestRateTimestamp1,
+            1,
+            "interestRateTimestamp1 is 1 because because on borrow we accrue interest for both silos"
+        );
 
         (uint256 collateralToLiquidate, uint256 debtToRepay) = partialLiquidation.maxLiquidation(address(silo0), BORROWER);
         assertEq(collateralToLiquidate, 0, "no collateralToLiquidate yet");

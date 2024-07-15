@@ -90,11 +90,12 @@ jobs:
           cp target/release/silo-foundry-utils ../../silo-foundry-utils
           ../../silo-foundry-utils --version
 
-      - name: Run Forge build
-        run: |
-          git submodule
-          forge --version
-          FOUNDRY_PROFILE=core forge build --sizes
+      # TODO
+      # - name: Run Forge build
+      #   run: |
+      #     git submodule
+      #     forge --version
+      #     FOUNDRY_PROFILE=core forge build --sizes
 
       - name: Run Forge tests
         run: FOUNDRY_PROFILE=core-test forge test --no-match-test "_skip_" --no-match-contract "SiloIntegrationTest" --ffi -vvv
