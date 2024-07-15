@@ -170,7 +170,7 @@ interface ISilo is IERC4626, IERC3156FlashLender {
     event Repay(address indexed sender, address indexed owner, uint256 assets, uint256 shares);
 
     /// @notice emitted only when collateral has been switched to other one
-    event CollateralTypeChanged(address indexed borrower, bool sameAseet);
+    event CollateralTypeChanged(address indexed borrower);
 
     event HooksUpdated(uint24 hooksBefore, uint24 hooksAfter);
 
@@ -353,7 +353,7 @@ interface ISilo is IERC4626, IERC3156FlashLender {
         external
         returns (uint256 assets);
 
-    function switchCollateralTo(bool _sameToken) external;
+    function switchCollateralTo() external;
 
     /// @notice Calculates the maximum amount of assets that can be borrowed by the given address
     /// @param _borrower Address of the potential borrower

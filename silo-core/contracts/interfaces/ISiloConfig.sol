@@ -156,7 +156,7 @@ interface ISiloConfig {
     /// @param _sameAsset true if `_borrower` operates on the same asset
     function setCollateralSilo(address _borrower, bool _sameAsset) external;
 
-    function switchCollateralSilo(address _borrower, bool _switchToSameAsset) external;
+    function switchCollateralSilo(address _borrower) external;
 
     function accrueInterestForSilo(address _silo) external;
 

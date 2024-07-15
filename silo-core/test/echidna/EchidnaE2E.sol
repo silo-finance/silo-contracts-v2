@@ -250,11 +250,11 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         assets = actor.transitionCollateral(_vaultZero, shares, withdrawType);
     }
 
-    function switchCollateralTo(uint8 _actorIndex, bool _vaultZero, bool _sameAsset) public {
+    function switchCollateralTo(uint8 _actorIndex, bool _vaultZero) public {
         emit LogUint256("[switchCollateralTo] block.timestamp:", block.timestamp);
 
         Actor actor = _selectActor(_actorIndex);
-        actor.switchCollateralTo(_vaultZero, _sameAsset);
+        actor.switchCollateralTo(_vaultZero);
     }
 
     function leverageSameAsset(

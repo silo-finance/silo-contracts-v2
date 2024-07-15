@@ -56,7 +56,7 @@ contract ChangeCollateralTypeTest is SiloLittleHelper, Test {
 
         vm.expectRevert(ISiloConfig.OnlySilo.selector);
         vm.prank(_from);
-        siloConfig.switchCollateralSilo(borrower, _toSameAsset);
+        siloConfig.switchCollateralSilo(borrower);
     }
 
     /*
@@ -81,7 +81,7 @@ contract ChangeCollateralTypeTest is SiloLittleHelper, Test {
         assertEq(sameAsset, !_toSameAsset);
 
         vm.prank(address(silo0));
-        siloConfig.switchCollateralSilo(borrower, _toSameAsset);
+        siloConfig.switchCollateralSilo(borrower);
 
         (collateral, debt) = siloConfig.getCollateralAndDebtConfigs(borrower);
 
@@ -90,33 +90,13 @@ contract ChangeCollateralTypeTest is SiloLittleHelper, Test {
         assertEq(sameAsset, _toSameAsset);
 
         vm.prank(address(silo0));
-        siloConfig.switchCollateralSilo(borrower, !_toSameAsset);
+        siloConfig.switchCollateralSilo(borrower);
 
         (collateral, debt) = siloConfig.getCollateralAndDebtConfigs(borrower);
 
         sameAsset = debt.silo == collateral.silo;
 
         assertEq(sameAsset, !_toSameAsset);
-    }
-
-    /*
-    forge test -vv --ffi --mt test_changeCollateralType_CollateralTypeDidNotChanged_
-    */
-    function test_changeCollateralType_CollateralTypeDidNotChanged_1token() public {
-        _changeCollateralType_CollateralTypeDidNotChanged(SAME_ASSET);
-    }
-
-    function test_changeCollateralType_CollateralTypeDidNotChanged_2tokens() public {
-        _changeCollateralType_CollateralTypeDidNotChanged(TWO_ASSETS);
-    }
-
-    function _changeCollateralType_CollateralTypeDidNotChanged(bool _toSameAsset) private {
-        _doDeposit(_toSameAsset);
-
-        vm.prank(address(silo0));
-        vm.expectRevert(ISiloConfig.CollateralTypeDidNotChanged.selector);
-
-        siloConfig.switchCollateralSilo(borrower, _toSameAsset);
     }
 
     /*
@@ -128,7 +108,7 @@ contract ChangeCollateralTypeTest is SiloLittleHelper, Test {
         vm.prank(address(silo0));
         vm.expectRevert(ISiloConfig.NoDebt.selector);
 
-        siloConfig.switchCollateralSilo(borrower, false);
+        siloConfig.switchCollateralSilo(borrower);
     }
 
     function _doDeposit(bool _sameAsset) private returns (ISiloConfig.ConfigData memory collateral, ISiloConfig.ConfigData memory debt) {
