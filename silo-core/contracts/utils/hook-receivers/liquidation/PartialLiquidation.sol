@@ -52,7 +52,7 @@ contract PartialLiquidation is SiloStorage, IPartialLiquidation, IHookReceiver {
         address _collateralAsset,
         address _debtAsset,
         address _borrower,
-        uint256 _debtToCover,
+        uint256 _debtToCover, // TODO check how we apply limitations
         bool _receiveSToken
     )
         external
@@ -115,7 +115,6 @@ contract PartialLiquidation is SiloStorage, IPartialLiquidation, IHookReceiver {
             collateralConfig.protectedShareToken,
             AssetTypes.PROTECTED
         );
-
 
         if (_receiveSToken) {
             // this two value were split from total collateral to withdraw, so we will not overflow
