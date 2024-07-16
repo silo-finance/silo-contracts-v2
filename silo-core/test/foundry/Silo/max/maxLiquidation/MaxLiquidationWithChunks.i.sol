@@ -8,11 +8,11 @@ import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {MaxLiquidationTest} from "./MaxLiquidation.i.sol";
 
 /*
-    forge test -vv --ffi --mc MaxLiquidationDividedTest
+    forge test -vv --ffi --mc MaxLiquidationWithChunksTest
 
     this tests are MaxLiquidationTest cases, difference is, we splitting max liquidation in chunks
 */
-contract MaxLiquidationDividedTest is MaxLiquidationTest {
+contract MaxLiquidationWithChunksTest is MaxLiquidationTest {
     using SiloLensLib for ISilo;
 
     uint256[] private _testCases;
@@ -91,7 +91,7 @@ contract MaxLiquidationDividedTest is MaxLiquidationTest {
             return _debtToCover / 2;
         } else if (_i == 3) {
             uint256 minAssets = silo1.previewRepayShares(1);
-            return _debtToCover < minAssets ? minAssets : _debtToCover - minAssets; // TODO possible? correct?
+            return _debtToCover < minAssets ? minAssets : _debtToCover - minAssets; // TODO correct?
         } else revert("this should never happen");
     }
 }

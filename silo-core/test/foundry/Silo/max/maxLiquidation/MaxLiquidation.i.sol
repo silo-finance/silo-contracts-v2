@@ -143,6 +143,7 @@ contract MaxLiquidationTest is MaxLiquidationCommon {
 
         emit log_named_decimal_uint("[MaxLiquidation] ltv before", silo0.getLtv(borrower), 16);
 
+        // TODO try do liquidate with chunks
         (withdrawCollateral, repayDebtAssets) = partialLiquidation.liquidationCall(
             address(silo1),
             address(_sameToken ? token1 : token0),

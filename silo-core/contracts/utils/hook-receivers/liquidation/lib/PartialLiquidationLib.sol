@@ -31,9 +31,8 @@ library PartialLiquidationLib {
     uint256 internal constant _DEBT_DUST_LEVEL = 0.9e18; // 90%
 
     /// @dev debt keeps growing over time, so when dApp use this view to calculate max, tx should never revert
-    /// because actual max can be only higher.
+    /// because actual max can be only higher
     /// @notice This method does not check, if user is solvent and it can return non zro result when user solvent
-    /// because this is all about math, not logic.
     function maxLiquidation(
         uint256 _sumOfCollateralAssets,
         uint256 _sumOfCollateralValue,
@@ -43,7 +42,7 @@ library PartialLiquidationLib {
         uint256 _liquidityFee
     )
         internal
-        view
+        pure
         returns (uint256 collateralToLiquidate, uint256 debtToRepay)
     {
         (
