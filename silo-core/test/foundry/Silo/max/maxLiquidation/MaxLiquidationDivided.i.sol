@@ -44,12 +44,7 @@ contract MaxLiquidationDividedTest is MaxLiquidationTest {
 
             if (isSolvent) break;
 
-            emit log_named_uint("[MaxLiquidationDivided] debtToCover", debtToCover);
-
             uint256 testDebtToCover = _prepareTestCase(debtToCover, i);
-            emit log_named_uint("[MaxLiquidationDivided] testDebtToCover", testDebtToCover);
-
-            if (debtToCover == 0) break;
 
             (uint256 partialCollateral, uint256 partialDebt) = _liquidationCall(testDebtToCover, _sameToken, _receiveSToken);
             withdrawCollateral += partialCollateral;
@@ -57,9 +52,7 @@ contract MaxLiquidationDividedTest is MaxLiquidationTest {
 
             // TODO warp?
         }
-
-        emit log_named_decimal_uint("[MaxLiquidationDivided] ltv after", silo0.getLtv(borrower), 16);
-
+        
         // sum of chunk liquidation will be always smaller than one max, because with chunks we will get to the point
         // where user became solvent and the margin we have for max liquidation will not be used
         assertLt(repayDebtAssets, totalDebtToCover, "chunks(debt) are always smaller than total/max");
