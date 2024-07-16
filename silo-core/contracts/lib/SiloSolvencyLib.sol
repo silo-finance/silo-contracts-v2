@@ -199,9 +199,7 @@ library SiloSolvencyLib {
         } else if (sumOfBorrowerCollateralValue == 0) {
             ltvInDp = _INFINITY;
         } else {
-            ltvInDp = totalBorrowerDebtValue.mulDiv(
-                _PRECISION_DECIMALS, sumOfBorrowerCollateralValue, Math.Rounding(Rounding.LTV)
-            );
+            ltvInDp = ltvMath(totalBorrowerDebtValue, sumOfBorrowerCollateralValue);
         }
     }
 
@@ -241,5 +239,15 @@ library SiloSolvencyLib {
         if (!_debtInfo.debtPresent) return true;
 
         return _debtInfo.debtInThisSilo ? !_debtInfo.sameAsset : _debtInfo.sameAsset;
+    }
+
+    function ltvMath(uint256 _totalBorrowerDebtValue, uint256 _sumOfBorrowerCollateralValue)
+        internal
+        pure
+        returns (uint256 ltvInDp)
+    {
+        ltvInDp = _totalBorrowerDebtValue.mulDiv(
+            _PRECISION_DECIMALS, _sumOfBorrowerCollateralValue, Math.Rounding(Rounding.LTV)
+        );
     }
 }
