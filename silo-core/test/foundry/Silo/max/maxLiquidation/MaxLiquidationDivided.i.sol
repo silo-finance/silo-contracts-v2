@@ -30,6 +30,7 @@ contract MaxLiquidationDividedTest is MaxLiquidationTest {
 
         for (uint256 i; i < 5; i++) {
             emit log_named_uint("[MaxLiquidationDivided] case ------------------------", i);
+            bool isSolvent = silo0.isSolvent(borrower);
 
             emit log_named_string("isSolvent", silo0.isSolvent(borrower) ? "YES" : "NO");
 
@@ -37,8 +38,7 @@ contract MaxLiquidationDividedTest is MaxLiquidationTest {
                 uint256 collateralToLiquidate, uint256 debtToCover
             ) = partialLiquidation.maxLiquidation(address(silo1), borrower);
 
-            bool isSolvent = silo0.isSolvent(borrower);
-
+            // this conditions caught bug
             if (isSolvent && debtToCover != 0) revert("if we solvent there should be no liquidation");
             if (!isSolvent && debtToCover == 0) revert("if we NOT solvent there should be a liquidation");
 
@@ -58,13 +58,12 @@ contract MaxLiquidationDividedTest is MaxLiquidationTest {
             // TODO warp?
         }
 
-        emit log("[MaxLiquidationDivided] LOOP case FINISHED");
-
-
         emit log_named_decimal_uint("[MaxLiquidationDivided] ltv after", silo0.getLtv(borrower), 16);
 
-        assertEq(repayDebtAssets, totalDebtToCover, "debt: maxLiquidation == result");
-        _assertEqDiff(withdrawCollateral, totalCollateralToLiquidate, "collateral: max == result");
+        // sum of chunk liquidation will be always smaller than one max, because with chunks we will get to the point
+        // where user became solvent and the margin we have for max liquidation will not be used
+        assertLt(repayDebtAssets, totalDebtToCover, "chunks(debt) are always smaller than total/max");
+        assertLt(withdrawCollateral, totalCollateralToLiquidate, "chunks(collateral) are always smaller than total/max");
     }
 
     function _liquidationCall(uint256 _debtToCover, bool _sameToken, bool _receiveSToken)

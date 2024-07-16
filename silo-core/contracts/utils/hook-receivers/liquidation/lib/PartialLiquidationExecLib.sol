@@ -95,6 +95,9 @@ library PartialLiquidationExecLib {
 
         uint256 ltvInDp = SiloSolvencyLib.ltvMath(debtValue, sumOfCollateralValue);
         if (ltvInDp <= collateralConfig.lt) return (0, 0); // user solvent
+
+        console.log("debtValue", debtValue);
+
         uint256 sumOfCollateralAssets;
         // safe because we adding same token, so it is under same total supply
         unchecked { sumOfCollateralAssets = ltvData.borrowerProtectedAssets + ltvData.borrowerCollateralAssets; }

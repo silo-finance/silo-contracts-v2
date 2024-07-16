@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.24;
 
+import {console} from "forge-std/console.sol";
+
+
 import {Math} from "openzeppelin5/utils/math/Math.sol";
 
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
@@ -31,7 +34,9 @@ library PartialLiquidationLib {
     uint256 internal constant _DEBT_DUST_LEVEL = 0.9e18; // 90%
 
     /// @dev debt keeps growing over time, so when dApp use this view to calculate max, tx should never revert
-    /// because actual max can be only higher
+    /// because actual max can be only higher.
+    /// @notice This method does not check, if user is solvent and it can return non zro result when user solvent
+    /// because this is all about math, not logic.
     function maxLiquidation(
         uint256 _sumOfCollateralAssets,
         uint256 _sumOfCollateralValue,
@@ -41,9 +46,11 @@ library PartialLiquidationLib {
         uint256 _liquidityFee
     )
         internal
-        pure
+        view
         returns (uint256 collateralToLiquidate, uint256 debtToRepay)
     {
+        console.log("[maxLiquidation]");
+
         (
             uint256 collateralValueToLiquidate, uint256 repayValue
         ) = maxLiquidationPreview(
@@ -52,6 +59,10 @@ library PartialLiquidationLib {
             minAcceptableLTV(_lt),
             _liquidityFee
         );
+
+        console.log("[maxLiquidation] ~LTV", _borrowerDebtValue * 1e18 / _sumOfCollateralValue);
+        console.log("[maxLiquidation] collateralValueToLiquidate", collateralValueToLiquidate);
+        console.log("[maxLiquidation] repayValue", repayValue);
 
         collateralToLiquidate = valueToAssetsByRatio(
             collateralValueToLiquidate,
