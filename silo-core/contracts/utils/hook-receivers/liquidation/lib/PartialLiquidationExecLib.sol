@@ -123,17 +123,17 @@ library PartialLiquidationExecLib {
         uint256 sumOfCollateralAssets;
         // safe because same asset can not overflow
         unchecked  { sumOfCollateralAssets = _ltvData.borrowerCollateralAssets + _ltvData.borrowerProtectedAssets; }
-        console.log("sumOfCollateralAssets %s", sumOfCollateralAssets);
-        console.log("_params.debtToCover %s", _params.debtToCover);
+        console.log("sumOfCollateralAssets", sumOfCollateralAssets);
+        console.log("_params.debtToCover", _params.debtToCover);
 
         if (_ltvData.borrowerDebtAssets == 0 || _params.debtToCover == 0) return (0, 0);
 
         console.log("[liquidationPreview] DEBUG", 1);
 
         if (sumOfCollateralAssets == 0) {
-        console.log("[liquidationPreview] DEBUG", 2);
+            console.log("[liquidationPreview] DEBUG", 2);
 
-        return (
+            return (
                 0,
                 _params.debtToCover > _ltvData.borrowerDebtAssets ? _ltvData.borrowerDebtAssets : _params.debtToCover
             );
@@ -142,6 +142,11 @@ library PartialLiquidationExecLib {
         (
             uint256 sumOfBorrowerCollateralValue, uint256 totalBorrowerDebtValue, uint256 ltvBefore
         ) = SiloSolvencyLib.calculateLtv(_ltvData, _params.collateralConfigAsset, _params.debtConfigAsset);
+
+        // LT 950000000000000000 LTV 951934150802791139 (ltvBefore)
+        // why we are solvent??
+
+        console.log("[liquidationPreview] DEBUG LT %s LTV %s", _params.collateralLt, ltvBefore);
 
         if (_params.selfLiquidation) {
             console.log("[liquidationPreview] DEBUG", 3);

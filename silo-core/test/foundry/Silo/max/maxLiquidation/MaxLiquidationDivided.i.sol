@@ -23,29 +23,48 @@ contract MaxLiquidationDividedTest is MaxLiquidationTest {
         returns (uint256 withdrawCollateral, uint256 repayDebtAssets)
     {
         (
-            uint256 collateralToLiquidate, uint256 debtToCover
+            uint256 totalCollateralToLiquidate, uint256 totalDebtToCover
         ) = partialLiquidation.maxLiquidation(address(silo1), borrower);
-
-        _prepareTestCases(debtToCover);
 
         emit log_named_decimal_uint("[MaxLiquidationDivided] ltv before", silo0.getLtv(borrower), 16);
 
-        uint256 partialCollateral;
-        uint256 partialDebt;
+        for (uint256 i; i < 5; i++) {
+            emit log_named_uint("[MaxLiquidationDivided] case ------------------------", i);
 
-        for (uint256 i; i < _testCases.length; i++) {
-            emit log_named_uint("[MaxLiquidationDivided] _testCases[i]", _testCases[i]);
+            emit log_named_string("isSolvent", silo0.isSolvent(borrower) ? "YES" : "NO");
 
-            (partialCollateral, partialDebt) = _liquidationCall(_testCases[i], _sameToken, _receiveSToken);
+            (
+                uint256 collateralToLiquidate, uint256 debtToCover
+            ) = partialLiquidation.maxLiquidation(address(silo1), borrower);
+
+            bool isSolvent = silo0.isSolvent(borrower);
+
+            if (isSolvent && debtToCover != 0) revert("if we solvent there should be no liquidation");
+            if (!isSolvent && debtToCover == 0) revert("if we NOT solvent there should be a liquidation");
+
+            if (isSolvent) break;
+
+            emit log_named_uint("[MaxLiquidationDivided] debtToCover", debtToCover);
+
+            uint256 testDebtToCover = _prepareTestCase(debtToCover, i);
+            emit log_named_uint("[MaxLiquidationDivided] testDebtToCover", testDebtToCover);
+
+            if (debtToCover == 0) break;
+
+            (uint256 partialCollateral, uint256 partialDebt) = _liquidationCall(testDebtToCover, _sameToken, _receiveSToken);
             withdrawCollateral += partialCollateral;
             repayDebtAssets += partialDebt;
+
+            // TODO warp?
         }
 
-        emit log_named_decimal_uint("[MaxLiquidationDivided] ltv after", silo0.getLtv(borrower), 16);
-        emit log_named_decimal_uint("[MaxLiquidationDivided] collateralToLiquidate", collateralToLiquidate, 18);
+        emit log("[MaxLiquidationDivided] LOOP case FINISHED");
 
-        assertEq(debtToCover, repayDebtAssets, "debt: maxLiquidation == result");
-        _assertEqDiff(withdrawCollateral, collateralToLiquidate, "collateral: max == result");
+
+        emit log_named_decimal_uint("[MaxLiquidationDivided] ltv after", silo0.getLtv(borrower), 16);
+
+        assertEq(repayDebtAssets, totalDebtToCover, "debt: maxLiquidation == result");
+        _assertEqDiff(withdrawCollateral, totalCollateralToLiquidate, "collateral: max == result");
     }
 
     function _liquidationCall(uint256 _debtToCover, bool _sameToken, bool _receiveSToken)
@@ -62,32 +81,25 @@ contract MaxLiquidationDividedTest is MaxLiquidationTest {
         );
     }
 
-    function _prepareTestCases(uint256 _debtToCover) private {
-        delete _testCases;
+    function _prepareTestCase(uint256 _debtToCover, uint256 _i) private returns (uint256 _chunk) {
+        if (_debtToCover == 0) return 0;
 
-        // min amount of assets that will not generate ZeroShares error
-        uint256 minAssets = silo1.previewRepayShares(1);
+        if (_i < 2 || _i == 4) {
+            // two first iteration and last one (we assume we have max 5 iterations), try to use minimal amount
 
-        _testCases.push(minAssets);
-        _debtToCover -= _testCases[_testCases.length - 1];
+            // min amount of assets that will not generate ZeroShares error
+            uint256 minAssets = silo1.previewRepayShares(1);
 
-        if (_debtToCover == 0) return;
+            if (_debtToCover < minAssets) {
+                revert("calculation of maxDebtToCover should never return assets that will generate zero shares");
+            }
 
-        _testCases.push(minAssets);
-        _debtToCover -= _testCases[_testCases.length - 1];
-
-        if (_debtToCover == 0) return;
-
-        _testCases.push(_debtToCover /  2);
-        _debtToCover -= _testCases[_testCases.length - 1];
-
-        if (_debtToCover == 0) return;
-
-        _testCases.push(_debtToCover - minAssets);
-        _debtToCover -= _testCases[_testCases.length - 1];
-
-        if (_debtToCover == 0) return;
-
-        _testCases.push(_debtToCover);
+            return minAssets;
+        } else if (_i == 2) {
+            return _debtToCover / 2;
+        } else if (_i == 3) {
+            uint256 minAssets = silo1.previewRepayShares(1);
+            return _debtToCover < minAssets ? minAssets : _debtToCover - minAssets; // TODO possible? correct?
+        } else revert("this should never happen");
     }
 }

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.20;
+import {console} from "forge-std/console.sol";
 
 import {Math} from "openzeppelin5/utils/math/Math.sol";
 
@@ -46,6 +47,8 @@ library SiloSolvencyLib {
             _accrueInMemory,
             IShareToken(_debtConfig.debtShareToken).balanceOf(_borrower)
         );
+
+        console.log("[isSolvent] ltv %s <= lt ", ltv, _collateralConfig.lt);
 
         return ltv <= _collateralConfig.lt;
     }
