@@ -1,9 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.24;
 
-import {console} from "forge-std/console.sol";
-
-
 import {Math} from "openzeppelin5/utils/math/Math.sol";
 
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
@@ -49,8 +46,6 @@ library PartialLiquidationLib {
         view
         returns (uint256 collateralToLiquidate, uint256 debtToRepay)
     {
-        console.log("[maxLiquidation]");
-
         (
             uint256 collateralValueToLiquidate, uint256 repayValue
         ) = maxLiquidationPreview(
@@ -59,10 +54,6 @@ library PartialLiquidationLib {
             minAcceptableLTV(_lt),
             _liquidityFee
         );
-
-        console.log("[maxLiquidation] ~LTV", _borrowerDebtValue * 1e18 / _sumOfCollateralValue);
-        console.log("[maxLiquidation] collateralValueToLiquidate", collateralValueToLiquidate);
-        console.log("[maxLiquidation] repayValue", repayValue);
 
         collateralToLiquidate = valueToAssetsByRatio(
             collateralValueToLiquidate,

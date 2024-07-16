@@ -52,7 +52,7 @@ contract MaxLiquidationDividedTest is MaxLiquidationTest {
 
             // TODO warp?
         }
-        
+
         // sum of chunk liquidation will be always smaller than one max, because with chunks we will get to the point
         // where user became solvent and the margin we have for max liquidation will not be used
         assertLt(repayDebtAssets, totalDebtToCover, "chunks(debt) are always smaller than total/max");

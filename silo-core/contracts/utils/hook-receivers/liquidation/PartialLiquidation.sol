@@ -1,9 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.24;
 
-import {console} from "forge-std/console.sol";
-
-
 import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
 import {IERC20} from "openzeppelin5/interfaces/IERC20.sol";
 import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
@@ -62,12 +59,10 @@ contract PartialLiquidation is SiloStorage, IPartialLiquidation, IHookReceiver {
         virtual
         returns (uint256 withdrawCollateral, uint256 repayDebtAssets)
     {
-        console.log("[liquidationCall] %s", _debtToCover);
-
         ISiloConfig siloConfigCached = siloConfig;
 
         if (address(siloConfigCached) == address(0)) revert EmptySiloConfig();
-        if (_debtToCover == 0) revert EmptyDebtToCover();
+        if (_debtToCover == 0) revert NoDebtToCover();
 
         (
             ISiloConfig.ConfigData memory collateralConfig,
@@ -91,8 +86,6 @@ contract PartialLiquidation is SiloStorage, IPartialLiquidation, IHookReceiver {
             selfLiquidation ? 0 : collateralConfig.liquidationFee,
             selfLiquidation
         );
-
-        console.log("getExactLiquidationAmounts %s", repayDebtAssets);
 
         if (repayDebtAssets == 0) revert NoDebtToCover();
         if (repayDebtAssets > _debtToCover) revert DebtToCoverTooSmall();
