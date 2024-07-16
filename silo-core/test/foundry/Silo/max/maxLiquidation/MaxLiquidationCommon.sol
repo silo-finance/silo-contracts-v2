@@ -137,6 +137,11 @@ abstract contract MaxLiquidationCommon is SiloLittleHelper, Test {
         assertLe(a - b, 2, string.concat(_msg, " (2wei diff allowed)"));
     }
 
+    function _assertLeDiff(uint256 a, uint256 b, string memory _msg) internal {
+        if (a > b) _assertEqDiff(a, b, _msg);
+        else assertLe(a, b, _msg);
+    }
+
     function _executeLiquidationAndChecks(bool _sameToken, bool _receiveSToken) internal {
         uint256 siloBalanceBefore0 = token0.balanceOf(address(silo0));
         uint256 siloBalanceBefore1 = token1.balanceOf(address(silo1));

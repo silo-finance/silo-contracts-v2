@@ -53,10 +53,15 @@ contract MaxLiquidationWithChunksTest is MaxLiquidationTest {
             // TODO warp?
         }
 
-        // sum of chunk liquidation will be always smaller than one max, because with chunks we will get to the point
+        // sum of chunk liquidation can be smaller than one max/total, because with chunks we can get to the point
         // where user became solvent and the margin we have for max liquidation will not be used
-        assertLt(repayDebtAssets, totalDebtToCover, "chunks(debt) are always smaller than total/max");
-        assertLt(withdrawCollateral, totalCollateralToLiquidate, "chunks(collateral) are always smaller than total/max");
+        assertLe(repayDebtAssets, totalDebtToCover, "chunks(debt) can not be bigger than total/max");
+
+        _assertLeDiff(
+            withdrawCollateral,
+            totalCollateralToLiquidate,
+            "chunks(collateral) can not be bigger than total/max"
+        );
     }
 
     function _liquidationCall(uint256 _debtToCover, bool _sameToken, bool _receiveSToken)
