@@ -211,6 +211,47 @@ abstract contract MaxLiquidationCommon is SiloLittleHelper, Test {
         }
     }
 
+    function _calculateChunk(uint256 _debtToCover, uint256 _i) internal view returns (uint256 _chunk) {
+        if (_debtToCover == 0) return 0;
+
+        if (_i < 2 || _i == 4) {
+            // two first iteration and last one (we assume we have max 5 iterations), try to use minimal amount
+
+            // min amount of assets that will not generate ZeroShares error
+            uint256 minAssets = silo1.previewRepayShares(1);
+
+            if (_debtToCover < minAssets) {
+                revert("#1 calculation of maxDebtToCover should never return assets that will generate zero shares");
+            }
+
+            return minAssets;
+        } else if (_i == 2) {
+            return _debtToCover == 1 ? 1 : _debtToCover / 2;
+        } else if (_i == 3) {
+            uint256 minAssets = silo1.previewRepayShares(1);
+
+            if (_debtToCover < minAssets) {
+                revert("#2 calculation of maxDebtToCover should never return assets that will generate zero shares");
+            }
+
+            return _debtToCover;
+        } else revert("this should never happen");
+    }
+
+    function _liquidationCall(uint256 _debtToCover, bool _sameToken, bool _receiveSToken)
+        internal
+        returns (uint256 withdrawCollateral, uint256 repayDebtAssets)
+    {
+        return partialLiquidation.liquidationCall(
+            address(silo1),
+            address(_sameToken ? token1 : token0),
+            address(token1),
+            borrower,
+            _debtToCover,
+            _receiveSToken
+        );
+    }
+
     function _executeLiquidation(bool _sameToken, bool _receiveSToken)
         internal
         virtual

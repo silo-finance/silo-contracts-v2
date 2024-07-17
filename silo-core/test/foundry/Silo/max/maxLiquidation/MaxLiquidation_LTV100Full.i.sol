@@ -8,7 +8,7 @@ import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {MaxLiquidationCommon} from "./MaxLiquidationCommon.sol";
 
 /*
-    forge test -vv --ffi --mc MaxLiquidationLTV100PartialTest
+    forge test -vv --ffi --mc MaxLiquidationLTV100FullTest
 
     cases where we go from solvent to 100% and we must do full liquidation
 */
@@ -37,7 +37,7 @@ contract MaxLiquidationLTV100FullTest is MaxLiquidationCommon {
 
     I used `_findLTV100` to find range of numbers for which we jump to 100% for this case setup
     */
-    function _maxLiquidation_LTV100_full_1token_fuzz(uint8 _collateral, bool _receiveSToken) internal {
+    function _maxLiquidation_LTV100_full_1token_fuzz(uint8 _collateral, bool _receiveSToken) internal virtual {
         bool _sameAsset = true;
 
         vm.assume(_collateral < 20);
@@ -119,6 +119,7 @@ contract MaxLiquidationLTV100FullTest is MaxLiquidationCommon {
 
     function _executeLiquidation(bool _sameToken, bool _receiveSToken)
         internal
+        virtual
         override
         returns (uint256 withdrawCollateral, uint256 repayDebtAssets)
     {
