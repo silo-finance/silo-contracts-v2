@@ -2,7 +2,6 @@
 pragma solidity 0.8.24;
 
 import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
-import {Hook} from "../lib/Hook.sol";
 
 abstract contract CrossReentrancyGuard {
     // Booleans are more expensive than uint256 or any type that takes up a full

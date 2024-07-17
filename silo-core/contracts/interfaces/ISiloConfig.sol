@@ -192,7 +192,7 @@ interface ISiloConfig {
     /// @notice Retrieves the debt silo associated with a specific borrower
     /// @dev This function reverts if debt present in two silo (should not happen)
     /// @param _borrower The address of the borrower for which the debt silo is being retrievedååå
-    function getDebtSilo(address _borrower) external view virtual returns (address debtSilo);
+    function getDebtSilo(address _borrower) external view returns (address debtSilo);
 
     /// @notice Retrieves configuration data for both silos. First config is for the silo that is asking for configs.
     /// @dev This function reverts for incorrect silo address input.
