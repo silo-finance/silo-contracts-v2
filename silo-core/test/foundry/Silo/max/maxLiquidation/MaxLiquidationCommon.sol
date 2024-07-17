@@ -9,8 +9,8 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
 
-import {MintableToken} from "../../_common/MintableToken.sol";
-import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
+import {MintableToken} from "../../../_common/MintableToken.sol";
+import {SiloLittleHelper} from "../../../_common/SiloLittleHelper.sol";
 
 
 abstract contract MaxLiquidationCommon is SiloLittleHelper, Test {
@@ -135,6 +135,11 @@ abstract contract MaxLiquidationCommon is SiloLittleHelper, Test {
         // a must be > b, otherwise panic, this is on purpose, we need to know which value can be higher
         // this 2 wei difference is caused by max liquidation underestimation
         assertLe(a - b, 2, string.concat(_msg, " (2wei diff allowed)"));
+    }
+
+    function _assertLeDiff(uint256 a, uint256 b, string memory _msg) internal {
+        if (a > b) _assertEqDiff(a, b, _msg);
+        else assertLe(a, b, _msg);
     }
 
     function _executeLiquidationAndChecks(bool _sameToken, bool _receiveSToken) internal {

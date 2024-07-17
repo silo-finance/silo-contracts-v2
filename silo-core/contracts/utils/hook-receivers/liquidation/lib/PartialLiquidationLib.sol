@@ -32,6 +32,7 @@ library PartialLiquidationLib {
 
     /// @dev debt keeps growing over time, so when dApp use this view to calculate max, tx should never revert
     /// because actual max can be only higher
+    /// @notice This method does not check, if user is solvent and it can return non zero result when user solvent
     function maxLiquidation(
         uint256 _sumOfCollateralAssets,
         uint256 _sumOfCollateralValue,
