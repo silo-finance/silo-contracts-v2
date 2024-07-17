@@ -32,33 +32,6 @@ library SiloSolvencyLib {
     function isSolvent(
         ISiloConfig.ConfigData memory _collateralConfig,
         ISiloConfig.ConfigData memory _debtConfig,
-        ISiloConfig.DebtInfo memory _debtInfo,
-        address _borrower,
-        ISilo.AccrueInterestInMemory _accrueInMemory
-    ) internal view returns (bool) {
-        if (!_debtInfo.debtPresent) return true;
-
-        uint256 ltv = getLtv(
-            _collateralConfig,
-            _debtConfig,
-            _borrower,
-            ISilo.OracleType.Solvency,
-            _accrueInMemory,
-            IShareToken(_debtConfig.debtShareToken).balanceOf(_borrower)
-        );
-
-        return ltv <= _collateralConfig.lt;
-    }
-
-    /// @notice Determines if a borrower is solvent based on the Loan-to-Value (LTV) ratio
-    /// @param _collateralConfig Configuration data for the collateral
-    /// @param _debtConfig Configuration data for the debt
-    /// @param _borrower Address of the borrower to check solvency for
-    /// @param _accrueInMemory Determines whether or not to consider un-accrued interest in calculations
-    /// @return True if the borrower is solvent, false otherwise
-    function isSolvent(
-        ISiloConfig.ConfigData memory _collateralConfig,
-        ISiloConfig.ConfigData memory _debtConfig,
         address _borrower,
         ISilo.AccrueInterestInMemory _accrueInMemory
     ) internal view returns (bool) {

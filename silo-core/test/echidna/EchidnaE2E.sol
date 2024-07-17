@@ -378,9 +378,8 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         if (maxAssets == 0) {
             (
                 ISiloConfig.ConfigData memory collateralConfig,
-                ISiloConfig.ConfigData memory debtConfig,
-                // ISiloConfig.DebtInfo memory debtInfo
-            ) = siloConfig.getConfigs(address(vault), address(actor), Hook.WITHDRAW);
+                ISiloConfig.ConfigData memory debtConfig
+            ) = siloConfig.getConfigs(address(actor));
 
             uint256 shareBalance = IERC20(collateralConfig.collateralShareToken).balanceOf(address(actor));
             uint256 debtShareBalance = IERC20(debtConfig.debtShareToken).balanceOf(address(actor));

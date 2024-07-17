@@ -8,7 +8,6 @@ import {ISiloConfig} from "./interfaces/ISiloConfig.sol";
 import {IShareToken} from "./interfaces/IShareToken.sol";
 import {CrossReentrancyGuard} from "./utils/CrossReentrancyGuard.sol";
 import {Hook} from "./lib/Hook.sol";
-import {ConfigLib} from "./lib/ConfigLib.sol";
 
 // solhint-disable var-name-mixedcase
 
@@ -167,58 +166,6 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
         }
     }
 
-    function accrueInterestAndGetConfigOptimised(
-        uint256 _action,
-        ISilo.CollateralType _collateralType
-    ) external virtual returns (address shareToken, address asset) {
-        _crossNonReentrantBefore();
-        _callAccrueInterest(msg.sender);
-
-        if (msg.sender == _SILO0) {
-            asset = _TOKEN0;
-
-            if (_action.matchAction(Hook.REPAY)) {
-                shareToken = _DEBT_SHARE_TOKEN0;
-            } else {
-                shareToken = _collateralType == ISilo.CollateralType.Collateral
-                    ? _COLLATERAL_SHARE_TOKEN0
-                    : _PROTECTED_COLLATERAL_SHARE_TOKEN0;
-            }
-        } else if (msg.sender == _SILO1) {
-            asset = _TOKEN1;
-
-            if (_action.matchAction(Hook.REPAY)) {
-                shareToken = _DEBT_SHARE_TOKEN1;
-            } else {
-                shareToken = _collateralType == ISilo.CollateralType.Collateral
-                    ? _COLLATERAL_SHARE_TOKEN1
-                    : _PROTECTED_COLLATERAL_SHARE_TOKEN1;
-            }
-        } else {
-            revert WrongSilo();
-        }
-    }
-
-    function accrueInterestAndGetConfigs(address _silo, address _borrower, uint256 _action)
-        external
-        virtual
-        returns (ConfigData memory collateralConfig, ConfigData memory debtConfig, DebtInfo memory debtInfo)
-    {
-        _crossNonReentrantBefore();
-
-        if (_action.matchAction(Hook.BORROW)) {
-            _setCollateralSilo(msg.sender, _borrower, _action.matchAction(Hook.SAME_ASSET));
-        } else {
-            // TODO looks like anyone can raise flag if there is no action taken?
-        }
-
-        debtInfo = _getDebtInfo(_silo, _borrower);
-
-        _callAccrueInterest(_silo);
-
-        (collateralConfig, debtConfig) = _getOrderedConfigs(_silo, debtInfo, _action);
-    }
-
     function accrueInterestForSilo(address _silo) external {
         ISilo(_silo).accrueInterestForConfig(
             _silo == _SILO0 ? _INTEREST_RATE_MODEL0 : _INTEREST_RATE_MODEL1,
@@ -253,7 +200,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
         _borrowerCollateralSilo[_borrower] = currentSilo == _SILO0 ? _SILO1 : _SILO0;
     }
 
-    function getCollateralAndDebtConfigs(address _borrower) external view returns (
+    function getConfigs(address _borrower) external view returns (
         ConfigData memory collateralConfig,
         ConfigData memory debtConfig
     ) {
@@ -300,16 +247,6 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
         } else {
             revert WrongSilo();
         }
-    }
-
-    function getConfigs(address _silo, address _borrower, uint256 _action)
-        external
-        view
-        virtual
-        returns (ConfigData memory collateralConfig, ConfigData memory debtConfig, DebtInfo memory debtInfo)
-    {
-        debtInfo = _getDebtInfo(_silo, _borrower);
-        (collateralConfig, debtConfig) = _getOrderedConfigs(_silo, debtInfo, _action);
     }
 
     function getConfigsForWithdraw(address _silo, address _depositOwner) external view virtual returns (
@@ -424,67 +361,12 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
         debtSilo = debtBal0 != 0 ? _SILO0 : _SILO1;
     }
 
-    function _changeCollateralType(address _silo, address _borrower, bool _switchToSameAsset) internal {
-        _onlySilo();
-
-        DebtInfo memory debtInfo = _getDebtInfo(_silo, _borrower);
-
-        if (!debtInfo.debtPresent) revert NoDebt();
-        if (debtInfo.sameAsset == _switchToSameAsset) revert CollateralTypeDidNotChanged();
-
-        address currentSilo = _borrowerCollateralSilo[_borrower];
-        _borrowerCollateralSilo[_borrower] = currentSilo == _SILO0 ? _SILO1 : _SILO0;
-    }
-
-    function _getDebtInfo(address _silo, address _borrower)
-        internal
-        view
-        virtual
-        returns (DebtInfo memory debtInfo)
-    {
-        address debtSilo = getDebtSilo(_borrower);
-
-        if (debtSilo == address(0)) return debtInfo; // no debt
-
-        address collateralSilo = _borrowerCollateralSilo[_borrower];
-
-        debtInfo.debtPresent = true;
-        debtInfo.sameAsset = collateralSilo == debtSilo;
-        debtInfo.debtInSilo0 = debtSilo == _SILO0;
-        debtInfo.debtInThisSilo = _silo == debtSilo;
-    }
-
     function _callAccrueInterest(address _silo) internal {
         ISilo(_silo).accrueInterestForConfig(
             _silo == _SILO0 ? _INTEREST_RATE_MODEL0 : _INTEREST_RATE_MODEL1,
             _DAO_FEE,
             _DEPLOYER_FEE
         );
-    }
-
-    function _getOrderedConfigs(address _silo, DebtInfo memory _debtInfo, uint256 _action)
-        internal
-        view
-        returns (ConfigData memory collateralConfig, ConfigData memory debtConfig)
-    {
-        bool callForSilo0 = _silo == _SILO0;
-        if (!callForSilo0 && _silo != _SILO1) revert WrongSilo();
-
-        uint256 order = ConfigLib.orderConfigs(_debtInfo, callForSilo0, _action);
-
-        if (order == ConfigLib.SILO0_SILO0) {
-            collateralConfig = _silo0ConfigData();
-            debtConfig = collateralConfig;
-        } else if (order == ConfigLib.SILO1_SILO0) {
-            collateralConfig = _silo1ConfigData();
-            debtConfig = _silo0ConfigData();
-        } else if (order == ConfigLib.SILO0_SILO1) {
-            collateralConfig = _silo0ConfigData();
-            debtConfig = _silo1ConfigData();
-        } else if (order == ConfigLib.SILO1_SILO1) {
-            collateralConfig = _silo1ConfigData();
-            debtConfig = collateralConfig;
-        } else revert InvalidConfigOrder();
     }
 
     function _silo0ConfigData() internal view returns (ConfigData memory config) {

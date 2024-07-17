@@ -67,11 +67,10 @@ library PartialLiquidationExecLib {
     {
         (
             ISiloConfig.ConfigData memory collateralConfig,
-            ISiloConfig.ConfigData memory debtConfig,
-            ISiloConfig.DebtInfo memory debtInfo
-        ) = _siloWithDebt.config().getConfigs(address(_siloWithDebt), _borrower, 0 /* method matters only on borrow */);
+            ISiloConfig.ConfigData memory debtConfig
+        ) = _siloWithDebt.config().getConfigs(_borrower);
 
-        if (!debtInfo.debtPresent || !debtInfo.debtInThisSilo) {
+        if (debtConfig.silo == address(0) || debtConfig.silo != address(_siloWithDebt)) {
             return (0, 0);
         }
 

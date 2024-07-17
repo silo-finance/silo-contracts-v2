@@ -303,7 +303,7 @@ library Actions {
         ISiloConfig.ConfigData memory collateralConfig;
         ISiloConfig.ConfigData memory debtConfig;
 
-        (collateralConfig, debtConfig) = siloConfig.getCollateralAndDebtConfigs(msg.sender);
+        (collateralConfig, debtConfig) = siloConfig.getConfigs(msg.sender);
 
         _checkSolvency(collateralConfig, debtConfig, msg.sender);
 

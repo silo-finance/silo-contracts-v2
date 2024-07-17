@@ -5,13 +5,6 @@ import {IHookReceiver} from "./IHookReceiver.sol";
 import {ISilo} from "./ISilo.sol";
 
 interface ISiloConfig {
-    struct DebtInfo {
-        bool debtPresent;
-        bool sameAsset;
-        bool debtInSilo0;
-        bool debtInThisSilo; // at-hoc when getting configs
-    }
-
     struct InitData {
         /// @notice The address of the deployer of the Silo
         address deployer;
@@ -160,15 +153,6 @@ interface ISiloConfig {
 
     function accrueInterestForSilo(address _silo) external;
 
-    function accrueInterestAndGetConfigs(address _silo, address _borrower, uint256 _action)
-        external
-        returns (ConfigData memory collateralConfig, ConfigData memory debtConfig, DebtInfo memory debtInfo);
-
-    function accrueInterestAndGetConfigOptimised(
-        uint256 _action,
-        ISilo.CollateralType _collateralType
-    ) external returns (address shareToken, address asset);
-
     function accrueInterestForBothSilos() external;
 
     /// @notice view method for checking cross Silo reentrancy flag
@@ -194,17 +178,13 @@ interface ISiloConfig {
 
     /// @notice Retrieves configuration data for both silos. First config is for the silo that is asking for configs.
     /// @dev This function reverts for incorrect silo address input.
-    /// @param _silo The address of the silo for which configuration data is being retrieved. Config for this silo will
-    /// be at index 0.
     /// @param borrower borrower address for which `debtInfo` will be returned
-    /// @param _action hook flag that will determine action
     /// @return collateralConfig The configuration data for collateral silo.
     /// @return debtConfig The configuration data for debt silo.
-    /// @return debtInfo details about `borrower` debt
-    function getConfigs(address _silo, address borrower, uint256 _action)
+    function getConfigs(address borrower)
         external
         view
-        returns (ConfigData memory collateralConfig, ConfigData memory debtConfig, DebtInfo memory debtInfo);
+        returns (ConfigData memory collateralConfig, ConfigData memory debtConfig);
 
     /// @notice Retrieves configuration data for a specific silo
     /// @dev This function reverts for incorrect silo address input.
@@ -222,11 +202,6 @@ interface ISiloConfig {
         external
         view
         returns (ConfigData memory collateralConfig, ConfigData memory debtConfig);
-
-    function getCollateralAndDebtConfigs(address _borrower) external view returns (
-        ConfigData memory collateralConfig,
-        ConfigData memory debtConfig
-    );
 
     /// @notice Retrieves fee-related information for a specific silo
     /// @dev This function reverts for incorrect silo address input

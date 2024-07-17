@@ -21,8 +21,8 @@ contract BorrowNotPossibleTest is SiloLittleHelper, Test {
         _setUpLocalFixture(SiloConfigsNames.LOCAL_NOT_BORROWABLE);
 
         (
-            ISiloConfig.ConfigData memory cfg0, ISiloConfig.ConfigData memory cfg1,
-        ) = silo0.config().getConfigs(address(silo0), address(0), 0 /* always 0 for external calls */);
+            ISiloConfig.ConfigData memory cfg0, ISiloConfig.ConfigData memory cfg1
+        ) = silo0.config().getConfigs(address(0));
 
         assertEq(cfg0.maxLtv, 0, "borrow OFF");
         assertGt(cfg1.maxLtv, 0, "borrow ON");

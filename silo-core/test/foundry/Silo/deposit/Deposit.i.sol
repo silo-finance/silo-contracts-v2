@@ -74,8 +74,8 @@ contract DepositTest is SiloLittleHelper, Test {
 
         (
             ISiloConfig.ConfigData memory collateral,
-            ISiloConfig.ConfigData memory debt,
-        ) = siloConfig.getConfigs(address(silo0), address(0), 0 /* always 0 for external calls */);
+            ISiloConfig.ConfigData memory debt
+        ) = siloConfig.getConfigs(address(0));
 
         assertEq(token0.balanceOf(address(silo0)), assets * 2);
         assertEq(silo0.getCollateralAssets(), assets);
