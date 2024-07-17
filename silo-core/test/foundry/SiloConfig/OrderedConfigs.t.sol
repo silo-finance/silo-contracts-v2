@@ -16,11 +16,6 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 // - `withdraw`             debt silo1  | debt same asset
 // - `borrow`               no debt     | debt not the same asset
 // - `borrow`               no debt     | debt the same asset
-// - `leverageSameAsset`    no debt
-// - `leverageSameAsset`    debt silo0  | debt not the same asset
-// - `leverageSameAsset`    debt silo0  | debt the same asset
-// - `leverageSameAsset`    debt silo1  | debt not the same asset
-// - `leverageSameAsset`    debt silo1  | debt the same asset
 // - `transitionCollateral` no debt
 // - `transitionCollateral` debt silo0  | debt not the same asset
 // - `transitionCollateral` debt silo0  | debt the same asset
