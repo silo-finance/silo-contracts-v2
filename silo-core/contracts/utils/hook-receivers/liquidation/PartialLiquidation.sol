@@ -180,7 +180,6 @@ contract PartialLiquidation is SiloStorage, IPartialLiquidation, IHookReceiver {
 
         if (debtConfig.silo == address(0)) revert UserIsSolvent();
         if (_siloConfigCached.hasDebtInOtherSilo(_siloWithDebt, _borrower)) revert ISilo.ThereIsDebtInOtherSilo();
-        if (_siloWithDebt != debtConfig.silo) revert WrongSilo();
 
         if (_collateralAsset != collateralConfig.token) revert UnexpectedCollateralToken();
         if (_debtAsset != debtConfig.token) revert UnexpectedDebtToken();

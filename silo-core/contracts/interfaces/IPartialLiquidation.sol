@@ -36,7 +36,6 @@ interface IPartialLiquidation {
     error UserIsSolvent();
     error InsufficientLiquidation();
     error LiquidationTooBig();
-    error WrongSilo();
     error UnknownRatio();
 
     /// @notice Function to liquidate a non-healthy debt collateral-wise

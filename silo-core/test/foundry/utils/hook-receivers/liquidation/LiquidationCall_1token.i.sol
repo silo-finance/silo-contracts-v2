@@ -46,7 +46,6 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
         assertEq(token0.balanceOf(address(silo0)), COLLATERAL - DEBT, "silo0 has only 2.5 debt token (10 - 7.5)");
 
         ISiloConfig.ConfigData memory silo0Config = siloConfig.getConfig(address(silo0));
-        ISiloConfig.ConfigData memory silo1Config = siloConfig.getConfig(address(silo1));
 
         assertEq(silo0Config.liquidationFee, 0.05e18, "liquidationFee1");
     }

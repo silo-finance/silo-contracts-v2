@@ -72,10 +72,8 @@ contract DepositTest is SiloLittleHelper, Test {
         _makeDeposit(silo1, token1, assets, depositor, ISilo.CollateralType.Collateral);
         _makeDeposit(silo1, token1, assets, depositor, ISilo.CollateralType.Protected);
 
-        (
-            ISiloConfig.ConfigData memory collateral,
-            ISiloConfig.ConfigData memory debt
-        ) = siloConfig.getConfigs(address(0));
+        ISiloConfig.ConfigData memory collateral = silo0.config().getConfig(address(silo0));
+        ISiloConfig.ConfigData memory debt = silo0.config().getConfig(address(silo1));
 
         assertEq(token0.balanceOf(address(silo0)), assets * 2);
         assertEq(silo0.getCollateralAssets(), assets);

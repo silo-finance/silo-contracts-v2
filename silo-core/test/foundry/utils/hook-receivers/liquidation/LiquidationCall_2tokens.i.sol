@@ -115,7 +115,7 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
 
         ISiloConfig.ConfigData memory debt;
 
-        (, debt) = siloConfig.getConfigs(BORROWER);
+        (, debt) = siloConfig.getConfigs(userWithoutDebt);
 
         assertTrue(debt.silo == address(0), "we need user without debt for this test");
 
@@ -349,10 +349,8 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
         uint256 debtToCover = 100e18;
         bool receiveSToken;
 
-        (
-            ISiloConfig.ConfigData memory collateralConfig,
-            ISiloConfig.ConfigData memory debtConfig
-        ) = siloConfig.getConfigs(address(0));
+        ISiloConfig.ConfigData memory collateralConfig = siloConfig.getConfig(address(silo0));
+        ISiloConfig.ConfigData memory debtConfig = siloConfig.getConfig(address(silo1));
 
         (, uint64 interestRateTimestamp0) = silo0.siloData();
         (, uint64 interestRateTimestamp1) = silo1.siloData();
