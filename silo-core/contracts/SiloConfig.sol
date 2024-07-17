@@ -5,12 +5,10 @@ import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 
 import {ISilo} from "./interfaces/ISilo.sol";
 import {ISiloConfig} from "./interfaces/ISiloConfig.sol";
-import {IShareToken} from "./interfaces/IShareToken.sol";
 import {CrossReentrancyGuard} from "./utils/CrossReentrancyGuard.sol";
 import {Hook} from "./lib/Hook.sol";
 
 // solhint-disable var-name-mixedcase
-
 
 /// @notice SiloConfig stores full configuration of Silo in immutable manner
 /// @dev Immutable contract is more expensive to deploy than minimal proxy however it provides nearly 10x cheapper
@@ -79,7 +77,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
     /// @param _siloId ID of this pool assigned by factory
     /// @param _configData0 silo configuration data for token0
     /// @param _configData1 silo configuration data for token1
-    constructor(
+    constructor( // solhint-disable-line function-max-lines
         uint256 _siloId,
         ConfigData memory _configData0,
         ConfigData memory _configData1
@@ -149,8 +147,10 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
     }
 
     /// @inheritdoc ISiloConfig
-    function setCollateralSilo(address _borrower, bool _sameAsset) external {
-        _setCollateralSilo(msg.sender, _borrower, _sameAsset);
+    function setCollateralSilo(address _borrower, bool _sameAsset) external virtual {
+        _onlySilo();
+
+        _borrowerCollateralSilo[_borrower] = _getCollateralSilo(msg.sender, _sameAsset);
     }
 
     /// @inheritdoc ISiloConfig
@@ -166,15 +166,27 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
         }
     }
 
-    function accrueInterestForSilo(address _silo) external {
+    /// @inheritdoc ISiloConfig
+    function accrueInterestForSilo(address _silo) external virtual {
+        address irm;
+
+        if (_silo == _SILO0) {
+            irm = _INTEREST_RATE_MODEL0;
+        } else if (_silo == _SILO1) {
+            irm = _INTEREST_RATE_MODEL1;
+        } else {
+            revert WrongSilo();
+        }
+
         ISilo(_silo).accrueInterestForConfig(
-            _silo == _SILO0 ? _INTEREST_RATE_MODEL0 : _INTEREST_RATE_MODEL1,
+            irm,
             _DAO_FEE,
             _DEPLOYER_FEE
         );
     }
 
-    function accrueInterestForBothSilos() external {
+    /// @inheritdoc ISiloConfig
+    function accrueInterestForBothSilos() external virtual {
         ISilo(_SILO0).accrueInterestForConfig(
             _INTEREST_RATE_MODEL0,
             _DAO_FEE,
@@ -188,7 +200,8 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
         );
     }
 
-    function switchCollateralSilo(address _borrower) external {
+    /// @inheritdoc ISiloConfig
+    function switchCollateralSilo(address _borrower) external virtual {
         _onlySilo();
 
         address debtSilo = getDebtSilo(_borrower);
@@ -200,7 +213,8 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
         _borrowerCollateralSilo[_borrower] = currentSilo == _SILO0 ? _SILO1 : _SILO0;
     }
 
-    function getConfigs(address _borrower) external view returns (
+    /// @inheritdoc ISiloConfig
+    function getConfigs(address _borrower) external view virtual returns (
         ConfigData memory collateralConfig,
         ConfigData memory debtConfig
     ) {
@@ -214,12 +228,13 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
         debtConfig = getConfig(debtSilo);
     }
 
+    /// @inheritdoc ISiloConfig
     function reentrancyGuardEntered() external view virtual returns (bool entered) {
         entered = _reentrancyGuardEntered();
     }
 
     /// @inheritdoc ISiloConfig
-    function getSilos() external view returns (address silo0, address silo1) {
+    function getSilos() external view virtual returns (address silo0, address silo1) {
         return (_SILO0, _SILO1);
     }
 
@@ -227,6 +242,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
     function getShareTokens(address _silo)
         external
         view
+        virtual
         returns (address protectedShareToken, address collateralShareToken, address debtShareToken)
     {
         if (_silo == _SILO0) {
@@ -249,6 +265,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
         }
     }
 
+    /// @inheritdoc ISiloConfig
     function getConfigsForWithdraw(address _silo, address _depositOwner) external view virtual returns (
         DepositConfig memory depositConfig,
         ConfigData memory collateralConfig,
@@ -265,9 +282,11 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
         }
     }
 
+    /// @inheritdoc ISiloConfig
     function getConfigsForBorrow(address _silo, bool _sameAsset)
         external
         view
+        virtual
         returns (ConfigData memory collateralConfig, ConfigData memory debtConfig)
     {
         address collateralSilo = _getCollateralSilo(_silo, _sameAsset);
@@ -297,9 +316,11 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
         }
     }
 
+    /// @inheritdoc ISiloConfig
     function getCollateralShareTokenAndSiloToken(address _silo, ISilo.CollateralType _collateralType)
         external
         view
+        virtual
         returns (address shareToken, address asset)
     {
         if (_silo == _SILO0) {
@@ -315,9 +336,11 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
         }
     }
 
+    /// @inheritdoc ISiloConfig
     function getDebtShareTokenAndAsset(address _silo)
         external
         view
+        virtual
         returns (address shareToken, address asset)
     {
         if (_silo == _SILO0) {
@@ -330,16 +353,17 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
     }
 
     /// @inheritdoc ISiloConfig
-    function getConfig(address _silo) public view virtual returns (ConfigData memory) {
+    function getConfig(address _silo) public view virtual returns (ConfigData memory config) {
         if (_silo == _SILO0) {
-            return _silo0ConfigData();
+            config = _silo0ConfigData();
         } else if (_silo == _SILO1) {
-            return _silo1ConfigData();
+            config = _silo1ConfigData();
         } else {
             revert WrongSilo();
         }
     }
 
+    /// @inheritdoc ISiloConfig
     function hasDebtInOtherSilo(address _thisSilo, address _borrower) public view returns (bool hasDebt) {
         if (_thisSilo == _SILO0) {
             hasDebt = _balanceOf(_DEBT_SHARE_TOKEN1, _borrower) != 0;
@@ -350,7 +374,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
         }
      }
 
-
+    /// @inheritdoc ISiloConfig
     function getDebtSilo(address _borrower) public view virtual returns (address debtSilo) {
         uint256 debtBal0 = _balanceOf(_DEBT_SHARE_TOKEN0, _borrower);
         uint256 debtBal1 = _balanceOf(_DEBT_SHARE_TOKEN1, _borrower);
@@ -359,14 +383,6 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
         if (debtBal0 == 0 && debtBal1 == 0) return address(0);
 
         debtSilo = debtBal0 != 0 ? _SILO0 : _SILO1;
-    }
-
-    function _callAccrueInterest(address _silo) internal {
-        ISilo(_silo).accrueInterestForConfig(
-            _silo == _SILO0 ? _INTEREST_RATE_MODEL0 : _INTEREST_RATE_MODEL1,
-            _DAO_FEE,
-            _DEPLOYER_FEE
-        );
     }
 
     function _silo0ConfigData() internal view returns (ConfigData memory config) {
@@ -413,9 +429,9 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
         });
     }
 
-    function _getDepositConfig(address _silo) internal view virtual returns (DepositConfig memory) {
+    function _getDepositConfig(address _silo) internal view virtual returns (DepositConfig memory config) {
         if (_silo == _SILO0) {
-            return DepositConfig({
+            config = DepositConfig({
                 silo: _SILO0,
                 token: _TOKEN0,
                 collateralShareToken: _COLLATERAL_SHARE_TOKEN0,
@@ -425,7 +441,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
                 interestRateModel: _INTEREST_RATE_MODEL0
             });
         } else if (_silo == _SILO1) {
-            return DepositConfig({
+            config = DepositConfig({
                 silo: _SILO1,
                 token: _TOKEN1,
                 collateralShareToken: _COLLATERAL_SHARE_TOKEN1,
@@ -460,12 +476,6 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
 
     function _balanceOf(address _token, address _user) internal view returns (uint256 balance) {
         balance = IERC20(_token).balanceOf(_user);
-    }
-
-    function _setCollateralSilo(address _silo, address _borrower, bool _sameAsset) private {
-        _onlySilo();
-
-        _borrowerCollateralSilo[_borrower] = _getCollateralSilo(_silo, _sameAsset);
     }
 
     function _getCollateralSilo(address _calle, bool _sameAsset) private view returns (address collateralSilo) {
