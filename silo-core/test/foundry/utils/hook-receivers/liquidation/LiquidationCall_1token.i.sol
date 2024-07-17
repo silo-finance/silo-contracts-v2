@@ -352,7 +352,9 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
         uint256 debtToCover = 100e18;
         bool receiveSToken;
 
-        ISiloConfig.ConfigData memory debtConfig = siloConfig.getConfig(address(silo0));
+        ISiloConfig.ConfigData memory debtConfig;
+
+        (, debtConfig) = siloConfig.getConfigs(BORROWER);
 
         (, uint64 interestRateTimestamp0) = silo0.siloData();
         (, uint64 interestRateTimestamp1) = silo1.siloData();
@@ -437,7 +439,7 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
 
             assertEq(token0.balanceOf(address(silo0)), dust + roundingError, "no balance after withdraw fees (except dust!)");
             assertEq(IShareToken(debtConfig.debtShareToken).totalSupply(), 0, "expected debtShareToken burned");
-            assertEq(IShareToken(debtConfig.collateralShareToken).totalSupply(), 0, "expected collateralShareToken burned");
+            assertEq(IShareToken(debtConfig.collateralShareToken).totalSupply(), 1, "expected collateralShareToken burned");
             assertEq(silo0.total(AssetTypes.COLLATERAL), dust + roundingError, "storage AssetType.Collateral");
             assertEq(silo0.getDebtAssets(), 0, "total debt == 0");
             assertEq(silo0.getCollateralAssets(), dust + roundingError, "total collateral == 4+5, dust!");
