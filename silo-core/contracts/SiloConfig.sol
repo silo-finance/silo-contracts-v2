@@ -135,18 +135,6 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
     }
 
     /// @inheritdoc ISiloConfig
-    function turnOnReentrancyProtection() external virtual {
-        _onlySiloOrTokenOrHookReceiver();
-        _crossNonReentrantBefore();
-    }
-
-    /// @inheritdoc ISiloConfig
-    function turnOffReentrancyProtection() external virtual {
-        _onlySiloOrTokenOrHookReceiver();
-        _crossNonReentrantAfter();
-    }
-
-    /// @inheritdoc ISiloConfig
     function setCollateralSilo(address _borrower, bool _sameAsset) external virtual {
         _onlySilo();
 
@@ -226,11 +214,6 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
 
         collateralConfig = getConfig(collateralSilo);
         debtConfig = getConfig(debtSilo);
-    }
-
-    /// @inheritdoc ISiloConfig
-    function reentrancyGuardEntered() external view virtual returns (bool entered) {
-        entered = _reentrancyGuardEntered();
     }
 
     /// @inheritdoc ISiloConfig
@@ -455,7 +438,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
         }
     }
 
-    function _onlySiloOrTokenOrHookReceiver() internal view virtual {
+    function _onlySiloOrTokenOrHookReceiver() internal view override {
         if (msg.sender != _SILO0 &&
             msg.sender != _SILO1 &&
             msg.sender != _HOOK_RECEIVER &&

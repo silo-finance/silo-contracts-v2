@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.5.0;
 
-import {IHookReceiver} from "./IHookReceiver.sol";
 import {ISilo} from "./ISilo.sol";
+import {ICrossReentrancyGuard} from "./ICrossReentrancyGuard.sol";
 
-interface ISiloConfig {
+interface ISiloConfig is ICrossReentrancyGuard {
     struct InitData {
         /// @notice The address of the deployer of the Silo
         address deployer;
@@ -127,8 +127,6 @@ interface ISiloConfig {
     error DebtExistInOtherSilo();
     error NoDebt();
     error CollateralTypeDidNotChanged();
-    error CrossReentrantCall();
-    error CrossReentrancyNotActive();
     error InvalidConfigOrder();
     error FeeTooHigh();
     error InvalidDebtShareToken();
@@ -137,12 +135,6 @@ interface ISiloConfig {
     /// @param _sender sender address
     /// @param _recipient recipient address
     function onDebtTransfer(address _sender, address _recipient) external;
-
-    /// @notice only silo method for cross Silo reentrancy
-    function turnOnReentrancyProtection() external;
-
-    /// @notice only silo method for cross Silo reentrancy
-    function turnOffReentrancyProtection() external;
 
     /// @notice Set collateral silo
     /// @param _borrower borrower address
@@ -160,11 +152,6 @@ interface ISiloConfig {
 
     /// @notice Accrue interest for both silos (SILO_0 and SILO_1 in a config)
     function accrueInterestForBothSilos() external;
-
-    /// @notice view method for checking cross Silo reentrancy flag
-    /// @return entered true if the reentrancy guard is currently set to "entered", which indicates there is a
-    /// `nonReentrant` function in the call stack.
-    function reentrancyGuardEntered() external view returns (bool entered);
 
     /// @notice Retrieves the silo ID
     /// @dev Each silo is represented by ERC-721 token with the silo ID as the token ID.
