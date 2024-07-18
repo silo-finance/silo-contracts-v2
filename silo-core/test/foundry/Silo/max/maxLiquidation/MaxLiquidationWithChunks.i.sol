@@ -24,10 +24,10 @@ contract MaxLiquidationWithChunksTest is MaxLiquidationTest {
             uint256 totalCollateralToLiquidate, uint256 totalDebtToCover
         ) = partialLiquidation.maxLiquidation(address(silo1), borrower);
 
-        emit log_named_decimal_uint("[MaxLiquidationDivided] ltv before", silo0.getLtv(borrower), 16);
+        emit log_named_decimal_uint("[MaxLiquidationWithChunks] ltv before", silo0.getLtv(borrower), 16);
 
         for (uint256 i; i < 5; i++) {
-            emit log_named_uint("[MaxLiquidationDivided] case ------------------------", i);
+            emit log_named_uint("[MaxLiquidationWithChunks] case ------------------------", i);
             bool isSolvent = silo0.isSolvent(borrower);
 
             emit log_named_string("isSolvent", silo0.isSolvent(borrower) ? "YES" : "NO");
