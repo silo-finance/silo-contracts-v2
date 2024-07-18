@@ -31,13 +31,10 @@ contract MaxLiquidationWithChunksTest is MaxLiquidationTest {
             bool isSolvent = silo0.isSolvent(borrower);
 
             emit log_named_string("isSolvent", silo0.isSolvent(borrower) ? "YES" : "NO");
-            emit log_named_decimal_uint("[MaxLiquidationWithChunks] ltv before", silo0.getLtv(borrower), 16);
 
             (
                 uint256 collateralToLiquidate, uint256 debtToCover
             ) = partialLiquidation.maxLiquidation(address(silo1), borrower);
-            emit log_named_uint("[MaxLiquidationWithChunks] max collateralToLiquidate", collateralToLiquidate);
-            emit log_named_uint("[MaxLiquidationWithChunks] max debtToCover", debtToCover);
 
             // this conditions caught bug
             if (isSolvent && debtToCover != 0) revert("if we solvent there should be no liquidation");
@@ -46,13 +43,10 @@ contract MaxLiquidationWithChunksTest is MaxLiquidationTest {
             if (isSolvent) break;
 
             uint256 testDebtToCover = _calculateChunk(debtToCover, i);
-            emit log_named_uint("[MaxLiquidationWithChunks] testDebtToCover", testDebtToCover);
 
             (
                 uint256 partialCollateral, uint256 partialDebt
             ) = _liquidationCall(testDebtToCover, _sameToken, _receiveSToken);
-            emit log_named_uint("[MaxLiquidationWithChunks] partialCollateral", partialCollateral);
-            emit log_named_uint("[MaxLiquidationWithChunks] partialDebt", partialDebt);
 
             withdrawCollateral += partialCollateral;
             repayDebtAssets += partialDebt;
@@ -61,8 +55,6 @@ contract MaxLiquidationWithChunksTest is MaxLiquidationTest {
 
             // TODO warp?
         }
-
-        emit log_named_decimal_uint("[MaxLiquidationWithChunks] ltv after all chunks", silo0.getLtv(borrower), 16);
 
         // sum of chunk liquidation can be smaller than one max/total, because with chunks we can get to the point
         // where user became solvent and the margin we have for max liquidation will not be used
