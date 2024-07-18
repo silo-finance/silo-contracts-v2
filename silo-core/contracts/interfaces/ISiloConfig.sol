@@ -248,7 +248,7 @@ interface ISiloConfig is ICrossReentrancyGuard {
     /// @param _collateralType The type of collateral
     /// @return shareToken The address of the share token (collateral or protected collateral)
     /// @return asset The address of the silo token
-    function getCollateralShareTokenAndSiloToken(address _silo, ISilo.CollateralType _collateralType)
+    function getCollateralShareTokenAndAsset(address _silo, ISilo.CollateralType _collateralType)
         external
         view
         returns (address shareToken, address asset);

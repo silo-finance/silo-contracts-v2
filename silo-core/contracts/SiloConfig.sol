@@ -300,7 +300,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
     }
 
     /// @inheritdoc ISiloConfig
-    function getCollateralShareTokenAndSiloToken(address _silo, ISilo.CollateralType _collateralType)
+    function getCollateralShareTokenAndAsset(address _silo, ISilo.CollateralType _collateralType)
         external
         view
         virtual
