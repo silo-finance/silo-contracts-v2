@@ -93,6 +93,7 @@ contract MaxLiquidationDustTest is MaxLiquidationCommon {
 
     function _executeLiquidation(bool _sameToken, bool _receiveSToken)
         internal
+        virtual
         override
         returns (uint256 withdrawCollateral, uint256 repayDebtAssets)
     {
