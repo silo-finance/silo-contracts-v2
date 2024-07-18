@@ -184,8 +184,8 @@ interface ISiloConfig is ICrossReentrancyGuard {
     /// @notice Retrieves configuration data for both silos. First config is for the silo that is asking for configs.
     /// @dev This function reverts for incorrect silo address input.
     /// @param borrower borrower address for which `debtInfo` will be returned
-    /// @return collateralConfig The configuration data for collateral silo.
-    /// @return debtConfig The configuration data for debt silo.
+    /// @return collateralConfig The configuration data for collateral silo (empty if there is no debt).
+    /// @return debtConfig The configuration data for debt silo (empty if there is no debt).
     function getConfigs(address borrower)
         external
         view
