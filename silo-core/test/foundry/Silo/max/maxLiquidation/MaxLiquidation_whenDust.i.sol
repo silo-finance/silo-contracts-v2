@@ -71,7 +71,7 @@ contract MaxLiquidationDustTest is MaxLiquidationCommon {
     function _maxLiquidation_dust_2tokens_fuzz(uint8 _collateral, bool _receiveSToken) internal {
         bool _sameAsset = false;
 
-        vm.assume(_collateral == 12 || _collateral == 19 || _collateral == 33);
+        vm.assume(_collateral == 19 || _collateral == 33);
 
         uint256 toBorrow = uint256(_collateral) * 75 / 100; // maxLT is 75%
 

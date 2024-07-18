@@ -106,7 +106,6 @@ contract MaxLiquidationTest is MaxLiquidationCommon {
     function _maxLiquidation_partial_2tokens_fuzz(uint128 _collateral, bool _receiveSToken) internal {
         bool _sameAsset = false;
 
-        vm.assume(_collateral != 12); // dust case
         vm.assume(_collateral != 19); // dust case
         vm.assume(_collateral != 33); // dust
 
@@ -126,7 +125,10 @@ contract MaxLiquidationTest is MaxLiquidationCommon {
         _executeLiquidationAndRunChecks(_sameAsset, _receiveSToken);
 
         _assertBorrowerIsSolvent();
-        _ensureBorrowerHasDebt();
+
+        // 12 case allow for full liquidation and when done with chunks it stays at LTV 100 till the end
+        if (_collateral == 12) _ensureBorrowerHasNoDebt();
+        else _ensureBorrowerHasDebt();
     }
 
     function _executeLiquidation(bool _sameToken, bool _receiveSToken)
