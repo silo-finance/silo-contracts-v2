@@ -76,6 +76,7 @@ contract MaxLiquidationTest is MaxLiquidationCommon {
         _createDebt(_collateral, toBorrow, _sameAsset);
 
         vm.warp(block.timestamp + 1050 days); // initial time movement to speed up _moveTimeUntilInsolvent
+
         _moveTimeUntilInsolvent();
 
         _assertBorrowerIsNotSolvent({_hasBadDebt: false}); // TODO make tests for bad debt as well
@@ -141,6 +142,8 @@ contract MaxLiquidationTest is MaxLiquidationCommon {
             uint256 collateralToLiquidate, uint256 debtToRepay
         ) = partialLiquidation.maxLiquidation(address(silo1), borrower);
 
+        emit log_named_decimal_uint("[MaxLiquidation] collateralToLiquidate", collateralToLiquidate, 18);
+        emit log_named_decimal_uint("[MaxLiquidation] debtToRepay", debtToRepay, 16);
         emit log_named_decimal_uint("[MaxLiquidation] ltv before", silo0.getLtv(borrower), 16);
 
         // TODO try do liquidate with chunks
@@ -154,7 +157,6 @@ contract MaxLiquidationTest is MaxLiquidationCommon {
         );
 
         emit log_named_decimal_uint("[MaxLiquidation] ltv after", silo0.getLtv(borrower), 16);
-        emit log_named_decimal_uint("[MaxLiquidation] collateralToLiquidate", collateralToLiquidate, 18);
 
         assertEq(debtToRepay, repayDebtAssets, "debt: maxLiquidation == result");
         _assertEqDiff(withdrawCollateral, collateralToLiquidate, "collateral: max == result");

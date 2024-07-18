@@ -36,11 +36,7 @@ contract MaxLiquidationDustTest is MaxLiquidationCommon {
         bool _sameAsset = true;
 
         // this value found by fuzzing tests, is high enough to have partial liquidation possible for this test setup
-        vm.assume(
-            _collateral == 12
-            || (_collateral >= 29 && _collateral <= 38)
-            || (_collateral >= 52 && _collateral <= 57)
-        );
+        vm.assume((_collateral >= 29 && _collateral <= 38) || (_collateral >= 52 && _collateral <= 57));
 
         uint256 toBorrow = uint256(_collateral) * 85 / 100; // maxLT is 85%
         _createDebt(_collateral, toBorrow, _sameAsset);
