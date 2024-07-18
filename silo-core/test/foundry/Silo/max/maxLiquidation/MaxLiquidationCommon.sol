@@ -142,7 +142,7 @@ abstract contract MaxLiquidationCommon is SiloLittleHelper, Test {
         else assertLe(a, b, _msg);
     }
 
-    function _executeLiquidationAndChecks(bool _sameToken, bool _receiveSToken) internal {
+    function _executeLiquidationAndRunChecks(bool _sameToken, bool _receiveSToken) internal {
         uint256 siloBalanceBefore0 = token0.balanceOf(address(silo0));
         uint256 siloBalanceBefore1 = token1.balanceOf(address(silo1));
 
@@ -173,7 +173,7 @@ abstract contract MaxLiquidationCommon is SiloLittleHelper, Test {
                 assertEq(
                     siloBalanceBefore1 + repayDebtAssets - withdrawCollateral,
                     token1.balanceOf(address(silo1)),
-                    "debt was repay to silo and collateral withdrawn"
+                    "debt was repay to silo and collateral withdrawn from silo"
                 );
             }
         } else {
@@ -226,15 +226,17 @@ abstract contract MaxLiquidationCommon is SiloLittleHelper, Test {
 
             return minAssets;
         } else if (_i == 2) {
+            // try to liquidate half
             return _debtToCover == 1 ? 1 : _debtToCover / 2;
         } else if (_i == 3) {
+            // try to liquidate almost everything
             uint256 minAssets = silo1.previewRepayShares(1);
 
             if (_debtToCover < minAssets) {
                 revert("#2 calculation of maxDebtToCover should never return assets that will generate zero shares");
             }
 
-            return _debtToCover;
+            return _debtToCover == minAssets ? minAssets : _debtToCover - minAssets;
         } else revert("this should never happen");
     }
 

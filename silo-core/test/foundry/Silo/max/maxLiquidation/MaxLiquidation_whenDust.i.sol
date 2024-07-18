@@ -50,7 +50,7 @@ contract MaxLiquidationDustTest is MaxLiquidationCommon {
 
         _assertBorrowerIsNotSolvent({_hasBadDebt: false}); // TODO make tests for bad debt as well
 
-        _executeLiquidationAndChecks(_sameAsset, _receiveSToken);
+        _executeLiquidationAndRunChecks(_sameAsset, _receiveSToken);
 
         _assertBorrowerIsSolvent();
         _ensureBorrowerHasNoDebt();
@@ -85,7 +85,7 @@ contract MaxLiquidationDustTest is MaxLiquidationCommon {
 
         _assertBorrowerIsNotSolvent({_hasBadDebt: false});
 
-        _executeLiquidationAndChecks(_sameAsset, _receiveSToken);
+        _executeLiquidationAndRunChecks(_sameAsset, _receiveSToken);
 
         _assertBorrowerIsSolvent();
         _ensureBorrowerHasNoDebt();

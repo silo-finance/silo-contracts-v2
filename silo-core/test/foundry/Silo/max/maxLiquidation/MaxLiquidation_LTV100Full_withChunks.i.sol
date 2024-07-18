@@ -48,7 +48,7 @@ contract MaxLiquidationLTV100FullWithChunksTest is MaxLiquidationLTV100FullTest 
 
         _assertLTV100();
 
-        _executeLiquidationAndChecks(_sameAsset, _receiveSToken);
+        _executeLiquidationAndRunChecks(_sameAsset, _receiveSToken);
 
         _assertBorrowerIsSolvent();
     }

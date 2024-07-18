@@ -36,13 +36,11 @@ contract MaxLiquidationDustWithChunksTest is MaxLiquidationDustTest {
             uint256 testDebtToCover = _calculateChunk(debtToCover, i);
             emit log_named_uint("[DustWithChunks] testDebtToCover", testDebtToCover);
 
-            (
-                uint256 partialCollateral, uint256 partialDebt
-            ) = _liquidationCallReverts(testDebtToCover, _sameToken, _receiveSToken);
+            _liquidationCallReverts(testDebtToCover, _sameToken, _receiveSToken);
         }
 
         // only full is possible
-        _liquidationCall(debtToCover, _sameToken, _receiveSToken);
+        return _liquidationCall(debtToCover, _sameToken, _receiveSToken);
     }
 
     function _liquidationCallReverts(uint256 _debtToCover, bool _sameToken, bool _receiveSToken) private {

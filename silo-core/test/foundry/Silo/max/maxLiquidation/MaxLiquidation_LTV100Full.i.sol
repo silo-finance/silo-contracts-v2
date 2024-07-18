@@ -69,7 +69,7 @@ contract MaxLiquidationLTV100FullTest is MaxLiquidationCommon {
 
         _assertLTV100();
 
-        _executeLiquidationAndChecks(_sameAsset, _receiveSToken);
+        _executeLiquidationAndRunChecks(_sameAsset, _receiveSToken);
 
         _assertBorrowerIsSolvent();
         _ensureBorrowerHasNoDebt();
@@ -111,7 +111,7 @@ contract MaxLiquidationLTV100FullTest is MaxLiquidationCommon {
 
         _assertLTV100();
 
-        _executeLiquidationAndChecks(_sameAsset, _receiveSToken);
+        _executeLiquidationAndRunChecks(_sameAsset, _receiveSToken);
 
         _assertBorrowerIsSolvent();
         _ensureBorrowerHasNoDebt();
