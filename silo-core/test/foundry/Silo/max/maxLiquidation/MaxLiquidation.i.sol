@@ -76,11 +76,12 @@ contract MaxLiquidationTest is MaxLiquidationCommon {
         _createDebt(_collateral, toBorrow, _sameAsset);
 
         vm.warp(block.timestamp + 1050 days); // initial time movement to speed up _moveTimeUntilInsolvent
+
         _moveTimeUntilInsolvent();
 
         _assertBorrowerIsNotSolvent({_hasBadDebt: false}); // TODO make tests for bad debt as well
 
-        _executeLiquidationAndChecks(_sameAsset, _receiveSToken);
+        _executeLiquidationAndRunChecks(_sameAsset, _receiveSToken);
 
         _assertBorrowerIsSolvent();
         _ensureBorrowerHasDebt();
@@ -105,7 +106,6 @@ contract MaxLiquidationTest is MaxLiquidationCommon {
     function _maxLiquidation_partial_2tokens_fuzz(uint128 _collateral, bool _receiveSToken) internal {
         bool _sameAsset = false;
 
-        vm.assume(_collateral != 12); // dust case
         vm.assume(_collateral != 19); // dust case
         vm.assume(_collateral != 33); // dust
 
@@ -122,10 +122,13 @@ contract MaxLiquidationTest is MaxLiquidationCommon {
 
         _assertBorrowerIsNotSolvent({_hasBadDebt: false});
 
-        _executeLiquidationAndChecks(_sameAsset, _receiveSToken);
+        _executeLiquidationAndRunChecks(_sameAsset, _receiveSToken);
 
         _assertBorrowerIsSolvent();
-        _ensureBorrowerHasDebt();
+
+        // 12 case allow for full liquidation and when done with chunks it stays at LTV 100 till the end
+        if (_collateral == 12) _ensureBorrowerHasNoDebt();
+        else _ensureBorrowerHasDebt();
     }
 
     function _executeLiquidation(bool _sameToken, bool _receiveSToken)
@@ -141,9 +144,10 @@ contract MaxLiquidationTest is MaxLiquidationCommon {
             uint256 collateralToLiquidate, uint256 debtToRepay
         ) = partialLiquidation.maxLiquidation(address(silo1), borrower);
 
+        emit log_named_decimal_uint("[MaxLiquidation] collateralToLiquidate", collateralToLiquidate, 18);
+        emit log_named_decimal_uint("[MaxLiquidation] debtToRepay", debtToRepay, 16);
         emit log_named_decimal_uint("[MaxLiquidation] ltv before", silo0.getLtv(borrower), 16);
 
-        // TODO try do liquidate with chunks
         (withdrawCollateral, repayDebtAssets) = partialLiquidation.liquidationCall(
             address(silo1),
             address(_sameToken ? token1 : token0),
@@ -154,7 +158,6 @@ contract MaxLiquidationTest is MaxLiquidationCommon {
         );
 
         emit log_named_decimal_uint("[MaxLiquidation] ltv after", silo0.getLtv(borrower), 16);
-        emit log_named_decimal_uint("[MaxLiquidation] collateralToLiquidate", collateralToLiquidate, 18);
 
         assertEq(debtToRepay, repayDebtAssets, "debt: maxLiquidation == result");
         _assertEqDiff(withdrawCollateral, collateralToLiquidate, "collateral: max == result");

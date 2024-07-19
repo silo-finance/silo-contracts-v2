@@ -15,8 +15,6 @@ import {MaxLiquidationTest} from "./MaxLiquidation.i.sol";
 contract MaxLiquidationWithChunksTest is MaxLiquidationTest {
     using SiloLensLib for ISilo;
 
-    uint256[] private _testCases;
-
     function _executeLiquidation(bool _sameToken, bool _receiveSToken)
         internal
         override
@@ -26,10 +24,10 @@ contract MaxLiquidationWithChunksTest is MaxLiquidationTest {
             uint256 totalCollateralToLiquidate, uint256 totalDebtToCover
         ) = partialLiquidation.maxLiquidation(address(silo1), borrower);
 
-        emit log_named_decimal_uint("[MaxLiquidationDivided] ltv before", silo0.getLtv(borrower), 16);
+        emit log_named_decimal_uint("[MaxLiquidationWithChunks] ltv before", silo0.getLtv(borrower), 16);
 
         for (uint256 i; i < 5; i++) {
-            emit log_named_uint("[MaxLiquidationDivided] case ------------------------", i);
+            emit log_named_uint("[MaxLiquidationWithChunks] case ------------------------", i);
             bool isSolvent = silo0.isSolvent(borrower);
 
             emit log_named_string("isSolvent", silo0.isSolvent(borrower) ? "YES" : "NO");
@@ -44,11 +42,16 @@ contract MaxLiquidationWithChunksTest is MaxLiquidationTest {
 
             if (isSolvent) break;
 
-            uint256 testDebtToCover = _prepareTestCase(debtToCover, i);
+            uint256 testDebtToCover = _calculateChunk(debtToCover, i);
 
-            (uint256 partialCollateral, uint256 partialDebt) = _liquidationCall(testDebtToCover, _sameToken, _receiveSToken);
+            (
+                uint256 partialCollateral, uint256 partialDebt
+            ) = _liquidationCall(testDebtToCover, _sameToken, _receiveSToken);
+
             withdrawCollateral += partialCollateral;
             repayDebtAssets += partialDebt;
+
+            _assertLeDiff(partialCollateral, collateralToLiquidate, "partialCollateral");
 
             // TODO warp?
         }
@@ -62,41 +65,5 @@ contract MaxLiquidationWithChunksTest is MaxLiquidationTest {
             totalCollateralToLiquidate,
             "chunks(collateral) can not be bigger than total/max"
         );
-    }
-
-    function _liquidationCall(uint256 _debtToCover, bool _sameToken, bool _receiveSToken)
-        private
-        returns (uint256 withdrawCollateral, uint256 repayDebtAssets)
-    {
-        return partialLiquidation.liquidationCall(
-            address(silo1),
-            address(_sameToken ? token1 : token0),
-            address(token1),
-            borrower,
-            _debtToCover,
-            _receiveSToken
-        );
-    }
-
-    function _prepareTestCase(uint256 _debtToCover, uint256 _i) private returns (uint256 _chunk) {
-        if (_debtToCover == 0) return 0;
-
-        if (_i < 2 || _i == 4) {
-            // two first iteration and last one (we assume we have max 5 iterations), try to use minimal amount
-
-            // min amount of assets that will not generate ZeroShares error
-            uint256 minAssets = silo1.previewRepayShares(1);
-
-            if (_debtToCover < minAssets) {
-                revert("calculation of maxDebtToCover should never return assets that will generate zero shares");
-            }
-
-            return minAssets;
-        } else if (_i == 2) {
-            return _debtToCover / 2;
-        } else if (_i == 3) {
-            uint256 minAssets = silo1.previewRepayShares(1);
-            return _debtToCover < minAssets ? minAssets : _debtToCover - minAssets; // TODO correct?
-        } else revert("this should never happen");
     }
 }

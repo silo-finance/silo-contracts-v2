@@ -36,11 +36,7 @@ contract MaxLiquidationDustTest is MaxLiquidationCommon {
         bool _sameAsset = true;
 
         // this value found by fuzzing tests, is high enough to have partial liquidation possible for this test setup
-        vm.assume(
-            _collateral == 12
-            || (_collateral >= 29 && _collateral <= 38)
-            || (_collateral >= 52 && _collateral <= 57)
-        );
+        vm.assume((_collateral >= 29 && _collateral <= 38) || (_collateral >= 52 && _collateral <= 57));
 
         uint256 toBorrow = uint256(_collateral) * 85 / 100; // maxLT is 85%
         _createDebt(_collateral, toBorrow, _sameAsset);
@@ -50,7 +46,7 @@ contract MaxLiquidationDustTest is MaxLiquidationCommon {
 
         _assertBorrowerIsNotSolvent({_hasBadDebt: false}); // TODO make tests for bad debt as well
 
-        _executeLiquidationAndChecks(_sameAsset, _receiveSToken);
+        _executeLiquidationAndRunChecks(_sameAsset, _receiveSToken);
 
         _assertBorrowerIsSolvent();
         _ensureBorrowerHasNoDebt();
@@ -75,7 +71,7 @@ contract MaxLiquidationDustTest is MaxLiquidationCommon {
     function _maxLiquidation_dust_2tokens_fuzz(uint8 _collateral, bool _receiveSToken) internal {
         bool _sameAsset = false;
 
-        vm.assume(_collateral == 12 || _collateral == 19 || _collateral == 33);
+        vm.assume(_collateral == 19 || _collateral == 33);
 
         uint256 toBorrow = uint256(_collateral) * 75 / 100; // maxLT is 75%
 
@@ -85,7 +81,7 @@ contract MaxLiquidationDustTest is MaxLiquidationCommon {
 
         _assertBorrowerIsNotSolvent({_hasBadDebt: false});
 
-        _executeLiquidationAndChecks(_sameAsset, _receiveSToken);
+        _executeLiquidationAndRunChecks(_sameAsset, _receiveSToken);
 
         _assertBorrowerIsSolvent();
         _ensureBorrowerHasNoDebt();
@@ -93,6 +89,7 @@ contract MaxLiquidationDustTest is MaxLiquidationCommon {
 
     function _executeLiquidation(bool _sameToken, bool _receiveSToken)
         internal
+        virtual
         override
         returns (uint256 withdrawCollateral, uint256 repayDebtAssets)
     {

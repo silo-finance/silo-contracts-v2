@@ -142,7 +142,7 @@ abstract contract MaxLiquidationCommon is SiloLittleHelper, Test {
         else assertLe(a, b, _msg);
     }
 
-    function _executeLiquidationAndChecks(bool _sameToken, bool _receiveSToken) internal {
+    function _executeLiquidationAndRunChecks(bool _sameToken, bool _receiveSToken) internal {
         uint256 siloBalanceBefore0 = token0.balanceOf(address(silo0));
         uint256 siloBalanceBefore1 = token1.balanceOf(address(silo1));
 
@@ -173,7 +173,7 @@ abstract contract MaxLiquidationCommon is SiloLittleHelper, Test {
                 assertEq(
                     siloBalanceBefore1 + repayDebtAssets - withdrawCollateral,
                     token1.balanceOf(address(silo1)),
-                    "debt was repay to silo and collateral withdrawn"
+                    "debt was repay to silo and collateral withdrawn from silo"
                 );
             }
         } else {
@@ -209,6 +209,49 @@ abstract contract MaxLiquidationCommon is SiloLittleHelper, Test {
                 "debt was repay to silo"
             );
         }
+    }
+
+    function _calculateChunk(uint256 _debtToCover, uint256 _i) internal view returns (uint256 _chunk) {
+        if (_debtToCover == 0) return 0;
+
+        if (_i < 2 || _i == 4) {
+            // two first iteration and last one (we assume we have max 5 iterations), try to use minimal amount
+
+            // min amount of assets that will not generate ZeroShares error
+            uint256 minAssets = silo1.previewRepayShares(1);
+
+            if (_debtToCover < minAssets) {
+                revert("#1 calculation of maxDebtToCover should never return assets that will generate zero shares");
+            }
+
+            return minAssets;
+        } else if (_i == 2) {
+            // try to liquidate half
+            return _debtToCover == 1 ? 1 : _debtToCover / 2;
+        } else if (_i == 3) {
+            // try to liquidate almost everything
+            uint256 minAssets = silo1.previewRepayShares(1);
+
+            if (_debtToCover < minAssets) {
+                revert("#2 calculation of maxDebtToCover should never return assets that will generate zero shares");
+            }
+
+            return _debtToCover == minAssets ? minAssets : _debtToCover - minAssets;
+        } else revert("this should never happen");
+    }
+
+    function _liquidationCall(uint256 _debtToCover, bool _sameToken, bool _receiveSToken)
+        internal
+        returns (uint256 withdrawCollateral, uint256 repayDebtAssets)
+    {
+        return partialLiquidation.liquidationCall(
+            address(silo1),
+            address(_sameToken ? token1 : token0),
+            address(token1),
+            borrower,
+            _debtToCover,
+            _receiveSToken
+        );
     }
 
     function _executeLiquidation(bool _sameToken, bool _receiveSToken)
