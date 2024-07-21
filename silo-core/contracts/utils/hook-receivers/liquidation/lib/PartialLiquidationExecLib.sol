@@ -90,14 +90,14 @@ library PartialLiquidationExecLib {
             uint256 sumOfCollateralValue, uint256 debtValue
         ) = SiloSolvencyLib.getPositionValues(ltvData, collateralConfig.token, debtConfig.token);
 
-        uint256 ltvInDp = SiloSolvencyLib.ltvMath(debtValue, sumOfCollateralValue);
-        if (ltvInDp <= collateralConfig.lt) return (0, 0); // user solvent
-
         uint256 sumOfCollateralAssets;
         // safe because we adding same token, so it is under same total supply
         unchecked { sumOfCollateralAssets = ltvData.borrowerProtectedAssets + ltvData.borrowerCollateralAssets; }
 
         if (sumOfCollateralValue == 0) return (sumOfCollateralAssets, ltvData.borrowerDebtAssets);
+
+        uint256 ltvInDp = SiloSolvencyLib.ltvMath(debtValue, sumOfCollateralValue);
+        if (ltvInDp <= collateralConfig.lt) return (0, 0); // user solvent
 
         return PartialLiquidationLib.maxLiquidation(
             sumOfCollateralAssets,
