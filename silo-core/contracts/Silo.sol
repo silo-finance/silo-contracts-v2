@@ -108,11 +108,10 @@ contract Silo is SiloERC4626 {
     function isSolvent(address _borrower) external view virtual returns (bool) {
         (
             ISiloConfig.ConfigData memory collateral,
-            ISiloConfig.ConfigData memory debt,
-            ISiloConfig.DebtInfo memory debtInfo
-        ) = _sharedStorage.siloConfig.getConfigs(address(this), _borrower, Hook.NONE);
+            ISiloConfig.ConfigData memory debt
+        ) = _sharedStorage.siloConfig.getConfigs(_borrower);
 
-        return SiloSolvencyLib.isSolvent(collateral, debt, debtInfo, _borrower, AccrueInterestInMemory.Yes);
+        return SiloSolvencyLib.isSolvent(collateral, debt, _borrower, AccrueInterestInMemory.Yes);
     }
 
     /// @inheritdoc ISilo

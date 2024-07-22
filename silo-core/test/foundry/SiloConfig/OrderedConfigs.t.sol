@@ -14,27 +14,13 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 // - `withdraw`             debt silo0  | debt same asset
 // - `withdraw`             debt silo1  | debt not the same asset
 // - `withdraw`             debt silo1  | debt same asset
-// - `borrow`               no debt     | debt not the same asset
-// - `borrow`               no debt     | debt the same asset
-// - `transitionCollateral` no debt
-// - `transitionCollateral` debt silo0  | debt not the same asset
-// - `transitionCollateral` debt silo0  | debt the same asset
-// - `transitionCollateral` debt silo1  | debt not the same asset
-// - `transitionCollateral` debt silo1  | debt the same asset
-// - `switchCollateralTo`   no debt     | swith not to the same asset
-// - `switchCollateralTo`   no debt     | swith to the same asset
-// - `switchCollateralTo`   debt silo0  | swith not to the same asset   | debt not the same asset
-// - `switchCollateralTo`   debt silo0  | swith to the same asset       | debt not the same asset
-// - `switchCollateralTo`   debt silo1  | swith not to the same asset   | debt not the same asset
-// - `switchCollateralTo`   debt silo1  | swith to the same asset       | debt not the same asset
-// - `switchCollateralTo`   debt silo0  | swith not to the same asset   | debt the same asset
-// - `switchCollateralTo`   debt silo0  | swith to the same asset       | debt the same asset
-// - `switchCollateralTo`   debt silo1  | swith not to the same asset   | debt the same asset
-// - `switchCollateralTo`   debt silo1  | swith to the same asset       | debt the same asset
-// - `liquidationCall`      debt silo0  | debt not the same asset
-// - `liquidationCall`      debt silo0  | debt the same asset
-// - `liquidationCall`      debt silo1  | debt not the same asset
-// - `liquidationCall`      debt silo1  | debt the same asset
+// - `borrow`               not the same asset
+// - `borrow`               the same asset
+// - `getConfigs`           no debt
+// - `getConfigs`           debt silo0  | not the same asset
+// - `getConfigs`           debt silo0  | the same asset
+// - `getConfigs`           debt silo1  | not the same asset
+// - `getConfigs`           debt silo1  | the same asset
 //
 // FOUNDRY_PROFILE=core-test forge test -vv --mc OrderedConfigsTest
 contract OrderedConfigsTest is Test {
@@ -97,170 +83,127 @@ contract OrderedConfigsTest is Test {
 
     // FOUNDRY_PROFILE=core-test forge test -vvv --mt testOrderedConfigsWithdrawNoDebt
     function testOrderedConfigsWithdrawNoDebt() public view {
+        ISiloConfig.DepositConfig memory depositConfig;
         ISiloConfig.ConfigData memory collateralConfig;
         ISiloConfig.ConfigData memory debtConfig;
-        ISiloConfig.DebtInfo memory debtInfo;
 
-        (collateralConfig, debtConfig, debtInfo) = _siloConfig.getConfigs(
-            _silo0,
-            _siloUser,
-            Hook.withdrawAction(ISilo.CollateralType.Collateral)
-        );
+        (depositConfig, collateralConfig, debtConfig) = _siloConfig.getConfigsForWithdraw(_silo0, _siloUser);
 
-        assertEq(collateralConfig.silo, _silo0);
-        assertEq(debtConfig.silo, _silo1);
-        _assertNoDebt(debtInfo);
+        assertEq(depositConfig.silo, _silo0);
+        assertEq(collateralConfig.silo, address(0));
+        assertEq(debtConfig.silo, address(0));
 
-        (collateralConfig, debtConfig,) = _siloConfig.getConfigs(
-            _silo1,
-            _siloUser,
-            Hook.withdrawAction(ISilo.CollateralType.Collateral)
-        );
+        (depositConfig, collateralConfig, debtConfig) = _siloConfig.getConfigsForWithdraw(_silo1, _siloUser);
 
-        assertEq(collateralConfig.silo, _silo1);
-        assertEq(debtConfig.silo, _silo0);
-        _assertNoDebt(debtInfo);
+        assertEq(depositConfig.silo, _silo1);
+        assertEq(collateralConfig.silo, address(0));
+        assertEq(debtConfig.silo, address(0));
     }
 
     // FOUNDRY_PROFILE=core-test forge test -vvv --mt testOrderedConfigsWithdrawDebtSilo0NotSameAsset
     function testOrderedConfigsWithdrawDebtSilo0NotSameAsset() public {
-        bool sameAsset;
-
         _mockShareTokensBlances(_siloUser, 1, 0);
 
         vm.prank(_silo0);
-        _siloConfig.accrueInterestAndGetConfigs(_silo0, _siloUser, Hook.borrowAction(sameAsset));
+        _siloConfig.setCollateralSilo(_siloUser, !_SAME_ASSET);
 
+        ISiloConfig.DepositConfig memory depositConfig;
         ISiloConfig.ConfigData memory collateralConfig;
         ISiloConfig.ConfigData memory debtConfig;
-        ISiloConfig.DebtInfo memory debtInfo;
-        
-        (collateralConfig, debtConfig, debtInfo) = _siloConfig.getConfigs(
-            _silo0,
-            _siloUser,
-            Hook.withdrawAction(ISilo.CollateralType.Collateral)
-        );
 
-        assertEq(collateralConfig.silo, _silo0);
-        assertEq(debtConfig.silo, _silo1);
-        _assertForSilo0DebtSilo0NotSameAsset(debtInfo);
+        (depositConfig, collateralConfig, debtConfig) = _siloConfig.getConfigsForWithdraw(_silo0, _siloUser);
 
-        (collateralConfig, debtConfig, debtInfo) = _siloConfig.getConfigs(
-            _silo1,
-            _siloUser,
-            Hook.withdrawAction(ISilo.CollateralType.Collateral)
-        );
-
+        assertEq(depositConfig.silo, _silo0);
         assertEq(collateralConfig.silo, _silo1);
         assertEq(debtConfig.silo, _silo0);
-        _assertForSilo1DebtSilo0NotSameAsset(debtInfo);
+        _assertForSilo0DebtSilo0NotSameAsset(collateralConfig, debtConfig);
+
+        (depositConfig, collateralConfig, debtConfig) = _siloConfig.getConfigsForWithdraw(_silo1, _siloUser);
+
+        assertEq(depositConfig.silo, _silo1);
+        assertEq(collateralConfig.silo, _silo1);
+        assertEq(debtConfig.silo, _silo0);
+        _assertForSilo1DebtSilo0NotSameAsset(collateralConfig, debtConfig);
     }
 
     // FOUNDRY_PROFILE=core-test forge test -vvv --mt testOrderedConfigsWithdrawDebtSilo1NotSameAsset
     function testOrderedConfigsWithdrawDebtSilo1NotSameAsset() public {
-        bool sameAsset;
-
         _mockShareTokensBlances(_siloUser, 0, 1);
 
         vm.prank(_silo1);
-        _siloConfig.accrueInterestAndGetConfigs(_silo1, _siloUser, Hook.borrowAction(sameAsset));
+        _siloConfig.setCollateralSilo(_siloUser, !_SAME_ASSET);
 
+        ISiloConfig.DepositConfig memory depositConfig;
         ISiloConfig.ConfigData memory collateralConfig;
         ISiloConfig.ConfigData memory debtConfig;
-        ISiloConfig.DebtInfo memory debtInfo;
         
-        (collateralConfig, debtConfig, debtInfo) = _siloConfig.getConfigs(
-            _silo0,
-            _siloUser,
-            Hook.withdrawAction(ISilo.CollateralType.Collateral)
-        );
+        (depositConfig, collateralConfig, debtConfig) = _siloConfig.getConfigsForWithdraw(_silo0, _siloUser);
 
+        assertEq(depositConfig.silo, _silo0);
         assertEq(collateralConfig.silo, _silo0);
         assertEq(debtConfig.silo, _silo1);
-        _assertForSilo0DebtSilo1NotSameAsset(debtInfo);
+        _assertForSilo0DebtSilo1NotSameAsset(collateralConfig, debtConfig);
 
-        (collateralConfig, debtConfig, debtInfo) = _siloConfig.getConfigs(
-            _silo1,
-            _siloUser,
-            Hook.withdrawAction(ISilo.CollateralType.Collateral)
-        );
+        (depositConfig, collateralConfig, debtConfig) = _siloConfig.getConfigsForWithdraw(_silo1, _siloUser);
 
-        assertEq(collateralConfig.silo, _silo1);
-        assertEq(debtConfig.silo, _silo0);
-        _assertForSilo1DebtSilo1NotSameAsset(debtInfo);
+        assertEq(depositConfig.silo, _silo1);
+        assertEq(collateralConfig.silo, _silo0);
+        assertEq(debtConfig.silo, _silo1);
+        _assertForSilo1DebtSilo1NotSameAsset(collateralConfig, debtConfig);
     }
 
     // FOUNDRY_PROFILE=core-test forge test -vvv --mt testOrderedConfigsWithdrawWithDebtSilo0SameAsset
     function testOrderedConfigsWithdrawWithDebtSilo0SameAsset() public {
-        bool sameAsset = true;
-
         _mockShareTokensBlances(_siloUser, 1, 0);
 
         vm.prank(_silo0);
-        _siloConfig.accrueInterestAndGetConfigs(_silo0, _siloUser, Hook.borrowAction(sameAsset));
+        _siloConfig.setCollateralSilo(_siloUser, _SAME_ASSET);
 
+        ISiloConfig.DepositConfig memory depositConfig;
         ISiloConfig.ConfigData memory collateralConfig;
         ISiloConfig.ConfigData memory debtConfig;
-        ISiloConfig.DebtInfo memory debtInfo;
         
-        (collateralConfig, debtConfig, debtInfo) = _siloConfig.getConfigs(
-            _silo0,
-            _siloUser,
-            Hook.withdrawAction(ISilo.CollateralType.Collateral)
-        );
+        (depositConfig, collateralConfig, debtConfig) = _siloConfig.getConfigsForWithdraw(_silo0, _siloUser);
 
+        assertEq(depositConfig.silo, _silo0);
         assertEq(collateralConfig.silo, _silo0);
         assertEq(debtConfig.silo, _silo0);
-        _assertForSilo0DebtSilo0SameAsset(debtInfo);
+        _assertForSilo0DebtSilo0SameAsset(collateralConfig, debtConfig);
 
-        (collateralConfig, debtConfig, debtInfo) = _siloConfig.getConfigs(
-            _silo1,
-            _siloUser,
-            Hook.withdrawAction(ISilo.CollateralType.Collateral)
-        );
+        (depositConfig, collateralConfig, debtConfig) = _siloConfig.getConfigsForWithdraw(_silo1, _siloUser);
 
-        assertEq(collateralConfig.silo, _silo1);
+        assertEq(depositConfig.silo, _silo1);
+        assertEq(collateralConfig.silo, _silo0);
         assertEq(debtConfig.silo, _silo0);
-        _assertForSilo1DebtSilo0SameAsset(debtInfo);
+        _assertForSilo1DebtSilo0SameAsset(collateralConfig, debtConfig);
     }
 
     // FOUNDRY_PROFILE=core-test forge test -vvv --mt testOrderedConfigsWithdrawWithDebtSilo1SameAsset
     function testOrderedConfigsWithdrawWithDebtSilo1SameAsset() public {
-        bool sameAsset = true;
-
         _mockShareTokensBlances(_siloUser, 0, 1);
 
         vm.prank(_silo1);
-        _siloConfig.accrueInterestAndGetConfigs(_silo1, _siloUser, Hook.borrowAction(sameAsset));
+        _siloConfig.setCollateralSilo(_siloUser, _SAME_ASSET);
 
+        ISiloConfig.DepositConfig memory depositConfig;
         ISiloConfig.ConfigData memory collateralConfig;
         ISiloConfig.ConfigData memory debtConfig;
-        ISiloConfig.DebtInfo memory debtInfo;
         
-        (collateralConfig, debtConfig, debtInfo) = _siloConfig.getConfigs(
-            _silo0,
-            _siloUser,
-            Hook.withdrawAction(ISilo.CollateralType.Collateral)
-        );
+        (depositConfig, collateralConfig, debtConfig) = _siloConfig.getConfigsForWithdraw(_silo0, _siloUser);
 
-        assertEq(collateralConfig.silo, _silo0);
+        assertEq(depositConfig.silo, _silo0);
+        assertEq(collateralConfig.silo, _silo1);
         assertEq(debtConfig.silo, _silo1);
 
-        (collateralConfig, debtConfig, debtInfo) = _siloConfig.getConfigs(
-            _silo1,
-            _siloUser,
-            Hook.withdrawAction(ISilo.CollateralType.Collateral)
-        );
+        (depositConfig, collateralConfig, debtConfig) = _siloConfig.getConfigsForWithdraw(_silo1, _siloUser);
 
+        assertEq(depositConfig.silo, _silo1);
         assertEq(collateralConfig.silo, _silo1);
         assertEq(debtConfig.silo, _silo1);
     }
 
     // FOUNDRY_PROFILE=core-test forge test -vvv --mt testOrderedConfigsBorrowNoDebtNotSameAsset
-    function testOrderedConfigsBorrowNoDebtNotSameAsset() public {
-        vm.prank(_silo0);
-        _siloConfig.setCollateralSilo(_siloUser, !_SAME_ASSET);
-
+    function testOrderedConfigsBorrowNoDebtNotSameAsset() public view {
         ISiloConfig.ConfigData memory collateralConfig;
         ISiloConfig.ConfigData memory debtConfig;
         
@@ -269,9 +212,6 @@ contract OrderedConfigsTest is Test {
         assertEq(collateralConfig.silo, _silo1);
         assertEq(debtConfig.silo, _silo0);
 
-        vm.prank(_silo1);
-        _siloConfig.setCollateralSilo(_siloUser, !_SAME_ASSET);
-
         (collateralConfig, debtConfig) = _siloConfig.getConfigsForBorrow(_silo1, !_SAME_ASSET);
 
         assertEq(collateralConfig.silo, _silo0);
@@ -279,10 +219,7 @@ contract OrderedConfigsTest is Test {
     }
 
     // FOUNDRY_PROFILE=core-test forge test -vvv --mt testOrderedConfigsBorrowNoDebtSameAsset
-    function testOrderedConfigsBorrowNoDebtSameAsset() public {
-        vm.prank(_silo0);
-        _siloConfig.setCollateralSilo(_siloUser, _SAME_ASSET);
-
+    function testOrderedConfigsBorrowNoDebtSameAsset() public view {
         ISiloConfig.ConfigData memory collateralConfig;
         ISiloConfig.ConfigData memory debtConfig;
         
@@ -291,875 +228,151 @@ contract OrderedConfigsTest is Test {
         assertEq(collateralConfig.silo, _silo0);
         assertEq(debtConfig.silo, _silo0);
 
-        vm.prank(_silo1);
-        _siloConfig.setCollateralSilo(_siloUser, _SAME_ASSET);
-
         (collateralConfig, debtConfig) = _siloConfig.getConfigsForBorrow(_silo1, _SAME_ASSET);
 
         assertEq(collateralConfig.silo, _silo1);
         assertEq(debtConfig.silo, _silo1);
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --mt testOrderedConfigsLeverageSameAssetsNoDebt
-    function testOrderedConfigsLeverageSameAssetsNoDebt() public view {
+    // FOUNDRY_PROFILE=core-test forge test -vvv --mt testGetConfigsNoDebt
+    function testGetConfigsNoDebt() public view {
         ISiloConfig.ConfigData memory collateralConfig;
         ISiloConfig.ConfigData memory debtConfig;
-        ISiloConfig.DebtInfo memory debtInfo;
 
-        (collateralConfig, debtConfig, debtInfo) = _siloConfig.getConfigs(
-            _silo0,
-            _siloUser,
-            Hook.LEVERAGE_SAME_ASSET
-        );
+        (collateralConfig, debtConfig) = _siloConfig.getConfigs(_siloUser);
 
-        assertEq(collateralConfig.silo, _silo0);
-        assertEq(debtConfig.silo, _silo0);
-        _assertNoDebt(debtInfo);
-
-        (collateralConfig, debtConfig, debtInfo) = _siloConfig.getConfigs(
-            _silo1,
-            _siloUser,
-            Hook.LEVERAGE_SAME_ASSET
-        );
-
-        assertEq(collateralConfig.silo, _silo1);
-        assertEq(debtConfig.silo, _silo1);
-        _assertNoDebt(debtInfo);
+        assertEq(collateralConfig.silo, address(0));
+        assertEq(debtConfig.silo, address(0));
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --mt testOrderedConfigsLeverageSameAssetsDebtSilo0NotSameAsset
-    function testOrderedConfigsLeverageSameAssetsDebtSilo0NotSameAsset() public {
-        bool sameAsset;
-
+    // FOUNDRY_PROFILE=core-test forge test -vvv --mt testGetConfigsDebtSilo0NotSameAsset
+    function testGetConfigsDebtSilo0NotSameAsset() public {
         _mockShareTokensBlances(_siloUser, 1, 0);
 
         vm.prank(_silo0);
-        _siloConfig.accrueInterestAndGetConfigs(_silo0, _siloUser, Hook.borrowAction(sameAsset));
+        _siloConfig.setCollateralSilo(_siloUser, !_SAME_ASSET);
 
         ISiloConfig.ConfigData memory collateralConfig;
         ISiloConfig.ConfigData memory debtConfig;
-        ISiloConfig.DebtInfo memory debtInfo;
 
-        (collateralConfig, debtConfig, debtInfo) = _siloConfig.getConfigs(
-            _silo0,
-            _siloUser,
-            Hook.LEVERAGE_SAME_ASSET
-        );
+        (collateralConfig, debtConfig) = _siloConfig.getConfigs(_siloUser);
 
         assertEq(collateralConfig.silo, _silo1);
         assertEq(debtConfig.silo, _silo0);
-        _assertForSilo0DebtSilo0NotSameAsset(debtInfo);
-
-        (collateralConfig, debtConfig, debtInfo) = _siloConfig.getConfigs(
-            _silo1,
-            _siloUser,
-            Hook.LEVERAGE_SAME_ASSET
-        );
-
-        assertEq(collateralConfig.silo, _silo1);
-        assertEq(debtConfig.silo, _silo0);
-        _assertForSilo1DebtSilo0NotSameAsset(debtInfo);
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --mt testOrderedConfigsLeverageSameAssetsDebtSilo1NotSameAsset
-    function testOrderedConfigsLeverageSameAssetsDebtSilo1NotSameAsset() public {
-        bool sameAsset;
-
-        _mockShareTokensBlances(_siloUser, 0, 1);
-
-        vm.prank(_silo1);
-        _siloConfig.accrueInterestAndGetConfigs(_silo1, _siloUser, Hook.borrowAction(sameAsset));
-
-        ISiloConfig.ConfigData memory collateralConfig;
-        ISiloConfig.ConfigData memory debtConfig;
-        ISiloConfig.DebtInfo memory debtInfo;
-
-        (collateralConfig, debtConfig, debtInfo) = _siloConfig.getConfigs(
-            _silo0,
-            _siloUser,
-            Hook.LEVERAGE_SAME_ASSET
-        );
-
-        assertEq(collateralConfig.silo, _silo0);
-        assertEq(debtConfig.silo, _silo1);
-        _assertForSilo0DebtSilo1NotSameAsset(debtInfo);
-
-        (collateralConfig, debtConfig, debtInfo) = _siloConfig.getConfigs(
-            _silo1,
-            _siloUser,
-            Hook.LEVERAGE_SAME_ASSET
-        );
-
-        assertEq(collateralConfig.silo, _silo0);
-        assertEq(debtConfig.silo, _silo1);
-        _assertForSilo1DebtSilo1NotSameAsset(debtInfo);
-    }
-
-    // FOUNDRY_PROFILE=core-test forge test -vvv --mt testOrderedConfigsLeverageSameAssetsDebtSilo0SameAsset
-    function testOrderedConfigsLeverageSameAssetsDebtSilo0SameAsset() public {
-        bool sameAsset = true;
-
+    // FOUNDRY_PROFILE=core-test forge test -vvv --mt testGetConfigsDebtSilo0SameAsset
+    function testGetConfigsDebtSilo0SameAsset() public {
         _mockShareTokensBlances(_siloUser, 1, 0);
 
         vm.prank(_silo0);
-        _siloConfig.accrueInterestAndGetConfigs(_silo0, _siloUser, Hook.borrowAction(sameAsset));
+        _siloConfig.setCollateralSilo(_siloUser, _SAME_ASSET);
 
         ISiloConfig.ConfigData memory collateralConfig;
         ISiloConfig.ConfigData memory debtConfig;
-        ISiloConfig.DebtInfo memory debtInfo;
 
-        (collateralConfig, debtConfig, debtInfo) = _siloConfig.getConfigs(
-            _silo0,
-            _siloUser,
-            Hook.LEVERAGE_SAME_ASSET
-        );
+        (collateralConfig, debtConfig) = _siloConfig.getConfigs(_siloUser);
 
         assertEq(collateralConfig.silo, _silo0);
         assertEq(debtConfig.silo, _silo0);
-        _assertForSilo0DebtSilo0SameAsset(debtInfo);
-
-        (collateralConfig, debtConfig, debtInfo) = _siloConfig.getConfigs(
-            _silo1,
-            _siloUser,
-            Hook.LEVERAGE_SAME_ASSET
-        );
-
-        assertEq(collateralConfig.silo, _silo0);
-        assertEq(debtConfig.silo, _silo0);
-        _assertForSilo1DebtSilo0SameAsset(debtInfo);
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --mt testOrderedConfigsLeverageSameAssetsDebtSilo1SameAsset
-    function testOrderedConfigsLeverageSameAssetsDebtSilo1SameAsset() public {
-        bool sameAsset = true;
-
+    // FOUNDRY_PROFILE=core-test forge test -vvv --mt testGetConfigsDebtSil1NotSameAsset
+    function testGetConfigsDebtSil1NotSameAsset() public {
         _mockShareTokensBlances(_siloUser, 0, 1);
 
         vm.prank(_silo1);
-        _siloConfig.accrueInterestAndGetConfigs(_silo1, _siloUser, Hook.borrowAction(sameAsset));
+        _siloConfig.setCollateralSilo(_siloUser, !_SAME_ASSET);
 
         ISiloConfig.ConfigData memory collateralConfig;
         ISiloConfig.ConfigData memory debtConfig;
-        ISiloConfig.DebtInfo memory debtInfo;
 
-        (collateralConfig, debtConfig, debtInfo) = _siloConfig.getConfigs(
-            _silo0,
-            _siloUser,
-            Hook.LEVERAGE_SAME_ASSET
-        );
-
-        assertEq(collateralConfig.silo, _silo1);
-        assertEq(debtConfig.silo, _silo1);
-        _assertForSilo0DebtSilo1SameAsset(debtInfo);
-
-        (collateralConfig, debtConfig, debtInfo) = _siloConfig.getConfigs(
-            _silo1,
-            _siloUser,
-            Hook.LEVERAGE_SAME_ASSET
-        );
-
-        assertEq(collateralConfig.silo, _silo1);
-        assertEq(debtConfig.silo, _silo1);
-        _assertForSilo1DebtSilo1SameAsset(debtInfo);
-    }
-
-    // FOUNDRY_PROFILE=core-test forge test -vvv --mt testOrderedConfigsTransitionCollateralNoDebt
-    function testOrderedConfigsTransitionCollateralNoDebt() public view {
-        ISiloConfig.ConfigData memory collateralConfig;
-        ISiloConfig.ConfigData memory debtConfig;
-        ISiloConfig.DebtInfo memory debtInfo;
-
-        (collateralConfig, debtConfig, debtInfo) = _siloConfig.getConfigs(
-            _silo0,
-            _siloUser,
-            Hook.TRANSITION_COLLATERAL
-        );
+        (collateralConfig, debtConfig) = _siloConfig.getConfigs(_siloUser);
 
         assertEq(collateralConfig.silo, _silo0);
         assertEq(debtConfig.silo, _silo1);
-        _assertNoDebt(debtInfo);
-
-        (collateralConfig, debtConfig, debtInfo) = _siloConfig.getConfigs(
-            _silo1,
-            _siloUser,
-            Hook.TRANSITION_COLLATERAL
-        );
-
-        assertEq(collateralConfig.silo, _silo1);
-        assertEq(debtConfig.silo, _silo0);
-        _assertNoDebt(debtInfo);
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --mt testOrderedConfigsTransitionCollateralDebtSilo0NotSameAsset
-    function testOrderedConfigsTransitionCollateralDebtSilo0NotSameAsset() public {
-        bool sameAsset;
-
-        _mockShareTokensBlances(_siloUser, 1, 0);
-
-        vm.prank(_silo0);
-        _siloConfig.accrueInterestAndGetConfigs(_silo0, _siloUser, Hook.borrowAction(sameAsset));
-
-        ISiloConfig.ConfigData memory collateralConfig;
-        ISiloConfig.ConfigData memory debtConfig;
-        ISiloConfig.DebtInfo memory debtInfo;
-
-        (collateralConfig, debtConfig, debtInfo) = _siloConfig.getConfigs(
-            _silo0,
-            _siloUser,
-            Hook.TRANSITION_COLLATERAL
-        );
-
-        assertEq(collateralConfig.silo, _silo1);
-        assertEq(debtConfig.silo, _silo0);
-        _assertForSilo0DebtSilo0NotSameAsset(debtInfo);
-
-        (collateralConfig, debtConfig, debtInfo) = _siloConfig.getConfigs(
-            _silo1,
-            _siloUser,
-            Hook.TRANSITION_COLLATERAL
-        );
-
-        assertEq(collateralConfig.silo, _silo1);
-        assertEq(debtConfig.silo, _silo0);
-        _assertForSilo1DebtSilo0NotSameAsset(debtInfo);
-    }
-
-    // FOUNDRY_PROFILE=core-test forge test -vvv --mt testOrderedConfigsTransitionCollateralDebtSilo0SameAsset
-    function testOrderedConfigsTransitionCollateralDebtSilo0SameAsset() public {
-        bool sameAsset = true;
-
-        _mockShareTokensBlances(_siloUser, 1, 0);
-
-        vm.prank(_silo0);
-        _siloConfig.accrueInterestAndGetConfigs(_silo0, _siloUser, Hook.borrowAction(sameAsset));
-
-        ISiloConfig.ConfigData memory collateralConfig;
-        ISiloConfig.ConfigData memory debtConfig;
-        ISiloConfig.DebtInfo memory debtInfo;
-        
-        (collateralConfig, debtConfig, debtInfo) = _siloConfig.getConfigs(
-            _silo0,
-            _siloUser,
-            Hook.TRANSITION_COLLATERAL
-        );
-
-        assertEq(collateralConfig.silo, _silo0);
-        assertEq(debtConfig.silo, _silo0);
-        _assertForSilo0DebtSilo0SameAsset(debtInfo);
-
-        (collateralConfig, debtConfig, debtInfo) = _siloConfig.getConfigs(
-            _silo1,
-            _siloUser,
-            Hook.TRANSITION_COLLATERAL
-        );
-
-        assertEq(collateralConfig.silo, _silo0);
-        assertEq(debtConfig.silo, _silo0);
-        _assertForSilo1DebtSilo0SameAsset(debtInfo);
-    }
-
-    // FOUNDRY_PROFILE=core-test forge test -vvv --mt testOrderedConfigsTransitionCollateralDebtSilo1NotSameAsset
-    function testOrderedConfigsTransitionCollateralDebtSilo1NotSameAsset() public {
-        bool sameAsset;
-
+    // FOUNDRY_PROFILE=core-test forge test -vvv --mt testGetConfigsDebtSilo1SameAsset
+    function testGetConfigsDebtSilo1SameAsset() public {
         _mockShareTokensBlances(_siloUser, 0, 1);
 
         vm.prank(_silo1);
-        _siloConfig.accrueInterestAndGetConfigs(_silo1, _siloUser, Hook.borrowAction(sameAsset));
+        _siloConfig.setCollateralSilo(_siloUser, _SAME_ASSET);
 
         ISiloConfig.ConfigData memory collateralConfig;
         ISiloConfig.ConfigData memory debtConfig;
-        ISiloConfig.DebtInfo memory debtInfo;
-        
-        (collateralConfig, debtConfig, debtInfo) = _siloConfig.getConfigs(
-            _silo0,
-            _siloUser,
-            Hook.TRANSITION_COLLATERAL
-        );
-        assertEq(collateralConfig.silo, _silo0);
-        assertEq(debtConfig.silo, _silo1);
-        _assertForSilo0DebtSilo1NotSameAsset(debtInfo);
 
-        (collateralConfig, debtConfig, debtInfo) = _siloConfig.getConfigs(
-            _silo1,
-            _siloUser,
-            Hook.TRANSITION_COLLATERAL
-        );
-
-        assertEq(collateralConfig.silo, _silo0);
-        assertEq(debtConfig.silo, _silo1);
-        _assertForSilo1DebtSilo1NotSameAsset(debtInfo);
-    }
-
-    // FOUNDRY_PROFILE=core-test forge test -vvv --mt testOrderedConfigsTransitionCollateralDebtSilo1SameAsset
-    function testOrderedConfigsTransitionCollateralDebtSilo1SameAsset() public {
-        bool sameAsset = true;
-
-        _mockShareTokensBlances(_siloUser, 0, 1);
-
-        vm.prank(_silo1);
-        _siloConfig.accrueInterestAndGetConfigs(_silo1, _siloUser, Hook.borrowAction(sameAsset));
-
-        ISiloConfig.ConfigData memory collateralConfig;
-        ISiloConfig.ConfigData memory debtConfig;
-        ISiloConfig.DebtInfo memory debtInfo;
-        
-        (collateralConfig, debtConfig, debtInfo) = _siloConfig.getConfigs(
-            _silo0,
-            _siloUser,
-            Hook.TRANSITION_COLLATERAL
-        );
+        (collateralConfig, debtConfig) = _siloConfig.getConfigs(_siloUser);
 
         assertEq(collateralConfig.silo, _silo1);
         assertEq(debtConfig.silo, _silo1);
-        _assertForSilo0DebtSilo1SameAsset(debtInfo);
-
-        (collateralConfig, debtConfig, debtInfo) = _siloConfig.getConfigs(
-            _silo1,
-            _siloUser,
-            Hook.TRANSITION_COLLATERAL
-        );
-
-        assertEq(collateralConfig.silo, _silo1);
-        assertEq(debtConfig.silo, _silo1);
-        _assertForSilo1DebtSilo1SameAsset(debtInfo);
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --mt testOrderedSwitchConfigsCollateralToNotSameAssetNoDebt
-    function testOrderedSwitchConfigsCollateralToNotSameAssetNoDebt() public view {
-        bool switchToSameAsset;
-
-        ISiloConfig.ConfigData memory collateralConfig;
-        ISiloConfig.ConfigData memory debtConfig;
-        ISiloConfig.DebtInfo memory debtInfo;
-
-        (collateralConfig, debtConfig, debtInfo) = _siloConfig.getConfigs(
-            _silo0,
-            _siloUser,
-            Hook.switchCollateralAction(switchToSameAsset)
-        );
-
-        assertEq(collateralConfig.silo, _silo0);
-        assertEq(debtConfig.silo, _silo1);
-        _assertNoDebt(debtInfo);
-
-        (collateralConfig, debtConfig, debtInfo) = _siloConfig.getConfigs(
-            _silo1,
-            _siloUser,
-            Hook.switchCollateralAction(switchToSameAsset)
-        );
-
-        assertEq(collateralConfig.silo, _silo1);
-        assertEq(debtConfig.silo, _silo0);
-        _assertNoDebt(debtInfo);
+    function _assertForSilo0DebtSilo1NotSameAsset(
+        ISiloConfig.ConfigData memory collateral,
+        ISiloConfig.ConfigData memory debt
+    )
+        internal
+        view
+    {
+        assertTrue(debt.silo != address(0), "debtPresent true");
+        assertTrue(debt.silo != collateral.silo, "sameAsset false");
+        assertTrue(debt.silo != _silo0, "debtInSilo0 false");
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --mt testOrderedSwitchConfigsCollateralToSameAssetNoDebt
-    function testOrderedSwitchConfigsCollateralToSameAssetNoDebt() public view {
-        bool switchToSameAsset = true;
-
-        ISiloConfig.ConfigData memory collateralConfig;
-        ISiloConfig.ConfigData memory debtConfig;
-        ISiloConfig.DebtInfo memory debtInfo;
-
-        (collateralConfig, debtConfig, debtInfo) = _siloConfig.getConfigs(
-            _silo0,
-            _siloUser,
-            Hook.switchCollateralAction(switchToSameAsset)
-        );
-
-        assertEq(collateralConfig.silo, _silo0);
-        assertEq(debtConfig.silo, _silo1);
-        _assertNoDebt(debtInfo);
-
-        (collateralConfig, debtConfig, debtInfo) = _siloConfig.getConfigs(
-            _silo1,
-            _siloUser,
-            Hook.switchCollateralAction(switchToSameAsset)
-        );
-
-        assertEq(collateralConfig.silo, _silo1);
-        assertEq(debtConfig.silo, _silo0);
-        _assertNoDebt(debtInfo);
+    function _assertForSilo1DebtSilo1NotSameAsset(
+        ISiloConfig.ConfigData memory collateral,
+        ISiloConfig.ConfigData memory debt
+    )
+        internal
+        view
+    {
+        _assertForSilo0DebtSilo1NotSameAsset(collateral, debt);
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --mt testOrderedSwitchConfigsCollateralToNotSameDebtSilo0NotSameAsset
-    function testOrderedSwitchConfigsCollateralToNotSameDebtSilo0NotSameAsset() public {
-        bool switchToSameAsset;
-        bool sameAsset;
-
-        _mockShareTokensBlances(_siloUser, 1, 0);
-
-        vm.prank(_silo0);
-        _siloConfig.accrueInterestAndGetConfigs(_silo0, _siloUser, Hook.borrowAction(sameAsset));
-
-        ISiloConfig.ConfigData memory collateralConfig;
-        ISiloConfig.ConfigData memory debtConfig;
-        ISiloConfig.DebtInfo memory debtInfo;
-
-        (collateralConfig, debtConfig, debtInfo) = _siloConfig.getConfigs(
-            _silo0,
-            _siloUser,
-            Hook.switchCollateralAction(switchToSameAsset)
-        );
-
-        assertEq(collateralConfig.silo, _silo1);
-        assertEq(debtConfig.silo, _silo0);
-        _assertForSilo0DebtSilo0NotSameAsset(debtInfo);
-
-        (collateralConfig, debtConfig, debtInfo) = _siloConfig.getConfigs(
-            _silo1,
-            _siloUser,
-            Hook.switchCollateralAction(switchToSameAsset)
-        );
-
-        assertEq(collateralConfig.silo, _silo1);
-        assertEq(debtConfig.silo, _silo0);
-        _assertForSilo1DebtSilo0NotSameAsset(debtInfo);
+    function _assertForSilo0DebtSilo0SameAsset(
+        ISiloConfig.ConfigData memory collateral,
+        ISiloConfig.ConfigData memory debt
+    )
+        internal
+        view
+    {
+        assertTrue(debt.silo != address(0), "debtPresent true");
+        assertTrue(debt.silo == collateral.silo, "sameAsset true");
+        assertTrue(debt.silo == _silo0, "debtInSilo0 true");
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --mt testOrderedSwitchConfigsCollateralToSameDebtSilo0NotSameAsset
-    function testOrderedSwitchConfigsCollateralToSameDebtSilo0NotSameAsset() public {
-        bool switchToSameAsset = true;
-        bool sameAsset;
-
-        _mockShareTokensBlances(_siloUser, 1, 0);
-
-        vm.prank(_silo0);
-        _siloConfig.accrueInterestAndGetConfigs(_silo0, _siloUser, Hook.borrowAction(sameAsset));
-
-        ISiloConfig.ConfigData memory collateralConfig;
-        ISiloConfig.ConfigData memory debtConfig;
-        ISiloConfig.DebtInfo memory debtInfo;
-
-        (collateralConfig, debtConfig, debtInfo) = _siloConfig.getConfigs(
-            _silo0,
-            _siloUser,
-            Hook.switchCollateralAction(switchToSameAsset)
-        );
-
-        assertEq(collateralConfig.silo, _silo1);
-        assertEq(debtConfig.silo, _silo0);
-        _assertForSilo0DebtSilo0NotSameAsset(debtInfo);
-
-        (collateralConfig, debtConfig, debtInfo) = _siloConfig.getConfigs(
-            _silo1,
-            _siloUser,
-            Hook.switchCollateralAction(switchToSameAsset)
-        );
-
-        assertEq(collateralConfig.silo, _silo1);
-        assertEq(debtConfig.silo, _silo0);
-        _assertForSilo1DebtSilo0NotSameAsset(debtInfo);
+    function _assertForSilo1DebtSilo0SameAsset(
+        ISiloConfig.ConfigData memory collateral,
+        ISiloConfig.ConfigData memory debt
+    )
+        internal
+        view
+    {
+        _assertForSilo0DebtSilo0SameAsset(collateral, debt);
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --mt testOrderedSwitchConfigsCollateralToNotSameDebtSilo1NotSameAsset
-    function testOrderedSwitchConfigsCollateralToNotSameDebtSilo1NotSameAsset() public {
-        bool switchToSameAsset;
-        bool sameAsset;
-
-        _mockShareTokensBlances(_siloUser, 0, 1);
-
-        vm.prank(_silo1);
-        _siloConfig.accrueInterestAndGetConfigs(_silo1, _siloUser, Hook.borrowAction(sameAsset));
-
-        ISiloConfig.ConfigData memory collateralConfig;
-        ISiloConfig.ConfigData memory debtConfig;
-        ISiloConfig.DebtInfo memory debtInfo;
-
-        (collateralConfig, debtConfig, debtInfo) = _siloConfig.getConfigs(
-            _silo0,
-            _siloUser,
-            Hook.switchCollateralAction(switchToSameAsset)
-        );
-
-        assertEq(collateralConfig.silo, _silo0);
-        assertEq(debtConfig.silo, _silo1);
-        _assertForSilo0DebtSilo1NotSameAsset(debtInfo);
-
-        (collateralConfig, debtConfig, debtInfo) = _siloConfig.getConfigs(
-            _silo1,
-            _siloUser,
-            Hook.switchCollateralAction(switchToSameAsset)
-        );
-
-        assertEq(collateralConfig.silo, _silo0);
-        assertEq(debtConfig.silo, _silo1);
-        _assertForSilo1DebtSilo1NotSameAsset(debtInfo);
+    function _assertForSilo0DebtSilo0NotSameAsset(
+        ISiloConfig.ConfigData memory collateral,
+        ISiloConfig.ConfigData memory debt
+    )
+        internal
+        view
+    {
+        assertTrue(debt.silo != address(0), "debtPresent true");
+        assertTrue(debt.silo != collateral.silo, "sameAsset false");
+        assertTrue(debt.silo == _silo0, "debtInSilo0 true");
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --mt testOrderedSwitchConfigsCollateralToSameDebtSilo1NotSameAsset
-    function testOrderedSwitchConfigsCollateralToSameDebtSilo1NotSameAsset() public {
-        bool switchToSameAsset = true;
-        bool sameAsset;
-
-        _mockShareTokensBlances(_siloUser, 0, 1);
-
-        vm.prank(_silo1);
-        _siloConfig.accrueInterestAndGetConfigs(_silo1, _siloUser, Hook.borrowAction(sameAsset));
-
-        ISiloConfig.ConfigData memory collateralConfig;
-        ISiloConfig.ConfigData memory debtConfig;
-        ISiloConfig.DebtInfo memory debtInfo;
-
-        (collateralConfig, debtConfig, debtInfo) = _siloConfig.getConfigs(
-            _silo0,
-            _siloUser,
-            Hook.switchCollateralAction(switchToSameAsset)
-        );
-
-        assertEq(collateralConfig.silo, _silo0);
-        assertEq(debtConfig.silo, _silo1);
-        _assertForSilo0DebtSilo1NotSameAsset(debtInfo);
-
-        (collateralConfig, debtConfig, debtInfo) = _siloConfig.getConfigs(
-            _silo1,
-            _siloUser,
-            Hook.switchCollateralAction(switchToSameAsset)
-        );
-
-        assertEq(collateralConfig.silo, _silo0);
-        assertEq(debtConfig.silo, _silo1);
-        _assertForSilo1DebtSilo1NotSameAsset(debtInfo);
-    }
-
-    // FOUNDRY_PROFILE=core-test forge test -vvv --mt testOrderedSwitchConfigsCollateralToNotSameDebtSilo0SameAsset
-    function testOrderedSwitchConfigsCollateralToNotSameDebtSilo0SameAsset() public {
-        bool switchToSameAsset;
-        bool sameAsset = true;
-
-        _mockShareTokensBlances(_siloUser, 1, 0);
-
-        vm.prank(_silo0);
-        _siloConfig.accrueInterestAndGetConfigs(_silo0, _siloUser, Hook.borrowAction(sameAsset));
-
-        ISiloConfig.ConfigData memory collateralConfig;
-        ISiloConfig.ConfigData memory debtConfig;
-        ISiloConfig.DebtInfo memory debtInfo;
-
-        (collateralConfig, debtConfig, debtInfo) = _siloConfig.getConfigs(
-            _silo0,
-            _siloUser,
-            Hook.switchCollateralAction(switchToSameAsset)
-        );
-
-        assertEq(collateralConfig.silo, _silo0);
-        assertEq(debtConfig.silo, _silo0);
-        _assertForSilo0DebtSilo0SameAsset(debtInfo);
-
-        (collateralConfig, debtConfig, debtInfo) = _siloConfig.getConfigs(
-            _silo1,
-            _siloUser,
-            Hook.switchCollateralAction(switchToSameAsset)
-        );
-
-        assertEq(collateralConfig.silo, _silo0);
-        assertEq(debtConfig.silo, _silo0);
-        _assertForSilo1DebtSilo0SameAsset(debtInfo);
-    }
-
-    // FOUNDRY_PROFILE=core-test forge test -vvv --mt testOrderedSwitchConfigsCollateralToSameDebtSilo0SameAsset
-    function testOrderedSwitchConfigsCollateralToSameDebtSilo0SameAsset() public {
-        bool switchToSameAsset = true;
-        bool sameAsset = true;
-
-        _mockShareTokensBlances(_siloUser, 1, 0);
-
-        vm.prank(_silo0);
-        _siloConfig.accrueInterestAndGetConfigs(_silo0, _siloUser, Hook.borrowAction(sameAsset));
-
-        ISiloConfig.ConfigData memory collateralConfig;
-        ISiloConfig.ConfigData memory debtConfig;
-        ISiloConfig.DebtInfo memory debtInfo;
-
-        (collateralConfig, debtConfig, debtInfo) = _siloConfig.getConfigs(
-            _silo0,
-            _siloUser,
-            Hook.switchCollateralAction(switchToSameAsset)
-        );
-
-        assertEq(collateralConfig.silo, _silo0);
-        assertEq(debtConfig.silo, _silo0);
-        _assertForSilo0DebtSilo0SameAsset(debtInfo);
-
-        (collateralConfig, debtConfig, debtInfo) = _siloConfig.getConfigs(
-            _silo1,
-            _siloUser,
-            Hook.switchCollateralAction(switchToSameAsset)
-        );
-
-        assertEq(collateralConfig.silo, _silo0);
-        assertEq(debtConfig.silo, _silo0);
-        _assertForSilo1DebtSilo0SameAsset(debtInfo);
-    }
-
-    // FOUNDRY_PROFILE=core-test forge test -vvv --mt testOrderedSwitchConfigsCollateralToNotSameDebtSilo1NotSameAsset
-    function testOrderedSwitchConfigsCollateralToNotSameDebtSilo1SameAsset() public {
-        bool switchToSameAsset;
-        bool sameAsset = true;
-
-        _mockShareTokensBlances(_siloUser, 0, 1);
-
-        vm.prank(_silo1);
-        _siloConfig.accrueInterestAndGetConfigs(_silo1, _siloUser, Hook.borrowAction(sameAsset));
-
-        ISiloConfig.ConfigData memory collateralConfig;
-        ISiloConfig.ConfigData memory debtConfig;
-        ISiloConfig.DebtInfo memory debtInfo;
-        
-        (collateralConfig, debtConfig, debtInfo) = _siloConfig.getConfigs(
-            _silo0,
-            _siloUser,
-            Hook.switchCollateralAction(switchToSameAsset)
-        );
-
-        assertEq(collateralConfig.silo, _silo1);
-        assertEq(debtConfig.silo, _silo1);
-        _assertForSilo0DebtSilo1SameAsset(debtInfo);
-
-        (collateralConfig, debtConfig, debtInfo) = _siloConfig.getConfigs(
-            _silo1,
-            _siloUser,
-            Hook.switchCollateralAction(switchToSameAsset)
-        );
-
-        assertEq(collateralConfig.silo, _silo1);
-        assertEq(debtConfig.silo, _silo1);
-        _assertForSilo1DebtSilo1SameAsset(debtInfo);
-    }
-
-    // FOUNDRY_PROFILE=core-test forge test -vvv --mt testOrderedSwitchConfigsCollateralToSameDebtSilo1SameAsset
-    function testOrderedSwitchConfigsCollateralToSameDebtSilo1SameAsset() public {
-        bool switchToSameAsset = true;
-        bool sameAsset = true;
-
-        _mockShareTokensBlances(_siloUser, 0, 1);
-
-        vm.prank(_silo1);
-        _siloConfig.accrueInterestAndGetConfigs(_silo1, _siloUser, Hook.borrowAction(sameAsset));
-
-        ISiloConfig.ConfigData memory collateralConfig;
-        ISiloConfig.ConfigData memory debtConfig;
-        ISiloConfig.DebtInfo memory debtInfo;
-
-        (collateralConfig, debtConfig, debtInfo) = _siloConfig.getConfigs(
-            _silo0,
-            _siloUser,
-            Hook.switchCollateralAction(switchToSameAsset)
-        );
-
-        assertEq(collateralConfig.silo, _silo1);
-        assertEq(debtConfig.silo, _silo1);
-        _assertForSilo0DebtSilo1SameAsset(debtInfo);
-
-        (collateralConfig, debtConfig, debtInfo) = _siloConfig.getConfigs(
-            _silo1,
-            _siloUser,
-            Hook.switchCollateralAction(switchToSameAsset)
-        );
-
-        assertEq(collateralConfig.silo, _silo1);
-        assertEq(debtConfig.silo, _silo1);
-        _assertForSilo1DebtSilo1SameAsset(debtInfo);
-    }
-
-    // FOUNDRY_PROFILE=core-test forge test -vvv --mt testOrderedLiqudaitionDebtSilo0NotSameAsset
-    function testOrderedLiqudaitionDebtSilo0NotSameAsset() public {
-        bool sameAsset;
-
-        _mockShareTokensBlances(_siloUser, 1, 0);
-
-        vm.prank(_silo0);
-        _siloConfig.accrueInterestAndGetConfigs(_silo0, _siloUser, Hook.borrowAction(sameAsset));
-
-        ISiloConfig.ConfigData memory collateralConfig;
-        ISiloConfig.ConfigData memory debtConfig;
-        ISiloConfig.DebtInfo memory debtInfo;
-
-        (collateralConfig, debtConfig, debtInfo) = _siloConfig.getConfigs(
-            _silo0,
-            _siloUser,
-            Hook.LIQUIDATION
-        );
-
-        assertEq(collateralConfig.silo, _silo1);
-        assertEq(debtConfig.silo, _silo0);
-        _assertForSilo0DebtSilo0NotSameAsset(debtInfo);
-
-        (collateralConfig, debtConfig, debtInfo) = _siloConfig.getConfigs(
-            _silo1,
-            _siloUser,
-            Hook.LIQUIDATION
-        );
-
-        assertEq(collateralConfig.silo, _silo1);
-        assertEq(debtConfig.silo, _silo0);
-        _assertForSilo1DebtSilo0NotSameAsset(debtInfo);
-    }
-
-    // FOUNDRY_PROFILE=core-test forge test -vvv --mt testOrderedLiqudaitionDebtSilo1NotSameAsset
-    function testOrderedLiqudaitionDebtSilo1NotSameAsset() public {
-        bool sameAsset;
-
-        _mockShareTokensBlances(_siloUser, 0, 1);
-
-        vm.prank(_silo1);
-        _siloConfig.accrueInterestAndGetConfigs(_silo1, _siloUser, Hook.borrowAction(sameAsset));
-
-        ISiloConfig.ConfigData memory collateralConfig;
-        ISiloConfig.ConfigData memory debtConfig;
-        ISiloConfig.DebtInfo memory debtInfo;
-
-        (collateralConfig, debtConfig, debtInfo) = _siloConfig.getConfigs(
-            _silo0,
-            _siloUser,
-            Hook.LIQUIDATION
-        );
-
-        assertEq(collateralConfig.silo, _silo0);
-        assertEq(debtConfig.silo, _silo1);
-        _assertForSilo0DebtSilo1NotSameAsset(debtInfo);
-
-        (collateralConfig, debtConfig, debtInfo) = _siloConfig.getConfigs(
-            _silo1,
-            _siloUser,
-            Hook.LIQUIDATION
-        );
-
-        assertEq(collateralConfig.silo, _silo0);
-        assertEq(debtConfig.silo, _silo1);
-        _assertForSilo1DebtSilo1NotSameAsset(debtInfo);
-    }
-
-    // FOUNDRY_PROFILE=core-test forge test -vvv --mt testOrderedLiqudaitionDebtSilo0SameAsset
-    function testOrderedLiqudaitionDebtSilo0SameAsset() public {
-        bool sameAsset = true;
-
-        _mockShareTokensBlances(_siloUser, 1, 0);
-
-        vm.prank(_silo0);
-        _siloConfig.accrueInterestAndGetConfigs(_silo0, _siloUser, Hook.borrowAction(sameAsset));
-
-        ISiloConfig.ConfigData memory collateralConfig;
-        ISiloConfig.ConfigData memory debtConfig;
-        ISiloConfig.DebtInfo memory debtInfo;
-
-        (collateralConfig, debtConfig, debtInfo) = _siloConfig.getConfigs(
-            _silo0,
-            _siloUser,
-            Hook.LIQUIDATION
-        );
-
-        assertEq(collateralConfig.silo, _silo0);
-        assertEq(debtConfig.silo, _silo0);
-        _assertForSilo0DebtSilo0SameAsset(debtInfo);
-
-        (collateralConfig, debtConfig, debtInfo) = _siloConfig.getConfigs(
-            _silo1,
-            _siloUser,
-            Hook.LIQUIDATION
-        );
-
-        assertEq(collateralConfig.silo, _silo0);
-        assertEq(debtConfig.silo, _silo0);
-        _assertForSilo1DebtSilo0SameAsset(debtInfo);
-    }
-
-    // FOUNDRY_PROFILE=core-test forge test -vvv --mt testOrderedLiqudaitionDebtSilo1SameAsset
-    function testOrderedLiqudaitionDebtSilo1SameAsset() public {
-        bool sameAsset = true;
-
-        _mockShareTokensBlances(_siloUser, 0, 1);
-
-        vm.prank(_silo1);
-        _siloConfig.accrueInterestAndGetConfigs(_silo1, _siloUser, Hook.borrowAction(sameAsset));
-
-        ISiloConfig.ConfigData memory collateralConfig;
-        ISiloConfig.ConfigData memory debtConfig;
-        ISiloConfig.DebtInfo memory debtInfo;
-
-        (collateralConfig, debtConfig, debtInfo) = _siloConfig.getConfigs(
-            _silo0,
-            _siloUser,
-            Hook.LIQUIDATION
-        );
-
-        assertEq(collateralConfig.silo, _silo1);
-        assertEq(debtConfig.silo, _silo1);
-        _assertForSilo0DebtSilo1SameAsset(debtInfo);
-
-        (collateralConfig, debtConfig, debtInfo) = _siloConfig.getConfigs(
-            _silo1,
-            _siloUser,
-            Hook.LIQUIDATION
-        );
-
-        assertEq(collateralConfig.silo, _silo1);
-        assertEq(debtConfig.silo, _silo1);
-        _assertForSilo1DebtSilo1SameAsset(debtInfo);
-    }
-
-    function _assertNoDebt(ISiloConfig.DebtInfo memory _debtInfo) internal pure {
-        assertEq(_debtInfo.debtPresent, false);
-        assertEq(_debtInfo.sameAsset, false);
-        assertEq(_debtInfo.debtInSilo0, false);
-        assertEq(_debtInfo.debtInThisSilo, false);
-    }
-
-    function _assertForSilo0DebtSilo1SameAsset(ISiloConfig.DebtInfo memory _debtInfo) internal pure {
-        assertEq(_debtInfo.debtPresent, true);
-        assertEq(_debtInfo.sameAsset, true);
-        assertEq(_debtInfo.debtInSilo0, false);
-        assertEq(_debtInfo.debtInThisSilo, false);
-    }
-
-    function _assertForSilo1DebtSilo1SameAsset(ISiloConfig.DebtInfo memory _debtInfo) internal pure {
-        assertEq(_debtInfo.debtPresent, true);
-        assertEq(_debtInfo.sameAsset, true);
-        assertEq(_debtInfo.debtInSilo0, false);
-        assertEq(_debtInfo.debtInThisSilo, true);
-    }
-
-    function _assertForSilo0DebtSilo1NotSameAsset(ISiloConfig.DebtInfo memory _debtInfo) internal pure {
-        assertEq(_debtInfo.debtPresent, true);
-        assertEq(_debtInfo.sameAsset, false);
-        assertEq(_debtInfo.debtInSilo0, false);
-        assertEq(_debtInfo.debtInThisSilo, false);
-    }
-
-    function _assertForSilo1DebtSilo1NotSameAsset(ISiloConfig.DebtInfo memory _debtInfo) internal pure {
-        assertEq(_debtInfo.debtPresent, true);
-        assertEq(_debtInfo.sameAsset, false);
-        assertEq(_debtInfo.debtInSilo0, false);
-        assertEq(_debtInfo.debtInThisSilo, true);
-    }
-
-    function _assertForSilo0DebtSilo0SameAsset(ISiloConfig.DebtInfo memory _debtInfo) internal pure {
-        assertEq(_debtInfo.debtPresent, true);
-        assertEq(_debtInfo.sameAsset, true);
-        assertEq(_debtInfo.debtInSilo0, true);
-        assertEq(_debtInfo.debtInThisSilo, true);
-    }
-
-    function _assertForSilo1DebtSilo0SameAsset(ISiloConfig.DebtInfo memory _debtInfo) internal pure {
-        assertEq(_debtInfo.debtPresent, true);
-        assertEq(_debtInfo.sameAsset, true);
-        assertEq(_debtInfo.debtInSilo0, true);
-        assertEq(_debtInfo.debtInThisSilo, false);
-    }
-
-    function _assertForSilo0DebtSilo0NotSameAsset(ISiloConfig.DebtInfo memory _debtInfo) internal pure {
-        assertEq(_debtInfo.debtPresent, true);
-        assertEq(_debtInfo.sameAsset, false);
-        assertEq(_debtInfo.debtInSilo0, true);
-        assertEq(_debtInfo.debtInThisSilo, true);
-    }
-
-    function _assertForSilo1DebtSilo0NotSameAsset(ISiloConfig.DebtInfo memory _debtInfo) internal pure {
-        assertEq(_debtInfo.debtPresent, true);
-        assertEq(_debtInfo.sameAsset, false);
-        assertEq(_debtInfo.debtInSilo0, true);
-        assertEq(_debtInfo.debtInThisSilo, false);
+    function _assertForSilo1DebtSilo0NotSameAsset(
+        ISiloConfig.ConfigData memory collateral,
+        ISiloConfig.ConfigData memory debt
+    )
+        internal
+        view
+    {
+       _assertForSilo0DebtSilo0NotSameAsset(collateral, debt);
     }
 
     function _mockAccrueInterestCalls(

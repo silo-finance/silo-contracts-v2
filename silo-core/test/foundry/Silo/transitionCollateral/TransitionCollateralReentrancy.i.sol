@@ -4,14 +4,12 @@ pragma solidity ^0.8.20;
 import {Test} from "forge-std/Test.sol";
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
-import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 
 import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
 
 import {Hook} from "silo-core/contracts/lib/Hook.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
-import {ISiloDeployer} from "silo-core/contracts/interfaces/ISiloDeployer.sol";
-import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
+import {ICrossReentrancyGuard} from "silo-core/contracts/interfaces/ICrossReentrancyGuard.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {PartialLiquidation} from "silo-core/contracts/utils/hook-receivers/liquidation/PartialLiquidation.sol";
 
@@ -19,7 +17,6 @@ import {SiloConfigOverride} from "../../_common/fixtures/SiloFixture.sol";
 import {SiloFixtureWithVeSilo as SiloFixture} from "../../_common/fixtures/SiloFixtureWithVeSilo.sol";
 import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
 import {MintableToken} from "../../_common/MintableToken.sol";
-import {HookReceiverMock} from "../../_mocks/HookReceiverMock.sol";
 
 /*
 FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mc TransitionCollateralReentrancyTest
@@ -78,7 +75,7 @@ contract TransitionCollateralReentrancyTest is SiloLittleHelper, Test, PartialLi
         assertEq(collateralToLiquidate, 3, "collateralToLiquidate (5 - 2 underestimation)");
         assertEq(debtToRepay, 5, "debtToRepay");
 
-        vm.expectRevert(ISiloConfig.CrossReentrantCall.selector);
+        vm.expectRevert(ICrossReentrancyGuard.CrossReentrantCall.selector);
         partialLiquidation.liquidationCall(
             siloWithDebt,
             address(token0),
@@ -106,9 +103,9 @@ contract TransitionCollateralReentrancyTest is SiloLittleHelper, Test, PartialLi
         assertTrue(afterActionExecuted, "afterActionExecuted");
         assertTrue(silo0.isSolvent(borrower), "borrower is solvent after transition of collateral");
 
-        (,, ISiloConfig.DebtInfo memory debtInfo) = siloConfig.getConfigs(address(silo0), borrower, 0);
+        (, ISiloConfig.ConfigData memory debt) = siloConfig.getConfigs(borrower);
 
         assertTrue(silo0.isSolvent(borrower), "borrower is solvent after transition of collateral");
-        assertTrue(debtInfo.debtPresent, "borrower has debt");
+        assertTrue(debt.silo != address(0), "borrower has debt");
     }
 }

@@ -43,14 +43,20 @@ contract SwitchCollateralToTest is SiloLittleHelper, Test {
 
         _borrow(assets / 2, borrower, _sameAsset);
 
-        (,, ISiloConfig.DebtInfo memory debtInfo) = siloConfig.getConfigs(address(silo0), borrower, 0);
-        assertEq(debtInfo.sameAsset, _sameAsset, "original position type");
+        ISiloConfig.ConfigData memory collateral;
+        ISiloConfig.ConfigData memory debt;
+
+        (collateral, debt) = siloConfig.getConfigs(borrower);
+        bool debtSameAsset = debt.token == collateral.token;
+
+        assertEq(debtSameAsset, _sameAsset, "original position type");
 
         vm.prank(borrower);
         silo0.switchCollateralTo();
-        (,, debtInfo) = siloConfig.getConfigs(address(silo0), borrower, 0);
+        (collateral, debt) = siloConfig.getConfigs(borrower);
+        debtSameAsset = debt.token == collateral.token;
 
-        assertEq(debtInfo.sameAsset, !_sameAsset, "position type after change");
+        assertEq(debtSameAsset, !_sameAsset, "position type after change");
 
         ISilo siloWithDeposit = _sameAsset ? silo1 : silo0;
         vm.prank(borrower);

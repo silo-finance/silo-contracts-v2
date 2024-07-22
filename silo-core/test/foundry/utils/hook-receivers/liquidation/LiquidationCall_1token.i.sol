@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.20;
 
-import "forge-std/Test.sol";
+import {Test} from "forge-std/Test.sol";
 
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 
@@ -45,7 +45,9 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
         assertEq(token0.balanceOf(address(this)), 0, "liquidation should have no collateral");
         assertEq(token0.balanceOf(address(silo0)), COLLATERAL - DEBT, "silo0 has only 2.5 debt token (10 - 7.5)");
 
-        assertEq(siloConfig.getConfig(address(silo0)).liquidationFee, 0.05e18, "liquidationFee1");
+        ISiloConfig.ConfigData memory silo0Config = siloConfig.getConfig(address(silo0));
+
+        assertEq(silo0Config.liquidationFee, 0.05e18, "liquidationFee1");
     }
 
     /*
@@ -85,11 +87,11 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
         uint256 debtToCover = 1e18;
         bool receiveSToken;
 
-        (
-            ,, ISiloConfig.DebtInfo memory debtInfo
-        ) = siloConfig.getConfigs(address(silo0), userWithoutDebt, 0 /* always 0 for external calls */);
+        ISiloConfig.ConfigData memory debt;
 
-        assertTrue(!debtInfo.debtPresent, "we need user without debt for this test");
+        (, debt) = siloConfig.getConfigs(userWithoutDebt);
+
+        assertTrue(debt.silo == address(0), "we need user without debt for this test");
 
         vm.expectRevert(IPartialLiquidation.UserIsSolvent.selector);
 
@@ -107,13 +109,14 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
         uint256 debtToCover = 1e18;
         bool receiveSToken;
 
-        (
-            ,, ISiloConfig.DebtInfo memory debtInfo
-        ) = siloConfig.getConfigs(address(silo0), BORROWER, 0 /* always 0 for external calls */);
+        ISiloConfig.ConfigData memory collateral;
+        ISiloConfig.ConfigData memory debt;
 
-        assertTrue(debtInfo.debtPresent, "we need user with debt for this test");
-        assertTrue(debtInfo.debtInSilo0, "we need debt in silo0");
-        assertTrue(debtInfo.debtInThisSilo, "we need debt in this(silo0)");
+        (collateral, debt) = siloConfig.getConfigs(BORROWER);
+
+        assertTrue(debt.silo != address(0), "we need user with debt for this test");
+        assertTrue(debt.silo == address(silo0), "we need debt in silo0");
+        assertTrue(siloConfig.hasDebtInOtherSilo(address(silo1), BORROWER), "we need debt in this(silo0)");
 
         vm.expectRevert(ISilo.ThereIsDebtInOtherSilo.selector);
 
@@ -153,9 +156,7 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
     function test_liquidationCall_partial_1token() public {
         uint256 debtToCover = 1e5;
 
-        (
-            , ISiloConfig.ConfigData memory debtConfig,
-        ) = siloConfig.getConfigs(address(silo0), address(0), Hook.NONE);
+        ISiloConfig.ConfigData memory debtConfig = siloConfig.getConfig(address(silo0));
 
         (, uint64 interestRateTimestamp0) = silo0.siloData();
         (, uint64 interestRateTimestamp1) = silo1.siloData();
@@ -352,9 +353,7 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
         uint256 debtToCover = 100e18;
         bool receiveSToken;
 
-        (
-            , ISiloConfig.ConfigData memory debtConfig,
-        ) = siloConfig.getConfigs(address(silo0), address(0), 0 /* always 0 for external calls */);
+        ISiloConfig.ConfigData memory debtConfig = siloConfig.getConfig(address(silo1));
 
         (, uint64 interestRateTimestamp0) = silo0.siloData();
         (, uint64 interestRateTimestamp1) = silo1.siloData();
@@ -471,9 +470,7 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
         uint256 debtToCover = 100e18;
         bool receiveSToken;
 
-        (
-            , ISiloConfig.ConfigData memory debtConfig,
-        ) = siloConfig.getConfigs(address(silo0), address(0), 0 /* always 0 for external calls */);
+        ISiloConfig.ConfigData memory debtConfig = siloConfig.getConfig(address(silo0));
 
         (, uint64 interestRateTimestamp0) = silo0.siloData();
         (, uint64 interestRateTimestamp1) = silo1.siloData();
@@ -744,17 +741,15 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
         assertEq(token0.balanceOf(module), 0);
         assertEq(token1.balanceOf(module), 0);
 
-        (
-            ISiloConfig.ConfigData memory collateralConfig,
-            ISiloConfig.ConfigData memory debtConfig,
-        ) = siloConfig.getConfigs(address(silo0), address(0), 0 /* always 0 for external calls */);
+        ISiloConfig.ConfigData memory silo0Config = siloConfig.getConfig(address(silo0));
+        ISiloConfig.ConfigData memory silo1Config = siloConfig.getConfig(address(silo1));
 
-        assertEq(IShareToken(collateralConfig.collateralShareToken).balanceOf(module), 0);
-        assertEq(IShareToken(collateralConfig.protectedShareToken).balanceOf(module), 0);
-        assertEq(IShareToken(collateralConfig.debtShareToken).balanceOf(module), 0);
+        assertEq(IShareToken(silo0Config.collateralShareToken).balanceOf(module), 0);
+        assertEq(IShareToken(silo0Config.protectedShareToken).balanceOf(module), 0);
+        assertEq(IShareToken(silo0Config.debtShareToken).balanceOf(module), 0);
 
-        assertEq(IShareToken(debtConfig.collateralShareToken).balanceOf(module), 0);
-        assertEq(IShareToken(debtConfig.protectedShareToken).balanceOf(module), 0);
-        assertEq(IShareToken(debtConfig.debtShareToken).balanceOf(module), 0);
+        assertEq(IShareToken(silo1Config.collateralShareToken).balanceOf(module), 0);
+        assertEq(IShareToken(silo1Config.protectedShareToken).balanceOf(module), 0);
+        assertEq(IShareToken(silo1Config.debtShareToken).balanceOf(module), 0);
     }
 }

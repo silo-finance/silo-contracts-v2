@@ -50,7 +50,7 @@ library Actions {
 
         (
             address shareToken, address asset
-        ) = siloConfig.getCollateralShareTokenAndSiloToken(address(this), _collateralType);
+        ) = siloConfig.getCollateralShareTokenAndAsset(address(this), _collateralType);
 
         (assets, shares) = SiloERC4626Lib.deposit(
             asset,
@@ -213,7 +213,7 @@ library Actions {
         ISiloConfig.ConfigData memory collateralConfig;
         ISiloConfig.ConfigData memory debtConfig;
 
-        (collateralConfig, debtConfig) = siloConfig.getConfigsForBorrow({_silo: address(this), _sameAsset: true});
+        (collateralConfig, debtConfig) = siloConfig.getConfigsForBorrow({_debtSilo: address(this), _sameAsset: true});
 
         uint256 borrowedAssets;
 
@@ -303,7 +303,7 @@ library Actions {
         ISiloConfig.ConfigData memory collateralConfig;
         ISiloConfig.ConfigData memory debtConfig;
 
-        (collateralConfig, debtConfig) = siloConfig.getCollateralAndDebtConfigs(msg.sender);
+        (collateralConfig, debtConfig) = siloConfig.getConfigs(msg.sender);
 
         _checkSolvency(collateralConfig, debtConfig, msg.sender);
 

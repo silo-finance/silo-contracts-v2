@@ -37,8 +37,8 @@ contract ChangeCollateralTypeTest is SiloLittleHelper, Test {
     function _changeCollateralType_reverts_OnlySilo(bool _toSameAsset) private {
         (
             ISiloConfig.ConfigData memory collateral,
-            ISiloConfig.ConfigData memory debt,
-        ) = siloConfig.getConfigs(address(silo0), address(0), 0);
+            ISiloConfig.ConfigData memory debt
+        ) = siloConfig.getConfigs(address(0));
 
         _changeCollateralType_reverts_OnlySilo_From(collateral.collateralShareToken, _toSameAsset);
         _changeCollateralType_reverts_OnlySilo_From(collateral.protectedShareToken, _toSameAsset);
@@ -83,7 +83,7 @@ contract ChangeCollateralTypeTest is SiloLittleHelper, Test {
         vm.prank(address(silo0));
         siloConfig.switchCollateralSilo(borrower);
 
-        (collateral, debt) = siloConfig.getCollateralAndDebtConfigs(borrower);
+        (collateral, debt) = siloConfig.getConfigs(borrower);
 
         sameAsset = debt.silo == collateral.silo;
 
@@ -92,7 +92,7 @@ contract ChangeCollateralTypeTest is SiloLittleHelper, Test {
         vm.prank(address(silo0));
         siloConfig.switchCollateralSilo(borrower);
 
-        (collateral, debt) = siloConfig.getCollateralAndDebtConfigs(borrower);
+        (collateral, debt) = siloConfig.getConfigs(borrower);
 
         sameAsset = debt.silo == collateral.silo;
 
@@ -130,6 +130,6 @@ contract ChangeCollateralTypeTest is SiloLittleHelper, Test {
 
         if (_andBorrow) _borrow(1, borrower, _sameAsset);
 
-        (collateral, debt) = siloConfig.getCollateralAndDebtConfigs(borrower);
+        (collateral, debt) = siloConfig.getConfigs(borrower);
     }
 }

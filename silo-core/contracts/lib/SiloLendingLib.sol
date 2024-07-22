@@ -363,8 +363,4 @@ library SiloLendingLib {
             );
         }
     }
-
-    function borrowPossible(ISiloConfig.DebtInfo memory _debtInfo) internal pure returns (bool) {
-        return !_debtInfo.debtPresent || _debtInfo.debtInThisSilo;
-    }
 }

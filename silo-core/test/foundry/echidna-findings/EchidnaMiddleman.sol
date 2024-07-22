@@ -139,8 +139,8 @@ contract EchidnaMiddleman is EchidnaSetup {
         if (maxAssets == 0) {
             (
                 ISiloConfig.ConfigData memory collateralConfig,
-                ISiloConfig.ConfigData memory debtConfig,
-            ) = siloConfig.getConfigs(address(_siloWithCollateral), actor, Hook.WITHDRAW);
+                ISiloConfig.ConfigData memory debtConfig
+            ) = siloConfig.getConfigs(actor);
 
             uint256 shareBalance = IERC20(collateralConfig.collateralShareToken).balanceOf(address(actor));
             uint256 debtShareBalance = IERC20(debtConfig.debtShareToken).balanceOf(address(actor));
