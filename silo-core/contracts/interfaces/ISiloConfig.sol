@@ -154,7 +154,7 @@ interface ISiloConfig is ICrossReentrancyGuard {
     function accrueInterestForBothSilos() external;
 
     /// @notice Retrieves the silo ID
-    /// @dev Each silo is represented by ERC-721 token with the silo ID as the token ID.
+    /// @dev Each silo is assigned a unique ID. ERC-721 token is minted with identical ID to deployer.
     /// An owner of that token receives the protocol fees.
     /// @return siloId The ID of the silo
     function SILO_ID() external view returns (uint256 siloId); // solhint-disable-line func-name-mixedcase
