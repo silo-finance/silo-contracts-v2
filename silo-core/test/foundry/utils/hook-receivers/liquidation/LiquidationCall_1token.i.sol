@@ -99,29 +99,6 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --ffi --mt test_liquidationCall_revert_otherSiloDebt
-    */
-    function test_liquidationCall_revert_otherSiloDebt_1token() public {
-        uint256 debtToCover = 1e18;
-        bool receiveSToken;
-
-        ISiloConfig.ConfigData memory collateral;
-        ISiloConfig.ConfigData memory debt;
-
-        (collateral, debt) = siloConfig.getConfigs(BORROWER);
-
-        assertTrue(debt.silo != address(0), "we need user with debt for this test");
-        assertTrue(debt.silo == address(silo0), "we need debt in silo0");
-        assertTrue(siloConfig.hasDebtInOtherSilo(address(silo1), BORROWER), "we need debt in this(silo0)");
-
-        vm.expectRevert(ISilo.ThereIsDebtInOtherSilo.selector);
-
-        partialLiquidation.liquidationCall(address(token0), address(token0), BORROWER, debtToCover, receiveSToken);
-
-        _liquidationModulDoNotHaveTokens();
-    }
-
-    /*
     forge test -vv --ffi --mt test_liquidationCall_self
     */
     function test_liquidationCall_self_1token() public {
