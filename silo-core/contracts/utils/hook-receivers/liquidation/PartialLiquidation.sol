@@ -151,7 +151,7 @@ contract PartialLiquidation is SiloStorage, IPartialLiquidation, IHookReceiver {
     }
 
     /// @inheritdoc IPartialLiquidation
-    function maxLiquidation(address _borrower)
+    function maxLiquidation(address _borrower) // TODO are we cap by liquidity?
         external
         view
         virtual
