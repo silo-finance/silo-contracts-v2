@@ -142,14 +142,13 @@ contract MaxLiquidationTest is MaxLiquidationCommon {
 
         (
             uint256 collateralToLiquidate, uint256 debtToRepay
-        ) = partialLiquidation.maxLiquidation(address(silo1), borrower);
+        ) = partialLiquidation.maxLiquidation(borrower);
 
         emit log_named_decimal_uint("[MaxLiquidation] collateralToLiquidate", collateralToLiquidate, 18);
         emit log_named_decimal_uint("[MaxLiquidation] debtToRepay", debtToRepay, 16);
         emit log_named_decimal_uint("[MaxLiquidation] ltv before", silo0.getLtv(borrower), 16);
 
         (withdrawCollateral, repayDebtAssets) = partialLiquidation.liquidationCall(
-            address(silo1),
             address(_sameToken ? token1 : token0),
             address(token1),
             borrower,

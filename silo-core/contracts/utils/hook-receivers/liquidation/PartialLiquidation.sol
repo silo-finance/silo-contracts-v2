@@ -48,7 +48,6 @@ contract PartialLiquidation is SiloStorage, IPartialLiquidation, IHookReceiver {
 
     /// @inheritdoc IPartialLiquidation
     function liquidationCall( // solhint-disable-line function-max-lines
-        address _siloWithDebt,
         address _collateralAsset,
         address _debtAsset,
         address _borrower,
@@ -67,7 +66,7 @@ contract PartialLiquidation is SiloStorage, IPartialLiquidation, IHookReceiver {
         (
             ISiloConfig.ConfigData memory collateralConfig,
             ISiloConfig.ConfigData memory debtConfig
-        ) = _fetchConfigs(siloConfigCached, _siloWithDebt, _collateralAsset, _debtAsset, _borrower);
+        ) = _fetchConfigs(siloConfigCached, _collateralAsset, _debtAsset, _borrower);
 
         uint256 collateralShares;
         uint256 protectedShares;
@@ -152,18 +151,17 @@ contract PartialLiquidation is SiloStorage, IPartialLiquidation, IHookReceiver {
     }
 
     /// @inheritdoc IPartialLiquidation
-    function maxLiquidation(address _siloWithDebt, address _borrower)
+    function maxLiquidation(address _borrower)
         external
         view
         virtual
         returns (uint256 collateralToLiquidate, uint256 debtToRepay)
     {
-        return PartialLiquidationExecLib.maxLiquidation(ISilo(_siloWithDebt), _borrower);
+        return PartialLiquidationExecLib.maxLiquidation(siloConfig, _borrower);
     }
 
     function _fetchConfigs(
         ISiloConfig _siloConfigCached,
-        address _siloWithDebt,
         address _collateralAsset,
         address _debtAsset,
         address _borrower
@@ -178,8 +176,6 @@ contract PartialLiquidation is SiloStorage, IPartialLiquidation, IHookReceiver {
         (collateralConfig, debtConfig) = _siloConfigCached.getConfigs(_borrower);
 
         if (debtConfig.silo == address(0)) revert UserIsSolvent();
-        if (_siloConfigCached.hasDebtInOtherSilo(_siloWithDebt, _borrower)) revert ISilo.ThereIsDebtInOtherSilo();
-
         if (_collateralAsset != collateralConfig.token) revert UnexpectedCollateralToken();
         if (_debtAsset != debtConfig.token) revert UnexpectedDebtToken();
 

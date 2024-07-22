@@ -140,7 +140,6 @@ contract HookCallsOutsideActionTest is PartialLiquidation, IERC3156FlashBorrower
         emit log_named_decimal_uint("borrower LTV", silo0.getLtv(borrower), 16);
 
         partialLiquidation.liquidationCall(
-            address(silo1),
             address(token1),
             address(token1),
             borrower,

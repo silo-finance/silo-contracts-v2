@@ -60,7 +60,7 @@ contract MaxLiquidationLTV100FullWithChunksTest is MaxLiquidationLTV100FullTest 
     {
         (
             uint256 totalCollateralToLiquidate, uint256 totalDebtToCover
-        ) = partialLiquidation.maxLiquidation(address(silo1), borrower);
+        ) = partialLiquidation.maxLiquidation(borrower);
 
         emit log_named_decimal_uint("[LTV100FullWithChunks] ltv before", silo0.getLtv(borrower), 16);
 
@@ -72,7 +72,7 @@ contract MaxLiquidationLTV100FullWithChunksTest is MaxLiquidationLTV100FullTest 
 
             (
                 uint256 collateralToLiquidate, uint256 debtToCover
-            ) = partialLiquidation.maxLiquidation(address(silo1), borrower);
+            ) = partialLiquidation.maxLiquidation(borrower);
 
             emit log_named_uint("[LTV100FullWithChunks] debtToCover", debtToCover);
 

@@ -43,7 +43,6 @@ interface IPartialLiquidation {
     /// - The caller (liquidator) covers `debtToCover` amount of debt of the user getting liquidated, and receives
     ///   a amount of the `collateralAsset` plus a bonus to cover market risk
     /// @dev user can use this method to do self liquidation, it that case, check for LT requirements will be ignored
-    /// @param _siloWithDebt The address of the silo where the debt it
     /// @param _collateralAsset The address of the underlying asset used as collateral, to receive as result
     /// @param _debtAsset The address of the underlying borrowed asset to be repaid with the liquidation
     /// @param _user The address of the borrower getting liquidated
@@ -55,7 +54,6 @@ interface IPartialLiquidation {
     /// `withdrawCollateral` will be estimated, on redeem one can expect this value to be rounded down
     /// @return repayDebtAssets actual debt value that was repayed by `msg.sender`
     function liquidationCall(
-        address _siloWithDebt,
         address _collateralAsset,
         address _debtAsset,
         address _user,
@@ -69,7 +67,7 @@ interface IPartialLiquidation {
     /// because actual max can be only higher
     /// @return collateralToLiquidate underestimated (up to 2 wei) amount of collateral liquidator will get
     /// @return debtToRepay debt amount needed to be repay to get `collateralToLiquidate`
-    function maxLiquidation(address _siloWithDebt, address _borrower)
+    function maxLiquidation(address _borrower)
         external
         view
         returns (uint256 collateralToLiquidate, uint256 debtToRepay);

@@ -959,7 +959,7 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock {
         uint256 collateralToLiquidate;
         uint256 debtToRepay;
 
-        (collateralToLiquidate, debtToRepay) = partialLiquidation.maxLiquidation(address(silo0), _borrower);
+        (collateralToLiquidate, debtToRepay) = partialLiquidation.maxLiquidation(_borrower);
 
         assertGt(collateralToLiquidate, 0, "expect collateralToLiquidate");
 
@@ -1016,9 +1016,7 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock {
             );
         }
 
-        partialLiquidation.liquidationCall(
-            address(silo0), address(token1), address(token0), _borrower, _debtToRepay, _receiveSToken
-        );
+        partialLiquidation.liquidationCall(address(token1), address(token0), _borrower, _debtToRepay, _receiveSToken);
     }
 
     function _depositForBorrowNotSameAsset() internal {

@@ -72,7 +72,7 @@ contract RawLiquidityAndProtectedCollateralTest is SiloLittleHelper, Test {
         _printSiloStats("\nStep5 withdraw fees (Silo0)", silo0, token0);
 
         // liquidation
-        (uint256 collateralToLiquidate, uint256 debtToRepay) = partialLiquidation.maxLiquidation(address(silo1), user0);
+        (uint256 collateralToLiquidate, uint256 debtToRepay) = partialLiquidation.maxLiquidation(user0);
 
         assertGt(collateralToLiquidate, 0, "expect collateralToLiquidate");
 
@@ -81,7 +81,7 @@ contract RawLiquidityAndProtectedCollateralTest is SiloLittleHelper, Test {
 
         vm.expectRevert(ISilo.NotEnoughLiquidity.selector);
         partialLiquidation.liquidationCall(
-            address(silo1), address(token0), address(token1), user0, debtToRepay, false /* receive share tokens */
+            address(token0), address(token1), user0, debtToRepay, false /* receive share tokens */
         );
 
         // If there is not liquidity in the silo, the liquidator can receive share tokens
@@ -91,7 +91,7 @@ contract RawLiquidityAndProtectedCollateralTest is SiloLittleHelper, Test {
         assertEq(IERC20(collateralShareToken).balanceOf(address(this)), 0, "expect 0 balance");
 
         partialLiquidation.liquidationCall(
-            address(silo1), address(token0), address(token1), user0, debtToRepay, true /* receive share tokens */
+            address(token0), address(token1), user0, debtToRepay, true /* receive share tokens */
         );
 
         assertGt(IERC20(collateralShareToken).balanceOf(address(this)), 0, "expect balance");

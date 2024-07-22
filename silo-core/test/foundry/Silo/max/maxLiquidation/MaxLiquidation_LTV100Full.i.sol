@@ -128,13 +128,12 @@ contract MaxLiquidationLTV100FullTest is MaxLiquidationCommon {
 
         (
             uint256 collateralToLiquidate, uint256 debtToRepay
-        ) = partialLiquidation.maxLiquidation(address(silo1), borrower);
+        ) = partialLiquidation.maxLiquidation(borrower);
 
         emit log_named_decimal_uint("[_executeMaxPartialLiquidation] ltv before", silo0.getLtv(borrower), 16);
 
         // TODO try do liquidate less and then again the rest of debt, will that summ up?
         (withdrawCollateral, repayDebtAssets) = partialLiquidation.liquidationCall(
-            address(silo1),
             address(_sameToken ? token1 : token0),
             address(token1),
             borrower,

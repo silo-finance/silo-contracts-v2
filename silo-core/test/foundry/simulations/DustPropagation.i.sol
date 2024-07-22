@@ -52,15 +52,13 @@ contract DustPropagationTest is SiloLittleHelper, Test {
 
         (
             , uint256 debtToRepay
-        ) = partialLiquidation.maxLiquidation(address(silo0), BORROWER);
+        ) = partialLiquidation.maxLiquidation(BORROWER);
 
         token0.mint(address(this), debtToRepay);
         token0.approve(address(partialLiquidation), debtToRepay);
         bool receiveSToken;
 
-        partialLiquidation.liquidationCall(
-            address(silo0), address(token0), address(token0), BORROWER, debtToRepay, receiveSToken
-        );
+        partialLiquidation.liquidationCall(address(token0), address(token0), BORROWER, debtToRepay, receiveSToken);
         _printState("after liquidation");
 
         assertTrue(silo0.isSolvent(BORROWER), "user is solvent after liquidation");
@@ -233,7 +231,7 @@ contract DustPropagationTest is SiloLittleHelper, Test {
 
         (
             uint256 collateralToWithdraw, uint256 debtToRepay
-        ) = partialLiquidation.maxLiquidation(address(silo0), BORROWER);
+        ) = partialLiquidation.maxLiquidation(BORROWER);
 
         if (debtToRepay != 0) {
             emit log_named_decimal_uint("[silo0] liquidation possible, collateralToWithdraw", collateralToWithdraw, 18);
