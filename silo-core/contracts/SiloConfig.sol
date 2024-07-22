@@ -234,7 +234,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
     }
 
     /// @inheritdoc ISiloConfig
-    function getConfigsForBorrow(address _silo, bool _sameAsset)
+    function getConfigsForBorrow(address _debtSilo, bool _sameAsset)
         external
         view
         virtual
