@@ -161,14 +161,11 @@ contract Actor is PropertiesAsserts, IERC3156FlashBorrower {
     }
 
     function liquidationCall(
-        bool _vaultZeroWithDebt,
         address borrower,
         uint256 debtToCover,
         bool receiveSToken,
         ISiloConfig config
     ) public {
-        Silo vault = _prepareForLiquidationRepay(_vaultZeroWithDebt, debtToCover);
-
         (ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig) =
             config.getConfigs(borrower);
 
