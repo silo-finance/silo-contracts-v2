@@ -35,7 +35,6 @@ contract Hack1 {
         uint256 assets = 1e18;
         uint256 shares = 1e18;
         address receiver = address(this);
-        bool sameAsset = false;
 
         option = option % 10;
 
@@ -50,9 +49,9 @@ contract Hack1 {
         } else if (option == 4) {
             Silo(payable(msg.sender)).transitionCollateral(shares, _initiator, ISilo.CollateralType.Collateral);
         } else if (option == 5) {
-            Silo(payable(msg.sender)).borrow(assets, receiver, _initiator, sameAsset);
+            Silo(payable(msg.sender)).borrow(assets, receiver, _initiator);
         } else if (option == 6) {
-            Silo(payable(msg.sender)).borrowShares(shares, receiver, _initiator, sameAsset);
+            Silo(payable(msg.sender)).borrowShares(shares, receiver, _initiator);
         } else if (option == 7) {
             Silo(payable(msg.sender)).repay(assets, _initiator);
         } else if (option == 8) {

@@ -101,15 +101,15 @@ contract Actor is PropertiesAsserts, IERC3156FlashBorrower {
         _accountForClosedPosition(_assetType, _vaultZero, assets, _shares);
     }
 
-    function borrow(bool _vaultZero, uint256 _assets, bool _sameAsset) external returns (uint256 shares) {
+    function borrow(bool _vaultZero, uint256 _assets) external returns (uint256 shares) {
         Silo vault = _vaultZero ? vault0 : vault1;
-        shares = vault.borrow(_assets, address(this), address(this), _sameAsset);
+        shares = vault.borrow(_assets, address(this), address(this));
         _accountForOpenedDebt(_vaultZero, _assets, shares);
     }
 
-    function borrowShares(bool _vaultZero, uint256 _shares, bool _sameAsset) external returns (uint256 assets) {
+    function borrowShares(bool _vaultZero, uint256 _shares) external returns (uint256 assets) {
         Silo vault = _vaultZero ? vault0 : vault1;
-        assets = vault.borrowShares(_shares, address(this), address(this), _sameAsset);
+        assets = vault.borrowShares(_shares, address(this), address(this));
         _accountForOpenedDebt(_vaultZero, assets, _shares);
     }
 

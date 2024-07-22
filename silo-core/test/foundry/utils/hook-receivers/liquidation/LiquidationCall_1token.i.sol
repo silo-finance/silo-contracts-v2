@@ -37,10 +37,19 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
     function setUp() public {
         siloConfig = _setUpLocalFixture();
 
-        // we cresting debt on silo1, because lt there is 85 and in silo0 95, so it is easier to test because of dust
-        _depositCollateral(COLLATERAL, BORROWER, !SAME_TOKEN);
         vm.prank(BORROWER);
-        silo0.borrow(DEBT, BORROWER, BORROWER, SAME_TOKEN);
+        token0.mint(BORROWER, COLLATERAL);
+
+        vm.prank(BORROWER);
+        token0.approve(address(silo0), COLLATERAL);
+
+        vm.prank(BORROWER);
+        silo0.leverageSameAsset(
+            COLLATERAL,
+            DEBT,
+            BORROWER,
+            ISilo.CollateralType.Collateral
+        );
 
         assertEq(token0.balanceOf(address(this)), 0, "liquidation should have no collateral");
         assertEq(token0.balanceOf(address(silo0)), COLLATERAL - DEBT, "silo0 has only 2.5 debt token (10 - 7.5)");
@@ -134,8 +143,8 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
 
         assertEq(
             interestRateTimestamp1,
-            1,
-            "interestRateTimestamp1 is 1 because because on borrow we accrue interest for both silos"
+            0,
+            "interestRateTimestamp1 is 0 because because on borrow same asset we accrue interest only for one silo"
         );
 
         (uint256 collateralToLiquidate, uint256 debtToRepay) = partialLiquidation.maxLiquidation(BORROWER);

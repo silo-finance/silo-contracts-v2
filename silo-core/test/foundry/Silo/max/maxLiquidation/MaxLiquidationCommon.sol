@@ -35,9 +35,25 @@ abstract contract MaxLiquidationCommon is SiloLittleHelper, Test {
         vm.assume(_collateral > 0);
         vm.assume(_toBorrow > 0);
 
-        _depositForBorrow(_collateral, depositor);
-        _depositCollateral(_collateral, borrower, _sameAsset);
-        _borrow(_toBorrow, borrower, _sameAsset);
+        if (!_sameAsset) {
+            _depositForBorrow(_collateral, depositor);
+            _depositCollateral(_collateral, borrower, false /* to silo 1 */);
+            _borrow(_toBorrow, borrower);
+        } else {
+            vm.prank(borrower);
+            token1.mint(borrower, _collateral);
+
+            vm.prank(borrower);
+            token1.approve(address(silo1), _collateral);
+
+            vm.prank(borrower);
+            silo1.leverageSameAsset(
+                _collateral,
+                _toBorrow,
+                borrower,
+                ISilo.CollateralType.Collateral
+            );
+        }
 
         _ensureBorrowerHasDebt();
     }

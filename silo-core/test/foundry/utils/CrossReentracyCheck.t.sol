@@ -86,20 +86,20 @@ contract CrossReentracyCheckTest is HookCallsOutsideActionTest {
         emit log("[CrossReentracyCheckTest] _reentrancyCheck_Borrow");
 
         vm.expectRevert(ICrossReentrancyGuard.CrossReentrantCall.selector);
-        silo0.borrow(1000, address(0), address(0), false);
+        silo0.borrow(1000, address(0), address(0));
 
         vm.expectRevert(ICrossReentrancyGuard.CrossReentrantCall.selector);
-        silo0.borrow(1000, address(0), address(0), true);
+        silo0.borrow(1000, address(0), address(0));
     }
 
     function _reentrancyCheck_BorrowShare() internal {
         emit log("[CrossReentracyCheckTest] _reentrancyCheck_BorrowShare");
 
         vm.expectRevert(ICrossReentrancyGuard.CrossReentrantCall.selector);
-        silo0.borrowShares(1000, address(0), address(0), false);
+        silo0.borrowShares(1000, address(0), address(0));
 
         vm.expectRevert(ICrossReentrancyGuard.CrossReentrantCall.selector);
-        silo0.borrowShares(1000, address(0), address(0), true);
+        silo0.borrowShares(1000, address(0), address(0));
     }
 
     function _reentrancyCheck_TransitionCollateral() internal {

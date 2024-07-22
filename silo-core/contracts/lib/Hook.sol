@@ -277,12 +277,6 @@ library Hook {
         return WITHDRAW | (_type == ISilo.CollateralType.Collateral ? COLLATERAL_TOKEN : PROTECTED_TOKEN);
     }
 
-    /// @notice Returns the action for borrowing
-    /// @param _sameAsset Whether the borrow is on the same asset
-    function borrowAction(bool _sameAsset) internal pure returns (uint256) {
-        return BORROW | (_sameAsset ? SAME_ASSET : TWO_ASSETS);
-    }
-
     /// @notice Returns the action for collateral transition
     /// @param _type The collateral type
     function transitionCollateralAction(ISilo.CollateralType _type) internal pure returns (uint256) {

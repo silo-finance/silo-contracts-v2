@@ -95,8 +95,7 @@ contract HookReceiverAllActionsWithEvents is PartialLiquidation, SiloHookReceive
         uint256 borrowedAssets,
         uint256 borrowedShares,
         address borrower,
-        address receiver,
-        bool isSameAsset
+        address receiver
     );
 
     event BorrowAfterHA(
@@ -106,8 +105,7 @@ contract HookReceiverAllActionsWithEvents is PartialLiquidation, SiloHookReceive
         address borrower,
         address receiver,
         uint256 returnedAssets,
-        uint256 returnedShares,
-        bool isSameAsset
+        uint256 returnedShares
     );
 
     event RepayBeforeHA(
@@ -360,25 +358,14 @@ contract HookReceiverAllActionsWithEvents is PartialLiquidation, SiloHookReceive
     }
 
     function _processBorrow(address _silo, uint256 _action, bytes calldata _inputAndOutput, bool _isBefore) internal {
-        if (_action.matchAction(Hook.borrowAction(_NOT_SAME_ASSET))) {
-            _processBorrowAction(_silo, _inputAndOutput, _isBefore, _NOT_SAME_ASSET);
-        } else if (_action.matchAction(Hook.borrowAction(_SAME_ASSET))) {
-            _processBorrowAction(_silo, _inputAndOutput, _isBefore, _SAME_ASSET);
-        } else if (_action.matchAction(Hook.borrowAction(_SAME_ASSET))) {
-            _processBorrowAction(_silo, _inputAndOutput, _isBefore, _SAME_ASSET);
-        } else if (_action.matchAction(Hook.borrowAction(_NOT_SAME_ASSET))) {
-            _processBorrowAction(_silo, _inputAndOutput, _isBefore, _NOT_SAME_ASSET);
+        if (_action.matchAction(Hook.BORROW)) {
+            _processBorrowAction(_silo, _inputAndOutput, _isBefore);
         } else {
             revert UnknownBorrowAction();
         }
     }
 
-    function _processBorrowAction(
-        address _silo,
-        bytes calldata _inputAndOutput,
-        bool _isBefore,
-        bool _isSameAsset
-    ) internal {
+    function _processBorrowAction(address _silo, bytes calldata _inputAndOutput, bool _isBefore) internal {
         if (_isBefore) {
             Hook.BeforeBorrowInput memory input = Hook.beforeBorrowDecode(_inputAndOutput);
 
@@ -387,8 +374,7 @@ contract HookReceiverAllActionsWithEvents is PartialLiquidation, SiloHookReceive
                 input.assets,
                 input.shares,
                 input.borrower,
-                input.receiver,
-                _isSameAsset
+                input.receiver
             );
         } else {
             Hook.AfterBorrowInput memory input = Hook.afterBorrowDecode(_inputAndOutput);
@@ -400,8 +386,7 @@ contract HookReceiverAllActionsWithEvents is PartialLiquidation, SiloHookReceive
                 input.borrower,
                 input.receiver,
                 input.borrowedAssets,
-                input.borrowedShares,
-                _isSameAsset
+                input.borrowedShares
             );
         }
     }

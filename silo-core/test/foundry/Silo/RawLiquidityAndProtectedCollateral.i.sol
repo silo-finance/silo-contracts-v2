@@ -53,11 +53,11 @@ contract RawLiquidityAndProtectedCollateralTest is SiloLittleHelper, Test {
 
         uint256 borrowAmount = 750; // maxLtv = 75%
         vm.prank(user1);
-        silo0.borrow(borrowAmount, user1, user1, false /* not same asset */);
+        silo0.borrow(borrowAmount, user1, user1);
         _printSiloStats("\nStep2 borrow 750 (Silo0)", silo0, token0);
 
         vm.prank(user0);
-        silo1.borrow(borrowAmount, user0, user0, false /* not same asset */);
+        silo1.borrow(borrowAmount, user0, user0);
 
         vm.warp(block.timestamp + 30 days);
 

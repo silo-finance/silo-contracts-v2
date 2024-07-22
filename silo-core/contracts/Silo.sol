@@ -441,8 +441,8 @@ contract Silo is SiloERC4626 {
     }
 
     /// @inheritdoc ISilo
-    function maxBorrow(address _borrower, bool _sameAsset) external view virtual returns (uint256 maxAssets) {
-        (maxAssets,) = SiloLendingLib.maxBorrow(_sharedStorage.siloConfig, _borrower, _sameAsset);
+    function maxBorrow(address _borrower) external view virtual returns (uint256 maxAssets) {
+        (maxAssets,) = SiloLendingLib.maxBorrow(_sharedStorage.siloConfig, _borrower);
     }
 
     /// @inheritdoc ISilo
@@ -495,19 +495,19 @@ contract Silo is SiloERC4626 {
     }
 
     /// @inheritdoc ISilo
-    function borrow(uint256 _assets, address _receiver, address _borrower, bool _sameAsset)
+    function borrow(uint256 _assets, address _receiver, address _borrower)
         external
         virtual
         returns (uint256 shares)
     {
         (
             , shares
-        ) = _borrow(_assets, 0 /* shares */, _receiver, _borrower, _sameAsset);
+        ) = _borrow(_assets, 0 /* shares */, _receiver, _borrower);
     }
 
     /// @inheritdoc ISilo
-    function maxBorrowShares(address _borrower, bool _sameAsset) external view virtual returns (uint256 maxShares) {
-        (,maxShares) = SiloLendingLib.maxBorrow(_sharedStorage.siloConfig, _borrower, _sameAsset);
+    function maxBorrowShares(address _borrower) external view virtual returns (uint256 maxShares) {
+        (,maxShares) = SiloLendingLib.maxBorrow(_sharedStorage.siloConfig, _borrower);
     }
 
     /// @inheritdoc ISilo
@@ -520,14 +520,14 @@ contract Silo is SiloERC4626 {
     }
 
     /// @inheritdoc ISilo
-    function borrowShares(uint256 _shares, address _receiver, address _borrower, bool _sameAsset)
+    function borrowShares(uint256 _shares, address _receiver, address _borrower)
         external
         virtual
         returns (uint256 assets)
     {
         (
             assets,
-        ) = _borrow(0 /* assets */, _shares, _receiver, _borrower, _sameAsset);
+        ) = _borrow(0 /* assets */, _shares, _receiver, _borrower);
     }
 
     /// @inheritdoc ISilo
@@ -715,8 +715,7 @@ contract Silo is SiloERC4626 {
         uint256 _assets,
         uint256 _shares,
         address _receiver,
-        address _borrower,
-        bool _sameAsset
+        address _borrower
     )
         internal
         virtual
@@ -728,8 +727,7 @@ contract Silo is SiloERC4626 {
                 assets: _assets,
                 shares: _shares,
                 receiver: _receiver,
-                borrower: _borrower,
-                sameAsset: _sameAsset
+                borrower: _borrower
             }),
             _total[AssetTypes.COLLATERAL],
             _total[AssetTypes.DEBT]

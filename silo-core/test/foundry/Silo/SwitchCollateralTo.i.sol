@@ -25,40 +25,30 @@ contract SwitchCollateralToTest is SiloLittleHelper, Test {
     forge test -vv --ffi --mt test_switchCollateralTo_pass_
     */
     function test_switchCollateralTo_pass_1token() public {
-        _switchCollateralTo_pass(SAME_ASSET);
+        _switchCollateralTo_pass();
     }
 
-    function test_switchCollateralTo_pass_2tokens() public {
-        _switchCollateralTo_pass(TWO_ASSETS);
-    }
-
-    function _switchCollateralTo_pass(bool _sameAsset) private {
+    function _switchCollateralTo_pass() private {
         uint256 assets = 1e18;
         address depositor = makeAddr("Depositor");
         address borrower = makeAddr("Borrower");
 
-        _depositCollateral(assets, borrower, _sameAsset);
-        _depositCollateral(assets, borrower, !_sameAsset);
+        _deposit(assets, borrower);
+        _depositForBorrow(assets, borrower);
         _depositForBorrow(assets, depositor);
 
-        _borrow(assets / 2, borrower, _sameAsset);
+        _borrow(assets / 2, borrower);
 
         ISiloConfig.ConfigData memory collateral;
         ISiloConfig.ConfigData memory debt;
 
         (collateral, debt) = siloConfig.getConfigs(borrower);
-        bool debtSameAsset = debt.token == collateral.token;
-
-        assertEq(debtSameAsset, _sameAsset, "original position type");
 
         vm.prank(borrower);
         silo0.switchCollateralTo();
         (collateral, debt) = siloConfig.getConfigs(borrower);
-        debtSameAsset = debt.token == collateral.token;
 
-        assertEq(debtSameAsset, !_sameAsset, "position type after change");
-
-        ISilo siloWithDeposit = _sameAsset ? silo1 : silo0;
+        ISilo siloWithDeposit = silo0;
         vm.prank(borrower);
         siloWithDeposit.withdraw(assets, borrower, borrower);
 
@@ -70,22 +60,18 @@ contract SwitchCollateralToTest is SiloLittleHelper, Test {
     forge test -vv --mt test_switchCollateralTo_NotSolvent_
     */
     function test_switchCollateralTo_NotSolvent_1token() public {
-        _switchCollateralTo_NotSolvent(SAME_ASSET);
+        _switchCollateralTo_NotSolvent();
     }
 
-    function test_switchCollateralTo_NotSolvent_2tokens() public {
-        _switchCollateralTo_NotSolvent(TWO_ASSETS);
-    }
-
-    function _switchCollateralTo_NotSolvent(bool _sameAsset) private {
+    function _switchCollateralTo_NotSolvent() private {
         uint256 assets = 1e18;
         address depositor = makeAddr("Depositor");
         address borrower = makeAddr("Borrower");
 
-        _depositCollateral(assets, borrower, _sameAsset);
-        _depositCollateral(1, borrower, !_sameAsset);
+        _deposit(assets, borrower);
+        _deposit(1, borrower);
         _depositForBorrow(assets, depositor);
-        _borrow(assets / 2, borrower, _sameAsset);
+        _borrow(assets / 2, borrower);
 
         vm.prank(borrower);
         vm.expectRevert(ISilo.NotSolvent.selector);

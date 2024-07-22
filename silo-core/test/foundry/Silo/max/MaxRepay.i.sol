@@ -47,17 +47,12 @@ contract MaxRepayTest is SiloLittleHelper, Test {
     */
     /// forge-config: core-test.fuzz.runs = 1000
     function test_maxRepay_withDebt_1token_fuzz(uint128 _collateral) public {
-        _maxRepay_withDebt(_collateral, SAME_ASSET);
+        _maxRepay_withDebt(_collateral);
     }
 
-    /// forge-config: core-test.fuzz.runs = 1000
-    function test_maxRepay_withDebt_2tokens_fuzz(uint128 _collateral) public {
-        _maxRepay_withDebt(_collateral, TWO_ASSETS);
-    }
-
-    function _maxRepay_withDebt(uint128 _collateral, bool _sameAsset) private {
+    function _maxRepay_withDebt(uint128 _collateral) private {
         uint256 toBorrow = _collateral / 3;
-        _createDebt(_collateral, toBorrow, _sameAsset);
+        _createDebt(_collateral, toBorrow);
 
         uint256 maxRepay = silo1.maxRepay(borrower);
         assertEq(maxRepay, toBorrow, "max repay is what was borrower if no interest");
@@ -71,17 +66,12 @@ contract MaxRepayTest is SiloLittleHelper, Test {
     */
     /// forge-config: core-test.fuzz.runs = 1000
     function test_maxRepay_withInterest_1token_fuzz(uint128 _collateral) public {
-        _maxRepay_withInterest(_collateral, SAME_ASSET);
+        _maxRepay_withInterest(_collateral);
     }
 
-    /// forge-config: core-test.fuzz.runs = 1000
-    function test_maxRepay_withInterest_2tokens_fuzz(uint128 _collateral) public {
-        _maxRepay_withInterest(_collateral, TWO_ASSETS);
-    }
-
-    function _maxRepay_withInterest(uint128 _collateral, bool _sameAsset) public {
+    function _maxRepay_withInterest(uint128 _collateral) public {
         uint256 toBorrow = _collateral / 3;
-        _createDebt(_collateral, toBorrow, _sameAsset);
+        _createDebt(_collateral, toBorrow);
 
         vm.warp(block.timestamp + 356 days);
 
@@ -92,13 +82,13 @@ contract MaxRepayTest is SiloLittleHelper, Test {
         _assertBorrowerHasNoDebt();
     }
 
-    function _createDebt(uint256 _collateral, uint256 _toBorrow, bool _sameAsset) internal {
+    function _createDebt(uint256 _collateral, uint256 _toBorrow) internal {
         vm.assume(_collateral > 0);
         vm.assume(_toBorrow > 0);
 
         _depositForBorrow(_collateral, depositor);
-        _depositCollateral(_collateral, borrower, _sameAsset);
-        _borrow(_toBorrow, borrower, _sameAsset);
+        _deposit(_collateral, borrower);
+        _borrow(_toBorrow, borrower);
 
         _ensureBorrowerHasDebt();
     }

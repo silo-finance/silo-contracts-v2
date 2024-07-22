@@ -93,20 +93,13 @@ contract DepositTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --ffi --mt test_deposit_withDebt_2tokens
-    */
-    function test_deposit_withDebt_2tokens() public {
-        _deposit_withDebt(TWO_ASSETS);
-    }
-
-    /*
     forge test -vv --ffi --mt test_deposit_withDebt_1token
     */
     function test_deposit_withDebt_1token() public {
-        _deposit_withDebt(SAME_ASSET);
+        _deposit_withDebt();
     }
 
-    function _deposit_withDebt(bool _sameAsset) internal {
+    function _deposit_withDebt() internal {
         uint256 assets = 1e18;
         address depositor = makeAddr("Depositor");
 
@@ -115,8 +108,8 @@ contract DepositTest is SiloLittleHelper, Test {
         _makeDeposit(silo1, token1, assets, depositor, ISilo.CollateralType.Collateral);
         _makeDeposit(silo1, token1, assets, depositor, ISilo.CollateralType.Protected);
 
-        uint256 maxBorrow = silo1.maxBorrow(depositor, _sameAsset);
-        _borrow(maxBorrow, depositor, _sameAsset);
+        uint256 maxBorrow = silo1.maxBorrow(depositor);
+        _borrow(maxBorrow, depositor);
 
         _makeDeposit(silo0, token0, assets, depositor, ISilo.CollateralType.Collateral);
         _makeDeposit(silo0, token0, assets, depositor, ISilo.CollateralType.Protected);
@@ -226,20 +219,16 @@ contract DepositTest is SiloLittleHelper, Test {
     forge test -vv --ffi --mt test_deposit_revert_zeroShares
     */
     function test_deposit_revert_zeroShares_1token() public {
-        _deposit_revert_zeroShares(SAME_ASSET);
+        _deposit_revert_zeroShares();
     }
 
-    function test_deposit_revert_zeroShares_2tokens() public {
-        _deposit_revert_zeroShares(TWO_ASSETS);
-    }
-
-    function _deposit_revert_zeroShares(bool _sameAsset) private {
+    function _deposit_revert_zeroShares() private {
         address borrower = makeAddr("borrower");
 
-        _depositCollateral(2 ** 128, borrower, _sameAsset);
+        _deposit(2 ** 128, borrower);
         _depositForBorrow(2 ** 128, address(2));
 
-        _borrow(2 ** 128 / 2, borrower, _sameAsset);
+        _borrow(2 ** 128 / 2, borrower);
 
         address anyAddress = makeAddr("any");
         // no interest, so shares are 1:1

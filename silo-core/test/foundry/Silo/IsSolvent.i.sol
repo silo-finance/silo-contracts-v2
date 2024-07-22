@@ -29,27 +29,23 @@ contract IsSolventTest is SiloLittleHelper, Test {
     this test covers the bug when wrong configs are fetched after debt transfer
     */
     function test_isSolvent_onDebtTransfer_1token() public {
-        _isSolvent_onDebtTransfer(SAME_ASSET);
+        _isSolvent_onDebtTransfer();
     }
 
-    function test_isSolvent_onDebtTransfer_2tokens() public {
-        _isSolvent_onDebtTransfer(TWO_ASSETS);
-    }
-
-    function _isSolvent_onDebtTransfer(bool _sameAsset) private {
+    function _isSolvent_onDebtTransfer() private {
         uint256 assets = 1e18;
         address depositor = makeAddr("Depositor");
         address borrower = makeAddr("Borrower");
         address recipient = makeAddr("Recipient");
 
-        _depositCollateral(assets, borrower, _sameAsset);
+        _deposit(assets, borrower);
         _depositForBorrow(assets, depositor);
 
-        _depositCollateral(2, recipient, _sameAsset);
+        _deposit(2, recipient);
 
-        _borrow(assets / 2, borrower, _sameAsset);
+        _borrow(assets / 2, borrower);
 
-        ISilo collateralSilo = _sameAsset ? silo1 : silo0;
+        ISilo collateralSilo = silo0;
 
         (, address collateralShareToken,) = collateralSilo.config().getShareTokens(address(collateralSilo));
         (,, address debtShareToken) = silo1.config().getShareTokens(address(silo1));
@@ -74,23 +70,19 @@ contract IsSolventTest is SiloLittleHelper, Test {
     forge test -vv --ffi --mt test_isSolvent_RecipientNotSolventAfterTransfer
     */
     function test_isSolvent_RecipientNotSolventAfterTransfer_1token() public {
-        _isSolvent_RecipientNotSolventAfterTransfer(SAME_ASSET);
+        _isSolvent_RecipientNotSolventAfterTransfer();
     }
 
-    function test_isSolvent_RecipientNotSolventAfterTransfer_2tokens() public {
-        _isSolvent_RecipientNotSolventAfterTransfer(TWO_ASSETS);
-    }
-
-    function _isSolvent_RecipientNotSolventAfterTransfer(bool _sameAsset) private {
+    function _isSolvent_RecipientNotSolventAfterTransfer() private {
         uint256 assets = 1e18;
         address depositor = makeAddr("Depositor");
         address borrower = makeAddr("Borrower");
         address recipient = makeAddr("Recipient");
 
-        _depositCollateral(assets, borrower, _sameAsset);
+        _deposit(assets, borrower);
         _depositForBorrow(assets, depositor);
 
-        _borrow(assets / 2, borrower, _sameAsset);
+        _borrow(assets / 2, borrower);
 
         (,, address debtShareToken) = silo1.config().getShareTokens(address(silo1));
 
