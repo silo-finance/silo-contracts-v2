@@ -211,11 +211,11 @@ interface ISiloConfig is ICrossReentrancyGuard {
 
     /// @notice Retrieves configuration data for a specific silo for borrow fn.
     /// @dev This function reverts for incorrect silo address input.
-    /// @param _silo The address of the silo for which configuration data is being retrieved
+    /// @param _debtSilo The address of the silo for which configuration data is being retrieved
     /// @param _sameAsset true if the borrower operates on the same asset
     /// @return collateralConfig The configuration data for the collateral silo
     /// @return debtConfig The configuration data for the debt silo (always config for `_silo`)
-    function getConfigsForBorrow(address _silo, bool _sameAsset)
+    function getConfigsForBorrow(address _debtSilo, bool _sameAsset)
         external
         view
         returns (ConfigData memory collateralConfig, ConfigData memory debtConfig);

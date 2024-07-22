@@ -240,10 +240,10 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
         virtual
         returns (ConfigData memory collateralConfig, ConfigData memory debtConfig)
     {
-        address collateralSilo = _getCollateralSilo(_silo, _sameAsset);
+        address collateralSilo = _getCollateralSilo(_debtSilo, _sameAsset);
 
         collateralConfig = getConfig(collateralSilo);
-        debtConfig = getConfig(_silo);
+        debtConfig = getConfig(_debtSilo);
     }
 
     /// @inheritdoc ISiloConfig
