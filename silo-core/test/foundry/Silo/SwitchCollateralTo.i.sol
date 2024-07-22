@@ -43,14 +43,20 @@ contract SwitchCollateralToTest is SiloLittleHelper, Test {
 
         _borrow(assets / 2, borrower, _sameAsset);
 
-        (,, ISiloConfig.DebtInfo memory debtInfo) = siloConfig.getConfigs(address(silo0), borrower, 0);
-        assertEq(debtInfo.sameAsset, _sameAsset, "original position type");
+        ISiloConfig.ConfigData memory collateral;
+        ISiloConfig.ConfigData memory debt;
+
+        (collateral, debt) = siloConfig.getConfigs(borrower);
+        bool debtSameAsset = debt.token == collateral.token;
+
+        assertEq(debtSameAsset, _sameAsset, "original position type");
 
         vm.prank(borrower);
-        silo0.switchCollateralTo(!_sameAsset);
-        (,, debtInfo) = siloConfig.getConfigs(address(silo0), borrower, 0);
+        silo0.switchCollateralTo();
+        (collateral, debt) = siloConfig.getConfigs(borrower);
+        debtSameAsset = debt.token == collateral.token;
 
-        assertEq(debtInfo.sameAsset, !_sameAsset, "position type after change");
+        assertEq(debtSameAsset, !_sameAsset, "position type after change");
 
         ISilo siloWithDeposit = _sameAsset ? silo1 : silo0;
         vm.prank(borrower);
@@ -83,46 +89,18 @@ contract SwitchCollateralToTest is SiloLittleHelper, Test {
 
         vm.prank(borrower);
         vm.expectRevert(ISilo.NotSolvent.selector);
-        silo1.switchCollateralTo(!_sameAsset);
+        silo1.switchCollateralTo();
     }
 
-    function test_switchCollateralTo_CollateralTypeDidNotChanged_1token() public {
-        _switchCollateralTo_CollateralTypeDidNotChanged(SAME_ASSET);
+    function test_switchCollateralTo_NoDebt() public {
+        _switchCollateralTo_NoDebt();
     }
 
-    function test_switchCollateralTo_CollateralTypeDidNotChanged_2tokens() public {
-        _switchCollateralTo_CollateralTypeDidNotChanged(TWO_ASSETS);
-    }
-
-    function _switchCollateralTo_CollateralTypeDidNotChanged(bool _sameAsset) private {
-        uint256 assets = 1e18;
-        address depositor = makeAddr("Depositor");
-        address borrower = makeAddr("Borrower");
-
-        _depositCollateral(assets, borrower, _sameAsset);
-        _depositCollateral(assets, borrower, !_sameAsset);
-
-        _depositForBorrow(assets, depositor);
-        _borrow(assets / 2, borrower, _sameAsset);
-
-        vm.prank(borrower);
-        vm.expectRevert(ISiloConfig.CollateralTypeDidNotChanged.selector);
-        silo0.switchCollateralTo(_sameAsset);
-    }
-
-    function test_switchCollateralTo_NoDebt_1token() public {
-        _switchCollateralTo_NoDebt(SAME_ASSET);
-    }
-
-    function test_switchCollateralTo_NoDebt_2tokens() public {
-        _switchCollateralTo_NoDebt(TWO_ASSETS);
-    }
-
-    function _switchCollateralTo_NoDebt(bool _sameAsset) private {
+    function _switchCollateralTo_NoDebt() private {
         address borrower = makeAddr("Borrower");
 
         vm.prank(borrower);
         vm.expectRevert(ISiloConfig.NoDebt.selector);
-        silo0.switchCollateralTo(_sameAsset);
+        silo0.switchCollateralTo();
     }
 }

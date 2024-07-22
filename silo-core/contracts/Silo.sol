@@ -108,11 +108,10 @@ contract Silo is SiloERC4626 {
     function isSolvent(address _borrower) external view virtual returns (bool) {
         (
             ISiloConfig.ConfigData memory collateral,
-            ISiloConfig.ConfigData memory debt,
-            ISiloConfig.DebtInfo memory debtInfo
-        ) = _sharedStorage.siloConfig.getConfigs(address(this), _borrower, Hook.NONE);
+            ISiloConfig.ConfigData memory debt
+        ) = _sharedStorage.siloConfig.getConfigs(_borrower);
 
-        return SiloSolvencyLib.isSolvent(collateral, debt, debtInfo, _borrower, AccrueInterestInMemory.Yes);
+        return SiloSolvencyLib.isSolvent(collateral, debt, _borrower, AccrueInterestInMemory.Yes);
     }
 
     /// @inheritdoc ISilo
@@ -422,7 +421,15 @@ contract Silo is SiloERC4626 {
     {
         uint256 toShares;
 
-        (assets, toShares) = Actions.transitionCollateral(_sharedStorage, _shares, _owner, _withdrawType, _total);
+        (assets, toShares) = Actions.transitionCollateral(
+            _sharedStorage,
+            _total,
+            TransitionCollateralArgs({
+                shares: _shares,
+                owner: _owner,
+                withdrawType: _withdrawType
+            })
+        );
 
         if (_withdrawType == CollateralType.Collateral) {
             emit Withdraw(msg.sender, _owner, _owner, assets, _shares);
@@ -447,9 +454,9 @@ contract Silo is SiloERC4626 {
         );
     }
 
-    function switchCollateralTo(bool _sameAsset) external virtual {
-        Actions.switchCollateralTo(_sharedStorage, _sameAsset);
-        emit CollateralTypeChanged(msg.sender, _sameAsset);
+    function switchCollateralTo() external virtual {
+        Actions.switchCollateralTo(_sharedStorage);
+        emit CollateralTypeChanged(msg.sender);
     }
 
     /// @inheritdoc ISilo

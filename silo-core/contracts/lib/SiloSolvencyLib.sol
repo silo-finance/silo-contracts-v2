@@ -32,11 +32,10 @@ library SiloSolvencyLib {
     function isSolvent(
         ISiloConfig.ConfigData memory _collateralConfig,
         ISiloConfig.ConfigData memory _debtConfig,
-        ISiloConfig.DebtInfo memory _debtInfo,
         address _borrower,
         ISilo.AccrueInterestInMemory _accrueInMemory
     ) internal view returns (bool) {
-        if (!_debtInfo.debtPresent) return true;
+        if (_debtConfig.silo == address(0)) return true; // no debt, so solvent
 
         uint256 ltv = getLtv(
             _collateralConfig,
@@ -229,13 +228,6 @@ library SiloSolvencyLib {
                 ? _ltvData.debtOracle.quote(_ltvData.borrowerDebtAssets, _debtAsset)
                 : _ltvData.borrowerDebtAssets;
         }
-    }
-
-    /// @return TRUE when current silo deposit is NOT attached to debt, FALSE otherwise
-    function depositWithoutDebt(ISiloConfig.DebtInfo memory _debtInfo) internal pure returns (bool) {
-        if (!_debtInfo.debtPresent) return true;
-
-        return _debtInfo.debtInThisSilo ? !_debtInfo.sameAsset : _debtInfo.sameAsset;
     }
 
     function ltvMath(uint256 _totalBorrowerDebtValue, uint256 _sumOfBorrowerCollateralValue)

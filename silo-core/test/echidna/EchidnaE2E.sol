@@ -250,11 +250,11 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         assets = actor.transitionCollateral(_vaultZero, shares, withdrawType);
     }
 
-    function switchCollateralTo(uint8 _actorIndex, bool _vaultZero, bool _sameAsset) public {
+    function switchCollateralTo(uint8 _actorIndex, bool _vaultZero) public {
         emit LogUint256("[switchCollateralTo] block.timestamp:", block.timestamp);
 
         Actor actor = _selectActor(_actorIndex);
-        actor.switchCollateralTo(_vaultZero, _sameAsset);
+        actor.switchCollateralTo(_vaultZero);
     }
 
     function leverageSameAsset(
@@ -378,9 +378,8 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         if (maxAssets == 0) {
             (
                 ISiloConfig.ConfigData memory collateralConfig,
-                ISiloConfig.ConfigData memory debtConfig,
-                // ISiloConfig.DebtInfo memory debtInfo
-            ) = siloConfig.getConfigs(address(vault), address(actor), Hook.WITHDRAW);
+                ISiloConfig.ConfigData memory debtConfig
+            ) = siloConfig.getConfigs(address(actor));
 
             uint256 shareBalance = IERC20(collateralConfig.collateralShareToken).balanceOf(address(actor));
             uint256 debtShareBalance = IERC20(debtConfig.debtShareToken).balanceOf(address(actor));

@@ -175,24 +175,17 @@ contract PartialLiquidation is SiloStorage, IPartialLiquidation, IHookReceiver {
             ISiloConfig.ConfigData memory debtConfig
         )
     {
-        ISiloConfig.DebtInfo memory debtInfo;
+        (collateralConfig, debtConfig) = _siloConfigCached.getConfigs(_borrower);
 
-        (collateralConfig, debtConfig, debtInfo) = _siloConfigCached.getConfigs(
-            _siloWithDebt,
-            _borrower,
-            Hook.LIQUIDATION
-        );
-
-        if (!debtInfo.debtPresent) revert UserIsSolvent();
-        if (!debtInfo.debtInThisSilo) revert ISilo.ThereIsDebtInOtherSilo();
-        if (_siloWithDebt != debtConfig.silo) revert WrongSilo();
+        if (debtConfig.silo == address(0)) revert UserIsSolvent();
+        if (_siloConfigCached.hasDebtInOtherSilo(_siloWithDebt, _borrower)) revert ISilo.ThereIsDebtInOtherSilo();
 
         if (_collateralAsset != collateralConfig.token) revert UnexpectedCollateralToken();
         if (_debtAsset != debtConfig.token) revert UnexpectedDebtToken();
 
         ISilo(debtConfig.silo).accrueInterest();
 
-        if (!debtInfo.sameAsset) {
+        if (collateralConfig.silo != debtConfig.silo) {
             ISilo(debtConfig.otherSilo).accrueInterest();
             collateralConfig.callSolvencyOracleBeforeQuote();
             debtConfig.callSolvencyOracleBeforeQuote();

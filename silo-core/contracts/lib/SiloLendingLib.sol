@@ -262,21 +262,12 @@ library SiloLendingLib {
         view
         returns (uint256 maxAssets, uint256 maxShares)
     {
-        (
-            ISiloConfig.ConfigData memory collateralConfig,
-            ISiloConfig.ConfigData memory debtConfig,
-            ISiloConfig.DebtInfo memory debtInfo
-        ) = _siloConfig.getConfigs(
-            address(this),
-            _borrower,
-            Hook.BORROW | (_sameAsset ? Hook.SAME_ASSET : Hook.TWO_ASSETS)
-        );
+        if (_siloConfig.hasDebtInOtherSilo(address(this), _borrower)) return (0, 0);
 
-        if (!SiloLendingLib.borrowPossible(debtInfo)) return (0, 0);
+        ISiloConfig.ConfigData memory collateralConfig;
+        ISiloConfig.ConfigData memory debtConfig;
 
-        if (_sameAsset) {
-            collateralConfig = debtConfig;
-        }
+        (collateralConfig, debtConfig) = _siloConfig.getConfigsForBorrow(address(this), _sameAsset);
 
         (uint256 totalDebtAssets, uint256 totalDebtShares) =
             SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(debtConfig, ISilo.AssetType.Debt);
@@ -293,24 +284,24 @@ library SiloLendingLib {
 
     function getLiquidity(ISiloConfig _siloConfig) internal view returns (uint256 liquidity) {
         ISiloConfig.ConfigData memory config = _siloConfig.getConfig(address(this));
-        (liquidity,,) = getLiquidityAndAssetsWithInterest(config);
+        (liquidity,,) = getLiquidityAndAssetsWithInterest(config.interestRateModel, config.daoFee, config.deployerFee);
     }
 
-    function getLiquidityAndAssetsWithInterest(ISiloConfig.ConfigData memory _config)
+    function getLiquidityAndAssetsWithInterest(address _interestRateModel, uint256 _daoFee, uint256 _deployerFee)
         internal
         view
         returns (uint256 liquidity, uint256 totalCollateralAssets, uint256 totalDebtAssets)
     {
         totalCollateralAssets = SiloStdLib.getTotalCollateralAssetsWithInterest(
             address(this),
-            _config.interestRateModel,
-            _config.daoFee,
-            _config.deployerFee
+            _interestRateModel,
+            _daoFee,
+            _deployerFee
         );
 
         totalDebtAssets = SiloStdLib.getTotalDebtAssetsWithInterest(
             address(this),
-            _config.interestRateModel
+            _interestRateModel
         );
 
         liquidity = SiloMathLib.liquidity(totalCollateralAssets, totalDebtAssets);
@@ -371,9 +362,5 @@ library SiloLendingLib {
                 shares, _totalDebtAssets, _totalDebtShares, Rounding.MAX_BORROW_TO_ASSETS, ISilo.AssetType.Debt
             );
         }
-    }
-
-    function borrowPossible(ISiloConfig.DebtInfo memory _debtInfo) internal pure returns (bool) {
-        return !_debtInfo.debtPresent || _debtInfo.debtInThisSilo;
     }
 }

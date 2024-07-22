@@ -154,9 +154,9 @@ contract HookReceiverAllActionsWithEvents is PartialLiquidation, SiloHookReceive
         uint256 borrowedShares
     );
 
-    event SwitchCollateralBeforeHA(bool sameAsset, address user);
+    event SwitchCollateralBeforeHA(address user);
 
-    event SwitchCollateralAfterHA(bool sameAsset, address user);
+    event SwitchCollateralAfterHA(address user);
 
     event FlashLoanBeforeHA(address silo, address receiver, address token, uint256 amount);
 
@@ -442,17 +442,11 @@ contract HookReceiverAllActionsWithEvents is PartialLiquidation, SiloHookReceive
     ) internal {
         Hook.SwitchCollateralInput memory input = Hook.switchCollateralDecode(_inputAndOutput);
 
-        if (_action.matchAction(Hook.switchCollateralAction(_SAME_ASSET))) {
+        if (_action.matchAction(Hook.SWITCH_COLLATERAL)) {
             if (_isBefore) {
-                emit SwitchCollateralBeforeHA(_SAME_ASSET, input.user);
+                emit SwitchCollateralBeforeHA(input.user);
             } else {
-                emit SwitchCollateralAfterHA(_SAME_ASSET, input.user);
-            }
-        } else if (_action.matchAction(Hook.switchCollateralAction(_NOT_SAME_ASSET))) {
-            if (_isBefore) {
-                emit SwitchCollateralBeforeHA(_NOT_SAME_ASSET, input.user);
-            } else {
-                emit SwitchCollateralAfterHA(_NOT_SAME_ASSET, input.user);
+                emit SwitchCollateralAfterHA(input.user);
             }
         } else {
             revert UnknownSwitchCollateralAction();

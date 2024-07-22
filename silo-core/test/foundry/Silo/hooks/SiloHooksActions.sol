@@ -340,13 +340,13 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock {
         silo0.borrow(borrowAmount, _borrower, _borrower, _NOT_SAME_ASSET);
 
         vm.expectEmit(true, true, true, true);
-        emit SwitchCollateralBeforeHA(_SAME_ASSET, _borrower);
+        emit SwitchCollateralBeforeHA(_borrower);
 
         vm.expectEmit(true, true, true, true);
-        emit SwitchCollateralAfterHA(_SAME_ASSET, _borrower);
+        emit SwitchCollateralAfterHA(_borrower);
 
         vm.prank(_borrower);
-        silo0.switchCollateralTo(_SAME_ASSET);
+        silo0.switchCollateralTo();
     }
 
     /// FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testSwitchCollateralTwoAssetsHooks
@@ -370,13 +370,13 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock {
         silo0.borrow(borrowAmount, _borrower, _borrower, _SAME_ASSET);
 
         vm.expectEmit(true, true, true, true);
-        emit SwitchCollateralBeforeHA(_NOT_SAME_ASSET, _borrower);
+        emit SwitchCollateralBeforeHA(_borrower);
 
         vm.expectEmit(true, true, true, true);
-        emit SwitchCollateralAfterHA(_NOT_SAME_ASSET, _borrower);
+        emit SwitchCollateralAfterHA(_borrower);
 
         vm.prank(_borrower);
-        silo0.switchCollateralTo(_NOT_SAME_ASSET);
+        silo0.switchCollateralTo();
     }
 
     /// FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testTransitionCollateralToProtectedAllHooks

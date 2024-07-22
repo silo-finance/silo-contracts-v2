@@ -45,9 +45,12 @@ library Actions {
 
         ISiloConfig siloConfig = _shareStorage.siloConfig;
 
+        siloConfig.turnOnReentrancyProtection();
+        siloConfig.accrueInterestForSilo(address(this));
+
         (
             address shareToken, address asset
-        ) = siloConfig.accrueInterestAndGetConfigOptimised(Hook.DEPOSIT, _collateralType);
+        ) = siloConfig.getCollateralShareTokenAndAsset(address(this), _collateralType);
 
         (assets, shares) = SiloERC4626Lib.deposit(
             asset,
@@ -77,19 +80,20 @@ library Actions {
 
         _hookCallBeforeWithdraw(_shareStorage, _args);
 
-        (
-            ISiloConfig.ConfigData memory collateralConfig,
-            ISiloConfig.ConfigData memory debtConfig,
-            ISiloConfig.DebtInfo memory debtInfo
-        ) = siloConfig.accrueInterestAndGetConfigs(address(this), _args.owner, Hook.WITHDRAW);
+        siloConfig.turnOnReentrancyProtection();
+        siloConfig.accrueInterestForBothSilos();
 
-        if (collateralConfig.silo != debtConfig.silo) ISilo(debtConfig.silo).accrueInterest();
+        ISiloConfig.DepositConfig memory depositConfig;
+        ISiloConfig.ConfigData memory collateralConfig;
+        ISiloConfig.ConfigData memory debtConfig;
+
+        (depositConfig, collateralConfig, debtConfig) = siloConfig.getConfigsForWithdraw(address(this), _args.owner);
 
         (assets, shares) = SiloERC4626Lib.withdraw(
-            collateralConfig.token,
+            depositConfig.token,
             _args.collateralType == ISilo.CollateralType.Collateral
-                ? collateralConfig.collateralShareToken
-                : collateralConfig.protectedShareToken,
+                ? depositConfig.collateralShareToken
+                : depositConfig.protectedShareToken,
             _args,
             _args.collateralType == ISilo.CollateralType.Collateral
                 ? SiloMathLib.liquidity(_totalAssets.assets, _totalDebtAssets.assets)
@@ -97,18 +101,9 @@ library Actions {
             _totalAssets
         );
 
-        if (!SiloSolvencyLib.depositWithoutDebt(debtInfo)) {
-            if (!debtInfo.sameAsset) {
-                collateralConfig.callSolvencyOracleBeforeQuote();
-                debtConfig.callSolvencyOracleBeforeQuote();
-            }
-
-            bool ownerIsSolvent = SiloSolvencyLib.isSolvent(
-                collateralConfig, debtConfig, debtInfo, _args.owner, ISilo.AccrueInterestInMemory.No
-            );
-
-            // `_args.owner` must be solvent
-            if (!ownerIsSolvent) revert ISilo.NotSolvent();
+        if (depositConfig.silo == collateralConfig.silo) {
+            // If deposit is collateral, then check the solvency.
+            _checkSolvency(collateralConfig, debtConfig, _args.owner);
         }
 
         siloConfig.turnOffReentrancyProtection();
@@ -116,7 +111,6 @@ library Actions {
         _hookCallAfterWithdraw(_shareStorage, _args, assets, shares);
     }
 
-    // solhint-disable-next-line function-max-lines
     function borrow(
         ISilo.SharedStorage storage _shareStorage,
         ISilo.BorrowArgs memory _args,
@@ -126,23 +120,22 @@ library Actions {
         external
         returns (uint256 assets, uint256 shares)
     {
-        if (_args.assets == 0 && _args.shares == 0) revert ISilo.ZeroAssets();
-
+        ISiloConfig siloConfig = _shareStorage.siloConfig;
         uint256 borrowAction = Hook.borrowAction(_args.sameAsset);
+
+        if (_args.assets == 0 && _args.shares == 0) revert ISilo.ZeroAssets();
+        if (siloConfig.hasDebtInOtherSilo(address(this), _args.borrower)) revert ISilo.BorrowNotPossible();
 
         _hookCallBeforeBorrow(_shareStorage, _args, borrowAction);
 
-        ISiloConfig siloConfig = _shareStorage.siloConfig;
+        siloConfig.turnOnReentrancyProtection();
+        siloConfig.accrueInterestForBothSilos();
+        siloConfig.setCollateralSilo(_args.borrower, _args.sameAsset);
 
-        (
-            ISiloConfig.ConfigData memory collateralConfig,
-            ISiloConfig.ConfigData memory debtConfig,
-            ISiloConfig.DebtInfo memory debtInfo
-        ) = siloConfig.accrueInterestAndGetConfigs(address(this), _args.borrower, borrowAction);
+        ISiloConfig.ConfigData memory collateralConfig;
+        ISiloConfig.ConfigData memory debtConfig;
 
-        if (!SiloLendingLib.borrowPossible(debtInfo)) revert ISilo.BorrowNotPossible();
-
-        if (!_args.sameAsset) ISilo(collateralConfig.silo).accrueInterest();
+        (collateralConfig, debtConfig) = siloConfig.getConfigsForBorrow(address(this), _args.sameAsset);
 
         (assets, shares) = SiloLendingLib.borrow(
             debtConfig.debtShareToken,
@@ -153,16 +146,7 @@ library Actions {
             _totalDebt
         );
 
-        if (!debtInfo.sameAsset) {
-            collateralConfig.callMaxLtvOracleBeforeQuote();
-            debtConfig.callMaxLtvOracleBeforeQuote();
-        }
-
-        bool borrowerIsBelowMaxLtv = SiloSolvencyLib.isBelowMaxLtv(
-            collateralConfig, debtConfig, _args.borrower, ISilo.AccrueInterestInMemory.No
-        );
-
-        if (!borrowerIsBelowMaxLtv) revert ISilo.AboveMaxLtv();
+        _checkLTV(collateralConfig, debtConfig, _args.borrower);
 
         siloConfig.turnOffReentrancyProtection();
 
@@ -185,17 +169,18 @@ library Actions {
             _shareStorage.hookReceiver.beforeAction(address(this), Hook.REPAY, data);
         }
 
-        ISiloConfig siloConfigCached = _shareStorage.siloConfig;
+        ISiloConfig siloConfig = _shareStorage.siloConfig;
 
-        (
-            address debtShareToken, address debtAsset
-        ) = siloConfigCached.accrueInterestAndGetConfigOptimised(Hook.REPAY, ISilo.CollateralType(0));
+        siloConfig.turnOnReentrancyProtection();
+        siloConfig.accrueInterestForSilo(address(this));
+
+        (address debtShareToken, address debtAsset) = siloConfig.getDebtShareTokenAndAsset(address(this));
 
         (assets, shares) = SiloLendingLib.repay(
             IShareToken(debtShareToken), debtAsset, _assets, _shares, _borrower, _repayer, _totalDebt
         );
 
-        siloConfigCached.turnOffReentrancyProtection();
+        siloConfig.turnOffReentrancyProtection();
 
         if (_shareStorage.hooksAfter.matchAction(Hook.REPAY)) {
             bytes memory data = abi.encodePacked(_assets, _shares, _borrower, _repayer, assets, shares);
@@ -214,51 +199,54 @@ library Actions {
         external
         returns (uint256 depositedShares, uint256 borrowedShares)
     {
+        ISiloConfig siloConfig = _shareStorage.siloConfig;
+
         if (_args.depositAssets == 0 || _args.borrowAssets == 0) revert ISilo.ZeroAssets();
+        if (siloConfig.hasDebtInOtherSilo(address(this), _args.borrower)) revert ISilo.BorrowNotPossible();
 
         _hookCallBeforeLeverageSameAsset(_shareStorage, _args);
 
-        (
-            ISiloConfig.ConfigData memory collateralConfig,
-            ISiloConfig.ConfigData memory debtConfig,
-            ISiloConfig.DebtInfo memory debtInfo
-        ) = _shareStorage.siloConfig.accrueInterestAndGetConfigs(
-            address(this), _args.borrower, Hook.LEVERAGE_SAME_ASSET
-        );
-        
-        if (!SiloLendingLib.borrowPossible(debtInfo)) revert ISilo.BorrowNotPossible();
-        if (debtInfo.debtPresent && !debtInfo.sameAsset) revert ISilo.TwoAssetsDebt();
-        
+        siloConfig.turnOnReentrancyProtection();
+        siloConfig.accrueInterestForSilo(address(this));
+        siloConfig.setCollateralSilo({_borrower: _args.borrower, _sameAsset: true});
+
+        ISiloConfig.ConfigData memory collateralConfig;
+        ISiloConfig.ConfigData memory debtConfig;
+
+        (collateralConfig, debtConfig) = siloConfig.getConfigsForBorrow({_debtSilo: address(this), _sameAsset: true});
+
         uint256 borrowedAssets;
 
-        (borrowedAssets, borrowedShares) = SiloLendingLib.borrow(
-            debtConfig.debtShareToken,
-            address(0), // we are not transferring debt
-            msg.sender,
-            ISilo.BorrowArgs({
+        (borrowedAssets, borrowedShares) = SiloLendingLib.borrow({
+            _debtShareToken: debtConfig.debtShareToken,
+            _token: address(0), // we are not transferring debt
+            _spender: msg.sender,
+            _args: ISilo.BorrowArgs({
                 assets: _args.borrowAssets,
                 shares: 0,
                 receiver: _args.borrower,
                 borrower: _args.borrower,
                 sameAsset: true
             }),
-            _totalCollateral.assets,
-            _totalDebt
-        );
+            _totalCollateralAssets: _totalCollateral.assets,
+            _totalDebt: _totalDebt
+        });
 
         _receiveCollateralOnLeverageSameAsset(collateralConfig, _args.depositAssets, borrowedAssets);
 
-        (, depositedShares) = SiloERC4626Lib.deposit(
-            address(0), // we are not transferring token
-            msg.sender,
-            _args.depositAssets,
-            0 /* _shares */,
-            _args.borrower,
-            _args.collateralType == ISilo.CollateralType.Collateral
+        (, depositedShares) = SiloERC4626Lib.deposit({
+            _token: address(0), // we are not transferring token
+            _depositor: msg.sender,
+            _assets: _args.depositAssets,
+            _shares: 0,
+            _receiver: _args.borrower,
+            _collateralShareToken: _args.collateralType == ISilo.CollateralType.Collateral
                 ? IShareToken(collateralConfig.collateralShareToken)
                 : IShareToken(collateralConfig.protectedShareToken),
-            _totalAssetsForDeposit
-        );
+            _totalCollateral: _totalAssetsForDeposit
+        });
+
+        _checkLTV(collateralConfig, debtConfig, _args.borrower);
 
         _shareStorage.siloConfig.turnOffReentrancyProtection();
 
@@ -267,62 +255,40 @@ library Actions {
 
     function transitionCollateral(
         ISilo.SharedStorage storage _shareStorage,
-        uint256 _shares,
-        address _owner,
-        ISilo.CollateralType _withdrawType,
-        mapping(uint256 assetType => ISilo.Assets) storage _total
+        mapping(uint256 assetType => ISilo.Assets) storage _total,
+        ISilo.TransitionCollateralArgs memory _args
     )
         external
         returns (uint256 assets, uint256 toShares)
     {
-        _hookCallBeforeTransitionCollateral(_shareStorage, _withdrawType, _shares, _owner);
+        _hookCallBeforeTransitionCollateral(_shareStorage, _args);
 
-        ISiloConfig.ConfigData memory collateralConfig = _shareStorage.siloConfig.accrueInterestAndGetConfig(
-            address(this)
-        );
+        ISiloConfig siloConfig = _shareStorage.siloConfig;
 
-        uint256 liquidity = _withdrawType == ISilo.CollateralType.Collateral
-            ? SiloMathLib.liquidity(_total[AssetTypes.COLLATERAL].assets, _total[AssetTypes.DEBT].assets)
-            : _total[AssetTypes.PROTECTED].assets;
+        siloConfig.turnOnReentrancyProtection();
+        siloConfig.accrueInterestForSilo(address(this));
 
-        address shareTokenFrom = _withdrawType == ISilo.CollateralType.Collateral
-            ? collateralConfig.collateralShareToken
-            : collateralConfig.protectedShareToken;
+        (address protectedShareToken, address collateralShareToken,) = siloConfig.getShareTokens(address(this));
 
-        (assets, _shares) = SiloERC4626Lib.transitionCollateralWithdraw(
-            shareTokenFrom,
-            _shares,
-            _owner,
-            msg.sender,
-            _withdrawType,
-            liquidity,
-            _total[uint256(_withdrawType)]
-        );
+        uint256 shares;
 
-        (ISilo.AssetType depositType, address shareTokenTo) = _withdrawType == ISilo.CollateralType.Collateral
-            ? (ISilo.AssetType.Protected, collateralConfig.protectedShareToken)
-            : (ISilo.AssetType.Collateral, collateralConfig.collateralShareToken);
+        (assets, shares) = _transitionCollateralWithdraw(_total, _args, protectedShareToken, collateralShareToken);
 
-        (assets, toShares) = SiloERC4626Lib.deposit(
-            address(0), // empty token because we don't want to transfer
-            _owner,
+        (assets, toShares) = _transitionCollateralDeposit(
+            _total,
+            _args,
             assets,
-            0, // shares
-            _owner,
-            IShareToken(shareTokenTo),
-            _total[uint256(depositType)]
+            protectedShareToken,
+            collateralShareToken
         );
 
         _shareStorage.siloConfig.turnOffReentrancyProtection();
 
-        _hookCallAfterTransitionCollateral(_shareStorage, _withdrawType, _shares, _owner, assets);
+        _hookCallAfterTransitionCollateral(_shareStorage, _args, shares, assets);
     }
 
-    function switchCollateralTo(
-        ISilo.SharedStorage storage _shareStorage,
-        bool _toSameAsset
-    ) external {
-        uint256 action = Hook.switchCollateralAction(_toSameAsset);
+    function switchCollateralTo(ISilo.SharedStorage storage _shareStorage) external {
+        uint256 action = Hook.SWITCH_COLLATERAL;
 
         if (_shareStorage.hooksBefore.matchAction(action)) {
             _shareStorage.hookReceiver.beforeAction(address(this), action, abi.encodePacked(msg.sender));
@@ -330,24 +296,16 @@ library Actions {
 
         ISiloConfig siloConfig = _shareStorage.siloConfig;
 
-        (
-            ISiloConfig.ConfigData memory collateralConfig,
-            ISiloConfig.ConfigData memory debtConfig,
-            ISiloConfig.DebtInfo memory debtInfo
-        ) = siloConfig.accrueInterestAndGetConfigs(address(this), msg.sender, action);
+        siloConfig.turnOnReentrancyProtection();
+        siloConfig.accrueInterestForBothSilos();
+        siloConfig.switchCollateralSilo(msg.sender);
 
-        if (collateralConfig.otherSilo != address(this)) {
-            ISilo(collateralConfig.otherSilo).accrueInterest();
-        }
+        ISiloConfig.ConfigData memory collateralConfig;
+        ISiloConfig.ConfigData memory debtConfig;
 
-        collateralConfig.callSolvencyOracleBeforeQuote();
-        debtConfig.callSolvencyOracleBeforeQuote();
+        (collateralConfig, debtConfig) = siloConfig.getConfigs(msg.sender);
 
-        bool msgSenderIsSolvent = SiloSolvencyLib.isSolvent(
-            collateralConfig, debtConfig, debtInfo, msg.sender, ISilo.AccrueInterestInMemory.No
-        );
-
-        if (!msgSenderIsSolvent) revert ISilo.NotSolvent();
+        _checkSolvency(collateralConfig, debtConfig, msg.sender);
 
         siloConfig.turnOffReentrancyProtection();
 
@@ -502,6 +460,93 @@ library Actions {
         IERC20(collateralConfig.token).safeTransferFrom(msg.sender, address(this), transferDiff);
     }
 
+    function _checkSolvency(
+        ISiloConfig.ConfigData memory collateralConfig,
+        ISiloConfig.ConfigData memory debtConfig,
+        address _user
+    ) private {
+        if (debtConfig.silo != collateralConfig.silo) {
+            collateralConfig.callSolvencyOracleBeforeQuote();
+            debtConfig.callSolvencyOracleBeforeQuote();
+        }
+
+        bool userIsSolvent = SiloSolvencyLib.isSolvent(
+            collateralConfig, debtConfig, _user, ISilo.AccrueInterestInMemory.No
+        );
+
+        if (!userIsSolvent) revert ISilo.NotSolvent();
+    }
+
+    function _checkLTV(
+        ISiloConfig.ConfigData memory _collateralConfig,
+        ISiloConfig.ConfigData memory _debtConfig,
+        address _borrower
+    ) private {
+        if (_collateralConfig.silo != _debtConfig.silo) {
+            _collateralConfig.callMaxLtvOracleBeforeQuote();
+            _debtConfig.callMaxLtvOracleBeforeQuote();
+        }
+
+        bool borrowerIsBelowMaxLtv = SiloSolvencyLib.isBelowMaxLtv(
+            _collateralConfig, _debtConfig, _borrower, ISilo.AccrueInterestInMemory.No
+        );
+
+        if (!borrowerIsBelowMaxLtv) revert ISilo.AboveMaxLtv();
+    }
+
+    function _transitionCollateralWithdraw(
+        mapping(uint256 assetType => ISilo.Assets) storage _total,
+        ISilo.TransitionCollateralArgs memory _args,
+        address _protectedShareToken,
+        address _collateralShareToken
+    ) private returns (uint256 assets, uint256 toShares) {
+        uint256 liquidity = _args.withdrawType == ISilo.CollateralType.Collateral
+            ? SiloMathLib.liquidity(_total[AssetTypes.COLLATERAL].assets, _total[AssetTypes.DEBT].assets)
+            : _total[AssetTypes.PROTECTED].assets;
+
+        address shareTokenFrom = _args.withdrawType == ISilo.CollateralType.Collateral
+            ? _collateralShareToken
+            : _protectedShareToken;
+
+        (assets, toShares) = SiloERC4626Lib.withdraw({
+            _asset: address(0), // empty token because we don't want to transfer
+            _shareToken: shareTokenFrom,
+            _args: ISilo.WithdrawArgs({
+                assets: 0,
+                shares: _args.shares,
+                owner: _args.owner,
+                receiver: _args.owner,
+                spender: msg.sender,
+                collateralType: _args.withdrawType
+            }),
+            _liquidity: liquidity,
+            _totalCollateral: _total[uint256(_args.withdrawType)]
+        });
+    }
+
+    function _transitionCollateralDeposit(
+        mapping(uint256 assetType => ISilo.Assets) storage _total,
+        ISilo.TransitionCollateralArgs memory _args,
+        uint256 _assets,
+        address _protectedShareToken,
+        address _collateralShareToken
+    ) private returns (uint256 assets, uint256 toShares) {
+        (ISilo.AssetType depositType, address shareTokenTo) = _args.withdrawType == ISilo.CollateralType.Collateral
+            ? (ISilo.AssetType.Protected, _protectedShareToken)
+            : (ISilo.AssetType.Collateral, _collateralShareToken);
+
+        (assets, toShares) = SiloERC4626Lib.deposit({
+            _token: address(0), // empty token because we don't want to transfer
+            _depositor: _args.owner,
+            _assets: _assets,
+            _shares: 0,
+            _receiver: _args.owner,
+            _collateralShareToken: IShareToken(shareTokenTo),
+            _totalCollateral: _total[uint256(depositType)]
+        
+        });
+    }
+
     function _hookCallBeforeWithdraw(
         ISilo.SharedStorage storage _shareStorage,
         ISilo.WithdrawArgs calldata _args
@@ -567,31 +612,28 @@ library Actions {
 
     function _hookCallBeforeTransitionCollateral(
         ISilo.SharedStorage storage _shareStorage,
-        ISilo.CollateralType _withdrawType,
-        uint256 _shares,
-        address _owner
+        ISilo.TransitionCollateralArgs memory _args
     ) private {
-        uint256 action = Hook.transitionCollateralAction(_withdrawType);
+        uint256 action = Hook.transitionCollateralAction(_args.withdrawType);
 
         if (!_shareStorage.hooksBefore.matchAction(action)) return;
 
-        bytes memory data = abi.encodePacked(_shares, _owner);
+        bytes memory data = abi.encodePacked(_args.shares, _args.owner);
 
         _shareStorage.hookReceiver.beforeAction(address(this), action, data);
     }
 
     function _hookCallAfterTransitionCollateral(
         ISilo.SharedStorage storage _shareStorage,
-        ISilo.CollateralType _withdrawType,
+        ISilo.TransitionCollateralArgs memory _args,
         uint256 _shares,
-        address _owner,
         uint256 _assets
     ) private {
-        uint256 action = Hook.transitionCollateralAction(_withdrawType);
+        uint256 action = Hook.transitionCollateralAction(_args.withdrawType);
 
         if (!_shareStorage.hooksAfter.matchAction(action)) return;
 
-        bytes memory data = abi.encodePacked(_shares, _owner, _assets);
+        bytes memory data = abi.encodePacked(_shares, _args.owner, _assets);
 
         _shareStorage.hookReceiver.afterAction(address(this), action, data);
     }

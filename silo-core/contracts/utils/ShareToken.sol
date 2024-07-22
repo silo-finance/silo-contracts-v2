@@ -286,8 +286,8 @@ abstract contract ShareToken is Initializable, ERC20Permit, IShareToken {
     function _callOracleBeforeQuote(address _user) internal virtual {
         (
             ISiloConfig.ConfigData memory collateralConfig,
-            ISiloConfig.ConfigData memory debtConfig,
-        ) = siloConfig.getConfigs(address(silo), _user, Hook.NONE);
+            ISiloConfig.ConfigData memory debtConfig
+        ) = siloConfig.getConfigs(_user);
 
         collateralConfig.callSolvencyOracleBeforeQuote();
         debtConfig.callSolvencyOracleBeforeQuote();

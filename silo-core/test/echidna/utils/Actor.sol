@@ -136,9 +136,9 @@ contract Actor is PropertiesAsserts, IERC3156FlashBorrower {
         _accountForOpenedPosition(withdrawType, _vaultZero, assets, _shares);
     }
 
-    function switchCollateralTo(bool _vaultZero, bool _sameAsset) external {
+    function switchCollateralTo(bool _vaultZero) external {
         Silo vault = _vaultZero ? vault0 : vault1;
-        vault.switchCollateralTo(_sameAsset);
+        vault.switchCollateralTo();
     }
 
     function leverageSameAsset(
@@ -169,8 +169,8 @@ contract Actor is PropertiesAsserts, IERC3156FlashBorrower {
     ) public {
         Silo vault = _prepareForLiquidationRepay(_vaultZeroWithDebt, debtToCover);
 
-        (ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig,) =
-            config.getConfigs(address(vault), borrower, 0 /* always 0 for external calls */);
+        (ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig) =
+            config.getConfigs(borrower);
 
         liquidationModule.liquidationCall(
             address(vault), collateralConfig.token, debtConfig.token, borrower, debtToCover, receiveSToken

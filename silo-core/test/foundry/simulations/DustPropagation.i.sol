@@ -219,9 +219,7 @@ contract DustPropagationTest is SiloLittleHelper, Test {
     }
 
     function _printState(string memory _title) private {
-        (
-            ISiloConfig.ConfigData memory collateralConfig,,
-        ) = siloConfig.getConfigs(address(silo0), BORROWER, 0 /* always 0 for external calls */);
+        ISiloConfig.ConfigData memory collateralConfig = siloConfig.getConfig(address(silo0));
 
         emit log_named_string("================ ", _title);
 
