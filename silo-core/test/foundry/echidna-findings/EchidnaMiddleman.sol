@@ -115,14 +115,14 @@ contract EchidnaMiddleman is EchidnaSetup {
         (bool isSolvent, ISilo siloWithDebt, ) = _invariant_insolventHasDebt(actor);
         assertFalse(isSolvent, "expect not solvent user");
 
-        (, uint256 debtToRepay) = partialLiquidation.maxLiquidation(address(siloWithDebt), actor);
+        (, uint256 debtToRepay) = partialLiquidation.maxLiquidation(actor);
 
         (address collateral, address debt) = __liquidationTokens(address(siloWithDebt));
 
         __prepareForLiquidationRepay(siloWithDebt, actor, debtToRepay);
 
         vm.prank(actor);
-        partialLiquidation.liquidationCall(address(siloWithDebt), debt, collateral, actor, debtToRepay, false);
+        partialLiquidation.liquidationCall(debt, collateral, actor, debtToRepay, false);
     }
 
     function __maxWithdraw_correctMax(uint8 _actor) internal {
@@ -302,13 +302,13 @@ contract EchidnaMiddleman is EchidnaSetup {
         (bool isSolvent, ISilo siloWithDebt,) = _invariant_insolventHasDebt(actor);
         assertFalse(isSolvent, "expect not solvent user");
 
-        (, uint256 debtToRepay) = partialLiquidation.maxLiquidation(address(siloWithDebt), actor);
+        (, uint256 debtToRepay) = partialLiquidation.maxLiquidation(actor);
         (address collateral, address debt) = __liquidationTokens(address(siloWithDebt));
 
         __prepareForLiquidationRepay(siloWithDebt, actor, debtToRepay);
 
         vm.prank(actor);
-        partialLiquidation.liquidationCall(address(siloWithDebt), debt, collateral, actor, debtToRepay, _receiveShares);
+        partialLiquidation.liquidationCall(debt, collateral, actor, debtToRepay, _receiveShares);
     }
 
     function __debtSharesNeverLargerThanDebt() internal {
@@ -431,10 +431,10 @@ contract EchidnaMiddleman is EchidnaSetup {
 
         assertFalse(isSolvent, "expect user to be solvent, not solvent should be ignored by echidna");
 
-        (, uint256 debtToRepay) = partialLiquidation.maxLiquidation(address(siloWithDebt), address(actor));
+        (, uint256 debtToRepay) = partialLiquidation.maxLiquidation(address(actor));
         (address collateral, address debt) = __liquidationTokens(address(siloWithDebt));
 
-        try partialLiquidation.liquidationCall(address(siloWithDebt), debt, collateral, actor, debtToRepay, _receiveShares) {
+        try partialLiquidation.liquidationCall(debt, collateral, actor, debtToRepay, _receiveShares) {
             emit log("Solvent user liquidated!");
             assertTrue(false, "Solvent user liquidated!");
         } catch {
@@ -450,7 +450,7 @@ contract EchidnaMiddleman is EchidnaSetup {
 
         assertFalse(isSolvent, "expect not solvent user");
 
-        (, uint256 debtToRepay) = partialLiquidation.maxLiquidation(address(siloWithDebt), address(actor));
+        (, uint256 debtToRepay) = partialLiquidation.maxLiquidation(address(actor));
         assertFalse(isSolvent, "expect user to be not insolvent");
 
         uint256 ltvBefore = siloWithCollateral.getLtv(address(actor));
@@ -464,7 +464,7 @@ contract EchidnaMiddleman is EchidnaSetup {
         uint256 maxPartialRepayValue = maxRepay * PartialLiquidationLib._DEBT_DUST_LEVEL / 1e18;
 
         (address collateral, address debt) = __liquidationTokens(address(siloWithDebt));
-        partialLiquidation.liquidationCall(address(siloWithDebt), debt, collateral, actor, debtToRepay, false);
+        partialLiquidation.liquidationCall(debt, collateral, actor, debtToRepay, false);
 
         uint256 ltvAfter = siloWithDebt.getLtv(address(actor));
         emit log_named_decimal_uint("afterLtv:", ltvAfter, 16);
@@ -493,11 +493,11 @@ contract EchidnaMiddleman is EchidnaSetup {
         uint256 lt = siloWithDebt.getLt();
         uint256 ltv = siloWithDebt.getLtv(address(actor));
 
-        (, uint256 debtToRepay) = partialLiquidation.maxLiquidation(address(siloWithDebt), address(actor));
+        (, uint256 debtToRepay) = partialLiquidation.maxLiquidation(address(actor));
 
         (address collateral, address debt) = __liquidationTokens(address(siloWithDebt));
 
-        try partialLiquidation.liquidationCall(address(siloWithDebt), debt, collateral, actor, debtToRepay, _receiveShares) {
+        try partialLiquidation.liquidationCall(debt, collateral, actor, debtToRepay, _receiveShares) {
             emit log_named_decimal_uint("User LTV:", ltv, 16);
             emit log_named_decimal_uint("Liq Threshold:", lt, 16);
             emit log("User liquidated!");

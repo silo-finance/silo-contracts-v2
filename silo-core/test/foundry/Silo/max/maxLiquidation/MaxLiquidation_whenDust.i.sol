@@ -95,7 +95,7 @@ contract MaxLiquidationDustTest is MaxLiquidationCommon {
     {
         (
             uint256 collateralToLiquidate, uint256 debtToRepay
-        ) = partialLiquidation.maxLiquidation(address(silo1), borrower);
+        ) = partialLiquidation.maxLiquidation(borrower);
 
         emit log_named_decimal_uint("[_executeMaxPartialDustLiquidation] ltv before", silo0.getLtv(borrower), 16);
         emit log_named_uint("[_executeMaxPartialDustLiquidation] debtToRepay", debtToRepay);
@@ -105,7 +105,6 @@ contract MaxLiquidationDustTest is MaxLiquidationCommon {
         uint256 debtToCover = debtToRepay % 2 == 0 ? type(uint256).max : debtToRepay;
 
         (withdrawCollateral, repayDebtAssets) = partialLiquidation.liquidationCall(
-            address(silo1),
             address(_sameToken ? token1 : token0),
             address(token1),
             borrower,

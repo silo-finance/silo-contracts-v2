@@ -173,7 +173,7 @@ contract Actor is PropertiesAsserts, IERC3156FlashBorrower {
             config.getConfigs(borrower);
 
         liquidationModule.liquidationCall(
-            address(vault), collateralConfig.token, debtConfig.token, borrower, debtToCover, receiveSToken
+            collateralConfig.token, debtConfig.token, borrower, debtToCover, receiveSToken
         );
     }
 
