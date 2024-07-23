@@ -40,6 +40,8 @@ abstract contract MaxLiquidationCommon is SiloLittleHelper, Test {
             _depositCollateral(_collateral, borrower, false /* to silo 1 */);
             _borrow(_toBorrow, borrower);
         } else {
+            _depositForBorrow(_collateral, depositor);
+
             vm.prank(borrower);
             token1.mint(borrower, _collateral);
 
