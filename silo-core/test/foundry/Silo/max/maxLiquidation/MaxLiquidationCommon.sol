@@ -264,7 +264,8 @@ abstract contract MaxLiquidationCommon is SiloLittleHelper, Test {
                 revert("#2 calculation of maxDebtToCover should never return assets that will generate zero shares");
             }
 
-            return _debtToCover == minAssets ? minAssets : _debtToCover - minAssets;
+            uint256 almostEverything = _debtToCover < minAssets ? minAssets : _debtToCover - minAssets;
+            return almostEverything < minAssets ? minAssets : almostEverything;
         } else revert("this should never happen");
     }
 
