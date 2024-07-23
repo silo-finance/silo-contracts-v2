@@ -19,7 +19,7 @@ contract RepaySharesFullAccrueInterestGasTest is Gas, Test {
 
         vm.startPrank(BORROWER);
         silo0.deposit(ASSETS * 10, BORROWER);
-        silo1.borrow(ASSETS, BORROWER, BORROWER, false /* sameAsset */);
+        silo1.borrow(ASSETS, BORROWER, BORROWER);
         vm.stopPrank();
 
         vm.warp(block.timestamp + 1 days);

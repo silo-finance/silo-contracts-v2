@@ -37,12 +37,19 @@ contract DustPropagationTest is SiloLittleHelper, Test {
         _printState("initial state");
 
         // we cresting debt on silo0, because lt there is 85 and in silo0 95, so it is easier to test because of dust
-        _depositCollateral(COLLATERAL, BORROWER, !SAME_TOKEN);
-        _printState("after deposit collateral");
+        vm.prank(BORROWER);
+        token0.mint(BORROWER, COLLATERAL);
 
         vm.prank(BORROWER);
-        silo0.borrow(DEBT, BORROWER, BORROWER, SAME_TOKEN);
-        _printState("after borrow");
+        token0.approve(address(silo0), COLLATERAL);
+
+        vm.prank(BORROWER);
+        silo0.leverageSameAsset(
+            COLLATERAL,
+            DEBT,
+            BORROWER,
+            ISilo.CollateralType.Collateral
+        );
 
         uint256 timeForward = 120 days;
         vm.warp(block.timestamp + timeForward);

@@ -90,11 +90,9 @@ contract TransitionCollateralReentrancyTest is SiloLittleHelper, Test, PartialLi
     */
     function test_transitionCollateral2protected_liquidationReverts() public {
         address borrower = makeAddr("borrower");
-        bool sameAsset;
-
         _depositForBorrow(5, makeAddr("depositor"));
         uint256 depositedShares = _deposit(10, borrower);
-        _borrow(5, borrower, sameAsset);
+        _borrow(5, borrower);
 
         vm.prank(borrower);
         silo0.transitionCollateral(depositedShares / 2, borrower, ISilo.CollateralType.Collateral);

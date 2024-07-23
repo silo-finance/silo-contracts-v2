@@ -109,7 +109,7 @@ contract PreviewWithdrawTest is SiloLittleHelper, Test {
         }
 
         vm.prank(borrower);
-        silo0.borrow(_assetsOrShares / 2 == 0 ? 1 : _assetsOrShares / 2, borrower, borrower, false /* sameAsset */);
+        silo0.borrow(_assetsOrShares / 2 == 0 ? 1 : _assetsOrShares / 2, borrower, borrower);
 
         if (_interest) vm.warp(block.timestamp + 100 days);
 

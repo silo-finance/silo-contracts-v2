@@ -60,28 +60,21 @@ contract DustPropagationLoopTest is SiloLittleHelper, Test {
     forge test -vv --ffi --mt test__skip__dustPropagation_deposit_borrow_noInterest_oneBorrowers
     */
     function test__skip__dustPropagation_deposit_borrow_noInterest_oneBorrowers() public {
-        _dustPropagation_deposit_borrow(INIT_ASSETS, 1, 0, true);
+        _dustPropagation_deposit_borrow(INIT_ASSETS, 1, 0);
     }
 
     /*
     forge test -vv --ffi --mt test__skip__dustPropagation_deposit_borrow_noInterest_borrowers
     */
     function test__skip__dustPropagation_deposit_borrow_noInterest_borrowers() public {
-        _dustPropagation_deposit_borrow(INIT_ASSETS, 3, 0, true);
+        _dustPropagation_deposit_borrow(INIT_ASSETS, 3, 0);
     }
 
     /*
     forge test -vv --ffi --mt test__skip__dustPropagation_deposit_borrow_withInterest_borrowers
     */
     function test__skip__dustPropagation_deposit_borrow_withInterest_borrowers_1token() public {
-        _dustPropagation_deposit_borrow(INIT_ASSETS, 3, 60 * 60 * 24, true);
-    }
-
-    /*
-    forge test -vv --ffi --mt test__skip__dustPropagation_deposit_borrow_withInterest_borrowers
-    */
-    function test__skip__dustPropagation_deposit_borrow_withInterest_borrowers_2tokens() public {
-        _dustPropagation_deposit_borrow(INIT_ASSETS, 3000, 60 * 60 * 24, false);
+        _dustPropagation_deposit_borrow(INIT_ASSETS, 3, 60 * 60 * 24);
     }
 
     /// @dev for delay of 1 day, this test can handle up to 3K borrowers, because each borrow make +1 day
@@ -91,20 +84,17 @@ contract DustPropagationLoopTest is SiloLittleHelper, Test {
     function _dustPropagation_deposit_borrow(
         uint256 _assets,
         uint16 _borrowers,
-        uint24 _moveForwardSec,
-        bool _sameAsset
+        uint24 _moveForwardSec
     ) private {
         for (uint256 b = 1; b <= _borrowers; b++) {
             address borrower = makeAddr(string.concat("borrower", b.toString()));
             address depositor = makeAddr(string.concat("depositor", b.toString()));
 
-            _depositCollateral(_assets / b, borrower, _sameAsset);
+            _deposit(_assets / b, borrower);
 
-            if (!_sameAsset) {
-                _depositForBorrow(_assets, depositor);
-            }
+            _depositForBorrow(_assets, depositor);
 
-            _borrow(_assets / b / 2, borrower, _sameAsset);
+            _borrow(_assets / b / 2, borrower);
 
             if (_moveForwardSec > 0) {
                 vm.warp(block.timestamp + _moveForwardSec);
@@ -118,7 +108,7 @@ contract DustPropagationLoopTest is SiloLittleHelper, Test {
             uint256 debt = silo1.maxRepay(borrower);
             _repay(debt, borrower);
 
-            ISilo collateralSilo = _sameAsset ? silo1 : silo0;
+            ISilo collateralSilo = silo0;
             uint256 maxShares = collateralSilo.maxRedeem(borrower);
 
             vm.prank(borrower);

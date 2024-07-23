@@ -29,7 +29,7 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
     uint256 constant COLLATERAL = 10e18;
     uint256 constant COLLATERAL_FOR_BORROW = 8e18;
     uint256 constant DEBT = 7.5e18;
-    bool constant SAME_TOKEN = true;
+    bool constant TO_SILO_1 = true;
 
     ISiloConfig siloConfig;
     uint256 debtStart;
@@ -43,8 +43,8 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
         _depositForBorrow(COLLATERAL_FOR_BORROW, DEPOSITOR);
         emit log_named_decimal_uint("COLLATERAL_FOR_BORROW", COLLATERAL_FOR_BORROW, 18);
 
-        _depositCollateral(COLLATERAL, BORROWER, !SAME_TOKEN);
-        _borrow(DEBT, BORROWER, !SAME_TOKEN);
+        _depositCollateral(COLLATERAL, BORROWER, !TO_SILO_1);
+        _borrow(DEBT, BORROWER);
         emit log_named_decimal_uint("DEBT", DEBT, 18);
         debtStart = block.timestamp;
 

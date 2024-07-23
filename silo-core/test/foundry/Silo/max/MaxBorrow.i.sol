@@ -36,18 +36,10 @@ contract MaxBorrowTest is SiloLittleHelper, Test {
     forge test -vv --ffi --mt test_maxBorrow_noCollateral
     */
     function test_maxBorrow_noCollateral() public {
-        bool sameAsset;
-        uint256 maxBorrow = silo1.maxBorrow(borrower, sameAsset);
+        uint256 maxBorrow = silo1.maxBorrow(borrower);
         assertEq(maxBorrow, 0, "no collateral - no borrow");
 
-        _assertWeCanNotBorrowAboveMax(0, sameAsset);
-
-        sameAsset = true;
-
-        maxBorrow = silo1.maxBorrow(borrower, sameAsset);
-        assertEq(maxBorrow, 0, "no collateral - no borrow");
-
-        _assertWeCanNotBorrowAboveMax(0, sameAsset);
+        _assertWeCanNotBorrowAboveMax(0);
     }
 
     /*
@@ -59,51 +51,32 @@ contract MaxBorrowTest is SiloLittleHelper, Test {
     ) public {
         // uint128 _collateral = 401;
         // uint128 _liquidity = 1;
-        _maxBorrow_withCollateral_fuzz(_collateral, _liquidity, ISilo.CollateralType.Collateral, SAME_ASSET);
+        _maxBorrow_withCollateral_fuzz(_collateral, _liquidity, ISilo.CollateralType.Collateral);
     }
 
     /// forge-config: core-test.fuzz.runs = 1000
     function test_maxBorrow_withCollateral_protected_1token_fuzz(
         uint128 _collateral, uint128 _liquidity
     ) public {
-        _maxBorrow_withCollateral_fuzz(_collateral, _liquidity, ISilo.CollateralType.Protected, SAME_ASSET);
-    }
-
-    /// forge-config: core-test.fuzz.runs = 1000
-    function test_maxBorrow_withCollateral_2tokens_fuzz(
-        uint128 _collateral, uint128 _liquidity
-    ) public {
-        // uint128 _collateral = 401;
-        // uint128 _liquidity = 1;
-        _maxBorrow_withCollateral_fuzz(_collateral, _liquidity, ISilo.CollateralType.Collateral, TWO_ASSETS);
-    }
-
-    /// forge-config: core-test.fuzz.runs = 1000
-    function test_maxBorrow_withCollateral_protected_2tokens_fuzz(
-        uint128 _collateral, uint128 _liquidity
-    ) public {
-        _maxBorrow_withCollateral_fuzz(_collateral, _liquidity, ISilo.CollateralType.Protected, TWO_ASSETS);
+        _maxBorrow_withCollateral_fuzz(_collateral, _liquidity, ISilo.CollateralType.Protected);
     }
 
     function _maxBorrow_withCollateral_fuzz(
         uint128 _collateral,
         uint128 _liquidity,
-        ISilo.CollateralType _collateralType,
-        bool _sameAsset
+        ISilo.CollateralType _collateralType
     ) internal returns (uint256 maxBorrow) {
         vm.assume(_liquidity > 0);
         vm.assume(_collateral > 0);
 
-        emit log_named_string("_sameAsset", _sameAsset ? "yes" : "no");
-
         _depositForBorrow(_liquidity, depositor);
-        _depositCollateral(_collateral, borrower, _sameAsset, _collateralType);
+        _deposit(_collateral, borrower, _collateralType);
 
-        maxBorrow = silo1.maxBorrow(borrower, _sameAsset);
+        maxBorrow = silo1.maxBorrow(borrower);
         emit log_named_decimal_uint("maxBorrow", maxBorrow, 18);
 
-        _assertWeCanNotBorrowAboveMax(maxBorrow, 2, _sameAsset);
-        _assertMaxBorrowIsZeroAtTheEnd(_sameAsset);
+        _assertWeCanNotBorrowAboveMax(maxBorrow, 2);
+        _assertMaxBorrowIsZeroAtTheEnd();
     }
 
     /*
@@ -115,32 +88,32 @@ contract MaxBorrowTest is SiloLittleHelper, Test {
 
         _deposit(_collateral, borrower);
 
-        _assertMaxBorrowIsZeroAtTheEnd(TWO_ASSETS);
+        _assertMaxBorrowIsZeroAtTheEnd();
     }
 
     /*
     forge test -vv --ffi --mt test_maxBorrow_withDebt
     */
     /// forge-config: core-test.fuzz.runs = 1000
-    function test_maxBorrow_withDebt_fuzz(uint128 _collateral, uint128 _liquidity, bool _sameAsset) public {
+    function test_maxBorrow_withDebt_fuzz(uint128 _collateral, uint128 _liquidity) public {
         vm.assume(_collateral > 0);
         vm.assume(_liquidity > 0);
 
-        _depositCollateral(_collateral, borrower, _sameAsset);
+        _deposit(_collateral, borrower);
         _depositForBorrow(_liquidity, depositor);
 
-        uint256 maxBorrow = silo1.maxBorrow(borrower, _sameAsset);
+        uint256 maxBorrow = silo1.maxBorrow(borrower);
 
         uint256 firstBorrow = maxBorrow / 3;
         vm.assume(firstBorrow > 0);
-        _borrow(firstBorrow, borrower, _sameAsset);
+        _borrow(firstBorrow, borrower);
 
         // now we have debt
 
-        maxBorrow = silo1.maxBorrow(borrower, _sameAsset);
-        _assertWeCanNotBorrowAboveMax(maxBorrow, 2, _sameAsset);
+        maxBorrow = silo1.maxBorrow(borrower);
+        _assertWeCanNotBorrowAboveMax(maxBorrow, 2);
 
-        _assertMaxBorrowIsZeroAtTheEnd(_sameAsset);
+        _assertMaxBorrowIsZeroAtTheEnd();
     }
 
     /*
@@ -149,55 +122,34 @@ contract MaxBorrowTest is SiloLittleHelper, Test {
     /// forge-config: core-test.fuzz.runs = 1000
     function test_maxBorrow_withInterest_fuzz(
         uint128 _collateral,
-        uint128 _liquidity,
-        bool _sameAsset
+        uint128 _liquidity
     ) public {
 //         (
-//             uint128 _collateral, uint128 _liquidity, bool _sameAsset
+//             uint128 _collateral, uint128 _liquidity
 //         ) = (340282366920938463463374607431768211453, 88042, true);
 
         vm.assume(_collateral > 0);
         vm.assume(_liquidity > 0);
 
-        _depositCollateral(_collateral, borrower, _sameAsset);
+        _deposit(_collateral, borrower);
         _depositForBorrow(_liquidity, depositor);
 
-        uint256 maxBorrow = silo1.maxBorrow(borrower, _sameAsset);
+        uint256 maxBorrow = silo1.maxBorrow(borrower);
 
         uint256 firstBorrow = maxBorrow / 3;
         emit log_named_uint("firstBorrow", firstBorrow);
         vm.assume(firstBorrow > 0);
-        _borrow(firstBorrow, borrower, _sameAsset);
+        _borrow(firstBorrow, borrower);
 
         // now we have interest
         vm.warp(block.timestamp + 100 days);
 
-        maxBorrow = silo1.maxBorrow(borrower, _sameAsset);
+        maxBorrow = silo1.maxBorrow(borrower);
         emit log_named_uint("maxBorrow", maxBorrow);
 
-        _assertWeCanNotBorrowAboveMax(maxBorrow, 4, _sameAsset);
+        _assertWeCanNotBorrowAboveMax(maxBorrow, 4);
 
-        _assertMaxBorrowIsZeroAtTheEnd(1, _sameAsset);
-    }
-
-    /*
-    forge test -vv --ffi --mt test_maxBorrow_repayWithInterest_
-    */
-    /// forge-config: core-test.fuzz.runs = 5000
-    function test_maxBorrow_repayWithInterest_2tokens_fuzz(
-        uint64 _collateral,
-        uint128 _liquidity
-    ) public {
-        // (uint64 _collateral, uint128 _liquidity) = (5, 1);
-        _maxBorrow_repayWithInterest_fuzz(_collateral, _liquidity, ISilo.CollateralType.Collateral, TWO_ASSETS);
-    }
-
-    /// forge-config: core-test.fuzz.runs = 5000
-    function test_maxBorrow_repayWithInterest_2tokens_protected_fuzz(
-        uint64 _collateral,
-        uint128 _liquidity
-    ) public {
-        _maxBorrow_repayWithInterest_fuzz(_collateral, _liquidity, ISilo.CollateralType.Protected, TWO_ASSETS);
+        _assertMaxBorrowIsZeroAtTheEnd(1);
     }
 
     function test_maxBorrow_repayWithInterest_1token_fuzz(
@@ -205,34 +157,33 @@ contract MaxBorrowTest is SiloLittleHelper, Test {
         uint128 _liquidity
     ) public {
         // (uint64 _collateral, uint128 _liquidity) = (5, 1);
-        _maxBorrow_repayWithInterest_fuzz(_collateral, _liquidity, ISilo.CollateralType.Collateral, SAME_ASSET);
+        _maxBorrow_repayWithInterest_fuzz(_collateral, _liquidity, ISilo.CollateralType.Collateral);
     }
 
     function test_maxBorrow_repayWithInterest_1token_protected_fuzz(
         uint64 _collateral,
         uint128 _liquidity
     ) public {
-        _maxBorrow_repayWithInterest_fuzz(_collateral, _liquidity, ISilo.CollateralType.Protected, SAME_ASSET);
+        _maxBorrow_repayWithInterest_fuzz(_collateral, _liquidity, ISilo.CollateralType.Protected);
     }
 
     function _maxBorrow_repayWithInterest_fuzz(
         uint64 _collateral,
         uint128 _liquidity,
-        ISilo.CollateralType _collateralType,
-        bool _sameAsset
+        ISilo.CollateralType _collateralType
     ) internal {
         vm.assume(_collateral > 0);
         vm.assume(_liquidity > 0);
 
-        _depositCollateral(_collateral, borrower, _sameAsset, _collateralType);
+        _deposit(_collateral, borrower, _collateralType);
         _depositForBorrow(_liquidity, depositor);
 
-        uint256 maxBorrow = silo1.maxBorrow(borrower, _sameAsset);
+        uint256 maxBorrow = silo1.maxBorrow(borrower);
 
         uint256 firstBorrow = maxBorrow / 3;
         emit log_named_uint("firstBorrow", firstBorrow);
         vm.assume(firstBorrow > 0);
-        _borrow(firstBorrow, borrower, _sameAsset);
+        _borrow(firstBorrow, borrower);
 
         // now we have debt
         vm.warp(block.timestamp + 100 days);
@@ -251,48 +202,40 @@ contract MaxBorrowTest is SiloLittleHelper, Test {
 
         // maybe we have some debt left, maybe not
 
-        maxBorrow = silo1.maxBorrow(borrower, _sameAsset);
+        maxBorrow = silo1.maxBorrow(borrower);
         assertGt(maxBorrow, 0, "we can borrow again after repay");
 
-        _assertWeCanNotBorrowAboveMax(maxBorrow, 4, _sameAsset);
-        _assertMaxBorrowIsZeroAtTheEnd(1, _sameAsset);
+        _assertWeCanNotBorrowAboveMax(maxBorrow, 4);
+        _assertMaxBorrowIsZeroAtTheEnd(1);
     }
 
     /*
     forge test -vv --ffi --mt test_maxBorrow_maxOut
     // this is test from echidna findings
     */
-    function test_maxBorrow_maxOut_2tokens() public {
-        _maxBorrow_maxOut(TWO_ASSETS);
-    }
-
     function test_maxBorrow_maxOut_1token() public {
-        _maxBorrow_maxOut(SAME_ASSET);
-    }
-
-    function _maxBorrow_maxOut(bool _sameAsset) internal {
         address user0 = makeAddr("user0");
         address user1 = makeAddr("user1");
         address user2 = makeAddr("user2");
 
-        emit log("User 1 deposits 54901887191424375183106916902 assets into Silo 2");
-        _depositCollateral(54901887191424375183106916902, user1, !_sameAsset);
+        emit log("User 1 deposits 54901887191424375183106916902 assets into Silo 1");
+        _depositCollateral(54901887191424375183106916902, user1, true);
 
-        emit log("User 0 deposits 37778931862957161709569 assets into Silo 1");
+        emit log("User 0 deposits 37778931862957161709569 assets into Silo 0");
         _deposit(37778931862957161709569, user0);
 
-        emit log("User 2 mints 57553484963063775982514231325194206610732636 shares from Silo 2");
+        emit log("User 2 mints 57553484963063775982514231325194206610732636 shares from Silo 1");
 
-        _sameAsset ? token0.setOnDemand(true) : token1.setOnDemand(true);
-        _mintCollateral(1, 57553484963063775982514231325194206610732636, user2, !_sameAsset);
-        _sameAsset ? token0.setOnDemand(false) : token1.setOnDemand(false);
+        token1.setOnDemand(true);
+        _mintCollateral(1, 57553484963063775982514231325194206610732636, user2, true);
+        token1.setOnDemand(false);
 
-        emit log_named_uint("User 1 max borrow on silo1", silo0.maxBorrow(user1, _sameAsset));
-        emit log_named_uint("User 1 max borrow on silo2", silo1.maxBorrow(user1, _sameAsset));
+        emit log_named_uint("User 1 max borrow on silo0", silo0.maxBorrow(user1));
+        emit log_named_uint("User 1 max borrow on silo1", silo1.maxBorrow(user1));
 
         emit log("User 1 borrows the maximum returned from maxBorrow from Silo 1");
         vm.startPrank(user1);
-        silo0.borrow(silo0.maxBorrow(user1, _sameAsset), user1, user1, _sameAsset);
+        silo0.borrow(silo0.maxBorrow(user1), user1, user1);
         vm.stopPrank();
 
         vm.warp(block.timestamp + 41);
@@ -307,20 +250,20 @@ contract MaxBorrowTest is SiloLittleHelper, Test {
         silo0.accrueInterest();
         assertEq(liquidity, silo0.getLiquidity());
 
-        uint256 maxBorrow = silo0.maxBorrow(user2, _sameAsset);
+        uint256 maxBorrow = silo0.maxBorrow(user2);
         emit log_named_uint("user2 maxBorrow", maxBorrow);
 
         emit log("User 2 attempts to borrow maxBorrow assets, it should NOT fail with AboveMaxLtv()");
         vm.prank(user2);
-        silo0.borrow(maxBorrow, user2, user2, _sameAsset); // expect to pass
+        silo0.borrow(maxBorrow, user2, user2); // expect to pass
     }
 
-    function _assertWeCanNotBorrowAboveMax(uint256 _maxBorrow, bool _sameAsset) internal {
-        _assertWeCanNotBorrowAboveMax(_maxBorrow, 1, _sameAsset);
+    function _assertWeCanNotBorrowAboveMax(uint256 _maxBorrow) internal {
+        _assertWeCanNotBorrowAboveMax(_maxBorrow, 1);
     }
 
     /// @param _precision is needed because we count for precision error and we allow for 1 wei diff
-    function _assertWeCanNotBorrowAboveMax(uint256 _maxBorrow, uint256 _precision, bool _sameAsset) internal {
+    function _assertWeCanNotBorrowAboveMax(uint256 _maxBorrow, uint256 _precision) internal {
         emit log_named_uint("------- QA: _assertWeCanNotBorrowAboveMax +/-", _precision);
 
         uint256 toBorrow = _maxBorrow + _precision;
@@ -331,7 +274,7 @@ contract MaxBorrowTest is SiloLittleHelper, Test {
         emit log_named_decimal_uint("[_assertWeCanNotBorrowAboveMax]  toBorrow", toBorrow, 18);
 
         vm.prank(borrower);
-        try silo1.borrow(toBorrow, borrower, borrower, _sameAsset) returns (uint256) {
+        try silo1.borrow(toBorrow, borrower, borrower) returns (uint256) {
             revert("we expect tx to be reverted for _maxBorrow + _precision!");
         } catch (bytes memory data) {
             bytes4 errorType = bytes4(data);
@@ -359,18 +302,18 @@ contract MaxBorrowTest is SiloLittleHelper, Test {
 
             if (_maxBorrow > liquidity) revert("max borrow returns higher number than available liquidity");
 
-            _borrow(_maxBorrow, borrower, _sameAsset);
+            _borrow(_maxBorrow, borrower);
         }
     }
 
-    function _assertMaxBorrowIsZeroAtTheEnd(bool _sameAsset) internal {
-        _assertMaxBorrowIsZeroAtTheEnd(0, _sameAsset);
+    function _assertMaxBorrowIsZeroAtTheEnd() internal {
+        _assertMaxBorrowIsZeroAtTheEnd(0);
     }
 
-    function _assertMaxBorrowIsZeroAtTheEnd(uint256 _underestimatedBy, bool _sameAsset) internal {
+    function _assertMaxBorrowIsZeroAtTheEnd(uint256 _underestimatedBy) internal {
         emit log_named_uint("================ _assertMaxBorrowIsZeroAtTheEnd ================ +/-", _underestimatedBy);
 
-        uint256 maxBorrow = silo1.maxBorrow(borrower, _sameAsset);
+        uint256 maxBorrow = silo1.maxBorrow(borrower);
 
         assertLe(
             maxBorrow,

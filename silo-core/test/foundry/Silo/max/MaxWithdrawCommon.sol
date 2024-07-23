@@ -26,17 +26,17 @@ contract MaxWithdrawCommon is SiloLittleHelper, Test {
         borrower = makeAddr("Borrower");
     }
 
-    function _createDebtOnSilo1(uint256 _collateral, uint256 _toBorrow, bool _sameAsset) internal {
+    function _createDebtOnSilo1(uint256 _collateral, uint256 _toBorrow) internal {
         vm.assume(_toBorrow > 0);
         vm.assume(_collateral > _toBorrow);
 
         _depositForBorrow(_collateral, depositor);
-        _depositCollateral(_collateral, borrower, _sameAsset);
-        uint256 maxBorrow = silo1.maxBorrow(borrower, _sameAsset);
+        _deposit(_collateral, borrower);
+        uint256 maxBorrow = silo1.maxBorrow(borrower);
         vm.assume(maxBorrow > 0);
 
         uint256 assets = _toBorrow > maxBorrow ? maxBorrow : _toBorrow;
-        _borrow(assets, borrower, _sameAsset);
+        _borrow(assets, borrower);
 
         emit log_named_uint("[_createDebtSilo1] _collateral", _collateral);
         emit log_named_uint("[_createDebtSilo1] maxBorrow", maxBorrow);
@@ -49,20 +49,20 @@ contract MaxWithdrawCommon is SiloLittleHelper, Test {
         _ensureBorrowerHasDebt(silo1, borrower);
     }
 
-    function _createDebtOnSilo0(uint256 _collateral, uint256 _toBorrow, bool _sameAsset) internal {
+    function _createDebtOnSilo0(uint256 _collateral, uint256 _toBorrow) internal {
         vm.assume(_toBorrow > 0);
         vm.assume(_collateral > _toBorrow);
 
         address otherBorrower = makeAddr("some other borrower");
 
         _deposit(_collateral, depositor);
-        _depositCollateral(_collateral, otherBorrower, !_sameAsset);
-        uint256 maxBorrow = silo0.maxBorrow(otherBorrower, _sameAsset);
+        _depositForBorrow(_collateral, otherBorrower);
+        uint256 maxBorrow = silo0.maxBorrow(otherBorrower);
         vm.assume(maxBorrow > 0);
 
         uint256 assets = _toBorrow > maxBorrow ? maxBorrow : _toBorrow;
         vm.prank(otherBorrower);
-        silo0.borrow(assets, otherBorrower, otherBorrower, _sameAsset);
+        silo0.borrow(assets, otherBorrower, otherBorrower);
 
         emit log_named_uint("[_createDebtSilo0] _collateral", _collateral);
         emit log_named_uint("[_createDebtSilo0] maxBorrow", maxBorrow);

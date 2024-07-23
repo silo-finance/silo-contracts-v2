@@ -23,7 +23,6 @@ contract BeforeQuoteTest is SiloLittleHelper, Test {
     uint256 depositAssets = 1e18;
     uint256 borrowAmount = 0.3e18;
     uint256 withdrawAmount = 0.1e18;
-    bool sameAsset = false;
 
     address borrower;
     address depositor;
@@ -72,7 +71,7 @@ contract BeforeQuoteTest is SiloLittleHelper, Test {
         // notice: we calling oracle0 with `borrowAmount` because we borrowing token0, so this is our debt token
         _expectCallsToMaxLtvOracle(borrowAmount);
 
-        silo0.borrow(borrowAmount, borrower, borrower, sameAsset);
+        silo0.borrow(borrowAmount, borrower, borrower);
     }
 
     /*
@@ -84,7 +83,7 @@ contract BeforeQuoteTest is SiloLittleHelper, Test {
         // notice: we calling oracle0 with `depositAssets` because we borrow token1 and depositAssets is our collateral
         _expectCallsToMaxLtvOracle(depositAssets);
 
-        silo1.borrow(borrowAmount, borrower, borrower, sameAsset);
+        silo1.borrow(borrowAmount, borrower, borrower);
     }
 
     /*
@@ -94,7 +93,7 @@ contract BeforeQuoteTest is SiloLittleHelper, Test {
         _setupForBorrow0();
 
         _expectCallsToMaxLtvOracle(borrowAmount);
-        silo0.borrow(borrowAmount, borrower, borrower, sameAsset);
+        silo0.borrow(borrowAmount, borrower, borrower);
 
         _expectCallsToSolvencyOracle(borrowAmount);
         silo1.withdraw(withdrawAmount, borrower, borrower);
@@ -107,7 +106,7 @@ contract BeforeQuoteTest is SiloLittleHelper, Test {
         _setupForBorrow1();
 
         _expectCallsToMaxLtvOracle(depositAssets);
-        silo1.borrow(borrowAmount, borrower, borrower, sameAsset);
+        silo1.borrow(borrowAmount, borrower, borrower);
 
         _expectCallsToSolvencyOracle(depositAssets - withdrawAmount);
         silo0.withdraw(withdrawAmount, borrower, borrower);
@@ -120,7 +119,7 @@ contract BeforeQuoteTest is SiloLittleHelper, Test {
         _setupForBorrow0();
 
         _expectCallsToMaxLtvOracle(borrowAmount);
-        silo0.borrow(borrowAmount, borrower, borrower, sameAsset);
+        silo0.borrow(borrowAmount, borrower, borrower);
 
         vm.startPrank(depositor);
         vm.warp(block.timestamp + 100000 days);

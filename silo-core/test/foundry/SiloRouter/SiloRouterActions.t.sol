@@ -9,6 +9,7 @@ import {SiloRouter} from "silo-core/contracts/SiloRouter.sol";
 import {SiloDeployments, SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
+import {IOldSilo} from "silo-core/test/foundry/_mocks/IOldSilo.sol";
 
 // solhint-disable function-max-lines
 
@@ -294,6 +295,6 @@ contract SiloRouterActionsTest is IntegrationTest {
         uint256 borrowAmount = 100e6;
 
         vm.prank(borrower);
-        ISilo(silo0).borrow(borrowAmount, borrower, borrower, false);
+        IOldSilo(silo0).borrow(borrowAmount, borrower, borrower, false);
     }
 }

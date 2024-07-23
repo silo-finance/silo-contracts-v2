@@ -61,7 +61,7 @@ contract PreviewMintTest is SiloLittleHelper, Test {
     function test_previewMint_withInterest_1token_fuzz(uint128 _shares, bool _defaultType, uint8 _type) public {
         vm.assume(_shares > 0);
 
-        _createInterest(SAME_ASSET);
+        _createInterest();
 
         _assertPreviewMint(_shares, _defaultType, _type);
     }
@@ -70,19 +70,19 @@ contract PreviewMintTest is SiloLittleHelper, Test {
     function test_previewMint_withInterest_2tokens_fuzz(uint128 _shares, bool _defaultType, uint8 _type) public {
         vm.assume(_shares > 0);
 
-        _createInterest(TWO_ASSETS);
+        _createInterest();
 
         _assertPreviewMint(_shares, _defaultType, _type);
     }
 
-    function _createInterest(bool _sameAsset) internal {
+    function _createInterest() internal {
         uint256 assets = 1e18 + 123456789; // some not even number
 
         _deposit(assets, depositor);
         _depositForBorrow(assets, depositor);
 
-        _depositCollateral(assets, borrower, _sameAsset);
-        _borrow(assets / 10, borrower, _sameAsset);
+        _deposit(assets, borrower);
+        _borrow(assets / 10, borrower);
 
         vm.warp(block.timestamp + 365 days);
 

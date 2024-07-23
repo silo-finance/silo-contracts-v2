@@ -63,7 +63,7 @@ contract HookCallsOutsideActionTest is PartialLiquidation, IERC3156FlashBorrower
 
         address depositor = makeAddr("depositor");
         address borrower = makeAddr("borrower");
-        bool sameAsset = true;
+        bool depositToSilo1 = true;
 
         // execute all possible actions
 
@@ -71,10 +71,10 @@ contract HookCallsOutsideActionTest is PartialLiquidation, IERC3156FlashBorrower
         _depositForBorrow(200e18, depositor);
 
         emit log("-- _depositCollateral --");
-        _depositCollateral(200e18, borrower, !sameAsset);
+        _depositCollateral(200e18, borrower, !depositToSilo1);
 
         emit log("-- _borrow --");
-        _borrow(50e18, borrower, !sameAsset);
+        _borrow(50e18, borrower);
 
         emit log("-- _repay --");
         _repay(1e18, borrower);
@@ -94,7 +94,7 @@ contract HookCallsOutsideActionTest is PartialLiquidation, IERC3156FlashBorrower
         silo0.transitionCollateral(100e18, borrower, ISilo.CollateralType.Collateral);
 
         emit log("-- _depositCollateral --");
-        _depositCollateral(100e18, borrower, sameAsset);
+        _depositCollateral(100e18, borrower, depositToSilo1);
 
         emit log("-- switchCollateralTo --");
         vm.prank(borrower);

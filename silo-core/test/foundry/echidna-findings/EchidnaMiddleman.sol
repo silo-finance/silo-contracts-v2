@@ -35,7 +35,7 @@ contract EchidnaMiddleman is EchidnaSetup {
         ISilo silo = __chooseSilo(_siloZero);
 
         vm.prank(actor);
-        silo.borrow(_amount, actor, actor, false /* sameAsset */);
+        silo.borrow(_amount, actor, actor);
     }
 
     function __previewDeposit_doesNotReturnMoreThanDeposit(uint8 _actor, uint256 _assets)
@@ -69,10 +69,10 @@ contract EchidnaMiddleman is EchidnaSetup {
         emit log_named_string("    function", "__maxBorrow_correctReturnValue");
 
         address actor = _chooseActor(_actor);
-        maxAssets = silo0.maxBorrow(actor, false /* sameAsset */);
+        maxAssets = silo0.maxBorrow(actor);
 
         vm.prank(actor);
-        shares = silo0.borrow(maxAssets, actor, actor, false /* sameAsset */); // should not revert!
+        shares = silo0.borrow(maxAssets, actor, actor); // should not revert!
     }
 
     function __mint(uint8 _actor, bool _siloZero, uint256 _shares) internal {
@@ -90,11 +90,11 @@ contract EchidnaMiddleman is EchidnaSetup {
 
         address actor = _chooseActor(_actor);
 
-        maxBorrow = silo0.maxBorrowShares(actor, false /* sameAsset */);
+        maxBorrow = silo0.maxBorrowShares(actor);
         assertGt(maxBorrow, 0, "in echidna scenarios we exclude zeros, so we should not get it here as well");
 
         vm.prank(actor);
-        shares = silo0.borrowShares(maxBorrow, actor, actor, false /* sameAsset */);
+        shares = silo0.borrowShares(maxBorrow, actor, actor);
     }
 
     function __repayNeverReturnsZeroAssets(uint8 actorIndex, bool vaultZero, uint256 shares) public {
@@ -334,7 +334,7 @@ contract EchidnaMiddleman is EchidnaSetup {
         ISilo silo = __chooseSilo(_siloZero);
 
         vm.prank(actor);
-        silo.borrowShares(_shares, actor, actor, false /* sameAsset */);
+        silo.borrowShares(_shares, actor, actor);
     }
 
     function __maxRedeem_correctMax(uint8 _actorIndex) internal {

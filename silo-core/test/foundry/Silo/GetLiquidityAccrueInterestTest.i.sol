@@ -80,28 +80,23 @@ contract GetLiquidityAccrueInterestTest is SiloLittleHelper, Test {
     forge test -vv --ffi --mt test_liquidity_whenDepositAndBorrow
     */
     function test_liquidity_whenDepositAndBorrow_1token(uint128 _toDeposit, uint128 _toBorrow) public {
-        _liquidity_whenDepositAndBorrow(_toDeposit, _toBorrow, SAME_ASSET);
+        _liquidity_whenDepositAndBorrow(_toDeposit, _toBorrow);
     }
 
-    function test_liquidity_whenDepositAndBorrow_2tokens(uint128 _toDeposit, uint128 _toBorrow) public {
-        _liquidity_whenDepositAndBorrow(_toDeposit, _toBorrow, TWO_ASSETS);
-    }
-
-    function _liquidity_whenDepositAndBorrow(uint128 _toDeposit, uint128 _toBorrow, bool _sameAsset) private {
+    function _liquidity_whenDepositAndBorrow(uint128 _toDeposit, uint128 _toBorrow) private {
         vm.assume(_toDeposit > 0);
-        if (_sameAsset) vm.assume(_toDeposit < type(uint64).max);
         vm.assume(_toBorrow > 0);
         vm.assume(_toBorrow < _toDeposit / 2);
 
         _makeDeposit(silo1, token1, _toDeposit / 2, depositor, ISilo.CollateralType.Protected);
         _depositForBorrow(_toDeposit, depositor);
 
-        _depositCollateral(_toDeposit, borrower, _sameAsset);
-        _borrow(_toBorrow, borrower, _sameAsset);
+        _deposit(_toDeposit, borrower);
+        _borrow(_toBorrow, borrower);
 
         assertEq(
             silo0.getLiquidity(),
-            _sameAsset ? 0 : _toDeposit,
+            _toDeposit,
             "[0] expect collateral, no interest"
         );
 
@@ -109,7 +104,7 @@ contract GetLiquidityAccrueInterestTest is SiloLittleHelper, Test {
 
         assertEq(
             silo1.getLiquidity(),
-            _sameAsset ? _toDeposit * 2 - _toBorrow : _toDeposit - _toBorrow,
+            _toDeposit - _toBorrow,
             "[1] expect diff after borrow (interest)"
         );
 
@@ -124,18 +119,13 @@ contract GetLiquidityAccrueInterestTest is SiloLittleHelper, Test {
     forge test -vv --ffi --mt test_liquidity_whenDepositAndBorrowWithInterest
     */
     function test_liquidity_whenDepositAndBorrowWithInterest_1token(uint128 _toDeposit, uint128 _toBorrow) public {
-        _liquidity_whenDepositAndBorrowWithInterest(_toDeposit, _toBorrow, SAME_ASSET);
+        _liquidity_whenDepositAndBorrowWithInterest(_toDeposit, _toBorrow);
     }
 
-    function test_liquidity_whenDepositAndBorrowWithInterest_2tokens(uint128 _toDeposit, uint128 _toBorrow) public {
-        _liquidity_whenDepositAndBorrowWithInterest(_toDeposit, _toBorrow, TWO_ASSETS);
-    }
-
-    function _liquidity_whenDepositAndBorrowWithInterest(uint128 _toDeposit, uint128 _toBorrow, bool _sameAsset)
+    function _liquidity_whenDepositAndBorrowWithInterest(uint128 _toDeposit, uint128 _toBorrow)
         private
     {
         vm.assume(_toDeposit > 0);
-        if (_sameAsset) vm.assume(_toDeposit < type(uint64).max);
         vm.assume(_toBorrow > 0);
         vm.assume(_toBorrow < _toDeposit / 2);
 
@@ -145,9 +135,9 @@ contract GetLiquidityAccrueInterestTest is SiloLittleHelper, Test {
         _makeDeposit(silo1, token1, protectedDeposit1, depositor, ISilo.CollateralType.Protected);
         _depositForBorrow(_toDeposit, depositor);
 
-        _depositCollateral(protectedDeposit0, borrower, _sameAsset, ISilo.CollateralType.Protected);
-        _depositCollateral(_toDeposit, borrower, _sameAsset);
-        _borrow(_toBorrow, borrower, _sameAsset);
+        _deposit(protectedDeposit0, borrower, ISilo.CollateralType.Protected);
+        _deposit(_toDeposit, borrower);
+        _borrow(_toBorrow, borrower);
 
         vm.warp(block.timestamp + 100 days);
 
@@ -155,7 +145,7 @@ contract GetLiquidityAccrueInterestTest is SiloLittleHelper, Test {
         uint256 silo1_liquidityWithInterest = silo1.getLiquidity();
         uint256 silo1_protectedLiquidity = silo1.total(AssetTypes.PROTECTED);
 
-        _liquidity_whenDepositAndBorrowWithInterest_silo0(_toDeposit, _sameAsset);
+        _liquidity_whenDepositAndBorrowWithInterest_silo0(_toDeposit);
 
         uint256 accruedInterest1 = silo1.accrueInterest();
         vm.assume(accruedInterest1 > 0);
@@ -163,7 +153,7 @@ contract GetLiquidityAccrueInterestTest is SiloLittleHelper, Test {
 
         assertEq(
             silo1_rawLiquidity,
-            _sameAsset ? _toDeposit * 2 - _toBorrow : _toDeposit - _toBorrow,
+            _toDeposit - _toBorrow,
             "[1] expect liquidity without counting in interest"
         );
 
@@ -195,13 +185,13 @@ contract GetLiquidityAccrueInterestTest is SiloLittleHelper, Test {
         );
 
         assertEq(
-            _sameAsset ? protectedDeposit0 + protectedDeposit1 : protectedDeposit1,
+            protectedDeposit1,
             silo1_protectedLiquidity,
             "[1] protected liquidity"
         );
 
         assertEq(
-            _sameAsset ? protectedDeposit0 + protectedDeposit1 : protectedDeposit1,
+            protectedDeposit1,
             silo1.total(AssetTypes.PROTECTED),
             "[1] protected does not get interest"
         );
@@ -213,7 +203,7 @@ contract GetLiquidityAccrueInterestTest is SiloLittleHelper, Test {
         );
     }
 
-    function _liquidity_whenDepositAndBorrowWithInterest_silo0(uint128 _toDeposit, bool _sameAsset) private {
+    function _liquidity_whenDepositAndBorrowWithInterest_silo0(uint128 _toDeposit) private {
         uint256 protectedDeposit0 = _toDeposit / 2;
         uint256 silo0_rawLiquidity = _getRawLiquidity(silo0);
         uint256 silo0_liquidityWithInterest = silo0.getLiquidity();
@@ -224,13 +214,13 @@ contract GetLiquidityAccrueInterestTest is SiloLittleHelper, Test {
 
         assertEq(
             silo0_rawLiquidity,
-            _sameAsset ? 0 : _toDeposit,
+            _toDeposit,
             "[0] expect same liquidity, because no borrow on this silo"
         );
 
         assertEq(
             silo0_liquidityWithInterest,
-            _sameAsset ? 0 : _toDeposit,
+            _toDeposit,
             "[0] same liquidity, no interest"
         );
 
@@ -252,7 +242,7 @@ contract GetLiquidityAccrueInterestTest is SiloLittleHelper, Test {
 
         assertEq(
             silo0_protectedLiquidity,
-            _sameAsset ? 0 : protectedDeposit0,
+            protectedDeposit0,
             "[0] no interest on protected"
         );
     }
