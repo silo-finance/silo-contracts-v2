@@ -65,9 +65,6 @@ contract MaxLiquidationTest is MaxLiquidationCommon {
     function _maxLiquidation_partial_1token(uint128 _collateral, bool _receiveSToken, bool _self) internal virtual {
         bool sameAsset = true;
 
-        // this condition is to not have overflow: _collateral * 85
-        vm.assume(_collateral < type(uint128).max / 85);
-
         vm.assume(_collateral != 29); // dust
         vm.assume(_collateral != 30); // dust
         vm.assume(_collateral != 31); // dust
@@ -89,9 +86,7 @@ contract MaxLiquidationTest is MaxLiquidationCommon {
         // this value found by fuzzing tests, is high enough to have partial liquidation possible for this test setup
         vm.assume(_collateral >= 20);
 
-        uint256 toBorrow = _collateral * 85 / 100; // maxLT is 85%
-
-        _createDebt(_collateral, toBorrow, sameAsset);
+        _createDebtForBorrower(_collateral, sameAsset);
 
         vm.warp(block.timestamp + 1050 days); // initial time movement to speed up _moveTimeUntilInsolvent
 
@@ -144,14 +139,9 @@ contract MaxLiquidationTest is MaxLiquidationCommon {
 
         vm.assume(_collateral != 19); // dust case
         vm.assume(_collateral != 33); // dust
-
-        // this condition is to not have overflow: _collateral * 75
-        vm.assume(_collateral < type(uint128).max / 75);
         vm.assume(_collateral >= 7); // LTV100 cases
 
-        uint256 toBorrow = _collateral * 75 / 100; // maxLT is 75%
-
-        _createDebt(_collateral, toBorrow, sameAsset);
+        _createDebtForBorrower(_collateral, sameAsset);
 
         // for same asset interest increasing slower, because borrower is also depositor, also LT is higher
         _moveTimeUntilInsolvent();

@@ -19,12 +19,7 @@ contract MaxLiquidationBadDebtTest is MaxLiquidationTest {
     {
         bool sameAsset = true;
 
-        // this condition is to not have overflow: _collateral * 85
-        vm.assume(_collateral < type(uint128).max / 85);
-
-        uint256 toBorrow = _collateral * 85 / 100; // maxLT is 85%
-
-        _createDebt(_collateral, toBorrow, sameAsset);
+        _createDebtForBorrower(_collateral, sameAsset);
 
         vm.warp(block.timestamp + 1300 days); // initial time movement to speed up _moveTimeUntilInsolvent
 
@@ -45,12 +40,7 @@ contract MaxLiquidationBadDebtTest is MaxLiquidationTest {
     {
         bool sameAsset = false;
 
-        // this condition is to not have overflow: _collateral * 75
-        vm.assume(_collateral < type(uint128).max / 75);
-
-        uint256 toBorrow = _collateral * 75 / 100; // maxLT is 75%
-
-        _createDebt(_collateral, toBorrow, sameAsset);
+        _createDebtForBorrower(_collateral, sameAsset);
 
         vm.warp(block.timestamp + 50 days); // initial time movement to speed up _moveTimeUntilInsolvent
 

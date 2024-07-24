@@ -32,15 +32,24 @@ abstract contract MaxLiquidationCommon is SiloLittleHelper, Test {
         token1.setOnDemand(true); // TODO think if this can influence testing? maybe try to do it in normal way?
     }
 
-    function _createDebt(uint256 _collateral, uint256 _toBorrow, bool _sameAsset) internal {
+    function _createDebtForBorrower(uint128 _collateral, bool _sameAsset) internal {
         vm.assume(_collateral > 0);
-        vm.assume(_toBorrow > 0);
+
+        (
+            ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig
+        ) = siloConfig.getConfigsForBorrow(address(silo1), _sameAsset);
+
+        uint256 maxLtv = collateralConfig.maxLtv / 1e16; // to avoid overflow on high numbers
+        vm.assume(_collateral < type(uint128).max / maxLtv); // to avoid overflow
+
+        uint256 toBorrow = _collateral * maxLtv / 1e2;
+        vm.assume(toBorrow > 0);
 
         _depositForBorrow(_collateral, depositor);
 
         if (!_sameAsset) {
             _depositCollateral(_collateral, borrower, false /* to silo 1 */);
-            _borrow(_toBorrow, borrower);
+            _borrow(toBorrow, borrower);
         } else {
             vm.prank(borrower);
             token1.mint(borrower, _collateral);
@@ -51,7 +60,7 @@ abstract contract MaxLiquidationCommon is SiloLittleHelper, Test {
             vm.prank(borrower);
             silo1.leverageSameAsset(
                 _collateral,
-                _toBorrow,
+                toBorrow,
                 borrower,
                 ISilo.CollateralType.Collateral
             );
