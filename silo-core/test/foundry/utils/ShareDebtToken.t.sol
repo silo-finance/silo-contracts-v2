@@ -180,18 +180,14 @@ contract ShareDebtTokenTest is Test, SiloLittleHelper {
         assertEq(collateralReceiverBefore, collateralReceiverAfter, "0 does not change the receiver state");
     }
 
-    function _getCollateralState()
-        private
-        view
-        returns (address collateralSender, address collateralReceiver)
-    {
+    function _getCollateralState() private returns (address collateralSender, address collateralReceiver) {
         collateralSender = siloConfig.borrowerCollateralSilo(address(this));
         collateralReceiver = siloConfig.borrowerCollateralSilo(makeAddr("receiver"));
     }
 
     function _assertCollateralSiloDidNotChanged(
         address _collateralSenderBefore, address _collateralReceiverBefore
-    ) private view {
+    ) private {
         address collateralSenderAfter = siloConfig.borrowerCollateralSilo(address(this));
         address collateralReceiverAfter = siloConfig.borrowerCollateralSilo(makeAddr("receiver"));
 
@@ -200,7 +196,7 @@ contract ShareDebtTokenTest is Test, SiloLittleHelper {
         assertEq(_collateralReceiverBefore, collateralReceiverAfter, "[a] does not change the receiver state");
     }
 
-    function _assertCollateralSiloWasCopiedFromSenderToReceiver(address _collateralSenderBefore) private view {
+    function _assertCollateralSiloWasCopiedFromSenderToReceiver(address _collateralSenderBefore) private {
         address collateralSenderAfter = siloConfig.borrowerCollateralSilo(address(this));
         address collateralReceiverAfter = siloConfig.borrowerCollateralSilo(makeAddr("receiver"));
 
@@ -210,7 +206,7 @@ contract ShareDebtTokenTest is Test, SiloLittleHelper {
     }
 
 
-    function _assertReceiverIsNotBlockedByAnything() private view {
+    function _assertReceiverIsNotBlockedByAnything() private {
         address receiver = makeAddr("receiver");
 
         _depositCollateral(100, receiver, false);
