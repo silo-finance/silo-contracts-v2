@@ -46,17 +46,12 @@ contract ShareDebtTokenTest is Test, SiloLittleHelper {
     */
     function test_debtToken_transfer_amountZero() public {
         address receiver = makeAddr("receiver");
-        address collateralSenderBefore = siloConfig.borrowerCollateralSilo(address(this));
-        address collateralReceiverBefore = siloConfig.borrowerCollateralSilo(receiver);
+        (address collateralSenderBefore, address collateralReceiverBefore) = _getCollateralState();
 
         shareDebtToken.transfer(receiver, 0);
 
-        address collateralSenderAfter = siloConfig.borrowerCollateralSilo(address(this));
-        address collateralReceiverAfter = siloConfig.borrowerCollateralSilo(receiver);
-
-        // TODO send all debt, and expect what?
-        assertEq(collateralSenderBefore, collateralSenderAfter, "0 does not change the sender state");
-        assertEq(collateralReceiverBefore, collateralReceiverAfter, "0 does not change the receiver state");
+        _assertCollateralSiloDidNotChanged(collateralSenderBefore, collateralReceiverBefore);
+        _assertReceiverIsNotBlockedByAnything();
     }
 
     /*
@@ -126,8 +121,6 @@ contract ShareDebtTokenTest is Test, SiloLittleHelper {
 
     /*
     FOUNDRY_PROFILE=core-test forge test --ffi -vvv --mt test_debtToken_transfer_withAllowance_sameCollateral
-    TODO both tests are passing for same collateral and different collateral, idk if this bug or not
-    I thought only one way should pass
     */
     function test_debtToken_transfer_withAllowance_sameCollateral() public {
         address receiver = makeAddr("receiver");
@@ -140,13 +133,18 @@ contract ShareDebtTokenTest is Test, SiloLittleHelper {
         vm.prank(receiver);
         shareDebtToken.setReceiveApproval(address(this), 1);
 
+        (address collateralSenderBefore, ) = _getCollateralState();
+
         shareDebtToken.transfer(receiver, 1);
+
+        _assertCollateralSiloWasCopiedFromSenderToReceiver(collateralSenderBefore);
+        _assertReceiverIsNotBlockedByAnything();
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test --ffi -vvv --mt test_debtToken_transfer_withAllowance_notSolvent
+    FOUNDRY_PROFILE=core-test forge test --ffi -vvv --mt test_debtToken_transfer_withAllowance_solvent
     */
-    function test_debtToken_transfer_withAllowance_solvent() public {
+    function test_debtToken_transfer_solvent() public {
         address receiver = makeAddr("receiver");
 
         _depositCollateral(20, address(this), false);
@@ -180,5 +178,55 @@ contract ShareDebtTokenTest is Test, SiloLittleHelper {
         // TODO send all debt, and expect what?
         assertEq(collateralSenderBefore, collateralSenderAfter, "0 does not change the sender state");
         assertEq(collateralReceiverBefore, collateralReceiverAfter, "0 does not change the receiver state");
+    }
+
+    function _getCollateralState()
+        private
+        view
+        returns (address collateralSender, address collateralReceiver)
+    {
+        collateralSender = siloConfig.borrowerCollateralSilo(address(this));
+        collateralReceiver = siloConfig.borrowerCollateralSilo(makeAddr("receiver"));
+    }
+
+    function _assertCollateralSiloDidNotChanged(
+        address _collateralSenderBefore, address _collateralReceiverBefore
+    ) private view {
+        address collateralSenderAfter = siloConfig.borrowerCollateralSilo(address(this));
+        address collateralReceiverAfter = siloConfig.borrowerCollateralSilo(makeAddr("receiver"));
+
+        // TODO send all debt, and expect what?
+        assertEq(_collateralSenderBefore, collateralSenderAfter, "[a] does not change the sender state");
+        assertEq(_collateralReceiverBefore, collateralReceiverAfter, "[a] does not change the receiver state");
+    }
+
+    function _assertCollateralSiloWasCopiedFromSenderToReceiver(address _collateralSenderBefore) private view {
+        address collateralSenderAfter = siloConfig.borrowerCollateralSilo(address(this));
+        address collateralReceiverAfter = siloConfig.borrowerCollateralSilo(makeAddr("receiver"));
+
+        // TODO send all debt, and expect what?
+        assertEq(_collateralSenderBefore, collateralSenderAfter, "[b] does not change the sender state");
+        assertEq(_collateralSenderBefore, collateralReceiverAfter, "[b] does not change the receiver state");
+    }
+
+
+    function _assertReceiverIsNotBlockedByAnything() private view {
+        address receiver = makeAddr("receiver");
+
+        _depositCollateral(100, receiver, false);
+        _depositCollateral(100, receiver, true);
+        _depositForBorrow(100, makeAddr("depositor"));
+        _borrow(2, receiver);
+
+        vm.prank(receiver);
+        silo1.switchCollateralTo();
+
+        _repay(2, receiver);
+
+        vm.prank(receiver);
+        silo0.withdraw(2, receiver, receiver);
+
+        vm.prank(receiver);
+        silo1.withdraw(2, receiver, receiver);
     }
 }
