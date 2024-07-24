@@ -86,12 +86,30 @@ contract ShareDebtTokenTest is Test, SiloLittleHelper {
     }
 
     /*
+    FOUNDRY_PROFILE=core-test forge test --ffi -vvv --mt test_debtToken_transfer_withAllowance_noCollateral
+    */
+    function test_debtToken_transfer_withAllowance_noCollateral() public {
+        address receiver = makeAddr("receiver");
+
+        _depositCollateral(20, address(this), false);
+        _depositForBorrow(2, makeAddr("depositor"));
+        _borrow(2, address(this));
+
+        vm.prank(receiver);
+        shareDebtToken.setReceiveApproval(address(this), 1);
+
+        vm.expectRevert(IShareToken.RecipientNotSolventAfterTransfer.selector);
+        shareDebtToken.transfer(receiver, 1);
+    }
+
+    /*
     FOUNDRY_PROFILE=core-test forge test --ffi -vvv --mt test_debtToken_transfer_withAllowance_notSolvent
     */
     function test_debtToken_transfer_withAllowance_notSolvent() public {
         address receiver = makeAddr("receiver");
 
         _depositCollateral(20, address(this), false);
+        _depositCollateral(1, receiver, false);
         _depositForBorrow(2, makeAddr("depositor"));
         _borrow(2, address(this));
 
@@ -139,45 +157,6 @@ contract ShareDebtTokenTest is Test, SiloLittleHelper {
 
         _assertCollateralSiloWasCopiedFromSenderToReceiver(collateralSenderBefore);
         _assertReceiverIsNotBlockedByAnything();
-    }
-
-    /*
-    FOUNDRY_PROFILE=core-test forge test --ffi -vvv --mt test_debtToken_transfer_withAllowance_solvent
-    */
-    function test_debtToken_transfer_solvent() public {
-        address receiver = makeAddr("receiver");
-
-        _depositCollateral(20, address(this), false);
-        _depositForBorrow(2, makeAddr("depositor"));
-        _borrow(2, address(this));
-
-        vm.prank(receiver);
-        shareDebtToken.setReceiveApproval(address(this), 1);
-
-        shareDebtToken.transfer(receiver, 1);
-    }
-
-    /*
-    FOUNDRY_PROFILE=core-test forge test --ffi -vvv --mt test_debtToken_transfer_amount1
-    */
-    function test_debtToken_transfer_amount1() public {
-        address receiver = makeAddr("receiver");
-
-        _depositCollateral(2, address(this), false);
-        _depositForBorrow(2, makeAddr("depositor"));
-        _borrow(1, address(this));
-
-        address collateralSenderBefore = siloConfig.borrowerCollateralSilo(address(this));
-        address collateralReceiverBefore = siloConfig.borrowerCollateralSilo(receiver);
-
-        shareDebtToken.transfer(receiver, 1);
-
-        address collateralSenderAfter = siloConfig.borrowerCollateralSilo(address(this));
-        address collateralReceiverAfter = siloConfig.borrowerCollateralSilo(receiver);
-
-        // TODO send all debt, and expect what?
-        assertEq(collateralSenderBefore, collateralSenderAfter, "0 does not change the sender state");
-        assertEq(collateralReceiverBefore, collateralReceiverAfter, "0 does not change the receiver state");
     }
 
     function _getCollateralState() private returns (address collateralSender, address collateralReceiver) {
