@@ -14,46 +14,7 @@ import {MaxLiquidationLTV100FullTest} from "./MaxLiquidation_LTV100Full.i.sol";
 contract MaxLiquidationLTV100FullWithChunksTest is MaxLiquidationLTV100FullTest {
     using SiloLensLib for ISilo;
 
-    // this is copy of method from MaxLiquidationLTV100FullTest but without `_ensureBorrowerHasNoDebt` check
-    // because when we liquidate with chunks, we can end up with debt but being solvent
-    function _maxLiquidation_LTV100_full_1token_fuzz(uint8 _collateral, bool _receiveSToken) internal override {
-        bool _sameAsset = true;
-
-        vm.assume(_collateral < 20);
-        uint256 toBorrow = uint256(_collateral) * 85 / 100;
-
-        _createDebt(_collateral, toBorrow, _sameAsset);
-
-        // case for `1` never happen because is is not possible to create debt for 1 collateral
-        if (_collateral == 1) _findLTV100();
-        else if (_collateral == 2) vm.warp(7229 days);
-        else if (_collateral == 3) vm.warp(3172 days);
-        else if (_collateral == 4) vm.warp(2001 days);
-        else if (_collateral == 5) vm.warp(1455 days);
-        else if (_collateral == 6) vm.warp(1141 days);
-        else if (_collateral == 7) vm.warp(2457 days);
-        else if (_collateral == 8) vm.warp(2001 days);
-        else if (_collateral == 9) vm.warp(1685 days);
-        else if (_collateral == 10) vm.warp(1455 days);
-        else if (_collateral == 11) vm.warp(1279 days);
-        else if (_collateral == 12) vm.warp(1141 days);
-        else if (_collateral == 13) vm.warp(1030 days);
-        else if (_collateral == 14) vm.warp(2059 days);
-        else if (_collateral == 15) vm.warp(1876 days);
-        else if (_collateral == 16) vm.warp(1722 days);
-        else if (_collateral == 17) vm.warp(1592 days);
-        else if (_collateral == 18) vm.warp(1480 days);
-        else if (_collateral == 19) vm.warp(1382 days);
-        else revert("should not happen, because of vm.assume");
-
-        _assertLTV100();
-
-        _executeLiquidationAndRunChecks(_sameAsset, _receiveSToken);
-
-        _assertBorrowerIsSolvent();
-    }
-
-    function _executeLiquidation(bool _sameToken, bool _receiveSToken)
+    function _executeLiquidation(bool _sameToken, bool _receiveSToken, bool _self)
         internal
         override
         returns (uint256 withdrawCollateral, uint256 repayDebtAssets)
@@ -86,7 +47,7 @@ contract MaxLiquidationLTV100FullWithChunksTest is MaxLiquidationLTV100FullTest 
 
             (
                 uint256 partialCollateral, uint256 partialDebt
-            ) = _liquidationCall(testDebtToCover, _sameToken, _receiveSToken);
+            ) = _liquidationCall(testDebtToCover, _sameToken, _receiveSToken, _self);
 
             _assertLeDiff(partialCollateral, collateralToLiquidate, "partialCollateral");
 
@@ -103,5 +64,9 @@ contract MaxLiquidationLTV100FullWithChunksTest is MaxLiquidationLTV100FullTest 
             totalCollateralToLiquidate,
             "chunks(collateral) can not be bigger than total/max"
         );
+    }
+
+    function _withChunks() internal pure override returns (bool) {
+        return true;
     }
 }

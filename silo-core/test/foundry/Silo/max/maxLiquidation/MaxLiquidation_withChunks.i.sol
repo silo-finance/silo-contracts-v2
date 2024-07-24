@@ -15,7 +15,7 @@ import {MaxLiquidationTest} from "./MaxLiquidation.i.sol";
 contract MaxLiquidationWithChunksTest is MaxLiquidationTest {
     using SiloLensLib for ISilo;
 
-    function _executeLiquidation(bool _sameToken, bool _receiveSToken)
+    function _executeLiquidation(bool _sameToken, bool _receiveSToken, bool _self)
         internal
         override
         returns (uint256 withdrawCollateral, uint256 repayDebtAssets)
@@ -24,13 +24,13 @@ contract MaxLiquidationWithChunksTest is MaxLiquidationTest {
             uint256 totalCollateralToLiquidate, uint256 totalDebtToCover
         ) = partialLiquidation.maxLiquidation(borrower);
 
-        emit log_named_decimal_uint("[MaxLiquidationWithChunks] ltv before", silo0.getLtv(borrower), 16);
 
         for (uint256 i; i < 5; i++) {
             emit log_named_uint("[MaxLiquidationWithChunks] case ------------------------", i);
             bool isSolvent = silo0.isSolvent(borrower);
 
             emit log_named_string("isSolvent", silo0.isSolvent(borrower) ? "YES" : "NO");
+            emit log_named_decimal_uint("[MaxLiquidationWithChunks] ltv before", silo0.getLtv(borrower), 16);
 
             (
                 uint256 collateralToLiquidate, uint256 debtToCover
@@ -46,7 +46,7 @@ contract MaxLiquidationWithChunksTest is MaxLiquidationTest {
 
             (
                 uint256 partialCollateral, uint256 partialDebt
-            ) = _liquidationCall(testDebtToCover, _sameToken, _receiveSToken);
+            ) = _liquidationCall(testDebtToCover, _sameToken, _receiveSToken, _self);
 
             withdrawCollateral += partialCollateral;
             repayDebtAssets += partialDebt;
@@ -65,5 +65,9 @@ contract MaxLiquidationWithChunksTest is MaxLiquidationTest {
             totalCollateralToLiquidate,
             "chunks(collateral) can not be bigger than total/max"
         );
+    }
+
+    function _withChunks() internal pure override returns (bool) {
+        return true;
     }
 }
