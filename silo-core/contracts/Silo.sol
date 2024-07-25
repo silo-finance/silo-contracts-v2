@@ -442,7 +442,11 @@ contract Silo is SiloERC4626 {
 
     /// @inheritdoc ISilo
     function maxBorrow(address _borrower) external view virtual returns (uint256 maxAssets) {
-        (maxAssets,) = SiloLendingLib.maxBorrow(_sharedStorage.siloConfig, _borrower);
+        (maxAssets,) = SiloLendingLib.maxBorrow(_sharedStorage.siloConfig, _borrower, false /* same asset */);
+    }
+
+    function maxBorrowSameAsset(address _borrower) external view returns (uint256 maxAssets) {
+        (maxAssets,) = SiloLendingLib.maxBorrow(_sharedStorage.siloConfig, _borrower, true /* same asset */);
     }
 
     /// @inheritdoc ISilo
@@ -529,7 +533,12 @@ contract Silo is SiloERC4626 {
 
     /// @inheritdoc ISilo
     function maxBorrowShares(address _borrower) external view virtual returns (uint256 maxShares) {
-        (,maxShares) = SiloLendingLib.maxBorrow(_sharedStorage.siloConfig, _borrower);
+        (,maxShares) = SiloLendingLib.maxBorrow(_sharedStorage.siloConfig, _borrower, false /* same asset */);
+    }
+
+    /// @inheritdoc ISilo
+    function maxBorrowSameAssetShares(address _borrower) external view virtual returns (uint256 maxShares) {
+        (,maxShares) = SiloLendingLib.maxBorrow(_sharedStorage.siloConfig, _borrower, true /* same asset */);
     }
 
     /// @inheritdoc ISilo

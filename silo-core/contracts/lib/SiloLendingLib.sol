@@ -257,7 +257,7 @@ library SiloLendingLib {
         }
     }
 
-    function maxBorrow(ISiloConfig _siloConfig, address _borrower)
+    function maxBorrow(ISiloConfig _siloConfig, address _borrower, bool _sameAsset)
         internal
         view
         returns (uint256 maxAssets, uint256 maxShares)
@@ -267,7 +267,12 @@ library SiloLendingLib {
         ISiloConfig.ConfigData memory collateralConfig;
         ISiloConfig.ConfigData memory debtConfig;
 
-        (collateralConfig, debtConfig) = _siloConfig.getConfigsForBorrow({_debtSilo: address(this)});
+        if (_sameAsset) {
+            debtConfig = _siloConfig.getConfig(address(this));
+            collateralConfig = debtConfig;
+        } else {
+            (collateralConfig, debtConfig) = _siloConfig.getConfigsForBorrow({_debtSilo: address(this)});
+        }
 
         (uint256 totalDebtAssets, uint256 totalDebtShares) =
             SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(debtConfig, ISilo.AssetType.Debt);
