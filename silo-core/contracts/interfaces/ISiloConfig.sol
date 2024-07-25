@@ -136,11 +136,15 @@ interface ISiloConfig is ICrossReentrancyGuard {
     /// @param _recipient recipient address
     function onDebtTransfer(address _sender, address _recipient) external;
 
-    /// @notice Set collateral silo
+    /// @notice Set collateral silo.
+    /// @dev Revert if msg.sender is not a SILO_0 or SILO_1.
+    /// @dev Always set collateral silo the same as msg.sender.
     /// @param _borrower borrower address
     function setThisSiloAsCollateralSilo(address _borrower) external;
 
     /// @notice Set collateral silo
+    /// @dev Revert if msg.sender is not a SILO_0 or SILO_1.
+    /// @dev Always set collateral silo opposite to the msg.sender.
     /// @param _borrower borrower address
     function setOtherSiloAsCollateralSilo(address _borrower) external;
 
