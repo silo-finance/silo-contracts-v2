@@ -153,6 +153,46 @@ library Actions {
         _hookCallAfterBorrow(_shareStorage, _args, borrowAction, assets, shares);
     }
 
+    function borrowSameAsset(
+        ISilo.SharedStorage storage _shareStorage,
+        ISilo.BorrowArgs memory _args,
+        ISilo.Assets storage _totalCollateral,
+        ISilo.Assets storage _totalDebt
+    )
+        external
+        returns (uint256 assets, uint256 shares)
+    {
+        ISiloConfig siloConfig = _shareStorage.siloConfig;
+        uint256 borrowAction = Hook.BORROW;
+
+        if (_args.assets == 0 && _args.shares == 0) revert ISilo.ZeroAssets();
+        if (siloConfig.hasDebtInOtherSilo(address(this), _args.borrower)) revert ISilo.BorrowNotPossible();
+
+        _hookCallBeforeBorrow(_shareStorage, _args, borrowAction);
+
+        siloConfig.turnOnReentrancyProtection();
+        siloConfig.accrueInterestForSilo(address(this));
+        siloConfig.setThisSiloAsCollateralSilo(_args.borrower);
+
+        ISiloConfig.ConfigData memory collateralConfig = siloConfig.getConfig(address(this));
+        ISiloConfig.ConfigData memory debtConfig = collateralConfig;
+
+        (assets, shares) = SiloLendingLib.borrow({
+            _debtShareToken: debtConfig.debtShareToken,
+            _token: debtConfig.token,
+            _spender: msg.sender,
+            _args: _args,
+            _totalCollateralAssets: _totalCollateral.assets,
+            _totalDebt: _totalDebt
+        });
+
+        _checkLTV(collateralConfig, debtConfig, _args.borrower);
+
+        siloConfig.turnOffReentrancyProtection();
+
+        _hookCallAfterBorrow(_shareStorage, _args, borrowAction, assets, shares);
+    }
+
     function repay(
         ISilo.SharedStorage storage _shareStorage,
         uint256 _assets,
