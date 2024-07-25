@@ -150,10 +150,10 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
     function switchCollateralSilo(address _borrower) external virtual {
         _onlySilo();
 
-        address currentSilo = _borrowerCollateralSilo[_borrower];
+        address currentSilo = borrowerCollateralSilo[_borrower];
         if (currentSilo == msg.sender) revert CollateralSiloAlreadySet();
 
-        _borrowerCollateralSilo[_borrower] = msg.sender;
+        borrowerCollateralSilo[_borrower] = msg.sender;
     }
 
     /// @inheritdoc ISiloConfig
