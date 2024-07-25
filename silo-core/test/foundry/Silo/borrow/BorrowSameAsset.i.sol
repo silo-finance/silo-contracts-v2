@@ -142,51 +142,49 @@ contract BorrowSameAssetTest is SiloLittleHelper, Test {
         silo0.borrowSameAsset(assets, borrower, borrower);
     }
 
-    // /*
-    // forge test -vv --ffi --mt test_borrow_frontRun_pass
-    // */
-    // function test_borrow_frontRun_pass_1token() public {
-    //     _borrow_frontRun_pass();
-    // }
+    /*
+    forge test -vv --ffi --mt test_borrowSameAsset_frontRun_pass_1token
+    */
+    function test_borrowSameAsset_frontRun_pass_1token() public {
+        uint256 assets = 1e18;
+        address borrower = address(this);
 
-    // function _borrow_frontRun_pass() private {
-    //     uint256 assets = 1e18;
-    //     address borrower = address(this);
+        _deposit(assets, makeAddr("depositor"));
+        _deposit(assets, borrower, ISilo.CollateralType.Protected);
 
-    //     _depositForBorrow(assets, makeAddr("depositor"));
-    //     _deposit(assets, borrower, ISilo.CollateralType.Protected);
+        vm.prank(makeAddr("frontrunner"));
+        _deposit(1, borrower);
 
-    //     vm.prank(makeAddr("frontrunner"));
-    //     _deposit(1, borrower);
+        vm.prank(borrower);
+        silo0.borrowSameAsset(12345, borrower, borrower);
+    }
 
-    //     _borrow(12345, borrower);
-    // }
+    /*
+    forge test -vv --ffi --mt test_borrowSameAsset_frontRun_transferShare
+    */
+    function test_borrowSameAsset_frontRun_transferShare() public {
+        uint256 assets = 1e18;
+        address borrower = makeAddr("borrower");
+        address frontrunner = makeAddr("frontrunner");
 
-    // /*
-    // forge test -vv --ffi --mt test_borrow_frontRun_transferShare
-    // */
-    // function test_borrow_frontRun_transferShare_1token() public {
-    //     uint256 assets = 1e18;
-    //     address borrower = makeAddr("borrower");
-    //     address frontrunner = makeAddr("frontrunner");
+        _deposit(assets, makeAddr("depositor"));
+        _deposit(assets, borrower, ISilo.CollateralType.Protected);
 
-    //     _depositForBorrow(assets, makeAddr("depositor"));
-    //     _deposit(assets, borrower, ISilo.CollateralType.Protected);
+        (
+            address protectedShareToken, address collateralShareToken,
+        ) = siloConfig.getShareTokens(address(silo0));
 
-    //     (
-    //         address protectedShareToken, address collateralShareToken,
-    //     ) = siloConfig.getShareTokens(address(silo1));
+        _depositCollateral(5, frontrunner, false);
+        _depositCollateral(3, frontrunner, false, ISilo.CollateralType.Protected);
 
-    //     _depositCollateral(5, frontrunner, true);
-    //     _depositCollateral(3, frontrunner, true, ISilo.CollateralType.Protected);
+        vm.prank(frontrunner);
+        IShareToken(collateralShareToken).transfer(borrower, 5);
+        vm.prank(frontrunner);
+        IShareToken(protectedShareToken).transfer(borrower, 3);
 
-    //     vm.prank(frontrunner);
-    //     IShareToken(collateralShareToken).transfer(borrower, 5);
-    //     vm.prank(frontrunner);
-    //     IShareToken(protectedShareToken).transfer(borrower, 3);
-
-    //     _borrow(12345, borrower); // frontrun does not work
-    // }
+        vm.prank(borrower); // frontrun does not work
+        silo0.borrowSameAsset(12345, borrower, borrower);
+    }
 
     /*
     forge test -vv --ffi --mt test_borrowSameAsset_withTwoCollaterals
@@ -349,28 +347,6 @@ contract BorrowSameAssetTest is SiloLittleHelper, Test {
             "can mint when already borrowed (maxMint)"
         );
     }
-
-    // /*
-    // forge test -vv --ffi --mt test_borrowShares_revertsOnZeroAssets
-    // */
-    // /// forge-config: core-test.fuzz.runs = 1000
-    // function test_borrowShares_revertsOnZeroAssets_1token_fuzz(uint256 _depositAmount, uint256 _forBorrow) public {
-    //     _borrowShares_revertsOnZeroAssets(_depositAmount, _forBorrow);
-    // }
-
-    // function _borrowShares_revertsOnZeroAssets(uint256 _depositAmount, uint256 _forBorrow) private {
-    //     vm.assume(_depositAmount > _forBorrow);
-    //     vm.assume(_forBorrow > 0);
-
-    //     address borrower = makeAddr("Borrower");
-    //     address depositor = makeAddr("depositor");
-
-    //     _deposit(_depositAmount, borrower);
-    //     _depositForBorrow(_forBorrow, depositor);
-    //     uint256 amount = _borrowShares(1, borrower);
-
-    //     assertGt(amount, 0, "amount can never be 0");
-    // }
 
     function _borrowSameAssetWithAssertions(
         address _borrower,
