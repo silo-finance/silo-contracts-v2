@@ -72,7 +72,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
 
     bool private immutable _CALL_BEFORE_QUOTE1;
 
-    mapping (address borrower => address collateralSilo) internal _borrowerCollateralSilo;
+    mapping (address borrower => address collateralSilo) public borrowerCollateralSilo;
     
     /// @param _siloId ID of this pool assigned by factory
     /// @param _configData0 silo configuration data for token0
@@ -137,13 +137,13 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
     /// @inheritdoc ISiloConfig
     function setThisSiloAsCollateralSilo(address _borrower) external virtual {
         _onlySilo();
-        _borrowerCollateralSilo[_borrower] = msg.sender == _SILO0 ? _SILO0 : _SILO1;
+        borrowerCollateralSilo[_borrower] = msg.sender == _SILO0 ? _SILO0 : _SILO1;
     }
 
     /// @inheritdoc ISiloConfig
     function setOtherSiloAsCollateralSilo(address _borrower) external virtual {
         _onlySilo();
-        _borrowerCollateralSilo[_borrower] = msg.sender == _SILO0 ? _SILO1 : _SILO0;
+        borrowerCollateralSilo[_borrower] = msg.sender == _SILO0 ? _SILO1 : _SILO0;
     }
 
     /// @inheritdoc ISiloConfig
@@ -154,9 +154,9 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
 
         if (debtSilo == address(0)) revert NoDebt();
 
-        address currentSilo = _borrowerCollateralSilo[_borrower];
+        address currentSilo = borrowerCollateralSilo[_borrower];
 
-        _borrowerCollateralSilo[_borrower] = currentSilo == _SILO0 ? _SILO1 : _SILO0;
+        borrowerCollateralSilo[_borrower] = currentSilo == _SILO0 ? _SILO1 : _SILO0;
     }
 
     /// @inheritdoc ISiloConfig
@@ -167,8 +167,8 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
 
         if (hasDebtInOtherSilo(thisSilo, _recipient)) revert DebtExistInOtherSilo();
 
-        if (_borrowerCollateralSilo[_recipient] == address(0)) {
-            _borrowerCollateralSilo[_recipient] = _borrowerCollateralSilo[_sender];
+        if (borrowerCollateralSilo[_recipient] == address(0)) {
+            borrowerCollateralSilo[_recipient] = borrowerCollateralSilo[_sender];
         }
     }
 
@@ -215,7 +215,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
 
         if (debtSilo == address(0)) return (collateralConfig, debtConfig);
 
-        address collateralSilo = _borrowerCollateralSilo[_borrower];
+        address collateralSilo = borrowerCollateralSilo[_borrower];
 
         collateralConfig = getConfig(collateralSilo);
         debtConfig = getConfig(debtSilo);
@@ -231,7 +231,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
         address debtSilo = getDebtSilo(_depositOwner);
 
         if (debtSilo != address(0)) {
-            address collateralSilo = _borrowerCollateralSilo[_depositOwner];
+            address collateralSilo = borrowerCollateralSilo[_depositOwner];
 
             collateralConfig = getConfig(collateralSilo);
             debtConfig = getConfig(debtSilo);

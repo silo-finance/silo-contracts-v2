@@ -160,6 +160,8 @@ interface ISiloConfig is ICrossReentrancyGuard {
     /// @notice Accrue interest for both silos (SILO_0 and SILO_1 in a config)
     function accrueInterestForBothSilos() external;
 
+    function borrowerCollateralSilo(address _borrower) external view returns (address collateralSilo);
+
     /// @notice Retrieves the silo ID
     /// @dev Each silo is assigned a unique ID. ERC-721 token is minted with identical ID to deployer.
     /// An owner of that token receives the deployer fees.
