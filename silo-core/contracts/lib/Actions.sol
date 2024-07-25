@@ -462,6 +462,8 @@ library Actions {
         ISiloConfig.ConfigData memory debtConfig,
         address _user
     ) private {
+        if (debtConfig.silo == address(0)) return; // no debt
+
         if (debtConfig.silo != collateralConfig.silo) {
             collateralConfig.callSolvencyOracleBeforeQuote();
             debtConfig.callSolvencyOracleBeforeQuote();

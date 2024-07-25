@@ -130,6 +130,7 @@ interface ISiloConfig is ICrossReentrancyGuard {
     error InvalidConfigOrder();
     error FeeTooHigh();
     error InvalidDebtShareToken();
+    error CollateralSiloAlreadySet();
 
     /// @dev It should be called on debt transfer. It sets collateral silo if the `_to` address doesn't have one
     /// @param _sender sender address
