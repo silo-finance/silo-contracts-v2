@@ -207,26 +207,23 @@ library Hook {
     /// @notice Supported hooks
     /// @dev The hooks are stored as a bitmap and can be combined with bitwise OR
     uint256 internal constant NONE = 0;
-    uint256 internal constant SAME_ASSET = 2 ** 1;
-    uint256 internal constant TWO_ASSETS = 2 ** 2;
-    uint256 internal constant DEPOSIT = 2 ** 3;
-    uint256 internal constant BORROW = 2 ** 4;
-    uint256 internal constant REPAY = 2 ** 5;
-    uint256 internal constant WITHDRAW = 2 ** 6;
-    uint256 internal constant LEVERAGE = 2 ** 7;
-    uint256 internal constant FLASH_LOAN = 2 ** 8;
-    uint256 internal constant TRANSITION_COLLATERAL = 2 ** 9;
-    uint256 internal constant SWITCH_COLLATERAL = 2 ** 10;
-    uint256 internal constant LIQUIDATION = 2 ** 11;
-    uint256 internal constant SHARE_TOKEN_TRANSFER = 2 ** 12;
-    uint256 internal constant COLLATERAL_TOKEN = 2 ** 13;
-    uint256 internal constant PROTECTED_TOKEN = 2 ** 14;
-    uint256 internal constant DEBT_TOKEN = 2 ** 15;
+    uint256 internal constant DEPOSIT = 2 ** 1;
+    uint256 internal constant BORROW = 2 ** 2;
+    uint256 internal constant BORROW_SAME_ASSET = 2 ** 3;
+    uint256 internal constant REPAY = 2 ** 4;
+    uint256 internal constant WITHDRAW = 2 ** 5;
+    uint256 internal constant LEVERAGE_SAME_ASSET = 2 ** 6;
+    uint256 internal constant FLASH_LOAN = 2 ** 7;
+    uint256 internal constant TRANSITION_COLLATERAL = 2 ** 8;
+    uint256 internal constant SWITCH_COLLATERAL = 2 ** 0;
+    uint256 internal constant LIQUIDATION = 2 ** 10;
+    uint256 internal constant SHARE_TOKEN_TRANSFER = 2 ** 11;
+    uint256 internal constant COLLATERAL_TOKEN = 2 ** 12;
+    uint256 internal constant PROTECTED_TOKEN = 2 ** 13;
+    uint256 internal constant DEBT_TOKEN = 2 ** 14;
 
     // note: currently we can support hook value up to 2 ** 23,
     // because for optimisation purposes, we storing hooks as uint24
-
-    uint256 internal constant LEVERAGE_SAME_ASSET = BORROW | LEVERAGE | SAME_ASSET;
 
     // For decoding packed data
     uint256 private constant PACKED_ADDRESS_LENGTH = 20;

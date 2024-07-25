@@ -163,7 +163,7 @@ library Actions {
         returns (uint256 assets, uint256 shares)
     {
         ISiloConfig siloConfig = _shareStorage.siloConfig;
-        uint256 borrowAction = Hook.BORROW;
+        uint256 borrowAction = Hook.BORROW_SAME_ASSET;
 
         if (_args.assets == 0 && _args.shares == 0) revert ISilo.ZeroAssets();
         if (siloConfig.hasDebtInOtherSilo(address(this), _args.borrower)) revert ISilo.BorrowNotPossible();
