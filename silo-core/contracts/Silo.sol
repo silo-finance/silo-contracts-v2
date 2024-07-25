@@ -537,11 +537,6 @@ contract Silo is SiloERC4626 {
     }
 
     /// @inheritdoc ISilo
-    function maxBorrowSameAssetShares(address _borrower) external view virtual returns (uint256 maxShares) {
-        (,maxShares) = SiloLendingLib.maxBorrow(_sharedStorage.siloConfig, _borrower, true /* same asset */);
-    }
-
-    /// @inheritdoc ISilo
     function previewBorrowShares(uint256 _shares) external view virtual returns (uint256 assets) {
         (uint256 totalSiloAssets, uint256 totalShares) = _getTotalAssetsAndTotalSharesWithInterest(AssetType.Debt);
 

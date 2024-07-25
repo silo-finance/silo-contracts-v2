@@ -407,11 +407,6 @@ interface ISilo is IERC4626, IERC3156FlashLender {
     /// @return maxShares Maximum number of shares that the borrower can borrow
     function maxBorrowShares(address _borrower) external view returns (uint256 maxShares);
 
-    /// @notice Calculates the maximum amount of shares that can be borrowed by the given address
-    /// @param _borrower Address of the potential borrower
-    /// @return maxShares Maximum number of shares that the borrower can borrow
-    function maxBorrowSameAssetShares(address _borrower) external view returns (uint256 maxShares);
-
     /// @notice Previews the amount of assets equivalent to the given share amount for borrowing
     /// @param _shares Amount of shares to preview the equivalent assets for
     /// @return assets Amount of assets equivalent to the provided share amount

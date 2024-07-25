@@ -217,10 +217,8 @@ contract BorrowSameAssetTest is SiloLittleHelper, Test {
         (,, address debtShareToken) = siloConfig.getShareTokens(address(silo0));
 
         uint256 maxBorrow = silo0.maxBorrowSameAsset(borrower);
-        uint256 maxBorrowShares = silo0.maxBorrowSameAssetShares(borrower);
 
         assertEq(maxBorrow, 0.75e18 - 1, "invalid maxBorrow for two tokens");
-        assertEq(maxBorrowShares, 0.75e18, "invalid maxBorrowShares for two tokens");
 
         uint256 borrowToMuch = maxBorrow + 2;
         emit log_named_uint("borrowToMuch", borrowToMuch);
