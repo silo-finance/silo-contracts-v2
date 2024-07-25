@@ -267,10 +267,7 @@ library SiloLendingLib {
         ISiloConfig.ConfigData memory collateralConfig;
         ISiloConfig.ConfigData memory debtConfig;
 
-        (collateralConfig, debtConfig) = _siloConfig.getConfigsForBorrow({
-            _debtSilo: address(this),
-            _sameAsset: false
-        });
+        (collateralConfig, debtConfig) = _siloConfig.getConfigsForBorrow({_debtSilo: address(this)});
 
         (uint256 totalDebtAssets, uint256 totalDebtShares) =
             SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(debtConfig, ISilo.AssetType.Debt);

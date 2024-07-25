@@ -35,9 +35,16 @@ abstract contract MaxLiquidationCommon is SiloLittleHelper, Test {
     function _createDebtForBorrower(uint128 _collateral, bool _sameAsset) internal {
         vm.assume(_collateral > 0);
 
-        (
-            ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig
-        ) = siloConfig.getConfigsForBorrow(address(silo1), _sameAsset);
+        ISiloConfig.ConfigData memory collateralConfig;
+        ISiloConfig.ConfigData memory debtConfig;
+
+        if (_sameAsset) {
+            collateralConfig = siloConfig.getConfig(address(silo1));
+            debtConfig = collateralConfig;
+        } else {
+            collateralConfig = siloConfig.getConfig(address(silo0));
+            debtConfig = siloConfig.getConfig(address(silo1));
+        }
 
         uint256 maxLtv = collateralConfig.maxLtv / 1e16; // to avoid overflow on high numbers
         vm.assume(_collateral < type(uint128).max / maxLtv); // to avoid overflow

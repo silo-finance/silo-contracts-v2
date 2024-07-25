@@ -135,10 +135,15 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
     }
 
     /// @inheritdoc ISiloConfig
-    function setCollateralSilo(address _borrower, bool _sameAsset) external virtual {
+    function setThisSiloAsCollateralSilo(address _borrower) external virtual {
         _onlySilo();
+        _borrowerCollateralSilo[_borrower] = msg.sender == _SILO0 ? _SILO0 : _SILO1;
+    }
 
-        _borrowerCollateralSilo[_borrower] = _getCollateralSilo(msg.sender, _sameAsset);
+    /// @inheritdoc ISiloConfig
+    function setOtherSiloAsCollateralSilo(address _borrower) external virtual {
+        _onlySilo();
+        _borrowerCollateralSilo[_borrower] = msg.sender == _SILO0 ? _SILO1 : _SILO0;
     }
 
     /// @inheritdoc ISiloConfig
@@ -234,13 +239,13 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
     }
 
     /// @inheritdoc ISiloConfig
-    function getConfigsForBorrow(address _debtSilo, bool _sameAsset)
+    function getConfigsForBorrow(address _debtSilo)
         external
         view
         virtual
         returns (ConfigData memory collateralConfig, ConfigData memory debtConfig)
     {
-        address collateralSilo = _getCollateralSilo(_debtSilo, _sameAsset);
+        address collateralSilo = _debtSilo == _SILO0 ? _SILO1 : _SILO0;
 
         collateralConfig = getConfig(collateralSilo);
         debtConfig = getConfig(_debtSilo);
@@ -459,10 +464,5 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
 
     function _balanceOf(address _token, address _user) internal view returns (uint256 balance) {
         balance = IERC20(_token).balanceOf(_user);
-    }
-
-    function _getCollateralSilo(address _calle, bool _sameAsset) private view returns (address collateralSilo) {
-        address otherSilo = _calle == _SILO0 ? _SILO1 : _SILO0;
-        collateralSilo = _sameAsset ? _calle : otherSilo;
     }
 }
