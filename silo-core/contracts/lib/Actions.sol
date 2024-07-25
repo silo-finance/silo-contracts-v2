@@ -172,21 +172,19 @@ library Actions {
 
         siloConfig.turnOnReentrancyProtection();
         siloConfig.accrueInterestForSilo(address(this));
-        siloConfig.setCollateralSilo({_borrower: _args.borrower, _sameAsset: true});
+        siloConfig.setThisSiloAsCollateralSilo(_args.borrower);
 
-        ISiloConfig.ConfigData memory collateralConfig;
-        ISiloConfig.ConfigData memory debtConfig;
+        ISiloConfig.ConfigData memory collateralConfig = siloConfig.getConfig(address(this));
+        ISiloConfig.ConfigData memory debtConfig = collateralConfig;
 
-        (collateralConfig, debtConfig) = siloConfig.getConfigsForBorrow({_debtSilo: address(this), _sameAsset: true});
-
-        (assets, shares) = SiloLendingLib.borrow(
-            debtConfig.debtShareToken,
-            debtConfig.token,
-            msg.sender,
-            _args,
-            _totalCollateral.assets,
-            _totalDebt
-        );
+        (assets, shares) = SiloLendingLib.borrow({
+            _debtShareToken: debtConfig.debtShareToken,
+            _token: debtConfig.token,
+            _spender: msg.sender,
+            _args: _args,
+            _totalCollateralAssets: _totalCollateral.assets,
+            _totalDebt: _totalDebt
+        });
 
         _checkLTV(collateralConfig, debtConfig, _args.borrower);
 
