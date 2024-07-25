@@ -136,10 +136,17 @@ interface ISiloConfig is ICrossReentrancyGuard {
     /// @param _recipient recipient address
     function onDebtTransfer(address _sender, address _recipient) external;
 
-    /// @notice Set collateral silo
+    /// @notice Set collateral silo.
+    /// @dev Revert if msg.sender is not a SILO_0 or SILO_1.
+    /// @dev Always set collateral silo the same as msg.sender.
     /// @param _borrower borrower address
-    /// @param _sameAsset true if `_borrower` operates on the same asset
-    function setCollateralSilo(address _borrower, bool _sameAsset) external;
+    function setThisSiloAsCollateralSilo(address _borrower) external;
+
+    /// @notice Set collateral silo
+    /// @dev Revert if msg.sender is not a SILO_0 or SILO_1.
+    /// @dev Always set collateral silo opposite to the msg.sender.
+    /// @param _borrower borrower address
+    function setOtherSiloAsCollateralSilo(address _borrower) external;
 
     /// @notice Switch collateral silo
     /// @dev Always set to the other silo. Revert if `_borrower` has no debt.
@@ -212,10 +219,9 @@ interface ISiloConfig is ICrossReentrancyGuard {
     /// @notice Retrieves configuration data for a specific silo for borrow fn.
     /// @dev This function reverts for incorrect silo address input.
     /// @param _debtSilo The address of the silo for which configuration data is being retrieved
-    /// @param _sameAsset true if the borrower operates on the same asset
-    /// @return collateralConfig The configuration data for the collateral silo
-    /// @return debtConfig The configuration data for the debt silo (always config for `_silo`)
-    function getConfigsForBorrow(address _debtSilo, bool _sameAsset)
+    /// @return collateralConfig The configuration data for the collateral silo (always other than `_debtSilo`)
+    /// @return debtConfig The configuration data for the debt silo (always config for `_debtSilo`)
+    function getConfigsForBorrow(address _debtSilo)
         external
         view
         returns (ConfigData memory collateralConfig, ConfigData memory debtConfig);

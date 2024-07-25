@@ -105,7 +105,7 @@ contract OrderedConfigsTest is Test {
         _mockShareTokensBlances(_siloUser, 1, 0);
 
         vm.prank(_silo0);
-        _siloConfig.setCollateralSilo(_siloUser, !_SAME_ASSET);
+        _siloConfig.setOtherSiloAsCollateralSilo(_siloUser);
 
         ISiloConfig.DepositConfig memory depositConfig;
         ISiloConfig.ConfigData memory collateralConfig;
@@ -131,7 +131,7 @@ contract OrderedConfigsTest is Test {
         _mockShareTokensBlances(_siloUser, 0, 1);
 
         vm.prank(_silo1);
-        _siloConfig.setCollateralSilo(_siloUser, !_SAME_ASSET);
+        _siloConfig.setOtherSiloAsCollateralSilo(_siloUser);
 
         ISiloConfig.DepositConfig memory depositConfig;
         ISiloConfig.ConfigData memory collateralConfig;
@@ -157,7 +157,7 @@ contract OrderedConfigsTest is Test {
         _mockShareTokensBlances(_siloUser, 1, 0);
 
         vm.prank(_silo0);
-        _siloConfig.setCollateralSilo(_siloUser, _SAME_ASSET);
+        _siloConfig.setThisSiloAsCollateralSilo(_siloUser);
 
         ISiloConfig.DepositConfig memory depositConfig;
         ISiloConfig.ConfigData memory collateralConfig;
@@ -183,7 +183,7 @@ contract OrderedConfigsTest is Test {
         _mockShareTokensBlances(_siloUser, 0, 1);
 
         vm.prank(_silo1);
-        _siloConfig.setCollateralSilo(_siloUser, _SAME_ASSET);
+        _siloConfig.setThisSiloAsCollateralSilo(_siloUser);
 
         ISiloConfig.DepositConfig memory depositConfig;
         ISiloConfig.ConfigData memory collateralConfig;
@@ -207,30 +207,14 @@ contract OrderedConfigsTest is Test {
         ISiloConfig.ConfigData memory collateralConfig;
         ISiloConfig.ConfigData memory debtConfig;
         
-        (collateralConfig, debtConfig) = _siloConfig.getConfigsForBorrow(_silo0, !_SAME_ASSET);
+        (collateralConfig, debtConfig) = _siloConfig.getConfigsForBorrow({_debtSilo: _silo0});
 
         assertEq(collateralConfig.silo, _silo1);
         assertEq(debtConfig.silo, _silo0);
 
-        (collateralConfig, debtConfig) = _siloConfig.getConfigsForBorrow(_silo1, !_SAME_ASSET);
+        (collateralConfig, debtConfig) = _siloConfig.getConfigsForBorrow({_debtSilo: _silo1});
 
         assertEq(collateralConfig.silo, _silo0);
-        assertEq(debtConfig.silo, _silo1);
-    }
-
-    // FOUNDRY_PROFILE=core-test forge test -vvv --mt testOrderedConfigsBorrowNoDebtSameAsset
-    function testOrderedConfigsBorrowNoDebtSameAsset() public view {
-        ISiloConfig.ConfigData memory collateralConfig;
-        ISiloConfig.ConfigData memory debtConfig;
-        
-        (collateralConfig, debtConfig) = _siloConfig.getConfigsForBorrow(_silo0, _SAME_ASSET);
-
-        assertEq(collateralConfig.silo, _silo0);
-        assertEq(debtConfig.silo, _silo0);
-
-        (collateralConfig, debtConfig) = _siloConfig.getConfigsForBorrow(_silo1, _SAME_ASSET);
-
-        assertEq(collateralConfig.silo, _silo1);
         assertEq(debtConfig.silo, _silo1);
     }
 
@@ -250,7 +234,7 @@ contract OrderedConfigsTest is Test {
         _mockShareTokensBlances(_siloUser, 1, 0);
 
         vm.prank(_silo0);
-        _siloConfig.setCollateralSilo(_siloUser, !_SAME_ASSET);
+        _siloConfig.setOtherSiloAsCollateralSilo(_siloUser);
 
         ISiloConfig.ConfigData memory collateralConfig;
         ISiloConfig.ConfigData memory debtConfig;
@@ -266,7 +250,7 @@ contract OrderedConfigsTest is Test {
         _mockShareTokensBlances(_siloUser, 1, 0);
 
         vm.prank(_silo0);
-        _siloConfig.setCollateralSilo(_siloUser, _SAME_ASSET);
+        _siloConfig.setThisSiloAsCollateralSilo(_siloUser);
 
         ISiloConfig.ConfigData memory collateralConfig;
         ISiloConfig.ConfigData memory debtConfig;
@@ -282,7 +266,7 @@ contract OrderedConfigsTest is Test {
         _mockShareTokensBlances(_siloUser, 0, 1);
 
         vm.prank(_silo1);
-        _siloConfig.setCollateralSilo(_siloUser, !_SAME_ASSET);
+        _siloConfig.setOtherSiloAsCollateralSilo(_siloUser);
 
         ISiloConfig.ConfigData memory collateralConfig;
         ISiloConfig.ConfigData memory debtConfig;
@@ -298,7 +282,7 @@ contract OrderedConfigsTest is Test {
         _mockShareTokensBlances(_siloUser, 0, 1);
 
         vm.prank(_silo1);
-        _siloConfig.setCollateralSilo(_siloUser, _SAME_ASSET);
+        _siloConfig.setThisSiloAsCollateralSilo(_siloUser);
 
         ISiloConfig.ConfigData memory collateralConfig;
         ISiloConfig.ConfigData memory debtConfig;

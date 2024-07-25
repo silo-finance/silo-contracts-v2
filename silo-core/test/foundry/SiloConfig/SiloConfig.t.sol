@@ -240,7 +240,10 @@ contract SiloConfigTest is Test {
     */
     function test_setCollateralSilo_revertOnOnlySilo() public {
         vm.expectRevert(ISiloConfig.OnlySilo.selector);
-        _siloConfig.setCollateralSilo(makeAddr("SomeSilo"), true);
+        _siloConfig.setThisSiloAsCollateralSilo(makeAddr("borrower"));
+
+        vm.expectRevert(ISiloConfig.OnlySilo.selector);
+        _siloConfig.setOtherSiloAsCollateralSilo(makeAddr("borrower"));
     }
 
     /*
@@ -254,10 +257,16 @@ contract SiloConfigTest is Test {
         _mockShareTokensBlances(borrower2, 1, 0);
 
         vm.prank(_silo0Default);
-        _siloConfig.setCollateralSilo(borrower1, true);
+        _siloConfig.setThisSiloAsCollateralSilo(borrower1);
 
         vm.prank(_silo1Default);
-        _siloConfig.setCollateralSilo(borrower2, false);
+        _siloConfig.setThisSiloAsCollateralSilo(borrower2);
+
+        vm.prank(_silo0Default);
+        _siloConfig.setOtherSiloAsCollateralSilo(borrower1);
+
+        vm.prank(_silo1Default);
+        _siloConfig.setOtherSiloAsCollateralSilo(borrower2);
     }
 
     /*
@@ -295,7 +304,7 @@ contract SiloConfigTest is Test {
         _mockShareTokensBlances(borrower, 1, 0);
 
         vm.prank(_silo0Default);
-        _siloConfig.setCollateralSilo(borrower, true);
+        _siloConfig.setThisSiloAsCollateralSilo(borrower);
 
         ISiloConfig.ConfigData memory collateralConfig;
         ISiloConfig.ConfigData memory debtConfig;
@@ -316,7 +325,7 @@ contract SiloConfigTest is Test {
         _mockShareTokensBlances(borrower, 0, 1);
 
         vm.prank(_silo1Default);
-        _siloConfig.setCollateralSilo(borrower, /* same asset */ false);
+        _siloConfig.setOtherSiloAsCollateralSilo(borrower);
 
         ISiloConfig.ConfigData memory collateralConfig;
         ISiloConfig.ConfigData memory debtConfig;
@@ -352,7 +361,12 @@ contract SiloConfigTest is Test {
         _mockShareTokensBlances(from, balance0, balance1);
 
         vm.prank(silo);
-        _siloConfig.setCollateralSilo(from, sameAsset);
+
+        if (sameAsset) {
+            _siloConfig.setThisSiloAsCollateralSilo(from);
+        } else {
+            _siloConfig.setOtherSiloAsCollateralSilo(from);
+        }
 
         _mockShareTokensBlances(to, 0, 0);
 
@@ -442,12 +456,12 @@ contract SiloConfigTest is Test {
         _mockShareTokensBlances(from, 1, 0);
 
         vm.prank(_silo0Default);
-        _siloConfig.setCollateralSilo(from, /* same asset */ true);
+        _siloConfig.setThisSiloAsCollateralSilo(from);
 
         _mockShareTokensBlances(to, 0, 1);
 
         vm.prank(_silo1Default);
-        _siloConfig.setCollateralSilo(to, /* same asset */ true);
+        _siloConfig.setThisSiloAsCollateralSilo(to);
 
         vm.expectRevert(ISiloConfig.DebtExistInOtherSilo.selector);
         vm.prank(_configDataDefault0.debtShareToken);
@@ -467,12 +481,12 @@ contract SiloConfigTest is Test {
         _mockShareTokensBlances(to, 0, 0);
 
         vm.prank(_silo0Default);
-        _siloConfig.setCollateralSilo(from, /* same asset */ true);
+        _siloConfig.setThisSiloAsCollateralSilo(from);
 
         _mockShareTokensBlances(from, 1, 0);
 
         vm.prank(_silo0Default);
-        _siloConfig.setCollateralSilo(to, /* same asset */ false);
+        _siloConfig.setOtherSiloAsCollateralSilo(to);
 
         _mockShareTokensBlances(to, 1, 0);
 

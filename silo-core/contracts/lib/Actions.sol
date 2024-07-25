@@ -130,12 +130,12 @@ library Actions {
 
         siloConfig.turnOnReentrancyProtection();
         siloConfig.accrueInterestForBothSilos();
-        siloConfig.setCollateralSilo({_borrower: _args.borrower, _sameAsset: false});
+        siloConfig.setOtherSiloAsCollateralSilo(_args.borrower);
 
         ISiloConfig.ConfigData memory collateralConfig;
         ISiloConfig.ConfigData memory debtConfig;
 
-        (collateralConfig, debtConfig) = siloConfig.getConfigsForBorrow({_debtSilo: address(this), _sameAsset: false});
+        (collateralConfig, debtConfig) = siloConfig.getConfigsForBorrow({_debtSilo: address(this)});
 
         (assets, shares) = SiloLendingLib.borrow(
             debtConfig.debtShareToken,
@@ -208,12 +208,10 @@ library Actions {
 
         siloConfig.turnOnReentrancyProtection();
         siloConfig.accrueInterestForSilo(address(this));
-        siloConfig.setCollateralSilo({_borrower: _args.borrower, _sameAsset: true});
+        siloConfig.setThisSiloAsCollateralSilo(_args.borrower);
 
-        ISiloConfig.ConfigData memory collateralConfig;
-        ISiloConfig.ConfigData memory debtConfig;
-
-        (collateralConfig, debtConfig) = siloConfig.getConfigsForBorrow({_debtSilo: address(this), _sameAsset: true});
+        ISiloConfig.ConfigData memory collateralConfig = siloConfig.getConfig(address(this));
+        ISiloConfig.ConfigData memory debtConfig = collateralConfig;
 
         uint256 borrowedAssets;
 
