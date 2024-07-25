@@ -53,15 +53,28 @@ contract ChangeCollateralTypeTest is SiloLittleHelper, Test {
     forge test -vv --ffi --mt test_changeCollateralType_pass_1token
     */
     function test_changeCollateralType_pass_1token() public {
+        _changeCollateralType_pass(SAME_ASSET);
+    }
+
+    function test_changeCollateralType_pass_2tokens() public {
+        _changeCollateralType_pass(TWO_ASSETS);
+    }
+
+    function _changeCollateralType_pass(bool _sameAsset) public {
         uint256 assets = 1e18;
 
-        _deposit(assets, borrower);
-        _depositForBorrow(assets, borrower);
+        _depositCollateral(assets, borrower, _sameAsset);
+        _depositCollateral(assets, borrower, !_sameAsset);
         _depositForBorrow(assets, makeAddr("Depositor"));
+
+        if (_sameAsset) {
+            // TODO waiting for same asset method
+            return;
+        }
 
         _borrow(assets / 2, borrower);
 
-        vm.prank(address(silo1));
+        vm.prank(address(_sameAsset ? silo0 : silo1));
         siloConfig.switchCollateralSilo(borrower);
 
         ISiloConfig.ConfigData memory collateral;
