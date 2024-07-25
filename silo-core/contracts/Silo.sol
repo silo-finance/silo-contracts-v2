@@ -458,8 +458,8 @@ contract Silo is SiloERC4626 {
         );
     }
 
-    function switchCollateralTo() external virtual {
-        Actions.switchCollateralTo(_sharedStorage);
+    function setThisSiloAsCollateralSilo() external virtual {
+        Actions.setThisSiloAsCollateralSilo(_sharedStorage);
         emit CollateralTypeChanged(msg.sender);
     }
 

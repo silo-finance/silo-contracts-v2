@@ -346,7 +346,7 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock {
         emit SwitchCollateralAfterHA(_borrower);
 
         vm.prank(_borrower);
-        silo0.switchCollateralTo();
+        silo0.setThisSiloAsCollateralSilo();
     }
 
     /// FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testSwitchCollateralTwoAssetsHooks
@@ -376,7 +376,7 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock {
         emit SwitchCollateralAfterHA(_borrower);
 
         vm.prank(_borrower);
-        silo0.switchCollateralTo();
+        silo0.setThisSiloAsCollateralSilo();
     }
 
     /// FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testTransitionCollateralToProtectedAllHooks

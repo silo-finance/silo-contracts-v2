@@ -352,7 +352,7 @@ interface ISilo is IERC4626, IERC3156FlashLender {
         external
         returns (uint256 assets);
 
-    function switchCollateralTo() external;
+    function setThisSiloAsCollateralSilo() external;
 
     /// @notice Calculates the maximum amount of assets that can be borrowed by the given address
     /// @param _borrower Address of the potential borrower

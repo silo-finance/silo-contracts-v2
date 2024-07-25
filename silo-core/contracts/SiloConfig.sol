@@ -147,19 +147,6 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
     }
 
     /// @inheritdoc ISiloConfig
-    function switchCollateralSilo(address _borrower) external virtual {
-        _onlySilo();
-
-        address debtSilo = getDebtSilo(_borrower);
-
-        if (debtSilo == address(0)) revert NoDebt();
-
-        address currentSilo = borrowerCollateralSilo[_borrower];
-
-        borrowerCollateralSilo[_borrower] = currentSilo == _SILO0 ? _SILO1 : _SILO0;
-    }
-
-    /// @inheritdoc ISiloConfig
     function onDebtTransfer(address _sender, address _recipient) external virtual {
         if (msg.sender != _DEBT_SHARE_TOKEN0 && msg.sender != _DEBT_SHARE_TOKEN1) revert OnlyDebtShareToken();
 

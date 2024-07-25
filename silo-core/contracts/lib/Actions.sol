@@ -324,7 +324,7 @@ library Actions {
         _hookCallAfterTransitionCollateral(_shareStorage, _args, shares, assets);
     }
 
-    function switchCollateralTo(ISilo.SharedStorage storage _shareStorage) external {
+    function setThisSiloAsCollateralSilo(ISilo.SharedStorage storage _shareStorage) external {
         uint256 action = Hook.SWITCH_COLLATERAL;
 
         if (_shareStorage.hooksBefore.matchAction(action)) {
@@ -334,15 +334,17 @@ library Actions {
         ISiloConfig siloConfig = _shareStorage.siloConfig;
 
         siloConfig.turnOnReentrancyProtection();
-        siloConfig.accrueInterestForBothSilos();
-        siloConfig.switchCollateralSilo(msg.sender);
+        siloConfig.setThisSiloAsCollateralSilo(msg.sender);
 
         ISiloConfig.ConfigData memory collateralConfig;
         ISiloConfig.ConfigData memory debtConfig;
 
         (collateralConfig, debtConfig) = siloConfig.getConfigs(msg.sender);
 
-        _checkSolvency(collateralConfig, debtConfig, msg.sender);
+        if (debtConfig.silo != address(0)) {
+            siloConfig.accrueInterestForBothSilos();
+            _checkSolvency(collateralConfig, debtConfig, msg.sender);
+        }
 
         siloConfig.turnOffReentrancyProtection();
 

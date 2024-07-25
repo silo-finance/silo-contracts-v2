@@ -22,13 +22,9 @@ contract SwitchCollateralToTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --ffi --mt test_switchCollateralTo_pass_
+    forge test -vv --ffi --mt test_setThisSiloAsCollateralSilo_pass
     */
-    function test_switchCollateralTo_pass_1token() public {
-        _switchCollateralTo_pass();
-    }
-
-    function _switchCollateralTo_pass() private {
+    function test_setThisSiloAsCollateralSilo_pass() public {
         uint256 assets = 1e18;
         address depositor = makeAddr("Depositor");
         address borrower = makeAddr("Borrower");
@@ -45,7 +41,7 @@ contract SwitchCollateralToTest is SiloLittleHelper, Test {
         (collateral, debt) = siloConfig.getConfigs(borrower);
 
         vm.prank(borrower);
-        silo0.switchCollateralTo();
+        silo1.setThisSiloAsCollateralSilo();
         (collateral, debt) = siloConfig.getConfigs(borrower);
 
         ISilo siloWithDeposit = silo0;
@@ -57,13 +53,9 @@ contract SwitchCollateralToTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --mt test_switchCollateralTo_NotSolvent_
+    forge test -vv --mt test_setThisSiloAsCollateralSilo_NotSolvent_
     */
-    function test_switchCollateralTo_NotSolvent_1token() public {
-        _switchCollateralTo_NotSolvent();
-    }
-
-    function _switchCollateralTo_NotSolvent() private {
+    function test_setThisSiloAsCollateralSilo_NotSolvent_1token() public {
         uint256 assets = 1e18;
         address depositor = makeAddr("Depositor");
         address borrower = makeAddr("Borrower");
@@ -75,18 +67,6 @@ contract SwitchCollateralToTest is SiloLittleHelper, Test {
 
         vm.prank(borrower);
         vm.expectRevert(ISilo.NotSolvent.selector);
-        silo1.switchCollateralTo();
-    }
-
-    function test_switchCollateralTo_NoDebt() public {
-        _switchCollateralTo_NoDebt();
-    }
-
-    function _switchCollateralTo_NoDebt() private {
-        address borrower = makeAddr("Borrower");
-
-        vm.prank(borrower);
-        vm.expectRevert(ISiloConfig.NoDebt.selector);
-        silo0.switchCollateralTo();
+        silo1.setThisSiloAsCollateralSilo();
     }
 }

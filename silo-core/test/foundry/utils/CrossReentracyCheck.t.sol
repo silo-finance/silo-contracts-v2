@@ -72,7 +72,7 @@ contract CrossReentracyCheckTest is HookCallsOutsideActionTest {
         emit log("[CrossReentracyCheckTest] _reentrancyCheck_SwithCollateralTo");
 
         vm.expectRevert(ICrossReentrancyGuard.CrossReentrantCall.selector);
-        silo0.switchCollateralTo();
+        silo0.setThisSiloAsCollateralSilo();
     }
 
     function _reentrancyCheck_LeverageSameAsset() internal {
