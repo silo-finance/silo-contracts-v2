@@ -81,6 +81,7 @@ contract ChangeCollateralTypeTest is SiloLittleHelper, Test {
         vm.prank(address(silo0));
         vm.expectRevert(ISiloConfig.NoDebt.selector);
 
+        assertEq(siloConfig.bo)
         siloConfig.switchCollateralSilo(borrower);
     }
 
