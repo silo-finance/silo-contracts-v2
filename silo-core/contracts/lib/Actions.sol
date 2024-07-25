@@ -229,8 +229,6 @@ library Actions {
             _totalDebt: _totalDebt
         });
 
-        _receiveCollateralOnLeverageSameAsset(collateralConfig, _args.depositAssets, borrowedAssets);
-
         (, depositedShares) = SiloERC4626Lib.deposit({
             _token: address(0), // we are not transferring token
             _depositor: msg.sender,
@@ -242,6 +240,11 @@ library Actions {
                 : IShareToken(collateralConfig.protectedShareToken),
             _totalCollateral: _totalAssetsForDeposit
         });
+
+        // receive collateral
+        if (_args.depositAssets <= _args.borrowAssets) revert ISilo.LeverageTooHigh();
+        uint256 transferDiff = _args.depositAssets - _args.borrowAssets;
+        IERC20(collateralConfig.token).safeTransferFrom(msg.sender, address(this), transferDiff);
 
         _checkLTV(collateralConfig, debtConfig, _args.borrower);
 
@@ -434,27 +437,6 @@ library Actions {
         IShareToken(cfg.collateralShareToken).synchronizeHooks(hooksBefore, hooksAfter);
         IShareToken(cfg.protectedShareToken).synchronizeHooks(hooksBefore, hooksAfter);
         IShareToken(cfg.debtShareToken).synchronizeHooks(hooksBefore, hooksAfter);
-    }
-
-    function _receiveCollateralOnLeverageSameAsset(
-        ISiloConfig.ConfigData memory collateralConfig,
-        uint256 _depositAssets,
-        uint256 _borrowedAssets
-    ) private {
-        uint256 requiredCollateral = _borrowedAssets * SiloLendingLib._PRECISION_DECIMALS;
-        uint256 transferDiff;
-
-        unchecked { requiredCollateral = requiredCollateral / collateralConfig.maxLtv; }
-
-        if (_depositAssets < requiredCollateral) revert ISilo.LeverageTooHigh();
-
-        unchecked {
-            // safe because `requiredCollateral` > `_depositAssets`
-            // and `_borrowedAssets` is chunk of `requiredCollateral`
-            transferDiff = _depositAssets - _borrowedAssets;
-        }
-
-        IERC20(collateralConfig.token).safeTransferFrom(msg.sender, address(this), transferDiff);
     }
 
     function _checkSolvency(
