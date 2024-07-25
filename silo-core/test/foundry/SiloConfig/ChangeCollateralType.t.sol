@@ -61,7 +61,7 @@ contract ChangeCollateralTypeTest is SiloLittleHelper, Test {
 
         _borrow(assets / 2, borrower);
 
-        vm.prank(address(silo0));
+        vm.prank(address(silo1));
         siloConfig.switchCollateralSilo(borrower);
 
         ISiloConfig.ConfigData memory collateral;
@@ -78,11 +78,21 @@ contract ChangeCollateralTypeTest is SiloLittleHelper, Test {
     function test_changeCollateralType_NoDebt() public {
         _doDeposit(false);
 
-        vm.prank(address(silo0));
-        vm.expectRevert(ISiloConfig.NoDebt.selector);
+        assertEq(siloConfig.borrowerCollateralSilo(borrower), address(0), "clean account has no address set");
 
-        assertEq(siloConfig.bo)
+        vm.prank(address(silo0));
         siloConfig.switchCollateralSilo(borrower);
+
+        assertEq(siloConfig.borrowerCollateralSilo(borrower), address(silo0), "silo0 is set as collateral");
+
+        vm.prank(address(silo0));
+        vm.expectRevert(ISiloConfig.CollateralSiloAlreadySet.selector);
+        siloConfig.switchCollateralSilo(borrower);
+
+        vm.prank(address(silo1));
+        siloConfig.switchCollateralSilo(borrower);
+
+        assertEq(siloConfig.borrowerCollateralSilo(borrower), address(silo1), "silo1 is set as collateral");
     }
 
     function _doDeposit() private returns (ISiloConfig.ConfigData memory collateral, ISiloConfig.ConfigData memory debt) {
