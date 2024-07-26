@@ -18,6 +18,11 @@ FOUNDRY_PROFILE=core-test forge test --ffi -vv --mc ShareDebtTokenTest
 contract ShareDebtTokenTest is Test, SiloLittleHelper {
     ISiloConfig public siloConfig;
     ShareDebtToken public shareDebtToken;
+    address immutable receiver;
+
+    constructor() {
+        receiver = makeAddr("receiver");
+    }
 
     function setUp() public {
         siloConfig = _setUpLocalFixture();
@@ -45,8 +50,8 @@ contract ShareDebtTokenTest is Test, SiloLittleHelper {
     FOUNDRY_PROFILE=core-test forge test --ffi -vvv --mt test_debtToken_transfer_amountZero
     */
     function test_debtToken_transfer_amountZero() public {
-        address receiver = makeAddr("receiver");
         (address collateralSenderBefore, address collateralReceiverBefore) = _getCollateralState();
+        assertEq(collateralReceiverBefore, address(0), "receiver has no state");
 
         shareDebtToken.transfer(receiver, 0);
 
@@ -58,8 +63,6 @@ contract ShareDebtTokenTest is Test, SiloLittleHelper {
     FOUNDRY_PROFILE=core-test forge test --ffi -vvv --mt test_debtToken_transfer_noAllowance
     */
     function test_debtToken_transfer_noAllowance() public {
-        address receiver = makeAddr("receiver");
-
         _depositCollateral(2, address(this), false);
         _depositForBorrow(2, makeAddr("depositor"));
         _borrow(1, address(this));
@@ -72,8 +75,6 @@ contract ShareDebtTokenTest is Test, SiloLittleHelper {
     FOUNDRY_PROFILE=core-test forge test --ffi -vvv --mt test_debtToken_transfer_withLowAllowance
     */
     function test_debtToken_transfer_withLowAllowance() public {
-        address receiver = makeAddr("receiver");
-
         _depositCollateral(20, address(this), TWO_ASSETS);
         _depositForBorrow(2, makeAddr("depositor"));
         _borrow(2, address(this));
@@ -97,11 +98,9 @@ contract ShareDebtTokenTest is Test, SiloLittleHelper {
     }
 
     function _transfer_withAllowance_noCollateral(bool _sameAsset) private {
-        address receiver = makeAddr("receiver");
-
         _depositCollateral(20, address(this), _sameAsset);
         _depositForBorrow(2, makeAddr("depositor"));
-        _borrow(2, address(this));
+        _borrow(2, address(this), _sameAsset);
 
         vm.prank(receiver);
         shareDebtToken.setReceiveApproval(address(this), 1);
@@ -122,12 +121,10 @@ contract ShareDebtTokenTest is Test, SiloLittleHelper {
     }
 
     function _transfer_withAllowance_notSolvent(bool _sameAsset) public {
-        address receiver = makeAddr("receiver");
-
         _depositCollateral(20, address(this), _sameAsset);
         _depositCollateral(1, receiver, _sameAsset);
         _depositForBorrow(2, makeAddr("depositor"));
-        _borrow(2, address(this));
+        _borrow(2, address(this), _sameAsset);
 
         vm.prank(receiver);
         shareDebtToken.setReceiveApproval(address(this), 1);
@@ -148,11 +145,10 @@ contract ShareDebtTokenTest is Test, SiloLittleHelper {
     }
 
     function _transfer_withAllowance_differentCollateral(bool _sameAsset) private {
-        address receiver = makeAddr("receiver");
-
         _depositCollateral(20, address(this), _sameAsset);
         _depositCollateral(20, receiver, !_sameAsset);
-        _borrow(2, address(this));
+        _depositForBorrow(10, makeAddr("depositor"));
+        _borrow(2, address(this), _sameAsset);
 
         vm.prank(receiver);
         shareDebtToken.setReceiveApproval(address(this), 1);
@@ -173,12 +169,10 @@ contract ShareDebtTokenTest is Test, SiloLittleHelper {
     }
 
     function _transfer_withAllowance_sameCollateral(bool _sameAsset) private {
-        address receiver = makeAddr("receiver");
-
         _depositCollateral(20, address(this), _sameAsset);
         _depositCollateral(20, receiver, _sameAsset);
         _depositForBorrow(20, makeAddr("depositor"));
-        _borrow(2, address(this));
+        _borrow(2, address(this), _sameAsset);
 
         vm.prank(receiver);
         shareDebtToken.setReceiveApproval(address(this), 1);
@@ -203,8 +197,6 @@ contract ShareDebtTokenTest is Test, SiloLittleHelper {
     }
 
     function _transfer_withAllowance_withSameDebt(bool _sameAsset) private {
-        address receiver = makeAddr("receiver");
-
         _depositCollateral(20, address(this), _sameAsset);
         _depositCollateral(20, receiver, _sameAsset);
         _depositForBorrow(20, makeAddr("depositor"));
@@ -235,8 +227,6 @@ contract ShareDebtTokenTest is Test, SiloLittleHelper {
     }
 
     function _transfer_withAllowance_withDifferentDebt(bool _sameAsset) private {
-        address receiver = makeAddr("receiver");
-
         _depositCollateral(20, address(this), _sameAsset);
         _depositCollateral(20, receiver, !_sameAsset);
         _depositForBorrow(20, makeAddr("depositor"));
@@ -264,7 +254,6 @@ contract ShareDebtTokenTest is Test, SiloLittleHelper {
     }
 
     function _transferAll(bool _sameAsset) public {
-        address receiver = makeAddr("receiver");
         uint256 toBorrow = 2;
 
         _depositCollateral(20, address(this), _sameAsset);
@@ -301,7 +290,6 @@ contract ShareDebtTokenTest is Test, SiloLittleHelper {
     }
 
     function _transfer_debtExistInOtherSilo(bool _sameAsset) public {
-        address receiver = makeAddr("receiver");
         uint256 toBorrow = 2;
 
         _depositCollateral(20, address(this), _sameAsset);
@@ -329,8 +317,7 @@ contract ShareDebtTokenTest is Test, SiloLittleHelper {
     function _assertCollateralSiloDidNotChanged(
         address _collateralSenderBefore, address _collateralReceiverBefore
     ) private {
-        address collateralSenderAfter = siloConfig.borrowerCollateralSilo(address(this));
-        address collateralReceiverAfter = siloConfig.borrowerCollateralSilo(makeAddr("receiver"));
+        (address collateralSenderAfter, address collateralReceiverAfter) = _getCollateralState();
 
         assertEq(_collateralSenderBefore, collateralSenderAfter, "[a] does not change the sender state");
         assertEq(_collateralReceiverBefore, collateralReceiverAfter, "[a] does not change the receiver state");
@@ -345,8 +332,6 @@ contract ShareDebtTokenTest is Test, SiloLittleHelper {
     }
 
     function _assertReceiverIsNotBlockedByAnything() private {
-        address receiver = makeAddr("receiver");
-
         _depositCollateral(100, receiver, SAME_ASSET);
         _depositCollateral(100, receiver, TWO_ASSETS);
         _depositForBorrow(100, makeAddr("depositor"));
