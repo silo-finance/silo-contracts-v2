@@ -23,8 +23,21 @@ contract ShareDebtTokenNotInitializedTest is Test {
     /*
     FOUNDRY_PROFILE=core-test forge test -vvv --mt test_sToken_noInit_silo
     */
-    function test_sToken_noInit_silo() public {
+    function test_sToken_noInit_silo() public view {
         assertEq(address(sToken.silo()), address(0));
+    }
+
+    /*
+    FOUNDRY_PROFILE=core-test forge test -vvv --mt test_sToken_noInit_mint_zero
+    */
+    function test_sToken_noInit_mint_zero() public {
+        vm.expectRevert(IShareToken.OnlySilo.selector); // silo is 0
+        sToken.mint(address(1), address(1), 1);
+
+        // counterexample
+        vm.prank(address(0));
+        vm.expectRevert(IShareToken.ZeroTransfer.selector);
+        sToken.mint(address(1), address(1), 0);
     }
 
     /*
@@ -36,7 +49,6 @@ contract ShareDebtTokenNotInitializedTest is Test {
 
         // counterexample
         vm.prank(address(0));
-        vm.expectRevert(IShareToken.ZeroTransfer.selector);
         sToken.mint(address(1), address(1), 1);
     }
 
