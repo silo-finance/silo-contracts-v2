@@ -148,11 +148,6 @@ interface ISiloConfig is ICrossReentrancyGuard {
     /// @param _borrower borrower address
     function setOtherSiloAsCollateralSilo(address _borrower) external;
 
-    /// @notice Switch collateral silo
-    /// @dev Always set to the other silo. Revert if `_borrower` has no debt.
-    /// @param _borrower borrower address
-    function switchCollateralSilo(address _borrower) external;
-
     /// @notice Accrue interest for the silo
     /// @param _silo silo for which accrue interest
     function accrueInterestForSilo(address _silo) external;
