@@ -208,13 +208,13 @@ contract ShareDebtTokenTest is Test, SiloLittleHelper {
 
         _depositCollateral(20, address(this), _sameAsset);
 //        _depositCollateral(20, receiver, _sameAsset);
-        _borrow(toBorrow, address(this));
+        _borrow(toBorrow, address(this), _sameAsset);
 
 //        vm.prank(receiver);
 //        shareDebtToken.setReceiveApproval(address(this), toBorrow);
 //
 //        (address collateralSenderBefore, address collateralReceiverBefore) = _getCollateralState();
-
+//
 //        shareDebtToken.transfer(receiver, toBorrow);
 //
 //        (address collateralSenderAfter, address collateralReceiverAfter) = _getCollateralState();
@@ -248,7 +248,6 @@ contract ShareDebtTokenTest is Test, SiloLittleHelper {
         assertEq(_collateralSenderBefore, collateralReceiverAfter, "[b] copies state of sender to receiver");
     }
 
-
     function _assertReceiverIsNotBlockedByAnything() private {
         address receiver = makeAddr("receiver");
 
@@ -258,7 +257,7 @@ contract ShareDebtTokenTest is Test, SiloLittleHelper {
         _borrow(2, receiver);
 
         vm.prank(receiver);
-        silo1.switchCollateralTo();
+        silo1.switchCollateralToThisSilo();
 
         _repay(2, receiver);
 

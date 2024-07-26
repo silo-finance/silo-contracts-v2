@@ -130,6 +130,13 @@ abstract contract SiloLittleHelper is CommonBase {
         shares = silo1.borrow(_amount, _borrower, _borrower);
     }
 
+    function _borrow(uint256 _amount, address _borrower, bool _sameAsset) internal returns (uint256 shares) {
+        vm.prank(_borrower);
+        shares = _sameAsset
+            ? silo1.borrowSameAsset(_amount, _borrower, _borrower)
+            : silo1.borrow(_amount, _borrower, _borrower);
+    }
+
     function _borrowShares(uint256 _shares, address _borrower) internal returns (uint256 amount) {
         vm.prank(_borrower);
         amount = silo1.borrowShares(_shares, _borrower, _borrower);
