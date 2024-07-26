@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.20;
 
+import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {MethodReentrancyTest} from "../MethodReentrancyTest.sol";
 import {TestStateLib} from "../../TestState.sol";
 
-contract MaxBorrowSharesReentrancyTest is MethodReentrancyTest {
+contract BorrowerCollateralSiloReentrancyTest is MethodReentrancyTest {
     function callMethod() external {
         emit log_string("\tEnsure it will not revert");
         _ensureItWillNotRevert();
@@ -15,13 +16,14 @@ contract MaxBorrowSharesReentrancyTest is MethodReentrancyTest {
     }
 
     function methodDescription() external pure returns (string memory description) {
-        description = "maxBorrowShares(address,bool)";
+        description = "borrowerCollateralSilo(address)";
     }
 
     function _ensureItWillNotRevert() internal {
-        address anyAddr = makeAddr("Any address");
+        ISiloConfig config = TestStateLib.siloConfig();
+        address borrower = makeAddr("Borrower");
 
-        TestStateLib.silo0().maxBorrowShares(anyAddr);
-        TestStateLib.silo1().maxBorrowShares(anyAddr);
+        config.borrowerCollateralSilo(borrower);
+        config.borrowerCollateralSilo(address(0));
     }
 }

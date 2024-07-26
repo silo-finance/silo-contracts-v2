@@ -69,12 +69,12 @@ contract SiloReentrancyTest is Test {
 
                 emit log_string(string.concat("\nExecute ", method.methodDescription()));
 
-                (bool entered,) = siloConfig.crossReentrantStatus();
+                bool entered = siloConfig.reentrancyGuardEntered();
                 assertTrue(!entered, "Reentrancy should be disabled before calling the method");
 
                 method.callMethod();
 
-                (entered,) = siloConfig.crossReentrantStatus();
+                entered = siloConfig.reentrancyGuardEntered();
                 assertTrue(!entered, "Reentrancy should be disabled after calling the method");
 
                 vm.revertTo(snapshotId);

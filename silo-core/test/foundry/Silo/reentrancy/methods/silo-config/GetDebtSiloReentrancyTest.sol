@@ -4,21 +4,17 @@ pragma solidity ^0.8.20;
 import {MethodReentrancyTest} from "../MethodReentrancyTest.sol";
 import {TestStateLib} from "../../TestState.sol";
 
-contract GetConfigsReentrancyTest is MethodReentrancyTest {
+contract GetDebtSiloReentrancyTest is MethodReentrancyTest {
     function callMethod() external {
         emit log_string("\tEnsure it will not revert");
-        _ensureItWillNotRevert();
+        TestStateLib.siloConfig().getDebtSilo(address(0));
     }
 
     function verifyReentrancy() external view {
-        _ensureItWillNotRevert();
+        TestStateLib.siloConfig().getDebtSilo(address(0));
     }
 
     function methodDescription() external pure returns (string memory description) {
-        description = "getConfigs(address)";
-    }
-
-    function _ensureItWillNotRevert() internal view {
-        TestStateLib.siloConfig().getConfigs(address(0));
+        description = "getDebtSilo(address)";
     }
 }

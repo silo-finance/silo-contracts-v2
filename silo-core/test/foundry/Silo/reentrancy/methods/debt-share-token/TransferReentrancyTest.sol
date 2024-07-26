@@ -3,6 +3,7 @@ pragma solidity ^0.8.20;
 
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
+import {ICrossReentrancyGuard} from "silo-core/contracts/interfaces/ICrossReentrancyGuard.sol";
 import {ShareDebtToken} from "silo-core/contracts/utils/ShareDebtToken.sol";
 import {MethodReentrancyTest} from "../MethodReentrancyTest.sol";
 import {MaliciousToken} from "../../MaliciousToken.sol";
@@ -40,7 +41,7 @@ contract TransferReentrancyTest is MethodReentrancyTest {
         silo1.deposit(collateralAmount, borrower);
 
         vm.prank(borrower);
-        silo0.borrow(borrowAmount, borrower, borrower, false /* same asset */);
+        silo0.borrow(borrowAmount, borrower, borrower);
 
         (,,address debtToken) = TestStateLib.siloConfig().getShareTokens(address(silo0));
 
@@ -66,12 +67,12 @@ contract TransferReentrancyTest is MethodReentrancyTest {
 
         (,,address debtToken) = config.getShareTokens(address(silo0));
 
-        vm.expectRevert(ISiloConfig.CrossReentrantCall.selector);
+        vm.expectRevert(ICrossReentrancyGuard.CrossReentrantCall.selector);
         ShareDebtToken(debtToken).transfer(address(0), 0);
 
         (,, debtToken) = config.getShareTokens(address(silo1));
 
-        vm.expectRevert(ISiloConfig.CrossReentrantCall.selector);
+        vm.expectRevert(ICrossReentrancyGuard.CrossReentrantCall.selector);
         ShareDebtToken(debtToken).transfer(address(0), 0);
     }
 

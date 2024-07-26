@@ -5,23 +5,23 @@ import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {MethodReentrancyTest} from "../MethodReentrancyTest.sol";
 import {TestStateLib} from "../../TestState.sol";
 
-contract CrossNonReentrantAfterReentrancyTest is MethodReentrancyTest {
+contract TurnOffReentrancyProtectionReentrancyTest is MethodReentrancyTest {
     function callMethod() external {
         emit log_string("\tEnsure it will revert (permissions test)");
         ISiloConfig config = TestStateLib.siloConfig();
 
         vm.expectRevert(ISiloConfig.OnlySiloOrHookReceiver.selector);
-        config.crossNonReentrantAfter();
+        config.turnOffReentrancyProtection();
     }
 
     function verifyReentrancy() external {
         ISiloConfig config = TestStateLib.siloConfig();
 
         vm.expectRevert(ISiloConfig.OnlySiloOrHookReceiver.selector);
-        config.crossNonReentrantAfter();
+        config.turnOffReentrancyProtection();
     }
 
     function methodDescription() external pure returns (string memory description) {
-        description = "crossNonReentrantAfter()";
+        description = "turnOffReentrancyProtection()";
     }
 }

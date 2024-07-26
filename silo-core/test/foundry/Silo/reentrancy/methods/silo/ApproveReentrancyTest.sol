@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.20;
 
-import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
+import {ICrossReentrancyGuard} from "silo-core/contracts/interfaces/ICrossReentrancyGuard.sol";
 import {SiloERC4626} from "silo-core/contracts/utils/SiloERC4626.sol";
 import {MethodReentrancyTest} from "../MethodReentrancyTest.sol";
 import {TestStateLib} from "../../TestState.sol";
@@ -34,10 +34,10 @@ contract ApproveReentrancyTest is MethodReentrancyTest {
         SiloERC4626 silo0 = SiloERC4626(address(TestStateLib.silo0()));
         SiloERC4626 silo1 = SiloERC4626(address(TestStateLib.silo1()));
 
-        vm.expectRevert(ISiloConfig.CrossReentrantCall.selector);
+        vm.expectRevert(ICrossReentrancyGuard.CrossReentrantCall.selector);
         silo0.approve(address(0), 1e18);
 
-        vm.expectRevert(ISiloConfig.CrossReentrantCall.selector);
+        vm.expectRevert(ICrossReentrancyGuard.CrossReentrantCall.selector);
         silo1.approve(address(0), 1e18);
     }
 }

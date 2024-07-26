@@ -4,6 +4,7 @@ pragma solidity ^0.8.20;
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
+import {ICrossReentrancyGuard} from "silo-core/contracts/interfaces/ICrossReentrancyGuard.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {SiloERC4626} from "silo-core/contracts/utils/SiloERC4626.sol";
 import {MethodReentrancyTest} from "../MethodReentrancyTest.sol";
@@ -44,12 +45,12 @@ contract TransferFromReentrancyTest is MethodReentrancyTest {
     function verifyReentrancy() external {
         ISilo silo0 = TestStateLib.silo0();
 
-        vm.expectRevert(ISiloConfig.CrossReentrantCall.selector);
+        vm.expectRevert(ICrossReentrancyGuard.CrossReentrantCall.selector);
         SiloERC4626(address(silo0)).transferFrom(address(0), address(0), 1000);
 
         ISilo silo1 = TestStateLib.silo1();
 
-        vm.expectRevert(ISiloConfig.CrossReentrantCall.selector);
+        vm.expectRevert(ICrossReentrancyGuard.CrossReentrantCall.selector);
         SiloERC4626(address(silo1)).transferFrom(address(0), address(0), 1000);
     }
 

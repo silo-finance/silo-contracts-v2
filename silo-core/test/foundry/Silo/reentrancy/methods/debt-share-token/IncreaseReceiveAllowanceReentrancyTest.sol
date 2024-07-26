@@ -3,6 +3,7 @@ pragma solidity ^0.8.20;
 
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
+import {ICrossReentrancyGuard} from "silo-core/contracts/interfaces/ICrossReentrancyGuard.sol";
 import {ShareDebtToken} from "silo-core/contracts/utils/ShareDebtToken.sol";
 import {MethodReentrancyTest} from "../MethodReentrancyTest.sol";
 import {TestStateLib} from "../../TestState.sol";
@@ -44,12 +45,12 @@ contract IncreaseReceiveAllowanceReentrancyTest is MethodReentrancyTest {
 
         (,,address debtToken) = config.getShareTokens(address(silo0));
 
-        vm.expectRevert(ISiloConfig.CrossReentrantCall.selector);
+        vm.expectRevert(ICrossReentrancyGuard.CrossReentrantCall.selector);
         ShareDebtToken(debtToken).increaseReceiveAllowance(address(0), 0);
 
         (,, debtToken) = config.getShareTokens(address(silo1));
 
-        vm.expectRevert(ISiloConfig.CrossReentrantCall.selector);
+        vm.expectRevert(ICrossReentrancyGuard.CrossReentrantCall.selector);
         ShareDebtToken(debtToken).increaseReceiveAllowance(address(0), 0);
     }
 

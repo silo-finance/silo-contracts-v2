@@ -3,6 +3,7 @@ pragma solidity ^0.8.20;
 
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
+import {ICrossReentrancyGuard} from "silo-core/contracts/interfaces/ICrossReentrancyGuard.sol";
 import {ShareToken} from "silo-core/contracts/utils/ShareToken.sol";
 import {MethodReentrancyTest} from "../MethodReentrancyTest.sol";
 import {MaliciousToken} from "../../MaliciousToken.sol";
@@ -56,18 +57,18 @@ contract TransferFromReentrancyTest is MethodReentrancyTest {
 
         (address protected, address collateral,) = config.getShareTokens(address(silo0));
 
-        vm.expectRevert(ISiloConfig.CrossReentrantCall.selector);
+        vm.expectRevert(ICrossReentrancyGuard.CrossReentrantCall.selector);
         ShareToken(collateral).transferFrom(address(0), address(0), 0);
 
-        vm.expectRevert(ISiloConfig.CrossReentrantCall.selector);
+        vm.expectRevert(ICrossReentrancyGuard.CrossReentrantCall.selector);
         ShareToken(protected).transferFrom(address(0), address(0), 0);
 
         (protected, collateral,) = config.getShareTokens(address(silo1));
 
-        vm.expectRevert(ISiloConfig.CrossReentrantCall.selector);
+        vm.expectRevert(ICrossReentrancyGuard.CrossReentrantCall.selector);
         ShareToken(collateral).transferFrom(address(0), address(0), 0);
 
-        vm.expectRevert(ISiloConfig.CrossReentrantCall.selector);
+        vm.expectRevert(ICrossReentrancyGuard.CrossReentrantCall.selector);
         ShareToken(protected).transferFrom(address(0), address(0), 0);
     }
 

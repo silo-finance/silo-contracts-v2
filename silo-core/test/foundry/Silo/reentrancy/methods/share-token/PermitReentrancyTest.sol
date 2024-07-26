@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 import {VmSafe} from "forge-std/Vm.sol";
 import {MessageHashUtils} from "openzeppelin5//utils/cryptography/MessageHashUtils.sol";
 
-import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
+import {ICrossReentrancyGuard} from "silo-core/contracts/interfaces/ICrossReentrancyGuard.sol";
 import {ShareToken} from "silo-core/contracts/utils/ShareToken.sol";
 import {ShareTokenMethodReentrancyTest} from "./_ShareTokenMethodReentrancyTest.sol";
 
@@ -36,7 +36,7 @@ contract PermitReentrancyTest is ShareTokenMethodReentrancyTest {
         (uint8 v, bytes32 r, bytes32 s) =
             _createPermit(signer, spender, value, nonce, deadline, address(_token));
 
-        vm.expectRevert(ISiloConfig.CrossReentrantCall.selector);
+        vm.expectRevert(ICrossReentrancyGuard.CrossReentrantCall.selector);
         ShareToken(_token).permit(signer.addr, spender, value, deadline, v, r, s);
     }
 

@@ -47,7 +47,7 @@ contract MaliciousToken is ERC20, Test {
 
         ISiloConfig config = TestStateLib.siloConfig();
 
-        (bool entered,) = config.crossReentrantStatus();
+        bool entered = config.reentrancyGuardEntered();
         assertTrue(entered, "Reentrancy is not enabled on a token transfer");
 
         for (uint j = 0; j < _methodRegistries.length; j++) {

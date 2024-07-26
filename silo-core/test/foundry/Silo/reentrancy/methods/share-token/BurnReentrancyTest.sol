@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.20;
 
-import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
+import {ICrossReentrancyGuard} from "silo-core/contracts/interfaces/ICrossReentrancyGuard.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {ShareToken} from "silo-core/contracts/utils/ShareToken.sol";
 import {ShareTokenMethodReentrancyTest} from "./_ShareTokenMethodReentrancyTest.sol";
@@ -27,7 +27,7 @@ contract BurnReentrancyTest is ShareTokenMethodReentrancyTest {
 
     function _ensureItWillRevertReentrancy(address _silo, address _token) internal {
         vm.prank(_silo);
-        vm.expectRevert(ISiloConfig.CrossReentrantCall.selector);
+        vm.expectRevert(ICrossReentrancyGuard.CrossReentrantCall.selector);
         ShareToken(_token).burn(address(0), address(0), 0);
     }
 }

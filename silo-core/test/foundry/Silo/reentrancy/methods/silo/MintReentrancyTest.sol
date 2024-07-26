@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
-import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
+import {ICrossReentrancyGuard} from "silo-core/contracts/interfaces/ICrossReentrancyGuard.sol";
 import {MethodReentrancyTest} from "../MethodReentrancyTest.sol";
 import {TestStateLib} from "../../TestState.sol";
 import {MaliciousToken} from "../../MaliciousToken.sol";
@@ -30,12 +30,12 @@ contract MintReentrancyTest is MethodReentrancyTest {
     function verifyReentrancy() external {
         ISilo silo0 = TestStateLib.silo0();
 
-        vm.expectRevert(ISiloConfig.CrossReentrantCall.selector);
+        vm.expectRevert(ICrossReentrancyGuard.CrossReentrantCall.selector);
         silo0.mint(1000, address(0));
 
         ISilo silo1 = TestStateLib.silo1();
 
-        vm.expectRevert(ISiloConfig.CrossReentrantCall.selector);
+        vm.expectRevert(ICrossReentrancyGuard.CrossReentrantCall.selector);
         silo1.mint(1000, address(0));
     }
 

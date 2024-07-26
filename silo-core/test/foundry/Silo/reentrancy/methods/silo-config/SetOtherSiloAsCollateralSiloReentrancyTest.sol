@@ -5,23 +5,23 @@ import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {MethodReentrancyTest} from "../MethodReentrancyTest.sol";
 import {TestStateLib} from "../../TestState.sol";
 
-contract CloseDebtReentrancyTest is MethodReentrancyTest {
+contract SetOtherSiloAsCollateralSiloReentrancyTest is MethodReentrancyTest {
     function callMethod() external {
         emit log_string("\tEnsure it will revert (permissions test)");
         ISiloConfig config = TestStateLib.siloConfig();
 
-        vm.expectRevert(ISiloConfig.OnlySiloOrDebtShareToken.selector);
-        config.closeDebt(address(0));
+        vm.expectRevert(ISiloConfig.OnlySilo.selector);
+        config.setOtherSiloAsCollateralSilo(address(0));
     }
 
     function verifyReentrancy() external {
         ISiloConfig config = TestStateLib.siloConfig();
 
-        vm.expectRevert(ISiloConfig.OnlySiloOrDebtShareToken.selector);
-        config.closeDebt(address(0));
+        vm.expectRevert(ISiloConfig.OnlySilo.selector);
+        config.setOtherSiloAsCollateralSilo(address(0));
     }
 
     function methodDescription() external pure returns (string memory description) {
-        description = "closeDebt(address)";
+        description = "setOtherSiloAsCollateralSilo(address)";
     }
 }

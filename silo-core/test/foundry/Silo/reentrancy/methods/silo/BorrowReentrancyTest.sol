@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
-import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
+import {ICrossReentrancyGuard} from "silo-core/contracts/interfaces/ICrossReentrancyGuard.sol";
 import {MethodReentrancyTest} from "../MethodReentrancyTest.sol";
 import {TestStateLib} from "../../TestState.sol";
 import {MaliciousToken} from "../../MaliciousToken.sol";
@@ -39,19 +39,19 @@ contract BorrowReentrancyTest is MethodReentrancyTest {
         TestStateLib.enableReentrancy();
 
         vm.prank(borrower);
-        silo0.borrow(borrowAmount, borrower, borrower, false /* same asset */);
+        silo0.borrow(borrowAmount, borrower, borrower);
     }
 
     function verifyReentrancy() external {
         ISilo silo0 = TestStateLib.silo0();
 
-        vm.expectRevert(ISiloConfig.CrossReentrantCall.selector);
-        silo0.borrow(1000, address(0), address(0), false);
+        vm.expectRevert(ICrossReentrancyGuard.CrossReentrantCall.selector);
+        silo0.borrow(1000, address(0), address(0));
 
         ISilo silo1 = TestStateLib.silo1();
 
-        vm.expectRevert(ISiloConfig.CrossReentrantCall.selector);
-        silo1.borrow(1000, address(0), address(0), false);
+        vm.expectRevert(ICrossReentrancyGuard.CrossReentrantCall.selector);
+        silo1.borrow(1000, address(0), address(0));
     }
 
     function methodDescription() external pure returns (string memory description) {

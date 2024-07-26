@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
-import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
+import {ICrossReentrancyGuard} from "silo-core/contracts/interfaces/ICrossReentrancyGuard.sol";
 import {MethodReentrancyTest} from "../MethodReentrancyTest.sol";
 import {TestStateLib} from "../../TestState.sol";
 import {MaliciousToken} from "../../MaliciousToken.sol";
@@ -37,7 +37,7 @@ contract RepaySharesReentrancyTest is MethodReentrancyTest {
         silo1.deposit(collateralAmount, borrower);
 
         vm.prank(borrower);
-        silo0.borrow(borrowAmount, borrower, borrower, false /* same asset */);
+        silo0.borrow(borrowAmount, borrower, borrower);
 
         vm.prank(borrower);
         token0.approve(address(silo0), borrowAmount);
@@ -51,12 +51,12 @@ contract RepaySharesReentrancyTest is MethodReentrancyTest {
     function verifyReentrancy() external {
         ISilo silo0 = TestStateLib.silo0();
 
-        vm.expectRevert(ISiloConfig.CrossReentrantCall.selector);
+        vm.expectRevert(ICrossReentrancyGuard.CrossReentrantCall.selector);
         silo0.repayShares(1000, address(0));
 
         ISilo silo1 = TestStateLib.silo1();
 
-        vm.expectRevert(ISiloConfig.CrossReentrantCall.selector);
+        vm.expectRevert(ICrossReentrancyGuard.CrossReentrantCall.selector);
         silo1.repayShares(1000, address(0));
     }
 

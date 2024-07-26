@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 import {MethodReentrancyTest} from "../MethodReentrancyTest.sol";
 import {TestStateLib} from "../../TestState.sol";
 
-contract CrossReentrantStatusReentrancyTest is MethodReentrancyTest {
+contract ReentrancyGuardEnteredReentrancyTest is MethodReentrancyTest {
     function callMethod() external {
         emit log_string("\tEnsure it will not revert");
         _ensureItWillNotRevert();
@@ -15,10 +15,10 @@ contract CrossReentrantStatusReentrancyTest is MethodReentrancyTest {
     }
 
     function methodDescription() external pure returns (string memory description) {
-        description = "crossReentrantStatus()";
+        description = "reentrancyGuardEntered()";
     }
 
     function _ensureItWillNotRevert() internal view {
-        TestStateLib.siloConfig().crossReentrantStatus();
+        TestStateLib.siloConfig().reentrancyGuardEntered();
     }
 }
