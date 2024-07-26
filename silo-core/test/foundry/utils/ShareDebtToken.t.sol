@@ -70,7 +70,7 @@ contract ShareDebtTokenTest is Test, SiloLittleHelper {
     }
 
     function _transfer_amountZero_withSenderDebt(bool _sameAsset) private {
-        _depositCollateral(2, address(this), _sameAsset);
+        _depositCollateral(20, address(this), _sameAsset);
         _depositForBorrow(2, makeAddr("depositor"));
         _borrow(2, address(this), _sameAsset);
 
@@ -87,7 +87,7 @@ contract ShareDebtTokenTest is Test, SiloLittleHelper {
     }
 
     function _transfer_amountZero_withReceiverDebt(bool _sameAsset) private {
-        _depositCollateral(2, receiver, _sameAsset);
+        _depositCollateral(20, receiver, _sameAsset);
         _depositForBorrow(2, makeAddr("depositor"));
         _borrow(2, receiver, _sameAsset);
 
