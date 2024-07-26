@@ -49,9 +49,68 @@ contract ShareDebtTokenTest is Test, SiloLittleHelper {
     /*
     FOUNDRY_PROFILE=core-test forge test --ffi -vvv --mt test_debtToken_transfer_amountZero
     */
-    function test_debtToken_transfer_amountZero() public {
+    function test_debtToken_transfer_amountZero_noDebt() public {
         (address collateralSenderBefore, address collateralReceiverBefore) = _getCollateralState();
+        assertEq(collateralSenderBefore, address(0), "sender has no state");
         assertEq(collateralReceiverBefore, address(0), "receiver has no state");
+
+        shareDebtToken.transfer(receiver, 0);
+
+        _assertCollateralSiloDidNotChanged(collateralSenderBefore, collateralReceiverBefore);
+        _assertReceiverIsNotBlockedByAnything();
+    }
+
+    /*
+    FOUNDRY_PROFILE=core-test forge test --ffi -vvv --mt test_debtToken_transfer_amountZero
+    */
+    function test_transfer_amountZero_withSenderDebt_1token(bool _sameAsset) public {
+        _transfer_amountZero_withSenderDebt(SAME_ASSET);
+    }
+
+    function test_transfer_amountZero_withSenderDebt_2tokens(bool _sameAsset) public {
+        _transfer_amountZero_withSenderDebt(SAME_ASSET);
+    }
+
+    function _transfer_amountZero_withSenderDebt(bool _sameAsset) private {
+        _depositCollateral(2, address(this), _sameAsset);
+        _depositForBorrow(2, makeAddr("depositor"));
+        _borrow(2, address(this), _sameAsset);
+
+        (address collateralSenderBefore, address collateralReceiverBefore) = _getCollateralState();
+        assertNe(collateralSenderBefore, address(0), "sender has state");
+        assertEq(collateralReceiverBefore, address(0), "receiver has no state");
+
+        shareDebtToken.transfer(receiver, 0);
+
+        _assertCollateralSiloDidNotChanged(collateralSenderBefore, collateralReceiverBefore);
+        _assertReceiverIsNotBlockedByAnything();
+    }
+
+    function _transfer_amountZero_withReceiverDebt(bool _sameAsset) public {
+        _depositCollateral(2, receiver, _sameAsset);
+        _depositForBorrow(2, makeAddr("depositor"));
+        _borrow(2, receiver, _sameAsset);
+
+        (address collateralSenderBefore, address collateralReceiverBefore) = _getCollateralState();
+        assertEq(collateralSenderBefore, address(0), "sender has no state");
+        assertNe(collateralReceiverBefore, address(0), "receiver has state");
+
+        shareDebtToken.transfer(receiver, 0);
+
+        _assertCollateralSiloDidNotChanged(collateralSenderBefore, collateralReceiverBefore);
+        _assertReceiverIsNotBlockedByAnything();
+    }
+
+    function _transfer_amountZero_withSenderReceiverDebt(bool _senderSameAsset, bool _receiverSameAsset) public {
+        _depositCollateral(20, address(this), _senderSameAsset);
+        _depositCollateral(20, receiver, _receiverSameAsset);
+        _depositForBorrow(20, makeAddr("depositor"));
+        _borrow(2, address(this), _senderSameAsset);
+        _borrow(2, receiver, _receiverSameAsset);
+
+        (address collateralSenderBefore, address collateralReceiverBefore) = _getCollateralState();
+        assertEq(collateralSenderBefore, address(0), "sender has no state");
+        assertNe(collateralReceiverBefore, address(0), "receiver has state");
 
         shareDebtToken.transfer(receiver, 0);
 
