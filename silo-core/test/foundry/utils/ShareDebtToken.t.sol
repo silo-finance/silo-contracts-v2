@@ -289,6 +289,38 @@ contract ShareDebtTokenTest is Test, SiloLittleHelper {
         _assertReceiverIsNotBlockedByAnything();
     }
 
+    /*
+    FOUNDRY_PROFILE=core-test forge test --ffi -vvv --mt test_debtToken_transfer_debtExistInOtherSilo_
+    */
+    function test_debtToken_transfer_debtExistInOtherSilo_1token() public {
+        _transferAll(SAME_ASSET);
+    }
+
+    function test_debtToken_transfer_debtExistInOtherSilo_2tokens() public {
+        _transferAll(TWO_ASSETS);
+    }
+
+    function _transfer_debtExistInOtherSilo(bool _sameAsset) public {
+        address receiver = makeAddr("receiver");
+        uint256 toBorrow = 2;
+
+        _depositCollateral(20, address(this), _sameAsset);
+        _depositCollateral(20, receiver, !_sameAsset);
+        _depositForBorrow(2, makeAddr("depositor"));
+        _printStats(siloConfig, address(this));
+
+        _borrow(toBorrow, address(this), _sameAsset);
+
+        vm.prank(receiver);
+        _sameAsset ? silo0.borrow(1, receiver, receiver) : silo0.borrowSameAsset(1, receiver, receiver);
+
+        vm.prank(receiver);
+        shareDebtToken.setReceiveApproval(address(this), toBorrow);
+
+        vm.expectRevert(ISiloConfig.DebtExistInOtherSilo.selector);
+        shareDebtToken.transfer(receiver, toBorrow);
+    }
+
     function _getCollateralState() private returns (address collateralSender, address collateralReceiver) {
         collateralSender = siloConfig.borrowerCollateralSilo(address(this));
         collateralReceiver = siloConfig.borrowerCollateralSilo(makeAddr("receiver"));
