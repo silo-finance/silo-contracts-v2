@@ -2,6 +2,7 @@
 pragma solidity ^0.8.20;
 
 import {CommonBase} from "forge-std/Base.sol";
+import {console} from "forge-std/console.sol";
 
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
@@ -261,4 +262,19 @@ abstract contract SiloLittleHelper is CommonBase {
 
         partialLiquidation = IPartialLiquidation(hook);
     }
+
+    function _printStats(ISiloConfig _siloConfig, address _borrower) internal {
+        console.log("borrower", _borrower);
+        console.log("silo0", address(silo0));
+        console.log("silo1", address(silo1));
+
+        console.log("borrowerCollateralSilo", _siloConfig.borrowerCollateralSilo(_borrower));
+
+        console.log("[silo0] debtBalanceOfUnderlying", siloLens.debtBalanceOfUnderlying(silo0, _borrower));
+        console.log("[silo1] debtBalanceOfUnderlying", siloLens.debtBalanceOfUnderlying(silo1, _borrower));
+
+        console.log("[silo0] collateralBalanceOfUnderlying", siloLens.collateralBalanceOfUnderlying(silo0, _borrower));
+        console.log("[silo1] collateralBalanceOfUnderlying", siloLens.collateralBalanceOfUnderlying(silo1, _borrower));
+    }
+
 }

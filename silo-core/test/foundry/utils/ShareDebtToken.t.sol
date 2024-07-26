@@ -165,14 +165,33 @@ contract ShareDebtTokenTest is Test, SiloLittleHelper {
     FOUNDRY_PROFILE=core-test forge test --ffi -vvv --mt test_debtToken_transfer_withAllowance_sameCollateral
     */
     function test_debtToken_transfer_withAllowance_sameCollateral_1token() public {
-        _transfer_withAllowance_sameCollateral_1token(TWO_ASSETS);
+        _transfer_withAllowance_sameCollateral(TWO_ASSETS);
     }
 
     function test_debtToken_transfer_withAllowance_sameCollateral_2tokens() public {
-        _transfer_withAllowance_sameCollateral_1token(SAME_ASSET);
+        _transfer_withAllowance_sameCollateral(SAME_ASSET);
     }
 
-    function _transfer_withAllowance_sameCollateral_1token(bool _sameAsset) private {
+    function _transfer_withAllowance_sameCollateral(bool _sameAsset) private {
+        address receiver = makeAddr("receiver");
+
+        _depositCollateral(20, address(this), _sameAsset);
+        _depositCollateral(20, receiver, _sameAsset);
+        _depositForBorrow(20, makeAddr("depositor"));
+        _borrow(2, address(this));
+
+        vm.prank(receiver);
+        shareDebtToken.setReceiveApproval(address(this), 1);
+
+        (address collateralSenderBefore, ) = _getCollateralState();
+
+        shareDebtToken.transfer(receiver, 1);
+
+        _assertCollateralSiloWasCopiedFromSenderToReceiver(collateralSenderBefore);
+        _assertReceiverIsNotBlockedByAnything();
+    }
+
+    function _transfer_withAllowance_withSameDebt(bool _sameAsset) private {
         address receiver = makeAddr("receiver");
 
         _depositCollateral(20, address(this), _sameAsset);
@@ -207,22 +226,25 @@ contract ShareDebtTokenTest is Test, SiloLittleHelper {
         uint256 toBorrow = 2;
 
         _depositCollateral(20, address(this), _sameAsset);
-//        _depositCollateral(20, receiver, _sameAsset);
+        _depositCollateral(20, receiver, _sameAsset);
+        _depositForBorrow(2, makeAddr("depositor"));
+        _printStats(siloConfig, address(this));
         _borrow(toBorrow, address(this), _sameAsset);
 
-//        vm.prank(receiver);
-//        shareDebtToken.setReceiveApproval(address(this), toBorrow);
-//
-//        (address collateralSenderBefore, address collateralReceiverBefore) = _getCollateralState();
-//
-//        shareDebtToken.transfer(receiver, toBorrow);
-//
-//        (address collateralSenderAfter, address collateralReceiverAfter) = _getCollateralState();
-//
-//        assertEq(collateralSenderBefore, collateralSenderAfter, "[transferAll TODO imo we should reset the state when no debt");
-//        assertEq(collateralReceiverBefore, collateralSenderBefore, "[transferAll] state copied sender -> receiver");
-//
-//        _assertReceiverIsNotBlockedByAnything();
+        vm.prank(receiver);
+        shareDebtToken.setReceiveApproval(address(this), toBorrow);
+
+        (address collateralSenderBefore, address collateralReceiverBefore) = _getCollateralState();
+        assertEq(collateralReceiverBefore, address(0), "[transferAll] receiver collateral is empty");
+
+        shareDebtToken.transfer(receiver, toBorrow);
+
+        (address collateralSenderAfter, address collateralReceiverAfter) = _getCollateralState();
+
+        assertEq(collateralSenderBefore, collateralSenderAfter, "[transferAll] sender history is not cleared");
+        assertEq(collateralReceiverAfter, collateralSenderBefore, "[transferAll] state copied sender -> receiver");
+
+        _assertReceiverIsNotBlockedByAnything();
     }
 
     function _getCollateralState() private returns (address collateralSender, address collateralReceiver) {
