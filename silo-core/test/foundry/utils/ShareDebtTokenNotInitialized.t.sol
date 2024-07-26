@@ -36,6 +36,7 @@ contract ShareDebtTokenNotInitializedTest is Test {
 
         // counterexample
         vm.prank(address(0));
+        vm.expectRevert(IShareToken.ZeroTransfer.selector);
         sToken.mint(address(1), address(1), 1);
     }
 
@@ -48,6 +49,7 @@ contract ShareDebtTokenNotInitializedTest is Test {
 
         // counterexample
         vm.prank(address(0));
-        sToken.mint(address(1), address(1), 0);
+        vm.expectRevert(IShareToken.ZeroTransfer.selector);
+        sToken.burn(address(1), address(1), 0);
     }
 }
