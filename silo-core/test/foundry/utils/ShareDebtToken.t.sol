@@ -191,13 +191,26 @@ contract ShareDebtTokenTest is Test, SiloLittleHelper {
         _assertReceiverIsNotBlockedByAnything();
     }
 
+    /*
+    FOUNDRY_PROFILE=core-test forge test --ffi -vvv --mt test_debtToken_transfer_withAllowance_withSameDebt_1token
+    */
+    function test_debtToken_transfer_withAllowance_withSameDebt_1token() public {
+        _transfer_withAllowance_withSameDebt(SAME_ASSET);
+    }
+
+    function test_debtToken_transfer_withAllowance_withSameDebt_2tokens() public {
+        _transfer_withAllowance_withSameDebt(TWO_ASSETS);
+    }
+
     function _transfer_withAllowance_withSameDebt(bool _sameAsset) private {
         address receiver = makeAddr("receiver");
 
         _depositCollateral(20, address(this), _sameAsset);
         _depositCollateral(20, receiver, _sameAsset);
         _depositForBorrow(20, makeAddr("depositor"));
-        _borrow(2, address(this));
+
+        _borrow(2, address(this), _sameAsset);
+        _borrow(1, receiver, _sameAsset);
 
         vm.prank(receiver);
         shareDebtToken.setReceiveApproval(address(this), 1);
@@ -208,6 +221,36 @@ contract ShareDebtTokenTest is Test, SiloLittleHelper {
 
         _assertCollateralSiloWasCopiedFromSenderToReceiver(collateralSenderBefore);
         _assertReceiverIsNotBlockedByAnything();
+    }
+
+    /*
+    FOUNDRY_PROFILE=core-test forge test --ffi -vvv --mt test_debtToken_transfer_withAllowance_withDifferentDebt_
+    */
+    function test_debtToken_transfer_withAllowance_withDifferentDebt_1token() public {
+        _transfer_withAllowance_withDifferentDebt(SAME_ASSET);
+    }
+
+    function test_debtToken_transfer_withAllowance_withDifferentDebt_2tokens() public {
+        _transfer_withAllowance_withDifferentDebt(TWO_ASSETS);
+    }
+
+    function _transfer_withAllowance_withDifferentDebt(bool _sameAsset) private {
+        address receiver = makeAddr("receiver");
+
+        _depositCollateral(20, address(this), _sameAsset);
+        _depositCollateral(20, receiver, !_sameAsset);
+        _depositForBorrow(20, makeAddr("depositor"));
+
+        _borrow(2, address(this), _sameAsset);
+        _borrow(1, receiver, !_sameAsset);
+
+        vm.prank(receiver);
+        //        vm.expectRevert(IShareToken.RecipientNotSolventAfterTransfer.selector);
+        shareDebtToken.setReceiveApproval(address(this), 1);
+
+        (address collateralSenderBefore, ) = _getCollateralState();
+
+        shareDebtToken.transfer(receiver, 1);
     }
 
     /*
