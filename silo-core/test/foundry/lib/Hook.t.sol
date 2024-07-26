@@ -12,18 +12,28 @@ contract HookTest is Test {
     using Hook for uint256;
 
     function test_hook_addAction() public pure {
-        assertEq(Hook.SAME_ASSET, Hook.NONE.addAction(Hook.SAME_ASSET));
-        assertEq(Hook.SAME_ASSET, Hook.SAME_ASSET.addAction(Hook.SAME_ASSET), "nothing was changed");
+        assertEq(Hook.BORROW_SAME_ASSET, Hook.NONE.addAction(Hook.BORROW_SAME_ASSET));
 
-        uint256 bitmap = Hook.BORROW | Hook.SAME_ASSET;
-        assertEq(Hook.BORROW | Hook.SAME_ASSET | Hook.LEVERAGE, bitmap.addAction(Hook.LEVERAGE), "add LEVERAGE");
+        assertEq(
+            Hook.BORROW_SAME_ASSET,
+            Hook.BORROW_SAME_ASSET.addAction(Hook.BORROW_SAME_ASSET),
+            "nothing was changed"
+        );
+
+        uint256 bitmap = Hook.TRANSITION_COLLATERAL;
+
+        assertEq(
+            Hook.TRANSITION_COLLATERAL | Hook.COLLATERAL_TOKEN,
+            bitmap.addAction(Hook.COLLATERAL_TOKEN),
+            "add COLLATERAL_TOKEN"
+        );
     }
 
     function test_hook_removeAction() public pure {
-        assertEq(Hook.SAME_ASSET, Hook.SAME_ASSET.removeAction(Hook.NONE), "nothing was removed");
+        assertEq(Hook.TRANSITION_COLLATERAL, Hook.TRANSITION_COLLATERAL.removeAction(Hook.NONE), "nothing was removed");
 
-        uint256 bitmap = Hook.BORROW | Hook.SAME_ASSET | Hook.LEVERAGE;
-        assertEq(Hook.SAME_ASSET | Hook.LEVERAGE, bitmap.removeAction(Hook.BORROW), "remove WITHDRAW");
+        uint256 bitmap = Hook.BORROW | Hook.WITHDRAW;
+        assertEq(Hook.BORROW, bitmap.removeAction(Hook.WITHDRAW), "remove WITHDRAW");
     }
 
     function test_hook_match() public pure {
