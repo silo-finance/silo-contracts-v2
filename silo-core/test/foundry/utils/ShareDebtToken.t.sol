@@ -165,11 +165,11 @@ contract ShareDebtTokenTest is Test, SiloLittleHelper {
     FOUNDRY_PROFILE=core-test forge test --ffi -vvv --mt test_debtToken_transfer_withAllowance_sameCollateral
     */
     function test_debtToken_transfer_withAllowance_sameCollateral_1token() public {
-        _transfer_withAllowance_sameCollateral(TWO_ASSETS);
+        _transfer_withAllowance_sameCollateral(SAME_ASSET);
     }
 
     function test_debtToken_transfer_withAllowance_sameCollateral_2tokens() public {
-        _transfer_withAllowance_sameCollateral(SAME_ASSET);
+        _transfer_withAllowance_sameCollateral(TWO_ASSETS);
     }
 
     function _transfer_withAllowance_sameCollateral(bool _sameAsset) private {
