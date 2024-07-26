@@ -7,7 +7,7 @@ import {MethodReentrancyTest} from "../MethodReentrancyTest.sol";
 import {TestStateLib} from "../../TestState.sol";
 import {MaliciousToken} from "../../MaliciousToken.sol";
 
-contract BorrowReentrancyTest is MethodReentrancyTest {
+contract LeverageSameAssetReentrancyTest is MethodReentrancyTest {
     function callMethod() external {
         MaliciousToken token0 = MaliciousToken(TestStateLib.token0());
         MaliciousToken token1 = MaliciousToken(TestStateLib.token1());
@@ -22,7 +22,7 @@ contract BorrowReentrancyTest is MethodReentrancyTest {
         TestStateLib.disableReentrancy();
 
         token0.mint(depositor, depositAmount);
-        token1.mint(borrower, collateralAmount);
+        token0.mint(borrower, collateralAmount);
 
         vm.prank(depositor);
         token0.approve(address(silo0), depositAmount);
@@ -31,30 +31,33 @@ contract BorrowReentrancyTest is MethodReentrancyTest {
         silo0.deposit(depositAmount, depositor);
 
         vm.prank(borrower);
-        token1.approve(address(silo1), collateralAmount);
-
-        vm.prank(borrower);
-        silo1.deposit(collateralAmount, borrower);
+        token0.approve(address(silo0), collateralAmount);
 
         TestStateLib.enableReentrancy();
 
         vm.prank(borrower);
-        silo0.borrow(borrowAmount, borrower, borrower);
+
+        silo0.leverageSameAsset(
+            collateralAmount,
+            borrowAmount,
+            borrower,
+            ISilo.CollateralType.Collateral
+        );
     }
 
     function verifyReentrancy() external {
         ISilo silo0 = TestStateLib.silo0();
 
         vm.expectRevert(ICrossReentrancyGuard.CrossReentrantCall.selector);
-        silo0.borrow(1000, address(0), address(0));
+        silo0.leverageSameAsset(1000, 1000, address(0), ISilo.CollateralType.Collateral);
 
         ISilo silo1 = TestStateLib.silo1();
 
         vm.expectRevert(ICrossReentrancyGuard.CrossReentrantCall.selector);
-        silo1.borrow(1000, address(0), address(0));
+        silo1.leverageSameAsset(1000, 1000, address(0), ISilo.CollateralType.Collateral);
     }
 
     function methodDescription() external pure returns (string memory description) {
-        description = "borrow(uint256,address,address)";
+        description = "leverageSameAsset(uint256,uint256,address,uint8)";
     }
 }

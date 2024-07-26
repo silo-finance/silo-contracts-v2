@@ -15,7 +15,7 @@ contract MaxBorrowReentrancyTest is MethodReentrancyTest {
     }
 
     function methodDescription() external pure returns (string memory description) {
-        description = "maxBorrow(address,bool)";
+        description = "maxBorrow(address)";
     }
 
     function _ensureItWillNotRevert() internal {

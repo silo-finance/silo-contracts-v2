@@ -55,6 +55,6 @@ contract BorrowSharesReentrancyTest is MethodReentrancyTest {
     }
 
     function methodDescription() external pure returns (string memory description) {
-        description = "borrowShares(uint256,address,address,bool)";
+        description = "borrowShares(uint256,address,address)";
     }
 }

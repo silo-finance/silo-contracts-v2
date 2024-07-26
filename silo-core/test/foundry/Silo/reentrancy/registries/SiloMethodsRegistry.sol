@@ -11,6 +11,7 @@ import {ApproveReentrancyTest} from "../methods/silo/ApproveReentrancyTest.sol";
 import {AssetReentrancyTest} from "../methods/silo/AssetReentrancyTest.sol";
 import {BalanceOfReentrancyTest} from "../methods/silo/BalanceOfReentrancyTest.sol";
 import {BorrowReentrancyTest} from "../methods/silo/BorrowReentrancyTest.sol";
+import {BorrowSameAssetReentrancyTest} from "../methods/silo/BorrowSameAssetReentrancyTest.sol";
 import {BorrowSharesReentrancyTest} from "../methods/silo/BorrowSharesReentrancyTest.sol";
 import {CallOnBehalfOfSiloReentrancyTest} from "../methods/silo/CallOnBehalfOfSiloReentrancyTest.sol";
 import {ConfigReentrancyTest} from "../methods/silo/ConfigReentrancyTest.sol";
@@ -32,7 +33,9 @@ import {GetDebtAssetsReentrancyTest} from "../methods/silo/GetDebtAssetsReentran
 import {GetLiquidityReentrancyTest} from "../methods/silo/GetLiquidityReentrancyTest.sol";
 import {InitializeReentrancyTest} from "../methods/silo/InitializeReentrancyTest.sol";
 import {IsSolventReentrancyTest} from "../methods/silo/IsSolventReentrancyTest.sol";
+import {LeverageSameAssetReentrancyTest} from "../methods/silo/LeverageSameAssetReentrancyTest.sol";
 import {MaxBorrowReentrancyTest} from "../methods/silo/MaxBorrowReentrancyTest.sol";
+import {MaxBorrowSameAssetReentrancyTest} from "../methods/silo/MaxBorrowSameAssetReentrancyTest.sol";
 import {MaxBorrowSharesReentrancyTest} from "../methods/silo/MaxBorrowSharesReentrancyTest.sol";
 import {MaxDepositReentrancyTest} from "../methods/silo/MaxDepositReentrancyTest.sol";
 import {MaxDepositWithTypeReentrancyTest} from "../methods/silo/MaxDepositWithTypeReentrancyTest.sol";
@@ -92,6 +95,7 @@ contract SiloMethodsRegistry is IMethodsRegistry {
         _registerMethod(new AssetReentrancyTest());
         _registerMethod(new BalanceOfReentrancyTest());
         _registerMethod(new BorrowReentrancyTest());
+        _registerMethod(new BorrowSameAssetReentrancyTest());
         _registerMethod(new BorrowSharesReentrancyTest());
         _registerMethod(new CallOnBehalfOfSiloReentrancyTest());
         _registerMethod(new ConfigReentrancyTest());
@@ -112,7 +116,9 @@ contract SiloMethodsRegistry is IMethodsRegistry {
         _registerMethod(new GetLiquidityReentrancyTest());
         _registerMethod(new InitializeReentrancyTest());
         _registerMethod(new IsSolventReentrancyTest());
+        _registerMethod(new LeverageSameAssetReentrancyTest());
         _registerMethod(new MaxBorrowReentrancyTest());
+        _registerMethod(new MaxBorrowSameAssetReentrancyTest());
         _registerMethod(new MaxBorrowSharesReentrancyTest());
         _registerMethod(new MaxDepositReentrancyTest());
         _registerMethod(new MaxDepositWithTypeReentrancyTest());
