@@ -74,7 +74,7 @@ contract ShareDebtTokenTest is Test, SiloLittleHelper {
     function test_debtToken_transfer_withLowAllowance() public {
         address receiver = makeAddr("receiver");
 
-        _depositCollateral(20, address(this), false);
+        _depositCollateral(20, address(this), TWO_ASSETS);
         _depositForBorrow(2, makeAddr("depositor"));
         _borrow(2, address(this));
 
@@ -245,7 +245,6 @@ contract ShareDebtTokenTest is Test, SiloLittleHelper {
         _borrow(1, receiver, !_sameAsset);
 
         vm.prank(receiver);
-        //        vm.expectRevert(IShareToken.RecipientNotSolventAfterTransfer.selector);
         shareDebtToken.setReceiveApproval(address(this), 1);
 
         (address collateralSenderBefore, ) = _getCollateralState();
