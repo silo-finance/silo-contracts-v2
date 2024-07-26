@@ -276,5 +276,4 @@ abstract contract SiloLittleHelper is CommonBase {
         console.log("[silo0] collateralBalanceOfUnderlying", siloLens.collateralBalanceOfUnderlying(silo0, _borrower));
         console.log("[silo1] collateralBalanceOfUnderlying", siloLens.collateralBalanceOfUnderlying(silo1, _borrower));
     }
-
 }
