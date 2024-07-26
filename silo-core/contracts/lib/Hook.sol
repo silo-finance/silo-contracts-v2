@@ -215,7 +215,7 @@ library Hook {
     uint256 internal constant LEVERAGE_SAME_ASSET = 2 ** 6;
     uint256 internal constant FLASH_LOAN = 2 ** 7;
     uint256 internal constant TRANSITION_COLLATERAL = 2 ** 8;
-    uint256 internal constant SWITCH_COLLATERAL = 2 ** 0;
+    uint256 internal constant SWITCH_COLLATERAL = 2 ** 9;
     uint256 internal constant LIQUIDATION = 2 ** 10;
     uint256 internal constant SHARE_TOKEN_TRANSFER = 2 ** 11;
     uint256 internal constant COLLATERAL_TOKEN = 2 ** 12;
@@ -278,12 +278,6 @@ library Hook {
     /// @param _type The collateral type
     function transitionCollateralAction(ISilo.CollateralType _type) internal pure returns (uint256) {
         return TRANSITION_COLLATERAL | (_type == ISilo.CollateralType.Collateral ? COLLATERAL_TOKEN : PROTECTED_TOKEN);
-    }
-
-    /// @notice Returns the action for switching collateral
-    /// @param _toSameAsset Whether the switch is to the same asset
-    function switchCollateralAction(bool _toSameAsset) internal pure returns (uint256) {
-        return SWITCH_COLLATERAL | (_toSameAsset ? SAME_ASSET : TWO_ASSETS);
     }
 
     /// @notice Returns the share token transfer action

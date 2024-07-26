@@ -234,6 +234,8 @@ contract HookReceiverAllActionsWithEvents is PartialLiquidation, SiloHookReceive
             _processLeverageSameAsset(_silo, _inputAndOutput, _isBefore);
         } else if (_action.matchAction(Hook.BORROW)) {
             _processBorrow(_silo, _action, _inputAndOutput, _isBefore);
+        } else if (_action.matchAction(Hook.BORROW_SAME_ASSET)) {
+            _processBorrow(_silo, _action, _inputAndOutput, _isBefore);
         } else if (_action.matchAction(Hook.REPAY)) {
             _processRepay(_silo, _inputAndOutput, _isBefore);
         } else if (_action.matchAction(Hook.FLASH_LOAN)) {
@@ -358,7 +360,7 @@ contract HookReceiverAllActionsWithEvents is PartialLiquidation, SiloHookReceive
     }
 
     function _processBorrow(address _silo, uint256 _action, bytes calldata _inputAndOutput, bool _isBefore) internal {
-        if (_action.matchAction(Hook.BORROW)) {
+        if (_action.matchAction(Hook.BORROW) || _action.matchAction(Hook.BORROW_SAME_ASSET)) {
             _processBorrowAction(_silo, _inputAndOutput, _isBefore);
         } else {
             revert UnknownBorrowAction();
