@@ -54,20 +54,18 @@ contract ShareDebtTokenTest is Test, SiloLittleHelper {
         assertEq(collateralSenderBefore, address(0), "sender has no state");
         assertEq(collateralReceiverBefore, address(0), "receiver has no state");
 
+        vm.expectRevert(IShareToken.ZeroTransfer.selector);
         shareDebtToken.transfer(receiver, 0);
-
-        _assertCollateralSiloDidNotChanged(collateralSenderBefore, collateralReceiverBefore);
-        _assertReceiverIsNotBlockedByAnything();
     }
 
     /*
     FOUNDRY_PROFILE=core-test forge test --ffi -vvv --mt test_debtToken_transfer_amountZero
     */
-    function test_transfer_amountZero_withSenderDebt_1token(bool _sameAsset) public {
+    function test_transfer_amountZero_withSenderDebt_1token() public {
         _transfer_amountZero_withSenderDebt(SAME_ASSET);
     }
 
-    function test_transfer_amountZero_withSenderDebt_2tokens(bool _sameAsset) public {
+    function test_transfer_amountZero_withSenderDebt_2tokens() public {
         _transfer_amountZero_withSenderDebt(SAME_ASSET);
     }
 
@@ -76,46 +74,43 @@ contract ShareDebtTokenTest is Test, SiloLittleHelper {
         _depositForBorrow(2, makeAddr("depositor"));
         _borrow(2, address(this), _sameAsset);
 
-        (address collateralSenderBefore, address collateralReceiverBefore) = _getCollateralState();
-        assertNe(collateralSenderBefore, address(0), "sender has state");
-        assertEq(collateralReceiverBefore, address(0), "receiver has no state");
-
+        vm.expectRevert(IShareToken.ZeroTransfer.selector);
         shareDebtToken.transfer(receiver, 0);
-
-        _assertCollateralSiloDidNotChanged(collateralSenderBefore, collateralReceiverBefore);
-        _assertReceiverIsNotBlockedByAnything();
     }
 
-    function _transfer_amountZero_withReceiverDebt(bool _sameAsset) public {
+    function test_transfer_amountZero_withReceiverDebt_1token() public {
+        _transfer_amountZero_withReceiverDebt(SAME_ASSET);
+    }
+
+    function test_transfer_amountZero_withReceiverDebt_2tokens() public {
+        _transfer_amountZero_withReceiverDebt(TWO_ASSETS);
+    }
+
+    function _transfer_amountZero_withReceiverDebt(bool _sameAsset) private {
         _depositCollateral(2, receiver, _sameAsset);
         _depositForBorrow(2, makeAddr("depositor"));
         _borrow(2, receiver, _sameAsset);
 
-        (address collateralSenderBefore, address collateralReceiverBefore) = _getCollateralState();
-        assertEq(collateralSenderBefore, address(0), "sender has no state");
-        assertNe(collateralReceiverBefore, address(0), "receiver has state");
-
+        vm.expectRevert(IShareToken.ZeroTransfer.selector);
         shareDebtToken.transfer(receiver, 0);
-
-        _assertCollateralSiloDidNotChanged(collateralSenderBefore, collateralReceiverBefore);
-        _assertReceiverIsNotBlockedByAnything();
     }
 
-    function _transfer_amountZero_withSenderReceiverDebt(bool _senderSameAsset, bool _receiverSameAsset) public {
+    function test_transfer_amountZero_withSenderReceiverDebt() public {
+        _transfer_amountZero_withSenderReceiverDebt(SAME_ASSET, SAME_ASSET);
+        _transfer_amountZero_withSenderReceiverDebt(SAME_ASSET, TWO_ASSETS);
+        _transfer_amountZero_withSenderReceiverDebt(TWO_ASSETS, SAME_ASSET);
+        _transfer_amountZero_withSenderReceiverDebt(TWO_ASSETS, TWO_ASSETS);
+    }
+
+    function _transfer_amountZero_withSenderReceiverDebt(bool _senderSameAsset, bool _receiverSameAsset) private {
         _depositCollateral(20, address(this), _senderSameAsset);
         _depositCollateral(20, receiver, _receiverSameAsset);
         _depositForBorrow(20, makeAddr("depositor"));
         _borrow(2, address(this), _senderSameAsset);
         _borrow(2, receiver, _receiverSameAsset);
 
-        (address collateralSenderBefore, address collateralReceiverBefore) = _getCollateralState();
-        assertEq(collateralSenderBefore, address(0), "sender has no state");
-        assertNe(collateralReceiverBefore, address(0), "receiver has state");
-
+        vm.expectRevert(IShareToken.ZeroTransfer.selector);
         shareDebtToken.transfer(receiver, 0);
-
-        _assertCollateralSiloDidNotChanged(collateralSenderBefore, collateralReceiverBefore);
-        _assertReceiverIsNotBlockedByAnything();
     }
 
     /*

@@ -82,7 +82,7 @@ contract ShareDebtToken is IERC20R, ShareToken {
     /// @dev Check receive allowance and if recipient is allowed to accept debt from silo
     function _beforeTokenTransfer(address _sender, address _recipient, uint256 _amount) internal virtual override {
         // If we are minting or burning, Silo is responsible to check all necessary conditions
-        if (_amount != 0 && _isTransfer(_sender, _recipient)) {
+        if (_isTransfer(_sender, _recipient)) {
             // Silo forbids having two debts and this condition will be checked inside `onDebtTransfer`.
             // If `_recepient` has no collateral silo set yet, it will be copiet from sender.
             siloConfig.onDebtTransfer(_sender, _recipient);

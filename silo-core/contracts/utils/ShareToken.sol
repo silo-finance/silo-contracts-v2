@@ -242,6 +242,8 @@ abstract contract ShareToken is Initializable, ERC20Permit, IShareToken {
 
     /// @inheritdoc ERC20
     function _update(address from, address to, uint256 value) internal virtual override {
+        if (value == 0) revert ZeroTransfer();
+
         _beforeTokenTransfer(from, to, value);
 
         ERC20._update(from, to, value);
