@@ -98,7 +98,7 @@ contract HookCallsOutsideActionTest is PartialLiquidation, IERC3156FlashBorrower
 
         emit log("-- switchCollateralToThisSilo --");
         vm.prank(borrower);
-        silo0.switchCollateralToThisSilo();
+        silo1.switchCollateralToThisSilo();
 
         emit log("-- leverageSameAsset --");
         vm.prank(borrower);
