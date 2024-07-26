@@ -324,14 +324,16 @@ library Actions {
         _hookCallAfterTransitionCollateral(_shareStorage, _args, shares, assets);
     }
 
-    function setThisSiloAsCollateralSilo(ISilo.SharedStorage storage _shareStorage) external {
+    function switchCollateralToThisSilo(ISilo.SharedStorage storage _shareStorage) external {
+        ISiloConfig siloConfig = _shareStorage.siloConfig;
+
+        if (siloConfig.borrowerCollateralSilo(msg.sender) == address(this)) revert ISilo.CollateralSiloAlreadySet();
+
         uint256 action = Hook.SWITCH_COLLATERAL;
 
         if (_shareStorage.hooksBefore.matchAction(action)) {
             _shareStorage.hookReceiver.beforeAction(address(this), action, abi.encodePacked(msg.sender));
         }
-
-        ISiloConfig siloConfig = _shareStorage.siloConfig;
 
         siloConfig.turnOnReentrancyProtection();
         siloConfig.setThisSiloAsCollateralSilo(msg.sender);

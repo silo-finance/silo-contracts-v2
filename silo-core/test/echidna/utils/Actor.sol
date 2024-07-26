@@ -136,9 +136,9 @@ contract Actor is PropertiesAsserts, IERC3156FlashBorrower {
         _accountForOpenedPosition(withdrawType, _vaultZero, assets, _shares);
     }
 
-    function setThisSiloAsCollateralSilo(bool _vaultZero) external {
+    function switchCollateralToThisSilo(bool _vaultZero) external {
         Silo vault = _vaultZero ? vault0 : vault1;
-        vault.setThisSiloAsCollateralSilo();
+        vault.switchCollateralToThisSilo();
     }
 
     function leverageSameAsset(

@@ -200,6 +200,7 @@ interface ISilo is IERC4626, IERC3156FlashLender {
     error OnlySiloConfig();
     error NoLiquidity();
     error InputCanBeAssetsOrShares();
+    error CollateralSiloAlreadySet();
 
     /// @notice Method for HookReceiver only to call on behalf of Silo
     /// @param _target address of the contract to call
@@ -351,8 +352,10 @@ interface ISilo is IERC4626, IERC3156FlashLender {
     function transitionCollateral(uint256 _shares, address _owner, CollateralType _withdrawType)
         external
         returns (uint256 assets);
-
-    function setThisSiloAsCollateralSilo() external;
+    
+    /// @notice Switches the collateral silo to this silo
+    /// @dev Revert if the collateral silo is already set
+    function switchCollateralToThisSilo() external;
 
     /// @notice Calculates the maximum amount of assets that can be borrowed by the given address
     /// @param _borrower Address of the potential borrower

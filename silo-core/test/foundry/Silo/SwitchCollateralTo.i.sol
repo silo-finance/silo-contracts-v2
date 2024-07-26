@@ -22,9 +22,9 @@ contract SwitchCollateralToTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --ffi --mt test_setThisSiloAsCollateralSilo_pass
+    forge test -vv --ffi --mt test_switchCollateralToThisSilo_pass
     */
-    function test_setThisSiloAsCollateralSilo_pass() public {
+    function test_switchCollateralToThisSilo_pass() public {
         uint256 assets = 1e18;
         address depositor = makeAddr("Depositor");
         address borrower = makeAddr("Borrower");
@@ -41,7 +41,7 @@ contract SwitchCollateralToTest is SiloLittleHelper, Test {
         (collateral, debt) = siloConfig.getConfigs(borrower);
 
         vm.prank(borrower);
-        silo1.setThisSiloAsCollateralSilo();
+        silo1.switchCollateralToThisSilo();
         (collateral, debt) = siloConfig.getConfigs(borrower);
 
         ISilo siloWithDeposit = silo0;
@@ -53,9 +53,9 @@ contract SwitchCollateralToTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --mt test_setThisSiloAsCollateralSilo_NotSolvent_
+    forge test -vv --ffi --mt test_switchCollateralToThisSilo_NotSolvent
     */
-    function test_setThisSiloAsCollateralSilo_NotSolvent_1token() public {
+    function test_switchCollateralToThisSilo_NotSolvent() public {
         uint256 assets = 1e18;
         address depositor = makeAddr("Depositor");
         address borrower = makeAddr("Borrower");
@@ -67,6 +67,24 @@ contract SwitchCollateralToTest is SiloLittleHelper, Test {
 
         vm.prank(borrower);
         vm.expectRevert(ISilo.NotSolvent.selector);
-        silo1.setThisSiloAsCollateralSilo();
+        silo1.switchCollateralToThisSilo();
+    }
+
+    /*
+    forge test -vv --ffi --mt test_switchCollateralToThisSilo_AlreadySet
+    */
+    function test_switchCollateralToThisSilo_AlreadySet() public {
+        uint256 assets = 1e18;
+        address depositor = makeAddr("Depositor");
+        address borrower = makeAddr("Borrower");
+
+        _deposit(assets, borrower);
+        _deposit(1, borrower);
+        _depositForBorrow(assets, depositor);
+        _borrow(assets / 2, borrower);
+
+        vm.prank(borrower);
+        vm.expectRevert(ISilo.CollateralSiloAlreadySet.selector);
+        silo0.switchCollateralToThisSilo();
     }
 }
