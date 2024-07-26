@@ -99,6 +99,7 @@ contract LeverageSameAssetTest is SiloLittleHelper, Test {
 
         // 1 wei above max
         uint256 borrowAssets = maxLtv * depositAssets / 1e18 + 1;
+        depositAssets = borrowAssets - 1;
 
         vm.prank(borrower);
         vm.expectRevert(ISilo.LeverageTooHigh.selector);
