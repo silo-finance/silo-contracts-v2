@@ -160,13 +160,12 @@ contract GetAssetsDataForLtvCalculationsTest is Test {
                 ISiloConfig.ConfigData memory collateralConfig,
                 ISiloConfig.ConfigData memory debtConfig,
                 address borrower,
-                ISilo.OracleType oracleType,
-                bool accrueInterest,
+                ISilo.OracleType oracleType,,
                 uint256 cachedShareDebtBalance
             ) = getData(scenarios[index]);
 
             SiloSolvencyLib.LtvData memory ltvData = SiloSolvencyLib.getAssetsDataForLtvCalculations(
-                collateralConfig, debtConfig, borrower, oracleType, accrueInterest, cachedShareDebtBalance
+                collateralConfig, debtConfig, borrower, oracleType, cachedShareDebtBalance
             );
 
             assertEq(

@@ -119,7 +119,6 @@ library SiloStdLib {
     /// @param _interestRateModel Interest rate model to fetch compound interest rates
     /// @param _daoFee DAO fee in 18 decimals points
     /// @param _deployerFee Deployer fee in 18 decimals points
-    /// @param _interestRateTimestamp timestamp of the last interest accrual
     /// @return totalCollateralAssetsWithInterest Accumulated collateral amount with interest
     function getTotalCollateralAssetsWithInterest(
         address _silo,

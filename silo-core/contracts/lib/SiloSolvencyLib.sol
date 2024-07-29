@@ -27,7 +27,6 @@ library SiloSolvencyLib {
     /// @param _collateralConfig Configuration data for the collateral
     /// @param _debtConfig Configuration data for the debt
     /// @param _borrower Address of the borrower to check solvency for
-    /// @param _accrueInMemory Determines whether or not to consider un-accrued interest in calculations
     /// @return True if the borrower is solvent, false otherwise
     function isSolvent(
         ISiloConfig.ConfigData memory _collateralConfig,
@@ -51,7 +50,6 @@ library SiloSolvencyLib {
     /// @param _collateralConfig Configuration data for the collateral
     /// @param _debtConfig Configuration data for the debt
     /// @param _borrower Address of the borrower to check against max LTV
-    /// @param _accrueInMemory Determines whether or not to consider un-accrued interest in calculations
     /// @return True if the borrower's LTV is below the maximum, false otherwise
     function isBelowMaxLtv(
         ISiloConfig.ConfigData memory _collateralConfig,
@@ -77,7 +75,6 @@ library SiloSolvencyLib {
     /// @param _debtConfig Configuration data for the debt
     /// @param _borrower Address of the borrower whose LTV data is to be calculated
     /// @param _oracleType Specifies whether to use the MaxLTV or Solvency oracle type for calculations
-    /// @param _accrueInMemory Determines whether or not to consider un-accrued interest in calculations
     /// @param _debtShareBalanceCached Cached value of debt share balance for the borrower. If debt shares of
     /// `_borrower` is unknown, simply pass `0`.
     /// @return ltvData Data structure containing necessary data to compute LTV
