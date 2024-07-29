@@ -28,7 +28,6 @@ library PartialLiquidationExecLib {
             _debtConfig,
             _user,
             ISilo.OracleType.Solvency,
-            ISilo.AccrueInterestInMemory.No,
             0 /* no cached balance */
         );
 
@@ -76,7 +75,6 @@ library PartialLiquidationExecLib {
             debtConfig,
             _borrower,
             ISilo.OracleType.Solvency,
-            ISilo.AccrueInterestInMemory.Yes,
             0 /* no cached balance */
         );
 

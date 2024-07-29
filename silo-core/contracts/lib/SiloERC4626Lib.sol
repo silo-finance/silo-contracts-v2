@@ -139,7 +139,6 @@ library SiloERC4626Lib {
             _debtConfig,
             _owner,
             ISilo.OracleType.Solvency,
-            ISilo.AccrueInterestInMemory.Yes,
             IShareToken(_debtConfig.debtShareToken).balanceOf(_owner)
         );
 

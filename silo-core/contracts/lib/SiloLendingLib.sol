@@ -211,7 +211,6 @@ library SiloLendingLib {
             _debtConfig,
             _borrower,
             ISilo.OracleType.MaxLtv,
-            ISilo.AccrueInterestInMemory.Yes,
             0 /* no cache */
         );
 
@@ -304,11 +303,7 @@ library SiloLendingLib {
             _deployerFee
         );
 
-        totalDebtAssets = SiloStdLib.getTotalDebtAssetsWithInterest(
-            address(this),
-            _interestRateModel
-        );
-
+        totalDebtAssets = SiloStdLib.getTotalDebtAssetsWithInterest(address(this), _interestRateModel);
         liquidity = SiloMathLib.liquidity(totalCollateralAssets, totalDebtAssets);
     }
 

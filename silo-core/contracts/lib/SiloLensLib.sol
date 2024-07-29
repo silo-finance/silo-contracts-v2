@@ -43,7 +43,6 @@ library SiloLensLib {
                 debtConfig,
                 _borrower,
                 ISilo.OracleType.Solvency,
-                ISilo.AccrueInterestInMemory.Yes,
                 IShareToken(debtConfig.debtShareToken).balanceOf(_borrower)
             );
         }

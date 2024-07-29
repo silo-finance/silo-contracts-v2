@@ -32,8 +32,7 @@ library SiloSolvencyLib {
     function isSolvent(
         ISiloConfig.ConfigData memory _collateralConfig,
         ISiloConfig.ConfigData memory _debtConfig,
-        address _borrower,
-        ISilo.AccrueInterestInMemory _accrueInMemory
+        address _borrower
     ) internal view returns (bool) {
         if (_debtConfig.silo == address(0)) return true; // no debt, so solvent
 
@@ -42,7 +41,6 @@ library SiloSolvencyLib {
             _debtConfig,
             _borrower,
             ISilo.OracleType.Solvency,
-            _accrueInMemory,
             IShareToken(_debtConfig.debtShareToken).balanceOf(_borrower)
         );
 
@@ -58,8 +56,7 @@ library SiloSolvencyLib {
     function isBelowMaxLtv(
         ISiloConfig.ConfigData memory _collateralConfig,
         ISiloConfig.ConfigData memory _debtConfig,
-        address _borrower,
-        ISilo.AccrueInterestInMemory _accrueInMemory
+        address _borrower
     ) internal view returns (bool) {
         uint256 debtShareBalance = IShareToken(_debtConfig.debtShareToken).balanceOf(_borrower);
         if (debtShareBalance == 0) return true;
@@ -69,7 +66,6 @@ library SiloSolvencyLib {
             _debtConfig,
             _borrower,
             ISilo.OracleType.MaxLtv,
-            _accrueInMemory,
             debtShareBalance
         );
 
@@ -90,7 +86,6 @@ library SiloSolvencyLib {
         ISiloConfig.ConfigData memory _debtConfig,
         address _borrower,
         ISilo.OracleType _oracleType,
-        ISilo.AccrueInterestInMemory _accrueInMemory,
         uint256 _debtShareBalanceCached
     ) internal view returns (LtvData memory ltvData) {
         if (_collateralConfig.token != _debtConfig.token) {
@@ -119,14 +114,15 @@ library SiloSolvencyLib {
             _collateralConfig.collateralShareToken, _borrower, 0 /* no cache */
         );
 
-        totalCollateralAssets = _accrueInMemory == ISilo.AccrueInterestInMemory.Yes
-            ? SiloStdLib.getTotalCollateralAssetsWithInterest(
-                _collateralConfig.silo,
-                _collateralConfig.interestRateModel,
-                _collateralConfig.daoFee,
-                _collateralConfig.deployerFee
-            )
-            : totalCollateralAssets;
+        ISIlo.UtilizationData memory collateralUtilizationData = ISilo(_collateralConfig.silo).utilizationData();
+
+        totalCollateralAssets = SiloStdLib.getTotalCollateralAssetsWithInterest(
+            _collateralConfig.silo,
+            _collateralConfig.interestRateModel,
+            _collateralConfig.daoFee,
+            _collateralConfig.deployerFee,
+            collateralUtilizationData.interestRateTimestamp
+        );
 
         ltvData.borrowerCollateralAssets = SiloMathLib.convertToAssets(
             shares, totalCollateralAssets, totalShares, Rounding.COLLATERAL_TO_ASSETS, ISilo.AssetType.Collateral
@@ -136,9 +132,13 @@ library SiloSolvencyLib {
             _debtConfig.debtShareToken, _borrower, _debtShareBalanceCached
         );
 
-        uint256 totalDebtAssets = _accrueInMemory == ISilo.AccrueInterestInMemory.Yes
-            ? SiloStdLib.getTotalDebtAssetsWithInterest(_debtConfig.silo, _debtConfig.interestRateModel)
-            : ISilo(_debtConfig.silo).total(AssetTypes.DEBT);
+        ISIlo.UtilizationData memory debtUtilizationData = ISilo(_debtConfig.silo).utilizationData();
+
+        uint256 totalDebtAssets = SiloStdLib.getTotalDebtAssetsWithInterest(
+            _debtConfig.silo,
+            _debtConfig.interestRateModel,
+            debtUtilizationData.interestRateTimestamp
+        )
 
         // BORROW value -> to assets -> UP
         ltvData.borrowerDebtAssets = SiloMathLib.convertToAssets(
@@ -151,20 +151,18 @@ library SiloSolvencyLib {
     /// @param _debtConfig Configuration data related to the debt asset
     /// @param _borrower Address of the borrower whose LTV is to be computed
     /// @param _oracleType Oracle type to use for fetching the asset prices
-    /// @param _accrueInMemory Determines whether or not to consider un-accrued interest in calculations
     /// @return ltvInDp The computed LTV ratio in 18 decimals precision
     function getLtv(
         ISiloConfig.ConfigData memory _collateralConfig,
         ISiloConfig.ConfigData memory _debtConfig,
         address _borrower,
         ISilo.OracleType _oracleType,
-        ISilo.AccrueInterestInMemory _accrueInMemory,
         uint256 _debtShareBalance
     ) internal view returns (uint256 ltvInDp) {
         if (_debtShareBalance == 0) return 0;
 
         LtvData memory ltvData = getAssetsDataForLtvCalculations(
-            _collateralConfig, _debtConfig, _borrower, _oracleType, _accrueInMemory, _debtShareBalance
+            _collateralConfig, _debtConfig, _borrower, _oracleType, _debtShareBalance
         );
 
         if (ltvData.borrowerDebtAssets == 0) return 0;

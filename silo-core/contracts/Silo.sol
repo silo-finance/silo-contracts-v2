@@ -111,7 +111,7 @@ contract Silo is SiloERC4626 {
             ISiloConfig.ConfigData memory debt
         ) = _sharedStorage.siloConfig.getConfigs(_borrower);
 
-        return SiloSolvencyLib.isSolvent(collateral, debt, _borrower, AccrueInterestInMemory.Yes);
+        return SiloSolvencyLib.isSolvent(collateral, debt, _borrower);
     }
 
     /// @inheritdoc ISilo

@@ -100,13 +100,38 @@ library SiloStdLib {
     /// @param _interestRateModel Interest rate model to fetch compound interest rates
     /// @param _daoFee DAO fee in 18 decimals points
     /// @param _deployerFee Deployer fee in 18 decimals points
+    /// @param _interestRateTimestamp timestamp of the last interest accrual
     /// @return totalCollateralAssetsWithInterest Accumulated collateral amount with interest
     function getTotalCollateralAssetsWithInterest(
         address _silo,
         address _interestRateModel,
         uint256 _daoFee,
-        uint256 _deployerFee
+        uint256 _deployerFee,
+        uint256 _interestRateTimestamp
     ) internal view returns (uint256 totalCollateralAssetsWithInterest) {
+        if (_interestRateTimestamp == block.timestamp) return ISilo(_silo).getCollateralAssets();
+        else return getTotalCollateralAssetsWithInterest(_silo, _interestRateModel, _daoFee, _deployerFee);
+    }
+
+    /// @notice Calculates the total collateral assets with accrued interest
+    /// @dev Do not use this method when accrueInterest were executed already, in that case total does not change
+    /// @param _silo Address of the silo contract
+    /// @param _interestRateModel Interest rate model to fetch compound interest rates
+    /// @param _daoFee DAO fee in 18 decimals points
+    /// @param _deployerFee Deployer fee in 18 decimals points
+    /// @param _interestRateTimestamp timestamp of the last interest accrual
+    /// @return totalCollateralAssetsWithInterest Accumulated collateral amount with interest
+    function getTotalCollateralAssetsWithInterest(
+        address _silo,
+        address _interestRateModel,
+        uint256 _daoFee,
+        uint256 _deployerFee,
+        uint256 _interestRateTimestamp
+    ) internal view returns (uint256 totalCollateralAssetsWithInterest) {
+        if (_interestRateTimestamp == block.timestamp) {
+            return ISilo(_silo).getCollateralAssets();
+        }
+
         uint256 rcomp = IInterestRateModel(_interestRateModel).getCompoundInterestRate(_silo, block.timestamp);
 
         (uint256 collateralAssets, uint256 debtAssets) = ISilo(_silo).getCollateralAndDebtAssets();
@@ -130,7 +155,24 @@ library SiloStdLib {
         }
     }
 
-    /// @notice Calculates the total debt assets with accrued interest
+    /// @notice Calculates (if needed) the total debt assets with accrued interest
+    /// @param _silo Address of the silo contract
+    /// @param _interestRateModel Interest rate model to fetch compound interest rates
+    /// @param _interestRateTimestamp timestamp of the last interest accrual
+    /// @return totalDebtAssetsWithInterest Accumulated debt amount with interest
+    function getTotalDebtAssetsWithInterest(address _silo, address _interestRateModel, uint256 _interestRateTimestamp)
+        internal
+        view
+        returns (uint256 totalDebtAssetsWithInterest)
+    {
+        totalDebtAssetsWithInterest = ISilo(_silo).total(AssetTypes.DEBT);
+        if (_interestRateTimestamp == block.timestamp) return totalDebtAssetsWithInterest;
+
+        uint256 rcomp = IInterestRateModel(_interestRateModel).getCompoundInterestRate(_silo, block.timestamp);
+        (totalDebtAssetsWithInterest,) = SiloMathLib.getDebtAmountsWithInterest(totalDebtAssetsWithInterest, rcomp);
+    }
+
+    /// @notice Calculates (always) the total debt assets with accrued interest
     /// @param _silo Address of the silo contract
     /// @param _interestRateModel Interest rate model to fetch compound interest rates
     /// @return totalDebtAssetsWithInterest Accumulated debt amount with interest
