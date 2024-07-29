@@ -2,9 +2,11 @@
 pragma solidity ^0.8.20;
 
 import {ICrossReentrancyGuard} from "silo-core/contracts/interfaces/ICrossReentrancyGuard.sol";
+import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {ShareToken} from "silo-core/contracts/utils/ShareToken.sol";
 import {ShareTokenMethodReentrancyTest} from "./_ShareTokenMethodReentrancyTest.sol";
+import {TestStateLib} from "../../TestState.sol";
 
 contract BurnReentrancyTest is ShareTokenMethodReentrancyTest {
     function callMethod() external {
@@ -13,6 +15,11 @@ contract BurnReentrancyTest is ShareTokenMethodReentrancyTest {
     }
 
     function verifyReentrancy() external {
+         ISiloConfig config = TestStateLib.siloConfig();
+
+        bool entered = config.reentrancyGuardEntered();
+        assertTrue(entered, "Reentrancy is not enabled on a burn");
+
         _executeForAllShareTokens(_ensureItWillRevertOnlySilo);
     }
 
