@@ -19,11 +19,6 @@ contract EchidnaIRMv2 is PropertiesAsserts {
 
     uint256 internal constant _DP = 1e18;
 
-    enum AccrueInterestInMemory {
-        No,
-        Yes
-    }
-
     enum OracleType {
         Solvency,
         MaxLtv

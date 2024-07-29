@@ -493,11 +493,7 @@ library Actions {
             debtConfig.callSolvencyOracleBeforeQuote();
         }
 
-        bool userIsSolvent = SiloSolvencyLib.isSolvent(
-            collateralConfig, debtConfig, _user, ISilo.AccrueInterestInMemory.No
-        );
-
-        if (!userIsSolvent) revert ISilo.NotSolvent();
+        if (!SiloSolvencyLib.isSolvent(collateralConfig, debtConfig, _user)) revert ISilo.NotSolvent();
     }
 
     function _checkLTV(
@@ -510,9 +506,7 @@ library Actions {
             _debtConfig.callMaxLtvOracleBeforeQuote();
         }
 
-        bool borrowerIsBelowMaxLtv = SiloSolvencyLib.isBelowMaxLtv(
-            _collateralConfig, _debtConfig, _borrower, ISilo.AccrueInterestInMemory.No
-        );
+        bool borrowerIsBelowMaxLtv = SiloSolvencyLib.isBelowMaxLtv(_collateralConfig, _debtConfig, _borrower);
 
         if (!borrowerIsBelowMaxLtv) revert ISilo.AboveMaxLtv();
     }

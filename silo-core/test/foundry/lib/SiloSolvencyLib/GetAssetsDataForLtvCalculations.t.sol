@@ -52,7 +52,7 @@ contract GetAssetsDataForLtvCalculationsTest is Test {
             ISiloConfig.ConfigData memory debtConfig,
             address borrower,
             ISilo.OracleType oracleType,
-            ISilo.AccrueInterestInMemory accrueInMemory,
+            bool accrueInterest,
             uint256 cachedShareDebtBalance
         )
     {
@@ -81,9 +81,7 @@ contract GetAssetsDataForLtvCalculationsTest is Test {
         debtConfig.silo = silo1;
         debtConfig.token = makeAddr("debt.token");
 
-        accrueInMemory = scenario.input.accrueInMemory
-            ? ISilo.AccrueInterestInMemory.Yes
-            : ISilo.AccrueInterestInMemory.No;
+        accrueInterest = scenario.input.accrueInterest;
 
         borrower = borrowerAddr;
 
@@ -108,7 +106,7 @@ contract GetAssetsDataForLtvCalculationsTest is Test {
         
         );
 
-        if (scenario.input.accrueInMemory) {
+        if (scenario.input.accrueInterest) {
             interestRateModelMock.getCompoundInterestRateMock(
                 silo0, block.timestamp, scenario.input.collateralConfig.compoundInterestRate
             );
@@ -129,7 +127,7 @@ contract GetAssetsDataForLtvCalculationsTest is Test {
 
         SiloMock siloMock0 = new SiloMock(silo0);
 
-        if (scenario.input.accrueInMemory) {
+        if (scenario.input.accrueInterest) {
             siloMock0.getCollateralAndDebtAssetsMock(
                 scenario.input.collateralConfig.totalCollateralAssets,
                 scenario.input.collateralConfig.totalDebtAssets
@@ -144,7 +142,7 @@ contract GetAssetsDataForLtvCalculationsTest is Test {
         SiloMock siloMock1 = new SiloMock(silo1);
         siloMock1.totalMock(ISilo.AssetType.Debt, scenario.input.debtConfig.totalDebtAssets);
 
-        if (scenario.input.accrueInMemory) {
+        if (scenario.input.accrueInterest) {
             interestRateModelMock.getCompoundInterestRateMock(
                 silo1, block.timestamp, scenario.input.debtConfig.compoundInterestRate
             );
@@ -162,13 +160,12 @@ contract GetAssetsDataForLtvCalculationsTest is Test {
                 ISiloConfig.ConfigData memory collateralConfig,
                 ISiloConfig.ConfigData memory debtConfig,
                 address borrower,
-                ISilo.OracleType oracleType,
-                ISilo.AccrueInterestInMemory accrueInMemory,
+                ISilo.OracleType oracleType,,
                 uint256 cachedShareDebtBalance
             ) = getData(scenarios[index]);
 
             SiloSolvencyLib.LtvData memory ltvData = SiloSolvencyLib.getAssetsDataForLtvCalculations(
-                collateralConfig, debtConfig, borrower, oracleType, accrueInMemory, cachedShareDebtBalance
+                collateralConfig, debtConfig, borrower, oracleType, cachedShareDebtBalance
             );
 
             assertEq(

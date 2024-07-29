@@ -11,7 +11,7 @@ import {Gas} from "./Gas.sol";
 forge test -vv --ffi --mt test_gas_ | grep -i '\[GAS\]' | sort
 */
 contract Borrow2ndGasTest is Gas, Test {
-    function setUp() public {
+    function _setUp() public {
         _gasTestsInit();
 
         vm.prank(DEPOSITOR);
@@ -23,7 +23,12 @@ contract Borrow2ndGasTest is Gas, Test {
         vm.stopPrank();
     }
 
+    /*
+    forge test -vv --ffi --mt test_gas_secondBorrow
+    */
     function test_gas_secondBorrow() public {
+        _setUp();
+
         _action(
             BORROWER,
             address(silo1),
