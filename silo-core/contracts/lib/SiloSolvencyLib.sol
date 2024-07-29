@@ -114,7 +114,7 @@ library SiloSolvencyLib {
             _collateralConfig.collateralShareToken, _borrower, 0 /* no cache */
         );
 
-        ISIlo.UtilizationData memory collateralUtilizationData = ISilo(_collateralConfig.silo).utilizationData();
+        ISilo.UtilizationData memory collateralUtilizationData = ISilo(_collateralConfig.silo).utilizationData();
 
         totalCollateralAssets = SiloStdLib.getTotalCollateralAssetsWithInterest(
             _collateralConfig.silo,
@@ -132,13 +132,13 @@ library SiloSolvencyLib {
             _debtConfig.debtShareToken, _borrower, _debtShareBalanceCached
         );
 
-        ISIlo.UtilizationData memory debtUtilizationData = ISilo(_debtConfig.silo).utilizationData();
+        ISilo.UtilizationData memory debtUtilizationData = ISilo(_debtConfig.silo).utilizationData();
 
         uint256 totalDebtAssets = SiloStdLib.getTotalDebtAssetsWithInterest(
             _debtConfig.silo,
             _debtConfig.interestRateModel,
             debtUtilizationData.interestRateTimestamp
-        )
+        );
 
         // BORROW value -> to assets -> UP
         ltvData.borrowerDebtAssets = SiloMathLib.convertToAssets(
