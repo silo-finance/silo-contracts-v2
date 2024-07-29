@@ -31,7 +31,7 @@ contract GetAssetsDataForLtvCalculationsTestData is Test {
     }
 
     struct Input {
-        bool accrueInMemory;
+        bool accrueInterest;
         CollateralConfigInput collateralConfig;
         DebtConfigInput debtConfig;
         string oracleType;
@@ -72,7 +72,7 @@ contract GetAssetsDataForLtvCalculationsTestData is Test {
         emit log_named_uint("id", scenario.id);
         
         // Print Input struct within ScenarioData
-        emit log_named_string("accrueInMemory", scenario.input.accrueInMemory ? "Yes" : "No");
+        emit log_named_string("accrueInterest", scenario.input.accrueInterest ? "Yes" : "No");
         emit log_named_string("oracleType", scenario.input.oracleType);
         
         // Print DebtConfig struct within Input

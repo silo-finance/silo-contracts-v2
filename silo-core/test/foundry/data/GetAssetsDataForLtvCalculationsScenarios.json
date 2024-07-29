@@ -2,7 +2,7 @@
   {
     "id": 0,
     "input": {
-      "accrueInMemory": false,
+      "accrueInterest": false,
       "oracleType": "solvency",
       "debtConfig": {
         "maxLtvOracle": 101,
@@ -39,7 +39,7 @@
   {
     "id": 1,
     "input": {
-      "accrueInMemory": false,
+      "accrueInterest": false,
       "oracleType": "maxLtv",
       "debtConfig": {
         "maxLtvOracle": 0,
@@ -76,7 +76,7 @@
   {
     "id": 2,
     "input": {
-      "accrueInMemory": true,
+      "accrueInterest": true,
       "oracleType": "maxLtv",
       "debtConfig": {
         "maxLtvOracle": 0,
@@ -113,7 +113,7 @@
   {
     "id": 3,
     "input": {
-      "accrueInMemory": true,
+      "accrueInterest": true,
       "oracleType": "maxLtv",
       "debtConfig": {
         "maxLtvOracle": 0,
