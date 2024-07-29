@@ -128,8 +128,6 @@ contract MaxLiquidationLTV100FullTest is MaxLiquidationCommon {
 
         vm.assume(_collateral < 7);
 
-        uint256 toBorrow = uint256(_collateral) * 75 / 100; // maxLTV is 75%
-
         _createDebtForBorrower(_collateral, sameAsset);
 
         // this case (1) never happen because is is not possible to create debt for 1 collateral

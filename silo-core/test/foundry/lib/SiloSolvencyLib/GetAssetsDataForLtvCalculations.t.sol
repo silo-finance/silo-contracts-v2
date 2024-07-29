@@ -52,7 +52,6 @@ contract GetAssetsDataForLtvCalculationsTest is Test {
             ISiloConfig.ConfigData memory debtConfig,
             address borrower,
             ISilo.OracleType oracleType,
-            bool accrueInterest,
             uint256 cachedShareDebtBalance
         )
     {
@@ -81,8 +80,6 @@ contract GetAssetsDataForLtvCalculationsTest is Test {
         debtConfig.silo = silo1;
         debtConfig.token = makeAddr("debt.token");
 
-        accrueInterest = scenario.input.accrueInterest;
-
         borrower = borrowerAddr;
 
         oracleType = keccak256(bytes(scenario.input.oracleType)) == keccak256(bytes("solvency"))
@@ -106,11 +103,15 @@ contract GetAssetsDataForLtvCalculationsTest is Test {
         
         );
 
-        if (scenario.input.accrueInterest) {
+//        if (scenario.input.accrueInterest) {
             interestRateModelMock.getCompoundInterestRateMock(
                 silo0, block.timestamp, scenario.input.collateralConfig.compoundInterestRate
             );
-        }
+//
+//            interestRateModelMock.getCompoundInterestRateMock(
+//                silo1, block.timestamp, scenario.input.debtConfig.compoundInterestRate
+//            );
+//        }
 
         TokenMock debtShareTokenMock = new TokenMock(debtShareToken);
 
@@ -127,26 +128,31 @@ contract GetAssetsDataForLtvCalculationsTest is Test {
 
         SiloMock siloMock0 = new SiloMock(silo0);
 
-        if (scenario.input.accrueInterest) {
+//        if (scenario.input.accrueInterest) {
             siloMock0.getCollateralAndDebtAssetsMock(
                 scenario.input.collateralConfig.totalCollateralAssets,
                 scenario.input.collateralConfig.totalDebtAssets
             );
-        }
+//        }
 
         siloMock0.getCollateralAndProtectedAssetsMock(
             scenario.input.collateralConfig.totalCollateralAssets,
             scenario.input.collateralConfig.totalProtectedAssets
         );
 
+        siloMock0.totalMock(
+            ISilo.AssetType.Protected,
+            scenario.input.collateralConfig.totalProtectedAssets
+        );
+
         SiloMock siloMock1 = new SiloMock(silo1);
         siloMock1.totalMock(ISilo.AssetType.Debt, scenario.input.debtConfig.totalDebtAssets);
 
-        if (scenario.input.accrueInterest) {
+//        if (scenario.input.accrueInterest) {
             interestRateModelMock.getCompoundInterestRateMock(
                 silo1, block.timestamp, scenario.input.debtConfig.compoundInterestRate
             );
-        }
+//        }
     }
 
     /*
@@ -160,7 +166,7 @@ contract GetAssetsDataForLtvCalculationsTest is Test {
                 ISiloConfig.ConfigData memory collateralConfig,
                 ISiloConfig.ConfigData memory debtConfig,
                 address borrower,
-                ISilo.OracleType oracleType,,
+                ISilo.OracleType oracleType,
                 uint256 cachedShareDebtBalance
             ) = getData(scenarios[index]);
 

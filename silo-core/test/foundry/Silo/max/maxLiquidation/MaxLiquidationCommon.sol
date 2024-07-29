@@ -263,8 +263,8 @@ abstract contract MaxLiquidationCommon is SiloLittleHelper, Test {
         // min amount of assets that will not generate ZeroShares error
         uint256 minAssets = silo1.previewRepayShares(1);
 
-        if (_i < 2 || _i == 4) {
-            // two first iteration and last one (we assume we have max 5 iterations), try to use minimal amount
+        if (_i < 2) {
+            // two first iteration try to use minimal amount
             if (_debtToCover < minAssets) {
                 revert("#1 calculation of maxDebtToCover should never return assets that will generate zero shares");
             }
@@ -282,6 +282,13 @@ abstract contract MaxLiquidationCommon is SiloLittleHelper, Test {
 
             uint256 almostEverything = _debtToCover < minAssets ? minAssets : _debtToCover - minAssets;
             return almostEverything < minAssets ? minAssets : almostEverything;
+        } else if (_i == 4) {
+            // last one (we assume we have max 5 iterations), try to use the rest
+            if (_debtToCover < minAssets) {
+                revert("#3 calculation of maxDebtToCover should never return assets that will generate zero shares");
+            }
+
+            return _debtToCover;
         } else revert("this should never happen");
     }
 

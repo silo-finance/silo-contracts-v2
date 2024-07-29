@@ -63,6 +63,8 @@ contract BorrowNotPossibleTest is SiloLittleHelper, Test {
     function test_borrow_without_collateral(uint256 _depositAmount, uint256 _borrowAmount) public {
         vm.assume(_borrowAmount > 0);
         vm.assume(_depositAmount > _borrowAmount);
+        // to avoid `panic: arithmetic underflow or overflow` on InterestRateModelV2.sol::getCompoundInterestRate
+        vm.assume(_depositAmount < type(uint256).max / 1e18);
 
         address depositor = makeAddr("Depositor");
 
