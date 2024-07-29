@@ -125,13 +125,8 @@ library SiloStdLib {
         address _silo,
         address _interestRateModel,
         uint256 _daoFee,
-        uint256 _deployerFee,
-        uint256 _interestRateTimestamp
+        uint256 _deployerFee
     ) internal view returns (uint256 totalCollateralAssetsWithInterest) {
-        if (_interestRateTimestamp == block.timestamp) {
-            return ISilo(_silo).getCollateralAssets();
-        }
-
         uint256 rcomp = IInterestRateModel(_interestRateModel).getCompoundInterestRate(_silo, block.timestamp);
 
         (uint256 collateralAssets, uint256 debtAssets) = ISilo(_silo).getCollateralAndDebtAssets();
