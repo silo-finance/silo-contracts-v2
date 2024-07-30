@@ -2,6 +2,7 @@
 pragma solidity ^0.8.20;
 
 import {CommonBase} from "forge-std/Base.sol";
+import {console} from "forge-std/console.sol";
 
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
@@ -83,6 +84,8 @@ abstract contract SiloLittleHelper is CommonBase {
         return _makeDeposit(silo0, token0, _assets, _depositor, ISilo.CollateralType.Collateral);
     }
 
+    // TODO general note: most of the time we probably using default collateral,
+    // check if we can easily adopt some test to use protected collateral
     function _depositCollateral(uint256 _assets, address _depositor, bool _toSilo1)
         internal
         returns (uint256 shares)
@@ -126,6 +129,13 @@ abstract contract SiloLittleHelper is CommonBase {
     function _borrow(uint256 _amount, address _borrower) internal returns (uint256 shares) {
         vm.prank(_borrower);
         shares = silo1.borrow(_amount, _borrower, _borrower);
+    }
+
+    function _borrow(uint256 _amount, address _borrower, bool _sameAsset) internal returns (uint256 shares) {
+        vm.prank(_borrower);
+        shares = _sameAsset
+            ? silo1.borrowSameAsset(_amount, _borrower, _borrower)
+            : silo1.borrow(_amount, _borrower, _borrower);
     }
 
     function _borrowShares(uint256 _shares, address _borrower) internal returns (uint256 amount) {
@@ -251,5 +261,19 @@ abstract contract SiloLittleHelper is CommonBase {
         (siloConfig, silo0, silo1,,, hook) = _siloFixture.deploy_local(overrides);
 
         partialLiquidation = IPartialLiquidation(hook);
+    }
+
+    function _printStats(ISiloConfig _siloConfig, address _borrower) internal {
+        console.log("borrower", _borrower);
+        console.log("silo0", address(silo0));
+        console.log("silo1", address(silo1));
+
+        console.log("borrowerCollateralSilo", _siloConfig.borrowerCollateralSilo(_borrower));
+
+        console.log("[silo0] debtBalanceOfUnderlying", siloLens.debtBalanceOfUnderlying(silo0, _borrower));
+        console.log("[silo1] debtBalanceOfUnderlying", siloLens.debtBalanceOfUnderlying(silo1, _borrower));
+
+        console.log("[silo0] collateralBalanceOfUnderlying", siloLens.collateralBalanceOfUnderlying(silo0, _borrower));
+        console.log("[silo1] collateralBalanceOfUnderlying", siloLens.collateralBalanceOfUnderlying(silo1, _borrower));
     }
 }
