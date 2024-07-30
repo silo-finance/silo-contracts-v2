@@ -10,7 +10,7 @@ import {SiloLendingLib} from "silo-core/contracts/lib/SiloLendingLib.sol";
 import {PartialLiquidationLib} from "./PartialLiquidationLib.sol";
 
 library PartialLiquidationExecLib {
-    /// @dev it will be user responsibility to check profit
+    /// @dev it will be user responsibility to check profit, this method expect interest to be already accrued
     function getExactLiquidationAmounts(
         ISiloConfig.ConfigData memory _collateralConfig,
         ISiloConfig.ConfigData memory _debtConfig,
