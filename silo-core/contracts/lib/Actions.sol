@@ -103,7 +103,7 @@ library Actions {
 
         if (depositConfig.silo == collateralConfig.silo) {
             // If deposit is collateral, then check the solvency.
-            _checkRawSolvency(collateralConfig, debtConfig, _args.owner);
+            _checkSolvencyNoAccrue(collateralConfig, debtConfig, _args.owner);
         }
 
         siloConfig.turnOffReentrancyProtection();
@@ -146,7 +146,7 @@ library Actions {
             _totalDebt
         );
 
-        _checkRawLTV(collateralConfig, debtConfig, _args.borrower);
+        _checkLTVNoAccrue(collateralConfig, debtConfig, _args.borrower);
 
         siloConfig.turnOffReentrancyProtection();
 
@@ -186,7 +186,7 @@ library Actions {
             _totalDebt: _totalDebt
         });
 
-        _checkRawLTV(collateralConfig, debtConfig, _args.borrower);
+        _checkLTVNoAccrue(collateralConfig, debtConfig, _args.borrower);
 
         siloConfig.turnOffReentrancyProtection();
 
@@ -286,7 +286,7 @@ library Actions {
         uint256 transferDiff = _args.depositAssets - _args.borrowAssets;
         IERC20(collateralConfig.token).safeTransferFrom(msg.sender, address(this), transferDiff);
 
-        _checkRawLTV(collateralConfig, debtConfig, _args.borrower);
+        _checkLTVNoAccrue(collateralConfig, debtConfig, _args.borrower);
 
         _shareStorage.siloConfig.turnOffReentrancyProtection();
 
@@ -348,7 +348,7 @@ library Actions {
 
         if (debtConfig.silo != address(0)) {
             siloConfig.accrueInterestForBothSilos();
-            _checkRawSolvency(collateralConfig, debtConfig, msg.sender);
+            _checkSolvencyNoAccrue(collateralConfig, debtConfig, msg.sender);
         }
 
         siloConfig.turnOffReentrancyProtection();
@@ -484,7 +484,7 @@ library Actions {
     }
 
     // this method expect interest to be already accrued
-    function _checkRawSolvency(
+    function _checkSolvencyNoAccrue(
         ISiloConfig.ConfigData memory collateralConfig,
         ISiloConfig.ConfigData memory debtConfig,
         address _user
@@ -502,7 +502,7 @@ library Actions {
     }
 
     // this method expect interest to be already accrued
-    function _checkRawLTV(
+    function _checkLTVNoAccrue(
         ISiloConfig.ConfigData memory _collateralConfig,
         ISiloConfig.ConfigData memory _debtConfig,
         address _borrower
