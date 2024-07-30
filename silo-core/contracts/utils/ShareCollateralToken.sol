@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.24;
 
+import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
 import {SiloLensLib} from "../lib/SiloLensLib.sol";
 import {IShareToken, ShareToken, ISilo} from "./ShareToken.sol";
 
@@ -30,11 +31,21 @@ contract ShareCollateralToken is ShareToken {
     function _afterTokenTransfer(address _sender, address _recipient, uint256 _amount) internal virtual override {
         // for minting or burning, Silo is responsible to check all necessary conditions
         // for transfer make sure that _sender is solvent after transfer
-        if (_isTransfer(_sender, _recipient) && transferWithChecks) {
+        if (_isTransfer(_sender, _recipient) && transferWithChecks && _isThisCollateralToken(_sender)) {
             _callOracleBeforeQuote(_sender);
             if (!silo.isSolvent(_sender)) revert SenderNotSolventAfterTransfer();
         }
 
         ShareToken._afterTokenTransfer(_sender, _recipient, _amount);
+    }
+
+    function _isThisCollateralToken(address _sender) internal view virtual returns (bool depositOnly) {
+        (
+            ISiloConfig.DepositConfig memory depositConfig,
+            ISiloConfig.ConfigData memory collateralConfig,
+        ) = siloConfig.getConfigsForWithdraw(address(silo), _sender);
+
+        // when deposit silo is collateral silo, that means this sToken might be collateral for debt
+        return depositConfig.silo == collateralConfig.silo;
     }
 }
