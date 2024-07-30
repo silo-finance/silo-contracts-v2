@@ -10,9 +10,7 @@ import {MaliciousToken} from "../../MaliciousToken.sol";
 contract LeverageSameAssetReentrancyTest is MethodReentrancyTest {
     function callMethod() external {
         MaliciousToken token0 = MaliciousToken(TestStateLib.token0());
-        MaliciousToken token1 = MaliciousToken(TestStateLib.token1());
         ISilo silo0 = TestStateLib.silo0();
-        ISilo silo1 = TestStateLib.silo1();
         address depositor = makeAddr("Depositor");
         address borrower = makeAddr("Borrower");
         uint256 depositAmount = 100e18;

@@ -1,0 +1,27 @@
+// SPDX-License-Identifier: BUSL-1.1
+pragma solidity ^0.8.20;
+
+import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquidation.sol";
+import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
+import {TestStateLib} from "../../TestState.sol";
+import {MethodReentrancyTest} from "../MethodReentrancyTest.sol";
+
+contract MaxLiquidationReentrancyTest is MethodReentrancyTest {
+    function callMethod() external {
+        emit log_string("\tEnsure it will not revert");
+        _ensureItWillNotRevert();
+    }
+
+    function verifyReentrancy() external view {
+        _ensureItWillNotRevert();
+    }
+
+    function methodDescription() external pure returns (string memory description) {
+        description = "maxLiquidation(address)";
+    }
+
+    function _ensureItWillNotRevert() internal view {
+        address hookReceiver = TestStateLib.hookReceiver();
+        IPartialLiquidation(hookReceiver).maxLiquidation(address(this));
+    }
+}

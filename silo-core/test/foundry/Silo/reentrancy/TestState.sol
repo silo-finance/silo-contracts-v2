@@ -12,6 +12,7 @@ contract ReentracyTestState {
     address public silo1;
     address public token0;
     address public token1;
+    address public hookReceiver;
     bool public reenter = true;
 
     function set(
@@ -19,13 +20,15 @@ contract ReentracyTestState {
         address _silo0,
         address _silo1,
         address _token0,
-        address _token1
+        address _token1,
+        address _hookReceiver
     ) external {
         siloConfig = _siloConfig;
         silo0 = _silo0;
         silo1 = _silo1;
         token0 = _token0;
         token1 = _token1;
+        hookReceiver = _hookReceiver;
     }
 
     function setReenter(bool _status) external {
@@ -41,7 +44,8 @@ library TestStateLib {
         address _silo0,
         address _silo1,
         address _token0,
-        address _token1
+        address _token1,
+        address _hookReceiver
     ) internal {
         bytes memory code = Utils.getCodeAt(_ADDRESS);
 
@@ -53,7 +57,7 @@ library TestStateLib {
 
         VmLib.vm().etch(_ADDRESS, deployedCode);
 
-        ReentracyTestState(_ADDRESS).set(_siloConfig, _silo0, _silo1, _token0, _token1);
+        ReentracyTestState(_ADDRESS).set(_siloConfig, _silo0, _silo1, _token0, _token1, _hookReceiver);
         ReentracyTestState(_ADDRESS).setReenter(true);
     }
 
@@ -75,6 +79,10 @@ library TestStateLib {
 
     function siloConfig() internal view returns (ISiloConfig) {
         return ISiloConfig(ReentracyTestState(_ADDRESS).siloConfig());
+    }
+
+    function hookReceiver() internal view returns (address) {
+        return ReentracyTestState(_ADDRESS).hookReceiver();
     }
 
     function reenter() internal view returns (bool) {

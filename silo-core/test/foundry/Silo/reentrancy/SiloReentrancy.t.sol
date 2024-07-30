@@ -20,7 +20,7 @@ contract SiloReentrancyTest is Test {
     ISiloConfig public siloConfig;
     
     // TODO: remove _skip_
-    // FOUNDRY_PROFILE=core-test forge test -vv --ffi --mt test_coverage_for_reentrancy
+    // FOUNDRY_PROFILE=core-test forge test -vv --ffi --mt test_skip_coverage_for_reentrancy
     function test_skip_coverage_for_reentrancy() public {
         Registries registries = new Registries();
         IMethodsRegistry[] memory methodRegistries = registries.list();
@@ -58,7 +58,7 @@ contract SiloReentrancyTest is Test {
 
         emit log_string("\n\nRunning reentrancy test");
 
-        uint256 snapshotId = vm.snapshot();
+        uint256 stateBeforeTest = vm.snapshot();
 
         for (uint j = 0; j < methodRegistries.length; j++) {
             uint256 totalMethods = methodRegistries[j].supportedMethodsLength();
@@ -77,7 +77,7 @@ contract SiloReentrancyTest is Test {
                 entered = siloConfig.reentrancyGuardEntered();
                 assertTrue(!entered, "Reentrancy should be disabled after calling the method");
 
-                vm.revertTo(snapshotId);
+                vm.revertTo(stateBeforeTest);
             }
         }
     }
@@ -89,18 +89,20 @@ contract SiloReentrancyTest is Test {
 
         configOverride.token0 = address(new MaliciousToken());
         configOverride.token1 = address(new MaliciousToken());
-        configOverride.configName = SiloConfigsNames.LOCAL_DEPLOYER;
+        configOverride.configName = SiloConfigsNames.LOCAL_GAUGE_HOOK_RECEIVER;
         ISilo silo0;
         ISilo silo1;
+        address hookReceiver;
 
-        (siloConfig, silo0, silo1,,,) = siloFixture.deploy_local(configOverride);
+        (siloConfig, silo0, silo1,,, hookReceiver) = siloFixture.deploy_local(configOverride);
 
         TestStateLib.init(
             address(siloConfig),
             address(silo0),
             address(silo1),
             configOverride.token0,
-            configOverride.token1
+            configOverride.token1,
+            hookReceiver
         );
     }
 }
