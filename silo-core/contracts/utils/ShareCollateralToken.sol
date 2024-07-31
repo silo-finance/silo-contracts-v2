@@ -2,6 +2,7 @@
 pragma solidity 0.8.24;
 
 import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
+import {SiloSolvencyLib} from "../lib/SiloSolvencyLib.sol";
 import {SiloLensLib} from "../lib/SiloLensLib.sol";
 import {IShareToken, ShareToken, ISilo} from "./ShareToken.sol";
 
@@ -33,9 +34,22 @@ contract ShareCollateralToken is ShareToken {
         // for transfer make sure that _sender is solvent after transfer
         if (_isTransfer(_sender, _recipient) && transferWithChecks) {
             _callOracleBeforeQuote(_sender);
-            if (!silo.isSolventAfterCollateralTransfer(_sender)) revert SenderNotSolventAfterTransfer();
+            if (!_isSolventAfterCollateralTransfer(_sender)) revert SenderNotSolventAfterTransfer();
         }
 
         ShareToken._afterTokenTransfer(_sender, _recipient, _amount);
+    }
+
+    function _isSolventAfterCollateralTransfer(address _borrower) internal view virtual returns (bool) {
+        (
+            ISiloConfig.DepositConfig memory deposit,
+            ISiloConfig.ConfigData memory collateral,
+            ISiloConfig.ConfigData memory debt
+        ) = siloConfig.getConfigsForWithdraw(address(silo), _borrower);
+
+        // when deposit silo is collateral silo, that means this sToken is collateral for debt
+        if (collateral.silo != deposit.silo) return true;
+
+        return SiloSolvencyLib.isSolvent(collateral, debt, _borrower, ISilo.AccrueInterestInMemory.Yes);
     }
 }

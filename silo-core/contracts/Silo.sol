@@ -114,28 +114,6 @@ contract Silo is SiloERC4626 {
         return SiloSolvencyLib.isSolvent(collateral, debt, _borrower, AccrueInterestInMemory.Yes);
     }
 
-    function isSolventAfterCollateralTransfer(address _borrower) external view virtual returns (bool) {
-        (
-            ISiloConfig.DepositConfig memory deposit,
-            ISiloConfig.ConfigData memory collateral,
-            ISiloConfig.ConfigData memory debt
-        ) = _sharedStorage.siloConfig.getConfigsForWithdraw(address(this), _borrower);
-
-        if (
-            deposit.protectedShareToken != msg.sender
-            && deposit.collateralShareToken != msg.sender
-            && collateral.protectedShareToken != msg.sender
-            && collateral.collateralShareToken != msg.sender
-        ) {
-            revert OnlyShareCollateralToken();
-        }
-
-        // when deposit silo is collateral silo, that means this sToken is collateral for debt
-        if (collateral.silo != deposit.silo) return true;
-
-        return SiloSolvencyLib.isSolvent(collateral, debt, _borrower, AccrueInterestInMemory.Yes);
-    }
-
     /// @inheritdoc ISilo
     function getCollateralAssets() external view virtual returns (uint256 totalCollateralAssets) {
         ISiloConfig.ConfigData memory thisSiloConfig = _sharedStorage.siloConfig.getConfig(address(this));
