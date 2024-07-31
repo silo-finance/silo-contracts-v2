@@ -92,6 +92,22 @@ contract MaxBorrowTest is SiloLittleHelper, Test {
     }
 
     /*
+     I have a user with a collateral 100000000000000000000, .maxLtv 850000000000000000.
+maxBorrow returns 84999999999999999999. When I'm trying to borrow 84999999999999999999 it reverts with AboveMaxLtv error because when we are calculating ltv in a borrow fn we receive 850000000000000001.
+*/
+
+    /*
+   forge test -vv --ffi --mt test_Ihor_Case
+   */
+    function test_Ihor_Case() public {
+        _depositCollateral(1e18, borrower, TWO_ASSETS);
+
+        uint256 maxBorrow = silo1.maxBorrow(borrower);
+        emit log_named_uint("maxBorrow", maxBorrow);
+
+    }
+
+    /*
     forge test -vv --ffi --mt test_maxBorrow_withDebt
     */
     /// forge-config: core-test.fuzz.runs = 1000
