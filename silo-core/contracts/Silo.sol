@@ -116,6 +116,13 @@ contract Silo is SiloERC4626 {
 
     function isSolventAfterCollateralTransfer(address _borrower) external view virtual returns (bool) {
         (
+            ISiloConfig.ConfigData memory collateral1,
+            ISiloConfig.ConfigData memory debt1
+        ) = _sharedStorage.siloConfig.getConfigs(_borrower);
+
+        if (collateral1.silo == debt1.silo) revert();
+
+        (
             ISiloConfig.DepositConfig memory deposit,
             ISiloConfig.ConfigData memory collateral,
             ISiloConfig.ConfigData memory debt
