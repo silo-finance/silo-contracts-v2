@@ -120,6 +120,7 @@ interface ISiloConfig is ICrossReentrancyGuard {
 
     error OnlySilo();
     error OnlySiloOrHookReceiver();
+    error OnlyShareCollateralToken();
     error OnlyShareToken();
     error OnlySiloOrDebtShareToken();
     error WrongSilo();
@@ -154,6 +155,8 @@ interface ISiloConfig is ICrossReentrancyGuard {
 
     /// @notice Accrue interest for both silos (SILO_0 and SILO_1 in a config)
     function accrueInterestForBothSilos() external;
+
+    function isSolventAfterCollateralTransfer(address _silo, address _borrower) external view virtual returns (bool);
 
     function borrowerCollateralSilo(address _borrower) external view returns (address collateralSilo);
 

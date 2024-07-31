@@ -6,6 +6,7 @@ import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 import {ISilo} from "./interfaces/ISilo.sol";
 import {ISiloConfig} from "./interfaces/ISiloConfig.sol";
 import {CrossReentrancyGuard} from "./utils/CrossReentrancyGuard.sol";
+import {SiloSolvencyLib} from "./lib/SiloSolvencyLib.sol";
 import {Hook} from "./lib/Hook.sol";
 
 // solhint-disable var-name-mixedcase
@@ -209,7 +210,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
     }
 
     /// @inheritdoc ISiloConfig
-    function getConfigsForWithdraw(address _silo, address _depositOwner) external view virtual returns (
+    function getConfigsForWithdraw(address _silo, address _depositOwner) public view virtual returns (
         DepositConfig memory depositConfig,
         ConfigData memory collateralConfig,
         ConfigData memory debtConfig
@@ -268,6 +269,28 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
         } else {
             revert WrongSilo();
         }
+    }
+
+    function isSolventAfterCollateralTransfer(address _silo, address _borrower) external view virtual returns (bool) {
+        (
+            ISiloConfig.DepositConfig memory deposit,
+            ISiloConfig.ConfigData memory collateral,
+            ISiloConfig.ConfigData memory debt
+        ) = getConfigsForWithdraw(_silo, _borrower);
+
+        if (
+            deposit.protectedShareToken != msg.sender
+            && deposit.collateralShareToken != msg.sender
+            && collateral.protectedShareToken != msg.sender
+            && collateral.collateralShareToken != msg.sender
+        ) {
+            revert OnlyShareCollateralToken();
+        }
+
+        // when deposit silo is collateral silo, that means this sToken is collateral for debt
+        if (collateral.silo != deposit.silo) return true;
+
+        return SiloSolvencyLib.isSolvent(collateral, debt, _borrower, ISilo.AccrueInterestInMemory.Yes);
     }
 
     /// @inheritdoc ISiloConfig
