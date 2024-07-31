@@ -127,11 +127,11 @@ contract Silo is SiloERC4626 {
             && collateral.protectedShareToken != msg.sender
             && collateral.collateralShareToken != msg.sender
         ) {
-            revert("only sToken TODO");
+            revert OnlyShareCollateralToken();
         }
 
         // when deposit silo is collateral silo, that means this sToken is collateral for debt
-        if (collateral.silo != debt.silo) return true;
+        if (collateral.silo != deposit.silo) return true;
 
         return SiloSolvencyLib.isSolvent(collateral, debt, _borrower, AccrueInterestInMemory.Yes);
     }

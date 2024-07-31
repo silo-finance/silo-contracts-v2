@@ -198,6 +198,7 @@ interface ISilo is IERC4626, IERC3156FlashLender {
     error SiloInitialized();
     error OnlyHookReceiver();
     error OnlySiloConfig();
+    error OnlyShareCollateralToken();
     error NoLiquidity();
     error InputCanBeAssetsOrShares();
     error CollateralSiloAlreadySet();
