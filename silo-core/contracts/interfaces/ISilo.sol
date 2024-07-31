@@ -255,7 +255,9 @@ interface ISilo is IERC4626, IERC3156FlashLender {
     /// @return True if the borrower is solvent, otherwise false
     function isSolvent(address _borrower) external view returns (bool);
 
-    /// @notice Retrieves the raw total amount of assets based on provided type (direct storage access)
+    function isSolventAfterCollateralTransfer(address _borrower) external view returns (bool);
+
+        /// @notice Retrieves the raw total amount of assets based on provided type (direct storage access)
     function total(uint256 _assetType) external view returns (uint256);
 
     /// @notice Retrieves the total amount of collateral (borrowable) assets with interest
