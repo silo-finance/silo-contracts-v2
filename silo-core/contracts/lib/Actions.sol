@@ -103,7 +103,7 @@ library Actions {
 
         if (depositConfig.silo == collateralConfig.silo) {
             // If deposit is collateral, then check the solvency.
-            _checkSolvency(collateralConfig, debtConfig, _args.owner);
+            _checkSolvencyNoAccrue(collateralConfig, debtConfig, _args.owner);
         }
 
         siloConfig.turnOffReentrancyProtection();
@@ -146,7 +146,7 @@ library Actions {
             _totalDebt
         );
 
-        _checkLTV(collateralConfig, debtConfig, _args.borrower);
+        _checkLTVNoAccrue(collateralConfig, debtConfig, _args.borrower);
 
         siloConfig.turnOffReentrancyProtection();
 
@@ -186,7 +186,7 @@ library Actions {
             _totalDebt: _totalDebt
         });
 
-        _checkLTV(collateralConfig, debtConfig, _args.borrower);
+        _checkLTVNoAccrue(collateralConfig, debtConfig, _args.borrower);
 
         siloConfig.turnOffReentrancyProtection();
 
@@ -286,7 +286,7 @@ library Actions {
         uint256 transferDiff = _args.depositAssets - _args.borrowAssets;
         IERC20(collateralConfig.token).safeTransferFrom(msg.sender, address(this), transferDiff);
 
-        _checkLTV(collateralConfig, debtConfig, _args.borrower);
+        _checkLTVNoAccrue(collateralConfig, debtConfig, _args.borrower);
 
         _shareStorage.siloConfig.turnOffReentrancyProtection();
 
@@ -348,7 +348,7 @@ library Actions {
 
         if (debtConfig.silo != address(0)) {
             siloConfig.accrueInterestForBothSilos();
-            _checkSolvency(collateralConfig, debtConfig, msg.sender);
+            _checkSolvencyNoAccrue(collateralConfig, debtConfig, msg.sender);
         }
 
         siloConfig.turnOffReentrancyProtection();
@@ -483,7 +483,8 @@ library Actions {
         IShareToken(cfg.debtShareToken).synchronizeHooks(hooksBefore, hooksAfter);
     }
 
-    function _checkSolvency(
+    // this method expect interest to be already accrued
+    function _checkSolvencyNoAccrue(
         ISiloConfig.ConfigData memory collateralConfig,
         ISiloConfig.ConfigData memory debtConfig,
         address _user
@@ -500,7 +501,8 @@ library Actions {
         if (!userIsSolvent) revert ISilo.NotSolvent();
     }
 
-    function _checkLTV(
+    // this method expect interest to be already accrued
+    function _checkLTVNoAccrue(
         ISiloConfig.ConfigData memory _collateralConfig,
         ISiloConfig.ConfigData memory _debtConfig,
         address _borrower
