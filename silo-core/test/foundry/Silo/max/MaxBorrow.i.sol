@@ -8,7 +8,6 @@ import {Strings} from "openzeppelin5/utils/Strings.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
-import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
 
 import {MintableToken} from "../../_common/MintableToken.sol";
 import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
@@ -28,8 +27,8 @@ contract MaxBorrowTest is SiloLittleHelper, Test {
         borrower = makeAddr("Borrower");
     }
 
-    function setUp() public {
-        siloConfig = _setUpLocalFixture(SiloConfigsNames.LOCAL_NO_ORACLE_NO_LTV_SILO);
+    function setUp() public virtual {
+        siloConfig = _setUpLocalFixture();
     }
 
     /*
@@ -93,18 +92,41 @@ contract MaxBorrowTest is SiloLittleHelper, Test {
 
     /*
      I have a user with a collateral 100000000000000000000, .maxLtv 850000000000000000.
-maxBorrow returns 84999999999999999999. When I'm trying to borrow 84999999999999999999 it reverts with AboveMaxLtv error because when we are calculating ltv in a borrow fn we receive 850000000000000001.
-*/
+     maxBorrow returns 84999999999999999999.
+     When I'm trying to borrow 84999999999999999999 it reverts with AboveMaxLtv error because when we are calculating
+     ltv in a borrow fn we receive 850000000000000001.
+    */
 
     /*
-   forge test -vv --ffi --mt test_Ihor_Case
-   */
-    function test_Ihor_Case() public {
-        _depositCollateral(1e18, borrower, TWO_ASSETS);
+    forge test -vv --ffi --mt test_Ihor_Case
+    */
+    function test_Ihor_Case_1() public {
+        _Ihor_Case(SAME_ASSET);
+    }
+
+    function test_Ihor_Case_2() public {
+        _Ihor_Case(TWO_ASSETS);
+    }
+
+    function _Ihor_Case(bool _sameAsset) private {
+        _depositCollateral(1e18, borrower, _sameAsset);
 
         uint256 maxBorrow = silo1.maxBorrow(borrower);
-        emit log_named_uint("maxBorrow", maxBorrow);
+        emit log_named_uint("maxBorrow before", maxBorrow);
+        emit log_named_uint("balance of silo1", token1.balanceOf(address(silo1)));
 
+        if (_sameAsset) {
+            assertGt(maxBorrow, 0, "for same asset collateral is liquidity");
+        } else {
+            assertEq(maxBorrow, 0, "no liquidity");
+        }
+
+        _depositForBorrow(1e18, address(2));
+
+        maxBorrow = silo1.maxBorrow(borrower);
+        emit log_named_uint("maxBorrow after", maxBorrow);
+
+        _borrow(maxBorrow, borrower, _sameAsset);
     }
 
     /*
