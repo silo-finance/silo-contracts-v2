@@ -31,7 +31,7 @@ contract ShareCollateralToken is ShareToken {
     function _afterTokenTransfer(address _sender, address _recipient, uint256 _amount) internal virtual override {
         // for minting or burning, Silo is responsible to check all necessary conditions
         // for transfer make sure that _sender is solvent after transfer
-        if (_isTransfer(_sender, _recipient) && transferWithChecks && _isThisCollateralToken(_sender)) {
+        if (_isTransfer(_sender, _recipient) && transferWithChecks && _isCollateralTransfer(_sender)) {
             _callOracleBeforeQuote(_sender);
             if (!silo.isSolvent(_sender)) revert SenderNotSolventAfterTransfer();
         }
@@ -39,13 +39,13 @@ contract ShareCollateralToken is ShareToken {
         ShareToken._afterTokenTransfer(_sender, _recipient, _amount);
     }
 
-    function _isThisCollateralToken(address _sender) internal view virtual returns (bool depositOnly) {
+    function _isCollateralTransfer(address _sender) internal view virtual returns (bool depositOnly) {
         (
             ISiloConfig.DepositConfig memory depositConfig,
             ISiloConfig.ConfigData memory collateralConfig,
         ) = siloConfig.getConfigsForWithdraw(address(silo), _sender);
 
-        // when deposit silo is collateral silo, that means this sToken might be collateral for debt
+        // when deposit silo is collateral silo, that means this sToken is collateral for debt
         return depositConfig.silo == collateralConfig.silo;
     }
 }

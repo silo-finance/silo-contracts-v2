@@ -74,7 +74,10 @@ contract ShareCollateralTokenTest is Test, SiloLittleHelper {
         _depositCollateral(100, depositor, SAME_ASSET, _collateralType);
         _depositCollateral(100, depositor, TWO_ASSETS, _collateralType);
 
-        _token1(_collateralType).transfer(receiver, 1);
+        IShareToken token1 = _token1(_collateralType);
+
+        vm.prank(depositor);
+        token1.transfer(receiver, 1);
 
         assertEq(_token1(_collateralType).balanceOf(receiver), 1, "transfer success");
     }
