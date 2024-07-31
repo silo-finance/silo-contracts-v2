@@ -50,6 +50,8 @@ contract MaliciousToken is ERC20, Test {
         bool entered = config.reentrancyGuardEntered();
         assertTrue(entered, "Reentrancy is not enabled on a token transfer");
 
+        TestStateLib.disableReentrancy();
+
         uint256 stateBeforeReentrancyTest = vm.snapshot();
 
         for (uint j = 0; j < _methodRegistries.length; j++) {
@@ -66,5 +68,7 @@ contract MaliciousToken is ERC20, Test {
                 vm.revertTo(stateBeforeReentrancyTest);
             }
         }
+
+        TestStateLib.enableReentrancy();
     }
 }

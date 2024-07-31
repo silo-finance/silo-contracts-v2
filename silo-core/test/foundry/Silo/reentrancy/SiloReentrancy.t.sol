@@ -63,6 +63,8 @@ contract SiloReentrancyTest is Test {
         for (uint j = 0; j < methodRegistries.length; j++) {
             uint256 totalMethods = methodRegistries[j].supportedMethodsLength();
 
+            emit log_string(string.concat("\nVerifying ",methodRegistries[j].abiFile()));
+
             for (uint256 i = 0; i < totalMethods; i++) {
                 bytes4 methodSig = methodRegistries[j].supportedMethods(i);
                 IMethodReentrancyTest method = methodRegistries[j].methods(methodSig);

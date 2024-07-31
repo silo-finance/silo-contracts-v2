@@ -7,26 +7,38 @@ import {TestStateLib} from "../../TestState.sol";
 
 contract WithdrawFeesReentrancyTest is MethodReentrancyTest {
     function callMethod() external {
-        emit log_string("\tRevert as expected");
-        _revertAsExpected();
+        emit log_string("\tRevert as expected if no fees");
+        _revertAsExpectedIfNoFees();
     }
 
     function verifyReentrancy() external {
-        _revertAsExpected();
+        _revertAsExpectedIfNoFees();
     }
 
     function methodDescription() external pure returns (string memory description) {
         description = "withdrawFees()";
     }
 
-    function _revertAsExpected() internal {
+    function _revertAsExpectedIfNoFees() internal {
         ISilo silo0 = TestStateLib.silo0();
         ISilo silo1 = TestStateLib.silo1();
 
-        vm.expectRevert(ISilo.EarnedZero.selector);
+        uint192 daoAndDeployerFees;
+
+        (daoAndDeployerFees, ) = silo0.siloData();
+
+        if (daoAndDeployerFees == 0) {
+            vm.expectRevert(ISilo.EarnedZero.selector);    
+        }
+
         silo0.withdrawFees();
 
-        vm.expectRevert(ISilo.EarnedZero.selector);
+        (daoAndDeployerFees, ) = silo1.siloData();
+
+        if (daoAndDeployerFees == 0) {
+            vm.expectRevert(ISilo.EarnedZero.selector);    
+        }
+
         silo1.withdrawFees();
     }
 }
