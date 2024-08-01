@@ -131,38 +131,6 @@ contract MaxBorrowTest is SiloLittleHelper, Test {
     */
 
     /*
-    forge test -vv --ffi --mt test_debug_case
-    */
-    function test_debug_case_1() public {
-        _debug_case(SAME_ASSET);
-    }
-
-    function test_debug_case_2() public {
-        _debug_case(TWO_ASSETS);
-    }
-
-    function _debug_case(bool _sameAsset) private {
-        _depositCollateral(1e18, borrower, _sameAsset);
-
-        uint256 maxBorrow = _maxBorrow(_sameAsset);
-        emit log_named_uint("maxBorrow before", maxBorrow);
-        emit log_named_uint("balance of silo1", token1.balanceOf(address(silo1)));
-
-        if (_sameAsset) {
-            assertGt(maxBorrow, 0, "for same asset collateral is liquidity");
-        } else {
-            assertEq(maxBorrow, 0, "no liquidity");
-        }
-
-        _depositForBorrow(1e18, address(2));
-
-        maxBorrow = _maxBorrow(_sameAsset);
-        emit log_named_uint("maxBorrow after", maxBorrow);
-
-        _borrow(maxBorrow, borrower, _sameAsset);
-    }
-
-    /*
     forge test -vv --ffi --mt test_maxBorrow_withDebt
     */
     /// forge-config: core-test.fuzz.runs = 1000
