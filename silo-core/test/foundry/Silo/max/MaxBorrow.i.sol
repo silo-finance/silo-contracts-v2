@@ -106,9 +106,8 @@ contract MaxBorrowTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_maxBorrow_collateralButNoLiquidity
     */
-    /// forge-config: core-test.fuzz.runs = 100
-    function test_maxBorrow_collateralButNoLiquidity_1_fuzz(uint128 _collateral) public {
-        _maxBorrow_collateralButNoLiquidity(SAME_ASSET, _collateral);
+    function test_maxBorrow_collateralButNoLiquidity_1_fuzz() public {
+        // N/A for 1 token
     }
 
     /// forge-config: core-test.fuzz.runs = 100
@@ -328,7 +327,7 @@ contract MaxBorrowTest is SiloLittleHelper, Test {
         token1.setOnDemand(false);
 
         emit log_named_uint("User 1 max borrow on silo0", silo0.maxBorrow(user1));
-        emit log_named_uint("User 1 max borrow on silo1", silo1.maxBorrow(user1));
+        emit log_named_uint("User 1 max borrow on silo1", silo1.maxBorrowSameAsset(user1));
 
         emit log("User 1 borrows the maximum returned from maxBorrow from Silo 1");
         vm.startPrank(user1);
@@ -340,7 +339,7 @@ contract MaxBorrowTest is SiloLittleHelper, Test {
         emit log("Timestamp is increased by 41 seconds");
 
         emit log("User 0 deposits 1157...127042 assets into Silo 1");
-        _deposit(115792089237316195417293883273301227089434195242432897623355228563449095127042, user0);
+        _depositForBorrow(115792089237316195417293883273301227089434195242432897623355228563449095127042, user0);
 
         uint256 liquidity = silo0.getLiquidity();
         emit log_named_uint("liquidity on the fly", liquidity);
