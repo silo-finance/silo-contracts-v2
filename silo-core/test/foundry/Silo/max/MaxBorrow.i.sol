@@ -28,7 +28,7 @@ contract MaxBorrowTest is SiloLittleHelper, Test {
         borrower = makeAddr("Borrower");
     }
 
-    function setUp() public {
+    function setUp() public virtual {
         siloConfig = _setUpLocalFixture(SiloConfigsNames.LOCAL_NO_ORACLE_NO_LTV_SILO);
     }
 
