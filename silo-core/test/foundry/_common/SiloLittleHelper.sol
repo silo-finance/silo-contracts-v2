@@ -263,7 +263,7 @@ abstract contract SiloLittleHelper is CommonBase {
         partialLiquidation = IPartialLiquidation(hook);
     }
 
-    function _printStats(ISiloConfig _siloConfig, address _borrower) internal {
+    function _printStats(ISiloConfig _siloConfig, address _borrower) internal view {
         console.log("borrower", _borrower);
         console.log("silo0", address(silo0));
         console.log("silo1", address(silo1));
