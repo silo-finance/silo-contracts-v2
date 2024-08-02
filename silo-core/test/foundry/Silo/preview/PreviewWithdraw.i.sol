@@ -96,7 +96,45 @@ contract PreviewWithdrawTest is SiloLittleHelper, Test {
         ISilo.CollateralType assetType = _collateralType();
         bool protectedType = assetType == ISilo.CollateralType.Protected;
 
-        if (!_sameAsset()) _depositForBorrow(_assetsOrShares, makeAddr("any"));
+        if (!_sameAsset() || protectedType) _depositForBorrow(_assetsOrShares, makeAddr("any"));
+        // % 2 is to keep odd numbers
+        _depositCollateral(uint256(_assetsOrShares) * 2 - _assetsOrShares % 2, depositor, _sameAsset(), assetType);
+        _borrow(_assetsOrShares / 2 == 0 ? 1 : _assetsOrShares / 2, depositor, _sameAsset());
+
+        if (_interest) vm.warp(block.timestamp + 100 days);
+
+        uint256 preview = _useRedeem()
+            ? _silo().previewRedeem(amountToUse, assetType)
+            : _silo().previewWithdraw(amountToUse, assetType);
+
+        if (!_interest || protectedType) {
+            assertEq(preview, amountToUse, "previewWithdraw == assets == shares, when no interest");
+        }
+
+        _assertPreviewWithdraw(preview, amountToUse);
+    }
+
+    /*
+    forge test -vv --ffi --mt test_previewWithdraw_debtOthers_fuzz
+    */
+    /// forge-config: core-test.fuzz.runs = 10000
+    function test_previewWithdraw_debtOthers_fuzz(
+        uint64 _otherDeposit,
+        uint64 _assetsOrShares,
+        bool _interest,
+        bool _partial
+    ) public {
+        vm.assume(_otherDeposit > 0);
+        vm.assume(_assetsOrShares > 1); // can not create debt with 1 collateral
+        uint128 amountToUse = _partial ? uint128(uint256(_assetsOrShares) * 37 / 100) : _assetsOrShares;
+        vm.assume(amountToUse > 0);
+
+        ISilo.CollateralType assetType = _collateralType();
+        bool protectedType = assetType == ISilo.CollateralType.Protected;
+
+        _depositCollateral(_otherDeposit, makeAddr("other"), _sameAsset(), assetType);
+
+        if (!_sameAsset() || protectedType) _depositForBorrow(_assetsOrShares, makeAddr("any"));
         // % 2 is to keep odd numbers
         _depositCollateral(uint256(_assetsOrShares) * 2 - _assetsOrShares % 2, depositor, _sameAsset(), assetType);
         _borrow(_assetsOrShares / 2 == 0 ? 1 : _assetsOrShares / 2, depositor, _sameAsset());
