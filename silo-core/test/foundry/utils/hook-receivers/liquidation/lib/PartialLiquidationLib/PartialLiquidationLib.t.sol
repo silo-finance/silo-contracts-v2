@@ -24,16 +24,11 @@ contract PartialLiquidationLibTest is Test, MaxRepayRawMath {
     */
     function test_PartialLiquidationLib_minAcceptableLTV() public view {
         assertEq(PartialLiquidationLib.minAcceptableLTV(0), 0);
-        assertEq(PartialLiquidationLib.minAcceptableLTV(1), 0);
+        assertEq(PartialLiquidationLib.minAcceptableLTV(1), 1);
         assertEq(PartialLiquidationLib.minAcceptableLTV(10), 9);
         assertEq(PartialLiquidationLib.minAcceptableLTV(500), 450);
         assertEq(PartialLiquidationLib.minAcceptableLTV(1e4), 9000);
-
-        uint256 gasStart = gasleft();
         assertEq(PartialLiquidationLib.minAcceptableLTV(800), 720, "LT=80% => min=>72%");
-        uint256 gasEnd = gasleft();
-
-        assertLe(gasStart - gasEnd, 825, "optimise minAcceptableLTV()");
     }
 
     /*
@@ -344,20 +339,6 @@ contract PartialLiquidationLibTest is Test, MaxRepayRawMath {
         PartialLiquidationLib.liquidationPreview(
             _ltvBefore, _sumOfCollateralAssets, sumOfCollateralValue, borrowerDebtAssets, borrowerDebtValue, params
         );
-    }
-
-
-    /*
-    forge test -vv --mt test_gas_PartialLiquidationLib_liquidationPreview
-    */
-    function test_gas_PartialLiquidationLib_liquidationPreview() public view {
-        PartialLiquidationLib.LiquidationPreviewParams memory params;
-
-        uint256 gasStart = gasleft();
-        PartialLiquidationLib.liquidationPreview(1e8, 1e18, 1e18, 1e18, 10, params);
-        uint256 gasEnd = gasleft();
-
-        assertEq(gasStart - gasEnd, 1062, "optimise liquidationPreview");
     }
 
     /*

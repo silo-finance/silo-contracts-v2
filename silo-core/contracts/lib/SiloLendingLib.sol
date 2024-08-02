@@ -348,7 +348,7 @@ library SiloLendingLib {
                 ? oneDebtToken
                 : _debtOracle.quote(oneDebtToken, _debtToken);
 
-            assets = _maxBorrowValue * _PRECISION_DECIMALS / oneDebtTokenValue;
+            assets = _maxBorrowValue.mulDiv(_PRECISION_DECIMALS, oneDebtTokenValue, Rounding.MAX_BORROW_TO_ASSETS);
 
             // when we borrow, we convertToShares with rounding.Up, to create higher debt, however here,
             // when we want to calculate "max borrow", we can not round.Up, because it can create issue with max ltv,
@@ -361,7 +361,7 @@ library SiloLendingLib {
 
             // on LTV calculation, we taking debt value, and we round UP when we calculating shares
             // so here, when we want to calculate shares from value, we need to round down.
-            shares = _maxBorrowValue * shareBalance / _borrowerDebtValue; // by default rounding DOWN
+            shares = _maxBorrowValue.mulDiv(shareBalance, _borrowerDebtValue, Rounding.MAX_BORROW_TO_SHARES);
 
             assets = SiloMathLib.convertToAssets(
                 shares, _totalDebtAssets, _totalDebtShares, Rounding.MAX_BORROW_TO_ASSETS, ISilo.AssetType.Debt

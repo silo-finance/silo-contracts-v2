@@ -235,8 +235,6 @@ library SiloSolvencyLib {
         pure
         returns (uint256 ltvInDp)
     {
-        ltvInDp = _totalBorrowerDebtValue.mulDiv(
-            _PRECISION_DECIMALS, _sumOfBorrowerCollateralValue, Math.Rounding(Rounding.LTV)
-        );
+        ltvInDp = _totalBorrowerDebtValue.mulDiv(_PRECISION_DECIMALS, _sumOfBorrowerCollateralValue, Rounding.LTV);
     }
 }

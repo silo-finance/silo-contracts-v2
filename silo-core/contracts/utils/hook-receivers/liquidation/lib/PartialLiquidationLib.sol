@@ -5,8 +5,11 @@ import {Math} from "openzeppelin5/utils/math/Math.sol";
 
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquidation.sol";
+import {Rounding} from "silo-core/contracts/lib/Rounding.sol";
 
 library PartialLiquidationLib {
+    using Math for uint256;
+
     struct LiquidationPreviewParams {
         uint256 collateralLt;
         address collateralConfigAsset;
@@ -152,8 +155,7 @@ library PartialLiquidationLib {
     /// @param _lt LT liquidation threshold for asset
     /// @return minimalAcceptableLTV min acceptable LTV after liquidation
     function minAcceptableLTV(uint256 _lt) internal pure returns (uint256 minimalAcceptableLTV) {
-        // safe to uncheck because all values are in BP
-        unchecked { minimalAcceptableLTV = _lt * _LT_LIQUIDATION_MARGIN / _PRECISION_DECIMALS; }
+        minimalAcceptableLTV = _lt.mulDiv(_LT_LIQUIDATION_MARGIN, _PRECISION_DECIMALS, Rounding.LTV);
     }
 
     /// @notice this function never reverts

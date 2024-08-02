@@ -77,10 +77,7 @@ library SiloMathLib {
             return (_debtAssets, 0);
         }
 
-        unchecked {
-            // If we overflow on multiplication it should not revert tx, we will get lower fees
-            accruedInterest = _debtAssets * _rcomp / _PRECISION_DECIMALS;
-        }
+        accruedInterest = _debtAssets.mulDiv(_rcomp, _PRECISION_DECIMALS, Rounding.ACCRUED_INTEREST);
 
         debtAssetsWithInterest = _debtAssets + accruedInterest;
     }
@@ -174,7 +171,9 @@ library SiloMathLib {
             return 0;
         }
 
-        uint256 maxDebtValue = _sumOfBorrowerCollateralValue * _configMaxLtv / _PRECISION_DECIMALS; // Rounding.Floor
+        uint256 maxDebtValue = _sumOfBorrowerCollateralValue.mulDiv(
+            _configMaxLtv, _PRECISION_DECIMALS, Rounding.MAX_BORROW_VALUE
+        );
 
         unchecked {
             // we will not underflow because we checking `maxDebtValue > _borrowerDebtValue`
