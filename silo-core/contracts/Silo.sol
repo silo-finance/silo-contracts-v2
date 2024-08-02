@@ -541,7 +541,7 @@ contract Silo is SiloERC4626 {
         (uint256 totalSiloAssets, uint256 totalShares) = _getTotalAssetsAndTotalSharesWithInterest(AssetType.Debt);
 
         return SiloMathLib.convertToAssets(
-            _shares, totalSiloAssets, totalShares, Rounding.BORROW_TO_ASSETS, AssetType.Debt
+            _shares, totalSiloAssets, totalShares, Rounding.BORROW_TO_ASSETS, AssetType.Debt // previewBorrowShares TODO
         );
     }
 
@@ -574,7 +574,7 @@ contract Silo is SiloERC4626 {
         (uint256 totalSiloAssets, uint256 totalShares) = _getTotalAssetsAndTotalSharesWithInterest(AssetType.Debt);
 
         return SiloMathLib.convertToShares(
-            _assets, totalSiloAssets, totalShares, Rounding.REPAY_TO_SHARES, AssetType.Debt
+            _assets, totalSiloAssets, totalShares, Rounding.REPAY_TO_SHARES, AssetType.Debt // previewRepay TODO
         );
     }
 
@@ -598,7 +598,7 @@ contract Silo is SiloERC4626 {
         (uint256 totalSiloAssets, uint256 totalShares) = _getTotalAssetsAndTotalSharesWithInterest(AssetType.Debt);
 
         return SiloMathLib.convertToAssets(
-            _shares, totalSiloAssets, totalShares, Rounding.REPAY_TO_ASSETS, AssetType.Debt
+            _shares, totalSiloAssets, totalShares, Rounding.REPAY_TO_ASSETS, AssetType.Debt // previewRepayShares TODO
         );
     }
 
@@ -835,7 +835,7 @@ contract Silo is SiloERC4626 {
         (uint256 totalSiloAssets, uint256 totalShares) = _getTotalAssetsAndTotalSharesWithInterest(assetType);
 
         return SiloMathLib.convertToAssets(
-            _shares, totalSiloAssets, totalShares, Rounding.WITHDRAW_TO_ASSETS, assetType
+            _shares, totalSiloAssets, totalShares, Rounding.WITHDRAW_TO_ASSETS, assetType // _previewRedeem TODO
         );
     }
 
@@ -848,7 +848,7 @@ contract Silo is SiloERC4626 {
         (uint256 totalSiloAssets, uint256 totalShares) = _getTotalAssetsAndTotalSharesWithInterest(assetType);
 
         return SiloMathLib.convertToShares(
-            _assets, totalSiloAssets, totalShares, Rounding.WITHDRAW_TO_SHARES, assetType
+            _assets, totalSiloAssets, totalShares, Rounding.WITHDRAW_TO_SHARES, assetType // _previewWithdraw TODO
         );
     }
 
