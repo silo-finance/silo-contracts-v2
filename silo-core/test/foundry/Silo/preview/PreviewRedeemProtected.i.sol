@@ -13,7 +13,7 @@ contract PreviewRedeemTest is PreviewWithdrawTest {
         return true;
     }
 
-    function _collateralType() internal pure virtual returns (ISilo.CollateralType) {
+    function _collateralType() internal pure override returns (ISilo.CollateralType) {
         return ISilo.CollateralType.Protected;
     }
 }

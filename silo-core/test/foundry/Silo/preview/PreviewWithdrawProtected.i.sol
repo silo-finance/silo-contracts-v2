@@ -9,7 +9,7 @@ import {PreviewWithdrawTest} from "./PreviewWithdraw.i.sol";
     forge test -vv --ffi --mc PreviewWithdrawTest
 */
 contract PreviewWithdrawProtectedTest is PreviewWithdrawTest {
-    function _collateralType() internal pure virtual returns (ISilo.CollateralType) {
+    function _collateralType() internal pure override returns (ISilo.CollateralType) {
         return ISilo.CollateralType.Protected;
     }
 }

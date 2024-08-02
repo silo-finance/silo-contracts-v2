@@ -45,11 +45,11 @@ contract PreviewWithdrawTest is SiloLittleHelper, Test {
 
         // preview before deposit creation
         uint256 preview = _useRedeem()
-            ? silo0.previewRedeem(amountToUse, assetType)
-            : silo0.previewWithdraw(amountToUse, assetType);
+            ? _silo().previewRedeem(amountToUse, assetType)
+            : _silo().previewWithdraw(amountToUse, assetType);
 
         // first deposit AFTER preview
-        _deposit(_assetsOrShares, depositor, assetType);
+        _depositCollateral(_assetsOrShares, depositor, _sameAsset(), assetType);
 
         assertEq(preview, amountToUse, "previewWithdraw == assets == shares, when no interest");
 
@@ -69,11 +69,11 @@ contract PreviewWithdrawTest is SiloLittleHelper, Test {
 
         ISilo.CollateralType assetType = _collateralType();
 
-        _deposit(uint256(_assetsOrShares) * 2 - (_assetsOrShares % 2), depositor, assetType);
+        _depositCollateral(uint256(_assetsOrShares) * 2 - (_assetsOrShares % 2), depositor, _sameAsset(), assetType);
 
         uint256 preview = _useRedeem()
-            ? silo0.previewRedeem(amountToUse, assetType)
-            : silo0.previewWithdraw(amountToUse, assetType);
+            ? _silo().previewRedeem(amountToUse, assetType)
+            : _silo().previewWithdraw(amountToUse, assetType);
 
         assertEq(preview, amountToUse, "previewWithdraw == assets == shares, when no interest");
 
@@ -95,22 +95,16 @@ contract PreviewWithdrawTest is SiloLittleHelper, Test {
         ISilo.CollateralType assetType = _collateralType();
         bool protectedType = assetType == ISilo.CollateralType.Protected;
 
-        // we need interest on silo0, where we doing deposit
-        _depositForBorrow(uint256(_assetsOrShares) * 2, borrower); // deposit collateral for silo1
-        _deposit(uint256(_assetsOrShares) * 2 + (_assetsOrShares % 2), depositor); // deposit for silo0, for borrow
+        _depositForBorrow(uint256(_assetsOrShares) * 2, borrower);
+        _depositCollateral(uint256(_assetsOrShares) * 2 + (_assetsOrShares % 2), depositor, _sameAsset(), assetType);
 
-        if (protectedType) {
-            _deposit(uint256(_assetsOrShares) * 2 + (_assetsOrShares % 2), depositor, assetType);
-        }
-
-        vm.prank(borrower);
-        silo0.borrow(_assetsOrShares / 2 == 0 ? 1 : _assetsOrShares / 2, borrower, borrower);
+        _borrow(_assetsOrShares / 2 == 0 ? 1 : _assetsOrShares / 2, borrower);
 
         if (_interest) vm.warp(block.timestamp + 100 days);
 
         uint256 preview = _useRedeem()
-            ? silo0.previewRedeem(amountToUse, assetType)
-            : silo0.previewWithdraw(amountToUse, assetType);
+            ? _silo().previewRedeem(amountToUse, assetType)
+            : _silo().previewWithdraw(amountToUse, assetType);
 
         if (!_interest || protectedType) {
             assertEq(preview, amountToUse, "previewWithdraw == assets == shares, when no interest");
@@ -124,8 +118,8 @@ contract PreviewWithdrawTest is SiloLittleHelper, Test {
         vm.prank(depositor);
 
         uint256 results = _useRedeem()
-            ? silo0.redeem(_assetsOrShares, depositor, depositor, _collateralType())
-            : silo0.withdraw(_assetsOrShares, depositor, depositor, _collateralType());
+            ? _silo().redeem(_assetsOrShares, depositor, depositor, _collateralType())
+            : _silo().withdraw(_assetsOrShares, depositor, depositor, _collateralType());
 
         assertGt(results, 0, "expect any withdraw amount > 0");
 
@@ -139,5 +133,13 @@ contract PreviewWithdrawTest is SiloLittleHelper, Test {
 
     function _collateralType() internal pure virtual returns (ISilo.CollateralType) {
         return ISilo.CollateralType.Collateral;
+    }
+
+    function _sameAsset() internal pure virtual returns (bool) {
+        return false;
+    }
+
+    function _silo() private view returns (ISilo) {
+        return _sameAsset() ? silo1 : silo0;
     }
 }
