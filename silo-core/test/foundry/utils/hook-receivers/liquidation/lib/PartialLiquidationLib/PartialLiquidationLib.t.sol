@@ -22,7 +22,7 @@ contract PartialLiquidationLibTest is Test, MaxRepayRawMath {
     /*
     forge test -vv --mt test_PartialLiquidationLib_minAcceptableLTV
     */
-    function test_PartialLiquidationLib_minAcceptableLTV() public view {
+    function test_PartialLiquidationLib_minAcceptableLTV() public pure {
         assertEq(PartialLiquidationLib.minAcceptableLTV(0), 0);
         assertEq(PartialLiquidationLib.minAcceptableLTV(1), 1);
         assertEq(PartialLiquidationLib.minAcceptableLTV(10), 9);
