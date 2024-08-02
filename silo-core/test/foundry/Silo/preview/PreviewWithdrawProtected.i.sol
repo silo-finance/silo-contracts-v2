@@ -6,7 +6,7 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {PreviewWithdrawTest} from "./PreviewWithdraw.i.sol";
 
 /*
-    forge test -vv --ffi --mc PreviewWithdrawTest
+    forge test -vv --ffi --mc PreviewWithdrawProtectedTest
 */
 contract PreviewWithdrawProtectedTest is PreviewWithdrawTest {
     function _collateralType() internal pure override returns (ISilo.CollateralType) {

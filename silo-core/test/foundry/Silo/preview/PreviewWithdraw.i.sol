@@ -89,16 +89,17 @@ contract PreviewWithdrawTest is SiloLittleHelper, Test {
         bool _interest,
         bool _partial
     ) public {
+        vm.assume(_assetsOrShares > 1); // can not create debt with 1 collateral
         uint128 amountToUse = _partial ? uint128(uint256(_assetsOrShares) * 37 / 100) : _assetsOrShares;
         vm.assume(amountToUse > 0);
 
         ISilo.CollateralType assetType = _collateralType();
         bool protectedType = assetType == ISilo.CollateralType.Protected;
 
-        _depositForBorrow(uint256(_assetsOrShares) * 2, borrower);
-        _depositCollateral(uint256(_assetsOrShares) * 2 + (_assetsOrShares % 2), depositor, _sameAsset(), assetType);
-
-        _borrow(_assetsOrShares / 2 == 0 ? 1 : _assetsOrShares / 2, borrower);
+        if (!_sameAsset()) _depositForBorrow(_assetsOrShares, makeAddr("any"));
+        // % 2 is to keep odd numbers
+        _depositCollateral(uint256(_assetsOrShares) * 2 - _assetsOrShares % 2, depositor, _sameAsset(), assetType);
+        _borrow(_assetsOrShares / 2 == 0 ? 1 : _assetsOrShares / 2, depositor, _sameAsset());
 
         if (_interest) vm.warp(block.timestamp + 100 days);
 
