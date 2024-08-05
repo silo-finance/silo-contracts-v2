@@ -22,6 +22,7 @@ library Rounding {
     Math.Rounding internal constant BORROW_TO_SHARES = (Math.Rounding.Ceil);
     Math.Rounding internal constant MAX_BORROW_TO_ASSETS = (Math.Rounding.Floor);
     Math.Rounding internal constant MAX_BORROW_TO_SHARES = (Math.Rounding.Floor);
+    Math.Rounding internal constant MAX_BORROW_VALUE = (Math.Rounding.Floor);
     Math.Rounding internal constant REPAY_TO_ASSETS = (Math.Rounding.Ceil);
     Math.Rounding internal constant REPAY_TO_SHARES = (Math.Rounding.Floor);
     Math.Rounding internal constant MAX_REPAY_TO_ASSETS = (Math.Rounding.Ceil);
@@ -31,4 +32,5 @@ library Rounding {
     Math.Rounding internal constant MAX_WITHDRAW_TO_SHARES = (Math.Rounding.Floor);
     Math.Rounding internal constant LIQUIDATE_TO_SHARES = (Math.Rounding.Floor);
     Math.Rounding internal constant LTV = (Math.Rounding.Ceil);
+    Math.Rounding internal constant ACCRUED_INTEREST = (Math.Rounding.Floor);
 }
