@@ -82,6 +82,8 @@ contract PreviewWithdrawTest is SiloLittleHelper, Test {
 
     /*
     forge test -vv --ffi --mt test_previewWithdraw_debt_fuzz
+    same asset: we check preview on same silo
+    two assets: we need to borrow on silo0 in addition
     */
     /// forge-config: core-test.fuzz.runs = 10000
     function test_previewWithdraw_debt_fuzz(
@@ -96,22 +98,24 @@ contract PreviewWithdrawTest is SiloLittleHelper, Test {
         ISilo.CollateralType assetType = _collateralType();
         bool protectedType = assetType == ISilo.CollateralType.Protected;
 
-        if (!_sameAsset() || protectedType) _depositForBorrow(_assetsOrShares, makeAddr("any"));
+        address otherDepositor = makeAddr("otherDepositor");
+        _depositForBorrow(_assetsOrShares, otherDepositor);
+
         // % 2 is to keep odd numbers
         _depositCollateral(uint256(_assetsOrShares) * 2 - _assetsOrShares % 2, depositor, _sameAsset(), assetType);
         _borrow(_assetsOrShares / 2 == 0 ? 1 : _assetsOrShares / 2, depositor, _sameAsset());
 
-        if (_interest) vm.warp(block.timestamp + 100 days);
+        if (_interest) vm.warp(block.timestamp + 200 days);
 
-        uint256 preview = _useRedeem()
-            ? _silo().previewRedeem(amountToUse, assetType)
-            : _silo().previewWithdraw(amountToUse, assetType);
+        uint256 preview0 = _useRedeem()
+            ? _silo0.previewRedeem(amountToUse, assetType)
+            : _silo0.previewWithdraw(amountToUse, assetType);
 
         if (!_interest || protectedType) {
-            assertEq(preview, amountToUse, "previewWithdraw == assets == shares, when no interest");
+            assertEq(preview0, amountToUse, "previewWithdraw == assets == shares, when no interest");
         }
 
-        _assertPreviewWithdraw(preview, amountToUse);
+        _assertPreviewWithdraw(preview0, amountToUse);
     }
 
     /*
@@ -157,8 +161,8 @@ contract PreviewWithdrawTest is SiloLittleHelper, Test {
     */
     /// forge-config: core-test.fuzz.runs = 10000
     function test_previewWithdraw_random_fuzz(
-        uint128 _deposit,
-        uint128 _assetsOrShares,
+        uint64 _deposit,
+        uint64 _assetsOrShares,
         bool _interest,
         bool _partial
     ) public {
@@ -168,10 +172,11 @@ contract PreviewWithdrawTest is SiloLittleHelper, Test {
         ISilo.CollateralType assetType = _collateralType();
         bool protectedType = assetType == ISilo.CollateralType.Protected;
 
-        _depositCollateral(_deposit, makeAddr("other"), _sameAsset(), assetType);
+        _depositCollateral(_deposit, makeAddr("user1"), _sameAsset(), assetType);
+        _depositCollateral(_deposit, makeAddr("user2"), _sameAsset(), assetType);
+        _depositCollateral(_deposit, makeAddr("user3"), _sameAsset(), assetType);
 
         if (!_sameAsset() || protectedType) _depositForBorrow(_deposit, makeAddr("any"));
-        // % 2 is to keep odd numbers
         _depositCollateral(_deposit, depositor, _sameAsset(), assetType);
         _borrow(_deposit / 2 == 0 ? 1 : _deposit / 2, depositor, _sameAsset());
 
