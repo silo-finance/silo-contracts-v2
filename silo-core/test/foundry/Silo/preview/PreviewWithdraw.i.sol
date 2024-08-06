@@ -15,8 +15,6 @@ import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
     forge test -vv --ffi --mc PreviewWithdrawTest
 */
 contract PreviewWithdrawTest is SiloLittleHelper, Test {
-    uint256 constant DEPOSIT_BEFORE = 1e18 + 9876543211;
-
     ISiloConfig siloConfig;
     address immutable depositor;
     address immutable borrower;
@@ -184,6 +182,7 @@ contract PreviewWithdrawTest is SiloLittleHelper, Test {
 
         while (ltvAfter == ltvBefore) {
             vm.warp(block.timestamp + 500 days);
+            ltvAfter = siloLens.getLtv(silo1, borrower);
         }
 
         emit log_named_uint("ltvAfter loop", ltvAfter);
