@@ -41,8 +41,6 @@ contract PreviewWithdrawTest is SiloLittleHelper, Test {
         uint256 amountIn = _partial ? uint256(_assetsOrShares) * 37 / 100 : _assetsOrShares;
         vm.assume(amountIn > 0);
 
-        ISilo.CollateralType assetType = _collateralType();
-
         _depositForTestPreview(_assetsOrShares);
 
         uint256 preview = _getPreview(amountIn);
@@ -67,18 +65,15 @@ contract PreviewWithdrawTest is SiloLittleHelper, Test {
         uint128 amountToUse = _partial ? uint128(uint256(_assetsOrShares) * 37 / 100) : _assetsOrShares;
         vm.assume(amountToUse > 0);
 
-        ISilo.CollateralType assetType = _collateralType();
-        bool protectedType = assetType == ISilo.CollateralType.Protected;
-
         _depositForTestPreview(_assetsOrShares);
 
         _createSiloUsage();
 
-        if (_interest) vm.warp(block.timestamp + 200 days);
+        if (_interest) _applyInterest();
 
         uint256 preview = _getPreview(amountToUse);
 
-        if (!_interest || protectedType) {
+        if (!_interest || _collateralType() == ISilo.CollateralType.Protected) {
             assertEq(preview, amountToUse, "previewWithdraw == assets == shares, when no interest");
         }
 
@@ -92,18 +87,15 @@ contract PreviewWithdrawTest is SiloLittleHelper, Test {
     function test_previewWithdraw_random_fuzz(uint64 _assetsOrShares, bool _interest) public {
         vm.assume(_assetsOrShares > 0);
 
-        ISilo.CollateralType assetType = _collateralType();
-        bool protectedType = assetType == ISilo.CollateralType.Protected;
-
         _depositForTestPreview(_assetsOrShares);
 
         _createSiloUsage();
 
-        if (_interest) vm.warp(block.timestamp + 500 days);
+        if (_interest) _applyInterest();
 
         uint256 preview = _getPreview(_assetsOrShares);
 
-        if (!_interest || protectedType) {
+        if (!_interest || _collateralType() == ISilo.CollateralType.Protected) {
             assertEq(preview, _assetsOrShares, "previewWithdraw == assets == shares, when no interest");
         }
 
@@ -117,19 +109,16 @@ contract PreviewWithdrawTest is SiloLittleHelper, Test {
     function test_previewWithdraw_min_fuzz(uint64 _assetsOrShares, bool _interest) public {
         vm.assume(_assetsOrShares > 0);
 
-        ISilo.CollateralType assetType = _collateralType();
-        bool protectedType = assetType == ISilo.CollateralType.Protected;
-
         _depositForTestPreview(_assetsOrShares);
 
         _createSiloUsage();
 
-        if (_interest) vm.warp(block.timestamp + 500 days);
+        if (_interest) _applyInterest();
 
         uint256 minInput = _useRedeem() ? 1 : silo1.convertToAssets(1);
         uint256 minPreview = _getPreview(minInput);
 
-        if (!_interest || protectedType) {
+        if (!_interest || _collateralType() == ISilo.CollateralType.Protected) {
             assertEq(minPreview, minInput, "previewWithdraw == assets == shares, when no interest");
         }
 
@@ -140,34 +129,32 @@ contract PreviewWithdrawTest is SiloLittleHelper, Test {
     forge test -vv --ffi --mt test_previewWithdraw_max_fuzz
     */
     /// forge-config: core-test.fuzz.runs = 10000
-    function test_previewWithdraw_max_fuzz(uint64 _assetsOrShares, bool _interest) public {
-        vm.assume(_assetsOrShares > 0);
+    function test_previewWithdraw_max_fuzz(uint64 _assets, bool _interest) public {
+        vm.assume(_assets > 0);
 
-        ISilo.CollateralType assetType = _collateralType();
-        bool protectedType = assetType == ISilo.CollateralType.Protected;
-
-        _depositForTestPreview(_assetsOrShares);
+        _depositForTestPreview(_assets);
 
         _createSiloUsage();
 
-        if (_interest) vm.warp(block.timestamp + 500 days);
+        if (_interest) _applyInterest();
 
         uint256 maxInput = _useRedeem()
-            ? _getShareToken().balanceOf(depositor)
+            // we can not use balance of share token, because we not sure about liquidity
+            ? silo1.maxRedeem(depositor, _collateralType()) // _getShareToken().balanceOf(depositor)
             : silo1.maxWithdraw(depositor, _collateralType());
 
         uint256 maxPreview = _getPreview(maxInput);
 
-        if (!_interest || protectedType) {
+        if (!_interest || _collateralType() == ISilo.CollateralType.Protected) {
             assertEq(maxPreview, maxInput, "previewWithdraw == assets == shares, when no interest");
         }
 
         _assertPreviewWithdraw(maxPreview, maxInput);
     }
 
-    function _depositForTestPreview(uint256 _assetsOrShares) internal {
+    function _depositForTestPreview(uint256 _assets) internal {
         _depositCollateral({
-            _assets: _assetsOrShares,
+            _assets: _assets,
             _depositor: depositor,
             _toSilo1: true,
             _collateralType: _collateralType()
@@ -177,9 +164,31 @@ contract PreviewWithdrawTest is SiloLittleHelper, Test {
     function _createSiloUsage() internal {
         _depositForBorrow(type(uint128).max, depositor);
 
-        address otherDepositor = makeAddr("otherDepositor");
-        _depositCollateral(type(uint128).max, otherDepositor, _sameAsset(), _collateralType());
-        _borrow(type(uint64).max, otherDepositor, _sameAsset());
+        _depositCollateral(type(uint128).max, borrower, _sameAsset(), _collateralType());
+        _borrow(type(uint64).max, borrower, _sameAsset());
+    }
+
+    function _applyInterest() internal {
+        uint256 ltvBefore = siloLens.getLtv(silo1, borrower);
+        if (ltvBefore == 1) {
+            // there is no way for this test to apply interst for 1 wei LTV
+            return;
+        }
+
+        vm.warp(block.timestamp + 200 days);
+
+        uint256 ltvAfter = siloLens.getLtv(silo1, borrower);
+
+        emit log_named_uint("ltvBefore", ltvBefore);
+        emit log_named_uint("ltvAfter", ltvAfter);
+
+        while (ltvAfter == ltvBefore) {
+            vm.warp(block.timestamp + 500 days);
+        }
+
+        emit log_named_uint("ltvAfter loop", ltvAfter);
+
+        assertGt(ltvAfter, ltvBefore, "expect any interest");
     }
 
     function _assertPreviewWithdraw(uint256 _preview, uint256 _assetsOrShares) internal {
