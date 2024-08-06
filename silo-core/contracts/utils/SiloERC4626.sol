@@ -3,24 +3,38 @@ pragma solidity 0.8.24;
 
 import {ISilo, IERC20, IERC20Metadata} from "../interfaces/ISilo.sol";
 import {IShareToken} from "../interfaces/IShareToken.sol";
+import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
+import {NonReentrantLib} from "../lib/NonReentrantLib.sol";
 import {SiloStorage} from "../SiloStorage.sol";
 
 abstract contract SiloERC4626 is ISilo, SiloStorage {
     /// @inheritdoc IERC20
     function approve(address _spender, uint256 _amount) external returns (bool) {
+        NonReentrantLib.nonReentrant(_sharedStorage.siloConfig);
         IShareToken(_getShareToken()).forwardApprove(msg.sender, _spender, _amount);
+
         return true;
     }
 
     /// @inheritdoc IERC20
     function transfer(address _to, uint256 _amount) external returns (bool) {
+        ISiloConfig siloConfig = _sharedStorage.siloConfig;
+
+        siloConfig.turnOnReentrancyProtection();
         IShareToken(_getShareToken()).forwardTransfer(msg.sender, _to, _amount);
+        siloConfig.turnOffReentrancyProtection();
+
         return true;
     }
 
     /// @inheritdoc IERC20
     function transferFrom(address _from, address _to, uint256 _amount) external returns (bool) {
+        ISiloConfig siloConfig = _sharedStorage.siloConfig;
+
+        siloConfig.turnOnReentrancyProtection();
         IShareToken(_getShareToken()).forwardTransferFrom(msg.sender, _from, _to, _amount);
+        siloConfig.turnOffReentrancyProtection();
+
         return true;
     }
 

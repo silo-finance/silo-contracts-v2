@@ -14,9 +14,9 @@ contract DebtShareTokenMethodsRegistry is ShareTokenMethodsRegistry {
     constructor() ShareTokenMethodsRegistry() {
         _registerMethod(new TransferReentrancyTest());
         _registerMethod(new TransferFromReentrancyTest());
-        // _registerMethod(new SetReceiverApprovalReentrancyTest()); // TODO: add reentrancy protection
-        // _registerMethod(new DecreaseReceiveAllowanceReentrancyTest()); // TODO: add reentrancy protection
-        // _registerMethod(new IncreaseReceiveAllowanceReentrancyTest()); // TODO: add reentrancy protection
+        _registerMethod(new SetReceiverApprovalReentrancyTest());
+        _registerMethod(new DecreaseReceiveAllowanceReentrancyTest());
+        _registerMethod(new IncreaseReceiveAllowanceReentrancyTest());
         _registerMethod(new ReceiveAllowanceReentrancyTest());
     }
 

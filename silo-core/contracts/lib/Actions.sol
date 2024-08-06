@@ -19,6 +19,7 @@ import {SiloMathLib} from "./SiloMathLib.sol";
 import {Hook} from "./Hook.sol";
 import {AssetTypes} from "./AssetTypes.sol";
 import {CallBeforeQuoteLib} from "./CallBeforeQuoteLib.sol";
+import {NonReentrantLib} from "./NonReentrantLib.sol";
 
 library Actions {
     using SafeERC20 for IERC20;
@@ -468,8 +469,11 @@ library Actions {
         returns (uint24 hooksBefore, uint24 hooksAfter)
     {
         ISilo.SharedStorage memory shareStorage = _sharedStorage;
+        ISiloConfig siloConfig = shareStorage.siloConfig;
 
-        ISiloConfig.ConfigData memory cfg = shareStorage.siloConfig.getConfig(address(this));
+        NonReentrantLib.nonReentrant(siloConfig);
+
+        ISiloConfig.ConfigData memory cfg = siloConfig.getConfig(address(this));
 
         if (cfg.hookReceiver == address(0)) return (hooksBefore, hooksAfter);
 

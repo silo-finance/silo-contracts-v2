@@ -98,6 +98,12 @@ contract ShareTokenTest is Test {
     function test_descreaseAllowance() public {
         uint256 allowance = 100e18;
         address recipient = makeAddr("Recipient");
+        address siloAddr = silo.ADDRESS();
+
+        silo.configMock(siloConfig.ADDRESS());
+        siloConfig.reentrancyGuardEnteredMock(false);
+        address hookAddr = hookReceiverMock.ADDRESS();
+        sToken.initialize(ISilo(siloAddr), hookAddr, uint24(Hook.DEBT_TOKEN));
 
         vm.prank(recipient);
         sToken.increaseReceiveAllowance(owner, allowance);
@@ -119,6 +125,12 @@ contract ShareTokenTest is Test {
         uint256 value = 100e18;
         uint256 nonce = sToken.nonces(signer);
         uint256 deadline = block.timestamp + 1000;
+        address siloAddr = silo.ADDRESS();
+
+        silo.configMock(siloConfig.ADDRESS());
+        siloConfig.reentrancyGuardEnteredMock(false);
+        address hookAddr = hookReceiverMock.ADDRESS();
+        sToken.initialize(ISilo(siloAddr), hookAddr, uint24(Hook.DEBT_TOKEN));
 
         (uint8 v, bytes32 r, bytes32 s) =
             _createPermit(signer, privateKey, spender, value, nonce, deadline, address(sToken));

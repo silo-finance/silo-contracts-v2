@@ -37,7 +37,7 @@ contract GaugeHookReceiverMethodsRegistry is IMethodsRegistry {
         _registerMethod(new MaxLiquidationReentrancyTest());
         _registerMethod(new OwnerReentrancyTest());
         _registerMethod(new PendingOwnerReentrancyTest());
-        // _registerMethod(new LiquidationCallReentrancyTest()); TODO: add reentrancy protection
+        _registerMethod(new LiquidationCallReentrancyTest());
         _registerMethod(new RemoveGaugeReentrancyTest());
         _registerMethod(new RenounceOwnersipReentrancyTest());
         _registerMethod(new SetGaugeReentrancyTest());

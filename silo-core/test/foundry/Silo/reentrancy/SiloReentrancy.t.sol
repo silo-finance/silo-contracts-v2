@@ -19,9 +19,8 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 contract SiloReentrancyTest is Test {
     ISiloConfig public siloConfig;
     
-    // TODO: remove _skip_
-    // FOUNDRY_PROFILE=core-test forge test -vv --ffi --mt test_skip_coverage_for_reentrancy
-    function test_skip_coverage_for_reentrancy() public {
+    // FOUNDRY_PROFILE=core-test forge test -vv --ffi --mt test_coverage_for_reentrancy
+    function test_coverage_for_reentrancy() public {
         Registries registries = new Registries();
         IMethodsRegistry[] memory methodRegistries = registries.list();
 

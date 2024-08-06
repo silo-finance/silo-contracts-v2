@@ -5,6 +5,7 @@ import {IERC20R} from "../interfaces/IERC20R.sol";
 import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
 import {SiloLensLib} from "../lib/SiloLensLib.sol";
 import {IShareToken, ShareToken, ISilo} from "./ShareToken.sol";
+import {NonReentrantLib} from "../lib/NonReentrantLib.sol";
 
 /// @title ShareDebtToken
 /// @notice ERC20 compatible token representing debt in Silo
@@ -38,11 +39,15 @@ contract ShareDebtToken is IERC20R, ShareToken {
 
     /// @inheritdoc IERC20R
     function setReceiveApproval(address owner, uint256 _amount) external virtual override {
+        NonReentrantLib.nonReentrant(siloConfig);
+
         _setReceiveApproval(owner, _msgSender(), _amount);
     }
 
     /// @inheritdoc IERC20R
     function decreaseReceiveAllowance(address _owner, uint256 _subtractedValue) public virtual override {
+        NonReentrantLib.nonReentrant(siloConfig);
+
         uint256 currentAllowance = _receiveAllowances[_owner][_msgSender()];
 
         uint256 newAllowance;
@@ -57,6 +62,8 @@ contract ShareDebtToken is IERC20R, ShareToken {
 
     /// @inheritdoc IERC20R
     function increaseReceiveAllowance(address _owner, uint256 _addedValue) public virtual override {
+        NonReentrantLib.nonReentrant(siloConfig);
+
         uint256 currentAllowance = _receiveAllowances[_owner][_msgSender()];
         _setReceiveApproval(_owner, _msgSender(), currentAllowance + _addedValue);
     }
