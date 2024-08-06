@@ -44,14 +44,12 @@ contract LiquidationCallReentrancyTest is MethodReentrancyTest {
 
         bool receiveSTokens = true;
 
-        // vm.prank(borrower);
-        // partialLiquidation.liquidationCall(address(token1), address(token0), borrower, debtToRepay, receiveSTokens);
+        vm.prank(borrower);
+        partialLiquidation.liquidationCall(address(token1), address(token0), borrower, debtToRepay, receiveSTokens);
     }
 
     function verifyReentrancy() external {
         ISiloConfig siloConfig = TestStateLib.siloConfig();
-        ISilo silo0 = TestStateLib.silo0();
-        ISilo silo1 = TestStateLib.silo1();
         MaliciousToken token0 = MaliciousToken(TestStateLib.token0());
         MaliciousToken token1 = MaliciousToken(TestStateLib.token1());
         address hookReceiver = TestStateLib.hookReceiver();

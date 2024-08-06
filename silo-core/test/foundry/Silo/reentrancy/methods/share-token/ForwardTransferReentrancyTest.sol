@@ -13,7 +13,7 @@ contract ForwardTransferReentrancyTest is ShareTokenMethodReentrancyTest {
     }
 
     function verifyReentrancy() external {
-        _executeForAllShareTokensForSilo(_ensureItWillRevertReentrancy);
+        _executeForAllShareTokens(_ensureItWillRevertOnlySilo);
     }
 
     function methodDescription() external pure returns (string memory description) {
@@ -22,12 +22,6 @@ contract ForwardTransferReentrancyTest is ShareTokenMethodReentrancyTest {
 
     function _ensureItWillRevertOnlySilo(address _token) internal {
         vm.expectRevert(IShareToken.OnlySilo.selector);
-        ShareToken(_token).forwardTransfer(address(this), address(this), 100);
-    }
-
-    function _ensureItWillRevertReentrancy(address _silo, address _token) internal {
-        vm.prank(_silo);
-        vm.expectRevert(ICrossReentrancyGuard.CrossReentrantCall.selector);
         ShareToken(_token).forwardTransfer(address(this), address(this), 100);
     }
 }

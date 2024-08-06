@@ -13,6 +13,9 @@ import {BurnReentrancyTest} from "../methods/share-token/BurnReentrancyTest.sol"
 import {DecimalsReentrancyTest} from "../methods/share-token/DecimalsReentrancyTest.sol";
 import {Eip712DomainReentrancyTest} from "../methods/share-token/Eip712DomainReentrancyTest.sol";
 import {ForwardApproveReentrancyTest} from "../methods/share-token/ForwardApproveReentrancyTest.sol";
+import {
+    ForwardTransferFromNoChecksReentrancyTest
+} from "../methods/share-token/ForwardTransferFromNoChecksReentrancyTest.sol";
 import {ForwardTransferReentrancyTest} from "../methods/share-token/ForwardTransferReentrancyTest.sol";
 import {ForwardTransferFromReentrancyTest} from "../methods/share-token/ForwardTransferFromReentrancyTest.sol";
 import {HookReceiverReentrancyTest} from "../methods/share-token/HookReceiverReentrancyTest.sol";
@@ -27,6 +30,7 @@ import {SiloConfigReentrancyTest} from "../methods/share-token/SiloConfigReentra
 import {SymbolReentrancyTest} from "../methods/share-token/SymbolReentrancyTest.sol";
 import {SynchronizeHooksReentrancyTest} from "../methods/share-token/SynchronizeHooksReentrancyTest.sol";
 import {TotalSupplyReentrancyTest} from "../methods/share-token/TotalSupplyReentrancyTest.sol";
+import {TransferWithChecksReentrancyTest} from "../methods/share-token/TransferWithChecksReentrancyTest.sol";
 
 abstract contract ShareTokenMethodsRegistry is IMethodsRegistry {
     mapping(bytes4 methodSig => IMethodReentrancyTest) public methods;
@@ -35,27 +39,29 @@ abstract contract ShareTokenMethodsRegistry is IMethodsRegistry {
     constructor() {
         _registerMethod(new DomainSeparatorReentrancyTest());
         _registerMethod(new AllowanceReentrancyTest());
-        // _registerMethod(new ApproveReentrancyTest()); // TODO: add reentrancy protection
+        _registerMethod(new ApproveReentrancyTest());
         _registerMethod(new BalanceOfReentrancyTest());
         _registerMethod(new BalanceOfAndTotalSupplyReentrancyTest());
-        // _registerMethod(new BurnReentrancyTest()); // TODO: add reentrancy protection
+        _registerMethod(new BurnReentrancyTest());
         _registerMethod(new DecimalsReentrancyTest());
         _registerMethod(new Eip712DomainReentrancyTest());
-        // _registerMethod(new ForwardApproveReentrancyTest()); // TODO: add reentrancy protection
-        // _registerMethod(new ForwardTransferReentrancyTest()); // TODO: add reentrancy protection
-        // _registerMethod(new ForwardTransferFromReentrancyTest()); // TODO: add reentrancy protection
+        _registerMethod(new ForwardApproveReentrancyTest());
+        _registerMethod(new ForwardTransferFromNoChecksReentrancyTest());
+        _registerMethod(new ForwardTransferReentrancyTest());
+        _registerMethod(new ForwardTransferFromReentrancyTest());
         _registerMethod(new HookReceiverReentrancyTest());
         _registerMethod(new HookSetupReentrancyTest());
         _registerMethod(new InitializeReentrancyTest());
-        // _registerMethod(new MintReentrancyTest()); // TODO: add reentrancy protection
+        _registerMethod(new MintReentrancyTest());
         _registerMethod(new NameReentrancyTest());
         _registerMethod(new NoncesReentrancyTest());
-        // _registerMethod(new PermitReentrancyTest()); // TODO: add reentrancy protection
+        _registerMethod(new PermitReentrancyTest());
         _registerMethod(new SiloReentrancyTest());
         _registerMethod(new SiloConfigReentrancyTest());
         _registerMethod(new SymbolReentrancyTest());
-        // _registerMethod(new SynchronizeHooksReentrancyTest()); // TODO: add reentrancy protection
+        _registerMethod(new SynchronizeHooksReentrancyTest());
         _registerMethod(new TotalSupplyReentrancyTest());
+        _registerMethod(new TransferWithChecksReentrancyTest());
     }
 
     function supportedMethodsLength() external view returns (uint256) {

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.24;
 
-import {ERC20Permit} from "openzeppelin5/token/ERC20/extensions/ERC20Permit.sol";
+import {ERC20Permit, IERC20Permit} from "openzeppelin5/token/ERC20/extensions/ERC20Permit.sol";
 import {ERC20, IERC20Metadata, IERC20} from "openzeppelin5/token/ERC20/ERC20.sol";
 import {Initializable} from "openzeppelin5/proxy/utils/Initializable.sol";
 import {Strings} from "openzeppelin5/utils/Strings.sol";
@@ -12,6 +12,7 @@ import {ISiloConfig} from "../SiloConfig.sol";
 import {TokenHelper} from "../lib/TokenHelper.sol";
 import {Hook} from "../lib/Hook.sol";
 import {CallBeforeQuoteLib} from "../lib/CallBeforeQuoteLib.sol";
+import {NonReentrantLib} from "../lib/NonReentrantLib.sol";
 
 /// @title ShareToken
 /// @notice Implements common interface for Silo tokens representing debt or collateral.
@@ -154,6 +155,27 @@ abstract contract ShareToken is Initializable, ERC20Permit, IShareToken {
         result = ERC20.transfer(_to, _amount);
 
         siloConfigCached.turnOffReentrancyProtection();
+    }
+
+    function approve(address spender, uint256 value) public override(ERC20, IERC20) returns (bool result) {
+        NonReentrantLib.nonReentrant(siloConfig);
+
+        result = ERC20.approve(spender, value);
+    }
+
+    /// @inheritdoc IERC20Permit
+    function permit(
+        address owner,
+        address spender,
+        uint256 value,
+        uint256 deadline,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) public virtual override {
+        NonReentrantLib.nonReentrant(siloConfig);
+
+        ERC20Permit.permit(owner, spender, value, deadline, v, r, s);
     }
 
     /// @dev decimals of share token

@@ -91,8 +91,11 @@ contract PartialLiquidation is SiloStorage, IPartialLiquidation, IHookReceiver {
 
         emit LiquidationCall(msg.sender, _receiveSToken);
 
+        siloConfigCached.turnOnReentrancyProtection();
         IERC20(debtConfig.token).safeTransferFrom(msg.sender, address(this), repayDebtAssets);
         IERC20(debtConfig.token).safeIncreaseAllowance(debtConfig.silo, repayDebtAssets);
+        siloConfigCached.turnOffReentrancyProtection();
+
         ISilo(debtConfig.silo).repay(repayDebtAssets, _borrower);
 
         address shareTokenReceiver = _receiveSToken ? msg.sender : address(this);
