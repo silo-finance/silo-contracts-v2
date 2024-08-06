@@ -113,6 +113,81 @@ contract BeforeQuoteTest is SiloLittleHelper, Test {
     }
 
     /*
+    forge test -vv --ffi --mt test_beforeQuote_shareTokenTransfer_noDebt
+    */
+    function test_beforeQuote_shareTokenTransfer_noDebt() public {
+        _deposit(depositAssets, depositor);
+
+        (, address collateral,) = silo0.config().getShareTokens(address(silo0));
+
+        // Solvency check is ignored for share token transfer as a user has no debt.
+        // Expect transaction without revert as `beforeQuote` is not called.
+        vm.prank(depositor);
+        IShareToken(collateral).transfer(borrower, depositAssets);
+    }
+
+    /*
+    forge test -vv --ffi --mt test_beforeQuote_shareTokenTransfer_debtNotSolvent
+    */
+    function test_beforeQuote_shareTokenTransfer_debtNotSolvent() public {
+        _setupForBorrow0();
+
+        _expectCallsToMaxLtvOracle(borrowAmount);
+        silo0.borrow(borrowAmount, borrower, borrower);
+
+        (, address collateral,) = silo1.config().getShareTokens(address(silo1));
+
+        solvencyOracle0.setExpectBeforeQuote(true);
+        vm.expectCall(address(solvencyOracle0), abi.encodeWithSelector(ISiloOracle.beforeQuote.selector, address(token0)));
+
+        vm.prank(borrower);
+        vm.expectRevert(IShareToken.SenderNotSolventAfterTransfer.selector);
+        IShareToken(collateral).transfer(depositor, depositAssets);
+    }
+
+    /*
+    forge test -vv --ffi --mt test_beforeQuote_shareTokenTransfer_debtSolvent
+    */
+    function test_beforeQuote_shareTokenTransfer_debtSolvent() public {
+        _setupForBorrow0();
+        _depositForBorrow(depositAssets, borrower);
+
+        _expectCallsToMaxLtvOracle(borrowAmount);
+        silo0.borrow(borrowAmount, borrower, borrower);
+
+        (, address collateral,) = silo1.config().getShareTokens(address(silo1));
+
+        solvencyOracle0.setExpectBeforeQuote(true);
+        vm.expectCall(address(solvencyOracle0), abi.encodeWithSelector(ISiloOracle.beforeQuote.selector, address(token0)));
+
+        uint256 transferAmount = depositAssets / 2;
+
+        // Expect transaction without revert as user is solvent after transfer.
+        vm.prank(borrower);
+        IShareToken(collateral).transfer(depositor, transferAmount);
+    }
+
+    /*
+    forge test -vv --ffi --mt test_beforeQuote_shareTokenTransfer_debt_transferNotCollateral
+    */
+    function test_beforeQuote_shareTokenTransfer_debt_transferNotCollateral() public {
+        _setupForBorrow0();
+        _depositForBorrow(depositAssets, borrower);
+
+        _expectCallsToMaxLtvOracle(borrowAmount);
+        silo0.borrow(borrowAmount, borrower, borrower);
+
+        _deposit(depositAssets, borrower);
+
+        (, address collateral,) = silo0.config().getShareTokens(address(silo0));
+
+        // Solvency check is ignored for share token transfer as deposit is not collateral.
+        // Expect transaction without revert as `beforeQuote` is not called.
+        vm.prank(borrower);
+        IShareToken(collateral).transfer(depositor, depositAssets);
+    }
+
+    /*
     forge test -vv --ffi --mt test_beforeQuote_borrow0_liquidate
     */
     function test_beforeQuote_borrow0_liquidate() public {
