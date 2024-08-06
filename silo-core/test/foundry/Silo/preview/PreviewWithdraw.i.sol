@@ -72,12 +72,7 @@ contract PreviewWithdrawTest is SiloLittleHelper, Test {
 
         _depositForTestPreview(_assetsOrShares);
 
-        _depositForBorrow(_assetsOrShares, depositor);
-
-        address otherDepositor = makeAddr("otherDepositor");
-        // % 2 is to keep odd numbers
-        _depositCollateral(uint256(_assetsOrShares) * 2 - _assetsOrShares % 2, otherDepositor, _sameAsset(), assetType);
-        _borrow(_assetsOrShares / 2 == 0 ? 1 : _assetsOrShares / 2, otherDepositor, _sameAsset());
+        _createSiloUsage();
 
         if (_interest) vm.warp(block.timestamp + 200 days);
 
@@ -102,12 +97,7 @@ contract PreviewWithdrawTest is SiloLittleHelper, Test {
 
         _depositForTestPreview(_assetsOrShares);
 
-        _depositForBorrow(type(uint128).max, depositor);
-
-        address otherDepositor = makeAddr("otherDepositor");
-        // % 2 is to keep odd numbers
-        _depositCollateral(type(uint128).max, otherDepositor, _sameAsset(), assetType);
-        _borrow(type(uint64).max, otherDepositor, _sameAsset());
+        _createSiloUsage();
 
         if (_interest) vm.warp(block.timestamp + 500 days);
 
@@ -120,6 +110,61 @@ contract PreviewWithdrawTest is SiloLittleHelper, Test {
         _assertPreviewWithdraw(preview, _assetsOrShares);
     }
 
+    /*
+    forge test -vv --ffi --mt test_previewWithdraw_min_fuzz
+    */
+    /// forge-config: core-test.fuzz.runs = 10000
+    function test_previewWithdraw_min_fuzz(uint64 _assetsOrShares, bool _interest) public {
+        vm.assume(_assetsOrShares > 0);
+
+        ISilo.CollateralType assetType = _collateralType();
+        bool protectedType = assetType == ISilo.CollateralType.Protected;
+
+        _depositForTestPreview(_assetsOrShares);
+
+        _createSiloUsage();
+
+        if (_interest) vm.warp(block.timestamp + 500 days);
+
+        uint256 minInput = _useRedeem() ? 1 : silo1.convertToAssets(1);
+        uint256 minPreview = _getPreview(minInput);
+
+        if (!_interest || protectedType) {
+            assertEq(minPreview, minInput, "previewWithdraw == assets == shares, when no interest");
+        }
+
+        _assertPreviewWithdraw(minPreview, minInput);
+    }
+
+    /*
+    forge test -vv --ffi --mt test_previewWithdraw_max_fuzz
+    */
+    /// forge-config: core-test.fuzz.runs = 10000
+    function test_previewWithdraw_max_fuzz(uint64 _assetsOrShares, bool _interest) public {
+        vm.assume(_assetsOrShares > 0);
+
+        ISilo.CollateralType assetType = _collateralType();
+        bool protectedType = assetType == ISilo.CollateralType.Protected;
+
+        _depositForTestPreview(_assetsOrShares);
+
+        _createSiloUsage();
+
+        if (_interest) vm.warp(block.timestamp + 500 days);
+
+        uint256 maxInput = _useRedeem()
+            ? _getShareToken().balanceOf(depositor)
+            : silo1.maxWithdraw(depositor, _collateralType());
+
+        uint256 maxPreview = _getPreview(maxInput);
+
+        if (!_interest || protectedType) {
+            assertEq(maxPreview, maxInput, "previewWithdraw == assets == shares, when no interest");
+        }
+
+        _assertPreviewWithdraw(maxPreview, maxInput);
+    }
+
     function _depositForTestPreview(uint256 _assetsOrShares) internal {
         _depositCollateral({
             _assets: _assetsOrShares,
@@ -127,6 +172,14 @@ contract PreviewWithdrawTest is SiloLittleHelper, Test {
             _toSilo1: true,
             _collateralType: _collateralType()
         });
+    }
+
+    function _createSiloUsage() internal {
+        _depositForBorrow(type(uint128).max, depositor);
+
+        address otherDepositor = makeAddr("otherDepositor");
+        _depositCollateral(type(uint128).max, otherDepositor, _sameAsset(), _collateralType());
+        _borrow(type(uint64).max, otherDepositor, _sameAsset());
     }
 
     function _assertPreviewWithdraw(uint256 _preview, uint256 _assetsOrShares) internal {
@@ -141,6 +194,13 @@ contract PreviewWithdrawTest is SiloLittleHelper, Test {
 
         if (_useRedeem()) assertEq(_preview, results, "preview should give us exact result, NOT more");
         else assertEq(_preview, results, "preview should give us exact result, NOT fewer");
+    }
+
+    function _getShareToken() internal view virtual returns (IShareToken shareToken) {
+        (address protectedShareToken, address collateralShareToken, ) = siloConfig.getShareTokens(address(silo1));
+        shareToken = _collateralType() == ISilo.CollateralType.Collateral
+            ? IShareToken(collateralShareToken)
+            : IShareToken(protectedShareToken);
     }
 
     function _getPreview(uint256 _amountToUse) internal view virtual returns (uint256 preview) {
