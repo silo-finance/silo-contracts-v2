@@ -6,9 +6,9 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {PreviewWithdrawTest} from "./PreviewWithdraw.i.sol";
 
 /*
-    forge test -vv --ffi --mc PreviewWithdrawTest
+    forge test -vv --ffi --mc PreviewRedeemProtectedTest
 */
-contract PreviewRedeemTest is PreviewWithdrawTest {
+contract PreviewRedeemProtectedTest is PreviewWithdrawTest {
     function _useRedeem() internal pure override returns (bool) {
         return true;
     }
