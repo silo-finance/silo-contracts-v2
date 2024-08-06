@@ -38,46 +38,18 @@ contract PreviewWithdrawTest is SiloLittleHelper, Test {
         uint128 _assetsOrShares,
         bool _partial
     ) public {
-        uint128 amountToUse = _partial ? uint128(uint256(_assetsOrShares) * 37 / 100) : _assetsOrShares;
-        vm.assume(amountToUse > 0);
+        uint256 amountIn = _partial ? uint256(_assetsOrShares) * 37 / 100 : _assetsOrShares;
+        vm.assume(amountIn > 0);
 
         ISilo.CollateralType assetType = _collateralType();
 
-        // preview before deposit creation
-        uint256 preview = _useRedeem()
-            ? _silo().previewRedeem(amountToUse, assetType)
-            : _silo().previewWithdraw(amountToUse, assetType);
+        _depositForTestPreview(_assetsOrShares);
 
-        // first deposit AFTER preview
-        _depositCollateral(_assetsOrShares, depositor, _sameAsset(), assetType);
+        uint256 preview = _getPreview(amountIn);
 
-        assertEq(preview, amountToUse, "previewWithdraw == assets == shares, when no interest");
+        assertEq(preview, amountIn, "previewWithdraw == assets == shares, when no interest");
 
-        _assertPreviewWithdraw(preview, amountToUse);
-    }
-
-    /*
-    forge test -vv --ffi --mt test_previewWithdraw_noDebt_fuzz
-    */
-    /// forge-config: core-test.fuzz.runs = 10000
-    function test_previewWithdraw_noDebt_fuzz(
-        uint128 _assetsOrShares,
-        bool _partial
-    ) public {
-        uint128 amountToUse = _partial ? uint128(uint256(_assetsOrShares) * 37 / 100) : _assetsOrShares;
-        vm.assume(amountToUse > 0);
-
-        ISilo.CollateralType assetType = _collateralType();
-
-        _depositCollateral(uint256(_assetsOrShares) * 2 - (_assetsOrShares % 2), depositor, _sameAsset(), assetType);
-
-        uint256 preview = _useRedeem()
-            ? _silo().previewRedeem(amountToUse, assetType)
-            : _silo().previewWithdraw(amountToUse, assetType);
-
-        assertEq(preview, amountToUse, "previewWithdraw == assets == shares, when no interest");
-
-        _assertPreviewWithdraw(preview, amountToUse);
+        _assertPreviewWithdraw(preview, amountIn);
     }
 
     /*
@@ -98,56 +70,18 @@ contract PreviewWithdrawTest is SiloLittleHelper, Test {
         ISilo.CollateralType assetType = _collateralType();
         bool protectedType = assetType == ISilo.CollateralType.Protected;
 
-        address otherDepositor = makeAddr("otherDepositor");
-        _depositForBorrow(_assetsOrShares, otherDepositor);
+        _depositForTestPreview(_assetsOrShares);
 
+        _depositForBorrow(_assetsOrShares, depositor);
+
+        address otherDepositor = makeAddr("otherDepositor");
         // % 2 is to keep odd numbers
-        _depositCollateral(uint256(_assetsOrShares) * 2 - _assetsOrShares % 2, depositor, _sameAsset(), assetType);
-        _borrow(_assetsOrShares / 2 == 0 ? 1 : _assetsOrShares / 2, depositor, _sameAsset());
+        _depositCollateral(uint256(_assetsOrShares) * 2 - _assetsOrShares % 2, otherDepositor, _sameAsset(), assetType);
+        _borrow(_assetsOrShares / 2 == 0 ? 1 : _assetsOrShares / 2, otherDepositor, _sameAsset());
 
         if (_interest) vm.warp(block.timestamp + 200 days);
 
-        uint256 preview0 = _useRedeem()
-            ? _silo0.previewRedeem(amountToUse, assetType)
-            : _silo0.previewWithdraw(amountToUse, assetType);
-
-        if (!_interest || protectedType) {
-            assertEq(preview0, amountToUse, "previewWithdraw == assets == shares, when no interest");
-        }
-
-        _assertPreviewWithdraw(preview0, amountToUse);
-    }
-
-    /*
-    forge test -vv --ffi --mt test_previewWithdraw_debtOthers_fuzz
-    */
-    /// forge-config: core-test.fuzz.runs = 10000
-    function test_previewWithdraw_debtOthers_fuzz(
-        uint64 _otherDeposit,
-        uint64 _assetsOrShares,
-        bool _interest,
-        bool _partial
-    ) public {
-        vm.assume(_otherDeposit > 0);
-        vm.assume(_assetsOrShares > 1); // can not create debt with 1 collateral
-        uint128 amountToUse = _partial ? uint128(uint256(_assetsOrShares) * 37 / 100) : _assetsOrShares;
-        vm.assume(amountToUse > 0);
-
-        ISilo.CollateralType assetType = _collateralType();
-        bool protectedType = assetType == ISilo.CollateralType.Protected;
-
-        _depositCollateral(_otherDeposit, makeAddr("other"), _sameAsset(), assetType);
-
-        if (!_sameAsset() || protectedType) _depositForBorrow(_assetsOrShares, makeAddr("any"));
-        // % 2 is to keep odd numbers
-        _depositCollateral(uint256(_assetsOrShares) * 2 - _assetsOrShares % 2, depositor, _sameAsset(), assetType);
-        _borrow(_assetsOrShares / 2 == 0 ? 1 : _assetsOrShares / 2, depositor, _sameAsset());
-
-        if (_interest) vm.warp(block.timestamp + 100 days);
-
-        uint256 preview = _useRedeem()
-            ? _silo().previewRedeem(amountToUse, assetType)
-            : _silo().previewWithdraw(amountToUse, assetType);
+        uint256 preview = _getPreview(amountToUse);
 
         if (!_interest || protectedType) {
             assertEq(preview, amountToUse, "previewWithdraw == assets == shares, when no interest");
@@ -157,36 +91,27 @@ contract PreviewWithdrawTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --ffi --mt test_previewWithdraw_debtOthers_fuzz
+    forge test -vv --ffi --mt test_previewWithdraw_random_fuzz
     */
     /// forge-config: core-test.fuzz.runs = 10000
-    function test_previewWithdraw_random_fuzz(
-        uint64 _deposit,
-        uint64 _assetsOrShares,
-        bool _interest,
-        bool _partial
-    ) public {
-        vm.assume(_deposit > 0);
+    function test_previewWithdraw_random_fuzz(uint64 _assetsOrShares, bool _interest) public {
         vm.assume(_assetsOrShares > 0);
 
         ISilo.CollateralType assetType = _collateralType();
         bool protectedType = assetType == ISilo.CollateralType.Protected;
 
-        _depositCollateral(_deposit, makeAddr("user1"), _sameAsset(), assetType);
-        _depositCollateral(_deposit, makeAddr("user2"), _sameAsset(), assetType);
-        _depositCollateral(_deposit, makeAddr("user3"), _sameAsset(), assetType);
+        _depositForTestPreview(_assetsOrShares);
 
-        if (!_sameAsset() || protectedType) _depositForBorrow(_deposit, makeAddr("any"));
-        _depositCollateral(_deposit, depositor, _sameAsset(), assetType);
-        _borrow(_deposit / 2 == 0 ? 1 : _deposit / 2, depositor, _sameAsset());
+        _depositForBorrow(type(uint128).max, depositor);
 
-        if (_interest) vm.warp(block.timestamp + 100 days);
+        address otherDepositor = makeAddr("otherDepositor");
+        // % 2 is to keep odd numbers
+        _depositCollateral(type(uint128).max, otherDepositor, _sameAsset(), assetType);
+        _borrow(type(uint64).max, otherDepositor, _sameAsset());
 
-        vm.assume(_assetsOrShares <= _silo().getLiquidity());
+        if (_interest) vm.warp(block.timestamp + 500 days);
 
-        uint256 preview = _useRedeem()
-            ? _silo().previewRedeem(_assetsOrShares, assetType)
-            : _silo().previewWithdraw(_assetsOrShares, assetType);
+        uint256 preview = _getPreview(_assetsOrShares);
 
         if (!_interest || protectedType) {
             assertEq(preview, _assetsOrShares, "previewWithdraw == assets == shares, when no interest");
@@ -195,18 +120,33 @@ contract PreviewWithdrawTest is SiloLittleHelper, Test {
         _assertPreviewWithdraw(preview, _assetsOrShares);
     }
 
-    function _assertPreviewWithdraw(uint256 _preview, uint128 _assetsOrShares) internal {
+    function _depositForTestPreview(uint256 _assetsOrShares) internal {
+        _depositCollateral({
+            _assets: _assetsOrShares,
+            _depositor: depositor,
+            _toSilo1: true,
+            _collateralType: _collateralType()
+        });
+    }
+
+    function _assertPreviewWithdraw(uint256 _preview, uint256 _assetsOrShares) internal {
         vm.assume(_preview > 0);
         vm.prank(depositor);
 
         uint256 results = _useRedeem()
-            ? _silo().redeem(_assetsOrShares, depositor, depositor, _collateralType())
-            : _silo().withdraw(_assetsOrShares, depositor, depositor, _collateralType());
+            ? silo1.redeem(_assetsOrShares, depositor, depositor, _collateralType())
+            : silo1.withdraw(_assetsOrShares, depositor, depositor, _collateralType());
 
         assertGt(results, 0, "expect any withdraw amount > 0");
 
         if (_useRedeem()) assertEq(_preview, results, "preview should give us exact result, NOT more");
         else assertEq(_preview, results, "preview should give us exact result, NOT fewer");
+    }
+
+    function _getPreview(uint256 _amountToUse) internal view virtual returns (uint256 preview) {
+        preview = _useRedeem()
+            ? silo1.previewRedeem(_amountToUse, _collateralType())
+            : silo1.previewWithdraw(_amountToUse, _collateralType());
     }
     
     function _useRedeem() internal pure virtual returns (bool) {
@@ -219,9 +159,5 @@ contract PreviewWithdrawTest is SiloLittleHelper, Test {
 
     function _sameAsset() internal pure virtual returns (bool) {
         return false;
-    }
-
-    function _silo() private view returns (ISilo) {
-        return _sameAsset() ? silo1 : silo0;
     }
 }
