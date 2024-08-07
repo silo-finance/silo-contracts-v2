@@ -57,7 +57,7 @@ library SiloLendingLib {
         );
 
         if (shares == 0) revert ISilo.ZeroShares();
-        if (totalDebtAssets < assets) revert ISilo.RepayToHi();
+        if (totalDebtAssets < assets) revert ISilo.RepayTooHigh();
 
         // subtract repayment from debt, save to unchecked because of above `totalDebtAssets < assets`
         unchecked { _totalDebt.assets = totalDebtAssets - assets; }
