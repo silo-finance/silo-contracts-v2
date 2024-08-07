@@ -57,9 +57,10 @@ library SiloLendingLib {
         );
 
         if (shares == 0) revert ISilo.ZeroShares();
+        if (totalDebtAssets < assets) revert ISilo.RepayToHi();
 
-        // subtract repayment from debt
-        _totalDebt.assets = totalDebtAssets - assets;
+        // subtract repayment from debt, save to unchecked because of above `totalDebtAssets < assets`
+        unchecked { _totalDebt.assets = totalDebtAssets - assets; }
 
         // Anyone can repay anyone's debt so no approval check is needed. If hook receiver reenters then
         // no harm done because state changes are completed.
