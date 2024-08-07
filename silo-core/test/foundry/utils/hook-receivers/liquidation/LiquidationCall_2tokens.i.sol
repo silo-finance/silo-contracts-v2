@@ -484,8 +484,9 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
         vm.prank(liquidator);
         partialLiquidation.liquidationCall(address(token0), address(token1), BORROWER, debtToCover, _receiveSToken);
 
+        maxRepay = silo1.maxRepay(BORROWER);
+
         if (!_receiveSToken) {
-            maxRepay = silo1.maxRepay(BORROWER);
             assertGt(maxRepay, 0, "there will be leftover");
         }
 
@@ -494,18 +495,16 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
         token1.approve(address(partialLiquidation), maxRepay);
 
         emit log_named_decimal_uint("[test] maxRepay", maxRepay, 18);
-        uint256 repayAmount = 10239726027382400000;
 
-        // TODO why maxRepay is 110239726027382400000 and we repay with 10239726027382400000?
         // repay
         vm.expectCall(
             address(token1),
-            abi.encodeWithSelector(IERC20.transferFrom.selector, liquidator, address(partialLiquidation), repayAmount)
+            abi.encodeWithSelector(IERC20.transferFrom.selector, liquidator, address(partialLiquidation), maxRepay)
         );
 
         vm.expectCall(
             address(token1),
-            abi.encodeWithSelector(IERC20.transferFrom.selector, address(partialLiquidation), address(silo1), repayAmount)
+            abi.encodeWithSelector(IERC20.transferFrom.selector, address(partialLiquidation), address(silo1), maxRepay)
         );
 
         vm.prank(liquidator);
@@ -514,7 +513,7 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
         if (_receiveSToken) {
             assertEq(
                 token1.balanceOf(address(silo1)),
-                maxRepay + 0.5e18,
+                debtToCover + maxRepay + 0.5e18,
                 "[_receiveSToken] silo has debt token == to cover + original 0.5"
             );
         } else {
