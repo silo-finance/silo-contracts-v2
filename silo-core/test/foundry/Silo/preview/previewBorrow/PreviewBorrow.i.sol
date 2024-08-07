@@ -36,7 +36,7 @@ contract PreviewBorrowTest is SiloLittleHelper, Test {
         uint256 _amountIn = _partial ? uint256(_assetsOrShares) * 37 / 100 : _assetsOrShares;
         vm.assume(_amountIn > 0);
 
-        _createSiloUsage(false, false);
+        _createSiloScenario(false, false);
 
         uint256 preview = _getBorrowPreview(_amountIn);
 
@@ -57,7 +57,7 @@ contract PreviewBorrowTest is SiloLittleHelper, Test {
         uint256 _amountIn = _partial ? uint256(_assetsOrShares) * 37 / 100 : _assetsOrShares;
         vm.assume(_amountIn > 0);
 
-        _createSiloUsage(true, _interest);
+        _createSiloScenario(true, _interest);
 
         uint256 preview = _getBorrowPreview(_amountIn);
         emit log_named_uint("preview", preview);
@@ -119,7 +119,7 @@ contract PreviewBorrowTest is SiloLittleHelper, Test {
         });
     }
 
-    function _createSiloUsage(bool _creteDebt, bool _interest) internal {
+    function _createSiloScenario(bool _creteDebt, bool _interest) internal {
         _createSiloScenario(type(uint128).max, _creteDebt, _interest);
     }
 
