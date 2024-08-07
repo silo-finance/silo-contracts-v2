@@ -85,10 +85,6 @@ contract PreviewRepayTest is SiloLittleHelper, Test {
         uint256 minInput = 1;
         uint256 minPreview = _getRepayPreview(minInput);
 
-        emit log_named_uint("_assetsOrShares", _assetsOrShares);
-        emit log_named_uint("minInput", minInput);
-        emit log_named_uint("minPreview", minPreview);
-
         _assertPreviewRepay(minPreview, minInput);
     }
 
@@ -99,17 +95,8 @@ contract PreviewRepayTest is SiloLittleHelper, Test {
     function test_previewRepay_max_fuzz(uint64 _assetsOrShares, bool _interest) public {
         vm.assume(_assetsOrShares > 1e18);
 
-        _createScenario(_assetsOrShares, true, _interest);
-
-        uint256 maxInput = _useShares()
-            ? silo1.maxBorrowShares(borrower)
-            : _sameAsset() ? silo1.maxBorrowSameAsset(borrower) : silo1.maxBorrow(borrower);
-
+        uint256 maxInput = _createScenario(_assetsOrShares, true, _interest);
         uint256 maxPreview = _getRepayPreview(maxInput);
-
-        emit log_named_uint("_assetsOrShares", _assetsOrShares);
-        emit log_named_uint("maxInput", maxInput);
-        emit log_named_uint("maxPreview", maxPreview);
 
         _assertPreviewRepay(maxPreview, maxInput);
     }
@@ -136,7 +123,7 @@ contract PreviewRepayTest is SiloLittleHelper, Test {
 
         if (_interest) _applyInterest();
 
-        return silo1.maxRepay(borrower);
+        return _getMaxRepay();
     }
 
     function _applyInterest() internal {
@@ -181,7 +168,7 @@ contract PreviewRepayTest is SiloLittleHelper, Test {
         assertEq(_preview, results, "preview should give us exact result");
     }
 
-    function _getMaxRepay(uint256 _assetsOrShares) internal view virtual returns (uint256 max) {
+    function _getMaxRepay() internal view virtual returns (uint256 max) {
         max = _useShares()
             ? silo1.maxRepayShares(borrower)
             : silo1.maxRepay(borrower);
