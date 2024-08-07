@@ -139,9 +139,6 @@ contract PreviewRepayTest is SiloLittleHelper, Test {
 
         uint256 ltvAfter = siloLens.getLtv(silo1, borrower);
 
-        emit log_named_uint("ltvBefore", ltvBefore);
-        emit log_named_uint("ltvAfter", ltvAfter);
-
         while (ltvAfter == ltvBefore) {
             vm.warp(block.timestamp + warpTime);
             ltvAfter = siloLens.getLtv(silo1, borrower);
@@ -155,14 +152,9 @@ contract PreviewRepayTest is SiloLittleHelper, Test {
     function _assertPreviewRepay(uint256 _preview, uint256 _assetsOrShares) internal {
         vm.assume(_preview > 0);
 
-        // we do not have method for borrowing with shares for same asset
-        // vm.assume(!(_previewShares() && _sameAsset()));
-        emit log("33333");
-
         uint256 results = _useShares()
-            ? _repayShares(_assetsOrShares, _assetsOrShares, borrower)
+            ? _repayShares(_preview, _assetsOrShares, borrower)
             : _repay(_assetsOrShares, borrower);
-        emit log("44444");
 
         assertGt(results, 0, "expect any borrow amount > 0");
         assertEq(_preview, results, "preview should give us exact result");
