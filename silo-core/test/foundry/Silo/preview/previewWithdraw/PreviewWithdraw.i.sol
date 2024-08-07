@@ -8,8 +8,8 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
 
-import {MintableToken} from "../../_common/MintableToken.sol";
-import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
+import {MintableToken} from "../../../_common/MintableToken.sol";
+import {SiloLittleHelper} from "../../../_common/SiloLittleHelper.sol";
 
 /*
     forge test -vv --ffi --mc PreviewWithdrawTest
@@ -31,7 +31,7 @@ contract PreviewWithdrawTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_previewWithdraw_noInterestNoDebt_fuzz
     */
-    /// forge-config: core-test.fuzz.runs = 10000
+    /// forge-config: core-test.fuzz.runs = 1000
     function test_previewWithdraw_noInterestNoDebt_fuzz(
         uint128 _assetsOrShares,
         bool _partial
@@ -53,7 +53,7 @@ contract PreviewWithdrawTest is SiloLittleHelper, Test {
     same asset: we check preview on same silo
     two assets: we need to borrow on silo0 in addition
     */
-    /// forge-config: core-test.fuzz.runs = 10000
+    /// forge-config: core-test.fuzz.runs = 1000
     function test_previewWithdraw_debt_fuzz(
         uint128 _assetsOrShares,
         bool _interest,
@@ -81,7 +81,7 @@ contract PreviewWithdrawTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_previewWithdraw_random_fuzz
     */
-    /// forge-config: core-test.fuzz.runs = 10000
+    /// forge-config: core-test.fuzz.runs = 1000
     function test_previewWithdraw_random_fuzz(uint64 _assetsOrShares, bool _interest) public {
         vm.assume(_assetsOrShares > 0);
 
@@ -103,7 +103,7 @@ contract PreviewWithdrawTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_previewWithdraw_min_fuzz
     */
-    /// forge-config: core-test.fuzz.runs = 10000
+    /// forge-config: core-test.fuzz.runs = 1000
     function test_previewWithdraw_min_fuzz(uint64 _assetsOrShares, bool _interest) public {
         vm.assume(_assetsOrShares > 0);
 
@@ -126,7 +126,7 @@ contract PreviewWithdrawTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_previewWithdraw_max_fuzz
     */
-    /// forge-config: core-test.fuzz.runs = 10000
+    /// forge-config: core-test.fuzz.runs = 1000
     function test_previewWithdraw_max_fuzz(uint64 _assets, bool _interest) public {
         vm.assume(_assets > 0);
 

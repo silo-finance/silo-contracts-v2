@@ -1,0 +1,202 @@
+// SPDX-License-Identifier: BUSL-1.1
+pragma solidity ^0.8.20;
+
+import {Test} from "forge-std/Test.sol";
+
+import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
+import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
+import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
+import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
+
+import {MintableToken} from "../../../_common/MintableToken.sol";
+import {SiloLittleHelper} from "../../../_common/SiloLittleHelper.sol";
+
+/*
+    forge test -vv --ffi --mc PreviewBorrowTest
+*/
+contract PreviewBorrowTest is SiloLittleHelper, Test {
+    ISiloConfig siloConfig;
+    address immutable depositor;
+    address immutable borrower;
+    
+    constructor() {
+        depositor = makeAddr("Depositor");
+        borrower = makeAddr("Borrower");
+    }
+
+    function setUp() public {
+        siloConfig = _setUpLocalFixture();
+    }
+
+    /*
+    forge test -vv --ffi --mt test_previewBorrow_freshStart_fuzz
+    */
+    /// forge-config: core-test.fuzz.runs = 1000
+    function test_previewBorrow_freshStart_fuzz(uint112 _assetsOrShares, bool _partial) public {
+        uint256 _amountIn = _partial ? uint256(_assetsOrShares) * 37 / 100 : _assetsOrShares;
+        vm.assume(_amountIn > 0);
+
+        _createSiloScenario(false, false);
+
+        uint256 preview = _getBorrowPreview(_amountIn);
+
+        assertEq(preview, _amountIn, "previewWithdraw == assets == shares, when no interest");
+
+        _assertPreviewBorrow(preview, _amountIn);
+    }
+
+    /*
+    forge test -vv --ffi --mt test_previewBorrow_debt_fuzz
+    */
+    /// forge-config: core-test.fuzz.runs = 1000
+    function test_previewBorrow_debt_fuzz(
+        uint112 _assetsOrShares,
+        bool _interest,
+        bool _partial
+    ) public {
+        uint256 _amountIn = _partial ? uint256(_assetsOrShares) * 37 / 100 : _assetsOrShares;
+        vm.assume(_amountIn > 0);
+
+        _createSiloScenario(true, _interest);
+
+        uint256 preview = _getBorrowPreview(_amountIn);
+        emit log_named_uint("preview", preview);
+
+        if (!_interest) {
+            assertEq(preview, _amountIn, "preview == assets == shares, when no interest");
+        }
+
+        _assertPreviewBorrow(preview, _amountIn);
+    }
+
+    /*
+    forge test -vv --ffi --mt test_previewBorrow_min_fuzz
+    */
+    /// forge-config: core-test.fuzz.runs = 1000
+    function test_previewBorrow_min_fuzz(uint64 _assetsOrShares, bool _interest) public {
+        vm.assume(_assetsOrShares > 1e18);
+
+        _createSiloScenario(_assetsOrShares, true, _interest);
+
+        uint256 minInput = 1;
+        uint256 minPreview = _getBorrowPreview(minInput);
+
+        emit log_named_uint("_assetsOrShares", _assetsOrShares);
+        emit log_named_uint("minInput", minInput);
+        emit log_named_uint("minPreview", minPreview);
+
+        _assertPreviewBorrow(minPreview, minInput);
+    }
+
+    /*
+    forge test -vv --ffi --mt test_previewBorrow_max_fuzz
+    */
+    /// forge-config: core-test.fuzz.runs = 1000
+    function test_previewBorrow_max_fuzz(uint64 _assetsOrShares, bool _interest) public {
+        vm.assume(_assetsOrShares > 1e18);
+
+        _createSiloScenario(_assetsOrShares, true, _interest);
+
+        uint256 maxInput = _borrowShares()
+            ? silo1.maxBorrowShares(borrower)
+            : _sameAsset() ? silo1.maxBorrowSameAsset(borrower) : silo1.maxBorrow(borrower);
+
+        uint256 maxPreview = _getBorrowPreview(maxInput);
+
+        emit log_named_uint("_assetsOrShares", _assetsOrShares);
+        emit log_named_uint("maxInput", maxInput);
+        emit log_named_uint("maxPreview", maxPreview);
+
+        _assertPreviewBorrow(maxPreview, maxInput);
+    }
+
+    function _depositForTestPreview(uint256 _assets) internal {
+        _depositCollateral({
+            _assets: _assets,
+            _depositor: depositor,
+            _toSilo1: true,
+            _collateralType: _collateralType()
+        });
+    }
+
+    function _createSiloScenario(bool _creteDebt, bool _interest) internal {
+        _createSiloScenario(type(uint128).max, _creteDebt, _interest);
+    }
+
+    function _createSiloScenario(uint256 _borrowerInput, bool _creteDebt, bool _interest) internal {
+        // deposit small amount at begin, because with MAX128 is hard to generate interest
+        _depositForBorrow(type(uint64).max, depositor);
+
+        if (_creteDebt) {
+            address otherBorrower = makeAddr("otherBorrower");
+
+            _depositCollateral(type(uint64).max, otherBorrower, _sameAsset(), _collateralType());
+            _borrow(uint256(type(uint64).max) * 3 / 4, otherBorrower, _sameAsset());
+
+            if (_interest) _applyInterest();
+        }
+
+        _depositCollateral(_borrowerInput, borrower, _sameAsset(), _collateralType());
+        _depositForBorrow(type(uint128).max - type(uint64).max, depositor);
+    }
+
+    function _applyInterest() internal {
+        address otherBorrower = makeAddr("otherBorrower");
+
+        uint256 ltvBefore = siloLens.getLtv(silo1, otherBorrower);
+
+        if (ltvBefore == 1) {
+            // there is no way for this test to apply interest for 1 wei LTV
+            return;
+        }
+
+        uint256 warpTime = _sameAsset() ? 20 days : 10 days;
+        vm.warp(block.timestamp + warpTime);
+
+        uint256 ltvAfter = siloLens.getLtv(silo1, otherBorrower);
+
+        emit log_named_uint("ltvBefore", ltvBefore);
+        emit log_named_uint("ltvAfter", ltvAfter);
+
+        while (ltvAfter == ltvBefore) {
+            vm.warp(block.timestamp + warpTime);
+            ltvAfter = siloLens.getLtv(silo1, otherBorrower);
+        }
+
+        emit log_named_uint("ltvAfter loop", ltvAfter);
+
+        assertGt(ltvAfter, ltvBefore, "expect any interest");
+    }
+
+    function _assertPreviewBorrow(uint256 _preview, uint256 _assetsOrShares) internal {
+        vm.assume(_preview > 0);
+
+        // we do not have method for borrowing with shares for same asset
+        vm.assume(!(_borrowShares() && _sameAsset()));
+
+        uint256 results = _borrowShares()
+            ? _borrowShares(_assetsOrShares, borrower)
+            : _borrow(_assetsOrShares, borrower, _sameAsset());
+
+        assertGt(results, 0, "expect any borrow amount > 0");
+        assertEq(_preview, results, "preview should give us exact result");
+    }
+
+    function _getBorrowPreview(uint256 _assetsOrShares) internal view virtual returns (uint256 preview) {
+        preview = _borrowShares()
+            ? silo1.previewBorrowShares(_assetsOrShares)
+            : silo1.previewBorrow(_assetsOrShares);
+    }
+    
+    function _borrowShares() internal pure virtual returns (bool) {
+        return false;
+    }
+
+    function _collateralType() internal pure virtual returns (ISilo.CollateralType) {
+        return ISilo.CollateralType.Collateral;
+    }
+
+    function _sameAsset() internal pure virtual returns (bool) {
+        return false;
+    }
+}
