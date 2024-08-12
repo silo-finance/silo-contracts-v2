@@ -167,7 +167,7 @@ contract MaxLiquidationLTV100FullTest is MaxLiquidationCommon {
 
         emit log_named_decimal_uint("[100FULL] ltv before", silo0.getLtv(borrower), 16);
 
-        assertTrue(!sTokenRequired, "sTokenRequired not required");
+        assertTrue(!sTokenRequired, "sTokenRequired NOT required");
 
         if (_self) vm.prank(borrower);
 
