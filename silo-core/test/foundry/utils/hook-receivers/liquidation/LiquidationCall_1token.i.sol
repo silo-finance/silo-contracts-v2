@@ -441,14 +441,18 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
         emit log_named_decimal_uint("user ltv", silo0.getLtv(BORROWER), 16);
         assertGt(silo0.getLtv(BORROWER), 1e18, "expect bad debt");
 
-        (
-            uint256 collateralToLiquidate, uint256 debtToRepay, bool sTokenRequired
-        ) = partialLiquidation.maxLiquidation(BORROWER);
+        uint256 collateralToLiquidate;
+        uint256 debtToRepay;
+
+        { // too deep
+            bool sTokenRequired;
+            (collateralToLiquidate, debtToRepay, sTokenRequired) = partialLiquidation.maxLiquidation(BORROWER);
+            assertTrue(!sTokenRequired, "sTokenRequired not required");
+        }
 
         assertEq(silo0.getLiquidity(), 0, "with bad debt and no depositors, no liquidity");
         emit log_named_decimal_uint("collateralToLiquidate", collateralToLiquidate, 18);
         emit log_named_decimal_uint("debtToRepay", debtToRepay, 18);
-        assertTrue(!sTokenRequired, "sTokenRequired not required");
         assertEq(debtToRepay, silo0.getDebtAssets(), "debtToRepay is max debt");
         assertEq(
             collateralToLiquidate / 100,
