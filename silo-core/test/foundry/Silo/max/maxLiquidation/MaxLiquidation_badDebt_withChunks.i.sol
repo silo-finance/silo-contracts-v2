@@ -102,10 +102,8 @@ contract MaxLiquidationBadDebtWithChunksTest is MaxLiquidationBadDebtTest {
             emit log_named_uint("[BadDebtWithChunks] testDebtToCover", testDebtToCover);
 
             (
-                uint256 partialCollateral, uint256 partialDebt, bool sTokenRequired
+                uint256 partialCollateral, uint256 partialDebt
             ) = _liquidationCall(testDebtToCover, _sameToken, _receiveSToken, _self);
-
-            assertTrue(!sTokenRequired, "sTokenRequired not required");
 
             emit log_named_uint("[BadDebtWithChunks] partialCollateral", partialCollateral);
             emit log_named_uint("[BadDebtWithChunks] partialDebt", partialDebt);

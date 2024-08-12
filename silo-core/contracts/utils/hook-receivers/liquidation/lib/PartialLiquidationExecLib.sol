@@ -68,7 +68,7 @@ library PartialLiquidationExecLib {
         ) = _siloConfig.getConfigs(_borrower);
 
         if (debtConfig.silo == address(0)) {
-            return (0, 0);
+            return (0, 0, false);
         }
 
         SiloSolvencyLib.LtvData memory ltvData = SiloSolvencyLib.getAssetsDataForLtvCalculations(
@@ -80,7 +80,7 @@ library PartialLiquidationExecLib {
             0 /* no cached balance */
         );
 
-        if (ltvData.borrowerDebtAssets == 0) return (0, 0);
+        if (ltvData.borrowerDebtAssets == 0) return (0, 0, false);
 
         (
             uint256 sumOfCollateralValue, uint256 debtValue
@@ -90,10 +90,10 @@ library PartialLiquidationExecLib {
         // safe because we adding same token, so it is under same total supply
         unchecked { sumOfCollateralAssets = ltvData.borrowerProtectedAssets + ltvData.borrowerCollateralAssets; }
 
-        if (sumOfCollateralValue == 0) return (sumOfCollateralAssets, ltvData.borrowerDebtAssets);
+        if (sumOfCollateralValue == 0) return (sumOfCollateralAssets, ltvData.borrowerDebtAssets, false);
 
         uint256 ltvInDp = SiloSolvencyLib.ltvMath(debtValue, sumOfCollateralValue);
-        if (ltvInDp <= collateralConfig.lt) return (0, 0); // user solvent
+        if (ltvInDp <= collateralConfig.lt) return (0, 0, false); // user solvent
 
         (collateralToLiquidate, debtToRepay) = PartialLiquidationLib.maxLiquidation(
             sumOfCollateralAssets,
