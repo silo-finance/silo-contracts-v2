@@ -33,10 +33,10 @@ contract PreviewBorrowTest is SiloLittleHelper, Test {
     */
     /// forge-config: core-test.fuzz.runs = 1000
     function test_previewBorrow_freshStart_fuzz(uint112 _assetsOrShares, bool _partial) public {
-        uint256 _amountIn = _partial ? uint256(_assetsOrShares) * 37 / 100 : _assetsOrShares;
+        uint256 _amountIn = _partialAmount(_assetsOrShares, _partial);
         vm.assume(_amountIn > 0);
 
-        _createSiloScenario(false, false);
+        _createScenario(false, false);
 
         uint256 preview = _getBorrowPreview(_amountIn);
 
@@ -54,10 +54,10 @@ contract PreviewBorrowTest is SiloLittleHelper, Test {
         bool _interest,
         bool _partial
     ) public {
-        uint256 _amountIn = _partial ? uint256(_assetsOrShares) * 37 / 100 : _assetsOrShares;
+        uint256 _amountIn = _partialAmount(_assetsOrShares, _partial);
         vm.assume(_amountIn > 0);
 
-        _createSiloScenario(true, _interest);
+        _createScenario(true, _interest);
 
         uint256 preview = _getBorrowPreview(_amountIn);
         emit log_named_uint("preview", preview);
@@ -76,7 +76,7 @@ contract PreviewBorrowTest is SiloLittleHelper, Test {
     function test_previewBorrow_min_fuzz(uint64 _assetsOrShares, bool _interest) public {
         vm.assume(_assetsOrShares > 1e18);
 
-        _createSiloScenario(_assetsOrShares, true, _interest);
+        _createScenario(_assetsOrShares, true, _interest);
 
         uint256 minInput = 1;
         uint256 minPreview = _getBorrowPreview(minInput);
@@ -95,7 +95,7 @@ contract PreviewBorrowTest is SiloLittleHelper, Test {
     function test_previewBorrow_max_fuzz(uint64 _assetsOrShares, bool _interest) public {
         vm.assume(_assetsOrShares > 1e18);
 
-        _createSiloScenario(_assetsOrShares, true, _interest);
+        _createScenario(_assetsOrShares, true, _interest);
 
         uint256 maxInput = _borrowShares()
             ? silo1.maxBorrowShares(borrower)
@@ -110,20 +110,11 @@ contract PreviewBorrowTest is SiloLittleHelper, Test {
         _assertPreviewBorrow(maxPreview, maxInput);
     }
 
-    function _depositForTestPreview(uint256 _assets) internal {
-        _depositCollateral({
-            _assets: _assets,
-            _depositor: depositor,
-            _toSilo1: true,
-            _collateralType: _collateralType()
-        });
+    function _createScenario(bool _creteDebt, bool _interest) internal {
+        _createScenario(type(uint128).max, _creteDebt, _interest);
     }
 
-    function _createSiloScenario(bool _creteDebt, bool _interest) internal {
-        _createSiloScenario(type(uint128).max, _creteDebt, _interest);
-    }
-
-    function _createSiloScenario(uint256 _borrowerInput, bool _creteDebt, bool _interest) internal {
+    function _createScenario(uint256 _borrowerInput, bool _creteDebt, bool _interest) internal {
         // deposit small amount at begin, because with MAX128 is hard to generate interest
         _depositForBorrow(type(uint64).max, depositor);
 
@@ -188,6 +179,10 @@ contract PreviewBorrowTest is SiloLittleHelper, Test {
             : silo1.previewBorrow(_assetsOrShares);
     }
     
+    function _partialAmount(uint256 _assetsOrShares, bool _partial) internal pure returns (uint256 partialAmount) {
+        partialAmount = _partial ? uint256(_assetsOrShares) * 37 / 100 : _assetsOrShares;
+    }
+
     function _borrowShares() internal pure virtual returns (bool) {
         return false;
     }
