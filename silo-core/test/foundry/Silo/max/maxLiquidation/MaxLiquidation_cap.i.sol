@@ -106,6 +106,13 @@ contract MaxLiquidationCapTest is MaxLiquidationCommon {
         emit log_named_uint("         getLiquidity #2", silo0.getLiquidity());
         emit log_named_uint("collateralToLiquidate #2", collateralToLiquidate);
 
+//        // TODO can we borrow all liquidity?
+//        _depositForBorrow(1000e18, makeAddr("any"));
+//        vm.startPrank(makeAddr("any"));
+//        silo0.borrow(silo0.getLiquidity(), makeAddr("any"), makeAddr("any"));
+//        vm.stopPrank();
+//        emit log_named_uint("         getLiquidity #3", silo0.getLiquidity());
+
         partialLiquidation.liquidationCall(
             address(token0),
             address(token1),
