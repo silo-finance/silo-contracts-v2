@@ -91,13 +91,9 @@ contract MaxLiquidationBadDebtWithChunksTest is MaxLiquidationBadDebtTest {
 
             uint256 collateralToLiquidate;
             uint256 debtToCover;
+            (collateralToLiquidate, debtToCover, sTokenRequired) = partialLiquidation.maxLiquidation(borrower);
 
-            { // too deep
-                bool sTokenRequired;
-                (collateralToLiquidate, debtToCover, sTokenRequired) = partialLiquidation.maxLiquidation(borrower);
-
-                assertTrue(!sTokenRequired, "sTokenRequired not required");
-            }
+            assertTrue(!sTokenRequired, "sTokenRequired not required");
 
             emit log_named_uint("[BadDebtWithChunks] collateralToLiquidate", collateralToLiquidate);
             emit log_named_uint("[BadDebtWithChunks] debtToCover", debtToCover);
