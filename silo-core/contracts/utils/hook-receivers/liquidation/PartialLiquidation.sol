@@ -51,7 +51,7 @@ contract PartialLiquidation is SiloStorage, IPartialLiquidation, IHookReceiver {
         address _collateralAsset,
         address _debtAsset,
         address _borrower,
-        uint256 _debtToCover, // TODO check how we apply limitations
+        uint256 _debtToCover,
         bool _receiveSToken
     )
         external
@@ -154,7 +154,7 @@ contract PartialLiquidation is SiloStorage, IPartialLiquidation, IHookReceiver {
     }
 
     /// @inheritdoc IPartialLiquidation
-    function maxLiquidation(address _borrower) // TODO are we cap by liquidity?
+    function maxLiquidation(address _borrower)
         external
         view
         virtual
