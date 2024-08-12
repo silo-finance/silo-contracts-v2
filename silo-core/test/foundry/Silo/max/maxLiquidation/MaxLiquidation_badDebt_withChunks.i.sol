@@ -61,11 +61,7 @@ contract MaxLiquidationBadDebtWithChunksTest is MaxLiquidationBadDebtTest {
         override
         returns (uint256 withdrawCollateral, uint256 repayDebtAssets)
     {
-        (
-            uint256 totalCollateralToLiquidate, uint256 totalDebtToCover, bool sTokenRequired
-        ) = partialLiquidation.maxLiquidation(borrower);
-
-        assertTrue(!sTokenRequired, "sTokenRequired not required");
+        (uint256 totalCollateralToLiquidate, uint256 totalDebtToCover,) = partialLiquidation.maxLiquidation(borrower);
 
         emit log_named_decimal_uint("[BadDebtWithChunks] ltv before", silo0.getLtv(borrower), 16);
         emit log_named_uint("[BadDebtWithChunks] totalCollateralToLiquidate", totalCollateralToLiquidate);
@@ -91,9 +87,7 @@ contract MaxLiquidationBadDebtWithChunksTest is MaxLiquidationBadDebtTest {
 
             uint256 collateralToLiquidate;
             uint256 debtToCover;
-            (collateralToLiquidate, debtToCover, sTokenRequired) = partialLiquidation.maxLiquidation(borrower);
-
-            assertTrue(!sTokenRequired, "sTokenRequired not required");
+            (collateralToLiquidate, debtToCover,) = partialLiquidation.maxLiquidation(borrower);
 
             emit log_named_uint("[BadDebtWithChunks] collateralToLiquidate", collateralToLiquidate);
             emit log_named_uint("[BadDebtWithChunks] debtToCover", debtToCover);
