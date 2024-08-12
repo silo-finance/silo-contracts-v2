@@ -305,7 +305,7 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         Actor borrower = _selectActor(actorIndexBorrower);
         Actor liquidator = _selectActor(actorIndexLiquidator);
 
-        (, bool _vaultZeroWithDebt) = _invariant_insolventHasDebt(address(borrower));
+        _invariant_insolventHasDebt(address(borrower));
 
         liquidator.liquidationCall(address(borrower), debtToCover, receiveSToken, siloConfig);
     }
@@ -669,7 +669,6 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
 
         (bool isSolvent, bool _vaultZeroWithDebt) = _invariant_insolventHasDebt(address(actor));
 
-        Silo vault = _vaultZeroWithDebt ? vault0 : vault1;
         require(isSolvent, "user not solvent - ignoring this case");
 
         (, uint256 debtToRepay,) = liquidationModule.maxLiquidation(address(actor));
@@ -696,7 +695,6 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
 
         emit LogString(isSolvent ? "user is solvent" : "user is NOT solvent");
 
-        Silo siloWithDebt = _vaultZeroWithDebt ? vault0 : vault1;
         (, uint256 debtToRepay,) = liquidationModule.maxLiquidation(address(actor));
 
         _requireTotalCap(_vaultZeroWithDebt, address(liquidator), debtToRepay);

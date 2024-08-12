@@ -291,8 +291,6 @@ contract ShareDebtTokenTest is Test, SiloLittleHelper {
         vm.prank(receiver);
         shareDebtToken.setReceiveApproval(address(this), 1);
 
-        (address collateralSenderBefore, ) = _getCollateralState();
-
         shareDebtToken.transfer(receiver, 1);
     }
 

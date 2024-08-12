@@ -123,8 +123,8 @@ contract MaxLiquidationCapTest is MaxLiquidationCommon {
         revert("not in use");
     }
 
-    function _executeLiquidation(bool _sameToken, bool _receiveSToken, bool _self) internal override
-        returns (uint256 withdrawCollateral, uint256 repayDebtAssets)
+    function _executeLiquidation(bool, bool, bool) internal pure override
+        returns (uint256, uint256)
     {
         revert("not in use");
     }
