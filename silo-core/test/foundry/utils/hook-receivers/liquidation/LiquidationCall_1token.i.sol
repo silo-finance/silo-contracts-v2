@@ -576,6 +576,7 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
 
         emit log_named_decimal_uint("collateralToLiquidate", collateralToLiquidate, 18);
         emit log_named_decimal_uint("debtToRepay", debtToRepay, 18);
+
         assertEq(debtToRepay, silo0.getDebtAssets(), "debtToRepay is max debt");
         assertEq(
             collateralToLiquidate + 2, // +2 to compensate underestimation
