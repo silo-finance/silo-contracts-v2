@@ -67,7 +67,7 @@ interface IPartialLiquidation {
     /// because actual max can be only higher
     /// @return collateralToLiquidate underestimated (up to 2 wei) amount of collateral liquidator will get
     /// @return debtToRepay debt amount needed to be repay to get `collateralToLiquidate`
-    /// @return sTokenRequired TRUE, when liquidation with underlying token is not possible because of not enough
+    /// @return sTokenRequired TRUE, when liquidation with underlying asset is not possible because of not enough
     /// liquidity
     function maxLiquidation(address _borrower)
         external
