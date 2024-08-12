@@ -54,8 +54,6 @@ contract MaxLiquidationWithChunksTest is MaxLiquidationTest {
             repayDebtAssets += partialDebt;
 
             _assertLeDiff(partialCollateral, collateralToLiquidate, "partialCollateral");
-
-            // TODO warp?
         }
 
         // sum of chunk liquidation can be smaller than one max/total, because with chunks we can get to the point
