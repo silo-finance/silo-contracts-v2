@@ -73,26 +73,9 @@ contract MaxLiquidationBadDebtWithChunksTest is MaxLiquidationBadDebtTest {
 
         for (uint256 i; i < 5; i++) {
             emit log_named_uint("[BadDebtWithChunks] case ------------------------", i);
-
-            if (silo0.getLtv(borrower) <= 1e18) break; // not bad debt anymore
-
             emit log_named_decimal_uint("ltv", silo0.getLtv(borrower), 16);
 
-            emit log_named_uint("collateralBalanceOfUnderlying", siloLens.collateralBalanceOfUnderlying(silo1, borrower));
-            emit log_named_uint("debtBalanceOfUnderlying", siloLens.debtBalanceOfUnderlying(silo1, borrower));
-            emit log_named_uint("total(collateral).assets", silo1.total(AssetTypes.COLLATERAL));
-            emit log_named_uint("getCollateralAssets()", silo1.getCollateralAssets());
-
-            (
-                uint256 collateralToLiquidate, uint256 debtToCover, bool sTokenRequired
-            ) = partialLiquidation.maxLiquidation(borrower);
-
-            assertTrue(!sTokenRequired, "sTokenRequired not required");
-
-            emit log_named_uint("[BadDebtWithChunks] collateralToLiquidate", collateralToLiquidate);
-            emit log_named_uint("[BadDebtWithChunks] debtToCover", debtToCover);
-
-            assertTrue(!sTokenRequired, "sTokenRequired not required");
+            if (silo0.getLtv(borrower) <= 1e18) break; // not bad debt anymore
 
             { // too deep
                 bool isSolvent = silo0.isSolvent(borrower);
@@ -100,6 +83,24 @@ contract MaxLiquidationBadDebtWithChunksTest is MaxLiquidationBadDebtTest {
 
                 if (isSolvent) break;
             }
+
+            emit log_named_uint("collateralBalanceOfUnderlying", siloLens.collateralBalanceOfUnderlying(silo1, borrower));
+            emit log_named_uint("debtBalanceOfUnderlying", siloLens.debtBalanceOfUnderlying(silo1, borrower));
+            emit log_named_uint("total(collateral).assets", silo1.total(AssetTypes.COLLATERAL));
+            emit log_named_uint("getCollateralAssets()", silo1.getCollateralAssets());
+
+            uint256 collateralToLiquidate;
+            uint256 debtToCover;
+
+            { // too deep
+                bool sTokenRequired;
+                (collateralToLiquidate, debtToCover, sTokenRequired) = partialLiquidation.maxLiquidation(borrower);
+
+                assertTrue(!sTokenRequired, "sTokenRequired not required");
+            }
+
+            emit log_named_uint("[BadDebtWithChunks] collateralToLiquidate", collateralToLiquidate);
+            emit log_named_uint("[BadDebtWithChunks] debtToCover", debtToCover);
 
             uint256 testDebtToCover = _calculateChunk(debtToCover, i);
             emit log_named_uint("[BadDebtWithChunks] testDebtToCover", testDebtToCover);
