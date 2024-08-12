@@ -97,21 +97,18 @@ contract MaxLiquidationCapTest is MaxLiquidationCommon {
             false // receiveStoken
         );
 
-        emit log_named_uint("assets to deposit", collateralToLiquidate - silo0.getLiquidity());
         _deposit(collateralToLiquidate - silo0.getLiquidity(), address(1));
 
+        (,, sTokenRequired) = partialLiquidation.maxLiquidation(borrower);
+        assertTrue(sTokenRequired, "sTokenRequired is still required because of -2");
+
+        _deposit(2, address(1));
+
         (collateralToLiquidate, debtToCover, sTokenRequired) = partialLiquidation.maxLiquidation(borrower);
-        assertTrue(!sTokenRequired, "sTokenRequired NOT required because we deposit to silo0");
+        assertTrue(!sTokenRequired, "sTokenRequired NOT required because we have 'collateralToLiquidate + 2' in silo0");
 
         emit log_named_uint("         getLiquidity #2", silo0.getLiquidity());
         emit log_named_uint("collateralToLiquidate #2", collateralToLiquidate);
-
-//        // TODO can we borrow all liquidity?
-//        _depositForBorrow(1000e18, makeAddr("any"));
-//        vm.startPrank(makeAddr("any"));
-//        silo0.borrow(silo0.getLiquidity(), makeAddr("any"), makeAddr("any"));
-//        vm.stopPrank();
-//        emit log_named_uint("         getLiquidity #3", silo0.getLiquidity());
 
         partialLiquidation.liquidationCall(
             address(token0),
