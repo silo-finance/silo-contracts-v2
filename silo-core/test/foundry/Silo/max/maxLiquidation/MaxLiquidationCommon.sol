@@ -91,11 +91,11 @@ abstract contract MaxLiquidationCommon is SiloLittleHelper, Test {
     function _assertBorrowerIsSolvent() internal view {
         assertTrue(silo1.isSolvent(borrower), "[_assertBorrowerIsSolvent] expect borrower to be solvent");
 
-        (uint256 collateralToLiquidate, uint256 debtToRepay) = partialLiquidation.maxLiquidation(borrower);
+        (uint256 collateralToLiquidate, uint256 debtToRepay,) = partialLiquidation.maxLiquidation(borrower);
         assertEq(collateralToLiquidate, 0, "[_assertBorrowerIsSolvent] silo0.collateralToLiquidate");
         assertEq(debtToRepay, 0, "[_assertBorrowerIsSolvent] silo0.debtToRepay");
 
-        (collateralToLiquidate, debtToRepay) = partialLiquidation.maxLiquidation(borrower);
+        (collateralToLiquidate, debtToRepay,) = partialLiquidation.maxLiquidation(borrower);
         assertEq(collateralToLiquidate, 0, "[_assertBorrowerIsSolvent] silo1.collateralToLiquidate");
         assertEq(debtToRepay, 0, "[_assertBorrowerIsSolvent] silo1.debtToRepay");
     }

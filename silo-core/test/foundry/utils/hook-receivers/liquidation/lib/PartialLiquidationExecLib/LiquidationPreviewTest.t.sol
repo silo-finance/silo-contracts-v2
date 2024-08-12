@@ -89,7 +89,9 @@ contract LiquidationPreviewTest is Test, OraclesHelper {
         params.debtConfigAsset = DEBT_ASSET;
         params.collateralLt = 0.8000e18 - 1; // must be below LTV that is present in `ltvData`
 
-        (uint256 maxCollateralToLiquidate, uint256 maxDebtToCover) = PartialLiquidationLib.maxLiquidation(
+        (
+            uint256 maxCollateralToLiquidate, uint256 maxDebtToCover, bool sTokenRequired
+        ) = PartialLiquidationLib.maxLiquidation(
             ltvData.borrowerCollateralAssets,
             ltvData.borrowerCollateralAssets,
             ltvData.borrowerDebtAssets,
@@ -97,6 +99,8 @@ contract LiquidationPreviewTest is Test, OraclesHelper {
             params.collateralLt,
             params.liquidationFee
         );
+
+        assertTrue(!sTokenRequired, "sTokenRequired NOT required");
 
         emit log_named_decimal_uint("maxDebtToCover", maxDebtToCover, 18);
 

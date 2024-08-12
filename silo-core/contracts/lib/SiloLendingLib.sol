@@ -237,6 +237,13 @@ library SiloLendingLib {
             _totalDebtShares
         );
 
+        if (assets == 0) {
+            return (0, 0);
+        } else {
+            // sometimes even with rounding down, we need to do -1 wei to not revert on borrow
+            unchecked { assets--; }
+        }
+
         uint256 liquidityWithInterest = getLiquidity(_siloConfig);
 
         if (assets > liquidityWithInterest) {
@@ -250,11 +257,6 @@ library SiloLendingLib {
                 Rounding.MAX_BORROW_TO_SHARES,
                 ISilo.AssetType.Debt
             );
-        }
-
-        if (assets != 0) {
-            // sometimes even with rounding down, we need to do -1 wei to not revert on borrow
-            unchecked { assets--; }
         }
     }
 

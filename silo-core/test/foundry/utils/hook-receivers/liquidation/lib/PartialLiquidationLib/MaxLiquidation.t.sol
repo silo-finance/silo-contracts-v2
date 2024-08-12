@@ -45,7 +45,7 @@ contract MaxLiquidationTest is Test, MaxRepayRawMath {
         vm.assume(ltvBefore >= lt);
 
         (
-            uint256 collateralToLiquidate, uint256 debtToRepay
+            uint256 collateralToLiquidate, uint256 debtToRepay, bool sTokenRequired
         ) = PartialLiquidationLib.maxLiquidation(
             _sumOfCollateralAssets,
             _sumOfCollateralValue,
@@ -54,6 +54,8 @@ contract MaxLiquidationTest is Test, MaxRepayRawMath {
             lt,
             _liquidityFee
         );
+
+        assertTrue(!sTokenRequired, "sTokenRequired NOT required");
 
         emit log_named_decimal_uint("collateralToLiquidate", collateralToLiquidate, 18);
         emit log_named_decimal_uint("debtToRepay", debtToRepay, 18);

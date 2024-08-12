@@ -173,8 +173,10 @@ contract MaxLiquidationTest is MaxLiquidationCommon {
         uint256 debtToCover = type(uint256).max;
 
         (
-            uint256 collateralToLiquidate, uint256 debtToRepay
+            uint256 collateralToLiquidate, uint256 debtToRepay, bool sTokenRequired
         ) = partialLiquidation.maxLiquidation(borrower);
+
+        assertTrue(!sTokenRequired, "sTokenRequired not required");
 
         emit log_named_decimal_uint("[MaxLiquidation] collateralToLiquidate", collateralToLiquidate, 18);
         emit log_named_decimal_uint("[MaxLiquidation] debtToRepay", debtToRepay, 16);

@@ -62,8 +62,10 @@ contract MaxLiquidationBadDebtWithChunksTest is MaxLiquidationBadDebtTest {
         returns (uint256 withdrawCollateral, uint256 repayDebtAssets)
     {
         (
-            uint256 totalCollateralToLiquidate, uint256 totalDebtToCover
+            uint256 totalCollateralToLiquidate, uint256 totalDebtToCover, bool sTokenRequired
         ) = partialLiquidation.maxLiquidation(borrower);
+
+        assertTrue(!sTokenRequired, "sTokenRequired not required");
 
         emit log_named_decimal_uint("[BadDebtWithChunks] ltv before", silo0.getLtv(borrower), 16);
         emit log_named_uint("[BadDebtWithChunks] totalCollateralToLiquidate", totalCollateralToLiquidate);
@@ -84,11 +86,15 @@ contract MaxLiquidationBadDebtWithChunksTest is MaxLiquidationBadDebtTest {
             emit log_named_uint("getCollateralAssets()", silo1.getCollateralAssets());
 
             (
-                uint256 collateralToLiquidate, uint256 debtToCover
+                uint256 collateralToLiquidate, uint256 debtToCover, bool sTokenRequired
             ) = partialLiquidation.maxLiquidation(borrower);
+
+            assertTrue(!sTokenRequired, "sTokenRequired not required");
 
             emit log_named_uint("[BadDebtWithChunks] collateralToLiquidate", collateralToLiquidate);
             emit log_named_uint("[BadDebtWithChunks] debtToCover", debtToCover);
+
+            assertTrue(!sTokenRequired, "sTokenRequired not required");
 
             if (isSolvent) break;
 
@@ -96,8 +102,11 @@ contract MaxLiquidationBadDebtWithChunksTest is MaxLiquidationBadDebtTest {
             emit log_named_uint("[BadDebtWithChunks] testDebtToCover", testDebtToCover);
 
             (
-                uint256 partialCollateral, uint256 partialDebt
+                uint256 partialCollateral, uint256 partialDebt, bool sTokenRequired
             ) = _liquidationCall(testDebtToCover, _sameToken, _receiveSToken, _self);
+
+            assertTrue(!sTokenRequired, "sTokenRequired not required");
+
             emit log_named_uint("[BadDebtWithChunks] partialCollateral", partialCollateral);
             emit log_named_uint("[BadDebtWithChunks] partialDebt", partialDebt);
 

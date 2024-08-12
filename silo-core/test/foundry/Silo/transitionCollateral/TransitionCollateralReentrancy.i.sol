@@ -69,7 +69,7 @@ contract TransitionCollateralReentrancyTest is SiloLittleHelper, Test, PartialLi
         address siloWithDebt = address(silo1);
 
         (
-            uint256 collateralToLiquidate, uint256 debtToRepay
+            uint256 collateralToLiquidate, uint256 debtToRepay,
         ) = partialLiquidation.maxLiquidation(borrower);
 
         assertEq(collateralToLiquidate, 3, "collateralToLiquidate (5 - 2 underestimation)");

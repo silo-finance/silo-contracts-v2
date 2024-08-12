@@ -164,10 +164,12 @@ contract MaxLiquidationLTV100FullTest is MaxLiquidationCommon {
         uint256 debtToCover = type(uint256).max;
 
         (
-            uint256 collateralToLiquidate, uint256 debtToRepay
+            uint256 collateralToLiquidate, uint256 debtToRepay, bool sTokenRequired
         ) = partialLiquidation.maxLiquidation(borrower);
 
         emit log_named_decimal_uint("[100FULL] ltv before", silo0.getLtv(borrower), 16);
+
+        assertTrue(!sTokenRequired, "sTokenRequired not required");
 
         if (_self) vm.prank(borrower);
 

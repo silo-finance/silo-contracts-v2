@@ -57,9 +57,7 @@ contract DustPropagationTest is SiloLittleHelper, Test {
         assertEq(silo0.getLiquidity(), 0, "with bad debt and no depositors, no liquidity");
         _printState("after time forward");
 
-        (
-            , uint256 debtToRepay
-        ) = partialLiquidation.maxLiquidation(BORROWER);
+        (, uint256 debtToRepay,) = partialLiquidation.maxLiquidation(BORROWER);
 
         token0.mint(address(this), debtToRepay);
         token0.approve(address(partialLiquidation), debtToRepay);
@@ -236,9 +234,7 @@ contract DustPropagationTest is SiloLittleHelper, Test {
         emit log_named_decimal_uint("[silo0] liquidity", silo0.getLiquidity(), 18);
         emit log_named_decimal_uint("[silo0] balanceOf(silo)", token0.balanceOf(address(silo0)), 18);
 
-        (
-            uint256 collateralToWithdraw, uint256 debtToRepay
-        ) = partialLiquidation.maxLiquidation(BORROWER);
+        (uint256 collateralToWithdraw, uint256 debtToRepay,) = partialLiquidation.maxLiquidation(BORROWER);
 
         if (debtToRepay != 0) {
             emit log_named_decimal_uint("[silo0] liquidation possible, collateralToWithdraw", collateralToWithdraw, 18);

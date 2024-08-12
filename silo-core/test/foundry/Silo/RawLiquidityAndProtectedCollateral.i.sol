@@ -72,9 +72,10 @@ contract RawLiquidityAndProtectedCollateralTest is SiloLittleHelper, Test {
         _printSiloStats("\nStep5 withdraw fees (Silo0)", silo0, token0);
 
         // liquidation
-        (uint256 collateralToLiquidate, uint256 debtToRepay) = partialLiquidation.maxLiquidation(user0);
+        (uint256 collateralToLiquidate, uint256 debtToRepay, bool sTokenRequired) = partialLiquidation.maxLiquidation(user0);
 
         assertGt(collateralToLiquidate, 0, "expect collateralToLiquidate");
+        assertTrue(!sTokenRequired, "sTokenRequired not required");
 
         token1.mint(address(this), debtToRepay); // address(this) is liquidator
         token1.approve(address(partialLiquidation), debtToRepay);

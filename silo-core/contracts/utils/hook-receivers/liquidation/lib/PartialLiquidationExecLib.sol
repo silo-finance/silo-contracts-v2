@@ -60,7 +60,7 @@ library PartialLiquidationExecLib {
     function maxLiquidation(ISiloConfig _siloConfig, address _borrower)
         internal
         view
-        returns (uint256 collateralToLiquidate, uint256 debtToRepay)
+        returns (uint256 collateralToLiquidate, uint256 debtToRepay, bool _sTokenRequired)
     {
         (
             ISiloConfig.ConfigData memory collateralConfig,
@@ -95,7 +95,7 @@ library PartialLiquidationExecLib {
         uint256 ltvInDp = SiloSolvencyLib.ltvMath(debtValue, sumOfCollateralValue);
         if (ltvInDp <= collateralConfig.lt) return (0, 0); // user solvent
 
-        return PartialLiquidationLib.maxLiquidation(
+        (collateralToLiquidate, debtToRepay) = PartialLiquidationLib.maxLiquidation(
             sumOfCollateralAssets,
             sumOfCollateralValue,
             ltvData.borrowerDebtAssets,
@@ -103,6 +103,8 @@ library PartialLiquidationExecLib {
             collateralConfig.lt,
             collateralConfig.liquidationFee
         );
+
+        _sTokenRequired = collateralToLiquidate > ISilo(collateralConfig.silo).getLiquidity();
     }
 
     /// @return receiveCollateralAssets collateral + protected to liquidate, on self liquidation when borrower repay

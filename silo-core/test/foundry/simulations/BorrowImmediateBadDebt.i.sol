@@ -85,7 +85,7 @@ contract BorrowImmediateBadDebtTest is SiloLittleHelper, Test {
 
         emit log_named_decimal_uint("[1y] LTV after 1y", silo1.getLtv(borrower), 18);
         emit log_named_uint("[1y] current debt", silo1.previewRepayShares(borrowShares));
-        (uint256 collateralToLiquidate, uint256 debtToRepay) = partialLiquidation.maxLiquidation(borrower);
+        (uint256 collateralToLiquidate, uint256 debtToRepay, ) = partialLiquidation.maxLiquidation(borrower);
 
         emit log_named_uint("[1y] collateralToLiquidate", collateralToLiquidate);
         emit log_named_uint("[1y] debtToRepay", debtToRepay);
@@ -96,7 +96,7 @@ contract BorrowImmediateBadDebtTest is SiloLittleHelper, Test {
 
         emit log_named_decimal_uint("[2y] LTV after 2y", silo1.getLtv(borrower), 18);
         emit log_named_uint("[2y] current debt", silo1.previewRepayShares(borrowShares));
-        (collateralToLiquidate, debtToRepay) = partialLiquidation.maxLiquidation(borrower);
+        (collateralToLiquidate, debtToRepay,) = partialLiquidation.maxLiquidation(borrower);
 
         emit log_named_uint("[2y] collateralToLiquidate", collateralToLiquidate);
         emit log_named_uint("[2y] debtToRepay", debtToRepay);
@@ -144,7 +144,7 @@ contract BorrowImmediateBadDebtTest is SiloLittleHelper, Test {
 
         emit log_named_decimal_uint("[1y] LTV after 1y", silo1.getLtv(borrower), 18);
         emit log_named_uint("[1y] current debt", silo1.previewRepayShares(borrowShares));
-        (uint256 collateralToLiquidate, uint256 debtToRepay) = partialLiquidation.maxLiquidation(borrower);
+        (uint256 collateralToLiquidate, uint256 debtToRepay,) = partialLiquidation.maxLiquidation(borrower);
 
         emit log_named_uint("[1y] collateralToLiquidate", collateralToLiquidate);
         emit log_named_uint("[1y] debtToRepay", debtToRepay); // 2 tokens: 7574,
@@ -155,7 +155,7 @@ contract BorrowImmediateBadDebtTest is SiloLittleHelper, Test {
 
         emit log_named_decimal_uint("[2y] LTV after 2y", silo1.getLtv(borrower), 18);
         emit log_named_uint("[2y] current debt", silo1.previewRepayShares(borrowShares));
-        (collateralToLiquidate, debtToRepay) = partialLiquidation.maxLiquidation(borrower);
+        (collateralToLiquidate, debtToRepay,) = partialLiquidation.maxLiquidation(borrower);
 
         emit log_named_uint("[2y] collateralToLiquidate", collateralToLiquidate);
         emit log_named_uint("[2y] debtToRepay", debtToRepay); // 2 tokens: 15074
