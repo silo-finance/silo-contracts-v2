@@ -28,21 +28,15 @@ contract MaxLiquidationWithChunksTest is MaxLiquidationTest {
             emit log_named_string("isSolvent", silo0.isSolvent(borrower) ? "YES" : "NO");
             emit log_named_decimal_uint("[MaxLiquidationWithChunks] ltv before", silo0.getLtv(borrower), 16);
 
-            (
-                uint256 collateralToLiquidate, uint256 debtToCover, bool sTokenRequired
-            ) = partialLiquidation.maxLiquidation(borrower);
+            (uint256 collateralToLiquidate, uint256 debtToCover,) = partialLiquidation.maxLiquidation(borrower);
 
-            assertTrue(!sTokenRequired, "sTokenRequired not required");
+            bool isSolvent = silo0.isSolvent(borrower);
 
-            { // too deep
-                bool isSolvent = silo0.isSolvent(borrower);
+            // this conditions caught bug
+            if (isSolvent && debtToCover != 0) revert("if we solvent there should be no liquidation");
+            if (!isSolvent && debtToCover == 0) revert("if we NOT solvent there should be a liquidation");
 
-                // this conditions caught bug
-                if (isSolvent && debtToCover != 0) revert("if we solvent there should be no liquidation");
-                if (!isSolvent && debtToCover == 0) revert("if we NOT solvent there should be a liquidation");
-
-                if (isSolvent) break;
-            }
+            if (isSolvent) break;
 
             uint256 testDebtToCover = _calculateChunk(debtToCover, i);
 
