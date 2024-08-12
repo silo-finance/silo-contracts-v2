@@ -557,9 +557,15 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
         emit log_named_decimal_uint("user ltv", silo0.getLtv(BORROWER), 16);
         assertGt(silo0.getLtv(BORROWER), 1e18, "expect bad debt");
 
-        (uint256 collateralToLiquidate, uint256 debtToRepay, bool sTokenRequired) = partialLiquidation.maxLiquidation(BORROWER);
-        assertEq(silo0.getLiquidity(), 0, "bad debt too big to have liquidity");
-        assertTrue(sTokenRequired, "sTokenRequired required");
+        uint256 collateralToLiquidate;
+        uint256 debtToRepay;
+
+        { // too deep
+            bool sTokenRequired;
+            (collateralToLiquidate, debtToRepay, sTokenRequired) = partialLiquidation.maxLiquidation(BORROWER);
+            assertEq(silo0.getLiquidity(), 0, "bad debt too big to have liquidity");
+            assertTrue(sTokenRequired, "sTokenRequired required");
+        }
 
         { // too deep
             address depositor = makeAddr("depositor");
