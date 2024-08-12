@@ -73,11 +73,9 @@ contract MaxLiquidationBadDebtWithChunksTest is MaxLiquidationBadDebtTest {
 
         for (uint256 i; i < 5; i++) {
             emit log_named_uint("[BadDebtWithChunks] case ------------------------", i);
-            bool isSolvent = silo0.isSolvent(borrower);
 
             if (silo0.getLtv(borrower) <= 1e18) break; // not bad debt anymore
 
-            emit log_named_string("isSolvent", isSolvent ? "YES" : "NO");
             emit log_named_decimal_uint("ltv", silo0.getLtv(borrower), 16);
 
             emit log_named_uint("collateralBalanceOfUnderlying", siloLens.collateralBalanceOfUnderlying(silo1, borrower));
@@ -96,7 +94,12 @@ contract MaxLiquidationBadDebtWithChunksTest is MaxLiquidationBadDebtTest {
 
             assertTrue(!sTokenRequired, "sTokenRequired not required");
 
-            if (isSolvent) break;
+            { // too deep
+                bool isSolvent = silo0.isSolvent(borrower);
+                emit log_named_string("isSolvent", isSolvent ? "YES" : "NO");
+
+                if (isSolvent) break;
+            }
 
             uint256 testDebtToCover = _calculateChunk(debtToCover, i);
             emit log_named_uint("[BadDebtWithChunks] testDebtToCover", testDebtToCover);
