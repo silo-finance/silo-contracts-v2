@@ -158,8 +158,7 @@ contract MaxLiquidationTest is MaxLiquidationCommon {
         else if (_collateral == 12 && _self && _withChunks()) {
             if (_receiveSToken) _ensureBorrowerHasDebt();
             else _ensureBorrowerHasNoDebt();
-        }
-        else if (_self && !_withChunks()) _ensureBorrowerHasNoDebt(); // for self, we are doing full (input == max)
+        } else if (_self && !_withChunks()) _ensureBorrowerHasNoDebt(); // for self, we are doing full (input == max)
         else _ensureBorrowerHasDebt();
     }
 

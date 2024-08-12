@@ -11,7 +11,6 @@ import {console} from "forge-std/console.sol";
 
 /// @dev Hook receiver for all actions with events to see decoded inputs
 /// This contract is designed to be deployed for each test case
-// TODO this tests can have false positives if hook is not called at all
 contract HookReceiverAllActionsWithEvents is PartialLiquidation, SiloHookReceiver {
     using Hook for uint256;
 
