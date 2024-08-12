@@ -21,7 +21,7 @@ contract MaxLiquidationCapTest is MaxLiquidationCommon {
     /*
     forge test -vv --ffi --mt test_maxLiquidation_cap_1token
     */
-    function test_maxLiquidation_cap_1token_when_repayCoversLiquidity() public {
+    function test_maxLiquidation_cap_1token() public {
         _createDebtForBorrower(1e18, true);
 
         _moveTimeUntilInsolvent();
@@ -62,66 +62,57 @@ contract MaxLiquidationCapTest is MaxLiquidationCommon {
         );
     }
 
-
     /*
-    forge test -vv --ffi --mt test_maxLiquidation_cap_1token
+    forge test -vv --ffi --mt test_maxLiquidation_cap_2tokens
     */
-    function test_maxLiquidation_cap_1token_when_repayCoversLiquidity() public {
-        _createDebtForBorrower(1e18, true);
+    function test_maxLiquidation_cap_2tokens() public {
+        _createDebtForBorrower(1e18, false);
 
         _moveTimeUntilInsolvent();
         _assertBorrowerIsNotSolvent(false);
 
         (
-            uint256 collateralToLiquidate,, bool sTokenRequired
+            uint256 collateralToLiquidate, uint256 debtToCover, bool sTokenRequired
         ) = partialLiquidation.maxLiquidation(borrower);
 
-        emit log_named_uint("            getLiquidity", silo1.getLiquidity());
+        emit log_named_uint("         getLiquidity #1", silo0.getLiquidity());
         emit log_named_uint("collateralToLiquidate #1", collateralToLiquidate);
 
         assertTrue(!sTokenRequired, "sTokenRequired NOT required because it is partial liquidation");
 
-        _moveTimeUntilBadDebt();
-        _assertBorrowerIsNotSolvent(true);
+        vm.startPrank(depositor);
+        silo0.borrow(silo0.maxBorrow(depositor), depositor, depositor);
+        vm.stopPrank();
+        emit log_named_uint("getLiquidity after borrow", silo0.getLiquidity());
 
-        (
-            uint256 collateralToLiquidate2, uint256 debtToCover2, bool sTokenRequired2
-        ) = partialLiquidation.maxLiquidation(borrower);
+        (collateralToLiquidate, debtToCover, sTokenRequired) = partialLiquidation.maxLiquidation(borrower);
+        assertTrue(sTokenRequired, "sTokenRequired IS required because we borrowed on silo0");
 
-        emit log_named_uint("            getLiquidity", silo1.getLiquidity());
-        emit log_named_uint("collateralToLiquidate #2", collateralToLiquidate2);
-
-        assertTrue(sTokenRequired2, "sTokenRequired required because we in bad debt");
-//
-//        token1.mint(address(this), debtToCover2 * 2);
-////        token1.approve(address(partialLiquidation), debtToCover2);
-
-        emit log_named_uint("debtToCover2", debtToCover2);
-        emit log_named_uint("balance silo", token1.balanceOf(address(silo1)));
-        emit log_named_uint("balance this", token1.balanceOf(address(this)));
-
-        // this execution will pass even when sTokenRequired2==true, because repay will cover missing liquidity
+        vm.expectRevert(ISilo.NotEnoughLiquidity.selector);
         partialLiquidation.liquidationCall(
-            address(token1),
+            address(token0),
             address(token1),
             borrower,
-            debtToCover2,
+            debtToCover,
             false // receiveStoken
         );
 
-//        _depositForBorrow(collateralToLiquidate2 - silo1.getLiquidity(), address(1));
+        emit log_named_uint("assets to deposit", collateralToLiquidate - silo0.getLiquidity());
+        _deposit(collateralToLiquidate - silo0.getLiquidity(), address(1));
 
-//        (, uint256 debtToCover3, bool sTokenRequired3) = partialLiquidation.maxLiquidation(borrower);
-//
-//        assertTrue(!sTokenRequired3, "sTokenRequired NOT required because we have enough liquidity");
-//
-//        partialLiquidation.liquidationCall(
-//            address(token1),
-//            address(token1),
-//            borrower,
-//            debtToCover3,
-//            false // receiveStoken
-//        );
+        (collateralToLiquidate, debtToCover, sTokenRequired) = partialLiquidation.maxLiquidation(borrower);
+        assertTrue(!sTokenRequired, "sTokenRequired NOT required because we deposit to silo0");
+
+        emit log_named_uint("         getLiquidity #2", silo0.getLiquidity());
+        emit log_named_uint("collateralToLiquidate #2", collateralToLiquidate);
+
+        partialLiquidation.liquidationCall(
+            address(token0),
+            address(token1),
+            borrower,
+            debtToCover,
+            false // receiveStoken
+        );
     }
 
     function _withChunks() internal virtual pure override returns (bool) {
