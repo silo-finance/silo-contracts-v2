@@ -65,7 +65,7 @@ library SiloStdLib {
                 _configData.deployerFee
             );
 
-            totalShares = IShareToken(_configData.collateralShareToken).totalSupply();
+            totalShares = IShareToken(_configData.silo).totalSupply();
         } else { // ISilo.AssetType.Debt
             totalAssets = getTotalDebtAssetsWithInterest(_configData.silo, _configData.interestRateModel);
             totalShares = IShareToken(_configData.debtShareToken).totalSupply();

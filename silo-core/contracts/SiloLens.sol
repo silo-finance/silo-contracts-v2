@@ -80,12 +80,9 @@ contract SiloLens is ISiloLens {
         view
         returns (uint256 borrowerCollateral)
     {
-        (
-            address protectedShareToken, address collateralShareToken,
-        ) = _silo.config().getShareTokens(address(_silo));
-
+        (address protectedShareToken,) = _silo.config().getShareTokens(address(_silo));
         uint256 protectedShareBalance = IShareToken(protectedShareToken).balanceOf(_borrower);
-        uint256 collateralShareBalance = IShareToken(collateralShareToken).balanceOf(_borrower);
+        uint256 collateralShareBalance = _silo.balanceOf(_borrower);
 
         if (protectedShareBalance != 0) {
             borrowerCollateral = _silo.previewRedeem(protectedShareBalance, ISilo.CollateralType.Protected);

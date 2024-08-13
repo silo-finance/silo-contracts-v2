@@ -6,10 +6,10 @@ import {SiloSolvencyLib} from "../lib/SiloSolvencyLib.sol";
 import {SiloLensLib} from "../lib/SiloLensLib.sol";
 import {IShareToken, ShareToken, ISilo} from "./ShareToken.sol";
 
-/// @title ShareCollateralToken
+/// @title ShareProtectedToken
 /// @notice ERC20 compatible token representing collateral in Silo
 /// @custom:security-contact security@silo.finance
-contract ShareCollateralToken is ShareToken {
+contract ShareProtectedToken is ShareToken {
     using SiloLensLib for ISilo;
 
     /// @param _silo Silo address for which tokens was deployed

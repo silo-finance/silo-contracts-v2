@@ -143,11 +143,10 @@ contract GaugeHookReceiver is PartialLiquidation, IGaugeHookReceiver, SiloHookRe
     function _getTokenType(address _silo, address _shareToken) internal view virtual returns (uint256) {
         (
             address protectedShareToken,
-            address collateralShareToken,
             address debtShareToken
         ) = siloConfig.getShareTokens(_silo);
 
-        if (_shareToken == collateralShareToken) return Hook.COLLATERAL_TOKEN;
+        if (_shareToken == _silo) return Hook.COLLATERAL_TOKEN;
         if (_shareToken == protectedShareToken) return Hook.PROTECTED_TOKEN;
         if (_shareToken == debtShareToken) return Hook.DEBT_TOKEN;
 

@@ -12,7 +12,7 @@ library SiloCoreContracts {
     string public constant SILO_DEPLOYER = "SiloDeployer.sol";
     string public constant SILO = "Silo.sol";
     string public constant PARTIAL_LIQUIDATION = "PartialLiquidation.sol";
-    string public constant SHARE_COLLATERAL_TOKEN = "ShareCollateralToken.sol";
+    string public constant SHARE_COLLATERAL_TOKEN = "ShareProtectedToken.sol";
     string public constant SHARE_DEBT_TOKEN = "ShareDebtToken.sol";
     string public constant SILO_LENS = "SiloLens.sol";
     string public constant SILO_ROUTER = "SiloRouter.sol";

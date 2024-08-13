@@ -8,7 +8,7 @@ import {CommonDeploy, SiloCoreContracts} from "./_CommonDeploy.sol";
 import {ISiloFactory} from "silo-core/contracts/interfaces/ISiloFactory.sol";
 import {SiloFactory} from "silo-core/contracts/SiloFactory.sol";
 import {Silo} from "silo-core/contracts/Silo.sol";
-import {ShareCollateralToken} from "silo-core/contracts/utils/ShareCollateralToken.sol";
+import {ShareProtectedToken} from "silo-core/contracts/utils/ShareProtectedToken.sol";
 import {ShareDebtToken} from "silo-core/contracts/utils/ShareDebtToken.sol";
 
 import {console2} from "forge-std/console2.sol";
@@ -28,7 +28,7 @@ contract SiloFactoryDeploy is CommonDeploy {
         siloFactory = ISiloFactory(address(new SiloFactory()));
 
         address siloImpl = address(new Silo(siloFactory));
-        address shareCollateralTokenImpl = address(new ShareCollateralToken());
+        address shareCollateralTokenImpl = address(new ShareProtectedToken());
         address shareDebtTokenImpl = address(new ShareDebtToken());
 
         vm.stopBroadcast();

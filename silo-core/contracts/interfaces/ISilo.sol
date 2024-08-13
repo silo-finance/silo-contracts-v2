@@ -6,11 +6,12 @@ import {IERC4626, IERC20, IERC20Metadata} from "openzeppelin5/interfaces/IERC462
 import {IERC3156FlashLender} from "./IERC3156FlashLender.sol";
 import {ISiloConfig} from "./ISiloConfig.sol";
 import {ISiloFactory} from "./ISiloFactory.sol";
+import {IShareToken} from "./IShareToken.sol";
 
 import {IHookReceiver} from "./IHookReceiver.sol";
 
 // solhint-disable ordering
-interface ISilo is IERC4626, IERC3156FlashLender {
+interface ISilo is IERC4626, IERC3156FlashLender, IShareToken {
     /// @dev Interest accrual happens on each deposit/withdraw/borrow/repay. View methods work on storage that might be
     ///      outdate. Some calculations require accrued interest to return current state of Silo. This struct is used
     ///      to make a decision inside functions if interest should be accrued in memory to work on updated values.
@@ -197,7 +198,6 @@ interface ISilo is IERC4626, IERC3156FlashLender {
     error LeverageTooHigh();
     error SiloInitialized();
     error OnlyHookReceiver();
-    error OnlySiloConfig();
     error NoLiquidity();
     error InputCanBeAssetsOrShares();
     error CollateralSiloAlreadySet();

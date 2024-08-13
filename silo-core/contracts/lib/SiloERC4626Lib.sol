@@ -78,7 +78,7 @@ library SiloERC4626Lib {
         uint256 liquidity;
 
         if (_collateralType == ISilo.CollateralType.Collateral) {
-            shareTokenTotalSupply = IShareToken(depositConfig.collateralShareToken).totalSupply();
+            shareTokenTotalSupply = IShareToken(depositConfig.silo).totalSupply();
             (liquidity, _totalAssets, ) = SiloLendingLib.getLiquidityAndAssetsWithInterest(
                 depositConfig.interestRateModel,
                 depositConfig.daoFee,
@@ -92,7 +92,7 @@ library SiloERC4626Lib {
         if (depositConfig.silo != collateralConfig.silo) {
             shares = _collateralType == ISilo.CollateralType.Protected
                 ? IShareToken(depositConfig.protectedShareToken).balanceOf(_owner)
-                : IShareToken(depositConfig.collateralShareToken).balanceOf(_owner);
+                : IShareToken(depositConfig.silo).balanceOf(_owner);
 
             assets = SiloMathLib.convertToAssets(
                 shares,

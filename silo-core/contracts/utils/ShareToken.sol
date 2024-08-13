@@ -206,7 +206,7 @@ abstract contract ShareToken is Initializable, ERC20Permit, IShareToken {
 
         if (address(this) == configData.protectedShareToken) {
             pre = "Non-borrowable ";
-        } else if (address(this) == configData.collateralShareToken) {
+        } else if (address(this) == configData.silo) {
             pre = "Borrowable ";
         } else if (address(this) == configData.debtShareToken) {
             post = " Debt";
@@ -237,7 +237,7 @@ abstract contract ShareToken is Initializable, ERC20Permit, IShareToken {
 
         if (address(this) == configData.protectedShareToken) {
             pre = "nb";
-        } else if (address(this) == configData.collateralShareToken) {
+        } else if (address(this) == configData.silo) {
             pre = "b";
         } else if (address(this) == configData.debtShareToken) {
             pre = "d";

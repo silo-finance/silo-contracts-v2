@@ -105,7 +105,7 @@ contract PartialLiquidation is SiloStorage, IPartialLiquidation, IHookReceiver {
             _borrower,
             shareTokenReceiver,
             withdrawAssetsFromCollateral,
-            collateralConfig.collateralShareToken,
+            collateralConfig.silo,
             AssetTypes.COLLATERAL
         );
 

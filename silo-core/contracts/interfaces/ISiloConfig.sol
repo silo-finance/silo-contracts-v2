@@ -95,7 +95,6 @@ interface ISiloConfig is ICrossReentrancyGuard {
         address otherSilo;
         address token;
         address protectedShareToken;
-        address collateralShareToken;
         address debtShareToken;
         address solvencyOracle;
         address maxLtvOracle;
@@ -111,7 +110,6 @@ interface ISiloConfig is ICrossReentrancyGuard {
     struct DepositConfig {
         address silo;
         address token;
-        address collateralShareToken;
         address protectedShareToken;
         uint256 daoFee;
         uint256 deployerFee;
@@ -239,12 +237,11 @@ interface ISiloConfig is ICrossReentrancyGuard {
     /// @dev This function reverts for incorrect silo address input
     /// @param _silo The address of the silo for which share tokens are being retrieved
     /// @return protectedShareToken The address of the protected (non-borrowable) share token
-    /// @return collateralShareToken The address of the collateral share token
     /// @return debtShareToken The address of the debt share token
     function getShareTokens(address _silo)
         external
         view
-        returns (address protectedShareToken, address collateralShareToken, address debtShareToken);
+        returns (address protectedShareToken, address debtShareToken);
 
     /// @notice Retrieves the share token and the silo token associated with a specific silo
     /// @param _silo The address of the silo for which the share token and silo token are being retrieved

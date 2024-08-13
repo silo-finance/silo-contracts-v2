@@ -13,6 +13,6 @@ contract CollateralShareTokenMethodsRegistry is ShareTokenMethodsRegistry {
     }
 
     function abiFile() external pure override returns (string memory) {
-        return "/cache/foundry/out/silo-core/ShareCollateralToken.sol/ShareCollateralToken.json";
+        return "/cache/foundry/out/silo-core/ShareProtectedToken.sol/ShareProtectedToken.json";
     }
 }

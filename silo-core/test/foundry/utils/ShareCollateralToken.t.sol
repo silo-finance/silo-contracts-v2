@@ -5,7 +5,7 @@ import {Test} from "forge-std/Test.sol";
 
 import {IERC20Errors} from "openzeppelin5/interfaces/draft-IERC6093.sol";
 
-import {ShareCollateralToken} from "silo-core/contracts/utils/ShareCollateralToken.sol";
+import {ShareProtectedToken} from "silo-core/contracts/utils/ShareProtectedToken.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
@@ -17,10 +17,10 @@ FOUNDRY_PROFILE=core-test forge test --ffi -vv --mc ShareCollateralTokenTest
 */
 contract ShareCollateralTokenTest is Test, SiloLittleHelper {
     ISiloConfig public siloConfig;
-    ShareCollateralToken public shareCollateralToken0;
-    ShareCollateralToken public shareProtectedToken0;
-    ShareCollateralToken public shareCollateralToken1;
-    ShareCollateralToken public shareProtectedToken1;
+    ShareProtectedToken public shareCollateralToken0;
+    ShareProtectedToken public shareProtectedToken0;
+    ShareProtectedToken public shareCollateralToken1;
+    ShareProtectedToken public shareProtectedToken1;
 
     address immutable depositor;
     address immutable receiver;
@@ -33,12 +33,12 @@ contract ShareCollateralTokenTest is Test, SiloLittleHelper {
     function setUp() public {
         siloConfig = _setUpLocalFixture();
         (address protectedShareToken, address collateralShareToken, ) = siloConfig.getShareTokens(address(silo0));
-        shareCollateralToken0 = ShareCollateralToken(collateralShareToken);
-        shareProtectedToken0 = ShareCollateralToken(protectedShareToken);
+        shareCollateralToken0 = ShareProtectedToken(collateralShareToken);
+        shareProtectedToken0 = ShareProtectedToken(protectedShareToken);
 
         (protectedShareToken, collateralShareToken, ) = siloConfig.getShareTokens(address(silo1));
-        shareCollateralToken1 = ShareCollateralToken(collateralShareToken);
-        shareProtectedToken1 = ShareCollateralToken(protectedShareToken);
+        shareCollateralToken1 = ShareProtectedToken(collateralShareToken);
+        shareProtectedToken1 = ShareProtectedToken(protectedShareToken);
     }
 
     /*
@@ -175,11 +175,11 @@ contract ShareCollateralTokenTest is Test, SiloLittleHelper {
         vm.stopPrank();
     }
 
-    function _token0(ISilo.CollateralType _collateralType) private view returns (ShareCollateralToken) {
+    function _token0(ISilo.CollateralType _collateralType) private view returns (ShareProtectedToken) {
         return _collateralType == ISilo.CollateralType.Collateral ? shareCollateralToken0 : shareProtectedToken0;
     }
 
-    function _token1(ISilo.CollateralType _collateralType) private view returns (ShareCollateralToken) {
+    function _token1(ISilo.CollateralType _collateralType) private view returns (ShareProtectedToken) {
         return _collateralType == ISilo.CollateralType.Collateral ? shareCollateralToken1 : shareProtectedToken1;
     }
 }

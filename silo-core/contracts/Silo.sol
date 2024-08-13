@@ -14,7 +14,8 @@ import {ISiloFactory} from "./interfaces/ISiloFactory.sol";
 import {IInterestRateModel} from "./interfaces/IInterestRateModel.sol";
 import {IHookReceiver} from "./interfaces/IHookReceiver.sol";
 
-import {SiloERC4626} from "./utils/SiloERC4626.sol";
+import {ShareProtectedToken} from "./utils/ShareProtectedToken.sol";
+import {SiloStorage} from "./SiloStorage.sol";
 
 import {Actions} from "./lib/Actions.sol";
 import {SiloStdLib} from "./lib/SiloStdLib.sol";
@@ -33,7 +34,7 @@ import {AssetTypes} from "./lib/AssetTypes.sol";
 /// @notice Silo is a ERC4626-compatible vault that allows users to deposit collateral and borrow debt. This contract
 /// is deployed twice for each asset for two-asset lending markets.
 /// Version: 2.0.0
-contract Silo is SiloERC4626 {
+contract Silo is ISilo, SiloStorage, ShareProtectedToken {
     using SafeERC20 for IERC20;
 
     ISiloFactory public immutable factory;
@@ -68,6 +69,10 @@ contract Silo is SiloERC4626 {
         }
     }
 
+    function initialize(ISilo _silo, address _hookReceiver, uint24 _tokenType) external virtual override(IShareToken, ShareProtectedToken) {
+        revert("use other one");
+    }
+
     /// @inheritdoc ISilo
     function initialize(ISiloConfig _siloConfig, address _modelConfigAddress) external virtual {
         if (address(_sharedStorage.siloConfig) != address(0)) revert SiloInitialized();
@@ -77,6 +82,7 @@ contract Silo is SiloERC4626 {
         _sharedStorage.siloConfig = _siloConfig;
         _sharedStorage.hookReceiver = IHookReceiver(configData.hookReceiver);
 
+        __ShareToken_init(this, configData.hookReceiver, uint24(Hook.COLLATERAL_TOKEN));
         IInterestRateModel(configData.interestRateModel).connect(_modelConfigAddress);
     }
 
@@ -214,7 +220,7 @@ contract Silo is SiloERC4626 {
 
     /// @inheritdoc IERC4626
     function maxMint(address /* _receiver */) external view virtual returns (uint256 maxShares) {
-        return _callMaxDepositOrMint(IShareToken(_getShareToken()).totalSupply());
+        return _callMaxDepositOrMint(totalSupply());
     }
 
     /// @inheritdoc IERC4626
@@ -326,10 +332,16 @@ contract Silo is SiloERC4626 {
         virtual
         returns (uint256 maxShares)
     {
-        (address protectedToken, address collateralToken, ) = _sharedStorage.siloConfig.getShareTokens(address(this));
-        address shareToken = _collateralType == CollateralType.Collateral ? collateralToken : protectedToken;
+        uint256 totalSupply_;
 
-        return _callMaxDepositOrMint(IShareToken(shareToken).totalSupply());
+        if (_collateralType == CollateralType.Collateral) {
+            totalSupply_ = totalSupply();
+        } else {
+            (address protectedShareToken, ) = _sharedStorage.siloConfig.getShareTokens(address(this));
+            totalSupply_ = IShareToken(protectedShareToken).totalSupply();
+        }
+
+        return _callMaxDepositOrMint(totalSupply_);
     }
 
     /// @inheritdoc ISilo
@@ -788,10 +800,6 @@ contract Silo is SiloERC4626 {
     {
         ISiloConfig.ConfigData memory configData = _sharedStorage.siloConfig.getConfig(address(this));
         (assets, shares) = SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(configData, _assetType);
-    }
-
-    function _getShareToken() internal view virtual override returns (address collateralShareToken) {
-        (, collateralShareToken,) = _sharedStorage.siloConfig.getShareTokens(address(this));
     }
 
     function _previewMint(uint256 _shares, CollateralType _collateralType)

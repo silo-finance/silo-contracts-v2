@@ -93,7 +93,7 @@ library Actions {
         (assets, shares) = SiloERC4626Lib.withdraw(
             depositConfig.token,
             _args.collateralType == ISilo.CollateralType.Collateral
-                ? depositConfig.collateralShareToken
+                ? depositConfig.silo
                 : depositConfig.protectedShareToken,
             _args,
             _args.collateralType == ISilo.CollateralType.Collateral
@@ -277,7 +277,7 @@ library Actions {
             _shares: 0,
             _receiver: _args.borrower,
             _collateralShareToken: _args.collateralType == ISilo.CollateralType.Collateral
-                ? IShareToken(collateralConfig.collateralShareToken)
+                ? IShareToken(collateralConfig.silo)
                 : IShareToken(collateralConfig.protectedShareToken),
             _totalCollateral: _totalAssetsForDeposit
         });
@@ -309,18 +309,17 @@ library Actions {
         siloConfig.turnOnReentrancyProtection();
         siloConfig.accrueInterestForSilo(address(this));
 
-        (address protectedShareToken, address collateralShareToken,) = siloConfig.getShareTokens(address(this));
+        (address protectedShareToken,) = siloConfig.getShareTokens(address(this));
 
         uint256 shares;
 
-        (assets, shares) = _transitionCollateralWithdraw(_total, _args, protectedShareToken, collateralShareToken);
+        (assets, shares) = _transitionCollateralWithdraw(_total, _args, protectedShareToken);
 
         (assets, toShares) = _transitionCollateralDeposit(
             _total,
             _args,
             assets,
-            protectedShareToken,
-            collateralShareToken
+            protectedShareToken
         );
 
         _shareStorage.siloConfig.turnOffReentrancyProtection();
@@ -482,7 +481,6 @@ library Actions {
         _sharedStorage.hooksBefore = hooksBefore;
         _sharedStorage.hooksAfter = hooksAfter;
 
-        IShareToken(cfg.collateralShareToken).synchronizeHooks(hooksBefore, hooksAfter);
         IShareToken(cfg.protectedShareToken).synchronizeHooks(hooksBefore, hooksAfter);
         IShareToken(cfg.debtShareToken).synchronizeHooks(hooksBefore, hooksAfter);
     }
@@ -526,15 +524,14 @@ library Actions {
     function _transitionCollateralWithdraw(
         mapping(uint256 assetType => ISilo.Assets) storage _total,
         ISilo.TransitionCollateralArgs memory _args,
-        address _protectedShareToken,
-        address _collateralShareToken
+        address _protectedShareToken
     ) private returns (uint256 assets, uint256 toShares) {
         uint256 liquidity = _args.withdrawType == ISilo.CollateralType.Collateral
             ? SiloMathLib.liquidity(_total[AssetTypes.COLLATERAL].assets, _total[AssetTypes.DEBT].assets)
             : _total[AssetTypes.PROTECTED].assets;
 
         address shareTokenFrom = _args.withdrawType == ISilo.CollateralType.Collateral
-            ? _collateralShareToken
+            ? address(this)
             : _protectedShareToken;
 
         (assets, toShares) = SiloERC4626Lib.withdraw({
@@ -557,12 +554,11 @@ library Actions {
         mapping(uint256 assetType => ISilo.Assets) storage _total,
         ISilo.TransitionCollateralArgs memory _args,
         uint256 _assets,
-        address _protectedShareToken,
-        address _collateralShareToken
+        address _protectedShareToken
     ) private returns (uint256 assets, uint256 toShares) {
         (ISilo.AssetType depositType, address shareTokenTo) = _args.withdrawType == ISilo.CollateralType.Collateral
             ? (ISilo.AssetType.Protected, _protectedShareToken)
-            : (ISilo.AssetType.Collateral, _collateralShareToken);
+            : (ISilo.AssetType.Collateral, address(this));
 
         (assets, toShares) = SiloERC4626Lib.deposit({
             _token: address(0), // empty token because we don't want to transfer

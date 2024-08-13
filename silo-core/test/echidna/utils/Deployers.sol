@@ -20,7 +20,7 @@ import {ISiloDeployer, SiloDeployer} from "silo-core/contracts/SiloDeployer.sol"
 import {Silo} from "silo-core/contracts/Silo.sol";
 import {PartialLiquidation} from "silo-core/contracts/utils/hook-receivers/liquidation/PartialLiquidation.sol";
 import {SiloInternal} from "../internal_testing/SiloInternal.sol";
-import {ShareCollateralToken} from "silo-core/contracts/utils/ShareCollateralToken.sol";
+import {ShareProtectedToken} from "silo-core/contracts/utils/ShareProtectedToken.sol";
 import {ShareDebtToken} from "silo-core/contracts/utils/ShareDebtToken.sol";
 import {IInterestRateModelV2ConfigFactory, InterestRateModelV2ConfigFactory} from "silo-core/contracts/interestRateModel/InterestRateModelV2ConfigFactory.sol";
 import {IInterestRateModelV2, InterestRateModelV2} from "silo-core/contracts/interestRateModel/InterestRateModelV2.sol";
@@ -187,7 +187,7 @@ contract Deployers is VyperDeployer, Data {
             new SiloInternal(siloFactoryInternal)
         );
 
-        address shareCollateralTokenImpl = address(new ShareCollateralToken());
+        address shareCollateralTokenImpl = address(new ShareProtectedToken());
         address shareDebtTokenImpl = address(new ShareDebtToken());
 
         uint256 daoFee = 0.15e18;
