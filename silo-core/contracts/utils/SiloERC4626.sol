@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.24;
 
+import {IERC20Permit} from "openzeppelin5/token/ERC20/extensions/ERC20Permit.sol";
+
 import {ISilo, IERC20, IERC20Metadata} from "../interfaces/ISilo.sol";
 import {IShareToken} from "../interfaces/IShareToken.sol";
 import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
@@ -13,6 +15,8 @@ abstract contract SiloERC4626 is ISilo, SiloStorage {
         NonReentrantLib.nonReentrant(_sharedStorage.siloConfig);
         IShareToken(_getShareToken()).forwardApprove(msg.sender, _spender, _amount);
 
+        emit Approval(msg.sender, _spender, _amount);
+
         return true;
     }
 
@@ -23,6 +27,8 @@ abstract contract SiloERC4626 is ISilo, SiloStorage {
         siloConfig.turnOnReentrancyProtection();
         IShareToken(_getShareToken()).forwardTransfer(msg.sender, _to, _amount);
         siloConfig.turnOffReentrancyProtection();
+
+        emit Transfer(msg.sender, _to, _amount);
 
         return true;
     }
@@ -35,7 +41,25 @@ abstract contract SiloERC4626 is ISilo, SiloStorage {
         IShareToken(_getShareToken()).forwardTransferFrom(msg.sender, _from, _to, _amount);
         siloConfig.turnOffReentrancyProtection();
 
+        emit Transfer(_from, _to, _amount);
+
         return true;
+    }
+
+    function permit(
+        address owner,
+        address spender,
+        uint256 value,
+        uint256 deadline,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) external {
+        NonReentrantLib.nonReentrant(_sharedStorage.siloConfig);
+
+        IERC20Permit(_getShareToken()).permit(owner, spender, value, deadline, v, r, s);
+
+        emit Approval(owner, spender, value);
     }
 
     /// @inheritdoc IERC20Metadata

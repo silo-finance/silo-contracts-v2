@@ -9,6 +9,7 @@ import {ISiloFactory} from "silo-core/contracts/interfaces/ISiloFactory.sol";
 import {SiloFactory} from "silo-core/contracts/SiloFactory.sol";
 import {Silo} from "silo-core/contracts/Silo.sol";
 import {ShareCollateralToken} from "silo-core/contracts/utils/ShareCollateralToken.sol";
+import {ShareCollateralNoEventsToken} from "silo-core/contracts/utils/ShareCollateralNoEventsToken.sol";
 import {ShareDebtToken} from "silo-core/contracts/utils/ShareDebtToken.sol";
 
 import {console2} from "forge-std/console2.sol";
@@ -29,6 +30,7 @@ contract SiloFactoryDeploy is CommonDeploy {
 
         address siloImpl = address(new Silo(siloFactory));
         address shareCollateralTokenImpl = address(new ShareCollateralToken());
+        address shareTokenNoEventsImpl = address(new ShareCollateralNoEventsToken());
         address shareDebtTokenImpl = address(new ShareDebtToken());
 
         vm.stopBroadcast();
@@ -39,7 +41,15 @@ contract SiloFactoryDeploy is CommonDeploy {
 
         vm.startBroadcast(deployerPrivateKey);
 
-        siloFactory.initialize(siloImpl, shareCollateralTokenImpl, shareDebtTokenImpl, daoFee, daoFeeReceiver);
+        siloFactory.initialize(
+            siloImpl,
+            shareTokenNoEventsImpl,
+            shareCollateralTokenImpl,
+            shareDebtTokenImpl,
+            daoFee,
+            daoFeeReceiver
+        );
+
         Ownable(address(siloFactory)).transferOwnership(timelock);
 
         vm.stopBroadcast();

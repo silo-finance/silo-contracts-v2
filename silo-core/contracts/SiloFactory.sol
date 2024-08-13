@@ -34,6 +34,7 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step, Creator {
     address public daoFeeReceiver;
 
     address public siloImpl;
+    address public shareTokenNoEventsImpl;
     address public shareCollateralTokenImpl;
     address public shareDebtTokenImpl;
 
@@ -48,6 +49,7 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step, Creator {
     /// disabling initializer by calling `_disableInitializers()` in constructor, especially that only creator can init.
     function initialize(
         address _siloImpl,
+        address _shareTokenNoEventsImpl,
         address _shareCollateralTokenImpl,
         address _shareDebtTokenImpl,
         uint256 _daoFee,
@@ -63,6 +65,7 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step, Creator {
         }
 
         siloImpl = _siloImpl;
+        shareTokenNoEventsImpl = _shareTokenNoEventsImpl;
         shareCollateralTokenImpl = _shareCollateralTokenImpl;
         shareDebtTokenImpl = _shareDebtTokenImpl;
 
@@ -244,10 +247,10 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step, Creator {
         ISiloConfig.ConfigData memory configData1
     ) internal virtual {
         configData0.protectedShareToken = Clones.clone(shareCollateralTokenImpl);
-        configData0.collateralShareToken = Clones.clone(shareCollateralTokenImpl);
+        configData0.collateralShareToken = Clones.clone(shareTokenNoEventsImpl);
         configData0.debtShareToken = Clones.clone(shareDebtTokenImpl);
         configData1.protectedShareToken = Clones.clone(shareCollateralTokenImpl);
-        configData1.collateralShareToken = Clones.clone(shareCollateralTokenImpl);
+        configData1.collateralShareToken = Clones.clone(shareTokenNoEventsImpl);
         configData1.debtShareToken = Clones.clone(shareDebtTokenImpl);
     }
 
