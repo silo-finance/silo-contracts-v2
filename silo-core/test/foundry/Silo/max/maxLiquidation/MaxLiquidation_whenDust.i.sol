@@ -125,8 +125,10 @@ contract MaxLiquidationDustTest is MaxLiquidationCommon {
         returns (uint256 withdrawCollateral, uint256 repayDebtAssets)
     {
         (
-            uint256 collateralToLiquidate, uint256 debtToRepay
+            uint256 collateralToLiquidate, uint256 debtToRepay, bool sTokenRequired
         ) = partialLiquidation.maxLiquidation(borrower);
+
+        assertTrue(!sTokenRequired, "sTokenRequired not required");
 
         emit log_named_decimal_uint("[DustLiquidation] ltv before", silo0.getLtv(borrower), 16);
         emit log_named_uint("[DustLiquidation] debtToRepay", debtToRepay);

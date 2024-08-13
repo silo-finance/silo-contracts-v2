@@ -29,7 +29,7 @@ contract LiquidationCallReentrancyTest is MethodReentrancyTest {
         uint256 collateralToLiquidate;
         uint256 debtToRepay;
 
-        (collateralToLiquidate, debtToRepay) = partialLiquidation.maxLiquidation(borrower);
+        (collateralToLiquidate, debtToRepay,) = partialLiquidation.maxLiquidation(borrower);
 
         MaliciousToken token0 = MaliciousToken(TestStateLib.token0());
         MaliciousToken token1 = MaliciousToken(TestStateLib.token1());
@@ -71,7 +71,7 @@ contract LiquidationCallReentrancyTest is MethodReentrancyTest {
         uint256 collateralToLiquidate;
         uint256 debtToRepay;
 
-        (collateralToLiquidate, debtToRepay) = partialLiquidation.maxLiquidation(borrowerOnReentrancy);
+        (collateralToLiquidate, debtToRepay,) = partialLiquidation.maxLiquidation(borrowerOnReentrancy);
 
         vm.prank(borrowerOnReentrancy);
         vm.expectRevert(ICrossReentrancyGuard.CrossReentrantCall.selector);

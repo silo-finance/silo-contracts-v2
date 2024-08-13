@@ -66,10 +66,9 @@ contract TransitionCollateralReentrancyTest is SiloLittleHelper, Test, PartialLi
         IERC20(token1).safeIncreaseAllowance(address(partialLiquidation), 5);
 
         afterActionExecuted = true;
-        address siloWithDebt = address(silo1);
 
         (
-            uint256 collateralToLiquidate, uint256 debtToRepay
+            uint256 collateralToLiquidate, uint256 debtToRepay,
         ) = partialLiquidation.maxLiquidation(borrower);
 
         assertEq(collateralToLiquidate, 3, "collateralToLiquidate (5 - 2 underestimation)");

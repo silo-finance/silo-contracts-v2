@@ -20,27 +20,28 @@ contract MaxLiquidationLTV100FullWithChunksTest is MaxLiquidationLTV100FullTest 
         returns (uint256 withdrawCollateral, uint256 repayDebtAssets)
     {
         (
-            uint256 totalCollateralToLiquidate, uint256 totalDebtToCover
+            uint256 totalCollateralToLiquidate, uint256 totalDebtToCover,
         ) = partialLiquidation.maxLiquidation(borrower);
 
         emit log_named_decimal_uint("[LTV100FullWithChunks] ltv before", silo0.getLtv(borrower), 16);
 
         for (uint256 i; i < 5; i++) {
             emit log_named_uint("[LTV100FullWithChunks] case ------------------------", i);
-            bool isSolvent = silo0.isSolvent(borrower);
 
             emit log_named_string("isSolvent", silo0.isSolvent(borrower) ? "YES" : "NO");
 
-            (
-                uint256 collateralToLiquidate, uint256 debtToCover
-            ) = partialLiquidation.maxLiquidation(borrower);
+            (uint256 collateralToLiquidate, uint256 debtToCover,) = partialLiquidation.maxLiquidation(borrower);
 
             emit log_named_uint("[LTV100FullWithChunks] debtToCover", debtToCover);
 
-            if (isSolvent && debtToCover != 0) revert("if we solvent there should be no liquidation");
-            if (!isSolvent && debtToCover == 0) revert("if we NOT solvent there should be a liquidation");
+            { // too deep
+                bool isSolvent = silo0.isSolvent(borrower);
 
-            if (isSolvent) break;
+                if (isSolvent && debtToCover != 0) revert("if we solvent there should be no liquidation");
+                if (!isSolvent && debtToCover == 0) revert("if we NOT solvent there should be a liquidation");
+
+                if (isSolvent) break;
+            }
 
             uint256 testDebtToCover = _calculateChunk(debtToCover, i);
             emit log_named_uint("[LTV100FullWithChunks] testDebtToCover", testDebtToCover);

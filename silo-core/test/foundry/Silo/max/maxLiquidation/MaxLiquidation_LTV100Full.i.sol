@@ -128,8 +128,6 @@ contract MaxLiquidationLTV100FullTest is MaxLiquidationCommon {
 
         vm.assume(_collateral < 7);
 
-        uint256 toBorrow = uint256(_collateral) * 75 / 100; // maxLTV is 75%
-
         _createDebtForBorrower(_collateral, sameAsset);
 
         // this case (1) never happen because is is not possible to create debt for 1 collateral
@@ -164,10 +162,12 @@ contract MaxLiquidationLTV100FullTest is MaxLiquidationCommon {
         uint256 debtToCover = type(uint256).max;
 
         (
-            uint256 collateralToLiquidate, uint256 debtToRepay
+            uint256 collateralToLiquidate, uint256 debtToRepay, bool sTokenRequired
         ) = partialLiquidation.maxLiquidation(borrower);
 
         emit log_named_decimal_uint("[100FULL] ltv before", silo0.getLtv(borrower), 16);
+
+        assertTrue(!sTokenRequired, "sTokenRequired NOT required");
 
         if (_self) vm.prank(borrower);
 

@@ -237,6 +237,8 @@ library SiloLendingLib {
             _totalDebtShares
         );
 
+        if (assets == 0) return (0, 0);
+
         uint256 liquidityWithInterest = getLiquidity(_siloConfig);
 
         if (assets > liquidityWithInterest) {

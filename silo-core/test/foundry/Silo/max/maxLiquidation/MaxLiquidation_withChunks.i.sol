@@ -20,21 +20,17 @@ contract MaxLiquidationWithChunksTest is MaxLiquidationTest {
         override
         returns (uint256 withdrawCollateral, uint256 repayDebtAssets)
     {
-        (
-            uint256 totalCollateralToLiquidate, uint256 totalDebtToCover
-        ) = partialLiquidation.maxLiquidation(borrower);
-
+        (uint256 totalCollateralToLiquidate, uint256 totalDebtToCover,) = partialLiquidation.maxLiquidation(borrower);
 
         for (uint256 i; i < 5; i++) {
             emit log_named_uint("[MaxLiquidationWithChunks] case ------------------------", i);
-            bool isSolvent = silo0.isSolvent(borrower);
 
             emit log_named_string("isSolvent", silo0.isSolvent(borrower) ? "YES" : "NO");
             emit log_named_decimal_uint("[MaxLiquidationWithChunks] ltv before", silo0.getLtv(borrower), 16);
 
-            (
-                uint256 collateralToLiquidate, uint256 debtToCover
-            ) = partialLiquidation.maxLiquidation(borrower);
+            (uint256 collateralToLiquidate, uint256 debtToCover,) = partialLiquidation.maxLiquidation(borrower);
+
+            bool isSolvent = silo0.isSolvent(borrower);
 
             // this conditions caught bug
             if (isSolvent && debtToCover != 0) revert("if we solvent there should be no liquidation");
@@ -52,8 +48,6 @@ contract MaxLiquidationWithChunksTest is MaxLiquidationTest {
             repayDebtAssets += partialDebt;
 
             _assertLeDiff(partialCollateral, collateralToLiquidate, "partialCollateral");
-
-            // TODO warp?
         }
 
         // sum of chunk liquidation can be smaller than one max/total, because with chunks we can get to the point

@@ -60,7 +60,7 @@ library PartialLiquidationExecLib {
     function maxLiquidation(ISiloConfig _siloConfig, address _borrower)
         internal
         view
-        returns (uint256 collateralToLiquidate, uint256 debtToRepay)
+        returns (uint256 collateralToLiquidate, uint256 debtToRepay, bool sTokenRequired)
     {
         (
             ISiloConfig.ConfigData memory collateralConfig,
@@ -68,7 +68,7 @@ library PartialLiquidationExecLib {
         ) = _siloConfig.getConfigs(_borrower);
 
         if (debtConfig.silo == address(0)) {
-            return (0, 0);
+            return (0, 0, false);
         }
 
         SiloSolvencyLib.LtvData memory ltvData = SiloSolvencyLib.getAssetsDataForLtvCalculations(
@@ -80,7 +80,7 @@ library PartialLiquidationExecLib {
             0 /* no cached balance */
         );
 
-        if (ltvData.borrowerDebtAssets == 0) return (0, 0);
+        if (ltvData.borrowerDebtAssets == 0) return (0, 0, false);
 
         (
             uint256 sumOfCollateralValue, uint256 debtValue
@@ -90,12 +90,12 @@ library PartialLiquidationExecLib {
         // safe because we adding same token, so it is under same total supply
         unchecked { sumOfCollateralAssets = ltvData.borrowerProtectedAssets + ltvData.borrowerCollateralAssets; }
 
-        if (sumOfCollateralValue == 0) return (sumOfCollateralAssets, ltvData.borrowerDebtAssets);
+        if (sumOfCollateralValue == 0) return (sumOfCollateralAssets, ltvData.borrowerDebtAssets, false);
 
         uint256 ltvInDp = SiloSolvencyLib.ltvMath(debtValue, sumOfCollateralValue);
-        if (ltvInDp <= collateralConfig.lt) return (0, 0); // user solvent
+        if (ltvInDp <= collateralConfig.lt) return (0, 0, false); // user solvent
 
-        return PartialLiquidationLib.maxLiquidation(
+        (collateralToLiquidate, debtToRepay) = PartialLiquidationLib.maxLiquidation(
             sumOfCollateralAssets,
             sumOfCollateralValue,
             ltvData.borrowerDebtAssets,
@@ -103,6 +103,13 @@ library PartialLiquidationExecLib {
             collateralConfig.lt,
             collateralConfig.liquidationFee
         );
+
+        // maxLiquidation() can underestimate collateral by 2, when we do that and actual collateral that we will
+        // transfer will match exactly liquidity, but we will liquidate higher value by 1 or 2,
+        // then sTokenRequired will return false, but we can not withdraw (because we will be short by 2)
+        // solution is to include this 2wei here
+        // safe to unchecked, because we underestimated this value in a first place by -2
+        unchecked { sTokenRequired = collateralToLiquidate + 2 > ISilo(collateralConfig.silo).getLiquidity(); }
     }
 
     /// @return receiveCollateralAssets collateral + protected to liquidate, on self liquidation when borrower repay

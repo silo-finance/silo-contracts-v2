@@ -179,8 +179,7 @@ contract PartialLiquidationLibTest is Test, MaxRepayRawMath {
 
         for (uint256 i; i < data.length; i++) {
             (
-                uint256 collateralValueToLiquidate,
-                uint256 repayValue
+                uint256 collateralValueToLiquidate, uint256 repayValue
             ) = PartialLiquidationLib.maxLiquidationPreview(
                 data[i].input.totalBorrowerCollateralValue,
                 data[i].input.totalBorrowerDebtValue,

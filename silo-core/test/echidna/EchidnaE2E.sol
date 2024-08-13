@@ -305,7 +305,7 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         Actor borrower = _selectActor(actorIndexBorrower);
         Actor liquidator = _selectActor(actorIndexLiquidator);
 
-        (, bool _vaultZeroWithDebt) = _invariant_insolventHasDebt(address(borrower));
+        _invariant_insolventHasDebt(address(borrower));
 
         liquidator.liquidationCall(address(borrower), debtToCover, receiveSToken, siloConfig);
     }
@@ -536,7 +536,7 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         Silo siloWithDebt = _vaultZeroWithDebt ? vault0 : vault1;
 
         (
-            uint256 collateralToLiquidate, uint256 debtToRepay
+            uint256 collateralToLiquidate, uint256 debtToRepay,
         ) = liquidationModule.maxLiquidation(address(actor));
 
         require(collateralToLiquidate != 0 && debtToRepay != 0, "Nothing to liquidate");
@@ -649,7 +649,7 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         uint256 lt = vault.getLt();
         uint256 ltv = vault.getLtv(address(actor));
 
-        (, uint256 debtToRepay) = liquidationModule.maxLiquidation(address(actor));
+        (, uint256 debtToRepay,) = liquidationModule.maxLiquidation(address(actor));
 
         try liquidator.liquidationCall(address(actor), debtToRepay, receiveShares, siloConfig) {
             emit LogString(string.concat("User LTV:", ltv.toString(), " Liq Threshold:", lt.toString()));
@@ -669,10 +669,9 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
 
         (bool isSolvent, bool _vaultZeroWithDebt) = _invariant_insolventHasDebt(address(actor));
 
-        Silo vault = _vaultZeroWithDebt ? vault0 : vault1;
         require(isSolvent, "user not solvent - ignoring this case");
 
-        (, uint256 debtToRepay) = liquidationModule.maxLiquidation(address(actor));
+        (, uint256 debtToRepay,) = liquidationModule.maxLiquidation(address(actor));
 
         _requireTotalCap(_vaultZeroWithDebt, address(liquidator), debtToRepay);
 
@@ -696,8 +695,7 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
 
         emit LogString(isSolvent ? "user is solvent" : "user is NOT solvent");
 
-        Silo siloWithDebt = _vaultZeroWithDebt ? vault0 : vault1;
-        (, uint256 debtToRepay) = liquidationModule.maxLiquidation(address(actor));
+        (, uint256 debtToRepay,) = liquidationModule.maxLiquidation(address(actor));
 
         _requireTotalCap(_vaultZeroWithDebt, address(liquidator), debtToRepay);
 
@@ -729,7 +727,7 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         uint256 maxRepay = vault.maxRepay(address(actor));
         // we assume we do not have oracle and price is 1:1
         uint256 maxPartialRepayValue = maxRepay * PartialLiquidationLib._DEBT_DUST_LEVEL / 1e18;
-        (, uint256 debtToRepay) = liquidationModule.maxLiquidation(address(actor));
+        (, uint256 debtToRepay,) = liquidationModule.maxLiquidation(address(actor));
 
         bool isPartial = debtToRepay < maxPartialRepayValue;
 

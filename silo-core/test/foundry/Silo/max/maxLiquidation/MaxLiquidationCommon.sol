@@ -50,6 +50,7 @@ abstract contract MaxLiquidationCommon is SiloLittleHelper, Test {
         vm.assume(_collateral < type(uint128).max / maxLtv); // to avoid overflow
 
         uint256 toBorrow = _collateral * maxLtv / 1e2;
+        emit log_named_uint("full toBorrow amount", toBorrow);
         vm.assume(toBorrow > 0);
 
         _depositForBorrow(_collateral, depositor);
@@ -91,11 +92,11 @@ abstract contract MaxLiquidationCommon is SiloLittleHelper, Test {
     function _assertBorrowerIsSolvent() internal view {
         assertTrue(silo1.isSolvent(borrower), "[_assertBorrowerIsSolvent] expect borrower to be solvent");
 
-        (uint256 collateralToLiquidate, uint256 debtToRepay) = partialLiquidation.maxLiquidation(borrower);
+        (uint256 collateralToLiquidate, uint256 debtToRepay,) = partialLiquidation.maxLiquidation(borrower);
         assertEq(collateralToLiquidate, 0, "[_assertBorrowerIsSolvent] silo0.collateralToLiquidate");
         assertEq(debtToRepay, 0, "[_assertBorrowerIsSolvent] silo0.debtToRepay");
 
-        (collateralToLiquidate, debtToRepay) = partialLiquidation.maxLiquidation(borrower);
+        (collateralToLiquidate, debtToRepay,) = partialLiquidation.maxLiquidation(borrower);
         assertEq(collateralToLiquidate, 0, "[_assertBorrowerIsSolvent] silo1.collateralToLiquidate");
         assertEq(debtToRepay, 0, "[_assertBorrowerIsSolvent] silo1.debtToRepay");
     }
@@ -142,8 +143,8 @@ abstract contract MaxLiquidationCommon is SiloLittleHelper, Test {
 
     function _moveTimeUntilInsolvent() internal {
         for (uint256 i = 1; i < 10000; i++) {
-            emit log_named_decimal_uint("[_assertLTV100] LTV", silo1.getLtv(borrower), 16);
-            emit log_named_uint("[_assertLTV100] days", i);
+            emit log_named_decimal_uint("[_moveTimeUntilInsolvent] LTV", silo1.getLtv(borrower), 16);
+            emit log_named_uint("[_moveTimeUntilInsolvent] days", i);
 
             bool isSolvent = silo1.isSolvent(borrower);
 

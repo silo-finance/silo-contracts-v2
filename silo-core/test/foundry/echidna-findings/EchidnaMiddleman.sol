@@ -115,7 +115,7 @@ contract EchidnaMiddleman is EchidnaSetup {
         (bool isSolvent, ISilo siloWithDebt, ) = _invariant_insolventHasDebt(actor);
         assertFalse(isSolvent, "expect not solvent user");
 
-        (, uint256 debtToRepay) = partialLiquidation.maxLiquidation(actor);
+        (, uint256 debtToRepay,) = partialLiquidation.maxLiquidation(actor);
 
         (address collateral, address debt) = __liquidationTokens(address(siloWithDebt));
 
@@ -302,7 +302,7 @@ contract EchidnaMiddleman is EchidnaSetup {
         (bool isSolvent, ISilo siloWithDebt,) = _invariant_insolventHasDebt(actor);
         assertFalse(isSolvent, "expect not solvent user");
 
-        (, uint256 debtToRepay) = partialLiquidation.maxLiquidation(actor);
+        (, uint256 debtToRepay,) = partialLiquidation.maxLiquidation(actor);
         (address collateral, address debt) = __liquidationTokens(address(siloWithDebt));
 
         __prepareForLiquidationRepay(siloWithDebt, actor, debtToRepay);
@@ -431,7 +431,7 @@ contract EchidnaMiddleman is EchidnaSetup {
 
         assertFalse(isSolvent, "expect user to be solvent, not solvent should be ignored by echidna");
 
-        (, uint256 debtToRepay) = partialLiquidation.maxLiquidation(address(actor));
+        (, uint256 debtToRepay,) = partialLiquidation.maxLiquidation(address(actor));
         (address collateral, address debt) = __liquidationTokens(address(siloWithDebt));
 
         try partialLiquidation.liquidationCall(debt, collateral, actor, debtToRepay, _receiveShares) {
@@ -450,7 +450,7 @@ contract EchidnaMiddleman is EchidnaSetup {
 
         assertFalse(isSolvent, "expect not solvent user");
 
-        (, uint256 debtToRepay) = partialLiquidation.maxLiquidation(address(actor));
+        (, uint256 debtToRepay,) = partialLiquidation.maxLiquidation(address(actor));
         assertFalse(isSolvent, "expect user to be not insolvent");
 
         uint256 ltvBefore = siloWithCollateral.getLtv(address(actor));
@@ -493,7 +493,7 @@ contract EchidnaMiddleman is EchidnaSetup {
         uint256 lt = siloWithDebt.getLt();
         uint256 ltv = siloWithDebt.getLtv(address(actor));
 
-        (, uint256 debtToRepay) = partialLiquidation.maxLiquidation(address(actor));
+        (, uint256 debtToRepay,) = partialLiquidation.maxLiquidation(address(actor));
 
         (address collateral, address debt) = __liquidationTokens(address(siloWithDebt));
 

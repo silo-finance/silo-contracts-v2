@@ -1007,9 +1007,11 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock {
 
         uint256 collateralToLiquidate;
         uint256 debtToRepay;
+        bool sTokenRequired;
 
-        (collateralToLiquidate, debtToRepay) = partialLiquidation.maxLiquidation(_borrower);
+        (collateralToLiquidate, debtToRepay, sTokenRequired) = partialLiquidation.maxLiquidation(_borrower);
 
+        assertTrue(sTokenRequired, "sTokenRequired not required");
         assertGt(collateralToLiquidate, 0, "expect collateralToLiquidate");
 
         token0.mint(address(this), debtToRepay);

@@ -158,8 +158,7 @@ contract MaxLiquidationTest is MaxLiquidationCommon {
         else if (_collateral == 12 && _self && _withChunks()) {
             if (_receiveSToken) _ensureBorrowerHasDebt();
             else _ensureBorrowerHasNoDebt();
-        }
-        else if (_self && !_withChunks()) _ensureBorrowerHasNoDebt(); // for self, we are doing full (input == max)
+        } else if (_self && !_withChunks()) _ensureBorrowerHasNoDebt(); // for self, we are doing full (input == max)
         else _ensureBorrowerHasDebt();
     }
 
@@ -172,9 +171,7 @@ contract MaxLiquidationTest is MaxLiquidationCommon {
         // to test max, we want to provide higher `_debtToCover` and we expect not higher results
         uint256 debtToCover = type(uint256).max;
 
-        (
-            uint256 collateralToLiquidate, uint256 debtToRepay
-        ) = partialLiquidation.maxLiquidation(borrower);
+        (uint256 collateralToLiquidate, uint256 debtToRepay,) = partialLiquidation.maxLiquidation(borrower);
 
         emit log_named_decimal_uint("[MaxLiquidation] collateralToLiquidate", collateralToLiquidate, 18);
         emit log_named_decimal_uint("[MaxLiquidation] debtToRepay", debtToRepay, 16);

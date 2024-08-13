@@ -21,9 +21,14 @@ contract MaxLiquidationDustWithChunksTest is MaxLiquidationDustTest {
         override
         returns (uint256 withdrawCollateral, uint256 repayDebtAssets)
     {
-        (
-            uint256 collateralToLiquidate, uint256 debtToCover
-        ) = partialLiquidation.maxLiquidation(borrower);
+        uint256 collateralToLiquidate;
+        uint256 debtToCover;
+
+        { // too deep
+            bool sTokenRequired;
+            (collateralToLiquidate, debtToCover, sTokenRequired) = partialLiquidation.maxLiquidation(borrower);
+            assertTrue(!sTokenRequired, "sTokenRequired not required");
+        }
 
         emit log_named_decimal_uint("[DustWithChunks] collateralToLiquidate", collateralToLiquidate, 18);
         emit log_named_decimal_uint("[DustWithChunks] debtToCover", debtToCover, 18);
@@ -41,7 +46,6 @@ contract MaxLiquidationDustWithChunksTest is MaxLiquidationDustTest {
 
             uint256 testDebtToCover = _calculateChunk(debtToCover, i);
             emit log_named_uint("[DustWithChunks] testDebtToCover", testDebtToCover);
-
 
             if (_self) {
                 // self liquidation is always possible
