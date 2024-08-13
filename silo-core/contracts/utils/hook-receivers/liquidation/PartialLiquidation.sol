@@ -158,7 +158,7 @@ contract PartialLiquidation is SiloStorage, IPartialLiquidation, IHookReceiver {
         external
         view
         virtual
-        returns (uint256 collateralToLiquidate, uint256 debtToRepay, bool _sTokenRequired)
+        returns (uint256 collateralToLiquidate, uint256 debtToRepay, bool sTokenRequired)
     {
         return PartialLiquidationExecLib.maxLiquidation(siloConfig, _borrower);
     }
