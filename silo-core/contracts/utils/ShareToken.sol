@@ -311,7 +311,7 @@ abstract contract ShareToken is Initializable, ERC20Permit, IShareToken {
         (
             ISiloConfig.ConfigData memory collateralConfig,
             ISiloConfig.ConfigData memory debtConfig
-        ) = siloConfig.getConfigs(_user);
+        ) = siloConfig.getConfigsForSolvency(_user);
 
         collateralConfig.callSolvencyOracleBeforeQuote();
         debtConfig.callSolvencyOracleBeforeQuote();

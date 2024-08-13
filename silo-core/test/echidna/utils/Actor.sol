@@ -167,7 +167,7 @@ contract Actor is PropertiesAsserts, IERC3156FlashBorrower {
         ISiloConfig config
     ) public {
         (ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig) =
-            config.getConfigs(borrower);
+            config.getConfigsForSolvency(borrower);
 
         liquidationModule.liquidationCall(
             collateralConfig.token, debtConfig.token, borrower, debtToCover, receiveSToken

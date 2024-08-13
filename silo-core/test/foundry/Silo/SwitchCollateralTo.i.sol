@@ -38,11 +38,11 @@ contract SwitchCollateralToTest is SiloLittleHelper, Test {
         ISiloConfig.ConfigData memory collateral;
         ISiloConfig.ConfigData memory debt;
 
-        (collateral, debt) = siloConfig.getConfigs(borrower);
+        (collateral, debt) = siloConfig.getConfigsForSolvency(borrower);
 
         vm.prank(borrower);
         silo1.switchCollateralToThisSilo();
-        (collateral, debt) = siloConfig.getConfigs(borrower);
+        (collateral, debt) = siloConfig.getConfigsForSolvency(borrower);
 
         ISilo siloWithDeposit = silo0;
         vm.prank(borrower);

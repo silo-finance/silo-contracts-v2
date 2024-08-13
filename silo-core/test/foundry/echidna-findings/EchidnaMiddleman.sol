@@ -140,7 +140,7 @@ contract EchidnaMiddleman is EchidnaSetup {
             (
                 ISiloConfig.ConfigData memory collateralConfig,
                 ISiloConfig.ConfigData memory debtConfig
-            ) = siloConfig.getConfigs(actor);
+            ) = siloConfig.getConfigsForSolvency(actor);
 
             uint256 shareBalance = IERC20(collateralConfig.collateralShareToken).balanceOf(address(actor));
             uint256 debtShareBalance = IERC20(debtConfig.debtShareToken).balanceOf(address(actor));

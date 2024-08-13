@@ -123,7 +123,7 @@ contract FlashloanTest is SiloLittleHelper, Test, Gas {
         vm.prank(address(receiver));
         token0.approve(address(silo0), amount + fee);
 
-        (uint256 daoAndDeployerFeesBefore,) = silo0.siloData();
+        (uint256 daoAndDeployerRevenueBefore,) = silo0.siloData();
 
         bytes memory data = abi.encodeWithSelector(
             IERC3156FlashBorrower.onFlashLoan.selector, address(this), address(token0), amount, fee, _data
@@ -147,8 +147,8 @@ contract FlashloanTest is SiloLittleHelper, Test, Gas {
             500
         );
 
-        (uint256 daoAndDeployerFeesAfter,) = silo0.siloData();
-        assertEq(daoAndDeployerFeesAfter, daoAndDeployerFeesBefore + fee);
+        (uint256 daoAndDeployerRevenueAfter,) = silo0.siloData();
+        assertEq(daoAndDeployerRevenueAfter, daoAndDeployerRevenueBefore + fee);
     }
 
     /*

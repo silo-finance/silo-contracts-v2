@@ -7,6 +7,9 @@ import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
 import {NonReentrantLib} from "../lib/NonReentrantLib.sol";
 import {SiloStorage} from "../SiloStorage.sol";
 
+// TODO: make PoC for moving collateral token logic to SiloERC4626
+// move evertyhing to SiloERC4626
+// create internal interface for SiloERC4626
 abstract contract SiloERC4626 is ISilo, SiloStorage {
     /// @inheritdoc IERC20
     function approve(address _spender, uint256 _amount) external returns (bool) {
@@ -21,6 +24,7 @@ abstract contract SiloERC4626 is ISilo, SiloStorage {
         ISiloConfig siloConfig = _sharedStorage.siloConfig;
 
         siloConfig.turnOnReentrancyProtection();
+        // TODO: what about events? Will etherscan (and other UIs) show the correct balances? Should we move share token to Silo itself?
         IShareToken(_getShareToken()).forwardTransfer(msg.sender, _to, _amount);
         siloConfig.turnOffReentrancyProtection();
 

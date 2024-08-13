@@ -72,6 +72,7 @@ library SiloLendingLib {
         IERC20(_debtAsset).safeTransferFrom(_repayer, address(this), assets);
     }
 
+    // CERTORA TODO: accrue interest should never revert
     /// @notice Accrues interest on assets, updating the collateral and debt balances
     /// @dev This method will accrue interest for ONE asset ONLY, to calculate for both silos you have to call it twice
     /// with `_configData` for each token
@@ -126,7 +127,7 @@ library SiloLendingLib {
 
         // we operating on chunks (fees) of real tokens, so overflow should not happen
         // fee is simply to small to overflow on cast to uint192, even if, we will get lower fee
-        unchecked { _siloData.daoAndDeployerFees += uint192(totalFees); }
+        unchecked { _siloData.daoAndDeployerRevenue += uint192(totalFees); }
     }
 
     /// @notice Allows a user or a delegate to borrow assets against their collateral

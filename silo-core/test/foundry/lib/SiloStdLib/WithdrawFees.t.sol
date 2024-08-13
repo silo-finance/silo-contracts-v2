@@ -50,7 +50,7 @@ contract WithdrawFeesTest is Test {
     forge test -vv --mt test_withdrawFees_revert_NoLiquidity
     */
     function test_withdrawFees_revert_NoLiquidity() external {
-        siloData.daoAndDeployerFees = 1;
+        siloData.daoAndDeployerRevenue = 1;
 
         uint256 daoFee;
         uint256 deployerFee;
@@ -92,7 +92,7 @@ contract WithdrawFeesTest is Test {
         siloFactory.getFeeReceiversMock(address(this), dao, deployer);
         token.balanceOfMock(address(this), 1);
 
-        siloData.daoAndDeployerFees = 2;
+        siloData.daoAndDeployerRevenue = 2;
 
         vm.expectRevert(ISilo.NothingToPay.selector);
         _withdrawFees(ISilo(address(this)), siloData, NO_PROTECTED_ASSETS);
@@ -114,7 +114,7 @@ contract WithdrawFeesTest is Test {
         siloFactory.getFeeReceiversMock(address(this), dao, deployer);
         token.balanceOfMock(address(this), 1e18);
 
-        siloData.daoAndDeployerFees = 9;
+        siloData.daoAndDeployerRevenue = 9;
 
         token.transferMock(dao, 9);
 
@@ -137,7 +137,7 @@ contract WithdrawFeesTest is Test {
         siloFactory.getFeeReceiversMock(address(this), dao, deployer);
         token.balanceOfMock(address(this), 1e18);
 
-        siloData.daoAndDeployerFees = 2;
+        siloData.daoAndDeployerRevenue = 2;
 
         token.transferMock(deployer, 2);
 
@@ -150,20 +150,20 @@ contract WithdrawFeesTest is Test {
     function test_withdrawFees_pass() external {
         uint256 daoFee = 0.20e18;
         uint256 deployerFee = 0.20e18;
-        uint256 daoAndDeployerFees = 1e18;
-        uint256 daoFees = daoAndDeployerFees/2;
+        uint256 daoAndDeployerRevenue = 1e18;
+        uint256 daoFees = daoAndDeployerRevenue/2;
 
-        _withdrawFees_pass(daoFee, deployerFee, daoFees, daoAndDeployerFees - daoFees);
+        _withdrawFees_pass(daoFee, deployerFee, daoFees, daoAndDeployerRevenue - daoFees);
 
         daoFee = 0.20e18;
         deployerFee = 0.10e18;
-        daoFees = daoAndDeployerFees * 2/3;
-        _withdrawFees_pass(daoFee, deployerFee, daoFees, daoAndDeployerFees - daoFees);
+        daoFees = daoAndDeployerRevenue * 2/3;
+        _withdrawFees_pass(daoFee, deployerFee, daoFees, daoAndDeployerRevenue - daoFees);
 
         daoFee = 0.20e18;
         deployerFee = 0.01e18;
-        daoFees = daoAndDeployerFees * 20/21;
-        _withdrawFees_pass(daoFee, deployerFee, daoFees, daoAndDeployerFees - daoFees);
+        daoFees = daoAndDeployerRevenue * 20/21;
+        _withdrawFees_pass(daoFee, deployerFee, daoFees, daoAndDeployerRevenue - daoFees);
     }
 
     /*
@@ -183,7 +183,7 @@ contract WithdrawFeesTest is Test {
         siloFactory.getFeeReceiversMock(address(this), dao, deployer);
         token.balanceOfMock(address(this), siloBalance);
 
-        siloData.daoAndDeployerFees = uint192(siloBalance); // fees are the same as balance
+        siloData.daoAndDeployerRevenue = uint192(siloBalance); // fees are the same as balance
 
         uint256 protectedAssets = siloBalance / 3; // the third part of the balance is protected
 
@@ -210,13 +210,13 @@ contract WithdrawFeesTest is Test {
         siloFactory.getFeeReceiversMock(address(this), dao, deployer);
         token.balanceOfMock(address(this), 999e18);
 
-        siloData.daoAndDeployerFees = 1e18;
+        siloData.daoAndDeployerRevenue = 1e18;
 
         if (_transferDao != 0) token.transferMock(dao, _transferDao);
         if (_transferDeployer != 0) token.transferMock(deployer, _transferDeployer);
 
         _withdrawFees(ISilo(address(this)), siloData, NO_PROTECTED_ASSETS);
-        assertEq(siloData.daoAndDeployerFees, 0, "fees cleared");
+        assertEq(siloData.daoAndDeployerRevenue, 0, "fees cleared");
     }
 
     function _withdrawFees(ISilo _silo, ISilo.SiloData storage _siloData, uint256 _protectedAssets) internal {

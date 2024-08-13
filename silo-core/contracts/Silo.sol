@@ -77,6 +77,7 @@ contract Silo is SiloERC4626 {
         _sharedStorage.siloConfig = _siloConfig;
         _sharedStorage.hookReceiver = IHookReceiver(configData.hookReceiver);
 
+        // TODO: why do we need connect() and can this be replaced by minimal proxy?
         IInterestRateModel(configData.interestRateModel).connect(_modelConfigAddress);
     }
 
@@ -109,7 +110,7 @@ contract Silo is SiloERC4626 {
         (
             ISiloConfig.ConfigData memory collateral,
             ISiloConfig.ConfigData memory debt
-        ) = _sharedStorage.siloConfig.getConfigs(_borrower);
+        ) = _sharedStorage.siloConfig.getConfigsForSolvency(_borrower);
 
         return SiloSolvencyLib.isSolvent(collateral, debt, _borrower, AccrueInterestInMemory.Yes);
     }
@@ -661,7 +662,7 @@ contract Silo is SiloERC4626 {
 
     /// @inheritdoc ISilo
     function siloData() external view returns (uint192 daoAndDeployerFees, uint64 interestRateTimestamp) {
-        return (_siloData.daoAndDeployerFees, _siloData.interestRateTimestamp);
+        return (_siloData.daoAndDeployerRevenue, _siloData.interestRateTimestamp);
     }
 
     /// @inheritdoc ISilo
@@ -885,6 +886,7 @@ contract Silo is SiloERC4626 {
         address _interestRateModel,
         uint256 _daoFee,
         uint256 _deployerFee,
+        // TODO: remove _otherSilo
         address _otherSilo
     ) internal virtual returns (uint256 accruedInterest) {
         if (_otherSilo != address(0) && _otherSilo != address(this)) {

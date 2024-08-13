@@ -102,13 +102,13 @@ contract RawLiquidityAndProtectedCollateralTest is SiloLittleHelper, Test {
 
         (uint256 collateralAssets, uint256 protectedAssets) = _silo.getCollateralAndProtectedAssets();
         uint256 debtAssets = _silo.getDebtAssets();
-        (uint192 daoAndDeployerFees,) = _silo.siloData();
+        (uint192 daoAndDeployerRevenue,) = _silo.siloData();
         uint256 liquidity = _silo.getRawLiquidity();
 
         emit log_named_uint("collateralAssets", collateralAssets);
         emit log_named_uint("protectedAssets", protectedAssets);
         emit log_named_uint("debtAssets", debtAssets);
-        emit log_named_uint("daoAndDeployerFees", daoAndDeployerFees);
+        emit log_named_uint("daoAndDeployerRevenue", daoAndDeployerRevenue);
         emit log_named_uint("liquidity", liquidity);
         emit log_named_uint("silo balance", _token.balanceOf(address(_silo)));
     }

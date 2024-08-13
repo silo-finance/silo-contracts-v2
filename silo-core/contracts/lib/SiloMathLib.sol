@@ -32,7 +32,7 @@ library SiloMathLib {
     /// @param _deployerFee The fee (in 18 decimals points) to be taken for the deployer
     /// @return collateralAssetsWithInterest The total collateral assets including the accrued interest
     /// @return debtAssetsWithInterest The debt assets with accrued interest
-    /// @return daoAndDeployerFees Total fees amount to be split between DAO and deployer
+    /// @return daoAndDeployerRevenue Total fees amount to be split between DAO and deployer
     /// @return accruedInterest The total accrued interest
     function getCollateralAmountsWithInterest(
         uint256 _collateralAssets,
@@ -46,7 +46,7 @@ library SiloMathLib {
         returns (
             uint256 collateralAssetsWithInterest,
             uint256 debtAssetsWithInterest,
-            uint256 daoAndDeployerFees,
+            uint256 daoAndDeployerRevenue,
             uint256 accruedInterest
         )
     {
@@ -55,18 +55,19 @@ library SiloMathLib {
 
         unchecked {
             // If we overflow on multiplication it should not revert tx, we will get lower fees
-            daoAndDeployerFees = accruedInterest * (_daoFee + _deployerFee) / _PRECISION_DECIMALS;
-            // we will not underflow because daoAndDeployerFees is chunk of accruedInterest
-            collateralInterest = accruedInterest - daoAndDeployerFees;
+            daoAndDeployerRevenue = accruedInterest * (_daoFee + _deployerFee) / _PRECISION_DECIMALS;
+            // we will not underflow because daoAndDeployerRevenue is chunk of accruedInterest
+            collateralInterest = accruedInterest - daoAndDeployerRevenue;
         }
 
+        // TODO: unchecked and maxout the result (on overflow) in case of huge interest
         collateralAssetsWithInterest = _collateralAssets + collateralInterest;
     }
 
     /// @notice Calculate the debt assets with accrued interest
     /// @param _debtAssets The total amount of debt assets before accrued interest
     /// @param _rcomp Compound interest rate for the debt in 18 decimal precision
-    /// @return debtAssetsWithInterest The debt assets including the accrued interest
+    /// @return debtAssetsWithInterest The total debt assets including the accrued interest
     /// @return accruedInterest The amount of interest accrued on the debt assets
     function getDebtAmountsWithInterest(uint256 _debtAssets, uint256 _rcomp)
         internal
@@ -79,6 +80,7 @@ library SiloMathLib {
 
         accruedInterest = _debtAssets.mulDiv(_rcomp, _PRECISION_DECIMALS, Rounding.ACCRUED_INTEREST);
 
+        // TODO: unchecked and maxout the result (on overflow) in case of huge interest
         debtAssetsWithInterest = _debtAssets + accruedInterest;
     }
 
@@ -122,7 +124,9 @@ library SiloMathLib {
         } else if (_shares == 0) {
             shares = convertToShares(_assets, _totalAssets, _totalShares, _roundingToShares, _assetType);
             assets = _assets;
-        } else revert ISilo.InputCanBeAssetsOrShares();
+        } else {
+            revert ISilo.InputCanBeAssetsOrShares();
+        }
     }
 
     /// @dev Math for collateral is exact copy of

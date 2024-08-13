@@ -1,5 +1,7 @@
 ## Silo V2 Liquidity Mining System
 
+TODO: update to latest changes
+
 This is a fork of the [Balancer V2 liquidity mining system](https://github.com/balancer/balancer-v2-monorepo/tree/master/pkg/liquidity-mining).
 More details [here](./docs/forking.md).
 

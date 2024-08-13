@@ -46,6 +46,7 @@ contract PartialLiquidation is SiloStorage, IPartialLiquidation, IHookReceiver {
         // not in use
     }
 
+    // CERTORA TODO: there should be always a way to recover whatever's left in the silo (bad debt liquidation, withdrawal)
     /// @inheritdoc IPartialLiquidation
     function liquidationCall( // solhint-disable-line function-max-lines
         address _collateralAsset,
@@ -176,7 +177,7 @@ contract PartialLiquidation is SiloStorage, IPartialLiquidation, IHookReceiver {
             ISiloConfig.ConfigData memory debtConfig
         )
     {
-        (collateralConfig, debtConfig) = _siloConfigCached.getConfigs(_borrower);
+        (collateralConfig, debtConfig) = _siloConfigCached.getConfigsForSolvency(_borrower);
 
         if (debtConfig.silo == address(0)) revert UserIsSolvent();
         if (_collateralAsset != collateralConfig.token) revert UnexpectedCollateralToken();
@@ -200,7 +201,7 @@ contract PartialLiquidation is SiloStorage, IPartialLiquidation, IHookReceiver {
         uint256 _assetType
     ) internal virtual returns (uint256 shares) {
         if (_withdrawAssets == 0) return 0;
-        
+
         shares = SiloMathLib.convertToShares(
             _withdrawAssets,
             ISilo(_silo).total(_assetType),

@@ -116,11 +116,11 @@ interface ISilo is IERC4626, IERC3156FlashLender {
     }
 
     /// @dev Storage struct that holds all required data for a single token market
-    /// @param daoAndDeployerFees Current amount of fees accrued by DAO and Deployer
+    /// @param daoAndDeployerRevenue Current amount of assets (fees) accrued by DAO and Deployer but not yet withdrawn
     /// @param interestRateTimestamp timestamp of the last interest accrual
     /// @param assets map of assets
     struct SiloData {
-        uint192 daoAndDeployerFees;
+        uint192 daoAndDeployerRevenue;
         uint64 interestRateTimestamp;
     }
 
@@ -240,9 +240,9 @@ interface ISilo is IERC4626, IERC3156FlashLender {
     function factory() external view returns (ISiloFactory siloFactory);
 
     /// @notice Fetches the data related to the silo
-    /// @return daoAndDeployerFees Current amount of fees accrued by DAO and Deployer
+    /// @return daoAndDeployerRevenue Current amount of fees accrued by DAO and Deployer
     /// @return interestRateTimestamp Timestamp of the last interest accrual
-    function siloData() external view returns (uint192 daoAndDeployerFees, uint64 interestRateTimestamp);
+    function siloData() external view returns (uint192 daoAndDeployerRevenue, uint64 interestRateTimestamp);
 
     /// @notice Fetches the utilization data of the silo used by IRM
     function utilizationData() external view returns (UtilizationData memory utilizationData);

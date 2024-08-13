@@ -170,6 +170,8 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step, Creator {
         if (_initData.maxLtv1 > _initData.lt1) revert InvalidMaxLtv();
         if (_initData.lt0 > MAX_PERCENT || _initData.lt1 > MAX_PERCENT) revert InvalidLt();
 
+        // TODO: check oralce quote tokens
+
         if (_initData.maxLtvOracle0 != address(0) && _initData.solvencyOracle0 == address(0)) {
             revert OracleMisconfiguration();
         }

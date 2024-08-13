@@ -15,7 +15,7 @@ import {Hook} from "./lib/Hook.sol";
 /// data access using immutable variables.
 contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
     using Hook for uint256;
-    
+
     uint256 public immutable SILO_ID;
 
     uint256 private immutable _DAO_FEE;
@@ -72,8 +72,10 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
 
     bool private immutable _CALL_BEFORE_QUOTE1;
 
-    mapping (address borrower => address collateralSilo) public borrowerCollateralSilo;
-    
+    // TODO: document what is borrowerCollateralSilo. Explain all cases when it is set and how it is used.
+    // CERTORA TODO: when collateralSilo changes, solvency is checked and user solvent
+    mapping(address borrower => address collateralSilo) public borrowerCollateralSilo;
+
     /// @param _siloId ID of this pool assigned by factory
     /// @param _configData0 silo configuration data for token0
     /// @param _configData1 silo configuration data for token1
@@ -194,14 +196,17 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
     }
 
     /// @inheritdoc ISiloConfig
-    function getConfigs(address _borrower) external view virtual returns (
+    function getConfigsForSolvency(address _borrower) external view virtual returns (
         ConfigData memory collateralConfig,
         ConfigData memory debtConfig
     ) {
         address debtSilo = getDebtSilo(_borrower);
 
+        // TODO: make sure that collateralConfig is not used when empty
         if (debtSilo == address(0)) return (collateralConfig, debtConfig);
 
+        // TODO: what happens if debtSilo is address(0)?
+        // CERTORA TODO: if we have debt, borrowerCollateralSilo[_borrower] must not be empty
         address collateralSilo = borrowerCollateralSilo[_borrower];
 
         collateralConfig = getConfig(collateralSilo);
@@ -347,13 +352,15 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
         } else {
             revert WrongSilo();
         }
-     }
+    }
 
     /// @inheritdoc ISiloConfig
     function getDebtSilo(address _borrower) public view virtual returns (address debtSilo) {
         uint256 debtBal0 = _balanceOf(_DEBT_SHARE_TOKEN0, _borrower);
         uint256 debtBal1 = _balanceOf(_DEBT_SHARE_TOKEN1, _borrower);
 
+        // CERTORA TODO: debtBal0 > 0 && debtBal1 > 0 should never happen
+        // This is just sanity check but it should not be possible
         if (debtBal0 > 0 && debtBal1 > 0) revert DebtExistInOtherSilo();
         if (debtBal0 == 0 && debtBal1 == 0) return address(0);
 
@@ -365,6 +372,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
             daoFee: _DAO_FEE,
             deployerFee: _DEPLOYER_FEE,
             silo: _SILO0,
+            // TODO: do we use otherSilo anywhere?
             otherSilo: _SILO1,
             token: _TOKEN0,
             protectedShareToken: _PROTECTED_COLLATERAL_SHARE_TOKEN0,

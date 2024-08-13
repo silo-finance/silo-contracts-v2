@@ -16,7 +16,7 @@ contract AccrueInterestForAssetTest is Test {
     ISilo.Assets totalDebt;
 
     function setUp() public {
-        siloData.daoAndDeployerFees = 0;
+        siloData.daoAndDeployerRevenue = 0;
         siloData.interestRateTimestamp = 0;
 
         totalCollateral.assets = 0;
@@ -82,7 +82,7 @@ contract AccrueInterestForAssetTest is Test {
         assertEq(totalCollateral.assets, 1.005e18, "totalCollateral");
         assertEq(totalDebt.assets, 0.505e18, "totalDebt");
         assertEq(siloData.interestRateTimestamp, currentTimestamp, "interestRateTimestamp");
-        assertEq(siloData.daoAndDeployerFees, 0, "daoAndDeployerFees");
+        assertEq(siloData.daoAndDeployerRevenue, 0, "daoAndDeployerRevenue");
     }
 
     /*
@@ -117,9 +117,9 @@ contract AccrueInterestForAssetTest is Test {
         assertEq(totalDebt.assets, 0.505e18, "totalDebt");
         assertEq(siloData.interestRateTimestamp, currentTimestamp, "interestRateTimestamp");
         assertEq(
-            siloData.daoAndDeployerFees,
+            siloData.daoAndDeployerRevenue,
             accruedInterest * (daoFee + deployerFee) / DECIMAL_POINTS,
-            "daoAndDeployerFees"
+            "daoAndDeployerRevenue"
         );
     }
 }

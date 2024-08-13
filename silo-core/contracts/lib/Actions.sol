@@ -31,6 +31,7 @@ library Actions {
 
     error FeeOverflow();
 
+    // CERTORA TODO: deposit, repay, withdraw, liquidaiton should not on maxed out silo
     function deposit(
         ISilo.SharedStorage storage _shareStorage,
         uint256 _assets,
@@ -68,6 +69,7 @@ library Actions {
         _hookCallAfterDeposit(_shareStorage, _collateralType, _assets, _shares, _receiver, assets, shares);
     }
 
+    // CERTORA TODO: user without debt can always withdraw even if interest overflows
     function withdraw(
         ISilo.SharedStorage storage _shareStorage,
         ISilo.WithdrawArgs calldata _args,
@@ -345,7 +347,7 @@ library Actions {
         ISiloConfig.ConfigData memory collateralConfig;
         ISiloConfig.ConfigData memory debtConfig;
 
-        (collateralConfig, debtConfig) = siloConfig.getConfigs(msg.sender);
+        (collateralConfig, debtConfig) = siloConfig.getConfigsForSolvency(msg.sender);
 
         if (debtConfig.silo != address(0)) {
             siloConfig.accrueInterestForBothSilos();
@@ -396,7 +398,7 @@ library Actions {
         IERC20(_token).safeTransferFrom(address(_receiver), address(this), _amount + fee);
 
         // cast safe, because we checked `fee > type(uint192).max`
-        _siloData.daoAndDeployerFees += uint192(fee);
+        _siloData.daoAndDeployerRevenue += uint192(fee);
 
         if (_shareStorage.hooksAfter.matchAction(Hook.FLASH_LOAN)) {
             bytes memory data = abi.encodePacked(_receiver, _token, _amount, fee);
@@ -413,7 +415,7 @@ library Actions {
     /// @param _siloData Storage reference containing silo-related data, including accumulated fees
     /// @param _protectedAssets Protected assets in the silo. We can not withdraw it.
     function withdrawFees(ISilo _silo, ISilo.SiloData storage _siloData, uint256 _protectedAssets) external {
-        uint256 earnedFees = _siloData.daoAndDeployerFees;
+        uint256 earnedFees = _siloData.daoAndDeployerRevenue;
         if (earnedFees == 0) revert ISilo.EarnedZero();
 
         (
@@ -432,11 +434,10 @@ library Actions {
 
         if (availableLiquidity == 0) revert ISilo.NoLiquidity();
 
-
         if (earnedFees > availableLiquidity) earnedFees = availableLiquidity;
 
         // we will never underflow because earnedFees max value is `_siloData.daoAndDeployerFees`
-        unchecked { _siloData.daoAndDeployerFees -= uint192(earnedFees); }
+        unchecked { _siloData.daoAndDeployerRevenue -= uint192(earnedFees); }
 
         if (daoFeeReceiver == address(0) && deployerFeeReceiver == address(0)) {
             // just in case, should never happen...
@@ -572,7 +573,6 @@ library Actions {
             _receiver: _args.owner,
             _collateralShareToken: IShareToken(shareTokenTo),
             _totalCollateral: _total[uint256(depositType)]
-        
         });
     }
 

@@ -100,7 +100,7 @@ contract TransitionCollateralReentrancyTest is SiloLittleHelper, Test, PartialLi
         assertTrue(afterActionExecuted, "afterActionExecuted");
         assertTrue(silo0.isSolvent(borrower), "borrower is solvent after transition of collateral");
 
-        (, ISiloConfig.ConfigData memory debt) = siloConfig.getConfigs(borrower);
+        (, ISiloConfig.ConfigData memory debt) = siloConfig.getConfigsForSolvency(borrower);
 
         assertTrue(silo0.isSolvent(borrower), "borrower is solvent after transition of collateral");
         assertTrue(debt.silo != address(0), "borrower has debt");

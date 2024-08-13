@@ -94,7 +94,7 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
 
         ISiloConfig.ConfigData memory debt;
 
-        (, debt) = siloConfig.getConfigs(userWithoutDebt);
+        (, debt) = siloConfig.getConfigsForSolvency(userWithoutDebt);
 
         assertTrue(debt.silo == address(0), "we need user without debt for this test");
 
@@ -575,11 +575,11 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
         assertEq(silo0.getCollateralAssets(), dust, "total collateral (dust)");
 
         uint256 interest = 30_372197335919815515 - 7.5e18;
-        uint256 daoAndDeployerFees = interest * (0.15e18 + 0.10e18) / 1e18; // dao fee + deployer fee
+        uint256 daoAndDeployerRevenue = interest * (0.15e18 + 0.1e18) / 1e18; // dao fee + deployer fee
 
         assertEq(
             token0.balanceOf(address(silo0)),
-            daoAndDeployerFees + dust,
+            daoAndDeployerRevenue + dust,
             "silo collateral should be transfer to liquidator, fees left"
         );
 
@@ -649,7 +649,7 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
 
         uint256 maxRepay = silo0.maxRepay(BORROWER);
         uint256 interest = 30_372197335919815515 - 7.5e18;
-        uint256 daoAndDeployerFees = interest * (0.15e18 + 0.10e18) / 1e18; // dao fee + deployer fee
+        uint256 daoAndDeployerRevenue = interest * (0.15e18 + 0.1e18) / 1e18; // dao fee + deployer fee
 
         (uint256 collateralToLiquidate, uint256 debtToRepay) = partialLiquidation.maxLiquidation(BORROWER);
         emit log_named_decimal_uint("[test] getDebtAssets", silo0.getDebtAssets(), 18);
@@ -684,7 +684,7 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
         } else {
             assertEq(
                 token0.balanceOf(address(silo0)) - 5, // dust(2) + rounding error(3)
-                daoAndDeployerFees,
+                daoAndDeployerRevenue,
                 "[!_receiveSToken] silo has just fees"
             );
 

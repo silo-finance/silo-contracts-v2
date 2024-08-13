@@ -23,20 +23,20 @@ contract WithdrawFeesReentrancyTest is MethodReentrancyTest {
         ISilo silo0 = TestStateLib.silo0();
         ISilo silo1 = TestStateLib.silo1();
 
-        uint192 daoAndDeployerFees;
+        uint192 daoAndDeployerRevenue;
 
-        (daoAndDeployerFees, ) = silo0.siloData();
+        (daoAndDeployerRevenue,) = silo0.siloData();
 
-        if (daoAndDeployerFees == 0) {
-            vm.expectRevert(ISilo.EarnedZero.selector);    
+        if (daoAndDeployerRevenue == 0) {
+            vm.expectRevert(ISilo.EarnedZero.selector);
         }
 
         silo0.withdrawFees();
 
-        (daoAndDeployerFees, ) = silo1.siloData();
+        (daoAndDeployerRevenue,) = silo1.siloData();
 
-        if (daoAndDeployerFees == 0) {
-            vm.expectRevert(ISilo.EarnedZero.selector);    
+        if (daoAndDeployerRevenue == 0) {
+            vm.expectRevert(ISilo.EarnedZero.selector);
         }
 
         silo1.withdrawFees();
