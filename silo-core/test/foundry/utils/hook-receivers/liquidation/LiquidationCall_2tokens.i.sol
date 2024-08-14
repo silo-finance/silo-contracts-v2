@@ -283,19 +283,20 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
 
     /*
     forge test -vv --ffi --mt test_liquidationCall_partial_2tokens_sToken
+    test for bug: partial liquidation for sToken will revert if user will not be solvent after liquidation
     */
     function test_liquidationCall_partial_2tokens_sToken() public {
         uint256 debtToCover = 1e5;
 
         (
             ISiloConfig.ConfigData memory collateralConfig,
-            ISiloConfig.ConfigData memory debtConfig,
-        ) = siloConfig.getConfigs(address(silo1), address(0), 0 /* always 0 for external calls */);
+            ISiloConfig.ConfigData memory debtConfig
+        ) = siloConfig.getConfigs(BORROWER);
 
         (, uint64 interestRateTimestamp0) = silo0.siloData();
         (, uint64 interestRateTimestamp1) = silo1.siloData();
 
-        (uint256 collateralToLiquidate, uint256 debtToRepay) = partialLiquidation.maxLiquidation(address(silo1), BORROWER);
+        (uint256 collateralToLiquidate, uint256 debtToRepay,) = partialLiquidation.maxLiquidation(BORROWER);
         assertEq(collateralToLiquidate, 0, "no collateralToLiquidate yet");
         assertEq(debtToRepay, 0, "no debtToRepay yet");
 
@@ -305,7 +306,7 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
         uint256 timeForward = 7 days;
         vm.warp(block.timestamp + timeForward);
 
-        (collateralToLiquidate, debtToRepay) = partialLiquidation.maxLiquidation(address(silo1), BORROWER);
+        (collateralToLiquidate, debtToRepay,) = partialLiquidation.maxLiquidation(BORROWER);
         assertGt(collateralToLiquidate, 0, "expect collateralToLiquidate");
         assertGt(debtToRepay, debtToCover, "expect debtToRepay");
         emit log_named_decimal_uint("[test] max debtToRepay", debtToRepay, 18);
@@ -339,7 +340,7 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
             (
                 uint256 withdrawAssetsFromCollateral, uint256 repayDebtAssets
             ) = partialLiquidation.liquidationCall(
-                address(silo1), address(token0), address(token1), BORROWER, debtToCover, true /* receiveSToken */
+                address(token0), address(token1), BORROWER, debtToCover, true /* receiveSToken */
             );
 
             emit log_named_decimal_uint("[test] withdrawAssetsFromCollateral", withdrawAssetsFromCollateral, 18);
@@ -367,7 +368,8 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
             assertEq(interestRateTimestamp0 + timeForward, interestRateTimestamp0After, "interestRateTimestamp #0");
             assertEq(interestRateTimestamp1 + timeForward, interestRateTimestamp1After, "interestRateTimestamp #1");
 
-            (collateralToLiquidate, debtToRepay) = partialLiquidation.maxLiquidation(address(silo1), BORROWER);
+            bool sTokenRequired;
+            (collateralToLiquidate, debtToRepay, sTokenRequired) = partialLiquidation.maxLiquidation(BORROWER);
             assertGt(collateralToLiquidate, 0, "expect collateralToLiquidate after partial liquidation");
             assertGt(debtToRepay, 0, "expect debtToRepay after partial liquidation");
 
@@ -386,7 +388,7 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
             (
                 uint256 withdrawAssetsFromCollateral, uint256 repayDebtAssets
             ) = partialLiquidation.liquidationCall(
-                address(silo1), address(token0), address(token1), BORROWER, 2 ** 128, false /* receiveSToken */
+                address(token0), address(token1), BORROWER, 2 ** 128, false /* receiveSToken */
             );
 
             emit log_named_decimal_uint("[test] withdrawAssetsFromCollateral2", withdrawAssetsFromCollateral, 18);
