@@ -72,6 +72,8 @@ contract Silo is SiloERC4626 {
     function initialize(ISiloConfig _siloConfig, address _modelConfigAddress) external virtual {
         if (address(_sharedStorage.siloConfig) != address(0)) revert SiloInitialized();
 
+        __ShareToken_init();
+
         ISiloConfig.ConfigData memory configData = _siloConfig.getConfig(address(this));
 
         _sharedStorage.siloConfig = _siloConfig;
@@ -214,7 +216,7 @@ contract Silo is SiloERC4626 {
 
     /// @inheritdoc IERC4626
     function maxMint(address /* _receiver */) external view virtual returns (uint256 maxShares) {
-        return _callMaxDepositOrMint(IShareToken(_getShareToken()).totalSupply());
+        return _callMaxDepositOrMint(totalSupply());
     }
 
     /// @inheritdoc IERC4626
@@ -790,9 +792,14 @@ contract Silo is SiloERC4626 {
         (assets, shares) = SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(configData, _assetType);
     }
 
-    function _getShareToken() internal view virtual override returns (address collateralShareToken) {
-        (, collateralShareToken,) = _sharedStorage.siloConfig.getShareTokens(address(this));
+    function _getSiloConfig() internal view virtual override returns (ISiloConfig siloConfig) {
+        return siloConfig;
     }
+
+    function _getSharedStorage() internal view override returns (ISilo.SharedStorage storage sharedStorage) {
+        return _sharedStorage;
+    }
+
 
     function _previewMint(uint256 _shares, CollateralType _collateralType)
         internal
