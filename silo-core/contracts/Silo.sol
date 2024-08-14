@@ -792,8 +792,8 @@ contract Silo is SiloERC4626 {
         (assets, shares) = SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(configData, _assetType);
     }
 
-    function _getShareToken() internal view virtual override returns (address collateralShareToken) {
-        (, collateralShareToken,) = _sharedStorage.siloConfig.getShareTokens(address(this));
+    function _getShareToken() internal view virtual override returns (address collateralShareTokeStorage) {
+        collateralShareTokeStorage = _sharedStorage.siloConfig.getCollateralShareTokenStorage(address(this));
     }
 
     function _previewMint(uint256 _shares, CollateralType _collateralType)

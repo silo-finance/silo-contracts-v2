@@ -72,7 +72,8 @@ contract GetAssetsDataForLtvCalculationsTest is Test {
         }
 
         collateralConfig.protectedShareToken = protectedShareToken;
-        collateralConfig.collateralShareToken = collateralShareToken;
+        collateralConfig.collateralShareToken = silo0;
+        collateralConfig.collateralShareTokenStorage = collateralShareToken;
         collateralConfig.daoFee = scenario.input.collateralConfig.daoFee;
         collateralConfig.silo = silo0;
         collateralConfig.token = makeAddr("collateral.token");

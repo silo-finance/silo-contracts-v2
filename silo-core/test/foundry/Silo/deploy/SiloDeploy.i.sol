@@ -98,10 +98,11 @@ contract SiloDeployTest is IntegrationTest {
         assertNotEq(address(hookReceiver), address(0), "Hook receiver not initialized");
 
         address protectedShareToken;
-        address collateralShareToken;
         address debtShareToken;
 
-        (protectedShareToken, collateralShareToken, debtShareToken) = _siloConfig.getShareTokens(_silo);
+        (protectedShareToken,, debtShareToken) = _siloConfig.getShareTokens(_silo);
+
+        address collateralShareToken = _siloConfig.getCollateralShareTokenStorage(_silo);
 
         _verifyHookReceiverForToken(protectedShareToken);
         _verifyHookReceiverForToken(collateralShareToken);

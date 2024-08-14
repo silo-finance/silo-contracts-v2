@@ -456,7 +456,7 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
 
         // shares -> liquidator (because of receive sToken)
         vm.expectCall(
-            collateralConfig.collateralShareToken,
+            collateralConfig.collateralShareTokenStorage,
             abi.encodeWithSelector(
                 IShareToken.forwardTransferFromNoChecks.selector, BORROWER, liquidator, collateralSharesToLiquidate
             )

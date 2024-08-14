@@ -116,7 +116,7 @@ library SiloSolvencyLib {
         );
 
         (shares, totalShares) = SiloStdLib.getSharesAndTotalSupply(
-            _collateralConfig.collateralShareToken, _borrower, 0 /* no cache */
+            _collateralConfig.collateralShareTokenStorage, _borrower, 0 /* no cache */
         );
 
         totalCollateralAssets = _accrueInMemory == ISilo.AccrueInterestInMemory.Yes

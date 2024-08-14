@@ -133,7 +133,7 @@ contract GaugeHookReceiverTest is SiloLittleHelper, Test, TransferOwnership {
     // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testSetGaugePass
     function testSetGaugePass() public {
         (address silo0, address silo1) = _siloConfig.getSilos();
-        (,address shareCollateralToken,) = _siloConfig.getShareTokens(silo0);
+        address shareCollateralToken = _siloConfig.getCollateralShareTokenStorage(silo0);
 
         _mockGaugeShareToken(_gauge, shareCollateralToken);
 
@@ -173,7 +173,7 @@ contract GaugeHookReceiverTest is SiloLittleHelper, Test, TransferOwnership {
     // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testRemoveGauge
     function testRemoveGauge() public {
         (address silo0, address silo1) = _siloConfig.getSilos();
-        (,address shareCollateralToken,) = _siloConfig.getShareTokens(silo0);
+        address shareCollateralToken = _siloConfig.getCollateralShareTokenStorage(silo0);
 
         vm.prank(_dao);
         vm.expectRevert(IGaugeHookReceiver.GaugeIsNotConfigured.selector);
@@ -311,11 +311,9 @@ contract GaugeHookReceiverTest is SiloLittleHelper, Test, TransferOwnership {
 
         assertEq(address(hookReceiver), address(_hookReceiver));
 
-        (
-            address collateral,
-            address protected,
-            address debt
-        ) = _siloConfig.getShareTokens(_silo);
+        (address protected,, address debt) = _siloConfig.getShareTokens(_silo);
+
+        address collateral = _siloConfig.getCollateralShareTokenStorage(_silo);
 
         _testHookReceiverForShareToken(collateral);
         _testHookReceiverForShareToken(protected);

@@ -74,8 +74,6 @@ contract SiloConfigTest is Test {
         // when using assume, it reject too many inputs
         _configData0.hookReceiver = _configData1.hookReceiver;
 
-        _configData0.otherSilo = _configData1.silo;
-        _configData1.otherSilo = _configData0.silo;
         _configData1.daoFee = _configData0.daoFee;
         _configData1.deployerFee = _configData0.deployerFee;
 
@@ -126,13 +124,17 @@ contract SiloConfigTest is Test {
 
         (address protectedShareToken, address collateralShareToken, address debtShareToken) = siloConfig.getShareTokens(_configData0.silo);
         assertEq(protectedShareToken, _configData0.protectedShareToken);
-        assertEq(collateralShareToken, _configData0.collateralShareToken);
+        assertEq(collateralShareToken, _configData0.silo);
         assertEq(debtShareToken, _configData0.debtShareToken);
 
         (protectedShareToken, collateralShareToken, debtShareToken) = siloConfig.getShareTokens(_configData1.silo);
         assertEq(protectedShareToken, _configData1.protectedShareToken);
-        assertEq(collateralShareToken, _configData1.collateralShareToken);
+        assertEq(collateralShareToken, _configData1.silo);
         assertEq(debtShareToken, _configData1.debtShareToken);
+
+        address collateralShareTokenStorage = siloConfig.getCollateralShareTokenStorage(_configData0.silo);
+
+        assertEq(collateralShareTokenStorage, _configData0.collateralShareToken);
     }
 
     /*

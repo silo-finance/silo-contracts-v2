@@ -141,13 +141,16 @@ contract GaugeHookReceiver is PartialLiquidation, IGaugeHookReceiver, SiloHookRe
     /// @dev Revert if wrong silo
     /// @dev Revert if the share token is not one of the collateral, protected or debt tokens
     function _getTokenType(address _silo, address _shareToken) internal view virtual returns (uint256) {
+        address collateralShareToken = siloConfig.getCollateralShareTokenStorage(_silo);
+
+        if (_shareToken == collateralShareToken) return Hook.COLLATERAL_TOKEN;
+
         (
             address protectedShareToken,
-            address collateralShareToken,
+            ,
             address debtShareToken
         ) = siloConfig.getShareTokens(_silo);
 
-        if (_shareToken == collateralShareToken) return Hook.COLLATERAL_TOKEN;
         if (_shareToken == protectedShareToken) return Hook.PROTECTED_TOKEN;
         if (_shareToken == debtShareToken) return Hook.DEBT_TOKEN;
 

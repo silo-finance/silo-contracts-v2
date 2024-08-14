@@ -92,12 +92,10 @@ contract SiloFactoryCreateSiloTest is SiloLittleHelper, IntegrationTest {
 
         assertEq(configData0.daoFee, siloFactory.daoFee(), "configData0.daoFee");
         assertEq(configData0.deployerFee, initData.deployerFee, "configData0.deployerFee");
-        assertEq(configData0.silo, configData1.otherSilo, "configData0.silo");
-        assertEq(configData0.otherSilo, configData1.silo, "configData0.otherSilo");
         assertTrue(configData0.silo != address(0), "configData0.silo");
-        assertTrue(configData0.otherSilo != address(0), "configData0.otherSilo");
         assertTrue(configData0.protectedShareToken != address(0), "configData0.protectedShareToken");
         assertTrue(configData0.collateralShareToken != address(0), "configData0.collateralShareToken");
+        assertTrue(configData0.collateralShareTokenStorage != address(0), "configData0.collateralShareTokenStorage");
         assertTrue(configData0.debtShareToken != address(0), "configData0.debtShareToken");
         assertEq(configData0.solvencyOracle, initData.solvencyOracle0, "configData0.solvencyOracle");
         assertEq(configData0.maxLtvOracle, initData.maxLtvOracle0, "configData0.maxLtvOracle");
@@ -110,12 +108,10 @@ contract SiloFactoryCreateSiloTest is SiloLittleHelper, IntegrationTest {
 
         assertEq(configData1.daoFee, siloFactory.daoFee(), "configData1.daoFee");
         assertEq(configData1.deployerFee, initData.deployerFee, "configData1.deployerFee");
-        assertEq(configData1.silo, configData0.otherSilo, "configData1.silo");
-        assertEq(configData1.otherSilo, configData0.silo, "configData1.otherSilo");
         assertTrue(configData1.silo != address(0), "configData1.silo");
-        assertTrue(configData1.otherSilo != address(0), "configData1.otherSilo");
         assertTrue(configData1.protectedShareToken != address(0), "configData1.protectedShareToken");
         assertTrue(configData1.collateralShareToken != address(0), "configData1.collateralShareToken");
+        assertTrue(configData1.collateralShareTokenStorage != address(0), "configData1.collateralShareTokenStorage");
         assertTrue(configData1.debtShareToken != address(0), "configData1.debtShareToken");
         assertEq(configData1.solvencyOracle, initData.solvencyOracle1, "configData1.solvencyOracle");
         assertEq(configData1.maxLtvOracle, initData.maxLtvOracle1, "configData1.maxLtvOracle");
@@ -155,7 +151,7 @@ contract SiloFactoryCreateSiloTest is SiloLittleHelper, IntegrationTest {
         IShareToken(configData0.protectedShareToken).initialize(ISilo(configData0.silo), address(0), 0);
 
         vm.expectRevert(ISiloFactory.InvalidInitialization.selector);
-        IShareToken(configData0.collateralShareToken).initialize(ISilo(configData0.silo), address(0), 0);
+        IShareToken(configData0.collateralShareTokenStorage).initialize(ISilo(configData0.silo), address(0), 0);
 
         vm.expectRevert(ISiloFactory.InvalidInitialization.selector);
         IShareToken(configData0.debtShareToken).initialize(ISilo(configData0.silo), address(0), 0);
@@ -164,7 +160,7 @@ contract SiloFactoryCreateSiloTest is SiloLittleHelper, IntegrationTest {
         IShareToken(configData1.protectedShareToken).initialize(ISilo(configData1.silo), address(0), 0);
 
         vm.expectRevert(ISiloFactory.InvalidInitialization.selector);
-        IShareToken(configData1.collateralShareToken).initialize(ISilo(configData1.silo), address(0), 0);
+        IShareToken(configData1.collateralShareTokenStorage).initialize(ISilo(configData1.silo), address(0), 0);
 
         vm.expectRevert(ISiloFactory.InvalidInitialization.selector);
         IShareToken(configData1.debtShareToken).initialize(ISilo(configData1.silo), address(0), 0);

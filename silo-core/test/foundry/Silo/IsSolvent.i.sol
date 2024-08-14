@@ -47,7 +47,7 @@ contract IsSolventTest is SiloLittleHelper, Test {
 
         ISilo collateralSilo = silo0;
 
-        (, address collateralShareToken,) = collateralSilo.config().getShareTokens(address(collateralSilo));
+        address collateralShareToken = collateralSilo.config().getCollateralShareTokenStorage(address(collateralSilo));
         (,, address debtShareToken) = silo1.config().getShareTokens(address(silo1));
 
         vm.prank(recipient);

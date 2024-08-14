@@ -50,8 +50,8 @@ library Actions {
         siloConfig.accrueInterestForSilo(address(this));
 
         (
-            address shareToken, address asset
-        ) = siloConfig.getCollateralShareTokenAndAsset(address(this), _collateralType);
+            address shareTokenStorage, address asset
+        ) = siloConfig.getCollateralShareTokenStorageAndAsset(address(this), _collateralType);
 
         (assets, shares) = SiloERC4626Lib.deposit(
             asset,
@@ -59,7 +59,7 @@ library Actions {
             _assets,
             _shares,
             _receiver,
-            IShareToken(shareToken),
+            IShareToken(shareTokenStorage),
             _totalCollateral
         );
 
@@ -93,7 +93,7 @@ library Actions {
         (assets, shares) = SiloERC4626Lib.withdraw(
             depositConfig.token,
             _args.collateralType == ISilo.CollateralType.Collateral
-                ? depositConfig.collateralShareToken
+                ? depositConfig.collateralShareTokenStorage
                 : depositConfig.protectedShareToken,
             _args,
             _args.collateralType == ISilo.CollateralType.Collateral
@@ -277,7 +277,7 @@ library Actions {
             _shares: 0,
             _receiver: _args.borrower,
             _collateralShareToken: _args.collateralType == ISilo.CollateralType.Collateral
-                ? IShareToken(collateralConfig.collateralShareToken)
+                ? IShareToken(collateralConfig.collateralShareTokenStorage)
                 : IShareToken(collateralConfig.protectedShareToken),
             _totalCollateral: _totalAssetsForDeposit
         });
@@ -309,7 +309,8 @@ library Actions {
         siloConfig.turnOnReentrancyProtection();
         siloConfig.accrueInterestForSilo(address(this));
 
-        (address protectedShareToken, address collateralShareToken,) = siloConfig.getShareTokens(address(this));
+        (address protectedShareToken,,) = siloConfig.getShareTokens(address(this));
+        address collateralShareToken = siloConfig.getCollateralShareTokenStorage(address(this));
 
         uint256 shares;
 

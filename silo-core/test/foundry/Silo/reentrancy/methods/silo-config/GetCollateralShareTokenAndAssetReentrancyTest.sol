@@ -17,7 +17,7 @@ contract GetCollateralShareTokenAndAssetReentrancyTest is MethodReentrancyTest {
     }
 
     function methodDescription() external pure returns (string memory description) {
-        description = "getCollateralShareTokenAndAsset(address,uint8)";
+        description = "getCollateralShareTokenStorageAndAsset(address,uint8)";
     }
 
     function _ensureItWillRevertAsExpected() internal {
@@ -27,13 +27,13 @@ contract GetCollateralShareTokenAndAssetReentrancyTest is MethodReentrancyTest {
         address silo1 = address(TestStateLib.silo1());
         address wrongSilo = makeAddr("Wrong silo");
 
-        config.getCollateralShareTokenAndAsset(silo0, ISilo.CollateralType.Collateral);
-        config.getCollateralShareTokenAndAsset(silo0, ISilo.CollateralType.Protected);
+        config.getCollateralShareTokenStorageAndAsset(silo0, ISilo.CollateralType.Collateral);
+        config.getCollateralShareTokenStorageAndAsset(silo0, ISilo.CollateralType.Protected);
 
-        config.getCollateralShareTokenAndAsset(silo1, ISilo.CollateralType.Collateral);
-        config.getCollateralShareTokenAndAsset(silo1, ISilo.CollateralType.Protected);
+        config.getCollateralShareTokenStorageAndAsset(silo1, ISilo.CollateralType.Collateral);
+        config.getCollateralShareTokenStorageAndAsset(silo1, ISilo.CollateralType.Protected);
 
         vm.expectRevert(ISiloConfig.WrongSilo.selector);
-        config.getCollateralShareTokenAndAsset(wrongSilo, ISilo.CollateralType.Protected);
+        config.getCollateralShareTokenStorageAndAsset(wrongSilo, ISilo.CollateralType.Protected);
     }
 }

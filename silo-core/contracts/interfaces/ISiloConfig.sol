@@ -92,10 +92,10 @@ interface ISiloConfig is ICrossReentrancyGuard {
         uint256 daoFee;
         uint256 deployerFee;
         address silo;
-        address otherSilo;
         address token;
         address protectedShareToken;
         address collateralShareToken;
+        address collateralShareTokenStorage;
         address debtShareToken;
         address solvencyOracle;
         address maxLtvOracle;
@@ -111,7 +111,7 @@ interface ISiloConfig is ICrossReentrancyGuard {
     struct DepositConfig {
         address silo;
         address token;
-        address collateralShareToken;
+        address collateralShareTokenStorage;
         address protectedShareToken;
         uint256 daoFee;
         uint256 deployerFee;
@@ -251,7 +251,7 @@ interface ISiloConfig is ICrossReentrancyGuard {
     /// @param _collateralType The type of collateral
     /// @return shareToken The address of the share token (collateral or protected collateral)
     /// @return asset The address of the silo token
-    function getCollateralShareTokenAndAsset(address _silo, ISilo.CollateralType _collateralType)
+    function getCollateralShareTokenStorageAndAsset(address _silo, ISilo.CollateralType _collateralType)
         external
         view
         returns (address shareToken, address asset);
@@ -265,5 +265,5 @@ interface ISiloConfig is ICrossReentrancyGuard {
         view
         returns (address shareToken, address asset);
 
-    function getCollateralShareTokenStorage(address _silo) external view virtual returns (address shareToken);
+    function getCollateralShareTokenStorage(address _silo) external view returns (address shareToken);
 }

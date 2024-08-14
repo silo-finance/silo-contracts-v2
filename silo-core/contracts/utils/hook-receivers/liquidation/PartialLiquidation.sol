@@ -105,7 +105,7 @@ contract PartialLiquidation is SiloStorage, IPartialLiquidation, IHookReceiver {
             _borrower,
             shareTokenReceiver,
             withdrawAssetsFromCollateral,
-            collateralConfig.collateralShareToken,
+            collateralConfig.collateralShareTokenStorage,
             AssetTypes.COLLATERAL
         );
 
@@ -185,7 +185,7 @@ contract PartialLiquidation is SiloStorage, IPartialLiquidation, IHookReceiver {
         ISilo(debtConfig.silo).accrueInterest();
 
         if (collateralConfig.silo != debtConfig.silo) {
-            ISilo(debtConfig.otherSilo).accrueInterest();
+            ISilo(collateralConfig.silo).accrueInterest();
             collateralConfig.callSolvencyOracleBeforeQuote();
             debtConfig.callSolvencyOracleBeforeQuote();
         }
