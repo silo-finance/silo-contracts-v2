@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 import {ICrossReentrancyGuard} from "silo-core/contracts/interfaces/ICrossReentrancyGuard.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
-import {ShareToken} from "silo-core/contracts/utils/ShareToken.sol";
+import {ShareToken} from "silo-core/contracts/utils/share-tokens/share-token/ShareToken.sol";
 import {ShareTokenMethodReentrancyTest} from "./_ShareTokenMethodReentrancyTest.sol";
 
 contract ForwardTransferFromNoChecksReentrancyTest is ShareTokenMethodReentrancyTest {

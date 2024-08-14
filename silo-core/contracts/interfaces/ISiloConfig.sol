@@ -264,4 +264,6 @@ interface ISiloConfig is ICrossReentrancyGuard {
         external
         view
         returns (address shareToken, address asset);
+
+    function getCollateralShareTokenStorage(address _silo) external view virtual returns (address shareToken);
 }

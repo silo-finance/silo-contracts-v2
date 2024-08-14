@@ -482,7 +482,9 @@ library Actions {
         _sharedStorage.hooksBefore = hooksBefore;
         _sharedStorage.hooksAfter = hooksAfter;
 
-        IShareToken(cfg.collateralShareToken).synchronizeHooks(hooksBefore, hooksAfter);
+        address collateralShareTokenStorage = siloConfig.getCollateralShareTokenStorage(address(this));
+
+        IShareToken(collateralShareTokenStorage).synchronizeHooks(hooksBefore, hooksAfter);
         IShareToken(cfg.protectedShareToken).synchronizeHooks(hooksBefore, hooksAfter);
         IShareToken(cfg.debtShareToken).synchronizeHooks(hooksBefore, hooksAfter);
     }

@@ -8,7 +8,7 @@ import {ERC20Permit} from "openzeppelin5/token/ERC20/extensions/ERC20Permit.sol"
 
 import {SiloMathLib} from "silo-core/contracts/lib/SiloERC4626Lib.sol";
 import {Hook} from "silo-core/contracts/lib/Hook.sol";
-import {ShareDebtToken} from "silo-core/contracts/utils/ShareDebtToken.sol";
+import {ShareDebtToken} from "silo-core/contracts/utils/share-tokens/ShareDebtToken.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 

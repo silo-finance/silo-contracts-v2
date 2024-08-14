@@ -20,8 +20,9 @@ import {ISiloDeployer, SiloDeployer} from "silo-core/contracts/SiloDeployer.sol"
 import {Silo} from "silo-core/contracts/Silo.sol";
 import {PartialLiquidation} from "silo-core/contracts/utils/hook-receivers/liquidation/PartialLiquidation.sol";
 import {SiloInternal} from "../internal_testing/SiloInternal.sol";
-import {ShareCollateralToken} from "silo-core/contracts/utils/ShareCollateralToken.sol";
-import {ShareDebtToken} from "silo-core/contracts/utils/ShareDebtToken.sol";
+import {ShareCollateralToken} from "silo-core/contracts/utils/share-tokens/ShareCollateralToken.sol";
+import {ShareProtectedCollateralToken} from "silo-core/contracts/utils/share-tokens/ShareProtectedCollateralToken.sol";
+import {ShareDebtToken} from "silo-core/contracts/utils/share-tokens/ShareDebtToken.sol";
 import {IInterestRateModelV2ConfigFactory, InterestRateModelV2ConfigFactory} from "silo-core/contracts/interestRateModel/InterestRateModelV2ConfigFactory.sol";
 import {IInterestRateModelV2, InterestRateModelV2} from "silo-core/contracts/interestRateModel/InterestRateModelV2.sol";
 import {IInterestRateModelV2Config, InterestRateModelV2Config} from "silo-core/contracts/interestRateModel/InterestRateModelV2Config.sol";
@@ -188,6 +189,7 @@ contract Deployers is VyperDeployer, Data {
         );
 
         address shareCollateralTokenImpl = address(new ShareCollateralToken());
+        address shareProtectedCollateralTokenImpl = address(new ShareProtectedCollateralToken());
         address shareDebtTokenImpl = address(new ShareDebtToken());
 
         uint256 daoFee = 0.15e18;
@@ -198,6 +200,7 @@ contract Deployers is VyperDeployer, Data {
         siloFactory.initialize(
             siloImpl,
             shareCollateralTokenImpl,
+            shareProtectedCollateralTokenImpl,
             shareDebtTokenImpl,
             daoFee,
             daoFeeReceiver
@@ -206,6 +209,7 @@ contract Deployers is VyperDeployer, Data {
         siloFactoryInternal.initialize(
             siloImplInternal,
             shareCollateralTokenImpl,
+            shareProtectedCollateralTokenImpl,
             shareDebtTokenImpl,
             daoFee,
             daoFeeReceiver

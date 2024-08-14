@@ -6,10 +6,10 @@ Silo is the main component of the protocol. It implements lending logic, manages
 | Silo V2 core architecture |
 
 ### Silo shares tokens
-For each asset in a Silo, there are two [ERC-20](https://github.com/silo-finance/silo-contracts-v2/blob/develop/silo-core/contracts/utils/ShareToken.sol) tokens deployed and one [ERC20R](https://github.com/silo-finance/silo-contracts-v2/blob/develop/silo-core/contracts/utils/ShareDebtToken.sol):
-- [Share collateral token](https://github.com/silo-finance/silo-contracts-v2/blob/develop/silo-core/contracts/utils/ShareCollateralToken.sol) (ERC-20). This token represent a user deposited assets that can be borrowed.
-- [Share protected collateral token](https://github.com/silo-finance/silo-contracts-v2/blob/develop/silo-core/contracts/utils/ShareCollateralToken.sol)(ERC-20). This token represent a user deposited assets that can't be borrowed.
-- [Share debt token](https://github.com/silo-finance/silo-contracts-v2/blob/develop/silo-core/contracts/utils/ShareDebtToken.sol)(ERC20R). This tokens will be minted to represent a debt.
+For each asset in a Silo, there are two [ERC-20](https://github.com/silo-finance/silo-contracts-v2/blob/develop/silo-core/contracts/utils/share-tokens/share-token/ShareToken.sol) tokens deployed and one [ERC20R](https://github.com/silo-finance/silo-contracts-v2/blob/develop/silo-core/contracts/utils/share-tokens/ShareDebtToken.sol):
+- [Share collateral token](https://github.com/silo-finance/silo-contracts-v2/blob/develop/silo-core/contracts/utils/share-tokens/ShareCollateralToken.sol) (ERC-20). This token represent a user deposited assets that can be borrowed.
+- [Share protected collateral token](https://github.com/silo-finance/silo-contracts-v2/blob/develop/silo-core/contracts/utils/share-tokens/ShareCollateralToken.sol)(ERC-20). This token represent a user deposited assets that can't be borrowed.
+- [Share debt token](https://github.com/silo-finance/silo-contracts-v2/blob/develop/silo-core/contracts/utils/share-tokens/ShareDebtToken.sol)(ERC20R). This tokens will be minted to represent a debt.
 
 When the user deposits into a Silo they can decide where their deposit can be borrowed by other users to earn interest. Protected deposits are also called "collateral only" and other users cannot borrow them.
 

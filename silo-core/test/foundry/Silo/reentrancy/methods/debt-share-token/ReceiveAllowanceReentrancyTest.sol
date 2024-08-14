@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
-import {ShareDebtToken} from "silo-core/contracts/utils/ShareDebtToken.sol";
+import {ShareDebtToken} from "silo-core/contracts/utils/share-tokens/ShareDebtToken.sol";
 import {MethodReentrancyTest} from "../MethodReentrancyTest.sol";
 import {TestStateLib} from "../../TestState.sol";
 

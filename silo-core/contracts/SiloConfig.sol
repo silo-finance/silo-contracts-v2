@@ -327,6 +327,16 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
         }
     }
 
+    function getCollateralShareTokenStorage(address _silo) external view virtual returns (address shareToken) {
+        if (_silo == _SILO0) {
+            return _COLLATERAL_SHARE_TOKEN0;
+        } else if (_silo == _SILO1) {
+            return _COLLATERAL_SHARE_TOKEN1;
+        } else {
+            revert WrongSilo();
+        }
+    }
+
     /// @inheritdoc ISiloConfig
     function getConfig(address _silo) public view virtual returns (ConfigData memory config) {
         if (_silo == _SILO0) {

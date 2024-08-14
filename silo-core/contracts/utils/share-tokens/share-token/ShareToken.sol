@@ -120,7 +120,7 @@ abstract contract ShareToken is Initializable, SiloERC20Permit, IShareToken {
 
     /// @inheritdoc IShareToken
     function forwardApprove(address _owner, address _spender, uint256 _amount) external virtual onlySilo {
-        _approve(_owner, _spender, _amount);
+        _approve(_owner, _spender, _amount, _emitEvents);
     }
 
     function hookSetup() external view virtual returns (HookSetup memory) {

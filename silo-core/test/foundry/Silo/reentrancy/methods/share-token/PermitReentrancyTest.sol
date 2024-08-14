@@ -5,7 +5,7 @@ import {VmSafe} from "forge-std/Vm.sol";
 import {MessageHashUtils} from "openzeppelin5//utils/cryptography/MessageHashUtils.sol";
 
 import {ICrossReentrancyGuard} from "silo-core/contracts/interfaces/ICrossReentrancyGuard.sol";
-import {ShareToken} from "silo-core/contracts/utils/ShareToken.sol";
+import {ShareToken} from "silo-core/contracts/utils/share-tokens/share-token/ShareToken.sol";
 import {ShareTokenMethodReentrancyTest} from "./_ShareTokenMethodReentrancyTest.sol";
 
 contract PermitReentrancyTest is ShareTokenMethodReentrancyTest {

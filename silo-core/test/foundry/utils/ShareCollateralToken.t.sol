@@ -5,7 +5,7 @@ import {Test} from "forge-std/Test.sol";
 
 import {IERC20Errors} from "openzeppelin5/interfaces/draft-IERC6093.sol";
 
-import {ShareCollateralToken} from "silo-core/contracts/utils/ShareCollateralToken.sol";
+import {ShareCollateralToken} from "silo-core/contracts/utils/share-tokens/ShareCollateralToken.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";

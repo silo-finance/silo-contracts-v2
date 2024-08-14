@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.20;
 
-import {ShareToken} from "silo-core/contracts/utils/ShareToken.sol";
+import {ShareToken} from "silo-core/contracts/utils/share-tokens/share-token/ShareToken.sol";
 import {ShareTokenMethodReentrancyTest} from "./_ShareTokenMethodReentrancyTest.sol";
 
 contract DomainSeparatorReentrancyTest is ShareTokenMethodReentrancyTest {
