@@ -8,10 +8,9 @@ import {CommonDeploy, SiloCoreContracts} from "./_CommonDeploy.sol";
 import {ISiloFactory} from "silo-core/contracts/interfaces/ISiloFactory.sol";
 import {SiloFactory} from "silo-core/contracts/SiloFactory.sol";
 import {Silo} from "silo-core/contracts/Silo.sol";
-import {ShareCollateralToken} from "silo-core/contracts/utils/ShareCollateralToken.sol";
-import {ShareDebtToken} from "silo-core/contracts/utils/ShareDebtToken.sol";
-
-import {console2} from "forge-std/console2.sol";
+import {ShareCollateralToken} from "silo-core/contracts/utils/share-tokens/ShareCollateralToken.sol";
+import {ShareProtectedCollateralToken} from "silo-core/contracts/utils/share-tokens/ShareProtectedCollateralToken.sol";
+import {ShareDebtToken} from "silo-core/contracts/utils/share-tokens/ShareDebtToken.sol";
 
 /**
     FOUNDRY_PROFILE=core \
@@ -29,6 +28,7 @@ contract SiloFactoryDeploy is CommonDeploy {
 
         address siloImpl = address(new Silo(siloFactory));
         address shareCollateralTokenImpl = address(new ShareCollateralToken());
+        address shareProtectedCollateralTokenImpl = address(new ShareProtectedCollateralToken());
         address shareDebtTokenImpl = address(new ShareDebtToken());
 
         vm.stopBroadcast();
@@ -39,7 +39,15 @@ contract SiloFactoryDeploy is CommonDeploy {
 
         vm.startBroadcast(deployerPrivateKey);
 
-        siloFactory.initialize(siloImpl, shareCollateralTokenImpl, shareDebtTokenImpl, daoFee, daoFeeReceiver);
+        siloFactory.initialize(
+            siloImpl,
+            shareCollateralTokenImpl,
+            shareProtectedCollateralTokenImpl,
+            shareDebtTokenImpl,
+            daoFee,
+            daoFeeReceiver
+        );
+
         Ownable(address(siloFactory)).transferOwnership(timelock);
 
         vm.stopBroadcast();
@@ -48,5 +56,10 @@ contract SiloFactoryDeploy is CommonDeploy {
         _registerDeployment(address(siloImpl), SiloCoreContracts.SILO);
         _registerDeployment(address(shareCollateralTokenImpl), SiloCoreContracts.SHARE_COLLATERAL_TOKEN);
         _registerDeployment(address(shareDebtTokenImpl), SiloCoreContracts.SHARE_DEBT_TOKEN);
+
+        _registerDeployment(
+            address(shareProtectedCollateralTokenImpl),
+            SiloCoreContracts.SHARE_PROTECTED_COLLATERAL_TOKEN
+        );
     }
 }

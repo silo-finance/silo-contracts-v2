@@ -35,6 +35,7 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step, Creator {
 
     address public siloImpl;
     address public shareCollateralTokenImpl;
+    address public shareProtectedCollateralTokenImpl;
     address public shareDebtTokenImpl;
 
     mapping(uint256 id => address[2] silos) private _idToSilos;
@@ -49,6 +50,7 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step, Creator {
     function initialize(
         address _siloImpl,
         address _shareCollateralTokenImpl,
+        address _shareProtectedCollateralTokenImpl,
         address _shareDebtTokenImpl,
         uint256 _daoFee,
         address _daoFeeReceiver
@@ -64,6 +66,7 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step, Creator {
 
         siloImpl = _siloImpl;
         shareCollateralTokenImpl = _shareCollateralTokenImpl;
+        shareProtectedCollateralTokenImpl = _shareProtectedCollateralTokenImpl;
         shareDebtTokenImpl = _shareDebtTokenImpl;
 
         uint256 _maxDeployerFee = 0.15e18; // 15% max deployer fee
@@ -243,12 +246,16 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step, Creator {
         ISiloConfig.ConfigData memory configData0,
         ISiloConfig.ConfigData memory configData1
     ) internal virtual {
-        configData0.protectedShareToken = Clones.clone(shareCollateralTokenImpl);
-        configData0.collateralShareToken = Clones.clone(shareCollateralTokenImpl);
-        configData0.debtShareToken = Clones.clone(shareDebtTokenImpl);
-        configData1.protectedShareToken = Clones.clone(shareCollateralTokenImpl);
-        configData1.collateralShareToken = Clones.clone(shareCollateralTokenImpl);
-        configData1.debtShareToken = Clones.clone(shareDebtTokenImpl);
+        address collateralTokenImpl = shareCollateralTokenImpl;
+        address protectedCollateralTokenImpl = shareProtectedCollateralTokenImpl;
+        address debtTokenImpl = shareDebtTokenImpl;
+
+        configData0.protectedShareToken = Clones.clone(protectedCollateralTokenImpl);
+        configData0.collateralShareToken = Clones.clone(collateralTokenImpl);
+        configData0.debtShareToken = Clones.clone(debtTokenImpl);
+        configData1.protectedShareToken = Clones.clone(protectedCollateralTokenImpl);
+        configData1.collateralShareToken = Clones.clone(collateralTokenImpl);
+        configData1.debtShareToken = Clones.clone(debtTokenImpl);
     }
 
     function _initializeShareTokens(

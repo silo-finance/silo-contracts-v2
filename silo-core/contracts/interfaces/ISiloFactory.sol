@@ -36,6 +36,7 @@ interface ISiloFactory is IERC721 {
     function initialize(
         address _siloImpl,
         address _shareCollateralTokenImpl,
+        address _shareProtectedCollateralTokenImpl,
         address _shareDebtTokenImpl,
         uint256 _daoFee,
         address _daoFeeReceiver
