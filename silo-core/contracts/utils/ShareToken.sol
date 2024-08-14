@@ -56,6 +56,7 @@ import {NonReentrantLib} from "../lib/NonReentrantLib.sol";
 ///
 /// _Available since v4.7._
 /// @custom:security-contact security@silo.finance
+// TODO: use ERC20Permit upgradable
 abstract contract ShareToken is Initializable, ERC20Permit, IShareToken {
     using Hook for uint24;
     using CallBeforeQuoteLib for ISiloConfig.ConfigData;
