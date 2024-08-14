@@ -698,6 +698,7 @@ contract Silo is SiloERC4626 {
         );
 
         if (_collateralType == CollateralType.Collateral) {
+            emit Transfer(address(0), msg.sender, _shares);
             emit Deposit(msg.sender, _receiver, assets, shares);
         } else {
             emit DepositProtected(msg.sender, _receiver, assets, shares);
@@ -731,6 +732,7 @@ contract Silo is SiloERC4626 {
         );
 
         if (_collateralType == CollateralType.Collateral) {
+            emit Transfer(msg.sender, address(0), _shares);
             emit Withdraw(msg.sender, _receiver, _owner, assets, shares);
         } else {
             emit WithdrawProtected(msg.sender, _receiver, _owner, assets, shares);
