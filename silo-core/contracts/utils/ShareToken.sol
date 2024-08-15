@@ -10,7 +10,6 @@ import {IShareToken, ISilo} from "../interfaces/IShareToken.sol";
 import {ISiloConfig} from "../SiloConfig.sol";
 import {TokenHelper} from "../lib/TokenHelper.sol";
 import {Hook} from "../lib/Hook.sol";
-import {CallBeforeQuoteLib} from "../lib/CallBeforeQuoteLib.sol";
 import {NonReentrantLib} from "../lib/NonReentrantLib.sol";
 import {ShareTokenLib} from "../lib/ShareTokenLib.sol";
 import {SiloERC20} from "./siloERC20/SiloERC20.sol";
@@ -59,7 +58,6 @@ import {SiloERC20} from "./siloERC20/SiloERC20.sol";
 /// @custom:security-contact security@silo.finance
 abstract contract ShareToken is Initializable, SiloERC20, IShareToken {
     using Hook for uint24;
-    using CallBeforeQuoteLib for ISiloConfig.ConfigData;
 
     string private constant _NAME = "SiloShareToken";
 
@@ -137,11 +135,7 @@ abstract contract ShareToken is Initializable, SiloERC20, IShareToken {
         override(SiloERC20, IERC20)
         returns (bool result)
     {
-        ISiloConfig siloConfigCached = _crossNonReentrantBefore();
-
-        result = SiloERC20.transferFrom(_from, _to, _amount);
-
-        siloConfigCached.turnOffReentrancyProtection();
+        return ShareTokenLib.transferFrom(_from, _to, _amount);
     }
 
     /// @inheritdoc SiloERC20
@@ -151,11 +145,7 @@ abstract contract ShareToken is Initializable, SiloERC20, IShareToken {
         override(SiloERC20, IERC20)
         returns (bool result)
     {
-        ISiloConfig siloConfigCached = _crossNonReentrantBefore();
-
-        result = SiloERC20.transfer(_to, _amount);
-
-        siloConfigCached.turnOffReentrancyProtection();
+        return ShareTokenLib.transfer(_to, _amount);
     }
 
     function approve(address spender, uint256 value) public override(SiloERC20, IERC20) returns (bool result) {
@@ -252,25 +242,10 @@ abstract contract ShareToken is Initializable, SiloERC20, IShareToken {
         );
     }
 
-    function _crossNonReentrantBefore()
-        internal
-        virtual
-        returns (ISiloConfig siloConfigCached)
-    {
-        siloConfigCached = siloConfig;
-        siloConfigCached.turnOnReentrancyProtection();
-    }
-
     /// @notice Call beforeQuote on solvency oracles
     /// @param _user user address for which the solvent check is performed
     function _callOracleBeforeQuote(address _user) internal virtual {
-        (
-            ISiloConfig.ConfigData memory collateralConfig,
-            ISiloConfig.ConfigData memory debtConfig
-        ) = siloConfig.getConfigs(_user);
-
-        collateralConfig.callSolvencyOracleBeforeQuote();
-        debtConfig.callSolvencyOracleBeforeQuote();
+        ShareTokenLib._callOracleBeforeQuote(_user);
     }
 
     function _msgSender() internal view returns (address) {
