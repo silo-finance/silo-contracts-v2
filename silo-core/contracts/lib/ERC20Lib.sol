@@ -3,54 +3,37 @@ pragma solidity ^0.8.20;
 
 import {IERC20Errors} from "openzeppelin5/interfaces/draft-IERC6093.sol";
 
-import {ISiloERC20} from "../inerfaces/ISiloERC20.sol";
+import {ISiloERC20} from "../interfaces/ISiloERC20.sol";
 
 library ERC20Lib {
-//    /**
-//     * @dev Returns the name of the token.
-//     */
-//    function name(ISiloERC20.ERC20Storage storage $) external view returns (string memory) {
-//        return $._name;
-//    }
-//
-//    /**
-//     * @dev Returns the symbol of the token, usually a shorter version of the
-//     * name.
-//     */
-//    function symbol(ISiloERC20.ERC20Storage storage $) external view returns (string memory) {
-//        return $._symbol;
-//    }
-//
-//    /**
-//     * @dev Returns the number of decimals used to get its user representation.
-//     * For example, if `decimals` equals `2`, a balance of `505` tokens should
-//     * be displayed to a user as `5.05` (`505 / 10 ** 2`).
-//     *
-//     * Tokens usually opt for a value of 18, imitating the relationship between
-//     * Ether and Wei. This is the default value returned by this function, unless
-//     * it's overridden.
-//     *
-//     * NOTE: This information is only used for _display_ purposes: it in
-//     * no way affects any of the arithmetic of the contract, including
-//     * {IERC20-balanceOf} and {IERC20-transfer}.
-//     */
-//    function decimals() external view returns (uint8) {
-//        return 18;
-//    }
-//
-//    /**
-//     * @dev See {IERC20-totalSupply}.
-//     */
-//    function totalSupply(ISiloERC20.ERC20Storage storage $) external view returns (uint256) {
-//        return $._totalSupply;
-//    }
-//
-//    /**
-//     * @dev See {IERC20-balanceOf}.
-//     */
-//    function balanceOf(ISiloERC20.ERC20Storage storage $, address account) internal view returns (uint256) {
-//        return $._balances[account];
-//    }
+    /**
+     * @dev Returns the name of the token.
+     */
+    function name(ISiloERC20.ERC20Storage storage $) external view returns (string memory) {
+        return $._name;
+    }
+
+    /**
+     * @dev Returns the symbol of the token, usually a shorter version of the
+     * name.
+     */
+    function symbol(ISiloERC20.ERC20Storage storage $) public view returns (string memory) {
+        return $._symbol;
+    }
+
+    /**
+     * @dev See {IERC20-totalSupply}.
+     */
+    function totalSupply(ISiloERC20.ERC20Storage storage $) public view returns (uint256) {
+        return $._totalSupply;
+    }
+
+    /**
+     * @dev See {IERC20-balanceOf}.
+     */
+    function balanceOf(ISiloERC20.ERC20Storage storage $, address account) public view returns (uint256) {
+        return $._balances[account];
+    }
     
     /**
      * @dev See {IERC20-transfer}.
