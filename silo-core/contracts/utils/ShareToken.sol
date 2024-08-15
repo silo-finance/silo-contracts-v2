@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.24;
 
-import {ERC20Permit, IERC20Permit} from "openzeppelin5/token/ERC20/extensions/ERC20Permit.sol";
-import {ERC20, IERC20Metadata, IERC20} from "openzeppelin5/token/ERC20/ERC20.sol";
+import {IERC20Metadata, IERC20} from "openzeppelin5/token/ERC20/ERC20.sol";
 import {Initializable} from "openzeppelin5/proxy/utils/Initializable.sol";
 import {Strings} from "openzeppelin5/utils/Strings.sol";
 
@@ -13,6 +12,7 @@ import {TokenHelper} from "../lib/TokenHelper.sol";
 import {Hook} from "../lib/Hook.sol";
 import {CallBeforeQuoteLib} from "../lib/CallBeforeQuoteLib.sol";
 import {NonReentrantLib} from "../lib/NonReentrantLib.sol";
+import {SiloERC20} from "./siloERC20/SiloERC20.sol";
 
 /// @title ShareToken
 /// @notice Implements common interface for Silo tokens representing debt or collateral.
@@ -21,9 +21,9 @@ import {NonReentrantLib} from "../lib/NonReentrantLib.sol";
 /// Implementation of the ERC4626 "Tokenized Vault Standard" as defined in
 /// https://eips.ethereum.org/EIPS/eip-4626[EIP-4626].
 ///
-/// This extension allows the minting and burning of "shares" (represented using the ERC20 inheritance) in exchange for
+/// This extension allows the minting and burning of "shares" (represented using the SiloERC20 inheritance) in exchange for
 /// underlying "assets" through standardized {deposit}, {mint}, {redeem} and {burn} workflows. This contract extends
-/// the ERC20 standard. Any additional extensions included along it would affect the "shares" token represented by this
+/// the SiloERC20 standard. Any additional extensions included along it would affect the "shares" token represented by this
 /// contract and not the "assets" token which is an independent contract.
 ///
 /// [CAUTION]
@@ -56,7 +56,7 @@ import {NonReentrantLib} from "../lib/NonReentrantLib.sol";
 ///
 /// _Available since v4.7._
 /// @custom:security-contact security@silo.finance
-abstract contract ShareToken is Initializable, ERC20Permit, IShareToken {
+abstract contract ShareToken is Initializable, SiloERC20, IShareToken {
     using Hook for uint24;
     using CallBeforeQuoteLib for ISiloConfig.ConfigData;
 
@@ -80,7 +80,7 @@ abstract contract ShareToken is Initializable, ERC20Permit, IShareToken {
     }
 
     /// @custom:oz-upgrades-unsafe-allow constructor
-    constructor() ERC20(_NAME, _NAME) ERC20Permit(_NAME) {
+    constructor() {
         silo = ISilo(address(this)); // disable initializer
     }
 
@@ -129,57 +129,57 @@ abstract contract ShareToken is Initializable, ERC20Permit, IShareToken {
         return _hookSetup.hookReceiver;
     }
 
-    /// @inheritdoc ERC20
+    /// @inheritdoc SiloERC20
     function transferFrom(address _from, address _to, uint256 _amount)
         public
         virtual
-        override(ERC20, IERC20)
+        override(SiloERC20, IERC20)
         returns (bool result)
     {
         ISiloConfig siloConfigCached = _crossNonReentrantBefore();
 
-        result = ERC20.transferFrom(_from, _to, _amount);
+        result = SiloERC20.transferFrom(_from, _to, _amount);
 
         siloConfigCached.turnOffReentrancyProtection();
     }
 
-    /// @inheritdoc ERC20
+    /// @inheritdoc SiloERC20
     function transfer(address _to, uint256 _amount)
         public
         virtual
-        override(ERC20, IERC20)
+        override(SiloERC20, IERC20)
         returns (bool result)
     {
         ISiloConfig siloConfigCached = _crossNonReentrantBefore();
 
-        result = ERC20.transfer(_to, _amount);
+        result = SiloERC20.transfer(_to, _amount);
 
         siloConfigCached.turnOffReentrancyProtection();
     }
 
-    function approve(address spender, uint256 value) public override(ERC20, IERC20) returns (bool result) {
+    function approve(address spender, uint256 value) public override(SiloERC20, IERC20) returns (bool result) {
         NonReentrantLib.nonReentrant(siloConfig);
 
-        result = ERC20.approve(spender, value);
+        result = SiloERC20.approve(spender, value);
     }
 
-    /// @inheritdoc IERC20Permit
-    function permit(
-        address owner,
-        address spender,
-        uint256 value,
-        uint256 deadline,
-        uint8 v,
-        bytes32 r,
-        bytes32 s
-    ) public virtual override {
-        NonReentrantLib.nonReentrant(siloConfig);
-
-        ERC20Permit.permit(owner, spender, value, deadline, v, r, s);
-    }
+//    /// @inheritdoc IERC20Permit
+//    function permit(
+//        address owner,
+//        address spender,
+//        uint256 value,
+//        uint256 deadline,
+//        uint8 v,
+//        bytes32 r,
+//        bytes32 s
+//    ) public virtual override {
+//        NonReentrantLib.nonReentrant(siloConfig);
+//
+//        ERC20Permit.permit(owner, spender, value, deadline, v, r, s); TODO
+//    }
 
     /// @dev decimals of share token
-    function decimals() public view virtual override(ERC20, IERC20Metadata) returns (uint8) {
+    function decimals() public view virtual override(SiloERC20, IERC20Metadata) returns (uint8) {
         ISiloConfig.ConfigData memory configData = siloConfig.getConfig(address(silo));
         return uint8(TokenHelper.assertAndGetDecimals(configData.token));
     }
@@ -195,7 +195,7 @@ abstract contract ShareToken is Initializable, ERC20Permit, IShareToken {
         public
         view
         virtual
-        override(ERC20, IERC20Metadata)
+        override(SiloERC20, IERC20Metadata)
         returns (string memory)
     {
         ISiloConfig.ConfigData memory configData = siloConfig.getConfig(address(silo));
@@ -227,7 +227,7 @@ abstract contract ShareToken is Initializable, ERC20Permit, IShareToken {
         public
         view
         virtual
-        override(ERC20, IERC20Metadata)
+        override(SiloERC20, IERC20Metadata)
         returns (string memory)
     {
         ISiloConfig.ConfigData memory configData = siloConfig.getConfig(address(silo));
@@ -262,23 +262,8 @@ abstract contract ShareToken is Initializable, ERC20Permit, IShareToken {
         transferWithChecks = true;
     }
 
-    /// @inheritdoc ERC20
-    function _update(address from, address to, uint256 value) internal virtual override {
-        if (value == 0) revert ZeroTransfer();
-
-        _beforeTokenTransfer(from, to, value);
-
-        ERC20._update(from, to, value);
-
-        _afterTokenTransfer(from, to, value);
-    }
-
-    /// @dev By default, we do not have any hooks before token transfer. However,
-    /// derived contracts can override this function if they need to execute any logic before token transfer.
-    function _beforeTokenTransfer(address _sender, address _recipient, uint256 _amount) internal virtual {}
-
     /// @dev Call an afterTokenTransfer hook if registered
-    function _afterTokenTransfer(address _sender, address _recipient, uint256 _amount) internal virtual {
+    function _afterTokenTransfer(address _sender, address _recipient, uint256 _amount) internal virtual override {
         HookSetup memory setup = _hookSetup;
 
         uint256 action = Hook.shareTokenTransfer(setup.tokenType);
@@ -317,15 +302,19 @@ abstract contract ShareToken is Initializable, ERC20Permit, IShareToken {
         debtConfig.callSolvencyOracleBeforeQuote();
     }
 
+    function _msgSender() internal view returns (address) {
+        return msg.sender;
+    }
+
     /// @dev checks if operation is "real" transfer
     /// @param _sender sender address
     /// @param _recipient recipient address
     /// @return bool true if operation is real transfer, false if it is mint or burn
     function _isTransfer(address _sender, address _recipient) internal pure virtual returns (bool) {
         // in order this check to be true, it is required to have:
-        // require(sender != address(0), "ERC20: transfer from the zero address");
-        // require(recipient != address(0), "ERC20: transfer to the zero address");
-        // on transfer. ERC20 has them, so we good.
+        // require(sender != address(0), "SiloERC20: transfer from the zero address");
+        // require(recipient != address(0), "SiloERC20: transfer to the zero address");
+        // on transfer. SiloERC20 has them, so we good.
         return _sender != address(0) && _recipient != address(0);
     }
 }

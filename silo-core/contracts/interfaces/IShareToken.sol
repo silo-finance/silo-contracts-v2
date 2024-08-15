@@ -31,7 +31,6 @@ interface IShareToken is IERC20Metadata {
     error AmountExceedsAllowance();
     error RecipientNotSolventAfterTransfer();
     error SenderNotSolventAfterTransfer();
-    error ZeroTransfer();
 
     /// @param _silo Silo address for which tokens was deployed
     /// @param _hookReceiver address that will get a callback on mint, burn and transfer of the token
