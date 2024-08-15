@@ -5,6 +5,9 @@ import {IERC20Errors} from "openzeppelin5/interfaces/draft-IERC6093.sol";
 
 import {ISiloERC20} from "../interfaces/ISiloERC20.sol";
 
+/// @dev this is copy of ERC20Upgradeable. Changes:
+/// - events are commented out
+/// - `ISiloERC20.ERC20Storage storage $` added as parameter
 library ERC20Lib {
     /**
      * @dev Returns the name of the token.
