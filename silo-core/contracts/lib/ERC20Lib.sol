@@ -3,6 +3,8 @@ pragma solidity ^0.8.20;
 
 import {IERC20Errors} from "openzeppelin5/interfaces/draft-IERC6093.sol";
 
+import {ISiloERC20} from "../interfaces/ISiloERC20.sol";
+
 /**
  * @notice this is copy of ERC20Upgradeable. Changes:
  * - events are commented out
@@ -27,22 +29,10 @@ import {IERC20Errors} from "openzeppelin5/interfaces/draft-IERC6093.sol";
  * applications.
  */
 library ERC20Lib {
-    /// @custom:storage-location erc7201:openzeppelin.storage.ERC20
-    struct ERC20Storage {
-        mapping(address account => uint256) _balances;
-
-        mapping(address account => mapping(address spender => uint256)) _allowances;
-
-        uint256 _totalSupply;
-
-        string _name;
-        string _symbol;
-    }
-
     // keccak256(abi.encode(uint256(keccak256("openzeppelin.storage.ERC20")) - 1)) & ~bytes32(uint256(0xff))
     bytes32 private constant ERC20StorageLocation = 0x52c63247e1f47db19d5ce0460030c497f067ca4cebf71ba98eeadabe20bace00;
 
-    function _getERC20Storage() private pure returns (ERC20Storage storage $) {
+    function _getERC20Storage() private pure returns (ISiloERC20.ERC20Storage storage $) {
         assembly {
             $.slot := ERC20StorageLocation
         }
@@ -59,7 +49,7 @@ library ERC20Lib {
     }
 
     function __ERC20_init_unchained(string memory name_, string memory symbol_) internal {
-        ERC20Storage storage $ = _getERC20Storage();
+        ISiloERC20.ERC20Storage storage $ = _getERC20Storage();
         $._name = name_;
         $._symbol = symbol_;
     }
@@ -68,7 +58,7 @@ library ERC20Lib {
      * @dev Returns the name of the token.
      */
     function name() public view returns (string memory) {
-        ERC20Storage storage $ = _getERC20Storage();
+        ISiloERC20.ERC20Storage storage $ = _getERC20Storage();
         return $._name;
     }
 
@@ -77,7 +67,7 @@ library ERC20Lib {
      * name.
      */
     function symbol() public view returns (string memory) {
-        ERC20Storage storage $ = _getERC20Storage();
+        ISiloERC20.ERC20Storage storage $ = _getERC20Storage();
         return $._symbol;
     }
 
@@ -102,7 +92,7 @@ library ERC20Lib {
      * @dev See {IERC20-totalSupply}.
      */
     function totalSupply() public view returns (uint256) {
-        ERC20Storage storage $ = _getERC20Storage();
+        ISiloERC20.ERC20Storage storage $ = _getERC20Storage();
         return $._totalSupply;
     }
 
@@ -110,7 +100,7 @@ library ERC20Lib {
      * @dev See {IERC20-balanceOf}.
      */
     function balanceOf(address account) public view returns (uint256) {
-        ERC20Storage storage $ = _getERC20Storage();
+        ISiloERC20.ERC20Storage storage $ = _getERC20Storage();
         return $._balances[account];
     }
 
@@ -132,7 +122,7 @@ library ERC20Lib {
      * @dev See {IERC20-allowance}.
      */
     function allowance(address owner, address spender) public view returns (uint256) {
-        ERC20Storage storage $ = _getERC20Storage();
+        ISiloERC20.ERC20Storage storage $ = _getERC20Storage();
         return $._allowances[owner][spender];
     }
 
@@ -203,7 +193,7 @@ library ERC20Lib {
      * Emits a {Transfer} event.
      */
     function _update(address from, address to, uint256 value) internal {
-        ERC20Storage storage $ = _getERC20Storage();
+        ISiloERC20.ERC20Storage storage $ = _getERC20Storage();
         if (from == address(0)) {
             // Overflow check required: The rest of the code assumes that totalSupply never overflows
             $._totalSupply += value;
@@ -282,7 +272,7 @@ library ERC20Lib {
      * Requirements are the same as {_approve}.
      */
     function _approve(address owner, address spender, uint256 value) internal {
-        ERC20Storage storage $ = _getERC20Storage();
+        ISiloERC20.ERC20Storage storage $ = _getERC20Storage();
         if (owner == address(0)) {
             revert IERC20Errors.ERC20InvalidApprover(address(0));
         }
