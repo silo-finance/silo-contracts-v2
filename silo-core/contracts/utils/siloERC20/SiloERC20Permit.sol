@@ -21,7 +21,7 @@ import {ERC20PermitLib} from "./lib/ERC20PermitLib.sol";
  * presenting a message signed by the account. By not relying on `{IERC20-approve}`, the token holder account doesn't
  * need to send a transaction, and thus is not required to hold Ether at all.
  */
-contract SiloERC20Permit is SiloERC20, IERC20Permit {
+abstract contract SiloERC20Permit is SiloERC20, IERC20Permit {
     /**
      * @inheritdoc IERC20Permit
      */
@@ -42,6 +42,22 @@ contract SiloERC20Permit is SiloERC20, IERC20Permit {
      */
     function nonces(address owner) public view virtual returns (uint256) {
         return NoncesLib.nonces(owner);
+    }
+
+    function eip712Domain()
+        public
+        view
+        returns (
+            bytes1 fields,
+            string memory name,
+            string memory version,
+            uint256 chainId,
+            address verifyingContract,
+            bytes32 salt,
+            uint256[] memory extensions
+        )
+    {
+        return EIP712Lib.eip712Domain();
     }
 
     /**
