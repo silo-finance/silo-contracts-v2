@@ -26,7 +26,7 @@ import {IERC20Errors} from "openzeppelin5/interfaces/draft-IERC6093.sol";
  * conventional and does not conflict with the expectations of ERC-20
  * applications.
  */
-library ERC20Upgradeable {
+library ERC20Lib {
     /// @custom:storage-location erc7201:openzeppelin.storage.ERC20
     struct ERC20Storage {
         mapping(address account => uint256) _balances;
