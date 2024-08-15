@@ -187,7 +187,8 @@ library EIP712Lib {
     /**
      * @dev The hash of the version parameter for the EIP712 domain.
      *
-     * NOTE: In previous versions this function was virtual. In this version you should override `_EIP712Version` instead.
+     * NOTE: In previous versions this function was virtual.
+     * In this version you should override `_EIP712Version` instead.
      */
     function _EIP712VersionHash() internal view returns (bytes32) {
         EIP712Storage storage $ = _getEIP712Storage();
