@@ -10,7 +10,7 @@ import {TokenHelper} from "../lib/TokenHelper.sol";
 
 library ShareTokenLib {
     // keccak256(abi.encode(uint256(keccak256("silo.storage.ShareToken")) - 1)) & ~bytes32(uint256(0xff))
-    bytes32 private constant StorageLocation = 0x52c63247e1f47db19d5ce0460030c497f067ca4cebf71ba98eeadabe20bace00; // TODO
+    bytes32 private constant StorageLocation = 0x01b0b3f9d6e360167e522fa2b18ba597ad7b2b35841fec7e1ca4dbb0adea1200;
 
     function _getShareTokenStorage() private pure returns (IShareToken.ShareTokenStorage storage $) {
         assembly {
