@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 import {IERC20Errors} from "openzeppelin5/interfaces/draft-IERC6093.sol";
 
-import {ISiloERC20} from "../interfaces/ISiloERC20.sol";
+import {ISiloERC20} from "../../../interfaces/ISiloERC20.sol";
 
 /**
  * @notice this is copy of ERC20Upgradeable. Changes:
