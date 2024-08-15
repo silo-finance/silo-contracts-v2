@@ -36,6 +36,9 @@ import {ERC20Lib} from "./lib/ERC20Lib.sol";
  * these events, as it isn't required by the specification.
  */
 abstract contract SiloERC20 is IERC20, IERC20Metadata, IERC20Errors {
+    /**
+     * @dev flag that tels contract, if it should emit events
+     */
     function emitEvents() public pure virtual returns (bool) {
         return true;
     }
@@ -193,6 +196,25 @@ abstract contract SiloERC20 is IERC20, IERC20Metadata, IERC20Errors {
     }
 
     /**
+     * @dev Sets `value` as the allowance of `spender` over the `owner` s tokens.
+     *
+     * This internal function is equivalent to `approve`, and can be used to
+     * e.g. set automatic allowances for certain subsystems, etc.
+     *
+     * Emits an {Approval} event.
+     *
+     * Requirements:
+     *
+     * - `owner` cannot be the zero address.
+     * - `spender` cannot be the zero address.
+     *
+     * Overrides to this logic should be done to the variant with an additional `bool emitEvent` argument.
+     */
+    function _approve(address owner, address spender, uint256 value) internal {
+        _approve(owner, spender, value, emitEvents());
+    }
+
+    /**
      * @dev Variant of {_approve} with an optional flag to enable or disable the {Approval} event.
      *
      * By default (when calling {_approve}) the flag is set to true. On the other hand, approval changes made by
@@ -209,11 +231,11 @@ abstract contract SiloERC20 is IERC20, IERC20Metadata, IERC20Errors {
      *
      * Requirements are the same as {_approve}.
      */
-    function _approve(address owner, address spender, uint256 value) internal virtual {
-        ERC20Lib._approve(owner, spender, value);
+    function _approve(address owner, address spender, uint256 value, bool emitEvent) internal virtual {
+        return ERC20Lib._approve(owner, spender, value);
 
-        if (emitEvents()) {
-            emit IERC20.Approval(owner, spender, value);
+        if (emitEvent) {
+            emit Approval(owner, spender, value);
         }
     }
 
