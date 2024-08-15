@@ -12,6 +12,7 @@ import {TokenHelper} from "../lib/TokenHelper.sol";
 import {Hook} from "../lib/Hook.sol";
 import {CallBeforeQuoteLib} from "../lib/CallBeforeQuoteLib.sol";
 import {NonReentrantLib} from "../lib/NonReentrantLib.sol";
+import {ShareTokenLib} from "../lib/ShareTokenLib.sol";
 import {SiloERC20} from "./siloERC20/SiloERC20.sol";
 
 /// @title ShareToken
@@ -180,8 +181,7 @@ abstract contract ShareToken is Initializable, SiloERC20, IShareToken {
 
     /// @dev decimals of share token
     function decimals() public view virtual override(SiloERC20, IERC20Metadata) returns (uint8) {
-        ISiloConfig.ConfigData memory configData = siloConfig.getConfig(address(silo));
-        return uint8(TokenHelper.assertAndGetDecimals(configData.token));
+        return ShareTokenLib.decimals();
     }
 
     /// @dev Name convention:
@@ -198,22 +198,7 @@ abstract contract ShareToken is Initializable, SiloERC20, IShareToken {
         override(SiloERC20, IERC20Metadata)
         returns (string memory)
     {
-        ISiloConfig.ConfigData memory configData = siloConfig.getConfig(address(silo));
-        string memory siloIdAscii = Strings.toString(siloConfig.SILO_ID());
-
-        string memory pre = "";
-        string memory post = " Deposit";
-
-        if (address(this) == configData.protectedShareToken) {
-            pre = "Non-borrowable ";
-        } else if (address(this) == configData.collateralShareToken) {
-            pre = "Borrowable ";
-        } else if (address(this) == configData.debtShareToken) {
-            post = " Debt";
-        }
-
-        string memory tokenSymbol = TokenHelper.symbol(configData.token);
-        return string.concat("Silo Finance ", pre, tokenSymbol, post, ", SiloId: ", siloIdAscii);
+        return ShareTokenLib.name();
     }
 
     /// @dev Symbol convention:
@@ -230,21 +215,7 @@ abstract contract ShareToken is Initializable, SiloERC20, IShareToken {
         override(SiloERC20, IERC20Metadata)
         returns (string memory)
     {
-        ISiloConfig.ConfigData memory configData = siloConfig.getConfig(address(silo));
-        string memory siloIdAscii = Strings.toString(siloConfig.SILO_ID());
-
-        string memory pre;
-
-        if (address(this) == configData.protectedShareToken) {
-            pre = "nb";
-        } else if (address(this) == configData.collateralShareToken) {
-            pre = "b";
-        } else if (address(this) == configData.debtShareToken) {
-            pre = "d";
-        }
-
-        string memory tokenSymbol = TokenHelper.symbol(configData.token);
-        return string.concat(pre, tokenSymbol, "-", siloIdAscii);
+        return ShareTokenLib.symbol();
     }
 
     function balanceOfAndTotalSupply(address _account) public view virtual returns (uint256, uint256) {
