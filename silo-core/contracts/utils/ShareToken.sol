@@ -57,36 +57,20 @@ import {SiloERC20} from "./siloERC20/SiloERC20.sol";
 /// _Available since v4.7._
 /// @custom:security-contact security@silo.finance
 abstract contract ShareToken is Initializable, SiloERC20, IShareToken {
-    using Hook for uint24;
-
-    string private constant _NAME = "SiloShareToken";
-
-    /// @notice Silo address for which tokens was deployed
-    ISilo public silo;
-
-    /// @dev cached silo config address
-    ISiloConfig public siloConfig;
-
-    /// @notice Copy of hooks setup from SiloConfig for optimisation purposes
-    HookSetup private _hookSetup;
-
-    bool public transferWithChecks = true;
-
     modifier onlySilo() {
-        if (msg.sender != address(silo)) revert OnlySilo();
+        if (msg.sender != address(ShareTokenLib._getShareTokenStorage().silo)) revert OnlySilo();
 
         _;
     }
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
-        silo = ISilo(address(this)); // disable initializer
+        ShareTokenLib._getShareTokenStorage().silo = ISilo(address(this)); // disable initializer
     }
 
     /// @inheritdoc IShareToken
     function synchronizeHooks(uint24 _hooksBefore, uint24 _hooksAfter) external onlySilo {
-        _hookSetup.hooksBefore = _hooksBefore;
-        _hookSetup.hooksAfter = _hooksAfter;
+        ShareTokenLib.synchronizeHooks(_hooksBefore, _hooksAfter);
     }
 
     /// @inheritdoc IShareToken
@@ -110,9 +94,7 @@ abstract contract ShareToken is Initializable, SiloERC20, IShareToken {
         virtual
         onlySilo
     {
-        transferWithChecks = false;
-        _transfer(_from, _to, _amount);
-        transferWithChecks = true;
+        ShareTokenLib.forwardTransferFromNoChecks(_from, _to, _amount);
     }
 
     /// @inheritdoc IShareToken
@@ -121,11 +103,11 @@ abstract contract ShareToken is Initializable, SiloERC20, IShareToken {
     }
 
     function hookSetup() external view virtual returns (HookSetup memory) {
-        return _hookSetup;
+        return ShareTokenLib.hookSetup();
     }
 
     function hookReceiver() external view virtual returns (address) {
-        return _hookSetup.hookReceiver;
+        return ShareTokenLib.hookReceiver();
     }
 
     /// @inheritdoc SiloERC20
@@ -149,9 +131,7 @@ abstract contract ShareToken is Initializable, SiloERC20, IShareToken {
     }
 
     function approve(address spender, uint256 value) public override(SiloERC20, IERC20) returns (bool result) {
-        NonReentrantLib.nonReentrant(siloConfig);
-
-        result = SiloERC20.approve(spender, value);
+        result = ShareTokenLib.approve(spender, value);
     }
 
 //    /// @inheritdoc IERC20Permit
@@ -208,6 +188,10 @@ abstract contract ShareToken is Initializable, SiloERC20, IShareToken {
         return ShareTokenLib.symbol();
     }
 
+    function silo() public view virtual returns (ISilo) {
+        return (ShareTokenLib._getShareTokenStorage().silo);
+    }
+
     function balanceOfAndTotalSupply(address _account) public view virtual returns (uint256, uint256) {
         return (balanceOf(_account), totalSupply());
     }
@@ -215,31 +199,12 @@ abstract contract ShareToken is Initializable, SiloERC20, IShareToken {
     /// @param _silo Silo address for which tokens was deployed
     // solhint-disable-next-line func-name-mixedcase
     function __ShareToken_init(ISilo _silo, address _hookReceiver, uint24 _tokenType) internal virtual {
-        silo = _silo;
-        siloConfig = _silo.config();
-
-        _hookSetup.hookReceiver = _hookReceiver;
-        _hookSetup.tokenType = _tokenType;
-        transferWithChecks = true;
+        ShareTokenLib.__ShareToken_init(_silo, _hookReceiver, _tokenType);
     }
 
     /// @dev Call an afterTokenTransfer hook if registered
     function _afterTokenTransfer(address _sender, address _recipient, uint256 _amount) internal virtual override {
-        HookSetup memory setup = _hookSetup;
-
-        uint256 action = Hook.shareTokenTransfer(setup.tokenType);
-
-        if (!setup.hooksAfter.matchAction(action)) return;
-
-        // report mint, burn or transfer
-        // even if it is possible to leave silo in a middle of mint/burn, where we can have invalid state
-        // you can not enter any function because of cross reentrancy check
-        // invalid mid-state can be eg: in a middle of transitionCollateral, after burn but before mint
-        IHookReceiver(setup.hookReceiver).afterAction(
-            address(silo),
-            action,
-            abi.encodePacked(_sender, _recipient, _amount, balanceOf(_sender), balanceOf(_recipient), totalSupply())
-        );
+        ShareTokenLib._afterTokenTransfer(_sender, _recipient, _amount);
     }
 
     /// @notice Call beforeQuote on solvency oracles

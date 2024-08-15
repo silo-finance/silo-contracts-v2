@@ -26,7 +26,7 @@ interface IShareToken is IERC20Metadata {
         ISiloConfig siloConfig;
 
         /// @notice Copy of hooks setup from SiloConfig for optimisation purposes
-        HookSetup _hookSetup;
+        HookSetup hookSetup;
 
         bool transferWithChecks;
     }

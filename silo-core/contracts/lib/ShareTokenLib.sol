@@ -3,24 +3,74 @@ pragma solidity ^0.8.0;
 
 import {Strings} from "openzeppelin5/utils/Strings.sol";
 
+import {ISilo} from "../interfaces/ISilo.sol";
 import {IShareToken} from "../interfaces/IShareToken.sol";
 import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
+import {IHookReceiver} from "../interfaces/IHookReceiver.sol";
 
 import {TokenHelper} from "../lib/TokenHelper.sol";
 import {CallBeforeQuoteLib} from "../lib/CallBeforeQuoteLib.sol";
+import {Hook} from "../lib/Hook.sol";
+import {NonReentrantLib} from "../lib/NonReentrantLib.sol";
 
 import {ERC20Lib} from "../utils/siloERC20/lib/ERC20Lib.sol";
 
 library ShareTokenLib {
+    using Hook for uint24;
     using CallBeforeQuoteLib for ISiloConfig.ConfigData;
 
     // keccak256(abi.encode(uint256(keccak256("silo.storage.ShareToken")) - 1)) & ~bytes32(uint256(0xff))
     bytes32 private constant StorageLocation = 0x01b0b3f9d6e360167e522fa2b18ba597ad7b2b35841fec7e1ca4dbb0adea1200;
 
-    function _getShareTokenStorage() private pure returns (IShareToken.ShareTokenStorage storage $) {
+    function _getShareTokenStorage() internal pure returns (IShareToken.ShareTokenStorage storage $) {
         assembly {
             $.slot := StorageLocation
         }
+    }
+
+    /// @param _silo Silo address for which tokens was deployed
+    // solhint-disable-next-line func-name-mixedcase
+    function __ShareToken_init(ISilo _silo, address _hookReceiver, uint24 _tokenType) internal {
+        IShareToken.ShareTokenStorage storage $ = _getShareTokenStorage();
+
+        $.silo = _silo;
+        $.siloConfig = _silo.config();
+
+        $.hookSetup.hookReceiver = _hookReceiver;
+        $.hookSetup.tokenType = _tokenType;
+        $.transferWithChecks = true;
+    }
+
+    function forwardTransferFromNoChecks(address _from, address _to, uint256 _amount) external {
+        IShareToken.ShareTokenStorage storage $ = _getShareTokenStorage();
+
+        $.transferWithChecks = false;
+        ERC20Lib._transfer(_from, _to, _amount);
+        $.transferWithChecks = true;
+    }
+
+    function synchronizeHooks(uint24 _hooksBefore, uint24 _hooksAfter) external {
+        IShareToken.ShareTokenStorage storage $ = _getShareTokenStorage();
+
+        $.hookSetup.hooksBefore = _hooksBefore;
+        $.hookSetup.hooksAfter = _hooksAfter;
+    }
+
+    function hookSetup() external view returns (IShareToken.HookSetup memory) {
+        IShareToken.ShareTokenStorage storage $ = _getShareTokenStorage();
+        return $.hookSetup;
+    }
+
+    function hookReceiver() external view returns (address) {
+        IShareToken.ShareTokenStorage storage $ = _getShareTokenStorage();
+        return $.hookSetup.hookReceiver;
+    }
+
+    function approve(address spender, uint256 value) public returns (bool result) {
+        IShareToken.ShareTokenStorage storage $ = _getShareTokenStorage();
+
+        NonReentrantLib.nonReentrant($.siloConfig);
+        result = ERC20Lib.approve(spender, value);
     }
 
     /// @dev decimals of share token
@@ -120,5 +170,32 @@ library ShareTokenLib {
 
         collateralConfig.callSolvencyOracleBeforeQuote();
         debtConfig.callSolvencyOracleBeforeQuote();
+    }
+
+    function _afterTokenTransfer(address _sender, address _recipient, uint256 _amount) external {
+        IShareToken.ShareTokenStorage storage $ = _getShareTokenStorage();
+
+        IShareToken.HookSetup memory setup = $.hookSetup;
+
+        uint256 action = Hook.shareTokenTransfer(setup.tokenType);
+
+        if (!setup.hooksAfter.matchAction(action)) return;
+
+        // report mint, burn or transfer
+        // even if it is possible to leave silo in a middle of mint/burn, where we can have invalid state
+        // you can not enter any function because of cross reentrancy check
+        // invalid mid-state can be eg: in a middle of transitionCollateral, after burn but before mint
+        IHookReceiver(setup.hookReceiver).afterAction(
+            address($.silo),
+            action,
+            abi.encodePacked(
+                _sender,
+                _recipient,
+                _amount,
+                ERC20Lib.balanceOf(_sender),
+                ERC20Lib.balanceOf(_recipient),
+                ERC20Lib.totalSupply()
+            )
+        );
     }
 }
