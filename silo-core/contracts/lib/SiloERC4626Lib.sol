@@ -14,6 +14,8 @@ import {SiloStdLib} from "./SiloStdLib.sol";
 import {SiloLendingLib} from "./SiloLendingLib.sol";
 import {Rounding} from "./Rounding.sol";
 import {Hook} from "./Hook.sol";
+import {AssetTypes} from "./AssetTypes.sol";
+import {SiloStorageLib} from "./SiloStorageLib.sol";
 
 // solhint-disable function-max-lines
 
