@@ -97,7 +97,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
         _TOKEN0 = _configData0.token;
 
         _PROTECTED_COLLATERAL_SHARE_TOKEN0 = _configData0.protectedShareToken;
-        _COLLATERAL_SHARE_TOKEN0 = _configData0.collateralShareToken;
+        _COLLATERAL_SHARE_TOKEN0 = _configData0.silo;
         _DEBT_SHARE_TOKEN0 = _configData0.debtShareToken;
 
         _SOLVENCY_ORACLE0 = _configData0.solvencyOracle;
@@ -118,7 +118,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
         _TOKEN1 = _configData1.token;
 
         _PROTECTED_COLLATERAL_SHARE_TOKEN1 = _configData1.protectedShareToken;
-        _COLLATERAL_SHARE_TOKEN1 = _configData1.collateralShareToken;
+        _COLLATERAL_SHARE_TOKEN1 = _configData1.silo;
         _DEBT_SHARE_TOKEN1 = _configData1.debtShareToken;
 
         _SOLVENCY_ORACLE1 = _configData1.solvencyOracle;

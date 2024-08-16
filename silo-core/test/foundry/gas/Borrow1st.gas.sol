@@ -21,13 +21,16 @@ contract Borrow1stGasTest is Gas, Test {
         silo1.deposit(ASSETS, DEPOSITOR);
     }
 
+    /*
+    forge test -vv --ffi --mt test_gas_firstBorrow
+    */
     function test_gas_firstBorrow() public {
         _action(
             BORROWER,
             address(silo1),
             abi.encodeCall(ISilo.borrow, (ASSETS, BORROWER, BORROWER)),
             "Borrow1st (no interest)",
-            227631
+            225249
         );
     }
 }

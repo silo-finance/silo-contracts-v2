@@ -154,7 +154,7 @@ contract SiloFactoryCreateSiloTest is SiloLittleHelper, IntegrationTest {
         vm.expectRevert(ISiloFactory.InvalidInitialization.selector);
         IShareToken(configData0.protectedShareToken).initialize(ISilo(configData0.silo), address(0), 0);
 
-        vm.expectRevert(ISiloFactory.InvalidInitialization.selector);
+        vm.expectRevert(ISilo.UseSiloInitializeMethodInstead.selector);
         IShareToken(configData0.collateralShareToken).initialize(ISilo(configData0.silo), address(0), 0);
 
         vm.expectRevert(ISiloFactory.InvalidInitialization.selector);
@@ -163,7 +163,7 @@ contract SiloFactoryCreateSiloTest is SiloLittleHelper, IntegrationTest {
         vm.expectRevert(ISiloFactory.InvalidInitialization.selector);
         IShareToken(configData1.protectedShareToken).initialize(ISilo(configData1.silo), address(0), 0);
 
-        vm.expectRevert(ISiloFactory.InvalidInitialization.selector);
+        vm.expectRevert(ISilo.UseSiloInitializeMethodInstead.selector);
         IShareToken(configData1.collateralShareToken).initialize(ISilo(configData1.silo), address(0), 0);
 
         vm.expectRevert(ISiloFactory.InvalidInitialization.selector);
