@@ -7,6 +7,7 @@ import {Clones} from "openzeppelin5/proxy/Clones.sol";
 import {ShareDebtToken} from "silo-core/contracts/utils/ShareDebtToken.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
+import {SiloERC20} from "silo-core/contracts/utils/siloERC20/SiloERC20.sol";
 
 
 // solhint-disable func-name-mixedcase
@@ -36,7 +37,7 @@ contract ShareDebtTokenNotInitializedTest is Test {
 
         // counterexample
         vm.prank(address(0));
-        vm.expectRevert(IShareToken.ZeroTransfer.selector);
+        vm.expectRevert(SiloERC20.ZeroTransfer.selector);
         sToken.mint(address(1), address(1), 0);
     }
 
@@ -61,7 +62,7 @@ contract ShareDebtTokenNotInitializedTest is Test {
 
         // counterexample
         vm.prank(address(0));
-        vm.expectRevert(IShareToken.ZeroTransfer.selector);
+        vm.expectRevert(SiloERC20.ZeroTransfer.selector);
         sToken.burn(address(1), address(1), 0);
     }
 }

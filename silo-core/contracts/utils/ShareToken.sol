@@ -264,23 +264,8 @@ abstract contract ShareToken is Initializable, SiloERC20Permit, IShareToken {
         transferWithChecks = true;
     }
 
-    /// @inheritdoc SiloERC20
-    function _update(address from, address to, uint256 value) internal virtual override {
-        if (value == 0) revert ZeroTransfer();
-
-        _beforeTokenTransfer(from, to, value);
-
-        SiloERC20._update(from, to, value);
-
-        _afterTokenTransfer(from, to, value);
-    }
-
-    /// @dev By default, we do not have any hooks before token transfer. However,
-    /// derived contracts can override this function if they need to execute any logic before token transfer.
-    function _beforeTokenTransfer(address _sender, address _recipient, uint256 _amount) internal virtual {}
-
     /// @dev Call an afterTokenTransfer hook if registered
-    function _afterTokenTransfer(address _sender, address _recipient, uint256 _amount) internal virtual {
+    function _afterTokenTransfer(address _sender, address _recipient, uint256 _amount) internal virtual override {
         HookSetup memory setup = _hookSetup;
 
         uint256 action = Hook.shareTokenTransfer(setup.tokenType);

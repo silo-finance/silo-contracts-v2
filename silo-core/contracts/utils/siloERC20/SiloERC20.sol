@@ -12,6 +12,8 @@ import {ERC20Lib} from "./lib/ERC20Lib.sol";
  * - constructor removed
  * - added `virtual` to all methods
  * - added `emitEvents()` method
+ * - added _beforeTokenTransfer, _afterTokenTransfer
+ * - disallow zero transfer
  *
  * @dev Implementation of the {IERC20} interface.
  *
@@ -36,6 +38,8 @@ import {ERC20Lib} from "./lib/ERC20Lib.sol";
  * these events, as it isn't required by the specification.
  */
 abstract contract SiloERC20 is IERC20, IERC20Metadata, IERC20Errors {
+    error ZeroTransfer();
+
     /**
      * @dev flag that tels contract, if it should emit events
      */
@@ -164,7 +168,13 @@ abstract contract SiloERC20 is IERC20, IERC20Metadata, IERC20Errors {
      * Emits a {Transfer} event.
      */
     function _update(address from, address to, uint256 value) internal virtual {
+        if (value == 0) revert ZeroTransfer();
+
+        _beforeTokenTransfer(from, to, value);
+
         ERC20Lib._update(from, to, value);
+
+        _afterTokenTransfer(from, to, value);
 
         if (emitEvents()) {
             emit IERC20.Transfer(from, to, value);
@@ -250,4 +260,12 @@ abstract contract SiloERC20 is IERC20, IERC20Metadata, IERC20Errors {
     function _spendAllowance(address owner, address spender, uint256 value) internal virtual {
         ERC20Lib._spendAllowance(owner, spender, value);
     }
+
+    function _beforeTokenTransfer(address /* _sender */, address /* _recipient */, uint256 /* _amount */)
+        internal
+        virtual {}
+
+    function _afterTokenTransfer(address /* _sender */, address /* _recipient */, uint256 /* _amount */)
+        internal
+        virtual {}
 }
