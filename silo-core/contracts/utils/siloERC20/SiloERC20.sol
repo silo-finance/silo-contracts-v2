@@ -101,8 +101,16 @@ abstract contract SiloERC20 is IERC20, IERC20Metadata, IERC20Errors {
      * - `to` cannot be the zero address.
      * - the caller must have a balance of at least `value`.
      */
-    function transfer(address to, uint256 value) public virtual returns (bool) {
-        return ERC20Lib.transfer(to, value);
+    function transfer(address to, uint256 value) public virtual returns (bool result) {
+        _beforeTokenTransfer(msg.sender, to, value);
+
+        result = ERC20Lib.transfer(to, value);
+
+        _afterTokenTransfer(msg.sender, to, value);
+
+        if (emitEvents()) {
+            emit IERC20.Transfer(msg.sender, to, value);
+        }
     }
 
     /**
@@ -122,8 +130,8 @@ abstract contract SiloERC20 is IERC20, IERC20Metadata, IERC20Errors {
      *
      * - `spender` cannot be the zero address.
      */
-    function approve(address spender, uint256 value) public virtual returns (bool) {
-        return ERC20Lib.approve(spender, value);
+    function approve(address spender, uint256 value) public virtual returns (bool result) {
+        _approve(msg.sender, spender, value);
     }
 
     /**
@@ -142,8 +150,16 @@ abstract contract SiloERC20 is IERC20, IERC20Metadata, IERC20Errors {
      * - the caller must have allowance for ``from``'s tokens of at least
      * `value`.
      */
-    function transferFrom(address from, address to, uint256 value) public virtual returns (bool) {
-        return ERC20Lib.transferFrom(from, to, value);
+    function transferFrom(address from, address to, uint256 value) public virtual returns (bool result) {
+        _beforeTokenTransfer(from, to, value);
+
+        result = ERC20Lib.transferFrom(from, to, value);
+
+        _afterTokenTransfer(from, to, value);
+
+        if (emitEvents()) {
+            emit IERC20.Transfer(from, to, value);
+        }
     }
 
     /**
@@ -190,7 +206,15 @@ abstract contract SiloERC20 is IERC20, IERC20Metadata, IERC20Errors {
      * NOTE: This function is not virtual, {_update} should be overridden instead.
      */
     function _mint(address account, uint256 value) internal virtual {
+        _beforeTokenTransfer(address(0), account, value);
+
         ERC20Lib._mint(account, value);
+
+        _afterTokenTransfer(address(0), account, value);
+
+        if (emitEvents()) {
+            emit IERC20.Transfer(address(0), account, value);
+        }
     }
 
     /**
@@ -202,7 +226,15 @@ abstract contract SiloERC20 is IERC20, IERC20Metadata, IERC20Errors {
      * NOTE: This function is not virtual, {_update} should be overridden instead
      */
     function _burn(address account, uint256 value) internal virtual {
+        _beforeTokenTransfer(account, address(0), value);
+
         ERC20Lib._burn(account, value);
+
+        _afterTokenTransfer(account, address(0), value);
+
+        if (emitEvents()) {
+            emit IERC20.Transfer(account, address(0), value);
+        }
     }
 
     /**
