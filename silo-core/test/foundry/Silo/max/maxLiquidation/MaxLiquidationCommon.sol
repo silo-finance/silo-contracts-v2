@@ -29,7 +29,7 @@ abstract contract MaxLiquidationCommon is SiloLittleHelper, Test {
 
     function setUp() public {
         siloConfig = _setUpLocalFixture(SiloConfigsNames.LOCAL_NO_ORACLE_SILO);
-        token1.setOnDemand(true); // TODO think if this can influence testing? maybe try to do it in normal way?
+        token1.setOnDemand(true);
     }
 
     function _createDebtForBorrower(uint128 _collateral, bool _sameAsset) internal {
