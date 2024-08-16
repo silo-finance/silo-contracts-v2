@@ -15,6 +15,8 @@ import {CallBeforeQuoteLib} from "../lib/CallBeforeQuoteLib.sol";
 import {NonReentrantLib} from "../lib/NonReentrantLib.sol";
 import {SiloERC20} from "../utils/siloERC20/SiloERC20.sol";
 import {SiloERC20Permit} from "../utils/siloERC20/SiloERC20Permit.sol";
+import {EIP712Lib} from "../utils/siloERC20/lib/EIP712Lib.sol";
+import {ERC20Lib} from "../utils/siloERC20/lib/ERC20Lib.sol";
 
 /// @title ShareToken
 /// @notice Implements common interface for Silo tokens representing debt or collateral.
@@ -262,6 +264,9 @@ abstract contract ShareToken is Initializable, SiloERC20Permit, IShareToken {
         _hookSetup.hookReceiver = _hookReceiver;
         _hookSetup.tokenType = _tokenType;
         transferWithChecks = true;
+
+        ERC20Lib.__ERC20_init(_NAME, _NAME);
+        EIP712Lib.__EIP712_init(_NAME, "1");
     }
 
     /// @dev Call an afterTokenTransfer hook if registered
