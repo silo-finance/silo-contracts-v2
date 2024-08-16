@@ -201,7 +201,6 @@ interface ISilo is IERC20, IERC4626, IERC3156FlashLender {
     error InputCanBeAssetsOrShares();
     error CollateralSiloAlreadySet();
     error RepayTooHigh();
-    error UseSiloInitializeMethodInstead();
 
     /// @notice Method for HookReceiver only to call on behalf of Silo
     /// @param _target address of the contract to call
