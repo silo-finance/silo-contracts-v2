@@ -36,7 +36,7 @@ contract ShareDebtTokenTest is Test, SiloLittleHelper {
     */
     function test_debtToken_transfer_address_zero() public {
         vm.expectRevert(abi.encodeWithSelector(IERC20Errors.ERC20InvalidReceiver.selector, address(0)));
-        shareDebtToken.transfer(address(0), 0);
+        shareDebtToken.transfer(address(0), 1);
     }
 
     /*
