@@ -102,6 +102,8 @@ abstract contract SiloERC20 is IERC20, IERC20Metadata, IERC20Errors {
      * - the caller must have a balance of at least `value`.
      */
     function transfer(address to, uint256 value) public virtual returns (bool result) {
+        if (value == 0) revert ZeroTransfer();
+
         _beforeTokenTransfer(msg.sender, to, value);
 
         result = ERC20Lib.transfer(to, value);
@@ -151,6 +153,8 @@ abstract contract SiloERC20 is IERC20, IERC20Metadata, IERC20Errors {
      * `value`.
      */
     function transferFrom(address from, address to, uint256 value) public virtual returns (bool result) {
+        if (value == 0) revert ZeroTransfer();
+
         _beforeTokenTransfer(from, to, value);
 
         result = ERC20Lib.transferFrom(from, to, value);
@@ -206,6 +210,8 @@ abstract contract SiloERC20 is IERC20, IERC20Metadata, IERC20Errors {
      * NOTE: This function is not virtual, {_update} should be overridden instead.
      */
     function _mint(address account, uint256 value) internal virtual {
+        if (value == 0) revert ZeroTransfer();
+
         _beforeTokenTransfer(address(0), account, value);
 
         ERC20Lib._mint(account, value);
@@ -226,6 +232,8 @@ abstract contract SiloERC20 is IERC20, IERC20Metadata, IERC20Errors {
      * NOTE: This function is not virtual, {_update} should be overridden instead
      */
     function _burn(address account, uint256 value) internal virtual {
+        if (value == 0) revert ZeroTransfer();
+
         _beforeTokenTransfer(account, address(0), value);
 
         ERC20Lib._burn(account, value);
