@@ -6,6 +6,7 @@ import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
 import {SiloLensLib} from "../lib/SiloLensLib.sol";
 import {IShareToken, ShareToken, ISilo} from "./ShareToken.sol";
 import {NonReentrantLib} from "../lib/NonReentrantLib.sol";
+import {ERC20Lib} from "../utils/siloERC20/lib/ERC20Lib.sol";
 
 /// @title ShareDebtToken
 /// @notice ERC20 compatible token representing debt in Silo
@@ -41,14 +42,14 @@ contract ShareDebtToken is IERC20R, ShareToken {
     function setReceiveApproval(address owner, uint256 _amount) external virtual override {
         NonReentrantLib.nonReentrant(siloConfig);
 
-        _setReceiveApproval(owner, _msgSender(), _amount);
+        _setReceiveApproval(owner, ERC20Lib._msgSender(), _amount);
     }
 
     /// @inheritdoc IERC20R
     function decreaseReceiveAllowance(address _owner, uint256 _subtractedValue) public virtual override {
         NonReentrantLib.nonReentrant(siloConfig);
 
-        uint256 currentAllowance = _receiveAllowances[_owner][_msgSender()];
+        uint256 currentAllowance = _receiveAllowances[_owner][ERC20Lib._msgSender()];
 
         uint256 newAllowance;
 
@@ -57,15 +58,15 @@ contract ShareDebtToken is IERC20R, ShareToken {
             newAllowance = currentAllowance < _subtractedValue ? 0 : currentAllowance - _subtractedValue;
         }
 
-        _setReceiveApproval(_owner, _msgSender(), newAllowance);
+        _setReceiveApproval(_owner, ERC20Lib._msgSender(), newAllowance);
     }
 
     /// @inheritdoc IERC20R
     function increaseReceiveAllowance(address _owner, uint256 _addedValue) public virtual override {
         NonReentrantLib.nonReentrant(siloConfig);
 
-        uint256 currentAllowance = _receiveAllowances[_owner][_msgSender()];
-        _setReceiveApproval(_owner, _msgSender(), currentAllowance + _addedValue);
+        uint256 currentAllowance = _receiveAllowances[_owner][ERC20Lib._msgSender()];
+        _setReceiveApproval(_owner, ERC20Lib._msgSender(), currentAllowance + _addedValue);
     }
 
     /// @inheritdoc IERC20R
