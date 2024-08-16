@@ -82,7 +82,7 @@ abstract contract ShareToken is Initializable, SiloERC20Permit, IShareToken {
     }
 
     /// @custom:oz-upgrades-unsafe-allow constructor
-    constructor() {
+    constructor() SiloERC20Permit() {
         silo = ISilo(address(this)); // disable initializer
     }
 
