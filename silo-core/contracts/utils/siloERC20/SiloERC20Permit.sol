@@ -18,7 +18,7 @@ import {ERC20PermitLib} from "./lib/ERC20PermitLib.sol";
  * presenting a message signed by the account. By not relying on `{IERC20-approve}`, the token holder account doesn't
  * need to send a transaction, and thus is not required to hold Ether at all.
  */
-abstract contract SiloERC20Permit is SiloERC20, IERC20Permit {
+abstract contract SiloERC20Permit is IERC20Permit, SiloERC20 {
     /**
      * @inheritdoc IERC20Permit
      */
