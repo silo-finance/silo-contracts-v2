@@ -9,7 +9,7 @@ import {ShareDebtToken} from "silo-core/contracts/utils/ShareDebtToken.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
-import {ERC20Lib} from "silo-core/contracts/utils/siloERC20/lib/ERC20Lib.sol";
+import {SiloERC20} from "silo-core/contracts/utils/siloERC20/SiloERC20.sol";
 
 import {SiloLittleHelper} from  "../_common/SiloLittleHelper.sol";
 
@@ -55,7 +55,7 @@ contract ShareDebtTokenTest is Test, SiloLittleHelper {
         assertEq(collateralSenderBefore, address(0), "sender has no state");
         assertEq(collateralReceiverBefore, address(0), "receiver has no state");
 
-        vm.expectRevert(ERC20Lib.ZeroTransfer.selector);
+        vm.expectRevert(SiloERC20.ZeroTransfer.selector);
         shareDebtToken.transfer(receiver, 0);
     }
 
@@ -75,7 +75,7 @@ contract ShareDebtTokenTest is Test, SiloLittleHelper {
         _depositForBorrow(2, makeAddr("depositor"));
         _borrow(2, address(this), _sameAsset);
 
-        vm.expectRevert(ERC20Lib.ZeroTransfer.selector);
+        vm.expectRevert(SiloERC20.ZeroTransfer.selector);
         shareDebtToken.transfer(receiver, 0);
     }
 
@@ -92,7 +92,7 @@ contract ShareDebtTokenTest is Test, SiloLittleHelper {
         _depositForBorrow(2, makeAddr("depositor"));
         _borrow(2, receiver, _sameAsset);
 
-        vm.expectRevert(ERC20Lib.ZeroTransfer.selector);
+        vm.expectRevert(SiloERC20.ZeroTransfer.selector);
         shareDebtToken.transfer(receiver, 0);
     }
 
@@ -110,7 +110,7 @@ contract ShareDebtTokenTest is Test, SiloLittleHelper {
         _borrow(2, address(this), _senderSameAsset);
         _borrow(2, receiver, _receiverSameAsset);
 
-        vm.expectRevert(ERC20Lib.ZeroTransfer.selector);
+        vm.expectRevert(SiloERC20.ZeroTransfer.selector);
         shareDebtToken.transfer(receiver, 0);
     }
 

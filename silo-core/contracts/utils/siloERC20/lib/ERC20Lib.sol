@@ -29,8 +29,6 @@ import {ISiloERC20} from "../../../interfaces/ISiloERC20.sol";
  * applications.
  */
 library ERC20Lib {
-    error ZeroTransfer();
-
     // keccak256(abi.encode(uint256(keccak256("openzeppelin.storage.ERC20")) - 1)) & ~bytes32(uint256(0xff))
     bytes32 private constant ERC20StorageLocation = 0x52c63247e1f47db19d5ce0460030c497f067ca4cebf71ba98eeadabe20bace00;
 
@@ -114,14 +112,9 @@ library ERC20Lib {
      * - `to` cannot be the zero address.
      * - the caller must have a balance of at least `value`.
      */
-    function transfer(
-        address to,
-        uint256 value,
-        function(address,address,uint256) external _before,
-        function(address,address,uint256) external _after
-    ) public returns (bool) {
+    function transfer(address to, uint256 value) public returns (bool) {
         address owner = _msgSender();
-        _transfer(owner, to, value, _before, _after);
+        _transfer(owner, to, value);
         return true;
     }
 
@@ -165,16 +158,10 @@ library ERC20Lib {
      * - the caller must have allowance for ``from``'s tokens of at least
      * `value`.
      */
-    function transferFrom(
-        address from,
-        address to,
-        uint256 value,
-        function(address,address,uint256) external _before,
-        function(address,address,uint256) external _after
-    ) public returns (bool) {
+    function transferFrom(address from, address to, uint256 value) public returns (bool) {
         address spender = _msgSender();
         _spendAllowance(from, spender, value);
-        _transfer(from, to, value, _before, _after);
+        _transfer(from, to, value);
         return true;
     }
 
@@ -188,20 +175,14 @@ library ERC20Lib {
      *
      * NOTE: This function is not, {_update} should be overridden instead.
      */
-    function _transfer(
-        address from,
-        address to,
-        uint256 value,
-        function(address,address,uint256) external _before,
-        function(address,address,uint256) external _after
-    ) internal {
+    function _transfer(address from, address to, uint256 value) internal {
         if (from == address(0)) {
             revert IERC20Errors.ERC20InvalidSender(address(0));
         }
         if (to == address(0)) {
             revert IERC20Errors.ERC20InvalidReceiver(address(0));
         }
-        _update(from, to, value, _before, _after);
+        _update(from, to, value);
     }
 
     /**
@@ -211,17 +192,7 @@ library ERC20Lib {
      *
      * Emits a {Transfer} event.
      */
-    function _update(
-        address from,
-        address to,
-        uint256 value,
-        function(address,address,uint256) external _before,
-        function(address,address,uint256) external _after
-    ) internal {
-        if (value == 0) revert ZeroTransfer();
-
-        _before(from, to, value);
-
+    function _update(address from, address to, uint256 value) internal {
         ISiloERC20.ERC20Storage storage $ = _getERC20Storage();
         if (from == address(0)) {
             // Overflow check required: The rest of the code assumes that totalSupply never overflows
@@ -250,7 +221,6 @@ library ERC20Lib {
         }
 
         // emit Transfer(from, to, value);
-        _after(from, to, value);
     }
 
     /**
@@ -261,16 +231,11 @@ library ERC20Lib {
      *
      * NOTE: This function is not, {_update} should be overridden instead.
      */
-    function _mint(
-        address account,
-        uint256 value,
-        function(address,address,uint256) external _before,
-        function(address,address,uint256) external _after
-    ) internal {
+    function _mint(address account, uint256 value) internal {
         if (account == address(0)) {
             revert IERC20Errors.ERC20InvalidReceiver(address(0));
         }
-        _update(address(0), account, value, _before, _after);
+        _update(address(0), account, value);
     }
 
     /**
@@ -281,16 +246,11 @@ library ERC20Lib {
      *
      * NOTE: This function is not, {_update} should be overridden instead
      */
-    function _burn(
-        address account,
-        uint256 value,
-        function(address,address,uint256) external _before,
-        function(address,address,uint256) external _after
-    ) internal {
+    function _burn(address account, uint256 value) internal {
         if (account == address(0)) {
             revert IERC20Errors.ERC20InvalidSender(address(0));
         }
-        _update(account, address(0), value, _before, _after);
+        _update(account, address(0), value);
     }
 
     /**

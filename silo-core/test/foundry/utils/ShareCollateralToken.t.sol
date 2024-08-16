@@ -9,7 +9,7 @@ import {ShareCollateralToken} from "silo-core/contracts/utils/ShareCollateralTok
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
-import {ERC20Lib} from "silo-core/contracts/utils/siloERC20/lib/ERC20Lib.sol";
+import {SiloERC20} from "silo-core/contracts/utils/siloERC20/SiloERC20.sol";
 
 import {SiloLittleHelper} from  "../_common/SiloLittleHelper.sol";
 
@@ -56,7 +56,7 @@ contract ShareCollateralTokenTest is Test, SiloLittleHelper {
     function _sToken_transfer_zero_whenDeposit(ISilo.CollateralType _collateralType) private {
         _deposit(100, depositor, _collateralType);
 
-        vm.expectRevert(ERC20Lib.ZeroTransfer.selector);
+        vm.expectRevert(SiloERC20.ZeroTransfer.selector);
         _token1(_collateralType).transfer(receiver, 0);
     }
 
