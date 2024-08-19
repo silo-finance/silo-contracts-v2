@@ -20,6 +20,8 @@ import {ERC20Lib} from "../utils/siloERC20/lib/ERC20Lib.sol";
 /// take someone else's debt without asking.
 /// @custom:security-contact security@silo.finance
 contract ShareDebtToken is IERC20R, ShareToken {
+    error NotAvailable();
+
     using SiloLensLib for ISilo;
 
     /// @param _silo Silo address for which tokens was deployed
@@ -27,15 +29,8 @@ contract ShareDebtToken is IERC20R, ShareToken {
         __ShareToken_init(_silo, _hookReceiver, _tokenType);
     }
 
-    /// @inheritdoc IShareToken
-    function mint(address _owner, address _spender, uint256 _amount) external virtual override onlySilo {
-        if (_owner != _spender) _spendAllowance(_owner, _spender, _amount);
-        _mint(_owner, _amount);
-    }
-
-    /// @inheritdoc IShareToken
-    function burn(address _owner, address, uint256 _amount) external virtual override onlySilo {
-        _burn(_owner, _amount);
+    function forwardTransferFromNoChecks(address, address, uint256) external pure override {
+        revert NotAvailable();
     }
 
     /// @inheritdoc IERC20R

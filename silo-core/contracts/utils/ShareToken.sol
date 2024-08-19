@@ -78,6 +78,11 @@ abstract contract ShareToken is Initializable, SiloERC20Permit, IShareToken {
         ShareTokenLib.getShareTokenStorage().silo = ISilo(address(this)); // disable initializer
     }
 
+    /// @param _silo Silo address for which tokens was deployed
+    function initialize(ISilo _silo, address _hookReceiver, uint24 _tokenType) external virtual initializer {
+        __ShareToken_init(_silo, _hookReceiver, _tokenType);
+    }
+
     function silo() external view returns (ISilo silo) {
         return ShareTokenLib.getShareTokenStorage().silo;
     }
@@ -94,19 +99,18 @@ abstract contract ShareToken is Initializable, SiloERC20Permit, IShareToken {
         $.hookSetup.hooksAfter = _hooksAfter;
     }
 
+    // TODO why there was inconsistance how we using `_spendAllowance` in mint/burn?
+
     /// @inheritdoc IShareToken
-    function forwardTransfer(address _owner, address _recipient, uint256 _amount) external virtual onlySilo {
-        _transfer(_owner, _recipient, _amount);
+    function mint(address _owner, address _spender, uint256 _amount) external virtual override onlySilo {
+        if (_owner != _spender) _spendAllowance(_owner, _spender, _amount);
+        _mint(_owner, _amount);
     }
 
     /// @inheritdoc IShareToken
-    function forwardTransferFrom(address _spender, address _from, address _to, uint256 _amount)
-        external
-        virtual
-        onlySilo
-    {
-        _spendAllowance(_from, _spender, _amount);
-        _transfer(_from, _to, _amount);
+    function burn(address _owner, address _spender, uint256 _amount) external virtual override onlySilo {
+        if (_owner != _spender) _spendAllowance(_owner, _spender, _amount);
+        _burn(_owner, _amount);
     }
 
     /// @inheritdoc IShareToken
@@ -120,11 +124,6 @@ abstract contract ShareToken is Initializable, SiloERC20Permit, IShareToken {
         $.transferWithChecks = false;
         _transfer(_from, _to, _amount);
         $.transferWithChecks = true;
-    }
-
-    /// @inheritdoc IShareToken
-    function forwardApprove(address _owner, address _spender, uint256 _amount) external virtual onlySilo {
-        _approve(_owner, _spender, _amount);
     }
 
     function hookSetup() external view virtual returns (HookSetup memory) {
