@@ -3,6 +3,7 @@ pragma solidity 0.8.24;
 
 import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
+import {Initializable} from "openzeppelin5/proxy/utils/Initializable.sol";
 
 import {ISilo, IERC4626, IERC3156FlashLender} from "./interfaces/ISilo.sol";
 import {ISiloOracle} from "./interfaces/ISiloOracle.sol";

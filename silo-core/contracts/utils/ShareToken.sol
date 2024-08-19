@@ -19,6 +19,7 @@ import {SiloERC20Permit} from "../utils/siloERC20/SiloERC20Permit.sol";
 import {EIP712Lib} from "../utils/siloERC20/lib/EIP712Lib.sol";
 import {ERC20Lib} from "../utils/siloERC20/lib/ERC20Lib.sol";
 
+
 /// @title ShareToken
 /// @notice Implements common interface for Silo tokens representing debt or collateral.
 /// @dev Docs borrowed from https://github.com/OpenZeppelin/openzeppelin-contracts/tree/v4.9.3

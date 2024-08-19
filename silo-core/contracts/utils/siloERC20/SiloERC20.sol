@@ -262,7 +262,7 @@ abstract contract SiloERC20 is IERC20, IERC20Metadata, IERC20Errors {
      *
      * Overrides to this logic should be done to the variant with an additional `bool emitEvent` argument.
      */
-    function _approve(address owner, address spender, uint256 value) internal {
+    function _approve(address owner, address spender, uint256 value) internal virtual {
         _approve(owner, spender, value, emitEvents());
     }
 

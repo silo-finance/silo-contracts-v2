@@ -194,6 +194,8 @@ contract SiloConfigTest is Test {
     ) public {
         // we always using #0 setup for hookReceiver
         _configData1.hookReceiver = _configData0.hookReceiver;
+        _configData0.collateralShareToken = _configData0.silo;
+        _configData1.collateralShareToken = _configData1.silo;
 
         SiloConfig siloConfig = siloConfigDeploy(_siloId, _configData0, _configData1);
 
