@@ -175,7 +175,7 @@ library ERC20Lib {
      *
      * NOTE: This function is not, {_update} should be overridden instead.
      */
-    function _transfer(address from, address to, uint256 value) internal {
+    function _transfer(address from, address to, uint256 value) public {
         if (from == address(0)) {
             revert IERC20Errors.ERC20InvalidSender(address(0));
         }
@@ -192,7 +192,7 @@ library ERC20Lib {
      *
      * Emits a {Transfer} event.
      */
-    function _update(address from, address to, uint256 value) internal {
+    function _update(address from, address to, uint256 value) public {
         // TODO if we do circular dependency, we can read share token storage here, use tokenType
         // and call before/after hook, this will allow us to remove this duplicated hook code from SiloERC20.sol
 
@@ -234,7 +234,7 @@ library ERC20Lib {
      *
      * NOTE: This function is not, {_update} should be overridden instead.
      */
-    function _mint(address account, uint256 value) internal {
+    function _mint(address account, uint256 value) public {
         if (account == address(0)) {
             revert IERC20Errors.ERC20InvalidReceiver(address(0));
         }
@@ -249,7 +249,7 @@ library ERC20Lib {
      *
      * NOTE: This function is not, {_update} should be overridden instead
      */
-    function _burn(address account, uint256 value) internal {
+    function _burn(address account, uint256 value) public {
         if (account == address(0)) {
             revert IERC20Errors.ERC20InvalidSender(address(0));
         }
@@ -274,7 +274,7 @@ library ERC20Lib {
      *
      * Requirements are the same as {_approve}.
      */
-    function _approve(address owner, address spender, uint256 value) internal {
+    function _approve(address owner, address spender, uint256 value) public {
         ISiloERC20.ERC20Storage storage $ = _getERC20Storage();
         if (owner == address(0)) {
             revert IERC20Errors.ERC20InvalidApprover(address(0));
@@ -296,7 +296,7 @@ library ERC20Lib {
      *
      * Does not emit an {Approval} event.
      */
-    function _spendAllowance(address owner, address spender, uint256 value) internal {
+    function _spendAllowance(address owner, address spender, uint256 value) public {
         uint256 currentAllowance = allowance(owner, spender);
         if (currentAllowance != type(uint256).max) {
             if (currentAllowance < value) {
