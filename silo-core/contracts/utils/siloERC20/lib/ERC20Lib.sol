@@ -193,6 +193,9 @@ library ERC20Lib {
      * Emits a {Transfer} event.
      */
     function _update(address from, address to, uint256 value) internal {
+        // TODO if we do circular dependency, we can read share token storage here, use tokenType
+        // and call before/after hook, this will allow us to remove this duplicated hook code from SiloERC20.sol
+
         ISiloERC20.ERC20Storage storage $ = _getERC20Storage();
         if (from == address(0)) {
             // Overflow check required: The rest of the code assumes that totalSupply never overflows

@@ -3,6 +3,7 @@ pragma solidity >=0.5.0;
 
 import {IERC20Metadata} from "openzeppelin5/token/ERC20/extensions/IERC20Metadata.sol";
 
+import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
 import {ISilo} from "../interfaces/ISilo.sol";
 
 interface IShareToken is IERC20Metadata {
@@ -15,6 +16,19 @@ interface IShareToken is IERC20Metadata {
         uint24 hooksAfter;
         /// @param tokenType must be one of this hooks values: COLLATERAL_TOKEN, PROTECTED_TOKEN, DEBT_TOKEN
         uint24 tokenType;
+    }
+
+    struct ShareTokenStorage {
+        /// @notice Silo address for which tokens was deployed
+        ISilo silo;
+
+        /// @dev cached silo config address
+        ISiloConfig siloConfig;
+
+        /// @notice Copy of hooks setup from SiloConfig for optimisation purposes
+        HookSetup hookSetup;
+
+        bool transferWithChecks;
     }
 
     /// @notice Emitted every time receiver is notified about token transfer
@@ -84,6 +98,8 @@ interface IShareToken is IERC20Metadata {
     /// @notice Returns silo address for which token was deployed
     /// @return silo address
     function silo() external view returns (ISilo silo);
+
+    function siloConfig() external view returns (ISiloConfig silo);
 
     /// @notice Returns hook setup
     function hookSetup() external view returns (HookSetup memory);

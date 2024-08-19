@@ -19,6 +19,6 @@ contract TransferWithChecksReentrancyTest is ShareTokenMethodReentrancyTest {
     }
 
     function _ensureItWillNotRevert(address _token) internal view {
-        ShareToken(_token).transferWithChecks();
+        // ShareToken(_token).transferWithChecks(); // TODO do we need this to be public?
     }
 }
