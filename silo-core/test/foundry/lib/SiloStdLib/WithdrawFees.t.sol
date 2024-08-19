@@ -4,7 +4,9 @@ pragma solidity ^0.8.20;
 import {Test} from "forge-std/Test.sol";
 
 import {Actions} from "silo-core/contracts/lib/Actions.sol";
+import {SiloStorageLib} from "silo-core/contracts/lib/SiloStorageLib.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
+import {AssetTypes} from "silo-core/contracts/lib/AssetTypes.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISiloFactory} from "silo-core/contracts/interfaces/ISiloFactory.sol";
 
@@ -21,14 +23,16 @@ contract WithdrawFeesTest is Test {
     ISiloConfig public config;
     ISiloFactory public factory;
 
-
     SiloConfigMock siloConfig;
     SiloFactoryMock siloFactory;
     TokenMock token;
 
     function setUp() public {
+        ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
+
         siloConfig = new SiloConfigMock(address(0));
         config = ISiloConfig(siloConfig.ADDRESS());
+        $.sharedStorage.siloConfig = config;
 
         siloFactory = new SiloFactoryMock(address(0));
         factory = ISiloFactory(siloFactory.ADDRESS());
@@ -43,14 +47,16 @@ contract WithdrawFeesTest is Test {
         _reset();
 
         vm.expectRevert();
-        _withdrawFees(ISilo(address(this)), siloData, NO_PROTECTED_ASSETS);
+        _withdrawFees(ISilo(address(this)));
     }
 
     /*
     forge test -vv --mt test_withdrawFees_revert_NoLiquidity
     */
     function test_withdrawFees_revert_NoLiquidity() external {
-        siloData.daoAndDeployerFees = 1;
+        ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
+
+        $.siloData.daoAndDeployerFees = 1;
 
         uint256 daoFee;
         uint256 deployerFee;
@@ -65,7 +71,7 @@ contract WithdrawFeesTest is Test {
         token.balanceOfMock(address(this), 0);
 
         vm.expectRevert(ISilo.NoLiquidity.selector);
-        _withdrawFees(ISilo(address(this)), siloData, NO_PROTECTED_ASSETS);
+        _withdrawFees(ISilo(address(this)));
     }
 
     /*
@@ -73,7 +79,7 @@ contract WithdrawFeesTest is Test {
     */
     function test_withdrawFees_EarnedZero() external {
         vm.expectRevert(ISilo.EarnedZero.selector);
-        _withdrawFees(ISilo(address(this)), siloData, NO_PROTECTED_ASSETS);
+        _withdrawFees(ISilo(address(this)));
     }
 
     /*
@@ -87,15 +93,17 @@ contract WithdrawFeesTest is Test {
 
         address dao;
         address deployer;
+
+        ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
         
         siloConfig.getFeesWithAssetMock(address(this), daoFee, deployerFee, flashloanFeeInBp, asset);
         siloFactory.getFeeReceiversMock(address(this), dao, deployer);
         token.balanceOfMock(address(this), 1);
 
-        siloData.daoAndDeployerFees = 2;
+        $.siloData.daoAndDeployerFees = 2;
 
         vm.expectRevert(ISilo.NothingToPay.selector);
-        _withdrawFees(ISilo(address(this)), siloData, NO_PROTECTED_ASSETS);
+        _withdrawFees(ISilo(address(this)));
     }
 
     /*
@@ -110,15 +118,17 @@ contract WithdrawFeesTest is Test {
         address dao = makeAddr("DAO");
         address deployer;
 
+        ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
+
         siloConfig.getFeesWithAssetMock(address(this), daoFee, deployerFee, flashloanFeeInBp, asset);
         siloFactory.getFeeReceiversMock(address(this), dao, deployer);
         token.balanceOfMock(address(this), 1e18);
 
-        siloData.daoAndDeployerFees = 9;
+        $.siloData.daoAndDeployerFees = 9;
 
         token.transferMock(dao, 9);
 
-        _withdrawFees(ISilo(address(this)), siloData, NO_PROTECTED_ASSETS);
+        _withdrawFees(ISilo(address(this)));
     }
 
     /*
@@ -133,15 +143,17 @@ contract WithdrawFeesTest is Test {
         address dao;
         address deployer = makeAddr("Deployer");
 
+        ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
+
         siloConfig.getFeesWithAssetMock(address(this), daoFee, deployerFee, flashloanFeeInBp, asset);
         siloFactory.getFeeReceiversMock(address(this), dao, deployer);
         token.balanceOfMock(address(this), 1e18);
 
-        siloData.daoAndDeployerFees = 2;
+        $.siloData.daoAndDeployerFees = 2;
 
         token.transferMock(deployer, 2);
 
-        _withdrawFees(ISilo(address(this)), siloData, NO_PROTECTED_ASSETS);
+        _withdrawFees(ISilo(address(this)));
     }
 
     /*
@@ -179,17 +191,21 @@ contract WithdrawFeesTest is Test {
         address dao = makeAddr("DAO");
         address deployer;
 
+        ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
+
         siloConfig.getFeesWithAssetMock(address(this), daoFee, deployerFee, flashloanFeeInBp, asset);
         siloFactory.getFeeReceiversMock(address(this), dao, deployer);
         token.balanceOfMock(address(this), siloBalance);
 
-        siloData.daoAndDeployerFees = uint192(siloBalance); // fees are the same as balance
+        $.siloData.daoAndDeployerFees = uint192(siloBalance); // fees are the same as balance
 
         uint256 protectedAssets = siloBalance / 3; // the third part of the balance is protected
 
         token.transferMock(dao, siloBalance - protectedAssets); // dao gets all the liquidity except protected assets
 
-        _withdrawFees(ISilo(address(this)), siloData, protectedAssets);
+         $.total[AssetTypes.PROTECTED].assets = protectedAssets;
+
+        _withdrawFees(ISilo(address(this)));
     }
 
     function _withdrawFees_pass(
@@ -206,21 +222,23 @@ contract WithdrawFeesTest is Test {
         address dao = makeAddr("DAO");
         address deployer = makeAddr("Deployer");
 
+        ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
+
         siloConfig.getFeesWithAssetMock(address(this), _daoFee, _deployerFee, flashloanFeeInBp, asset);
         siloFactory.getFeeReceiversMock(address(this), dao, deployer);
         token.balanceOfMock(address(this), 999e18);
 
-        siloData.daoAndDeployerFees = 1e18;
+        $.siloData.daoAndDeployerFees = 1e18;
 
         if (_transferDao != 0) token.transferMock(dao, _transferDao);
         if (_transferDeployer != 0) token.transferMock(deployer, _transferDeployer);
 
-        _withdrawFees(ISilo(address(this)), siloData, NO_PROTECTED_ASSETS);
-        assertEq(siloData.daoAndDeployerFees, 0, "fees cleared");
+        _withdrawFees(ISilo(address(this)));
+        assertEq($.siloData.daoAndDeployerFees, 0, "fees cleared");
     }
 
-    function _withdrawFees(ISilo _silo, ISilo.SiloData storage _siloData, uint256 _protectedAssets) internal {
-        Actions.withdrawFees(_silo, _siloData, _protectedAssets);
+    function _withdrawFees(ISilo _silo) internal {
+        Actions.withdrawFees(_silo);
     }
 
     function _reset() internal {

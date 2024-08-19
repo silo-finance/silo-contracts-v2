@@ -3,11 +3,11 @@ pragma solidity ^0.8.20;
 
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
+import {AssetTypes} from "silo-core/contracts/lib/AssetTypes.sol";
 import {SiloLendingLib} from "silo-core/contracts/lib/SiloLendingLib.sol";
+import {SiloStorageLib} from "silo-core/contracts/lib/SiloStorageLib.sol";
 
 contract SiloLendingLibImpl {
-    ISilo.Assets totalDebt;
-
     function borrow(
         address _debtShareToken,
         address _token,
@@ -19,7 +19,9 @@ contract SiloLendingLibImpl {
         ISilo.Assets memory _totalDebt,
         uint256 _totalCollateralAssets
     ) external returns (uint256 borrowedAssets, uint256 borrowedShares) {
-        totalDebt.assets = _totalDebt.assets;
+        ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
+
+        $.total[AssetTypes.DEBT].assets = _totalDebt.assets;
 
         (borrowedAssets, borrowedShares) = SiloLendingLib.borrow(
             _debtShareToken,
@@ -30,11 +32,9 @@ contract SiloLendingLibImpl {
                 shares: _shares,
                 receiver: _receiver,
                 borrower: _borrower
-            }),
-            _totalCollateralAssets,
-            totalDebt
+            })
         );
 
-        _totalDebt.assets = totalDebt.assets;
+        _totalDebt.assets = $.total[AssetTypes.DEBT].assets;
     }
 }

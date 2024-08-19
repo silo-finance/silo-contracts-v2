@@ -69,9 +69,7 @@ contract BorrowTest is Test {
                 shares: shares,
                 receiver: receiver,
                 borrower: borrower
-            }),
-            totalCollateralAssets,
-            totalDebt
+            })
         );
     }
 
