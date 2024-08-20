@@ -16,12 +16,12 @@ contract ShareCollateralToken is ShareToken {
 
     /// @inheritdoc IShareToken
     function mint(address _owner, address _spender, uint256 _amount) external virtual override onlySilo {
-        if (_owner != _spender) _spendAllowance(_owner, _spender, _amount);
         _mint(_owner, _amount);
     }
 
     /// @inheritdoc IShareToken
     function burn(address _owner, address _spender, uint256 _amount) external virtual override onlySilo {
+        if (_owner != _spender) _spendAllowance(_owner, _spender, _amount);
         _burn(_owner, _amount);
     }
 
