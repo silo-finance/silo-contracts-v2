@@ -254,10 +254,8 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step, Creator {
         ISiloConfig.ConfigData memory configData1
     ) internal virtual {
         configData0.protectedShareToken = Clones.clone(shareCollateralTokenImpl);
-        configData0.collateralShareToken = Clones.clone(shareCollateralTokenImpl);
         configData0.debtShareToken = Clones.clone(shareDebtTokenImpl);
         configData1.protectedShareToken = Clones.clone(shareCollateralTokenImpl);
-        configData1.collateralShareToken = Clones.clone(shareCollateralTokenImpl);
         configData1.debtShareToken = Clones.clone(shareDebtTokenImpl);
     }
 
@@ -266,7 +264,6 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step, Creator {
         ISiloConfig.ConfigData memory configData1
     ) internal virtual {
         uint24 protectedTokenType = uint24(Hook.PROTECTED_TOKEN);
-        uint24 collateralTokenType = uint24(Hook.COLLATERAL_TOKEN);
         uint24 debtTokenType = uint24(Hook.DEBT_TOKEN);
 
         // initialize configData0
@@ -274,7 +271,6 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step, Creator {
         address hookReceiver0 = configData0.hookReceiver;
 
         IShareToken(configData0.protectedShareToken).initialize(silo0, hookReceiver0, protectedTokenType);
-        IShareToken(configData0.collateralShareToken).initialize(silo0, hookReceiver0, collateralTokenType);
         IShareToken(configData0.debtShareToken).initialize(silo0, hookReceiver0, debtTokenType);
 
         // initialize configData1
@@ -282,7 +278,6 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step, Creator {
         address hookReceiver1 = configData1.hookReceiver;
 
         IShareToken(configData1.protectedShareToken).initialize(silo1, hookReceiver1, protectedTokenType);
-        IShareToken(configData1.collateralShareToken).initialize(silo1, hookReceiver1, collateralTokenType);
         IShareToken(configData1.debtShareToken).initialize(silo1, hookReceiver1, debtTokenType);
     }
 

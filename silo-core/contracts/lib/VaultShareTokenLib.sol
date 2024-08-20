@@ -30,6 +30,10 @@ library VaultShareTokenLib {
         _delegateCall(abi.encodeCall(IShareToken.burn, (_owner, _spender, _amount)));
     }
 
+    function initialize(ISilo, address _hookReceiver, uint24 _tokenType) external {
+        _delegateCall(abi.encodeCall(IShareToken.initialize, (ISilo(address(0)), _hookReceiver, _tokenType)));
+    }
+
     function permit(
         address owner,
         address spender,

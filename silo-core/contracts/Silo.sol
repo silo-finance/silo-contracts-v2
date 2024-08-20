@@ -27,6 +27,7 @@ import {Hook} from "./lib/Hook.sol";
 import {AssetTypes} from "./lib/AssetTypes.sol";
 import {SiloStorageLib} from "./lib/SiloStorageLib.sol";
 import {VaultShareTokenViewLib} from "./lib/VaultShareTokenViewLib.sol";
+import {VaultShareTokenLib} from "./lib/VaultShareTokenLib.sol";
 
 // Keep ERC4626 ordering
 // solhint-disable ordering
@@ -87,6 +88,8 @@ contract Silo is SiloERC4626 {
         $.sharedStorage.hookReceiver = IHookReceiver(configData.hookReceiver);
 
         IInterestRateModel(configData.interestRateModel).connect(_modelConfigAddress);
+
+        VaultShareTokenLib.initialize(ISilo(address(this)), configData.hookReceiver, uint24(Hook.COLLATERAL_TOKEN));
     }
 
     /// @inheritdoc ISilo

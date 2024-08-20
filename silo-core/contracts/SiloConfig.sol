@@ -30,8 +30,6 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
 
     /// @dev Token that represents a share in total protected deposits of Silo
     address private immutable _PROTECTED_COLLATERAL_SHARE_TOKEN0;
-    /// @dev Token that represents a share in total deposits of Silo
-    address private immutable _COLLATERAL_SHARE_TOKEN0;
     /// @dev Token that represents a share in total debt of Silo
     address private immutable _DEBT_SHARE_TOKEN0;
 
@@ -55,8 +53,6 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
 
     /// @dev Token that represents a share in total protected deposits of Silo
     address private immutable _PROTECTED_COLLATERAL_SHARE_TOKEN1;
-    /// @dev Token that represents a share in total deposits of Silo
-    address private immutable _COLLATERAL_SHARE_TOKEN1;
     /// @dev Token that represents a share in total debt of Silo
     address private immutable _DEBT_SHARE_TOKEN1;
 
@@ -97,7 +93,6 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
         _TOKEN0 = _configData0.token;
 
         _PROTECTED_COLLATERAL_SHARE_TOKEN0 = _configData0.protectedShareToken;
-        _COLLATERAL_SHARE_TOKEN0 = _configData0.collateralShareToken;
         _DEBT_SHARE_TOKEN0 = _configData0.debtShareToken;
 
         _SOLVENCY_ORACLE0 = _configData0.solvencyOracle;
@@ -118,7 +113,6 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
         _TOKEN1 = _configData1.token;
 
         _PROTECTED_COLLATERAL_SHARE_TOKEN1 = _configData1.protectedShareToken;
-        _COLLATERAL_SHARE_TOKEN1 = _configData1.collateralShareToken;
         _DEBT_SHARE_TOKEN1 = _configData1.debtShareToken;
 
         _SOLVENCY_ORACLE1 = _configData1.solvencyOracle;
@@ -251,9 +245,9 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
         returns (address protectedShareToken, address collateralShareToken, address debtShareToken)
     {
         if (_silo == _SILO0) {
-            return (_PROTECTED_COLLATERAL_SHARE_TOKEN0, _COLLATERAL_SHARE_TOKEN0, _DEBT_SHARE_TOKEN0);
+            return (_PROTECTED_COLLATERAL_SHARE_TOKEN0, _SILO0, _DEBT_SHARE_TOKEN0);
         } else if (_silo == _SILO1) {
-            return (_PROTECTED_COLLATERAL_SHARE_TOKEN1, _COLLATERAL_SHARE_TOKEN1, _DEBT_SHARE_TOKEN1);
+            return (_PROTECTED_COLLATERAL_SHARE_TOKEN1, _SILO1, _DEBT_SHARE_TOKEN1);
         } else {
             revert WrongSilo();
         }
@@ -300,11 +294,11 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
     {
         if (_silo == _SILO0) {
             return _collateralType == ISilo.CollateralType.Collateral
-                ? (_COLLATERAL_SHARE_TOKEN0, _TOKEN0)
+                ? (_SILO0, _TOKEN0)
                 : (_PROTECTED_COLLATERAL_SHARE_TOKEN0, _TOKEN0);
         } else if (_silo == _SILO1) {
             return _collateralType == ISilo.CollateralType.Collateral
-                ? (_COLLATERAL_SHARE_TOKEN1, _TOKEN1)
+                ? (_SILO1, _TOKEN1)
                 : (_PROTECTED_COLLATERAL_SHARE_TOKEN1, _TOKEN1);
         } else {
             revert WrongSilo();
@@ -368,7 +362,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
             otherSilo: _SILO1,
             token: _TOKEN0,
             protectedShareToken: _PROTECTED_COLLATERAL_SHARE_TOKEN0,
-            collateralShareToken: _COLLATERAL_SHARE_TOKEN0,
+            collateralShareToken: _SILO0,
             debtShareToken: _DEBT_SHARE_TOKEN0,
             solvencyOracle: _SOLVENCY_ORACLE0,
             maxLtvOracle: _MAX_LTV_ORACLE0,
@@ -390,7 +384,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
             otherSilo: _SILO0,
             token: _TOKEN1,
             protectedShareToken: _PROTECTED_COLLATERAL_SHARE_TOKEN1,
-            collateralShareToken: _COLLATERAL_SHARE_TOKEN1,
+            collateralShareToken: _SILO1,
             debtShareToken: _DEBT_SHARE_TOKEN1,
             solvencyOracle: _SOLVENCY_ORACLE1,
             maxLtvOracle: _MAX_LTV_ORACLE1,
@@ -409,7 +403,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
             config = DepositConfig({
                 silo: _SILO0,
                 token: _TOKEN0,
-                collateralShareToken: _COLLATERAL_SHARE_TOKEN0,
+                collateralShareToken: _SILO0,
                 protectedShareToken: _PROTECTED_COLLATERAL_SHARE_TOKEN0,
                 daoFee: _DAO_FEE,
                 deployerFee: _DEPLOYER_FEE,
@@ -419,7 +413,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
             config = DepositConfig({
                 silo: _SILO1,
                 token: _TOKEN1,
-                collateralShareToken: _COLLATERAL_SHARE_TOKEN1,
+                collateralShareToken: _SILO1,
                 protectedShareToken: _PROTECTED_COLLATERAL_SHARE_TOKEN1,
                 daoFee: _DAO_FEE,
                 deployerFee: _DEPLOYER_FEE,
@@ -434,8 +428,6 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
         if (msg.sender != _SILO0 &&
             msg.sender != _SILO1 &&
             msg.sender != _HOOK_RECEIVER &&
-            msg.sender != _COLLATERAL_SHARE_TOKEN0 &&
-            msg.sender != _COLLATERAL_SHARE_TOKEN1 &&
             msg.sender != _PROTECTED_COLLATERAL_SHARE_TOKEN0 &&
             msg.sender != _PROTECTED_COLLATERAL_SHARE_TOKEN1 &&
             msg.sender != _DEBT_SHARE_TOKEN0 &&
