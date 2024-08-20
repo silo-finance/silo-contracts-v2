@@ -84,16 +84,16 @@ abstract contract ShareToken is Initializable, SiloERC20Permit, IShareToken {
         __ShareToken_init(_silo, _hookReceiver, _tokenType);
     }
 
-    function silo() external view returns (ISilo silo) {
-        silo = ShareTokenLib.getShareTokenStorage().silo;
+    function silo() external view returns (ISilo) {
+        return ShareTokenLib.getShareTokenStorage().silo;
     }
 
-    function siloConfig() external view returns (ISiloConfig siloConfig) {
-        siloConfig = ShareTokenLib.getShareTokenStorage().siloConfig;
+    function siloConfig() external view returns (ISiloConfig) {
+        return ShareTokenLib.getShareTokenStorage().siloConfig;
     }
 
     /// @inheritdoc IShareToken
-    function synchronizeHooks(uint24 _hooksBefore, uint24 _hooksAfter) external virtual onlySilo { // TODO remove for silo
+    function synchronizeHooks(uint24 _hooksBefore, uint24 _hooksAfter) external virtual onlySilo {
         IShareToken.ShareTokenStorage storage $ = ShareTokenLib.getShareTokenStorage();
 
         $.hookSetup.hooksBefore = _hooksBefore;
