@@ -8,6 +8,8 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {SiloStorageLib} from "./SiloStorageLib.sol";
 
 library VaultShareTokenViewLib {
+    string private constant _NAME = "SiloShareToken";
+
     /// @custom:storage-location erc7201:openzeppelin.storage.ERC20
     struct ERC20Storage {
         mapping(address account => uint256) _balances;
@@ -36,5 +38,17 @@ library VaultShareTokenViewLib {
 
     function totalSupply() internal view returns (uint256) {
         return _getERC20Storage()._totalSupply;
+    }
+
+    function decimals() internal view returns (uint8) {
+        return 18;
+    }
+
+    function name() internal view returns (string memory) {
+        return _NAME;
+    }
+
+    function symbol() internal view returns (string memory) {
+        return _NAME;
     }
 }

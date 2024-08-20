@@ -35,6 +35,7 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step, Creator {
 
     address public siloImpl;
     address public shareCollateralTokenImpl;
+    address public vaultShareTokenImpl;
     address public shareDebtTokenImpl;
 
     mapping(uint256 id => address[2] silos) private _idToSilos;
@@ -49,6 +50,7 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step, Creator {
     function initialize(
         address _siloImpl,
         address _shareCollateralTokenImpl,
+        address _vaultShareTokenImpl,
         address _shareDebtTokenImpl,
         uint256 _daoFee,
         address _daoFeeReceiver
@@ -64,6 +66,7 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step, Creator {
 
         siloImpl = _siloImpl;
         shareCollateralTokenImpl = _shareCollateralTokenImpl;
+        vaultShareTokenImpl = _vaultShareTokenImpl;
         shareDebtTokenImpl = _shareDebtTokenImpl;
 
         uint256 _maxDeployerFee = 0.15e18; // 15% max deployer fee
@@ -102,8 +105,10 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step, Creator {
 
         siloConfig = ISiloConfig(address(new SiloConfig(nextSiloId, configData0, configData1)));
 
-        ISilo(configData0.silo).initialize(siloConfig, _initData.interestRateModelConfig0);
-        ISilo(configData1.silo).initialize(siloConfig, _initData.interestRateModelConfig1);
+        address vaultTokenImpl = vaultShareTokenImpl;
+
+        ISilo(configData0.silo).initialize(siloConfig, _initData.interestRateModelConfig0, vaultTokenImpl);
+        ISilo(configData1.silo).initialize(siloConfig, _initData.interestRateModelConfig1, vaultTokenImpl);
 
         _initializeShareTokens(configData0, configData1);
 

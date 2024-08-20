@@ -8,8 +8,6 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {SiloStorageLib} from "./SiloStorageLib.sol";
 
 library VaultShareTokenLib {
-    string private constant _NAME = "SiloShareToken";
-
     function approve(address _spender, uint256 _amount) internal returns (bool) {
         (bool result,) = _delegateCall(abi.encodeCall(IERC20.approve, (_spender, _amount)));
 
@@ -26,27 +24,6 @@ library VaultShareTokenLib {
         (bool result,) = _delegateCall(abi.encodeCall(IERC20.transferFrom, (_from, _to, _amount)));
 
         return result;
-    }
-
-    function decimals() internal view returns (uint8) {
-        return 18;
-    }
-
-    function name() internal view returns (string memory) {
-        return _NAME;
-    }
-
-    function symbol() internal view returns (string memory) {
-        return _NAME;
-    }
-
-    function allowance(address _owner, address _spender) internal view returns (uint256) {
-    }
-
-    function balanceOf(address _owner) internal view returns (uint256) {
-    }
-
-    function totalSupply() internal view returns (uint256) {
     }
 
     function _delegateCall(bytes memory txPayload) private returns (bool success, bytes memory returnData) {

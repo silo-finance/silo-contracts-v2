@@ -26,7 +26,7 @@ import {Rounding} from "./lib/Rounding.sol";
 import {Hook} from "./lib/Hook.sol";
 import {AssetTypes} from "./lib/AssetTypes.sol";
 import {SiloStorageLib} from "./lib/SiloStorageLib.sol";
-import {VaultShareTokenLib} from "./lib/VaultShareTokenLib.sol";
+import {VaultShareTokenViewLib} from "./lib/VaultShareTokenViewLib.sol";
 
 // Keep ERC4626 ordering
 // solhint-disable ordering
@@ -71,7 +71,11 @@ contract Silo is SiloERC4626 {
     }
 
     /// @inheritdoc ISilo
-    function initialize(ISiloConfig _siloConfig, address _modelConfigAddress) external virtual {
+    function initialize(
+        ISiloConfig _siloConfig,
+        address _modelConfigAddress,
+        address _vaultShareTokenImpl
+    ) external virtual {
         SiloStorage storage $ = SiloStorageLib.getSiloStorage();
 
         if (address($.sharedStorage.siloConfig) != address(0)) revert SiloInitialized();
@@ -79,6 +83,7 @@ contract Silo is SiloERC4626 {
         ISiloConfig.ConfigData memory configData = _siloConfig.getConfig(address(this));
 
         $.sharedStorage.siloConfig = _siloConfig;
+        $.vaultTokenImpl = _vaultShareTokenImpl;
         $.sharedStorage.hookReceiver = IHookReceiver(configData.hookReceiver);
 
         IInterestRateModel(configData.interestRateModel).connect(_modelConfigAddress);
@@ -224,7 +229,7 @@ contract Silo is SiloERC4626 {
 
     /// @inheritdoc IERC4626
     function maxMint(address /* _receiver */) external view virtual returns (uint256 maxShares) {
-        return _callMaxDepositOrMint(VaultShareTokenLib.totalSupply());
+        return _callMaxDepositOrMint(VaultShareTokenViewLib.totalSupply());
     }
 
     /// @inheritdoc IERC4626
