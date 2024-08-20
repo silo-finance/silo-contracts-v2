@@ -10,6 +10,7 @@ import {IShareToken} from "../interfaces/IShareToken.sol";
 import {IERC3156FlashBorrower} from "../interfaces/IERC3156FlashBorrower.sol";
 import {IPartialLiquidation} from "../interfaces/IPartialLiquidation.sol";
 import {IHookReceiver} from "../interfaces/IHookReceiver.sol";
+import {IInterestRateModel} from "../interfaces/IInterestRateModel.sol";
 
 import {SiloERC4626Lib} from "./SiloERC4626Lib.sol";
 import {SiloSolvencyLib} from "./SiloSolvencyLib.sol";
@@ -32,6 +33,18 @@ library Actions {
     bytes32 internal constant _FLASHLOAN_CALLBACK = keccak256("ERC3156FlashBorrower.onFlashLoan");
 
     error FeeOverflow();
+
+    function initialize(ISiloConfig _siloConfig, address _modelConfigAddress) external returns (address hookReceiver) {
+        IShareToken.ShareTokenStorage storage _sharedStorage = ShareTokenLib.getShareTokenStorage();
+
+        if (address(_sharedStorage.siloConfig) != address(0)) revert ISilo.SiloInitialized();
+
+        ISiloConfig.ConfigData memory configData = _siloConfig.getConfig(address(this));
+
+        IInterestRateModel(configData.interestRateModel).connect(_modelConfigAddress);
+
+        return configData.hookReceiver;
+    }
 
     function deposit(
         uint256 _assets,

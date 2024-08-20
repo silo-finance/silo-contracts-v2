@@ -65,6 +65,8 @@ contract Silo is ISilo, SiloStorage, ShareCollateralToken {
         payable
         returns (bool success, bytes memory result)
     {
+        // moving this to Actions this increased silo size slighty
+
         if (msg.sender != address(ShareTokenLib.getShareTokenStorage().hookSetup.hookReceiver)) {
             revert OnlyHookReceiver();
         }
@@ -85,18 +87,9 @@ contract Silo is ISilo, SiloStorage, ShareCollateralToken {
 
     /// @inheritdoc ISilo
     function initialize(ISiloConfig _siloConfig, address _modelConfigAddress) external virtual {
-        IShareToken.ShareTokenStorage storage _sharedStorage = ShareTokenLib.getShareTokenStorage();
+        address hookReceiver = Actions.initialize(_siloConfig, _modelConfigAddress);
 
-        if (address(_sharedStorage.siloConfig) != address(0)) revert SiloInitialized();
-
-        ISiloConfig.ConfigData memory configData = _siloConfig.getConfig(address(this));
-
-        _sharedStorage.siloConfig = _siloConfig;
-        _sharedStorage.hookSetup.hookReceiver = configData.hookReceiver;
-
-        IInterestRateModel(configData.interestRateModel).connect(_modelConfigAddress);
-
-        __ShareToken_init(this, configData.hookReceiver, uint24(Hook.COLLATERAL_TOKEN));
+        __ShareToken_init(this, hookReceiver, uint24(Hook.COLLATERAL_TOKEN));
     }
 
     /// @inheritdoc ISilo
