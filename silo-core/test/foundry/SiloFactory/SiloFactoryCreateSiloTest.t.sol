@@ -127,10 +127,10 @@ contract SiloFactoryCreateSiloTest is SiloLittleHelper, IntegrationTest {
         assertEq(configData1.callBeforeQuote, initData.callBeforeQuote1, "configData1.callBeforeQuote");
 
         vm.expectRevert(ISilo.SiloInitialized.selector);
-        ISilo(configData0.silo).initialize(siloConfig, initData.interestRateModelConfig0);
+        ISilo(configData0.silo).initialize(siloConfig, initData.interestRateModelConfig0, address(0));
 
         vm.expectRevert(ISilo.SiloInitialized.selector);
-        ISilo(configData1.silo).initialize(siloConfig, initData.interestRateModelConfig1);
+        ISilo(configData1.silo).initialize(siloConfig, initData.interestRateModelConfig1, address(0));
 
         (,, IInterestRateModelV2Config modelConfigAddr0) =
             InterestRateModelV2(configData0.interestRateModel).getSetup(configData0.silo);

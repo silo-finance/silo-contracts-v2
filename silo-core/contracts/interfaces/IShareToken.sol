@@ -4,6 +4,7 @@ pragma solidity >=0.5.0;
 import {IERC20Metadata} from "openzeppelin5/token/ERC20/extensions/IERC20Metadata.sol";
 
 import {ISilo} from "../interfaces/ISilo.sol";
+import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
 
 interface IShareToken is IERC20Metadata {
     struct HookSetup {
@@ -74,4 +75,5 @@ interface IShareToken is IERC20Metadata {
     function hookReceiver() external view returns (address);
 
     function transferWithChecks() external view returns (bool);
+    function siloConfig() external view returns (ISiloConfig);
 }

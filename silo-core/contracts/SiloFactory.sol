@@ -60,7 +60,12 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step, Creator {
         // start IDs from 1
         _siloId = 1;
 
-        if (_siloImpl == address(0) || _shareCollateralTokenImpl == address(0) || _shareDebtTokenImpl == address(0)) {
+        if (
+            _siloImpl == address(0) ||
+            _shareCollateralTokenImpl == address(0) ||
+            _vaultShareTokenImpl == address(0) ||
+            _shareDebtTokenImpl == address(0)
+        ) {
             revert ZeroAddress();
         }
 

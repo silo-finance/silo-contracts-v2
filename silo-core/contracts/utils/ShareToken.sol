@@ -63,6 +63,7 @@ abstract contract ShareToken is ERC20PermitUpgradeable, IShareToken {
 
     string private constant _NAME = "SiloShareToken";
 
+    /// @custom:storage-location erc7201:silo.shareToken.storage
     struct ShareTokenStorage {
         /// @notice Copy of hooks setup from SiloConfig for optimisation purposes
         HookSetup hookSetup;
@@ -104,6 +105,10 @@ abstract contract ShareToken is ERC20PermitUpgradeable, IShareToken {
 
     function transferWithChecks() external view virtual returns (bool) {
         return _getShareTokenStorage().transferWithChecks;
+    }
+
+    function siloConfig() external view returns (ISiloConfig) {
+        return _getSiloConfig();
     }
 
     /// @inheritdoc ERC20Upgradeable

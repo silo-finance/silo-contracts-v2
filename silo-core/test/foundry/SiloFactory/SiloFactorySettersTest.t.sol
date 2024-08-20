@@ -15,6 +15,7 @@ contract SiloFactorySettersTest is Test {
 
     address siloImpl = address(100001);
     address shareCollateralTokenImpl = address(100002);
+    address vaultShareTokenImpl = address(100004);
     address shareDebtTokenImpl = address(100003);
     uint256 daoFee = 0.20e18;
     address daoFeeReceiver = address(100004);
@@ -23,7 +24,10 @@ contract SiloFactorySettersTest is Test {
 
     function setUp() public {
         siloFactory = new SiloFactory();
-        siloFactory.initialize(siloImpl, shareCollateralTokenImpl, shareDebtTokenImpl, daoFee, daoFeeReceiver);
+
+        siloFactory.initialize(
+            siloImpl, shareCollateralTokenImpl, vaultShareTokenImpl, shareDebtTokenImpl, daoFee, daoFeeReceiver
+        );
     }
 
     /*

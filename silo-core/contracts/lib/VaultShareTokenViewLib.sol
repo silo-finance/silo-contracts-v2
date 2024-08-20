@@ -40,15 +40,15 @@ library VaultShareTokenViewLib {
         return _getERC20Storage()._totalSupply;
     }
 
-    function decimals() internal view returns (uint8) {
+    function decimals() internal pure returns (uint8) {
         return 18;
     }
 
-    function name() internal view returns (string memory) {
+    function name() internal pure returns (string memory) {
         return _NAME;
     }
 
-    function symbol() internal view returns (string memory) {
+    function symbol() internal pure returns (string memory) {
         return _NAME;
     }
 }

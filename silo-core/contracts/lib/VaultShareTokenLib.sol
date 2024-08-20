@@ -8,22 +8,16 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {SiloStorageLib} from "./SiloStorageLib.sol";
 
 library VaultShareTokenLib {
-    function approve(address _spender, uint256 _amount) internal returns (bool) {
-        (bool result,) = _delegateCall(abi.encodeCall(IERC20.approve, (_spender, _amount)));
-
-        return result;
+    function approve(address _spender, uint256 _amount) internal returns (bool result) {
+        (result,) = _delegateCall(abi.encodeCall(IERC20.approve, (_spender, _amount)));
     }
 
-    function transfer(address _to, uint256 _amount) internal returns (bool) {
-        (bool result,) = _delegateCall(abi.encodeCall(IERC20.transfer, (_to, _amount)));
-
-        return result;
+    function transfer(address _to, uint256 _amount) internal returns (bool result) {
+        (result,) = _delegateCall(abi.encodeCall(IERC20.transfer, (_to, _amount)));
     }
 
-    function transferFrom(address _from, address _to, uint256 _amount) internal returns (bool) {
-        (bool result,) = _delegateCall(abi.encodeCall(IERC20.transferFrom, (_from, _to, _amount)));
-
-        return result;
+    function transferFrom(address _from, address _to, uint256 _amount) internal returns (bool result) {
+        (result,) = _delegateCall(abi.encodeCall(IERC20.transferFrom, (_from, _to, _amount)));
     }
 
     function _delegateCall(bytes memory txPayload) private returns (bool success, bytes memory returnData) {

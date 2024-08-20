@@ -17,7 +17,6 @@ abstract contract SiloERC4626 is ISilo {
 
     /// @inheritdoc IERC20
     function transfer(address _to, uint256 _amount) external returns (bool) {
-        ISiloConfig siloConfig = SiloStorageLib.siloConfig();
         return VaultShareTokenLib.transfer(_to, _amount);
     }
 

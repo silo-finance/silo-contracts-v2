@@ -6,6 +6,7 @@ import {ISilo, IShareToken} from "../interfaces/IShareToken.sol";
 import {ISiloConfig} from "../SiloConfig.sol";
 
 abstract contract ExternalShareToken is ShareToken {
+    /// @custom:storage-location erc7201:silo.exteranalShareToken.storage
     struct ExternalShareTokenStorage {
         /// @notice Silo address for which tokens was deployed
         ISilo silo;

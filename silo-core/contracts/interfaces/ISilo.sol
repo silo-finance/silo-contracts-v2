@@ -124,6 +124,8 @@ interface ISilo is IERC4626, IERC3156FlashLender {
         uint64 interestRateTimestamp;
     }
 
+    /// @custom:storage-location erc7201:silo.vault.storage
+    /// @dev See silo-core/contracts/lib/SiloStorageLib.sol
     struct SiloStorage {
         address vaultTokenImpl;
         SiloData siloData;
